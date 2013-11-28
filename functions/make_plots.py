@@ -776,7 +776,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         # Plot isochrone.
         plt.plot(iso_moved[1], iso_moved[0], 'g', lw=1.2)
         # Plot colorbar.
-        cbaxes = fig.add_axes([0.19, 0.185, 0.04, 0.005]) 
+        cbaxes = fig.add_axes([0.19, 0.318, 0.04, 0.005]) 
         cbar = plt.colorbar(cax=cbaxes, ticks=[0,1], orientation='horizontal')
         cbar.ax.tick_params(labelsize=9)
 
@@ -835,7 +835,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                          xerr=func(mag_y, *popt_col1), fmt='k.', lw=0.8, ms=0.,\
                          zorder=4)
             # Plot colorbar.
-            cbaxes18 = fig.add_axes([0.43, 0.185, 0.04, 0.005])
+            cbaxes18 = fig.add_axes([0.435, 0.318, 0.04, 0.005])
             cbar18 = plt.colorbar(cax=cbaxes18, ticks=[v_min,v_max],
                                  orientation='horizontal')
             cbar18.ax.tick_params(labelsize=9) 
@@ -895,7 +895,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                          xerr=func(mag_y, *popt_col1), fmt='k.', lw=0.8, ms=0.,\
                          zorder=4)
             # Plot colorbar.
-            cbaxes19 = fig.add_axes([0.675, 0.185, 0.04, 0.005])
+            cbaxes19 = fig.add_axes([0.68, 0.318, 0.04, 0.005])
             cbar19 = plt.colorbar(cax=cbaxes19, ticks=[v_min,v_max],
                                  orientation='horizontal')
             cbar19.ax.tick_params(labelsize=9)
@@ -948,7 +948,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         # Plot isochrone.
         plt.plot(iso_moved[1], iso_moved[0], 'g', lw=1.2)
         # Plot colorbar.
-        cbaxes20 = fig.add_axes([0.93, 0.185, 0.04, 0.005])
+        cbaxes20 = fig.add_axes([0.935, 0.318, 0.04, 0.005])
         cbar20 = plt.colorbar(cax=cbaxes20, ticks=[v_min,v_max],
                              orientation='horizontal')
         cbar20.ax.tick_params(labelsize=9)
