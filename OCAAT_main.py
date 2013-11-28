@@ -15,6 +15,7 @@
 from os import listdir, getcwd, walk, mkdir, rmdir
 from os.path import join, realpath, dirname, exists
 from os import makedirs
+from os.path import expanduser
 
 import matplotlib.pyplot as plt
 
@@ -81,15 +82,21 @@ while wrong_mode:
         print 'Wrong input. Try again.\n'
 
 
+
+# Define paths to folders/files.
+
+# Set 'home' dir.
+home = expanduser("~")
+
 # Path where the code is running
 mypath = realpath(join(getcwd(), dirname(__file__)))
-# Path where the cluster files are stored.
-mypath2 = mypath+'/clusters_in'
+# Path where the cluster files to be processed are stored.
+mypath2 = home+'/clusters/clusters_in'
 # Path where the sub-folders are moved once processed.
-mypath3 = mypath+'/clusters_done'
-
+mypath3 = home+'/clusters/clusters_done'
 # Set output directory.        
-output_dir = '/home/gabriel/clusters_out/'
+output_dir = home+'/clusters/clusters_out/'
+
 
 # Create output data file (append if file already existis)
 c_o_d_f(output_dir)   
