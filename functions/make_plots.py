@@ -885,8 +885,11 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         plt.scatter(m_p_m_temp_inv[0], m_p_m_temp_inv[1], marker='o', 
                     c=m_p_m_temp_inv[2], s=40, cmap=cm, lw=0.5, \
                     vmin=v_min, vmax=v_max)
+        print 'afuera'
         # If list is not empty.
         if m_p_m_temp_inv[1]:
+            print 'adentro'
+            print v_min,v_max
             # Plot error bars at several mag values.
             mag_y = np.arange(int(min(m_p_m_temp_inv[1])+0.5), 
                               int(max(m_p_m_temp_inv[1])+0.5) + 0.1)
@@ -895,7 +898,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                          xerr=func(mag_y, *popt_col1), fmt='k.', lw=0.8, ms=0.,\
                          zorder=4)
             # Plot colorbar.
-            cbaxes19 = fig.add_axes([0.679, 0.318, 0.04, 0.005])
+            cbaxes19 = fig.add_axes([0.68, 0.318, 0.04, 0.005])
             cbar19 = plt.colorbar(cax=cbaxes19, ticks=[v_min,v_max],
                                  orientation='horizontal')
             cbar19.ax.tick_params(labelsize=9)

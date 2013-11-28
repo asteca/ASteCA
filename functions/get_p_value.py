@@ -77,7 +77,8 @@ def get_pval(flag_area_stronger, cluster_region, field_region,
         # Set number of runs for the p_value algorithm with a maximum of
         # 100 if only one field region was used.
 #        runs = int(100/len(field_region))
-        runs = 4
+        print 'runs:', int(100/len(field_region))
+        runs = 3
         
         # Only use stars inside cluster's radius.
         cluster_region_r = []
