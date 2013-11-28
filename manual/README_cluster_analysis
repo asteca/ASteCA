@@ -1,0 +1,10 @@
+
+
+Input folders and files:
+
+1- /functions: stores the python functions used by the main cluster_analysis.py code
+
+2- /isochrones: stores the Girardi isochrone files with the values assigned by Piatti
+   to the published clusters.
+
+3- /clusters_in: 
