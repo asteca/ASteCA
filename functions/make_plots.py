@@ -54,8 +54,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     # Plot all outputs
     # figsize(x1, y1), GridSpec(y2, x2) --> To have square plots: x1/x2 = 
     # y1/y2 = 2.5 
-    fig = plt.figure(figsize=(20, 25)) # create the top-level container
-    gs1 = gridspec.GridSpec(10, 8)  # create a GridSpec object
+    fig = plt.figure(figsize=(20, 30)) # create the top-level container
+    gs1 = gridspec.GridSpec(12, 8)  # create a GridSpec object
     #gs1.update(wspace=.09, hspace=.0)
 
     # 2D filtered histogram, d_b=100
@@ -679,92 +679,55 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                    extent=[col1_min, col1_max, mag_min, mag_max], aspect='auto')
 
 
-    # Distribution of p_values.
-    # Check if decont algorithm was applied.
-    if not(flag_area_stronger):
-        ax16 = plt.subplot(gs1[6:8, 6:8])
-        plt.xlim(0, 1)
-        plt.ylim(0, 1)
-        plt.xlabel('p-values', fontsize=12)
-        ax16.minorticks_on()
-        ax16.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
- 
-        xmin, xmax = min(p_vals_cl), max(p_vals_cl)
-        x_cl = np.mgrid[xmin:xmax:100j]
-        xmin, xmax = min(p_vals_f), max(p_vals_f)
-        x_f = np.mgrid[xmin:xmax:100j]
-        x_min, x_max = 0., 1.
-        binwidth = 0.05       
-        weights_c = np.ones_like(p_vals_cl)/len(p_vals_cl)
-        ax16.hist(p_vals_cl, bins=np.arange(int(x_min), int(x_max), binwidth),
-                weights=weights_c, histtype='step', color='blue')
-        plt.plot(x_cl, kde_cl_norm, c='b', ls='--', lw=2., label=r'$p-value_{cl}$')
-    
-        weights_f = np.ones_like(p_vals_f)/len(p_vals_f)
-        ax16.hist(p_vals_f, bins=np.arange(int(x_min), int(x_max), binwidth),
-                weights=weights_f, histtype='step', color='red')
-        plt.plot(x_f, kde_f_norm, c='r', ls='--', lw=2., label=r'$p-value_{f}$')
-        
-        text1 = r'$\overline{p-value_{cl}} = %0.2f$' '\n' % p_val_cl_avrg
-        text2 = r'$\overline{p-value_{f}} = %0.2f$' '\n' % p_val_f_avrg
-        text3 = r'$p-value\, = %0.2f$' % p_value 
-        text = text1+text2+text3
-        plt.text(0.05, 0.83, text, transform = ax16.transAxes, 
-             bbox=dict(facecolor='white', alpha=0.85), fontsize=12)
-    
-        handles, labels = ax16.get_legend_handles_labels()
-        ax16.legend(handles, labels, loc='upper right', numpoints=1,
-                    fontsize=12)
-
 
     # Finding chart of cluster region with decontamination algorithm applied.
     # Used for the finding chart with colors assigned according to the
     # probabilities obtained.
     # Use only the first sub-lists in these lists for plotting.
-#    if len(clus_reg_decont_lst) >= 1:
-#        clus_reg_decont = clus_reg_decont_lst[0]
-#    else:
-#        clus_reg_decont = clus_reg_decont_lst    
-#    
-#    # Check if decont algorithm was applied.
-#    if not(flag_area_stronger):
-#        ax16 = plt.subplot(gs1[6:8, 6:8])
-#        # Get max and min values in x,y
-#        x_min, x_max = 10000., -10000
-#        y_min, y_max = 10000., -10000
-#        for star in cluster_region:
-#            x_min, x_max = min(star[1], x_min), max(star[1], x_max)
-#            y_min, y_max = min(star[2], y_min), max(star[2], y_max)
-#        #Set plot limits
-#        plt.xlim(x_min, x_max)
-#        plt.ylim(y_min, y_max)
-#        #Set axis labels
-#        plt.xlabel('x (px)', fontsize=12)
-#        plt.ylabel('y (px)', fontsize=12)
-#        # Set minor ticks
-#        ax16.minorticks_on()
-#        # Radius
-#        circle = plt.Circle((center_cl[0], center_cl[1]), clust_rad[0], 
-#                            color='red', fill=False)
-#        fig.gca().add_artist(circle)
-#        plt.text(0.63, 0.93, 'Cluster region', transform = ax16.transAxes, \
-#        bbox=dict(facecolor='white', alpha=0.8), fontsize=12)
-#        # This color scheme makes higher prob stars look blacker.
-#        cm = plt.cm.get_cmap('gist_yarg')
-#        # Plot cluster region.
-#        stars_clust_temp = [[], [], []]
-#        for st_indx, star in enumerate(cluster_region):
-#            if backg_value[0] > 0.005:
-#                # Dense field
-#                star_size = 15
-#            else:
-#                star_size = 20
-#            stars_clust_temp[0].append(star[1])
-#            stars_clust_temp[1].append(star[2])
-#            stars_clust_temp[2].append(200*clus_reg_decont[st_indx]**8)       
-#        plt.scatter(stars_clust_temp[0], stars_clust_temp[1], marker='o', 
-#                    c=stars_clust_temp[2], s=star_size, edgecolors='black',\
-#                    cmap=cm)
+    if len(clus_reg_decont_lst) >= 1:
+        clus_reg_decont = clus_reg_decont_lst[0]
+    else:
+        clus_reg_decont = clus_reg_decont_lst    
+    
+    # Check if decont algorithm was applied.
+    if not(flag_area_stronger):
+        ax16 = plt.subplot(gs1[6:8, 6:8])
+        # Get max and min values in x,y
+        x_min, x_max = 10000., -10000
+        y_min, y_max = 10000., -10000
+        for star in cluster_region:
+            x_min, x_max = min(star[1], x_min), max(star[1], x_max)
+            y_min, y_max = min(star[2], y_min), max(star[2], y_max)
+        #Set plot limits
+        plt.xlim(x_min, x_max)
+        plt.ylim(y_min, y_max)
+        #Set axis labels
+        plt.xlabel('x (px)', fontsize=12)
+        plt.ylabel('y (px)', fontsize=12)
+        # Set minor ticks
+        ax16.minorticks_on()
+        # Radius
+        circle = plt.Circle((center_cl[0], center_cl[1]), clust_rad[0], 
+                            color='red', fill=False)
+        fig.gca().add_artist(circle)
+        plt.text(0.63, 0.93, 'Cluster region', transform = ax16.transAxes, \
+        bbox=dict(facecolor='white', alpha=0.8), fontsize=12)
+        # This color scheme makes higher prob stars look blacker.
+        cm = plt.cm.get_cmap('gist_yarg')
+        # Plot cluster region.
+        stars_clust_temp = [[], [], []]
+        for st_indx, star in enumerate(cluster_region):
+            if backg_value[0] > 0.005:
+                # Dense field
+                star_size = 15
+            else:
+                star_size = 20
+            stars_clust_temp[0].append(star[1])
+            stars_clust_temp[1].append(star[2])
+            stars_clust_temp[2].append(200*clus_reg_decont[st_indx]**8)       
+        plt.scatter(stars_clust_temp[0], stars_clust_temp[1], marker='o', 
+                    c=stars_clust_temp[2], s=star_size, edgecolors='black',\
+                    cmap=cm)
             
 
 
@@ -781,7 +744,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         plt.xlabel(r'$C-T_1$', fontsize=18)
         plt.ylabel(r'$T_1$', fontsize=18)
         tot_kde_clust = len(membership_prob_avrg_sort)
-        text = r'$N=%d\,|\,MI \leq 1.$' % tot_kde_clust
+        text = r'$N=%d\,|\,MI \geq 0.$' % tot_kde_clust
         plt.text(0.05, 0.93, text, transform = ax17.transAxes,
                  bbox=dict(facecolor='white', alpha=0.5), fontsize=14)
         # Set minor ticks
@@ -932,7 +895,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                          xerr=func(mag_y, *popt_col1), fmt='k.', lw=0.8, ms=0.,\
                          zorder=4)
             # Plot colorbar.
-            cbaxes19 = fig.add_axes([0.67, 0.185, 0.04, 0.005])
+            cbaxes19 = fig.add_axes([0.675, 0.185, 0.04, 0.005])
             cbar19 = plt.colorbar(cax=cbaxes19, ticks=[v_min,v_max],
                                  orientation='horizontal')
             cbar19.ax.tick_params(labelsize=9)
@@ -985,11 +948,49 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         # Plot isochrone.
         plt.plot(iso_moved[1], iso_moved[0], 'g', lw=1.2)
         # Plot colorbar.
-        cbaxes20 = fig.add_axes([0.925, 0.185, 0.04, 0.005])
+        cbaxes20 = fig.add_axes([0.93, 0.185, 0.04, 0.005])
         cbar20 = plt.colorbar(cax=cbaxes20, ticks=[v_min,v_max],
                              orientation='horizontal')
         cbar20.ax.tick_params(labelsize=9)
         
+        
+        
+    # Distribution of p_values.
+    # Check if decont algorithm was applied.
+    if not(flag_area_stronger):
+        ax21 = plt.subplot(gs1[10:12, 0:2])
+        plt.xlim(0, 1)
+        plt.ylim(0, 1)
+        plt.xlabel('p-values', fontsize=12)
+        ax21.minorticks_on()
+        ax21.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
+ 
+        xmin, xmax = min(p_vals_cl), max(p_vals_cl)
+        x_cl = np.mgrid[xmin:xmax:100j]
+        xmin, xmax = min(p_vals_f), max(p_vals_f)
+        x_f = np.mgrid[xmin:xmax:100j]
+        x_min, x_max = 0., 1.
+        binwidth = 0.05       
+        weights_c = np.ones_like(p_vals_cl)/len(p_vals_cl)
+        ax21.hist(p_vals_cl, bins=np.arange(int(x_min), int(x_max), binwidth),
+                weights=weights_c, histtype='step', color='blue')
+        plt.plot(x_cl, kde_cl_norm, c='b', ls='--', lw=2., label=r'$p-value_{cl}$')
+    
+        weights_f = np.ones_like(p_vals_f)/len(p_vals_f)
+        ax21.hist(p_vals_f, bins=np.arange(int(x_min), int(x_max), binwidth),
+                weights=weights_f, histtype='step', color='red')
+        plt.plot(x_f, kde_f_norm, c='r', ls='--', lw=2., label=r'$p-value_{f}$')
+        
+        text1 = r'$\overline{p-value_{cl}} = %0.2f$' '\n' % p_val_cl_avrg
+        text2 = r'$\overline{p-value_{f}} = %0.2f$' '\n' % p_val_f_avrg
+        text3 = r'$p-value\, = %0.2f$' % p_value 
+        text = text1+text2+text3
+        plt.text(0.05, 0.83, text, transform = ax21.transAxes, 
+             bbox=dict(facecolor='white', alpha=0.85), fontsize=12)
+    
+        handles, labels = ax21.get_legend_handles_labels()
+        ax21.legend(handles, labels, loc='upper right', numpoints=1,
+                    fontsize=12)        
         
 
     fig.tight_layout()

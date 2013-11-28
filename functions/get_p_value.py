@@ -76,7 +76,8 @@ def get_pval(flag_area_stronger, cluster_region, field_region,
         
         # Set number of runs for the p_value algorithm with a maximum of
         # 100 if only one field region was used.
-        runs = int(100/len(field_region))
+#        runs = int(100/len(field_region))
+        runs = 1
         
         # Only use stars inside cluster's radius.
         cluster_region_r = []
@@ -168,7 +169,7 @@ def get_pval(flag_area_stronger, cluster_region, field_region,
 #        print '\n', p_vals_cl, '\n'
 #        print p_vals_f, '\n'
 #        print p_value
-        raw_input()
+#        raw_input()
 
     # Skipping decontamination algorithm
     else:
