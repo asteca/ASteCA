@@ -410,11 +410,11 @@ all stars with photom errors < 0.3)? (y/n) ')
 
 
     # Get p_value for cluster region.
-    p_value, p_vals_cl, p_vals_f, kde_cl_norm, kde_f_norm, p_val_cl_avrg,\
-    p_val_f_avrg = gpv(flag_area_stronger, cluster_region, field_region,
-                       col1_data, mag_data, center_cl, clust_rad)
 #    p_value, p_vals_cl, p_vals_f, kde_cl_norm, kde_f_norm, p_val_cl_avrg,\
-#    p_val_f_avrg = -1., [0., 1.], [0., 1.], [], [], -1., -1.
+#    p_val_f_avrg = gpv(flag_area_stronger, cluster_region, field_region,
+#                       col1_data, mag_data, center_cl, clust_rad)
+    p_value, p_vals_cl, p_vals_f, kde_cl_norm, kde_f_norm, p_val_cl_avrg,\
+    p_val_f_avrg = -1., [0., 1.], [0., 1.], [], [], -1., -1.
     print 'p_value for cluster region vs field region obtained (%0.2f).'\
     % p_value
     

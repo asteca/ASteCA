@@ -15,6 +15,9 @@ def get_isochrones(mypath, clust_name):
     (m-M)o values.
     '''
     
+    # Path to isochrones dir.
+    iso_path = '/media/rest/github/isochrones/isochrones'
+    
     # Get extinction, age, metallicity and dist module for this cluster from
     # the file that stores this data.
     myfile = 'clusters_data_isos.dat'
@@ -52,10 +55,9 @@ def get_isochrones(mypath, clust_name):
             str_cl_z = '0.019'
         
         # Obtain ages from the isochrone file with the corresponding metallicity.
-        mypath2 = mypath+'/isochrones'
         cl_file = str_cl_z+'.dat'
         # Open the isochrone for this cluster's metallicity.
-        with open(join(mypath2, cl_file), mode="r") as f_iso:
+        with open(join(iso_path, cl_file), mode="r") as f_iso:
     
             # List that will hold all the ages in the file.        
             ages = []
@@ -106,12 +108,11 @@ def get_isochrones(mypath, clust_name):
 
 
     # Obtain ZAMS.
-    mypath2 = mypath+'/isochrones'
     cl_file = 'zams.dat'
     
     zams = [[], []]
     # Open the ZAMS isochrone.
-    with open(join(mypath2, cl_file), mode="r") as f_zams:
+    with open(join(iso_path, cl_file), mode="r") as f_zams:
         # Iterate through all lines.
         for line in f_zams:
 
