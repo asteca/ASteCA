@@ -7,7 +7,7 @@ Created on Fri Nov  1 17:58:28 2013
 
 import numpy as np
 import random as rd
-from scipy.stats import ks_2samp
+#from scipy.stats import ks_2samp
 from scipy import stats
 
 import rpy2.robjects as robjects
@@ -76,9 +76,7 @@ def get_pval(flag_area_stronger, cluster_region, field_region,
         
         # Set number of runs for the p_value algorithm with a maximum of
         # 100 if only one field region was used.
-#        runs = int(100/len(field_region))
-        print 'runs:', int(100/len(field_region))
-        runs = 5
+        runs = int(100/len(field_region))
         
         # Only use stars inside cluster's radius.
         cluster_region_r = []
@@ -159,18 +157,12 @@ def get_pval(flag_area_stronger, cluster_region, field_region,
         res_cl_f = kde_test(x1=m_cl, x2=m_f)
         p_val_cl_f = res_cl_f.rx2('pvalue')
         
-        kol_smir_d_p = ks_2samp(p_vals_cl, p_vals_f)
-        kol_smir_d, kol_smir_p = kol_smir_d_p[0], kol_smir_d_p[1]
-        print '  K-S statistic', kol_smir_d
-        print '  K-S p-value', kol_smir_p
+#        kol_smir_d_p = ks_2samp(p_vals_cl, p_vals_f)
+#        kol_smir_d, kol_smir_p = kol_smir_d_p[0], kol_smir_d_p[1]
+#        print '  K-S statistic', kol_smir_d
+#        print '  K-S p-value', kol_smir_p
         
         p_value = round(float(str(p_val_cl_f)[4:]), 2)
-        print '  KDE Test p_value', p_value
-        
-#        print '\n', p_vals_cl, '\n'
-#        print p_vals_f, '\n'
-#        print p_value
-#        raw_input()
 
     # Skipping decontamination algorithm
     else:

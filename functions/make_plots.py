@@ -877,19 +877,19 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                     c=m_p_m_temp_inv[2], s=40, cmap=cm, lw=0.5, \
                     vmin=v_min, vmax=v_max)
         # If list is not empty.
-#        if m_p_m_temp_inv[1]:
-        # Plot error bars at several mag values.
-        mag_y = np.arange(int(min(m_p_m_temp_inv[1])+0.5), 
-                          int(max(m_p_m_temp_inv[1])+0.5) + 0.1)
-        x_val = [min(3.9, max(col1_data)+0.2) - 0.4]*len(mag_y)
-        plt.errorbar(x_val, mag_y, yerr=func(mag_y, *popt_mag), 
-                     xerr=func(mag_y, *popt_col1), fmt='k.', lw=0.8, ms=0.,\
-                     zorder=4)
-        # Plot colorbar.
-        cbaxes19 = fig.add_axes([0.678, 0.318, 0.04, 0.005])
-        cbar19 = plt.colorbar(cax=cbaxes19, ticks=[v_min,v_max],
-                             orientation='horizontal')
-        cbar19.ax.tick_params(labelsize=9) 
+        if m_p_m_temp_inv[1]:
+            # Plot error bars at several mag values.
+            mag_y = np.arange(int(min(m_p_m_temp_inv[1])+0.5), 
+                              int(max(m_p_m_temp_inv[1])+0.5) + 0.1)
+            x_val = [min(3.9, max(col1_data)+0.2) - 0.4]*len(mag_y)
+            plt.errorbar(x_val, mag_y, yerr=func(mag_y, *popt_mag), 
+                         xerr=func(mag_y, *popt_col1), fmt='k.', lw=0.8, ms=0.,\
+                         zorder=4)
+            # Plot colorbar.
+            cbaxes19 = fig.add_axes([0.678, 0.318, 0.04, 0.005])
+            cbar19 = plt.colorbar(cax=cbaxes19, ticks=[v_min,v_max],
+                                 orientation='horizontal')
+            cbar19.ax.tick_params(labelsize=9) 
 
         
         
