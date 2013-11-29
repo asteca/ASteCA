@@ -997,7 +997,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         ax22.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
         plt.scatter(quantiles[0], quantiles[1], marker='o', c='k', s=10.)
         text = r'$R^2\, = %0.2f$' % r_squared
-        plt.text(0.05, 0.87, text, transform = ax22.transAxes, 
+        plt.text(0.05, 0.9, text, transform = ax22.transAxes, 
              bbox=dict(facecolor='white', alpha=0.85), fontsize=12)
         plt.plot([0., 1.], [0., 1.], color='k', linestyle='--', linewidth=1.)
            
