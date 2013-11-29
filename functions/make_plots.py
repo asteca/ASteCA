@@ -731,11 +731,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
             
 
 
-    # Cluster's stars CMD of N_c stars (the approx number of member stars)
-    # inside cluster's radius with the smallest decontamination index 
-    # (most probable members).
-    # Check if decont algorithm was applied.
-    if not(flag_area_stronger) and n_c > 0:
+    # Cluster's stars CMD. Check if decont algorithm was applied.
+    if not(flag_area_stronger):
         ax17 = plt.subplot(gs1[8:10, 0:2])
         #Set plot limits
         plt.xlim(col1_min, col1_max)
@@ -782,11 +779,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
 
 
 
-    # Cluster's stars CMD of N_c stars (the approx number of member stars)
-    # inside cluster's radius with the smallest decontamination index 
-    # (most probable members).
-    # Check if decont algorithm was applied.
-    if not(flag_area_stronger) and n_c > 0:
+    # Cluster's stars CMD. Check if decont algorithm was applied.
+    if not(flag_area_stronger):
         ax18 = plt.subplot(gs1[8:10, 2:4])
         #Set plot limits
         plt.xlim(col1_min, col1_max)
@@ -842,11 +836,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
        
         
         
-    # Cluster's stars CMD of N_c stars (the approx number of member stars)
-    # inside cluster's radius with the smallest decontamination index 
-    # (most probable members).
-    # Check if decont algorithm was applied.
-    if not(flag_area_stronger) and n_c > 0:
+    # Cluster's stars CMD. Check if decont algorithm was applied.
+    if not(flag_area_stronger):
         ax19 = plt.subplot(gs1[8:10, 4:6])
         #Set plot limits
         plt.xlim(col1_min, col1_max)
@@ -885,23 +876,20 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         plt.scatter(m_p_m_temp_inv[0], m_p_m_temp_inv[1], marker='o', 
                     c=m_p_m_temp_inv[2], s=40, cmap=cm, lw=0.5, \
                     vmin=v_min, vmax=v_max)
-        print 'afuera'
         # If list is not empty.
-        if m_p_m_temp_inv[1]:
-            print 'adentro'
-            print v_min,v_max
-            # Plot error bars at several mag values.
-            mag_y = np.arange(int(min(m_p_m_temp_inv[1])+0.5), 
-                              int(max(m_p_m_temp_inv[1])+0.5) + 0.1)
-            x_val = [min(3.9, max(col1_data)+0.2) - 0.4]*len(mag_y)
-            plt.errorbar(x_val, mag_y, yerr=func(mag_y, *popt_mag), 
-                         xerr=func(mag_y, *popt_col1), fmt='k.', lw=0.8, ms=0.,\
-                         zorder=4)
-            # Plot colorbar.
-            cbaxes19 = fig.add_axes([0.68, 0.318, 0.04, 0.005])
-            cbar19 = plt.colorbar(cax=cbaxes19, ticks=[v_min,v_max],
-                                 orientation='horizontal')
-            cbar19.ax.tick_params(labelsize=9)
+#        if m_p_m_temp_inv[1]:
+        # Plot error bars at several mag values.
+        mag_y = np.arange(int(min(m_p_m_temp_inv[1])+0.5), 
+                          int(max(m_p_m_temp_inv[1])+0.5) + 0.1)
+        x_val = [min(3.9, max(col1_data)+0.2) - 0.4]*len(mag_y)
+        plt.errorbar(x_val, mag_y, yerr=func(mag_y, *popt_mag), 
+                     xerr=func(mag_y, *popt_col1), fmt='k.', lw=0.8, ms=0.,\
+                     zorder=4)
+        # Plot colorbar.
+        cbaxes19 = fig.add_axes([0.678, 0.318, 0.04, 0.005])
+        cbar19 = plt.colorbar(cax=cbaxes19, ticks=[v_min,v_max],
+                             orientation='horizontal')
+        cbar19.ax.tick_params(labelsize=9) 
 
         
         
@@ -960,40 +948,40 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         
     # Distribution of p_values.
     # Check if decont algorithm was applied.
-    if not(flag_area_stronger):
-        ax21 = plt.subplot(gs1[10:12, 0:2])
-        plt.xlim(0, 1)
-        plt.ylim(0, 1)
-        plt.xlabel('p-values', fontsize=12)
-        ax21.minorticks_on()
-        ax21.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
- 
-        xmin, xmax = min(p_vals_cl), max(p_vals_cl)
-        x_cl = np.mgrid[xmin:xmax:100j]
-        xmin, xmax = min(p_vals_f), max(p_vals_f)
-        x_f = np.mgrid[xmin:xmax:100j]
-        x_min, x_max = 0., 1.
-        binwidth = 0.05       
-        weights_c = np.ones_like(p_vals_cl)/len(p_vals_cl)
-        ax21.hist(p_vals_cl, bins=np.arange(int(x_min), int(x_max), binwidth),
-                weights=weights_c, histtype='step', color='blue')
-        plt.plot(x_cl, kde_cl_norm, c='b', ls='--', lw=2., label=r'$p-value_{cl}$')
-    
-        weights_f = np.ones_like(p_vals_f)/len(p_vals_f)
-        ax21.hist(p_vals_f, bins=np.arange(int(x_min), int(x_max), binwidth),
-                weights=weights_f, histtype='step', color='red')
-        plt.plot(x_f, kde_f_norm, c='r', ls='--', lw=2., label=r'$p-value_{f}$')
-        
-        text1 = r'$\overline{p-value_{cl}} = %0.2f$' '\n' % p_val_cl_avrg
-        text2 = r'$\overline{p-value_{f}} = %0.2f$' '\n' % p_val_f_avrg
-        text3 = r'$p-value\, = %0.2f$' % p_value 
-        text = text1+text2+text3
-        plt.text(0.05, 0.83, text, transform = ax21.transAxes, 
-             bbox=dict(facecolor='white', alpha=0.85), fontsize=12)
-    
-        handles, labels = ax21.get_legend_handles_labels()
-        ax21.legend(handles, labels, loc='upper right', numpoints=1,
-                    fontsize=12)        
+#    if not(flag_area_stronger):
+#        ax21 = plt.subplot(gs1[10:12, 0:2])
+#        plt.xlim(0, 1)
+#        plt.ylim(0, 1)
+#        plt.xlabel('p-values', fontsize=12)
+#        ax21.minorticks_on()
+#        ax21.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
+# 
+#        xmin, xmax = min(p_vals_cl), max(p_vals_cl)
+#        x_cl = np.mgrid[xmin:xmax:100j]
+#        xmin, xmax = min(p_vals_f), max(p_vals_f)
+#        x_f = np.mgrid[xmin:xmax:100j]
+#        x_min, x_max = 0., 1.
+#        binwidth = 0.05       
+#        weights_c = np.ones_like(p_vals_cl)/len(p_vals_cl)
+#        ax21.hist(p_vals_cl, bins=np.arange(int(x_min), int(x_max), binwidth),
+#                weights=weights_c, histtype='step', color='blue')
+#        plt.plot(x_cl, kde_cl_norm, c='b', ls='--', lw=2., label=r'$p-value_{cl}$')
+#    
+#        weights_f = np.ones_like(p_vals_f)/len(p_vals_f)
+#        ax21.hist(p_vals_f, bins=np.arange(int(x_min), int(x_max), binwidth),
+#                weights=weights_f, histtype='step', color='red')
+#        plt.plot(x_f, kde_f_norm, c='r', ls='--', lw=2., label=r'$p-value_{f}$')
+#        
+#        text1 = r'$\overline{p-value_{cl}} = %0.2f$' '\n' % p_val_cl_avrg
+#        text2 = r'$\overline{p-value_{f}} = %0.2f$' '\n' % p_val_f_avrg
+#        text3 = r'$p-value\, = %0.2f$' % p_value 
+#        text = text1+text2+text3
+#        plt.text(0.05, 0.83, text, transform = ax21.transAxes, 
+#             bbox=dict(facecolor='white', alpha=0.85), fontsize=12)
+#    
+#        handles, labels = ax21.get_legend_handles_labels()
+#        ax21.legend(handles, labels, loc='upper right', numpoints=1,
+#                    fontsize=12)        
         
 
     fig.tight_layout()

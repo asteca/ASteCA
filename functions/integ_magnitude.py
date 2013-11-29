@@ -14,4 +14,10 @@ def integ_mag():
     
     
     # Calculate completeness limit.
-    mag_lim = 
+    mag_comp_lim = 
+    
+    # Total number of stars up to that completitude limit.
+    n_comp_tot = len()
+    
+    # Total number of stars in cluster region.
+    n_tot = len()
