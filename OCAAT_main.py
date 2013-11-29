@@ -411,31 +411,18 @@ all stars with photom errors < 0.3)? (y/n) ')
 
 
     # Get p_value for cluster region.
-#    p_value, p_vals_cl, p_vals_f, kde_cl_norm, kde_f_norm, p_val_cl_avrg,\
-#    p_val_f_avrg = g_pv(flag_area_stronger, cluster_region, field_region,
-#                       col1_data, mag_data, center_cl, clust_rad)
     p_value, p_vals_cl, p_vals_f, kde_cl_norm, kde_f_norm, p_val_cl_avrg,\
-    p_val_f_avrg = -1., [0., 1.], [0., 1.], [], [], -1., -1.
+    p_val_f_avrg = g_pv(flag_area_stronger, cluster_region, field_region,
+                       col1_data, mag_data, center_cl, clust_rad)
+#    p_value, p_vals_cl, p_vals_f, kde_cl_norm, kde_f_norm, p_val_cl_avrg,\
+#    p_val_f_avrg = -1., [0., 1.], [0., 1.], [], [], -1., -1.
     print 'p_value for cluster region vs field region obtained (%0.2f).'\
     % p_value
-    
-    p_vals_cl = [53.69362609, 68.21771806, 20.39747855, 28.20464957, 59.34132076, 34.27464770,
-75.13627501, 23.45269609, 44.89763339, 26.85714117, 66.84415646, 38.91338943,
-60.43568491, 34.95596274, 28.55883513, 50.67017178, 16.85100445, 54.25102748,
-29.40165820, 16.92651738, 56.90113860, 45.41339674, 25.36584606, 52.83371822,
--0.04490587, 35.05115462, 35.59659405, 58.64984699, 13.33865747, 41.07363898]
-                 
-    p_vals_f = [38.51620, 82.69897, 11.46010, 85.26367, 62.03044, 22.68867, 63.30991, 43.45314,
-39.40062, 47.26387, 23.00968, 58.34524, 53.78290, 23.93189, 61.97718, 13.21769,
-36.86564, 45.50950, 47.10698, 23.92704, 56.55629, 31.71361, 15.31962, 13.38162,
-37.79644, 55.19306, 69.87253, 43.69660, 65.16929, 12.46024, 49.49598, 30.42613,
-43.68916, 38.54011, 25.36554, 56.87987, 53.52410, 32.34740, 59.93865, 57.08575,
-41.48073, 24.40187, 37.97007, 59.28741, 19.05832, 80.81034, 30.57704, 73.31060,
-52.48388, 53.36333]
-    
+
+
     # Get QQ plot for p-values distributions.
-    qq_points, r_square = g_qq(p_vals_cl, p_vals_f)
-    print 'QQ-plot obtained (R^2 = %0.2f)' % r_square
+    quantiles, r_squared = g_qq(p_vals_cl, p_vals_f)
+    print 'QQ-plot obtained (R^2 = %0.2f)' % r_squared
     
     
     
@@ -521,9 +508,9 @@ all stars with photom errors < 0.3)? (y/n) ')
        stars_out, stars_in_rjct,
        stars_out_rjct, n_c, flag_area_stronger, cluster_region, field_region,
        p_value, p_vals_cl, p_vals_f, kde_cl_norm, kde_f_norm, p_val_cl_avrg,
-       p_val_f_avrg, clus_reg_decont, field_reg_box, kde_cl, kde,
-       membership_prob_avrg_sort, iso_moved, zams_iso, cl_e_bv, cl_age, cl_feh,
-       cl_dmod)
+       p_val_f_avrg, quantiles, r_squared, clus_reg_decont, field_reg_box,
+       kde_cl, kde, membership_prob_avrg_sort, iso_moved, zams_iso, cl_e_bv,
+       cl_age, cl_feh, cl_dmod)
     print 'Plots created.'
 
 

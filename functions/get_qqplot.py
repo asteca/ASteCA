@@ -12,6 +12,7 @@ the cluster's KDE with the field region's KDEs.
 
 import numpy as np
 from scipy.stats.mstats import mquantiles
+from scipy import stats
 
 
 def ppoints(vector):
@@ -30,10 +31,21 @@ def ppoints(vector):
     
 def qqplot(p_vals_cl, p_vals_f):
     
+    # Interpolate the larger list.
+    if len(p_vals_f) >= len(p_vals_cl):
+        A, B = p_vals_f, p_vals_cl
+    else:
+        B, A = p_vals_f, p_vals_cl
     # Calculate the quantiles, using R's defaults for 'alphap' and 'betap'
-    # (ie: R's type 7)    
-    quant = mquantiles(p_vals_f, prob=ppoints(p_vals_cl), alphap=1., betap=1.)
+    # (ie: R's type 7)        
+    quant = mquantiles(A, prob=ppoints(B), alphap=1., betap=1.)
     
-    print quant
-
-    raw_input()
+    quantiles = [sorted(B), sorted(quant.tolist())]
+    print quantiles
+    
+    slope, intercept, r_value, p_value, std_err = stats.linregress(quantiles)
+    r_squared = r_value**2
+    
+    print slope, intercept, r_value, p_value, std_err
+    
+    return quantiles, r_squared
