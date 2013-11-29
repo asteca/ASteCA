@@ -421,7 +421,7 @@ all stars with photom errors < 0.3)? (y/n) ')
 
 
     # Get QQ plot for p-values distributions.
-    quantiles, r_squared = g_qq(p_vals_cl, p_vals_f)
+    quantiles, r_squared, slope, intercept = g_qq(p_vals_cl, p_vals_f)
     print 'QQ-plot obtained (R^2 = %0.2f)' % r_squared
     
     
@@ -508,7 +508,8 @@ all stars with photom errors < 0.3)? (y/n) ')
        stars_out, stars_in_rjct,
        stars_out_rjct, n_c, flag_area_stronger, cluster_region, field_region,
        p_value, p_vals_cl, p_vals_f, kde_cl_norm, kde_f_norm, p_val_cl_avrg,
-       p_val_f_avrg, quantiles, r_squared, clus_reg_decont, field_reg_box,
+       p_val_f_avrg, quantiles, r_squared, slope, intercept, clus_reg_decont,
+       field_reg_box,
        kde_cl, kde, membership_prob_avrg_sort, iso_moved, zams_iso, cl_e_bv,
        cl_age, cl_feh, cl_dmod)
     print 'Plots created.'

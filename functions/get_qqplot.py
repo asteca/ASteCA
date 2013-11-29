@@ -41,11 +41,10 @@ def qqplot(p_vals_cl, p_vals_f):
     quant = mquantiles(A, prob=ppoints(B), alphap=1., betap=1.)
     
     quantiles = [sorted(B), sorted(quant.tolist())]
-    print quantiles
     
     slope, intercept, r_value, p_value, std_err = stats.linregress(quantiles)
     r_squared = r_value**2
     
     print slope, intercept, r_value, p_value, std_err
     
-    return quantiles, r_squared
+    return quantiles, r_squared, slope, intercept

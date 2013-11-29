@@ -23,7 +23,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                stars_out, stars_in_rjct, stars_out_rjct, n_c, flag_area_stronger,
                cluster_region, field_region, p_value, p_vals_cl, p_vals_f,
                kde_cl_norm, kde_f_norm, p_val_cl_avrg, p_val_f_avrg, quantiles,
-               r_squared, clus_reg_decont_lst, field_reg_box,
+               r_squared, slope, intercept, clus_reg_decont_lst, field_reg_box,
                kde_cl, kde, membership_prob_avrg_sort, iso_moved, zams_iso,
                cl_e_bv, cl_age, cl_feh, cl_dmod):
     '''
@@ -989,16 +989,17 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     # Check if decont algorithm was applied.
     if not(flag_area_stronger):
         ax22 = plt.subplot(gs1[10:12, 2:4])
-#        plt.xlim(min(quantiles[0]), max(quantiles[0]))
-#        plt.ylim(0, 1)
+        plt.xlim(-0.05, 1.05)
+        plt.ylim(-0.05, 1.05)
         plt.xlabel('quantiles_0', fontsize=12)
         plt.ylabel('quantiles_1', fontsize=12)
         ax22.minorticks_on()
         ax22.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
         plt.scatter(quantiles[0], quantiles[1], marker='o', c='k', s=10.)
         text = r'$R^2\, = %0.2f$' % r_squared
-        plt.text(0.05, 0.83, text, transform = ax22.transAxes, 
+        plt.text(0.05, 0.87, text, transform = ax22.transAxes, 
              bbox=dict(facecolor='white', alpha=0.85), fontsize=12)
+        plt.plot([0., 1.], [0., 1.], color='k', linestyle='--', linewidth=1.)
            
         
         
