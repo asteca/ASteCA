@@ -10,37 +10,30 @@ Calculate the QQ-plot for the distribution of p-values obtained comparing
 the cluster's KDE with the field region's KDEs.
 '''
 
+import numpy as np
+from scipy.stats.mstats import mquantiles
+
 
 def ppoints(vector):
     '''
-    Mimics R's function 'ppoints'.
+    Analogue to R's `ppoints` function
+    see details at http://stat.ethz.ch/R-manual/R-patched/library/stats/html/ppoints.html 
     '''
-
-    m_range = int(vector[0]) if len(vector)==1 else len(vector)
-        
-    n = vector[0] if len(vector)==1 else len(vector)
+    try:
+        n = np.float(len(vector))
+    except TypeError:
+        n = np.float(vector)
     a = 3./8. if n <= 10 else 1./2
-         
-    m_value =  n if len(vector)==1 else m_range
-    pp_list = [((m+1)-a)/(m_value+(1-a)-a) for m in range(m_range)]
     
-    return pp_list
-    
-    
-def quantile():
-    '''
-    Mimics R's function 'quantile'.
-    '''
-    
+    return (np.arange(n) + 1 - a)/(n + 1 - 2*a)
     
     
 def qqplot(p_vals_cl, p_vals_f):
     
-    # Call ppoints function.
-    B = ppoints(p_vals_cl)
-    print B
+    # Calculate the quantiles, using R's defaults for 'alphap' and 'betap'
+    # (ie: R's type 7)    
+    quant = mquantiles(p_vals_f, prob=ppoints(p_vals_cl), alphap=1., betap=1.)
     
-    C = ppoints(p_vals_f)
-    print C
+    print quant
 
     raw_input()
