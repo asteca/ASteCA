@@ -51,7 +51,8 @@ from functions.get_regions import get_regions as g_r
 from functions.field_decont_kde import field_decont_kde as fdk
 #from functions.field_decont_dias import field_decont_dias as fdd
 
-from functions.get_p_value import get_pval as gpv
+from functions.get_p_value import get_pval as g_pv
+from functions.get_qqplot import qqplot as g_qq
 from functions.get_most_probable_members import get_most_prob_memb as g_m_p_m
 from functions.make_plots import make_plots as mp
 from functions.add_data_output import add_data_output as a_d_o
@@ -411,12 +412,28 @@ all stars with photom errors < 0.3)? (y/n) ')
 
     # Get p_value for cluster region.
 #    p_value, p_vals_cl, p_vals_f, kde_cl_norm, kde_f_norm, p_val_cl_avrg,\
-#    p_val_f_avrg = gpv(flag_area_stronger, cluster_region, field_region,
+#    p_val_f_avrg = g_pv(flag_area_stronger, cluster_region, field_region,
 #                       col1_data, mag_data, center_cl, clust_rad)
     p_value, p_vals_cl, p_vals_f, kde_cl_norm, kde_f_norm, p_val_cl_avrg,\
     p_val_f_avrg = -1., [0., 1.], [0., 1.], [], [], -1., -1.
     print 'p_value for cluster region vs field region obtained (%0.2f).'\
     % p_value
+    
+    p_vals_cl = [20.439129, 45.339383, 26.474899, 36.409435, 41.690680,
+                 43.597484, 19.167574,19.258653, 46.870292, 19.018450,
+                 34.379961, 26.588331, 41.197512, 58.845735,19.266880,
+                 19.366026, 38.199784, 25.021612, 38.585905, 39.954925,
+                 41.987629,89.712387, 39.466486, 50.659410, 8.223344,
+                 60.332769, 20.387427, 40.324141,71.046308, 19.180428,
+                 42.079515, 36.718962, 76.094525, 45.456335, 55.678425,
+                 84.186454, 31.662718, 52.640821, 49.022927, 29.800106,
+                 63.302508, 43.928516,60.759910, 23.349476, 23.445973,
+                 12.332187, 48.599801, 46.208535, 45.119189,22.561869]
+    p_vals_f = [10.3]
+    
+    # Get QQ plot for p-values distributions.
+    qq_points, r_square = g_qq(p_vals_cl, p_vals_f)
+    print 'QQ-plot obtained (R^2 = %0.2f)' % r_square
     
     
     
