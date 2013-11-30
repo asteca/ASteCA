@@ -30,11 +30,18 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     Make all plots.
     '''
     
-    # Exponential fitted function.
     def func(x, a, b, c):
         '''Exponential function.
         '''
         return a * np.exp(b * x) + c
+        
+    
+    def line(x,slope, intercept):
+        '''
+        Linar function.
+        '''
+        y = slope*x + intercept
+        return y
 
     def three_params(x):
         '''
@@ -1000,6 +1007,10 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         plt.text(0.05, 0.9, text, transform = ax22.transAxes, 
              bbox=dict(facecolor='white', alpha=0.85), fontsize=12)
         plt.plot([0., 1.], [0., 1.], color='k', linestyle='--', linewidth=1.)
+        # Plot qq-plot line fitted.
+        x = np.arange(0.,1.1,0.1)
+        y = line(x, slope, intercept)
+        plt.plot(x,y, color='r', linestyle='--')
            
         
         
