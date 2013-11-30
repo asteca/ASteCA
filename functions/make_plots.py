@@ -807,15 +807,11 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         cm = plt.cm.get_cmap('RdYlBu_r')
         m_p_m_temp = [[], [], []]
         for star in membership_prob_avrg_sort:
-            dist = np.sqrt((center_cl[0]-star[1])**2 + \
-            (center_cl[1]-star[2])**2)
-            # Only plot stars inside the cluster's radius.
-            if dist <= clust_rad[0]:
-                # Only plot stars with MI>=0.5
-                if star[7] >= 0.5:
-                    m_p_m_temp[0].append(star[5])
-                    m_p_m_temp[1].append(star[3])
-                    m_p_m_temp[2].append(star[7])
+            # Only plot stars with MI>=0.5
+            if star[7] >= 0.5:
+                m_p_m_temp[0].append(star[5])
+                m_p_m_temp[1].append(star[3])
+                m_p_m_temp[2].append(star[7])
         # Create new list with inverted values so higher prob stars are on top.
         m_p_m_temp_inv = [i[::-1] for i in m_p_m_temp]
         plt.text(0.05, 0.93, r'$N=%d\,|\,MI \geq 0.5$' % len(m_p_m_temp[0]), 
@@ -864,15 +860,11 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         cm = plt.cm.get_cmap('RdYlBu_r')
         m_p_m_temp = [[], [], []]
         for star in membership_prob_avrg_sort:
-            dist = np.sqrt((center_cl[0]-star[1])**2 + \
-            (center_cl[1]-star[2])**2)
-            # Only plot stars inside the cluster's radius.
-            if dist <= clust_rad[0]:
-                # Only plot stars with MI>=0.75
-                if star[7] >= 0.75:
-                    m_p_m_temp[0].append(star[5])
-                    m_p_m_temp[1].append(star[3])
-                    m_p_m_temp[2].append(star[7])
+            # Only plot stars with MI>=0.75
+            if star[7] >= 0.75:
+                m_p_m_temp[0].append(star[5])
+                m_p_m_temp[1].append(star[3])
+                m_p_m_temp[2].append(star[7])
         # Create new list with inverted values so higher prob stars are on top.
         m_p_m_temp_inv = [i[::-1] for i in m_p_m_temp]
         plt.text(0.05, 0.93, r'$N=%d\,|\,MI \geq 0.75$' % len(m_p_m_temp[0]), 
@@ -998,20 +990,48 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         ax22 = plt.subplot(gs1[10:12, 2:4])
         plt.xlim(-0.05, 1.05)
         plt.ylim(-0.05, 1.05)
-        plt.xlabel('quantiles_0', fontsize=12)
-        plt.ylabel('quantiles_1', fontsize=12)
+        plt.xlabel(r'$p-value_{cl}$', fontsize=16)
+        plt.ylabel(r'$p-value_{f}$', fontsize=16)
         ax22.minorticks_on()
         ax22.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
         plt.scatter(quantiles[0], quantiles[1], marker='o', c='k', s=10.)
         text = r'$R^2\, = %0.2f$' % r_squared
-        plt.text(0.05, 0.9, text, transform = ax22.transAxes, 
+        plt.text(0.05, 0.92, text, transform = ax22.transAxes, 
              bbox=dict(facecolor='white', alpha=0.85), fontsize=12)
         plt.plot([0., 1.], [0., 1.], color='k', linestyle='--', linewidth=1.)
-        # Plot qq-plot line fitted.
+        # Plot qq-plot fitted line.
         x = np.arange(0.,1.1,0.1)
         y = line(x, slope, intercept)
         plt.plot(x,y, color='r', linestyle='--')
            
+        
+        
+    # Norm fit for KDE probability values.
+    # Check if decont algorithm was applied.
+    if not(flag_area_stronger):
+        from scipy.stats import norm
+        import matplotlib.mlab as mlab
+        
+        ax23 = plt.subplot(gs1[10:12, 4:6])
+        plt.xlim(0., 1.)
+        plt.xlabel('cluster membership', fontsize=12)
+        plt.ylabel('prob', fontsize=12)
+        ax23.minorticks_on()
+        ax23.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
+        prob_data = [star[7] for star in membership_prob_avrg_sort]
+        # Bbest Gaussian fit of data.
+        (mu, sigma) = norm.fit(prob_data)
+        # Text.
+        text = r'$\mu=%.3f,\ \sigma=%.3f$' %(mu, sigma)
+        plt.text(0.05, 0.92, text, transform = ax23.transAxes, 
+             bbox=dict(facecolor='white', alpha=0.85), fontsize=12)
+        # Histogram of the data.
+        n, bins, patches = plt.hist(prob_data, 60, normed=1, facecolor='green', alpha=0.75)
+        # Best fit line.
+        y = mlab.normpdf( bins, mu, sigma)
+        plt.plot(bins, y, 'r--', linewidth=2)
+
+
         
         
 

@@ -18,7 +18,8 @@ from scipy import stats
 def ppoints(vector):
     '''
     Analogue to R's `ppoints` function
-    see details at http://stat.ethz.ch/R-manual/R-patched/library/stats/html/ppoints.html 
+    see details at 'http://stat.ethz.ch/R-manual/R-patched/library/stats/html/
+    ppoints.html'
     '''
     try:
         n = np.float(len(vector))
@@ -37,14 +38,21 @@ def qqplot(p_vals_cl, p_vals_f):
     else:
         B, A = p_vals_f, p_vals_cl
     # Calculate the quantiles, using R's defaults for 'alphap' and 'betap'
-    # (ie: R's type 7)        
+    # (ie: R's type 7) See: 'http://docs.scipy.org/doc/scipy/reference/generated/
+    # scipy.stats.mstats.mquantiles.html'
     quant = mquantiles(A, prob=ppoints(B), alphap=1., betap=1.)
     
-    quantiles = [sorted(B), sorted(quant.tolist())]
+    # Set order so the names of the axis when plotting are unchanged.
+    if len(p_vals_f) >= len(p_vals_cl):
+        quantiles = [sorted(B), sorted(quant.tolist())]
+    else:
+        quantiles = [sorted(quant.tolist()), sorted(B)]
     
+    # Calculate R^2 value, slope and intercept of best fir line and p-value
+    # (not clear about the meaning of this last one though)
     slope, intercept, r_value, p_value, std_err = stats.linregress(quantiles)
     r_squared = r_value**2
     
-    print slope, intercept, r_value, p_value, std_err
+#    print slope, intercept, r_value, p_value, std_err
     
     return quantiles, r_squared, slope, intercept
