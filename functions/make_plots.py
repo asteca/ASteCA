@@ -1014,8 +1014,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         
         ax23 = plt.subplot(gs1[10:12, 4:6])
         plt.xlim(0., 1.)
-        plt.xlabel('cluster membership', fontsize=12)
-        plt.ylabel('prob', fontsize=12)
+        plt.xlabel('cluster membership prob', fontsize=12)
         ax23.minorticks_on()
         ax23.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
         prob_data = [star[7] for star in membership_prob_avrg_sort]
