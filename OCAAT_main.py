@@ -411,10 +411,11 @@ all stars with photom errors < 0.3)? (y/n) ')
 
 
     # Get p_value for cluster region.
-    p_value, p_vals_cl, p_vals_f, kde_cl_norm, kde_f_norm, p_val_cl_avrg,\
-    p_val_f_avrg = g_pv(flag_area_stronger, cluster_region, field_region,
-                       col1_data, mag_data, center_cl, clust_rad)
-#    p_value, p_vals_cl, p_vals_f, kde_cl_norm, kde_f_norm, p_val_cl_avrg,\
+    p_value, p_vals_cl, p_vals_f, kde_cl_1d, kde_f_1d, x_kde_cl, x_kde_f, \
+    p_val_cl_avrg, p_val_f_avrg = g_pv(flag_area_stronger, cluster_region,
+                                       field_region, col1_data, mag_data, 
+                                       center_cl, clust_rad)
+#    p_value, p_vals_cl, p_vals_f, kde_cl_1d, kde_f_1d, p_val_cl_avrg,\
 #    p_val_f_avrg = -1., [0., 1.], [0., 1.], [], [], -1., -1.
     print 'p_value for cluster region vs field region obtained (%0.2f).'\
     % p_value
@@ -507,9 +508,9 @@ all stars with photom errors < 0.3)? (y/n) ')
        use_errors_fit, k_prof, k_pr_err, flag_king_no_conver, stars_in,
        stars_out, stars_in_rjct,
        stars_out_rjct, n_c, flag_area_stronger, cluster_region, field_region,
-       p_value, p_vals_cl, p_vals_f, kde_cl_norm, kde_f_norm, p_val_cl_avrg,
-       p_val_f_avrg, quantiles, r_squared, slope, intercept, clus_reg_decont,
-       field_reg_box,
+       p_value, p_vals_cl, p_vals_f, kde_cl_1d, kde_f_1d, x_kde_cl, x_kde_f,
+       p_val_cl_avrg, p_val_f_avrg, quantiles, r_squared, slope, intercept,
+       clus_reg_decont, field_reg_box,
        kde_cl, kde, membership_prob_avrg_sort, iso_moved, zams_iso, cl_e_bv,
        cl_age, cl_feh, cl_dmod)
     print 'Plots created.'

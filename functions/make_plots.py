@@ -22,8 +22,9 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                flag_king_no_conver, stars_in,
                stars_out, stars_in_rjct, stars_out_rjct, n_c, flag_area_stronger,
                cluster_region, field_region, p_value, p_vals_cl, p_vals_f,
-               kde_cl_norm, kde_f_norm, p_val_cl_avrg, p_val_f_avrg, quantiles,
-               r_squared, slope, intercept, clus_reg_decont_lst, field_reg_box,
+               kde_cl_1d, kde_f_1d, x_kde_cl, x_kde_f, p_val_cl_avrg,
+               p_val_f_avrg, quantiles, r_squared, slope, intercept,
+               clus_reg_decont_lst, field_reg_box,
                kde_cl, kde, membership_prob_avrg_sort, iso_moved, zams_iso,
                cl_e_bv, cl_age, cl_feh, cl_dmod):
     '''
@@ -950,37 +951,32 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     if not(flag_area_stronger):
         ax21 = plt.subplot(gs1[10:12, 0:2])
         plt.xlim(0, 1)
-        plt.ylim(0, 1)
+        plt.ylim(0, max(max(kde_f_1d), max(kde_cl_1d))+0.5)
         plt.xlabel('p-values', fontsize=12)
         ax21.minorticks_on()
         ax21.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
- 
-        xmin, xmax = min(p_vals_cl), max(p_vals_cl)
-        x_cl = np.mgrid[xmin:xmax:100j]
-        xmin, xmax = min(p_vals_f), max(p_vals_f)
-        x_f = np.mgrid[xmin:xmax:100j]
-        x_min, x_max = 0., 1.
-        binwidth = 0.05       
-        weights_c = np.ones_like(p_vals_cl)/len(p_vals_cl)
-        ax21.hist(p_vals_cl, bins=np.arange(int(x_min), int(x_max), binwidth),
-                weights=weights_c, histtype='step', color='blue')
-        plt.plot(x_cl, kde_cl_norm, c='b', ls='--', lw=2., label=r'$p-value_{cl}$')
-    
-        weights_f = np.ones_like(p_vals_f)/len(p_vals_f)
-        ax21.hist(p_vals_f, bins=np.arange(int(x_min), int(x_max), binwidth),
-                weights=weights_f, histtype='step', color='red')
-        plt.plot(x_f, kde_f_norm, c='r', ls='--', lw=2., label=r'$p-value_{f}$')
-        
-        text1 = r'$\overline{p-value_{cl}} = %0.2f$' '\n' % p_val_cl_avrg
-        text2 = r'$\overline{p-value_{f}} = %0.2f$' '\n' % p_val_f_avrg
-        text3 = r'$p-value\, = %0.2f$' % p_value 
-        text = text1+text2+text3
-        plt.text(0.05, 0.83, text, transform = ax21.transAxes, 
-             bbox=dict(facecolor='white', alpha=0.85), fontsize=12)
-    
-        handles, labels = ax21.get_legend_handles_labels()
-        ax21.legend(handles, labels, loc='upper right', numpoints=1,
-                    fontsize=12)        
+        # Limits and bin width for histograms.
+        x_min, x_max, binwidth = 0., 1., 0.05
+        # Plot cluster vs field histogram.
+#        ax21.hist(p_vals_cl, bins=np.arange(int(x_min), int(x_max), binwidth),
+#                normed=True, histtype='step', color='blue')
+        # Plot 1D KDE.
+        plt.plot(x_kde_cl, kde_cl_1d, c='b', ls='--', lw=2., label=r'$p-value_{cl}$')
+        # Plot field vs field histogram.
+#        ax21.hist(p_vals_f, bins=np.arange(int(x_min), int(x_max), binwidth),
+#                normed=True, histtype='step', color='red')
+        # Plot 1D KDE.
+        plt.plot(x_kde_f, kde_f_1d, c='r', ls='--', lw=2., label=r'$p-value_{f}$')
+        # Text and labes.
+#        text1 = r'$\overline{p-value_{cl}} = %0.2f$' '\n' % p_val_cl_avrg
+#        text2 = r'$\overline{p-value_{f}} = %0.2f$' '\n' % p_val_f_avrg
+#        text3 = r'$p-value\, = %0.2f$' % p_value 
+#        text = text1+text2+text3
+#        plt.text(0.05, 0.83, text, transform = ax21.transAxes, 
+#             bbox=dict(facecolor='white', alpha=0.85), fontsize=12)
+#        handles, labels = ax21.get_legend_handles_labels()
+#        ax21.legend(handles, labels, loc='upper right', numpoints=1,
+#                    fontsize=12)        
         
         
 
