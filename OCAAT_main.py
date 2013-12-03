@@ -531,8 +531,8 @@ all stars with photom errors < 0.3)? (y/n) ')
    
     # Add cluster data and flags to output file
     a_d_o(sub_dir, output_dir, clust_name, center_cl, clust_rad, k_prof, 
-          n_c_k, flag_king_no_conver, cont_index, n_c, p_value, flag_center,
-          flag_std_dev, flag_center_manual,
+          n_c_k, flag_king_no_conver, cont_index, n_c, p_value, stars_in_mag,
+          flag_center, flag_std_dev, flag_center_manual,
           flag_radius_manual, flag_errors_manual, flag_bin_count,
           flag_delta_total, flag_not_stable, flag_rad_500, flag_delta,
           flag_delta_points, flag_num_memb_low, flag_no_memb)

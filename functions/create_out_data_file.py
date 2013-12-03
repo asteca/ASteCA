@@ -42,6 +42,8 @@ def create_out_data_file(output_dir):
 #          (5%%) means there is little chance this is an actual cluster (ie: the\n\
 #          null hypothesis that both CMD realizations come from the same distribution\n\
 #          can't be rejected).\n\
+# mag_int: Integrated magnitude value for all stars inside the cluster radius, except\n\
+#          those that were rejected due to large errors.\n\
 #\n\
 # M1 (flag_center_manual): Indicates that the center was set manually.\n\
 # M2 (flag_radius_manual): Indicates that the radius was set manually.\n\
@@ -78,5 +80,5 @@ def create_out_data_file(output_dir):
 #    than one cluster present in the frame, variable or too crowded field, etc.\n\
 #\n\
 #NAME            c_x[px] c_y[px] R_cl[px] R_c[px] R_t[px] cont_ind memb memb_k \
-p_value  M1 M2 M3  f1 f2 f3 f4 f5 f6 f7 f8 f9 f10 f11  FC\n" % now_time)
+p_value mag_int  M1 M2 M3  f1 f2 f3 f4 f5 f6 f7 f8 f9 f10 f11  FC\n" % now_time)
         out_data_file.close()
