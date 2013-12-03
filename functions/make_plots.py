@@ -8,6 +8,9 @@ import matplotlib.gridspec as gridspec
 from matplotlib.patches import Rectangle
 from matplotlib.ticker import MultipleLocator
 from itertools import cycle
+from scipy.stats import norm
+import matplotlib.mlab as mlab
+        
 from os.path import join
 
 
@@ -20,7 +23,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                mag_val_left, mag_val_right, col1_val_left,
                col1_val_right, use_errors_fit, k_prof, k_pr_err,
                flag_king_no_conver, stars_in,
-               stars_out, stars_in_rjct, stars_out_rjct, n_c, flag_area_stronger,
+               stars_out, stars_in_rjct, stars_out_rjct, stars_in_mag,
+               stars_in_all_mag, n_c, flag_area_stronger,
                cluster_region, field_region, p_value, p_vals_cl, p_vals_f,
                kde_cl_1d, kde_f_1d, x_kde_cl, x_kde_f, p_val_cl_avrg,
                p_val_f_avrg, quantiles, r_squared, slope, intercept,
@@ -1005,30 +1009,51 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     # Norm fit for KDE probability values.
     # Check if decont algorithm was applied.
     if not(flag_area_stronger):
-        from scipy.stats import norm
-        import matplotlib.mlab as mlab
-        
         ax23 = plt.subplot(gs1[10:12, 4:6])
         plt.xlim(0., 1.)
         plt.xlabel('cluster membership prob', fontsize=12)
         ax23.minorticks_on()
         ax23.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
         prob_data = [star[7] for star in membership_prob_avrg_sort]
-        # Bbest Gaussian fit of data.
+        # Best Gaussian fit of data.
         (mu, sigma) = norm.fit(prob_data)
         # Text.
         text = r'$\mu=%.3f,\ \sigma=%.3f$' %(mu, sigma)
         plt.text(0.05, 0.92, text, transform = ax23.transAxes, 
              bbox=dict(facecolor='white', alpha=0.85), fontsize=12)
         # Histogram of the data.
-        n, bins, patches = plt.hist(prob_data, 60, normed=1, facecolor='green', alpha=0.75)
+        n, bins, patches = plt.hist(prob_data, 60, normed=1, facecolor='green',
+                                    alpha=0.75)
         # Best fit line.
         y = mlab.normpdf( bins, mu, sigma)
         plt.plot(bins, y, 'r--', linewidth=2)
 
 
-        
-        
+
+    # Integrated magnitude distribution.
+    ax24 = plt.subplot(gs1[10:12, 6:8])
+    plt.xlim(min(stars_in_all_mag[0])-0.2, max(stars_in_all_mag[0])+0.2)
+    plt.ylim(max(stars_in_all_mag[1])+0.2, min(stars_in_all_mag[1])-0.2)
+    plt.xlabel(r'$T_1$', fontsize=18)
+    plt.ylabel(r'$T_1^*$', fontsize=18)
+    ax24.minorticks_on()
+    ax24.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
+    # Text.
+    text1 = r'$stars_{acpt}\,(T_{1,max}^*\,=%.2f$)' '\n' % (min(stars_in_mag[1]))
+    text2 =r'$stars_{all}\;(T_{1,max}^*\,=%.2f)$' % (min(stars_in_all_mag[1]))
+    # Only accepted stars.
+    plt.plot(stars_in_mag[0], stars_in_mag[1], 'r-', lw=1.5, label=text1)
+    # All stars, including those rejected due to its large errors.
+    plt.plot(stars_in_all_mag[0], stars_in_all_mag[1], 'b--', lw=1., label=text2)
+    # get handles
+    handles, labels = ax24.get_legend_handles_labels()
+    # use them in the legend
+    leg = ax24.legend(handles, labels, loc='lower right', numpoints=1,
+                      fontsize=12)
+    leg.get_frame().set_alpha(0.5)
+
+
+
 
     fig.tight_layout()
 

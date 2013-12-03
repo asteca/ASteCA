@@ -42,6 +42,7 @@ import functions.err_accpt_rejct as ear
 from functions.display_errors import disp_errors as d_e
 from functions.err_accpt_rejct_03 import err_a_r_03 as e_a_r_03
 import functions.get_in_out as gio
+from functions.get_integ_mag import integ_mag as g_i_m
 import functions.get_members_number as g_m_n
 import functions.get_cont_index as g_c_i
 from functions.get_regions import get_regions as g_r
@@ -391,6 +392,11 @@ all stars with photom errors < 0.3)? (y/n) ')
     print "Stars separated in/out of cluster's boundaries."
     
     
+    # Calculate integrated magnitude.
+    stars_in_mag, stars_in_all_mag = g_i_m(stars_in, stars_in_rjct)
+    print 'Integrated magnitude distribution obtained.'
+    
+    
     # Get approximate number of cluster's members.
     n_c, flag_num_memb_low, flag_no_memb = g_m_n.get_memb_num(backg_value[0],\
     clust_rad[0], stars_in, stars_in_rjct)
@@ -507,7 +513,8 @@ all stars with photom errors < 0.3)? (y/n) ')
        pol_col1, mag_val_left, mag_val_right, col1_val_left, col1_val_right,
        use_errors_fit, k_prof, k_pr_err, flag_king_no_conver, stars_in,
        stars_out, stars_in_rjct,
-       stars_out_rjct, n_c, flag_area_stronger, cluster_region, field_region,
+       stars_out_rjct, stars_in_mag, stars_in_all_mag, n_c, flag_area_stronger,
+       cluster_region, field_region,
        p_value, p_vals_cl, p_vals_f, kde_cl_1d, kde_f_1d, x_kde_cl, x_kde_f,
        p_val_cl_avrg, p_val_f_avrg, quantiles, r_squared, slope, intercept,
        clus_reg_decont, field_reg_box,
