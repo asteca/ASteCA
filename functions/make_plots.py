@@ -962,25 +962,25 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         # Limits and bin width for histograms.
         x_min, x_max, binwidth = 0., 1., 0.05
         # Plot cluster vs field histogram.
-#        ax21.hist(p_vals_cl, bins=np.arange(int(x_min), int(x_max), binwidth),
-#                normed=True, histtype='step', color='blue')
+        ax21.hist(p_vals_cl, bins=np.arange(int(x_min), int(x_max), binwidth),
+                normed=True, histtype='step', color='blue')
         # Plot 1D KDE.
         plt.plot(x_kde_cl, kde_cl_1d, c='b', ls='--', lw=2., label=r'$p-value_{cl}$')
         # Plot field vs field histogram.
-#        ax21.hist(p_vals_f, bins=np.arange(int(x_min), int(x_max), binwidth),
-#                normed=True, histtype='step', color='red')
+        ax21.hist(p_vals_f, bins=np.arange(int(x_min), int(x_max), binwidth),
+                normed=True, histtype='step', color='red')
         # Plot 1D KDE.
         plt.plot(x_kde_f, kde_f_1d, c='r', ls='--', lw=2., label=r'$p-value_{f}$')
         # Text and labes.
-#        text1 = r'$\overline{p-value_{cl}} = %0.2f$' '\n' % p_val_cl_avrg
-#        text2 = r'$\overline{p-value_{f}} = %0.2f$' '\n' % p_val_f_avrg
-#        text3 = r'$p-value\, = %0.2f$' % p_value 
-#        text = text1+text2+text3
-#        plt.text(0.05, 0.83, text, transform = ax21.transAxes, 
-#             bbox=dict(facecolor='white', alpha=0.85), fontsize=12)
-#        handles, labels = ax21.get_legend_handles_labels()
-#        ax21.legend(handles, labels, loc='upper right', numpoints=1,
-#                    fontsize=12)        
+        text1 = r'$\overline{p-value_{cl}} = %0.2f$' '\n' % p_val_cl_avrg
+        text2 = r'$\overline{p-value_{f}} = %0.2f$' '\n' % p_val_f_avrg
+        text3 = r'$p-value\, = %0.2f$' % p_value 
+        text = text1+text2+text3
+        plt.text(0.05, 0.83, text, transform = ax21.transAxes, 
+             bbox=dict(facecolor='white', alpha=0.85), fontsize=12)
+        handles, labels = ax21.get_legend_handles_labels()
+        ax21.legend(handles, labels, loc='upper right', numpoints=1,
+                    fontsize=12)        
         
         
 

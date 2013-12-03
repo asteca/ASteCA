@@ -9,7 +9,7 @@ Created on Thu Nov 21 15:51:34 2013
 Calculate and return the contamination index value cont_index.
 The contamination index is defined as the ratio of field stars that should 
 be present in the cluster region (calculated by means of the background value
-'backg_val' and the cluster's radious 'r') to the totalnumber of stars in the
+'backg_val' and the cluster's radius 'r') to the total number of stars in the
 cluster region 'n_tot'.
 
 CI = [backg_val*PI*r**2]/n_tot

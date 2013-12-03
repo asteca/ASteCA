@@ -53,6 +53,4 @@ def qqplot(p_vals_cl, p_vals_f):
     slope, intercept, r_value, p_value, std_err = stats.linregress(quantiles)
     r_squared = r_value**2
     
-#    print slope, intercept, r_value, p_value, std_err
-    
     return quantiles, r_squared, slope, intercept

@@ -6,12 +6,11 @@ Created on Thu Nov 28 20:55:57 2013
 """
 
 '''
-Obtain integrated magnitude using all stars inside the cluster's radius and
-all stars up to a given completess limit in magnitude.
+Obtain integrated magnitude using all stars inside the cluster's radius for
+several limits in magnitude.
 '''
 
 import numpy as np
-#import time
 
 
 def calc_integ_mag(mag_list, mag_limit):

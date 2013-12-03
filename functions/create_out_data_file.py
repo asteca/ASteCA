@@ -32,9 +32,10 @@ def create_out_data_file(output_dir):
 #\n\
 # cont_ind: 'Contamination index' is a  measure of the contamination of field\n\
 #           stars in the cluster region. The closer to 1, the more contaminated\n\
-#           the cluster region is. E.g.: a value of 0.5 means I should expect\n\
+#           the cluster region is. E.g.: a value of 0.5 means one should expect\n\
 #           to find the same number of field stars and cluster members inside the\n\
-#           cluster region.\n\
+#           cluster region. A value of 1 means that *all* of the stars in the \n\
+#           cluster region are expected to be field stars.\n\
 # memb: Approximate number of cluster's members assuming a uniform background.\n\
 # memb_k: Approximate number of cluster's members obtained integrating the fitted\n\
 #         3-P King profile (if it converged).\n\
