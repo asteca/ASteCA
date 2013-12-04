@@ -27,7 +27,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                stars_in_all_mag, n_c, flag_area_stronger,
                cluster_region, field_region,
                prob_cl_kde, p_vals_cl, p_vals_f, kde_cl_1d, kde_f_1d, x_kde,
-               quantiles, r_squared, slope, intercept,
+               y_over, quantiles, r_squared, slope, intercept,
                clus_reg_decont_lst, field_reg_box,
                kde_cl, kde, membership_prob_avrg_sort, iso_moved, zams_iso,
                cl_e_bv, cl_age, cl_feh, cl_dmod):
@@ -965,20 +965,14 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         plt.plot(x_kde, kde_cl_1d, c='b', ls='-', lw =1., label=r'$KDE_{cl}$')
         # Plot field vs field KDE.
         plt.plot(x_kde, kde_f_1d, c='r', ls='-', lw=1., label=r'$KDE_{f}$')
-        # Plot KDE_cl*KDE_f.
-#        plt.plot(x_kde, kde_cl_f, c='g', ls='--', lw=2.,
-#                 label=r'$KDE_{cl}*KDE_{f}$')
-        # Text and labes.
-#        text1 = r'$\int\, KDE_{cl}^2 = %0.2f$' '\n' % int_prob_list[0]
-#        text2 = r'$\int\, KDE_{f}^2 = %0.2f$' '\n' % int_prob_list[1]
-#        text3 = r'$\int\, KDE_{cl}*KDE_{f} = %0.2f$' '\n' '\n' % int_prob_list[2]
+        # Fill overlap.
+        plt.fill_between(x_kde, y_over, 0., color='grey', alpha='0.5')
         text = r'$\;P_{cl}^{KDE} = %0.2f$' % round(prob_cl_kde,2)
-#        text = text1+text2+text3+text4
-        plt.text(0.05, 0.85, text, transform = ax21.transAxes, 
-             bbox=dict(facecolor='white', alpha=0.6), fontsize=9)
+        plt.text(0.05, 0.92, text, transform = ax21.transAxes, 
+             bbox=dict(facecolor='white', alpha=0.6), fontsize=12)
         handles, labels = ax21.get_legend_handles_labels()
         leg = ax21.legend(handles, labels, loc='upper right', numpoints=1,
-                          fontsize=9)
+                          fontsize=12)
         leg.get_frame().set_alpha(0.6)
         
         

@@ -151,8 +151,8 @@ def get_pval(flag_area_stronger, cluster_region, field_region,
 
     # Skipping decontamination algorithm
     else:
-        prob_cl_kde, p_vals_cl, p_vals_f, kde_cl_1d, kde_f_1d, x_kde = -1., [],\
-        [], [], [], []
+        prob_cl_kde, p_vals_cl, p_vals_f, kde_cl_1d, kde_f_1d, x_kde, y_over =\
+        -1., [], [], [], [], [], []
         
 
     # Define KDE limits.
@@ -170,28 +170,20 @@ def get_pval(flag_area_stronger, cluster_region, field_region,
     # KDE for plotting.
     kde_f_1d = np.reshape(kernel_f(x_kde).T, x_kde.shape)
     
-    # Multiply KDEs for plotting.
-#    kde_cl_f = kernel_cl(x_kde)*kernel_f(x_kde)
-        
-    # Calculate integrals of each KDE squared.
-#    int_kde_cl_sq = kernel_cl.integrate_kde(kernel_cl)
-#    int_kde_f_sq = kernel_f.integrate_kde(kernel_f)
-#    # Integral of the multiplication of both KDEs.
-#    int_kde_cl_f = kernel_f.integrate_kde(kernel_cl)
-    
     # Calculate overlap between the two KDEs.
     def y_pts(pt):
         y_pt = min(kernel_cl(pt), kernel_f(pt))
         return y_pt
 
-    overlap = quad(y_pts, -1., 2.)    
+    overlap = quad(y_pts, -1., 2.) 
+    # Store y values for plotting the overlap filled.
+    y_over = y_pts(x_kde)
     
     # Probability value for the cluster.
-#    prob_cl_kde = 1. - int_kde_cl_f/((int_kde_cl_sq+int_kde_f_sq)/2.)
     prob_cl_kde = 1- overlap[0]
     
     # Store the integral values in a single list.
 #    int_prob_list = [int_kde_cl_sq, int_kde_f_sq, int_kde_cl_f]
 
  
-    return prob_cl_kde, p_vals_cl, p_vals_f, kde_cl_1d, kde_f_1d, x_kde
+    return prob_cl_kde, p_vals_cl, p_vals_f, kde_cl_1d, kde_f_1d, x_kde, y_over
