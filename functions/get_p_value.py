@@ -22,8 +22,11 @@ Compare the cluster region KDE with all the field region KDEs using Duong's
 ks package (developed in R) to obtain a p-value. This value will be close
 to 1 if the cluster region is very similar to the field regions and
 closer to 0 as it differentiates from it.
-As a rule of thumb, a p-value > 0.05 (ie: 5%) indicates that the overdensity
-is most likely not a real cluster.
+As a rule of thumb, a p-value > 0.05 (ie: 5%) indicates that one should reject
+the null hypothesis that the KDEs arose from ther same distribution.
+We asseigante a probability of the overdensity being a real cluster as 1 minus
+the overlap between the KDEs of the distributions of p-values for the cluster
+vs field and field vs field comparisions.
 '''
 
 
@@ -77,8 +80,7 @@ def get_pval(flag_area_stronger, cluster_region, field_region,
         
         # Set number of runs for the p_value algorithm with a maximum of
         # 100 if only one field region was used.
-#        runs = int(100/len(field_region))
-        runs = 2
+        runs = int(100/len(field_region))
         
         # Only use stars inside cluster's radius.
         cluster_region_r = []
