@@ -52,7 +52,7 @@ from functions.cl_members_file import cluster_members_file as c_m_f
         
 
 
-print '            OCAAT v0.1\n'
+print '            OCAAT\n'
 print '-------------------------------------------\n'
 
 
