@@ -78,7 +78,7 @@ def get_pval(flag_area_stronger, cluster_region, field_region,
         # 100 if only one field region was used.
 #        runs = int(100/len(field_region))
         # Set to only 1 run otherwise the p-value drops.
-        runs = 1
+        runs = 10
         
         # Only use stars inside cluster's radius.
         cluster_region_r = []
@@ -157,20 +157,30 @@ def get_pval(flag_area_stronger, cluster_region, field_region,
         p_val_cl_avrg = round(np.average(p_vals_cl), 2)
         p_val_f_avrg = round(np.average(p_vals_f), 2)
         
+        p_vals_cl_hist, bin_edges = np.histogram(p_vals_cl, bins=50,
+                                                 density=True)
+        p_vals_f_hist, bin_edges = np.histogram(p_vals_f, bins=50,
+                                                density=True)
+                                                
+        print p_vals_cl_hist, '\n'
+        print p_vals_f_hist
+        
         # Obtain final p_value for the *distributions* of p_values obtained
         # above.
 #        m_cl = robjects.FloatVector(p_vals_cl)
 #        m_f = robjects.FloatVector(p_vals_f)
-#        res_cl_f = kde_test(x1=m_cl, x2=m_f)
-#        p_val_cl_f = res_cl_f.rx2('pvalue')
+        m_cl = robjects.FloatVector(p_vals_cl_hist)
+        m_f = robjects.FloatVector(p_vals_f_hist)
+        res_cl_f = kde_test(x1=m_cl, x2=m_f)
+        p_val_cl_f = res_cl_f.rx2('pvalue')
         
-        kol_smir_d_p = ks_2samp(p_vals_cl, p_vals_f)
+        kol_smir_d_p = ks_2samp(p_vals_cl_hist, p_vals_f_hist)
         kol_smir_d, kol_smir_p = kol_smir_d_p[0], kol_smir_d_p[1]
 #        print '  K-S statistic', kol_smir_d
-#        print '  K-S p-value', kol_smir_p
+        print '  K-S p-value', kol_smir_p
         
-#        p_value = round(float(str(p_val_cl_f)[4:]), 2)
-        p_value = round(float(kol_smir_p), 2)
+        p_value = round(float(str(p_val_cl_f)[4:]), 2)
+#        p_value = round(float(kol_smir_p), 2)
 
     # Skipping decontamination algorithm
     else:
