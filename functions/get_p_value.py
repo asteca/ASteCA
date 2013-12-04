@@ -181,9 +181,5 @@ def get_pval(flag_area_stronger, cluster_region, field_region,
     
     # Probability value for the cluster.
     prob_cl_kde = 1- overlap[0]
-    
-    # Store the integral values in a single list.
-#    int_prob_list = [int_kde_cl_sq, int_kde_f_sq, int_kde_cl_f]
-
  
     return prob_cl_kde, p_vals_cl, p_vals_f, kde_cl_1d, kde_f_1d, x_kde, y_over

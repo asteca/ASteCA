@@ -39,10 +39,10 @@ def create_out_data_file(output_dir):
 # memb: Approximate number of cluster's members assuming a uniform background.\n\
 # memb_k: Approximate number of cluster's members obtained integrating the fitted\n\
 #         3-P King profile (if it converged).\n\
-# prob_cl: Statistical comparision of cluster vs field KDEs. Probabilities close\n\
-#          to 0 means there is little chance this is an actual cluster (ie: the\n\
-#          null hypothesis that both CMD realizations come from the same distribution\n\
-#          can't be rejected).\n\
+# prob_cl: Statistical comparision of cluster vs field KDEs. It is obtained as 1\n\
+#          minus the overlap area between the KDEs. If the KDEs are very similar\n\
+#          value will be very close to zero indicating the overdensity has little\n\
+#          chance of being a true cluster.\n\
 # mag_int: Integrated magnitude value for all stars inside the cluster radius, except\n\
 #          those that were rejected due to large errors.\n\
 #\n\
