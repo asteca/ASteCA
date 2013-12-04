@@ -959,6 +959,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         plt.xlabel('p-values', fontsize=12)
         ax21.minorticks_on()
         ax21.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
+        # Grid to background.
+        ax21.set_axisbelow(True)
         # Limits and bin width for histograms.
         x_min, x_max, binwidth = 0., 1., 0.05
         # Plot cluster vs field histogram.

@@ -157,9 +157,9 @@ def get_pval(flag_area_stronger, cluster_region, field_region,
         p_val_cl_avrg = round(np.average(p_vals_cl), 2)
         p_val_f_avrg = round(np.average(p_vals_f), 2)
         
-        p_vals_cl_hist, bin_edges = np.histogram(p_vals_cl, bins=50,
+        p_vals_cl_hist, bin_edges = np.histogram(p_vals_cl, bins=100,
                                                  density=True)
-        p_vals_f_hist, bin_edges = np.histogram(p_vals_f, bins=50,
+        p_vals_f_hist, bin_edges = np.histogram(p_vals_f, bins=100,
                                                 density=True)
                                                 
         print p_vals_cl_hist, '\n'
