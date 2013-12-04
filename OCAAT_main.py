@@ -416,15 +416,13 @@ all stars with photom errors < 0.3)? (y/n) ')
     print 'Cluster + field stars regions obtained (%d).' % len(field_region)
 
 
-    # Get p_value for cluster region.
-    p_value, p_vals_cl, p_vals_f, kde_cl_1d, kde_f_1d, x_kde_cl, x_kde_f, \
-    p_val_cl_avrg, p_val_f_avrg = g_pv(flag_area_stronger, cluster_region,
+    # Get physical cluster probability based on p_values distribution.
+    prob_cl_kde, p_vals_cl, p_vals_f, kde_cl_1d, kde_f_1d, x_kde, \
+    kde_cl_f, int_prob_list = g_pv(flag_area_stronger, cluster_region,
                                        field_region, col1_data, mag_data, 
                                        center_cl, clust_rad)
-#    p_value, p_vals_cl, p_vals_f, kde_cl_1d, kde_f_1d, p_val_cl_avrg,\
-#    p_val_f_avrg = -1., [0., 1.], [0., 1.], [], [], -1., -1.
-    print 'p_value for cluster region vs field region obtained (%0.2f).'\
-    % p_value
+    print 'Probability of physical cluster obtained (%0.2f).'\
+    % prob_cl_kde
 
 
     # Get QQ plot for p-values distributions.
@@ -515,8 +513,9 @@ all stars with photom errors < 0.3)? (y/n) ')
        stars_out, stars_in_rjct,
        stars_out_rjct, stars_in_mag, stars_in_all_mag, n_c, flag_area_stronger,
        cluster_region, field_region,
-       p_value, p_vals_cl, p_vals_f, kde_cl_1d, kde_f_1d, x_kde_cl, x_kde_f,
-       p_val_cl_avrg, p_val_f_avrg, quantiles, r_squared, slope, intercept,
+       prob_cl_kde, p_vals_cl, p_vals_f, kde_cl_1d, kde_f_1d, x_kde, 
+       kde_cl_f, int_prob_list,
+       quantiles, r_squared, slope, intercept,
        clus_reg_decont, field_reg_box,
        kde_cl, kde, membership_prob_avrg_sort, iso_moved, zams_iso, cl_e_bv,
        cl_age, cl_feh, cl_dmod)
@@ -531,7 +530,7 @@ all stars with photom errors < 0.3)? (y/n) ')
    
     # Add cluster data and flags to output file
     a_d_o(sub_dir, output_dir, clust_name, center_cl, clust_rad, k_prof, 
-          n_c_k, flag_king_no_conver, cont_index, n_c, p_value, stars_in_mag,
+          n_c_k, flag_king_no_conver, cont_index, n_c, prob_cl_kde, stars_in_mag,
           flag_center, flag_std_dev, flag_center_manual,
           flag_radius_manual, flag_errors_manual, flag_bin_count,
           flag_delta_total, flag_not_stable, flag_rad_500, flag_delta,

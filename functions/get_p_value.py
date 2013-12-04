@@ -7,7 +7,7 @@ Created on Fri Nov  1 17:58:28 2013
 
 import numpy as np
 import random as rd
-from scipy.stats import ks_2samp
+#from scipy.stats import ks_2samp
 from scipy import stats
 
 import rpy2.robjects as robjects
@@ -77,8 +77,7 @@ def get_pval(flag_area_stronger, cluster_region, field_region,
         # Set number of runs for the p_value algorithm with a maximum of
         # 100 if only one field region was used.
 #        runs = int(100/len(field_region))
-        # Set to only 1 run otherwise the p-value drops.
-        runs = 10
+        runs = 2
         
         # Only use stars inside cluster's radius.
         cluster_region_r = []
@@ -148,62 +147,43 @@ def get_pval(flag_area_stronger, cluster_region, field_region,
                 print '  50% done'
             elif run_num == (runs/2 + runs/4):
                 print '  75% done'
-            
-
-#        p_vals_cl = [0.09250994, 0.2287211, 0.3641553, 0.4374516, 0.2979309, 0.06554331, 0.3920572, 0.2774193, 0.1558179, 0.3028591, 0.1777675, 0.1223087, 0.4844228, 0.1668868, 0.366417, 0.279858, 0.1770417, 0.002990314, 6.164522e-05, 0.431183]            
-#        p_vals_f = [0.09250994, 0.2287211, 0.3641553, 0.4374516, 0.2979309, 0.06554331, 0.3920572, 0.2774193, 0.1558179, 0.3028591, 0.1777675, 0.1223087, 0.4844228, 0.1668868, 0.366417, 0.279858, 0.1770417, 0.002990314, 6.164522e-05, 0.431183]
-            
-        # Obtain average for all p-values.
-        p_val_cl_avrg = round(np.average(p_vals_cl), 2)
-        p_val_f_avrg = round(np.average(p_vals_f), 2)
-        
-        p_vals_cl_hist, bin_edges = np.histogram(p_vals_cl, bins=100,
-                                                 density=True)
-        p_vals_f_hist, bin_edges = np.histogram(p_vals_f, bins=100,
-                                                density=True)
-                                                
-        print p_vals_cl_hist, '\n'
-        print p_vals_f_hist
-        
-        # Obtain final p_value for the *distributions* of p_values obtained
-        # above.
-#        m_cl = robjects.FloatVector(p_vals_cl)
-#        m_f = robjects.FloatVector(p_vals_f)
-        m_cl = robjects.FloatVector(p_vals_cl_hist)
-        m_f = robjects.FloatVector(p_vals_f_hist)
-        res_cl_f = kde_test(x1=m_cl, x2=m_f)
-        p_val_cl_f = res_cl_f.rx2('pvalue')
-        
-        kol_smir_d_p = ks_2samp(p_vals_cl_hist, p_vals_f_hist)
-        kol_smir_d, kol_smir_p = kol_smir_d_p[0], kol_smir_d_p[1]
-#        print '  K-S statistic', kol_smir_d
-        print '  K-S p-value', kol_smir_p
-        
-        p_value = round(float(str(p_val_cl_f)[4:]), 2)
-#        p_value = round(float(kol_smir_p), 2)
 
     # Skipping decontamination algorithm
     else:
-        p_value, p_vals_cl, p_vals_f, kde_cl_norm, kde_f_norm, p_val_cl_avrg,\
-        p_val_f_avrg = -1., [], [], [], [], -1., -1.
+        prob_cl_kde, p_vals_cl, p_vals_f, kde_cl_1d, kde_f_1d, x_kde, \
+        kde_cl_f, int_prob_list = -1., [], [], [], [], [], [], []
         
 
-    # For plotting purposes only.        
-        
+    # Define KDE limits.
+    xmin, xmax = -1., 2.
+    x_kde = np.mgrid[xmin:xmax:100j]
+    
     # Obtain the 1D KDE for the cluster region (stars inside cluster's
     # radius) vs field regions.
-    xmin, xmax = min(p_vals_cl)-0.1, max(p_vals_cl)+0.1
-    x_kde_cl = np.mgrid[xmin:xmax:100j]
     kernel_cl = stats.gaussian_kde(p_vals_cl)
-    # 1-D KDE for cluster vs field region p_values.
-    kde_cl_1d = np.reshape(kernel_cl(x_kde_cl).T, x_kde_cl.shape)
+    # KDE for plotting.
+    kde_cl_1d = np.reshape(kernel_cl(x_kde).T, x_kde.shape)
 
     # Obtain the 1D KDE for the field regions vs field regions.
-    xmin, xmax = min(p_vals_f)-0.1, max(p_vals_f)+0.1
-    x_kde_f = np.mgrid[xmin:xmax:100j]
     kernel_f = stats.gaussian_kde(p_vals_f)
-    # 1-D KDE for field vs field region p_values.
-    kde_f_1d = np.reshape(kernel_f(x_kde_f).T, x_kde_f.shape)
+    # KDE for plotting.
+    kde_f_1d = np.reshape(kernel_f(x_kde).T, x_kde.shape)
+    
+    # Multiply KDEs for plotting.
+    kde_cl_f = kernel_cl(x_kde)*kernel_f(x_kde)
+        
+    # Calculate integrals of each KDE squared.
+    int_kde_cl_sq = kernel_cl.integrate_kde(kernel_cl)
+    int_kde_f_sq = kernel_f.integrate_kde(kernel_f)
+    # Integral of the multiplication of both KDEs.
+    int_kde_cl_f = kernel_f.integrate_kde(kernel_cl)
+    
+    # Probability value for the cluster.
+    prob_cl_kde = 1. - int_kde_cl_f/((int_kde_cl_sq+int_kde_f_sq)/2.)
+    
+    # Store the integral values in a single list.
+    int_prob_list = [int_kde_cl_sq, int_kde_f_sq, int_kde_cl_f]
+
  
-    return p_value, p_vals_cl, p_vals_f, kde_cl_1d, kde_f_1d, x_kde_cl, x_kde_f,\
-    p_val_cl_avrg, p_val_f_avrg
+    return prob_cl_kde, p_vals_cl, p_vals_f, kde_cl_1d, kde_f_1d, x_kde,\
+    kde_cl_f, int_prob_list

@@ -25,9 +25,10 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                flag_king_no_conver, stars_in,
                stars_out, stars_in_rjct, stars_out_rjct, stars_in_mag,
                stars_in_all_mag, n_c, flag_area_stronger,
-               cluster_region, field_region, p_value, p_vals_cl, p_vals_f,
-               kde_cl_1d, kde_f_1d, x_kde_cl, x_kde_f, p_val_cl_avrg,
-               p_val_f_avrg, quantiles, r_squared, slope, intercept,
+               cluster_region, field_region,
+               prob_cl_kde, p_vals_cl, p_vals_f, kde_cl_1d, kde_f_1d, x_kde, 
+               kde_cl_f, int_prob_list,
+               quantiles, r_squared, slope, intercept,
                clus_reg_decont_lst, field_reg_box,
                kde_cl, kde, membership_prob_avrg_sort, iso_moved, zams_iso,
                cl_e_bv, cl_age, cl_feh, cl_dmod):
@@ -954,35 +955,32 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     # Check if decont algorithm was applied.
     if not(flag_area_stronger):
         ax21 = plt.subplot(gs1[10:12, 0:2])
-        plt.xlim(0, 1)
-        plt.ylim(0, max(max(kde_f_1d), max(kde_cl_1d))+0.5)
+        plt.xlim(-0.5, 1.5)
+        plt.ylim(0, max(max(kde_f_1d), max(kde_cl_1d), max(kde_cl_f))+0.5)
         plt.xlabel('p-values', fontsize=12)
         ax21.minorticks_on()
         ax21.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
         # Grid to background.
         ax21.set_axisbelow(True)
-        # Limits and bin width for histograms.
-        x_min, x_max, binwidth = 0., 1., 0.05
-        # Plot cluster vs field histogram.
-        ax21.hist(p_vals_cl, bins=np.arange(int(x_min), int(x_max), binwidth),
-                normed=True, histtype='step', color='blue')
-        # Plot 1D KDE.
-        plt.plot(x_kde_cl, kde_cl_1d, c='b', ls='--', lw=2., label=r'$p-value_{cl}$')
-        # Plot field vs field histogram.
-        ax21.hist(p_vals_f, bins=np.arange(int(x_min), int(x_max), binwidth),
-                normed=True, histtype='step', color='red')
-        # Plot 1D KDE.
-        plt.plot(x_kde_f, kde_f_1d, c='r', ls='--', lw=2., label=r'$p-value_{f}$')
+        # Plot cluster vs field KDE.
+        plt.plot(x_kde, kde_cl_1d, c='b', ls='-', lw =1., label=r'$KDE_{cl}$')
+        # Plot field vs field KDE.
+        plt.plot(x_kde, kde_f_1d, c='r', ls='-', lw=1., label=r'$KDE_{f}$')
+        # Plot KDE_cl*KDE_f.
+        plt.plot(x_kde, kde_cl_f, c='g', ls='--', lw=2.,
+                 label=r'$KDE_{cl}*KDE_{f}$')
         # Text and labes.
-        text1 = r'$\overline{p-value_{cl}} = %0.2f$' '\n' % p_val_cl_avrg
-        text2 = r'$\overline{p-value_{f}} = %0.2f$' '\n' % p_val_f_avrg
-        text3 = r'$p-value\, = %0.2f$' % p_value 
-        text = text1+text2+text3
-        plt.text(0.05, 0.83, text, transform = ax21.transAxes, 
-             bbox=dict(facecolor='white', alpha=0.85), fontsize=12)
+        text1 = r'$\int\, KDE_{cl}^2 = %0.2f$' '\n' % int_prob_list[0]
+        text2 = r'$\int\, KDE_{f}^2 = %0.2f$' '\n' % int_prob_list[1]
+        text3 = r'$\int\, KDE_{cl}*KDE_{f} = %0.2f$' '\n' '\n' % int_prob_list[2]
+        text4 = r'$\;P_{cl}^{KDE} = %0.2f$' % round(prob_cl_kde,2)
+        text = text1+text2+text3+text4
+        plt.text(0.635, 0.54, text, transform = ax21.transAxes, 
+             bbox=dict(facecolor='white', alpha=0.6), fontsize=9)
         handles, labels = ax21.get_legend_handles_labels()
-        ax21.legend(handles, labels, loc='upper right', numpoints=1,
-                    fontsize=12)        
+        leg = ax21.legend(handles, labels, loc='upper right', numpoints=1,
+                          fontsize=9)
+        leg.get_frame().set_alpha(0.6)
         
         
 
