@@ -1,14 +1,5 @@
 # -*- coding: utf-8 -*-
 
-# VERSIONS
-#
-# v1.1 21/11/13
-# Changed the way the contamination index is calculated. Added the calculation
-# as its own function and modified description.
-
-
-
-
 
 # Import these to be able to grab the dir from where the code is being run and
 # iterate for all data files in that dir
