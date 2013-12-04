@@ -5,8 +5,8 @@
 ''' Add data obtained to the 'data_output' file.'''
 
 def add_data_output(sub_dir, output_dir, clust_name, center_cl, clust_rad,
-                    k_prof, n_c_k, flag_king_no_conver, cont_index, n_c, p_value,
-                    stars_in_mag,                    
+                    k_prof, n_c_k, flag_king_no_conver, cont_index, n_c,
+                    prob_cl_kde, stars_in_mag,                    
                     flag_center, flag_std_dev, flag_center_manual, 
                     flag_radius_manual, flag_errors_manual, flag_bin_count, 
                     flag_delta_total, flag_not_stable, flag_rad_500, flag_delta,
@@ -30,7 +30,7 @@ def add_data_output(sub_dir, output_dir, clust_name, center_cl, clust_rad,
             str('%0.f' % round(center_cl[1])), str('%0.f' % round(clust_rad[0])),\
             str('%0.f' % round(k_prof[0])), str('%0.f' % round(k_prof[1])), \
             str(round(cont_index, 2)), str(int(n_c)), str(n_c_k), \
-            str('%0.2f' % p_value), str('%0.2f' % min(stars_in_mag[1]))]
+            str('%0.2f' % prob_cl_kde), str('%0.2f' % min(stars_in_mag[1]))]
     
     # "a" opens the file for appending
     with open(output_dir+'data_output', "a") as f_out:

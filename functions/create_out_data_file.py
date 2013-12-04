@@ -39,8 +39,8 @@ def create_out_data_file(output_dir):
 # memb: Approximate number of cluster's members assuming a uniform background.\n\
 # memb_k: Approximate number of cluster's members obtained integrating the fitted\n\
 #         3-P King profile (if it converged).\n\
-# p_value: Statistical comparision of cluster vs field KDEs. A value over 0.05\n\
-#          (5%%) means there is little chance this is an actual cluster (ie: the\n\
+# prob_cl: Statistical comparision of cluster vs field KDEs. Probabilities close\n\
+#          to 0 means there is little chance this is an actual cluster (ie: the\n\
 #          null hypothesis that both CMD realizations come from the same distribution\n\
 #          can't be rejected).\n\
 # mag_int: Integrated magnitude value for all stars inside the cluster radius, except\n\
@@ -81,5 +81,5 @@ def create_out_data_file(output_dir):
 #    than one cluster present in the frame, variable or too crowded field, etc.\n\
 #\n\
 #NAME            c_x[px] c_y[px] R_cl[px] R_c[px] R_t[px] cont_ind memb memb_k \
-p_value mag_int  M1 M2 M3  f1 f2 f3 f4 f5 f6 f7 f8 f9 f10 f11  FC\n" % now_time)
+prob_cl mag_int  M1 M2 M3  f1 f2 f3 f4 f5 f6 f7 f8 f9 f10 f11  FC\n" % now_time)
         out_data_file.close()
