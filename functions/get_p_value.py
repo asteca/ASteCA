@@ -9,6 +9,7 @@ import numpy as np
 import random as rd
 #from scipy.stats import ks_2samp
 from scipy import stats
+from scipy.integrate import quad
 
 import rpy2.robjects as robjects
 from rpy2.robjects.packages import importr
@@ -150,13 +151,13 @@ def get_pval(flag_area_stronger, cluster_region, field_region,
 
     # Skipping decontamination algorithm
     else:
-        prob_cl_kde, p_vals_cl, p_vals_f, kde_cl_1d, kde_f_1d, x_kde, \
-        kde_cl_f, int_prob_list = -1., [], [], [], [], [], [], []
+        prob_cl_kde, p_vals_cl, p_vals_f, kde_cl_1d, kde_f_1d, x_kde = -1., [],\
+        [], [], [], []
         
 
     # Define KDE limits.
     xmin, xmax = -1., 2.
-    x_kde = np.mgrid[xmin:xmax:100j]
+    x_kde = np.mgrid[xmin:xmax:1000j]
     
     # Obtain the 1D KDE for the cluster region (stars inside cluster's
     # radius) vs field regions.
@@ -170,20 +171,27 @@ def get_pval(flag_area_stronger, cluster_region, field_region,
     kde_f_1d = np.reshape(kernel_f(x_kde).T, x_kde.shape)
     
     # Multiply KDEs for plotting.
-    kde_cl_f = kernel_cl(x_kde)*kernel_f(x_kde)
+#    kde_cl_f = kernel_cl(x_kde)*kernel_f(x_kde)
         
     # Calculate integrals of each KDE squared.
-    int_kde_cl_sq = kernel_cl.integrate_kde(kernel_cl)
-    int_kde_f_sq = kernel_f.integrate_kde(kernel_f)
-    # Integral of the multiplication of both KDEs.
-    int_kde_cl_f = kernel_f.integrate_kde(kernel_cl)
+#    int_kde_cl_sq = kernel_cl.integrate_kde(kernel_cl)
+#    int_kde_f_sq = kernel_f.integrate_kde(kernel_f)
+#    # Integral of the multiplication of both KDEs.
+#    int_kde_cl_f = kernel_f.integrate_kde(kernel_cl)
+    
+    # Calculate overlap between the two KDEs.
+    def y_pts(pt):
+        y_pt = min(kernel_cl(pt), kernel_f(pt))
+        return y_pt
+
+    overlap = quad(y_pts, -1., 2.)    
     
     # Probability value for the cluster.
-    prob_cl_kde = 1. - int_kde_cl_f/((int_kde_cl_sq+int_kde_f_sq)/2.)
+#    prob_cl_kde = 1. - int_kde_cl_f/((int_kde_cl_sq+int_kde_f_sq)/2.)
+    prob_cl_kde = 1- overlap[0]
     
     # Store the integral values in a single list.
-    int_prob_list = [int_kde_cl_sq, int_kde_f_sq, int_kde_cl_f]
+#    int_prob_list = [int_kde_cl_sq, int_kde_f_sq, int_kde_cl_f]
 
  
-    return prob_cl_kde, p_vals_cl, p_vals_f, kde_cl_1d, kde_f_1d, x_kde,\
-    kde_cl_f, int_prob_list
+    return prob_cl_kde, p_vals_cl, p_vals_f, kde_cl_1d, kde_f_1d, x_kde

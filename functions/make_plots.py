@@ -26,8 +26,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                stars_out, stars_in_rjct, stars_out_rjct, stars_in_mag,
                stars_in_all_mag, n_c, flag_area_stronger,
                cluster_region, field_region,
-               prob_cl_kde, p_vals_cl, p_vals_f, kde_cl_1d, kde_f_1d, x_kde, 
-               kde_cl_f, int_prob_list,
+               prob_cl_kde, p_vals_cl, p_vals_f, kde_cl_1d, kde_f_1d, x_kde,
                quantiles, r_squared, slope, intercept,
                clus_reg_decont_lst, field_reg_box,
                kde_cl, kde, membership_prob_avrg_sort, iso_moved, zams_iso,
@@ -956,7 +955,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     if not(flag_area_stronger):
         ax21 = plt.subplot(gs1[10:12, 0:2])
         plt.xlim(-0.5, 1.5)
-        plt.ylim(0, max(max(kde_f_1d), max(kde_cl_1d), max(kde_cl_f))+0.5)
+        plt.ylim(0, max(max(kde_f_1d), max(kde_cl_1d))+0.5)
         plt.xlabel('p-values', fontsize=12)
         ax21.minorticks_on()
         ax21.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
@@ -967,15 +966,15 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         # Plot field vs field KDE.
         plt.plot(x_kde, kde_f_1d, c='r', ls='-', lw=1., label=r'$KDE_{f}$')
         # Plot KDE_cl*KDE_f.
-        plt.plot(x_kde, kde_cl_f, c='g', ls='--', lw=2.,
-                 label=r'$KDE_{cl}*KDE_{f}$')
+#        plt.plot(x_kde, kde_cl_f, c='g', ls='--', lw=2.,
+#                 label=r'$KDE_{cl}*KDE_{f}$')
         # Text and labes.
-        text1 = r'$\int\, KDE_{cl}^2 = %0.2f$' '\n' % int_prob_list[0]
-        text2 = r'$\int\, KDE_{f}^2 = %0.2f$' '\n' % int_prob_list[1]
-        text3 = r'$\int\, KDE_{cl}*KDE_{f} = %0.2f$' '\n' '\n' % int_prob_list[2]
-        text4 = r'$\;P_{cl}^{KDE} = %0.2f$' % round(prob_cl_kde,2)
-        text = text1+text2+text3+text4
-        plt.text(0.635, 0.54, text, transform = ax21.transAxes, 
+#        text1 = r'$\int\, KDE_{cl}^2 = %0.2f$' '\n' % int_prob_list[0]
+#        text2 = r'$\int\, KDE_{f}^2 = %0.2f$' '\n' % int_prob_list[1]
+#        text3 = r'$\int\, KDE_{cl}*KDE_{f} = %0.2f$' '\n' '\n' % int_prob_list[2]
+        text = r'$\;P_{cl}^{KDE} = %0.2f$' % round(prob_cl_kde,2)
+#        text = text1+text2+text3+text4
+        plt.text(0.05, 0.85, text, transform = ax21.transAxes, 
              bbox=dict(facecolor='white', alpha=0.6), fontsize=9)
         handles, labels = ax21.get_legend_handles_labels()
         leg = ax21.legend(handles, labels, loc='upper right', numpoints=1,

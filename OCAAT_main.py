@@ -408,12 +408,10 @@ all stars with photom errors < 0.3)? (y/n) ')
 
 
     # Get physical cluster probability based on p_values distribution.
-    prob_cl_kde, p_vals_cl, p_vals_f, kde_cl_1d, kde_f_1d, x_kde, \
-    kde_cl_f, int_prob_list = g_pv(flag_area_stronger, cluster_region,
-                                       field_region, col1_data, mag_data, 
-                                       center_cl, clust_rad)
-    print 'Probability of physical cluster obtained (%0.2f).'\
-    % prob_cl_kde
+    prob_cl_kde, p_vals_cl, p_vals_f, kde_cl_1d, kde_f_1d, x_kde, = \
+    g_pv(flag_area_stronger, cluster_region, field_region, col1_data, \
+    mag_data, center_cl, clust_rad)
+    print 'Probability of physical cluster obtained (%0.2f).' % prob_cl_kde
 
 
     # Get QQ plot for p-values distributions.
@@ -505,7 +503,6 @@ all stars with photom errors < 0.3)? (y/n) ')
        stars_out_rjct, stars_in_mag, stars_in_all_mag, n_c, flag_area_stronger,
        cluster_region, field_region,
        prob_cl_kde, p_vals_cl, p_vals_f, kde_cl_1d, kde_f_1d, x_kde, 
-       kde_cl_f, int_prob_list,
        quantiles, r_squared, slope, intercept,
        clus_reg_decont, field_reg_box,
        kde_cl, kde, membership_prob_avrg_sort, iso_moved, zams_iso, cl_e_bv,
