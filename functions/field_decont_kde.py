@@ -39,10 +39,10 @@ def field_decont_kde(flag_area_stronger, cluster_region, field_region,
     if not(flag_area_stronger):
         
         # Set number of runs for the KDE algorithm.
-        runs = 5
+        runs = 10
         
         # Set the number of samples used in the Monte Carlo itegration.
-        mc_sample = 10
+        mc_sample = 3000
         
         print 'Applying KDE decontamination algorithm.'
         
