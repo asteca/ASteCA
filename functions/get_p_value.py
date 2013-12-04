@@ -177,7 +177,7 @@ def get_pval(flag_area_stronger, cluster_region, field_region,
 
     overlap = quad(y_pts, -1., 2.) 
     # Store y values for plotting the overlap filled.
-    y_over = y_pts(x_kde)
+    y_over = [float(y_pts(x_pt)) for x_pt in x_kde]
     
     # Probability value for the cluster.
     prob_cl_kde = 1- overlap[0]

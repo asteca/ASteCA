@@ -966,7 +966,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         # Plot field vs field KDE.
         plt.plot(x_kde, kde_f_1d, c='r', ls='-', lw=1., label=r'$KDE_{f}$')
         # Fill overlap.
-        plt.fill_between(x_kde, y_over, 0., color='grey', alpha='0.5')
+        plt.fill_between(x_kde, y_over, 0, color='grey', alpha='0.5')
         text = r'$\;P_{cl}^{KDE} = %0.2f$' % round(prob_cl_kde,2)
         plt.text(0.05, 0.92, text, transform = ax21.transAxes, 
              bbox=dict(facecolor='white', alpha=0.6), fontsize=12)
