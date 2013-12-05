@@ -20,7 +20,7 @@ def gauss_error(col_lst, e_col_lst, mag_lst, e_mag_lst):
 
 
 def bw_val(runs, run_num, num_stars):
-    # Calculate bandwisth value based on the number of stars in the region
+    # Calculate bandwidth value based on the number of stars in the region
     # and the run_num value.
     bw_min = 0.1
     bw_max = num_stars**(-1./6.) # Scott's rule
