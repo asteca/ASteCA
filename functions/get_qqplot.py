@@ -51,7 +51,7 @@ def qqplot(p_vals_cl, p_vals_f):
     # Calculate R^2 value, slope and intercept of best fir line and p-value
     # (not clear about the meaning of this last one though)
     slope, intercept, r_value, p_value, std_err = stats.linregress(quantiles)
-    r_squared = r_value**2
+    r_squared = round(r_value**2, 2)
     
     # Calculate CCC (Concordance correlation coefficient) for the quantiles.
     # https://en.wikipedia.org/wiki/Concordance_correlation_coefficient

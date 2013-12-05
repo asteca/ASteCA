@@ -62,7 +62,6 @@ def get_king_profile(clust_rad, backg_value, radii, ring_density):
         n_c_k = -1
 
     # If fit converged to tidal radius too large.
-  
     if k_prof[1] > 1000.:
         k_prof[1] = 999.99
         k_pr_err[1][1] = 998001.
