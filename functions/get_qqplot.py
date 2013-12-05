@@ -53,4 +53,11 @@ def qqplot(p_vals_cl, p_vals_f):
     slope, intercept, r_value, p_value, std_err = stats.linregress(quantiles)
     r_squared = r_value**2
     
-    return quantiles, r_squared, slope, intercept
+    # Calculate CCC (Concordance correlation coefficient) for the quantiles.
+    # https://en.wikipedia.org/wiki/Concordance_correlation_coefficient
+    a = quantiles[0]
+    b = quantiles[1]
+    ccc = 2*(np.std(a)*np.std(b))/\
+    (np.std(a)**2+np.std(b)**2+(np.mean(a)-np.mean(b))**2)
+    
+    return quantiles, r_squared, slope, intercept, ccc

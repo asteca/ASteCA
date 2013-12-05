@@ -27,7 +27,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                stars_in_all_mag, n_c, flag_area_stronger,
                cluster_region, field_region,
                prob_cl_kde, p_vals_cl, p_vals_f, kde_cl_1d, kde_f_1d, x_kde,
-               y_over, quantiles, r_squared, slope, intercept,
+               y_over, quantiles, r_squared, slope, intercept, ccc,
                clus_reg_decont_lst, field_reg_box,
                kde_cl, kde, membership_prob_avrg_sort, iso_moved, zams_iso,
                cl_e_bv, cl_age, cl_feh, cl_dmod):
@@ -988,8 +988,10 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         ax22.minorticks_on()
         ax22.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
         plt.scatter(quantiles[0], quantiles[1], marker='o', c='k', s=10.)
-        text = r'$R^2\, = %0.2f$' % r_squared
-        plt.text(0.05, 0.92, text, transform = ax22.transAxes, 
+        text1 = r'$R^2\, = %0.2f$' '\n' % r_squared
+        text2 = r'$CCC\, = %0.2f$' % ccc
+        text = text1+text2
+        plt.text(0.72, 0.87, text, transform = ax22.transAxes, 
              bbox=dict(facecolor='white', alpha=0.85), fontsize=12)
         plt.plot([0., 1.], [0., 1.], color='k', linestyle='--', linewidth=1.)
         # Plot qq-plot fitted line.

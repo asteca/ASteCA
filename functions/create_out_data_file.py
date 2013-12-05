@@ -41,8 +41,14 @@ def create_out_data_file(output_dir):
 #         3-P King profile (if it converged).\n\
 # prob_cl: Statistical comparision of cluster vs field KDEs. It is obtained as 1\n\
 #          minus the overlap area between the KDEs. If the KDEs are very similar\n\
-#          value will be very close to zero indicating the overdensity has little\n\
-#          chance of being a true cluster.\n\
+#          this value will be low indicating the overdensity is probably not a\n\
+#          true cluster.\n\
+# CCC: Concordance correlation coefficient. Measures the agreement between the\n\
+#      quantiles and the identity line and gives and idea of how similar the shapes\n\
+#      of the KDEs are. A value close to 1 means good agreement, ie: the shapes of\n\
+#      the KDEs are very similar. A low value of prob_cl combined with a high \n\
+#      value of CCC implies the overdensity has little chance of being a true \n\
+#      physical cluster.\n\
 # mag_int: Integrated magnitude value for all stars inside the cluster radius, except\n\
 #          those that were rejected due to large errors.\n\
 #\n\
@@ -81,5 +87,5 @@ def create_out_data_file(output_dir):
 #    than one cluster present in the frame, variable or too crowded field, etc.\n\
 #\n\
 #NAME            c_x[px] c_y[px] R_cl[px] R_c[px] R_t[px] cont_ind memb memb_k \
-prob_cl mag_int  M1 M2 M3  f1 f2 f3 f4 f5 f6 f7 f8 f9 f10 f11  FC\n" % now_time)
+prob_cl   CCC mag_int  M1 M2 M3  f1 f2 f3 f4 f5 f6 f7 f8 f9 f10 f11  FC\n" % now_time)
         out_data_file.close()

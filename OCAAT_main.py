@@ -415,7 +415,7 @@ all stars with photom errors < 0.3)? (y/n) ')
 
 
     # Get QQ plot for p-values distributions.
-    quantiles, r_squared, slope, intercept = g_qq(p_vals_cl, p_vals_f)
+    quantiles, r_squared, slope, intercept, ccc = g_qq(p_vals_cl, p_vals_f)
     print 'QQ-plot obtained (R^2 = %0.2f)' % r_squared
     
     
@@ -503,7 +503,7 @@ all stars with photom errors < 0.3)? (y/n) ')
        stars_out_rjct, stars_in_mag, stars_in_all_mag, n_c, flag_area_stronger,
        cluster_region, field_region,
        prob_cl_kde, p_vals_cl, p_vals_f, kde_cl_1d, kde_f_1d, x_kde, y_over,
-       quantiles, r_squared, slope, intercept,
+       quantiles, r_squared, slope, intercept, ccc,
        clus_reg_decont, field_reg_box,
        kde_cl, kde, membership_prob_avrg_sort, iso_moved, zams_iso, cl_e_bv,
        cl_age, cl_feh, cl_dmod)
@@ -518,7 +518,8 @@ all stars with photom errors < 0.3)? (y/n) ')
    
     # Add cluster data and flags to output file
     a_d_o(sub_dir, output_dir, clust_name, center_cl, clust_rad, k_prof, 
-          n_c_k, flag_king_no_conver, cont_index, n_c, prob_cl_kde, stars_in_mag,
+          n_c_k, flag_king_no_conver, cont_index, n_c, prob_cl_kde, ccc,
+          stars_in_mag,
           flag_center, flag_std_dev, flag_center_manual,
           flag_radius_manual, flag_errors_manual, flag_bin_count,
           flag_delta_total, flag_not_stable, flag_rad_500, flag_delta,
