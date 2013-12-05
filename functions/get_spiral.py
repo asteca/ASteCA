@@ -7,8 +7,6 @@ def spiral():
     Create a list containing lists of two items. These two items are the
     x and y coordinates of a spiral array starting from [0,0] and moving
     right and bottom to obtain finally: [[0,0], [1,0], [1,-1], [0,1], ...]
-    Initialize 'ring index'. This value points to a given ring around
-    the center bin. The ith ring has 8*i number of bins.
     '''
     
     # Total number of spiral rings to be generated
