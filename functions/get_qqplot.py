@@ -48,7 +48,7 @@ def qqplot(p_vals_cl, p_vals_f):
     else:
         quantiles = [sorted(quant.tolist()), sorted(B)]
     
-    # Calculate R^2 value, slope and intercept of best fir line and p-value
+    # Calculate R^2 value, slope and intercept of best fit line and p-value
     # (not clear about the meaning of this last one though)
     slope, intercept, r_value, p_value, std_err = stats.linregress(quantiles)
     r_squared = round(r_value**2, 2)
