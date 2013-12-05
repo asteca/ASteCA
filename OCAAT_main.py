@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-# Import these to be able to grab the dir from where the code is being run and
+# Import these to be able to grab the dir from where the code is running and
 # iterate for all data files in that dir
 from os import listdir, getcwd, walk, mkdir, rmdir
 from os.path import join, realpath, dirname, exists
