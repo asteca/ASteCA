@@ -42,7 +42,7 @@ def field_decont_kde(flag_area_stronger, cluster_region, field_region,
         runs = 5
         
         # Set the number of samples used in the Monte Carlo itegration.
-        mc_sample = 100
+        mc_sample = 10
         
         print 'Applying KDE decontamination algorithm.'
         
@@ -84,7 +84,7 @@ def field_decont_kde(flag_area_stronger, cluster_region, field_region,
    
         
         # Run 'runs' times.
-        flag_25, flag_50, flag_75, flag_100 = False, False, False, False
+        flag_25, flag_50, flag_75 = False, False, False
         for run_num in range(runs):
 
             # Format data used to obtain kernel estimate in cluster region. Only
@@ -253,18 +253,17 @@ def field_decont_kde(flag_area_stronger, cluster_region, field_region,
             # Convert to final list.
             clus_reg_decont.append(temp.tolist())
             
-            if run_num >= runs/4 and flag_25 == False:
+            if run_num+1 >= runs/4 and flag_25 == False:
                 print '  25% done'
                 flag_25 = True
-            elif run_num >= runs/2 and flag_50 == False:
+            elif run_num+1 >= runs/2 and flag_50 == False:
                 print '  50% done'
                 flag_50 = True
-            elif run_num >= (runs/2 + runs/4) and flag_75 == False:
+            elif run_num+1 >= (runs/2 + runs/4) and flag_75 == False:
                 print '  75% done'
                 flag_75 = True
-            elif run_num >= runs and flag_100 == False:
+            elif run_num+1 == runs:
                 print '  100% done'
-                flag_100 = True
                 
         
     # Skipping decontamination algorithm
