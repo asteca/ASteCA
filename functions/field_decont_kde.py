@@ -159,9 +159,6 @@ def field_decont_kde(flag_area_stronger, cluster_region, field_region,
                 # Cluster KDE obtained.
             
             
-            # This list will hold the KDEs used for plotting.
-            if run_num == 4:
-                kde_f = [[] for _ in range(len(field_region))]
             # This list will hold the probabilities for each field region.
             clus_reg_decont_fl = [[] for _ in range(len(field_region))]
             
