@@ -115,7 +115,7 @@ def field_decont_kde(flag_area_stronger, cluster_region, field_region,
             x, y = np.mgrid[xmin:xmax:100j, ymin:ymax:100j]
             positions = np.vstack([x.ravel(), y.ravel()])
             values = np.vstack([col_gauss, mag_gauss])
-            # Call function to calculate bandwisth to use.
+            # Call function to calculate bandwidth to use.
             bw_choice = bw_val(runs, run_num, len(col_gauss))
             # The results are HEAVILY dependant on the bandwidth used here.
             # See: http://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.gaussian_kde.html
@@ -190,7 +190,7 @@ def field_decont_kde(flag_area_stronger, cluster_region, field_region,
                 x, y = np.mgrid[xmin:xmax:100j, ymin:ymax:100j]
                 positions = np.vstack([x.ravel(), y.ravel()])
                 values = np.vstack([col_gauss, mag_gauss])
-                # Call function to calculate bandwisth to use.
+                # Call function to calculate bandwidth to use.
                 bw_choice = bw_val(runs, run_num, len(col_gauss))
                 # The results are HEAVILY dependant on the bandwidth used here.
                 # See: http://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.gaussian_kde.html
