@@ -81,6 +81,7 @@ def get_pval(flag_area_stronger, cluster_region, field_region,
         # Set number of runs for the p_value algorithm with a maximum of
         # 100 if only one field region was used.
         runs = int(100/len(field_region))
+        runs = 1
         
         # Only use stars inside cluster's radius.
         cluster_region_r = []
@@ -97,7 +98,7 @@ def get_pval(flag_area_stronger, cluster_region, field_region,
         # Iterate a given number of times.
         for run_num in range(runs):
             # Loop through all the field regions.
-            for indx, f_region in enumerate(field_region):
+            for indx, f_region in enumerate(field_region[:2]):
                 
                 # CMD for cluster region.
                 matrix_cl = get_CMD(cluster_region_r)
