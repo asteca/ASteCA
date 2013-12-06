@@ -96,6 +96,7 @@ def get_pval(flag_area_stronger, cluster_region, field_region,
         # vs field comparisions.
         p_vals_cl, p_vals_f = [], []
         # Iterate a given number of times.
+        flag_25, flag_50, flag_75 = False, False, False
         for run_num in range(runs):
             # Loop through all the field regions.
             for indx, f_region in enumerate(field_region[:2]):
@@ -145,12 +146,17 @@ def get_pval(flag_area_stronger, cluster_region, field_region,
                     p_vals_f.append(float(str(p_val_f)[4:]))
 
 
-            if run_num == runs/4:
+            if run_num+1 >= runs/4 and flag_25 == False:
                 print '  25% done'
-            elif run_num == runs/2:
+                flag_25 = True
+            elif run_num+1 >= runs/2 and flag_50 == False:
                 print '  50% done'
-            elif run_num == (runs/2 + runs/4):
+                flag_50 = True
+            elif run_num+1 >= (runs/2 + runs/4) and flag_75 == False:
                 print '  75% done'
+                flag_75 = True
+            elif run_num+1 == runs:
+                print '  100% done'
 
     # Skipping decontamination algorithm
     else:
