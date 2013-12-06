@@ -29,7 +29,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                prob_cl_kde, p_vals_cl, p_vals_f, kde_cl_1d, kde_f_1d, x_kde,
                y_over, quantiles, r_squared, slope, intercept, ccc,
                clus_reg_decont_lst, field_reg_box,
-               kde_cl, kde, membership_prob_avrg_sort, iso_moved, zams_iso,
+               kde_cl, kde_f, membership_prob_avrg_sort, iso_moved, zams_iso,
                cl_e_bv, cl_age, cl_feh, cl_dmod):
     '''
     Make all plots.
@@ -640,7 +640,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         plt.scatter(stars_reg_temp[0], stars_reg_temp[1], marker='o', 
                     c='black', s=4., edgecolors='none', zorder=2)
         # Plot field KDE.
-        plt.imshow(np.rot90(kde[region]), cmap=plt.cm.gist_earth_r, 
+        plt.imshow(np.rot90(kde_f), cmap=plt.cm.gist_earth_r, 
                    extent=[col1_min, col1_max, mag_min, mag_max],\
                    aspect='auto')
         # Plot ZAMS.

@@ -196,8 +196,8 @@ def field_decont_kde(flag_area_stronger, cluster_region, field_region,
                 # See: http://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.gaussian_kde.html
                 kernel = stats.gaussian_kde(values, bw_method = bw_choice)
                 # Store the KDE for plotting it later on.
-                if run_num == 4:
-                    kde[reg_index] = np.reshape(kernel(positions).T, x.shape)
+                if run_num == 4 and reg_index == 0:
+                    kde_f = np.reshape(kernel(positions).T, x.shape)
                 
                 # We iterate through all stars in the cluster region to obtain
                 # the probability for each one of belonging to this field region.
@@ -268,6 +268,6 @@ def field_decont_kde(flag_area_stronger, cluster_region, field_region,
         
     # Skipping decontamination algorithm
     else:
-        clus_reg_decont, kde_cl, kde = [], [], []
+        clus_reg_decont, kde_cl, kde_f = [], [], []
     
-    return clus_reg_decont, kde_cl, kde
+    return clus_reg_decont, kde_cl, kde_f
