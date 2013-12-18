@@ -44,7 +44,7 @@ def create_out_data_file(output_dir):
 #          this value will be low indicating the overdensity is probably not a\n\
 #          true cluster.\n\
 # CCC: Concordance correlation coefficient. Measures the agreement between the\n\
-#      quantiles and the identity line and gives and idea of how similar the shapes\n\
+#      quantiles and the identity line and gives an idea of how similar the shapes\n\
 #      of the KDEs are. A value close to 1 means good agreement, ie: the shapes of\n\
 #      the KDEs are very similar. A low value of prob_cl combined with a high \n\
 #      value of CCC implies the overdensity has little chance of being a true \n\
