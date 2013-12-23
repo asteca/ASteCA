@@ -20,8 +20,10 @@ def gauss_error(col_lst, e_col_lst, mag_lst, e_mag_lst):
 
 
 def bw_val(runs, run_num, num_stars):
-    # Calculate bandwidth value based on the number of stars in the region
-    # and the run_num value.
+    '''
+    Calculate bandwidth value based on the number of stars in the region
+    and the run_num value.
+    '''
     bw_min = 0.1
     bw_max = num_stars**(-1./6.) # Scott's rule
     bw_step = (bw_max-bw_min)/(runs-1)
@@ -30,6 +32,71 @@ def bw_val(runs, run_num, num_stars):
     bw_go = bw_range[run_num]
     return bw_go
     
+    
+def mc_probability(reg, xmin, xmax, ymin, ymax, runs, run_num, cluster_region,
+                   center_cl, clust_rad, mc_sample):
+    '''
+    Calculate probability for each cluster region star through Monte Carlo 
+    integration.
+    '''   
+    # Format region data.
+    col_lst, e_col_lst, mag_lst, e_mag_lst = [], [], [], []
+    for star in reg:
+        # Color data.
+        col_lst.append(star[5])
+        # Color error.
+        e_col_lst.append(star[6])
+        # Magnitude data.
+        mag_lst.append(star[3])
+        # Magnitude error.
+        e_mag_lst.append(star[4])
+        
+    # Move magnitude and colors randomly using a Gaussian function.
+    col_gauss, mag_gauss = gauss_error(col_lst, e_col_lst, mag_lst,
+                                       e_mag_lst)    
+    
+    # Obtain the KDE for this region.            
+    x, y = np.mgrid[xmin:xmax:100j, ymin:ymax:100j]
+    positions = np.vstack([x.ravel(), y.ravel()])
+    values = np.vstack([col_gauss, mag_gauss])
+    # Call function to calculate bandwidth to use.
+    bw_choice = bw_val(runs, run_num, len(col_gauss))
+    # The results are HEAVILY dependant on the bandwidth used here.
+    # See: http://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.gaussian_kde.html
+    kernel = stats.gaussian_kde(values, bw_method = bw_choice)
+    
+    reg_decont = []
+    # We iterate through all stars in the cluster region to obtain
+    # the probability for each one of belonging to this field region.
+    for star in cluster_region:
+        # Only compute if star is inside the cluster estimated radius.
+        # We do this to save sime processing time.
+        dist = np.sqrt((center_cl[0]-star[1])**2 + (center_cl[1]-star[2])**2)
+        if dist <= clust_rad[0]:
+
+            # Compute the point below which to integrate.
+            iso = kernel((star[5], star[3]))
+            
+            # Sample from the KDE distribution
+            sample = kernel.resample(size=mc_sample)
+            
+            # Filter the sample
+            insample = kernel(sample) < iso
+            
+            # The integral is equivalent to the probability of
+            # drawing a point that gets through the filter
+            integral = insample.sum() / float(insample.shape[0])
+            integral = integral if integral > 0. else 0.000001
+            
+            # Save probab value for this star of belonging to the
+            # cluster.
+            reg_decont.append(integral)
+        else:
+            reg_decont.append(0.000001)    
+    
+    return reg_decont, kernel, positions, x
+
+
 
 
 def field_decont_kde(flag_area_stronger, cluster_region, field_region,
@@ -41,8 +108,8 @@ def field_decont_kde(flag_area_stronger, cluster_region, field_region,
         # Set number of runs for the KDE algorithm.
         runs = 10
         
-        # Set the number of samples used in the Monte Carlo itegration.
-        mc_sample = 3000
+        # Set the number of samples used by the Monte Carlo itegration.
+        mc_sample = 1000
         
         print 'Applying KDE decontamination algorithm.'
         
@@ -66,189 +133,73 @@ def field_decont_kde(flag_area_stronger, cluster_region, field_region,
         # to lower the probabilities of stars in the cluster region located
         # distant from other stars in the cluster CMD.
         
-        # Initialize 'clus_reg_decont' empty list. The numbers inside this
-        # list are the average of the probabilities obtained for each star in
-        # the cluster region in each field region (inverted by taking the 1-*
-        # substraction) and the probability in the cluster region. The
-        # bigger this number, the more likely it is that that star is a true
-        # cluster member.
-        clus_reg_decont = []
-            
+        
         # Obtain max and min values for the axis. We do it this way so that
         # the plots of the KDEs will be aligned with the scatters plots
         # of the field region later on. Note that the limits are independent
         # of mag_lst and col_lst (used below).
         xmin, xmax = max(-0.9, min(col1_data)-0.2),\
                              min(3.9, max(col1_data)+0.2)
-        ymin, ymax = max(mag_data)+0.5, min(mag_data)-0.5        
-   
+        ymin, ymax = max(mag_data)+0.5, min(mag_data)-0.5  
+        
+        # Initialize 'clus_reg_decont' empty list. The numbers inside this
+        # list are the average of the probabilities obtained for each star in
+        # the cluster region in each field region (inverted by taking the 1-*
+        # substraction) and the probability in the cluster region. The
+        # bigger this number, the more likely it is that that star is a true
+        # cluster member.
+        clus_reg_decont = []  
         
         # Run 'runs' times.
         flag_25, flag_50, flag_75 = False, False, False
         for run_num in range(runs):
-
-            # Format data used to obtain kernel estimate in cluster region. Only
-            # use stars inside cluster's radius.
-            col_lst, e_col_lst, mag_lst, e_mag_lst = [], [], [], []
-            for star in cluster_region:
-                
-                dist = np.sqrt((center_cl[0]-star[1])**2 + \
-                (center_cl[1]-star[2])**2)
-                
-                if dist <= clust_rad[0]: 
-                    # Color data.
-                    col_lst.append(star[5])
-                    # Color error.
-                    e_col_lst.append(star[6])
-                    # Magnitude data.
-                    mag_lst.append(star[3])
-                    # Magnitude error.
-                    e_mag_lst.append(star[4]) 
-
-            # Move magnitude and colors for cluster stars randomly using a
-            # Gaussian function.
-            col_gauss, mag_gauss = gauss_error(col_lst, e_col_lst, mag_lst,
-                                               e_mag_lst)
-            
-            # Obtain the KDE for the cluster region (stars inside cluster's
-            # radius).
-            x, y = np.mgrid[xmin:xmax:100j, ymin:ymax:100j]
-            positions = np.vstack([x.ravel(), y.ravel()])
-            values = np.vstack([col_gauss, mag_gauss])
-            # Call function to calculate bandwidth to use.
-            bw_choice = bw_val(runs, run_num, len(col_gauss))
-            # The results are HEAVILY dependant on the bandwidth used here.
-            # See: http://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.gaussian_kde.html
-            kernel_cl = stats.gaussian_kde(values, bw_method = bw_choice)
-            # Store the KDE for plotting it later on.
-            if run_num == 4:
-                kde_cl = np.reshape(kernel_cl(positions).T, x.shape)
-            
-            # Initialize 'clus_reg_decont_cl' empty list which will hold the
-            # probs obtained for each star with the cluster's KDE.
-            clus_reg_decont_cl = []
-            
-            # Get probability of belonging to the cluster for every star in the
-            # cluster region.
-            for star in cluster_region:
-                # Only compute if star is inside the cluster estimated radius.
-                # We do this to save processing time.
-                dist = np.sqrt((center_cl[0]-star[1])**2 + \
-                (center_cl[1]-star[2])**2)
-                
-                if dist <= clust_rad[0]:            
-                    # Compute the point below which to integrate.
-                    iso = kernel_cl((star[5], star[3]))
-                    
-                    # Random sample from the KDE distribution.
-                    sample = kernel_cl.resample(size= mc_sample)
-                    
-                    # Filter the sample.
-                    insample = kernel_cl(sample) < iso
-                    
-                    # As per Monte Carlo, the integral is equivalent to the
-                    # probability of drawing a point that gets through the
-                    # filter.
-                    integral = insample.sum() / float(insample.shape[0])
-                    # This is the probability associated with that point of
-                    # belonging to the cluster sequence.
-                    clus_reg_decont_cl.append(integral)
-                else:
-                    clus_reg_decont_cl.append(0.)
-                
-                # Cluster KDE obtained.
-            
             
             # This list will hold the probabilities for each field region.
-            clus_reg_decont_fl = [[] for _ in range(len(field_region))]
-            
+            clus_reg_decont_fl = [[] for _ in field_region]
             # Iterate through all the 'field stars' regions that were populated.
-            for reg_index in range(len(field_region)):
-                
-                reg = field_region[reg_index]
-                
-                # Format field region data.
-                col_lst, e_col_lst, mag_lst, e_mag_lst = [], [], [], []
-                for star in reg:
-                    # Color data.
-                    col_lst.append(star[5])
-                    # Color error.
-                    e_col_lst.append(star[6])
-                    # Magnitude data.
-                    mag_lst.append(star[3])
-                    # Magnitude error.
-                    e_mag_lst.append(star[4])
-                    
-                # Move magnitude and colors randomly using a Gaussian function.
-                col_gauss, mag_gauss = gauss_error(col_lst, e_col_lst, mag_lst,
-                                                   e_mag_lst)
-                
-                # Obtain the KDE for this field region.            
-                x, y = np.mgrid[xmin:xmax:100j, ymin:ymax:100j]
-                positions = np.vstack([x.ravel(), y.ravel()])
-                values = np.vstack([col_gauss, mag_gauss])
-                # Call function to calculate bandwidth to use.
-                bw_choice = bw_val(runs, run_num, len(col_gauss))
-                # The results are HEAVILY dependant on the bandwidth used here.
-                # See: http://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.gaussian_kde.html
-                kernel = stats.gaussian_kde(values, bw_method = bw_choice)
-                # Store the KDE for plotting it later on.
-                if run_num == 4 and reg_index == 0:
-                    kde_f = np.reshape(kernel(positions).T, x.shape)
-                
-                # We iterate through all stars in the cluster region to obtain
-                # the probability for each one of belonging to this field region.
-                for star in cluster_region:
-                    # Only compute if star is inside the cluster estimated radius.
-                    # We do this to save sime processing time.
-                    dist = np.sqrt((center_cl[0]-star[1])**2 + \
-                    (center_cl[1]-star[2])**2)
-                    if dist <= clust_rad[0]:
-    
-                        # Compute the point below which to integrate.
-                        iso = kernel((star[5], star[3]))
-                        
-                        # Sample from the KDE distribution
-                        sample = kernel.resample(size= mc_sample)
-                        
-                        # Filter the sample
-                        insample = kernel(sample) < iso
-                        
-                        # The integral is equivalent to the probability of
-                        # drawing a point that gets through the filter
-                        integral = insample.sum() / float(insample.shape[0])
-                        # Get the probability associated with that star of
-                        # belonging to the cluster as 1 minus the probability of
-                        # belonging to the field.
-                        prob = 1 - integral
+            for indx, fl_region in enumerate(field_region):
 
-                        # Save probab value for this star of belonging to the
-                        # cluster.
-                        clus_reg_decont_fl[reg_index].append(prob)
-                    else:
-                        clus_reg_decont_fl[reg_index].append(0.)
-                    
-            # Field processed.
-    
+                n_fl = len(fl_region)
+                # Randomly shuffle the stars in the cluster region.
+                clust_reg_clean = np.random.permutation(cluster_region)
+                # Remove n_fl random stars from the cluster region and pass
+                # it to the function that obtains the probabilities for each
+                # star in the "cleaned" cluster region.
+                reg = clust_reg_clean[n_fl:]
+                n_cl = len(reg)
+                reg_decont_cl, kernel, positions, x = \
+                mc_probability(reg, xmin, xmax, \
+                ymin, ymax, runs, run_num, cluster_region, center_cl, \
+                clust_rad, mc_sample)
+                # Cluster KDE obtained. 
+                # Store the KDE for plotting it later on.
+                if run_num == 4:
+                    kde_cl = np.reshape(kernel(positions).T, x.shape)
+                
+                reg = fl_region
+                reg_decont_fl, kernel, positions, x = \
+                mc_probability(reg, xmin, xmax, ymin, \
+                ymax, runs, run_num, cluster_region, center_cl, clust_rad, \
+                mc_sample)
+                # Field region processed.
+                # Store the KDE for plotting it later on.
+                if run_num == 4 and indx == 0:
+                    kde_f = np.reshape(kernel(positions).T, x.shape)
+
+                # Obtain Bayesian probability for each star in the cluster
+                # region.
+                p_a, p_b = np.array(reg_decont_fl), np.array(reg_decont_cl)
+                bayes_prob = 1./(1. + (n_fl*p_a)/(n_cl*p_b))
+                # Store probabilities.
+                clus_reg_decont_fl[indx] = bayes_prob
+
             # Now we have the probabilities of each star of belonging to the
-            # cluster sequence obtained with the cluster KDE in
-            # 'clus_reg_decont_cl' and the probs obtained with the field stars
-            # regions in 'clus_reg_decont_fl'
+            # cluster sequence in 'clus_reg_decont_fl'
             
-            # First we average all the values in the field stars regions lists.
-            # Change to array because its faster.
-            arr_clus_reg_decont_fl = np.array(clus_reg_decont_fl)
-            # Create new list with averaged values.
-            avrg_field_reg = np.mean(arr_clus_reg_decont_fl, 0)
-            
-            # Now we average that list with the one obtained using the cluster
-            # field.
-            # Create new array of both array and list.
-            data = np.array([avrg_field_reg, clus_reg_decont_cl])
-            # Store average in temporary array.
-            temp = np.average(data, axis=0)
-            # Convert to final list.
-            clus_reg_decont.append(temp.tolist())
+            # Average all the probability values in each list.
+            avrg_field_reg = np.mean(np.array(clus_reg_decont_fl), 0)
+            # Store in final list as list.
+            clus_reg_decont.append(avrg_field_reg.tolist())
             
             if run_num+1 >= runs/4 and flag_25 == False:
                 print '  25% done'

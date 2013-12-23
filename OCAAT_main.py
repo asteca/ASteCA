@@ -408,17 +408,19 @@ all stars with photom errors < 0.3)? (y/n) ')
 
 
     # Get physical cluster probability based on p_values distribution.
-    prob_cl_kde, p_vals_cl, p_vals_f, kde_cl_1d, kde_f_1d, x_kde, y_over = \
-    g_pv(flag_area_stronger, cluster_region, field_region, col1_data, \
-    mag_data, center_cl, clust_rad)
-    print 'Probability of physical cluster obtained (%0.2f).' % prob_cl_kde
-
-
-    # Get QQ plot for p-values distributions.
-    quantiles, r_squared, slope, intercept, ccc = g_qq(p_vals_cl, p_vals_f)
-    print 'QQ-plot obtained (R^2 = %0.2f)' % r_squared
+#    prob_cl_kde, p_vals_cl, p_vals_f, kde_cl_1d, kde_f_1d, x_kde, y_over = \
+#    g_pv(flag_area_stronger, cluster_region, field_region, col1_data, \
+#    mag_data, center_cl, clust_rad)
+#    print 'Probability of physical cluster obtained (%0.2f).' % prob_cl_kde
+#
+#
+#    # Get QQ plot for p-values distributions.
+#    quantiles, r_squared, slope, intercept, ccc = g_qq(p_vals_cl, p_vals_f)
+#    print 'QQ-plot obtained (R^2 = %0.2f)' % r_squared
     
-    
+    prob_cl_kde, p_vals_cl, p_vals_f, kde_cl_1d, kde_f_1d, x_kde, y_over, \
+    quantiles, r_squared, slope, intercept, ccc = 0., [], [], [], [], [], [],\
+    [], 0., 0., 0., 0.
     
 ################## Decontamination Algorithm Selection #######################
     # Apply decontamination algorithm only to stars with accepted photom
