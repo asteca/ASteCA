@@ -106,7 +106,7 @@ def field_decont_kde(flag_area_stronger, cluster_region, field_region,
     if not(flag_area_stronger):
         
         # Set number of runs for the KDE algorithm.
-        runs = 100
+        runs = 99
         
         # Set the number of samples used by the Monte Carlo itegration.
         mc_sample = 1000
