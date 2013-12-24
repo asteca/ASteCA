@@ -36,8 +36,8 @@ def bw_val(runs, run_num, num_stars):
 def mc_probability(reg, xmin, xmax, ymin, ymax, runs, run_num, cluster_region,
                    center_cl, clust_rad, mc_sample):
     '''
-    Calculate probability for each cluster region star through Monte Carlo 
-    integration.
+    Calculate probability/likelihood for each cluster region star through
+    Monte Carlo integration.
     '''   
     # Format region data.
     col_lst, e_col_lst, mag_lst, e_mag_lst = [], [], [], []
@@ -67,29 +67,29 @@ def mc_probability(reg, xmin, xmax, ymin, ymax, runs, run_num, cluster_region,
     
     reg_decont = []
     # We iterate through all stars in the cluster region to obtain
-    # the probability for each one of belonging to this field region.
+    # the probability/likelihood for each one of belonging to this region.
     for star in cluster_region:
         # Only compute if star is inside the cluster estimated radius.
-        # We do this to save sime processing time.
         dist = np.sqrt((center_cl[0]-star[1])**2 + (center_cl[1]-star[2])**2)
         if dist <= clust_rad[0]:
 
-            # Compute the point below which to integrate.
+            # Compute the value below which to integrate.
             iso = kernel((star[5], star[3]))
+            integral = iso
             
-            # Sample from the KDE distribution
-            sample = kernel.resample(size=mc_sample)
-            
-            # Filter the sample
-            insample = kernel(sample) < iso
-            
-            # The integral is equivalent to the probability of
-            # drawing a point that gets through the filter
-            integral = insample.sum() / float(insample.shape[0])
+#            # Sample from the KDE distribution
+#            sample = kernel.resample(size=mc_sample)
+#            
+#            # Filter the sample
+#            insample = kernel(sample) < iso
+#            
+#            # The integral is equivalent to the probability of
+#            # drawing a point that gets through the filter
+#            integral = insample.sum() / float(insample.shape[0])
+            # Avoid 'nan' and/or 'infinite' solutions.
             integral = integral if integral > 0. else 0.000001
             
-            # Save probab value for this star of belonging to the
-            # cluster.
+            # Save probability value for this star of belonging to this region.
             reg_decont.append(integral)
         else:
             reg_decont.append(0.000001)    
@@ -106,7 +106,7 @@ def field_decont_kde(flag_area_stronger, cluster_region, field_region,
     if not(flag_area_stronger):
         
         # Set number of runs for the KDE algorithm.
-        runs = 10
+        runs = 100
         
         # Set the number of samples used by the Monte Carlo itegration.
         mc_sample = 1000
@@ -158,17 +158,34 @@ def field_decont_kde(flag_area_stronger, cluster_region, field_region,
             clus_reg_decont_fl = [[] for _ in field_region]
             # Iterate through all the 'field stars' regions that were populated.
             for indx, fl_region in enumerate(field_region):
-
+                
+                # Obtain likelihoods for each star in the cluster region
+                # using this field region, ie: P(A)
+                reg_decont_fl, kernel, positions, x = \
+                mc_probability(fl_region, xmin, xmax, ymin, \
+                ymax, runs, run_num, cluster_region, center_cl, clust_rad, \
+                mc_sample)
+                # Store number of stars in field region.
                 n_fl = len(fl_region)
+                # Store the KDE for plotting it later on.
+                if run_num == 4 and indx == 0:
+                    kde_f = np.reshape(kernel(positions).T, x.shape)
+
+
                 # Randomly shuffle the stars in the cluster region.
-                clust_reg_clean = np.random.permutation(cluster_region)
+                clust_reg_shuffle = np.random.permutation(cluster_region)
                 # Remove n_fl random stars from the cluster region and pass
-                # it to the function that obtains the probabilities for each
-                # star in the "cleaned" cluster region.
-                reg = clust_reg_clean[n_fl:]
-                n_cl = len(reg)
+                # it to the function that obtains the likelihoods for each
+                # star in the "cleaned" cluster region, ie: P(B)
+                if n_fl < len(clust_reg_shuffle):
+                    clust_reg_clean = clust_reg_shuffle[n_fl:]
+                else:
+                    # If field region has more stars than the cluster region,
+                    # don't remove any star. This should not happen though.
+                    clust_reg_clean = clust_reg_shuffle
+                n_cl = len(clust_reg_clean)
                 reg_decont_cl, kernel, positions, x = \
-                mc_probability(reg, xmin, xmax, \
+                mc_probability(clust_reg_clean, xmin, xmax, \
                 ymin, ymax, runs, run_num, cluster_region, center_cl, \
                 clust_rad, mc_sample)
                 # Cluster KDE obtained. 
@@ -176,15 +193,6 @@ def field_decont_kde(flag_area_stronger, cluster_region, field_region,
                 if run_num == 4:
                     kde_cl = np.reshape(kernel(positions).T, x.shape)
                 
-                reg = fl_region
-                reg_decont_fl, kernel, positions, x = \
-                mc_probability(reg, xmin, xmax, ymin, \
-                ymax, runs, run_num, cluster_region, center_cl, clust_rad, \
-                mc_sample)
-                # Field region processed.
-                # Store the KDE for plotting it later on.
-                if run_num == 4 and indx == 0:
-                    kde_f = np.reshape(kernel(positions).T, x.shape)
 
                 # Obtain Bayesian probability for each star in the cluster
                 # region.
@@ -196,7 +204,7 @@ def field_decont_kde(flag_area_stronger, cluster_region, field_region,
             # Now we have the probabilities of each star of belonging to the
             # cluster sequence in 'clus_reg_decont_fl'
             
-            # Average all the probability values in each list.
+            # Average all the probability values for each star.
             avrg_field_reg = np.mean(np.array(clus_reg_decont_fl), 0)
             # Store in final list as list.
             clus_reg_decont.append(avrg_field_reg.tolist())
@@ -213,7 +221,6 @@ def field_decont_kde(flag_area_stronger, cluster_region, field_region,
             elif run_num+1 == runs:
                 print '  100% done'
                 
-        
     # Skipping decontamination algorithm
     else:
         clus_reg_decont, kde_cl, kde_f = [], [], []
