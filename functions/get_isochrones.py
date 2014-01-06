@@ -16,7 +16,7 @@ def get_isochrones(mypath, clust_name):
     '''
     
     # Path to isochrones dir.
-    iso_path = '/media/sync/github/isochrones/isochrones'
+    iso_path = '/media/rest/github/isochrones/isochrones'
     
     # Get extinction, age, metallicity and dist module for this cluster from
     # the file that stores this data.
