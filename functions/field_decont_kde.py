@@ -5,6 +5,7 @@
 import numpy as np
 import random as rd
 from scipy import stats
+import time
 
 '''
 KDE field decontamination algorithm.
@@ -68,6 +69,7 @@ def mc_probability(reg, xmin, xmax, ymin, ymax, runs, run_num, cluster_region,
     reg_decont = []
     # We iterate through all stars in the cluster region to obtain
     # the probability/likelihood for each one of belonging to this region.
+    tik = time.time()
     for star in cluster_region:
         # Only compute if star is inside the cluster estimated radius.
         dist = np.sqrt((center_cl[0]-star[1])**2 + (center_cl[1]-star[2])**2)
@@ -75,24 +77,25 @@ def mc_probability(reg, xmin, xmax, ymin, ymax, runs, run_num, cluster_region,
 
             # Compute the value below which to integrate.
             iso = kernel((star[5], star[3]))
-            integral = iso
+#            integral = iso
             
-#            # Sample from the KDE distribution
-#            sample = kernel.resample(size=mc_sample)
-#            
-#            # Filter the sample
-#            insample = kernel(sample) < iso
-#            
-#            # The integral is equivalent to the probability of
-#            # drawing a point that gets through the filter
-#            integral = insample.sum() / float(insample.shape[0])
+            # Sample from the KDE distribution
+            sample = kernel.resample(size=mc_sample)
+            
+            # Filter the sample
+            insample = kernel(sample) < iso
+            
+            # The integral is equivalent to the probability of
+            # drawing a point that gets through the filter
+            integral = insample.sum() / float(insample.shape[0])
             # Avoid 'nan' and/or 'infinite' solutions.
             integral = integral if integral > 0. else 0.000001
             
             # Save probability value for this star of belonging to this region.
             reg_decont.append(integral)
         else:
-            reg_decont.append(0.000001)    
+            reg_decont.append(0.000001)
+    print 'MC', time.time()-tik
     
     return reg_decont, kernel, positions, x
 
@@ -161,6 +164,7 @@ def field_decont_kde(flag_area_stronger, cluster_region, field_region,
                 
                 # Obtain likelihoods for each star in the cluster region
                 # using this field region, ie: P(A)
+                tik1 = time.time()
                 reg_decont_fl, kernel, positions, x = \
                 mc_probability(fl_region, xmin, xmax, ymin, \
                 ymax, runs, run_num, cluster_region, center_cl, clust_rad, \
@@ -170,6 +174,7 @@ def field_decont_kde(flag_area_stronger, cluster_region, field_region,
                 # Store the KDE for plotting it later on.
                 if run_num == 4 and indx == 0:
                     kde_f = np.reshape(kernel(positions).T, x.shape)
+                print '1', time.time()-tik1
 
 
                 # Randomly shuffle the stars in the cluster region.
@@ -177,12 +182,13 @@ def field_decont_kde(flag_area_stronger, cluster_region, field_region,
                 # Remove n_fl random stars from the cluster region and pass
                 # it to the function that obtains the likelihoods for each
                 # star in the "cleaned" cluster region, ie: P(B)
-                if n_fl < len(clust_reg_shuffle):
+                if n_fl < len(cluster_region):
                     clust_reg_clean = clust_reg_shuffle[n_fl:]
                 else:
                     # If field region has more stars than the cluster region,
                     # don't remove any star. This should not happen though.
                     clust_reg_clean = clust_reg_shuffle
+                tik2 = time.time()
                 n_cl = len(clust_reg_clean)
                 reg_decont_cl, kernel, positions, x = \
                 mc_probability(clust_reg_clean, xmin, xmax, \
@@ -192,6 +198,7 @@ def field_decont_kde(flag_area_stronger, cluster_region, field_region,
                 # Store the KDE for plotting it later on.
                 if run_num == 4:
                     kde_cl = np.reshape(kernel(positions).T, x.shape)
+                print '2', time.time()-tik2
                 
 
                 # Obtain Bayesian probability for each star in the cluster
