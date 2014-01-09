@@ -211,5 +211,16 @@ def gip(memb_prob_avrg_sort):
     # Select photometric system to be used.
     sys_select = raw_input('Select UBVI or Washington system as 1 or 2: ')    
     
+
+    # Store cluster data in new arrays: color & magnitude, their errors and 
+    # each star's membership probabilities (weights)
+    data0 = memb_prob_avrg_sort
+    # Store color and magnitude into array.
+    col_mag = np.array([[data0[5], data0[3]]], dtype=float)
+    # Store color and magnitude errors into array.
+    err_col_mag = np.array([[data0[6], data0[4]]], dtype=float)
+    # Store weights data (membership probabilities) into array.
+    weights = np.array([data0[7]], dtype=float)    
+    
     
     return isoch_fit_params
