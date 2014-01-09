@@ -97,8 +97,8 @@ def mc_probability(reg, xmin, xmax, ymin, ymax, runs, run_num, cluster_region,
 
 
 
-def field_decont_kde(flag_area_stronger, cluster_region, field_region,
-                     col1_data, mag_data, center_cl, clust_rad):
+def field_decont_kde(cluster_region, field_region, col1_data, mag_data,
+                     center_cl, clust_rad):
     '''
     Main function.
     '''
