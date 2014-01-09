@@ -466,8 +466,7 @@ all stars with photom errors < 0.3)? (y/n) ')
         # store in list.
         memb_prob_avrg_sort, clust_reg_prob_avrg = m_p_a_s(cluster_region,\
         runs_fields_probs, n_c, center_cl, clust_rad[0])
-        print 'Averaged Bayesian probabilities for all runs and field regions.'
-
+        print 'Averaged probabilities for all runs.'
     
     
     # New name for cluster used in output data file.
@@ -516,12 +515,10 @@ all stars with photom errors < 0.3)? (y/n) ')
        cl_age, cl_feh, cl_dmod)
     print 'Plots created.'
 
-    raw_input()
-
     # Create data file with most probable members.
     c_m_f(output_dir, sub_dir, clust_name, memb_prob_avrg_sort)
     print 'Most probable members saved to file.'
-   
+ 
    
     # Add cluster data and flags to output file
     a_d_o(sub_dir, output_dir, clust_name, center_cl, clust_rad, k_prof, 

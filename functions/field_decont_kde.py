@@ -110,11 +110,10 @@ def field_decont_kde(cluster_region, field_region, col1_data, mag_data,
     '''
     
     # Set total number of runs for the KDE algorithm to 100.
-#    runs = int(100/len(field_region))
-    runs = 5
+    runs = int(100/len(field_region))
     
     # Set the number of samples used by the Monte Carlo integration.
-    mc_sample = 10
+    mc_sample = 1000
     
     # cluster_region = [[id,x,y,T1,eT1,CT1,eCT1], [], [], ...]
     # len(cluster_region) = number of stars inside the cluster region
