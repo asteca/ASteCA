@@ -17,50 +17,6 @@ import matplotlib.gridspec as gridspec
 from matplotlib.ticker import MultipleLocator
 
 
-'''
-Rutine to find the best fit for a set of cluster stars given a set of tracks/
-isochrones. This allows assigning values for the (supposed) cluster's 
-parameters: E(B-V), distance (distance modulus), age and metallicity.
-
-* Files read by this code:
-    
-** All tracks stored in this path as files:
-    iso_path
-    
-** Read paths and names to all clusters processed by the 'cluster analysis'
-   algorithm from this file:
-   dir_memb_files  + algor_analisys_+algor_sr+.data
-
-** All files with membership probabilities assigned to store the coordinates
-   in CMD space and  weights of all the stars saved as most probable members:
-   dir_memb_files + sub_dir + *_memb.dat
-   
-* Files created by this code:
-
-** Main output data file. Stores the names and parameters values obtained for
-   each cluster through the track fitting process:
-   dir_memb_files + algor_track_fit_+algor_sr+.data
-
-** Store corrected (intrinsec) values for magnitude and color for each cluster
-   along with the rest of the data.
-   dir_memb_files  + sub_dir  + clust_name+_memb_intrsc.dat
-    
-** Output PNG images with best fit track for each cluster.
-   dir_memb_files + sub_dir + clust_name+_iso_auto_fit.png    
-
-'''
-
-
-
-
-
-
-
-
-
-
-
-
 def track_distance(t_ind):
     '''
     Function that takes as input an index pointing to a track/isochrone
@@ -250,38 +206,6 @@ def fast_wdist(t_ind):
     
     return func_score
         
-        
-        
-def intrsc_values(col_obsrv, mag_obsrv, e_bv, dist_mod):
-    '''
-    Takes *observed* color and magnitude lists and returns corrected or
-    intrinsic lists. Depends on the system selected/used.
-    '''
-    if sys_select == '1':
-        # For UBVI system.
-        #
-        # E(B-V) = (B-V) - (B-V)o
-        # Av = 3.1*E(B-V)
-        # (mv - Mv)o = -5 + 5*log(d) + Av = dist_mod + Av
-        # Mv = mv - dist_mod - Av
-        #
-        col_intrsc = col_obsrv - e_bv
-        mag_intrsc = mag_obsrv - dist_mod - 3.1*e_bv
-    else:
-        # For Washington system.
-        #
-        # E(C-T1) = 1.97*E(B-V) = (C-T1) - (C-T)o
-        # M_T1 = T1 + 0.58*E(B-V) - (m-M)o - 3.2*E(B-V)
-        #
-        # (C-T1)o = (C-T1) - 1.97*E(B-V)
-        # M_T1 = T1 + 0.58*E(B-V) - (m-M)o - 3.2*E(B-V)
-        #
-        col_intrsc = col_obsrv - 1.97*e_bv
-        mag_intrsc = mag_obsrv + 0.58*e_bv - dist_mod - 3.2*e_bv
-    
-    return col_intrsc, mag_intrsc
-
-
 
 
     data0 = memb_prob_avrg_sort
