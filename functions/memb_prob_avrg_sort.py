@@ -73,22 +73,6 @@ def mpas(cluster_region, runs_fields_probs, n_c, center_cl, clust_rad):
     membership_prob_avrg_sort = sorted(membership_prob_avrg,
                                        key=lambda item: (-item[7], item[4],
                                                          item[6], item[3]))
-
-    
-    
-# DEPRECATED
-    # We now re-scale this list so that the minimum value will be set
-    # as 0 and the maximum as 1.
-    # Put prob values in first sublist of temp_lst.
-#        temp_lst = list(reversed(zip(*most_prob_memb_nc)))
-#        min_p, max_p = np.min(temp_lst[0]), np.max(temp_lst[0])
-#        for indx, star in enumerate(most_prob_memb_nc):
-#            # Call function to get re-scaled probability value.
-#            prob_r = rescale(star[8], min_p, max_p)
-#            # Update value in list.
-#            most_prob_memb_nc[indx][8] = prob_r
-# DEPRECATED
-
     
 # DEPRECATED        
 #        # Store all stars in all lists into a single list.
