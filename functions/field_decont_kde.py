@@ -111,7 +111,7 @@ def field_decont_kde(cluster_region, field_region, col1_data, mag_data,
     
     # Set total number of runs for the KDE algorithm to 100.
 #    runs = int(100/len(field_region))
-    runs = 1
+    runs = 5
     
     # Set the number of samples used by the Monte Carlo integration.
     mc_sample = 10

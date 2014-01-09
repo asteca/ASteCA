@@ -460,12 +460,12 @@ all stars with photom errors < 0.3)? (y/n) ')
     
     # Check if decont alg was applied.
     if flag_area_stronger:
-        memb_prob_avrg_sort = []
+        memb_prob_avrg_sort, clust_reg_prob_avrg = [], []
     else:
         # Average and sort all membership probabilities for each star and
         # store in list.
-        memb_prob_avrg_sort = m_p_a_s(cluster_region, runs_fields_probs, n_c,
-                                      center_cl, clust_rad[0])
+        memb_prob_avrg_sort, clust_reg_prob_avrg = m_p_a_s(cluster_region,\
+        runs_fields_probs, n_c, center_cl, clust_rad[0])
         print 'Averaged Bayesian probabilities for all runs and field regions.'
 
     
@@ -511,15 +511,15 @@ all stars with photom errors < 0.3)? (y/n) ')
        cluster_region, field_region,
        prob_cl_kde, p_vals_cl, p_vals_f, kde_cl_1d, kde_f_1d, x_kde, y_over,
        quantiles, r_squared, slope, intercept, ccc,
-       clus_reg_decont, field_reg_box,
-       kde_cl, kde_f, membership_prob_avrg_sort, iso_moved, zams_iso, cl_e_bv,
+       clust_reg_prob_avrg, field_reg_box,
+       kde_cl, kde_f, memb_prob_avrg_sort, iso_moved, zams_iso, cl_e_bv,
        cl_age, cl_feh, cl_dmod)
     print 'Plots created.'
 
+    raw_input()
 
     # Create data file with most probable members.
-    c_m_f(output_dir, sub_dir, clust_name, membership_prob_list,
-          membership_prob_avrg_sort)
+    c_m_f(output_dir, sub_dir, clust_name, memb_prob_avrg_sort)
     print 'Most probable members saved to file.'
    
    

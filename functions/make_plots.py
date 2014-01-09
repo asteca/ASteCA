@@ -28,8 +28,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                cluster_region, field_region,
                prob_cl_kde, p_vals_cl, p_vals_f, kde_cl_1d, kde_f_1d, x_kde,
                y_over, quantiles, r_squared, slope, intercept, ccc,
-               clus_reg_decont_lst, field_reg_box,
-               kde_cl, kde_f, membership_prob_avrg_sort, iso_moved, zams_iso,
+               clust_reg_prob_avrg, field_reg_box,
+               kde_cl, kde_f, memb_prob_avrg_sort, iso_moved, zams_iso,
                cl_e_bv, cl_age, cl_feh, cl_dmod):
     '''
     Make all plots.
@@ -667,7 +667,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         text = text1+text2+text3+text4
         plt.text(0.05, 0.8, text, transform = ax15.transAxes, 
                  bbox=dict(facecolor='white', alpha=0.6), fontsize=12)
-        tot_kde_clust = len(membership_prob_avrg_sort)
+        tot_kde_clust = len(memb_prob_avrg_sort)
         plt.text(0.55, 0.93, r'$r \leq R_{cl}\,|\,N=%d$' % tot_kde_clust,
                  transform=ax15.transAxes, \
                  bbox=dict(facecolor='white', alpha=0.5), fontsize=16)
@@ -677,7 +677,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         ax15.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
         stars_clust_temp = [[], [], []]
         # Plot stars inside cluster radius.
-        for star in membership_prob_avrg_sort:
+        for star in memb_prob_avrg_sort:
             stars_clust_temp[0].append(star[5])
             stars_clust_temp[1].append(star[3])
         plt.scatter(stars_clust_temp[0], stars_clust_temp[1], marker='o', 
@@ -695,12 +695,6 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     # Finding chart of cluster region with decontamination algorithm applied.
     # Used for the finding chart with colors assigned according to the
     # probabilities obtained.
-    # Use only the first sub-lists in these lists for plotting.
-    if len(clus_reg_decont_lst) >= 1:
-        clus_reg_decont = clus_reg_decont_lst[0]
-    else:
-        clus_reg_decont = clus_reg_decont_lst    
-    
     # Check if decont algorithm was applied.
     if not(flag_area_stronger):
         ax16 = plt.subplot(gs1[6:8, 6:8])
@@ -736,7 +730,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                 star_size = 20
             stars_clust_temp[0].append(star[1])
             stars_clust_temp[1].append(star[2])
-            stars_clust_temp[2].append(200*clus_reg_decont[st_indx]**8)       
+            stars_clust_temp[2].append(200*clust_reg_prob_avrg[st_indx]**8)       
         plt.scatter(stars_clust_temp[0], stars_clust_temp[1], marker='o', 
                     c=stars_clust_temp[2], s=star_size, edgecolors='black',\
                     cmap=cm)
@@ -752,7 +746,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         #Set axis labels
         plt.xlabel(r'$C-T_1$', fontsize=18)
         plt.ylabel(r'$T_1$', fontsize=18)
-        tot_kde_clust = len(membership_prob_avrg_sort)
+        tot_kde_clust = len(memb_prob_avrg_sort)
         text = r'$N=%d\,|\,MI \geq 0.$' % tot_kde_clust
         plt.text(0.05, 0.93, text, transform = ax17.transAxes,
                  bbox=dict(facecolor='white', alpha=0.5), fontsize=14)
@@ -763,7 +757,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         # This reversed colormap means higher prob stars will look redder.
         cm = plt.cm.get_cmap('RdYlBu_r')
         m_p_m_temp = [[], [], []]
-        for star in membership_prob_avrg_sort:
+        for star in memb_prob_avrg_sort:
             m_p_m_temp[0].append(star[5])
             m_p_m_temp[1].append(star[3])
             m_p_m_temp[2].append(star[7])
@@ -811,7 +805,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         # This reversed colormap means higher prob stars will look redder.
         cm = plt.cm.get_cmap('RdYlBu_r')
         m_p_m_temp = [[], [], []]
-        for star in membership_prob_avrg_sort:
+        for star in memb_prob_avrg_sort:
             # Only plot stars with MI>=0.5
             if star[7] >= 0.5:
                 m_p_m_temp[0].append(star[5])
@@ -864,7 +858,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         # This reversed colormap means higher prob stars will look redder.
         cm = plt.cm.get_cmap('RdYlBu_r')
         m_p_m_temp = [[], [], []]
-        for star in membership_prob_avrg_sort:
+        for star in memb_prob_avrg_sort:
             # Only plot stars with MI>=0.75
             if star[7] >= 0.75:
                 m_p_m_temp[0].append(star[5])
@@ -909,7 +903,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         #Set axis labels
         plt.xlabel(r'$C-T_1$', fontsize=18)
         plt.ylabel(r'$T_1$', fontsize=18)
-        text = r'$N_{c}=%d$' % len(membership_prob_avrg_sort[:n_c])
+        text = r'$N_{c}=%d$' % len(memb_prob_avrg_sort[:n_c])
         plt.text(0.05, 0.93, text, transform = ax20.transAxes, 
                  bbox=dict(facecolor='white', alpha=0.5), fontsize=14)
         # Set minor ticks
@@ -919,7 +913,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         # This reversed colormap means higher prob stars will look redder.
         cm = plt.cm.get_cmap('RdYlBu_r')
         m_p_m_temp = [[], [], []]
-        for star in membership_prob_avrg_sort[:n_c]:
+        for star in memb_prob_avrg_sort[:n_c]:
             m_p_m_temp[0].append(star[5])
             m_p_m_temp[1].append(star[3])
             m_p_m_temp[2].append(star[7])
@@ -1009,7 +1003,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         plt.xlabel('cluster membership prob', fontsize=12)
         ax23.minorticks_on()
         ax23.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
-        prob_data = [star[7] for star in membership_prob_avrg_sort]
+        prob_data = [star[7] for star in memb_prob_avrg_sort]
         # Best Gaussian fit of data.
         (mu, sigma) = norm.fit(prob_data)
         # Text.
