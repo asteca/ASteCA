@@ -5,6 +5,7 @@
 import numpy as np
 import random as rd
 from scipy import stats
+from sklearn.neighbors import KernelDensity
 import time
 
 '''
@@ -69,7 +70,6 @@ def mc_probability(reg, xmin, xmax, ymin, ymax, runs, run_num, cluster_region,
     reg_decont = []
     # We iterate through all stars in the cluster region to obtain
     # the probability/likelihood for each one of belonging to this region.
-    tik = time.time()
     for star in cluster_region:
         # Only compute if star is inside the cluster estimated radius.
         dist = np.sqrt((center_cl[0]-star[1])**2 + (center_cl[1]-star[2])**2)
@@ -95,10 +95,73 @@ def mc_probability(reg, xmin, xmax, ymin, ymax, runs, run_num, cluster_region,
             reg_decont.append(integral)
         else:
             reg_decont.append(0.000001)
-    print 'MC', time.time()-tik
     
     return reg_decont, kernel, positions, x
 
+
+
+def mc_probability2(reg, xmin, xmax, ymin, ymax, runs, run_num, cluster_region,
+                   center_cl, clust_rad, mc_sample):
+    '''
+    Calculate probability/likelihood for each cluster region star through
+    Monte Carlo integration.
+    '''   
+    # Format region data.
+    col_lst, e_col_lst, mag_lst, e_mag_lst = [], [], [], []
+    for star in reg:
+        # Color data.
+        col_lst.append(star[5])
+        # Color error.
+        e_col_lst.append(star[6])
+        # Magnitude data.
+        mag_lst.append(star[3])
+        # Magnitude error.
+        e_mag_lst.append(star[4])
+        
+    # Move magnitude and colors randomly using a Gaussian function.
+    col_gauss, mag_gauss = gauss_error(col_lst, e_col_lst, mag_lst,
+                                       e_mag_lst)    
+    
+    # Obtain the KDE for this region.            
+    x, y = np.mgrid[xmin:xmax:100j, ymin:ymax:100j]
+    positions = np.vstack([x.ravel(), y.ravel()])
+    values = np.vstack([col_gauss, mag_gauss])
+    # Call function to calculate bandwidth to use.
+    bw_choice = bw_val(runs, run_num, len(col_gauss))
+    # The results are HEAVILY dependant on the bandwidth used here.
+    # See: http://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.gaussian_kde.html
+    kernel_sk = KernelDensity(kernel='gaussian', bandwidth=bw_choice, rtol=1E-3).fit(zip(*values))
+    
+    reg_decont = []
+    # We iterate through all stars in the cluster region to obtain
+    # the probability/likelihood for each one of belonging to this region.
+    for star in cluster_region:
+        # Only compute if star is inside the cluster estimated radius.
+        dist = np.sqrt((center_cl[0]-star[1])**2 + (center_cl[1]-star[2])**2)
+        if dist <= clust_rad[0]:
+
+            iso = np.exp(kernel_sk.score_samples([[star[5], star[3]]]))
+            
+            # Sample from KDE distribution (Monte Carlo process).
+            sample = kernel_sk.sample(mc_sample)
+            
+            # Filter the sample leaving only values for which
+            # the kernel evaluates to less than what it does for
+            # the (x1, y1) point defined above.
+            insample = kernel_sk.score_samples(sample) < iso
+            
+            # The integral is equivalent to the probability of
+            # drawing a point that gets through the filter
+            integral = insample.sum() / float(insample.shape[0])
+            # Avoid 'nan' and/or 'infinite' solutions.
+            integral = integral if integral > 0. else 0.000001
+            
+            # Save probability value for this star of belonging to this region.
+            reg_decont.append(integral)
+        else:
+            reg_decont.append(0.000001)
+    
+    return reg_decont, kernel_sk, positions, x
 
 
 
@@ -200,6 +263,34 @@ def field_decont_kde(flag_area_stronger, cluster_region, field_region,
                     kde_cl = np.reshape(kernel(positions).T, x.shape)
                 print '2', time.time()-tik2
                 
+                
+# -------------------------------------------------------------------------------
+                # Obtain likelihoods for each star in the cluster region
+                # using this field region, ie: P(A)
+                tik1 = time.time()
+                reg_decont_fl, kernel, positions, x = \
+                mc_probability2(fl_region, xmin, xmax, ymin, \
+                ymax, runs, run_num, cluster_region, center_cl, clust_rad, \
+                mc_sample)
+                # Store number of stars in field region.
+                n_fl = len(fl_region)
+                # Store the KDE for plotting it later on.
+                if run_num == 4 and indx == 0:
+                    kde_f = np.reshape(kernel(positions).T, x.shape)
+                print '3', time.time()-tik1
+
+                tik2 = time.time()
+                n_cl = len(clust_reg_clean)
+                reg_decont_cl, kernel, positions, x = \
+                mc_probability2(clust_reg_clean, xmin, xmax, \
+                ymin, ymax, runs, run_num, cluster_region, center_cl, \
+                clust_rad, mc_sample)
+                # Cluster KDE obtained. 
+                # Store the KDE for plotting it later on.
+                if run_num == 4:
+                    kde_cl = np.reshape(kernel(positions).T, x.shape)
+                print '4', time.time()-tik2
+# -------------------------------------------------------------------------------
 
                 # Obtain Bayesian probability for each star in the cluster
                 # region.
