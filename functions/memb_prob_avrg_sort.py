@@ -7,28 +7,6 @@ Created on Fri Jul 19 10:24:45 2013
 
 import numpy as np
 
-
-# DEPRECATED
-#from collections import defaultdict
-#
-#def rescale(prob, min_p, max_p):
-#    '''
-#    Function to re-scale the values in the list that holds the n_c most
-#    probable members between 0 for the minimum probability value and 1 for the
-#    maximum.
-#    '''
-#    if max_p == min_p:
-#        # This will happen when there's only one star in the list.
-#        prob_r = 0
-#    else:
-#        m = 1./(max_p - min_p)
-#        h = min_p/(min_p - max_p)
-#        prob_r = m*prob+h
-#    
-#    return round(prob_r, 3)
-# DEPRECATED    
-
-
 def mpas(cluster_region, runs_fields_probs, n_c, center_cl, clust_rad):
     """
     Use the number of approximate cluster's members n_c to identify the n_c
