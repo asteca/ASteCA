@@ -105,14 +105,5 @@ def mpas(cluster_region, runs_fields_probs, n_c, center_cl, clust_rad):
     
 # DEPRECATED
 
-    
-# DEPRECATED
-    # We now trim this list up to 'N_c' items so it will contain only the
-    # brightest stars with the largest decontamination index as the
-    # approximate number of cluster members.
-#        most_prob_memb_avrg = most_prob_memb_avrg_temp[:n_c]
-# DEPRECATED
-
-
     return membership_prob_avrg_sort, membership_prob_list
         
