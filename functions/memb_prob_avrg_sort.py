@@ -73,25 +73,6 @@ def mpas(cluster_region, runs_fields_probs, n_c, center_cl, clust_rad):
     membership_prob_avrg_sort = sorted(membership_prob_avrg,
                                        key=lambda item: (-item[7], item[4],
                                                          item[6], item[3]))
-    
-# DEPRECATED        
-#        # Store all stars in all lists into a single list.
-#        temp_single_list = []
-#        for KDE_reg in most_prob_memb_list:
-#            for star in KDE_reg:
-#                temp_single_list.append(star)
-#
-#        # Iterate through all stars in the list averaging those that are found
-#        # more then once.
-#        temp_single_avrg = []
-#        nums = defaultdict(list)
-#        for arr in temp_single_list:
-#            key = tuple(arr[1:8]) # make the x,y,mag,e_mag,col,e_col the keys
-#            nums[key].append(arr[8]) # append the probability for the given key
-#        
-#        temp_single_avrg = [list(k) + [round(sum(vals)/len(vals),3)] for k,
-#                            vals in nums.items()]
-# DEPRECATED
 
-    return membership_prob_avrg_sort, membership_prob_list
+    return membership_prob_avrg_sort
         
