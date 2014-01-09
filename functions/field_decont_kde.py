@@ -107,7 +107,7 @@ def field_decont_kde(cluster_region, field_region, col1_data, mag_data,
     runs = int(100/len(field_region))
     
     # Set the number of samples used by the Monte Carlo integration.
-    mc_sample = 1000
+    mc_sample = 10
     
     print 'Applying KDE decontamination algorithm.'
     
@@ -181,7 +181,7 @@ def field_decont_kde(cluster_region, field_region, col1_data, mag_data,
             # region.
             p_a, p_b = np.array(reg_decont_fl), np.array(reg_decont_cl)
             bayes_prob = 1./(1. + (n_fl*p_a)/(n_cl*p_b))
-            # Store probabilities.
+            # Store probabilities obtained with this field region.
             clus_reg_decont_fl[indx] = bayes_prob
 
         # Now we have the probabilities of each star of belonging to the
