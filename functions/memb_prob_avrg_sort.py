@@ -93,17 +93,5 @@ def mpas(cluster_region, runs_fields_probs, n_c, center_cl, clust_rad):
 #                            vals in nums.items()]
 # DEPRECATED
 
-
-    
-# DEPRECATED        
-    # Sort this list again as above (decontamination index first from max
-    # value (1) to min (0) and then by its error values and magnitude value,
-    # (in that order) from min to max value).
-    # item[7] is the star's decont index and item[3] its magnitude.
-#        most_prob_memb_avrg_temp = sorted(temp_single_avrg, key=lambda item: \
-#                                    (-item[7], item[4], item[6], item[3]))
-    
-# DEPRECATED
-
     return membership_prob_avrg_sort, membership_prob_list
         
