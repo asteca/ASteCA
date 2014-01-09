@@ -762,15 +762,6 @@ def intrsc_values(col_obsrv, mag_obsrv, e_bv, dist_mod):
     out_png = join(dir_memb_files, sub_dir, clust_name+'_iso_auto_fit.png')
     plt.savefig(out_png, dpi=150)
     plt.close()
-else:
-    # If file is empty, ie: no possible members were found, store all
-    # 99.99 values for cluster.
-    line = [sub_dir+'/'+clust_name, '99.99', '99.99', '99.99', '99.99',
-            '99.99', '99.99']
-
-    # "a" opens the file for appending
-    with open(out_data, "a") as f_out:
-        f_out.write('{:<22} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8}'.format(*line))
-        f_out.write('\n')    
+   
     
 print '\nEnd.'
