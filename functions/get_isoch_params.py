@@ -5,7 +5,69 @@ Created on Thu Jan  9 15:08:39 2014
 @author: gabriel
 """
 
-def read_isochrones():
+import os
+from os.path import join
+
+import numpy as np
+
+
+def get_ranges_paths():
+    '''
+    Reads parameters ranges and paths to stored isochrone files.
+    '''
+    
+    # Select photometric system to be used.
+    sys_select = raw_input('Select UBVI or Washington system as 1 or 2: ')
+    
+    # Girardi isochrones span a range of ~ 3.98+06 to 1.26e+10 yr.
+    # MASSCLEAN clusters span a range of ~ 1.00e06 to 1.00e+10 yr.
+    if sys_select == '1':
+        # Range of values where the parameters will move.
+        e_bv_min, e_bv_max, e_bv_step = 0., 1.01, 0.05
+        dis_mod_min, dis_mod_max, dis_mod_step = 8., 13., 0.5
+        z_min, z_max = 0.01, 0.03
+        age_min, age_max = 0.003, 3.2
+        
+        # Path where isochrone files are stored.
+        iso_path = '/media/rest/github/isochrones/iso_ubvi_marigo'
+        
+        # Data for files formatted for UBVI Marigo tracks.
+        line_start = "#\tIsochrone\tZ = "
+        mag_index = 9
+         
+    elif sys_select == '2':
+        # Select cloud.
+        cloud = raw_input('SMC or LMC cloud?')
+        
+        # Range of values where the parameters will move.
+        e_bv_min, e_bv_max, e_bv_step = 0., 0.21, 0.01
+        if cloud == 'SMC':
+            dis_mod_min, dis_mod_max, dis_mod_step = 18.9, 18.91, 1
+        elif cloud == 'LMC':
+            dis_mod_min, dis_mod_max, dis_mod_step = 18.5, 18.51, 1
+        z_min, z_max = 0.0005, 0.02
+        age_min, age_max = 0.003, 12.6
+    
+        # Select Marigo or PARSEC tracks.        
+        iso_select = raw_input('Select Marigo or PARSEC tracks as 1 or 2: ')
+        if iso_select == '1':
+            # Marigo.
+            line_start = "#\tIsochrone\tZ = "
+            mag_index = 9
+            # Path where isochrone files are stored.
+            iso_path = '/media/rest/github/isochrones/iso_wash_marigo'
+        elif iso_select == '2':
+            # PARSEC.
+            line_start = "#\tIsochrone  Z = "
+            mag_index = 10
+            # Path where isochrone files are stored.
+            iso_path = '/media/rest/github/isochrones/iso_wash_parsec'
+    
+    return iso_path, line_start, mag_index
+    
+    
+
+def read_isochrones(iso_path, line_start, mag_index):
     '''
     Reads and stores all isochrones available in the indicated folder.
     '''
@@ -15,11 +77,11 @@ def read_isochrones():
     # Each isochrrone is stored as a list composed of two sub-lists, one for
     # the mag and one for the color:
     # funcs = [[[mag values],[color values]], [[],[]], ...]
-    funcs =[]
+    isochrones =[]
     # List that will hold all the ages, metallicities and extinctions associated
     # with the isochrone in the same indexed position in 'funcs'.
     # params = [[metal, age, E(B-V), dis_mod], [], ...]
-    params = []
+    isoch_params = []
     # Iterate through all isochrone files.
     for iso_file in os.listdir(iso_path):
     
@@ -74,19 +136,20 @@ def read_isochrones():
                 # generating a new function. Store this function in 'funcs' list.
                 for e_bv in np.arange(e_bv_min, e_bv_max, e_bv_step):
                     
-                    for dis_mod in np.arange(dis_mod_min, dis_mod_max, dis_mod_step):
+                    for dis_mod in np.arange(dis_mod_min, dis_mod_max,
+                                             dis_mod_step):
                         
                         # Store params for this isochrone.
-                        params.append([metal, ages[age_val], round(e_bv, 2),
-                                       round(dis_mod, 2)])
+                        isoch_params.append([metal, ages[age_val],
+                                             round(e_bv, 2), round(dis_mod, 2)])
                         
                         # Call function to move track.
                         iso_moved_0, iso_moved_1 = move_track(sys_select, dis_mod,
                                                               e_bv) 
                         # Append final x and y CMD data to array.
-                        funcs.append([iso_moved_0, iso_moved_1])
+                        isochrones.append([iso_moved_0, iso_moved_1])
                     
-                    
+    return isochrones, isoch_params
 
 
 def gip(memb_prob_avrg_sort):

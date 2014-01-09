@@ -52,55 +52,11 @@ parameters: E(B-V), distance (distance modulus), age and metallicity.
 
 
 
-# Select photometric system to be used.
-sys_select = raw_input('Select UBVI or Washington system as 1 or 2: ')
 
 
 
-# Girardi isochrones span a range of ~ 3.98+06 to 1.26e+10 yr.
-# MASSCLEAN clusters span a range of ~ 1.00e06 to 1.00e+10 yr.
-if sys_select == '1':
-    # Range of values where the parameters will move.
-    e_bv_min, e_bv_max, e_bv_step = 0., 1.01, 0.05
-    dis_mod_min, dis_mod_max, dis_mod_step = 8., 13., 0.5
-    z_min, z_max = 0.01, 0.03
-    age_min, age_max = 0.003, 3.2
-    
-    # Path where isochrone files are stored.
-    iso_path = '/media/rest/Dropbox/GABRIEL/CARRERA/3-POS-DOC/trabajo/codigo/iso_ubvi_marigo'
-#    iso_path = '/media/sync/Dropbox/GABRIEL/CARRERA/3-POS-DOC/trabajo/codigo/iso_ubvi_marigo'
-    
-    # Data for files formatted for UBVI Marigo tracks.
-    line_start = "#\tIsochrone\tZ = "
-    mag_index = 9
-     
-elif sys_select == '2':
-    # Select cloud.
-    cloud = raw_input('SMC or LMC cloud?')
-    
-    # Range of values where the parameters will move.
-    e_bv_min, e_bv_max, e_bv_step = 0., 0.21, 0.01
-    if cloud == 'SMC':
-        dis_mod_min, dis_mod_max, dis_mod_step = 18.9, 18.91, 1
-    elif cloud == 'LMC':
-        dis_mod_min, dis_mod_max, dis_mod_step = 18.5, 18.51, 1
-    z_min, z_max = 0.0005, 0.02
-    age_min, age_max = 0.003, 12.6
 
-    # Select Marigo or PARSEC tracks.        
-    iso_select = raw_input('Select Marigo or PARSEC tracks as 1 or 2: ')
-    if iso_select == '1':
-        # Marigo.
-        line_start = "#\tIsochrone\tZ = "
-        mag_index = 9
-        # Path where isochrone files are stored.
-        iso_path = '/media/rest/Dropbox/GABRIEL/CARRERA/3-POS-DOC/trabajo/codigo/iso_wash_marigo'
-    elif iso_select == '2':
-        # PARSEC.
-        line_start = "#\tIsochrone  Z = "
-        mag_index = 10
-        # Path where isochrone files are stored.
-        iso_path = '/media/rest/Dropbox/GABRIEL/CARRERA/3-POS-DOC/trabajo/codigo/iso_wash_parsec'
+
 
 
 
