@@ -199,6 +199,35 @@ def read_isochrones(sys_select):
 
 
 
+def isoch_likelihood(iso_ind):
+    '''
+    Takes an isochrone/synthetic CMD, compares it to the observed data and
+    returns a likelihood value.
+    '''
+    return isoch_score
+
+
+
+def brute_force(isochrones):
+    '''
+    Brute force algorithm that computes the likelihoods for *all* the defined
+    isochrones.
+    '''
+    # Initiate list that will hold the values (scores) which defines how well
+    # each isochrone fits the observed data.
+    score = []
+    # Iterate through all the tracks defined and stored.
+    for iso_ind in range(len(isochrones)):
+
+        # Call function that returns the score for a given track.
+        isoch_score = isoch_likelihood(iso_ind)
+        # Store the scores for each function/track into list.
+        score.append(isoch_score)    
+        
+    return score
+    
+
+
 
 def gip(memb_prob_avrg_sort):
     '''
@@ -227,19 +256,8 @@ def gip(memb_prob_avrg_sort):
     # according to the E(B-V) and dist_mod ranges given
     isochrones, isoch_params = read_isochrones(sys_select)
     
-
-    # Brute force algorithm: iterate through all the isochrones.
-
-    # Initiate list that will hold the values (scores) which defines how well
-    # each isochrone fits the observed data.
-    score = []
-    # Iterate through all the tracks defined and stored.
-    for iso_ind in range(len(isochrones)):
-
-        # Call function that returns the score for a given track.
-        track_score = track_distance(iso_ind)
-        # Store the scores for each function/track into list.
-        score.append(track_score)    
+    # Call brute force algorithm to calculate the likelihoods for all isochrones.
+    score = brute_force(isochrones)
     
     # Find index of function with smallest value of the likelihoods.
     # This index thus points to the isochrone that best fits the observed
@@ -249,6 +267,8 @@ def gip(memb_prob_avrg_sort):
 
     z_met, age_gyr, e_bv, dis_mod = [i for i in isoch_params[best_func]]
     dist_kpc = round(10**(0.2*(dis_mod+5.))/1000., 2)
+    
+    isoch_fit_params = [z_met, age_gyr, e_bv, dis_mod, dist_kpc]
     
     
     return isoch_fit_params
