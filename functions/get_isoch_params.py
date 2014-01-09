@@ -11,13 +11,10 @@ from os.path import join
 import numpy as np
 
 
-def get_ranges_paths():
+def get_ranges_paths(sys_select):
     '''
     Reads parameters ranges and paths to stored isochrone files.
     '''
-    
-    # Select photometric system to be used.
-    sys_select = raw_input('Select UBVI or Washington system as 1 or 2: ')
     
     # Girardi isochrones span a range of ~ 3.98+06 to 1.26e+10 yr.
     # MASSCLEAN clusters span a range of ~ 1.00e06 to 1.00e+10 yr.
@@ -63,7 +60,8 @@ def get_ranges_paths():
             # Path where isochrone files are stored.
             iso_path = '/media/rest/github/isochrones/iso_wash_parsec'
     
-    return iso_path, line_start, mag_index
+    return e_bv_min, e_bv_max, e_bv_step, dis_mod_min, dis_mod_max,
+    dis_mod_step, iso_path, line_start, mag_index
     
     
 
@@ -110,10 +108,14 @@ def move_track(sys_select, dis_mod, e_bv, iso_list, age_val):
     
     
 
-def read_isochrones(iso_path, line_start, mag_index):
+def read_isochrones(sys_select):
     '''
-    Reads and stores all isochrones available in the indicated folder.
+    Reads and stores all isochrones available inside the indicated folder.
     '''
+
+    # Call function to obtain these values.
+    e_bv_min, e_bv_max, e_bv_step, dis_mod_min, dis_mod_max, dis_mod_step,\
+    iso_path, line_start, mag_index = get_ranges_paths(sys_select)
 
     # This list will hold every isochrone of a given age, metallicity moved
     # according to given values of distance modulues and extinction.
@@ -196,11 +198,17 @@ def read_isochrones(iso_path, line_start, mag_index):
     return isochrones, isoch_params
 
 
+
 def gip(memb_prob_avrg_sort):
     '''
+    Main function.
+    
     Perform a best fitting process to find the cluster's parameters:
     E(B-V), distance (distance modulus), age and metallicity.
     '''
+
+    # Select photometric system to be used.
+    sys_select = raw_input('Select UBVI or Washington system as 1 or 2: ')    
     
     
     return isoch_fit_params
