@@ -171,8 +171,8 @@ def field_decont_kde(flag_area_stronger, cluster_region, field_region,
     # Apply algorithm of l is bigger than 2, else skip it.
     if not(flag_area_stronger):
         
-        # Set number of runs for the KDE algorithm.
-        runs = 99
+        # Set total number of runs for the KDE algorithm to 100.
+        runs = int(100/len(field_region))
         
         # Set the number of samples used by the Monte Carlo itegration.
         mc_sample = 1000
