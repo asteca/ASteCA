@@ -45,7 +45,7 @@ from functions.field_decont_kde import field_decont_kde as fdk
 
 from functions.get_p_value import get_pval as g_pv
 from functions.get_qqplot import qqplot as g_qq
-from functions.get_most_probable_members import get_most_prob_memb as g_m_p_m
+from functions.memb_prob_avrg_sort import mpas as m_p_a_s
 from functions.make_plots import make_plots as mp
 from functions.add_data_output import add_data_output as a_d_o
 from functions.cl_members_file import cluster_members_file as c_m_f
@@ -460,12 +460,12 @@ all stars with photom errors < 0.3)? (y/n) ')
     
     # Check if decont alg was applied.
     if flag_area_stronger:
-        membership_prob_avrg_sort, membership_prob_list = [], []
+        memb_prob_avrg_sort = []
     else:
-        # Identify the most probable members and re-scale its probability
-        # values between 0 and 1.
-        membership_prob_avrg_sort, membership_prob_list = \
-        g_m_p_m(cluster_region, clus_reg_decont, n_c, center_cl, clust_rad[0])
+        # Average and sort all membership probabilities for each star and
+        # store in list.
+        memb_prob_avrg_sort = m_p_a_s(cluster_region, runs_fields_probs, n_c,
+                                      center_cl, clust_rad[0])
         print 'Averaged Bayesian probabilities for all runs and field regions.'
 
     

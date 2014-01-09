@@ -29,8 +29,7 @@ import numpy as np
 # DEPRECATED    
 
 
-def get_most_prob_memb(cluster_region, clus_reg_decont, n_c, center_cl,
-                       clust_rad):
+def mpas(cluster_region, runs_fields_probs, n_c, center_cl, clust_rad):
     """
     Use the number of approximate cluster's members n_c to identify the n_c
     most likely members among the stars inside the calculated cluster's radius,
