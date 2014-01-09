@@ -99,114 +99,109 @@ def mc_probability(reg, xmin, xmax, ymin, ymax, runs, run_num, cluster_region,
 
 def field_decont_kde(flag_area_stronger, cluster_region, field_region,
                      col1_data, mag_data, center_cl, clust_rad):
+    '''
+    Main function.
+    '''
     
-    # Apply algorithm if at least one equal-sized field region was found
-    # around the cluster.
-    if not(flag_area_stronger):
-        
-        # Set total number of runs for the KDE algorithm to 100.
-        runs = int(100/len(field_region))
-        
-        # Set the number of samples used by the Monte Carlo itegration.
-        mc_sample = 1000
-        
-        print 'Applying KDE decontamination algorithm.'
-        
-        # cluster_region = [[id,x,y,T1,eT1,CT1,eCT1], [], [], ...]
-        # len(cluster_region) = number of stars inside the cluster region
-        # len(field_region[i]) = number of stars inside this field region
-        # Stars in the cluster region in the list 'cluster_region' and the
-        # rest of the field stars regions defined in lists inside the list
-        # 'field_region[]'.
-        
-        # Obtain max and min values for the axis. We do it this way so that
-        # the plots of the KDEs will be aligned with the scatters plots
-        # of the field region later on. Note that the limits are independent
-        # of mag_lst and col_lst (used below) and depend only on the full
-        # ranges of magnitude and color for the data.
-        xmin, xmax = max(-0.9, min(col1_data)-0.2),\
-                             min(3.9, max(col1_data)+0.2)
-        ymin, ymax = max(mag_data)+0.5, min(mag_data)-0.5  
-        
-        # Initialize 'clus_reg_decont' empty list. The numbers inside this
-        # list are the average of the probabilities obtained for each star in
-        # the cluster region in each field region (inverted by taking the 1-*
-        # substraction) and the probability in the cluster region. The
-        # bigger this number, the more likely it is that that star is a true
-        # cluster member.
-        clus_reg_decont = []  
-        
-        # Run 'runs' times.
-        flag_25, flag_50, flag_75 = False, False, False
-        for run_num in range(runs):
-            
-            # This list will hold the probabilities for each field region.
-            clus_reg_decont_fl = [[] for _ in field_region]
-            # Iterate through all the 'field stars' regions that were populated.
-            for indx, fl_region in enumerate(field_region):
-                
-                # Obtain likelihoods for each star in the cluster region
-                # using this field region, ie: P(A)
-                reg_decont_fl, kernel, positions, x = \
-                mc_probability(fl_region, xmin, xmax, ymin, \
-                ymax, runs, run_num, cluster_region, center_cl, clust_rad, \
-                mc_sample)
-                # Store number of stars in field region.
-                n_fl = len(fl_region)
-                # Store the KDE for plotting it later on.
-                if run_num == 4 and indx == 0:
-                    kde_f = np.reshape(kernel(positions).T, x.shape)
-
-                # Randomly shuffle the stars in the cluster region.
-                clust_reg_shuffle = np.random.permutation(cluster_region)
-                # Remove n_fl random stars from the cluster region and pass
-                # it to the function that obtains the likelihoods for each
-                # star in the "cleaned" cluster region, ie: P(B)
-                if n_fl < len(cluster_region):
-                    clust_reg_clean = clust_reg_shuffle[n_fl:]
-                else:
-                    # If field region has more stars than the cluster region,
-                    # don't remove any star. This should not happen though.
-                    clust_reg_clean = clust_reg_shuffle
-                n_cl = len(clust_reg_clean)
-                reg_decont_cl, kernel, positions, x = \
-                mc_probability(clust_reg_clean, xmin, xmax, \
-                ymin, ymax, runs, run_num, cluster_region, center_cl, \
-                clust_rad, mc_sample)
-                # Cluster KDE obtained. 
-                # Store the KDE for plotting it later on.
-                if run_num == 4:
-                    kde_cl = np.reshape(kernel(positions).T, x.shape)
-
-                # Obtain Bayesian probability for each star in the cluster
-                # region.
-                p_a, p_b = np.array(reg_decont_fl), np.array(reg_decont_cl)
-                bayes_prob = 1./(1. + (n_fl*p_a)/(n_cl*p_b))
-                # Store probabilities.
-                clus_reg_decont_fl[indx] = bayes_prob
-
-            # Now we have the probabilities of each star of belonging to the
-            # cluster sequence in 'clus_reg_decont_fl'
-            
-            # Average all the probability values for each star.
-            avrg_field_reg = np.mean(np.array(clus_reg_decont_fl), 0)
-            # Store in final list as list.
-            clus_reg_decont.append(avrg_field_reg.tolist())
-            
-            if run_num+1 >= runs/4 and flag_25 == False:
-                print '  25% done'
-                flag_25 = True
-            elif run_num+1 >= runs/2 and flag_50 == False:
-                print '  50% done'
-                flag_50 = True
-            elif run_num+1 >= (runs/2 + runs/4) and flag_75 == False:
-                print '  75% done'
-                flag_75 = True
-            elif run_num+1 == runs:
-                print '  100% done'
-                
-    else:
-        # Skipping decontamination algorithm
-        clus_reg_decont, kde_cl, kde_f = [], [], []
+    # Set total number of runs for the KDE algorithm to 100.
+    runs = int(100/len(field_region))
     
+    # Set the number of samples used by the Monte Carlo integration.
+    mc_sample = 1000
+    
+    print 'Applying KDE decontamination algorithm.'
+    
+    # cluster_region = [[id,x,y,T1,eT1,CT1,eCT1], [], [], ...]
+    # len(cluster_region) = number of stars inside the cluster region
+    # len(field_region[i]) = number of stars inside this field region
+    # Stars in the cluster region in the list 'cluster_region' and the
+    # rest of the field stars regions defined in lists inside the list
+    # 'field_region[]'.
+    
+    # Obtain max and min values for the axis. We do it this way so that
+    # the plots of the KDEs will be aligned with the scatters plots
+    # of the field region later on. Note that the limits are independent
+    # of mag_lst and col_lst (used below) and depend only on the full
+    # ranges of magnitude and color for the data.
+    xmin, xmax = max(-0.9, min(col1_data)-0.2),\
+                         min(3.9, max(col1_data)+0.2)
+    ymin, ymax = max(mag_data)+0.5, min(mag_data)-0.5  
+    
+    # Initialize 'clus_reg_decont' empty list. The numbers inside this
+    # list are the average of the probabilities obtained for each star in
+    # the cluster region in each field region (inverted by taking the 1-*
+    # substraction) and the probability in the cluster region. The
+    # bigger this number, the more likely it is that that star is a true
+    # cluster member.
+    clus_reg_decont = []  
+    
+    # Run 'runs' times.
+    flag_25, flag_50, flag_75 = False, False, False
+    for run_num in range(runs):
+        
+        # This list will hold the probabilities for each field region.
+        clus_reg_decont_fl = [[] for _ in field_region]
+        # Iterate through all the 'field stars' regions that were populated.
+        for indx, fl_region in enumerate(field_region):
+            
+            # Obtain likelihoods for each star in the cluster region
+            # using this field region, ie: P(A)
+            reg_decont_fl, kernel, positions, x = \
+            mc_probability(fl_region, xmin, xmax, ymin, \
+            ymax, runs, run_num, cluster_region, center_cl, clust_rad, \
+            mc_sample)
+            # Store number of stars in field region.
+            n_fl = len(fl_region)
+            # Store the KDE for plotting it later on.
+            if run_num == 4 and indx == 0:
+                kde_f = np.reshape(kernel(positions).T, x.shape)
+
+            # Randomly shuffle the stars in the cluster region.
+            clust_reg_shuffle = np.random.permutation(cluster_region)
+            # Remove n_fl random stars from the cluster region and pass
+            # it to the function that obtains the likelihoods for each
+            # star in the "cleaned" cluster region, ie: P(B)
+            if n_fl < len(cluster_region):
+                clust_reg_clean = clust_reg_shuffle[n_fl:]
+            else:
+                # If field region has more stars than the cluster region,
+                # don't remove any star. This should not happen though.
+                clust_reg_clean = clust_reg_shuffle
+            n_cl = len(clust_reg_clean)
+            reg_decont_cl, kernel, positions, x = \
+            mc_probability(clust_reg_clean, xmin, xmax, \
+            ymin, ymax, runs, run_num, cluster_region, center_cl, \
+            clust_rad, mc_sample)
+            # Cluster KDE obtained. 
+            # Store the KDE for plotting it later on.
+            if run_num == 4:
+                kde_cl = np.reshape(kernel(positions).T, x.shape)
+
+            # Obtain Bayesian probability for each star in the cluster
+            # region.
+            p_a, p_b = np.array(reg_decont_fl), np.array(reg_decont_cl)
+            bayes_prob = 1./(1. + (n_fl*p_a)/(n_cl*p_b))
+            # Store probabilities.
+            clus_reg_decont_fl[indx] = bayes_prob
+
+        # Now we have the probabilities of each star of belonging to the
+        # cluster sequence in 'clus_reg_decont_fl'
+        
+        # Average all the probability values for each star.
+        avrg_field_reg = np.mean(np.array(clus_reg_decont_fl), 0)
+        # Store in final list as list.
+        clus_reg_decont.append(avrg_field_reg.tolist())
+        
+        if run_num+1 >= runs/4 and flag_25 == False:
+            print '  25% done'
+            flag_25 = True
+        elif run_num+1 >= runs/2 and flag_50 == False:
+            print '  50% done'
+            flag_50 = True
+        elif run_num+1 >= (runs/2 + runs/4) and flag_75 == False:
+            print '  75% done'
+            flag_75 = True
+        elif run_num+1 == runs:
+            print '  100% done'
+                
     return clus_reg_decont, kde_cl, kde_f
