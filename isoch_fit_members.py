@@ -56,37 +56,6 @@ parameters: E(B-V), distance (distance modulus), age and metallicity.
 sys_select = raw_input('Select UBVI or Washington system as 1 or 2: ')
 
 
-################### CHANGE THIS DIR ACCORDINGLY ###############################
-
-# Location of the *_memb.dat output files. This is also the location of the
-# 'data_output' file from where to get the cont_ind value.
-
-dir_memb_files = '/home/gabriel/clusters/massclean_KDE-Scott/'
-algor_sr = 'KDE-Scott'
-#dir_memb_files = '/home/gabriel/clusters/massclean_KDE-1/'
-#algor_sr = 'KDE-1'
-#dir_memb_files = '/home/gabriel/clusters/massclean_KDE-2/'
-#algor_sr = 'KDE-2'
-
-#dir_memb_files = '/home/gabriel/clusters/massclean_VB-1/'
-#algor_sr = 'VB-1'
-#dir_memb_files = '/home/gabriel/clusters/massclean_VB-2/'
-#algor_sr = 'VB-2'
-
-#dir_memb_files = '/home/gabriel/clusters/massclean_Dias-1/'
-#algor_sr = 'Dias-1'
-#dir_memb_files = '/home/gabriel/clusters/massclean_Dias-2/'
-#algor_sr = 'Dias-2'
-
-#dir_memb_files = '/home/gabriel/clusters/massclean_random/'
-#algor_sr = 'random'
-
-###############################################################################
-
-# Output data file. Stores the names and parameters values obtained for each
-# cluster.
-out_data = dir_memb_files+'algor_track_fit_%s.data' % (algor_sr)
-
 
 # Girardi isochrones span a range of ~ 3.98+06 to 1.26e+10 yr.
 # MASSCLEAN clusters span a range of ~ 1.00e06 to 1.00e+10 yr.
@@ -137,8 +106,8 @@ elif sys_select == '2':
 
 def move_track(sys_select, dis_mod, e_bv):
     '''
-    Recieves an evolutionary track of a given age and metallicity and modifies
-    it according to given values for the extinction E(B-V) and the distance
+    Recieves an iosochrone of a given age and metallicity and modifies
+    it according to given values for the extinction E(B-V) and distance
     modulus.
     '''
     iso_moved = [[], []]
@@ -176,86 +145,6 @@ def move_track(sys_select, dis_mod, e_bv):
 
     return iso_moved[0], iso_moved[1]
 
-
-
-# Generate all tracks used to find the best fit with the cluster's stars.
-
-# This list will hold every isochrone of a given age, metallicity and extinction.
-# Each isochrrone is stored as a list composed of two sub-lists, one for
-# the mag and one for the color:
-# funcs = [[[mag values],[color values]], [[],[]], ...]
-funcs =[]
-# List that will hold all the ages, metallicities and extinctions associated
-# with the isochrone in the same indexed position in 'funcs'.
-# params = [[metal, age, E(B-V), dis_mod], [], ...]
-params = []
-# Iterate through all isochrone files.
-for iso_file in os.listdir(iso_path):
-
-    # Read the entire file once to count the total number of ages in it.    
-    with open(join(iso_path, iso_file), mode="r") as f_iso:
-        ages_total = 0
-        for line in f_iso:
-            if line.startswith(line_start):
-                ages_total += 1
-    
-    # Open the isochrone for this cluster's metallicity.
-    with open(join(iso_path, iso_file), mode="r") as f_iso:
-        
-        # Store metallicity value.
-        if iso_file[:-4] == 'zams':
-            metal = 0.019
-        else:
-            metal = float(iso_file[:-4])
-    
-        # List that will hold all the isochrones of the same metallicity.
-        iso_list = [[[], []] for _ in \
-                    range(len(os.listdir(iso_path))*ages_total)]
-
-        # List that holds the ages in the isochrone file.
-        ages = []
-        # This var counts the number of ages within a given metallicity file.
-        age_indx = -1
-        # Iterate through each line in the file.
-        for line in f_iso:
-            
-            if line.startswith(line_start):
-                age_indx += 1
-                # Store age value in 'ages' list.
-                for i, part in enumerate(line.split("Age =")):
-                    # i=0 indicates the first part of that line, before 'Age ='
-                    if i==1:
-                        ages.append(float(part[:-3])/1.e09)
-
-            # Save mag and color values for each isochrone.
-            if not line.startswith("#"):
-                reader = line.split()
-                # Magnitude.
-                iso_list[age_indx][1].append(float(reader[mag_index]))
-                # Color.
-                iso_list[age_indx][0].append(float(reader[8]) -
-                float(reader[mag_index]))
-
-        # Separate isochrones with different ages.
-        for age_val in range(age_indx+1):
-            
-            # Move isochrone according to E(B-V) and dis_mod values thus
-            # generating a new function. Store this function in 'funcs' list.
-            for e_bv in np.arange(e_bv_min, e_bv_max, e_bv_step):
-                
-                for dis_mod in np.arange(dis_mod_min, dis_mod_max, dis_mod_step):
-                    
-                    # Store params for this isochrone.
-                    params.append([metal, ages[age_val], round(e_bv, 2),
-                                   round(dis_mod, 2)])
-                    
-                    # Call function to move track.
-                    iso_moved_0, iso_moved_1 = move_track(sys_select, dis_mod,
-                                                          e_bv) 
-                    # Append final x and y CMD data to array.
-                    funcs.append([iso_moved_0, iso_moved_1])
-                    
-print int(len(funcs)), 'tracks read and stored.'
 
 
 
@@ -482,6 +371,7 @@ def intrsc_values(col_obsrv, mag_obsrv, e_bv, dist_mod):
 
 
 
+    data0 = memb_prob_avrg_sort
 
     # Store color and magnitude into array.
     data = np.array([
@@ -561,7 +451,7 @@ def intrsc_values(col_obsrv, mag_obsrv, e_bv, dist_mod):
     # 0.019  0.0
 #    A, B = 1.7354259305164, 1.013629121876
 #    feh = A + B*np.log10(params[best_func][0])
-    print "Best fit found for", clust_name
+
     e_bv = params[best_func][2]
     print 'E(B-V)=', e_bv
     age_gyr = params[best_func][1]
@@ -574,7 +464,6 @@ def intrsc_values(col_obsrv, mag_obsrv, e_bv, dist_mod):
     print 'dist (kpc)=', dist_kpc
     min_score = score[best_func]
     print 'min score=', min_score
-    print 'time=', time.time() - tik
     
  
     
@@ -758,10 +647,7 @@ def intrsc_values(col_obsrv, mag_obsrv, e_bv, dist_mod):
 
 
     fig.tight_layout()
-    
-    out_png = join(dir_memb_files, sub_dir, clust_name+'_iso_auto_fit.png')
-    plt.savefig(out_png, dpi=150)
-    plt.close()
+
    
     
 print '\nEnd.'
