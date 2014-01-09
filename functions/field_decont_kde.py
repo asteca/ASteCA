@@ -26,15 +26,18 @@ def bw_val(runs, run_num, num_stars):
     '''
     bw_min = 0.1
     bw_max = num_stars**(-1./6.) # Scott's rule
-    bw_step = (bw_max-bw_min)/(runs-1)
-    bw_range = np.arange(bw_min, bw_max+(bw_step/2.), bw_step)
-    # Value to return    
-    bw_go = bw_range[run_num]
+    if runs > 1:
+        bw_step = (bw_max-bw_min)/(runs-1)
+        bw_range = np.arange(bw_min, bw_max+(bw_step/2.), bw_step)
+        # Value to return    
+        bw_go = bw_range[run_num]
+    else:
+        bw_go = bw_max
     return bw_go
     
     
-def mc_probability(reg, xmin, xmax, ymin, ymax, runs, run_num, cluster_region,
-                   center_cl, clust_rad, mc_sample):
+def mc_probability(reg_call, reg, xmin, xmax, ymin, ymax, runs, run_num,
+                   cluster_region, center_cl, clust_rad, mc_sample):
     '''
     Calculate probability/likelihood for each cluster region star through
     Monte Carlo integration.
@@ -91,7 +94,10 @@ def mc_probability(reg, xmin, xmax, ymin, ymax, runs, run_num, cluster_region,
             # Save probability value for this star of belonging to this region.
             reg_decont.append(integral)
         else:
-            reg_decont.append(0.000001)
+            if reg_call == 'field':
+                reg_decont.append(1.)
+            elif reg_call == 'clust':
+                reg_decont.append(0.000001)
     
     return reg_decont, kernel, positions, x
 
@@ -104,12 +110,11 @@ def field_decont_kde(cluster_region, field_region, col1_data, mag_data,
     '''
     
     # Set total number of runs for the KDE algorithm to 100.
-    runs = int(100/len(field_region))
+#    runs = int(100/len(field_region))
+    runs = 1
     
     # Set the number of samples used by the Monte Carlo integration.
     mc_sample = 10
-    
-    print 'Applying KDE decontamination algorithm.'
     
     # cluster_region = [[id,x,y,T1,eT1,CT1,eCT1], [], [], ...]
     # len(cluster_region) = number of stars inside the cluster region
@@ -127,27 +132,30 @@ def field_decont_kde(cluster_region, field_region, col1_data, mag_data,
                          min(3.9, max(col1_data)+0.2)
     ymin, ymax = max(mag_data)+0.5, min(mag_data)-0.5  
     
-    # Initialize 'clus_reg_decont' empty list. The numbers inside this
-    # list are the average of the probabilities obtained for each star in
-    # the cluster region in each field region (inverted by taking the 1-*
-    # substraction) and the probability in the cluster region. The
-    # bigger this number, the more likely it is that that star is a true
-    # cluster member.
-    clus_reg_decont = []  
+    # This list holds one sub-list per run. Each of those sub-lists holds N
+    # sub-sub-lists (where N = len(field_region)) with the membership
+    # probabilities assigned to each star in the 'cluster_region'.
+    #
+    # runs_fields_probs = [A_1, A_2, ..., A_runs]
+    # A_i = [B_1, B_2, ..., B_N] ; N = len(field_regions)
+    # B_j = [p_1, p_2, ..., p_n] ; n = len(cluster_region)
+    # A,B --> arrays ; p --> floats (Bayesian probabilities)
+    runs_fields_probs = []
     
     # Run 'runs' times.
     flag_25, flag_50, flag_75 = False, False, False
     for run_num in range(runs):
         
         # This list will hold the probabilities for each field region.
-        clus_reg_decont_fl = [[] for _ in field_region]
+        field_reg_probs = [[] for _ in field_region]
         # Iterate through all the 'field stars' regions that were populated.
         for indx, fl_region in enumerate(field_region):
             
             # Obtain likelihoods for each star in the cluster region
             # using this field region, ie: P(A)
+            reg_call = 'field'
             reg_decont_fl, kernel, positions, x = \
-            mc_probability(fl_region, xmin, xmax, ymin, \
+            mc_probability(reg_call, fl_region, xmin, xmax, ymin, \
             ymax, runs, run_num, cluster_region, center_cl, clust_rad, \
             mc_sample)
             # Store number of stars in field region.
@@ -168,8 +176,9 @@ def field_decont_kde(cluster_region, field_region, col1_data, mag_data,
                 # don't remove any star. This should not happen though.
                 clust_reg_clean = clust_reg_shuffle
             n_cl = len(clust_reg_clean)
+            reg_call = 'clust'
             reg_decont_cl, kernel, positions, x = \
-            mc_probability(clust_reg_clean, xmin, xmax, \
+            mc_probability(reg_call, clust_reg_clean, xmin, xmax, \
             ymin, ymax, runs, run_num, cluster_region, center_cl, \
             clust_rad, mc_sample)
             # Cluster KDE obtained. 
@@ -177,20 +186,18 @@ def field_decont_kde(cluster_region, field_region, col1_data, mag_data,
             if run_num == 4:
                 kde_cl = np.reshape(kernel(positions).T, x.shape)
 
-            # Obtain Bayesian probability for each star in the cluster
-            # region.
+            # Obtain Bayesian probability for each star in cluster_region.
             p_a, p_b = np.array(reg_decont_fl), np.array(reg_decont_cl)
             bayes_prob = 1./(1. + (n_fl*p_a)/(n_cl*p_b))
             # Store probabilities obtained with this field region.
-            clus_reg_decont_fl[indx] = bayes_prob
+            field_reg_probs[indx] = bayes_prob
 
-        # Now we have the probabilities of each star of belonging to the
-        # cluster sequence in 'clus_reg_decont_fl'
+        # Now we have the probabilities of each star in cluster_region of
+        # being an actual cluster member (membership) in 'field_reg_probs', one
+        # sub-list per field region.
         
-        # Average all the probability values for each star.
-        avrg_field_reg = np.mean(np.array(clus_reg_decont_fl), 0)
-        # Store in final list as list.
-        clus_reg_decont.append(avrg_field_reg.tolist())
+        # Append this list to the list that holds all the runs.
+        runs_fields_probs.append(field_reg_probs)
         
         if run_num+1 >= runs/4 and flag_25 == False:
             print '  25% done'
@@ -203,5 +210,5 @@ def field_decont_kde(cluster_region, field_region, col1_data, mag_data,
             flag_75 = True
         elif run_num+1 == runs:
             print '  100% done'
-                
-    return clus_reg_decont, kde_cl, kde_f
+              
+    return runs_fields_probs, kde_cl, kde_f
