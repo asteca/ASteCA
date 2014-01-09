@@ -199,16 +199,26 @@ def read_isochrones(sys_select):
 
 
 
-def isoch_likelihood(iso_ind):
+def get_synthetic_SMD():
+    '''
+    Takes an isochrone and returns a synthetic CMD created with a certain
+    IMF and binary fraction.
+    '''
+    return synth_CMD
+
+
+
+def isoch_likelihood(synth_CMD):
     '''
     Takes an isochrone/synthetic CMD, compares it to the observed data and
     returns a likelihood value.
     '''
+    
     return isoch_score
 
 
 
-def brute_force(isochrones):
+def brute_force(isochrones, col_mag, err_col_mag, weights):
     '''
     Brute force algorithm that computes the likelihoods for *all* the defined
     isochrones.
@@ -218,9 +228,12 @@ def brute_force(isochrones):
     score = []
     # Iterate through all the tracks defined and stored.
     for iso_ind in range(len(isochrones)):
+        
+        # Call function to obtain synthetic CMD from a given isochrone.
+        synth_CMD = get_synthetic_SMD(isochrones(iso_ind))
 
         # Call function that returns the score for a given track.
-        isoch_score = isoch_likelihood(iso_ind)
+        isoch_score = isoch_likelihood(synth_CMD)
         # Store the scores for each function/track into list.
         score.append(isoch_score)    
         
@@ -252,12 +265,14 @@ def gip(memb_prob_avrg_sort):
     weights = np.array([data0[7]], dtype=float)    
     
     
-    # Call function that reads all isochrones from files and creates new ones
-    # according to the E(B-V) and dist_mod ranges given
+    # Call function that reads all isochrones from stored files and creates new
+    # extra ones according to the E(B-V) and dist_mod ranges given
     isochrones, isoch_params = read_isochrones(sys_select)
     
+    
     # Call brute force algorithm to calculate the likelihoods for all isochrones.
-    score = brute_force(isochrones)
+    score = brute_force(isochrones, col_mag, err_col_mag, weights)
+    
     
     # Find index of function with smallest value of the likelihoods.
     # This index thus points to the isochrone that best fits the observed
