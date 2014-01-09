@@ -602,44 +602,7 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
         print 'min score=', min_score
         print 'time=', time.time() - tik
         
-        # Save cluster's name, z, age (Gyr), E(B-V), dist_mod, and dist (kpc)
-        # in global file that will store this data for all clusters.
-        try:
-            # File already exists -> don't create a new one, append new lines.
-            with open(out_data): pass
-        # File doesn't exist -> create new one.
-        except IOError:
-            out_data_file = open(out_data,'w')
-            out_data_file.write('#Name z age(Gyr) E(B-V) dist_mod dist(kpc) score\n')
-            out_data_file.close()
-            
-        line = [sub_dir+'/'+clust_name, str(z_met), str(age_gyr), str(e_bv),
-                str(dis_mod), str(dist_kpc), str(round(min_score,3))]
-    
-        # "a" opens the file for appending
-        with open(out_data, "a") as f_out:
-            f_out.write('{:<22} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8}'.format(*line))
-            f_out.write('\n')
-            
-            
-        # Store corrected (intrinsec) values for magnitude and color for this
-        # cluster along with the rest of the data.
-        memb_file = join(dir_memb_files, sub_dir, clust_name+'_memb_intrsc.dat')
-        
-        # Call function that returns intrinsic magnitude and color values.
-        col_intrsc, mag_intrsc = intrsc_values(data[0][0], data[0][1], e_bv,
-                                               dis_mod)
-    
-        line = [data0[0], data0[1], data0[2], mag_intrsc, data0[4], col_intrsc,
-                data0[6], data0[7]]
-        
-        with open(memb_file, 'w') as f_out:
-            f_out.write("# ID x y T1o e_T1 CT1o e_CT1 cont_index\n")
-            for item in zip(*line):
-                f_out.write('{:<8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8}'.\
-                format(*item))
-                f_out.write('\n')
-    
+   
         
         # Calculate the 1% variation around the minimum value, ie: the max and min
         # values for each parameter that fall within 1% of the absolute minimum.
