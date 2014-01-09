@@ -602,77 +602,7 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
         print 'min score=', min_score
         print 'time=', time.time() - tik
         
-   
-        
-        # Calculate the 1% variation around the minimum value, ie: the max and min
-        # values for each parameter that fall within 1% of the absolute minimum.
-        # Thi is used as an estimate for the parameters errors.
-        perc_err = min_score/100.
-        
-        # If 1% is not enough to find different min and max values for the delta
-        # that determines the "uncertainty" in the minimum 'score' value found,
-        # increase the right limit by 1% and try again. Repeat until min != max.
-        # Find delta for metallicity.
-        met_done = False
-        j_met = 1.
-        while met_done == False:
-            up_lim = (score[best_func] + j_met*perc_err)
-            # Filter 'score' list to keep only values within the range specified by
-            # the min(score)+perc_err value.
-            temp_met = [i for ind,i in enumerate(zip(*params)[0]) \
-                        if score[ind] < up_lim]
-            # Store min and max values of params within x% of minimum score.
-            met_var = [min(temp_met), max(temp_met)]
-            if met_var[0] != met_var[1] or j_met > 20:
-                met_done = True
-            else:
-                j_met += 1
-        # Find delta for age.
-        age_done = False
-        j_age = 1.
-        while age_done == False:
-            up_lim = (score[best_func] + j_age*perc_err)
-            # Filter 'score' list to keep only values within the range specified by
-            # the min(score)+perc_err value.
-            temp_age = [i for ind,i in enumerate(zip(*params)[1]) \
-                        if score[ind] < up_lim]
-            # Store min and max values of params within x% of minimum score.
-            age_var = [min(temp_age), max(temp_age)]
-            if age_var[0] != age_var[1] or j_age > 20:
-                age_done = True
-            else:
-                j_age += 1
-        # Find delta for E(B-V).
-        ebv_done = False
-        j_ebv = 1.
-        while ebv_done == False:
-            up_lim = (score[best_func] + j_ebv*perc_err)
-            # Filter 'score' list to keep only values within the range specified by
-            # the min(score)+perc_err value.
-            temp_ebv = [i for ind,i in enumerate(zip(*params)[2]) \
-                        if score[ind] < up_lim]
-            # Store min and max values of params within x% of minimum score.
-            ebv_var = [min(temp_ebv), max(temp_ebv)]
-            if ebv_var[0] != ebv_var[1] or j_ebv > 20:
-                ebv_done = True
-            else:
-                j_ebv += 1
-        # Find delta for d.
-        dis_done = False
-        j_dis = 1.
-        while dis_done == False:
-            up_lim = (score[best_func] + j_dis*perc_err)
-            # Filter 'score' list to keep only values within the range specified by
-            # the min(score)+perc_err value.
-            temp_dis = [i for ind,i in enumerate(zip(*params)[3]) \
-                        if score[ind] < up_lim]
-            # Store min and max values of params within x% of minimum score.
-            dis_var = [min(temp_dis), max(temp_dis)]
-            if dis_var[0] != dis_var[1] or j_dis > 20:
-                dis_done = True
-            else:
-                j_dis += 1
-        
+     
         
         
         
