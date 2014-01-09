@@ -5,10 +5,6 @@ Created on Sat Sep 21 17:10:04 2013
 @author: gabriel
 """
 
-import os
-from os.path import join
-import time
-
 import scipy.spatial.distance as sp
 
 import numpy as np
@@ -208,102 +204,19 @@ def fast_wdist(t_ind):
         
 
 
-    data0 = memb_prob_avrg_sort
-
-    # Store color and magnitude into array.
-    data = np.array([
-        [data0[5],  # color (x)
-         data0[3]]  # magnitude (y)
-        ], dtype=float)
-    # Store color and magnitude errors into array.
-    errors = np.array([
-        [data0[6],  # color error (e_x)
-         data0[4]]  # magnitude error(e_y)
-        ], dtype=float)
-    # Store weights data into array.
-    weights = np.array([
-            data0[7]  # w
-            ], dtype=float)
-
-
-# *****************************************************************************
-    # Brute force algorithm: iterate through all the isochrones.
-
-    # Initiate list that will hold the values (scores) which defines how well
-    # each isochrone/track adjusts the data.
-    score = []
-    score2 = []
-    score3 = []
-    # Iterate through all the tracks defined and stored.
     for t_ind in range(len(funcs)):
-
-        tik = time.time()
-        # Call function that returns the score for a given track.
-        track_score = track_distance(t_ind)
-        # Store the scores for each function/track into list.
-        score.append(track_score)
-        print 'orig time', time.time()-tik
-
-        tik = time.time()
         # Call function that returns the score for a given track.
         track_score2 = track_distance_err_weight(t_ind)
         # Store the scores for each function/track into list.
         score2.append(track_score2)
-        print 'slow time', time.time()-tik
 
-        tik = time.time()            
         # Call function that returns the score for a given track.
         track_score3 = fast_wdist(t_ind)
         # Store the scores for each function/track into list.
         score3.append(track_score3)
-        print 'fast time', time.time()-tik
-        
-        raw_input()
-        
-        # Notice of how many functions/isochrones have been processed already.
-        if t_ind == int(len(funcs)*0.1):
-            print '  10%f of tracks processed'
-        elif t_ind == int(len(funcs)*0.25):
-            print '  25%f of tracks processed'
-        elif t_ind == int(len(funcs)*0.5):
-            print '  50%f of tracks processed'
-        elif t_ind == int(len(funcs)*0.75):
-            print '  75%f of tracks processed'
-        
-    # Find index of function with smallest value of total weighted distances.
-    # This index thus points to the isochrone that best fits the group of stars.
-    best_func = np.argmin(score)
-    best_func2 = np.argmin(score2)
-    print best_func, best_func2
-    raw_input()
-# *****************************************************************************
 
-    # Print values of best fit to screen.
-    # Convert z to [Fe/H] using the y=A+B*log10(x) zunzun.com function and the
-    # x,y values:
-    #   z    [Fe/H]
-    # 0.001  -1.3
-    # 0.004  -0.7
-    # 0.008  -0.4
-    # 0.019  0.0
-#    A, B = 1.7354259305164, 1.013629121876
-#    feh = A + B*np.log10(params[best_func][0])
 
-    e_bv = params[best_func][2]
-    print 'E(B-V)=', e_bv
-    age_gyr = params[best_func][1]
-    print 'Age (Gyr)=', age_gyr
-    z_met = params[best_func][0]
-    print 'z=', z_met
-    dis_mod = params[best_func][3]
-    print 'dis_mod=', dis_mod
-    dist_kpc = round(10**(0.2*(params[best_func][3]+5))/1000., 2)
-    print 'dist (kpc)=', dist_kpc
-    min_score = score[best_func]
-    print 'min score=', min_score
-    
- 
-    
+
     
     
     

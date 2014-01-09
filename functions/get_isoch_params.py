@@ -223,4 +223,32 @@ def gip(memb_prob_avrg_sort):
     weights = np.array([data0[7]], dtype=float)    
     
     
+    # Call function that reads all isochrones from files and creates new ones
+    # according to the E(B-V) and dist_mod ranges given
+    isochrones, isoch_params = read_isochrones(sys_select)
+    
+
+    # Brute force algorithm: iterate through all the isochrones.
+
+    # Initiate list that will hold the values (scores) which defines how well
+    # each isochrone fits the observed data.
+    score = []
+    # Iterate through all the tracks defined and stored.
+    for iso_ind in range(len(isochrones)):
+
+        # Call function that returns the score for a given track.
+        track_score = track_distance(iso_ind)
+        # Store the scores for each function/track into list.
+        score.append(track_score)    
+    
+    # Find index of function with smallest value of the likelihoods.
+    # This index thus points to the isochrone that best fits the observed
+    # group of stars.
+    best_func= np.argmin(score)
+    min_score = score[best_func]
+
+    z_met, age_gyr, e_bv, dis_mod = [i for i in isoch_params[best_func]]
+    dist_kpc = round(10**(0.2*(dis_mod+5.))/1000., 2)
+    
+    
     return isoch_fit_params
