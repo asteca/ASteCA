@@ -56,13 +56,6 @@ def mpas(cluster_region, runs_fields_probs, n_c, center_cl, clust_rad):
         # for each field region.
         membership_prob_list.append(temp_prob_members)
         
-# DEPRECATED   
-        # We now trim this list up to 'N_c' items so it will contain only the
-        # brightest stars with the largest decontamination index as the
-        # approximate number of cluster members.
-#            most_prob_memb_nc = most_prob_memb_sort[:n_c]
-# DEPRECATED   
-        
 
     # Find average of decont_index value for stars in each sublist in the
     # main membership_prob_list list.
