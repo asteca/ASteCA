@@ -199,11 +199,15 @@ def read_isochrones(sys_select):
 
 
 
-def get_synthetic_SMD():
+def get_synthetic_SMD(isochrone):
     '''
     Takes an isochrone and returns a synthetic CMD created with a certain
     IMF and binary fraction.
     '''
+    
+    # Define IMF used: 
+    imf_func = 
+    
     return synth_CMD
 
 
@@ -234,6 +238,7 @@ def brute_force(isochrones, col_mag, err_col_mag, weights):
 
         # Call function that returns the score for a given track.
         isoch_score = isoch_likelihood(synth_CMD)
+        
         # Store the scores for each function/track into list.
         score.append(isoch_score)    
         
