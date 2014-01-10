@@ -216,19 +216,21 @@ def isoch_likelihood(synth_CMD, col_mag, err_col_mag, weights):
     '''
     Takes an isochrone/synthetic CMD, compares it to the observed data and
     returns the weighted (log) likelihood value.
+    This function follows the recipe given in Monteiro, Dias & Caetano (2010).
     '''
     
     clust_stars_probs = []
     for indx,star in enumerate(col_mag):
-        # This terms does not depend on the synth stars.
-        A = 1/(err_col_mag[indx][0]*err_col_mag[indx][1])
+        # The first term does not depend on the synth stars.
+        sigma_c, sigma_m = err_col_mag[indx][0], err_col_mag[indx][1]
+        A = 1/(sigma_c*sigma_m)
         
         # Get probability for this cluster star.
         sum_synth_stars = []
         for synth_st in synth_CMD:
             # synth_st[0] = color ; synth_st[0] = mag
-            B = np.exp(-0.5*((star[0]-synth_st[0])/err_col_mag[indx][0])**2)
-            C = np.exp(-0.5*((star[1]-synth_st[1])/err_col_mag[indx][1])**2)
+            B = np.exp(-0.5*((star[0]-synth_st[0])/sigma_c)**2)
+            C = np.exp(-0.5*((star[1]-synth_st[1])/sigma_m)**2)
             sum_synth_stars.append(A*B*C)
             
         # The final prob for this cluster star is the sum over all synthetic
