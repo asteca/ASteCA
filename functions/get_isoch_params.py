@@ -212,11 +212,37 @@ def get_synthetic_SMD(isochrone):
 
 
 
-def isoch_likelihood(synth_CMD):
+def isoch_likelihood(synth_CMD, col_mag, err_col_mag, weights):
     '''
     Takes an isochrone/synthetic CMD, compares it to the observed data and
-    returns a likelihood value.
+    returns the weighted (log) likelihood value.
     '''
+    
+    clust_stars_probs = []
+    for indx,star in enumerate(col_mag):
+        # This terms does not depend on the synth stars.
+        A = 1/(err_col_mag[indx][0]*err_col_mag[indx][1])
+        
+        # Get probability for this cluster star.
+        sum_synth_stars = []
+        for synth_st in synth_CMD:
+            # synth_st[0] = color ; synth_st[0] = mag
+            B = np.exp(-0.5*((star[0]-synth_st[0])/err_col_mag[indx][0])**2)
+            C = np.exp(-0.5*((star[1]-synth_st[1])/err_col_mag[indx][1])**2)
+            sum_synth_stars.append(A*B*C)
+            
+        # The final prob for this cluster star is the sum over all synthetic
+        # stars.
+        clust_stars_probs.append(sum(sum_synth_stars))
+        
+    # Weight probabilities for each cluster star.
+    weighted_probs = clust_stars_probs*weights
+    
+    # Get weighted likelihood.
+    L_x = reduce(lambda x, y: x*y, weighted_probs)
+    
+    # Final score.
+    isoch_score = sum(-log(L_x))
     
     return isoch_score
 
@@ -237,7 +263,7 @@ def brute_force(isochrones, col_mag, err_col_mag, weights):
         synth_CMD = get_synthetic_SMD(isochrones(iso_ind))
 
         # Call function that returns the score for a given track.
-        isoch_score = isoch_likelihood(synth_CMD)
+        isoch_score = isoch_likelihood(synth_CMD, col_mag, err_col_mag, weights)
         
         # Store the scores for each function/track into list.
         score.append(isoch_score)    
@@ -263,9 +289,9 @@ def gip(memb_prob_avrg_sort):
     # each star's membership probabilities (weights)
     data0 = memb_prob_avrg_sort
     # Store color and magnitude into array.
-    col_mag = np.array([[data0[5], data0[3]]], dtype=float)
+    col_mag = np.array([zip(*[data0[5], data0[3]])], dtype=float)
     # Store color and magnitude errors into array.
-    err_col_mag = np.array([[data0[6], data0[4]]], dtype=float)
+    err_col_mag = np.array([zip(*[data0[6], data0[4]])], dtype=float)
     # Store weights data (membership probabilities) into array.
     weights = np.array([data0[7]], dtype=float)    
     
