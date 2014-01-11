@@ -205,8 +205,15 @@ def get_synthetic_SMD(isochrone):
     IMF and binary fraction.
     '''
     
-    # Define IMF used: 
-    imf_func = 
+    # Define IMF used: Kroupa, Tout & Gilmore (1993):
+    power = [-1.3, -2.2, -2.7]
+    if 0.08<m_star<=0.5:
+        i = 0
+    elif 0.5<m_star<=1.:
+        i = 1
+    elif 1.<m_star:
+        i = 2
+    imf_func = m**power[i]
     
     return synth_CMD
 
