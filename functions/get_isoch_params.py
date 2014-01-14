@@ -221,7 +221,7 @@ def get_synthetic_SMD(isochrone):
 
 def isoch_likelihood(synth_CMD, col_mag, err_col_mag, weights):
     '''
-    Takes an isochrone/synthetic CMD, compares it to the observed data and
+    Takes a synthetic CMD, compares it to the observed data and
     returns the weighted (log) likelihood value.
     This function follows the recipe given in Monteiro, Dias & Caetano (2010).
     '''
@@ -250,8 +250,8 @@ def isoch_likelihood(synth_CMD, col_mag, err_col_mag, weights):
     # Get weighted likelihood.
     L_x = reduce(lambda x, y: x*y, weighted_probs)
     
-    # Final score.
-    isoch_score = sum(-log(L_x))
+    # Final score: sum log likelihoods for each star in cluster.
+    isoch_score = sum(-np.log(L_x))
     
     return isoch_score
 
