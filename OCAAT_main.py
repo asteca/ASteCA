@@ -476,8 +476,8 @@ all stars with photom errors < 0.3)? (y/n) ')
         isoch_fit_params = []
     else:
         # Obtain best fitting parameters for cluster.
-        isoch_fit_params = g_i_p(memb_prob_avrg_sort)
-        print 'Averaged probabilities for all runs.'
+        isoch_fit_params = g_i_p('2', memb_prob_avrg_sort)
+        print 'Best fit parameters obtained.'
     
     
     # New name for cluster used in output data file.
@@ -499,8 +499,8 @@ all stars with photom errors < 0.3)? (y/n) ')
     cl_e_bv, cl_age, cl_feh, cl_dmod, iso_moved, zams_iso = g_i(mypath,
                                                                 clust_name)
     print 'Isochrone obtained.'
-    
-        
+
+
     # Generate output subdir.   
     output_subdir = join(output_dir, sub_dir)
     # Check if subdir already exists, if not create it
