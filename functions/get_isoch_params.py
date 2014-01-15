@@ -280,6 +280,36 @@ def brute_force(isochrones, col_mag, err_col_mag, weights):
     return score
     
 
+def isoch_likelihood(m, a, e, d):
+    '''
+    Call with given values for metallicity, age, extinction and distance modulus
+    to generate a synthetic cluster with those parameters and compare it wiht
+    the observed cluster.
+    
+    m, a, e, d = metallicity, age, extinction, distance modulus.
+    '''
+    
+    # Open file, given by the metallicity value 'm'.
+    # Call function that reads all isochrones from stored files and creates new
+    # extra ones according to the E(B-V) and dist_mod ranges given
+    isochrones, isoch_params = read_isochrones(sys_select)   
+    
+    # Read isochrone, given by the age value 'a'.
+    
+ 
+    
+    
+    # Move isochrone in both axis according to 'e' and 'm'.
+    
+    # Generate synthetic cluster using this "moved" isochrone.
+    
+    # Call function to obtain the likelihood by comparing the synthetic cluster
+    # with the observed cluster.
+    likelihood = 
+    
+    return likelihood
+    
+
 
 
 def gip(memb_prob_avrg_sort):
@@ -305,11 +335,10 @@ def gip(memb_prob_avrg_sort):
     weights = np.array([data0[7]], dtype=float)    
     
     
-    # Call function that reads all isochrones from stored files and creates new
-    # extra ones according to the E(B-V) and dist_mod ranges given
-    isochrones, isoch_params = read_isochrones(sys_select)
-    
-    
+    # Store mass distribution used to produce a synthetic cluster based on
+    # a given theoretic isochrone.
+    dist_mass = mass_dist('kroupa_1993', 'total_number', 500)  
+   
     # Call brute force algorithm to calculate the likelihoods for all isochrones.
     score = brute_force(isochrones, col_mag, err_col_mag, weights)
     
