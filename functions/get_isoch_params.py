@@ -337,6 +337,10 @@ def gip(memb_prob_avrg_sort):
     
     # Store mass distribution used to produce a synthetic cluster based on
     # a given theoretic isochrone.
+    # 1st param: 'chabrier_2001', 'kroupa_1993'
+    # 2nd param: 'total_number', 'total_mass'
+    # 3rd param: total cluster mass or number of stars in clusters, depending
+    # on the chosen 2nd param.
     dist_mass = mass_dist('kroupa_1993', 'total_number', 500)  
    
     # Call brute force algorithm to calculate the likelihoods for all isochrones.
