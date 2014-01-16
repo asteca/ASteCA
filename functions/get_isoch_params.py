@@ -295,7 +295,10 @@ def get_synthetic_clust(isochrone, mass_dist):
     # Add masses and update array.
     
     # Randomly move stars according to given error distributions.
+    
+    # Remove stars according to a completness limit function.
 
+    synth_clust = isochrone
     
     return synth_clust
     
@@ -368,6 +371,8 @@ def brute_force(sys_select, isoch_params, iso_path, line_start, indexes,
 
     z_met, age_gyr, e_bv, dis_mod = [i for i in isoch_params[best_func]]
     dist_kpc = round(10**(0.2*(dis_mod+5.))/1000., 2)
+    
+    print z_met, age_gyr, e_bv, dis_mod
     
     isoch_fit_params = [z_met, age_gyr, e_bv, dis_mod, dist_kpc]         
         
