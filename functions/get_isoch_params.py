@@ -137,7 +137,7 @@ def get_isoch_params(sys_select):
                 # List that holds all the isochrone ages in the file.
                 ages = []
                 # List that holds all the isochrones in this metallicity file.
-                isoch_met, first_run = [], True
+                isoch_met = []
                 
                 # Define empty lists.
                 isoch_col, isoch_mag, isoch_mas = [], [], []
@@ -152,7 +152,7 @@ def get_isoch_params(sys_select):
                         age = float(age_str[:-3])/1.e09
                         
                         # Save stored values if these exist.
-                        if not first_run:
+                        if isoch_col:
                             # Store colors, magnitudes and masses for this isochrone.
                             isoch_met.append([isoch_col, isoch_mag, isoch_mas])
                             # Reset lists.
@@ -163,9 +163,6 @@ def get_isoch_params(sys_select):
                     if age_min<= age <=age_max:
                         # Save age in list.
                         ages.append(age)
-                        
-                        # Set flag so values will be stored away.
-                        first_run = False
 
                         # Save mag, color and mass values for each isochrone star.
                         if not line.startswith("#"):
