@@ -5,6 +5,10 @@ Created on Fri Jan 17 17:21:58 2014
 @author: gabriel
 """
 
+from move_isochrone import move_isoch
+import numpy as np
+
+
 def likelihood(synth_clust, obs_clust):
     '''
     Takes a synthetic cluster, compares it to the observed cluster and
@@ -81,22 +85,20 @@ def synthetic_clust(isochrone, mass_dist):
     
     
     
-def isoch_likelihood(m, a, e, d, sys_select, obs_clust, mass_dist):
+def isoch_likelihood(sys_select, e, d, obs_clust, isochrone, mass_dist):
     '''
     Main function.
     
-    Call with given values for metallicity, age, extinction and distance modulus
-    to generate a synthetic cluster with those parameters and compare it wiht
-    the observed cluster.
+    Call with an isochrone of given values for metallicity and age and supply
+    the extinction and distance modulus values to move that isochrone. Use
+    that isochrone to generate a synthetic cluster with those parameters and
+    finally compare it wiht the observed cluster.
     
-    m, a, e, d = metallicity, age, extinction, distance modulus.
+    e, d = extinction, distance modulus.
     '''
     
-    # Store isochrone of metallicity value 'm' and age 'a' moved by the
-    # values 'e' and 'd'.
-    isoch_final = move_track(isoch_list, sys_select, e, d)
-#    isoch_final = read_isoch(m, a, e, d, sys_select, iso_path, line_start,
-#                             indexes)
+    # Store isochrone moved by the values 'e' and 'd'.
+    isoch_final = move_isoch(sys_select, isochrone, e, d)
     
     # Generate synthetic cluster using this "moved" isochrone and a mass
     # distribution.
