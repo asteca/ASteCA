@@ -46,7 +46,7 @@ def selection(likel_list, breed_prob):
 
 
 
-def gen_algor(n_pop, n_gen, fdif):
+def gen_algor(obs_clust, isochrones, isoch_params, dist_mass, n_pop, n_gen, fdif):
     '''
     Main function.
     

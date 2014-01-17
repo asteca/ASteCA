@@ -476,7 +476,7 @@ all stars with photom errors < 0.3)? (y/n) ')
         isoch_fit_params = []
     else:
         # Obtain best fitting parameters for cluster.
-        isoch_fit_params = g_i_p('2', memb_prob_avrg_sort)
+        isoch_fit_params = g_i_p('WASH', memb_prob_avrg_sort)
         print 'Best fit parameters obtained.'
     
     

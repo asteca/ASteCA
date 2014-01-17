@@ -279,7 +279,7 @@ def likelihood(synth_clust, obs_clust):
 
 
 
-def get_synthetic_clust(isochrone, mass_dist):
+def synthetic_clust(isochrone, mass_dist):
     '''
     Takes an isochrone and returns a synthetic cluster created according to
     a certain mass distribution.
@@ -322,7 +322,7 @@ def isoch_likelihood(m, a, e, d, sys_select, obs_clust, mass_dist):
     
     # Generate synthetic cluster using this "moved" isochrone and a mass
     # distribution.
-    synth_clust = get_synthetic_clust(isoch_final, mass_dist)
+    synth_clust = synthetic_clust(isoch_final, mass_dist)
     
     # Call function to obtain the likelihood by comparing the synthetic cluster
     # with the observed cluster.
@@ -341,9 +341,6 @@ def boostrap_resample(memb_prob_avrg_sort):
     return obs_clust
     
 
-
-  
-    
 
 def gip(sys_select, memb_prob_avrg_sort):
     '''

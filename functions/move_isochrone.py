@@ -13,7 +13,7 @@ def move_isoch(isoch_list, sys_select, e, d):
     '''
     iso_moved = [[], []]
     
-    if sys_select == '1':
+    if sys_select == 'UBVI':
         # For UBVI system.
         #
         # E(B-V) = (B-V) - (B-V)o
@@ -27,7 +27,7 @@ def move_isoch(isoch_list, sys_select, e, d):
         for item in isoch_list[0]:
             # (B-V) affected by extinction.
             iso_moved[0].append(item + e)
-    else:
+    elif sys_select == 'WASH':
         # For Washington system.
         #
         # E(C-T1) = 1.97*E(B-V) = (C-T1) - (C-T)o
