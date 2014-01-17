@@ -46,28 +46,44 @@ def selection(likel_list, breed_prob):
 
 
 
-def gen_algor(N_gen, fdif):
+def gen_algor(n_pop, n_gen, fdif):
     '''
     Main function.
     
     Genetic algorithm adapted to find the best fit model-obervation.
-    N_ga: number of generations to process.
+    
+    n_pop: number of chromosomes in the population.
+    n_gen: number of generations to process.
     fdif: Fitness differential. Establishes the 'selection pressure' for the
     algorithm.
     '''
     
-    # Translate space of all possible solutions to binary format.
+    # Initial random population evaluation.
     
-    # Pick N initial solutions (genotypes/chromosomes) at random from each
-    # list of the parameters possible values.
+    # Pick N initial solutions at random from each
+    # list storing all the possible parameters values.
     
-    # Encode these initial parameters values into binary arrays and combine the
-    # encoded parameters into N binary chromosomes.
+    # Evaluate each solution in the objective function.
     
     
-    # Begin genetic algorithm process.
-    for i in range(N_gen):
+    # Rank-based breeding probability. Independent of the fitness values,
+    # only depends on the toal number of chromosomes and the fitness
+    # differential fdif.
+    breed_prob = [1./n_pop + fdif*(n_pop+1.-2.*(i+1.))/(n_pop*(n_pop+1.)) for i in range(n_pop)]    
     
+    # Begin processing the populations up to n_gen generations.
+    for i in range(n_gen):
+    
+        #### Breeding ###
+        
+        # Encode solutions into chromosomes.
+        chromosomes = encode(generation)
+        
+        # Apply crossover operation on random chromosomes.
+        
+        # Apply mutation operation on random chromosomes.
+        
+        
         ### Evaluation/fitness ###
         
         # Evaluate the N random chromosomes in the evaluation/objective function
@@ -77,33 +93,12 @@ def gen_algor(N_gen, fdif):
         # Calculate the true fitness value for each solution from the objective
         # function.
         likel_list = [1.3, 0.2, 0.7, 5.6, 0.35, 20., 2.7, 0.64, 1.5, 6.6, 8.2, 1.3, 7.4, 3.0, 0.1, 1.2, 0.35, 0.21, 3.1]
-        np = len(likel_list)    
         # Sort list in place. Minimum value goes first.
         likel_list.sort()
-        
-        # Rank-based breeding probability. Independent of the fitness values,
-        # only depends on the toal number of chromosomes and the fitness
-        # differential fdif.
-        breed_prob = [1./np + fdif*(np+1.-2.*(i+1.))/(np*(np+1.)) for i in range(np)]
-       
-        
+
+
         #### Selection ###
         
         # Select np chromosomes for breeding from the CDF to generate the
         # intermediate population.
         select_chrom = selection(likel_list, breed_prob)
-    
-        
-    
-    gen_algor()
-        
-        #### Breeding ### 
-        
-        # Apply crossover operation on random chromosomes.
-        
-        # Apply mutation operation on random chromosomes.
-        
-        
-        ### Decoding###
-        
-        # Translate binary form to normal naming to process this new generation.
