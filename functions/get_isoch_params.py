@@ -10,6 +10,7 @@ from os.path import join
 
 from get_mass_dist import mass_dist as md
 import numpy as np
+import time
 
 
 def get_ranges_paths(sys_select):
@@ -30,21 +31,26 @@ def get_ranges_paths(sys_select):
         
         # Data for files formatted for UBVI Marigo tracks.
         line_start = "#\tIsochrone\tZ = "
-        mag_index = 9
+        # Index that points to the corresponding column in the file.
+        mag_indx = 9
          
     elif sys_select == '2':
         # Select cloud.
 #        cloud = raw_input('SMC or LMC cloud?')
-        cloud = 'SMC'
-        
+#        cloud = 'LMC'
+#        
         # Range of values where the parameters will move.
-        e_bv_min, e_bv_max, e_bv_step = 0., 0.21, 0.01
-        if cloud == 'SMC':
-            dis_mod_min, dis_mod_max, dis_mod_step = 18.9, 18.91, 1.
-        elif cloud == 'LMC':
-            dis_mod_min, dis_mod_max, dis_mod_step = 18.5, 18.51, 1.
-        z_min, z_max = 0.0005, 0.02
-        age_min, age_max = 0.003, 12.6
+        e_bv_min, e_bv_max, e_bv_step = 0., 0.21, 0.02
+#        if cloud == 'SMC':
+#            dis_mod_min, dis_mod_max, dis_mod_step = 18.9, 18.91, 1.
+#        elif cloud == 'LMC':
+#            dis_mod_min, dis_mod_max, dis_mod_step = 18.5, 18.51, 1.
+        dis_mod_min, dis_mod_max, dis_mod_step = 18., 19., 0.2
+#        z_min, z_max = 0.0005, 0.02
+        z_min, z_max = 0.0005, 0.005
+        # age_val x10 yr
+#        age_min, age_max = 0.003, 12.6
+        age_min, age_max = 0.003, 0.5
     
         # Select Marigo or PARSEC tracks.        
 #        iso_select = raw_input('Select Marigo or PARSEC tracks as 1 or 2: ')
@@ -52,88 +58,174 @@ def get_ranges_paths(sys_select):
         if iso_select == '1':
             # Marigo.
             line_start = "#\tIsochrone\tZ = "
+            # Index that points to the corresponding column in the file.
             mini_indx, col_indx, mag_indx = 1, 7, 9
             # Path where isochrone files are stored.
             iso_path = '/media/rest/github/isochrones/iso_wash_marigo'
         elif iso_select == '2':
             # PARSEC.
             line_start = "#\tIsochrone  Z = "
+            # Index that points to the corresponding column in the file.
             mini_indx, col_indx, mag_indx = 2, 8, 10
             # Path where isochrone files are stored.
             iso_path = '/media/rest/github/isochrones/iso_wash_parsec'
     
+    # Store ranges and steps.
+    ranges_steps = [[z_min, z_max], [age_min, age_max],
+                    [e_bv_min, e_bv_max, e_bv_step],\
+                    [dis_mod_min, dis_mod_max, dis_mod_step]]
+    # Store indexes that point to columns in the file that stores isochrones.
     indexes = [mini_indx, col_indx, mag_indx]
     
-    return e_bv_min, e_bv_max, e_bv_step, dis_mod_min, dis_mod_max,\
-    dis_mod_step, iso_path, line_start, indexes
+    return ranges_steps, indexes, iso_path, line_start
     
     
 
 def get_isoch_params(sys_select):
     '''
-    Reads and stores all available parameter values for the stored isochrones.
+    Reads and stores available parameter values for the stored isochrones
+    between the specified ranges and with the given steps.
+    Also stores all the available isochrones of different metallicities
+    according to the ranges given to this parameters.
     '''
 
-    # Call function to obtain the ranges for the parameters.
-    e_bv_min, e_bv_max, e_bv_step, dis_mod_min, dis_mod_max, dis_mod_step,\
-    iso_path, line_start, indexes = get_ranges_paths(sys_select)
-
+    # Call function to obtain the ranges and steps for the parameters along
+    # with the path to the isochrone files and information about how they
+    # are formatted (line_start).
+    ranges_steps, indexes, iso_path, line_start = get_ranges_paths(sys_select)
+    z_min, z_max = ranges_steps[0]
+    age_min, age_max = ranges_steps[1]
+    e_bv_min, e_bv_max, e_bv_step = ranges_steps[2]
+    dis_mod_min, dis_mod_max, dis_mod_step = ranges_steps[3]
+    
+    # Read indexes for this Girardi output file.
+    mini_indx, mag_indx, col_indx = indexes
+    
+    # Lists that store the colors, magnitudes and masses of the isochrone.
+    isoch_list = []
+    
     # List that will hold all the ages, metallicities and extinctions associated
-    # with all the stored isochrones.
+    # with the stored isochrones.
     # isoch_params = [[metal, age, E(B-V), dis_mod], [], ...]
     isoch_params = []
-    # Iterate through all isochrone files.
-    for iso_file in os.listdir(iso_path):
     
-        # Read the entire file once to count the total number of ages in it.    
-        with open(join(iso_path, iso_file), mode="r") as f_iso:
-            ages_total = 0
-            for line in f_iso:
-                if line.startswith(line_start):
-                    ages_total += 1
+    # Iterate through all metallicity files.
+    for met_file in os.listdir(iso_path):
         
-        # Open the isochrone for this cluster's metallicity.
-        with open(join(iso_path, iso_file), mode="r") as f_iso:
+        # Process metallicity file only if it's inside the given range.
+        if z_min<= met_file[:-4] <= z_max:
             
-            # Store metallicity value.
-            if iso_file[:-4] == 'zams':
-                metal = '0.019'
-            else:
-                metal = iso_file[:-4]
-    
-            # List that holds the ages in the file.
-            ages = []
-            # This var counts the number of ages within a given metallicity file.
-            age_indx = -1
-            # Iterate through each line in the file.
-            for line in f_iso:
+            # Store the metallicity value.
+            metal = met_file[:-4]
+            
+            # Open the metallicity file.
+            with open(join(iso_path, met_file), mode="r") as f_iso:
                 
-                if line.startswith(line_start):
-                    age_indx += 1
-                    # Store age value in 'ages' list.
-                    for i, part in enumerate(line.split("Age =")):
-                        # i=0 indicates the first part of that line, before 'Age ='
-                        if i==1:
-                            ages.append(float(part[:-3])/1.e09)
-    
-            # Separate isochrones with different ages.
-            for age_val in range(age_indx+1):
-                
-                # Store extinction and distance modulus values.
-                for e_bv in np.arange(e_bv_min, e_bv_max, e_bv_step):
+                # List that holds all the isochrone ages in the file.
+                ages = []
+                # Iterate through each line in the file.
+                for line in f_iso:
                     
+                    # Identify begginning of a defined isochrone.
+                    if line.startswith(line_start):
+                        # Store age value in 'ages' list if it falls inside
+                        # the given range.
+                        age_str = line.split("Age =")[1]
+                        age = float(age_str[:-3])/1.e09
+                        if age_min<= age <=age_max:
+                            
+                            # Save age in list.
+                            ages.append(age)
+
+                            # Save mag, color and mass values for each
+                            # isochrone star.
+                            if not line.startswith("#"):
+                                reader = line.split()
+                                # Color.
+                                isoch_col.append(float(reader[col_indx]) -
+                                float(reader[mag_indx]))
+                                # Magnitude.
+                                isoch_mag.append(float(reader[mag_indx]))
+                                # Mass
+                                isoch_mas.append(float(reader[mini_indx]))
+
+                # Store lists in isochrone list.
+                isoch_age = [isoch_col, isoch_mag, isoch_mas]
+
+            # Store all isochrones in this metallicity file.
+
+
+            # Store in list all the available isochrones to be used, according
+            # to the ranges and steps given to its parameters metallicity, age,
+            # extinction and distance modulus.
+            for age_val in ages:
+                
+                # Loop through all extinction values.
+                for e_bv in np.arange(e_bv_min, e_bv_max, e_bv_step):
+                    # Loop through all distance modulus values.    
                     for dis_mod in np.arange(dis_mod_min, dis_mod_max,
                                              dis_mod_step):
-                        
                         # Store params for this isochrone.
-                        isoch_params.append([metal, ages[age_val],
-                                             round(e_bv, 2), round(dis_mod, 2)])
+                        isoch_params.append([metal, age_val, round(e_bv, 2),
+                                             round(dis_mod, 2)])
                     
-    return isoch_params, iso_path, line_start, indexes
+    return isoch_list, isoch_params, iso_path, line_start, indexes
 
 
+#def read_isoch(m, a, e, d, sys_select, iso_path, line_start, indexes):
+#    '''
+#    Reads and stores an isochrone given the values of the parameters: m, a, e, d.
+#    '''
+#
+#    # Lists that store the color, magnitude and masses of the isochrone.
+#    iso_list, masses = [[], []], []
+#    
+#    # Read indexes for this Girardi output file.
+#    mini_indx, mag_indx, col_indx = indexes
+#    
+#    # Read the file corresponding to the value of 'm' and store the isochrone
+#    # of age 'a'.
+#    m_file = m+'.dat'
+#    with open(join(iso_path, m_file), mode="r") as f_iso:
+#
+#        # Set initial age value.
+#        age = -99.
+#        # Iterate through each line in the file.
+#        for line in f_iso:
+#            
+#            age_flag = False
+#            if line.startswith(line_start) and not age_flag:
+#                # Save age value.
+#                for i, part in enumerate(line.split("Age =")):
+#                    # i=0 indicates the first part of that line, before 'Age ='
+#                    if i==1:
+#                        age = float(part[:-3])/1.e09
+#                        age_flag = True
+#            elif line.startswith(line_start) and age_flag:
+#                break
+#
+#            if age == a:
+#                # Save mag, color and mass values for each isochrone star.
+#                if not line.startswith("#"):
+#                    reader = line.split()
+#                    # Magnitude.
+#                    iso_list[1].append(float(reader[mag_indx]))
+#                    # Color.
+#                    iso_list[0].append(float(reader[col_indx]) -
+#                    float(reader[mag_indx]))
+#                    # Mass
+#                    masses.append(float(reader[mini_indx]))
+#
+#        # Move isochrone according to E(B-V) and dis_mod values.
+#        iso_color, iso_magnitude = move_track(iso_list, sys_select, e, d)
+#        
+#    # Append final data to array.
+#    isochrone = [iso_color, iso_magnitude, masses]
+#                    
+#    return isochrone
 
-def move_track(iso_list, sys_select, e, d):
+
+def move_track(isoch_list, sys_select, e, d):
     '''
     Recieves an isochrone of a given age and metallicity and modifies
     it according to given values for the extinction E(B-V) and distance
@@ -149,10 +241,10 @@ def move_track(iso_list, sys_select, e, d):
         # (mv - Mv)o = -5 + 5*log(d) + Av
         #
         Av = 3.1*e
-        for item in iso_list[1]:
+        for item in isoch_list[1]:
             # mv affected by extinction.
             iso_moved[1].append(item + d + Av)
-        for item in iso_list[0]:
+        for item in isoch_list[0]:
             # (B-V) affected by extinction.
             iso_moved[0].append(item + e)
     else:
@@ -165,68 +257,14 @@ def move_track(iso_list, sys_select, e, d):
         # T1 = M_T1 - 0.58*E(B-V) + (m-M)o + 3.2*E(B-V)
         #
         V_Mv = d + 3.2*e
-        for item in iso_list[1]:
+        for item in isoch_list[1]:
              # T1 magnitude affected by extinction.
             iso_moved[1].append(item - 0.58*e + V_Mv)
-        for item in iso_list[0]:
+        for item in isoch_list[0]:
              # C-T1 color affected by extinction.
             iso_moved[0].append(item + 1.97*e)    
 
-    return iso_moved[0], iso_moved[1]    
-    
-    
-
-def read_isoch(m, a, e, d, sys_select, iso_path, line_start, indexes):
-    '''
-    Reads and stores an isochrone given the values of the parameters: m, a, e, d.
-    '''
-
-    # Lists that store the color, magnitude and masses of the isochrone.
-    iso_list, masses = [[], []], []
-    
-    # Read indexes for this Girardi output file.
-    mini_indx, mag_indx, col_indx = indexes
-    
-    # Read the file corresponding to the value of 'm' and store the isochrone
-    # of age 'a'.
-    m_file = m+'.dat'
-    with open(join(iso_path, m_file), mode="r") as f_iso:
-
-        # Set initial age value.
-        age = -99.
-        # Iterate through each line in the file.
-        for line in f_iso:
-            
-            age_flag = False
-            if line.startswith(line_start) and not age_flag:
-                # Save age value.
-                for i, part in enumerate(line.split("Age =")):
-                    # i=0 indicates the first part of that line, before 'Age ='
-                    if i==1:
-                        age = float(part[:-3])/1.e09
-                        age_flag = True
-            elif line.startswith(line_start) and age_flag:
-                break
-
-            if age == a:
-                # Save mag, color and mass values for each isochrone star.
-                if not line.startswith("#"):
-                    reader = line.split()
-                    # Magnitude.
-                    iso_list[1].append(float(reader[mag_indx]))
-                    # Color.
-                    iso_list[0].append(float(reader[col_indx]) -
-                    float(reader[mag_indx]))
-                    # Mass
-                    masses.append(float(reader[mini_indx]))
-
-        # Move isochrone according to E(B-V) and dis_mod values.
-        iso_moved_0, iso_moved_1 = move_track(iso_list, sys_select, e, d)
-        
-    # Append final data to array.
-    isochrone = [iso_moved_0, iso_moved_1, masses]
-                    
-    return isochrone
+    return iso_moved[0], iso_moved[1]
 
 
 
@@ -239,40 +277,42 @@ def likelihood(synth_clust, obs_clust):
     
     # Store cluster data in new arrays: color & magnitude, their errors and 
     # each star's membership probabilities (weights)
-    data0 = obs_clust
     # Store color and magnitude into array.
-    col_mag = np.array([zip(*[data0[5], data0[3]])], dtype=float)
-    # Store color and magnitude errors into array.
-    err_col_mag = np.array([zip(*[data0[6], data0[4]])], dtype=float)
-    # Store weights data (membership probabilities) into array.
-    weights = np.array([data0[7]], dtype=float)        
-    
+#    data0 = zip(*obs_clust)
+#    col_mag = np.array([data0[5], data0[3]], dtype=float)
+#    # Store color and magnitude errors into array.
+#    err_col_mag = np.array([data0[6], data0[4]], dtype=float)
+#    print 'synth_clust', synth_clust, '\n'
+   
     clust_stars_probs = []
-    for indx,star in enumerate(col_mag):
+    for indx,star in enumerate(obs_clust):
         # The first term does not depend on the synth stars.
-        sigma_c, sigma_m = err_col_mag[indx][0], err_col_mag[indx][1]
+        sigma_c, sigma_m = star[6], star[4]
         A = 1/(sigma_c*sigma_m)
         
         # Get probability for this cluster star.
-        sum_synth_stars = []
-        for synth_st in synth_clust:
-            # synth_st[0] = color ; synth_st[0] = mag
-            B = np.exp(-0.5*((star[0]-synth_st[0])/sigma_c)**2)
-            C = np.exp(-0.5*((star[1]-synth_st[1])/sigma_m)**2)
-            sum_synth_stars.append(A*B*C)
+        synth_stars = []
+        for synth_st in zip(*synth_clust):
+            # synth_st[0] = color ; synth_st[1] = mag
+            B = np.exp(-0.5*((star[5]-synth_st[0])/sigma_c)**2)
+            C = np.exp(-0.5*((star[3]-synth_st[1])/sigma_m)**2)
+            synth_stars.append(A*B*C)
             
         # The final prob for this cluster star is the sum over all synthetic
         # stars.
-        clust_stars_probs.append(sum(sum_synth_stars))
+        sum_synth_stars = sum(synth_stars) if sum(synth_stars)>0. else 1e-06
+        clust_stars_probs.append(sum_synth_stars)
         
+    # Store weights data (membership probabilities) into array.
+    weights = np.array([zip(*obs_clust)[7]], dtype=float)   
     # Weight probabilities for each cluster star.
     weighted_probs = clust_stars_probs*weights
     
     # Get weighted likelihood.
-    L_x = reduce(lambda x, y: x*y, weighted_probs)
+#    L_x = reduce(lambda x, y: x*y, weighted_probs)
     
     # Final score: sum log likelihoods for each star in cluster.
-    isoch_score = sum(-np.log(L_x))
+    isoch_score = -sum(np.log(np.asarray(weighted_probs[0])))
     
     return isoch_score
 
@@ -304,8 +344,7 @@ def get_synthetic_clust(isochrone, mass_dist):
     
     
     
-def isoch_likelihood(m, a, e, d, sys_select, iso_path, line_start, indexes,
-                     obs_clust, mass_dist):
+def isoch_likelihood(m, a, e, d, sys_select, obs_clust, mass_dist):
     '''
     Call with given values for metallicity, age, extinction and distance modulus
     to generate a synthetic cluster with those parameters and compare it wiht
@@ -314,10 +353,11 @@ def isoch_likelihood(m, a, e, d, sys_select, iso_path, line_start, indexes,
     m, a, e, d = metallicity, age, extinction, distance modulus.
     '''
     
-    # Open file, given by the metallicity value 'm' and store the isochrone
-    # of age 'a' moved by the values 'e' and 'd'.
-    isoch_final = read_isoch(m, a, e, d, sys_select, iso_path, line_start,
-                             indexes)
+    # Store isochrone of metallicity value 'm' and age 'a' moved by the
+    # values 'e' and 'd'.
+    isoch_final = move_track(isoch_list, sys_select, e, d)
+#    isoch_final = read_isoch(m, a, e, d, sys_select, iso_path, line_start,
+#                             indexes)
     
     # Generate synthetic cluster using this "moved" isochrone and a mass
     # distribution.
@@ -335,13 +375,13 @@ def boostrap_resample(memb_prob_avrg_sort):
     '''
     Resamples the observed cluster to use in the bootstrap process.
     '''
+#    http://www.astroml.org/_modules/astroML/resample.html#bootstrap
     obs_clust = memb_prob_avrg_sort
     return obs_clust
     
 
 
-def brute_force(sys_select, isoch_params, iso_path, line_start, indexes,
-                obs_clust, mass_dist):
+def brute_force(sys_select, isoch_list, isoch_params, obs_clust, mass_dist):
     '''
     Brute force algorithm that computes the likelihoods for *all* the defined
     isochrones.
@@ -350,16 +390,18 @@ def brute_force(sys_select, isoch_params, iso_path, line_start, indexes,
     # each isochrone fits the observed data.
     score = []
     # Iterate through all the tracks defined and stored.
-    for isoch in isoch_params:
+    tik = time.time()
+    for indx, isoch in enumerate(isoch_params):
 
         # Get parameters value from this isochrone.
         m, a, e, d = isoch
         
-        # Call function that returns the score for a given track.
-        isoch_score = isoch_likelihood(m, a, e, d, sys_select, iso_path,
-                                       line_start, indexes, obs_clust,\
-                                       mass_dist)
+        # Get stored isochrone corresponding to these values of 'm' and 'a'.
+        isoch_ma = isoch_list[indx]
         
+        # Call function that returns the score for a given track.
+        isoch_score = isoch_likelihood(e, d, isoch_ma, sys_select, obs_clust, mass_dist)
+        print isoch, isoch_score
         # Store the scores for each function/track into list.
         score.append(isoch_score)    
         
@@ -373,6 +415,8 @@ def brute_force(sys_select, isoch_params, iso_path, line_start, indexes,
     dist_kpc = round(10**(0.2*(dis_mod+5.))/1000., 2)
     
     print z_met, age_gyr, e_bv, dis_mod
+    print 'time: ', time.time()-tik
+    raw_input()
     
     isoch_fit_params = [z_met, age_gyr, e_bv, dis_mod, dist_kpc]         
         
@@ -400,10 +444,16 @@ def gip(sys_select, memb_prob_avrg_sort):
     mass_dist = md('kroupa_1993', 'total_number', 500)
     
     # Store all posible combinations of metallicity, age, extinction and
-    # distance modulus in a list.
-    # isoch_params = [isoch_1, ..., isoch_N]
-    # icosh_i = [met_i, age_i, ext_i, dist_mod_i]
-    isoch_params, iso_path, line_start, indexes = get_isoch_params(sys_select)
+    # distance modulus in isoch_params and all isochrones stored in all the
+    # metallicity files in isoch_list. We do this so the files will only have
+    # to be accessed once, thus being a more efficient method.
+    
+    # isoch_params = [params_1, ..., params_N]
+    # params_i = [met_i, age_i, ext_i, dist_mod_i]
+    
+    # isoch_list = [isoch_1, ..., isoch_2]
+    # isoch_i = [[colors], [magnitudes], [masses]]
+    isoch_list, isoch_params, iso_path, line_start, indexes = get_isoch_params(sys_select)
     print isoch_params[0]
    
     # Begin bootstrap block.
