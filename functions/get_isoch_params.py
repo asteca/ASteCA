@@ -9,7 +9,7 @@ import os
 from os.path import join
 
 from get_mass_dist import mass_dist as md
-from genetic_algorith import gen_algor as g_a
+from genetic_algorithm import gen_algor as g_a
 import numpy as np
 
 
@@ -120,12 +120,12 @@ def get_isoch_params(sys_select):
     
     # Iterate through all metallicity files.
     for met_file in os.listdir(iso_path):
+
+        # Store the metallicity value.
+        metal = float(met_file[:-4])
         
         # Process metallicity file only if it's inside the given range.
-        if z_min<= met_file[:-4] <= z_max:
-            
-            # Store the metallicity value.
-            metal = met_file[:-4]
+        if z_min<= metal <= z_max:
             
             # Initialize list that will hold all the isochrones for this
             # metallicity value.
@@ -134,8 +134,9 @@ def get_isoch_params(sys_select):
             # Open the metallicity file.
             with open(join(iso_path, met_file), mode="r") as f_iso:
                 
-                # List that holds all the isochrone ages in the file.
-                ages = []
+                # List that holds the each value of metallicity and age in a
+                # given single metallicity file.
+                met_params = []
                 # List that holds all the isochrones in this metallicity file.
                 isoch_met = []
                 
@@ -150,6 +151,8 @@ def get_isoch_params(sys_select):
                         # Read age value
                         age_str = line.split("Age =")[1]
                         age = float(age_str[:-3])/1.e09
+                    else:
+                        age = -99.
                         
                         # Save stored values if these exist.
                         if isoch_col:
@@ -161,8 +164,8 @@ def get_isoch_params(sys_select):
                     # Store age value in 'ages' list if it falls inside
                     # the given range.
                     if age_min<= age <=age_max:
-                        # Save age in list.
-                        ages.append(age)
+                        # Save metallicity age in list.
+                        met_params.append([metal, age])
 
                         # Save mag, color and mass values for each isochrone star.
                         if not line.startswith("#"):
@@ -176,83 +179,17 @@ def get_isoch_params(sys_select):
                             isoch_mas.append(float(reader[mini_indx]))
 
                 # Store all isochrones with this metallicity value.
+                print isoch_met
+                raw_input()
                 metal_isoch.append(isoch_met)
 
             # Store list holding all the isochrones with the same metallicity
             # in the final isochrone list.
             isoch_list.append(metal_isoch)
-
-            # Store all isochrones in this metallicity file.
-
-
-#            # Store in list all the available isochrones to be used, according
-#            # to the ranges and steps given to its parameters metallicity, age,
-#            # extinction and distance modulus.
-#            for age_val in ages:
-#                
-#                # Loop through all extinction values.
-#                for e_bv in np.arange(e_bv_min, e_bv_max, e_bv_step):
-#                    # Loop through all distance modulus values.    
-#                    for dis_mod in np.arange(dis_mod_min, dis_mod_max,
-#                                             dis_mod_step):
-#                        # Store params for this isochrone.
-#                        isoch_params.append([metal, age_val, round(e_bv, 2),
-#                                             round(dis_mod, 2)])
+            # Store in list that holds all the metallicities and ages.
+            isoch_params.append(met_params)
                     
     return isoch_list, isoch_params
-
-
-#def read_isoch(m, a, e, d, sys_select, iso_path, line_start, indexes):
-#    '''
-#    Reads and stores an isochrone given the values of the parameters: m, a, e, d.
-#    '''
-#
-#    # Lists that store the color, magnitude and masses of the isochrone.
-#    iso_list, masses = [[], []], []
-#    
-#    # Read indexes for this Girardi output file.
-#    mini_indx, mag_indx, col_indx = indexes
-#    
-#    # Read the file corresponding to the value of 'm' and store the isochrone
-#    # of age 'a'.
-#    m_file = m+'.dat'
-#    with open(join(iso_path, m_file), mode="r") as f_iso:
-#
-#        # Set initial age value.
-#        age = -99.
-#        # Iterate through each line in the file.
-#        for line in f_iso:
-#            
-#            age_flag = False
-#            if line.startswith(line_start) and not age_flag:
-#                # Save age value.
-#                for i, part in enumerate(line.split("Age =")):
-#                    # i=0 indicates the first part of that line, before 'Age ='
-#                    if i==1:
-#                        age = float(part[:-3])/1.e09
-#                        age_flag = True
-#            elif line.startswith(line_start) and age_flag:
-#                break
-#
-#            if age == a:
-#                # Save mag, color and mass values for each isochrone star.
-#                if not line.startswith("#"):
-#                    reader = line.split()
-#                    # Magnitude.
-#                    iso_list[1].append(float(reader[mag_indx]))
-#                    # Color.
-#                    iso_list[0].append(float(reader[col_indx]) -
-#                    float(reader[mag_indx]))
-#                    # Mass
-#                    masses.append(float(reader[mini_indx]))
-#
-#        # Move isochrone according to E(B-V) and dis_mod values.
-#        iso_color, iso_magnitude = move_track(iso_list, sys_select, e, d)
-#        
-#    # Append final data to array.
-#    isochrone = [iso_color, iso_magnitude, masses]
-#                    
-#    return isochrone
 
 
 
@@ -296,7 +233,9 @@ def gip(sys_select, memb_prob_avrg_sort):
     # isoch_list = [isoch_1, ..., isoch_2]
     # isoch_i = [[colors], [magnitudes], [masses]]
     isoch_list, isoch_params = get_isoch_params(sys_select)
-    print isoch_params[0]
+    print isoch_list[0][0]
+    print isoch_params[0][0]
+    raw_input()
    
     # Begin bootstrap block.
     # NUmber of times to run the bootstrap block.
