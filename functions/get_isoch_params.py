@@ -100,7 +100,7 @@ def get_isoch_params(sys_select):
     dis_mod_min, dis_mod_max, dis_mod_step = ranges_steps[3]
     
     # Read indexes for this Girardi output file.
-    mini_indx, mag_indx, col_indx = indexes
+    mini_indx, col_indx, mag_indx = indexes
     
     # Lists that store the colors, magnitudes and masses of the isochrones.
     # isoch_list = [metal_1, ..., metal_M]
@@ -137,35 +137,36 @@ def get_isoch_params(sys_select):
                 # List that holds the each value of metallicity and age in a
                 # given single metallicity file.
                 met_params = []
-                # List that holds all the isochrones in this metallicity file.
-                isoch_met = []
                 
                 # Define empty lists.
                 isoch_col, isoch_mag, isoch_mas = [], [], []
+                
+                # Initial value for age to avoid 'not defined' error.
+                age = -99.
                 
                 # Iterate through each line in the file.
                 for line in f_iso:
                     
                     # Identify beginning of a defined isochrone.
                     if line.startswith(line_start):
-                        # Read age value
-                        age_str = line.split("Age =")[1]
-                        age = float(age_str[:-3])/1.e09
-                    else:
-                        age = -99.
                         
                         # Save stored values if these exist.
+                        # Skip first age for which the lists will be empty.
                         if isoch_col:
+                            # Save metallicity and age in list.
+                            met_params.append([metal, age])
                             # Store colors, magnitudes and masses for this isochrone.
-                            isoch_met.append([isoch_col, isoch_mag, isoch_mas])
+                            metal_isoch.append([isoch_col, isoch_mag, isoch_mas])
                             # Reset lists.
                             isoch_col, isoch_mag, isoch_mas = [], [], []
+                            
+                        # Read age value.
+                        age_str = line.split("Age =")[1]
+                        age = float(age_str[:-3])/1.e09
                         
                     # Store age value in 'ages' list if it falls inside
                     # the given range.
                     if age_min<= age <=age_max:
-                        # Save metallicity age in list.
-                        met_params.append([metal, age])
 
                         # Save mag, color and mass values for each isochrone star.
                         if not line.startswith("#"):
@@ -177,11 +178,6 @@ def get_isoch_params(sys_select):
                             isoch_mag.append(float(reader[mag_indx]))
                             # Mass
                             isoch_mas.append(float(reader[mini_indx]))
-
-                # Store all isochrones with this metallicity value.
-                print isoch_met
-                raw_input()
-                metal_isoch.append(isoch_met)
 
             # Store list holding all the isochrones with the same metallicity
             # in the final isochrone list.
@@ -233,8 +229,8 @@ def gip(sys_select, memb_prob_avrg_sort):
     # isoch_list = [isoch_1, ..., isoch_2]
     # isoch_i = [[colors], [magnitudes], [masses]]
     isoch_list, isoch_params = get_isoch_params(sys_select)
-    print isoch_list[0][0]
-    print isoch_params[0][0]
+    print isoch_list[3][17]
+    print isoch_params[3][17]
     raw_input()
    
     # Begin bootstrap block.
