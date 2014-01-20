@@ -58,38 +58,58 @@ def gen_algor(obs_clust, isoch_list, isoch_params, mass_dist, n_pop, n_gen, fdif
     algorithm.
     '''
     
-    # Initial random population evaluation.
+    
+    ### Initial random population evaluation. ###
     
     # Pick N initial solutions at random from each
     # list storing all the possible parameters values.
     
     # Evaluate each solution in the objective function.
-    
+    likel_list = [1.3, 0.2, 0.7, 5.6, 0.35, 20., 2.7, 0.64, 1.5, 6.6, 8.2, 1.3, 7.4, 3.0, 0.1, 1.2, 0.35, 0.21, 3.1]
+    # Sort list in place. Minimum value goes first.
+    likel_list.sort()
     
     # Rank-based breeding probability. Independent of the fitness values,
-    # only depends on the toal number of chromosomes and the fitness
+    # only depends on the total number of chromosomes and the fitness
     # differential fdif.
-    breed_prob = [1./n_pop + fdif*(n_pop+1.-2.*(i+1.))/(n_pop*(n_pop+1.)) for i in range(n_pop)]    
+    breed_prob = [1./n_pop + fdif*(n_pop+1.-2.*(i+1.))/(n_pop*(n_pop+1.)) \
+    for i in range(n_pop)]    
     
     # Begin processing the populations up to n_gen generations.
     for i in range(n_gen):
     
-        #### Breeding ###
+       
+        #### Selection/Reproduction ###
         
         # Encode solutions into chromosomes.
         chromosomes = encode(generation)
         
-        # Apply crossover operation on random chromosomes.
+        # Elitism: pass a number of the best solutions to ensure they breed.
+        
+        # Select (n_pop-n_elit) chromosomes for breeding from the above
+        # generation of solutions according to breed_prob to generate the
+        # intermediate population.
+        select_chrom = selection(likel_list, breed_prob)
+        
+
+        #### Breeding ###
+        
+        # Randomly pair chromosomes.
+        
+        # Apply crossover operation on random pair of chromosomes. Select only
+        # 100*p_cross% of pairs to apply the crossover to, where p_cross is the
+        # crossover probability.
         
         # Apply mutation operation on random chromosomes.
         
         
         ### Evaluation/fitness ###
-        
         # Evaluate the N random chromosomes in the evaluation/objective function
         # (likelihood)
+        
         # Decode the chromosomes into solutions first.
         decode()
+        
         # Calculate the true fitness value for each solution from the objective
         # function.
         likel_list = [1.3, 0.2, 0.7, 5.6, 0.35, 20., 2.7, 0.64, 1.5, 6.6, 8.2, 1.3, 7.4, 3.0, 0.1, 1.2, 0.35, 0.21, 3.1]
@@ -97,8 +117,3 @@ def gen_algor(obs_clust, isoch_list, isoch_params, mass_dist, n_pop, n_gen, fdif
         likel_list.sort()
 
 
-        #### Selection ###
-        
-        # Select np chromosomes for breeding from the CDF to generate the
-        # intermediate population.
-        select_chrom = selection(likel_list, breed_prob)

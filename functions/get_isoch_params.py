@@ -14,7 +14,7 @@ import numpy as np
 
 
 
-def get_ranges_paths(sys_select):
+def get_ranges_paths(sys_select, iso_select):
     '''
     Reads parameters ranges and paths to stored isochrone files.
     '''
@@ -54,17 +54,13 @@ def get_ranges_paths(sys_select):
         age_min, age_max = 0.003, 0.5
     
         # Select Marigo or PARSEC tracks.        
-#        iso_select = raw_input('Select Marigo or PARSEC tracks as 1 or 2: ')
-        iso_select = '1' 
-        if iso_select == '1':
-            # Marigo.
+        if iso_select == 'MAR':  # Marigo.
             line_start = "#\tIsochrone\tZ = "
             # Index that points to the corresponding column in the file.
             mini_indx, col_indx, mag_indx = 1, 7, 9
             # Path where isochrone files are stored.
             iso_path = '/media/rest/github/isochrones/iso_wash_marigo'
-        elif iso_select == '2':
-            # PARSEC.
+        elif iso_select == 'PAR':  # PARSEC.
             line_start = "#\tIsochrone  Z = "
             # Index that points to the corresponding column in the file.
             mini_indx, col_indx, mag_indx = 2, 8, 10
@@ -82,7 +78,7 @@ def get_ranges_paths(sys_select):
     
     
 
-def get_isoch_params(sys_select):
+def get_isoch_params(sys_select, iso_select):
     '''
     Reads and stores available parameter values for the stored isochrones
     between the specified ranges and with the given steps.
@@ -93,7 +89,8 @@ def get_isoch_params(sys_select):
     # Call function to obtain the ranges and steps for the parameters along
     # with the path to the isochrone files and information about how they
     # are formatted (line_start).
-    ranges_steps, indexes, iso_path, line_start = get_ranges_paths(sys_select)
+    ranges_steps, indexes, iso_path, line_start = get_ranges_paths(sys_select,
+                                                                   iso_select)
     z_min, z_max = ranges_steps[0]
     age_min, age_max = ranges_steps[1]
     e_bv_min, e_bv_max, e_bv_step = ranges_steps[2]
@@ -155,7 +152,8 @@ def get_isoch_params(sys_select):
                         if isoch_col:
                             # Save metallicity and age in list.
                             met_params.append([metal, age])
-                            # Store colors, magnitudes and masses for this isochrone.
+                            # Store colors, magnitudes and masses for this
+                            # isochrone.
                             metal_isoch.append([isoch_col, isoch_mag, isoch_mas])
                             # Reset lists.
                             isoch_col, isoch_mag, isoch_mas = [], [], []
@@ -168,7 +166,8 @@ def get_isoch_params(sys_select):
                     # the given range.
                     if age_min<= age <=age_max:
 
-                        # Save mag, color and mass values for each isochrone star.
+                        # Save mag, color and mass values for each isochrone
+                        # star.
                         if not line.startswith("#"):
                             reader = line.split()
                             # Color.
@@ -199,7 +198,7 @@ def boostrap_resample(memb_prob_avrg_sort):
     
 
 
-def gip(sys_select, memb_prob_avrg_sort):
+def gip(sys_select, iso_select, memb_prob_avrg_sort):
     '''
     Main function.
     
@@ -228,7 +227,7 @@ def gip(sys_select, memb_prob_avrg_sort):
     
     # isoch_list = [isoch_1, ..., isoch_2]
     # isoch_i = [[colors], [magnitudes], [masses]]
-    isoch_list, isoch_params = get_isoch_params(sys_select)
+    isoch_list, isoch_params = get_isoch_params(sys_select, iso_select)
     print isoch_list[3][17]
     print isoch_params[3][17]
     raw_input()
@@ -258,14 +257,16 @@ def gip(sys_select, memb_prob_avrg_sort):
 #                                           line_start, indexes, obs_clust,\
 #                                           mass_dist)
             # Genetic algorithm.
-            isoch_fit_params = g_a(obs_clust, isoch_list, isoch_params, mass_dist)
+            isoch_fit_params = g_a(obs_clust, isoch_list, isoch_params,
+                                   mass_dist, n_pop, n_gen, fdif)
         else:
             # Brute force.
 #            params_boot.append(brute_force(sys_select, isoch_params, iso_path,
 #                                           line_start, indexes, obs_clust,\
 #                                           mass_dist))
             # Genetic algorithm algorithm.
-            params_boot.append(g_a(obs_clust, isoch_list, isoch_params, mass_dist))
+            params_boot.append(g_a(obs_clust, isoch_list, isoch_params,
+                                   mass_dist, n_pop, n_gen, fdif))
         
     # Calculate errors for each parameter.
     isoch_fit_errors = np.mean(params_boot)
