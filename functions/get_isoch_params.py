@@ -41,17 +41,16 @@ def get_ranges_paths(sys_select, iso_select):
 #        cloud = 'LMC'
 #        
         # Range of values where the parameters will move.
-        e_bv_min, e_bv_max, e_bv_step = 0., 0.21, 0.02
+        e_bv_min, e_bv_max, e_bv_step = 0., 0.41, 0.01
 #        if cloud == 'SMC':
 #            dis_mod_min, dis_mod_max, dis_mod_step = 18.9, 18.91, 1.
 #        elif cloud == 'LMC':
 #            dis_mod_min, dis_mod_max, dis_mod_step = 18.5, 18.51, 1.
-        dis_mod_min, dis_mod_max, dis_mod_step = 18., 19., 0.2
-#        z_min, z_max = 0.0005, 0.02
-        z_min, z_max = 0.0005, 0.005
+        dis_mod_min, dis_mod_max, dis_mod_step = 18., 19.01, 0.05
+        z_min, z_max = 0.0005, 0.02
         # age_val x10 yr
 #        age_min, age_max = 0.003, 12.6
-        age_min, age_max = 0.003, 0.5
+        age_min, age_max = 6.6, 10.1
     
         # Select Marigo or PARSEC tracks.        
         if iso_select == 'MAR':  # Marigo.
@@ -108,12 +107,15 @@ def get_isoch_params(sys_select, iso_select):
     
     # List that will hold all the metallicities and ages associated with the
     # stored isochrones.
-    # isoch_params = [met_1, ..., met_M]
+    # This way of storing does not need to assume that
+    # each metallicity file contains the same number of isochrones with the
+    # same ages.
+    # isoch_ma = [met_1, ..., met_M]
     # met_i = [params_i1, ..., params_iN]
     # params_ij = [metallicity_i, age_j]
-    # isoch_params[i][*][0] --> metallicity i (float)
-    # isoch_params[i][j][1] --> age j (float)
-    isoch_params = []
+    # isoch_ma[i][*][0] --> metallicity i (float)
+    # isoch_ma[i][j][1] --> age j (float)
+    isoch_ma = []
     
     # Iterate through all metallicity files.
     for met_file in os.listdir(iso_path):
@@ -160,7 +162,8 @@ def get_isoch_params(sys_select, iso_select):
                             
                         # Read age value.
                         age_str = line.split("Age =")[1]
-                        age = float(age_str[:-3])/1.e09
+#                        age = float(age_str[:-3])/1.e09
+                        age = round(np.log10(float(age_str[:-3])), 2)
                         
                     # Store age value in 'ages' list if it falls inside
                     # the given range.
@@ -182,9 +185,21 @@ def get_isoch_params(sys_select, iso_select):
             # in the final isochrone list.
             isoch_list.append(metal_isoch)
             # Store in list that holds all the metallicities and ages.
-            isoch_params.append(met_params)
-                    
-    return isoch_list, isoch_params
+            isoch_ma.append(met_params)
+                  
+    
+    # Store all possible extinction and distance modulus values in list.
+    # isoch_ed = [extinction, dis_mod]
+    # extinction = [e_1, e_2, ..., e_n]
+    # dis_mod = [dm_1, dm_2, ..., dm_m]
+    isoch_ed = [[], []]
+    for e_bv in np.arange(e_bv_min, e_bv_max, e_bv_step):
+        isoch_ed[0].append(round(e_bv, 2))
+    for dis_mod in np.arange(dis_mod_min, dis_mod_max, dis_mod_step):
+        # Store params for this isochrone.
+        isoch_ed[1].append(round(dis_mod, 2))                  
+                  
+    return isoch_list, isoch_ma, isoch_ed, ranges_steps
 
 
 
@@ -217,20 +232,19 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort):
     # on the chosen 2nd param.
     mass_dist = md('kroupa_1993', 'total_number', 500)
     
-    # Store all posible combinations of metallicity, age, extinction and
-    # distance modulus in isoch_params and all isochrones stored in all the
-    # metallicity files in isoch_list. We do this so the files will only have
-    # to be accessed once, thus being a more efficient method.
+    # Genetic algorithm parameters.
+    n_pop, n_gen, fdif = 100, 100, 3./5.
     
-    # isoch_params = [params_1, ..., params_N]
-    # params_i = [met_i, age_i, ext_i, dist_mod_i]
     
-    # isoch_list = [isoch_1, ..., isoch_2]
-    # isoch_i = [[colors], [magnitudes], [masses]]
-    isoch_list, isoch_params = get_isoch_params(sys_select, iso_select)
-    print isoch_list[3][17]
-    print isoch_params[3][17]
-    raw_input()
+    # Store all isochrones in all the metallicity files in isoch_list. We do
+    # this so the files will only have to be accessed once.
+    # Store metallicity values and isochrones ages between the allowed
+    # ranges in isoch_ma; extinction and distance modulus values in isoch_ed.
+    isoch_list, isoch_ma, isoch_ed, ranges_steps = get_isoch_params(sys_select, iso_select)
+#    print isoch_list[3][17]
+#    print isoch_ma[3]
+#    print isoch_ed
+#    raw_input()
    
     # Begin bootstrap block.
     # NUmber of times to run the bootstrap block.
@@ -248,7 +262,7 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort):
         else:
             obs_clust = boostrap_resample(memb_prob_avrg_sort)
 
-        # Call  algorithm to calculate the likelihoods for the set of
+        # Call algorithm to calculate the likelihoods for the set of
         # isochrones and return the best fitting parameters.
         
         if i==0:
@@ -257,16 +271,16 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort):
 #                                           line_start, indexes, obs_clust,\
 #                                           mass_dist)
             # Genetic algorithm.
-            isoch_fit_params = g_a(obs_clust, isoch_list, isoch_params,
-                                   mass_dist, n_pop, n_gen, fdif)
+            isoch_fit_params = g_a(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed,
+                                   mass_dist, ranges_steps, n_pop, n_gen, fdif)
         else:
             # Brute force.
 #            params_boot.append(brute_force(sys_select, isoch_params, iso_path,
 #                                           line_start, indexes, obs_clust,\
 #                                           mass_dist))
             # Genetic algorithm algorithm.
-            params_boot.append(g_a(obs_clust, isoch_list, isoch_params,
-                                   mass_dist, n_pop, n_gen, fdif))
+            params_boot.append(g_a(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed,
+                                   mass_dist, ranges_steps, n_pop, n_gen, fdif))
         
     # Calculate errors for each parameter.
     isoch_fit_errors = np.mean(params_boot)

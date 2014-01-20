@@ -85,7 +85,7 @@ def synthetic_clust(isochrone, mass_dist):
     
     
     
-def isoch_likelihood(sys_select, e, d, obs_clust, isochrone, mass_dist):
+def isoch_likelihood(sys_select, isochrone, e, d, obs_clust, mass_dist):
     '''
     Main function.
     
