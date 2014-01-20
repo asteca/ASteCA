@@ -24,10 +24,56 @@ def encode(mm_m, mm_a, mm_e, mm_d, n, int_popul):
         e_binar = str(bin(int(((sol[2]-mm_e[0])/delta_e)*(2**n))))[2:].zfill(n)
         d_binar = str(bin(int(((sol[3]-mm_d[0])/delta_d)*(2**n))))[2:].zfill(n)
         chrom = m_binar + a_binar + e_binar + d_binar
-        print len(chrom), m_binar, a_binar, e_binar, d_binar, sol
+#        print len(chrom), m_binar, a_binar, e_binar, d_binar, sol
         chromosomes.append(chrom)
     
     return chromosomes
+    
+    
+def chunker(seq, size):
+    '''
+    Helper function for 'crossover'. Returns elemenst in list in "chunks"
+    rather than one at a time.
+    '''
+    return (seq[pos:pos + size] for pos in xrange(0, len(seq), size))
+    
+    
+def crossover(chromosomes, p_cross):
+    '''
+    Applies the crosssover operator over each chromosome.
+    '''
+    cross_chrom= []
+    for chrom_pair in chunker(chromosomes, 2):
+        r = random.random()
+        if r<= p_cross:
+            # Select random crossover point.
+            cp = random.randint(0, len(chrom_pair[0]))
+            cross_chrom.append(chrom_pair[0][:cp]+chrom_pair[1][cp:])
+            cross_chrom.append(chrom_pair[1][:cp]+chrom_pair[0][cp:])
+        else:
+            cross_chrom.append(chrom_pair[0])
+            cross_chrom.append(chrom_pair[1])
+        
+    return cross_chrom
+    
+    
+def mutation(cross_chrom, p_mut):
+    '''
+    Applies the mutation operator over random genes in each chromosome.
+    '''
+#    mut_chrom = []
+#    for chrom in cross_chrom:
+#        gene_flip = []
+#        for gene in chrom:
+#            r = random.random()
+#            if r < p_mut:
+#                # Flip gene.
+#                gene = 1 - int(gene)
+                
+    for i,elem in enumerate(cross_chrom):
+        cross_chrom[i] = ''.join(char if random.random()>p_mut else str(1-int(char)) for char in elem)
+    
+    return cross_chrom
     
     
 def decode():
@@ -86,7 +132,7 @@ def fitness_eval(sys_select, isoch_list, obs_clust, mass_dist, isoch_ma,
 
 
 def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
-              ranges_steps, n_pop, n_gen, fdif):
+              ranges_steps, n_pop, n_gen, fdif, p_cross, p_mut):
     '''
     Main function.
     
@@ -106,9 +152,7 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
     mm_d, step_d = [ranges_steps[3][0], ranges_steps[3][1]], ranges_steps[3][2]
     delta_m, delta_a, delta_e, delta_d = (mm_m[1]-mm_m[0]), (mm_a[1]-mm_a[0]),\
     (mm_e[1]-mm_e[0]), (mm_d[1]-mm_d[0])
-    print delta_m,step_m, delta_a,step_a, delta_e,step_e, delta_d,step_d
     n_bin = int(np.log(max((delta_m/step_m), (delta_a/step_a), (delta_e/step_e), (delta_d/step_d)))/np.log(2))+1
-    print n_bin
     
     
     ### Initial random population evaluation. ###
@@ -149,28 +193,32 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
         
         # Encode intermediate population's solutions into binary chromosomes.
         chromosomes = encode(mm_m, mm_a, mm_e, mm_d, n_bin, int_popul)
-        print chromosomes
-        raw_input()
         
         #### Breeding ###
         
-        # Randomly pair chromosomes.
+        # Pair chromosomes by randomly shuffling them.
+        random.shuffle(chromosomes)
         
-        # Apply crossover operation on random pair of chromosomes. Select only
-        # 100*p_cross% of pairs to apply the crossover to, where p_cross is the
-        # crossover probability.
+        # Apply crossover operation on each subsequent pair of chromosomes.
+        # Select only 100*p_cross% of pairs to apply the crossover to,
+        # where p_cross is the crossover probability.
+        cross_chrom = crossover(chromosomes, p_cross)
+        print cross_chrom[0]
         
-        # Apply mutation operation on random chromosomes.
+        # Apply mutation operation on random genes for every chromosome.
+        mut_chrom = mutation(cross_chrom, p_mut)
+        print mut_chrom[0]
+        raw_input()
         
         
         ### Evaluation/fitness ###
-        # Evaluate the N random chromosomes in the evaluation/objective function
-        # (likelihood)
         
-        # Decode the chromosomes into solutions first.
-        decode()
+        # Decode the chromosomes into solutions to form the new generation.
+        ma_lst, e_lst, d_lst = decode(mut_chrom)
         
-        # Evaluate each random solution in the objective function.
-
+        # Evaluate each new solution in the objective function and sort
+        # according to the best solutions found.
+        generation = fitness_eval(sys_select, isoch_list, obs_clust, mass_dist,
+                                  isoch_ma, ma_lst, e_lst, d_lst)
 
 

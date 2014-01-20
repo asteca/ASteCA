@@ -47,10 +47,10 @@ def get_ranges_paths(sys_select, iso_select):
 #        elif cloud == 'LMC':
 #            dis_mod_min, dis_mod_max, dis_mod_step = 18.5, 18.51, 1.
         dis_mod_min, dis_mod_max, dis_mod_step = 18., 19.01, 0.05
-        z_min, z_max = 0.0005, 0.02
+        z_min, z_max = 0.0005, 0.021
         # age_val x10 yr
 #        age_min, age_max = 0.003, 12.6
-        age_min, age_max = 6.6, 10.1
+        age_min, age_max = 6.6, 10.11
     
         # Select Marigo or PARSEC tracks.        
         if iso_select == 'MAR':  # Marigo.
@@ -233,7 +233,7 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort):
     mass_dist = md('kroupa_1993', 'total_number', 500)
     
     # Genetic algorithm parameters.
-    n_pop, n_gen, fdif = 100, 100, 3./5.
+    n_pop, n_gen, fdif, p_cross, p_mut = 100, 100, 3./5., 0.85, 0.01
     
     
     # Store all isochrones in all the metallicity files in isoch_list. We do
@@ -272,7 +272,7 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort):
 #                                           mass_dist)
             # Genetic algorithm.
             isoch_fit_params = g_a(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed,
-                                   mass_dist, ranges_steps, n_pop, n_gen, fdif)
+                                   mass_dist, ranges_steps, n_pop, n_gen, fdif, p_cross, p_mut)
         else:
             # Brute force.
 #            params_boot.append(brute_force(sys_select, isoch_params, iso_path,
@@ -280,7 +280,7 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort):
 #                                           mass_dist))
             # Genetic algorithm algorithm.
             params_boot.append(g_a(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed,
-                                   mass_dist, ranges_steps, n_pop, n_gen, fdif))
+                                   mass_dist, ranges_steps, n_pop, n_gen, fdif, p_cross, p_mut))
         
     # Calculate errors for each parameter.
     isoch_fit_errors = np.mean(params_boot)
