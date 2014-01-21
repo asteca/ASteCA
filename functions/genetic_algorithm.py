@@ -19,6 +19,7 @@ def encode(mm_m, mm_a, mm_e, mm_d, n, int_popul):
     (mm_e[1]-mm_e[0]), (mm_d[1]-mm_d[0])
     chromosomes = []
     for sol in int_popul:
+        # Convert floats to binary strings.
         m_binar = str(bin(int(((sol[0]-mm_m[0])/delta_m)*(2**n))))[2:].zfill(n)
         a_binar = str(bin(int(((sol[1]-mm_a[0])/delta_a)*(2**n))))[2:].zfill(n)
         e_binar = str(bin(int(((sol[2]-mm_e[0])/delta_e)*(2**n))))[2:].zfill(n)
@@ -43,6 +44,7 @@ def crossover(chromosomes, p_cross):
     Applies the crosssover operator over each chromosome.
     '''
     cross_chrom= []
+    # Take two chromosomes at a time.
     for chrom_pair in chunker(chromosomes, 2):
         r = random.random()
         if r<= p_cross:
@@ -61,33 +63,59 @@ def mutation(cross_chrom, p_mut):
     '''
     Applies the mutation operator over random genes in each chromosome.
     '''
-#    mut_chrom = []
-#    for chrom in cross_chrom:
-#        gene_flip = []
-#        for gene in chrom:
-#            r = random.random()
-#            if r < p_mut:
-#                # Flip gene.
-#                gene = 1 - int(gene)
-                
+    #                 
     for i,elem in enumerate(cross_chrom):
         cross_chrom[i] = ''.join(char if random.random()>p_mut else str(1-int(char)) for char in elem)
     
     return cross_chrom
     
     
-def decode(mut_chrom):
+def decode(mm_m, mm_a, mm_e, mm_d, n_bin, isoch_ma, isoch_ed, mut_chrom):
     '''
     Decode the chromosomes into its real values to be evaluated by the
     objective function.
     '''
+    import itertools
+    
+    delta_m, delta_a, delta_e, delta_d = (mm_m[1]-mm_m[0]), (mm_a[1]-mm_a[0]),\
+    (mm_e[1]-mm_e[0]), (mm_d[1]-mm_d[0])    
+    
+    # Flat out metallicity and ages list.
+    flat_ma = zip(*list(itertools.chain(*isoch_ma)))    
+    
+    ma_lst, e_lst, d_ls = [], [], []
+    for chrom in mut_chrom:
+        # Split chromosome string.
+        chrom_split = [chrom[i:i+n_bin] for i in xrange(0, len(chrom), n_bin)]
+        # Convert binary to integer for each parameter.
+        km, ka, ke, kd = (int(i, 2) for i in chrom_split)
+        # Map integers to the real parameter values.
+        xm = mm_m[0]+(km*delta_m/(2**n_bin))
+        xa = mm_a[0]+(ka*delta_a/(2**n_bin))
+        xe = mm_e[0]+(ke*delta_e/(2**n_bin))
+        xd = mm_d[0]+(kd*delta_d/(2**n_bin))
+        # Find the closest values in the parameters list and store its index
+        # in the case of metallicity and age and real values for extinction
+        # and distance modulus.
+        m = min(flat_ma[0], key=lambda x:abs(x-xm))
+        a = min(flat_ma[1], key=lambda x:abs(x-xa))
+        e = min(isoch_ed[0], key=lambda x:abs(x-xe))
+        d = min(isoch_ed[1], key=lambda x:abs(x-xd))
+        [m, a] = next(((i,j) for i,x in enumerate(isoch_ma) for j,y in enumerate(x) if y == [m, a]), None)
+#        ma_indx = isoch_ma.index([m, a])
+#        print m, a, ma_indx
+        ma_lst.append([m, a])
+#        print ma_lst
+        e_lst.append(e)
+        d_ls.append(d)
+        
     return ma_lst, e_lst, d_ls
     
     
 
 def selection(generation, breed_prob):
     '''
-    Select np random chromosomes from the chromose list passed according to
+    Select random chromosomes from the chromose list passed according to
     the breeding probability given by their fitness.
     '''
     select_chrom = []
@@ -158,11 +186,11 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
     ### Initial random population evaluation. ###
     
     # Pick n_pop initial random solutions from each list storing all the possible
-    # parameters values. The lists store indexes.
+    # parameters values. These lists store real values.
     e_lst = [random.choice(isoch_ed[0]) for _ in range(n_pop)]
     d_lst = [random.choice(isoch_ed[1]) for _ in range(n_pop)]
     # Flat array so every [metal,age] combination has the same probability
-    # of being picked.
+    # of being picked. This list stores indexes.
     ma_flat = [(i, j) for i in range(len(isoch_ma)) for j in range(len(isoch_ma[i]))]
     ma_lst = [random.choice(ma_flat) for _ in range(n_pop)]
     
@@ -177,6 +205,7 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
     breed_prob = [1./n_pop + fdif*(n_pop+1.-2.*(i+1.))/(n_pop*(n_pop+1.)) \
     for i in range(n_pop)]    
     
+    
     # Begin processing the populations up to n_gen generations.
     for i in range(n_gen):
     
@@ -189,7 +218,8 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
         # Select (n_pop-n_elit) chromosomes for breeding from the above
         # generation of solutions according to breed_prob to generate the
         # intermediate population.
-        int_popul = int_popul0 + selection(generation[1:], breed_prob[1:])
+        select_chrom = selection(generation[1:], breed_prob[1:])
+        int_popul = int_popul0 + select_chrom
         
         # Encode intermediate population's solutions into binary chromosomes.
         chromosomes = encode(mm_m, mm_a, mm_e, mm_d, n_bin, int_popul)
@@ -211,7 +241,9 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
         ### Evaluation/fitness ###
         
         # Decode the chromosomes into solutions to form the new generation.
-        ma_lst, e_lst, d_lst = decode(mut_chrom)
+        ma_lst, e_lst, d_lst = decode(mm_m, mm_a, mm_e, mm_d, n_bin, isoch_ma, isoch_ed, mut_chrom)
+        print ma_lst[0], e_lst[0], d_lst[0]
+        raw_input()
         
         # Evaluate each new solution in the objective function and sort
         # according to the best solutions found.

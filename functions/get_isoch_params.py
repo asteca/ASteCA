@@ -47,10 +47,13 @@ def get_ranges_paths(sys_select, iso_select):
 #        elif cloud == 'LMC':
 #            dis_mod_min, dis_mod_max, dis_mod_step = 18.5, 18.51, 1.
         dis_mod_min, dis_mod_max, dis_mod_step = 18., 19.01, 0.05
-        z_min, z_max = 0.0005, 0.021
+        # The small increases in max metallicity and age are there to ensure
+        # that the encoding into binary strings of those values respects
+        # the length that the rest of the parameters use.
+        z_min, z_max = 0.0005, 0.0201
         # age_val x10 yr
 #        age_min, age_max = 0.003, 12.6
-        age_min, age_max = 6.6, 10.11
+        age_min, age_max = 6.6, 10.101
     
         # Select Marigo or PARSEC tracks.        
         if iso_select == 'MAR':  # Marigo.
