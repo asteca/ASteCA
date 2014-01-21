@@ -24,26 +24,27 @@ def likelihood(synth_clust, obs_clust):
 #    # Store color and magnitude errors into array.
 #    err_col_mag = np.array([data0[6], data0[4]], dtype=float)
 #    print 'synth_clust', synth_clust, '\n'
-   
+    
     clust_stars_probs = []
-    for indx,star in enumerate(obs_clust):
+    
+    for star in obs_clust:
         # The first term does not depend on the synth stars.
-        sigma_c, sigma_m = star[6], star[4]
-        A = 1/(sigma_c*sigma_m)
+        # sigma_c, sigma_m = star[6], star[4]
+        A = 1./(star[6]*star[4])
         
         # Get probability for this cluster star.
         synth_stars = []
         for synth_st in zip(*synth_clust):
             # synth_st[0] = color ; synth_st[1] = mag
-            B = np.exp(-0.5*((star[5]-synth_st[0])/sigma_c)**2)
-            C = np.exp(-0.5*((star[3]-synth_st[1])/sigma_m)**2)
+            B = np.exp(-0.5*((star[5]-synth_st[0])/star[6])**2)
+            C = np.exp(-0.5*((star[3]-synth_st[1])/star[4])**2)
             synth_stars.append(A*B*C)
-            
+    
         # The final prob for this cluster star is the sum over all synthetic
         # stars.
         sum_synth_stars = sum(synth_stars) if sum(synth_stars)>0. else 1e-06
         clust_stars_probs.append(sum_synth_stars)
-        
+    
     # Store weights data (membership probabilities) into array.
     weights = np.array([zip(*obs_clust)[7]], dtype=float)   
     # Weight probabilities for each cluster star.
@@ -106,6 +107,7 @@ def isoch_likelihood(sys_select, isochrone, e, d, obs_clust, mass_dist):
     
     # Call function to obtain the likelihood by comparing the synthetic cluster
     # with the observed cluster.
+    
     isoch_lik = likelihood(synth_clust, obs_clust)
     
     return isoch_lik

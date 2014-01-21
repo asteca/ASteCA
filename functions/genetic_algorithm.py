@@ -10,6 +10,7 @@ import random
 import numpy as np
 
 
+
 def encode(mm_m, mm_a, mm_e, mm_d, n, int_popul):
     '''
     Encode the solutions into binary string chromosomes to be bred.
@@ -118,9 +119,10 @@ def selection(generation, breed_prob):
     Select random chromosomes from the chromose list passed according to
     the breeding probability given by their fitness.
     '''
+
     select_chrom = []
     # Draw n_pop random numbers uniformelly distributed between [0,1)
-    ran_lst = np.random.uniform(0, 1, len(generation))
+    ran_lst = np.random.uniform(0, sum(breed_prob), len(generation))
     # For each of these numbers, obtain the corresponding likelihood from the
     # breed_prob CDF.
     for r in ran_lst:
@@ -152,10 +154,10 @@ def fitness_eval(sys_select, isoch_list, obs_clust, mass_dist, isoch_ma,
     # Sort according to the likelihood list.
     generation = [x for y, x in sorted(zip(likelihood, generation_list))]
     # Sort list in place putting the likelihood minimum value first.
-#    likelihood.sort()
+    likelihood.sort()
     
-#    return likelihood, generation
-    return generation
+    return generation, likelihood
+#    return generation
     
 
 
@@ -196,7 +198,7 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
     
     
     # Evaluate each random solution in the objective function.
-    generation = fitness_eval(sys_select, isoch_list, obs_clust, mass_dist,
+    generation, lkl = fitness_eval(sys_select, isoch_list, obs_clust, mass_dist,
                               isoch_ma, ma_lst, e_lst, d_lst)
 
     # Rank-based breeding probability. Independent of the fitness values,
@@ -208,21 +210,20 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
     
     # Begin processing the populations up to n_gen generations.
     for i in range(n_gen):
-    
-       
+        
         #### Selection/Reproduction ###
         
-        # Elitism: pass the best solution to ensure it breeds.
-        int_popul0 = [generation[0]]
+        # Store best solution for passing along in the 'Elitism' block.
+        best_sol = [generation[0]]
         
-        # Select (n_pop-n_elit) chromosomes for breeding from the above
-        # generation of solutions according to breed_prob to generate the
-        # intermediate population.
-        select_chrom = selection(generation[1:], breed_prob[1:])
-        int_popul = int_popul0 + select_chrom
+        # Select chromosomes for breeding from the current  generation of
+        # solutions according to breed_prob to generate the intermediate
+        # population.
+        int_popul = selection(generation, breed_prob)
         
         # Encode intermediate population's solutions into binary chromosomes.
         chromosomes = encode(mm_m, mm_a, mm_e, mm_d, n_bin, int_popul)
+
         
         #### Breeding ###
         
@@ -237,17 +238,21 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
         # Apply mutation operation on random genes for every chromosome.
         mut_chrom = mutation(cross_chrom, p_mut)
         
+        # Elitism: make sure that the best solution from the previous generation
+        # is passed unchanged into this next generation.
+        best_chrom = encode(mm_m, mm_a, mm_e, mm_d, n_bin, best_sol)
+        mut_chrom[0] = best_chrom[0]
+        
         
         ### Evaluation/fitness ###
         
         # Decode the chromosomes into solutions to form the new generation.
         ma_lst, e_lst, d_lst = decode(mm_m, mm_a, mm_e, mm_d, n_bin, isoch_ma, isoch_ed, mut_chrom)
-        print ma_lst[0], e_lst[0], d_lst[0]
-        raw_input()
         
         # Evaluate each new solution in the objective function and sort
         # according to the best solutions found.
-        generation = fitness_eval(sys_select, isoch_list, obs_clust, mass_dist,
+        generation, lkl = fitness_eval(sys_select, isoch_list, obs_clust, mass_dist,
                                   isoch_ma, ma_lst, e_lst, d_lst)
+        print i, lkl[0], generation[0]
 
 
