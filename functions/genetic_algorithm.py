@@ -76,12 +76,12 @@ def mutation(cross_chrom, p_mut):
     return cross_chrom
     
     
-def decode():
+def decode(mut_chrom):
     '''
     Decode the chromosomes into its real values to be evaluated by the
     objective function.
     '''
-    return
+    return ma_lst, e_lst, d_ls
     
     
 
@@ -203,12 +203,9 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
         # Select only 100*p_cross% of pairs to apply the crossover to,
         # where p_cross is the crossover probability.
         cross_chrom = crossover(chromosomes, p_cross)
-        print cross_chrom[0]
         
         # Apply mutation operation on random genes for every chromosome.
         mut_chrom = mutation(cross_chrom, p_mut)
-        print mut_chrom[0]
-        raw_input()
         
         
         ### Evaluation/fitness ###
