@@ -8,6 +8,7 @@ from isoch_likelihood import isoch_likelihood as i_l
 
 import random
 import numpy as np
+import time
 
 
 
@@ -251,8 +252,9 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
         
         # Evaluate each new solution in the objective function and sort
         # according to the best solutions found.
+        tik = time.time()
         generation, lkl = fitness_eval(sys_select, isoch_list, obs_clust, mass_dist,
                                   isoch_ma, ma_lst, e_lst, d_lst)
-        print i, lkl[0], generation[0]
+        print i, lkl[0], generation[0], time.time()-tik
 
 
