@@ -78,24 +78,29 @@ def decode(mm_m, mm_a, mm_e, mm_d, n_bin, isoch_ma, isoch_ed, mut_chrom):
     objective function.
     '''
     import itertools
+    import bisect
     
     delta_m, delta_a, delta_e, delta_d = (mm_m[1]-mm_m[0]), (mm_a[1]-mm_a[0]),\
     (mm_e[1]-mm_e[0]), (mm_d[1]-mm_d[0])    
     
     # Flat out metallicity and ages list.
-    flat_ma = zip(*list(itertools.chain(*isoch_ma)))    
+    flat_ma = zip(*list(itertools.chain(*isoch_ma)))
     
     ma_lst, e_lst, d_ls = [], [], []
     for chrom in mut_chrom:
         # Split chromosome string.
         chrom_split = [chrom[i:i+n_bin] for i in xrange(0, len(chrom), n_bin)]
+        
         # Convert binary to integer for each parameter.
         km, ka, ke, kd = (int(i, 2) for i in chrom_split)
+        
         # Map integers to the real parameter values.
         xm = mm_m[0]+(km*delta_m/(2**n_bin))
         xa = mm_a[0]+(ka*delta_a/(2**n_bin))
         xe = mm_e[0]+(ke*delta_e/(2**n_bin))
         xd = mm_d[0]+(kd*delta_d/(2**n_bin))
+        
+        tik=time.time()
         # Find the closest values in the parameters list and store its index
         # in the case of metallicity and age and real values for extinction
         # and distance modulus.
@@ -103,11 +108,25 @@ def decode(mm_m, mm_a, mm_e, mm_d, n_bin, isoch_ma, isoch_ed, mut_chrom):
         a = min(flat_ma[1], key=lambda x:abs(x-xa))
         e = min(isoch_ed[0], key=lambda x:abs(x-xe))
         d = min(isoch_ed[1], key=lambda x:abs(x-xd))
+        print '  m,a', m,a
+        # Find the indexes for these metallicity and age values.
         [m, a] = next(((i,j) for i,x in enumerate(isoch_ma) for j,y in enumerate(x) if y == [m, a]), None)
-#        ma_indx = isoch_ma.index([m, a])
-#        print m, a, ma_indx
+        
+        print '  floats1', m,a,e,d,time.time()-tik
+        
+        tik=time.time()
+        # Find the closest values in the parameters list and store its index
+        # in the case of metallicity and age and real values for extinction
+        # and distance modulus.
+        m = bisect.bisect_left(np.sort(flat_ma[0][:len(isoch_ma)]), xm)
+        a = bisect.bisect_left(flat_ma[1], xa, 0, len(isoch_ma[0]))
+        e = bisect.bisect_left(isoch_ed[0], xe)
+        d = bisect.bisect_left(isoch_ed[1], xd)
+        print '  m,a', isoch_ma[m][a][0], isoch_ma[m][a][1]
+        print '  floats2', m,a,isoch_ed[0][e],isoch_ed[1][d],time.time()-tik, '\n'
+        
+        # Append indexes (for m,a) and real values (for e,d) to lists.
         ma_lst.append([m, a])
-#        print ma_lst
         e_lst.append(e)
         d_ls.append(d)
         
@@ -146,9 +165,11 @@ def fitness_eval(sys_select, isoch_list, obs_clust, mass_dist, isoch_ma,
     '''
     likelihood, generation_list = [], []
     for indx, e in enumerate(e_lst):
+        # Get isochrone with m,a values.
         m, a = ma_lst[indx]
         isochrone = isoch_list[m][a]
         d = d_lst[indx]
+        # Call likelihood function with m,a,e,d values.
         likel_val = i_l(sys_select, isochrone, e, d, obs_clust, mass_dist)
         likelihood.append(likel_val)
         generation_list.append([isoch_ma[m][a][0], isoch_ma[m][a][1], e,d])
@@ -212,6 +233,7 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
     # Begin processing the populations up to n_gen generations.
     for i in range(n_gen):
         
+        tik0 = time.time()
         #### Selection/Reproduction ###
         
         # Store best solution for passing along in the 'Elitism' block.
@@ -221,7 +243,7 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
         # solutions according to breed_prob to generate the intermediate
         # population.
         int_popul = selection(generation, breed_prob)
-        
+
         # Encode intermediate population's solutions into binary chromosomes.
         chromosomes = encode(mm_m, mm_a, mm_e, mm_d, n_bin, int_popul)
 
@@ -230,12 +252,12 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
         
         # Pair chromosomes by randomly shuffling them.
         random.shuffle(chromosomes)
-        
+
         # Apply crossover operation on each subsequent pair of chromosomes.
         # Select only 100*p_cross% of pairs to apply the crossover to,
         # where p_cross is the crossover probability.
         cross_chrom = crossover(chromosomes, p_cross)
-        
+
         # Apply mutation operation on random genes for every chromosome.
         mut_chrom = mutation(cross_chrom, p_mut)
         
@@ -248,13 +270,17 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
         ### Evaluation/fitness ###
         
         # Decode the chromosomes into solutions to form the new generation.
+        tik6 = time.time()
         ma_lst, e_lst, d_lst = decode(mm_m, mm_a, mm_e, mm_d, n_bin, isoch_ma, isoch_ed, mut_chrom)
+        print 'decod', time.time()-tik6
         
         # Evaluate each new solution in the objective function and sort
         # according to the best solutions found.
-        tik = time.time()
+        tik7 = time.time()
         generation, lkl = fitness_eval(sys_select, isoch_list, obs_clust, mass_dist,
                                   isoch_ma, ma_lst, e_lst, d_lst)
-        print i, lkl[0], generation[0], time.time()-tik
+        print 'fitne', time.time()-tik7
+                                  
+        print i, lkl[0], generation[0], time.time()-tik0
 
 

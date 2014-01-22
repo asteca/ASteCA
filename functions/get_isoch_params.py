@@ -120,8 +120,8 @@ def get_isoch_params(sys_select, iso_select):
     # isoch_ma[i][j][1] --> age j (float)
     isoch_ma = []
     
-    # Iterate through all metallicity files.
-    for met_file in os.listdir(iso_path):
+    # Iterate through all metallicity files in order.
+    for met_file in sorted(os.listdir(iso_path)):
 
         # Store the metallicity value.
         metal = float(met_file[:-4])

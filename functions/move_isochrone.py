@@ -8,8 +8,8 @@ Created on Fri Jan 17 16:35:24 2014
 def move_isoch(sys_select, isochrone, e, d):
     '''
     Recieves an isochrone of a given age and metallicity and modifies
-    it according to given values for the extinction E(B-V) and distance
-    modulus.
+    its color and magnitude values according to given values for the extinction
+    E(B-V) (e) and distance modulus (d).
     '''
     iso_moved = [[], []]
     
@@ -45,6 +45,6 @@ def move_isoch(sys_select, isochrone, e, d):
             iso_moved[0].append(item + 1.97*e)
             
     # Store moved colors and magnitudes in final list.
-    isoch_final = [iso_moved[0], iso_moved[1]]
+#    isoch_final = [iso_moved[0], iso_moved[1]]
 
-    return isoch_final
+    return [iso_moved[0], iso_moved[1]]
