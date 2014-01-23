@@ -236,7 +236,7 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort):
     mass_dist = md('kroupa_1993', 'total_number', 500)
     
     # Genetic algorithm parameters.
-    n_pop, n_gen, fdif, p_cross, p_mut = 100, 100, 3./5., 0.85, 0.01
+    n_pop, n_gen, fdif, p_cross, p_mut, n_ei = 100, 100, 3./5., 0.85, 0.01, 5
     
     
     # Store all isochrones in all the metallicity files in isoch_list. We do
@@ -268,6 +268,7 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort):
         # Call algorithm to calculate the likelihoods for the set of
         # isochrones and return the best fitting parameters.
         
+        print 'Run ', i
         if i==0:
             # Brute force algorithm.
 #            isoch_fit_params = brute_force(sys_select, isoch_params, iso_path,
@@ -275,7 +276,8 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort):
 #                                           mass_dist)
             # Genetic algorithm.
             isoch_fit_params = g_a(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed,
-                                   mass_dist, ranges_steps, n_pop, n_gen, fdif, p_cross, p_mut)
+                                   mass_dist, ranges_steps, n_pop, n_gen, fdif, p_cross, p_mut, n_ei)
+            print isoch_fit_params
         else:
             # Brute force.
 #            params_boot.append(brute_force(sys_select, isoch_params, iso_path,
@@ -283,7 +285,8 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort):
 #                                           mass_dist))
             # Genetic algorithm algorithm.
             params_boot.append(g_a(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed,
-                                   mass_dist, ranges_steps, n_pop, n_gen, fdif, p_cross, p_mut))
+                                   mass_dist, ranges_steps, n_pop, n_gen, fdif, p_cross, p_mut, n_ei))
+            print params_boot[i-1]
         
     print isoch_fit_params, '\n'
     # Calculate errors for each parameter.

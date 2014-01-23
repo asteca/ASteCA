@@ -181,10 +181,26 @@ def fitness_eval(sys_select, isoch_list, obs_clust, mass_dist, isoch_ma,
     return generation, likelihood
 #    return generation
     
+    
+def random_population(isoch_ma, isoch_ed, n_pop):
+    '''
+    Generate a random set of parameter values to use as a random population.
+    '''
+    # Pick n_pop initial random solutions from each list storing all the possible
+    # parameters values. These lists store real values.
+    e_lst = [random.choice(isoch_ed[0]) for _ in range(n_pop)]
+    d_lst = [random.choice(isoch_ed[1]) for _ in range(n_pop)]
+    # Flat array so every [metal,age] combination has the same probability
+    # of being picked. This list stores indexes.
+    ma_flat = [(i, j) for i in range(len(isoch_ma)) for j in range(len(isoch_ma[i]))]
+    ma_lst = [random.choice(ma_flat) for _ in range(n_pop)]
+    
+    return ma_lst, e_lst, d_lst
+
 
 
 def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
-              ranges_steps, n_pop, n_gen, fdif, p_cross, p_mut):
+              ranges_steps, n_pop, n_gen, fdif, p_cross, p_mut, n_ei):
     '''
     Main function.
     
@@ -206,38 +222,33 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
     (mm_e[1]-mm_e[0]), (mm_d[1]-mm_d[0])
     n_bin = int(np.log(max((delta_m/step_m), (delta_a/step_a), (delta_e/step_e), (delta_d/step_d)))/np.log(2))+1
     
-    
-    ### Initial random population evaluation. ###
-    
-    # Pick n_pop initial random solutions from each list storing all the possible
-    # parameters values. These lists store real values.
-    e_lst = [random.choice(isoch_ed[0]) for _ in range(n_pop)]
-    d_lst = [random.choice(isoch_ed[1]) for _ in range(n_pop)]
-    # Flat array so every [metal,age] combination has the same probability
-    # of being picked. This list stores indexes.
-    ma_flat = [(i, j) for i in range(len(isoch_ma)) for j in range(len(isoch_ma[i]))]
-    ma_lst = [random.choice(ma_flat) for _ in range(n_pop)]
-    
-    
-    # Evaluate each random solution in the objective function.
-    generation, lkl = fitness_eval(sys_select, isoch_list, obs_clust, mass_dist,
-                              isoch_ma, ma_lst, e_lst, d_lst)
-
     # Rank-based breeding probability. Independent of the fitness values,
-    # only depends on the total number of chromosomes and the fitness
+    # only depends on the total number of chromosomes n_pop and the fitness
     # differential fdif.
     breed_prob = [1./n_pop + fdif*(n_pop+1.-2.*(i+1.))/(n_pop*(n_pop+1.)) \
-    for i in range(n_pop)]    
+    for i in range(n_pop)]     
     
     
+    ### Initial random population evaluation. ###
+    ma_lst, e_lst, d_lst = random_population(isoch_ma, isoch_ed, n_pop)
+    
+    
+    # Evaluate initial random solutions in the objective function.
+    generation, lkl = fitness_eval(sys_select, isoch_list, obs_clust, mass_dist,
+                              isoch_ma, ma_lst, e_lst, d_lst)
+    # Store best solution for passing along in the 'Elitism' block.
+    best_sol = [generation[0]]
+    print '  ', best_sol, lkl[0]
+
+   
     # Begin processing the populations up to n_gen generations.
+    best_sol_count, ext_imm_count = 0, 0
+    n_eic = int(n_pop*0.05)
+    best_sol_ei = []
     for i in range(n_gen):
         
-        tik0 = time.time()
+#        tik0 = time.time()
         #### Selection/Reproduction ###
-        
-        # Store best solution for passing along in the 'Elitism' block.
-        best_sol = [generation[0]]
         
         # Select chromosomes for breeding from the current  generation of
         # solutions according to breed_prob to generate the intermediate
@@ -270,17 +281,64 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
         ### Evaluation/fitness ###
         
         # Decode the chromosomes into solutions to form the new generation.
-        tik6 = time.time()
+#        tik6 = time.time()
         ma_lst, e_lst, d_lst = decode(mm_m, mm_a, mm_e, mm_d, n_bin, isoch_ma, isoch_ed, mut_chrom)
-        print 'decod', time.time()-tik6
+#        print 'decod', time.time()-tik6
         
         # Evaluate each new solution in the objective function and sort
         # according to the best solutions found.
-        tik7 = time.time()
+#        tik7 = time.time()
         generation, lkl = fitness_eval(sys_select, isoch_list, obs_clust, mass_dist,
                                   isoch_ma, ma_lst, e_lst, d_lst)
-        print 'fitne', time.time()-tik7
+#        print 'fitne', time.time()-tik7
+        
+        
+        ### Extinction/Immigration ###
+        # If the best solution has remained unchanged for n_ei
+        # generations, remove all chromosomes but the best one (extinction)
+        # and fill with random new solutions (immigration).
+
+        print ' ', i, best_sol_count, best_sol, [generation[0]], lkl[0]
+        # Check if new best solution is equal to the previous one.
+        if [generation[0]] == best_sol:
+            # Increase counter.
+            best_sol_count += 1
+            
+            # Check how many times the best_sol has remained unchanged.
+            if best_sol_count == n_ei:
+                # Apply Extinction/Immigration operator.
+                
+                # Exit switch. If n_eic runs of the Ext/Imm operator have
+                # been applied with no changes to the best solution, exit the GA.
+                if best_sol == best_sol_ei:
+                    # Increase Ext/Imm operator counter.
+                    ext_imm_count += 1
+                    if ext_imm_count == n_eic:
+                        print 'exit switch'
+                        # Exit generations loop.
+                        break
+                else:
+                    best_sol_ei = best_sol
+                    ext_imm_count = 0
+
+                # Generate n_pop-1 random solutions.
+                ma_lst, e_lst, d_lst = random_population(isoch_ma, isoch_ed, (n_pop-1))
+                # Evaluate this new population.
+                generation_ei, lkl = fitness_eval(sys_select, isoch_list, obs_clust, mass_dist,
+                                          isoch_ma, ma_lst, e_lst, d_lst)
+                # Append immigrant population to the best solution.
+                generation = best_sol + generation_ei
+                print '  Ext/Imm', ext_imm_count, best_sol_ei
+                # Reset best solution counter.
+                best_sol_count = 0
+                    
+        else:
+            # Update best solution for passing along in the 'Elitism' block.
+            best_sol = [generation[0]]
+            # Reset counter.
+            best_sol_count = 0
+            
                                   
-        print i, lkl[0], generation[0], time.time()-tik0
+#        print i, lkl[0], generation[0], time.time()-tik0
 
     return generation[0]
