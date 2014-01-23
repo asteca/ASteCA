@@ -200,7 +200,7 @@ def random_population(isoch_ma, isoch_ed, n_pop):
 
 
 def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
-              ranges_steps, n_pop, n_gen, fdif, p_cross, p_mut, n_ei):
+              ranges_steps, n_pop, n_gen, fdif, p_cross, p_mut, n_ei, n_es):
     '''
     Main function.
     
@@ -210,6 +210,12 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
     n_gen: number of generations to process.
     fdif: Fitness differential. Establishes the 'selection pressure' for the
     algorithm.
+    p_cros: crossover probability.
+    p_mut: mutation probability.
+    n_ei: number of generations allowed to run with the same best solution
+    before applying the Extinction/Immigration operator.
+    n_es:number of times the xtinction/Immigration operator is allowed to run
+    returning the same best solution before exiting the generations loop.
     '''
     
     # Store parameters ranges and calculate the minimum number of binary digits
@@ -238,16 +244,16 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
                               isoch_ma, ma_lst, e_lst, d_lst)
     # Store best solution for passing along in the 'Elitism' block.
     best_sol = [generation[0]]
-    print '  ', best_sol, lkl[0]
 
    
-    # Begin processing the populations up to n_gen generations.
+    # Initiate counters.
     best_sol_count, ext_imm_count = 0, 0
-    n_eic = int(n_pop*0.05)
+    # Initiate empty list. Stores the best solution found after each
+    # application of the Extinction/Immigration operator.
     best_sol_ei = []
+    # Begin processing the populations up to n_gen generations.
     for i in range(n_gen):
         
-#        tik0 = time.time()
         #### Selection/Reproduction ###
         
         # Select chromosomes for breeding from the current  generation of
@@ -281,24 +287,20 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
         ### Evaluation/fitness ###
         
         # Decode the chromosomes into solutions to form the new generation.
-#        tik6 = time.time()
         ma_lst, e_lst, d_lst = decode(mm_m, mm_a, mm_e, mm_d, n_bin, isoch_ma, isoch_ed, mut_chrom)
-#        print 'decod', time.time()-tik6
         
         # Evaluate each new solution in the objective function and sort
         # according to the best solutions found.
-#        tik7 = time.time()
         generation, lkl = fitness_eval(sys_select, isoch_list, obs_clust, mass_dist,
                                   isoch_ma, ma_lst, e_lst, d_lst)
-#        print 'fitne', time.time()-tik7
-        
+       
         
         ### Extinction/Immigration ###
         # If the best solution has remained unchanged for n_ei
         # generations, remove all chromosomes but the best one (extinction)
         # and fill with random new solutions (immigration).
 
-        print ' ', i, best_sol_count, best_sol, [generation[0]], lkl[0]
+#        print ' ', i, best_sol_count, best_sol, [generation[0]], lkl[0]
         # Check if new best solution is equal to the previous one.
         if [generation[0]] == best_sol:
             # Increase counter.
@@ -308,13 +310,13 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
             if best_sol_count == n_ei:
                 # Apply Extinction/Immigration operator.
                 
-                # Exit switch. If n_eic runs of the Ext/Imm operator have
-                # been applied with no changes to the best solution, exit the GA.
+                ### Exit switch. ##
+                # If n_es runs of the Ext/Imm operator have been applied with
+                # no changes to the best solution, exit the GA.
                 if best_sol == best_sol_ei:
                     # Increase Ext/Imm operator counter.
                     ext_imm_count += 1
-                    if ext_imm_count == n_eic:
-                        print 'exit switch'
+                    if ext_imm_count == n_es:
                         # Exit generations loop.
                         break
                 else:
@@ -328,7 +330,7 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
                                           isoch_ma, ma_lst, e_lst, d_lst)
                 # Append immigrant population to the best solution.
                 generation = best_sol + generation_ei
-                print '  Ext/Imm', ext_imm_count, best_sol_ei
+#                print '  Ext/Imm', ext_imm_count, best_sol_ei
                 # Reset best solution counter.
                 best_sol_count = 0
                     
@@ -341,4 +343,5 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
                                   
 #        print i, lkl[0], generation[0], time.time()-tik0
 
+    # Return best solutions found.
     return generation[0]

@@ -7,7 +7,7 @@ Created on Fri Jan 17 17:21:58 2014
 
 from move_isochrone import move_isoch
 import numpy as np
-import time
+#import time
 
 def likelihood(synth_clust, obs_clust):
     '''
@@ -16,15 +16,7 @@ def likelihood(synth_clust, obs_clust):
     This function follows the recipe given in Monteiro, Dias & Caetano (2010).
     '''
     
-    # Store cluster data in new arrays: color & magnitude, their errors and 
-    # each star's membership probabilities (weights)
-    # Store color and magnitude into array.
-#    data0 = zip(*obs_clust)
-#    col_mag = np.array([data0[5], data0[3]], dtype=float)
-#    # Store color and magnitude errors into array.
-#    err_col_mag = np.array([data0[6], data0[4]], dtype=float)
-#    print 'synth_clust', synth_clust, '\n'
-
+    # Store observed and synthetic clusters as arrays.
     obs_arr = np.array(obs_clust)
     syn_arr = np.array(zip(*synth_clust))
     
@@ -32,7 +24,7 @@ def likelihood(synth_clust, obs_clust):
     for star in obs_arr:
         # Get probability for this cluster star.
         
-        # sigma_c, sigma_m = star[6], star[4]
+        # e_col, e_mag = star[6], star[4]
         A = 1./(star[6]*star[4])
         B = -0.5*((star[5]-syn_arr[:,0])/star[6])**2
         C = -0.5*((star[3]-syn_arr[:,1])/star[4])**2
@@ -94,7 +86,6 @@ def isoch_likelihood(sys_select, isochrone, e, d, obs_clust, mass_dist):
     e, d = extinction, distance modulus.
     '''
     
-#    tik = time.time()
     # Store isochrone moved by the values 'e' and 'd'.
     isoch_final = move_isoch(sys_select, isochrone, e, d)
     
@@ -104,8 +95,6 @@ def isoch_likelihood(sys_select, isochrone, e, d, obs_clust, mass_dist):
     
     # Call function to obtain the likelihood by comparing the synthetic cluster
     # with the observed cluster.
-    
     isoch_lik = likelihood(synth_clust, obs_clust)
-#    print '  likel', time.time()-tik
     
     return isoch_lik

@@ -223,9 +223,6 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort):
     Perform a best fitting process to find the cluster's parameters:
     E(B-V), distance (distance modulus), age and metallicity.
     '''
-
-    # Select photometric system to be used.
-    # sys_select: Select UBVI or Washington system as 1 or 2.
     
     # Store mass distribution used to produce a synthetic cluster based on
     # a given theoretic isochrone.
@@ -235,8 +232,10 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort):
     # on the chosen 2nd param.
     mass_dist = md('kroupa_1993', 'total_number', 500)
     
+    # Number of times to run the bootstrap block.
+    N_B = 10
     # Genetic algorithm parameters.
-    n_pop, n_gen, fdif, p_cross, p_mut, n_ei = 100, 100, 3./5., 0.85, 0.01, 5
+    n_pop, n_gen, fdif, p_cross, p_mut, n_ei, n_es = 100, 100, 3./5., 0.85, 0.01, 5, 5
     
     
     # Store all isochrones in all the metallicity files in isoch_list. We do
@@ -244,18 +243,13 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort):
     # Store metallicity values and isochrones ages between the allowed
     # ranges in isoch_ma; extinction and distance modulus values in isoch_ed.
     isoch_list, isoch_ma, isoch_ed, ranges_steps = get_isoch_params(sys_select, iso_select)
-#    print isoch_list[3][17]
-#    print isoch_ma[3]
-#    print isoch_ed
-#    raw_input()
    
-    # Begin bootstrap block.
-    # NUmber of times to run the bootstrap block.
-    N_B = 10
+
     # List that holds the parameters values obtained by the bootstrap
     # process.
     params_boot = []
-    for i in range(N_B+1):
+    # Begin bootstrap block.
+    for i in range(N_B):
         
         # The first pass is done with no resampling to calculate the final
         # values. After that we resample to get the uncertainty in each
@@ -268,7 +262,6 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort):
         # Call algorithm to calculate the likelihoods for the set of
         # isochrones and return the best fitting parameters.
         
-        print 'Run ', i
         if i==0:
             # Brute force algorithm.
 #            isoch_fit_params = brute_force(sys_select, isoch_params, iso_path,
@@ -276,7 +269,7 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort):
 #                                           mass_dist)
             # Genetic algorithm.
             isoch_fit_params = g_a(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed,
-                                   mass_dist, ranges_steps, n_pop, n_gen, fdif, p_cross, p_mut, n_ei)
+                                   mass_dist, ranges_steps, n_pop, n_gen, fdif, p_cross, p_mut, n_ei, n_es)
             print isoch_fit_params
         else:
             # Brute force.
@@ -285,10 +278,9 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort):
 #                                           mass_dist))
             # Genetic algorithm algorithm.
             params_boot.append(g_a(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed,
-                                   mass_dist, ranges_steps, n_pop, n_gen, fdif, p_cross, p_mut, n_ei))
+                                   mass_dist, ranges_steps, n_pop, n_gen, fdif, p_cross, p_mut, n_ei, n_es))
             print params_boot[i-1]
         
-    print isoch_fit_params, '\n'
     # Calculate errors for each parameter.
     isoch_fit_errors = np.mean(params_boot, 0)
     print isoch_fit_errors
