@@ -78,13 +78,14 @@ def decode(mm_m, mm_a, mm_e, mm_d, n_bin, isoch_ma, isoch_ed, mut_chrom):
     objective function.
     '''
     import itertools
-    import bisect
+#    import bisect
     
     delta_m, delta_a, delta_e, delta_d = (mm_m[1]-mm_m[0]), (mm_a[1]-mm_a[0]),\
     (mm_e[1]-mm_e[0]), (mm_d[1]-mm_d[0])    
     
     # Flat out metallicity and ages list.
     flat_ma = zip(*list(itertools.chain(*isoch_ma)))
+#    met_lst = [i[0][0] for i in isoch_ma]
     
     ma_lst, e_lst, d_ls = [], [], []
     for chrom in mut_chrom:
@@ -100,7 +101,8 @@ def decode(mm_m, mm_a, mm_e, mm_d, n_bin, isoch_ma, isoch_ed, mut_chrom):
         xe = mm_e[0]+(ke*delta_e/(2**n_bin))
         xd = mm_d[0]+(kd*delta_d/(2**n_bin))
         
-        tik=time.time()
+#        print xm, xa, xe, xd
+#        tik=time.time()
         # Find the closest values in the parameters list and store its index
         # in the case of metallicity and age and real values for extinction
         # and distance modulus.
@@ -108,22 +110,20 @@ def decode(mm_m, mm_a, mm_e, mm_d, n_bin, isoch_ma, isoch_ed, mut_chrom):
         a = min(flat_ma[1], key=lambda x:abs(x-xa))
         e = min(isoch_ed[0], key=lambda x:abs(x-xe))
         d = min(isoch_ed[1], key=lambda x:abs(x-xd))
-        print '  m,a', m,a
+#        print ' ', m,a
         # Find the indexes for these metallicity and age values.
         [m, a] = next(((i,j) for i,x in enumerate(isoch_ma) for j,y in enumerate(x) if y == [m, a]), None)
         
-        print '  floats1', m,a,e,d,time.time()-tik
-        
-        tik=time.time()
-        # Find the closest values in the parameters list and store its index
-        # in the case of metallicity and age and real values for extinction
-        # and distance modulus.
-        m = bisect.bisect_left(np.sort(flat_ma[0][:len(isoch_ma)]), xm)
-        a = bisect.bisect_left(flat_ma[1], xa, 0, len(isoch_ma[0]))
-        e = bisect.bisect_left(isoch_ed[0], xe)
-        d = bisect.bisect_left(isoch_ed[1], xd)
-        print '  m,a', isoch_ma[m][a][0], isoch_ma[m][a][1]
-        print '  floats2', m,a,isoch_ed[0][e],isoch_ed[1][d],time.time()-tik, '\n'
+#        print ' ', m,a,e,d,time.time()-tik
+#        
+#        tik=time.time()
+#        m = bisect.bisect(met_lst, xm)
+#        a = bisect.bisect(flat_ma[1][:len(isoch_ma[0])], xa)
+#        e = bisect.bisect(isoch_ed[0], xe)
+#        d = bisect.bisect(isoch_ed[1], xd)
+#        print ' ', m,a
+#        print ' ', isoch_ma[m][a][0], isoch_ma[m][a][1]
+#        print ' ', m,a,isoch_ed[0][e],isoch_ed[1][d],time.time()-tik, '\n'
         
         # Append indexes (for m,a) and real values (for e,d) to lists.
         ma_lst.append([m, a])
@@ -283,4 +283,4 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
                                   
         print i, lkl[0], generation[0], time.time()-tik0
 
-
+    return generation[0]

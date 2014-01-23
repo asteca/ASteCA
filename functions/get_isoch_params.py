@@ -251,7 +251,7 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort):
    
     # Begin bootstrap block.
     # NUmber of times to run the bootstrap block.
-    N_B = 500
+    N_B = 10
     # List that holds the parameters values obtained by the bootstrap
     # process.
     params_boot = []
@@ -285,7 +285,9 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort):
             params_boot.append(g_a(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed,
                                    mass_dist, ranges_steps, n_pop, n_gen, fdif, p_cross, p_mut))
         
+    print isoch_fit_params, '\n'
     # Calculate errors for each parameter.
-    isoch_fit_errors = np.mean(params_boot)
+    isoch_fit_errors = np.mean(params_boot, 0)
+    print isoch_fit_errors
     
     return isoch_fit_params, isoch_fit_errors
