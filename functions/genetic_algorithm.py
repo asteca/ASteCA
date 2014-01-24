@@ -167,6 +167,9 @@ def fitness_eval(sys_select, isoch_list, obs_clust, mass_dist, isoch_ma,
     for indx, e in enumerate(e_lst):
         # Get isochrone with m,a values.
         m, a = ma_lst[indx]
+
+        print isoch_ma[m][a][0], isoch_ma[m][a][1], e, d_lst[indx], '\n'
+        
         isochrone = isoch_list[m][a]
         d = d_lst[indx]
         # Call likelihood function with m,a,e,d values.

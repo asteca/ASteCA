@@ -56,7 +56,42 @@ def synthetic_clust(isochrone, mass_dist):
     
     # Interpolate masses from the mass distribution into the isochrone to
     # obtain its magnitude and color values. Reject masses that fall outside of
-    # the isochrone mass range.
+    # the isochrone mass range. 
+    N = 100
+    col, mag, mass = np.linspace(0, 1, len(isochrone[0])), np.linspace(0, 1, N),\
+    np.linspace(0, 1, N)
+    # One-dimensional linear interpolation.
+    col_i, mag_i, mass_i = (np.interp(mag, col, isochrone[i]) for i in range(3))
+#    mag_i = np.interp(mag, col, isochrone[1])
+#    mass_i = np.interp(mag, col, isochrone[2])
+    # Store track interpolated values.
+    isoch_inter = np.asarray([col_i, mag_i, mass_i])
+    
+    print isoch_inter[0], '\n'
+    print isoch_inter[1], '\n'
+    print isoch_inter[2], '\n'
+#    raw_input()
+
+
+#    import bisect
+#    # Reject masses out of range.
+#    masses = bisect.bisect(mass_i, mass_dist)
+
+    print mass_dist, '\n'
+    
+    isoch_m_d = [[], [], []]
+    min_m, max_m = min(isochrone[2]), max(isochrone[2])
+    for m in mass_dist:
+        if min_m <= m <= max_m:
+            indx, m_i = min(enumerate(isoch_inter[2]), key=lambda x:abs(x[1]-m))
+            isoch_m_d[0].append(isoch_inter[0][indx])
+            isoch_m_d[1].append(isoch_inter[1][indx])
+            isoch_m_d[2].append(m_i)
+        
+    print isoch_m_d[0], '\n'
+    print isoch_m_d[1], '\n'
+    print isoch_m_d[2], '\n'
+    raw_input()
     
     # Randomly select a fraction of these stars to be binaries.
     
@@ -85,10 +120,10 @@ def isoch_likelihood(sys_select, isochrone, e, d, obs_clust, mass_dist):
     
     e, d = extinction, distance modulus.
     '''
-    
     # Store isochrone moved by the values 'e' and 'd'.
-    isoch_final = move_isoch(sys_select, isochrone, e, d)
-    
+    isoch_moved = move_isoch(sys_select, isochrone, e, d)
+    isoch_final = isoch_moved + [isochrone[2]]
+        
     # Generate synthetic cluster using this "moved" isochrone and a mass
     # distribution.
     synth_clust = synthetic_clust(isoch_final, mass_dist)

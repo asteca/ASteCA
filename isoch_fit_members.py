@@ -25,22 +25,6 @@ def track_distance(t_ind):
     # Define track according to index passed.
     track = funcs[t_ind]
 
-    # Interpolate the track so all tracks will have equidistant
-    # points. This is VERY important, otherwise the block that
-    # finds the point located at the minimum distance with the
-    # cluster stars will not work correctly.
-    t = np.linspace(0, 1, len(track[0]))
-    # Generate twice as many interpolating points as cluster's stars present.
-    # Use a value of 500 if the number of stars is smaller than that and
-    # 2000 if it's larger.
-    num_inter = min(2000, max(500, 2*len(data[0][0])))
-    t2 = np.linspace(0, 1, num_inter)
-    
-    # One-dimensional linear interpolation.
-    x2 = np.interp(t2, t, track[0])
-    y2 = np.interp(t2, t, track[1])
-    # Store track interpolated values.
-    track_inter = [x2,y2]
 
     # Get distances of *every* star to *every* interpolated point in this
     # isochrone/function. The list is made of N sub-lists where N is the
@@ -86,33 +70,11 @@ def fast_wdist(t_ind):
     
     A = data[0]
     
-    # Define track according to index passed.
-    track = funcs[t_ind]
-
-    # Interpolate the track so all tracks will have equidistant
-    # points. This is VERY important, otherwise the block that
-    # finds the point located at the minimum dist with the
-    # cluster stars will not work correctly.
-    t = np.linspace(0, 1, len(track[0]))
-    # Generate twice as many interpolating points as cluster's stars present.
-    # Use a value of 500 if the number of stars is smaller than that and
-    # 2000 if it's larger.
-    num_inter = min(2000, max(500, 2*len(data[0][0])))
-    t2 = np.linspace(0, 1, num_inter)
-    
-    # One-dimensional linear interpolation.
-    x2 = np.interp(t2, t, track[0])
-    y2 = np.interp(t2, t, track[1])
-    # Store interpolated values.
-    track_inter = np.array([x2,y2])
-    
-    B = track_inter
-    
-    W = errors[0]
+    B = np.array([x2,y2])
 
     # compute the differences and apply the weights in one go using
     # broadcasting jujitsu. the result is (n, k, m)
-    wdiff = (A[np.newaxis,...] - B[np.newaxis,...].T) / W[np.newaxis,...]
+    wdiff = (A[np.newaxis,...] - B[np.newaxis,...].T)
 
     # square and sum over the second axis, take the sqrt and transpose. the
     # result is an (m, n) array of weighted euclidean distances
@@ -120,28 +82,13 @@ def fast_wdist(t_ind):
 
     # Identify closest point in track for each star, add weight to this
     # minimum distance and save the weighted distance.
-    func_dist = np.array(D).min(axis=1)*np.array(weights[0])
+    func_dist = np.array(D).min(axis=1)
 
     func_score = sum(func_dist)
     print 'fast', func_score
     
     return func_score
         
-
-
-    for t_ind in range(len(funcs)):
-        # Call function that returns the score for a given track.
-        track_score2 = track_distance_err_weight(t_ind)
-        # Store the scores for each function/track into list.
-        score2.append(track_score2)
-
-        # Call function that returns the score for a given track.
-        track_score3 = fast_wdist(t_ind)
-        # Store the scores for each function/track into list.
-        score3.append(track_score3)
-
-
-
     
     
     
