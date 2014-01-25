@@ -68,7 +68,9 @@ def get_mass_cdf(cdf_arr):
 
 def mass_dist(imf_sel, limit_sel, MN_total):
     '''
-    Main function. Returns a mass distribution according to a given IMF and
+    Main function.
+    
+    Returns a mass distribution according to a given IMF and
     a total number of stars or total cluster mass.
     '''
     

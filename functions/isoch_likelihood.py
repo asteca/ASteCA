@@ -48,49 +48,70 @@ def likelihood(synth_clust, obs_clust):
 
 
 
-def synthetic_clust(isochrone, mass_dist):
+def synthetic_clust(isochrone, mass_dist, completeness):
     '''
     Takes an isochrone and returns a synthetic cluster created according to
     a certain mass distribution.
     '''
     
-    # Interpolate masses from the mass distribution into the isochrone to
-    # obtain its magnitude and color values. Reject masses that fall outside of
-    # the isochrone mass range. 
-    N = 100
-    col, mag, mass = np.linspace(0, 1, len(isochrone[0])), np.linspace(0, 1, N),\
+#    print 'col1', isochrone[0], '\n'
+#    print 'mag1', isochrone[1], '\n'
+#    print 'mass1', isochrone[2], '\n'
+    # Remove stars from isochrone with magnitude values larger that the maximum
+    # value found in the observation (entire field, not just the cluster region).
+    #
+    # Sort isochrone first according to magnitude values (min to max).
+    isoch_sort = zip(*sorted(zip(*isochrone), key=lambda x: x[1]))
+#    print 'col2', isoch_sort[0], '\n'
+#    print 'mag2', isoch_sort[1], '\n'
+#    print 'mass2', isoch_sort[2], '\n'
+    # Now remove values beyond max_mag (= completeness[0]).
+    # Get index of closest mag value to max_mag.
+#    print 'max_mag', completeness[0], '\n'
+    max_indx = min(range(len(isoch_sort[1])), key=lambda i: abs(isoch_sort[1][i]-completeness[0]))
+    # Remove elements.
+    isoch_cut = [isoch_sort[i][0:max_indx] for i in range(3)]
+#    print 'col3', isoch_cut[0], '\n'
+#    print 'mag3', isoch_cut[1], '\n'
+#    print 'mass3', isoch_cut[2], '\n'
+    
+    
+    # Interpolate extra color, magnitude and masses into the isochrone.
+    N = 1500
+    col, mag, mass = np.linspace(0, 1, len(isoch_cut[0])), np.linspace(0, 1, N),\
     np.linspace(0, 1, N)
     # One-dimensional linear interpolation.
-    col_i, mag_i, mass_i = (np.interp(mag, col, isochrone[i]) for i in range(3))
-#    mag_i = np.interp(mag, col, isochrone[1])
-#    mass_i = np.interp(mag, col, isochrone[2])
-    # Store track interpolated values.
+    col_i, mag_i, mass_i = (np.interp(mag, col, isoch_cut[i]) for i in range(3))
+    # Store isochrone's interpolated values.
     isoch_inter = np.asarray([col_i, mag_i, mass_i])
+
+#    print 'dist_mass', mass_dist, '\n'
     
-    print isoch_inter[0], '\n'
-    print isoch_inter[1], '\n'
-    print isoch_inter[2], '\n'
-#    raw_input()
-
-
-#    import bisect
-#    # Reject masses out of range.
-#    masses = bisect.bisect(mass_i, mass_dist)
-
-    print mass_dist, '\n'
-    
+    # Find the mass in the isochrone closest to each mass in dist_mass while
+    # rejecting those masses that fall outside of the isochrone's mass range. 
     isoch_m_d = [[], [], []]
-    min_m, max_m = min(isochrone[2]), max(isochrone[2])
+    min_m, max_m = min(isoch_cut[2]), max(isoch_cut[2])
     for m in mass_dist:
         if min_m <= m <= max_m:
             indx, m_i = min(enumerate(isoch_inter[2]), key=lambda x:abs(x[1]-m))
             isoch_m_d[0].append(isoch_inter[0][indx])
             isoch_m_d[1].append(isoch_inter[1][indx])
             isoch_m_d[2].append(m_i)
+#    print 'col', isoch_m_d[0]
+#    print 'mag', isoch_m_d[1]
+#    print 'mass', isoch_m_d[2], '\n'
+
+    # Get histogram. completeness[1] = bin_edges of the observed region
+    # histogram.
+    synth_mag_hist, bin_edges = np.histogram(isoch_m_d[1], completeness[1])
+    print 'peak', completeness[2], '\n'
+    pi = completeness[3]
+    n1, p1 = synth_mag_hist[completeness[2]], pi[0]
+    print 'n1, p1:', n1, p1
+    print 'di:', np.around((synth_mag_hist[completeness[2]:]-(n1/p1)*np.asarray(pi)), 0)
+    print 'syn hist', synth_mag_hist[completeness[2]:], '\n'
+    print 'syn bin_ed', bin_edges[completeness[2]:]
         
-    print isoch_m_d[0], '\n'
-    print isoch_m_d[1], '\n'
-    print isoch_m_d[2], '\n'
     raw_input()
     
     # Randomly select a fraction of these stars to be binaries.
@@ -100,8 +121,6 @@ def synthetic_clust(isochrone, mass_dist):
     # Add masses and update array.
     
     # Randomly move stars according to given error distributions.
-    
-    # Remove stars according to a completness limit function.
 
     synth_clust = isochrone
     
@@ -109,7 +128,7 @@ def synthetic_clust(isochrone, mass_dist):
     
     
     
-def isoch_likelihood(sys_select, isochrone, e, d, obs_clust, mass_dist):
+def isoch_likelihood(sys_select, isochrone, e, d, obs_clust, mass_dist, completeness):
     '''
     Main function.
     
@@ -126,7 +145,7 @@ def isoch_likelihood(sys_select, isochrone, e, d, obs_clust, mass_dist):
         
     # Generate synthetic cluster using this "moved" isochrone and a mass
     # distribution.
-    synth_clust = synthetic_clust(isoch_final, mass_dist)
+    synth_clust = synthetic_clust(isoch_final, mass_dist, completeness)
     
     # Call function to obtain the likelihood by comparing the synthetic cluster
     # with the observed cluster.

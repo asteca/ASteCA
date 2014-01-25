@@ -216,7 +216,7 @@ def boostrap_resample(memb_prob_avrg_sort):
     
 
 
-def gip(sys_select, iso_select, memb_prob_avrg_sort):
+def gip(sys_select, iso_select, memb_prob_avrg_sort, completeness):
     '''
     Main function.
     
@@ -230,8 +230,10 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort):
     # 2nd param: 'total_number', 'total_mass'
     # 3rd param: total cluster mass or number of stars in clusters, depending
     # on the chosen 2nd param.
-    mass_dist = md('kroupa_1993', 'total_number', 500)
+#    mass_dist = md('kroupa_1993', 'total_number', 500)
+    mass_dist = md('kroupa_1993', 'total_mass', 1000)
     
+
     # Number of times to run the bootstrap block.
     N_B = 10
     # Genetic algorithm parameters.
@@ -269,7 +271,8 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort):
 #                                           mass_dist)
             # Genetic algorithm.
             isoch_fit_params = g_a(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed,
-                                   mass_dist, ranges_steps, n_pop, n_gen, fdif, p_cross, p_mut, n_ei, n_es)
+                                   mass_dist, ranges_steps, n_pop, n_gen, fdif, p_cross, p_mut, n_ei, n_es,\
+                                   completeness)
             print isoch_fit_params
         else:
             # Brute force.
@@ -278,7 +281,8 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort):
 #                                           mass_dist))
             # Genetic algorithm algorithm.
             params_boot.append(g_a(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed,
-                                   mass_dist, ranges_steps, n_pop, n_gen, fdif, p_cross, p_mut, n_ei, n_es))
+                                   mass_dist, ranges_steps, n_pop, n_gen, fdif, p_cross, p_mut, n_ei, n_es,\
+                                   completeness))
             print params_boot[i-1]
         
     # Calculate errors for each parameter.
