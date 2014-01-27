@@ -168,7 +168,7 @@ def fitness_eval(sys_select, isoch_list, obs_clust, mass_dist, isoch_ma,
         # Get isochrone with m,a values.
         m, a = ma_lst[indx]
 
-        print isoch_ma[m][a][0], isoch_ma[m][a][1], e, d_lst[indx], '\n'
+#        print isoch_ma[m][a][0], isoch_ma[m][a][1], e, d_lst[indx], '\n'
         
         isochrone = isoch_list[m][a]
         d = d_lst[indx]
@@ -258,6 +258,7 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
     # Begin processing the populations up to n_gen generations.
     for i in range(n_gen):
         
+        tik = time.time()
         #### Selection/Reproduction ###
         
         # Select chromosomes for breeding from the current  generation of
@@ -330,11 +331,11 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
                 # Generate n_pop-1 random solutions.
                 ma_lst, e_lst, d_lst = random_population(isoch_ma, isoch_ed, (n_pop-1))
                 # Evaluate this new population.
-                generation_ei, lkl = fitness_eval(sys_select, isoch_list, obs_clust, mass_dist,
+                generation_ei, lkl2 = fitness_eval(sys_select, isoch_list, obs_clust, mass_dist,
                                           isoch_ma, ma_lst, e_lst, d_lst, completeness)
                 # Append immigrant population to the best solution.
                 generation = best_sol + generation_ei
-#                print '  Ext/Imm', ext_imm_count, best_sol_ei
+                print '  Ext/Imm', ext_imm_count, best_sol_ei
                 # Reset best solution counter.
                 best_sol_count = 0
                     
@@ -345,7 +346,7 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
             best_sol_count = 0
             
                                   
-#        print i, lkl[0], generation[0], time.time()-tik0
+        print i, lkl[0], generation[0], time.time()-tik
 
     # Return best solutions found.
     return generation[0]
