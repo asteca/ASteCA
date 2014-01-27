@@ -8,7 +8,8 @@ Created on Fri Jan 17 17:21:58 2014
 from move_isochrone import move_isoch
 import numpy as np
 import itertools
-#import time
+import time
+
 
 def likelihood(synth_clust, obs_clust):
     '''
@@ -59,6 +60,7 @@ def synthetic_clust(isochrone, mass_dist, completeness):
     '''
     
     # Interpolate extra color, magnitude and masses into the isochrone.
+#    tik = time.time()
     N = 1500
     col, mag, mass = np.linspace(0, 1, len(isochrone[0])), np.linspace(0, 1, N),\
     np.linspace(0, 1, N)
@@ -66,35 +68,60 @@ def synthetic_clust(isochrone, mass_dist, completeness):
     col_i, mag_i, mass_i = (np.interp(mag, col, isochrone[i]) for i in range(3))
     # Store isochrone's interpolated values.
     isoch_inter = np.asarray([col_i, mag_i, mass_i])
+#    print 'interp', time.time()-tik
 
     # Remove stars from isochrone with magnitude values larger that the maximum
     # value found in the observation (entire field, not just the cluster region).
     #
     # Sort isochrone first according to magnitude values (min to max).
+#    tik = time.time()
     isoch_sort = zip(*sorted(zip(*isoch_inter), key=lambda x: x[1]))
     # Now remove values beyond max_mag (= completeness[0]).
     # Get index of closest mag value to max_mag.
     max_indx = min(range(len(isoch_sort[1])), key=lambda i: abs(isoch_sort[1][i]-completeness[0]))
     # Remove elements.
     isoch_cut = [isoch_sort[i][0:max_indx] for i in range(3)]
-    
+#    print 'sort-cut', time.time()-tik
+
     
     # Find the mass in the isochrone closest to each mass in dist_mass while
-    # rejecting those masses that fall outside of the isochrone's mass range. 
-    isoch_m_d = [[], [], []]
-    min_m, max_m = min(isoch_cut[2]), max(isoch_cut[2])
-    for m in mass_dist:
-        if min_m <= m <= max_m:
-            indx, m_i = min(enumerate(isoch_cut[2]), key=lambda x:abs(x[1]-m))
-            isoch_m_d[0].append(isoch_cut[0][indx])
-            isoch_m_d[1].append(isoch_cut[1][indx])
-            isoch_m_d[2].append(m_i)
+    # rejecting those masses that fall outside of the isochrone's mass range.
+#    tik = time.time()
+#    isoch_m_d = [[], [], []]
+#    min_m, max_m = min(isoch_cut[2]), max(isoch_cut[2])
+#    for m in mass_dist:
+#        if min_m <= m <= max_m:
+#            indx, m_i = min(enumerate(isoch_cut[2]), key=lambda x:abs(x[1]-m))
+#            isoch_m_d[0].append(isoch_cut[0][indx])
+#            isoch_m_d[1].append(isoch_cut[1][indx])
+#            isoch_m_d[2].append(m_i)
+            
+#    print isoch_m_d0[2], '\n'
+#            
+    def find_closest(A, target):
+        #A must be sorted
+        idx = A.searchsorted(target)
+        idx = np.clip(idx, 1, len(A)-1)
+        left = A[idx-1]
+        right = A[idx]
+        idx -= target - left < right - target
+        return idx
 
-#    print isoch_m_d[1], '\n'
+    data = np.array(isoch_cut)
+    target = np.array(mass_dist)    
+    
+    order = data[2, :].argsort()
+    key = data[2, order]
+    target = target[(target >= key[0]) & (target <= key[-1])]
+    closest = find_closest(key, target)
+    isoch_m_d = data[:, order[closest]]
+            
+#    print 'interp-mass', time.time()-tik
     
 
     ### Completeness limit removal of stars. ###
-    if not isoch_m_d[0]:
+#    if not isoch_m_d[0]:
+    if not isoch_m_d.any():
         # If the isochrone is empty after removing stars outside of the observed
         # ranges, then pass empty array.
         synth_clust = np.asarray([])
@@ -108,6 +135,7 @@ def synthetic_clust(isochrone, mass_dist, completeness):
             
             # Get histogram. completeness[2] = bin_edges of the observed region
             # histogram.
+#            tik = time.time()
             synth_mag_hist, bin_edges = np.histogram(isoch_m_d[1], completeness[1])
             pi = completeness[3]
             n1, p1 = synth_mag_hist[completeness[2]], pi[0]
@@ -129,11 +157,13 @@ def synthetic_clust(isochrone, mass_dist, completeness):
             # Pick a number (given by the list 'di') of random elements in each
             # range. Those are the indexes of the elements that should be removed
             # from the three sub-lists.
+#            print 'r_indx', rang_indx
+#            raw_input()
             rem_indx = []
             for indx,num in enumerate(di):
                 if rang_indx[indx] and len(rang_indx[indx]) >= num:
-                    rem_indx.append(np.random.choice(rang_indx[indx], num, replace=False))
-#                    rem_indx.append(rang_indx[indx][:int(num)])
+#                    rem_indx.append(np.random.choice(rang_indx[indx], num, replace=False))
+                    rem_indx.append(rang_indx[indx][:int(num)])
                 else:
                     rem_indx.append(rang_indx[indx])
             
@@ -146,6 +176,7 @@ def synthetic_clust(isochrone, mass_dist, completeness):
     #        print 'd', d, '\n'
             # Remove those selected indexes from the three sub-lists.
             synth_clust = np.delete(np.asarray(isoch_m_d), d, axis=1)
+#            print 'comp-lev', time.time()-tik
     #        print 'syn', len(synth_clust[1]), synth_clust[1]
     #        raw_input()
         else:

@@ -286,7 +286,7 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort, completeness):
 #            print params_boot[i-1]
         
     # Calculate errors for each parameter.
-    isoch_fit_errors = np.mean(params_boot, 0)
+    isoch_fit_errors = np.std(params_boot, 0)
     print isoch_fit_errors
     
     return isoch_fit_params, isoch_fit_errors
