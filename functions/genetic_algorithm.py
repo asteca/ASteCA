@@ -16,7 +16,6 @@ def encode(mm_m, mm_a, mm_e, mm_d, n, int_popul):
     '''
     Encode the solutions into binary string chromosomes to be bred.
     '''
-    
     delta_m, delta_a, delta_e, delta_d = (mm_m[1]-mm_m[0]), (mm_a[1]-mm_a[0]),\
     (mm_e[1]-mm_e[0]), (mm_d[1]-mm_d[0])
     chromosomes = []
@@ -50,14 +49,21 @@ def crossover(chromosomes, p_cross):
     for chrom_pair in chunker(chromosomes, 2):
         r = random.random()
         if r<= p_cross:
-            # Select random crossover point.
-            cp = random.randint(0, len(chrom_pair[0]))
-            cross_chrom.append(chrom_pair[0][:cp]+chrom_pair[1][cp:])
-            cross_chrom.append(chrom_pair[1][:cp]+chrom_pair[0][cp:])
+
+#            # Select one random crossover point.
+#            cp = random.randint(0, len(chrom_pair[0]))
+#            cross_chrom.append(chrom_pair[0][:cp]+chrom_pair[1][cp:])
+#            cross_chrom.append(chrom_pair[1][:cp]+chrom_pair[0][cp:])
+            
+            # Select two random crossover points.
+            cp0, cp1 = np.sort(random.sample(range(0, len(chrom_pair[0])), 2))
+            # Apply crossover on these two chromosomes.
+            cross_chrom.append(chrom_pair[0][:cp0]+chrom_pair[1][cp0:cp1]+chrom_pair[0][cp1:])
+            cross_chrom.append(chrom_pair[1][:cp0]+chrom_pair[0][cp0:cp1]+chrom_pair[1][cp1:])
         else:
+            # Skip crossover operation.
             cross_chrom.append(chrom_pair[0])
             cross_chrom.append(chrom_pair[1])
-        
     return cross_chrom
     
     
@@ -65,10 +71,10 @@ def mutation(cross_chrom, p_mut):
     '''
     Applies the mutation operator over random genes in each chromosome.
     '''
-    #                 
+    # For each chromosome flip their genes according to the probability p_mut.
     for i,elem in enumerate(cross_chrom):
-        cross_chrom[i] = ''.join(char if random.random()>p_mut else str(1-int(char)) for char in elem)
-    
+        cross_chrom[i] = ''.join(char if random.random()>p_mut else \
+        str(1-int(char)) for char in elem)
     return cross_chrom
     
     
@@ -139,7 +145,6 @@ def selection(generation, breed_prob):
     Select random chromosomes from the chromose list passed according to
     the breeding probability given by their fitness.
     '''
-
     select_chrom = []
     # Draw n_pop random numbers uniformelly distributed between [0,1)
     ran_lst = np.random.uniform(0, sum(breed_prob), len(generation))
@@ -169,7 +174,6 @@ def fitness_eval(sys_select, isoch_list, obs_clust, mass_dist, isoch_ma,
         m, a = ma_lst[indx]
 
 #        print isoch_ma[m][a][0], isoch_ma[m][a][1], e, d_lst[indx], '\n'
-        
         isochrone = isoch_list[m][a]
         d = d_lst[indx]
         # Call likelihood function with m,a,e,d values.
@@ -185,18 +189,18 @@ def fitness_eval(sys_select, isoch_list, obs_clust, mass_dist, isoch_ma,
 #    return generation
     
     
-def random_population(isoch_ma, isoch_ed, n_pop):
+def random_population(isoch_ma, isoch_ed, n_ran):
     '''
     Generate a random set of parameter values to use as a random population.
     '''
-    # Pick n_pop initial random solutions from each list storing all the possible
+    # Pick n_ran initial random solutions from each list storing all the possible
     # parameters values. These lists store real values.
-    e_lst = [random.choice(isoch_ed[0]) for _ in range(n_pop)]
-    d_lst = [random.choice(isoch_ed[1]) for _ in range(n_pop)]
+    e_lst = [random.choice(isoch_ed[0]) for _ in range(n_ran)]
+    d_lst = [random.choice(isoch_ed[1]) for _ in range(n_ran)]
     # Flat array so every [metal,age] combination has the same probability
     # of being picked. This list stores indexes.
     ma_flat = [(i, j) for i in range(len(isoch_ma)) for j in range(len(isoch_ma[i]))]
-    ma_lst = [random.choice(ma_flat) for _ in range(n_pop)]
+    ma_lst = [random.choice(ma_flat) for _ in range(n_ran)]
     
     return ma_lst, e_lst, d_lst
 

@@ -230,14 +230,16 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort, completeness):
     # 2nd param: 'total_number', 'total_mass'
     # 3rd param: total cluster mass or number of stars in clusters, depending
     # on the chosen 2nd param.
-    mass_dist = md('kroupa_1993', 'total_number', 500)
+    mass_dist = md('kroupa_1993', 'total_number', 1000)
 #    mass_dist = md('kroupa_1993', 'total_mass', 1000)
     
 
     # Number of times to run the bootstrap block.
     N_B = 10
     # Genetic algorithm parameters.
-    n_pop, n_gen, fdif, p_cross, p_mut, n_ei, n_es = 100, 100, 3./5., 0.85, 0.01, 5, 5
+#    n_pop, n_gen, fdif, p_cross, p_mut, n_ei, n_es = 100, 100, 3./5., 0.85, 0.01, 5, 5
+#    n_pop, n_gen, fdif, p_cross, p_mut, n_ei, n_es = 50, 100, 0.5, 0.8, 0.1, 15, 10
+    n_pop, n_gen, fdif, p_cross, p_mut, n_ei, n_es = 250, 50, 0.5, 0.8, 0.01, 5, 5
     
     
     # Store all isochrones in all the metallicity files in isoch_list. We do
