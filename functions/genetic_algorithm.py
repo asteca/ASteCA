@@ -142,11 +142,11 @@ def decode(mm_m, mm_a, mm_e, mm_d, n_bin, isoch_ma, isoch_ed, mut_chrom):
 
 def selection(generation, breed_prob):
     '''
-    Select random chromosomes from the chromose list passed according to
+    Select random chromosomes from the chromosome list passed according to
     the breeding probability given by their fitness.
     '''
     select_chrom = []
-    # Draw n_pop random numbers uniformelly distributed between [0,1)
+    # Draw len(generation) random numbers uniformelly distributed between [0,1)
     ran_lst = np.random.uniform(0, sum(breed_prob), len(generation))
     # For each of these numbers, obtain the corresponding likelihood from the
     # breed_prob CDF.
@@ -290,7 +290,8 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
         # Elitism: make sure that the best solution from the previous generation
         # is passed unchanged into this next generation.
         best_chrom = encode(mm_m, mm_a, mm_e, mm_d, n_bin, best_sol)
-        mut_chrom[0] = best_chrom[0]
+#        mut_chrom[0] = best_chrom[0]
+        mut_chrom[0] = best_chrom
         
         
         ### Evaluation/fitness ###
@@ -309,7 +310,6 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
         # generations, remove all chromosomes but the best one (extinction)
         # and fill with random new solutions (immigration).
 
-#        print ' ', i, best_sol_count, best_sol, [generation[0]], lkl[0]
         # Check if new best solution is equal to the previous one.
         if [generation[0]] == best_sol:
             # Increase counter.
@@ -329,6 +329,7 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
                         # Exit generations loop.
                         break
                 else:
+                    # Update best solution.
                     best_sol_ei = best_sol
                     ext_imm_count = 0
 
