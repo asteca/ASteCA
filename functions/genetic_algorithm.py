@@ -207,7 +207,7 @@ def random_population(isoch_ma, isoch_ed, n_ran):
 
 
 def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
-              ranges_steps, n_pop, n_gen, fdif, p_cross, p_mut, n_ei, n_es,
+              ranges_steps, n_pop, n_gen, fdif, p_cross, p_mut, n_el, n_ei, n_es,
               completeness):
     '''
     Main function.
@@ -220,9 +220,11 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
     algorithm.
     p_cros: crossover probability.
     p_mut: mutation probability.
+    n_el: number of best solutions to pass unchanged to the next generation
+    (Elitism operator)
     n_ei: number of generations allowed to run with the same best solution
     before applying the Extinction/Immigration operator.
-    n_es:number of times the xtinction/Immigration operator is allowed to run
+    n_es:number of times the Extinction/Immigration operator is allowed to run
     returning the same best solution before exiting the generations loop.
     '''
     
@@ -251,7 +253,7 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
     generation, lkl = fitness_eval(sys_select, isoch_list, obs_clust, mass_dist,
                               isoch_ma, ma_lst, e_lst, d_lst, completeness)
     # Store best solution for passing along in the 'Elitism' block.
-    best_sol = [generation[0]]
+    best_sol = generation[:n_el]
 
    
     # Initiate counters.
@@ -287,11 +289,11 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
         # Apply mutation operation on random genes for every chromosome.
         mut_chrom = mutation(cross_chrom, p_mut)
         
-        # Elitism: make sure that the best solution from the previous generation
-        # is passed unchanged into this next generation.
+        # Elitism: make sure that the best n_el solutions from the previous
+        # generation are passed unchanged into this next generation.
         best_chrom = encode(mm_m, mm_a, mm_e, mm_d, n_bin, best_sol)
 #        mut_chrom[0] = best_chrom[0]
-        mut_chrom[0] = best_chrom
+        mut_chrom[:n_el] = best_chrom
         
         
         ### Evaluation/fitness ###
@@ -311,7 +313,7 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
         # and fill with random new solutions (immigration).
 
         # Check if new best solution is equal to the previous one.
-        if [generation[0]] == best_sol:
+        if generation[0] == best_sol[0]:
             # Increase counter.
             best_sol_count += 1
             
@@ -322,7 +324,7 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
                 ### Exit switch. ##
                 # If n_es runs of the Ext/Imm operator have been applied with
                 # no changes to the best solution, exit the GA.
-                if best_sol == best_sol_ei:
+                if best_sol[0] == best_sol_ei:
                     # Increase Ext/Imm operator counter.
                     ext_imm_count += 1
                     if ext_imm_count == n_es:
@@ -330,11 +332,11 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
                         break
                 else:
                     # Update best solution.
-                    best_sol_ei = best_sol
+                    best_sol_ei = best_sol[0]
                     ext_imm_count = 0
 
-                # Generate n_pop-1 random solutions.
-                ma_lst, e_lst, d_lst = random_population(isoch_ma, isoch_ed, (n_pop-1))
+                # Generate (n_pop-n_el) random solutions.
+                ma_lst, e_lst, d_lst = random_population(isoch_ma, isoch_ed, (n_pop-n_el))
                 # Evaluate this new population.
                 generation_ei, lkl2 = fitness_eval(sys_select, isoch_list, obs_clust, mass_dist,
                                           isoch_ma, ma_lst, e_lst, d_lst, completeness)
@@ -343,10 +345,9 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
                 print '  Ext/Imm', ext_imm_count, best_sol_ei
                 # Reset best solution counter.
                 best_sol_count = 0
-                    
         else:
             # Update best solution for passing along in the 'Elitism' block.
-            best_sol = [generation[0]]
+            best_sol = generation[:n_el]
             # Reset counter.
             best_sol_count = 0
             
