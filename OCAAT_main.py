@@ -245,7 +245,7 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
     # Get background value in stars/area
     
     # Inner and outer radii for obtaining the background values. Both are 
-    # calculated as a given fraction of the minimum widht between the x and y 
+    # calculated as a given fraction of the minimum width between the x and y 
     # axis spans.
     inner_ring = (min((max(x_data)-min(x_data)), (max(y_data)-min(y_data))))/4.
     outer_ring = (min((max(x_data)-min(x_data)), (max(y_data)-min(y_data))))/3.  
@@ -473,7 +473,9 @@ all stars with photom errors < 0.3)? (y/n) ')
     
 
     # Get the completeness level for each magnitude bin.
-    completeness = m_c(mag_data)
+    # Width of the bins used for the magnitude histogram.
+    b_width = 0.1
+    completeness = m_c(mag_data, b_width)
     print 'Completeness magnitude levels obtained.'    
     
     
@@ -482,7 +484,7 @@ all stars with photom errors < 0.3)? (y/n) ')
         isoch_fit_params = []
     else:
         # Obtain best fitting parameters for cluster.
-        isoch_fit_params = g_i_p('WASH', 'MAR', memb_prob_avrg_sort, completeness)
+        isoch_fit_params = g_i_p('WASH', 'MAR', memb_prob_avrg_sort, completeness, popt_mag, popt_col1)
         print 'Best fit parameters obtained.'
     
     

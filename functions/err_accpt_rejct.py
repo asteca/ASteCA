@@ -12,7 +12,7 @@ def err_accpt_rejct(id_star, x_data, y_data, mag, e_mag, col1, e_col1):
     """
 
 ################################################################################
-# First part: separate stars in magnitud intervals for errors of magnitude and
+# First part: separate stars in magnitude intervals for errors of magnitude and
 # of color.
 
     # Get value of brightest and dimmest stars.
@@ -148,7 +148,7 @@ def err_accpt_rejct(id_star, x_data, y_data, mag, e_mag, col1, e_col1):
                     else:
                         hist_count = hist_count + bin_num
             
-                # Condition to keep sigma values low for low values of T1.
+                # Condition to keep sigma values low for low values of mag.
                 if mag_value[indx] < (bright_end+1.) and (median[indx2] + \
                 sigma[indx2]) > 0.05:
                     sigma[indx2] = 0.025
@@ -179,7 +179,7 @@ def err_accpt_rejct(id_star, x_data, y_data, mag, e_mag, col1, e_col1):
 # Third part: get best fitting curves for the median and median+sigma values
 # obtained previously for errors in magnitude and color.
             
-    # After iterating though all intervals in magnitude, we fit an exponential
+    # After iterating through all intervals in magnitude, we fit an exponential
     # and a polynomial to these points (median and median+sigma).
     
     # Define exponential function.

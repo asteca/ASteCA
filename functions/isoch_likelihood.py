@@ -5,7 +5,6 @@ Created on Fri Jan 17 17:21:58 2014
 @author: gabriel
 """
 
-from move_isochrone import move_isoch
 from synth_cluster import synth_clust as s_c
 import numpy as np
 
@@ -52,7 +51,8 @@ def likelihood(synth_clust, obs_clust):
 
     
     
-def isoch_likelihood(sys_select, isochrone, e, d, obs_clust, mass_dist, completeness):
+def isoch_likelihood(sys_select, isochrone, e, d, obs_clust, mass_dist,
+                     completeness, f_bin, q_bin, popt_mag, popt_col1):
     '''
     Main function.
     
@@ -63,13 +63,11 @@ def isoch_likelihood(sys_select, isochrone, e, d, obs_clust, mass_dist, complete
     
     e, d = extinction, distance modulus.
     '''
-    # Store isochrone moved by the values 'e' and 'd'.
-    isoch_moved = move_isoch(sys_select, isochrone, e, d)
-    isoch_final = isoch_moved + [isochrone[2]]
         
     # Generate synthetic cluster using this "moved" isochrone and a mass
     # distribution.
-    synth_clust = s_c(isoch_final, mass_dist, completeness)
+    synth_clust = s_c(sys_select, isochrone, e, d, mass_dist, completeness,
+                      f_bin, q_bin, popt_mag, popt_col1)
     
     # Call function to obtain the likelihood by comparing the synthetic cluster
     # with the observed cluster.

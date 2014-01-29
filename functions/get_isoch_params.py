@@ -216,7 +216,7 @@ def boostrap_resample(memb_prob_avrg_sort):
     
 
 
-def gip(sys_select, iso_select, memb_prob_avrg_sort, completeness):
+def gip(sys_select, iso_select, memb_prob_avrg_sort, completeness, popt_mag, popt_col1):
     '''
     Main function.
     
@@ -224,18 +224,16 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort, completeness):
     E(B-V), distance (distance modulus), age and metallicity.
     '''
     
-    # Store mass distribution used to produce a synthetic cluster based on
-    # a given theoretic isochrone.
-    # 1st param: 'chabrier_2001', 'kroupa_1993'
-    # 2nd param: 'total_number', 'total_mass'
-    # 3rd param: total cluster mass or number of stars in clusters, depending
-    # on the chosen 2nd param.
-    mass_dist = md('kroupa_1993', 'total_number', 1000)
-#    mass_dist = md('kroupa_1993', 'total_mass', 1000)
-    
-
     # Number of times to run the bootstrap block.
     N_B = 10
+    
+    # IMF parameters.
+#    'kroupa_1993', 'total_mass', 1000
+    imf_use, total_norm, num_stars = 'kroupa_1993', 'total_number', 1000
+    
+    # Binarity parameters.
+    f_bin, q_bin = 0.5, 0.7
+    
     # Genetic algorithm parameters.
 #    n_pop, n_gen, fdif, p_cross, p_mut, n_ei, n_es = 100, 100, 3./5., 0.85, 0.01, 5, 5
 #    n_pop, n_gen, fdif, p_cross, p_mut, n_ei, n_es = 50, 100, 0.5, 0.8, 0.1, 15, 10
@@ -243,7 +241,7 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort, completeness):
     
     
     # Store all isochrones in all the metallicity files in isoch_list. We do
-    # this so the files will only have to be accessed once.
+    # this now so the files will only have to be accessed once.
     # Store metallicity values and isochrones ages between the allowed
     # ranges in isoch_ma; extinction and distance modulus values in isoch_ed.
     isoch_list, isoch_ma, isoch_ed, ranges_steps = get_isoch_params(sys_select, iso_select)
@@ -254,6 +252,14 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort, completeness):
     params_boot = []
     # Begin bootstrap block.
     for i in range(N_B):
+        
+        # Store mass distribution used to produce a synthetic cluster based on
+        # a given theoretic isochrone.
+        # 1st param: 'chabrier_2001', 'kroupa_1993'
+        # 2nd param: 'total_number', 'total_mass'
+        # 3rd param: total cluster mass or number of stars in clusters, depending
+        # on the chosen 2nd param.
+        mass_dist = md(imf_use, total_norm, num_stars)
         
         # The first pass is done with no resampling to calculate the final
         # values. After that we resample to get the uncertainty in each
@@ -274,7 +280,7 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort, completeness):
             # Genetic algorithm.
             isoch_fit_params = g_a(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed,
                                    mass_dist, ranges_steps, n_pop, n_gen, fdif, p_cross, p_mut, n_el, n_ei, n_es,\
-                                   completeness)
+                                   completeness, f_bin, q_bin, popt_mag, popt_col1)
 #            print isoch_fit_params
         else:
             # Brute force.
@@ -284,7 +290,7 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort, completeness):
             # Genetic algorithm algorithm.
             params_boot.append(g_a(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed,
                                    mass_dist, ranges_steps, n_pop, n_gen, fdif, p_cross, p_mut, n_el, n_ei, n_es,\
-                                   completeness))
+                                   completeness, f_bin, q_bin, popt_mag, popt_col1))
 #            print params_boot[i-1]
         
     # Calculate errors for each parameter.

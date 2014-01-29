@@ -163,7 +163,7 @@ def selection(generation, breed_prob):
 
 
 def fitness_eval(sys_select, isoch_list, obs_clust, mass_dist, isoch_ma,
-                 ma_lst, e_lst, d_lst, completeness):
+                 ma_lst, e_lst, d_lst, completeness, f_bin, q_bin, popt_mag, popt_col1):
     '''
     Evaluate each n_pop random solution in the objective function to obtain
     the fitness of each solution.
@@ -173,11 +173,11 @@ def fitness_eval(sys_select, isoch_list, obs_clust, mass_dist, isoch_ma,
         # Get isochrone with m,a values.
         m, a = ma_lst[indx]
 
-#        print isoch_ma[m][a][0], isoch_ma[m][a][1], e, d_lst[indx], '\n'
+        print 'file', isoch_ma[m][a][0], isoch_ma[m][a][1], '\n'
         isochrone = isoch_list[m][a]
         d = d_lst[indx]
         # Call likelihood function with m,a,e,d values.
-        likel_val = i_l(sys_select, isochrone, e, d, obs_clust, mass_dist, completeness)
+        likel_val = i_l(sys_select, isochrone, e, d, obs_clust, mass_dist, completeness, f_bin, q_bin, popt_mag, popt_col1)
         likelihood.append(likel_val)
         generation_list.append([isoch_ma[m][a][0], isoch_ma[m][a][1], e,d])
     # Sort according to the likelihood list.
@@ -208,7 +208,7 @@ def random_population(isoch_ma, isoch_ed, n_ran):
 
 def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
               ranges_steps, n_pop, n_gen, fdif, p_cross, p_mut, n_el, n_ei, n_es,
-              completeness):
+              completeness, f_bin, q_bin, popt_mag, popt_col1):
     '''
     Main function.
     
@@ -251,7 +251,7 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
     
     # Evaluate initial random solutions in the objective function.
     generation, lkl = fitness_eval(sys_select, isoch_list, obs_clust, mass_dist,
-                              isoch_ma, ma_lst, e_lst, d_lst, completeness)
+                              isoch_ma, ma_lst, e_lst, d_lst, completeness, f_bin, q_bin, popt_mag, popt_col1)
     # Store best solution for passing along in the 'Elitism' block.
     best_sol = generation[:n_el]
 
@@ -304,7 +304,7 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
         # Evaluate each new solution in the objective function and sort
         # according to the best solutions found.
         generation, lkl = fitness_eval(sys_select, isoch_list, obs_clust, mass_dist,
-                                  isoch_ma, ma_lst, e_lst, d_lst, completeness)
+                                  isoch_ma, ma_lst, e_lst, d_lst, completeness, f_bin, q_bin, popt_mag, popt_col1)
        
         
         ### Extinction/Immigration ###
@@ -339,7 +339,7 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
                 ma_lst, e_lst, d_lst = random_population(isoch_ma, isoch_ed, (n_pop-n_el))
                 # Evaluate this new population.
                 generation_ei, lkl2 = fitness_eval(sys_select, isoch_list, obs_clust, mass_dist,
-                                          isoch_ma, ma_lst, e_lst, d_lst, completeness)
+                                          isoch_ma, ma_lst, e_lst, d_lst, completeness, f_bin, q_bin, popt_mag, popt_col1)
                 # Append immigrant population to the best solution.
                 generation = best_sol + generation_ei
                 print '  Ext/Imm', ext_imm_count, best_sol_ei
