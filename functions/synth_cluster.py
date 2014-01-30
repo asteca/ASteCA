@@ -11,7 +11,7 @@ import numpy as np
 import random
 import itertools
 
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 
 def exp_func(x, a, b, c):
@@ -21,12 +21,12 @@ def exp_func(x, a, b, c):
     return a * np.exp(b * x) + c
     
     
-def gauss_error(col_lst, e_col_lst, mag_lst, e_mag_lst):
+def gauss_error(col, e_col, mag, e_mag):
     '''
     Randomly move mag and color through a Gaussian function.
     '''
-    col_gauss = random.gauss(np.array(col_lst), np.array(e_col_lst))
-    mag_gauss = random.gauss(np.array(mag_lst), np.array(e_mag_lst))
+    col_gauss = col + np.random.normal(0, 1, len(col))*e_col
+    mag_gauss = mag + np.random.normal(0, 1, len(col))*e_mag
     
     return col_gauss, mag_gauss
     
@@ -78,6 +78,8 @@ def synth_clust(sys_select, isochrone, e, d, mass_dist, completeness, f_bin,
     a certain mass distribution.
     '''
     
+#    f, ((ax1, ax2, ax3, ax4), (ax5, ax6, ax7, ax8)) = plt.subplots(2, 4)
+    
     # Interpolate extra color, magnitude and masses into the isochrone.
     N = 1000
     col, mag, mass = np.linspace(0, 1, len(isochrone[0])), np.linspace(0, 1, N),\
@@ -86,35 +88,91 @@ def synth_clust(sys_select, isochrone, e, d, mass_dist, completeness, f_bin,
     col_i, mag_i, mass_i = (np.interp(mag, col, isochrone[i]) for i in range(3))
     # Store isochrone's interpolated values.
     isoch_inter = np.asarray([col_i, mag_i, mass_i])
+    
+#    ax1.set_title('Interp isoch')
+#    ax1.invert_yaxis()
+#    ax1.scatter(isoch_inter[0], isoch_inter[1], s=15, c='aqua')
 
 
+    # Move synth cluster with the values 'e' and 'd'.
+    isoch_moved = move_isoch(sys_select, [isoch_inter[0], isoch_inter[1]], e, d) + [isoch_inter[2]]
+    
+#    ax2.set_title('Shifted isoch')
+#    ax2.invert_yaxis()
+#    text1 = r'$E_{(B-V)} = %0.2f}$' '\n' % e
+#    text2 = r'$(m-M)_o = %0.2f}$' % d
+#    text=text1+text2
+#    plt.text(0.1, 0.1, text, transform=ax2.transAxes,
+#             bbox=dict(facecolor='white', alpha=0.5), fontsize=13)
+#    ax2.scatter(isoch_moved[0], isoch_moved[1], s=15, c='azure')           
+         
+         
     # Remove stars from isochrone with magnitude values larger that the maximum
     # value found in the observation (entire field, not just the cluster region).
     #
     # Sort isochrone first according to magnitude values (min to max).
-    isoch_sort = zip(*sorted(zip(*isoch_inter), key=lambda x: x[1]))
+    isoch_sort = zip(*sorted(zip(*isoch_moved), key=lambda x: x[1]))
     # Now remove values beyond max_mag (= completeness[0]).
     # Get index of closest mag value to max_mag.
     max_indx = min(range(len(isoch_sort[1])), key=lambda i: abs(isoch_sort[1][i]-completeness[0]))
     # Remove elements.
-    isoch_cut = [isoch_sort[i][0:max_indx] for i in range(3)]
+    isoch_cut = np.array([isoch_sort[i][0:max_indx] for i in range(3)])
 
+#    ax3.set_title('Max mag cut')
+#    ax3.invert_yaxis()
+#    ax3.scatter(isoch_cut[0], isoch_cut[1], s=15, c='bisque')     
+         
 
-#    isoch_m_d0 = [[], [], []]
-#    min_m, max_m = min(isoch_cut[2]), max(isoch_cut[2])
-#    print 'min, max mass', min(isoch_cut[2]), max(isoch_cut[2]), '\n'
-#    for m in mass_dist:
-#        if min_m <= m <= max_m:
-#            indx, m_i = min(enumerate(isoch_cut[2]), key=lambda x:abs(x[1]-m))
-#            isoch_m_d0[0].append(isoch_cut[0][indx])
-#            isoch_m_d0[1].append(isoch_cut[1][indx])
-#            isoch_m_d0[2].append(m_i)
-#    print len(isoch_m_d0[2]), isoch_m_d0[2], '\n'
-          
     # Interpolate masses in mass_dist into the isochrone rejecting those
     # masses that fall outside of the isochrone's mass range.
     isoch_m_d = mass_interp(isoch_cut, mass_dist)
-            
+
+#    ax4.set_title('Masses interp')
+#    ax4.invert_yaxis()
+#    ax4.scatter(isoch_m_d[0], isoch_m_d[1], s=15, c='teal')     
+    
+
+    # Assignment of binarity.
+    # Randomly select a fraction of stars to be binaries.
+    # Indexes of the randomly selected stars in isoch_m_d.
+    bin_indxs = random.sample(range(len(isoch_m_d[0])), int(f_bin*len(isoch_m_d[0])))
+    
+    # Calculate the secondary masses of these binary stars between q_bin*m1
+    # and m1, where m1 is the primary mass.
+    # Primary masses.
+    m1 = np.asarray(isoch_m_d[2][bin_indxs])
+    # Secondary masses.
+    mass_bin0 = np.random.uniform(q_bin*m1, m1)
+    # If any secondary mass falls outside of the lower isochrone's mass range,
+    # change its value to the min value.
+    mass_bin = [i if i >= min(isoch_m_d[2]) else min(isoch_m_d[2]) for i in mass_bin0]
+
+    # Find color and magnitude values for each secondary star. This will
+    # slightly change the values of the masses since they will be assigned
+    # to the closest value found in the interpolated isochrone.
+    bin_isoch = mass_interp(isoch_cut, mass_bin)
+    
+    # Obtain color, magnitude and masses for each binary system.
+    # Transform color to the first filter's magnitude before obtaining the
+    # new binary magnitude.
+    col_mag_bin = -2.5*np.log10(10**(-0.4*(isoch_m_d[0][bin_indxs]+isoch_m_d[1][bin_indxs]))+10**(-0.4*(bin_isoch[0]+bin_isoch[1])))
+    mag_bin = -2.5*np.log10(10**(-0.4*isoch_m_d[1][bin_indxs])+10**(-0.4*bin_isoch[1]))
+    # Transform back first filter's magnitude into color.
+    col_bin = col_mag_bin - mag_bin
+    
+    # Add masses to obtain the system's mass.
+    mass_bin = isoch_m_d[2][bin_indxs] + bin_isoch[2]
+    
+    # Update array with new values of color, magnitude and masses.
+    for indx,i in enumerate(bin_indxs):
+        isoch_m_d[0][i] = col_bin[indx]
+        isoch_m_d[1][i] = mag_bin[indx]
+        isoch_m_d[2][i] = mass_bin[indx]
+
+#    ax5.set_title('Binarity')
+#    ax5.invert_yaxis()
+#    ax5.scatter(isoch_m_d[0], isoch_m_d[1], s=15, c='steelblue')        
+    
     
     # Completeness limit removal of stars. Remove a number of stars according
     # to the percentages of star loss find in get_completeness for the
@@ -165,77 +223,26 @@ def synth_clust(sys_select, isochrone, e, d, mass_dist, completeness, f_bin,
         else:
             clust_compl = np.asarray(isoch_m_d)
 
-        f, (ax1, ax2, ax3, ax4) = plt.subplots(1, 4)
-        
-        ax1.set_title('Clust compl')
-        ax1.invert_yaxis()
-        ax1.plot(isochrone[0], isochrone[1], lw=1.)
-        ax1.scatter(clust_compl[0], clust_compl[1], c='green')
+#        ax6.set_title('Completeness')
+#        ax6.invert_yaxis()
+#        ax6.scatter(clust_compl[0], clust_compl[1], s=15, c='blue')
 
-
-        # Assignment of binarity.
-        
-        # Randomly select a fraction of stars to be binaries.
-        n_bin = int(f_bin*len(clust_compl[0]))
-        # Indexes of the randomly selected stars.
-        bin_indxs = random.sample(range(len(clust_compl[0])), n_bin)
-        
-        # Calculate the secondary masses of these binary stars between q_bin*m1
-        # and m1, where m1 is the primary mass.
-        m1 = np.asarray(clust_compl[2][bin_indxs])
-        mass_bin0 = np.random.uniform(q_bin*m1, m1)
-        # If any secondary mass falls outside of the isochrone's mass range
-        # (below), change its value to the min value.
-        mass_bin = [i if i >= min(isoch_cut[2]) else min(isoch_cut[2]) for i in mass_bin0]
-
-        # Find color and magnitude values for each secondary star. This will
-        # slightly change the values of the masses since they will be assigned
-        # to the closest value found in the interpolated isochrone.
-        bin_isoch = mass_interp(isoch_cut, mass_bin)
-        
-        # Obtain color, magnitude and masses for each binary system.
-        # Transform color to the filter's magnitude before obtaining the
-        # new binary magnitude.
-        col_mag_bin = -2.5*np.log10(10**(-0.4*(clust_compl[0][bin_indxs]+clust_compl[1][bin_indxs]))+10**(-0.4*(bin_isoch[0]+bin_isoch[1])))
-        mag_bin = -2.5*np.log10(10**(-0.4*clust_compl[1][bin_indxs])+10**(-0.4*bin_isoch[1]))
-        # Transform back filter magnitude into color.
-        col_bin = col_mag_bin - mag_bin
-        mass_bin = clust_compl[2][bin_indxs] + bin_isoch[2]
-        
-        # Update array with new values of color, magnitude and masses.
-        for indx,i in enumerate(bin_indxs):
-            clust_compl[0][i] = col_bin[indx]
-            clust_compl[1][i] = mag_bin[indx]
-            clust_compl[2][i] = mass_bin[indx]
-
-        ax2.set_title('Binarity')
-        ax2.invert_yaxis()
-        ax2.scatter(clust_compl[0], clust_compl[1], c='red')
-
-        # Move synth cluster with the values 'e' and 'd'.
-        isoch_moved = move_isoch(sys_select, [clust_compl[0], clust_compl[1]], e, d)
-        
-        ax3.set_title('Isoch moved')
-        ax3.invert_yaxis()
-        ax3.scatter(isoch_moved[0], isoch_moved[1], marker='x', c='teal')
         
         # Randomly move stars according to given error distributions.
-        sigma_mag = exp_func(isoch_moved[1], *popt_mag)
-        sigma_col = exp_func(isoch_moved[1], *popt_col1)
-        col_gauss, mag_gauss = gauss_error(isoch_moved[0], sigma_col, isoch_moved[1], sigma_mag)
+        # Get errors according to errors distribution.
+        sigma_mag = np.array(exp_func(clust_compl[1], *popt_mag))
+        sigma_col = np.array(exp_func(clust_compl[1], *popt_col1))
+        col_gauss, mag_gauss = gauss_error(clust_compl[0], 2*sigma_col, clust_compl[1], 2*sigma_mag)
         clust_error = [col_gauss, mag_gauss]
         
-        ax4.set_title('Clust + errors')
-        ax4.invert_yaxis()
-        ax4.scatter(clust_error[0], clust_error[1], marker='o', c='black')
-
-        
-        plt.show()
-        raw_input()
-        
+#        ax7.set_title('Errors')
+#        ax7.invert_yaxis()
+#        ax7.scatter(clust_error[0], clust_error[1], s=15, c='black')
+#
+#        plt.show()
+#        raw_input()
        
         # Append masses.
         synth_clust = clust_error + [clust_compl[2]]
-    
     
     return np.array(synth_clust)

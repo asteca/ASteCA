@@ -237,7 +237,7 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort, completeness, popt_mag, pop
     # Genetic algorithm parameters.
 #    n_pop, n_gen, fdif, p_cross, p_mut, n_ei, n_es = 100, 100, 3./5., 0.85, 0.01, 5, 5
 #    n_pop, n_gen, fdif, p_cross, p_mut, n_ei, n_es = 50, 100, 0.5, 0.8, 0.1, 15, 10
-    n_pop, n_gen, fdif, p_cross, p_mut, n_el, n_ei, n_es = 250, 50, 1., 0.8, 0.05, 10, 3, 5
+    n_pop, n_gen, fdif, p_cross, p_mut, n_el, n_ei, n_es = 200, 50, 1., 0.8, 0.05, 1, 100, 2
     
     
     # Store all isochrones in all the metallicity files in isoch_list. We do

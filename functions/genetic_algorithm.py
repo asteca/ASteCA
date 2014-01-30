@@ -163,30 +163,55 @@ def selection(generation, breed_prob):
 
 
 def fitness_eval(sys_select, isoch_list, obs_clust, mass_dist, isoch_ma,
-                 ma_lst, e_lst, d_lst, completeness, f_bin, q_bin, popt_mag, popt_col1):
+                 ma_lst, e_lst, d_lst, isoch_done, completeness, f_bin,
+                 q_bin, popt_mag, popt_col1):
     '''
-    Evaluate each n_pop random solution in the objective function to obtain
+    Evaluate each random isochrone in the objective function to obtain
     the fitness of each solution.
     '''
     likelihood, generation_list = [], []
+    # Process each isochrone selected.
     for indx, e in enumerate(e_lst):
-        # Get isochrone with m,a values.
-        m, a = ma_lst[indx]
 
-        print 'file', isoch_ma[m][a][0], isoch_ma[m][a][1], '\n'
-        isochrone = isoch_list[m][a]
+        # Metallicity and age indexes, dist modulus value.
+        m, a = ma_lst[indx]
         d = d_lst[indx]
-        # Call likelihood function with m,a,e,d values.
-        likel_val = i_l(sys_select, isochrone, e, d, obs_clust, mass_dist, completeness, f_bin, q_bin, popt_mag, popt_col1)
-        likelihood.append(likel_val)
+        
+#        print isoch_done[0]
+#        print isoch_done[1]
+#        print [isoch_ma[m][a][0], isoch_ma[m][a][1], e,d], '\n'
+#        raw_input()
+        
+        # Check if this isochrone was already processed.
+        if [isoch_ma[m][a][0], isoch_ma[m][a][1], e,d] in isoch_done[0]:
+            # Get index for this isochrone.
+#            print 'in', isoch_ma[m][a][0], isoch_ma[m][a][1], e,d, '\n'
+            likel_val = isoch_done[1][isoch_done[0].index([isoch_ma[m][a][0], isoch_ma[m][a][1], e,d])]
+        else:
+            # Call likelihood function with m,a,e,d values.
+            likel_val = i_l(sys_select, isoch_list[m][a], e, d, obs_clust, mass_dist,
+                            completeness, f_bin, q_bin, popt_mag, popt_col1)
+            # Append data identifying the isochrone and the obtained
+            # likelihood value to this *persistent* list.
+            isoch_done[0].append([isoch_ma[m][a][0], isoch_ma[m][a][1], e,d])
+            isoch_done[1].append(likel_val)
+            
+        # Append same data to the lists that will be erased with each call
+        # to this function.
         generation_list.append([isoch_ma[m][a][0], isoch_ma[m][a][1], e,d])
+        likelihood.append(round(likel_val, 2))
+        
     # Sort according to the likelihood list.
     generation = [x for y, x in sorted(zip(likelihood, generation_list))]
     # Sort list in place putting the likelihood minimum value first.
     likelihood.sort()
+
+    print generation[0:10]
+    print likelihood[0:10], '\n'
+#    raw_input()
     
-    return generation, likelihood
-#    return generation
+    return generation, likelihood, isoch_done
+
     
     
 def random_population(isoch_ma, isoch_ed, n_ran):
@@ -243,15 +268,26 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
     # differential fdif.
     breed_prob = [1./n_pop + fdif*(n_pop+1.-2.*(i+1.))/(n_pop*(n_pop+1.)) \
     for i in range(n_pop)]     
-    
-    
+
+   
+    isoch_done = [[], []]
+    ma_lst = [[0, 39]]
+    e_lst = [0.08]
+    d_lst = [18.5]
+    generation, lkl, isoch_done = fitness_eval(sys_select, isoch_list, obs_clust, mass_dist,
+                              isoch_ma, ma_lst, e_lst, d_lst, isoch_done, completeness, f_bin, q_bin, popt_mag, popt_col1)  
+    print generation, '\n'
+    print lkl
+    raw_input()
+
+
     ### Initial random population evaluation. ###
     ma_lst, e_lst, d_lst = random_population(isoch_ma, isoch_ed, n_pop)
     
-    
+    isoch_done = [[], []]
     # Evaluate initial random solutions in the objective function.
-    generation, lkl = fitness_eval(sys_select, isoch_list, obs_clust, mass_dist,
-                              isoch_ma, ma_lst, e_lst, d_lst, completeness, f_bin, q_bin, popt_mag, popt_col1)
+    generation, lkl, isoch_done = fitness_eval(sys_select, isoch_list, obs_clust, mass_dist,
+                              isoch_ma, ma_lst, e_lst, d_lst, isoch_done, completeness, f_bin, q_bin, popt_mag, popt_col1)
     # Store best solution for passing along in the 'Elitism' block.
     best_sol = generation[:n_el]
 
@@ -267,7 +303,7 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
         tik = time.time()
         #### Selection/Reproduction ###
         
-        # Select chromosomes for breeding from the current  generation of
+        # Select chromosomes for breeding from the current generation of
         # solutions according to breed_prob to generate the intermediate
         # population.
         int_popul = selection(generation, breed_prob)
@@ -303,8 +339,8 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
         
         # Evaluate each new solution in the objective function and sort
         # according to the best solutions found.
-        generation, lkl = fitness_eval(sys_select, isoch_list, obs_clust, mass_dist,
-                                  isoch_ma, ma_lst, e_lst, d_lst, completeness, f_bin, q_bin, popt_mag, popt_col1)
+        generation, lkl, isoch_done = fitness_eval(sys_select, isoch_list, obs_clust, mass_dist,
+                                  isoch_ma, ma_lst, e_lst, d_lst, isoch_done, completeness, f_bin, q_bin, popt_mag, popt_col1)
        
         
         ### Extinction/Immigration ###
@@ -338,8 +374,8 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
                 # Generate (n_pop-n_el) random solutions.
                 ma_lst, e_lst, d_lst = random_population(isoch_ma, isoch_ed, (n_pop-n_el))
                 # Evaluate this new population.
-                generation_ei, lkl2 = fitness_eval(sys_select, isoch_list, obs_clust, mass_dist,
-                                          isoch_ma, ma_lst, e_lst, d_lst, completeness, f_bin, q_bin, popt_mag, popt_col1)
+                generation_ei, lkl2, isoch_done = fitness_eval(sys_select, isoch_list, obs_clust, mass_dist,
+                                          isoch_ma, ma_lst, e_lst, d_lst, isoch_done, completeness, f_bin, q_bin, popt_mag, popt_col1)
                 # Append immigrant population to the best solution.
                 generation = best_sol + generation_ei
                 print '  Ext/Imm', ext_imm_count, best_sol_ei

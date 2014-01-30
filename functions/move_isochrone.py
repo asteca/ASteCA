@@ -5,6 +5,8 @@ Created on Fri Jan 17 16:35:24 2014
 @author: gabriel
 """
 
+import numpy as np
+
 def move_isoch(sys_select, isochrone, e, d):
     '''
     Recieves an isochrone of a given age and metallicity and modifies
@@ -37,14 +39,7 @@ def move_isoch(sys_select, isochrone, e, d):
         # T1 = M_T1 - 0.58*E(B-V) + (m-M)o + 3.2*E(B-V)
         #
         V_Mv = d + 3.2*e
-        for item in isochrone[1]:
-             # T1 magnitude affected by extinction.
-            iso_moved[1].append(item - 0.58*e + V_Mv)
-        for item in isochrone[0]:
-             # C-T1 color affected by extinction.
-            iso_moved[0].append(item + 1.97*e)
-            
-    # Store moved colors and magnitudes in final list.
-#    isoch_final = [iso_moved[0], iso_moved[1]]
-
-    return [iso_moved[0], iso_moved[1]]
+        iso_moved = [np.array(isochrone[0])+1.97*e,
+                     np.array(isochrone[1])-0.58*e+V_Mv]
+        
+    return iso_moved

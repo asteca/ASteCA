@@ -3,7 +3,6 @@
 """
 
 import numpy as np
-import random as rd
 from scipy import stats
 
 '''
@@ -11,10 +10,10 @@ Bayesian KDE field decontamination algorithm.
 '''
 
 
-def gauss_error(col_lst, e_col_lst, mag_lst, e_mag_lst):
+def gauss_error(col, e_col, mag, e_mag):
     # Randomly move mag and color through a Gaussian function.
-    col_gauss = rd.gauss(np.array(col_lst), np.array(e_col_lst))
-    mag_gauss = rd.gauss(np.array(mag_lst), np.array(e_mag_lst))
+    col_gauss = col + np.random.normal(0, 1, len(col))*e_col
+    mag_gauss = mag + np.random.normal(0, 1, len(col))*e_mag
     
     return col_gauss, mag_gauss
 
