@@ -10,6 +10,8 @@ import random
 import numpy as np
 import time
 
+import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 
 
 def encode(mm_m, mm_a, mm_e, mm_d, n, int_popul):
@@ -40,7 +42,7 @@ def chunker(seq, size):
     return (seq[pos:pos + size] for pos in xrange(0, len(seq), size))
     
     
-def crossover(chromosomes, p_cross):
+def crossover(chromosomes, p_cross, cr_sel):
     '''
     Applies the crosssover operator over each chromosome.
     '''
@@ -50,16 +52,18 @@ def crossover(chromosomes, p_cross):
         r = random.random()
         if r<= p_cross:
 
-#            # Select one random crossover point.
-#            cp = random.randint(0, len(chrom_pair[0]))
-#            cross_chrom.append(chrom_pair[0][:cp]+chrom_pair[1][cp:])
-#            cross_chrom.append(chrom_pair[1][:cp]+chrom_pair[0][cp:])
-            
-            # Select two random crossover points.
-            cp0, cp1 = np.sort(random.sample(range(0, len(chrom_pair[0])), 2))
-            # Apply crossover on these two chromosomes.
-            cross_chrom.append(chrom_pair[0][:cp0]+chrom_pair[1][cp0:cp1]+chrom_pair[0][cp1:])
-            cross_chrom.append(chrom_pair[1][:cp0]+chrom_pair[0][cp0:cp1]+chrom_pair[1][cp1:])
+            if cr_sel == '1P':
+                # Select one random crossover point.
+                cp = random.randint(0, len(chrom_pair[0]))
+                # Apply crossover on these two chromosomes.
+                cross_chrom.append(chrom_pair[0][:cp]+chrom_pair[1][cp:])
+                cross_chrom.append(chrom_pair[1][:cp]+chrom_pair[0][cp:])
+            elif cr_sel == '2P':
+                # Select two random crossover points.
+                cp0, cp1 = np.sort(random.sample(range(0, len(chrom_pair[0])), 2))
+                # Apply crossover on these two chromosomes.
+                cross_chrom.append(chrom_pair[0][:cp0]+chrom_pair[1][cp0:cp1]+chrom_pair[0][cp1:])
+                cross_chrom.append(chrom_pair[1][:cp0]+chrom_pair[0][cp0:cp1]+chrom_pair[1][cp1:])
         else:
             # Skip crossover operation.
             cross_chrom.append(chrom_pair[0])
@@ -206,8 +210,8 @@ def fitness_eval(sys_select, isoch_list, obs_clust, mass_dist, isoch_ma,
     # Sort list in place putting the likelihood minimum value first.
     likelihood.sort()
 
-    print generation[0:10]
-    print likelihood[0:10], '\n'
+    print '  gen', generation[0:10]
+    print '  lik', likelihood[0:10]
 #    raw_input()
     
     return generation, likelihood, isoch_done
@@ -232,7 +236,7 @@ def random_population(isoch_ma, isoch_ed, n_ran):
 
 
 def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
-              ranges_steps, n_pop, n_gen, fdif, p_cross, p_mut, n_el, n_ei, n_es,
+              ranges_steps, n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es,
               completeness, f_bin, q_bin, popt_mag, popt_col1):
     '''
     Main function.
@@ -244,6 +248,7 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
     fdif: Fitness differential. Establishes the 'selection pressure' for the
     algorithm.
     p_cros: crossover probability.
+    cr_sel: select 1-point or 2-point crossover.
     p_mut: mutation probability.
     n_el: number of best solutions to pass unchanged to the next generation
     (Elitism operator)
@@ -269,16 +274,13 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
     breed_prob = [1./n_pop + fdif*(n_pop+1.-2.*(i+1.))/(n_pop*(n_pop+1.)) \
     for i in range(n_pop)]     
 
-   
-    isoch_done = [[], []]
-    ma_lst = [[0, 39]]
-    e_lst = [0.08]
-    d_lst = [18.5]
-    generation, lkl, isoch_done = fitness_eval(sys_select, isoch_list, obs_clust, mass_dist,
-                              isoch_ma, ma_lst, e_lst, d_lst, isoch_done, completeness, f_bin, q_bin, popt_mag, popt_col1)  
-    print generation, '\n'
-    print lkl
-    raw_input()
+    # Temporary REMOVE.
+#    isoch_done = [[], []]
+#    ma_lst = [[0, 39]]
+#    e_lst = [0.08]
+#    d_lst = [18.5]
+#    generation, lkl, isoch_done = fitness_eval(sys_select, isoch_list, obs_clust, mass_dist,
+#                              isoch_ma, ma_lst, e_lst, d_lst, isoch_done, completeness, f_bin, q_bin, popt_mag, popt_col1)  
 
 
     ### Initial random population evaluation. ###
@@ -291,6 +293,8 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
     # Store best solution for passing along in the 'Elitism' block.
     best_sol = generation[:n_el]
 
+    # Temporary REMOVE.
+    lkl_old = [2000.]
    
     # Initiate counters.
     best_sol_count, ext_imm_count = 0, 0
@@ -299,6 +303,11 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
     best_sol_ei = []
     # Begin processing the populations up to n_gen generations.
     for i in range(n_gen):
+        
+        
+#        fig, (ax1, ax2, ax3) = plt.subplots(1, 3)
+        fig = plt.figure(figsize=(10, 3.5))
+        gs = gridspec.GridSpec(1, 3)
         
         tik = time.time()
         #### Selection/Reproduction ###
@@ -320,7 +329,7 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
         # Apply crossover operation on each subsequent pair of chromosomes.
         # Select only 100*p_cross% of pairs to apply the crossover to,
         # where p_cross is the crossover probability.
-        cross_chrom = crossover(chromosomes, p_cross)
+        cross_chrom = crossover(chromosomes, p_cross, cr_sel)
 
         # Apply mutation operation on random genes for every chromosome.
         mut_chrom = mutation(cross_chrom, p_mut)
@@ -349,6 +358,7 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
         # and fill with random new solutions (immigration).
 
         # Check if new best solution is equal to the previous one.
+        print '  gen-bes', generation[0], best_sol[0]
         if generation[0] == best_sol[0]:
             # Increase counter.
             best_sol_count += 1
@@ -384,11 +394,65 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
         else:
             # Update best solution for passing along in the 'Elitism' block.
             best_sol = generation[:n_el]
+            print '  upd', best_sol[0]
             # Reset counter.
             best_sol_count = 0
             
                                   
-        print i, lkl[0], generation[0], time.time()-tik
+        print '\n', i, lkl[0], generation[0], time.time()-tik
 
+
+        ax1 = plt.subplot(gs[0:1, 0:1])
+#        ax1.set_title('Likelihood', fontsize=12)
+        plt.xlim(-5, n_gen)
+        plt.ylim(0, 2000)
+        ax1.tick_params(axis='both', which='major', labelsize=8)
+        ax1.tick_params(axis='both', which='minor', labelsize=8)
+        text1 = 'N = %d' '\n'  % i
+        text2 = '$\hat{L} = %0.2f$' % np.mean(lkl)
+        text = text1+text2
+        plt.text(0.38, 0.85, text, transform = ax1.transAxes, \
+        bbox=dict(facecolor='white', alpha=0.5), fontsize=8)
+        plt.xlabel('Generations', fontsize=10)
+        plt.ylabel('Likelihood', fontsize=10)
+        ax1.scatter(i, lkl[0], s=15, c='black')
+        ax1.plot(range(i+1), lkl_old, lw=1.5, c='black')
+
+        ax2 = plt.subplot(gs[0:1, 1:2])
+        plt.xlim(mm_m[0], mm_m[1])
+        plt.ylim(mm_a[0], mm_a[1])
+        ax2.tick_params(axis='both', which='major', labelsize=8)
+        ax2.tick_params(axis='both', which='minor', labelsize=8)
+        plt.xlabel('$[Fe/H]$', fontsize=12)
+        plt.ylabel('$Age$', fontsize=12)
+        ax2.scatter(zip(*generation)[0], zip(*generation)[1], s=15, c='blue')
+        ax2.scatter(generation[0][0], generation[0][1], s=20, c='red')
+        
+        ax3 = plt.subplot(gs[0:1, 2:3])
+        plt.xlim(mm_e[0], mm_e[1])
+        plt.ylim(mm_d[0], mm_d[1])
+        ax3.tick_params(axis='both', which='major', labelsize=8)
+        ax3.tick_params(axis='both', which='minor', labelsize=8)
+        plt.xlabel('$E_{(B-V)}$', fontsize=12)
+        plt.ylabel('$dist mod$', fontsize=12)
+        ax3.scatter(zip(*generation)[2], zip(*generation)[3], s=15, c='blue')
+        ax3.scatter(generation[0][2], generation[0][3], s=20, c='red')
+        
+        fig.tight_layout()
+        # Generate output file for each data file.
+        plt.savefig('/home/gabriel/Descargas/GA/GA_'+str(i)+'.png', dpi=150)
+        
+#        plt.show()
+#        raw_input()
+        
+        if lkl[0] > lkl_old[i]:
+            print lkl[0], lkl_old[i]
+            print 'STOP'
+            raw_input()
+        else:
+            lkl_old.append(lkl[0])
+
+    print 'generation done'
+    raw_input()
     # Return best solutions found.
     return generation[0]

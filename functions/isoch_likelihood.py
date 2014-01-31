@@ -42,7 +42,7 @@ def likelihood(synth_clust, obs_clust):
         # Store weights data (membership probabilities) into array.
         weights = np.array([zip(*obs_clust)[7]], dtype=float)   
         # Weight probabilities for each cluster star.
-        weighted_probs = clust_stars_probs*weights
+        weighted_probs = clust_stars_probs*weights/len(synth_clust[0])
         
         # Final score: sum log likelihoods for each star in cluster.
         isoch_score = -sum(np.log(np.asarray(weighted_probs[0])))

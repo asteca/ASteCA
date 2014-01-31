@@ -237,7 +237,7 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort, completeness, popt_mag, pop
     # Genetic algorithm parameters.
 #    n_pop, n_gen, fdif, p_cross, p_mut, n_ei, n_es = 100, 100, 3./5., 0.85, 0.01, 5, 5
 #    n_pop, n_gen, fdif, p_cross, p_mut, n_ei, n_es = 50, 100, 0.5, 0.8, 0.1, 15, 10
-    n_pop, n_gen, fdif, p_cross, p_mut, n_el, n_ei, n_es = 200, 50, 1., 0.8, 0.05, 1, 100, 2
+    n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es = 100, 100, 1., 0.8, '2P', 0.05, 1, 100, 2
     
     
     # Store all isochrones in all the metallicity files in isoch_list. We do
@@ -279,7 +279,7 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort, completeness, popt_mag, pop
 #                                           mass_dist)
             # Genetic algorithm.
             isoch_fit_params = g_a(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed,
-                                   mass_dist, ranges_steps, n_pop, n_gen, fdif, p_cross, p_mut, n_el, n_ei, n_es,\
+                                   mass_dist, ranges_steps, n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es,\
                                    completeness, f_bin, q_bin, popt_mag, popt_col1)
 #            print isoch_fit_params
         else:
@@ -289,7 +289,7 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort, completeness, popt_mag, pop
 #                                           mass_dist))
             # Genetic algorithm algorithm.
             params_boot.append(g_a(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed,
-                                   mass_dist, ranges_steps, n_pop, n_gen, fdif, p_cross, p_mut, n_el, n_ei, n_es,\
+                                   mass_dist, ranges_steps, n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es,\
                                    completeness, f_bin, q_bin, popt_mag, popt_col1))
 #            print params_boot[i-1]
         
