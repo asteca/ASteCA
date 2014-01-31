@@ -233,7 +233,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
 #    # get handles
 #    handles, labels = ax4.get_legend_handles_labels()
 #    # use them in the legend
-#    ax4.legend(handles, labels, loc='upper right', numpoints=1, fontsize=10)1
+#    ax4.legend(handles, labels, loc='upper right', numpoints=1, fontsize=10)
 
 
     ax4 = plt.subplot(gs1[2:4, 2:6])

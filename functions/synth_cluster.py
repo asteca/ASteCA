@@ -145,7 +145,11 @@ def synth_clust(sys_select, isochrone, e, d, mass_dist, completeness, f_bin,
     mass_bin0 = np.random.uniform(q_bin*m1, m1)
     # If any secondary mass falls outside of the lower isochrone's mass range,
     # change its value to the min value.
-    mass_bin = [i if i >= min(isoch_m_d[2]) else min(isoch_m_d[2]) for i in mass_bin0]
+    if mass_bin0.any():
+        # This prevents a rare error where apparently mass_bin0 is a float.
+        mass_bin = [i if i >= min(isoch_m_d[2]) else min(isoch_m_d[2]) for i in mass_bin0]
+    else:
+        mass_bin = mass_bin0
 
     # Find color and magnitude values for each secondary star. This will
     # slightly change the values of the masses since they will be assigned

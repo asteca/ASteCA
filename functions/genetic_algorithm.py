@@ -12,6 +12,7 @@ import time
 
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+import scipy.interpolate
 
 
 def encode(mm_m, mm_a, mm_e, mm_d, n, int_popul):
@@ -294,7 +295,7 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
     best_sol = generation[:n_el]
 
     # Temporary REMOVE.
-    lkl_old = [2000.]
+    lkl_old = [[5000.], [5000.]]
    
     # Initiate counters.
     best_sol_count, ext_imm_count = 0, 0
@@ -404,28 +405,45 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
 
         ax1 = plt.subplot(gs[0:1, 0:1])
 #        ax1.set_title('Likelihood', fontsize=12)
-        plt.xlim(-5, n_gen)
-        plt.ylim(0, 2000)
+        plt.xlim(-5, n_gen+int(0.05*n_gen))
+        plt.ylim(0, 5000)
         ax1.tick_params(axis='both', which='major', labelsize=8)
         ax1.tick_params(axis='both', which='minor', labelsize=8)
-        text1 = 'N = %d' '\n'  % i
-        text2 = '$\hat{L} = %0.2f$' % np.mean(lkl)
-        text = text1+text2
-        plt.text(0.38, 0.85, text, transform = ax1.transAxes, \
+        text = 'N = %d' % i
+        plt.text(0.2, 0.9, text, transform = ax1.transAxes, \
         bbox=dict(facecolor='white', alpha=0.5), fontsize=8)
-        plt.xlabel('Generations', fontsize=10)
+        plt.xlabel('Generation', fontsize=10)
         plt.ylabel('Likelihood', fontsize=10)
-        ax1.scatter(i, lkl[0], s=15, c='black')
-        ax1.plot(range(i+1), lkl_old, lw=1.5, c='black')
+        ax1.plot(range(i+1), lkl_old[0], lw=1., c='black', label='$L$')
+        ax1.plot(range(i+1), lkl_old[1], lw=1., c='blue', label='$\hat{L}$')
+        ax1.legend(loc='upper right', numpoints=1, fontsize=10)
 
         ax2 = plt.subplot(gs[0:1, 1:2])
         plt.xlim(mm_m[0], mm_m[1])
         plt.ylim(mm_a[0], mm_a[1])
         ax2.tick_params(axis='both', which='major', labelsize=8)
         ax2.tick_params(axis='both', which='minor', labelsize=8)
-        plt.xlabel('$[Fe/H]$', fontsize=12)
+        plt.xlabel('$z$', fontsize=12)
         plt.ylabel('$Age$', fontsize=12)
-        ax2.scatter(zip(*generation)[0], zip(*generation)[1], s=15, c='blue')
+        # Define x,y values.
+        m_x, a_y = zip(*isoch_done[0])[0], zip(*isoch_done[0])[1]
+        # Density values.
+        z = isoch_done[1]
+        print m_x, '\n'
+        print a_y, '\n'
+        print z
+        raw_input()
+        # Set up a regular grid of interpolation points
+        xi, yi = np.linspace(min(m_x), max(m_x), 100), np.linspace(min(a_y), max(a_y), 100)
+        xi, yi = np.meshgrid(xi, yi)
+        # Interpolate
+        rbf = scipy.interpolate.Rbf(m_x, a_y, z, function='linear')
+        zi = rbf(xi, yi)
+        # Plot density.
+        plt.imshow(zi, vmin=z.min(), vmax=z.max(), origin='lower',
+                   extent=[m_x.min(), m_x.max(), a_y.min(), a_y.max()])        
+        # Plot points.
+        ax2.scatter(zip(*generation)[0], zip(*generation)[1], s=7, lw=0.2, c='white')
         ax2.scatter(generation[0][0], generation[0][1], s=20, c='red')
         
         ax3 = plt.subplot(gs[0:1, 2:3])
@@ -434,23 +452,21 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
         ax3.tick_params(axis='both', which='major', labelsize=8)
         ax3.tick_params(axis='both', which='minor', labelsize=8)
         plt.xlabel('$E_{(B-V)}$', fontsize=12)
-        plt.ylabel('$dist mod$', fontsize=12)
-        ax3.scatter(zip(*generation)[2], zip(*generation)[3], s=15, c='blue')
+        plt.ylabel('$dist\;mod$', fontsize=12)
+        ax3.scatter(zip(*generation)[2], zip(*generation)[3], s=8, lw=0.4, c='teal')
         ax3.scatter(generation[0][2], generation[0][3], s=20, c='red')
         
         fig.tight_layout()
         # Generate output file for each data file.
-        plt.savefig('/home/gabriel/Descargas/GA/GA_'+str(i)+'.png', dpi=150)
+        plt.savefig('/home/gabriel/Descargas/GA/GA_'+str(i).zfill(3)+'.png', dpi=150)
         
-#        plt.show()
-#        raw_input()
-        
-        if lkl[0] > lkl_old[i]:
-            print lkl[0], lkl_old[i]
+        if lkl[0] > lkl_old[0][i]:
+            print lkl[0], lkl_old[0][i]
             print 'STOP'
             raw_input()
-        else:
-            lkl_old.append(lkl[0])
+            
+        lkl_old[0].append(lkl[0])
+        lkl_old[1].append(np.mean(lkl))
 
     print 'generation done'
     raw_input()
