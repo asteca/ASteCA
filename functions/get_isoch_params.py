@@ -7,10 +7,11 @@ Created on Thu Jan  9 15:08:39 2014
 
 import os
 from os.path import join
+import numpy as np
 
 from get_mass_dist import mass_dist as md
 from genetic_algorithm import gen_algor as g_a
-import numpy as np
+
 
 
 

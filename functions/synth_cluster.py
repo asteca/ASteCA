@@ -145,33 +145,31 @@ def synth_clust(sys_select, isochrone, e, d, mass_dist, completeness, f_bin,
     mass_bin0 = np.random.uniform(q_bin*m1, m1)
     # If any secondary mass falls outside of the lower isochrone's mass range,
     # change its value to the min value.
-    if mass_bin0.any():
+    if not type(mass_bin0) is float:
         # This prevents a rare error where apparently mass_bin0 is a float.
         mass_bin = [i if i >= min(isoch_m_d[2]) else min(isoch_m_d[2]) for i in mass_bin0]
-    else:
-        mass_bin = mass_bin0
 
-    # Find color and magnitude values for each secondary star. This will
-    # slightly change the values of the masses since they will be assigned
-    # to the closest value found in the interpolated isochrone.
-    bin_isoch = mass_interp(isoch_cut, mass_bin)
-    
-    # Obtain color, magnitude and masses for each binary system.
-    # Transform color to the first filter's magnitude before obtaining the
-    # new binary magnitude.
-    col_mag_bin = -2.5*np.log10(10**(-0.4*(isoch_m_d[0][bin_indxs]+isoch_m_d[1][bin_indxs]))+10**(-0.4*(bin_isoch[0]+bin_isoch[1])))
-    mag_bin = -2.5*np.log10(10**(-0.4*isoch_m_d[1][bin_indxs])+10**(-0.4*bin_isoch[1]))
-    # Transform back first filter's magnitude into color.
-    col_bin = col_mag_bin - mag_bin
-    
-    # Add masses to obtain the system's mass.
-    mass_bin = isoch_m_d[2][bin_indxs] + bin_isoch[2]
-    
-    # Update array with new values of color, magnitude and masses.
-    for indx,i in enumerate(bin_indxs):
-        isoch_m_d[0][i] = col_bin[indx]
-        isoch_m_d[1][i] = mag_bin[indx]
-        isoch_m_d[2][i] = mass_bin[indx]
+        # Find color and magnitude values for each secondary star. This will
+        # slightly change the values of the masses since they will be assigned
+        # to the closest value found in the interpolated isochrone.
+        bin_isoch = mass_interp(isoch_cut, mass_bin)
+        
+        # Obtain color, magnitude and masses for each binary system.
+        # Transform color to the first filter's magnitude before obtaining the
+        # new binary magnitude.
+        col_mag_bin = -2.5*np.log10(10**(-0.4*(isoch_m_d[0][bin_indxs]+isoch_m_d[1][bin_indxs]))+10**(-0.4*(bin_isoch[0]+bin_isoch[1])))
+        mag_bin = -2.5*np.log10(10**(-0.4*isoch_m_d[1][bin_indxs])+10**(-0.4*bin_isoch[1]))
+        # Transform back first filter's magnitude into color.
+        col_bin = col_mag_bin - mag_bin
+        
+        # Add masses to obtain the system's mass.
+        mass_bin = isoch_m_d[2][bin_indxs] + bin_isoch[2]
+        
+        # Update array with new values of color, magnitude and masses.
+        for indx,i in enumerate(bin_indxs):
+            isoch_m_d[0][i] = col_bin[indx]
+            isoch_m_d[1][i] = mag_bin[indx]
+            isoch_m_d[2][i] = mass_bin[indx]
 
 #    ax5.set_title('Binarity')
 #    ax5.invert_yaxis()

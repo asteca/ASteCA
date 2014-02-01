@@ -12,7 +12,7 @@ import time
 
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-import scipy.interpolate
+from scipy.ndimage.filters import gaussian_filter
 
 
 def encode(mm_m, mm_a, mm_e, mm_d, n, int_popul):
@@ -307,8 +307,8 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
         
         
 #        fig, (ax1, ax2, ax3) = plt.subplots(1, 3)
-        fig = plt.figure(figsize=(10, 3.5))
-        gs = gridspec.GridSpec(1, 3)
+        fig = plt.figure(figsize=(12, 6))
+        gs = gridspec.GridSpec(2, 4)
         
         tik = time.time()
         #### Selection/Reproduction ###
@@ -404,57 +404,119 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
 
 
         ax1 = plt.subplot(gs[0:1, 0:1])
-#        ax1.set_title('Likelihood', fontsize=12)
         plt.xlim(-5, n_gen+int(0.05*n_gen))
-        plt.ylim(0, 5000)
-        ax1.tick_params(axis='both', which='major', labelsize=8)
-        ax1.tick_params(axis='both', which='minor', labelsize=8)
-        text = 'N = %d' % i
-        plt.text(0.2, 0.9, text, transform = ax1.transAxes, \
-        bbox=dict(facecolor='white', alpha=0.5), fontsize=8)
+        plt.ylim(0, 3000)
+        ax1.tick_params(axis='both', which='major', labelsize=7)
+        ax1.tick_params(axis='both', which='minor', labelsize=7)
         plt.xlabel('Generation', fontsize=10)
         plt.ylabel('Likelihood', fontsize=10)
+        text = 'N = %d' '\n' '$L_{min}=%0.2f$' % (i, lkl[0])
+        plt.text(0.2, 0.8, text, transform = ax1.transAxes, \
+        bbox=dict(facecolor='white', alpha=0.5), fontsize=8)
         ax1.plot(range(i+1), lkl_old[0], lw=1., c='black', label='$L$')
         ax1.plot(range(i+1), lkl_old[1], lw=1., c='blue', label='$\hat{L}$')
         ax1.legend(loc='upper right', numpoints=1, fontsize=10)
 
+
         ax2 = plt.subplot(gs[0:1, 1:2])
         plt.xlim(mm_m[0], mm_m[1])
         plt.ylim(mm_a[0], mm_a[1])
-        ax2.tick_params(axis='both', which='major', labelsize=8)
-        ax2.tick_params(axis='both', which='minor', labelsize=8)
+        ax2.tick_params(axis='both', which='major', labelsize=7)
+        ax2.tick_params(axis='both', which='minor', labelsize=7)
         plt.xlabel('$z$', fontsize=12)
-        plt.ylabel('$Age$', fontsize=12)
-        # Define x,y values.
-        m_x, a_y = zip(*isoch_done[0])[0], zip(*isoch_done[0])[1]
-        # Density values.
-        z = isoch_done[1]
-        print m_x, '\n'
-        print a_y, '\n'
-        print z
-        raw_input()
-        # Set up a regular grid of interpolation points
-        xi, yi = np.linspace(min(m_x), max(m_x), 100), np.linspace(min(a_y), max(a_y), 100)
-        xi, yi = np.meshgrid(xi, yi)
-        # Interpolate
-        rbf = scipy.interpolate.Rbf(m_x, a_y, z, function='linear')
-        zi = rbf(xi, yi)
-        # Plot density.
-        plt.imshow(zi, vmin=z.min(), vmax=z.max(), origin='lower',
-                   extent=[m_x.min(), m_x.max(), a_y.min(), a_y.max()])        
-        # Plot points.
-        ax2.scatter(zip(*generation)[0], zip(*generation)[1], s=7, lw=0.2, c='white')
+        plt.ylabel('$log(age)$', fontsize=12)
+        # Plot points in generation.
+        ax2.scatter(zip(*generation)[0], zip(*generation)[1], s=7, lw=0.2, c='blue')
         ax2.scatter(generation[0][0], generation[0][1], s=20, c='red')
+
+        
         
         ax3 = plt.subplot(gs[0:1, 2:3])
         plt.xlim(mm_e[0], mm_e[1])
         plt.ylim(mm_d[0], mm_d[1])
-        ax3.tick_params(axis='both', which='major', labelsize=8)
-        ax3.tick_params(axis='both', which='minor', labelsize=8)
+        ax3.tick_params(axis='both', which='major', labelsize=7)
+        ax3.tick_params(axis='both', which='minor', labelsize=7)
         plt.xlabel('$E_{(B-V)}$', fontsize=12)
         plt.ylabel('$dist\;mod$', fontsize=12)
-        ax3.scatter(zip(*generation)[2], zip(*generation)[3], s=8, lw=0.4, c='teal')
+        # Plot points in generation.
+        ax3.scatter(zip(*generation)[2], zip(*generation)[3], s=8, lw=0.2, c='blue')
         ax3.scatter(generation[0][2], generation[0][3], s=20, c='red')
+        
+        
+        ax4 = plt.subplot(gs[1:2, 0:1])
+        plt.xlim(lkl[0], 3000)
+        plt.ylim(mm_m[0], mm_m[1])
+        ax4.tick_params(axis='both', which='major', labelsize=7)
+        ax4.tick_params(axis='both', which='minor', labelsize=7)
+        plt.xlabel('Likelihood', fontsize=10)
+        plt.ylabel('$z$', fontsize=12)
+#        rang = [[0, 2000], [mm_m[0], mm_m[1]]]
+#        binsxy = [int((2000-0)/25), int((mm_m[1]-mm_m[0])/25)]
+        # Store the values of the widths of the used bins
+        # hist is the 2D histogran, xedges & yedges store the edges of the bins
+#        hist, xedges, yedges = np.histogram2d(isoch_done[1], zip(*isoch_done[0])[0], range=rang, bins=binsxy)
+        hist, xedges, yedges = np.histogram2d(isoch_done[1], zip(*isoch_done[0])[0], bins=100)
+        # H_g is the 2D histogram with a gaussian filter applied
+        h_g = gaussian_filter(hist, 2, mode='constant')        
+#        plt.imshow(h_g.transpose(), origin='lower', aspect='auto')
+        plt.imshow(h_g.transpose(), origin='lower',
+                   extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]],\
+                   cmap=plt.get_cmap('gist_yarg'), aspect='auto')
+        plt.axhline(y=generation[0][0], linestyle='--', color='red')
+        # Plot points in generation.
+#        ax4.scatter(isoch_done[1], zip(*isoch_done[0])[0], s=2, lw=0., c='white')
+#        ax4.scatter(lkl[0], generation[0][0], s=20, c='red')
+        
+        
+        ax5 = plt.subplot(gs[1:2, 1:2])
+        plt.xlim(lkl[0], 3000)
+        plt.ylim(mm_a[0], mm_a[1])
+        ax5.tick_params(axis='both', which='major', labelsize=7)
+        ax5.tick_params(axis='both', which='minor', labelsize=7)
+        plt.xlabel('Likelihood', fontsize=10)
+        plt.ylabel('$log(age)$', fontsize=12)
+        hist, xedges, yedges = np.histogram2d(isoch_done[1], zip(*isoch_done[0])[1], bins=100)
+        # H_g is the 2D histogram with a gaussian filter applied
+        h_g = gaussian_filter(hist, 2, mode='constant')        
+        plt.imshow(h_g.transpose(), origin='lower',
+                   extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]],\
+                   cmap=plt.get_cmap('gist_yarg'), aspect='auto')
+        plt.axhline(y=generation[0][1], linestyle='--', color='red')
+
+
+
+        ax6 = plt.subplot(gs[1:2, 2:3])
+        plt.xlim(lkl[0], 3000)
+        plt.ylim(mm_e[0], mm_e[1])
+        ax6.tick_params(axis='both', which='major', labelsize=7)
+        ax6.tick_params(axis='both', which='minor', labelsize=7)
+        plt.xlabel('Likelihood', fontsize=10)
+        plt.ylabel('$E_{(B-V)}$', fontsize=12)
+        hist, xedges, yedges = np.histogram2d(isoch_done[1], zip(*isoch_done[0])[2], bins=100)
+        # H_g is the 2D histogram with a gaussian filter applied
+        h_g = gaussian_filter(hist, 2, mode='constant')        
+        plt.imshow(h_g.transpose(), origin='lower',
+                   extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]],\
+                   cmap=plt.get_cmap('gist_yarg'), aspect='auto')
+        plt.axhline(y=generation[0][2], linestyle='--', color='red')
+        
+        
+        
+        ax7 = plt.subplot(gs[1:2, 3:4])
+        plt.xlim(lkl[0], 3000)
+        plt.ylim(mm_d[0], mm_d[1])
+        ax7.tick_params(axis='both', which='major', labelsize=7)
+        ax7.tick_params(axis='both', which='minor', labelsize=7)
+        plt.xlabel('Likelihood', fontsize=10)
+        plt.ylabel('$dist\;mod$', fontsize=12)
+        hist, xedges, yedges = np.histogram2d(isoch_done[1], zip(*isoch_done[0])[3], bins=100)
+        # H_g is the 2D histogram with a gaussian filter applied
+        h_g = gaussian_filter(hist, 2, mode='constant')        
+        plt.imshow(h_g.transpose(), origin='lower',
+                   extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]],\
+                   cmap=plt.get_cmap('gist_yarg'), aspect='auto')
+        plt.axhline(y=generation[0][3], linestyle='--', color='red')
+        
         
         fig.tight_layout()
         # Generate output file for each data file.
