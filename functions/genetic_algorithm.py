@@ -294,7 +294,7 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
     # Store best solution for passing along in the 'Elitism' block.
     best_sol = generation[:n_el]
 
-    # Temporary REMOVE.
+    # Temporary REMOVE <- Perhaps not.
     lkl_old = [[5000.], [5000.]]
    
     # Initiate counters.
@@ -403,44 +403,55 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
         print '\n', i, lkl[0], generation[0], time.time()-tik
 
 
-        ax1 = plt.subplot(gs[0:1, 0:1])
+        ax0 = plt.subplot(gs[0:1, 0:1])
         plt.xlim(-5, n_gen+int(0.05*n_gen))
         plt.ylim(0, 3000)
-        ax1.tick_params(axis='both', which='major', labelsize=7)
-        ax1.tick_params(axis='both', which='minor', labelsize=7)
+        ax0.tick_params(axis='both', which='major', labelsize=7)
+        ax0.tick_params(axis='both', which='minor', labelsize=7)
         plt.xlabel('Generation', fontsize=10)
         plt.ylabel('Likelihood', fontsize=10)
         text = 'N = %d' '\n' '$L_{min}=%0.2f$' % (i, lkl[0])
-        plt.text(0.2, 0.8, text, transform = ax1.transAxes, \
+        plt.text(0.2, 0.8, text, transform = ax0.transAxes, \
         bbox=dict(facecolor='white', alpha=0.5), fontsize=8)
-        ax1.plot(range(i+1), lkl_old[0], lw=1., c='black', label='$L$')
-        ax1.plot(range(i+1), lkl_old[1], lw=1., c='blue', label='$\hat{L}$')
-        ax1.legend(loc='upper right', numpoints=1, fontsize=10)
+        ax0.plot(range(i+1), lkl_old[0], lw=1., c='black', label='$L$')
+        ax0.plot(range(i+1), lkl_old[1], lw=1., c='blue', label='$\hat{L}$')
+        ax0.legend(loc='upper right', numpoints=1, fontsize=8)
 
 
-        ax2 = plt.subplot(gs[0:1, 1:2])
+        ax1 = plt.subplot(gs[0:1, 1:2])
         plt.xlim(mm_m[0], mm_m[1])
         plt.ylim(mm_a[0], mm_a[1])
-        ax2.tick_params(axis='both', which='major', labelsize=7)
-        ax2.tick_params(axis='both', which='minor', labelsize=7)
+        ax1.tick_params(axis='both', which='major', labelsize=7)
+        ax1.tick_params(axis='both', which='minor', labelsize=7)
         plt.xlabel('$z$', fontsize=12)
         plt.ylabel('$log(age)$', fontsize=12)
         # Plot points in generation.
-        ax2.scatter(zip(*generation)[0], zip(*generation)[1], s=7, lw=0.2, c='blue')
-        ax2.scatter(generation[0][0], generation[0][1], s=20, c='red')
-
+        ax1.scatter(zip(*generation)[0], zip(*generation)[1], s=7, lw=0.2, c='blue')
+        ax1.scatter(generation[0][0], generation[0][1], s=20, c='red')
         
         
-        ax3 = plt.subplot(gs[0:1, 2:3])
+        ax2 = plt.subplot(gs[0:1, 2:3])
         plt.xlim(mm_e[0], mm_e[1])
         plt.ylim(mm_d[0], mm_d[1])
-        ax3.tick_params(axis='both', which='major', labelsize=7)
-        ax3.tick_params(axis='both', which='minor', labelsize=7)
+        ax2.tick_params(axis='both', which='major', labelsize=7)
+        ax2.tick_params(axis='both', which='minor', labelsize=7)
         plt.xlabel('$E_{(B-V)}$', fontsize=12)
         plt.ylabel('$dist\;mod$', fontsize=12)
         # Plot points in generation.
-        ax3.scatter(zip(*generation)[2], zip(*generation)[3], s=8, lw=0.2, c='blue')
-        ax3.scatter(generation[0][2], generation[0][3], s=20, c='red')
+        ax2.scatter(zip(*generation)[2], zip(*generation)[3], s=8, lw=0.2, c='blue')
+        ax2.scatter(generation[0][2], generation[0][3], s=20, c='red')
+        
+        
+        ax3 = plt.subplot(gs[0:1, 3:4])
+        plt.xlim(0, len(isoch_done[1]))
+        plt.ylim(lkl[0]-(lkl[0]*0.2), 3000)
+        ax3.tick_params(axis='both', which='major', labelsize=7)
+        ax2.tick_params(axis='both', which='minor', labelsize=7)
+        plt.xlabel('Solutions', fontsize=10)
+        plt.ylabel('Likelihoods', fontsize=10)
+        # Plot points in generation.
+        ax3.scatter(range(len(isoch_done[1])), isoch_done[1], s=5, lw=0.2, c='blue')
+        plt.axhline(y=lkl[0], linestyle='--', lw=0.8, color='red')
         
         
         ax4 = plt.subplot(gs[1:2, 0:1])
@@ -450,22 +461,17 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
         ax4.tick_params(axis='both', which='minor', labelsize=7)
         plt.xlabel('Likelihood', fontsize=10)
         plt.ylabel('$z$', fontsize=12)
-#        rang = [[0, 2000], [mm_m[0], mm_m[1]]]
-#        binsxy = [int((2000-0)/25), int((mm_m[1]-mm_m[0])/25)]
-        # Store the values of the widths of the used bins
-        # hist is the 2D histogran, xedges & yedges store the edges of the bins
-#        hist, xedges, yedges = np.histogram2d(isoch_done[1], zip(*isoch_done[0])[0], range=rang, bins=binsxy)
+        text = '$z = %0.4f$' % generation[0][0]
+        plt.text(0.67, 0.9, text, transform = ax4.transAxes, \
+        bbox=dict(facecolor='white', alpha=0.5), fontsize=8)
         hist, xedges, yedges = np.histogram2d(isoch_done[1], zip(*isoch_done[0])[0], bins=100)
         # H_g is the 2D histogram with a gaussian filter applied
         h_g = gaussian_filter(hist, 2, mode='constant')        
-#        plt.imshow(h_g.transpose(), origin='lower', aspect='auto')
         plt.imshow(h_g.transpose(), origin='lower',
                    extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]],\
                    cmap=plt.get_cmap('gist_yarg'), aspect='auto')
         plt.axhline(y=generation[0][0], linestyle='--', color='red')
-        # Plot points in generation.
-#        ax4.scatter(isoch_done[1], zip(*isoch_done[0])[0], s=2, lw=0., c='white')
-#        ax4.scatter(lkl[0], generation[0][0], s=20, c='red')
+
         
         
         ax5 = plt.subplot(gs[1:2, 1:2])
@@ -475,6 +481,9 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
         ax5.tick_params(axis='both', which='minor', labelsize=7)
         plt.xlabel('Likelihood', fontsize=10)
         plt.ylabel('$log(age)$', fontsize=12)
+        text = '$log(age) = %0.2f$' % generation[0][1]
+        plt.text(0.6, 0.9, text, transform = ax5.transAxes, \
+        bbox=dict(facecolor='white', alpha=0.5), fontsize=8)
         hist, xedges, yedges = np.histogram2d(isoch_done[1], zip(*isoch_done[0])[1], bins=100)
         # H_g is the 2D histogram with a gaussian filter applied
         h_g = gaussian_filter(hist, 2, mode='constant')        
@@ -492,6 +501,9 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
         ax6.tick_params(axis='both', which='minor', labelsize=7)
         plt.xlabel('Likelihood', fontsize=10)
         plt.ylabel('$E_{(B-V)}$', fontsize=12)
+        text = '$E_{(B-V)} = %0.2f$' % generation[0][2]
+        plt.text(0.65, 0.9, text, transform = ax6.transAxes, \
+        bbox=dict(facecolor='white', alpha=0.5), fontsize=8)
         hist, xedges, yedges = np.histogram2d(isoch_done[1], zip(*isoch_done[0])[2], bins=100)
         # H_g is the 2D histogram with a gaussian filter applied
         h_g = gaussian_filter(hist, 2, mode='constant')        
@@ -509,6 +521,9 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
         ax7.tick_params(axis='both', which='minor', labelsize=7)
         plt.xlabel('Likelihood', fontsize=10)
         plt.ylabel('$dist\;mod$', fontsize=12)
+        text = '$dist\;mod = %0.2f$' % generation[0][3]
+        plt.text(0.5, 0.9, text, transform = ax7.transAxes, \
+        bbox=dict(facecolor='white', alpha=0.5), fontsize=8)
         hist, xedges, yedges = np.histogram2d(isoch_done[1], zip(*isoch_done[0])[3], bins=100)
         # H_g is the 2D histogram with a gaussian filter applied
         h_g = gaussian_filter(hist, 2, mode='constant')        
