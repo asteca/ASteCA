@@ -171,6 +171,7 @@ def synth_clust(sys_select, isochrone, e, d, mass_dist, completeness, f_bin,
             isoch_m_d[1][i] = mag_bin[indx]
             isoch_m_d[2][i] = mass_bin[indx]
 
+
 #    ax5.set_title('Binarity')
 #    ax5.invert_yaxis()
 #    ax5.scatter(isoch_m_d[0], isoch_m_d[1], s=15, c='steelblue')        
