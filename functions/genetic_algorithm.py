@@ -12,7 +12,6 @@ import time
 
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 from scipy.ndimage.filters import gaussian_filter
 
 
@@ -186,6 +185,7 @@ def fitness_eval(sys_select, isoch_list, obs_clust, mass_dist, isoch_ma,
 #        print isoch_done[0]
 #        print isoch_done[1]
 #        print [isoch_ma[m][a][0], isoch_ma[m][a][1], e,d], '\n'
+        m_p, a_p = isoch_ma[m][a][0], isoch_ma[m][a][1]
 #        raw_input()
         
         # Check if this isochrone was already processed.
@@ -195,7 +195,7 @@ def fitness_eval(sys_select, isoch_list, obs_clust, mass_dist, isoch_ma,
             likel_val = isoch_done[1][isoch_done[0].index([isoch_ma[m][a][0], isoch_ma[m][a][1], e,d])]
         else:
             # Call likelihood function with m,a,e,d values.
-            likel_val = i_l(sys_select, isoch_list[m][a], e, d, obs_clust, mass_dist,
+            likel_val = i_l(sys_select, isoch_list[m][a], m_p, a_p, e, d, obs_clust, mass_dist,
                             completeness, f_bin, q_bin, popt_mag, popt_col1)
             # Append data identifying the isochrone and the obtained
             # likelihood value to this *persistent* list.
@@ -237,8 +237,8 @@ def random_population(isoch_ma, isoch_ed, n_ran):
 
 
 
-def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
-              ranges_steps, n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es,
+def gen_algor(N_B, sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
+              ranges_steps, params_ga,
               completeness, f_bin, q_bin, popt_mag, popt_col1):
     '''
     Main function.
@@ -259,6 +259,8 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
     n_es:number of times the Extinction/Immigration operator is allowed to run
     returning the same best solution before exiting the generations loop.
     '''
+    
+    n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es = params_ga
     
     # Store parameters ranges and calculate the minimum number of binary digits
     # needed to encode the solutions.
@@ -555,8 +557,11 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
         
         fig.tight_layout()
         # Generate output file for each data file.
-        plt.savefig('/home/gabriel/Descargas/GA/GA_'+str(i).zfill(3)+'.png', dpi=150)
-        
+#        plt.savefig('/home/gabriel/Descargas/GA/GA_'+str(i).zfill(3)+'.png', dpi=150)
+        plt.savefig('/home/gabriel/Descargas/GA/'+str(N_B)+'_GA.png', dpi=150)
+        # Close to release memory.
+        plt.clf()
+        plt.close()
 
 # lkl    generation[0]               n_gen n_pop  fdif cr_sel p_cross p_mut n_el n_ei n_es
     line = [str(i*n_pop), str('%0.2f' % lkl[0]), str(generation[0]), str(n_gen), str(n_pop),

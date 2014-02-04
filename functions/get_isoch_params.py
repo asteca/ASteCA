@@ -226,7 +226,7 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort, completeness, popt_mag, pop
     '''
     
     # Number of times to run the bootstrap block.
-    N_B = 20
+    N_B = 6
     
     # IMF parameters.
 #    'kroupa_1993', 'total_mass', 1000
@@ -236,9 +236,11 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort, completeness, popt_mag, pop
     f_bin, q_bin = 0.5, 0.7
     
     # Genetic algorithm parameters.
-#    n_pop, n_gen, fdif, p_cross, p_mut, n_ei, n_es = 100, 100, 3./5., 0.85, 0.01, 5, 5
-#    n_pop, n_gen, fdif, p_cross, p_mut, n_ei, n_es = 50, 100, 0.5, 0.8, 0.1, 15, 10
-    n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es = 100, 100, 3./5., 0.65, '1P', 0.01, 1, 15, 5
+#    n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es = 100, 100, 3./5., 0.65, '1P', 0.01, 1, 15, 5
+    params_ga = [[400, 50, 1., 0.85, '1P', 0.01, 1, 10, 5],\
+                 [400, 50, 1., 0.85, '2P', 0.01, 1, 10, 5],\
+                 [400, 50, 0.5, 0.85, '1P', 0.01, 1, 10, 5],\
+                 [400, 50, 0.5, 0.85, '2P', 0.01, 1, 10, 5]]
     
     
     # Store all isochrones in all the metallicity files in isoch_list. We do
@@ -279,8 +281,8 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort, completeness, popt_mag, pop
 #                                           line_start, indexes, obs_clust,\
 #                                           mass_dist)
             # Genetic algorithm.
-            isoch_fit_params = g_a(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed,
-                                   mass_dist, ranges_steps, n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es,\
+            isoch_fit_params = g_a(i, sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed,
+                                   mass_dist, ranges_steps, params_ga[i],\
                                    completeness, f_bin, q_bin, popt_mag, popt_col1)
 #            print isoch_fit_params
         else:
@@ -289,8 +291,8 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort, completeness, popt_mag, pop
 #                                           line_start, indexes, obs_clust,\
 #                                           mass_dist))
             # Genetic algorithm algorithm.
-            params_boot.append(g_a(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed,
-                                   mass_dist, ranges_steps, n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es,\
+            params_boot.append(g_a(i, sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed,
+                                   mass_dist, ranges_steps, params_ga[i],\
                                    completeness, f_bin, q_bin, popt_mag, popt_col1))
 #            print params_boot[i-1]
         
