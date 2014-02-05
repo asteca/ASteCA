@@ -8,6 +8,7 @@ Created on Thu Jan  9 15:08:39 2014
 import os
 from os.path import join
 import numpy as np
+import random
 
 from get_mass_dist import mass_dist as md
 from genetic_algorithm import gen_algor as g_a
@@ -207,12 +208,11 @@ def get_isoch_params(sys_select, iso_select):
 
 
 
-def boostrap_resample(memb_prob_avrg_sort):
+def boostrap_resample(in_list):
     '''
     Resamples the observed cluster to use in the bootstrap process.
     '''
-#    http://www.astroml.org/_modules/astroML/resample.html#bootstrap
-    obs_clust = memb_prob_avrg_sort
+    obs_clust = [random.choice(in_list) for _ in in_list]
     return obs_clust
     
 
@@ -226,10 +226,13 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort, completeness, popt_mag, pop
     '''
     
     # Number of times to run the bootstrap block.
-    N_B = 6
+    N_B = 10
     
     # IMF parameters.
-#    'kroupa_1993', 'total_mass', 1000
+    # 1st param: 'chabrier_2001', 'kroupa_1993'
+    # 2nd param: 'total_number', 'total_mass'
+    # 3rd param: total cluster mass or number of stars in clusters, depending
+    # on the chosen 2nd param.
     imf_use, total_norm, num_stars = 'kroupa_1993', 'total_number', 1000
     
     # Binarity parameters.
@@ -258,16 +261,12 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort, completeness, popt_mag, pop
         
         # Store mass distribution used to produce a synthetic cluster based on
         # a given theoretic isochrone.
-        # 1st param: 'chabrier_2001', 'kroupa_1993'
-        # 2nd param: 'total_number', 'total_mass'
-        # 3rd param: total cluster mass or number of stars in clusters, depending
-        # on the chosen 2nd param.
         mass_dist = md(imf_use, total_norm, num_stars)
         
         # The first pass is done with no resampling to calculate the final
         # values. After that we resample to get the uncertainty in each
         # parameter.
-        if i == 0:
+        if i == 2:
             obs_clust = memb_prob_avrg_sort
         else:
             obs_clust = boostrap_resample(memb_prob_avrg_sort)
@@ -284,7 +283,6 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort, completeness, popt_mag, pop
             isoch_fit_params = g_a(i, sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed,
                                    mass_dist, ranges_steps, params_ga[i],\
                                    completeness, f_bin, q_bin, popt_mag, popt_col1)
-#            print isoch_fit_params
         else:
             # Brute force.
 #            params_boot.append(brute_force(sys_select, isoch_params, iso_path,
@@ -294,7 +292,7 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort, completeness, popt_mag, pop
             params_boot.append(g_a(i, sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed,
                                    mass_dist, ranges_steps, params_ga[i],\
                                    completeness, f_bin, q_bin, popt_mag, popt_col1))
-#            print params_boot[i-1]
+
         
     # Calculate errors for each parameter.
     isoch_fit_errors = np.std(params_boot, 0)

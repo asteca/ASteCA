@@ -11,7 +11,7 @@ import numpy as np
 import random
 import itertools
 
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 
 def exp_func(x, a, b, c):
@@ -78,10 +78,10 @@ def synth_clust(sys_select, isochrone, m_p, a_p, e, d, mass_dist, completeness, 
     a certain mass distribution.
     '''
     
-    f, ((ax1, ax2, ax3, ax4), (ax5, ax6, ax7, ax8)) = plt.subplots(2, 4)
-    for ax in [ax2, ax3, ax4, ax5, ax6, ax7]:
-        ax.set_xlabel('$(C-T_1)$', fontsize=15)
-        ax.set_ylabel('$T_1$', fontsize=15)
+#    f, ((ax1, ax2, ax3, ax4), (ax5, ax6, ax7, ax8)) = plt.subplots(2, 4)
+#    for ax in [ax2, ax3, ax4, ax5, ax6, ax7]:
+#        ax.set_xlabel('$(C-T_1)$', fontsize=15)
+#        ax.set_ylabel('$T_1$', fontsize=15)
     
     
     # Interpolate extra color, magnitude and masses into the isochrone.
@@ -93,33 +93,33 @@ def synth_clust(sys_select, isochrone, m_p, a_p, e, d, mass_dist, completeness, 
     # Store isochrone's interpolated values.
     isoch_inter = np.asarray([col_i, mag_i, mass_i])
     
-    ax1.set_title('Isochrone (interp)')
-    ax1.invert_yaxis()
-    ax1.set_xlabel('$(C-T_1)_o$', fontsize=15)
-    ax1.set_ylabel('$M_{T_1}$', fontsize=15)
-    text1 = '$z = %0.4f$' '\n' % m_p
-    text2 = '$log(age) = %0.2f$' % a_p
-    text=text1+text2
-    plt.text(0.1, 0.1, text, transform=ax1.transAxes,
-             bbox=dict(facecolor='white', alpha=0.5), fontsize=15)
-    plt.text(0.1, 0.9, 'a)', transform=ax1.transAxes,
-             bbox=dict(facecolor='white', alpha=0.5), fontsize=16)
-    ax1.scatter(isoch_inter[0], isoch_inter[1], s=10, c='aqua')
+#    ax1.set_title('Isochrone (interp)')
+#    ax1.invert_yaxis()
+#    ax1.set_xlabel('$(C-T_1)_o$', fontsize=15)
+#    ax1.set_ylabel('$M_{T_1}$', fontsize=15)
+#    text1 = '$z = %0.4f$' '\n' % m_p
+#    text2 = '$log(age) = %0.2f$' % a_p
+#    text=text1+text2
+#    plt.text(0.1, 0.1, text, transform=ax1.transAxes,
+#             bbox=dict(facecolor='white', alpha=0.5), fontsize=15)
+#    plt.text(0.1, 0.9, 'a)', transform=ax1.transAxes,
+#             bbox=dict(facecolor='white', alpha=0.5), fontsize=16)
+#    ax1.scatter(isoch_inter[0], isoch_inter[1], s=10, c='aqua')
 
 
     # Move synth cluster with the values 'e' and 'd'.
     isoch_moved = move_isoch(sys_select, [isoch_inter[0], isoch_inter[1]], e, d) + [isoch_inter[2]]
     
-    ax2.set_title('Shifted isochrone')
-    ax2.invert_yaxis()
-    text1 = '$E_{(B-V)} = %0.2f$' '\n' % e
-    text2 = '$(m-M)_o = %0.2f$' % d
-    text=text1+text2
-    plt.text(0.1, 0.1, text, transform=ax2.transAxes,
-             bbox=dict(facecolor='white', alpha=0.5), fontsize=15)
-    plt.text(0.1, 0.9, 'b)', transform=ax2.transAxes,
-             bbox=dict(facecolor='white', alpha=0.5), fontsize=16)
-    ax2.scatter(isoch_moved[0], isoch_moved[1], s=15, c='azure')           
+#    ax2.set_title('Shifted isochrone')
+#    ax2.invert_yaxis()
+#    text1 = '$E_{(B-V)} = %0.2f$' '\n' % e
+#    text2 = '$(m-M)_o = %0.2f$' % d
+#    text=text1+text2
+#    plt.text(0.1, 0.1, text, transform=ax2.transAxes,
+#             bbox=dict(facecolor='white', alpha=0.5), fontsize=15)
+#    plt.text(0.1, 0.9, 'b)', transform=ax2.transAxes,
+#             bbox=dict(facecolor='white', alpha=0.5), fontsize=16)
+#    ax2.scatter(isoch_moved[0], isoch_moved[1], s=15, c='azure')           
          
          
     # Remove stars from isochrone with magnitude values larger that the maximum
@@ -133,22 +133,22 @@ def synth_clust(sys_select, isochrone, m_p, a_p, e, d, mass_dist, completeness, 
     # Remove elements.
     isoch_cut = np.array([isoch_sort[i][0:max_indx] for i in range(3)])
 
-    ax3.set_title('Max magnitude cut')
-    ax3.invert_yaxis()
-    plt.text(0.1, 0.9, 'c)', transform=ax3.transAxes,
-             bbox=dict(facecolor='white', alpha=0.5), fontsize=16)
-    ax3.scatter(isoch_cut[0], isoch_cut[1], s=15, c='bisque')     
+#    ax3.set_title('Max magnitude cut')
+#    ax3.invert_yaxis()
+#    plt.text(0.1, 0.9, 'c)', transform=ax3.transAxes,
+#             bbox=dict(facecolor='white', alpha=0.5), fontsize=16)
+#    ax3.scatter(isoch_cut[0], isoch_cut[1], s=15, c='bisque')     
          
 
     # Interpolate masses in mass_dist into the isochrone rejecting those
     # masses that fall outside of the isochrone's mass range.
     isoch_m_d = mass_interp(isoch_cut, mass_dist)
 
-    ax4.set_title('IMF masses')
-    ax4.invert_yaxis()
-    plt.text(0.1, 0.9, 'd)', transform=ax4.transAxes,
-             bbox=dict(facecolor='white', alpha=0.5), fontsize=16)
-    ax4.scatter(isoch_m_d[0], isoch_m_d[1], s=15, c='teal')     
+#    ax4.set_title('IMF masses')
+#    ax4.invert_yaxis()
+#    plt.text(0.1, 0.9, 'd)', transform=ax4.transAxes,
+#             bbox=dict(facecolor='white', alpha=0.5), fontsize=16)
+#    ax4.scatter(isoch_m_d[0], isoch_m_d[1], s=15, c='teal')     
     
 
     # Assignment of binarity.
@@ -191,11 +191,11 @@ def synth_clust(sys_select, isochrone, m_p, a_p, e, d, mass_dist, completeness, 
             isoch_m_d[2][i] = mass_bin[indx]
 
 
-    ax5.set_title('Binarity')
-    ax5.invert_yaxis()
-    plt.text(0.1, 0.9, 'e)', transform=ax5.transAxes,
-             bbox=dict(facecolor='white', alpha=0.5), fontsize=16)
-    ax5.scatter(isoch_m_d[0], isoch_m_d[1], s=15, c='steelblue')        
+#    ax5.set_title('Binarity')
+#    ax5.invert_yaxis()
+#    plt.text(0.1, 0.9, 'e)', transform=ax5.transAxes,
+#             bbox=dict(facecolor='white', alpha=0.5), fontsize=16)
+#    ax5.scatter(isoch_m_d[0], isoch_m_d[1], s=15, c='steelblue')        
     
     
     # Completeness limit removal of stars. Remove a number of stars according
@@ -247,11 +247,11 @@ def synth_clust(sys_select, isochrone, m_p, a_p, e, d, mass_dist, completeness, 
         else:
             clust_compl = np.asarray(isoch_m_d)
 
-        ax6.set_title('Completeness')
-        ax6.invert_yaxis()
-        plt.text(0.1, 0.9, 'f)', transform=ax6.transAxes,
-                 bbox=dict(facecolor='white', alpha=0.5), fontsize=16)
-        ax6.scatter(clust_compl[0], clust_compl[1], s=15, c='blue')
+#        ax6.set_title('Completeness')
+#        ax6.invert_yaxis()
+#        plt.text(0.1, 0.9, 'f)', transform=ax6.transAxes,
+#                 bbox=dict(facecolor='white', alpha=0.5), fontsize=16)
+#        ax6.scatter(clust_compl[0], clust_compl[1], s=15, c='blue')
 
         
         # Randomly move stars according to given error distributions.
@@ -261,15 +261,14 @@ def synth_clust(sys_select, isochrone, m_p, a_p, e, d, mass_dist, completeness, 
         col_gauss, mag_gauss = gauss_error(clust_compl[0], 2*sigma_col, clust_compl[1], 2*sigma_mag)
         clust_error = [col_gauss, mag_gauss]
         
-        ax7.set_title('Add errors')
-        ax7.invert_yaxis()
-        plt.text(0.1, 0.9, 'g)', transform=ax7.transAxes,
-                 bbox=dict(facecolor='white', alpha=0.5), fontsize=16)
-        ax7.scatter(clust_error[0], clust_error[1], s=15, c='black')
+#        ax7.set_title('Add errors')
+#        ax7.invert_yaxis()
+#        plt.text(0.1, 0.9, 'g)', transform=ax7.transAxes,
+#                 bbox=dict(facecolor='white', alpha=0.5), fontsize=16)
+#        ax7.scatter(clust_error[0], clust_error[1], s=15, c='black')
 
-        plt.show()
-#        plt.savefig('/home/gabriel/Descargas/GA/synth_cluster.png', dpi=150)
-        raw_input()
+#        plt.show()
+#        raw_input()
        
         # Append masses.
         synth_clust = clust_error + [clust_compl[2]]
