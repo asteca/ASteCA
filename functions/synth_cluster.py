@@ -6,11 +6,13 @@ Created on Tue Jan 28 15:22:10 2014
 """
 
 from move_isochrone import move_isoch
+from get_mass_dist import mass_dist as m_d
 
 import numpy as np
 import random
 import itertools
 
+#import time
 #import matplotlib.pyplot as plt
 
 
@@ -69,7 +71,7 @@ def mass_interp(isochrone, mass_dist):
     
 
 
-def synth_clust(sys_select, isochrone, e, d, mass_dist, completeness, f_bin,
+def synth_clust(sys_select, isochrone, e, d, mass_params, completeness, f_bin,
                 q_bin, popt_mag, popt_col1):
     '''
     Main function.
@@ -83,6 +85,9 @@ def synth_clust(sys_select, isochrone, e, d, mass_dist, completeness, f_bin,
 #        ax.set_xlabel('$(C-T_1)$', fontsize=15)
 #        ax.set_ylabel('$T_1$', fontsize=15)
     
+    # Store mass distribution used to produce a synthetic cluster based on
+    # a given theoretic isochrone.
+    mass_dist = m_d(mass_params)
     
     # Interpolate extra color, magnitude and masses into the isochrone.
     N = 1000
@@ -97,11 +102,11 @@ def synth_clust(sys_select, isochrone, e, d, mass_dist, completeness, f_bin,
 #    ax1.invert_yaxis()
 #    ax1.set_xlabel('$(C-T_1)_o$', fontsize=15)
 #    ax1.set_ylabel('$M_{T_1}$', fontsize=15)
-#    text1 = '$z = %0.4f$' '\n' % m_p
-#    text2 = '$log(age) = %0.2f$' % a_p
-#    text=text1+text2
-#    plt.text(0.1, 0.1, text, transform=ax1.transAxes,
-#             bbox=dict(facecolor='white', alpha=0.5), fontsize=15)
+##    text1 = '$z = %0.4f$' '\n' % m_p
+##    text2 = '$log(age) = %0.2f$' % a_p
+##    text=text1+text2
+##    plt.text(0.1, 0.1, text, transform=ax1.transAxes,
+##             bbox=dict(facecolor='white', alpha=0.5), fontsize=15)
 #    plt.text(0.1, 0.9, 'a)', transform=ax1.transAxes,
 #             bbox=dict(facecolor='white', alpha=0.5), fontsize=16)
 #    ax1.scatter(isoch_inter[0], isoch_inter[1], s=10, c='aqua')
@@ -190,7 +195,6 @@ def synth_clust(sys_select, isochrone, e, d, mass_dist, completeness, f_bin,
             isoch_m_d[1][i] = mag_bin[indx]
             isoch_m_d[2][i] = mass_bin[indx]
 
-
 #    ax5.set_title('Binarity')
 #    ax5.invert_yaxis()
 #    plt.text(0.1, 0.9, 'e)', transform=ax5.transAxes,
@@ -205,7 +209,7 @@ def synth_clust(sys_select, isochrone, e, d, mass_dist, completeness, f_bin,
     if not isoch_m_d.any():
         # If the isochrone is empty after removing stars outside of the observed
         # ranges, then pass an empty array.
-        clust_compl = np.asarray([])
+        synth_clust = np.asarray([])
     else:
         # If stars exist in the isochrone beyond the completeness magnitude
         # level, then apply the removal of stars. Otherwise, skip it.
@@ -266,11 +270,11 @@ def synth_clust(sys_select, isochrone, e, d, mass_dist, completeness, f_bin,
 #        plt.text(0.1, 0.9, 'g)', transform=ax7.transAxes,
 #                 bbox=dict(facecolor='white', alpha=0.5), fontsize=16)
 #        ax7.scatter(clust_error[0], clust_error[1], s=15, c='black')
-
+#
 #        plt.show()
 #        raw_input()
        
         # Append masses.
-        synth_clust = clust_error + [clust_compl[2]]
+        synth_clust = np.array(clust_error + [clust_compl[2]])
     
-    return np.array(synth_clust)
+    return synth_clust

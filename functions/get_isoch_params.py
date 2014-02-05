@@ -10,8 +10,8 @@ from os.path import join
 import numpy as np
 import random
 
-from get_mass_dist import mass_dist as md
 from genetic_algorithm import gen_algor as g_a
+from get_IMF_CDF import IMF_CDF as i_c
 
 
 
@@ -230,7 +230,13 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort, completeness, popt_mag, pop
     # 2nd param: 'total_number', 'total_mass'
     # 3rd param: total cluster mass or number of stars in clusters, depending
     # on the chosen 2nd param.
-    imf_use, total_norm, num_stars = 'chabrier_2001', 'total_number', 1000
+    
+    # Obtain the selected IMF's CDF. We run it once because the array only
+    # depends on the IMF selected.
+    imf_cdf = i_c('chabrier_2001')
+    # Store parameters to obtain the mass distribution for each synthetic
+    # cluster.
+    mass_params = [imf_cdf, 'total_number', 1000]
     
     # Binarity parameters.
     f_bin, q_bin = 0.5, 0.7
@@ -256,10 +262,6 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort, completeness, popt_mag, pop
     # Begin bootstrap block.
     for i in range(N_B):
         
-        # Store mass distribution used to produce a synthetic cluster based on
-        # a given theoretic isochrone.
-        mass_dist = md(imf_use, total_norm, num_stars)
-        
         # The first pass is done with no resampling to calculate the final
         # values. After that we resample to get the uncertainty in each
         # parameter.
@@ -278,7 +280,7 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort, completeness, popt_mag, pop
 #                                           mass_dist)
             # Genetic algorithm.
             isoch_fit_params = g_a(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed,
-                                   mass_dist, ranges_steps, params_ga[i],\
+                                   mass_params, ranges_steps, params_ga[i],\
                                    completeness, f_bin, q_bin, popt_mag, popt_col1)
         else:
             # Brute force.
@@ -287,7 +289,7 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort, completeness, popt_mag, pop
 #                                           mass_dist))
             # Genetic algorithm algorithm.
             params_boot.append(g_a(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed,
-                                   mass_dist, ranges_steps, params_ga[i],\
+                                   mass_params, ranges_steps, params_ga[i],\
                                    completeness, f_bin, q_bin, popt_mag, popt_col1))
 
         

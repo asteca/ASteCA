@@ -9,64 +9,25 @@ Created on Wed Jan 15 15:26:39 2014
 # http://python4mpia.github.io/fitting_data/MC-sampling-from-Salpeter.html
 
 import numpy as np
-from scipy.integrate import quad
+
+#import time
 
 
-def imfs(imf_name, m_star, norm_const):
-    '''
-    Define any number of IMFs.
-    '''
-    if imf_name == 'kroupa_1993':
-        # Kroupa, Tout & Gilmore. (1993) piecewise IMF.
-        power = [-1.3, -2.2, -2.7]
-        if 0.08<m_star<=0.5:
-            i = 0
-        elif 0.5<m_star<=1.:
-            i = 1
-        elif 1.<m_star:
-            i = 2
-        imf_val = norm_const*m_star**power[i]
-        
-    elif imf_name == 'chabrier_2001':
-        # Chabrier (2001) exponential form of the IMF.
-        imf_val = norm_const*3.*m_star**(-3.3)*np.exp(-(716.4/m_star)**0.25)
-
-    return imf_val
-    
-
-def integral_IMF_M(m_star, imf_sel, norm_const):
-    '''
-    Return the properly normalized function to perform the integration of the
-    selected IMF. Returns mass values.
-    '''
-    imf_val = m_star*imfs(imf_sel, m_star, norm_const)
-    return imf_val
-    
-    
-def integral_IMF_N(m_star, imf_sel, norm_const):
-    '''
-    Return the properly normalized function to perform the integration of the
-    selected IMF. Returns number of stars.
-    '''
-    imf_val = imfs(imf_sel, m_star, norm_const)
-    return imf_val
-    
-    
-def get_mass_cdf(cdf_arr):
+def get_mass_cdf(imf_cdf):
     '''
     Draw a random mass value from the CDF.
     '''
     # Draw random [0,1) value.
     u = np.random.random()
     # Find closest value in CDF array.
-    idx = np.argmin(np.abs(u - np.asarray(cdf_arr[1])))
+    idx = np.argmin(np.abs(u - np.asarray(imf_cdf[1])))
     # Identify mass value corresponding to this CDF value.
-    m_upper = cdf_arr[0][idx]
+    m_upper = imf_cdf[0][idx]
 
     return m_upper
 
 
-def mass_dist(imf_sel, limit_sel, MN_total):
+def mass_dist(mass_params):
     '''
     Main function.
     
@@ -74,37 +35,22 @@ def mass_dist(imf_sel, limit_sel, MN_total):
     a total number of stars or total cluster mass.
     '''
     
-    # Set IMFs limits.
-    if imf_sel == 'kroupa_1993':
-        m_low, m_high = 0.081, 100.
-    elif imf_sel == 'chabrier_2001':
-        m_low, m_high = 0.001, 100.
+    imf_cdf, limit_sel, MN_total = mass_params
     
-    # Normalize to a total unit mass.
-    M = 1.
-    norm_const = 1./quad(integral_IMF_M, m_low, m_high, args=(imf_sel, 1./M))[0]
-    
-    # Generate CDF for the given normalized IMF.
-    IMF_vals = []
-    for m_upper in np.arange(m_low, m_high, 0.01):
-        IMF_vals.append(integral_IMF_M(m_upper, imf_sel, norm_const))
-    # First sublist contains the masses, second the CDF values.
-    cdf_arr = [np.arange(m_low, m_high, 0.01), np.cumsum(IMF_vals)/m_high]
-   
     # Prepare array for output masses.
     dist_mass = []
     # Fill in array according to selected limits.
     if limit_sel == 'total_number':
         while (len(dist_mass) < MN_total):
             # Draw random mass from the IMF's CDF.
-            m_upper = get_mass_cdf(cdf_arr)
+            m_upper = get_mass_cdf(imf_cdf)
             # Store mass in array.
             dist_mass.append(round(m_upper,3))
         
     elif limit_sel == 'total_mass':
         while (sum(dist_mass) < MN_total):
             # Draw random mass from the IMF's CDF.
-            m_upper = get_mass_cdf(cdf_arr)
+            m_upper = get_mass_cdf(imf_cdf)
             # Store mass in array.
             dist_mass.append(round(m_upper,3))
     

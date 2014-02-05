@@ -10,7 +10,7 @@ import random
 import numpy as np
 import itertools
     
-#import time
+import time
 #import matplotlib.pyplot as plt
 #import matplotlib.gridspec as gridspec
 #from scipy.ndimage.filters import gaussian_filter
@@ -150,7 +150,7 @@ def selection(generation, breed_prob):
 
 
 
-def fitness_eval(sys_select, isoch_list, obs_clust, mass_dist, isoch_ma,
+def fitness_eval(sys_select, isoch_list, obs_clust, mass_params, isoch_ma,
                  ma_lst, e_lst, d_lst, isoch_done, completeness, f_bin,
                  q_bin, popt_mag, popt_col1):
     '''
@@ -171,7 +171,7 @@ def fitness_eval(sys_select, isoch_list, obs_clust, mass_dist, isoch_ma,
             likel_val = isoch_done[1][isoch_done[0].index([isoch_ma[m][a][0], isoch_ma[m][a][1], e,d])]
         else:
             # Call likelihood function with m,a,e,d values.
-            likel_val = i_l(sys_select, isoch_list[m][a], e, d, obs_clust, mass_dist,
+            likel_val = i_l(sys_select, isoch_list[m][a], e, d, obs_clust, mass_params,
                             completeness, f_bin, q_bin, popt_mag, popt_col1)
             # Append data identifying the isochrone and the obtained
             # likelihood value to this *persistent* list.
@@ -212,7 +212,7 @@ def random_population(isoch_ma, isoch_ed, n_ran):
 
 
 
-def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
+def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_params,
               ranges_steps, params_ga,
               completeness, f_bin, q_bin, popt_mag, popt_col1):
     '''
@@ -262,7 +262,7 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
     # obtained.
     isoch_done = [[], []]
     # Evaluate initial random solutions in the objective function.
-    generation, isoch_done = fitness_eval(sys_select, isoch_list, obs_clust, mass_dist,
+    generation, isoch_done = fitness_eval(sys_select, isoch_list, obs_clust, mass_params,
                               isoch_ma, ma_lst, e_lst, d_lst, isoch_done, completeness, f_bin, q_bin, popt_mag, popt_col1)
     # Store best solution for passing along in the 'Elitism' block.
     best_sol = generation[:n_el]
@@ -277,12 +277,13 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
     # Initiate empty list. Stores the best solution found after each
     # application of the Extinction/Immigration operator.
     best_sol_ei = []
+    flag_25, flag_50, flag_75 = False, False, False
     # Begin processing the populations up to n_gen generations.
     for i in range(n_gen):
         
 #        fig = plt.figure(figsize=(12, 6))
 #        gs = gridspec.GridSpec(2, 4)
-#        tik = time.time()
+        tik = time.time()
 
         #### Selection/Reproduction ###
         
@@ -321,9 +322,9 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
         
         # Evaluate each new solution in the objective function and sort
         # according to the best solutions found.
-        generation, isoch_done = fitness_eval(sys_select, isoch_list, obs_clust, mass_dist,
+        generation, isoch_done = fitness_eval(sys_select, isoch_list, obs_clust, mass_params,
                                   isoch_ma, ma_lst, e_lst, d_lst, isoch_done, completeness, f_bin, q_bin, popt_mag, popt_col1)
-       
+      
         
         ### Extinction/Immigration ###
         # If the best solution has remained unchanged for n_ei
@@ -377,7 +378,21 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
             # Reset counter.
             best_sol_count = 0
             
-           
+        print i, generation[0], time.time()-tik, '\n'            
+            
+    if i+1 >= n_gen/4 and flag_25 == False:
+        print '  25% done'
+        flag_25 = True
+    elif i+1 >= n_gen/2 and flag_50 == False:
+        print '  50% done'
+        flag_50 = True
+    elif i+1 >= (n_gen/2 + n_gen/4) and flag_75 == False:
+        print '  75% done'
+        flag_75 = True
+    elif i+1 == n_gen:
+        print '  100% done'
+        
+        
 #        lkl_old[0].append(lkl[0])
 #        lkl_old[1].append(np.mean(lkl))
 #        
@@ -389,8 +404,6 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_dist,
 #                raw_input()
 #        
 #                                  
-#        print i, lkl[0], generation[0], time.time()-tik, '\n'
-#
 #        ax0 = plt.subplot(gs[0:1, 0:1])
 #        plt.xlim(-5, n_gen+int(0.05*n_gen))
 #        plt.ylim(0, 4000)
