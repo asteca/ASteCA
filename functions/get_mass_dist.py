@@ -11,8 +11,6 @@ Created on Wed Jan 15 15:26:39 2014
 import numpy as np
 from scipy.integrate import quad
 
-import time
-
 
 def imfs(imf_name, m_star, norm_const):
     '''
