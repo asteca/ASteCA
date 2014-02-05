@@ -69,7 +69,7 @@ def mass_interp(isochrone, mass_dist):
     
 
 
-def synth_clust(sys_select, isochrone, m_p, a_p, e, d, mass_dist, completeness, f_bin,
+def synth_clust(sys_select, isochrone, e, d, mass_dist, completeness, f_bin,
                 q_bin, popt_mag, popt_col1):
     '''
     Main function.

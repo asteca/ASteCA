@@ -225,27 +225,24 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort, completeness, popt_mag, pop
     E(B-V), distance (distance modulus), age and metallicity.
     '''
     
-    # Number of times to run the bootstrap block.
-    N_B = 10
-    
     # IMF parameters.
     # 1st param: 'chabrier_2001', 'kroupa_1993'
     # 2nd param: 'total_number', 'total_mass'
     # 3rd param: total cluster mass or number of stars in clusters, depending
     # on the chosen 2nd param.
-    imf_use, total_norm, num_stars = 'kroupa_1993', 'total_number', 1000
+    imf_use, total_norm, num_stars = 'chabrier_2001', 'total_number', 1000
     
     # Binarity parameters.
     f_bin, q_bin = 0.5, 0.7
     
     # Genetic algorithm parameters.
-#    n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es = 100, 100, 3./5., 0.65, '1P', 0.01, 1, 15, 5
-    params_ga = [[400, 50, 1., 0.85, '1P', 0.01, 1, 10, 5],\
-                 [400, 50, 1., 0.85, '2P', 0.01, 1, 10, 5],\
-                 [400, 50, 0.5, 0.85, '1P', 0.01, 1, 10, 5],\
-                 [400, 50, 0.5, 0.85, '2P', 0.01, 1, 10, 5]]
+    # n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es
+    params_ga = [[100, 100, 1., 0.85, '2P', 0.01, 1, 10, 7]]
     
-    
+
+    # Number of times to run the bootstrap block.
+    N_B = 10   
+   
     # Store all isochrones in all the metallicity files in isoch_list. We do
     # this now so the files will only have to be accessed once.
     # Store metallicity values and isochrones ages between the allowed
@@ -266,7 +263,7 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort, completeness, popt_mag, pop
         # The first pass is done with no resampling to calculate the final
         # values. After that we resample to get the uncertainty in each
         # parameter.
-        if i == 2:
+        if i == 0:
             obs_clust = memb_prob_avrg_sort
         else:
             obs_clust = boostrap_resample(memb_prob_avrg_sort)
@@ -280,7 +277,7 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort, completeness, popt_mag, pop
 #                                           line_start, indexes, obs_clust,\
 #                                           mass_dist)
             # Genetic algorithm.
-            isoch_fit_params = g_a(i, sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed,
+            isoch_fit_params = g_a(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed,
                                    mass_dist, ranges_steps, params_ga[i],\
                                    completeness, f_bin, q_bin, popt_mag, popt_col1)
         else:
@@ -289,7 +286,7 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort, completeness, popt_mag, pop
 #                                           line_start, indexes, obs_clust,\
 #                                           mass_dist))
             # Genetic algorithm algorithm.
-            params_boot.append(g_a(i, sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed,
+            params_boot.append(g_a(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed,
                                    mass_dist, ranges_steps, params_ga[i],\
                                    completeness, f_bin, q_bin, popt_mag, popt_col1))
 

@@ -11,6 +11,8 @@ Created on Wed Jan 15 15:26:39 2014
 import numpy as np
 from scipy.integrate import quad
 
+import time
+
 
 def imfs(imf_name, m_star, norm_const):
     '''
@@ -85,12 +87,12 @@ def mass_dist(imf_sel, limit_sel, MN_total):
     norm_const = 1./quad(integral_IMF_M, m_low, m_high, args=(imf_sel, 1./M))[0]
     
     # Generate CDF for the given normalized IMF.
-    cdf_arr = [[], []]
+    IMF_vals = []
     for m_upper in np.arange(m_low, m_high, 0.01):
-        cdf_arr[0].append(m_upper)
-        cdf_arr[1].append(quad(integral_IMF_M, m_low, m_upper,\
-        args=(imf_sel, norm_const))[0])
-    
+        IMF_vals.append(integral_IMF_M(m_upper, imf_sel, norm_const))
+    # First sublist contains the masses, second the CDF values.
+    cdf_arr = [np.arange(m_low, m_high, 0.01), np.cumsum(IMF_vals)/m_high]
+   
     # Prepare array for output masses.
     dist_mass = []
     # Fill in array according to selected limits.
@@ -107,5 +109,5 @@ def mass_dist(imf_sel, limit_sel, MN_total):
             m_upper = get_mass_cdf(cdf_arr)
             # Store mass in array.
             dist_mass.append(round(m_upper,3))
-
+    
     return dist_mass
