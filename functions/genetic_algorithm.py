@@ -162,6 +162,8 @@ def fitness_eval(sys_select, isoch_list, obs_clust, mass_params, isoch_ma,
         # Metallicity and age indexes, dist modulus value.
         m, a = ma_lst[indx]
         d = d_lst[indx]
+        # Pass metallicity and age values for plotting purposes.
+        params = [isoch_ma[m][a][0], isoch_ma[m][a][1], e, d]
         
         # Check if this isochrone was already processed.
         if [isoch_ma[m][a][0], isoch_ma[m][a][1], e, d] in isoch_done[0]:
@@ -169,7 +171,7 @@ def fitness_eval(sys_select, isoch_list, obs_clust, mass_params, isoch_ma,
             likel_val = isoch_done[1][isoch_done[0].index([isoch_ma[m][a][0], isoch_ma[m][a][1], e,d])]
         else:
             # Call likelihood function with m,a,e,d values.
-            likel_val = i_l(sys_select, isoch_list[m][a], e, d, obs_clust, mass_params,
+            likel_val = i_l(sys_select, isoch_list[m][a], params, obs_clust, mass_params,
                             completeness, f_bin, q_bin, popt_mag, popt_col1)
             # Append data identifying the isochrone and the obtained
             # likelihood value to this *persistent* list.

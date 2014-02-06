@@ -71,7 +71,7 @@ def mass_interp(isochrone, mass_dist):
     
 
 
-def synth_clust(sys_select, isochrone, e, d, mass_params, completeness, f_bin,
+def synth_clust(sys_select, isochrone, params, mass_params, completeness, f_bin,
                 q_bin, popt_mag, popt_col1):
     '''
     Main function.
@@ -95,6 +95,7 @@ def synth_clust(sys_select, isochrone, e, d, mass_params, completeness, f_bin,
     
 
     # Move synth cluster with the values 'e' and 'd'.
+    e, d, = params[2], params[3]
     isoch_moved = move_isoch(sys_select, [isoch_inter[0], isoch_inter[1]], e, d) + [isoch_inter[2]]
     
          
@@ -113,6 +114,9 @@ def synth_clust(sys_select, isochrone, e, d, mass_params, completeness, f_bin,
     # Interpolate masses in mass_dist into the isochrone rejecting those
     # masses that fall outside of the isochrone's mass range.
     isoch_m_d = mass_interp(isoch_cut, mass_dist)
+    # For plotting purposes: store a copy of this list before adding binaries.
+#    from copy import deepcopy
+#    isoch_m_d0 = deepcopy(isoch_m_d)
     
 
     # Assignment of binarity.
@@ -154,27 +158,23 @@ def synth_clust(sys_select, isochrone, e, d, mass_params, completeness, f_bin,
             isoch_m_d[1][i] = mag_bin[indx]
             isoch_m_d[2][i] = mass_bin[indx]
             
-    # Store list with new name to differentiate from previous one with no
-    # binaries.
-    isoch_m_d_b = isoch_m_d
-
     
     # Completeness limit removal of stars. Remove a number of stars according
     # to the percentages of star loss find in get_completeness for the
     # real observation.
     # Check for an empty array.
-    if not isoch_m_d_b.any():
+    if not isoch_m_d.any():
         # If the isochrone is empty after removing stars outside of the observed
         # ranges, then pass an empty array.
         synth_clust = np.asarray([])
     else:
         # If stars exist in the isochrone beyond the completeness magnitude
         # level, then apply the removal of stars. Otherwise, skip it.
-        if max(isoch_m_d_b[1]) > completeness[1][completeness[2]]:
+        if max(isoch_m_d[1]) > completeness[1][completeness[2]]:
            
             # Get histogram. completeness[2] = bin_edges of the observed region
             # histogram.
-            synth_mag_hist, bin_edges = np.histogram(isoch_m_d_b[1], completeness[1])
+            synth_mag_hist, bin_edges = np.histogram(isoch_m_d[1], completeness[1])
             pi = completeness[3]
             n1, p1 = synth_mag_hist[completeness[2]], pi[0]
             di = np.around((synth_mag_hist[completeness[2]:]-(n1/p1)*np.asarray(pi)), 0)
@@ -182,7 +182,7 @@ def synth_clust(sys_select, isochrone, e, d, mass_params, completeness, f_bin,
             # Store indexes of *all* elements in isoch_m_d whose magnitude value
             # falls between the ranges given.
             rang_indx = [[] for _ in range(len(completeness[1][completeness[2]:])-1)]
-            for indx,elem in enumerate(isoch_m_d_b[1]):
+            for indx,elem in enumerate(isoch_m_d[1]):
                 for i in range(len(completeness[1][completeness[2]:])-1):
                     if completeness[1][completeness[2]+i] < elem <= completeness[1][completeness[2]+(i+1)]:
                         rang_indx[i].append(indx)
@@ -204,9 +204,9 @@ def synth_clust(sys_select, isochrone, e, d, mass_params, completeness, f_bin,
             # the elements in the lists after removing them.
             d_i = sorted(list(itertools.chain(*rem_indx)), reverse=True)
             # Remove those selected indexes from the three sub-lists.
-            clust_compl = np.delete(np.asarray(isoch_m_d_b), d_i, axis=1)
+            clust_compl = np.delete(np.asarray(isoch_m_d), d_i, axis=1)
         else:
-            clust_compl = np.asarray(isoch_m_d_b)
+            clust_compl = np.asarray(isoch_m_d)
 
 
         # Randomly move stars according to given error distributions.
@@ -221,7 +221,7 @@ def synth_clust(sys_select, isochrone, e, d, mass_params, completeness, f_bin,
         synth_clust = np.array(clust_error + [clust_compl[2]])
         
         # Plot diagrams.
-#        s_c_p(isoch_inter, e, d, isoch_moved, isoch_cut, isoch_m_d,
-#              isoch_m_d_b, clust_compl, clust_error)
+#        s_c_p(mass_dist, isoch_inter, params, isoch_moved, isoch_cut, isoch_m_d0,
+#              isoch_m_d, clust_compl, clust_error)
     
     return synth_clust

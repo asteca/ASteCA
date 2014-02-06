@@ -434,7 +434,7 @@ all stars with photom errors < 0.3)? (y/n) ')
     # Apply algorithm if at least one equal-sized field region was found
     # around the cluster.
     if not(flag_area_stronger):
-        print 'Applying KDE decontamination algorithm.'
+        print 'Applying decontamination algorithm.'
         runs_fields_probs, kde_cl, kde_f = fdk(cluster_region, field_region,
                                              col1_data, mag_data,\
                                              center_cl, clust_rad)

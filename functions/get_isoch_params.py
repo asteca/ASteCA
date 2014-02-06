@@ -11,7 +11,7 @@ import numpy as np
 import random
 
 from genetic_algorithm import gen_algor as g_a
-from get_IMF_CDF import IMF_CDF as i_c
+from get_IMF_PDF import IMF_PDF as i_p
 
 
 
@@ -226,24 +226,21 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort, completeness, popt_mag, pop
     '''
     
     # IMF parameters.
-    # 1st param: 'chabrier_2001', 'kroupa_1993'
-    # 2nd param: 'total_number', 'total_mass'
-    # 3rd param: total cluster mass or number of stars in clusters, depending
-    # on the chosen 2nd param.
-    
+    # 1st param: 'chabrier_2001', 'kroupa_1993', kroupa_2002'
+    # 2nd param: total cluster mass.
     # Obtain the selected IMF's CDF. We run it once because the array only
     # depends on the IMF selected.
-    imf_cdf = i_c('chabrier_2001')
+    imf_cdf = i_p('kroupa_2002')
     # Store parameters to obtain the mass distribution for each synthetic
     # cluster.
-    mass_params = [imf_cdf, 'total_number', 1000]
+    mass_params = [imf_cdf, 5000.]
     
     # Binarity parameters.
     f_bin, q_bin = 0.5, 0.7
     
     # Genetic algorithm parameters.
     # n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es
-    params_ga = [[100, 100, 1., 0.85, '2P', 0.01, 1, 10, 7]]
+    params_ga = [[250, 100, 1., 0.85, '2P', 0.01, 1, 10, 5]]
     
 
     # Number of times to run the bootstrap block.
