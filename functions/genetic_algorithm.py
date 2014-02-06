@@ -362,7 +362,7 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_params
                 # Reset best solution counter.
                 best_sol_count = 0
                 
-                # Save index where the operator was used, for plotting purposes.
+                # For plotting purposes. Save index where the operator was used.
                 ext_imm_indx.append([i])
 
         else:
@@ -383,10 +383,12 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_params
         elif i+1 == n_gen:
             print '  100% done'
         
+        # For plotting purposes.
         lkl_old[0].append(lkl[0])
         lkl_old[1].append(np.mean(lkl))
         # Call function to make plots.
-        ga_p(i, mm_m, mm_a, mm_e, mm_d, params_ga, lkl, lkl_old, ext_imm_indx, isoch_done, generation)        
+        ga_p(i, mm_m, mm_a, mm_e, mm_d, params_ga, lkl, lkl_old, ext_imm_indx,
+             isoch_done, generation)        
 
 #    # Store data in file.
 #    line = [str(i*n_pop), str('%0.2f' % lkl[0]), str(generation[0]), str(n_gen), str(n_pop),
