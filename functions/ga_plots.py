@@ -155,4 +155,3 @@ def GA_plot(i, mm_m, mm_a, mm_e, mm_d, params_ga, lkl, lkl_old, ext_imm_indx, is
     plt.clf()
     plt.close()
     
-    print i, lkl[0], generation[0]

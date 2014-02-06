@@ -221,7 +221,7 @@ def synth_clust(sys_select, isochrone, e, d, mass_params, completeness, f_bin,
         synth_clust = np.array(clust_error + [clust_compl[2]])
         
         # Plot diagrams.
-        s_c_p(isoch_inter, e, d, isoch_moved, isoch_cut, isoch_m_d,
-              isoch_m_d_b, clust_compl, clust_error)
+#        s_c_p(isoch_inter, e, d, isoch_moved, isoch_cut, isoch_m_d,
+#              isoch_m_d_b, clust_compl, clust_error)
     
     return synth_clust
