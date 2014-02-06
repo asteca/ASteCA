@@ -240,11 +240,11 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort, completeness, popt_mag, pop
     
     # Genetic algorithm parameters.
     # n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es
-    params_ga = [[250, 100, 1., 0.85, '2P', 0.01, 1, 10, 5]]
+    params_ga = [250, 100, 1., 0.85, '2P', 0.01, 1, 10, 5]
     
 
     # Number of times to run the bootstrap block.
-    N_B = 10   
+    N_B = 5   
    
     # Store all isochrones in all the metallicity files in isoch_list. We do
     # this now so the files will only have to be accessed once.
@@ -277,7 +277,7 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort, completeness, popt_mag, pop
 #                                           mass_dist)
             # Genetic algorithm.
             isoch_fit_params = g_a(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed,
-                                   mass_params, ranges_steps, params_ga[i],\
+                                   mass_params, ranges_steps, params_ga,\
                                    completeness, f_bin, q_bin, popt_mag, popt_col1)
         else:
             # Brute force.
@@ -286,12 +286,12 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort, completeness, popt_mag, pop
 #                                           mass_dist))
             # Genetic algorithm algorithm.
             params_boot.append(g_a(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed,
-                                   mass_params, ranges_steps, params_ga[i],\
+                                   mass_params, ranges_steps, params_ga,\
                                    completeness, f_bin, q_bin, popt_mag, popt_col1))
 
         
     # Calculate errors for each parameter.
     isoch_fit_errors = np.std(params_boot, 0)
-    print isoch_fit_errors
+    print isoch_fit_params, isoch_fit_errors
     
     return isoch_fit_params, isoch_fit_errors
