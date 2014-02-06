@@ -9,7 +9,6 @@ Created on Wed Jan 15 15:26:39 2014
 # http://python4mpia.github.io/fitting_data/MC-sampling-from-Salpeter.html
 
 import numpy as np
-
 #import time
 
 
@@ -38,6 +37,7 @@ def mass_dist(mass_params):
     imf_cdf, limit_sel, MN_total = mass_params
     
     # Prepare array for output masses.
+#    tik=time.time()
     dist_mass = []
     # Fill in array according to selected limits.
     if limit_sel == 'total_number':
@@ -53,5 +53,8 @@ def mass_dist(mass_params):
             m_upper = get_mass_cdf(imf_cdf)
             # Store mass in array.
             dist_mass.append(round(m_upper,3))
+            
+#    print '0', time.time()-tik
+#    raw_input()    
     
     return dist_mass
