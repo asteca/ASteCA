@@ -826,7 +826,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                          xerr=func(mag_y, *popt_col1), fmt='k.', lw=0.8, ms=0.,\
                          zorder=4)
             # Plot colorbar.
-            cbaxes = fig.add_axes([0.67, 0.31, 0.04, 0.005]) 
+            cbaxes = fig.add_axes([0.678, 0.31, 0.04, 0.005])
             cbar = plt.colorbar(cax=cbaxes, ticks=[0,1], orientation='horizontal')
             cbar.ax.tick_params(labelsize=9)
 
