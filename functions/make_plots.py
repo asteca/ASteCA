@@ -739,7 +739,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     # Integrated magnitude distribution.
     ax17 = plt.subplot(gs1[8:10, 0:2])
     plt.xlim(min(stars_in_all_mag[0])-0.2, max(stars_in_all_mag[0])+0.2)
-    plt.ylim(max(stars_in_all_mag[1])+0.2, min(stars_in_all_mag[1])-0.2)
+    plt.ylim(max(max(stars_in_all_mag[1]), max(stars_in_mag[1]))+0.2,
+             min(stars_in_all_mag[1])-0.2)
     plt.xlabel(r'$T_1$', fontsize=18)
     plt.ylabel(r'$T_1^*$', fontsize=18)
     ax17.minorticks_on()
