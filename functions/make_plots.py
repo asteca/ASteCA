@@ -736,10 +736,57 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                     cmap=cm)
             
 
+    # Integrated magnitude distribution.
+    ax17 = plt.subplot(gs1[8:10, 0:2])
+    plt.xlim(min(stars_in_all_mag[0])-0.2, max(stars_in_all_mag[0])+0.2)
+    plt.ylim(max(stars_in_all_mag[1])+0.2, min(stars_in_all_mag[1])-0.2)
+    plt.xlabel(r'$T_1$', fontsize=18)
+    plt.ylabel(r'$T_1^*$', fontsize=18)
+    ax17.minorticks_on()
+    ax17.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
+    # Text.
+    text1 = r'$stars_{acpt}\,(T_{1,max}^*\,=%.2f$)' '\n' % (min(stars_in_mag[1]))
+    text2 =r'$stars_{all}\;(T_{1,max}^*\,=%.2f)$' % (min(stars_in_all_mag[1]))
+    # Only accepted stars.
+    plt.plot(stars_in_mag[0], stars_in_mag[1], 'r-', lw=1.5, label=text1)
+    # All stars, including those rejected due to its large errors.
+    plt.plot(stars_in_all_mag[0], stars_in_all_mag[1], 'b--', lw=1., label=text2)
+    # get handles
+    handles, labels = ax17.get_legend_handles_labels()
+    # use them in the legend
+    leg = ax17.legend(handles, labels, loc='lower right', numpoints=1,
+                      fontsize=12)
+    leg.get_frame().set_alpha(0.5)
+    
+    
+
+    # Norm fit for KDE probability values.
+    # Check if decont algorithm was applied.
+    if not(flag_area_stronger):
+        ax18 = plt.subplot(gs1[8:10, 2:4])
+        plt.xlim(0., 1.)
+        plt.xlabel('cluster membership prob', fontsize=12)
+        ax18.minorticks_on()
+        ax18.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
+        prob_data = [star[7] for star in memb_prob_avrg_sort]
+        # Best Gaussian fit of data.
+        (mu, sigma) = norm.fit(prob_data)
+        # Text.
+        text = r'$\mu=%.3f,\ \sigma=%.3f$' %(mu, sigma)
+        plt.text(0.05, 0.92, text, transform = ax18.transAxes, 
+             bbox=dict(facecolor='white', alpha=0.85), fontsize=12)
+        # Histogram of the data.
+        n, bins, patches = plt.hist(prob_data, 60, normed=1, facecolor='green',
+                                    alpha=0.75)
+        # Best fit line.
+        y = mlab.normpdf( bins, mu, sigma)
+        plt.plot(bins, y, 'r--', linewidth=2)
+
+
 
     # Cluster's stars CMD. Check if decont algorithm was applied.
     if not(flag_area_stronger):
-        ax17 = plt.subplot(gs1[8:10, 0:2])
+        ax19 = plt.subplot(gs1[8:10, 4:6])
         #Set plot limits
         plt.xlim(col1_min, col1_max)
         plt.ylim(mag_min, mag_max)
@@ -748,12 +795,16 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         plt.ylabel(r'$T_1$', fontsize=18)
         tot_kde_clust = len(memb_prob_avrg_sort)
         text = r'$N=%d\,|\,MI \geq 0.$' % tot_kde_clust
-        plt.text(0.05, 0.93, text, transform = ax17.transAxes,
+        plt.text(0.05, 0.93, text, transform = ax19.transAxes,
                  bbox=dict(facecolor='white', alpha=0.5), fontsize=14)
         # Set minor ticks
-        ax17.minorticks_on()
-        ax17.xaxis.set_major_locator(MultipleLocator(1.0))
-        ax17.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
+        ax19.minorticks_on()
+        ax19.xaxis.set_major_locator(MultipleLocator(1.0))
+        ax19.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
+        # Plot ZAMS.
+        plt.plot(zams_iso[1], zams_iso[0], c='k', ls='--', lw=1.)
+        # Plot isochrone.
+        plt.plot(iso_moved[1], iso_moved[0], 'g', lw=1.2)
         # This reversed colormap means higher prob stars will look redder.
         cm = plt.cm.get_cmap('RdYlBu_r')
         m_p_m_temp = [[], [], []]
@@ -774,20 +825,16 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
             plt.errorbar(x_val, mag_y, yerr=func(mag_y, *popt_mag), 
                          xerr=func(mag_y, *popt_col1), fmt='k.', lw=0.8, ms=0.,\
                          zorder=4)
-        # Plot ZAMS.
-        plt.plot(zams_iso[1], zams_iso[0], c='k', ls='--', lw=1.)
-        # Plot isochrone.
-        plt.plot(iso_moved[1], iso_moved[0], 'g', lw=1.2)
-        # Plot colorbar.
-        cbaxes = fig.add_axes([0.19, 0.318, 0.04, 0.005]) 
-        cbar = plt.colorbar(cax=cbaxes, ticks=[0,1], orientation='horizontal')
-        cbar.ax.tick_params(labelsize=9)
+            # Plot colorbar.
+            cbaxes = fig.add_axes([0.67, 0.31, 0.04, 0.005]) 
+            cbar = plt.colorbar(cax=cbaxes, ticks=[0,1], orientation='horizontal')
+            cbar.ax.tick_params(labelsize=9)
 
 
 
     # Cluster's stars CMD. Check if decont algorithm was applied.
     if not(flag_area_stronger):
-        ax18 = plt.subplot(gs1[8:10, 2:4])
+        ax20 = plt.subplot(gs1[8:10, 6:8])
         #Set plot limits
         plt.xlim(col1_min, col1_max)
         plt.ylim(mag_min, mag_max)
@@ -795,9 +842,9 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         plt.xlabel(r'$C-T_1$', fontsize=18)
         plt.ylabel(r'$T_1$', fontsize=18)
         # Set minor ticks
-        ax18.minorticks_on()
-        ax18.xaxis.set_major_locator(MultipleLocator(1.0))
-        ax18.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
+        ax20.minorticks_on()
+        ax20.xaxis.set_major_locator(MultipleLocator(1.0))
+        ax20.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
         # Plot ZAMS.
         plt.plot(zams_iso[1], zams_iso[0], c='k', ls='--', lw=1.)
         # Plot isochrone.
@@ -806,17 +853,17 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         cm = plt.cm.get_cmap('RdYlBu_r')
         m_p_m_temp = [[], [], []]
         for star in memb_prob_avrg_sort:
-            # Only plot stars with MI>=0.5
-            if star[7] >= 0.5:
+            # Only plot stars with MI>=mu
+            if star[7] >= mu:
                 m_p_m_temp[0].append(star[5])
                 m_p_m_temp[1].append(star[3])
                 m_p_m_temp[2].append(star[7])
         # Create new list with inverted values so higher prob stars are on top.
         m_p_m_temp_inv = [i[::-1] for i in m_p_m_temp]
-        plt.text(0.05, 0.93, r'$N=%d\,|\,MI \geq 0.5$' % len(m_p_m_temp[0]), 
-                 transform = ax18.transAxes, 
+        plt.text(0.05, 0.93, r'$N=%d\,|\,MI \geq \mu$' % len(m_p_m_temp[0]), 
+                 transform = ax20.transAxes, 
                  bbox=dict(facecolor='white', alpha=0.5), fontsize=14)
-        v_min = 0.50
+        v_min = round(mu, 2)
         v_max = round(max(m_p_m_temp[2]),2) if m_p_m_temp[2] else 1.
         plt.scatter(m_p_m_temp_inv[0], m_p_m_temp_inv[1], marker='o', 
                     c=m_p_m_temp_inv[2], s=40, cmap=cm, lw=0.5, vmin=v_min, \
@@ -831,116 +878,10 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                          xerr=func(mag_y, *popt_col1), fmt='k.', lw=0.8, ms=0.,\
                          zorder=4)
             # Plot colorbar.
-            cbaxes18 = fig.add_axes([0.435, 0.318, 0.04, 0.005])
-            cbar18 = plt.colorbar(cax=cbaxes18, ticks=[v_min,v_max],
-                                 orientation='horizontal')
-            cbar18.ax.tick_params(labelsize=9) 
-       
-        
-        
-    # Cluster's stars CMD. Check if decont algorithm was applied.
-    if not(flag_area_stronger):
-        ax19 = plt.subplot(gs1[8:10, 4:6])
-        #Set plot limits
-        plt.xlim(col1_min, col1_max)
-        plt.ylim(mag_min, mag_max)
-        #Set axis labels
-        plt.xlabel(r'$C-T_1$', fontsize=18)
-        plt.ylabel(r'$T_1$', fontsize=18)
-        # Set minor ticks
-        ax19.minorticks_on()
-        ax19.xaxis.set_major_locator(MultipleLocator(1.0))
-        ax19.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
-        # Plot ZAMS.
-        plt.plot(zams_iso[1], zams_iso[0], c='k', ls='--', lw=1.)
-        # Plot isochrone.
-        plt.plot(iso_moved[1], iso_moved[0], 'g', lw=1.2)
-        # This reversed colormap means higher prob stars will look redder.
-        cm = plt.cm.get_cmap('RdYlBu_r')
-        m_p_m_temp = [[], [], []]
-        for star in memb_prob_avrg_sort:
-            # Only plot stars with MI>=0.75
-            if star[7] >= 0.75:
-                m_p_m_temp[0].append(star[5])
-                m_p_m_temp[1].append(star[3])
-                m_p_m_temp[2].append(star[7])
-        # Create new list with inverted values so higher prob stars are on top.
-        m_p_m_temp_inv = [i[::-1] for i in m_p_m_temp]
-        plt.text(0.05, 0.93, r'$N=%d\,|\,MI \geq 0.75$' % len(m_p_m_temp[0]), 
-                 transform = ax19.transAxes, 
-                 bbox=dict(facecolor='white', alpha=0.5), fontsize=14)
-        v_min = 0.75
-        v_max = round(max(m_p_m_temp[2]),2) if m_p_m_temp[2] else 1.
-        plt.scatter(m_p_m_temp_inv[0], m_p_m_temp_inv[1], marker='o', 
-                    c=m_p_m_temp_inv[2], s=40, cmap=cm, lw=0.5, \
-                    vmin=v_min, vmax=v_max)
-        # If list is not empty.
-        if m_p_m_temp_inv[1]:
-            # Plot error bars at several mag values.
-            mag_y = np.arange(int(min(m_p_m_temp_inv[1])+0.5), 
-                              int(max(m_p_m_temp_inv[1])+0.5) + 0.1)
-            x_val = [min(3.9, max(col1_data)+0.2) - 0.4]*len(mag_y)
-            plt.errorbar(x_val, mag_y, yerr=func(mag_y, *popt_mag), 
-                         xerr=func(mag_y, *popt_col1), fmt='k.', lw=0.8, ms=0.,\
-                         zorder=4)
-            # Plot colorbar.
-            cbaxes19 = fig.add_axes([0.678, 0.318, 0.04, 0.005])
-            cbar19 = plt.colorbar(cax=cbaxes19, ticks=[v_min,v_max],
-                                 orientation='horizontal')
-            cbar19.ax.tick_params(labelsize=9) 
-
-        
-        
-    # Cluster's stars CMD of N_c stars (the approx number of member stars)
-    # inside cluster's radius with the smallest decontamination index 
-    # (most probable members).
-    # Check if decont algorithm was applied.
-    if not(flag_area_stronger) and n_c > 0:
-        ax20 = plt.subplot(gs1[8:10, 6:8])
-        #Set plot limits
-        plt.xlim(col1_min, col1_max)
-        plt.ylim(mag_min, mag_max)
-        #Set axis labels
-        plt.xlabel(r'$C-T_1$', fontsize=18)
-        plt.ylabel(r'$T_1$', fontsize=18)
-        text = r'$N_{c}=%d$' % len(memb_prob_avrg_sort[:n_c])
-        plt.text(0.05, 0.93, text, transform = ax20.transAxes, 
-                 bbox=dict(facecolor='white', alpha=0.5), fontsize=14)
-        # Set minor ticks
-        ax20.minorticks_on()
-        ax20.xaxis.set_major_locator(MultipleLocator(1.0))
-        ax20.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
-        # This reversed colormap means higher prob stars will look redder.
-        cm = plt.cm.get_cmap('RdYlBu_r')
-        m_p_m_temp = [[], [], []]
-        for star in memb_prob_avrg_sort[:n_c]:
-            m_p_m_temp[0].append(star[5])
-            m_p_m_temp[1].append(star[3])
-            m_p_m_temp[2].append(star[7])
-        # Create new list with inverted values so higher prob stars are on top.
-        m_p_m_temp_inv = [i[::-1] for i in m_p_m_temp]
-        v_min, v_max = round(min(m_p_m_temp[2]),2), round(max(m_p_m_temp[2]),2)
-        plt.scatter(m_p_m_temp_inv[0], m_p_m_temp_inv[1], marker='o', 
-                    c=m_p_m_temp_inv[2], s=40, cmap=cm, lw=0.5,\
-                    vmin=v_min, vmax=v_max)
-        # If list is not empty.
-        if m_p_m_temp_inv[1]:
-            # Plot error bars at several mag values.
-            mag_y = np.arange(int(min(m_p_m_temp_inv[1])+0.5), 
-                              int(max(m_p_m_temp_inv[1])+0.5) + 0.1)
-            x_val = [min(3.9, max(col1_data)+0.2) - 0.4]*len(mag_y)
-            plt.errorbar(x_val, mag_y, yerr=func(mag_y, *popt_mag), 
-                         xerr=func(mag_y, *popt_col1), fmt='k.', lw=0.8, ms=0.,\
-                         zorder=4)
-        # Plot ZAMS.
-        plt.plot(zams_iso[1], zams_iso[0], c='k', ls='--', lw=1.)
-        # Plot isochrone.
-        plt.plot(iso_moved[1], iso_moved[0], 'g', lw=1.2)
-        # Plot colorbar.
-        cbaxes20 = fig.add_axes([0.935, 0.318, 0.04, 0.005])
-        cbar20 = plt.colorbar(cax=cbaxes20, ticks=[v_min,v_max],
-                             orientation='horizontal')
-        cbar20.ax.tick_params(labelsize=9)
+            cbaxes20 = fig.add_axes([0.93, 0.31, 0.04, 0.005])
+            cbar20 = plt.colorbar(cax=cbaxes20, ticks=[v_min,v_max],
+                                  orientation='horizontal')
+            cbar20.ax.tick_params(labelsize=9) 
         
         
         
@@ -995,51 +936,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
            
         
         
-    # Norm fit for KDE probability values.
-    # Check if decont algorithm was applied.
-    if not(flag_area_stronger):
-        ax23 = plt.subplot(gs1[10:12, 4:6])
-        plt.xlim(0., 1.)
-        plt.xlabel('cluster membership prob', fontsize=12)
-        ax23.minorticks_on()
-        ax23.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
-        prob_data = [star[7] for star in memb_prob_avrg_sort]
-        # Best Gaussian fit of data.
-        (mu, sigma) = norm.fit(prob_data)
-        # Text.
-        text = r'$\mu=%.3f,\ \sigma=%.3f$' %(mu, sigma)
-        plt.text(0.05, 0.92, text, transform = ax23.transAxes, 
-             bbox=dict(facecolor='white', alpha=0.85), fontsize=12)
-        # Histogram of the data.
-        n, bins, patches = plt.hist(prob_data, 60, normed=1, facecolor='green',
-                                    alpha=0.75)
-        # Best fit line.
-        y = mlab.normpdf( bins, mu, sigma)
-        plt.plot(bins, y, 'r--', linewidth=2)
 
-
-
-    # Integrated magnitude distribution.
-    ax24 = plt.subplot(gs1[10:12, 6:8])
-    plt.xlim(min(stars_in_all_mag[0])-0.2, max(stars_in_all_mag[0])+0.2)
-    plt.ylim(max(stars_in_all_mag[1])+0.2, min(stars_in_all_mag[1])-0.2)
-    plt.xlabel(r'$T_1$', fontsize=18)
-    plt.ylabel(r'$T_1^*$', fontsize=18)
-    ax24.minorticks_on()
-    ax24.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
-    # Text.
-    text1 = r'$stars_{acpt}\,(T_{1,max}^*\,=%.2f$)' '\n' % (min(stars_in_mag[1]))
-    text2 =r'$stars_{all}\;(T_{1,max}^*\,=%.2f)$' % (min(stars_in_all_mag[1]))
-    # Only accepted stars.
-    plt.plot(stars_in_mag[0], stars_in_mag[1], 'r-', lw=1.5, label=text1)
-    # All stars, including those rejected due to its large errors.
-    plt.plot(stars_in_all_mag[0], stars_in_all_mag[1], 'b--', lw=1., label=text2)
-    # get handles
-    handles, labels = ax24.get_legend_handles_labels()
-    # use them in the legend
-    leg = ax24.legend(handles, labels, loc='lower right', numpoints=1,
-                      fontsize=12)
-    leg.get_frame().set_alpha(0.5)
 
 
 

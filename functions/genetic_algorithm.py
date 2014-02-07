@@ -388,11 +388,11 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_params
         print i, lkl[0], generation[0], time.time()-tik
         
         # For plotting purposes.
-        lkl_old[0].append(lkl[0])
-        lkl_old[1].append(np.mean(lkl))
-        # Call function to make plots.
-        ga_p(i, mm_m, mm_a, mm_e, mm_d, params_ga, lkl, lkl_old, ext_imm_indx,
-             isoch_done, generation)        
+#        lkl_old[0].append(lkl[0])
+#        lkl_old[1].append(np.mean(lkl))
+#        # Call function to make plots.
+#        ga_p(i, mm_m, mm_a, mm_e, mm_d, params_ga, lkl, lkl_old, ext_imm_indx,
+#             isoch_done, generation)        
 
 #    # Store data in file.
 #    line = [str(i*n_pop), str('%0.2f' % lkl[0]), str(generation[0]), str(n_gen), str(n_pop),
