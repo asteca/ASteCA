@@ -184,55 +184,6 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                                outer_ring*2, facecolor='none', edgecolor='b',\
                                ls='dashed', lw=1.5))
 
-        
-    # Density profile
-#    ax4 = plt.subplot(gs1[2:4, 2:6])
-#    # Get max and min values in x,y
-#    x_max = max(radii[0])+10
-#    y_min, y_max = (backg_value[0]-delta_backg)-(max(ring_density[0])-\
-#    min(ring_density[0]))/10, max(ring_density[0])+(max(ring_density[0])-\
-#    min(ring_density[0]))/10
-#    # Set plot limits
-#    plt.xlim(-10, x_max)
-#    plt.ylim(y_min, y_max)
-#    # Set axes labels
-#    plt.xlabel('radius (px)', fontsize=12)
-#    plt.ylabel(r"stars/px$^{2}$", fontsize=12)
-#    # Cluster's name.
-#    text = str(clust_name)
-#    plt.text(0.4, 0.9, text, transform = ax4.transAxes, fontsize=14)
-#    # Plot poisson error bars
-#    plt.errorbar(radii[0], ring_density[0], yerr = poisson_error[0], fmt='ko', 
-#                 zorder=1)
-#    ## Plot the delta around the background value used to asses when the density
-#    # has become stable
-#    plt.hlines(y=(backg_value[0]-delta_backg), xmin=0, xmax=max(radii[0]), 
-#               color='k', linestyles='dashed', zorder=2)
-#    plt.hlines(y=(backg_value[0]+delta_backg), xmin=0, xmax=max(radii[0]), 
-#               color='k', linestyles='dashed', zorder=2)
-#    # Legend texts
-#    texts = ['Density Profile (%d px)' % width_bins[0], 'Density Profile \
-#(%d px)' % width_bins[1], \
-#    'Density Profile (%d px)' % width_bins[2], 'Density Profile (%d px)' % \
-#    width_bins[3]]
-#    # Plot density profile with the smallest bin size
-#    ax4.plot(radii[0], ring_density[0], 'ko-', zorder=3, label=texts[0])
-#    # Plot density profiles for the last 3 (bigger) bin widths
-#    ax4.plot(radii[1], ring_density[1], 'go--', zorder=6, label=texts[1])
-#    ax4.plot(radii[2], ring_density[2], 'bo--', zorder=7, label=texts[2])
-#    ax4.plot(radii[3], ring_density[3], 'ro--', zorder=8, label=texts[3])
-#    # Plot background and radius lines
-#    ax4.vlines(x=clust_rad[0], ymin=0, ymax=max(ring_density[0]),
-#               label=r'Radius = %d $\pm$ %d px' % (clust_rad[0],\
-#               round(width_bins[0]/2.)), color='r', zorder=4)
-#    ax4.hlines(y=backg_value[0], xmin=0, xmax=max(radii[0]), 
-#               label=r'Background ($\Delta$=%d%%)' % delta_percentage, \
-#               color='k', zorder=5)
-#    # get handles
-#    handles, labels = ax4.get_legend_handles_labels()
-#    # use them in the legend
-#    ax4.legend(handles, labels, loc='upper right', numpoints=1, fontsize=10)
-
 
     ax4 = plt.subplot(gs1[2:4, 2:6])
     # Get max and min values in x,y
