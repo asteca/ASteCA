@@ -185,6 +185,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                                ls='dashed', lw=1.5))
 
 
+    # Radial density plot.
     ax4 = plt.subplot(gs1[2:4, 2:6])
     # Get max and min values in x,y
     x_max = max(radii[0])+10
@@ -452,47 +453,45 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                 s=sz_pt, zorder=2)
         
 
-    # T1 normalized histogram of stars outside cluster.
-    ax11 = plt.subplot(gs1[4, 6:8])
+
+    # LF of stars in cluster region and outside.
+    ax11 = plt.subplot(gs1[4:6, 6:8])
     #Set plot limits
     x_min, x_max = min(mag_data)-0.5, max(mag_data)+0.5
-    plt.xlim(x_min, x_max)
-    plt.text(0.05, 0.8, r'$r > R_{cl}$', transform = ax11.transAxes, 
-             bbox=dict(facecolor='white', alpha=0.5), fontsize=14)
+    plt.xlim(x_max, x_min)
     ax11.minorticks_on()
+    # Only draw units on axis (ie: 1, 2, 3)
+    ax11.xaxis.set_major_locator(MultipleLocator(2.0))
+    # Set grid
+    ax11.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
     #Set axis labels
-    plt.xlabel(r'$T_1$', fontsize=18)
-    # Plot stars.
+    plt.xlabel('$T_1$', fontsize=18)
+    plt.ylabel('$log(N^{\star})$', fontsize=18)
+    # Plot create lists with mag values.
     stars_out_temp = []
     for star in stars_out_rjct:
         stars_out_temp.append(star[3])
     for star in stars_out:
         stars_out_temp.append(star[3])
-    binwidth = 0.25
-    plt.hist(stars_out_temp, bins=np.arange(int(x_min), int(x_max+binwidth), 
-                                        binwidth), normed=True)
-
-
-    # T1 normalized histogram of stars inside cluster.
-    ax12 = plt.subplot(gs1[5, 6:8])
-    #Set plot limits
-    x_min, x_max = min(mag_data)-0.5, max(mag_data)+0.5
-    plt.xlim(x_min, x_max)
-    plt.text(0.05, 0.8, r'$r \leq R_{cl}$', transform = ax12.transAxes, 
-             bbox=dict(facecolor='white', alpha=0.5), fontsize=14)
-    ax12.minorticks_on()
-    #Set axis labels
-    plt.xlabel(r'$T_1$', fontsize=18)
-    # Plot stars.
     stars_in_temp = []
     for star in stars_in_rjct:
         stars_in_temp.append(star[3])
     for star in stars_in:
-        stars_in_temp.append(star[3])
+        stars_in_temp.append(star[3])        
+    # Plot histograms.
     binwidth = 0.25
-    plt.hist(stars_in_temp, bins=np.arange(int(x_min), int(x_max+binwidth), 
-                                        binwidth), normed=True)
-
+    plt.hist(stars_out_temp,
+             bins=np.arange(int(x_min), int(x_max+binwidth), binwidth),\
+             log=True, histtype='step', label='$r > R_{cl}$', color='b')
+    plt.hist(stars_in_temp,
+             bins=np.arange(int(x_min), int(x_max+binwidth), binwidth),\
+             log=True, histtype='step', label='$r \leq R_{cl}$', color='r')
+    # Force y axis min to 1.
+    plt.ylim(1., plt.ylim()[1])
+    # Legends.
+    leg11 = plt.legend(fancybox=True, loc='upper right', numpoints=1, fontsize=16)
+    # set the alpha value of the legend: it will be translucent
+    leg11.get_frame().set_alpha(0.7)
 
 
     # Star regions as defined by the decontamination algorithm.
@@ -682,7 +681,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
             stars_clust_temp[2].append(200*clust_reg_prob_avrg[st_indx]**8)       
         plt.scatter(stars_clust_temp[0], stars_clust_temp[1], marker='o', 
                     c=stars_clust_temp[2], s=star_size, edgecolors='black',\
-                    cmap=cm)
+                    cmap=cm, lw=0.5)
             
 
     # Integrated magnitude distribution.
