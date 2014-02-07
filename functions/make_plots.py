@@ -25,9 +25,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                flag_king_no_conver, stars_in,
                stars_out, stars_in_rjct, stars_out_rjct, stars_in_mag,
                stars_in_all_mag, n_c, flag_area_stronger,
-               cluster_region, field_region,
-               prob_cl_kde, p_vals_cl, p_vals_f, kde_cl_1d, kde_f_1d, x_kde,
-               y_over, quantiles, r_squared, slope, intercept, ccc,
+               cluster_region, field_region, pval_test_params, qq_params,
                clust_reg_prob_avrg, field_reg_box,
                kde_cl, kde_f, memb_prob_avrg_sort, iso_moved, zams_iso,
                cl_e_bv, cl_age, cl_feh, cl_dmod):
@@ -886,54 +884,55 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         
         
         
-#    # Distribution of p_values.
-#    # Check if decont algorithm was applied.
-#    if not(flag_area_stronger):
-#        ax21 = plt.subplot(gs1[10:12, 0:2])
-#        plt.xlim(-0.5, 1.5)
-#        plt.ylim(0, max(max(kde_f_1d), max(kde_cl_1d))+0.5)
-#        plt.xlabel('p-values', fontsize=12)
-#        ax21.minorticks_on()
-#        ax21.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
-#        # Grid to background.
-#        ax21.set_axisbelow(True)
-#        # Plot cluster vs field KDE.
-#        plt.plot(x_kde, kde_cl_1d, c='b', ls='-', lw =1., label=r'$KDE_{cl}$')
-#        # Plot field vs field KDE.
-#        plt.plot(x_kde, kde_f_1d, c='r', ls='-', lw=1., label=r'$KDE_{f}$')
-#        # Fill overlap.
-#        plt.fill_between(x_kde, y_over, 0, color='grey', alpha='0.5')
-#        text = r'$\;P_{cl}^{KDE} = %0.2f$' % round(prob_cl_kde,2)
-#        plt.text(0.05, 0.92, text, transform = ax21.transAxes, 
-#             bbox=dict(facecolor='white', alpha=0.6), fontsize=12)
-#        handles, labels = ax21.get_legend_handles_labels()
-#        leg = ax21.legend(handles, labels, loc='upper right', numpoints=1,
-#                          fontsize=12)
-#        leg.get_frame().set_alpha(0.6)
-#        
-#        
-#
-#    # QQ-plot.
-#    # Check if decont algorithm was applied.
-#    if not(flag_area_stronger):
-#        ax22 = plt.subplot(gs1[10:12, 2:4])
-#        plt.xlim(-0.05, 1.05)
-#        plt.ylim(-0.05, 1.05)
-#        plt.xlabel(r'$p-value_{cl}$', fontsize=16)
-#        plt.ylabel(r'$p-value_{f}$', fontsize=16)
-#        ax22.minorticks_on()
-#        ax22.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
-#        plt.scatter(quantiles[0], quantiles[1], marker='o', c='k', s=10.)
-#        text1 = r'$R^2\, = %0.2f$' '\n' % r_squared
-#        text2 = r'$CCC\, = %0.2f$' % ccc
-#        text = text1+text2
-#        plt.text(0.72, 0.87, text, transform = ax22.transAxes, 
-#             bbox=dict(facecolor='white', alpha=0.85), fontsize=12)
-#        plt.plot([0., 1.], [0., 1.], color='k', linestyle='--', linewidth=1.)
-#        # Plot qq-plot fitted line.
-#        x = np.arange(0.,1.1,0.1)
-#        y = line(x, slope, intercept)
-#        plt.plot(x,y, color='r', linestyle='--')
+    # Distribution of p_values.
+    # pval_test_params[-1] is the flag that tells me if the block was processed.
+    if not(flag_area_stronger) and pval_test_params[-1]:
+        # Extract parameters from list.
+        prob_cl_kde, p_vals_cl, p_vals_f, kde_cl_1d, kde_f_1d, x_kde, y_over = pval_test_params[:-1]
+        ax21 = plt.subplot(gs1[10:12, 0:2])
+        plt.xlim(-0.5, 1.5)
+        plt.ylim(0, max(max(kde_f_1d), max(kde_cl_1d))+0.5)
+        plt.xlabel('p-values', fontsize=12)
+        ax21.minorticks_on()
+        ax21.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
+        # Grid to background.
+        ax21.set_axisbelow(True)
+        # Plot cluster vs field KDE.
+        plt.plot(x_kde, kde_cl_1d, c='b', ls='-', lw =1., label=r'$KDE_{cl}$')
+        # Plot field vs field KDE.
+        plt.plot(x_kde, kde_f_1d, c='r', ls='-', lw=1., label=r'$KDE_{f}$')
+        # Fill overlap.
+        plt.fill_between(x_kde, y_over, 0, color='grey', alpha='0.5')
+        text = r'$\;P_{cl}^{KDE} = %0.2f$' % round(prob_cl_kde,2)
+        plt.text(0.05, 0.92, text, transform = ax21.transAxes, 
+             bbox=dict(facecolor='white', alpha=0.6), fontsize=12)
+        handles, labels = ax21.get_legend_handles_labels()
+        leg = ax21.legend(handles, labels, loc='upper right', numpoints=1,
+                          fontsize=12)
+        leg.get_frame().set_alpha(0.6)
+        
+        
+        # QQ-plot.
+        # Extract parameters from list.
+        ccc, quantiles, r_squared, slope, intercept = qq_params
+        ax22 = plt.subplot(gs1[10:12, 2:4])
+        plt.xlim(-0.05, 1.05)
+        plt.ylim(-0.05, 1.05)
+        plt.xlabel(r'$p-value_{cl}$', fontsize=16)
+        plt.ylabel(r'$p-value_{f}$', fontsize=16)
+        ax22.minorticks_on()
+        ax22.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
+        plt.scatter(quantiles[0], quantiles[1], marker='o', c='k', s=10.)
+        text1 = r'$R^2\, = %0.2f$' '\n' % r_squared
+        text2 = r'$CCC\, = %0.2f$' % ccc
+        text = text1+text2
+        plt.text(0.72, 0.87, text, transform = ax22.transAxes, 
+             bbox=dict(facecolor='white', alpha=0.85), fontsize=12)
+        plt.plot([0., 1.], [0., 1.], color='k', linestyle='--', linewidth=1.)
+        # Plot qq-plot fitted line.
+        x = np.arange(0.,1.1,0.1)
+        y = line(x, slope, intercept)
+        plt.plot(x,y, color='r', linestyle='--')
            
         
         

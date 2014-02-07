@@ -60,4 +60,7 @@ def qqplot(p_vals_cl, p_vals_f):
     ccc = 2*(np.std(a)*np.std(b))/\
     (np.std(a)**2+np.std(b)**2+(np.mean(a)-np.mean(b))**2)
     
-    return quantiles, r_squared, slope, intercept, ccc
+    # Return parameters inside list.
+    qq_params = [ccc, quantiles, r_squared, slope, intercept]
+    
+    return qq_params

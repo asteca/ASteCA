@@ -80,7 +80,8 @@ def get_pval(flag_area_stronger, cluster_region, field_region,
         
         # Set number of runs for the p_value algorithm with a maximum of
         # 100 if only one field region was used.
-        runs = int(100/len(field_region))
+#        runs = int(100/len(field_region))
+        runs = 1
         
         # Only use stars inside cluster's radius.
         cluster_region_r = []
@@ -157,37 +158,41 @@ def get_pval(flag_area_stronger, cluster_region, field_region,
             elif run_num+1 == runs:
                 print '  100% done'
 
-    # Skipping decontamination algorithm
-    else:
-        prob_cl_kde, p_vals_cl, p_vals_f, kde_cl_1d, kde_f_1d, x_kde, y_over =\
-        -1., [], [], [], [], [], []
+        # For plotting purposes.
         
-
-    # Define KDE limits.
-    xmin, xmax = -1., 2.
-    x_kde = np.mgrid[xmin:xmax:1000j]
+        # Define KDE limits.
+        xmin, xmax = -1., 2.
+        x_kde = np.mgrid[xmin:xmax:1000j]
+        
+        # Obtain the 1D KDE for the cluster region (stars inside cluster's
+        # radius) vs field regions.
+        kernel_cl = stats.gaussian_kde(p_vals_cl)
+        # KDE for plotting.
+        kde_cl_1d = np.reshape(kernel_cl(x_kde).T, x_kde.shape)
     
-    # Obtain the 1D KDE for the cluster region (stars inside cluster's
-    # radius) vs field regions.
-    kernel_cl = stats.gaussian_kde(p_vals_cl)
-    # KDE for plotting.
-    kde_cl_1d = np.reshape(kernel_cl(x_kde).T, x_kde.shape)
-
-    # Obtain the 1D KDE for the field regions vs field regions.
-    kernel_f = stats.gaussian_kde(p_vals_f)
-    # KDE for plotting.
-    kde_f_1d = np.reshape(kernel_f(x_kde).T, x_kde.shape)
+        # Obtain the 1D KDE for the field regions vs field regions.
+        kernel_f = stats.gaussian_kde(p_vals_f)
+        # KDE for plotting.
+        kde_f_1d = np.reshape(kernel_f(x_kde).T, x_kde.shape)
+        
+        # Calculate overlap between the two KDEs.
+        def y_pts(pt):
+            y_pt = min(kernel_cl(pt), kernel_f(pt))
+            return y_pt
     
-    # Calculate overlap between the two KDEs.
-    def y_pts(pt):
-        y_pt = min(kernel_cl(pt), kernel_f(pt))
-        return y_pt
-
-    overlap = quad(y_pts, -1., 2.) 
-    # Store y values for plotting the overlap filled.
-    y_over = [float(y_pts(x_pt)) for x_pt in x_kde]
+        overlap = quad(y_pts, -1., 2.) 
+        # Store y values for plotting the overlap filled.
+        y_over = [float(y_pts(x_pt)) for x_pt in x_kde]
+        
+        # Probability value for the cluster.
+        prob_cl_kde = 1- overlap[0]
     
-    # Probability value for the cluster.
-    prob_cl_kde = 1- overlap[0]
- 
-    return prob_cl_kde, p_vals_cl, p_vals_f, kde_cl_1d, kde_f_1d, x_kde, y_over
+        # Store all return params in a single list.
+        pval_test_params = [prob_cl_kde, p_vals_cl, p_vals_f, kde_cl_1d, kde_f_1d,
+                            x_kde, y_over]
+
+    # Skipping process.
+    else:
+        pval_test_params = []
+        
+    return pval_test_params

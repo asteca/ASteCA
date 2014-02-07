@@ -410,20 +410,28 @@ all stars with photom errors < 0.3)? (y/n) ')
     print 'Cluster + field stars regions obtained (%d).' % len(field_region)
 
 
+    flag_pval_test = False
     # Get physical cluster probability based on p_values distribution.
-#    prob_cl_kde, p_vals_cl, p_vals_f, kde_cl_1d, kde_f_1d, x_kde, y_over = \
-#    g_pv(flag_area_stronger, cluster_region, field_region, col1_data, \
-#    mag_data, center_cl, clust_rad)
-#    print 'Probability of physical cluster obtained (%0.2f).' % prob_cl_kde
-#
-#
-#    # Get QQ plot for p-values distributions.
-#    quantiles, r_squared, slope, intercept, ccc = g_qq(p_vals_cl, p_vals_f)
-#    print 'QQ-plot obtained (R^2 = %0.2f)' % r_squared
-    
-    prob_cl_kde, p_vals_cl, p_vals_f, kde_cl_1d, kde_f_1d, x_kde, y_over, \
-    quantiles, r_squared, slope, intercept, ccc = 0., [], [], [], [], [], [],\
-    [], 0., 0., 0., 0.
+    if flag_pval_test:
+        # pval_test_params = prob_cl_kde, p_vals_cl, p_vals_f, kde_cl_1d,
+        #                    kde_f_1d, x_kde, y_over
+        pval_test_params  = g_pv(flag_area_stronger, cluster_region,
+                                 field_region, col1_data, mag_data, center_cl,
+                                 clust_rad)
+        # Add flag to list.
+        pval_test_params = pval_test_params + [flag_pval_test]
+        print 'Probability of physical cluster obtained (%0.2f).' % \
+        pval_test_params[0]
+
+        # Get QQ plot for p-values distributions.
+        # qq_params = ccc, quantiles, r_squared, slope, intercept
+        qq_params = g_qq(pval_test_params[1], pval_test_params[2])
+        print 'QQ-plot obtained (R^2 = %0.2f)' % qq_params[2]
+    else:
+        # Pass empty lists.
+        pval_test_params, qq_params = [-1., flag_pval_test], [-1.]
+        print 'Skipping p-value test for cluster.'
+
     
 ################## Decontamination Algorithm Selection #######################
     # Apply decontamination algorithm only to stars with accepted photom
@@ -527,9 +535,7 @@ all stars with photom errors < 0.3)? (y/n) ')
        use_errors_fit, k_prof, k_pr_err, flag_king_no_conver, stars_in,
        stars_out, stars_in_rjct,
        stars_out_rjct, stars_in_mag, stars_in_all_mag, n_c, flag_area_stronger,
-       cluster_region, field_region,
-       prob_cl_kde, p_vals_cl, p_vals_f, kde_cl_1d, kde_f_1d, x_kde, y_over,
-       quantiles, r_squared, slope, intercept, ccc,
+       cluster_region, field_region, pval_test_params, qq_params,
        clust_reg_prob_avrg, field_reg_box,
        kde_cl, kde_f, memb_prob_avrg_sort, iso_moved, zams_iso, cl_e_bv,
        cl_age, cl_feh, cl_dmod)
@@ -542,8 +548,8 @@ all stars with photom errors < 0.3)? (y/n) ')
    
     # Add cluster data and flags to output file
     a_d_o(sub_dir, output_dir, clust_name, center_cl, clust_rad, k_prof, 
-          n_c_k, flag_king_no_conver, cont_index, n_c, prob_cl_kde, ccc,
-          stars_in_mag,
+          n_c_k, flag_king_no_conver, cont_index, n_c, pval_test_params[0],
+          qq_params[0], stars_in_mag,
           flag_center, flag_std_dev, flag_center_manual,
           flag_radius_manual, flag_errors_manual, flag_bin_count,
           flag_delta_total, flag_not_stable, flag_rad_500, flag_delta,
