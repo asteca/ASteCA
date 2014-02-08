@@ -28,7 +28,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                cluster_region, field_region, pval_test_params, qq_params,
                clust_reg_prob_avrg, field_reg_box,
                kde_cl, kde_f, memb_prob_avrg_sort, iso_moved, zams_iso,
-               cl_e_bv, cl_age, cl_feh, cl_dmod):
+               cl_e_bv, cl_age, cl_feh, cl_dmod,
+               shift_isoch, isoch_fit_params, isoch_fit_errors):
     '''
     Make all plots.
     '''
@@ -886,7 +887,56 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
            
         
         
-
+    # Cluster's stars CMD. Check if decont algorithm was applied.
+    ax23 = plt.subplot(gs1[10:12, 6:8])
+    #Set plot limits
+    plt.xlim(col1_min, col1_max)
+    plt.ylim(mag_min, mag_max)
+    #Set axis labels
+    plt.xlabel('$C-T_1$', fontsize=18)
+    plt.ylabel('$T_1$', fontsize=18)
+    # Set minor ticks
+    ax23.minorticks_on()
+    ax23.xaxis.set_major_locator(MultipleLocator(1.0))
+    ax23.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
+    # Add text box
+    m, a, e, d = isoch_fit_params
+    e_m, e_a, e_e, e_d = isoch_fit_errors
+    text1 = '$z = %0.4f \pm %0.5f$' '\n' % (m, e_m)
+    text2 = '$log(age) = %0.2f \pm %0.2f$' '\n' % (a, e_a)
+    text3 = '$E_{(B-V)} = %0.2f \pm %0.2f$' '\n' % (e, e_e)
+    text4 = '$(m-M)_o = %0.2f \pm %0.2f$' % (d, e_d)
+    text = text1+text2+text3+text4
+    plt.text(0.05, 0.8, text, transform = ax23.transAxes, 
+             bbox=dict(facecolor='white', alpha=0.6), fontsize=12)
+    # Plot ZAMS.
+#    plt.plot(zams_iso[1], zams_iso[0], c='k', ls='--', lw=1.)
+    # Plot best fitted isochrone.
+    plt.plot(shift_isoch[0], shift_isoch[1], 'g', lw=1.2)
+    # This reversed colormap means higher prob stars will look redder.
+    cm = plt.cm.get_cmap('RdYlBu_r')
+    m_p_m_temp = [[], [], []]
+    for star in memb_prob_avrg_sort:
+        # Only plot stars with MI>=mu
+        if star[7] >= 0.:
+            m_p_m_temp[0].append(star[5])
+            m_p_m_temp[1].append(star[3])
+            m_p_m_temp[2].append(star[7])
+    # Create new list with inverted values so higher prob stars are on top.
+    m_p_m_temp_inv = [i[::-1] for i in m_p_m_temp]
+    v_min, v_max = round(min(m_p_m_temp[2]), 2), round(max(m_p_m_temp[2]),2)
+    plt.scatter(m_p_m_temp_inv[0], m_p_m_temp_inv[1], marker='o', 
+                c=m_p_m_temp_inv[2], s=40, cmap=cm, lw=0.5, vmin=v_min,\
+                vmax=v_max)
+    # If list is not empty.
+    if m_p_m_temp_inv[1]:
+        # Plot error bars at several mag values.
+        mag_y = np.arange(int(min(m_p_m_temp_inv[1])+0.5), 
+                          int(max(m_p_m_temp_inv[1])+0.5) + 0.1)
+        x_val = [min(3.9, max(col1_data)+0.2) - 0.4]*len(mag_y)
+        plt.errorbar(x_val, mag_y, yerr=func(mag_y, *popt_mag), 
+                     xerr=func(mag_y, *popt_col1), fmt='k.', lw=0.8, ms=0.,\
+                     zorder=4)
 
 
 

@@ -7,13 +7,11 @@ Created on Tue Jan 28 15:22:10 2014
 
 from move_isochrone import move_isoch
 from get_mass_dist import mass_dist as m_d
-from synth_plot import synth_clust_plot as s_c_p
+#from synth_plot import synth_clust_plot as s_c_p
 
 import numpy as np
 import random
 import itertools
-
-#import time
 
 
 def exp_func(x, a, b, c):

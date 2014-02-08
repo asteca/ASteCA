@@ -12,6 +12,7 @@ import random
 
 from genetic_algorithm import gen_algor as g_a
 from get_IMF_PDF import IMF_PDF as i_p
+from move_isochrone import move_isoch
 
 
 
@@ -189,7 +190,8 @@ def get_isoch_params(sys_select, iso_select):
             # Store list holding all the isochrones with the same metallicity
             # in the final isochrone list.
             isoch_list.append(metal_isoch)
-            # Store in list that holds all the metallicities and ages.
+            # Store parameter values in list that holds all the metallicities
+            # and ages.
             isoch_ma.append(met_params)
                   
     
@@ -240,11 +242,11 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort, completeness, popt_mag, pop
     
     # Genetic algorithm parameters.
     # n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es
-    params_ga = [20, 10, 1., 0.85, '2P', 0.01, 1, 10, 5]
+    params_ga = [250, 400, 1., 0.85, '2P', 0.01, 1, 25, 6]
     
 
     # Number of times to run the bootstrap block.
-    N_B = 1   
+    N_B = 10
    
     # Store all isochrones in all the metallicity files in isoch_list. We do
     # this now so the files will only have to be accessed once.
@@ -292,6 +294,10 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort, completeness, popt_mag, pop
         
     # Calculate errors for each parameter.
     isoch_fit_errors = np.std(params_boot, 0)
-    print isoch_fit_params, isoch_fit_errors
     
-    return isoch_fit_params, isoch_fit_errors
+    # For plotting purposes: generate shifted isochrone.
+    m, a, e, d = isoch_fit_params
+    m_indx, a_indx = next(((i,j) for i,x in enumerate(isoch_ma) for j,y in enumerate(x) if y == [m, a]), None)
+    shift_isoch = move_isoch(sys_select, [isoch_list[m_indx][a_indx][0], isoch_list[m_indx][a_indx][1]], e, d)
+
+    return shift_isoch, isoch_fit_params, isoch_fit_errors

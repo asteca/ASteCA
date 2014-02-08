@@ -11,7 +11,7 @@ import numpy as np
 import itertools
     
 import time
-from ga_plots import GA_plot as ga_p
+#from ga_plots import GA_plot as ga_p
 
 
 def encode(mm_m, mm_a, mm_e, mm_d, n, int_popul):
@@ -81,16 +81,14 @@ def mutation(cross_chrom, p_mut):
     return cross_chrom
     
     
-def decode(mm_m, mm_a, mm_e, mm_d, n_bin, isoch_ma, isoch_ed, mut_chrom):
+def decode(mm_m, mm_a, mm_e, mm_d, n_bin, isoch_ma, isoch_ed, mut_chrom,
+           flat_ma):
     '''
     Decode the chromosomes into its real values to be evaluated by the
     objective function.
     '''
     delta_m, delta_a, delta_e, delta_d = (mm_m[1]-mm_m[0]), (mm_a[1]-mm_a[0]),\
     (mm_e[1]-mm_e[0]), (mm_d[1]-mm_d[0])    
-    
-    # Flat out metallicity and ages list.
-    flat_ma = zip(*list(itertools.chain(*isoch_ma)))
     
     ma_lst, e_lst, d_ls = [], [], []
     for chrom in mut_chrom:
@@ -247,6 +245,9 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_params
     n_bin = int(np.log(max((delta_m/step_m), (delta_a/step_a), (delta_e/step_e),
                            (delta_d/step_d)))/np.log(2))+1
     
+    # Flat out metallicity and ages list (used by the 'Decode' process).
+    flat_ma = zip(*list(itertools.chain(*isoch_ma)))    
+    
     # Rank-based breeding probability. Independent of the fitness values,
     # only depends on the total number of chromosomes n_pop and the fitness
     # differential fdif.
@@ -267,9 +268,9 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_params
     best_sol = generation[:n_el]
 
     # For plotting purposes.
-    lkl_old = [[], []]
-    # Stores indexes where the Ext/Imm operator was applied.
-    ext_imm_indx = []
+#    lkl_old = [[], []]
+#    # Stores indexes where the Ext/Imm operator was applied.
+#    ext_imm_indx = []
    
     # Initiate counters.
     best_sol_count, ext_imm_count = 0, 0
@@ -314,7 +315,7 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_params
         ### Evaluation/fitness ###
         
         # Decode the chromosomes into solutions to form the new generation.
-        ma_lst, e_lst, d_lst = decode(mm_m, mm_a, mm_e, mm_d, n_bin, isoch_ma, isoch_ed, mut_chrom)
+        ma_lst, e_lst, d_lst = decode(mm_m, mm_a, mm_e, mm_d, n_bin, isoch_ma, isoch_ed, mut_chrom, flat_ma)
         
         # Evaluate each new solution in the objective function and sort
         # according to the best solutions found.
@@ -365,7 +366,7 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_params
                 best_sol_count = 0
                 
                 # For plotting purposes. Save index where the operator was used.
-                ext_imm_indx.append([i])
+#                ext_imm_indx.append([i])
 
         else:
             # Update best solution for passing along in the 'Elitism' block.
