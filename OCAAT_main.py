@@ -410,7 +410,7 @@ all stars with photom errors < 0.3)? (y/n) ')
     print 'Cluster + field stars regions obtained (%d).' % len(field_region)
 
 
-    flag_pval_test = True
+    flag_pval_test = False
     # Get physical cluster probability based on p_values distribution.
     if flag_pval_test:
         # pval_test_params = prob_cl_kde, p_vals_cl, p_vals_f, kde_cl_1d,
@@ -489,11 +489,11 @@ all stars with photom errors < 0.3)? (y/n) ')
     
     # Check if decont alg was applied.
     if flag_area_stronger:
-        isoch_fit_params = []
+        shift_isoch, ga_return, isoch_fit_errors = [], [], []
     else:
         print 'Searching for optimal parameters.'
         # Obtain best fitting parameters for cluster.
-        shift_isoch, isoch_fit_params, isoch_fit_errors = g_i_p('WASH', 'MAR', memb_prob_avrg_sort, completeness, popt_mag, popt_col1)
+        shift_isoch, ga_return, isoch_fit_errors = g_i_p('WASH', 'MAR', memb_prob_avrg_sort, completeness, popt_mag, popt_col1)
         print 'Best fit parameters obtained.'
     
     
@@ -539,7 +539,7 @@ all stars with photom errors < 0.3)? (y/n) ')
        clust_reg_prob_avrg, field_reg_box,
        kde_cl, kde_f, memb_prob_avrg_sort, iso_moved, zams_iso, cl_e_bv,
        cl_age, cl_feh, cl_dmod,
-       shift_isoch, isoch_fit_params, isoch_fit_errors)
+       shift_isoch, ga_return, isoch_fit_errors)
     print 'Plots created.'
 
     # Create data file with most probable members.

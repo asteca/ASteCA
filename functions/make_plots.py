@@ -29,7 +29,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                clust_reg_prob_avrg, field_reg_box,
                kde_cl, kde_f, memb_prob_avrg_sort, iso_moved, zams_iso,
                cl_e_bv, cl_age, cl_feh, cl_dmod,
-               shift_isoch, isoch_fit_params, isoch_fit_errors):
+               shift_isoch, ga_return, isoch_fit_errors):
     '''
     Make all plots.
     '''
@@ -882,9 +882,33 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         plt.plot([0., 1.], [0., 1.], color='k', linestyle='--', linewidth=1.)
            
         
+
+    # GA diagram.
+    n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es = ga_return[1]
+    lkl_old, ext_imm_indx = ga_return[2], ga_return[3]
+    ax23 = plt.subplot(gs1[10:12, 4:6])
+    plt.xlim(-1, n_gen+int(0.05*n_gen))
+    plt.ylim(min(lkl_old[0])-0.1*min(lkl_old[0]), max(lkl_old[0])+min(lkl_old[0]))
+    ax23.tick_params(axis='y', which='major', labelsize=9)
+    ax23.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
+    plt.xlabel('Generation', fontsize=16)
+    plt.ylabel('Likelihood', fontsize=16)
+    text1 = '$N = %d\,;\,L_{min}=%0.2f$' '\n' % (len(lkl_old[0]), min(lkl_old[0]))
+    text2 = '$n_{gen}=%d\,;\,n_{pop}=%d$' '\n' % (n_gen, n_pop)
+    text3 = '$f_{dif}=%0.2f\,;\,cr_{sel}=%s$' '\n' % (fdif, cr_sel)
+    text4 = '$p_{cross}=%0.2f\,;\,p_{mut}=%0.2f$' '\n' % (p_cross, p_mut)
+    text5 = '$n_{el}=%d\,;\,n_{ei}=%d\,;\,n_{es}=%d$' % (n_el, n_ei, n_es)
+    text = text1+text2+text3+text4+text5
+    plt.text(0.3, 0.75, text, transform = ax23.transAxes, \
+    bbox=dict(facecolor='white', alpha=0.5), fontsize=12)
+    ax23.plot(range(len(lkl_old[0])), lkl_old[0], lw=1., c='black')
+    ax23.plot(range(len(lkl_old[0])), lkl_old[1], lw=1., c='blue')
+    for lin in ext_imm_indx:
+        plt.axvline(x=lin, linestyle='--', lw=0.6, color='black')
+        
         
     # Cluster's stars CMD. Check if decont algorithm was applied.
-    ax23 = plt.subplot(gs1[10:12, 6:8])
+    ax24 = plt.subplot(gs1[10:12, 6:8])
     #Set plot limits
     plt.xlim(col1_min, col1_max)
     plt.ylim(mag_min, mag_max)
@@ -892,18 +916,18 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     plt.xlabel('$C-T_1$', fontsize=18)
     plt.ylabel('$T_1$', fontsize=18)
     # Set minor ticks
-    ax23.minorticks_on()
-    ax23.xaxis.set_major_locator(MultipleLocator(1.0))
-    ax23.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
+    ax24.minorticks_on()
+    ax24.xaxis.set_major_locator(MultipleLocator(1.0))
+    ax24.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
     # Add text box
-    m, a, e, d = isoch_fit_params
+    m, a, e, d = ga_return[0]
     e_m, e_a, e_e, e_d = isoch_fit_errors
-    text1 = '$z = %0.4f \pm %0.5f$' '\n' % (m, e_m)
+    text1 = '$z = %0.4f \pm %0.4f$' '\n' % (m, e_m)
     text2 = '$log(age) = %0.2f \pm %0.2f$' '\n' % (a, e_a)
     text3 = '$E_{(B-V)} = %0.2f \pm %0.2f$' '\n' % (e, e_e)
     text4 = '$(m-M)_o = %0.2f \pm %0.2f$' % (d, e_d)
     text = text1+text2+text3+text4
-    plt.text(0.05, 0.8, text, transform = ax23.transAxes, 
+    plt.text(0.32, 0.8, text, transform = ax24.transAxes, 
              bbox=dict(facecolor='white', alpha=0.6), fontsize=12)
     # Plot ZAMS.
 #    plt.plot(zams_iso[1], zams_iso[0], c='k', ls='--', lw=1.)

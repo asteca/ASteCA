@@ -242,7 +242,7 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort, completeness, popt_mag, pop
     
     # Genetic algorithm parameters.
     # n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es
-    params_ga = [4, 2, 1., 0.85, '2P', 0.01, 1, 25, 6]
+    params_ga = [4, 20, 1., 0.85, '2P', 0.01, 1, 25, 6]
     
 
     # Number of times to run the bootstrap block.
@@ -278,7 +278,7 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort, completeness, popt_mag, pop
 #                                           line_start, indexes, obs_clust,\
 #                                           mass_dist)
             # Genetic algorithm.
-            isoch_fit_params = g_a(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed,
+            ga_return = g_a(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed,
                                    mass_params, ranges_steps, params_ga,\
                                    completeness, f_bin, q_bin, popt_mag, popt_col1)
         else:
@@ -289,15 +289,15 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort, completeness, popt_mag, pop
             # Genetic algorithm algorithm.
             params_boot.append(g_a(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed,
                                    mass_params, ranges_steps, params_ga,\
-                                   completeness, f_bin, q_bin, popt_mag, popt_col1))
+                                   completeness, f_bin, q_bin, popt_mag, popt_col1)[0])
 
         
     # Calculate errors for each parameter.
     isoch_fit_errors = np.std(params_boot, 0)
     
     # For plotting purposes: generate shifted isochrone.
-    m, a, e, d = isoch_fit_params
+    m, a, e, d = ga_return[0]
     m_indx, a_indx = next(((i,j) for i,x in enumerate(isoch_ma) for j,y in enumerate(x) if y == [m, a]), None)
     shift_isoch = move_isoch(sys_select, [isoch_list[m_indx][a_indx][0], isoch_list[m_indx][a_indx][1]], e, d)
 
-    return shift_isoch, isoch_fit_params, isoch_fit_errors
+    return shift_isoch, ga_return, isoch_fit_errors
