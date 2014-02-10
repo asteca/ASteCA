@@ -102,8 +102,6 @@ def get_pval(flag_area_stronger, cluster_region, field_region,
                 # Store number of stars in field region.
                 n_fl = len(f_region)
                 
-#                print len(cluster_region_r), cluster_region_r, '\n'
-                
                 # Randomly shuffle the stars in the cluster region.
                 clust_reg_shuffle = np.random.permutation(cluster_region_r)
                 # Remove n_fl random stars from the cluster region and pass
@@ -116,7 +114,6 @@ def get_pval(flag_area_stronger, cluster_region, field_region,
                     # don't remove any star. This should not happen though.
                     clust_reg_clean = clust_reg_shuffle                
                 
-#                print len(clust_reg_clean), clust_reg_clean
                 # CMD for cluster region.
                 matrix_cl = get_CMD(clust_reg_clean)
                 rows_cl = int(len(matrix_cl)/2)

@@ -56,12 +56,17 @@ def get_regions(x_center_bin, y_center_bin, width_bins, histo, clust_rad,
             break
 
     # If length is still smaller than 3 we try with less field areas and
-    # increase the threshold to accept a value of 2.
-    if length < 3.:
-        for areas_2 in range(areas, 1, -1):           
-            length = int(np.sqrt(percent*area/(areas_2*100.))/clust_rad[0])
-            if length >= 2:
+    # increase the threshold to accept a value of 3.
+    if length < 3:
+        for areas_2 in range(areas, 1, -1):
+            length = int(np.sqrt(100.*area/(areas_2*100.))/clust_rad[0])
+            if length == 3:
                 break
+            
+    # If length is still smaller than 3, try with a value of 2 and only one
+    # field area. This way: (r*l)^2 = area/2
+    if length < 3:
+        length = int(np.sqrt(100.*area/(2.*100.))/clust_rad[0])
         
     # If after this length is still smaller than 2, this means that the area
     # taken by the cluster is bigger than half of the total frame. In this case
