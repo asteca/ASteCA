@@ -12,8 +12,7 @@ import numpy as np
 def get_regions(x_center_bin, y_center_bin, width_bins, histo, clust_rad,
                 h_manual, stars_in, stars_out):
     '''
-    Get cluster and field regions around the cluster's center, used by the
-    decontamination algorithms(s).
+    Define cluster and field regions around the cluster's center.
     '''
     
     # Use the bin center obtained with the smallest bin width
@@ -38,7 +37,7 @@ def get_regions(x_center_bin, y_center_bin, width_bins, histo, clust_rad,
     # the length of the side of the square, called 'cluster_region', that
     # contains the cluster.
     # We set 'length' so that all the regions of area
-    # (l*r)^2 sum up to less than 50% of area: 50*area/100 > 5*(l*r)^2. This
+    # (l*r)^2 sum up to less than 50% of area: 50*area/100 > 3*(l*r)^2. This
     # means that length = sqrt(0.1*area)/clust_rad[0]. First we see if length
     # obtained this way is equal or greater than 3. A value less than 3 would
     # mean that the area around the cluster is comparable to the cluster's area.
@@ -110,17 +109,16 @@ def get_regions(x_center_bin, y_center_bin, width_bins, histo, clust_rad,
         # the central bin which corresponds to the center of the cluster
         for sp_item in spiral:
             
-            
-            # THIS IS AN ADDITION MADE SO THAT THE KDE ALGORITHM USES CMD's
-            # OF AREAS EQUAL TO THE CLUSTER AREA FOR THE FIELDS SINCE ONLY STARS
-            # INSIDE THE CLUSTER RADIUS ARE USED TO OBTAIN THE CLUSTER'S CMD.
+            # This ensures that the decontamination algorithm uses CMD's
+            # of areas equal to the cluster area for the field regions since
+            # only stars inside the cluster's radius are used to obtain
+            # the cluster's CMD.
             if reg_index == 0:
                 # We're inside the cluster region: use big square area
                num_bins_area_2 = num_bins_area
             else:
                 # We're inside a field region: use cluster's area.
                 num_bins_area_2 = int(np.pi*((clust_rad[0]/width_bins[0])**2))
-    
     
             # If the region is not filled yet, we add this bin to this region.
             if bin_count[reg_index] <= num_bins_area_2:
@@ -212,8 +210,8 @@ def get_regions(x_center_bin, y_center_bin, width_bins, histo, clust_rad,
         # lists inside the list 'field_region[]'.
         
         # If any of the field regions has less than 4 stars then we remove it
-        # from the list otherwise the KDE or the p-value algorithms will fail.
-        # This lists stores the indexes of the empty regions.
+        # from the list otherwise the decontamination or the p-value algorithms
+        # will fail. This list stores the indexes of the empty regions.
         field_regs_del = []
         for indx, s_lst in enumerate(field_region):
             if len(s_lst) < 4:

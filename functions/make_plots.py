@@ -888,7 +888,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     lkl_old, ext_imm_indx = ga_return[2], ga_return[3]
     ax23 = plt.subplot(gs1[10:12, 4:6])
     plt.xlim(-1, n_gen+int(0.05*n_gen))
-    plt.ylim(min(lkl_old[0])-0.1*min(lkl_old[0]), max(lkl_old[0])+min(lkl_old[0]))
+    plt.ylim(min(lkl_old[0])-0.1*min(lkl_old[0]),
+             max(lkl_old[0])+min(lkl_old[0])/2.)
     ax23.tick_params(axis='y', which='major', labelsize=9)
     ax23.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
     plt.xlabel('Generation', fontsize=16)

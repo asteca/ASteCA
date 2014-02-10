@@ -30,13 +30,12 @@ vs field and field vs field comparisions.
 '''
 
 
-def gauss_error(col_lst, e_col_lst, mag_lst, e_mag_lst):
+def gauss_error(col, e_col, mag, e_mag):
     # Randomly move mag and color through a Gaussian function.
-    col_gauss = rd.gauss(np.array(col_lst), np.array(e_col_lst))
-    mag_gauss = rd.gauss(np.array(mag_lst), np.array(e_mag_lst))
+    col_gauss = col + np.random.normal(0, 1, len(col))*e_col
+    mag_gauss = mag + np.random.normal(0, 1, len(col))*e_mag
     
     return col_gauss, mag_gauss
-
 
 
 def get_CMD(region):
@@ -99,9 +98,27 @@ def get_pval(flag_area_stronger, cluster_region, field_region,
         for run_num in range(runs):
             # Loop through all the field regions.
             for indx, f_region in enumerate(field_region):
+
+                # Store number of stars in field region.
+                n_fl = len(f_region)
                 
+#                print len(cluster_region_r), cluster_region_r, '\n'
+                
+                # Randomly shuffle the stars in the cluster region.
+                clust_reg_shuffle = np.random.permutation(cluster_region_r)
+                # Remove n_fl random stars from the cluster region and pass
+                # it to the function that obtains the likelihoods for each
+                # star in the "cleaned" cluster region, ie: P(B)
+                if n_fl < len(cluster_region_r):
+                    clust_reg_clean = clust_reg_shuffle[n_fl:]
+                else:
+                    # If field region has more stars than the cluster region,
+                    # don't remove any star. This should not happen though.
+                    clust_reg_clean = clust_reg_shuffle                
+                
+#                print len(clust_reg_clean), clust_reg_clean
                 # CMD for cluster region.
-                matrix_cl = get_CMD(cluster_region_r)
+                matrix_cl = get_CMD(clust_reg_clean)
                 rows_cl = int(len(matrix_cl)/2)
                 # CMD for 1st field region.
                 matrix_f1 = get_CMD(f_region)
