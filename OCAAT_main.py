@@ -426,7 +426,7 @@ all stars with photom errors < 0.3)? (y/n) ')
         # Get QQ plot for p-values distributions.
         # qq_params = ccc, quantiles, r_squared, slope, intercept
         qq_params = g_qq(pval_test_params[1], pval_test_params[2])
-        print 'QQ-plot obtained (R^2 = %0.2f)' % qq_params[2]
+        print 'QQ-plot obtained (CCC = %0.2f)' % qq_params[0]
     else:
         # Pass empty lists.
         pval_test_params, qq_params = [-1., flag_pval_test], [-1.]

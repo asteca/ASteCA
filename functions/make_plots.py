@@ -865,25 +865,21 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         
         # QQ-plot.
         # Extract parameters from list.
-        ccc, quantiles, r_squared, slope, intercept = qq_params
+        ccc, quantiles = qq_params
         ax22 = plt.subplot(gs1[10:12, 2:4])
         plt.xlim(-0.05, 1.05)
         plt.ylim(-0.05, 1.05)
-        plt.xlabel(r'$p-value_{cl}$', fontsize=16)
-        plt.ylabel(r'$p-value_{f}$', fontsize=16)
+        plt.xlabel('$p-value_{cl}$', fontsize=16)
+        plt.ylabel('$p-value_{f}$', fontsize=16)
         ax22.minorticks_on()
         ax22.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
-        plt.scatter(quantiles[0], quantiles[1], marker='o', c='k', s=10.)
-        text1 = r'$R^2\, = %0.2f$' '\n' % r_squared
-        text2 = r'$CCC\, = %0.2f$' % ccc
-        text = text1+text2
-        plt.text(0.72, 0.87, text, transform = ax22.transAxes, 
+        text = '$CCC\, = %0.2f$' % ccc
+        plt.text(0.05, 0.92, text, transform = ax22.transAxes, 
              bbox=dict(facecolor='white', alpha=0.85), fontsize=12)
+        # Plot quantiles.
+        plt.scatter(quantiles[0], quantiles[1], marker='o', c='k', s=10.)
+        # Identity line.
         plt.plot([0., 1.], [0., 1.], color='k', linestyle='--', linewidth=1.)
-        # Plot qq-plot fitted line.
-        x = np.arange(0.,1.1,0.1)
-        y = line(x, slope, intercept)
-        plt.plot(x,y, color='r', linestyle='--')
            
         
         

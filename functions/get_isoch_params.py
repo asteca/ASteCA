@@ -242,11 +242,11 @@ def gip(sys_select, iso_select, memb_prob_avrg_sort, completeness, popt_mag, pop
     
     # Genetic algorithm parameters.
     # n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es
-    params_ga = [250, 400, 1., 0.85, '2P', 0.01, 1, 25, 6]
+    params_ga = [4, 2, 1., 0.85, '2P', 0.01, 1, 25, 6]
     
 
     # Number of times to run the bootstrap block.
-    N_B = 10
+    N_B = 2
    
     # Store all isochrones in all the metallicity files in isoch_list. We do
     # this now so the files will only have to be accessed once.
