@@ -5,13 +5,15 @@
 from scipy.optimize import curve_fit
 import numpy as np
 
-def err_accpt_rejct(phot_data):
+def err_accpt_rejct(phot_data, er_params):
     """    
     Accept and reject stars in and out of the cluster's boundaries according to
     a given criteria based on their photometric errors.
     """
 
     id_star, x_data, y_data, mag, e_mag, col1, e_col1 = phot_data
+    
+    be, be_e, e_max = er_params
 
 ################################################################################
 # First part: separate stars in magnitude intervals for errors of magnitude and
@@ -21,12 +23,12 @@ def err_accpt_rejct(phot_data):
     min_mag, max_mag = min(mag), max(mag)
         
     # Define left side max limit for the box that holds the brightest stars.
-    bright_end = (min_mag+2.)
+    bright_end = (min_mag+be)
         
     # Create a segmented list in magnitude.
     # Magnitude range.
     delta_mag = max_mag - bright_end
-    # Width if the intervals in magnitude.
+    # Width of the intervals in magnitude.
     interv_mag = 0.5
     # Number of intervals.
     n_interv = int(delta_mag/interv_mag)
@@ -48,8 +50,8 @@ def err_accpt_rejct(phot_data):
     # Iterate through all stars
     for st_ind, star_id in enumerate(id_star):
 
-        # Reject stars with at least one error >= 0.3.
-        if e_mag[st_ind] >= 0.3 or e_col1[st_ind] >= 0.3:
+        # Reject stars with at least one error >= e_max.
+        if e_mag[st_ind] >= e_max or e_col1[st_ind] >= e_max:
 
             rjct_stars.append([star_id, x_data[st_ind], y_data[st_ind], 
                                mag[st_ind], e_mag[st_ind], col1[st_ind],\
@@ -61,8 +63,8 @@ def err_accpt_rejct(phot_data):
             # For stars brighter than the brightest plus 2 magnitudes.
             if mag[st_ind] <= bright_end:
                 # For values in this range accept all stars with both errors
-                # <0.1
-                if e_mag[st_ind] < 0.1 and e_col1[st_ind] < 0.1:
+                # < be_e.
+                if e_mag[st_ind] < be_e and e_col1[st_ind] < be_e:
                     # Accept star.
                     acpt_stars.append([star_id, x_data[st_ind], y_data[st_ind], 
                                       mag[st_ind], e_mag[st_ind], col1[st_ind],\
@@ -266,7 +268,7 @@ def err_accpt_rejct(phot_data):
     for st_ind, star_id in enumerate(id_star):
         
         # Star already rejected and stored.
-        if e_mag[st_ind] >= 0.3 or e_col1[st_ind] >= 0.3:
+        if e_mag[st_ind] >= e_max or e_col1[st_ind] >= e_max:
             pass
         else:
             # Stars brighter than the brightest plus 2 magnitudes also already

@@ -27,7 +27,7 @@ import functions.get_king_prof as gkp
 from functions.display_rad import disp_rad as d_r
 import functions.err_accpt_rejct as ear
 from functions.display_errors import disp_errors as d_e
-from functions.err_accpt_rejct_03 import err_a_r_03 as e_a_r_03
+from functions.err_accpt_rejct_max import err_a_r_m as e_a_r_m
 import functions.get_in_out as gio
 from functions.get_integ_mag import integ_mag as g_i_m
 import functions.get_members_number as g_m_n
@@ -63,7 +63,7 @@ print '-------------------------------------------\n'
 mypath = realpath(join(getcwd(), dirname(__file__)))
 
 # Read input parameters for code from file.
-mode, in_dirs, gd_params, gc_params, br_params, cr_params = gip.get_in_params(mypath)
+mode, in_dirs, gd_params, gc_params, br_params, cr_params, er_params = gip.get_in_params(mypath)
 
 # Read paths.
 mypath2, mypath3, output_dir = in_dirs
@@ -292,7 +292,8 @@ px): '))
     # Accept and reject stars based on their errors.
     bright_end, popt_mag, popt_umag, pol_mag, popt_col1, popt_ucol1, \
     pol_col1, mag_val_left, mag_val_right, col1_val_left, col1_val_right, \
-    acpt_stars, rjct_stars = ear.err_accpt_rejct(phot_data)
+    acpt_stars, rjct_stars = ear.err_accpt_rejct(phot_data, er_params)
+    e_max = er_params[2]
     print 'Stars accepted/rejected based on their errors.'
 
 
@@ -306,30 +307,30 @@ px): '))
 
     
     # This indicates if we are to use the output of the 'err_accpt_rejct'
-    # function or all stars with errors < 0.3.
+    # function or all stars with errors < e_max.
     use_errors_fit = True
     # If Manual mode is set, display errors distributions and ask the user
-    # to accept it or else use all stars except those with errors >0.3 in
+    # to accept it or else use all stars except those with errors > e_max in
     # either the magnitude or the color.
     flag_errors_manual = False
     if mode == 'm':
         print 'Plot error distributions.'
         d_e(mag_data, bright_end, popt_mag, popt_umag, pol_mag, popt_col1,
             popt_ucol1, pol_col1, mag_val_left, mag_val_right,
-            col1_val_left, col1_val_right, acpt_stars, rjct_stars)
+            col1_val_left, col1_val_right, acpt_stars, rjct_stars, er_params)
         plt.show()
                 
         wrong_answer = True
         while wrong_answer:
             answer_rad = raw_input('Accept fit for errors (otherwise use \
-all stars with photom errors < 0.3)? (y/n) ')
+all stars with photom errors < %0.2f)? (y/n) ' % e_max)
             if answer_rad == 'y':
                 print 'Fit accepted.'
                 wrong_answer = False
             elif answer_rad == 'n':
-                print 'Using stars with errors < 0.3.'
-                # Call function to reject stars w errors > 0.3.
-                acpt_stars, rjct_stars = e_a_r_03(phot_data)
+                print 'Using stars with errors < %0.2f.' % e_max
+                # Call function to reject stars w errors > e_max.
+                acpt_stars, rjct_stars = e_a_r_m(phot_data, er_params)
                 flag_errors_manual = True
                 use_errors_fit = False
                 wrong_answer = False
@@ -338,9 +339,9 @@ all stars with photom errors < 0.3)? (y/n) ')
     elif mode == 's':
         if err_flag_semi == 1:
             # Reject error fit.
-            print 'Using stars with errors < 0.3.'
-            # Call function to reject stars w errors > 0.3.
-            acpt_stars, rjct_stars = e_a_r_03(phot_data)
+            print 'Using stars with errors < %0.2f.' % e_max
+            # Call function to reject stars w errors > e_max.
+            acpt_stars, rjct_stars = e_a_r_m(phot_data, er_params)
             flag_errors_manual = True
             use_errors_fit = False
 

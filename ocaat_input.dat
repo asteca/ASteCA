@@ -47,3 +47,14 @@ BR     4.    3.
 # This is the condition where the star density is found to have
 # stabilized.
 CR  4
+
+# Rejection of stars according to their errors.
+# be: bright end, the magnitude value that will be added to the
+# brightest star to determine the range where stars will be accepted
+# if their errors are lower than 'be_e' (see below).
+# be_e: maximum error value that stars in the bright end range can
+# have without being rejected.
+# e_max: maximum error value a star can have in either its magnitude or
+# color withou being rejected. 
+#   be  be_e  e_max
+ER  2.   0.1    0.3

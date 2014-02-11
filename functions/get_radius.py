@@ -16,7 +16,6 @@ def get_clust_rad(backg_value, radii, ring_density, width_bins, cr_params):
     """
     
     n_l = cr_params[0]
-    print n_l
     
     # Initiate empty list of as many items as different bin widths were used.
     clust_rad = [0]*len(width_bins)
