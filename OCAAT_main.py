@@ -269,7 +269,7 @@ background (%d, %d) px? (y/n) ' % (inner_ring, outer_ring))
     backg_value, flag_bin_count = gbg.get_background(x_data, y_data, \
                                     x_center_bin, y_center_bin, h_not_filt,\
                                     width_bins, inner_ring, outer_ring)
-    print 'Background calculated (%0.5f stars/px^2).' % backg_value[0]
+    print 'Background calculated (%0.5f stars/px^2).' % backg_value
 
 
     # Get density profile
@@ -279,18 +279,17 @@ background (%d, %d) px? (y/n) ' % (inner_ring, outer_ring))
     
     
     # Get cluster radius
-    clust_rad, delta_backg, delta_percentage, \
-    flag_delta_total, flag_not_stable, flag_rad_500, flag_delta, \
-    flag_delta_points = gr.get_clust_rad(backg_value, radii, 
-                                         ring_density, width_bins)
-    print 'Radius calculated: %d px.' % clust_rad[0]
+    radius_params = gr.get_clust_rad(backg_value, radii, ring_density,
+                                     width_bins)
+    clust_rad = radius_params[0]
+    print 'Radius calculated: %d px.' % clust_rad
 
 
     # If Manual mode is set, display radius and ask the user to accept it or
     # input new one.
     flag_radius_manual = False
     if mode == 'm':
-        print 'Radius found: ', clust_rad[0]
+        print 'Radius found: ', clust_rad
         d_r(x_data, y_data, mag_data, center_cl, cent_cl_err, clust_rad, \
         x_center_bin, y_center_bin, h_filter, backg_value, radii,
         delta_backg, ring_density, clust_name, poisson_error, width_bins,
@@ -305,7 +304,7 @@ manually)? (y/n) ')
                 print 'Value accepted.'
                 wrong_answer = False
             elif answer_rad == 'n':
-                clust_rad[0] = float(raw_input('Input new radius value (in \
+                clust_rad = float(raw_input('Input new radius value (in \
 px): '))
                 wrong_answer = False
                 flag_radius_manual = True
@@ -314,7 +313,7 @@ px): '))
     elif mode == 's':
         if rad_flag_semi == 1:
             # Update value.
-            clust_rad[0] = cl_rad_semi
+            clust_rad = cl_rad_semi
             flag_radius_manual = True
 
                 
@@ -382,7 +381,7 @@ all stars with photom errors < 0.3)? (y/n) ')
 
     # Get stars in and out of cluster's radius.
     stars_in, stars_out, stars_in_rjct, stars_out_rjct =  \
-    gio.get_in_out(center_cl, clust_rad[0], acpt_stars, rjct_stars)
+    gio.get_in_out(center_cl, clust_rad, acpt_stars, rjct_stars)
     print "Stars separated in/out of cluster's boundaries."
     
     
@@ -393,12 +392,12 @@ all stars with photom errors < 0.3)? (y/n) ')
     
     # Get approximate number of cluster's members.
     n_c, flag_num_memb_low, flag_no_memb = g_m_n.get_memb_num(backg_value[0],\
-    clust_rad[0], stars_in, stars_in_rjct)
+    clust_rad, stars_in, stars_in_rjct)
     print 'Approximate number of members in cluster obtained (%d).' % (n_c)
             
     
     # Get contamination index.
-    cont_index = g_c_i.cont_indx(backg_value[0], clust_rad[0], stars_in,
+    cont_index = g_c_i.cont_indx(backg_value[0], clust_rad, stars_in,
                                  stars_in_rjct)
     print 'Contamination index obtained (%0.2f).' % cont_index
     
