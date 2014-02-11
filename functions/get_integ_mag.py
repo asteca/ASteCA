@@ -5,13 +5,7 @@ Created on Thu Nov 28 20:55:57 2013
 @author: gabriel
 """
 
-'''
-Obtain integrated magnitude using all stars inside the cluster's radius for
-several limits in magnitude.
-'''
-
 import numpy as np
-
 
 def calc_integ_mag(mag_list, mag_limit):
     '''
@@ -40,6 +34,10 @@ def calc_integ_mag(mag_list, mag_limit):
     
 
 def integ_mag(stars_in, stars_in_rjct):
+    '''
+    Obtain integrated magnitude using all stars inside the cluster's radius for
+    several limits in magnitude.
+    '''
     
     # Generate lists holding only mag values.
     mags_in = [i[3] for i in stars_in]
@@ -71,5 +69,3 @@ def integ_mag(stars_in, stars_in_rjct):
             out_list[1].append(int_mag_val)
     
     return stars_in_mag, stars_in_all_mag
-
-
