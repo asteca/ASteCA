@@ -15,6 +15,7 @@ import time
 import gc
 
 # Import files with defined functions
+import functions.get_in_params as gip
 from functions.create_out_data_file import create_out_data_file as c_o_d_f
 from functions.get_isochrones import get_isochrones as g_i
 from functions.get_data_semi import get_semi as g_s
@@ -58,41 +59,14 @@ from functions.cl_members_file import cluster_members_file as c_m_f
 print '            OCAAT v0.1\n'
 print '-------------------------------------------\n'
 
-
-# Select automatic or manual mode. Manual mode will ask for some values (center,
-# radius, background) but will give you the chance to have them automatically
-# calculated. Automatic mode does not require user intervention of any kind.
-wrong_mode = True
-while wrong_mode:
-    mode = raw_input('\nSelect Auto / Semi / Manual mode (a/s/m): ')
-    if mode == 'a':
-        print 'Automatic mode selected.\n'
-        wrong_mode = False
-    elif mode == 's':
-        print 'Semi automatic mode selected.\n'
-        wrong_mode = False
-    elif mode == 'm':
-        print 'Manual mode selected.\n'
-        wrong_mode = False
-    else:
-        print 'Wrong input. Try again.\n'
-
-
-
-# Define paths to folders/files.
-
-# Set 'home' dir.
-home = expanduser("~")
-
 # Path where the code is running
 mypath = realpath(join(getcwd(), dirname(__file__)))
-# Path where the cluster files to be processed are stored.
-mypath2 = home+'/clusters/clusters_in'
-# Path where the sub-folders are moved once processed.
-mypath3 = home+'/clusters/clusters_done'
-# Set output directory.        
-output_dir = home+'/clusters/clusters_out/'
 
+# Read input parameters for code from file.
+mode, in_dirs = gip.get_in_params(mypath)
+
+# Read paths.
+mypath2, mypath3, output_dir = in_dirs
 
 # Create output data file (append if file already existis)
 c_o_d_f(output_dir)   
@@ -121,7 +95,6 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
     # Store cluster's name    
     clust_name = myfile[:-4]
     print 'Analizing cluster %s.' % (clust_name)
-
 
     # If Semi mode set, get data from 'data_input' file.
     if mode == 's':
