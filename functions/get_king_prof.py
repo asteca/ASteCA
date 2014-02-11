@@ -4,11 +4,6 @@ Created on Fri Oct 25 10:54:00 2013
 
 @author: gabriel
 """
-'''
-Function to fit the 3-params King profile to a given radial density.
-The background density value is fixed and the core radius, tidal radius and
-maximum density are fitted.
-'''
 
 import numpy as np
 from scipy.optimize import curve_fit
@@ -23,6 +18,11 @@ def three_params(x, a, b, c):
 
 
 def get_king_profile(clust_rad, backg_value, radii, ring_density):
+    '''
+    Function to fit the 3-params King profile to a given radial density.
+    The background density value is fixed and the core radius, tidal radius and
+    maximum density are fitted.
+    '''
     global backg_dens
     
     # Define values used by King profiles.
