@@ -2,8 +2,6 @@
 @author: gabriel
 """
 
-#import numpy as np
-
 def get_background(x_data, y_data, x_c_b, y_c_b, h_not_filt, width_bins,
                    inner_ring, outer_ring):
     """    
@@ -15,12 +13,7 @@ def get_background(x_data, y_data, x_c_b, y_c_b, h_not_filt, width_bins,
     be near a border and the raddi falls outside the boundaries of the frame.
     """
 
-#    # List that stores the background values obtained with each 2D histogram
-#    backg_value = []
-#    
-#    # Iterate through all four 2D histograms
-#    for index, item in enumerate(h_not_filt):
-
+    # Use only histogram made wiht the smallest bin width.
     index, item = 0, h_not_filt[0]
         
     # If the bin is at least inner_ring px away from the cluster's center
@@ -77,23 +70,6 @@ def get_background(x_data, y_data, x_c_b, y_c_b, h_not_filt, width_bins,
         # of the cluster.
         if index == 0:
             flag_bin_count = True
-
-    
-   # Put value of background into an array so as to be able to calculate the
-   # mean and standard deviation
-#    backg_array = np.array(backg_value)
-#    # Get mean and standard deviation for all the values calculated
-#    backg_mean, backg_std_dev = np.mean(backg_array), np.std(backg_array)
-#    print backg_value
-#    print backg_mean, backg_std_dev
-
-
-#   # If the difference between the mean background value and the one obtained
-#   # with the min bin width is higher than the standard deviation of that 
-#   # mean -> raise a flag.
-#    flag_back = False
-#    if abs(backg_mean-backg_value[0]) > backg_std_dev:
-#        flag_back = True
             
     # Return list of all background values obtained for each bin widt.
     return backg_value, flag_bin_count
