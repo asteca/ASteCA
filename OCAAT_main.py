@@ -26,7 +26,7 @@ from functions.display_cent import disp_cent as d_c
 from functions.manual_histo import manual_histo as mh
 import functions.get_background as gbg
 import functions.get_dens_prof as gdp
-import functions.get_clust_rad as gcr
+import functions.get_radius as gr
 import functions.get_king_prof as gkp
 from functions.display_rad import disp_rad as d_r
 import functions.err_accpt_rejct as ear
@@ -281,8 +281,8 @@ background (%d, %d) px? (y/n) ' % (inner_ring, outer_ring))
     # Get cluster radius
     clust_rad, delta_backg, delta_percentage, \
     flag_delta_total, flag_not_stable, flag_rad_500, flag_delta, \
-    flag_delta_points = gcr.get_clust_rad(backg_value, radii, 
-                                          ring_density, width_bins)
+    flag_delta_points = gr.get_clust_rad(backg_value, radii, 
+                                         ring_density, width_bins)
     print 'Radius calculated: %d px.' % clust_rad[0]
 
 
