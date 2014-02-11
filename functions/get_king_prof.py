@@ -27,8 +27,8 @@ def get_king_profile(clust_rad, backg_value, radii, ring_density):
     
     # Define values used by King profiles.
     max_dens = max(ring_density[0])
-    backg_dens = backg_value[0]
-    r_t = clust_rad[0]
+    backg_dens = backg_value
+    r_t = clust_rad
 
     # Initial guesses for fit: r_c, r_t, max_dens.
     guess = (r_t/2., r_t, max_dens)

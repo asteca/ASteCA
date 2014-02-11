@@ -6,7 +6,6 @@ Created on Fri Nov  1 17:58:28 2013
 """
 
 import numpy as np
-import random as rd
 #from scipy.stats import ks_2samp
 from scipy import stats
 from scipy.integrate import quad
@@ -86,7 +85,7 @@ def get_pval(flag_area_stronger, cluster_region, field_region,
         for star in cluster_region:
             dist = np.sqrt((center_cl[0]-star[1])**2 + \
             (center_cl[1]-star[2])**2)
-            if dist <= clust_rad[0]: 
+            if dist <= clust_rad: 
                 cluster_region_r.append(star)
                 
         # The first list holds all the p_values obtained comparing the cluster

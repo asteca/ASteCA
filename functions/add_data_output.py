@@ -9,8 +9,12 @@ def add_data_output(sub_dir, output_dir, clust_name, center_cl, clust_rad,
                     prob_cl_kde, ccc, stars_in_mag,                    
                     flag_center, flag_std_dev, flag_center_manual, 
                     flag_radius_manual, flag_errors_manual, flag_bin_count, 
-                    flag_delta_total, flag_not_stable, flag_rad_500, flag_delta,
-                    flag_delta_points, flag_num_memb_low, flag_no_memb):
+                    radius_params, flag_num_memb_low, flag_no_memb):
+
+
+    # Parameters from get_radius function.
+    flag_delta_total, flag_not_stable, flag_rad_500, flag_delta,\
+    flag_delta_points = radius_params
 
     # Create list containing all the flags.  
     flags_list = [flag_center_manual, flag_radius_manual, flag_errors_manual,
@@ -27,7 +31,7 @@ def add_data_output(sub_dir, output_dir, clust_name, center_cl, clust_rad,
 
     # str(sub_dir)+'_'+str(clust_name)
     line = [str(sub_dir)+'/'+str(clust_name), str('%0.f' % round(center_cl[0])),
-            str('%0.f' % round(center_cl[1])), str('%0.f' % round(clust_rad[0])),\
+            str('%0.f' % round(center_cl[1])), str('%0.f' % round(clust_rad)),\
             str('%0.f' % round(k_prof[0])), str('%0.f' % round(k_prof[1])),\
             str(round(cont_index, 2)), str(int(n_c)), str(n_c_k),\
             str('%0.2f' % prob_cl_kde), str('%0.2f' % ccc),\

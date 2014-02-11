@@ -73,7 +73,7 @@ def mc_probability(reg_call, reg, xmin, xmax, ymin, ymax, runs, run_num,
     for star in cluster_region:
         # Only compute if star is inside the cluster estimated radius.
         dist = np.sqrt((center_cl[0]-star[1])**2 + (center_cl[1]-star[2])**2)
-        if dist <= clust_rad[0]:
+        if dist <= clust_rad:
 
             # Compute the value below which to integrate.
             iso = kernel((star[5], star[3]))

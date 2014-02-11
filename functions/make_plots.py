@@ -16,9 +16,9 @@ from os.path import join
 
 def make_plots(output_subdir, clust_name, x_data, y_data, center_cl, 
                cent_cl_err, x_center_bin, y_center_bin, h_filter, radii, 
-               backg_value, inner_ring, outer_ring, delta_backg, ring_density,
-               poisson_error, clust_rad, cont_index, width_bins,
-               delta_percentage, mag_data, col1_data, bright_end, popt_mag,
+               backg_value, inner_ring, outer_ring, radius_params,
+               ring_density, poisson_error, cont_index, width_bins,
+               mag_data, col1_data, bright_end, popt_mag,
                popt_umag, pol_mag, popt_col1, popt_ucol1, pol_col1,
                mag_val_left, mag_val_right, col1_val_left,
                col1_val_right, use_errors_fit, k_prof, k_pr_err,
@@ -51,7 +51,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         '''
         Three parameters King profile fit.
         '''
-        a, b, c, d = k_prof[0], k_prof[1], k_prof[2], backg_value[0]
+        a, b, c, d = k_prof[0], k_prof[1], k_prof[2], backg_value
         return c*(1/np.sqrt(1+(x/a)**2) - 1/np.sqrt(1+(b/a)**2))**2 + d
         
 
@@ -61,6 +61,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     mag_min, mag_max = max(mag_data)+0.5, min(mag_data)-0.5
 
 
+    # Parameters from get_radius function.
+    clust_rad, delta_backg, delta_percentage = radius_params
 
     # Plot all outputs
     # figsize(x1, y1), GridSpec(y2, x2) --> To have square plots: x1/x2 = 
@@ -130,7 +132,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     plt.axvline(x=x_center_bin[0], linestyle='--', color='white')
     plt.axhline(y=y_center_bin[0], linestyle='--', color='white')
     # Radius
-    circle = plt.Circle((x_center_bin[0], y_center_bin[0]), clust_rad[0]/25., 
+    circle = plt.Circle((x_center_bin[0], y_center_bin[0]), clust_rad/25., 
                         color='w', fill=False)
     fig.gca().add_artist(circle)
     #text = 'Center (%d, %d)' % (x_center_bin[0], y_center_bin[0])
@@ -153,7 +155,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     plt.ylabel('y (px)', fontsize=12)
     # Set minor ticks
     ax5.minorticks_on()
-    circle = plt.Circle((center_cl[0], center_cl[1]), clust_rad[0], color='r', 
+    circle = plt.Circle((center_cl[0], center_cl[1]), clust_rad, color='r', 
                         fill=False)
     fig.gca().add_artist(circle)
     # Add text box
@@ -167,7 +169,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     range_10_perc = (max(mag_data)-min(mag_data))/10.+min(mag_data)
     bright_stars = len([i for i in mag_data if i < range_10_perc])
     # Set exponential factor for high and low density fields.
-    exp_factor = -0.004 if backg_value[0] > 0.005 else -0.0035
+    exp_factor = -0.004 if backg_value > 0.005 else -0.0035
     # Set a lower amplitude for fields with very bright stars.
     amplitude = 500 if bright_stars < 10 else 200
     plt.scatter(x_data, y_data, marker='o', c='black',
@@ -190,7 +192,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     ax4 = plt.subplot(gs1[2:4, 2:6])
     # Get max and min values in x,y
     x_max = max(radii[0])+10
-    y_min, y_max = (backg_value[0]-delta_backg)-(max(ring_density[0])-\
+    y_min, y_max = (backg_value-delta_backg)-(max(ring_density[0])-\
     min(ring_density[0]))/10, max(ring_density[0])+(max(ring_density[0])-\
     min(ring_density[0]))/10
     # Set plot limits
@@ -207,9 +209,9 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                  zorder=1)
     ## Plot the delta around the background value used to asses when the density
     # has become stable
-#    plt.hlines(y=(backg_value[0]-delta_backg), xmin=0, xmax=max(radii[0]), 
+#    plt.hlines(y=(backg_value-delta_backg), xmin=0, xmax=max(radii[0]), 
 #               color='k', linestyles='dashed', zorder=2)
-    plt.hlines(y=(backg_value[0]+delta_backg), xmin=0, xmax=max(radii[0]), 
+    plt.hlines(y=(backg_value+delta_backg), xmin=0, xmax=max(radii[0]), 
                color='k', linestyles='dashed', zorder=2)
     # Legend texts
     # Calculate errors for fitted King parameters. Use sqrt since the error
@@ -220,7 +222,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     else:
         rc_err, rt_err = -1, -1
     texts = ['Density Profile (%d px)' % width_bins[0],
-             r'$R_{cl}$ = %d $\pm$ %d px' % (clust_rad[0],
+             r'$R_{cl}$ = %d $\pm$ %d px' % (clust_rad,
                                            round(width_bins[0]/2.)),\
             '3-P King profile',
              r'$R_c$ = %d $\pm$ %d px' % (k_prof[0], rc_err),\
@@ -230,8 +232,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     ax4.plot(radii[0], ring_density[0], 'ko-', zorder=3, label=texts[0])
     # Plot King profile.
     arr_y_up = (y_max-y_min)/2. + y_min # Middle of the graph.
-    head_l = abs((arr_y_up-backg_value[0])/7.) # Length of arrow head.
-    arr_y_dwn = -1.*abs(arr_y_up-backg_value[0]-head_l*1.5) # Length of arrow.
+    head_l = abs((arr_y_up-backg_value)/7.) # Length of arrow head.
+    arr_y_dwn = -1.*abs(arr_y_up-backg_value-head_l*1.5) # Length of arrow.
     if flag_king_no_conver == False:
         ax4.plot(radii[0], three_params(radii[0]), 'b--', label=texts[2],
                  lw=1.5, zorder=3)
@@ -243,11 +245,11 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         ax4.arrow(k_prof[1], arr_y_up, 0., arr_y_dwn, fc="b", ec="b",\
                   head_width=10., head_length=head_l, zorder=5)
     # Plot radius.
-    ax4.vlines(x=clust_rad[0], ymin=0, ymax=0., label=texts[1], color='r')
-    ax4.arrow(clust_rad[0], arr_y_up, 0., arr_y_dwn, fc="r",
+    ax4.vlines(x=clust_rad, ymin=0, ymax=0., label=texts[1], color='r')
+    ax4.arrow(clust_rad, arr_y_up, 0., arr_y_dwn, fc="r",
               ec="r", head_width=10., head_length=head_l, zorder=5)
     # Plot background level.
-    ax4.hlines(y=backg_value[0], xmin=0, xmax=max(radii[0]), 
+    ax4.hlines(y=backg_value, xmin=0, xmax=max(radii[0]), 
                label=texts[5], color='k', zorder=5)
     # get handles
     handles, labels = ax4.get_legend_handles_labels()
@@ -262,10 +264,10 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     x_min, x_max = min(x_data), max(x_data)
     y_min, y_max = min(y_data), max(y_data)
     # If possible, zoom in.
-    x_min, x_max = max(x_min, (center_cl[0]-1.5*clust_rad[0])), \
-    min(x_max, (center_cl[0]+1.5*clust_rad[0]))
-    y_min, y_max = max(y_min, (center_cl[1]-1.5*clust_rad[0])), \
-    min(y_max, (center_cl[1]+1.5*clust_rad[0]))
+    x_min, x_max = max(x_min, (center_cl[0]-1.5*clust_rad)), \
+    min(x_max, (center_cl[0]+1.5*clust_rad))
+    y_min, y_max = max(y_min, (center_cl[1]-1.5*clust_rad)), \
+    min(y_max, (center_cl[1]+1.5*clust_rad))
     plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
     #Set axis labels
@@ -274,7 +276,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     # Set minor ticks
     ax6.minorticks_on()
     # Add circle
-    circle = plt.Circle((center_cl[0], center_cl[1]), clust_rad[0], color='r', 
+    circle = plt.Circle((center_cl[0], center_cl[1]), clust_rad, color='r', 
                         fill=False)
     fig.gca().add_artist(circle)
     text1 = 'Cluster (zoom)\n'
@@ -282,7 +284,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     text = text1 + text2
     plt.text(0.6, 0.9, text, transform = ax6.transAxes, 
              bbox=dict(facecolor='white', alpha=0.85), fontsize=12)
-    if backg_value[0] > 0.005:
+    if backg_value > 0.005:
         plt.scatter(x_data, y_data, marker='o', c='black', 
                     s=500*np.exp(-0.003*mag_data**2.5))
     else:
@@ -512,7 +514,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         ax13.minorticks_on()
         ax13.grid(b=True, which='both', color='gray', linestyle='--', lw=0.5)
         # Radius
-        circle = plt.Circle((center_cl[0], center_cl[1]), clust_rad[0], 
+        circle = plt.Circle((center_cl[0], center_cl[1]), clust_rad, 
                             color='r', fill=False)
         fig.gca().add_artist(circle)
         plt.text(0.4, 0.92, 'Cluster + %d Field regions' % (len(field_region)), 
@@ -524,7 +526,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
             dist = np.sqrt((center_cl[0]-star[1])**2 + \
             (center_cl[1]-star[2])**2)
             # Only plot stars inside the cluster's radius.
-            if dist <= clust_rad[0]:
+            if dist <= clust_rad:
                 clust_reg_temp[0].append(star[1])
                 clust_reg_temp[1].append(star[2])
         plt.scatter(clust_reg_temp[0], clust_reg_temp[1], marker='o', c='black',
@@ -662,7 +664,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         # Set minor ticks
         ax16.minorticks_on()
         # Radius
-        circle = plt.Circle((center_cl[0], center_cl[1]), clust_rad[0], 
+        circle = plt.Circle((center_cl[0], center_cl[1]), clust_rad, 
                             color='red', fill=False)
         fig.gca().add_artist(circle)
         plt.text(0.63, 0.93, 'Cluster region', transform = ax16.transAxes, \
@@ -672,7 +674,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         # Plot cluster region.
         stars_clust_temp = [[], [], []]
         for st_indx, star in enumerate(cluster_region):
-            if backg_value[0] > 0.005:
+            if backg_value > 0.005:
                 # Dense field
                 star_size = 15
             else:

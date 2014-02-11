@@ -290,10 +290,10 @@ background (%d, %d) px? (y/n) ' % (inner_ring, outer_ring))
     flag_radius_manual = False
     if mode == 'm':
         print 'Radius found: ', clust_rad
-        d_r(x_data, y_data, mag_data, center_cl, cent_cl_err, clust_rad, \
-        x_center_bin, y_center_bin, h_filter, backg_value, radii,
-        delta_backg, ring_density, clust_name, poisson_error, width_bins,
-        delta_percentage, inner_ring, outer_ring)
+        d_r(x_data, y_data, mag_data, center_cl, cent_cl_err,
+            radius_params[0:3], x_center_bin, y_center_bin, h_filter,\
+            backg_value, radii, ring_density, clust_name, poisson_error,\
+            width_bins, inner_ring, outer_ring)
         plt.show()
                 
         wrong_answer = True
@@ -391,13 +391,13 @@ all stars with photom errors < 0.3)? (y/n) ')
     
     
     # Get approximate number of cluster's members.
-    n_c, flag_num_memb_low, flag_no_memb = g_m_n.get_memb_num(backg_value[0],\
+    n_c, flag_num_memb_low, flag_no_memb = g_m_n.get_memb_num(backg_value,\
     clust_rad, stars_in, stars_in_rjct)
     print 'Approximate number of members in cluster obtained (%d).' % (n_c)
             
     
     # Get contamination index.
-    cont_index = g_c_i.cont_indx(backg_value[0], clust_rad, stars_in,
+    cont_index = g_c_i.cont_indx(backg_value, clust_rad, stars_in,
                                  stars_in_rjct)
     print 'Contamination index obtained (%0.2f).' % cont_index
     
@@ -475,7 +475,7 @@ all stars with photom errors < 0.3)? (y/n) ')
         # Average and sort all membership probabilities for each star and
         # store in list.
         memb_prob_avrg_sort, clust_reg_prob_avrg = m_p_a_s(cluster_region,\
-        runs_fields_probs, n_c, center_cl, clust_rad[0])
+        runs_fields_probs, n_c, center_cl, clust_rad)
         print 'Averaged probabilities for all runs.'
     
 
@@ -527,8 +527,8 @@ all stars with photom errors < 0.3)? (y/n) ')
     # Make plots
     mp(output_subdir, clust_name, x_data, y_data, center_cl, cent_cl_err,
        x_center_bin, y_center_bin, h_filter, radii, backg_value, inner_ring,
-       outer_ring, delta_backg, ring_density, poisson_error, clust_rad,
-       cont_index, width_bins, delta_percentage, mag_data, col1_data,
+       outer_ring, radius_params[0:3], ring_density, poisson_error,
+       cont_index, width_bins, mag_data, col1_data,
        bright_end, popt_mag, popt_umag, pol_mag, popt_col1, popt_ucol1,
        pol_col1, mag_val_left, mag_val_right, col1_val_left, col1_val_right,
        use_errors_fit, k_prof, k_pr_err, flag_king_no_conver, stars_in,
@@ -552,8 +552,7 @@ all stars with photom errors < 0.3)? (y/n) ')
           qq_params[0], stars_in_mag,
           flag_center, flag_std_dev, flag_center_manual,
           flag_radius_manual, flag_errors_manual, flag_bin_count,
-          flag_delta_total, flag_not_stable, flag_rad_500, flag_delta,
-          flag_delta_points, flag_num_memb_low, flag_no_memb)
+          radius_params[3:], flag_num_memb_low, flag_no_memb)
     print 'Data added to output file.'
     
 

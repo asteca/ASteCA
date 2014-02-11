@@ -38,7 +38,7 @@ def get_regions(x_center_bin, y_center_bin, width_bins, histo, clust_rad,
     # contains the cluster.
     # We set 'length' so that all the regions of area
     # (l*r)^2 sum up to less than 50% of area: 50*area/100 > 3*(l*r)^2. This
-    # means that length = sqrt(0.1*area)/clust_rad[0]. First we see if length
+    # means that length = sqrt(0.1*area)/clust_rad. First we see if length
     # obtained this way is equal or greater than 3. A value less than 3 would
     # mean that the area around the cluster is comparable to the cluster's area.
     # If this is the case we increase the 50% value by 10% and try again; we
@@ -47,7 +47,7 @@ def get_regions(x_center_bin, y_center_bin, width_bins, histo, clust_rad,
     # last scenario, we set length = 2 and raise a flag.
     
     for percent in range(50, 101, 10):
-        length = int(np.sqrt(percent*area/(areas*100.))/clust_rad[0])
+        length = int(np.sqrt(percent*area/(areas*100.))/clust_rad)
         if length < 3:
             # Increase the percentage and try again.
             pass
@@ -59,14 +59,14 @@ def get_regions(x_center_bin, y_center_bin, width_bins, histo, clust_rad,
     # increase the threshold to accept a value of 3.
     if length < 3:
         for areas_2 in range(areas, 1, -1):
-            length = int(np.sqrt(100.*area/(areas_2*100.))/clust_rad[0])
+            length = int(np.sqrt(100.*area/(areas_2*100.))/clust_rad)
             if length == 3:
                 break
             
     # If length is still smaller than 3, try with a value of 2 and only one
     # field area. This way: (r*l)^2 = area/2
     if length < 3:
-        length = int(np.sqrt(100.*area/(2.*100.))/clust_rad[0])
+        length = int(np.sqrt(100.*area/(2.*100.))/clust_rad)
         
     # If after this length is still smaller than 2, this means that the area
     # taken by the cluster is bigger than half of the total frame. In this case
@@ -83,7 +83,7 @@ def get_regions(x_center_bin, y_center_bin, width_bins, histo, clust_rad,
         # Calculate number of bins such that their combined area is
         # approximately (l*r)^2. See that: num_bins_area * width_bins[0]^2 = 
         # (l*r)^2.
-        num_bins_area = int((length*clust_rad[0]/width_bins[0])**2)
+        num_bins_area = int((length*clust_rad/width_bins[0])**2)
     
         # This list holds all the lists that will hold the bins that
         # compose the areas for the cluster (first list) and the remaining
@@ -123,7 +123,7 @@ def get_regions(x_center_bin, y_center_bin, width_bins, histo, clust_rad,
                num_bins_area_2 = num_bins_area
             else:
                 # We're inside a field region: use cluster's area.
-                num_bins_area_2 = int(np.pi*((clust_rad[0]/width_bins[0])**2))
+                num_bins_area_2 = int(np.pi*((clust_rad/width_bins[0])**2))
     
             # If the region is not filled yet, we add this bin to this region.
             if bin_count[reg_index] <= num_bins_area_2:

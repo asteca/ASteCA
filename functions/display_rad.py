@@ -7,13 +7,15 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from matplotlib.patches import Rectangle
 
-def disp_rad(x_data, y_data, mag_data, center_cl, cent_cl_err, clust_rad, \
-    x_center_bin, y_center_bin, h_filter, backg_value, radii, delta_backg,
-    ring_density, clust_name, poisson_error, width_bins, delta_percentage,
-    inner_ring, outer_ring):
+def disp_rad(x_data, y_data, mag_data, center_cl, cent_cl_err, radius_params, \
+    x_center_bin, y_center_bin, h_filter, backg_value, radii, ring_density,
+    clust_name, poisson_error, width_bins, inner_ring, outer_ring):
     '''
     Plot cluster and its radius.
     '''
+    
+    # Parameters from get_radius function.
+    clust_rad, delta_backg, delta_percentage = radius_params    
     
     # Plot all outputs
     fig = plt.figure(figsize=(12, 12)) # create the top-level container
@@ -30,7 +32,7 @@ def disp_rad(x_data, y_data, mag_data, center_cl, cent_cl_err, clust_rad, \
     plt.axvline(x=x_center_bin[0], linestyle='--', color='white')
     plt.axhline(y=y_center_bin[0], linestyle='--', color='white')
     # Radius
-    circle = plt.Circle((x_center_bin[0], y_center_bin[0]), clust_rad[0]/25., 
+    circle = plt.Circle((x_center_bin[0], y_center_bin[0]), clust_rad/25., 
                         color='w', fill=False)
     fig.gca().add_artist(circle)
     # Cluster's name in a text box
@@ -59,10 +61,10 @@ def disp_rad(x_data, y_data, mag_data, center_cl, cent_cl_err, clust_rad, \
     plt.axvline(x=center_cl[0], linestyle='--', color='red', lw=2.)
     plt.axhline(y=center_cl[1], linestyle='--', color='red', lw=2.)
     # Draw circle radius
-    circle = plt.Circle((center_cl[0], center_cl[1]), clust_rad[0], color='r', 
+    circle = plt.Circle((center_cl[0], center_cl[1]), clust_rad, color='r', 
                         fill=False)
     fig.gca().add_artist(circle)
-    if backg_value[0] > 0.005:
+    if backg_value > 0.005:
         # High density field
         plt.scatter(x_data, y_data, marker='o', c='black', 
                     s=500*np.exp(-0.004*mag_data**2.5))
@@ -88,7 +90,7 @@ def disp_rad(x_data, y_data, mag_data, center_cl, cent_cl_err, clust_rad, \
     ax4 = plt.subplot(gs[1, 0:2])
     # Get max and min values in x,y
     x_max = max(radii[0])+10
-    y_min, y_max = (backg_value[0]-delta_backg)-(max(ring_density[0])-\
+    y_min, y_max = (backg_value-delta_backg)-(max(ring_density[0])-\
     min(ring_density[0]))/10, max(ring_density[0])+(max(ring_density[0])-\
     min(ring_density[0]))/10
     # Set plot limits
@@ -105,9 +107,9 @@ def disp_rad(x_data, y_data, mag_data, center_cl, cent_cl_err, clust_rad, \
                  zorder=1)
     ## Plot the delta around the background value used to asses when the density
     # has become stable
-    plt.hlines(y=(backg_value[0]-delta_backg), xmin=0, xmax=max(radii[0]), 
+    plt.hlines(y=(backg_value-delta_backg), xmin=0, xmax=max(radii[0]), 
                color='k', linestyles='dashed', zorder=2)
-    plt.hlines(y=(backg_value[0]+delta_backg), xmin=0, xmax=max(radii[0]), 
+    plt.hlines(y=(backg_value+delta_backg), xmin=0, xmax=max(radii[0]), 
                color='k', linestyles='dashed', zorder=2)
     # Legend texts
     texts = ['Density Profile (%d px)' % width_bins[0], 'Density Profile \
@@ -121,9 +123,9 @@ def disp_rad(x_data, y_data, mag_data, center_cl, cent_cl_err, clust_rad, \
     ax4.plot(radii[2], ring_density[2], 'bo--', zorder=7, label=texts[2])
     ax4.plot(radii[3], ring_density[3], 'ro--', zorder=8, label=texts[3])
     # Plot background and radius lines
-    ax4.vlines(x=clust_rad[0], ymin=0, ymax=max(ring_density[0]), label='Radius\
- = %d px' % clust_rad[0], color='r', zorder=4)
-    ax4.hlines(y=backg_value[0], xmin=0, xmax=max(radii[0]), 
+    ax4.vlines(x=clust_rad, ymin=0, ymax=max(ring_density[0]), label='Radius\
+ = %d px' % clust_rad, color='r', zorder=4)
+    ax4.hlines(y=backg_value, xmin=0, xmax=max(radii[0]), 
                label=r'Background ($\Delta$=%d%%)' % delta_percentage, \
                color='k', zorder=5)
     # get handles

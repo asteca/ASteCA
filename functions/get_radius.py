@@ -23,12 +23,12 @@ def get_clust_rad(backg_value, radii, ring_density, width_bins):
     rd_index, rd_item = 0, ring_density[0]
         
     # Difference between max density value and the background value.
-    delta_total = (max(rd_item) - backg_value[rd_index])
+    delta_total = (max(rd_item) - backg_value)
     
     # If the difference between the max density value and the background is 
     # less than 3 times the value of the background, raise a flag.
     flag_delta_total = False
-    if delta_total < 3*backg_value[rd_index]:
+    if delta_total < 3*backg_value:
         flag_delta_total = True
     
     # Start i value to cap the number of iterations to 5.
@@ -67,7 +67,7 @@ def get_clust_rad(backg_value, radii, ring_density, width_bins):
                 # The condition index!=0 is there to avoid counting the first
                 # point which sometimes presents a very low density value due
                 # to the small width of the bin used.
-                if (item - backg_value[rd_index]) <= delta_backg and \
+                if (item - backg_value) <= delta_backg and \
                 index !=0:
                     # Augment value of counter.
                     in_delta_val += 1
@@ -107,7 +107,7 @@ def get_clust_rad(backg_value, radii, ring_density, width_bins):
         radii_dens = [rd_item[index_rad+i] for i in range(4)]
         clust_rad[rd_index] = radii[rd_index][index_rad+\
         min(range(len(radii_dens)), key=lambda \
-        i:abs(radii_dens[i]-backg_value[rd_index]))]
+        i:abs(radii_dens[i]-backg_value))]
         # If radius is > 500px, trim to 500px.
         if clust_rad[rd_index] > 500:
             clust_rad[rd_index] = 500
