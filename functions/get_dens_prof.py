@@ -6,8 +6,6 @@ import math
 
 def get_dens_prof(histo, x_c_b, y_c_b, width_bins, inner_ring):
     """
-    (list, list, list, list, float) -> list, list, list
-
     Calculate the density profile by counting the number of stars in the center
     bin first (r aprox width_bins/2 px), then moving to the 8 adyacent bins
     (r aprox width_bins + (width_bins/2) px), then the following 16 (r aprox 
