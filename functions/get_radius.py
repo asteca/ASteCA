@@ -25,13 +25,6 @@ def get_clust_rad(backg_value, radii, ring_density, width_bins):
     # Difference between max density value and the background value.
     delta_total = (max(rd_item) - backg_value[rd_index])
     
-    # DEPRECATED AS OF v1.1
-    # Calculate the 'contamination index' which is the inverse of the
-    # 'delta_total' value. The closer to 1 this index is, the more contaminated
-    # the cluster region is.
-#    cont_index = backg_value[rd_index]/max(rd_item)
-    # DEPRECATED AS OF v1.1
-    
     # If the difference between the max density value and the background is 
     # less than 3 times the value of the background, raise a flag.
     flag_delta_total = False
