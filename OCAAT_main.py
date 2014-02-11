@@ -63,7 +63,7 @@ print '-------------------------------------------\n'
 mypath = realpath(join(getcwd(), dirname(__file__)))
 
 # Read input parameters for code from file.
-mode, in_dirs, gd_params, gc_params, br_params = gip.get_in_params(mypath)
+mode, in_dirs, gd_params, gc_params, br_params, cr_params = gip.get_in_params(mypath)
 
 # Read paths.
 mypath2, mypath3, output_dir = in_dirs
@@ -252,7 +252,7 @@ background (%d, %d) px? (y/n) ' % (inner_ring, outer_ring))
     
     # Get cluster radius
     radius_params = gr.get_clust_rad(backg_value, radii, ring_density,
-                                     width_bins)
+                                     width_bins, cr_params)
     clust_rad = radius_params[0]
     print 'Radius calculated: %d px.' % clust_rad
 

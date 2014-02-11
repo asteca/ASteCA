@@ -5,7 +5,6 @@ Created on Tue Feb 11 14:03:44 2014
 @author: gabriel
 """
 
-import csv
 from os.path import join
 
 
@@ -42,8 +41,10 @@ def get_in_params(mypath):
                     gc_params = map(float, reader[1:])
                 elif reader[0] == 'BR':
                     br_params = map(float, reader[1:])
+                elif reader[0] == 'CR':
+                    cr_params = map(float, reader[1:])
                     
                     
     in_dirs = [mypath2, mypath3, output_dir]
     
-    return mode, in_dirs, gd_params, gc_params, br_params
+    return mode, in_dirs, gd_params, gc_params, br_params, cr_params

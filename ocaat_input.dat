@@ -2,11 +2,13 @@
 #
 #
 # This file contains the values of the parameters used by OCAAT.
-# Every empty line and lines that stars with a # sign will be ignored
+# Any empty line and lines that begin with a # sign will be ignored
 # and as many as needed can be added to this file.
 #
 # DO NOT modify the ID strings in the first column of each line, these
 # are used by the code to identify the parameters in that line.
+# DO NOT write less or more values than those requested or the code
+# will halt.
 
 
 # Mode used to run the code: a (auto) / s (semi) / m (manual):
@@ -30,11 +32,18 @@ PD      0      1      2         3     4     5     6
 
 # Bin widths for the cluster's center determination, in pixels. The
 # minimum value will be used to establish the center in auto mode.
-CC  25 50 75 100
+#  bin0 bin1 bin2 bin3
+CC   25   50   75  100
 
-# Define bopundaries for the inner and outer rings where the background
+# Define boundaries for the inner and outer rings where the background
 # will be calculated. These rings are defined as a fraction of the the
 # maximum range spanned by either axis.
 # To input these values in pixels manually, select 'm' mode.
 #   Inner Outer
 BR     4.    3.
+
+# This parameter determines the number of points that must be found
+# within a given delta value around the background value.
+# This is the condition where the star density is found to have
+# stabilized.
+CR  4

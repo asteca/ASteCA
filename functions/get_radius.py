@@ -2,9 +2,9 @@
 @author: gabriel
 """
 
-def get_clust_rad(backg_value, radii, ring_density, width_bins):
+def get_clust_rad(backg_value, radii, ring_density, width_bins, cr_params):
     """
-    Obtain the value of the cluster's radius by counting the number of points
+    Obtain the value for the cluster's radius by counting the number of points
     that fall within a given interval of the background or lower. If this number
     is equal to the number of points left behind (to the left) then assign the
     radius as the first of those values in the string that shows a "stable"
@@ -14,6 +14,9 @@ def get_clust_rad(backg_value, radii, ring_density, width_bins):
     points are available or a radius of 500 px was reached. In any of these
     last three cases, assign r=500 px.
     """
+    
+    n_l = cr_params[0]
+    print n_l
     
     # Initiate empty list of as many items as different bin widths were used.
     clust_rad = [0]*len(width_bins)
@@ -44,10 +47,14 @@ def get_clust_rad(backg_value, radii, ring_density, width_bins):
         # Increase value of i for next iteration (if it happens)
         i += 1
         
-        # Initialize density values counter (points inside the range determined
-        # by the delta around the background) and assign a value to the
-        # number of points that determine the 'stabilized' condition.
-        in_delta_val, n_left = 0, 4
+        # Initialize density values counter for points that fall inside the
+        # range determined by the delta value around the background.
+        in_delta_val = 0
+        # Assign a value to the number of points that have been found within
+        # the delta value around the background, which determines the
+        # 'stabilized' condition.
+        n_left = n_l
+        
         # This value stores the number of points that fall outside the delta
         # limits around the background, for the value of 'delta_backg' used.
         outside_val = 0
