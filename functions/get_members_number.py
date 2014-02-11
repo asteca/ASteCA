@@ -12,9 +12,11 @@ def get_memb_num(backg_value, clust_rad, stars_in, stars_in_rjct):
     radius. The process is as follows: backg_value is the density of field
     stars per px^2 so multiplying that by the cluster's radius we get the
     approx number of field stars inside the cluster's radius N_f. We can count
-    the total number of stars inside the radius, n_t = n_c + N_f, and then
+    the total number of stars inside the radius, n_t and then
     obtain n_c (which is the approx number of members) with:
         
+    n_t = n_c + N_f
+    then:
     n_c = n_t - N_f = n_t - [backg_value*(Pi*clust_rad**2)]
     """
     
@@ -26,14 +28,8 @@ def get_memb_num(backg_value, clust_rad, stars_in, stars_in_rjct):
     
     # Approx number of members.
     n_c = round(n_t - (backg_value*a_c))
-    # If value is negative or zero, assign 1/10th of the total number of stars
-    # inside the cluster's radius or 9 stars, whichever is larger.
-    flag_no_memb = False
-    if n_c <= 0:
-        n_c = max(int(n_t/10), 9)
-        flag_no_memb = True
         
     # Raise a flag if the number of members is <10
     flag_num_memb_low = False if n_c >= 10 else True
     
-    return int(n_c), flag_num_memb_low, flag_no_memb
+    return int(n_c), flag_num_memb_low

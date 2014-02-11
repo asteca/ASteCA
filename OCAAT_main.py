@@ -358,8 +358,8 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
     
     
     # Get approximate number of cluster's members.
-    n_c, flag_num_memb_low, flag_no_memb = g_m_n.get_memb_num(backg_value,\
-    clust_rad, stars_in, stars_in_rjct)
+    n_c, flag_num_memb_low = g_m_n.get_memb_num(backg_value, clust_rad,
+                                                stars_in, stars_in_rjct)
     print 'Approximate number of members in cluster obtained (%d).' % (n_c)
             
     
@@ -442,7 +442,7 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
         # Average and sort all membership probabilities for each star and
         # store in list.
         memb_prob_avrg_sort, clust_reg_prob_avrg = m_p_a_s(cluster_region,\
-        runs_fields_probs, n_c, center_cl, clust_rad)
+        runs_fields_probs, center_cl, clust_rad)
         print 'Averaged probabilities for all runs.'
     
 
@@ -519,7 +519,7 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
           qq_params[0], stars_in_mag,
           flag_center, flag_std_dev, flag_center_manual,
           flag_radius_manual, flag_errors_manual, flag_bin_count,
-          radius_params[3:], flag_num_memb_low, flag_no_memb)
+          radius_params[3:], flag_num_memb_low)
     print 'Data added to output file.'
     
 

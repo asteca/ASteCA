@@ -9,7 +9,7 @@ def add_data_output(sub_dir, output_dir, clust_name, center_cl, clust_rad,
                     prob_cl_kde, ccc, stars_in_mag,                    
                     flag_center, flag_std_dev, flag_center_manual, 
                     flag_radius_manual, flag_errors_manual, flag_bin_count, 
-                    radius_params, flag_num_memb_low, flag_no_memb):
+                    radius_params, flag_num_memb_low):
 
 
     # Parameters from get_radius function.
@@ -20,13 +20,13 @@ def add_data_output(sub_dir, output_dir, clust_name, center_cl, clust_rad,
     flags_list = [flag_center_manual, flag_radius_manual, flag_errors_manual,
                   flag_center, flag_std_dev, flag_bin_count, flag_delta_total,
                   flag_not_stable, flag_rad_500, flag_delta, flag_delta_points,
-                  flag_king_no_conver, flag_num_memb_low, flag_no_memb]
+                  flag_king_no_conver, flag_num_memb_low]
     
     # Converty True & False values to 1 and 0 respectively.
     int_flags = [1 if flg else 0 for flg in flags_list]
 
-    # Sum all flags to obtain CI value (cluster index) and append to the end of
-    # the list. Do not count the manual flags, hence the [3:].
+    # Sum all flags to obtain the CI value (cluster index) and append to the
+    # end of the list. Do not count the manual flags, hence the [3:].
     int_flags.append(sum(int_flags[3:]))
 
     # str(sub_dir)+'_'+str(clust_name)
@@ -43,5 +43,5 @@ def add_data_output(sub_dir, output_dir, clust_name, center_cl, clust_rad,
 {:>7} {:>5} {:>7}'.format(*line))
         # Flags.
         f_out.write('{:>4} {:>2} {:>2}  {:>2} {:>2} {:>2} {:>2} {:>2} {:>2} \
-{:>2} {:>2} {:>2} {:>3} {:>3} {:>3}'.format(*int_flags))
+{:>2} {:>2} {:>2} {:>3} {:>3}'.format(*int_flags))
         f_out.write('\n')

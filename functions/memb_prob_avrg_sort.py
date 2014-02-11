@@ -7,7 +7,7 @@ Created on Fri Jul 19 10:24:45 2013
 
 import numpy as np
 
-def mpas(cluster_region, runs_fields_probs, n_c, center_cl, clust_rad):
+def mpas(cluster_region, runs_fields_probs, center_cl, clust_rad):
     """
     Generate a list with the averaged membership probabilities obtained
     with the decontamination algorithm for each star in cluster_region.
