@@ -63,7 +63,8 @@ print '-------------------------------------------\n'
 mypath = realpath(join(getcwd(), dirname(__file__)))
 
 # Read input parameters for code from file.
-mode, in_dirs, gd_params, gc_params, br_params, cr_params, er_params = gip.get_in_params(mypath)
+mode, in_dirs, gd_params, gc_params, br_params, cr_params, er_params,\
+gr_params = gip.get_in_params(mypath)
 
 # Read paths.
 mypath2, mypath3, output_dir = in_dirs
@@ -372,7 +373,7 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
     # Get cluster + field regions around the cluster's center.        
     flag_area_stronger, cluster_region, field_region = \
     g_r(x_center_bin, y_center_bin, width_bins, h_not_filt, clust_rad,
-        H_manual, stars_in, stars_out)
+        H_manual, stars_in, stars_out, gr_params)
     print 'Cluster + field stars regions obtained (%d).' % len(field_region)
 
 

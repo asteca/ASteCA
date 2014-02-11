@@ -58,3 +58,8 @@ CR  4
 # color withou being rejected. 
 #   be  be_e  e_max
 ER  2.   0.1    0.3
+
+# Cluster region and field regions.
+# areas: number of areas defined including the cluster region (integer).
+#   areas
+GR     21

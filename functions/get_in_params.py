@@ -45,8 +45,11 @@ def get_in_params(mypath):
                     cr_params = map(float, reader[1:])
                 elif reader[0] == 'ER':
                     er_params = map(float, reader[1:])
+                elif reader[0] == 'GR':
+                    gr_params = map(int, reader[1:])
                     
                     
     in_dirs = [mypath2, mypath3, output_dir]
     
-    return mode, in_dirs, gd_params, gc_params, br_params, cr_params, er_params
+    return mode, in_dirs, gd_params, gc_params, br_params, cr_params, er_params,\
+    gr_params

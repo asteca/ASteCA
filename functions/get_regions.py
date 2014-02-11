@@ -10,10 +10,14 @@ import numpy as np
 
 
 def get_regions(x_center_bin, y_center_bin, width_bins, histo, clust_rad,
-                h_manual, stars_in, stars_out):
+                h_manual, stars_in, stars_out, gr_params):
     '''
     Define cluster and field regions around the cluster's center.
     '''
+
+    # Number of areas used: one is for the cluster region and the rest for
+    # the field regions.
+    areas = gr_params[0]
     
     # Use the bin center obtained with the smallest bin width
     x_c_b, y_c_b = x_center_bin[0], y_center_bin[0]
@@ -28,10 +32,6 @@ def get_regions(x_center_bin, y_center_bin, width_bins, histo, clust_rad,
 
     # Get area as total number of bins in 2D hist times the area of each bin.
     area = len(histo[0][0])*len(histo[0])*(width_bins[0]**2)
-
-    # We set the number of areas used: one is for the cluster region and the
-    # rest for the field regions.
-    areas = 21
 
     # Calculate 'length' = constant that multiplied by the cluster's radius gives
     # the length of the side of the square, called 'cluster_region', that
