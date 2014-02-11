@@ -5,11 +5,11 @@
 import numpy as np
 from scipy.ndimage.filters import gaussian_filter
 
-def get_center(x_data, y_data):
+def get_center(x_data, y_data, gc_params):
     """   
-    Obtain the center of the putative cluster and return a list of two
-    items: [x_center, y_center] and the array that contains the gausssian
-    filtered 2D histogram and lots of other stuff.
+    Obtains the center of the putative cluster. Returns the center values
+    along with its errors and several arrays related to histograms, mainly for
+    plotting purposes.
     """
     
     xmin, xmax = min(x_data), max(x_data)
@@ -26,8 +26,9 @@ def get_center(x_data, y_data):
     # Store the widths of the bins used
     width_bins = []
 
-    # Iterate for bin widths of: 25, 50, 75 and 100 px
-    for d_b in range(25, 105, 25):
+    # Iterate for bin widths stored in list.
+    gc_params.sort()
+    for indx,d_b in enumerate(gc_params):
         # Number of bins in x,y given the bin width 'd_b'
         binsxy = [int((xmax - xmin) / d_b), int((ymax - ymin) / d_b)]
         
@@ -41,8 +42,8 @@ def get_center(x_data, y_data):
         # background value)
         h_not_filt.append(hist)
         
-        # Only store the edges for the smallest value of 'd_b' <- HARDCODED!!
-        if d_b == 25:
+        # Only store the edges for the smallest value of 'd_b'.
+        if indx == 0:
             xedges_min_db, yedges_min_db = xedges, yedges
 
         # H_g is the 2D histogram with a gaussian filter applied

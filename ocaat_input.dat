@@ -24,3 +24,8 @@ CP2  /home/gabriel/clusters/clusters_out/
 # photometric data files.
 # id_star x_coor y_coor magnitude e_mag color e_col
 PD      0      1      2         3     4     5     6
+
+# Bin widths for the cluster's center determination, in pixels. The
+# minimum value will be used to establish the center in auto mode.
+#CC  25 50 75 100
+CC  35 44 71 189

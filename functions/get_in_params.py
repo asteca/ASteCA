@@ -38,8 +38,10 @@ def get_in_params(mypath):
                     output_dir = str(reader[1])
                 elif reader[0] == 'PD':
                     gd_params = map(int, reader[1:])
+                elif reader[0] == 'CC':
+                    gc_params = map(float, reader[1:])
                     
                     
     in_dirs = [mypath2, mypath3, output_dir]
     
-    return mode, in_dirs, gd_params
+    return mode, in_dirs, gd_params, gc_params

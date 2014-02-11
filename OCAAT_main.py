@@ -63,7 +63,7 @@ print '-------------------------------------------\n'
 mypath = realpath(join(getcwd(), dirname(__file__)))
 
 # Read input parameters for code from file.
-mode, in_dirs, gd_params = gip.get_in_params(mypath)
+mode, in_dirs, gd_params, gc_params = gip.get_in_params(mypath)
 
 # Read paths.
 mypath2, mypath3, output_dir = in_dirs
@@ -153,7 +153,7 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
     # used
     center_cl, cent_cl_err, h_filter, h_not_filt, xedges_min_db, \
     yedges_min_db, x_center_bin, y_center_bin, width_bins, flag_center, \
-    flag_std_dev = g_c.get_center(x_data, y_data)
+    flag_std_dev = g_c.get_center(x_data, y_data, gc_params)
     print 'Auto center found: (%d, %d) px.' % (center_cl[0], center_cl[1])
 
 
