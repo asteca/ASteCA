@@ -63,7 +63,7 @@ print '-------------------------------------------\n'
 mypath = realpath(join(getcwd(), dirname(__file__)))
 
 # Read input parameters for code from file.
-mode, in_dirs, gd_params, gc_params = gip.get_in_params(mypath)
+mode, in_dirs, gd_params, gc_params, br_params = gip.get_in_params(mypath)
 
 # Read paths.
 mypath2, mypath3, output_dir = in_dirs
@@ -213,12 +213,14 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
     
     
     # Get background value in stars/area
-    
     # Inner and outer radii for obtaining the background values. Both are 
     # calculated as a given fraction of the minimum width between the x and y 
     # axis spans.
-    inner_ring = (min((max(x_data)-min(x_data)), (max(y_data)-min(y_data))))/4.
-    outer_ring = (min((max(x_data)-min(x_data)), (max(y_data)-min(y_data))))/3.  
+    inn_fr, out_fr = br_params
+    inner_ring = (min((max(x_data)-min(x_data)),
+                      (max(y_data)-min(y_data))))/inn_fr
+    outer_ring = (min((max(x_data)-min(x_data)),
+                      (max(y_data)-min(y_data))))/out_fr
     
     if mode == 'm':
         wrong_answer = True

@@ -1,3 +1,6 @@
+##### OCAAT input parameters file ####
+#
+#
 # This file contains the values of the parameters used by OCAAT.
 # Every empty line and lines that stars with a # sign will be ignored
 # and as many as needed can be added to this file.
@@ -27,5 +30,11 @@ PD      0      1      2         3     4     5     6
 
 # Bin widths for the cluster's center determination, in pixels. The
 # minimum value will be used to establish the center in auto mode.
-#CC  25 50 75 100
-CC  35 44 71 189
+CC  25 50 75 100
+
+# Define bopundaries for the inner and outer rings where the background
+# will be calculated. These rings are defined as a fraction of the the
+# maximum range spanned by either axis.
+# To input these values in pixels manually, select 'm' mode.
+#   Inner Outer
+BR     4.    3.
