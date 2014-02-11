@@ -1,25 +1,20 @@
 # -*- coding: utf-8 -*-
 
 
-# Import these to be able to grab the dir from where the code is running and
-# iterate for all data files in that dir
-from os import listdir, getcwd, walk, mkdir, rmdir
 from os.path import join, realpath, dirname, exists
-from os import makedirs
-from os.path import expanduser
-
 import matplotlib.pyplot as plt
-
-import shutil
 import time
-import gc
 
 # Import files with defined functions
 import functions.get_in_params as gip
+
 from functions.create_out_data_file import create_out_data_file as c_o_d_f
-from functions.get_isochrones import get_isochrones as g_i
 from functions.get_data_semi import get_semi as g_s
-import functions.get_data as gd
+import functions.get_phot_data as gd
+
+
+from functions.get_isochrones import get_isochrones as g_i
+
 from functions.display_frame import disp_frame as d_f
 from functions.trim_frame import trim_frame as t_f
 import functions.get_center as g_c
@@ -54,6 +49,11 @@ from functions.make_plots import make_plots as mp
 from functions.add_data_output import add_data_output as a_d_o
 from functions.cl_members_file import cluster_members_file as c_m_f
         
+from os import makedirs
+from os import listdir, getcwd, walk, mkdir, rmdir
+import shutil
+# Garbage collector.
+import gc
 
 
 print '            OCAAT v0.1\n'
@@ -63,7 +63,7 @@ print '-------------------------------------------\n'
 mypath = realpath(join(getcwd(), dirname(__file__)))
 
 # Read input parameters for code from file.
-mode, in_dirs = gip.get_in_params(mypath)
+mode, in_dirs, gd_params = gip.get_in_params(mypath)
 
 # Read paths.
 mypath2, mypath3, output_dir = in_dirs
@@ -96,16 +96,18 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
     clust_name = myfile[:-4]
     print 'Analizing cluster %s.' % (clust_name)
 
-    # If Semi mode set, get data from 'data_input' file.
+    # If Semi mode set, get data from 'clusters_input.dat' file.
     if mode == 's':
         cent_cl_semi, cl_rad_semi, cent_flag_semi, rad_flag_semi, \
         err_flag_semi = g_s(mypath, clust_name) 
 
 
     # Get cluster's photometric data from file.
-    id_star, x_data, y_data, mag_data, e_mag, col1_data, e_col1 = \
-    gd.get_data(mypath2, sub_dir, myfile)
-    print 'Data correctly obtained from input file  (N stars: %d).' % len(x_data)
+    phot_data = gd.get_data(mypath2, sub_dir, myfile, gd_params)
+    x_data, y_data, mag_data, col1_data = phot_data[1], phot_data[2], \
+    phot_data[3], phot_data[5]
+    print 'Data correctly obtained from input file  (N stars: %d).'\
+    % len(phot_data[0])
 
 
     # If Manual mode is set, display frame and ask if it should be trimmed.
@@ -128,15 +130,13 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
                 temp_side.append(float(raw_input('x_side: ')))
                 temp_side.append(float(raw_input('y_side: ')))
                 # Trim frame.
-                id_star, x_data, y_data, mag_data, e_mag, col1_data, e_col1 =\
-                t_f(temp_cent, temp_side, id_star, x_data, y_data, mag_data, 
-                    e_mag, col1_data, e_col1)
+                phot_data = t_f(temp_cent, temp_side, phot_data)
                 wrong_answer = False
             else:
                 print 'Wrong input. Try again.\n'
     elif mode == 's':
         # If there are too many stars in the frame, trim it.
-        if len(x_data) > 25000:
+        if len(phot_data[0]) > 25000:
             temp_cent, temp_side = [], []
             # Set center.
             temp_cent.append(cent_cl_semi[0])
@@ -145,9 +145,7 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
             temp_side.append(2000.)
             temp_side.append(2000.)
             # Trim frame.
-            id_star, x_data, y_data, mag_data, e_mag, col1_data, e_col1 =\
-            t_f(temp_cent, temp_side, id_star, x_data, y_data, mag_data, 
-                e_mag, col1_data, e_col1)
+            phot_data = t_f(temp_cent, temp_side, phot_data)
 
 
     # Get cluster's center values and errors, set of 4 filtered 2D hist,
@@ -210,8 +208,7 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
 
     # Obtain manual 2D histogram for the field with star's values attached
     # to each bin.
-    H_manual = mh(id_star, x_data, y_data, mag_data, e_mag, col1_data, e_col1, \
-    xedges_min_db, yedges_min_db)
+    H_manual = mh(phot_data, xedges_min_db, yedges_min_db)
     print 'Manual 2D histogram obtained.'
     
     
@@ -293,9 +290,7 @@ px): '))
     # Accept and reject stars based on their errors.
     bright_end, popt_mag, popt_umag, pol_mag, popt_col1, popt_ucol1, \
     pol_col1, mag_val_left, mag_val_right, col1_val_left, col1_val_right, \
-    acpt_stars, rjct_stars = ear.err_accpt_rejct(id_star, x_data, y_data,
-                                                 mag_data, e_mag, col1_data,
-                                                 e_col1)
+    acpt_stars, rjct_stars = ear.err_accpt_rejct(phot_data)
     print 'Stars accepted/rejected based on their errors.'
 
 
@@ -332,9 +327,7 @@ all stars with photom errors < 0.3)? (y/n) ')
             elif answer_rad == 'n':
                 print 'Using stars with errors < 0.3.'
                 # Call function to reject stars w errors > 0.3.
-                acpt_stars, rjct_stars = e_a_r_03(id_star, x_data, y_data,
-                                                  mag_data, e_mag, col1_data,
-                                                  e_col1)
+                acpt_stars, rjct_stars = e_a_r_03(phot_data)
                 flag_errors_manual = True
                 use_errors_fit = False
                 wrong_answer = False
@@ -345,9 +338,7 @@ all stars with photom errors < 0.3)? (y/n) ')
             # Reject error fit.
             print 'Using stars with errors < 0.3.'
             # Call function to reject stars w errors > 0.3.
-            acpt_stars, rjct_stars = e_a_r_03(id_star, x_data, y_data,
-                                              mag_data, e_mag, col1_data,
-                                              e_col1)
+            acpt_stars, rjct_stars = e_a_r_03(phot_data)
             flag_errors_manual = True
             use_errors_fit = False
 

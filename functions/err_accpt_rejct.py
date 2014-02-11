@@ -5,11 +5,13 @@
 from scipy.optimize import curve_fit
 import numpy as np
 
-def err_accpt_rejct(id_star, x_data, y_data, mag, e_mag, col1, e_col1):
+def err_accpt_rejct(phot_data):
     """    
     Accept and reject stars in and out of the cluster's boundaries according to
     a given criteria based on their photometric errors.
     """
+
+    id_star, x_data, y_data, mag, e_mag, col1, e_col1 = phot_data
 
 ################################################################################
 # First part: separate stars in magnitude intervals for errors of magnitude and

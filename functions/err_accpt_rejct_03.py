@@ -5,10 +5,12 @@ Created on Thu Jul 18 17:41:28 2013
 @author: gabriel
 """
 
-def err_a_r_03(id_star, x_data, y_data, mag, e_mag, col1, e_col1):
+def err_a_r_03(phot_data):
     """    
     Accept stars with photom errors < 0.3 both in mag and in color.
     """
+
+    id_star, x_data, y_data, mag, e_mag, col1, e_col1 = phot_data
 
     # Initialize empty list to hold accepted/rejected stars.
     acpt_stars, rjct_stars = [], []    

@@ -14,7 +14,7 @@ def get_semi(mypath, clust_name):
     
     cent_cl_semi = [[],[]]
     # Get center, radius and error flag from file.
-    myfile = 'data_input'
+    myfile = 'clusters_input.dat'
     with open(join(mypath, myfile), mode="r") as f_cl_dt:
        
         for line in f_cl_dt:

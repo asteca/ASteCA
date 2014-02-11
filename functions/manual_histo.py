@@ -2,13 +2,14 @@
 #import matplotlib.gridspec as gridspec
 
 
-def manual_histo(id_star, xdata, ydata, T1_data, e_T1, CT1_data, e_CT1, 
-                 xedges, yedges):
+def manual_histo(phot_data, xedges, yedges):
     
     ''' Obtains a (manual) 2D histogram for the field with not only the number
     of stars per bin but also the values associated to each of those stars: x, y
-    coordinates and T1, eT1, CT1, eCT1 values.
+    coordinates and magnitude, e_mag, color, e_color values.
     '''
+    
+    id_star, x_data, y_data, mag_data, e_mag, col1_data, e_col1 = phot_data
 
     # Create the empty list that will hold the information of each star that
     # falls within a given bin in the 2D histogram.
@@ -19,8 +20,8 @@ def manual_histo(id_star, xdata, ydata, T1_data, e_T1, CT1_data, e_CT1,
         H_manual.append([[0] for _ in xrange(len(yedges)-1)])
     
     # Iterate through all the stars in the frame.
-    for xindex, xcoord in enumerate(xdata):
-        ycoord = ydata[xindex]
+    for xindex, xcoord in enumerate(x_data):
+        ycoord = y_data[xindex]
         
         # Iterate through all edges in the x axis.
         for xbin_index, xitem_edg in enumerate(xedges):
@@ -57,8 +58,8 @@ def manual_histo(id_star, xdata, ydata, T1_data, e_T1, CT1_data, e_CT1,
                                     H_manual[xbin_index][ybin_index][0] += 1
                                     H_manual[xbin_index][ybin_index].extend(\
                                     [[id_star[xindex], xcoord, ycoord, \
-                                    T1_data[xindex], e_T1[xindex], \
-                                    CT1_data[xindex], e_CT1[xindex]]])
+                                    mag_data[xindex], e_mag[xindex], \
+                                    col1_data[xindex], e_col1[xindex]]])
                                 break
                             else:
                             # A bin beyond this one exists (ie: star is NOT in
@@ -78,8 +79,8 @@ def manual_histo(id_star, xdata, ydata, T1_data, e_T1, CT1_data, e_CT1,
                                         H_manual[xbin_index][ybin_index][0] += 1
                                         H_manual[xbin_index][ybin_index].extend(\
                                         [[id_star[xindex], xcoord, ycoord,\
-                                        T1_data[xindex], e_T1[xindex],\
-                                        CT1_data[xindex], e_CT1[xindex]]])
+                                        mag_data[xindex], e_mag[xindex],\
+                                        col1_data[xindex], e_col1[xindex]]])
                                     break
                 else:
                 # A bin beyond this one in the x axis exists so star is not in
@@ -105,8 +106,8 @@ def manual_histo(id_star, xdata, ydata, T1_data, e_T1, CT1_data, e_CT1,
                                         H_manual[xbin_index][ybin_index][0] += 1
                                         H_manual[xbin_index][ybin_index].extend(\
                                         [[id_star[xindex], xcoord, ycoord, \
-                                        T1_data[xindex], e_T1[xindex], \
-                                        CT1_data[xindex], e_CT1[xindex]]])
+                                        mag_data[xindex], e_mag[xindex], \
+                                        col1_data[xindex], e_col1[xindex]]])
                                     break
                                 else:
                                     if ycoord < yedges[ybin_index+1]:
@@ -119,9 +120,9 @@ def manual_histo(id_star, xdata, ydata, T1_data, e_T1, CT1_data, e_CT1,
                                             += 1
                                             H_manual[xbin_index][ybin_index].\
                                             extend([[id_star[xindex], xcoord, \
-                                            ycoord, T1_data[xindex], \
-                                            e_T1[xindex], CT1_data[xindex], \
-                                            e_CT1[xindex]]])
+                                            ycoord, mag_data[xindex], \
+                                            e_mag[xindex], col1_data[xindex], \
+                                            e_col1[xindex]]])
                                         break
     
     

@@ -26,7 +26,6 @@ def get_in_params(mypath):
             
             if not line.startswith("#") and line.strip() != '':
                 reader = line.split()
-                print reader
                 
                 # Read folder paths where clusters are stored.
                 if reader[0] == 'MO':
@@ -37,8 +36,10 @@ def get_in_params(mypath):
                     mypath3 = str(reader[1])
                 elif reader[0] == 'CP2':
                     output_dir = str(reader[1])
+                elif reader[0] == 'PD':
+                    gd_params = map(int, reader[1:])
                     
                     
     in_dirs = [mypath2, mypath3, output_dir]
     
-    return mode, in_dirs
+    return mode, in_dirs, gd_params
