@@ -249,8 +249,6 @@ def field_decont_kde(cluster_region, field_region, col1_data, mag_data,
         print 'Assigning equal probabilities to all stars inside cluster radius.'
         # Assign equal probabilities to all stars.
         runs_fields_probs = [[[1.]*len(cluster_region)]]
-
-    print runs_fields_probs
               
 #    return runs_fields_probs, kde_cl, kde_f
     return runs_fields_probs

@@ -69,14 +69,20 @@ def mass_interp(isochrone, mass_dist):
     
 
 
-def synth_clust(sys_select, isochrone, params, mass_params, completeness, f_bin,
-                q_bin, popt_mag, popt_col1):
+def synth_clust(err_lst, obs_clust, completeness, sc_params, isochrone, params):
     '''
     Main function.
     
     Takes an isochrone and returns a synthetic cluster created according to
     a certain mass distribution.
     '''
+    
+    sys_sel, mass_params, f_bin, q_bin = sc_params[0], sc_params[1:3], sc_params[3], sc_params[4]
+    print sys_sel, f_bin, q_bin
+    print mass_params[1]
+    print mass_params[0]
+    print 'done'
+    raw_input()
     
     # Store mass distribution used to produce a synthetic cluster based on
     # a given theoretic isochrone.
@@ -94,7 +100,7 @@ def synth_clust(sys_select, isochrone, params, mass_params, completeness, f_bin,
 
     # Move synth cluster with the values 'e' and 'd'.
     e, d, = params[2], params[3]
-    isoch_moved = move_isoch(sys_select, [isoch_inter[0], isoch_inter[1]], e, d) + [isoch_inter[2]]
+    isoch_moved = move_isoch(sys_sel, [isoch_inter[0], isoch_inter[1]], e, d) + [isoch_inter[2]]
     
          
     # Remove stars from isochrone with magnitude values larger that the maximum
@@ -209,6 +215,7 @@ def synth_clust(sys_select, isochrone, params, mass_params, completeness, f_bin,
 
         # Randomly move stars according to given error distributions.
         # Get errors according to errors distribution.
+        popt_mag, popt_col1 = err_lst
         sigma_mag = np.array(exp_func(clust_compl[1], *popt_mag))
         sigma_col = np.array(exp_func(clust_compl[1], *popt_col1))
         col_gauss, mag_gauss = gauss_error(clust_compl[0], 2*sigma_col, clust_compl[1], 2*sigma_mag)

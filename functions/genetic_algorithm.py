@@ -146,9 +146,8 @@ def selection(generation, breed_prob):
 
 
 
-def fitness_eval(sys_select, isoch_list, obs_clust, mass_params, isoch_ma,
-                 ma_lst, e_lst, d_lst, isoch_done, completeness, f_bin,
-                 q_bin, popt_mag, popt_col1):
+def fitness_eval(err_lst, obs_clust, completeness, isoch_list,
+                              isoch_ma, ma_lst, e_lst, d_lst, sc_params, isoch_done):
     '''
     Evaluate each random isochrone in the objective function to obtain
     the fitness of each solution.
@@ -166,11 +165,12 @@ def fitness_eval(sys_select, isoch_list, obs_clust, mass_params, isoch_ma,
         # Check if this isochrone was already processed.
         if [isoch_ma[m][a][0], isoch_ma[m][a][1], e, d] in isoch_done[0]:
             # Get index for this isochrone.
-            likel_val = isoch_done[1][isoch_done[0].index([isoch_ma[m][a][0], isoch_ma[m][a][1], e,d])]
+            likel_val = isoch_done[1][isoch_done[0].index([isoch_ma[m][a][0],
+                                      isoch_ma[m][a][1], e,d])]
         else:
             # Call likelihood function with m,a,e,d values.
-            likel_val = i_l(sys_select, isoch_list[m][a], params, obs_clust, mass_params,
-                            completeness, f_bin, q_bin, popt_mag, popt_col1)
+            likel_val = i_l(err_lst, obs_clust, completeness, sc_params,
+                            isoch_list[m][a], params)                            
             # Append data identifying the isochrone and the obtained
             # likelihood value to this *persistent* list.
             isoch_done[0].append([isoch_ma[m][a][0], isoch_ma[m][a][1], e, d])
@@ -209,9 +209,7 @@ def random_population(isoch_ma, isoch_ed, n_ran):
 
 
 
-def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_params,
-              ranges_steps, params_ga,
-              completeness, f_bin, q_bin, popt_mag, popt_col1):
+def gen_algor(err_lst, obs_clust, completeness, ip_list, sc_params, params_ga):
     '''
     Main function.
     
@@ -231,21 +229,19 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_params
     n_es:number of times the Extinction/Immigration operator is allowed to run
     returning the same best solution before exiting the generations loop.
     '''
+
+    isoch_list, isoch_ma, isoch_ed, ranges_steps = ip_list    
     
     n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es = params_ga
     
     # Store parameters ranges and calculate the minimum number of binary digits
     # needed to encode the solutions.
-    mm_m, step_m = ranges_steps[0], (isoch_ma[1][0][0]-isoch_ma[0][0][0])
-    mm_a, step_a = ranges_steps[1], (isoch_ma[0][1][1]-isoch_ma[0][0][1])
+    mm_m, step_m = [ranges_steps[0][0], ranges_steps[0][1]], ranges_steps[0][2]
+    mm_a, step_a = [ranges_steps[1][0], ranges_steps[1][1]], ranges_steps[1][2]
     mm_e, step_e = [ranges_steps[2][0], ranges_steps[2][1]], ranges_steps[2][2]
     mm_d, step_d = [ranges_steps[3][0], ranges_steps[3][1]], ranges_steps[3][2]
     delta_m, delta_a, delta_e, delta_d = (mm_m[1]-mm_m[0]), (mm_a[1]-mm_a[0]),\
     (mm_e[1]-mm_e[0]), (mm_d[1]-mm_d[0])
-    print 'FIX THIS'
-    # The small increases in max metallicity and age are there to ensure
-    # that the encoding into binary strings of those values respects
-    # the length that the rest of the parameters use.
     n_bin = int(np.log(max((delta_m/step_m), (delta_a/step_a), (delta_e/step_e),
                            (delta_d/step_d)))/np.log(2))+1
     
@@ -262,12 +258,12 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_params
     ### Initial random population evaluation. ###
     ma_lst, e_lst, d_lst = random_population(isoch_ma, isoch_ed, n_pop)
     
-    # Stores parameters pf the solutions already processed and the likelihhods
+    # Stores parameters of the solutions already processed and the likelihhods
     # obtained.
     isoch_done = [[], []]
     # Evaluate initial random solutions in the objective function.
-    generation, lkl, isoch_done = fitness_eval(sys_select, isoch_list, obs_clust, mass_params,
-                              isoch_ma, ma_lst, e_lst, d_lst, isoch_done, completeness, f_bin, q_bin, popt_mag, popt_col1)
+    generation, lkl, isoch_done = fitness_eval(err_lst, obs_clust, completeness, isoch_list,
+                              isoch_ma, ma_lst, e_lst, d_lst, sc_params, isoch_done)
     # Store best solution for passing along in the 'Elitism' block.
     best_sol = generation[:n_el]
 
@@ -323,8 +319,8 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_params
         
         # Evaluate each new solution in the objective function and sort
         # according to the best solutions found.
-        generation, lkl, isoch_done = fitness_eval(sys_select, isoch_list, obs_clust, mass_params,
-                                  isoch_ma, ma_lst, e_lst, d_lst, isoch_done, completeness, f_bin, q_bin, popt_mag, popt_col1)
+        generation, lkl, isoch_done = fitness_eval(err_lst, obs_clust, completeness, isoch_list,
+                              isoch_ma, ma_lst, e_lst, d_lst, sc_params, isoch_done)
       
         
         ### Extinction/Immigration ###

@@ -22,7 +22,7 @@ def boostrap_resample(in_list):
     
 
 
-def bf(sys_select, iso_select, memb_prob_avrg_sort, completeness, popt_mag, popt_col1):
+def bf(err_lst, memb_prob_avrg_sort, completeness, ip_list, sc_params):
     '''
     Main function.
     
@@ -30,24 +30,17 @@ def bf(sys_select, iso_select, memb_prob_avrg_sort, completeness, popt_mag, popt
     E(B-V), distance (distance modulus), age and metallicity.
     '''
     
-    # IMF parameters.
-    # 1st param: 'chabrier_2001', 'kroupa_1993', kroupa_2002'
-    # 2nd param: total cluster mass.
-    # Obtain the selected IMF's CDF. We run it once because the array only
+    # Obtain the selected IMF's PDF. We run it once because the array only
     # depends on the IMF selected.
-    imf_cdf = i_p('kroupa_2002')
-    # Store parameters to obtain the mass distribution for each synthetic
-    # cluster.
-    mass_params = [imf_cdf, 5000.]
+    imf_pdf = i_p(sc_params[1])
+    # Replace the name of the IMF by its PDF.
+    sc_params[1] = imf_pdf
     
-    # Binarity parameters.
-    f_bin, q_bin = 0.5, 0.7
     
     # Genetic algorithm parameters.
     # n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es
     params_ga = [4, 20, 1., 0.85, '2P', 0.01, 1, 25, 6]
     
-
     # Number of times to run the bootstrap block.
     N_B = 2
    
@@ -74,26 +67,25 @@ def bf(sys_select, iso_select, memb_prob_avrg_sort, completeness, popt_mag, popt
 #                                           line_start, indexes, obs_clust,\
 #                                           mass_dist)
             # Genetic algorithm.
-            ga_return = g_a(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed,
-                                   mass_params, ranges_steps, params_ga,\
-                                   completeness, f_bin, q_bin, popt_mag, popt_col1)
+            ga_return = g_a(err_lst, obs_clust, completeness, ip_list, sc_params,
+                                   params_ga)
         else:
             # Brute force.
 #            params_boot.append(brute_force(sys_select, isoch_params, iso_path,
 #                                           line_start, indexes, obs_clust,\
 #                                           mass_dist))
             # Genetic algorithm algorithm.
-            params_boot.append(g_a(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed,
-                                   mass_params, ranges_steps, params_ga,\
-                                   completeness, f_bin, q_bin, popt_mag, popt_col1)[0])
+            params_boot.append(g_a(err_lst, obs_clust, completeness, ip_list,
+                                   sc_params, params_ga)[0])
 
         
     # Calculate errors for each parameter.
     isoch_fit_errors = np.std(params_boot, 0)
     
     # For plotting purposes: generate shifted isochrone.
+    isoch_list, isoch_ma = ip_list[0], ip_list[1]
     m, a, e, d = ga_return[0]
     m_indx, a_indx = next(((i,j) for i,x in enumerate(isoch_ma) for j,y in enumerate(x) if y == [m, a]), None)
-    shift_isoch = move_isoch(sys_select, [isoch_list[m_indx][a_indx][0], isoch_list[m_indx][a_indx][1]], e, d)
+    shift_isoch = move_isoch(sc_params[0], [isoch_list[m_indx][a_indx][0], isoch_list[m_indx][a_indx][1]], e, d)
 
     return shift_isoch, ga_return, isoch_fit_errors

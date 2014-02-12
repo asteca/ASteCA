@@ -11,36 +11,40 @@ import numpy as np
 
     
 
-def gip(sys_select, iso_select):
+def ip(ps_params):
     '''
-    Reads and stores available parameter values for the stored isochrones
+    Stores all the available isochrones of different metallicities and
+    ages according to the ranges given to this parameters.
+    Also stores available parameter values for the stored isochrones
     between the specified ranges and with the given steps.
-    Also stores all the available isochrones of different metallicities
-    according to the ranges given to this parameters.
     '''
-
+    
+    # Paths to isochrone files.
+    iso_path = ps_params[0]
+    # String that identifies the beginning of a new isochrone.
+    line_start = ps_params[1]
+    # Read indexes for this Girardi output file.
+    mini_indx, mag_indx, col_indx = ps_params[2]
+    # Read ranges and steps for these parameters.
+    z_min, z_max, z_step = ps_params[3]
+    age_min, age_max, age_step = ps_params[4]
+    e_bv_min, e_bv_max, e_bv_step = ps_params[5]
+    dis_mod_min, dis_mod_max, dis_mod_step = ps_params[6]
+    
     # Store ranges and steps.
-    ranges_steps = [[z_min, z_max], [age_min, age_max],
+    ranges_steps = [[z_min, z_max, z_step], [age_min, age_max, age_step],
                     [e_bv_min, e_bv_max, e_bv_step],\
                     [dis_mod_min, dis_mod_max, dis_mod_step]]
-    # Store indexes that point to columns in the file that stores isochrones.
-    indexes = [mini_indx, col_indx, mag_indx]
     
-    return ranges_steps, indexes, iso_path, line_start
-
-    # Call function to obtain the ranges and steps for the parameters along
-    # with the path to the isochrone files and information about how they
-    # are formatted (line_start).
-    ranges_steps, indexes, iso_path, line_start
-    
-    z_min, z_max = ranges_steps[0]
-    age_min, age_max = ranges_steps[1]
-    e_bv_min, e_bv_max, e_bv_step = ranges_steps[2]
-    dis_mod_min, dis_mod_max, dis_mod_step = ranges_steps[3]
-    
-    # Read indexes for this Girardi output file.
-    mini_indx, col_indx, mag_indx = indexes
-    
+    # Add a small value to each max value to ensure that the range is a bit
+    # larger than the one between the real min and max values. This simplifies
+    # the input of data and ensures that the GA won't fail when encoding/
+    # decoding the floats into their binary representations.
+    z_max = z_max + z_step/2.
+    age_max = age_max + age_step/2.
+    e_bv_max = e_bv_max + e_bv_step/2.
+    dis_mod_max = dis_mod_max + dis_mod_step/2.
+   
     # Lists that store the colors, magnitudes and masses of the isochrones.
     # isoch_list = [metal_1, ..., metal_M]
     # metal_i = [isoch_i1, ..., isoch_iN]
@@ -142,5 +146,9 @@ def gip(sys_select, iso_select):
     for dis_mod in np.arange(dis_mod_min, dis_mod_max, dis_mod_step):
         # Store params for this isochrone.
         isoch_ed[1].append(round(dis_mod, 2))                  
-                  
-    return isoch_list, isoch_ma, isoch_ed, ranges_steps
+            
+    ip_list = [isoch_list, isoch_ma, isoch_ed, ranges_steps]
+    print isoch_ma[17], '\n'
+    print isoch_ed
+            
+    return ip_list

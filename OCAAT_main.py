@@ -61,7 +61,7 @@ mypath = realpath(join(getcwd(), dirname(__file__)))
 
 # Read input parameters for code from file.
 mode, in_dirs, gd_params, gc_params, br_params, cr_params, er_params,\
-gr_params, pv_params, da_params = gip.get_in_params(mypath)
+gr_params, pv_params, da_params, ps_params, sc_params = gip.get_in_params(mypath)
 
 # Read paths.
 mypath2, mypath3, output_dir = in_dirs
@@ -432,8 +432,9 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
     # Store all isochrones in all the metallicity files in isoch_list.
     # Store metallicity values and isochrones ages between the allowed
     # ranges in isoch_ma; extinction and distance modulus values in isoch_ed.
-    # Ranges and steps are stored in ranges_steps.
-    isoch_list, isoch_ma, isoch_ed, ranges_steps = ip(sys_select, iso_select)    
+    # isoch_list, isoch_ma, isoch_ed = ip_list
+    ip_list = ip(ps_params)
+    print 'Isochrone and their parameters read and stored.'
     
     
     # Check if decont alg was applied.
@@ -442,7 +443,9 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
     else:
         print 'Searching for optimal parameters.'
         # Obtain best fitting parameters for cluster.
-        shift_isoch, ga_return, isoch_fit_errors = bfsc('WASH', 'MAR', memb_prob_avrg_sort, completeness, popt_mag, popt_col1)
+        err_lst = [popt_mag, popt_col1]
+        shift_isoch, ga_return, isoch_fit_errors = bfsc(err_lst,\
+        memb_prob_avrg_sort, completeness, ip_list, sc_params)
         print 'Best fit parameters obtained.'
     
     

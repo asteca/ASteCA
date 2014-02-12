@@ -7,7 +7,7 @@ Created on Fri Jan 17 16:35:24 2014
 
 import numpy as np
 
-def move_isoch(sys_select, isochrone, e, d):
+def move_isoch(sys_sel, isochrone, e, d):
     '''
     Recieves an isochrone of a given age and metallicity and modifies
     its color and magnitude values according to given values for the extinction
@@ -15,7 +15,7 @@ def move_isoch(sys_select, isochrone, e, d):
     '''
     iso_moved = [[], []]
     
-    if sys_select == 'UBVI':
+    if sys_sel == 'UBVI':
         # For UBVI system.
         #
         # E(B-V) = (B-V) - (B-V)o
@@ -23,13 +23,10 @@ def move_isoch(sys_select, isochrone, e, d):
         # (mv - Mv)o = -5 + 5*log(d) + Av
         #
         Av = 3.1*e
-        for item in isochrone[1]:
-            # mv affected by extinction.
-            iso_moved[1].append(item + d + Av)
-        for item in isochrone[0]:
-            # (B-V) affected by extinction.
-            iso_moved[0].append(item + e)
-    elif sys_select == 'WASH':
+        iso_moved = [np.array(isochrone[0])+e,
+                     np.array(isochrone[1])+d+Av]            
+            
+    elif sys_sel == 'WASH':
         # For Washington system.
         #
         # E(C-T1) = 1.97*E(B-V) = (C-T1) - (C-T)o
