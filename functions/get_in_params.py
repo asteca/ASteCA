@@ -48,13 +48,18 @@ def get_in_params(mypath):
                 elif reader[0] == 'GR':
                     gr_params = map(int, reader[1:])
                 elif reader[0] == 'PV':
-                    pv0_params = bool(reader[1])
+                    pv0_params = True if reader[1] == 'True' else False
                     pv1_params = str(reader[2])
                     pv2_params = int(reader[3])
+                elif reader[0] == 'DA':
+                    da0_params = str(reader[1])
+                    da1_params = int(reader[2])
+                    da2_params = int(reader[3])                    
                     
                     
     in_dirs = [mypath2, mypath3, output_dir]
     pv_params = [pv0_params, pv1_params, pv2_params]
+    da_params = [da0_params, da1_params, da2_params, mypath2]
     
     return mode, in_dirs, gd_params, gc_params, br_params, cr_params, er_params,\
-    gr_params, pv_params
+    gr_params, pv_params, da_params

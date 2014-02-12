@@ -34,11 +34,7 @@ import functions.get_members_number as g_m_n
 import functions.get_cont_index as g_c_i
 from functions.get_regions import get_regions as g_r
 
-#from functions.field_decont_ran import field_decont_ran as fdr
-#from functions.field_decont_VB import field_decont_VB as fdvb
 from functions.field_decont_kde import field_decont_kde as fdk
-#from functions.field_decont_dias import field_decont_dias as fdd
-
 from functions.get_p_value import get_pval as g_pv
 from functions.get_qqplot import qqplot as g_qq
 from functions.memb_prob_avrg_sort import mpas as m_p_a_s
@@ -64,7 +60,7 @@ mypath = realpath(join(getcwd(), dirname(__file__)))
 
 # Read input parameters for code from file.
 mode, in_dirs, gd_params, gc_params, br_params, cr_params, er_params,\
-gr_params, pv_params = gip.get_in_params(mypath)
+gr_params, pv_params, da_params = gip.get_in_params(mypath)
 
 # Read paths.
 mypath2, mypath3, output_dir = in_dirs
@@ -406,13 +402,13 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
     # was found around the cluster.
     if not(flag_area_stronger):
         print 'Applying decontamination algorithm.'
-        runs_fields_probs, kde_cl, kde_f = fdk(cluster_region, field_region,
-                                             col1_data, mag_data,\
-                                             center_cl, clust_rad)
+        runs_fields_probs = fdk(cluster_region, field_region, col1_data,
+                                mag_data, center_cl, clust_rad, clust_name,
+                                sub_dir, da_params)
     else:
         print 'WARNING: Decontamination algorithm was skipped.'
         # Skipping decontamination algorithm
-        runs_fields_probs, kde_cl, kde_f = [], [], []
+        runs_fields_probs = []
 
 
     
@@ -420,8 +416,7 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
     if flag_area_stronger:
         memb_prob_avrg_sort, clust_reg_prob_avrg = [], []
     else:
-        # Average and sort all membership probabilities for each star and
-        # store in list.
+        # Average and sort all membership probabilities for each star.
         memb_prob_avrg_sort, clust_reg_prob_avrg = m_p_a_s(cluster_region,\
         runs_fields_probs, center_cl, clust_rad)
         print 'Averaged probabilities for all runs.'
@@ -484,7 +479,7 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
        stars_out_rjct, stars_in_mag, stars_in_all_mag, n_c, flag_area_stronger,
        cluster_region, field_region, pval_test_params, qq_params,
        clust_reg_prob_avrg,
-       kde_cl, kde_f, memb_prob_avrg_sort, iso_moved, zams_iso, cl_e_bv,
+       memb_prob_avrg_sort, iso_moved, zams_iso, cl_e_bv,
        cl_age, cl_feh, cl_dmod,
        shift_isoch, ga_return, isoch_fit_errors)
     print 'Plots created.'

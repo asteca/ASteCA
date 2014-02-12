@@ -27,7 +27,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                stars_in_all_mag, n_c, flag_area_stronger,
                cluster_region, field_region, pval_test_params, qq_params,
                clust_reg_prob_avrg,
-               kde_cl, kde_f, memb_prob_avrg_sort, iso_moved, zams_iso,
+               memb_prob_avrg_sort, iso_moved, zams_iso,
                cl_e_bv, cl_age, cl_feh, cl_dmod,
                shift_isoch, ga_return, isoch_fit_errors):
     '''
@@ -546,37 +546,37 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
 
     # Stars in the first field region with their KDE.
     # Check if decont algorithm was applied.
-    if not(flag_area_stronger):
-        # Plot first field region.
-        region = 0
-        ax14 = plt.subplot(gs1[6:8, 2:4])
-        plt.xlabel(r'$C-T_1$', fontsize=18)
-        plt.ylabel(r'$T_1$', fontsize=18)
-        col1_acpt_out, mag_acpt_out = [], []
-        for star in stars_out:
-            col1_acpt_out.append(star[5])
-            mag_acpt_out.append(star[3])
-        #Set plot limits
-        plt.xlim(col1_min, col1_max)
-        plt.ylim(mag_min, mag_max)
-        # Set minor ticks
-        ax14.minorticks_on()
-        ax14.xaxis.set_major_locator(MultipleLocator(1.0))
-        ax14.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
-        plt.text(0.63, 0.93, 'Field region %d' % region, transform = \
-        ax14.transAxes, bbox=dict(facecolor='white', alpha=0.8), fontsize=12)
-        # Plot field stars and KDE for KDE algorithm.
-        stars_reg_temp = [[], []]
-        for star in field_region[region]:
-            # star[3] is the T1 coordinate and star[5] the CT1 coordinate.
-            stars_reg_temp[0].append(star[5])
-            stars_reg_temp[1].append(star[3])
-        plt.scatter(stars_reg_temp[0], stars_reg_temp[1], marker='o', 
-                    c='black', s=4., edgecolors='none', zorder=2)
-        # Plot field KDE.
-        plt.imshow(np.rot90(kde_f), cmap=plt.cm.gist_earth_r, 
-                   extent=[col1_min, col1_max, mag_min, mag_max],\
-                   aspect='auto')
+#    if not(flag_area_stronger):
+#        # Plot first field region.
+#        region = 0
+#        ax14 = plt.subplot(gs1[6:8, 2:4])
+#        plt.xlabel(r'$C-T_1$', fontsize=18)
+#        plt.ylabel(r'$T_1$', fontsize=18)
+#        col1_acpt_out, mag_acpt_out = [], []
+#        for star in stars_out:
+#            col1_acpt_out.append(star[5])
+#            mag_acpt_out.append(star[3])
+#        #Set plot limits
+#        plt.xlim(col1_min, col1_max)
+#        plt.ylim(mag_min, mag_max)
+#        # Set minor ticks
+#        ax14.minorticks_on()
+#        ax14.xaxis.set_major_locator(MultipleLocator(1.0))
+#        ax14.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
+#        plt.text(0.63, 0.93, 'Field region %d' % region, transform = \
+#        ax14.transAxes, bbox=dict(facecolor='white', alpha=0.8), fontsize=12)
+#        # Plot field stars and KDE for KDE algorithm.
+#        stars_reg_temp = [[], []]
+#        for star in field_region[region]:
+#            # star[3] is the T1 coordinate and star[5] the CT1 coordinate.
+#            stars_reg_temp[0].append(star[5])
+#            stars_reg_temp[1].append(star[3])
+#        plt.scatter(stars_reg_temp[0], stars_reg_temp[1], marker='o', 
+#                    c='black', s=4., edgecolors='none', zorder=2)
+#        # Plot field KDE.
+#        plt.imshow(np.rot90(kde_f), cmap=plt.cm.gist_earth_r, 
+#                   extent=[col1_min, col1_max, mag_min, mag_max],\
+#                   aspect='auto')
         # Plot ZAMS.
 #        plt.plot(zams_iso[1], zams_iso[0], c='k', ls='--', lw=1.)
 
@@ -585,44 +585,44 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     # Cluster's stars CMD (stars inside cluster's radius) cleaned by the decont
     # algorithm.
     # Check if decont algorithm was applied.
-    if not(flag_area_stronger):
-        ax15 = plt.subplot(gs1[6:8, 4:6])
-        #Set plot limits
-        plt.xlim(col1_min, col1_max)
-        plt.ylim(mag_min, mag_max)
-        #Set axis labels
-        plt.xlabel(r'$C-T_1$', fontsize=18)
-        plt.ylabel(r'$T_1$', fontsize=18)
-        # Add text box
-        text1 = r'$E_{(B-V)} = %0.2f}$' '\n' % cl_e_bv
-        text2 = r'$Age = %0.3f}$' '\n' % cl_age
-        text3 = r'$[Fe/H] = %0.2f}$' '\n' % cl_feh
-        text4 = r'$(m-M)_o = %0.2f}$' % cl_dmod
-        text = text1+text2+text3+text4
-        plt.text(0.05, 0.8, text, transform = ax15.transAxes, 
-                 bbox=dict(facecolor='white', alpha=0.6), fontsize=12)
-        tot_kde_clust = len(memb_prob_avrg_sort)
-        plt.text(0.55, 0.93, r'$r \leq R_{cl}\,|\,N=%d$' % tot_kde_clust,
-                 transform=ax15.transAxes, \
-                 bbox=dict(facecolor='white', alpha=0.5), fontsize=16)
-        # Set minor ticks
-        ax15.minorticks_on()
-        ax15.xaxis.set_major_locator(MultipleLocator(1.0))
-        ax15.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
-        stars_clust_temp = [[], [], []]
-        # Plot stars inside cluster radius.
-        for star in memb_prob_avrg_sort:
-            stars_clust_temp[0].append(star[5])
-            stars_clust_temp[1].append(star[3])
-        plt.scatter(stars_clust_temp[0], stars_clust_temp[1], marker='o', 
-                    c='black', s=4., edgecolors='none')
-#        # Plot ZAMS.
-#        plt.plot(zams_iso[1], zams_iso[0], c='k', ls='--', lw=1.)
-#        # Plot isochrone.
-#        plt.plot(iso_moved[1], iso_moved[0], c='crimson', ls='--', lw=1.5)
-        # Plot KDE. Uncomment if KDE algorithm is used.
-        plt.imshow(np.rot90(kde_cl), cmap=plt.cm.gist_earth_r, 
-                   extent=[col1_min, col1_max, mag_min, mag_max], aspect='auto')
+#    if not(flag_area_stronger):
+#        ax15 = plt.subplot(gs1[6:8, 4:6])
+#        #Set plot limits
+#        plt.xlim(col1_min, col1_max)
+#        plt.ylim(mag_min, mag_max)
+#        #Set axis labels
+#        plt.xlabel(r'$C-T_1$', fontsize=18)
+#        plt.ylabel(r'$T_1$', fontsize=18)
+#        # Add text box
+#        text1 = r'$E_{(B-V)} = %0.2f}$' '\n' % cl_e_bv
+#        text2 = r'$Age = %0.3f}$' '\n' % cl_age
+#        text3 = r'$[Fe/H] = %0.2f}$' '\n' % cl_feh
+#        text4 = r'$(m-M)_o = %0.2f}$' % cl_dmod
+#        text = text1+text2+text3+text4
+#        plt.text(0.05, 0.8, text, transform = ax15.transAxes, 
+#                 bbox=dict(facecolor='white', alpha=0.6), fontsize=12)
+#        tot_kde_clust = len(memb_prob_avrg_sort)
+#        plt.text(0.55, 0.93, r'$r \leq R_{cl}\,|\,N=%d$' % tot_kde_clust,
+#                 transform=ax15.transAxes, \
+#                 bbox=dict(facecolor='white', alpha=0.5), fontsize=16)
+#        # Set minor ticks
+#        ax15.minorticks_on()
+#        ax15.xaxis.set_major_locator(MultipleLocator(1.0))
+#        ax15.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
+#        stars_clust_temp = [[], [], []]
+#        # Plot stars inside cluster radius.
+#        for star in memb_prob_avrg_sort:
+#            stars_clust_temp[0].append(star[5])
+#            stars_clust_temp[1].append(star[3])
+#        plt.scatter(stars_clust_temp[0], stars_clust_temp[1], marker='o', 
+#                    c='black', s=4., edgecolors='none')
+##        # Plot ZAMS.
+##        plt.plot(zams_iso[1], zams_iso[0], c='k', ls='--', lw=1.)
+##        # Plot isochrone.
+##        plt.plot(iso_moved[1], iso_moved[0], c='crimson', ls='--', lw=1.5)
+#        # Plot KDE. Uncomment if KDE algorithm is used.
+#        plt.imshow(np.rot90(kde_cl), cmap=plt.cm.gist_earth_r, 
+#                   extent=[col1_min, col1_max, mag_min, mag_max], aspect='auto')
 
 
 
