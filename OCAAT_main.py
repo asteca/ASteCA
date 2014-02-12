@@ -39,7 +39,8 @@ from functions.get_p_value import get_pval as g_pv
 from functions.get_qqplot import qqplot as g_qq
 from functions.memb_prob_avrg_sort import mpas as m_p_a_s
 from functions.get_completeness import mag_completeness as m_c
-from functions.get_isoch_params import gip as g_i_p
+from functions.get_isoch_params import ip
+from functions.best_fit_synth_cl import bf as bfsc
 
 from functions.make_plots import make_plots as mp
 from functions.add_data_output import add_data_output as a_d_o
@@ -428,13 +429,20 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
     print 'Completeness magnitude levels obtained.'    
     
     
+    # Store all isochrones in all the metallicity files in isoch_list.
+    # Store metallicity values and isochrones ages between the allowed
+    # ranges in isoch_ma; extinction and distance modulus values in isoch_ed.
+    # Ranges and steps are stored in ranges_steps.
+    isoch_list, isoch_ma, isoch_ed, ranges_steps = ip(sys_select, iso_select)    
+    
+    
     # Check if decont alg was applied.
     if flag_area_stronger:
         shift_isoch, ga_return, isoch_fit_errors = [], [], []
     else:
         print 'Searching for optimal parameters.'
         # Obtain best fitting parameters for cluster.
-        shift_isoch, ga_return, isoch_fit_errors = g_i_p('WASH', 'MAR', memb_prob_avrg_sort, completeness, popt_mag, popt_col1)
+        shift_isoch, ga_return, isoch_fit_errors = bfsc('WASH', 'MAR', memb_prob_avrg_sort, completeness, popt_mag, popt_col1)
         print 'Best fit parameters obtained.'
     
     

@@ -242,6 +242,10 @@ def gen_algor(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed, mass_params
     mm_d, step_d = [ranges_steps[3][0], ranges_steps[3][1]], ranges_steps[3][2]
     delta_m, delta_a, delta_e, delta_d = (mm_m[1]-mm_m[0]), (mm_a[1]-mm_a[0]),\
     (mm_e[1]-mm_e[0]), (mm_d[1]-mm_d[0])
+    print 'FIX THIS'
+    # The small increases in max metallicity and age are there to ensure
+    # that the encoding into binary strings of those values respects
+    # the length that the rest of the parameters use.
     n_bin = int(np.log(max((delta_m/step_m), (delta_a/step_a), (delta_e/step_e),
                            (delta_d/step_d)))/np.log(2))+1
     

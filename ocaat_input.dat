@@ -91,4 +91,41 @@ PV  False   auto   1
 # - If 'skip' is selected all stars will be assigned an equal probability
 # of 1. and the algorithm skipped altogether.
 #   mode     runs  mc_samp
-DA  read      1       10
+DA  skip      1       10
+
+
+# Photometric system & stored isochrones.
+# Select the photometric system used to perform the observations and
+# provide path to stored isochrones.
+# phot_syst: Johnson (UBVI) / Washington (WASH)
+# isochs: Marigo (MAR) / PARSEC (PAR)
+#   phot_syst  isochs
+PS   WASH         MAR
+
+#   iso_path (full path to the folder that stores the isochrone files)
+PS_p  /media/rest/github/isochrones/iso_wash_marigo
+
+# line_start (string that identifies the beginning of a new isochrone)
+# MAR: "#\tIsochrone\tZ = "
+# PAR: "#\tIsochrone  Z = "
+PS_l   "#\tIsochrone\tZ = "
+
+# Index that points to the corresponding column in the file.
+# WASH: MAR (1 9 7), PAR (2 10 8)
+#      mass_ini 1st_mag 2nd_mag
+PS_i         1       9       7
+
+# Ranges and steps for the parameters to be fitted.
+# Metallicity     z_min   z_max
+PS_m             0.0005  0.0200
+# Age    age_min age_max
+PS_a         6.6   10.10
+# E(B-V)    e_bv_min e_bv_max e_bv_step
+PS_e              0.     0.41      0.01
+# Distance modulus    dis_mod_min dis_mod_max dis_mod_step
+PS_d                          18.         19.         0.05
+
+
+# Synthetic cluster.
+# 
+

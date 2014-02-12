@@ -8,70 +8,17 @@ Created on Thu Jan  9 15:08:39 2014
 import os
 from os.path import join
 import numpy as np
-import random
 
-from genetic_algorithm import gen_algor as g_a
-from get_IMF_PDF import IMF_PDF as i_p
-from move_isochrone import move_isoch
-
-
-
-
-def get_ranges_paths(sys_select, iso_select):
-    '''
-    Reads parameters ranges and paths to stored isochrone files.
-    '''
-    # Girardi isochrones span a range of ~ 3.98+06 to 1.26e+10 yr.
-    # MASSCLEAN clusters span a range of ~ 1.00e06 to 1.00e+10 yr.
-    if sys_select == 'UBVI':
-        # Range of values where the parameters will move.
-        e_bv_min, e_bv_max, e_bv_step = 0., 1.01, 0.05
-        dis_mod_min, dis_mod_max, dis_mod_step = 8., 13., 0.5
-        z_min, z_max = 0.01, 0.03
-        age_min, age_max = 0.003, 3.2
-        
-        # Path where isochrone files are stored.
-        iso_path = '/media/rest/github/isochrones/iso_ubvi_marigo'
-        
-        # Data for files formatted for UBVI Marigo tracks.
-        line_start = "#\tIsochrone\tZ = "
-        # Index that points to the corresponding column in the file.
-        mag_indx = 9
-         
-    elif sys_select == 'WASH':
-        # Select cloud.
-#        cloud = raw_input('SMC or LMC cloud?')
-#        cloud = 'LMC'
-#        
-        # Range of values where the parameters will move.
-        e_bv_min, e_bv_max, e_bv_step = 0., 0.41, 0.01
-#        if cloud == 'SMC':
-#            dis_mod_min, dis_mod_max, dis_mod_step = 18.9, 18.91, 1.
-#        elif cloud == 'LMC':
-#            dis_mod_min, dis_mod_max, dis_mod_step = 18.5, 18.51, 1.
-        dis_mod_min, dis_mod_max, dis_mod_step = 18., 19.01, 0.05
-        # The small increases in max metallicity and age are there to ensure
-        # that the encoding into binary strings of those values respects
-        # the length that the rest of the parameters use.
-        z_min, z_max = 0.0005, 0.0201
-        # age_val x10 yr
-#        age_min, age_max = 0.003, 12.6
-        age_min, age_max = 6.6, 10.101
     
-        # Select Marigo or PARSEC tracks.        
-        if iso_select == 'MAR':  # Marigo.
-            line_start = "#\tIsochrone\tZ = "
-            # Index that points to the corresponding column in the file.
-            mini_indx, col_indx, mag_indx = 1, 7, 9
-            # Path where isochrone files are stored.
-            iso_path = '/media/rest/github/isochrones/iso_wash_marigo'
-        elif iso_select == 'PAR':  # PARSEC.
-            line_start = "#\tIsochrone  Z = "
-            # Index that points to the corresponding column in the file.
-            mini_indx, col_indx, mag_indx = 2, 8, 10
-            # Path where isochrone files are stored.
-            iso_path = '/media/rest/github/isochrones/iso_wash_parsec'
-    
+
+def gip(sys_select, iso_select):
+    '''
+    Reads and stores available parameter values for the stored isochrones
+    between the specified ranges and with the given steps.
+    Also stores all the available isochrones of different metallicities
+    according to the ranges given to this parameters.
+    '''
+
     # Store ranges and steps.
     ranges_steps = [[z_min, z_max], [age_min, age_max],
                     [e_bv_min, e_bv_max, e_bv_step],\
@@ -80,22 +27,12 @@ def get_ranges_paths(sys_select, iso_select):
     indexes = [mini_indx, col_indx, mag_indx]
     
     return ranges_steps, indexes, iso_path, line_start
-    
-    
-
-def get_isoch_params(sys_select, iso_select):
-    '''
-    Reads and stores available parameter values for the stored isochrones
-    between the specified ranges and with the given steps.
-    Also stores all the available isochrones of different metallicities
-    according to the ranges given to this parameters.
-    '''
 
     # Call function to obtain the ranges and steps for the parameters along
     # with the path to the isochrone files and information about how they
     # are formatted (line_start).
-    ranges_steps, indexes, iso_path, line_start = get_ranges_paths(sys_select,
-                                                                   iso_select)
+    ranges_steps, indexes, iso_path, line_start
+    
     z_min, z_max = ranges_steps[0]
     age_min, age_max = ranges_steps[1]
     e_bv_min, e_bv_max, e_bv_step = ranges_steps[2]
@@ -207,97 +144,3 @@ def get_isoch_params(sys_select, iso_select):
         isoch_ed[1].append(round(dis_mod, 2))                  
                   
     return isoch_list, isoch_ma, isoch_ed, ranges_steps
-
-
-
-def boostrap_resample(in_list):
-    '''
-    Resamples the observed cluster to use in the bootstrap process.
-    '''
-    obs_clust = [random.choice(in_list) for _ in in_list]
-    return obs_clust
-    
-
-
-def gip(sys_select, iso_select, memb_prob_avrg_sort, completeness, popt_mag, popt_col1):
-    '''
-    Main function.
-    
-    Perform a best fitting process to find the cluster's parameters:
-    E(B-V), distance (distance modulus), age and metallicity.
-    '''
-    
-    # IMF parameters.
-    # 1st param: 'chabrier_2001', 'kroupa_1993', kroupa_2002'
-    # 2nd param: total cluster mass.
-    # Obtain the selected IMF's CDF. We run it once because the array only
-    # depends on the IMF selected.
-    imf_cdf = i_p('kroupa_2002')
-    # Store parameters to obtain the mass distribution for each synthetic
-    # cluster.
-    mass_params = [imf_cdf, 5000.]
-    
-    # Binarity parameters.
-    f_bin, q_bin = 0.5, 0.7
-    
-    # Genetic algorithm parameters.
-    # n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es
-    params_ga = [4, 20, 1., 0.85, '2P', 0.01, 1, 25, 6]
-    
-
-    # Number of times to run the bootstrap block.
-    N_B = 2
-   
-    # Store all isochrones in all the metallicity files in isoch_list. We do
-    # this now so the files will only have to be accessed once.
-    # Store metallicity values and isochrones ages between the allowed
-    # ranges in isoch_ma; extinction and distance modulus values in isoch_ed.
-    isoch_list, isoch_ma, isoch_ed, ranges_steps = get_isoch_params(sys_select, iso_select)
-   
-
-    # List that holds the parameters values obtained by the bootstrap
-    # process.
-    params_boot = []
-    # Begin bootstrap block.
-    for i in range(N_B):
-        
-        # The first pass is done with no resampling to calculate the final
-        # values. After that we resample to get the uncertainty in each
-        # parameter.
-        if i == 0:
-            obs_clust = memb_prob_avrg_sort
-        else:
-            obs_clust = boostrap_resample(memb_prob_avrg_sort)
-
-        # Call algorithm to calculate the likelihoods for the set of
-        # isochrones and return the best fitting parameters.
-        
-        if i==0:
-            # Brute force algorithm.
-#            isoch_fit_params = brute_force(sys_select, isoch_params, iso_path,
-#                                           line_start, indexes, obs_clust,\
-#                                           mass_dist)
-            # Genetic algorithm.
-            ga_return = g_a(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed,
-                                   mass_params, ranges_steps, params_ga,\
-                                   completeness, f_bin, q_bin, popt_mag, popt_col1)
-        else:
-            # Brute force.
-#            params_boot.append(brute_force(sys_select, isoch_params, iso_path,
-#                                           line_start, indexes, obs_clust,\
-#                                           mass_dist))
-            # Genetic algorithm algorithm.
-            params_boot.append(g_a(sys_select, obs_clust, isoch_list, isoch_ma, isoch_ed,
-                                   mass_params, ranges_steps, params_ga,\
-                                   completeness, f_bin, q_bin, popt_mag, popt_col1)[0])
-
-        
-    # Calculate errors for each parameter.
-    isoch_fit_errors = np.std(params_boot, 0)
-    
-    # For plotting purposes: generate shifted isochrone.
-    m, a, e, d = ga_return[0]
-    m_indx, a_indx = next(((i,j) for i,x in enumerate(isoch_ma) for j,y in enumerate(x) if y == [m, a]), None)
-    shift_isoch = move_isoch(sys_select, [isoch_list[m_indx][a_indx][0], isoch_list[m_indx][a_indx][1]], e, d)
-
-    return shift_isoch, ga_return, isoch_fit_errors
