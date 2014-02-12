@@ -422,10 +422,9 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
         print 'Averaged probabilities for all runs.'
     
 
-    # Get the completeness level for each magnitude bin.
-    # Width of the bins used for the magnitude histogram.
-    b_width = 0.1
-    completeness = m_c(mag_data, b_width)
+    # Get the completeness level for each magnitude bin. This will be used by
+    # the isochrone/synthetic cluster fitting algorithm.
+    completeness = m_c(mag_data)
     print 'Completeness magnitude levels obtained.'    
     
     
