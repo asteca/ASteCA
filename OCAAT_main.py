@@ -64,7 +64,7 @@ mypath = realpath(join(getcwd(), dirname(__file__)))
 
 # Read input parameters for code from file.
 mode, in_dirs, gd_params, gc_params, br_params, cr_params, er_params,\
-gr_params = gip.get_in_params(mypath)
+gr_params, pv_params = gip.get_in_params(mypath)
 
 # Read paths.
 mypath2, mypath3, output_dir = in_dirs
@@ -377,14 +377,15 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
     print 'Cluster + field stars regions obtained (%d).' % len(field_region)
 
 
-    flag_pval_test = False
+    # Check if test is to be applied or skipped.
+    flag_pval_test = pv_params[0]
     # Get physical cluster probability based on p_values distribution.
     if flag_pval_test:
         # pval_test_params = prob_cl_kde, p_vals_cl, p_vals_f, kde_cl_1d,
         #                    kde_f_1d, x_kde, y_over
         pval_test_params  = g_pv(flag_area_stronger, cluster_region,
                                  field_region, col1_data, mag_data, center_cl,
-                                 clust_rad)
+                                 clust_rad, pv_params)
         # Add flag to list.
         pval_test_params = pval_test_params + [flag_pval_test]
         print 'Probability of physical cluster obtained (%0.2f).' % \

@@ -12,7 +12,6 @@ the cluster's KDE with the field region's KDEs.
 
 import numpy as np
 from scipy.stats.mstats import mquantiles
-from scipy import stats
 
 
 def ppoints(vector):

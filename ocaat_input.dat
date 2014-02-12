@@ -63,3 +63,14 @@ ER  2.   0.1    0.3
 # areas: number of areas defined including the cluster region (integer).
 #   areas
 GR     21
+
+# Test to determine the probability of the cluster being a physical entity
+# instead of a random overdensity of stars, based on comparing its CMD with
+# field regions CMDs.
+# flag: True / False, switch to apply or skip the test.
+# runs: auto / manual, the number of times the cluster-field regions will be
+# compared. If 'auto' is set, the code will use an integer value of
+# 100/(areas-1). If 'manual' is set then 'num' will be used (otherwise this
+# number is irrelevant).
+#   flag   runs   num
+PV  True   auto   100

@@ -67,18 +67,26 @@ def get_CMD(region):
 
 
 
-def get_pval(flag_area_stronger, cluster_region, field_region,
-                     col1_data, mag_data, center_cl, clust_rad):
+def get_pval(flag_area_stronger, cluster_region, field_region, col1_data,
+             mag_data, center_cl, clust_rad, pv_params):
     
     # Apply algorithm if enough field regions around the cluster region
     # were selected.
     if not(flag_area_stronger):
         
+        run_set, num_runs = pv_params[1], pv_params[2]
+        
         print 'Obtaining p_value for cluster region vs field regions.'
         
-        # Set number of runs for the p_value algorithm with a maximum of
-        # 100 if only one field region was used.
-        runs = int(100/len(field_region))
+        if run_set == 'auto':
+            # Set number of runs for the p_value algorithm with a maximum of
+            # 100 if only one field region was used.
+            runs = int(100/len(field_region))
+        elif run_set == 'manual':
+            runs = num_runs
+        else:
+            runs = int(100/len(field_region))
+            print "  Parameter 'runs' has wrong name. Using 'auto'."
         
         # Only use stars inside cluster's radius.
         cluster_region_r = []
