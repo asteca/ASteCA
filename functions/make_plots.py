@@ -26,7 +26,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                stars_out, stars_in_rjct, stars_out_rjct, stars_in_mag,
                stars_in_all_mag, n_c, flag_area_stronger,
                cluster_region, field_region, pval_test_params, qq_params,
-               clust_reg_prob_avrg, field_reg_box,
+               clust_reg_prob_avrg,
                kde_cl, kde_f, memb_prob_avrg_sort, iso_moved, zams_iso,
                cl_e_bv, cl_age, cl_feh, cl_dmod,
                shift_isoch, ga_return, isoch_fit_errors):
@@ -544,8 +544,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                         c=next(col), s=8, edgecolors='none')
    
 
-    # Stars in the fields region with their boxes/KDE, depending on the
-    # algorithm used.
+    # Stars in the first field region with their KDE.
     # Check if decont algorithm was applied.
     if not(flag_area_stronger):
         # Plot first field region.
@@ -566,22 +565,6 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         ax14.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
         plt.text(0.63, 0.93, 'Field region %d' % region, transform = \
         ax14.transAxes, bbox=dict(facecolor='white', alpha=0.8), fontsize=12)
-        
-        # Plot field star region for variable box algorithm.
-#        boxes = plt.gca()
-#        col = ['red', 'darkgreen', 'blue', 'maroon']
-#        stars_reg_temp = [[], []]
-#        for star in field_reg_box[region]:
-#            # star[2] is the box size in T1 and star[3] in CT1.
-#            boxes.add_patch(Rectangle(((star[1]-star[3]), \
-#            (star[0]-star[2])), star[3]*2, star[2]*2, facecolor='none', \
-#            edgecolor=col[0], lw=0.8))
-#            # star[0] is the T1 coordinate and star[1] the CT1 coordinate.
-#            stars_reg_temp[0].append(star[1])
-#            stars_reg_temp[1].append(star[0])
-#        plt.scatter(stars_reg_temp[0], stars_reg_temp[1], marker='o', 
-#                    c='black', s=5, edgecolors='none', zorder=2)
-
         # Plot field stars and KDE for KDE algorithm.
         stars_reg_temp = [[], []]
         for star in field_region[region]:
