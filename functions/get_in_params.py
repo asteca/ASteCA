@@ -72,14 +72,13 @@ def get_in_params(mypath):
                     d_rs = map(float, reader[1:])
                 elif reader[0] == 'PS_xy':
                     axes_names = map(str, reader[1:])
-
                 elif reader[0] == 'SC':
                     sys_sel = str(reader[1])
                     IMF_name = str(reader[2])
                     tot_mass = float(reader[3])
                     f_bin = float(reader[4])
                     q_bin = float(reader[5])
-                    
+
                     
     in_dirs = [mypath2, mypath3, output_dir]
     pv_params = [pv0_params, pv1_params, pv2_params]

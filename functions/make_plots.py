@@ -24,7 +24,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                stars_out, stars_in_rjct, stars_out_rjct, stars_in_mag,
                stars_in_all_mag, n_c, flag_area_stronger,
                cluster_region, field_region, pval_test_params, qq_params,
-               clust_reg_prob_avrg, memb_prob_avrg_sort, manual_params_iso,
+               clust_reg_prob_avrg, memb_prob_avrg_sort,
                shift_isoch, ga_return, isoch_fit_errors):
     '''
     Make all plots.
@@ -63,9 +63,6 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     # Parameters from error fitting.
     bright_end, popt_umag, pol_mag, popt_ucol1, pol_col1, mag_val_left,\
     mag_val_right, col1_val_left, col1_val_right = err_plot
-    
-    # Parameters from manual isochrone fitting.
-    cl_e_bv, cl_age, cl_feh, cl_dmod, iso_moved, zams_iso = manual_params_iso
 
 
     # Plot all outputs
@@ -740,10 +737,6 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         ax19.minorticks_on()
         ax19.xaxis.set_major_locator(MultipleLocator(1.0))
         ax19.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
-        # Plot ZAMS.
-        plt.plot(zams_iso[1], zams_iso[0], c='k', ls='--', lw=1.)
-        # Plot isochrone.
-        plt.plot(iso_moved[1], iso_moved[0], 'g', lw=1.2)
         # This reversed colormap means higher prob stars will look redder.
         cm = plt.cm.get_cmap('RdYlBu_r')
         m_p_m_temp = [[], [], []]
@@ -784,10 +777,6 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         ax20.minorticks_on()
         ax20.xaxis.set_major_locator(MultipleLocator(1.0))
         ax20.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
-        # Plot ZAMS.
-        plt.plot(zams_iso[1], zams_iso[0], c='k', ls='--', lw=1.)
-        # Plot isochrone.
-        plt.plot(iso_moved[1], iso_moved[0], 'g', lw=1.2)
         # This reversed colormap means higher prob stars will look redder.
         cm = plt.cm.get_cmap('RdYlBu_r')
         m_p_m_temp = [[], [], []]

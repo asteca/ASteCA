@@ -37,7 +37,6 @@ from functions.memb_prob_avrg_sort import mpas as m_p_a_s
 from functions.get_completeness import mag_completeness as m_c
 from functions.get_isoch_params import ip
 from functions.best_fit_synth_cl import bf as bfsc
-from functions.get_manual_isoch import manual_isoch as m_i
 
 from functions.make_plots import make_plots as mp
 from functions.add_data_output import add_data_output as a_d_o
@@ -437,7 +436,7 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
     # ranges in isoch_ma; extinction and distance modulus values in isoch_ed.
     # isoch_list, isoch_ma, isoch_ed = ip_list
     ip_list = ip(ps_params)
-    print 'Isochrone and their parameters read and stored.'
+    print 'Theoretical isochrones (and their parameters) read and stored.'
     
     
     # Check if decont alg was applied.
@@ -452,8 +451,8 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
         print 'Best fit parameters obtained.'
     
     
-    # New name for cluster used in output data file. Useful when there's a
-    # single photometric file with multiple clusters in it.
+    # New name for cluster? Useful when there's a single photometric file
+    # with multiple clusters in it.
     if mode == 'm':
         wrong_answer = True
         while wrong_answer:
@@ -467,10 +466,10 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
             else:
                 print 'Wrong input. Try again.\n'
         
-        
-    # Get manually fitted parameters for cluster, if these exist.
-    manual_params_iso = m_i(mypath, clust_name)
-    print 'Isochrone obtained.'
+
+    # Create data file with membership probabilities.
+    c_m_f(output_dir, sub_dir, clust_name, memb_prob_avrg_sort)
+    print 'Membership probabilities for stars in cluster region saved to file.'
 
 
     # Generate output subdir.   
@@ -490,16 +489,10 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
        stars_out, stars_in_rjct,
        stars_out_rjct, stars_in_mag, stars_in_all_mag, n_c, flag_area_stronger,
        cluster_region, field_region, pval_test_params, qq_params,
-       clust_reg_prob_avrg,
-       memb_prob_avrg_sort, iso_moved, zams_iso, cl_e_bv,
-       cl_age, cl_feh, cl_dmod,
+       clust_reg_prob_avrg, memb_prob_avrg_sort,
        shift_isoch, ga_return, isoch_fit_errors)
     print 'Plots created.'
 
-    # Create data file with most probable members.
-    c_m_f(output_dir, sub_dir, clust_name, memb_prob_avrg_sort)
-    print 'Most probable members saved to file.'
- 
    
     # Add cluster data and flags to output file
     a_d_o(sub_dir, output_dir, clust_name, center_cl, clust_rad, k_prof, 

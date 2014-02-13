@@ -126,7 +126,6 @@ PS_e              0.     0.4      0.01
 # Distance modulus    dis_mod_min dis_mod_max dis_mod_step
 PS_d                          18.       19.         0.05
 
-
 # Synthetic cluster.
 # sys_select: WASH / UBVI
 # IMF:  chabrier_2001 / kroupa_1993 / kroupa_2002
