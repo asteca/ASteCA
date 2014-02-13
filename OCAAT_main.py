@@ -36,7 +36,7 @@ from functions.get_qqplot import qqplot as g_qq
 from functions.memb_prob_avrg_sort import mpas as m_p_a_s
 from functions.get_completeness import mag_completeness as m_c
 from functions.get_isoch_params import ip
-from functions.best_fit_synth_cl import bf as bfsc
+from functions.best_fit_synth_cl import best_fit as bfsc
 
 from functions.make_plots import make_plots as mp
 from functions.add_data_output import add_data_output as a_d_o
@@ -57,8 +57,8 @@ mypath = realpath(join(getcwd(), dirname(__file__)))
 
 # Read input parameters for code from file.
 mode, in_dirs, gd_params, gc_params, br_params, cr_params, er_params,\
-gr_params, pv_params, da_params, ps_params, N_b, sc_params, ga_params =\
-gip.get_in_params(mypath)
+gr_params, pv_params, da_params, ps_params, N_b, sc_params, ga_params,\
+flag_move_file = gip.get_in_params(mypath)
 
 # Read paths.
 mypath2, mypath3, output_dir = in_dirs
@@ -505,18 +505,19 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
     
 
     # Move file to 'done' dir.
-#    dst_dir = join(mypath3, sub_dir)
-#    # If the sub-dir doesn't exist, create it before moving the file.
-#    if not exists(dst_dir):
-#        mkdir(dst_dir)
-#    shutil.move(join(mypath2, sub_dir, myfile), dst_dir)
-#    # If sub-dir is empty, remove it.
-#    try:
-#        rmdir(join(mypath2, sub_dir))
-#    except OSError as ex:
-#        # Sub-dir not empty, skip.
-#        pass
-#    print "Data file moved to 'done' folder."
+    if flag_move_file:
+        dst_dir = join(mypath3, sub_dir)
+        # If the sub-dir doesn't exist, create it before moving the file.
+        if not exists(dst_dir):
+            mkdir(dst_dir)
+        shutil.move(join(mypath2, sub_dir, myfile), dst_dir)
+        # If sub-dir left behind is empty, remove it.
+        try:
+            rmdir(join(mypath2, sub_dir))
+        except OSError as ex:
+            # Sub-dir not empty, skip.
+            pass
+        print 'Data file moved to folder: %s' % dst_dir
    
 
     elapsed = time.time() - start

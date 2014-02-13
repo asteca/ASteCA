@@ -26,6 +26,11 @@ CP1  /home/gabriel/clusters/clusters_done
 # Output directory.        
 CP2  /home/gabriel/clusters/clusters_out/
 
+# Move file once it is processed?
+# The cluster's photometric file will be moved to folder
+# defined in 'CP1' if this flag is set to 'True'.
+MF  False
+
 # Column numbers identifying the data needed, as stored in the clusters'
 # photometric data files.
 # id_star x_coor y_coor magnitude e_mag color e_col
@@ -128,7 +133,7 @@ PS_d                          18.       19.         0.05
 
 # Best fit of synthetic cluster.
 # boot_num: number of times the bootstrap with replacement
-# process will run.
+# process will run. Minimum value is 2.
 #   boot_num
 BF  10
 
@@ -156,4 +161,4 @@ SC         WASH    chabrier_2001         5000          0.5         0.7
 # returning the same best solution before exiting the generations loop.
 #
 #   n_pop  n_gen fdif p_cross cr_sel p_mut n_el n_ei n_es
-GA    100     20   1.    0.85     2P  0.01    1   25    6
+GA     10     20   1.    0.85     2P  0.01    1   25    6

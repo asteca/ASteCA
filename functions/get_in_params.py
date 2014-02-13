@@ -73,7 +73,7 @@ def get_in_params(mypath):
                 elif reader[0] == 'PS_xy':
                     axes_names = map(str, reader[1:])
                 elif reader[0] == 'BF':
-                    N_b = int(reader[1:])
+                    N_b = int(reader[1])
                 elif reader[0] == 'SC':
                     sys_sel = str(reader[1])
                     IMF_name = str(reader[2])
@@ -90,7 +90,8 @@ def get_in_params(mypath):
                     n_el = int(reader[7])
                     n_ei = int(reader[8])
                     n_es = int(reader[9])
-
+                elif reader[0] == 'MF':
+                    flag_move_file = True if reader[1] == 'True' else False
                     
     in_dirs = [mypath2, mypath3, output_dir]
     pv_params = [pv0_params, pv1_params, pv2_params]
@@ -101,4 +102,5 @@ def get_in_params(mypath):
     ga_params = [n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es]
     
     return mode, in_dirs, gd_params, gc_params, br_params, cr_params, er_params,\
-    gr_params, pv_params, da_params, ps_params, N_b, sc_params, ga_params
+    gr_params, pv_params, da_params, ps_params, N_b, sc_params, ga_params,\
+    flag_move_file
