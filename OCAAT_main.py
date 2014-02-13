@@ -286,14 +286,6 @@ px): '))
             clust_rad = cl_rad_semi
             flag_radius_manual = True
 
-                
-    # Accept and reject stars based on their errors.
-    bright_end, popt_mag, popt_umag, pol_mag, popt_col1, popt_ucol1, \
-    pol_col1, mag_val_left, mag_val_right, col1_val_left, col1_val_right, \
-    acpt_stars, rjct_stars = ear.err_accpt_rejct(phot_data, er_params)
-    e_max = er_params[2]
-    print 'Stars accepted/rejected based on their errors.'
-
 
     # Get King profiles based on the density profiles.
     k_prof, k_pr_err, n_c_k, flag_king_no_conver = \
@@ -302,20 +294,35 @@ px): '))
         print '3-P King profile obtained.'
     else:
         print 'King profile fitting did not converge.'
+        
 
-    
     # This indicates if we are to use the output of the 'err_accpt_rejct'
     # function or all stars with errors < e_max.
-    use_errors_fit = True
+    rjct_errors_fit = False
+    # Accept and reject stars based on their errors.
+    popt_mag, popt_col1, acpt_stars, rjct_stars, err_plot = \
+    ear.err_accpt_rejct(phot_data, er_params)    
+    e_max = er_params[2]
+    # If list of accepted stars is empty, halt the code.
+    if not acpt_stars:
+        print '  No stars accepted based on their errors.'
+        print '  This probably means the exponential error function\n\
+did not converge.'
+        print 'Using all stars with errors < %0.2f.' % e_max
+        # Call function to reject stars w errors > e_max.
+        popt_mag, popt_col1, acpt_stars, rjct_stars = e_a_r_m(phot_data, er_params)
+        rjct_errors_fit = True
+    else:
+        print 'Stars accepted/rejected based on their errors.'
+
+
     # If Manual mode is set, display errors distributions and ask the user
     # to accept it or else use all stars except those with errors > e_max in
     # either the magnitude or the color.
-    flag_errors_manual = False
     if mode == 'm':
         print 'Plot error distributions.'
-        d_e(mag_data, bright_end, popt_mag, popt_umag, pol_mag, popt_col1,
-            popt_ucol1, pol_col1, mag_val_left, mag_val_right,
-            col1_val_left, col1_val_right, acpt_stars, rjct_stars, er_params)
+        d_e(mag_data, popt_mag,  popt_col1, acpt_stars, rjct_stars, err_plot,
+            er_params)
         plt.show()
                 
         wrong_answer = True
@@ -328,20 +335,19 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
             elif answer_rad == 'n':
                 print 'Using stars with errors < %0.2f.' % e_max
                 # Call function to reject stars w errors > e_max.
-                acpt_stars, rjct_stars = e_a_r_m(phot_data, er_params)
-                flag_errors_manual = True
-                use_errors_fit = False
+                popt_mag, popt_col1, acpt_stars, rjct_stars = e_a_r_m(phot_data, er_params)
+                rjct_errors_fit = True
                 wrong_answer = False
             else:
                 print 'Wrong input. Try again.\n'
     elif mode == 's':
         if err_flag_semi == 1:
             # Reject error fit.
-            print 'Using stars with errors < %0.2f.' % e_max
+            print 'Semi: using all stars with errors < %0.2f.' % e_max
             # Call function to reject stars w errors > e_max.
-            acpt_stars, rjct_stars = e_a_r_m(phot_data, er_params)
-            flag_errors_manual = True
-            use_errors_fit = False
+            popt_mag, popt_col1, acpt_stars, rjct_stars = e_a_r_m(phot_data, er_params)
+            rjct_errors_fit = True
+
 
 
     # Get stars in and out of cluster's radius.
@@ -443,7 +449,7 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
     else:
         print 'Searching for optimal parameters.'
         # Obtain best fitting parameters for cluster.
-        err_lst = [popt_mag, popt_col1]
+        err_lst = [popt_mag, popt_col1, e_max]
         shift_isoch, ga_return, isoch_fit_errors = bfsc(err_lst,\
         memb_prob_avrg_sort, completeness, ip_list, sc_params)
         print 'Best fit parameters obtained.'
@@ -482,9 +488,8 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
        x_center_bin, y_center_bin, h_filter, radii, backg_value, inner_ring,
        outer_ring, radius_params[0:3], ring_density, poisson_error,
        cont_index, width_bins, mag_data, col1_data,
-       bright_end, popt_mag, popt_umag, pol_mag, popt_col1, popt_ucol1,
-       pol_col1, mag_val_left, mag_val_right, col1_val_left, col1_val_right,
-       use_errors_fit, k_prof, k_pr_err, flag_king_no_conver, stars_in,
+       popt_mag, popt_col1, err_plot,
+       rjct_errors_fit, k_prof, k_pr_err, flag_king_no_conver, stars_in,
        stars_out, stars_in_rjct,
        stars_out_rjct, stars_in_mag, stars_in_all_mag, n_c, flag_area_stronger,
        cluster_region, field_region, pval_test_params, qq_params,
@@ -504,7 +509,7 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
           n_c_k, flag_king_no_conver, cont_index, n_c, pval_test_params[0],
           qq_params[0], stars_in_mag,
           flag_center, flag_std_dev, flag_center_manual,
-          flag_radius_manual, flag_errors_manual, flag_bin_count,
+          flag_radius_manual, rjct_errors_fit, flag_bin_count,
           radius_params[3:], flag_num_memb_low)
     print 'Data added to output file.'
     

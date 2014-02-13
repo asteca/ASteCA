@@ -18,10 +18,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                cent_cl_err, x_center_bin, y_center_bin, h_filter, radii, 
                backg_value, inner_ring, outer_ring, radius_params,
                ring_density, poisson_error, cont_index, width_bins,
-               mag_data, col1_data, bright_end, popt_mag,
-               popt_umag, pol_mag, popt_col1, popt_ucol1, pol_col1,
-               mag_val_left, mag_val_right, col1_val_left,
-               col1_val_right, use_errors_fit, k_prof, k_pr_err,
+               mag_data, col1_data, popt_mag, popt_col1,
+               err_plot, rjct_errors_fit, k_prof, k_pr_err,
                flag_king_no_conver, stars_in,
                stars_out, stars_in_rjct, stars_out_rjct, stars_in_mag,
                stars_in_all_mag, n_c, flag_area_stronger,
@@ -63,6 +61,11 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
 
     # Parameters from get_radius function.
     clust_rad, delta_backg, delta_percentage = radius_params
+    
+    # Parameters from error fitting.
+    bright_end, popt_umag, pol_mag, popt_ucol1, pol_col1, mag_val_left,\
+    mag_val_right, col1_val_left, col1_val_right = err_plot
+
 
     # Plot all outputs
     # figsize(x1, y1), GridSpec(y2, x2) --> To have square plots: x1/x2 = 
@@ -159,9 +162,9 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                         fill=False)
     fig.gca().add_artist(circle)
     # Add text box
-    text1 = r'$x_{cent} = %d \pm %d px$' % (center_cl[0], cent_cl_err[0])
+    text1 = '$x_{cent} = %d \pm %d px$' % (center_cl[0], cent_cl_err[0])
     text2 = '\n'
-    text3 = r'$y_{cent} = %d \pm %d px$' % (center_cl[1], cent_cl_err[1])
+    text3 = '$y_{cent} = %d \pm %d px$' % (center_cl[1], cent_cl_err[1])
     text4 = text1+text2+text3
     plt.text(0.5, 0.85, text4, transform = ax5.transAxes, \
     bbox=dict(facecolor='white', alpha=0.85), fontsize=15)
@@ -222,11 +225,11 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     else:
         rc_err, rt_err = -1, -1
     texts = ['Density Profile (%d px)' % width_bins[0],
-             r'$R_{cl}$ = %d $\pm$ %d px' % (clust_rad,
+             '$R_{cl}$ = %d $\pm$ %d px' % (clust_rad,
                                            round(width_bins[0]/2.)),\
             '3-P King profile',
-             r'$R_c$ = %d $\pm$ %d px' % (k_prof[0], rc_err),\
-             r'$R_t$ = %d $\pm$ %d px' % (k_prof[1], rt_err),\
+             '$R_c$ = %d $\pm$ %d px' % (k_prof[0], rc_err),\
+             '$R_t$ = %d $\pm$ %d px' % (k_prof[1], rt_err),\
              r'Background ($\Delta$=%d%%)' % delta_percentage]
     # Plot density profile with the smallest bin size
     ax4.plot(radii[0], ring_density[0], 'ko-', zorder=3, label=texts[0])
@@ -298,28 +301,28 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     plt.xlim(min(mag_data)-0.5, max(mag_data)+0.5)
     plt.ylim(-0.005, 0.31)
     #Set axis labels
-    plt.ylabel(r'$\sigma_{T_1}$', fontsize=18)
-    plt.xlabel(r'$T_1$', fontsize=18)
+    plt.ylabel('$\sigma_{T_1}$', fontsize=18)
+    plt.xlabel('$T_1$', fontsize=18)
     # Set minor ticks
     ax7.minorticks_on()
     mag_x = np.linspace(min(mag_data), max(mag_data), 50)
     # Condition to not plot the lines if the fit was rejected.
-    if use_errors_fit:
-        # Plot lower envelope.
-        ax7.plot(mag_x, func(mag_x, *popt_mag), 'r-', zorder=3)
+    # Plot lower envelope.
+    ax7.plot(mag_x, func(mag_x, *popt_mag), 'r-', zorder=3)
+    if not rjct_errors_fit:
         # Plot left side of upper envelope (exponential).
         ax7.plot(mag_val_left, func(mag_val_left, *popt_umag), 'r--', lw=2.,
                  zorder=3)
         # Plot right side of upper envelope (polynomial).
         ax7.plot(mag_val_right, np.polyval(pol_mag, (mag_val_right)),
                  'r--', lw=2., zorder=3)
-        # Plot rectangle.
-        ax7.vlines(x=bright_end+0.05, ymin=-0.005, ymax=0.1, color='r', 
-                   linestyles='dashed', zorder=2)
-        ax7.vlines(x=min(mag_data)-0.05, ymin=-0.005, ymax=0.1, color='r',
-                   linestyles='dashed', zorder=2)
-        ax7.hlines(y=0.1, xmin=min(mag_data), xmax=bright_end, color='r',
-                   linestyles='dashed', zorder=2)
+    # Plot rectangle.
+    ax7.vlines(x=bright_end+0.05, ymin=-0.005, ymax=0.1, color='r', 
+               linestyles='dashed', zorder=2)
+    ax7.vlines(x=min(mag_data)-0.05, ymin=-0.005, ymax=0.1, color='r',
+               linestyles='dashed', zorder=2)
+    ax7.hlines(y=0.1, xmin=min(mag_data), xmax=bright_end, color='r',
+               linestyles='dashed', zorder=2)
     # Plot stars.
     stars_rjct_temp = [[], []]
     for star in stars_out_rjct:
@@ -347,27 +350,27 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     plt.xlim(min(mag_data)-0.5, max(mag_data)+0.5)
     plt.ylim(-0.005, 0.31)
     #Set axis labels
-    plt.ylabel(r'$\sigma_{(C-T_1)}$', fontsize=18)
-    plt.xlabel(r'$T_1$', fontsize=18)
+    plt.ylabel('$\sigma_{(C-T_1)}$', fontsize=18)
+    plt.xlabel('$T_1$', fontsize=18)
     # Set minor ticks
     ax8.minorticks_on()
     # Condition to not plot the lines if the fit was rejected.
-    if use_errors_fit:
-        # Plot lower envelope.
-        ax8.plot(mag_x, func(mag_x, *popt_col1), 'r-', zorder=3)
+    # Plot lower envelope.
+    ax8.plot(mag_x, func(mag_x, *popt_col1), 'r-', zorder=3)
+    if not rjct_errors_fit:
         # Plot left side of upper envelope (exponential).
         ax8.plot(col1_val_left, func(col1_val_left, *popt_ucol1), 'r--', lw=2.,
                  zorder=3)
         # Plot right side of upper envelope (polynomial).
         ax8.plot(col1_val_right, np.polyval(pol_col1, (col1_val_right)),
                  'r--', lw=2., zorder=3)
-        # Plot rectangle.
-        ax8.vlines(x=bright_end+0.05, ymin=-0.005, ymax=0.1, color='r', 
-                   linestyles='dashed', zorder=2)
-        ax8.vlines(x=min(mag_data)-0.05, ymin=-0.005, ymax=0.1, color='r',
-                   linestyles='dashed', zorder=2)
-        ax8.hlines(y=0.1, xmin=min(mag_data), xmax=bright_end, color='r',
-                   linestyles='dashed', zorder=2)
+    # Plot rectangle.
+    ax8.vlines(x=bright_end+0.05, ymin=-0.005, ymax=0.1, color='r', 
+               linestyles='dashed', zorder=2)
+    ax8.vlines(x=min(mag_data)-0.05, ymin=-0.005, ymax=0.1, color='r',
+               linestyles='dashed', zorder=2)
+    ax8.hlines(y=0.1, xmin=min(mag_data), xmax=bright_end, color='r',
+               linestyles='dashed', zorder=2)
     # Plot stars.
     stars_rjct_temp = [[], []]
     for star in stars_out_rjct:
@@ -395,15 +398,15 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     plt.xlim(col1_min, col1_max)
     plt.ylim(mag_min, mag_max)
     #Set axis labels
-    plt.xlabel(r'$C-T_1$', fontsize=18)
-    plt.ylabel(r'$T_1$', fontsize=18)
+    plt.xlabel('$C-T_1$', fontsize=18)
+    plt.ylabel('$T_1$', fontsize=18)
     # Set minor ticks
     ax9.minorticks_on()
     # Only draw units on axis (ie: 1, 2, 3)
     ax9.xaxis.set_major_locator(MultipleLocator(1.0))
     # Set grid
     ax9.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
-    plt.text(0.8, 0.93, r'$r > R_{cl}$', transform = ax9.transAxes, \
+    plt.text(0.8, 0.93, '$r > R_{cl}$', transform = ax9.transAxes, \
     bbox=dict(facecolor='white', alpha=0.5), fontsize=16)
     # Plot stars.
     stars_rjct_temp = [[], []]
@@ -427,8 +430,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     plt.xlim(col1_min, col1_max)
     plt.ylim(mag_min, mag_max)
     #Set axis labels
-    plt.xlabel(r'$C-T_1$', fontsize=18)
-    plt.ylabel(r'$T_1$', fontsize=18)
+    plt.xlabel('$C-T_1$', fontsize=18)
+    plt.ylabel('$T_1$', fontsize=18)
     # Set minor ticks
     ax10.minorticks_on()
     # Only draw units on axis (ie: 1, 2, 3)
@@ -437,7 +440,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     ax10.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
     # Calculate total number of stars whitin cluster's radius.
     tot_stars = len(stars_in_rjct) + len(stars_in)
-    plt.text(0.55, 0.93, r'$r \leq R_{cl}\,|\,N=%d$' % tot_stars, 
+    plt.text(0.55, 0.93, '$r \leq R_{cl}\,|\,N=%d$' % tot_stars, 
              transform = ax10.transAxes, 
              bbox=dict(facecolor='white', alpha=0.5), fontsize=16)
     # Plot stars.
@@ -550,8 +553,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
 #        # Plot first field region.
 #        region = 0
 #        ax14 = plt.subplot(gs1[6:8, 2:4])
-#        plt.xlabel(r'$C-T_1$', fontsize=18)
-#        plt.ylabel(r'$T_1$', fontsize=18)
+#        plt.xlabel('$C-T_1$', fontsize=18)
+#        plt.ylabel('$T_1$', fontsize=18)
 #        col1_acpt_out, mag_acpt_out = [], []
 #        for star in stars_out:
 #            col1_acpt_out.append(star[5])
@@ -591,18 +594,18 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
 #        plt.xlim(col1_min, col1_max)
 #        plt.ylim(mag_min, mag_max)
 #        #Set axis labels
-#        plt.xlabel(r'$C-T_1$', fontsize=18)
-#        plt.ylabel(r'$T_1$', fontsize=18)
+#        plt.xlabel('$C-T_1$', fontsize=18)
+#        plt.ylabel('$T_1$', fontsize=18)
 #        # Add text box
-#        text1 = r'$E_{(B-V)} = %0.2f}$' '\n' % cl_e_bv
-#        text2 = r'$Age = %0.3f}$' '\n' % cl_age
-#        text3 = r'$[Fe/H] = %0.2f}$' '\n' % cl_feh
-#        text4 = r'$(m-M)_o = %0.2f}$' % cl_dmod
+#        text1 = '$E_{(B-V)} = %0.2f}$' '\n' % cl_e_bv
+#        text2 = '$Age = %0.3f}$' '\n' % cl_age
+#        text3 = '$[Fe/H] = %0.2f}$' '\n' % cl_feh
+#        text4 = '$(m-M)_o = %0.2f}$' % cl_dmod
 #        text = text1+text2+text3+text4
 #        plt.text(0.05, 0.8, text, transform = ax15.transAxes, 
 #                 bbox=dict(facecolor='white', alpha=0.6), fontsize=12)
 #        tot_kde_clust = len(memb_prob_avrg_sort)
-#        plt.text(0.55, 0.93, r'$r \leq R_{cl}\,|\,N=%d$' % tot_kde_clust,
+#        plt.text(0.55, 0.93, '$r \leq R_{cl}\,|\,N=%d$' % tot_kde_clust,
 #                 transform=ax15.transAxes, \
 #                 bbox=dict(facecolor='white', alpha=0.5), fontsize=16)
 #        # Set minor ticks
@@ -675,13 +678,13 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     plt.xlim(min(stars_in_all_mag[0])-0.2, max(stars_in_all_mag[0])+0.2)
     plt.ylim(max(max(stars_in_all_mag[1]), max(stars_in_mag[1]))+0.2,
              min(stars_in_all_mag[1])-0.2)
-    plt.xlabel(r'$T_1$', fontsize=18)
-    plt.ylabel(r'$T_1^*$', fontsize=18)
+    plt.xlabel('$T_1$', fontsize=18)
+    plt.ylabel('$T_1^*$', fontsize=18)
     ax17.minorticks_on()
     ax17.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
     # Text.
-    text1 = r'$stars_{acpt}\,(T_{1,max}^*\,=%.2f$)' '\n' % (min(stars_in_mag[1]))
-    text2 =r'$stars_{all}\;(T_{1,max}^*\,=%.2f)$' % (min(stars_in_all_mag[1]))
+    text1 = '$stars_{acpt}\,(T_{1,max}^*\,=%.2f$)' '\n' % (min(stars_in_mag[1]))
+    text2 ='$stars_{all}\;(T_{1,max}^*\,=%.2f)$' % (min(stars_in_all_mag[1]))
     # Only accepted stars.
     plt.plot(stars_in_mag[0], stars_in_mag[1], 'r-', lw=1.5, label=text1)
     # All stars, including those rejected due to its large errors.
@@ -707,7 +710,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         # Best Gaussian fit of data.
         (mu, sigma) = norm.fit(prob_data)
         # Text.
-        text = r'$\mu=%.3f,\ \sigma=%.3f$' %(mu, sigma)
+        text = '$\mu=%.3f,\ \sigma=%.3f$' %(mu, sigma)
         plt.text(0.05, 0.92, text, transform = ax18.transAxes, 
              bbox=dict(facecolor='white', alpha=0.85), fontsize=12)
         # Histogram of the data.
@@ -726,10 +729,10 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         plt.xlim(col1_min, col1_max)
         plt.ylim(mag_min, mag_max)
         #Set axis labels
-        plt.xlabel(r'$C-T_1$', fontsize=18)
-        plt.ylabel(r'$T_1$', fontsize=18)
+        plt.xlabel('$C-T_1$', fontsize=18)
+        plt.ylabel('$T_1$', fontsize=18)
         tot_kde_clust = len(memb_prob_avrg_sort)
-        text = r'$N=%d\,|\,MI \geq 0.$' % tot_kde_clust
+        text = '$N=%d\,|\,MI \geq 0.$' % tot_kde_clust
         plt.text(0.05, 0.93, text, transform = ax19.transAxes,
                  bbox=dict(facecolor='white', alpha=0.5), fontsize=14)
         # Set minor ticks
@@ -774,8 +777,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         plt.xlim(col1_min, col1_max)
         plt.ylim(mag_min, mag_max)
         #Set axis labels
-        plt.xlabel(r'$C-T_1$', fontsize=18)
-        plt.ylabel(r'$T_1$', fontsize=18)
+        plt.xlabel('$C-T_1$', fontsize=18)
+        plt.ylabel('$T_1$', fontsize=18)
         # Set minor ticks
         ax20.minorticks_on()
         ax20.xaxis.set_major_locator(MultipleLocator(1.0))
@@ -795,7 +798,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                 m_p_m_temp[2].append(star[7])
         # Create new list with inverted values so higher prob stars are on top.
         m_p_m_temp_inv = [i[::-1] for i in m_p_m_temp]
-        plt.text(0.05, 0.93, r'$N=%d\,|\,MI \geq \mu$' % len(m_p_m_temp[0]), 
+        plt.text(0.05, 0.93, '$N=%d\,|\,MI \geq \mu$' % len(m_p_m_temp[0]), 
                  transform = ax20.transAxes, 
                  bbox=dict(facecolor='white', alpha=0.5), fontsize=14)
         v_min = round(mu, 2)
@@ -834,12 +837,12 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         # Grid to background.
         ax21.set_axisbelow(True)
         # Plot cluster vs field KDE.
-        plt.plot(x_kde, kde_cl_1d, c='b', ls='-', lw =1., label=r'$KDE_{cl}$')
+        plt.plot(x_kde, kde_cl_1d, c='b', ls='-', lw =1., label='$KDE_{cl}$')
         # Plot field vs field KDE.
-        plt.plot(x_kde, kde_f_1d, c='r', ls='-', lw=1., label=r'$KDE_{f}$')
+        plt.plot(x_kde, kde_f_1d, c='r', ls='-', lw=1., label='$KDE_{f}$')
         # Fill overlap.
         plt.fill_between(x_kde, y_over, 0, color='grey', alpha='0.5')
-        text = r'$\;P_{cl}^{KDE} = %0.2f$' % round(prob_cl_kde,2)
+        text = '$\;P_{cl}^{KDE} = %0.2f$' % round(prob_cl_kde,2)
         plt.text(0.05, 0.92, text, transform = ax21.transAxes, 
              bbox=dict(facecolor='white', alpha=0.6), fontsize=12)
         handles, labels = ax21.get_legend_handles_labels()

@@ -26,11 +26,13 @@ def likelihood(synth_clust, obs_clust):
         clust_stars_probs = []
         for star in obs_arr:
             # Get probability for this cluster star.
+
+            # Avoid numeric errors if one of the errors is 0.            
+            e_col, e_mag = max(star[6], 1e-10), max(star[4], 1e-10)
             
-            # e_col, e_mag = star[6], star[4]
-            A = 1./(star[6]*star[4])
-            B = -0.5*((star[5]-syn_arr[:,0])/star[6])**2
-            C = -0.5*((star[3]-syn_arr[:,1])/star[4])**2
+            A = 1./(e_col*e_mag)
+            B = -0.5*((star[5]-syn_arr[:,0])/e_col)**2
+            C = -0.5*((star[3]-syn_arr[:,1])/e_mag)**2
             synth_stars = A*np.exp(B+C)
         
             # The final prob for this cluster star is the sum over all synthetic
@@ -45,7 +47,7 @@ def likelihood(synth_clust, obs_clust):
         weighted_probs = clust_stars_probs*weights/len(synth_clust[0])
         
         # Final score: sum log likelihoods for each star in cluster.
-        isoch_score = -sum(np.log(np.asarray(weighted_probs[0])))
+        isoch_score = min(-sum(np.log(np.asarray(weighted_probs[0]))), 10000.)
     
     return isoch_score
 

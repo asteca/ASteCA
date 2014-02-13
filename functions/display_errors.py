@@ -13,13 +13,14 @@ def func(x, a, b, c):
     return a * np.exp(b * x) + c   
 
 
-def disp_errors(mag_data, bright_end, popt_mag, popt_umag, pol_mag,
-                popt_col1, popt_ucol1, pol_col1, mag_val_left, mag_val_right,
-                col1_val_left, col1_val_right, acpt_stars, rjct_stars,
-                er_params):
+def disp_errors(mag_data, popt_mag,  popt_col1, acpt_stars, rjct_stars,
+                err_plot, er_params):
     '''
     Plot errors diagrams.
     '''
+
+    bright_end, popt_umag, pol_mag, popt_ucol1, pol_col1, mag_val_left, \
+    mag_val_right, col1_val_left, col1_val_right = err_plot
 
     be, be_e, e_max = er_params
     

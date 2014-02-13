@@ -7,7 +7,7 @@ Created on Tue Jan 28 15:22:10 2014
 
 from move_isochrone import move_isoch
 from get_mass_dist import mass_dist as m_d
-from synth_plot import synth_clust_plot as s_c_p
+#from synth_plot import synth_clust_plot as s_c_p
 
 import numpy as np
 import random
@@ -113,9 +113,10 @@ def synth_clust(err_lst, completeness, sc_params, isochrone, params):
     # Interpolate masses in mass_dist into the isochrone rejecting those
     # masses that fall outside of the isochrone's mass range.
     isoch_m_d = mass_interp(isoch_cut, mass_dist)
+    
     # For plotting purposes: store a copy of this list before adding binaries.
-    from copy import deepcopy
-    isoch_m_d0 = deepcopy(isoch_m_d)
+#    from copy import deepcopy
+#    isoch_m_d0 = deepcopy(isoch_m_d)
     
 
     # Assignment of binarity.
@@ -210,18 +211,26 @@ def synth_clust(err_lst, completeness, sc_params, isochrone, params):
 
         # Randomly move stars according to given error distributions.
         # Get errors according to errors distribution.
-        popt_mag, popt_col1 = err_lst
+        popt_mag, popt_col1, e_max = err_lst
         sigma_mag = np.array(exp_func(clust_compl[1], *popt_mag))
         sigma_col = np.array(exp_func(clust_compl[1], *popt_col1))
-        col_gauss, mag_gauss = gauss_error(clust_compl[0], 3*sigma_col, clust_compl[1], 3*sigma_mag)
+        # Replace all error values greater than e_max with e_max.
+        sigma_mag[sigma_mag > e_max] = e_max
+        sigma_col[sigma_col > e_max] = e_max
+        # Do the same but for a minimum error value. This ensures a reasonable
+        # error spread even for low magnitudes.
+        sigma_mag[sigma_mag < 0.05] = 0.05
+        sigma_col[sigma_col < 0.05] = 0.05
+        # Call function to shift stars around these errors.
+        col_gauss, mag_gauss = gauss_error(clust_compl[0], sigma_col,
+                                           clust_compl[1], sigma_mag)
         clust_error = [col_gauss, mag_gauss]
         
-       
         # Append masses.
         synth_clust = np.array(clust_error + [clust_compl[2]])
         
         # Plot diagrams.
-        s_c_p(mass_dist, isoch_inter, params, isoch_moved, isoch_cut, isoch_m_d0,
-              isoch_m_d, clust_compl, clust_error)
+#        s_c_p(mass_dist, isoch_inter, params, isoch_moved, isoch_cut, isoch_m_d0,
+#              isoch_m_d, clust_compl, clust_error)
     
     return synth_clust

@@ -159,8 +159,5 @@ def ip(ps_params):
         isoch_ed[1].append(round(dis_mod, 2))                  
             
     ip_list = [isoch_list, isoch_ma, isoch_ed, ranges_steps]
-    print isoch_ma[17], '\n'
-    print isoch_list[17][-1]
-    raw_input()
             
     return ip_list

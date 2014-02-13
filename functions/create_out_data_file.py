@@ -54,7 +54,7 @@ def create_out_data_file(output_dir):
 #\n\
 # M1 (flag_center_manual): Indicates that the center was set manually.\n\
 # M2 (flag_radius_manual): Indicates that the radius was set manually.\n\
-# M3 (flag_errors_manual): Indicates that all stars with errors < 0.3 were\n\
+# M3 (rjct_errors_fit): Indicates that all stars with errors < e_max were\n\
 #    accepted, meaning that the automatic error rejecting fit was poor.\n\
 #\n\
 # f1 (flag_center): Either the x or y coordinate assigned as center deviates\n\

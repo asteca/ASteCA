@@ -5,6 +5,16 @@
 from scipy.optimize import curve_fit
 import numpy as np
 
+
+
+# Define exponential function.
+def func(x, a, b, c):
+    '''
+    Exponential function.
+    '''
+    return a * np.exp(b * x) + c
+        
+        
 def err_accpt_rejct(phot_data, er_params):
     """    
     Accept and reject stars in and out of the cluster's boundaries according to
@@ -186,13 +196,6 @@ def err_accpt_rejct(phot_data, er_params):
     # After iterating through all intervals in magnitude, we fit an exponential
     # and a polynomial to these points (median and median+sigma).
     
-    # Define exponential function.
-    def func(x, a, b, c):
-        '''
-        Exponential function.
-        '''
-        return a * np.exp(b * x) + c
-            
     # Fit curves for errors in magnitude.            
             
     # Fit lower (exponential) curve.
@@ -318,7 +321,8 @@ def err_accpt_rejct(phot_data, er_params):
                                       mag[st_ind], e_mag[st_ind], col1[st_ind],\
                                       e_col1[st_ind]])
 
+    # All these values are used for plotting purposes only.
+    err_plot = [bright_end, popt_umag, pol_mag, popt_ucol1, pol_col1,
+    mag_val_left, mag_val_right, col1_val_left, col1_val_right]
                 
-    return bright_end, popt_mag, popt_umag, pol_mag, popt_col1, popt_ucol1, \
-    pol_col1, mag_val_left, mag_val_right, col1_val_left, col1_val_right, \
-    acpt_stars, rjct_stars
+    return popt_mag, popt_col1, acpt_stars, rjct_stars, err_plot

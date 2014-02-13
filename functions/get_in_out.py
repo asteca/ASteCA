@@ -8,7 +8,7 @@ def get_in_out(center_cl, clust_rad, acpt_stars, rjct_stars):
     """    
     Separate stars between those inside the cluster's radius and those outside.
     """
-
+    
     # Create new empty lists to store items inside and outside of the cluster's
     # radius limit.
     stars_in, stars_out, stars_in_rjct, stars_out_rjct = [], [], [], []

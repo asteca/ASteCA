@@ -38,7 +38,6 @@ def integ_mag(stars_in, stars_in_rjct):
     Obtain integrated magnitude using all stars inside the cluster's radius for
     several limits in magnitude.
     '''
-    
     # Generate lists holding only mag values.
     mags_in = [i[3] for i in stars_in]
     mags_in_all = mags_in + [i[3] for i in stars_in_rjct]
