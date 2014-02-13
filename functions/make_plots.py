@@ -761,55 +761,6 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
             cbaxes = fig.add_axes([0.678, 0.31, 0.04, 0.005])
             cbar = plt.colorbar(cax=cbaxes, ticks=[0,1], orientation='horizontal')
             cbar.ax.tick_params(labelsize=9)
-
-
-
-    # Cluster's stars CMD. Check if decont algorithm was applied.
-    if not(flag_area_stronger):
-        ax20 = plt.subplot(gs1[8:10, 6:8])
-        #Set plot limits
-        plt.xlim(col1_min, col1_max)
-        plt.ylim(mag_min, mag_max)
-        #Set axis labels
-        plt.xlabel('$C-T_1$', fontsize=18)
-        plt.ylabel('$T_1$', fontsize=18)
-        # Set minor ticks
-        ax20.minorticks_on()
-        ax20.xaxis.set_major_locator(MultipleLocator(1.0))
-        ax20.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
-        # This reversed colormap means higher prob stars will look redder.
-        cm = plt.cm.get_cmap('RdYlBu_r')
-        m_p_m_temp = [[], [], []]
-        for star in memb_prob_avrg_sort:
-            # Only plot stars with MI>=mu
-            if star[7] >= mu:
-                m_p_m_temp[0].append(star[5])
-                m_p_m_temp[1].append(star[3])
-                m_p_m_temp[2].append(star[7])
-        # Create new list with inverted values so higher prob stars are on top.
-        m_p_m_temp_inv = [i[::-1] for i in m_p_m_temp]
-        plt.text(0.05, 0.93, '$N=%d\,|\,MI \geq \mu$' % len(m_p_m_temp[0]), 
-                 transform = ax20.transAxes, 
-                 bbox=dict(facecolor='white', alpha=0.5), fontsize=14)
-        v_min = round(mu, 2)
-        v_max = round(max(m_p_m_temp[2]),2) if m_p_m_temp[2] else 1.
-        plt.scatter(m_p_m_temp_inv[0], m_p_m_temp_inv[1], marker='o', 
-                    c=m_p_m_temp_inv[2], s=40, cmap=cm, lw=0.5, vmin=v_min, \
-                    vmax=v_max)
-        # If list is not empty.
-        if m_p_m_temp_inv[1]:
-            # Plot error bars at several mag values.
-            mag_y = np.arange(int(min(m_p_m_temp_inv[1])+0.5), 
-                              int(max(m_p_m_temp_inv[1])+0.5) + 0.1)
-            x_val = [min(3.9, max(col1_data)+0.2) - 0.4]*len(mag_y)
-            plt.errorbar(x_val, mag_y, yerr=func(mag_y, *popt_mag), 
-                         xerr=func(mag_y, *popt_col1), fmt='k.', lw=0.8, ms=0.,\
-                         zorder=4)
-            # Plot colorbar.
-            cbaxes20 = fig.add_axes([0.93, 0.31, 0.04, 0.005])
-            cbar20 = plt.colorbar(cax=cbaxes20, ticks=[v_min,v_max],
-                                  orientation='horizontal')
-            cbar20.ax.tick_params(labelsize=9) 
         
         
         
