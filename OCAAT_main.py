@@ -11,10 +11,6 @@ import functions.get_in_params as gip
 from functions.create_out_data_file import create_out_data_file as c_o_d_f
 from functions.get_data_semi import get_semi as g_s
 import functions.get_phot_data as gd
-
-
-from functions.get_isochrones import get_isochrones as g_i
-
 from functions.display_frame import disp_frame as d_f
 from functions.trim_frame import trim_frame as t_f
 import functions.get_center as g_c
@@ -41,6 +37,7 @@ from functions.memb_prob_avrg_sort import mpas as m_p_a_s
 from functions.get_completeness import mag_completeness as m_c
 from functions.get_isoch_params import ip
 from functions.best_fit_synth_cl import bf as bfsc
+from functions.get_manual_isoch import manual_isoch as m_i
 
 from functions.make_plots import make_plots as mp
 from functions.add_data_output import add_data_output as a_d_o
@@ -455,7 +452,8 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
         print 'Best fit parameters obtained.'
     
     
-    # New name for cluster used in output data file.
+    # New name for cluster used in output data file. Useful when there's a
+    # single photometric file with multiple clusters in it.
     if mode == 'm':
         wrong_answer = True
         while wrong_answer:
@@ -471,8 +469,7 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
         
         
     # Get manually fitted parameters for cluster, if these exist.
-    cl_e_bv, cl_age, cl_feh, cl_dmod, iso_moved, zams_iso = g_i(mypath,
-                                                                clust_name)
+    manual_params_iso = m_i(mypath, clust_name)
     print 'Isochrone obtained.'
 
 

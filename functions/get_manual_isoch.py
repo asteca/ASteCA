@@ -9,10 +9,10 @@ Created on Sun Aug  4 10:31:00 2013
 from os.path import join
 import numpy as np
 
-def get_isochrones(mypath, clust_name):
+def manual_isoch(mypath, clust_name):
     '''
-    Get isochrone for a given cluster, moved by the corresponding E(B-V) and
-    (m-M)o values.
+    Get manually fitted isochrone for a given cluster, moved by the
+    corresponding E(B-V) and (m-M)o values.
     '''
     
     # Path to isochrones dir.
@@ -134,5 +134,7 @@ def get_isochrones(mypath, clust_name):
     for item in zams[1]:
         zams_iso[1].append(item + 1.97*cl_e_bv)
             
+    manual_params_iso = [cl_e_bv, cl_age, cl_feh, cl_dmod, iso_moved, zams_iso]
 
-    return cl_e_bv, cl_age, cl_feh, cl_dmod, iso_moved, zams_iso   
+    return manual_params_iso
+    

@@ -24,9 +24,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                stars_out, stars_in_rjct, stars_out_rjct, stars_in_mag,
                stars_in_all_mag, n_c, flag_area_stronger,
                cluster_region, field_region, pval_test_params, qq_params,
-               clust_reg_prob_avrg,
-               memb_prob_avrg_sort, iso_moved, zams_iso,
-               cl_e_bv, cl_age, cl_feh, cl_dmod,
+               clust_reg_prob_avrg, memb_prob_avrg_sort, manual_params_iso,
                shift_isoch, ga_return, isoch_fit_errors):
     '''
     Make all plots.
@@ -65,6 +63,9 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     # Parameters from error fitting.
     bright_end, popt_umag, pol_mag, popt_ucol1, pol_col1, mag_val_left,\
     mag_val_right, col1_val_left, col1_val_right = err_plot
+    
+    # Parameters from manual isochrone fitting.
+    cl_e_bv, cl_age, cl_feh, cl_dmod, iso_moved, zams_iso = manual_params_iso
 
 
     # Plot all outputs
