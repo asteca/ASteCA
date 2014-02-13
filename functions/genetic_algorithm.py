@@ -59,10 +59,13 @@ def crossover(chromosomes, p_cross, cr_sel):
                 cross_chrom.append(chrom_pair[1][:cp]+chrom_pair[0][cp:])
             elif cr_sel == '2P':
                 # Select two random crossover points.
-                cp0, cp1 = np.sort(random.sample(range(0, len(chrom_pair[0])), 2))
+                cp0, cp1 = np.sort(random.sample(range(0, len(chrom_pair[0])),
+                                                 2))
                 # Apply crossover on these two chromosomes.
-                cross_chrom.append(chrom_pair[0][:cp0]+chrom_pair[1][cp0:cp1]+chrom_pair[0][cp1:])
-                cross_chrom.append(chrom_pair[1][:cp0]+chrom_pair[0][cp0:cp1]+chrom_pair[1][cp1:])
+                cross_chrom.append(chrom_pair[0][:cp0]+\
+                chrom_pair[1][cp0:cp1]+chrom_pair[0][cp1:])
+                cross_chrom.append(chrom_pair[1][:cp0]+\
+                chrom_pair[0][cp0:cp1]+chrom_pair[1][cp1:])
         else:
             # Skip crossover operation.
             cross_chrom.append(chrom_pair[0])
@@ -113,7 +116,8 @@ def decode(mm_m, mm_a, mm_e, mm_d, n_bin, isoch_ma, isoch_ed, mut_chrom,
         d = min(isoch_ed[1], key=lambda x:abs(x-xd))
 
         # Find the indexes for these metallicity and age values.
-        [m, a] = next(((i,j) for i,x in enumerate(isoch_ma) for j,y in enumerate(x) if y == [m, a]), None)
+        [m, a] = next(((i,j) for i,x in enumerate(isoch_ma) for j,y in\
+        enumerate(x) if y == [m, a]), None)
         
         # Append indexes (for m,a) and real values (for e,d) to lists.
         ma_lst.append([m, a])
@@ -146,8 +150,8 @@ def selection(generation, breed_prob):
 
 
 
-def fitness_eval(err_lst, obs_clust, completeness, isoch_list,
-                              isoch_ma, ma_lst, e_lst, d_lst, sc_params, isoch_done):
+def fitness_eval(err_lst, obs_clust, completeness, isoch_list, isoch_ma,
+                 ma_lst, e_lst, d_lst, sc_params, isoch_done):
     '''
     Evaluate each random isochrone in the objective function to obtain
     the fitness of each solution.
@@ -196,13 +200,14 @@ def random_population(isoch_ma, isoch_ed, n_ran):
     '''
     Generate a random set of parameter values to use as a random population.
     '''
-    # Pick n_ran initial random solutions from each list storing all the possible
-    # parameters values. These lists store real values.
+    # Pick n_ran initial random solutions from each list storing all the
+    # possible parameters values. These lists store real values.
     e_lst = [random.choice(isoch_ed[0]) for _ in range(n_ran)]
     d_lst = [random.choice(isoch_ed[1]) for _ in range(n_ran)]
     # Flat array so every [metal,age] combination has the same probability
     # of being picked. This list stores indexes.
-    ma_flat = [(i, j) for i in range(len(isoch_ma)) for j in range(len(isoch_ma[i]))]
+    ma_flat = [(i, j) for i in range(len(isoch_ma)) for j in \
+    range(len(isoch_ma[i]))]
     ma_lst = [random.choice(ma_flat) for _ in range(n_ran)]
     
     return ma_lst, e_lst, d_lst
@@ -246,8 +251,8 @@ def gen_algor(err_lst, obs_clust, completeness, ip_list, sc_params, ga_params):
     # obtained.
     isoch_done = [[], []]
     # Evaluate initial random solutions in the objective function.
-    generation, lkl, isoch_done = fitness_eval(err_lst, obs_clust, completeness, isoch_list,
-                              isoch_ma, ma_lst, e_lst, d_lst, sc_params, isoch_done)
+    generation, lkl, isoch_done = fitness_eval(err_lst, obs_clust, completeness,\
+    isoch_list, isoch_ma, ma_lst, e_lst, d_lst, sc_params, isoch_done)
     # Store best solution for passing along in the 'Elitism' block.
     best_sol = generation[:n_el]
 
@@ -299,12 +304,14 @@ def gen_algor(err_lst, obs_clust, completeness, ip_list, sc_params, ga_params):
         ### Evaluation/fitness ###
         
         # Decode the chromosomes into solutions to form the new generation.
-        ma_lst, e_lst, d_lst = decode(mm_m, mm_a, mm_e, mm_d, n_bin, isoch_ma, isoch_ed, mut_chrom, flat_ma)
+        ma_lst, e_lst, d_lst = decode(mm_m, mm_a, mm_e, mm_d, n_bin, isoch_ma,
+                                      isoch_ed, mut_chrom, flat_ma)
         
         # Evaluate each new solution in the objective function and sort
         # according to the best solutions found.
-        generation, lkl, isoch_done = fitness_eval(err_lst, obs_clust, completeness, isoch_list,
-                              isoch_ma, ma_lst, e_lst, d_lst, sc_params, isoch_done)
+        generation, lkl, isoch_done = fitness_eval(err_lst, obs_clust,\
+        completeness, isoch_list, isoch_ma, ma_lst, e_lst, d_lst, sc_params,\
+        isoch_done)
       
         
         ### Extinction/Immigration ###
@@ -337,13 +344,15 @@ def gen_algor(err_lst, obs_clust, completeness, ip_list, sc_params, ga_params):
                     ext_imm_count = 0
 
                 # Generate (n_pop-n_el) random solutions.
-                ma_lst, e_lst, d_lst = random_population(isoch_ma, isoch_ed, (n_pop-n_el))
+                ma_lst, e_lst, d_lst = random_population(isoch_ma, isoch_ed,
+                                                         (n_pop-n_el))
                 # Store random solutions in random order.
                 generation_ei = []
                 for indx,ma in enumerate(ma_lst):
                     m, a = ma[0], ma[1]
                     e, d = e_lst[indx], d_lst[indx]
-                    generation_ei.append([isoch_ma[m][a][0], isoch_ma[m][a][1], e, d])
+                    generation_ei.append([isoch_ma[m][a][0], isoch_ma[m][a][1],
+                                          e, d])
                 # Append immigrant population to the best solution.
                 generation = best_sol + generation_ei
                 # Reset best solution counter.
@@ -375,6 +384,7 @@ def gen_algor(err_lst, obs_clust, completeness, ip_list, sc_params, ga_params):
         # For plotting purposes.
         lkl_old[0].append(lkl[0])
         lkl_old[1].append(np.mean(lkl))
+        
 #        # Call function to make plots.
 #        ga_p(i, mm_m, mm_a, mm_e, mm_d, params_ga, lkl, lkl_old, ext_imm_indx,
 #             isoch_done, generation)        

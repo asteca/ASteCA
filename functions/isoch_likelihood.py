@@ -36,8 +36,8 @@ def likelihood(synth_clust, obs_clust):
             synth_stars = A*np.exp(B+C)
         
             # The final prob for this cluster star is the sum over all synthetic
-            # stars. Use 1e-10 to avoid nan and inf values in the calculations that
-            # follow.
+            # stars. Use 1e-10 to avoid nan and inf values in the calculations
+            # that follow.
             sum_synth_stars = max(synth_stars.sum(), 1e-10) 
             clust_stars_probs.append(sum_synth_stars)
         
@@ -53,7 +53,8 @@ def likelihood(synth_clust, obs_clust):
 
     
     
-def isoch_likelihood(err_lst, obs_clust, completeness, sc_params, isochrone, params):
+def isoch_likelihood(err_lst, obs_clust, completeness, sc_params, isochrone,
+                     params):
     '''
     Main function.
     

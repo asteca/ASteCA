@@ -77,7 +77,8 @@ def synth_clust(err_lst, completeness, sc_params, isochrone, params):
     a certain mass distribution.
     '''
     
-    sys_sel, mass_params, f_bin, q_bin = sc_params[0], sc_params[1:3], sc_params[3], sc_params[4]
+    sys_sel, mass_params, f_bin, q_bin = sc_params[0], sc_params[1:3],\
+    sc_params[3], sc_params[4]
     
     # Store mass distribution used to produce a synthetic cluster based on
     # a given theoretic isochrone.
@@ -95,7 +96,8 @@ def synth_clust(err_lst, completeness, sc_params, isochrone, params):
 
     # Move synth cluster with the values 'e' and 'd'.
     e, d, = params[2], params[3]
-    isoch_moved = move_isoch(sys_sel, [isoch_inter[0], isoch_inter[1]], e, d) + [isoch_inter[2]]
+    isoch_moved = move_isoch(sys_sel, [isoch_inter[0], isoch_inter[1]], e, d) +\
+    [isoch_inter[2]]
     
          
     # Remove stars from isochrone with magnitude values larger that the maximum
@@ -105,7 +107,8 @@ def synth_clust(err_lst, completeness, sc_params, isochrone, params):
     isoch_sort = zip(*sorted(zip(*isoch_moved), key=lambda x: x[1]))
     # Now remove values beyond max_mag (= completeness[0]).
     # Get index of closest mag value to max_mag.
-    max_indx = min(range(len(isoch_sort[1])), key=lambda i: abs(isoch_sort[1][i]-completeness[0]))
+    max_indx = min(range(len(isoch_sort[1])), key=lambda i: \
+    abs(isoch_sort[1][i]-completeness[0]))
     # Remove elements.
     isoch_cut = np.array([isoch_sort[i][0:max_indx] for i in range(3)])
         
@@ -122,7 +125,8 @@ def synth_clust(err_lst, completeness, sc_params, isochrone, params):
     # Assignment of binarity.
     # Randomly select a fraction of stars to be binaries.
     # Indexes of the randomly selected stars in isoch_m_d.
-    bin_indxs = random.sample(range(len(isoch_m_d[0])), int(f_bin*len(isoch_m_d[0])))
+    bin_indxs = random.sample(range(len(isoch_m_d[0])),
+                              int(f_bin*len(isoch_m_d[0])))
     
     # Calculate the secondary masses of these binary stars between q_bin*m1
     # and m1, where m1 is the primary mass.
@@ -134,7 +138,8 @@ def synth_clust(err_lst, completeness, sc_params, isochrone, params):
     # change its value to the min value.
     if not type(mass_bin0) is float:
         # This prevents a rare error where apparently mass_bin0 is a float.
-        mass_bin = [i if i >= min(isoch_m_d[2]) else min(isoch_m_d[2]) for i in mass_bin0]
+        mass_bin = [i if i >= min(isoch_m_d[2]) else min(isoch_m_d[2])\
+        for i in mass_bin0]
 
         # Find color and magnitude values for each secondary star. This will
         # slightly change the values of the masses since they will be assigned
@@ -144,8 +149,10 @@ def synth_clust(err_lst, completeness, sc_params, isochrone, params):
         # Obtain color, magnitude and masses for each binary system.
         # Transform color to the first filter's magnitude before obtaining the
         # new binary magnitude.
-        col_mag_bin = -2.5*np.log10(10**(-0.4*(isoch_m_d[0][bin_indxs]+isoch_m_d[1][bin_indxs]))+10**(-0.4*(bin_isoch[0]+bin_isoch[1])))
-        mag_bin = -2.5*np.log10(10**(-0.4*isoch_m_d[1][bin_indxs])+10**(-0.4*bin_isoch[1]))
+        col_mag_bin = -2.5*np.log10(10**(-0.4*(isoch_m_d[0][bin_indxs]+\
+        isoch_m_d[1][bin_indxs]))+10**(-0.4*(bin_isoch[0]+bin_isoch[1])))
+        mag_bin = -2.5*np.log10(10**(-0.4*isoch_m_d[1][bin_indxs])+\
+        10**(-0.4*bin_isoch[1]))
         # Transform back first filter's magnitude into color.
         col_bin = col_mag_bin - mag_bin
         
@@ -174,22 +181,26 @@ def synth_clust(err_lst, completeness, sc_params, isochrone, params):
            
             # Get histogram. completeness[2] = bin_edges of the observed region
             # histogram.
-            synth_mag_hist, bin_edges = np.histogram(isoch_m_d[1], completeness[1])
+            synth_mag_hist, bin_edges = np.histogram(isoch_m_d[1],
+                                                     completeness[1])
             pi = completeness[3]
             n1, p1 = synth_mag_hist[completeness[2]], pi[0]
-            di = np.around((synth_mag_hist[completeness[2]:]-(n1/p1)*np.asarray(pi)), 0)
+            di = np.around((synth_mag_hist[completeness[2]:]-\
+            (n1/p1)*np.asarray(pi)), 0)
 
             # Store indexes of *all* elements in isoch_m_d whose magnitude value
             # falls between the ranges given.
-            rang_indx = [[] for _ in range(len(completeness[1][completeness[2]:])-1)]
+            rang_indx = [[] for _ in \
+            range(len(completeness[1][completeness[2]:])-1)]
             for indx,elem in enumerate(isoch_m_d[1]):
                 for i in range(len(completeness[1][completeness[2]:])-1):
-                    if completeness[1][completeness[2]+i] < elem <= completeness[1][completeness[2]+(i+1)]:
+                    if completeness[1][completeness[2]+i] < elem <= \
+                    completeness[1][completeness[2]+(i+1)]:
                         rang_indx[i].append(indx)
             
             # Pick a number (given by the list 'di') of random elements in each
-            # range. Those are the indexes of the elements that should be removed
-            # from the three sub-lists.
+            # range. Those are the indexes of the elements that should be
+            # removed from the three sub-lists.
             rem_indx = []
             for indx,num in enumerate(di):
                 if rang_indx[indx] and len(rang_indx[indx]) >= num:
@@ -230,7 +241,7 @@ def synth_clust(err_lst, completeness, sc_params, isochrone, params):
         synth_clust = np.array(clust_error + [clust_compl[2]])
         
         # Plot diagrams.
-#        s_c_p(mass_dist, isoch_inter, params, isoch_moved, isoch_cut, isoch_m_d0,
-#              isoch_m_d, clust_compl, clust_error)
+#        s_c_p(mass_dist, isoch_inter, params, isoch_moved, isoch_cut,
+#              isoch_m_d0, isoch_m_d, clust_compl, clust_error)
     
     return synth_clust
