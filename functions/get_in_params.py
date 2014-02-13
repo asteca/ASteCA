@@ -72,12 +72,24 @@ def get_in_params(mypath):
                     d_rs = map(float, reader[1:])
                 elif reader[0] == 'PS_xy':
                     axes_names = map(str, reader[1:])
+                elif reader[0] == 'BF':
+                    N_b = int(reader[1:])
                 elif reader[0] == 'SC':
                     sys_sel = str(reader[1])
                     IMF_name = str(reader[2])
                     tot_mass = float(reader[3])
                     f_bin = float(reader[4])
                     q_bin = float(reader[5])
+                elif reader[0] == 'GA':
+                    n_pop = int(reader[1])
+                    n_gen = int(reader[2])
+                    fdif = float(reader[3])
+                    p_cross = float(reader[4])
+                    cr_sel = str(reader[5])
+                    p_mut = float(reader[6])
+                    n_el = int(reader[7])
+                    n_ei = int(reader[8])
+                    n_es = int(reader[9])
 
                     
     in_dirs = [mypath2, mypath3, output_dir]
@@ -86,6 +98,7 @@ def get_in_params(mypath):
     ps_params = [iso_path, line_start, indx_cols, m_rs, a_rs, e_rs, d_rs,
                  axes_names]
     sc_params = [sys_sel, IMF_name, tot_mass, f_bin, q_bin]
+    ga_params = [n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es]
     
     return mode, in_dirs, gd_params, gc_params, br_params, cr_params, er_params,\
-    gr_params, pv_params, da_params, ps_params, sc_params
+    gr_params, pv_params, da_params, ps_params, N_b, sc_params, ga_params

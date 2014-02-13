@@ -209,30 +209,14 @@ def random_population(isoch_ma, isoch_ed, n_ran):
 
 
 
-def gen_algor(err_lst, obs_clust, completeness, ip_list, sc_params, params_ga):
+def gen_algor(err_lst, obs_clust, completeness, ip_list, sc_params, ga_params):
     '''
-    Main function.
-    
     Genetic algorithm adapted to find the best fit model-obervation.
-    
-    n_pop: number of chromosomes in the population.
-    n_gen: number of generations to process.
-    fdif: Fitness differential. Establishes the 'selection pressure' for the
-    algorithm.
-    p_cros: crossover probability.
-    cr_sel: select 1-point or 2-point crossover.
-    p_mut: mutation probability.
-    n_el: number of best solutions to pass unchanged to the next generation
-    (Elitism operator)
-    n_ei: number of generations allowed to run with the same best solution
-    before applying the Extinction/Immigration operator.
-    n_es:number of times the Extinction/Immigration operator is allowed to run
-    returning the same best solution before exiting the generations loop.
     '''
 
     isoch_list, isoch_ma, isoch_ed, ranges_steps = ip_list    
     
-    n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es = params_ga
+    n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es = ga_params
     
     # Store parameters ranges and calculate the minimum number of binary digits
     # needed to encode the solutions.
@@ -401,10 +385,7 @@ def gen_algor(err_lst, obs_clust, completeness, ip_list, sc_params, params_ga):
 #    with open('/home/gabriel/Descargas/GA/GA_output', "a") as f_out:
 #        f_out.write('{:<8} {:<8} {:<27} {:>5} {:>5} {:>5} {:>6} {:>7} {:>6} {:>4} {:>4} {:>4}'.format(*line))
 #        f_out.write('\n')
-#
-#    print 'Generation done.'
-#    raw_input()
 
-    ga_return = [generation[0], params_ga, lkl_old, ext_imm_indx]
+    ga_return = [generation[0], lkl_old, ext_imm_indx]
 
     return ga_return

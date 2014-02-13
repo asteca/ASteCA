@@ -126,6 +126,12 @@ PS_e              0.     0.4      0.01
 # Distance modulus    dis_mod_min dis_mod_max dis_mod_step
 PS_d                          18.       19.         0.05
 
+# Best fit of synthetic cluster.
+# boot_num: number of times the bootstrap with replacement
+# process will run.
+#   boot_num
+BF  10
+
 # Synthetic cluster.
 # sys_select: WASH / UBVI
 # IMF:  chabrier_2001 / kroupa_1993 / kroupa_2002
@@ -133,3 +139,21 @@ PS_d                          18.       19.         0.05
 SC         WASH    chabrier_2001         5000          0.5         0.7
 
 # Genetic Algorithm.
+# n_pop: number of chromosomes in the population.
+# n_gen: number of generations to process.
+# fdif: Fitness differential. Establishes the 'selection pressure' for the
+# algorithm.
+# p_cros: crossover probability.
+# (Crossover operator)
+# cr_sel: select 1-point (1P) or 2-point (2P) crossover.
+# p_mut: mutation probability.
+# (Elitism operator)
+# n_el: number of best solutions to pass unchanged to the next generation
+# n_ei: number of generations allowed to run with the same best solution
+# before applying the Extinction/Immigration operator.
+# (Exit switch)
+# n_es:number of times the Extinction/Immigration operator is allowed to run
+# returning the same best solution before exiting the generations loop.
+#
+#   n_pop  n_gen fdif p_cross cr_sel p_mut n_el n_ei n_es
+GA    100     20   1.    0.85     2P  0.01    1   25    6

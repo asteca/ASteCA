@@ -25,7 +25,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                stars_in_all_mag, n_c, flag_area_stronger,
                cluster_region, field_region, pval_test_params, qq_params,
                clust_reg_prob_avrg, memb_prob_avrg_sort,
-               shift_isoch, ga_return, isoch_fit_errors):
+               shift_isoch, ga_return, isoch_fit_errors, ga_params):
     '''
     Make all plots.
     '''
@@ -63,6 +63,9 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     # Parameters from error fitting.
     bright_end, popt_umag, pol_mag, popt_ucol1, pol_col1, mag_val_left,\
     mag_val_right, col1_val_left, col1_val_right = err_plot
+    
+    # Genetic algorithm params.
+    n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es = ga_params
 
 
     # Plot all outputs
@@ -813,8 +816,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         
 
     # GA diagram.
-    n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es = ga_return[1]
-    lkl_old, ext_imm_indx = ga_return[2], ga_return[3]
+    lkl_old, ext_imm_indx = ga_return[1], ga_return[2]
     ax23 = plt.subplot(gs1[10:12, 4:6])
     plt.xlim(-1, n_gen+int(0.05*n_gen))
     plt.ylim(min(lkl_old[0])-0.1*min(lkl_old[0]),

@@ -57,7 +57,8 @@ mypath = realpath(join(getcwd(), dirname(__file__)))
 
 # Read input parameters for code from file.
 mode, in_dirs, gd_params, gc_params, br_params, cr_params, er_params,\
-gr_params, pv_params, da_params, ps_params, sc_params = gip.get_in_params(mypath)
+gr_params, pv_params, da_params, ps_params, N_b, sc_params, ga_params =\
+gip.get_in_params(mypath)
 
 # Read paths.
 mypath2, mypath3, output_dir = in_dirs
@@ -414,7 +415,6 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
         runs_fields_probs = []
 
 
-    
     # Check if decont alg was applied.
     if flag_area_stronger:
         memb_prob_avrg_sort, clust_reg_prob_avrg = [], []
@@ -447,7 +447,7 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
         # Obtain best fitting parameters for cluster.
         err_lst = [popt_mag, popt_col1, e_max]
         shift_isoch, ga_return, isoch_fit_errors = bfsc(err_lst,\
-        memb_prob_avrg_sort, completeness, ip_list, sc_params)
+        memb_prob_avrg_sort, completeness, ip_list, N_b, sc_params, ga_params)
         print 'Best fit parameters obtained.'
     
     
@@ -490,7 +490,7 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
        stars_out_rjct, stars_in_mag, stars_in_all_mag, n_c, flag_area_stronger,
        cluster_region, field_region, pval_test_params, qq_params,
        clust_reg_prob_avrg, memb_prob_avrg_sort,
-       shift_isoch, ga_return, isoch_fit_errors)
+       shift_isoch, ga_return, isoch_fit_errors, ga_params)
     print 'Plots created.'
 
    

@@ -22,10 +22,9 @@ def boostrap_resample(in_list):
     
 
 
-def bf(err_lst, memb_prob_avrg_sort, completeness, ip_list, sc_params):
+def bf(err_lst, memb_prob_avrg_sort, completeness, ip_list, N_b, sc_params,
+       ga_params):
     '''
-    Main function.
-    
     Perform a best fitting process to find the cluster's parameters:
     E(B-V), distance (distance modulus), age and metallicity.
     '''
@@ -35,20 +34,12 @@ def bf(err_lst, memb_prob_avrg_sort, completeness, ip_list, sc_params):
     imf_pdf = i_p(sc_params[1])
     # Replace the name of the IMF by its PDF.
     sc_params[1] = imf_pdf
-    
-    
-    # Genetic algorithm parameters.
-    # n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es
-    params_ga = [4, 20, 1., 0.85, '2P', 0.01, 1, 25, 6]
-    
-    # Number of times to run the bootstrap block.
-    N_B = 2
-   
+
     # List that holds the parameters values obtained by the bootstrap
     # process.
     params_boot = []
     # Begin bootstrap block.
-    for i in range(N_B):
+    for i in range(N_b):
         
         # The first pass is done with no resampling to calculate the final
         # values. After that we resample to get the uncertainty in each
@@ -67,8 +58,8 @@ def bf(err_lst, memb_prob_avrg_sort, completeness, ip_list, sc_params):
 #                                           line_start, indexes, obs_clust,\
 #                                           mass_dist)
             # Genetic algorithm.
-            ga_return = g_a(err_lst, obs_clust, completeness, ip_list, sc_params,
-                                   params_ga)
+            ga_return = g_a(err_lst, obs_clust, completeness, ip_list,
+                            sc_params, ga_params)
         else:
             # Brute force.
 #            params_boot.append(brute_force(sys_select, isoch_params, iso_path,
@@ -76,16 +67,18 @@ def bf(err_lst, memb_prob_avrg_sort, completeness, ip_list, sc_params):
 #                                           mass_dist))
             # Genetic algorithm algorithm.
             params_boot.append(g_a(err_lst, obs_clust, completeness, ip_list,
-                                   sc_params, params_ga)[0])
+                                   sc_params, ga_params)[0])
 
         
     # Calculate errors for each parameter.
     isoch_fit_errors = np.std(params_boot, 0)
     
-    # For plotting purposes: generate shifted isochrone.
+    # For plotting purposes: generate shifted best fit isochrone.
     isoch_list, isoch_ma = ip_list[0], ip_list[1]
     m, a, e, d = ga_return[0]
-    m_indx, a_indx = next(((i,j) for i,x in enumerate(isoch_ma) for j,y in enumerate(x) if y == [m, a]), None)
-    shift_isoch = move_isoch(sc_params[0], [isoch_list[m_indx][a_indx][0], isoch_list[m_indx][a_indx][1]], e, d)
+    m_indx, a_indx = next(((i,j) for i,x in enumerate(isoch_ma) for j,y in \
+    enumerate(x) if y == [m, a]), None)
+    shift_isoch = move_isoch(sc_params[0], [isoch_list[m_indx][a_indx][0],
+                                       isoch_list[m_indx][a_indx][1]], e, d)
 
     return shift_isoch, ga_return, isoch_fit_errors
