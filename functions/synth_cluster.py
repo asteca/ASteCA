@@ -7,7 +7,7 @@ Created on Tue Jan 28 15:22:10 2014
 
 from move_isochrone import move_isoch
 from get_mass_dist import mass_dist as m_d
-#from synth_plot import synth_clust_plot as s_c_p
+from synth_plot import synth_clust_plot as s_c_p
 
 import numpy as np
 import random
@@ -69,7 +69,7 @@ def mass_interp(isochrone, mass_dist):
     
 
 
-def synth_clust(err_lst, obs_clust, completeness, sc_params, isochrone, params):
+def synth_clust(err_lst, completeness, sc_params, isochrone, params):
     '''
     Main function.
     
@@ -78,11 +78,6 @@ def synth_clust(err_lst, obs_clust, completeness, sc_params, isochrone, params):
     '''
     
     sys_sel, mass_params, f_bin, q_bin = sc_params[0], sc_params[1:3], sc_params[3], sc_params[4]
-    print sys_sel, f_bin, q_bin
-    print mass_params[1]
-    print mass_params[0]
-    print 'done'
-    raw_input()
     
     # Store mass distribution used to produce a synthetic cluster based on
     # a given theoretic isochrone.
@@ -119,8 +114,8 @@ def synth_clust(err_lst, obs_clust, completeness, sc_params, isochrone, params):
     # masses that fall outside of the isochrone's mass range.
     isoch_m_d = mass_interp(isoch_cut, mass_dist)
     # For plotting purposes: store a copy of this list before adding binaries.
-#    from copy import deepcopy
-#    isoch_m_d0 = deepcopy(isoch_m_d)
+    from copy import deepcopy
+    isoch_m_d0 = deepcopy(isoch_m_d)
     
 
     # Assignment of binarity.
@@ -218,7 +213,7 @@ def synth_clust(err_lst, obs_clust, completeness, sc_params, isochrone, params):
         popt_mag, popt_col1 = err_lst
         sigma_mag = np.array(exp_func(clust_compl[1], *popt_mag))
         sigma_col = np.array(exp_func(clust_compl[1], *popt_col1))
-        col_gauss, mag_gauss = gauss_error(clust_compl[0], 2*sigma_col, clust_compl[1], 2*sigma_mag)
+        col_gauss, mag_gauss = gauss_error(clust_compl[0], 3*sigma_col, clust_compl[1], 3*sigma_mag)
         clust_error = [col_gauss, mag_gauss]
         
        
@@ -226,7 +221,7 @@ def synth_clust(err_lst, obs_clust, completeness, sc_params, isochrone, params):
         synth_clust = np.array(clust_error + [clust_compl[2]])
         
         # Plot diagrams.
-#        s_c_p(mass_dist, isoch_inter, params, isoch_moved, isoch_cut, isoch_m_d0,
-#              isoch_m_d, clust_compl, clust_error)
+        s_c_p(mass_dist, isoch_inter, params, isoch_moved, isoch_cut, isoch_m_d0,
+              isoch_m_d, clust_compl, clust_error)
     
     return synth_clust

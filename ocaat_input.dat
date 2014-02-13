@@ -101,9 +101,9 @@ DA  skip      1       10
 PS_p  /media/rest/github/isochrones/iso_wash_marigo
 
 # line_start (string that identifies the beginning of a new isochrone)
-# MAR: "#\tIsochrone\tZ = "
-# PAR: "#\tIsochrone  Z = "
-PS_l   '#\tIsochrone\tZ = '
+# MAR: "#	Isochrone	Z = "
+# PAR: "#	Isochrone  Z = "
+PS_l   "#	Isochrone	Z = "
 
 # Index that points to the corresponding column in the file.
 # WASH: MAR (1 9 7), PAR (2 10 8)
@@ -114,7 +114,7 @@ PS_i         1       9       7
 # Metallicity     z_min  z_max   z_step
 PS_m             0.0005   0.02   0.0005
 # Age    age_min age_max  a_step
-PS_a         6.6    10.1    0.05
+PS_a         6.6    8.45    0.05
 # E(B-V)    e_bv_min e_bv_max e_bv_step
 PS_e              0.     0.4      0.01
 # Distance modulus    dis_mod_min dis_mod_max dis_mod_step

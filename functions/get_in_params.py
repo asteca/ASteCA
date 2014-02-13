@@ -6,6 +6,7 @@ Created on Tue Feb 11 14:03:44 2014
 """
 
 from os.path import join
+import re
 
 
 def get_in_params(mypath):
@@ -58,7 +59,7 @@ def get_in_params(mypath):
                 elif reader[0] == 'PS_p':
                     iso_path = str(reader[1])
                 elif reader[0] == 'PS_l':
-                    line_start = str(reader[1])
+                    line_start = re.search(r'"(.*)"', line).groups()[0]
                 elif reader[0] == 'PS_i':
                     indx_cols = map(int, reader[1:])
                 elif reader[0] == 'PS_m':

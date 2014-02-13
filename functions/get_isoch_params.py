@@ -31,11 +31,6 @@ def ip(ps_params):
     e_bv_min, e_bv_max, e_bv_step = ps_params[5]
     dis_mod_min, dis_mod_max, dis_mod_step = ps_params[6]
     
-    # Store ranges and steps.
-    ranges_steps = [[z_min, z_max, z_step], [age_min, age_max, age_step],
-                    [e_bv_min, e_bv_max, e_bv_step],\
-                    [dis_mod_min, dis_mod_max, dis_mod_step]]
-    
     # Add a small value to each max value to ensure that the range is a bit
     # larger than the one between the real min and max values. This simplifies
     # the input of data and ensures that the GA won't fail when encoding/
@@ -44,6 +39,11 @@ def ip(ps_params):
     age_max = age_max + age_step/2.
     e_bv_max = e_bv_max + e_bv_step/2.
     dis_mod_max = dis_mod_max + dis_mod_step/2.
+    
+    # Store ranges and steps.
+    ranges_steps = [[z_min, z_max, z_step], [age_min, age_max, age_step],
+                    [e_bv_min, e_bv_max, e_bv_step],\
+                    [dis_mod_min, dis_mod_max, dis_mod_step]]
    
     # Lists that store the colors, magnitudes and masses of the isochrones.
     # isoch_list = [metal_1, ..., metal_M]
@@ -107,13 +107,13 @@ def ip(ps_params):
                             # Reset lists.
                             isoch_col, isoch_mag, isoch_mas = [], [], []
                             
-                        # Read age value.
+                        # Read age value for this isochrone.
                         age_str = line.split("Age =")[1]
 #                        age = float(age_str[:-3])/1.e09
                         age = round(np.log10(float(age_str[:-3])), 2)
                         
-                    # Store age value in 'ages' list if it falls inside
-                    # the given range.
+                    # If age value falls inside the given range, store the
+                    # isochrone's data (in this line).
                     if age_min<= age <=age_max:
 
                         # Save mag, color and mass values for each isochrone
@@ -127,6 +127,17 @@ def ip(ps_params):
                             isoch_mag.append(float(reader[mag_indx]))
                             # Mass
                             isoch_mas.append(float(reader[mini_indx]))
+               
+                # Save the last isochrone when EOF is reached.
+                else:
+                    # If list is not empty.
+                    if isoch_col:
+                        # Save metallicity and age in list.
+                        met_params.append([metal, age])
+                        # Store colors, magnitudes and masses for this
+                        # isochrone.
+                        metal_isoch.append([isoch_col, isoch_mag, isoch_mas])
+
 
             # Store list holding all the isochrones with the same metallicity
             # in the final isochrone list.
@@ -149,6 +160,7 @@ def ip(ps_params):
             
     ip_list = [isoch_list, isoch_ma, isoch_ed, ranges_steps]
     print isoch_ma[17], '\n'
-    print isoch_ed
+    print isoch_list[17][-1]
+    raw_input()
             
     return ip_list
