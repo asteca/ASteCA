@@ -101,7 +101,7 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
     phot_data = gd.get_data(mypath2, sub_dir, myfile, gd_params)
     x_data, y_data, mag_data, col1_data = phot_data[1], phot_data[2], \
     phot_data[3], phot_data[5]
-    print 'Data correctly obtained from input file  (N stars: %d).'\
+    print 'Data correctly obtained from input file (N stars: %d).'\
     % len(phot_data[0])
 
 
