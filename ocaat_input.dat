@@ -1,16 +1,19 @@
+#####################################################################################
 ##### OCAAT input parameters file ####
 #
 #
 # This file contains the values of the parameters used by OCAAT.
-# Any empty line and lines that begin with a # sign will be ignored
+# Any empty line or lines that begin with a # character will be ignored
 # and as many as needed can be added to this file.
 #
 # * DO NOT modify the ID strings in the first column of each line, these
 # are used by the code to identify the parameters in that line.
-# * DO NOT write less or more values than those requested or the code
-# will halt.
-
+# * DO NOT write less or more values than those requested in each line
+# or the code will halt.
+#
 # Set values for the parameters below.
+#####################################################################################
+
 
 # Mode used to run the code: a (auto) / s (semi) / m (manual):
 # - Automatic mode does not require user intervention of any kind.
