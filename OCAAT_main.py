@@ -408,7 +408,7 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
     if not flag_pval_test or flag_area_stronger:
         print 'Skipping p-value test for cluster.'
         # Pass empty lists to make_plots.
-        pval_test_params, qq_params = [-1.], [-1.]
+        pval_test_params, qq_params = [-1., False], [-1.]
 
     
 
@@ -440,20 +440,14 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
     print 'Theoretical isochrones (and their parameters) read and stored.'
     
     
-    # Check if the best fit process should run.
-    if bf_params[0]:
-        print 'Searching for optimal parameters.'
-        # Obtain best fitting parameters for cluster.
-        err_lst = [popt_mag, popt_col1, e_max]
-        shift_isoch, ga_return, isoch_fit_errors = bfsc(err_lst,\
-        memb_prob_avrg_sort, completeness, ip_list, bf_params[1], sc_params,\
-        ga_params)
-        print 'Best fit parameters obtained.'
-    else:
-        # Pass empty lists to make_plots.
-        print 'Skipping synthetic cluster fitting process.'
-        shift_isoch, ga_return, isoch_fit_errors = [], [], []
-    
+    # Obtain best fitting parameters for cluster.
+    print 'Searching for optimal parameters.'
+    err_lst = [popt_mag, popt_col1, e_max]
+    shift_isoch, ga_return, isoch_fit_errors = bfsc(err_lst,\
+    memb_prob_avrg_sort, completeness, ip_list, bf_params, sc_params,\
+    ga_params)
+    print 'Best fit parameters obtained.'
+
     
     # New name for cluster? Useful when there's a single photometric file
     # with multiple clusters in it.

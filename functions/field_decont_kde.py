@@ -110,11 +110,11 @@ def field_decont_kde(flag_area_stronger, cluster_region, field_region,
     # Check if at least one field region was obtained.
     if flag_area_stronger:
         print 'No field regions found, skipping decontamination algorithm.'
-        mode == 'skip'
+        mode = 'skip'
     
     # Check if 'mode' was correctly set, else use 'skip'.
-    if mode != ['auto', 'manual', 'read', 'skip']:
-        mode == 'skip'
+    if mode not in ['auto', 'manual', 'read', 'skip']:
+        mode = 'skip'
         print "Wrong name for 'mode' in input file. Using 'skip'."
 
     # Run algorithm for any of these selections.

@@ -783,7 +783,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         
     # Distribution of p_values.
     # pval_test_params[-1] is the flag that tells me if the block was processed.
-    if not(flag_area_stronger) and pval_test_params[-1]:
+    if pval_test_params[-1]:
         # Extract parameters from list.
         prob_cl_kde, p_vals_cl, p_vals_f, kde_cl_1d, kde_f_1d, x_kde, y_over = pval_test_params[:-1]
         ax21 = plt.subplot(gs1[10:12, 0:2])
@@ -833,7 +833,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     if bf_params[0]:
         lkl_old, ext_imm_indx = ga_return[1], ga_return[2]
         ax23 = plt.subplot(gs1[10:12, 4:6])
-        plt.xlim(-1, n_gen+int(0.05*n_gen))
+        plt.xlim(-0.5, n_gen+int(0.05*n_gen))
         plt.ylim(min(lkl_old[0])-0.1*min(lkl_old[0]),
                  max(lkl_old[0])+min(lkl_old[0])/2.)
         ax23.tick_params(axis='y', which='major', labelsize=9)
