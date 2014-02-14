@@ -70,10 +70,9 @@ def get_in_params(mypath):
                     e_rs = map(float, reader[1:])
                 elif reader[0] == 'PS_d':
                     d_rs = map(float, reader[1:])
-                elif reader[0] == 'PS_xy':
-                    axes_names = map(str, reader[1:])
                 elif reader[0] == 'BF':
-                    N_b = int(reader[1])
+                    bf_flag = True if reader[1] == 'True' else False
+                    N_b = int(reader[2])
                 elif reader[0] == 'SC':
                     sys_sel = str(reader[1])
                     IMF_name = str(reader[2])
@@ -92,15 +91,21 @@ def get_in_params(mypath):
                     n_es = int(reader[9])
                 elif reader[0] == 'MF':
                     flag_move_file = True if reader[1] == 'True' else False
+                elif reader[0] == 'XA':
+                    x_ax = re.search(r'"(.*)"', line).groups()[0]
+                elif reader[0] == 'YA':
+                    y_ax = re.search(r'"(.*)"', line).groups()[0]
+                    
                     
     in_dirs = [mypath2, mypath3, output_dir]
     pv_params = [pv0_params, pv1_params, pv2_params]
     da_params = [da0_params, da1_params, da2_params, mypath2]
-    ps_params = [iso_path, line_start, indx_cols, m_rs, a_rs, e_rs, d_rs,
-                 axes_names]
+    ps_params = [iso_path, line_start, indx_cols, m_rs, a_rs, e_rs, d_rs]
+    bf_params = [bf_flag, N_b]
     sc_params = [sys_sel, IMF_name, tot_mass, f_bin, q_bin]
     ga_params = [n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es]
+    axes_names = [x_ax, y_ax]
     
     return mode, in_dirs, gd_params, gc_params, br_params, cr_params, er_params,\
-    gr_params, pv_params, da_params, ps_params, N_b, sc_params, ga_params,\
-    flag_move_file
+    gr_params, pv_params, da_params, ps_params, bf_params, sc_params, ga_params,\
+    flag_move_file, axes_names

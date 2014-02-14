@@ -39,8 +39,10 @@ PD      0      1      2         3     4     6     7
 
 # Input magnitude and color names for the CMD axis. LaTeX
 # formatting is allowed.
-#       color (x)  magnitude (y)
-PS_xy   '(C-T_1)'          'T_1'
+#       color (x)
+XA    "(C-T_{1})"
+#    magnitude (y)
+YA       "T_{1}"
 
 # Bin widths for the cluster's center determination, in pixels. The
 # minimum value will be used to establish the center in auto mode.
@@ -74,7 +76,7 @@ ER  2.   0.1    0.3
 # Cluster region and field regions.
 # areas: number of areas defined including the cluster region (integer).
 #   areas
-GR     21
+GR     20
 
 # Test to determine the probability of the cluster being a physical entity
 # instead of a random overdensity of stars, based on comparing its CMD with
@@ -106,7 +108,6 @@ DA  skip      1       10
 
 
 # Photometric system & stored isochrones.
-
 # Provide path to stored isochrone files.
 #   iso_path (full path to the folder that stores the isochrone files)
 PS_p  /media/rest/github/isochrones/iso_wash_marigo
@@ -132,10 +133,12 @@ PS_e              0.     0.4      0.01
 PS_d                          18.       19.         0.05
 
 # Best fit of synthetic cluster.
+run: True / False. Flag that determines if the best isochrone
+# fitting process is to be run.
 # boot_num: number of times the bootstrap with replacement
 # process will run. Minimum value is 2.
-#   boot_num
-BF  10
+#     run  boot_num
+BF  True 2
 
 # Synthetic cluster.
 # sys_select: WASH / UBVI
@@ -161,4 +164,4 @@ SC         WASH    chabrier_2001         5000          0.5         0.7
 # returning the same best solution before exiting the generations loop.
 #
 #   n_pop  n_gen fdif p_cross cr_sel p_mut n_el n_ei n_es
-GA     10     20   1.    0.85     2P  0.01    1   25    6
+GA     10     5   1.    0.85     2P  0.01    1   25    6

@@ -9,6 +9,15 @@ from functions.get_spiral import spiral as gs
 import numpy as np
 
 
+def spiral_region():
+    '''
+    Defin a spiral region starting from a certain coordinate until a 
+    given area is obteined.
+    '''
+    
+    return
+
+
 def get_regions(x_center_bin, y_center_bin, width_bins, histo, clust_rad,
                 h_manual, stars_in, stars_out, gr_params):
     '''
@@ -68,17 +77,24 @@ def get_regions(x_center_bin, y_center_bin, width_bins, histo, clust_rad,
     if length < 3:
         length = int(np.sqrt(100.*area/(2.*100.))/clust_rad)
         
-    # If after this length is still smaller than 2, this means that the area
+    # If after this 'length' is still smaller than 2, this means that the area
     # taken by the cluster is bigger than half of the total frame. In this case
-    # the algorithm can not be applied as is since we have no equal sized area
-    # with field stars to compare it with the cluster region. We skip the
-    # decontamination algorithm alltoghether and raise a flag.
+    # we only obtain the 'cluster_region' since we have no equal sized area
+    # of field stars
+    # Raise a flag.
     flag_area_stronger = False
     if length < 2:
+        print 'WARNING: cluster region too large, no field region available.'
         flag_area_stronger = True
 
-    # Apply algorithm if length is bigger than 2, else skip it.
-    if not(flag_area_stronger):
+    print '\n TEST - REMOVE \n'
+    flag_area_stronger = True
+
+    # Obtain cluster region.
+    
+    
+    # Obtain field regions.
+    if not flag_area_stronger:
 
         # Calculate number of bins such that their combined area is
         # approximately (l*r)^2. See that: num_bins_area * width_bins[0]^2 = 
@@ -99,11 +115,11 @@ def get_regions(x_center_bin, y_center_bin, width_bins, histo, clust_rad,
         # Get list that contains the spiral as a list of x,y coordinates (also
         # stored as lists) starting from the initial bin [0, 0].
         spiral = gs()
-        # Initialize the bin counter that tells me how many bins are already
+        # Initialize the bin counter that indicates how many bins are already
         # added to a given region.
         bin_count = [0 for _ in range(areas)]
     
-        # We add the bin to the corresponging region until 'num_bins_area'
+        # We add a bin to the corresponging region until 'num_bins_area'
         # are added to that region, then we move on to the next region.
         # Since the initial bin in the spiral corresponds to the center
         # of the cluster, the first region to be populated will be the
@@ -150,7 +166,7 @@ def get_regions(x_center_bin, y_center_bin, width_bins, histo, clust_rad,
             else:
                 reg_index += 1
     
-            # If all regions have been filled, we exit the spiral for loop.
+            # When all regions are filled, exit the spiral loop.
             if reg_index == areas:
                 break
 
@@ -228,10 +244,9 @@ def get_regions(x_center_bin, y_center_bin, width_bins, histo, clust_rad,
         # If after removing the empty regions no regions are left, raise the
         # flag.
         if not(field_region):
+            print 'WARNING: no field regions left after removal of those with \
+less than 4 stars.'
             flag_area_stronger = True
-            
-    # Skipping regions separation.
-    else:
-        cluster_region, field_region = [], []
+
         
     return flag_area_stronger, cluster_region, field_region

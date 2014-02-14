@@ -5,10 +5,6 @@
 import numpy as np
 from scipy import stats
 
-'''
-Bayesian KDE field decontamination algorithm.
-'''
-
 
 def gauss_error(col, e_col, mag, e_mag):
     # Randomly move mag and color through a Gaussian function.
@@ -102,15 +98,21 @@ def mc_probability(reg_call, reg, xmin, xmax, ymin, ymax, runs, run_num,
 
 
 
-def field_decont_kde(cluster_region, field_region, col1_data, mag_data,
-                     center_cl, clust_rad, clust_name, sub_dir, da_params):
+def field_decont_kde(flag_area_stronger, cluster_region, field_region,
+                     col1_data, mag_data, center_cl, clust_rad, clust_name,
+                     sub_dir, da_params):
     '''
-    Main function.
+    Bayesian KDE field decontamination algorithm.
     '''
-    
+
     mode, run_n, mc_samp, mypath2 = da_params
+
+    # Check if at least one field region was obtained.
+    if flag_area_stronger:
+        print 'No field regions found, skipping decontamination algorithm.'
+        mode == 'skip'
     
-    # Check if 'mode' was correctly set. else use 'skip'.
+    # Check if 'mode' was correctly set, else use 'skip'.
     if mode != ['auto', 'manual', 'read', 'skip']:
         mode == 'skip'
         print "Wrong name for 'mode' in input file. Using 'skip'."

@@ -14,7 +14,7 @@ def func(x, a, b, c):
 
 
 def disp_errors(mag_data, popt_mag,  popt_col1, acpt_stars, rjct_stars,
-                err_plot, er_params):
+                err_plot, er_params, axes_names):
     '''
     Plot errors diagrams.
     '''
@@ -22,7 +22,10 @@ def disp_errors(mag_data, popt_mag,  popt_col1, acpt_stars, rjct_stars,
     bright_end, popt_umag, pol_mag, popt_ucol1, pol_col1, mag_val_left, \
     mag_val_right, col1_val_left, col1_val_right = err_plot
 
+    # Error parameters.
     be, be_e, e_max = er_params
+    # Name for axes.
+    x_ax, y_ax = axes_names
     
     # Plot all outputs
     plt.figure(figsize=(10, 8)) # create the top-level container
@@ -45,8 +48,8 @@ def disp_errors(mag_data, popt_mag,  popt_col1, acpt_stars, rjct_stars,
     plt.xlim(min(mag_data)-0.5, max(mag_data)+0.5)
     plt.ylim(-0.005, min(0.5, stars_rjct_temp[1]))
     #Set axis labels
-    plt.ylabel(r'$\sigma_{T_1}$', fontsize=18)
-    plt.xlabel(r'$T_1$', fontsize=18)
+    plt.ylabel('$\sigma_{'+y_ax+'}$', fontsize=18)
+    plt.xlabel('$'+y_ax+'$', fontsize=18)    
     # Set minor ticks
     ax7.minorticks_on()
     # Plot exponential fitted function.
@@ -89,8 +92,8 @@ def disp_errors(mag_data, popt_mag,  popt_col1, acpt_stars, rjct_stars,
     plt.xlim(min(mag_data)-0.5, max(mag_data)+0.5)
     plt.ylim(-0.005, min(0.5, stars_rjct_temp[1]))
     #Set axis labels
-    plt.ylabel(r'$\sigma_{(C-T_1)}$', fontsize=18)
-    plt.xlabel(r'$T_1$', fontsize=18)
+    plt.ylabel('$\sigma_{'+x_ax+'}$', fontsize=18)
+    plt.xlabel('$'+y_ax+'$', fontsize=18)
     # Set minor ticks
     ax8.minorticks_on()
     # Plot lower envelope.

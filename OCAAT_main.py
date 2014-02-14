@@ -57,8 +57,8 @@ mypath = realpath(join(getcwd(), dirname(__file__)))
 
 # Read input parameters for code from file.
 mode, in_dirs, gd_params, gc_params, br_params, cr_params, er_params,\
-gr_params, pv_params, da_params, ps_params, N_b, sc_params, ga_params,\
-flag_move_file = gip.get_in_params(mypath)
+gr_params, pv_params, da_params, ps_params, bf_params, sc_params, ga_params,\
+flag_move_file, axes_names = gip.get_in_params(mypath)
 
 # Read paths.
 mypath2, mypath3, output_dir = in_dirs
@@ -293,35 +293,49 @@ px): '))
         print 'King profile fitting did not converge.'
         
 
-    # This indicates if we are to use the output of the 'err_accpt_rejct'
-    # function or all stars with errors < e_max.
-    rjct_errors_fit = False
+    # Apply auto rejecting of errors if flag is True.
+    e_max = er_params[2]
     # Accept and reject stars based on their errors.
     popt_mag, popt_col1, acpt_stars, rjct_stars, err_plot = \
     ear.err_accpt_rejct(phot_data, er_params)    
-    e_max = er_params[2]
+    # This indicates if we are to use the output of the 'err_accpt_rejct'
+    # function or all stars with errors < e_max.
+    rjct_errors_fit = False        
+    
     # If list of accepted stars is empty, halt the code.
     if not acpt_stars:
         print '  No stars accepted based on their errors.'
         print '  This probably means the exponential error function\n\
 did not converge.'
         print 'Using all stars with errors < %0.2f.' % e_max
-        # Call function to reject stars w errors > e_max.
-        popt_mag, popt_col1, acpt_stars, rjct_stars = e_a_r_m(phot_data, er_params)
+        # Call function to reject stars with errors > e_max.
+        popt_mag, popt_col1, acpt_stars, rjct_stars = e_a_r_m(phot_data,
+                                                              er_params)
         rjct_errors_fit = True
     else:
         print 'Stars accepted/rejected based on their errors.'
 
+    # Is 'semi' is set, check for the flag that indicates whether to use
+    # auto errors rejecting or all stars with errors < e_max.
+    if mode == 's':
+        if err_flag_semi == 1:
+            # Reject error fit.
+            print 'Semi: using all stars with errors < %0.2f.' % e_max
+            # Call function to reject stars w errors > e_max.
+            popt_mag, popt_col1, acpt_stars, rjct_stars = e_a_r_m(phot_data,
+                                                                  er_params)
+            rjct_errors_fit = True
 
-    # If Manual mode is set, display errors distributions and ask the user
+    # If 'manual' mode is set, display errors distributions and ask the user
     # to accept it or else use all stars except those with errors > e_max in
     # either the magnitude or the color.
-    if mode == 'm':
+    elif mode == 'm':
         print 'Plot error distributions.'
+        # Display automatic errors rejection.
         d_e(mag_data, popt_mag,  popt_col1, acpt_stars, rjct_stars, err_plot,
-            er_params)
+            er_params, axes_names)
         plt.show()
-                
+        # Ask if keep or reject.
         wrong_answer = True
         while wrong_answer:
             answer_rad = raw_input('Accept fit for errors (otherwise use \
@@ -332,19 +346,12 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
             elif answer_rad == 'n':
                 print 'Using stars with errors < %0.2f.' % e_max
                 # Call function to reject stars w errors > e_max.
-                popt_mag, popt_col1, acpt_stars, rjct_stars = e_a_r_m(phot_data, er_params)
+                popt_mag, popt_col1, acpt_stars, rjct_stars = e_a_r_m(phot_data,
+                                                                      er_params)
                 rjct_errors_fit = True
                 wrong_answer = False
             else:
                 print 'Wrong input. Try again.\n'
-    elif mode == 's':
-        if err_flag_semi == 1:
-            # Reject error fit.
-            print 'Semi: using all stars with errors < %0.2f.' % e_max
-            # Call function to reject stars w errors > e_max.
-            popt_mag, popt_col1, acpt_stars, rjct_stars = e_a_r_m(phot_data, er_params)
-            rjct_errors_fit = True
-
 
 
     # Get stars in and out of cluster's radius.
@@ -381,48 +388,42 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
     flag_pval_test = pv_params[0]
     # Get physical cluster probability based on p_values distribution.
     if flag_pval_test:
-        # pval_test_params = prob_cl_kde, p_vals_cl, p_vals_f, kde_cl_1d,
-        #                    kde_f_1d, x_kde, y_over
-        pval_test_params  = g_pv(flag_area_stronger, cluster_region,
-                                 field_region, col1_data, mag_data, center_cl,
-                                 clust_rad, pv_params)
-        # Add flag to list.
-        pval_test_params = pval_test_params + [flag_pval_test]
-        print 'Probability of physical cluster obtained (%0.2f).' % \
-        pval_test_params[0]
-
-        # Get QQ plot for p-values distributions.
-        # qq_params = ccc, quantiles, r_squared, slope, intercept
-        qq_params = g_qq(pval_test_params[1], pval_test_params[2])
-        print 'QQ-plot obtained (CCC = %0.2f)' % qq_params[0]
-    else:
-        # Pass empty lists.
-        pval_test_params, qq_params = [-1., flag_pval_test], [-1.]
+        # Check if field regions where found.
+        if not flag_area_stronger:
+            # pval_test_params = prob_cl_kde, p_vals_cl, p_vals_f, kde_cl_1d,
+            #                    kde_f_1d, x_kde, y_over
+            pval_test_params = g_pv(cluster_region, field_region, col1_data,
+                                    mag_data, center_cl, clust_rad, pv_params)
+            # Add flag to list.
+            pval_test_params = pval_test_params + [flag_pval_test]
+            print 'Probability of physical cluster obtained (%0.2f).' % \
+            pval_test_params[0]
+    
+            # Get QQ plot for p-values distributions.
+            # qq_params = ccc, quantiles, r_squared, slope, intercept
+            qq_params = g_qq(pval_test_params[1], pval_test_params[2])
+            print 'QQ-plot obtained (CCC = %0.2f)' % qq_params[0]
+            
+    # Skip process.
+    if not flag_pval_test or flag_area_stronger:
         print 'Skipping p-value test for cluster.'
+        # Pass empty lists to make_plots.
+        pval_test_params, qq_params = [-1.], [-1.]
 
     
 
     # Apply decontamination algorithm if at least one equal-sized field region
     # was found around the cluster.
-    if not(flag_area_stronger):
-        print 'Applying decontamination algorithm.'
-        runs_fields_probs = fdk(cluster_region, field_region, col1_data,
-                                mag_data, center_cl, clust_rad, clust_name,
-                                sub_dir, da_params)
-    else:
-        print 'WARNING: Decontamination algorithm was skipped.'
-        # Skipping decontamination algorithm
-        runs_fields_probs = []
+    print 'Applying decontamination algorithm.'
+    runs_fields_probs = fdk(flag_area_stronger, cluster_region, field_region,
+                            col1_data, mag_data, center_cl, clust_rad,
+                            clust_name, sub_dir, da_params)
 
 
-    # Check if decont alg was applied.
-    if flag_area_stronger:
-        memb_prob_avrg_sort, clust_reg_prob_avrg = [], []
-    else:
-        # Average and sort all membership probabilities for each star.
-        memb_prob_avrg_sort, clust_reg_prob_avrg = m_p_a_s(cluster_region,\
-        runs_fields_probs, center_cl, clust_rad)
-        print 'Averaged probabilities for all runs.'
+    # Average and sort all membership probabilities for each star.
+    memb_prob_avrg_sort, clust_reg_prob_avrg = m_p_a_s(cluster_region, \
+    runs_fields_probs, center_cl, clust_rad)
+    print 'Averaged probabilities for all runs.'
     
 
     # Get the completeness level for each magnitude bin. This will be used by
@@ -439,16 +440,19 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
     print 'Theoretical isochrones (and their parameters) read and stored.'
     
     
-    # Check if decont alg was applied.
-    if flag_area_stronger:
-        shift_isoch, ga_return, isoch_fit_errors = [], [], []
-    else:
+    # Check if the best fit process should run.
+    if bf_params[0]:
         print 'Searching for optimal parameters.'
         # Obtain best fitting parameters for cluster.
         err_lst = [popt_mag, popt_col1, e_max]
         shift_isoch, ga_return, isoch_fit_errors = bfsc(err_lst,\
-        memb_prob_avrg_sort, completeness, ip_list, N_b, sc_params, ga_params)
+        memb_prob_avrg_sort, completeness, ip_list, bf_params[1], sc_params,\
+        ga_params)
         print 'Best fit parameters obtained.'
+    else:
+        # Pass empty lists to make_plots.
+        print 'Skipping synthetic cluster fitting process.'
+        shift_isoch, ga_return, isoch_fit_errors = [], [], []
     
     
     # New name for cluster? Useful when there's a single photometric file
@@ -489,8 +493,9 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
        stars_out, stars_in_rjct,
        stars_out_rjct, stars_in_mag, stars_in_all_mag, n_c, flag_area_stronger,
        cluster_region, field_region, pval_test_params, qq_params,
-       clust_reg_prob_avrg, memb_prob_avrg_sort,
-       shift_isoch, ga_return, isoch_fit_errors, ga_params)
+       clust_reg_prob_avrg, memb_prob_avrg_sort, bf_params,
+       shift_isoch, ga_return, isoch_fit_errors, ga_params, er_params, 
+       axes_names)
     print 'Plots created.'
 
    

@@ -24,8 +24,9 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                stars_out, stars_in_rjct, stars_out_rjct, stars_in_mag,
                stars_in_all_mag, n_c, flag_area_stronger,
                cluster_region, field_region, pval_test_params, qq_params,
-               clust_reg_prob_avrg, memb_prob_avrg_sort,
-               shift_isoch, ga_return, isoch_fit_errors, ga_params):
+               clust_reg_prob_avrg, memb_prob_avrg_sort, bf_params,
+               shift_isoch, ga_return, isoch_fit_errors, ga_params,
+               er_params, axes_names):
     '''
     Make all plots.
     '''
@@ -57,15 +58,22 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     mag_min, mag_max = max(mag_data)+0.5, min(mag_data)-0.5
 
 
+
     # Parameters from get_radius function.
     clust_rad, delta_backg, delta_percentage = radius_params
-    
+   
+    # Error parameters.
+    be, be_e, e_max = er_params   
+   
     # Parameters from error fitting.
     bright_end, popt_umag, pol_mag, popt_ucol1, pol_col1, mag_val_left,\
     mag_val_right, col1_val_left, col1_val_right = err_plot
     
     # Genetic algorithm params.
     n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es = ga_params
+    
+    # Name for axes.
+    x_ax, y_ax = axes_names
 
 
     # Plot all outputs
@@ -204,7 +212,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     plt.ylim(y_min, y_max)
     # Set axes labels
     plt.xlabel('radius (px)', fontsize=12)
-    plt.ylabel(r"stars/px$^{2}$", fontsize=12)
+    plt.ylabel("stars/px$^{2}$", fontsize=12)
     # Cluster's name.
     text = str(clust_name)
     plt.text(0.4, 0.9, text, transform = ax4.transAxes, fontsize=14)
@@ -231,7 +239,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
             '3-P King profile',
              '$R_c$ = %d $\pm$ %d px' % (k_prof[0], rc_err),\
              '$R_t$ = %d $\pm$ %d px' % (k_prof[1], rt_err),\
-             r'Background ($\Delta$=%d%%)' % delta_percentage]
+             'Background ($\Delta$=%d%%)' % delta_percentage]
     # Plot density profile with the smallest bin size
     ax4.plot(radii[0], ring_density[0], 'ko-', zorder=3, label=texts[0])
     # Plot King profile.
@@ -300,10 +308,10 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     ax7 = plt.subplot(gs1[4, 0:2])
     #Set plot limits
     plt.xlim(min(mag_data)-0.5, max(mag_data)+0.5)
-    plt.ylim(-0.005, 0.31)
+    plt.ylim(-0.005, e_max+0.01)
     #Set axis labels
-    plt.ylabel('$\sigma_{T_1}$', fontsize=18)
-    plt.xlabel('$T_1$', fontsize=18)
+    plt.ylabel('$\sigma_{'+y_ax+'}$', fontsize=18)
+    plt.xlabel('$'+y_ax+'$', fontsize=18)
     # Set minor ticks
     ax7.minorticks_on()
     mag_x = np.linspace(min(mag_data), max(mag_data), 50)
@@ -318,11 +326,11 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         ax7.plot(mag_val_right, np.polyval(pol_mag, (mag_val_right)),
                  'r--', lw=2., zorder=3)
     # Plot rectangle.
-    ax7.vlines(x=bright_end+0.05, ymin=-0.005, ymax=0.1, color='r', 
+    ax7.vlines(x=bright_end+0.05, ymin=-0.005, ymax=be_e, color='r', 
                linestyles='dashed', zorder=2)
-    ax7.vlines(x=min(mag_data)-0.05, ymin=-0.005, ymax=0.1, color='r',
+    ax7.vlines(x=min(mag_data)-0.05, ymin=-0.005, ymax=be_e, color='r',
                linestyles='dashed', zorder=2)
-    ax7.hlines(y=0.1, xmin=min(mag_data), xmax=bright_end, color='r',
+    ax7.hlines(y=be_e, xmin=min(mag_data), xmax=bright_end, color='r',
                linestyles='dashed', zorder=2)
     # Plot stars.
     stars_rjct_temp = [[], []]
@@ -349,10 +357,10 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     ax8 = plt.subplot(gs1[5, 0:2])
     #Set plot limits
     plt.xlim(min(mag_data)-0.5, max(mag_data)+0.5)
-    plt.ylim(-0.005, 0.31)
+    plt.ylim(-0.005, e_max+0.01)
     #Set axis labels
-    plt.ylabel('$\sigma_{(C-T_1)}$', fontsize=18)
-    plt.xlabel('$T_1$', fontsize=18)
+    plt.ylabel('$\sigma_{'+x_ax+'}$', fontsize=18)
+    plt.xlabel('$'+y_ax+'$', fontsize=18)
     # Set minor ticks
     ax8.minorticks_on()
     # Condition to not plot the lines if the fit was rejected.
@@ -366,11 +374,11 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         ax8.plot(col1_val_right, np.polyval(pol_col1, (col1_val_right)),
                  'r--', lw=2., zorder=3)
     # Plot rectangle.
-    ax8.vlines(x=bright_end+0.05, ymin=-0.005, ymax=0.1, color='r', 
+    ax8.vlines(x=bright_end+0.05, ymin=-0.005, ymax=be_e, color='r', 
                linestyles='dashed', zorder=2)
-    ax8.vlines(x=min(mag_data)-0.05, ymin=-0.005, ymax=0.1, color='r',
+    ax8.vlines(x=min(mag_data)-0.05, ymin=-0.005, ymax=be_e, color='r',
                linestyles='dashed', zorder=2)
-    ax8.hlines(y=0.1, xmin=min(mag_data), xmax=bright_end, color='r',
+    ax8.hlines(y=be_e, xmin=min(mag_data), xmax=bright_end, color='r',
                linestyles='dashed', zorder=2)
     # Plot stars.
     stars_rjct_temp = [[], []]
@@ -399,8 +407,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     plt.xlim(col1_min, col1_max)
     plt.ylim(mag_min, mag_max)
     #Set axis labels
-    plt.xlabel('$C-T_1$', fontsize=18)
-    plt.ylabel('$T_1$', fontsize=18)
+    plt.xlabel('$'+x_ax+'$', fontsize=18)
+    plt.ylabel('$'+y_ax+'$', fontsize=18)
     # Set minor ticks
     ax9.minorticks_on()
     # Only draw units on axis (ie: 1, 2, 3)
@@ -431,8 +439,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     plt.xlim(col1_min, col1_max)
     plt.ylim(mag_min, mag_max)
     #Set axis labels
-    plt.xlabel('$C-T_1$', fontsize=18)
-    plt.ylabel('$T_1$', fontsize=18)
+    plt.xlabel('$'+x_ax+'$', fontsize=18)
+    plt.ylabel('$'+y_ax+'$', fontsize=18)
     # Set minor ticks
     ax10.minorticks_on()
     # Only draw units on axis (ie: 1, 2, 3)
@@ -472,7 +480,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     # Set grid
     ax11.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
     #Set axis labels
-    plt.xlabel('$T_1$', fontsize=18)
+    plt.xlabel('$'+y_ax+'$', fontsize=18)
     plt.ylabel('$log(N^{\star})$', fontsize=18)
     # Plot create lists with mag values.
     stars_out_temp = []
@@ -679,22 +687,28 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     plt.xlim(min(stars_in_all_mag[0])-0.2, max(stars_in_all_mag[0])+0.2)
     plt.ylim(max(max(stars_in_all_mag[1]), max(stars_in_mag[1]))+0.2,
              min(stars_in_all_mag[1])-0.2)
-    plt.xlabel('$T_1$', fontsize=18)
-    plt.ylabel('$T_1^*$', fontsize=18)
+    plt.xlabel('$'+y_ax+'$', fontsize=18)
+    plt.ylabel('$'+y_ax+'^*$', fontsize=18)             
     ax17.minorticks_on()
     ax17.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
     # Text.
-    text1 = '$stars_{acpt}\,(T_{1,max}^*\,=%.2f$)' '\n' % (min(stars_in_mag[1]))
-    text2 ='$stars_{all}\;(T_{1,max}^*\,=%.2f)$' % (min(stars_in_all_mag[1]))
+    text1 = '$'+y_ax+'^*\,(max_{acpt})\,=%.2f$' '\n' % (min(stars_in_mag[1]))
+    text2 = '$'+y_ax+'^*\,(max_{all})\;=%.2f$' % (min(stars_in_all_mag[1]))
+    text = text1+text2
+    plt.text(0.5, 0.25, text, transform = ax17.transAxes, 
+         bbox=dict(facecolor='white', alpha=0.85), fontsize=14)
+    # Labels.
+    label1 = '$stars_{acpt}$'
+    label2 ='$stars_{all}$'
     # Only accepted stars.
-    plt.plot(stars_in_mag[0], stars_in_mag[1], 'r-', lw=1.5, label=text1)
+    plt.plot(stars_in_mag[0], stars_in_mag[1], 'r-', lw=1.5, label=label1)
     # All stars, including those rejected due to its large errors.
-    plt.plot(stars_in_all_mag[0], stars_in_all_mag[1], 'b--', lw=1., label=text2)
+    plt.plot(stars_in_all_mag[0], stars_in_all_mag[1], 'b--', lw=1., label=label2)
     # get handles
     handles, labels = ax17.get_legend_handles_labels()
     # use them in the legend
     leg = ax17.legend(handles, labels, loc='lower right', numpoints=1,
-                      fontsize=12)
+                      fontsize=14)
     leg.get_frame().set_alpha(0.5)
     
     
@@ -730,8 +744,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         plt.xlim(col1_min, col1_max)
         plt.ylim(mag_min, mag_max)
         #Set axis labels
-        plt.xlabel('$C-T_1$', fontsize=18)
-        plt.ylabel('$T_1$', fontsize=18)
+        plt.xlabel('$'+x_ax+'$', fontsize=18)
+        plt.ylabel('$'+y_ax+'$', fontsize=18)
         tot_kde_clust = len(memb_prob_avrg_sort)
         text = '$N=%d\,|\,MI \geq 0.$' % tot_kde_clust
         plt.text(0.05, 0.93, text, transform = ax19.transAxes,
@@ -816,79 +830,78 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         
 
     # GA diagram.
-    lkl_old, ext_imm_indx = ga_return[1], ga_return[2]
-    ax23 = plt.subplot(gs1[10:12, 4:6])
-    plt.xlim(-1, n_gen+int(0.05*n_gen))
-    plt.ylim(min(lkl_old[0])-0.1*min(lkl_old[0]),
-             max(lkl_old[0])+min(lkl_old[0])/2.)
-    ax23.tick_params(axis='y', which='major', labelsize=9)
-    ax23.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
-    plt.xlabel('Generation', fontsize=16)
-    plt.ylabel('Likelihood', fontsize=16)
-    text1 = '$N = %d\,;\,L_{min}=%0.2f$' '\n' % (len(lkl_old[0]), min(lkl_old[0]))
-    text2 = '$n_{gen}=%d\,;\,n_{pop}=%d$' '\n' % (n_gen, n_pop)
-    text3 = '$f_{dif}=%0.2f\,;\,cr_{sel}=%s$' '\n' % (fdif, cr_sel)
-    text4 = '$p_{cross}=%0.2f\,;\,p_{mut}=%0.2f$' '\n' % (p_cross, p_mut)
-    text5 = '$n_{el}=%d\,;\,n_{ei}=%d\,;\,n_{es}=%d$' % (n_el, n_ei, n_es)
-    text = text1+text2+text3+text4+text5
-    plt.text(0.3, 0.75, text, transform = ax23.transAxes, \
-    bbox=dict(facecolor='white', alpha=0.5), fontsize=12)
-    ax23.plot(range(len(lkl_old[0])), lkl_old[0], lw=1., c='black')
-    ax23.plot(range(len(lkl_old[0])), lkl_old[1], lw=1., c='blue')
-    for lin in ext_imm_indx:
-        plt.axvline(x=lin, linestyle='--', lw=0.6, color='black')
+    if bf_params[0]:
+        lkl_old, ext_imm_indx = ga_return[1], ga_return[2]
+        ax23 = plt.subplot(gs1[10:12, 4:6])
+        plt.xlim(-1, n_gen+int(0.05*n_gen))
+        plt.ylim(min(lkl_old[0])-0.1*min(lkl_old[0]),
+                 max(lkl_old[0])+min(lkl_old[0])/2.)
+        ax23.tick_params(axis='y', which='major', labelsize=9)
+        ax23.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
+        plt.xlabel('Generation', fontsize=16)
+        plt.ylabel('Likelihood', fontsize=16)
+        text1 = '$N = %d\,;\,L_{min}=%0.2f$' '\n' % (len(lkl_old[0]), min(lkl_old[0]))
+        text2 = '$n_{gen}=%d\,;\,n_{pop}=%d$' '\n' % (n_gen, n_pop)
+        text3 = '$f_{dif}=%0.2f\,;\,cr_{sel}=%s$' '\n' % (fdif, cr_sel)
+        text4 = '$p_{cross}=%0.2f\,;\,p_{mut}=%0.2f$' '\n' % (p_cross, p_mut)
+        text5 = '$n_{el}=%d\,;\,n_{ei}=%d\,;\,n_{es}=%d$' % (n_el, n_ei, n_es)
+        text = text1+text2+text3+text4+text5
+        plt.text(0.3, 0.75, text, transform = ax23.transAxes, \
+        bbox=dict(facecolor='white', alpha=0.5), fontsize=12)
+        ax23.plot(range(len(lkl_old[0])), lkl_old[0], lw=1., c='black')
+        ax23.plot(range(len(lkl_old[0])), lkl_old[1], lw=1., c='blue')
+        for lin in ext_imm_indx:
+            plt.axvline(x=lin, linestyle='--', lw=0.6, color='black')
         
         
     # Cluster's stars CMD. Check if decont algorithm was applied.
-    ax24 = plt.subplot(gs1[10:12, 6:8])
-    #Set plot limits
-    plt.xlim(col1_min, col1_max)
-    plt.ylim(mag_min, mag_max)
-    #Set axis labels
-    plt.xlabel('$C-T_1$', fontsize=18)
-    plt.ylabel('$T_1$', fontsize=18)
-    # Set minor ticks
-    ax24.minorticks_on()
-    ax24.xaxis.set_major_locator(MultipleLocator(1.0))
-    ax24.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
-    # Add text box
-    m, a, e, d = ga_return[0]
-    e_m, e_a, e_e, e_d = isoch_fit_errors
-    text1 = '$z = %0.4f \pm %0.4f$' '\n' % (m, e_m)
-    text2 = '$log(age) = %0.2f \pm %0.2f$' '\n' % (a, e_a)
-    text3 = '$E_{(B-V)} = %0.2f \pm %0.2f$' '\n' % (e, e_e)
-    text4 = '$(m-M)_o = %0.2f \pm %0.2f$' % (d, e_d)
-    text = text1+text2+text3+text4
-    plt.text(0.32, 0.8, text, transform = ax24.transAxes, 
-             bbox=dict(facecolor='white', alpha=0.6), fontsize=12)
-    # Plot ZAMS.
-#    plt.plot(zams_iso[1], zams_iso[0], c='k', ls='--', lw=1.)
-    # Plot best fitted isochrone.
-    plt.plot(shift_isoch[0], shift_isoch[1], 'g', lw=1.2)
-    # This reversed colormap means higher prob stars will look redder.
-    cm = plt.cm.get_cmap('RdYlBu_r')
-    m_p_m_temp = [[], [], []]
-    for star in memb_prob_avrg_sort:
-        # Only plot stars with MI>=mu
-        if star[7] >= 0.:
-            m_p_m_temp[0].append(star[5])
-            m_p_m_temp[1].append(star[3])
-            m_p_m_temp[2].append(star[7])
-    # Create new list with inverted values so higher prob stars are on top.
-    m_p_m_temp_inv = [i[::-1] for i in m_p_m_temp]
-    v_min, v_max = round(min(m_p_m_temp[2]), 2), round(max(m_p_m_temp[2]),2)
-    plt.scatter(m_p_m_temp_inv[0], m_p_m_temp_inv[1], marker='o', 
-                c=m_p_m_temp_inv[2], s=40, cmap=cm, lw=0.5, vmin=v_min,\
-                vmax=v_max)
-    # If list is not empty.
-    if m_p_m_temp_inv[1]:
-        # Plot error bars at several mag values.
-        mag_y = np.arange(int(min(m_p_m_temp_inv[1])+0.5), 
-                          int(max(m_p_m_temp_inv[1])+0.5) + 0.1)
-        x_val = [min(3.9, max(col1_data)+0.2) - 0.4]*len(mag_y)
-        plt.errorbar(x_val, mag_y, yerr=func(mag_y, *popt_mag), 
-                     xerr=func(mag_y, *popt_col1), fmt='k.', lw=0.8, ms=0.,\
-                     zorder=4)
+    if bf_params[0]:
+        ax24 = plt.subplot(gs1[10:12, 6:8])
+        #Set plot limits
+        plt.xlim(col1_min, col1_max)
+        plt.ylim(mag_min, mag_max)
+        #Set axis labels
+        plt.xlabel('$'+x_ax+'$', fontsize=18)
+        plt.ylabel('$'+y_ax+'$', fontsize=18)
+        # Set minor ticks
+        ax24.minorticks_on()
+        ax24.xaxis.set_major_locator(MultipleLocator(1.0))
+        ax24.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
+        # Add text box
+        m, a, e, d = ga_return[0]
+        e_m, e_a, e_e, e_d = isoch_fit_errors
+        text1 = '$z = %0.4f \pm %0.4f$' '\n' % (m, e_m)
+        text2 = '$log(age) = %0.2f \pm %0.2f$' '\n' % (a, e_a)
+        text3 = '$E_{(B-V)} = %0.2f \pm %0.2f$' '\n' % (e, e_e)
+        text4 = '$(m-M)_o = %0.2f \pm %0.2f$' % (d, e_d)
+        text = text1+text2+text3+text4
+        plt.text(0.32, 0.8, text, transform = ax24.transAxes, 
+                 bbox=dict(facecolor='white', alpha=0.6), fontsize=12)
+        plt.plot(shift_isoch[0], shift_isoch[1], 'g', lw=1.2)
+        # This reversed colormap means higher prob stars will look redder.
+        cm = plt.cm.get_cmap('RdYlBu_r')
+        m_p_m_temp = [[], [], []]
+        for star in memb_prob_avrg_sort:
+            # Only plot stars with MI>=mu
+            if star[7] >= 0.:
+                m_p_m_temp[0].append(star[5])
+                m_p_m_temp[1].append(star[3])
+                m_p_m_temp[2].append(star[7])
+        # Create new list with inverted values so higher prob stars are on top.
+        m_p_m_temp_inv = [i[::-1] for i in m_p_m_temp]
+        v_min, v_max = round(min(m_p_m_temp[2]), 2), round(max(m_p_m_temp[2]),2)
+        plt.scatter(m_p_m_temp_inv[0], m_p_m_temp_inv[1], marker='o', 
+                    c=m_p_m_temp_inv[2], s=40, cmap=cm, lw=0.5, vmin=v_min,\
+                    vmax=v_max)
+        # If list is not empty.
+        if m_p_m_temp_inv[1]:
+            # Plot error bars at several mag values.
+            mag_y = np.arange(int(min(m_p_m_temp_inv[1])+0.5), 
+                              int(max(m_p_m_temp_inv[1])+0.5) + 0.1)
+            x_val = [min(3.9, max(col1_data)+0.2) - 0.4]*len(mag_y)
+            plt.errorbar(x_val, mag_y, yerr=func(mag_y, *popt_mag), 
+                         xerr=func(mag_y, *popt_col1), fmt='k.', lw=0.8, ms=0.,\
+                         zorder=4)
 
 
 
