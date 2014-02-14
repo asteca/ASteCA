@@ -509,43 +509,42 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     leg11.get_frame().set_alpha(0.7)
 
 
-    # Star regions as defined by the decontamination algorithm.
-    # Check if decont algorithm was applied.
+    # Cluster and field regions defined.
+    ax13 = plt.subplot(gs1[6:8, 0:2])
+    # Get max and min values in x,y
+    x_min, x_max = min(x_data), max(x_data)
+    y_min, y_max = min(y_data), max(y_data)
+    #Set plot limits
+    plt.xlim(x_min, x_max)
+    plt.ylim(y_min, y_max)
+    #Set axis labels
+    plt.xlabel('x (px)', fontsize=12)
+    plt.ylabel('y (px)', fontsize=12)
+    # Set minor ticks
+    ax13.minorticks_on()
+    ax13.grid(b=True, which='both', color='gray', linestyle='--', lw=0.5)
+    # Radius
+    circle = plt.Circle((center_cl[0], center_cl[1]), clust_rad, 
+                        color='r', fill=False)
+    fig.gca().add_artist(circle)
+    plt.text(0.4, 0.92, 'Cluster + %d Field regions' % (len(field_region)), 
+             transform = ax13.transAxes, 
+             bbox=dict(facecolor='white', alpha=0.8), fontsize=12)
+    # Plot cluster region.
+    clust_reg_temp = [[], []]
+    for star in cluster_region:
+        dist = np.sqrt((center_cl[0]-star[1])**2 + \
+        (center_cl[1]-star[2])**2)
+        # Only plot stars inside the cluster's radius.
+        if dist <= clust_rad:
+            clust_reg_temp[0].append(star[1])
+            clust_reg_temp[1].append(star[2])
+    plt.scatter(clust_reg_temp[0], clust_reg_temp[1], marker='o', c='black',
+                s=8, edgecolors='none')
     if not(flag_area_stronger):
-        ax13 = plt.subplot(gs1[6:8, 0:2])
-        # Get max and min values in x,y
-        x_min, x_max = min(x_data), max(x_data)
-        y_min, y_max = min(y_data), max(y_data)
-        #Set plot limits
-        plt.xlim(x_min, x_max)
-        plt.ylim(y_min, y_max)
-        #Set axis labels
-        plt.xlabel('x (px)', fontsize=12)
-        plt.ylabel('y (px)', fontsize=12)
-        # Set minor ticks
-        ax13.minorticks_on()
-        ax13.grid(b=True, which='both', color='gray', linestyle='--', lw=0.5)
-        # Radius
-        circle = plt.Circle((center_cl[0], center_cl[1]), clust_rad, 
-                            color='r', fill=False)
-        fig.gca().add_artist(circle)
-        plt.text(0.4, 0.92, 'Cluster + %d Field regions' % (len(field_region)), 
-                 transform = ax13.transAxes, 
-                 bbox=dict(facecolor='white', alpha=0.8), fontsize=12)
-        # Plot cluster region.
-        clust_reg_temp = [[], []]
-        for star in cluster_region:
-            dist = np.sqrt((center_cl[0]-star[1])**2 + \
-            (center_cl[1]-star[2])**2)
-            # Only plot stars inside the cluster's radius.
-            if dist <= clust_rad:
-                clust_reg_temp[0].append(star[1])
-                clust_reg_temp[1].append(star[2])
-        plt.scatter(clust_reg_temp[0], clust_reg_temp[1], marker='o', c='black',
-                    s=8, edgecolors='none')
         # Plot field stars regions.
-        col = cycle(['red', 'darkgreen', 'blue', 'maroon'])
-#        col = iter(plt.cm.rainbow(np.linspace(0, 1, len(field_region))))
+#        col = cycle(['red', 'darkgreen', 'blue', 'maroon'])
+        col = iter(plt.cm.rainbow(np.linspace(0, 1, len(field_region))))
         for i, reg in enumerate(field_region):
             stars_reg_temp = [[], []]
             for star in reg:
@@ -782,10 +781,11 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         
         
     # Distribution of p_values.
-    # pval_test_params[-1] is the flag that tells me if the block was processed.
+    # pval_test_params[-1] is the flag that indicates if the block was processed.
     if pval_test_params[-1]:
         # Extract parameters from list.
-        prob_cl_kde, p_vals_cl, p_vals_f, kde_cl_1d, kde_f_1d, x_kde, y_over = pval_test_params[:-1]
+        prob_cl_kde, p_vals_cl, p_vals_f, kde_cl_1d, kde_f_1d, x_kde, y_over\
+        = pval_test_params[:-1]
         ax21 = plt.subplot(gs1[10:12, 0:2])
         plt.xlim(-0.5, 1.5)
         plt.ylim(0, max(max(kde_f_1d), max(kde_cl_1d))+0.5)

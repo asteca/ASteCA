@@ -112,9 +112,6 @@ def get_regions(x_center_bin, y_center_bin, width_bins, histo, clust_rad,
         print 'WARNING: cluster region too large, no field region available.'
         flag_area_stronger = True
 
-    print '\n TEST - REMOVE \n'
-    flag_area_stronger = True
-
     # Calculate maximum number of field regions possible.
     f_regs_max = int((area-(length*clust_rad)**2.)/(np.pi*clust_rad**2))-1
     # If the number of field regiosn defined is larger than the maximum allowed,

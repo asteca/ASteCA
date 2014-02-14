@@ -76,7 +76,7 @@ ER  2.   0.1    0.3
 # Cluster region and field regions.
 # areas: number of areas defined including the cluster region (integer).
 #   areas
-GR     20
+GR     10
 
 # Test to determine the probability of the cluster being a physical entity
 # instead of a random overdensity of stars, based on comparing its CMD with
@@ -87,7 +87,7 @@ GR     20
 # 100/(areas-1). If 'manual' is set then 'num' will be used (otherwise this
 # number is irrelevant).
 #   flag   runs   num
-PV  False   auto   1
+PV  True   auto   1
 
 
 # Bayesian decontamination algorithm.
@@ -104,7 +104,7 @@ PV  False   auto   1
 # - If 'skip' is selected all stars will be assigned an equal probability
 # of 1. and the algorithm skipped altogether.
 #   mode     runs  mc_samp
-DA  skip      1       10
+DA  manual      1      10
 
 
 # Photometric system & stored isochrones.
@@ -138,7 +138,7 @@ run: True / False. Flag that determines if the best isochrone
 # boot_num: number of times the bootstrap with replacement
 # process will run. Minimum value is 2.
 #     run  boot_num
-BF  True 2
+BF   True        2
 
 # Synthetic cluster.
 # sys_select: WASH / UBVI
@@ -164,4 +164,4 @@ SC         WASH    chabrier_2001         5000          0.5         0.7
 # returning the same best solution before exiting the generations loop.
 #
 #   n_pop  n_gen fdif p_cross cr_sel p_mut n_el n_ei n_es
-GA     10     5   1.    0.85     2P  0.01    1   25    6
+GA    20     5   1.    0.85     2P  0.01    1   25    6
