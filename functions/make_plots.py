@@ -543,8 +543,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                 s=8, edgecolors='none')
     if not(flag_area_stronger):
         # Plot field stars regions.
-#        col = cycle(['red', 'darkgreen', 'blue', 'maroon'])
-        col = iter(plt.cm.rainbow(np.linspace(0, 1, len(field_region))))
+        col = cycle(['red', 'darkgreen', 'blue', 'maroon'])
         for i, reg in enumerate(field_region):
             stars_reg_temp = [[], []]
             for star in reg:
