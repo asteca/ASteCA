@@ -41,7 +41,7 @@ from functions.best_fit_synth_cl import best_fit as bfsc
 from functions.make_plots import make_plots as mp
 from functions.add_data_output import add_data_output as a_d_o
 from functions.cl_members_file import cluster_members_file as c_m_f
-        
+
 from os import makedirs
 from os import listdir, getcwd, walk, mkdir, rmdir
 import shutil
@@ -64,7 +64,7 @@ flag_move_file, axes_names = gip.get_in_params(mypath)
 mypath2, mypath3, output_dir = in_dirs
 
 # Create output data file (append if file already existis)
-c_o_d_f(output_dir)   
+c_o_d_f(output_dir)
 
 # Store subdir names [0] and file names [1] inside each subdir.
 dir_files = [[], []]
@@ -76,26 +76,25 @@ for root, dirs, files in walk(mypath2):
                 if name.endswith(('.DAT', '.MAG', '.OUT', '.TEX')):
                     dir_files[0].append(subdir)
                     dir_files[1].append(name)
-                    
+
 
 # Iterate through all cluster files.
 for f_indx, sub_dir in enumerate(dir_files[0]):
-    
+
     # Store name of file in 'myfile'.
     myfile = dir_files[1][f_indx]
 
     # Start timing this loop.
     start = time.time()
 
-    # Store cluster's name    
+    # Store cluster's name
     clust_name = myfile[:-4]
     print 'Analizing cluster %s.' % (clust_name)
 
     # If Semi mode set, get data from 'clusters_input.dat' file.
     if mode == 's':
         cent_cl_semi, cl_rad_semi, cent_flag_semi, rad_flag_semi, \
-        err_flag_semi = g_s(mypath, clust_name) 
-
+        err_flag_semi = g_s(mypath, clust_name)
 
     # Get cluster's photometric data from file.
     phot_data = gd.get_data(mypath2, sub_dir, myfile, gd_params)
@@ -104,13 +103,12 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
     print 'Data correctly obtained from input file (N stars: %d).'\
     % len(phot_data[0])
 
-
     # If Manual mode is set, display frame and ask if it should be trimmed.
     if mode == 'm':
         # Show plot with center obtained.
         d_f(x_data, y_data, mag_data)
         plt.show()
-        
+
         wrong_answer = True
         while wrong_answer:
             temp_cent, temp_side = [], []
@@ -161,7 +159,7 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
         d_c(x_data, y_data, mag_data, center_cl, cent_cl_err, x_center_bin, \
         y_center_bin, h_filter)
         plt.show()
-        
+
         wrong_answer = True
         while wrong_answer:
             answer_cen = raw_input('Input new center values? (y/n) ')
@@ -205,18 +203,18 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
     # to each bin.
     H_manual = mh(phot_data, xedges_min_db, yedges_min_db)
     print 'Manual 2D histogram obtained.'
-    
-    
+
+
     # Get background value in stars/area
-    # Inner and outer radii for obtaining the background values. Both are 
-    # calculated as a given fraction of the minimum width between the x and y 
+    # Inner and outer radii for obtaining the background values. Both are
+    # calculated as a given fraction of the minimum width between the x and y
     # axis spans.
     inn_fr, out_fr = br_params
     inner_ring = (min((max(x_data)-min(x_data)),
                       (max(y_data)-min(y_data))))/inn_fr
     outer_ring = (min((max(x_data)-min(x_data)),
                       (max(y_data)-min(y_data))))/out_fr
-    
+
     if mode == 'm':
         wrong_answer = True
         while wrong_answer:
@@ -232,7 +230,7 @@ background (%d, %d) px? (y/n) ' % (inner_ring, outer_ring))
                 wrong_answer = False
             else:
                 print 'Wrong input. Try again.\n'
-    
+
     backg_value, flag_bin_count = gbg.get_background(x_data, y_data, \
                                     x_center_bin, y_center_bin, h_not_filt,\
                                     width_bins, inner_ring, outer_ring)
@@ -243,8 +241,8 @@ background (%d, %d) px? (y/n) ' % (inner_ring, outer_ring))
     radii, ring_density, poisson_error = gdp.get_dens_prof(h_not_filt, \
     x_center_bin, y_center_bin, width_bins, inner_ring)
     print 'Density profile calculated.'
-    
-    
+
+
     # Get cluster radius
     radius_params = gr.get_clust_rad(backg_value, radii, ring_density,
                                      width_bins, cr_params)
@@ -262,7 +260,7 @@ background (%d, %d) px? (y/n) ' % (inner_ring, outer_ring))
             backg_value, radii, ring_density, clust_name, poisson_error,\
             width_bins, inner_ring, outer_ring)
         plt.show()
-                
+
         wrong_answer = True
         while wrong_answer:
             answer_rad = raw_input('Accept radius (otherwise input new one \
@@ -291,17 +289,17 @@ px): '))
         print '3-P King profile obtained.'
     else:
         print 'King profile fitting did not converge.'
-        
+
 
     # Apply auto rejecting of errors if flag is True.
     e_max = er_params[2]
     # Accept and reject stars based on their errors.
     popt_mag, popt_col1, acpt_stars, rjct_stars, err_plot = \
-    ear.err_accpt_rejct(phot_data, er_params)    
+    ear.err_accpt_rejct(phot_data, er_params)
     # This indicates if we are to use the output of the 'err_accpt_rejct'
     # function or all stars with errors < e_max.
-    rjct_errors_fit = False        
-    
+    rjct_errors_fit = False
+
     # If list of accepted stars is empty, halt the code.
     if not acpt_stars:
         print '  No stars accepted based on their errors.'
@@ -358,26 +356,26 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
     stars_in, stars_out, stars_in_rjct, stars_out_rjct =  \
     gio.get_in_out(center_cl, clust_rad, acpt_stars, rjct_stars)
     print "Stars separated in/out of cluster's boundaries."
-    
-    
+
+
     # Calculate integrated magnitude.
     stars_in_mag, stars_in_all_mag = g_i_m(stars_in, stars_in_rjct)
     print 'Integrated magnitude distribution obtained.'
-    
-    
+
+
     # Get approximate number of cluster's members.
     n_c, flag_num_memb_low = g_m_n.get_memb_num(backg_value, clust_rad,
                                                 stars_in, stars_in_rjct)
     print 'Approximate number of members in cluster obtained (%d).' % (n_c)
-            
-    
+
+
     # Get contamination index.
     cont_index = g_c_i.cont_indx(backg_value, clust_rad, stars_in,
                                  stars_in_rjct)
     print 'Contamination index obtained (%0.2f).' % cont_index
-    
-    
-    # Get cluster + field regions around the cluster's center.        
+
+
+    # Get cluster + field regions around the cluster's center.
     flag_area_stronger, cluster_region, field_region = \
     g_r(x_center_bin, y_center_bin, width_bins, h_not_filt, clust_rad,
         H_manual, stars_in, stars_out, gr_params)
@@ -398,19 +396,19 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
             pval_test_params = pval_test_params + [flag_pval_test]
             print 'Probability of physical cluster obtained (%0.2f).' % \
             pval_test_params[0]
-    
+
             # Get QQ plot for p-values distributions.
             # qq_params = ccc, quantiles, r_squared, slope, intercept
             qq_params = g_qq(pval_test_params[1], pval_test_params[2])
             print 'QQ-plot obtained (CCC = %0.2f)' % qq_params[0]
-            
+
     # Skip process.
     if not flag_pval_test or flag_area_stronger:
         print 'Skipping p-value test for cluster.'
         # Pass empty lists to make_plots.
         pval_test_params, qq_params = [-1., False], [-1.]
 
-    
+
 
     # Apply decontamination algorithm if at least one equal-sized field region
     # was found around the cluster.
@@ -424,31 +422,31 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
     memb_prob_avrg_sort, clust_reg_prob_avrg = m_p_a_s(cluster_region, \
     runs_fields_probs, center_cl, clust_rad)
     print 'Averaged probabilities for all runs.'
-    
+
 
     # Get the completeness level for each magnitude bin. This will be used by
     # the isochrone/synthetic cluster fitting algorithm.
     completeness = m_c(mag_data)
-    print 'Completeness magnitude levels obtained.'    
-    
-    
+    print 'Completeness magnitude levels obtained.'
+
+
     # Store all isochrones in all the metallicity files in isoch_list.
     # Store metallicity values and isochrones ages between the allowed
     # ranges in isoch_ma; extinction and distance modulus values in isoch_ed.
     # isoch_list, isoch_ma, isoch_ed = ip_list
     ip_list = ip(ps_params)
     print 'Theoretical isochrones (and their parameters) read and stored.'
-    
-    
+
+
     # Obtain best fitting parameters for cluster.
     print 'Searching for optimal parameters.'
     err_lst = [popt_mag, popt_col1, e_max]
-    shift_isoch, ga_return, isoch_fit_errors = bfsc(err_lst,\
+    shift_isoch, isoch_fit_params, isoch_fit_errors = bfsc(err_lst,\
     memb_prob_avrg_sort, completeness, ip_list, bf_params, sc_params,\
     ga_params)
     print 'Best fit parameters obtained.'
 
-    
+
     # New name for cluster? Useful when there's a single photometric file
     # with multiple clusters in it.
     if mode == 'm':
@@ -463,20 +461,20 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
                 wrong_answer = False
             else:
                 print 'Wrong input. Try again.\n'
-        
+
 
     # Create data file with membership probabilities.
     c_m_f(output_dir, sub_dir, clust_name, memb_prob_avrg_sort)
     print 'Membership probabilities for stars in cluster region saved to file.'
 
 
-    # Generate output subdir.   
+    # Generate output subdir.
     output_subdir = join(output_dir, sub_dir)
     # Check if subdir already exists, if not create it
     if not exists(output_subdir):
-        makedirs(output_subdir)        
-        
-        
+        makedirs(output_subdir)
+
+
     # Make plots
     mp(output_subdir, clust_name, x_data, y_data, center_cl, cent_cl_err,
        x_center_bin, y_center_bin, h_filter, radii, backg_value, inner_ring,
@@ -488,20 +486,20 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
        stars_out_rjct, stars_in_mag, stars_in_all_mag, n_c, flag_area_stronger,
        cluster_region, field_region, pval_test_params, qq_params,
        clust_reg_prob_avrg, memb_prob_avrg_sort, bf_params,
-       shift_isoch, ga_return, isoch_fit_errors, ga_params, er_params, 
+       shift_isoch, isoch_fit_params, isoch_fit_errors, ga_params, er_params,
        axes_names)
     print 'Plots created.'
 
-   
+
     # Add cluster data and flags to output file
-    a_d_o(sub_dir, output_dir, clust_name, center_cl, clust_rad, k_prof, 
+    a_d_o(sub_dir, output_dir, clust_name, center_cl, clust_rad, k_prof,
           n_c_k, flag_king_no_conver, cont_index, n_c, pval_test_params[0],
-          qq_params[0], stars_in_mag,
-          flag_center, flag_std_dev, flag_center_manual,
-          flag_radius_manual, rjct_errors_fit, flag_bin_count,
-          radius_params[3:], flag_num_memb_low)
+          qq_params[0], stars_in_mag, flag_center, flag_std_dev,
+          flag_center_manual, flag_radius_manual, rjct_errors_fit,
+          flag_bin_count, radius_params[3:], flag_num_memb_low,
+          isoch_fit_params[0], isoch_fit_errors)
     print 'Data added to output file.'
-    
+
 
     # Move file to 'done' dir.
     if flag_move_file:
@@ -517,15 +515,15 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
             # Sub-dir not empty, skip.
             pass
         print 'Data file moved to folder: %s' % dst_dir
-   
+
 
     elapsed = time.time() - start
     m, s = divmod(elapsed, 60)
-    print 'End of analysis for %s in %dm %02ds.\n'% (clust_name, m, s)   
-   
+    print 'End of analysis for %s in %dm %02ds.\n'% (clust_name, m, s)
+
     # Force the Garbage Collector to release unreferenced memory.
     gc.collect()
-    
+
     # Store memory information.
 #    h = hpy()
 #    with open('/home/gabriel/clusters/mem_out', "a") as f:
@@ -533,5 +531,5 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
 #        f.write(strftime("%Y-%m-%d %H:%M:%S")+'\n')
 #        f.write(str(h.heap()))
 #        f.write('\n')
-            
+
 print '\nFull iteration completed.'

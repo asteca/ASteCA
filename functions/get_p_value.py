@@ -22,12 +22,12 @@ def gauss_error(col, e_col, mag, e_mag):
     # Randomly move mag and color through a Gaussian function.
     col_gauss = col + np.random.normal(0, 1, len(col))*e_col
     mag_gauss = mag + np.random.normal(0, 1, len(col))*e_mag
-    
+
     return col_gauss, mag_gauss
 
 
 def get_CMD(region):
-    
+
     # Obtain CMD for given region.
     # Format field region data.
     col_lst, e_col_lst, mag_lst, e_mag_lst = [], [], [], []
@@ -40,7 +40,7 @@ def get_CMD(region):
         mag_lst.append(star[3])
         # Magnitude error.
         e_mag_lst.append(star[4])
-        
+
     # Move magnitude and colors randomly according to their errors,
     # using a Gaussian function.
     col_gauss, mag_gauss = gauss_error(col_lst, e_col_lst, mag_lst,
@@ -69,11 +69,11 @@ def get_pval(cluster_region, field_region, col1_data,
     the overlap between the KDEs of the distributions of p-values for the cluster
     vs field and field vs field comparisions.
     '''
-    
+
     run_set, num_runs = pv_params[1], pv_params[2]
-    
+
     print 'Obtaining p_value for cluster region vs field regions.'
-    
+
     if run_set == 'auto':
         # Set number of runs for the p_value algorithm with a maximum of
         # 100 if only one field region was used.
@@ -83,15 +83,15 @@ def get_pval(cluster_region, field_region, col1_data,
     else:
         runs = int(100/len(field_region))
         print "  Parameter 'runs' has wrong name. Using 'auto'."
-    
+
     # Only use stars inside cluster's radius.
     cluster_region_r = []
     for star in cluster_region:
         dist = np.sqrt((center_cl[0]-star[1])**2 + \
         (center_cl[1]-star[2])**2)
-        if dist <= clust_rad: 
+        if dist <= clust_rad:
             cluster_region_r.append(star)
-            
+
     # The first list holds all the p_values obtained comparing the cluster
     # region with the field regions, the second one holds p_values for field
     # vs field comparisions.
@@ -104,7 +104,7 @@ def get_pval(cluster_region, field_region, col1_data,
 
             # Store number of stars in field region.
             n_fl = len(f_region)
-            
+
             # Randomly shuffle the stars in the cluster region.
             clust_reg_shuffle = np.random.permutation(cluster_region_r)
             # Remove n_fl random stars from the cluster region and pass
@@ -115,25 +115,25 @@ def get_pval(cluster_region, field_region, col1_data,
             else:
                 # If field region has more stars than the cluster region,
                 # don't remove any star. This should not happen though.
-                clust_reg_clean = clust_reg_shuffle                
-            
+                clust_reg_clean = clust_reg_shuffle
+
             # CMD for cluster region.
             matrix_cl = get_CMD(clust_reg_clean)
             rows_cl = int(len(matrix_cl)/2)
             # CMD for 1st field region.
             matrix_f1 = get_CMD(f_region)
             rows_f1 = int(len(matrix_f1)/2)
-            
+
             # Create matrices for these CMDs.
             m_cl = robjects.r.matrix(robjects.FloatVector(matrix_cl),
                                    nrow=rows_cl, byrow=True)
             m_f1 = robjects.r.matrix(robjects.FloatVector(matrix_f1),
                                      nrow=rows_f1, byrow=True)
-                                     
+
             # Bandwith matrices.
             hpic = hpi_kfe(x=m_cl, binned=True)
             hpif1 = hpi_kfe(x=m_f1, binned=True)
-            
+
             # Call 'ks' function to obtain p_value.
             # Cluster vs field p_value.
             res_cl = kde_test(x1=m_cl, x2=m_f1, H1=hpic, H2=hpif1)
@@ -145,7 +145,7 @@ def get_pval(cluster_region, field_region, col1_data,
             # field regions. This results in [N*(N+1)/2] combinations of
             # field vs field comparisions.
             for f_region2 in field_region[indx:]:
-            
+
                 # CMD for 2nd field region.
                 matrix_f2 = get_CMD(f_region2)
                 rows_f2 = int(len(matrix_f2)/2)
@@ -154,7 +154,7 @@ def get_pval(cluster_region, field_region, col1_data,
                                          nrow=rows_f2, byrow=True)
                 # Bandwith.
                 hpif2 = hpi_kfe(x=m_f2, binned=True)
-        
+
                 # Field vs field p_value.
                 res_f = kde_test(x1=m_f1, x2=m_f2, H1=hpif1, H2=hpif2)
                 p_val_f = res_f.rx2('pvalue')
@@ -175,11 +175,11 @@ def get_pval(cluster_region, field_region, col1_data,
             print '  100% done'
 
     # For plotting purposes.
-    
+
     # Define KDE limits.
     xmin, xmax = -1., 2.
     x_kde = np.mgrid[xmin:xmax:1000j]
-    
+
     # Obtain the 1D KDE for the cluster region (stars inside cluster's
     # radius) vs field regions.
     kernel_cl = stats.gaussian_kde(p_vals_cl)
@@ -190,21 +190,21 @@ def get_pval(cluster_region, field_region, col1_data,
     kernel_f = stats.gaussian_kde(p_vals_f)
     # KDE for plotting.
     kde_f_1d = np.reshape(kernel_f(x_kde).T, x_kde.shape)
-    
+
     # Calculate overlap between the two KDEs.
     def y_pts(pt):
         y_pt = min(kernel_cl(pt), kernel_f(pt))
         return y_pt
 
-    overlap = quad(y_pts, -1., 2.) 
+    overlap = quad(y_pts, -1., 2.)
     # Store y values for plotting the overlap filled.
     y_over = [float(y_pts(x_pt)) for x_pt in x_kde]
-    
+
     # Probability value for the cluster.
     prob_cl_kde = 1- overlap[0]
 
     # Store all return params in a single list.
     pval_test_params = [prob_cl_kde, p_vals_cl, p_vals_f, kde_cl_1d, kde_f_1d,
                         x_kde, y_over]
-        
+
     return pval_test_params

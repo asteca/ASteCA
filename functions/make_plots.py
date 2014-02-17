@@ -25,7 +25,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                stars_in_all_mag, n_c, flag_area_stronger,
                cluster_region, field_region, pval_test_params, qq_params,
                clust_reg_prob_avrg, memb_prob_avrg_sort, bf_params,
-               shift_isoch, ga_return, isoch_fit_errors, ga_params,
+               shift_isoch, isoch_fit_params, isoch_fit_errors, ga_params,
                er_params, axes_names):
     '''
     Make all plots.
@@ -830,7 +830,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
 
     # GA diagram.
     if bf_params[0]:
-        lkl_old, ext_imm_indx = ga_return[1], ga_return[2]
+        lkl_old, ext_imm_indx = isoch_fit_params[1], isoch_fit_params[2]
         ax23 = plt.subplot(gs1[10:12, 4:6])
         plt.xlim(-0.5, n_gen+int(0.05*n_gen))
         plt.ylim(min(lkl_old[0])-0.1*min(lkl_old[0]),
@@ -867,7 +867,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         ax24.xaxis.set_major_locator(MultipleLocator(1.0))
         ax24.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
         # Add text box
-        m, a, e, d = ga_return[0]
+        m, a, e, d = isoch_fit_params[0]
         e_m, e_a, e_e, e_d = isoch_fit_errors
         text1 = '$z = %0.4f \pm %0.4f$' '\n' % (m, e_m)
         text2 = '$log(age) = %0.2f \pm %0.2f$' '\n' % (a, e_a)

@@ -51,6 +51,14 @@ def create_out_data_file(output_dir):
 #      physical cluster.\n\
 # mag_int: Integrated magnitude value for all stars inside the cluster radius, except\n\
 #          those that were rejected due to large errors.\n\
+# met: Metallicity value (z) obtained via synthetic cluster fitting.\n\
+# e_m: Metallicity error.\n\
+# age: log(age) for age in Gyr, idem metallicity.\n\
+# e_a: log(age) error.\n\
+# E(B-V): extinction, idem metallicity.\n\
+# e_E: Extinction error.\n\
+# dist: Distance modulus, idem metallicity.\n\
+# e_d: Distance error.\n\
 #\n\
 # M1 (flag_center_manual): Indicates that the center was set manually.\n\
 # M2 (flag_radius_manual): Indicates that the radius was set manually.\n\
@@ -84,5 +92,6 @@ def create_out_data_file(output_dir):
 #    than one cluster present in the frame, variable or too crowded field, etc.\n\
 #\n\
 #NAME            c_x[px] c_y[px] R_cl[px] R_c[px] R_t[px] cont_ind memb memb_k \
-prob_cl   CCC mag_int  M1 M2 M3  f1 f2 f3 f4 f5 f6 f7 f8 f9 f10  FC\n" % now_time)
+prob_cl   CCC mag_int     met    e_m   age   e_a  E(B-V)  e_E   dist   e_d  M1 M2 M3  f1 \
+f2 f3 f4 f5 f6 f7 f8 f9 f10  FC\n" % now_time)
         out_data_file.close()

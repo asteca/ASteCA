@@ -58,8 +58,9 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
     #                                           line_start, indexes, obs_clust,\
     #                                           mass_dist)
                 # Genetic algorithm.
-                ga_return = g_a(err_lst, memb_prob_avrg_sort, completeness,
-                                ip_list, sc_params, ga_params)
+                isoch_fit_params = g_a(err_lst, memb_prob_avrg_sort,
+                                       completeness, ip_list, sc_params,
+                                       ga_params)
             else:
                 # Brute force.
     #            params_boot.append(brute_force(sys_select, isoch_params, iso_path,
@@ -77,15 +78,15 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
         
         # For plotting purposes: generate shifted best fit isochrone.
         isoch_list, isoch_ma = ip_list[0], ip_list[1]
-        m, a, e, d = ga_return[0]
+        m, a, e, d = isoch_fit_params[0]
         m_indx, a_indx = next(((i,j) for i,x in enumerate(isoch_ma) for j,y in \
         enumerate(x) if y == [m, a]), None)
         shift_isoch = move_isoch(sc_params[0], [isoch_list[m_indx][a_indx][0],
                                            isoch_list[m_indx][a_indx][1]], e, d)
-
     else:
         # Pass empty lists to make_plots.
         print 'Skipping synthetic cluster fitting process.'
-        shift_isoch, ga_return, isoch_fit_errors = [], [], []
+        shift_isoch, isoch_fit_params, isoch_fit_errors = [], \
+        [-1.,-1.,-1.,-1.], [-1.,-1.,-1.,-1.]
 
-    return shift_isoch, ga_return, isoch_fit_errors
+    return shift_isoch, isoch_fit_params, isoch_fit_errors
