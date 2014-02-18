@@ -83,9 +83,11 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
         m, a, e, d = isoch_fit_params[0]
         m_indx, a_indx = next(((i,j) for i,x in enumerate(isoch_ma) for j,y in \
         enumerate(x) if y == [m, a]), None)
-        shift_isoch = move_isoch(sc_params[0], isoch_list[m_indx][a_indx][:2], e, d)
+        shift_isoch = move_isoch(sc_params[0], isoch_list[m_indx][a_indx][:2],
+                                 e, d)
         # Generate best fit synthetic cluster.
-        synth_clst = s_c(err_lst, completeness, sc_params, isoch_list[m_indx][a_indx], [-1., -1., e, d])
+        synth_clst = s_c(err_lst, completeness, sc_params,
+                         isoch_list[m_indx][a_indx], [-1., -1., e, d])
     else:
         # Pass empty lists to make_plots.
         print 'Skipping synthetic cluster fitting process.'
