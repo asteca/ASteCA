@@ -58,7 +58,7 @@ mypath = realpath(join(getcwd(), dirname(__file__)))
 # Read input parameters for code from file.
 mode, in_dirs, gd_params, gc_params, br_params, cr_params, er_params,\
 gr_params, pv_params, da_params, ps_params, bf_params, sc_params, ga_params,\
-flag_move_file, axes_names = gip.get_in_params(mypath)
+flag_move_file, axes_params = gip.get_in_params(mypath)
 
 # Read paths.
 mypath2, mypath3, output_dir = in_dirs
@@ -488,7 +488,7 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
        cluster_region, field_region, pval_test_params, qq_params,
        clust_reg_prob_avrg, memb_prob_avrg_sort, bf_params,
        shift_isoch, isoch_fit_params, isoch_fit_errors, synth_clst, ga_params,
-       er_params, axes_names)
+       er_params, axes_params)
     print 'Plots created.'
 
 

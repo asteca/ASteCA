@@ -26,7 +26,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                cluster_region, field_region, pval_test_params, qq_params,
                clust_reg_prob_avrg, memb_prob_avrg_sort, bf_params,
                shift_isoch, isoch_fit_params, isoch_fit_errors, synth_clst,
-               ga_params, er_params, axes_names):
+               ga_params, er_params, axes_params):
     '''
     Make all plots.
     '''
@@ -36,7 +36,6 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         '''
         return a * np.exp(b * x) + c
         
-    
     def line(x,slope, intercept):
         '''
         Linar function.
@@ -51,13 +50,15 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         a, b, c, d = k_prof[0], k_prof[1], k_prof[2], backg_value
         return c*(1/np.sqrt(1+(x/a)**2) - 1/np.sqrt(1+(b/a)**2))**2 + d
         
-
-    # Define plot limits for ALL CMD diagrams.
-    col1_min, col1_max = max(-0.9, min(col1_data)-0.2),\
-                         min(3.9, max(col1_data)+0.2)
-    mag_min, mag_max = max(mag_data)+0.5, min(mag_data)-0.5
-
-
+    # Name for axes.
+    x_ax, y_ax = axes_params[0], axes_params[1]
+    
+    # Define plot limits for *all* CMD diagrams.
+    x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd = axes_params[2]
+    col1_min, col1_max = max(x_min_cmd, min(col1_data)-0.2),\
+    min(x_max_cmd, max(col1_data)+0.2)
+    mag_min, mag_max = min(y_max_cmd, max(mag_data)+0.5),\
+    max(y_min_cmd, min(mag_data)-0.5)
 
     # Parameters from get_radius function.
     clust_rad, delta_backg, delta_percentage = radius_params
@@ -72,10 +73,6 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     # Genetic algorithm params.
     n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es = ga_params
     
-    # Name for axes.
-    x_ax, y_ax = axes_names
-
-
     # Plot all outputs
     # figsize(x1, y1), GridSpec(y2, x2) --> To have square plots: x1/x2 = 
     # y1/y2 = 2.5 
@@ -768,7 +765,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
             # Plot error bars at several mag values.
             mag_y = np.arange(int(min(m_p_m_temp_inv[1])+0.5), 
                               int(max(m_p_m_temp_inv[1])+0.5) + 0.1)
-            x_val = [min(3.9, max(col1_data)+0.2) - 0.4]*len(mag_y)
+            x_val = [min(x_min_cmd, max(col1_data)+0.2) - 0.4]*len(mag_y)
             plt.errorbar(x_val, mag_y, yerr=func(mag_y, *popt_mag), 
                          xerr=func(mag_y, *popt_col1), fmt='k.', lw=0.8, ms=0.,\
                          zorder=4)
@@ -897,7 +894,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
             # Plot error bars at several mag values.
             mag_y = np.arange(int(min(m_p_m_temp_inv[1])+0.5), 
                               int(max(m_p_m_temp_inv[1])+0.5) + 0.1)
-            x_val = [min(3.9, max(col1_data)+0.2) - 0.4]*len(mag_y)
+            x_val = [min(x_min_cmd, max(col1_data)+0.2) - 0.4]*len(mag_y)
             plt.errorbar(x_val, mag_y, yerr=func(mag_y, *popt_mag), 
                          xerr=func(mag_y, *popt_col1), fmt='k.', lw=0.8, ms=0.,\
                          zorder=4)

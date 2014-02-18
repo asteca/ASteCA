@@ -47,6 +47,10 @@ XA    "(C-T_{1})"
 #    magnitude (y)
 YA       "T_{1}"
 
+# Maximum and minimum axis values for the CMD plots.
+#   x_min x_max y_min y_max
+MM   -0.9   3.9    12   27
+
 # Bin widths for the cluster's center determination, in pixels. The
 # minimum value will be used to establish the center in auto mode.
 #  bin0 bin1 bin2 bin3

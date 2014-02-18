@@ -95,6 +95,8 @@ def get_in_params(mypath):
                     x_ax = re.search(r'"(.*)"', line).groups()[0]
                 elif reader[0] == 'YA':
                     y_ax = re.search(r'"(.*)"', line).groups()[0]
+                elif reader[0] == 'MM':
+                    xy_minmax = map(float, reader[1:])
                     
                     
     in_dirs = [mypath2, mypath3, output_dir]
@@ -104,8 +106,8 @@ def get_in_params(mypath):
     bf_params = [bf_flag, N_b]
     sc_params = [sys_sel, IMF_name, tot_mass, f_bin, q_bin]
     ga_params = [n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es]
-    axes_names = [x_ax, y_ax]
+    axes_params = [x_ax, y_ax, xy_minmax]
     
     return mode, in_dirs, gd_params, gc_params, br_params, cr_params, er_params,\
     gr_params, pv_params, da_params, ps_params, bf_params, sc_params, ga_params,\
-    flag_move_file, axes_names
+    flag_move_file, axes_params
