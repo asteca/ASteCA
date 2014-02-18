@@ -24,22 +24,42 @@ def likelihood(synth_clust, obs_clust):
         syn_arr = np.array(zip(*synth_clust))
         clust_stars_probs = []
         
-        for star in obs_arr:
-            # Get probability for this cluster star.
-            
-            # Avoid numeric errors if one of the errors is 0.            
-            e_col, e_mag = max(star[6], 1e-10), max(star[4], 1e-10)
-            
-            A = 1./(e_col*e_mag)
-            B = -0.5*((star[5]-syn_arr[:,0])/e_col)**2
-            C = -0.5*((star[3]-syn_arr[:,1])/e_mag)**2
-            synth_stars = A*np.exp(B+C)
 
-            # The final prob for this cluster star is the sum over all synthetic
-            # stars. Use 1e-10 to avoid nan and inf values in the calculations
-            # that follow.
+        e_col = obs_arr[:, 6]
+        e_mag = obs_arr[:, 4]
+    
+        syn_col = syn_arr[:, 0]
+        syn_mag= syn_arr[:, 1]
+    
+        As = 1./(e_col * e_mag)
+        Bfactors = -0.5 * (1 / e_col**2)
+        Cfactors = -0.5 * (1 / e_mag**2)
+    
+        for i, star in enumerate(obs_arr):
+            B = ((star[5] - syn_col) ** 2) * Bfactors[i]
+            C = ((star[3] - syn_mag) ** 2) * Cfactors[i]
+    
+            synth_stars = As[i]*np.exp(B+C)
+    
             sum_synth_stars = max(synth_stars.sum(), 1e-10)
-            clust_stars_probs.append(sum_synth_stars)
+            clust_stars_probs.append(sum_synth_stars)       
+        
+#        for star in obs_arr:
+#            # Get probability for this cluster star.
+#            
+#            # Avoid numeric errors if one of the errors is 0.            
+#            e_col, e_mag = max(star[6], 1e-10), max(star[4], 1e-10)
+#            
+#            A = 1./(e_col*e_mag)
+#            B = -0.5*((star[5]-syn_arr[:,0])/e_col)**2
+#            C = -0.5*((star[3]-syn_arr[:,1])/e_mag)**2
+#            synth_stars = A*np.exp(B+C)
+#
+#            # The final prob for this cluster star is the sum over all synthetic
+#            # stars. Use 1e-10 to avoid nan and inf values in the calculations
+#            # that follow.
+#            sum_synth_stars = max(synth_stars.sum(), 1e-10)
+#            clust_stars_probs.append(sum_synth_stars)
         
         # Store weights data (membership probabilities) into array.
         weights = np.array([zip(*obs_clust)[7]], dtype=float)   

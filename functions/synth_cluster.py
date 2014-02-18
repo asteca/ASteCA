@@ -12,7 +12,6 @@ from get_mass_dist import mass_dist as m_d
 import numpy as np
 import random
 import itertools
-import time
 
 
 def exp_func(x, a, b, c):
@@ -132,12 +131,12 @@ def synth_clust(err_lst, completeness, sc_params, isochrone, params):
     m1 = np.asarray(isoch_m_d[2][bin_indxs])
     # Secondary masses.
     mass_bin0 = np.random.uniform(q_bin*m1, m1)
-    # If any secondary mass falls outside of the lower isochrone's mass range,
-    # change its value to the min value.
+    # This prevents a rare error where apparently mass_bin0 is a float.
     if not type(mass_bin0) is float:
-        # This prevents a rare error where apparently mass_bin0 is a float.
-        mass_bin = [i if i >= min(isoch_m_d[2]) else min(isoch_m_d[2])\
-        for i in mass_bin0]
+        
+        # If any secondary mass falls outside of the lower isochrone's mass
+        # range, change its value to the min value.
+        mass_bin = np.maximum(min(isoch_m_d[2]), mass_bin0)
 
         # Find color and magnitude values for each secondary star. This will
         # slightly change the values of the masses since they will be assigned
