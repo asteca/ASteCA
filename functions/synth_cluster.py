@@ -12,6 +12,7 @@ from get_mass_dist import mass_dist as m_d
 import numpy as np
 import random
 import itertools
+import time
 
 
 def exp_func(x, a, b, c):
@@ -93,12 +94,10 @@ def synth_clust(err_lst, completeness, sc_params, isochrone, params):
     # Store isochrone's interpolated values.
     isoch_inter = np.asarray([col_i, mag_i, mass_i])
     
-
     # Move synth cluster with the values 'e' and 'd'.
     e, d, = params[2], params[3]
     isoch_moved = move_isoch(sys_sel, [isoch_inter[0], isoch_inter[1]], e, d) +\
     [isoch_inter[2]]
-    
          
     # Remove stars from isochrone with magnitude values larger that the maximum
     # value found in the observation (entire field, not just the cluster region).
@@ -111,7 +110,6 @@ def synth_clust(err_lst, completeness, sc_params, isochrone, params):
     abs(isoch_sort[1][i]-completeness[0]))
     # Remove elements.
     isoch_cut = np.array([isoch_sort[i][0:max_indx] for i in range(3)])
-        
 
     # Interpolate masses in mass_dist into the isochrone rejecting those
     # masses that fall outside of the isochrone's mass range.
@@ -164,7 +162,6 @@ def synth_clust(err_lst, completeness, sc_params, isochrone, params):
             isoch_m_d[0][i] = col_bin[indx]
             isoch_m_d[1][i] = mag_bin[indx]
             isoch_m_d[2][i] = mass_bin[indx]
-            
     
     # Completeness limit removal of stars. Remove a number of stars according
     # to the percentages of star loss find in get_completeness for the
@@ -218,7 +215,6 @@ def synth_clust(err_lst, completeness, sc_params, isochrone, params):
             clust_compl = np.delete(np.asarray(isoch_m_d), d_i, axis=1)
         else:
             clust_compl = np.asarray(isoch_m_d)
-
 
         # Randomly move stars according to given error distributions.
         # Get errors according to errors distribution.

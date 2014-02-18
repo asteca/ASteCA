@@ -22,11 +22,11 @@ def likelihood(synth_clust, obs_clust):
         # Store observed and synthetic clusters as arrays.
         obs_arr = np.array(obs_clust)
         syn_arr = np.array(zip(*synth_clust))
-        
         clust_stars_probs = []
+        
         for star in obs_arr:
             # Get probability for this cluster star.
-
+            
             # Avoid numeric errors if one of the errors is 0.            
             e_col, e_mag = max(star[6], 1e-10), max(star[4], 1e-10)
             
@@ -34,11 +34,11 @@ def likelihood(synth_clust, obs_clust):
             B = -0.5*((star[5]-syn_arr[:,0])/e_col)**2
             C = -0.5*((star[3]-syn_arr[:,1])/e_mag)**2
             synth_stars = A*np.exp(B+C)
-        
+
             # The final prob for this cluster star is the sum over all synthetic
             # stars. Use 1e-10 to avoid nan and inf values in the calculations
             # that follow.
-            sum_synth_stars = max(synth_stars.sum(), 1e-10) 
+            sum_synth_stars = max(synth_stars.sum(), 1e-10)
             clust_stars_probs.append(sum_synth_stars)
         
         # Store weights data (membership probabilities) into array.
