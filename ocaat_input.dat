@@ -107,7 +107,7 @@ PV  False   auto   1
 # - If 'skip' is selected all stars will be assigned an equal probability
 # of 1. and the algorithm skipped altogether.
 #   mode     runs  mc_samp
-DA  skip      1      10
+DA  read      2      100
 
 
 # Photometric system & stored isochrones.
@@ -167,4 +167,4 @@ SC         WASH    chabrier_2001         5000          0.5         0.7
 # returning the same best solution before exiting the generations loop.
 #
 #   n_pop  n_gen fdif p_cross cr_sel p_mut n_el n_ei n_es
-GA   200     5   1.    0.85     2P  0.01    1   25    6
+GA   100     20   1.    0.85     2P  0.01    1   25    6

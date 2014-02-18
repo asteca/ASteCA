@@ -25,8 +25,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                stars_in_all_mag, n_c, flag_area_stronger,
                cluster_region, field_region, pval_test_params, qq_params,
                clust_reg_prob_avrg, memb_prob_avrg_sort, bf_params,
-               shift_isoch, isoch_fit_params, isoch_fit_errors, ga_params,
-               er_params, axes_names):
+               shift_isoch, isoch_fit_params, isoch_fit_errors, synth_clst,
+               ga_params, er_params, axes_names):
     '''
     Make all plots.
     '''
@@ -834,7 +834,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         ax23 = plt.subplot(gs1[10:12, 4:6])
         plt.xlim(-0.5, n_gen+int(0.05*n_gen))
         plt.ylim(min(lkl_old[0])-0.1*min(lkl_old[0]),
-                 max(lkl_old[0])+min(lkl_old[0])/2.)
+                 max(lkl_old[1])+min(lkl_old[0])/2.)
         ax23.tick_params(axis='y', which='major', labelsize=9)
         ax23.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
         plt.xlabel('Generation', fontsize=16)
@@ -902,6 +902,25 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                          xerr=func(mag_y, *popt_col1), fmt='k.', lw=0.8, ms=0.,\
                          zorder=4)
 
+
+        
+    # Synthetic cluster. Check if decont algorithm was applied.
+    if bf_params[0]:
+        ax25 = plt.subplot(gs1[8:10, 6:8])
+        #Set plot limits
+        plt.xlim(col1_min, col1_max)
+        plt.ylim(mag_min, mag_max)
+        #Set axis labels
+        plt.xlabel('$'+x_ax+'$', fontsize=18)
+        plt.ylabel('$'+y_ax+'$', fontsize=18)
+        # Set minor ticks
+        ax25.minorticks_on()
+        ax25.xaxis.set_major_locator(MultipleLocator(1.0))
+        ax25.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
+        # Plot isochrone.
+        plt.plot(shift_isoch[0], shift_isoch[1], 'g', lw=1.2)
+        # Plot synth clust.
+        plt.scatter(synth_clst[0], synth_clst[2], marker='o', s=20, c='b')
 
 
 

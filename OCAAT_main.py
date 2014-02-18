@@ -91,7 +91,7 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
     clust_name = myfile[:-4]
     print 'Analizing cluster %s.' % (clust_name)
 
-    # If Semi mode set, get data from 'clusters_input.dat' file.
+    # If Semi mode set, get data from data iput file.
     if mode == 's':
         cent_cl_semi, cl_rad_semi, cent_flag_semi, rad_flag_semi, \
         err_flag_semi = g_s(mypath, clust_name)
@@ -278,7 +278,8 @@ px): '))
     elif mode == 's':
         if rad_flag_semi == 1:
             # Update value.
-            clust_rad = cl_rad_semi
+            radius_params[0] = cl_rad_semi
+            clust_rad = radius_params[0]
             flag_radius_manual = True
 
 
@@ -441,7 +442,7 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
     # Obtain best fitting parameters for cluster.
     print 'Searching for optimal parameters.'
     err_lst = [popt_mag, popt_col1, e_max]
-    shift_isoch, isoch_fit_params, isoch_fit_errors = bfsc(err_lst,\
+    shift_isoch, isoch_fit_params, isoch_fit_errors, synth_clst = bfsc(err_lst,\
     memb_prob_avrg_sort, completeness, ip_list, bf_params, sc_params,\
     ga_params)
     print 'Best fit parameters obtained.'
@@ -486,8 +487,8 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
        stars_out_rjct, stars_in_mag, stars_in_all_mag, n_c, flag_area_stronger,
        cluster_region, field_region, pval_test_params, qq_params,
        clust_reg_prob_avrg, memb_prob_avrg_sort, bf_params,
-       shift_isoch, isoch_fit_params, isoch_fit_errors, ga_params, er_params,
-       axes_names)
+       shift_isoch, isoch_fit_params, isoch_fit_errors, synth_clst, ga_params,
+       er_params, axes_names)
     print 'Plots created.'
 
 

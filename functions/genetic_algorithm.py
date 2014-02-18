@@ -173,7 +173,7 @@ def fitness_eval(err_lst, obs_clust, completeness, isoch_list, isoch_ma,
                                       isoch_ma[m][a][1], e,d])]
         else:
             # Call likelihood function with m,a,e,d values.
-            likel_val = i_l(err_lst, obs_clust, completeness, sc_params,
+            likel_val = i_l(err_lst, obs_clust, completeness, sc_params, 
                             isoch_list[m][a], params)
             # Append data identifying the isochrone and the obtained
             # likelihood value to this *persistent* list.
@@ -316,11 +316,9 @@ def gen_algor(err_lst, obs_clust, completeness, ip_list, sc_params, ga_params):
         
         # Evaluate each new solution in the objective function and sort
         # according to the best solutions found.
-#        tik6 = time.time()
         generation, lkl, isoch_done = fitness_eval(err_lst, obs_clust,\
         completeness, isoch_list, isoch_ma, ma_lst, e_lst, d_lst, sc_params,\
         isoch_done)
-#        print 'fitne', time.time()-tik6
         
         ### Extinction/Immigration ###
         # If the best solution has remained unchanged for n_ei
@@ -387,11 +385,11 @@ def gen_algor(err_lst, obs_clust, completeness, ip_list, sc_params, ga_params):
         elif i+1 == n_gen:
             print '  100% done'
 
-        print i, lkl[0], generation[0], time.time()-tik
-        
         # For plotting purposes.
         lkl_old[0].append(lkl[0])
         lkl_old[1].append(np.mean(lkl))
+        
+        print i, lkl[0], np.mean(lkl), generation[0], time.time()-tik
         
 #        # Call function to make plots.
 #        ga_p(i, mm_m, mm_a, mm_e, mm_d, params_ga, lkl, lkl_old, ext_imm_indx,

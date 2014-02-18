@@ -12,8 +12,8 @@ import numpy as np
 def spiral_region(histo, h_manual, stars_in, stars_out, x_c_b, y_c_b, spiral,
                   num_bins_area, sp_indx):
     '''
-    Defin a spiral region starting from a certain coordinate until a 
-    given area is obteined.
+    Define a spiral region starting from a certain coordinate until a 
+    given area is obtained.
     '''
     
     # Initialize the bin counter that indicates how many bins are already
@@ -114,7 +114,7 @@ def get_regions(x_center_bin, y_center_bin, width_bins, histo, clust_rad,
 
     # Calculate maximum number of field regions possible.
     f_regs_max = int((area-(length*clust_rad)**2.)/(np.pi*clust_rad**2))-1
-    # If the number of field regiosn defined is larger than the maximum allowed,
+    # If the number of field regions defined is larger than the maximum allowed,
     # use the maximum.
     if f_regions > f_regs_max:
         f_regions = f_regs_max

@@ -94,7 +94,7 @@ def synth_clust(err_lst, completeness, sc_params, isochrone, params):
     isoch_inter = np.asarray([col_i, mag_i, mass_i])
     
     # Move synth cluster with the values 'e' and 'd'.
-    e, d, = params[2], params[3]
+    e, d = params[2], params[3]
     isoch_moved = move_isoch(sys_sel, [isoch_inter[0], isoch_inter[1]], e, d) +\
     [isoch_inter[2]]
          
@@ -230,7 +230,7 @@ def synth_clust(err_lst, completeness, sc_params, isochrone, params):
         # Call function to shift stars around these errors.
         col_gauss, mag_gauss = gauss_error(clust_compl[0], sigma_col,
                                            clust_compl[1], sigma_mag)
-        clust_error = [col_gauss, mag_gauss]
+        clust_error = [col_gauss, sigma_col, mag_gauss, sigma_mag]
         
         # Append masses.
         synth_clust = np.array(clust_error + [clust_compl[2]])

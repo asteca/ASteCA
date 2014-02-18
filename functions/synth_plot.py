@@ -8,8 +8,8 @@ Created on Wed Feb  5 21:26:28 2014
 import matplotlib.pyplot as plt
 
 
-def synth_clust_plot(mass_dist, isoch_inter, params, isoch_moved, isoch_cut, isoch_m_d0,
-                     isoch_m_d, clust_compl, clust_error):
+def synth_clust_plot(mass_dist, isoch_inter, params, isoch_moved, isoch_cut,
+                     isoch_m_d0, isoch_m_d, clust_compl, clust_error):
     '''
     Plot several diagrams related with the synthetic clusters.
     '''
@@ -92,7 +92,7 @@ def synth_clust_plot(mass_dist, isoch_inter, params, isoch_moved, isoch_cut, iso
         ax8.invert_yaxis()
         plt.text(0.1, 0.9, 'h)', transform=ax8.transAxes,
                  bbox=dict(facecolor='white', alpha=0.5), fontsize=16)
-        ax8.scatter(clust_error[0], clust_error[1], s=10, c='black')
+        ax8.scatter(clust_error[0], clust_error[2], s=10, c='black')
 
 
     plt.show()
