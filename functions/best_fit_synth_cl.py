@@ -92,6 +92,6 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
         # Pass empty lists to make_plots.
         print 'Skipping synthetic cluster fitting process.'
         shift_isoch, isoch_fit_params, isoch_fit_errors, synth_clst = [], \
-        [-1.,-1.,-1.,-1.], [-1.,-1.,-1.,-1.], []
+        [[-1.,-1.,-1.,-1.]], [-1.,-1.,-1.,-1.], []
 
     return shift_isoch, isoch_fit_params, isoch_fit_errors, synth_clst

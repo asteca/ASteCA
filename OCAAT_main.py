@@ -332,7 +332,7 @@ did not converge.'
         print 'Plot error distributions.'
         # Display automatic errors rejection.
         d_e(mag_data, popt_mag,  popt_col1, acpt_stars, rjct_stars, err_plot,
-            er_params, axes_names)
+            er_params, axes_params)
         plt.show()
         # Ask if keep or reject.
         wrong_answer = True
@@ -488,7 +488,7 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
        cluster_region, field_region, pval_test_params, qq_params,
        clust_reg_prob_avrg, memb_prob_avrg_sort, bf_params,
        shift_isoch, isoch_fit_params, isoch_fit_errors, synth_clst, ga_params,
-       er_params, axes_params)
+       er_params, axes_params, ps_params)
     print 'Plots created.'
 
 

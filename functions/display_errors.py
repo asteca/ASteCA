@@ -14,7 +14,7 @@ def func(x, a, b, c):
 
 
 def disp_errors(mag_data, popt_mag,  popt_col1, acpt_stars, rjct_stars,
-                err_plot, er_params, axes_names):
+                err_plot, er_params, axes_params):
     '''
     Plot errors diagrams.
     '''
@@ -25,7 +25,7 @@ def disp_errors(mag_data, popt_mag,  popt_col1, acpt_stars, rjct_stars,
     # Error parameters.
     be, be_e, e_max = er_params
     # Name for axes.
-    x_ax, y_ax = axes_names
+    x_ax, y_ax = axes_params[0], axes_params[1]
     
     # Plot all outputs
     plt.figure(figsize=(10, 8)) # create the top-level container

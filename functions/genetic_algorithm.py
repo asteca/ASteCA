@@ -395,6 +395,6 @@ def gen_algor(err_lst, obs_clust, completeness, ip_list, sc_params, ga_params):
 #        ga_p(i, mm_m, mm_a, mm_e, mm_d, params_ga, lkl, lkl_old, ext_imm_indx,
 #             isoch_done, generation)        
 
-    ga_return = [generation[0], lkl_old, ext_imm_indx]
+    ga_return = [generation[0], lkl_old, ext_imm_indx, isoch_done]
 
     return ga_return
