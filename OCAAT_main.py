@@ -444,7 +444,7 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
     err_lst = [popt_mag, popt_col1, e_max]
     shift_isoch, isoch_fit_params, isoch_fit_errors, synth_clst = bfsc(err_lst,\
     memb_prob_avrg_sort, completeness, ip_list, bf_params, sc_params,\
-    ga_params)
+    ga_params, ps_params)
     print 'Best fit parameters obtained.'
 
 
@@ -476,6 +476,7 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
         makedirs(output_subdir)
 
 
+    tik=time.time()
     # Make plots
     mp(output_subdir, clust_name, x_data, y_data, center_cl, cent_cl_err,
        x_center_bin, y_center_bin, h_filter, radii, backg_value, inner_ring,
@@ -490,6 +491,7 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
        shift_isoch, isoch_fit_params, isoch_fit_errors, synth_clst, ga_params,
        er_params, axes_params, ps_params)
     print 'Plots created.'
+    print 'plot time', time.time-tik()
 
 
     # Add cluster data and flags to output file

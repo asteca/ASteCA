@@ -391,10 +391,6 @@ def gen_algor(err_lst, obs_clust, completeness, ip_list, sc_params, ga_params):
         
         print i, lkl[0], np.mean(lkl), generation[0], time.time()-tik
         
-#        # Call function to make plots.
-#        ga_p(i, mm_m, mm_a, mm_e, mm_d, params_ga, lkl, lkl_old, ext_imm_indx,
-#             isoch_done, generation)        
+    isoch_fit_params = [generation[0], lkl_old, ext_imm_indx, isoch_done]
 
-    ga_return = [generation[0], lkl_old, ext_imm_indx, isoch_done]
-
-    return ga_return
+    return isoch_fit_params
