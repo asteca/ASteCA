@@ -736,8 +736,9 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         ax18.minorticks_on()
         ax18.xaxis.set_major_locator(MultipleLocator(1.0))
         ax18.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
-        # Plot isochrone.
-        plt.plot(shift_isoch[0], shift_isoch[1], 'g', lw=1.2)
+        if bf_params[0]:
+            # Plot isochrone if best fit process was used.
+            plt.plot(shift_isoch[0], shift_isoch[1], 'g', lw=1.2)
         # This reversed colormap means higher prob stars will look redder.
         cm = plt.cm.get_cmap('RdYlBu_r')
         m_p_m_temp = [[], [], []]
@@ -761,7 +762,9 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                          xerr=func(mag_y, *popt_col1), fmt='k.', lw=0.8, ms=0.,\
                          zorder=4)
             # Plot colorbar.
-            cbaxes = fig.add_axes([0.4, 0.417, 0.04, 0.005])
+            cbar_posit = [0.65, 0.417, 0.04, 0.005] if bf_params[0] else \
+            [0.65, 0.408, 0.04, 0.005]
+            cbaxes = fig.add_axes(cbar_posit)
             cbar = plt.colorbar(cax=cbaxes, ticks=[v_min,v_max],
                                 orientation='horizontal')
             cbar.ax.tick_params(labelsize=9)

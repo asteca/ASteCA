@@ -83,7 +83,7 @@ ER  2.   0.1    0.3
 # Cluster region and field regions.
 # areas: number of areas defined including the cluster region (integer).
 #   areas
-GR     5
+GR    10
 
 # Test to determine the probability of the cluster being a physical entity
 # instead of a random overdensity of stars, based on comparing its CMD with
@@ -103,7 +103,7 @@ PV  True   manual   1
 # of Monte Carlo samples 'mc_samp' as defined internally (ie: 100/(areas-1)
 # and 1000 respectively)
 # - If 'manual' is set these two values are taken from this file (below),
-# otherwise the values are irrelevant.
+# otherwise these values are irrelevant.
 # - If 'read' is set the code will attempt to read the probabilities from
 # an existing file. This file should have the same format as the output
 # '*_memb.dat' file created by the code and should be located in the folder
@@ -111,7 +111,7 @@ PV  True   manual   1
 # - If 'skip' is selected all stars will be assigned an equal probability
 # of 1. and the algorithm skipped altogether.
 #   mode     runs  mc_samp
-DA  read      2      100
+DA  read      2      1000
 
 
 # Photometric system & stored isochrones.
@@ -145,7 +145,7 @@ run: True / False. Flag that determines if the best isochrone
 # boot_num: number of times the bootstrap with replacement
 # process will run. Minimum value is 2.
 #     run  boot_num
-BF   True        3
+BF   True        5
 
 # Synthetic cluster.
 # sys_select: WASH / UBVI
@@ -171,4 +171,4 @@ SC         WASH    chabrier_2001         5000          0.5         0.7
 # returning the same best solution before exiting the generations loop.
 #
 #   n_pop  n_gen fdif p_cross cr_sel p_mut n_el n_ei n_es
-GA   50     10   1.    0.85     2P  0.01    1   75    3
+GA   100     400   1.    0.85     2P  0.01    1   75    3

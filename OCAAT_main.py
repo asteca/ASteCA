@@ -475,8 +475,6 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
     if not exists(output_subdir):
         makedirs(output_subdir)
 
-
-    tik=time.time()
     # Make plots
     mp(output_subdir, clust_name, x_data, y_data, center_cl, cent_cl_err,
        x_center_bin, y_center_bin, h_filter, radii, backg_value, inner_ring,
@@ -491,8 +489,6 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
        shift_isoch, isoch_fit_params, isoch_fit_errors, synth_clst, ga_params,
        er_params, axes_params, ps_params)
     print 'Plots created.'
-    print 'plot time', time.time-tik()
-
 
     # Add cluster data and flags to output file
     a_d_o(sub_dir, output_dir, clust_name, center_cl, clust_rad, k_prof,

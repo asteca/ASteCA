@@ -186,13 +186,14 @@ def synth_clust(err_lst, completeness, sc_params, isochrone, params):
 
             # Store indexes of *all* elements in isoch_m_d whose magnitude value
             # falls between the ranges given.
-            rang_indx = [[] for _ in \
+            rang_indx = [[] for _ in  \
             range(len(completeness[1][completeness[2]:])-1)]
-            for indx,elem in enumerate(isoch_m_d[1]):
-                for i in range(len(completeness[1][completeness[2]:])-1):
-                    if completeness[1][completeness[2]+i] < elem <= \
-                    completeness[1][completeness[2]+(i+1)]:
-                        rang_indx[i].append(indx)
+            c_indx = np.searchsorted(completeness[1][completeness[2]:],
+                                     isoch_m_d[1], side='left')
+            for indx,elem in enumerate(c_indx):
+                if 0<elem<len(completeness[1][completeness[2]:]):
+                    rang_indx[elem-1].append(indx)
+
             
             # Pick a number (given by the list 'di') of random elements in each
             # range. Those are the indexes of the elements that should be
