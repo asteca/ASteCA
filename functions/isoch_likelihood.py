@@ -22,55 +22,6 @@ def likelihood(synth_clust, obs_clust):
         obs_arr = np.array(obs_clust)
         syn_arr = np.array(zip(*synth_clust))
         clust_stars_probs = []
-        
-        # Store errors for observed and synthetic cluster.
-        
-        # Version 1.
-#        e_col_obs, e_mag_obs = obs_arr[:, 6], obs_arr[:, 4]
-#        e_col_syn, e_mag_syn = syn_arr[:, 1], syn_arr[:, 3]
-#        e_col = np.sqrt(e_col_obs**2 + e_col_syn**2)
-#        e_mag = np.sqrt(e_mag_obs**2 + e_mag_syn**2)
-        
-#        e_col, e_mag = obs_arr[:, 6], obs_arr[:, 4]
-#
-#        # Synthetic cluster color and magnitude.
-#        syn_col, syn_mag = syn_arr[:, 0], syn_arr[:, 2]
-#        # Factors.
-#        As = 1./(e_col * e_mag)
-#        Bfactors = -0.5 * (1. / e_col**2)
-#        Cfactors = -0.5 * (1. / e_mag**2)
-#    
-#        for i, star in enumerate(obs_arr):
-#            B = ((star[5] - syn_col)** 2) * Bfactors[i]
-#            C = ((star[3] - syn_mag)** 2) * Cfactors[i]
-#    
-#            synth_stars = As[i]*np.exp(B+C)
-#    
-#            sum_synth_stars = max(synth_stars.sum(), 1e-10)
-#            clust_stars_probs.append(sum_synth_stars)       
-        
-        # Version 2.
-#        for star in obs_arr:
-#            # Get probability for this cluster star.
-#            
-#            # Avoid numeric errors if one of the errors is 0.            
-#            e_col_obs, e_mag_obs = max(star[6], 1e-10), max(star[4], 1e-10)
-#            e_col_syn, e_mag_syn = syn_arr[:,1], syn_arr[:,3]
-#            
-#            e_col = e_col_obs**2 + e_col_syn**2
-#            e_mag = e_mag_obs**2 + e_mag_syn**2
-#            
-#            A = 1./(np.sqrt(e_col*e_mag))
-#            Bs, Cs = -0.5/e_col, -0.5/e_mag
-#            B = Bs*(star[5]-syn_arr[:,0])**2
-#            C = Cs*(star[3]-syn_arr[:,2])**2
-#            synth_stars = A*np.exp(B+C)
-#
-#            # The final prob for this cluster star is the sum over all synthetic
-#            # stars. Use 1e-10 to avoid nan and inf values in the calculations
-#            # that follow.
-#            sum_synth_stars = max(synth_stars.sum(), 1e-10)
-#            clust_stars_probs.append(sum_synth_stars)
     
         # Small value used to replace zeros.
         epsilon = 1e-10
