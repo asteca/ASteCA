@@ -2,6 +2,7 @@
 @author: gabriel
 """
 
+import os.path
 import numpy as np
 from scipy import stats
 
@@ -109,14 +110,22 @@ def field_decont_kde(flag_area_stronger, cluster_region, field_region,
 
     # Check if at least one field region was obtained.
     if flag_area_stronger:
-        print 'No field regions found, skipping decontamination algorithm.'
+        print "WARNING: no field regions found. Using 'skip'."
         mode = 'skip'
     
     # Check if 'mode' was correctly set, else use 'skip'.
     if mode not in ['auto', 'manual', 'read', 'skip']:
+        print "WARNING: Wrong name for 'mode' in input file. Using 'skip'."
         mode = 'skip'
-        print "Wrong name for 'mode' in input file. Using 'skip'."
-
+        
+    if mode == 'read':
+        # Check if file exists.
+        memb_file = mypath2+'/'+sub_dir+'/'+clust_name+'_memb.dat'
+        if not os.path.isfile(memb_file):
+            # File does not exist.
+            print "WARNING: members file does not exist. Using 'skip'."
+            mode = 'skip'
+        
     # Run algorithm for any of these selections.
     if mode == 'auto' or mode == 'manual':
 

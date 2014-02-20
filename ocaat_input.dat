@@ -129,7 +129,7 @@ PV  False   manual     2
 # - If 'skip' is selected all stars will be assigned an equal probability
 # of 1. and the algorithm skipped altogether.
 #   mode     runs  mc_samp
-DA  skip      2      1000
+DA  read      2      1000
 
 
 # Best fit.
