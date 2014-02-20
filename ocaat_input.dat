@@ -11,7 +11,7 @@
 # * DO NOT write less or more values than those requested in each line
 # or the code will halt.
 #
-# Set values for the parameters below.
+# Set parameters values below.
 #####################################################################################
 
 
@@ -20,29 +20,32 @@
 # - Semi takes it input values from the 'clusters_input.dat' file.
 # - Manual mode will ask for some values (center, radius, background) but
 #   will also give you the chance to have them automatically calculated.
-MO  s
+MO  a
+
 
 # Path where the photometric data files of the clusters to be processed are stored.
 CP0  /home/gabriel/clusters/clusters_in
-# Path where the sub-folders are moved once processed.
+# Path where the sub-folders are moved once processed if the flag below is set
+# to 'True'.
 CP1  /home/gabriel/clusters/clusters_done
-# Output directory.        
+# Output directory for the images and the member probabilities files for each
+# cluster. The general 'data_output.dat' file is also stored here.
 CP2  /home/gabriel/clusters/clusters_out/
 
 # Move file once it is processed?
-# The cluster's photometric file will be moved to folder
+# The cluster's photometric file will be moved to the folder
 # defined in 'CP1' if this flag is set to 'True'.
-MF  False
+MF  True
 
 # Create output figure?
-# True / False. If 'False', no output figure will be created.
+# True / False. If 'False', no output figure will be generated.
 MP True
 
-# Column numbers identifying the data needed, as stored in the clusters'
+
+# Column numbers identifying the needed data as stored in the clusters'
 # photometric data files.
 # id_star x_coor y_coor magnitude e_mag color e_col
 PD      0      1      2         3     4     5     6
-#PD      0      1      2         3     4     6     7
 
 # Input magnitude and color names for the CMD axis. LaTeX
 # formatting is allowed.
@@ -55,24 +58,31 @@ YA       "T_{1}"
 #   x_min x_max y_min y_max
 MM   -0.9   3.9    12   27
 
+
+# Center.
 # Bin widths for the cluster's center determination, in pixels. The
 # minimum value will be used to establish the center in auto mode.
 #  bin0 bin1 bin2 bin3
 CC   25   50   75  100
 
+
+# Background.
 # Define boundaries for the inner and outer rings where the background
 # will be calculated. These rings are defined as a fraction of the the
 # maximum range spanned by either axis.
-# To input these values in pixels manually, select 'm' mode.
+# To input these values in pixels manually, select 'm' mode in 'MO' above.
 #   Inner Outer
 BR     4.    3.
 
-# This parameter determines the number of points that must be found
-# within a given delta value around the background value.
-# This is the condition where the star density is found to have
-# stabilized.
+
+# Radius.
+# Number of points that must be found within a given delta around the
+# background value. This is the condition where the star density is
+# found to have stabilized.
 CR  4
 
+
+# Errors.
 # Rejection of stars according to their errors.
 # be: bright end, the magnitude value that will be added to the
 # brightest star to determine the range where stars will be accepted
@@ -84,21 +94,25 @@ CR  4
 #   be  be_e  e_max
 ER  2.   0.1    0.3
 
-# Cluster region and field regions.
-# areas: number of areas defined including the cluster region (integer).
-#   areas
+
+# Field regions.
+# regions: number of field regions around the cluster that the code will
+# attempt to define.
+#   regions
 GR    10
 
+
+# p-value test.
 # Test to determine the probability of the cluster being a physical entity
 # instead of a random overdensity of stars, based on comparing its CMD with
 # field regions CMDs.
 # flag: True / False, switch to apply or skip the test (caps are necessary!).
 # runs: auto / manual, the number of times the cluster-field regions will be
 # compared. If 'auto' is set, the code will use an integer value of
-# 100/(areas-1). If 'manual' is set then 'num' will be used (otherwise this
-# number is irrelevant).
-#   flag   runs   num
-PV  True   manual   1
+# 100/(areas-1). If 'manual' is set then 'num' will be used, otherwise this
+# number is irrelevant.
+#   flag     runs   num
+PV  True   manual     2
 
 
 # Bayesian decontamination algorithm.
@@ -118,8 +132,8 @@ PV  True   manual   1
 DA  read      2      1000
 
 
-# Best fit of synthetic cluster.
-run: True / False. Flag that determines if the best isochrone
+# Best fit.
+# run: True / False. Flag that determines if the best synthetic cluster
 # fitting process is to be run.
 # algorithm: select algorithm to use in best fitting process,
 # 'brute' (for Brute Force) / 'genet' (for Genetic Algorithm)
@@ -127,36 +141,38 @@ run: True / False. Flag that determines if the best isochrone
 # boot_num: number of times the bootstrap with replacement
 # process will run. Minimum value is 2.
 #     run  algorithm   boot_num
-BF   True      brute        20
+BF   True      genet         10
 
-# Photometric system & stored isochrones.
-# Provide path to stored isochrone files.
-#   iso_path (full path to the folder that stores the isochrone files)
-PS_p  /media/rest/github/isochrones/iso_wash_marigo
 
-# line_start (string that identifies the beginning of a new isochrone)
+# Photometric system parameters.
+
+# Stored isochrones.
+# iso_path: full path to the folder that stores the isochrone files.
+#   iso_path
+#PS_p  /media/rest/github/isochrones/iso_wash_marigo
+PS_p  /media/rest/github/isochrones/iso_wash_parsec
+
+# String that identifies the beginning of a new isochrone.
+# line_start
 # MAR: "#	Isochrone	Z = "
 # PAR: "#	Isochrone  Z = "
-PS_l   "#	Isochrone	Z = "
+PS_l   "#	Isochrone  Z = "
 
 # Index that points to the corresponding column in the file.
 # WASH: MAR (1 9 7), PAR (2 10 8)
 #      mass_ini 1st_mag 2nd_mag <-- color = (2nd_mag-1st_mag)
-PS_i         1       9       7
+#PS_i         1       9       7
+PS_i         2       10       8
 
 # Ranges and steps for the parameters to be fitted.
 # Metallicity     z_min  z_max   z_step
-#PS_m             0.0005   0.02   0.0005
-PS_m             0.008   0.014   0.0005
+PS_m             0.0005   0.02   0.0005
 # Age    age_min age_max  a_step
-#PS_a         6.6    10.1    0.05
-PS_a         8.6    8.9    0.05
+PS_a         6.6    10.1    0.05
 # E(B-V)    e_bv_min e_bv_max e_bv_step
-#PS_e              0.     0.4      0.01
-PS_e              0.     0.4      0.1
+PS_e              0.     0.4      0.01
 # Distance modulus    dis_mod_min dis_mod_max dis_mod_step
-#PS_d                          18.       19.         0.05
-PS_d                          18.       19.         0.5
+PS_d                          18.       19.         0.05
 
 # Synthetic cluster.
 # sys_select: WASH / UBVI
@@ -182,4 +198,4 @@ SC         WASH    chabrier_2001         5000          0.5         0.7
 # returning the same best solution before exiting the generations loop.
 #
 #   n_pop  n_gen fdif p_cross cr_sel p_mut n_el n_ei n_es
-GA   100     1000   1.    0.85     2P  0.01    1 100    7
+GA   100     100   1.    0.85     2P  0.01    1 100    7

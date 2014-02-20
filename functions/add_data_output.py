@@ -9,7 +9,7 @@ def add_data_output(sub_dir, output_dir, clust_name, center_cl, clust_rad,
                     flag_center, flag_std_dev, flag_center_manual,
                     flag_radius_manual, rjct_errors_fit, flag_bin_count,
                     radius_params, flag_num_memb_low, bf_return):
-    ''' Add data obtained to the 'data_output' file.'''
+    '''Add data obtained to the 'data_output.dat' file.'''
 
     # Parameters from get_radius function.
     flag_delta_total, flag_not_stable, flag_rad_500, flag_delta,\
@@ -43,7 +43,7 @@ def add_data_output(sub_dir, output_dir, clust_name, center_cl, clust_rad,
         str('%0.2f' % d), str('%0.2f' % e_d)]
 
     # "a" opens the file for appending
-    with open(output_dir + 'data_output', "a") as f_out:
+    with open(output_dir + 'data_output.dat', "a") as f_out:
         f_out.write('{:<16} {:>7} {:>7} {:>8} {:>7} {:>7} {:>8} {:>4} {:>6} \
 {:>7} {:>5} {:>7} {:>7} {:>6} {:>5} {:>5} {:>7} {:>4} {:>6} {:>5}'.format(*line))
         # Flags.

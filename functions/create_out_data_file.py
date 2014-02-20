@@ -18,7 +18,7 @@ def create_out_data_file(output_dir):
         print('\nOutput data file already exists.')
     # File doesn't exist -> create new one.
     except IOError:
-        out_data_file = open(output_dir+'data_output','w')
+        out_data_file = open(output_dir+'data_output.dat','w')
         now_time = strftime("%Y-%m-%d %H:%M:%S")
         out_data_file.write("#\n\
 # [%s]\n\

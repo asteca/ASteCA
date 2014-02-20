@@ -68,8 +68,6 @@ def brute_force(err_lst, obs_clust, completeness, ip_list, sc_params,
     # This index thus points to the isochrone that best fits the observed
     # group of stars.
     best_fit_indx = np.argmin(zip(*score)[0])
-
-#    dist_kpc = round(10**(0.2*(dis_mod+5.))/1000., 2)
     
     isoch_fit_params = [score[best_fit_indx][1:], score[best_fit_indx][0]]
         
