@@ -14,7 +14,7 @@ def create_out_data_file(output_dir):
     # deleting/creating the file again.
     try:
         # File already exists -> don't create a new one and append new lines.
-        with open(output_dir+'data_output'): pass
+        with open(output_dir+'data_output.dat'): pass
         print('\nOutput data file already exists.')
     # File doesn't exist -> create new one.
     except IOError:
