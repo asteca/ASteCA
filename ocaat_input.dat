@@ -145,7 +145,7 @@ run: True / False. Flag that determines if the best isochrone
 # boot_num: number of times the bootstrap with replacement
 # process will run. Minimum value is 2.
 #     run  boot_num
-BF   True        5
+BF   True        20
 
 # Synthetic cluster.
 # sys_select: WASH / UBVI
@@ -171,4 +171,4 @@ SC         WASH    chabrier_2001         5000          0.5         0.7
 # returning the same best solution before exiting the generations loop.
 #
 #   n_pop  n_gen fdif p_cross cr_sel p_mut n_el n_ei n_es
-GA   100     400   1.    0.85     2P  0.01    1   75    3
+GA   100     1000   1.    0.85     2P  0.01    1 100    7

@@ -8,7 +8,6 @@ Created on Fri Jan 17 17:21:58 2014
 from synth_cluster import synth_clust as s_c
 import numpy as np
 
-
 def likelihood(synth_clust, obs_clust):
     '''
     Takes a synthetic cluster, compares it to the observed cluster and
@@ -25,6 +24,8 @@ def likelihood(synth_clust, obs_clust):
         clust_stars_probs = []
         
         # Store errors for observed and synthetic cluster.
+        
+        # Version 1.
 #        e_col_obs, e_mag_obs = obs_arr[:, 6], obs_arr[:, 4]
 #        e_col_syn, e_mag_syn = syn_arr[:, 1], syn_arr[:, 3]
 #        e_col = np.sqrt(e_col_obs**2 + e_col_syn**2)
@@ -48,27 +49,59 @@ def likelihood(synth_clust, obs_clust):
 #            sum_synth_stars = max(synth_stars.sum(), 1e-10)
 #            clust_stars_probs.append(sum_synth_stars)       
         
-        for star in obs_arr:
-            # Get probability for this cluster star.
-            
-            # Avoid numeric errors if one of the errors is 0.            
-            e_col_obs, e_mag_obs = max(star[6], 1e-10), max(star[4], 1e-10)
-            e_col_syn, e_mag_syn = syn_arr[:,1], syn_arr[:,3]
-            
-            e_col = e_col_obs**2 + e_col_syn**2
-            e_mag = e_mag_obs**2 + e_mag_syn**2
-            
-            A = 1./(np.sqrt(e_col*e_mag))
-            Bs, Cs = -0.5/e_col, -0.5/e_mag
-            B = Bs*(star[5]-syn_arr[:,0])**2
-            C = Cs*(star[3]-syn_arr[:,2])**2
-            synth_stars = A*np.exp(B+C)
-
+        # Version 2.
+#        for star in obs_arr:
+#            # Get probability for this cluster star.
+#            
+#            # Avoid numeric errors if one of the errors is 0.            
+#            e_col_obs, e_mag_obs = max(star[6], 1e-10), max(star[4], 1e-10)
+#            e_col_syn, e_mag_syn = syn_arr[:,1], syn_arr[:,3]
+#            
+#            e_col = e_col_obs**2 + e_col_syn**2
+#            e_mag = e_mag_obs**2 + e_mag_syn**2
+#            
+#            A = 1./(np.sqrt(e_col*e_mag))
+#            Bs, Cs = -0.5/e_col, -0.5/e_mag
+#            B = Bs*(star[5]-syn_arr[:,0])**2
+#            C = Cs*(star[3]-syn_arr[:,2])**2
+#            synth_stars = A*np.exp(B+C)
+#
+#            # The final prob for this cluster star is the sum over all synthetic
+#            # stars. Use 1e-10 to avoid nan and inf values in the calculations
+#            # that follow.
+#            sum_synth_stars = max(synth_stars.sum(), 1e-10)
+#            clust_stars_probs.append(sum_synth_stars)
+    
+        # Small value used to replace zeros.
+        epsilon = 1e-10
+    
+        # Split obs_arr.
+        P = np.split(obs_arr, 8, axis=1)
+        # Square errors in color and magnitude.
+        P[6] = np.square(np.maximum(P[6], epsilon)) # color
+        P[4] = np.square(np.maximum(P[4], epsilon)) # magnitude
+        P = np.hstack(P)
+    
+        # Split syn_arr.
+        Q = np.split(syn_arr, 5, axis=1)
+        # Square synthetic photometric errors.
+        Q[1] = np.square(Q[1])
+        Q[3] = np.square(Q[3])
+    
+        for star in P:
+            # Squares sum of errors.
+            e_col_2 = star[6] + Q[1]
+            e_mag_2 = star[4] + Q[3]
+            # star[5] & Q[0] = colors
+            # star[3] & Q[2] = magnitude
+            B = np.square(star[5] - Q[0]) / e_col_2
+            C = np.square(star[3] - Q[2]) / e_mag_2
+            synth_stars = np.exp(-0.5 * (B + C)) / np.sqrt(e_col_2 * e_mag_2)
             # The final prob for this cluster star is the sum over all synthetic
             # stars. Use 1e-10 to avoid nan and inf values in the calculations
             # that follow.
-            sum_synth_stars = max(synth_stars.sum(), 1e-10)
-            clust_stars_probs.append(sum_synth_stars)
+            clust_stars_probs.append(max(synth_stars.sum(), epsilon))
+        
         
         # Store weights data (membership probabilities) into array.
         weights = np.array([zip(*obs_clust)[7]], dtype=float)   
