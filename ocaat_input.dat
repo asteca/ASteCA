@@ -118,6 +118,17 @@ PV  True   manual   1
 DA  read      2      1000
 
 
+# Best fit of synthetic cluster.
+run: True / False. Flag that determines if the best isochrone
+# fitting process is to be run.
+# algorithm: select algorithm to use in best fitting process,
+# 'brute' (for Brute Force) / 'genet' (for Genetic Algorithm)
+# If 'brute' is selected, 'boot_num' is irrelevant.
+# boot_num: number of times the bootstrap with replacement
+# process will run. Minimum value is 2.
+#     run  algorithm   boot_num
+BF   True      brute        20
+
 # Photometric system & stored isochrones.
 # Provide path to stored isochrone files.
 #   iso_path (full path to the folder that stores the isochrone files)
@@ -135,21 +146,17 @@ PS_i         1       9       7
 
 # Ranges and steps for the parameters to be fitted.
 # Metallicity     z_min  z_max   z_step
-PS_m             0.0005   0.02   0.0005
+#PS_m             0.0005   0.02   0.0005
+PS_m             0.008   0.014   0.0005
 # Age    age_min age_max  a_step
-PS_a         6.6    10.1    0.05
+#PS_a         6.6    10.1    0.05
+PS_a         8.6    8.9    0.05
 # E(B-V)    e_bv_min e_bv_max e_bv_step
-PS_e              0.     0.4      0.01
+#PS_e              0.     0.4      0.01
+PS_e              0.     0.4      0.1
 # Distance modulus    dis_mod_min dis_mod_max dis_mod_step
-PS_d                          18.       19.         0.05
-
-# Best fit of synthetic cluster.
-run: True / False. Flag that determines if the best isochrone
-# fitting process is to be run.
-# boot_num: number of times the bootstrap with replacement
-# process will run. Minimum value is 2.
-#     run  boot_num
-BF   True        20
+#PS_d                          18.       19.         0.05
+PS_d                          18.       19.         0.5
 
 # Synthetic cluster.
 # sys_select: WASH / UBVI

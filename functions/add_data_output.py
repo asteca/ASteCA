@@ -8,8 +8,7 @@ def add_data_output(sub_dir, output_dir, clust_name, center_cl, clust_rad,
                     prob_cl_kde, ccc, stars_in_mag,
                     flag_center, flag_std_dev, flag_center_manual,
                     flag_radius_manual, rjct_errors_fit, flag_bin_count,
-                    radius_params, flag_num_memb_low, isoch_fit_params,
-                    isoch_fit_errors):
+                    radius_params, flag_num_memb_low, bf_return):
     ''' Add data obtained to the 'data_output' file.'''
 
     # Parameters from get_radius function.
@@ -29,7 +28,8 @@ def add_data_output(sub_dir, output_dir, clust_name, center_cl, clust_rad,
     # end of the list. Do not count the manual flags, hence the [3:].
     int_flags.append(sum(int_flags[3:]))
 
-    m, a, e, d = isoch_fit_params
+    isoch_fit_params, isoch_fit_errors = bf_return[0], bf_return[1]
+    m, a, e, d = isoch_fit_params[0]
     e_m, e_a, e_e, e_d = isoch_fit_errors
     # str(sub_dir)+'_'+str(clust_name)
     line = [str(sub_dir) + '/' + str(clust_name),

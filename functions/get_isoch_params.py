@@ -35,10 +35,10 @@ def ip(ps_params):
     # larger than the one between the real min and max values. This simplifies
     # the input of data and ensures that the GA won't fail when encoding/
     # decoding the floats into their binary representations.
-    z_max = z_max + z_step/2.
-    age_max = age_max + age_step/2.
-    e_bv_max = e_bv_max + e_bv_step/2.
-    dis_mod_max = dis_mod_max + dis_mod_step/2.
+    z_max = z_max + min(z_max/100., z_step/2.)
+    age_max = age_max + min(age_max/100., age_step/2.)
+    e_bv_max = e_bv_max + min(e_bv_max/100., e_bv_step/2.)
+    dis_mod_max = dis_mod_max + min(dis_mod_max/100., dis_mod_step/2.)
     
     # Store ranges and steps.
     ranges_steps = [[z_min, z_max, z_step], [age_min, age_max, age_step],

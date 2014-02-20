@@ -219,7 +219,7 @@ def gen_algor(err_lst, obs_clust, completeness, ip_list, sc_params, ga_params):
     Genetic algorithm adapted to find the best fit model-obervation.
     '''
 
-    isoch_list, isoch_ma, isoch_ed, ranges_steps = ip_list    
+    isoch_list, isoch_ma, isoch_ed, ranges_steps = ip_list
     
     n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es = ga_params
     

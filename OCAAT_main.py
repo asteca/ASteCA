@@ -436,15 +436,14 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
     # ranges in isoch_ma; extinction and distance modulus values in isoch_ed.
     # isoch_list, isoch_ma, isoch_ed = ip_list
     ip_list = ip(ps_params)
-    print 'Theoretical isochrones (and their parameters) read and stored.'
+    print 'Theoretical isochrones read and stored.'
 
 
     # Obtain best fitting parameters for cluster.
     print 'Searching for optimal parameters.'
     err_lst = [popt_mag, popt_col1, e_max]
-    shift_isoch, isoch_fit_params, isoch_fit_errors, synth_clst = bfsc(err_lst,\
-    memb_prob_avrg_sort, completeness, ip_list, bf_params, sc_params,\
-    ga_params, ps_params)
+    bf_return = bfsc(err_lst, memb_prob_avrg_sort, completeness, ip_list,
+                     bf_params, sc_params, ga_params, ps_params)
     print 'Best fit parameters obtained.'
 
 
@@ -480,8 +479,7 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
           n_c_k, flag_king_no_conver, cont_index, n_c, pval_test_params[0],
           qq_params[0], stars_in_mag, flag_center, flag_std_dev,
           flag_center_manual, flag_radius_manual, rjct_errors_fit,
-          flag_bin_count, radius_params[3:], flag_num_memb_low,
-          isoch_fit_params[0], isoch_fit_errors)
+          flag_bin_count, radius_params[3:], flag_num_memb_low, bf_return)
     print 'Data added to output file.'
 
     # Make plots
@@ -494,8 +492,7 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
            stars_in, stars_out, stars_in_rjct, stars_out_rjct, stars_in_mag,
            stars_in_all_mag, n_c, flag_area_stronger,
            cluster_region, field_region, pval_test_params, qq_params,
-           clust_reg_prob_avrg, memb_prob_avrg_sort, bf_params,
-           shift_isoch, isoch_fit_params, isoch_fit_errors, synth_clst,
+           clust_reg_prob_avrg, memb_prob_avrg_sort, bf_params, bf_return,
            ga_params, er_params, axes_params, ps_params)
         print 'Plots created.'
     

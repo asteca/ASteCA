@@ -26,8 +26,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                stars_out, stars_in_rjct, stars_out_rjct, stars_in_mag,
                stars_in_all_mag, n_c, flag_area_stronger,
                cluster_region, field_region, pval_test_params, qq_params,
-               clust_reg_prob_avrg, memb_prob_avrg_sort, bf_params,
-               shift_isoch, isoch_fit_params, isoch_fit_errors, synth_clst,
+               clust_reg_prob_avrg, memb_prob_avrg_sort, bf_params, bf_return,
                ga_params, er_params, axes_params, ps_params):
     '''
     Make all plots.
@@ -72,8 +71,14 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     bright_end, popt_umag, pol_mag, popt_ucol1, pol_col1, mag_val_left,\
     mag_val_right, col1_val_left, col1_val_right = err_plot
     
+    # Best isochrone fit params.
+    bf_flag, best_fit_algor, N_b = bf_params
+    
     # Genetic algorithm params.
     n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es = ga_params
+    
+    # Best fitting process results.
+    isoch_fit_params, isoch_fit_errors, shift_isoch, synth_clst = bf_return
     
     # Plot all outputs
     # figsize(x1, y1), GridSpec(y2, x2) --> To have square plots: x1/x2 = 
@@ -736,7 +741,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         ax18.minorticks_on()
         ax18.xaxis.set_major_locator(MultipleLocator(1.0))
         ax18.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
-        if bf_params[0]:
+        if bf_flag:
             # Plot isochrone if best fit process was used.
             plt.plot(shift_isoch[0], shift_isoch[1], 'g', lw=1.2)
         # This reversed colormap means higher prob stars will look redder.
@@ -762,15 +767,15 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                          xerr=func(mag_y, *popt_col1), fmt='k.', lw=0.8, ms=0.,\
                          zorder=4)
             # Plot colorbar.
-            cbar_posit = [0.65, 0.417, 0.04, 0.005] if bf_params[0] else \
-            [0.65, 0.408, 0.04, 0.005]
+            cbar_posit = [0.65, 0.417, 0.04, 0.005] if bf_flag and \
+            best_fit_algor == 'genet' else [0.65, 0.408, 0.04, 0.005]
             cbaxes = fig.add_axes(cbar_posit)
             cbar = plt.colorbar(cax=cbaxes, ticks=[v_min,v_max],
                                 orientation='horizontal')
             cbar.ax.tick_params(labelsize=9)
 
-    # Best fitting process plots.
-    if bf_params[0]:
+    # Best fitting process plots for GA.
+    if bf_flag and best_fit_algor == 'genet':
 
         # Set ranges used by plots below.
         m_min, m_max = ps_params[3][0], ps_params[3][1]
@@ -838,10 +843,10 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                    extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]],\
                    cmap=plt.get_cmap('Blues'), aspect='auto')
         
-    # GA diagram.
+        # GA diagram.
         lkl_old, ext_imm_indx = isoch_fit_params[1], isoch_fit_params[2]
         ax21 = plt.subplot(gs1[10:12, 2:6])
-        plt.xlim(-0.5, n_gen+int(0.05*n_gen))
+        plt.xlim(-0.5, n_gen+int(0.01*n_gen))
         plt.ylim(max(0, min(lkl_old[0])-0.3*min(lkl_old[0])),
                  max(lkl_old[1])+min(lkl_old[0])/2.)
         ax21.tick_params(axis='y', which='major', labelsize=9)

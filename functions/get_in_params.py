@@ -72,7 +72,8 @@ def get_in_params(mypath):
                     d_rs = map(float, reader[1:])
                 elif reader[0] == 'BF':
                     bf_flag = True if reader[1] == 'True' else False
-                    N_b = int(reader[2])
+                    best_fit_algor = str(reader[2])
+                    N_b = int(reader[3])
                 elif reader[0] == 'SC':
                     sys_sel = str(reader[1])
                     IMF_name = str(reader[2])
@@ -105,7 +106,7 @@ def get_in_params(mypath):
     pv_params = [pv0_params, pv1_params, pv2_params]
     da_params = [da0_params, da1_params, da2_params, mypath2]
     ps_params = [iso_path, line_start, indx_cols, m_rs, a_rs, e_rs, d_rs]
-    bf_params = [bf_flag, N_b]
+    bf_params = [bf_flag, best_fit_algor, N_b]
     sc_params = [sys_sel, IMF_name, tot_mass, f_bin, q_bin]
     ga_params = [n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es]
     axes_params = [x_ax, y_ax, xy_minmax]
