@@ -49,7 +49,7 @@ import shutil
 import gc
 
 
-print '            OCAAT v0.1\n'
+print '            OCAAT v1.0\n'
 print '-------------------------------------------\n'
 
 # Path where the code is running
