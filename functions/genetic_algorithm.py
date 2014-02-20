@@ -9,9 +9,6 @@ from isoch_likelihood import isoch_likelihood as i_l
 import random
 import numpy as np
 import itertools
-    
-import time
-#from ga_plots import GA_plot as ga_p
 
 
 def encode(mm_m, mm_a, mm_e, mm_d, n, int_popul):
@@ -270,19 +267,14 @@ def gen_algor(err_lst, obs_clust, completeness, ip_list, sc_params, ga_params):
     # Begin processing the populations up to n_gen generations.
     for i in range(n_gen):
 
-        tik = time.time()
         #### Selection/Reproduction ###
         # Select chromosomes for breeding from the current generation of
         # solutions according to breed_prob to generate the intermediate
         # population.
-#        tik0 = time.time()
         int_popul = selection(generation, breed_prob)
-#        print 'sele', time.time()-tik0
 
         # Encode intermediate population's solutions into binary chromosomes.
-#        tik1 = time.time()
         chromosomes = encode(mm_m, mm_a, mm_e, mm_d, n_bin, int_popul)
-#        print 'encode', time.time()-tik1
         
         #### Breeding ###
         # Pair chromosomes by randomly shuffling them.
@@ -291,28 +283,20 @@ def gen_algor(err_lst, obs_clust, completeness, ip_list, sc_params, ga_params):
         # Apply crossover operation on each subsequent pair of chromosomes.
         # Select only 100*p_cross% of pairs to apply the crossover to,
         # where p_cross is the crossover probability.
-#        tik2 = time.time()
         cross_chrom = crossover(chromosomes, p_cross, cr_sel)
-#        print 'cross', time.time()-tik2
 
         # Apply mutation operation on random genes for every chromosome.
-#        tik3 = time.time()
         mut_chrom = mutation(cross_chrom, p_mut)
-#        print 'mutat', time.time()-tik3
         
         # Elitism: make sure that the best n_el solutions from the previous
         # generation are passed unchanged into this next generation.
-#        tik4 = time.time()
         best_chrom = encode(mm_m, mm_a, mm_e, mm_d, n_bin, best_sol)
         mut_chrom[:n_el] = best_chrom
-#        print 'elit', time.time()-tik4
         
         ### Evaluation/fitness ###
         # Decode the chromosomes into solutions to form the new generation.
-#        tik5 = time.time()
         ma_lst, e_lst, d_lst = decode(mm_m, mm_a, mm_e, mm_d, n_bin, isoch_ma,
                                       isoch_ed, mut_chrom, flat_ma)
-#        print 'decod', time.time()-tik5
         
         # Evaluate each new solution in the objective function and sort
         # according to the best solutions found.
@@ -388,8 +372,6 @@ def gen_algor(err_lst, obs_clust, completeness, ip_list, sc_params, ga_params):
         # For plotting purposes.
         lkl_old[0].append(lkl[0])
         lkl_old[1].append(np.mean(lkl))
-        
-        print i, lkl[0], np.mean(lkl), generation[0], time.time()-tik
         
     isoch_fit_params = [generation[0], lkl_old, ext_imm_indx, isoch_done]
 
