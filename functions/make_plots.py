@@ -725,7 +725,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         plt.scatter(out_clust_rad[0], out_clust_rad[1], marker='o', 
                     s=star_size, edgecolors='black', facecolors='none', lw=0.5)
 
-    # Star's membership probabilities on cluster's CMD.
+        # Star's membership probabilities on cluster's CMD.
         ax18 = plt.subplot(gs1[8:10, 4:6])
         #Set plot limits
         plt.xlim(col1_min, col1_max)
@@ -773,6 +773,34 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
             cbar = plt.colorbar(cax=cbaxes, ticks=[v_min,v_max],
                                 orientation='horizontal')
             cbar.ax.tick_params(labelsize=9)
+            
+            # Synthetic cluster.
+            ax19 = plt.subplot(gs1[8:10, 6:8])
+            #Set plot limits
+            plt.xlim(col1_min, col1_max)
+            plt.ylim(mag_min, mag_max)
+            #Set axis labels
+            plt.xlabel('$'+x_ax+'$', fontsize=18)
+            plt.ylabel('$'+y_ax+'$', fontsize=18)
+            # Set minor ticks
+            ax19.minorticks_on()
+            ax19.xaxis.set_major_locator(MultipleLocator(1.0))
+            ax19.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
+            # Add text box
+            m, a, e, d = isoch_fit_params[0]
+            e_m, e_a, e_e, e_d = isoch_fit_errors
+            text1 = '$z = %0.4f \pm %0.4f$' '\n' % (m, e_m)
+            text2 = '$log(age) = %0.2f \pm %0.2f$' '\n' % (a, e_a)
+            text3 = '$E_{(B-V)} = %0.2f \pm %0.2f$' '\n' % (e, e_e)
+            text4 = '$(m-M)_o = %0.2f \pm %0.2f$' % (d, e_d)
+            text = text1+text2+text3+text4
+            plt.text(0.1, 0.8, text, transform = ax19.transAxes, 
+                     bbox=dict(facecolor='white', alpha=0.6), fontsize=12)
+            # Plot isochrone.
+            plt.plot(shift_isoch[0], shift_isoch[1], 'r', lw=1.2)
+            # Plot synth clust.
+            plt.scatter(synth_clst[0], synth_clst[2], marker='o', s=30, c='#4682b4',
+                        lw=0.5)
 
     # Best fitting process plots for GA.
     if bf_flag and best_fit_algor == 'genet':
@@ -790,34 +818,6 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
             e_min, e_max = e_min-0.1*e_min, e_max+0.1*e_min
         if d_min == d_max:
             d_min, d_max = d_min-0.1*d_min, d_max+0.1*d_min
-        
-        # Synthetic cluster.
-        ax19 = plt.subplot(gs1[8:10, 6:8])
-        #Set plot limits
-        plt.xlim(col1_min, col1_max)
-        plt.ylim(mag_min, mag_max)
-        #Set axis labels
-        plt.xlabel('$'+x_ax+'$', fontsize=18)
-        plt.ylabel('$'+y_ax+'$', fontsize=18)
-        # Set minor ticks
-        ax19.minorticks_on()
-        ax19.xaxis.set_major_locator(MultipleLocator(1.0))
-        ax19.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
-        # Add text box
-        m, a, e, d = isoch_fit_params[0]
-        e_m, e_a, e_e, e_d = isoch_fit_errors
-        text1 = '$z = %0.4f \pm %0.4f$' '\n' % (m, e_m)
-        text2 = '$log(age) = %0.2f \pm %0.2f$' '\n' % (a, e_a)
-        text3 = '$E_{(B-V)} = %0.2f \pm %0.2f$' '\n' % (e, e_e)
-        text4 = '$(m-M)_o = %0.2f \pm %0.2f$' % (d, e_d)
-        text = text1+text2+text3+text4
-        plt.text(0.1, 0.8, text, transform = ax19.transAxes, 
-                 bbox=dict(facecolor='white', alpha=0.6), fontsize=12)
-        # Plot isochrone.
-        plt.plot(shift_isoch[0], shift_isoch[1], 'r', lw=1.2)
-        # Plot synth clust.
-        plt.scatter(synth_clst[0], synth_clst[2], marker='o', s=30, c='#4682b4',
-                    lw=0.5)        
         
         # Age vs metallicity GA diagram.
         isoch_done = isoch_fit_params[3]
@@ -876,7 +876,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                           fontsize=12)
         leg.get_frame().set_alpha(0.6)
         
-    # Extinction vs distance modulus GA diagram.
+        # Extinction vs distance modulus GA diagram.
         isoch_done = isoch_fit_params[3]
         plt.subplot(gs1[10:12, 6:8])
         plt.xlim(e_min, e_max)

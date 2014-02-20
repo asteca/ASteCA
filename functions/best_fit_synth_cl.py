@@ -90,14 +90,10 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
         # Generate shifted best fit isochrone.
         shift_isoch = move_isoch(sc_params[0],
                                  isoch_list[m_indx][a_indx][:2], e, d)
-                                 
-        # Generate best fit synthetic cluster (only if GA was used).
-        if best_fit_algor == 'genet':
-            synth_clst = s_c(err_lst, completeness, sc_params,
-                             isoch_list[m_indx][a_indx], [-1., -1., e, d])
-        else:
-            # Pass empty list.
-            synth_clst = []
+        # Generate best fit synthetic cluster.
+        synth_clst = s_c(err_lst, completeness, sc_params,
+                         isoch_list[m_indx][a_indx], [-1., -1., e, d])
+
             
     else:
         # Pass empty lists to make_plots.
