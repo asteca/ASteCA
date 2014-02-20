@@ -34,6 +34,10 @@ CP2  /home/gabriel/clusters/clusters_out/
 # defined in 'CP1' if this flag is set to 'True'.
 MF  False
 
+# Create output figure?
+# True / False. If 'False', no output figure will be created.
+MP True
+
 # Column numbers identifying the data needed, as stored in the clusters'
 # photometric data files.
 # id_star x_coor y_coor magnitude e_mag color e_col

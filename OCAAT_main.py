@@ -58,7 +58,7 @@ mypath = realpath(join(getcwd(), dirname(__file__)))
 # Read input parameters for code from file.
 mode, in_dirs, gd_params, gc_params, br_params, cr_params, er_params,\
 gr_params, pv_params, da_params, ps_params, bf_params, sc_params, ga_params,\
-flag_move_file, axes_params = gip.get_in_params(mypath)
+flag_make_plot, flag_move_file, axes_params = gip.get_in_params(mypath)
 
 # Read paths.
 mypath2, mypath3, output_dir = in_dirs
@@ -475,21 +475,6 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
     if not exists(output_subdir):
         makedirs(output_subdir)
 
-    # Make plots
-    mp(output_subdir, clust_name, x_data, y_data, center_cl, cent_cl_err,
-       x_center_bin, y_center_bin, h_filter, radii, backg_value, inner_ring,
-       outer_ring, radius_params[0:3], ring_density, poisson_error,
-       cont_index, width_bins, mag_data, col1_data,
-       popt_mag, popt_col1, err_plot,
-       rjct_errors_fit, k_prof, k_pr_err, flag_king_no_conver, stars_in,
-       stars_out, stars_in_rjct,
-       stars_out_rjct, stars_in_mag, stars_in_all_mag, n_c, flag_area_stronger,
-       cluster_region, field_region, pval_test_params, qq_params,
-       clust_reg_prob_avrg, memb_prob_avrg_sort, bf_params,
-       shift_isoch, isoch_fit_params, isoch_fit_errors, synth_clst, ga_params,
-       er_params, axes_params, ps_params)
-    print 'Plots created.'
-
     # Add cluster data and flags to output file
     a_d_o(sub_dir, output_dir, clust_name, center_cl, clust_rad, k_prof,
           n_c_k, flag_king_no_conver, cont_index, n_c, pval_test_params[0],
@@ -499,7 +484,21 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
           isoch_fit_params[0], isoch_fit_errors)
     print 'Data added to output file.'
 
-
+    # Make plots
+    if flag_make_plot:
+        mp(output_subdir, clust_name, x_data, y_data, center_cl, cent_cl_err,
+           x_center_bin, y_center_bin, h_filter, radii, backg_value, inner_ring,
+           outer_ring, radius_params[0:3], ring_density, poisson_error,
+           cont_index, width_bins, mag_data, col1_data, popt_mag, popt_col1,
+           err_plot, rjct_errors_fit, k_prof, k_pr_err, flag_king_no_conver,
+           stars_in, stars_out, stars_in_rjct, stars_out_rjct, stars_in_mag,
+           stars_in_all_mag, n_c, flag_area_stronger,
+           cluster_region, field_region, pval_test_params, qq_params,
+           clust_reg_prob_avrg, memb_prob_avrg_sort, bf_params,
+           shift_isoch, isoch_fit_params, isoch_fit_errors, synth_clst,
+           ga_params, er_params, axes_params, ps_params)
+        print 'Plots created.'
+    
     # Move file to 'done' dir.
     if flag_move_file:
         dst_dir = join(mypath3, sub_dir)

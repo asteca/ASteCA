@@ -91,6 +91,8 @@ def get_in_params(mypath):
                     n_es = int(reader[9])
                 elif reader[0] == 'MF':
                     flag_move_file = True if reader[1] == 'True' else False
+                elif reader[0] == 'MP':
+                    flag_make_plot = True if reader[1] == 'True' else False
                 elif reader[0] == 'XA':
                     x_ax = re.search(r'"(.*)"', line).groups()[0]
                 elif reader[0] == 'YA':
@@ -110,4 +112,4 @@ def get_in_params(mypath):
     
     return mode, in_dirs, gd_params, gc_params, br_params, cr_params, er_params,\
     gr_params, pv_params, da_params, ps_params, bf_params, sc_params, ga_params,\
-    flag_move_file, axes_params
+    flag_make_plot, flag_move_file, axes_params
