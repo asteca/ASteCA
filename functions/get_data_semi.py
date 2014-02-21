@@ -9,36 +9,30 @@ from os.path import join
 
 def get_semi(mypath, clust_name):
     '''
-    Get center, radius and errors flag for semi automatic mode.
+    Get center, radius and flags for semi automatic mode.
     '''
-    
-    cent_cl_semi = [[],[]]
-    # Get center, radius and error flag from file.
+    # Flag to indicate if cluster was found in file.
     flag_clust_found = False
     myfile = 'clusters_input.dat'
     with open(join(mypath, myfile), mode="r") as f_cl_dt:
-       
         for line in f_cl_dt:
-
             li=line.strip()
-            
-            # Jump comments.
+            # Skip comments.
             if not li.startswith("#"):
                 reader = li.split()            
             
-                # reader[1]=c_x, reader[2]=c_y, [3]=radius, [8], [9], [10]=
-                # center, radius and error flags.
+                # If cluster is found in file.
                 if reader[0] == clust_name:
-                    cent_cl_semi[0], cent_cl_semi[1], cl_rad_semi, \
+                    cl_cent_semi = [float(reader[1]), float(reader[2])]
+                    cl_rad_semi = float(reader[3])
                     cent_flag_semi, rad_flag_semi, err_flag_semi = \
-                    float(reader[1]), float(reader[2]), float(reader[3]), \
-                    int(reader[8]), int(reader[9]), int(reader[10])
+                    int(reader[4]), int(reader[5]), int(reader[6])
                     # Set flag to True if the cluster was found.                    
                     flag_clust_found = True
                     
     # If cluster was found.
     if flag_clust_found:
-        semi_return = [cent_cl_semi, cl_rad_semi, cent_flag_semi, rad_flag_semi,
+        semi_return = [cl_cent_semi, cl_rad_semi, cent_flag_semi, rad_flag_semi,
                        err_flag_semi]
     else:
         semi_return = []
