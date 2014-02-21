@@ -14,6 +14,7 @@ def get_semi(mypath, clust_name):
     
     cent_cl_semi = [[],[]]
     # Get center, radius and error flag from file.
+    flag_clust_found = False
     myfile = 'clusters_input.dat'
     with open(join(mypath, myfile), mode="r") as f_cl_dt:
        
@@ -32,6 +33,14 @@ def get_semi(mypath, clust_name):
                     cent_flag_semi, rad_flag_semi, err_flag_semi = \
                     float(reader[1]), float(reader[2]), float(reader[3]), \
                     int(reader[8]), int(reader[9]), int(reader[10])
+                    # Set flag to True if the cluster was found.                    
+                    flag_clust_found = True
+                    
+    # If cluster was found.
+    if flag_clust_found:
+        semi_return = [cent_cl_semi, cl_rad_semi, cent_flag_semi, rad_flag_semi,
+                       err_flag_semi]
+    else:
+        semi_return = []
 
-    return cent_cl_semi, cl_rad_semi, cent_flag_semi, rad_flag_semi, \
-    err_flag_semi   
+    return semi_return

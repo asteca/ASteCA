@@ -117,9 +117,9 @@ def get_regions(x_center_bin, y_center_bin, width_bins, histo, clust_rad,
     # If the number of field regions defined is larger than the maximum allowed,
     # use the maximum.
     if f_regions > f_regs_max:
-        f_regions = f_regs_max
         print 'Number of field regions defined (%d) larger than the' % f_regions
         print 'maximum allowed (%d). Using max number.' % f_regs_max
+        f_regions = f_regs_max
 
     # Get list that contains the spiral as a list of x,y coordinates (also
     # stored as lists) starting from the initial bin [0, 0].

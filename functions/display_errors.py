@@ -46,7 +46,7 @@ def disp_errors(mag_data, popt_mag,  popt_col1, acpt_stars, rjct_stars,
     ax7 = plt.subplot(gs[0, 0:2])
     #Set plot limits
     plt.xlim(min(mag_data)-0.5, max(mag_data)+0.5)
-    plt.ylim(-0.005, min(0.5, stars_rjct_temp[1]))
+    plt.ylim(-0.005, min(0.5, max(stars_rjct_temp[1])))
     #Set axis labels
     plt.ylabel('$\sigma_{'+y_ax+'}$', fontsize=18)
     plt.xlabel('$'+y_ax+'$', fontsize=18)    
@@ -90,7 +90,7 @@ def disp_errors(mag_data, popt_mag,  popt_col1, acpt_stars, rjct_stars,
     ax8 = plt.subplot(gs[1, 0:2])
     #Set plot limits
     plt.xlim(min(mag_data)-0.5, max(mag_data)+0.5)
-    plt.ylim(-0.005, min(0.5, stars_rjct_temp[1]))
+    plt.ylim(-0.005, min(0.5, max(stars_rjct_temp[1])))
     #Set axis labels
     plt.ylabel('$\sigma_{'+x_ax+'}$', fontsize=18)
     plt.xlabel('$'+y_ax+'$', fontsize=18)

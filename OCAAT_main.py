@@ -93,8 +93,15 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
 
     # If Semi mode set, get data from data iput file.
     if mode == 's':
-        cent_cl_semi, cl_rad_semi, cent_flag_semi, rad_flag_semi, \
-        err_flag_semi = g_s(mypath, clust_name)
+        semi_return = g_s(mypath, clust_name)
+        # Check if the cluster was found in file.
+        if semi_return:
+            cent_cl_semi, cl_rad_semi, cent_flag_semi, rad_flag_semi, \
+            err_flag_semi = semi_return
+        else:
+            # If the cluster was not found in the file, default to 'manual'.
+            print "WARNING: cluster not found in file. Using 'manual'"
+            mode = 'm'
 
     # Get cluster's photometric data from file.
     phot_data = gd.get_data(mypath2, sub_dir, myfile, gd_params)
