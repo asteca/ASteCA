@@ -69,7 +69,7 @@ def mass_interp(isochrone, mass_dist):
     
 
 
-def synth_clust(err_lst, completeness, sc_params, isochrone, params):
+def synth_clust(err_lst, completeness, sc_params, isochrone, params, sys_sel):
     '''
     Main function.
     
@@ -77,8 +77,7 @@ def synth_clust(err_lst, completeness, sc_params, isochrone, params):
     a certain mass distribution.
     '''
     
-    sys_sel, mass_params, f_bin, q_bin = sc_params[0], sc_params[1:3],\
-    sc_params[3], sc_params[4]
+    mass_params, f_bin, q_bin = sc_params[0:2], sc_params[2], sc_params[3]
     
     # Store mass distribution used to produce a synthetic cluster based on
     # a given theoretic isochrone.

@@ -14,22 +14,44 @@ import numpy as np
 def ip(ps_params):
     '''
     Stores all the available isochrones of different metallicities and
-    ages according to the ranges given to this parameters.
+    ages according to the ranges given to thess parameters.
     Also stores available parameter values for the stored isochrones
     between the specified ranges and with the given steps.
     '''
     
-    # Paths to isochrone files.
-    iso_path = ps_params[0]
+    
+    iso_path, sys_select, iso_select, m_rs, a_rs, e_rs, d_rs = ps_params
+   
+    # Assign values according to the system and set of isochrones selected.
+    if sys_select == 'WASH':
+        if iso_select == 'MAR':
+            li_s = "#\tIsochrone\tZ ="
+            # Mass, T1, C
+            mas_i, mag_i, col_i = 1, 9, 7
+        elif iso_select == 'PAR':
+            li_s = "#\tIsochrone  Z = "
+            mas_i, mag_i, col_i = 2, 10, 8
+            
+    if sys_select == 'UBVI':
+        if iso_select == 'MAR':
+            li_s = "#\tIsochrone\tZ ="
+            # Mass, V, B
+            mas_i, mag_i, col_i = 1, 9, 8
+        elif iso_select == 'PAR':
+            li_s = "#\tIsochrone  Z = "
+            mas_i, mag_i, col_i = 2, 10, 8    
+    
+    
     # String that identifies the beginning of a new isochrone.
-    line_start = ps_params[1]
-    # Read indexes for this Girardi output file.
-    mini_indx, mag_indx, col_indx = ps_params[2]
+    line_start = li_s
+    # Read columns indexes for this Girardi output file.
+    mini_indx, mag_indx, col_indx = mas_i, mag_i, col_i
+    
     # Read ranges and steps for these parameters.
-    z_min, z_max, z_step = ps_params[3]
-    age_min, age_max, age_step = ps_params[4]
-    e_bv_min, e_bv_max, e_bv_step = ps_params[5]
-    dis_mod_min, dis_mod_max, dis_mod_step = ps_params[6]
+    z_min, z_max, z_step = m_rs
+    age_min, age_max, age_step = a_rs
+    e_bv_min, e_bv_max, e_bv_step = e_rs
+    dis_mod_min, dis_mod_max, dis_mod_step = d_rs
     
     # Add a small value to each max value to ensure that the range is a bit
     # larger than the one between the real min and max values. This simplifies

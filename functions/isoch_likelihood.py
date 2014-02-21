@@ -67,7 +67,7 @@ def likelihood(synth_clust, obs_clust):
     
     
 def isoch_likelihood(err_lst, obs_clust, completeness, sc_params, isochrone,
-                     params):
+                     params, sys_sel):
     '''
     Main function.
     
@@ -81,7 +81,8 @@ def isoch_likelihood(err_lst, obs_clust, completeness, sc_params, isochrone,
         
     # Generate synthetic cluster using this "moved" isochrone and a mass
     # distribution.
-    synth_clust = s_c(err_lst, completeness, sc_params, isochrone, params)
+    synth_clust = s_c(err_lst, completeness, sc_params, isochrone, params,
+                      sys_sel)
     
     # Call function to obtain the likelihood by comparing the synthetic cluster
     # with the observed cluster.

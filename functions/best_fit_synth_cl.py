@@ -33,22 +33,23 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
     '''
     
     bf_flag, best_fit_algor, N_b = bf_params
+    sys_sel = ps_params[1]
     
     # Check if algorithm should run.
     if bf_flag:
     
         # Obtain the selected IMF's PDF. We run it once because the array only
         # depends on the IMF selected.
-        imf_pdf = i_p(sc_params[1])
+        imf_pdf = i_p(sc_params[0])
         # Replace the name of the IMF by its PDF.
-        sc_params[1] = imf_pdf
+        sc_params[0] = imf_pdf
     
         # Call algorithm to calculate the likelihoods for the set of
         # isochrones and return the best fitting parameters.
         if best_fit_algor == 'brute':
         # Brute force algorithm.
             isoch_fit_params = b_f(err_lst, memb_prob_avrg_sort, completeness,
-                                   ip_list, sc_params, ga_params)
+                                   ip_list, sc_params, ga_params, sys_sel)
             # Assign errors as the steps in each parameter.
             isoch_fit_errors = [ps_params[i+3][2] for i in range(4)]
 
@@ -59,7 +60,7 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
             # values. After that we resample to get the uncertainty in each
             # parameter.  
             isoch_fit_params = g_a(err_lst, memb_prob_avrg_sort, completeness,
-                                   ip_list, sc_params, ga_params)    
+                                   ip_list, sc_params, ga_params, sys_sel)    
         
             # List that holds the parameters values obtained by the bootstrap
             # process.
@@ -70,7 +71,7 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
                 obs_clust = boostrap_resample(memb_prob_avrg_sort)
                 # Genetic algorithm.
                 params_boot.append(g_a(err_lst, obs_clust, completeness, ip_list,
-                                       sc_params, ga_params)[0])
+                                       sc_params, ga_params, sys_sel)[0])
     
             # Calculate errors for each parameter.
             isoch_fit_errors = np.std(params_boot, 0)
@@ -88,11 +89,11 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
         m_indx, a_indx = next(((i,j) for i,x in enumerate(isoch_ma) for j,y\
         in enumerate(x) if y == [m, a]), None)
         # Generate shifted best fit isochrone.
-        shift_isoch = move_isoch(sc_params[0],
+        shift_isoch = move_isoch(sys_sel,
                                  isoch_list[m_indx][a_indx][:2], e, d)
         # Generate best fit synthetic cluster.
         synth_clst = s_c(err_lst, completeness, sc_params,
-                         isoch_list[m_indx][a_indx], [-1., -1., e, d])
+                         isoch_list[m_indx][a_indx], [-1., -1., e, d], sys_sel)
 
             
     else:

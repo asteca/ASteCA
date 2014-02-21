@@ -56,12 +56,15 @@ def get_in_params(mypath):
                     da0_params = str(reader[1])
                     da1_params = int(reader[2])
                     da2_params = int(reader[3])
+                elif reader[0] == 'PS':
+                    sys_select = str(reader[1])
+                    iso_select = str(reader[2])
                 elif reader[0] == 'PS_p':
                     iso_path = str(reader[1])
-                elif reader[0] == 'PS_l':
-                    line_start = re.search(r'"(.*)"', line).groups()[0]
-                elif reader[0] == 'PS_i':
-                    indx_cols = map(int, reader[1:])
+#                elif reader[0] == 'PS_l':
+#                    line_start = re.search(r'"(.*)"', line).groups()[0]
+#                elif reader[0] == 'PS_i':
+#                    indx_cols = map(int, reader[1:])
                 elif reader[0] == 'PS_m':
                     m_rs = map(float, reader[1:])
                 elif reader[0] == 'PS_a':
@@ -75,11 +78,10 @@ def get_in_params(mypath):
                     best_fit_algor = str(reader[2])
                     N_b = int(reader[3])
                 elif reader[0] == 'SC':
-                    sys_sel = str(reader[1])
-                    IMF_name = str(reader[2])
-                    tot_mass = float(reader[3])
-                    f_bin = float(reader[4])
-                    q_bin = float(reader[5])
+                    IMF_name = str(reader[1])
+                    tot_mass = float(reader[2])
+                    f_bin = float(reader[3])
+                    q_bin = float(reader[4])
                 elif reader[0] == 'GA':
                     n_pop = int(reader[1])
                     n_gen = int(reader[2])
@@ -105,9 +107,9 @@ def get_in_params(mypath):
     in_dirs = [mypath2, mypath3, output_dir]
     pv_params = [pv0_params, pv1_params, pv2_params]
     da_params = [da0_params, da1_params, da2_params, mypath2]
-    ps_params = [iso_path, line_start, indx_cols, m_rs, a_rs, e_rs, d_rs]
+    ps_params = [iso_path, sys_select, iso_select, m_rs, a_rs, e_rs, d_rs]
     bf_params = [bf_flag, best_fit_algor, N_b]
-    sc_params = [sys_sel, IMF_name, tot_mass, f_bin, q_bin]
+    sc_params = [IMF_name, tot_mass, f_bin, q_bin]
     ga_params = [n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es]
     axes_params = [x_ax, y_ax, xy_minmax]
     
