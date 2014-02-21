@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-from os.path import join, realpath, dirname, exists
+from os.path import join, realpath, dirname, exists, isfile
 import matplotlib.pyplot as plt
 import time
 
@@ -513,6 +513,9 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
         if not exists(dst_dir):
             mkdir(dst_dir)
         shutil.move(join(mypath2, sub_dir, myfile), dst_dir)
+        # Also move *memb_data.dat file if it exists.
+        if isfile(join(mypath2, sub_dir, clust_name+'_memb.dat')):
+            shutil.move(join(mypath2, sub_dir, clust_name+'_memb.dat'), dst_dir)
         # If sub-dir left behind is empty, remove it.
         try:
             rmdir(join(mypath2, sub_dir))
