@@ -139,7 +139,7 @@ def get_pval(cluster_region, field_region, col1_data,
             res_cl = kde_test(x1=m_cl, x2=m_f1, H1=hpic, H2=hpif1)
             p_val_cl = res_cl.rx2('pvalue')
             # Store cluster vs field p-value.
-            p_vals_cl.append(float(str(p_val_cl)[4:]))
+            p_vals_cl.append(float(str(p_val_cl)[4:].replace(',','.')))
 
             # Compare the field region used above with all the remaining
             # field regions. This results in [N*(N+1)/2] combinations of
@@ -159,7 +159,7 @@ def get_pval(cluster_region, field_region, col1_data,
                 res_f = kde_test(x1=m_f1, x2=m_f2, H1=hpif1, H2=hpif2)
                 p_val_f = res_f.rx2('pvalue')
                 # Store field vs field p-value.
-                p_vals_f.append(float(str(p_val_f)[4:]))
+                p_vals_f.append(float(str(p_val_f)[4:].replace(',','.')))
 
 
         if run_num+1 >= runs/4 and flag_25 == False:

@@ -276,8 +276,11 @@ manually)? (y/n) ')
                 print 'Value accepted.'
                 wrong_answer = False
             elif answer_rad == 'n':
-                clust_rad = float(raw_input('Input new radius value (in \
+                clust_rad_m = float(raw_input('Input new radius value (in \
 px): '))
+                # Update radius value.
+                radius_params[0] = clust_rad_m
+                clust_rad = radius_params[0]
                 wrong_answer = False
                 flag_radius_manual = True
             else:
@@ -470,17 +473,17 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
                 print 'Wrong input. Try again.\n'
 
 
-    # Create data file with membership probabilities.
-    c_m_f(output_dir, sub_dir, clust_name, memb_prob_avrg_sort)
-    print 'Membership probabilities for stars in cluster region saved to file.'
-
-
     # Generate output subdir.
     output_subdir = join(output_dir, sub_dir)
     # Check if subdir already exists, if not create it
     if not exists(output_subdir):
         makedirs(output_subdir)
 
+    # Create data file with membership probabilities.
+    c_m_f(output_dir, sub_dir, clust_name, memb_prob_avrg_sort)
+    print 'Membership probabilities for stars in cluster region saved to file.'
+    
+    
     # Add cluster data and flags to output file
     a_d_o(sub_dir, output_dir, clust_name, center_cl, clust_rad, k_prof,
           n_c_k, flag_king_no_conver, cont_index, n_c, pval_test_params[0],
