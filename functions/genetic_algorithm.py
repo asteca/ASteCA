@@ -164,23 +164,25 @@ def fitness_eval(err_lst, obs_clust, completeness, isoch_list, isoch_ma,
         params = [isoch_ma[m][a][0], isoch_ma[m][a][1], e, d]
         
         # Check if this isochrone was already processed.
-        if [isoch_ma[m][a][0], isoch_ma[m][a][1], e, d] in isoch_done[0]:
-            # Get index for this isochrone.
-            likel_val = isoch_done[1][isoch_done[0].index([isoch_ma[m][a][0],
-                                      isoch_ma[m][a][1], e,d])]
+        if params in isoch_done[0]:
+            # Get likel_val value for this isochrone.
+            likel_val = isoch_done[1][isoch_done[0].index(params)]
+            print '  in', params, likel_val
         else:
             # Call likelihood function with m,a,e,d values.
             likel_val = i_l(err_lst, obs_clust, completeness, sc_params, 
                             isoch_list[m][a], params, sys_sel)
             # Append data identifying the isochrone and the obtained
             # likelihood value to this *persistent* list.
-            isoch_done[0].append([isoch_ma[m][a][0], isoch_ma[m][a][1], e, d])
+            isoch_done[0].append(params)
             isoch_done[1].append(likel_val)
+            print '  no', params, likel_val
             
         # Append same data to the lists that will be erased with each call
         # to this function.
-        generation_list.append([isoch_ma[m][a][0], isoch_ma[m][a][1], e, d])
-        likelihood.append(round(likel_val, 2))
+        generation_list.append(params)
+#        likelihood.append(round(likel_val, 2))
+        likelihood.append(likel_val)
         
     # Sort according to the likelihood list.
     generation = [x for y, x in sorted(zip(likelihood, generation_list))]
@@ -248,14 +250,16 @@ def gen_algor(err_lst, obs_clust, completeness, ip_list, sc_params, ga_params,
     # Stores parameters of the solutions already processed and the likelihhods
     # obtained.
     isoch_done = [[], []]
+    
     # Evaluate initial random solutions in the objective function.
     generation, lkl, isoch_done = fitness_eval(err_lst, obs_clust, completeness,\
     isoch_list, isoch_ma, ma_lst, e_lst, d_lst, sc_params, isoch_done, sys_sel)
+    
     # Store best solution for passing along in the 'Elitism' block.
     best_sol = generation[:n_el]
 
     # For plotting purposes.
-    lkl_old = [[], []]
+    lkl_old = [[lkl[0]], [lkl[0]]]
     # Stores indexes where the Ext/Imm operator was applied.
     ext_imm_indx = []
    
@@ -268,6 +272,7 @@ def gen_algor(err_lst, obs_clust, completeness, ip_list, sc_params, ga_params,
     # Begin processing the populations up to n_gen generations.
     for i in range(n_gen):
 
+        print '1', generation[0], best_sol[0], lkl[0], lkl_old[0][-1]
         #### Selection/Reproduction ###
         # Select chromosomes for breeding from the current generation of
         # solutions according to breed_prob to generate the intermediate
@@ -304,6 +309,7 @@ def gen_algor(err_lst, obs_clust, completeness, ip_list, sc_params, ga_params,
         generation, lkl, isoch_done = fitness_eval(err_lst, obs_clust,\
         completeness, isoch_list, isoch_ma, ma_lst, e_lst, d_lst, sc_params,\
         isoch_done, sys_sel)
+        print '2', generation[0], best_sol[0], lkl[0], lkl_old[0][-1]
         
         ### Extinction/Immigration ###
         # If the best solution has remained unchanged for n_ei
@@ -370,9 +376,14 @@ def gen_algor(err_lst, obs_clust, completeness, ip_list, sc_params, ga_params,
         elif i+1 == n_gen:
             print '  100% done'
 
+        if lkl[0] > lkl_old[0][-1]:
+            print 'STOP!'
+            raw_input()
+
         # For plotting purposes.
         lkl_old[0].append(lkl[0])
         lkl_old[1].append(np.mean(lkl))
+        
         
     isoch_fit_params = [generation[0], lkl_old, ext_imm_indx, isoch_done]
 
