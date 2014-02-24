@@ -122,7 +122,24 @@ def decode(mm_m, mm_a, mm_e, mm_d, n_bin, isoch_ma, isoch_ed, mut_chrom,
         d_ls.append(d)
         
     return ma_lst, e_lst, d_ls
+
+
+def elitism(best_sol, ma_lst, e_lst, d_lst, isoch_ma):
+    '''
+    Pass the best n_el solutions unchanged to the next generation.
+    '''
+    i=0
+    for sol in best_sol:
+        # Find indexes for these values.
+        [m, a] = next(((i,j) for i,x in enumerate(isoch_ma) for j,y in\
+                enumerate(x) if y == [sol[0], sol[1]]), None)
+        # Store met and age indexes.
+        ma_lst[i] = [m, a]
+        # Store extinction and distance modulus values.
+        e_lst[i], d_lst[i] = sol[2], sol[3]
+        i += 1
     
+    return ma_lst, e_lst, d_lst
     
 
 def selection(generation, breed_prob):
@@ -146,7 +163,6 @@ def selection(generation, breed_prob):
     return select_chrom
 
 
-
 def fitness_eval(err_lst, obs_clust, completeness, isoch_list, isoch_ma,
                  ma_lst, e_lst, d_lst, sc_params, isoch_done, sys_sel):
     '''
@@ -167,7 +183,6 @@ def fitness_eval(err_lst, obs_clust, completeness, isoch_list, isoch_ma,
         if params in isoch_done[0]:
             # Get likel_val value for this isochrone.
             likel_val = isoch_done[1][isoch_done[0].index(params)]
-            print '  in', params, likel_val
         else:
             # Call likelihood function with m,a,e,d values.
             likel_val = i_l(err_lst, obs_clust, completeness, sc_params, 
@@ -176,7 +191,6 @@ def fitness_eval(err_lst, obs_clust, completeness, isoch_list, isoch_ma,
             # likelihood value to this *persistent* list.
             isoch_done[0].append(params)
             isoch_done[1].append(likel_val)
-            print '  no', params, likel_val
             
         # Append same data to the lists that will be erased with each call
         # to this function.
@@ -194,7 +208,6 @@ def fitness_eval(err_lst, obs_clust, completeness, isoch_list, isoch_ma,
     return generation, likelihood, isoch_done
 
     
-    
 def random_population(isoch_ma, isoch_ed, n_ran):
     '''
     Generate a random set of parameter values to use as a random population.
@@ -210,7 +223,6 @@ def random_population(isoch_ma, isoch_ed, n_ran):
     ma_lst = [random.choice(ma_flat) for _ in range(n_ran)]
     
     return ma_lst, e_lst, d_lst
-
 
 
 def gen_algor(err_lst, obs_clust, completeness, ip_list, sc_params, ga_params,
@@ -259,7 +271,7 @@ def gen_algor(err_lst, obs_clust, completeness, ip_list, sc_params, ga_params,
     best_sol = generation[:n_el]
 
     # For plotting purposes.
-    lkl_old = [[lkl[0]], [lkl[0]]]
+    lkl_old = [[], []]
     # Stores indexes where the Ext/Imm operator was applied.
     ext_imm_indx = []
    
@@ -272,7 +284,6 @@ def gen_algor(err_lst, obs_clust, completeness, ip_list, sc_params, ga_params,
     # Begin processing the populations up to n_gen generations.
     for i in range(n_gen):
 
-        print '1', generation[0], best_sol[0], lkl[0], lkl_old[0][-1]
         #### Selection/Reproduction ###
         # Select chromosomes for breeding from the current generation of
         # solutions according to breed_prob to generate the intermediate
@@ -294,22 +305,20 @@ def gen_algor(err_lst, obs_clust, completeness, ip_list, sc_params, ga_params,
         # Apply mutation operation on random genes for every chromosome.
         mut_chrom = mutation(cross_chrom, p_mut)
         
-        # Elitism: make sure that the best n_el solutions from the previous
-        # generation are passed unchanged into this next generation.
-        best_chrom = encode(mm_m, mm_a, mm_e, mm_d, n_bin, best_sol)
-        mut_chrom[:n_el] = best_chrom
-        
         ### Evaluation/fitness ###
         # Decode the chromosomes into solutions to form the new generation.
         ma_lst, e_lst, d_lst = decode(mm_m, mm_a, mm_e, mm_d, n_bin, isoch_ma,
                                       isoch_ed, mut_chrom, flat_ma)
+       
+        # Elitism: make sure that the best n_el solutions from the previous
+        # generation are passed unchanged into this next generation.
+        ma_lst, e_lst, d_lst = elitism(best_sol, ma_lst, e_lst, d_lst, isoch_ma)
         
         # Evaluate each new solution in the objective function and sort
         # according to the best solutions found.
         generation, lkl, isoch_done = fitness_eval(err_lst, obs_clust,\
         completeness, isoch_list, isoch_ma, ma_lst, e_lst, d_lst, sc_params,\
         isoch_done, sys_sel)
-        print '2', generation[0], best_sol[0], lkl[0], lkl_old[0][-1]
         
         ### Extinction/Immigration ###
         # If the best solution has remained unchanged for n_ei
@@ -376,14 +385,9 @@ def gen_algor(err_lst, obs_clust, completeness, ip_list, sc_params, ga_params,
         elif i+1 == n_gen:
             print '  100% done'
 
-        if lkl[0] > lkl_old[0][-1]:
-            print 'STOP!'
-            raw_input()
-
         # For plotting purposes.
         lkl_old[0].append(lkl[0])
         lkl_old[1].append(np.mean(lkl))
-        
         
     isoch_fit_params = [generation[0], lkl_old, ext_imm_indx, isoch_done]
 

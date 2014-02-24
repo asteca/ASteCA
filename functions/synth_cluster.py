@@ -7,7 +7,7 @@ Created on Tue Jan 28 15:22:10 2014
 
 from move_isochrone import move_isoch
 from get_mass_dist import mass_dist as m_d
-from synth_plot import synth_clust_plot as s_c_p
+#from synth_plot import synth_clust_plot as s_c_p
 
 import numpy as np
 import random
@@ -114,8 +114,8 @@ def synth_clust(err_lst, completeness, sc_params, isochrone, params, sys_sel):
     isoch_m_d = mass_interp(isoch_cut, mass_dist)
 
     # For plotting purposes: store a copy of this list before adding binaries.
-    from copy import deepcopy
-    isoch_m_d0 = deepcopy(isoch_m_d)
+#    from copy import deepcopy
+#    isoch_m_d0 = deepcopy(isoch_m_d)
 
     # Assignment of binarity.
     # Randomly select a fraction of stars to be binaries.
@@ -240,7 +240,7 @@ def synth_clust(err_lst, completeness, sc_params, isochrone, params, sys_sel):
         synth_clust = np.array(clust_error + [clust_compl[2]])
 
          #Plot diagrams.
-        s_c_p(mass_dist, isoch_inter, params, isoch_moved, isoch_cut,
-              isoch_m_d0, isoch_m_d, clust_compl, clust_error)
+#        s_c_p(mass_dist, isoch_inter, params, isoch_moved, isoch_cut,
+#              isoch_m_d0, isoch_m_d, clust_compl, clust_error)
 
     return synth_clust
