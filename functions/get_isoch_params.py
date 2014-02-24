@@ -18,8 +18,7 @@ def ip(ps_params):
     Also stores available parameter values for the stored isochrones
     between the specified ranges and with the given steps.
     '''
-    
-    
+
     iso_path, sys_select, iso_select, m_rs, a_rs, e_rs, d_rs = ps_params
    
     # Assign values according to the system and set of isochrones selected.
@@ -37,10 +36,6 @@ def ip(ps_params):
             li_s = "#\tIsochrone\tZ ="
             # Mass, V, B
             mas_i, mag_i, col_i = 1, 9, 8
-        elif iso_select == 'PAR':
-            li_s = "#\tIsochrone  Z = "
-            mas_i, mag_i, col_i = 2, 10, 8    
-    
     
     # String that identifies the beginning of a new isochrone.
     line_start = li_s
