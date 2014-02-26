@@ -43,12 +43,11 @@ def create_out_data_file(output_dir):
 #          minus the overlap area between the KDEs. If the KDEs are very similar\n\
 #          this value will be low indicating the overdensity is probably not a\n\
 #          true cluster.\n\
-# CCC: Concordance correlation coefficient. Measures the agreement between the\n\
-#      quantiles and the identity line and gives an idea of how similar the shapes\n\
-#      of the KDEs are. A value close to 1 means good agreement, ie: the shapes of\n\
-#      the KDEs are very similar. A low value of prob_cl combined with a high \n\
-#      value of CCC implies the overdensity has little chance of being a true \n\
-#      physical cluster.\n\
+# CCC: Concordance correlation coefficient (inverted). Measures the agreement \n\
+#      between the quantiles and the identity line and gives an idea of how \n\
+#      similar the shapes of the KDEs are. A value close to 1 means bad agreement,\n\
+#      ie: the shapes of the KDEs are very different. Low values of prob_cl and CCC\n\
+#      imply that the overdensity has little chance of being a true cluster.\n\
 # mag_int: Integrated magnitude value for all stars inside the cluster radius, except\n\
 #          those that were rejected due to large errors.\n\
 # met: Metallicity value (z) obtained via synthetic cluster fitting.\n\
