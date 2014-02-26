@@ -52,8 +52,8 @@ def get_CMD(region):
     matrix_1 = map(list, zip(*matrix_0))
     # Put all stars into a single list.
     matrix = [star for axis in matrix_1 for star in axis]
-    return matrix
 
+    return matrix
 
 
 def get_pval(cluster_region, field_region, col1_data,
@@ -102,27 +102,13 @@ def get_pval(cluster_region, field_region, col1_data,
         # Loop through all the field regions.
         for indx, f_region in enumerate(field_region):
 
-            # Store number of stars in field region.
-            n_fl = len(f_region)
-
-            # Randomly shuffle the stars in the cluster region.
-            clust_reg_shuffle = np.random.permutation(cluster_region_r)
-            # Remove n_fl random stars from the cluster region and pass
-            # it to the function that obtains the likelihoods for each
-            # star in the "cleaned" cluster region, ie: P(B)
-            if n_fl < len(cluster_region_r):
-                clust_reg_clean = clust_reg_shuffle[n_fl:]
-            else:
-                # If field region has more stars than the cluster region,
-                # don't remove any star. This should not happen though.
-                clust_reg_clean = clust_reg_shuffle
-
             # CMD for cluster region.
-            matrix_cl = get_CMD(clust_reg_clean)
-            rows_cl = int(len(matrix_cl)/2)
+            #matrix_cl = get_CMD(clust_reg_clean)
+            matrix_cl = get_CMD(cluster_region_r)
+            rows_cl = int(len(matrix_cl) / 2)
             # CMD for 1st field region.
             matrix_f1 = get_CMD(f_region)
-            rows_f1 = int(len(matrix_f1)/2)
+            rows_f1 = int(len(matrix_f1) / 2)
 
             # Create matrices for these CMDs.
             m_cl = robjects.r.matrix(robjects.FloatVector(matrix_cl),
@@ -161,14 +147,13 @@ def get_pval(cluster_region, field_region, col1_data,
                 # Store field vs field p-value.
                 p_vals_f.append(float(str(p_val_f)[4:].replace(',','.')))
 
-
-        if run_num+1 >= runs/4 and flag_25 == False:
+        if run_num+1 >= 0.25 * runs and flag_25 is False:
             print '  25% done'
             flag_25 = True
-        elif run_num+1 >= runs/2 and flag_50 == False:
+        elif run_num+1 >= 0.5 * runs and flag_50 is False:
             print '  50% done'
             flag_50 = True
-        elif run_num+1 >= (runs/2 + runs/4) and flag_75 == False:
+        elif run_num+1 >= 0.75 * runs and flag_75 is False:
             print '  75% done'
             flag_75 = True
         elif run_num+1 == runs:

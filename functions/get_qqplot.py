@@ -53,6 +53,8 @@ def qqplot(p_vals_cl, p_vals_f):
     b = quantiles[1]
     ccc = 2*(np.std(a)*np.std(b))/\
     (np.std(a)**2+np.std(b)**2+(np.mean(a)-np.mean(b))**2)
+    # Invert CCC for easier reading.
+    ccc = 1 - ccc
     
     # Return parameters inside list.
     qq_params = [ccc, quantiles]

@@ -221,17 +221,17 @@ def field_decont_kde(flag_area_stronger, cluster_region, field_region,
             # Append this list to the list that holds all the runs.
             runs_fields_probs.append(field_reg_probs)
             
-            if run_num+1 >= runs/4 and flag_25 == False:
+            if run_num+1 >= 0.25 * runs and flag_25 is False:
                 print '  25% done'
                 flag_25 = True
-            elif run_num+1 >= runs/2 and flag_50 == False:
+            elif run_num+1 >= 0.5 * runs and flag_50 is False:
                 print '  50% done'
                 flag_50 = True
-            elif run_num+1 >= (runs/2 + runs/4) and flag_75 == False:
+            elif run_num+1 >= 0.75 * runs and flag_75 is False:
                 print '  75% done'
                 flag_75 = True
             elif run_num+1 == runs:
-                print '  100% done'
+                print '  100% done'            
 
     elif mode == 'read':
         print 'Reading membership probabilities from file.'

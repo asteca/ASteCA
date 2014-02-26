@@ -292,7 +292,7 @@ px): '))
     if flag_king_no_conver is False:
         print '3-P King profile obtained.'
     else:
-        print 'King profile fitting did not converge.'
+        print 'WARNING: King profile fitting did not converge.'
 
     # Apply auto rejecting of errors if flag is True.
     e_max = er_params[2]

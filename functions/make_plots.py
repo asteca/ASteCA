@@ -774,7 +774,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                                 orientation='horizontal')
             cbar.ax.tick_params(labelsize=9)
             
-            # Synthetic cluster.
+        # Synthetic cluster.
+        if bf_flag:
             ax19 = plt.subplot(gs1[8:10, 6:8])
             #Set plot limits
             plt.xlim(col1_min, col1_max)
@@ -799,8 +800,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
             # Plot isochrone.
             plt.plot(shift_isoch[0], shift_isoch[1], 'r', lw=1.2)
             # Plot synth clust.
-            plt.scatter(synth_clst[0], synth_clst[2], marker='o', s=30, c='#4682b4',
-                        lw=0.5)
+            plt.scatter(synth_clst[0], synth_clst[2], marker='o', s=30,
+                        c='#4682b4', lw=0.5)
 
     # Best fitting process plots for GA.
     if bf_flag and best_fit_algor == 'genet':

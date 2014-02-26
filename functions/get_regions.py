@@ -139,7 +139,7 @@ def get_regions(x_center_bin, y_center_bin, width_bins, histo, clust_rad,
     # Obtain field regions.
     # This list holds all the field regions.
     field_regions = []
-    if not flag_area_stronger:
+    if not flag_area_stronger and f_regions > 0:
 
         # This ensures that the decontamination algorithm uses CMD's
         # of areas equal to the cluster area for the field regions since
