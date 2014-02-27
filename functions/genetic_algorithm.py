@@ -373,17 +373,17 @@ def gen_algor(err_lst, obs_clust, completeness, ip_list, sc_params, ga_params,
             # Reset counter.
             best_sol_count = 0
             
-        if i+1 >= n_gen/4 and flag_25 == False:
+        if i+1 >= 0.25 * n_gen and flag_25 is False:
             print '  25% done'
             flag_25 = True
-        elif i+1 >= n_gen/2 and flag_50 == False:
+        elif i+1 >= 0.5 * n_gen and flag_50 is False:
             print '  50% done'
             flag_50 = True
-        elif i+1 >= (n_gen/2 + n_gen/4) and flag_75 == False:
+        elif i+1 >= 0.75 * n_gen and flag_75 is False:
             print '  75% done'
             flag_75 = True
         elif i+1 == n_gen:
-            print '  100% done'
+            print '  100% done'            
 
         # For plotting purposes.
         lkl_old[0].append(lkl[0])
