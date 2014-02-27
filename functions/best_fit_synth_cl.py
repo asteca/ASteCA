@@ -67,6 +67,7 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
             params_boot = []
             # Begin bootstrap block (run a minimum of two times).
             for i in range(max(N_b, 2)):
+                print i, 'bootstrap run.'
                 # Resample cluster with replacement.
                 obs_clust = boostrap_resample(memb_prob_avrg_sort)
                 # Genetic algorithm.
