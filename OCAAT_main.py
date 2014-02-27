@@ -285,6 +285,7 @@ px): '))
             radius_params[0] = cl_rad_semi
             clust_rad = radius_params[0]
             flag_radius_manual = True
+            print 'Semi-auto radius set: %0.1f px.' % clust_rad
 
     # Get King profiles based on the density profiles.
     k_prof, k_pr_err, n_c_k, flag_king_no_conver = \
