@@ -52,7 +52,9 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
                                    ip_list, sc_params, ga_params, sys_sel)
             # Assign errors as the steps in each parameter.
             isoch_fit_errors = [ps_params[i+3][2] for i in range(4)]
-
+            print 'Best fit params obtained (%0.4f, %0.2f, %0.2f, %0.2f).' % \
+            (isoch_fit_params[0][0], isoch_fit_params[0][1], \
+            isoch_fit_params[0][2], isoch_fit_params[0][3])
             
         elif best_fit_algor == 'genet':
             # Genetic algorithm.
@@ -60,7 +62,10 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
             # values. After that we resample to get the uncertainty in each
             # parameter.  
             isoch_fit_params = g_a(err_lst, memb_prob_avrg_sort, completeness,
-                                   ip_list, sc_params, ga_params, sys_sel)    
+                                   ip_list, sc_params, ga_params, sys_sel)
+            print 'Best fit params obtained (%0.4f, %0.2f, %0.2f, %0.2f).' % \
+            (isoch_fit_params[0][0], isoch_fit_params[0][1], \
+            isoch_fit_params[0][2], isoch_fit_params[0][3])
         
             # List that holds the parameters values obtained by the bootstrap
             # process.
@@ -79,7 +84,6 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
             # Errors can not be smaller than the steps in each parameter.
             for i in range(4):
                 isoch_fit_errors[i] = max(ps_params[i+3][2], isoch_fit_errors[i])
-        
         
         # For plotting purposes.
         # Get list of stored isochrones and their parameters.
