@@ -20,8 +20,8 @@ hpi_kfe = ks.Hpi_kfe
 
 def gauss_error(col, e_col, mag, e_mag):
     # Randomly move mag and color through a Gaussian function.
-    col_gauss = col + np.random.normal(0, 1, len(col))*e_col
-    mag_gauss = mag + np.random.normal(0, 1, len(col))*e_mag
+    col_gauss = col + np.random.normal(0, 1, len(col)) * e_col
+    mag_gauss = mag + np.random.normal(0, 1, len(col)) * e_mag
 
     return col_gauss, mag_gauss
 
@@ -63,11 +63,11 @@ def get_pval(cluster_region, field_region, col1_data,
     ks package (developed in R) to obtain a p-value. This value will be close
     to 1 if the cluster region is very similar to the field regions and
     closer to 0 as it differentiates from it.
-    As a rule of thumb, a p-value > 0.05 (ie: 5%) indicates that one should reject
-    the null hypothesis that the KDEs arose from ther same distribution.
-    We asseigante a probability of the overdensity being a real cluster as 1 minus
-    the overlap between the KDEs of the distributions of p-values for the cluster
-    vs field and field vs field comparisions.
+    As a rule of thumb, a p-value > 0.05 (ie: 5%) indicates that one should
+    reject the null hypothesis that the KDEs arose from ther same distribution.
+    We asseigante a probability of the overdensity being a real cluster as 1
+    minus the overlap between the KDEs of the distributions of p-values for
+    the cluster vs field and field vs field comparisions.
     '''
 
     run_set, num_runs = pv_params[1], pv_params[2]
@@ -77,18 +77,18 @@ def get_pval(cluster_region, field_region, col1_data,
     if run_set == 'auto':
         # Set number of runs for the p_value algorithm with a maximum of
         # 100 if only one field region was used.
-        runs = int(100/len(field_region))
+        runs = int(100 / len(field_region))
     elif run_set == 'manual':
         runs = num_runs
     else:
-        runs = int(100/len(field_region))
+        runs = int(100 / len(field_region))
         print "  Parameter 'runs' has wrong name. Using 'auto'."
 
     # Only use stars inside cluster's radius.
     cluster_region_r = []
     for star in cluster_region:
-        dist = np.sqrt((center_cl[0]-star[1])**2 + \
-        (center_cl[1]-star[2])**2)
+        dist = np.sqrt((center_cl[0] - star[1]) ** 2 +
+        (center_cl[1] - star[2]) ** 2)
         if dist <= clust_rad:
             cluster_region_r.append(star)
 
@@ -125,7 +125,7 @@ def get_pval(cluster_region, field_region, col1_data,
             res_cl = kde_test(x1=m_cl, x2=m_f1, H1=hpic, H2=hpif1)
             p_val_cl = res_cl.rx2('pvalue')
             # Store cluster vs field p-value.
-            p_vals_cl.append(float(str(p_val_cl)[4:].replace(',','.')))
+            p_vals_cl.append(float(str(p_val_cl)[4:].replace(',', '.')))
 
             # Compare the field region used above with all the remaining
             # field regions. This results in [N*(N+1)/2] combinations of
@@ -134,7 +134,7 @@ def get_pval(cluster_region, field_region, col1_data,
 
                 # CMD for 2nd field region.
                 matrix_f2 = get_CMD(f_region2)
-                rows_f2 = int(len(matrix_f2)/2)
+                rows_f2 = int(len(matrix_f2) / 2)
                 # Matrix.
                 m_f2 = robjects.r.matrix(robjects.FloatVector(matrix_f2),
                                          nrow=rows_f2, byrow=True)
@@ -145,18 +145,18 @@ def get_pval(cluster_region, field_region, col1_data,
                 res_f = kde_test(x1=m_f1, x2=m_f2, H1=hpif1, H2=hpif2)
                 p_val_f = res_f.rx2('pvalue')
                 # Store field vs field p-value.
-                p_vals_f.append(float(str(p_val_f)[4:].replace(',','.')))
+                p_vals_f.append(float(str(p_val_f)[4:].replace(',', '.')))
 
-        if run_num+1 >= 0.25 * runs and flag_25 is False:
+        if run_num + 1 >= 0.25 * runs and flag_25 is False:
             print '  25% done'
             flag_25 = True
-        elif run_num+1 >= 0.5 * runs and flag_50 is False:
+        elif run_num + 1 >= 0.5 * runs and flag_50 is False:
             print '  50% done'
             flag_50 = True
-        elif run_num+1 >= 0.75 * runs and flag_75 is False:
+        elif run_num + 1 >= 0.75 * runs and flag_75 is False:
             print '  75% done'
             flag_75 = True
-        elif run_num+1 == runs:
+        elif run_num + 1 == runs:
             print '  100% done'
 
     # For plotting purposes.
@@ -186,7 +186,7 @@ def get_pval(cluster_region, field_region, col1_data,
     y_over = [float(y_pts(x_pt)) for x_pt in x_kde]
 
     # Probability value for the cluster.
-    prob_cl_kde = 1- overlap[0]
+    prob_cl_kde = 1 - overlap[0]
 
     # Store all return params in a single list.
     pval_test_params = [prob_cl_kde, p_vals_cl, p_vals_f, kde_cl_1d, kde_f_1d,
