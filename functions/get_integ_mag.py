@@ -8,67 +8,82 @@ Created on Thu Nov 28 20:55:57 2013
 import numpy as np
 
 
-def calc_integ_mag(mags_in, mags_in_all, mag_range):
+def calc_integ_mag(st_reg):
     '''
     Calculate integrated magnitude up to a certain maximum magnitude value.
     '''
 
+    # Define magnitude range.
+    mag_range = np.linspace(min(st_reg), max(st_reg), 100)
+
     # Define final output lists.
-    stars_in_mag, stars_in_all_mag = [[], []], [[], []]
-    # Combine into one list.
-    all_lists = [stars_in_mag, stars_in_all_mag]
+    reg_mag = [[], []]
 
-    # Loop through each list.
-    for indx, out_list in enumerate(all_lists):
+    # Sort magnitude list.
+    sort_lis = sorted(st_reg)
+    # Pick random star.
+    mag_star = np.random.choice(sort_lis)
 
-        # Define the list to be used.
-        if indx == 0:
-            mag_list = mags_in
-        elif indx == 1:
-            mag_list = mags_in_all
+    int_mag_val = 0.
+    for mag_limit in mag_range:
 
-        # Sort magnitude list.
-        sort_lis = sorted(mag_list)
-        # Pick random star.
-        mag_star = np.random.choice(sort_lis)
+        # Calculate integrated magnitude up to this mag value.
 
-        int_mag_val = 0.
-        for mag_limit in mag_range:
+        trim_lis = [i for i in sort_lis if i <= mag_limit]
 
-            # Calculate integrated magnitude up to this mag value.
+        if len(trim_lis) == 0:
+            int_mag_val = mag_limit
+        else:
+            energ_sum = 0.
+            for mag_i in trim_lis:
+                energ_sum = energ_sum + 10 ** ((mag_i - mag_star) / -2.5)
 
-            trim_lis = [i for i in sort_lis if i <= mag_limit]
+            int_mag_val = -2.5 * np.log10(energ_sum) + mag_star
 
-            if len(trim_lis) == 0:
-                int_mag_val = mag_limit
-            else:
-                energ_sum = 0.
-                for mag_i in trim_lis:
-                    energ_sum = energ_sum + 10 ** ((mag_i - mag_star) / -2.5)
+        reg_mag[0].append(mag_limit)
+        reg_mag[1].append(int_mag_val)
 
-                int_mag_val = -2.5 * np.log10(energ_sum) + mag_star
-
-            out_list[0].append(mag_limit)
-            out_list[1].append(int_mag_val)
-
-    return stars_in_mag, stars_in_all_mag
+    return reg_mag
 
 
-def integ_mag(stars_in, stars_in_rjct):
+def integ_mag(center_cl, clust_rad, cluster_region, field_region):
     '''
     Obtain integrated magnitude using all stars inside the cluster's radius for
     several limits in magnitude.
     '''
-    # Generate lists holding only mag values.
-    mags_in = [i[3] for i in stars_in]
-    mags_in_all = mags_in + [i[3] for i in stars_in_rjct]
 
-    # Define range in magnitude.
-    min_mag, max_mag = min(min(mags_in), min(mags_in_all)), max(max(mags_in),
-                           max(mags_in_all))
-    mag_range = np.arange(min_mag, max_mag, 0.1)
+    # Only use stars inside cluster's radius.
+    cl_region_r = []
+    for star in cluster_region:
+        dist = np.sqrt((center_cl[0] - star[1]) ** 2 +
+        (center_cl[1] - star[2]) ** 2)
+        if dist <= clust_rad:
+            # Append magnitude.
+            cl_region_r.append(star[3])
 
-    stars_in_mag, stars_in_all_mag = calc_integ_mag(mags_in, mags_in_all,
-        mag_range)
+    cl_reg_mag = calc_integ_mag(cl_region_r)
 
-    return stars_in_mag, stars_in_all_mag
+    # Run for every field region defined.
+    fl_reg_1 = [[], []]
+    for f_reg in field_region:
+        fl_reg_0 = calc_integ_mag(zip(*f_reg)[3])
+        fl_reg_1[0].extend(fl_reg_0[0])
+        fl_reg_1[1].extend(fl_reg_0[1])
+
+    # Average values for all field regions.
+    #fl_reg_2 = []
+    #fl_reg_2[0] = np.mean(zip(*fl_reg_1)[0])
+    #fl_reg_2[1] = np.mean(zip(*fl_reg_1)[1])
+
+    fl_reg_2 = [[], []]
+    fl_reg_2[0] = np.sort(fl_reg_1[0])
+    fl_reg_2[1] = np.sort(fl_reg_1[1]).reverse()
+    print fl_reg_2[0], '\n'
+    print fl_reg_2[1]
+    raw_input()
+
+    # Substract field region average from cluster region to generate
+    # the final clean values.
+    cl_subs_fl = fl_reg_mag - cl_reg_mag
+
+    return cl_reg_mag, fl_reg_mag, cl_subs_fl

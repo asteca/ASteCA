@@ -368,10 +368,6 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
     gio.get_in_out(center_cl, clust_rad, acpt_stars, rjct_stars)
     print "Stars separated in/out of cluster's boundaries."
 
-    # Calculate integrated magnitude.
-    stars_in_mag, stars_in_all_mag = g_i_m(stars_in, stars_in_rjct)
-    print 'Integrated magnitude distribution obtained.'
-
     # Get approximate number of cluster's members.
     n_c, flag_num_memb_low = g_m_n.get_memb_num(backg_value, clust_rad,
                                                 stars_in, stars_in_rjct)
@@ -387,6 +383,11 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
     g_r(x_center_bin, y_center_bin, width_bins, h_not_filt, clust_rad,
         H_manual, stars_in, stars_out, gr_params)
     print 'Cluster + field stars regions obtained (%d).' % len(field_region)
+
+    # Calculate integrated magnitude.
+    cl_reg_mag, fl_reg_mag, cl_subs_fl = g_i_m(center_cl, clust_rad,
+        cluster_region, field_region)
+    print 'Integrated magnitude distribution obtained.'
 
     # Check if test is to be applied or skipped.
     flag_pval_test = pv_params[0]
