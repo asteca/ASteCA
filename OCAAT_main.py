@@ -93,6 +93,7 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
 
     # If Semi mode set, get data from data iput file.
     if mode == 's':
+        print 'Semi mode selected.'
         semi_return = g_s(mypath, clust_name)
         # Check if the cluster was found in file.
         if semi_return:
@@ -100,7 +101,8 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
             err_flag_semi = semi_return
         else:
             # If the cluster was not found in the file, default to 'manual'.
-            print "WARNING: cluster not found in file. Using 'manual'"
+            print "  WARNING: cluster not found in clusters_input.dat file."
+            print "  Default to 'manual' mode."
             mode = 'm'
 
     # Get cluster's photometric data from file.
@@ -293,7 +295,7 @@ px): '))
     if flag_king_no_conver is False:
         print '3-P King profile obtained.'
     else:
-        print 'WARNING: King profile fitting did not converge.'
+        print '  WARNING: King profile fitting did not converge.'
 
     # Apply auto rejecting of errors if flag is True.
     e_max = er_params[2]
