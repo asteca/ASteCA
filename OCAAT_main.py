@@ -400,7 +400,7 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
             # Get QQ plot for p-values distributions.
             # qq_params = ccc, quantiles, r_squared, slope, intercept
             qq_params = g_qq(pval_test_params[1], pval_test_params[2])
-            print 'QQ-plot obtained (CCC = %0.2f)' % qq_params[0]
+            print 'QQ-plot obtained (CCC = %0.2f).' % qq_params[0]
 
     # Skip process.
     if not flag_pval_test or flag_area_stronger:
