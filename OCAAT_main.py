@@ -81,6 +81,12 @@ for root, dirs, files in walk(mypath2):
 # Iterate through all cluster files.
 for f_indx, sub_dir in enumerate(dir_files[0]):
 
+    # Generate output subdir.
+    output_subdir = join(output_dir, sub_dir)
+    # Check if subdir already exists, if not create it
+    if not exists(output_subdir):
+        makedirs(output_subdir)
+
     # Store name of file in 'myfile'.
     myfile = dir_files[1][f_indx]
 
@@ -420,6 +426,10 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
         runs_fields_probs, center_cl, clust_rad)
     print 'Averaged probabilities for all runs.'
 
+    # Create data file with membership probabilities.
+    c_m_f(output_dir, sub_dir, clust_name, memb_prob_avrg_sort)
+    print 'Membership probabilities for stars in cluster region saved to file.'
+
     # Get the completeness level for each magnitude bin. This will be used by
     # the isochrone/synthetic cluster fitting algorithm.
     completeness = m_c(mag_data)
@@ -453,16 +463,6 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
                 wrong_answer = False
             else:
                 print 'Wrong input. Try again.\n'
-
-    # Generate output subdir.
-    output_subdir = join(output_dir, sub_dir)
-    # Check if subdir already exists, if not create it
-    if not exists(output_subdir):
-        makedirs(output_subdir)
-
-    # Create data file with membership probabilities.
-    c_m_f(output_dir, sub_dir, clust_name, memb_prob_avrg_sort)
-    print 'Membership probabilities for stars in cluster region saved to file.'
 
     # Add cluster data and flags to output file
     a_d_o(sub_dir, output_dir, clust_name, center_cl, clust_rad, k_prof,
