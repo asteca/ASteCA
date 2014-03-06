@@ -12,8 +12,8 @@ from scipy.stats import norm
 import matplotlib.mlab as mlab
 from scipy.ndimage.filters import gaussian_filter
 from matplotlib.patches import Ellipse
-
 from os.path import join
+import warnings
 
 
 def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
@@ -1018,7 +1018,9 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         plt.axvline(x=d + e_d, linestyle='--', color='red')
         plt.axvline(x=d - e_d, linestyle='--', color='red')
 
-    fig.tight_layout()
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        fig.tight_layout()
 
     # Generate output file for each data file.
     plt.savefig(join(output_subdir, str(clust_name) + '.png'), dpi=150)
