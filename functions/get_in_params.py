@@ -11,22 +11,22 @@ import re
 
 def get_in_params(mypath):
     '''
-    This function reads the input data parameters stored in the 'ocaat_input.dat'
-    file and returns them packaged for each function to use.
+    This function reads the input data parameters stored in the
+    'ocaat_input.dat' file and returns them packaged for each function to use.
     '''
-    
+
 # Allows to work with columns data files.
 
     data_file = join(mypath, 'ocaat_input.dat')
-    
+
     with open(data_file, mode="r") as f_dat:
-        
+
         # Iterate through each line in the file.
         for line in f_dat:
-            
+
             if not line.startswith("#") and line.strip() != '':
                 reader = line.split()
-                
+
                 # Read folder paths where clusters are stored.
                 if reader[0] == 'MO':
                     mode = str(reader[1])
@@ -61,10 +61,6 @@ def get_in_params(mypath):
                     iso_select = str(reader[2])
                 elif reader[0] == 'PS_p':
                     iso_path = str(reader[1])
-#                elif reader[0] == 'PS_l':
-#                    line_start = re.search(r'"(.*)"', line).groups()[0]
-#                elif reader[0] == 'PS_i':
-#                    indx_cols = map(int, reader[1:])
                 elif reader[0] == 'PS_m':
                     m_rs = map(float, reader[1:])
                 elif reader[0] == 'PS_a':
@@ -102,8 +98,7 @@ def get_in_params(mypath):
                     y_ax = re.search(r'"(.*)"', line).groups()[0]
                 elif reader[0] == 'MM':
                     xy_minmax = map(float, reader[1:])
-                    
-                    
+
     in_dirs = [mypath2, mypath3, output_dir]
     pv_params = [pv0_params, pv1_params, pv2_params]
     da_params = [da0_params, da1_params, da2_params, mypath2]
@@ -112,7 +107,7 @@ def get_in_params(mypath):
     sc_params = [IMF_name, tot_mass, f_bin, q_bin]
     ga_params = [n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es]
     axes_params = [x_ax, y_ax, xy_minmax]
-    
-    return mode, in_dirs, gd_params, gc_params, br_params, cr_params, er_params,\
-    gr_params, pv_params, da_params, ps_params, bf_params, sc_params, ga_params,\
-    flag_make_plot, flag_move_file, axes_params
+
+    return mode, in_dirs, gd_params, gc_params, br_params, cr_params, \
+    er_params, gr_params, pv_params, da_params, ps_params, bf_params, \
+    sc_params, ga_params, flag_make_plot, flag_move_file, axes_params
