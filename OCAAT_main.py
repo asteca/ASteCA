@@ -385,8 +385,7 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
     print 'Cluster + field stars regions obtained (%d).' % len(field_region)
 
     # Calculate integrated magnitude.
-    cl_reg_mag, fl_reg_mag, integ_mag = g_i_m(center_cl, clust_rad,
-        cluster_region, field_region)
+    integr_return = g_i_m(center_cl, clust_rad, cluster_region, field_region)
     print 'Integrated magnitude distribution obtained.'
 
     # Check if test is to be applied or skipped.
@@ -468,7 +467,7 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
     # Add cluster data and flags to output file
     a_d_o(sub_dir, output_dir, clust_name, center_cl, clust_rad, k_prof,
           n_c_k, flag_king_no_conver, cont_index, n_c, pval_test_params[0],
-          qq_params[0], integ_mag, flag_center, flag_std_dev,
+          qq_params[0], integr_return, flag_center, flag_std_dev,
           flag_center_manual, flag_radius_manual, rjct_errors_fit,
           flag_bin_count, radius_params[3:], flag_num_memb_low, bf_return)
     print 'Data added to output file.'
@@ -480,8 +479,8 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
            outer_ring, radius_params[0:3], ring_density, poisson_error,
            cont_index, width_bins, mag_data, col1_data, popt_mag, popt_col1,
            err_plot, rjct_errors_fit, k_prof, k_pr_err, flag_king_no_conver,
-           stars_in, stars_out, stars_in_rjct, stars_out_rjct, cl_reg_mag,
-           fl_reg_mag, n_c, flag_area_stronger,
+           stars_in, stars_out, stars_in_rjct, stars_out_rjct,
+           integr_return, n_c, flag_area_stronger,
            cluster_region, field_region, pval_test_params, qq_params,
            clust_reg_prob_avrg, memb_prob_avrg_sort, completeness, bf_params,
            bf_return, ga_params, er_params, axes_params, ps_params)

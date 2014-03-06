@@ -5,7 +5,7 @@
 
 def add_data_output(sub_dir, output_dir, clust_name, center_cl, clust_rad,
                     k_prof, n_c_k, flag_king_no_conver, cont_index, n_c,
-                    prob_cl_kde, ccc, integ_mag,
+                    prob_cl_kde, ccc, integr_return,
                     flag_center, flag_std_dev, flag_center_manual,
                     flag_radius_manual, rjct_errors_fit, flag_bin_count,
                     radius_params, flag_num_memb_low, bf_return):
@@ -14,6 +14,9 @@ def add_data_output(sub_dir, output_dir, clust_name, center_cl, clust_rad,
     # Parameters from get_radius function.
     flag_delta_total, flag_not_stable, flag_rad_500, flag_delta,\
     flag_delta_points = radius_params
+
+    # Get parameter from list.
+    integ_mag = integr_return[2]
 
     # Create list containing all the flags.
     flags_list = [flag_center_manual, flag_radius_manual, rjct_errors_fit,

@@ -84,18 +84,18 @@ def integ_mag(center_cl, clust_rad, cluster_region, field_region):
     fl_reg_c_2[0] = np.sort(fl_reg_c_1[0])
     fl_reg_c_2[1] = np.sort(fl_reg_c_1[1])[::-1]
 
-    # Interpolate all curves to obtain final field integrated magnitude.
+    # Interpolate all curves to obtain final field integrated and color
+    # magnitude.
     fl_reg_mag, fl_reg_col = [[], []], [[], []]
     fl_reg_mag[0] = np.linspace(min(fl_reg_m_2[0]), max(fl_reg_m_2[0]), 200)
     fl_reg_mag[1] = np.interp(fl_reg_mag[0], fl_reg_m_2[0], fl_reg_m_2[1])
     fl_reg_col[0] = np.linspace(min(fl_reg_c_2[0]), max(fl_reg_c_2[0]), 200)
     fl_reg_col[1] = np.interp(fl_reg_col[0], fl_reg_c_2[0], fl_reg_c_2[1])
 
-    print cl_reg_col[1], '\n'
-    print fl_reg_col[1]
-    raw_input()
-
     integ_mag = min(cl_reg_mag[1]) - min(fl_reg_mag[1])
     integ_col = min(cl_reg_col[1]) - min(fl_reg_col[1])
 
-    return cl_reg_mag, fl_reg_mag, integ_mag
+    integr_return = [cl_reg_mag, fl_reg_mag, integ_mag, cl_reg_col,
+        fl_reg_col, integ_col]
+
+    return integr_return
