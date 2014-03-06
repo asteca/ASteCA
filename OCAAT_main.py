@@ -161,7 +161,8 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
     center_cl, cent_cl_err, h_filter, h_not_filt, xedges_min_db, \
     yedges_min_db, x_center_bin, y_center_bin, width_bins, flag_center, \
     flag_std_dev = g_c.get_center(x_data, y_data, gc_params)
-    print 'Auto center found: (%d, %d) px.' % (center_cl[0], center_cl[1])
+    if mode == 'a':
+        print 'Auto center found: (%d, %d) px.' % (center_cl[0], center_cl[1])
 
     # If Manual mode is set, display center and ask the user to accept it or
     # input new one.
@@ -202,7 +203,7 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
             center_cl[1] = cent_cl_semi[1]
             # Update error values.
             cent_cl_err[0], cent_cl_err[1] = 13., 13.
-            print 'Semi-auto center set: (%d, %d) px.' % (center_cl[0],
+            print 'Semi center set: (%d, %d) px.' % (center_cl[0],
                 center_cl[1])
             # Store center values in bin coordinates. We substract
             # the min (x,y) coordinate values otherwise the bin
@@ -257,7 +258,8 @@ background (%d, %d) px? (y/n) ' % (inner_ring, outer_ring))
     radius_params = gr.get_clust_rad(backg_value, radii, ring_density,
                                      width_bins, cr_params)
     clust_rad = radius_params[0]
-    print 'Radius calculated: %d px.' % clust_rad
+    if mode == 'a':
+        print 'Auto radius found: %d px.' % clust_rad
 
     # If Manual mode is set, display radius and ask the user to accept it or
     # input new one.
@@ -293,7 +295,7 @@ px): '))
             radius_params[0] = cl_rad_semi
             clust_rad = radius_params[0]
             flag_radius_manual = True
-            print 'Semi-auto radius set: %0.1f px.' % clust_rad
+            print 'Semi radius set: %0.1f px.' % clust_rad
 
     # Get King profiles based on the density profiles.
     k_prof, k_pr_err, n_c_k, flag_king_no_conver = \
@@ -386,7 +388,7 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
 
     # Calculate integrated magnitude.
     integr_return = g_i_m(center_cl, clust_rad, cluster_region, field_region)
-    print 'Integrated magnitude distribution obtained.'
+    print 'Integrated magnitude/color distribution obtained.'
 
     # Check if test is to be applied or skipped.
     flag_pval_test = pv_params[0]
@@ -439,15 +441,18 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
     # Store metallicity values and isochrones ages between the allowed
     # ranges in isoch_ma; extinction and distance modulus values in isoch_ed.
     # isoch_list, isoch_ma, isoch_ed = ip_list
-    ip_list = ip(ps_params)
-    print 'Theoretical isochrones read and stored.'
+    # Only read files if best fit process is set to run.
+    # bf_flag = bf_params[0]
+    if bf_params[0]:
+        ip_list = ip(ps_params)
+        print 'Theoretical isochrones read and stored.'
+    else:
+        ip_list = []
 
     # Obtain best fitting parameters for cluster.
-    print 'Searching for optimal parameters.'
     err_lst = [popt_mag, popt_col1, e_max]
     bf_return = bfsc(err_lst, memb_prob_avrg_sort, completeness, ip_list,
                      bf_params, sc_params, ga_params, ps_params)
-    print 'Best fit parameters obtained.'
 
     # New name for cluster? Useful when there's a single photometric file
     # with multiple clusters in it.

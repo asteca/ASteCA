@@ -37,6 +37,8 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
     # Check if algorithm should run.
     if bf_flag:
 
+        print 'Searching for optimal parameters.'
+
         # Obtain the selected IMF's PDF. We run it once because the array only
         # depends on the IMF selected.
         imf_pdf = i_p(sc_params[0])
@@ -100,9 +102,11 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
         synth_clst = s_c(err_lst, completeness, sc_params,
                          isoch_list[m_indx][a_indx], [-1., -1., e, d], sys_sel)
 
+        print 'Best fit parameters obtained.'
+
     else:
         # Pass empty lists to make_plots.
-        print 'Skipping synthetic cluster fitting process.'
+        print 'Skipping parameters fitting process.'
         isoch_fit_params, isoch_fit_errors, shift_isoch, synth_clst = \
         [[-1., -1., -1., -1.]], [-1., -1., -1., -1.], [], []
 
