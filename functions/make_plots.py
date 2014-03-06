@@ -23,11 +23,12 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                mag_data, col1_data, popt_mag, popt_col1,
                err_plot, rjct_errors_fit, k_prof, k_pr_err,
                flag_king_no_conver, stars_in,
-               stars_out, stars_in_rjct, stars_out_rjct, stars_in_mag,
-               stars_in_all_mag, n_c, flag_area_stronger,
+               stars_out, stars_in_rjct, stars_out_rjct, cl_reg_mag,
+               fl_reg_mag, n_c, flag_area_stronger,
                cluster_region, field_region, pval_test_params, qq_params,
-               clust_reg_prob_avrg, memb_prob_avrg_sort, bf_params, bf_return,
-               ga_params, er_params, axes_params, ps_params):
+               clust_reg_prob_avrg, memb_prob_avrg_sort, completeness,
+               bf_params, bf_return, ga_params, er_params, axes_params,
+               ps_params):
     '''
     Make all plots.
     '''
@@ -547,26 +548,33 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
 
     # Integrated magnitude distribution.
     ax13 = plt.subplot(gs1[6:8, 2:4])
-    plt.xlim(min(stars_in_all_mag[0]) - 0.2, max(stars_in_all_mag[0]) + 0.2)
-    plt.ylim(max(max(stars_in_all_mag[1]), max(stars_in_mag[1])) + 0.2,
-             min(stars_in_all_mag[1]) - 0.2)
+    plt.xlim(min(min(cl_reg_mag[0]), min(fl_reg_mag[0])) - 0.2,
+        max(max(cl_reg_mag[0]), max(fl_reg_mag[0])) + 0.2)
+    y_min, y_max = max(max(cl_reg_mag[1]), max(fl_reg_mag[1])) + 0.2,\
+        min(min(cl_reg_mag[1]), min(fl_reg_mag[1])) - 0.2
+    plt.ylim(y_min, y_max)
     plt.xlabel('$' + y_ax + '$', fontsize=18)
     plt.ylabel('$' + y_ax + '^*$', fontsize=18)
     ax13.minorticks_on()
     ax13.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
     # Text.
-    text1 = '$' + y_ax + '^*\,(max_{acpt})\,=%.2f$' '\n' % \
-    (min(stars_in_mag[1]))
-    text2 = '$' + y_ax + '^*\,(max_{all})\;=%.2f$' % (min(stars_in_all_mag[1]))
-    text = text1 + text2
-    plt.text(0.5, 0.25, text, transform=ax13.transAxes,
-         bbox=dict(facecolor='white', alpha=0.85), fontsize=14)
-    # Only accepted stars.
-    plt.plot(stars_in_mag[0], stars_in_mag[1], 'r-', lw=1.5,
-             label='$stars_{acpt}$')
-    # All stars, including those rejected due to its large errors.
-    plt.plot(stars_in_all_mag[0], stars_in_all_mag[1], 'b--', lw=1.,
-             label='$stars_{all}$')
+    text1 = '$' + y_ax + '^{*}_{cl}\,;\,' + y_ax + '^{*}_{cl,max}=%.2f$' '\n' \
+    % (min(cl_reg_mag[1]))
+    text2 = '$' + y_ax + '^{*}_{fl}\,;\,' + y_ax + '^{*}_{fl,max}=%.2f$' \
+    % (min(fl_reg_mag[1]))
+    #text = text1 + text2
+    #plt.text(0.5, 0.25, text, transform=ax13.transAxes,
+         #bbox=dict(facecolor='white', alpha=0.85), fontsize=14)
+    # Cluster integrated magnitude.
+    plt.plot(cl_reg_mag[0], cl_reg_mag[1], 'r-', lw=1., label=text1)
+    # Field average integrated magnitude.
+    plt.plot(fl_reg_mag[0], fl_reg_mag[1], 'b-', lw=1., label=text2)
+    # Completeness maximum value.
+    # completeness = [max_mag, bin_edges, max_indx, comp_perc]
+    bin_edges, max_indx = completeness[1], completeness[2]
+    mag_peak = bin_edges[max_indx]
+    ax13.vlines(x=mag_peak, ymin=y_min, ymax=y_max, color='g',
+           linestyles='dashed', lw=2., zorder=2)
     # get handles
     handles, labels = ax13.get_legend_handles_labels()
     # use them in the legend

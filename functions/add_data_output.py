@@ -5,7 +5,7 @@
 
 def add_data_output(sub_dir, output_dir, clust_name, center_cl, clust_rad,
                     k_prof, n_c_k, flag_king_no_conver, cont_index, n_c,
-                    prob_cl_kde, ccc, stars_in_mag,
+                    prob_cl_kde, ccc, integ_mag,
                     flag_center, flag_std_dev, flag_center_manual,
                     flag_radius_manual, rjct_errors_fit, flag_bin_count,
                     radius_params, flag_num_memb_low, bf_return):
@@ -37,7 +37,7 @@ def add_data_output(sub_dir, output_dir, clust_name, center_cl, clust_rad,
         str('%0.f' % round(clust_rad)), str('%0.f' % round(k_prof[0])),
         str('%0.f' % round(k_prof[1])), str(round(cont_index, 2)),
         str(int(n_c)), str(n_c_k), str('%0.2f' % prob_cl_kde),
-        str('%0.2f' % ccc), str('%0.2f' % min(stars_in_mag[1])),
+        str('%0.2f' % ccc), str('%0.2f' % integ_mag),
         str('%0.4f' % m), str('%0.4f' % e_m), str('%0.2f' % a),
         str('%0.2f' % e_a), str('%0.2f' % e), str('%0.2f' % e_e),
         str('%0.2f' % d), str('%0.2f' % e_d)]
@@ -45,8 +45,9 @@ def add_data_output(sub_dir, output_dir, clust_name, center_cl, clust_rad,
     # "a" opens the file for appending
     with open(output_dir + 'data_output.dat', "a") as f_out:
         f_out.write('{:<16} {:>7} {:>7} {:>8} {:>7} {:>7} {:>8} {:>4} {:>6} \
-{:>7} {:>5} {:>7} {:>7} {:>6} {:>5} {:>5} {:>7} {:>4} {:>6} {:>5}'.format(*line))
+{:>7} {:>5} {:>7} {:>7} {:>7} {:>5} {:>5} {:>7} {:>5} {:>6} \
+{:>5}'.format(*line))
         # Flags.
-        f_out.write('{:>4} {:>2} {:>2}  {:>2} {:>2} {:>2} {:>2} {:>2} {:>2} \
+        f_out.write('{:>4} {:>2} {:>2} {:>3} {:>2} {:>2} {:>2} {:>2} {:>2} \
 {:>2} {:>2} {:>2} {:>3} {:>3}'.format(*int_flags))
         f_out.write('\n')

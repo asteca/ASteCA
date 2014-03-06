@@ -9,7 +9,7 @@ def create_out_data_file(output_dir):
     Create output data file with headers. This will overwrite any old output
     data file already in the folder.
     '''
-    
+
     # Check if file already exists. If it does append new values instead of
     # deleting/creating the file again.
     try:
@@ -91,6 +91,6 @@ def create_out_data_file(output_dir):
 #    than one cluster present in the frame, variable or too crowded field, etc.\n\
 #\n\
 #NAME            c_x[px] c_y[px] R_cl[px] R_c[px] R_t[px] cont_ind memb memb_k \
-prob_cl   CCC mag_int     met    e_m   age   e_a  E(B-V)  e_E   dist   e_d  M1 M2 M3  f1 \
+prob_cl   CCC mag_int     met     e_m   age   e_a  E(B-V)   e_E   dist   e_d  M1 M2 M3  f1 \
 f2 f3 f4 f5 f6 f7 f8 f9 f10  FC\n" % now_time)
         out_data_file.close()
