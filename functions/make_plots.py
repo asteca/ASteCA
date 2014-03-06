@@ -550,8 +550,10 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     cl_reg_mag, fl_reg_mag, integ_mag, cl_reg_col, fl_reg_col, integ_col =\
     integr_return
     ax13 = plt.subplot(gs1[6:8, 2:4])
-    plt.xlim(min(min(cl_reg_mag[0]), min(fl_reg_mag[0])) - 0.2,
-        max(max(cl_reg_mag[0]), max(fl_reg_mag[0])) + 0.2)
+    x_min, x_max = min(min(cl_reg_mag[0]), min(fl_reg_mag[0])) - 0.2,\
+        max(max(cl_reg_mag[0]), max(fl_reg_mag[0])) + 0.2
+    plt.xlim(x_min, x_max)
+    #ax13.set(xlim=[x_min, x_max])
     y_min, y_max = max(max(cl_reg_mag[1]), max(fl_reg_mag[1])) + 0.2,\
         min(min(cl_reg_mag[1]), min(fl_reg_mag[1])) - 0.2
     plt.ylim(y_min, y_max)
@@ -560,8 +562,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     ax13.minorticks_on()
     ax13.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
     # Text.
-    text1 = '$' + y_ax + '^{*}_{cl,max}=%.2f$' '\n' % (min(cl_reg_mag[1]))
-    text2 = '$' + y_ax + '^{*}_{fl,max}=%.2f$' '\n' % (min(fl_reg_mag[1]))
+    text1 = '$' + y_ax + '^{*}_{cl,max}=%.2f$' % (min(cl_reg_mag[1]))
+    text2 = '$' + y_ax + '^{*}_{fl,max}=%.2f$' % (min(fl_reg_mag[1]))
     # Completeness maximum value.
     # completeness = [max_mag, bin_edges, max_indx, comp_perc]
     bin_edges, max_indx = completeness[1], completeness[2]
@@ -574,21 +576,22 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     plt.plot(fl_reg_mag[0], fl_reg_mag[1], 'b-', lw=1., label=text2)
 
     # Color integrated magnitude.
-    ax132 = ax13.twinx().twiny()
-    plt.xlim(min(min(cl_reg_col[0]), min(fl_reg_col[0])) - 0.2,
-        max(max(cl_reg_col[0]), max(fl_reg_col[0])) + 0.2)
+    tempax = ax13.twinx()
+    ax132 = tempax.twiny()
+    x_min, x_max = min(min(cl_reg_col[0]), min(fl_reg_col[0])) - 0.2,\
+        max(max(cl_reg_col[0]), max(fl_reg_col[0])) + 0.2
     y_min, y_max = max(max(cl_reg_col[1]), max(fl_reg_col[1])) + 0.2,\
         min(min(cl_reg_col[1]), min(fl_reg_col[1])) - 0.2
-    plt.ylim(y_min, y_max)
-    ax132.set_xlabel('$' + x_ax + '$', fontsize=16)
-    ax132.set_ylabel(r'$' + x_ax + '^*$', fontsize=16)
+    ax132.set_xlabel('$' + x_ax + '$', fontsize=14)
+    tempax.set_ylabel('$' + x_ax + '^*$', fontsize=14, rotation=90)
     # Text.
-    text1 = '$' + x_ax + '^{*}_{cl,max}=%.2f$' '\n' % (min(cl_reg_col[1]))
+    text1 = '$' + x_ax + '^{*}_{cl,max}=%.2f$' % (min(cl_reg_col[1]))
     text2 = '$' + x_ax + '^{*}_{fl,max}=%.2f$' % (min(fl_reg_col[1]))
     # Cluster integrated magnitude.
-    plt.plot(cl_reg_col[0], cl_reg_col[1], 'r:', lw=1.5, label=text1)
+    plt.plot(cl_reg_col[0], cl_reg_col[1], 'r:', lw=2., label=text1)
     # Field average integrated magnitude.
-    plt.plot(fl_reg_col[0], fl_reg_col[1], 'b:', lw=1.5, label=text2)
+    plt.plot(fl_reg_col[0], fl_reg_col[1], 'b:', lw=2., label=text2)
+    ax132.set(ylim=[y_min, y_max])
     # ask matplotlib for the plotted objects and their labels
     lines, labels = ax13.get_legend_handles_labels()
     lines2, labels2 = ax132.get_legend_handles_labels()
@@ -797,8 +800,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                          ms=0., zorder=4)
             # Plot colorbar.
             if v_min != v_max:
-                cbar_posit = [0.65, 0.417, 0.04, 0.005] if bf_flag and \
-                best_fit_algor == 'genet' else [0.65, 0.408, 0.04, 0.005]
+                box = ax18.get_position()
+                cbar_posit = [box.x1 * 0.93, box.y1 * 0.915, 0.04, 0.005]
                 cbaxes = fig.add_axes(cbar_posit)
                 cbar = plt.colorbar(cax=cbaxes, ticks=[v_min, v_max],
                                     orientation='horizontal')
