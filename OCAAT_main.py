@@ -61,17 +61,17 @@ gr_params, pv_params, da_params, ps_params, bf_params, sc_params, ga_params,\
 flag_make_plot, flag_move_file, axes_params = gip.get_in_params(mypath)
 
 # Read paths.
-mypath2, mypath3, output_dir = in_dirs
+input_dir, output_dir, done_dir = in_dirs
 
 # Create output data file (append if file already existis)
 c_o_d_f(output_dir)
 
 # Store subdir names [0] and file names [1] inside each subdir.
 dir_files = [[], []]
-for root, dirs, files in walk(mypath2):
+for root, dirs, files in walk(input_dir):
     if dirs:
         for subdir in dirs:
-            for name in listdir(join(mypath2, subdir)):
+            for name in listdir(join(input_dir, subdir)):
                 # Check to see if it's a valid data file.
                 if name.endswith(('.DAT', '.MAG', '.OUT', '.TEX')):
                     dir_files[0].append(subdir)
@@ -112,7 +112,7 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
             mode = 'm'
 
     # Get cluster's photometric data from file.
-    phot_data = gd.get_data(mypath2, sub_dir, myfile, gd_params)
+    phot_data = gd.get_data(input_dir, sub_dir, myfile, gd_params)
     x_data, y_data, mag_data, col1_data = phot_data[1], phot_data[2], \
     phot_data[3], phot_data[5]
     print 'Data correctly obtained from input file (N stars: %d).'\
@@ -488,18 +488,18 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
 
     # Move file to 'done' dir.
     if flag_move_file:
-        dst_dir = join(mypath3, sub_dir)
+        dst_dir = join(done_dir, sub_dir)
         # If the sub-dir doesn't exist, create it before moving the file.
         if not exists(dst_dir):
             mkdir(dst_dir)
-        shutil.move(join(mypath2, sub_dir, myfile), dst_dir)
+        shutil.move(join(input_dir, sub_dir, myfile), dst_dir)
         # Also move *memb_data.dat file if it exists.
-        if isfile(join(mypath2, sub_dir, clust_name + '_memb.dat')):
-            shutil.move(join(mypath2, sub_dir, clust_name + '_memb.dat'),
+        if isfile(join(input_dir, sub_dir, clust_name + '_memb.dat')):
+            shutil.move(join(input_dir, sub_dir, clust_name + '_memb.dat'),
                 dst_dir)
         # If sub-dir left behind is empty, remove it.
         try:
-            rmdir(join(mypath2, sub_dir))
+            rmdir(join(input_dir, sub_dir))
         except OSError as ex:
             # Sub-dir not empty, skip.
             pass

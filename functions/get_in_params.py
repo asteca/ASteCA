@@ -6,7 +6,7 @@ Created on Tue Feb 11 14:03:44 2014
 """
 
 from os.path import join
-import re
+#import re
 
 
 def get_in_params(mypath):
@@ -30,14 +30,26 @@ def get_in_params(mypath):
                 # Read folder paths where clusters are stored.
                 if reader[0] == 'MO':
                     mode = str(reader[1])
-                elif reader[0] == 'CP0':
-                    mypath2 = str(reader[1])
-                elif reader[0] == 'CP1':
-                    mypath3 = str(reader[1])
-                elif reader[0] == 'CP2':
+
+                elif reader[0] == 'CP_i':
+                    input_dir = str(reader[1])
+                elif reader[0] == 'CP_o':
                     output_dir = str(reader[1])
+                elif reader[0] == 'CP_d':
+                    done_dir = str(reader[1])
+
+                elif reader[0] == 'MP':
+                    flag_make_plot = True if reader[1] == 'True' else False
+
                 elif reader[0] == 'PD':
                     gd_params = map(int, reader[1:])
+
+                elif reader[0] == 'CMD':
+                    cmd_select = int(reader[1])
+
+                elif reader[0] == 'PS':
+                    iso_select = str(reader[1])
+
                 elif reader[0] == 'CC':
                     gc_params = map(float, reader[1:])
                 elif reader[0] == 'BR':
@@ -56,9 +68,7 @@ def get_in_params(mypath):
                     da0_params = str(reader[1])
                     da1_params = int(reader[2])
                     da2_params = int(reader[3])
-                elif reader[0] == 'PS':
-                    sys_select = str(reader[1])
-                    iso_select = str(reader[2])
+
                 elif reader[0] == 'PS_p':
                     iso_path = str(reader[1])
                 elif reader[0] == 'PS_m':
@@ -90,22 +100,36 @@ def get_in_params(mypath):
                     n_es = int(reader[9])
                 elif reader[0] == 'MF':
                     flag_move_file = True if reader[1] == 'True' else False
-                elif reader[0] == 'MP':
-                    flag_make_plot = True if reader[1] == 'True' else False
-                elif reader[0] == 'XA':
-                    x_ax = re.search(r'"(.*)"', line).groups()[0]
-                elif reader[0] == 'YA':
-                    y_ax = re.search(r'"(.*)"', line).groups()[0]
+
+                #elif reader[0] == 'XA':
+                    #x_ax = re.search(r'"(.*)"', line).groups()[0]
+                #elif reader[0] == 'YA':
+                    #y_ax = re.search(r'"(.*)"', line).groups()[0]
+
                 elif reader[0] == 'MM':
                     xy_minmax = map(float, reader[1:])
 
-    in_dirs = [mypath2, mypath3, output_dir]
+    in_dirs = [input_dir, output_dir, done_dir]
     pv_params = [pv0_params, pv1_params, pv2_params]
-    da_params = [da0_params, da1_params, da2_params, mypath2]
+    da_params = [da0_params, da1_params, da2_params, input_dir]
+
+    if cmd_select == 1 or cmd_select == 2:
+        sys_select = 'UBVI'
+    elif cmd_select == 3:
+        sys_select = 'WASH'
     ps_params = [iso_path, sys_select, iso_select, m_rs, a_rs, e_rs, d_rs]
+
     bf_params = [bf_flag, best_fit_algor, N_b]
     sc_params = [IMF_name, tot_mass, f_bin, q_bin]
     ga_params = [n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es]
+
+    # Input magnitude and color names for the CMD axis
+    if cmd_select == 1:
+        x_ax, y_ax = '(B-V)', 'V'
+    elif cmd_select == 2:
+        x_ax, y_ax = '(V-I)', 'V'
+    elif cmd_select == 3:
+        x_ax, y_ax = '(C-T_{1})', 'T_{1}'
     axes_params = [x_ax, y_ax, xy_minmax]
 
     return mode, in_dirs, gd_params, gc_params, br_params, cr_params, \
