@@ -109,9 +109,14 @@ def synth_clust(err_lst, completeness, sc_params, isochrone, params, sys_sel):
     # Remove elements.
     isoch_cut = np.array([isoch_sort[i][0:max_indx] for i in range(3)])
 
-    # Interpolate masses in mass_dist into the isochrone rejecting those
-    # masses that fall outside of the isochrone's mass range.
-    isoch_m_d = mass_interp(isoch_cut, mass_dist)
+    # Check for an empty array.
+    if isoch_cut.any():
+        # Interpolate masses in mass_dist into the isochrone rejecting those
+        # masses that fall outside of the isochrone's mass range.
+        isoch_m_d = mass_interp(isoch_cut, mass_dist)
+    else:
+        # If the isochrone is empty after the magnitude cut, pass empty array.
+        isoch_m_d = np.asarray([])
 
     # For plotting purposes: store a copy of this list before adding binaries.
 #    from copy import deepcopy
