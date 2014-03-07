@@ -40,7 +40,7 @@ def bootstrap(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
     milestones = [15, 30, 45, 60, 75, 90, 100]
     # Begin bootstrap block (run a minimum of two times).
     for i in range(max(N_b, 2)):
-        print ' ', i, 'bootstrap run.'
+
         # Resample cluster with replacement.
         obs_clust = resample_replacement(memb_prob_avrg_sort)
         # Let the GA algor know this call comes from the bootstrap process
