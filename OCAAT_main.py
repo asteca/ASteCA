@@ -435,7 +435,7 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
 
     # Create data file with membership probabilities.
     c_m_f(output_dir, sub_dir, clust_name, memb_prob_avrg_sort)
-    print 'Membership probabilities for stars in cluster region saved to file.'
+    print 'Membership probabilities saved to file.'
 
     # Get the completeness level for each magnitude bin. This will be used by
     # the isochrone/synthetic cluster fitting algorithm.

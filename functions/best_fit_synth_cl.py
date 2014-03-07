@@ -5,23 +5,12 @@ Created on Wed Feb 12 16:10:05 2014
 @author: gabriel
 """
 
-import numpy as np
-import random
-
 from genetic_algorithm import gen_algor as g_a
 from brute_force_algorithm import brute_force as b_f
+from bootstrap_func import bootstrap
 from synth_cluster import synth_clust as s_c
 from get_IMF_PDF import IMF_PDF as i_p
 from move_isochrone import move_isoch
-
-
-def boostrap_resample(stars_list):
-    '''
-    Resamples the observed cluster with replacement. Used by the bootstrap
-    process.
-    '''
-    obs_clust = [random.choice(stars_list) for _ in stars_list]
-    return obs_clust
 
 
 def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
@@ -48,7 +37,9 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
         # Call algorithm to calculate the likelihoods for the set of
         # isochrones and return the best fitting parameters.
         if best_fit_algor == 'brute':
-        # Brute force algorithm.
+
+            print 'Using Brute Force algorithm.'
+            # Brute force algorithm.
             isoch_fit_params = b_f(err_lst, memb_prob_avrg_sort, completeness,
                                    ip_list, sc_params, ga_params, sys_sel)
             # Assign errors as the steps in each parameter.
@@ -58,34 +49,28 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
             isoch_fit_params[0][2], isoch_fit_params[0][3])
 
         elif best_fit_algor == 'genet':
-            # Genetic algorithm.
+
+            print 'Using Genetic Algorithm.'
+
             # The first pass is done with no resampling to calculate the final
             # values. After that we resample to get the uncertainty in each
             # parameter.
-            isoch_fit_params = g_a(err_lst, memb_prob_avrg_sort, completeness,
-                                   ip_list, sc_params, ga_params, sys_sel)
+
+            # Genetic algorithm.
+            # Let the GA algor know this call comes from the main function
+            # so it will print percentages to screen.
+            flag_print_perc = True
+            isoch_fit_params = g_a(flag_print_perc, err_lst,
+                memb_prob_avrg_sort, completeness, ip_list, sc_params,
+                ga_params, sys_sel)
             print 'Best fit params obtained (%0.4f, %0.2f, %0.2f, %0.2f).' % \
             (isoch_fit_params[0][0], isoch_fit_params[0][1],
             isoch_fit_params[0][2], isoch_fit_params[0][3])
 
-            # List that holds the parameters values obtained by the bootstrap
-            # process.
-            params_boot = []
-            # Begin bootstrap block (run a minimum of two times).
-            for i in range(max(N_b, 2)):
-                print i, 'bootstrap run.'
-                # Resample cluster with replacement.
-                obs_clust = boostrap_resample(memb_prob_avrg_sort)
-                # Genetic algorithm.
-                params_boot.append(g_a(err_lst, obs_clust, completeness,
-                    ip_list, sc_params, ga_params, sys_sel)[0])
-
-            # Calculate errors for each parameter.
-            isoch_fit_errors = np.std(params_boot, 0)
-            # Errors can not be smaller than the steps in each parameter.
-            for i in range(4):
-                isoch_fit_errors[i] = max(ps_params[i + 3][2],
-                isoch_fit_errors[i])
+            # Call bootstrap function.
+            params_boot, isoch_fit_errors = bootstrap(err_lst,
+                memb_prob_avrg_sort, completeness, ip_list, bf_params,
+                sc_params, ga_params, ps_params)
 
         # For plotting purposes.
         # Get list of stored isochrones and their parameters.

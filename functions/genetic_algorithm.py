@@ -229,8 +229,8 @@ def random_population(isoch_ma, isoch_ed, n_ran):
     return ma_lst, e_lst, d_lst
 
 
-def gen_algor(err_lst, obs_clust, completeness, ip_list, sc_params, ga_params,
-              sys_sel):
+def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
+    sc_params, ga_params, sys_sel):
     '''
     Genetic algorithm adapted to find the best fit model-obervation.
     '''
@@ -284,7 +284,9 @@ def gen_algor(err_lst, obs_clust, completeness, ip_list, sc_params, ga_params,
     # Initiate empty list. Stores the best solution found after each
     # application of the Extinction/Immigration operator.
     best_sol_ei = []
-    flag_25, flag_50, flag_75 = False, False, False
+
+    # Print percentage done.
+    milestones = [25, 50, 75, 100]
     # Begin processing the populations up to n_gen generations.
     for i in range(n_gen):
 
@@ -377,17 +379,12 @@ def gen_algor(err_lst, obs_clust, completeness, ip_list, sc_params, ga_params,
             # Reset counter.
             best_sol_count = 0
 
-        if i + 1 >= 0.25 * n_gen and flag_25 is False:
-            print '  25% done'
-            flag_25 = True
-        elif i + 1 >= 0.5 * n_gen and flag_50 is False:
-            print '  50% done'
-            flag_50 = True
-        elif i + 1 >= 0.75 * n_gen and flag_75 is False:
-            print '  75% done'
-            flag_75 = True
-        elif i + 1 == n_gen:
-            print '  100% done'
+        if flag_print_perc:
+            percentage_complete = (100.0 * (i + 1) / n_gen)
+            while len(milestones) > 0 and percentage_complete >= milestones[0]:
+                print "  {}% done".format(milestones[0])
+                # Remove that milestone from the list.
+                milestones = milestones[1:]
 
         # For plotting purposes.
         lkl_old[0].append(lkl[0])

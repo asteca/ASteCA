@@ -97,7 +97,7 @@ def get_pval(cluster_region, field_region, col1_data,
     # vs field comparisions.
     p_vals_cl, p_vals_f = [], []
     # Iterate a given number of times.
-    flag_25, flag_50, flag_75 = False, False, False
+    milestones = [25, 50, 75, 100]
     for run_num in range(runs):
         # Loop through all the field regions.
         for indx, f_region in enumerate(field_region):
@@ -147,17 +147,11 @@ def get_pval(cluster_region, field_region, col1_data,
                 # Store field vs field p-value.
                 p_vals_f.append(float(str(p_val_f)[4:].replace(',', '.')))
 
-        if run_num + 1 >= 0.25 * runs and flag_25 is False:
-            print '  25% done'
-            flag_25 = True
-        elif run_num + 1 >= 0.5 * runs and flag_50 is False:
-            print '  50% done'
-            flag_50 = True
-        elif run_num + 1 >= 0.75 * runs and flag_75 is False:
-            print '  75% done'
-            flag_75 = True
-        elif run_num + 1 == runs:
-            print '  100% done'
+        percentage_complete = (100.0 * (run_num + 1) / runs)
+        while len(milestones) > 0 and percentage_complete >= milestones[0]:
+            print "  {}% done".format(milestones[0])
+            # Remove that milestone from the list.
+            milestones = milestones[1:]
 
     # For plotting purposes.
 
