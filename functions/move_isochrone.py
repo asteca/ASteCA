@@ -7,6 +7,7 @@ Created on Fri Jan 17 16:35:24 2014
 
 import numpy as np
 
+
 def move_isoch(sys_sel, isochrone, e, d):
     '''
     Recieves an isochrone of a given age and metallicity and modifies
@@ -14,7 +15,7 @@ def move_isoch(sys_sel, isochrone, e, d):
     E(B-V) (e) and distance modulus (d).
     '''
     iso_moved = [[], []]
-    
+
     if sys_sel == 'UBVI':
         # For UBVI system.
         #
@@ -22,10 +23,10 @@ def move_isoch(sys_sel, isochrone, e, d):
         # Av = 3.1*E(B-V)
         # (mv - Mv)o = -5 + 5*log(d) + Av
         #
-        Av = 3.1*e
-        iso_moved = [np.array(isochrone[0])+e,
-                     np.array(isochrone[1])+d+Av]            
-            
+        Av = 3.1 * e
+        iso_moved = [np.array(isochrone[0]) + e,
+                     np.array(isochrone[1]) + d + Av]
+
     elif sys_sel == 'WASH':
         # For Washington system.
         #
@@ -35,8 +36,8 @@ def move_isoch(sys_sel, isochrone, e, d):
         # (C-T1) = (C-T1)o + 1.97*E(B-V)
         # T1 = M_T1 - 0.58*E(B-V) + (m-M)o + 3.2*E(B-V)
         #
-        V_Mv = d + 3.2*e
-        iso_moved = [np.array(isochrone[0])+1.97*e,
-                     np.array(isochrone[1])-0.58*e+V_Mv]
-        
+        V_Mv = d + 3.2 * e
+        iso_moved = [np.array(isochrone[0]) + 1.97 * e,
+                     np.array(isochrone[1]) - 0.58 * e + V_Mv]
+
     return iso_moved
