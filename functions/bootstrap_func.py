@@ -43,12 +43,12 @@ def bootstrap(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
 
         # Resample cluster with replacement.
         obs_clust = resample_replacement(memb_prob_avrg_sort)
-        # Let the GA algor know this call comes from the bootstrap process
-        # so it will not print percentages to screen.
-        flag_print_perc = False
 
+        # Algorithm selected.
         if best_fit_algor == 'genet':
-            # Genetic algorithm.
+            # Let the GA algor know this call comes from the bootstrap process
+            # so it will not print percentages to screen.
+            flag_print_perc = False
             params_boot.append(g_a(flag_print_perc, err_lst, obs_clust,
             completeness, ip_list, sc_params, ga_params, sys_sel)[0])
 
