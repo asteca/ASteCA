@@ -212,6 +212,9 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
             min(x_data)) / width_bins[0])), int(round((center_cl[1] -
             min(y_data)) / width_bins[0]))
             flag_center_manual = True
+        else:
+            print 'Auto center found: (%d, %d) px.' % (center_cl[0],
+                center_cl[1])
 
     # Obtain manual 2D histogram for the field with star's values attached
     # to each bin.
@@ -259,7 +262,7 @@ background (%d, %d) px? (y/n) ' % (inner_ring, outer_ring))
                                      width_bins, cr_params)
     clust_rad = radius_params[0]
     if mode == 'a':
-        print 'Auto radius found: %d px.' % clust_rad
+        print 'Auto radius found: %0.1f px.' % clust_rad
 
     # If Manual mode is set, display radius and ask the user to accept it or
     # input new one.
@@ -296,6 +299,8 @@ px): '))
             clust_rad = radius_params[0]
             flag_radius_manual = True
             print 'Semi radius set: %0.1f px.' % clust_rad
+        else:
+            print 'Auto radius found: %0.1f px.' % clust_rad
 
     # Get King profiles based on the density profiles.
     k_prof, k_pr_err, n_c_k, flag_king_no_conver = \

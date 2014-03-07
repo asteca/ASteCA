@@ -134,7 +134,7 @@ GR       10
 # 100/(areas-1). If 'manual' is set then 'num' will be used, otherwise this
 # number is irrelevant.
 #   flag     runs   num
-PV  False     auto    10
+PV  True     auto    10
 
 
 # Bayesian decontamination algorithm.
@@ -151,7 +151,7 @@ PV  False     auto    10
 # - If 'skip' is selected all stars will be assigned an equal probability
 # of 1. and the algorithm skipped altogether.
 #   mode     runs  mc_samp
-DA  read      2     500
+DA  manual      5     500
 
 
 #################################################
@@ -164,7 +164,7 @@ DA  read      2     500
 # boot_num: number of times the bootstrap with replacement
 # process will run. Minimum value is 2.
 #     run  algorithm   boot_num
-BF   False      genet         10
+BF   True      genet         10
 
 # Ranges and steps for the parameters to be fitted.
 # Metallicity     z_min  z_max   z_step
@@ -175,10 +175,13 @@ PS_m             0.01   0.03   0.002
 PS_a         6.6    9.5    0.1
 # E(B-V)    e_bv_min e_bv_max e_bv_step
 #PS_e              0.     0.4      0.01
-PS_e              0.35     0.35      0.05
+#PS_e              0.35     0.35      0.05
+PS_e              0.     3.      0.1
 # Distance modulus    dis_mod_min dis_mod_max dis_mod_step
 #PS_d                          18.       19.         0.05
-PS_d                          10.5       12.5         0.1
+#PS_d                          10.5       12.5         0.1
+#MASSCLEAN
+PS_d                          8.5       15.5         0.2
 
 # Synthetic cluster.
 # IMF:  chabrier_2001 / kroupa_1993 / kroupa_2002
@@ -203,5 +206,5 @@ SC  chabrier_2001         5000          0.5         0.7
 # returning the same best solution before exiting the generations loop.
 #
 #   n_pop  n_gen fdif p_cross cr_sel p_mut n_el n_ei n_es
-GA    100   700   1.    0.85     2P  0.01    1    75   7
+GA    100   1000   1.    0.85     2P  0.01    1   75   10
 #################################################
