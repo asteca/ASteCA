@@ -117,127 +117,137 @@ def synth_clust(err_lst, completeness, sc_params, isochrone, params, sys_sel):
 #    from copy import deepcopy
 #    isoch_m_d0 = deepcopy(isoch_m_d)
 
-    # Assignment of binarity.
-    # Randomly select a fraction of stars to be binaries.
-    # Indexes of the randomly selected stars in isoch_m_d.
-    bin_indxs = random.sample(range(len(isoch_m_d[0])),
-                              int(f_bin * len(isoch_m_d[0])))
-
-    # Calculate the secondary masses of these binary stars between q_bin*m1
-    # and m1, where m1 is the primary mass.
-    # Primary masses.
-    m1 = np.asarray(isoch_m_d[2][bin_indxs])
-    # Secondary masses.
-    mass_bin0 = np.random.uniform(q_bin * m1, m1)
-    # This prevents a rare error where apparently mass_bin0 is a float.
-    if not type(mass_bin0) is float:
-
-        # If any secondary mass falls outside of the lower isochrone's mass
-        # range, change its value to the min value.
-        mass_bin = np.maximum(min(isoch_m_d[2]), mass_bin0)
-
-        # Find color and magnitude values for each secondary star. This will
-        # slightly change the values of the masses since they will be assigned
-        # to the closest value found in the interpolated isochrone.
-        bin_isoch = mass_interp(isoch_cut, mass_bin)
-
-        # Obtain color, magnitude and masses for each binary system.
-        # Transform color to the first filter's magnitude before obtaining the
-        # new binary magnitude.
-        col_mag_bin = -2.5 * np.log10(10 ** (-0.4 * (isoch_m_d[0][bin_indxs] +
-        isoch_m_d[1][bin_indxs])) + 10 ** (-0.4 * (bin_isoch[0] +
-        bin_isoch[1])))
-        mag_bin = -2.5 * np.log10(10 ** (-0.4 * isoch_m_d[1][bin_indxs]) +
-        10 ** (-0.4 * bin_isoch[1]))
-        # Transform back first filter's magnitude into color.
-        col_bin = col_mag_bin - mag_bin
-
-        # Add masses to obtain the system's mass.
-        mass_bin = isoch_m_d[2][bin_indxs] + bin_isoch[2]
-
-        # Update array with new values of color, magnitude and masses.
-        for indx, i in enumerate(bin_indxs):
-            isoch_m_d[0][i] = col_bin[indx]
-            isoch_m_d[1][i] = mag_bin[indx]
-            isoch_m_d[2][i] = mass_bin[indx]
-
-    # Completeness limit removal of stars. Remove a number of stars according
-    # to the percentages of star loss find in get_completeness for the
-    # real observation.
     # Check for an empty array.
-    if not isoch_m_d.any():
-        # If the isochrone is empty after removing stars outside of the observed
-        # ranges, then pass an empty array.
-        synth_clust = np.asarray([])
-    else:
-        # If stars exist in the isochrone beyond the completeness magnitude
-        # level, then apply the removal of stars. Otherwise, skip it.
-        if max(isoch_m_d[1]) > completeness[1][completeness[2]]:
+    if isoch_m_d.any():
 
-            # Get histogram. completeness[2] = bin_edges of the observed region
-            # histogram.
-            synth_mag_hist, bin_edges = np.histogram(isoch_m_d[1],
-                                                     completeness[1])
-            pi = completeness[3]
-            n1, p1 = synth_mag_hist[completeness[2]], pi[0]
-            di = np.around((synth_mag_hist[completeness[2]:] -
-            (n1 / p1) * np.asarray(pi)), 0)
+        # Assignment of binarity.
+        # Randomly select a fraction of stars to be binaries.
+        # Indexes of the randomly selected stars in isoch_m_d.
+        bin_indxs = random.sample(range(len(isoch_m_d[0])),
+                                  int(f_bin * len(isoch_m_d[0])))
 
-            # Store indexes of *all* elements in isoch_m_d whose magnitude value
-            # falls between the ranges given.
-            c_indx = np.searchsorted(completeness[1][completeness[2]:],
-                                     isoch_m_d[1], side='left')
-            N = len(completeness[1][completeness[2]:])
-            mask = (c_indx > 0) & (c_indx < N)
-            elements = c_indx[mask]
-            indices = np.arange(c_indx.size)[mask]
-            sorting_idx = np.argsort(elements, kind='mergesort')
-            ind_sorted = indices[sorting_idx]
-            x = np.searchsorted(elements, range(N), side='right',
-                sorter=sorting_idx)
-            # Indexes.
-            rang_indx = [ind_sorted[x[i]:x[i + 1]] for i in range(N - 1)]
+        # Calculate the secondary masses of these binary stars between q_bin*m1
+        # and m1, where m1 is the primary mass.
+        # Primary masses.
+        m1 = np.asarray(isoch_m_d[2][bin_indxs])
+        # Secondary masses.
+        mass_bin0 = np.random.uniform(q_bin * m1, m1)
+        # This prevents a rare error where apparently mass_bin0 is a float.
+        if not type(mass_bin0) is float:
 
-            # Pick a number (given by the list 'di') of random elements in each
-            # range. Those are the indexes of the elements that should be
-            # removed from the three sub-lists.
-            rem_indx = []
-            for indx, num in enumerate(di):
-                if rang_indx[indx].any() and len(rang_indx[indx]) >= num:
-                    rem_indx.append(np.random.choice(rang_indx[indx], num,
-                                                     replace=False))
-                else:
-                    rem_indx.append(rang_indx[indx])
+            # If any secondary mass falls outside of the lower isochrone's mass
+            # range, change its value to the min value.
+            mass_bin = np.maximum(min(isoch_m_d[2]), mass_bin0)
 
-            # Remove items from list.
-            # itertools.chain() flattens the list of indexes and sorted() with
-            # reverse=True inverts them so we don't change the indexes of
-            # the elements in the lists after removing them.
-            d_i = sorted(list(itertools.chain(*rem_indx)), reverse=True)
-            # Remove those selected indexes from the three sub-lists.
-            clust_compl = np.delete(np.asarray(isoch_m_d), d_i, axis=1)
+            # Find color and magnitude values for each secondary star. This will
+            # slightly change the values of the masses since they will be
+            # assigned to the closest value found in the interpolated isochrone.
+            bin_isoch = mass_interp(isoch_cut, mass_bin)
+
+            # Obtain color, magnitude and masses for each binary system.
+            # Transform color to the first filter's magnitude before obtaining
+            # the new binary magnitude.
+            col_mag_bin = -2.5 * np.log10(10 ** (-0.4 *
+            (isoch_m_d[0][bin_indxs] + isoch_m_d[1][bin_indxs])) +
+            10 ** (-0.4 * (bin_isoch[0] + bin_isoch[1])))
+            mag_bin = -2.5 * np.log10(10 ** (-0.4 * isoch_m_d[1][bin_indxs]) +
+            10 ** (-0.4 * bin_isoch[1]))
+            # Transform back first filter's magnitude into color.
+            col_bin = col_mag_bin - mag_bin
+
+            # Add masses to obtain the system's mass.
+            mass_bin = isoch_m_d[2][bin_indxs] + bin_isoch[2]
+
+            # Update array with new values of color, magnitude and masses.
+            for indx, i in enumerate(bin_indxs):
+                isoch_m_d[0][i] = col_bin[indx]
+                isoch_m_d[1][i] = mag_bin[indx]
+                isoch_m_d[2][i] = mass_bin[indx]
+
+        # Check for an empty array.
+        if isoch_m_d.any():
+
+            # Completeness limit removal of stars. Remove a number of stars
+            # according to the percentages of star loss find in
+            # get_completeness for the real observation.
+
+            # If stars exist in the isochrone beyond the completeness magnitude
+            # level, then apply the removal of stars. Otherwise, skip it.
+            if max(isoch_m_d[1]) > completeness[1][completeness[2]]:
+
+                # Get histogram. completeness[2] = bin_edges of the observed
+                # region histogram.
+                synth_mag_hist, bin_edges = np.histogram(isoch_m_d[1],
+                                                         completeness[1])
+                pi = completeness[3]
+                n1, p1 = synth_mag_hist[completeness[2]], pi[0]
+                di = np.around((synth_mag_hist[completeness[2]:] -
+                (n1 / p1) * np.asarray(pi)), 0)
+
+                # Store indexes of *all* elements in isoch_m_d whose magnitude
+                # value falls between the ranges given.
+                c_indx = np.searchsorted(completeness[1][completeness[2]:],
+                                         isoch_m_d[1], side='left')
+                N = len(completeness[1][completeness[2]:])
+                mask = (c_indx > 0) & (c_indx < N)
+                elements = c_indx[mask]
+                indices = np.arange(c_indx.size)[mask]
+                sorting_idx = np.argsort(elements, kind='mergesort')
+                ind_sorted = indices[sorting_idx]
+                x = np.searchsorted(elements, range(N), side='right',
+                    sorter=sorting_idx)
+                # Indexes.
+                rang_indx = [ind_sorted[x[i]:x[i + 1]] for i in range(N - 1)]
+
+                # Pick a number (given by the list 'di') of random elements in
+                # each range. Those are the indexes of the elements that
+                # should be removed from the three sub-lists.
+                rem_indx = []
+                for indx, num in enumerate(di):
+                    if rang_indx[indx].any() and len(rang_indx[indx]) >= num:
+                        rem_indx.append(np.random.choice(rang_indx[indx], num,
+                                                         replace=False))
+                    else:
+                        rem_indx.append(rang_indx[indx])
+
+                # Remove items from list.
+                # itertools.chain() flattens the list of indexes and sorted()
+                # with reverse=True inverts them so we don't change the
+                # indexes of the elements in the lists after removing them.
+                d_i = sorted(list(itertools.chain(*rem_indx)), reverse=True)
+                # Remove those selected indexes from the three sub-lists.
+                clust_compl = np.delete(np.asarray(isoch_m_d), d_i, axis=1)
+            else:
+                clust_compl = np.asarray(isoch_m_d)
+
+            # Randomly move stars according to given error distributions.
+            # Get errors according to errors distribution.
+            popt_mag, popt_col1, e_max = err_lst
+            sigma_mag = np.array(exp_func(clust_compl[1], *popt_mag))
+            sigma_col = np.array(exp_func(clust_compl[1], *popt_col1))
+            # Replace all error values greater than e_max with e_max.
+            sigma_mag[sigma_mag > e_max] = e_max
+            sigma_col[sigma_col > e_max] = e_max
+            # Do the same but for a minimum error value. This ensures a
+            # reasonable error spread even for low magnitudes.
+            sigma_mag[sigma_mag < 0.05] = 0.05
+            sigma_col[sigma_col < 0.05] = 0.05
+            # Call function to shift stars around these errors.
+            col_gauss, mag_gauss = gauss_error(clust_compl[0], sigma_col,
+                                               clust_compl[1], sigma_mag)
+            clust_error = [col_gauss, sigma_col, mag_gauss, sigma_mag]
+
+            # Append masses.
+            synth_clust = np.array(clust_error + [clust_compl[2]])
+
         else:
-            clust_compl = np.asarray(isoch_m_d)
-
-        # Randomly move stars according to given error distributions.
-        # Get errors according to errors distribution.
-        popt_mag, popt_col1, e_max = err_lst
-        sigma_mag = np.array(exp_func(clust_compl[1], *popt_mag))
-        sigma_col = np.array(exp_func(clust_compl[1], *popt_col1))
-        # Replace all error values greater than e_max with e_max.
-        sigma_mag[sigma_mag > e_max] = e_max
-        sigma_col[sigma_col > e_max] = e_max
-        # Do the same but for a minimum error value. This ensures a reasonable
-        # error spread even for low magnitudes.
-        sigma_mag[sigma_mag < 0.05] = 0.05
-        sigma_col[sigma_col < 0.05] = 0.05
-        # Call function to shift stars around these errors.
-        col_gauss, mag_gauss = gauss_error(clust_compl[0], sigma_col,
-                                           clust_compl[1], sigma_mag)
-        clust_error = [col_gauss, sigma_col, mag_gauss, sigma_mag]
-
-        # Append masses.
-        synth_clust = np.array(clust_error + [clust_compl[2]])
+            # If the isochrone is empty after removing stars outside of the
+            # observed ranges, then pass an empty array.
+            synth_clust = np.asarray([])
+    else:
+        # If the isochrone is empty after the masses interpolation, pass an
+        # empty array.
+        synth_clust = np.asarray([])
 
          #Plot diagrams.
 #        s_c_p(mass_dist, isoch_inter, params, isoch_moved, isoch_cut,
