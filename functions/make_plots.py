@@ -1018,6 +1018,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         plt.axvline(x=d + e_d, linestyle='--', color='red')
         plt.axvline(x=d - e_d, linestyle='--', color='red')
 
+    # Ignore warning issued by colorbar plotted in CMD with membership
+    # probabilities.
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         fig.tight_layout()

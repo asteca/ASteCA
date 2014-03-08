@@ -129,7 +129,7 @@ def get_in_params(mypath):
     elif cmd_select == 2:
         x_ax, y_ax = '(V-I)', 'V'
     elif cmd_select == 3:
-        x_ax, y_ax = '(C-T_{1})', 'T_{1}'
+        x_ax, y_ax = '(C-{T_1})', '{T_1}'
     axes_params = [x_ax, y_ax, xy_minmax]
 
     return mode, in_dirs, gd_params, gc_params, br_params, cr_params, \

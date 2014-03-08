@@ -77,15 +77,18 @@ def mc_probability(reg_call, reg, xmin, xmax, ymin, ymax, runs, run_num,
             # Compute the value below which to integrate.
             iso = kernel((star[5], star[3]))
 
-            # Sample from the KDE distribution
-            sample = kernel.resample(size=mc_sample)
+            ## Sample from the KDE distribution
+            #sample = kernel.resample(size=mc_sample)
 
-            # Filter the sample
-            insample = kernel(sample) < iso
+            ## Filter the sample
+            #insample = kernel(sample) < iso
 
-            # The integral is equivalent to the probability of
-            # drawing a point that gets through the filter
-            integral = insample.sum() / float(insample.shape[0])
+            ## The integral is equivalent to the probability of
+            ## drawing a point that gets through the filter
+            #integral = insample.sum() / float(insample.shape[0])
+
+            integral = iso
+
             # Avoid 'nan' and/or 'infinite' solutions.
             integral = integral if integral > 0. else 0.000001
 
