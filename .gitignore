@@ -1,3 +1,4 @@
 *.pyc
 ocaat_input.dat
 clusters_input.dat
+isochrones/

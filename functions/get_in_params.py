@@ -69,8 +69,9 @@ def get_in_params(mypath):
                     da1_params = int(reader[2])
                     da2_params = int(reader[3])
 
-                elif reader[0] == 'PS_p':
-                    iso_path = str(reader[1])
+                #elif reader[0] == 'PS_p':
+                    #iso_path = str(reader[1])
+
                 elif reader[0] == 'PS_m':
                     m_rs = map(float, reader[1:])
                 elif reader[0] == 'PS_a':
@@ -113,17 +114,35 @@ def get_in_params(mypath):
     pv_params = [pv0_params, pv1_params, pv2_params]
     da_params = [da0_params, da1_params, da2_params, input_dir]
 
+    # Fix photometric system according to the CMD selected.
     if cmd_select == 1 or cmd_select == 2:
         sys_select = 'UBVI'
     elif cmd_select == 3:
         sys_select = 'WASH'
+
+    # Fix isochrones location according to the CMD and set selected.
+    if sys_select == 'UBVI':
+        text1 = 'ubvi'
+    elif sys_select == 'WASH':
+        text1 = 'wash'
+    if iso_select == 'MAR':
+        text2 = 'marigo'
+    elif iso_select == 'PAR':
+        text2 = 'parsec'
+    # Set iso_path according to the above values.
+    iso_path = join(mypath + '/isochrones/' + 'iso_' + text1 + '_' + text2)
+
+    # Fix metallicity and age step value since this is determined by the
+    # stored isochrones.
+    m_rs.append(0.0005)
+    a_rs.append(0.05)
     ps_params = [iso_path, sys_select, iso_select, m_rs, a_rs, e_rs, d_rs]
 
     bf_params = [bf_flag, best_fit_algor, N_b]
     sc_params = [IMF_name, tot_mass, f_bin, q_bin]
     ga_params = [n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es]
 
-    # Input magnitude and color names for the CMD axis
+    # Fix magnitude and color names for the CMD axis
     if cmd_select == 1:
         x_ax, y_ax = '(B-V)', 'V'
     elif cmd_select == 2:

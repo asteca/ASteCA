@@ -35,6 +35,9 @@ def ip(ps_params):
             li_s = "#\tIsochrone\tZ ="
             # Mass, V, B
             mas_i, mag_i, col_i = 1, 9, 8
+        elif iso_select == 'PAR':
+            li_s = "#\tIsochrone  Z = "
+            mas_i, mag_i, col_i = 2, 10, 9
 
     # String that identifies the beginning of a new isochrone.
     line_start = li_s
