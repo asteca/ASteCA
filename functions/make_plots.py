@@ -540,6 +540,12 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
              log=True, histtype='step', label='$r \leq R_{cl}$', color='r')
     # Force y axis min to 1.
     plt.ylim(1., plt.ylim()[1])
+    # Completeness maximum value.
+    # completeness = [max_mag, bin_edges, max_indx, comp_perc]
+    bin_edges, max_indx = completeness[1], completeness[2]
+    mag_peak = bin_edges[max_indx]
+    ax12.vlines(x=mag_peak, ymin=1., ymax=plt.ylim()[1], color='g',
+        linestyles='dashed', lw=2., label='$' + y_ax + '_{compl}$', zorder=3)
     # Legends.
     leg11 = plt.legend(fancybox=True, loc='upper right', numpoints=1,
                        fontsize=16)
@@ -801,7 +807,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
             # Plot colorbar.
             if v_min != v_max:
                 box = ax18.get_position()
-                cbar_posit = [box.x1 * 0.93, box.y1 * 0.915, 0.04, 0.005]
+                print box
+                cbar_posit = [box.x1 * 0.93, box.y1 * 0.94, 0.04, 0.005]
                 cbaxes = fig.add_axes(cbar_posit)
                 cbar = plt.colorbar(cax=cbaxes, ticks=[v_min, v_max],
                                     orientation='horizontal')
@@ -828,7 +835,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
             text3 = '$E_{(B-V)} = %0.2f \pm %0.2f$' '\n' % (e, e_e)
             text4 = '$(m-M)_o = %0.2f \pm %0.2f$' % (d, e_d)
             text = text1 + text2 + text3 + text4
-            plt.text(0.1, 0.8, text, transform=ax19.transAxes,
+            plt.text(0.5, 0.77, text, transform=ax19.transAxes,
                      bbox=dict(facecolor='white', alpha=0.6), fontsize=12)
             # Plot isochrone.
             plt.plot(shift_isoch[0], shift_isoch[1], 'r', lw=1.2)
