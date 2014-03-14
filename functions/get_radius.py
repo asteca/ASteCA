@@ -2,6 +2,7 @@
 @author: gabriel
 """
 
+
 def get_clust_rad(backg_value, radii, ring_density, width_bins, cr_params):
     """
     Obtain the value for the cluster's radius by counting the number of points
@@ -14,25 +15,25 @@ def get_clust_rad(backg_value, radii, ring_density, width_bins, cr_params):
     points are available or a radius of 500 px was reached. In any of these
     last three cases, assign r=500 px.
     """
-    
+
     n_l = cr_params[0]
-    
+
     # Initiate empty list of as many items as different bin widths were used.
-    clust_rad = [0]*len(width_bins)
-    
+    clust_rad = [0] * len(width_bins)
+
     # Use the density profile and the background value obtained with the
     # smallest bin width.
     rd_index, rd_item = 0, ring_density[0]
-        
+
     # Difference between max density value and the background value.
     delta_total = (max(rd_item) - backg_value)
-    
-    # If the difference between the max density value and the background is 
+
+    # If the difference between the max density value and the background is
     # less than 3 times the value of the background, raise a flag.
     flag_delta_total = False
-    if delta_total < 3*backg_value:
+    if delta_total < 3 * backg_value:
         flag_delta_total = True
-    
+
     # Start i value to cap the number of iterations to 5.
     i = 1
     # Initialize condition to break out of 'while'.
@@ -40,12 +41,12 @@ def get_clust_rad(backg_value, radii, ring_density, width_bins, cr_params):
     # Iterate until a stable condition is attained or for a maximum of 5 values
     # of delta_backg.
     while flag_not_stable and i < 6:
-    
+
         # i*5% of difference between max density value and background.
-        delta_backg = i*5*delta_total/100.
+        delta_backg = i * 5 * delta_total / 100.
         # Increase value of i for next iteration (if it happens)
         i += 1
-        
+
         # Initialize density values counter for points that fall inside the
         # range determined by the delta value around the background.
         in_delta_val = 0
@@ -53,11 +54,11 @@ def get_clust_rad(backg_value, radii, ring_density, width_bins, cr_params):
         # the delta value around the background, which determines the
         # 'stabilized' condition.
         n_left = n_l
-        
+
         # This value stores the number of points that fall outside the delta
         # limits around the background, for the value of 'delta_backg' used.
         outside_val = 0
-        
+
         # Initialize index_rad value.
         index_rad = 0
 
@@ -67,14 +68,14 @@ def get_clust_rad(backg_value, radii, ring_density, width_bins, cr_params):
             # Condition to iterate until at least n_left points close to the
             # background value are found.
             if in_delta_val < n_left:
-                
+
                 # If the density value is closer than 'delta_backg' to the
                 # background value or lower --> add it.
                 # The condition index!=0 is there to avoid counting the first
                 # point which sometimes presents a very low density value due
                 # to the small width of the bin used.
                 if (item - backg_value) <= delta_backg and \
-                index !=0:
+                index != 0:
                     # Augment value of counter.
                     in_delta_val += 1
                     # Store first radius value that falls below the upper delta
@@ -91,45 +92,45 @@ def get_clust_rad(backg_value, radii, ring_density, width_bins, cr_params):
                 # found == "stable" condition.
                 flag_not_stable = False
                 break
-    
-    delta_percentage = (i-1)*5
+
+    delta_percentage = (i - 1) * 5
     # Raise a flag if the delta used to get the stable condition is greater
     # than 10%.
     flag_delta = False
     if delta_percentage > 10:
-        flag_delta = True    
-    
+        flag_delta = True
+
     # If radius is > 500px --> re-assign it as 500 and raise a flag.
     flag_rad_500 = False
     # The first condition is there in case that the stable condition was reached
     # with the last item.
-    if (in_delta_val < n_left) and flag_not_stable == True:
+    if (in_delta_val < n_left) and flag_not_stable is True:
         # Assign maximum radius value of 500 px.
         clust_rad[rd_index] = 500
     else:
         # Stable condition was attained, assign radius value as the one with
         # the density value closest to the background value among the first 4
         # points counting from the one determined by the index index_rad.
-        radii_dens = [rd_item[index_rad+i] for i in range(4)]
-        clust_rad[rd_index] = radii[rd_index][index_rad+\
-        min(range(len(radii_dens)), key=lambda \
-        i:abs(radii_dens[i]-backg_value))]
+        radii_dens = [rd_item[index_rad + i] for i in range(4)]
+        clust_rad[rd_index] = radii[rd_index][index_rad +
+        min(range(len(radii_dens)), key=lambda
+        i:abs(radii_dens[i] - backg_value))]
         # If radius is > 500px, trim to 500px.
         if clust_rad[rd_index] > 500:
             clust_rad[rd_index] = 500
             flag_rad_500 = True
-    
+
     # Raise a flag if the number of points that fall outside the delta limits
     # is higher than the number of points to the left of the one used as the
     # cluster's radius. This indicates a possible variable background.
     # outside_val > (index_rad+1) means that there are at least 2 points that
     # fall outside the delta limits between index_rad and (index_rad+3)
     flag_delta_points = False
-    if outside_val > (index_rad+1):
+    if outside_val > (index_rad + 1):
         flag_delta_points = True
 
-    radius_params = [clust_rad[rd_index], delta_backg, delta_percentage, \
-    flag_delta_total, flag_not_stable, flag_rad_500, flag_delta, \
-    flag_delta_points]    
-    
+    radius_params = [clust_rad[rd_index], delta_backg, delta_percentage,
+    flag_delta_total, flag_not_stable, flag_rad_500, flag_delta,
+    flag_delta_points]
+
     return radius_params
