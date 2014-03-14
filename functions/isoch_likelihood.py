@@ -30,8 +30,8 @@ def likelihood(synth_clust, obs_clust):
         # Split obs_arr.
         P = np.split(obs_arr, 8, axis=1)
         # Square errors in color and magnitude.
-        P[6] = np.square(np.maximum(P[6], epsilon))  # color
-        P[4] = np.square(np.maximum(P[4], epsilon))  # magnitude
+        P[6] = np.square(P[6])  # color
+        P[4] = np.square(P[4])  # magnitude
         P = np.hstack(P)
 
         # Split syn_arr.
@@ -42,8 +42,8 @@ def likelihood(synth_clust, obs_clust):
 
         for star in P:
             # Squares sum of errors.
-            e_col_2 = star[6] + Q[1]
-            e_mag_2 = star[4] + Q[3]
+            e_col_2 = np.maximum(star[6] + Q[1], epsilon)
+            e_mag_2 = np.maximum(star[4] + Q[3], epsilon)
             # star[5] & Q[0] = colors
             # star[3] & Q[2] = magnitude
             B = np.square(star[5] - Q[0]) / e_col_2

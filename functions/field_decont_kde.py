@@ -250,7 +250,7 @@ def field_decont_kde(flag_area_stronger, cluster_region, field_region,
                 # Assign the probability stored in file for this star.
                 probs.append(data[7][i])
             else:
-                probs.append(0.000001)
+                probs.append(0.01)
 
         # Store probabilities in list.
         runs_fields_probs = [[probs]]
