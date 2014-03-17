@@ -26,7 +26,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                stars_out, stars_in_rjct, stars_out_rjct,
                integr_return, n_c, flag_area_stronger,
                cluster_region, field_region, pval_test_params, qq_params,
-               clust_reg_prob_avrg, memb_prob_avrg_sort, completeness,
+               memb_prob_avrg_sort, completeness,
                bf_params, bf_return, ga_params, er_params, axes_params,
                ps_params):
     '''
@@ -705,7 +705,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         plt.text(0.05, 0.92, text, transform=ax16.transAxes,
              bbox=dict(facecolor='white', alpha=0.85), fontsize=12)
         # Histogram of the data.
-        n, bins, patches = plt.hist(prob_data, 50, normed=1, facecolor='green',
+        n, bins, patches = plt.hist(prob_data, 25, normed=1, facecolor='green',
                                     alpha=0.75)
         # Best fit line.
         y = mlab.normpdf(bins, mu, sigma)

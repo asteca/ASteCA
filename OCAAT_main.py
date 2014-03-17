@@ -33,7 +33,6 @@ from functions.get_regions import get_regions as g_r
 from functions.field_decont_kde import field_decont_kde as fdk
 from functions.get_p_value import get_pval as g_pv
 from functions.get_qqplot import qqplot as g_qq
-from functions.memb_prob_avrg_sort import mpas as m_p_a_s
 from functions.get_completeness import mag_completeness as m_c
 from functions.get_isoch_params import ip
 from functions.best_fit_synth_cl import best_fit as bfsc
@@ -424,14 +423,14 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
     # Apply decontamination algorithm if at least one equal-sized field region
     # was found around the cluster.
     print 'Applying decontamination algorithm.'
-    runs_fields_probs = fdk(flag_area_stronger, cluster_region, field_region,
+    memb_prob_avrg_sort = fdk(flag_area_stronger, cluster_region, field_region,
                             col1_data, mag_data, center_cl, clust_rad,
                             clust_name, sub_dir, da_params)
 
-    # Average and sort all membership probabilities for each star.
-    memb_prob_avrg_sort, clust_reg_prob_avrg = m_p_a_s(cluster_region,
-        runs_fields_probs, center_cl, clust_rad)
-    print 'Averaged probabilities for all runs.'
+    ## Average and sort all membership probabilities for each star.
+    #memb_prob_avrg_sort = m_p_a_s(cluster_region,
+        #runs_fields_probs, center_cl, clust_rad)
+    #print 'Averaged probabilities for all runs.'
 
     # Create data file with membership probabilities.
     c_m_f(output_dir, sub_dir, clust_name, memb_prob_avrg_sort)
@@ -492,7 +491,7 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
            stars_in, stars_out, stars_in_rjct, stars_out_rjct,
            integr_return, n_c, flag_area_stronger,
            cluster_region, field_region, pval_test_params, qq_params,
-           clust_reg_prob_avrg, memb_prob_avrg_sort, completeness, bf_params,
+           memb_prob_avrg_sort, completeness, bf_params,
            bf_return, ga_params, er_params, axes_params, ps_params)
         print 'Plots created.'
 

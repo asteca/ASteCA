@@ -67,7 +67,6 @@ def get_in_params(mypath):
                 elif reader[0] == 'DA':
                     da0_params = str(reader[1])
                     da1_params = int(reader[2])
-                    da2_params = int(reader[3])
 
                 #elif reader[0] == 'PS_p':
                     #iso_path = str(reader[1])
@@ -112,7 +111,7 @@ def get_in_params(mypath):
 
     in_dirs = [input_dir, output_dir, done_dir]
     pv_params = [pv0_params, pv1_params, pv2_params]
-    da_params = [da0_params, da1_params, da2_params, input_dir]
+    da_params = [da0_params, da1_params, input_dir]
 
     # Fix photometric system according to the CMD selected.
     if cmd_select == 1 or cmd_select == 2:
