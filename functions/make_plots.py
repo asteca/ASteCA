@@ -653,42 +653,6 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         # Identity line.
         plt.plot([0., 1.], [0., 1.], color='k', linestyle='--', linewidth=1.)
 
-    # Stars in the first field region with their KDE.
-    # Check if decont algorithm was applied.
-#    if not(flag_area_stronger):
-#        # Plot first field region.
-#        region = 0
-#        ax14 = plt.subplot(gs1[6:8, 2:4])
-#        plt.xlabel('$C-T_1$', fontsize=18)
-#        plt.ylabel('$T_1$', fontsize=18)
-#        col1_acpt_out, mag_acpt_out = [], []
-#        for star in stars_out:
-#            col1_acpt_out.append(star[5])
-#            mag_acpt_out.append(star[3])
-#        #Set plot limits
-#        plt.xlim(col1_min, col1_max)
-#        plt.ylim(mag_min, mag_max)
-#        # Set minor ticks
-#        ax14.minorticks_on()
-#        ax14.xaxis.set_major_locator(MultipleLocator(1.0))
-#        ax14.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
-#        plt.text(0.63, 0.93, 'Field region %d' % region, transform = \
-#        ax14.transAxes, bbox=dict(facecolor='white', alpha=0.8), fontsize=12)
-#        # Plot field stars and KDE for KDE algorithm.
-#        stars_reg_temp = [[], []]
-#        for star in field_region[region]:
-#            # star[3] is the T1 coordinate and star[5] the CT1 coordinate.
-#            stars_reg_temp[0].append(star[5])
-#            stars_reg_temp[1].append(star[3])
-#        plt.scatter(stars_reg_temp[0], stars_reg_temp[1], marker='o',
-#                    c='black', s=4., edgecolors='none', zorder=2)
-#        # Plot field KDE.
-#        plt.imshow(np.rot90(kde_f), cmap=plt.cm.gist_earth_r,
-#                   extent=[col1_min, col1_max, mag_min, mag_max],\
-#                   aspect='auto')
-        # Plot ZAMS.
-#        plt.plot(zams_iso[1], zams_iso[0], c='k', ls='--', lw=1.)
-
     # Norm fit for decontamination algorithm probability values.
     # Check if decont algorithm was applied.
     if not(flag_area_stronger):
