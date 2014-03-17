@@ -427,11 +427,6 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
                             col1_data, mag_data, center_cl, clust_rad,
                             clust_name, sub_dir, da_params)
 
-    ## Average and sort all membership probabilities for each star.
-    #memb_prob_avrg_sort = m_p_a_s(cluster_region,
-        #runs_fields_probs, center_cl, clust_rad)
-    #print 'Averaged probabilities for all runs.'
-
     # Create data file with membership probabilities.
     c_m_f(output_dir, sub_dir, clust_name, memb_prob_avrg_sort)
     print 'Membership probabilities saved to file.'
