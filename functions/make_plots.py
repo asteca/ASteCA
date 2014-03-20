@@ -754,11 +754,11 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
             m_p_m_temp[2].append(star[7])
         # Create new list with inverted values so higher prob stars are on top.
         m_p_m_temp_inv = [i[::-1] for i in m_p_m_temp]
-        v_min, v_max = round(min(m_p_m_temp[2]), 2), \
+        v_min_mp, v_max_mp = round(min(m_p_m_temp[2]), 2), \
         round(max(m_p_m_temp[2]), 2)
-        plt.scatter(m_p_m_temp_inv[0], m_p_m_temp_inv[1], marker='o',
-                    c=m_p_m_temp_inv[2], s=40, cmap=cm, lw=0.5, vmin=v_min,
-                    vmax=v_max)
+        sca = plt.scatter(m_p_m_temp_inv[0], m_p_m_temp_inv[1], marker='o',
+                    c=m_p_m_temp_inv[2], s=40, cmap=cm, lw=0.5, vmin=v_min_mp,
+                    vmax=v_max_mp)
         # If list is not empty.
         if m_p_m_temp_inv[1]:
             # Plot error bars at several mag values.
@@ -768,15 +768,10 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
             plt.errorbar(x_val, mag_y, yerr=func(mag_y, *popt_mag),
                          xerr=func(mag_y, *popt_col1), fmt='k.', lw=0.8,
                          ms=0., zorder=4)
-            # Plot colorbar.
-            if v_min != v_max:
-                box = ax18.get_position()
-                print box
-                cbar_posit = [box.x1 * 0.93, box.y1 * 0.94, 0.04, 0.005]
-                cbaxes = fig.add_axes(cbar_posit)
-                cbar = plt.colorbar(cax=cbaxes, ticks=[v_min, v_max],
-                                    orientation='horizontal')
-                cbar.ax.tick_params(labelsize=9)
+            # Plot colorbar (see bottom of file).
+            plot_colorbar = False
+            if v_min_mp != v_max_mp:
+                plot_colorbar = True
 
         # Synthetic cluster.
         if bf_flag:
@@ -994,6 +989,21 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         fig.tight_layout()
+
+    # Plot colorbar down here so tight_layout won't move it around.
+    if plot_colorbar is True:
+        import matplotlib
+        # Position and dimensions relative to the axes.
+        x0, y0, width, height = [0.6, 0.93, 0.2, 0.04]
+        # Transform them to get the ABSOLUTE POSITION AND DIMENSIONS
+        Bbox = matplotlib.transforms.Bbox.from_bounds(x0, y0, width, height)
+        trans = ax18.transAxes + fig.transFigure.inverted()
+        l, b, w, h = matplotlib.transforms.TransformedBbox(Bbox, trans).bounds
+        # Create the axes and the colorbar.
+        cbaxes = fig.add_axes([l, b, w, h])
+        cbar = plt.colorbar(sca, cax=cbaxes, ticks=[v_min_mp, v_max_mp],
+            orientation='horizontal')
+        cbar.ax.tick_params(labelsize=9)
 
     # Generate output file for each data file.
     plt.savefig(join(output_subdir, str(clust_name) + '.png'), dpi=150)
