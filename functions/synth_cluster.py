@@ -210,8 +210,8 @@ def synth_clust(err_lst, completeness, sc_params, isochrone, params, sys_sel):
                 rem_indx = []
                 for indx, num in enumerate(di):
                     if rang_indx[indx].any() and len(rang_indx[indx]) >= num:
-                        rem_indx.append(np.random.choice(rang_indx[indx], num,
-                                                         replace=False))
+                        rem_indx.append(np.random.choice(rang_indx[indx],
+                            int(num), replace=False))
                     else:
                         rem_indx.append(rang_indx[indx])
 
