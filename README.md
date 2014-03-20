@@ -12,11 +12,13 @@ See the code's [site][1] for more information.
 Software
 -------
 
-* [Python 2.7.3](www.python.org)
-* [R 3.0.2](http://www.r-project.org/)
+Both `python` and `R` are needed to run OCAAT. I've tested the code
+using the versions shown below.
 
-Python dependencies
--------
+* [Python v2.7.3](www.python.org)
+* [R v3.0.2](http://www.r-project.org/)
+
+### Python dependencies
 
 The packages listed are required to run the code. The versions are the ones I used,
 could work with older versions but I can't guarantee it.
