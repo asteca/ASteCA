@@ -30,7 +30,7 @@ import functions.get_members_number as g_m_n
 import functions.get_cont_index as g_c_i
 from functions.get_regions import get_regions as g_r
 
-from functions.field_decont_kde import field_decont_kde as fdk
+from functions.field_decont_bys import field_decont_bys as fdb
 from functions.get_p_value import get_pval as g_pv
 from functions.get_qqplot import qqplot as g_qq
 from functions.get_completeness import mag_completeness as m_c
@@ -423,7 +423,7 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
     # Apply decontamination algorithm if at least one equal-sized field region
     # was found around the cluster.
     print 'Applying decontamination algorithm.'
-    memb_prob_avrg_sort = fdk(flag_area_stronger, cluster_region, field_region,
+    memb_prob_avrg_sort = fdb(flag_area_stronger, cluster_region, field_region,
                             col1_data, mag_data, center_cl, clust_rad,
                             clust_name, sub_dir, da_params)
 

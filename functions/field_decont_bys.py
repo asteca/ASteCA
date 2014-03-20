@@ -83,11 +83,11 @@ def mpas(cl_reg_rad, runs_fields_probs):
     return membership_prob_avrg_sort
 
 
-def field_decont_kde(flag_area_stronger, cluster_region, field_region,
+def field_decont_bys(flag_area_stronger, cluster_region, field_region,
                      col1_data, mag_data, center_cl, clust_rad, clust_name,
                      sub_dir, da_params):
     '''
-    Bayesian KDE field decontamination algorithm.
+    Bayesian field decontamination algorithm.
     '''
 
     mode, run_n, mypath2 = da_params
