@@ -444,7 +444,8 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
     # bf_flag = bf_params[0]
     if bf_params[0]:
         ip_list = ip(ps_params)
-        print 'Theoretical isochrones read and stored.'
+        print 'Theoretical isochrones read and stored (%d).' % \
+            (len(ip_list[0]) * len(ip_list[0][0]))
     else:
         ip_list = []
 
