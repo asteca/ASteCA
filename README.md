@@ -3,11 +3,7 @@ OCAAT
 
 This code is still under heavy development.
 
-### Site
-
 See the code's [site][1] for more information.
-
-[1]: http://gabriel-p.github.io/ocaat/
 
 Software
 -------
@@ -26,3 +22,5 @@ could work with older versions but I can't guarantee it.
 * [Numpy 1.8.0](http://www.numpy.org/) -- `sudo pip install numpy`
 * [SciPy 0.12.0](http://www.scipy.org/) -- `sudo pip install scipy`
 * [Matplotlib 1.2.1](http://matplotlib.org/) -- `sudo pip install matplotlib`
+
+[1]: http://gabriel-p.github.io/ocaat/
