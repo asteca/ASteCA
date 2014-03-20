@@ -19,6 +19,8 @@ def get_in_params(mypath):
 
     data_file = join(mypath, 'ocaat_input.dat')
 
+    true_lst = ('True', 'true')
+
     with open(data_file, mode="r") as f_dat:
 
         # Iterate through each line in the file.
@@ -39,7 +41,7 @@ def get_in_params(mypath):
                     done_dir = str(reader[1])
 
                 elif reader[0] == 'MP':
-                    flag_make_plot = True if reader[1] == 'True' else False
+                    flag_make_plot = True if reader[1] in true_lst else False
 
                 elif reader[0] == 'PD':
                     gd_params = map(int, reader[1:])
@@ -61,7 +63,7 @@ def get_in_params(mypath):
                 elif reader[0] == 'GR':
                     gr_params = map(int, reader[1:])
                 elif reader[0] == 'PV':
-                    pv0_params = True if reader[1] == 'True' else False
+                    pv0_params = True if reader[1] in true_lst else False
                     pv1_params = str(reader[2])
                     pv2_params = int(reader[3])
                 elif reader[0] == 'DA':
@@ -80,7 +82,7 @@ def get_in_params(mypath):
                 elif reader[0] == 'PS_d':
                     d_rs = map(float, reader[1:])
                 elif reader[0] == 'BF':
-                    bf_flag = True if reader[1] == 'True' else False
+                    bf_flag = True if reader[1] in true_lst else False
                     best_fit_algor = str(reader[2])
                     N_b = int(reader[3])
                 elif reader[0] == 'SC':
@@ -99,7 +101,7 @@ def get_in_params(mypath):
                     n_ei = int(reader[8])
                     n_es = int(reader[9])
                 elif reader[0] == 'MF':
-                    flag_move_file = True if reader[1] == 'True' else False
+                    flag_move_file = True if reader[1] in true_lst else False
 
                 #elif reader[0] == 'XA':
                     #x_ax = re.search(r'"(.*)"', line).groups()[0]
