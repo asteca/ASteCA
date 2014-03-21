@@ -204,7 +204,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     min(ring_density[0])) / 10, max(ring_density[0]) + (max(ring_density[0]) -
     min(ring_density[0])) / 10
     # Set plot limits
-    plt.xlim(-10, min(x_max, 500))
+    plt.xlim(-10, x_max)
     plt.ylim(y_min, y_max)
     # Set axes labels
     plt.xlabel('radius (px)', fontsize=12)
