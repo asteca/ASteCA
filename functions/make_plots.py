@@ -226,8 +226,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
             '3-P King prof',
             'r$_c$ = %d $\pm$ %d px' % (k_prof[0], rc_err),
             'r$_t$ = %d $\pm$ %d px' % (k_prof[1], rt_err),
-            'r$_{cl}$ = %d $\pm$ %d px' % (clust_rad,
-                round(width_bins[0] / 2.))]
+            'r$_{cl}$ = %d $\pm$ %d px' % (clust_rad, round(width_bins[0]))]
     # Plot density profile with the smallest bin size
     ax5.plot(radii[0], ring_density[0], 'ko-', zorder=3, label=texts[0])
     # Plot poisson error bars
