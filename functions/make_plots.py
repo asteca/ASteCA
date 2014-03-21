@@ -217,13 +217,6 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     # Cluster's name.
     text = str(clust_name)
     plt.text(0.4, 0.9, text, transform=ax5.transAxes, fontsize=14)
-    # Plot poisson error bars
-    plt.errorbar(radii[0], ring_density[0], yerr=poisson_error[0], fmt='ko',
-                 zorder=1)
-    ## Plot the delta around the background value used to asses when the density
-    # has become stable
-    plt.hlines(y=(backg_value + delta_backg), xmin=0, xmax=max(radii[0]),
-               color='k', linestyles='dashed', zorder=2)
     # Legend texts
     # Calculate errors for fitted King parameters. Use sqrt since the error
     # given by 'curve_fit' is the variance and we want the standard deviation.
@@ -232,41 +225,51 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         rt_err = round(np.sqrt(k_pr_err[1][1]))
     else:
         rc_err, rt_err = -1, -1
-    texts = ['Density Profile (%d px)' % width_bins[0],
-             '$R_{cl}$ = %d $\pm$ %d px' % (clust_rad,
-                                           round(width_bins[0] / 2.)),
-            '3-P King profile',
-             '$R_c$ = %d $\pm$ %d px' % (k_prof[0], rc_err),
-             '$R_t$ = %d $\pm$ %d px' % (k_prof[1], rt_err),
-             'Background ($\Delta$=%d%%)' % delta_percentage]
+    texts = ['Dens prof (%d px)' % width_bins[0],
+            'backg = %.1E $st/px^{2}$' % backg_value,
+            '$\Delta$=%d%%' % delta_percentage,
+            '3-P King prof',
+            'r$_c$ = %d $\pm$ %d px' % (k_prof[0], rc_err),
+            'r$_t$ = %d $\pm$ %d px' % (k_prof[1], rt_err),
+            'r$_{cl}$ = %d $\pm$ %d px' % (clust_rad,
+                round(width_bins[0] / 2.))]
     # Plot density profile with the smallest bin size
     ax5.plot(radii[0], ring_density[0], 'ko-', zorder=3, label=texts[0])
-    # Plot King profile.
-    arr_y_up = (y_max - y_min) / 2. + y_min  # Middle of the graph.
-    head_l = abs((arr_y_up - backg_value) / 7.)  # Length of arrow head.
-    # Length of arrow.
-    arr_y_dwn = -1. * abs(arr_y_up - backg_value - head_l * 1.5)
-    if flag_king_no_conver is False:
-        ax5.plot(radii[0], three_params(radii[0]), 'b--', label=texts[2],
-                 lw=1.5, zorder=3)
-        # Plot R_c as a dashed line.
-        ax5.vlines(x=k_prof[0], ymin=0, ymax=max(ring_density[0]) / 1.2,
-                   label=texts[3], color='g', linestyles='dashed', zorder=4)
-        # Plot R_t radius as an arrow. vline is there to show the label.
-        ax5.vlines(x=k_prof[1], ymin=0., ymax=0., label=texts[4], color='b')
-        ax5.arrow(k_prof[1], arr_y_up, 0., arr_y_dwn, fc="b", ec="b",
-                  head_width=10., head_length=head_l, zorder=5)
-    # Plot radius.
-    ax5.vlines(x=clust_rad, ymin=0, ymax=0., label=texts[1], color='r')
-    ax5.arrow(clust_rad, arr_y_up, 0., arr_y_dwn, fc="r",
-              ec="r", head_width=10., head_length=head_l, zorder=5)
+    # Plot poisson error bars
+    plt.errorbar(radii[0], ring_density[0], yerr=poisson_error[0], fmt='ko',
+                 zorder=1)
     # Plot background level.
     ax5.hlines(y=backg_value, xmin=0, xmax=max(radii[0]),
-               label=texts[5], color='k', zorder=5)
+               label=texts[1], color='b', zorder=5)
+    # Plot the delta around the background value used to asses when the density
+    # has become stable
+    plt.hlines(y=(backg_value + delta_backg), xmin=0, xmax=max(radii[0]),
+               color='b', linestyles='dashed', label=texts[2], zorder=2)
+    # Middle of the graph.
+    arr_y_up = (y_max - y_min) / 2. + y_min
+    # Length of arrow head.
+    head_l = abs((arr_y_up - backg_value) / 7.)
+    # Length of arrow.
+    arr_y_dwn = -1. * abs(arr_y_up - backg_value - head_l * 1.5)
+    # Plot King profile.
+    if flag_king_no_conver is False:
+        ax5.plot(radii[0], three_params(radii[0]), 'g--', label=texts[3],
+                 lw=2., zorder=3)
+        # Plot r_c as a dashed line.
+        ax5.vlines(x=k_prof[0], ymin=0, ymax=max(ring_density[0]) / 1.2,
+                   label=texts[4], color='g', linestyles=':', lw=2., zorder=4)
+        # Plot r_t radius as an arrow. vline is there to show the label.
+        ax5.vlines(x=k_prof[1], ymin=0., ymax=0., label=texts[5], color='g')
+        ax5.arrow(k_prof[1], arr_y_up, 0., arr_y_dwn, fc="g", ec="g",
+                  head_width=10., head_length=head_l, zorder=5)
+    # Plot radius.
+    ax5.vlines(x=clust_rad, ymin=0, ymax=0., label=texts[6], color='r')
+    ax5.arrow(clust_rad, arr_y_up, 0., arr_y_dwn, fc="r",
+              ec="r", head_width=10., head_length=head_l, zorder=5)
     # get handles
     handles, labels = ax5.get_legend_handles_labels()
     # use them in the legend
-    ax5.legend(handles, labels, loc='upper right', numpoints=1, fontsize=10)
+    ax5.legend(handles, labels, loc='upper right', numpoints=2, fontsize=11)
     ax5.minorticks_on()
 
     # Zoom on x,y finding chart
@@ -360,7 +363,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     ax8.xaxis.set_major_locator(MultipleLocator(1.0))
     # Set grid
     ax8.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
-    plt.text(0.8, 0.93, '$r > R_{cl}$', transform=ax8.transAxes,
+    plt.text(0.8, 0.93, '$r > r_{cl}$', transform=ax8.transAxes,
     bbox=dict(facecolor='white', alpha=0.5), fontsize=16)
     # Plot stars.
     stars_rjct_temp = [[], []]
@@ -393,7 +396,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     ax9.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
     # Calculate total number of stars whitin cluster's radius.
     tot_stars = len(stars_in_rjct) + len(stars_in)
-    plt.text(0.55, 0.93, '$r \leq R_{cl}\,|\,N=%d$' % tot_stars,
+    plt.text(0.55, 0.93, '$r \leq r_{cl}\,|\,N=%d$' % tot_stars,
              transform=ax9.transAxes,
              bbox=dict(facecolor='white', alpha=0.5), fontsize=16)
     # Plot stars.
@@ -534,10 +537,10 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     binwidth = 0.25
     plt.hist(stars_out_temp,
              bins=np.arange(int(x_min), int(x_max + binwidth), binwidth),
-             log=True, histtype='step', label='$r  > R_{cl}$', color='b')
+             log=True, histtype='step', label='$r  > r_{cl}$', color='b')
     plt.hist(stars_in_temp,
              bins=np.arange(int(x_min), int(x_max + binwidth), binwidth),
-             log=True, histtype='step', label='$r \leq R_{cl}$', color='r')
+             log=True, histtype='step', label='$r \leq r_{cl}$', color='r')
     # Force y axis min to 1.
     plt.ylim(1., plt.ylim()[1])
     # Completeness maximum value.
@@ -735,7 +738,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         plt.xlabel('$' + x_ax + '$', fontsize=18)
         plt.ylabel('$' + y_ax + '$', fontsize=18)
         tot_kde_clust = len(memb_prob_avrg_sort)
-        text = '$r \leq R_{cl}\,|\,N=%d$' % tot_kde_clust
+        text = '$r \leq r_{cl}\,|\,N=%d$' % tot_kde_clust
         plt.text(0.05, 0.93, text, transform=ax18.transAxes,
                  bbox=dict(facecolor='white', alpha=0.5), fontsize=14)
         # Set minor ticks
