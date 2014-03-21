@@ -731,10 +731,10 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         #Set axis labels
         plt.xlabel('$' + x_ax + '$', fontsize=18)
         plt.ylabel('$' + y_ax + '$', fontsize=18)
-        tot_kde_clust = len(memb_prob_avrg_sort)
-        text = '$r \leq r_{cl}\,|\,N=%d$' % tot_kde_clust
-        plt.text(0.05, 0.93, text, transform=ax18.transAxes,
-                 bbox=dict(facecolor='white', alpha=0.5), fontsize=14)
+        tot_clust = len(memb_prob_avrg_sort)
+        text = '$r \leq r_{cl}\,|\,N=%d$' % tot_clust
+        plt.text(0.5, 0.93, text, transform=ax18.transAxes,
+                 bbox=dict(facecolor='white', alpha=0.5), fontsize=16)
         # Set minor ticks
         ax18.minorticks_on()
         ax18.xaxis.set_major_locator(MultipleLocator(1.0))
