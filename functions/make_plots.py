@@ -179,15 +179,10 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     text4 = text1 + text2 + text3
     plt.text(0.5, 0.85, text4, transform=ax4.transAxes,
         bbox=dict(facecolor='white', alpha=0.85), fontsize=15)
-    # Count the number of very bright stars in the field.
-    range_10_perc = (max(mag_data) - min(mag_data)) / 10. + min(mag_data)
-    bright_stars = len([i for i in mag_data if i < range_10_perc])
-    # Set exponential factor for high and low density fields.
-    exp_factor = -0.004 if backg_value > 0.005 else -0.0035
-    # Set a lower amplitude for fields with very bright stars.
-    amplitude = 500 if bright_stars < 10 else 200
+    # Plot stars.
+    a, b, c = 50, -0.003, 2.5
     plt.scatter(x_data, y_data, marker='o', c='black',
-                s=amplitude * np.exp(exp_factor * mag_data ** 2.5))
+        s=a * np.exp(b * mag_data ** c))
     # Plot inner and outer rectangles used to calculate the background value.
     # Inner ring
     boxes = plt.gca()
@@ -296,14 +291,12 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     text1 = 'Cluster (zoom)\n'
     text2 = 'CI = %0.2f' % (cont_index)
     text = text1 + text2
-    plt.text(0.6, 0.9, text, transform=ax6.transAxes,
+    plt.text(0.62, 0.9, text, transform=ax6.transAxes,
              bbox=dict(facecolor='white', alpha=0.85), fontsize=12)
-    if backg_value > 0.005:
-        plt.scatter(x_data, y_data, marker='o', c='black',
-                    s=500 * np.exp(-0.003 * mag_data ** 2.5))
-    else:
-        plt.scatter(x_data, y_data, marker='o', c='black',
-                    s=500 * np.exp(-0.0025 * mag_data ** 2.5))
+    # Plot stars.
+    a, b, c = 100, -0.003, 2.5
+    plt.scatter(x_data, y_data, marker='o', c='black',
+        s=a * np.exp(b * mag_data ** c))
 
     # Cluster and field regions defined.
     ax7 = plt.subplot(gs1[4:6, 0:2])
@@ -363,8 +356,10 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     ax8.xaxis.set_major_locator(MultipleLocator(1.0))
     # Set grid
     ax8.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
-    plt.text(0.8, 0.93, '$r > r_{cl}$', transform=ax8.transAxes,
-    bbox=dict(facecolor='white', alpha=0.5), fontsize=16)
+    tot_stars = len(stars_out_rjct) + len(stars_out)
+    plt.text(0.53, 0.93, '$r > r_{cl}\,|\,N=%d$' % tot_stars,
+        transform=ax8.transAxes, bbox=dict(facecolor='white', alpha=0.5),
+        fontsize=16)
     # Plot stars.
     stars_rjct_temp = [[], []]
     for star in stars_out_rjct:
