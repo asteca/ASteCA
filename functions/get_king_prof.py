@@ -14,7 +14,8 @@ def three_params(x, a, b, c):
     Three parameters King profile fit.
     '''
     d = backg_dens
-    return c * (1 / np.sqrt(1 + (x / a) ** 2) -
+
+    return c * (1 / np.sqrt(1 + (np.asarray(x) / a) ** 2) -
         1 / np.sqrt(1 + (b / a) ** 2)) ** 2 + d
 
 
