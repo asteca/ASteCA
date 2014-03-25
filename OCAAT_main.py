@@ -138,6 +138,8 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
                 temp_side.append(float(raw_input('y_side: ')))
                 # Trim frame.
                 phot_data = t_f(temp_cent, temp_side, phot_data)
+                x_data, y_data, mag_data, col1_data = phot_data[1], \
+                phot_data[2], phot_data[3], phot_data[5]
                 wrong_answer = False
             else:
                 print 'Wrong input. Try again.\n'
