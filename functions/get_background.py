@@ -7,21 +7,20 @@ def get_background(x_data, y_data, x_c_b, y_c_b, h_not_filt, width_bins,
                    inner_ring, outer_ring):
     """
     Get background level of stars by calculating the density
-    of (num of stars)/area for a "square ring" centered at the cluster center
+    of (num of stars)/area for a "square ring" centered at the cluster's center
     and whose minor and major radii are: inner_ring and outer_ring pixels
     respectively. We use "square rings" instead of circles because that way we
     can avoid using areas that are too big in the case where the cluster might
-    be near a border and the raddi falls outside the boundaries of the frame.
+    be near a border and the raddi fall outside the boundaries of the frame.
     """
 
     # Use only histogram made wiht the smallest bin width.
     index, item = 0, h_not_filt[0]
 
     # If the bin is at least inner_ring px away from the cluster's center
-    # (in both directions) and less than outer_ring px, then use
-    # it to calculate the background value. We set an outer boundary
-    # to try to prevent empty areas of the frame from lowering artificially
-    # the final density value.
+    # and less than outer_ring px, then use it to calculate the background
+    # value. We set an outer boundary to try to prevent empty areas of the
+    # frame from artificially lowering the final density value.
     inner_bound, outer_bound = int(inner_ring / width_bins[index]), \
     int(outer_ring / width_bins[index])
 
@@ -63,14 +62,10 @@ def get_background(x_data, y_data, x_c_b, y_c_b, h_not_filt, width_bins,
         backg_value = star_count / area
     else:
         # A value of bin_count=0 for a given 2D histogram means that the
-        # inner limit pushed the bins outside the frame. This will most
-        # likely happen with the histogram obtained with the 2 largest
-        # bin widths (tipically 75 & 100 px) so in these cases it is
-        # expected. If it happens with the smallest bin width,
-        # it could be indicative of a small field given the size
-        # of the cluster.
-        if index == 0:
-            flag_bin_count = True
+        # inner limit pushed the bins outside the frame. This could be
+        # indicative of a small field given the size of the cluster.
+        flag_bin_count = True
+        backg_value = 0.
 
-    # Return list of all background values obtained for each bin widt.
+    # Return background value obtained.
     return backg_value, flag_bin_count
