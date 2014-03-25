@@ -147,8 +147,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     plt.axvline(x=x_center_bin[0], linestyle='--', color='white')
     plt.axhline(y=y_center_bin[0], linestyle='--', color='white')
     # Radius
-    circle = plt.Circle((x_center_bin[0], y_center_bin[0]), clust_rad / 25.,
-                        color='w', fill=False)
+    circle = plt.Circle((x_center_bin[0], y_center_bin[0]),
+        clust_rad / width_bins[0], color='w', fill=False)
     fig.gca().add_artist(circle)
     #text = 'Center (%d, %d)' % (x_center_bin[0], y_center_bin[0])
     text = 'Bin: %d px' % (width_bins[0])
