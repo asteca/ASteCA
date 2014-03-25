@@ -39,8 +39,7 @@ def get_center(x_data, y_data, gc_params):
         # hist is the 2D histogran, xedges & yedges store the edges of the bins
         hist, xedges, yedges = np.histogram2d(x_data, y_data, range=rang,
                                               bins=binsxy)
-        # Store not-filtered 2D hist with d_b=20 in 'h_not_filt' (used to get
-        # background value)
+        # Store not-filtered 2D hist in 'h_not_filt'.
         h_not_filt.append(hist)
 
         # Only store the edges for the smallest value of 'd_b'.
@@ -62,11 +61,11 @@ def get_center(x_data, y_data, gc_params):
         # returns the bin index that stores the max value in the histogram in a
         # non-flattened array.
         x_cent_g, y_cent_g = np.unravel_index(h_g.argmax(), h_g.shape)
-        # Store center bins for the filtered hist
+        # Store center bins for the filtered hist.
         x_center_bin.append(x_cent_g)
         y_center_bin.append(y_cent_g)
 
-        # Calculate centers in pixel coordinates.
+        # Calculate center coords in pixel coordinates.
         center_x_g.append(np.average(xedges[x_cent_g:x_cent_g + 2]))
         center_y_g.append(np.average(yedges[y_cent_g:y_cent_g + 2]))
 
