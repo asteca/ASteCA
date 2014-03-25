@@ -5,13 +5,14 @@
 import numpy as np
 from scipy.ndimage.filters import gaussian_filter
 
+
 def get_center(x_data, y_data, gc_params):
-    """   
+    """
     Obtains the center of the putative cluster. Returns the center values
     along with its errors and several arrays related to histograms, mainly for
     plotting purposes.
     """
-    
+
     xmin, xmax = min(x_data), max(x_data)
     ymin, ymax = min(y_data), max(y_data)
     rang = [[xmin, xmax], [ymin, ymax]]
@@ -28,20 +29,20 @@ def get_center(x_data, y_data, gc_params):
 
     # Iterate for bin widths stored in list.
     gc_params.sort()
-    for indx,d_b in enumerate(gc_params):
+    for indx, d_b in enumerate(gc_params):
         # Number of bins in x,y given the bin width 'd_b'
         binsxy = [int((xmax - xmin) / d_b), int((ymax - ymin) / d_b)]
-        
+
         # Store the values of the widths of the used bins
-        width_bins.append(d_b)               
-        
+        width_bins.append(d_b)
+
         # hist is the 2D histogran, xedges & yedges store the edges of the bins
-        hist, xedges, yedges = np.histogram2d(x_data, y_data, range=rang, 
+        hist, xedges, yedges = np.histogram2d(x_data, y_data, range=rang,
                                               bins=binsxy)
         # Store not-filtered 2D hist with d_b=20 in 'h_not_filt' (used to get
         # background value)
         h_not_filt.append(hist)
-        
+
         # Only store the edges for the smallest value of 'd_b'.
         if indx == 0:
             xedges_min_db, yedges_min_db = xedges, yedges
@@ -51,9 +52,8 @@ def get_center(x_data, y_data, gc_params):
         # Store all filtered arrays with different bin sizes in 'h_filter'
         h_filter.append(h_g)
 
-
         # x_cent_g & y_cent_g store the x,y coordinates of the bin with the
-        # maximum value in the 2D filtered histogram, ie: the center of the 
+        # maximum value in the 2D filtered histogram, ie: the center of the
         # putative cluster.
         # 'argmax' returns the flattened histogram's bin index that stores the
         # biggest value.
@@ -73,31 +73,31 @@ def get_center(x_data, y_data, gc_params):
     # Store in this array the values for the cluster's center x,y coordinates
     # obtained with the different bin sizes.
     arr_g = np.array([center_x_g, center_y_g])
-    
+
     # Calculate the median value for the cluster's center (use median instead of
     # mean to reject possible outliers) and the standard deviation that will be
     # used as a measure of the error in the assignation of the cluster's center.
     center_coords, std_dev = np.median(arr_g, axis=1), np.std(arr_g, axis=1)
     cent_coo_err = [int(std_dev[0]), int(std_dev[1])]
-    
+
     # Raise a flag if the median cluster's central coordinates are more than
     # 50 px away from the ones obtained with the min bin width.
     flag_center = False
-    if abs(center_coords[0]-center_x_g[0]) > 50 or \
-    abs(center_coords[1]-center_y_g[0]) > 50:
+    if abs(center_coords[0] - center_x_g[0]) > 50 or \
+    abs(center_coords[1] - center_y_g[0]) > 50:
         flag_center = True
-        
+
     # If the standard deviation for the cluster's center is bigger
     # than 50 px for any axis -> raise a flag.
     flag_std_dev = False
     if cent_coo_err[0] > 50 or cent_coo_err[1] > 50:
         flag_std_dev = True
-        
+
     # Pass the center coordinates obtained with the smallest bin.
     center_coords[0], center_coords[1] = center_x_g[0], center_y_g[0]
     # Pass the errors as half of the width of the smallest bin.
-    cent_coo_err[0], cent_coo_err[1] = int(round(width_bins[0]/2.)), \
-    int(round(width_bins[0]/2.))
+    cent_coo_err[0], cent_coo_err[1] = int(round(width_bins[0] / 2.)), \
+    int(round(width_bins[0] / 2.))
 
     return center_coords, cent_coo_err, h_filter, h_not_filt, xedges_min_db, \
     yedges_min_db, x_center_bin, y_center_bin, width_bins, flag_center, \
