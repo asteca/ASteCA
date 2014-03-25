@@ -8,12 +8,9 @@ def get_clust_rad(backg_value, radii, ring_density, width_bins, cr_params):
     Obtain the value for the cluster's radius by counting the number of points
     that fall within a given interval of the background or lower. If this number
     is equal to the number of points left behind (to the left) then assign the
-    radius as the first of those values in the string that shows a "stable"
-    behaviour around the background value.
+    radius as the one closest to the background.
     Iterate increasing the interval around the background until n_left points
-    are found or the interval reaches 25% of the total delta or no more
-    points are available or a radius of 500 px was reached. In any of these
-    last three cases, assign r=500 px.
+    are found or the interval reaches 25%.
     """
 
     n_l = cr_params[0]
@@ -42,8 +39,11 @@ def get_clust_rad(backg_value, radii, ring_density, width_bins, cr_params):
     # of delta_backg.
     while flag_not_stable and i < 6:
 
-        # i*5% of difference between max density value and background.
-        delta_backg = i * 5 * delta_total / 100.
+        # Store value for delta_percentage.
+        delta_percentage = i * 5
+
+        # % of difference between max density value and background.
+        delta_backg = delta_percentage * delta_total / 100.
         # Increase value of i for next iteration (if it happens)
         i += 1
 
@@ -74,13 +74,11 @@ def get_clust_rad(backg_value, radii, ring_density, width_bins, cr_params):
                 # The condition index!=0 is there to avoid counting the first
                 # point which sometimes presents a very low density value due
                 # to the small width of the bin used.
-                if (item - backg_value) <= delta_backg and \
-                index != 0:
+                if (item - backg_value) <= delta_backg and index != 0:
                     # Augment value of counter.
                     in_delta_val += 1
                     # Store first radius value that falls below the upper delta
-                    # limit. This will be the assigned radius if the stable
-                    # condition is attained.
+                    # limit.
                     if in_delta_val == 1:
                         index_rad = index
                 else:
@@ -93,19 +91,16 @@ def get_clust_rad(backg_value, radii, ring_density, width_bins, cr_params):
                 flag_not_stable = False
                 break
 
-    delta_percentage = (i - 1) * 5
     # Raise a flag if the delta used to get the stable condition is greater
     # than 10%.
     flag_delta = False
     if delta_percentage > 10:
         flag_delta = True
 
-    # If radius is > 500px --> re-assign it as 500 and raise a flag.
-    flag_rad_500 = False
     # The first condition is there in case that the stable condition was reached
     # with the last item.
     if (in_delta_val < n_left) and flag_not_stable is True:
-        # Assign maximum radius value of 500 px.
+        # No radius value found. Assign radius value of 500 px.
         clust_rad[rd_index] = 500
     else:
         # Stable condition was attained, assign radius value as the one with
@@ -115,7 +110,9 @@ def get_clust_rad(backg_value, radii, ring_density, width_bins, cr_params):
         clust_rad[rd_index] = radii[rd_index][index_rad +
         min(range(len(radii_dens)), key=lambda
         i:abs(radii_dens[i] - backg_value))]
-        # If radius is > 500px, trim to 500px.
+
+        # If radius is > 500px --> re-assign it as 500 and raise a flag.
+        flag_rad_500 = False
         if clust_rad[rd_index] > 500:
             clust_rad[rd_index] = 500
             flag_rad_500 = True
