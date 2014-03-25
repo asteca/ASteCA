@@ -217,11 +217,6 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
             print 'Auto center found: (%d, %d) px.' % (center_cl[0],
                 center_cl[1])
 
-    # Obtain manual 2D histogram for the field with star's values attached
-    # to each bin.
-    H_manual = mh(phot_data, xedges_min_db, yedges_min_db)
-    print 'Manual 2D histogram obtained.'
-
     # Get background value in stars/area
     # Inner and outer radii for obtaining the background values. Both are
     # calculated as a given fraction of the minimum width between the x and y
@@ -385,6 +380,11 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
     cont_index = g_c_i.cont_indx(backg_value, clust_rad, stars_in,
                                  stars_in_rjct)
     print 'Contamination index obtained (%0.2f).' % cont_index
+
+    # Obtain manual 2D histogram for the field with star's values attached
+    # to each bin.
+    H_manual = mh(phot_data, xedges_min_db, yedges_min_db)
+    print 'Manual 2D histogram obtained.'
 
     # Get cluster + field regions around the cluster's center.
     flag_area_stronger, cluster_region, field_region = \
