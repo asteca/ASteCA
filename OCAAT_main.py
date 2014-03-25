@@ -163,7 +163,8 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
     yedges_min_db, x_center_bin, y_center_bin, width_bins, flag_center, \
     flag_std_dev = g_c.get_center(x_data, y_data, gc_params)
     if mode == 'a':
-        print 'Auto center found: (%d, %d) px.' % (center_cl[0], center_cl[1])
+        print 'Auto center found: (%0.2f, %0.2f) px.' % (center_cl[0],
+        center_cl[1])
 
     # If Manual mode is set, display center and ask the user to accept it or
     # input new one.
@@ -204,7 +205,7 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
             center_cl[1] = cent_cl_semi[1]
             # Update error values.
             cent_cl_err[0], cent_cl_err[1] = 13., 13.
-            print 'Semi center set: (%d, %d) px.' % (center_cl[0],
+            print 'Semi center set: (%0.2f, %0.2f) px.' % (center_cl[0],
                 center_cl[1])
             # Store center values in bin coordinates. We substract
             # the min (x,y) coordinate values otherwise the bin
@@ -214,7 +215,7 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
             min(y_data)) / width_bins[0]))
             flag_center_manual = True
         else:
-            print 'Auto center found: (%d, %d) px.' % (center_cl[0],
+            print 'Auto center found: (%0.2f, %0.2f) px.' % (center_cl[0],
                 center_cl[1])
 
     # Get background value in stars/area
@@ -301,10 +302,6 @@ px): '))
     # Get King profiles based on the density profiles.
     k_prof, k_pr_err, n_c_k, flag_king_no_conver = \
     gkp.get_king_profile(clust_rad, backg_value, radii, ring_density)
-    if flag_king_no_conver is False:
-        print '3-P King profile obtained.'
-    else:
-        print '  WARNING: King profile fitting did not converge.'
 
     # Apply auto rejecting of errors if flag is True.
     e_max = er_params[2]
