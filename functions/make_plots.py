@@ -239,8 +239,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     # has become stable
     plt.hlines(y=(backg_value + delta_backg), xmin=0, xmax=max(radii[0]),
                color='b', linestyles='dashed', label=texts[2], zorder=2)
-    # Middle of the graph.
-    arr_y_up = (y_max - y_min) / 2. + y_min
+    # Approx middle of the graph.
+    arr_y_up = (y_max - y_min) / 2.3 + y_min
     # Length of arrow head.
     head_l = abs((arr_y_up - backg_value) / 7.)
     # Length of arrow.
@@ -251,7 +251,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                  lw=2., zorder=3)
         # Plot r_c as a dashed line.
         ax5.vlines(x=k_prof[0], ymin=0, ymax=max(ring_density[0]) / 1.2,
-                   label=texts[4], color='g', linestyles=':', lw=2., zorder=4)
+                   label=texts[4], color='g', linestyles=':', lw=3.5, zorder=4)
         # Plot r_t radius as an arrow. vline is there to show the label.
         ax5.vlines(x=k_prof[1], ymin=0., ymax=0., label=texts[5], color='g')
         ax5.arrow(k_prof[1], arr_y_up, 0., arr_y_dwn, fc="g", ec="g",
@@ -263,7 +263,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     # get handles
     handles, labels = ax5.get_legend_handles_labels()
     # use them in the legend
-    ax5.legend(handles, labels, loc='upper right', numpoints=2, fontsize=11)
+    ax5.legend(handles, labels, loc='upper right', numpoints=2, fontsize=12)
     ax5.minorticks_on()
 
     # Zoom on x,y finding chart
