@@ -93,7 +93,7 @@ def get_regions(x_center_bin, y_center_bin, width_bins, histo, clust_rad,
     # Use the bin center obtained with the smallest bin width.
     x_c_b, y_c_b = x_center_bin[0], y_center_bin[0]
 
-    # Define 'cluster_region' as a spiral centered around the cluster
+    # Define region around the cluster as a spiral centered in it
     # and of area a bit larger than that defined by the cluster's radius.
 
     # Get area as total number of bins in 2D hist times the area of each bin.
