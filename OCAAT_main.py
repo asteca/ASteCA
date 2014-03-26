@@ -218,8 +218,7 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
             print 'Auto center found: (%0.2f, %0.2f) px.' % (center_cl[0],
                 center_cl[1])
 
-    # Get background value in stars/area
-    # Inner and outer radii for obtaining the background values. Both are
+    # Inner and outer radii for obtaining the background value. Both are
     # calculated as a given fraction of the minimum width between the x and y
     # axis spans.
     inn_fr, out_fr = br_params
@@ -244,6 +243,7 @@ background (%d, %d) px? (y/n) ' % (inner_ring, outer_ring))
             else:
                 print 'Wrong input. Try again.\n'
 
+    # Get background value in stars/area
     backg_value, flag_bin_count = gbg.get_background(x_data, y_data,
         x_center_bin, y_center_bin, h_not_filt, width_bins, inner_ring,
         outer_ring)
