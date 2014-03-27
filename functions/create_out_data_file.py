@@ -71,27 +71,25 @@ def create_out_data_file(output_dir):
 #    accepted, meaning that the automatic error rejecting fit was poor.\n\
 #\n\
 # f1 (flag_center): Either the x or y coordinate assigned as center deviates\n\
-#    more than 50px from the mean value obtained using all bin widths.\n\
-# f2 (flag_std_dev): Standard deviation of either x or y of the mean center\n\
-#    coordinates is > 50px.\n\
-# f3 (flag_bin_count): When calculating the background value, the inner limit\n\
+#    more than 2 sigmas from the mean value obtained using all bin widths.\n\
+# f2 (flag_bin_count): When calculating the background value, the inner limit\n\
 #    pushed all the bins outside the frame. This could be indicative of a\n\
 #    small field given the size of the cluster.\n\
-# f4 (flag_delta_total): The background value is smaller than a third of the\n\
+# f3 (flag_delta_total): The background value is smaller than a third of the\n\
 #    maximum radial density value.\n\
-# f5 (flag_not_stable): Not enough points found stabilized around the\n\
+# f4 (flag_not_stable): Not enough points found stabilized around the\n\
 #    background value -> r = 500px assigned.\n\
-# f6 (flag_rad_500): Radius obtained was bigger than 500px -> trimmed to\n\
+# f5 (flag_rad_500): Radius obtained was bigger than 500px -> trimmed to\n\
 #    500px.\n\
-# f7 (flag_delta): The delta range around the background used to attain the\n\
+# f6 (flag_delta): The delta range around the background used to attain the\n\
 #    stable condition to determine the radius is greater than 10%%. This\n\
 #    indicates a possible variable background.\n\
-# f8 (flag_delta_points): The number of points that fall outside the delta\n\
+# f7 (flag_delta_points): The number of points that fall outside the delta\n\
 #    range is higher than the number of points to the left of the radius.\n\
 #    This indicates a possible variable background.\n\
-# f9 (flag_king_no_conver): The process to fit a 3-P King profile to the\n\
+# f8 (flag_king_no_conver): The process to fit a 3-P King profile to the\n\
 #    density points did not converge.\n\
-# f10 (flag_num_memb_low): The number of approximate cluster members is < 10.\n\
+# f9 (flag_num_memb_low): The number of approximate cluster members is < 10.\n\
 #\n\
 # FC (flags count): Sum of all the flags values. The bigger this value the\n\
 #    more likely it is that there's a problem with the frame, ie: no cluster,\n\
@@ -100,5 +98,5 @@ def create_out_data_file(output_dir):
 #\n\
 #NAME            c_x[px] c_y[px] R_cl[px] R_c[px] R_t[px] cont_ind memb memb_k \
 prob_cl   CCC mag_int     met     e_m   age   e_a  E(B-V)   e_E   dist   e_d  \
-M1 M2 M3  f1 f2 f3 f4 f5 f6 f7 f8 f9 f10  FC\n" % now_time)
+M1 M2 M3  f1 f2 f3 f4 f5 f6 f7 f8 f9  FC\n" % now_time)
         out_data_file.close()

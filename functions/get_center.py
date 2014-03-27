@@ -24,17 +24,21 @@ def get_center(x_data, y_data, gc_params):
     x_center_bin, y_center_bin = [], []
     # 2D histograms
     h_not_filt, h_filter = [], []
-    # Store the widths of the bins used
-    width_bins = []
 
-    # Iterate for bin widths stored in list.
-    gc_params.sort()
-    for indx, d_b in enumerate(gc_params):
+    # Either calculate or read the number of bins used.
+    if gc_params[0] == 'auto':
+        min_rang = min((rang[0][1] - rang[0][0]), (rang[1][1] - rang[1][0]))
+        # Number of bins given by 1%, 2%, 3% and 4% of thE minimum
+        # axis range.
+        bin_list = [int(i * min_rang / 100.) for i in range(1, 5)]
+    else:
+        bin_list = gc_params[1:]
+        bin_list.sort()
+
+    # Iterate for the defined bin widths.
+    for indx, d_b in enumerate(bin_list):
         # Number of bins in x,y given the bin width 'd_b'
         binsxy = [int((xmax - xmin) / d_b), int((ymax - ymin) / d_b)]
-
-        # Store the values of the widths of the used bins
-        width_bins.append(d_b)
 
         # hist is the 2D histogran, xedges & yedges store the edges of the bins
         hist, xedges, yedges = np.histogram2d(x_data, y_data, range=rang,
@@ -74,30 +78,21 @@ def get_center(x_data, y_data, gc_params):
     arr_g = np.array([center_x_g, center_y_g])
 
     # Calculate the median value for the cluster's center (use median instead of
-    # mean to reject possible outliers) and the standard deviation that will be
-    # used as a measure of the error in the assignation of the cluster's center.
-    center_coords, std_dev = np.median(arr_g, axis=1), np.std(arr_g, axis=1)
-    cent_coo_err = [int(std_dev[0]), int(std_dev[1])]
+    # mean to reject possible outliers) and the standard deviation using all
+    # the coordinates obtained with different bin widths.
+    median_coords, std_dev = np.median(arr_g, axis=1), np.std(arr_g, axis=1)
 
-    # Raise a flag if the median cluster's central coordinates are more than
-    # 50 px away from the ones obtained with the min bin width.
+    # Raise a flag if either median cluster's central coordinate is more than
+    # 2 sigmas away from the ones obtained with the min bin width.
     flag_center = False
-    if abs(center_coords[0] - center_x_g[0]) > 50 or \
-    abs(center_coords[1] - center_y_g[0]) > 50:
+    if abs(median_coords[0] - center_x_g[0]) > 2 * std_dev[0] or \
+    abs(median_coords[1] - center_y_g[0]) > 2 * std_dev[1]:
         flag_center = True
 
-    # If the standard deviation for the cluster's center is bigger
-    # than 50 px for any axis -> raise a flag.
-    flag_std_dev = False
-    if cent_coo_err[0] > 50 or cent_coo_err[1] > 50:
-        flag_std_dev = True
-
     # Pass the center coordinates obtained with the smallest bin.
-    center_coords[0], center_coords[1] = center_x_g[0], center_y_g[0]
+    center_coords = [center_x_g[0], center_y_g[0]]
     # Pass the errors as half of the width of the smallest bin.
-    cent_coo_err[0], cent_coo_err[1] = int(round(width_bins[0] / 2.)), \
-    int(round(width_bins[0] / 2.))
+    cent_coo_err = [int(round(bin_list[0] / 2.)), int(round(bin_list[0] / 2.))]
 
     return center_coords, cent_coo_err, h_filter, h_not_filt, xedges_min_db, \
-    yedges_min_db, x_center_bin, y_center_bin, width_bins, flag_center, \
-    flag_std_dev
+    yedges_min_db, x_center_bin, y_center_bin, bin_list, flag_center

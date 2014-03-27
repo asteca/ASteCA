@@ -160,8 +160,8 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
     # set of 4 non-filtered 2D hist, x,y bin centers and width of each bin
     # used
     center_cl, cent_cl_err, h_filter, h_not_filt, xedges_min_db, \
-    yedges_min_db, x_center_bin, y_center_bin, width_bins, flag_center, \
-    flag_std_dev = g_c.get_center(x_data, y_data, gc_params)
+    yedges_min_db, x_center_bin, y_center_bin, width_bins, flag_center = \
+    g_c.get_center(x_data, y_data, gc_params)
     if mode == 'a':
         print 'Auto center found: (%0.2f, %0.2f) px.' % (center_cl[0],
         center_cl[1])
@@ -471,8 +471,8 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
     # Add cluster data and flags to output file
     a_d_o(sub_dir, output_dir, clust_name, center_cl, clust_rad, k_prof,
           n_c_k, flag_king_no_conver, cont_index, n_c, pval_test_params[0],
-          qq_params[0], integr_return, flag_center, flag_std_dev,
-          flag_center_manual, flag_radius_manual, rjct_errors_fit,
+          qq_params[0], integr_return, flag_center, flag_center_manual,
+          flag_radius_manual, rjct_errors_fit,
           flag_bin_count, radius_params[3:], flag_num_memb_low, bf_return)
     print 'Data added to output file.'
 

@@ -53,7 +53,8 @@ def get_in_params(mypath):
                     iso_select = str(reader[1])
 
                 elif reader[0] == 'CC':
-                    gc_params = map(float, reader[1:])
+                    gc_params0 = [str(reader[1])]
+                    gc_params1 = map(float, reader[2:])
                 elif reader[0] == 'BR':
                     br_params = map(float, reader[1:])
                 elif reader[0] == 'CR':
@@ -111,6 +112,7 @@ def get_in_params(mypath):
                 elif reader[0] == 'MM':
                     xy_minmax = map(float, reader[1:])
 
+    gc_params = gc_params0 + gc_params1
     in_dirs = [input_dir, output_dir, done_dir]
     pv_params = [pv0_params, pv1_params, pv2_params]
     da_params = [da0_params, da1_params, input_dir]
