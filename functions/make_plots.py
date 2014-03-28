@@ -229,9 +229,10 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     # Approx middle of the graph.
     arr_y_up = (y_max - y_min) / 2.3 + y_min
     # Length of arrow head.
-    head_l = abs((arr_y_up - backg_value) / 7.)
+    #head_w = abs((arr_y_up - backg_value) / 10.)
+    head_w, head_l = x_max * 0.023, (y_max - y_min) * 0.045
     # Length of arrow.
-    arr_y_dwn = -1. * abs(arr_y_up - backg_value - head_l * 1.5)
+    arr_y_dwn = -1. * abs(arr_y_up - backg_value) * 0.76
     # Plot King profile.
     if flag_king_no_conver is False:
         ax5.plot(radii, three_params(radii), 'g--', label=texts[3],
@@ -242,11 +243,11 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
         # Plot r_t radius as an arrow. vline is there to show the label.
         ax5.vlines(x=k_prof[1], ymin=0., ymax=0., label=texts[5], color='g')
         ax5.arrow(k_prof[1], arr_y_up, 0., arr_y_dwn, fc="g", ec="g",
-                  head_width=10., head_length=head_l, zorder=5)
+                  head_width=head_w, head_length=head_l, zorder=5)
     # Plot radius.
     ax5.vlines(x=clust_rad, ymin=0, ymax=0., label=texts[6], color='r')
     ax5.arrow(clust_rad, arr_y_up, 0., arr_y_dwn, fc="r",
-              ec="r", head_width=10., head_length=head_l, zorder=5)
+              ec="r", head_width=head_w, head_length=head_l, zorder=5)
     # get handles
     handles, labels = ax5.get_legend_handles_labels()
     # use them in the legend
