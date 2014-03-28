@@ -83,7 +83,8 @@ def create_out_data_file(output_dir):
 #    range is higher than the number of points to the left of the radius.\n\
 #    This indicates a possible variable background.\n\
 # f6 (flag_king_no_conver): The process to fit a 3-P King profile to the\n\
-#    density points did not converge.\n\
+#    density points did not converge or did so to a tidal radius beyond the\n\
+#    ranges of the frame.\n\
 # f7 (flag_num_memb_low): The number of approximate cluster members is < 10.\n\
 #\n\
 # FC (flags count): Sum of all the flags values. The bigger this value the\n\

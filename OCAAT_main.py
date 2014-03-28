@@ -273,8 +273,9 @@ px): '))
             print 'Auto radius found: %0.1f px.' % clust_rad
 
     # Get King profiles based on the density profiles.
+    delta_xy = max((max(x_data) - min(x_data)), (max(y_data) - min(y_data)))
     k_prof, k_pr_err, n_c_k, flag_king_no_conver = \
-    gkp.get_king_profile(clust_rad, backg_value, radii, ring_density)
+    gkp.get_king_profile(clust_rad, backg_value, radii, ring_density, delta_xy)
 
     # Apply auto rejecting of errors if flag is True.
     e_max = er_params[2]

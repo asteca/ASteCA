@@ -19,7 +19,7 @@ def three_params(x, a, b, c):
         1 / np.sqrt(1 + (b / a) ** 2)) ** 2 + d
 
 
-def get_king_profile(clust_rad, backg_value, radii, ring_density):
+def get_king_profile(clust_rad, backg_value, radii, ring_density, delta_xy):
     '''
     Function to fit the 3-params King profile to a given radial density.
     The background density value is fixed and the core radius, tidal radius and
@@ -53,10 +53,13 @@ def get_king_profile(clust_rad, backg_value, radii, ring_density):
     # members with eq (3) from Froebrich et al. (2007); 374, 399-408
     if flag_king_no_conver is False:
 
-        # If fit converged to tidal radius too large, trim it.
-        if k_prof[1] > 1000.:
-            k_prof[1] = 999.99
-            k_pr_err[1][1] = 998001.
+        # If fit converged to tidal radius that extends beyond the maximum
+        # range of the frame, discard it.
+        if k_prof[1] > delta_xy:
+            k_prof[1] = -1.
+            k_pr_err[1][1] = 1.
+            # Raise flag.
+            flag_king_no_conver = True
 
         x = 1 + (k_prof[1] / k_prof[0]) ** 2
         n_c_k = int(round((np.pi * max_dens * k_prof[0] ** 2) * (np.log(x) -
