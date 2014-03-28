@@ -5,7 +5,7 @@
 import math
 
 
-def get_dens_prof(histo, x_c_b, y_c_b, width_bin):
+def get_dens_prof(hist_2d, x_c_b, y_c_b, width_bin):
     """
     Calculate the density profile by counting the number of stars in the center
     bin first (r aprox width_bin/2 px), then moving to the 8 adyacent bins
@@ -21,8 +21,6 @@ def get_dens_prof(histo, x_c_b, y_c_b, width_bin):
     # Initialize lists.
     radii, ring_density, poisson_error = [], [], []
 
-    # Use histogram of field obtained with the minimum bin width.
-    hist_2d = histo[0]
     # Number of bins that define the length of the largest square ring
     # around the center coordinates.
     bins = int(min(len(hist_2d[0]), len(hist_2d[1])) * 0.75)

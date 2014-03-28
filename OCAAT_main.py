@@ -219,7 +219,7 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
                 center_cl[1])
 
     # Get density profile
-    radii, ring_density, poisson_error = gdp.get_dens_prof(h_not_filt,
+    radii, ring_density, poisson_error = gdp.get_dens_prof(h_not_filt[0],
     x_center_bin[0], y_center_bin[0], width_bins[0])
     print 'Density profile calculated.'
 
@@ -274,8 +274,9 @@ px): '))
 
     # Get King profiles based on the density profiles.
     delta_xy = max((max(x_data) - min(x_data)), (max(y_data) - min(y_data)))
-    k_prof, k_pr_err, n_c_k, flag_king_no_conver = \
-    gkp.get_king_profile(clust_rad, backg_value, radii, ring_density, delta_xy)
+    k_prof, k_pr_err, d_b_k, n_c_k, flag_king_no_conver = \
+    gkp.get_king_profile(clust_rad, backg_value, radii, ring_density, delta_xy,
+        x_data, y_data, width_bins[0])
 
     # Apply auto rejecting of errors if flag is True.
     e_max = er_params[2]
@@ -456,7 +457,8 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
            x_center_bin, y_center_bin, h_filter, radii, backg_value,
            radius_params[0:3], ring_density, poisson_error,
            cont_index, width_bins, mag_data, col1_data, popt_mag, popt_col1,
-           err_plot, rjct_errors_fit, k_prof, k_pr_err, flag_king_no_conver,
+           err_plot, rjct_errors_fit, k_prof, k_pr_err, d_b_k,
+           flag_king_no_conver,
            stars_in, stars_out, stars_in_rjct, stars_out_rjct,
            integr_return, n_c, flag_area_stronger,
            cluster_region, field_region, pval_test_params, qq_params,
