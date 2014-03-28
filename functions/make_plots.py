@@ -217,7 +217,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     # Plot density profile with the smallest bin size
     ax5.plot(radii, ring_density, 'ko-', zorder=3, label=texts[0])
     # Plot poisson error bars
-    plt.errorbar(radii, ring_density, yerr=poisson_error[0], fmt='ko',
+    plt.errorbar(radii, ring_density, yerr=poisson_error, fmt='ko',
                  zorder=1)
     # Plot background level.
     ax5.hlines(y=backg_value, xmin=0, xmax=max(radii),
