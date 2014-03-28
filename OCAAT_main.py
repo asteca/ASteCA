@@ -444,9 +444,9 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
 
     # Add cluster data and flags to output file
     a_d_o(sub_dir, output_dir, clust_name, center_cl, clust_rad, k_prof,
-          n_c_k, flag_king_no_conver, cont_index, n_c, pval_test_params[0],
-          qq_params[0], integr_return, flag_center, flag_center_manual,
-          flag_radius_manual, rjct_errors_fit,
+          k_pr_err, n_c_k, flag_king_no_conver, cont_index, n_c,
+          pval_test_params[0], qq_params[0], integr_return, flag_center,
+          flag_center_manual, flag_radius_manual, rjct_errors_fit,
           radius_params[3:], flag_num_memb_low, bf_return)
     print 'Data added to output file.'
 

@@ -29,9 +29,9 @@ def create_out_data_file(output_dir):
 # NAME: Cluster's name.\n\
 # c_x[px]: Cluster's x center coordinate in pixels.\n\
 # c_y[px]: Cluster's y center coordinate in pixels.\n\
-# R_cl[px]: Cluster's radius in pixels.\n\
-# R_c[px]: Core radius (3-P King profile) in pixels.\n\
-# R_t[px]: Tidal radius (3-P King profile) in pixels.\n\
+# r_cl[px]: Cluster's radius in pixels.\n\
+# r_c[px]: Core radius (3-P King profile) in pixels.\n\
+# r_t[px]: Tidal radius (3-P King profile) in pixels.\n\
 #\n\
 # cont_ind: 'Contamination index' is a  measure of the contamination of field\n\
 #           stars in the cluster region. The closer to 1, the more\n\
@@ -92,7 +92,7 @@ def create_out_data_file(output_dir):
 #    more than one cluster present in the frame, variable or too crowded\n\
 #    field, etc.\n\
 #\n\
-#NAME            c_x[px] c_y[px] R_cl[px] R_c[px] R_t[px] cont_ind memb memb_k \
-prob_cl   CCC mag_int     met     e_m   age   e_a  E(B-V)   e_E   dist   e_d  \
-M1 M2 M3  f1 f2 f3 f4 f5 f6 f7  FC\n" % now_time)
+#NAME            c_x[px] c_y[px] r_cl[px] r_c[px] e_rc[px] r_t[px] e_rt[px] \
+cont_ind memb memb_k prob_cl   CCC mag_int     met     e_m   age   e_a  E(B-V) \
+  e_E   dist   e_d  M1 M2 M3  f1 f2 f3 f4 f5 f6 f7  FC\n" % now_time)
         out_data_file.close()

@@ -2,10 +2,12 @@
 @author: gabriel
 """
 
+import numpy as np
+
 
 def add_data_output(sub_dir, output_dir, clust_name, center_cl, clust_rad,
-                    k_prof, n_c_k, flag_king_no_conver, cont_index, n_c,
-                    prob_cl_kde, ccc, integr_return,
+                    k_prof, k_pr_err, n_c_k, flag_king_no_conver, cont_index,
+                    n_c, prob_cl_kde, ccc, integr_return,
                     flag_center, flag_center_manual,
                     flag_radius_manual, rjct_errors_fit,
                     radius_params, flag_num_memb_low, bf_return):
@@ -38,7 +40,10 @@ def add_data_output(sub_dir, output_dir, clust_name, center_cl, clust_rad,
     line = [str(sub_dir) + '/' + str(clust_name),
         str('%0.f' % round(center_cl[0])), str('%0.f' % round(center_cl[1])),
         str('%0.f' % round(clust_rad)), str('%0.f' % round(k_prof[0])),
-        str('%0.f' % round(k_prof[1])), str(round(cont_index, 2)),
+        str('%0.f' % round(np.sqrt(k_pr_err[0][0]))),
+        str('%0.f' % round(k_prof[1])),
+        str('%0.f' % round(np.sqrt(k_pr_err[1][1]))),
+        str(round(cont_index, 2)),
         str(int(n_c)), str(n_c_k), str('%0.2f' % prob_cl_kde),
         str('%0.2f' % ccc), str('%0.2f' % integ_mag),
         str('%0.4f' % m), str('%0.4f' % e_m), str('%0.2f' % a),
@@ -47,8 +52,8 @@ def add_data_output(sub_dir, output_dir, clust_name, center_cl, clust_rad,
 
     # "a" opens the file for appending
     with open(output_dir + 'data_output.dat', "a") as f_out:
-        f_out.write('{:<16} {:>7} {:>7} {:>8} {:>7} {:>7} {:>8} {:>4} {:>6} \
-{:>7} {:>5} {:>7} {:>7} {:>7} {:>5} {:>5} {:>7} {:>5} {:>6} \
+        f_out.write('{:<16} {:>7} {:>7} {:>8} {:>7} {:>8} {:>7} {:>8} {:>8} \
+{:>4} {:>6} {:>7} {:>5} {:>7} {:>7} {:>7} {:>5} {:>5} {:>7} {:>5} {:>6} \
 {:>5}'.format(*line))
         # Flags.
         f_out.write('{:>4} {:>2} {:>2} {:>3} {:>2} {:>2} {:>2} {:>2} {:>2} \
