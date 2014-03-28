@@ -75,6 +75,4 @@ def get_dens_prof(histo, x_c_b, y_c_b, width_bin):
         # and stored in 'ring_density'
         radii.append(width_bin / 2. + (width_bin * i))
 
-        print i, radii[i], ring_density[i], bin_count, area
-
     return radii, ring_density, poisson_error

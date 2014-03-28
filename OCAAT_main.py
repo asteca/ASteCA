@@ -223,9 +223,8 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
     x_center_bin[0], y_center_bin[0], width_bins[0])
     print 'Density profile calculated.'
 
-    # Get background value in stars/area
-    backg_value, flag_bin_count = gbg.get_background(x_data, y_data,
-        x_center_bin, y_center_bin, h_not_filt, width_bins)
+    # Get background value in stars/px^2.
+    backg_value = gbg.get_background(ring_density)
     print 'Background calculated (%0.5f stars/px^2).' % backg_value
 
     # Get cluster radius
