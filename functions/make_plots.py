@@ -186,10 +186,10 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     # Radial density plot.
     ax5 = plt.subplot(gs1[2:4, 2:6])
     # Get max and min values in x,y
-    x_max = max(radii[0]) + 10
-    y_min, y_max = (backg_value - delta_backg) - (max(ring_density[0]) -
-    min(ring_density[0])) / 10, max(ring_density[0]) + (max(ring_density[0]) -
-    min(ring_density[0])) / 10
+    x_max = max(radii) + 10
+    y_min, y_max = (backg_value - delta_backg) - (max(ring_density) -
+    min(ring_density)) / 10, max(ring_density) + (max(ring_density) -
+    min(ring_density)) / 10
     # Set plot limits
     plt.xlim(-10, x_max)
     plt.ylim(y_min, y_max)
@@ -215,16 +215,16 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
             'r$_t$ = %d $\pm$ %d px' % (k_prof[1], rt_err),
             'r$_{cl}$ = %d $\pm$ %d px' % (clust_rad, round(width_bins[0]))]
     # Plot density profile with the smallest bin size
-    ax5.plot(radii[0], ring_density[0], 'ko-', zorder=3, label=texts[0])
+    ax5.plot(radii, ring_density, 'ko-', zorder=3, label=texts[0])
     # Plot poisson error bars
-    plt.errorbar(radii[0], ring_density[0], yerr=poisson_error[0], fmt='ko',
+    plt.errorbar(radii, ring_density, yerr=poisson_error[0], fmt='ko',
                  zorder=1)
     # Plot background level.
-    ax5.hlines(y=backg_value, xmin=0, xmax=max(radii[0]),
+    ax5.hlines(y=backg_value, xmin=0, xmax=max(radii),
                label=texts[1], color='b', zorder=5)
     # Plot the delta around the background value used to asses when the density
     # has become stable
-    plt.hlines(y=(backg_value + delta_backg), xmin=0, xmax=max(radii[0]),
+    plt.hlines(y=(backg_value + delta_backg), xmin=0, xmax=max(radii),
                color='b', linestyles='dashed', label=texts[2], zorder=2)
     # Approx middle of the graph.
     arr_y_up = (y_max - y_min) / 2.3 + y_min
@@ -234,10 +234,10 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     arr_y_dwn = -1. * abs(arr_y_up - backg_value - head_l * 1.5)
     # Plot King profile.
     if flag_king_no_conver is False:
-        ax5.plot(radii[0], three_params(radii[0]), 'g--', label=texts[3],
+        ax5.plot(radii, three_params(radii), 'g--', label=texts[3],
                  lw=2., zorder=3)
         # Plot r_c as a dashed line.
-        ax5.vlines(x=k_prof[0], ymin=0, ymax=max(ring_density[0]) / 1.2,
+        ax5.vlines(x=k_prof[0], ymin=0, ymax=max(ring_density) / 1.2,
                    label=texts[4], color='g', linestyles=':', lw=3.5, zorder=4)
         # Plot r_t radius as an arrow. vline is there to show the label.
         ax5.vlines(x=k_prof[1], ymin=0., ymax=0., label=texts[5], color='g')
