@@ -55,8 +55,6 @@ def get_in_params(mypath):
                 elif reader[0] == 'CC':
                     gc_params0 = [str(reader[1])]
                     gc_params1 = map(float, reader[2:])
-                elif reader[0] == 'BR':
-                    br_params = map(float, reader[1:])
                 elif reader[0] == 'CR':
                     cr_params = map(float, reader[1:])
                 elif reader[0] == 'ER':
@@ -154,6 +152,6 @@ def get_in_params(mypath):
         x_ax, y_ax = '(C-{T_1})', '{T_1}'
     axes_params = [x_ax, y_ax, xy_minmax]
 
-    return mode, in_dirs, gd_params, gc_params, br_params, cr_params, \
+    return mode, in_dirs, gd_params, gc_params, cr_params, \
     er_params, gr_params, pv_params, da_params, ps_params, bf_params, \
     sc_params, ga_params, flag_make_plot, flag_move_file, axes_params

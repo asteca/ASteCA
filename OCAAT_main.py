@@ -55,7 +55,7 @@ print '-------------------------------------------\n'
 mypath = realpath(join(getcwd(), dirname(__file__)))
 
 # Read input parameters for code from file.
-mode, in_dirs, gd_params, gc_params, br_params, cr_params, er_params,\
+mode, in_dirs, gd_params, gc_params, cr_params, er_params,\
 gr_params, pv_params, da_params, ps_params, bf_params, sc_params, ga_params,\
 flag_make_plot, flag_move_file, axes_params = gip.get_in_params(mypath)
 
@@ -218,41 +218,15 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
             print 'Auto center found: (%0.2f, %0.2f) px.' % (center_cl[0],
                 center_cl[1])
 
-    # Inner and outer radii for obtaining the background value. Both are
-    # calculated as a given fraction of the minimum width between the x and y
-    # axis spans.
-    inn_fr, out_fr = br_params
-    inner_ring = (min((max(x_data) - min(x_data)),
-                      (max(y_data) - min(y_data)))) / inn_fr
-    outer_ring = (min((max(x_data) - min(x_data)),
-                      (max(y_data) - min(y_data)))) / out_fr
-
-    if mode == 'm':
-        wrong_answer = True
-        while wrong_answer:
-            answer_bkg = raw_input('Input new inner and outer radius for \
-background (%d, %d) px? (y/n) ' % (inner_ring, outer_ring))
-            if answer_bkg == 'n':
-                print 'Values accepted.'
-                wrong_answer = False
-            elif answer_bkg == 'y':
-                print 'Input new values (in px).'
-                inner_ring = float(raw_input('inner_ring: '))
-                outer_ring = float(raw_input('outer_ring: '))
-                wrong_answer = False
-            else:
-                print 'Wrong input. Try again.\n'
+    # Get density profile
+    radii, ring_density, poisson_error = gdp.get_dens_prof(h_not_filt,
+    x_center_bin[0], y_center_bin[0], width_bins[0])
+    print 'Density profile calculated.'
 
     # Get background value in stars/area
     backg_value, flag_bin_count = gbg.get_background(x_data, y_data,
-        x_center_bin, y_center_bin, h_not_filt, width_bins, inner_ring,
-        outer_ring)
+        x_center_bin, y_center_bin, h_not_filt, width_bins)
     print 'Background calculated (%0.5f stars/px^2).' % backg_value
-
-    # Get density profile
-    radii, ring_density, poisson_error = gdp.get_dens_prof(h_not_filt,
-    x_center_bin, y_center_bin, width_bins, inner_ring)
-    print 'Density profile calculated.'
 
     # Get cluster radius
     radius_params = gr.get_clust_rad(backg_value, radii, ring_density,
