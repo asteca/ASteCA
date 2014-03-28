@@ -28,7 +28,7 @@ def get_king_profile(clust_rad, backg_value, radii, ring_density):
     global backg_dens
 
     # Define values used by King profiles.
-    max_dens = max(ring_density[0])
+    max_dens = max(ring_density)
     backg_dens = backg_value
     r_t = clust_rad
 
@@ -36,13 +36,15 @@ def get_king_profile(clust_rad, backg_value, radii, ring_density):
     guess = (r_t / 2., r_t, max_dens)
 
     # Skip first radius value if it is smaller than the second value.
-    if ring_density[0][0] > ring_density[0][1]:
-        radii_k, ring_dens_k = radii[0], ring_density[0]
+    if ring_density[0] > ring_density[1]:
+        radii_k, ring_dens_k = radii, ring_density
     else:
-        radii_k, ring_dens_k = radii[0][1:], ring_density[0][1:]
+        radii_k, ring_dens_k = radii[1:], ring_density[1:]
 
     flag_king_no_conver = False  # Flag that indicates no convergence.
     try:
+        print radii_k, '\n'
+        print ring_dens_k
         k_prof, k_pr_err = curve_fit(three_params, radii_k, ring_dens_k, guess)
         print '3-P King profile obtained.'
     except RuntimeError:

@@ -72,15 +72,10 @@ def create_out_data_file(output_dir):
 #\n\
 # f1 (flag_center): Either the x or y coordinate assigned as center deviates\n\
 #    more than 2 sigmas from the mean value obtained using all bin widths.\n\
-# f2 (flag_bin_count): When calculating the background value, the inner limit\n\
-#    pushed all the bins outside the frame. This could be indicative of a\n\
-#    small field given the size of the cluster.\n\
 # f3 (flag_delta_total): The background value is smaller than a third of the\n\
 #    maximum radial density value.\n\
 # f4 (flag_not_stable): Not enough points found stabilized around the\n\
-#    background value -> r = 500px assigned.\n\
-# f5 (flag_rad_500): Radius obtained was bigger than 500px -> trimmed to\n\
-#    500px.\n\
+#    background value -> r = middle value of density profile.\n\
 # f6 (flag_delta): The delta range around the background used to attain the\n\
 #    stable condition to determine the radius is greater than 10%%. This\n\
 #    indicates a possible variable background.\n\

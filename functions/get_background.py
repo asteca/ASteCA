@@ -15,7 +15,8 @@ def get_background(ring_density):
     """
 
     stable_cond = False
-    reduced_rd = ring_density
+    # Copy list.
+    reduced_rd = list(ring_density)
 
     while stable_cond is False:
 

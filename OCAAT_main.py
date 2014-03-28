@@ -229,7 +229,7 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
 
     # Get cluster radius
     radius_params = gr.get_clust_rad(backg_value, radii, ring_density,
-                                     width_bins, cr_params)
+        cr_params)
     clust_rad = radius_params[0]
     if mode == 'a':
         print 'Auto radius found: %0.1f px.' % clust_rad
@@ -242,7 +242,7 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
         d_r(x_data, y_data, mag_data, center_cl, cent_cl_err,
             radius_params[0:3], x_center_bin, y_center_bin, h_filter,
             backg_value, radii, ring_density, clust_name, poisson_error,
-            width_bins, inner_ring, outer_ring)
+            width_bins)
         plt.show()
 
         wrong_answer = True
