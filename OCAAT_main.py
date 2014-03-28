@@ -446,14 +446,14 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
           n_c_k, flag_king_no_conver, cont_index, n_c, pval_test_params[0],
           qq_params[0], integr_return, flag_center, flag_center_manual,
           flag_radius_manual, rjct_errors_fit,
-          flag_bin_count, radius_params[3:], flag_num_memb_low, bf_return)
+          radius_params[3:], flag_num_memb_low, bf_return)
     print 'Data added to output file.'
 
     # Make plots
     if flag_make_plot:
         mp(output_subdir, clust_name, x_data, y_data, center_cl, cent_cl_err,
-           x_center_bin, y_center_bin, h_filter, radii, backg_value, inner_ring,
-           outer_ring, radius_params[0:3], ring_density, poisson_error,
+           x_center_bin, y_center_bin, h_filter, radii, backg_value,
+           radius_params[0:3], ring_density, poisson_error,
            cont_index, width_bins, mag_data, col1_data, popt_mag, popt_col1,
            err_plot, rjct_errors_fit, k_prof, k_pr_err, flag_king_no_conver,
            stars_in, stars_out, stars_in_rjct, stars_out_rjct,

@@ -72,19 +72,19 @@ def create_out_data_file(output_dir):
 #\n\
 # f1 (flag_center): Either the x or y coordinate assigned as center deviates\n\
 #    more than 2 sigmas from the mean value obtained using all bin widths.\n\
-# f3 (flag_delta_total): The background value is smaller than a third of the\n\
+# f2 (flag_delta_total): The background value is smaller than a third of the\n\
 #    maximum radial density value.\n\
-# f4 (flag_not_stable): Not enough points found stabilized around the\n\
+# f3 (flag_not_stable): Not enough points found stabilized around the\n\
 #    background value -> r = middle value of density profile.\n\
-# f6 (flag_delta): The delta range around the background used to attain the\n\
+# f4 (flag_delta): The delta range around the background used to attain the\n\
 #    stable condition to determine the radius is greater than 10%%. This\n\
 #    indicates a possible variable background.\n\
-# f7 (flag_delta_points): The number of points that fall outside the delta\n\
+# f5 (flag_delta_points): The number of points that fall outside the delta\n\
 #    range is higher than the number of points to the left of the radius.\n\
 #    This indicates a possible variable background.\n\
-# f8 (flag_king_no_conver): The process to fit a 3-P King profile to the\n\
+# f6 (flag_king_no_conver): The process to fit a 3-P King profile to the\n\
 #    density points did not converge.\n\
-# f9 (flag_num_memb_low): The number of approximate cluster members is < 10.\n\
+# f7 (flag_num_memb_low): The number of approximate cluster members is < 10.\n\
 #\n\
 # FC (flags count): Sum of all the flags values. The bigger this value the\n\
 #    more likely it is that there's a problem with the frame, ie: no cluster,\n\
@@ -93,5 +93,5 @@ def create_out_data_file(output_dir):
 #\n\
 #NAME            c_x[px] c_y[px] R_cl[px] R_c[px] R_t[px] cont_ind memb memb_k \
 prob_cl   CCC mag_int     met     e_m   age   e_a  E(B-V)   e_E   dist   e_d  \
-M1 M2 M3  f1 f2 f3 f4 f5 f6 f7 f8 f9  FC\n" % now_time)
+M1 M2 M3  f1 f2 f3 f4 f5 f6 f7  FC\n" % now_time)
         out_data_file.close()

@@ -43,8 +43,6 @@ def get_king_profile(clust_rad, backg_value, radii, ring_density):
 
     flag_king_no_conver = False  # Flag that indicates no convergence.
     try:
-        print radii_k, '\n'
-        print ring_dens_k
         k_prof, k_pr_err = curve_fit(three_params, radii_k, ring_dens_k, guess)
         print '3-P King profile obtained.'
     except RuntimeError:

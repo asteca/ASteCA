@@ -5,7 +5,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-from matplotlib.patches import Rectangle
 from matplotlib.ticker import MultipleLocator
 from itertools import cycle
 from scipy.stats import norm
@@ -18,7 +17,7 @@ import warnings
 
 def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                cent_cl_err, x_center_bin, y_center_bin, h_filter, radii,
-               backg_value, inner_ring, outer_ring, radius_params,
+               backg_value, radius_params,
                ring_density, poisson_error, cont_index, width_bins,
                mag_data, col1_data, popt_mag, popt_col1,
                err_plot, rjct_errors_fit, k_prof, k_pr_err,
@@ -183,18 +182,6 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     a, b, c = 50, -0.003, 2.5
     plt.scatter(x_data, y_data, marker='o', c='black',
         s=a * np.exp(b * mag_data ** c))
-    # Plot inner and outer rectangles used to calculate the background value.
-    # Inner ring
-    boxes = plt.gca()
-    boxes.add_patch(Rectangle(((center_cl[0] - inner_ring),
-                               (center_cl[1] - inner_ring)), inner_ring * 2,
-                               inner_ring * 2, facecolor='none', edgecolor='b',
-                               ls='dashed', lw=1.5))
-    # Outer ring
-    boxes.add_patch(Rectangle(((center_cl[0] - outer_ring),
-                               (center_cl[1] - outer_ring)), outer_ring * 2,
-                               outer_ring * 2, facecolor='none', edgecolor='b',
-                               ls='dashed', lw=1.5))
 
     # Radial density plot.
     ax5 = plt.subplot(gs1[2:4, 2:6])
