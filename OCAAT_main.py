@@ -1,35 +1,34 @@
 # -*- coding: utf-8 -*-
 
 from os.path import join, realpath, dirname, exists, isfile
-import matplotlib.pyplot as plt
+from os import makedirs, listdir, getcwd, walk, mkdir, rmdir
 import time
-from os import makedirs
-from os import listdir, getcwd, walk, mkdir, rmdir
+import matplotlib.pyplot as plt
 import shutil
 import gc  # Garbage collector.
 
 # Import files with defined functions
-import functions.get_in_params as gip
+from functions.get_in_params import get_in_params as gip
 from functions.create_out_data_file import create_out_data_file as c_o_d_f
 from functions.get_data_semi import get_semi as g_s
-import functions.get_phot_data as gd
+from functions.get_phot_data import get_data as gd
 from functions.display_frame import disp_frame as d_f
 from functions.trim_frame import trim_frame as t_f
-import functions.get_center as g_c
+from functions.get_center import get_center as g_c
 from functions.display_cent import disp_cent as d_c
 from functions.manual_histo import manual_histo as mh
-import functions.get_background as gbg
-import functions.get_dens_prof as gdp
-import functions.get_radius as gr
-import functions.get_king_prof as gkp
+from functions.get_background import get_background as gbg
+from functions.get_dens_prof import get_dens_prof as gdp
+from functions.get_radius import get_clust_rad as gcr
+from functions.get_king_prof import get_king_profile as gkp
 from functions.display_rad import disp_rad as d_r
-import functions.err_accpt_rejct as ear
+from functions.err_accpt_rejct import err_accpt_rejct as ear
 from functions.display_errors import disp_errors as d_e
 from functions.err_accpt_rejct_max import err_a_r_m as e_a_r_m
-import functions.get_in_out as gio
+from functions.get_in_out import get_in_out as gio
 from functions.get_integ_mag import integ_mag as g_i_m
-import functions.get_members_number as g_m_n
-import functions.get_cont_index as g_c_i
+from functions.get_members_number import get_memb_num as g_m_n
+from functions.get_cont_index import cont_indx as g_c_i
 from functions.get_regions import get_regions as g_r
 from functions.field_decont_bys import field_decont_bys as fdb
 from functions.get_p_value import get_pval as g_pv
@@ -48,10 +47,10 @@ print '-------------------------------------------\n'
 # Path where the code is running
 mypath = realpath(join(getcwd(), dirname(__file__)))
 
-# Read input parameters for code from file.
+# Read input parameters from input file.
 mode, in_dirs, gd_params, gc_params, cr_params, er_params,\
 gr_params, pv_params, da_params, ps_params, bf_params, sc_params, ga_params,\
-flag_make_plot, flag_move_file, axes_params = gip.get_in_params(mypath)
+flag_make_plot, flag_move_file, axes_params = gip(mypath)
 
 # Read paths.
 input_dir, output_dir, done_dir = in_dirs
@@ -105,7 +104,7 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
             mode = 'm'
 
     # Get cluster's photometric data from file.
-    phot_data = gd.get_data(input_dir, sub_dir, myfile, gd_params)
+    phot_data = gd(input_dir, sub_dir, myfile, gd_params)
     x_data, y_data, mag_data, col1_data = phot_data[1], phot_data[2], \
     phot_data[3], phot_data[5]
     print 'Data correctly obtained from input file (N stars: %d).'\
@@ -155,7 +154,7 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
     # used
     center_cl, cent_cl_err, h_filter, h_not_filt, xedges_min_db, \
     yedges_min_db, x_center_bin, y_center_bin, width_bins, flag_center = \
-    g_c.get_center(x_data, y_data, gc_params)
+    g_c(x_data, y_data, gc_params)
     if mode == 'a':
         print 'Auto center found: (%0.2f, %0.2f) px.' % (center_cl[0],
         center_cl[1])
@@ -213,16 +212,16 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
                 center_cl[1])
 
     # Get density profile
-    radii, ring_density, poisson_error = gdp.get_dens_prof(h_not_filt[0],
-    x_center_bin[0], y_center_bin[0], width_bins[0])
+    radii, ring_density, poisson_error = gdp(h_not_filt[0], x_center_bin[0],
+        y_center_bin[0], width_bins[0])
     print 'Density profile calculated.'
 
     # Get background value in stars/px^2.
-    backg_value = gbg.get_background(ring_density)
+    backg_value = gbg(ring_density)
     print 'Background calculated (%0.5f stars/px^2).' % backg_value
 
     # Get cluster radius
-    radius_params = gr.get_clust_rad(backg_value, radii, ring_density,
+    radius_params = gcr(backg_value, radii, ring_density,
         cr_params)
     clust_rad = radius_params[0]
     if mode == 'a':
@@ -269,14 +268,14 @@ px): '))
     # Get King profiles based on the density profiles.
     delta_xy = max((max(x_data) - min(x_data)), (max(y_data) - min(y_data)))
     k_prof, k_pr_err, d_b_k, n_c_k, flag_king_no_conver = \
-    gkp.get_king_profile(clust_rad, backg_value, radii, ring_density, delta_xy,
-        x_data, y_data, width_bins[0])
+    gkp(clust_rad, backg_value, radii, ring_density, delta_xy, x_data, y_data,
+        width_bins[0])
 
     # Apply auto rejecting of errors if flag is True.
     e_max = er_params[2]
     # Accept and reject stars based on their errors.
-    popt_mag, popt_col1, acpt_stars, rjct_stars, err_plot = \
-    ear.err_accpt_rejct(phot_data, er_params)
+    popt_mag, popt_col1, acpt_stars, rjct_stars, err_plot = ear(phot_data,
+        er_params)
     # This indicates if we are to use the output of the 'err_accpt_rejct'
     # function or all stars with errors < e_max.
     rjct_errors_fit = False
@@ -333,18 +332,17 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
                 print 'Wrong input. Try again.\n'
 
     # Get stars in and out of cluster's radius.
-    stars_in, stars_out, stars_in_rjct, stars_out_rjct =  \
-    gio.get_in_out(center_cl, clust_rad, acpt_stars, rjct_stars)
+    stars_in, stars_out, stars_in_rjct, stars_out_rjct = gio(center_cl,
+        clust_rad, acpt_stars, rjct_stars)
     print "Stars separated in/out of cluster's boundaries."
 
     # Get approximate number of cluster's members.
-    n_c, flag_num_memb_low = g_m_n.get_memb_num(backg_value, clust_rad,
-                                                stars_in, stars_in_rjct)
+    n_c, flag_num_memb_low = g_m_n(backg_value, clust_rad, stars_in,
+        stars_in_rjct)
     print 'Approximate number of members in cluster obtained (%d).' % (n_c)
 
     # Get contamination index.
-    cont_index = g_c_i.cont_indx(backg_value, clust_rad, stars_in,
-                                 stars_in_rjct)
+    cont_index = g_c_i(backg_value, clust_rad, stars_in, stars_in_rjct)
     print 'Contamination index obtained (%0.2f).' % cont_index
 
     # Obtain manual 2D histogram for the field with star's values attached
