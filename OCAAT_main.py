@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 
-
 from os.path import join, realpath, dirname, exists, isfile
 import matplotlib.pyplot as plt
 import time
+from os import makedirs
+from os import listdir, getcwd, walk, mkdir, rmdir
+import shutil
+import gc  # Garbage collector.
 
 # Import files with defined functions
 import functions.get_in_params as gip
-
 from functions.create_out_data_file import create_out_data_file as c_o_d_f
 from functions.get_data_semi import get_semi as g_s
 import functions.get_phot_data as gd
@@ -29,25 +31,17 @@ from functions.get_integ_mag import integ_mag as g_i_m
 import functions.get_members_number as g_m_n
 import functions.get_cont_index as g_c_i
 from functions.get_regions import get_regions as g_r
-
 from functions.field_decont_bys import field_decont_bys as fdb
 from functions.get_p_value import get_pval as g_pv
 from functions.get_qqplot import qqplot as g_qq
 from functions.get_completeness import mag_completeness as m_c
 from functions.get_isoch_params import ip
 from functions.best_fit_synth_cl import best_fit as bfsc
-
 from functions.make_plots import make_plots as mp
 from functions.add_data_output import add_data_output as a_d_o
 from functions.cl_members_file import cluster_members_file as c_m_f
 
-from os import makedirs
-from os import listdir, getcwd, walk, mkdir, rmdir
-import shutil
-# Garbage collector.
-import gc
-
-
+# Begin code.
 print '            OCAAT v1.0\n'
 print '-------------------------------------------\n'
 
