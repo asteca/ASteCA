@@ -15,19 +15,16 @@ from os.path import join
 import warnings
 
 
-def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
-               cent_cl_err, x_center_bin, y_center_bin, h_filter, radii,
-               backg_value, radius_params,
-               ring_density, poisson_error, cont_index, width_bins,
-               mag_data, col1_data, popt_mag, popt_col1,
-               err_plot, rjct_errors_fit, k_prof, k_pr_err, d_b_k,
-               flag_king_no_conver, stars_in,
-               stars_out, stars_in_rjct, stars_out_rjct,
-               integr_return, n_c, flag_area_stronger,
-               cluster_region, field_region, pval_test_params, qq_params,
-               memb_prob_avrg_sort, completeness,
-               bf_params, bf_return, ga_params, er_params, axes_params,
-               ps_params):
+def make_plots(output_subdir, clust_name, x_data, y_data, center_coords,
+    cent_coo_err, center_cl, cent_cl_err, x_center_bin, y_center_bin, h_filter,
+    radii, backg_value,
+    radius_params, ring_density, poisson_error, cont_index, width_bins,
+    mag_data, col1_data, popt_mag, popt_col1, err_plot, rjct_errors_fit,
+    k_prof, k_pr_err, d_b_k, flag_king_no_conver, stars_in, stars_out,
+    stars_in_rjct, stars_out_rjct, integr_return, n_c, flag_area_stronger,
+    cluster_region, field_region, pval_test_params, qq_params,
+    memb_prob_avrg_sort, completeness, bf_params, bf_return, ga_params,
+    er_params, axes_params, ps_params):
     '''
     Make all plots.
     '''
@@ -102,11 +99,17 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                 zorder=3)
     plt.axhline(y=y_center_bin[2], linestyle='-', color='white', linewidth=2,
                 zorder=3)
-    # Plot center coordinates in bin.
-    #text = 'Center (%d, %d)' % (x_center_bin[2], y_center_bin[2])
+    # Add text boxs.
     text = 'Bin: %d px' % (width_bins[2])
-    plt.text(0.7, 0.92, text, transform=ax0.transAxes,
+    plt.text(0.05, 0.92, text, transform=ax0.transAxes,
              bbox=dict(facecolor='white', alpha=0.8), fontsize=12)
+    text1 = '$x_{cent} = %d \pm %d px$' '\n' % (center_coords[0][2],
+        cent_coo_err[2])
+    text2 = '$y_{cent} = %d \pm %d px$' % (center_coords[1][2],
+        cent_coo_err[2])
+    text = text1 + text2
+    plt.text(0.53, 0.85, text, transform=ax0.transAxes,
+        bbox=dict(facecolor='white', alpha=0.85), fontsize=15)
     plt.imshow(h_filter[2].transpose(), origin='lower', aspect='auto')
 
     # 2D filtered histogram.
@@ -116,10 +119,17 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     ax1.minorticks_on()
     plt.axvline(x=x_center_bin[1], linestyle='--', color='white')
     plt.axhline(y=y_center_bin[1], linestyle='--', color='white')
-    #text = 'Center (%d, %d)' % (x_center_bin[2], y_center_bin[2])
+    # Add text boxs.
     text = 'Bin: %d px' % (width_bins[1])
-    plt.text(0.7, 0.92, text, transform=ax1.transAxes,
+    plt.text(0.05, 0.92, text, transform=ax1.transAxes,
              bbox=dict(facecolor='white', alpha=0.8), fontsize=12)
+    text1 = '$x_{cent} = %d \pm %d px$' '\n' % (center_coords[0][1],
+        cent_coo_err[1])
+    text2 = '$y_{cent} = %d \pm %d px$' % (center_coords[1][1],
+        cent_coo_err[1])
+    text = text1 + text2
+    plt.text(0.53, 0.85, text, transform=ax1.transAxes,
+        bbox=dict(facecolor='white', alpha=0.85), fontsize=15)
     plt.imshow(h_filter[1].transpose(), origin='lower', aspect='auto')
 
     # 2D filtered histogram.
@@ -129,12 +139,19 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     ax2.minorticks_on()
     plt.axvline(x=x_center_bin[3], linestyle='--', color='white')
     plt.axhline(y=y_center_bin[3], linestyle='--', color='white')
-    #text = 'Center (%d, %d)' % (x_center_bin[1], y_center_bin[1])
+    # Add text boxs.
     text1 = 'Bin: %d px' '\n' % (width_bins[3])
     text2 = '(weighted)'
     text = text1 + text2
-    plt.text(0.7, 0.87, text, transform=ax2.transAxes,
+    plt.text(0.05, 0.87, text, transform=ax2.transAxes,
              bbox=dict(facecolor='white', alpha=0.8), fontsize=12)
+    text1 = '$x_{cent} = %d \pm %d px$' '\n' % (center_coords[0][3],
+        cent_coo_err[3])
+    text2 = '$y_{cent} = %d \pm %d px$' % (center_coords[1][3],
+        cent_coo_err[3])
+    text = text1 + text2
+    plt.text(0.53, 0.85, text, transform=ax2.transAxes,
+        bbox=dict(facecolor='white', alpha=0.85), fontsize=15)
     plt.imshow(h_filter[3].transpose(), origin='lower', aspect='auto')
 
     # 2D filtered histogram, smallest bin width.
@@ -148,10 +165,15 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     circle = plt.Circle((x_center_bin[0], y_center_bin[0]),
         clust_rad / width_bins[0], color='w', fill=False)
     fig.gca().add_artist(circle)
-    #text = 'Center (%d, %d)' % (x_center_bin[0], y_center_bin[0])
+    # Add text boxs.
     text = 'Bin: %d px' % (width_bins[0])
-    plt.text(0.7, 0.92, text, transform=ax3.transAxes,
+    plt.text(0.05, 0.92, text, transform=ax3.transAxes,
              bbox=dict(facecolor='white', alpha=0.8), fontsize=12)
+    text1 = '$x_{cent} = %d \pm %d px$' '\n' % (center_cl[0], cent_cl_err[0])
+    text2 = '$y_{cent} = %d \pm %d px$' % (center_cl[1], cent_cl_err[1])
+    text = text1 + text2
+    plt.text(0.53, 0.85, text, transform=ax3.transAxes,
+        bbox=dict(facecolor='white', alpha=0.85), fontsize=15)
     plt.imshow(h_filter[0].transpose(), origin='lower', aspect='auto')
 
     # x,y finding chart of full frame
@@ -171,11 +193,10 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
                         fill=False)
     fig.gca().add_artist(circle)
     # Add text box
-    text1 = '$x_{cent} = %d \pm %d px$' % (center_cl[0], cent_cl_err[0])
-    text2 = '\n'
-    text3 = '$y_{cent} = %d \pm %d px$' % (center_cl[1], cent_cl_err[1])
-    text4 = text1 + text2 + text3
-    plt.text(0.5, 0.85, text4, transform=ax4.transAxes,
+    text1 = '$x_{cent} = %d \pm %d px$' '\n' % (center_cl[0], cent_cl_err[0])
+    text2 = '$y_{cent} = %d \pm %d px$' % (center_cl[1], cent_cl_err[1])
+    text = text1 + text2
+    plt.text(0.53, 0.85, text, transform=ax4.transAxes,
         bbox=dict(facecolor='white', alpha=0.85), fontsize=15)
     # Plot stars.
     a, b, c = 50, -0.003, 2.5

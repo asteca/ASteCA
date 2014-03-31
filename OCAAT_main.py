@@ -152,9 +152,11 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
     # Get cluster's center values and errors, set of 4 filtered 2D hist,
     # set of 4 non-filtered 2D hist, x,y bin centers and width of each bin
     # used
-    center_cl, cent_cl_err, h_filter, h_not_filt, xedges_min_db, \
+    center_coords, cent_coo_err, h_filter, h_not_filt, xedges_min_db, \
     yedges_min_db, x_center_bin, y_center_bin, width_bins, flag_center = \
     g_c(x_data, y_data, mag_data, gc_params)
+    center_cl = [center_coords[0][0], center_coords[1][0]]
+    cent_cl_err = [cent_coo_err[0], cent_coo_err[0]]
     if mode == 'a':
         print 'Auto center found: (%0.2f, %0.2f) px.' % (center_cl[0],
         center_cl[1])
@@ -180,7 +182,7 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
                 center_cl[0] = float(raw_input('x: '))
                 center_cl[1] = float(raw_input('y: '))
                 # Update values.
-                cent_cl_err[0], cent_cl_err[1] = 13., 13.
+                cent_cl_err[0], cent_cl_err[1] = 0., 0.
                 # Store center values in bin coordinates. We substract
                 # the min (x,y) coordinate values otherwise the bin
                 # coordinates won't be aligned.
@@ -197,7 +199,7 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
             center_cl[0] = cent_cl_semi[0]
             center_cl[1] = cent_cl_semi[1]
             # Update error values.
-            cent_cl_err[0], cent_cl_err[1] = 13., 13.
+            cent_cl_err[0], cent_cl_err[1] = 0., 0.
             print 'Semi center set: (%0.2f, %0.2f) px.' % (center_cl[0],
                 center_cl[1])
             # Store center values in bin coordinates. We substract
@@ -445,17 +447,17 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
 
     # Make plots
     if flag_make_plot:
-        mp(output_subdir, clust_name, x_data, y_data, center_cl, cent_cl_err,
-           x_center_bin, y_center_bin, h_filter, radii, backg_value,
-           radius_params[0:3], ring_density, poisson_error,
-           cont_index, width_bins, mag_data, col1_data, popt_mag, popt_col1,
-           err_plot, rjct_errors_fit, k_prof, k_pr_err, d_b_k,
-           flag_king_no_conver,
-           stars_in, stars_out, stars_in_rjct, stars_out_rjct,
-           integr_return, n_c, flag_area_stronger,
-           cluster_region, field_region, pval_test_params, qq_params,
-           memb_prob_avrg_sort, completeness, bf_params,
-           bf_return, ga_params, er_params, axes_params, ps_params)
+        mp(output_subdir, clust_name, x_data, y_data, center_coords,
+            cent_coo_err, center_cl, cent_cl_err, x_center_bin, y_center_bin,
+            h_filter, radii,
+            backg_value, radius_params[0:3], ring_density, poisson_error,
+            cont_index, width_bins, mag_data, col1_data, popt_mag, popt_col1,
+            err_plot, rjct_errors_fit, k_prof, k_pr_err, d_b_k,
+            flag_king_no_conver, stars_in, stars_out, stars_in_rjct,
+            stars_out_rjct, integr_return, n_c, flag_area_stronger,
+            cluster_region, field_region, pval_test_params, qq_params,
+            memb_prob_avrg_sort, completeness, bf_params,
+            bf_return, ga_params, er_params, axes_params, ps_params)
         print 'Plots created.'
 
     # Move file to 'done' dir.

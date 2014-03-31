@@ -112,9 +112,9 @@ def get_center(x_data, y_data, mag_data, gc_params):
         flag_center = True
 
     # Pass the center coordinates obtained with the smallest bin.
-    center_coords = [center_x_g[0], center_y_g[0]]
-    # Pass the errors as the width of the smallest bin.
-    cent_coo_err = [int(round(bin_list[0])), int(round(bin_list[0]))]
+    center_coords = [center_x_g, center_y_g]
+    # Pass the errors as the width of the bin.
+    cent_coo_err = bin_list
 
     return center_coords, cent_coo_err, h_filter, h_not_filt, xedges_min_db, \
     yedges_min_db, x_center_bin, y_center_bin, bin_list, flag_center
