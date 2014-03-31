@@ -13,21 +13,18 @@ from get_dens_prof import get_dens_prof as gdp
 
 def new_hist(x_data, y_data, d_b):
     '''
+    Generate new 2D histogram with increased bin width. Obtain also new center
+    value.
     '''
-
     xmin, xmax = min(x_data), max(x_data)
     ymin, ymax = min(y_data), max(y_data)
     rang = [[xmin, xmax], [ymin, ymax]]
-
     binsxy = [int((xmax - xmin) / d_b), int((ymax - ymin) / d_b)]
-
     # hist is the 2D histogran, xedges & yedges store the edges of the bins
     hist, xedges, yedges = np.histogram2d(x_data, y_data, range=rang,
                                           bins=binsxy)
-
     # H_g is the 2D histogram with a gaussian filter applied
     h_g = gaussian_filter(hist, 2, mode='constant')
-
     # x_c_b, y_c_b store the x,y coordinates of the bin with the
     # maximum value in the 2D filtered histogram.
     x_c_b, y_c_b = np.unravel_index(h_g.argmax(), h_g.shape)
@@ -70,6 +67,8 @@ def get_king_profile(clust_rad, backg_value, radii, ring_density, delta_xy,
 
     flag_king_no_conver = True  # Flag that indicates no convergence.
     i, d_b_k = 1, width_bin
+    # Iterate increasing the bin width until either King profile converges or
+    # a value of twice the original bin width is reached.
     while flag_king_no_conver is True and i < width_bin:
 
         try:
@@ -78,8 +77,7 @@ def get_king_profile(clust_rad, backg_value, radii, ring_density, delta_xy,
 
             # If fit converged to tidal radius that extends beyond the maximum
             # range of the frame, discard it.
-            if k_prof[1] > delta_xy or \
-            np.sqrt(k_pr_err[1][1]) > k_prof[1] / 2.:
+            if k_prof[1] > delta_xy:
                 k_prof[1] = -1.
                 k_pr_err[1][1] = 1.
                 # Raise flag.
