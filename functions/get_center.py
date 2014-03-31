@@ -28,7 +28,7 @@ def get_center(x_data, y_data, gc_params):
     # Either calculate or read the number of bins used.
     if gc_params[0] == 'auto':
         min_rang = min((rang[0][1] - rang[0][0]), (rang[1][1] - rang[1][0]))
-        # Number of bins given by 1%, 2%, 3% and 4% of thE minimum
+        # Number of bins given by 1%, 2%, 3% and 4% of the minimum
         # axis range.
         bin_list = [int(i * min_rang / 100.) for i in range(1, 5)]
     else:
@@ -91,8 +91,8 @@ def get_center(x_data, y_data, gc_params):
 
     # Pass the center coordinates obtained with the smallest bin.
     center_coords = [center_x_g[0], center_y_g[0]]
-    # Pass the errors as half of the width of the smallest bin.
-    cent_coo_err = [int(round(bin_list[0] / 2.)), int(round(bin_list[0] / 2.))]
+    # Pass the errors as the width of the smallest bin.
+    cent_coo_err = [int(round(bin_list[0])), int(round(bin_list[0]))]
 
     return center_coords, cent_coo_err, h_filter, h_not_filt, xedges_min_db, \
     yedges_min_db, x_center_bin, y_center_bin, bin_list, flag_center
