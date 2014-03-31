@@ -5,11 +5,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 def disp_frame(x_data, y_data, mag_data):
     '''
     Show full frame.
     '''
-   
+
     # Get max and min values in x,y
     x_min, x_max = min(x_data), max(x_data)
     y_min, y_max = min(y_data), max(y_data)
@@ -24,8 +25,8 @@ def disp_frame(x_data, y_data, mag_data):
     # Set grid
     plt.grid(b=True, which='major', color='k', linestyle='-', zorder=1)
     plt.grid(b=True, which='minor', color='k', linestyle='-', zorder=1)
-    plt.scatter(x_data, y_data, marker='o', c='black', 
-                s=500*np.exp(-0.0035*mag_data**2.5))
+    plt.scatter(x_data, y_data, marker='o', c='black',
+                s=500 * np.exp(-0.0035 * mag_data ** 2.5))
 
     plt.draw()
     print 'Plot displayed, waiting for it to be closed.'

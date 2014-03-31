@@ -6,16 +6,17 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
-def disp_cent(x_data, y_data, mag_data, center_cl, cent_cl_err, x_center_bin, 
+
+def disp_cent(x_data, y_data, mag_data, center_cl, cent_cl_err, x_center_bin,
               y_center_bin, h_filter):
     '''
     Show plot of cluster with value of center obtained.
     '''
-   
+
     # Plot all outputs
-    plt.figure(figsize=(18, 8)) # create the top-level container
+    plt.figure(figsize=(18, 8))  # create the top-level container
     gs = gridspec.GridSpec(1, 2)  # create a GridSpec object
-        
+
     # 1 subplot: 2D filtered histogram, d_b=25
     ax1 = plt.subplot(gs[0, 0])
     #Set axis labels
@@ -31,10 +32,9 @@ def disp_cent(x_data, y_data, mag_data, center_cl, cent_cl_err, x_center_bin,
     plt.axhline(y=y_center_bin[0], linestyle='-', color='white', zorder=4)
     # Cluster's name in a text box
     text = 'Center bins (%d, %d)' % (x_center_bin[0], y_center_bin[0])
-    plt.text(0.5, 0.95, text, transform = ax1.transAxes, \
+    plt.text(0.5, 0.95, text, transform=ax1.transAxes,
     bbox=dict(facecolor='white', alpha=0.8), fontsize=12)
     plt.imshow(h_filter[0].transpose(), origin='lower')
-
 
     # 2 subplot: x,y finding chart of full frame
     ax2 = plt.subplot(gs[0, 1])
@@ -59,11 +59,11 @@ def disp_cent(x_data, y_data, mag_data, center_cl, cent_cl_err, x_center_bin,
     text1 = r'$x_{cent} = %d \pm %d px$' % (center_cl[0], cent_cl_err[0])
     text2 = '\n'
     text3 = r'$y_{cent} = %d \pm %d px$' % (center_cl[1], cent_cl_err[1])
-    text = text1+text2+text3
-    plt.text(0.7, 0.9, text, transform = ax2.transAxes, \
+    text = text1 + text2 + text3
+    plt.text(0.7, 0.9, text, transform=ax2.transAxes,
     bbox=dict(facecolor='white', alpha=0.8), fontsize=15)
-    plt.scatter(x_data, y_data, marker='o', c='black', 
-                s=500*np.exp(-0.0035*mag_data**2.5))
+    plt.scatter(x_data, y_data, marker='o', c='black',
+        s=500 * np.exp(-0.0035 * mag_data ** 2.5))
 
     plt.draw()
     print 'Plot displayed, waiting for it to be closed.'
