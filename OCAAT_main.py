@@ -154,7 +154,7 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
     # used
     center_cl, cent_cl_err, h_filter, h_not_filt, xedges_min_db, \
     yedges_min_db, x_center_bin, y_center_bin, width_bins, flag_center = \
-    g_c(x_data, y_data, gc_params)
+    g_c(x_data, y_data, mag_data, gc_params)
     if mode == 'a':
         print 'Auto center found: (%0.2f, %0.2f) px.' % (center_cl[0],
         center_cl[1])

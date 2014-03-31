@@ -6,7 +6,7 @@ import numpy as np
 from scipy.ndimage.filters import gaussian_filter
 
 
-def get_center(x_data, y_data, gc_params):
+def get_center(x_data, y_data, mag_data, gc_params):
     """
     Obtains the center of the putative cluster. Returns the center values
     along with its errors and several arrays related to histograms, mainly for
@@ -28,9 +28,8 @@ def get_center(x_data, y_data, gc_params):
     # Either calculate or read the number of bins used.
     if gc_params[0] == 'auto':
         min_rang = min((rang[0][1] - rang[0][0]), (rang[1][1] - rang[1][0]))
-        # Number of bins given by 1%, 2%, 3% and 4% of the minimum
-        # axis range.
-        bin_list = [int(i * min_rang / 100.) for i in range(1, 5)]
+        # Number of bins given by 1%, 2% and 3% of the minimum axis range.
+        bin_list = [int(i * min_rang / 100.) for i in range(1, 4)]
     else:
         bin_list = gc_params[1:]
         bin_list.sort()
@@ -72,6 +71,29 @@ def get_center(x_data, y_data, gc_params):
         # Calculate center coords in pixel coordinates.
         center_x_g.append(np.average(xedges[x_cent_g:x_cent_g + 2]))
         center_y_g.append(np.average(yedges[y_cent_g:y_cent_g + 2]))
+
+    # Run again for the minimum bin width, this time weighting according to
+    # relative intensities.
+    # Obtain relative intensities.
+    rel_int = 10 ** ((max(mag_data) - mag_data) / 2.5)
+    # Use minimum bin width.
+    d_b = bin_list[0]
+    bin_list.append(d_b)
+    binsxy = [int((xmax - xmin) / d_b), int((ymax - ymin) / d_b)]
+    hist, xedges, yedges = np.histogram2d(x_data, y_data, range=rang,
+                                          bins=binsxy, weights=rel_int)
+    # Store not-filtered 2D hist.
+    h_not_filt.append(hist)
+    h_g = gaussian_filter(hist, 2, mode='constant')
+    # Store filtered 2D hist.
+    h_filter.append(h_g)
+    x_cent_g, y_cent_g = np.unravel_index(h_g.argmax(), h_g.shape)
+    # Store center bins for the filtered hist.
+    x_center_bin.append(x_cent_g)
+    y_center_bin.append(y_cent_g)
+    # Append center coords in pixel coordinates.
+    center_x_g.append(np.average(xedges[x_cent_g:x_cent_g + 2]))
+    center_y_g.append(np.average(yedges[y_cent_g:y_cent_g + 2]))
 
     # Store in this array the values for the cluster's center x,y coordinates
     # obtained with the different bin sizes.

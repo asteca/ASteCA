@@ -95,48 +95,47 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     plt.ylabel('y (bins)', fontsize=12)
     # Set minor ticks
     ax0.minorticks_on()
-    # Set ticks font.
-    #ax0.tick_params(axis='both', which='major', labelsize=7)
     # Set grid
-    ax0.grid(b=True, which='major', color='k', linestyle='-', zorder=1)
-    ax0.grid(b=True, which='minor', color='k', linestyle='-', zorder=1)
+    ax0.grid(which='both', color='k', linestyle='-', zorder=1)
     # Add lines through the center of the cluster
-    plt.axvline(x=x_center_bin[3], linestyle='-', color='white', linewidth=2,
+    plt.axvline(x=x_center_bin[2], linestyle='-', color='white', linewidth=2,
                 zorder=3)
-    plt.axhline(y=y_center_bin[3], linestyle='-', color='white', linewidth=2,
+    plt.axhline(y=y_center_bin[2], linestyle='-', color='white', linewidth=2,
                 zorder=3)
     # Plot center coordinates in bin.
-    #text = 'Center (%d, %d)' % (x_center_bin[3], y_center_bin[3])
-    text = 'Bin: %d px' % (width_bins[3])
+    #text = 'Center (%d, %d)' % (x_center_bin[2], y_center_bin[2])
+    text = 'Bin: %d px' % (width_bins[2])
     plt.text(0.7, 0.92, text, transform=ax0.transAxes,
              bbox=dict(facecolor='white', alpha=0.8), fontsize=12)
-    plt.imshow(h_filter[3].transpose(), origin='lower')
+    plt.imshow(h_filter[2].transpose(), origin='lower')
 
     # 2D filtered histogram.
     ax1 = plt.subplot(gs1[0:2, 2:4])
     plt.xlabel('x (bins)', fontsize=12)
     plt.ylabel('y (bins)', fontsize=12)
     ax1.minorticks_on()
-    plt.axvline(x=x_center_bin[2], linestyle='--', color='white')
-    plt.axhline(y=y_center_bin[2], linestyle='--', color='white')
+    plt.axvline(x=x_center_bin[1], linestyle='--', color='white')
+    plt.axhline(y=y_center_bin[1], linestyle='--', color='white')
     #text = 'Center (%d, %d)' % (x_center_bin[2], y_center_bin[2])
-    text = 'Bin: %d px' % (width_bins[2])
+    text = 'Bin: %d px' % (width_bins[1])
     plt.text(0.7, 0.92, text, transform=ax1.transAxes,
              bbox=dict(facecolor='white', alpha=0.8), fontsize=12)
-    plt.imshow(h_filter[2].transpose(), origin='lower')
+    plt.imshow(h_filter[1].transpose(), origin='lower')
 
     # 2D filtered histogram.
     ax2 = plt.subplot(gs1[0:2, 4:6])
     plt.xlabel('x (bins)', fontsize=12)
     plt.ylabel('y (bins)', fontsize=12)
     ax2.minorticks_on()
-    plt.axvline(x=x_center_bin[1], linestyle='--', color='white')
-    plt.axhline(y=y_center_bin[1], linestyle='--', color='white')
+    plt.axvline(x=x_center_bin[3], linestyle='--', color='white')
+    plt.axhline(y=y_center_bin[3], linestyle='--', color='white')
     #text = 'Center (%d, %d)' % (x_center_bin[1], y_center_bin[1])
-    text = 'Bin: %d px' % (width_bins[1])
-    plt.text(0.7, 0.92, text, transform=ax2.transAxes,
+    text1 = 'Bin: %d px' '\n' % (width_bins[3])
+    text2 = '(weighted)'
+    text = text1 + text2
+    plt.text(0.7, 0.87, text, transform=ax2.transAxes,
              bbox=dict(facecolor='white', alpha=0.8), fontsize=12)
-    plt.imshow(h_filter[1].transpose(), origin='lower')
+    plt.imshow(h_filter[3].transpose(), origin='lower')
 
     # 2D filtered histogram, smallest bin width.
     ax3 = plt.subplot(gs1[0:2, 6:8])
