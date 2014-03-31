@@ -107,7 +107,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     text = 'Bin: %d px' % (width_bins[2])
     plt.text(0.7, 0.92, text, transform=ax0.transAxes,
              bbox=dict(facecolor='white', alpha=0.8), fontsize=12)
-    plt.imshow(h_filter[2].transpose(), origin='lower')
+    plt.imshow(h_filter[2].transpose(), origin='lower', aspect='auto')
 
     # 2D filtered histogram.
     ax1 = plt.subplot(gs1[0:2, 2:4])
@@ -120,7 +120,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     text = 'Bin: %d px' % (width_bins[1])
     plt.text(0.7, 0.92, text, transform=ax1.transAxes,
              bbox=dict(facecolor='white', alpha=0.8), fontsize=12)
-    plt.imshow(h_filter[1].transpose(), origin='lower')
+    plt.imshow(h_filter[1].transpose(), origin='lower', aspect='auto')
 
     # 2D filtered histogram.
     ax2 = plt.subplot(gs1[0:2, 4:6])
@@ -135,7 +135,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     text = text1 + text2
     plt.text(0.7, 0.87, text, transform=ax2.transAxes,
              bbox=dict(facecolor='white', alpha=0.8), fontsize=12)
-    plt.imshow(h_filter[3].transpose(), origin='lower')
+    plt.imshow(h_filter[3].transpose(), origin='lower', aspect='auto')
 
     # 2D filtered histogram, smallest bin width.
     ax3 = plt.subplot(gs1[0:2, 6:8])
@@ -152,7 +152,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_cl,
     text = 'Bin: %d px' % (width_bins[0])
     plt.text(0.7, 0.92, text, transform=ax3.transAxes,
              bbox=dict(facecolor='white', alpha=0.8), fontsize=12)
-    plt.imshow(h_filter[0].transpose(), origin='lower')
+    plt.imshow(h_filter[0].transpose(), origin='lower', aspect='auto')
 
     # x,y finding chart of full frame
     ax4 = plt.subplot(gs1[2:4, 0:2])
