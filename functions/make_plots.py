@@ -6,6 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from matplotlib.ticker import MultipleLocator
+from scipy.optimize import fsolve
 from itertools import cycle
 from scipy.stats import norm
 import matplotlib.mlab as mlab
@@ -29,8 +30,15 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_coords,
     Make all plots.
     '''
 
+    def star_size(x, a, c, area):
+        '''
+        function to obtain the optimal star size for the scatter plot.
+        '''
+        return sum(a * np.exp(x * mag_data ** c)) / area - 0.001
+
     def func(x, a, b, c):
-        '''Exponential function.
+        '''
+        Exponential function.
         '''
         return a * np.exp(b * x) + c
 
@@ -199,7 +207,10 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_coords,
     plt.text(0.53, 0.85, text, transform=ax4.transAxes,
         bbox=dict(facecolor='white', alpha=0.85), fontsize=15)
     # Plot stars.
-    a, b, c = 50, -0.003, 2.5
+    a, c = 200., 2.5
+    area = (max(x_data) - min(x_data)) * (max(y_data) - min(y_data))
+    # Solve for optimal star size.
+    b = fsolve(star_size, backg_value, args=(a, c, area))
     plt.scatter(x_data, y_data, marker='o', c='black',
         s=a * np.exp(b * mag_data ** c))
 
@@ -301,9 +312,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_coords,
     plt.text(0.62, 0.9, text, transform=ax6.transAxes,
              bbox=dict(facecolor='white', alpha=0.85), fontsize=12)
     # Plot stars.
-    a, b, c = 100, -0.003, 2.5
     plt.scatter(x_data, y_data, marker='o', c='black',
-        s=a * np.exp(b * mag_data ** c))
+        s=2*a * np.exp(b * mag_data ** c))
 
     # Cluster and field regions defined.
     ax7 = plt.subplot(gs1[4:6, 0:2])
