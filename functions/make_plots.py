@@ -313,7 +313,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_coords,
              bbox=dict(facecolor='white', alpha=0.85), fontsize=12)
     # Plot stars.
     plt.scatter(x_data, y_data, marker='o', c='black',
-        s=2*a * np.exp(b * mag_data ** c))
+        s=2 * a * np.exp(b * mag_data ** c))
 
     # Cluster and field regions defined.
     ax7 = plt.subplot(gs1[4:6, 0:2])
