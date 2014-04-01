@@ -227,7 +227,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_coords,
         rt_err = round(np.sqrt(k_pr_err[1][1]))
     else:
         rc_err, rt_err = -1, -1
-    texts = ['Dens prof (%d px)' % width_bins[0],
+    texts = ['RDP (%d px)' % width_bins[0],
             'backg = %.1E $st/px^{2}$' % backg_value,
             '$\Delta$=%d%%' % delta_percentage,
             '3-P King prof (%d px)' % d_b_k,
