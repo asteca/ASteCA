@@ -258,8 +258,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_coords,
         ax5.plot(radii, three_params(radii), 'g--', label=texts[3],
                  lw=2., zorder=3)
         # Plot r_c as a dashed line.
-        ax5.vlines(x=k_prof[0], ymin=0, ymax=max(ring_density) / 1.2,
-                   label=texts[4], color='g', linestyles=':', lw=3.5, zorder=4)
+        ax5.vlines(x=k_prof[0], ymin=0, ymax=three_params(k_prof[0]),
+                   label=texts[4], color='g', linestyles=':', lw=4., zorder=4)
         # Plot r_t radius as an arrow. vline is there to show the label.
         ax5.vlines(x=k_prof[1], ymin=0., ymax=0., label=texts[5], color='g')
         ax5.arrow(k_prof[1], arr_y_up, 0., arr_y_dwn, fc="g", ec="g",
