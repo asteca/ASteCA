@@ -5,25 +5,22 @@
 import numpy as np
 
 
-def add_data_output(sub_dir, output_dir, clust_name, center_cl, clust_rad,
-                    k_prof, k_pr_err, n_c_k, flag_king_no_conver, cont_index,
-                    n_c, prob_cl_kde, ccc, integr_return,
-                    flag_center, flag_center_manual,
-                    flag_radius_manual, rjct_errors_fit,
-                    radius_params, flag_num_memb_low, bf_return):
+def add_data_output(out_file_name, sub_dir, output_dir, clust_name, center_cl,
+    clust_rad, k_prof, k_pr_err, n_c_k, flag_king_no_conver, cont_index,
+    n_c, prob_cl_kde, ccc, integr_return, flag_center, flag_center_manual,
+    flag_radius_manual, rjct_errors_fit, radius_params, flag_num_memb_low,
+    bf_return):
     '''Add data obtained to the 'data_output.dat' file.'''
 
     # Parameters from get_radius function.
-    flag_delta_total, flag_not_stable, flag_delta, flag_delta_points = \
-    radius_params
+    flag_delta_total, flag_not_stable, flag_delta = radius_params
 
     # Get parameter from list.
     integ_mag = integr_return[2]
 
     # Create list containing all the flags.
     flags_list = [flag_center_manual, flag_radius_manual, rjct_errors_fit,
-                  flag_center, flag_delta_total,
-                  flag_not_stable, flag_delta, flag_delta_points,
+                  flag_center, flag_delta_total, flag_not_stable, flag_delta,
                   flag_king_no_conver, flag_num_memb_low]
 
     # Converty True & False values to 1 and 0 respectively.
@@ -51,11 +48,11 @@ def add_data_output(sub_dir, output_dir, clust_name, center_cl, clust_rad,
         str('%0.2f' % d), str('%0.2f' % e_d)]
 
     # "a" opens the file for appending
-    with open(output_dir + 'data_output.dat', "a") as f_out:
+    with open(output_dir + out_file_name, "a") as f_out:
         f_out.write('{:<16} {:>7} {:>7} {:>8} {:>7} {:>8} {:>7} {:>8} {:>8} \
 {:>4} {:>6} {:>7} {:>5} {:>7} {:>7} {:>7} {:>5} {:>5} {:>7} {:>5} {:>6} \
 {:>5}'.format(*line))
         # Flags.
         f_out.write('{:>4} {:>2} {:>2} {:>3} {:>2} {:>2} {:>2} {:>2} {:>2} \
-{:>2} {:>3}'.format(*int_flags))
+{:>3}'.format(*int_flags))
         f_out.write('\n')

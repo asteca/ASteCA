@@ -7,13 +7,20 @@ def get_clust_rad(backg_value, radii, ring_density, cr_params):
     """
     Obtain the value for the cluster's radius by counting the number of points
     that fall within a given interval of the background or lower. If this number
-    is equal to the number of points left behind (to the left) then assign the
-    radius as the one closest to the background.
+    is equal to a fixed number of points n_left then assign the radius as the
+    closest point to the background value among the first n_left points
+    counting from the first one that fell below the backg + delta limit.
     Iterate increasing the interval around the background until n_left points
-    are found or the interval reaches 25%.
+    are found or the delta interval reaches its maximum allowed.
     """
 
-    n_l = cr_params[0]
+    # Assign a value to the number of points that should be found below
+    # the delta value around the background to attain the 'stabilized'
+    # condition.
+    if cr_params[0] == 'auto':
+        n_left = max(int(round(len(radii) * 0.1)), 2)
+    else:
+        n_left = cr_params[1]
 
     # Difference between max density value and the background value.
     delta_total = (max(ring_density) - backg_value)
@@ -24,12 +31,12 @@ def get_clust_rad(backg_value, radii, ring_density, cr_params):
     if delta_total < 3 * backg_value:
         flag_delta_total = True
 
-    # Start i value to cap the number of iterations to 5.
+    # Start i value to cap the number of iterations.
     i = 1
     # Initialize condition to break out of 'while'.
     flag_not_stable = True
-    # Iterate until a stable condition is attained or for a maximum of 5 values
-    # of delta_backg.
+    # Iterate until a stable condition is attained or for a maximum
+    # values of delta_backg.
     while flag_not_stable and i < 6:
 
         # Store value for delta_percentage.
@@ -43,14 +50,6 @@ def get_clust_rad(backg_value, radii, ring_density, cr_params):
         # Initialize density values counter for points that fall inside the
         # range determined by the delta value around the background.
         in_delta_val = 0
-        # Assign a value to the number of points that have been found within
-        # the delta value around the background, which determines the
-        # 'stabilized' condition.
-        n_left = n_l
-
-        # This value stores the number of points that fall outside the delta
-        # limits around the background, for the value of 'delta_backg' used.
-        outside_val = 0
 
         # Initialize index_rad value.
         index_rad = 0
@@ -58,8 +57,8 @@ def get_clust_rad(backg_value, radii, ring_density, cr_params):
         # Iterate through all values of star density in this "square ring".
         for index, item in enumerate(ring_density):
 
-            # Condition to iterate until at least n_left points close to the
-            # background value are found.
+            # Condition to iterate until at least n_left points below the
+            # delta + background value are found.
             if in_delta_val < n_left:
 
                 # If the density value is closer than 'delta_backg' to the
@@ -74,10 +73,6 @@ def get_clust_rad(backg_value, radii, ring_density, cr_params):
                     # limit.
                     if in_delta_val == 1:
                         index_rad = index
-                else:
-                    # If the point falls above the upper delta limit around the
-                    # background --> increase value.
-                    outside_val += 1
             else:
                 # Exit 'for' and 'while' loops if n_left consecutive values were
                 # found == "stable" condition.
@@ -98,22 +93,13 @@ def get_clust_rad(backg_value, radii, ring_density, cr_params):
         clust_rad = radii[int(len(radii) / 2.)]
     else:
         # Stable condition was attained, assign radius value as the one with
-        # the density value closest to the background value among the first 4
-        # points counting from the one determined by the index index_rad.
-        radii_dens = [ring_density[index_rad + i] for i in range(4)]
+        # the density value closest to the background value among the first
+        # n_left points counting from the one determined by the index index_rad.
+        radii_dens = [ring_density[index_rad + i] for i in range(n_left)]
         clust_rad = radii[index_rad + min(range(len(radii_dens)), key=lambda
         i:abs(radii_dens[i] - backg_value))]
 
-    # Raise a flag if the number of points that fall outside the delta limits
-    # is higher than the number of points to the left of the one used as the
-    # cluster's radius. This indicates a possible variable background.
-    # outside_val > (index_rad+1) means that there are at least 2 points that
-    # fall outside the delta limits between index_rad and (index_rad+3)
-    flag_delta_points = False
-    if outside_val > (index_rad + 1):
-        flag_delta_points = True
-
     radius_params = [clust_rad, delta_backg, delta_percentage,
-    flag_delta_total, flag_not_stable, flag_delta, flag_delta_points]
+    flag_delta_total, flag_not_stable, flag_delta]
 
     return radius_params
