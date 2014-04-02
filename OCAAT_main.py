@@ -136,18 +136,6 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
                 wrong_answer = False
             else:
                 print 'Wrong input. Try again.\n'
-    elif mode == 's':
-        # If there are too many stars in the frame, trim it.
-        if len(phot_data[0]) > 25000:
-            temp_cent, temp_side = [], []
-            # Set center.
-            temp_cent.append(cent_cl_semi[0])
-            temp_cent.append(cent_cl_semi[1])
-            # Set side length.
-            temp_side.append(2000.)
-            temp_side.append(2000.)
-            # Trim frame.
-            phot_data = t_f(temp_cent, temp_side, phot_data)
 
     # Get cluster's center values and errors, set of 4 filtered 2D hist,
     # set of 4 non-filtered 2D hist, x,y bin centers and width of each bin
