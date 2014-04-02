@@ -57,7 +57,7 @@ def get_in_params(mypath):
                     gc_params1 = map(float, reader[2:])
                 elif reader[0] == 'CR':
                     cr_params0 = str(reader[1])
-                    cr_params1 = map(float, reader[2])
+                    cr_params1 = map(float, reader[2:])
 
                 elif reader[0] == 'ER':
                     er_params = map(float, reader[1:])
@@ -112,7 +112,7 @@ def get_in_params(mypath):
                 elif reader[0] == 'MM':
                     xy_minmax = map(float, reader[1:])
 
-    cr_params = [cr_params0, cr_params1]
+    cr_params = [cr_params0] + cr_params1
     gc_params = gc_params0 + gc_params1
     in_dirs = [input_dir, output_dir, done_dir]
     pv_params = [pv0_params, pv1_params, pv2_params]

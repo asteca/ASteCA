@@ -17,10 +17,15 @@ def get_clust_rad(backg_value, radii, ring_density, cr_params):
     # Assign a value to the number of points that should be found below
     # the delta value around the background to attain the 'stabilized'
     # condition.
-    if cr_params[0] == 'auto':
-        n_left = max(int(round(len(radii) * 0.1)), 2)
-    else:
-        n_left = cr_params[1]
+    mode = cr_params[0]
+    if mode not in {'auto', 'manual'}:
+        print "  WARNING: CR mode is not valid. Default to 'auto'."
+        mode = 'auto'
+    # Set params.
+    if mode == 'manual':
+        n_left, delta_step = int(cr_params[1]), cr_params[2]
+    elif mode == 'auto':
+        n_left, delta_step = max(int(round(len(radii) * 0.1)), 2), 5
 
     # Difference between max density value and the background value.
     delta_total = (max(ring_density) - backg_value)
@@ -40,7 +45,7 @@ def get_clust_rad(backg_value, radii, ring_density, cr_params):
     while flag_not_stable and i < 6:
 
         # Store value for delta_percentage.
-        delta_percentage = i * 5
+        delta_percentage = i * delta_step
 
         # % of difference between max density value and background.
         delta_backg = delta_percentage * delta_total / 100.
