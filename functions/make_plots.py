@@ -197,9 +197,20 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_coords,
     plt.ylabel('y (px)', fontsize=12)
     # Set minor ticks
     ax4.minorticks_on()
+    # Plot r_cl.
     circle = plt.Circle((center_cl[0], center_cl[1]), clust_rad, color='r',
                         fill=False)
     fig.gca().add_artist(circle)
+    # Plot r_t if K-P converged.
+    if flag_king_no_conver is False:
+        if k_prof[0] > 0:
+            circle = plt.Circle((center_cl[0], center_cl[1]), k_prof[0],
+                color='g', fill=False, ls='dashed')
+            fig.gca().add_artist(circle)
+        # Plot tidal radius.
+        circle = plt.Circle((center_cl[0], center_cl[1]), k_prof[1], color='g',
+                            fill=False)
+        fig.gca().add_artist(circle)
     # Add text box
     text1 = '$x_{cent} = %d \pm %d px$' '\n' % (center_cl[0], cent_cl_err[0])
     text2 = '$y_{cent} = %d \pm %d px$' % (center_cl[1], cent_cl_err[1])
