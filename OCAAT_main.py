@@ -14,8 +14,7 @@ from functions.get_data_semi import get_semi as g_s
 from functions.get_phot_data import get_data as gd
 from functions.display_frame import disp_frame as d_f
 from functions.trim_frame import trim_frame as t_f
-from functions.get_center import get_center as g_c
-from functions.display_cent import disp_cent as d_c
+from functions.get_center_new import get_center as g_c
 from functions.manual_histo import manual_histo as mh
 from functions.get_background import get_background as gbg
 from functions.get_dens_prof import get_dens_prof as gdp
@@ -89,19 +88,8 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
     clust_name = myfile[:-4]
     print 'Analizing cluster %s.' % (clust_name)
 
-    # If Semi mode set, get data from data iput file.
-    if mode == 's':
-        print 'Semi mode selected.'
-        semi_return = g_s(mypath, clust_name)
-        # Check if the cluster was found in file.
-        if semi_return:
-            cent_cl_semi, cl_rad_semi, cent_flag_semi, rad_flag_semi, \
-            err_flag_semi = semi_return
-        else:
-            # If the cluster was not found in the file, default to 'manual'.
-            print "  WARNING: cluster not found in clusters_input.dat file."
-            print "  Default to 'manual' mode."
-            mode = 'm'
+    # Get data from semi-data input file.
+    mode, semi_return = g_s(mypath, clust_name, mode)
 
     # Get cluster's photometric data from file.
     phot_data = gd(input_dir, sub_dir, myfile, gd_params)
@@ -137,73 +125,16 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
             else:
                 print 'Wrong input. Try again.\n'
 
-    # Get cluster's center values and errors, set of 4 filtered 2D hist,
-    # set of 4 non-filtered 2D hist, x,y bin centers and width of each bin
+    # Get cluster's center values and errors, filtered 2D hist, non-filtered
+    # 2D hist, x,y bin centers and width of each bin
     # used
-    center_coords, cent_coo_err, h_filter, h_not_filt, xedges_min_db, \
-    yedges_min_db, x_center_bin, y_center_bin, width_bins, flag_center = \
-    g_c(x_data, y_data, mag_data, gc_params)
-    center_cl = [center_coords[0][0], center_coords[1][0]]
-    cent_cl_err = [cent_coo_err[0], cent_coo_err[0]]
-    if mode == 'a':
-        print 'Auto center found: (%0.2f, %0.2f) px.' % (center_cl[0],
-        center_cl[1])
-
-    # If Manual mode is set, display center and ask the user to accept it or
-    # input new one.
-    flag_center_manual = False
-    if mode == 'm':
-
-        # Show plot with center obtained.
-        d_c(x_data, y_data, mag_data, center_cl, cent_cl_err, x_center_bin,
-            y_center_bin, h_filter)
-        plt.show()
-
-        wrong_answer = True
-        while wrong_answer:
-            answer_cen = raw_input('Input new center values? (y/n) ')
-            if answer_cen == 'n':
-                print 'Value accepted.'
-                wrong_answer = False
-            elif answer_cen == 'y':
-                print 'Input new center values (in px).'
-                center_cl[0] = float(raw_input('x: '))
-                center_cl[1] = float(raw_input('y: '))
-                # Update values.
-                cent_cl_err[0], cent_cl_err[1] = 0., 0.
-                # Store center values in bin coordinates. We substract
-                # the min (x,y) coordinate values otherwise the bin
-                # coordinates won't be aligned.
-                x_center_bin[0], y_center_bin[0] = int(round((center_cl[0] -
-                min(x_data)) / width_bins[0])), int(round((center_cl[1] -
-                min(y_data)) / width_bins[0]))
-                wrong_answer = False
-                flag_center_manual = True
-            else:
-                print 'Wrong input. Try again.\n'
-    elif mode == 's':
-        if cent_flag_semi == 1:
-            # Update center values.
-            center_cl[0] = cent_cl_semi[0]
-            center_cl[1] = cent_cl_semi[1]
-            # Update error values.
-            cent_cl_err[0], cent_cl_err[1] = 0., 0.
-            print 'Semi center set: (%0.2f, %0.2f) px.' % (center_cl[0],
-                center_cl[1])
-            # Store center values in bin coordinates. We substract
-            # the min (x,y) coordinate values otherwise the bin
-            # coordinates won't be aligned.
-            x_center_bin[0], y_center_bin[0] = int(round((center_cl[0] -
-            min(x_data)) / width_bins[0])), int(round((center_cl[1] -
-            min(y_data)) / width_bins[0]))
-            flag_center_manual = True
-        else:
-            print 'Auto center found: (%0.2f, %0.2f) px.' % (center_cl[0],
-                center_cl[1])
+    center_params = g_c(x_data, y_data, mag_data, gc_params, mode, semi_return)
+    center_cl, h_not_filt, x_center_bin, y_center_bin, xedges_min_db, \
+    yedges_min_db, bin_width = center_params
 
     # Get density profile
-    radii, ring_density, poisson_error = gdp(h_not_filt[0], x_center_bin[0],
-        y_center_bin[0], width_bins[0])
+    radii, ring_density, poisson_error = gdp(h_not_filt, x_center_bin,
+        y_center_bin, bin_width)
     print 'Density profile calculated.'
 
     # Get background value in stars/px^2.
@@ -225,7 +156,7 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
         d_r(x_data, y_data, mag_data, center_cl, cent_cl_err,
             radius_params[0:3], x_center_bin, y_center_bin, h_filter,
             backg_value, radii, ring_density, clust_name, poisson_error,
-            width_bins)
+            bin_width)
         plt.show()
 
         wrong_answer = True
@@ -259,7 +190,7 @@ px): '))
     delta_xy = max((max(x_data) - min(x_data)), (max(y_data) - min(y_data)))
     k_prof, k_pr_err, d_b_k, n_c_k, flag_king_no_conver = \
     gkp(clust_rad, backg_value, radii, ring_density, delta_xy, x_data, y_data,
-        width_bins[0])
+        bin_width)
 
     # Apply auto rejecting of errors if flag is True.
     e_max = er_params[2]
@@ -342,7 +273,7 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
 
     # Get cluster + field regions around the cluster's center.
     flag_area_stronger, cluster_region, field_region = \
-    g_r(x_center_bin, y_center_bin, width_bins, h_not_filt, clust_rad,
+    g_r(x_center_bin, y_center_bin, bin_width, h_not_filt, clust_rad,
         H_manual, stars_in, stars_out, gr_params)
     print 'Cluster + field stars regions obtained (%d).' % len(field_region)
 
@@ -439,7 +370,7 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
             cent_coo_err, center_cl, cent_cl_err, x_center_bin, y_center_bin,
             h_filter, radii,
             backg_value, radius_params[0:3], ring_density, poisson_error,
-            cont_index, width_bins, mag_data, col1_data, popt_mag, popt_col1,
+            cont_index, bin_width, mag_data, col1_data, popt_mag, popt_col1,
             err_plot, rjct_errors_fit, k_prof, k_pr_err, d_b_k,
             flag_king_no_conver, stars_in, stars_out, stars_in_rjct,
             stars_out_rjct, integr_return, n_c, flag_area_stronger,

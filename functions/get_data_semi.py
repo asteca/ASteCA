@@ -8,7 +8,7 @@ Created on Fri Aug 16 11:12:55 2013
 from os.path import join
 
 
-def get_semi(mypath, clust_name):
+def get_semi(mypath, clust_name, mode):
     '''
     Get center, radius and flags for semi automatic mode.
     '''
@@ -31,11 +31,18 @@ def get_semi(mypath, clust_name):
                     # Set flag to True if the cluster was found.
                     flag_clust_found = True
 
-    # If cluster was found.
-    if flag_clust_found:
-        semi_return = [cl_cent_semi, cl_rad_semi, cent_flag_semi, rad_flag_semi,
-                       err_flag_semi]
+    # Mode is semi.
+    if mode == 's':
+        # If cluster was found.
+        if flag_clust_found:
+            semi_return = [cl_cent_semi, cl_rad_semi, cent_flag_semi,
+                rad_flag_semi, err_flag_semi]
+        else:
+            # If the cluster was not found in the file, default to 'manual'.
+            print "  WARNING: cluster not found in clusters_input.dat file."
+            print "  Default to 'manual' mode."
+            mode = 'm'
     else:
         semi_return = []
 
-    return semi_return
+    return mode, semi_return
