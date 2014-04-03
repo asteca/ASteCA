@@ -14,7 +14,7 @@ from functions.get_data_semi import get_semi as g_s
 from functions.get_phot_data import get_data as gd
 from functions.display_frame import disp_frame as d_f
 from functions.trim_frame import trim_frame as t_f
-from functions.get_center_new import get_center as g_c
+from functions.get_center import get_center as g_c
 from functions.manual_histo import manual_histo as mh
 from functions.get_background import get_background as gbg
 from functions.get_dens_prof import get_dens_prof as gdp
