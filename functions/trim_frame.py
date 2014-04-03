@@ -67,5 +67,7 @@ def trim_frame(phot_data, mode):
                     np.array(CT1_data2), np.array(e_CT12)]
             else:
                 print 'Wrong input. Try again.\n'
+    else:
+        phot_data_t = phot_data
 
     return phot_data_t
