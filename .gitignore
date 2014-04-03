@@ -1,2 +1,4 @@
 *.pyc
 isochrones/
+input/
+output/
