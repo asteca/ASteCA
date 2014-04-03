@@ -1,5 +1,4 @@
 
-
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.ndimage.filters import gaussian_filter
@@ -85,33 +84,32 @@ def get_center(x_data, y_data, mag_data, gc_params, mode, semi_return):
         centers_hw.append([np.average(xedges_w[x_cent_g_w:x_cent_g_w + 2]),
             np.average(yedges_w[y_cent_g_w:y_cent_g_w + 2])])
 
-    print centers_h
-    print centers_hw, '\n'
-
-    ## Store in this array the values for the cluster's center x,y coordinates
-    ## obtained with the different bin sizes.
-    #arr_g = np.array(centers_h)
-
-    ## Calculate the median value for the cluster's center (use median instead of
-    ## mean to reject possible outliers) and the standard deviation using all
-    ## the coordinates obtained with different bin widths.
-    #median_coords, std_dev = np.median(arr_g, axis=1), np.std(arr_g, axis=1)
-    #print median_coords, std_dev
-
-    ## Raise a flag if either median cluster's central coordinate is more than
-    ## 2 sigmas away from the ones obtained with the min bin width.
-    #flag_center = False
-    #if abs(median_coords[0] - centers_h[0][0]) > 2 * std_dev[0] or \
-    #abs(median_coords[1] - centers_h[0][1]) > 2 * std_dev[1]:
-        #flag_center = True
+    # Store in this array the values for the cluster's center x,y coordinates
+    # obtained with the different bin sizes.
+    arr_g = np.array(centers_h)
+    # Calculate the median value for the cluster's center (use median instead
+    # of mean to reject possible outliers) and the standard deviation using all
+    # the coordinates obtained with different bin widths.
+    median_coords, std_dev = np.median(arr_g, axis=0), np.std(arr_g, axis=0)
+    # Set flags.
+    flag_center_med, flag_center_std = False, False
+    # Raise a flag if either median cluster's central coordinate is more than
+    # 10% away from the ones obtained with the min bin width.
+    if abs(median_coords[0] - centers_h[0][0]) > 0.1 * centers_h[0][0] or \
+    abs(median_coords[1] - centers_h[0][1]) > 0.1 * centers_h[0][1]:
+        flag_center_med = True
+    # Raise a flag if the standard deviation for either coord is larger than
+    # 10% the coord value.
+    if std_dev[0] > 0.1 * centers_h[0][0] or \
+    std_dev[1] > 0.1 * centers_h[0][1]:
+        flag_center_std = True
 
     # Pass the center coordinates obtained with the smallest bin.
     center_coords = [centers_h, centers_hw]
-    # Pass the errors as the width of the bin.
-    cent_coo_err = bin_list
-
+    # Store auto found center with min bin width.
     center_cl = [center_coords[0][0][0], center_coords[0][0][1]]
-    cent_cl_err = [cent_coo_err[0], cent_coo_err[0]]
+    # Pass the errors as the width of the bin.
+    cent_cl_err = [bin_list[0], bin_list[0]]
 
     flag_center_manual = False
     if mode == 'a':
@@ -119,7 +117,7 @@ def get_center(x_data, y_data, mag_data, gc_params, mode, semi_return):
         center_cl[1])
 
     elif mode == 's':
-
+        # Unpack semi values.
         cent_cl_semi, cl_rad_semi, cent_flag_semi, rad_flag_semi, \
         err_flag_semi = semi_return
 
@@ -127,41 +125,37 @@ def get_center(x_data, y_data, mag_data, gc_params, mode, semi_return):
             # Search for new center values using the initial center coordinates
             # and radius given.
 
+            # Define maximum x,y values for the search.
             x_min, x_max = cent_cl_semi[0] - cl_rad_semi, \
             cent_cl_semi[0] + cl_rad_semi
-
             y_min, y_max = cent_cl_semi[1] - cl_rad_semi, \
             cent_cl_semi[1] + cl_rad_semi
-
+            # Convert range in pixel coords to bin coords.
             x_bin_max, x_bin_min = int(x_max / bin_list[0]), \
             int(x_min / bin_list[0])
-
             y_bin_max, y_bin_min = int(y_max / bin_list[0]), \
             int(y_min / bin_list[0])
 
-            print bin_list[0], len(h_filter[0]), len(h_filter[0][0])
-            print x_bin_max, x_bin_min
-            print y_bin_max, y_bin_min
-            h_section = h_filter[0][x_bin_min:(x_bin_max + 1)]
-            print np.unravel_index(h_section.argmax(), h_section.shape)
-            raw_input()
-
-            center_cl[0] = cent_cl_semi[0]
-            center_cl[1] = cent_cl_semi[1]
+            # Create new array filled with inf.
+            A = np.full_like(h_filter[0], -np.inf)
+            # Slice new array.
+            A[x_bin_min:x_bin_max, y_bin_min:y_bin_max] = \
+            h_filter[0][x_bin_min:x_bin_max, y_bin_min:y_bin_max]
+            # Search for maximum value in this region in bin coords.
+            x_center_bin, y_center_bin = np.unravel_index(A.argmax(),
+                A.shape)
+            # Convert to pixel coordinates.
+            B = [np.average(xedges_min_db[x_center_bin:x_center_bin + 2]),
+                np.average(yedges_min_db[y_center_bin:y_center_bin + 2])]
+            # Update list with new center coords.
+            center_cl = B
 
             print 'Semi center found: (%0.2f, %0.2f) px.' % (center_cl[0],
                 center_cl[1])
-            # Store center values in bin coordinates. We substract
-            # the min (x,y) coordinate values otherwise the bin
-            # coordinates won't be aligned.
-            #x_center_bin[0], y_center_bin[0] = int(round((center_cl[0] -
-            #min(x_data)) / width_bins[0])), int(round((center_cl[1] -
-            #min(y_data)) / width_bins[0]))
 
     # If Manual mode is set, display center and ask the user to accept it or
     # input new one.
     elif mode == 'm':
-
         # Show plot with center obtained.
         d_c(x_data, y_data, mag_data, center_cl, cent_cl_err, x_center_bin,
             y_center_bin, h_filter)
@@ -182,15 +176,16 @@ def get_center(x_data, y_data, mag_data, gc_params, mode, semi_return):
                 # Store center values in bin coordinates. We substract
                 # the min (x,y) coordinate values otherwise the bin
                 # coordinates won't be aligned.
-                #x_center_bin[0], y_center_bin[0] = int(round((center_cl[0] -
-                #min(x_data)) / width_bins[0])), int(round((center_cl[1] -
-                #min(y_data)) / width_bins[0]))
+                x_center_bin, y_center_bin = int(round((center_cl[0] -
+                min(x_data)) / bin_list[0])), int(round((center_cl[1] -
+                min(y_data)) / bin_list[0]))
                 wrong_answer = False
                 flag_center_manual = True
             else:
                 print 'Wrong input. Try again.\n'
 
-    center_params = [center_cl, h_not_filt, x_center_bin, y_center_bin,
-        xedges_min_db, yedges_min_db, bin_list[0], flag_center_manual]
+    center_params = [center_cl, h_not_filt, x_center_bin,
+        y_center_bin, xedges_min_db, yedges_min_db, bin_list[0], h_filter,
+        flag_center_med, flag_center_std, flag_center_manual]
 
     return center_params

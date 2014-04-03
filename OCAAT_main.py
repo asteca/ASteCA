@@ -129,8 +129,9 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
     # 2D hist, x,y bin centers and width of each bin
     # used
     center_params = g_c(x_data, y_data, mag_data, gc_params, mode, semi_return)
+    # Unpack list.
     center_cl, h_not_filt, x_center_bin, y_center_bin, xedges_min_db, \
-    yedges_min_db, bin_width = center_params
+    yedges_min_db, bin_width = center_params[:7]
 
     # Get density profile
     radii, ring_density, poisson_error = gdp(h_not_filt, x_center_bin,
@@ -153,8 +154,7 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
     flag_radius_manual = False
     if mode == 'm':
         print 'Radius found: ', clust_rad
-        d_r(x_data, y_data, mag_data, center_cl, cent_cl_err,
-            radius_params[0:3], x_center_bin, y_center_bin, h_filter,
+        d_r(x_data, y_data, mag_data, center_params, radius_params[0:3],
             backg_value, radii, ring_density, clust_name, poisson_error,
             bin_width)
         plt.show()

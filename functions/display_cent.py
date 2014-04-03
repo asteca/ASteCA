@@ -28,10 +28,10 @@ def disp_cent(x_data, y_data, mag_data, center_cl, cent_cl_err, x_center_bin,
     ax1.grid(b=True, which='major', color='k', linestyle='--', zorder=3)
     ax1.grid(b=True, which='minor', color='k', linestyle='--', zorder=3)
     # Add lines through the center of the cluster
-    plt.axvline(x=x_center_bin[0], linestyle='-', color='white', zorder=4)
-    plt.axhline(y=y_center_bin[0], linestyle='-', color='white', zorder=4)
+    plt.axvline(x=x_center_bin, linestyle='-', color='white', zorder=4)
+    plt.axhline(y=y_center_bin, linestyle='-', color='white', zorder=4)
     # Cluster's name in a text box
-    text = 'Center bins (%d, %d)' % (x_center_bin[0], y_center_bin[0])
+    text = 'Center bins (%d, %d)' % (x_center_bin, y_center_bin)
     plt.text(0.5, 0.95, text, transform=ax1.transAxes,
     bbox=dict(facecolor='white', alpha=0.8), fontsize=12)
     plt.imshow(h_filter[0].transpose(), origin='lower')
