@@ -12,7 +12,6 @@ from functions.get_in_params import get_in_params as gip
 from functions.create_out_data_file import create_out_data_file as c_o_d_f
 from functions.get_data_semi import get_semi as g_s
 from functions.get_phot_data import get_data as gd
-from functions.display_frame import disp_frame as d_f
 from functions.trim_frame import trim_frame as t_f
 from functions.get_center import get_center as g_c
 from functions.manual_histo import manual_histo as mh
@@ -93,37 +92,13 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
 
     # Get cluster's photometric data from file.
     phot_data = gd(input_dir, sub_dir, myfile, gd_params)
+    # If Manual mode is set, display frame and ask if it should be trimmed.
+    phot_data = t_f(phot_data, mode)
+    # Unpack coordinates, magnitude and color.
     x_data, y_data, mag_data, col1_data = phot_data[1], phot_data[2], \
     phot_data[3], phot_data[5]
     print 'Data correctly obtained from input file (N stars: %d).'\
     % len(phot_data[0])
-
-    # If Manual mode is set, display frame and ask if it should be trimmed.
-    if mode == 'm':
-        # Show plot with center obtained.
-        d_f(x_data, y_data, mag_data)
-        plt.show()
-
-        wrong_answer = True
-        while wrong_answer:
-            temp_cent, temp_side = [], []
-            answer_fra = raw_input('Trim frame? (y/n) ')
-            if answer_fra == 'n':
-                wrong_answer = False
-            elif answer_fra == 'y':
-                print 'Input center of new frame (in px).'
-                temp_cent.append(float(raw_input('x: ')))
-                temp_cent.append(float(raw_input('y: ')))
-                print 'Input side lenght for new frame (in px).'
-                temp_side.append(float(raw_input('x_side: ')))
-                temp_side.append(float(raw_input('y_side: ')))
-                # Trim frame.
-                phot_data = t_f(temp_cent, temp_side, phot_data)
-                x_data, y_data, mag_data, col1_data = phot_data[1], \
-                phot_data[2], phot_data[3], phot_data[5]
-                wrong_answer = False
-            else:
-                print 'Wrong input. Try again.\n'
 
     # Get cluster's center values and errors, filtered 2D hist, non-filtered
     # 2D hist, x,y bin centers and width of each bin
