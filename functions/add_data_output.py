@@ -5,22 +5,28 @@
 import numpy as np
 
 
-def add_data_output(out_file_name, sub_dir, output_dir, clust_name, center_cl,
-    clust_rad, k_prof, k_pr_err, n_c_k, flag_king_no_conver, cont_index,
-    n_c, prob_cl_kde, ccc, integr_return, flag_center, flag_center_manual,
-    flag_radius_manual, rjct_errors_fit, radius_params, flag_num_memb_low,
-    bf_return):
-    '''Add data obtained to the 'data_output.dat' file.'''
+def add_data_output(out_file_name, sub_dir, output_dir, clust_name,
+    center_params, radius_params, k_prof, k_pr_err, n_c_k,
+    flag_king_no_conver, cont_index, n_c, prob_cl_kde, ccc, integr_return,
+    rjct_errors_fit, flag_num_memb_low, bf_return):
+    '''
+    Add data obtained to the 'data_output.dat' file.
+    '''
 
-    # Parameters from get_radius function.
-    flag_delta_total, flag_not_stable, flag_delta = radius_params
+    # Unpack data.
+    center_cl = center_params[0]
+    flag_center_med, flag_center_std, flag_center_manual = center_params[-3:]
+    clust_rad = radius_params[0]
+    flag_delta_total, flag_not_stable, flag_delta, flag_radius_manual = \
+    radius_params[-4:]
 
     # Get parameter from list.
     integ_mag = integr_return[2]
 
     # Create list containing all the flags.
     flags_list = [flag_center_manual, flag_radius_manual, rjct_errors_fit,
-                  flag_center, flag_delta_total, flag_not_stable, flag_delta,
+                  flag_center_med, flag_center_std, flag_delta_total,
+                  flag_not_stable, flag_delta,
                   flag_king_no_conver, flag_num_memb_low]
 
     # Converty True & False values to 1 and 0 respectively.
@@ -54,5 +60,5 @@ def add_data_output(out_file_name, sub_dir, output_dir, clust_name, center_cl,
 {:>5}'.format(*line))
         # Flags.
         f_out.write('{:>4} {:>2} {:>2} {:>3} {:>2} {:>2} {:>2} {:>2} {:>2} \
-{:>3}'.format(*int_flags))
+{:>2} {:>3}'.format(*int_flags))
         f_out.write('\n')

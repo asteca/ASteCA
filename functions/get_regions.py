@@ -29,7 +29,7 @@ def spiral_region(histo, h_manual, stars_in, stars_out, x_c_b, y_c_b, spiral,
 
             # Check if the bin exists in the 2D histogram.
             try:
-                histo[0][x_c_b + sp_item[0]][y_c_b + sp_item[1]]
+                histo[x_c_b + sp_item[0]][y_c_b + sp_item[1]]
             except IndexError:
                 pass  # Item out of histogram range.
             else:
@@ -81,7 +81,7 @@ def spiral_region(histo, h_manual, stars_in, stars_out, x_c_b, y_c_b, spiral,
     return region, sp_indx2
 
 
-def get_regions(x_center_bin, y_center_bin, width_bins, histo, clust_rad,
+def get_regions(x_c_b, y_c_b, bin_width, histo, clust_rad,
                 h_manual, stars_in, stars_out, gr_params):
     '''
     Define cluster and field regions around the cluster's center.
@@ -90,14 +90,11 @@ def get_regions(x_center_bin, y_center_bin, width_bins, histo, clust_rad,
     # Maximum number of field regions to attempt to fill.
     f_regions = gr_params[0]
 
-    # Use the bin center obtained with the smallest bin width.
-    x_c_b, y_c_b = x_center_bin[0], y_center_bin[0]
-
     # Define region around the cluster as a spiral centered in it
     # and of area a bit larger than that defined by the cluster's radius.
 
     # Get area as total number of bins in 2D hist times the area of each bin.
-    area = len(histo[0][0]) * len(histo[0]) * (width_bins[0] ** 2)
+    area = len(histo[0]) * len(histo) * (bin_width ** 2)
 
     # Length of the side of the square that contains the cluster.
     length = 2.5
@@ -111,16 +108,16 @@ def get_regions(x_center_bin, y_center_bin, width_bins, histo, clust_rad,
     if (area - (length * clust_rad) ** 2) < np.pi * clust_rad ** 2:
         print 'WARNING: cluster region too large, no field region available.'
         flag_area_stronger = True
-
-    # Calculate maximum number of field regions possible.
-    f_regs_max = int((area - (length * clust_rad) ** 2.) /
-        (np.pi * clust_rad ** 2)) - 1
-    # If the number of field regions defined is larger than the maximum allowed,
-    # use the maximum.
-    if f_regions > f_regs_max:
-        print 'Number of field regions defined (%d) larger than the' % f_regions
-        print 'maximum allowed (%d). Using max number.' % f_regs_max
-        f_regions = f_regs_max
+    else:
+        # Calculate maximum number of field regions possible.
+        f_regs_max = int((area - (length * clust_rad) ** 2.) /
+            (np.pi * clust_rad ** 2)) - 1
+        # If the number of field regions defined is larger than the maximum
+        # allowed, use the maximum.
+        if f_regions > f_regs_max:
+            print 'Number of FR defined (%d) larger than the' % f_regions
+            print 'maximum allowed (%d). Using max number.' % f_regs_max
+            f_regions = f_regs_max
 
     # Get list that contains the spiral as a list of x,y coordinates (also
     # stored as lists) starting from the initial bin [0, 0].
@@ -130,7 +127,7 @@ def get_regions(x_center_bin, y_center_bin, width_bins, histo, clust_rad,
     # Calculate number of bins such that their combined area is
     # approximately (l*r)^2. See that: num_bins_area * width_bins[0]^2 =
     # (l*r)^2.
-    num_bins_area = int(round(((length * clust_rad / width_bins[0]) ** 2), 0))
+    num_bins_area = int(round(((length * clust_rad / bin_width) ** 2), 0))
     # Get cluster_region.
     sp_indx = 0
     cluster_region, sp_indx = spiral_region(histo, h_manual, stars_in,
@@ -146,7 +143,7 @@ def get_regions(x_center_bin, y_center_bin, width_bins, histo, clust_rad,
         # of areas equal to the cluster area for the field regions since
         # only stars inside the cluster's radius are used to obtain
         # the cluster's CMD.
-        num_bins_area = int(np.pi * ((clust_rad / width_bins[0]) ** 2))
+        num_bins_area = int(np.pi * ((clust_rad / bin_width) ** 2))
 
         for f_reg in range(f_regions):
             f_region, sp_indx = spiral_region(histo, h_manual, stars_in,

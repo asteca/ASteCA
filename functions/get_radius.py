@@ -6,17 +6,10 @@ from functions.display_rad import disp_rad as d_r
 import matplotlib.pyplot as plt
 
 
-def get_clust_rad(phot_data, backg_value, cr_params, center_params,
-    rdp_params, semi_return, mode):
-    """
-    Obtain the value for the cluster's radius by counting the number of points
-    that fall within a given interval of the background or lower. If this number
-    is equal to a fixed number of points n_left then assign the radius as the
-    closest point to the background value among the first n_left points
-    counting from the first one that fell below the backg + delta limit.
-    Iterate increasing the interval around the background until n_left points
-    are found or the delta interval reaches its maximum allowed.
-    """
+def main_center_algor(rdp_params, cr_params, backg_value):
+    '''
+    This function holds the main algorithm that returns a radius value.
+    '''
 
     radii, ring_density = rdp_params[:2]
 
@@ -109,6 +102,27 @@ def get_clust_rad(phot_data, backg_value, cr_params, center_params,
         radii_dens = [ring_density[index_rad + i] for i in range(n_left)]
         clust_rad = radii[index_rad + min(range(len(radii_dens)), key=lambda
         i:abs(radii_dens[i] - backg_value))]
+
+    return clust_rad, delta_backg, delta_percentage, flag_delta_total, \
+    flag_not_stable, flag_delta
+
+
+def get_clust_rad(phot_data, backg_value, cr_params, center_params,
+    rdp_params, semi_return, mode):
+    """
+    Obtain the value for the cluster's radius by counting the number of points
+    that fall within a given interval of the background or lower. If this number
+    is equal to a fixed number of points n_left then assign the radius as the
+    closest point to the background value among the first n_left points
+    counting from the first one that fell below the backg + delta limit.
+    Iterate increasing the interval around the background until n_left points
+    are found or the delta interval reaches its maximum allowed.
+    """
+
+    # Call function that holds the radius finding algorithm.
+    clust_rad, delta_backg, delta_percentage, flag_delta_total, \
+    flag_not_stable, flag_delta = main_center_algor(rdp_params, cr_params,
+        backg_value)
 
     # Check if semi or manual mode are set.
     flag_radius_manual = False

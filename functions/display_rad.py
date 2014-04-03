@@ -16,8 +16,11 @@ def disp_rad(phot_data, center_params, clust_rad, delta_backg, delta_percentage,
     # Unpack.
     x_data, y_data, mag_data, col1_data = phot_data[1], phot_data[2], \
     phot_data[3], phot_data[5]
-    center_cl, h_not_filt, x_center_bin, y_center_bin, xedges_min_db, \
-    yedges_min_db, bin_width, h_filter, cent_cl_err = center_params[:9]
+
+    center_cl, bin_list = center_params[:2]
+    h_filter, h_not_filt, x_center_bin, y_center_bin, xedges_min_db, \
+    yedges_min_db = center_params[3:9]
+    bin_width, cent_cl_err = bin_list[0], bin_list[0]
     radii, ring_density, poisson_error = rdp_params
 
     # Plot all outputs
@@ -29,10 +32,10 @@ def disp_rad(phot_data, center_params, clust_rad, delta_backg, delta_percentage,
     plt.xlabel('x (bins)', fontsize=12)
     plt.ylabel('y (bins)', fontsize=12)
     ax1.minorticks_on()
-    plt.axvline(x=x_center_bin, linestyle='--', color='white')
-    plt.axhline(y=y_center_bin, linestyle='--', color='white')
+    plt.axvline(x=x_center_bin[0], linestyle='--', color='white')
+    plt.axhline(y=y_center_bin[0], linestyle='--', color='white')
     # Radius
-    circle = plt.Circle((x_center_bin, y_center_bin),
+    circle = plt.Circle((x_center_bin[0], y_center_bin[0]),
         clust_rad / bin_width, color='w', fill=False)
     fig.gca().add_artist(circle)
     #text = 'Center (%d, %d)' % (x_center_bin, y_center_bin)
@@ -57,9 +60,9 @@ def disp_rad(phot_data, center_params, clust_rad, delta_backg, delta_percentage,
                         fill=False)
     fig.gca().add_artist(circle)
     # Add text box
-    text1 = '$x_{cent} = %d \pm %d px$' % (center_cl[0], cent_cl_err[0])
+    text1 = '$x_{cent} = %d \pm %d px$' % (center_cl[0], cent_cl_err)
     text2 = '\n'
-    text3 = '$y_{cent} = %d \pm %d px$' % (center_cl[1], cent_cl_err[1])
+    text3 = '$y_{cent} = %d \pm %d px$' % (center_cl[1], cent_cl_err)
     text4 = text1 + text2 + text3
     plt.text(0.5, 0.85, text4, transform=ax2.transAxes,
         bbox=dict(facecolor='white', alpha=0.85), fontsize=15)

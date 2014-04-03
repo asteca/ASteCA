@@ -3,7 +3,6 @@
 from os.path import join, realpath, dirname, exists, isfile
 from os import makedirs, listdir, getcwd, walk, mkdir, rmdir
 import time
-import matplotlib.pyplot as plt
 import shutil
 import gc  # Garbage collector.
 
@@ -20,8 +19,6 @@ from functions.get_dens_prof import get_dens_prof as gdp
 from functions.get_radius import get_clust_rad as gcr
 from functions.get_king_prof import get_king_profile as gkp
 from functions.err_accpt_rejct import err_accpt_rejct as ear
-from functions.display_errors import disp_errors as d_e
-from functions.err_accpt_rejct_max import err_a_r_m as e_a_r_m
 from functions.get_in_out import get_in_out as gio
 from functions.get_integ_mag import integ_mag as g_i_m
 from functions.get_members_number import get_memb_num as g_m_n
@@ -104,11 +101,13 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
     # used
     center_params = g_c(x_data, y_data, mag_data, gc_params, mode, semi_return)
     # Unpack list.
-    center_cl, h_not_filt, x_center_bin, y_center_bin, xedges_min_db, \
-    yedges_min_db, bin_width = center_params[:7]
+    center_cl, bin_list, center_coords = center_params[:3]
+    bin_width = bin_list[0]
+    h_not_filt, x_center_bin, y_center_bin, xedges_min_db, yedges_min_db =\
+    center_params[4:9]
 
     # Get density profile
-    rdp_params = gdp(h_not_filt, x_center_bin, y_center_bin, bin_width)
+    rdp_params = gdp(h_not_filt, x_center_bin[0], y_center_bin[0], bin_width)
     radii, ring_density, poisson_error = rdp_params
     print 'Density profile calculated.'
 
@@ -127,65 +126,9 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
     gkp(clust_rad, backg_value, radii, ring_density, delta_xy, x_data, y_data,
         bin_width)
 
-    # Apply auto rejecting of errors if flag is True.
-    e_max = er_params[2]
     # Accept and reject stars based on their errors.
-    popt_mag, popt_col1, acpt_stars, rjct_stars, err_plot = ear(phot_data,
-        er_params)
-    # This indicates if we are to use the output of the 'err_accpt_rejct'
-    # function or all stars with errors < e_max.
-    rjct_errors_fit = False
-
-    # If list of accepted stars is empty, halt the code.
-    if not acpt_stars:
-        print '  No stars accepted based on their errors.'
-        print '  This probably means the exponential error function\n\
-did not converge.'
-        print 'Using all stars with errors < %0.2f.' % e_max
-        # Call function to reject stars with errors > e_max.
-        popt_mag, popt_col1, acpt_stars, rjct_stars = e_a_r_m(phot_data,
-                                                              er_params)
-        rjct_errors_fit = True
-    else:
-        print 'Stars accepted/rejected based on their errors.'
-
-    # Is 'semi' is set, check for the flag that indicates whether to use
-    # auto errors rejecting or all stars with errors < e_max.
-    if mode == 's':
-        if err_flag_semi == 1:
-            # Reject error fit.
-            print 'Semi: using all stars with errors < %0.2f.' % e_max
-            # Call function to reject stars w errors > e_max.
-            popt_mag, popt_col1, acpt_stars, rjct_stars = e_a_r_m(phot_data,
-                                                                  er_params)
-            rjct_errors_fit = True
-
-    # If 'manual' mode is set, display errors distributions and ask the user
-    # to accept it or else use all stars except those with errors > e_max in
-    # either the magnitude or the color.
-    elif mode == 'm':
-        print 'Plot error distributions.'
-        # Display automatic errors rejection.
-        d_e(mag_data, popt_mag, popt_col1, acpt_stars, rjct_stars, err_plot,
-            er_params, axes_params)
-        plt.show()
-        # Ask if keep or reject.
-        wrong_answer = True
-        while wrong_answer:
-            answer_rad = raw_input('Accept fit for errors (otherwise use \
-all stars with photom errors < %0.2f)? (y/n) ' % e_max)
-            if answer_rad == 'y':
-                print 'Fit accepted.'
-                wrong_answer = False
-            elif answer_rad == 'n':
-                print 'Using stars with errors < %0.2f.' % e_max
-                # Call function to reject stars w errors > e_max.
-                popt_mag, popt_col1, acpt_stars, rjct_stars = e_a_r_m(phot_data,
-                                                                      er_params)
-                rjct_errors_fit = True
-                wrong_answer = False
-            else:
-                print 'Wrong input. Try again.\n'
+    popt_mag, popt_col1, acpt_stars, rjct_stars, err_plot, rjct_errors_fit = \
+    ear(phot_data, axes_params, er_params, mode, semi_return)
 
     # Get stars in and out of cluster's radius.
     stars_in, stars_out, stars_in_rjct, stars_out_rjct = gio(center_cl,
@@ -208,12 +151,13 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
 
     # Get cluster + field regions around the cluster's center.
     flag_area_stronger, cluster_region, field_region = \
-    g_r(x_center_bin, y_center_bin, bin_width, h_not_filt, clust_rad,
+    g_r(x_center_bin[0], y_center_bin[0], bin_width, h_not_filt, clust_rad,
         H_manual, stars_in, stars_out, gr_params)
     print 'Cluster + field stars regions obtained (%d).' % len(field_region)
 
     # Calculate integrated magnitude.
-    integr_return = g_i_m(center_cl, clust_rad, cluster_region, field_region)
+    integr_return = g_i_m(center_cl, clust_rad, cluster_region, field_region,
+        flag_area_stronger)
     print 'Integrated magnitude/color distribution obtained.'
 
     # Check if test is to be applied or skipped.
@@ -272,7 +216,7 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
         ip_list = []
 
     # Obtain best fitting parameters for cluster.
-    err_lst = [popt_mag, popt_col1, e_max]
+    err_lst = [popt_mag, popt_col1, er_params[2]]
     bf_return = bfsc(err_lst, memb_prob_avrg_sort, completeness, ip_list,
                      bf_params, sc_params, ga_params, ps_params)
 
@@ -292,20 +236,17 @@ all stars with photom errors < %0.2f)? (y/n) ' % e_max)
                 print 'Wrong input. Try again.\n'
 
     # Add cluster data and flags to output file
-    a_d_o(out_file_name, sub_dir, output_dir, clust_name, center_cl, clust_rad,
-        k_prof, k_pr_err, n_c_k, flag_king_no_conver, cont_index, n_c,
-        pval_test_params[0], qq_params[0], integr_return, flag_center,
-        flag_center_manual, flag_radius_manual, rjct_errors_fit,
-        radius_params[3:], flag_num_memb_low, bf_return)
+    a_d_o(out_file_name, sub_dir, output_dir, clust_name, center_params,
+        radius_params, k_prof, k_pr_err, n_c_k, flag_king_no_conver, cont_index,
+        n_c, pval_test_params[0], qq_params[0], integr_return,
+        rjct_errors_fit, flag_num_memb_low, bf_return)
     print 'Data added to output file.'
 
     # Make plots
     if flag_make_plot:
-        mp(output_subdir, clust_name, x_data, y_data, center_coords,
-            cent_coo_err, center_cl, cent_cl_err, x_center_bin, y_center_bin,
-            h_filter, radii,
+        mp(output_subdir, clust_name, x_data, y_data, center_params, radii,
             backg_value, radius_params[0:3], ring_density, poisson_error,
-            cont_index, bin_width, mag_data, col1_data, popt_mag, popt_col1,
+            cont_index, mag_data, col1_data, popt_mag, popt_col1,
             err_plot, rjct_errors_fit, k_prof, k_pr_err, d_b_k,
             flag_king_no_conver, stars_in, stars_out, stars_in_rjct,
             stars_out_rjct, integr_return, n_c, flag_area_stronger,

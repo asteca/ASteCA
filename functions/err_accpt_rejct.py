@@ -4,6 +4,9 @@
 
 from scipy.optimize import curve_fit
 import numpy as np
+import matplotlib.pyplot as plt
+from functions.display_errors import disp_errors as d_e
+from functions.err_accpt_rejct_max import err_a_r_m as e_a_r_m
 
 
 # Define exponential function.
@@ -14,24 +17,17 @@ def func(x, a, b, c):
     return a * np.exp(b * x) + c
 
 
-def err_accpt_rejct(phot_data, er_params):
-    """
-    Accept and reject stars in and out of the cluster's boundaries according to
-    a given criteria based on their photometric errors.
-    """
-
+def first(phot_data, er_params):
+    '''
+    Separate stars in magnitude intervals for errors of magnitude and of color.
+    '''
+    # Unpack data.
     id_star, x_data, y_data, mag, e_mag, col1, e_col1 = phot_data
-
     be, be_e, e_max = er_params
-
-################################################################################
-# First part: separate stars in magnitude intervals for errors of magnitude and
-# of color.
 
     # Get value of brightest and dimmest stars.
     min_mag, max_mag = min(mag), max(mag)
-
-    # Define left side max limit for the box that holds the brightest stars.
+    # Define max limit for the box that holds the brightest stars.
     bright_end = (min_mag + be)
 
     # Create a segmented list in magnitude.
@@ -45,15 +41,13 @@ def err_accpt_rejct(phot_data, er_params):
     # Each list within the 'mag_interv' list holds all the magnitude error
     # values for all the stars in the interval 'q' which corresponds to the
     # mag value:
-    # [bright_end+(interv_mag*q) + bright_end+(interv_mag*(q-1))]/2.
+    # [bright_end+(interv_mag*q) + bright_end+(interv_mag*(q+1))]/2.
     # where 'q' is the index that points to the interval being filled. Idem
     # for 'col1_interv' but with color errors.
     mag_interv = [[] for _ in range(n_interv - 1)]
     col1_interv = [[] for _ in range(n_interv - 1)]
-    mag_value = [((bright_end + (interv_mag * (q + 1))) +
-    (bright_end + (interv_mag * (q)))) / 2. for q in range(n_interv - 1)]
 
-    # Initialize empty list to hold accepted/rejected stars.
+    # Initialize empty lists to hold accepted/rejected stars.
     acpt_stars, rjct_stars = [], []
 
     # Iterate through all stars
@@ -65,11 +59,10 @@ def err_accpt_rejct(phot_data, er_params):
             rjct_stars.append([star_id, x_data[st_ind], y_data[st_ind],
                                mag[st_ind], e_mag[st_ind], col1[st_ind],
                                e_col1[st_ind]])
-
         else:
             # Accept star.
 
-            # For stars brighter than the brightest plus 2 magnitudes.
+            # For stars brighter than the bright end.
             if mag[st_ind] <= bright_end:
                 # For values in this range accept all stars with both errors
                 # < be_e.
@@ -86,7 +79,7 @@ def err_accpt_rejct(phot_data, er_params):
             else:
             # For the reminder of stars, we store them in its corresponding
             # interval in the segmented mag list which will be used to calculate
-            # the lower and upper curve fits for both the magnit. and the color.
+            # the lower and upper curve fits for both the mag and the color.
 
                 # Iterate through all intervals in magnitude.
                 for q in range(n_interv - 1):
@@ -98,20 +91,25 @@ def err_accpt_rejct(phot_data, er_params):
                         # Star falls in this interval, store its e_col1 value
                         col1_interv[q].append(e_col1[st_ind])
                         break
-################################################################################
 
-################################################################################
-# Second part: obtain histograms for each interval and get median of the
-# interval and sigma value using the histogram. Do this for magnitude and color
-# errors.
+    return bright_end, interv_mag, n_interv, mag_interv, col1_interv, \
+    acpt_stars, rjct_stars
 
-    # At this point I have the magnitude errors of stars beyond the (brightest
-    # star + 2.) limit stored in magnitude intervals in the 'mag_interv' list
-    # and the same for color errors in the 'col1_interv'. We need to find
-    # the histogram for each interval and store its mean and mean+sigma in the
-    # lists 'e_mag_value' and 'e_col1_value'. The values in these lists will be
-    # used to fit the lower and upper curves for the magnitude and color
-    # photometric errors.
+
+def sec(n_interv, bright_end, mag_interv, col1_interv, mag_value):
+    '''
+    Obtain histograms for each interval and get median of the
+    interval and sigma value using the histogram. Do this for magnitude and
+    color errors.
+
+    At this point we have the magnitude errors of stars beyond the (brightest
+    star + 2.) limit stored in magnitude intervals in the 'mag_interv' list
+    and the same for color errors in the 'col1_interv'. We need to find
+    the histogram for each interval and store its mean and mean+sigma in the
+    lists 'e_mag_value' and 'e_col1_value'. The values in these lists will be
+    used to fit the lower and upper curves for the magnitude and color
+    photometric errors.
+    '''
 
     # 'e_mag_value' will hold two lists: the first one for the mean of the
     # fitted gaussians for the stars in the interval corresponding to the
@@ -184,12 +182,15 @@ def err_accpt_rejct(phot_data, er_params):
             else:
                 e_col1_value[0].append(median[indx2])
                 e_col1_value[1].append(median[indx2] + sigma[indx2])
-################################################################################
 
-################################################################################
-# Third part: get best fitting curves for the median and median+sigma values
-# obtained previously for errors in magnitude and color.
+    return e_mag_value, e_col1_value
 
+
+def third(mag_value, bright_end, e_mag_value, e_col1_value, mag):
+    '''
+    Get best fitting curves for the median and median+sigma values
+    obtained previously for errors in magnitude and color.
+    '''
     # After iterating through all intervals in magnitude, we fit an exponential
     # and a polynomial to these points (median and median+sigma).
 
@@ -230,34 +231,21 @@ def err_accpt_rejct(phot_data, er_params):
         if np.polyval(pol_col1, (x_val)) > func(x_val, *popt_ucol1):
             intersec_col1 = x_val
             break
-################################################################################
 
-################################################################################
-# Fourth part: divide magnitude interval in two, the first fitted with the
-# exponential and the second with the polynomial. Do this for the errors in
-# magnitude and in color.
+    return intersec_mag, intersec_col1, popt_mag, popt_umag, pol_mag,\
+    popt_col1, popt_ucol1, pol_col1
 
-    # Separate mag_values between those to the left and to the right of this
-    # intersect value. The exponential will be the first part of the upper
-    # envelope and the polynomial will be the second.
-    mag_val_left, mag_val_right = [], []
-    for item in mag_value:
-        if item <= intersec_mag:
-            mag_val_left.append(item)
-        else:
-            mag_val_right.append(item)
 
-    col1_val_left, col1_val_right = [], []
-    for item in mag_value:
-        if item <= intersec_col1:
-            col1_val_left.append(item)
-        else:
-            col1_val_right.append(item)
-################################################################################
+def fourth(phot_data, er_params, bright_end, acpt_stars, rjct_stars,
+intersec_mag, intersec_col1, popt_umag, pol_mag, popt_ucol1, pol_col1):
+    '''
+    Use the curves obtained above to accept or reject stars in the
+    magnitude range beyond the (brightest star + 2. mag) limit.
+    '''
 
-################################################################################
-# Fifth part: use the curves obtained above to accept or reject stars in the
-# magnitude range beyond the (brightest star + 2. mag) limit.
+    # Unpack data.
+    id_star, x_data, y_data, mag, e_mag, col1, e_col1 = phot_data
+    be, be_e, e_max = er_params
 
     # Iterate through all stars once again and now accept or reject those beyond
     # the (brightest star + 2. mag) limit according to the upper curves we
@@ -314,8 +302,129 @@ def err_accpt_rejct(phot_data, er_params):
                                       mag[st_ind], e_mag[st_ind], col1[st_ind],
                                       e_col1[st_ind]])
 
+    return acpt_stars, rjct_stars
+
+
+def divide(mag_value, intersec_mag, intersec_col1):
+    '''
+    Divide magnitude interval in two, the first fitted with the
+    exponential and the second with the polynomial. Do this for the errors in
+    magnitude and in color.
+    '''
+
+    # Separate mag_values between those to the left and to the right of this
+    # intersect value. The exponential will be the first part of the upper
+    # envelope and the polynomial will be the second.
+    mag_val_left, mag_val_right = [], []
+    for item in mag_value:
+        if item <= intersec_mag:
+            mag_val_left.append(item)
+        else:
+            mag_val_right.append(item)
+
+    col1_val_left, col1_val_right = [], []
+    for item in mag_value:
+        if item <= intersec_col1:
+            col1_val_left.append(item)
+        else:
+            col1_val_right.append(item)
+
+    return mag_val_left, mag_val_right, col1_val_left, col1_val_right
+
+
+def err_accpt_rejct(phot_data, axes_params, er_params, mode, semi_return):
+    """
+    Accept and reject stars in and out of the cluster's boundaries according to
+    a given criteria based on their photometric errors.
+    """
+
+    # Call first function.
+    bright_end, interv_mag, n_interv, mag_interv, col1_interv, acpt_stars, \
+    rjct_stars = first(phot_data, er_params)
+
+    # Define list of points spanning the magnitude range starting from the
+    # bright end.
+    mag_value = [bright_end + interv_mag * (q + 0.5) for q in
+    range(n_interv - 1)]
+
+    # Call second function.
+    e_mag_value, e_col1_value = sec(n_interv, bright_end, mag_interv,
+        col1_interv, mag_value)
+
+    # Call third function.
+    intersec_mag, intersec_col1, popt_mag, popt_umag, pol_mag, popt_col1, \
+    popt_ucol1, pol_col1 = third(mag_value, bright_end, e_mag_value,
+    e_col1_value, phot_data[3])
+
+    # Call fourth function.
+    acpt_stars, rjct_stars = fourth(phot_data, er_params, bright_end,
+        acpt_stars, rjct_stars, intersec_mag, intersec_col1, popt_umag,
+        pol_mag, popt_ucol1, pol_col1)
+
     # All these values are used for plotting purposes only.
+    mag_val_left, mag_val_right, col1_val_left, col1_val_right = \
+    divide(mag_value, intersec_mag, intersec_col1)
+    # This list holds all the values necessary for plotting.
     err_plot = [bright_end, popt_umag, pol_mag, popt_ucol1, pol_col1,
     mag_val_left, mag_val_right, col1_val_left, col1_val_right]
 
-    return popt_mag, popt_col1, acpt_stars, rjct_stars, err_plot
+    e_max = er_params[2]
+    # This indicates if we are to use the output of the 'err_accpt_rejct'
+    # function or all stars with errors < e_max.
+    rjct_errors_fit = False
+    # If list of accepted stars is empty, halt the code.
+    if not acpt_stars:
+        print '  No stars accepted based on their errors.'
+        print '  This probably means the exponential error function\n\
+did not converge.'
+        print 'Using all stars with errors < %0.2f.' % e_max
+        # Call function to reject stars with errors > e_max.
+        popt_mag, popt_col1, acpt_stars, rjct_stars = e_a_r_m(phot_data,
+                                                              er_params)
+        rjct_errors_fit = True
+    else:
+        print 'Stars accepted/rejected based on their errors.'
+
+    # Is 'semi' is set, check for the flag that indicates whether to use
+    # auto errors rejecting or all stars with errors < e_max.
+    if mode == 's':
+        # Unpack semi values.
+        err_flag_semi = semi_return[4]
+        # Apply auto rejecting of errors if flag is True.
+        if err_flag_semi == 1:
+            # Reject error fit.
+            print 'Semi: using all stars with errors < %0.2f.' % e_max
+            # Call function to reject stars w errors > e_max.
+            popt_mag, popt_col1, acpt_stars, rjct_stars = e_a_r_m(phot_data,
+                                                                  er_params)
+            rjct_errors_fit = True
+
+    # If 'manual' mode is set, display errors distributions and ask the user
+    # to accept it or else use all stars except those with errors > e_max in
+    # either the magnitude or the color.
+    elif mode == 'm':
+        print 'Plot error distributions.'
+        # Display automatic errors rejection.
+        d_e(phot_data[3], popt_mag, popt_col1, acpt_stars, rjct_stars, err_plot,
+            er_params, axes_params)
+        plt.show()
+        # Ask if keep or reject.
+        wrong_answer = True
+        while wrong_answer:
+            answer_rad = raw_input('Accept fit for errors (otherwise use \
+all stars with photom errors < %0.2f)? (y/n) ' % e_max)
+            if answer_rad == 'y':
+                print 'Fit accepted.'
+                wrong_answer = False
+            elif answer_rad == 'n':
+                print 'Using *all* stars with errors < %0.2f.' % e_max
+                # Call function to reject stars w errors > e_max.
+                popt_mag, popt_col1, acpt_stars, rjct_stars = e_a_r_m(phot_data,
+                                                                      er_params)
+                rjct_errors_fit = True
+                wrong_answer = False
+            else:
+                print 'Wrong input. Try again.\n'
+
+    return popt_mag, popt_col1, acpt_stars, rjct_stars, err_plot, \
+    rjct_errors_fit

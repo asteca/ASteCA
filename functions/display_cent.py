@@ -7,8 +7,8 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
 
-def disp_cent(x_data, y_data, mag_data, center_cl, cent_cl_err, x_center_bin,
-              y_center_bin, h_filter):
+def disp_cent(x_data, y_data, mag_data, center_cl, x_center_bin, y_center_bin,
+    h_filter, cent_cl_err):
     '''
     Show plot of cluster with value of center obtained.
     '''
@@ -56,9 +56,9 @@ def disp_cent(x_data, y_data, mag_data, center_cl, cent_cl_err, x_center_bin,
     plt.axvline(x=center_cl[0], linestyle='--', color='red', lw=2.)
     plt.axhline(y=center_cl[1], linestyle='--', color='red', lw=2.)
     # Add text box
-    text1 = r'$x_{cent} = %d \pm %d px$' % (center_cl[0], cent_cl_err[0])
+    text1 = r'$x_{cent} = %d \pm %d px$' % (center_cl[0], cent_cl_err)
     text2 = '\n'
-    text3 = r'$y_{cent} = %d \pm %d px$' % (center_cl[1], cent_cl_err[1])
+    text3 = r'$y_{cent} = %d \pm %d px$' % (center_cl[1], cent_cl_err)
     text = text1 + text2 + text3
     plt.text(0.7, 0.9, text, transform=ax2.transAxes,
     bbox=dict(facecolor='white', alpha=0.8), fontsize=15)

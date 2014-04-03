@@ -5,6 +5,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+from matplotlib.patches import Rectangle
 from matplotlib.ticker import MultipleLocator
 from scipy.optimize import fsolve
 from itertools import cycle
@@ -16,16 +17,14 @@ from os.path import join
 import warnings
 
 
-def make_plots(output_subdir, clust_name, x_data, y_data, center_coords,
-    cent_coo_err, center_cl, cent_cl_err, x_center_bin, y_center_bin, h_filter,
-    radii, backg_value,
-    radius_params, ring_density, poisson_error, cont_index, width_bins,
-    mag_data, col1_data, popt_mag, popt_col1, err_plot, rjct_errors_fit,
-    k_prof, k_pr_err, d_b_k, flag_king_no_conver, stars_in, stars_out,
-    stars_in_rjct, stars_out_rjct, integr_return, n_c, flag_area_stronger,
-    cluster_region, field_region, pval_test_params, qq_params,
-    memb_prob_avrg_sort, completeness, bf_params, bf_return, ga_params,
-    er_params, axes_params, ps_params):
+def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
+    radii, backg_value, radius_params, ring_density, poisson_error,
+    cont_index, mag_data, col1_data, popt_mag, popt_col1,
+    err_plot, rjct_errors_fit, k_prof, k_pr_err, d_b_k, flag_king_no_conver,
+    stars_in, stars_out, stars_in_rjct, stars_out_rjct, integr_return, n_c,
+    flag_area_stronger, cluster_region, field_region, pval_test_params,
+    qq_params, memb_prob_avrg_sort, completeness, bf_params, bf_return,
+    ga_params, er_params, axes_params, ps_params):
     '''
     Make all plots.
     '''
@@ -67,22 +66,22 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_coords,
     mag_min, mag_max = min(y_max_cmd, max(mag_data) + 0.5),\
     max(y_min_cmd, min(mag_data) - 0.5)
 
+    # Unpack params.
+    # Parameters from get_center function.
+    center_cl, bin_list, center_coords, h_filter, h_not_filt, \
+    x_center_bin, y_center_bin, xedges_min_db, yedges_min_db, cent_stats = \
+    center_params[:10]
     # Parameters from get_radius function.
     clust_rad, delta_backg, delta_percentage = radius_params
-
     # Error parameters.
     be, be_e, e_max = er_params
-
     # Parameters from error fitting.
     bright_end, popt_umag, pol_mag, popt_ucol1, pol_col1, mag_val_left,\
     mag_val_right, col1_val_left, col1_val_right = err_plot
-
     # Best isochrone fit params.
     bf_flag, best_fit_algor, N_b = bf_params
-
     # Genetic algorithm params.
     n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es = ga_params
-
     # Best fitting process results.
     isoch_fit_params, isoch_fit_errors, shift_isoch, synth_clst = bf_return
 
@@ -93,102 +92,103 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_coords,
     gs1 = gridspec.GridSpec(14, 8)  # create a GridSpec object
     #gs1.update(wspace=.09, hspace=.0)
 
-    # 2D filtered histogram, largest bin width.
+    # 2D not-weighted histogram.
     ax0 = plt.subplot(gs1[0:2, 0:2])
-    #Set axis labels
     plt.xlabel('x (bins)', fontsize=12)
     plt.ylabel('y (bins)', fontsize=12)
-    # Set minor ticks
     ax0.minorticks_on()
-    # Set grid
-    ax0.grid(which='both', color='k', linestyle='-', zorder=1)
-    # Add lines through the center of the cluster
-    plt.axvline(x=x_center_bin[2], linestyle='-', color='white', linewidth=2,
-                zorder=3)
-    plt.axhline(y=y_center_bin[2], linestyle='-', color='white', linewidth=2,
-                zorder=3)
+    plt.axvline(x=x_center_bin[0], linestyle='--', color='white')
+    plt.axhline(y=y_center_bin[0], linestyle='--', color='white')
+    # Radius
+    circle = plt.Circle((x_center_bin[0], y_center_bin[0]),
+        clust_rad / bin_list[0], color='w', fill=False)
+    fig.gca().add_artist(circle)
     # Add text boxs.
-    text = 'Bin: %d px' % (width_bins[2])
+    text = 'Bin: %d px' % (bin_list[0])
     plt.text(0.05, 0.92, text, transform=ax0.transAxes,
              bbox=dict(facecolor='white', alpha=0.8), fontsize=12)
-    text1 = '$x_{cent} = %d \pm %d px$' '\n' % (center_coords[0][2],
-        cent_coo_err[2])
-    text2 = '$y_{cent} = %d \pm %d px$' % (center_coords[1][2],
-        cent_coo_err[2])
+    text1 = '$x_{cent} = %d \pm %d px$' '\n' % (center_cl[0], bin_list[0])
+    text2 = '$y_{cent} = %d \pm %d px$' % (center_cl[1], bin_list[0])
     text = text1 + text2
     plt.text(0.53, 0.85, text, transform=ax0.transAxes,
         bbox=dict(facecolor='white', alpha=0.85), fontsize=15)
-    plt.imshow(h_filter[2].transpose(), origin='lower', aspect='auto')
+    plt.imshow(h_filter[0].transpose(), origin='lower', aspect='auto')
 
-    # 2D filtered histogram.
+    # 2D not-weighted histograms' centers.
     ax1 = plt.subplot(gs1[0:2, 2:4])
-    plt.xlabel('x (bins)', fontsize=12)
-    plt.ylabel('y (bins)', fontsize=12)
+    # Get max and min values in x,y
+    x_min, x_max = min(x_data), max(x_data)
+    y_min, y_max = min(y_data), max(y_data)
+    #Set plot limits
+    plt.xlim(x_min, x_max)
+    plt.ylim(y_min, y_max)
+    plt.xlabel('x (px)', fontsize=12)
+    plt.ylabel('y (px)', fontsize=12)
     ax1.minorticks_on()
-    plt.axvline(x=x_center_bin[1], linestyle='--', color='white')
-    plt.axhline(y=y_center_bin[1], linestyle='--', color='white')
-    # Add text boxs.
-    text = 'Bin: %d px' % (width_bins[1])
-    plt.text(0.05, 0.92, text, transform=ax1.transAxes,
-             bbox=dict(facecolor='white', alpha=0.8), fontsize=12)
-    text1 = '$x_{cent} = %d \pm %d px$' '\n' % (center_coords[0][1],
-        cent_coo_err[1])
-    text2 = '$y_{cent} = %d \pm %d px$' % (center_coords[1][1],
-        cent_coo_err[1])
+    # Add stats box.
+    text1 = r'$(\tilde{x},\, \tilde{y}) = (%0.0f, %0.0f)\,px$' '\n' % \
+    (cent_stats[0][0], cent_stats[0][1])
+    text2 = '$(\sigma_x,\, \sigma_y) = (%0.0f, %0.0f)\,px$' % \
+    (cent_stats[1][0], cent_stats[1][1])
     text = text1 + text2
-    plt.text(0.53, 0.85, text, transform=ax1.transAxes,
-        bbox=dict(facecolor='white', alpha=0.85), fontsize=15)
-    plt.imshow(h_filter[1].transpose(), origin='lower', aspect='auto')
+    plt.text(0.05, 0.88, text, transform=ax1.transAxes,
+        bbox=dict(facecolor='white', alpha=0.8), fontsize=11)
+    cols = ['red', 'blue', 'green', 'black']
+    for i in range(len(bin_list)):
+        boxes = plt.gca()
+        boxes.add_patch(Rectangle(((center_coords[0][i][0] - bin_list[i] / 2.),
+            (center_coords[0][i][1] - bin_list[i] / 2.)), bin_list[i] * 2.,
+            bin_list[i] * 2., facecolor='none', edgecolor=cols[i], ls='solid',
+            lw=2., zorder=(len(bin_list) - i)))
 
-    # 2D filtered histogram.
+    # 2D weighted histogram's centers.
     ax2 = plt.subplot(gs1[0:2, 4:6])
-    plt.xlabel('x (bins)', fontsize=12)
-    plt.ylabel('y (bins)', fontsize=12)
+    #Set plot limits
+    plt.xlim(x_min, x_max)
+    plt.ylim(y_min, y_max)
+    plt.xlabel('x (px)', fontsize=12)
+    plt.ylabel('y (px)', fontsize=12)
     ax2.minorticks_on()
-    plt.axvline(x=x_center_bin[3], linestyle='--', color='white')
-    plt.axhline(y=y_center_bin[3], linestyle='--', color='white')
-    # Add text boxs.
-    text1 = 'Bin: %d px' '\n' % (width_bins[3])
-    text2 = '(weighted)'
+    # Add stats box.
+    text1 = r'$(\tilde{x},\, \tilde{y}) = (%0.0f, %0.0f)\,px$' '\n' % \
+    (cent_stats[2][0], cent_stats[2][1])
+    text2 = '$(\sigma_x,\, \sigma_y) = (%0.0f, %0.0f)\,px$' % \
+    (cent_stats[3][0], cent_stats[3][1])
     text = text1 + text2
-    plt.text(0.05, 0.87, text, transform=ax2.transAxes,
-             bbox=dict(facecolor='white', alpha=0.8), fontsize=12)
-    text1 = '$x_{cent} = %d \pm %d px$' '\n' % (center_coords[0][3],
-        cent_coo_err[3])
-    text2 = '$y_{cent} = %d \pm %d px$' % (center_coords[1][3],
-        cent_coo_err[3])
-    text = text1 + text2
-    plt.text(0.53, 0.85, text, transform=ax2.transAxes,
-        bbox=dict(facecolor='white', alpha=0.85), fontsize=15)
-    plt.imshow(h_filter[3].transpose(), origin='lower', aspect='auto')
+    plt.text(0.05, 0.88, text, transform=ax2.transAxes,
+        bbox=dict(facecolor='white', alpha=0.85), fontsize=11)
+    cols = ['red', 'blue', 'green', 'black']
+    for i in range(len(bin_list)):
+        boxes = plt.gca()
+        boxes.add_patch(Rectangle(((center_coords[1][i][0] - bin_list[i] / 2.),
+            (center_coords[1][i][1] - bin_list[i] / 2.)), bin_list[i] * 2.,
+            bin_list[i] * 2., facecolor='none', edgecolor=cols[i], ls='solid',
+            lw=2., zorder=(len(bin_list) - i)))
 
     # 2D filtered histogram, smallest bin width.
     ax3 = plt.subplot(gs1[0:2, 6:8])
     plt.xlabel('x (bins)', fontsize=12)
     plt.ylabel('y (bins)', fontsize=12)
     ax3.minorticks_on()
-    plt.axvline(x=x_center_bin[0], linestyle='--', color='white')
-    plt.axhline(y=y_center_bin[0], linestyle='--', color='white')
-    # Radius
-    circle = plt.Circle((x_center_bin[0], y_center_bin[0]),
-        clust_rad / width_bins[0], color='w', fill=False)
-    fig.gca().add_artist(circle)
+    plt.axvline(x=x_center_bin[1], linestyle='--', color='white')
+    plt.axhline(y=y_center_bin[1], linestyle='--', color='white')
     # Add text boxs.
-    text = 'Bin: %d px' % (width_bins[0])
-    plt.text(0.05, 0.92, text, transform=ax3.transAxes,
+    text1 = 'Bin: %d px' '\n' % (bin_list[0])
+    text2 = '(weighted)'
+    text = text1 + text2
+    plt.text(0.05, 0.87, text, transform=ax3.transAxes,
              bbox=dict(facecolor='white', alpha=0.8), fontsize=12)
-    text1 = '$x_{cent} = %d \pm %d px$' '\n' % (center_cl[0], cent_cl_err[0])
-    text2 = '$y_{cent} = %d \pm %d px$' % (center_cl[1], cent_cl_err[1])
+    text1 = '$x_{cent} = %d \pm %d px$' '\n' % (center_coords[1][0][0],
+        bin_list[0])
+    text2 = '$y_{cent} = %d \pm %d px$' % (center_coords[1][0][1],
+        bin_list[0])
     text = text1 + text2
     plt.text(0.53, 0.85, text, transform=ax3.transAxes,
         bbox=dict(facecolor='white', alpha=0.85), fontsize=15)
-    plt.imshow(h_filter[0].transpose(), origin='lower', aspect='auto')
+    plt.imshow(h_filter[1].transpose(), origin='lower', aspect='auto')
 
     # x,y finding chart of full frame
     ax4 = plt.subplot(gs1[2:4, 0:2])
-    # Get max and min values in x,y
-    x_min, x_max = min(x_data), max(x_data)
-    y_min, y_max = min(y_data), max(y_data)
     #Set plot limits
     plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
@@ -212,8 +212,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_coords,
                             fill=False)
         fig.gca().add_artist(circle)
     # Add text box
-    text1 = '$x_{cent} = %d \pm %d px$' '\n' % (center_cl[0], cent_cl_err[0])
-    text2 = '$y_{cent} = %d \pm %d px$' % (center_cl[1], cent_cl_err[1])
+    text1 = '$x_{cent} = %d \pm %d px$' '\n' % (center_cl[0], bin_list[0])
+    text2 = '$y_{cent} = %d \pm %d px$' % (center_cl[1], bin_list[0])
     text = text1 + text2
     plt.text(0.53, 0.85, text, transform=ax4.transAxes,
         bbox=dict(facecolor='white', alpha=0.85), fontsize=15)
@@ -249,13 +249,13 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_coords,
         rt_err = round(np.sqrt(k_pr_err[1][1]))
     else:
         rc_err, rt_err = -1, -1
-    texts = ['RDP (%d px)' % width_bins[0],
+    texts = ['RDP (%d px)' % bin_list[0],
             'backg = %.1E $st/px^{2}$' % backg_value,
             '$\Delta$=%d%%' % delta_percentage,
             '3-P King prof (%d px)' % d_b_k,
             'r$_c$ = %d $\pm$ %d px' % (k_prof[0], rc_err),
             'r$_t$ = %d $\pm$ %d px' % (k_prof[1], rt_err),
-            'r$_{cl}$ = %d $\pm$ %d px' % (clust_rad, round(width_bins[0]))]
+            'r$_{cl}$ = %d $\pm$ %d px' % (clust_rad, round(bin_list[0]))]
     # Plot density profile with the smallest bin size
     ax5.plot(radii, ring_density, 'ko-', zorder=3, label=texts[0])
     # Plot poisson error bars
@@ -582,12 +582,18 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_coords,
     cl_reg_mag, fl_reg_mag, integ_mag, cl_reg_col, fl_reg_col, integ_col =\
     integr_return
     ax13 = plt.subplot(gs1[6:8, 2:4])
-    x_min, x_max = min(min(cl_reg_mag[0]), min(fl_reg_mag[0])) - 0.2,\
-        max(max(cl_reg_mag[0]), max(fl_reg_mag[0])) + 0.2
+    # If lists are not empty.
+    if fl_reg_mag[0].any():
+        x_min, x_max = min(min(cl_reg_mag[0]), min(fl_reg_mag[0])) - 0.2,\
+            max(max(cl_reg_mag[0]), max(fl_reg_mag[0])) + 0.2
+        y_min, y_max = max(max(cl_reg_mag[1]), max(fl_reg_mag[1])) + 0.2,\
+            min(min(cl_reg_mag[1]), min(fl_reg_mag[1])) - 0.2
+        min_fl_mag = min(fl_reg_mag[1])
+    else:
+        x_min, x_max = min(cl_reg_mag[0]) - 0.2, max(cl_reg_mag[0]) + 0.2
+        y_min, y_max = max(cl_reg_mag[1]) + 0.2, min(cl_reg_mag[1]) - 0.2
+        min_fl_mag = 0.
     plt.xlim(x_min, x_max)
-    #ax13.set(xlim=[x_min, x_max])
-    y_min, y_max = max(max(cl_reg_mag[1]), max(fl_reg_mag[1])) + 0.2,\
-        min(min(cl_reg_mag[1]), min(fl_reg_mag[1])) - 0.2
     plt.ylim(y_min, y_max)
     ax13.set_xlabel('$' + y_ax + '$', fontsize=18)
     ax13.set_ylabel('$' + y_ax + '^*$', fontsize=18)
@@ -595,7 +601,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_coords,
     ax13.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
     # Text.
     text1 = '$' + y_ax + '^{*}_{cl,max}=%.2f$' % (min(cl_reg_mag[1]))
-    text2 = '$' + y_ax + '^{*}_{fl,max}=%.2f$' % (min(fl_reg_mag[1]))
+    text2 = '$' + y_ax + '^{*}_{fl,max}=%.2f$' % (min_fl_mag)
     # Completeness maximum value.
     # completeness = [max_mag, bin_edges, max_indx, comp_perc]
     bin_edges, max_indx = completeness[1], completeness[2]
@@ -610,15 +616,22 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_coords,
     # Color integrated magnitude.
     tempax = ax13.twinx()
     ax132 = tempax.twiny()
-    x_min, x_max = min(min(cl_reg_col[0]), min(fl_reg_col[0])) - 0.2,\
-        max(max(cl_reg_col[0]), max(fl_reg_col[0])) + 0.2
-    y_min, y_max = max(max(cl_reg_col[1]), max(fl_reg_col[1])) + 0.2,\
-        min(min(cl_reg_col[1]), min(fl_reg_col[1])) - 0.2
+    # If lists are not empty.
+    if fl_reg_col[0].any():
+        x_min, x_max = min(min(cl_reg_col[0]), min(fl_reg_col[0])) - 0.2,\
+            max(max(cl_reg_col[0]), max(fl_reg_col[0])) + 0.2
+        y_min, y_max = max(max(cl_reg_col[1]), max(fl_reg_col[1])) + 0.2,\
+            min(min(cl_reg_col[1]), min(fl_reg_col[1])) - 0.2
+        min_fl_col = min(fl_reg_col[1])
+    else:
+        x_min, x_max = min(cl_reg_col[0]) - 0.2, max(cl_reg_col[0]) + 0.2
+        y_min, y_max = max(cl_reg_col[1]) + 0.2, min(cl_reg_col[1]) - 0.2
+        min_fl_col = 0.
     ax132.set_xlabel('$' + x_ax + '$', fontsize=14)
     tempax.set_ylabel('$' + x_ax + '^*$', fontsize=14, rotation=90)
     # Text.
     text1 = '$' + x_ax + '^{*}_{cl,max}=%.2f$' % (min(cl_reg_col[1]))
-    text2 = '$' + x_ax + '^{*}_{fl,max}=%.2f$' % (min(fl_reg_col[1]))
+    text2 = '$' + x_ax + '^{*}_{fl,max}=%.2f$' % (min_fl_col)
     # Cluster integrated magnitude.
     plt.plot(cl_reg_col[0], cl_reg_col[1], 'r:', lw=2., label=text1)
     # Field average integrated magnitude.
@@ -681,6 +694,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_coords,
 
     # Norm fit for decontamination algorithm probability values.
     # Check if decont algorithm was applied.
+    plot_colorbar = False
     if not(flag_area_stronger):
         ax16 = plt.subplot(gs1[8:10, 0:2])
         plt.xlim(0., 1.)
@@ -795,7 +809,6 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_coords,
                          xerr=func(mag_y, *popt_col1), fmt='k.', lw=0.8,
                          ms=0., zorder=4)
             # Plot colorbar (see bottom of file).
-            plot_colorbar = False
             if v_min_mp != v_max_mp:
                 plot_colorbar = True
 

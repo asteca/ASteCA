@@ -72,19 +72,22 @@ def create_out_data_file(output_dir):
 # M3 (rjct_errors_fit): Indicates that all stars with errors < e_max were\n\
 #    accepted, meaning that the automatic error rejecting fit was poor.\n\
 #\n\
-# f1 (flag_center): Either the x or y coordinate assigned as center deviates\n\
-#    more than 2 sigmas from the mean value obtained using all bin widths.\n\
-# f2 (flag_delta_total): The background value is smaller than a third of the\n\
+# f1 (flag_center_med): Either median cluster's central coordinates (obtained\n\
+#    using all bin widths) is more than 10%% away from the values obtained \n\
+#    with the min bin width.\n\
+# f2 (flag_center_std): The standard deviation for either center coordinate\n\
+#    is larger than 10%% of the coordinate's value.\n\
+# f3 (flag_delta_total): The background value is smaller than a third of the\n\
 #    maximum radial density value.\n\
-# f3 (flag_not_stable): Not enough points found stabilized around the\n\
+# f4 (flag_not_stable): Not enough points found stabilized around the\n\
 #    background value -> r = middle value of density profile.\n\
-# f4 (flag_delta): The delta range around the background used to attain the\n\
+# f5 (flag_delta): The delta range around the background used to attain the\n\
 #    stable condition to determine the radius is greater than 10%%. This\n\
 #    indicates a possible variable background.\n\
-# f5 (flag_king_no_conver): The process to fit a 3-P King profile to the\n\
+# f6 (flag_king_no_conver): The process to fit a 3-P King profile to the\n\
 #    density points did not converge or did so to a tidal radius beyond the\n\
 #    ranges of the frame.\n\
-# f6 (flag_num_memb_low): The number of approximate cluster members is < 10.\n\
+# f7 (flag_num_memb_low): The number of approximate cluster members is < 10.\n\
 #\n\
 # FC (flags count): Sum of all the flags values. The bigger this value the\n\
 #    more likely it is that there's a problem with the frame, ie: no cluster,\n\
@@ -93,7 +96,7 @@ def create_out_data_file(output_dir):
 #\n\
 #NAME            c_x[px] c_y[px] r_cl[px] r_c[px] e_rc[px] r_t[px] e_rt[px] \
 cont_ind memb memb_k prob_cl   CCC mag_int     met     e_m   age   e_a  E(B-V) \
-  e_E   dist   e_d  M1 M2 M3  f1 f2 f3 f4 f5 f6  FC\n" % now_time)
+  e_E   dist   e_d  M1 M2 M3  f1 f2 f3 f4 f5 f6 f7  FC\n" % now_time)
         out_data_file.close()
 
     return out_file_name

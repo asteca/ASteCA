@@ -54,7 +54,7 @@ def disp_errors(mag_data, popt_mag, popt_col1, acpt_stars, rjct_stars,
     # Set minor ticks
     ax7.minorticks_on()
     # Plot exponential fitted function.
-    mag_x = np.linspace(min(mag_data), max(mag_data), 50)
+    mag_x = np.linspace(bright_end, max(mag_data), 50)
     # Plot lower envelope.
     ax7.plot(mag_x, func(mag_x, *popt_mag), 'r-', zorder=3)
     # Plot left side of upper envelope (exponential).
