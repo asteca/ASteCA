@@ -7,15 +7,18 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
 
-def disp_rad(x_data, y_data, mag_data, center_cl, cent_cl_err, radius_params,
-    x_center_bin, y_center_bin, h_filter, backg_value, radii, ring_density,
-    clust_name, poisson_error, width_bins):
+def disp_rad(phot_data, center_params, clust_rad, delta_backg, delta_percentage,
+            backg_value, rdp_params):
     '''
     Plot cluster and its radius.
     '''
 
-    # Parameters from get_radius function.
-    clust_rad, delta_backg, delta_percentage = radius_params
+    # Unpack.
+    x_data, y_data, mag_data, col1_data = phot_data[1], phot_data[2], \
+    phot_data[3], phot_data[5]
+    center_cl, h_not_filt, x_center_bin, y_center_bin, xedges_min_db, \
+    yedges_min_db, bin_width, h_filter, cent_cl_err = center_params[:9]
+    radii, ring_density, poisson_error = rdp_params
 
     # Plot all outputs
     fig = plt.figure(figsize=(12, 12))
@@ -26,14 +29,14 @@ def disp_rad(x_data, y_data, mag_data, center_cl, cent_cl_err, radius_params,
     plt.xlabel('x (bins)', fontsize=12)
     plt.ylabel('y (bins)', fontsize=12)
     ax1.minorticks_on()
-    plt.axvline(x=x_center_bin[0], linestyle='--', color='white')
-    plt.axhline(y=y_center_bin[0], linestyle='--', color='white')
+    plt.axvline(x=x_center_bin, linestyle='--', color='white')
+    plt.axhline(y=y_center_bin, linestyle='--', color='white')
     # Radius
-    circle = plt.Circle((x_center_bin[0], y_center_bin[0]),
-        clust_rad / width_bins[0], color='w', fill=False)
+    circle = plt.Circle((x_center_bin, y_center_bin),
+        clust_rad / bin_width, color='w', fill=False)
     fig.gca().add_artist(circle)
-    #text = 'Center (%d, %d)' % (x_center_bin[0], y_center_bin[0])
-    text = 'Bin: %d px' % (width_bins[0])
+    #text = 'Center (%d, %d)' % (x_center_bin, y_center_bin)
+    text = 'Bin: %d px' % (bin_width)
     plt.text(0.7, 0.92, text, transform=ax1.transAxes,
              bbox=dict(facecolor='white', alpha=0.8), fontsize=12)
     plt.imshow(h_filter[0].transpose(), origin='lower')
@@ -78,13 +81,13 @@ def disp_rad(x_data, y_data, mag_data, center_cl, cent_cl_err, radius_params,
     plt.xlabel('radius (px)', fontsize=12)
     plt.ylabel("stars/px$^{2}$", fontsize=12)
     # Cluster's name.
-    text = str(clust_name)
-    plt.text(0.4, 0.9, text, transform=ax3.transAxes, fontsize=14)
+    #text = str(clust_name)
+    #plt.text(0.4, 0.9, text, transform=ax3.transAxes, fontsize=14)
     # Legend texts
-    texts = ['Dens prof (%d px)' % width_bins[0],
+    texts = ['Dens prof (%d px)' % bin_width,
             'backg = %.1E $st/px^{2}$' % backg_value,
             '$\Delta$=%d%%' % delta_percentage,
-            'r$_{cl}$ = %d $\pm$ %d px' % (clust_rad, round(width_bins[0]))]
+            'r$_{cl}$ = %d $\pm$ %d px' % (clust_rad, round(bin_width))]
     # Plot density profile with the smallest bin size
     ax3.plot(radii, ring_density, 'ko-', zorder=3, label=texts[0])
     # Plot poisson error bars

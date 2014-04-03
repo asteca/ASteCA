@@ -2,8 +2,12 @@
 @author: gabriel
 """
 
+from functions.display_rad import disp_rad as d_r
+import matplotlib.pyplot as plt
 
-def get_clust_rad(backg_value, radii, ring_density, cr_params):
+
+def get_clust_rad(phot_data, backg_value, cr_params, center_params,
+    rdp_params, semi_return, mode):
     """
     Obtain the value for the cluster's radius by counting the number of points
     that fall within a given interval of the background or lower. If this number
@@ -14,17 +18,19 @@ def get_clust_rad(backg_value, radii, ring_density, cr_params):
     are found or the delta interval reaches its maximum allowed.
     """
 
+    radii, ring_density = rdp_params[:2]
+
     # Assign a value to the number of points that should be found below
     # the delta value around the background to attain the 'stabilized'
     # condition.
-    mode = cr_params[0]
-    if mode not in {'auto', 'manual'}:
+    mode_r = cr_params[0]
+    if mode_r not in {'auto', 'manual'}:
         print "  WARNING: CR mode is not valid. Default to 'auto'."
-        mode = 'auto'
+        mode_r = 'auto'
     # Set params.
-    if mode == 'manual':
+    if mode_r == 'manual':
         n_left, delta_step = int(cr_params[1]), cr_params[2]
-    elif mode == 'auto':
+    elif mode_r == 'auto':
         n_left, delta_step = max(int(round(len(radii) * 0.1)), 2), 5
 
     # Difference between max density value and the background value.
@@ -104,7 +110,48 @@ def get_clust_rad(backg_value, radii, ring_density, cr_params):
         clust_rad = radii[index_rad + min(range(len(radii_dens)), key=lambda
         i:abs(radii_dens[i] - backg_value))]
 
+    # Check if semi or manual mode are set.
+    flag_radius_manual = False
+    if mode == 'a':
+        print 'Auto radius found: %0.1f px.' % clust_rad
+
+    elif mode == 's':
+        # Unpack semi values.
+        cent_cl_semi, cl_rad_semi, cent_flag_semi, rad_flag_semi, \
+        err_flag_semi = semi_return
+
+        if rad_flag_semi == 1:
+            # Update value.
+            clust_rad = cl_rad_semi
+            print 'Semi radius set: %0.1f px.' % clust_rad
+
+    # If Manual mode is set, display radius and ask the user to accept it or
+    # input new one.
+    elif mode == 'm':
+
+        print 'Radius found: ', clust_rad
+        d_r(phot_data, center_params, clust_rad, delta_backg, delta_percentage,
+            backg_value, rdp_params)
+        plt.show()
+
+        wrong_answer = True
+        while wrong_answer:
+            answer_rad = raw_input('Accept radius (otherwise input new one \
+manually)? (y/n) ')
+            if answer_rad == 'y':
+                print 'Value accepted.'
+                wrong_answer = False
+            elif answer_rad == 'n':
+                clust_rad_m = float(raw_input('Input new radius value (in \
+px): '))
+                # Update radius value.
+                clust_rad = clust_rad_m
+                wrong_answer = False
+                flag_radius_manual = True
+            else:
+                print 'Wrong input. Try again.\n'
+
     radius_params = [clust_rad, delta_backg, delta_percentage,
-    flag_delta_total, flag_not_stable, flag_delta]
+    flag_delta_total, flag_not_stable, flag_delta, flag_radius_manual]
 
     return radius_params

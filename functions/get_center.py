@@ -186,6 +186,6 @@ def get_center(x_data, y_data, mag_data, gc_params, mode, semi_return):
 
     center_params = [center_cl, h_not_filt, x_center_bin,
         y_center_bin, xedges_min_db, yedges_min_db, bin_list[0], h_filter,
-        flag_center_med, flag_center_std, flag_center_manual]
+        cent_cl_err, flag_center_med, flag_center_std, flag_center_manual]
 
     return center_params

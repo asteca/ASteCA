@@ -19,7 +19,6 @@ from functions.get_background import get_background as gbg
 from functions.get_dens_prof import get_dens_prof as gdp
 from functions.get_radius import get_clust_rad as gcr
 from functions.get_king_prof import get_king_profile as gkp
-from functions.display_rad import disp_rad as d_r
 from functions.err_accpt_rejct import err_accpt_rejct as ear
 from functions.display_errors import disp_errors as d_e
 from functions.err_accpt_rejct_max import err_a_r_m as e_a_r_m
@@ -109,8 +108,8 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
     yedges_min_db, bin_width = center_params[:7]
 
     # Get density profile
-    radii, ring_density, poisson_error = gdp(h_not_filt, x_center_bin,
-        y_center_bin, bin_width)
+    rdp_params = gdp(h_not_filt, x_center_bin, y_center_bin, bin_width)
+    radii, ring_density, poisson_error = rdp_params
     print 'Density profile calculated.'
 
     # Get background value in stars/px^2.
@@ -118,48 +117,9 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
     print 'Background calculated (%0.5f stars/px^2).' % backg_value
 
     # Get cluster radius
-    radius_params = gcr(backg_value, radii, ring_density,
-        cr_params)
+    radius_params = gcr(phot_data, backg_value, cr_params, center_params,
+        rdp_params, semi_return, mode)
     clust_rad = radius_params[0]
-    if mode == 'a':
-        print 'Auto radius found: %0.1f px.' % clust_rad
-
-    # If Manual mode is set, display radius and ask the user to accept it or
-    # input new one.
-    flag_radius_manual = False
-    if mode == 'm':
-        print 'Radius found: ', clust_rad
-        d_r(x_data, y_data, mag_data, center_params, radius_params[0:3],
-            backg_value, radii, ring_density, clust_name, poisson_error,
-            bin_width)
-        plt.show()
-
-        wrong_answer = True
-        while wrong_answer:
-            answer_rad = raw_input('Accept radius (otherwise input new one \
-manually)? (y/n) ')
-            if answer_rad == 'y':
-                print 'Value accepted.'
-                wrong_answer = False
-            elif answer_rad == 'n':
-                clust_rad_m = float(raw_input('Input new radius value (in \
-px): '))
-                # Update radius value.
-                radius_params[0] = clust_rad_m
-                clust_rad = radius_params[0]
-                wrong_answer = False
-                flag_radius_manual = True
-            else:
-                print 'Wrong input. Try again.\n'
-    elif mode == 's':
-        if rad_flag_semi == 1:
-            # Update value.
-            radius_params[0] = cl_rad_semi
-            clust_rad = radius_params[0]
-            flag_radius_manual = True
-            print 'Semi radius set: %0.1f px.' % clust_rad
-        else:
-            print 'Auto radius found: %0.1f px.' % clust_rad
 
     # Get King profiles based on the density profiles.
     delta_xy = max((max(x_data) - min(x_data)), (max(y_data) - min(y_data)))
