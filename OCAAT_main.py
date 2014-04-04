@@ -133,7 +133,7 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
     print 'Approximate number of members in cluster obtained (%d).' % (n_c)
 
     # Get contamination index.
-    cont_index = g_c_i(backg_value, rdp_params, clust_rad, stars_in, stars_in_rjct)
+    cont_index = g_c_i(backg_value, rdp_params, clust_rad)
     print 'Contamination index obtained (%0.2f).' % cont_index
 
     # Obtain manual 2D histogram for the field with star's values attached
@@ -185,6 +185,11 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
                             col1_data, mag_data, center_cl, clust_rad,
                             clust_name, sub_dir, da_params)
 
+    flag_red_rad = True
+    # Call function to reduce the radius value until CI <= 0.5.
+    memb_prob_avrg_sort = grr(flag_red_rad, backg_value, clust_rad,
+        cont_index, center_cl, rdp_params, memb_prob_avrg_sort)
+
     # Create data file with membership probabilities.
     c_m_f(output_dir, sub_dir, clust_name, memb_prob_avrg_sort)
     print 'Membership probabilities saved to file.'
@@ -206,11 +211,6 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
             (len(ip_list[0]) * len(ip_list[0][0]))
     else:
         ip_list = []
-
-    #flag_red_rad = True
-    ## Call function to reduce the radius value until CI <= 0.5.
-    #memb_prob_avrg_sort = grr(flag_red_rad, backg_value, clust_rad, center_cl,
-        #cont_index, memb_prob_avrg_sort)
 
     # Obtain best fitting parameters for cluster.
     err_lst = [popt_mag, popt_col1, er_params[2]]

@@ -5,18 +5,11 @@ Created on Thu Nov 21 15:51:34 2013
 @author: gabriel
 """
 
-import numpy as np
 
-
-def cont_indx(backg_val, rdp_params, clust_rad, stars_in, stars_in_rjct):
+def cont_indx(backg_val, rdp_params, clust_rad):
     '''
-    Calculate and return the contamination index value cont_index.
-    The contamination index is defined as the ratio of field stars that should
-    be present in the cluster region (calculated by means of the background
-    value 'backg_val' and the cluster's radius 'r') to the total number of
-    stars in the cluster region 'n_tot'.
-
-    CI = [backg_val*PI*r**2]/n_tot
+    Calculate the contamination index value. This parameter is defined as the
+    ratio of field stars density over density of stars in the cluster region.
 
     If this number equals 1, it means that all of the stars in the cluster
     region are expected to be field stars. A small number (close to zero)
@@ -25,14 +18,6 @@ def cont_indx(backg_val, rdp_params, clust_rad, stars_in, stars_in_rjct):
     background than there are inside the cluster region (which isn't a good
     sign).
     '''
-
-    # Cluster's area.
-    a_c = np.pi * (clust_rad ** 2)
-    # Total number of stars in cluster region.
-    n_tot = len(stars_in) + len(stars_in_rjct)
-    # Calculate contamination index.
-    cont_index = backg_val * a_c / n_tot
-    print cont_index
 
     radii, ring_density = rdp_params[:2]
     num_stars = 0
@@ -51,6 +36,5 @@ def cont_indx(backg_val, rdp_params, clust_rad, stars_in, stars_in_rjct):
 
     # Final contamination index.
     cont_index = backg_val / cl_dens
-    print cont_index
 
     return cont_index

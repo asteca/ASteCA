@@ -9,12 +9,14 @@ from get_cont_index import cont_indx as ci
 import numpy as np
 
 
-def red_rad(flag_red_rad, backg_val, clust_rad, center_cl, cont_index,
-    memb_prob_avrg_sort):
+def red_rad(flag_red_rad, backg_val, clust_rad, cont_index, center_cl,
+    rdp_params, memb_prob_avrg_sort):
     '''
     Attempts to reduce the radius until a value of CI<=0.5 is
     achieved.
     '''
+
+    radii, ring_density = rdp_params[:2]
 
     new_rad, flag_new_rad = clust_rad, False
     i = 1
