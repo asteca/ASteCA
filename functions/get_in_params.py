@@ -15,9 +15,10 @@ def get_in_params(mypath):
     'ocaat_input.dat' file and returns them packaged for each function to use.
     '''
 
-# Allows to work with columns data files.
-
-    data_file = join(mypath, 'ocaat_input.dat')
+    # Store input and output dirs and path to input data file.
+    input_dir = join(mypath, 'input/')
+    output_dir = join(mypath, 'output/')
+    data_file = join(input_dir, 'ocaat_input.dat')
 
     true_lst = ('True', 'true')
 
@@ -33,15 +34,13 @@ def get_in_params(mypath):
                 if reader[0] == 'MO':
                     mode = str(reader[1])
 
-                elif reader[0] == 'CP_i':
-                    input_dir = str(reader[1])
-                elif reader[0] == 'CP_o':
-                    output_dir = str(reader[1])
                 elif reader[0] == 'CP_d':
                     done_dir = str(reader[1])
 
                 elif reader[0] == 'MP':
                     flag_make_plot = True if reader[1] in true_lst else False
+                    plot_frmt = str(reader[2])
+                    plot_dpi = int(reader[3])
 
                 elif reader[0] == 'PD':
                     gd_params = map(int, reader[1:])
@@ -112,6 +111,7 @@ def get_in_params(mypath):
                 elif reader[0] == 'MM':
                     xy_minmax = map(float, reader[1:])
 
+    pl_params = [flag_make_plot, plot_frmt, plot_dpi]
     cr_params = [cr_params0] + cr_params1
     gc_params = gc_params0 + gc_params1
     in_dirs = [input_dir, output_dir, done_dir]
@@ -157,4 +157,4 @@ def get_in_params(mypath):
 
     return mode, in_dirs, gd_params, gc_params, cr_params, \
     er_params, gr_params, pv_params, da_params, ps_params, bf_params, \
-    sc_params, ga_params, flag_make_plot, flag_move_file, axes_params
+    sc_params, ga_params, pl_params, flag_move_file, axes_params

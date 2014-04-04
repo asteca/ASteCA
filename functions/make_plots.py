@@ -24,7 +24,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     stars_in, stars_out, stars_in_rjct, stars_out_rjct, integr_return, n_c,
     flag_area_stronger, cluster_region, field_region, pval_test_params,
     qq_params, memb_prob_avrg_sort, completeness, bf_params, bf_return,
-    ga_params, er_params, axes_params, ps_params):
+    ga_params, er_params, axes_params, ps_params, pl_params):
     '''
     Make all plots.
     '''
@@ -1045,7 +1045,9 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
         cbar.ax.tick_params(labelsize=9)
 
     # Generate output file for each data file.
-    plt.savefig(join(output_subdir, str(clust_name) + '.png'), dpi=150)
+    pl_frmt = pl_params[1]
+    pl_dpi = pl_params[2]
+    plt.savefig(join(output_subdir, str(clust_name) + pl_frmt), dpi=pl_dpi)
 
     # Close to release memory.
     plt.clf()

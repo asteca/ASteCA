@@ -25,25 +25,19 @@
 MO  s
 
 
-# Path where the photometric data files of the clusters to be processed are stored.
-CP_i  /home/gabriel/clusters/clusters_in
-# Output directory for the images and the member probabilities files for each
-# cluster. The general 'data_output.dat' file is also stored here.
-CP_o  /home/gabriel/clusters/clusters_out/
-
 # Move file once it is processed?
 # The cluster's photometric file will be moved to the folder
 # defined below if this flag is set to 'True'.
 MF  false
 # Path where the sub-folders are moved once processed if the flag
 # above is set to 'True'.
-CP_d  /home/gabriel/clusters/clusters_done/
+CP_d  /path/
 
 
 # Create output figure?
 # True / False. If 'False', no output figure will be generated.
-#    flag_make_plot
-MP             True
+#    flag_make_plot  format  DPI
+MP             True     pdf  150
 
 
 # Column numbers identifying the needed data as stored in the clusters'

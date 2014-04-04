@@ -8,14 +8,14 @@ Created on Fri Aug 16 11:12:55 2013
 from os.path import join
 
 
-def get_semi(mypath, clust_name, mode):
+def get_semi(input_dir, clust_name, mode):
     '''
     Get center, radius and flags for semi automatic mode.
     '''
     # Flag to indicate if cluster was found in file.
     flag_clust_found = False
-    myfile = 'clusters_input.dat'
-    with open(join(mypath, myfile), mode="r") as f_cl_dt:
+    myfile = 'semi_input.dat'
+    with open(join(input_dir, myfile), mode="r") as f_cl_dt:
         for line in f_cl_dt:
             li = line.strip()
             # Skip comments.

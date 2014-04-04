@@ -44,7 +44,7 @@ mypath = realpath(join(getcwd(), dirname(__file__)))
 # Read input parameters from input file.
 mode, in_dirs, gd_params, gc_params, cr_params, er_params,\
 gr_params, pv_params, da_params, ps_params, bf_params, sc_params, ga_params,\
-flag_make_plot, flag_move_file, axes_params = gip(mypath)
+pl_params, flag_move_file, axes_params = gip(mypath)
 
 # Read paths.
 input_dir, output_dir, done_dir = in_dirs
@@ -84,7 +84,7 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
     print 'Analizing cluster %s.' % (clust_name)
 
     # Get data from semi-data input file.
-    mode, semi_return = g_s(mypath, clust_name, mode)
+    mode, semi_return = g_s(input_dir, clust_name, mode)
 
     # Get cluster's photometric data from file.
     phot_data = gd(input_dir, sub_dir, myfile, gd_params)
@@ -243,7 +243,7 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
     print 'Data added to output file.'
 
     # Make plots
-    if flag_make_plot:
+    if pl_params[0]:
         mp(output_subdir, clust_name, x_data, y_data, center_params, radii,
             backg_value, radius_params[0:3], ring_density, poisson_error,
             cont_index, mag_data, col1_data, popt_mag, popt_col1,
@@ -252,7 +252,7 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
             stars_out_rjct, integr_return, n_c, flag_area_stronger,
             cluster_region, field_region, pval_test_params, qq_params,
             memb_prob_avrg_sort, completeness, bf_params,
-            bf_return, ga_params, er_params, axes_params, ps_params)
+            bf_return, ga_params, er_params, axes_params, ps_params, pl_params)
         print 'Plots created.'
 
     # Move file to 'done' dir.
