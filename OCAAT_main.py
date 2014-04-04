@@ -264,7 +264,7 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
         except OSError as ex:
             # Sub-dir not empty, skip.
             pass
-        print 'Data file moved to folder: %s' % dst_dir
+        print 'Photometric data file moved.'
 
     elapsed = time.time() - start
     m, s = divmod(elapsed, 60)
