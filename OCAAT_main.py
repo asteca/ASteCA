@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 
 from os.path import join, realpath, dirname, exists, isfile
-from os import makedirs, listdir, getcwd, walk, mkdir, rmdir
+from os import makedirs, getcwd, mkdir, rmdir
 import time
 import shutil
 import gc  # Garbage collector.
 
 # Import files with defined functions
+from functions.read_paths import read_paths as rp
 from functions.get_in_params import get_in_params as gip
 from functions.create_out_data_file import create_out_data_file as c_o_d_f
 from functions.get_data_semi import get_semi as g_s
@@ -52,17 +53,8 @@ input_dir, output_dir, done_dir = in_dirs
 # Create output data file (append if file already existis)
 out_file_name = c_o_d_f(output_dir)
 
-# Store subdir names [0] and file names [1] inside each subdir.
-dir_files = [[], []]
-for root, dirs, files in walk(input_dir):
-    if dirs:
-        for subdir in dirs:
-            for name in listdir(join(input_dir, subdir)):
-                # Check to see if it's a valid data file.
-                if name.endswith(('.DAT', '.MAG', '.OUT', '.TEX')):
-                    dir_files[0].append(subdir)
-                    dir_files[1].append(name)
-
+# Read paths and names of all clusters stored in input_dir.
+dir_files = rp(input_dir)
 
 # Iterate through all cluster files.
 for f_indx, sub_dir in enumerate(dir_files[0]):
