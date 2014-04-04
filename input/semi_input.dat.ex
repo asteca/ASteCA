@@ -10,4 +10,4 @@
 # M5 (flag_errors_manual): Use all stars with errors < e_max.
 #
 # NAME         c_x[px]      c_y[px]      rad[px]   M3 M4 M5
-clust_test		  1500         1500          150    1  1  0
+CLUSTER_T        1000.        1000.         250.    1  1  0

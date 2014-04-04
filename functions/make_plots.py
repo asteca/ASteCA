@@ -1045,9 +1045,9 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
         cbar.ax.tick_params(labelsize=9)
 
     # Generate output file for each data file.
-    pl_frmt = pl_params[1]
+    pl_fmt = pl_params[1]
     pl_dpi = pl_params[2]
-    plt.savefig(join(output_subdir, str(clust_name) + pl_frmt), dpi=pl_dpi)
+    plt.savefig(join(output_subdir, str(clust_name) + '.' + pl_fmt), dpi=pl_dpi)
 
     # Close to release memory.
     plt.clf()
