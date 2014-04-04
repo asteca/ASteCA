@@ -47,7 +47,7 @@ mode, in_dirs, gd_params, gc_params, cr_params, er_params,\
 gr_params, pv_params, da_params, ps_params, bf_params, sc_params, ga_params,\
 pl_params, flag_move_file, axes_params = gip(mypath)
 
-# Read paths.
+# Read input/output/done paths.
 input_dir, output_dir, done_dir = in_dirs
 
 # Create output data file (append if file already existis)
