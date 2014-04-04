@@ -85,8 +85,7 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
     # Unpack coordinates, magnitude and color.
     x_data, y_data, mag_data, col1_data = phot_data[1], phot_data[2], \
     phot_data[3], phot_data[5]
-    print 'Data correctly obtained from input file (N stars: %d).'\
-    % len(phot_data[0])
+    print 'Data obtained from input file (N stars: %d).' % len(phot_data[0])
 
     # Get cluster's center values and errors, filtered 2D hist, non-filtered
     # 2D hist, x,y bin centers and width of each bin
