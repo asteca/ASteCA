@@ -138,6 +138,8 @@ def get_clust_rad(phot_data, backg_value, cr_params, center_params,
             # Update value.
             clust_rad = cl_rad_semi
             print 'Semi radius set: %0.1f px.' % clust_rad
+        else:
+            print 'Auto radius found: %0.1f px.' % clust_rad
 
     # If Manual mode is set, display radius and ask the user to accept it or
     # input new one.

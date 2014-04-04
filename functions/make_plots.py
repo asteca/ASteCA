@@ -18,7 +18,7 @@ import warnings
 
 
 def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
-    radii, backg_value, radius_params, ring_density, poisson_error,
+    rdp_params, backg_value, radius_params,
     cont_index, mag_data, col1_data, popt_mag, popt_col1,
     err_plot, rjct_errors_fit, k_prof, k_pr_err, d_b_k, flag_king_no_conver,
     stars_in, stars_out, stars_in_rjct, stars_out_rjct, integr_return, n_c,
@@ -71,6 +71,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     center_cl, bin_list, center_coords, h_filter, h_not_filt, \
     x_center_bin, y_center_bin, xedges_min_db, yedges_min_db, cent_stats = \
     center_params[:10]
+    # RDP params.
+    radii, ring_density, poisson_error = rdp_params
     # Parameters from get_radius function.
     clust_rad, delta_backg, delta_percentage = radius_params
     # Error parameters.

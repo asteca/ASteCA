@@ -30,6 +30,7 @@ from functions.get_p_value import get_pval as g_pv
 from functions.get_qqplot import qqplot as g_qq
 from functions.get_completeness import mag_completeness as m_c
 from functions.get_isoch_params import ip
+from functions.get_reduced_rad import red_rad as grr
 from functions.best_fit_synth_cl import best_fit as bfsc
 from functions.make_plots import make_plots as mp
 from functions.add_data_output import add_data_output as a_d_o
@@ -99,7 +100,7 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
 
     # Get density profile
     rdp_params = gdp(h_not_filt, x_center_bin[0], y_center_bin[0], bin_width)
-    radii, ring_density, poisson_error = rdp_params
+    radii, ring_density = rdp_params[:2]
     print 'Density profile calculated.'
 
     # Get background value in stars/px^2.
@@ -132,7 +133,7 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
     print 'Approximate number of members in cluster obtained (%d).' % (n_c)
 
     # Get contamination index.
-    cont_index = g_c_i(backg_value, clust_rad, stars_in, stars_in_rjct)
+    cont_index = g_c_i(backg_value, rdp_params, clust_rad, stars_in, stars_in_rjct)
     print 'Contamination index obtained (%0.2f).' % cont_index
 
     # Obtain manual 2D histogram for the field with star's values attached
@@ -206,6 +207,11 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
     else:
         ip_list = []
 
+    #flag_red_rad = True
+    ## Call function to reduce the radius value until CI <= 0.5.
+    #memb_prob_avrg_sort = grr(flag_red_rad, backg_value, clust_rad, center_cl,
+        #cont_index, memb_prob_avrg_sort)
+
     # Obtain best fitting parameters for cluster.
     err_lst = [popt_mag, popt_col1, er_params[2]]
     bf_return = bfsc(err_lst, memb_prob_avrg_sort, completeness, ip_list,
@@ -235,8 +241,8 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
 
     # Make plots
     if pl_params[0]:
-        mp(output_subdir, clust_name, x_data, y_data, center_params, radii,
-            backg_value, radius_params[0:3], ring_density, poisson_error,
+        mp(output_subdir, clust_name, x_data, y_data, center_params, rdp_params,
+            backg_value, radius_params[0:3],
             cont_index, mag_data, col1_data, popt_mag, popt_col1,
             err_plot, rjct_errors_fit, k_prof, k_pr_err, d_b_k,
             flag_king_no_conver, stars_in, stars_out, stars_in_rjct,
