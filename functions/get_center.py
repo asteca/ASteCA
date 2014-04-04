@@ -176,7 +176,7 @@ def get_center(x_data, y_data, mag_data, gc_params, mode, semi_return):
                 # Store center values in bin coordinates. We substract
                 # the min (x,y) coordinate values otherwise the bin
                 # coordinates won't be aligned.
-                x_center_bin, y_center_bin = int(round((center_cl[0] -
+                x_center_bin[0], y_center_bin[0] = int(round((center_cl[0] -
                 min(x_data)) / bin_list[0])), int(round((center_cl[1] -
                 min(y_data)) / bin_list[0]))
                 wrong_answer = False
