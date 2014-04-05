@@ -94,7 +94,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     gs1 = gridspec.GridSpec(14, 8)  # create a GridSpec object
     #gs1.update(wspace=.09, hspace=.0)
 
-    # 2D not-weighted histogram.
+    # 2D not-weighted gaussian convolved histogram, smallest bin width.
     ax0 = plt.subplot(gs1[0:2, 0:2])
     plt.xlabel('x (bins)', fontsize=12)
     plt.ylabel('y (bins)', fontsize=12)
@@ -127,6 +127,17 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     plt.xlabel('x (px)', fontsize=12)
     plt.ylabel('y (px)', fontsize=12)
     ax1.minorticks_on()
+    # Add lines through meadian values with std deviations.
+    plt.axvline(x=cent_stats[0][0], linestyle='-', color='k')
+    plt.axvline(x=cent_stats[0][0] + cent_stats[1][0], linestyle='--',
+        color='k')
+    plt.axvline(x=cent_stats[0][0] - cent_stats[1][0], linestyle='--',
+        color='k')
+    plt.axhline(y=cent_stats[0][1], linestyle='-', color='k')
+    plt.axhline(y=cent_stats[0][1] + cent_stats[1][1], linestyle='--',
+        color='k')
+    plt.axhline(y=cent_stats[0][1] - cent_stats[1][1], linestyle='--',
+        color='k')
     # Add stats box.
     text1 = r'$(\tilde{x},\, \tilde{y}) = (%0.0f, %0.0f)\,px$' '\n' % \
     (cent_stats[0][0], cent_stats[0][1])
@@ -151,6 +162,17 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     plt.xlabel('x (px)', fontsize=12)
     plt.ylabel('y (px)', fontsize=12)
     ax2.minorticks_on()
+    # Add lines through meadian values with std deviations.
+    plt.axvline(x=cent_stats[2][0], linestyle='-', color='k')
+    plt.axvline(x=cent_stats[2][0] + cent_stats[3][0], linestyle='--',
+        color='k')
+    plt.axvline(x=cent_stats[2][0] - cent_stats[3][0], linestyle='--',
+        color='k')
+    plt.axhline(y=cent_stats[2][1], linestyle='-', color='k')
+    plt.axhline(y=cent_stats[2][1] + cent_stats[3][1], linestyle='--',
+        color='k')
+    plt.axhline(y=cent_stats[2][1] - cent_stats[3][1], linestyle='--',
+        color='k')
     # Add stats box.
     text1 = r'$(\tilde{x},\, \tilde{y}) = (%0.0f, %0.0f)\,px$' '\n' % \
     (cent_stats[2][0], cent_stats[2][1])
@@ -167,7 +189,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
             bin_list[i] * 2., facecolor='none', edgecolor=cols[i], ls='solid',
             lw=2., zorder=(len(bin_list) - i)))
 
-    # 2D filtered histogram, smallest bin width.
+    # 2D weighted gaussian convolved histogram, smallest bin width.
     ax3 = plt.subplot(gs1[0:2, 6:8])
     plt.xlabel('x (bins)', fontsize=12)
     plt.ylabel('y (bins)', fontsize=12)
@@ -308,6 +330,14 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     min(x_max, (center_cl[0] + 1.5 * clust_rad))
     y_min, y_max = max(y_min, (center_cl[1] - 1.5 * clust_rad)), \
     min(y_max, (center_cl[1] + 1.5 * clust_rad))
+    # Prevent axis stretching.
+    if (x_max - x_min) != (y_max - y_min):
+        lst = [(x_max - x_min), (y_max - y_min)]
+        val, idx = min((val, idx) for (idx, val) in enumerate(lst))
+        if idx == 0:
+            x_max = x_min + lst[1]
+        else:
+            y_max = y_min + lst[0]
     plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
     #Set axis labels
