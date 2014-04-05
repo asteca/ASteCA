@@ -47,8 +47,10 @@ def red_rad(flag_red_rad, backg_val, clust_rad, cont_index, center_cl,
                 # Break out of while.
                 flag_new_rad = True
                 print 'Reduced radius found (%0.2f).' % new_rad
+    else:
+        memb_prob_avrg_sort2 = memb_prob_avrg_sort
 
-    if flag_red_rad is not True or flag_new_rad is not True:
+    if flag_new_rad is False:
         print 'No reduced radius value found.'
         # Return unchanged list of members.
         memb_prob_avrg_sort2 = memb_prob_avrg_sort

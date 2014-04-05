@@ -45,8 +45,8 @@ mypath = realpath(join(getcwd(), dirname(__file__)))
 
 # Read input parameters from input file.
 mode, in_dirs, gd_params, gc_params, cr_params, er_params,\
-gr_params, pv_params, da_params, ps_params, bf_params, sc_params, ga_params,\
-pl_params, flag_move_file, axes_params = gip(mypath)
+gr_params, pv_params, da_params, ps_params, bf_params, flag_red_rad, \
+sc_params, ga_params, pl_params, flag_move_file, axes_params = gip(mypath)
 
 # Read input/output/done paths.
 input_dir, output_dir, done_dir = in_dirs
@@ -185,7 +185,6 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
                             col1_data, mag_data, center_cl, clust_rad,
                             clust_name, sub_dir, da_params)
 
-    flag_red_rad = True
     # Call function to reduce the radius value until CI <= 0.5.
     memb_prob_avrg_sort = grr(flag_red_rad, backg_value, clust_rad,
         cont_index, center_cl, rdp_params, memb_prob_avrg_sort)
