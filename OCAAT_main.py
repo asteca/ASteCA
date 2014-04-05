@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from os.path import join, realpath, dirname, exists, isfile
-from os import makedirs, getcwd, mkdir, rmdir
+from os import getcwd, mkdir, rmdir
 import time
 import shutil
 import gc  # Garbage collector.
@@ -62,9 +62,9 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
 
     # Generate output subdir.
     output_subdir = join(output_dir, sub_dir)
-    # Check if subdir already exists, if not create it
+    # Check if subdir already exists, if not create it.
     if not exists(output_subdir):
-        makedirs(output_subdir)
+        mkdir(output_subdir)
 
     # Store name of file in 'myfile'.
     myfile = dir_files[1][f_indx]

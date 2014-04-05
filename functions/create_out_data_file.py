@@ -3,6 +3,8 @@
 """
 
 from time import strftime
+from os.path import exists
+from os import mkdir
 
 
 def create_out_data_file(output_dir):
@@ -12,6 +14,10 @@ def create_out_data_file(output_dir):
     '''
 
     out_file_name = 'ocaat_output.dat'
+
+    # Check if output folder exists, if not create it.
+    if not exists(output_dir):
+        mkdir(output_dir)
 
     # Check if file already exists. If it does append new values instead of
     # deleting/creating the file again.
