@@ -317,7 +317,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     ax6.minorticks_on()
     # Add circle
     circle = plt.Circle((center_cl[0], center_cl[1]), clust_rad, color='r',
-                        fill=False)
+        fill=False, lw=1.5)
     fig.gca().add_artist(circle)
     text1 = 'Cluster (zoom)\n'
     text2 = 'CI = %0.2f' % (cont_index)
@@ -326,7 +326,28 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
              bbox=dict(facecolor='white', alpha=0.85), fontsize=12)
     # Plot stars.
     plt.scatter(x_data, y_data, marker='o', c='black',
-        s=2 * a * np.exp(b * mag_data ** c))
+        s=a * np.exp(b * mag_data ** c))
+    # Plor contour levels.
+    # Get KDE for CMD intrinsic position of most probable members.
+    x, y = np.mgrid[x_min:x_max:100j, y_min:y_max:100j]
+    positions = np.vstack([x.ravel(), y.ravel()])
+    x_zoom, y_zoom = [], []
+    for indx, star_x in enumerate(x_data):
+        if x_min < star_x < x_max and y_min < y_data[indx] < y_max:
+            x_zoom.append(star_x)
+            y_zoom.append(y_data[indx])
+    values = np.vstack([x_zoom, y_zoom])
+    # The results are HEAVILY dependant on the bandwidth used here.
+    from scipy import stats
+    kernel = stats.gaussian_kde(values, bw_method=None)
+    kde = np.reshape(kernel(positions).T, x.shape)
+    #levels_range = np.arange(0.05, 1.01, 0.05)
+    cols = ('#DF3A01', '#D7DF01', '#3ADF00', '#01DF74', '#01A9DB', '#0101DF')
+    #('#B45F04', '#AEB404', '#04B431', '#04B486', '#0489B1', '#013ADF')
+    #('red', 'yellow', 'cyan', 'magenta', 'green', 'blue')
+    plt.contour(x, y, kde, 6, linewidths=np.arange(.5, 4, .5),
+        colors=cols)
+    #plt.clabel(CS, fontsize=11, fmt='%.0E', inline=1, zorder=5)
 
     # Cluster and field regions defined.
     ax7 = plt.subplot(gs1[4:6, 0:2])
