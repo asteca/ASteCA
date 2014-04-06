@@ -5,7 +5,8 @@ Created on Tue Feb 11 14:03:44 2014
 @author: gabriel
 """
 
-from os.path import join
+from os.path import join, isfile
+import sys
 #import re
 
 
@@ -20,6 +21,14 @@ def get_in_params(mypath):
     output_dir = join(mypath, 'output/')
     data_file = join(input_dir, 'ocaat_input.dat')
 
+    # Check if ocaat_input.dat file exists.
+    if isfile(data_file):
+        pass
+    else:
+        # Halt code.
+        sys.exit('FATAL: ocaat_input.dat file does not exist. Halting code.')
+
+    # Read data from file.
     true_lst = ('True', 'true')
 
     with open(data_file, mode="r") as f_dat:
@@ -34,8 +43,9 @@ def get_in_params(mypath):
                 if reader[0] == 'MO':
                     mode = str(reader[1])
 
-                elif reader[0] == 'CP_d':
-                    done_dir = str(reader[1])
+                elif reader[0] == 'MF':
+                    flag_move_file = True if reader[1] in true_lst else False
+                    done_dir = str(reader[2])
 
                 elif reader[0] == 'MP':
                     flag_make_plot = True if reader[1] in true_lst else False
@@ -102,8 +112,6 @@ def get_in_params(mypath):
                     n_el = int(reader[7])
                     n_ei = int(reader[8])
                     n_es = int(reader[9])
-                elif reader[0] == 'MF':
-                    flag_move_file = True if reader[1] in true_lst else False
 
                 #elif reader[0] == 'XA':
                     #x_ax = re.search(r'"(.*)"', line).groups()[0]

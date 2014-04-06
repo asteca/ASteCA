@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from os.path import join, realpath, dirname, exists, isfile
-from os import getcwd, mkdir, rmdir
+from os import getcwd, mkdir, rmdir, makedirs
 import time
 import shutil
 import gc  # Garbage collector.
@@ -36,29 +36,15 @@ from functions.make_plots import make_plots as mp
 from functions.add_data_output import add_data_output as a_d_o
 from functions.cl_members_file import cluster_members_file as c_m_f
 
-# Begin code.
-print '            OCAAT v1.0\n'
-print '-------------------------------------------\n'
 
-# Path where the code is running
-mypath = realpath(join(getcwd(), dirname(__file__)))
+def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
+    '''
+    '''
 
-# Read input parameters from input file.
-mode, in_dirs, gd_params, gc_params, cr_params, er_params,\
-gr_params, pv_params, da_params, ps_params, bf_params, flag_red_rad, \
-sc_params, ga_params, pl_params, flag_move_file, axes_params = gip(mypath)
-
-# Read input/output/done paths.
-input_dir, output_dir, done_dir = in_dirs
-
-# Create output data file (append if file already existis)
-out_file_name = c_o_d_f(output_dir)
-
-# Read paths and names of all clusters stored in input_dir.
-dir_files = rp(input_dir)
-
-# Iterate through all cluster files.
-for f_indx, sub_dir in enumerate(dir_files[0]):
+    mode, in_dirs, gd_params, gc_params, cr_params, er_params,\
+    gr_params, pv_params, da_params, ps_params, bf_params, flag_red_rad, \
+    sc_params, ga_params, pl_params, flag_move_file, axes_params = gip_params
+    input_dir, output_dir, done_dir = in_dirs
 
     # Generate output subdir.
     output_subdir = join(output_dir, sub_dir)
@@ -256,7 +242,7 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
         dst_dir = join(done_dir, sub_dir)
         # If the sub-dir doesn't exist, create it before moving the file.
         if not exists(dst_dir):
-            mkdir(dst_dir)
+            makedirs(dst_dir)
         shutil.move(join(input_dir, sub_dir, myfile), dst_dir)
         # Also move *memb_data.dat file if it exists.
         if isfile(join(input_dir, sub_dir, clust_name + '_memb.dat')):
@@ -285,4 +271,31 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
 #        f.write(str(h.heap()))
 #        f.write('\n')
 
-print '\nFull iteration completed.'
+
+# Begin code.
+print '            OCAAT v1.0\n'
+print '-------------------------------------------\n'
+
+# Path where the code is running
+mypath = realpath(join(getcwd(), dirname(__file__)))
+
+# Read input parameters from ocaat_input.dat file.
+gip_params = gip(mypath)
+# Read input/output paths.
+input_dir, output_dir = gip_params[1][:2]
+# Read paths and names of all clusters stored in input_dir.
+dir_files = rp(input_dir)
+# Create output data file in output_dir (append if file already exists)
+out_file_name = c_o_d_f(output_dir)
+
+# Iterate through all cluster files.
+for f_indx, sub_dir in enumerate(dir_files[0]):
+
+    try:
+        # Call main function for this cluster.
+        ocaat_main(f_indx, sub_dir, out_file_name, gip_params)
+    except Exception, err:
+        print 'FATAL: %s could not be processed. ' % dir_files[1][f_indx][:-4]
+        print 'Error:', str(err), '\n'
+
+print 'Full iteration completed.'
