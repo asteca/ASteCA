@@ -251,7 +251,7 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
         # If sub-dir left behind is empty, remove it.
         try:
             rmdir(join(input_dir, sub_dir))
-        except OSError as ex:
+        except OSError:
             # Sub-dir not empty, skip.
             pass
         print 'Photometric data file moved.'
