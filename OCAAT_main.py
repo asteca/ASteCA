@@ -263,14 +263,6 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
     # Force the Garbage Collector to release unreferenced memory.
     gc.collect()
 
-    # Store memory information.
-#    h = hpy()
-#    with open('/home/gabriel/clusters/mem_out', "a") as f:
-#        f.write('\n')
-#        f.write(strftime("%Y-%m-%d %H:%M:%S")+'\n')
-#        f.write(str(h.heap()))
-#        f.write('\n')
-
 
 # Begin code.
 print '            OCAAT v1.0\n'
