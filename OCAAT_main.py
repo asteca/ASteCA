@@ -43,6 +43,9 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
     a given photometric data file.
     '''
 
+    # Start timing this loop.
+    start = time.time()
+
     mode, in_dirs, gd_params, gc_params, cr_params, er_params,\
     gr_params, pv_params, da_params, ps_params, bf_params, flag_red_rad, \
     sc_params, ga_params, pl_params, flag_move_file, axes_params = gip_params
@@ -56,10 +59,6 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
 
     # Store name of file in 'myfile'.
     myfile = dir_files[1][f_indx]
-
-    # Start timing this loop.
-    start = time.time()
-
     # Store cluster's name
     clust_name = myfile[:-4]
     print 'Analizing cluster %s.' % (clust_name)
