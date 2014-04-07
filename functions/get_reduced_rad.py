@@ -50,7 +50,7 @@ def red_rad(flag_red_rad, backg_val, clust_rad, cont_index, center_cl,
     else:
         memb_prob_avrg_sort2 = memb_prob_avrg_sort
 
-    if flag_new_rad is False:
+    if flag_red_rad is True and flag_new_rad is False:
         print 'No reduced radius value found.'
         # Return unchanged list of members.
         memb_prob_avrg_sort2 = memb_prob_avrg_sort

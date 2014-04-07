@@ -9,7 +9,7 @@ from matplotlib.patches import Rectangle
 from matplotlib.ticker import MultipleLocator
 from scipy.optimize import fsolve
 from itertools import cycle
-from scipy.stats import norm
+from scipy import stats
 import matplotlib.mlab as mlab
 from scipy.ndimage.filters import gaussian_filter
 from matplotlib.patches import Ellipse
@@ -354,9 +354,6 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     text = text1 + text2
     plt.text(0.62, 0.9, text, transform=ax6.transAxes,
              bbox=dict(facecolor='white', alpha=0.85), fontsize=12)
-    # Plot stars.
-    plt.scatter(x_data, y_data, marker='o', c='black',
-        s=a * np.exp(b * mag_data ** c))
     # Plor contour levels.
     # Get KDE for CMD intrinsic position of most probable members.
     x, y = np.mgrid[x_min:x_max:100j, y_min:y_max:100j]
@@ -368,16 +365,17 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
             y_zoom.append(y_data[indx])
     values = np.vstack([x_zoom, y_zoom])
     # The results are HEAVILY dependant on the bandwidth used here.
-    from scipy import stats
     kernel = stats.gaussian_kde(values, bw_method=None)
     kde = np.reshape(kernel(positions).T, x.shape)
-    #levels_range = np.arange(0.05, 1.01, 0.05)
-    cols = ('#DF3A01', '#D7DF01', '#3ADF00', '#01DF74', '#01A9DB', '#0101DF')
-    #('#B45F04', '#AEB404', '#04B431', '#04B486', '#0489B1', '#013ADF')
-    #('red', 'yellow', 'cyan', 'magenta', 'green', 'blue')
-    plt.contour(x, y, kde, 6, linewidths=np.arange(.5, 4, .5),
-        colors=cols)
-    #plt.clabel(CS, fontsize=11, fmt='%.0E', inline=1, zorder=5)
+    plt.imshow(np.rot90(kde), cmap=plt.cm.YlOrBr,
+        extent=[x_min, x_max, y_min, y_max])
+    plt.contour(x, y, kde, 10, colors='k', linewidths=0.6)
+    # Plot stars.
+    plt.scatter(x_data, y_data, marker='o', c='black',
+        s=a * np.exp(b * mag_data ** c), zorder=4)
+    #Plot center.
+    plt.scatter(center_cl[0], center_cl[1], color='w', s=40, lw=0.8,
+        marker='x', zorder=5)
 
     # Cluster and field regions defined.
     ax7 = plt.subplot(gs1[4:6, 0:2])
@@ -756,7 +754,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
         ax16.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
         prob_data = [star[7] for star in memb_prob_avrg_sort]
         # Best Gaussian fit of data.
-        (mu, sigma) = norm.fit(prob_data)
+        (mu, sigma) = stats.norm.fit(prob_data)
         # Text.
         text = '$\mu=%.3f,\ \sigma=%.3f$' % (mu, sigma)
         plt.text(0.05, 0.92, text, transform=ax16.transAxes,
