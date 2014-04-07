@@ -39,6 +39,8 @@ from functions.cl_members_file import cluster_members_file as c_m_f
 
 def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
     '''
+    This is the main container which holds the calls to all functions for
+    a given photometric data file.
     '''
 
     mode, in_dirs, gd_params, gc_params, cr_params, er_params,\
