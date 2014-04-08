@@ -81,12 +81,13 @@ def spiral_region(histo, h_manual, stars_in, stars_out, x_c_b, y_c_b, spiral,
     return region, sp_indx2
 
 
-def get_regions(x_c_b, y_c_b, bin_width, histo, clust_rad,
-                h_manual, stars_in, stars_out, gr_params):
+def get_regions(bin_center, bin_width, histo, clust_rad, h_manual, stars_in,
+    stars_out, gr_params):
     '''
     Define cluster and field regions around the cluster's center.
     '''
 
+    x_c_b, y_c_b = bin_center
     # Maximum number of field regions to attempt to fill.
     f_regions = gr_params[0]
 

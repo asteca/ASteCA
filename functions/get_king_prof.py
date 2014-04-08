@@ -94,9 +94,9 @@ def get_king_profile(clust_rad, backg_value, radii, ring_density, delta_xy,
             d_b_k = i + width_bin
             # Obtain 2D histo with new bin width.
             hist, x_c_b, y_c_b = new_hist(x_data, y_data, d_b_k)
+            bin_center = [x_c_b, y_c_b]
             # Get new density profile.
-            radii_k, ring_dens_k, poisson_error = gdp(hist, x_c_b, y_c_b,
-                d_b_k)
+            radii_k, ring_dens_k, poisson_error = gdp(hist, bin_center, d_b_k)
 
         i += 1
 

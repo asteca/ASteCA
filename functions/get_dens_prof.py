@@ -5,7 +5,7 @@
 import math
 
 
-def get_dens_prof(hist_2d, x_c_b, y_c_b, width_bin):
+def get_dens_prof(hist_2d, bin_center, bin_width):
     """
     Calculate the density profile by counting the number of stars in the center
     bin first (r aprox width_bin/2 px), then moving to the 8 adyacent bins
@@ -17,6 +17,8 @@ def get_dens_prof(hist_2d, x_c_b, y_c_b, width_bin):
     Dividing the number of stars in each "square ring" by this area, we get all
     the "ring densities" for those approximate values of r.
     """
+
+    x_c_b, y_c_b = bin_center
 
     # Initialize lists.
     radii, ring_density, poisson_error = [], [], []
@@ -62,7 +64,7 @@ def get_dens_prof(hist_2d, x_c_b, y_c_b, width_bin):
         bin_count = 1 if bin_count == 0 else bin_count
         # The number of bins times the area of each bin gives the area of
         # this square ring.
-        area = bin_count * (width_bin ** 2)
+        area = bin_count * (bin_width ** 2)
 
         # Calculate density corresponding to "square ring" i
         ring_density.append(ring_count / area)
@@ -71,6 +73,6 @@ def get_dens_prof(hist_2d, x_c_b, y_c_b, width_bin):
 
         # Store values for radii to go with the densities obtained above
         # and stored in 'ring_density'
-        radii.append(width_bin / 2. + (width_bin * i))
+        radii.append(bin_width / 2. + (bin_width * i))
 
     return radii, ring_density, poisson_error

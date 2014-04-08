@@ -78,15 +78,14 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
     # Get cluster's center values and errors, filtered 2D hist, non-filtered
     # 2D hist, x,y bin centers and width of each bin
     # used
-    center_params = g_c(x_data, y_data, mag_data, gc_params, mode, semi_return)
-    # Unpack list.
-    center_cl, bin_list, center_coords = center_params[:3]
-    bin_width = bin_list[0]
-    h_not_filt, x_center_bin, y_center_bin, xedges_min_db, yedges_min_db =\
-    center_params[4:9]
+    center_params = g_c(x_data, y_data, gc_params, mode, semi_return)
+    # Unpack values from list.
+    bin_width, h_not_filt, hist_xyedges, bin_center = center_params[0][0], \
+    center_params[1], center_params[2], center_params[4]
+    center_cl = [center_params[5][0][0], center_params[5][0][1]]
 
     # Get density profile
-    rdp_params = gdp(h_not_filt, x_center_bin[0], y_center_bin[0], bin_width)
+    rdp_params = gdp(h_not_filt, bin_center, bin_width)
     radii, ring_density = rdp_params[:2]
     print 'Density profile calculated.'
 
@@ -125,13 +124,13 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
 
     # Obtain manual 2D histogram for the field with star's values attached
     # to each bin.
-    H_manual = mh(phot_data, xedges_min_db, yedges_min_db)
+    H_manual = mh(phot_data, hist_xyedges)
     print 'Manual 2D histogram obtained.'
 
     # Get cluster + field regions around the cluster's center.
-    flag_area_stronger, cluster_region, field_region = \
-    g_r(x_center_bin[0], y_center_bin[0], bin_width, h_not_filt, clust_rad,
-        H_manual, stars_in, stars_out, gr_params)
+    flag_area_stronger, cluster_region, field_region = g_r(bin_center,
+        bin_width, h_not_filt, clust_rad, H_manual, stars_in, stars_out,
+        gr_params)
     print 'Cluster + field stars regions obtained (%d).' % len(field_region)
 
     # Calculate integrated magnitude.
@@ -288,7 +287,9 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
         # Call main function for this cluster.
         ocaat_main(f_indx, sub_dir, out_file_name, gip_params)
     except Exception, err:
+        import traceback
         print 'FATAL: %s could not be processed. ' % dir_files[1][f_indx][:-4]
         print 'Error:', str(err), '\n'
+        print traceback.format_exc()
 
 print 'Full iteration completed.'
