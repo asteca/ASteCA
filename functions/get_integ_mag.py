@@ -94,7 +94,11 @@ def integ_mag(center_cl, clust_rad, cluster_region, field_region,
         fl_reg_col[0] = np.linspace(min(fl_reg_c_2[0]), max(fl_reg_c_2[0]), 200)
         fl_reg_col[1] = np.interp(fl_reg_col[0], fl_reg_c_2[0], fl_reg_c_2[1])
 
-        integ_mag = min(cl_reg_mag[1]) - min(fl_reg_mag[1])
+        # Obtain integrated magnitude of clean cluster region, ie: substracting
+        # the field contribution.
+        integ_mag = -2.5 * np.log10(1 - 10 ** ((min(fl_reg_mag[1]) -
+        min(cl_reg_mag[1])) / -2.5)) + min(cl_reg_mag[1])
+
         integ_col = min(cl_reg_col[1]) - min(fl_reg_col[1])
     else:
         # Pass dummy lists.

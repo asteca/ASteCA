@@ -655,11 +655,11 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
             max(max(cl_reg_mag[0]), max(fl_reg_mag[0])) + 0.2
         y_min, y_max = max(max(cl_reg_mag[1]), max(fl_reg_mag[1])) + 0.2,\
             min(min(cl_reg_mag[1]), min(fl_reg_mag[1])) - 0.2
-        min_fl_mag = min(fl_reg_mag[1])
+        #min_fl_mag = min(fl_reg_mag[1])
     else:
         x_min, x_max = min(cl_reg_mag[0]) - 0.2, max(cl_reg_mag[0]) + 0.2
         y_min, y_max = max(cl_reg_mag[1]) + 0.2, min(cl_reg_mag[1]) - 0.2
-        min_fl_mag = 0.
+        #min_fl_mag = 0.
     plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
     ax13.set_xlabel('$' + y_ax + '$', fontsize=18)
@@ -667,18 +667,22 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     ax13.minorticks_on()
     ax13.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
     # Text.
-    text1 = '$' + y_ax + '^{*}_{cl,max}=%.2f$' % (min(cl_reg_mag[1]))
-    text2 = '$' + y_ax + '^{*}_{fl,max}=%.2f$' % (min_fl_mag)
+    text1 = '$' + y_ax + '^{*}_{cl+fl}$'
+    text2 = '$' + y_ax + '^{*}_{fl}$'
+    text3 = '$' + y_ax + '^{*}_{cl} = %0.2f$' % integ_mag
     # Completeness maximum value.
     # completeness = [max_mag, bin_edges, max_indx, comp_perc]
-    bin_edges, max_indx = completeness[1], completeness[2]
-    mag_peak = bin_edges[max_indx]
-    ax13.vlines(x=mag_peak, ymin=y_min, ymax=y_max, color='g',
-           linestyles='dashed', lw=2., zorder=3)
-    # Cluster integrated magnitude.
+    #bin_edges, max_indx = completeness[1], completeness[2]
+    #mag_peak = bin_edges[max_indx]
+    #ax13.vlines(x=mag_peak, ymin=y_min, ymax=y_max, color='g',
+           #linestyles='dashed', lw=2., zorder=3)
+    # Cluster + field integrated magnitude curve.
     plt.plot(cl_reg_mag[0], cl_reg_mag[1], 'r-', lw=1., label=text1)
-    # Field average integrated magnitude.
+    # Field average integrated magnitude curve.
     plt.plot(fl_reg_mag[0], fl_reg_mag[1], 'b-', lw=1., label=text2)
+    # Cluster integrated magnitude value.
+    ax13.hlines(y=integ_mag, xmin=x_min, xmax=x_max, color='g',
+               linestyles='dashed', lw=2., label=text3)
 
     # Color integrated magnitude.
     tempax = ax13.twinx()
@@ -689,20 +693,20 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
             max(max(cl_reg_col[0]), max(fl_reg_col[0])) + 0.2
         y_min, y_max = max(max(cl_reg_col[1]), max(fl_reg_col[1])) + 0.2,\
             min(min(cl_reg_col[1]), min(fl_reg_col[1])) - 0.2
-        min_fl_col = min(fl_reg_col[1])
+        #min_fl_col = min(fl_reg_col[1])
     else:
         x_min, x_max = min(cl_reg_col[0]) - 0.2, max(cl_reg_col[0]) + 0.2
         y_min, y_max = max(cl_reg_col[1]) + 0.2, min(cl_reg_col[1]) - 0.2
-        min_fl_col = 0.
+        #min_fl_col = 0.
     ax132.set_xlabel('$' + x_ax + '$', fontsize=14)
     tempax.set_ylabel('$' + x_ax + '^*$', fontsize=14, rotation=90)
     # Text.
-    text1 = '$' + x_ax + '^{*}_{cl,max}=%.2f$' % (min(cl_reg_col[1]))
-    text2 = '$' + x_ax + '^{*}_{fl,max}=%.2f$' % (min_fl_col)
+    text4 = '$' + x_ax + '^{*}_{cl+fl}$'
+    text5 = '$' + x_ax + '^{*}_{fl}$'
     # Cluster integrated magnitude.
-    plt.plot(cl_reg_col[0], cl_reg_col[1], 'r:', lw=2., label=text1)
+    plt.plot(cl_reg_col[0], cl_reg_col[1], 'r:', lw=2., label=text4)
     # Field average integrated magnitude.
-    plt.plot(fl_reg_col[0], fl_reg_col[1], 'b:', lw=2., label=text2)
+    plt.plot(fl_reg_col[0], fl_reg_col[1], 'b:', lw=2., label=text5)
     ax132.set(ylim=[y_min, y_max])
     # ask matplotlib for the plotted objects and their labels
     lines, labels = ax13.get_legend_handles_labels()
