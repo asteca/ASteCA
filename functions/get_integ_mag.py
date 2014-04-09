@@ -100,7 +100,7 @@ def integ_mag(center_cl, clust_rad, cluster_region, field_region,
             integ_mag = -2.5 * np.log10(1 - 10 ** ((min(fl_reg_mag[1]) -
             min(cl_reg_mag[1])) / -2.5)) + min(cl_reg_mag[1])
         else:
-            # If the field is righter than the cluster.
+            # If the field is brighter than the cluster.
             integ_mag = -99.
 
         integ_col = min(cl_reg_col[1]) - min(fl_reg_col[1])
