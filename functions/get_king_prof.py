@@ -59,16 +59,19 @@ def get_king_profile(clust_rad, backg_value, radii, ring_density, delta_xy,
     # Initial guesses for fit: r_c, r_t, max_dens.
     guess = (r_t / 2., r_t, max_dens)
 
-    # Skip first radius value if it is smaller than the second value.
+    # Skip first radius value if it is smaller than the second value. This
+    # makes it easier for the KP to converge.
     if ring_density[0] > ring_density[1]:
         radii_k, ring_dens_k = radii, ring_density
     else:
         radii_k, ring_dens_k = radii[1:], ring_density[1:]
 
     flag_king_no_conver = True  # Flag that indicates no convergence.
-    i, d_b_k = 1, width_bin
+    # i is the initial bin width in px that will be used if the KP doesn't
+    # converge with the width_bin value.
+    i, d_b_k = 10, width_bin
     # Iterate increasing the bin width until either King profile converges or
-    # a value of twice the original bin width is reached.
+    # the original bin width is reached.
     while flag_king_no_conver is True and i < width_bin:
 
         try:
@@ -91,7 +94,7 @@ def get_king_profile(clust_rad, backg_value, radii, ring_density, delta_xy,
         if flag_king_no_conver is True:
 
             # Increase bin width by 1 px.
-            d_b_k = i + width_bin
+            d_b_k = i
             # Obtain 2D histo with new bin width.
             hist, x_c_b, y_c_b = new_hist(x_data, y_data, d_b_k)
             bin_center = [x_c_b, y_c_b]
