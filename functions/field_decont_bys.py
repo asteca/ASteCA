@@ -14,6 +14,7 @@ def likelihood(region, cl_reg_rad):
 
     # Store cleaned cluster/field region and full cluster_region as arrays.
     cl_fl_arr = np.array(region)  # Cleaned cluster/field region.
+    N = len(region)  # Number of stars in this region.
     cl_full_arr = np.array(cl_reg_rad)  # Full cluster region.
     clust_stars_probs = []
 
@@ -33,6 +34,7 @@ def likelihood(region, cl_reg_rad):
     Q[6] = np.square(Q[6])
     Q[4] = np.square(Q[4])
 
+    # For every star in the full cluster region.
     for star in P:
         # Squares sum of errors.
         e_col_2 = np.maximum(star[6] + Q[6], epsilon)
@@ -42,9 +44,13 @@ def likelihood(region, cl_reg_rad):
         B = np.square(star[5] - Q[5]) / e_col_2
         C = np.square(star[3] - Q[3]) / e_mag_2
         synth_stars = np.exp(-0.5 * (B + C)) / np.sqrt(e_col_2 * e_mag_2)
-        # The final prob for this cluster star is the sum over all region
-        # stars. Use 1e-10 to avoid nan and inf values.
-        clust_stars_probs.append(max(synth_stars.sum(), epsilon))
+
+        # The likelihood for this cluster star is the sum over all region
+        # stars.
+        likelihood = synth_stars.sum() / N
+
+        # Use 1e-10 to avoid nan and inf values.
+        clust_stars_probs.append(max(likelihood, epsilon))
 
     return clust_stars_probs
 
@@ -123,7 +129,7 @@ def field_decont_bys(flag_area_stronger, cluster_region, field_region,
     if mode == 'auto' or mode == 'manual':
 
         if mode == 'auto':
-            # Set total number of runs 1000.
+            # Set total number of runs.
             runs = 1000
         elif mode == 'manual':
             # Take values from input data file.
