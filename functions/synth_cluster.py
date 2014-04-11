@@ -180,7 +180,7 @@ def synth_clust(err_lst, completeness, sc_params, isochrone, params, sys_sel):
             # level, then apply the removal of stars. Otherwise, skip it.
             if max(isoch_m_d[1]) > completeness[1][completeness[2]]:
 
-                # Get histogram. completeness[2] = bin_edges of the observed
+                # Get histogram. completeness[1] = bin_edges of the observed
                 # region histogram.
                 synth_mag_hist, bin_edges = np.histogram(isoch_m_d[1],
                                                          completeness[1])
