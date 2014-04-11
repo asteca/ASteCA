@@ -30,7 +30,6 @@ from functions.get_p_value import get_pval as g_pv
 from functions.get_qqplot import qqplot as g_qq
 from functions.get_completeness import mag_completeness as m_c
 from functions.get_isoch_params import ip
-from functions.get_reduced_rad import red_rad as grr
 from functions.best_fit_synth_cl import best_fit as bfsc
 from functions.make_plots import make_plots as mp
 from functions.add_data_output import add_data_output as a_d_o
@@ -170,10 +169,6 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
     memb_prob_avrg_sort = fdb(flag_area_stronger, cluster_region, field_region,
                             col1_data, mag_data, center_cl, clust_rad,
                             clust_name, sub_dir, da_params)
-
-    # Call function to reduce the radius value until CI <= 0.5.
-    memb_prob_avrg_sort = grr(flag_red_rad, backg_value, clust_rad,
-        cont_index, center_cl, rdp_params, memb_prob_avrg_sort)
 
     # Create data file with membership probabilities.
     c_m_f(output_dir, sub_dir, clust_name, memb_prob_avrg_sort)
