@@ -87,8 +87,6 @@ def get_in_params(mypath):
                     bf_flag = True if reader[1] in true_lst else False
                     best_fit_algor = str(reader[2])
                     N_b = int(reader[3])
-                elif reader[0] == 'RR':
-                    flag_red_rad = True if reader[1] in true_lst else False
                 elif reader[0] == 'PS_m':
                     m_rs = map(float, reader[1:])
                 elif reader[0] == 'PS_a':
@@ -167,4 +165,4 @@ def get_in_params(mypath):
 
     return mode, in_dirs, gd_params, gc_params, cr_params, \
     er_params, gr_params, pv_params, da_params, ps_params, bf_params, \
-    flag_red_rad, sc_params, ga_params, pl_params, flag_move_file, axes_params
+    sc_params, ga_params, pl_params, flag_move_file, axes_params

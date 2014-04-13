@@ -46,7 +46,7 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
     start = time.time()
 
     mode, in_dirs, gd_params, gc_params, cr_params, er_params,\
-    gr_params, pv_params, da_params, ps_params, bf_params, flag_red_rad, \
+    gr_params, pv_params, da_params, ps_params, bf_params, \
     sc_params, ga_params, pl_params, flag_move_file, axes_params = gip_params
     input_dir, output_dir, done_dir = in_dirs
 
