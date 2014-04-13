@@ -21,8 +21,6 @@ def mag_completeness(mag_data):
     mag_hist, bin_edges = np.histogram(mag_data, bins)
     # Index of the bin with the maximum number of stars.
     max_indx = mag_hist.argmax(axis=0)
-    # Value of the magnitude where the peak starts.
-#    mag_peak = bin_edges[max_indx]
     # Total number of stars beyond the peak bin (included).
     total = sum(mag_hist[max_indx:])
     # Get percentages per interval beyond the maximum interval (included).
