@@ -21,7 +21,7 @@ def get_memb_num(backg_value, clust_rad, rdp_params, bin_width):
 
     bins_in_rings = rdp_params[3]
     # Index of point in RDP closer to the calculated cluster radius.
-    sq_indx = int(round((clust_rad - (bin_width / 2.)) / bin_width + 1, 0))
+    sq_indx = int(round(((clust_rad - (bin_width / 2.)) / bin_width) + 1))
 
     # Count the total number of stars inside the cluster's radius by
     # summing stars inside the bins around the center.

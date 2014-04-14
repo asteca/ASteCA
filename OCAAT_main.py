@@ -97,12 +97,6 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
         rdp_params, semi_return, mode)
     clust_rad = radius_params[0]
 
-    # Get King profiles based on the density profiles.
-    delta_xy = max((max(x_data) - min(x_data)), (max(y_data) - min(y_data)))
-    k_prof, k_pr_err, d_b_k, n_c_k, flag_king_no_conver = \
-    gkp(clust_rad, backg_value, radii, ring_density, delta_xy, x_data, y_data,
-        bin_width)
-
     # Get approximate number of cluster's members.
     n_c, flag_num_memb_low, a_clust, n_clust = g_m_n(backg_value, clust_rad,
         rdp_params, bin_width)
@@ -111,6 +105,12 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
     # Get contamination index.
     cont_index = g_c_i(backg_value, a_clust, n_clust)
     print 'Contamination index obtained (%0.2f).' % cont_index
+
+    # Get King profiles based on the density profiles.
+    delta_xy = max((max(x_data) - min(x_data)), (max(y_data) - min(y_data)))
+    k_prof, k_pr_err, d_b_k, n_c_k, flag_king_no_conver = \
+    gkp(clust_rad, backg_value, radii, ring_density, delta_xy, x_data, y_data,
+        bin_width)
 
     # Accept and reject stars based on their errors.
     popt_mag, popt_col1, acpt_stars, rjct_stars, err_plot, rjct_errors_fit = \

@@ -5,18 +5,13 @@ Created on Thu Mar 20 2014
 @author: gabriel
 """
 
-from scipy import stats
-
 
 def memb_mu(memb_prob_avrg_sort, flag_memb_mu):
     '''
-    Use only those stars in the upper half of the gaussian fit to the
-    distribution of membership probabilities.
+    Discard stars until a CI < 0.5 is achieved.
     '''
 
     prob_data = [star[7] for star in memb_prob_avrg_sort]
-    # Best Gaussian fit of data.
-    (mu, sigma) = stats.norm.fit(prob_data)
 
     memb_prob_avrg_sort2 = []
     if flag_memb_mu is True:
