@@ -769,7 +769,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     if not(flag_area_stronger):
         ax16 = plt.subplot(gs1[8:10, 0:2])
         plt.xlim(0., 1.)
-        plt.xlabel('cluster membership prob', fontsize=12)
+        plt.xlabel('membership prob', fontsize=12)
         ax16.minorticks_on()
         ax16.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
         prob_data = [star[7] for star in memb_prob_avrg_sort]
@@ -1104,7 +1104,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     if plot_colorbar is True:
         import matplotlib
         # Position and dimensions relative to the axes.
-        x0, y0, width, height = [0.6, 0.93, 0.2, 0.04]
+        x0, y0, width, height = [0.6, 0.85, 0.2, 0.04]
         # Transform them to get the ABSOLUTE POSITION AND DIMENSIONS
         Bbox = matplotlib.transforms.Bbox.from_bounds(x0, y0, width, height)
         trans = ax18.transAxes + fig.transFigure.inverted()
