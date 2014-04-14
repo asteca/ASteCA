@@ -61,7 +61,7 @@ def integ_mag(center_cl, clust_rad, cluster_region, field_region,
             # Append magnitude.
             cl_region_r[0].append(star[3])
             # Append color.
-            cl_region_r[1].append(star[5])
+            cl_region_r[1].append(star[5] + star[3])
 
     cl_reg_mag = calc_integ_mag(cl_region_r[0])
     cl_reg_col = calc_integ_mag(cl_region_r[1])
@@ -75,7 +75,8 @@ def integ_mag(center_cl, clust_rad, cluster_region, field_region,
             fl_reg_m_1[0].extend(fl_reg_m_0[0])
             fl_reg_m_1[1].extend(fl_reg_m_0[1])
             # For color values.
-            fl_reg_c_0 = calc_integ_mag(zip(*f_reg)[5])
+            fl_reg_c_0 = calc_integ_mag(np.asarray(zip(*f_reg)[5]) +
+                np.asarray(zip(*f_reg)[3]))
             fl_reg_c_1[0].extend(fl_reg_c_0[0])
             fl_reg_c_1[1].extend(fl_reg_c_0[1])
 
