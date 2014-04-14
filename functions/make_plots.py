@@ -649,21 +649,27 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     cl_reg_mag, fl_reg_mag, integ_mag, cl_reg_col, fl_reg_col, integ_col =\
     integr_return
     ax13 = plt.subplot(gs1[6:8, 2:4])
-    # If lists are not empty.
-    if fl_reg_mag[0].any():
-        x_min, x_max = min(min(cl_reg_mag[0]), min(fl_reg_mag[0])) - 0.2,\
-            max(max(cl_reg_mag[0]), max(fl_reg_mag[0])) + 0.2
-        y_min, y_max = max(max(cl_reg_mag[1]), max(fl_reg_mag[1])) + 0.2,\
-            min(min(cl_reg_mag[1]), min(fl_reg_mag[1])) - 0.2
-        #min_fl_mag = min(fl_reg_mag[1])
+    # If field lists are not empty.
+    if fl_reg_mag[0].any() and fl_reg_col[0].any():
+        x_min = min(min(cl_reg_mag[0]), min(fl_reg_mag[0]),
+            min(cl_reg_col[0]), min(fl_reg_col[0])) - 0.2
+        x_max = max(max(cl_reg_mag[0]), max(fl_reg_mag[0]),
+            max(cl_reg_col[0]), max(fl_reg_col[0])) + 0.2
+        y_min = max(max(cl_reg_mag[1]), max(fl_reg_mag[1]),
+            max(cl_reg_col[1]), max(fl_reg_col[1])) + 0.2
+        y_max = min(min(cl_reg_mag[1]), min(fl_reg_mag[1]),
+            min(cl_reg_col[1]), min(fl_reg_col[1])) - 0.2
     else:
-        x_min, x_max = min(cl_reg_mag[0]) - 0.2, max(cl_reg_mag[0]) + 0.2
-        y_min, y_max = max(cl_reg_mag[1]) + 0.2, min(cl_reg_mag[1]) - 0.2
-        #min_fl_mag = 0.
+        x_min, x_max = min(min(cl_reg_mag[0]), min(cl_reg_col[0])) - 0.2,\
+        max(max(cl_reg_mag[0]), max(cl_reg_col[0])) + 0.2
+        y_min, y_max = max(max(cl_reg_mag[1]), max(cl_reg_col[1])) + 0.2,\
+        min(min(cl_reg_mag[1]), min(cl_reg_col[1])) - 0.2
     plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
-    ax13.set_xlabel('$' + y_ax + '$', fontsize=18)
-    ax13.set_ylabel('$' + y_ax + '^*$', fontsize=18)
+    #ax13.set_xlabel('$' + y_ax + '$', fontsize=18)
+    #ax13.set_ylabel('$' + y_ax + '^*$', fontsize=18)
+    ax13.set_xlabel('$mag$', fontsize=18)
+    ax13.set_ylabel('$mag^*$', fontsize=18)
     #ax13.minorticks_on()
     ax13.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
     # Text.
