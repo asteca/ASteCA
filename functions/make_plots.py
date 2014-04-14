@@ -669,79 +669,35 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
         min(min(cl_reg_mag[1]), min(cl_reg_col[1])) - 0.2
     plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
-    #ax13.set_xlabel('$' + y_ax + '$', fontsize=18)
-    #ax13.set_ylabel('$' + y_ax + '^*$', fontsize=18)
     ax13.set_xlabel('$mag$', fontsize=18)
     ax13.set_ylabel('$mag^*$', fontsize=18)
-    #ax13.minorticks_on()
+    ax13.minorticks_on()
     ax13.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
     # Text.
     text1 = '$' + y_ax + '^{*}_{cl+fl}$'
     text2 = '$' + y_ax + '^{*}_{fl}$'
-    text3 = '$' + y_ax + '^{*}_{cl} = %0.2f$' % integ_mag
     if sys_select == 'UBVI':
         x_ax0 = 'B'
     elif sys_select == 'WASH':
         x_ax0 = 'C'
-    text4 = '$' + x_ax0 + '^{*}_{cl+fl}$'
-    text5 = '$' + x_ax0 + '^{*}_{fl}$'
-    text6 = '$' + x_ax0 + '^{*}_{cl} = %0.2f$' % integ_col
-    # Completeness maximum value.
-    # completeness = [max_mag, bin_edges, max_indx, comp_perc]
-    #bin_edges, max_indx = completeness[1], completeness[2]
-    #mag_peak = bin_edges[max_indx]
-    #ax13.vlines(x=mag_peak, ymin=y_min, ymax=y_max, color='g',
-           #linestyles='dashed', lw=2., zorder=3)
+    text3 = '$' + x_ax0 + '^{*}_{cl+fl}$'
+    text4 = '$' + x_ax0 + '^{*}_{fl}$'
     # Cluster + field integrated magnitude curve.
     plt.plot(cl_reg_mag[0], cl_reg_mag[1], 'r-', lw=1., label=text1)
     # Field average integrated magnitude curve.
     plt.plot(fl_reg_mag[0], fl_reg_mag[1], 'b-', lw=1., label=text2)
-    # Cluster integrated magnitude value.
-    plt.hlines(y=integ_mag, xmin=x_min, xmax=x_max, color='g',
-               linestyles='dashed', lw=2., label=text3)
     # Cluster integrated magnitude.
-    plt.plot(cl_reg_col[0], cl_reg_col[1], 'r:', lw=2., label=text4)
+    plt.plot(cl_reg_col[0], cl_reg_col[1], 'r:', lw=2., label=text3)
     # Field average integrated magnitude.
-    plt.plot(fl_reg_col[0], fl_reg_col[1], 'b:', lw=2., label=text5)
-    # Cluster integrated second magnitude value.
-    plt.hlines(y=integ_col, xmin=x_min, xmax=x_max, color='k',
-               linestyles='dashed', lw=2., label=text6)
-    # ask matplotlib for the plotted objects and their labels
+    plt.plot(fl_reg_col[0], fl_reg_col[1], 'b:', lw=2., label=text4)
+    text = '$(' + x_ax0 + '^{*} -' + y_ax + '^{*} )_{cl} = %0.2f$' % \
+    (integ_col - integ_mag)
+    plt.text(0.3, 0.04, text, transform=ax13.transAxes,
+         bbox=dict(facecolor='white', alpha=0.6), fontsize=12)
     lines, labels = ax13.get_legend_handles_labels()
     leg = ax13.legend(lines, labels, loc='lower right', numpoints=1,
         fontsize=11)
     leg.get_frame().set_alpha(0.75)
-
-    ## Color integrated magnitude.
-    #tempax = ax13.twinx()
-    #ax132 = tempax.twiny()
-    ## If lists are not empty.
-    #if fl_reg_col[0].any():
-        #x_min, x_max = min(min(cl_reg_col[0]), min(fl_reg_col[0])) - 0.2,\
-            #max(max(cl_reg_col[0]), max(fl_reg_col[0])) + 0.2
-        #y_min, y_max = max(max(cl_reg_col[1]), max(fl_reg_col[1])) + 0.2,\
-            #min(min(cl_reg_col[1]), min(fl_reg_col[1])) - 0.2
-        ##min_fl_col = min(fl_reg_col[1])
-    #else:
-        #x_min, x_max = min(cl_reg_col[0]) - 0.2, max(cl_reg_col[0]) + 0.2
-        #y_min, y_max = max(cl_reg_col[1]) + 0.2, min(cl_reg_col[1]) - 0.2
-        ##min_fl_col = 0.
-    #ax132.set_xlabel('$' + x_ax + '$', fontsize=14)
-    #tempax.set_ylabel('$' + x_ax + '^*$', fontsize=14, rotation=90)
-    ## Text.
-    #text4 = '$' + x_ax + '^{*}_{cl+fl}$'
-    #text5 = '$' + x_ax + '^{*}_{fl}$'
-    ## Cluster integrated magnitude.
-    #plt.plot(cl_reg_col[0], cl_reg_col[1], 'r:', lw=2., label=text4)
-    ## Field average integrated magnitude.
-    #plt.plot(fl_reg_col[0], fl_reg_col[1], 'b:', lw=2., label=text5)
-    #ax132.set(ylim=[y_min, y_max])
-    ## ask matplotlib for the plotted objects and their labels
-    #lines, labels = ax13.get_legend_handles_labels()
-    #lines2, labels2 = ax132.get_legend_handles_labels()
-    #leg = ax132.legend(lines + lines2, labels + labels2, loc='lower right',
-        #numpoints=1, fontsize=12)
-    #leg.get_frame().set_alpha(0.75)
 
     # Distribution of p_values.
     # pval_test_params[-1] is the flag that indicates if the block was

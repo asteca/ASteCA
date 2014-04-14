@@ -105,7 +105,6 @@ def integ_mag(center_cl, clust_rad, cluster_region, field_region,
             integ_mag = -99.
 
         # Obtain integrated second magnitude of clean cluster region.
-        print min(fl_reg_col[1]), min(cl_reg_col[1])
         if min(fl_reg_col[1]) > min(cl_reg_col[1]):
             integ_col = -2.5 * np.log10(1 - 10 ** ((min(fl_reg_col[1]) -
             min(cl_reg_col[1])) / -2.5)) + min(cl_reg_col[1])
