@@ -103,6 +103,15 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
     gkp(clust_rad, backg_value, radii, ring_density, delta_xy, x_data, y_data,
         bin_width)
 
+    # Get approximate number of cluster's members.
+    n_c, flag_num_memb_low, a_clust, n_clust = g_m_n(backg_value, clust_rad,
+        rdp_params, bin_width)
+    print 'Approximate number of members in cluster obtained (%d).' % (n_c)
+
+    # Get contamination index.
+    cont_index = g_c_i(backg_value, a_clust, n_clust)
+    print 'Contamination index obtained (%0.2f).' % cont_index
+
     # Accept and reject stars based on their errors.
     popt_mag, popt_col1, acpt_stars, rjct_stars, err_plot, rjct_errors_fit = \
     ear(phot_data, axes_params, er_params, mode, semi_return)
@@ -111,15 +120,6 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
     stars_in, stars_out, stars_in_rjct, stars_out_rjct = gio(center_cl,
         clust_rad, acpt_stars, rjct_stars)
     print "Stars separated in/out of cluster's boundaries."
-
-    # Get approximate number of cluster's members.
-    n_c, flag_num_memb_low = g_m_n(backg_value, clust_rad, stars_in,
-        stars_in_rjct)
-    print 'Approximate number of members in cluster obtained (%d).' % (n_c)
-
-    # Get contamination index.
-    cont_index = g_c_i(backg_value, rdp_params, clust_rad)
-    print 'Contamination index obtained (%0.2f).' % cont_index
 
     # Obtain manual 2D histogram for the field with star's values attached
     # to each bin.

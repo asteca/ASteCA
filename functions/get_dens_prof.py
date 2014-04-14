@@ -29,6 +29,7 @@ def get_dens_prof(hist_2d, bin_center, bin_width):
     # Number of square rings.
     sq_rings = int(bins * 0.5)
 
+    bins_in_rings = []
     # Iterate through all the "square rings".
     for i in range(sq_rings):
 
@@ -59,6 +60,8 @@ def get_dens_prof(hist_2d, bin_center, bin_width):
                     ring_count = ring_count + st_in_bin
                     bin_count += 1
 
+        # Store bin and star counts in each square ring.
+        bins_in_rings.append([bin_count, ring_count])
         # If no stars are inside this square ring, set value to 1 to avoid a
         # division by zero.
         bin_count = 1 if bin_count == 0 else bin_count
@@ -75,4 +78,4 @@ def get_dens_prof(hist_2d, bin_center, bin_width):
         # and stored in 'ring_density'
         radii.append(bin_width / 2. + (bin_width * i))
 
-    return radii, ring_density, poisson_error
+    return radii, ring_density, poisson_error, bins_in_rings

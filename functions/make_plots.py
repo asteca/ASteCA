@@ -76,7 +76,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     center_params[6], center_params[7]
     center_cl = [center_params[5][0][0], center_params[5][0][1]]
     # RDP params.
-    radii, ring_density, poisson_error = rdp_params
+    radii, ring_density, poisson_error = rdp_params[:3]
     # Parameters from get_radius function.
     clust_rad, delta_backg, delta_percentage = radius_params
     # Error parameters.

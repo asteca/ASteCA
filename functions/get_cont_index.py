@@ -6,7 +6,7 @@ Created on Thu Nov 21 15:51:34 2013
 """
 
 
-def cont_indx(backg_val, rdp_params, clust_rad):
+def cont_indx(backg_val, a_clust, n_clust):
     '''
     Calculate the contamination index value. This parameter is defined as the
     ratio of field stars density over density of stars in the cluster region.
@@ -19,20 +19,20 @@ def cont_indx(backg_val, rdp_params, clust_rad):
     sign).
     '''
 
-    radii, ring_density = rdp_params[:2]
-    num_stars = 0
-    for indx, dens in enumerate(ring_density):
-        # Count stars inside cluster region (ie: up to clust_rad)
-        if radii[indx] <= clust_rad:
-            # Area of previous square.
-            prev_area = (2 * radii[indx - 1]) ** 2 if indx != 0 else 0.
-            # Area of square ring.
-            sq_rng_area = (2 * radii[indx]) ** 2 - prev_area
-            # Number of stars in the square ring.
-            num_stars = num_stars + (dens * sq_rng_area)
+    #radii, ring_density = rdp_params[:2]
+    #num_stars = 0
+    #for indx, dens in enumerate(ring_density):
+        ## Count stars inside cluster region (ie: up to clust_rad)
+        #if radii[indx] <= clust_rad:
+            ## Area of previous square.
+            #prev_area = (2 * radii[indx - 1]) ** 2 if indx != 0 else 0.
+            ## Area of square ring.
+            #sq_rng_area = (2 * radii[indx]) ** 2 - prev_area
+            ## Number of stars in the square ring.
+            #num_stars = num_stars + (dens * sq_rng_area)
 
     # Star density in the cluster region.
-    cl_dens = num_stars / (2 * clust_rad) ** 2
+    cl_dens = n_clust / a_clust
 
     # Final contamination index.
     cont_index = backg_val / cl_dens
