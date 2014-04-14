@@ -113,6 +113,8 @@ def integ_mag(center_cl, clust_rad, cluster_region, field_region,
             integ_col = -99.
 
     else:
+        print 'WARNING: no field regions defined. Integrated magnitude is not'
+        print 'cleaned from field star contamination.'
         # Pass dummy lists.
         fl_reg_mag, fl_reg_col = [np.array([]), np.array([])], \
         [np.array([]), np.array([])]

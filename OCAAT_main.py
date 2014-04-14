@@ -135,7 +135,8 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
     # Calculate integrated magnitude.
     integr_return = g_i_m(center_cl, clust_rad, cluster_region, field_region,
         flag_area_stronger)
-    print 'Integrated magnitude/color distribution obtained.'
+    print 'Integrated color magnitude distribution obtained (%0.2f).' % \
+        (integr_return[5] - integr_return[2])
 
     # Check if test is to be applied or skipped.
     flag_pval_test = pv_params[0]

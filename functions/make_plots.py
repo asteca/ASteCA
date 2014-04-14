@@ -673,23 +673,25 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     ax13.set_ylabel('$mag^*$', fontsize=18)
     ax13.minorticks_on()
     ax13.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
-    # Text.
-    text1 = '$' + y_ax + '^{*}_{cl+fl}$'
-    text2 = '$' + y_ax + '^{*}_{fl}$'
+    # System used.
     if sys_select == 'UBVI':
         x_ax0 = 'B'
     elif sys_select == 'WASH':
         x_ax0 = 'C'
-    text3 = '$' + x_ax0 + '^{*}_{cl+fl}$'
-    text4 = '$' + x_ax0 + '^{*}_{fl}$'
+    text1 = '$' + y_ax + '^{*}_{cl+fl}$'
+    text2 = '$' + x_ax0 + '^{*}_{cl+fl}$'
     # Cluster + field integrated magnitude curve.
     plt.plot(cl_reg_mag[0], cl_reg_mag[1], 'r-', lw=1., label=text1)
-    # Field average integrated magnitude curve.
-    plt.plot(fl_reg_mag[0], fl_reg_mag[1], 'b-', lw=1., label=text2)
     # Cluster integrated magnitude.
-    plt.plot(cl_reg_col[0], cl_reg_col[1], 'r:', lw=2., label=text3)
-    # Field average integrated magnitude.
-    plt.plot(fl_reg_col[0], fl_reg_col[1], 'b:', lw=2., label=text4)
+    plt.plot(cl_reg_col[0], cl_reg_col[1], 'r:', lw=2., label=text2)
+    # Check if field regiones were defined.
+    if flag_area_stronger is not True:
+        text3 = '$' + y_ax + '^{*}_{fl}$'
+        text4 = '$' + x_ax0 + '^{*}_{fl}$'
+        # Field average integrated magnitude curve.
+        plt.plot(fl_reg_mag[0], fl_reg_mag[1], 'b-', lw=1., label=text3)
+        # Field average integrated magnitude.
+        plt.plot(fl_reg_col[0], fl_reg_col[1], 'b:', lw=2., label=text4)
     text = '$(' + x_ax0 + '^{*} -' + y_ax + '^{*} )_{cl} = %0.2f$' % \
     (integ_col - integ_mag)
     plt.text(0.3, 0.15, text, transform=ax13.transAxes,
