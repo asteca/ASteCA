@@ -169,5 +169,8 @@ def get_regions(bin_center, bin_width, histo, clust_rad, h_manual, stars_in,
             print 'WARNING: no field regions left after removal of those with \
 less than 4 stars.'
             flag_area_stronger = True
+    else:
+        print 'WARNING: number of field regions is 0. No field region defined.'
+        flag_area_stronger = True
 
     return flag_area_stronger, cluster_region, field_regions
