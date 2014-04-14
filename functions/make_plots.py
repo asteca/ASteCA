@@ -692,8 +692,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     plt.plot(fl_reg_col[0], fl_reg_col[1], 'b:', lw=2., label=text4)
     text = '$(' + x_ax0 + '^{*} -' + y_ax + '^{*} )_{cl} = %0.2f$' % \
     (integ_col - integ_mag)
-    plt.text(0.3, 0.04, text, transform=ax13.transAxes,
-         bbox=dict(facecolor='white', alpha=0.6), fontsize=12)
+    plt.text(0.3, 0.15, text, transform=ax13.transAxes,
+         bbox=dict(facecolor='white', alpha=0.75), fontsize=12)
     lines, labels = ax13.get_legend_handles_labels()
     leg = ax13.legend(lines, labels, loc='lower right', numpoints=1,
         fontsize=11)
@@ -753,7 +753,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     if not(flag_area_stronger):
         ax16 = plt.subplot(gs1[8:10, 0:2])
         plt.xlim(0., 1.)
-        plt.xlabel('membership prob', fontsize=12)
+        plt.xlabel('membership probability', fontsize=12)
         ax16.minorticks_on()
         ax16.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
         prob_data = [star[7] for star in memb_prob_avrg_sort]
@@ -764,10 +764,19 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
         plt.text(0.05, 0.92, text, transform=ax16.transAxes,
              bbox=dict(facecolor='white', alpha=0.85), fontsize=12)
         # Histogram of the data.
-        n, bins, patches = plt.hist(prob_data, 25, normed=1, color='green')
+        n, bins, patches = plt.hist(prob_data, 25, normed=1)
+        # Get bin centers.
+        bin_centers = 0.5 * (bins[:-1] + bins[1:])
+        # scale values to interval [0,1]
+        col = bin_centers - min(bin_centers)
+        col /= max(col)
+        cm = plt.cm.get_cmap('RdYlBu_r')
+        # Plot histo colored according to colormap.
+        for c, p in zip(col, patches):
+            plt.setp(p, 'facecolor', cm(c))
         # Best fit line.
         y = mlab.normpdf(bins, mu, sigma)
-        plt.plot(bins, y, 'r--', linewidth=2)
+        plt.plot(bins, y, 'g--', linewidth=3.5)
 
         # Finding chart of cluster region with decontamination algorithm
         # applied.
