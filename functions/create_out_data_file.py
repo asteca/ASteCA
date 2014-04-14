@@ -62,7 +62,7 @@ def create_out_data_file(output_dir):
 #      agreement, ie: the shapes of the KDEs are very different. Low values\n\
 #      of prob_cl and CCC imply that the overdensity has little chance of\n\
 #      being a true cluster.\n\
-# mag_int: Integrated magnitude value for all stars inside the cluster\n\
+# mag_int: Integrated color magnitude for all stars inside the cluster\n\
 #          radius, except those that were rejected due to large errors.\n\
 # met: Metallicity value (z) obtained via synthetic cluster fitting.\n\
 # e_m: Metallicity error.\n\

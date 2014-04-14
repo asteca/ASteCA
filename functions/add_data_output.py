@@ -21,7 +21,7 @@ def add_data_output(out_file_name, sub_dir, output_dir, clust_name,
     radius_params[-4:]
 
     # Get parameter from list.
-    integ_mag = integr_return[2]
+    integ_mag, integ_col = integr_return[2], integr_return[5]
 
     # Create list containing all the flags.
     flags_list = [flag_center_manual, flag_radius_manual, rjct_errors_fit,
@@ -48,7 +48,7 @@ def add_data_output(out_file_name, sub_dir, output_dir, clust_name,
         str('%0.f' % round(np.sqrt(k_pr_err[1][1]))),
         str(round(cont_index, 2)),
         str(int(n_c)), str(n_c_k), str('%0.2f' % prob_cl_kde),
-        str('%0.2f' % ccc), str('%0.2f' % integ_mag),
+        str('%0.2f' % ccc), str('%0.2f' % (integ_col - integ_mag)),
         str('%0.4f' % m), str('%0.4f' % e_m), str('%0.2f' % a),
         str('%0.2f' % e_a), str('%0.2f' % e), str('%0.2f' % e_e),
         str('%0.2f' % d), str('%0.2f' % e_d)]
