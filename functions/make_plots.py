@@ -67,6 +67,9 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     max(y_min_cmd, min(mag_data) - 0.5)
 
     # Unpack params.
+    # Selected system params.
+    sys_select = ps_params[1]
+    m_rs, a_rs, e_rs, d_rs = ps_params[3:]
     # Parameters from get_center function.
     bin_list, h_filter, bin_center, centers_kde, cent_stats, kde_pl = \
     center_params[0], center_params[3], center_params[4], center_params[5], \
@@ -81,6 +84,9 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     # Parameters from error fitting.
     bright_end, popt_umag, pol_mag, popt_ucol1, pol_col1, mag_val_left,\
     mag_val_right, col1_val_left, col1_val_right = err_plot
+    # Integrated magnitude distribution.
+    cl_reg_mag, fl_reg_mag, integ_mag, cl_reg_col, fl_reg_col, integ_col =\
+    integr_return
     # Best isochrone fit params.
     bf_flag, best_fit_algor, N_b = bf_params
     # Genetic algorithm params.
@@ -504,7 +510,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     plt.scatter(stars_acpt_temp[0], stars_acpt_temp[1], marker='o', c='k',
                 s=sz_pt, zorder=2)
 
-    # T1 magnitude error
+    # Magnitude error
     ax10 = plt.subplot(gs1[4, 6:8])
     #Set plot limits
     plt.xlim(min(mag_data) - 0.5, max(mag_data) + 0.5)
@@ -552,7 +558,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     plt.scatter(stars_acpt_temp[0], stars_acpt_temp[1], marker='o', c='k',
                 s=1, zorder=2)
 
-    # C-T1 color error
+    # Color error
     ax11 = plt.subplot(gs1[5, 6:8])
     #Set plot limits
     plt.xlim(min(mag_data) - 0.5, max(mag_data) + 0.5)
@@ -645,9 +651,6 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     # Set the alpha value of the legend.
     leg11.get_frame().set_alpha(0.7)
 
-    # Integrated magnitude distribution.
-    cl_reg_mag, fl_reg_mag, integ_mag, cl_reg_col, fl_reg_col, integ_col =\
-    integr_return
     ax13 = plt.subplot(gs1[6:8, 2:4])
     # If field lists are not empty.
     if fl_reg_mag[0].any() and fl_reg_col[0].any():
@@ -676,6 +679,13 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     text1 = '$' + y_ax + '^{*}_{cl+fl}$'
     text2 = '$' + y_ax + '^{*}_{fl}$'
     text3 = '$' + y_ax + '^{*}_{cl} = %0.2f$' % integ_mag
+    if sys_select == 'UBVI':
+        x_ax0 = 'B'
+    elif sys_select == 'WASH':
+        x_ax0 = 'C'
+    text4 = '$' + x_ax0 + '^{*}_{cl+fl}$'
+    text5 = '$' + x_ax0 + '^{*}_{fl}$'
+    text6 = '$' + x_ax0 + '^{*}_{cl} = %0.2f$' % integ_col
     # Completeness maximum value.
     # completeness = [max_mag, bin_edges, max_indx, comp_perc]
     #bin_edges, max_indx = completeness[1], completeness[2]
@@ -687,14 +697,15 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     # Field average integrated magnitude curve.
     plt.plot(fl_reg_mag[0], fl_reg_mag[1], 'b-', lw=1., label=text2)
     # Cluster integrated magnitude value.
-    ax13.hlines(y=integ_mag, xmin=x_min, xmax=x_max, color='g',
+    plt.hlines(y=integ_mag, xmin=x_min, xmax=x_max, color='g',
                linestyles='dashed', lw=2., label=text3)
-    text4 = '$' + x_ax + '^{*}_{cl+fl}$'
-    text5 = '$' + x_ax + '^{*}_{fl}$'
     # Cluster integrated magnitude.
     plt.plot(cl_reg_col[0], cl_reg_col[1], 'r:', lw=2., label=text4)
     # Field average integrated magnitude.
     plt.plot(fl_reg_col[0], fl_reg_col[1], 'b:', lw=2., label=text5)
+    # Cluster integrated second magnitude value.
+    plt.hlines(y=integ_col, xmin=x_min, xmax=x_max, color='k',
+               linestyles='dashed', lw=2., label=text6)
     # ask matplotlib for the plotted objects and their labels
     lines, labels = ax13.get_legend_handles_labels()
     leg = ax13.legend(lines, labels, loc='lower right', numpoints=1,
@@ -932,10 +943,10 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     if bf_flag and best_fit_algor == 'genet':
 
         # Set ranges used by plots below.
-        m_min, m_max = ps_params[3][0], ps_params[3][1]
-        a_min, a_max = ps_params[4][0], ps_params[4][1]
-        e_min, e_max = ps_params[5][0], ps_params[5][1]
-        d_min, d_max = ps_params[6][0], ps_params[6][1]
+        m_min, m_max = m_rs
+        a_min, a_max = a_rs
+        e_min, e_max = e_rs
+        d_min, d_max = d_rs
         if m_min == m_max:
             m_min, m_max = m_min - 0.1 * m_min, m_max + 0.1 * m_min
         if a_min == a_max:
