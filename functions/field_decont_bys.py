@@ -125,6 +125,7 @@ def field_decont_bys(flag_area_stronger, cluster_region, field_region,
         if dist <= clust_rad:
             cl_reg_rad.append(star)
 
+    flag_decont_skip = False
     # Run algorithm for any of these selections.
     if mode == 'auto' or mode == 'manual':
 
@@ -224,8 +225,9 @@ def field_decont_bys(flag_area_stronger, cluster_region, field_region,
         print 'Assign equal probabilities to all stars inside cluster radius.'
         # Assign equal probabilities to all stars.
         runs_fields_probs = [[[1.] * len(cl_reg_rad)]]
+        flag_decont_skip = True
 
     # Call function to average all probabilities.
-    membership_prob_avrg_sort = mpas(cl_reg_rad, runs_fields_probs)
+    memb_prob_avrg_sort = mpas(cl_reg_rad, runs_fields_probs)
 
-    return membership_prob_avrg_sort
+    return memb_prob_avrg_sort, flag_decont_skip

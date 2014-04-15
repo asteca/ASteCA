@@ -169,9 +169,10 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
     # Apply decontamination algorithm if at least one equal-sized field region
     # was found around the cluster.
     print 'Applying decontamination algorithm.'
-    memb_prob_avrg_sort = fdb(flag_area_stronger, cluster_region, field_region,
+    decont_algor_return = fdb(flag_area_stronger, cluster_region, field_region,
                             col1_data, mag_data, center_cl, clust_rad,
                             clust_name, sub_dir, da_params)
+    memb_prob_avrg_sort = decont_algor_return[0]
 
     # Create data file with membership probabilities.
     c_m_f(output_dir, sub_dir, clust_name, memb_prob_avrg_sort)
@@ -197,7 +198,7 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
 
     # Reduce number of stars in cluster according to a lower membership
     # probability limit.
-    red_memb_prob_avrg_sort = rm(flag_area_stronger, memb_prob_avrg_sort,
+    red_memb_prob_avrg_sort = rm(flag_area_stronger, decont_algor_return,
         rm_params)
 
     # Obtain best fitting parameters for cluster.
