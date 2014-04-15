@@ -87,6 +87,9 @@ def get_in_params(mypath):
                     bf_flag = True if reader[1] in true_lst else False
                     best_fit_algor = str(reader[2])
                     N_b = int(reader[3])
+                elif reader[0] == 'RM':
+                    flag_red_memb = str(reader[1])
+                    min_prob = float(reader[2])
                 elif reader[0] == 'PS_m':
                     m_rs = map(float, reader[1:])
                 elif reader[0] == 'PS_a':
@@ -153,6 +156,7 @@ def get_in_params(mypath):
     bf_params = [bf_flag, best_fit_algor, N_b]
     sc_params = [IMF_name, tot_mass, f_bin, q_bin]
     ga_params = [n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es]
+    rm_params = [flag_red_memb, min_prob]
 
     # Fix magnitude and color names for the CMD axis
     if cmd_select == 1:
@@ -165,4 +169,4 @@ def get_in_params(mypath):
 
     return mode, in_dirs, gd_params, gc_params, cr_params, \
     er_params, gr_params, pv_params, da_params, ps_params, bf_params, \
-    sc_params, ga_params, pl_params, flag_move_file, axes_params
+    sc_params, ga_params, rm_params, pl_params, flag_move_file, axes_params

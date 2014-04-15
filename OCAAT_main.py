@@ -30,6 +30,7 @@ from functions.get_p_value import get_pval as g_pv
 from functions.get_qqplot import qqplot as g_qq
 from functions.get_completeness import mag_completeness as m_c
 from functions.get_isoch_params import ip
+from functions.reduce_membership import red_memb as rm
 from functions.best_fit_synth_cl import best_fit as bfsc
 from functions.make_plots import make_plots as mp
 from functions.add_data_output import add_data_output as a_d_o
@@ -47,7 +48,8 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
 
     mode, in_dirs, gd_params, gc_params, cr_params, er_params,\
     gr_params, pv_params, da_params, ps_params, bf_params, \
-    sc_params, ga_params, pl_params, flag_move_file, axes_params = gip_params
+    sc_params, ga_params, rm_params, pl_params, flag_move_file, axes_params =\
+    gip_params
     input_dir, output_dir, done_dir = in_dirs
 
     # Generate output subdir.
@@ -193,9 +195,14 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
     else:
         ip_list = []
 
+    # Reduce number of stars in cluster according to a lower membership
+    # probability limit.
+    red_memb_prob_avrg_sort = rm(flag_area_stronger, memb_prob_avrg_sort,
+        rm_params)
+
     # Obtain best fitting parameters for cluster.
     err_lst = [popt_mag, popt_col1, er_params[2]]
-    bf_return = bfsc(err_lst, memb_prob_avrg_sort, completeness, ip_list,
+    bf_return = bfsc(err_lst, red_memb_prob_avrg_sort, completeness, ip_list,
                      bf_params, sc_params, ga_params, ps_params)
 
     # New name for cluster? Useful when there's a single photometric file

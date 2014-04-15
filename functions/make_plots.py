@@ -910,10 +910,10 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     if bf_flag and best_fit_algor == 'genet':
 
         # Set ranges used by plots below.
-        m_min, m_max = m_rs
-        a_min, a_max = a_rs
-        e_min, e_max = e_rs
-        d_min, d_max = d_rs
+        m_min, m_max = m_rs[:2]
+        a_min, a_max = a_rs[:2]
+        e_min, e_max = e_rs[:2]
+        d_min, d_max = d_rs[:2]
         if m_min == m_max:
             m_min, m_max = m_min - 0.1 * m_min, m_max + 0.1 * m_min
         if a_min == a_max:
