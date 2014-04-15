@@ -9,7 +9,6 @@ from matplotlib.patches import Rectangle
 from matplotlib.ticker import MultipleLocator
 from scipy.optimize import fsolve
 from itertools import cycle
-from scipy import stats
 from scipy.ndimage.filters import gaussian_filter
 from matplotlib.patches import Ellipse
 from os.path import join

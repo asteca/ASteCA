@@ -42,8 +42,6 @@ def red_memb(flag_area_stronger, decont_algor_return, rm_params):
                 else:
                     red_memb_prob = memb_prob_avrg_sort[:middle_indx]
                     min_prob = memb_prob_avrg_sort[middle_indx][7]
-                    print min_prob
-                    raw_input()
 
             elif flag_red_memb == 'manual':
 
