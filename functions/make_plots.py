@@ -10,7 +10,6 @@ from matplotlib.ticker import MultipleLocator
 from scipy.optimize import fsolve
 from itertools import cycle
 from scipy import stats
-import matplotlib.mlab as mlab
 from scipy.ndimage.filters import gaussian_filter
 from matplotlib.patches import Ellipse
 from os.path import join
@@ -776,9 +775,6 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
         # Plot histo colored according to colormap.
         for c, p in zip(col, patches):
             plt.setp(p, 'facecolor', cm(c))
-        # Best fit line.
-        y = mlab.normpdf(bins, mu, sigma)
-        plt.plot(bins, y, 'g--', linewidth=3.5)
 
         # Finding chart of cluster region with decontamination algorithm
         # applied.
