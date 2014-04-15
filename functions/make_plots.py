@@ -23,8 +23,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     err_plot, rjct_errors_fit, k_prof, k_pr_err, d_b_k, flag_king_no_conver,
     stars_in, stars_out, stars_in_rjct, stars_out_rjct, integr_return, n_c,
     flag_area_stronger, cluster_region, field_region, pval_test_params,
-    qq_params, memb_prob_avrg_sort, completeness, bf_params, bf_return,
-    ga_params, er_params, axes_params, ps_params, pl_params):
+    qq_params, memb_prob_avrg_sort, completeness, bf_params, red_return,
+    bf_return, ga_params, er_params, axes_params, ps_params, pl_params):
     '''
     Make all plots.
     '''

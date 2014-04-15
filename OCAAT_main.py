@@ -198,13 +198,13 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
 
     # Reduce number of stars in cluster according to a lower membership
     # probability limit.
-    red_memb_prob_avrg_sort = rm(flag_area_stronger, decont_algor_return,
-        rm_params)
+    red_return = rm(flag_area_stronger, decont_algor_return, rm_params)
+    red_memb_prob = red_return[0]
 
     # Obtain best fitting parameters for cluster.
     err_lst = [popt_mag, popt_col1, er_params[2]]
-    bf_return = bfsc(err_lst, red_memb_prob_avrg_sort, completeness, ip_list,
-                     bf_params, sc_params, ga_params, ps_params)
+    bf_return = bfsc(err_lst, red_memb_prob, completeness, ip_list, bf_params,
+        sc_params, ga_params, ps_params)
 
     # New name for cluster? Useful when there's a single photometric file
     # with multiple clusters in it.
@@ -237,7 +237,7 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
             flag_king_no_conver, stars_in, stars_out, stars_in_rjct,
             stars_out_rjct, integr_return, n_c, flag_area_stronger,
             cluster_region, field_region, pval_test_params, qq_params,
-            memb_prob_avrg_sort, completeness, bf_params,
+            memb_prob_avrg_sort, completeness, bf_params, red_return,
             bf_return, ga_params, er_params, axes_params, ps_params, pl_params)
         print 'Plots created.'
 

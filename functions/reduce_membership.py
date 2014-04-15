@@ -41,6 +41,9 @@ def red_memb(flag_area_stronger, decont_algor_return, rm_params):
                     print 'by membership prob. Using full list.'
                 else:
                     red_memb_prob = memb_prob_avrg_sort[:middle_indx]
+                    min_prob = memb_prob_avrg_sort[middle_indx][7]
+                    print min_prob
+                    raw_input()
 
             elif flag_red_memb == 'manual':
 
@@ -60,4 +63,4 @@ def red_memb(flag_area_stronger, decont_algor_return, rm_params):
         # Skip reduction process.
         red_memb_prob = memb_prob_avrg_sort
 
-    return red_memb_prob
+    return red_memb_prob, min_prob
