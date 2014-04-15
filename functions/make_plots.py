@@ -758,12 +758,6 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
         ax16.minorticks_on()
         ax16.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
         prob_data = [star[7] for star in memb_prob_avrg_sort]
-        # Best Gaussian fit of data.
-        (mu, sigma) = stats.norm.fit(prob_data)
-        # Text.
-        text = '$\mu=%.3f,\ \sigma=%.3f$' % (mu, sigma)
-        plt.text(0.05, 0.92, text, transform=ax16.transAxes,
-             bbox=dict(facecolor='white', alpha=0.85), fontsize=12)
         # Histogram of the data.
         n, bins, patches = plt.hist(prob_data, 25, normed=1)
         # Get bin centers.
@@ -775,6 +769,14 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
         # Plot histo colored according to colormap.
         for c, p in zip(col, patches):
             plt.setp(p, 'facecolor', cm(c))
+        if bf_flag:
+            # Plot minimum probability value used in best isochrone fit
+            # function.
+            min_prob = red_return[1]
+            text = '$\mu=%.2f$' % min_prob
+            plt.text(0.05, 0.92, text, transform=ax16.transAxes,
+                 bbox=dict(facecolor='white', alpha=0.85), fontsize=14)
+            plt.axvline(x=min_prob, linestyle='--', color='green', lw=2.5)
 
         # Finding chart of cluster region with decontamination algorithm
         # applied.
