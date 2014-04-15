@@ -198,7 +198,8 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
 
     # Reduce number of stars in cluster according to a lower membership
     # probability limit.
-    red_return = rm(flag_area_stronger, decont_algor_return, rm_params)
+    red_return = rm(flag_area_stronger, decont_algor_return, bf_params,
+        rm_params)
     red_memb_prob = red_return[0]
 
     # Obtain best fitting parameters for cluster.

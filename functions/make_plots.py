@@ -85,6 +85,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     # Integrated magnitude distribution.
     cl_reg_mag, fl_reg_mag, integ_mag, cl_reg_col, fl_reg_col, integ_col =\
     integr_return
+    # Reduced membership.
+    min_prob = red_return[1]
     # Best isochrone fit params.
     bf_flag, best_fit_algor, N_b = bf_params
     # Genetic algorithm params.
@@ -771,8 +773,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
         if bf_flag:
             # Plot minimum probability value used in best isochrone fit
             # function.
-            min_prob = red_return[1]
-            text = '$\mu=%.2f$' % min_prob
+            text = '$prob_{min}=%.2f$' % min_prob
             plt.text(0.05, 0.92, text, transform=ax16.transAxes,
                  bbox=dict(facecolor='white', alpha=0.85), fontsize=14)
             plt.axvline(x=min_prob, linestyle='--', color='green', lw=2.5)
