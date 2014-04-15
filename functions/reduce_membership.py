@@ -37,6 +37,7 @@ def red_memb(decont_algor_return, bf_params, rm_params):
                     if len(memb_prob_avrg_sort[:middle_indx]) < 10:
                         print 'WARNING: less than 10 stars left after reducing'
                         print 'by membership prob. Using full list.'
+                        red_memb_prob, min_prob = memb_prob_avrg_sort, 0.
                     else:
                         red_memb_prob = memb_prob_avrg_sort[:middle_indx]
                         min_prob = memb_prob_avrg_sort[middle_indx][7]
@@ -51,7 +52,7 @@ def red_memb(decont_algor_return, bf_params, rm_params):
                     if len(red_memb_prob) < 10:
                         print 'WARNING: less than 10 stars left after reducing'
                         print '         by membership prob. Using full list.'
-                        red_memb_prob = memb_prob_avrg_sort
+                        red_memb_prob, min_prob = memb_prob_avrg_sort, 0.
             else:
                 # Skip reduction process.
                 red_memb_prob, min_prob = memb_prob_avrg_sort, 0.
