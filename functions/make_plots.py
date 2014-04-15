@@ -750,159 +750,157 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
         plt.plot([0., 1.], [0., 1.], color='k', linestyle='--', linewidth=1.)
 
     # Norm fit for decontamination algorithm probability values.
-    # Check if decont algorithm was applied.
     plot_colorbar = False
-    if not(flag_area_stronger):
-        ax16 = plt.subplot(gs1[8:10, 0:2])
-        plt.xlim(0., 1.)
-        plt.xlabel('membership probability', fontsize=12)
-        ax16.minorticks_on()
-        ax16.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
-        prob_data = [star[7] for star in memb_prob_avrg_sort]
-        # Histogram of the data.
-        n, bins, patches = plt.hist(prob_data, 25, normed=1)
-        # Get bin centers.
-        bin_centers = 0.5 * (bins[:-1] + bins[1:])
-        # scale values to interval [0,1]
-        col = bin_centers - min(bin_centers)
-        col /= max(col)
-        cm = plt.cm.get_cmap('RdYlBu_r')
-        # Plot histo colored according to colormap.
-        for c, p in zip(col, patches):
-            plt.setp(p, 'facecolor', cm(c))
-        if bf_flag:
-            # Plot minimum probability value used in best isochrone fit
-            # function.
-            text = '$prob_{min}=%.2f$' % min_prob
-            plt.text(0.05, 0.92, text, transform=ax16.transAxes,
-                 bbox=dict(facecolor='white', alpha=0.85), fontsize=14)
-            plt.axvline(x=min_prob, linestyle='--', color='green', lw=2.5)
+    ax16 = plt.subplot(gs1[8:10, 0:2])
+    plt.xlim(0., 1.)
+    plt.xlabel('membership probability', fontsize=12)
+    ax16.minorticks_on()
+    ax16.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
+    prob_data = [star[7] for star in memb_prob_avrg_sort]
+    # Histogram of the data.
+    n, bins, patches = plt.hist(prob_data, 25, normed=1)
+    # Get bin centers.
+    bin_centers = 0.5 * (bins[:-1] + bins[1:])
+    # scale values to interval [0,1]
+    col = bin_centers - min(bin_centers)
+    col /= max(col)
+    cm = plt.cm.get_cmap('RdYlBu_r')
+    # Plot histo colored according to colormap.
+    for c, p in zip(col, patches):
+        plt.setp(p, 'facecolor', cm(c))
+    if bf_flag:
+        # Plot minimum probability value used in best isochrone fit
+        # function.
+        text = '$prob_{min}=%.2f$' % min_prob
+        plt.text(0.05, 0.92, text, transform=ax16.transAxes,
+             bbox=dict(facecolor='white', alpha=0.85), fontsize=14)
+        plt.axvline(x=min_prob, linestyle='--', color='green', lw=2.5)
 
-        # Finding chart of cluster region with decontamination algorithm
-        # applied.
-        # Used for the finding chart with colors assigned according to the
-        # probabilities obtained.
-        # Check if decont algorithm was applied.
-        ax17 = plt.subplot(gs1[8:10, 2:4])
-        # Get max and min values in x,y
-        x_min, x_max = 10000., -10000
-        y_min, y_max = 10000., -10000
-        for star in cluster_region:
-            x_min, x_max = min(star[1], x_min), max(star[1], x_max)
-            y_min, y_max = min(star[2], y_min), max(star[2], y_max)
-        #Set plot limits
-        plt.xlim(x_min, x_max)
-        plt.ylim(y_min, y_max)
-        #Set axis labels
-        plt.xlabel('x (px)', fontsize=12)
-        plt.ylabel('y (px)', fontsize=12)
-        # Set minor ticks
-        ax17.minorticks_on()
-        # Radius
-        circle = plt.Circle((center_cl[0], center_cl[1]), clust_rad,
-                            color='red', fill=False)
-        fig.gca().add_artist(circle)
-        plt.text(0.63, 0.93, 'Cluster region', transform=ax17.transAxes,
-            bbox=dict(facecolor='white', alpha=0.8), fontsize=12)
-        # Color map, higher prob stars look redder.
-        cm = plt.cm.get_cmap('RdYlBu_r')
-        # Star sizes for dense and not dense regions.
-        star_size = 20 if backg_value > 0.005 else 35
-        m_p_m_temp = [[], [], []]
-        for star in memb_prob_avrg_sort:
-            m_p_m_temp[0].append(star[1])
-            m_p_m_temp[1].append(star[2])
-            m_p_m_temp[2].append(star[7])
-        # Create new list with inverted values so higher prob stars are on top.
-        m_p_m_temp_inv = [i[::-1] for i in m_p_m_temp]
-        plt.scatter(m_p_m_temp_inv[0], m_p_m_temp_inv[1], marker='o',
-                    c=m_p_m_temp_inv[2], s=star_size, edgecolors='black',
-                    cmap=cm, lw=0.5)
-        out_clust_rad = [[], []]
-        for star in cluster_region:
-            dist = np.sqrt((center_cl[0] - star[1]) ** 2 +
-            (center_cl[1] - star[2]) ** 2)
-            # Only plot stars outside the cluster's radius.
-            if dist >= clust_rad:
-                out_clust_rad[0].append(star[1])
-                out_clust_rad[1].append(star[2])
-        plt.scatter(out_clust_rad[0], out_clust_rad[1], marker='o',
-                    s=star_size, edgecolors='black', facecolors='none', lw=0.5)
+    # Finding chart of cluster region with decontamination algorithm
+    # applied.
+    # Used for the finding chart with colors assigned according to the
+    # probabilities obtained.
+    # Check if decont algorithm was applied.
+    ax17 = plt.subplot(gs1[8:10, 2:4])
+    # Get max and min values in x,y
+    x_min, x_max = 10000., -10000
+    y_min, y_max = 10000., -10000
+    for star in cluster_region:
+        x_min, x_max = min(star[1], x_min), max(star[1], x_max)
+        y_min, y_max = min(star[2], y_min), max(star[2], y_max)
+    #Set plot limits
+    plt.xlim(x_min, x_max)
+    plt.ylim(y_min, y_max)
+    #Set axis labels
+    plt.xlabel('x (px)', fontsize=12)
+    plt.ylabel('y (px)', fontsize=12)
+    # Set minor ticks
+    ax17.minorticks_on()
+    # Radius
+    circle = plt.Circle((center_cl[0], center_cl[1]), clust_rad,
+                        color='red', fill=False)
+    fig.gca().add_artist(circle)
+    plt.text(0.63, 0.93, 'Cluster region', transform=ax17.transAxes,
+        bbox=dict(facecolor='white', alpha=0.8), fontsize=12)
+    # Color map, higher prob stars look redder.
+    cm = plt.cm.get_cmap('RdYlBu_r')
+    # Star sizes for dense and not dense regions.
+    star_size = 20 if backg_value > 0.005 else 35
+    m_p_m_temp = [[], [], []]
+    for star in memb_prob_avrg_sort:
+        m_p_m_temp[0].append(star[1])
+        m_p_m_temp[1].append(star[2])
+        m_p_m_temp[2].append(star[7])
+    # Create new list with inverted values so higher prob stars are on top.
+    m_p_m_temp_inv = [i[::-1] for i in m_p_m_temp]
+    plt.scatter(m_p_m_temp_inv[0], m_p_m_temp_inv[1], marker='o',
+                c=m_p_m_temp_inv[2], s=star_size, edgecolors='black',
+                cmap=cm, lw=0.5)
+    out_clust_rad = [[], []]
+    for star in cluster_region:
+        dist = np.sqrt((center_cl[0] - star[1]) ** 2 +
+        (center_cl[1] - star[2]) ** 2)
+        # Only plot stars outside the cluster's radius.
+        if dist >= clust_rad:
+            out_clust_rad[0].append(star[1])
+            out_clust_rad[1].append(star[2])
+    plt.scatter(out_clust_rad[0], out_clust_rad[1], marker='o',
+                s=star_size, edgecolors='black', facecolors='none', lw=0.5)
 
-        # Star's membership probabilities on cluster's CMD.
-        ax18 = plt.subplot(gs1[8:10, 4:6])
+    # Star's membership probabilities on cluster's CMD.
+    ax18 = plt.subplot(gs1[8:10, 4:6])
+    #Set plot limits
+    plt.xlim(col1_min, col1_max)
+    plt.ylim(mag_min, mag_max)
+    #Set axis labels
+    plt.xlabel('$' + x_ax + '$', fontsize=18)
+    plt.ylabel('$' + y_ax + '$', fontsize=18)
+    tot_clust = len(memb_prob_avrg_sort)
+    text = '$r \leq r_{cl}\,|\,N=%d$' % tot_clust
+    plt.text(0.5, 0.93, text, transform=ax18.transAxes,
+             bbox=dict(facecolor='white', alpha=0.5), fontsize=16)
+    # Set minor ticks
+    ax18.minorticks_on()
+    ax18.xaxis.set_major_locator(MultipleLocator(1.0))
+    ax18.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
+    if bf_flag:
+        # Plot isochrone if best fit process was used.
+        plt.plot(shift_isoch[0], shift_isoch[1], 'g', lw=1.2)
+    # This reversed colormap means higher prob stars will look redder.
+    cm = plt.cm.get_cmap('RdYlBu_r')
+    m_p_m_temp = [[], [], []]
+    for star in memb_prob_avrg_sort:
+        m_p_m_temp[0].append(star[5])
+        m_p_m_temp[1].append(star[3])
+        m_p_m_temp[2].append(star[7])
+    # Create new list with inverted values so higher prob stars are on top.
+    m_p_m_temp_inv = [i[::-1] for i in m_p_m_temp]
+    v_min_mp, v_max_mp = round(min(m_p_m_temp[2]), 2), \
+    round(max(m_p_m_temp[2]), 2)
+    sca = plt.scatter(m_p_m_temp_inv[0], m_p_m_temp_inv[1], marker='o',
+                c=m_p_m_temp_inv[2], s=40, cmap=cm, lw=0.5, vmin=v_min_mp,
+                vmax=v_max_mp)
+    # If list is not empty.
+    if m_p_m_temp_inv[1]:
+        # Plot error bars at several mag values.
+        mag_y = np.arange(int(min(m_p_m_temp_inv[1]) + 0.5),
+                          int(max(m_p_m_temp_inv[1]) + 0.5) + 0.1)
+        x_val = [min(x_max_cmd, max(col1_data) + 0.2) - 0.4] * len(mag_y)
+        plt.errorbar(x_val, mag_y, yerr=func(mag_y, *popt_mag),
+                     xerr=func(mag_y, *popt_col1), fmt='k.', lw=0.8,
+                     ms=0., zorder=4)
+        # Plot colorbar (see bottom of file).
+        if v_min_mp != v_max_mp:
+            plot_colorbar = True
+
+    # Synthetic cluster.
+    if bf_flag:
+        ax19 = plt.subplot(gs1[8:10, 6:8])
         #Set plot limits
         plt.xlim(col1_min, col1_max)
         plt.ylim(mag_min, mag_max)
         #Set axis labels
         plt.xlabel('$' + x_ax + '$', fontsize=18)
         plt.ylabel('$' + y_ax + '$', fontsize=18)
-        tot_clust = len(memb_prob_avrg_sort)
-        text = '$r \leq r_{cl}\,|\,N=%d$' % tot_clust
-        plt.text(0.5, 0.93, text, transform=ax18.transAxes,
-                 bbox=dict(facecolor='white', alpha=0.5), fontsize=16)
         # Set minor ticks
-        ax18.minorticks_on()
-        ax18.xaxis.set_major_locator(MultipleLocator(1.0))
-        ax18.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
-        if bf_flag:
-            # Plot isochrone if best fit process was used.
-            plt.plot(shift_isoch[0], shift_isoch[1], 'g', lw=1.2)
-        # This reversed colormap means higher prob stars will look redder.
-        cm = plt.cm.get_cmap('RdYlBu_r')
-        m_p_m_temp = [[], [], []]
-        for star in memb_prob_avrg_sort:
-            m_p_m_temp[0].append(star[5])
-            m_p_m_temp[1].append(star[3])
-            m_p_m_temp[2].append(star[7])
-        # Create new list with inverted values so higher prob stars are on top.
-        m_p_m_temp_inv = [i[::-1] for i in m_p_m_temp]
-        v_min_mp, v_max_mp = round(min(m_p_m_temp[2]), 2), \
-        round(max(m_p_m_temp[2]), 2)
-        sca = plt.scatter(m_p_m_temp_inv[0], m_p_m_temp_inv[1], marker='o',
-                    c=m_p_m_temp_inv[2], s=40, cmap=cm, lw=0.5, vmin=v_min_mp,
-                    vmax=v_max_mp)
-        # If list is not empty.
-        if m_p_m_temp_inv[1]:
-            # Plot error bars at several mag values.
-            mag_y = np.arange(int(min(m_p_m_temp_inv[1]) + 0.5),
-                              int(max(m_p_m_temp_inv[1]) + 0.5) + 0.1)
-            x_val = [min(x_max_cmd, max(col1_data) + 0.2) - 0.4] * len(mag_y)
-            plt.errorbar(x_val, mag_y, yerr=func(mag_y, *popt_mag),
-                         xerr=func(mag_y, *popt_col1), fmt='k.', lw=0.8,
-                         ms=0., zorder=4)
-            # Plot colorbar (see bottom of file).
-            if v_min_mp != v_max_mp:
-                plot_colorbar = True
-
-        # Synthetic cluster.
-        if bf_flag:
-            ax19 = plt.subplot(gs1[8:10, 6:8])
-            #Set plot limits
-            plt.xlim(col1_min, col1_max)
-            plt.ylim(mag_min, mag_max)
-            #Set axis labels
-            plt.xlabel('$' + x_ax + '$', fontsize=18)
-            plt.ylabel('$' + y_ax + '$', fontsize=18)
-            # Set minor ticks
-            ax19.minorticks_on()
-            ax19.xaxis.set_major_locator(MultipleLocator(1.0))
-            ax19.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
-            # Add text box
-            m, a, e, d = isoch_fit_params[0]
-            e_m, e_a, e_e, e_d = isoch_fit_errors
-            text1 = '$z = %0.4f \pm %0.4f$' '\n' % (m, e_m)
-            text2 = '$log(age) = %0.2f \pm %0.2f$' '\n' % (a, e_a)
-            text3 = '$E_{(B-V)} = %0.2f \pm %0.2f$' '\n' % (e, e_e)
-            text4 = '$(m-M)_o = %0.2f \pm %0.2f$' % (d, e_d)
-            text = text1 + text2 + text3 + text4
-            plt.text(0.5, 0.77, text, transform=ax19.transAxes,
-                     bbox=dict(facecolor='white', alpha=0.6), fontsize=12)
-            # Plot isochrone.
-            plt.plot(shift_isoch[0], shift_isoch[1], 'r', lw=1.2)
-            # Plot synth clust.
-            plt.scatter(synth_clst[0], synth_clst[2], marker='o', s=30,
-                        c='#4682b4', lw=0.5)
+        ax19.minorticks_on()
+        ax19.xaxis.set_major_locator(MultipleLocator(1.0))
+        ax19.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
+        # Add text box
+        m, a, e, d = isoch_fit_params[0]
+        e_m, e_a, e_e, e_d = isoch_fit_errors
+        text1 = '$z = %0.4f \pm %0.4f$' '\n' % (m, e_m)
+        text2 = '$log(age) = %0.2f \pm %0.2f$' '\n' % (a, e_a)
+        text3 = '$E_{(B-V)} = %0.2f \pm %0.2f$' '\n' % (e, e_e)
+        text4 = '$(m-M)_o = %0.2f \pm %0.2f$' % (d, e_d)
+        text = text1 + text2 + text3 + text4
+        plt.text(0.5, 0.77, text, transform=ax19.transAxes,
+                 bbox=dict(facecolor='white', alpha=0.6), fontsize=12)
+        # Plot isochrone.
+        plt.plot(shift_isoch[0], shift_isoch[1], 'r', lw=1.2)
+        # Plot synth clust.
+        plt.scatter(synth_clst[0], synth_clst[2], marker='o', s=30,
+                    c='#4682b4', lw=0.5)
 
     # Best fitting process plots for GA.
     if bf_flag and best_fit_algor == 'genet':

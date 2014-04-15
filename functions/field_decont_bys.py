@@ -99,7 +99,7 @@ def field_decont_bys(flag_area_stronger, cluster_region, field_region,
     mode, run_n, mypath2 = da_params
 
     # Check if at least one field region was obtained.
-    if flag_area_stronger:
+    if mode in ['auto', 'manual'] and flag_area_stronger:
         print "WARNING: no field regions found. Using 'skip'."
         mode = 'skip'
 

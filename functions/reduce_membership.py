@@ -6,7 +6,7 @@ Created on Thu Mar 20 2014
 """
 
 
-def red_memb(flag_area_stronger, decont_algor_return, bf_params, rm_params):
+def red_memb(decont_algor_return, bf_params, rm_params):
     '''
     Reduce number of stars according to a given membership probability
     lower limit.
@@ -22,14 +22,8 @@ def red_memb(flag_area_stronger, decont_algor_return, bf_params, rm_params):
         skip_reduce = False
         if flag_red_memb in {'auto', 'manual'}:
 
-            if flag_area_stronger is True:
-                red_memb_prob = memb_prob_avrg_sort
-                print 'WARNING: no field regions found.'
-                print "Can't apply membership reduction."
-                skip_reduce = True
-
             if flag_decont_skip is True:
-                print 'WARNING: decontamination algorithm skipped.'
+                print "WARNING: decontamination algorithm skipped."
                 print "Can't apply membership reduction."
                 skip_reduce = True
 
@@ -56,7 +50,7 @@ def red_memb(flag_area_stronger, decont_algor_return, bf_params, rm_params):
 
                     if len(red_memb_prob) < 10:
                         print 'WARNING: less than 10 stars left after reducing'
-                        print 'by membership prob. Using full list.'
+                        print '         by membership prob. Using full list.'
                         red_memb_prob = memb_prob_avrg_sort
             else:
                 # Skip reduction process.
