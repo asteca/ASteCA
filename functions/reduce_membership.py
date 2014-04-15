@@ -19,7 +19,7 @@ def red_memb(flag_area_stronger, decont_algor_return, rm_params):
     if flag_red_memb in {'auto', 'manual'}:
 
         if flag_area_stronger is True:
-            memb_prob_avrg_sort2 = memb_prob_avrg_sort
+            red_memb_prob = memb_prob_avrg_sort
             print 'WARNING: no field regions found.'
             print "Can't apply membership reduction."
             skip_reduce = True
@@ -35,19 +35,29 @@ def red_memb(flag_area_stronger, decont_algor_return, rm_params):
                 # Reject stars in the lower half of the membership
                 # probabilities list.
                 middle_indx = int(len(memb_prob_avrg_sort) / 2)
-                memb_prob_avrg_sort2 = memb_prob_avrg_sort[:middle_indx]
+                # Check number of stars left.
+                if len(memb_prob_avrg_sort[:middle_indx]) < 10:
+                    print 'WARNING: less than 10 stars left after reducing'
+                    print 'by membership prob. Using full list.'
+                else:
+                    red_memb_prob = memb_prob_avrg_sort[:middle_indx]
 
             elif flag_red_memb == 'manual':
 
-                memb_prob_avrg_sort2 = []
+                red_memb_prob = []
                 for star in memb_prob_avrg_sort:
                     if star[7] >= min_prob:
-                        memb_prob_avrg_sort2.append(star)
+                        red_memb_prob.append(star)
+
+                if len(red_memb_prob) < 10:
+                    print 'WARNING: less than 10 stars left after reducing'
+                    print 'by membership prob. Using full list.'
+                    red_memb_prob = memb_prob_avrg_sort
         else:
             # Skip reduction process.
-            memb_prob_avrg_sort2 = memb_prob_avrg_sort
+            red_memb_prob = memb_prob_avrg_sort
     else:
         # Skip reduction process.
-        memb_prob_avrg_sort2 = memb_prob_avrg_sort
+        red_memb_prob = memb_prob_avrg_sort
 
-    return memb_prob_avrg_sort2
+    return red_memb_prob
