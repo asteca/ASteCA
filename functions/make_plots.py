@@ -960,7 +960,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
         text4 = '$p_{cross}=%0.2f\,;\,p_{mut}=%0.2f$' '\n' % (p_cross, p_mut)
         text5 = '$n_{el}=%d\,;\,n_{ei}=%d\,;\,n_{es}=%d$' % (n_el, n_ei, n_es)
         text = text1 + text2 + text3 + text4 + text5
-        plt.text(0.05, 0.75, text, transform=ax21.transAxes,
+        plt.text(0.05, 0.73, text, transform=ax21.transAxes,
             bbox=dict(facecolor='white', alpha=0.75), fontsize=12)
         # Plot likelihood minimum and mean lines.
         ax21.plot(range(len(lkl_old[0])), lkl_old[0], lw=1., c='black',
