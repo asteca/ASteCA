@@ -953,8 +953,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
         ax21.grid(b=True, which='major', color='gray', linestyle='--', lw=0.6)
         plt.xlabel('Generation', fontsize=12)
         plt.ylabel('Likelihood', fontsize=12)
-        text1 = '$N = %d\,;\,L_{min}=%0.2f$' '\n' % (len(lkl_old[0]),
-            min(lkl_old[0]))
+        text1 = '$N_{btst} = %d\,;\,N = %d$' '\n' % (N_b, len(lkl_old[0]))
         text2 = '$n_{gen}=%d\,;\,n_{pop}=%d$' '\n' % (n_gen, n_pop)
         text3 = '$f_{dif}=%0.2f\,;\,cr_{sel}=%s$' '\n' % (fdif, cr_sel)
         text4 = '$p_{cross}=%0.2f\,;\,p_{mut}=%0.2f$' '\n' % (p_cross, p_mut)

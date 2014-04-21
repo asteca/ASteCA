@@ -11,6 +11,34 @@ from bootstrap_func import bootstrap
 from synth_cluster import synth_clust as s_c
 from get_IMF_PDF import IMF_PDF as i_p
 from move_isochrone import move_isoch
+from math import log10, floor
+
+
+def round_to_1(x):
+    return round(x, -int(floor(log10(x))))
+
+
+def round_to_ref(x, y):
+    return round(x, -int(floor(log10(y))))
+
+
+def round_sig_fig(isoch_fit_params, isoch_fit_errors):
+    '''
+    Round errors to 1 significant figure and parameter values to the
+    corresponding number given by the length of each error.
+    '''
+
+    print isoch_fit_errors
+    print isoch_fit_params[0]
+    # Round errors to 1 significant figure.
+    isoch_fit_errors_r = map(round_to_1, isoch_fit_errors)
+    isoch_fit_params_r = map(round_to_ref, isoch_fit_params[0],
+        isoch_fit_errors_r)
+
+    print isoch_fit_errors_r
+    print isoch_fit_params_r
+
+    return isoch_fit_params_r, isoch_fit_errors_r
 
 
 def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
@@ -44,18 +72,10 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
                                    ip_list, sc_params, ga_params, sys_sel)
             # Assign errors as the steps in each parameter.
             isoch_fit_errors = [ps_params[i + 3][2] for i in range(4)]
-            print 'Best fit params obtained (%0.4f, %0.2f, %0.2f, %0.2f).' % \
-            (isoch_fit_params[0][0], isoch_fit_params[0][1],
-            isoch_fit_params[0][2], isoch_fit_params[0][3])
 
         elif best_fit_algor == 'genet':
 
             print 'Using Genetic Algorithm.'
-
-            # The first pass is done with no resampling to calculate the final
-            # values. After that we resample to get the uncertainty in each
-            # parameter.
-
             # Genetic algorithm.
             # Let the GA algor know this call comes from the main function
             # so it will print percentages to screen.
@@ -63,14 +83,22 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
             isoch_fit_params = g_a(flag_print_perc, err_lst,
                 memb_prob_avrg_sort, completeness, ip_list, sc_params,
                 ga_params, sys_sel)
-            print 'Best fit params obtained (%0.4f, %0.2f, %0.2f, %0.2f).' % \
-            (isoch_fit_params[0][0], isoch_fit_params[0][1],
-            isoch_fit_params[0][2], isoch_fit_params[0][3])
 
-            # Call bootstrap function.
+        print 'Best fit params obtained (%0.4f, %0.2f, %0.2f, %0.2f).' % \
+        (isoch_fit_params[0][0], isoch_fit_params[0][1],
+        isoch_fit_params[0][2], isoch_fit_params[0][3])
+
+        if best_fit_algor == 'genet':
+            # Call bootstrap function with resampling to get the uncertainty
+            # in each parameter.
             params_boot, isoch_fit_errors = bootstrap(err_lst,
                 memb_prob_avrg_sort, completeness, ip_list, bf_params,
                 sc_params, ga_params, ps_params)
+
+        # Round errors to 1 significant digit and round params values to the
+        # corresponding number of significant digits given by the errors.
+        isoch_fit_params[0], isoch_fit_errors = \
+        round_sig_fig(isoch_fit_params, isoch_fit_errors)
 
         # For plotting purposes.
         # Get list of stored isochrones and their parameters.
