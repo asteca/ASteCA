@@ -31,7 +31,7 @@ def get_in_params(mypath):
     # Read data from file.
     true_lst = ('True', 'true')
 
-    with open(data_file, mode="r") as f_dat:
+    with open(data_file, "r") as f_dat:
 
         # Iterate through each line in the file.
         for line in f_dat:

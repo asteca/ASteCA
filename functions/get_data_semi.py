@@ -20,7 +20,7 @@ def get_semi(input_dir, clust_name, mode):
 
         # Flag to indicate if cluster was found in file.
         flag_clust_found = False
-        with open(semi_file, mode="r") as f_cl_dt:
+        with open(semi_file, "r") as f_cl_dt:
             for line in f_cl_dt:
                 li = line.strip()
                 # Skip comments.
