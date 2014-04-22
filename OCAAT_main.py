@@ -4,6 +4,7 @@ from os.path import join, realpath, dirname, exists, isfile
 from os import getcwd, mkdir, rmdir, makedirs
 import time
 import shutil
+import traceback
 import gc  # Garbage collector.
 
 # Import files with defined functions
@@ -295,7 +296,6 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
         # Call main function for this cluster.
         ocaat_main(f_indx, sub_dir, out_file_name, gip_params)
     except Exception, err:
-        import traceback
         print 'FATAL: %s could not be processed. ' % dir_files[1][f_indx][:-4]
         print 'Error:', str(err), '\n'
         print traceback.format_exc()
