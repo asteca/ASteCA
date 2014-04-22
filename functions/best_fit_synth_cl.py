@@ -28,15 +28,10 @@ def round_sig_fig(isoch_fit_params, isoch_fit_errors):
     corresponding number given by the length of each error.
     '''
 
-    print isoch_fit_errors
-    print isoch_fit_params[0]
     # Round errors to 1 significant figure.
     isoch_fit_errors_r = map(round_to_1, isoch_fit_errors)
     isoch_fit_params_r = map(round_to_ref, isoch_fit_params[0],
         isoch_fit_errors_r)
-
-    print isoch_fit_errors_r
-    print isoch_fit_params_r
 
     return isoch_fit_params_r, isoch_fit_errors_r
 

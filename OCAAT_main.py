@@ -287,6 +287,10 @@ out_file_name = c_o_d_f(output_dir)
 # Iterate through all cluster files.
 for f_indx, sub_dir in enumerate(dir_files[0]):
 
+    # Read input parameters from ocaat_input.dat file again to reset params
+    # lists.
+    gip_params = gip(mypath)
+
     try:
         # Call main function for this cluster.
         ocaat_main(f_indx, sub_dir, out_file_name, gip_params)
