@@ -145,7 +145,7 @@ def get_clust_rad(phot_data, backg_value, cr_params, center_params,
     # input new one.
     elif mode == 'm':
 
-        print 'Radius found: ', clust_rad
+        print 'Radius found: %0.1f px' % clust_rad
         d_r(phot_data, center_params, clust_rad, delta_backg, delta_percentage,
             backg_value, rdp_params)
         plt.show()

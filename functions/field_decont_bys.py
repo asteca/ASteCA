@@ -210,7 +210,6 @@ def field_decont_bys(flag_area_stronger, cluster_region, field_region,
         id_list = data[0].tolist()
         # Read probabilities from file.
         data = np.loadtxt(memb_file, unpack=True)
-        #id_list = data[0].tolist()
 
         probs = []
         # Assign probabilities read from file according to the star's IDs.

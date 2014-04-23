@@ -114,12 +114,12 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     fig.gca().add_artist(circle)
     # Add text boxs.
     text = 'Bin: %.1f px' % (bin_list[0])
-    plt.text(0.05, 0.92, text, transform=ax0.transAxes,
+    plt.text(0.7, 0.94, text, transform=ax0.transAxes,
              bbox=dict(facecolor='white', alpha=0.8), fontsize=10)
     text1 = '$x_{cent} = %.1f \pm %.1f px$' '\n' % (center_cl[0], bin_list[0])
     text2 = '$y_{cent} = %.1f \pm %.1f px$' % (center_cl[1], bin_list[0])
     text = text1 + text2
-    plt.text(0.53, 0.85, text, transform=ax0.transAxes,
+    plt.text(0.05, 0.9, text, transform=ax0.transAxes,
         bbox=dict(facecolor='white', alpha=0.85), fontsize=11)
     plt.imshow(h_filter.transpose(), origin='lower', aspect='auto')
 
@@ -151,7 +151,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     text2 = '$(\sigma_x,\, \sigma_y) = (%.1f, %.1f)\,px$' % \
     (cent_stats[1][0], cent_stats[1][1])
     text = text1 + text2
-    plt.text(0.05, 0.88, text, transform=ax1.transAxes,
+    plt.text(0.05, 0.9, text, transform=ax1.transAxes,
         bbox=dict(facecolor='white', alpha=0.8), fontsize=11)
     cols = ['red', 'blue', 'green', 'black']
     for i in range(len(bin_list)):
@@ -254,7 +254,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     text1 = '$x_{cent} = %.1f \pm %.1f px$' '\n' % (center_cl[0], bin_list[0])
     text2 = '$y_{cent} = %.1f \pm %.1f px$' % (center_cl[1], bin_list[0])
     text = text1 + text2
-    plt.text(0.53, 0.85, text, transform=ax4.transAxes,
+    plt.text(0.05, 0.9, text, transform=ax4.transAxes,
         bbox=dict(facecolor='white', alpha=0.85), fontsize=11)
     # Plot stars.
     a, c = 200., 2.5
