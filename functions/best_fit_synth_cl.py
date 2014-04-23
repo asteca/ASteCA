@@ -11,6 +11,7 @@ from bootstrap_func import bootstrap
 from synth_cluster import synth_clust as s_c
 from get_IMF_PDF import IMF_PDF as i_p
 from move_isochrone import move_isoch
+import numpy as np
 from math import log10, floor
 
 
@@ -75,8 +76,11 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
             # Let the GA algor know this call comes from the main function
             # so it will print percentages to screen.
             flag_print_perc = True
+            # Remove IDs so likelihood function works.
+            obs_clust = np.array(zip(*zip(*memb_prob_avrg_sort)[1:]),
+                dtype=float)
             isoch_fit_params = g_a(flag_print_perc, err_lst,
-                memb_prob_avrg_sort, completeness, ip_list, sc_params,
+                obs_clust, completeness, ip_list, sc_params,
                 ga_params, sys_sel)
 
         print 'Best fit params obtained (%0.4f, %0.2f, %0.2f, %0.2f).' % \
@@ -87,7 +91,7 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
             # Call bootstrap function with resampling to get the uncertainty
             # in each parameter.
             params_boot, isoch_fit_errors = bootstrap(err_lst,
-                memb_prob_avrg_sort, completeness, ip_list, bf_params,
+                obs_clust, completeness, ip_list, bf_params,
                 sc_params, ga_params, ps_params)
 
         # Round errors to 1 significant digit and round params values to the

@@ -9,7 +9,7 @@ from synth_cluster import synth_clust as s_c
 import numpy as np
 
 
-def likelihood(synth_clust, obs_clust):
+def likelihood(synth_clust, obs_arr):
     '''
     Takes a synthetic cluster, compares it to the observed cluster and
     returns the weighted (log) likelihood value.
@@ -20,7 +20,7 @@ def likelihood(synth_clust, obs_clust):
         isoch_score = 10000.
     else:
         # Store observed and synthetic clusters as arrays.
-        obs_arr = np.array(obs_clust)
+        #obs_arr = np.array(obs_clust)
         syn_arr = np.array(zip(*synth_clust))
         clust_stars_probs = []
 
@@ -28,10 +28,10 @@ def likelihood(synth_clust, obs_clust):
         epsilon = 1e-10
 
         # Split obs_arr.
-        P = np.split(obs_arr, 8, axis=1)
+        P = np.split(obs_arr, 7, axis=1)
         # Square errors in color and magnitude.
-        P[6] = np.square(P[6])  # color
-        P[4] = np.square(P[4])  # magnitude
+        P[5] = np.square(P[5])  # color
+        P[3] = np.square(P[3])  # magnitude
         P = np.hstack(P)
 
         # Split syn_arr.
@@ -42,12 +42,12 @@ def likelihood(synth_clust, obs_clust):
 
         for star in P:
             # Squares sum of errors.
-            e_col_2 = np.maximum(star[6] + Q[1], epsilon)
-            e_mag_2 = np.maximum(star[4] + Q[3], epsilon)
-            # star[5] & Q[0] = colors
-            # star[3] & Q[2] = magnitude
-            B = np.square(star[5] - Q[0]) / e_col_2
-            C = np.square(star[3] - Q[2]) / e_mag_2
+            e_col_2 = np.maximum(star[5] + Q[1], epsilon)
+            e_mag_2 = np.maximum(star[3] + Q[3], epsilon)
+            # star[4] & Q[0] = colors
+            # star[2] & Q[2] = magnitude
+            B = np.square(star[4] - Q[0]) / e_col_2
+            C = np.square(star[2] - Q[2]) / e_mag_2
             synth_stars = np.exp(-0.5 * (B + C)) / np.sqrt(e_col_2 * e_mag_2)
             # The final prob for this cluster star is the sum over all synthetic
             # stars. Use 1e-10 to avoid nan and inf values in the calculations
@@ -55,7 +55,7 @@ def likelihood(synth_clust, obs_clust):
             clust_stars_probs.append(max(synth_stars.sum(), epsilon))
 
         # Store weights data (membership probabilities) into array.
-        weights = np.array([zip(*obs_clust)[7]], dtype=float)
+        weights = np.array([zip(*obs_arr)[6]], dtype=float)
         # Weight probabilities for each cluster star.
         weighted_probs = clust_stars_probs * weights / len(synth_clust[0])
 

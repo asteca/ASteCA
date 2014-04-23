@@ -10,17 +10,18 @@ import random
 from genetic_algorithm import gen_algor as g_a
 
 
-def resample_replacement(stars_list):
+def resample_replacement(obs_clust0):
     '''
     Resamples the observed cluster with replacement. Used by the bootstrap
     process.
     '''
-    obs_clust = [random.choice(stars_list) for _ in stars_list]
+    obs_clust = np.array([random.choice(obs_clust0) for _ in obs_clust0],
+        dtype=float)
 
     return obs_clust
 
 
-def bootstrap(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
+def bootstrap(err_lst, obs_clust0, completeness, ip_list, bf_params,
              sc_params, ga_params, ps_params):
     '''
     Bootstrap process, runs the selected algorithm a number of times each
@@ -42,7 +43,7 @@ def bootstrap(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
     for i in range(max(N_b, 2)):
 
         # Resample cluster with replacement.
-        obs_clust = resample_replacement(memb_prob_avrg_sort)
+        obs_clust = resample_replacement(obs_clust0)
 
         # Algorithm selected.
         if best_fit_algor == 'genet':
