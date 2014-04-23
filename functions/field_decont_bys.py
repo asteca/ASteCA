@@ -14,10 +14,12 @@ def likelihood(region, cl_reg_rad):
 
     # Store cleaned cluster/field region and full cluster_region as arrays
     # skipping IDs otherwise thw whole array is converted to strings.
-    cl_fl_arr = np.array(region[1:])  # Cleaned cluster/field region.
+    # Cleaned cluster/field region.
+    cl_fl_arr = np.array(zip(*zip(*region)[1:]), dtype=float)
+    print cl_fl_arr[17]
     N = len(region)  # Number of stars in this region.
-    cl_full_arr = np.array(cl_reg_rad[1:])  # Full cluster region.
-    clust_stars_probs = []
+    # Full cluster region.
+    cl_full_arr = np.array(zip(*zip(*cl_reg_rad)[1:]))
 
     # Small value used to replace zeros.
     epsilon = 1e-10
@@ -25,8 +27,8 @@ def likelihood(region, cl_reg_rad):
     # Split full cluster region array.
     P = np.split(cl_full_arr, 6, axis=1)
     # Square errors in color and magnitude.
-    P[5] = np.square(P[5])  # color
-    P[3] = np.square(P[3])  # magnitude
+    P[5] = np.square(P[5])  # color error
+    P[3] = np.square(P[3])  # magnitude error
     P = np.hstack(P)
 
     # Split array.
@@ -36,6 +38,7 @@ def likelihood(region, cl_reg_rad):
     Q[3] = np.square(Q[3])
 
     # For every star in the full cluster region.
+    clust_stars_probs = []
     for star in P:
         # Squares sum of errors.
         e_col_2 = np.maximum(star[5] + Q[5], epsilon)
