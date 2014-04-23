@@ -113,14 +113,14 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
         clust_rad / bin_list[0], color='w', fill=False)
     fig.gca().add_artist(circle)
     # Add text boxs.
-    text = 'Bin: %.2f px' % (bin_list[0])
+    text = 'Bin: %.1f px' % (bin_list[0])
     plt.text(0.05, 0.92, text, transform=ax0.transAxes,
-             bbox=dict(facecolor='white', alpha=0.8), fontsize=12)
-    text1 = '$x_{cent} = %.2f \pm %.2f px$' '\n' % (center_cl[0], bin_list[0])
-    text2 = '$y_{cent} = %.2f \pm %.2f px$' % (center_cl[1], bin_list[0])
+             bbox=dict(facecolor='white', alpha=0.8), fontsize=10)
+    text1 = '$x_{cent} = %.1f \pm %.1f px$' '\n' % (center_cl[0], bin_list[0])
+    text2 = '$y_{cent} = %.1f \pm %.1f px$' % (center_cl[1], bin_list[0])
     text = text1 + text2
     plt.text(0.53, 0.85, text, transform=ax0.transAxes,
-        bbox=dict(facecolor='white', alpha=0.85), fontsize=15)
+        bbox=dict(facecolor='white', alpha=0.85), fontsize=11)
     plt.imshow(h_filter.transpose(), origin='lower', aspect='auto')
 
     # 2D not-weighted histograms' centers.
@@ -146,9 +146,9 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     plt.axhline(y=cent_stats[0][1] - cent_stats[1][1], linestyle='--',
         color='k')
     # Add stats box.
-    text1 = r'$(\tilde{x},\, \tilde{y}) = (%.2f, %.2f)\,px$' '\n' % \
+    text1 = r'$(\tilde{x},\, \tilde{y}) = (%.1f, %.1f)\,px$' '\n' % \
     (cent_stats[0][0], cent_stats[0][1])
-    text2 = '$(\sigma_x,\, \sigma_y) = (%.2f, %.2f)\,px$' % \
+    text2 = '$(\sigma_x,\, \sigma_y) = (%.1f, %.1f)\,px$' % \
     (cent_stats[1][0], cent_stats[1][1])
     text = text1 + text2
     plt.text(0.05, 0.88, text, transform=ax1.transAxes,
@@ -160,7 +160,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
             (centers_kde[i][1] - bin_list[i])), bin_list[i] * 2.,
             bin_list[i] * 2., facecolor='none', edgecolor=cols[i], ls='solid',
             lw=1.5, zorder=(len(bin_list) - i),
-            label='Bin: %.2f px' % bin_list[i]))
+            label='Bin: %.1f px' % bin_list[i]))
     # get handles
     handles, labels = ax1.get_legend_handles_labels()
     # use them in the legend
@@ -251,16 +251,15 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
             fill=False, lw=2.5)
         fig.gca().add_artist(circle)
     # Add text box
-    text1 = '$x_{cent} = %.2f \pm %.2f px$' '\n' % (center_cl[0], bin_list[0])
-    text2 = '$y_{cent} = %.2f \pm %.2f px$' % (center_cl[1], bin_list[0])
+    text1 = '$x_{cent} = %.1f \pm %.1f px$' '\n' % (center_cl[0], bin_list[0])
+    text2 = '$y_{cent} = %.1f \pm %.1f px$' % (center_cl[1], bin_list[0])
     text = text1 + text2
     plt.text(0.53, 0.85, text, transform=ax4.transAxes,
-        bbox=dict(facecolor='white', alpha=0.85), fontsize=15)
+        bbox=dict(facecolor='white', alpha=0.85), fontsize=11)
     # Plot stars.
     a, c = 200., 2.5
     area = (max(x_data) - min(x_data)) * (max(y_data) - min(y_data))
     # Solve for optimal star size.
-    b = -0.0035
     b = fsolve(star_size, 0.01, args=(a, c, area))
     plt.scatter(x_data, y_data, marker='o', c='black',
         s=a * np.exp(b * mag_data ** c))
@@ -290,13 +289,13 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
         rt_err = round(np.sqrt(k_pr_err[1][1]))
     else:
         rc_err, rt_err = -1, -1
-    texts = ['RDP (%d px)' % bin_list[0],
+    texts = ['RDP (%0.1f px)' % bin_list[0],
             'backg = %.1E $st/px^{2}$' % backg_value,
             '$\Delta$=%d%%' % delta_percentage,
-            '3-P King prof (%d px)' % d_b_k,
-            'r$_c$ = %d $\pm$ %d px' % (k_prof[0], rc_err),
-            'r$_t$ = %d $\pm$ %d px' % (k_prof[1], rt_err),
-            'r$_{cl}$ = %d $\pm$ %d px' % (clust_rad, round(bin_list[0]))]
+            '3-P King prof (%0.1f px)' % d_b_k,
+            'r$_c$ = %d $\pm$ %0.1f px' % (k_prof[0], rc_err),
+            'r$_t$ = %d $\pm$ %0.1f px' % (k_prof[1], rt_err),
+            'r$_{cl}$ = %d $\pm$ %0.1f px' % (clust_rad, round(bin_list[0]))]
     # Plot density profile with the smallest bin size
     ax5.plot(radii, ring_density, 'ko-', zorder=3, label=texts[0])
     # Plot poisson error bars
