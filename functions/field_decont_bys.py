@@ -16,10 +16,9 @@ def likelihood(region, cl_reg_rad):
     # skipping IDs otherwise thw whole array is converted to strings.
     # Cleaned cluster/field region.
     cl_fl_arr = np.array(zip(*zip(*region)[1:]), dtype=float)
-    print cl_fl_arr[17]
     N = len(region)  # Number of stars in this region.
     # Full cluster region.
-    cl_full_arr = np.array(zip(*zip(*cl_reg_rad)[1:]))
+    cl_full_arr = np.array(zip(*zip(*cl_reg_rad)[1:]), dtype=float)
 
     # Small value used to replace zeros.
     epsilon = 1e-10
@@ -232,7 +231,6 @@ def field_decont_bys(flag_area_stronger, cluster_region, field_region,
         flag_decont_skip = True
 
     # Call function to average all probabilities.
-    print cl_reg_rad[0]
     memb_prob_avrg_sort = mpas(cl_reg_rad, runs_fields_probs)
 
     return memb_prob_avrg_sort, flag_decont_skip
