@@ -41,9 +41,9 @@ def add_data_output(out_file_name, sub_dir, output_dir, clust_name,
     e_m, e_a, e_e, e_d = isoch_fit_errors
     # str(sub_dir)+'_'+str(clust_name)
     line = [str(sub_dir) + '/' + str(clust_name),
-        str('%.1f' % round(center_cl[0]), 1),
-        str('%.1f' % round(center_cl[1]), 1),
-        str('%.1f' % round(clust_rad), 1), str('%.1f' % round(k_prof[0], 1)),
+        str('%.1f' % round(center_cl[0], 1)),
+        str('%.1f' % round(center_cl[1], 1)),
+        str('%.1f' % round(clust_rad, 1)), str('%.1f' % round(k_prof[0], 1)),
         str('%.1f' % round(np.sqrt(k_pr_err[0][0]), 1)),
         str('%.1f' % round(k_prof[1], 1)),
         str('%.1f' % round(np.sqrt(k_pr_err[1][1]), 1)),

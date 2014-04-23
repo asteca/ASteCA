@@ -205,10 +205,11 @@ def field_decont_bys(flag_area_stronger, cluster_region, field_region,
         print 'Reading membership probabilities from file.'
         # File where membership probabilities are stored.
         memb_file = mypath2 + '/' + sub_dir + '/' + clust_name + '_memb.dat'
-        # Read probabilities from file.
+        # Read IDs from file.
         data = np.genfromtxt(memb_file, dtype=str, unpack=True)
-        id_list = data[0]
-        #data = np.loadtxt(memb_file, unpack=True)
+        id_list = data[0].tolist()
+        # Read probabilities from file.
+        data = np.loadtxt(memb_file, unpack=True)
         #id_list = data[0].tolist()
 
         probs = []
