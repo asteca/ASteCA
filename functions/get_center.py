@@ -15,11 +15,9 @@ def center_fun(x_data, y_data, d_b):
     xmin, xmax = min(x_data), max(x_data)
     ymin, ymax = min(y_data), max(y_data)
     rang = [[xmin, xmax], [ymin, ymax]]
-    print '3', rang
 
     # Number of bins in x,y given the bin width 'd_b'
     binsxy = [int((xmax - xmin) / d_b), int((ymax - ymin) / d_b)]
-    print '4', binsxy
 
     # hist is the 2D histogran, *edges store the edges of the bins.
     hist, xedges, yedges = np.histogram2d(x_data, y_data,
@@ -38,8 +36,6 @@ def kde_center(x_data, y_data, x_cent_pix, y_cent_pix, radius):
     # Generate zoom around initial center value.
     xmin_z, xmax_z = x_cent_pix - radius, x_cent_pix + radius
     ymin_z, ymax_z = y_cent_pix - radius, y_cent_pix + radius
-    print '1', xmin_z, xmax_z
-    print '2', ymin_z, ymax_z
     # Use region around the center.
     x_zoom, y_zoom = [], []
     for indx, star_x in enumerate(x_data):
@@ -74,7 +70,6 @@ def get_center(x_data, y_data, mag_data, gc_params, mode, semi_return):
     ymin, ymax = min(y_data), max(y_data)
     rang = [[xmin, xmax], [ymin, ymax]]
     x_span, y_span = max(x_data) - min(x_data), max(y_data) - min(y_data)
-    print '0', x_span, y_span
     # This is the radius used in auto mode to restrict the search of the
     # KDE center coordinates.
     radius = 0.15 * min(x_span, y_span)
@@ -93,7 +88,6 @@ def get_center(x_data, y_data, mag_data, gc_params, mode, semi_return):
         bin_list = gc_params[1:]
         bin_list.sort()
 
-    print '5', bin_list
     # Arrays that store the cluster's center values calculated varying
     # the bin size 'd_b'.
     centers_kde = []

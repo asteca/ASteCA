@@ -171,8 +171,8 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
     # was found around the cluster.
     print 'Applying decontamination algorithm.'
     decont_algor_return = fdb(flag_area_stronger, cluster_region, field_region,
-                            col1_data, mag_data, center_cl, clust_rad,
-                            clust_name, sub_dir, da_params)
+                            center_cl, clust_rad, clust_name, sub_dir,
+                            da_params)
     memb_prob_avrg_sort = decont_algor_return[0]
 
     # Create data file with membership probabilities.

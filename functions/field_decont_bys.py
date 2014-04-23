@@ -12,37 +12,38 @@ def likelihood(region, cl_reg_rad):
     region defined as that inside the cluster's radius.
     '''
 
-    # Store cleaned cluster/field region and full cluster_region as arrays.
-    cl_fl_arr = np.array(region)  # Cleaned cluster/field region.
+    # Store cleaned cluster/field region and full cluster_region as arrays
+    # skipping IDs otherwise thw whole array is converted to strings.
+    cl_fl_arr = np.array(region[1:])  # Cleaned cluster/field region.
     N = len(region)  # Number of stars in this region.
-    cl_full_arr = np.array(cl_reg_rad)  # Full cluster region.
+    cl_full_arr = np.array(cl_reg_rad[1:])  # Full cluster region.
     clust_stars_probs = []
 
     # Small value used to replace zeros.
     epsilon = 1e-10
 
     # Split full cluster region array.
-    P = np.split(cl_full_arr, 7, axis=1)
+    P = np.split(cl_full_arr, 6, axis=1)
     # Square errors in color and magnitude.
-    P[6] = np.square(P[6])  # color
-    P[4] = np.square(P[4])  # magnitude
+    P[5] = np.square(P[5])  # color
+    P[3] = np.square(P[3])  # magnitude
     P = np.hstack(P)
 
     # Split array.
-    Q = np.split(cl_fl_arr, 7, axis=1)
+    Q = np.split(cl_fl_arr, 6, axis=1)
     # Square photometric errors.
-    Q[6] = np.square(Q[6])
-    Q[4] = np.square(Q[4])
+    Q[5] = np.square(Q[5])
+    Q[3] = np.square(Q[3])
 
     # For every star in the full cluster region.
     for star in P:
         # Squares sum of errors.
-        e_col_2 = np.maximum(star[6] + Q[6], epsilon)
-        e_mag_2 = np.maximum(star[4] + Q[4], epsilon)
-        # star[5] & Q[5] = colors
-        # star[3] & Q[3] = magnitude
-        B = np.square(star[5] - Q[5]) / e_col_2
-        C = np.square(star[3] - Q[3]) / e_mag_2
+        e_col_2 = np.maximum(star[5] + Q[5], epsilon)
+        e_mag_2 = np.maximum(star[3] + Q[3], epsilon)
+        # star[4] & Q[4] = colors
+        # star[2] & Q[2] = magnitude
+        B = np.square(star[4] - Q[4]) / e_col_2
+        C = np.square(star[2] - Q[2]) / e_mag_2
         synth_stars = np.exp(-0.5 * (B + C)) / np.sqrt(e_col_2 * e_mag_2)
 
         # The likelihood for this cluster star is the sum over all region
@@ -90,7 +91,7 @@ def mpas(cl_reg_rad, runs_fields_probs):
 
 
 def field_decont_bys(flag_area_stronger, cluster_region, field_region,
-                     col1_data, mag_data, center_cl, clust_rad, clust_name,
+                     center_cl, clust_rad, clust_name,
                      sub_dir, da_params):
     '''
     Bayesian field decontamination algorithm.
