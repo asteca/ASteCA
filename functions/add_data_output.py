@@ -14,7 +14,7 @@ def add_data_output(out_file_name, sub_dir, output_dir, clust_name,
     '''
 
     # Unpack data.
-    center_cl = center_params[0]
+    center_cl = center_params[5]
     flag_center_med, flag_center_std, flag_center_manual = center_params[-3:]
     clust_rad = radius_params[0]
     flag_delta_total, flag_not_stable, flag_delta, flag_radius_manual = \
@@ -41,11 +41,11 @@ def add_data_output(out_file_name, sub_dir, output_dir, clust_name,
     e_m, e_a, e_e, e_d = isoch_fit_errors
     # str(sub_dir)+'_'+str(clust_name)
     line = [str(sub_dir) + '/' + str(clust_name),
-        str('%0.f' % round(center_cl[0])), str('%0.f' % round(center_cl[1])),
-        str('%0.f' % round(clust_rad)), str('%0.f' % round(k_prof[0])),
-        str('%0.f' % round(np.sqrt(k_pr_err[0][0]))),
-        str('%0.f' % round(k_prof[1])),
-        str('%0.f' % round(np.sqrt(k_pr_err[1][1]))),
+        str('%.1g' % round(center_cl[0])), str('%.1g' % round(center_cl[1])),
+        str('%.1g' % round(clust_rad)), str('%.1g' % round(k_prof[0])),
+        str('%.1g' % round(np.sqrt(k_pr_err[0][0]))),
+        str('%.1g' % round(k_prof[1])),
+        str('%.1g' % round(np.sqrt(k_pr_err[1][1]))),
         str(round(cont_index, 2)),
         str(int(n_c)), str(n_c_k), str('%0.2f' % prob_cl_kde),
         str('%0.2f' % ccc), str('%0.2f' % (integ_col - integ_mag)),

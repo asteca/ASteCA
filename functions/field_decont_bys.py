@@ -228,6 +228,7 @@ def field_decont_bys(flag_area_stronger, cluster_region, field_region,
         flag_decont_skip = True
 
     # Call function to average all probabilities.
+    print cl_reg_rad[0]
     memb_prob_avrg_sort = mpas(cl_reg_rad, runs_fields_probs)
 
     return memb_prob_avrg_sort, flag_decont_skip

@@ -114,7 +114,7 @@ def get_king_profile(clust_rad, backg_value, radii, ring_density, delta_xy,
     else:
         print '  WARNING: King profile fitting did not converge.'
         # If 3-P King profile did not converge, pass dummy values
-        n_c_k, k_prof, k_pr_err = -1, [-1, -1, -1], [[-1, -1, -1],
-            [-1, -1, -1], [-1, -1, -1]]
+        n_c_k, k_prof, k_pr_err = -1, [-1, -1, -1], [[1, -1, -1],
+            [-1, 1, -1], [-1, -1, -1]]
 
     return k_prof, k_pr_err, d_b_k, n_c_k, flag_king_no_conver

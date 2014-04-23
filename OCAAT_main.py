@@ -80,7 +80,7 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
     # Get cluster's center values and errors, filtered 2D hist, non-filtered
     # 2D hist, x,y bin centers and width of each bin
     # used
-    center_params = g_c(x_data, y_data, gc_params, mode, semi_return)
+    center_params = g_c(x_data, y_data, mag_data, gc_params, mode, semi_return)
     # Unpack values from list.
     bin_width, h_not_filt, hist_xyedges, bin_center = center_params[0][0], \
     center_params[1], center_params[2], center_params[4]

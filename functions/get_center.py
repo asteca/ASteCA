@@ -15,9 +15,11 @@ def center_fun(x_data, y_data, d_b):
     xmin, xmax = min(x_data), max(x_data)
     ymin, ymax = min(y_data), max(y_data)
     rang = [[xmin, xmax], [ymin, ymax]]
+    print '3', rang
 
     # Number of bins in x,y given the bin width 'd_b'
     binsxy = [int((xmax - xmin) / d_b), int((ymax - ymin) / d_b)]
+    print '4', binsxy
 
     # hist is the 2D histogran, *edges store the edges of the bins.
     hist, xedges, yedges = np.histogram2d(x_data, y_data,
@@ -36,6 +38,8 @@ def kde_center(x_data, y_data, x_cent_pix, y_cent_pix, radius):
     # Generate zoom around initial center value.
     xmin_z, xmax_z = x_cent_pix - radius, x_cent_pix + radius
     ymin_z, ymax_z = y_cent_pix - radius, y_cent_pix + radius
+    print '1', xmin_z, xmax_z
+    print '2', ymin_z, ymax_z
     # Use region around the center.
     x_zoom, y_zoom = [], []
     for indx, star_x in enumerate(x_data):
@@ -59,7 +63,7 @@ def kde_center(x_data, y_data, x_cent_pix, y_cent_pix, radius):
     return x_cent_kde, y_cent_kde, kde_plot
 
 
-def get_center(x_data, y_data, gc_params, mode, semi_return):
+def get_center(x_data, y_data, mag_data, gc_params, mode, semi_return):
     """
     Obtains the center of the putative cluster. Returns the center values
     along with its errors and several arrays related to histograms, mainly for
@@ -70,6 +74,7 @@ def get_center(x_data, y_data, gc_params, mode, semi_return):
     ymin, ymax = min(y_data), max(y_data)
     rang = [[xmin, xmax], [ymin, ymax]]
     x_span, y_span = max(x_data) - min(x_data), max(y_data) - min(y_data)
+    print '0', x_span, y_span
     # This is the radius used in auto mode to restrict the search of the
     # KDE center coordinates.
     radius = 0.15 * min(x_span, y_span)
@@ -78,15 +83,17 @@ def get_center(x_data, y_data, gc_params, mode, semi_return):
     if gc_params[0] == 'auto':
         min_rang = min((rang[0][1] - rang[0][0]), (rang[1][1] - rang[1][0]))
         # Number of bins given by 1%, 2% and 3% of the minimum axis range.
-        bin_list = [int(i * min_rang / 100.) for i in range(1, 5)]
+        #bin_list = [int(i * min_rang / 100.) for i in range(1, 5)]
+        bin_list = [(i * min_rang / 100.) for i in range(1, 5)]
         # Minimum bin widths are: 10, 20, 30, 40 px respectively.
-        for indx, elem_bin in enumerate(bin_list):
-            if elem_bin < 10 * (indx + 1):
-                bin_list[indx] = 10 * (indx + 1)
+        #for indx, elem_bin in enumerate(bin_list):
+            #if elem_bin < 10 * (indx + 1):
+                #bin_list[indx] = 10 * (indx + 1)
     else:
         bin_list = gc_params[1:]
         bin_list.sort()
 
+    print '5', bin_list
     # Arrays that store the cluster's center values calculated varying
     # the bin size 'd_b'.
     centers_kde = []
@@ -186,7 +193,8 @@ def get_center(x_data, y_data, gc_params, mode, semi_return):
     # input new one.
     elif mode == 'm':
         # Show plot with center obtained.
-        d_c(x_data, y_data, center_cl, bin_center, h_filter, bin_list[0])
+        d_c(x_data, y_data, mag_data, center_cl, bin_center, h_filter,
+            bin_list[0])
         plt.show()
 
         wrong_answer = True

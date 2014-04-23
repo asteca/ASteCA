@@ -17,11 +17,14 @@ def disp_rad(phot_data, center_params, clust_rad, delta_backg, delta_percentage,
     x_data, y_data, mag_data, col1_data = phot_data[1], phot_data[2], \
     phot_data[3], phot_data[5]
 
-    center_cl, bin_list = center_params[:2]
-    h_filter, h_not_filt, x_center_bin, y_center_bin, xedges_min_db, \
-    yedges_min_db = center_params[3:9]
+    centers_kde = center_params[5]
+    center_cl = [centers_kde[0][0], centers_kde[0][1]]
+    bin_list, h_not_filt, hist_xyedges, h_filter, bin_center = center_params[:5]
+    xedges_min_db, yedges_min_db = hist_xyedges
+    x_center_bin, y_center_bin = bin_center
+
     bin_width, cent_cl_err = bin_list[0], bin_list[0]
-    radii, ring_density, poisson_error = rdp_params
+    radii, ring_density, poisson_error = rdp_params[:3]
 
     # Plot all outputs
     fig = plt.figure(figsize=(12, 12))
@@ -32,18 +35,18 @@ def disp_rad(phot_data, center_params, clust_rad, delta_backg, delta_percentage,
     plt.xlabel('x (bins)', fontsize=12)
     plt.ylabel('y (bins)', fontsize=12)
     ax1.minorticks_on()
-    plt.axvline(x=x_center_bin[0], linestyle='--', color='white')
-    plt.axhline(y=y_center_bin[0], linestyle='--', color='white')
+    plt.axvline(x=x_center_bin, linestyle='--', color='white')
+    plt.axhline(y=y_center_bin, linestyle='--', color='white')
     # Radius
-    circle = plt.Circle((x_center_bin[0], y_center_bin[0]),
+    circle = plt.Circle((x_center_bin, y_center_bin),
         clust_rad / bin_width, color='w', fill=False)
     fig.gca().add_artist(circle)
-    #text = 'Center (%d, %d)' % (x_center_bin, y_center_bin)
     text = 'Bin: %d px' % (bin_width)
     plt.text(0.7, 0.92, text, transform=ax1.transAxes,
              bbox=dict(facecolor='white', alpha=0.8), fontsize=12)
-    plt.imshow(h_filter[0].transpose(), origin='lower')
+    plt.imshow(h_filter.transpose(), origin='lower')
 
+    # Finding chart.
     ax2 = plt.subplot(gs[0, 1])
     # Get max and min values in x,y
     x_min, x_max = min(x_data), max(x_data)
@@ -71,14 +74,16 @@ def disp_rad(phot_data, center_params, clust_rad, delta_backg, delta_percentage,
     plt.scatter(x_data, y_data, marker='o', c='black',
         s=a * np.exp(b * mag_data ** c))
 
+    # Radial density plot.
     ax3 = plt.subplot(gs[1, 0:2])
     # Get max and min values in x,y
-    x_max = max(radii) + 10
+    x_min, x_max = min(radii) - (max(radii) / 10.), \
+    max(radii) + (max(radii) / 10.)
     y_min, y_max = (backg_value - delta_backg) - (max(ring_density) -
     min(ring_density)) / 10, max(ring_density) + (max(ring_density) -
     min(ring_density)) / 10
     # Set plot limits
-    plt.xlim(-10, x_max)
+    plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
     # Set axes labels
     plt.xlabel('radius (px)', fontsize=12)
