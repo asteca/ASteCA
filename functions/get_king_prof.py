@@ -7,39 +7,21 @@ Created on Fri Oct 25 10:54:00 2013
 
 import numpy as np
 from scipy.optimize import curve_fit
-from scipy.ndimage.filters import gaussian_filter
-from get_dens_prof import get_dens_prof as gdp
 
 
-def new_hist(x_data, y_data, d_b):
+def two_params(x, cd, rc, bg):
     '''
-    Generate new 2D histogram with increased bin width. Obtain also new center
-    value.
+    Two parameters King profile fit.
     '''
-    xmin, xmax = min(x_data), max(x_data)
-    ymin, ymax = min(y_data), max(y_data)
-    rang = [[xmin, xmax], [ymin, ymax]]
-    binsxy = [int((xmax - xmin) / d_b), int((ymax - ymin) / d_b)]
-    # hist is the 2D histogran, xedges & yedges store the edges of the bins
-    hist, xedges, yedges = np.histogram2d(x_data, y_data, range=rang,
-                                          bins=binsxy)
-    # H_g is the 2D histogram with a gaussian filter applied
-    h_g = gaussian_filter(hist, 2, mode='constant')
-    # x_c_b, y_c_b store the x,y coordinates of the bin with the
-    # maximum value in the 2D filtered histogram.
-    x_c_b, y_c_b = np.unravel_index(h_g.argmax(), h_g.shape)
-
-    return hist, x_c_b, y_c_b
+    return bg + cd / (1 + (np.asarray(x) / rc) ** 2)
 
 
-def three_params(x, a, b, c):
+def three_params(x, rt, cd, rc, bg):
     '''
     Three parameters King profile fit.
     '''
-    d = backg_dens
-
-    return c * (1 / np.sqrt(1 + (np.asarray(x) / a) ** 2) -
-        1 / np.sqrt(1 + (b / a) ** 2)) ** 2 + d
+    return cd * (1 / np.sqrt(1 + (np.asarray(x) / rc) ** 2) -
+        1 / np.sqrt(1 + (rt / rc) ** 2)) ** 2 + bg
 
 
 def get_king_profile(kp_flag, clust_rad, backg_value, radii, ring_density,
@@ -47,21 +29,22 @@ def get_king_profile(kp_flag, clust_rad, backg_value, radii, ring_density,
     '''
     Function to fit the 3-params King profile to a given radial density.
     The background density value is fixed and the core radius, tidal radius and
-    maximum density are fitted.
+    maximum central density are fitted.
     '''
 
-    global backg_dens
+    # Flags that indicate either no convergence or that the fits were not
+    # attempted.
+    flag_2pk_conver, flag_3pk_conver = False, False
 
     # Check flag to run or skip.
     if kp_flag:
 
-        # Define values used by King profiles.
-        max_dens = max(ring_density)
-        backg_dens = backg_value
-        r_t = clust_rad
-
-        # Initial guesses for fit: r_c, r_t, max_dens.
-        guess = (r_t / 2., r_t, max_dens)
+        # Background value is fixed.
+        bg = backg_value
+        # Initial guesses for fit: max_dens, rt, rc
+        max_dens, rt, rc = max(ring_density), clust_rad, clust_rad / 2.
+        guess2 = (max_dens, rc)
+        guess3 = (rt)
 
         # Skip first radius value if it is smaller than the second value. This
         # makes it easier for the KP to converge.
@@ -70,60 +53,53 @@ def get_king_profile(kp_flag, clust_rad, backg_value, radii, ring_density,
         else:
             radii_k, ring_dens_k = radii[1:], ring_density[1:]
 
-        flag_king_no_conver = True  # Flag that indicates no convergence.
-        # i is the initial bin width in px that will be used if the KP doesn't
-        # converge with the width_bin value.
-        i, d_b_k = 10, width_bin
-        # Iterate increasing the bin width until either King profile converges
-        # or the original bin width is reached.
-        while flag_king_no_conver is True and i < width_bin:
+        # Fit the 2P King profile first to obtain the maximum central density
+        # and core radius.
+        try:
+            popt, pcov = curve_fit(lambda x, cd,
+                rc: two_params(x, cd, rc, bg), radii_k, ring_dens_k, guess2)
+            # Unpaxk max density and core radius.
+            cd, rc = popt
+            # Obtain error in core radius.
+            e_rc = np.sqrt(pcov[1][1]) if pcov[1][1] > 0 else -1.
+            flag_2pk_conver = True
+        except RuntimeError:
+            flag_2pk_conver = False
 
+        # Attempt to fit the tidal radius if the previous values were found.
+        if flag_2pk_conver:
             try:
-                k_prof, k_pr_err = curve_fit(three_params, radii_k, ring_dens_k,
-                    guess)
+                popt, pcov = curve_fit(lambda x,
+                    rt: three_params(x, rt, cd, rc, bg), radii_k, ring_dens_k,
+                    guess3)
+                # Unpack tidal radius and its error.
+                rt = popt[0]
+                e_rt = np.sqrt(pcov[0][0]) if pcov[0][0] > 0 else -1.
+                flag_3pk_conver = True
 
                 # If fit converged to tidal radius that extends beyond the
                 # maximum range of the frame, discard it.
-                if k_prof[1] > delta_xy:
-                    k_prof[1] = -1.
-                    k_pr_err[1][1] = 1.
+                if rt > delta_xy:
+                    rt, e_rt = -1., -1.
                     # Raise flag.
-                    flag_king_no_conver = True
-                else:
-                    flag_king_no_conver = False
-
+                    flag_3pk_conver = False
             except RuntimeError:
-                flag_king_no_conver = True
+                flag_3pk_conver = False
 
-            if flag_king_no_conver is True:
-
-                # Increase bin width by 1 px.
-                d_b_k = i
-                # Obtain 2D histo with new bin width.
-                hist, x_c_b, y_c_b = new_hist(x_data, y_data, d_b_k)
-                bin_center = [x_c_b, y_c_b]
-                # Get new density profile.
-                rdp_out = gdp(hist, bin_center, d_b_k)
-                radii_k, ring_dens_k = rdp_out[:2]
-
-            i += 1
-
-        # If 3-P King profile converged, calculate approximate number of cluster
-        # members with eq (3) from Froebrich et al. (2007); 374, 399-408
-        if flag_king_no_conver is False:
-            print '3-P King profile obtained: %0.2f px.' % k_prof[1]
-            x = 1 + (k_prof[1] / k_prof[0]) ** 2
-            n_c_k = int(round((np.pi * max_dens * k_prof[0] ** 2) * (np.log(x) -
+        # If 3-P King profile converged, ie: the tidal radius was found,
+        # calculate approximate number of cluster members with eq (3) from
+        # Froebrich et al. (2007); 374, 399-408
+        if flag_3pk_conver is True:
+            print 'Tidal radius obtained: %0.2f px.' % rt
+            x = 1 + (rt / rc) ** 2
+            n_c_k = int(round((np.pi * cd * rc ** 2) * (np.log(x) -
             4 + (4 * np.sqrt(x) + (x - 1)) / x)))
         else:
-            print '  WARNING: King profile fitting did not converge.'
+            print '  WARNING: tidal radius could not be obtained.'
             # If 3-P King profile did not converge, pass dummy values
-            n_c_k, k_prof, k_pr_err = -1, [-1, -1, -1], [[1, -1, -1],
-                [-1, 1, -1], [-1, -1, -1]]
+            rt, e_rt, n_c_k = -1., -1., -1.
     else:
         # Pass dummy values
-        flag_king_no_conver = True
-        n_c_k, k_prof, k_pr_err, d_b_k = -1, [-1, -1, -1], [[1, -1, -1],
-            [-1, 1, -1], [-1, -1, -1]], -1.
+        rc, e_rc, rt, e_rt, n_c_k, cd = -1., -1., -1., -1., -1., -1.
 
-    return k_prof, k_pr_err, d_b_k, n_c_k, flag_king_no_conver
+    return rc, e_rc, rt, e_rt, n_c_k, cd, flag_2pk_conver, flag_3pk_conver

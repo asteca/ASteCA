@@ -116,9 +116,8 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
 
     # Get King profiles based on the density profiles.
     delta_xy = max((max(x_data) - min(x_data)), (max(y_data) - min(y_data)))
-    k_prof, k_pr_err, d_b_k, n_c_k, flag_king_no_conver = \
-    gkp(kp_flag, clust_rad, backg_value, radii, ring_density, delta_xy,
-        x_data, y_data, bin_width)
+    kp_params = gkp(kp_flag, clust_rad, backg_value, radii, ring_density,
+        delta_xy, x_data, y_data, bin_width)
 
     # Accept and reject stars based on their errors.
     popt_mag, popt_col1, acpt_stars, rjct_stars, err_plot, rjct_errors_fit = \
@@ -229,9 +228,9 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
 
     # Add cluster data and flags to output file
     a_d_o(out_file_name, sub_dir, output_dir, clust_name, center_params,
-        radius_params, k_prof, k_pr_err, n_c_k, flag_king_no_conver, cont_index,
-        n_c, pval_test_params[0], qq_params[0], integr_return,
-        rjct_errors_fit, flag_num_memb_low, bf_return)
+        radius_params, kp_params, cont_index, n_c, pval_test_params[0],
+        qq_params[0], integr_return, rjct_errors_fit, flag_num_memb_low,
+        bf_return)
     print 'Data added to output file.'
 
     # Make plots
@@ -239,11 +238,10 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
         mp(output_subdir, clust_name, x_data, y_data, center_params, rdp_params,
             backg_value, radius_params[0:3],
             cont_index, mag_data, col1_data, popt_mag, popt_col1,
-            err_plot, rjct_errors_fit, k_prof, k_pr_err, d_b_k,
-            flag_king_no_conver, stars_in, stars_out, stars_in_rjct,
-            stars_out_rjct, integr_return, n_c, flag_area_stronger,
-            cluster_region, field_region, pval_test_params, qq_params,
-            memb_prob_avrg_sort, completeness, bf_params, red_return,
+            err_plot, rjct_errors_fit, kp_params, stars_in, stars_out,
+            stars_in_rjct, stars_out_rjct, integr_return, n_c,
+            flag_area_stronger, cluster_region, field_region, pval_test_params,
+            qq_params, memb_prob_avrg_sort, completeness, bf_params, red_return,
             bf_return, ga_params, er_params, axes_params, ps_params, pl_params)
         print 'Plots created.'
 

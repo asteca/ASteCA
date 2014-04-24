@@ -18,7 +18,7 @@ import warnings
 def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     rdp_params, backg_value, radius_params,
     cont_index, mag_data, col1_data, popt_mag, popt_col1,
-    err_plot, rjct_errors_fit, k_prof, k_pr_err, d_b_k, flag_king_no_conver,
+    err_plot, rjct_errors_fit, kp_params,
     stars_in, stars_out, stars_in_rjct, stars_out_rjct, integr_return, n_c,
     flag_area_stronger, cluster_region, field_region, pval_test_params,
     qq_params, memb_prob_avrg_sort, completeness, bf_params, red_return,
@@ -46,13 +46,26 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
         y = slope * x + intercept
         return y
 
-    def three_params(x):
+    #def three_params(x):
+        #'''
+        #Three parameters King profile fit.
+        #'''
+        #a, b, c, d = k_prof[0], k_prof[1], k_prof[2], backg_value
+        #return c * (1 / np.sqrt(1 + (x / a) ** 2) - 1 /
+        #np.sqrt(1 + (b / a) ** 2)) ** 2 + d
+
+    def two_params(x, cd, rc, bg):
+        '''
+        Two parameters King profile fit.
+        '''
+        return bg + cd / (1 + (np.asarray(x) / rc) ** 2)
+
+    def three_params(x, rt, cd, rc, bg):
         '''
         Three parameters King profile fit.
         '''
-        a, b, c, d = k_prof[0], k_prof[1], k_prof[2], backg_value
-        return c * (1 / np.sqrt(1 + (x / a) ** 2) - 1 /
-        np.sqrt(1 + (b / a) ** 2)) ** 2 + d
+        return cd * (1 / np.sqrt(1 + (np.asarray(x) / rc) ** 2) -
+            1 / np.sqrt(1 + (rt / rc) ** 2)) ** 2 + bg
 
     # Name for axes.
     x_ax, y_ax = axes_params[0], axes_params[1]
@@ -77,6 +90,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     radii, ring_density, poisson_error = rdp_params[:3]
     # Parameters from get_radius function.
     clust_rad, delta_backg, delta_percentage = radius_params
+    # King prof params.
+    rc, e_rc, rt, e_rt, n_c_k, cd, flag_2pk_conver, flag_3pk_conver = kp_params
     # Error parameters.
     be, be_e, e_max = er_params
     # Parameters from error fitting.
@@ -169,63 +184,6 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     # Set the alpha value of the legend.
     leg1.get_frame().set_alpha(0.5)
 
-    ## 2D weighted histogram's centers.
-    #ax2 = plt.subplot(gs1[0:2, 4:6])
-    ##Set plot limits
-    #plt.xlim(x_min, x_max)
-    #plt.ylim(y_min, y_max)
-    #plt.xlabel('x (px)', fontsize=12)
-    #plt.ylabel('y (px)', fontsize=12)
-    #ax2.minorticks_on()
-    ## Add lines through meadian values with std deviations.
-    #plt.axvline(x=cent_stats[2][0], linestyle='-', color='k')
-    #plt.axvline(x=cent_stats[2][0] + cent_stats[3][0], linestyle='--',
-        #color='k')
-    #plt.axvline(x=cent_stats[2][0] - cent_stats[3][0], linestyle='--',
-        #color='k')
-    #plt.axhline(y=cent_stats[2][1], linestyle='-', color='k')
-    #plt.axhline(y=cent_stats[2][1] + cent_stats[3][1], linestyle='--',
-        #color='k')
-    #plt.axhline(y=cent_stats[2][1] - cent_stats[3][1], linestyle='--',
-        #color='k')
-    ## Add stats box.
-    #text1 = r'$(\tilde{x},\, \tilde{y}) = (%0.0f, %0.0f)\,px$' '\n' % \
-    #(cent_stats[2][0], cent_stats[2][1])
-    #text2 = '$(\sigma_x,\, \sigma_y) = (%0.0f, %0.0f)\,px$' % \
-    #(cent_stats[3][0], cent_stats[3][1])
-    #text = text1 + text2
-    #plt.text(0.05, 0.88, text, transform=ax2.transAxes,
-        #bbox=dict(facecolor='white', alpha=0.85), fontsize=11)
-    #cols = ['red', 'blue', 'green', 'black']
-    #for i in range(len(bin_list)):
-        #boxes = plt.gca()
-        #boxes.add_patch(Rectangle(((center_coords[1][i][0] - bin_list[i] / 2.),
-            #(center_coords[1][i][1] - bin_list[i] / 2.)), bin_list[i] * 2.,
-            #bin_list[i] * 2., facecolor='none', edgecolor=cols[i], ls='solid',
-            #lw=2., zorder=(len(bin_list) - i)))
-
-    ## 2D weighted gaussian convolved histogram, smallest bin width.
-    #ax3 = plt.subplot(gs1[0:2, 6:8])
-    #plt.xlabel('x (bins)', fontsize=12)
-    #plt.ylabel('y (bins)', fontsize=12)
-    #ax3.minorticks_on()
-    #plt.axvline(x=x_center_bin[1], linestyle='--', color='white')
-    #plt.axhline(y=y_center_bin[1], linestyle='--', color='white')
-    ## Add text boxs.
-    #text1 = 'Bin: %d px' '\n' % (bin_list[0])
-    #text2 = '(weighted)'
-    #text = text1 + text2
-    #plt.text(0.05, 0.87, text, transform=ax3.transAxes,
-             #bbox=dict(facecolor='white', alpha=0.8), fontsize=12)
-    #text1 = '$x_{cent} = %d \pm %d px$' '\n' % (center_coords[1][0][0],
-        #bin_list[0])
-    #text2 = '$y_{cent} = %d \pm %d px$' % (center_coords[1][0][1],
-        #bin_list[0])
-    #text = text1 + text2
-    #plt.text(0.53, 0.85, text, transform=ax3.transAxes,
-        #bbox=dict(facecolor='white', alpha=0.85), fontsize=15)
-    #plt.imshow(h_filter[1].transpose(), origin='lower', aspect='auto')
-
     # x,y finding chart of full frame
     ax4 = plt.subplot(gs1[2:4, 0:2])
     #Set plot limits
@@ -240,14 +198,15 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     circle = plt.Circle((center_cl[0], center_cl[1]), clust_rad, color='r',
         fill=False, lw=2.5)
     fig.gca().add_artist(circle)
-    # Plot r_t if K-P converged.
-    if flag_king_no_conver is False:
-        if k_prof[0] > 0:
-            circle = plt.Circle((center_cl[0], center_cl[1]), k_prof[0],
+    # Plot core radius.
+    if flag_2pk_conver is True:
+        if rc > 0:
+            circle = plt.Circle((center_cl[0], center_cl[1]), rc,
                 color='g', fill=False, ls='dashed', lw=2.5)
             fig.gca().add_artist(circle)
-        # Plot tidal radius.
-        circle = plt.Circle((center_cl[0], center_cl[1]), k_prof[1], color='g',
+    # Plot tidal radius.
+    if flag_3pk_conver is True:
+        circle = plt.Circle((center_cl[0], center_cl[1]), rt, color='g',
             fill=False, lw=2.5)
         fig.gca().add_artist(circle)
     # Add text box
@@ -282,20 +241,13 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     text = str(clust_name)
     plt.text(0.4, 0.9, text, transform=ax5.transAxes, fontsize=14)
     # Legend texts
-    # Calculate errors for fitted King parameters. Use sqrt since the error
-    # given by 'curve_fit' is the variance and we want the standard deviation.
-    if flag_king_no_conver is False:
-        rc_err = round(np.sqrt(k_pr_err[0][0]))
-        rt_err = round(np.sqrt(k_pr_err[1][1]))
-    else:
-        rc_err, rt_err = -1, -1
     texts = ['RDP (%0.1f px)' % bin_list[0],
             'backg = %.1E $st/px^{2}$' % backg_value,
             '$\Delta$=%d%%' % delta_percentage,
-            '3-P King prof (%0.1f px)' % d_b_k,
-            'r$_c$ = %d $\pm$ %0.1f px' % (k_prof[0], rc_err),
-            'r$_t$ = %d $\pm$ %0.1f px' % (k_prof[1], rt_err),
-            'r$_{cl}$ = %d $\pm$ %0.1f px' % (clust_rad, round(bin_list[0]))]
+            'King profile',
+            'r$_c$ = %0.1f $\pm$ %0.1f px' % (rc, e_rc),
+            'r$_t$ = %0.1f $\pm$ %0.1f px' % (rt, e_rt),
+            'r$_{cl}$ = %0.1f $\pm$ %0.1f px' % (clust_rad, round(bin_list[0]))]
     # Plot density profile with the smallest bin size
     ax5.plot(radii, ring_density, 'ko-', zorder=3, label=texts[0])
     # Plot poisson error bars
@@ -310,22 +262,31 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
                color='b', linestyles='dashed', label=texts[2], zorder=2)
     # Approx middle of the graph.
     arr_y_up = (y_max - y_min) / 2.3 + y_min
-    # Length of arrow head.
-    #head_w = abs((arr_y_up - backg_value) / 10.)
+    # Length and width of arrow head.
     head_w, head_l = x_max * 0.023, (y_max - y_min) * 0.045
     # Length of arrow.
     arr_y_dwn = -1. * abs(arr_y_up - backg_value) * 0.76
-    # Plot King profile.
-    if flag_king_no_conver is False:
-        ax5.plot(radii, three_params(radii), 'g--', label=texts[3],
-                 lw=2., zorder=3)
-        # Plot r_c as a dashed line.
-        ax5.vlines(x=k_prof[0], ymin=0, ymax=three_params(k_prof[0]),
-                   label=texts[4], color='g', linestyles=':', lw=4., zorder=4)
+    # Plot 3-P King profile.
+    if flag_3pk_conver is True:
+        # Plot curve.
+        ax5.plot(radii, three_params(radii, rt, cd, rc, backg_value), 'g--',
+            label=texts[3], lw=2., zorder=3)
         # Plot r_t radius as an arrow. vline is there to show the label.
-        ax5.vlines(x=k_prof[1], ymin=0., ymax=0., label=texts[5], color='g')
-        ax5.arrow(k_prof[1], arr_y_up, 0., arr_y_dwn, fc="g", ec="g",
+        ax5.vlines(x=rt, ymin=0., ymax=0., label=texts[5], color='g')
+        ax5.arrow(rt, arr_y_up, 0., arr_y_dwn, fc="g", ec="g",
                   head_width=head_w, head_length=head_l, zorder=5)
+        if flag_2pk_conver is True:
+            # Plot r_c as a dashed line.
+            ax5.vlines(x=rc, ymin=0, ymax=two_params(rc, cd, rc, backg_value),
+                label=texts[4], color='g', linestyles=':', lw=4., zorder=4)
+    # Plot 2-P King profile if 3-P was not found.
+    elif flag_2pk_conver is True:
+        # Plot curve.
+        ax5.plot(radii, two_params(radii, cd, rc, backg_value), 'g--',
+            label=texts[3], lw=2., zorder=3)
+        # Plot r_c as a dashed line.
+        ax5.vlines(x=rc, ymin=0, ymax=two_params(rc, cd, rc, backg_value),
+                   label=texts[4], color='g', linestyles=':', lw=4., zorder=4)
     # Plot radius.
     ax5.vlines(x=clust_rad, ymin=0, ymax=0., label=texts[6], color='r')
     ax5.arrow(clust_rad, arr_y_up, 0., arr_y_dwn, fc="r",
