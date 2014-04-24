@@ -62,8 +62,10 @@ def get_in_params(mypath):
                     iso_select = str(reader[1])
 
                 elif reader[0] == 'CC':
-                    gc_params0 = [str(reader[1])]
-                    gc_params1 = map(float, reader[2:])
+                    gc_params0 = str(reader[1])
+                    gc_params1 = float(reader[2])
+                    #gc_params2 = str(reader[3])
+
                 elif reader[0] == 'CR':
                     cr_params0 = str(reader[1])
                     cr_params1 = map(float, reader[2:])
@@ -116,7 +118,7 @@ def get_in_params(mypath):
 
     pl_params = [flag_make_plot, plot_frmt, plot_dpi]
     cr_params = [cr_params0] + cr_params1
-    gc_params = gc_params0 + gc_params1
+    gc_params = [gc_params0, gc_params1]
     in_dirs = [input_dir, output_dir, done_dir]
     pv_params = [pv0_params, pv1_params, pv2_params]
     da_params = [da0_params, da1_params, input_dir]

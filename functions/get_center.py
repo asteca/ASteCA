@@ -80,8 +80,7 @@ def get_center(x_data, y_data, mag_data, gc_params, mode, semi_return):
         # Number of bins given by 1%, 2% and 3% of the minimum axis range.
         bin_list = [(i * min_rang / 100.) for i in range(1, 5)]
     else:
-        bin_list = gc_params[1:]
-        bin_list.sort()
+        bin_list = [(i * gc_params[1]) for i in range(1, 5)]
 
     # Arrays that store the cluster's center values calculated varying
     # the bin size 'd_b'.
