@@ -25,7 +25,7 @@ def three_params(x, rt, cd, rc, bg):
 
 
 def get_king_profile(kp_flag, clust_rad, backg_value, radii, ring_density,
-    delta_xy, x_data, y_data, width_bin):
+    x_data, y_data, width_bin):
     '''
     Function to fit the 3-params King profile to a given radial density.
     The background density value is fixed and the core radius, tidal radius and
@@ -66,11 +66,10 @@ def get_king_profile(kp_flag, clust_rad, backg_value, radii, ring_density,
             e_rt = np.sqrt(pcov[2][2]) if pcov[2][2] > 0 else -1.
             flag_3pk_conver = True
 
-            # If fit converged to tidal radius that extends beyond the
-            # maximum range of the frame, discard it.
-            if rt > delta_xy:
-                rt, e_rt = -1., -1.
-                # Raise flag.
+            # If fit converged to tidal radius that extends beyond 100 times
+            # the core radius, discard it.
+            if rt > rc * 100.:
+                # Raise flag to reject fit.
                 flag_3pk_conver = False
         except RuntimeError:
             flag_3pk_conver = False

@@ -115,9 +115,8 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
     print 'Contamination index obtained (%0.2f).' % cont_index
 
     # Get King profiles based on the density profiles.
-    delta_xy = max((max(x_data) - min(x_data)), (max(y_data) - min(y_data)))
     kp_params = gkp(kp_flag, clust_rad, backg_value, radii, ring_density,
-        delta_xy, x_data, y_data, bin_width)
+        x_data, y_data, bin_width)
 
     # Accept and reject stars based on their errors.
     popt_mag, popt_col1, acpt_stars, rjct_stars, err_plot, rjct_errors_fit = \
