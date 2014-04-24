@@ -387,7 +387,7 @@ did not converge.'
 
     # Is 'semi' is set, check for the flag that indicates whether to use
     # auto errors rejecting or all stars with errors < e_max.
-    if mode == 's':
+    if mode == 'semi':
         # Unpack semi values.
         err_flag_semi = semi_return[4]
         # Apply auto rejecting of errors if flag is True.
@@ -402,7 +402,7 @@ did not converge.'
     # If 'manual' mode is set, display errors distributions and ask the user
     # to accept it or else use all stars except those with errors > e_max in
     # either the magnitude or the color.
-    elif mode == 'm':
+    elif mode == 'manual':
         print 'Plot error distributions.'
         # Display automatic errors rejection.
         d_e(phot_data[3], popt_mag, popt_col1, acpt_stars, rjct_stars, err_plot,

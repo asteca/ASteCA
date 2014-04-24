@@ -126,10 +126,10 @@ def get_clust_rad(phot_data, backg_value, cr_params, center_params,
 
     # Check if semi or manual mode are set.
     flag_radius_manual = False
-    if mode == 'a':
+    if mode == 'auto':
         print 'Auto radius found: %0.1f px.' % clust_rad
 
-    elif mode == 's':
+    elif mode == 'semi':
         # Unpack semi values.
         cent_cl_semi, cl_rad_semi, cent_flag_semi, rad_flag_semi, \
         err_flag_semi = semi_return
@@ -143,7 +143,7 @@ def get_clust_rad(phot_data, backg_value, cr_params, center_params,
 
     # If Manual mode is set, display radius and ask the user to accept it or
     # input new one.
-    elif mode == 'm':
+    elif mode == 'manual':
 
         print 'Radius found: %0.1f px' % clust_rad
         d_r(phot_data, center_params, clust_rad, delta_backg, delta_percentage,

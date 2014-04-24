@@ -14,7 +14,7 @@ def get_semi(input_dir, clust_name, mode):
     '''
 
     # Mode is semi.
-    if mode == 's':
+    if mode == 'semi':
 
         semi_file = join(input_dir, 'semi_input.dat')
         # Check if semi_input.dat file exists.
@@ -46,13 +46,13 @@ def get_semi(input_dir, clust_name, mode):
                 # If the cluster was not found in the file, default to 'manual'.
                 print "  WARNING: cluster not found in semi_input.dat file."
                 print "  Default to 'manual' mode."
-                mode = 'm'
+                mode = 'manual'
                 semi_return = []
         else:
             # File semi_input.dat does not exist.
             print "  WARNING: semi_input.dat file does not exist."
             print "  Default to 'manual' mode."
-            mode = 'm'
+            mode = 'manual'
             semi_return = []
     else:
         # Mode is not semi.

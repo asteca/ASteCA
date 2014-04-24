@@ -15,7 +15,7 @@ def trim_frame(phot_data, mode):
     Trim frame according to given values of new center and side lengths.
     '''
 
-    if mode == 'm':
+    if mode == 'manual':
 
         # Unpack data.
         id_star, x_data, y_data, mag_data, e_mag, col1_data, e_col1 = phot_data

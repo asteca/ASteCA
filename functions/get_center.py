@@ -146,11 +146,11 @@ def get_center(x_data, y_data, mag_data, gc_params, mode, semi_return):
         flag_center_std = True
 
     flag_center_manual = False
-    if mode == 'a':
+    if mode == 'auto':
         print 'Auto center found: (%0.2f, %0.2f) px.' % (center_cl[0],
         center_cl[1])
 
-    elif mode == 's':
+    elif mode == 'semi':
         # Unpack semi values.
         cent_cl_semi, cl_rad_semi, cent_flag_semi, rad_flag_semi, \
         err_flag_semi = semi_return
@@ -180,7 +180,7 @@ def get_center(x_data, y_data, mag_data, gc_params, mode, semi_return):
 
     # If Manual mode is set, display center and ask the user to accept it or
     # input new one.
-    elif mode == 'm':
+    elif mode == 'manual':
         # Show plot with center obtained.
         d_c(x_data, y_data, mag_data, center_cl, bin_center, h_filter,
             bin_list[0])

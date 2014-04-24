@@ -53,6 +53,11 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
     gip_params
     input_dir, output_dir, done_dir = in_dirs
 
+    # Check mode.
+    if mode not in {'auto', 'semi', 'manual'}:
+        print "  WARNING: mode is incorrect. Default to 'manual'."
+        mode = 'manual'
+
     # Generate output subdir.
     output_subdir = join(output_dir, sub_dir)
     # Check if subdir already exists, if not create it.
@@ -209,7 +214,7 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
 
     # New name for cluster? Useful when there's a single photometric file
     # with multiple clusters in it.
-    if mode == 'm':
+    if mode == 'manual':
         wrong_answer = True
         while wrong_answer:
             answer_rad = raw_input('New name for cluster? (y/n) ')
