@@ -70,6 +70,9 @@ def get_in_params(mypath):
                     cr_params0 = str(reader[1])
                     cr_params1 = map(float, reader[2:])
 
+                elif reader[0] == 'KP':
+                    kp_flag = True if reader[1] in true_lst else False
+
                 elif reader[0] == 'ER':
                     er_params = map(float, reader[1:])
                 elif reader[0] == 'GR':
@@ -166,6 +169,6 @@ def get_in_params(mypath):
     # Store axes params.
     axes_params = [x_ax, y_ax, xy_minmax]
 
-    return mode, in_dirs, gd_params, gc_params, cr_params, \
+    return mode, in_dirs, gd_params, gc_params, cr_params, kp_flag, \
     er_params, gr_params, pv_params, da_params, ps_params, bf_params, \
     sc_params, ga_params, rm_params, pl_params, flag_move_file, axes_params

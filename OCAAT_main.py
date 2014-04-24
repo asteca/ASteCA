@@ -47,7 +47,7 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
     # Start timing this loop.
     start = time.time()
 
-    mode, in_dirs, gd_params, gc_params, cr_params, er_params,\
+    mode, in_dirs, gd_params, gc_params, cr_params, kp_flag, er_params,\
     gr_params, pv_params, da_params, ps_params, bf_params, \
     sc_params, ga_params, rm_params, pl_params, flag_move_file, axes_params =\
     gip_params
@@ -117,8 +117,8 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
     # Get King profiles based on the density profiles.
     delta_xy = max((max(x_data) - min(x_data)), (max(y_data) - min(y_data)))
     k_prof, k_pr_err, d_b_k, n_c_k, flag_king_no_conver = \
-    gkp(clust_rad, backg_value, radii, ring_density, delta_xy, x_data, y_data,
-        bin_width)
+    gkp(kp_flag, clust_rad, backg_value, radii, ring_density, delta_xy,
+        x_data, y_data, bin_width)
 
     # Accept and reject stars based on their errors.
     popt_mag, popt_col1, acpt_stars, rjct_stars, err_plot, rjct_errors_fit = \
