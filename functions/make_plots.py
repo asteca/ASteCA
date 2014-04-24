@@ -46,14 +46,6 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
         y = slope * x + intercept
         return y
 
-    #def three_params(x):
-        #'''
-        #Three parameters King profile fit.
-        #'''
-        #a, b, c, d = k_prof[0], k_prof[1], k_prof[2], backg_value
-        #return c * (1 / np.sqrt(1 + (x / a) ** 2) - 1 /
-        #np.sqrt(1 + (b / a) ** 2)) ** 2 + d
-
     def two_params(x, cd, rc, bg):
         '''
         Two parameters King profile fit.
@@ -198,17 +190,22 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     circle = plt.Circle((center_cl[0], center_cl[1]), clust_rad, color='r',
         fill=False, lw=2.5)
     fig.gca().add_artist(circle)
-    # Plot core radius.
-    if flag_2pk_conver is True:
+    if flag_3pk_conver is True:
+        # Plot tidal radius.
+        circle = plt.Circle((center_cl[0], center_cl[1]), rt, color='g',
+            fill=False, lw=2.5)
+        fig.gca().add_artist(circle)
+        # Plot core radius.
         if rc > 0:
             circle = plt.Circle((center_cl[0], center_cl[1]), rc,
                 color='g', fill=False, ls='dashed', lw=2.5)
             fig.gca().add_artist(circle)
-    # Plot tidal radius.
-    if flag_3pk_conver is True:
-        circle = plt.Circle((center_cl[0], center_cl[1]), rt, color='g',
-            fill=False, lw=2.5)
-        fig.gca().add_artist(circle)
+    elif flag_2pk_conver is True:
+        # Plot core radius.
+        if rc > 0:
+            circle = plt.Circle((center_cl[0], center_cl[1]), rc,
+                color='g', fill=False, ls='dashed', lw=2.5)
+            fig.gca().add_artist(circle)
     # Add text box
     text1 = '$x_{cent} = %.1f \pm %.1f px$' '\n' % (center_cl[0], bin_list[0])
     text2 = '$y_{cent} = %.1f \pm %.1f px$' % (center_cl[1], bin_list[0])
@@ -241,10 +238,11 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     text = str(clust_name)
     plt.text(0.4, 0.9, text, transform=ax5.transAxes, fontsize=14)
     # Legend texts
+    kp_text = '3P' if flag_3pk_conver else '2P'
     texts = ['RDP (%0.1f px)' % bin_list[0],
             'backg = %.1E $st/px^{2}$' % backg_value,
             '$\Delta$=%d%%' % delta_percentage,
-            'King profile',
+            '%s King profile' % kp_text,
             'r$_c$ = %0.1f $\pm$ %0.1f px' % (rc, e_rc),
             'r$_t$ = %0.1f $\pm$ %0.1f px' % (rt, e_rt),
             'r$_{cl}$ = %0.1f $\pm$ %0.1f px' % (clust_rad, round(bin_list[0]))]
@@ -275,10 +273,9 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
         ax5.vlines(x=rt, ymin=0., ymax=0., label=texts[5], color='g')
         ax5.arrow(rt, arr_y_up, 0., arr_y_dwn, fc="g", ec="g",
                   head_width=head_w, head_length=head_l, zorder=5)
-        if flag_2pk_conver is True:
-            # Plot r_c as a dashed line.
-            ax5.vlines(x=rc, ymin=0, ymax=two_params(rc, cd, rc, backg_value),
-                label=texts[4], color='g', linestyles=':', lw=4., zorder=4)
+        # Plot r_c as a dashed line.
+        ax5.vlines(x=rc, ymin=0, ymax=three_params(rc, rt, cd, rc, backg_value),
+            label=texts[4], color='g', linestyles=':', lw=4., zorder=4)
     # Plot 2-P King profile if 3-P was not found.
     elif flag_2pk_conver is True:
         # Plot curve.

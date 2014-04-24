@@ -44,7 +44,8 @@ def get_king_profile(kp_flag, clust_rad, backg_value, radii, ring_density,
         # Initial guesses for fit: max_dens, rt, rc
         max_dens, rt, rc = max(ring_density), clust_rad, clust_rad / 2.
         guess2 = (max_dens, rc)
-        guess3 = (rt)
+        #guess3 = (rt)
+        guess3 = (max_dens, rc, rt)
 
         # Skip first radius value if it is smaller than the second value. This
         # makes it easier for the KP to converge.
@@ -53,38 +54,26 @@ def get_king_profile(kp_flag, clust_rad, backg_value, radii, ring_density,
         else:
             radii_k, ring_dens_k = radii[1:], ring_density[1:]
 
-        # Fit the 2P King profile first to obtain the maximum central density
-        # and core radius.
+        # Attempt to fit a 3-P King profile with the background value fixed.
         try:
-            popt, pcov = curve_fit(lambda x, cd,
-                rc: two_params(x, cd, rc, bg), radii_k, ring_dens_k, guess2)
-            # Unpaxk max density and core radius.
-            cd, rc = popt
-            # Obtain error in core radius.
+            popt, pcov = curve_fit(lambda x, cd, rc,
+                rt: three_params(x, rt, cd, rc, bg), radii_k, ring_dens_k,
+                guess3)
+
+            # Unpack tidal radius and its error.
+            cd, rc, rt = popt
             e_rc = np.sqrt(pcov[1][1]) if pcov[1][1] > 0 else -1.
-            flag_2pk_conver = True
-        except RuntimeError:
-            flag_2pk_conver = False
+            e_rt = np.sqrt(pcov[2][2]) if pcov[2][2] > 0 else -1.
+            flag_3pk_conver = True
 
-        # Attempt to fit the tidal radius if the previous values were found.
-        if flag_2pk_conver:
-            try:
-                popt, pcov = curve_fit(lambda x,
-                    rt: three_params(x, rt, cd, rc, bg), radii_k, ring_dens_k,
-                    guess3)
-                # Unpack tidal radius and its error.
-                rt = popt[0]
-                e_rt = np.sqrt(pcov[0][0]) if pcov[0][0] > 0 else -1.
-                flag_3pk_conver = True
-
-                # If fit converged to tidal radius that extends beyond the
-                # maximum range of the frame, discard it.
-                if rt > delta_xy:
-                    rt, e_rt = -1., -1.
-                    # Raise flag.
-                    flag_3pk_conver = False
-            except RuntimeError:
+            # If fit converged to tidal radius that extends beyond the
+            # maximum range of the frame, discard it.
+            if rt > delta_xy:
+                rt, e_rt = -1., -1.
+                # Raise flag.
                 flag_3pk_conver = False
+        except RuntimeError:
+            flag_3pk_conver = False
 
         # If 3-P King profile converged, ie: the tidal radius was found,
         # calculate approximate number of cluster members with eq (3) from
@@ -98,6 +87,22 @@ def get_king_profile(kp_flag, clust_rad, backg_value, radii, ring_density,
             print '  WARNING: tidal radius could not be obtained.'
             # If 3-P King profile did not converge, pass dummy values
             rt, e_rt, n_c_k = -1., -1., -1.
+
+        if flag_3pk_conver is False:
+            # Fit a 2P King profile first to obtain the maximum central
+            # density and core radius.
+            try:
+                popt, pcov = curve_fit(lambda x, cd,
+                    rc: two_params(x, cd, rc, bg), radii_k, ring_dens_k, guess2)
+                # Unpaxk max density and core radius.
+                cd, rc = popt
+                # Obtain error in core radius.
+                e_rc = np.sqrt(pcov[1][1]) if pcov[1][1] > 0 else -1.
+                flag_2pk_conver = True
+            except RuntimeError:
+                flag_2pk_conver = False
+                # Pass dummy values
+                rc, e_rc, rt, e_rt, n_c_k, cd = -1., -1., -1., -1., -1., -1.
     else:
         # Pass dummy values
         rc, e_rc, rt, e_rt, n_c_k, cd = -1., -1., -1., -1., -1., -1.
