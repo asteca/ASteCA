@@ -114,14 +114,6 @@ def get_in_params(mypath):
                     n_ei = int(reader[8])
                     n_es = int(reader[9])
 
-                #elif reader[0] == 'XA':
-                    #x_ax = re.search(r'"(.*)"', line).groups()[0]
-                #elif reader[0] == 'YA':
-                    #y_ax = re.search(r'"(.*)"', line).groups()[0]
-
-                elif reader[0] == 'MM':
-                    xy_minmax = map(float, reader[1:])
-
     pl_params = [flag_make_plot, plot_frmt, plot_dpi]
     cr_params = [cr_params0] + cr_params1
     gc_params = gc_params0 + gc_params1
@@ -165,6 +157,11 @@ def get_in_params(mypath):
         x_ax, y_ax = '(V-I)', 'V'
     elif cmd_select == 3:
         x_ax, y_ax = '(C-{T_1})', '{T_1}'
+    # Maximum and minimum axis values for the CMD plots.
+    if cmd_select in {1, 2, 3}:
+        # col_min col_max mag_min mag_max
+        xy_minmax = [-1., 4., 7., 30.]
+    # Store axes params.
     axes_params = [x_ax, y_ax, xy_minmax]
 
     return mode, in_dirs, gd_params, gc_params, cr_params, \
