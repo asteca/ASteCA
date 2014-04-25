@@ -193,12 +193,7 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
     # isoch_list, isoch_ma, isoch_ed = ip_list
     # Only read files if best fit process is set to run.
     # bf_flag = bf_params[0]
-    if bf_params[0]:
-        ip_list = ip(ps_params)
-        print 'Theoretical isochrones read and stored (%d).' % \
-            (len(ip_list[0]) * len(ip_list[0][0]))
-    else:
-        ip_list = []
+    ip_list = ip(ps_params, bf_params[0])
 
     # Reduce number of stars in cluster according to a lower membership
     # probability limit.

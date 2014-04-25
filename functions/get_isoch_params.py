@@ -10,7 +10,7 @@ from os.path import join
 import numpy as np
 
 
-def ip(ps_params):
+def get_ip(ps_params):
     '''
     Stores all the available isochrones of different metallicities and
     ages according to the ranges given to thess parameters.
@@ -177,5 +177,19 @@ def ip(ps_params):
         isoch_ed[1].append(round(dis_mod, 2))
 
     ip_list = [isoch_list, isoch_ma, isoch_ed, ranges_steps]
+
+    return ip_list
+
+
+def ip(ps_params, bf_flag):
+    '''
+    Read isochrones and parameters if best fit function is set to run.
+    '''
+    if bf_flag is True:
+        ip_list = get_ip(ps_params)
+        print 'Theoretical isochrones read and stored (%d).' % \
+            (len(ip_list[0]) * len(ip_list[0][0]))
+    else:
+        ip_list = []
 
     return ip_list

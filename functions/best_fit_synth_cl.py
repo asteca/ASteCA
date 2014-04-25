@@ -94,25 +94,28 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
                 obs_clust, completeness, ip_list, bf_params,
                 sc_params, ga_params, ps_params)
 
-        # Round errors to 1 significant digit and round params values to the
-        # corresponding number of significant digits given by the errors.
-        isoch_fit_params[0], isoch_fit_errors = \
-        round_sig_fig(isoch_fit_params, isoch_fit_errors)
-
         # For plotting purposes.
         # Get list of stored isochrones and their parameters.
         isoch_list, isoch_ma = ip_list[0], ip_list[1]
         # Read best fit values for all parameters.
         m, a, e, d = isoch_fit_params[0]
-        # Find indexes for metallixity and age.
+        # Find indexes for metallicity and age. If indexes are not found due
+        # to some difference in the significant figures, use the indices
+        # [0, 0] to prevent the code from halting.
         m_indx, a_indx = next(((i, j) for i, x in enumerate(isoch_ma) for j, y
-        in enumerate(x) if y == [m, a]), None)
+        in enumerate(x) if y == [m, a]), [0, 0])
         # Generate shifted best fit isochrone.
         shift_isoch = move_isoch(sys_sel,
                                  isoch_list[m_indx][a_indx][:2], e, d)
         # Generate best fit synthetic cluster.
         synth_clst = s_c(err_lst, completeness, sc_params,
                          isoch_list[m_indx][a_indx], [-1., -1., e, d], sys_sel)
+
+        # Round errors to 1 significant digit and round params values to the
+        # corresponding number of significant digits given by the errors.
+        isoch_fit_params[0], isoch_fit_errors = \
+        round_sig_fig(isoch_fit_params, isoch_fit_errors)
+
     else:
         # Pass empty lists to make_plots.
         print 'Skipping parameters fitting process.'
