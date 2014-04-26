@@ -24,8 +24,7 @@ def three_params(x, rt, cd, rc, bg):
         1 / np.sqrt(1 + (rt / rc) ** 2)) ** 2 + bg
 
 
-def get_king_profile(kp_flag, clust_rad, backg_value, radii, ring_density,
-    x_data, y_data, width_bin):
+def get_king_profile(kp_flag, clust_rad, backg_value, radii, ring_density):
     '''
     Function to fit the 3-params King profile to a given radial density.
     The background density value is fixed and the core radius, tidal radius and
@@ -44,7 +43,6 @@ def get_king_profile(kp_flag, clust_rad, backg_value, radii, ring_density,
         # Initial guesses for fit: max_dens, rt, rc
         max_dens, rt, rc = max(ring_density), clust_rad, clust_rad / 2.
         guess2 = (max_dens, rc)
-        #guess3 = (rt)
         guess3 = (max_dens, rc, rt)
 
         # Skip first radius value if it is smaller than the second value. This
