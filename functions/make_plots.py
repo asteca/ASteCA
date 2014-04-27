@@ -906,7 +906,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
         lkl_old, ext_imm_indx = isoch_fit_params[1], isoch_fit_params[2]
         ax21 = plt.subplot(gs1[10:12, 2:6])
         plt.xlim(-0.5, n_gen + int(0.01 * n_gen))
-        plt.ylim(max(0, min(lkl_old[0]) - 0.3 * min(lkl_old[0])),
+        plt.ylim(min(lkl_old[0]) - 0.3 * min(lkl_old[0]),
                  max(lkl_old[1]) + min(lkl_old[0]) / 2.)
         ax21.tick_params(axis='y', which='major', labelsize=9)
         ax21.grid(b=True, which='major', color='gray', linestyle='--', lw=0.6)
