@@ -97,7 +97,9 @@ def get_regions(bin_center, bin_width, histo, clust_rad, h_manual, stars_in,
     # Get area as total number of bins in 2D hist times the area of each bin.
     area = len(histo[0]) * len(histo) * (bin_width ** 2)
 
-    # Length of the side of the square that contains the cluster.
+    # Length of the side of the square that contains the cluster. Increase it
+    # if the radius is comparable to the bin width used to make sure the
+    # region covers the entire cluster.
     length = 2.5 if clust_rad > 2 * bin_width else 5.
 
     # If the remaining area in the frame after substracting the cluster region
