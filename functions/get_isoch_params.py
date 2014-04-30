@@ -18,26 +18,31 @@ def get_ip(ps_params):
     between the specified ranges and with the given steps.
     '''
 
-    iso_path, sys_select, iso_select, m_rs, a_rs, e_rs, d_rs = ps_params
+    iso_path, cmd_select, iso_select, m_rs, a_rs, e_rs, d_rs = ps_params
 
     # Assign values according to the system and set of isochrones selected.
-    if sys_select == 'WASH':
-        if iso_select == 'MAR':
-            li_s = "#\tIsochrone\tZ ="
-            # Mass, T1, C
-            mas_i, mag_i, col_i = 1, 9, 7
-        elif iso_select == 'PAR':
-            li_s = "#\tIsochrone  Z = "
-            mas_i, mag_i, col_i = 2, 10, 8
-
-    if sys_select == 'UBVI':
-        if iso_select == 'MAR':
-            li_s = "#\tIsochrone\tZ ="
+    if iso_select == 'MAR':
+        li_s = "#\tIsochrone\tZ ="
+        if cmd_select == 1:
             # Mass, V, B
             mas_i, mag_i, col_i = 1, 9, 8
-        elif iso_select == 'PAR':
-            li_s = "#\tIsochrone  Z = "
+        elif cmd_select == 2:
+            # Mass, V, I
+            mas_i, mag_i, col_i = 1, 9, 11
+        elif cmd_select == 3:
+            # Mass, T1, C
+            mas_i, mag_i, col_i = 1, 9, 7
+    elif iso_select == 'PAR':
+        li_s = "#\tIsochrone  Z = "
+        if cmd_select == 1:
+            # Mass, V, B
             mas_i, mag_i, col_i = 2, 10, 9
+        elif cmd_select == 2:
+            # Mass, V, I
+            mas_i, mag_i, col_i = 2, 10, 12
+        elif cmd_select == 3:
+            # Mass, T1, C
+            mas_i, mag_i, col_i = 2, 10, 8
 
     # String that identifies the beginning of a new isochrone.
     line_start = li_s

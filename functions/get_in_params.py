@@ -127,15 +127,15 @@ def get_in_params(mypath):
     da_params = [da0_params, da1_params, input_dir]
 
     # Fix photometric system according to the CMD selected.
-    if cmd_select == 1 or cmd_select == 2:
-        sys_select = 'UBVI'
-    elif cmd_select == 3:
-        sys_select = 'WASH'
+    #if cmd_select == 1 or cmd_select == 2:
+        #sys_select = 'UBVI'
+    #elif cmd_select == 3:
+        #sys_select = 'WASH'
 
     # Fix isochrones location according to the CMD and set selected.
-    if sys_select == 'UBVI':
+    if cmd_select in {1, 2}:
         text1 = 'ubvi'
-    elif sys_select == 'WASH':
+    elif cmd_select in {3}:
         text1 = 'wash'
     if iso_select == 'MAR':
         text2 = 'marigo'
@@ -148,7 +148,7 @@ def get_in_params(mypath):
     # stored isochrones.
     m_rs.append(0.0005)
     a_rs.append(0.05)
-    ps_params = [iso_path, sys_select, iso_select, m_rs, a_rs, e_rs, d_rs]
+    ps_params = [iso_path, cmd_select, iso_select, m_rs, a_rs, e_rs, d_rs]
 
     bf_params = [bf_flag, best_fit_algor, N_b]
     sc_params = [IMF_name, tot_mass, f_bin, q_bin]

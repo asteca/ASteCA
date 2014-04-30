@@ -72,7 +72,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
 
     # Unpack params.
     # Selected system params.
-    sys_select = ps_params[1]
+    cmd_select = ps_params[1]
     m_rs, a_rs, e_rs, d_rs = ps_params[3:]
     # Parameters from get_center function.
     bin_list, h_filter, bin_center, centers_kde, cent_stats, kde_pl = \
@@ -634,9 +634,11 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     ax13.minorticks_on()
     ax13.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
     # System used.
-    if sys_select == 'UBVI':
+    if cmd_select == 1:
         x_ax0 = 'B'
-    elif sys_select == 'WASH':
+    elif cmd_select == 2:
+        x_ax0 = 'I'
+    elif cmd_select == 3:
         x_ax0 = 'C'
     text1 = '$' + y_ax + '^{*}_{cl+fl}$'
     text2 = '$' + x_ax0 + '^{*}_{cl+fl}$'

@@ -168,7 +168,7 @@ def selection(generation, breed_prob):
 
 
 def fitness_eval(err_lst, obs_clust, completeness, isoch_list, isoch_ma,
-                 ma_lst, e_lst, d_lst, sc_params, isoch_done, sys_sel):
+                 ma_lst, e_lst, d_lst, sc_params, isoch_done, cmd_sel):
     '''
     Evaluate each random isochrone in the objective function to obtain
     the fitness of each solution.
@@ -190,7 +190,7 @@ def fitness_eval(err_lst, obs_clust, completeness, isoch_list, isoch_ma,
         else:
             # Call likelihood function with m,a,e,d values.
             likel_val = i_l(err_lst, obs_clust, completeness, sc_params,
-                            isoch_list[m][a], params, sys_sel)
+                            isoch_list[m][a], params, cmd_sel)
             # Append data identifying the isochrone and the obtained
             # likelihood value to this *persistent* list.
             isoch_done[0].append(params)
@@ -230,7 +230,7 @@ def random_population(isoch_ma, isoch_ed, n_ran):
 
 
 def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
-    sc_params, ga_params, sys_sel):
+    sc_params, ga_params, cmd_sel):
     '''
     Genetic algorithm adapted to find the best fit model-obervation.
     '''
@@ -269,7 +269,7 @@ def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
     # Evaluate initial random solutions in the objective function.
     generation, lkl, isoch_done = fitness_eval(err_lst, obs_clust,
         completeness, isoch_list, isoch_ma, ma_lst, e_lst, d_lst,
-        sc_params, isoch_done, sys_sel)
+        sc_params, isoch_done, cmd_sel)
 
     # Store best solution for passing along in the 'Elitism' block.
     best_sol = generation[:n_el]
@@ -324,7 +324,7 @@ def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
         # according to the best solutions found.
         generation, lkl, isoch_done = fitness_eval(err_lst, obs_clust,
         completeness, isoch_list, isoch_ma, ma_lst, e_lst, d_lst, sc_params,
-        isoch_done, sys_sel)
+        isoch_done, cmd_sel)
 
         ### Extinction/Immigration ###
         # If the best solution has remained unchanged for n_ei

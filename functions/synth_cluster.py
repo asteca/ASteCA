@@ -68,7 +68,7 @@ def mass_interp(isochrone, mass_dist):
     return isoch_interp
 
 
-def synth_clust(err_lst, completeness, sc_params, isochrone, params, sys_sel):
+def synth_clust(err_lst, completeness, sc_params, isochrone, params, cmd_sel):
     '''
     Main function.
 
@@ -93,7 +93,7 @@ def synth_clust(err_lst, completeness, sc_params, isochrone, params, sys_sel):
 
     # Move synth cluster with the values 'e' and 'd'.
     e, d = params[2], params[3]
-    isoch_moved = move_isoch(sys_sel, [isoch_inter[0], isoch_inter[1]], e, d) +\
+    isoch_moved = move_isoch(cmd_sel, [isoch_inter[0], isoch_inter[1]], e, d) +\
     [isoch_inter[2]]
 
     # Remove stars from isochrone with magnitude values larger that the maximum

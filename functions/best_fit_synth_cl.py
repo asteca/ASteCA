@@ -45,7 +45,7 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
     '''
 
     bf_flag, best_fit_algor, N_b = bf_params
-    sys_sel = ps_params[1]
+    cmd_sel = ps_params[1]
 
     # Check if algorithm should run.
     if bf_flag:
@@ -65,7 +65,7 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
             print 'Using Brute Force algorithm.'
             # Brute force algorithm.
             isoch_fit_params = b_f(err_lst, memb_prob_avrg_sort, completeness,
-                                   ip_list, sc_params, ga_params, sys_sel)
+                                   ip_list, sc_params, ga_params, cmd_sel)
             # Assign errors as the steps in each parameter.
             isoch_fit_errors = [ps_params[i + 3][2] for i in range(4)]
 
@@ -81,7 +81,7 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
                 dtype=float)
             isoch_fit_params = g_a(flag_print_perc, err_lst,
                 obs_clust, completeness, ip_list, sc_params,
-                ga_params, sys_sel)
+                ga_params, cmd_sel)
 
         print 'Best fit params obtained (%0.4f, %0.2f, %0.2f, %0.2f).' % \
         (isoch_fit_params[0][0], isoch_fit_params[0][1],
@@ -105,11 +105,11 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
         m_indx, a_indx = next(((i, j) for i, x in enumerate(isoch_ma) for j, y
         in enumerate(x) if y == [m, a]), [0, 0])
         # Generate shifted best fit isochrone.
-        shift_isoch = move_isoch(sys_sel,
+        shift_isoch = move_isoch(cmd_sel,
                                  isoch_list[m_indx][a_indx][:2], e, d)
         # Generate best fit synthetic cluster.
         synth_clst = s_c(err_lst, completeness, sc_params,
-                         isoch_list[m_indx][a_indx], [-1., -1., e, d], sys_sel)
+                         isoch_list[m_indx][a_indx], [-1., -1., e, d], cmd_sel)
 
         # Round errors to 1 significant digit and round params values to the
         # corresponding number of significant digits given by the errors.
