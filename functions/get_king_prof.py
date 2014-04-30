@@ -66,7 +66,7 @@ def get_king_profile(kp_flag, clust_rad, backg_value, radii, ring_density):
 
             # If fit converged to tidal radius that extends beyond 100 times
             # the core radius, discard it.
-            if rt > rc * 100.:
+            if rt > rc * 100. or rt <= 0. or rc <= 0.:
                 # Raise flag to reject fit.
                 flag_3pk_conver = False
         except RuntimeError:

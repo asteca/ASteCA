@@ -2,6 +2,7 @@
 @author: gabriel
 """
 
+import numpy as np
 from functions.display_rad import disp_rad as d_r
 import matplotlib.pyplot as plt
 
@@ -12,6 +13,9 @@ def main_center_algor(rdp_params, cr_params, backg_value):
     '''
 
     radii, ring_density = rdp_params[:2]
+    # Find maximum density value and assume this is the central density.
+    max_dens_ind = np.argmax(ring_density)
+    ring_dens_c, radii_c = ring_density[max_dens_ind:], radii[max_dens_ind:]
 
     # Assign a value to the number of points that should be found below
     # the delta value around the background to attain the 'stabilized'
@@ -24,10 +28,10 @@ def main_center_algor(rdp_params, cr_params, backg_value):
     if mode_r == 'manual':
         n_left, delta_step = int(cr_params[1]), cr_params[2]
     elif mode_r == 'auto':
-        n_left, delta_step = max(int(round(len(radii) * 0.1)), 2), 5
+        n_left, delta_step = max(int(round(len(radii_c) * 0.1)), 2), 5
 
     # Difference between max density value and the background value.
-    delta_total = (max(ring_density) - backg_value)
+    delta_total = (max(ring_dens_c) - backg_value)
 
     # If the difference between the max density value and the background is
     # less than 3 times the value of the background, raise a flag.
@@ -59,7 +63,7 @@ def main_center_algor(rdp_params, cr_params, backg_value):
         index_rad = 0
 
         # Iterate through all values of star density in this "square ring".
-        for index, item in enumerate(ring_density):
+        for index, item in enumerate(ring_dens_c):
 
             # Condition to iterate until at least n_left points below the
             # delta + background value are found.
@@ -67,10 +71,7 @@ def main_center_algor(rdp_params, cr_params, backg_value):
 
                 # If the density value is closer than 'delta_backg' to the
                 # background value or lower --> add it.
-                # The condition index!=0 is there to avoid counting the first
-                # point which sometimes presents a very low density value due
-                # to the small width of the bin used.
-                if (item - backg_value) <= delta_backg and index != 0:
+                if (item - backg_value) <= delta_backg:
                     # Augment value of counter.
                     in_delta_val += 1
                     # Store first radius value that falls below the upper delta
@@ -94,13 +95,13 @@ def main_center_algor(rdp_params, cr_params, backg_value):
     if (in_delta_val < n_left) and flag_not_stable is True:
         # No radius value found. Assign radius value as the middle element
         # in the radii list.
-        clust_rad = radii[int(len(radii) / 2.)]
+        clust_rad = radii_c[int(len(radii_c) / 2.)]
     else:
         # Stable condition was attained, assign radius value as the one with
         # the density value closest to the background value among the first
         # n_left points counting from the one determined by the index index_rad.
-        radii_dens = [ring_density[index_rad + i] for i in range(n_left)]
-        clust_rad = radii[index_rad + min(range(len(radii_dens)), key=lambda
+        radii_dens = [ring_dens_c[index_rad + i] for i in range(n_left)]
+        clust_rad = radii_c[index_rad + min(range(len(radii_dens)), key=lambda
         i:abs(radii_dens[i] - backg_value))]
 
     return clust_rad, delta_backg, delta_percentage, flag_delta_total, \
