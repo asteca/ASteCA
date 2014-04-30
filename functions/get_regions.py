@@ -98,7 +98,7 @@ def get_regions(bin_center, bin_width, histo, clust_rad, h_manual, stars_in,
     area = len(histo[0]) * len(histo) * (bin_width ** 2)
 
     # Length of the side of the square that contains the cluster.
-    length = 2.5
+    length = 2.5 if clust_rad > 2 * bin_width else 5.
 
     # If the remaining area in the frame after substracting the cluster region
     # is smaller than the cluster's area, this means that the cluster is either

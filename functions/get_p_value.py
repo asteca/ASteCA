@@ -207,4 +207,4 @@ def get_pval(cluster_region, field_region, col1_data, mag_data, center_cl,
         pval_test_params = [-1., [], [], [], [], [], []]
         qq_params = [-1., []]
 
-    return pval_test_params, qq_params
+    return pval_test_params, qq_params, flag_pval_test

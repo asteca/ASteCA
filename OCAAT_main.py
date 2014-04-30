@@ -143,9 +143,9 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
         (integr_return[5] - integr_return[2])
 
     # Get physical cluster probability based on p_values distribution.
-    pval_test_params, qq_params = g_pv(cluster_region, field_region, col1_data,
-                                  mag_data, center_cl, clust_rad, pv_params,
-                                  flag_area_stronger)
+    pval_test_params, qq_params, flag_pval_test = g_pv(cluster_region,
+        field_region, col1_data, mag_data, center_cl, clust_rad, pv_params,
+        flag_area_stronger)
 
     # Apply decontamination algorithm if at least one equal-sized field region
     # was found around the cluster.
@@ -211,10 +211,10 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
             cont_index, mag_data, col1_data, popt_mag, popt_col1,
             err_plot, rjct_errors_fit, kp_params, stars_in, stars_out,
             stars_in_rjct, stars_out_rjct, integr_return, n_c,
-            flag_area_stronger, cluster_region, field_region, pval_test_params,
-            qq_params, memb_prob_avrg_sort, completeness, bf_params, red_return,
-            bf_return, ga_params, er_params, axes_params, ps_params, pl_params,
-            pv_params)
+            flag_area_stronger, cluster_region, field_region, flag_pval_test,
+            pval_test_params, qq_params, memb_prob_avrg_sort, completeness,
+            bf_params, red_return, bf_return, ga_params, er_params,
+            axes_params, ps_params, pl_params)
         print 'Plots created.'
 
     # Move file to 'done' dir.
