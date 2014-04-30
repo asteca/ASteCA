@@ -5,11 +5,6 @@ Created on Fri Nov 29 14:11:22 2013
 @author: gabriel
 """
 
-'''
-Calculate the QQ-plot for the distribution of p-values obtained comparing
-the cluster's KDE with the field region's KDEs.
-'''
-
 import numpy as np
 from scipy.stats.mstats import mquantiles
 
@@ -30,6 +25,10 @@ def ppoints(vector):
 
 
 def qqplot(p_vals_cl, p_vals_f):
+    '''
+    Calculate the QQ-plot for the distribution of p-values obtained comparing
+    the cluster's KDE with the field region's KDEs.
+    '''
 
     # Interpolate the larger list.
     if len(p_vals_f) >= len(p_vals_cl):
@@ -59,5 +58,7 @@ def qqplot(p_vals_cl, p_vals_f):
 
     # Return parameters inside list.
     qq_params = [ccc, quantiles]
+
+    print 'QQ-plot obtained (CCC = %0.2f).' % qq_params[0]
 
     return qq_params

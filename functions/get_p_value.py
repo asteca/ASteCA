@@ -11,6 +11,7 @@ from scipy.integrate import quad
 
 import rpy2.robjects as robjects
 from rpy2.robjects.packages import importr
+from get_qqplot import qqplot as g_qq
 
 # Define variables to communicate with package 'R'.
 ks = importr('ks')
@@ -56,8 +57,8 @@ def get_CMD(region):
     return matrix
 
 
-def get_pval(cluster_region, field_region, col1_data,
-             mag_data, center_cl, clust_rad, pv_params):
+def get_pval(cluster_region, field_region, col1_data, mag_data, center_cl,
+    clust_rad, pv_params, flag_area_stronger):
     '''
     Compare the cluster region KDE with all the field region KDEs using Duong's
     ks package (developed in R) to obtain a p-value. This value will be close
@@ -70,19 +71,7 @@ def get_pval(cluster_region, field_region, col1_data,
     the cluster vs field and field vs field comparisions.
     '''
 
-    run_set, num_runs = pv_params[1], pv_params[2]
-
-    print 'Obtaining p_value for cluster region vs field regions.'
-
-    if run_set == 'auto':
-        # Set number of runs for the p_value algorithm with a maximum of
-        # 100 if only one field region was used.
-        runs = int(100 / len(field_region))
-    elif run_set == 'manual':
-        runs = num_runs
-    else:
-        runs = int(100 / len(field_region))
-        print "  Parameter 'runs' has wrong name. Using 'auto'."
+    flag_pval_test, run_set, num_runs = pv_params
 
     # Only use stars inside cluster's radius.
     cluster_region_r = []
@@ -92,98 +81,130 @@ def get_pval(cluster_region, field_region, col1_data,
         if dist <= clust_rad:
             cluster_region_r.append(star)
 
-    # The first list holds all the p_values obtained comparing the cluster
-    # region with the field regions, the second one holds p_values for field
-    # vs field comparisions.
-    p_vals_cl, p_vals_f = [], []
-    # Iterate a given number of times.
-    milestones = [25, 50, 75, 100]
-    for run_num in range(runs):
-        # Loop through all the field regions.
-        for indx, f_region in enumerate(field_region):
+    # skip test if < 10 members are found within the cluster's radius.
+    flag_few_members = False if len(cluster_region_r) > 10 else True
+    if flag_few_members:
+        print '  WARNING: < 10 stars in cluster region, skipping test.'
+        flag_pval_test = False
 
-            # CMD for cluster region.
-            #matrix_cl = get_CMD(clust_reg_clean)
-            matrix_cl = get_CMD(cluster_region_r)
-            rows_cl = int(len(matrix_cl) / 2)
-            # CMD for 1st field region.
-            matrix_f1 = get_CMD(f_region)
-            rows_f1 = int(len(matrix_f1) / 2)
+    # Check if test is to be applied or skipped. Check if field regions
+    # where found.
+    if flag_pval_test and not flag_area_stronger:
 
-            # Create matrices for these CMDs.
-            m_cl = robjects.r.matrix(robjects.FloatVector(matrix_cl),
-                                   nrow=rows_cl, byrow=True)
-            m_f1 = robjects.r.matrix(robjects.FloatVector(matrix_f1),
-                                     nrow=rows_f1, byrow=True)
+        print 'Obtaining p_value for cluster region vs field regions.'
 
-            # Bandwith matrices.
-            hpic = hpi_kfe(x=m_cl, binned=True)
-            hpif1 = hpi_kfe(x=m_f1, binned=True)
+        if run_set == 'auto':
+            # Set number of runs for the p_value algorithm with a maximum of
+            # 100 if only one field region was used.
+            runs = int(100 / len(field_region))
+        elif run_set == 'manual':
+            runs = num_runs
+        else:
+            runs = int(100 / len(field_region))
+            print "  Parameter 'runs' has wrong name. Using 'auto'."
 
-            # Call 'ks' function to obtain p_value.
-            # Cluster vs field p_value.
-            res_cl = kde_test(x1=m_cl, x2=m_f1, H1=hpic, H2=hpif1)
-            p_val_cl = res_cl.rx2('pvalue')
-            # Store cluster vs field p-value.
-            p_vals_cl.append(float(str(p_val_cl)[4:].replace(',', '.')))
+        # The first list holds all the p_values obtained comparing the cluster
+        # region with the field regions, the second one holds p_values for
+        # field vs field comparisions.
+        p_vals_cl, p_vals_f = [], []
+        # Iterate a given number of times.
+        milestones = [25, 50, 75, 100]
+        for run_num in range(runs):
+            # Loop through all the field regions.
+            for indx, f_region in enumerate(field_region):
 
-            # Compare the field region used above with all the remaining
-            # field regions. This results in [N*(N+1)/2] combinations of
-            # field vs field comparisions.
-            for f_region2 in field_region[indx:]:
+                # CMD for cluster region.
+                matrix_cl = get_CMD(cluster_region_r)
+                rows_cl = int(len(matrix_cl) / 2)
+                # CMD for 1st field region.
+                matrix_f1 = get_CMD(f_region)
+                rows_f1 = int(len(matrix_f1) / 2)
 
-                # CMD for 2nd field region.
-                matrix_f2 = get_CMD(f_region2)
-                rows_f2 = int(len(matrix_f2) / 2)
-                # Matrix.
-                m_f2 = robjects.r.matrix(robjects.FloatVector(matrix_f2),
-                                         nrow=rows_f2, byrow=True)
-                # Bandwith.
-                hpif2 = hpi_kfe(x=m_f2, binned=True)
+                # Create matrices for these CMDs.
+                m_cl = robjects.r.matrix(robjects.FloatVector(matrix_cl),
+                                       nrow=rows_cl, byrow=True)
+                m_f1 = robjects.r.matrix(robjects.FloatVector(matrix_f1),
+                                         nrow=rows_f1, byrow=True)
+                # Bandwith matrices.
+                hpic = hpi_kfe(x=m_cl, binned=True)
+                hpif1 = hpi_kfe(x=m_f1, binned=True)
 
-                # Field vs field p_value.
-                res_f = kde_test(x1=m_f1, x2=m_f2, H1=hpif1, H2=hpif2)
-                p_val_f = res_f.rx2('pvalue')
-                # Store field vs field p-value.
-                p_vals_f.append(float(str(p_val_f)[4:].replace(',', '.')))
+                # Call 'ks' function to obtain p_value.
+                # Cluster vs field p_value.
+                res_cl = kde_test(x1=m_cl, x2=m_f1, H1=hpic, H2=hpif1)
+                p_val_cl = res_cl.rx2('pvalue')
+                # Store cluster vs field p-value.
+                p_vals_cl.append(float(str(p_val_cl)[4:].replace(',', '.')))
 
-        percentage_complete = (100.0 * (run_num + 1) / runs)
-        while len(milestones) > 0 and percentage_complete >= milestones[0]:
-            print "  {}% done".format(milestones[0])
-            # Remove that milestone from the list.
-            milestones = milestones[1:]
+                # Compare the field region used above with all the remaining
+                # field regions. This results in [N*(N+1)/2] combinations of
+                # field vs field comparisions.
+                for f_region2 in field_region[indx:]:
 
-    # For plotting purposes.
+                    # CMD for 2nd field region.
+                    matrix_f2 = get_CMD(f_region2)
+                    rows_f2 = int(len(matrix_f2) / 2)
+                    # Matrix.
+                    m_f2 = robjects.r.matrix(robjects.FloatVector(matrix_f2),
+                                             nrow=rows_f2, byrow=True)
+                    # Bandwith.
+                    hpif2 = hpi_kfe(x=m_f2, binned=True)
 
-    # Define KDE limits.
-    xmin, xmax = -1., 2.
-    x_kde = np.mgrid[xmin:xmax:1000j]
+                    # Field vs field p_value.
+                    res_f = kde_test(x1=m_f1, x2=m_f2, H1=hpif1, H2=hpif2)
+                    p_val_f = res_f.rx2('pvalue')
+                    # Store field vs field p-value.
+                    p_vals_f.append(float(str(p_val_f)[4:].replace(',', '.')))
 
-    # Obtain the 1D KDE for the cluster region (stars inside cluster's
-    # radius) vs field regions.
-    kernel_cl = stats.gaussian_kde(p_vals_cl)
-    # KDE for plotting.
-    kde_cl_1d = np.reshape(kernel_cl(x_kde).T, x_kde.shape)
+            percentage_complete = (100.0 * (run_num + 1) / runs)
+            while len(milestones) > 0 and percentage_complete >= milestones[0]:
+                print "  {}% done".format(milestones[0])
+                # Remove that milestone from the list.
+                milestones = milestones[1:]
 
-    # Obtain the 1D KDE for the field regions vs field regions.
-    kernel_f = stats.gaussian_kde(p_vals_f)
-    # KDE for plotting.
-    kde_f_1d = np.reshape(kernel_f(x_kde).T, x_kde.shape)
+        # For plotting purposes.
 
-    # Calculate overlap between the two KDEs.
-    def y_pts(pt):
-        y_pt = min(kernel_cl(pt), kernel_f(pt))
-        return y_pt
+        # Define KDE limits.
+        xmin, xmax = -1., 2.
+        x_kde = np.mgrid[xmin:xmax:1000j]
 
-    overlap = quad(y_pts, -1., 2.)
-    # Store y values for plotting the overlap filled.
-    y_over = [float(y_pts(x_pt)) for x_pt in x_kde]
+        # Obtain the 1D KDE for the cluster region (stars inside cluster's
+        # radius) vs field regions.
+        kernel_cl = stats.gaussian_kde(p_vals_cl)
+        # KDE for plotting.
+        kde_cl_1d = np.reshape(kernel_cl(x_kde).T, x_kde.shape)
 
-    # Probability value for the cluster.
-    prob_cl_kde = 1 - overlap[0]
+        # Obtain the 1D KDE for the field regions vs field regions.
+        kernel_f = stats.gaussian_kde(p_vals_f)
+        # KDE for plotting.
+        kde_f_1d = np.reshape(kernel_f(x_kde).T, x_kde.shape)
 
-    # Store all return params in a single list.
-    pval_test_params = [prob_cl_kde, p_vals_cl, p_vals_f, kde_cl_1d, kde_f_1d,
-                        x_kde, y_over]
+        # Calculate overlap between the two KDEs.
+        def y_pts(pt):
+            y_pt = min(kernel_cl(pt), kernel_f(pt))
+            return y_pt
 
-    return pval_test_params
+        overlap = quad(y_pts, -1., 2.)
+        # Store y values for plotting the overlap filled.
+        y_over = [float(y_pts(x_pt)) for x_pt in x_kde]
+
+        # Probability value for the cluster.
+        prob_cl_kde = 1 - overlap[0]
+
+        # Store all return params in a single list.
+        pval_test_params = [prob_cl_kde, p_vals_cl, p_vals_f, kde_cl_1d,
+            kde_f_1d, x_kde, y_over]
+
+        print 'Probability of physical cluster obtained (%0.2f).' % prob_cl_kde
+
+        # Get QQ plot for p-values distributions.
+        qq_params = g_qq(p_vals_cl, p_vals_f)
+
+    # Skip process.
+    else:
+        print 'Skipping p-value test for cluster.'
+        # Pass empty lists to make_plots.
+        pval_test_params = [-1., [], [], [], [], [], []]
+        qq_params = [-1., []]
+
+    return pval_test_params, qq_params

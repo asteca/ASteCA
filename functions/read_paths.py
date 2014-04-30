@@ -22,9 +22,9 @@ def read_paths(input_dir):
             for subdir in dirs:
                 for name in listdir(join(input_dir, subdir)):
                     # Check to see if it's a valid data file.
-                    if name.endswith(('.DAT', '.MAG', '.OUT', '.TEX', '.TXT',
-                    '.dat', '.mag', '.out', '.tex', '.txt')) and \
-                    not name.endswith('_memb.dat'):
+                    if name.endswith(('.DAT', '.MAG', '.OUT', '.TEX',
+                    '.TXT', '.dat', '.mag', '.out', '.tex', '.txt'))\
+                    and not name.endswith('_memb.dat'):
                         dir_files[0].append(subdir)
                         dir_files[1].append(name)
 

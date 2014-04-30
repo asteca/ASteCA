@@ -64,7 +64,7 @@ def spiral_region(histo, h_manual, stars_in, stars_out, x_c_b, y_c_b, spiral,
         ybin = sp_coords[1][xbin_index]
 
         for star in range(h_manual[xbin][ybin][0]):
-            # Add all the stars inside this bin to the cluster area.
+            # Add all the stars inside this bin to the region.
             # We use 'star+1' to skip the first item which holds the
             # number of stars in the bin.
             # Check to see if star belongs to the group of stars
@@ -134,7 +134,6 @@ def get_regions(bin_center, bin_width, histo, clust_rad, h_manual, stars_in,
     cluster_region, sp_indx = spiral_region(histo, h_manual, stars_in,
                                             stars_out, x_c_b, y_c_b, spiral,
                                             num_bins_area, sp_indx)
-
     # Obtain field regions.
     # This list holds all the field regions.
     field_regions = []

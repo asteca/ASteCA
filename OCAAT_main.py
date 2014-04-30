@@ -28,7 +28,6 @@ from functions.get_cont_index import cont_indx as g_c_i
 from functions.get_regions import get_regions as g_r
 from functions.field_decont_bys import field_decont_bys as fdb
 from functions.get_p_value import get_pval as g_pv
-from functions.get_qqplot import qqplot as g_qq
 from functions.get_completeness import mag_completeness as m_c
 from functions.get_isoch_params import ip
 from functions.reduce_membership import red_memb as rm
@@ -143,31 +142,10 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
     print 'Integrated color magnitude distribution obtained (%0.2f).' % \
         (integr_return[5] - integr_return[2])
 
-    # Check if test is to be applied or skipped.
-    flag_pval_test = pv_params[0]
     # Get physical cluster probability based on p_values distribution.
-    if flag_pval_test:
-        # Check if field regions where found.
-        if not flag_area_stronger:
-            # pval_test_params = prob_cl_kde, p_vals_cl, p_vals_f, kde_cl_1d,
-            #                    kde_f_1d, x_kde, y_over
-            pval_test_params = g_pv(cluster_region, field_region, col1_data,
-                                    mag_data, center_cl, clust_rad, pv_params)
-            # Add flag to list.
-            pval_test_params = pval_test_params + [flag_pval_test]
-            print 'Probability of physical cluster obtained (%0.2f).' % \
-            pval_test_params[0]
-
-            # Get QQ plot for p-values distributions.
-            # qq_params = ccc, quantiles, r_squared, slope, intercept
-            qq_params = g_qq(pval_test_params[1], pval_test_params[2])
-            print 'QQ-plot obtained (CCC = %0.2f).' % qq_params[0]
-
-    # Skip process.
-    if not flag_pval_test or flag_area_stronger:
-        print 'Skipping p-value test for cluster.'
-        # Pass empty lists to make_plots.
-        pval_test_params, qq_params = [-1., False], [-1.]
+    pval_test_params, qq_params = g_pv(cluster_region, field_region, col1_data,
+                                  mag_data, center_cl, clust_rad, pv_params,
+                                  flag_area_stronger)
 
     # Apply decontamination algorithm if at least one equal-sized field region
     # was found around the cluster.
@@ -235,7 +213,8 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
             stars_in_rjct, stars_out_rjct, integr_return, n_c,
             flag_area_stronger, cluster_region, field_region, pval_test_params,
             qq_params, memb_prob_avrg_sort, completeness, bf_params, red_return,
-            bf_return, ga_params, er_params, axes_params, ps_params, pl_params)
+            bf_return, ga_params, er_params, axes_params, ps_params, pl_params,
+            pv_params)
         print 'Plots created.'
 
     # Move file to 'done' dir.

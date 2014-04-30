@@ -22,7 +22,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     stars_in, stars_out, stars_in_rjct, stars_out_rjct, integr_return, n_c,
     flag_area_stronger, cluster_region, field_region, pval_test_params,
     qq_params, memb_prob_avrg_sort, completeness, bf_params, red_return,
-    bf_return, ga_params, er_params, axes_params, ps_params, pl_params):
+    bf_return, ga_params, er_params, axes_params, ps_params, pl_params,
+    pv_params):
     '''
     Make all plots.
     '''
@@ -92,6 +93,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     # Integrated magnitude distribution.
     cl_reg_mag, fl_reg_mag, integ_mag, cl_reg_col, fl_reg_col, integ_col =\
     integr_return
+    # p-value flag.
+    flag_pval_test = pv_params[0]
     # Reduced membership.
     min_prob = red_return[1]
     # Best isochrone fit params.
@@ -390,7 +393,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
             clust_reg_temp[1].append(star[2])
     plt.scatter(clust_reg_temp[0], clust_reg_temp[1], marker='o', c='black',
                 s=8, edgecolors='none')
-    if not(flag_area_stronger):
+    if not flag_area_stronger:
         # Plot field stars regions.
         col = cycle(['red', 'darkgreen', 'blue', 'maroon'])
         for i, reg in enumerate(field_region):
@@ -644,7 +647,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     # Cluster integrated magnitude.
     plt.plot(cl_reg_col[0], cl_reg_col[1], 'r:', lw=2., label=text2)
     # Check if field regiones were defined.
-    if flag_area_stronger is not True:
+    if not flag_area_stronger:
         text3 = '$' + y_ax + '^{*}_{fl}$'
         text4 = '$' + x_ax0 + '^{*}_{fl}$'
         # Field average integrated magnitude curve.
@@ -661,12 +664,10 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     leg.get_frame().set_alpha(0.75)
 
     # Distribution of p_values.
-    # pval_test_params[-1] is the flag that indicates if the block was
-    # processed.
-    if pval_test_params[-1]:
+    if flag_pval_test and not flag_area_stronger:
         # Extract parameters from list.
         prob_cl_kde, p_vals_cl, p_vals_f, kde_cl_1d, kde_f_1d, x_kde, y_over\
-        = pval_test_params[:-1]
+        = pval_test_params
         ax14 = plt.subplot(gs1[6:8, 4:6])
         plt.xlim(-0.5, 1.5)
         plt.ylim(0, max(max(kde_f_1d), max(kde_cl_1d)) + 0.5)

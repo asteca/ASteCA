@@ -47,8 +47,8 @@ def manual_histo(phot_data, hist_xyedges):
                                     H_manual[xbin_index][ybin_index]
                                 except IndexError:
                                 # Star outside of 2d hist list of bins. It
-                                # happens for a couple of stars per frame, so we
-                                # just iognore it.
+                                # happens for a couple of stars per frame, so
+                                # we just ignore it.
                                     pass
                                 else:
                                 # Store the star's data and increase the count
