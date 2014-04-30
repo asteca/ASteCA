@@ -903,16 +903,19 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
                    cmap=plt.get_cmap('Blues'), aspect='auto')
 
         # GA diagram.
-        lkl_old, ext_imm_indx = isoch_fit_params[1], isoch_fit_params[2]
+        lkl_old, ext_imm_indx, isoch_done = isoch_fit_params[1], \
+        isoch_fit_params[2], isoch_fit_params[3]
         ax21 = plt.subplot(gs1[10:12, 2:6])
         plt.xlim(-0.5, n_gen + int(0.01 * n_gen))
-        plt.ylim(min(lkl_old[0]) - 0.3 * min(lkl_old[0]),
-                 max(lkl_old[1]) + min(lkl_old[0]) / 2.)
+        lkl_range = max(lkl_old[1]) - min(lkl_old[0])
+        plt.ylim(min(lkl_old[0]) - 0.1 * lkl_range,
+                 max(lkl_old[1]) + 0.1 * lkl_range)
         ax21.tick_params(axis='y', which='major', labelsize=9)
         ax21.grid(b=True, which='major', color='gray', linestyle='--', lw=0.6)
         plt.xlabel('Generation', fontsize=12)
         plt.ylabel('Likelihood', fontsize=12)
-        text1 = '$N_{btst} = %d\,;\,N = %d$' '\n' % (N_b, len(lkl_old[0]))
+        text1 = '$N_{total} = %.2e\,;\,N_{btst} = %d$' '\n' % \
+        (len(isoch_done[0]), N_b)
         text2 = '$n_{gen}=%d\,;\,n_{pop}=%d$' '\n' % (n_gen, n_pop)
         text3 = '$f_{dif}=%0.2f\,;\,cr_{sel}=%s$' '\n' % (fdif, cr_sel)
         text4 = '$p_{cross}=%0.2f\,;\,p_{mut}=%0.2f$' '\n' % (p_cross, p_mut)
@@ -935,7 +938,6 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
         leg.get_frame().set_alpha(0.6)
 
         # Extinction vs distance modulus GA diagram.
-        isoch_done = isoch_fit_params[3]
         plt.subplot(gs1[10:12, 6:8])
         plt.xlim(e_min, e_max)
         plt.ylim(d_min, d_max)
