@@ -7,8 +7,7 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
 
-def disp_rad(phot_data, center_params, clust_rad, delta_backg, delta_percentage,
-            backg_value, rdp_params):
+def disp_rad(phot_data, center_params, clust_rad, backg_value, rdp_params):
     '''
     Plot cluster and its radius.
     '''
@@ -79,6 +78,9 @@ def disp_rad(phot_data, center_params, clust_rad, delta_backg, delta_percentage,
     # Get max and min values in x,y
     x_min, x_max = min(radii) - (max(radii) / 10.), \
     max(radii) + (max(radii) / 10.)
+    max(radii) + (max(radii) / 20.)
+    delta_total = (max(ring_density) - backg_value)
+    delta_backg = 0.2 * delta_total
     y_min, y_max = (backg_value - delta_backg) - (max(ring_density) -
     min(ring_density)) / 10, max(ring_density) + (max(ring_density) -
     min(ring_density)) / 10
@@ -94,7 +96,6 @@ def disp_rad(phot_data, center_params, clust_rad, delta_backg, delta_percentage,
     # Legend texts
     texts = ['Dens prof (%d px)' % bin_width,
             'backg = %.1E $st/px^{2}$' % backg_value,
-            '$\Delta$=%d%%' % delta_percentage,
             'r$_{cl}$ = %d $\pm$ %d px' % (clust_rad, round(bin_width))]
     # Plot density profile with the smallest bin size
     ax3.plot(radii, ring_density, 'ko-', zorder=3, label=texts[0])
@@ -104,10 +105,6 @@ def disp_rad(phot_data, center_params, clust_rad, delta_backg, delta_percentage,
     # Plot background level.
     ax3.hlines(y=backg_value, xmin=0, xmax=max(radii),
                label=texts[1], color='b', zorder=5)
-    # Plot the delta around the background value used to asses when the density
-    # has become stable
-    plt.hlines(y=(backg_value + delta_backg), xmin=0, xmax=max(radii),
-               color='b', linestyles='dashed', label=texts[2], zorder=2)
     # Approx middle of the graph.
     arr_y_up = (y_max - y_min) / 2.3 + y_min
     # Length of arrow head.
@@ -116,7 +113,7 @@ def disp_rad(phot_data, center_params, clust_rad, delta_backg, delta_percentage,
     # Length of arrow.
     arr_y_dwn = -1. * abs(arr_y_up - backg_value) * 0.76
     # Plot radius.
-    ax3.vlines(x=clust_rad, ymin=0, ymax=0., label=texts[3], color='r')
+    ax3.vlines(x=clust_rad, ymin=0, ymax=0., label=texts[2], color='r')
     ax3.arrow(clust_rad, arr_y_up, 0., arr_y_dwn, fc="r",
               ec="r", head_width=head_w, head_length=head_l, zorder=5)
     # get handles

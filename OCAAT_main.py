@@ -102,7 +102,7 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
 
     # Get cluster radius
     radius_params = gcr(phot_data, backg_value, cr_params, center_params,
-        rdp_params, semi_return, mode)
+        rdp_params, semi_return, mode, bin_width)
     clust_rad = radius_params[0]
 
     # Get King profiles based on the density profiles.
@@ -208,7 +208,7 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
     # Make plots
     if pl_params[0]:
         mp(output_subdir, clust_name, x_data, y_data, center_params, rdp_params,
-            backg_value, radius_params[0:3],
+            backg_value, radius_params,
             cont_index, mag_data, col1_data, popt_mag, popt_col1,
             err_plot, rjct_errors_fit, kp_params, stars_in, stars_out,
             stars_in_rjct, stars_out_rjct, integr_return, n_c,

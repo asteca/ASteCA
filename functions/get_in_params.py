@@ -68,7 +68,7 @@ def get_in_params(mypath):
 
                 elif reader[0] == 'CR':
                     cr_params0 = str(reader[1])
-                    cr_params1 = map(float, reader[2:])
+                    cr_params1 = float(reader[2])
 
                 elif reader[0] == 'KP':
                     kp_flag = True if reader[1] in true_lst else False
@@ -120,7 +120,7 @@ def get_in_params(mypath):
                     n_es = int(reader[9])
 
     pl_params = [flag_make_plot, plot_frmt, plot_dpi]
-    cr_params = [cr_params0] + cr_params1
+    cr_params = [cr_params0, cr_params1]
     gc_params = [gc_params0, gc_params1]
     in_dirs = [input_dir, output_dir, done_dir]
     pv_params = [pv0_params, pv1_params, pv2_params]

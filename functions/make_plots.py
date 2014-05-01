@@ -82,7 +82,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     # RDP params.
     radii, ring_density, poisson_error = rdp_params[:3]
     # Parameters from get_radius function.
-    clust_rad, delta_backg, delta_percentage = radius_params
+    clust_rad, e_rad = radius_params[:2]
     # King prof params.
     rc, e_rc, rt, e_rt, n_c_k, cd, flag_2pk_conver, flag_3pk_conver = kp_params
     # Error parameters.
@@ -226,6 +226,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     # Get max and min values in x,y
     x_min, x_max = min(radii) - (max(radii) / 20.), \
     max(radii) + (max(radii) / 20.)
+    delta_total = (max(ring_density) - backg_value)
+    delta_backg = 0.2 * delta_total
     y_min, y_max = (backg_value - delta_backg) - (max(ring_density) -
     min(ring_density)) / 10, max(ring_density) + (max(ring_density) -
     min(ring_density)) / 10
@@ -242,11 +244,10 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     kp_text = '3P' if flag_3pk_conver else '2P'
     texts = ['RDP (%0.1f px)' % bin_list[0],
             'backg = %.1E $st/px^{2}$' % backg_value,
-            '$\Delta$=%d%%' % delta_percentage,
             '%s King profile' % kp_text,
             'r$_c$ = %0.1f $\pm$ %0.1f px' % (rc, e_rc),
             'r$_t$ = %0.1f $\pm$ %0.1f px' % (rt, e_rt),
-            'r$_{cl}$ = %0.1f $\pm$ %0.1f px' % (clust_rad, round(bin_list[0]))]
+            'r$_{cl}$ = %0.1f $\pm$ %0.1f px' % (clust_rad, e_rad)]
     # Plot density profile with the smallest bin size
     ax5.plot(radii, ring_density, 'ko-', zorder=3, label=texts[0])
     # Plot poisson error bars
@@ -255,10 +256,6 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     # Plot background level.
     ax5.hlines(y=backg_value, xmin=0, xmax=max(radii),
                label=texts[1], color='b', zorder=5)
-    # Plot the delta around the background value used to asses when the density
-    # has become stable
-    plt.hlines(y=(backg_value + delta_backg), xmin=0, xmax=max(radii),
-               color='b', linestyles='dashed', label=texts[2], zorder=2)
     # Approx middle of the graph.
     arr_y_up = (y_max - y_min) / 2.3 + y_min
     # Length and width of arrow head.
@@ -269,26 +266,29 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     if flag_3pk_conver is True:
         # Plot curve.
         ax5.plot(radii, three_params(radii, rt, cd, rc, backg_value), 'g--',
-            label=texts[3], lw=2., zorder=3)
+            label=texts[2], lw=2., zorder=3)
         # Plot r_t radius as an arrow. vline is there to show the label.
-        ax5.vlines(x=rt, ymin=0., ymax=0., label=texts[5], color='g')
+        ax5.vlines(x=rt, ymin=0., ymax=0., label=texts[4], color='g')
         ax5.arrow(rt, arr_y_up, 0., arr_y_dwn, fc="g", ec="g",
                   head_width=head_w, head_length=head_l, zorder=5)
         # Plot r_c as a dashed line.
         ax5.vlines(x=rc, ymin=0, ymax=three_params(rc, rt, cd, rc, backg_value),
-            label=texts[4], color='g', linestyles=':', lw=4., zorder=4)
+            label=texts[3], color='g', linestyles=':', lw=4., zorder=4)
     # Plot 2-P King profile if 3-P was not found.
     elif flag_2pk_conver is True:
         # Plot curve.
         ax5.plot(radii, two_params(radii, cd, rc, backg_value), 'g--',
-            label=texts[3], lw=2., zorder=3)
+            label=texts[2], lw=2., zorder=3)
         # Plot r_c as a dashed line.
         ax5.vlines(x=rc, ymin=0, ymax=two_params(rc, cd, rc, backg_value),
-                   label=texts[4], color='g', linestyles=':', lw=4., zorder=4)
+                   label=texts[3], color='g', linestyles=':', lw=4., zorder=4)
     # Plot radius.
-    ax5.vlines(x=clust_rad, ymin=0, ymax=0., label=texts[6], color='r')
+    ax5.vlines(x=clust_rad, ymin=0, ymax=0., label=texts[5], color='r')
     ax5.arrow(clust_rad, arr_y_up, 0., arr_y_dwn, fc="r",
               ec="r", head_width=head_w, head_length=head_l, zorder=5)
+    # Plot radius error zone.
+    plt.axvspan((clust_rad - e_rad), (clust_rad + e_rad), facecolor='grey',
+        alpha=0.5)
     # get handles
     handles, labels = ax5.get_legend_handles_labels()
     # use them in the legend
