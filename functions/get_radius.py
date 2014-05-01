@@ -91,7 +91,7 @@ def main_center_algor(rdp_params, cr_params, backg_value, bin_width):
     for ind in index_rad:
         rad_found.append(radii_c[ind])
     if rad_found:
-        clust_rad, e_rad = np.mean(rad_found), min(np.std(rad_found), bin_width)
+        clust_rad, e_rad = np.mean(rad_found), max(np.std(rad_found), bin_width)
     else:
         flag_not_stable = True
         # No radius value found. Assign radius value as the middle element
