@@ -33,9 +33,9 @@ def get_memb_num(backg_value, clust_rad, rdp_params, bin_width):
     a_clust = n_b * bin_width ** 2
 
     # Approx number of members.
-    n_c = round(n_clust - (backg_value * a_clust))
+    n_c = max(int(round(n_clust - (backg_value * a_clust))), 0)
 
     # Raise a flag if the number of members is <10
     flag_num_memb_low = False if n_c >= 10 else True
 
-    return int(n_c), flag_num_memb_low, a_clust, n_clust
+    return n_c, flag_num_memb_low, a_clust, n_clust
