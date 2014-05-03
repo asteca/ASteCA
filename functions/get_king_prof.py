@@ -85,6 +85,7 @@ def get_king_profile(kp_flag, clust_rad, backg_value, radii, ring_density):
             # If 3-P King profile did not converge, pass dummy values
             rt, e_rt, n_c_k = -1., -1., -1.
 
+        # If 3-param King fit did not converge.
         if flag_3pk_conver is False:
             # Fit a 2P King profile first to obtain the maximum central
             # density and core radius.
@@ -100,6 +101,15 @@ def get_king_profile(kp_flag, clust_rad, backg_value, radii, ring_density):
                 flag_2pk_conver = False
                 # Pass dummy values
                 rc, e_rc, rt, e_rt, n_c_k, cd = -1., -1., -1., -1., -1., -1.
+
+            # If 2-param converged to negative core radius.
+            if rc < 0:
+                flag_2pk_conver = False
+                # Pass dummy values
+                rc, e_rc, rt, e_rt, n_c_k, cd = -1., -1., -1., -1., -1., -1.
+
+            if flag_2pk_conver is False:
+                print '  WARNING: core radius could not be ontained.'
     else:
         # Pass dummy values
         rc, e_rc, rt, e_rt, n_c_k, cd = -1., -1., -1., -1., -1., -1.

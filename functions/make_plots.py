@@ -224,12 +224,12 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     # Radial density plot.
     ax5 = plt.subplot(gs1[2:4, 2:6])
     # Get max and min values in x,y
-    x_min, x_max = min(radii) - (max(radii) / 20.), \
+    x_min, x_max = max(min(radii) - (max(radii) / 20.), 0), \
     max(radii) + (max(radii) / 20.)
     delta_total = (max(ring_density) - backg_value)
     delta_backg = 0.2 * delta_total
-    y_min, y_max = (backg_value - delta_backg) - (max(ring_density) -
-    min(ring_density)) / 10, max(ring_density) + (max(ring_density) -
+    y_min, y_max = max((backg_value - delta_backg) - (max(ring_density) -
+    min(ring_density)) / 10, 0), max(ring_density) + (max(ring_density) -
     min(ring_density)) / 10
     # Set plot limits
     plt.xlim(x_min, x_max)
