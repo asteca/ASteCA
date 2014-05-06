@@ -124,11 +124,6 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     text = 'Bin: %.1f px' % (bin_list[0])
     plt.text(0.7, 0.94, text, transform=ax0.transAxes,
              bbox=dict(facecolor='white', alpha=0.8), fontsize=10)
-    text1 = '$x_{cent} = %.1f \pm %.1f px$' '\n' % (center_cl[0], bin_list[0])
-    text2 = '$y_{cent} = %.1f \pm %.1f px$' % (center_cl[1], bin_list[0])
-    text = text1 + text2
-    plt.text(0.05, 0.9, text, transform=ax0.transAxes,
-        bbox=dict(facecolor='white', alpha=0.85), fontsize=11)
     plt.imshow(h_filter.transpose(), origin='lower', aspect='auto')
 
     # 2D not-weighted histograms' centers.
@@ -237,6 +232,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     # Set axes labels
     plt.xlabel('radius (px)', fontsize=12)
     plt.ylabel("stars/px$^{2}$", fontsize=12)
+    # Set grid
+    ax5.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
     # Cluster's name.
     text = str(clust_name)
     plt.text(0.4, 0.9, text, transform=ax5.transAxes, fontsize=14)
@@ -287,8 +284,9 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     ax5.arrow(clust_rad, arr_y_up, 0., arr_y_dwn, fc="r",
               ec="r", head_width=head_w, head_length=head_l, zorder=5)
     # Plot radius error zone.
-    plt.axvspan((clust_rad - e_rad), (clust_rad + e_rad), facecolor='grey',
-        alpha=0.5)
+    if e_rad > 0.:
+        plt.axvspan((clust_rad - e_rad), (clust_rad + e_rad), facecolor='grey',
+            alpha=0.5)
     # get handles
     handles, labels = ax5.get_legend_handles_labels()
     # use them in the legend

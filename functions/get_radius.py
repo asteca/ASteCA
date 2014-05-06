@@ -129,8 +129,8 @@ def get_clust_rad(phot_data, backg_value, cr_params, center_params,
         err_flag_semi = semi_return
 
         if rad_flag_semi == 1:
-            # Update value.
-            clust_rad = cl_rad_semi
+            # Update values.
+            clust_rad, e_rad = cl_rad_semi, 0.
             print 'Semi radius set: %0.1f px.' % clust_rad
         else:
             print 'Auto radius found: %0.1f px.' % clust_rad
