@@ -16,7 +16,7 @@ import warnings
 
 
 def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
-    rdp_params, backg_value, radius_params,
+    rdp_params, field_dens, radius_params,
     cont_index, mag_data, col1_data, popt_mag, popt_col1,
     err_plot, rjct_errors_fit, kp_params,
     stars_in, stars_out, stars_in_rjct, stars_out_rjct, integr_return, n_c,
@@ -221,9 +221,9 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     # Get max and min values in x,y
     x_min, x_max = max(min(radii) - (max(radii) / 20.), 0), \
     max(radii) + (max(radii) / 20.)
-    delta_total = (max(ring_density) - backg_value)
+    delta_total = (max(ring_density) - field_dens)
     delta_backg = 0.2 * delta_total
-    y_min, y_max = max((backg_value - delta_backg) - (max(ring_density) -
+    y_min, y_max = max((field_dens - delta_backg) - (max(ring_density) -
     min(ring_density)) / 10, 0), max(ring_density) + (max(ring_density) -
     min(ring_density)) / 10
     # Set plot limits
@@ -240,7 +240,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     # Legend texts
     kp_text = '3P' if flag_3pk_conver else '2P'
     texts = ['RDP (%0.1f px)' % bin_list[0],
-            'backg = %.1E $st/px^{2}$' % backg_value,
+            '$d_{field}$ = %.1E $st/px^{2}$' % field_dens,
             '%s King profile' % kp_text,
             'r$_c$ = %0.1f $\pm$ %0.1f px' % (rc, e_rc),
             'r$_t$ = %0.1f $\pm$ %0.1f px' % (rt, e_rt),
@@ -251,33 +251,33 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     plt.errorbar(radii, ring_density, yerr=poisson_error, fmt='ko',
                  zorder=1)
     # Plot background level.
-    ax5.hlines(y=backg_value, xmin=0, xmax=max(radii),
+    ax5.hlines(y=field_dens, xmin=0, xmax=max(radii),
                label=texts[1], color='b', zorder=5)
     # Approx middle of the graph.
     arr_y_up = (y_max - y_min) / 2.3 + y_min
     # Length and width of arrow head.
     head_w, head_l = x_max * 0.023, (y_max - y_min) * 0.045
     # Length of arrow.
-    arr_y_dwn = -1. * abs(arr_y_up - backg_value) * 0.76
+    arr_y_dwn = -1. * abs(arr_y_up - field_dens) * 0.76
     # Plot 3-P King profile.
     if flag_3pk_conver is True:
         # Plot curve.
-        ax5.plot(radii, three_params(radii, rt, cd, rc, backg_value), 'g--',
+        ax5.plot(radii, three_params(radii, rt, cd, rc, field_dens), 'g--',
             label=texts[2], lw=2., zorder=3)
         # Plot r_t radius as an arrow. vline is there to show the label.
         ax5.vlines(x=rt, ymin=0., ymax=0., label=texts[4], color='g')
         ax5.arrow(rt, arr_y_up, 0., arr_y_dwn, fc="g", ec="g",
                   head_width=head_w, head_length=head_l, zorder=5)
         # Plot r_c as a dashed line.
-        ax5.vlines(x=rc, ymin=0, ymax=three_params(rc, rt, cd, rc, backg_value),
+        ax5.vlines(x=rc, ymin=0, ymax=three_params(rc, rt, cd, rc, field_dens),
             label=texts[3], color='g', linestyles=':', lw=4., zorder=4)
     # Plot 2-P King profile if 3-P was not found.
     elif flag_2pk_conver is True:
         # Plot curve.
-        ax5.plot(radii, two_params(radii, cd, rc, backg_value), 'g--',
+        ax5.plot(radii, two_params(radii, cd, rc, field_dens), 'g--',
             label=texts[2], lw=2., zorder=3)
         # Plot r_c as a dashed line.
-        ax5.vlines(x=rc, ymin=0, ymax=two_params(rc, cd, rc, backg_value),
+        ax5.vlines(x=rc, ymin=0, ymax=two_params(rc, cd, rc, field_dens),
                    label=texts[3], color='g', linestyles=':', lw=4., zorder=4)
     # Plot radius.
     ax5.vlines(x=clust_rad, ymin=0, ymax=0., label=texts[5], color='r')
@@ -763,7 +763,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     # Color map, higher prob stars look redder.
     cm = plt.cm.get_cmap('RdYlBu_r')
     # Star sizes for dense and not dense regions.
-    star_size = 20 if backg_value > 0.005 else 35
+    star_size = 20 if field_dens > 0.005 else 35
     m_p_m_temp = [[], [], []]
     for star in memb_prob_avrg_sort:
         m_p_m_temp[0].append(star[1])
