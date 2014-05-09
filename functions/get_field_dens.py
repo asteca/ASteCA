@@ -5,9 +5,9 @@
 import numpy as np
 
 
-def get_background(ring_density):
+def field_dens(ring_density):
     """
-    Get background level of stars through an iterative process. Start with
+    Get field density level of stars through an iterative process. Start with
     the complete set of radial density points and optain its median and
     standard deviation. Then reject the point located the farthest beyond
     the 1 sigma range around the median and obtain the new median. Repeat
@@ -44,7 +44,7 @@ def get_background(ring_density):
         else:
             stable_cond = True
 
-        backg_value = median
+        field_dens = median
 
     # Return background value obtained.
-    return backg_value
+    return field_dens

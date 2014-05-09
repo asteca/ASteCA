@@ -16,7 +16,7 @@ from functions.get_phot_data import get_data as gd
 from functions.trim_frame import trim_frame as t_f
 from functions.get_center import get_center as g_c
 from functions.manual_histo import manual_histo as mh
-from functions.get_background import get_background as gbg
+from functions.get_field_dens import field_dens as gfd
 from functions.get_dens_prof import get_dens_prof as gdp
 from functions.get_radius import get_clust_rad as gcr
 from functions.get_king_prof import get_king_profile as gkp
@@ -96,25 +96,25 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
     radii, ring_density = rdp_params[:2]
     print 'Density profile calculated.'
 
-    # Get background value in stars/px^2.
-    backg_value = gbg(ring_density)
-    print 'Background calculated (%0.5f stars/px^2).' % backg_value
+    # Get field density value in stars/px^2.
+    field_dens = gfd(ring_density)
+    print 'Field density calculated (%0.5f stars/px^2).' % field_dens
 
     # Get cluster radius
-    radius_params = gcr(phot_data, backg_value, cr_params, center_params,
+    radius_params = gcr(phot_data, field_dens, cr_params, center_params,
         rdp_params, semi_return, mode, bin_width)
     clust_rad = radius_params[0]
 
     # Get King profiles based on the density profiles.
-    kp_params = gkp(kp_flag, clust_rad, backg_value, radii, ring_density)
+    kp_params = gkp(kp_flag, clust_rad, field_dens, radii, ring_density)
 
     # Get approximate number of cluster's members.
-    n_c, flag_num_memb_low, a_clust, n_clust = g_m_n(backg_value, clust_rad,
+    n_c, flag_num_memb_low, a_clust, n_clust = g_m_n(field_dens, clust_rad,
         rdp_params, bin_width)
     print 'Approximate number of members in cluster obtained (%d).' % (n_c)
 
     # Get contamination index.
-    cont_index = g_c_i(backg_value, a_clust, n_clust)
+    cont_index = g_c_i(field_dens, a_clust, n_clust)
     print 'Contamination index obtained (%0.2f).' % cont_index
 
     # Accept and reject stars based on their errors.
@@ -208,7 +208,7 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
     # Make plots
     if pl_params[0]:
         mp(output_subdir, clust_name, x_data, y_data, center_params, rdp_params,
-            backg_value, radius_params,
+            field_dens, radius_params,
             cont_index, mag_data, col1_data, popt_mag, popt_col1,
             err_plot, rjct_errors_fit, kp_params, stars_in, stars_out,
             stars_in_rjct, stars_out_rjct, integr_return, n_c,
