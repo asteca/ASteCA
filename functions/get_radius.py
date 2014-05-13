@@ -96,7 +96,7 @@ def main_center_algor(rdp_params, cr_params, backg_value, bin_width):
         flag_not_stable = True
         # No radius value found. Assign radius value as the middle element
         # in the radii list.
-        clust_rad = radii_c[int(len(radii_c) / 2.)]
+        clust_rad, e_rad = radii_c[int(len(radii_c) / 2.)], 0.
         print '  WARNING: no radius found, setting value to: %0.2f' % clust_rad
 
     return clust_rad, e_rad, flag_delta_total, flag_not_stable, flag_delta
