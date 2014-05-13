@@ -31,7 +31,7 @@ def center_fun(x_data, y_data, d_b):
 
 def kde_center(x_data, y_data, x_cent_pix, y_cent_pix, radius):
     '''
-    Find the KDE maximum value wich points to the cneter coordinates.
+    Find the KDE maximum value wich points to the center coordinates.
     '''
     # Generate zoom around initial center value.
     xmin_z, xmax_z = x_cent_pix - radius, x_cent_pix + radius
