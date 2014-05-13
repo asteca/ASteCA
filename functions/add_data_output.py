@@ -13,7 +13,7 @@ def add_data_output(out_file_name, sub_dir, output_dir, clust_name,
     # Unpack data.
     center_cl = center_params[5][0]
     flag_center_med, flag_center_std, flag_center_manual = center_params[-3:]
-    clust_rad = radius_params[0]
+    clust_rad, e_rad = radius_params[:2]
     flag_delta_total, flag_not_stable, flag_delta, flag_radius_manual = \
     radius_params[-4:]
     rc, e_rc, rt, e_rt, n_c_k = kp_params[:5]
@@ -43,7 +43,8 @@ def add_data_output(out_file_name, sub_dir, output_dir, clust_name,
     line = [str(sub_dir) + '/' + str(clust_name),
         str('%.1f' % round(center_cl[0], 1)),
         str('%.1f' % round(center_cl[1], 1)),
-        str('%.1f' % round(clust_rad, 1)), str('%.1f' % round(rc, 1)),
+        str('%.1f' % round(clust_rad, 1)), str('%.1f' % round(e_rad, 1)),
+        str('%.1f' % round(rc, 1)),
         str('%.1f' % round(e_rc, 1)),
         str('%.1f' % round(rt, 1)),
         str('%.1f' % round(e_rt, 1)),
@@ -56,8 +57,8 @@ def add_data_output(out_file_name, sub_dir, output_dir, clust_name,
 
     # "a" opens the file for appending
     with open(output_dir + out_file_name, "a") as f_out:
-        f_out.write('{:<16} {:>7} {:>7} {:>8} {:>7} {:>8} {:>7} {:>8} {:>8} \
-{:>4} {:>6} {:>7} {:>5} {:>7} {:>7} {:>7} {:>5} {:>5} {:>7} {:>5} {:>6} \
+        f_out.write('{:<16} {:>7} {:>7} {:>8} {:>8} {:>7} {:>8} {:>7} {:>8} \
+{:>8} {:>4} {:>6} {:>7} {:>5} {:>7} {:>7} {:>7} {:>5} {:>5} {:>7} {:>5} {:>6} \
 {:>5}'.format(*line))
         # Flags.
         f_out.write('{:>4} {:>2} {:>2} {:>3} {:>2} {:>2} {:>2} {:>2} {:>2} \
