@@ -100,9 +100,10 @@ def create_out_data_file(output_dir):
 #    more than one cluster present in the frame, variable or too crowded\n\
 #    field, etc.\n\
 #\n\
-#NAME            c_x[px] c_y[px] r_cl[px]  e_r[px] r_c[px] e_rc[px] r_t[px] \
-e_rt[px] cont_ind memb memb_k prob_cl   CCC mag_int     met     e_m   age   e_a\
-  E(B-V)   e_E   dist   e_d  M1 M2 M3  f1 f2 f3 f4 f5 f6 f7  FC\n" % now_time)
+#NAME            c_x[px] c_y[px]   e_c[px] r_cl[px]  e_r[px] r_c[px] e_rc[px] \
+r_t[px] e_rt[px] cont_ind memb memb_k prob_cl   CCC mag_int     met     e_m   \
+age   e_a  E(B-V)   e_E   dist   e_d  M1 M2 M3  f1 f2 f3 f4 f5 f6 f7  \
+FC\n" % now_time)
         out_data_file.close()
 
     return out_file_name

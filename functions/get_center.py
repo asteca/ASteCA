@@ -29,7 +29,7 @@ def center_fun(x_data, y_data, d_b):
     return hist, xedges, yedges, h_g
 
 
-def kde_center(x_data, y_data, x_cent_pix, y_cent_pix, radius):
+def kde_center(indx_b, x_data, y_data, x_cent_pix, y_cent_pix, radius):
     '''
     Find the KDE maximum value wich points to the center coordinates.
     '''
@@ -43,20 +43,37 @@ def kde_center(x_data, y_data, x_cent_pix, y_cent_pix, radius):
             x_zoom.append(star_x)
             y_zoom.append(y_data[indx])
     values = np.vstack([x_zoom, y_zoom])
-    # Obtain KDE.
-    kernel = stats.gaussian_kde(values)
-    # Search for maximum in grid.
+    # Define x,y grid.
     x, y = np.mgrid[xmin_z:xmax_z:100j, ymin_z:ymax_z:100j]
     positions = np.vstack([x.ravel(), y.ravel()])
-    k_pos = kernel(positions)
-    # x,y coordinates of max value.
-    x_cent_kde, y_cent_kde = positions.T[np.argmax(k_pos)]
+    # Obtain KDE.
+    kernel = stats.gaussian_kde(values)
+    # Get default bandwidth value.
+    bw = kernel.covariance_factor()
+    kde_centers = []
+    indx_r = 4 if indx_b == 0 else 1
+    for i in range(indx_r):
+        kernel = stats.gaussian_kde(values, bw_method=(bw * (i + 1)))
+        # Evaluate kernel in this positions.
+        k_pos = kernel(positions)
+        # Save this one for plotting.
+        if i == 0:
+            k_pos_plot = k_pos
+        # Coordinates of max value in x,y grid.
+        x_cent_kde, y_cent_kde = positions.T[np.argmax(k_pos)]
+        # Append values to list.
+        kde_centers.append([x_cent_kde, y_cent_kde])
+    if indx_b == 0:
+        x_cent_kde, y_cent_kde = np.mean(kde_centers, axis=0)
+        e_cent = np.std(kde_centers, axis=0)
+    else:
+        e_cent = 0.
 
     # Pass for plotting.
     ext_range = [xmin_z, xmax_z, ymin_z, ymax_z]
-    kde_plot = [ext_range, x, y, k_pos]
+    kde_plot = [ext_range, x, y, k_pos_plot]
 
-    return x_cent_kde, y_cent_kde, kde_plot
+    return x_cent_kde, y_cent_kde, e_cent, kde_plot
 
 
 def get_center(x_data, y_data, mag_data, gc_params, mode, semi_return):
@@ -98,14 +115,16 @@ def get_center(x_data, y_data, mag_data, gc_params, mode, semi_return):
         np.average(yedges[y_cent_bin:y_cent_bin + 2])
 
         # Call funct to obtain the pixel coords of the maximum KDE value.
-        x_cent_kde, y_cent_kde, kde_plot = kde_center(x_data, y_data,
-            x_cent_pix, y_cent_pix, radius)
+        x_cent_kde, y_cent_kde, e_cent, kde_plot = kde_center(indx, x_data,
+            y_data, x_cent_pix, y_cent_pix, radius)
 
         # Store center coords in pixel coordinates.
         centers_kde.append([x_cent_kde, y_cent_kde])
 
         # Only store for the smallest value of 'd_b'.
         if indx == 0:
+            # Store center error.
+            e_center = round(max(e_cent), 1)
             # Store min width bin edges.
             hist_xyedges = [xedges, yedges]
             # Find bin where the center xy coordinates are located.
@@ -131,7 +150,7 @@ def get_center(x_data, y_data, mag_data, gc_params, mode, semi_return):
     # the coordinates obtained with different bin widths.
     median_coords, std_dev = np.median(arr_g, axis=0), np.std(arr_g, axis=0)
     # Store stats values.
-    cent_stats = [median_coords, std_dev]
+    cent_stats = [e_center, median_coords, std_dev]
     # Set flags.
     flag_center_med, flag_center_std = False, False
     # Raise a flag if either median cluster's central coordinate is more than

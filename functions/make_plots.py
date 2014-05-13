@@ -138,21 +138,21 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     plt.ylabel('y (px)', fontsize=12)
     ax1.minorticks_on()
     # Add lines through meadian values with std deviations.
-    plt.axvline(x=cent_stats[0][0], linestyle='-', color='k')
-    plt.axvline(x=cent_stats[0][0] + cent_stats[1][0], linestyle='--',
+    plt.axvline(x=cent_stats[1][0], linestyle='-', color='k')
+    plt.axvline(x=cent_stats[1][0] + cent_stats[2][0], linestyle='--',
         color='k')
-    plt.axvline(x=cent_stats[0][0] - cent_stats[1][0], linestyle='--',
+    plt.axvline(x=cent_stats[1][0] - cent_stats[2][0], linestyle='--',
         color='k')
-    plt.axhline(y=cent_stats[0][1], linestyle='-', color='k')
-    plt.axhline(y=cent_stats[0][1] + cent_stats[1][1], linestyle='--',
+    plt.axhline(y=cent_stats[1][1], linestyle='-', color='k')
+    plt.axhline(y=cent_stats[1][1] + cent_stats[2][1], linestyle='--',
         color='k')
-    plt.axhline(y=cent_stats[0][1] - cent_stats[1][1], linestyle='--',
+    plt.axhline(y=cent_stats[1][1] - cent_stats[2][1], linestyle='--',
         color='k')
     # Add stats box.
     text1 = r'$(\tilde{x},\, \tilde{y}) = (%.1f, %.1f)\,px$' '\n' % \
-    (cent_stats[0][0], cent_stats[0][1])
-    text2 = '$(\sigma_x,\, \sigma_y) = (%.1f, %.1f)\,px$' % \
     (cent_stats[1][0], cent_stats[1][1])
+    text2 = '$(\sigma_x,\, \sigma_y) = (%.1f, %.1f)\,px$' % \
+    (cent_stats[2][0], cent_stats[2][1])
     text = text1 + text2
     plt.text(0.05, 0.9, text, transform=ax1.transAxes,
         bbox=dict(facecolor='white', alpha=0.8), fontsize=11)
@@ -203,8 +203,9 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
                 color='g', fill=False, ls='dashed', lw=2.5)
             fig.gca().add_artist(circle)
     # Add text box
-    text1 = '$x_{cent} = %.1f \pm %.1f px$' '\n' % (center_cl[0], bin_list[0])
-    text2 = '$y_{cent} = %.1f \pm %.1f px$' % (center_cl[1], bin_list[0])
+    e_cent = cent_stats[0]
+    text1 = '$x_{cent} = %.1f \pm %.1f px$' '\n' % (center_cl[0], e_cent)
+    text2 = '$y_{cent} = %.1f \pm %.1f px$' % (center_cl[1], e_cent)
     text = text1 + text2
     plt.text(0.05, 0.9, text, transform=ax4.transAxes,
         bbox=dict(facecolor='white', alpha=0.85), fontsize=11)
