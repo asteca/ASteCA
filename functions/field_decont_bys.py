@@ -103,12 +103,12 @@ def field_decont_bys(flag_area_stronger, cluster_region, field_region,
 
     # Check if at least one field region was obtained.
     if mode in ['auto', 'manual'] and flag_area_stronger:
-        print "WARNING: no field regions found. Using 'skip'."
+        print "  WARNING: no field regions found. Using 'skip'."
         mode = 'skip'
 
     # Check if 'mode' was correctly set, else use 'skip'.
     if mode not in ['auto', 'manual', 'read', 'skip']:
-        print "WARNING: Wrong name for 'mode' in input file. Using 'skip'."
+        print "  WARNING: Wrong name for 'mode' in input file. Using 'skip'."
         mode = 'skip'
 
     if mode == 'read':
@@ -116,7 +116,7 @@ def field_decont_bys(flag_area_stronger, cluster_region, field_region,
         memb_file = mypath2 + '/' + sub_dir + '/' + clust_name + '_memb.dat'
         if not os.path.isfile(memb_file):
             # File does not exist.
-            print "WARNING: members file does not exist. Using 'skip'."
+            print "  WARNING: members file does not exist. Using 'skip'."
             mode = 'skip'
 
     # Define clean cluster_region as that composed of those stars located

@@ -109,7 +109,7 @@ def get_regions(bin_center, bin_width, histo, clust_rad, h_manual, stars_in,
     # Raise a flag.
     flag_area_stronger = False
     if (area - (length * clust_rad) ** 2) < np.pi * clust_rad ** 2:
-        print 'WARNING: cluster region too large, no field region available.'
+        print '  WARNING: cluster region too large, no field region available.'
         flag_area_stronger = True
     else:
         # Calculate maximum number of field regions possible.
@@ -118,8 +118,9 @@ def get_regions(bin_center, bin_width, histo, clust_rad, h_manual, stars_in,
         # If the number of field regions defined is larger than the maximum
         # allowed, use the maximum.
         if f_regions > f_regs_max:
-            print 'Number of FR defined (%d) larger than the' % f_regions
-            print 'maximum allowed (%d). Using max number.' % f_regs_max
+            print ('  WARNING: Number of FR defined (%d) larger\n' +
+            '  than the maximum allowed (%d). Using max number.') % (f_regions,
+            f_regs_max)
             f_regions = f_regs_max
 
     # Get list that contains the spiral as a list of x,y coordinates (also
@@ -167,11 +168,12 @@ def get_regions(bin_center, bin_width, histo, clust_rad, h_manual, stars_in,
         # If after removing the empty regions no regions are left, raise the
         # flag.
         if not(field_regions):
-            print 'WARNING: no field regions left after removal of those with \
-less than 4 stars.'
+            print ('  WARNING: no field regions left after removal of those\n' +
+            '  with less than 4 stars.')
             flag_area_stronger = True
     else:
-        print 'WARNING: number of field regions is 0. No field region defined.'
+        print ('  WARNING: number of field regions is 0.\n' +
+        '  No field region defined.')
         flag_area_stronger = True
 
     return flag_area_stronger, cluster_region, field_regions

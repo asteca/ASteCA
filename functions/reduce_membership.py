@@ -23,8 +23,8 @@ def red_memb(decont_algor_return, bf_params, rm_params):
         if flag_red_memb in {'auto', 'manual'}:
 
             if flag_decont_skip is True:
-                print "WARNING: decontamination algorithm skipped."
-                print "Can't apply membership reduction."
+                print "  WARNING: decontamination algorithm skipped."
+                print "  Can't apply membership reduction."
                 skip_reduce = True
 
             if skip_reduce is not True:
@@ -35,8 +35,8 @@ def red_memb(decont_algor_return, bf_params, rm_params):
                     middle_indx = int(len(memb_prob_avrg_sort) / 2)
                     # Check number of stars left.
                     if len(memb_prob_avrg_sort[:middle_indx]) < 10:
-                        print 'WARNING: less than 10 stars left after reducing'
-                        print 'by membership prob. Using full list.'
+                        print '  WARNING: less than 10 stars left after'
+                        print '  reducing by membership prob. Using full list.'
                         red_memb, prob_mag = memb_prob_avrg_sort, 0.
                     else:
                         red_memb = memb_prob_avrg_sort[:middle_indx]
@@ -50,8 +50,8 @@ def red_memb(decont_algor_return, bf_params, rm_params):
                             red_memb.append(star)
 
                     if len(red_memb) < 10:
-                        print 'WARNING: less than 10 stars left after reducing'
-                        print '         by membership prob. Using full list.'
+                        print '  WARNING: less than 10 stars left after'
+                        print '  reducing by membership prob. Using full list.'
                         red_memb, prob_mag = memb_prob_avrg_sort, 0.
             else:
                 # Skip reduction process.
