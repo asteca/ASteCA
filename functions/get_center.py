@@ -178,8 +178,8 @@ def get_center(x_data, y_data, mag_data, gc_params, mode, semi_return):
             # and radius given.
 
             # Call funct to obtain the pixel coords of the maximum KDE value.
-            x_cent_kde, y_cent_kde, kde_plot = kde_center(x_data, y_data,
-                cent_cl_semi[0], cent_cl_semi[1], cl_rad_semi)
+            x_cent_kde, y_cent_kde, e_cent, kde_plot = kde_center(0, x_data,
+                y_data, cent_cl_semi[0], cent_cl_semi[1], cl_rad_semi)
 
             # Update KDE for plotting.
             kde_pl = kde_plot

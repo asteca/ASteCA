@@ -174,7 +174,7 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
     ip_list = ip(ps_params, bf_params[0])
 
     # Reduce number of stars in cluster according to a lower membership
-    # probability limit.
+    # probability or magnitude limit.
     red_return = rm(decont_algor_return, bf_params, rm_params)
     red_memb_prob = red_return[0]
 
