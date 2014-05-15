@@ -1,12 +1,10 @@
-OCAAT
-=============
+# OCAAT
 
 This code is still under heavy development.
 
 See the code's [site][1] for more information.
 
-Software
--------
+## Software
 
 Both `python` and `R` are needed to run OCAAT. I've tested the code
 using the versions shown below.
@@ -24,3 +22,8 @@ could work with older versions but I can't guarantee it.
 * [Matplotlib 1.2.1](http://matplotlib.org/) -- `sudo pip install matplotlib`
 
 [1]: http://gabriel-p.github.io/ocaat/
+
+
+## To do
+
+List of planned and still open [enhancements](http://goo.gl/g4teTB).
