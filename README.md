@@ -26,4 +26,4 @@ could work with older versions but I can't guarantee it.
 
 ## To do
 
-List of planned and still open [enhancements](http://goo.gl/g4teTB).
+List of planned and still open [enhancements](https://github.com/Gabriel-p/ocaat/search?o=asc&p=1&q=label%3Aenhancement+state%3Aopen&s=created&type=Issues).
