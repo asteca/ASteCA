@@ -52,12 +52,15 @@ def get_data(mypath, sub_dir, myfile, gd_params):
     # Now read IDs as strings.
     data = np.genfromtxt(data_file, dtype=str, unpack=True)
     id_star = data[id_inx]
+    n_old = len(id_star)
 
     # If any mag or color value (or their errors) is too large, discard
     # that star.
     id_star, [x_data, y_data, mag_data, e_mag, col1_data, e_col1] = \
     rem_bad_stars(id_star, x_data, y_data, mag_data, e_mag, col1_data, e_col1)
 
-    print 'Data obtained from input file (N stars: %d).' % len(id_star)
+    print 'Data obtained from input file (N_stars: %d).' % len(id_star)
+    if (n_old - len(id_star)) > 0:
+        print ' Entries rejected: %d.' % (n_old - len(id_star))
 
     return id_star, x_data, y_data, mag_data, e_mag, col1_data, e_col1
