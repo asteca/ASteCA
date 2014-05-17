@@ -29,7 +29,8 @@ def center_fun(x_data, y_data, d_b):
     return hist, xedges, yedges, h_g
 
 
-def kde_center(indx_b, x_data, y_data, x_cent_pix, y_cent_pix, radius):
+def kde_center(indx_b, x_data, y_data, x_cent_pix, y_cent_pix, radius,
+    gc_params):
     '''
     Find the KDE maximum value wich points to the center coordinates.
     '''
@@ -48,8 +49,12 @@ def kde_center(indx_b, x_data, y_data, x_cent_pix, y_cent_pix, radius):
     positions = np.vstack([x.ravel(), y.ravel()])
     # Obtain KDE.
     kernel = stats.gaussian_kde(values)
-    # Get default bandwidth value.
-    bw = kernel.covariance_factor()
+    if gc_params[0] == 'auto':
+        # Get default bandwidth value.
+        bw = kernel.covariance_factor()
+    else:
+        # Use manual value.
+        bw = gc_params[1]
     kde_centers = []
     indx_r = 4 if indx_b == 0 else 1
     for i in range(indx_r):
@@ -91,13 +96,10 @@ def get_center(x_data, y_data, mag_data, gc_params, mode, semi_return):
     # KDE center coordinates.
     radius = 0.15 * min(x_span, y_span)
 
-    # Either calculate or read the number of bins used.
-    if gc_params[0] == 'auto':
-        min_rang = min((rang[0][1] - rang[0][0]), (rang[1][1] - rang[1][0]))
-        # Number of bins given by 1%, 2% and 3% of the minimum axis range.
-        bin_list = [(i * min_rang / 100.) for i in range(1, 5)]
-    else:
-        bin_list = [(i * gc_params[1]) for i in range(1, 5)]
+    # Calculate the number of bins used.
+    min_rang = min((rang[0][1] - rang[0][0]), (rang[1][1] - rang[1][0]))
+    # Number of bins given by 1%, 2% and 3% of the minimum axis range.
+    bin_list = [(i * min_rang / 100.) for i in range(1, 5)]
 
     # Arrays that store the cluster's center values calculated varying
     # the bin size 'd_b'.
@@ -116,7 +118,7 @@ def get_center(x_data, y_data, mag_data, gc_params, mode, semi_return):
 
         # Call funct to obtain the pixel coords of the maximum KDE value.
         x_cent_kde, y_cent_kde, e_cent, kde_plot = kde_center(indx, x_data,
-            y_data, x_cent_pix, y_cent_pix, radius)
+            y_data, x_cent_pix, y_cent_pix, radius, gc_params)
 
         # Store center coords in pixel coordinates.
         centers_kde.append([x_cent_kde, y_cent_kde])
@@ -179,7 +181,8 @@ def get_center(x_data, y_data, mag_data, gc_params, mode, semi_return):
 
             # Call funct to obtain the pixel coords of the maximum KDE value.
             x_cent_kde, y_cent_kde, e_cent, kde_plot = kde_center(0, x_data,
-                y_data, cent_cl_semi[0], cent_cl_semi[1], cl_rad_semi)
+                y_data, cent_cl_semi[0], cent_cl_semi[1], cl_rad_semi,
+                gc_params)
 
             # Update KDE for plotting.
             kde_pl = kde_plot
