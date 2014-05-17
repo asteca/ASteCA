@@ -13,19 +13,20 @@ def rem_bad_stars(id_star, x_data, y_data, mag_data, e_mag, col1_data,
     values (or their errors) which indicates a bad photometry.
     '''
     # Set value of maximum limit.
-    max_lim = 90.
+    min_lim, max_lim = -50., 50.
 
     # Store indexes of stars that should be removed.
     lists_arr = zip(mag_data, e_mag, col1_data, e_col1)
     del_indexes = [i for i, t in enumerate(lists_arr) if
-        any(e > max_lim for e in t)]
+        any(e > max_lim for e in t) or any(e < min_lim for e in t)]
 
-    # Remove stars from all lists simultaneously.
-    big_array = np.array([id_star, x_data, y_data, mag_data, e_mag, col1_data,
-        e_col1])
-    clean_array = np.delete(big_array, del_indexes, axis=1)
+    # Remove stars from id list first since this are strings.
+    id_clean = np.delete(np.array(id_star), del_indexes)
+    # Remove stars from the rest of the lists simultaneously.
+    clean_array = np.delete(np.array([x_data, y_data, mag_data, e_mag,
+        col1_data, e_col1]), del_indexes, axis=1)
 
-    return clean_array
+    return id_clean, clean_array
 
 
 def get_data(mypath, sub_dir, myfile, gd_params):
@@ -54,8 +55,7 @@ def get_data(mypath, sub_dir, myfile, gd_params):
 
     # If any mag or color value (or their errors) is too large, discard
     # that star.
-    print len(id_star)
-    id_star, x_data, y_data, mag_data, e_mag, col1_data, e_col1 = \
+    id_star, [x_data, y_data, mag_data, e_mag, col1_data, e_col1] = \
     rem_bad_stars(id_star, x_data, y_data, mag_data, e_mag, col1_data, e_col1)
 
     print 'Data obtained from input file (N stars: %d).' % len(id_star)
