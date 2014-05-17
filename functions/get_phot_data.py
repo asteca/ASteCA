@@ -12,12 +12,13 @@ def rem_bad_stars(id_star, x_data, y_data, mag_data, e_mag, col1_data,
     Remove stars from all lists that have too large magnitude or color
     values (or their errors) which indicates a bad photometry.
     '''
-    # Store indexes of stars that should be removed.
+    # Set value of maximum limit.
     max_lim = 90.
-    del_indexes = []
-    for i, data_lsts in enumerate(zip(mag_data, e_mag, col1_data, e_col1)):
-        if any(e > max_lim for e in data_lsts):
-            del_indexes.append(i)
+
+    # Store indexes of stars that should be removed.
+    lists_arr = zip(mag_data, e_mag, col1_data, e_col1)
+    del_indexes = [i for i, t in enumerate(lists_arr) if
+        any(e > max_lim for e in t)]
 
     # Remove stars from all lists simultaneously.
     big_array = np.array([id_star, x_data, y_data, mag_data, e_mag, col1_data,
