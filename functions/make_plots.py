@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from matplotlib.patches import Rectangle
 from matplotlib.ticker import MultipleLocator
-from scipy.optimize import fsolve
 from itertools import cycle
 from scipy.ndimage.filters import gaussian_filter
 from matplotlib.patches import Ellipse
@@ -210,12 +209,15 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     plt.text(0.05, 0.9, text, transform=ax4.transAxes,
         bbox=dict(facecolor='white', alpha=0.85), fontsize=11)
     # Plot stars.
-    a, c = 200., 2.5
-    area = (max(x_data) - min(x_data)) * (max(y_data) - min(y_data))
     # Solve for optimal star size.
-    b = fsolve(star_size, 0.01, args=(a, c, area))
-    plt.scatter(x_data, y_data, marker='o', c='black',
-        s=a * np.exp(b * mag_data ** c))
+    #from scipy.optimize import fsolve
+    #a, c = 75., 2.5
+    #area = (max(x_data) - min(x_data)) * (max(y_data) - min(y_data))
+    #b = fsolve(star_size, 0.01, args=(a, c, area))
+    #st_sizes_arr = a * np.exp(b * mag_data ** c)
+    st_sizes_arr = 0.1 + 100. * 10 ** ((np.array(mag_data) -
+        min(mag_data)) / -2.5)
+    plt.scatter(x_data, y_data, marker='o', c='black', s=st_sizes_arr)
 
     # Radial density plot.
     ax5 = plt.subplot(gs1[2:4, 2:6])
@@ -350,8 +352,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     plt.imshow(np.rot90(kde), cmap=plt.cm.YlOrBr, extent=ext_range)
     plt.contour(x, y, kde, 10, colors='k', linewidths=0.6)
     # Plot stars.
-    plt.scatter(x_data, y_data, marker='o', c='black',
-        s=a * np.exp(b * mag_data ** c), zorder=4)
+    plt.scatter(x_data, y_data, marker='o', c='black', s=st_sizes_arr, zorder=4)
     #Plot center.
     plt.scatter(center_cl[0], center_cl[1], color='w', s=40, lw=0.8,
         marker='x', zorder=5)
