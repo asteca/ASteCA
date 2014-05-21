@@ -481,9 +481,9 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     # Set minor ticks
     ax10.minorticks_on()
     mag_x = np.linspace(min(mag_data), max(mag_data), 50)
-    # Condition to not plot the lines if the fit was rejected.
     # Plot lower envelope.
     ax10.plot(mag_x, func(mag_x, *popt_mag), 'r-', zorder=3)
+    # Condition to not plot the lines if the fit was rejected.
     if not rjct_errors_fit:
         # Plot left side of upper envelope (exponential).
         ax10.plot(mag_val_left, func(mag_val_left, *popt_umag), 'r--', lw=2.,
@@ -528,9 +528,9 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     plt.xlabel('$' + y_ax + '$', fontsize=18)
     # Set minor ticks
     ax11.minorticks_on()
-    # Condition to not plot the lines if the fit was rejected.
     # Plot lower envelope.
     ax11.plot(mag_x, func(mag_x, *popt_col1), 'r-', zorder=3)
+    # Condition to not plot the lines if the fit was rejected.
     if not rjct_errors_fit:
         # Plot left side of upper envelope (exponential).
         ax11.plot(col1_val_left, func(col1_val_left, *popt_ucol1), 'r--', lw=2.,
