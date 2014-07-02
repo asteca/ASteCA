@@ -8,7 +8,7 @@ import numpy as np
 def field_dens(ring_density):
     """
     Get field density level of stars through an iterative process. Start with
-    the complete set of radial density points and optain its median and
+    the complete set of radial density points and obtain its median and
     standard deviation. Then reject the point located the farthest beyond
     the 1 sigma range around the median and obtain the new median. Repeat
     the process until no points are left beyond the 1 sigma level.
