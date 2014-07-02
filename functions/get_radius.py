@@ -7,7 +7,7 @@ from functions.display_rad import disp_rad as d_r
 import matplotlib.pyplot as plt
 
 
-def main_center_algor(rdp_params, cr_params, backg_value, bin_width):
+def main_center_algor(rdp_params, cr_params, field_dens, bin_width):
     '''
     This function holds the main algorithm that returns a radius value.
     '''
@@ -19,7 +19,7 @@ def main_center_algor(rdp_params, cr_params, backg_value, bin_width):
     ring_dens_c, radii_c = ring_density[max_dens_ind:], radii[max_dens_ind:]
 
     # Assign a value to the number of points that should be found below
-    # the delta values around the background to attain the 'stabilized'
+    # the delta values around the field density to attain the 'stabilized'
     # condition.
     mode_r = cr_params[0]
     if mode_r not in {'auto', 'manual'}:
@@ -34,13 +34,13 @@ def main_center_algor(rdp_params, cr_params, backg_value, bin_width):
     # Delta step is fixed to 5%
     delta_step = 5
 
-    # Difference between max density value and the background value.
-    delta_total = (max(ring_dens_c) - backg_value)
+    # Difference between max density value and the field density value.
+    delta_total = (max(ring_dens_c) - field_dens)
 
-    # If the difference between the max density value and the background is
-    # less than 3 times the value of the background, raise a flag.
+    # If the difference between the max density value and the field density is
+    # less than 3 times the value of the field density, raise a flag.
     flag_delta_total = False
-    if delta_total < 3 * backg_value:
+    if delta_total < 3 * field_dens:
         flag_delta_total = True
 
     # Initialize index_rad value.
@@ -50,30 +50,30 @@ def main_center_algor(rdp_params, cr_params, backg_value, bin_width):
         # Store value for delta_percentage --> 20, 15, 10, 5
         delta_percentage = (4. - i) * delta_step
 
-        # % of difference between max density value and background.
-        delta_backg = delta_percentage * delta_total / 100.
+        # % of difference between max density value and field density.
+        delta_field = delta_percentage * delta_total / 100.
 
         # Initialize density values counter for points that fall inside the
-        # range determined by the delta value around the background.
+        # range determined by the delta value around the field density.
         in_delta_val, dens_dist, index_rad_i = 0, 1.e10, 0
 
         # Iterate through all values of star density in this "square ring".
         for index, item in enumerate(ring_dens_c):
 
             # Condition to iterate until at least n_left points below the
-            # delta + background value are found.
+            # delta + field density value are found.
             if in_delta_val < (n_left - i):
 
-                # If the density value is closer than 'delta_backg' to the
-                # background value or lower --> add it.
-                if item <= delta_backg + backg_value:
+                # If the density value is closer than 'delta_field' to the
+                # field density value or lower --> add it.
+                if item <= delta_field + field_dens:
                     # Augment value of counter.
                     in_delta_val += 1
                     # Store first radius value that falls below the upper delta
                     # limit.
-                    if abs(item - backg_value) < dens_dist:
+                    if abs(item - field_dens) < dens_dist:
                         # Store distance of point to field density value.
-                        dens_dist = abs(item - backg_value)
+                        dens_dist = abs(item - field_dens)
                         index_rad_i = index
                 else:
                     # Reset.
@@ -102,21 +102,22 @@ def main_center_algor(rdp_params, cr_params, backg_value, bin_width):
     return clust_rad, e_rad, flag_delta_total, flag_not_stable, flag_delta
 
 
-def get_clust_rad(phot_data, backg_value, cr_params, center_params,
+def get_clust_rad(phot_data, field_dens, cr_params, center_params,
     rdp_params, semi_return, mode, bin_width):
     """
     Obtain the value for the cluster's radius by counting the number of points
-    that fall within a given interval of the background or lower. If this number
-    is equal to a fixed number of points n_left then assign the radius as the
-    closest point to the background value among the first n_left points
-    counting from the first one that fell below the backg + delta limit.
-    Iterate increasing the interval around the background until n_left points
+    that fall within a given interval of the field density or lower. If this
+    number is equal to a fixed number of points n_left then assign the radius
+    as the closest point to the field density value among the first n_left
+    points counting from the first one that fell below the field dens +
+    delta limit.
+    Iterate increasing the interval around the field density until n_left points
     are found or the delta interval reaches its maximum allowed.
     """
 
     # Call function that holds the radius finding algorithm.
     clust_rad, e_rad, flag_delta_total, flag_not_stable, flag_delta = \
-    main_center_algor(rdp_params, cr_params, backg_value, bin_width)
+    main_center_algor(rdp_params, cr_params, field_dens, bin_width)
 
     # Check if semi or manual mode are set.
     flag_radius_manual = False
@@ -140,7 +141,7 @@ def get_clust_rad(phot_data, backg_value, cr_params, center_params,
     elif mode == 'manual':
 
         print 'Radius found: %0.1f px' % clust_rad
-        d_r(phot_data, center_params, clust_rad, backg_value, rdp_params)
+        d_r(phot_data, center_params, clust_rad, field_dens, rdp_params)
         plt.show()
 
         wrong_answer = True
