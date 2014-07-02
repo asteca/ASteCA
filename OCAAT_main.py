@@ -93,7 +93,7 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
     # Get density profile
     rdp_params = gdp(h_not_filt, bin_center, bin_width)
     radii, ring_density = rdp_params[:2]
-    print 'Density profile calculated.'
+    print 'Radial density profile (RDP) calculated.'
 
     # Get field density value in stars/px^2.
     field_dens = gfd(ring_density)
