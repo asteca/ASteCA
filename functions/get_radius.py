@@ -12,11 +12,11 @@ def main_center_algor(rdp_params, cr_params, field_dens, bin_width):
     This function holds the main algorithm that returns a radius value.
     '''
 
-    radii, ring_density = rdp_params[:2]
+    radii, rdp_points = rdp_params[:2]
     # Find maximum density value and assume this is the central density.
     # Do not use previous values.
-    max_dens_ind = np.argmax(ring_density)
-    ring_dens_c, radii_c = ring_density[max_dens_ind:], radii[max_dens_ind:]
+    max_dens_ind = np.argmax(rdp_points)
+    rdp_points_c, radii_c = rdp_points[max_dens_ind:], radii[max_dens_ind:]
 
     # Assign a value to the number of points that should be found below
     # the delta values around the field density to attain the 'stabilized'
@@ -27,15 +27,18 @@ def main_center_algor(rdp_params, cr_params, field_dens, bin_width):
         mode_r = 'auto'
     # Set params.
     if mode_r == 'manual':
+        # Read the value from input file.
         n_left = int(cr_params[1])
     elif mode_r == 'auto':
+        # Calculate the value automatically --> 20% of the points in the RDP
+        # (min 3 points)
         n_left = max(int(round(len(radii_c) * 0.2)), 3)
 
-    # Delta step is fixed to 5%
+    # Delta step is fixed to 5%.
     delta_step = 5
 
-    # Difference between max density value and the field density value.
-    delta_total = (max(ring_dens_c) - field_dens)
+    # Difference between max RDP density value and the field density value.
+    delta_total = (max(rdp_points_c) - field_dens)
 
     # If the difference between the max density value and the field density is
     # less than 3 times the value of the field density, raise a flag.
@@ -48,20 +51,19 @@ def main_center_algor(rdp_params, cr_params, field_dens, bin_width):
     for i in range(4):
 
         # Store value for delta_percentage --> 20, 15, 10, 5
-        delta_percentage = (4. - i) * delta_step
-
+        delta_percentage = (4. - i) * delta_step / 100.
         # % of difference between max density value and field density.
-        delta_field = delta_percentage * delta_total / 100.
+        delta_field = delta_percentage * delta_total
 
         # Initialize density values counter for points that fall inside the
         # range determined by the delta value around the field density.
-        in_delta_val, dens_dist, index_rad_i = 0, 1.e10, 0
+        in_delta_val, index_rad_i, dens_dist = 0, 0, 1.e10
 
-        # Iterate through all values of star density in this "square ring".
-        for index, item in enumerate(ring_dens_c):
+        # Iterate through all values of star density in the RDP.
+        for index, item in enumerate(rdp_points_c):
 
             # Condition to iterate until at least n_left points below the
-            # delta + field density value are found.
+            # (delta + field density) value are found.
             if in_delta_val < (n_left - i):
 
                 # If the density value is closer than 'delta_field' to the
@@ -69,15 +71,18 @@ def main_center_algor(rdp_params, cr_params, field_dens, bin_width):
                 if item <= delta_field + field_dens:
                     # Augment value of counter.
                     in_delta_val += 1
-                    # Store first radius value that falls below the upper delta
-                    # limit.
+                    # Store radius value closer to the field density.
                     if abs(item - field_dens) < dens_dist:
-                        # Store distance of point to field density value.
                         dens_dist = abs(item - field_dens)
                         index_rad_i = index
+                # If the RDP point is outside the (delta + field density) range
+                # reset all values.
                 else:
                     # Reset.
                     in_delta_val, index_rad_i, dens_dist = 0, 0, 1.e10
+            # If enough RDP points have been found within the fiel density
+            # range, store the radius value closer to the field density value
+            # and break out of the for loop.
             else:
                 index_rad.append(index_rad_i)
                 break
@@ -89,7 +94,9 @@ def main_center_algor(rdp_params, cr_params, field_dens, bin_width):
 
     rad_found = []
     for ind in index_rad:
+        # Use the stored indexes to obtain the actual radius values.
         rad_found.append(radii_c[ind])
+    # If at least one radius value was found.
     if rad_found:
         clust_rad, e_rad = np.mean(rad_found), max(np.std(rad_found), bin_width)
     else:
@@ -107,12 +114,12 @@ def get_clust_rad(phot_data, field_dens, cr_params, center_params,
     """
     Obtain the value for the cluster's radius by counting the number of points
     that fall within a given interval of the field density or lower. If this
-    number is equal to a fixed number of points n_left then assign the radius
-    as the closest point to the field density value among the first n_left
-    points counting from the first one that fell below the field dens +
-    delta limit.
-    Iterate increasing the interval around the field density until n_left points
-    are found or the delta interval reaches its maximum allowed.
+    number is equal to a minimum fixed number of points 'n_left', then assign
+    the radius as the point closest to the field density value among those
+    first n_left points counting from the first one that fell below the
+    (field dens + delta limit) range.
+    Iterate increasing the interval around the field density and finally
+    average all the radius values found for each interval.
     """
 
     # Call function that holds the radius finding algorithm.
