@@ -66,9 +66,9 @@ def get_pval(cluster_region, field_region, col1_data, mag_data, center_cl,
     closer to 0 as it differentiates from it.
     As a rule of thumb, a p-value > 0.05 (ie: 5%) indicates that one should
     reject the null hypothesis that the KDEs arose from ther same distribution.
-    We asseigante a probability of the overdensity being a real cluster as 1
+    We assign a probability of the overdensity being a real cluster as 1
     minus the overlap between the KDEs of the distributions of p-values for
-    the cluster vs field and field vs field comparisions.
+    the cluster vs field and field vs field comparisons.
     '''
 
     flag_pval_test, run_set, num_runs = pv_params
