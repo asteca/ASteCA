@@ -16,8 +16,7 @@ import warnings
 
 def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     rdp_params, field_dens, radius_params,
-    cont_index, mag_data, col1_data, popt_mag, popt_col1,
-    err_plot, rjct_errors_fit, kp_params,
+    cont_index, mag_data, col1_data, err_plot, err_flags, kp_params,
     stars_in, stars_out, stars_in_rjct, stars_out_rjct, integr_return, n_c,
     flag_area_stronger, cluster_region, field_region, flag_pval_test,
     pval_test_params, qq_params, memb_prob_avrg_sort, completeness, bf_params,
@@ -85,10 +84,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     # King prof params.
     rc, e_rc, rt, e_rt, n_c_k, cd, flag_2pk_conver, flag_3pk_conver = kp_params
     # Error parameters.
-    be, be_e, e_max = er_params
-    # Parameters from error fitting.
-    bright_end, popt_umag, pol_mag, popt_ucol1, pol_col1, mag_val_left,\
-    mag_val_right, col1_val_left, col1_val_right = err_plot
+    er_mode, e_max, be, be_e, N_sig = er_params
+    err_all_fallback, err_max_fallback = err_flags
     # Integrated magnitude distribution.
     cl_reg_mag, fl_reg_mag, integ_mag, cl_reg_col, fl_reg_col, integ_col =\
     integr_return
@@ -473,31 +470,45 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     # Magnitude error
     ax10 = plt.subplot(gs1[4, 6:8])
     #Set plot limits
-    plt.xlim(min(mag_data) - 0.5, max(mag_data) + 0.5)
-    plt.ylim(-0.005, e_max + 0.01)
+    x_min, x_max = min(mag_data) - 0.5, max(mag_data) + 0.5
+    plt.xlim(x_min, x_max)
+    plt.ylim(-0.005, e_max + (e_max / 5.))
     #Set axis labels
     plt.ylabel('$\sigma_{' + y_ax + '}$', fontsize=18)
     plt.xlabel('$' + y_ax + '$', fontsize=18)
     # Set minor ticks
     ax10.minorticks_on()
-    mag_x = np.linspace(min(mag_data), max(mag_data), 50)
-    # Plot lower envelope.
-    ax10.plot(mag_x, func(mag_x, *popt_mag), 'r-', zorder=3)
-    # Condition to not plot the lines if the fit was rejected.
-    if not rjct_errors_fit:
-        # Plot left side of upper envelope (exponential).
-        ax10.plot(mag_val_left, func(mag_val_left, *popt_umag), 'r--', lw=2.,
-                 zorder=3)
-        # Plot right side of upper envelope (polynomial).
-        ax10.plot(mag_val_right, np.polyval(pol_mag, (mag_val_right)),
-                 'r--', lw=2., zorder=3)
+    # Plot e_max line.
+    ax10.hlines(y=e_max, xmin=x_min, xmax=x_max, color='r',
+        linestyles='dashed', zorder=2)
     # Plot rectangle.
+    bright_end = min(mag_data) + be
     ax10.vlines(x=bright_end + 0.05, ymin=-0.005, ymax=be_e, color='r',
                linestyles='dashed', zorder=2)
     ax10.vlines(x=min(mag_data) - 0.05, ymin=-0.005, ymax=be_e, color='r',
                linestyles='dashed', zorder=2)
     ax10.hlines(y=be_e, xmin=min(mag_data), xmax=bright_end, color='r',
                linestyles='dashed', zorder=2)
+    # If any method could be used.
+    if err_all_fallback is False and err_max_fallback is False:
+        # Plot curve(s) according to the method used.
+        if er_mode == 'eyefit':
+            # Unpack params.
+            popt_umag, pol_mag, popt_ucol1, pol_col1, mag_val_left, \
+            mag_val_right, col1_val_left, col1_val_right = err_plot
+
+            # Plot left side of upper envelope (exponential).
+            ax10.plot(mag_val_left, func(mag_val_left, *popt_umag), 'r--',
+                lw=2., zorder=3)
+            # Plot right side of upper envelope (polynomial).
+            ax10.plot(mag_val_right, np.polyval(pol_mag, (mag_val_right)),
+                'r--', lw=2., zorder=3)
+        elif er_mode == 'lowexp':
+            # Unpack params.
+            popt_mag, popt_col1 = err_plot
+            # Plot exponential curve.
+            mag_x = np.linspace(bright_end, max(mag_data), 50)
+            ax10.plot(mag_x, func(mag_x, *popt_mag), 'r-', zorder=3)
     # Plot stars.
     stars_rjct_temp = [[], []]
     for star in stars_out_rjct:
@@ -521,30 +532,44 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     # Color error
     ax11 = plt.subplot(gs1[5, 6:8])
     #Set plot limits
-    plt.xlim(min(mag_data) - 0.5, max(mag_data) + 0.5)
-    plt.ylim(-0.005, e_max + 0.01)
+    x_min, x_max = min(mag_data) - 0.5, max(mag_data) + 0.5
+    plt.xlim(x_min, x_max)
+    plt.ylim(-0.005, e_max + (e_max / 5.))
     #Set axis labels
     plt.ylabel('$\sigma_{' + x_ax + '}$', fontsize=18)
     plt.xlabel('$' + y_ax + '$', fontsize=18)
     # Set minor ticks
     ax11.minorticks_on()
-    # Plot lower envelope.
-    ax11.plot(mag_x, func(mag_x, *popt_col1), 'r-', zorder=3)
-    # Condition to not plot the lines if the fit was rejected.
-    if not rjct_errors_fit:
-        # Plot left side of upper envelope (exponential).
-        ax11.plot(col1_val_left, func(col1_val_left, *popt_ucol1), 'r--', lw=2.,
-                 zorder=3)
-        # Plot right side of upper envelope (polynomial).
-        ax11.plot(col1_val_right, np.polyval(pol_col1, (col1_val_right)),
-                 'r--', lw=2., zorder=3)
+    # Plot e_max line.
+    ax11.hlines(y=e_max, xmin=x_min, xmax=x_max, color='r',
+               linestyles='dashed', zorder=2)
     # Plot rectangle.
+    bright_end = min(mag_data) + be
     ax11.vlines(x=bright_end + 0.05, ymin=-0.005, ymax=be_e, color='r',
                linestyles='dashed', zorder=2)
     ax11.vlines(x=min(mag_data) - 0.05, ymin=-0.005, ymax=be_e, color='r',
                linestyles='dashed', zorder=2)
     ax11.hlines(y=be_e, xmin=min(mag_data), xmax=bright_end, color='r',
                linestyles='dashed', zorder=2)
+    # If any method could be used.
+    if err_all_fallback is False and err_max_fallback is False:
+        # Plot curve(s) according to the method used.
+        if er_mode == 'eyefit':
+            # Unpack params.
+            popt_umag, pol_mag, popt_ucol1, pol_col1, mag_val_left, \
+            mag_val_right, col1_val_left, col1_val_right = err_plot
+
+            # Plot left side of upper envelope (exponential).
+            ax11.plot(mag_val_left, func(mag_val_left, *popt_umag), 'r--',
+                lw=2., zorder=3)
+            # Plot right side of upper envelope (polynomial).
+            ax11.plot(mag_val_right, np.polyval(pol_mag, (mag_val_right)),
+                'r--', lw=2., zorder=3)
+        elif er_mode == 'lowexp':
+            # Unpack params.
+            popt_mag, popt_col1 = err_plot
+            # Plot exponential curve.
+            ax11.plot(mag_x, func(mag_x, *popt_col1), 'r-', zorder=3)
     # Plot stars.
     stars_rjct_temp = [[], []]
     for star in stars_out_rjct:
@@ -821,14 +846,14 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
                 c=m_p_m_temp_inv[2], s=40, cmap=cm, lw=0.5, vmin=v_min_mp,
                 vmax=v_max_mp)
     # If list is not empty.
-    if m_p_m_temp_inv[1]:
+    if m_p_m_temp_inv[1]:  # FIX
         # Plot error bars at several mag values.
-        mag_y = np.arange(int(min(m_p_m_temp_inv[1]) + 0.5),
-                          int(max(m_p_m_temp_inv[1]) + 0.5) + 0.1)
-        x_val = [min(x_max_cmd, max(col1_data) + 0.2) - 0.4] * len(mag_y)
-        plt.errorbar(x_val, mag_y, yerr=func(mag_y, *popt_mag),
-                     xerr=func(mag_y, *popt_col1), fmt='k.', lw=0.8,
-                     ms=0., zorder=4)
+        #mag_y = np.arange(int(min(m_p_m_temp_inv[1]) + 0.5),
+                          #int(max(m_p_m_temp_inv[1]) + 0.5) + 0.1)
+        #x_val = [min(x_max_cmd, max(col1_data) + 0.2) - 0.4] * len(mag_y)
+        #plt.errorbar(x_val, mag_y, yerr=func(mag_y, *popt_mag),
+                     #xerr=func(mag_y, *popt_col1), fmt='k.', lw=0.8,
+                     #ms=0., zorder=4)
         # Plot colorbar (see bottom of file).
         if v_min_mp != v_max_mp:
             plot_colorbar = True

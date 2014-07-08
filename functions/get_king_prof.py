@@ -9,25 +9,25 @@ import numpy as np
 from scipy.optimize import curve_fit
 
 
-def two_params(x, cd, rc, bg):
+def two_params(x, cd, rc, fd):
     '''
     Two parameters King profile fit.
     '''
-    return bg + cd / (1 + (np.asarray(x) / rc) ** 2)
+    return fd + cd / (1 + (np.asarray(x) / rc) ** 2)
 
 
-def three_params(x, rt, cd, rc, bg):
+def three_params(x, rt, cd, rc, fd):
     '''
     Three parameters King profile fit.
     '''
     return cd * (1 / np.sqrt(1 + (np.asarray(x) / rc) ** 2) -
-        1 / np.sqrt(1 + (rt / rc) ** 2)) ** 2 + bg
+        1 / np.sqrt(1 + (rt / rc) ** 2)) ** 2 + fd
 
 
-def get_king_profile(kp_flag, clust_rad, backg_value, radii, ring_density):
+def get_king_profile(kp_flag, clust_rad, field_dens, radii, ring_density):
     '''
     Function to fit the 3-params King profile to a given radial density.
-    The background density value is fixed and the core radius, tidal radius and
+    The field density value is fixed and the core radius, tidal radius and
     maximum central density are fitted.
     '''
 
@@ -38,8 +38,8 @@ def get_king_profile(kp_flag, clust_rad, backg_value, radii, ring_density):
     # Check flag to run or skip.
     if kp_flag:
 
-        # Background value is fixed.
-        bg = backg_value
+        # Field density value is fixed.
+        fd = field_dens
         # Initial guesses for fit: max_dens, rt, rc
         max_dens, rt, rc = max(ring_density), clust_rad, clust_rad / 2.
         guess2 = (max_dens, rc)
@@ -55,7 +55,7 @@ def get_king_profile(kp_flag, clust_rad, backg_value, radii, ring_density):
         # Attempt to fit a 3-P King profile with the background value fixed.
         try:
             popt, pcov = curve_fit(lambda x, cd, rc,
-                rt: three_params(x, rt, cd, rc, bg), radii_k, ring_dens_k,
+                rt: three_params(x, rt, cd, rc, fd), radii_k, ring_dens_k,
                 guess3)
 
             # Unpack tidal radius and its error.
@@ -91,7 +91,7 @@ def get_king_profile(kp_flag, clust_rad, backg_value, radii, ring_density):
             # density and core radius.
             try:
                 popt, pcov = curve_fit(lambda x, cd,
-                    rc: two_params(x, cd, rc, bg), radii_k, ring_dens_k, guess2)
+                    rc: two_params(x, cd, rc, fd), radii_k, ring_dens_k, guess2)
                 # Unpaxk max density and core radius.
                 cd, rc = popt
                 # Obtain error in core radius.

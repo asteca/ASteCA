@@ -74,9 +74,11 @@ def get_in_params(mypath):
                     kp_flag = True if reader[1] in true_lst else False
 
                 elif reader[0] == 'ER':
-                    er_params = map(float, reader[1:])
+                    er_params = [str(reader[1])] + map(float, reader[2:])
+
                 elif reader[0] == 'GR':
                     gr_params = map(int, reader[1:])
+
                 elif reader[0] == 'PV':
                     pv0_params = True if reader[1] in true_lst else False
                     pv1_params = str(reader[2])

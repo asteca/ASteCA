@@ -75,8 +75,6 @@ def create_out_data_file(output_dir):
 #\n\
 # M1 (flag_center_manual): Indicates that the center was set manually.\n\
 # M2 (flag_radius_manual): Indicates that the radius was set manually.\n\
-# M3 (rjct_errors_fit): Indicates that all stars with errors < e_max were\n\
-#    accepted, meaning that the automatic error rejecting fit was poor.\n\
 #\n\
 # f1 (flag_center_med): Either median cluster's central coordinates (obtained\n\
 #    using all bin widths) is more than 10%% away from the values obtained \n\
@@ -93,16 +91,19 @@ def create_out_data_file(output_dir):
 # f6 (flag_king_no_conver): The process to fit a 3-P King profile to the\n\
 #    density points did not converge or did so to a tidal radius beyond the\n\
 #    ranges of the frame.\n\
-# f7 (flag_num_memb_low): The number of approximate cluster members is < 10.\n\
+# f7 (err_all_fallback): no error rejection was possible.\n\
+# f8 (err_max_fallback): the function had to fall back to the 'e_max'-based\n\
+#    rejection method since the selected one failed.\n\
+# f9 (flag_num_memb_low): The number of approximate cluster members is < 10.\n\
 #\n\
 # FC (flags count): Sum of all the flags values. The bigger this value the\n\
 #    more likely it is that there's a problem with the frame, ie: no cluster,\n\
 #    more than one cluster present in the frame, variable or too crowded\n\
 #    field, etc.\n\
 #\n\
-#NAME            c_x[px] c_y[px]   e_c[px] r_cl[px]  e_r[px] r_c[px] e_rc[px] \
+#NAME            c_x[px] c_y[px] e_c[px] r_cl[px]  e_r[px] r_c[px] e_rc[px] \
 r_t[px] e_rt[px] cont_ind memb memb_k prob_cl   CCC mag_int     met     e_m   \
-age   e_a  E(B-V)   e_E   dist   e_d  M1 M2 M3  f1 f2 f3 f4 f5 f6 f7  \
+age   e_a  E(B-V)   e_E   dist   e_d  M1 M2  f1 f2 f3 f4 f5 f6 f7 f8 f9  \
 FC\n" % now_time)
         out_data_file.close()
 

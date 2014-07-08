@@ -117,7 +117,7 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
     print 'Contamination index obtained (%0.2f).' % cont_index
 
     # Accept and reject stars based on their errors.
-    popt_mag, popt_col1, acpt_stars, rjct_stars, err_plot, rjct_errors_fit = \
+    acpt_stars, rjct_stars, err_plot, err_flags = \
     ear(phot_data, axes_params, er_params, mode, semi_return)
 
     # Get stars in and out of cluster's radius.
@@ -178,7 +178,8 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
     red_memb_prob = red_return[0]
 
     # Obtain best fitting parameters for cluster.
-    err_lst = [popt_mag, popt_col1, er_params[2]]
+    #err_lst = [popt_mag, popt_col1, er_params[2]] # TODO
+    err_lst = []  # FIX
     bf_return = bfsc(err_lst, red_memb_prob, completeness, ip_list, bf_params,
         sc_params, ga_params, ps_params)
 
@@ -200,16 +201,14 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
     # Add cluster data and flags to output file
     a_d_o(out_file_name, sub_dir, output_dir, clust_name, center_params,
         radius_params, kp_params, cont_index, n_c, pval_test_params[0],
-        qq_params[0], integr_return, rjct_errors_fit, flag_num_memb_low,
-        bf_return)
+        qq_params[0], integr_return, err_flags, flag_num_memb_low, bf_return)
     print 'Data added to output file.'
 
     # Make plots
     if pl_params[0]:
         mp(output_subdir, clust_name, x_data, y_data, center_params, rdp_params,
-            field_dens, radius_params,
-            cont_index, mag_data, col1_data, popt_mag, popt_col1,
-            err_plot, rjct_errors_fit, kp_params, stars_in, stars_out,
+            field_dens, radius_params, cont_index, mag_data, col1_data,
+            err_plot, err_flags, kp_params, stars_in, stars_out,
             stars_in_rjct, stars_out_rjct, integr_return, n_c,
             flag_area_stronger, cluster_region, field_region, flag_pval_test,
             pval_test_params, qq_params, memb_prob_avrg_sort, completeness,
