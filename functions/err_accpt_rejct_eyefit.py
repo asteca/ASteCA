@@ -31,15 +31,15 @@ def fit_curves(mag, mag_value, bright_end, e_mag_value, e_col1_value):
                 break
 
         if i == 0:
-            popt_umag, pol_mag, intersec_mag = popt, pol, intersec
+            popt_mag, pol_mag, intersec_mag = popt, pol, intersec
         elif i == 1:
-            popt_ucol1, pol_col1, intersec_col1 = popt, pol, intersec
+            popt_col1, pol_col1, intersec_col1 = popt, pol, intersec
 
-    return intersec_mag, intersec_col1, popt_umag, pol_mag, popt_ucol1, pol_col1
+    return intersec_mag, intersec_col1, popt_mag, pol_mag, popt_col1, pol_col1
 
 
 def separate_stars(mag, e_mag, e_col1, e_max, bright_end, be_e,
-    intersec_mag, intersec_col1, popt_umag, pol_mag, popt_ucol1, pol_col1):
+    intersec_mag, intersec_col1, popt_mag, pol_mag, popt_col1, pol_col1):
     '''
     Use the curves obtained above to accept or reject stars in the
     magnitude range beyond the (brightest star + be) limit.
@@ -78,7 +78,7 @@ def separate_stars(mag, e_mag, e_col1, e_max, bright_end, be_e,
                 mag_rjct = False
                 if mag[st_ind] <= intersec_mag:
                     # Compare with exponential.
-                    if e_mag[st_ind] > exp_func(mag[st_ind], *popt_umag):
+                    if e_mag[st_ind] > exp_func(mag[st_ind], *popt_mag):
                         # Reject star.
                         mag_rjct = True
                 else:
@@ -90,7 +90,7 @@ def separate_stars(mag, e_mag, e_col1, e_max, bright_end, be_e,
                 col1_rjct = False
                 if mag[st_ind] <= intersec_col1:
                     # Compare with exponential.
-                    if e_col1[st_ind] > exp_func(mag[st_ind], *popt_ucol1):
+                    if e_col1[st_ind] > exp_func(mag[st_ind], *popt_col1):
                         # Reject star.
                         col1_rjct = True
                 else:
@@ -152,20 +152,20 @@ def err_a_r_eyefit(mag, e_mag, e_col1, params):
         bright_end, n_interv, interv_mag, mag, e_mag, e_col1)
 
     # Fit polynomial + exponential curves.
-    intersec_mag, intersec_col1, popt_umag, pol_mag, popt_ucol1, pol_col1 = \
+    intersec_mag, intersec_col1, popt_mag, pol_mag, popt_col1, pol_col1 = \
     fit_curves(mag, mag_value, bright_end, e_mag_value, e_col1_value)
 
     # Use the fitted curves to identify accepted/rejected stars and store
     # their indexes.
     acpt_indx, rjct_indx = separate_stars(mag, e_mag, e_col1, e_max,
-        bright_end, be_e, intersec_mag, intersec_col1, popt_umag, pol_mag,
-        popt_ucol1, pol_col1)
+        bright_end, be_e, intersec_mag, intersec_col1, popt_mag, pol_mag,
+        popt_col1, pol_col1)
 
     # Values are used for plotting purposes only.
     mag_val_left, mag_val_right, col1_val_left, col1_val_right = \
     divide(mag_value, intersec_mag, intersec_col1)
     # This list holds all the values necessary for plotting.
-    err_plot = [popt_umag, pol_mag, popt_ucol1, pol_col1,
+    err_plot = [popt_mag, pol_mag, popt_col1, pol_col1,
     mag_val_left, mag_val_right, col1_val_left, col1_val_right]
 
     return acpt_indx, rjct_indx, err_plot

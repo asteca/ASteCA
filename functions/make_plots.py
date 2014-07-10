@@ -551,14 +551,14 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
         # Plot curve(s) according to the method used.
         if er_mode == 'eyefit':
             # Unpack params.
-            popt_umag, pol_mag, popt_ucol1, pol_col1, mag_val_left, \
+            popt_mag, pol_mag, popt_col1, pol_col1, mag_val_left, \
             mag_val_right, col1_val_left, col1_val_right = err_plot
 
-            # Plot left side of upper envelope (exponential).
-            ax11.plot(mag_val_left, exp_func(mag_val_left, *popt_umag), 'r--',
+            # Plot left side: exponential envelope.
+            ax11.plot(mag_val_left, exp_func(col1_val_left, *popt_col1), 'r--',
                 lw=2., zorder=3)
-            # Plot right side of upper envelope (polynomial).
-            ax11.plot(mag_val_right, np.polyval(pol_mag, (mag_val_right)),
+            # Plot right side: polynomial envelope.
+            ax11.plot(mag_val_right, np.polyval(pol_col1, (col1_val_right)),
                 'r--', lw=2., zorder=3)
         elif er_mode == 'lowexp':
             # Unpack params.
