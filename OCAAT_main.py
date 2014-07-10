@@ -31,6 +31,7 @@ from functions.get_p_value import get_pval as g_pv
 from functions.get_completeness import mag_completeness as m_c
 from functions.get_isoch_params import ip
 from functions.reduce_membership import red_memb as rm
+from functions.synth_cl_err import synth_clust_err as sce
 from functions.best_fit_synth_cl import best_fit as bfsc
 from functions.make_plots import make_plots as mp
 from functions.add_data_output import add_data_output as a_d_o
@@ -117,7 +118,7 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
     print 'Contamination index obtained (%0.2f).' % cont_index
 
     # Accept and reject stars based on their errors.
-    acpt_stars, rjct_stars, err_plot, err_flags = \
+    acpt_stars, rjct_stars, err_plot, err_flags, err_pck = \
     ear(phot_data, axes_params, er_params, mode, semi_return)
 
     # Get stars in and out of cluster's radius.
@@ -177,9 +178,10 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
     red_return = rm(decont_algor_return, bf_params, rm_params)
     red_memb_prob = red_return[0]
 
+    # Obtain exponential error function parameters to use by the
+    # synthetic cluster creation function.
+    err_lst = sce(phot_data, err_pck)
     # Obtain best fitting parameters for cluster.
-    #err_lst = [popt_mag, popt_col1, er_params[2]] # TODO
-    err_lst = []  # FIX
     bf_return = bfsc(err_lst, red_memb_prob, completeness, ip_list, bf_params,
         sc_params, ga_params, ps_params)
 

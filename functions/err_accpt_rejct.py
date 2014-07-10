@@ -2,6 +2,7 @@
 @author: gabriel
 """
 
+import sys
 #import matplotlib.pyplot as plt
 #from functions.display_errors import disp_errors as d_e
 from functions.err_accpt_rejct_lowexp import err_a_r_lowexp as e_a_r_le
@@ -56,7 +57,7 @@ def err_accpt_rejct(phot_data, axes_params, er_params, mode, semi_return):
     range(n_interv - 1)]
 
     # Pack params to pass.
-    params = [er_params, bright_end, n_interv, interv_mag, mag_value]
+    err_pck = [er_params, bright_end, n_interv, interv_mag, mag_value]
 
     # Check selected mode.
     if mode in ('auto', 'semi'):
@@ -78,24 +79,24 @@ def err_accpt_rejct(phot_data, axes_params, er_params, mode, semi_return):
         # file.
         if er_mode == 'emax':
             # Call function to reject stars with errors > e_max.
-            acpt_indx, rjct_indx, err_plot = e_a_r_m(e_mag, e_col1, params)
+            acpt_indx, rjct_indx, err_plot = e_a_r_m(e_mag, e_col1, err_pck)
 
         elif er_mode in ('lowexp', 'eyefit'):
             try:
                 if er_mode == 'lowexp':
                     # Call N sigma exp function.
                     acpt_indx, rjct_indx, err_plot = e_a_r_le(mag, e_mag,
-                        e_col1, params)
+                        e_col1, err_pck)
 
                 elif er_mode == 'eyefit':
                     # Call 'eyefit' function.
                     acpt_indx, rjct_indx, err_plot = e_a_r_ef(mag, e_mag,
-                        e_col1, params)
+                        e_col1, err_pck)
             except RuntimeError:
                 print ('  WARNING: function could not be fitted. Falling back\n'
                 '  to e_max function.')
                 # Call function to reject stars with errors > e_max.
-                acpt_indx, rjct_indx, err_plot = e_a_r_m(e_mag, e_col1, params)
+                acpt_indx, rjct_indx, err_plot = e_a_r_m(e_mag, e_col1, err_pck)
                 err_max_fallback = True
 
         # Flag indicates that no error rejection was possible.
@@ -105,7 +106,7 @@ def err_accpt_rejct(phot_data, axes_params, er_params, mode, semi_return):
             print '  WARNING: No stars accepted based on their errors.'
             print '  Using all stars with errors < %0.2f.' % e_max
             # Call function to reject stars with errors > e_max.
-            acpt_indx, rjct_indx, err_plot = e_a_r_m(e_mag, e_col1, params)
+            acpt_indx, rjct_indx, err_plot = e_a_r_m(e_mag, e_col1, err_pck)
             err_max_fallback = True
         # If the method used was e_max, use all stars.
         elif not acpt_indx and er_mode == 'emax':
@@ -143,10 +144,15 @@ def err_accpt_rejct(phot_data, axes_params, er_params, mode, semi_return):
             #else:
                 #print 'Wrong input. Try again.\n'
 
-    # Call function to store stars according to the returned indexes.
-    acpt_stars, rjct_stars = err_sel_stars(acpt_indx, rjct_indx, phot_data)
+    if len(acpt_indx) == 0:
+        # Halt code if no stars are accepted.
+        sys.exit('FATAL: no stars left after error rejection.'
+        ' Halting code.')
+    else:
+        # Call function to store stars according to the returned indexes.
+        acpt_stars, rjct_stars = err_sel_stars(acpt_indx, rjct_indx, phot_data)
 
     print 'Stars accepted/rejected based on their errors.'
 
     err_flags = [err_all_fallback, err_max_fallback]
-    return acpt_stars, rjct_stars, err_plot, err_flags
+    return acpt_stars, rjct_stars, err_plot, err_flags, err_pck
