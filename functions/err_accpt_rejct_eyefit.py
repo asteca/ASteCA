@@ -150,35 +150,26 @@ def fit_curves(mag, mag_value, bright_end, e_mag_value, e_col1_value):
     in magnitude and color.
     '''
 
-    # Fit curves for errors in magnitude.
+    # Fit curves for errors in magnitude and color.
+    for i, err_val in enumerate([e_mag_value, e_col1_value]):
 
-    # Fit exponential envelope.
-    popt_umag, pcov_mag = curve_fit(exp_func, mag_value, e_mag_value)
-    # Fit polynomial of grade 3 envelope.
-    pol_mag = np.polyfit(mag_value, e_mag_value, 3)
-    # Find point where curves intersect.
-    # Initialize value in case no intersect value is found.
-    intersec_mag = 0.
-    mag_x = np.linspace(bright_end, max(mag), 100)
-    for x_val in mag_x:
-        if np.polyval(pol_mag, (x_val)) > exp_func(x_val, *popt_umag):
-            intersec_mag = x_val
-            break
+        # Fit exponential envelope.
+        popt, pcov = curve_fit(exp_func, mag_value, err_val)
+        # Fit polynomial of grade 3 envelope.
+        pol = np.polyfit(mag_value, err_val, 3)
+        # Find point where curves intersect.
+        # Initialize value in case no intersect value is found.
+        intersec = 0.
+        mag_x = np.linspace(bright_end, max(mag), 100)
+        for x_val in mag_x:
+            if np.polyval(pol, (x_val)) > exp_func(x_val, *popt):
+                intersec = x_val
+                break
 
-    # Fit curves for errors in color.
-
-    # Fit exponential envelope.
-    popt_ucol1, pcov_col1 = curve_fit(exp_func, mag_value, e_col1_value)
-    # Fit polynomial of grade 3 envelope.
-    pol_col1 = np.polyfit(mag_value, e_col1_value, 3)
-    # Find point where curves intersect.
-    # Initialize value in case no intersect value is found.
-    intersec_col1 = 0.
-    mag_x = np.linspace(bright_end, max(mag), 100)
-    for x_val in mag_x:
-        if np.polyval(pol_col1, (x_val)) > exp_func(x_val, *popt_ucol1):
-            intersec_col1 = x_val
-            break
+        if i == 0:
+            popt_umag, pol_mag, intersec_mag = popt, pol, intersec
+        elif i == 1:
+            popt_ucol1, pol_col1, intersec_col1 = popt, pol, intersec
 
     return intersec_mag, intersec_col1, popt_umag, pol_mag, popt_ucol1, pol_col1
 
