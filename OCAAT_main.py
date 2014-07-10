@@ -118,7 +118,7 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
     print 'Contamination index obtained (%0.2f).' % cont_index
 
     # Accept and reject stars based on their errors.
-    acpt_stars, rjct_stars, err_plot, err_flags, err_pck = \
+    acpt_stars, rjct_stars, err_plot, err_flags, err_pck, er_params = \
     ear(phot_data, axes_params, er_params, mode, semi_return)
 
     # Get stars in and out of cluster's radius.
@@ -214,7 +214,7 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
             stars_in_rjct, stars_out_rjct, integr_return, n_c,
             flag_area_stronger, cluster_region, field_region, flag_pval_test,
             pval_test_params, qq_params, memb_prob_avrg_sort, completeness,
-            bf_params, red_return, bf_return, ga_params, er_params,
+            bf_params, red_return, err_lst, bf_return, ga_params, er_params,
             axes_params, ps_params, pl_params)
         print 'Plots created.'
 

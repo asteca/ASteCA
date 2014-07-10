@@ -21,8 +21,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     stars_in, stars_out, stars_in_rjct, stars_out_rjct, integr_return, n_c,
     flag_area_stronger, cluster_region, field_region, flag_pval_test,
     pval_test_params, qq_params, memb_prob_avrg_sort, completeness, bf_params,
-    red_return, bf_return, ga_params, er_params, axes_params, ps_params,
-    pl_params):
+    red_return, err_lst, bf_return, ga_params, er_params, axes_params,
+    ps_params, pl_params):
     '''
     Make all plots.
     '''
@@ -841,14 +841,16 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
                 c=m_p_m_temp_inv[2], s=40, cmap=cm, lw=0.5, vmin=v_min_mp,
                 vmax=v_max_mp)
     # If list is not empty.
-    if m_p_m_temp_inv[1]:  # FIX
+    if m_p_m_temp_inv[1]:
         # Plot error bars at several mag values.
-        #mag_y = np.arange(int(min(m_p_m_temp_inv[1]) + 0.5),
-                          #int(max(m_p_m_temp_inv[1]) + 0.5) + 0.1)
-        #x_val = [min(x_max_cmd, max(col1_data) + 0.2) - 0.4] * len(mag_y)
-        #plt.errorbar(x_val, mag_y, yerr=func(mag_y, *popt_mag),
-                     #xerr=func(mag_y, *popt_col1), fmt='k.', lw=0.8,
-                     #ms=0., zorder=4)
+        mag_y = np.arange(int(min(m_p_m_temp_inv[1]) + 0.5),
+                          int(max(m_p_m_temp_inv[1]) + 0.5) + 0.1)
+        x_val = [min(x_max_cmd, max(col1_data) + 0.2) - 0.4] * len(mag_y)
+        # Read average fitted values for exponential error fit.
+        popt_mag, popt_col1 = err_lst[:2]
+        plt.errorbar(x_val, mag_y, yerr=exp_func(mag_y, *popt_mag),
+                     xerr=exp_func(mag_y, *popt_col1), fmt='k.', lw=0.8,
+                     ms=0., zorder=4)
         # Plot colorbar (see bottom of file).
         if v_min_mp != v_max_mp:
             plot_colorbar = True
