@@ -5,6 +5,7 @@ Created on Tue Jan 28 15:22:10 2014
 @author: gabriel
 """
 
+from functions.exp_function import exp_func
 from move_isochrone import move_isoch
 from get_mass_dist import mass_dist as m_d
 #from synth_plot import synth_clust_plot as s_c_p
@@ -12,13 +13,6 @@ from get_mass_dist import mass_dist as m_d
 import numpy as np
 import random
 import itertools
-
-
-def exp_func(x, a, b, c):
-    '''
-    Exponential function.
-    '''
-    return a * np.exp(b * x) + c
 
 
 def gauss_error(col, e_col, mag, e_mag):

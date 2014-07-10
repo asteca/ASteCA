@@ -2,16 +2,9 @@
 @author: gabriel
 """
 
+from functions.exp_function import exp_func
 from scipy.optimize import curve_fit
 import numpy as np
-
-
-# Define exponential function.
-def exp_func(x, a, b, c):
-    '''
-    Exponential function.
-    '''
-    return a * np.exp(b * x) + c
 
 
 def separate_stars(mag, e_mag, e_col1, e_max, be_e, bright_end,

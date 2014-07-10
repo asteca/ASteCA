@@ -2,16 +2,9 @@
 @author: gabriel
 """
 
+from functions.exp_function import exp_func
 from scipy.optimize import curve_fit
 import numpy as np
-
-
-# Define exponential function.
-def exp_func(x, a, b, c):
-    '''
-    Exponential function.
-    '''
-    return a * np.exp(b * x) + c
 
 
 def mag_median(method, mag_value, e_max, bright_end, n_interv, interv_mag,

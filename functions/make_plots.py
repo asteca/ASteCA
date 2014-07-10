@@ -2,6 +2,7 @@
 @author: gabriel
 """
 
+from functions.exp_function import exp_func
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
@@ -31,12 +32,6 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
         Function to obtain the optimal star size for the scatter plot.
         '''
         return sum(a * np.exp(x * mag_data ** c)) / area - 0.001
-
-    def func(x, a, b, c):
-        '''
-        Exponential function.
-        '''
-        return a * np.exp(b * x) + c
 
     def line(x, slope, intercept):
         '''
@@ -498,7 +493,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
             mag_val_right, col1_val_left, col1_val_right = err_plot
 
             # Plot left side of upper envelope (exponential).
-            ax10.plot(mag_val_left, func(mag_val_left, *popt_umag), 'r--',
+            ax10.plot(mag_val_left, exp_func(mag_val_left, *popt_umag), 'r--',
                 lw=2., zorder=3)
             # Plot right side of upper envelope (polynomial).
             ax10.plot(mag_val_right, np.polyval(pol_mag, (mag_val_right)),
@@ -508,7 +503,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
             popt_mag, popt_col1 = err_plot
             # Plot exponential curve.
             mag_x = np.linspace(bright_end, max(mag_data), 50)
-            ax10.plot(mag_x, func(mag_x, *popt_mag), 'r-', zorder=3)
+            ax10.plot(mag_x, exp_func(mag_x, *popt_mag), 'r-', zorder=3)
     # Plot stars.
     stars_rjct_temp = [[], []]
     for star in stars_out_rjct:
@@ -560,7 +555,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
             mag_val_right, col1_val_left, col1_val_right = err_plot
 
             # Plot left side of upper envelope (exponential).
-            ax11.plot(mag_val_left, func(mag_val_left, *popt_umag), 'r--',
+            ax11.plot(mag_val_left, exp_func(mag_val_left, *popt_umag), 'r--',
                 lw=2., zorder=3)
             # Plot right side of upper envelope (polynomial).
             ax11.plot(mag_val_right, np.polyval(pol_mag, (mag_val_right)),
@@ -569,7 +564,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
             # Unpack params.
             popt_mag, popt_col1 = err_plot
             # Plot exponential curve.
-            ax11.plot(mag_x, func(mag_x, *popt_col1), 'r-', zorder=3)
+            ax11.plot(mag_x, exp_func(mag_x, *popt_col1), 'r-', zorder=3)
     # Plot stars.
     stars_rjct_temp = [[], []]
     for star in stars_out_rjct:
