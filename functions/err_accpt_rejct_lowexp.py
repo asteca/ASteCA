@@ -62,14 +62,14 @@ def separate_stars(mag, e_mag, e_col1, e_max, be_e, bright_end,
     return acpt_indx, rjct_indx
 
 
-def err_a_r_lowexp(mag, e_mag, e_col1, params):
+def err_a_r_lowexp(mag, e_mag, e_col1, err_pck):
     '''
     Find the exponential fit to the photometric errors in mag and color
     and reject stars beyond the N*sigma limit.
     '''
 
     # Unpack params.
-    er_params, bright_end, n_interv, interv_mag, mag_value = params
+    er_params, bright_end, n_interv, interv_mag, mag_value = err_pck
     e_max, be, be_e, N_sig = er_params[1:]
 
     # Fit exponential curve for the magnitude.
@@ -80,9 +80,9 @@ def err_a_r_lowexp(mag, e_mag, e_col1, params):
     # Add a number of sigmas to one or more parameters of the exponential.
     sigmas_m = np.sqrt(np.diag(pcov_mag))
     sigmas_c = np.sqrt(np.diag(pcov_col1))
-    for i in [0]:
-        popt_mag[i] = popt_mag[i] + int(N_sig) * sigmas_m[i]
-        popt_col1[i] = popt_col1[i] + int(N_sig) * sigmas_c[i]
+    for i in [0, 1, 2]:
+        popt_mag[i] = popt_mag[i] + float(N_sig) * sigmas_m[i]
+        popt_col1[i] = popt_col1[i] + float(N_sig) * sigmas_c[i]
 
     # Use the fitted curves to identify accepted/rejected stars and store
     # their indexes.
