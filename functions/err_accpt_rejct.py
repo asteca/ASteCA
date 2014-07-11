@@ -72,9 +72,16 @@ def err_accpt_rejct(phot_data, axes_params, er_params, mode, semi_return):
             # Unpack semi flag
             err_flag_semi = semi_return[4]
             if err_flag_semi != 0:
-                print 'Semi: using method selected %d.' % int(err_flag_semi)
-                # Set error mode to use.
-                er_mode == float(err_flag_semi)
+                if err_flag_semi in {1, 2, 3}:
+                    # Set error mode to use.
+                    mode_map = {1: 'emax', 2: 'lowexp', 3: 'eyefit'}
+                    er_mode = mode_map[int(err_flag_semi)]
+                    er_params[0] = er_mode
+                    print 'Semi: using method selected: %s.' % er_mode
+                else:
+                    print ('  WARNING: wrong error method in semi input file.\n'
+                    '  Falling back to emax.')
+                    er_mode, er_params[0] = 'emax', 'emax'
 
         # Check which error rejection algorithm was selected in the input
         # file.
