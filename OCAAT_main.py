@@ -28,7 +28,7 @@ from functions.get_cont_index import cont_indx as g_c_i
 from functions.get_regions import get_regions as g_r
 from functions.field_decont_bys import field_decont_bys as fdb
 from functions.get_p_value import get_pval as g_pv
-from functions.get_completeness import mag_completeness as m_c
+from functions.get_lf import lf
 from functions.get_isoch_params import ip
 from functions.reduce_membership import red_memb as rm
 from functions.synth_cl_err import synth_clust_err as sce
@@ -137,6 +137,13 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
         gr_params)
     print 'Cluster + field stars regions obtained (%d).' % len(field_region)
 
+    # Get the luminosity function and completeness level for each magnitude
+    # bin. The completeness will be used by the isochrone/synthetic cluster
+    # fitting algorithm.
+    lum_func, completeness = lf(flag_area_stronger, cluster_region,
+        field_region)
+    print 'LF and Completeness magnitude levels obtained.'
+
     # Calculate integrated magnitude.
     integr_return = g_i_m(center_cl, clust_rad, cluster_region, field_region,
         flag_area_stronger)
@@ -159,11 +166,6 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
     # Create data file with membership probabilities.
     c_m_f(output_dir, sub_dir, clust_name, memb_prob_avrg_sort)
     print 'Membership probabilities saved to file.'
-
-    # Get the completeness level for each magnitude bin. This will be used by
-    # the isochrone/synthetic cluster fitting algorithm.
-    completeness = m_c(mag_data)
-    print 'Completeness magnitude levels obtained.'
 
     # Store all isochrones in all the metallicity files in isoch_list.
     # Store metallicity values and isochrones ages between the allowed
@@ -213,7 +215,8 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
             err_plot, err_flags, kp_params, stars_in, stars_out,
             stars_in_rjct, stars_out_rjct, integr_return, n_c,
             flag_area_stronger, cluster_region, field_region, flag_pval_test,
-            pval_test_params, qq_params, memb_prob_avrg_sort, completeness,
+            pval_test_params, qq_params, memb_prob_avrg_sort, lum_func,
+            completeness,
             bf_params, red_return, err_lst, bf_return, ga_params, er_params,
             axes_params, ps_params, pl_params)
         print 'Plots created.'

@@ -20,7 +20,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     cont_index, mag_data, col1_data, err_plot, err_flags, kp_params,
     stars_in, stars_out, stars_in_rjct, stars_out_rjct, integr_return, n_c,
     flag_area_stronger, cluster_region, field_region, flag_pval_test,
-    pval_test_params, qq_params, memb_prob_avrg_sort, completeness, bf_params,
+    pval_test_params, qq_params, memb_prob_avrg_sort, lum_func, completeness,
+    bf_params,
     red_return, err_lst, bf_return, ga_params, er_params, axes_params,
     ps_params, pl_params):
     '''
@@ -81,6 +82,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     # Error parameters.
     er_mode, e_max, be, be_e, N_sig = er_params
     err_all_fallback, err_max_fallback = err_flags
+    # Luminosity functions.
+    x_cl, y_cl, x_fl, y_fl = lum_func
     # Integrated magnitude distribution.
     cl_reg_mag, fl_reg_mag, integ_mag, cl_reg_col, fl_reg_col, integ_col =\
     integr_return
@@ -597,40 +600,34 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     ax12.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
     #Set axis labels
     plt.xlabel('$' + y_ax + '$', fontsize=18)
-    plt.ylabel('$log(N^{\star})$', fontsize=18)
-    # Plot create lists with mag values.
-    stars_out_temp = []
-    for star in stars_out_rjct:
-        stars_out_temp.append(star[3])
-    for star in stars_out:
-        stars_out_temp.append(star[3])
-    stars_in_temp = []
-    for star in stars_in_rjct:
-        stars_in_temp.append(star[3])
-    for star in stars_in:
-        stars_in_temp.append(star[3])
-    # Plot histograms.
-    binwidth = 0.25
-    plt.hist(stars_out_temp,
-             bins=np.arange(int(x_min), int(x_max + binwidth), binwidth),
-             log=True, histtype='step', label='$r  > r_{cl}$', color='b')
-    plt.hist(stars_in_temp,
-             bins=np.arange(int(x_min), int(x_max + binwidth), binwidth),
-             log=True, histtype='step', label='$r \leq r_{cl}$', color='r')
-    # Force y axis min to 1.
-    plt.ylim(1., plt.ylim()[1])
+    plt.ylabel('$N^{\star}/A_{cl}$', fontsize=18)
+    # Cluster region LF (contaminated).
+    plt.step(x_cl, y_cl, where='post', color='r', ls='--', lw=1.5,
+        label='$LF_{cl+fl} \;(r \leq r_{cl})$')
+    # Check if field regiones were defined.
+    if flag_area_stronger is not True:
+        # Average field regions LF.
+        plt.step(x_fl, y_fl, where='post', color='b', ls='--', lw=1.5,
+            label='$LF_{fl} \;(r  > r_{cl})$')
+        # Cluster region LF - average field regions LF.
+        plt.step(x_cl, y_cl - y_fl, where='post', color='g', lw=2.,
+            label='$LF_{cl}$')
+    # Force y axis min to 0.
+    plt.ylim(0., plt.ylim()[1])
     # Completeness maximum value.
     # completeness = [max_mag, bin_edges, max_indx, comp_perc]
     bin_edges, max_indx = completeness[1], completeness[2]
     mag_peak = bin_edges[max_indx]
-    ax12.vlines(x=mag_peak, ymin=1., ymax=plt.ylim()[1], color='g',
-        linestyles='dashed', lw=2., label='$' + y_ax + '_{compl}$', zorder=3)
+    ax12.vlines(x=mag_peak, ymin=1., ymax=plt.ylim()[1], color='k',
+        linestyles='dashed', lw=2.,
+        label='$' + y_ax + '_{compl} \simeq %0.1f$' % mag_peak, zorder=1)
     # Legends.
     leg11 = plt.legend(fancybox=True, loc='upper right', numpoints=1,
-                       fontsize=16)
+                       fontsize=13)
     # Set the alpha value of the legend.
     leg11.get_frame().set_alpha(0.7)
 
+    # Integrated magnitude and color.
     ax13 = plt.subplot(gs1[6:8, 2:4])
     # If field lists are not empty.
     if fl_reg_mag[0].any() and fl_reg_col[0].any():
