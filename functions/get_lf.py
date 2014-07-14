@@ -50,6 +50,12 @@ def lf(flag_area_stronger, cluster_region, field_region):
     # Obtain histogram for cluster region.
     lf_clust, lf_edg_c = np.histogram(mag_cl, bins=bins_cl)
 
+    # Create arrays adding elements so plt.step will plot the first and last
+    # vertical bars.
+    x_cl = np.concatenate((np.array([0.]), lf_edg_c))
+    y_cl = np.concatenate((np.array([0.]), lf_clust, np.array([0.])))
+
+    # Now for field regions.
     mag_fl = []
     if flag_area_stronger is not True:
 
@@ -64,8 +70,6 @@ def lf(flag_area_stronger, cluster_region, field_region):
 
         # Create arrays adding elements so plt.step will plot the first and last
         # vertical bars.
-        x_cl = np.concatenate((np.array([0.]), lf_edg_c))
-        y_cl = np.concatenate((np.array([0.]), lf_clust, np.array([0.])))
         x_fl = np.concatenate((np.array([0.]), lf_edg_f))
         y_fl = np.concatenate((np.array([0.]), (lf_field / len(field_region)),
             np.array([0.])))
