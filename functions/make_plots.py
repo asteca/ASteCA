@@ -370,7 +370,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     ax7.grid(b=True, which='both', color='gray', linestyle='--', lw=0.5)
     # Radius
     circle = plt.Circle((center_cl[0], center_cl[1]), clust_rad,
-                        color='r', fill=False)
+                        color='k', fill=False)
     fig.gca().add_artist(circle)
     plt.text(0.4, 0.92, 'Cluster + %d Field regions' % (len(field_region)),
              transform=ax7.transAxes,
@@ -384,11 +384,11 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
         if dist <= clust_rad:
             clust_reg_temp[0].append(star[1])
             clust_reg_temp[1].append(star[2])
-    plt.scatter(clust_reg_temp[0], clust_reg_temp[1], marker='o', c='black',
+    plt.scatter(clust_reg_temp[0], clust_reg_temp[1], marker='o', c='red',
                 s=8, edgecolors='none')
     if not flag_area_stronger:
         # Plot field stars regions.
-        col = cycle(['red', 'darkgreen', 'blue', 'maroon'])
+        col = cycle(['DimGray', 'ForestGreen', 'maroon', 'RoyalBlue'])
         for i, reg in enumerate(field_region):
             stars_reg_temp = [[], []]
             for star in reg:
@@ -412,24 +412,53 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     ax8.xaxis.set_major_locator(MultipleLocator(1.0))
     # Set grid
     ax8.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
-    tot_stars = len(stars_out_rjct) + len(stars_out)
-    plt.text(0.53, 0.93, '$r > r_{cl}\,|\,N=%d$' % tot_stars,
-        transform=ax8.transAxes, bbox=dict(facecolor='white', alpha=0.5),
-        fontsize=16)
+    tot_stars_f = len(stars_out_rjct) + len(stars_out)
+    #plt.text(0.53, 0.93, '$r > r_{cl}\,|\,N=%d$' % tot_stars,
+        #transform=ax8.transAxes, bbox=dict(facecolor='white', alpha=0.5),
+        #fontsize=16)
     # Plot stars.
     stars_rjct_temp = [[], []]
     for star in stars_out_rjct:
         stars_rjct_temp[0].append(star[5])
         stars_rjct_temp[1].append(star[3])
     plt.scatter(stars_rjct_temp[0], stars_rjct_temp[1], marker='x', c='teal',
-                s=10, zorder=1)
+                s=15, zorder=1)
+#########################
+    stars_rjct_temp = [[], []]
+    for star in stars_in_rjct:
+        stars_rjct_temp[0].append(star[5])
+        stars_rjct_temp[1].append(star[3])
+    plt.scatter(stars_rjct_temp[0], stars_rjct_temp[1], marker='x', c='teal',
+                s=15, zorder=1)
+#########################
     stars_acpt_temp = [[], []]
     for star in stars_out:
         stars_acpt_temp[0].append(star[5])
         stars_acpt_temp[1].append(star[3])
     sz_pt = 0.2 if (len(stars_out_rjct) + len(stars_out)) > 5000 else 0.5
-    plt.scatter(stars_acpt_temp[0], stars_acpt_temp[1], marker='o', c='k',
-                s=sz_pt, zorder=2)
+    #plt.scatter(stars_acpt_temp[0], stars_acpt_temp[1], marker='o', c='k',
+                #s=sz_pt, zorder=2)
+    text = '$r > r_{cl}\,|\,N=%d$' % tot_stars_f
+    plt.scatter(stars_acpt_temp[0], stars_acpt_temp[1], marker='o',
+        c='LightSteelBlue', lw=0., s=12, zorder=2, label=text)
+#########################
+    stars_acpt_temp = [[], []]
+    for star in stars_in:
+        stars_acpt_temp[0].append(star[5])
+        stars_acpt_temp[1].append(star[3])
+    sz_pt = 0.5 if (len(stars_in_rjct) + len(stars_in)) > 1000 else 1.
+    tot_stars_c = len(stars_in_rjct) + len(stars_in)
+    text = '$r \leq r_{cl}\,|\,N=%d$' % tot_stars_c
+    plt.scatter(stars_acpt_temp[0], stars_acpt_temp[1], marker='o', c='r',
+                lw=0.3, s=15, zorder=2, label=text)
+    # Legends.
+    leg8 = plt.legend(fancybox=True, loc='upper right', scatterpoints=1,
+                       fontsize=12)
+    leg8.legendHandles[0]._sizes = [50]
+    leg8.legendHandles[1]._sizes = [50]
+    # Set the alpha value of the legend.
+    leg8.get_frame().set_alpha(0.85)
+#########################
 
     # Cluster's stars CMD (stars inside cluster's radius)
     ax9 = plt.subplot(gs1[4:6, 4:6])
@@ -603,24 +632,24 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     plt.ylabel('$N^{\star}/A_{cl}$', fontsize=18)
     # Cluster region LF (contaminated).
     plt.step(x_cl, y_cl, where='post', color='r', ls='--', lw=1.5,
-        label='$LF_{cl+fl} \;(r \leq r_{cl})$')
+        label='$LF_{cl+fl} \;(r \leq r_{cl})$', zorder=2)
     # Check if field regiones were defined.
     if flag_area_stronger is not True:
         # Average field regions LF.
         plt.step(x_fl, y_fl, where='post', color='b', ls='--', lw=1.5,
-            label='$LF_{fl} \;(r  > r_{cl})$')
+            label='$LF_{fl} \;(r  > r_{cl})$', zorder=3)
         # Cluster region LF - average field regions LF.
-        plt.step(x_cl, y_cl - y_fl, where='post', color='g', lw=2.,
-            label='$LF_{cl}$')
+        plt.step(x_cl, y_cl - y_fl, where='post', color='g', lw=1.7,
+            label='$LF_{cl}$', zorder=4)
     # Force y axis min to 0.
     plt.ylim(0., plt.ylim()[1])
     # Completeness maximum value.
     # completeness = [max_mag, bin_edges, max_indx, comp_perc]
     bin_edges, max_indx = completeness[1], completeness[2]
     mag_peak = bin_edges[max_indx]
-    ax12.vlines(x=mag_peak, ymin=1., ymax=plt.ylim()[1], color='k',
-        linestyles='dashed', lw=2.,
-        label='$' + y_ax + '_{compl} \simeq %0.1f$' % mag_peak, zorder=1)
+    ax12.vlines(x=mag_peak, ymin=0., ymax=plt.ylim()[1], color='k',
+        lw=1.5, linestyles='dashed',
+        label='$' + y_ax + r'_{compl}\,\approx\,%0.1f$' % mag_peak, zorder=1)
     # Legends.
     leg11 = plt.legend(fancybox=True, loc='upper right', numpoints=1,
                        fontsize=13)
@@ -674,10 +703,10 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     text = '$(' + x_ax0 + '^{*} -' + y_ax + '^{*} )_{cl} = %0.2f$' % \
     (integ_col - integ_mag)
     plt.text(0.3, 0.15, text, transform=ax13.transAxes,
-         bbox=dict(facecolor='white', alpha=0.75), fontsize=12)
+         bbox=dict(facecolor='white', alpha=0.75), fontsize=13)
     lines, labels = ax13.get_legend_handles_labels()
     leg = ax13.legend(lines, labels, loc='lower right', numpoints=1,
-        fontsize=11)
+        fontsize=13)
     leg.get_frame().set_alpha(0.75)
 
     # Distribution of p_values.
