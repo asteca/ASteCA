@@ -140,7 +140,7 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
     # Get the luminosity function and completeness level for each magnitude
     # bin. The completeness will be used by the isochrone/synthetic cluster
     # fitting algorithm.
-    lum_func, completeness = lf(flag_area_stronger, cluster_region,
+    lum_func, completeness = lf(flag_area_stronger, mag_data, cluster_region,
         field_region)
     print 'LF and Completeness magnitude levels obtained.'
 
