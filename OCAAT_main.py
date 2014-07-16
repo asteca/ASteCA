@@ -151,7 +151,7 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
         (integr_return[5] - integr_return[2])
 
     # Get physical cluster probability based on p_values distribution.
-    pval_test_params, qq_params, flag_pval_test = g_pv(cluster_region,
+    pval_test_params, flag_pval_test = g_pv(cluster_region,
         field_region, col1_data, mag_data, center_cl, clust_rad, pv_params,
         flag_area_stronger)
 
@@ -205,7 +205,7 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
     # Add cluster data and flags to output file
     a_d_o(out_file_name, sub_dir, output_dir, clust_name, center_params,
         radius_params, kp_params, cont_index, n_c, pval_test_params[0],
-        qq_params[0], integr_return, err_flags, flag_num_memb_low, bf_return)
+        integr_return, err_flags, flag_num_memb_low, bf_return)
     print 'Data added to output file.'
 
     # Make plots
@@ -215,8 +215,7 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
             err_plot, err_flags, kp_params, stars_in, stars_out,
             stars_in_rjct, stars_out_rjct, integr_return, n_c,
             flag_area_stronger, cluster_region, field_region, flag_pval_test,
-            pval_test_params, qq_params, memb_prob_avrg_sort, lum_func,
-            completeness,
+            pval_test_params, memb_prob_avrg_sort, lum_func, completeness,
             bf_params, red_return, err_lst, bf_return, ga_params, er_params,
             axes_params, ps_params, pl_params)
         print 'Plots created.'

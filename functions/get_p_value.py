@@ -11,7 +11,6 @@ from scipy.integrate import quad
 
 import rpy2.robjects as robjects
 from rpy2.robjects.packages import importr
-from get_qqplot import qqplot as g_qq
 
 # Define variables to communicate with package 'R'.
 ks = importr('ks')
@@ -197,14 +196,10 @@ def get_pval(cluster_region, field_region, col1_data, mag_data, center_cl,
 
         print 'Probability of physical cluster obtained (%0.2f).' % prob_cl_kde
 
-        # Get QQ plot for p-values distributions.
-        qq_params = g_qq(p_vals_cl, p_vals_f)
-
     # Skip process.
     else:
         print 'Skipping p-value test for cluster.'
         # Pass empty lists to make_plots.
         pval_test_params = [-1., [], [], [], [], [], []]
-        qq_params = [-1., []]
 
-    return pval_test_params, qq_params, flag_pval_test
+    return pval_test_params, flag_pval_test

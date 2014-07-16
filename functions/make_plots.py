@@ -20,8 +20,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     cont_index, mag_data, col1_data, err_plot, err_flags, kp_params,
     stars_in, stars_out, stars_in_rjct, stars_out_rjct, integr_return, n_c,
     flag_area_stronger, cluster_region, field_region, flag_pval_test,
-    pval_test_params, qq_params, memb_prob_avrg_sort, lum_func, completeness,
-    bf_params,
+    pval_test_params, memb_prob_avrg_sort, lum_func, completeness, bf_params,
     red_return, err_lst, bf_return, ga_params, er_params, axes_params,
     ps_params, pl_params):
     '''
@@ -732,24 +731,6 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
         leg = ax14.legend(handles, labels, loc='upper right', numpoints=1,
                           fontsize=12)
         leg.get_frame().set_alpha(0.6)
-
-        # QQ-plot.
-        # Extract parameters from list.
-        ccc, quantiles = qq_params
-        ax15 = plt.subplot(gs1[6:8, 6:8])
-        plt.xlim(-0.05, 1.05)
-        plt.ylim(-0.05, 1.05)
-        plt.xlabel('$p-value_{cl}$', fontsize=16)
-        plt.ylabel('$p-value_{f}$', fontsize=16)
-        ax15.minorticks_on()
-        ax15.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
-        text = '$CCC\, = %0.2f$' % ccc
-        plt.text(0.05, 0.92, text, transform=ax15.transAxes,
-             bbox=dict(facecolor='white', alpha=0.85), fontsize=12)
-        # Plot quantiles.
-        plt.scatter(quantiles[0], quantiles[1], marker='o', c='k', s=10.)
-        # Identity line.
-        plt.plot([0., 1.], [0., 1.], color='k', linestyle='--', linewidth=1.)
 
     # Norm fit for decontamination algorithm probability values.
     plot_colorbar = False

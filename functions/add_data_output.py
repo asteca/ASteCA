@@ -5,7 +5,7 @@
 
 def add_data_output(out_file_name, sub_dir, output_dir, clust_name,
     center_params, radius_params, kp_params, cont_index, n_c, prob_cl_kde,
-    ccc, integr_return, err_flags, flag_num_memb_low, bf_return):
+    integr_return, err_flags, flag_num_memb_low, bf_return):
     '''
     Add data obtained to the 'data_output.dat' file.
     '''
@@ -52,7 +52,7 @@ def add_data_output(out_file_name, sub_dir, output_dir, clust_name,
         str('%.1f' % round(e_rt, 1)),
         str(round(cont_index, 2)),
         str(int(n_c)), str(n_c_k), str('%0.2f' % prob_cl_kde),
-        str('%0.2f' % ccc), str('%0.2f' % (integ_col - integ_mag)),
+        str('%0.2f' % (integ_col - integ_mag)),
         str('%0.4f' % m), str('%0.4f' % e_m), str('%0.2f' % a),
         str('%0.2f' % e_a), str('%0.2f' % e), str('%0.2f' % e_e),
         str('%0.2f' % d), str('%0.2f' % e_d)]
@@ -60,7 +60,7 @@ def add_data_output(out_file_name, sub_dir, output_dir, clust_name,
     # "a" opens the file for appending
     with open(output_dir + out_file_name, "a") as f_out:
         f_out.write('{:<16} {:>7} {:>7} {:>7} {:>8} {:>8} {:>7} {:>8} {:>7} \
-{:>8} {:>8} {:>4} {:>6} {:>7} {:>5} {:>7} {:>7} {:>7} {:>5} {:>5} {:>7} {:>5} \
+{:>8} {:>8} {:>4} {:>6} {:>7} {:>7} {:>7} {:>7} {:>5} {:>5} {:>7} {:>5} \
 {:>6} {:>5}'.format(*line))
         # Flags.
         f_out.write('{:>4} {:>2} {:>3} {:>2} {:>2} {:>2} {:>2} {:>2} {:>2} \
