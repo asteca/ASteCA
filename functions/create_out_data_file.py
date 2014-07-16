@@ -56,7 +56,7 @@ def create_out_data_file(output_dir):
 #          as 1 minus the overlap area between the KDEs. If the KDEs are\n\
 #          very similar this value will be low indicating the overdensity is\n\
 #          probably not a true cluster.\n\
-# mag_int: Integrated color magnitude for all stars inside the cluster\n\
+# int_col: Integrated color magnitude for all stars inside the cluster\n\
 #          radius, except those that were rejected due to large errors.\n\
 # met: Metallicity value (z) obtained via synthetic cluster fitting.\n\
 # e_m: Metallicity error.\n\
@@ -96,7 +96,7 @@ def create_out_data_file(output_dir):
 #    field, etc.\n\
 #\n\
 #NAME            c_x[px] c_y[px] e_c[px] r_cl[px]  e_r[px] r_c[px] e_rc[px] \
-r_t[px] e_rt[px] cont_ind memb memb_k prob_cl   mag_int     met     e_m   \
+r_t[px] e_rt[px] cont_ind memb memb_k prob_cl int_col     met     e_m   \
 age   e_a  E(B-V)   e_E   dist   e_d  M1 M2  f1 f2 f3 f4 f5 f6 f7 f8 f9  \
 FC\n" % now_time)
         out_data_file.close()
