@@ -21,8 +21,6 @@ def calc_integ_mag(st_reg):
 
     # Sort magnitude list.
     sort_lis = sorted(st_reg)
-    # Pick random star.
-    mag_star = np.random.choice(sort_lis)
 
     int_mag_val = 0.
     for mag_limit in mag_range:
@@ -35,9 +33,9 @@ def calc_integ_mag(st_reg):
         else:
             energ_sum = 0.
             for mag_i in trim_lis:
-                energ_sum = energ_sum + 10 ** ((mag_i - mag_star) / -2.5)
+                energ_sum = energ_sum + 10 ** (mag_i / -2.5)
 
-            int_mag_val = -2.5 * np.log10(energ_sum) + mag_star
+            int_mag_val = -2.5 * np.log10(energ_sum)
 
         reg_mag[0].append(mag_limit)
         reg_mag[1].append(int_mag_val)
