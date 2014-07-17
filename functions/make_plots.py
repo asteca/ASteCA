@@ -411,20 +411,10 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     ax8.xaxis.set_major_locator(MultipleLocator(1.0))
     # Set grid
     ax8.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
-    #plt.text(0.53, 0.93, '$r > r_{cl}\,|\,N=%d$' % tot_stars,
-        #transform=ax8.transAxes, bbox=dict(facecolor='white', alpha=0.5),
-        #fontsize=16)
     # Plot rejected stars.
     # Outside of the cluster region.
     stars_rjct_temp = [[], []]
     for star in stars_out_rjct:
-        stars_rjct_temp[0].append(star[5])
-        stars_rjct_temp[1].append(star[3])
-    plt.scatter(stars_rjct_temp[0], stars_rjct_temp[1], marker='x', c='teal',
-                s=15, zorder=1)
-    # Inside the cluster region.
-    stars_rjct_temp = [[], []]
-    for star in stars_in_rjct:
         stars_rjct_temp[0].append(star[5])
         stars_rjct_temp[1].append(star[3])
     plt.scatter(stars_rjct_temp[0], stars_rjct_temp[1], marker='x', c='teal',
@@ -436,24 +426,11 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
             stars_acpt_temp[0].append(star[5])
             stars_acpt_temp[1].append(star[3])
     sz_pt = 0.2 if (len(stars_out_rjct) + len(stars_out)) > 5000 else 0.5
-    #plt.scatter(stars_acpt_temp[0], stars_acpt_temp[1], marker='o', c='k',
-                #s=sz_pt, zorder=2)
-    text = '$r > r_{cl}\,|\,N=%d$' % len(stars_acpt_temp[0])
-    plt.scatter(stars_acpt_temp[0], stars_acpt_temp[1], marker='o',
-        c='LightSteelBlue', lw=0., s=12, zorder=2, label=text)
-#########################
-    tot_stars_c = len(stars_in_rjct) + len(stars_in)
-    text = '$r \leq r_{cl}\,|\,N=%d$' % tot_stars_c
-    plt.scatter(zip(*stars_in)[5], zip(*stars_in)[3], marker='o', c='r',
-                lw=0.3, s=15, zorder=2, label=text)
-    # Legends.
-    leg8 = plt.legend(fancybox=True, loc='upper right', scatterpoints=1,
-                       fontsize=12)
-    leg8.legendHandles[0]._sizes = [50]
-    leg8.legendHandles[1]._sizes = [50]
-    # Set the alpha value of the legend.
-    leg8.get_frame().set_alpha(0.85)
-#########################
+    plt.scatter(stars_acpt_temp[0], stars_acpt_temp[1], marker='o', c='k',
+                s=sz_pt, zorder=2)
+    plt.text(0.53, 0.93, '$r > r_{cl}\,|\,N=%d$' % len(stars_acpt_temp[0]),
+        transform=ax8.transAxes, bbox=dict(facecolor='white', alpha=0.5),
+        fontsize=16)
 
     # Cluster's stars CMD (stars inside cluster's radius)
     ax9 = plt.subplot(gs1[4:6, 4:6])
