@@ -113,8 +113,8 @@ def synth_clust(err_lst, completeness, sc_params, isochrone, params, cmd_sel):
         isoch_m_d = np.asarray([])
 
     # For plotting purposes: store a copy of this list before adding binaries.
-#    from copy import deepcopy
-#    isoch_m_d0 = deepcopy(isoch_m_d)
+    #from copy import deepcopy
+    #isoch_m_d0 = deepcopy(isoch_m_d)
 
     # Check for an empty array.
     if isoch_m_d.any():
@@ -248,8 +248,8 @@ def synth_clust(err_lst, completeness, sc_params, isochrone, params, cmd_sel):
         # empty array.
         synth_clust = np.asarray([])
 
-         #Plot diagrams.
-#        s_c_p(mass_dist, isoch_inter, params, isoch_moved, isoch_cut,
-#              isoch_m_d0, isoch_m_d, clust_compl, clust_error)
+     #Plot diagrams.
+    #s_c_p(mass_dist, isoch_inter, params, isoch_moved, isoch_cut,
+          #isoch_m_d0, isoch_m_d, clust_compl, clust_error)
 
     return synth_clust
