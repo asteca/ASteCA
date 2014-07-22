@@ -45,10 +45,17 @@ $M_T=1M_{\odot}\, \rightarrow \, C_1 = \frac{1}{\int_{m_l}^{m_h} m\xi(m)dm}$\\
 $PDF(m) = \xi(m)_{norm} = C_1 \xi(m) $\\
 
 This is the first step, performed by the \texttt{get-IMF-PDF} function for a given selected
-IMF (Chabrier 2001, Kroupa et al. 1993, Kroupa 2002)\\
+IMF (Chabrier 2001, Kro"upa et al. 1993, Kroupa 2002)\\
 
 
+Once the PDF is generated, every time a new synthetic cluster is created the
+\texttt{get-mass-dist} function is called from within \texttt{synth-cluster}. This
+former function takes the PDF and samples a number of masses randomly from it, following
+the probabilities distribution given by the PDF, until the mass fixed by the
+\texttt{total-mass} parameter is achieved.
 
+The \texttt{get-mass-dist} function thus returns a distribution of masses probabilistically
+sampled from a certain IMF, whose masses sum up to a total cluster mass.
 
 
 \end{document}
