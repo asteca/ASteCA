@@ -15,25 +15,29 @@ def imfs(imf_name, m_star, norm_const):
     '''
     if imf_name == 'kroupa_1993':
         # Kroupa, Tout & Gilmore. (1993) piecewise IMF.
+        # 1993MNRAS.262..545K
         power = [-1.3, -2.2, -2.7]
+        factor = [0.035, 0.019, 0.019]
         if 0.08 < m_star <= 0.5:
             i = 0
         elif 0.5 < m_star <= 1.:
             i = 1
         elif 1. < m_star:
             i = 2
-        imf_val = norm_const * m_star ** power[i]
+        imf_val = norm_const * factor[i] * m_star ** power[i]
 
     elif imf_name == 'kroupa_2002':
         # Kroupa (2002) piecewise IMF (taken from MASSCLEAN article).
         power = [-0.3, -1.3, -2.3]
+        m0, m1, m2 = 0.01, 0.08, 0.5
+        factor = [0.4687, 0.0375, 0.01875]
         if 0.01 < m_star <= 0.08:
             i = 0
         elif 0.08 < m_star <= 0.5:
             i = 1
         elif 0.5 < m_star:
             i = 2
-        imf_val = norm_const * m_star ** power[i]
+        imf_val = norm_const * factor[i] * m_star ** power[i]
 
     elif imf_name == 'chabrier_2001':
         # Chabrier (2001) exponential form of the IMF.
@@ -43,12 +47,12 @@ def imfs(imf_name, m_star, norm_const):
     return imf_val
 
 
-def integral_IMF_M(m_star, imf_sel, norm_const):
+def integral_IMF_M(m_star, imf_sel, tot_mass):
     '''
     Return the properly normalized function to perform the integration of the
     selected IMF. Returns mass values.
     '''
-    imf_val = m_star * imfs(imf_sel, m_star, norm_const)
+    imf_val = m_star * imfs(imf_sel, m_star, tot_mass)
     return imf_val
 
 

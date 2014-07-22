@@ -24,11 +24,31 @@ This is the manual of operation for the \texttt{OCAAT} code.
 
 \subsection{IMF sampling}
 
-\begin{enumerate}
-\item Run \texttt{get-IMF-PDF} function for a given selected IMF (Chabrier 2001, Kroupa et al. 1993,
-Kroupa 2002)
-\item 
-\end{enumerate}
+The initial mass function (IMF) is the distribution of initial masses for a population
+of stars. For a population of $N$ stars with masses $m_i$ and a total mass of $M_T$:\\
+
+$IMF \, \rightarrow \, \xi(m)=\frac{dn}{dm} \, \rightarrow \,dn = \xi(m)dm$\\
+
+$M_T= \sum_{i=1}^N m_i \, \rightarrow \, M_T = C\int_{m_l}^{m_h} m(n)dn = $\\
+
+$= C\int_{m_l}^{m_h} m\xi(m)dm$\\
+
+\noindent where $m_l$ and $m_h$ are the mass limits for the IMF ($m_h$ is fixed to
+$100 M_{\odot}$ in the code) and $C$ is a normalization constant. Setting the total
+mass to unity, $M_T=1 M_{\odot}$, allows us to obtain the normalization constant $C_1$
+and treat the normalized IMF as a PDF:\\
+
+$M_T=1M_{\odot}\, \rightarrow \, C_1 = \frac{1}{\int_{m_l}^{m_h} m\xi(m)dm}$\\
+
+\noindent and thus the normalized IMF can be written as:\\
+
+$PDF(m) = \xi(m)_{norm} = C_1 \xi(m) $\\
+
+This is the first step, performed by the \texttt{get-IMF-PDF} function for a given selected
+IMF (Chabrier 2001, Kroupa et al. 1993, Kroupa 2002)\\
+
+
+
 
 
 \end{document}
