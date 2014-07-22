@@ -2,3 +2,6 @@
 isochrones/
 input/*
 output/*
+man/*
+!man/*.tex
+!man/*.pdf
