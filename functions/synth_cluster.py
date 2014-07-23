@@ -48,8 +48,7 @@ def mass_interp(isochrone, mass_dist):
     isochrone's mass range.
     '''
     # Convert to arrays.
-    data = np.array(isochrone)
-    target = np.array(mass_dist)
+    data, target = np.array(isochrone), np.array(mass_dist)
     # Returns the indices that would sort the array.
     order = data[2, :].argsort()
     key = data[2, order]
