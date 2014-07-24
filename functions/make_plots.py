@@ -889,6 +889,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
         plt.ylim(a_min, a_max)
         plt.xlabel('$z$', fontsize=16)
         plt.ylabel('$log(age)$', fontsize=16)
+        plt.minorticks_on()
         # Plot best fit point.
         plt.scatter(m, a, marker='o', c='r', s=30)
         # Plot ellipse error.
@@ -913,6 +914,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
         lkl_range = max(lkl_old[1]) - min(lkl_old[0])
         plt.ylim(min(lkl_old[0]) - 0.1 * lkl_range,
                  max(lkl_old[1]) + 0.1 * lkl_range)
+        # Set minor ticks
+        ax21.minorticks_on()
         ax21.tick_params(axis='y', which='major', labelsize=9)
         ax21.grid(b=True, which='major', color='gray', linestyle='--', lw=0.6)
         plt.xlabel('Generation', fontsize=12)
@@ -946,6 +949,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
         plt.ylim(d_min, d_max)
         plt.xlabel('$E_{(B-V)}$', fontsize=16)
         plt.ylabel('$(m-M)_o$', fontsize=16)
+        plt.minorticks_on()
         # Plot best fit point.
         plt.scatter(e, d, marker='o', c='b', s=30)
         # Plot ellipse error.
@@ -966,6 +970,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
         plt.ylim(max(0, min(lkl_old[0]) - 0.3 * min(lkl_old[0])),
             max(lkl_old[1]))
         plt.xlim(m_min, m_max)
+        # Set minor ticks
+        ax22.minorticks_on()
         ax22.tick_params(axis='y', which='major', labelsize=9)
         plt.ylabel('Likelihood', fontsize=12)
         plt.xlabel('$z$', fontsize=16)
@@ -988,9 +994,11 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
         plt.ylim(max(0, min(lkl_old[0]) - 0.3 * min(lkl_old[0])),
             max(lkl_old[1]))
         plt.xlim(a_min, a_max)
+        # Set minor ticks
+        ax23.minorticks_on()
         ax23.tick_params(axis='y', which='major', labelsize=9)
         plt.ylabel('Likelihood', fontsize=12)
-        plt.xlabel('$log(age)$', fontsize=16)
+        plt.xlabel('$log(age/yr)$', fontsize=16)
         text = '$log(age) = %0.2f \pm %0.2f$' % (a, e_a)
         plt.text(0.1, 0.93, text, transform=ax23.transAxes,
             bbox=dict(facecolor='white', alpha=0.5), fontsize=12)
@@ -1009,6 +1017,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
         plt.ylim(max(0, min(lkl_old[0]) - 0.3 * min(lkl_old[0])),
             max(lkl_old[1]))
         plt.xlim(e_min, e_max)
+        # Set minor ticks
+        ax24.minorticks_on()
         ax24.tick_params(axis='y', which='major', labelsize=9)
         plt.ylabel('Likelihood', fontsize=12)
         plt.xlabel('$E_{(B-V)}$', fontsize=16)
@@ -1030,6 +1040,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
         plt.ylim(max(0, min(lkl_old[0]) - 0.3 * min(lkl_old[0])),
             max(lkl_old[1]))
         plt.xlim(d_min, d_max)
+        # Set minor ticks
+        ax25.minorticks_on()
         ax25.tick_params(axis='y', which='major', labelsize=9)
         plt.ylabel('Likelihood', fontsize=12)
         plt.xlabel('$(m-M)_o$', fontsize=16)
