@@ -98,7 +98,7 @@ def get_center(x_data, y_data, mag_data, gc_params, mode, semi_return):
 
     # Calculate the number of bins used.
     min_rang = min((rang[0][1] - rang[0][0]), (rang[1][1] - rang[1][0]))
-    # Number of bins given by 1%, 2% and 3% of the minimum axis range.
+    # Number of bins given by 1%, 2%, 3% and 4% of the minimum axis range.
     bin_list = [(i * min_rang / 100.) for i in range(1, 5)]
 
     # Arrays that store the cluster's center values calculated varying
