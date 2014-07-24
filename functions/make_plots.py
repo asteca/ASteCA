@@ -674,7 +674,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
         plt.plot(fl_reg_col[0], fl_reg_col[1], 'b:', lw=2., label=text4)
     text = '$(' + x_ax0 + '^{*} -' + y_ax + '^{*} )_{cl} = %0.2f$' % \
     (integ_col - integ_mag)
-    plt.text(0.3, 0.15, text, transform=ax13.transAxes,
+    plt.text(0.25, 0.15, text, transform=ax13.transAxes,
          bbox=dict(facecolor='white', alpha=0.75), fontsize=13)
     lines, labels = ax13.get_legend_handles_labels()
     leg = ax13.legend(lines, labels, loc='lower right', numpoints=1,
