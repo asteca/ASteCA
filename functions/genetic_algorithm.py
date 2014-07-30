@@ -303,9 +303,8 @@ def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
         # Pair chromosomes by randomly shuffling them.
         random.shuffle(chromosomes)
 
-        # Apply crossover operation on each subsequent pair of chromosomes.
-        # Select only 100*p_cross% of pairs to apply the crossover to,
-        # where p_cross is the crossover probability.
+        # Apply crossover operation on each subsequent pair of chromosomes
+        # with a p_cross probability (crossover probability)
         cross_chrom = crossover(chromosomes, p_cross, cr_sel)
 
         # Apply mutation operation on random genes for every chromosome.
