@@ -156,9 +156,10 @@ def selection(generation, breed_prob):
     ran_lst = np.random.uniform(0, sum(breed_prob), len(generation))
     # For each of these numbers, obtain the corresponding likelihood from the
     # breed_prob CDF.
+    gen_breed = zip(*[generation, breed_prob])
     for r in ran_lst:
         s = 0.
-        for sol, num in zip(*[generation, breed_prob]):
+        for sol, num in gen_breed:
             s += num
             if s >= r:
                 select_chrom.append(sol)
