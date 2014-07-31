@@ -168,7 +168,7 @@ def selection(generation, breed_prob):
     return select_chrom
 
 
-def fitness_eval(err_lst, obs_clust, completeness, isoch_list, isoch_ma,
+def evaluation(err_lst, obs_clust, completeness, isoch_list, isoch_ma,
                  ma_lst, e_lst, d_lst, sc_params, isoch_done, cmd_sel):
     '''
     Evaluate each random isochrone in the objective function to obtain
@@ -254,10 +254,11 @@ def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
     # Flat out metallicity and ages list (used by the 'Decode' process).
     flat_ma = zip(*list(itertools.chain(*isoch_ma)))
 
+    # Fitness.
     # Rank-based breeding probability. Independent of the fitness values,
     # only depends on the total number of chromosomes n_pop and the fitness
     # differential fdif.
-    breed_prob = [1. / n_pop + fdif * (n_pop + 1. - 2. * (i + 1.)) /
+    fitness = [1. / n_pop + fdif * (n_pop + 1. - 2. * (i + 1.)) /
     (n_pop * (n_pop + 1.)) for i in range(n_pop)]
 
     ### Initial random population evaluation. ###
@@ -268,7 +269,7 @@ def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
     isoch_done = [[], []]
 
     # Evaluate initial random solutions in the objective function.
-    generation, lkl, isoch_done = fitness_eval(err_lst, obs_clust,
+    generation, lkl, isoch_done = evaluation(err_lst, obs_clust,
         completeness, isoch_list, isoch_ma, ma_lst, e_lst, d_lst,
         sc_params, isoch_done, cmd_sel)
 
@@ -295,7 +296,7 @@ def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
         # Select chromosomes for breeding from the current generation of
         # solutions according to breed_prob to generate the intermediate
         # population.
-        int_popul = selection(generation, breed_prob)
+        int_popul = selection(generation, fitness)
 
         # Encode intermediate population's solutions into binary chromosomes.
         chromosomes = encode(mm_m, mm_a, mm_e, mm_d, n_bin, int_popul)
@@ -311,7 +312,7 @@ def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
         # Apply mutation operation on random genes for every chromosome.
         mut_chrom = mutation(cross_chrom, p_mut)
 
-        ### Evaluation/fitness ###
+        ### Evaluation ###
         # Decode the chromosomes into solutions to form the new generation.
         ma_lst, e_lst, d_lst = decode(mm_m, mm_a, mm_e, mm_d, n_bin, isoch_ma,
                                       isoch_ed, mut_chrom, flat_ma)
@@ -322,7 +323,7 @@ def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
 
         # Evaluate each new solution in the objective function and sort
         # according to the best solutions found.
-        generation, lkl, isoch_done = fitness_eval(err_lst, obs_clust,
+        generation, lkl, isoch_done = evaluation(err_lst, obs_clust,
         completeness, isoch_list, isoch_ma, ma_lst, e_lst, d_lst, sc_params,
         isoch_done, cmd_sel)
 
