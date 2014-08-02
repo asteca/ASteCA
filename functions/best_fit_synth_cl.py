@@ -90,9 +90,8 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
         if best_fit_algor == 'genet':
             # Call bootstrap function with resampling to get the uncertainty
             # in each parameter.
-            params_boot, isoch_fit_errors = bootstrap(err_lst,
-                obs_clust, completeness, ip_list, bf_params,
-                sc_params, ga_params, ps_params)
+            isoch_fit_errors = bootstrap(err_lst, obs_clust, completeness,
+                ip_list, bf_params, sc_params, ga_params, ps_params)
 
         # For plotting purposes.
         # Get list of stored isochrones and their parameters.

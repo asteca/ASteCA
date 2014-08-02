@@ -66,4 +66,4 @@ def bootstrap(err_lst, obs_clust0, completeness, ip_list, bf_params,
         isoch_fit_errors[i] = max(ps_params[i + 3][2],
         isoch_fit_errors[i])
 
-    return params_boot, isoch_fit_errors
+    return isoch_fit_errors
