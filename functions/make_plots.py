@@ -176,28 +176,9 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     # Set minor ticks
     ax4.minorticks_on()
     # Plot r_cl.
-    #circle = plt.Circle((center_cl[0], center_cl[1]), clust_rad, color='r',
-        #fill=False, lw=2.5)
-    #fig.gca().add_artist(circle)
-    #########
-    #Radius: auto first, manual second
-    clusts = {"CZ26": [398., 238., 'Czernik 26'],
-        "CZ30": [446., 238., 'Czernik 30'],
-        "HAF11": [398., 363., 'Haffner 11'],
-        "NGC2236": [340., 238., 'NGC 2236'],
-        "NGC2324": [531., 400., 'NGC 2324'],
-        "NGC2627": [310., 363., 'NGC 2627'],
-        "RUP1": [273., 213., 'Ruprecht 1'],
-        "TO1": [493., 430., 'Tombaugh 1'],
-        "TR5": [613., 450., 'Trumpler 5']}
-    rad1, rad2 = clusts[clust_name][0], clusts[clust_name][1]
-    circle1 = plt.Circle((center_cl[0], center_cl[1]), rad1, color='r',
+    circle = plt.Circle((center_cl[0], center_cl[1]), clust_rad, color='r',
         fill=False, lw=2.5)
-    circle2 = plt.Circle((center_cl[0], center_cl[1]), rad2, color='b',
-        fill=False, lw=2.5)
-    fig.gca().add_artist(circle1)
-    fig.gca().add_artist(circle2)
-    #########
+    fig.gca().add_artist(circle)
     if flag_3pk_conver is True:
         # Plot tidal radius.
         circle = plt.Circle((center_cl[0], center_cl[1]), rt, color='g',
@@ -215,17 +196,12 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
                 color='g', fill=False, ls='dashed', lw=2.5)
             fig.gca().add_artist(circle)
     # Add text box
-    #e_cent = cent_stats[0]
-    #text1 = '$x_{cent} = %.1f \pm %.1f px$' '\n' % (center_cl[0], e_cent)
-    #text2 = '$y_{cent} = %.1f \pm %.1f px$' % (center_cl[1], e_cent)
-    #text = text1 + text2
-    #plt.text(0.05, 0.9, text, transform=ax4.transAxes,
-        #bbox=dict(facecolor='white', alpha=0.85), fontsize=11)
-    #################
-    text = clusts[clust_name][2]
+    e_cent = cent_stats[0]
+    text1 = '$x_{cent} = %.1f \pm %.1f px$' '\n' % (center_cl[0], e_cent)
+    text2 = '$y_{cent} = %.1f \pm %.1f px$' % (center_cl[1], e_cent)
+    text = text1 + text2
     plt.text(0.05, 0.9, text, transform=ax4.transAxes,
-        bbox=dict(facecolor='white', alpha=0.85), fontsize=17)
-    #################
+        bbox=dict(facecolor='white', alpha=0.85), fontsize=11)
     # Plot stars.
     # Solve for optimal star size.
     #from scipy.optimize import fsolve
