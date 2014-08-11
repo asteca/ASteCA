@@ -163,6 +163,8 @@ def get_in_params(mypath):
     elif cmd_select == 2:
         x_ax, y_ax = '(V-I)', 'V'
     elif cmd_select == 3:
+        x_ax, y_ax = '(U-B)', 'V'
+    elif cmd_select == 3:
         x_ax, y_ax = '(C-{T_1})', '{T_1}'
     # Maximum and minimum axis values for the CMD plots.
     if cmd_select in {1, 2, 3}:

@@ -657,6 +657,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     elif cmd_select == 2:
         x_ax0 = 'I'
     elif cmd_select == 3:
+        x_ax0 = 'U'
+    elif cmd_select == 4:
         x_ax0 = 'C'
     text1 = '$' + y_ax + '^{*}_{cl+fl}$'
     text2 = '$' + x_ax0 + '^{*}_{cl+fl}$'

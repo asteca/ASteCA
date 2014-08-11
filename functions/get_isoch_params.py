@@ -30,6 +30,9 @@ def get_ip(ps_params):
             # Mass, V, I
             mas_i, mag_i, col_i = 1, 9, 11
         elif cmd_select == 3:
+            # Mass, B, U
+            mas_i, mag_i, col_i = 1, 8, 7
+        elif cmd_select == 4:
             # Mass, T1, C
             mas_i, mag_i, col_i = 1, 9, 7
     elif iso_select == 'PAR':
@@ -40,7 +43,10 @@ def get_ip(ps_params):
         elif cmd_select == 2:
             # Mass, V, I
             mas_i, mag_i, col_i = 2, 10, 12
-        elif cmd_select == 3:
+        if cmd_select == 3:
+            # Mass, B, U
+            mas_i, mag_i, col_i = 2, 9, 8
+        elif cmd_select == 4:
             # Mass, T1, C
             mas_i, mag_i, col_i = 2, 10, 8
 

@@ -38,8 +38,19 @@ def move_isoch(cmd_sel, isochrone, e, d):
         Av = 3.1 * e
         iso_moved = [np.array(isochrone[0]) + 1.244 * e,
                      np.array(isochrone[1]) + d + Av]
-
     elif cmd_sel == 3:
+        # For UBVI system.
+        #
+        # E(U-B) = 0.72 * E(B-V) + 0.05 * E(B-V)^2
+        # E(U-B) = (U-B) - (U-B)o
+        # Av = 3.1*E(B-V)
+        # (mv - Mv)o = -5 + 5*log(d) + Av
+        #
+        Av = 3.1 * e
+        iso_moved = [np.array(isochrone[0]) + (0.72 * e + 0.05 * e ** 2),
+                     np.array(isochrone[1]) + d + Av]
+
+    elif cmd_sel == 4:
         # For Washington system.
         #
         # E(C-T1) = 1.97*E(B-V) = (C-T1) - (C-T)o
