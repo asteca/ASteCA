@@ -24,15 +24,18 @@ could work with older versions but I can't guarantee it.
 ### Theoretical isochrones
 
 OCAAT needs at least one set of theoretical isochrones stored in a `/isochrones/`
-folder to be able to apply the function that estimates the clusters' parameters. [Girardi isochrones][8] are currently the default but any set can in practice be 
+folder to be able to apply the function that estimates the clusters' parameters. [Girardi isochrones][7] are currently the default but any set can in practice be 
 used (with minor changes made to the code)
 
-The isochrones can be downloaded manually or the package [ezPadova-2][9] can be
+The isochrones can be downloaded manually or the package [ezPadova-2][8] can be
 used to automatically fetch them from the site.
 
 ## To do
 
-List of planned and still open [enhancements][7].
+* List of open [bugs][9].
+* List of planned [enhancements][10].
+* High priority [issues][11].
+* All open [issues][12].
 
 
 [1]: http://gabriel-p.github.io/ocaat/
@@ -41,6 +44,9 @@ List of planned and still open [enhancements][7].
 [4]: http://www.numpy.org/
 [5]: http://www.scipy.org/
 [6]: http://matplotlib.org/
-[7]: https://github.com/Gabriel-p/ocaat/search?o=asc&p=1&q=label%3Aenhancement+state%3Aopen&s=created&type=Issues
-[8]: http://stev.oapd.inaf.it/cgi-bin/cmd
-[9]: https://github.com/Gabriel-p/ezpadova
+[7]: http://stev.oapd.inaf.it/cgi-bin/cmd
+[8]: https://github.com/Gabriel-p/ezpadova
+[9]: https://github.com/Gabriel-p/ocaat/issues?q=is%3Aopen+is%3Aissue+label%3Abug
+[10]: https://github.com/Gabriel-p/ocaat/issues?q=is%3Aopen+is%3Aissue+label%3Aenhancement
+[11]: https://github.com/Gabriel-p/ocaat/issues?q=is%3Aopen+is%3Aissue+label%3Aprior%3Ahigh
+[12]: https://github.com/Gabriel-p/ocaat/issues
