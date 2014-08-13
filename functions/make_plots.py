@@ -1000,8 +1000,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
         ax23.minorticks_on()
         ax23.tick_params(axis='y', which='major', labelsize=9)
         plt.ylabel('Likelihood', fontsize=12)
-        plt.xlabel('$log(age/yr)$', fontsize=16)
-        text = '$log(age/yr) = %0.2f \pm %0.2f$' % (a, e_a)
+        plt.xlabel('$log(age)$', fontsize=16)
+        text = '$log(age) = %0.2f \pm %0.2f$' % (a, e_a)
         plt.text(0.1, 0.93, text, transform=ax23.transAxes,
             bbox=dict(facecolor='white', alpha=0.5), fontsize=12)
         hist, xedges, yedges = np.histogram2d(zip(*isoch_done[0])[1],
