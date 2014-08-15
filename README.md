@@ -4,17 +4,45 @@ This code is still under heavy development.
 
 See the code's [site][1] for more information. <-- *Not ready yet*.
 
-## Software
+## Contents
+
+- [Installation](#installation)
+ - [Python](#python)
+ - [Dependencies](#dependencies)
+ - [Extra packages](#extra-packages)
+ - [Theoretical isochrones](#theoretical-isochrones)
+-[To do](#to-do)
+
+<!-- end toc -->
+
+## Installation
+
+The packaged zip or tarball for the latest release can be downloaded from:
+
+* [.zip](https://github.com/Gabriel-p/ocaat/releases)
+* [.tar.gz](https://github.com/Gabriel-p/ocaat/releases)
+
+You can alternatively checkout the entire project via `git`. Simply locate
+yourself in the folder you want the code to be downloaded and run:
+
+    git clone https://github.com/Gabriel-p/ocaat.git
+
+This will create a new sub-folder named _OCAAT_ with all the code
+stored inside.
+
+### Python
 
 The code has been tested with the July 2014 release of [python](www.python.org):
 
 * [Python - 2.7.8](https://www.python.org/download/releases/2.7.8/)
 
-It should also work on older versions, if you encounter any problems please contact me or open a new issue.
+It should also work on older versions, if you encounter any problems please contact
+me or [open a new issue](https://github.com/Gabriel-p/ocaat/issues/new).
 
-The best and easiest way to install several versions of python and its packages without affecting your system is [pyenv](https://github.com/yyuu/pyenv).
+The best and easiest way to install several versions of python and its packages without 
+affecting your system is [pyenv](https://github.com/yyuu/pyenv).
 
-### Python dependencies
+### Dependencies
 
 The packages listed below are required to run OCAAT.
 
@@ -22,20 +50,24 @@ The packages listed below are required to run OCAAT.
 * [Matplotlib - 1.3.1][6] -- `pip install matplotlib`
 * [SciPy  - 0.14.0][5] -- `pip install scipy`
 
-The versions are the ones I used, the code could work with older versions of these packages but I can't guarantee it.
+The versions are the ones I used, the code could work with older versions of these
+packages but I can't guarantee it.
 
-#### Extra packages
-If you want to use the function to obtain the cluster probability of being a true cluster, the following packages are needed:
+### Extra packages
+If you want to use the function to obtain the cluster probability of being a true
+cluster, the following packages are needed:
 
 * [R - 3.0.1][3] -- `sudo apt-get install r-base`
 * [rpy2  -2.4.3](http://rpy.sourceforge.net/) -- `pip install rpy2`
 
-These are not mandatory and OCAAT will still run without them, just not that particular function.
+These are not mandatory and OCAAT will still run without them, just not that particular
+function.
 
 ### Theoretical isochrones
 
 OCAAT needs at least one set of theoretical isochrones stored in a `/isochrones/`
-folder to be able to apply the function that estimates the clusters' parameters. [Girardi isochrones][7] are currently the default but any set can in practice be 
+folder to be able to apply the function that estimates the clusters' parameters.
+[Girardi isochrones][7] are currently the default but any set can in practice be
 used (with minor changes made to the code)
 
 The isochrones can be downloaded manually or the package [ezPadova-2][8] can be
