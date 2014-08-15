@@ -17,8 +17,8 @@ using the versions shown below.
 The packages listed below are required to run the code. The versions are the ones I used, could work with older versions but I can't guarantee it.
 
 * [Numpy - 1.8.2][4] -- `pip install numpy`
-* [Matplotlib - 1.8.2][6] -- `pip install matplotlib`
-* [SciPy  -1.8.2][5] -- `pip install scipy`
+* [Matplotlib - 1.3.1][6] -- `pip install matplotlib`
+* [SciPy  - 0.14.0][5] -- `pip install scipy`
 * [rpy2  -2.4.3](http://rpy.sourceforge.net/) -- `pip install rpy2`
 
 The best and easiest way to install several versions of `python` and its packages without affecting your system is [pyenv](https://github.com/yyuu/pyenv).
