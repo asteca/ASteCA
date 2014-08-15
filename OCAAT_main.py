@@ -27,7 +27,13 @@ from functions.get_members_number import get_memb_num as g_m_n
 from functions.get_cont_index import cont_indx as g_c_i
 from functions.get_regions import get_regions as g_r
 from functions.field_decont_bys import field_decont_bys as fdb
-from functions.get_p_value import get_pval as g_pv
+# Check if rpy2 package is installed, else skip get_p_value function.
+rpy2_inst = True
+try:
+    from functions.get_p_value import get_pval as g_pv
+except ImportError:
+    rpy2_inst = False
+#
 from functions.get_lf import lf
 from functions.get_isoch_params import ip
 from functions.reduce_membership import red_memb as rm
@@ -38,7 +44,7 @@ from functions.add_data_output import add_data_output as a_d_o
 from functions.cl_members_file import cluster_members_file as c_m_f
 
 
-def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
+def ocaat_main(f_indx, sub_dir, out_file_name, gip_params, rpy2_inst):
     '''
     This is the main container which holds the calls to all functions for
     a given photometric data file.
@@ -150,10 +156,21 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params):
     print 'Integrated color magnitude distribution obtained (%0.2f).' % \
         (integr_return[5] - integr_return[2])
 
-    # Get physical cluster probability based on p_values distribution.
-    pval_test_params, flag_pval_test = g_pv(cluster_region,
-        field_region, col1_data, mag_data, center_cl, clust_rad, pv_params,
-        flag_area_stronger)
+    # Only run if package is installed.
+    if rpy2_inst:
+        # Package is installed, call function.
+        # Get physical cluster probability based on p_values distribution.
+        pval_test_params, flag_pval_test = g_pv(cluster_region,
+            field_region, col1_data, mag_data, center_cl, clust_rad, pv_params,
+            flag_area_stronger)
+    elif pv_params[0]:
+        # Package is not installed, and function was told to run.
+        print '  WARNING: no rpy2 package installed. Skipping function.'
+        flag_pval_test, pval_test_params = False, [-1., [], [], [], [], [], []]
+    else:
+        # Package is not installed, but function was told not to run.
+        print 'Skipping p-value function.'
+        flag_pval_test, pval_test_params = False, [-1., [], [], [], [], [], []]
 
     # Apply decontamination algorithm if at least one equal-sized field region
     # was found around the cluster.
@@ -272,7 +289,7 @@ for f_indx, sub_dir in enumerate(dir_files[0]):
 
     try:
         # Call main function for this cluster.
-        ocaat_main(f_indx, sub_dir, out_file_name, gip_params)
+        ocaat_main(f_indx, sub_dir, out_file_name, gip_params, rpy2_inst)
     except Exception, err:
         print 'FATAL: %s could not be processed. ' % dir_files[1][f_indx][:-4]
         print 'Error:', str(err), '\n'

@@ -82,7 +82,7 @@ def get_pval(cluster_region, field_region, col1_data, mag_data, center_cl,
 
     # skip test if < 10 members are found within the cluster's radius.
     flag_few_members = False if len(cluster_region_r) > 10 else True
-    if flag_few_members:
+    if flag_pval_test and flag_few_members:
         print '  WARNING: < 10 stars in cluster region, skipping test.'
         flag_pval_test = False
 
