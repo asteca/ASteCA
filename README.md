@@ -11,7 +11,7 @@ See the code's [site][1] for more information. <-- *Not ready yet*.
  - [Dependencies](#dependencies)
  - [Extra packages](#extra-packages)
  - [Theoretical isochrones](#theoretical-isochrones)
--[To do](#to-do)
+- [To do](#to-do)
 
 <!-- end toc -->
 
@@ -39,8 +39,8 @@ The code has been tested with the July 2014 release of [python](www.python.org):
 It should also work on older versions, if you encounter any problems please contact
 me or [open a new issue](https://github.com/Gabriel-p/ocaat/issues/new).
 
-The best and easiest way to install several versions of python and its packages without 
-affecting your system is [pyenv](https://github.com/yyuu/pyenv).
+The best and easiest way to install and manage  several versions of python and its
+packages without  affecting your system is [pyenv](https://github.com/yyuu/pyenv).
 
 ### Dependencies
 
@@ -50,14 +50,17 @@ The packages listed below are required to run OCAAT.
 * [Matplotlib - 1.3.1][6] -- `pip install matplotlib`
 * [SciPy  - 0.14.0][5] -- `pip install scipy`
 
-The versions are the ones I used, the code could work with older versions of these
+These versions are the ones I used, the code could work with older versions of the
 packages but I can't guarantee it.
 
 ### Extra packages
 If you want to use the function to obtain the cluster probability of being a true
-cluster, the following packages are needed:
+cluster, the following software:
 
 * [R - 3.0.1][3] -- `sudo apt-get install r-base`
+
+and package are needed:
+
 * [rpy2  -2.4.3](http://rpy.sourceforge.net/) -- `pip install rpy2`
 
 These are not mandatory and OCAAT will still run without them, just not that particular
