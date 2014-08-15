@@ -162,7 +162,7 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params, r_flags):
     print 'Integrated color magnitude distribution obtained (%0.2f).' % \
         (integr_return[5] - integr_return[2])
 
-    # Only run if bot R and rpy2 packages are installed.
+    # Only run if both R and rpy2 packages are installed.
     if all(f is True for f in r_flags):
         # R and rpy2 package are installed, call function.
         # Get physical cluster probability based on p_values distribution.
