@@ -6,22 +6,31 @@ See the code's [site][1] for more information.
 
 ## Software
 
-Both `python` and `R` are needed to run OCAAT. I've tested the code
-using the versions shown below.
+The code has been tested with the latest 2.7.x `python` version:
 
 * [Python - 2.7.8][2]
-* [R - 3.0.1][3]
+
+It should also work on older versions. Iif you encounter any problems with older versions, please contact me or open a new issue.
+
+The best and easiest way to install several versions of `python` and its packages without affecting your system is [pyenv](https://github.com/yyuu/pyenv).
 
 ### Python dependencies
 
-The packages listed below are required to run the code. The versions are the ones I used, could work with older versions but I can't guarantee it.
+The packages listed below are required to run the code.
 
 * [Numpy - 1.8.2][4] -- `pip install numpy`
 * [Matplotlib - 1.3.1][6] -- `pip install matplotlib`
 * [SciPy  - 0.14.0][5] -- `pip install scipy`
+
+The versions are the ones I used, could work with older versions but I can't guarantee it.
+
+#### Extra packages
+If you want to use the function to obtain the cluster probability of being a true cluster, the following packages are needed:
+
+* [R - 3.0.1][3] -- `sudo apt-get install r-base`
 * [rpy2  -2.4.3](http://rpy.sourceforge.net/) -- `pip install rpy2`
 
-The best and easiest way to install several versions of `python` and its packages without affecting your system is [pyenv](https://github.com/yyuu/pyenv).
+These packages are not mandatory and OCAAT will still run without them, just not that particular function.
 
 ### Theoretical isochrones
 
