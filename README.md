@@ -55,11 +55,18 @@ packages but I can't guarantee it.
 
 ### Extra packages
 If you want to use the function to obtain the cluster probability of being a true
-cluster, the following software:
+cluster, the following software is needed:
 
 * [R - 3.0.1][3] -- `sudo apt-get install r-base`
 
-and package are needed:
+After it is installed, open with sudo privileges (`sudo R`) and install the packages:
+
+* rgl -- `install.packages("rgl")`
+* mvtnorm -- `install.packages("mvtnorm")`
+* misc3d -- `install.packages("misc3d")`
+* ks -- `install.packages("ks")`
+
+The package that allows `python` and `R` to coomunicate is also needed:
 
 * [rpy2  -2.4.3](http://rpy.sourceforge.net/) -- `pip install rpy2`
 
