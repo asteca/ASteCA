@@ -1,9 +1,10 @@
 
 
 def manual_histo(phot_data, hist_xyedges):
-    ''' Obtains a (manual) 2D histogram for the field with not only the number
-    of stars per bin but also the values associated to each of those stars: x, y
-    coordinates and magnitude, e_mag, color, e_color values.
+    '''
+    Obtains a (manual) 2D histogram for the field with not only the number
+    of stars per bin but also the values associated to each of those stars:
+    x, y coordinates and magnitude, e_mag, color, e_color values.
     '''
 
     id_star, x_data, y_data, mag_data, e_mag, col1_data, e_col1 = phot_data
@@ -123,33 +124,33 @@ def manual_histo(phot_data, hist_xyedges):
                                             e_col1[xindex]]])
                                         break
 
-    return H_manual
+    ## Check to see if all items are equal. A couple of bins in the borders
+    ## will probaly not have the same values.
+    ## The h_not_filt histo should be brought in first.
+    #for xindex, xelem in enumerate(h_not_filt):
+        #for yindex, yelem in enumerate(xelem):
+            #if yelem != H_manual[xindex][yindex][0]:
+                #print xindex, yindex, yelem, H_manual[xindex][yindex][0]
 
-# Check to see if all items are equal. A couple of bins in the borders will
-# probaly not have the same values.
-#    for xindex, xelem in enumerate(H):
-#        for yindex, yelem in enumerate(xelem):
-#            if yelem != H_manual[xindex][yindex][0]:
-#                print myfile, xindex, yindex, yelem,
-#                    H_manual[xindex][yindex][0]
-#
-#    print H[25][37], H_manual[25][37]
-#
-#    # Plot both 2D histograms to check that they are equal
-#    H_manual2 = []
-#    for i in range(len(xedges)-1):
-#        H_manual2.append([0 for _ in xrange(len(yedges)-1)])
-#    for xindex, xelem in enumerate(H_manual):
-#        for yindex, yelem in enumerate(xelem):
-#            H_manual2[xindex][yindex] =  H_manual[xindex][yindex][0]
-#
-# import matplotlib.pyplot as plt
-# import matplotlib.gridspec as gridspec
-#
-#    fig = plt.figure(figsize=(10, 5)) # create the top-level container
-#    gs = gridspec.GridSpec(1, 2)
-#    plt.subplot(gs[0, 0])
-#    plt.imshow(H.transpose(), origin='lower')
-#    plt.subplot(gs[0, 1])
-#    plt.imshow(np.array(H_manual2).transpose(), origin='lower')
-#    plt.show()
+    ## Plot both 2D histograms to check that they are equal
+    #H_manual2 = []
+    #for i in range(len(xedges) - 1):
+        #H_manual2.append([0 for _ in xrange(len(yedges) - 1)])
+    #for xindex, xelem in enumerate(H_manual):
+        #for yindex, yelem in enumerate(xelem):
+            #H_manual2[xindex][yindex] = H_manual[xindex][yindex][0]
+
+    #import matplotlib.pyplot as plt
+    #import matplotlib.gridspec as gridspec
+    #import numpy as np
+
+    #plt.figure(figsize=(10, 5))  # create the top-level container
+    #gs = gridspec.GridSpec(1, 2)
+    #plt.subplot(gs[0, 0])
+    #plt.imshow(np.array(h_not_filt).transpose(), origin='lower')
+    #plt.subplot(gs[0, 1])
+    #plt.imshow(np.array(H_manual2).transpose(), origin='lower')
+    #plt.show()
+    #raw_input()
+
+    return H_manual

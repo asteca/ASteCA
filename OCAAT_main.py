@@ -16,7 +16,7 @@ from functions.get_data_semi import get_semi as g_s
 from functions.get_phot_data import get_data as gd
 from functions.trim_frame import trim_frame as t_f
 from functions.get_center import get_center as g_c
-from functions.manual_histo import manual_histo as mh
+from functions.get_histo_manual import manual_histo as mh
 from functions.get_field_dens import field_dens as gfd
 from functions.get_dens_prof import get_dens_prof as gdp
 from functions.get_radius import get_clust_rad as gcr
@@ -103,6 +103,11 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params, r_flags):
     center_params[1], center_params[2], center_params[4]
     center_cl = [center_params[5][0][0], center_params[5][0][1]]
 
+    # Obtain manual 2D histogram for the field with star's values attached
+    # to each bin.
+    H_manual = mh(phot_data, hist_xyedges)
+    print 'Manual 2D histogram obtained.'
+
     # Get density profile
     rdp_params = gdp(h_not_filt, bin_center, bin_width)
     radii, ring_density = rdp_params[:2]
@@ -137,11 +142,6 @@ def ocaat_main(f_indx, sub_dir, out_file_name, gip_params, r_flags):
     stars_in, stars_out, stars_in_rjct, stars_out_rjct = gio(center_cl,
         clust_rad, acpt_stars, rjct_stars)
     print "Stars separated in/out of cluster's boundaries."
-
-    # Obtain manual 2D histogram for the field with star's values attached
-    # to each bin.
-    H_manual = mh(phot_data, hist_xyedges)
-    print 'Manual 2D histogram obtained.'
 
     # Get cluster + field regions around the cluster's center.
     flag_area_stronger, cluster_region, field_region = g_r(bin_center,
