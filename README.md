@@ -2,6 +2,8 @@
 
 This code is still under heavy development.
 
+List of issues left until stable [version 1.0](https://github.com/Gabriel-p/ocaat/issues?q=is%3Aissue+milestone%3Av1.0.0+is%3Aopen) is released.
+
 See the code's [site][1] for more information. <-- *Not ready yet*.
 
 ## Contents
