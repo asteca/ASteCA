@@ -38,11 +38,9 @@ The code has been tested with the July 2014 release of [python](www.python.org):
 
 * [Python - 2.7.8](https://www.python.org/download/releases/2.7.8/)
 
-It should also work on older versions, if you encounter any problems please contact
-me or [open a new issue](https://github.com/Gabriel-p/ocaat/issues/new).
+It should also work on older versions, if you encounter any problems please contact me or [open a new issue](https://github.com/Gabriel-p/ocaat/issues/new).
 
-The best and easiest way to install and manage  several versions of python and its
-packages without  affecting your system is [pyenv](https://github.com/yyuu/pyenv).
+The best and easiest way to install and manage  several versions of python and its packages without  affecting your system is [pyenv](https://github.com/yyuu/pyenv).
 
 ### Dependencies
 
@@ -60,7 +58,7 @@ If you want to use the [function](https://github.com/Gabriel-p/ocaat/blob/master
 
 * [R - 3.0.1][3] -- `sudo apt-get install r-base`
 
-After it is installed, open with sudo privileges (`sudo R`) and install the packages:
+After it is installed, open with sudo privileges (`sudo R`) and install, _in order_, the packages:
 
 * rgl -- `install.packages("rgl")`
 * mvtnorm -- `install.packages("mvtnorm")`
@@ -71,18 +69,14 @@ The package that allows `python` and `R` to coomunicate is also needed:
 
 * [rpy2  -2.4.3](http://rpy.sourceforge.net/) -- `pip install rpy2`
 
-These are not mandatory and OCAAT will still run without them, just not that particular
-function.
+These extra packages are not mandatory and OCAAT will still run without them, just not that particular function.
 
 ### Theoretical isochrones
 
-OCAAT needs at least one set of theoretical isochrones stored in a `/isochrones/`
-folder to be able to apply the function that estimates the clusters' parameters.
-[Girardi isochrones][7] are currently the default but any set can in practice be
-used (with minor changes made to the code)
+OCAAT needs at least one set of theoretical isochrones stored in a `/ocaat/isochrones` folder to be able to apply the function that estimates the clusters' parameters.
+[Girardi isochrones][7] are currently the default but any set can in practice be used (with minor changes made to the code)
 
-The isochrones can be downloaded manually or the package [ezPadova-2][8] can be
-used to automatically fetch them from the site.
+The isochrones can be downloaded manually or the package [ezPadova-2][8] can be used to automatically fetch them from the site.
 
 ## To do
 
