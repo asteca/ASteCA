@@ -29,7 +29,7 @@ yourself in the folder you want the code to be downloaded and run:
 
     git clone https://github.com/Gabriel-p/ocaat.git
 
-This will create a new sub-folder named _OCAAT_ with all the code
+This will create a new sub-folder named _/ocaat_ with all the code
 stored inside.
 
 ### Python
@@ -56,8 +56,7 @@ These versions are the ones I used, the code could work with older versions of t
 packages but I can't guarantee it.
 
 ### Extra packages
-If you want to use the function to obtain the cluster probability of being a true
-cluster, the following software is needed:
+If you want to use the [function](https://github.com/Gabriel-p/ocaat/blob/master/functions/get_p_value.py) that obtains the cluster probability of being a true cluster, the following software is needed:
 
 * [R - 3.0.1][3] -- `sudo apt-get install r-base`
 
