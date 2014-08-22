@@ -209,7 +209,6 @@ def field_decont_bys(flag_area_stronger, cluster_region, field_region,
         data = np.genfromtxt(memb_file, dtype=str, unpack=True)
         id_list = data[0].tolist()
         # Read probabilities from file.
-        #data = np.loadtxt(memb_file, unpack=True)
         data = np.genfromtxt(memb_file, dtype=float, unpack=True)
         memb_probs = data[7].tolist()
 
