@@ -660,6 +660,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
         x_ax0 = 'U'
     elif cmd_select == 4:
         x_ax0 = 'C'
+    elif cmd_select == 5:
+        x_ax0 = 'H'
     text1 = '$' + y_ax + '^{*}_{cl+fl}$'
     text2 = '$' + x_ax0 + '^{*}_{cl+fl}$'
     # Cluster + field integrated magnitude curve.

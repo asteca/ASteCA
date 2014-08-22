@@ -49,6 +49,9 @@ def get_ip(ps_params):
         elif cmd_select == 4:
             # Mass, T1, C
             mas_i, mag_i, col_i = 2, 10, 8
+        elif cmd_select == 5:
+            # Mass, J, H
+            mas_i, mag_i, col_i = 2, 8, 9
 
     # String that identifies the beginning of a new isochrone.
     line_start = li_s
@@ -152,8 +155,13 @@ def get_ip(ps_params):
                         if not line.startswith("#"):
                             reader = line.split()
                             # Color.
-                            isoch_col.append(float(reader[col_indx]) -
-                            float(reader[mag_indx]))
+                            # Generate colors correclty,
+                            if cmd_select in {1, 5}:
+                                isoch_col.append(float(reader[mag_indx]) -
+                                float(reader[col_indx]))
+                            else:
+                                isoch_col.append(float(reader[col_indx]) -
+                                float(reader[mag_indx]))
                             # Magnitude.
                             isoch_mag.append(float(reader[mag_indx]))
                             # Mass

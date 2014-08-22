@@ -135,10 +135,12 @@ def get_in_params(mypath):
         #sys_select = 'WASH'
 
     # Fix isochrones location according to the CMD and set selected.
-    if cmd_select in {1, 2}:
+    if cmd_select in {1, 2, 3}:
         text1 = 'ubvi'
-    elif cmd_select in {3}:
+    elif cmd_select in {4}:
         text1 = 'wash'
+    elif cmd_select in {5}:
+        text1 = '2mass'
     if iso_select == 'MAR':
         text2 = 'marigo'
     elif iso_select == 'PAR':
@@ -164,12 +166,13 @@ def get_in_params(mypath):
         x_ax, y_ax = '(V-I)', 'V'
     elif cmd_select == 3:
         x_ax, y_ax = '(U-B)', 'V'
-    elif cmd_select == 3:
+    elif cmd_select == 4:
         x_ax, y_ax = '(C-{T_1})', '{T_1}'
+    elif cmd_select == 5:
+        x_ax, y_ax = '(J-H)', 'J'
     # Maximum and minimum axis values for the CMD plots.
-    if cmd_select in {1, 2, 3}:
-        # col_min col_max mag_min mag_max
-        xy_minmax = [-1., 4., 7., 30.]
+    # col_min col_max mag_min mag_max
+    xy_minmax = [-1., 4., 7., 30.]
     # Store axes params.
     axes_params = [x_ax, y_ax, xy_minmax]
 
