@@ -19,7 +19,7 @@ def disp_cent(x_data, y_data, mag_data, center_cl, bin_center, h_filter,
     plt.figure(figsize=(18, 8))  # create the top-level container
     gs = gridspec.GridSpec(1, 2)  # create a GridSpec object
 
-    # 1 subplot: 2D filtered histogram, d_b=25
+    # 1 subplot: 2D filtered histogram
     ax1 = plt.subplot(gs[0, 0])
     #Set axis labels
     plt.xlabel('x', fontsize=12)
@@ -64,8 +64,9 @@ def disp_cent(x_data, y_data, mag_data, center_cl, bin_center, h_filter,
     text = text1 + text2 + text3
     plt.text(0.7, 0.9, text, transform=ax2.transAxes,
     bbox=dict(facecolor='white', alpha=0.8), fontsize=15)
-    plt.scatter(x_data, y_data, marker='o', c='black',
-        s=500 * np.exp(-0.0035 * mag_data ** 2.5))
+    st_sizes_arr = 0.1 + 100. * 10 ** ((np.array(mag_data) -
+        min(mag_data)) / -2.5)
+    plt.scatter(x_data, y_data, marker='o', c='black', s=st_sizes_arr)
 
     plt.draw()
     print 'Plot displayed, waiting for it to be closed.'
