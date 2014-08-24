@@ -198,6 +198,9 @@ def get_center(x_data, y_data, mag_data, gc_params, mode, semi_return):
 
             print 'Semi center found: (%0.2f, %0.2f) px.' % (centers_kde[0][0],
                 centers_kde[0][1])
+        else:
+            print 'Auto center found: (%0.2f, %0.2f) px.' % (center_cl[0],
+            center_cl[1])
 
     # If Manual mode is set, display center and ask the user to accept it or
     # input new one.
