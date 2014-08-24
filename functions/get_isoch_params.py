@@ -156,7 +156,7 @@ def get_ip(ps_params):
                             reader = line.split()
                             # Color.
                             # Generate colors correclty,
-                            if cmd_select in {1, 5}:
+                            if cmd_select in {2, 5}:
                                 isoch_col.append(float(reader[mag_indx]) -
                                 float(reader[col_indx]))
                             else:
