@@ -204,6 +204,7 @@ def ip(ps_params, bf_flag):
     '''
     Read isochrones and parameters if best fit function is set to run.
     '''
+    # Only read files of best fit method is set to run.
     if bf_flag is True:
         ip_list = get_ip(ps_params)
         print 'Theoretical isochrones read and stored (%d).' % \
