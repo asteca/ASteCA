@@ -14,6 +14,7 @@ See the code's [site][1] for more information. <-- *Not ready yet*.
  - [Extra packages](#extra-packages)
  - [Theoretical isochrones](#theoretical-isochrones)
 - [To do](#to-do)
+- [Versioning](#versioning)
 
 <!-- end toc -->
 
