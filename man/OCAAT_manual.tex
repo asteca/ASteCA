@@ -72,5 +72,42 @@ in the CMD.
 plot block.
 \end{itemize}
 
+\section{Integrated magnitudes}
+
+To obtain the integrated magnitude for the cluster region \textit{cleaned}
+from field stars contamination, the following equations are used.
+
+First, assume:
+
+\begin{equation}
+I_{cl+fl} = I_{cl} + I_{fl}
+\label{eq:integ-cl-fl}
+\end{equation}
+
+then:
+
+\begin{equation}
+V^*_{cl} - V^*_{cl+fl} = -2.5 \log(I_{cl}/I_{cl+fl})
+\end{equation}
+
+using Eq. \ref{eq:integ-cl-fl} we have:
+
+\begin{equation}
+V^*_{cl} - V^*_{cl+fl} = -2.5 \log(1 - I_{fl}/I_{cl+fl})
+\label{eq:integ-cl-fl2}
+\end{equation}
+
+and given:
+
+\begin{equation}
+V^*_{fl} - V^*_{cl+fl} = -2.5 \log(I_{fl}/I_{cl+fl}) \Rightarrow \frac{I_{fl}}{I_{cl+fl}} = 10^{(V^*_{fl} - V^*_{cl+fl})/-2.5}
+\label{eq:integ-cl-fl3}
+\end{equation}
+
+we can combine now Eqs. \ref{eq:integ-cl-fl2} and \ref{eq:integ-cl-fl3} to obtain:
+
+\begin{equation}
+V^*_{cl} = -2.5 \log(1 - 10^{(V^*_{fl} - V^*_{cl+fl})/-2.5}) + V^*_{cl+fl}
+\end{equation}
 
 \end{document}
