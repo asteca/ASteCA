@@ -714,11 +714,13 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
                           fontsize=12)
         leg.get_frame().set_alpha(0.6)
 
-    # Norm fit for decontamination algorithm probability values.
+    # Histogram for th edistribution of membership probabilities from the
+    # decontamination algorithm.
     plot_colorbar = False
     ax16 = plt.subplot(gs1[8:10, 0:2])
     plt.xlim(0., 1.)
     plt.xlabel('membership probability', fontsize=12)
+    plt.ylabel('N', fontsize=12)
     ax16.minorticks_on()
     ax16.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
     prob_data = [star[7] for star in memb_prob_avrg_sort]
