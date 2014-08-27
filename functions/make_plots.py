@@ -694,7 +694,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
         plt.xlim(-0.5, 1.5)
         plt.ylim(0, max(max(kde_f_1d), max(kde_cl_1d)) + 0.5)
         plt.xlabel('p-values', fontsize=12)
-        plt.xlabel('Density', fontsize=12)
+        plt.ylabel('Density', fontsize=12)
         ax14.minorticks_on()
         ax14.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
         # Grid to background.
