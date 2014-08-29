@@ -2,7 +2,7 @@
 
 This code is still under heavy development.
 
-List of issues left until stable [version 1.0](https://github.com/Gabriel-p/ocaat/milestones/v1.0.0) is released.
+List of issues left until stable [version 1.0](https://github.com/Gabriel-p/ocaat/milestones/1.0.0) is released.
 
 See the code's [site][1] for more information. <-- *Not ready yet*.
 
@@ -119,5 +119,5 @@ Constructed with the following guidelines:
 [8]: https://github.com/Gabriel-p/ezpadova
 [9]: https://github.com/Gabriel-p/ocaat/issues?q=is%3Aopen+is%3Aissue+label%3Abug
 [10]: https://github.com/Gabriel-p/ocaat/issues?q=is%3Aopen+is%3Aissue+label%3Aenhancement
-[11]: https://github.com/Gabriel-p/ocaat/issues?q=is%3Aopen+is%3Aissue+label%3Aprior%3Ahigh
+[11]: https://github.com/Gabriel-p/ocaat/issues?q=is%3Aopen+is%3Aissue+label%3Ap%3Ahigh
 [12]: https://github.com/Gabriel-p/ocaat/issues
