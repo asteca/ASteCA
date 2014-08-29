@@ -12,6 +12,7 @@ See the code's [site][1] for more information. <-- *Not ready yet*.
  - [Python](#python)
  - [Dependencies](#dependencies)
  - [Extra packages](#extra-packages)
+ - [Python distributions](#python-distributions)
  - [Theoretical isochrones](#theoretical-isochrones)
 - [To do](#to-do)
 - [Versioning](#versioning)
@@ -41,8 +42,6 @@ The code has been tested with the July 2014 release of [python](www.python.org):
 
 It should also work on older versions, if you encounter any problems please contact me or [open a new issue](https://github.com/Gabriel-p/ocaat/issues/new).
 
-The best and easiest way to install and manage  several versions of python and its packages without  affecting your system is [pyenv](https://github.com/yyuu/pyenv).
-
 ### Dependencies
 
 The packages listed below are required to run OCAAT.
@@ -53,6 +52,15 @@ The packages listed below are required to run OCAAT.
 
 These versions are the ones I used, the code could work with older versions of the
 packages but I can't guarantee it.
+
+### Python distributions
+
+An alternative to installing packages separately is to download a Python distribution which comes with many packages already installed:
+
+* [Anaconda](https://store.continuum.io/cshop/anaconda/)
+* [Canopy](https://www.enthought.com/products/canopy/)
+
+The best and easiest way to install and manage several versions of python and its packages without affecting your system is [pyenv](https://github.com/yyuu/pyenv).
 
 ### Extra packages
 If you want to use the [function](https://github.com/Gabriel-p/ocaat/blob/master/functions/get_p_value.py) that obtains the cluster probability of being a true cluster, the following software is needed:
