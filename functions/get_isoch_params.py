@@ -25,38 +25,46 @@ def get_ip(ps_params):
         li_s = "#\tIsochrone\tZ ="
         if cmd_select == 1:
             # Mass, V, B
-            mas_i, mag_i, col_i = 1, 9, 8
+            mas_i, mag1_i, mag2_i = 1, 9, 8
         elif cmd_select == 2:
             # Mass, V, I
-            mas_i, mag_i, col_i = 1, 9, 11
+            mas_i, mag1_i, mag2_i = 1, 9, 11
         elif cmd_select == 3:
             # Mass, B, U
-            mas_i, mag_i, col_i = 1, 8, 7
+            mas_i, mag1_i, mag2_i = 1, 8, 7
         elif cmd_select == 4:
             # Mass, T1, C
-            mas_i, mag_i, col_i = 1, 9, 7
+            mas_i, mag1_i, mag2_i = 1, 9, 7
     elif iso_select == 'PAR':
         li_s = "#\tIsochrone  Z = "
+        # Mass column.
+        mas_i = 2
         if cmd_select == 1:
-            # Mass, V, B
-            mas_i, mag_i, col_i = 2, 10, 9
+            # V, B
+            mag1_i, mag2_i = 10, 9
         elif cmd_select == 2:
-            # Mass, V, I
-            mas_i, mag_i, col_i = 2, 10, 12
+            # V, I
+            mag1_i, mag2_i = 10, 12
         if cmd_select == 3:
-            # Mass, B, U
-            mas_i, mag_i, col_i = 2, 9, 8
+            # V, U
+            mag1_i, mag2_i = 10, 8
         elif cmd_select == 4:
-            # Mass, T1, C
-            mas_i, mag_i, col_i = 2, 10, 8
+            # T1, C
+            mag1_i, mag2_i = 10, 8
         elif cmd_select == 5:
-            # Mass, J, H
-            mas_i, mag_i, col_i = 2, 8, 9
+            # J, H
+            mag1_i, mag2_i = 8, 9
+        elif cmd_select == 6:
+            # H, J
+            mag1_i, mag2_i = 9, 8
+        elif cmd_select == 7:
+            # K_s, H
+            mag1_i, mag2_i = 10, 9
 
     # String that identifies the beginning of a new isochrone.
     line_start = li_s
     # Read columns indexes for this Girardi output file.
-    mini_indx, mag_indx, col_indx = mas_i, mag_i, col_i
+    mini_indx, mag1_indx, mag2_indx = mas_i, mag1_i, mag2_i
 
     # Read ranges and steps for these parameters.
     z_min, z_max, z_step = m_rs
@@ -157,13 +165,13 @@ def get_ip(ps_params):
                             # Color.
                             # Generate colors correclty,
                             if cmd_select in {2, 5}:
-                                isoch_col.append(float(reader[mag_indx]) -
-                                float(reader[col_indx]))
+                                isoch_col.append(float(reader[mag1_indx]) -
+                                float(reader[mag2_indx]))
                             else:
-                                isoch_col.append(float(reader[col_indx]) -
-                                float(reader[mag_indx]))
+                                isoch_col.append(float(reader[mag2_indx]) -
+                                float(reader[mag1_indx]))
                             # Magnitude.
-                            isoch_mag.append(float(reader[mag_indx]))
+                            isoch_mag.append(float(reader[mag1_indx]))
                             # Mass
                             isoch_mas.append(float(reader[mini_indx]))
 

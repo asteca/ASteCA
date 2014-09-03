@@ -61,16 +61,14 @@ sampled from a certain IMF, whose masses sum up to a total cluster mass.
 \section{Adding CMD support}
 
 In order to add support for a new CMD the following functions should be modified:
-\begin{itemize}
-\item \texttt{get-in-params}, add the label for the color.
+\begin{enumerate}
+\item \texttt{get-in-params}, add names of filters and positions needed to form the color
 \item \texttt{get-isoch-params}, add the columns in the theoretical isochrone
 where the code should look for the filters used.
 \item \texttt{move-isochrone}, add the extinction equations that define how
-the this effect along with the distance modulus affect the magnitude and color
+this effect along with the distance modulus affect the magnitude and color
 in the CMD.
-\item \texttt{make-plots}, add name of the new filter in the integrated color
-plot block.
-\end{itemize}
+\end{enumerate}
 
 \section{Integrated magnitudes}
 

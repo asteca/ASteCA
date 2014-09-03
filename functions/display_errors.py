@@ -17,8 +17,12 @@ def disp_errors(er_mode, mag, err_plot, acpt_stars, rjct_stars, err_pck,
     # Error parameters.
     er_params, bright_end, n_interv, interv_mag, mag_value = err_pck
     e_max, be, be_e = er_params[1:4]
-    # Name for axes.
-    x_ax, y_ax = axes_params[0], axes_params[1]
+    # Define names for CMD axes.
+    y_ax, x_ax0, m_ord = axes_params[0:3]
+    if m_ord == 21:
+        x_ax = '(' + x_ax0 + '-' + y_ax + ')'
+    elif m_ord == 12:
+        x_ax = '(' + y_ax + '-' + x_ax0 + ')'
 
     # Plot all outputs
     plt.figure(figsize=(10, 8))  # create the top-level container

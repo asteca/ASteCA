@@ -151,9 +151,7 @@ def ocaat_funcs(myfile, sub_dir, out_file_name, gip_params):
 
     # Calculate integrated magnitude.
     integr_return = g_i_m(center_cl, clust_rad, cluster_region, field_region,
-        flag_area_stronger)
-    print 'Integrated color magnitude distribution obtained (%0.2f).' % \
-        (integr_return[5] - integr_return[2])
+        axes_params, flag_area_stronger)
 
     # Only run if both R and rpy2 packages are installed.
     if all(f is True for f in r_flags):

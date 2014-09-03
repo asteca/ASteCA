@@ -53,11 +53,15 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
         return cd * (1 / np.sqrt(1 + (np.asarray(x) / rc) ** 2) -
             1 / np.sqrt(1 + (rt / rc) ** 2)) ** 2 + bg
 
-    # Name for axes.
-    x_ax, y_ax = axes_params[0], axes_params[1]
+    # Define names for CMD axes.
+    y_ax, x_ax0, m_ord = axes_params[0:3]
+    if m_ord == 21:
+        x_ax = '(' + x_ax0 + '-' + y_ax + ')'
+    elif m_ord == 12:
+        x_ax = '(' + y_ax + '-' + x_ax0 + ')'
 
     # Define plot limits for *all* CMD diagrams.
-    x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd = axes_params[2]
+    x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd = axes_params[3]
     col1_min, col1_max = max(x_min_cmd, min(col1_data) - 0.2),\
     min(x_max_cmd, max(col1_data) + 0.2)
     mag_min, mag_max = min(y_max_cmd, max(mag_data) + 0.5),\
@@ -65,7 +69,6 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
 
     # Unpack params.
     # Selected system params.
-    cmd_select = ps_params[1]
     m_rs, a_rs, e_rs, d_rs = ps_params[3:]
     # Parameters from get_center function.
     bin_list, h_filter, bin_center, centers_kde, cent_stats, kde_pl = \
@@ -84,8 +87,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     # Luminosity functions.
     x_cl, y_cl, x_fl, y_fl = lum_func
     # Integrated magnitude distribution.
-    cl_reg_mag, fl_reg_mag, integ_mag, cl_reg_col, fl_reg_col, integ_col =\
-    integr_return
+    cl_reg_mag1, fl_reg_mag1, integ_mag1, cl_reg_mag2, fl_reg_mag2, \
+    integ_mag2 = integr_return
     # Reduced membership.
     min_prob = red_return[1]
     # Best isochrone fit params.
@@ -117,7 +120,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     text = 'Bin: %.1f px' % (bin_list[0])
     plt.text(0.7, 0.94, text, transform=ax0.transAxes,
              bbox=dict(facecolor='white', alpha=0.8), fontsize=10)
-    plt.imshow(h_filter.transpose(), origin='lower', aspect='auto')
+    plt.imshow(h_filter.transpose(), origin='lower')
 
     # 2D not-weighted histograms' centers.
     ax1 = plt.subplot(gs1[0:2, 2:4])
@@ -631,53 +634,47 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     # Integrated magnitude and color.
     ax13 = plt.subplot(gs1[6:8, 2:4])
     # If field lists are not empty.
-    if fl_reg_mag[0].any() and fl_reg_col[0].any():
-        x_min = min(min(cl_reg_mag[0]), min(fl_reg_mag[0]),
-            min(cl_reg_col[0]), min(fl_reg_col[0])) - 0.2
-        x_max = max(max(cl_reg_mag[0]), max(fl_reg_mag[0]),
-            max(cl_reg_col[0]), max(fl_reg_col[0])) + 0.2
-        y_min = max(max(cl_reg_mag[1]), max(fl_reg_mag[1]),
-            max(cl_reg_col[1]), max(fl_reg_col[1])) + 0.2
-        y_max = min(min(cl_reg_mag[1]), min(fl_reg_mag[1]),
-            min(cl_reg_col[1]), min(fl_reg_col[1])) - 0.2
+    if fl_reg_mag1[0].any() and fl_reg_mag2[0].any():
+        x_min = min(min(cl_reg_mag1[0]), min(fl_reg_mag1[0]),
+            min(cl_reg_mag2[0]), min(fl_reg_mag2[0])) - 0.2
+        x_max = max(max(cl_reg_mag1[0]), max(fl_reg_mag1[0]),
+            max(cl_reg_mag2[0]), max(fl_reg_mag2[0])) + 0.2
+        y_min = max(max(cl_reg_mag1[1]), max(fl_reg_mag1[1]),
+            max(cl_reg_mag2[1]), max(fl_reg_mag2[1])) + 0.2
+        y_max = min(min(cl_reg_mag1[1]), min(fl_reg_mag1[1]),
+            min(cl_reg_mag2[1]), min(fl_reg_mag2[1])) - 0.2
     else:
-        x_min, x_max = min(min(cl_reg_mag[0]), min(cl_reg_col[0])) - 0.2,\
-        max(max(cl_reg_mag[0]), max(cl_reg_col[0])) + 0.2
-        y_min, y_max = max(max(cl_reg_mag[1]), max(cl_reg_col[1])) + 0.2,\
-        min(min(cl_reg_mag[1]), min(cl_reg_col[1])) - 0.2
+        x_min, x_max = min(min(cl_reg_mag1[0]), min(cl_reg_mag2[0])) - 0.2,\
+        max(max(cl_reg_mag1[0]), max(cl_reg_mag2[0])) + 0.2
+        y_min, y_max = max(max(cl_reg_mag1[1]), max(cl_reg_mag2[1])) + 0.2,\
+        min(min(cl_reg_mag1[1]), min(cl_reg_mag2[1])) - 0.2
     plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
     ax13.set_xlabel('$mag$', fontsize=18)
     ax13.set_ylabel('$mag^*$', fontsize=18)
     ax13.minorticks_on()
     ax13.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
-    # System used.
-    if cmd_select == 1:
-        x_ax0 = 'B'
-    elif cmd_select == 2:
-        x_ax0 = 'I'
-    elif cmd_select == 3:
-        x_ax0 = 'U'
-    elif cmd_select == 4:
-        x_ax0 = 'C'
-    elif cmd_select == 5:
-        x_ax0 = 'H'
     text1 = '$' + y_ax + '^{*}_{cl+fl}$'
     text2 = '$' + x_ax0 + '^{*}_{cl+fl}$'
     # Cluster + field integrated magnitude curve.
-    plt.plot(cl_reg_mag[0], cl_reg_mag[1], 'r-', lw=1., label=text1)
+    plt.plot(cl_reg_mag1[0], cl_reg_mag1[1], 'r-', lw=1., label=text1)
     # Cluster integrated magnitude.
-    plt.plot(cl_reg_col[0], cl_reg_col[1], 'r:', lw=2., label=text2)
+    plt.plot(cl_reg_mag2[0], cl_reg_mag2[1], 'r:', lw=2., label=text2)
     # Check if field regiones were defined.
     if not flag_area_stronger:
         text3 = '$' + y_ax + '^{*}_{fl}$'
         text4 = '$' + x_ax0 + '^{*}_{fl}$'
         # Field average integrated magnitude curve.
-        plt.plot(fl_reg_mag[0], fl_reg_mag[1], 'b-', lw=1., label=text3)
+        plt.plot(fl_reg_mag1[0], fl_reg_mag1[1], 'b-', lw=1., label=text3)
         # Field average integrated magnitude.
-        plt.plot(fl_reg_col[0], fl_reg_col[1], 'b:', lw=2., label=text4)
-    text = '$(' + x_ax0 + '^{*} -' + y_ax + '^{*} )_{cl} = %0.2f$' % \
-    (integ_col - integ_mag)
+        plt.plot(fl_reg_mag2[0], fl_reg_mag2[1], 'b:', lw=2., label=text4)
+    # Check how the second magnitude whould be formed.
+    if m_ord == 21:
+        sig, text0 = 1., x_ax0 + '^{*} -' + y_ax
+    elif m_ord == 12:
+        sig, text0 = -1., y_ax + '^{*} -' + x_ax0
+    int_col = sig * (integ_mag2 - integ_mag1)
+    text = '$(' + text0 + '^{*} )_{cl} = %0.2f$' % int_col
     plt.text(0.25, 0.15, text, transform=ax13.transAxes,
          bbox=dict(facecolor='white', alpha=0.75), fontsize=13)
     lines, labels = ax13.get_legend_handles_labels()

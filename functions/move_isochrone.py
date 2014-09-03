@@ -76,4 +76,30 @@ def move_isoch(cmd_sel, isochrone, e, d):
         iso_moved = [np.array(isochrone[0]) + 0.34 * e,
                      np.array(isochrone[1]) + d + A_J]
 
+    elif cmd_sel == 6:
+        # For 2MASS system.
+        #
+        # E(J-H) = 0.34*E(B-V) = (J-H) - (J-H)o
+        # A_H = A_J - 0.34*E(B-V) = 0.82*E(B-V) - 0.34*E(B-V) = 0.48*E(B-V)
+        #
+        # (J-H) = (J-H)o + 0.34*E(B-V)
+        # H = M_H + (m-M)o + A_H
+        #
+        A_H = 0.48 * e
+        iso_moved = [np.array(isochrone[0]) + 0.34 * e,
+                     np.array(isochrone[1]) + d + A_H]
+
+    elif cmd_sel == 7:
+        # For 2MASS system.
+        #
+        # E(H-K) = 0.2*E(B-V) = (H-K) - (H-K)o
+        # A_K = A_H - 0.2*E(B-V) = 0.48*E(B-V) - 0.2*E(B-V) = 0.28*E(B-V)
+        #
+        # (H-K) = (H-K)o + 0.2*E(B-V)
+        # K = M_K + (m-M)o + A_K
+        #
+        A_K = 0.28 * e
+        iso_moved = [np.array(isochrone[0]) + 0.2 * e,
+                     np.array(isochrone[1]) + d + A_K]
+
     return iso_moved

@@ -128,18 +128,12 @@ def get_in_params(mypath):
     pv_params = [pv0_params, pv1_params, pv2_params]
     da_params = [da0_params, da1_params, input_dir]
 
-    # Fix photometric system according to the CMD selected.
-    #if cmd_select == 1 or cmd_select == 2:
-        #sys_select = 'UBVI'
-    #elif cmd_select == 3:
-        #sys_select = 'WASH'
-
     # Fix isochrones location according to the CMD and set selected.
     if cmd_select in {1, 2, 3}:
         text1 = 'ubvi'
     elif cmd_select in {4}:
         text1 = 'wash'
-    elif cmd_select in {5}:
+    elif cmd_select in {5, 6, 7}:
         text1 = '2mass'
     if iso_select == 'MAR':
         text2 = 'marigo'
@@ -148,33 +142,32 @@ def get_in_params(mypath):
     # Set iso_path according to the above values.
     iso_path = join(mypath + '/isochrones/' + 'iso_' + text1 + '_' + text2)
 
+    # Fix magnitude and color names for the CMD axis.
+    # m_1 is the y axis magnitude, m_2 is the magnitude used to obtain the
+    # color index and the third value in each key indicates how the color
+    # is to be formed, e.g: '12' means (m_1 - m_2)
+    cmds_dic = {1: ('V', 'B', 21), 2: ('V', 'I', 12), 3: ('V', 'U', 21),
+        4: ('{T_1}', 'C', 21), 5: ('J', 'H', 12), 6: ('H', 'J', 21),
+        7: ('K', 'H', 21)}
+    m_1, m_2, m_ord = cmds_dic[cmd_select]
+
+    # Fixed maximum and minimum axis values for the CMD plots.
+    # col_min col_max mag_min mag_max
+    xy_minmax = [-1., 4., 7., 30.]
+    # Store axes params.
+    axes_params = [m_1, m_2, m_ord, xy_minmax]
+
     # Fix metallicity and age step value since this is determined by the
     # stored isochrones.
     m_rs.append(0.0005)
     a_rs.append(0.05)
     ps_params = [iso_path, cmd_select, iso_select, m_rs, a_rs, e_rs, d_rs]
 
+    # Store GA params in lists.
     bf_params = [bf_flag, best_fit_algor, N_b]
     sc_params = [IMF_name, tot_mass, f_bin, q_bin]
     ga_params = [n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es]
     rm_params = [flag_red_memb, min_prob]
-
-    # Fix magnitude and color names for the CMD axis
-    if cmd_select == 1:
-        x_ax, y_ax = '(B-V)', 'V'
-    elif cmd_select == 2:
-        x_ax, y_ax = '(V-I)', 'V'
-    elif cmd_select == 3:
-        x_ax, y_ax = '(U-B)', 'V'
-    elif cmd_select == 4:
-        x_ax, y_ax = '(C-{T_1})', '{T_1}'
-    elif cmd_select == 5:
-        x_ax, y_ax = '(J-H)', 'J'
-    # Maximum and minimum axis values for the CMD plots.
-    # col_min col_max mag_min mag_max
-    xy_minmax = [-1., 4., 7., 30.]
-    # Store axes params.
-    axes_params = [x_ax, y_ax, xy_minmax]
 
     return mode, in_dirs, gd_params, gc_params, cr_params, kp_flag, \
     er_params, gr_params, pv_params, da_params, ps_params, bf_params, \
