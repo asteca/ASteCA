@@ -6,6 +6,7 @@ Created on Thu Nov 28 20:55:57 2013
 """
 
 import numpy as np
+from scipy.interpolate import spline
 
 
 def calc_integ_mag(st_reg):
@@ -43,9 +44,22 @@ def calc_integ_mag(st_reg):
     return reg_mag
 
 
-def movingaverage(interval, window_size):
-    window = np.ones(int(window_size)) / float(window_size)
-    return np.convolve(interval, window, 'same')
+def field_reg_integ_mag_curve(fl_reg_m):
+    '''
+    Return smooth averaged curve for integraed magnitude.
+    '''
+
+    # Average all field regions for the integrated magnitude.
+    fl_reg_m1 = np.average(fl_reg_m, axis=0)
+
+    # Smooth curve for the averaged integrated magnitude.
+    fl_reg_mag = []
+    # Magnitude values.
+    fl_reg_mag.append(np.linspace(min(fl_reg_m1[0]), max(fl_reg_m1[0]), 100))
+    # Integ magnitude values.
+    fl_reg_mag.append(spline(fl_reg_m1[0], fl_reg_m1[1], fl_reg_mag[0]))
+
+    return fl_reg_mag
 
 
 def integ_mag(center_cl, clust_rad, cluster_region, field_region, axes_params,
@@ -59,10 +73,7 @@ def integ_mag(center_cl, clust_rad, cluster_region, field_region, axes_params,
     # is substracted from the second one or the other way around.
     m_ord = axes_params[2]
     # Check how the second magnitude whould be formed.
-    if m_ord == 21:
-        sig = 1.
-    elif m_ord == 12:
-        sig = -1.
+    sig = 1. if m_ord == 21 else -1.
 
     # Only use stars inside cluster's radius.
     cl_region_r = [[], []]
@@ -79,51 +90,18 @@ def integ_mag(center_cl, clust_rad, cluster_region, field_region, axes_params,
     cl_reg_mag2 = calc_integ_mag(cl_region_r[1])
 
     if flag_area_stronger is not True:
+
         # Run for every field region defined.
-        fl_reg_m11, fl_reg_m21 = [[], []], [[], []]
+        fl_reg_m = [[], []]
         for f_reg in field_region:
-
             # First magnitude values.
-            fl_reg_m10 = calc_integ_mag(zip(*f_reg)[3])
-            fl_reg_m11[0].extend(fl_reg_m10[0])
-            fl_reg_m11[1].extend(fl_reg_m10[1])
+            fl_reg_m[0].append(calc_integ_mag(zip(*f_reg)[3]))
             # Second magnitude values.
-            fl_reg_m20 = calc_integ_mag(np.asarray(zip(*f_reg)[3]) +
-                sig * np.asarray(zip(*f_reg)[5]))
-            fl_reg_m21[0].extend(fl_reg_m20[0])
-            fl_reg_m21[1].extend(fl_reg_m20[1])
+            fl_reg_m[1].append(calc_integ_mag(np.asarray(zip(*f_reg)[3]) +
+                sig * np.asarray(zip(*f_reg)[5])))
 
-        # Sort arrays reversing the integrated magnitudes.
-        fl_reg_m12, fl_reg_m22 = [[], []], [[], []]
-        fl_reg_m12[0] = np.sort(fl_reg_m11[0])
-        fl_reg_m12[1] = np.sort(fl_reg_m11[1])[::-1]
-        fl_reg_m22[0] = np.sort(fl_reg_m21[0])
-        fl_reg_m22[1] = np.sort(fl_reg_m21[1])[::-1]
-
-        # Interpolate all curves to obtain final field integrated and color
-        # magnitude.
-        fl_reg_mag1, fl_reg_mag2 = [[], []], [[], []]
-        fl_reg_mag1[0] = np.linspace(min(fl_reg_m12[0]), max(fl_reg_m12[0]),
-            20)
-        fl_reg_mag1[1] = np.interp(fl_reg_mag1[0], fl_reg_m12[0], fl_reg_m12[1])
-        fl_reg_mag2[0] = np.linspace(min(fl_reg_m22[0]), max(fl_reg_m22[0]),
-            20)
-        fl_reg_mag2[1] = np.interp(fl_reg_mag2[0], fl_reg_m22[0], fl_reg_m22[1])
-
-        smoothed = movingaverage(fl_reg_m21[0], 50)
-        import matplotlib.pyplot as plt
-        print fl_reg_m21
-        #for i, f_reg in enumerate(field_region):
-            #print i, len(zip(*f_reg)[3])
-            #fl_reg_m20 = calc_integ_mag(np.asarray(zip(*f_reg)[3]) +
-                #sig * np.asarray(zip(*f_reg)[5]))
-            #plt.scatter(fl_reg_m20[0], fl_reg_m20[1], label=i)
-        #plt.plot(fl_reg_mag2[0], fl_reg_mag2[1], label='interp', c='r')
-        plt.scatter(fl_reg_m21[0], fl_reg_m21[1], label='mov_avr', c='b')
-        #plt.gca().invert_yaxis()
-        #plt.legend()
-        plt.show()
-        raw_input()
+        fl_reg_mag1 = field_reg_integ_mag_curve(fl_reg_m[0])
+        fl_reg_mag2 = field_reg_integ_mag_curve(fl_reg_m[1])
 
         # Obtain integrated magnitude of clean cluster region, ie: substracting
         # the field contribution.
