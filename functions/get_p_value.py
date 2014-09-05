@@ -56,8 +56,8 @@ def get_CMD(region):
     return matrix
 
 
-def get_pval(cluster_region, field_region, col1_data, mag_data, center_cl,
-    clust_rad, pv_params, flag_area_stronger):
+def get_pval(cl_region, field_region, col1_data, mag_data, pv_params,
+        flag_area_stronger):
     '''
     Compare the cluster region KDE with all the field region KDEs using Duong's
     ks package (developed in R) to obtain a p-value. This value will be close
@@ -72,16 +72,8 @@ def get_pval(cluster_region, field_region, col1_data, mag_data, center_cl,
 
     flag_pval_test, run_set, num_runs = pv_params
 
-    # Only use stars inside cluster's radius.
-    cluster_region_r = []
-    for star in cluster_region:
-        dist = np.sqrt((center_cl[0] - star[1]) ** 2 +
-        (center_cl[1] - star[2]) ** 2)
-        if dist <= clust_rad:
-            cluster_region_r.append(star)
-
     # skip test if < 10 members are found within the cluster's radius.
-    flag_few_members = False if len(cluster_region_r) > 10 else True
+    flag_few_members = False if len(cl_region) > 10 else True
     if flag_pval_test and flag_few_members:
         print '  WARNING: < 10 stars in cluster region, skipping test.'
         flag_pval_test = False
@@ -113,7 +105,7 @@ def get_pval(cluster_region, field_region, col1_data, mag_data, center_cl,
             for indx, f_region in enumerate(field_region):
 
                 # CMD for cluster region.
-                matrix_cl = get_CMD(cluster_region_r)
+                matrix_cl = get_CMD(cl_region)
                 rows_cl = int(len(matrix_cl) / 2)
                 # CMD for 1st field region.
                 matrix_f1 = get_CMD(f_region)

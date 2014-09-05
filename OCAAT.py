@@ -15,8 +15,10 @@ def main():
     Main function. Reads input data files and calls the container function.
     '''
 
+    __version__ = "1.0.0-beta"
+
     print '-------------------------------------------'
-    print '            OCAAT Beta 1'
+    print '            OCAAT %s' % __version__
     print '-------------------------------------------\n'
 
     # Path where the code is running

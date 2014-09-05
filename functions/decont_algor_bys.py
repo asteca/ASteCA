@@ -92,9 +92,8 @@ def mpas(cl_reg_rad, runs_fields_probs):
     return membership_prob_avrg_sort
 
 
-def field_decont_bys(flag_area_stronger, cluster_region, field_region,
-                     center_cl, clust_rad, clust_name,
-                     sub_dir, da_params):
+def bys_da(flag_area_stronger, cl_region, field_region, clust_name, sub_dir,
+        da_params):
     '''
     Bayesian field decontamination algorithm.
     '''
@@ -118,15 +117,6 @@ def field_decont_bys(flag_area_stronger, cluster_region, field_region,
             # File does not exist.
             print "  WARNING: members file does not exist. Using 'skip'."
             mode = 'skip'
-
-    # Define clean cluster_region as that composed of those stars located
-    # inside the cluster's radius.
-    cl_reg_rad = []
-    for star in cluster_region:
-        dist = np.sqrt((center_cl[0] - star[1]) ** 2 +
-        (center_cl[1] - star[2]) ** 2)
-        if dist <= clust_rad:
-            cl_reg_rad.append(star)
 
     flag_decont_skip = False
     # Run algorithm for any of these selections.
@@ -164,23 +154,23 @@ def field_decont_bys(flag_area_stronger, cluster_region, field_region,
 
                 # Obtain likelihoods for each star in the clean cluster region
                 # using this field region, ie: P(A)
-                reg_decont_fl = likelihood(fl_region, cl_reg_rad)
+                reg_decont_fl = likelihood(fl_region, cl_region)
                 # Store number of stars in field region.
                 n_fl = len(fl_region)
 
                 # Randomly shuffle the stars in the cluster region.
-                clust_reg_shuffle = np.random.permutation(cl_reg_rad)
+                clust_reg_shuffle = np.random.permutation(cl_region)
                 # Remove n_fl random stars from the cluster region and pass
                 # it to the function that obtains the likelihoods for each
                 # star in the "cleaned" cluster region, ie: P(B)
-                if n_fl < len(cl_reg_rad):
+                if n_fl < len(cl_region):
                     clust_reg_clean = clust_reg_shuffle[n_fl:]
                 else:
                     # If field region has more stars than the cluster region,
                     # don't remove any star. This should not happen though.
                     clust_reg_clean = clust_reg_shuffle
                 n_cl = len(clust_reg_clean)
-                reg_decont_cl = likelihood(clust_reg_clean, cl_reg_rad)
+                reg_decont_cl = likelihood(clust_reg_clean, cl_region)
 
                 # Obtain Bayesian probability for each star in cl_reg_rad.
                 p_a, p_b = np.array(reg_decont_fl), np.array(reg_decont_cl)
@@ -215,7 +205,7 @@ def field_decont_bys(flag_area_stronger, cluster_region, field_region,
         probs = []
         # Assign probabilities read from file according to the star's IDs.
         # Those stars not present in the list are assigned a very low value.
-        for indx, star in enumerate(cl_reg_rad):
+        for indx, star in enumerate(cl_region):
             if star[0] in id_list:
                 # Index of star in file.
                 i = id_list.index(star[0])
@@ -230,10 +220,10 @@ def field_decont_bys(flag_area_stronger, cluster_region, field_region,
     elif mode == 'skip':
         print 'Assign equal probabilities to all stars inside cluster radius.'
         # Assign equal probabilities to all stars.
-        runs_fields_probs = [[[1.] * len(cl_reg_rad)]]
+        runs_fields_probs = [[[1.] * len(cl_region)]]
         flag_decont_skip = True
 
     # Call function to average all probabilities.
-    memb_prob_avrg_sort = mpas(cl_reg_rad, runs_fields_probs)
+    memb_prob_avrg_sort = mpas(cl_region, runs_fields_probs)
 
     return memb_prob_avrg_sort, flag_decont_skip

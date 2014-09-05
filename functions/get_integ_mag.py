@@ -62,8 +62,7 @@ def field_reg_integ_mag_curve(fl_reg_m):
     return fl_reg_mag
 
 
-def integ_mag(center_cl, clust_rad, cluster_region, field_region, axes_params,
-    flag_area_stronger):
+def integ_mag(cl_region, field_region, axes_params, flag_area_stronger):
     '''
     Obtain integrated magnitude using all stars inside the cluster's radius for
     several limits in magnitude.
@@ -77,14 +76,11 @@ def integ_mag(center_cl, clust_rad, cluster_region, field_region, axes_params,
 
     # Only use stars inside cluster's radius.
     cl_region_r = [[], []]
-    for star in cluster_region:
-        dist = np.sqrt((center_cl[0] - star[1]) ** 2 +
-        (center_cl[1] - star[2]) ** 2)
-        if dist <= clust_rad:
-            # Append first magnitude.
-            cl_region_r[0].append(star[3])
-            # Append second magnitude.
-            cl_region_r[1].append(star[3] + sig * star[5])
+    for star in cl_region:
+        # Append first magnitude.
+        cl_region_r[0].append(star[3])
+        # Append second magnitude.
+        cl_region_r[1].append(star[3] + sig * star[5])
 
     cl_reg_mag1 = calc_integ_mag(cl_region_r[0])
     cl_reg_mag2 = calc_integ_mag(cl_region_r[1])

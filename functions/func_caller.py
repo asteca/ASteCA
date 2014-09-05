@@ -21,7 +21,7 @@ from functions.get_integ_mag import integ_mag as g_i_m
 from functions.get_members_number import get_memb_num as g_m_n
 from functions.get_cont_index import cont_indx as g_c_i
 from functions.get_regions import get_regions as g_r
-from functions.field_decont_bys import field_decont_bys as fdb
+from functions.decont_algor_bys import bys_da as dab
 from functions.get_lf import lf
 from functions.get_isoch_params import ip
 from functions.reduce_membership import red_memb as rm
@@ -132,34 +132,33 @@ def ocaat_funcs(myfile, sub_dir, out_file_name, gip_params):
     ear(phot_data, axes_params, er_params, mode, semi_return)
 
     # Get stars in and out of cluster's radius.
-    stars_in, stars_out, stars_in_rjct, stars_out_rjct = gio(center_cl,
+    cl_region, stars_out, stars_in_rjct, stars_out_rjct = gio(center_cl,
         clust_rad, acpt_stars, rjct_stars)
     print "Stars separated in/out of cluster's boundaries."
 
-    # Get cluster + field regions around the cluster's center.
-    flag_area_stronger, cluster_region, field_region = g_r(bin_center,
-        bin_width, h_not_filt, clust_rad, H_manual, stars_in, stars_out,
+    # Field regions around the cluster's center.
+    flag_area_stronger, cl_reg_big, field_region = g_r(bin_center,
+        bin_width, h_not_filt, clust_rad, H_manual, cl_region, stars_out,
         gr_params)
-    print 'Cluster + field stars regions obtained (%d).' % len(field_region)
+    print 'Field stars regions obtained (%d).' % len(field_region)
 
     # Get the luminosity function and completeness level for each magnitude
     # bin. The completeness will be used by the isochrone/synthetic cluster
     # fitting algorithm.
-    lum_func, completeness = lf(flag_area_stronger, mag_data, cluster_region,
+    lum_func, completeness = lf(flag_area_stronger, mag_data, cl_region,
         field_region)
     print 'LF and Completeness magnitude levels obtained.'
 
     # Calculate integrated magnitude.
-    integr_return = g_i_m(center_cl, clust_rad, cluster_region, field_region,
-        axes_params, flag_area_stronger)
+    integr_return = g_i_m(cl_region, field_region, axes_params,
+        flag_area_stronger)
 
     # Only run if both R and rpy2 packages are installed.
     if all(f is True for f in r_flags):
         # R and rpy2 package are installed, call function.
         # Get physical cluster probability based on p_values distribution.
-        pval_test_params, flag_pval_test = g_pv(cluster_region,
-            field_region, col1_data, mag_data, center_cl, clust_rad, pv_params,
-            flag_area_stronger)
+        pval_test_params, flag_pval_test = g_pv(cl_region, field_region,
+            col1_data, mag_data, pv_params, flag_area_stronger)
     else:
         if pv_params[0]:
             # Something is not installed and function was told to run.
@@ -172,9 +171,8 @@ def ocaat_funcs(myfile, sub_dir, out_file_name, gip_params):
     # Apply decontamination algorithm if at least one equal-sized field region
     # was found around the cluster.
     print 'Applying decontamination algorithm.'
-    decont_algor_return = fdb(flag_area_stronger, cluster_region, field_region,
-                            center_cl, clust_rad, clust_name, sub_dir,
-                            da_params)
+    decont_algor_return = dab(flag_area_stronger, cl_region, field_region,
+                            clust_name, sub_dir, da_params)
     memb_prob_avrg_sort = decont_algor_return[0]
 
     # Create data file with membership probabilities.
@@ -226,12 +224,12 @@ def ocaat_funcs(myfile, sub_dir, out_file_name, gip_params):
     if pl_params[0]:
         mp(output_subdir, clust_name, x_data, y_data, center_params, rdp_params,
             field_dens, radius_params, cont_index, mag_data, col1_data,
-            err_plot, err_flags, kp_params, stars_in, stars_out,
+            err_plot, err_flags, kp_params, cl_region, stars_out,
             stars_in_rjct, stars_out_rjct, integr_return, n_c,
-            flag_area_stronger, cluster_region, field_region, flag_pval_test,
+            flag_area_stronger, cl_reg_big, field_region, flag_pval_test,
             pval_test_params, memb_prob_avrg_sort, lum_func, completeness,
-            bf_params, red_return, err_lst, bf_return, ga_params, er_params,
-            axes_params, ps_params, pl_params)
+            da_params, bf_params, red_return, err_lst, bf_return, ga_params,
+            er_params, axes_params, ps_params, pl_params)
         print 'Plots created.'
 
     # Move file to 'done' dir.

@@ -35,7 +35,7 @@ def mag_completeness(mag_data):
     return completeness
 
 
-def lf(flag_area_stronger, mag_data, cluster_region, field_region):
+def lf(flag_area_stronger, mag_data, cl_region, field_region):
     '''
     Obtain the Luminosity Function for the field regions and the cluster
     region normalized to their area. Substract the field curve from the
@@ -47,7 +47,7 @@ def lf(flag_area_stronger, mag_data, cluster_region, field_region):
     x_min, x_max = min(mag_data) - 0.5, max(mag_data) + 0.5
     bins_n = np.arange(int(x_min), int(x_max + binwidth), binwidth)
 
-    mag_cl = zip(*cluster_region)[3]
+    mag_cl = zip(*cl_region)[3]
     # Obtain histogram for cluster region.
     lf_clust, lf_edg_c = np.histogram(mag_cl, bins=bins_n)
 

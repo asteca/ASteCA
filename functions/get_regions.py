@@ -134,11 +134,13 @@ def get_regions(bin_center, bin_width, histo, clust_rad, h_manual, stars_in,
     # approximately (l*r)^2. See that: num_bins_area * width_bins[0]^2 =
     # (l*r)^2.
     num_bins_area = int(round(((length * clust_rad / bin_width) ** 2), 0))
-    # Get cluster_region.
+    # Store 'big' cluster region as the slightly larger area around the
+    # cluster's radius. Used for plotting.
     sp_indx = 0
-    cluster_region, sp_indx = spiral_region(histo, h_manual, stars_in,
+    cl_reg_big, sp_indx = spiral_region(histo, h_manual, stars_in,
                                             stars_out, x_c_b, y_c_b, spiral,
                                             num_bins_area, sp_indx)
+
     # Obtain field regions.
     # This list holds all the field regions.
     field_regions = []
@@ -178,4 +180,4 @@ def get_regions(bin_center, bin_width, histo, clust_rad, h_manual, stars_in,
         '  No field region defined.')
         flag_area_stronger = True
 
-    return flag_area_stronger, cluster_region, field_regions
+    return flag_area_stronger, cl_reg_big, field_regions
