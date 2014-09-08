@@ -2,31 +2,8 @@
 import numpy as np
 import bisect
 import matplotlib.pyplot as plt
-from scipy.ndimage.filters import gaussian_filter
 from scipy import stats
 from display_cent import disp_cent as d_c
-
-
-def center_fun(x_data, y_data, d_b):
-    '''
-    Function that returns 2D histograms for the observed field.
-    '''
-
-    xmin, xmax = min(x_data), max(x_data)
-    ymin, ymax = min(y_data), max(y_data)
-    rang = [[xmin, xmax], [ymin, ymax]]
-
-    # Number of bins in x,y given the bin width 'd_b'
-    binsxy = [int((xmax - xmin) / d_b), int((ymax - ymin) / d_b)]
-
-    # hist is the 2D histogran, *edges store the edges of the bins.
-    hist, xedges, yedges = np.histogram2d(x_data, y_data,
-        range=rang, bins=binsxy)
-
-    # H_g is the 2D histogram with a gaussian filter applied.
-    h_g = gaussian_filter(hist, 2, mode='constant')
-
-    return hist, xedges, yedges, h_g
 
 
 def kde_center(indx_b, x_data, y_data, x_cent_pix, y_cent_pix, radius,
@@ -37,7 +14,7 @@ def kde_center(indx_b, x_data, y_data, x_cent_pix, y_cent_pix, radius,
     # Generate zoom around initial center value.
     xmin_z, xmax_z = x_cent_pix - radius, x_cent_pix + radius
     ymin_z, ymax_z = y_cent_pix - radius, y_cent_pix + radius
-    # Use region around the center.
+    # Use reduced region around the center.
     x_zoom, y_zoom = [], []
     for indx, star_x in enumerate(x_data):
         if xmin_z < star_x < xmax_z and ymin_z < y_data[indx] < ymax_z:
@@ -47,7 +24,7 @@ def kde_center(indx_b, x_data, y_data, x_cent_pix, y_cent_pix, radius,
     # Define x,y grid.
     x, y = np.mgrid[xmin_z:xmax_z:100j, ymin_z:ymax_z:100j]
     positions = np.vstack([x.ravel(), y.ravel()])
-    # Obtain KDE.
+    # Obtain Gaussian KDE.
     kernel = stats.gaussian_kde(values)
     if gc_params[0] == 'auto':
         # Get default bandwidth value.
@@ -81,25 +58,18 @@ def kde_center(indx_b, x_data, y_data, x_cent_pix, y_cent_pix, radius,
     return x_cent_kde, y_cent_kde, e_cent, kde_plot
 
 
-def get_center(x_data, y_data, mag_data, gc_params, mode, semi_return):
+def get_center(x_data, y_data, mag_data, bin_list, gc_params, mode,
+    semi_return):
     """
     Obtains the center of the putative cluster. Returns the center values
     along with its errors and several arrays related to histograms, mainly for
     plotting purposes.
     """
 
-    xmin, xmax = min(x_data), max(x_data)
-    ymin, ymax = min(y_data), max(y_data)
-    rang = [[xmin, xmax], [ymin, ymax]]
-    x_span, y_span = max(x_data) - min(x_data), max(y_data) - min(y_data)
     # This is the radius used in auto mode to restrict the search of the
     # KDE center coordinates.
+    x_span, y_span = max(x_data) - min(x_data), max(y_data) - min(y_data)
     radius = 0.15 * min(x_span, y_span)
-
-    # Calculate the number of bins used.
-    min_rang = min((rang[0][1] - rang[0][0]), (rang[1][1] - rang[1][0]))
-    # Number of bins given by 1%, 2%, 3% and 4% of the minimum axis range.
-    bin_list = [(i * min_rang / 100.) for i in range(1, 5)]
 
     # Arrays that store the cluster's center values calculated varying
     # the bin size 'd_b'.
@@ -161,7 +131,7 @@ def get_center(x_data, y_data, mag_data, gc_params, mode, semi_return):
     abs(median_coords[1] - center_cl[1]) > 0.1 * center_cl[1]:
         flag_center_med = True
     # Raise a flag if the standard deviation for either coord is larger than
-    # 10% the center coord values.
+    # 10% of the center coord values.
     if std_dev[0] > 0.1 * center_cl[0] or std_dev[1] > 0.1 * center_cl[1]:
         flag_center_std = True
 
@@ -175,9 +145,11 @@ def get_center(x_data, y_data, mag_data, gc_params, mode, semi_return):
         cent_cl_semi, cl_rad_semi, cent_flag_semi, rad_flag_semi, \
         err_flag_semi = semi_return
 
+        # Only apply if flag is true, else skip semi-center assignment for
+        # this cluster.
         if cent_flag_semi == 1:
-            # Search for new center values using the initial center coordinates
-            # and radius given.
+            # Search for new center values using the center coordinates
+            # and radius given as initial values.
 
             # Call funct to obtain the pixel coords of the maximum KDE value.
             x_cent_kde, y_cent_kde, e_cent, kde_plot = kde_center(0, x_data,

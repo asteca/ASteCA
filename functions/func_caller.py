@@ -9,6 +9,7 @@ import gc  # Garbage collector.
 from functions.get_data_semi import get_semi as g_s
 from functions.get_phot_data import get_data as gd
 from functions.trim_frame import trim_frame as t_f
+from functions.get_2d_hists import get_2d_hists as g2dh
 from functions.get_center import get_center as g_c
 from functions.get_histo_manual import manual_histo as mh
 from functions.get_field_dens import field_dens as gfd
@@ -87,19 +88,22 @@ def ocaat_funcs(myfile, sub_dir, out_file_name, gip_params):
     x_data, y_data, mag_data, col1_data = phot_data[1], phot_data[2], \
     phot_data[3], phot_data[5]
 
-    # Get cluster's center values and errors, filtered 2D hist, non-filtered
-    # 2D hist, x,y bin centers and width of each bin
-    # used
-    center_params = g_c(x_data, y_data, mag_data, gc_params, mode, semi_return)
+    # Obtain 2D histograms for the observed frame using several bin widths.
+    hists_2d = g2dh(x_data, y_data)
+    print "Frame's 2D histogram obtained."
+
+    # Obtain filled 2D histogram for the field with star's values attached
+    # to each bin.
+    hist_2d_filled = mh(phot_data, hists_2d)
+    print 'Filled 2D histogram obtained.'
+
+    # Get cluster's center coordinates and errors.
+    center_params = g_c(x_data, y_data, mag_data, hists_2d, gc_params,
+        mode, semi_return)
     # Unpack values from list.
     bin_width, h_not_filt, hist_xyedges, bin_center = center_params[0][0], \
     center_params[1], center_params[2], center_params[4]
     center_cl = [center_params[5][0][0], center_params[5][0][1]]
-
-    # Obtain manual 2D histogram for the field with star's values attached
-    # to each bin.
-    H_manual = mh(phot_data, hist_xyedges)
-    print 'Manual 2D histogram obtained.'
 
     # Get density profile
     rdp_params = gdp(h_not_filt, bin_center, bin_width)
@@ -138,7 +142,7 @@ def ocaat_funcs(myfile, sub_dir, out_file_name, gip_params):
 
     # Field regions around the cluster's center.
     flag_area_stronger, cl_reg_big, field_region = g_r(bin_center,
-        bin_width, h_not_filt, clust_rad, H_manual, cl_region, stars_out,
+        bin_width, h_not_filt, clust_rad, hist_2d_filled, cl_region, stars_out,
         gr_params)
     print 'Field stars regions obtained (%d).' % len(field_region)
 
