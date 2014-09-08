@@ -1,10 +1,10 @@
 # ASteCA
 
-This code is still under heavy development.
+The code is still under development. Version 1.0.0 will be released as soon as the following list of issues is addressed:
 
-List of issues left until stable [version 1.0](https://github.com/Gabriel-p/asteca/milestones/1.0.0) is released.
+* [Issues left until version 1.0.0](https://github.com/Gabriel-p/asteca/milestones/1.0.0)
 
-See the code's [site][1] for more information. <-- *Not ready yet*.
+See the code's [site][1] for more information. <-- *Under development*.
 
 ## Contents
 
