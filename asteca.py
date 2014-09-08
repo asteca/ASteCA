@@ -7,7 +7,7 @@ import traceback
 from functions.read_paths import read_paths as rp
 from functions.get_in_params import get_in_params as gip
 from functions.create_out_data_file import create_out_data_file as c_o_d_f
-from functions.func_caller import ocaat_funcs as of
+from functions.func_caller import asteca_funcs as of
 
 
 def main():
@@ -18,13 +18,13 @@ def main():
     __version__ = "1.0.0-beta"
 
     print '-------------------------------------------'
-    print '            OCAAT %s' % __version__
+    print '            ASteCA %s' % __version__
     print '-------------------------------------------\n'
 
     # Path where the code is running
     mypath = realpath(join(getcwd(), dirname(__file__)))
 
-    # Read input parameters from ocaat_input.dat file.
+    # Read input parameters from params_input.dat file.
     gip_params = gip(mypath)
     # Read input/output paths.
     input_dir, output_dir = gip_params[1][:2]
@@ -39,7 +39,7 @@ def main():
         # Store name of file in 'myfile'.
         myfile = dir_files[1][f_indx]
 
-        # Read input parameters from ocaat_input.dat file again to reset params
+        # Read input parameters from params_input.dat file again to reset params
         # lists.
         gip_params = gip(mypath)
 

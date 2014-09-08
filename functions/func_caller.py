@@ -47,7 +47,7 @@ if exit_code != 0:
 r_flags = [R_inst, rpy2_inst]
 
 
-def ocaat_funcs(myfile, sub_dir, out_file_name, gip_params):
+def asteca_funcs(myfile, sub_dir, out_file_name, gip_params):
     '''
     Container which holds the calls to all the functions.
     '''

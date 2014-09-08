@@ -13,20 +13,20 @@ import sys
 def get_in_params(mypath):
     '''
     This function reads the input data parameters stored in the
-    'ocaat_input.dat' file and returns them packaged for each function to use.
+    'params_input.dat' file and returns them packaged for each function to use.
     '''
 
     # Store input and output dirs and path to input data file.
     input_dir = join(mypath, 'input/')
     output_dir = join(mypath, 'output/')
-    data_file = join(input_dir, 'ocaat_input.dat')
+    data_file = join(input_dir, 'params_input.dat')
 
-    # Check if ocaat_input.dat file exists.
+    # Check if params_input.dat file exists.
     if isfile(data_file):
         pass
     else:
         # Halt code.
-        sys.exit('FATAL: ocaat_input.dat file does not exist. Halting code.')
+        sys.exit('FATAL: params_input.dat file does not exist. Halting code.')
 
     # Read data from file.
     true_lst = ('True', 'true')

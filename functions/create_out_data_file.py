@@ -13,7 +13,7 @@ def create_out_data_file(output_dir):
     data file already in the folder.
     '''
 
-    out_file_name = 'ocaat_output.dat'
+    out_file_name = 'asteca_output.dat'
 
     # Check if output folder exists, if not create it.
     if not exists(output_dir):
