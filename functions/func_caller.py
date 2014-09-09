@@ -9,7 +9,7 @@ import gc  # Garbage collector.
 from functions.get_data_semi import get_semi as g_s
 from functions.get_phot_data import get_data as gd
 from functions.trim_frame import trim_frame as t_f
-from functions.get_2d_hists import get_2d_hists as g2dh
+from functions.get_2d_histo import get_2d_histo as g2dh
 from functions.get_center import get_center as g_c
 from functions.get_histo_manual import manual_histo as mh
 from functions.get_field_dens import field_dens as gfd
@@ -56,8 +56,8 @@ def asteca_funcs(myfile, sub_dir, out_file_name, gip_params):
     start = time.time()
 
     # Unpack input parameters.
-    mode, in_dirs, gd_params, gc_params, cr_params, kp_flag, er_params,\
-    gr_params, pv_params, da_params, ps_params, bf_params, \
+    mode, in_dirs, gd_params, gh_params, gc_params, cr_params, kp_flag, \
+    er_params, gr_params, pv_params, da_params, ps_params, bf_params, \
     sc_params, ga_params, rm_params, pl_params, flag_move_file, axes_params =\
     gip_params
     input_dir, output_dir, done_dir = in_dirs
@@ -75,7 +75,7 @@ def asteca_funcs(myfile, sub_dir, out_file_name, gip_params):
 
     # Store cluster's name
     clust_name = myfile[:-4]
-    print 'Analizing cluster %s.' % (clust_name)
+    print 'Analizing cluster %s (%s).' % (clust_name, mode)
 
     # Get data from semi-data input file.
     mode, semi_return = g_s(input_dir, clust_name, mode)
@@ -89,24 +89,24 @@ def asteca_funcs(myfile, sub_dir, out_file_name, gip_params):
     phot_data[3], phot_data[5]
 
     # Obtain 2D histograms for the observed frame using several bin widths.
-    hists_2d = g2dh(x_data, y_data)
-    print "Frame's 2D histogram obtained."
+    hist_lst = g2dh(x_data, y_data, gh_params)
+    bin_width = hist_lst[-1]
+    print "Frame's 2D histogram obtained (bin width: {:.2f}).".format(
+        bin_width)
 
     # Obtain filled 2D histogram for the field with star's values attached
     # to each bin.
-    hist_2d_filled = mh(phot_data, hists_2d)
+    hist_2d_filled = mh(phot_data, hist_lst)
     print 'Filled 2D histogram obtained.'
 
     # Get cluster's center coordinates and errors.
-    center_params = g_c(x_data, y_data, mag_data, hists_2d, gc_params,
+    center_params = g_c(x_data, y_data, mag_data, hist_lst, gc_params,
         mode, semi_return)
     # Unpack values from list.
-    bin_width, h_not_filt, hist_xyedges, bin_center = center_params[0][0], \
-    center_params[1], center_params[2], center_params[4]
-    center_cl = [center_params[5][0][0], center_params[5][0][1]]
+    cent_bin, kde_center = center_params[0], center_params[1][0]
 
     # Get density profile
-    rdp_params = gdp(h_not_filt, bin_center, bin_width)
+    rdp_params = gdp(hist_lst, cent_bin)
     radii, ring_density = rdp_params[:2]
     print 'Radial density profile (RDP) calculated.'
 
@@ -136,14 +136,13 @@ def asteca_funcs(myfile, sub_dir, out_file_name, gip_params):
     ear(phot_data, axes_params, er_params, mode, semi_return)
 
     # Get stars in and out of cluster's radius.
-    cl_region, stars_out, stars_in_rjct, stars_out_rjct = gio(center_cl,
+    cl_region, stars_out, stars_in_rjct, stars_out_rjct = gio(kde_center,
         clust_rad, acpt_stars, rjct_stars)
     print "Stars separated in/out of cluster's boundaries."
 
     # Field regions around the cluster's center.
-    flag_area_stronger, cl_reg_big, field_region = g_r(bin_center,
-        bin_width, h_not_filt, clust_rad, hist_2d_filled, cl_region, stars_out,
-        gr_params)
+    flag_area_stronger, cl_reg_big, field_region = g_r(hist_lst, cent_bin,
+        clust_rad, hist_2d_filled, cl_region, stars_out, gr_params)
     print 'Field stars regions obtained (%d).' % len(field_region)
 
     # Get the luminosity function and completeness level for each magnitude
@@ -226,7 +225,8 @@ def asteca_funcs(myfile, sub_dir, out_file_name, gip_params):
 
     # Make plots
     if pl_params[0]:
-        mp(output_subdir, clust_name, x_data, y_data, center_params, rdp_params,
+        mp(output_subdir, clust_name, x_data, y_data, bin_width,
+            center_params, rdp_params,
             field_dens, radius_params, cont_index, mag_data, col1_data,
             err_plot, err_flags, kp_params, cl_region, stars_out,
             stars_in_rjct, stars_out_rjct, integr_return, n_c,

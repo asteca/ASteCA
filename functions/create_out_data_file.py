@@ -25,29 +25,30 @@ def create_out_data_file(output_dir):
         # File already exists -> don't create a new one and append new lines.
         with open(output_dir + out_file_name):
             pass
-        print 'Output data file already exists.'
+        print 'Output data file already exists.\n'
     # File doesn't exist -> create new one.
     except IOError:
-        print 'Output data file created.'
+        print 'Output data file created.\n'
         out_data_file = open(output_dir + out_file_name, 'w')
         now_time = strftime("%Y-%m-%d %H:%M:%S")
         out_data_file.write("#\n\
 # [%s]\n\
 #\n\
 # NAME: Cluster's name.\n\
-# c_x[px]: Cluster's x center coordinate in pixels.\n\
-# c_y[px]: Cluster's y center coordinate in pixels.\n\
-# r_cl[px]: Cluster's radius in pixels.\n\
-# r_c[px]: Core radius (3-P King profile) in pixels.\n\
-# r_t[px]: Tidal radius (3-P King profile) in pixels.\n\
+# c_x[px]: Cluster's x center coordinate.\n\
+# e_x[px]: Cluster's x center coordinate error.\n\
+# c_y[px]: Cluster's y center coordinate.\n\
+# e_y[px]: Cluster's x center coordinate error.\n\
+# r_cl[px]: Cluster's radius.\n\
+# e_rcl[px]: Cluster's radius error.\n\
+# r_c[px]: Core radius (3-P King profile).\n\
+# e_rc[px]: Core radius error.\n\
+# r_t[px]: Tidal radius (3-P King profile).\n\
+# e_rt[px]: Tidal radius error.\n\
 #\n\
 # cont_ind: 'Contamination index' is a  measure of the contamination of field\n\
 #           stars in the cluster region. The closer to 1, the more\n\
-#           contaminated the cluster region is. E.g.: a value of 0.5 means\n\
-#           one should expect to find the same number of field stars and\n\
-#           cluster members inside the cluster region. A value of 1 means\n\
-#           that *all* of the stars in the cluster region are expected to\n\
-#           be field stars.\n\
+#           contaminated the cluster region is.\n\
 # memb: Approximate number of cluster's members assuming a uniform\n\
 #       background.\n\
 # memb_k: Approximate number of cluster's members obtained integrating the\n\
@@ -71,8 +72,8 @@ def create_out_data_file(output_dir):
 # M2 (flag_radius_manual): Indicates that the radius was set manually.\n\
 #\n\
 # f1 (flag_center_med): Either median cluster's central coordinates (obtained\n\
-#    using all bin widths) is more than 10%% away from the values obtained \n\
-#    with the min bin width.\n\
+#    using several standard deviation smoothing values) is more than 10%% \n\
+#    away from the central position assigned.\n\
 # f2 (flag_center_std): The standard deviation for either center coordinate\n\
 #    is larger than 10%% of the coordinate's value.\n\
 # f3 (flag_delta_total): The background value is smaller than a third of the\n\
@@ -95,8 +96,8 @@ def create_out_data_file(output_dir):
 #    more than one cluster present in the frame, variable or too crowded\n\
 #    field, etc.\n\
 #\n\
-#NAME            c_x[px] c_y[px] e_c[px] r_cl[px]  e_r[px] r_c[px] e_rc[px] \
-r_t[px] e_rt[px] cont_ind memb memb_k prob_cl int_col     met     e_m   \
+#NAME                c_x     e_x     c_y     e_y     r_cl    e_rcl     r_c     \
+e_rc     r_t     e_rt cont_ind memb memb_k prob_cl int_col     met     e_m   \
 age   e_a  E(B-V)   e_E   dist   e_d  M1 M2  f1 f2 f3 f4 f5 f6 f7 f8 f9  \
 FC\n" % now_time)
         out_data_file.close()

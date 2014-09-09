@@ -148,7 +148,8 @@ def get_clust_rad(phot_data, field_dens, cr_params, center_params,
     elif mode == 'manual':
 
         print 'Radius found: %0.1f px' % clust_rad
-        d_r(phot_data, center_params, clust_rad, field_dens, rdp_params)
+        d_r(phot_data, bin_width, center_params, clust_rad, field_dens,
+            rdp_params)
         plt.show()
 
         wrong_answer = True

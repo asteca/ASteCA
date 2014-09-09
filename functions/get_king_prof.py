@@ -92,10 +92,13 @@ def get_king_profile(kp_flag, clust_rad, field_dens, radii, ring_density):
             try:
                 popt, pcov = curve_fit(lambda x, cd,
                     rc: two_params(x, cd, rc, fd), radii_k, ring_dens_k, guess2)
-                # Unpaxk max density and core radius.
+                # Unpack max density and core radius.
                 cd, rc = popt
                 # Obtain error in core radius.
-                e_rc = np.sqrt(pcov[1][1]) if pcov[1][1] > 0 else -1.
+                if np.isfinite(pcov).all():
+                    e_rc = np.sqrt(pcov[1][1]) if pcov[1][1] > 0 else -1.
+                else:
+                    e_rc = -1.
                 flag_2pk_conver = True
             except RuntimeError:
                 flag_2pk_conver = False

@@ -7,7 +7,8 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
 
-def disp_rad(phot_data, center_params, clust_rad, backg_value, rdp_params):
+def disp_rad(phot_data, bin_width, center_params, clust_rad, backg_value,
+    rdp_params):
     '''
     Plot cluster and its radius.
     '''
@@ -16,13 +17,15 @@ def disp_rad(phot_data, center_params, clust_rad, backg_value, rdp_params):
     x_data, y_data, mag_data, col1_data = phot_data[1], phot_data[2], \
     phot_data[3], phot_data[5]
 
-    centers_kde = center_params[5]
-    center_cl = [centers_kde[0][0], centers_kde[0][1]]
-    bin_list, h_not_filt, hist_xyedges, h_filter, bin_center = center_params[:5]
-    xedges_min_db, yedges_min_db = hist_xyedges
-    x_center_bin, y_center_bin = bin_center
+    cent_bin, kde_centers, e_cent, st_dev_lst, hist_2d_g, kde_plot = \
+    center_params[:6]
 
-    bin_width, cent_cl_err = bin_list[0], bin_list[0]
+    center_cl = [kde_centers[0][0], kde_centers[0][1]]
+    #h_not_filt, hist_xyedges, h_filter = center_params[:5]
+    #xedges_min_db, yedges_min_db = hist_xyedges
+    x_center_bin, y_center_bin = cent_bin
+
+    #bin_width, cent_cl_err = bin_list[0], bin_list[0]
     radii, ring_density, poisson_error = rdp_params[:3]
 
     # Plot all outputs
@@ -43,7 +46,7 @@ def disp_rad(phot_data, center_params, clust_rad, backg_value, rdp_params):
     text = 'Bin: %d px' % (bin_width)
     plt.text(0.7, 0.92, text, transform=ax1.transAxes,
              bbox=dict(facecolor='white', alpha=0.8), fontsize=12)
-    plt.imshow(h_filter.transpose(), origin='lower')
+    plt.imshow(hist_2d_g.transpose(), origin='lower')
 
     # Finding chart.
     ax2 = plt.subplot(gs[0, 1])
@@ -62,9 +65,9 @@ def disp_rad(phot_data, center_params, clust_rad, backg_value, rdp_params):
                         fill=False)
     fig.gca().add_artist(circle)
     # Add text box
-    text1 = '$x_{cent} = %d \pm %d px$' % (center_cl[0], cent_cl_err)
+    text1 = '$x_{cent} = %d \pm %d px$' % (center_cl[0], e_cent[0])
     text2 = '\n'
-    text3 = '$y_{cent} = %d \pm %d px$' % (center_cl[1], cent_cl_err)
+    text3 = '$y_{cent} = %d \pm %d px$' % (center_cl[1], e_cent[1])
     text4 = text1 + text2 + text3
     plt.text(0.5, 0.85, text4, transform=ax2.transAxes,
         bbox=dict(facecolor='white', alpha=0.85), fontsize=15)

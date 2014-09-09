@@ -148,16 +148,19 @@ def err_accpt_rejct(phot_data, axes_params, er_params, mode, semi_return):
             while wrong_answer:
                 answer_rad = int(raw_input('Choose a method for error-based '
                 'stars rejection:\n  1 (emax), 2 (lowexp), 3 (eyefit), 4 (use '
-                'all stars) '))
+                'all stars): '))
 
                 if answer_rad == 1:
+                    e_max = float(raw_input('Select maximum error value: '))
+                    err_pck[0][1] = e_max
                     # Call function to reject stars with errors > e_max.
                     acpt_indx, rjct_indx, err_plot = e_a_r_m(e_mag, e_col1,
                         err_pck)
                     wrong_answer = False
                     er_mode, er_params[0] = 'emax', 'emax'
                 elif answer_rad == 2:
-                    N_sig = float(raw_input('Select value for N: '))
+                    N_sig = float(raw_input('''Select number of sigmas to lift
+                    the curve: '''))
                     err_pck[0][-1] = N_sig
                     # Call N sigma exp function.
                     acpt_indx, rjct_indx, err_plot = e_a_r_le(mag, e_mag,

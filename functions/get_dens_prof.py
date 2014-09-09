@@ -5,7 +5,7 @@
 import math
 
 
-def get_dens_prof(hist_2d, bin_center, bin_width):
+def get_dens_prof(hist_lst, cent_bin):
     """
     Calculate the density profile by counting the number of stars in the center
     bin first (r aprox width_bin/2 px), then moving to the 8 adyacent bins
@@ -18,7 +18,8 @@ def get_dens_prof(hist_2d, bin_center, bin_width):
     the "ring densities" for those approximate values of r.
     """
 
-    x_c_b, y_c_b = bin_center
+    hist_2d, bin_width = hist_lst[0], hist_lst[-1]
+    x_c_b, y_c_b = cent_bin
 
     # Initialize lists.
     radii, ring_density, poisson_error = [], [], []

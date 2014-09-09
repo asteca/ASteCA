@@ -7,7 +7,7 @@ import traceback
 from functions.read_paths import read_paths as rp
 from functions.get_in_params import get_in_params as gip
 from functions.create_out_data_file import create_out_data_file as c_o_d_f
-from functions.func_caller import asteca_funcs as of
+from functions.func_caller import asteca_funcs as af
 
 
 def main():
@@ -45,7 +45,7 @@ def main():
 
         try:
             # Call function that calls sub-functions sequentially.
-            of(myfile, sub_dir, out_file_name, gip_params)
+            af(myfile, sub_dir, out_file_name, gip_params)
         except Exception, err:
             print 'FATAL: %s could not be processed. ' % myfile[:-4]
             print 'Error:', str(err), '\n'

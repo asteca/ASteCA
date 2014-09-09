@@ -15,8 +15,8 @@ from os.path import join
 import warnings
 
 
-def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
-    rdp_params, field_dens, radius_params,
+def make_plots(output_subdir, clust_name, x_data, y_data, bin_width,
+    center_params, rdp_params, field_dens, radius_params,
     cont_index, mag_data, col1_data, err_plot, err_flags, kp_params,
     cl_region, stars_out, stars_in_rjct, stars_out_rjct, integr_return, n_c,
     flag_area_stronger, cl_reg_big, field_region, flag_pval_test,
@@ -71,10 +71,9 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     # Selected system params.
     m_rs, a_rs, e_rs, d_rs = ps_params[3:]
     # Parameters from get_center function.
-    bin_list, h_filter, bin_center, centers_kde, cent_stats, kde_pl = \
-    center_params[0], center_params[3], center_params[4], center_params[5], \
-    center_params[6], center_params[7]
-    center_cl = [center_params[5][0][0], center_params[5][0][1]]
+    cent_bin, kde_centers, e_cent, st_dev_lst, hist_2d_g, kde_pl = \
+    center_params[:6]
+    center_cl = kde_centers[0]
     # RDP params.
     radii, ring_density, poisson_error = rdp_params[:3]
     # Parameters from get_radius function.
@@ -105,24 +104,24 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     gs1 = gridspec.GridSpec(14, 8)  # create a GridSpec object
     #gs1.update(wspace=.09, hspace=.0)
 
-    # 2D not-weighted gaussian convolved histogram, smallest bin width.
+    # 2D gaussian convolved histogram.
     ax0 = plt.subplot(gs1[0:2, 0:2])
     plt.xlabel('x (bins)', fontsize=12)
     plt.ylabel('y (bins)', fontsize=12)
     ax0.minorticks_on()
-    plt.axvline(x=bin_center[0], linestyle='--', color='white')
-    plt.axhline(y=bin_center[1], linestyle='--', color='white')
+    plt.axvline(x=cent_bin[0], linestyle='--', color='white')
+    plt.axhline(y=cent_bin[1], linestyle='--', color='white')
     # Radius
-    circle = plt.Circle((bin_center[0], bin_center[1]),
-        clust_rad / bin_list[0], color='w', fill=False)
+    circle = plt.Circle((cent_bin[0], cent_bin[1]),
+        clust_rad / bin_width, color='w', fill=False)
     fig.gca().add_artist(circle)
     # Add text boxs.
-    text = 'Bin: %.1f px' % (bin_list[0])
+    text = 'Bin: %.1f px' % (bin_width)
     plt.text(0.7, 0.94, text, transform=ax0.transAxes,
              bbox=dict(facecolor='white', alpha=0.8), fontsize=10)
-    plt.imshow(h_filter.transpose(), origin='lower')
+    plt.imshow(hist_2d_g.transpose(), origin='lower')
 
-    # 2D not-weighted histograms' centers.
+    # 2D Gaussian histograms' centers using different standard deviations.
     ax1 = plt.subplot(gs1[0:2, 2:4])
     # Get max and min values in x,y
     x_min, x_max = min(x_data), max(x_data)
@@ -133,33 +132,38 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     plt.xlabel('x (px)', fontsize=12)
     plt.ylabel('y (px)', fontsize=12)
     ax1.minorticks_on()
-    # Add lines through meadian values with std deviations.
-    plt.axvline(x=cent_stats[1][0], linestyle='-', color='k')
-    plt.axvline(x=cent_stats[1][0] + cent_stats[2][0], linestyle='--',
+    ## Add lines through median values with std deviations.
+    cent_median, cent_std_dev = np.mean(np.array(kde_centers), axis=0), \
+    np.std(np.array(kde_centers), axis=0)
+    plt.axvline(x=cent_median[0], linestyle='-', color='k')
+    plt.axvline(x=cent_median[0] + cent_std_dev[0], linestyle='--',
         color='k')
-    plt.axvline(x=cent_stats[1][0] - cent_stats[2][0], linestyle='--',
+    plt.axvline(x=cent_median[0] - cent_std_dev[0], linestyle='--',
         color='k')
-    plt.axhline(y=cent_stats[1][1], linestyle='-', color='k')
-    plt.axhline(y=cent_stats[1][1] + cent_stats[2][1], linestyle='--',
+    plt.axhline(y=cent_median[1], linestyle='-', color='k')
+    plt.axhline(y=cent_median[1] + cent_std_dev[1], linestyle='--',
         color='k')
-    plt.axhline(y=cent_stats[1][1] - cent_stats[2][1], linestyle='--',
+    plt.axhline(y=cent_median[1] - cent_std_dev[1], linestyle='--',
         color='k')
     # Add stats box.
     text1 = r'$(\tilde{x},\, \tilde{y}) = (%.1f, %.1f)\,px$' '\n' % \
-    (cent_stats[1][0], cent_stats[1][1])
+    (cent_median[0], cent_median[1])
     text2 = '$(\sigma_x,\, \sigma_y) = (%.1f, %.1f)\,px$' % \
-    (cent_stats[2][0], cent_stats[2][1])
+    (cent_std_dev[0], cent_std_dev[1])
     text = text1 + text2
     plt.text(0.05, 0.9, text, transform=ax1.transAxes,
         bbox=dict(facecolor='white', alpha=0.8), fontsize=11)
-    cols = ['red', 'blue', 'green', 'black']
-    for i in range(len(bin_list)):
+    # Plot centers.
+    cols = cycle(['red', 'blue', 'green', 'black', 'cyan'])
+    for i, center in enumerate(kde_centers):
         boxes = plt.gca()
-        boxes.add_patch(Rectangle(((centers_kde[i][0] - bin_list[i]),
-            (centers_kde[i][1] - bin_list[i])), bin_list[i] * 2.,
-            bin_list[i] * 2., facecolor='none', edgecolor=cols[i], ls='solid',
-            lw=1.5, zorder=(len(bin_list) - i),
-            label='Bin: %.1f px' % bin_list[i]))
+        length = (bin_width * st_dev_lst[i]) * 2.
+        boxes.add_patch(Rectangle(
+            (center[0] - (length / 2.), center[1] - (length / 2.)),
+            length, length,
+            facecolor='none', edgecolor=next(cols), ls='solid',
+            lw=1.5, zorder=(len(st_dev_lst) - i),
+            label='St dev: %.1f' % st_dev_lst[i]))
     # get handles
     handles, labels = ax1.get_legend_handles_labels()
     # use them in the legend
@@ -199,9 +203,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
                 color='g', fill=False, ls='dashed', lw=2.5)
             fig.gca().add_artist(circle)
     # Add text box
-    e_cent = cent_stats[0]
-    text1 = '$x_{cent} = %.1f \pm %.1f px$' '\n' % (center_cl[0], e_cent)
-    text2 = '$y_{cent} = %.1f \pm %.1f px$' % (center_cl[1], e_cent)
+    text1 = '$x_{cent} = %.1f \pm %.1f px$' '\n' % (center_cl[0], e_cent[0])
+    text2 = '$y_{cent} = %.1f \pm %.1f px$' % (center_cl[1], e_cent[1])
     text = text1 + text2
     plt.text(0.05, 0.9, text, transform=ax4.transAxes,
         bbox=dict(facecolor='white', alpha=0.85), fontsize=11)
@@ -239,7 +242,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     plt.text(0.4, 0.9, text, transform=ax5.transAxes, fontsize=14)
     # Legend texts
     kp_text = '3P' if flag_3pk_conver else '2P'
-    texts = ['RDP (%0.1f px)' % bin_list[0],
+    texts = ['RDP (%0.1f px)' % bin_width,
             '$d_{field}$ = %.1E $st/px^{2}$' % field_dens,
             '%s King profile' % kp_text,
             'r$_c$ = %0.1f $\pm$ %0.1f px' % (rc, e_rc),
@@ -344,10 +347,13 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
     ## Print x,y coordinates of max value.
     #new_cent = positions.T[np.argmax(k_pos)]
     #print new_cent
-    ext_range, x, y, k_pos = kde_pl
-    kde = np.reshape(k_pos.T, x.shape)
-    plt.imshow(np.rot90(kde), cmap=plt.cm.YlOrBr, extent=ext_range)
-    plt.contour(x, y, kde, 10, colors='k', linewidths=0.6)
+    # 'manual' mode produces none of these parameters. Skip KDE plot if
+    # that mode was used.
+    if kde_pl:
+        ext_range, x, y, k_pos = kde_pl
+        kde = np.reshape(k_pos.T, x.shape)
+        plt.imshow(np.rot90(kde), cmap=plt.cm.YlOrBr, extent=ext_range)
+        plt.contour(x, y, kde, 10, colors='k', linewidths=0.6)
     # Plot stars.
     plt.scatter(x_data, y_data, marker='o', c='black', s=st_sizes_arr, zorder=4)
     #Plot center.
@@ -447,8 +453,10 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
              transform=ax9.transAxes,
              bbox=dict(facecolor='white', alpha=0.5), fontsize=16)
     # Plot stars in CMD.
-    plt.scatter(zip(*stars_in_rjct)[5], zip(*stars_in_rjct)[3], marker='x',
-        c='teal', s=12, zorder=1)
+    if len(stars_in_rjct) > 0:
+        # Only attempt to pot if any star is stored in the list.
+        plt.scatter(zip(*stars_in_rjct)[5], zip(*stars_in_rjct)[3], marker='x',
+            c='teal', s=12, zorder=1)
     sz_pt = 0.5 if (len(stars_in_rjct) + len(cl_region)) > 1000 else 1.
     plt.scatter(zip(*cl_region)[5], zip(*cl_region)[3], marker='o', c='k',
                 s=sz_pt, zorder=2)
@@ -496,10 +504,13 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
             mag_x = np.linspace(bright_end, max(mag_data), 50)
             ax10.plot(mag_x, exp_func(mag_x, *popt_mag), 'r-', zorder=3)
     # Plot rejected stars.
-    plt.scatter(zip(*stars_out_rjct)[3], zip(*stars_out_rjct)[4], marker='x',
-        c='teal', s=15, zorder=1)
-    plt.scatter(zip(*stars_in_rjct)[3], zip(*stars_in_rjct)[3], marker='x',
-        c='teal', s=15, zorder=1)
+    if len(stars_out_rjct) > 0:
+        # Only attempt to pot if any star is stored in the list.
+        plt.scatter(zip(*stars_out_rjct)[3], zip(*stars_out_rjct)[4],
+            marker='x', c='teal', s=15, zorder=1)
+    if len(stars_in_rjct) > 0:
+        plt.scatter(zip(*stars_in_rjct)[3], zip(*stars_in_rjct)[3], marker='x',
+            c='teal', s=15, zorder=1)
     # Plot accepted stars.
     plt.scatter(zip(*cl_region)[3], zip(*cl_region)[4], marker='o', c='k',
                 s=1, zorder=2)
@@ -548,10 +559,13 @@ def make_plots(output_subdir, clust_name, x_data, y_data, center_params,
             # Plot exponential curve.
             ax11.plot(mag_x, exp_func(mag_x, *popt_col1), 'r-', zorder=3)
     # Plot rejected stars.
-    plt.scatter(zip(*stars_out_rjct)[3], zip(*stars_out_rjct)[6], marker='x',
-        c='teal', s=15, zorder=1)
-    plt.scatter(zip(*stars_in_rjct)[3], zip(*stars_in_rjct)[6], marker='x',
-        c='teal', s=15, zorder=1)
+    if len(stars_out_rjct) > 0:
+        # Only attempt to pot if any star is stored in the list.
+        plt.scatter(zip(*stars_out_rjct)[3], zip(*stars_out_rjct)[6],
+            marker='x', c='teal', s=15, zorder=1)
+    if len(stars_in_rjct) > 0:
+        plt.scatter(zip(*stars_in_rjct)[3], zip(*stars_in_rjct)[6], marker='x',
+            c='teal', s=15, zorder=1)
     # Plot accepted stars.
     plt.scatter(zip(*cl_region)[3], zip(*cl_region)[6], marker='o', c='k',
                 s=1, zorder=2)

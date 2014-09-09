@@ -81,13 +81,14 @@ def spiral_region(histo, h_manual, stars_in, stars_out, x_c_b, y_c_b, spiral,
     return region, sp_indx2
 
 
-def get_regions(bin_center, bin_width, histo, clust_rad, h_manual, stars_in,
-    stars_out, gr_params):
+def get_regions(hist_lst, cent_bin, clust_rad, h_manual, stars_in, stars_out,
+    gr_params):
     '''
     Define cluster and field regions around the cluster's center.
     '''
 
-    x_c_b, y_c_b = bin_center
+    hist_2d, bin_width = hist_lst[0], hist_lst[-1]
+    x_c_b, y_c_b = cent_bin
     # Maximum number of field regions to attempt to fill.
     f_regions = gr_params[0]
 
@@ -95,7 +96,7 @@ def get_regions(bin_center, bin_width, histo, clust_rad, h_manual, stars_in,
     # and of area a bit larger than that defined by the cluster's radius.
 
     # Get area as total number of bins in 2D hist times the area of each bin.
-    area = len(histo[0]) * len(histo) * (bin_width ** 2)
+    area = len(hist_2d[0]) * len(hist_2d) * (bin_width ** 2)
 
     # Length of the side of the square that contains the cluster. Increase it
     # if the radius is comparable to the bin width used to make sure the
@@ -137,7 +138,7 @@ def get_regions(bin_center, bin_width, histo, clust_rad, h_manual, stars_in,
     # Store 'big' cluster region as the slightly larger area around the
     # cluster's radius. Used for plotting.
     sp_indx = 0
-    cl_reg_big, sp_indx = spiral_region(histo, h_manual, stars_in,
+    cl_reg_big, sp_indx = spiral_region(hist_2d, h_manual, stars_in,
                                             stars_out, x_c_b, y_c_b, spiral,
                                             num_bins_area, sp_indx)
 
@@ -153,7 +154,7 @@ def get_regions(bin_center, bin_width, histo, clust_rad, h_manual, stars_in,
         num_bins_area = int(np.pi * ((clust_rad / bin_width) ** 2))
 
         for f_reg in range(f_regions):
-            f_region, sp_indx = spiral_region(histo, h_manual, stars_in,
+            f_region, sp_indx = spiral_region(hist_2d, h_manual, stars_in,
                                               stars_out, x_c_b, y_c_b, spiral,
                                               num_bins_area, sp_indx)
             field_regions.append(f_region)

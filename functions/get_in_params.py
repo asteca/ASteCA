@@ -61,6 +61,10 @@ def get_in_params(mypath):
                 elif reader[0] == 'PS':
                     iso_select = str(reader[1])
 
+                elif reader[0] == 'CH':
+                    gh_params0 = str(reader[1])
+                    gh_params1 = float(reader[2])
+
                 elif reader[0] == 'CC':
                     gc_params0 = str(reader[1])
                     gc_params1 = float(reader[2])
@@ -123,6 +127,7 @@ def get_in_params(mypath):
 
     pl_params = [flag_make_plot, plot_frmt, plot_dpi]
     cr_params = [cr_params0, cr_params1]
+    gh_params = [gh_params0, gh_params1]
     gc_params = [gc_params0, gc_params1]
     in_dirs = [input_dir, output_dir, done_dir]
     pv_params = [pv0_params, pv1_params, pv2_params]
@@ -169,6 +174,6 @@ def get_in_params(mypath):
     ga_params = [n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es]
     rm_params = [flag_red_memb, min_prob]
 
-    return mode, in_dirs, gd_params, gc_params, cr_params, kp_flag, \
+    return mode, in_dirs, gd_params, gh_params, gc_params, cr_params, kp_flag,\
     er_params, gr_params, pv_params, da_params, ps_params, bf_params, \
     sc_params, ga_params, rm_params, pl_params, flag_move_file, axes_params

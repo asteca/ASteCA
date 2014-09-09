@@ -1,6 +1,6 @@
 
 
-def manual_histo(phot_data, hist_xyedges):
+def manual_histo(phot_data, hist_lst):
     '''
     Obtains a (manual) 2D histogram for the field with not only the number
     of stars per bin but also the values associated to each of those stars:
@@ -8,7 +8,7 @@ def manual_histo(phot_data, hist_xyedges):
     '''
 
     id_star, x_data, y_data, mag_data, e_mag, col1_data, e_col1 = phot_data
-    xedges, yedges = hist_xyedges
+    xedges, yedges = hist_lst[1], hist_lst[2]
 
     # Create the empty list that will hold the information of each star that
     # falls within a given bin in the 2D histogram.
