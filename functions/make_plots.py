@@ -85,9 +85,6 @@ def make_plots(output_subdir, clust_name, x_data, y_data, bin_width,
     err_all_fallback, err_max_fallback = err_flags
     # Luminosity functions.
     x_cl, y_cl, x_fl, y_fl = lum_func
-    # Integrated magnitude distribution.
-    cl_reg_mag1, fl_reg_mag1, integ_mag1, cl_reg_mag2, fl_reg_mag2, \
-    integ_mag2 = integr_return
     # Reduced membership.
     min_prob = red_return[1]
     # Best isochrone fit params.
@@ -612,55 +609,60 @@ def make_plots(output_subdir, clust_name, x_data, y_data, bin_width,
     leg11.get_frame().set_alpha(0.7)
 
     # Integrated magnitude and color.
-    ax13 = plt.subplot(gs1[6:8, 2:4])
-    # If field lists are not empty.
-    if fl_reg_mag1[0].any() and fl_reg_mag2[0].any():
-        x_min = min(min(cl_reg_mag1[0]), min(fl_reg_mag1[0]),
-            min(cl_reg_mag2[0]), min(fl_reg_mag2[0])) - 0.2
-        x_max = max(max(cl_reg_mag1[0]), max(fl_reg_mag1[0]),
-            max(cl_reg_mag2[0]), max(fl_reg_mag2[0])) + 0.2
-        y_min = max(max(cl_reg_mag1[1]), max(fl_reg_mag1[1]),
-            max(cl_reg_mag2[1]), max(fl_reg_mag2[1])) + 0.2
-        y_max = min(min(cl_reg_mag1[1]), min(fl_reg_mag1[1]),
-            min(cl_reg_mag2[1]), min(fl_reg_mag2[1])) - 0.2
-    else:
-        x_min, x_max = min(min(cl_reg_mag1[0]), min(cl_reg_mag2[0])) - 0.2,\
-        max(max(cl_reg_mag1[0]), max(cl_reg_mag2[0])) + 0.2
-        y_min, y_max = max(max(cl_reg_mag1[1]), max(cl_reg_mag2[1])) + 0.2,\
-        min(min(cl_reg_mag1[1]), min(cl_reg_mag2[1])) - 0.2
-    plt.xlim(x_min, x_max)
-    plt.ylim(y_min, y_max)
-    ax13.set_xlabel('$mag$', fontsize=18)
-    ax13.set_ylabel('$mag^*$', fontsize=18)
-    ax13.minorticks_on()
-    ax13.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
-    text1 = '$' + y_ax + '^{*}_{cl+fl}$'
-    text2 = '$' + x_ax0 + '^{*}_{cl+fl}$'
-    # Cluster + field integrated magnitude curve.
-    plt.plot(cl_reg_mag1[0], cl_reg_mag1[1], 'r-', lw=1., label=text1)
-    # Cluster integrated magnitude.
-    plt.plot(cl_reg_mag2[0], cl_reg_mag2[1], 'r:', lw=2., label=text2)
-    # Check if field regiones were defined.
-    if not flag_area_stronger:
-        text3 = '$' + y_ax + '^{*}_{fl}$'
-        text4 = '$' + x_ax0 + '^{*}_{fl}$'
-        # Field average integrated magnitude curve.
-        plt.plot(fl_reg_mag1[0], fl_reg_mag1[1], 'b-', lw=1., label=text3)
-        # Field average integrated magnitude.
-        plt.plot(fl_reg_mag2[0], fl_reg_mag2[1], 'b:', lw=2., label=text4)
-    # Check how the second magnitude whould be formed.
-    if m_ord == 21:
-        sig, text0 = 1., x_ax0 + '^{*} -' + y_ax
-    elif m_ord == 12:
-        sig, text0 = -1., y_ax + '^{*} -' + x_ax0
-    int_col = sig * (integ_mag2 - integ_mag1)
-    text = '$(' + text0 + '^{*} )_{cl} = %0.2f$' % int_col
-    plt.text(0.25, 0.15, text, transform=ax13.transAxes,
-         bbox=dict(facecolor='white', alpha=0.75), fontsize=13)
-    lines, labels = ax13.get_legend_handles_labels()
-    leg = ax13.legend(lines, labels, loc='lower right', numpoints=1,
-        fontsize=13)
-    leg.get_frame().set_alpha(0.75)
+    if integr_return:
+        # Unpack values.
+        cl_reg_mag1, fl_reg_mag1, integ_mag1, cl_reg_mag2, fl_reg_mag2, \
+        integ_mag2 = integr_return
+        # Make plot
+        ax13 = plt.subplot(gs1[6:8, 2:4])
+        # If field lists are not empty.
+        if fl_reg_mag1[0].any() and fl_reg_mag2[0].any():
+            x_min = min(min(cl_reg_mag1[0]), min(fl_reg_mag1[0]),
+                min(cl_reg_mag2[0]), min(fl_reg_mag2[0])) - 0.2
+            x_max = max(max(cl_reg_mag1[0]), max(fl_reg_mag1[0]),
+                max(cl_reg_mag2[0]), max(fl_reg_mag2[0])) + 0.2
+            y_min = max(max(cl_reg_mag1[1]), max(fl_reg_mag1[1]),
+                max(cl_reg_mag2[1]), max(fl_reg_mag2[1])) + 0.2
+            y_max = min(min(cl_reg_mag1[1]), min(fl_reg_mag1[1]),
+                min(cl_reg_mag2[1]), min(fl_reg_mag2[1])) - 0.2
+        else:
+            x_min, x_max = min(min(cl_reg_mag1[0]), min(cl_reg_mag2[0])) - 0.2,\
+            max(max(cl_reg_mag1[0]), max(cl_reg_mag2[0])) + 0.2
+            y_min, y_max = max(max(cl_reg_mag1[1]), max(cl_reg_mag2[1])) + 0.2,\
+            min(min(cl_reg_mag1[1]), min(cl_reg_mag2[1])) - 0.2
+        plt.xlim(x_min, x_max)
+        plt.ylim(y_min, y_max)
+        ax13.set_xlabel('$mag$', fontsize=18)
+        ax13.set_ylabel('$mag^*$', fontsize=18)
+        ax13.minorticks_on()
+        ax13.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
+        text1 = '$' + y_ax + '^{*}_{cl+fl}$'
+        text2 = '$' + x_ax0 + '^{*}_{cl+fl}$'
+        # Cluster + field integrated magnitude curve.
+        plt.plot(cl_reg_mag1[0], cl_reg_mag1[1], 'r-', lw=1., label=text1)
+        # Cluster integrated magnitude.
+        plt.plot(cl_reg_mag2[0], cl_reg_mag2[1], 'r:', lw=2., label=text2)
+        # Check if field regiones were defined.
+        if not flag_area_stronger:
+            text3 = '$' + y_ax + '^{*}_{fl}$'
+            text4 = '$' + x_ax0 + '^{*}_{fl}$'
+            # Field average integrated magnitude curve.
+            plt.plot(fl_reg_mag1[0], fl_reg_mag1[1], 'b-', lw=1., label=text3)
+            # Field average integrated magnitude.
+            plt.plot(fl_reg_mag2[0], fl_reg_mag2[1], 'b:', lw=2., label=text4)
+        # Check how the second magnitude whould be formed.
+        if m_ord == 21:
+            sig, text0 = 1., x_ax0 + '^{*} -' + y_ax
+        elif m_ord == 12:
+            sig, text0 = -1., y_ax + '^{*} -' + x_ax0
+        int_col = sig * (integ_mag2 - integ_mag1)
+        text = '$(' + text0 + '^{*} )_{cl} = %0.2f$' % int_col
+        plt.text(0.25, 0.15, text, transform=ax13.transAxes,
+             bbox=dict(facecolor='white', alpha=0.75), fontsize=13)
+        lines, labels = ax13.get_legend_handles_labels()
+        leg = ax13.legend(lines, labels, loc='lower right', numpoints=1,
+            fontsize=13)
+        leg.get_frame().set_alpha(0.75)
 
     # Distribution of p_values.
     if flag_pval_test and not flag_area_stronger:

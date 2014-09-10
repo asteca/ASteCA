@@ -7,7 +7,7 @@ import shutil
 import gc  # Garbage collector.
 # Import files with defined functions.
 from functions.get_data_semi import get_semi as g_s
-from functions.get_phot_data import get_data as gd
+from functions.get_data import get_data as gd
 from functions.trim_frame import trim_frame as t_f
 from functions.get_2d_histo import get_2d_histo as g2dh
 from functions.get_center import get_center as g_c
@@ -57,7 +57,7 @@ def asteca_funcs(myfile, sub_dir, out_file_name, gip_params):
 
     # Unpack input parameters.
     mode, in_dirs, gd_params, gh_params, gc_params, cr_params, kp_flag, \
-    er_params, gr_params, pv_params, da_params, ps_params, bf_params, \
+    im_flag, er_params, gr_params, pv_params, da_params, ps_params, bf_params,\
     sc_params, ga_params, rm_params, pl_params, flag_move_file, axes_params =\
     gip_params
     input_dir, output_dir, done_dir = in_dirs
@@ -153,7 +153,7 @@ def asteca_funcs(myfile, sub_dir, out_file_name, gip_params):
     print 'LF and Completeness magnitude levels obtained.'
 
     # Calculate integrated magnitude.
-    integr_return = g_i_m(cl_region, field_region, axes_params,
+    integr_return = g_i_m(im_flag, cl_region, field_region, axes_params,
         flag_area_stronger)
 
     # Only run if both R and rpy2 packages are installed.

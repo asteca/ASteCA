@@ -54,6 +54,8 @@ def get_in_params(mypath):
 
                 elif reader[0] == 'PD':
                     gd_params = map(int, reader[1:])
+                elif reader[0] == 'PX':
+                    gd_params.append(str(reader[1]))
 
                 elif reader[0] == 'CMD':
                     cmd_select = int(reader[1])
@@ -80,6 +82,9 @@ def get_in_params(mypath):
                 elif reader[0] == 'ER':
                     er_params = [str(reader[1])] + map(float, reader[2:])
 
+                elif reader[0] == 'IM':
+                    im_flag = True if reader[1] in true_lst else False
+
                 elif reader[0] == 'GR':
                     gr_params = map(int, reader[1:])
 
@@ -90,9 +95,6 @@ def get_in_params(mypath):
                 elif reader[0] == 'DA':
                     da0_params = str(reader[1])
                     da1_params = int(reader[2])
-
-                #elif reader[0] == 'PS_p':
-                    #iso_path = str(reader[1])
 
                 elif reader[0] == 'BF':
                     bf_flag = True if reader[1] in true_lst else False
@@ -175,5 +177,5 @@ def get_in_params(mypath):
     rm_params = [flag_red_memb, min_prob]
 
     return mode, in_dirs, gd_params, gh_params, gc_params, cr_params, kp_flag,\
-    er_params, gr_params, pv_params, da_params, ps_params, bf_params, \
+    im_flag, er_params, gr_params, pv_params, da_params, ps_params, bf_params,\
     sc_params, ga_params, rm_params, pl_params, flag_move_file, axes_params

@@ -36,7 +36,7 @@ def get_data(mypath, sub_dir, myfile, gd_params):
     data_file = join(mypath, sub_dir, myfile)
 
     # Read indexes from input params.
-    id_inx, x_inx, y_inx, m_inx, em_inx, c_inx, ec_inx = gd_params
+    id_inx, x_inx, y_inx, m_inx, em_inx, c_inx, ec_inx = gd_params[:-1]
 
     # Loads the data in 'myfile' as a list of N lists where N is the number of
     # columns. Each of the N lists contains all the data for the column.

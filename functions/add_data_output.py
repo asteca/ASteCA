@@ -22,7 +22,10 @@ def add_data_output(out_file_name, sub_dir, output_dir, clust_name,
     flag_3pk_no_conver = not kp_params[-1]
 
     # Get parameter from list.
-    integ_mag, integ_col = integr_return[2], integr_return[5]
+    if integr_return:
+        integ_mag, integ_col = integr_return[2], integr_return[5]
+    else:
+        integ_mag, integ_col = -98., 1.
 
     # Create list containing all the flags.
     flags_list = [flag_center_manual, flag_radius_manual, flag_center_med,
