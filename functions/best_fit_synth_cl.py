@@ -9,32 +9,10 @@ from genetic_algorithm import gen_algor as g_a
 from brute_force_algorithm import brute_force as b_f
 from bootstrap_func import bootstrap
 from synth_cluster import synth_clust as s_c
+from error_round import round_sig_fig as rsf
 from get_IMF_PDF import IMF_PDF as i_p
 from move_isochrone import move_isoch
 import numpy as np
-from math import log10, floor
-
-
-def round_to_1(x):
-    return round(x, -int(floor(log10(x))))
-
-
-def round_to_ref(x, y):
-    return round(x, -int(floor(log10(y))))
-
-
-def round_sig_fig(isoch_fit_params, isoch_fit_errors):
-    '''
-    Round errors to 1 significant figure and parameter values to the
-    corresponding number given by the length of each error.
-    '''
-
-    # Round errors to 1 significant figure.
-    isoch_fit_errors_r = map(round_to_1, isoch_fit_errors)
-    isoch_fit_params_r = map(round_to_ref, isoch_fit_params[0],
-        isoch_fit_errors_r)
-
-    return isoch_fit_params_r, isoch_fit_errors_r
 
 
 def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
@@ -83,9 +61,9 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
                 obs_clust, completeness, ip_list, sc_params,
                 ga_params, cmd_sel)
 
-        print 'Best fit params obtained (%0.4f, %0.2f, %0.2f, %0.2f).' % \
-        (isoch_fit_params[0][0], isoch_fit_params[0][1],
-        isoch_fit_params[0][2], isoch_fit_params[0][3])
+        print 'Best fit params obtained ({:g}, {:g}, {:g}, {:g}).'.format(
+            isoch_fit_params[0][0], isoch_fit_params[0][1],
+            isoch_fit_params[0][2], isoch_fit_params[0][3])
 
         if best_fit_algor == 'genet':
             # Call bootstrap function with resampling to get the uncertainty
@@ -112,8 +90,8 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
 
         # Round errors to 1 significant digit and round params values to the
         # corresponding number of significant digits given by the errors.
-        isoch_fit_params[0], isoch_fit_errors = \
-        round_sig_fig(isoch_fit_params, isoch_fit_errors)
+        isoch_fit_params[0], isoch_fit_errors = rsf(isoch_fit_params[0],
+            isoch_fit_errors)
 
     else:
         # Pass empty lists to make_plots.

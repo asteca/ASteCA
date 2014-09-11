@@ -7,7 +7,7 @@ from functions.display_rad import disp_rad as d_r
 import matplotlib.pyplot as plt
 
 
-def main_center_algor(rdp_params, cr_params, field_dens, bin_width):
+def main_rad_algor(rdp_params, cr_params, field_dens, bin_width, coord):
     '''
     This function holds the main algorithm that returns a radius value.
     '''
@@ -104,13 +104,14 @@ def main_center_algor(rdp_params, cr_params, field_dens, bin_width):
         # No radius value found. Assign radius value as the middle element
         # in the radii list.
         clust_rad, e_rad = radii_c[int(len(radii_c) / 2.)], 0.
-        print '  WARNING: no radius found, setting value to: %0.2f' % clust_rad
+        print '  WARNING: no radius found, setting value to: {:g}'.format(
+            clust_rad)
 
     return clust_rad, e_rad, flag_delta_total, flag_not_stable, flag_delta
 
 
 def get_clust_rad(phot_data, field_dens, cr_params, center_params,
-    rdp_params, semi_return, mode, bin_width):
+    rdp_params, semi_return, mode, bin_width, coord_lst):
     """
     Obtain the value for the cluster's radius by counting the number of points
     that fall within a given interval of the field density or lower. If this
@@ -122,14 +123,15 @@ def get_clust_rad(phot_data, field_dens, cr_params, center_params,
     average all the radius values found for each interval.
     """
 
+    coord = coord_lst[0]
     # Call function that holds the radius finding algorithm.
     clust_rad, e_rad, flag_delta_total, flag_not_stable, flag_delta = \
-    main_center_algor(rdp_params, cr_params, field_dens, bin_width)
+    main_rad_algor(rdp_params, cr_params, field_dens, bin_width, coord)
 
     # Check if semi or manual mode are set.
     flag_radius_manual = False
     if mode == 'auto':
-        print 'Auto radius found: %0.1f px.' % clust_rad
+        print 'Auto radius found: {:g} {}.'.format(clust_rad, coord)
 
     elif mode == 'semi':
         # Unpack semi values.
@@ -139,15 +141,15 @@ def get_clust_rad(phot_data, field_dens, cr_params, center_params,
         if rad_flag_semi == 1:
             # Update values.
             clust_rad, e_rad = cl_rad_semi, 0.
-            print 'Semi radius set: %0.1f px.' % clust_rad
+            print 'Semi radius set: {:g} {}.'.format(clust_rad, coord)
         else:
-            print 'Auto radius found: %0.1f px.' % clust_rad
+            print 'Auto radius found: {:g} {}.'.format(clust_rad, coord)
 
     # If Manual mode is set, display radius and ask the user to accept it or
     # input new one.
     elif mode == 'manual':
 
-        print 'Radius found: %0.1f px' % clust_rad
+        print 'Radius found: {:g} {}.'.format(clust_rad, coord)
         d_r(phot_data, bin_width, center_params, clust_rad, field_dens,
             rdp_params)
         plt.show()

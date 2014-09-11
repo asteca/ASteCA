@@ -2,20 +2,23 @@
 @author: gabriel
 """
 
-from functions.exp_function import exp_func
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from matplotlib.patches import Rectangle
+import matplotlib.offsetbox as offsetbox
 from matplotlib.ticker import MultipleLocator
 from itertools import cycle
 from scipy.ndimage.filters import gaussian_filter
 from matplotlib.patches import Ellipse
 from os.path import join
 import warnings
+# Custom functions.
+from functions.exp_function import exp_func
+import error_round as err_r
 
 
-def make_plots(output_subdir, clust_name, x_data, y_data, bin_width,
+def make_plots(output_subdir, clust_name, x_data, y_data, gd_params, bin_width,
     center_params, rdp_params, field_dens, radius_params,
     cont_index, mag_data, col1_data, err_plot, err_flags, kp_params,
     cl_region, stars_out, stars_in_rjct, stars_out_rjct, integr_return, n_c,
@@ -60,6 +63,13 @@ def make_plots(output_subdir, clust_name, x_data, y_data, bin_width,
     elif m_ord == 12:
         x_ax = '(' + y_ax + '-' + x_ax0 + ')'
 
+    # Define system of coordinates used.
+    px_deg = gd_params[-1]
+    if px_deg == 'px':
+        coord, x_name, y_name = 'px', 'x', 'y'
+    else:
+        coord, x_name, y_name = 'deg', 'ra', 'dec'
+
     # Define plot limits for *all* CMD diagrams.
     x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd = axes_params[3]
     col1_min, col1_max = max(x_min_cmd, min(col1_data) - 0.2),\
@@ -99,12 +109,11 @@ def make_plots(output_subdir, clust_name, x_data, y_data, bin_width,
     # y1/y2 = 2.5
     fig = plt.figure(figsize=(20, 35))  # create the top-level container
     gs1 = gridspec.GridSpec(14, 8)  # create a GridSpec object
-    #gs1.update(wspace=.09, hspace=.0)
 
     # 2D gaussian convolved histogram.
     ax0 = plt.subplot(gs1[0:2, 0:2])
-    plt.xlabel('x (bins)', fontsize=12)
-    plt.ylabel('y (bins)', fontsize=12)
+    plt.xlabel('{} (bins)'.format(x_name), fontsize=12)
+    plt.ylabel('{} (bins)'.format(y_name), fontsize=12)
     ax0.minorticks_on()
     plt.axvline(x=cent_bin[0], linestyle='--', color='white')
     plt.axhline(y=cent_bin[1], linestyle='--', color='white')
@@ -113,9 +122,10 @@ def make_plots(output_subdir, clust_name, x_data, y_data, bin_width,
         clust_rad / bin_width, color='w', fill=False)
     fig.gca().add_artist(circle)
     # Add text boxs.
-    text = 'Bin: %.1f px' % (bin_width)
-    plt.text(0.7, 0.94, text, transform=ax0.transAxes,
-             bbox=dict(facecolor='white', alpha=0.8), fontsize=10)
+    bin_w_r = err_r.round_to_y(bin_width)
+    text = 'Bin $\simeq$ {0:g} {1}'.format(bin_w_r, coord)
+    ob = offsetbox.AnchoredText(text, loc=1)
+    ax0.add_artist(ob)
     plt.imshow(hist_2d_g.transpose(), origin='lower')
 
     # 2D Gaussian histograms' centers using different standard deviations.
@@ -126,8 +136,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, bin_width,
     #Set plot limits
     plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
-    plt.xlabel('x (px)', fontsize=12)
-    plt.ylabel('y (px)', fontsize=12)
+    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=12)
+    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=12)
     ax1.minorticks_on()
     ## Add lines through median values with std deviations.
     cent_median, cent_std_dev = np.mean(np.array(kde_centers), axis=0), \
@@ -143,11 +153,12 @@ def make_plots(output_subdir, clust_name, x_data, y_data, bin_width,
     plt.axhline(y=cent_median[1] - cent_std_dev[1], linestyle='--',
         color='k')
     # Add stats box.
-    text1 = r'$(\tilde{x},\, \tilde{y}) = (%.1f, %.1f)\,px$' '\n' % \
-    (cent_median[0], cent_median[1])
-    text2 = '$(\sigma_x,\, \sigma_y) = (%.1f, %.1f)\,px$' % \
-    (cent_std_dev[0], cent_std_dev[1])
-    text = text1 + text2
+    cent_med_r, cent_std_dev_r = err_r.round_sig_fig(cent_median, cent_std_dev)
+    text1 = (r"$(\tilde{{{0}}},\tilde{{{1}}}) = ({3:g},\;{4:g})\,"
+    "{2}$").format(x_name, y_name, coord, *cent_med_r)
+    text2 = ("$(\sigma_{{{0}}},\sigma_{{{1}}}) = ({3:g},\;{4:g})\,"
+    "{2}$").format(x_name, y_name, coord, *cent_std_dev_r)
+    text = text1 + '\n' + text2
     plt.text(0.05, 0.9, text, transform=ax1.transAxes,
         bbox=dict(facecolor='white', alpha=0.8), fontsize=11)
     # Plot centers.
@@ -164,7 +175,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, bin_width,
     # get handles
     handles, labels = ax1.get_legend_handles_labels()
     # use them in the legend
-    leg1 = ax1.legend(handles, labels, loc='upper right', numpoints=1,
+    leg1 = ax1.legend(handles, labels, loc='lower right', numpoints=1,
         fontsize=7)
     # Set the alpha value of the legend.
     leg1.get_frame().set_alpha(0.5)
@@ -175,8 +186,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, bin_width,
     plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
     #Set axis labels
-    plt.xlabel('x (px)', fontsize=12)
-    plt.ylabel('y (px)', fontsize=12)
+    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=12)
+    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=12)
     # Set minor ticks
     ax4.minorticks_on()
     # Plot r_cl.
@@ -200,18 +211,15 @@ def make_plots(output_subdir, clust_name, x_data, y_data, bin_width,
                 color='g', fill=False, ls='dashed', lw=2.5)
             fig.gca().add_artist(circle)
     # Add text box
-    text1 = '$x_{cent} = %.1f \pm %.1f px$' '\n' % (center_cl[0], e_cent[0])
-    text2 = '$y_{cent} = %.1f \pm %.1f px$' % (center_cl[1], e_cent[1])
-    text = text1 + text2
+    center_cl_r, e_cent_r = err_r.round_sig_fig(center_cl, e_cent)
+    text1 = '${0}_{{cent}} = {1:g} \pm {2:g}\,{3}$'.format(x_name,
+        center_cl_r[0], e_cent_r[0], coord)
+    text2 = '${0}_{{cent}} = {1:g} \pm {2:g}\,{3}$'.format(y_name,
+        center_cl_r[1], e_cent_r[1], coord)
+    text = text1 + '\n' + text2
     plt.text(0.05, 0.9, text, transform=ax4.transAxes,
         bbox=dict(facecolor='white', alpha=0.85), fontsize=11)
     # Plot stars.
-    # Solve for optimal star size.
-    #from scipy.optimize import fsolve
-    #a, c = 75., 2.5
-    #area = (max(x_data) - min(x_data)) * (max(y_data) - min(y_data))
-    #b = fsolve(star_size, 0.01, args=(a, c, area))
-    #st_sizes_arr = a * np.exp(b * mag_data ** c)
     st_sizes_arr = 0.1 + 100. * 10 ** ((np.array(mag_data) -
         min(mag_data)) / -2.5)
     plt.scatter(x_data, y_data, marker='o', c='black', s=st_sizes_arr)
@@ -230,21 +238,32 @@ def make_plots(output_subdir, clust_name, x_data, y_data, bin_width,
     plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
     # Set axes labels
-    plt.xlabel('radius (px)', fontsize=12)
-    plt.ylabel("stars/px$^{2}$", fontsize=12)
+    plt.xlabel('radius ({})'.format(coord), fontsize=12)
+    plt.ylabel("stars/{}$^{{2}}$".format(coord), fontsize=12)
     # Set grid
     ax5.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
     # Cluster's name.
     text = str(clust_name)
     plt.text(0.4, 0.9, text, transform=ax5.transAxes, fontsize=14)
+    # Round radii values.
+    # If 3-P King profile converged.
+    if flag_3pk_conver is True:
+        rads_r, e_rads_r = err_r.round_sig_fig([rc, rt, clust_rad],
+            [e_rc, e_rt, e_rad])
+    elif flag_2pk_conver is True:
+        rads_r, e_rads_r = err_r.round_sig_fig([rc, 0.0, clust_rad],
+            [e_rc, 0.0, e_rad])
     # Legend texts
     kp_text = '3P' if flag_3pk_conver else '2P'
-    texts = ['RDP (%0.1f px)' % bin_width,
-            '$d_{field}$ = %.1E $st/px^{2}$' % field_dens,
-            '%s King profile' % kp_text,
-            'r$_c$ = %0.1f $\pm$ %0.1f px' % (rc, e_rc),
-            'r$_t$ = %0.1f $\pm$ %0.1f px' % (rt, e_rt),
-            'r$_{cl}$ = %0.1f $\pm$ %0.1f px' % (clust_rad, e_rad)]
+    texts = ['RDP ($\sim${0:g} {1})'.format(bin_w_r, coord),
+            '$d_{{field}}$ = {:.1E} $st/{}^{{2}}$'.format(field_dens, coord),
+            '{} King profile'.format(kp_text),
+            'r$_c$ = {0:g} $\pm$ {1:g} {2}'.format(rads_r[0], e_rads_r[0],
+                coord),
+            'r$_t$ = {0:g} $\pm$ {1:g} {2}'.format(rads_r[1], e_rads_r[1],
+                coord),
+            'r$_{{cl}}$ = {0:g} $\pm$ {1:g} {2}'.format(rads_r[2], e_rads_r[2],
+                coord)]
     # Plot density profile with the smallest bin size
     ax5.plot(radii, ring_density, 'ko-', zorder=3, label=texts[0])
     # Plot poisson error bars
@@ -314,8 +333,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, bin_width,
     plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
     #Set axis labels
-    plt.xlabel('x (px)', fontsize=12)
-    plt.ylabel('y (px)', fontsize=12)
+    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=12)
+    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=12)
     # Set minor ticks
     ax6.minorticks_on()
     # Add circle
@@ -368,8 +387,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, bin_width,
     plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
     #Set axis labels
-    plt.xlabel('x (px)', fontsize=12)
-    plt.ylabel('y (px)', fontsize=12)
+    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=12)
+    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=12)
     # Set minor ticks
     ax7.minorticks_on()
     ax7.grid(b=True, which='both', color='gray', linestyle='--', lw=0.5)

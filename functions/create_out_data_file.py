@@ -35,20 +35,20 @@ def create_out_data_file(output_dir):
 # [%s]\n\
 #\n\
 # NAME: Cluster's name.\n\
-# c_x[px]: Cluster's x center coordinate.\n\
-# e_x[px]: Cluster's x center coordinate error.\n\
-# c_y[px]: Cluster's y center coordinate.\n\
-# e_y[px]: Cluster's x center coordinate error.\n\
-# r_cl[px]: Cluster's radius.\n\
-# e_rcl[px]: Cluster's radius error.\n\
-# r_c[px]: Core radius (3-P King profile).\n\
-# e_rc[px]: Core radius error.\n\
-# r_t[px]: Tidal radius (3-P King profile).\n\
-# e_rt[px]: Tidal radius error.\n\
+# c_x: Cluster's x center coordinate.\n\
+# e_x: Cluster's x center coordinate error.\n\
+# c_y: Cluster's y center coordinate.\n\
+# e_y: Cluster's x center coordinate error.\n\
+# r_cl: Cluster's radius.\n\
+# e_rcl: Cluster's radius error.\n\
+# r_c: Core radius (3-P King profile).\n\
+# e_rc: Core radius error.\n\
+# r_t: Tidal radius (3-P King profile).\n\
+# e_rt: Tidal radius error.\n\
 #\n\
-# cont_ind: 'Contamination index' is a  measure of the contamination of field\n\
-#           stars in the cluster region. The closer to 1, the more\n\
-#           contaminated the cluster region is.\n\
+# CI: 'Contamination index' is a  measure of the contamination of field\n\
+#      stars in the cluster region. The closer to 1, the more contaminated \n\
+#      the cluster region is.\n\
 # memb: Approximate number of cluster's members assuming a uniform\n\
 #       background.\n\
 # memb_k: Approximate number of cluster's members obtained integrating the\n\
@@ -96,10 +96,10 @@ def create_out_data_file(output_dir):
 #    more than one cluster present in the frame, variable or too crowded\n\
 #    field, etc.\n\
 #\n\
-#NAME                c_x     e_x     c_y     e_y     r_cl    e_rcl     r_c     \
-e_rc     r_t     e_rt cont_ind memb memb_k prob_cl int_col     met     e_m   \
-age   e_a  E(B-V)   e_E   dist   e_d  M1 M2  f1 f2 f3 f4 f5 f6 f7 f8 f9  \
-FC\n" % now_time)
+#NAME                 c_x      e_x      c_y      e_y     r_cl    e_rcl      \
+r_c     e_rc      r_t     e_rt       CI     memb  memb_k   prob_cl  \
+int_col      met      e_m      age      e_a   E(B-V)      e_E     dist      \
+e_d      M1 M2  f1 f2 f3 f4 f5 f6 f7 f8 f9  FC\n" % now_time)
         out_data_file.close()
 
     return out_file_name
