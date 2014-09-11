@@ -65,10 +65,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params, bin_width,
 
     # Define system of coordinates used.
     px_deg = gd_params[-1]
-    if px_deg == 'px':
-        coord, x_name, y_name = 'px', 'x', 'y'
-    else:
-        coord, x_name, y_name = 'deg', 'ra', 'dec'
+    coord_lst = ['px', 'x', 'y'] if px_deg == 'px' else 'deg', 'ra', 'dec'
+    coord, x_name, y_name = coord_lst
 
     # Define plot limits for *all* CMD diagrams.
     x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd = axes_params[3]

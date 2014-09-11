@@ -226,7 +226,7 @@ def asteca_funcs(myfile, sub_dir, out_file_name, gip_params):
     # Add cluster data and flags to output file
     a_d_o(out_file_name, sub_dir, output_dir, clust_name, center_params,
         radius_params, kp_params, cont_index, n_c, pval_test_params[0],
-        integr_return, err_flags, flag_num_memb_low, bf_return)
+        integr_return, axes_params, err_flags, flag_num_memb_low, bf_return)
     print 'Data added to output file.'
 
     # Make plots
