@@ -34,7 +34,7 @@ def round_to_ref(x, y):
     >>> round_to_ref(0.0035, 0.05)
     0.0
     '''
-    x_r = 0.0 if y == 0. else round(x, -int(floor(log10(abs(y)))))
+    x_r = x if y == 0. else round(x, -int(floor(log10(abs(y)))))
 
     return x_r
 
