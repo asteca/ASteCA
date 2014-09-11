@@ -114,7 +114,7 @@ def get_king_profile(kp_flag, clust_rad, field_dens, radii, ring_density,
                 rc, e_rc, rt, e_rt, n_c_k, cd = -1., -1., -1., -1., -1., -1.
 
             if flag_2pk_conver is False:
-                print '  WARNING: core radius could not be ontained.'
+                print '  WARNING: core radius could not be obtained.'
     else:
         # Pass dummy values
         rc, e_rc, rt, e_rt, n_c_k, cd = -1., -1., -1., -1., -1., -1.

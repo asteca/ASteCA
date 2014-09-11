@@ -50,13 +50,8 @@ def add_data_output(out_file_name, sub_dir, output_dir, clust_name,
     int_flags.append(sum(int_flags[2:]))
 
     # Round structure parameters.
-    # If 3-P King profile converged.
-    if flag_3pk_no_conver is False:
-        rtt, e_rtt = rt, e_rt
-    elif flag_2pk_conver is True:
-        rtt, e_rtt = -1., -1.
-    cr_r, cr_e = rsf([center_cl[0], center_cl[1], clust_rad, rc, rtt],
-        [e_cent[0], e_cent[1], e_rad, e_rc, e_rtt])
+    cr_r, cr_e = rsf([center_cl[0], center_cl[1], clust_rad, rc, rt],
+        [e_cent[0], e_cent[1], e_rad, e_rc, e_rt])
     # Interwine these lists.
     cre_r = [item for t in zip(cr_r, cr_e) for item in t]
 

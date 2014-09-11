@@ -65,7 +65,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params, bin_width,
 
     # Define system of coordinates used.
     px_deg = gd_params[-1]
-    coord_lst = ['px', 'x', 'y'] if px_deg == 'px' else 'deg', 'ra', 'dec'
+    coord_lst = ['px', 'x', 'y'] if px_deg == 'px' else ['deg', 'ra', 'dec']
     coord, x_name, y_name = coord_lst
 
     # Define plot limits for *all* CMD diagrams.
@@ -246,13 +246,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params, bin_width,
     text = str(clust_name)
     plt.text(0.4, 0.9, text, transform=ax5.transAxes, fontsize=14)
     # Round radii values.
-    # If 3-P King profile converged.
-    if flag_3pk_conver is True:
-        rads_r, e_rads_r = err_r.round_sig_fig([rc, rt, clust_rad],
-            [e_rc, e_rt, e_rad])
-    elif flag_2pk_conver is True:
-        rads_r, e_rads_r = err_r.round_sig_fig([rc, 0.0, clust_rad],
-            [e_rc, 0.0, e_rad])
+    rads_r, e_rads_r = err_r.round_sig_fig([rc, rt, clust_rad],
+        [e_rc, e_rt, e_rad])
     # Legend texts
     kp_text = '3P' if flag_3pk_conver else '2P'
     texts = ['RDP ($\sim${0:g} {1})'.format(bin_w_r, coord),

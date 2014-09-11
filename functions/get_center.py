@@ -126,9 +126,9 @@ def get_center(x_data, y_data, mag_data, hist_lst, gc_params, mode,
             # and radius given as initial values.
 
             # Call funct to obtain the pixel coords of the maximum KDE value.
-            approx_cent_semi = [cent_cl_semi]
+            approx_cents = [cent_cl_semi]
             kde_cent, e_cent, kde_plot = kde_center(x_data, y_data,
-                approx_cent_semi, cl_rad_semi, gc_params)
+                approx_cents, cl_rad_semi, gc_params)
 
             # Find bin where the center xy coordinates are located.
             hist, xedges, yedges = hist_lst[:-1]
