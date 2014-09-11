@@ -14,7 +14,7 @@ def red_memb(decont_algor_return, bf_params, rm_params):
 
     bf_flag = bf_params[0]
     memb_prob_avrg_sort, flag_decont_skip = decont_algor_return
-    flag_red_memb, prob_mag = rm_params
+    flag_red_memb, min_prob = rm_params
 
     # Only run if best fit process is set to run.
     if bf_flag:
@@ -37,47 +37,47 @@ def red_memb(decont_algor_return, bf_params, rm_params):
                     if len(memb_prob_avrg_sort[:middle_indx]) < 10:
                         print '  WARNING: less than 10 stars left after'
                         print '  reducing by membership prob. Using full list.'
-                        red_memb, prob_mag = memb_prob_avrg_sort, 0.
+                        red_memb, min_prob = memb_prob_avrg_sort, 0.
                     else:
                         red_memb = memb_prob_avrg_sort[:middle_indx]
-                        prob_mag = memb_prob_avrg_sort[middle_indx][7]
+                        min_prob = memb_prob_avrg_sort[middle_indx][7]
 
                 elif flag_red_memb == 'manual':
 
                     red_memb = []
                     for star in memb_prob_avrg_sort:
-                        if star[7] >= prob_mag:
+                        if star[7] >= min_prob:
                             red_memb.append(star)
 
                     if len(red_memb) < 10:
                         print '  WARNING: less than 10 stars left after'
                         print '  reducing by membership prob. Using full list.'
-                        red_memb, prob_mag = memb_prob_avrg_sort, 0.
+                        red_memb, min_prob = memb_prob_avrg_sort, 0.
             else:
                 # Skip reduction process.
-                red_memb, prob_mag = memb_prob_avrg_sort, 0.
+                red_memb, min_prob = memb_prob_avrg_sort, 0.
 
         elif flag_red_memb == 'mag':
             # Reject stars beyond the given magnitude limit.
             red_list = []
             for star in memb_prob_avrg_sort:
-                if star[3] <= prob_mag:
+                if star[3] <= min_prob:
                     red_list.append(star)
 
             # Check number of stars left.
             if len(red_list) < 10:
                 print '  WARNING: less than 10 stars left after reducing'
                 print '  by magnitude limit. Using full list.'
-                red_memb, prob_mag = memb_prob_avrg_sort, 0.
+                red_memb, min_prob = memb_prob_avrg_sort, 0.
             else:
                 red_memb = red_list
-                prob_mag = memb_prob_avrg_sort[-1][7]
+                min_prob = memb_prob_avrg_sort[-1][7]
 
         else:
             # Skip reduction process.
-            red_memb, prob_mag = memb_prob_avrg_sort, 0.
+            red_memb, min_prob = memb_prob_avrg_sort, 0.
     else:
         # Skip reduction process.
-        red_memb, prob_mag = memb_prob_avrg_sort, 0.
+        red_memb, min_prob = memb_prob_avrg_sort, 0.
 
-    return red_memb, prob_mag
+    return red_memb, min_prob
