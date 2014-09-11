@@ -122,8 +122,10 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params, bin_width,
     # Add text boxs.
     bin_w_r = err_r.round_to_y(bin_width)
     text = 'Bin $\simeq$ {0:g} {1}'.format(bin_w_r, coord)
-    ob = offsetbox.AnchoredText(text, loc=1)
+    ob = offsetbox.AnchoredText(text, loc=1, prop=dict(size=10))
+    ob.patch.set(boxstyle='square,pad=-0.2', alpha=0.85)
     ax0.add_artist(ob)
+
     plt.imshow(hist_2d_g.transpose(), origin='lower')
 
     # 2D Gaussian histograms' centers using different standard deviations.
@@ -344,25 +346,9 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params, bin_width,
     text = text1 + text2
     plt.text(0.62, 0.9, text, transform=ax6.transAxes,
              bbox=dict(facecolor='white', alpha=0.85), fontsize=12)
-    # Plor contour levels.
-    # Get KDE for CMD intrinsic position of most probable members.
-    #x, y = np.mgrid[x_min:x_max:100j, y_min:y_max:100j]
-    #positions = np.vstack([x.ravel(), y.ravel()])
-    #x_zoom, y_zoom = [], []
-    #for indx, star_x in enumerate(x_data):
-        #if x_min < star_x < x_max and y_min < y_data[indx] < y_max:
-            #x_zoom.append(star_x)
-            #y_zoom.append(y_data[indx])
-    #values = np.vstack([x_zoom, y_zoom])
-    ## The results are HEAVILY dependant on the bandwidth used here.
-    #kernel = stats.gaussian_kde(values)
-
-    #k_pos = kernel(positions)
-    ## Print x,y coordinates of max value.
-    #new_cent = positions.T[np.argmax(k_pos)]
-    #print new_cent
-    # 'manual' mode produces none of these parameters. Skip KDE plot if
-    # that mode was used.
+    # Plot contour levels.
+    # 'semi' and 'manual' modes do not produce any of these parameters.
+    # Skip KDE plot if one of those modes was used.
     if kde_pl:
         ext_range, x, y, k_pos = kde_pl
         kde = np.reshape(k_pos.T, x.shape)
@@ -373,8 +359,6 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params, bin_width,
     #Plot center.
     plt.scatter(center_cl[0], center_cl[1], color='w', s=40, lw=0.8,
         marker='x', zorder=5)
-    #plt.scatter(new_cent[0], new_cent[1], color='g', s=40, lw=0.8,
-        #marker='x', zorder=5)
 
     # Cluster and field regions defined.
     ax7 = plt.subplot(gs1[4:6, 0:2])
