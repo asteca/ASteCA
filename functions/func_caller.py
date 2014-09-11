@@ -107,7 +107,7 @@ def asteca_funcs(myfile, sub_dir, out_file_name, gip_params):
     center_params = g_c(x_data, y_data, mag_data, hist_lst, gc_params,
         mode, semi_return, coord_lst)
     # Unpack values from list.
-    cent_bin, kde_center = center_params[0], center_params[1][0]
+    cent_bin, kde_center = center_params[0], center_params[1]
 
     # Get density profile
     rdp_params = gdp(hist_lst, cent_bin)

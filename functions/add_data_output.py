@@ -14,7 +14,7 @@ def add_data_output(out_file_name, sub_dir, output_dir, clust_name,
     '''
 
     # Unpack data.
-    center_cl, e_cent = center_params[1][0], center_params[2]
+    center_cl, e_cent = center_params[1], center_params[2]
     flag_center_med, flag_center_std, flag_center_manual = center_params[-3:]
     clust_rad, e_rad = radius_params[:2]
     flag_delta_total, flag_not_stable, flag_delta, flag_radius_manual = \

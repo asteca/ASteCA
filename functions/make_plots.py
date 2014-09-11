@@ -81,9 +81,9 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params, bin_width,
     # Selected system params.
     m_rs, a_rs, e_rs, d_rs = ps_params[3:]
     # Parameters from get_center function.
-    cent_bin, kde_centers, e_cent, st_dev_lst, hist_2d_g, kde_pl = \
-    center_params[:6]
-    center_cl = kde_centers[0]
+    cent_bin, kde_cent, e_cent, approx_cents, st_dev_lst, hist_2d_g, \
+    kde_pl = center_params[:7]
+    center_cl = kde_cent
     # RDP params.
     radii, ring_density, poisson_error = rdp_params[:3]
     # Parameters from get_radius function.
@@ -140,8 +140,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params, bin_width,
     plt.ylabel('{} ({})'.format(y_name, coord), fontsize=12)
     ax1.minorticks_on()
     ## Add lines through median values with std deviations.
-    cent_median, cent_std_dev = np.mean(np.array(kde_centers), axis=0), \
-    np.std(np.array(kde_centers), axis=0)
+    cent_median, cent_std_dev = np.mean(np.array(approx_cents), axis=0), \
+    np.std(np.array(approx_cents), axis=0)
     plt.axvline(x=cent_median[0], linestyle='-', color='k')
     plt.axvline(x=cent_median[0] + cent_std_dev[0], linestyle='--',
         color='k')
@@ -163,7 +163,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params, bin_width,
         bbox=dict(facecolor='white', alpha=0.8), fontsize=11)
     # Plot centers.
     cols = cycle(['red', 'blue', 'green', 'black', 'cyan'])
-    for i, center in enumerate(kde_centers):
+    for i, center in enumerate(approx_cents):
         boxes = plt.gca()
         length = (bin_width * st_dev_lst[i]) * 2.
         boxes.add_patch(Rectangle(
