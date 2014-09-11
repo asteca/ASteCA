@@ -2,6 +2,7 @@
 @author: gabriel
 """
 
+import numpy as np
 from error_round import round_sig_fig as rsf
 from compiler.ast import flatten
 
@@ -59,11 +60,15 @@ def add_data_output(out_file_name, sub_dir, output_dir, clust_name,
     # Interwine these lists.
     cre_r = [item for t in zip(cr_r, cr_e) for item in t]
 
-    # Unpack cluster param values and their errors.
-    m, a, e, d = bf_return[0][0]
-    e_m, e_a, e_e, e_d = bf_return[1]
     # Round cluster parameters.
-    cp_r, cp_e = rsf([m, a, e, d], [e_m, e_a, e_e, e_d])
+    # See if bootstrap process was applied.
+    cp_e = bf_return[1]
+    if np.array([_ == -1. for _ in cp_e]).all():
+        # Round cluster params using the g format.
+        cp_r = ['{:g}'.format(_) for _ in bf_return[0][0]]
+    else:
+        # Round cluster parameters.
+        cp_r, cp_e = rsf(bf_return[0][0], bf_return[1])
     # Interwine these lists.
     cpe_r = [item for t in zip(cp_r, cp_e) for item in t]
 

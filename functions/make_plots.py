@@ -839,12 +839,19 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params, bin_width,
         ax19.xaxis.set_major_locator(MultipleLocator(1.0))
         ax19.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
         # Add text box
-        m, a, e, d = isoch_fit_params[0]
-        e_m, e_a, e_e, e_d = isoch_fit_errors
-        text1 = '$z = %0.4f \pm %0.4f$' '\n' % (m, e_m)
-        text2 = '$log(age) = %0.2f \pm %0.2f$' '\n' % (a, e_a)
-        text3 = '$E_{(B-V)} = %0.2f \pm %0.2f$' '\n' % (e, e_e)
-        text4 = '$(m-M)_o = %0.2f \pm %0.2f$' % (d, e_d)
+        # See if bootstrap process was applied.
+        if N_b < 2:
+            # Round cluster params using the g format.
+            cp_r = ['{:g}'.format(_) for _ in isoch_fit_params[0]]
+            cp_e = isoch_fit_errors
+        else:
+            # Round cluster parameters.
+            cp_r, cp_e = err_r.round_sig_fig(isoch_fit_params[0],
+                isoch_fit_errors)
+        text1 = '$z = {} \pm {}$' '\n'.format(cp_r[0], cp_e[0])
+        text2 = '$log(age) = {} \pm {}$' '\n'.format(cp_r[1], cp_e[1])
+        text3 = '$E_{{(B-V)}} = {} \pm {}$' '\n'.format(cp_r[2], cp_e[2])
+        text4 = '$(m-M)_o = {} \pm {}$'.format(cp_r[3], cp_e[3])
         text = text1 + text2 + text3 + text4
         plt.text(0.5, 0.77, text, transform=ax19.transAxes,
                  bbox=dict(facecolor='white', alpha=0.6), fontsize=12)
@@ -856,6 +863,9 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params, bin_width,
 
     # Best fitting process plots for GA.
     if bf_flag and best_fit_algor == 'genet':
+
+        m, a, e, d = isoch_fit_params[0]
+        e_m, e_a, e_e, e_d = isoch_fit_errors if N_b >= 2 else [0.] * 4
 
         # Set ranges used by plots below.
         m_min, m_max = m_rs[:2]
@@ -965,7 +975,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params, bin_width,
         ax22.tick_params(axis='y', which='major', labelsize=9)
         plt.ylabel('Likelihood', fontsize=12)
         plt.xlabel('$z$', fontsize=16)
-        text = '$z = %0.4f \pm %0.4f$' % (m, e_m)
+        text = '$z = {} \pm {}$'.format(cp_r[0], cp_e[0])
         plt.text(0.1, 0.93, text, transform=ax22.transAxes,
             bbox=dict(facecolor='white', alpha=0.5), fontsize=12)
         hist, xedges, yedges = np.histogram2d(zip(*isoch_done[0])[0],
@@ -976,9 +986,9 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params, bin_width,
         plt.imshow(h_g.transpose(), origin='lower',
                    extent=[xedges[0], xedges[-1], y_min_edge, yedges[-1]],
                    cmap=plt.get_cmap('gist_yarg'), aspect='auto')
-        plt.axvline(x=m, linestyle='--', color='blue')
         plt.axvline(x=m + e_m, linestyle='--', color='red')
         plt.axvline(x=m - e_m, linestyle='--', color='red')
+        plt.axvline(x=m, linestyle='--', color='blue', zorder=3)
 
         ax23 = plt.subplot(gs1[12:14, 2:4])
         plt.ylim(max(0, min(lkl_old[0]) - 0.3 * min(lkl_old[0])),
@@ -989,7 +999,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params, bin_width,
         ax23.tick_params(axis='y', which='major', labelsize=9)
         plt.ylabel('Likelihood', fontsize=12)
         plt.xlabel('$log(age)$', fontsize=16)
-        text = '$log(age) = %0.2f \pm %0.2f$' % (a, e_a)
+        text = '$log(age) = {} \pm {}$'.format(cp_r[1], cp_e[1])
         plt.text(0.1, 0.93, text, transform=ax23.transAxes,
             bbox=dict(facecolor='white', alpha=0.5), fontsize=12)
         hist, xedges, yedges = np.histogram2d(zip(*isoch_done[0])[1],
@@ -999,9 +1009,9 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params, bin_width,
         plt.imshow(h_g.transpose(), origin='lower',
                    extent=[xedges[0], xedges[-1], y_min_edge, yedges[-1]],
                    cmap=plt.get_cmap('gist_yarg'), aspect='auto')
-        plt.axvline(x=a, linestyle='--', color='blue')
         plt.axvline(x=a + e_a, linestyle='--', color='red')
         plt.axvline(x=a - e_a, linestyle='--', color='red')
+        plt.axvline(x=a, linestyle='--', color='blue', zorder=3)
 
         ax24 = plt.subplot(gs1[12:14, 4:6])
         plt.ylim(max(0, min(lkl_old[0]) - 0.3 * min(lkl_old[0])),
@@ -1012,7 +1022,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params, bin_width,
         ax24.tick_params(axis='y', which='major', labelsize=9)
         plt.ylabel('Likelihood', fontsize=12)
         plt.xlabel('$E_{(B-V)}$', fontsize=16)
-        text = '$E_{(B-V)} = %0.2f \pm %0.2f$' % (e, e_e)
+        text = '$E_{{(B-V)}} = {} \pm {}$'.format(cp_r[2], cp_e[2])
         plt.text(0.1, 0.93, text, transform=ax24.transAxes,
             bbox=dict(facecolor='white', alpha=0.5), fontsize=12)
         hist, xedges, yedges = np.histogram2d(zip(*isoch_done[0])[2],
@@ -1022,9 +1032,9 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params, bin_width,
         plt.imshow(h_g.transpose(), origin='lower',
                    extent=[xedges[0], xedges[-1], y_min_edge, yedges[-1]],
                    cmap=plt.get_cmap('gist_yarg'), aspect='auto')
-        plt.axvline(x=e, linestyle='--', color='blue')
         plt.axvline(x=e + e_e, linestyle='--', color='red')
         plt.axvline(x=e - e_e, linestyle='--', color='red')
+        plt.axvline(x=e, linestyle='--', color='blue', zorder=3)
 
         ax25 = plt.subplot(gs1[12:14, 6:8])
         plt.ylim(max(0, min(lkl_old[0]) - 0.3 * min(lkl_old[0])),
@@ -1035,7 +1045,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params, bin_width,
         ax25.tick_params(axis='y', which='major', labelsize=9)
         plt.ylabel('Likelihood', fontsize=12)
         plt.xlabel('$(m-M)_o$', fontsize=16)
-        text = '$(m-M)_o = %0.2f \pm %0.2f$' % (d, e_d)
+        text = '$(m-M)_o = {} \pm {}$'.format(cp_r[3], cp_e[3])
         plt.text(0.1, 0.93, text, transform=ax25.transAxes,
             bbox=dict(facecolor='white', alpha=0.5), fontsize=12)
         hist, xedges, yedges = np.histogram2d(zip(*isoch_done[0])[3],
@@ -1045,9 +1055,9 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params, bin_width,
         plt.imshow(h_g.transpose(), origin='lower',
                    extent=[xedges[0], xedges[-1], y_min_edge, yedges[-1]],
                    cmap=plt.get_cmap('gist_yarg'), aspect='auto')
-        plt.axvline(x=d, linestyle='--', color='blue')
         plt.axvline(x=d + e_d, linestyle='--', color='red')
         plt.axvline(x=d - e_d, linestyle='--', color='red')
+        plt.axvline(x=d, linestyle='--', color='blue', zorder=3)
 
     # Ignore warning issued by colorbar plotted in CMD with membership
     # probabilities.

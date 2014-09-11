@@ -66,10 +66,20 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
             isoch_fit_params[0][2], isoch_fit_params[0][3])
 
         if best_fit_algor == 'genet':
-            # Call bootstrap function with resampling to get the uncertainty
-            # in each parameter.
-            isoch_fit_errors = bootstrap(err_lst, obs_clust, completeness,
-                ip_list, bf_params, sc_params, ga_params, ps_params)
+            if N_b >= 2:
+                # Call bootstrap function with resampling to get the uncertainty
+                # in each parameter.
+                isoch_fit_errors = bootstrap(err_lst, obs_clust, completeness,
+                    ip_list, bf_params, sc_params, ga_params, ps_params)
+
+                # Round errors to 1 significant digit and round params values
+                # to the corresponding number of significant digits given by
+                # the errors.
+                isoch_fit_params[0], isoch_fit_errors = rsf(isoch_fit_params[0],
+                    isoch_fit_errors)
+            else:
+                print 'Skipping bootstrap process.'
+                isoch_fit_errors = [-1.] * 4
 
         # For plotting purposes.
         # Get list of stored isochrones and their parameters.
@@ -87,11 +97,6 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
         # Generate best fit synthetic cluster.
         synth_clst = s_c(err_lst, completeness, sc_params,
                          isoch_list[m_indx][a_indx], [-1., -1., e, d], cmd_sel)
-
-        # Round errors to 1 significant digit and round params values to the
-        # corresponding number of significant digits given by the errors.
-        isoch_fit_params[0], isoch_fit_errors = rsf(isoch_fit_params[0],
-            isoch_fit_errors)
 
     else:
         # Pass empty lists to make_plots.

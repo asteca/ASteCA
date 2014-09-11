@@ -40,15 +40,15 @@ def bootstrap(err_lst, obs_clust0, completeness, ip_list, bf_params,
 
     milestones = [15, 30, 45, 60, 75, 90, 100]
     # Begin bootstrap block (run a minimum of two times).
-    for i in range(max(N_b, 2)):
+    for i in range(N_b):
 
         # Resample cluster with replacement.
         obs_clust = resample_replacement(obs_clust0)
 
         # Algorithm selected.
         if best_fit_algor == 'genet':
-            # Let the GA algor know this call comes from the bootstrap process
-            # so it will not print percentages to screen.
+            # Let the GA algor know this call comes from the bootstrap
+            # process so it will not print percentages to screen.
             flag_print_perc = False
             params_boot.append(g_a(flag_print_perc, err_lst, obs_clust,
             completeness, ip_list, sc_params, ga_params, sys_sel)[0])
