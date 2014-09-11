@@ -33,7 +33,7 @@ def get_semi(input_dir, clust_name, mode):
                         if reader[0] == clust_name:
                             cl_cent_semi = [float(reader[1]), float(reader[2])]
                             cl_rad_semi = float(reader[3])
-                            cent_flag_semi, rad_flag_semi, err_flag_semi = \
+                            err_flag_semi, cent_flag_semi, rad_flag_semi = \
                             int(reader[4]), int(reader[5]), int(reader[6])
                             # Set flag to True if the cluster was found.
                             flag_clust_found = True

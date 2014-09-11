@@ -99,7 +99,7 @@ def get_regions(hist_lst, cent_bin, clust_rad, h_manual, stars_in, stars_out,
     area = len(hist_2d[0]) * len(hist_2d) * (bin_width ** 2)
 
     # Length of the side of the square that contains the cluster. Increase it
-    # if the radius is comparable to the bin width used to make sure the
+    # if the radius is comparable to the bin width used, to make sure the
     # region covers the entire cluster.
     length = 2.5 if clust_rad > 2 * bin_width else 5.
 
