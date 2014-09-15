@@ -2,7 +2,7 @@
 
 The code is still under development. Version 1.0.0 will be released as soon as the following list of issues is addressed:
 
-* [Issues left until version 1.0.0](https://github.com/Gabriel-p/asteca/milestones/1.0.0)
+* [Issues left until version 1.0.0](https://github.com/Gabriel-p/asteca/milestones/v1.0.0)
 
 A list of **Beta** releases can be accessed [here](https://github.com/Gabriel-p/asteca/releases).
 
