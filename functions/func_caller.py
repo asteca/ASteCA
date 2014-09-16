@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 
-from os.path import join, exists, isfile
-from os import mkdir, rmdir, makedirs
+from os.path import join, exists
+from os import mkdir
 import time
-import shutil
 import gc  # Garbage collector.
 # Import files with defined functions.
+from functions.get_in_params import get_in_params as gip
 from functions.get_data_semi import get_semi as g_s
 from functions.get_data import get_data as gd
 from functions.trim_frame import trim_frame as t_f
@@ -29,8 +29,10 @@ from functions.reduce_membership import red_memb as rm
 from functions.synth_cl_err import synth_clust_err as sce
 from functions.best_fit_synth_cl import best_fit as bfsc
 from functions.make_plots import make_plots as mp
+from functions.create_out_data_file import create_out_data_file as c_o_d_f
 from functions.add_data_output import add_data_output as a_d_o
 from functions.cl_members_file import cluster_members_file as c_m_f
+from functions.done_move import done_move as dm
 
 # Check if rpy2 package and R are installed, else skip get_p_value function.
 from subprocess import Popen, PIPE
@@ -47,13 +49,16 @@ if exit_code != 0:
 r_flags = [R_inst, rpy2_inst]
 
 
-def asteca_funcs(myfile, sub_dir, out_file_name, gip_params):
+def asteca_funcs(mypath, cl_file):
     '''
     Container which holds the calls to all the functions.
     '''
 
     # Start timing this loop.
     start = time.time()
+
+    # Read input parameters from params_input.dat file.
+    gip_params = gip(mypath)
 
     # Unpack input parameters.
     mode, in_dirs, gd_params, gh_params, gc_params, cr_params, kp_flag, \
@@ -72,21 +77,25 @@ def asteca_funcs(myfile, sub_dir, out_file_name, gip_params):
         print "  WARNING: mode is incorrect. Default to 'manual'."
         mode = 'manual'
 
-    # Generate output subdir.
-    output_subdir = join(output_dir, sub_dir)
-    # Check if subdir already exists, if not create it.
-    if not exists(output_subdir):
-        mkdir(output_subdir)
-
-    # Store cluster's name
-    clust_name = myfile[:-4]
+    # Store cluster's name without extension.
+    clust_name = cl_file[1][:-4]
     print 'Analizing cluster {} ({}).'.format(clust_name, mode)
 
+    # Generate file names.
+    data_file = join(mypath, 'input', *cl_file)
+    memb_file = join(mypath, 'input', cl_file[0], clust_name + '_memb.dat')
+    output_subdir = join(mypath, 'output', cl_file[0])
+    # Generate output subdir if it doesn't exist.
+    if not exists(output_subdir):
+        mkdir(output_subdir)
+    memb_file_out = join(output_subdir, clust_name + '_memb.dat')
+    write_name = join(cl_file[0], clust_name)
+
     # Get data from semi-data input file.
-    mode, semi_return = g_s(input_dir, clust_name, mode)
+    mode, semi_return = g_s(clust_name, mode)
 
     # Get cluster's photometric data from file.
-    phot_data = gd(input_dir, sub_dir, myfile, gd_params)
+    phot_data = gd(data_file, gd_params)
     # If Manual mode is set, display frame and ask if it should be trimmed.
     phot_data = t_f(phot_data, mode)
     # Unpack coordinates, magnitude and color.
@@ -131,11 +140,12 @@ def asteca_funcs(myfile, sub_dir, out_file_name, gip_params):
     # Get approximate number of cluster's members.
     n_c, flag_num_memb_low, a_clust, n_clust = g_m_n(field_dens, clust_rad,
         rdp_params, bin_width)
-    print 'Approximate number of members in cluster obtained (%d).' % (n_c)
+    print ("Approximate number of members in cluster obtained "
+        "({:.0f}).".format(n_c))
 
     # Get contamination index.
     cont_index = g_c_i(field_dens, a_clust, n_clust)
-    print 'Contamination index obtained (%0.2f).' % cont_index
+    print 'Contamination index obtained ({:.2f}).'.format(cont_index)
 
     # Accept and reject stars based on their errors.
     acpt_stars, rjct_stars, err_plot, err_flags, err_pck, er_params = \
@@ -149,7 +159,7 @@ def asteca_funcs(myfile, sub_dir, out_file_name, gip_params):
     # Field regions around the cluster's center.
     flag_area_stronger, cl_reg_big, field_region = g_r(hist_lst, cent_bin,
         clust_rad, hist_2d_filled, cl_region, stars_out, gr_params)
-    print 'Field stars regions obtained (%d).' % len(field_region)
+    print 'Field stars regions obtained ({}).'.format(len(field_region))
 
     # Get the luminosity function and completeness level for each magnitude
     # bin. The completeness will be used by the isochrone/synthetic cluster
@@ -181,11 +191,11 @@ def asteca_funcs(myfile, sub_dir, out_file_name, gip_params):
     # was found around the cluster.
     print 'Applying decontamination algorithm.'
     decont_algor_return = dab(flag_area_stronger, cl_region, field_region,
-                            clust_name, sub_dir, da_params)
+                            memb_file, da_params)
     memb_prob_avrg_sort = decont_algor_return[0]
 
     # Create data file with membership probabilities.
-    c_m_f(output_dir, sub_dir, clust_name, memb_prob_avrg_sort)
+    c_m_f(memb_file_out, memb_prob_avrg_sort)
     print 'Membership probabilities saved to file.'
 
     # Store all isochrones in all the metallicity files in isoch_list.
@@ -208,31 +218,19 @@ def asteca_funcs(myfile, sub_dir, out_file_name, gip_params):
     bf_return = bfsc(err_lst, red_memb_prob, completeness, ip_list, bf_params,
         sc_params, ga_params, ps_params)
 
-    # New name for cluster? Useful when there's a single photometric file
-    # with multiple clusters in it.
-    if mode == 'manual':
-        wrong_answer = True
-        while wrong_answer:
-            answer_rad = raw_input('New name for cluster? (y/n) ')
-            if answer_rad == 'n':
-                wrong_answer = False
-            elif answer_rad == 'y':
-                new_name = str(raw_input('Input new name: '))
-                clust_name = new_name
-                wrong_answer = False
-            else:
-                print 'Wrong input. Try again.\n'
+    # Create output data file in /output dir if it doesn't exist.
+    out_file_name = c_o_d_f(output_dir)
 
     # Add cluster data and flags to output file
-    a_d_o(out_file_name, sub_dir, output_dir, clust_name, center_params,
+    a_d_o(out_file_name, write_name, center_params,
         radius_params, kp_params, cont_index, n_c, pval_test_params[0],
         integr_return, axes_params, err_flags, flag_num_memb_low, bf_return)
     print 'Data added to output file.'
 
     # Make plots
     if pl_params[0]:
-        mp(output_subdir, clust_name, x_data, y_data, gd_params, bin_width,
-            center_params, rdp_params,
+        mp(output_subdir, clust_name, x_data, y_data, gd_params,
+            bin_width, center_params, rdp_params,
             field_dens, radius_params, cont_index, mag_data, col1_data,
             err_plot, err_flags, kp_params, cl_region, stars_out,
             stars_in_rjct, stars_out_rjct, integr_return, n_c,
@@ -242,28 +240,13 @@ def asteca_funcs(myfile, sub_dir, out_file_name, gip_params):
             er_params, axes_params, ps_params, pl_params)
         print 'Plots created.'
 
-    # Move file to 'done' dir.
-    if flag_move_file:
-        dst_dir = join(done_dir, sub_dir)
-        # If the sub-dir doesn't exist, create it before moving the file.
-        if not exists(dst_dir):
-            makedirs(dst_dir)
-        shutil.move(join(input_dir, sub_dir, myfile), dst_dir)
-        # Also move *memb_data.dat file if it exists.
-        if isfile(join(input_dir, sub_dir, clust_name + '_memb.dat')):
-            shutil.move(join(input_dir, sub_dir, clust_name + '_memb.dat'),
-                dst_dir)
-        # If sub-dir left behind is empty, remove it.
-        try:
-            rmdir(join(input_dir, sub_dir))
-        except OSError:
-            # Sub-dir not empty, skip.
-            pass
-        print 'Photometric data file moved.'
+    # Move file to 'done' dir if flag is set.
+    dm(flag_move_file, mypath, cl_file, done_dir, data_file, memb_file)
 
     elapsed = time.time() - start
     m, s = divmod(elapsed, 60)
-    print 'End of analysis for %s in %dm %02ds.\n' % (clust_name, m, s)
+    print 'End of analysis for {} in {:.0f}m {:.0f}s.\n'.format(clust_name,
+        m, s)
 
     # Force the Garbage Collector to release unreferenced memory.
     gc.collect()

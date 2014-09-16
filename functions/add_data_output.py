@@ -7,7 +7,7 @@ from error_round import round_sig_fig as rsf
 from compiler.ast import flatten
 
 
-def add_data_output(out_file_name, sub_dir, output_dir, clust_name,
+def add_data_output(out_file_name, write_name,
     center_params, radius_params, kp_params, cont_index, n_c, prob_cl_kde,
     integr_return, axes_params, err_flags, flag_num_memb_low, bf_return):
     '''
@@ -68,13 +68,13 @@ def add_data_output(out_file_name, sub_dir, output_dir, clust_name,
     cpe_r = [item for t in zip(cp_r, cp_e) for item in t]
 
     # Store all parameter values in list.
-    line = [str(sub_dir) + '/' + str(clust_name), cre_r,
+    line = [write_name, cre_r,
         cont_index, n_c, n_c_k, prob_cl_kde, integ_col, cpe_r]
     # Flatten list.
     line_f = flatten(line)
 
     # Write values to file.
-    with open(output_dir + out_file_name, "a") as f_out:
+    with open(out_file_name, "a") as f_out:
         f_out.write('''{:<16} {:>8} {:>8} {:>8} {:>8} {:>8} \
 {:>8} {:>8} {:>8} {:>8} {:>8} \
 {:>8.2f} {:>8.0f} {:>8.0f} {:>8.0f} {:>8.2f} \

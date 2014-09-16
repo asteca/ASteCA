@@ -3,17 +3,18 @@
 """
 
 from time import strftime
-from os.path import exists
+from os.path import exists, join
 from os import mkdir
 
 
 def create_out_data_file(output_dir):
     '''
-    Create output data file with headers. This will overwrite any old output
-    data file already in the folder.
+    Create output data file with headers. This will not overwrite any old
+    output data file already in the folder.
     '''
 
-    out_file_name = 'asteca_output.dat'
+    # Output file name.
+    out_file_name = join(output_dir, 'asteca_output.dat')
 
     # Check if output folder exists, if not create it.
     if not exists(output_dir):
@@ -23,13 +24,12 @@ def create_out_data_file(output_dir):
     # deleting/creating the file again.
     try:
         # File already exists -> don't create a new one and append new lines.
-        with open(output_dir + out_file_name):
+        with open(out_file_name):
             pass
-        print 'Output data file already exists.\n'
     # File doesn't exist -> create new one.
     except IOError:
-        print 'Output data file created.\n'
-        out_data_file = open(output_dir + out_file_name, 'w')
+        print 'Output data file created.'
+        out_data_file = open(out_file_name, 'w')
         now_time = strftime("%Y-%m-%d %H:%M:%S")
         out_data_file.write("#\n\
 # [%s]\n\

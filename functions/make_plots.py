@@ -18,8 +18,8 @@ from functions.exp_function import exp_func
 import error_round as err_r
 
 
-def make_plots(output_subdir, clust_name, x_data, y_data, gd_params, bin_width,
-    center_params, rdp_params, field_dens, radius_params,
+def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
+    bin_width, center_params, rdp_params, field_dens, radius_params,
     cont_index, mag_data, col1_data, err_plot, err_flags, kp_params,
     cl_region, stars_out, stars_in_rjct, stars_out_rjct, integr_return, n_c,
     flag_area_stronger, cl_reg_big, field_region, flag_pval_test,
@@ -1076,8 +1076,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params, bin_width,
         cbar.ax.tick_params(labelsize=9)
 
     # Generate output file for each data file.
-    pl_fmt = pl_params[1]
-    pl_dpi = pl_params[2]
+    pl_fmt, pl_dpi = pl_params[1:3]
     plt.savefig(join(output_subdir, str(clust_name) + '.' + pl_fmt), dpi=pl_dpi)
 
     # Close to release memory.

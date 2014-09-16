@@ -19,7 +19,7 @@ def get_in_params(mypath):
     # Store input and output dirs and path to input data file.
     input_dir = join(mypath, 'input/')
     output_dir = join(mypath, 'output/')
-    data_file = join(input_dir, 'params_input.dat')
+    data_file = join(mypath, 'params_input.dat')
 
     # Check if params_input.dat file exists.
     if isfile(data_file):
@@ -133,7 +133,7 @@ def get_in_params(mypath):
     gc_params = [gc_params0, gc_params1]
     in_dirs = [input_dir, output_dir, done_dir]
     pv_params = [pv0_params, pv1_params, pv2_params]
-    da_params = [da0_params, da1_params, input_dir]
+    da_params = [da0_params, da1_params]
 
     # Fix isochrones location according to the CMD and set selected.
     if cmd_select in {1, 2, 3}:

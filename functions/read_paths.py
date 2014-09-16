@@ -9,23 +9,31 @@ from os.path import join
 from os import listdir, walk
 
 
-def read_paths(input_dir):
+def read_paths(mypath):
     '''
     Store the paths and names of all the input clusters stored in the
     input_dir folder.
     '''
 
-    # Store subdir names [0] and file names [1] inside each subdir.
-    dir_files = [[], []]
+    # Path where cluster data files are stored.
+    input_dir = join(mypath, 'input/')
+
+    # Store subdir names and file names in cl_files.
+    cl_files = []
     for root, dirs, files in walk(input_dir):
+
+        # For files not in sub-dirs.
+        if files and root == input_dir:
+            for name in files:
+                # Don't attempt to read membership data files.
+                if not name.endswith('_memb.dat'):
+                    cl_files.append(['', name])
+        # For files in sub-dirs.
         if dirs:
             for subdir in dirs:
                 for name in listdir(join(input_dir, subdir)):
-                    # Check to see if it's a valid data file.
-                    if name.endswith(('.DAT', '.MAG', '.OUT', '.TEX',
-                    '.TXT', '.dat', '.mag', '.out', '.tex', '.txt'))\
-                    and not name.endswith('_memb.dat'):
-                        dir_files[0].append(subdir)
-                        dir_files[1].append(name)
+                    # Don't attempt to read membership data files.
+                    if not name.endswith('_memb.dat'):
+                        cl_files.append([subdir, name])
 
-    return dir_files
+    return cl_files

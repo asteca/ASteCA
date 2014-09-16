@@ -3,7 +3,6 @@
 """
 
 import numpy as np
-from os.path import join
 
 
 def rem_bad_stars(id_star, x_data, y_data, mag_data, e_mag, col1_data,
@@ -29,11 +28,10 @@ def rem_bad_stars(id_star, x_data, y_data, mag_data, e_mag, col1_data,
     return id_clean, clean_array
 
 
-def get_data(mypath, sub_dir, myfile, gd_params):
+def get_data(data_file, gd_params):
     '''
     Get photometric data from the cluster's data file.
     '''
-    data_file = join(mypath, sub_dir, myfile)
 
     # Read indexes from input params.
     id_inx, x_inx, y_inx, m_inx, em_inx, c_inx, ec_inx = gd_params[:-1]

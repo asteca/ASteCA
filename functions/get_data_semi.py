@@ -5,10 +5,10 @@ Created on Fri Aug 16 11:12:55 2013
 @author: gabriel
 """
 
-from os.path import join, isfile
+from os.path import isfile
 
 
-def get_semi(input_dir, clust_name, mode):
+def get_semi(clust_name, mode):
     '''
     Get center, radius and flags for semi automatic mode.
     '''
@@ -16,7 +16,7 @@ def get_semi(input_dir, clust_name, mode):
     # Mode is semi.
     if mode == 'semi':
 
-        semi_file = join(input_dir, 'semi_input.dat')
+        semi_file = 'semi_input.dat'
         # Check if semi_input.dat file exists.
         if isfile(semi_file):
 

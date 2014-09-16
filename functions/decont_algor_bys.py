@@ -92,30 +92,29 @@ def mpas(cl_reg_rad, runs_fields_probs):
     return membership_prob_avrg_sort
 
 
-def bys_da(flag_area_stronger, cl_region, field_region, clust_name, sub_dir,
-        da_params):
+def bys_da(flag_area_stronger, cl_region, field_region, memb_file, da_params):
     '''
     Bayesian field decontamination algorithm.
     '''
 
-    mode, run_n, mypath2 = da_params
+    mode, run_n = da_params
 
     # Check if at least one field region was obtained.
     if mode in ['auto', 'manual'] and flag_area_stronger:
-        print "  WARNING: no field regions found. Using 'skip'."
+        print "  WARNING: no field regions found. Using 'skip' mode."
         mode = 'skip'
 
     # Check if 'mode' was correctly set, else use 'skip'.
     if mode not in ['auto', 'manual', 'read', 'skip']:
-        print "  WARNING: Wrong name for 'mode' in input file. Using 'skip'."
+        print ('''  WARNING: Wrong name for 'mode' in input file. Using 'skip'
+        mode.''')
         mode = 'skip'
 
     if mode == 'read':
         # Check if file exists.
-        memb_file = mypath2 + '/' + sub_dir + '/' + clust_name + '_memb.dat'
         if not os.path.isfile(memb_file):
             # File does not exist.
-            print "  WARNING: members file does not exist. Using 'skip'."
+            print "  WARNING: members file does not exist. Using 'skip' mode."
             mode = 'skip'
 
     flag_decont_skip = False
@@ -193,8 +192,6 @@ def bys_da(flag_area_stronger, cl_region, field_region, clust_name, sub_dir,
 
     elif mode == 'read':
         print 'Reading membership probabilities from file.'
-        # File where membership probabilities are stored.
-        memb_file = mypath2 + '/' + sub_dir + '/' + clust_name + '_memb.dat'
         # Read IDs from file.
         data = np.genfromtxt(memb_file, dtype=str, unpack=True)
         id_list = data[0].tolist()
