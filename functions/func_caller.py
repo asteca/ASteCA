@@ -61,11 +61,10 @@ def asteca_funcs(mypath, cl_file):
     gip_params = gip(mypath)
 
     # Unpack input parameters.
-    mode, in_dirs, gd_params, gh_params, gc_params, cr_params, kp_flag, \
+    mode, done_dir, gd_params, gh_params, gc_params, cr_params, kp_flag, \
     im_flag, er_params, gr_params, pv_params, da_params, ps_params, bf_params,\
     sc_params, ga_params, rm_params, pl_params, flag_move_file, axes_params =\
     gip_params
-    input_dir, output_dir, done_dir = in_dirs
 
     # Define system of coordinates used.
     px_deg = gd_params[-1]
@@ -81,11 +80,12 @@ def asteca_funcs(mypath, cl_file):
     clust_name = cl_file[1][:-4]
     print 'Analizing cluster {} ({}).'.format(clust_name, mode)
 
-    # Generate file names.
+    # Generate hardcoded file names and paths.
     data_file = join(mypath, 'input', *cl_file)
     memb_file = join(mypath, 'input', cl_file[0], clust_name + '_memb.dat')
-    output_subdir = join(mypath, 'output', cl_file[0])
-    # Generate output subdir if it doesn't exist.
+    output_dir = join(mypath, 'output')
+    output_subdir = join(output_dir, cl_file[0])
+    # Generate output dir/subdir if it doesn't exist.
     if not exists(output_subdir):
         mkdir(output_subdir)
     memb_file_out = join(output_subdir, clust_name + '_memb.dat')

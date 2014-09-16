@@ -16,6 +16,7 @@ See the code's [site][1] for more information. <-- *Under development*.
  - [Extra packages](#extra-packages)
  - [Python distributions](#python-distributions)
  - [Theoretical isochrones](#theoretical-isochrones)
+ - [Running](#running)
 - [To do](#to-do)
 - [Versioning](#versioning)
 
@@ -88,6 +89,18 @@ ASteCA needs at least one set of theoretical isochrones stored in a `/asteca/iso
 [Girardi isochrones][7] are currently the default but any set can in practice be used (with minor changes made to the code)
 
 The isochrones can be downloaded manually or the package [ezPadova-2][8] can be used to automatically fetch them from the site.
+
+## Running
+
+To run the code simply drop a cluster's photometric data file in the `/asteca/input` folder,
+modify the `params_input.dat` file to both inform the code of the distribution of columns
+in your photometric file and set the values for each function within the code.
+
+Photometric files can also be stored in `/asteca/input` inside a sub-folder.
+
+**Every** file inside the `/asteca/input` folder (inside or outside a sub-folder) will be
+processed by `ASteCA`, with the exception of the membership probabilities files that end
+with a _memb.dat_ extension.
 
 ## To do
 

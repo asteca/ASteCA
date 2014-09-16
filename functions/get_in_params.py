@@ -17,8 +17,6 @@ def get_in_params(mypath):
     '''
 
     # Store input and output dirs and path to input data file.
-    input_dir = join(mypath, 'input/')
-    output_dir = join(mypath, 'output/')
     data_file = join(mypath, 'params_input.dat')
 
     # Check if params_input.dat file exists.
@@ -131,7 +129,6 @@ def get_in_params(mypath):
     cr_params = [cr_params0, cr_params1]
     gh_params = [gh_params0, gh_params1]
     gc_params = [gc_params0, gc_params1]
-    in_dirs = [input_dir, output_dir, done_dir]
     pv_params = [pv0_params, pv1_params, pv2_params]
     da_params = [da0_params, da1_params]
 
@@ -176,6 +173,6 @@ def get_in_params(mypath):
     ga_params = [n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es]
     rm_params = [flag_red_memb, min_prob]
 
-    return mode, in_dirs, gd_params, gh_params, gc_params, cr_params, kp_flag,\
+    return mode, done_dir, gd_params, gh_params, gc_params, cr_params, kp_flag,\
     im_flag, er_params, gr_params, pv_params, da_params, ps_params, bf_params,\
     sc_params, ga_params, rm_params, pl_params, flag_move_file, axes_params
