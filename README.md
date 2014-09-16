@@ -16,7 +16,7 @@ See the code's [site][1] for more information. <-- *Under development*.
  - [Extra packages](#extra-packages)
  - [Python distributions](#python-distributions)
  - [Theoretical isochrones](#theoretical-isochrones)
- - [Running](#running)
+- [Running](#running)
 - [To do](#to-do)
 - [Versioning](#versioning)
 
@@ -101,6 +101,11 @@ Photometric files can also be stored in `/asteca/input` inside a sub-folder.
 **Every** file inside the `/asteca/input` folder (inside or outside a sub-folder) will be
 processed by `ASteCA`, with the exception of the membership probabilities files that end
 with a _memb.dat_ extension.
+
+Once file(s) are in place and the `params_input.dat` file correctly modified, the code
+can be executed with the command:
+
+    python asteca.py
 
 ## To do
 
