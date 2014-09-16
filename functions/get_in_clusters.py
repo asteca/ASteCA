@@ -9,7 +9,7 @@ from os.path import join
 from os import listdir, walk
 
 
-def read_paths(mypath):
+def in_clusters(mypath):
     '''
     Store the paths and names of all the input clusters stored in the
     input_dir folder.

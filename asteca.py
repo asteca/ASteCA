@@ -4,7 +4,7 @@ from os.path import join, realpath, dirname
 from os import getcwd
 import traceback
 # Import files with defined functions.
-from functions.read_paths import read_paths as rp
+from functions.get_in_clusters import in_clusters
 from functions.func_caller import asteca_funcs as af
 
 
@@ -22,7 +22,7 @@ def main():
     # Path where the code is running
     mypath = realpath(join(getcwd(), dirname(__file__)))
     # Read paths and names of all clusters stored in /input.
-    cl_files = rp(mypath)
+    cl_files = in_clusters(mypath)
 
     # Iterate through all cluster files.
     for cl_file in cl_files:

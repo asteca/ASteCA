@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from os.path import join, exists
-from os import mkdir
 import time
 import gc  # Garbage collector.
 # Import files with defined functions.
 from functions.get_in_params import get_in_params as gip
+from functions.get_names_paths import names_paths as n_p
 from functions.get_data_semi import get_semi as g_s
 from functions.get_data import get_data as gd
 from functions.trim_frame import trim_frame as t_f
@@ -76,20 +75,10 @@ def asteca_funcs(mypath, cl_file):
         print "  WARNING: mode is incorrect. Default to 'manual'."
         mode = 'manual'
 
-    # Store cluster's name without extension.
-    clust_name = cl_file[1][:-4]
+    # Get file names and paths.
+    clust_name, data_file, memb_file, output_dir, output_subdir, \
+    memb_file_out, write_name = n_p(mypath, cl_file)
     print 'Analizing cluster {} ({}).'.format(clust_name, mode)
-
-    # Generate hardcoded file names and paths.
-    data_file = join(mypath, 'input', *cl_file)
-    memb_file = join(mypath, 'input', cl_file[0], clust_name + '_memb.dat')
-    output_dir = join(mypath, 'output')
-    output_subdir = join(output_dir, cl_file[0])
-    # Generate output dir/subdir if it doesn't exist.
-    if not exists(output_subdir):
-        mkdir(output_subdir)
-    memb_file_out = join(output_subdir, clust_name + '_memb.dat')
-    write_name = join(cl_file[0], clust_name)
 
     # Get data from semi-data input file.
     mode, semi_return = g_s(clust_name, mode)
