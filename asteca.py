@@ -13,7 +13,7 @@ def main():
     Main function. Reads input data files and calls the container function.
     '''
 
-    __version__ = "v2.0.1-beta"
+    __version__ = "v3.0.0-beta"
 
     print '-------------------------------------------'
     print '            ASteCA %s' % __version__
