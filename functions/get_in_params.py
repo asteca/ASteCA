@@ -7,7 +7,6 @@ Created on Tue Feb 11 14:03:44 2014
 
 from os.path import join, isfile
 import sys
-#import re
 
 
 def get_in_params(mypath):
@@ -68,7 +67,6 @@ def get_in_params(mypath):
                 elif reader[0] == 'CC':
                     gc_params0 = str(reader[1])
                     gc_params1 = float(reader[2])
-                    #gc_params2 = str(reader[3])
 
                 elif reader[0] == 'CR':
                     cr_params0 = str(reader[1])
@@ -84,7 +82,10 @@ def get_in_params(mypath):
                     im_flag = True if reader[1] in true_lst else False
 
                 elif reader[0] == 'GR':
-                    gr_params = map(int, reader[1:])
+                    try:
+                        fr_number = int(reader[1])
+                    except:
+                        fr_number = str(reader[1])
 
                 elif reader[0] == 'PV':
                     pv0_params = True if reader[1] in true_lst else False
@@ -174,5 +175,5 @@ def get_in_params(mypath):
     rm_params = [flag_red_memb, min_prob]
 
     return mode, done_dir, gd_params, gh_params, gc_params, cr_params, kp_flag,\
-    im_flag, er_params, gr_params, pv_params, da_params, ps_params, bf_params,\
+    im_flag, er_params, fr_number, pv_params, da_params, ps_params, bf_params,\
     sc_params, ga_params, rm_params, pl_params, flag_move_file, axes_params

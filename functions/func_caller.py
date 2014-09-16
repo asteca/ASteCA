@@ -61,7 +61,7 @@ def asteca_funcs(mypath, cl_file):
 
     # Unpack input parameters.
     mode, done_dir, gd_params, gh_params, gc_params, cr_params, kp_flag, \
-    im_flag, er_params, gr_params, pv_params, da_params, ps_params, bf_params,\
+    im_flag, er_params, fr_number, pv_params, da_params, ps_params, bf_params,\
     sc_params, ga_params, rm_params, pl_params, flag_move_file, axes_params =\
     gip_params
 
@@ -147,8 +147,7 @@ def asteca_funcs(mypath, cl_file):
 
     # Field regions around the cluster's center.
     flag_area_stronger, cl_reg_big, field_region = g_r(hist_lst, cent_bin,
-        clust_rad, hist_2d_filled, cl_region, stars_out, gr_params)
-    print 'Field stars regions obtained ({}).'.format(len(field_region))
+        clust_rad, hist_2d_filled, cl_region, stars_out, fr_number)
 
     # Get the luminosity function and completeness level for each magnitude
     # bin. The completeness will be used by the isochrone/synthetic cluster

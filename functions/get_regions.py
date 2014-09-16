@@ -82,26 +82,36 @@ def spiral_region(histo, h_manual, stars_in, stars_out, x_c_b, y_c_b, spiral,
 
 
 def get_regions(hist_lst, cent_bin, clust_rad, h_manual, stars_in, stars_out,
-    gr_params):
+    fr_number):
     '''
     Define cluster and field regions around the cluster's center.
     '''
 
     hist_2d, bin_width = hist_lst[0], hist_lst[-1]
     x_c_b, y_c_b = cent_bin
-    # Maximum number of field regions to attempt to fill.
-    f_regions = gr_params[0]
 
     # Define region around the cluster as a spiral centered in it
     # and of area a bit larger than that defined by the cluster's radius.
 
     # Get area as total number of bins in 2D hist times the area of each bin.
-    area = len(hist_2d[0]) * len(hist_2d) * (bin_width ** 2)
+    total_area = len(hist_2d[0]) * len(hist_2d) * (bin_width ** 2)
+    cl_area = np.pi * clust_rad ** 2
 
-    # Length of the side of the square that contains the cluster. Increase it
-    # if the radius is comparable to the bin width used, to make sure the
-    # region covers the entire cluster.
-    length = 2.5 if clust_rad > 2 * bin_width else 5.
+    # Begin with a length factor of 2.5 and decrease it to 2.0 if the maximu
+    # number of field regions that can be defined is smaller than 1.
+    for l_factor in np.arange(2.5, 1.99, -0.1):
+        # l_factor: Length of the side of the square that contains the cluster.
+
+        # Increase length if the radius is comparable to the bin width used,
+        # to make sure the region covers the entire cluster.
+        length = l_factor if clust_rad > 2 * bin_width else (2. * l_factor)
+        # Area of the square around the cluster area.
+        sq_area = (length * clust_rad) ** 2.
+        # Maximum number of field regions possible.
+        f_regs_max = int((total_area - sq_area) / cl_area)
+
+        if f_regs_max > 0:
+            break
 
     # If the remaining area in the frame after substracting the cluster region
     # is smaller than the cluster's area, this means that the cluster is either
@@ -109,20 +119,29 @@ def get_regions(hist_lst, cent_bin, clust_rad, h_manual, stars_in, stars_out,
     # that of the cluster can be obtained.
     # Raise a flag.
     flag_area_stronger = False
-    if (area - (length * clust_rad) ** 2) < np.pi * clust_rad ** 2:
-        print '  WARNING: cluster region too large, no field region available.'
+    if f_regs_max < 1:
+        print ("  WARNING: cluster region is too large or frame\n"
+        "  is too small. No field regions available.")
         flag_area_stronger = True
     else:
-        # Calculate maximum number of field regions possible.
-        f_regs_max = int((area - (length * clust_rad) ** 2.) /
-            (np.pi * clust_rad ** 2))
         # If the number of field regions defined is larger than the maximum
         # allowed, use the maximum.
-        if f_regions > f_regs_max:
-            print ('  WARNING: Number of FR defined (%d) larger\n' +
-            '  than the maximum allowed (%d). Using max number.') % (f_regions,
-            f_regs_max)
+        if fr_number == 'max':
             f_regions = f_regs_max
+            print 'Using max number of field regions ({}).'.format(f_regions)
+        elif fr_number > f_regs_max:
+            f_regions = f_regs_max
+            print ("  WARNING: Number of FR defined ({}) larger than\n"
+            "  the maximum allowed ({}). "
+            "Using max number.").format(fr_number, f_regs_max)
+        elif fr_number < 0:
+            f_regions = f_regs_max
+            print ("  WARNING: Number of FR defined ({}) is less than\n"
+            "  zero. Using max number ({}).").format(fr_number, f_regs_max)
+        else:
+            print ("Using defined number of field "
+            "regions ({}).".format(fr_number))
+            f_regions = fr_number
 
     # Get list that contains the spiral as a list of x,y coordinates (also
     # stored as lists) starting from the initial bin [0, 0].
@@ -143,7 +162,7 @@ def get_regions(hist_lst, cent_bin, clust_rad, h_manual, stars_in, stars_out,
     # Obtain field regions.
     # This list holds all the field regions.
     field_regions = []
-    if not flag_area_stronger and f_regions > 0:
+    if not flag_area_stronger:
 
         # This ensures that the decontamination algorithm uses CMD's
         # of areas equal to the cluster area for the field regions since
@@ -174,9 +193,5 @@ def get_regions(hist_lst, cent_bin, clust_rad, h_manual, stars_in, stars_out,
             print ('  WARNING: no field regions left after removal of those\n' +
             '  with less than 4 stars.')
             flag_area_stronger = True
-    else:
-        print ('  WARNING: number of field regions is 0.\n' +
-        '  No field region defined.')
-        flag_area_stronger = True
 
     return flag_area_stronger, cl_reg_big, field_regions
