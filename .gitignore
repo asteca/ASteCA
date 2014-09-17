@@ -1,6 +1,7 @@
 *.pyc
 isochrones/
 output/*
+input/*
 man/*
 !man/*.tex
 !man/*.pdf
