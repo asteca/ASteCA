@@ -1,7 +1,5 @@
 *.pyc
-*.dat
 isochrones/
-input/*
 output/*
 man/*
 !man/*.tex
