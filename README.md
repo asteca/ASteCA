@@ -108,13 +108,13 @@ can be executed with the command:
     python asteca.py
 
 The _CLUSTER.DAT_ file contains a synthetic open cluster generated via the
-[MASSCLEAN][(http://www.physics.uc.edu/~bogdan/massclean/) package with the following
+[MASSCLEAN](http://www.physics.uc.edu/~bogdan/massclean/) package with the following
 parameter values:
 
-> z=
-> log(age)=
-> E(B-V)=
-> (m-M)o=
+>>> z=
+>>> log(age)=
+>>> E(B-V)=
+>>> (m-M)o=
 
 and serves as an example cluster to be analyzed with `ASteCA`.
 
