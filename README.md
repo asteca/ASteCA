@@ -107,14 +107,14 @@ can be executed with the command:
 
     python asteca.py
 
-The _CLUSTER.DAT_ file contains a synthetic open cluster generated via the
-[MASSCLEAN](http://www.physics.uc.edu/~bogdan/massclean/) package with the following
-parameter values:
+The _CLUSTER.DAT_ file located in the `/asteca/input` folder contains a synthetic open cluster
+generated via the [MASSCLEAN](http://www.physics.uc.edu/~bogdan/massclean/) package with the
+following parameter values:
 
->>> z=
->>> log(age)=
->>> E(B-V)=
->>> (m-M)o=
+    z=
+    log(age)=
+    E(B-V)=
+    (m-M)o=
 
 and serves as an example cluster to be analyzed with `ASteCA`.
 
