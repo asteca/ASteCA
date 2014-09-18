@@ -6,14 +6,18 @@
 Welcome to ASteCA's documentation
 ==================================
 
-The lastest version available for this documentation can be found here.
+This is the manual of operation for the ``ASteCA`` (**A**utomated **ST**ellar
+**C**luster **A**nylysis) packag. The latest version
+available for this documentation can be found `here`_.
 
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
    installation
    running
+   synth_clust
+     imf_sample
 
 
 Indices and tables
@@ -23,3 +27,4 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
+.. _here: http://asteca.rtfd.org/

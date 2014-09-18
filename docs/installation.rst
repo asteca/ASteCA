@@ -53,7 +53,7 @@ python and its packages without affecting your system is `pyenv`_.
 
 
 Extra packages
-~~~~~~~~~~~~~~
+--------------
 
 If you want to use the `function`_ that obtains the cluster probability
 of being a true cluster, the following software is needed:
@@ -78,7 +78,7 @@ them, just not that particular function.
 
 
 Theoretical isochrones
-~~~~~~~~~~~~~~~~~~~~~~
+----------------------
 
 ``ASteCA`` needs at least one set of theoretical isochrones stored in a
 ``/asteca/isochrones`` folder to be able to apply the function that
