@@ -170,7 +170,7 @@ ER    eyefit    0.25    2.   0.1  0.5
 
 # Integrated magnitudes.
 #
-# flag_IM: True / False. Switch to apply or skip
+# flag_IM: True / False. Switch to apply or skip.
 #
 #    flag_IM
 IM     false
@@ -214,7 +214,7 @@ DA  auto      100
 # * flag: True / False. Flag that determines if the best synthetic cluster
 #   fitting process is to be run.
 # * algorithm: select algorithm to use in best fitting process,
-#   'brute' (for Brute Force) / 'genet' (for Genetic Algorithm)
+#   'brute' (Brute Force) / 'genet' (Genetic Algorithm)
 #   If 'brute' is selected, 'boot_num' is irrelevant.
 # * boot_num: number of times the bootstrap with replacement process will run.
 #   Minimum value is 2, anything less will skip the bootstrap process hence
