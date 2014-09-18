@@ -137,7 +137,8 @@ KP       true
 # Field star regions.
 #
 # * regions: number of field regions around the cluster that the code will
-#   attempt to define.
+#   attempt to define. If the keyword 'max' is used, then the maximum possible
+#   number will be used.
 #
 #   regions
 GR       10
