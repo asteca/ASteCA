@@ -1,0 +1,201 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Installation &mdash; ASteCA v3.0.0-beta documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     'v3.0.0-beta',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="ASteCA v3.0.0-beta documentation" href="index.html" />
+    <link rel="next" title="Running" href="running.html" />
+    <link rel="prev" title="Welcome to ASteCA’s documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="running.html" title="Running"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to ASteCA’s documentation"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">ASteCA v3.0.0-beta documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<p>The latest packaged release (zip or tarball) can be downloaded from:</p>
+<ul class="simple">
+<li><a class="reference external" href="https://github.com/Gabriel-p/asteca/releases">.zip</a></li>
+<li><a class="reference external" href="https://github.com/Gabriel-p/asteca/releases">.tar.gz</a></li>
+</ul>
+<p>You can alternatively checkout the entire project via <tt class="docutils literal"><span class="pre">git</span></tt>. Simply
+locate yourself in the folder you want the code to be downloaded and
+run:</p>
+<div class="highlight-python"><div class="highlight"><pre>git clone https://github.com/Gabriel-p/asteca.git
+</pre></div>
+</div>
+<p>This will create a new sub-folder named <em>/asteca</em> with all the code
+stored inside.</p>
+<div class="section" id="python">
+<h2>Python<a class="headerlink" href="#python" title="Permalink to this headline">¶</a></h2>
+<p>The code has been tested with the July 2014 release of <a class="reference external" href="https://www.python.org">python</a>:</p>
+<ul class="simple">
+<li><a class="reference external" href="https://www.python.org/download/releases/2.7.8/">Python - 2.7.8</a></li>
+</ul>
+<p>It should also work on older versions, if you encounter any problems
+please contact me or <a class="reference external" href="https://github.com/Gabriel-p/asteca/issues/new">open a new issue</a>.</p>
+</div>
+<div class="section" id="dependencies">
+<h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h2>
+<p>The packages listed below are required to run <tt class="docutils literal"><span class="pre">ASteCA</span></tt>.</p>
+<ul class="simple">
+<li><a class="reference external" href="http://www.numpy.org/">Numpy - 1.8.2</a> – <tt class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">numpy</span></tt></li>
+<li><a class="reference external" href="http://matplotlib.org/">Matplotlib - 1.3.1</a> – <tt class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">matplotlib</span></tt></li>
+<li><a class="reference external" href="http://www.scipy.org/">SciPy - 0.14.0</a> – <tt class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">scipy</span></tt></li>
+</ul>
+<p>These versions are the ones I used, the code could work with older
+versions of the packages but I can’t guarantee it.</p>
+</div>
+<div class="section" id="python-distributions">
+<h2>Python distributions<a class="headerlink" href="#python-distributions" title="Permalink to this headline">¶</a></h2>
+<p>An alternative to installing packages separately is to download a Python
+distribution which comes with many packages already installed:</p>
+<ul class="simple">
+<li><a class="reference external" href="https://store.continuum.io/cshop/anaconda/">Anaconda</a></li>
+<li><a class="reference external" href="https://www.enthought.com/products/canopy/">Canopy</a></li>
+</ul>
+<p>The best and easiest way to install and manage several versions of
+python and its packages without affecting your system is <a class="reference external" href="https://github.com/yyuu/pyenv">pyenv</a>.</p>
+<div class="section" id="extra-packages">
+<h3>Extra packages<a class="headerlink" href="#extra-packages" title="Permalink to this headline">¶</a></h3>
+<p>If you want to use the <a class="reference external" href="https://github.com/Gabriel-p/asteca/blob/master/functions/get_p_value.py">function</a> that obtains the cluster probability
+of being a true cluster, the following software is needed:</p>
+<ul class="simple">
+<li><a class="reference external" href="http://www.r-project.org/">R - 3.0.1</a> – <tt class="docutils literal"><span class="pre">sudo</span> <span class="pre">apt-get</span> <span class="pre">install</span> <span class="pre">r-base</span></tt></li>
+</ul>
+<p>After it is installed, open with sudo privileges (<tt class="docutils literal"><span class="pre">sudo</span> <span class="pre">R</span></tt>) and
+install, <em>in order</em>, the packages:</p>
+<ul class="simple">
+<li>rgl – <tt class="docutils literal"><span class="pre">install.packages(&quot;rgl&quot;)</span></tt></li>
+<li>mvtnorm – <tt class="docutils literal"><span class="pre">install.packages(&quot;mvtnorm&quot;)</span></tt></li>
+<li>misc3d – <tt class="docutils literal"><span class="pre">install.packages(&quot;misc3d&quot;)</span></tt></li>
+<li>ks – <tt class="docutils literal"><span class="pre">install.packages(&quot;ks&quot;)</span></tt></li>
+</ul>
+<p>The package that allows <tt class="docutils literal"><span class="pre">python</span></tt> and <tt class="docutils literal"><span class="pre">R</span></tt> to communicate is also
+needed:</p>
+<ul class="simple">
+<li><a class="reference external" href="http://rpy.sourceforge.net/">rpy2 -2.4.3</a> – <tt class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">rpy2</span></tt></li>
+</ul>
+<p>These extra packages are not mandatory and <tt class="docutils literal"><span class="pre">ASteCA</span></tt> will still run without
+them, just not that particular function.</p>
+</div>
+<div class="section" id="theoretical-isochrones">
+<h3>Theoretical isochrones<a class="headerlink" href="#theoretical-isochrones" title="Permalink to this headline">¶</a></h3>
+<p><tt class="docutils literal"><span class="pre">ASteCA</span></tt> needs at least one set of theoretical isochrones stored in a
+<tt class="docutils literal"><span class="pre">/asteca/isochrones</span></tt> folder to be able to apply the function that
+estimates the clusters’ parameters. <a class="reference external" href="http://stev.oapd.inaf.it/cgi-bin/cmd">Girardi isochrones</a> are currently
+the default but any set can in practice be used (with minor changes made
+to the code)</p>
+<p>The isochrones can be downloaded manually or the package <a class="reference external" href="https://github.com/Gabriel-p/ezpadova">ezPadova-2</a>
+can be used to automatically fetch them from the site.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Installation</a><ul>
+<li><a class="reference internal" href="#python">Python</a></li>
+<li><a class="reference internal" href="#dependencies">Dependencies</a></li>
+<li><a class="reference internal" href="#python-distributions">Python distributions</a><ul>
+<li><a class="reference internal" href="#extra-packages">Extra packages</a></li>
+<li><a class="reference internal" href="#theoretical-isochrones">Theoretical isochrones</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Welcome to ASteCA&#8217;s documentation</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="running.html"
+                        title="next chapter">Running</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/installation.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="running.html" title="Running"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to ASteCA’s documentation"
+             >previous</a> |</li>
+        <li><a href="index.html">ASteCA v3.0.0-beta documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Gabriel I Perren.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>
