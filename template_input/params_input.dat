@@ -24,7 +24,7 @@
 #   - auto: does not require user intervention of any kind.
 #   - semi: takes input values from the 'semi_input.dat' file.
 #   - manual: asks the user for some values (center, radius) but will also
-#     also give you the chance to have them automatically calculated.
+#     give you the chance to have them automatically calculated.
 #
 #   mode
 MO  auto
@@ -45,7 +45,7 @@ PD      0      1      2         3     4     5     6
 # * coords: px / deg. Indicates if the observed frame is in pixels or degrees.
 #
 #    coords
-PX      deg
+PX      px
 
 # Indicate the CMD to be used by the code to perform the analysis.
 #
@@ -163,7 +163,7 @@ GR       10
 #   if their errors are lower than 'be_e' (see below).
 # * be_e: maximum error value that stars in the bright end range can
 #   have without being rejected.
-# * N: number of sigmas (integer) to be used by the 'lowexp' method. <--INTEGER??
+# * N: number of sigmas to be used by the 'lowexp' method.
 #
 #       mode   e_max   be   be_e  N
 ER    eyefit    0.25    2.   0.1  0.5
@@ -173,7 +173,7 @@ ER    eyefit    0.25    2.   0.1  0.5
 # flag_IM: True / False. Switch to apply or skip.
 #
 #    flag_IM
-IM     false
+IM      true
 
 # KDE p-value test.
 #
@@ -188,7 +188,7 @@ IM     false
 #     cluster and field regions are compared.
 #
 #   flag_KDE    mode   num
-PV     false   manual   1
+PV      true   manual   1
 
 # Bayesian decontamination algorithm.
 #
