@@ -10,7 +10,7 @@ This is the manual of operation for the ``ASteCA`` (**A**\ utomated **Ste**\ lla
 **C**\ luster **A**\ nylysis) package.
 
 The latest version available for this documentation can be found `here`__.
-A PDF version of this manual can be downloaded from `here`__.
+A PDF version of this manual can also be downloaded `here`__.
 
 
 .. toctree::
