@@ -6,7 +6,7 @@
 Welcome to ASteCA's documentation
 ==================================
 
-This is the manual of operation for the ``ASteCA`` (**A**utomated **ST**ellar
+This is the manual of operation for the ``ASteCA`` (**A** utomated **ST**ellar
 **C**luster **A**nylysis) package. The latest version
 available for this documentation can be found `here`_.
 
@@ -17,6 +17,7 @@ available for this documentation can be found `here`_.
    installation
    running
    synth_clust
+   cmd_support
 
 
 Indices and tables
