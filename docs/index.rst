@@ -6,8 +6,8 @@
 Welcome to ASteCA's documentation
 ==================================
 
-This is the manual of operation for the ``ASteCA`` (**A** utomated **ST**ellar
-**C**luster **A**nylysis) package. The latest version
+This is the manual of operation for the ``ASteCA`` (**A**\ utomated **Ste**\ llar
+**C**\ luster **A**\ nylysis) package. The latest version
 available for this documentation can be found `here`_.
 
 
