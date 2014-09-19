@@ -28,12 +28,15 @@ def in_clusters(mypath):
                 # Don't attempt to read membership data files.
                 if not name.endswith('_memb.dat'):
                     cl_files.append(['', name])
+
         # For files in sub-dirs.
         if dirs:
             for subdir in dirs:
-                for name in listdir(join(input_dir, subdir)):
-                    # Don't attempt to read membership data files.
-                    if not name.endswith('_memb.dat'):
-                        cl_files.append([subdir, name])
+                # Don't read this sub-folder so it can be used as a container.
+                if subdir != 'dont_read':
+                    for name in listdir(join(input_dir, subdir)):
+                        # Don't attempt to read membership data files.
+                        if not name.endswith('_memb.dat'):
+                            cl_files.append([subdir, name])
 
     return cl_files
