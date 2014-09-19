@@ -9,6 +9,8 @@ A list of **Beta** releases can be accessed [here][2].
 
 See the code's [site][3] for more information. <-- *Under development*.
 
+Read the code's [documentation][9]. <-- *Under development*.
+
 ## To do
 
 * List of open [bugs][4].
@@ -40,3 +42,4 @@ Constructed with the following guidelines:
 [6]: https://github.com/Gabriel-p/asteca/issues?q=is%3Aopen+is%3Aissue+label%3Ap%3Ahigh
 [7]: https://github.com/Gabriel-p/asteca/issues
 [8]: http://semver.org/
+[9]: http://asteca.rtfd.org/
