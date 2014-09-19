@@ -29,7 +29,7 @@ and thus the normalized IMF can be written as:
 :math:`PDF(m) = \xi(m)_{norm} = C_1 \xi(m)`
 
 This is the first step, performed by the ``get-IMF-PDF`` function for
-a given selected IMF (Chabrier 2001, Kro"upa et al. 1993, Kroupa 2002)
+a given selected IMF (Chabrier 2001, Kroupa et al. 1993, Kroupa 2002)
 
 Once the PDF is generated, every time a new synthetic cluster is created
 the ``get-mass-dist`` function is called from within ``synth-cluster``.

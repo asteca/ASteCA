@@ -1,0 +1,117 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Integrated magnitudes &mdash; ASteCA v3.0.0-beta documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     'v3.0.0-beta',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="ASteCA v3.0.0-beta documentation" href="index.html" />
+    <link rel="prev" title="Adding CMD support" href="cmd_support.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="cmd_support.html" title="Adding CMD support"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">ASteCA v3.0.0-beta documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="integrated-magnitudes">
+<h1>Integrated magnitudes<a class="headerlink" href="#integrated-magnitudes" title="Permalink to this headline">¶</a></h1>
+<p>To obtain the integrated magnitude for the cluster region <em>cleaned</em> from
+field stars contamination, the following equations are used.</p>
+<p>First, assume:</p>
+<div class="math" id="equation-integ-cl-fl">
+<p><span class="eqno">(1)</span><img src="_images/math/e2b79145403df95bcdec66d309fdabd6640a42d2.png" alt="I_{cl+fl} = I_{cl} + I_{fl}"/></p>
+</div><p>then:</p>
+<div class="math">
+<p><img src="_images/math/0fe6af2787babbf66ad55ed88f7351003cafc582.png" alt="V^*_{cl} - V^*_{cl+fl} = -2.5 \log(I_{cl}/I_{cl+fl})"/></p>
+</div><p>using Eq. <a href="#equation-integ-cl-fl">(1)</a> we have:</p>
+<div class="math" id="equation-integ-cl-fl2">
+<p><span class="eqno">(2)</span><img src="_images/math/68cd9fcbcb6b2a2cb964cfd91b3884c4a35c8bd9.png" alt="V^*_{cl} - V^*_{cl+fl} = -2.5 \log(1 - I_{fl}/I_{cl+fl})"/></p>
+</div><p>and given:</p>
+<div class="math" id="equation-integ-cl-fl3">
+<p><span class="eqno">(3)</span><img src="_images/math/7645591f899a658da14546dafb4451b8d6189f5a.png" alt="V^*_{fl} - V^*_{cl+fl} = -2.5 \log(I_{fl}/I_{cl+fl}) \Rightarrow \frac{I_{fl}}{I_{cl+fl}} = 10^{(V^*_{fl} - V^*_{cl+fl})/-2.5}"/></p>
+</div><p>we can combine now Eqs. <a href="#equation-integ-cl-fl2">(2)</a> and <a href="#equation-integ-cl-fl3">(3)</a> to obtain:</p>
+<div class="math">
+<p><img src="_images/math/b4bb89eb17d4efc0c647c8d254a2eee1087d66cb.png" alt="V^*_{cl} = -2.5 \log(1 - 10^{(V^*_{fl} - V^*_{cl+fl})/-2.5}) + V^*_{cl+fl}"/></p>
+</div></div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="cmd_support.html"
+                        title="previous chapter">Adding CMD support</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/int_mags.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="cmd_support.html" title="Adding CMD support"
+             >previous</a> |</li>
+        <li><a href="index.html">ASteCA v3.0.0-beta documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Gabriel I Perren.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

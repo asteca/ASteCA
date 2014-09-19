@@ -24,6 +24,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="ASteCA v3.0.0-beta documentation" href="index.html" />
+    <link rel="next" title="Adding CMD support" href="cmd_support.html" />
     <link rel="prev" title="Running" href="running.html" /> 
   </head>
   <body>
@@ -33,6 +34,9 @@
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="cmd_support.html" title="Adding CMD support"
+             accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="running.html" title="Running"
              accesskey="P">previous</a> |</li>
@@ -67,7 +71,7 @@ M_T &amp;= \sum_{i=1}^N m_i \, \rightarrow \, M_T = C\int_{m_l}^{m_h} m(n)dn = \
 <p>and thus the normalized IMF can be written as:</p>
 <p><img class="math" src="_images/math/d53242477fee51f133fd361e34f3c656961dd7ff.png" alt="PDF(m) = \xi(m)_{norm} = C_1 \xi(m)"/></p>
 <p>This is the first step, performed by the <tt class="docutils literal"><span class="pre">get-IMF-PDF</span></tt> function for
-a given selected IMF (Chabrier 2001, Kro&#8221;upa et al. 1993, Kroupa 2002)</p>
+a given selected IMF (Chabrier 2001, Kroupa et al. 1993, Kroupa 2002)</p>
 <p>Once the PDF is generated, every time a new synthetic cluster is created
 the <tt class="docutils literal"><span class="pre">get-mass-dist</span></tt> function is called from within <tt class="docutils literal"><span class="pre">synth-cluster</span></tt>.
 This former function takes the PDF and samples a number of masses
@@ -96,6 +100,9 @@ total cluster mass.</p>
   <h4>Previous topic</h4>
   <p class="topless"><a href="running.html"
                         title="previous chapter">Running</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="cmd_support.html"
+                        title="next chapter">Adding CMD support</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/synth_clust.txt"
@@ -124,6 +131,9 @@ total cluster mass.</p>
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              >index</a></li>
+        <li class="right" >
+          <a href="cmd_support.html" title="Adding CMD support"
+             >next</a> |</li>
         <li class="right" >
           <a href="running.html" title="Running"
              >previous</a> |</li>

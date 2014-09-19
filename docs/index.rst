@@ -18,6 +18,7 @@ available for this documentation can be found `here`_.
    running
    synth_clust
    cmd_support
+   int_mags
 
 
 Indices and tables
