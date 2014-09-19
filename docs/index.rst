@@ -7,8 +7,10 @@ Welcome to ASteCA's documentation
 ==================================
 
 This is the manual of operation for the ``ASteCA`` (**A**\ utomated **Ste**\ llar
-**C**\ luster **A**\ nylysis) package. The latest version
-available for this documentation can be found `here`_.
+**C**\ luster **A**\ nylysis) package.
+
+The latest version available for this documentation can be found `here`__.
+A PDF version of this manual can also be downloaded `here`__.
 
 
 .. toctree::
@@ -28,4 +30,5 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
-.. _here: http://asteca.rtfd.org/
+.. __: http://asteca.rtfd.org/
+.. __: https://readthedocs.org/projects/asteca/downloads/pdf/latest/

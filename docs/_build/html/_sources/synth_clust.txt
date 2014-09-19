@@ -22,11 +22,13 @@ where :math:`m_l` and :math:`m_h` are the mass limits for the IMF
 :math:`M_T=1 M_{\odot}`, allows us to obtain the normalization constant
 :math:`C_1` and treat the normalized IMF as a PDF:
 
-:math:`M_T=1M_{\odot}\, \rightarrow \, C_1 = \frac{1}{\int_{m_l}^{m_h} m\xi(m)dm}`
+.. math::
+ M_T=1M_{\odot}\, \rightarrow \, C_1 = \frac{1}{\int_{m_l}^{m_h} m\xi(m)dm}
 
 and thus the normalized IMF can be written as:
 
-:math:`PDF(m) = \xi(m)_{norm} = C_1 \xi(m)`
+.. math::
+ PDF(m) = \xi(m)_{norm} = C_1 \xi(m)
 
 This is the first step, performed by the ``get-IMF-PDF`` function for
 a given selected IMF (Chabrier 2001, Kroupa et al. 1993, Kroupa 2002)

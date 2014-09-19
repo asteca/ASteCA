@@ -67,10 +67,12 @@ M_T &amp;= \sum_{i=1}^N m_i \, \rightarrow \, M_T = C\int_{m_l}^{m_h} m(n)dn = \
 <img class="math" src="_images/math/2bcc65482aa8e15cd4c9e9f2542451fb4e971a91.png" alt="C"/> is a normalization constant. Setting the total mass to unity,
 <img class="math" src="_images/math/6c99d31afa7f74b244ad026849a20cc6b3b0b84e.png" alt="M_T=1 M_{\odot}"/>, allows us to obtain the normalization constant
 <img class="math" src="_images/math/a37c919e07a75380817840dfff31d2781ee02586.png" alt="C_1"/> and treat the normalized IMF as a PDF:</p>
-<p><img class="math" src="_images/math/c71b8c84772b381a9f79ed527a68a38c7a1532c7.png" alt="M_T=1M_{\odot}\, \rightarrow \, C_1 = \frac{1}{\int_{m_l}^{m_h} m\xi(m)dm}"/></p>
-<p>and thus the normalized IMF can be written as:</p>
-<p><img class="math" src="_images/math/d53242477fee51f133fd361e34f3c656961dd7ff.png" alt="PDF(m) = \xi(m)_{norm} = C_1 \xi(m)"/></p>
-<p>This is the first step, performed by the <tt class="docutils literal"><span class="pre">get-IMF-PDF</span></tt> function for
+<div class="math">
+<p><img src="_images/math/3d888426b139932e5eb2a5b9a5840cdcd2e00208.png" alt="M_T=1M_{\odot}\, \rightarrow \, C_1 = \frac{1}{\int_{m_l}^{m_h} m\xi(m)dm}"/></p>
+</div><p>and thus the normalized IMF can be written as:</p>
+<div class="math">
+<p><img src="_images/math/785f97a910a7680c22eebe0dfe28534cd6d02b13.png" alt="PDF(m) = \xi(m)_{norm} = C_1 \xi(m)"/></p>
+</div><p>This is the first step, performed by the <tt class="docutils literal"><span class="pre">get-IMF-PDF</span></tt> function for
 a given selected IMF (Chabrier 2001, Kroupa et al. 1993, Kroupa 2002)</p>
 <p>Once the PDF is generated, every time a new synthetic cluster is created
 the <tt class="docutils literal"><span class="pre">get-mass-dist</span></tt> function is called from within <tt class="docutils literal"><span class="pre">synth-cluster</span></tt>.
