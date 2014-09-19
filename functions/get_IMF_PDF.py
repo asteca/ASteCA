@@ -15,29 +15,35 @@ def imfs(imf_name, m_star, norm_const):
     '''
     if imf_name == 'kroupa_1993':
         # Kroupa, Tout & Gilmore. (1993) piecewise IMF.
-        # 1993MNRAS.262..545K
-        power = [-1.3, -2.2, -2.7]
+        # http://adsabs.harvard.edu/abs/1993MNRAS.262..545K
+        # Eq. (13), p. 572 (28)
+        alpha = [-1.3, -2.2, -2.7]
+        m_i = [0.08, 0.5, 1.]
+        m0, m1, m2 = m_i
         factor = [0.035, 0.019, 0.019]
-        if 0.08 < m_star <= 0.5:
+        if m0 < m_star <= m1:
             i = 0
-        elif 0.5 < m_star <= 1.:
+        elif m1 < m_star <= m2:
             i = 1
-        elif 1. < m_star:
+        elif m2 < m_star:
             i = 2
-        imf_val = norm_const * factor[i] * m_star ** power[i]
+        imf_val = norm_const * factor[i] * (m_star ** alpha[i])
 
     elif imf_name == 'kroupa_2002':
         # Kroupa (2002) piecewise IMF (taken from MASSCLEAN article).
-        power = [-0.3, -1.3, -2.3]
-        m0, m1, m2 = 0.01, 0.08, 0.5
-        factor = [0.4687, 0.0375, 0.01875]
-        if 0.01 < m_star <= 0.08:
+        # http://adsabs.harvard.edu/abs/2002Sci...295...82K
+        # Eq. (2) & (3), p. 1725
+        alpha = [-0.3, -1.3, -2.3]
+        m0, m1, m2 = [0.01, 0.08, 0.5]
+        factor = [(1. / m1) ** alpha[0], (1. / m1) ** alpha[1],
+            ((m2 / m1) ** alpha[1]) * ((1. / m2) ** alpha[2])]
+        if m0 < m_star <= m1:
             i = 0
-        elif 0.08 < m_star <= 0.5:
+        elif m1 < m_star <= m2:
             i = 1
-        elif 0.5 < m_star:
+        elif m2 < m_star:
             i = 2
-        imf_val = norm_const * factor[i] * m_star ** power[i]
+        imf_val = norm_const * factor[i] * (m_star ** alpha[i])
 
     elif imf_name == 'chabrier_2001':
         # Chabrier (2001) exponential form of the IMF.
@@ -67,20 +73,23 @@ def integral_IMF_M(m_star, imf_sel, tot_mass):
 
 def IMF_PDF(imf_sel):
     '''
-    Main function.
-
     Returns the selected IMF's probability distribution function (PDF)
     normalized to 1 solar mass.
     '''
 
-    # Set IMFs limits.
-    if imf_sel == 'kroupa_1993':
-        m_low = 0.081
-    elif imf_sel == 'kroupa_2002':
-        m_low = 0.011
-    elif imf_sel == 'chabrier_2001':
-        m_low = 0.001
+    # Low mass limits are defined for each IMF to avoid numerical
+    # issues when integrating.
+    imfs_dict = {'kroupa_1993': (0.081), 'chabrier_2001': (0.001),
+        'kroupa_2002': (0.011)}
 
+    if imf_sel not in imfs_dict:
+        print ("  WARNING: Name of IMF ({}) is incorrect.\n"
+        "  Defaulting to Chabrier (2001).".format(imf_sel))
+        imf_sel = 'chabrier_2001'
+
+    # Set IMF low mass limit.
+    m_low = imfs_dict[imf_sel]
+    # Set IMF max mass limit and interpolation step.
     m_high, m_step = 100., 0.01
     # Normalize IMF to a total unit mass.
     M = 1.
