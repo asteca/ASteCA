@@ -43,48 +43,9 @@
             
   <div class="section" id="imf-sampling">
 <h1>IMF sampling<a class="headerlink" href="#imf-sampling" title="Permalink to this headline">¶</a></h1>
-<div class="line-block">
-<div class="line">The initial mass function (IMF) is the distribution of initial masses</div>
-</div>
-<p>for a population of stars. For a population of <img class="math" src="_images/math/75e27f04188974063be3230dca208cd495b77ce1.png" alt="N"/> stars with
+<p>The initial mass function (IMF) is the distribution of initial masses
+for a population of stars. For a population of <img class="math" src="_images/math/75e27f04188974063be3230dca208cd495b77ce1.png" alt="N"/> stars with
 masses <img class="math" src="_images/math/21728519fb5117232be3dab5913f25e4508c8c29.png" alt="m_i"/> and a total mass of <img class="math" src="_images/math/aae0db378a6c094311c8da0198e30b8da3034855.png" alt="M_T"/>:</p>
-<div class="line-block">
-<div class="line"><img class="math" src="_images/math/f922a4011080401e26c4e501d647c825bd1e80c8.png" alt="IMF \, \rightarrow \, \xi(m)=\frac{dn}{dm} \, \rightarrow \,dn = \xi(m)dm"/></div>
-</div>
-<div class="line-block">
-<div class="line">:math:<a href="#id1"><span class="problematic" id="id2">`</span></a>M_T= sum_{i=1}^N m_i , rightarrow , M_T = Cint_{m_l}^{m_h} m(n)dn = `</div>
-</div>
-<div class="line-block">
-<div class="line"><img class="math" src="_images/math/6d429ea29f42f1c26f01d3a50d693921941b3ee5.png" alt="= C\int_{m_l}^{m_h} m\xi(m)dm"/></div>
-</div>
-<div class="line-block">
-<div class="line">where <img class="math" src="_images/math/381bafe9fef47ee765d57184c2d8eacad8900c6a.png" alt="m_l"/> and <img class="math" src="_images/math/5cff571f6c0a3ff86f006462dd8aa66e3ec8eaf8.png" alt="m_h"/> are the mass limits for the IMF</div>
-</div>
-<p>(<img class="math" src="_images/math/5cff571f6c0a3ff86f006462dd8aa66e3ec8eaf8.png" alt="m_h"/> is fixed to <img class="math" src="_images/math/0adf6210ba19d7dcc11953272ae622ebefb76652.png" alt="100 M_{\odot}"/> in the code) and
-<img class="math" src="_images/math/2bcc65482aa8e15cd4c9e9f2542451fb4e971a91.png" alt="C"/> is a normalization constant. Setting the total mass to unity,
-<img class="math" src="_images/math/6c99d31afa7f74b244ad026849a20cc6b3b0b84e.png" alt="M_T=1 M_{\odot}"/>, allows us to obtain the normalization constant
-<img class="math" src="_images/math/a37c919e07a75380817840dfff31d2781ee02586.png" alt="C_1"/> and treat the normalized IMF as a PDF:</p>
-<div class="line-block">
-<div class="line"><img class="math" src="_images/math/c71b8c84772b381a9f79ed527a68a38c7a1532c7.png" alt="M_T=1M_{\odot}\, \rightarrow \, C_1 = \frac{1}{\int_{m_l}^{m_h} m\xi(m)dm}"/></div>
-</div>
-<div class="line-block">
-<div class="line">and thus the normalized IMF can be written as:</div>
-</div>
-<div class="line-block">
-<div class="line">:math:<a href="#id3"><span class="problematic" id="id4">`</span></a>PDF(m) = xi(m)_{norm} = C_1 xi(m) `</div>
-</div>
-<div class="line-block">
-<div class="line">This is the first step, performed by the <tt class="docutils literal"><span class="pre">get-IMF-PDF</span></tt> function for</div>
-</div>
-<p>a given selected IMF (Chabrier 2001, Kro&#8221;upa et al. 1993, Kroupa 2002)</p>
-<p>Once the PDF is generated, every time a new synthetic cluster is created
-the <tt class="docutils literal"><span class="pre">get-mass-dist</span></tt> function is called from within <tt class="docutils literal"><span class="pre">synth-cluster</span></tt>.
-This former function takes the PDF and samples a number of masses
-randomly from it, following the probabilities distribution given by the
-PDF, until the mass fixed by the <tt class="docutils literal"><span class="pre">total-mass</span></tt> parameter is achieved.</p>
-<p>The <tt class="docutils literal"><span class="pre">get-mass-dist</span></tt> function thus returns a distribution of masses
-probabilistically sampled from a certain IMF, whose masses sum up to a
-total cluster mass.</p>
 </div>
 
 
