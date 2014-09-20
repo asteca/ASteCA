@@ -5,7 +5,7 @@ In order to add support for a new CMD the following functions should be
 modified:
 
 #. ``get-in-params``, add names of filters and positions needed to form
-   the color
+   the color.
 
 #. ``get-isoch-params``, add the columns in the theoretical isochrone
    where the code should look for the filters used.
