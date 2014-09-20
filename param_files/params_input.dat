@@ -1,0 +1,282 @@
+##############################################################################
+##### ASteCA input parameters file ####
+#
+# This file contains the values of the parameters used by ASteCA.
+# Any empty line or lines that begin with a # character will be ignored and as
+# many as needed can be added to this file.
+#
+# The blocks can be moved around as the user sees fit.
+#
+# * DO NOT modify the ID strings in the first column of each line, these are
+# used by the code to identify the parameters in that line.
+# * DO NOT write less or more values than those required in each line or the
+# the code will halt.
+#
+###############################################################################
+
+
+
+################################### Mode ######################################
+
+# Mode used to run the code.
+#
+# * mode: auto / semi / manual
+#   - auto: does not require user intervention of any kind.
+#   - semi: takes input values from the 'semi_input.dat' file.
+#   - manual: asks the user for some values (center, radius) but will also
+#     give you the chance to have them automatically calculated.
+#
+#   mode
+MO  auto
+###############################################################################
+
+
+
+######################### Input data parameters ###############################
+
+# Column numbers identifying the needed data as stored in the clusters'
+# photometric data files.
+#
+# id_star   x/ra  y/dec magnitude e_mag color e_col
+PD      0      1      2         3     4     5     6
+
+# Define the system of coordinates used in the data file.
+#
+# * coords: px / deg. Indicates if the observed frame is in pixels or degrees.
+#
+#    coords
+PX      px
+
+# Indicate the CMD to be used by the code to perform the analysis.
+#
+# * selection: [1, 7]
+# - 1: (B-V) vs V   ; UBVI (Johnson)
+# - 2: (V-I) vs V   ; UBVI (Johnson)
+# - 3: (U-V) vs V   ; UBVI (Johnson)
+# - 4: (C-T1) vs T1 ; Washington
+# - 5: (J-H) vs J   ; 2MASS
+# - 6: (J-H) vs H   ; 2MASS
+# - 7: (H-K) vs K   ; 2MASS
+#
+#    selection
+CMD          1
+###############################################################################
+
+
+
+########################## Output parameters ##################################
+
+# Create output figure?
+#
+# * flag_make_plot: True / False. If 'False', no output figure will be
+#   generated.
+# * format: png / pdf. Format of the final image file.
+#
+#    flag_make_plot  format  DPI
+MP             true     png  150
+
+# Move data file once it is processed?
+#
+# * flag_move: True / False. The cluster's photometric file will be moved to
+#   the folder defined below if this flag is set to 'True'.
+# * path: Path where the sub-folders are moved once processed if
+#   the flag is set to 'True'.
+#
+#    flag_move   path
+MF       false   /path/to/folder
+###############################################################################
+
+
+
+################### Structure functions parameters #############################
+
+# 2D positional histogram of observed frame.
+#
+# * mode: auto / manual
+#   - auto: 1% of the minimum x,y range of the observed frame. This is a good
+#     heuristic value, only change it if you really need to since this will
+#     affect the RDP (primarily).
+#   - manual; use 'bin_width' parameter value.
+# * bin_width: width of the bin in pixels or degrees, whatever the frame uses.
+#
+#    mode   bin_width
+CH   auto         20.
+
+# Center finding function parameters.
+#
+# * mode: auto / manual
+#   - auto: the code will use Scott's rule to calculate the bandwidth of the
+#     KDE used to obtain the center value.
+#   - manual: the 'bandwidth' parameter will be used (otherwise its value is
+#     of no importance).
+#
+#    mode    bandwidth
+CC   auto         0.25
+
+# Radius function parameters.
+#
+# * mode: auto / manual
+#   - auto: the 'points' parameter will set as 20% of the total number of
+#     points in the radial density profile.
+#   - manual: the value in 'points' will be used.
+# * points: Number of points that must be found below a minimum delta around
+#   the background value. This condition indicates that the star density
+#   has stabilized.
+#
+#    mode   points
+CR   auto        5
+
+# King profile function.
+#
+# * flag_KP: true / false. If 'True' the code will attempt to fit a King
+#   profile to the radial density profile of the cluster.
+#
+#     flag_KP
+KP       true
+
+# Field star regions.
+#
+# * regions: number of field regions around the cluster that the code will
+#   attempt to define. If the keyword 'max' is used, then the maximum possible
+#   number will be used.
+#
+#   regions
+GR       10
+###############################################################################
+
+
+
+################## Photometric functions parameters ############################
+
+# Errors rejection function.
+#
+# * mode: emax / lowexp / eyefit
+#   - emax: uses the e_max value as a cut in photometric errors.
+#   - lowexp: fits an exponential and rejects any star beyond
+#     the curve plus N sigmas.
+#   - eyefit: attempt an 'eye' fit process composed of a polynomial
+#     plus an exponential.
+# * e_max: maximum error value a star can have in either its magnitude or
+#   color without being rejected. 
+# * be: bright end, the magnitude value that will be added to the
+#   brightest star to determine the range where stars will be accepted
+#   if their errors are lower than 'be_e' (see below).
+# * be_e: maximum error value that stars in the bright end range can
+#   have without being rejected.
+# * N: number of sigmas to be used by the 'lowexp' method.
+#
+#       mode   e_max   be   be_e  N
+ER    eyefit    0.25    2.   0.1  0.5
+
+# Integrated magnitudes.
+#
+# flag_IM: True / False. Switch to apply or skip.
+#
+#    flag_IM
+IM      true
+
+# KDE p-value test.
+#
+# Test to determine the probability of the cluster being a physical entity
+# instead of a random over-density of stars, based on comparing its CMD with
+# field regions CMDs.
+# * flag_KDE: True / False. Switch to apply or skip the test.
+# * mode: auto / manual.
+#   - auto: the code will compare 100/(regions-1) times the CMDs of the
+#     cluster and field regions.
+#   - manual: the 'num' parameter determines the number of times the CMDs of
+#     cluster and field regions are compared.
+#
+#   flag_KDE    mode   num
+PV      true   manual   1
+
+# Bayesian decontamination algorithm.
+#
+# * mode: auto / manual / read / skip
+#   - auto: the code will iterate a number of times defined internally (1000).
+#   - manual: the code will iterate a number of times given by the 'runs'
+#     parameter, otherwise this value is irrelevant.
+#   - read: the code will attempt to read the probabilities from an existing
+#     file. This file should have the same format as the output '*_memb.dat'
+#     file created by the code and should be located in the input data folder.
+#   - skip: all stars will be assigned an equal probability of 1.
+#
+#   mode     runs
+DA  auto      100
+###############################################################################
+
+
+
+#################### Cluster parameters assignation ############################
+
+# Best synthetic cluster fit.
+#
+# * flag: True / False. Flag that determines if the best synthetic cluster
+#   fitting process is to be run.
+# * algorithm: select algorithm to use in best fitting process,
+#   'brute' (Brute Force) / 'genet' (Genetic Algorithm)
+#   If 'brute' is selected, 'boot_num' is irrelevant.
+# * boot_num: number of times the bootstrap with replacement process will run.
+#   Minimum value is 2, anything less will skip the bootstrap process hence
+#   no errors will be assigned to the parameters.
+#
+#     flag  algorithm   boot_num
+BF    true      genet         10
+
+# Select set of isochrones to use.
+#
+# WARNING: Marigo only works with the first 4 CMDs and will be deprecated soon.
+# iso_select: MAR (Marigo) / PAR (PARSEC)
+#
+#    iso_select
+PS          PAR
+
+# Reduced membership.
+#
+# * mode: auto / manual / skip
+#   - auto: will set the minimum probability value such that only the top
+#     half of stars with the highest probability are used.
+#   - manual: the minimum probability value has to be set manually in the
+#    'min_prob' parameter (0, 1).
+#
+#    mode           min_prob
+RM   auto              0.75
+
+# Ranges and steps for the parameters to be fitted.
+#
+# Metallicity (z)		min 	max
+PS_m					0.0005	0.03
+# log(age/yr)			min 	max
+PS_a					6.6		10.1
+# E(B-V)				min 	max 	step
+PS_e					0.		0.4		0.01
+# Distance modulus		min 	max 	step
+PS_d					8.		15.		0.05
+
+# Synthetic cluster parameters.
+#
+# IMF:  chabrier_2001 / kroupa_1993 / kroupa_2002
+#
+#             IMF   total_mass   frac_binar  mass_ratio
+SC  chabrier_2001         5000          0.5         0.7
+
+# Genetic Algorithm parameters.
+# n_pop: number of chromosomes in the population.
+# n_gen: number of generations to process.
+# fdif: Fitness differential. Establishes the 'selection pressure' for the
+# algorithm.
+# p_cros: crossover probability.
+# (Crossover operator)
+# cr_sel: select 1-point (1P) or 2-point (2P) crossover.
+# p_mut: mutation probability.
+# (Elitism operator)
+# n_el: number of best solutions to pass unchanged to the next generation
+# n_ei: number of generations allowed to run with the same best solution
+# before applying the Extinction/Immigration operator.
+# (Exit switch)
+# n_es:number of times the Extinction/Immigration operator is allowed to run
+# returning the same best solution before exiting the generations loop.
+#
+#   n_pop  n_gen fdif p_cross cr_sel p_mut n_el n_ei n_es
+GA    100    100   1.    0.85     2P  0.01    1  100   10
+###############################################################################

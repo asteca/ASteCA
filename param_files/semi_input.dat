@@ -1,0 +1,23 @@
+#
+# NAME:	Cluster's name.
+# c_x: 	Cluster's x center coordinate in pixels.
+# c_y: 	Cluster's y center coordinate in pixels.
+# rad: 	Cluster's radius in pixels.
+#
+# err: 	Error rejection method. Allowed values are [0, 1, 2, 3].
+# The '0' value means the mode set in the input parameters file
+# will be used. Any other value is interpreted as:
+# 1: 'emax', 2: 'lowexp', 3: 'eyefit'
+# 
+# 1 == True / 0 == False
+#
+# M1:	Manual center flag. If 'True' the coordinates given
+#		here will be used as initial approximate values for the
+#		cluster's true central coordinates. The latter will be
+#		searched inside the radius given in the 'rad' parameter.
+#
+# M2:	Radius value flag. If 'True' the radius for the cluster
+#		will be taken from the 'rad' value.
+#
+# NAME         c_x          c_y          rad     err  M1 M2
+CLUSTER        1000.        1000.        250.      0   1  1

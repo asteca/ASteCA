@@ -1,8 +1,6 @@
 *.pyc
 *.dat
+!/param_files/*.dat
 isochrones/
 output/*
 input/*
-man/*
-!man/*.tex
-!man/*.pdf
