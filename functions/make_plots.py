@@ -21,7 +21,7 @@ import error_round as err_r
 def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
     bin_width, center_params, rdp_params, field_dens, radius_params,
     cont_index, mag_data, col1_data, err_plot, err_flags, kp_params,
-    cl_region, stars_out, stars_in_rjct, stars_out_rjct, integr_return, n_c,
+    cl_region, stars_out, stars_in_rjct, stars_out_rjct, integr_return, n_memb,
     flag_area_stronger, cl_reg_big, field_region, flag_pval_test,
     pval_test_params, memb_prob_avrg_sort, lum_func, completeness, da_params,
     bf_params, red_return, err_lst, bf_return, ga_params, er_params,
@@ -442,8 +442,10 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
     ax9.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
     # Calculate total number of stars whitin cluster's radius.
     tot_stars = len(stars_in_rjct) + len(cl_region)
-    plt.text(0.55, 0.93, '$r \leq r_{cl}\,|\,N=%d$' % tot_stars,
-             transform=ax9.transAxes,
+    text1 = '$r \leq r_{{cl}}\,|\,N={}$'.format(tot_stars)
+    text2 = r'$n_{{memb}} \approx {}$'.format(n_memb)
+    text = text1 + '\n' + text2
+    plt.text(0.55, 0.87, text, transform=ax9.transAxes,
              bbox=dict(facecolor='white', alpha=0.5), fontsize=16)
     # Plot stars in CMD.
     if len(stars_in_rjct) > 0:

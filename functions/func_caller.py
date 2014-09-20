@@ -127,10 +127,10 @@ def asteca_funcs(mypath, cl_file):
         coord_lst)
 
     # Get approximate number of cluster's members.
-    n_c, flag_num_memb_low, a_clust, n_clust = g_m_n(field_dens, clust_rad,
+    n_memb, flag_num_memb_low, a_clust, n_clust = g_m_n(field_dens, clust_rad,
         rdp_params, bin_width)
     print ("Approximate number of members in cluster obtained "
-        "({:.0f}).".format(n_c))
+        "({:.0f}).".format(n_memb))
 
     # Get contamination index.
     cont_index = g_c_i(field_dens, a_clust, n_clust)
@@ -211,7 +211,7 @@ def asteca_funcs(mypath, cl_file):
 
     # Add cluster data and flags to output file
     a_d_o(out_file_name, write_name, center_params,
-        radius_params, kp_params, cont_index, n_c, pval_test_params[0],
+        radius_params, kp_params, cont_index, n_memb, pval_test_params[0],
         integr_return, axes_params, err_flags, flag_num_memb_low, bf_return)
     print 'Data added to output file.'
 
@@ -221,7 +221,7 @@ def asteca_funcs(mypath, cl_file):
             bin_width, center_params, rdp_params,
             field_dens, radius_params, cont_index, mag_data, col1_data,
             err_plot, err_flags, kp_params, cl_region, stars_out,
-            stars_in_rjct, stars_out_rjct, integr_return, n_c,
+            stars_in_rjct, stars_out_rjct, integr_return, n_memb,
             flag_area_stronger, cl_reg_big, field_region, flag_pval_test,
             pval_test_params, memb_prob_avrg_sort, lum_func, completeness,
             da_params, bf_params, red_return, err_lst, bf_return, ga_params,

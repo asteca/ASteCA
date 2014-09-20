@@ -22,6 +22,10 @@ def in_clusters(mypath):
     cl_files = []
     for root, dirs, files in walk(input_dir):
 
+        # Don't read this sub-folder so it can be used as a container.
+        if 'dont_read' in dirs:
+            dirs.remove('dont_read')
+
         # For files not in sub-dirs.
         if files and root == input_dir:
             for name in files:
@@ -32,11 +36,9 @@ def in_clusters(mypath):
         # For files in sub-dirs.
         if dirs:
             for subdir in dirs:
-                # Don't read this sub-folder so it can be used as a container.
-                if subdir != 'dont_read':
-                    for name in listdir(join(input_dir, subdir)):
-                        # Don't attempt to read membership data files.
-                        if not name.endswith('_memb.dat'):
-                            cl_files.append([subdir, name])
+                for name in listdir(join(input_dir, subdir)):
+                    # Don't attempt to read membership data files.
+                    if not name.endswith('_memb.dat'):
+                        cl_files.append([subdir, name])
 
     return cl_files
