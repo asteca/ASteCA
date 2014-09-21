@@ -10,7 +10,8 @@ sub-folder.
 
 **Every** file inside the ``/input`` folder (inside or outside a
 sub-folder) will be processed by **ASteCA**, with the exception of the
-membership probabilities files that end with a *memb.dat* extension.
+membership probabilities files that end with a ``.memb.dat`` extension
+(see XXX).
 
 Once file(s) are in place and the ``params_input.dat`` file correctly
 modified, the code can be executed with the command:
@@ -40,7 +41,8 @@ Theoretical isochrones
 ``/asteca/isochrones`` folder to be able to apply the function that
 estimates the clusters’ parameters. `Girardi isochrones`_ are currently
 the default but any set can in practice be used (with minor changes made
-to the code)
+to the code). Please `contact me <gabrielperren@gmail.com>`_ if you wish
+to use a different set of theoretical isochrones.
 
 The isochrones can be downloaded manually or the package `ezPadova-2`_
 can be used to automatically fetch them from the site.

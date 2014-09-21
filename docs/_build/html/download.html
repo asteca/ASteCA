@@ -68,14 +68,16 @@
 <li class="toctree-l2"><a class="reference internal" href="#extra-packages">2.4. Extra packages</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="running.html">3. Running</a></li>
-<li class="toctree-l1"><a class="reference internal" href="running.html#theoretical-isochrones">4. Theoretical isochrones</a></li>
-<li class="toctree-l1"><a class="reference internal" href="synth_clust.html">5. Synthetic clusters</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="synth_clust.html#imf-sampling">5.1. IMF sampling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="running.html">3. Running</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="running.html#theoretical-isochrones">3.1. Theoretical isochrones</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="cmd_support.html">6. Adding CMD support</a></li>
-<li class="toctree-l1"><a class="reference internal" href="int_mags.html">7. Integrated magnitudes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="synth_clust.html">4. Synthetic clusters</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="synth_clust.html#imf-sampling">4.1. IMF sampling</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="cmd_support.html">5. Adding CMD support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="int_mags.html">6. Integrated magnitudes</a></li>
 </ul>
 
         
@@ -114,17 +116,21 @@
 <h1>2. Download<a class="headerlink" href="#download" title="Permalink to this headline">¶</a></h1>
 <p>The latest packaged release (zip or tarball) can be downloaded from:</p>
 <ul class="simple">
-<li><a class="reference external" href="https://github.com/Gabriel-p/asteca/releases">.zip</a></li>
-<li><a class="reference external" href="https://github.com/Gabriel-p/asteca/releases">.tar.gz</a></li>
+<li><strong>ASteCA</strong> <a class="reference external" href="https://github.com/Gabriel-p/asteca/releases">.zip</a></li>
+<li><strong>ASteCA</strong> <a class="reference external" href="https://github.com/Gabriel-p/asteca/releases">.tar.gz</a></li>
 </ul>
-<p>You can alternatively checkout the entire project via <a class="reference external" href="http://git-scm.com/">git</a>. Simply
+<p>After downloading, extract the compressed file wherever you want
+the code to exist.</p>
+<p>Alternatively you can checkout the entire project via <a class="reference external" href="http://git-scm.com/">git</a>. Simply
 locate yourself in the folder you want the code to be downloaded and
-run the following command in terminal:</p>
+run the following command in a terminal:</p>
 <div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>git clone https://github.com/Gabriel-p/asteca.git
 </pre></div>
 </div>
 <p>This will create a new sub-folder named <tt class="docutils literal"><span class="pre">/asteca</span></tt> with all the code
-stored inside. No installation is necessary.</p>
+stored inside.</p>
+<p>No further installation is necessary with the exception of the
+requirements listed below.</p>
 <div class="section" id="requirements">
 <h2>2.1. Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
 <p>The code has been tested with the July 2014 release of <strong>python</strong>:</p>
@@ -133,31 +139,41 @@ stored inside. No installation is necessary.</p>
 </ul>
 <p>It should also work on older versions, if you encounter any problems
 please contact me or <a class="reference external" href="https://github.com/Gabriel-p/asteca/issues/new">open a new issue</a>.</p>
-<p>To check the version of python installed simply run in a terminal:</p>
-<div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>python
+<p>To check the version of <strong>python</strong> installed in your system simply run in
+a terminal the command:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>python --version
 </pre></div>
 </div>
 <p>The output will resemble this:</p>
-<div class="highlight-bash"><div class="highlight"><pre>Python 2.7.7 <span class="o">(</span>default, Sep  1 2014, 11:47:35<span class="o">)</span>
-<span class="o">[</span>GCC 4.6.3<span class="o">]</span> on linux2
-Type <span class="s2">&quot;help&quot;</span>, <span class="s2">&quot;copyright&quot;</span>, <span class="s2">&quot;credits&quot;</span> or <span class="s2">&quot;license&quot;</span> <span class="k">for </span>more information.
-&gt;&gt;&gt;
+<div class="highlight-bash"><div class="highlight"><pre>Python 2.7.3
 </pre></div>
 </div>
-<p>If your version is <tt class="docutils literal"><span class="pre">2.7.x</span></tt> you are good to go. If you are using the new
-<tt class="docutils literal"><span class="pre">3.x</span></tt> version of <strong>python</strong> I assume you know what you are doing and can
-figure out how to run the code in a <tt class="docutils literal"><span class="pre">2.7.x</span></tt> environment.</p>
+<p>If your version is <tt class="docutils literal"><span class="pre">2.7.x</span></tt> you are probably good to go. If you are using
+the new <tt class="docutils literal"><span class="pre">3.x</span></tt> version of <strong>python</strong> I assume you know what you are doing
+and can figure out how to run the code in a <tt class="docutils literal"><span class="pre">2.7.x</span></tt> environment.</p>
 </div>
 <div class="section" id="python-dependencies">
 <h2>2.2. Python dependencies<a class="headerlink" href="#python-dependencies" title="Permalink to this headline">¶</a></h2>
-<p>The packages listed below are required to run <tt class="docutils literal"><span class="pre">ASteCA</span></tt>.</p>
+<p>The packages listed below are required to run <strong>ASteCA</strong>.</p>
 <ul class="simple">
-<li><a class="reference external" href="http://www.numpy.org/">Numpy - 1.8.2</a> – <tt class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">numpy</span></tt></li>
-<li><a class="reference external" href="http://matplotlib.org/">Matplotlib - 1.3.1</a> – <tt class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">matplotlib</span></tt></li>
-<li><a class="reference external" href="http://www.scipy.org/">SciPy - 0.14.0</a> – <tt class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">scipy</span></tt></li>
+<li><a class="reference external" href="http://www.numpy.org/">Numpy - 1.8.2</a></li>
+<li><a class="reference external" href="http://matplotlib.org/">Matplotlib - 1.3.1</a></li>
+<li><a class="reference external" href="http://www.scipy.org/">SciPy - 0.14.0</a></li>
 </ul>
 <p>These versions are the ones I used, the code could work with older
-versions of the packages but I can’t guarantee it.</p>
+versions of the packages but I can&#8217;t guarantee it.
+The recommended way to install each of the above packages is to
+use <a class="reference external" href="https://pypi.python.org/pypi/pip/">pip</a> (see <a class="reference external" href="https://pip.pypa.io/en/latest/index.html">the docs</a> for more information on this tool):</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>pip install numpy
+<span class="nv">$ </span>pip install matplotlib
+<span class="nv">$ </span>pip install scipy
+</pre></div>
+</div>
+<p>If <strong>pip</strong> is not installed in your system, you can install it
+(assuming <strong>python</strong> is) via:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>python get-pip.py
+</pre></div>
+</div>
 </div>
 <div class="section" id="python-distributions">
 <h2>2.3. Python distributions<a class="headerlink" href="#python-distributions" title="Permalink to this headline">¶</a></h2>
@@ -168,18 +184,21 @@ distribution which comes with many packages already installed:</p>
 <li><a class="reference external" href="https://www.enthought.com/products/canopy/">Canopy</a></li>
 </ul>
 <p>The best and easiest way to install and manage several versions of
-<strong>python</strong> and its packages without affecting your system is <a class="reference external" href="https://github.com/yyuu/pyenv">pyenv</a>.
-See hte</p>
+<strong>python</strong> and its packages without affecting your system is <a class="reference external" href="https://github.com/yyuu/pyenv">pyenv</a>.</p>
 </div>
 <div class="section" id="extra-packages">
 <h2>2.4. Extra packages<a class="headerlink" href="#extra-packages" title="Permalink to this headline">¶</a></h2>
 <p>If you want to use the <a class="reference external" href="https://github.com/Gabriel-p/asteca/blob/master/functions/get_p_value.py">function</a> that obtains the cluster probability
 of being a true cluster, the following software is needed:</p>
 <ul class="simple">
-<li><a class="reference external" href="http://www.r-project.org/">R - 3.0.1</a> – <tt class="docutils literal"><span class="pre">sudo</span> <span class="pre">apt-get</span> <span class="pre">install</span> <span class="pre">r-base</span></tt></li>
+<li><a class="reference external" href="http://www.r-project.org/">R - 3.0.1</a></li>
 </ul>
-<p>After it is installed, open with sudo privileges (<tt class="docutils literal"><span class="pre">sudo</span> <span class="pre">R</span></tt>) and
-install, <em>in order</em>, the packages:</p>
+<p>which can be installed with:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>sudo apt-get install r-base
+</pre></div>
+</div>
+<p>After <strong>R</strong> is installed, open with sudo privileges (<tt class="docutils literal"><span class="pre">sudo</span> <span class="pre">R</span></tt>) and
+install, <em>in order</em>, the packages (installation commands to the right):</p>
 <ul class="simple">
 <li>rgl – <tt class="docutils literal"><span class="pre">install.packages(&quot;rgl&quot;)</span></tt></li>
 <li>mvtnorm – <tt class="docutils literal"><span class="pre">install.packages(&quot;mvtnorm&quot;)</span></tt></li>
@@ -189,10 +208,10 @@ install, <em>in order</em>, the packages:</p>
 <p>The package that allows <tt class="docutils literal"><span class="pre">python</span></tt> and <tt class="docutils literal"><span class="pre">R</span></tt> to communicate is also
 needed:</p>
 <ul class="simple">
-<li><a class="reference external" href="http://rpy.sourceforge.net/">rpy2 -2.4.3</a> – <tt class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">rpy2</span></tt></li>
+<li><a class="reference external" href="http://rpy.sourceforge.net/">rpy2 -2.4.3</a> –  <tt class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">rpy2</span></tt></li>
 </ul>
-<p>These extra packages are not mandatory and <tt class="docutils literal"><span class="pre">ASteCA</span></tt> will still run without
-them, just not that particular function.</p>
+<p>These extra packages are <em>not mandatory</em> and <strong>ASteCA</strong> will still run without
+them, just not the particular function mentioned above.</p>
 </div>
 </div>
 

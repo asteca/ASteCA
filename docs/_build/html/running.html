@@ -122,7 +122,8 @@ Photometric files can also be stored in <tt class="docutils literal"><span class
 sub-folder.</p>
 <p><strong>Every</strong> file inside the <tt class="docutils literal"><span class="pre">/input</span></tt> folder (inside or outside a
 sub-folder) will be processed by <strong>ASteCA</strong>, with the exception of the
-membership probabilities files that end with a <em>memb.dat</em> extension.</p>
+membership probabilities files that end with a <tt class="docutils literal"><span class="pre">.memb.dat</span></tt> extension
+(see XXX).</p>
 <p>Once file(s) are in place and the <tt class="docutils literal"><span class="pre">params_input.dat</span></tt> file correctly
 modified, the code can be executed with the command:</p>
 <div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>python asteca.py
@@ -144,7 +145,8 @@ E(B-V)=
 <tt class="docutils literal"><span class="pre">/asteca/isochrones</span></tt> folder to be able to apply the function that
 estimates the clusters’ parameters. <a class="reference external" href="http://stev.oapd.inaf.it/cgi-bin/cmd">Girardi isochrones</a> are currently
 the default but any set can in practice be used (with minor changes made
-to the code)</p>
+to the code). Please <a class="reference external" href="mailto:gabrielperren&#37;&#52;&#48;gmail&#46;com">contact me</a> if you wish
+to use a different set of theoretical isochrones.</p>
 <p>The isochrones can be downloaded manually or the package <a class="reference external" href="https://github.com/Gabriel-p/ezpadova">ezPadova-2</a>
 can be used to automatically fetch them from the site.</p>
 </div>

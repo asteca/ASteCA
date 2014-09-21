@@ -3,19 +3,25 @@ Download
 
 The latest packaged release (zip or tarball) can be downloaded from:
 
--  `.zip`_
--  `.tar.gz`_
+-  **ASteCA** `.zip`_
+-  **ASteCA** `.tar.gz`_
 
-You can alternatively checkout the entire project via `git`_. Simply
+After downloading, extract the compressed file wherever you want
+the code to exist.
+
+Alternatively you can checkout the entire project via `git`_. Simply
 locate yourself in the folder you want the code to be downloaded and
-run the following command in terminal:
+run the following command in a terminal:
 
 .. code-block:: bash
 
     $ git clone https://github.com/Gabriel-p/asteca.git
 
 This will create a new sub-folder named ``/asteca`` with all the code
-stored inside. No installation is necessary.
+stored inside.
+
+No further installation is necessary with the exception of the
+requirements listed below.
 
 
 Requirements
@@ -28,36 +34,51 @@ The code has been tested with the July 2014 release of **python**:
 It should also work on older versions, if you encounter any problems
 please contact me or `open a new issue`_.
 
-To check the version of python installed simply run in a terminal:
+To check the version of **python** installed in your system simply run in
+a terminal the command:
 
 .. code-block:: bash
 
-   $ python
+   $ python --version
 
 The output will resemble this:
 
 .. code-block:: bash
 
-  Python 2.7.7 (default, Sep  1 2014, 11:47:35) 
-  [GCC 4.6.3] on linux2
-  Type "help", "copyright", "credits" or "license" for more information.
-  >>> 
+  Python 2.7.3
 
-If your version is ``2.7.x`` you are good to go. If you are using the new
-``3.x`` version of **python** I assume you know what you are doing and can
-figure out how to run the code in a ``2.7.x`` environment.
+If your version is ``2.7.x`` you are probably good to go. If you are using
+the new ``3.x`` version of **python** I assume you know what you are doing
+and can figure out how to run the code in a ``2.7.x`` environment.
+
 
 Python dependencies
 -------------------
 
-The packages listed below are required to run ``ASteCA``.
+The packages listed below are required to run **ASteCA**.
 
--  `Numpy - 1.8.2`_ – ``pip install numpy``
--  `Matplotlib - 1.3.1`_ – ``pip install matplotlib``
--  `SciPy - 0.14.0`_ – ``pip install scipy``
+-  `Numpy - 1.8.2`_
+-  `Matplotlib - 1.3.1`_ 
+-  `SciPy - 0.14.0`_
 
 These versions are the ones I used, the code could work with older
-versions of the packages but I can’t guarantee it.
+versions of the packages but I can't guarantee it.
+The recommended way to install each of the above packages is to
+use `pip`_ (see `the docs`_ for more information on this tool):
+
+.. code-block:: bash
+
+  $ pip install numpy
+  $ pip install matplotlib
+  $ pip install scipy
+
+If **pip** is not installed in your system, you can install it
+(assuming **python** is) via:
+
+.. code-block:: bash
+
+  $ python get-pip.py
+
 
 Python distributions
 --------------------
@@ -70,7 +91,6 @@ distribution which comes with many packages already installed:
 
 The best and easiest way to install and manage several versions of
 **python** and its packages without affecting your system is `pyenv`_.
-See hte 
 
 
 Extra packages
@@ -79,10 +99,16 @@ Extra packages
 If you want to use the `function`_ that obtains the cluster probability
 of being a true cluster, the following software is needed:
 
--  `R - 3.0.1`_ – ``sudo apt-get install r-base``
+-  `R - 3.0.1`_
 
-After it is installed, open with sudo privileges (``sudo R``) and
-install, *in order*, the packages:
+which can be installed with:
+
+.. code-block:: bash
+
+ $ sudo apt-get install r-base
+
+After **R** is installed, open with sudo privileges (``sudo R``) and
+install, *in order*, the packages (installation commands to the right):
 
 -  rgl – ``install.packages("rgl")``
 -  mvtnorm – ``install.packages("mvtnorm")``
@@ -92,10 +118,10 @@ install, *in order*, the packages:
 The package that allows ``python`` and ``R`` to communicate is also
 needed:
 
--  `rpy2 -2.4.3`_ – ``pip install rpy2``
+-  `rpy2 -2.4.3`_ –  ``pip install rpy2``
 
-These extra packages are not mandatory and ``ASteCA`` will still run without
-them, just not that particular function.
+These extra packages are *not mandatory* and **ASteCA** will still run without
+them, just not the particular function mentioned above.
 
 
 
@@ -104,6 +130,8 @@ them, just not that particular function.
 .. _git: http://git-scm.com/
 .. _Python - 2.7.8: https://www.python.org/download/releases/2.7.8/
 .. _open a new issue: https://github.com/Gabriel-p/asteca/issues/new
+.. _pip: https://pypi.python.org/pypi/pip/
+.. _the docs: https://pip.pypa.io/en/latest/index.html
 .. _Numpy - 1.8.2: http://www.numpy.org/
 .. _Matplotlib - 1.3.1: http://matplotlib.org/
 .. _SciPy - 0.14.0: http://www.scipy.org/

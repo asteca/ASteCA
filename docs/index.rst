@@ -4,16 +4,15 @@
    contain the root `toctree` directive.
 
 .. warning::
-   This documentation is not yet finished.
+   This documentation is in the process of being written and is **not yet finished**.
 
 .. important::
-   A PDF version of this manual is available `here`__.
+   A PDF version of this manual can be downloaded `here`__.
 
 ASteCA's documentation
 ======================
 
-.. image:: _images/asteca_out_s.png
-   :alt: ASteCA output
+.. image:: _images/asteca-out-s.png
    :align: right
 
 This is the manual of operation for the **ASteCA** (**A**\ utomated **Ste**\ llar
