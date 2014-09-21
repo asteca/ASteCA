@@ -7,7 +7,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>5. Adding CMD support &mdash; ASteCA v3.0.0-beta documentation</title>
+  <title>1. About &mdash; ASteCA v3.0.0-beta documentation</title>
   
 
   
@@ -29,10 +29,10 @@
 
   
         <link rel="author" title="About these documents"
-              href="about.html"/>
+              href="#"/>
     <link rel="top" title="ASteCA v3.0.0-beta documentation" href="index.html"/>
-        <link rel="next" title="6. Integrated magnitudes" href="int_mags.html"/>
-        <link rel="prev" title="4. Synthetic clusters" href="synth_clust.html"/> 
+        <link rel="next" title="2. Download" href="download.html"/>
+        <link rel="prev" title="ASteCA’s documentation" href="index.html"/> 
 
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
@@ -60,23 +60,21 @@
         
         
             <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="about.html">1. About</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">1. About</a></li>
 <li class="toctree-l1"><a class="reference internal" href="download.html">2. Download</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="download.html#requirements">2.1. Requirements</a></li>
 <li class="toctree-l2"><a class="reference internal" href="download.html#python-dependencies">2.2. Python dependencies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="download.html#python-distributions">2.3. Python distributions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="download.html#extra-packages">2.4. Extra packages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="download.html#theoretical-isochrones">2.5. Theoretical isochrones</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="running.html">3. Running</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="running.html#theoretical-isochrones">3.1. Theoretical isochrones</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="running.html">3. Running</a></li>
 <li class="toctree-l1"><a class="reference internal" href="synth_clust.html">4. Synthetic clusters</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="synth_clust.html#imf-sampling">4.1. IMF sampling</a></li>
 </ul>
 </li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">5. Adding CMD support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cmd_support.html">5. Adding CMD support</a></li>
 <li class="toctree-l1"><a class="reference internal" href="int_mags.html">6. Integrated magnitudes</a></li>
 </ul>
 
@@ -101,10 +99,10 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-    <li>5. Adding CMD support</li>
+    <li>1. About</li>
       <li class="wy-breadcrumbs-aside">
         
-          <a href="_sources/cmd_support.txt" rel="nofollow"> View page source</a>
+          <a href="_sources/about.txt" rel="nofollow"> View page source</a>
         
       </li>
   </ul>
@@ -112,19 +110,31 @@
 </div>
           <div role="main">
             
-  <div class="section" id="adding-cmd-support">
-<h1>5. Adding CMD support<a class="headerlink" href="#adding-cmd-support" title="Permalink to this headline">¶</a></h1>
-<p>In order to add support for a new CMD the following functions should be
-modified:</p>
-<ol class="arabic simple">
-<li><tt class="docutils literal"><span class="pre">get-in-params</span></tt>, add names of filters and positions needed to form
-the color.</li>
-<li><tt class="docutils literal"><span class="pre">get-isoch-params</span></tt>, add the columns in the theoretical isochrone
-where the code should look for the filters used.</li>
-<li><tt class="docutils literal"><span class="pre">move-isochrone</span></tt>, add the extinction equations that define how this
-effect along with the distance modulus affect the magnitude and color
-in the CMD.</li>
-</ol>
+  <div class="section" id="about">
+<h1>1. About<a class="headerlink" href="#about" title="Permalink to this headline">¶</a></h1>
+<p>ASteCA (Automated Stellar Cluster Analysis) is an open source code
+developed entirely in python designed to fully automatize the usual tests
+applied to stellar clusters (SC) in order to determine their characteristics:
+center, radius, stars&#8217; membership probabilities and associated
+intrinsic/extrinsic parameters: metallicity, age, extinction, distance
+and eventually total mass.</p>
+<p>The code is designed modularly thus allowing the user to select which
+tests to run and which to skip, all managed through a simple input data
+file. Thanks to this modularity functions can even be swapped, added or
+removed so, for example, more than one decontamination algorithm can be
+made available for the user to choose.</p>
+<p>In its current version (v1.0.0) ASteCA can be applied to a number of color
+magnitude diagrams (CMD) in the systems of Johnson, Washington and 2MASS
+but it can be easily extended to work on any number of CMDs. Eventually
+the code can be generalized to work with an arbitrary nubmer of colors
+instead of being limited to a single color, like it is when using a CMD.</p>
+<p>ASteCA is intended to run without the need for user intervention but both
+a semi-automatic and a manual mode are made available in case user input
+is necessary or required.</p>
+<p>The sections below present a brief description of the processes applied by
+ASteCA to an input photometric data file (ie: an observed cluster) in the
+order in which they run. More information about each of these processes
+can be found in the code&#8217;s user manual.</p>
 </div>
 
 
@@ -133,10 +143,10 @@ in the CMD.</li>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="int_mags.html" class="btn btn-neutral float-right" title="6. Integrated magnitudes"/>Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="download.html" class="btn btn-neutral float-right" title="2. Download"/>Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="synth_clust.html" class="btn btn-neutral" title="4. Synthetic clusters"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="index.html" class="btn btn-neutral" title="ASteCA’s documentation"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

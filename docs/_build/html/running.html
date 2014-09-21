@@ -7,7 +7,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>2. Running &mdash; ASteCA v3.0.0-beta documentation</title>
+  <title>3. Running &mdash; ASteCA v3.0.0-beta documentation</title>
   
 
   
@@ -28,9 +28,11 @@
   
 
   
+        <link rel="author" title="About these documents"
+              href="about.html"/>
     <link rel="top" title="ASteCA v3.0.0-beta documentation" href="index.html"/>
-        <link rel="next" title="3. Synthetic clusters" href="synth_clust.html"/>
-        <link rel="prev" title="1. Installation" href="installation.html"/> 
+        <link rel="next" title="4. Synthetic clusters" href="synth_clust.html"/>
+        <link rel="prev" title="2. Download" href="download.html"/> 
 
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
@@ -58,21 +60,24 @@
         
         
             <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="installation.html">1. Installation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#python">1.1. Python</a></li>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#dependencies">1.2. Dependencies</a></li>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#python-distributions">1.3. Python distributions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#extra-packages">1.4. Extra packages</a></li>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#theoretical-isochrones">1.5. Theoretical isochrones</a></li>
+<li class="toctree-l1"><a class="reference internal" href="about.html">1. About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="download.html">2. Download</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="download.html#requirements">2.1. Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="download.html#python-dependencies">2.2. Python dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="download.html#python-distributions">2.3. Python distributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="download.html#extra-packages">2.4. Extra packages</a></li>
 </ul>
 </li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">2. Running</a></li>
-<li class="toctree-l1"><a class="reference internal" href="synth_clust.html">3. Synthetic clusters</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="synth_clust.html#imf-sampling">3.1. IMF sampling</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">3. Running</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#theoretical-isochrones">3.1. Theoretical isochrones</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="cmd_support.html">4. Adding CMD support</a></li>
-<li class="toctree-l1"><a class="reference internal" href="int_mags.html">5. Integrated magnitudes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="synth_clust.html">4. Synthetic clusters</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="synth_clust.html#imf-sampling">4.1. IMF sampling</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="cmd_support.html">5. Adding CMD support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="int_mags.html">6. Integrated magnitudes</a></li>
 </ul>
 
         
@@ -96,7 +101,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-    <li>2. Running</li>
+    <li>3. Running</li>
       <li class="wy-breadcrumbs-aside">
         
           <a href="_sources/running.txt" rel="nofollow"> View page source</a>
@@ -108,22 +113,22 @@
           <div role="main">
             
   <div class="section" id="running">
-<h1>2. Running<a class="headerlink" href="#running" title="Permalink to this headline">¶</a></h1>
-<p>To run the code simply drop a cluster’s photometric data file in the
-<tt class="docutils literal"><span class="pre">/asteca/input</span></tt> folder, modify the <tt class="docutils literal"><span class="pre">params_input.dat</span></tt> file to both
+<h1>3. Running<a class="headerlink" href="#running" title="Permalink to this headline">¶</a></h1>
+<p>To run the code simply position a cluster’s photometric data file in the
+<tt class="docutils literal"><span class="pre">/input</span></tt> folder, modify the <tt class="docutils literal"><span class="pre">params_input.dat</span></tt> file to both
 inform the code of the distribution of columns in your photometric file
-and set the values for each function within the code.</p>
-<p>Photometric files can also be stored in <tt class="docutils literal"><span class="pre">/asteca/input</span></tt> inside a
+and set the values for each function within the code.
+Photometric files can also be stored in <tt class="docutils literal"><span class="pre">/input</span></tt> inside a
 sub-folder.</p>
-<p><strong>Every</strong> file inside the <tt class="docutils literal"><span class="pre">/asteca/input</span></tt> folder (inside or outside a
-sub-folder) will be processed by <tt class="docutils literal"><span class="pre">ASteCA</span></tt>, with the exception of the
+<p><strong>Every</strong> file inside the <tt class="docutils literal"><span class="pre">/input</span></tt> folder (inside or outside a
+sub-folder) will be processed by <strong>ASteCA</strong>, with the exception of the
 membership probabilities files that end with a <em>memb.dat</em> extension.</p>
 <p>Once file(s) are in place and the <tt class="docutils literal"><span class="pre">params_input.dat</span></tt> file correctly
 modified, the code can be executed with the command:</p>
-<div class="highlight-python"><div class="highlight"><pre>python asteca.py
+<div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>python asteca.py
 </pre></div>
 </div>
-<p>The <em>CLUSTER.DAT</em> file located in the <tt class="docutils literal"><span class="pre">/asteca/input</span></tt> folder contains
+<p>The <tt class="docutils literal"><span class="pre">CLUSTER.DAT</span></tt> file located in the <tt class="docutils literal"><span class="pre">/input</span></tt> folder contains
 a synthetic open cluster generated via the <a class="reference external" href="http://www.physics.uc.edu/~bogdan/massclean/">MASSCLEAN</a> package with the
 following parameter values:</p>
 <div class="highlight-python"><div class="highlight"><pre>z=
@@ -132,7 +137,17 @@ E(B-V)=
 (m-M)o=
 </pre></div>
 </div>
-<p>and serves as an example cluster to be analyzed with <tt class="docutils literal"><span class="pre">ASteCA</span></tt>.</p>
+<p>and serves as an example cluster to be analyzed with <strong>ASteCA</strong>.</p>
+<div class="section" id="theoretical-isochrones">
+<h2>3.1. Theoretical isochrones<a class="headerlink" href="#theoretical-isochrones" title="Permalink to this headline">¶</a></h2>
+<p><strong>ASteCA</strong> needs at least one set of theoretical isochrones stored in a
+<tt class="docutils literal"><span class="pre">/asteca/isochrones</span></tt> folder to be able to apply the function that
+estimates the clusters’ parameters. <a class="reference external" href="http://stev.oapd.inaf.it/cgi-bin/cmd">Girardi isochrones</a> are currently
+the default but any set can in practice be used (with minor changes made
+to the code)</p>
+<p>The isochrones can be downloaded manually or the package <a class="reference external" href="https://github.com/Gabriel-p/ezpadova">ezPadova-2</a>
+can be used to automatically fetch them from the site.</p>
+</div>
 </div>
 
 
@@ -141,10 +156,10 @@ E(B-V)=
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="synth_clust.html" class="btn btn-neutral float-right" title="3. Synthetic clusters"/>Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="synth_clust.html" class="btn btn-neutral float-right" title="4. Synthetic clusters"/>Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="installation.html" class="btn btn-neutral" title="1. Installation"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="download.html" class="btn btn-neutral" title="2. Download"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

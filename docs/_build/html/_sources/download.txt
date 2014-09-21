@@ -98,18 +98,6 @@ These extra packages are not mandatory and ``ASteCA`` will still run without
 them, just not that particular function.
 
 
-Theoretical isochrones
-----------------------
-
-``ASteCA`` needs at least one set of theoretical isochrones stored in a
-``/asteca/isochrones`` folder to be able to apply the function that
-estimates the clusters’ parameters. `Girardi isochrones`_ are currently
-the default but any set can in practice be used (with minor changes made
-to the code)
-
-The isochrones can be downloaded manually or the package `ezPadova-2`_
-can be used to automatically fetch them from the site.
-
 
 .. _.zip: https://github.com/Gabriel-p/asteca/releases
 .. _.tar.gz: https://github.com/Gabriel-p/asteca/releases
@@ -125,5 +113,3 @@ can be used to automatically fetch them from the site.
 .. _function: https://github.com/Gabriel-p/asteca/blob/master/functions/get_p_value.py
 .. _R - 3.0.1: http://www.r-project.org/
 .. _rpy2 -2.4.3: http://rpy.sourceforge.net/
-.. _Girardi isochrones: http://stev.oapd.inaf.it/cgi-bin/cmd
-.. _ezPadova-2: https://github.com/Gabriel-p/ezpadova

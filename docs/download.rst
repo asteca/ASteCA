@@ -1,34 +1,54 @@
-Installation
-============
+Download
+========
 
 The latest packaged release (zip or tarball) can be downloaded from:
 
 -  `.zip`_
 -  `.tar.gz`_
 
-You can alternatively checkout the entire project via ``git``. Simply
+You can alternatively checkout the entire project via `git`_. Simply
 locate yourself in the folder you want the code to be downloaded and
-run:
+run the following command in terminal:
 
-::
+.. code-block:: bash
 
-    git clone https://github.com/Gabriel-p/asteca.git
+    $ git clone https://github.com/Gabriel-p/asteca.git
 
-This will create a new sub-folder named */asteca* with all the code
-stored inside.
+This will create a new sub-folder named ``/asteca`` with all the code
+stored inside. No installation is necessary.
 
-Python
-------
 
-The code has been tested with the July 2014 release of `python`_:
+Requirements
+------------
+
+The code has been tested with the July 2014 release of **python**:
 
 -  `Python - 2.7.8`_
 
 It should also work on older versions, if you encounter any problems
 please contact me or `open a new issue`_.
 
-Dependencies
-------------
+To check the version of python installed simply run in a terminal:
+
+.. code-block:: bash
+
+   $ python
+
+The output will resemble this:
+
+.. code-block:: bash
+
+  Python 2.7.7 (default, Sep  1 2014, 11:47:35) 
+  [GCC 4.6.3] on linux2
+  Type "help", "copyright", "credits" or "license" for more information.
+  >>> 
+
+If your version is ``2.7.x`` you are good to go. If you are using the new
+``3.x`` version of **python** I assume you know what you are doing and can
+figure out how to run the code in a ``2.7.x`` environment.
+
+Python dependencies
+-------------------
 
 The packages listed below are required to run ``ASteCA``.
 
@@ -42,14 +62,15 @@ versions of the packages but I can’t guarantee it.
 Python distributions
 --------------------
 
-An alternative to installing packages separately is to download a Python
+An alternative to installing packages separately is to download a **python**
 distribution which comes with many packages already installed:
 
 -  `Anaconda`_
 -  `Canopy`_
 
 The best and easiest way to install and manage several versions of
-python and its packages without affecting your system is `pyenv`_.
+**python** and its packages without affecting your system is `pyenv`_.
+See hte 
 
 
 Extra packages
@@ -77,22 +98,10 @@ These extra packages are not mandatory and ``ASteCA`` will still run without
 them, just not that particular function.
 
 
-Theoretical isochrones
-----------------------
-
-``ASteCA`` needs at least one set of theoretical isochrones stored in a
-``/asteca/isochrones`` folder to be able to apply the function that
-estimates the clusters’ parameters. `Girardi isochrones`_ are currently
-the default but any set can in practice be used (with minor changes made
-to the code)
-
-The isochrones can be downloaded manually or the package `ezPadova-2`_
-can be used to automatically fetch them from the site.
-
 
 .. _.zip: https://github.com/Gabriel-p/asteca/releases
 .. _.tar.gz: https://github.com/Gabriel-p/asteca/releases
-.. _python: https://www.python.org
+.. _git: http://git-scm.com/
 .. _Python - 2.7.8: https://www.python.org/download/releases/2.7.8/
 .. _open a new issue: https://github.com/Gabriel-p/asteca/issues/new
 .. _Numpy - 1.8.2: http://www.numpy.org/
@@ -104,5 +113,3 @@ can be used to automatically fetch them from the site.
 .. _function: https://github.com/Gabriel-p/asteca/blob/master/functions/get_p_value.py
 .. _R - 3.0.1: http://www.r-project.org/
 .. _rpy2 -2.4.3: http://rpy.sourceforge.net/
-.. _Girardi isochrones: http://stev.oapd.inaf.it/cgi-bin/cmd
-.. _ezPadova-2: https://github.com/Gabriel-p/ezpadova

@@ -6,23 +6,33 @@
 .. warning::
    This documentation is not yet finished.
 
+.. important::
+   A PDF version of this manual is available `here`__.
+
 ASteCA's documentation
 ======================
 
-This is the manual of operation for the *ASteCA* (**A**\ utomated **Ste**\ llar
+.. image:: _images/asteca_out_s.png
+   :alt: ASteCA output
+   :align: right
+
+This is the manual of operation for the **ASteCA** (**A**\ utomated **Ste**\ llar
 **C**\ luster **A**\ nylysis) package.
 
-Visit the `official site`_ for download instructions.
-The `repository`_ for the code is hosted in Github.
+- Project website: `gabriel-p.github.io/asteca <http://gabriel-p.github.io/asteca/>`_
+- Code repository: `Gabriel-p/asteca <https://github.com/Gabriel-p/asteca>`_
+- Documentation: `asteca.rtfd.org <http://asteca.readthedocs.org/en/latest/>`_
 
-.. important::
-  A PDF version of this manual is available `here`__.
+
+Table of Contents
+-----------------
 
 .. toctree::
    :numbered:
    :maxdepth: 3
 
-   installation
+   about
+   download
    running
    synth_clust
    cmd_support
@@ -36,6 +46,4 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
-.. _official site: http://gabriel-p.github.io/asteca/
-.. _repository: https://github.com/Gabriel-p/asteca
 .. __: https://readthedocs.org/projects/asteca/downloads/pdf/latest/
