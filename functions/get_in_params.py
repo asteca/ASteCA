@@ -145,7 +145,7 @@ def get_in_params(mypath):
     elif iso_select == 'PAR':
         text2 = 'parsec'
     # Set iso_path according to the above values.
-    iso_path = join(mypath + '/isochrones/' + 'iso_' + text1 + '_' + text2)
+    iso_path = join(mypath + '/isochrones/' + text1 + '_' + text2)
 
     # Fix magnitude and color names for the CMD axis.
     # m_1 is the y axis magnitude, m_2 is the magnitude used to obtain the
