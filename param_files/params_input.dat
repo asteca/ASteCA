@@ -244,13 +244,14 @@ RM   auto              0.75
 
 # Ranges and steps for the parameters to be fitted.
 #
-# Metallicity (z)		min 	max
-PS_m					0.0005	0.03
-# log(age/yr)			min 	max
-PS_a					6.6		10.1
-# E(B-V)				min 	max 	step
+# 						min 	max     step
+# Metallicity (z)		
+PS_m					0.0005	0.03    0.005
+# log(age)			
+PS_a					6.6		10.1    0.1
+# E(B-V)				
 PS_e					0.		0.4		0.01
-# Distance modulus		min 	max 	step
+# Distance modulus		
 PS_d					8.		15.		0.05
 
 # Synthetic cluster parameters.
