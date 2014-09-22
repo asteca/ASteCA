@@ -162,10 +162,7 @@ def get_in_params(mypath):
     # Store axes params.
     axes_params = [m_1, m_2, m_ord, xy_minmax]
 
-    # Fix metallicity and age step value since this is determined by the
-    # stored isochrones.
-    m_rs.append(0.0005)
-    a_rs.append(0.05)
+    # Store photometric system params in lists.
     ps_params = [iso_path, cmd_select, iso_select, m_rs, a_rs, e_rs, d_rs]
 
     # Store GA params in lists.

@@ -81,7 +81,7 @@ def get_ip(ps_params):
     e_bv_max = e_bv_max + min(e_bv_max / 100., e_bv_step / 2.)
     dis_mod_max = dis_mod_max + min(dis_mod_max / 100., dis_mod_step / 2.)
 
-    # Store ranges and steps.
+    # Store min, max values and steps.
     ranges_steps = [[z_min, z_max, z_step], [age_min, age_max, age_step],
                     [e_bv_min, e_bv_max, e_bv_step],
                     [dis_mod_min, dis_mod_max, dis_mod_step]]
@@ -105,6 +105,10 @@ def get_ip(ps_params):
     # isoch_ma[i][j][1] --> age j (float)
     isoch_ma = []
 
+    # Create ranges for metallicity and age.
+    z_range = np.arange(z_min, z_max, z_step)
+    a_range = np.arange(age_min, age_max, age_step)
+
     # Iterate through all metallicity files in order.
     for met_file in sorted(os.listdir(iso_path)):
 
@@ -112,7 +116,7 @@ def get_ip(ps_params):
         metal = float(met_file[:-4])
 
         # Process metallicity file only if it's inside the given range.
-        if z_min <= metal <= z_max:
+        if np.isclose(z_range, metal, atol=0.0001).any():
 
             # Initialize list that will hold all the isochrones for this
             # metallicity value.
@@ -156,7 +160,7 @@ def get_ip(ps_params):
 
                     # If age value falls inside the given range, store the
                     # isochrone's data (in this line).
-                    if age_min <= age <= age_max:
+                    if np.isclose(a_range, age, atol=0.01).any():
 
                         # Save mag, color and mass values for each isochrone
                         # star.
@@ -196,12 +200,10 @@ def get_ip(ps_params):
     # isoch_ed = [extinction, dis_mod]
     # extinction = [e_1, e_2, ..., e_n]
     # dis_mod = [dm_1, dm_2, ..., dm_m]
-    isoch_ed = [[], []]
-    for e_bv in np.arange(e_bv_min, e_bv_max, e_bv_step):
-        isoch_ed[0].append(round(e_bv, 2))
-    for dis_mod in np.arange(dis_mod_min, dis_mod_max, dis_mod_step):
-        # Store params for this isochrone.
-        isoch_ed[1].append(round(dis_mod, 2))
+    e_range = [round(i, 2) for i in np.arange(e_bv_min, e_bv_max, e_bv_step)]
+    d_range = [round(i, 2) for i in np.arange(dis_mod_min, dis_mod_max,
+        dis_mod_step)]
+    isoch_ed = [e_range, d_range]
 
     ip_list = [isoch_list, isoch_ma, isoch_ed, ranges_steps]
 
