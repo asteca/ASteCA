@@ -1,16 +1,16 @@
 ##############################################################################
 ##### ASteCA input parameters file ####
 #
-# This file contains the values of the parameters used by ASteCA.
+# This file contains the values of the parameters used by ASteCA functions.
 # Any empty line or lines that begin with a # character will be ignored and as
 # many as needed can be added to this file.
 #
-# The blocks can be moved around as the user sees fit.
+# The blocks are independent and can be moved around as the user sees fit.
 #
 # * DO NOT modify the ID strings in the first column of each line, these are
-# used by the code to identify the parameters in that line.
-# * DO NOT write less or more values than those required in each line or the
-# the code will halt.
+#   used by the code to identify the parameters in that line.
+# * DO NOT write less values than those required in each line or the the code
+#   will halt.
 #
 ###############################################################################
 
@@ -121,7 +121,7 @@ CC   auto         0.25
 #   - manual: the value in 'points' will be used.
 # * points: Number of points that must be found below a minimum delta around
 #   the background value. This condition indicates that the star density
-#   has stabilized.
+#   has stabilized. The 'auto' value is 25% of the points in the RDP.
 #
 #    mode   points
 CR   auto        5
@@ -180,15 +180,15 @@ IM      true
 # Test to determine the probability of the cluster being a physical entity
 # instead of a random over-density of stars, based on comparing its CMD with
 # field regions CMDs.
-# * flag_KDE: True / False. Switch to apply or skip the test.
-# * mode: auto / manual.
+# * mode: auto / manual / skip
 #   - auto: the code will compare 100/(regions-1) times the CMDs of the
 #     cluster and field regions.
 #   - manual: the 'num' parameter determines the number of times the CMDs of
 #     cluster and field regions are compared.
+#   - skip: skip test.
 #
-#   flag_KDE    mode   num
-PV      true   manual   1
+#       mode   num
+PV      auto     2
 
 # Bayesian decontamination algorithm.
 #
