@@ -35,7 +35,7 @@ from functions.done_move import done_move as dm
 
 def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
     '''
-    Container which holds the calls to all the functions.
+    Container that holds the calls to all the functions.
     '''
 
     # Start timing this loop.
