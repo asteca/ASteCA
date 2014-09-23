@@ -11,7 +11,7 @@ import traceback
 from subprocess import Popen, PIPE
 from get_in_params import get_in_params as gip
 from get_names_paths import names_paths as n_p
-from get_isoch_params import ip
+import get_isoch_params as isochp
 
 
 def check(mypath, cl_files):
@@ -26,12 +26,13 @@ def check(mypath, cl_files):
     inst_packgs_lst = ["%s" % (i.key) for i in inst_packgs]
     for pckg in ['numpy', 'matplotlib', 'scipy']:
         if pckg not in inst_packgs_lst:
-            print "FATAL: '{}' package is not installed.".format(pckg)
+            print "ERROR: '{}' package is not installed.".format(pckg)
             sys.exit("Install with: pip install {}".format(pckg))
+    import numpy as np
 
     # Check if params_input.dat file exists.
     if not isfile(join(mypath, 'params_input.dat')):
-        sys.exit('FATAL: params_input.dat file does not exist.')
+        sys.exit('ERROR: params_input.dat file does not exist.')
 
     # Check if params_input file is properly formatted.
     try:
@@ -43,17 +44,17 @@ def check(mypath, cl_files):
     except Exception:
         # Halt code.
         print traceback.format_exc()
-        sys.exit('FATAL: params_input.dat is badly formatted.')
+        sys.exit('ERROR: params_input.dat is badly formatted.')
 
     # Check mode.
     if mode not in {'auto', 'semi', 'manual'}:
-        sys.exit("FATAL: 'mode' value is incorrect.")
+        sys.exit("ERROR: 'mode' value is incorrect.")
 
     if mode == 'semi':
         # Check if semi_input.dat file exists.
         if not isfile(join(mypath, 'semi_input.dat')):
             # File semi_input.dat does not exist.
-            sys.exit("FATAL: 'semi' mode is set but semi_input.dat file does"
+            sys.exit("ERROR: 'semi' mode is set but semi_input.dat file does"
                 " not exist.")
 
     # Check KDE p-value custer probability function.
@@ -92,7 +93,7 @@ def check(mypath, cl_files):
     mode_da = da_params[0]
     # Check if 'mode' was correctly set.
     if mode_da not in ['auto', 'manual', 'read', 'skip']:
-        sys.exit("  FATAL: Wrong name ({}) for decontamination algorithm "
+        sys.exit("  ERROR: Wrong name ({}) for decontamination algorithm "
             "'mode'".format(mode_da))
 
     if mode_da == 'read':
@@ -103,7 +104,7 @@ def check(mypath, cl_files):
             memb_file = n_p(mypath, cl_file)[2]
             if not isfile(memb_file):
                 # File does not exist.
-                sys.exit("FATAL: 'read' mode was set for decontamination "
+                sys.exit("ERROR: 'read' mode was set for decontamination "
                 "algorithm but the file:\n {}\ndoes not "
                 "exist.".format(memb_file))
 
@@ -112,24 +113,62 @@ def check(mypath, cl_files):
     if bf_params[0]:
 
         # Unpack.
-        iso_path, cmd_select, iso_select, m_rs, a_rs = ps_params[:-2]
+        iso_path, cmd_select, iso_select, m_rs, a_rs, e_rs, d_rs = ps_params
 
         # Check that CMD is correctly set.
         if cmd_select not in {1, 2, 3, 4, 5, 6, 7}:
-            sys.exit("FATAL: the stored CMD value ({}) does not match a valid"
+            sys.exit("ERROR: the stored CMD value ({}) does not match a valid"
                 " selection.".format(cmd_select))
 
         # Check selected isochrones set.
         if iso_select not in {'MAR', 'PAR'}:
-            sys.exit("FATAL: the selected isochrones set ({}) does not match a"
+            sys.exit("ERROR: the selected isochrones set ({}) does not match a"
                 " valid input.".format(iso_select))
 
         # Check if /isochrones folder exists.
         if not isdir(iso_path):
-            sys.exit("FATAL: 'Best synthetic cluster fit' function is set to"
+            sys.exit("ERROR: 'Best synthetic cluster fit' function is set to"
                 " run but the folder:\n {}\ndoes not exists.".format(iso_path))
 
+        # Read names of all metallicity files stored in isochrones path given.
+        isoch_m, met_files = isochp.get_metals(iso_path)
+        # Read Girardi metallicity files format.
+        isoch_format = isochp.i_format(iso_select, cmd_select)
+        # Read all ages in the first metallicity file.
+        # *WE ASUME ALL METALLICITY FILES HAVE THE SAME NUMBER OF AGE VALUES*
+        isoch_a = isochp.get_ages(met_files[0], isoch_format[1])
+        # Get parameters ranges stored in params_input.dat file.
+        z_range, a_range, isoch_ed, ranges_steps = isochp.get_ranges(m_rs,
+            a_rs, e_rs, d_rs)
+        if not np.array(z_range).size:
+            sys.exit("ERROR: No values exist in metallicity range defined:\n\n"
+            "min={}, max={}, step={}".format(*m_rs))
+        if not np.array(a_range).size:
+            sys.exit("ERROR: No values exist in age range defined:\n\n"
+            "min={}, max={}, step={}".format(*a_rs))
+        if not np.array(isoch_ed[0]).size:
+            sys.exit("ERROR: No values exist in extinction range defined:\n\n"
+            "min={}, max={}, step={}".format(*e_rs))
+        if not np.array(isoch_ed[1]).size:
+            sys.exit("ERROR: No values exist in distance range defined:\n\n"
+            "min={}, max={}, step={}".format(*d_rs))
+
         # Check that metallicity and age min, max & steps values are correct.
+        # Match values in ranges with those available in files.
+        metal_files, age_values = isochp.match_ranges(isoch_m, met_files,
+            isoch_a, z_range, a_range)
+        if len(z_range) > len(zip(*metal_files)[1]):
+            sys.exit("ERROR: one or more metallicity files could not be\n"
+            "matched to the range given. The range defined was:\n\n"
+            "{}\n\nand the closest available values are:\n\n"
+            "{}".format(z_range, np.asarray(zip(*metal_files)[1])))
+        if len(a_range) > len(age_values):
+            sys.exit("ERROR: one or more isochrones could not be matched\n"
+            "to the age range given. The range defined was:\n\n"
+            "{}\n\nand the closest available values are:\n\n"
+            "{}".format(a_range, np.asarray(age_values)))
+
+        # Read metallicity files.
         try:
             # Store all isochrones in all the metallicity files in isoch_list.
             # Store metallicity values and isochrones ages between the allowed
@@ -138,14 +177,14 @@ def check(mypath, cl_files):
             # isoch_list, isoch_ma, isoch_ed = ip_list
             # Only read files if best fit process is set to run.
             # bf_flag = bf_params[0]
-            ip_list = ip(ps_params, bf_params[0])
+            ip_list = isochp.ip(ps_params, bf_params[0])
         except:
             print traceback.format_exc()
-            sys.exit("FATAL: error reading metallicity files.")
+            sys.exit("ERROR: unknown error reading metallicity files.")
 
     # Check that at least one photometric cluster file exists.
     if not cl_files:
         sys.exit("No photometric data files found in '/input' folder. Halting.")
 
-    print 'Check done.\n'
+    print 'Full check done.\n'
     return ip_list, R_in_place
