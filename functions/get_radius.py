@@ -30,9 +30,9 @@ def main_rad_algor(rdp_params, cr_params, field_dens, bin_width, coord):
         # Read the value from input file.
         n_left = int(cr_params[1])
     elif mode_r == 'auto':
-        # Calculate the value automatically --> 20% of the points in the RDP
+        # Calculate the value automatically --> 25% of the points in the RDP
         # (min 3 points)
-        n_left = max(int(round(len(radii_c) * 0.2)), 3)
+        n_left = max(int(round(len(radii_c) * 0.25)), 3)
 
     # Delta step is fixed to 5%.
     delta_step = 5

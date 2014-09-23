@@ -74,9 +74,8 @@ def get_in_params(mypath):
                 elif reader[0] == 'IM':
                     im_flag = True if reader[1] in true_lst else False
                 elif reader[0] == 'PV':
-                    pv0_params = True if reader[1] in true_lst else False
-                    pv1_params = str(reader[2])
-                    pv2_params = int(reader[3])
+                    pv0_params = str(reader[1])
+                    pv1_params = int(reader[2])
                 elif reader[0] == 'DA':
                     da0_params = str(reader[1])
                     da1_params = int(reader[2])
@@ -120,7 +119,7 @@ def get_in_params(mypath):
     cr_params = [cr_params0, cr_params1]
     gh_params = [gh_params0, gh_params1]
     gc_params = [gc_params0, gc_params1]
-    pv_params = [pv0_params, pv1_params, pv2_params]
+    pv_params = [pv0_params, pv1_params]
     da_params = [da0_params, da1_params]
 
     # Fix isochrones location according to the CMD and set selected.

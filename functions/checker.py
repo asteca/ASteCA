@@ -73,7 +73,7 @@ def check(mypath, cl_files):
         # R and rpy2 package are installed, function is good to go.
         R_in_place = True
     else:
-        if pv_params[0]:
+        if pv_params[0] in {'auto', 'manual'}:
             if R_inst and not rpy2_inst:
                 R_pack = 'rpy2 is'
             if rpy2_inst and not R_inst:
@@ -107,6 +107,7 @@ def check(mypath, cl_files):
                 "algorithm but the file:\n {}\ndoes not "
                 "exist.".format(memb_file))
 
+    ip_list = []
     # If best fit method is set to run.
     if bf_params[0]:
 
