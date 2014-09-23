@@ -21,10 +21,6 @@ def check(mypath, cl_files):
     on with the code.
     '''
 
-    print 'python', sys.version
-    import numpy as np
-    print 'numpy', np.__version__
-
     # Check packages installed.
     inst_packgs = pip.get_installed_distributions()
     inst_packgs_lst = ["%s" % (i.key) for i in inst_packgs]
