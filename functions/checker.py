@@ -58,23 +58,28 @@ def check(mypath, cl_files):
                 " not exist.")
 
     # Check KDE p-value custer probability function.
-    # Check if rpy2 package and R are installed, else skip get_p_value function.
-    rpy2_inst, R_inst = True, True
-    if 'rpy2' not in inst_packgs_lst:
-        rpy2_inst = False
-    # Now for R.
-    proc = Popen(["which", "R"], stdout=PIPE, stderr=PIPE)
-    exit_code = proc.wait()
-    if exit_code != 0:
-        R_inst = False
-
     R_in_place = False
-    # If both R and rpy2 packages are installed.
-    if R_inst and rpy2_inst:
-        # R and rpy2 package are installed, function is good to go.
-        R_in_place = True
-    else:
-        if pv_params[0] in {'auto', 'manual'}:
+    if pv_params[0] not in {'auto', 'manual', 'skip'}:
+        sys.exit("ERROR: Wrong name ({}) for KDE p-value function "
+            "'mode'.".format(pv_params[0]))
+
+    elif pv_params[0] in {'auto', 'manual'}:
+
+        rpy2_inst, R_inst = True, True
+        # Check if rpy2 package is installed.
+        if 'rpy2' not in inst_packgs_lst:
+            rpy2_inst = False
+        # Now check for R.
+        proc = Popen(["which", "R"], stdout=PIPE, stderr=PIPE)
+        exit_code = proc.wait()
+        if exit_code != 0:
+            R_inst = False
+
+        # If both R and rpy2 packages are installed.
+        if R_inst and rpy2_inst:
+            # R and rpy2 package are installed, function is good to go.
+            R_in_place = True
+        else:
             if R_inst and not rpy2_inst:
                 R_pack = 'rpy2 is'
             if rpy2_inst and not R_inst:
@@ -82,19 +87,19 @@ def check(mypath, cl_files):
             if not R_inst and not rpy2_inst:
                 R_pack = 'R and rpy2 are'
             # Something is not installed and function was told to run.
-            print ("WARNING: {} not installed and the\n"
-            "'KDE p-value test' was set to run. The function\n"
-            "will be skipped.".format(R_pack))
-        #else:
-        # Something is not installed, but function was told not to run so
-        # it will be skipped anyway.
+            print ("  WARNING: {} not installed and the\n"
+            "  'KDE p-value test' was set to run. The\n"
+            "  function will be skipped.\n".format(R_pack))
+    #else:
+    # Something is not installed, but function was told not to run so
+    # it will be skipped anyway.
 
     # Check decont algorithm params.
     mode_da = da_params[0]
     # Check if 'mode' was correctly set.
     if mode_da not in ['auto', 'manual', 'read', 'skip']:
-        sys.exit("  ERROR: Wrong name ({}) for decontamination algorithm "
-            "'mode'".format(mode_da))
+        sys.exit("ERROR: Wrong name ({}) for decontamination algorithm "
+            "'mode'.".format(mode_da))
 
     if mode_da == 'read':
         # Check if file exists.

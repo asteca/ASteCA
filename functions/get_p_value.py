@@ -69,8 +69,8 @@ def get_pval(cl_region, field_region, col1_data, mag_data, pv_params,
     the cluster vs field and field vs field comparisons.
     '''
 
-    run_mode, num_runs = pv_params
-    flag_pval_test = True if run_mode in {'auto', 'manual'} else False
+    mode_pv, num_runs = pv_params
+    flag_pval_test = True if mode_pv in {'auto', 'manual'} else False
 
     # skip test if < 10 members are found within the cluster's radius.
     flag_few_members = False if len(cl_region) > 10 else True
@@ -84,16 +84,9 @@ def get_pval(cl_region, field_region, col1_data, mag_data, pv_params,
 
         print 'Obtaining p_value for cluster region vs field regions.'
 
-        if run_mode == 'auto':
-            # Set number of runs for the p_value algorithm with a maximum of
-            # 100 if only one field region was used.
-            runs = int(100 / len(field_region))
-        elif run_mode == 'manual':
-            runs = num_runs
-        else:
-            runs = int(100 / len(field_region))
-            print ("  WARNING: Parameter 'mode' has wrong name. Using 'auto' "
-                "option.")
+        # Set number of runs for the p_value algorithm with a maximum of
+        # 100 if only one field region was used.
+        runs = int(100 / len(field_region)) if mode_pv == 'auto' else num_runs
 
         # The first list holds all the p_values obtained comparing the cluster
         # region with the field regions, the second one holds p_values for
@@ -187,7 +180,8 @@ def get_pval(cl_region, field_region, col1_data, mag_data, pv_params,
         pval_test_params = [prob_cl_kde, p_vals_cl, p_vals_f, kde_cl_1d,
             kde_f_1d, x_kde, y_over]
 
-        print 'Probability of physical cluster obtained (%0.2f).' % prob_cl_kde
+        print 'Probability of physical cluster obtained ({:.2f}).'.format(
+            prob_cl_kde)
 
     # Skip process.
     else:

@@ -1,6 +1,6 @@
 
 from os.path import join, exists
-from os import mkdir
+from os import mkdir, extsep
 
 
 def names_paths(mypath, cl_file):
@@ -13,7 +13,7 @@ def names_paths(mypath, cl_file):
     out_fold = 'output'
 
     # Store cluster's name without extension.
-    clust_name = cl_file[1][:-4]
+    clust_name = cl_file[1].split(extsep)[0]
 
     # Generate hardcoded file names and paths.
     data_file = join(mypath, in_fold, *cl_file)

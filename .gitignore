@@ -4,3 +4,4 @@
 isochrones/
 output/*
 input/*
+.python-version
