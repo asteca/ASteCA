@@ -2,7 +2,6 @@
 @author: gabriel
 """
 
-import os.path
 import numpy as np
 
 
@@ -97,36 +96,19 @@ def bys_da(flag_area_stronger, cl_region, field_region, memb_file, da_params):
     Bayesian field decontamination algorithm.
     '''
 
-    mode, run_n = da_params
+    mode_da, run_n = da_params
 
     # Check if at least one field region was obtained.
-    if mode in ['auto', 'manual'] and flag_area_stronger:
+    if mode_da in {'auto', 'manual'} and flag_area_stronger:
         print "  WARNING: no field regions found. Using 'skip' mode."
-        mode = 'skip'
-
-    # Check if 'mode' was correctly set, else use 'skip'.
-    if mode not in ['auto', 'manual', 'read', 'skip']:
-        print ('''  WARNING: Wrong name for 'mode' in input file. Using 'skip'
-        mode.''')
-        mode = 'skip'
-
-    if mode == 'read':
-        # Check if file exists.
-        if not os.path.isfile(memb_file):
-            # File does not exist.
-            print "  WARNING: members file does not exist. Using 'skip' mode."
-            mode = 'skip'
+        mode_da = 'skip'
 
     flag_decont_skip = False
     # Run algorithm for any of these selections.
-    if mode == 'auto' or mode == 'manual':
+    if mode_da in {'auto', 'manual'}:
 
-        if mode == 'auto':
-            # Set total number of runs.
-            runs = 1000
-        elif mode == 'manual':
-            # Take values from input data file.
-            runs = run_n
+        # Set total number of runs.
+        runs = 1000 if mode_da == 'auto' else run_n
 
         # cl_reg_rad = [[id,x,y,T1,eT1,CT1,eCT1], [], [], ...]
         # len(cl_reg_rad) = number of stars inside the cluster's radius.
@@ -190,7 +172,7 @@ def bys_da(flag_area_stronger, cl_region, field_region, memb_file, da_params):
                 # Remove that milestone from the list.
                 milestones = milestones[1:]
 
-    elif mode == 'read':
+    elif mode_da == 'read':
         print 'Reading membership probabilities from file.'
         # Read IDs from file.
         data = np.genfromtxt(memb_file, dtype=str, unpack=True)
@@ -214,8 +196,8 @@ def bys_da(flag_area_stronger, cl_region, field_region, memb_file, da_params):
         # Store probabilities in list.
         runs_fields_probs = [[probs]]
 
-    elif mode == 'skip':
-        print 'Assign equal probabilities to all stars inside cluster radius.'
+    elif mode_da == 'skip':
+        print 'Assign equal probabilities to all stars in cluster region.'
         # Assign equal probabilities to all stars.
         runs_fields_probs = [[[1.] * len(cl_region)]]
         flag_decont_skip = True

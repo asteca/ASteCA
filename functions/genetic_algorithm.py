@@ -28,6 +28,7 @@ def encode(mm_m, mm_a, mm_e, mm_d, n, int_popul):
         (2 ** n))))[2:].zfill(n)
         d_binar = str(bin(int(((sol[3] - mm_d[0]) / delta_d) *
         (2 ** n))))[2:].zfill(n)
+        # Combine to generate chromosome.
         chrom = m_binar + a_binar + e_binar + d_binar
         chromosomes.append(chrom)
 

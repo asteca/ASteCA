@@ -108,4 +108,8 @@ def IMF_PDF(imf_sel):
         pdf_sum += pdf_val
         m_upper = m_upper + m_step
 
-    return pdf_arr
+    # Normalize probabilities to avoid 'np.random.choice' error if PDF doesn't
+    # add up *exactly* to 1.  with numpy > 1.8.0.
+    pdf_arr[1] /= np.asarray(pdf_arr[1]).sum()
+
+    return np.asarray(pdf_arr)

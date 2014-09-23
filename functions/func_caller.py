@@ -23,7 +23,6 @@ from functions.get_cont_index import cont_indx as g_c_i
 from functions.get_regions import get_regions as g_r
 from functions.decont_algor_bys import bys_da as dab
 from functions.get_lf import lf
-from functions.get_isoch_params import ip
 from functions.reduce_membership import red_memb as rm
 from functions.synth_cl_err import synth_clust_err as sce
 from functions.best_fit_synth_cl import best_fit as bfsc
@@ -33,22 +32,8 @@ from functions.add_data_output import add_data_output as a_d_o
 from functions.cl_members_file import cluster_members_file as c_m_f
 from functions.done_move import done_move as dm
 
-# Check if rpy2 package and R are installed, else skip get_p_value function.
-from subprocess import Popen, PIPE
-rpy2_inst, R_inst = True, True
-try:
-    from functions.get_p_value import get_pval as g_pv
-except ImportError:
-    rpy2_inst = False
-# Now for R.
-proc = Popen(["which", "R"], stdout=PIPE, stderr=PIPE)
-exit_code = proc.wait()
-if exit_code != 0:
-    R_inst = False
-r_flags = [R_inst, rpy2_inst]
 
-
-def asteca_funcs(mypath, cl_file):
+def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
     '''
     Container which holds the calls to all the functions.
     '''
@@ -57,23 +42,15 @@ def asteca_funcs(mypath, cl_file):
     start = time.time()
 
     # Read input parameters from params_input.dat file.
-    gip_params = gip(mypath)
-
-    # Unpack input parameters.
     mode, done_dir, gd_params, gh_params, gc_params, cr_params, kp_flag, \
     im_flag, er_params, fr_number, pv_params, da_params, ps_params, bf_params,\
     sc_params, ga_params, rm_params, pl_params, flag_move_file, axes_params =\
-    gip_params
+    gip(mypath)
 
     # Define system of coordinates used.
     px_deg = gd_params[-1]
     coord_lst = ['px', 'x', 'y'] if px_deg == 'px' else ['deg', 'ra', 'dec']
     coord, x_name, y_name = coord_lst
-
-    # Check mode.
-    if mode not in {'auto', 'semi', 'manual'}:
-        print "  WARNING: mode is incorrect. Default to 'manual'."
-        mode = 'manual'
 
     # Get file names and paths.
     clust_name, data_file, memb_file, output_dir, output_subdir, \
@@ -160,19 +137,13 @@ def asteca_funcs(mypath, cl_file):
     integr_return = g_i_m(im_flag, cl_region, field_region, axes_params,
         flag_area_stronger)
 
-    # Only run if both R and rpy2 packages are installed.
-    if all(f is True for f in r_flags):
-        # R and rpy2 package are installed, call function.
-        # Get physical cluster probability based on p_values distribution.
+    # Get physical cluster probability based on p_values distribution.
+    if R_in_place:
+        from functions.get_p_value import get_pval as g_pv
         pval_test_params, flag_pval_test = g_pv(cl_region, field_region,
             col1_data, mag_data, pv_params, flag_area_stronger)
     else:
-        if pv_params[0]:
-            # Something is not installed and function was told to run.
-            print '  WARNING: R or rpy2 not installed. Skipping function.'
-        else:
-            # Something is not installed, but function was told not to run.
-            print 'Skipping p-value function.'
+        print 'Skipping KDE p-value function.'
         flag_pval_test, pval_test_params = False, [-1., [], [], [], [], [], []]
 
     # Apply decontamination algorithm if at least one equal-sized field region
@@ -185,14 +156,6 @@ def asteca_funcs(mypath, cl_file):
     # Create data file with membership probabilities.
     c_m_f(memb_file_out, memb_prob_avrg_sort)
     print 'Membership probabilities saved to file.'
-
-    # Store all isochrones in all the metallicity files in isoch_list.
-    # Store metallicity values and isochrones ages between the allowed
-    # ranges in isoch_ma; extinction and distance modulus values in isoch_ed.
-    # isoch_list, isoch_ma, isoch_ed = ip_list
-    # Only read files if best fit process is set to run.
-    # bf_flag = bf_params[0]
-    ip_list = ip(ps_params, bf_params[0])
 
     # Reduce number of stars in cluster according to a lower membership
     # probability or magnitude limit.

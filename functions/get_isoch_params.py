@@ -10,33 +10,33 @@ from os.path import join
 import numpy as np
 
 
-def get_ip(ps_params):
+def get_isoch_format(iso_select, cmd_select):
     '''
-    Stores all the available isochrones of different metallicities and
-    ages according to the ranges given to thess parameters.
-    Also stores available parameter values for the stored isochrones
-    between the specified ranges and with the given steps.
+    Read line start format and columns indexes for the selected set of
+    Girardi isochrones and chosen CMD.
     '''
-
-    iso_path, cmd_select, iso_select, m_rs, a_rs, e_rs, d_rs = ps_params
 
     # Assign values according to the system and set of isochrones selected.
     if iso_select == 'MAR':
-        li_s = "#\tIsochrone\tZ ="
+        # String that identifies the beginning of a new isochrone.
+        line_start = "#\tIsochrone\tZ ="
+        # Mass column.
+        mas_i = 1
         if cmd_select == 1:
-            # Mass, V, B
-            mas_i, mag1_i, mag2_i = 1, 9, 8
+            # V, B
+            mag1_i, mag2_i = 9, 8
         elif cmd_select == 2:
-            # Mass, V, I
-            mas_i, mag1_i, mag2_i = 1, 9, 11
+            # V, I
+            mag1_i, mag2_i = 9, 11
         elif cmd_select == 3:
-            # Mass, B, U
-            mas_i, mag1_i, mag2_i = 1, 8, 7
+            # B, U
+            mag1_i, mag2_i = 8, 7
         elif cmd_select == 4:
-            # Mass, T1, C
-            mas_i, mag1_i, mag2_i = 1, 9, 7
+            # T1, C
+            mag1_i, mag2_i = 9, 7
     elif iso_select == 'PAR':
-        li_s = "#\tIsochrone  Z = "
+        # String that identifies the beginning of a new isochrone.
+        line_start = "#\tIsochrone  Z = "
         # Mass column.
         mas_i = 2
         if cmd_select == 1:
@@ -61,17 +61,21 @@ def get_ip(ps_params):
             # K_s, H
             mag1_i, mag2_i = 10, 9
 
-    # String that identifies the beginning of a new isochrone.
-    line_start = li_s
-    # Read columns indexes for this Girardi output file.
-    mini_indx, mag1_indx, mag2_indx = mas_i, mag1_i, mag2_i
+    return line_start, mas_i, mag1_i, mag2_i
 
-    # Read ranges and steps for these parameters.
+
+def get_ranges(m_rs, a_rs, e_rs, d_rs):
+    '''
+    Calculate parameter ranges to be used by the selected best fit method.
+    '''
+
+    # Store ranges and steps for these parameters.
     z_min, z_max, z_step = m_rs
     age_min, age_max, age_step = a_rs
     e_bv_min, e_bv_max, e_bv_step = e_rs
     dis_mod_min, dis_mod_max, dis_mod_step = d_rs
 
+    # UPDATE max values.
     # Add a small value to each max value to ensure that the range is a bit
     # larger than the one between the real min and max values. This simplifies
     # the input of data and ensures that the GA algorithm won't fail when
@@ -81,10 +85,125 @@ def get_ip(ps_params):
     e_bv_max = e_bv_max + min(e_bv_max / 100., e_bv_step / 2.)
     dis_mod_max = dis_mod_max + min(dis_mod_max / 100., dis_mod_step / 2.)
 
-    # Store min, max values and steps.
+    # Store min, *UPDATED* max values and steps.
     ranges_steps = [[z_min, z_max, z_step], [age_min, age_max, age_step],
                     [e_bv_min, e_bv_max, e_bv_step],
                     [dis_mod_min, dis_mod_max, dis_mod_step]]
+
+    # Create ranges for metallicity and age.
+    z_range = np.arange(z_min, z_max, z_step)
+    a_range = np.arange(age_min, age_max, age_step)
+
+    # Store all possible extinction and distance modulus values in list.
+    # isoch_ed = [extinction, dis_mod]
+    # extinction = [e_1, e_2, ..., e_n]
+    # dis_mod = [dm_1, dm_2, ..., dm_m]
+    e_range = [round(i, 2) for i in np.arange(e_bv_min, e_bv_max, e_bv_step)]
+    d_range = [round(i, 2) for i in np.arange(dis_mod_min, dis_mod_max,
+        dis_mod_step)]
+    isoch_ed = [e_range, d_range]
+
+    return z_range, a_range, isoch_ed, ranges_steps
+
+
+def read_met_file(iso_path, met_file, metal, a_range, cmd_select,
+    isoch_format):
+    '''
+    Read a given metallicity file and return the isochrones for the ages
+    within the age range.
+    '''
+
+    line_start, mini_indx, mag1_indx, mag2_indx = isoch_format
+
+    # Initialize list that will hold all the isochrones for this
+    # metallicity value.
+    metal_isoch = []
+
+    # Open the metallicity file.
+    with open(join(iso_path, met_file), mode="r") as f_iso:
+
+        # List that holds the each value of metallicity and age in a
+        # given single metallicity file.
+        met_params = []
+
+        # Define empty lists.
+        isoch_col, isoch_mag, isoch_mas = [], [], []
+
+        # Initial value for age to avoid 'not defined' error.
+        age = -99.
+
+        # Iterate through each line in the file.
+        for line in f_iso:
+
+            # Identify beginning of a defined isochrone.
+            if line.startswith(line_start):
+
+                # Save stored values if these exist.
+                # Skip first age for which the lists will be empty.
+                if isoch_col:
+                    # Save metallicity and age in list.
+                    met_params.append([metal, age])
+                    # Store colors, magnitudes and masses for this
+                    # isochrone.
+                    metal_isoch.append([isoch_col, isoch_mag,
+                        isoch_mas])
+                    # Reset lists.
+                    isoch_col, isoch_mag, isoch_mas = [], [], []
+
+                # Read age value for this isochrone.
+                age_str = line.split("Age =")[1]
+                age = round(np.log10(float(age_str[:-3])), 2)
+
+            # If age value falls inside the given range, store the
+            # isochrone's data (in this line).
+            if np.isclose(a_range, age, atol=0.01).any():
+
+                # Save mag, color and mass values for each isochrone
+                # star.
+                if not line.startswith("#"):
+                    reader = line.split()
+                    # Color.
+                    # Generate colors correctty,
+                    if cmd_select in {2, 5}:
+                        isoch_col.append(float(reader[mag1_indx]) -
+                        float(reader[mag2_indx]))
+                    else:
+                        isoch_col.append(float(reader[mag2_indx]) -
+                        float(reader[mag1_indx]))
+                    # Magnitude.
+                    isoch_mag.append(float(reader[mag1_indx]))
+                    # Mass
+                    isoch_mas.append(float(reader[mini_indx]))
+
+        # Save the last isochrone when EOF is reached.
+        else:
+            # If list is not empty.
+            if isoch_col:
+                # Save metallicity and age in list.
+                met_params.append([metal, age])
+                # Store colors, magnitudes and masses for this
+                # isochrone.
+                metal_isoch.append([isoch_col, isoch_mag, isoch_mas])
+
+    return metal_isoch, met_params
+
+
+def get_ip(ps_params, metal_files):
+    '''
+    Stores the available isochrones of different metallicities and
+    ages, according to the ranges given to these parameters.
+    '''
+
+    # Unpack.
+    iso_path, cmd_select, iso_select, m_rs, a_rs, e_rs, d_rs = ps_params
+
+    # Read line start format and columns indexes for the selected set of
+    # Girardi isochrones.
+    isoch_format = get_isoch_format(iso_select, cmd_select)
+
+    # Get parameters ranges.
+    z_range, a_range, isoch_ed, ranges_steps = get_ranges(m_rs, a_rs, e_rs,
+        d_rs)
 
     # Lists that store the colors, magnitudes and masses of the isochrones.
     # isoch_list = [metal_1, ..., metal_M]
@@ -105,89 +224,18 @@ def get_ip(ps_params):
     # isoch_ma[i][j][1] --> age j (float)
     isoch_ma = []
 
-    # Create ranges for metallicity and age.
-    z_range = np.arange(z_min, z_max, z_step)
-    a_range = np.arange(age_min, age_max, age_step)
+    # Iterate in order through all the metallicity files stored for the
+    # selected set of isochrones.
+    for met_file in metal_files:
 
-    # Iterate through all metallicity files in order.
-    for met_file in sorted(os.listdir(iso_path)):
-
-        # Store the metallicity value.
+        # Extract metallicity value from the name of the file.
         metal = float(met_file[:-4])
 
         # Process metallicity file only if it's inside the given range.
         if np.isclose(z_range, metal, atol=0.0001).any():
 
-            # Initialize list that will hold all the isochrones for this
-            # metallicity value.
-            metal_isoch = []
-
-            # Open the metallicity file.
-            with open(join(iso_path, met_file), mode="r") as f_iso:
-
-                # List that holds the each value of metallicity and age in a
-                # given single metallicity file.
-                met_params = []
-
-                # Define empty lists.
-                isoch_col, isoch_mag, isoch_mas = [], [], []
-
-                # Initial value for age to avoid 'not defined' error.
-                age = -99.
-
-                # Iterate through each line in the file.
-                for line in f_iso:
-
-                    # Identify beginning of a defined isochrone.
-                    if line.startswith(line_start):
-
-                        # Save stored values if these exist.
-                        # Skip first age for which the lists will be empty.
-                        if isoch_col:
-                            # Save metallicity and age in list.
-                            met_params.append([metal, age])
-                            # Store colors, magnitudes and masses for this
-                            # isochrone.
-                            metal_isoch.append([isoch_col, isoch_mag,
-                                isoch_mas])
-                            # Reset lists.
-                            isoch_col, isoch_mag, isoch_mas = [], [], []
-
-                        # Read age value for this isochrone.
-                        age_str = line.split("Age =")[1]
-#                        age = float(age_str[:-3])/1.e09
-                        age = round(np.log10(float(age_str[:-3])), 2)
-
-                    # If age value falls inside the given range, store the
-                    # isochrone's data (in this line).
-                    if np.isclose(a_range, age, atol=0.01).any():
-
-                        # Save mag, color and mass values for each isochrone
-                        # star.
-                        if not line.startswith("#"):
-                            reader = line.split()
-                            # Color.
-                            # Generate colors correclty,
-                            if cmd_select in {2, 5}:
-                                isoch_col.append(float(reader[mag1_indx]) -
-                                float(reader[mag2_indx]))
-                            else:
-                                isoch_col.append(float(reader[mag2_indx]) -
-                                float(reader[mag1_indx]))
-                            # Magnitude.
-                            isoch_mag.append(float(reader[mag1_indx]))
-                            # Mass
-                            isoch_mas.append(float(reader[mini_indx]))
-
-                # Save the last isochrone when EOF is reached.
-                else:
-                    # If list is not empty.
-                    if isoch_col:
-                        # Save metallicity and age in list.
-                        met_params.append([metal, age])
-                        # Store colors, magnitudes and masses for this
-                        # isochrone.
-                        metal_isoch.append([isoch_col, isoch_mag, isoch_mas])
+            metal_isoch, met_params = read_met_file(iso_path, met_file, metal,
+                a_range, cmd_select, isoch_format)
 
             # Store list holding all the isochrones with the same metallicity
             # in the final isochrone list.
@@ -196,30 +244,36 @@ def get_ip(ps_params):
             # and ages.
             isoch_ma.append(met_params)
 
-    # Store all possible extinction and distance modulus values in list.
-    # isoch_ed = [extinction, dis_mod]
-    # extinction = [e_1, e_2, ..., e_n]
-    # dis_mod = [dm_1, dm_2, ..., dm_m]
-    e_range = [round(i, 2) for i in np.arange(e_bv_min, e_bv_max, e_bv_step)]
-    d_range = [round(i, 2) for i in np.arange(dis_mod_min, dis_mod_max,
-        dis_mod_step)]
-    isoch_ed = [e_range, d_range]
+    return isoch_list, isoch_ma, isoch_ed, ranges_steps
 
-    ip_list = [isoch_list, isoch_ma, isoch_ed, ranges_steps]
 
-    return ip_list
+def get_metal_files(iso_path):
+    '''
+    Read names of all metallicity files stored in isochrones path given.
+    '''
+
+    return sorted(os.listdir(iso_path))
 
 
 def ip(ps_params, bf_flag):
     '''
     Read isochrones and parameters if best fit function is set to run.
     '''
+
+    ip_list = []
     # Only read files of best fit method is set to run.
     if bf_flag is True:
-        ip_list = get_ip(ps_params)
-        print 'Theoretical isochrones read and stored (%d).' % \
-            (len(ip_list[0]) * len(ip_list[0][0]))
-    else:
-        ip_list = []
+
+        # Unpack.
+        iso_path = ps_params[0]
+
+        # Read names of all metallicity files stored in isochrones path given.
+        metal_files = get_metal_files(iso_path)
+
+        # Get isochonres, ranges and parameters values.
+        ip_list = get_ip(ps_params, metal_files)
+
+        total = len(ip_list[0]) * len(ip_list[0][0])
+        print 'Theoretical isochrones read and stored ({}).'.format(total)
 
     return ip_list

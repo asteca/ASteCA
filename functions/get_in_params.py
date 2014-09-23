@@ -5,8 +5,7 @@ Created on Tue Feb 11 14:03:44 2014
 @author: gabriel
 """
 
-from os.path import join, isfile
-import sys
+from os.path import join
 
 
 def get_in_params(mypath):
@@ -15,19 +14,13 @@ def get_in_params(mypath):
     'params_input.dat' file and returns them packaged for each function to use.
     '''
 
-    # Store input and output dirs and path to input data file.
+    # Store path to input data file.
     data_file = join(mypath, 'params_input.dat')
 
-    # Check if params_input.dat file exists.
-    if isfile(data_file):
-        pass
-    else:
-        # Halt code.
-        sys.exit('FATAL: params_input.dat file does not exist. Halting code.')
+    # Accept these variations of 'true'.
+    true_lst = ('True', 'true', 'TRUE')
 
     # Read data from file.
-    true_lst = ('True', 'true')
-
     with open(data_file, "r") as f_dat:
 
         # Iterate through each line in the file.
@@ -36,57 +29,50 @@ def get_in_params(mypath):
             if not line.startswith("#") and line.strip() != '':
                 reader = line.split()
 
-                # Read folder paths where clusters are stored.
+                # Mode.
                 if reader[0] == 'MO':
                     mode = str(reader[1])
 
-                elif reader[0] == 'MF':
-                    flag_move_file = True if reader[1] in true_lst else False
-                    done_dir = str(reader[2])
-
-                elif reader[0] == 'MP':
-                    flag_make_plot = True if reader[1] in true_lst else False
-                    plot_frmt = str(reader[2])
-                    plot_dpi = int(reader[3])
-
+                # Input data parameters.
                 elif reader[0] == 'PD':
                     gd_params = map(int, reader[1:])
                 elif reader[0] == 'PX':
                     gd_params.append(str(reader[1]))
-
                 elif reader[0] == 'CMD':
                     cmd_select = int(reader[1])
 
-                elif reader[0] == 'PS':
-                    iso_select = str(reader[1])
+                # Output parameters.
+                elif reader[0] == 'MP':
+                    flag_make_plot = True if reader[1] in true_lst else False
+                    plot_frmt = str(reader[2])
+                    plot_dpi = int(reader[3])
+                elif reader[0] == 'MF':
+                    flag_move_file = True if reader[1] in true_lst else False
+                    done_dir = str(reader[2])
 
+                # Structure functions parameters.
                 elif reader[0] == 'CH':
                     gh_params0 = str(reader[1])
                     gh_params1 = float(reader[2])
-
                 elif reader[0] == 'CC':
                     gc_params0 = str(reader[1])
                     gc_params1 = float(reader[2])
-
                 elif reader[0] == 'CR':
                     cr_params0 = str(reader[1])
                     cr_params1 = float(reader[2])
-
                 elif reader[0] == 'KP':
                     kp_flag = True if reader[1] in true_lst else False
-
-                elif reader[0] == 'ER':
-                    er_params = [str(reader[1])] + map(float, reader[2:])
-
-                elif reader[0] == 'IM':
-                    im_flag = True if reader[1] in true_lst else False
-
                 elif reader[0] == 'GR':
                     try:
                         fr_number = int(reader[1])
                     except:
                         fr_number = str(reader[1])
 
+                # Photometric functions parameters.
+                elif reader[0] == 'ER':
+                    er_params = [str(reader[1])] + map(float, reader[2:])
+                elif reader[0] == 'IM':
+                    im_flag = True if reader[1] in true_lst else False
                 elif reader[0] == 'PV':
                     pv0_params = True if reader[1] in true_lst else False
                     pv1_params = str(reader[2])
@@ -95,21 +81,24 @@ def get_in_params(mypath):
                     da0_params = str(reader[1])
                     da1_params = int(reader[2])
 
+                # Cluster parameters assignation.
                 elif reader[0] == 'BF':
                     bf_flag = True if reader[1] in true_lst else False
                     best_fit_algor = str(reader[2])
                     N_b = int(reader[3])
+                elif reader[0] == 'PS':
+                    iso_select = str(reader[1])
                 elif reader[0] == 'RM':
                     flag_red_memb = str(reader[1])
                     min_prob = float(reader[2])
                 elif reader[0] == 'PS_m':
-                    m_rs = map(float, reader[1:])
+                    m_rs = map(float, reader[1:4])
                 elif reader[0] == 'PS_a':
-                    a_rs = map(float, reader[1:])
+                    a_rs = map(float, reader[1:4])
                 elif reader[0] == 'PS_e':
-                    e_rs = map(float, reader[1:])
+                    e_rs = map(float, reader[1:4])
                 elif reader[0] == 'PS_d':
-                    d_rs = map(float, reader[1:])
+                    d_rs = map(float, reader[1:4])
                 elif reader[0] == 'SC':
                     IMF_name = str(reader[1])
                     tot_mass = float(reader[2])
@@ -126,6 +115,7 @@ def get_in_params(mypath):
                     n_ei = int(reader[8])
                     n_es = int(reader[9])
 
+    # Pack params in lists.
     pl_params = [flag_make_plot, plot_frmt, plot_dpi]
     cr_params = [cr_params0, cr_params1]
     gh_params = [gh_params0, gh_params1]
@@ -134,6 +124,7 @@ def get_in_params(mypath):
     da_params = [da0_params, da1_params]
 
     # Fix isochrones location according to the CMD and set selected.
+    text1, text2 = 'none', 'none'
     if cmd_select in {1, 2, 3}:
         text1 = 'ubvi'
     elif cmd_select in {4}:
@@ -154,7 +145,11 @@ def get_in_params(mypath):
     cmds_dic = {1: ('V', 'B', 21), 2: ('V', 'I', 12), 3: ('V', 'U', 21),
         4: ('{T_1}', 'C', 21), 5: ('J', 'H', 12), 6: ('H', 'J', 21),
         7: ('K', 'H', 21)}
-    m_1, m_2, m_ord = cmds_dic[cmd_select]
+    # Catch error if CMD value is off in file.
+    try:
+        m_1, m_2, m_ord = cmds_dic[cmd_select]
+    except:
+        m_1, m_2, m_ord = ['X', 'X', 0]
 
     # Fixed maximum and minimum axis values for the CMD plots.
     # col_min col_max mag_min mag_max

@@ -8,7 +8,6 @@ Created on Fri Nov  1 17:58:28 2013
 import numpy as np
 from scipy import stats
 from scipy.integrate import quad
-
 import rpy2.robjects as robjects
 from rpy2.robjects.packages import importr
 
