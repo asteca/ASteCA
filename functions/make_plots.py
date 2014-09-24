@@ -22,7 +22,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
     bin_width, center_params, rdp_params, field_dens, radius_params,
     cont_index, mag_data, col1_data, err_plot, err_flags, kp_params,
     cl_region, stars_out, stars_in_rjct, stars_out_rjct, integr_return, n_memb,
-    flag_area_stronger, cl_reg_big, field_region, flag_pval_test,
+    flag_area_stronger, field_region, flag_pval_test,
     pval_test_params, memb_prob_avrg_sort, lum_func, completeness, da_params,
     bf_params, red_return, err_lst, bf_return, ga_params, er_params,
     axes_params, ps_params, pl_params):
@@ -313,20 +313,20 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
     x_min, x_max = min(x_data), max(x_data)
     y_min, y_max = min(y_data), max(y_data)
     # If possible, zoom in.
-    x_min, x_max = max(x_min, (center_cl[0] - 1.5 * clust_rad)), \
+    x_zmin, x_zmax = max(x_min, (center_cl[0] - 1.5 * clust_rad)), \
     min(x_max, (center_cl[0] + 1.5 * clust_rad))
-    y_min, y_max = max(y_min, (center_cl[1] - 1.5 * clust_rad)), \
+    y_zmin, y_zmax = max(y_min, (center_cl[1] - 1.5 * clust_rad)), \
     min(y_max, (center_cl[1] + 1.5 * clust_rad))
     # Prevent axis stretching.
-    if (x_max - x_min) != (y_max - y_min):
-        lst = [(x_max - x_min), (y_max - y_min)]
+    if (x_zmax - x_zmin) != (y_zmax - y_zmin):
+        lst = [(x_zmax - x_zmin), (y_zmax - y_zmin)]
         val, idx = min((val, idx) for (idx, val) in enumerate(lst))
         if idx == 0:
-            x_max = x_min + lst[1]
+            x_zmax = x_zmin + lst[1]
         else:
-            y_max = y_min + lst[0]
-    plt.xlim(x_min, x_max)
-    plt.ylim(y_min, y_max)
+            y_zmax = y_zmin + lst[0]
+    plt.xlim(x_zmin, x_zmax)
+    plt.ylim(y_zmin, y_zmax)
     #Set axis labels
     plt.xlabel('{} ({})'.format(x_name, coord), fontsize=12)
     plt.ylabel('{} ({})'.format(y_name, coord), fontsize=12)
@@ -724,15 +724,9 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
         # Finding chart of cluster region with decontamination algorithm
         # applied and colors assigned according to the probabilities obtained.
         ax17 = plt.subplot(gs1[8:10, 2:4])
-        # Get max and min values in x,y setting some fixed limits.
-        x_min, x_max = 10000., -10000
-        y_min, y_max = 10000., -10000
-        for star in cl_reg_big:
-            x_min, x_max = min(star[1], x_min), max(star[1], x_max)
-            y_min, y_max = min(star[2], y_min), max(star[2], y_max)
-        #Set plot limits
-        plt.xlim(x_min, x_max)
-        plt.ylim(y_min, y_max)
+        #Set plot limits, Use 'zoom' x,y ranges.
+        plt.xlim(x_zmin, x_zmax)
+        plt.ylim(y_zmin, y_zmax)
         #Set axis labels
         plt.xlabel('x (px)', fontsize=12)
         plt.ylabel('y (px)', fontsize=12)
@@ -759,13 +753,14 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
                     c=m_p_m_temp_inv[2], s=star_size, edgecolors='black',
                     cmap=cm, lw=0.5)
         out_clust_rad = [[], []]
-        for star in cl_reg_big:
-            dist = np.sqrt((center_cl[0] - star[1]) ** 2 +
-            (center_cl[1] - star[2]) ** 2)
-            # Only plot stars outside the cluster's radius.
-            if dist >= clust_rad:
-                out_clust_rad[0].append(star[1])
-                out_clust_rad[1].append(star[2])
+        for star in stars_out:
+            if x_zmin <= star[1] <= x_zmax and y_zmin <= star[2] <= y_zmax:
+                dist = np.sqrt((center_cl[0] - star[1]) ** 2 +
+                (center_cl[1] - star[2]) ** 2)
+                # Only plot stars outside the cluster's radius.
+                if dist >= clust_rad:
+                    out_clust_rad[0].append(star[1])
+                    out_clust_rad[1].append(star[2])
         plt.scatter(out_clust_rad[0], out_clust_rad[1], marker='o',
                     s=star_size, edgecolors='black', facecolors='none', lw=0.5)
 

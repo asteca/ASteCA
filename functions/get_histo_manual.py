@@ -1,14 +1,10 @@
 
 
-def manual_histo(phot_data, hist_lst):
+def manual_histo(phot_data, xedges, yedges):
     '''
-    Obtains a (manual) 2D histogram for the field with not only the number
-    of stars per bin but also the values associated to each of those stars:
-    x, y coordinates and magnitude, e_mag, color, e_color values.
+    Obtains a filled 2D histogram for the field with not only the number
+    of stars per bin but also the values associated to each star.
     '''
-
-    id_star, x_data, y_data, mag_data, e_mag, col1_data, e_col1 = phot_data
-    xedges, yedges = hist_lst[1], hist_lst[2]
 
     # Create the empty list that will hold the information of each star that
     # falls within a given bin in the 2D histogram.
@@ -19,8 +15,8 @@ def manual_histo(phot_data, hist_lst):
         H_manual.append([[0] for _ in xrange(len(yedges) - 1)])
 
     # Iterate through all the stars in the frame.
-    for xindex, xcoord in enumerate(x_data):
-        ycoord = y_data[xindex]
+    for star in phot_data:
+        xcoord, ycoord = star[1:3]
 
         # Iterate through all edges in the x axis.
         for xbin_index, xitem_edg in enumerate(xedges):
@@ -55,10 +51,8 @@ def manual_histo(phot_data, hist_lst):
                                 # Store the star's data and increase the count
                                 # for this bin.
                                     H_manual[xbin_index][ybin_index][0] += 1
-                                    H_manual[xbin_index][ybin_index].extend(
-                                    [[id_star[xindex], xcoord, ycoord,
-                                    mag_data[xindex], e_mag[xindex],
-                                    col1_data[xindex], e_col1[xindex]]])
+                                    H_manual[xbin_index][ybin_index].append(
+                                    star)
                                 break
                             else:
                             # A bin beyond this one exists (ie: star is NOT in
@@ -76,10 +70,8 @@ def manual_histo(phot_data, hist_lst):
                                     # It does, store star's data and increase
                                     # the count for this bin.
                                         H_manual[xbin_index][ybin_index][0] += 1
-                                        H_manual[xbin_index][ybin_index].extend(
-                                        [[id_star[xindex], xcoord, ycoord,
-                                        mag_data[xindex], e_mag[xindex],
-                                        col1_data[xindex], e_col1[xindex]]])
+                                        H_manual[xbin_index][ybin_index].append(
+                                        star)
                                     break
                 else:
                 # A bin beyond this one in the x axis exists so star is not in
@@ -103,10 +95,8 @@ def manual_histo(phot_data, hist_lst):
                                         pass
                                     else:
                                         H_manual[xbin_index][ybin_index][0] += 1
-                                        H_manual[xbin_index][ybin_index].extend(
-                                        [[id_star[xindex], xcoord, ycoord,
-                                        mag_data[xindex], e_mag[xindex],
-                                        col1_data[xindex], e_col1[xindex]]])
+                                        H_manual[xbin_index][ybin_index].append(
+                                        star)
                                     break
                                 else:
                                     if ycoord < yedges[ybin_index + 1]:
@@ -118,10 +108,7 @@ def manual_histo(phot_data, hist_lst):
                                             H_manual[xbin_index][ybin_index][0]\
                                             += 1
                                             H_manual[xbin_index][ybin_index].\
-                                            extend([[id_star[xindex], xcoord,
-                                            ycoord, mag_data[xindex],
-                                            e_mag[xindex], col1_data[xindex],
-                                            e_col1[xindex]]])
+                                            append(star)
                                         break
 
     ## Check to see if all items are equal. A couple of bins in the borders
@@ -146,8 +133,8 @@ def manual_histo(phot_data, hist_lst):
 
     #plt.figure(figsize=(10, 5))  # create the top-level container
     #gs = gridspec.GridSpec(1, 2)
-    #plt.subplot(gs[0, 0])
-    #plt.imshow(np.array(h_not_filt).transpose(), origin='lower')
+    ##plt.subplot(gs[0, 0])
+    ##plt.imshow(np.array(h_not_filt).transpose(), origin='lower')
     #plt.subplot(gs[0, 1])
     #plt.imshow(np.array(H_manual2).transpose(), origin='lower')
     #plt.show()

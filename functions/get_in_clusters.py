@@ -41,4 +41,7 @@ def in_clusters(mypath):
                     if not name.endswith('_memb.dat'):
                         cl_files.append([subdir, name])
 
+    # Return sorted list by cluster file name.
+    cl_files.sort(key=lambda x: x[1].lower())
+
     return cl_files

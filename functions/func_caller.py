@@ -10,7 +10,6 @@ from functions.get_data import get_data as gd
 from functions.trim_frame import trim_frame as t_f
 from functions.get_2d_histo import get_2d_histo as g2dh
 from functions.get_center import get_center as g_c
-from functions.get_histo_manual import manual_histo as mh
 from functions.get_field_dens import field_dens as gfd
 from functions.get_dens_prof import get_dens_prof as gdp
 from functions.get_radius import get_clust_rad as gcr
@@ -73,11 +72,6 @@ def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
     bin_width = hist_lst[-1]
     print "Frame's 2D histogram obtained"
 
-    # Obtain filled 2D histogram for the field with star's values attached
-    # to each bin.
-    hist_2d_filled = mh(phot_data, hist_lst)
-    print 'Filled 2D histogram obtained.'
-
     # Get cluster's center coordinates and errors.
     center_params = g_c(x_data, y_data, mag_data, hist_lst, gc_params,
         mode, semi_return, coord_lst)
@@ -123,8 +117,8 @@ def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
     print "Stars separated in/out of cluster's boundaries."
 
     # Field regions around the cluster's center.
-    flag_area_stronger, cl_reg_big, field_region = g_r(hist_lst, cent_bin,
-        clust_rad, hist_2d_filled, cl_region, stars_out, fr_number)
+    flag_area_stronger, field_region = g_r(hist_lst, cent_bin,
+        clust_rad, stars_out, fr_number)
 
     # Get the luminosity function and completeness level for each magnitude
     # bin. The completeness will be used by the isochrone/synthetic cluster
@@ -185,7 +179,7 @@ def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
             field_dens, radius_params, cont_index, mag_data, col1_data,
             err_plot, err_flags, kp_params, cl_region, stars_out,
             stars_in_rjct, stars_out_rjct, integr_return, n_memb,
-            flag_area_stronger, cl_reg_big, field_region, flag_pval_test,
+            flag_area_stronger, field_region, flag_pval_test,
             pval_test_params, memb_prob_avrg_sort, lum_func, completeness,
             da_params, bf_params, red_return, err_lst, bf_return, ga_params,
             er_params, axes_params, ps_params, pl_params)

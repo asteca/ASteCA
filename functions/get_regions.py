@@ -5,15 +5,20 @@ Created on Mon Jul 29 10:06:31 2013
 @author: gabriel
 """
 
-from functions.get_spiral import spiral as gs
+from get_spiral import spiral as gs
+from get_histo_manual import manual_histo as mh
 import numpy as np
 
 
-def spiral_region(histo, h_manual, stars_in, stars_out, x_c_b, y_c_b, spiral,
-                  num_bins_area, sp_indx):
+def spiral_index(spiral, sp_indx, histo, x_c_b, y_c_b, num_bins_area):
     '''
-    Define a spiral region starting from a certain coordinate until a
-    given area is obtained.
+    Take the fixed x,y coordinates for a squared spiral of bins (spiral)
+    centered at [0,0] and an index (sp_indx) that points to a given
+    coordinate (where 0 means centger coords: [0,0]).
+
+    Center the spiral at the coordinates (x_c_b, y_c_b) for a 2D histogram
+    (histo) and loop through the spiralt storing the coordinates of each
+    histogram bin until a given total area (num_bins_area) is obtained.
     '''
 
     # Initialize the bin counter that indicates how many bins are already
@@ -48,50 +53,46 @@ def spiral_region(histo, h_manual, stars_in, stars_out, x_c_b, y_c_b, spiral,
                     # Store the index of the last bin.
                     sp_indx2 = indx + sp_indx
 
-    # At this point we have the list 'sp_coords' composed of two lists, the
-    # first one containing the x coordinates for every bin that corresponds
-    # to the region and the second list the y coordinates. We need to
-    # obtain the stars located insiden each of those bins. To do this
-    # we use 'h_manual' wich is a list that already contains the stars that
-    # fall inside each of the bins in the 2D histogram along with their
-    # relevant data (ID, x, y, T1, etc..)
+    return sp_indx2, sp_coords
 
-    # Initialize empty region.
-    region = []
+
+def spiral_region(h_manual, sp_coords):
+    '''
+     At this point we have the list 'sp_coords' composed of two lists, the
+     first one containing the x coordinates for every bin that corresponds
+     to the region and the second list the y coordinates. We need to
+     obtain the stars located inside each of those bins. To do this
+     we use 'h_manual' wich is a list that already contains the stars that
+     fall inside each of the bins in the 2D histogram along with their
+     relevant data (ID, x, y, T1, etc..)
+    '''
+
+    # Initialize empty field region.
+    f_region = []
 
     # Iterate through all the bins in the spiral list defined.
-    for xbin_index, xbin in enumerate(sp_coords[0]):
-        ybin = sp_coords[1][xbin_index]
+    for xbin, ybin in zip(*sp_coords):
 
-        for star in range(h_manual[xbin][ybin][0]):
+        if h_manual[xbin][ybin][0] > 0:
             # Add all the stars inside this bin to the region.
-            # We use 'star+1' to skip the first item which holds the
+            # We use [1:] to skip the first item which holds the
             # number of stars in the bin.
-            # Check to see if star belongs to the group of stars
-            # that were NOT removed because of its large error.
-            # h_manual[xbin][ybin][star+1][0] is the ID of the star.
-            st_id = h_manual[xbin][ybin][star + 1][0]
-            st_x = h_manual[xbin][ybin][star + 1][1]
-            if any(st_id == i[0] for i in stars_in) and \
-            any(st_x == i[1] for i in stars_in) or \
-            any(st_id == i[0] for i in stars_out) and \
-            any(st_x == i[1] for i in stars_out):
-                region.append(h_manual[xbin][ybin][star + 1])
+            f_region.extend(h_manual[xbin][ybin][1:])
 
-    return region, sp_indx2
+    return f_region
 
 
-def get_regions(hist_lst, cent_bin, clust_rad, h_manual, stars_in, stars_out,
-    fr_number):
+def get_regions(hist_lst, cent_bin, clust_rad, stars_out, fr_number):
     '''
-    Define cluster and field regions around the cluster's center.
+    Define empty region around the cluster via a spiral centered on it
+    and of area a bit larger than that defined by the cluster's radius.
+
+    Define as many field regions as requested (or permitted) around this empty
+    region.
     '''
 
-    hist_2d, bin_width = hist_lst[0], hist_lst[-1]
+    hist_2d, xedges, yedges, bin_width = hist_lst
     x_c_b, y_c_b = cent_bin
-
-    # Define region around the cluster as a spiral centered in it
-    # and of area a bit larger than that defined by the cluster's radius.
 
     # Get area as total number of bins in 2D hist times the area of each bin.
     total_area = len(hist_2d[0]) * len(hist_2d) * (bin_width ** 2)
@@ -152,17 +153,19 @@ def get_regions(hist_lst, cent_bin, clust_rad, h_manual, stars_in, stars_out,
     # approximately (l*r)^2. See that: num_bins_area * width_bins[0]^2 =
     # (l*r)^2.
     num_bins_area = int(round(((length * clust_rad / bin_width) ** 2), 0))
-    # Store 'big' cluster region as the slightly larger area around the
-    # cluster's radius. Used for plotting.
-    sp_indx = 0
-    cl_reg_big, sp_indx = spiral_region(hist_2d, h_manual, stars_in,
-                                            stars_out, x_c_b, y_c_b, spiral,
-                                            num_bins_area, sp_indx)
+    # Obtain index of spiral bin where field regions should begin to be formed.
+    # no_lst is not important here.
+    sp_indx, no_lst = spiral_index(spiral, 0, hist_2d, x_c_b, y_c_b,
+        num_bins_area)
 
     # Obtain field regions.
     # This list holds all the field regions.
     field_regions = []
     if not flag_area_stronger:
+
+        # Obtain filled 2D histogram for the field with star's values attached
+        # to each bin.
+        h_manual = mh(stars_out, xedges, yedges)
 
         # This ensures that the decontamination algorithm uses CMD's
         # of areas equal to the cluster area for the field regions since
@@ -170,10 +173,14 @@ def get_regions(hist_lst, cent_bin, clust_rad, h_manual, stars_in, stars_out,
         # the cluster's CMD.
         num_bins_area = int(np.pi * ((clust_rad / bin_width) ** 2))
 
-        for f_reg in range(f_regions):
-            f_region, sp_indx = spiral_region(hist_2d, h_manual, stars_in,
-                                              stars_out, x_c_b, y_c_b, spiral,
-                                              num_bins_area, sp_indx)
+        for _ in range(f_regions):
+            # Retrieve spiral index where this field region should end and
+            # coordinates of its bins.
+            sp_indx, sp_coords = spiral_index(spiral, sp_indx, hist_2d, x_c_b,
+                y_c_b, num_bins_area)
+            # Fill spiral section for this field region with all the stars
+            # that fall inside of it.
+            f_region = spiral_region(h_manual, sp_coords)
             field_regions.append(f_region)
 
         # If any of the field regions has less than 4 stars then we remove it
@@ -194,4 +201,4 @@ def get_regions(hist_lst, cent_bin, clust_rad, h_manual, stars_in, stars_out,
             '  with less than 4 stars.')
             flag_area_stronger = True
 
-    return flag_area_stronger, cl_reg_big, field_regions
+    return flag_area_stronger, field_regions
