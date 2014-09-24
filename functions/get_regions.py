@@ -148,7 +148,7 @@ def get_regions(hist_lst, cent_bin, clust_rad, stars_out, fr_number):
     # stored as lists) starting from the initial bin [0, 0].
     spiral = gs()
 
-    # Obtain cluster region.
+    # Obtain empty area around cluster region.
     # Calculate number of bins such that their combined area is
     # approximately (l*r)^2. See that: num_bins_area * width_bins[0]^2 =
     # (l*r)^2.

@@ -7,12 +7,10 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
 
-def disp_cent(x_data, y_data, mag_data, center_cl, bin_center, h_filter):
+def disp_cent(x_data, y_data, mag_data, center_cl, h_filter):
     '''
     Show plot of cluster with value of center obtained.
     '''
-
-    x_center_bin, y_center_bin = bin_center
 
     # Plot all outputs
     plt.figure(figsize=(18, 8))  # create the top-level container
@@ -28,13 +26,6 @@ def disp_cent(x_data, y_data, mag_data, center_cl, bin_center, h_filter):
     # Set grid
     ax1.grid(b=True, which='major', color='k', linestyle='--', zorder=3)
     ax1.grid(b=True, which='minor', color='k', linestyle='--', zorder=3)
-    # Add lines through the center of the cluster
-    plt.axvline(x=x_center_bin, linestyle='-', color='white', zorder=4)
-    plt.axhline(y=y_center_bin, linestyle='-', color='white', zorder=4)
-    # Cluster's name in a text box
-    text = 'Center bins (%d, %d)' % (x_center_bin, y_center_bin)
-    plt.text(0.5, 0.95, text, transform=ax1.transAxes,
-    bbox=dict(facecolor='white', alpha=0.8), fontsize=12)
     plt.imshow(h_filter.transpose(), origin='lower')
 
     # 2 subplot: x,y finding chart of full frame

@@ -125,7 +125,6 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
     ob = offsetbox.AnchoredText(text, loc=1, prop=dict(size=10))
     ob.patch.set(boxstyle='square,pad=-0.2', alpha=0.85)
     ax0.add_artist(ob)
-
     plt.imshow(hist_2d_g.transpose(), origin='lower')
 
     # 2D Gaussian histograms' centers using different standard deviations.

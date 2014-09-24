@@ -7,13 +7,11 @@ from scipy.ndimage.filters import gaussian_filter
 from display_cent import disp_cent as d_c
 
 
-def center_approx(hist_lst, st_dev_lst):
+def center_approx(hist, xedges, yedges, st_dev_lst):
     '''
     Function that returns a filtered 2D histogram and approximate center
     coordinates obtained using different standard deviations.
     '''
-
-    hist, xedges, yedges = hist_lst
 
     approx_cents = []
     for indx, st_dev in enumerate(st_dev_lst):
@@ -34,13 +32,7 @@ def center_approx(hist_lst, st_dev_lst):
 
         approx_cents.append([x_cent_pix, y_cent_pix])
 
-    # Find bin where the center xy coordinates are located.
-    x_cent_bin = bisect.bisect_left(xedges, approx_cents[0][0])
-    y_cent_bin = bisect.bisect_left(yedges, approx_cents[0][1])
-    # Store center bin coords for the filtered hist.
-    cent_bin = [(x_cent_bin - 1), (y_cent_bin - 1)]
-
-    return hist_2d_g, cent_bin, approx_cents
+    return hist_2d_g, approx_cents
 
 
 def kde_center(x_data, y_data, approx_cent, radius, gc_params):
@@ -99,6 +91,20 @@ def kde_center(x_data, y_data, approx_cent, radius, gc_params):
     return kde_center, e_cent, kde_plot
 
 
+def bin_center(xedges, yedges, kde_cent):
+    '''
+    Take c,y coordinates and return the bin where they are located.
+    Used to convert x,y center coordinates into the coordinates for the
+    center bin.
+    '''
+    x_cent_bin = bisect.bisect_left(xedges, kde_cent[0])
+    y_cent_bin = bisect.bisect_left(yedges, kde_cent[1])
+    # Store center bin coords for the filtered hist.
+    cent_bin = [(x_cent_bin - 1), (y_cent_bin - 1)]
+
+    return cent_bin
+
+
 def get_center(x_data, y_data, mag_data, hist_lst, gc_params, mode,
     semi_return, coord_lst):
     """
@@ -113,6 +119,9 @@ def get_center(x_data, y_data, mag_data, hist_lst, gc_params, mode,
     # Set flags.
     flag_center_med, flag_center_std = False, False
     flag_center_manual = False
+
+    # Unpack
+    hist, xedges, yedges, bin_width = hist_lst
 
     mode_semi = True
     if mode == 'semi':
@@ -131,11 +140,7 @@ def get_center(x_data, y_data, mag_data, hist_lst, gc_params, mode,
                 approx_cents, cl_rad_semi, gc_params)
 
             # Find bin where the center xy coordinates are located.
-            hist, xedges, yedges = hist_lst[:-1]
-            x_cent_bin = bisect.bisect_left(xedges, kde_cent[0])
-            y_cent_bin = bisect.bisect_left(yedges, kde_cent[1])
-            # Store center bin coords for the filtered hist.
-            cent_bin = [(x_cent_bin - 1), (y_cent_bin - 1)]
+            cent_bin = bin_center(xedges, yedges, kde_cent)
 
             # For plotting.
             # 2D histogram with a gaussian filter applied.
@@ -152,7 +157,7 @@ def get_center(x_data, y_data, mag_data, hist_lst, gc_params, mode,
         # Obtain approximate values for center coordinates using several
         # Gaussian filters with different standard deviation values, on the
         # 2D histogram.
-        hist_2d_g, cent_bin, approx_cents = center_approx(hist_lst[:-1],
+        hist_2d_g, approx_cents = center_approx(hist, xedges, yedges,
             st_dev_lst)
 
         # This is the radius used in auto mode to restrict the search of the
@@ -163,6 +168,9 @@ def get_center(x_data, y_data, mag_data, hist_lst, gc_params, mode,
         # Call funct to obtain the pixel coords of the maximum KDE value.
         kde_cent, e_cent, kde_plot = kde_center(x_data, y_data, approx_cents,
             radius, gc_params)
+
+        # Find bin where the center xy coordinates are located.
+        cent_bin = bin_center(xedges, yedges, kde_cent)
 
         # Calculate the median value for the cluster's center (use median
         # instead of mean to reject possible outliers) and the standard
@@ -191,11 +199,11 @@ def get_center(x_data, y_data, mag_data, hist_lst, gc_params, mode,
         # Obtain approximate values for center coordinates using several
         # Gaussian filters with different standard deviation values, on the
         # 2D histogram.
-        hist_2d_g, cent_bin, approx_cents = center_approx(hist_lst[:-1],
+        hist_2d_g, cent_bin, approx_cents = center_approx(hist, xedges, yedges,
             [st_dev_lst[0]])
 
         # Show plot with center obtained.
-        d_c(x_data, y_data, mag_data, approx_cents[0], cent_bin, hist_2d_g)
+        d_c(x_data, y_data, mag_data, approx_cents[0], hist_2d_g)
         plt.show()
 
         kde_cent = [approx_cents[0]]
