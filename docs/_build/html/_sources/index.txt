@@ -3,21 +3,20 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-.. warning::
-   This documentation is in the process of being written and is **not yet finished**.
+ASteCA
+======
 
-ASteCA's documentation
-======================
+.. image:: /_images/centers.png
 
-.. image:: _images/centers.png
+:Web: `gabriel-p.github.io/asteca <http://gabriel-p.github.io/asteca/>`_
+:Source: `Gabriel-p/asteca <https://github.com/Gabriel-p/asteca>`_
+:Documentation: `asteca.rtfd.org <http://asteca.readthedocs.org/en/latest/>`_
 
 This is the manual of operation for the **ASteCA** (**A**\ utomated **Ste**\ llar
 **C**\ luster **A**\ nalysis) package.
 
-- Project website: `gabriel-p.github.io/asteca <http://gabriel-p.github.io/asteca/>`_
-- Code repository: `Gabriel-p/asteca <https://github.com/Gabriel-p/asteca>`_
-- Documentation: `asteca.rtfd.org <http://asteca.readthedocs.org/en/latest/>`_
-
+.. warning::
+   This documentation is in the process of being written and is **not yet finished**.
 
 Table of Contents
 -----------------
@@ -36,7 +35,7 @@ Table of Contents
 
 .. important::
    A PDF version of this manual can be downloaded `here`__.
-   
+
 Indices and tables
 ==================
 
