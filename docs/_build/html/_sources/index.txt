@@ -6,7 +6,7 @@
 ASteCA
 ======
 
-.. image:: /_images/centers.png
+.. image:: _static/centers.png
 
 :Web: `gabriel-p.github.io/asteca <http://gabriel-p.github.io/asteca/>`_
 :Source: `Gabriel-p/asteca <https://github.com/Gabriel-p/asteca>`_
@@ -31,7 +31,6 @@ Table of Contents
    synth_clust
    cmd_support
    int_mags
-
 
 .. important::
    A PDF version of this manual can be downloaded `here`__.
