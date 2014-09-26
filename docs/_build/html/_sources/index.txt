@@ -6,17 +6,13 @@
 .. warning::
    This documentation is in the process of being written and is **not yet finished**.
 
-.. important::
-   A PDF version of this manual can be downloaded `here`__.
-
 ASteCA's documentation
 ======================
 
-.. image:: _images/asteca-out-s.png
-   :align: right
+.. image:: _images/centers.png
 
 This is the manual of operation for the **ASteCA** (**A**\ utomated **Ste**\ llar
-**C**\ luster **A**\ nylysis) package.
+**C**\ luster **A**\ nalysis) package.
 
 - Project website: `gabriel-p.github.io/asteca <http://gabriel-p.github.io/asteca/>`_
 - Code repository: `Gabriel-p/asteca <https://github.com/Gabriel-p/asteca>`_
@@ -38,6 +34,9 @@ Table of Contents
    int_mags
 
 
+.. important::
+   A PDF version of this manual can be downloaded `here`__.
+   
 Indices and tables
 ==================
 
