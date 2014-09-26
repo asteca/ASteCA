@@ -34,7 +34,7 @@ Constructed with the following guidelines:
 * A new *patch* release indicates a bugfix or small change which does not affect compatibility.
 * A new *build* release indicates this is a pre-release of the version.
 
-[1]: https://github.com/Gabriel-p/asteca/milestones/v1.0.0
+[1]: https://github.com/Gabriel-p/asteca/milestones/v0.1.0
 [2]: https://github.com/Gabriel-p/asteca/releases
 [3]: http://gabriel-p.github.io/asteca/
 [4]: https://github.com/Gabriel-p/asteca/issues?q=is%3Aopen+is%3Aissue+label%3Abug
