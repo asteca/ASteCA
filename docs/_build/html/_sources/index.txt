@@ -9,7 +9,7 @@ ASteCA
 .. image:: _static/centers.png
 
 :Web: `gabriel-p.github.io/asteca <http://gabriel-p.github.io/asteca/>`_
-:Source: `Gabriel-p/asteca <https://github.com/Gabriel-p/asteca>`_
+:Source: `github.com/Gabriel-p/asteca <https://github.com/Gabriel-p/asteca>`_
 :Documentation: `asteca.rtfd.org <http://asteca.readthedocs.org/en/latest/>`_
 
 This is the manual of operation for the **ASteCA** (**A**\ utomated **Ste**\ llar

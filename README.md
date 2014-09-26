@@ -1,9 +1,9 @@
 # ASteCA
 
-The code is still under development. Version 1.0.0 will be released as soon as
+The code is still under development. Version 0.1.0 will be released as soon as
 the following list of issues is addressed:
 
-* [Issues left until version 1.0.0][1]
+* [Issues left until version 0.1.0][1]
 
 A list of **Beta** releases can be accessed [here][2].
 
