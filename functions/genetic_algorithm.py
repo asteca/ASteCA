@@ -152,7 +152,14 @@ def elitism(best_sol, p_lst):
     Pass the best n_el solutions unchanged to the next generation.
     '''
 
-    p_lst_r = best_sol + p_lst[len(best_sol):]
+    print 'best sol', best_sol, '\n'
+    print 'p_lst', p_lst
+    p_lst_r = []
+    for sol in best_sol:
+        p_lst_r.append([sol[0]] + p_lst[0][len(best_sol):])
+        p_lst_r.append([sol[1]] + p_lst[1][len(best_sol):])
+        p_lst_r.append([sol[2]] + p_lst[2][len(best_sol):])
+        p_lst_r.append([sol[3]] + p_lst[3][len(best_sol):])
     #i = 0
     #for sol in best_sol:
         ## Find indexes for these values.
@@ -201,7 +208,7 @@ def evaluation(err_lst, obs_clust, completeness, isoch_list, param_values,
     for params in zip(*p_lst):
 
         ## Metallicity and age indexes.
-        print params
+        print 'eval', params
         m_i = param_values[0].index(params[0])
         a_i = param_values[1].index(params[1])
         #d = d_lst[indx]
