@@ -136,37 +136,34 @@ def check(mypath, cl_files):
                 " run but the folder:\n {}\ndoes not exists.".format(iso_path))
 
         # Read names of all metallicity files stored in isochrones path given.
-        isoch_m, met_files = isochp.get_metals(iso_path)
+        # Also read full paths to metallicity files.
+        met_vals_all, met_files = isochp.get_metals(iso_path)
         # Read Girardi metallicity files format.
         isoch_format = isochp.i_format(iso_select, cmd_select)
-        # Read all ages in the first metallicity file.
+        # Read all ages in the first metallicity file: met_files[0]
         # *WE ASUME ALL METALLICITY FILES HAVE THE SAME NUMBER OF AGE VALUES*
-        isoch_a = isochp.get_ages(met_files[0], isoch_format[1])
+        age_vals_all = isochp.get_ages(met_files[0], isoch_format[1])
         # Get parameters ranges stored in params_input.dat file.
-        z_range, a_range, isoch_ed, ranges_steps = isochp.get_ranges(m_rs,
-            a_rs, e_rs, d_rs)
-        if not np.array(z_range).size:
-            sys.exit("ERROR: No values exist in metallicity range defined:\n\n"
-            "min={}, max={}, step={}".format(*m_rs))
-        if not np.array(a_range).size:
-            sys.exit("ERROR: No values exist in age range defined:\n\n"
-            "min={}, max={}, step={}".format(*a_rs))
-        if not np.array(isoch_ed[0]).size:
-            sys.exit("ERROR: No values exist in extinction range defined:\n\n"
-            "min={}, max={}, step={}".format(*e_rs))
-        if not np.array(isoch_ed[1]).size:
-            sys.exit("ERROR: No values exist in distance range defined:\n\n"
-            "min={}, max={}, step={}".format(*d_rs))
+        param_ranges, param_rs = isochp.get_ranges(m_rs, a_rs, e_rs, d_rs)
+        # Check that ranges are properly defined.
+        p_names = [['metallicity', m_rs], ['age', a_rs], ['extinction', e_rs],
+            ['distance', d_rs]]
+        for i, p in enumerate(param_ranges):
+            if not p.size:
+                sys.exit("ERROR: No values exist for {} range defined:\n\n"
+                "min={}, max={}, step={}".format(p_names[i][0], *p_names[i][1]))
 
         # Check that metallicity and age min, max & steps values are correct.
-        # Match values in ranges with those available in files.
-        metal_files, age_values = isochp.match_ranges(isoch_m, met_files,
-            isoch_a, z_range, a_range)
-        if len(z_range) > len(zip(*metal_files)[1]):
+        # Match values in metallicity and age ranges with those available.
+        z_range, a_range = param_ranges[:2]
+        met_f_filter, met_values, age_values = isochp.match_ranges(met_vals_all,
+            met_files, age_vals_all, z_range, a_range)
+
+        if len(z_range) > len(met_values):
             sys.exit("ERROR: one or more metallicity files could not be\n"
             "matched to the range given. The range defined was:\n\n"
             "{}\n\nand the closest available values are:\n\n"
-            "{}".format(z_range, np.asarray(zip(*metal_files)[1])))
+            "{}".format(z_range, np.asarray(met_values)))
         if len(a_range) > len(age_values):
             sys.exit("ERROR: one or more isochrones could not be matched\n"
             "to the age range given. The range defined was:\n\n"
