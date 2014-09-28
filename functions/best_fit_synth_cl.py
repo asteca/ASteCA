@@ -83,20 +83,26 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
 
         # For plotting purposes.
         # Get list of stored isochrones and their parameters.
-        isoch_list, isoch_ma = ip_list[0], ip_list[1]
+        isoch_list, param_values = ip_list[0], ip_list[1]
         # Read best fit values for all parameters.
         m, a, e, d = isoch_fit_params[0]
         # Find indexes for metallicity and age. If indexes are not found due
         # to some difference in the significant figures, use the indices
         # [0, 0] to prevent the code from halting.
-        m_indx, a_indx = next(((i, j) for i, x in enumerate(isoch_ma) for j, y
-        in enumerate(x) if y == [m, a]), [0, 0])
+
+        #m_indx, a_indx = next(((i, j) for i, x in enumerate(isoch_ma) for j, y
+        #in enumerate(x) if y == [m, a]), [0, 0])
+
+        try:
+            m_i, a_i = param_values[0].index(m), param_values[1].index(a)
+        except:
+            m_i, a_i = [0, 0]
+
         # Generate shifted best fit isochrone.
-        shift_isoch = move_isoch(cmd_sel,
-                                 isoch_list[m_indx][a_indx][:2], e, d)
+        shift_isoch = move_isoch(cmd_sel, isoch_list[m_i][a_i][:2], e, d)
         # Generate best fit synthetic cluster.
         synth_clst = s_c(err_lst, completeness, sc_params,
-                         isoch_list[m_indx][a_indx], [-1., -1., e, d], cmd_sel)
+                         isoch_list[m_i][a_i], [-1., -1., e, d], cmd_sel)
 
     else:
         # Pass empty lists to make_plots.

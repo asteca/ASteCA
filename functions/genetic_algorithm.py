@@ -324,7 +324,6 @@ def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
     # Unpack.
     isoch_list, param_values, param_rs = ip_list
     n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es = ga_params
-
     # Check if n_pop is odd. If it is sum 1 to avoid conflict if cr_sel
     # '2P' was selected.
     n_pop += n_pop % 2
