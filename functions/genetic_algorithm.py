@@ -13,8 +13,6 @@ def encode(n_bin, p_delta, p_mins, int_popul):
     '''
     Encode the solutions into binary string chromosomes to be bred.
     '''
-    #delta_m, delta_a, delta_e, delta_d = (mm_m[1] - mm_m[0]), \
-    #(mm_a[1] - mm_a[0]), (mm_e[1] - mm_e[0]), (mm_d[1] - mm_d[0])
 
     chromosomes = []
     for sol in int_popul:
@@ -23,18 +21,6 @@ def encode(n_bin, p_delta, p_mins, int_popul):
         for i, p_del in enumerate(p_delta):
             p_binar.append(str(bin(int(((sol[i] - p_mins[i]) / p_delta[i]) *
                 (2 ** n_bin))))[2:].zfill(n_bin))
-
-        #m_binar = str(bin(int(((sol[0] - mm_m[0]) / delta_m) *
-        #(2 ** n))))[2:].zfill(n)
-
-        #a_binar = str(bin(int(((sol[1] - mm_a[0]) / delta_a) *
-        #(2 ** n))))[2:].zfill(n)
-
-        #e_binar = str(bin(int(((sol[2] - mm_e[0]) / delta_e) *
-        #(2 ** n))))[2:].zfill(n)
-
-        #d_binar = str(bin(int(((sol[3] - mm_d[0]) / delta_d) *
-        #(2 ** n))))[2:].zfill(n)
 
         # Combine binary strings to generate chromosome.
         chrom = ''.join(p_binar)
@@ -99,8 +85,6 @@ def decode(param_values, n_bin, p_delta, p_mins, mut_chrom):
     Decode the chromosomes into its real values to be evaluated by the
     objective function.
     '''
-    #delta_m, delta_a, delta_e, delta_d = (mm_m[1] - mm_m[0]), \
-    #(mm_a[1] - mm_a[0]), (mm_e[1] - mm_e[0]), (mm_d[1] - mm_d[0])
 
     # Initialize empty list with as many sub-lists as parameters.
     p_lst = [[] for _ in range(len(param_values))]
@@ -110,7 +94,6 @@ def decode(param_values, n_bin, p_delta, p_mins, mut_chrom):
         chrom_split = [chrom[i:i + n_bin] for i in xrange(0, len(chrom), n_bin)]
 
         # Convert each binary into an integer for all parameters.
-        #km, ka, ke, kd = (int(i, 2) for i in chrom_split)
         b2i = [int(i, 2) for i in chrom_split]
 
         # Map integers to the real parameter values.
@@ -121,28 +104,6 @@ def decode(param_values, n_bin, p_delta, p_mins, mut_chrom):
             p = min(param_values[i], key=lambda x: abs(x - p_r))
             # Store this last value.
             p_lst[i].append(p)
-
-        #xm = mm_m[0] + (km * delta_m / (2 ** n_bin))
-        #xa = mm_a[0] + (ka * delta_a / (2 ** n_bin))
-        #xe = mm_e[0] + (ke * delta_e / (2 ** n_bin))
-        #xd = mm_d[0] + (kd * delta_d / (2 ** n_bin))
-
-        # Find the closest values in the parameters list and store its index
-        # in the case of metallicity and age and real values for extinction
-        # and distance modulus.
-        #m = min(flat_ma[0], key=lambda x: abs(x - xm))
-        #a = min(flat_ma[1], key=lambda x: abs(x - xa))
-        #e = min(isoch_ed[0], key=lambda x: abs(x - xe))
-        #d = min(isoch_ed[1], key=lambda x: abs(x - xd))
-
-        # Find the indexes for these metallicity and age values.
-        #[m, a] = next(((i, j) for i, x in enumerate(isoch_ma) for j, y in
-        #enumerate(x) if y == [m, a]), None)
-
-        # Append indexes (for m,a) and real values (for e,d) to lists.
-        #ma_lst.append([m, a])
-        #e_lst.append(e)
-        #d_ls.append(d)
 
     return p_lst
 
@@ -157,22 +118,6 @@ def elitism(best_sol, p_lst):
     p_lst_r = []
     for i, pars in enumerate(p_lst):
         p_lst_r.append(list(zip(*best_sol)[i]) + pars[:-len(best_sol)])
-
-        #p_lst_r.append([sol[0]] + p_lst[0][len(best_sol):])
-        #p_lst_r.append([sol[1]] + p_lst[1][len(best_sol):])
-        #p_lst_r.append([sol[2]] + p_lst[2][len(best_sol):])
-        #p_lst_r.append([sol[3]] + p_lst[3][len(best_sol):])
-    #i = 0
-    #for sol in best_sol:
-        ## Find indexes for these values.
-        #[m, a] = next(((i, j) for i, x in enumerate(isoch_ma) for j, y in
-                #enumerate(x) if y == [sol[0], sol[1]]), None)
-        ## Store met and age indexes.
-        #ma_lst[i] = [m, a]
-        ## Store extinction and distance modulus values.
-        #e_lst[i], d_lst[i] = sol[2], sol[3]
-        #p_lst_r[i] =
-        #i += 1
 
     return p_lst_r
 
@@ -213,9 +158,6 @@ def evaluation(err_lst, obs_clust, completeness, isoch_list, param_values,
         ## Metallicity and age indexes.
         m_i = param_values[0].index(model[0])
         a_i = param_values[1].index(model[1])
-        #d = d_lst[indx]
-        ## Pass metallicity and age values for plotting purposes.
-        #params = [isoch_ma[m][a][0], isoch_ma[m][a][1], e, d]
 
         # Check if this isochrone was already processed.
         if model in isoch_done[0]:
@@ -257,14 +199,6 @@ def random_population(param_values, n_ran):
     for param in param_values:
         p_lst.append([random.choice(param) for _ in range(n_ran)])
 
-    #e_lst = [random.choice(isoch_ed[0]) for _ in range(n_ran)]
-    #d_lst = [random.choice(isoch_ed[1]) for _ in range(n_ran)]
-    ## Flat array so every [metal,age] combination has the same probability
-    ## of being picked. This list stores indexes.
-    #ma_flat = [(i, j) for i in range(len(isoch_ma)) for j in
-    #range(len(isoch_ma[i]))]
-    #ma_lst = [random.choice(ma_flat) for _ in range(n_ran)]
-
     return p_lst
 
 
@@ -276,13 +210,7 @@ def ext_imm(best_sol, param_values, n_pop):
     # Generate (n_pop-n_el) random solutions.
     n_ran = n_pop - len(best_sol)
     p_lst_r = random_population(param_values, n_ran)
-    # Store random solutions in random order.
-    #generation_ei = []
-    #for indx, ma in enumerate(ma_lst):
-        #m, a = ma[0], ma[1]
-        #e, d = e_lst[indx], d_lst[indx]
-        #generation_ei.append([isoch_ma[m][a][0], isoch_ma[m][a][1],
-                              #e, d])
+
     # Append immigrant random population to the best solution.
     generation_ei = best_sol + zip(*p_lst_r)
 
@@ -300,13 +228,7 @@ def num_binary_digits(param_rs):
         p_mins.append(param[0])  # Used by the encode operator.
         p_delta.append(param[1] - param[0])  # max - min value
         p_step.append(param[2])  # step
-    #mm_m, step_m = [ranges_steps[0][0], ranges_steps[0][1]], ranges_steps[0][2]
-    #mm_a, step_a = [ranges_steps[1][0], ranges_steps[1][1]], ranges_steps[1][2]
-    #mm_e, step_e = [ranges_steps[2][0], ranges_steps[2][1]], ranges_steps[2][2]
-    #mm_d, step_d = [ranges_steps[3][0], ranges_steps[3][1]], ranges_steps[3][2]
 
-    #delta_m, delta_a, delta_e, delta_d = (mm_m[1] - mm_m[0]), \
-    #(mm_a[1] - mm_a[0]), (mm_e[1] - mm_e[0]), (mm_d[1] - mm_d[0])
     p_interv = np.array(p_delta) / np.array(p_step)
 
     # Number of binary digits used to create the chromosomes.
@@ -331,9 +253,6 @@ def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
     # Get number of binary digits to use.
     n_bin, p_delta, p_mins = num_binary_digits(param_rs)
 
-    # Flat out metallicity and ages list (used by the 'Decode' process).
-    #flat_ma = zip(*list(itertools.chain(*isoch_ma)))
-
     # Fitness.
     # Rank-based breeding probability. Independent of the fitness values,
     # only depends on the total number of chromosomes n_pop and the fitness
@@ -343,7 +262,6 @@ def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
 
     ### Initial random population evaluation. ###
     p_lst_r = random_population(param_values, n_pop)
-    #print 'rad1', p_lst_r, '\n'
 
     # Stores parameters of the solutions already processed and the likelihhods
     # obtained.
@@ -353,11 +271,9 @@ def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
     generation, lkl, isoch_done = evaluation(err_lst, obs_clust,
         completeness, isoch_list, param_values, p_lst_r,
         sc_params, isoch_done, cmd_sel)
-    #print 'eval1', generation, '\n'
 
     # Store best solution for passing along in the 'Elitism' block.
     best_sol = generation[:n_el]
-    #print 'best sol1', best_sol, '\n'
 
     # For plotting purposes.
     lkl_old = [[], []]
@@ -380,11 +296,9 @@ def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
         # solutions according to breed_prob to generate the intermediate
         # population.
         int_popul = selection(generation, fitness)
-        #print 'int pop', int_popul, '\n'
 
         # Encode intermediate population's solutions into binary chromosomes.
         chromosomes = encode(n_bin, p_delta, p_mins, int_popul)
-        #print 'chrom', chromosomes, '\n'
 
         #### Breeding ###
         # Pair chromosomes by randomly shuffling them.
@@ -393,28 +307,23 @@ def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
         # Apply crossover operation on each subsequent pair of chromosomes
         # with a p_cross probability (crossover probability)
         cross_chrom = crossover(chromosomes, p_cross, cr_sel)
-        #print 'cross', cross_chrom, '\n'
 
         # Apply mutation operation on random genes for every chromosome.
         mut_chrom = mutation(cross_chrom, p_mut)
-        #print 'mut', mut_chrom, '\n'
 
         ### Evaluation ###
         # Decode the chromosomes into solutions to form the new generation.
         p_lst_d = decode(param_values, n_bin, p_delta, p_mins, mut_chrom)
-        #print 'dec', p_lst_d, '\n'
 
         # Elitism: make sure that the best n_el solutions from the previous
         # generation are passed unchanged into this next generation.
         p_lst_e = elitism(best_sol, p_lst_d)
-        #print 'eli', p_lst_e, '\n'
 
         # Evaluate each new solution in the objective function and sort
         # according to the best solutions found.
         generation, lkl, isoch_done = evaluation(err_lst, obs_clust,
         completeness, isoch_list, param_values, p_lst_e, sc_params,
         isoch_done, cmd_sel)
-        #print 'eval2', generation[0], '\n'
 
         ### Extinction/Immigration ###
         # If the best solution has remained unchanged for n_ei

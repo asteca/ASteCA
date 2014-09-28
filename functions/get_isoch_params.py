@@ -286,7 +286,4 @@ def ip(ps_params, bf_flag):
         "  {} distance values,".format(*lens))
         print "  = {:.1e} approx total models.".format(total)
 
-        print '\n', param_values, '\n'
-        print param_rs
-
     return ip_list

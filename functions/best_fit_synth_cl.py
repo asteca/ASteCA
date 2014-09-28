@@ -30,7 +30,7 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
 
         print 'Searching for optimal parameters.'
 
-        # Remove IDs so likelihood function works.
+        # Remove IDs  and convert to array so likelihood function works.
         obs_clust = np.array(zip(*zip(*memb_prob_avrg_sort)[1:]), dtype=float)
 
         # Obtain the selected IMF's PDF. We run it once because the array only
@@ -89,15 +89,10 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
         # Find indexes for metallicity and age. If indexes are not found due
         # to some difference in the significant figures, use the indices
         # [0, 0] to prevent the code from halting.
-
-        #m_indx, a_indx = next(((i, j) for i, x in enumerate(isoch_ma) for j, y
-        #in enumerate(x) if y == [m, a]), [0, 0])
-
         try:
             m_i, a_i = param_values[0].index(m), param_values[1].index(a)
         except:
             m_i, a_i = [0, 0]
-
         # Generate shifted best fit isochrone.
         shift_isoch = move_isoch(cmd_sel, isoch_list[m_i][a_i][:2], e, d)
         # Generate best fit synthetic cluster.
