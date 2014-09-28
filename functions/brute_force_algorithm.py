@@ -16,25 +16,24 @@ def brute_force(err_lst, obs_clust, completeness, ip_list, sc_params,
     isochrones.
     '''
 
-    isoch_list, isoch_ma, isoch_ed, ranges_steps = ip_list
+    isoch_list, param_values, param_rs = ip_list
 
-    # Create lists with all possible
-    e_lst = isoch_ed[0]
-    d_lst = isoch_ed[1]
+    # Unpack parameters values.
+    m_lst, a_lst, e_lst, d_lst = param_values
 
     # Initiate list that will hold the likelihood values telling us how well
     # each isochrone (syhtnetic cluster) fits the observed data.
-    score = []
+    score = [[], []]
 
-    tot_sols, i = len(isoch_list) * len(isoch_list[0]) * len(e_lst) *\
-    len(d_lst), 0
+    tot_sols, i = reduce(lambda x, y: x * y,
+        [len(_) for _ in param_values], 1), 0
 
-    milestones = [25, 50, 75, 100]
+    milestones = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
     # Iterate through all metallicities.
-    for m, m_isochs in enumerate(isoch_list):
+    for m_i, m in enumerate(m_lst):
 
         # Iterate through all ages.
-        for a, isochs in enumerate(m_isochs):
+        for a_i, a in enumerate(a_lst):
 
             # Iterate through all extinction values.
             for e in e_lst:
@@ -42,18 +41,19 @@ def brute_force(err_lst, obs_clust, completeness, ip_list, sc_params,
                 # Iterate through all distance modulus.
                 for d in d_lst:
 
-                    # Pass metallicity and age values for plotting purposes.
-                    params = [isoch_ma[m][a][0], isoch_ma[m][a][1], e, d]
+                    params = [m, a, e, d]
 
                     # Call likelihood function with m,a,e,d values.
+                    isochrone = isoch_list[m_i][a_i]
+                    # Call likelihood function with m,a,e,d values.
                     likel_val = i_l(err_lst, obs_clust, completeness, sc_params,
-                                    isoch_list[m][a], params, cmd_sel)
-
+                                    isochrone, params, cmd_sel)
                     # Store the likelihood for each synthetic cluster.
-                    score.append([likel_val, isoch_ma[m][a][0],
-                                  isoch_ma[m][a][1], e, d])
-                    i += 1
+                    score[0].append(likel_val)
+                    score[1].append(params)
 
+                    # Print percentage done.
+                    i += 1
                     percentage_complete = (100.0 * (i + 1) / tot_sols)
                     while len(milestones) > 0 and percentage_complete >= \
                     milestones[0]:
@@ -64,8 +64,8 @@ def brute_force(err_lst, obs_clust, completeness, ip_list, sc_params,
     # Find index of function with smallest likelihood value.
     # This index thus points to the isochrone that best fits the observed
     # group of stars.
-    best_fit_indx = np.argmin(zip(*score)[0])
+    best_fit_indx = np.argmin(score[0])
 
-    isoch_fit_params = [score[best_fit_indx][1:], score[best_fit_indx][0]]
+    isoch_fit_params = [score[1][best_fit_indx], score]
 
     return isoch_fit_params

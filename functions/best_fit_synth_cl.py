@@ -30,6 +30,9 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
 
         print 'Searching for optimal parameters.'
 
+        # Remove IDs so likelihood function works.
+        obs_clust = np.array(zip(*zip(*memb_prob_avrg_sort)[1:]), dtype=float)
+
         # Obtain the selected IMF's PDF. We run it once because the array only
         # depends on the IMF selected.
         imf_pdf = i_p(sc_params[0])
@@ -42,7 +45,7 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
 
             print 'Using Brute Force algorithm.'
             # Brute force algorithm.
-            isoch_fit_params = b_f(err_lst, memb_prob_avrg_sort, completeness,
+            isoch_fit_params = b_f(err_lst, obs_clust, completeness,
                                    ip_list, sc_params, ga_params, cmd_sel)
             # Assign errors as the steps in each parameter.
             isoch_fit_errors = [ps_params[i + 3][2] for i in range(4)]
@@ -54,9 +57,6 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
             # Let the GA algor know this call comes from the main function
             # so it will print percentages to screen.
             flag_print_perc = True
-            # Remove IDs so likelihood function works.
-            obs_clust = np.array(zip(*zip(*memb_prob_avrg_sort)[1:]),
-                dtype=float)
             isoch_fit_params = g_a(flag_print_perc, err_lst,
                 obs_clust, completeness, ip_list, sc_params,
                 ga_params, cmd_sel)
