@@ -38,7 +38,6 @@ def encode(n_bin, p_delta, p_mins, int_popul):
 
         # Combine binary strings to generate chromosome.
         chrom = ''.join(p_binar)
-        print 'encode', sol, p_binar, chrom
         chromosomes.append(chrom)
 
     return chromosomes
@@ -73,8 +72,6 @@ def crossover(chromosomes, p_cross, cr_sel):
                 cp0, cp1 = np.sort(random.sample(range(0, len(chrom_pair[0])),
                                                  2))
                 # Apply crossover on these two chromosomes.
-                print chrom_pair
-                print cp0, cp1
                 cross_chrom.append(chrom_pair[0][:cp0] +
                 chrom_pair[1][cp0:cp1] + chrom_pair[0][cp1:])
                 cross_chrom.append(chrom_pair[1][:cp0] +
@@ -155,10 +152,11 @@ def elitism(best_sol, p_lst):
     Pass the best n_el solutions unchanged to the next generation.
     '''
 
+    # Append the n_el best solutions to the beginning of the list, pushing
+    # out n_el solutions located on the end (right) of the list.
     p_lst_r = []
-    for sol in best_sol:
-        for i, pars in enumerate(p_lst):
-            p_lst_r.append([sol[i]] + pars[len(best_sol):])
+    for i, pars in enumerate(p_lst):
+        p_lst_r.append(list(zip(*best_sol)[i]) + pars[:-len(best_sol)])
 
         #p_lst_r.append([sol[0]] + p_lst[0][len(best_sol):])
         #p_lst_r.append([sol[1]] + p_lst[1][len(best_sol):])
@@ -204,37 +202,38 @@ def selection(generation, breed_prob):
 def evaluation(err_lst, obs_clust, completeness, isoch_list, param_values,
                  p_lst, sc_params, isoch_done, cmd_sel):
     '''
-    Evaluate each random isochrone in the objective function to obtain
-    the fitness of each solution.
+    Evaluate each model in the objective function to obtain the fitness of
+    each one.
     '''
+
     likelihood, generation_list = [], []
-    # Process each isochrone selected.
-    for params in zip(*p_lst):
+    # Process each model selected.
+    for model in zip(*p_lst):
 
         ## Metallicity and age indexes.
-        m_i = param_values[0].index(params[0])
-        a_i = param_values[1].index(params[1])
+        m_i = param_values[0].index(model[0])
+        a_i = param_values[1].index(model[1])
         #d = d_lst[indx]
         ## Pass metallicity and age values for plotting purposes.
         #params = [isoch_ma[m][a][0], isoch_ma[m][a][1], e, d]
 
         # Check if this isochrone was already processed.
-        if params in isoch_done[0]:
+        if model in isoch_done[0]:
             # Get likel_val value for this isochrone.
-            likel_val = isoch_done[1][isoch_done[0].index(params)]
+            likel_val = isoch_done[1][isoch_done[0].index(model)]
         else:
             isochrone = isoch_list[m_i][a_i]
             # Call likelihood function with m,a,e,d values.
             likel_val = i_l(err_lst, obs_clust, completeness, sc_params,
-                            isochrone, params, cmd_sel)
+                            isochrone, model, cmd_sel)
             # Append data identifying the isochrone and the obtained
             # likelihood value to this *persistent* list.
-            isoch_done[0].append(params)
+            isoch_done[0].append(model)
             isoch_done[1].append(likel_val)
 
         # Append same data to the lists that will be erased with each call
         # to this function.
-        generation_list.append(params)
+        generation_list.append(model)
 #        likelihood.append(round(likel_val, 2))
         likelihood.append(likel_val)
 
@@ -267,6 +266,27 @@ def random_population(param_values, n_ran):
     #ma_lst = [random.choice(ma_flat) for _ in range(n_ran)]
 
     return p_lst
+
+
+def ext_imm(best_sol, param_values, n_pop):
+    '''
+    Append a new random population to the best solution so far.
+    '''
+
+    # Generate (n_pop-n_el) random solutions.
+    n_ran = n_pop - len(best_sol)
+    p_lst_r = random_population(param_values, n_ran)
+    # Store random solutions in random order.
+    #generation_ei = []
+    #for indx, ma in enumerate(ma_lst):
+        #m, a = ma[0], ma[1]
+        #e, d = e_lst[indx], d_lst[indx]
+        #generation_ei.append([isoch_ma[m][a][0], isoch_ma[m][a][1],
+                              #e, d])
+    # Append immigrant random population to the best solution.
+    generation_ei = best_sol + zip(*p_lst_r)
+
+    return generation_ei
 
 
 def num_binary_digits(param_rs):
@@ -324,7 +344,7 @@ def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
 
     ### Initial random population evaluation. ###
     p_lst_r = random_population(param_values, n_pop)
-    print 'rad1', p_lst_r, '\n'
+    #print 'rad1', p_lst_r, '\n'
 
     # Stores parameters of the solutions already processed and the likelihhods
     # obtained.
@@ -334,11 +354,11 @@ def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
     generation, lkl, isoch_done = evaluation(err_lst, obs_clust,
         completeness, isoch_list, param_values, p_lst_r,
         sc_params, isoch_done, cmd_sel)
-    print 'eval1', generation, '\n'
+    #print 'eval1', generation, '\n'
 
     # Store best solution for passing along in the 'Elitism' block.
     best_sol = generation[:n_el]
-    print 'best sol1', best_sol, '\n'
+    #print 'best sol1', best_sol, '\n'
 
     # For plotting purposes.
     lkl_old = [[], []]
@@ -361,11 +381,11 @@ def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
         # solutions according to breed_prob to generate the intermediate
         # population.
         int_popul = selection(generation, fitness)
-        print 'int pop', int_popul, '\n'
+        #print 'int pop', int_popul, '\n'
 
         # Encode intermediate population's solutions into binary chromosomes.
         chromosomes = encode(n_bin, p_delta, p_mins, int_popul)
-        print 'chrom', chromosomes, '\n'
+        #print 'chrom', chromosomes, '\n'
 
         #### Breeding ###
         # Pair chromosomes by randomly shuffling them.
@@ -374,25 +394,28 @@ def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
         # Apply crossover operation on each subsequent pair of chromosomes
         # with a p_cross probability (crossover probability)
         cross_chrom = crossover(chromosomes, p_cross, cr_sel)
+        #print 'cross', cross_chrom, '\n'
 
         # Apply mutation operation on random genes for every chromosome.
         mut_chrom = mutation(cross_chrom, p_mut)
+        #print 'mut', mut_chrom, '\n'
 
         ### Evaluation ###
         # Decode the chromosomes into solutions to form the new generation.
         p_lst_d = decode(param_values, n_bin, p_delta, p_mins, mut_chrom)
+        #print 'dec', p_lst_d, '\n'
 
         # Elitism: make sure that the best n_el solutions from the previous
         # generation are passed unchanged into this next generation.
         p_lst_e = elitism(best_sol, p_lst_d)
-        print 'eli', p_lst_e, '\n'
+        #print 'eli', p_lst_e, '\n'
 
         # Evaluate each new solution in the objective function and sort
         # according to the best solutions found.
         generation, lkl, isoch_done = evaluation(err_lst, obs_clust,
         completeness, isoch_list, param_values, p_lst_e, sc_params,
         isoch_done, cmd_sel)
-        print 'eval2', generation[0], '\n'
+        #print 'eval2', generation[0], '\n'
 
         ### Extinction/Immigration ###
         # If the best solution has remained unchanged for n_ei
@@ -405,12 +428,13 @@ def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
             best_sol_count += 1
 
             # Check how many times the best_sol has remained unchanged.
+            # If the number equals n_ei, apply Extinction/Immigration operator.
             if best_sol_count == n_ei:
-                # Apply Extinction/Immigration operator.
 
                 ### Exit switch. ##
                 # If n_es runs of the Ext/Imm operator have been applied with
-                # no changes to the best solution, exit the GA.
+                # no changes to the best solution, apply the exit switch,
+                # ie: exit the GA.
                 if best_sol[0] == best_sol_ei:
                     # Increase Ext/Imm operator counter.
                     ext_imm_count += 1
@@ -423,21 +447,14 @@ def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
                     # Reset counter.
                     ext_imm_count = 0
 
-                # Generate (n_pop-n_el) random solutions.
-                p_lst_r = random_population(param_valules, (n_pop - n_el))
-                # Store random solutions in random order.
-                generation_ei = []
-                for indx, ma in enumerate(ma_lst):
-                    m, a = ma[0], ma[1]
-                    e, d = e_lst[indx], d_lst[indx]
-                    generation_ei.append([isoch_ma[m][a][0], isoch_ma[m][a][1],
-                                          e, d])
-                # Append immigrant population to the best solution.
-                generation = best_sol + generation_ei
+                # Apply Extinction/Immigration operator.
+                generation = ext_imm(best_sol, param_values, n_pop)
+
                 # Reset best solution counter.
                 best_sol_count = 0
 
-                # For plotting purposes. Save index where the operator was used.
+                # For plotting purposes. Save index where the E/I perator
+                # was used.
                 ext_imm_indx.append([i])
 
         else:
