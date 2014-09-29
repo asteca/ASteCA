@@ -66,6 +66,7 @@ def crossover(chromosomes, p_cross, cr_sel):
             # Skip crossover operation.
             cross_chrom.append(chrom_pair[0])
             cross_chrom.append(chrom_pair[1])
+
     return cross_chrom
 
 
@@ -77,6 +78,7 @@ def mutation(cross_chrom, p_mut):
     for i, elem in enumerate(cross_chrom):
         cross_chrom[i] = ''.join(char if random.random() > p_mut else
         str(1 - int(char)) for char in elem)
+
     return cross_chrom
 
 
@@ -258,7 +260,7 @@ def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
     # only depends on the total number of chromosomes n_pop and the fitness
     # differential fdif.
     fitness = [1. / n_pop + fdif * (n_pop + 1. - 2. * (i + 1.)) /
-    (n_pop * (n_pop + 1.)) for i in range(n_pop)]
+        (n_pop * (n_pop + 1.)) for i in range(n_pop)]
 
     ### Initial random population evaluation. ###
     p_lst_r = random_population(param_values, n_pop)
@@ -322,8 +324,8 @@ def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
         # Evaluate each new solution in the objective function and sort
         # according to the best solutions found.
         generation, lkl, isoch_done = evaluation(err_lst, obs_clust,
-        completeness, isoch_list, param_values, p_lst_e, sc_params,
-        isoch_done, cmd_sel)
+            completeness, isoch_list, param_values, p_lst_e, sc_params,
+            isoch_done, cmd_sel)
 
         ### Extinction/Immigration ###
         # If the best solution has remained unchanged for n_ei

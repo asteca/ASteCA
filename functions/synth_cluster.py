@@ -61,7 +61,7 @@ def mass_interp(isochrone, mass_dist):
     return isoch_interp
 
 
-def synth_clust(err_lst, completeness, sc_params, isochrone, params, cmd_sel):
+def synth_clust(err_lst, completeness, sc_params, isochrone, model, cmd_sel):
     '''
     Main function.
 
@@ -69,23 +69,23 @@ def synth_clust(err_lst, completeness, sc_params, isochrone, params, cmd_sel):
     a certain mass distribution.
     '''
 
-    mass_params, f_bin, q_bin = sc_params[0:2], sc_params[2], sc_params[3]
+    # Unpack synthetic cluster parameters.
+    imf_pdf, bin_mass_ratio = sc_params[0:2]
+    e, d, M_total, bin_frac = model[2:]
 
     # Store mass distribution used to produce a synthetic cluster based on
     # a given theoretic isochrone.
-    mass_dist = m_d(mass_params)
+    mass_dist = m_d(imf_pdf, M_total)
 
     # Interpolate extra color, magnitude and masses into the isochrone.
     N = 1000
-    col, mag, mass = np.linspace(0, 1, len(isochrone[0])), \
-    np.linspace(0, 1, N), np.linspace(0, 1, N)
+    col, mag = np.linspace(0, 1, len(isochrone[0])), np.linspace(0, 1, N)
     # One-dimensional linear interpolation.
     col_i, mag_i, mass_i = (np.interp(mag, col, isochrone[i]) for i in range(3))
     # Store isochrone's interpolated values.
     isoch_inter = np.asarray([col_i, mag_i, mass_i])
 
     # Move synth cluster with the values 'e' and 'd'.
-    e, d = params[2], params[3]
     isoch_moved = move_isoch(cmd_sel, [isoch_inter[0], isoch_inter[1]], e, d) +\
     [isoch_inter[2]]
 
@@ -111,7 +111,7 @@ def synth_clust(err_lst, completeness, sc_params, isochrone, params, cmd_sel):
         # If the isochrone is empty after the magnitude cut, pass empty array.
         isoch_m_d = np.asarray([])
 
-    # For plotting purposes: store a copy of this list before adding binaries.
+    ### For plotting purposes: store a copy of this list before adding binaries.
     #from copy import deepcopy
     #isoch_m_d0 = deepcopy(isoch_m_d)
 
@@ -122,14 +122,14 @@ def synth_clust(err_lst, completeness, sc_params, isochrone, params, cmd_sel):
         # Randomly select a fraction of stars to be binaries.
         # Indexes of the randomly selected stars in isoch_m_d.
         bin_indxs = random.sample(range(len(isoch_m_d[0])),
-                                  int(f_bin * len(isoch_m_d[0])))
+                                  int(bin_frac * len(isoch_m_d[0])))
 
-        # Calculate the secondary masses of these binary stars between q_bin*m1
-        # and m1, where m1 is the primary mass.
+        # Calculate the secondary masses of these binary stars between
+        # bin_mass_ratio*m1 and m1, where m1 is the primary mass.
         # Primary masses.
         m1 = np.asarray(isoch_m_d[2][bin_indxs])
         # Secondary masses.
-        mass_bin0 = np.random.uniform(q_bin * m1, m1)
+        mass_bin0 = np.random.uniform(bin_mass_ratio * m1, m1)
         # This prevents a rare error where apparently mass_bin0 is a float.
         if not type(mass_bin0) is float:
 
@@ -143,11 +143,19 @@ def synth_clust(err_lst, completeness, sc_params, isochrone, params, cmd_sel):
             bin_isoch = mass_interp(isoch_cut, mass_bin)
 
             # Obtain color, magnitude and masses for each binary system.
-            # Transform color to the first filter's magnitude before obtaining
+            # Transform color to the second magnitude before obtaining
             # the new binary magnitude.
-            col_mag_bin = -2.5 * np.log10(10 ** (-0.4 *
-            (isoch_m_d[0][bin_indxs] + isoch_m_d[1][bin_indxs])) +
-            10 ** (-0.4 * (bin_isoch[0] + bin_isoch[1])))
+            if cmd_sel in {2, 5}:
+                # E.g.: V vs (V-I)
+                mag2_iso = isoch_m_d[1][bin_indxs] - isoch_m_d[0][bin_indxs]
+                mag2_bin = bin_isoch[1] - bin_isoch[0]
+            else:
+                # E.g.: V vs (B-V)
+                mag2_iso = isoch_m_d[0][bin_indxs] + isoch_m_d[1][bin_indxs]
+                mag2_bin = bin_isoch[0] + bin_isoch[1]
+            col_mag_bin = -2.5 * np.log10(10 ** (-0.4 * mag2_iso) +
+            10 ** (-0.4 * mag2_bin))
+            # Magnitude in y axis.
             mag_bin = -2.5 * np.log10(10 ** (-0.4 * isoch_m_d[1][bin_indxs]) +
             10 ** (-0.4 * bin_isoch[1]))
             # Transform back first filter's magnitude into color.
@@ -247,8 +255,8 @@ def synth_clust(err_lst, completeness, sc_params, isochrone, params, cmd_sel):
         # empty array.
         synth_clust = np.asarray([])
 
-     #Plot diagrams.
-    #s_c_p(mass_dist, isoch_inter, params, isoch_moved, isoch_cut,
+    ### Plot diagrams.
+    #s_c_p(mass_dist, isoch_inter, model, isoch_moved, isoch_cut,
           #isoch_m_d0, isoch_m_d, clust_compl, clust_error)
 
     return synth_clust

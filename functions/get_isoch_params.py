@@ -48,16 +48,20 @@ def get_ages(met_file, age_format):
     return isoch_a
 
 
-def get_ranges(m_rs, a_rs, e_rs, d_rs):
+def get_ranges(par_ranges):
     '''
     Calculate parameter ranges to be used by the selected best fit method.
     '''
+
+    m_rs, a_rs, e_rs, d_rs, mass_rs, bin_rs = par_ranges
 
     # Store ranges and steps for these parameters.
     z_min, z_max, z_step = m_rs
     age_min, age_max, age_step = a_rs
     e_bv_min, e_bv_max, e_bv_step = e_rs
-    dis_mod_min, dis_mod_max, dis_mod_step = d_rs
+    dm_min, dm_max, dm_step = d_rs
+    mas_min, mas_max, mas_step = mass_rs
+    bin_min, bin_max, bin_step = bin_rs
 
     # UPDATE max values.
     # Add a small value to each max value to ensure that the range is a bit
@@ -67,24 +71,24 @@ def get_ranges(m_rs, a_rs, e_rs, d_rs):
     z_max = z_max + min(z_max / 100., z_step / 2.)
     age_max = age_max + min(age_max / 100., age_step / 2.)
     e_bv_max = e_bv_max + min(e_bv_max / 100., e_bv_step / 2.)
-    dis_mod_max = dis_mod_max + min(dis_mod_max / 100., dis_mod_step / 2.)
+    dm_max = dm_max + min(dm_max / 100., dm_step / 2.)
+    mas_max = mas_max + min(mas_max / 100., mas_step / 2.)
+    bin_max = bin_max + min(bin_max / 100., bin_step / 2.)
 
     # Store min, *UPDATED* max values and steps for all parameters.
     param_rs = [[z_min, z_max, z_step], [age_min, age_max, age_step],
-               [e_bv_min, e_bv_max, e_bv_step],
-               [dis_mod_min, dis_mod_max, dis_mod_step]]
+        [e_bv_min, e_bv_max, e_bv_step], [dm_min, dm_max, dm_step],
+        [mas_min, mas_max, mas_step], [bin_min, bin_max, bin_step]]
 
-    # Create ranges for metallicity and age.
+    # Store all possible parameter values in array.
+    # param = [p_1, p_2, ..., p_n]
     z_range = np.arange(z_min, z_max, z_step)
     a_range = np.arange(age_min, age_max, age_step)
-
-    # Store all possible extinction and distance modulus values in array.
-    # isoch_ed = [extinction, dis_mod]
-    # extinction = [e_1, e_2, ..., e_n]
-    # dis_mod = [dm_1, dm_2, ..., dm_m]
     e_range = np.arange(e_bv_min, e_bv_max, e_bv_step)
-    d_range = np.arange(dis_mod_min, dis_mod_max, dis_mod_step)
-    param_ranges = [z_range, a_range, e_range, d_range]
+    d_range = np.arange(dm_min, dm_max, dm_step)
+    mas_range = np.arange(mas_min, mas_max, mas_step)
+    bin_range = np.arange(bin_min, bin_max, bin_step)
+    param_ranges = [z_range, a_range, e_range, d_range, mas_range, bin_range]
 
     return param_ranges, param_rs
 
@@ -130,10 +134,6 @@ def read_met_file(met_f, age_values, cmd_select, isoch_format):
     # Open the metallicity file.
     with open(met_f, mode="r") as f_iso:
 
-        # List that holds the each value of metallicity and age in a
-        # given single metallicity file.
-        #met_params = []
-
         # Define empty lists.
         isoch_col, isoch_mag, isoch_mas = [], [], []
 
@@ -149,9 +149,7 @@ def read_met_file(met_f, age_values, cmd_select, isoch_format):
                 # Save stored values if these exist.
                 # Skip first age for which the lists will be empty.
                 if isoch_col:
-                    # Save metallicity and age in list.
-                    #met_params.append([metal, age])
-                    # Store colors, magnitudes and masses for this
+                    # Store color, magnitudes and masses for this
                     # isochrone.
                     metal_isoch.append([isoch_col, isoch_mag,
                         isoch_mas])
@@ -186,8 +184,6 @@ def read_met_file(met_f, age_values, cmd_select, isoch_format):
         else:
             # If list is not empty.
             if isoch_col:
-                # Save metallicity and age in list.
-                #met_params.append([metal, age])
                 # Store colors, magnitudes and masses for this
                 # isochrone.
                 metal_isoch.append([isoch_col, isoch_mag, isoch_mas])
@@ -208,18 +204,6 @@ def get_isochs(iso_select, cmd_select, met_f_filter, age_values, isoch_format):
     # isoch_list[i][j] --> i: metallicity index ; j: age index
     isoch_list = []
 
-    # List that will hold all the metallicities and ages associated with the
-    # stored isochrones.
-    # This way of storing does not need to assume that
-    # each metallicity file contains the same number of isochrones with the
-    # same ages.
-    # isoch_ma = [met_1, ..., met_M]
-    # met_i = [params_i1, ..., params_iN]
-    # params_ij = [metallicity_i, age_j]
-    # isoch_ma[i][*][0] --> metallicity i (float)
-    # isoch_ma[i][j][1] --> age j (float)
-    #isoch_ma = []
-
     # Iterate in order through all the metallicity files stored for the
     # selected set of isochrones.
     for met_f in met_f_filter:
@@ -229,14 +213,11 @@ def get_isochs(iso_select, cmd_select, met_f_filter, age_values, isoch_format):
         # Store list holding all the isochrones with the same metallicity
         # in the final isochrone list.
         isoch_list.append(metal_isoch)
-        # Store parameter values in list that holds all the metallicities
-        # and ages.
-        #isoch_ma.append(met_params)
 
     return isoch_list
 
 
-def ip(ps_params, bf_flag):
+def ip(ps_params, par_ranges, bf_flag):
     '''
     Read isochrones and parameters if best fit function is set to run.
     '''
@@ -246,7 +227,7 @@ def ip(ps_params, bf_flag):
     if bf_flag is True:
 
         # Unpack.
-        iso_path, cmd_select, iso_select, m_rs, a_rs, e_rs, d_rs = ps_params
+        iso_path, cmd_select, iso_select = ps_params
 
         # Read names of all metallicity files stored in isochrones path given.
         # I.e.: store all metallicity values available.
@@ -262,7 +243,7 @@ def ip(ps_params, bf_flag):
         age_vals_all = get_ages(met_files[0], isoch_format[1])
 
         # Get parameters ranges stored in params_input.dat file.
-        param_ranges, param_rs = get_ranges(m_rs, a_rs, e_rs, d_rs)
+        param_ranges, param_rs = get_ranges(par_ranges)
 
         # Match values in metallicity and age ranges with those available.
         z_range, a_range = param_ranges[:2]
@@ -283,7 +264,9 @@ def ip(ps_params, bf_flag):
         "  {} metallicity values (z),\n"
         "  {} isochrones per z,\n"
         "  {} reddening values,\n"
-        "  {} distance values,".format(*lens))
+        "  {} distance values,\n"
+        "  {} mass values,\n"
+        "  {} binary fraction values.".format(*lens))
         print "  = {:.1e} approx total models.".format(total)
 
     return ip_list

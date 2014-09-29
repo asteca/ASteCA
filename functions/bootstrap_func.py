@@ -62,8 +62,8 @@ def bootstrap(err_lst, obs_clust0, completeness, ip_list, bf_params,
     # Calculate errors for each parameter.
     isoch_fit_errors = np.std(params_boot, 0)
     # Errors can not be smaller than the steps in each parameter.
-    for i in range(4):
-        isoch_fit_errors[i] = max(ps_params[i + 3][2],
-        isoch_fit_errors[i])
+    param_rs = ip_list[2]
+    for i, p_er in enumerate(isoch_fit_errors):
+        isoch_fit_errors[i] = max(param_rs[i][2], p_er)
 
     return isoch_fit_errors

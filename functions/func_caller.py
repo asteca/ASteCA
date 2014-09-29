@@ -43,8 +43,8 @@ def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
     # Read input parameters from params_input.dat file.
     mode, done_dir, gd_params, gh_params, gc_params, cr_params, kp_flag, \
     im_flag, er_params, fr_number, pv_params, da_params, ps_params, bf_params,\
-    sc_params, ga_params, rm_params, pl_params, flag_move_file, axes_params =\
-    gip(mypath)
+    sc_params, par_ranges, ga_params, rm_params, pl_params, flag_move_file, \
+    axes_params = gip(mypath)
 
     # Define system of coordinates used.
     px_deg = gd_params[-1]
@@ -182,7 +182,7 @@ def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
             flag_area_stronger, field_region, flag_pval_test,
             pval_test_params, memb_prob_avrg_sort, lum_func, completeness,
             da_params, bf_params, red_return, err_lst, bf_return, ga_params,
-            er_params, axes_params, ps_params, pl_params)
+            er_params, axes_params, par_ranges, pl_params)
         print 'Plots created.'
 
     # Move file to 'done' dir if flag is set.

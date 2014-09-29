@@ -38,12 +38,11 @@ def weighted_fast_samp(mass_init, probs, M_total):
     return masses[:last + 1]
 
 
-def mass_dist(mass_params):
+def mass_dist(imf_pdf, M_total):
     '''
     Returns a mass distribution according to a given IMF and a total cluster
     mass.
     '''
-    imf_pdf, M_total = mass_params
     # Sample masses from IMF according to the PDF obtained from it until
     # the sum of all stars reaches M_total.
     dist_mass = weighted_fast_samp(imf_pdf[0], imf_pdf[1], M_total)

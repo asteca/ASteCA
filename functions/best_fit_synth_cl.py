@@ -48,7 +48,8 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
             isoch_fit_params = b_f(err_lst, obs_clust, completeness,
                                    ip_list, sc_params, ga_params, cmd_sel)
             # Assign errors as the steps in each parameter.
-            isoch_fit_errors = [ps_params[i + 3][2] for i in range(4)]
+            #param_rs = ip_list[2]
+            isoch_fit_errors = [p_rs[2] for p_rs in ip_list[2]]
 
         elif best_fit_algor == 'genet':
 
@@ -61,9 +62,8 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
                 obs_clust, completeness, ip_list, sc_params,
                 ga_params, cmd_sel)
 
-        print 'Best fit params obtained ({:g}, {:g}, {:g}, {:g}).'.format(
-            isoch_fit_params[0][0], isoch_fit_params[0][1],
-            isoch_fit_params[0][2], isoch_fit_params[0][3])
+        print ("Best fit params obtained ({:g}, {:g}, {:g}, {:g}, {:g},"
+            " {:g}).".format(*isoch_fit_params[0]))
 
         if best_fit_algor == 'genet':
             if N_b >= 2:
@@ -79,13 +79,13 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
                     isoch_fit_errors)
             else:
                 print 'Skipping bootstrap process.'
-                isoch_fit_errors = [-1.] * 4
+                isoch_fit_errors = [-1.] * len(isoch_fit_params[0])
 
         # For plotting purposes.
         # Get list of stored isochrones and their parameters.
         isoch_list, param_values = ip_list[0], ip_list[1]
         # Read best fit values for all parameters.
-        m, a, e, d = isoch_fit_params[0]
+        m, a, e, d, mass, binar_f = isoch_fit_params[0]
         # Find indexes for metallicity and age. If indexes are not found due
         # to some difference in the significant figures, use the indices
         # [0, 0] to prevent the code from halting.
@@ -97,13 +97,14 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
         shift_isoch = move_isoch(cmd_sel, isoch_list[m_i][a_i][:2], e, d)
         # Generate best fit synthetic cluster.
         synth_clst = s_c(err_lst, completeness, sc_params,
-                         isoch_list[m_i][a_i], [-1., -1., e, d], cmd_sel)
+                         isoch_list[m_i][a_i], [-1., -1., e, d, mass, binar_f],
+                         cmd_sel)
 
     else:
         # Pass empty lists to make_plots.
         print 'Skipping parameters fitting process.'
         isoch_fit_params, isoch_fit_errors, shift_isoch, synth_clst = \
-        [[-1., -1., -1., -1.]], [-1., -1., -1., -1.], [], []
+        [[-1., -1., -1., -1., -1.]], [-1., -1., -1., -1., -1.], [], []
 
     bf_return = [isoch_fit_params, isoch_fit_errors, shift_isoch, synth_clst]
 

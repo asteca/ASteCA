@@ -25,7 +25,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
     flag_area_stronger, field_region, flag_pval_test,
     pval_test_params, memb_prob_avrg_sort, lum_func, completeness, da_params,
     bf_params, red_return, err_lst, bf_return, ga_params, er_params,
-    axes_params, ps_params, pl_params):
+    axes_params, par_ranges, pl_params):
     '''
     Make all plots.
     '''
@@ -76,8 +76,6 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
     max(y_min_cmd, min(mag_data) - 0.5)
 
     # Unpack params.
-    # Selected system params.
-    m_rs, a_rs, e_rs, d_rs = ps_params[3:]
     # Parameters from get_center function.
     cent_bin, kde_cent, e_cent, approx_cents, st_dev_lst, hist_2d_g, \
     kde_pl = center_params[:7]
@@ -839,26 +837,32 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
             # Round cluster parameters.
             cp_r, cp_e = err_r.round_sig_fig(isoch_fit_params[0],
                 isoch_fit_errors)
-        text1 = '$z = {} \pm {}$' '\n'.format(cp_r[0], cp_e[0])
-        text2 = '$log(age) = {} \pm {}$' '\n'.format(cp_r[1], cp_e[1])
-        text3 = '$E_{{(B-V)}} = {} \pm {}$' '\n'.format(cp_r[2], cp_e[2])
-        text4 = '$(m-M)_o = {} \pm {}$'.format(cp_r[3], cp_e[3])
-        text = text1 + text2 + text3 + text4
-        plt.text(0.5, 0.77, text, transform=ax19.transAxes,
+        text1 = '$z = {} \pm {}$\n'.format(cp_r[0], cp_e[0])
+        text2 = '$log(age) = {} \pm {}$\n'.format(cp_r[1], cp_e[1])
+        text3 = '$E_{{(B-V)}} = {} \pm {}$\n'.format(cp_r[2], cp_e[2])
+        text4 = '$(m-M)_o = {} \pm {}$\n'.format(cp_r[3], cp_e[3])
+        text5 = '$M_{{\odot}} = {} \pm {}$\n'.format(cp_r[4], cp_e[4])
+        text6 = '$b_{{frac}} = {} \pm {}$'.format(cp_r[5], cp_e[5])
+        text = text1 + text2 + text3 + text4 + text5 + text6
+        plt.text(0.5, 0.7, text, transform=ax19.transAxes,
                  bbox=dict(facecolor='white', alpha=0.6), fontsize=12)
         # Plot isochrone.
         plt.plot(shift_isoch[0], shift_isoch[1], 'r', lw=1.2)
         # Plot synth clust.
-        plt.scatter(synth_clst[0], synth_clst[2], marker='o', s=30,
+        plt.scatter(synth_clst[0], synth_clst[2], marker='o', s=40,
                     c='#4682b4', lw=0.5)
 
     # Best fitting process plots for GA.
     if bf_flag and best_fit_algor == 'genet':
 
-        m, a, e, d = isoch_fit_params[0]
-        e_m, e_a, e_e, e_d = isoch_fit_errors if N_b >= 2 else [0.] * 4
+        m, a, e, d, mass, binar_f = isoch_fit_params[0]
+        if N_b >= 2:
+            e_m, e_a, e_e, e_d, e_mas, e_bin = isoch_fit_errors
+        else:
+            e_m, e_a, e_e, e_d, e_mas, e_bin = [0.] * len(isoch_fit_errors)
 
         # Set ranges used by plots below.
+        m_rs, a_rs, e_rs, d_rs, mass_rs, bin_rs = par_ranges
         m_min, m_max = m_rs[:2]
         a_min, a_max = a_rs[:2]
         e_min, e_max = e_rs[:2]

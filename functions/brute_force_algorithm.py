@@ -19,7 +19,7 @@ def brute_force(err_lst, obs_clust, completeness, ip_list, sc_params,
     isoch_list, param_values, param_rs = ip_list
 
     # Unpack parameters values.
-    m_lst, a_lst, e_lst, d_lst = param_values
+    m_lst, a_lst, e_lst, d_lst, mass_lst, bin_lst = param_values
 
     # Initiate list that will hold the likelihood values telling us how well
     # each isochrone (syhtnetic cluster) fits the observed data.
@@ -41,25 +41,31 @@ def brute_force(err_lst, obs_clust, completeness, ip_list, sc_params,
                 # Iterate through all distance modulus.
                 for d in d_lst:
 
-                    params = [m, a, e, d]
+                    # Iterate through all masses.
+                    for mass in mass_lst:
 
-                    # Call likelihood function with m,a,e,d values.
-                    isochrone = isoch_list[m_i][a_i]
-                    # Call likelihood function with m,a,e,d values.
-                    likel_val = i_l(err_lst, obs_clust, completeness, sc_params,
-                                    isochrone, params, cmd_sel)
-                    # Store the likelihood for each synthetic cluster.
-                    score[0].append(likel_val)
-                    score[1].append(params)
+                        # Iterate through all binary fractions.
+                        for bin_frac in bin_lst:
 
-                    # Print percentage done.
-                    i += 1
-                    percentage_complete = (100.0 * (i + 1) / tot_sols)
-                    while len(milestones) > 0 and percentage_complete >= \
-                    milestones[0]:
-                        print "  {}% done".format(milestones[0])
-                        # Remove that milestone from the list.
-                        milestones = milestones[1:]
+                            params = [m, a, e, d, mass, bin_frac]
+
+                            # Call likelihood function with m,a,e,d values.
+                            isochrone = isoch_list[m_i][a_i]
+                            # Call likelihood function with m,a,e,d values.
+                            likel_val = i_l(err_lst, obs_clust, completeness,
+                                sc_params, isochrone, params, cmd_sel)
+                            # Store the likelihood for each synthetic cluster.
+                            score[0].append(likel_val)
+                            score[1].append(params)
+
+                            # Print percentage done.
+                            i += 1
+                            percentage_complete = (100.0 * (i + 1) / tot_sols)
+                            while len(milestones) > 0 and \
+                            percentage_complete >= milestones[0]:
+                                print "  {}% done".format(milestones[0])
+                                # Remove that milestone from the list.
+                                milestones = milestones[1:]
 
     # Find index of function with smallest likelihood value.
     # This index thus points to the isochrone that best fits the observed

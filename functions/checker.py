@@ -39,8 +39,8 @@ def check(mypath, cl_files):
         # Read input parameters from params_input.dat file.
         mode, done_dir, gd_params, gh_params, gc_params, cr_params, kp_flag,\
         im_flag, er_params, fr_number, pv_params, da_params, ps_params,\
-        bf_params, sc_params, ga_params, rm_params, pl_params, flag_move_file,\
-        axes_params = gip(mypath)
+        bf_params, sc_params, par_ranges, ga_params, rm_params, pl_params,\
+        flag_move_file, axes_params = gip(mypath)
     except Exception:
         # Halt code.
         print traceback.format_exc()
@@ -118,7 +118,8 @@ def check(mypath, cl_files):
     if bf_params[0]:
 
         # Unpack.
-        iso_path, cmd_select, iso_select, m_rs, a_rs, e_rs, d_rs = ps_params
+        iso_path, cmd_select, iso_select = ps_params
+        m_rs, a_rs, e_rs, d_rs, mass_rs, bin_rs = par_ranges
 
         # Check that CMD is correctly set.
         if cmd_select not in {1, 2, 3, 4, 5, 6, 7}:
@@ -144,10 +145,10 @@ def check(mypath, cl_files):
         # *WE ASUME ALL METALLICITY FILES HAVE THE SAME NUMBER OF AGE VALUES*
         age_vals_all = isochp.get_ages(met_files[0], isoch_format[1])
         # Get parameters ranges stored in params_input.dat file.
-        param_ranges, param_rs = isochp.get_ranges(m_rs, a_rs, e_rs, d_rs)
+        param_ranges, param_rs = isochp.get_ranges(par_ranges)
         # Check that ranges are properly defined.
         p_names = [['metallicity', m_rs], ['age', a_rs], ['extinction', e_rs],
-            ['distance', d_rs]]
+            ['distance', d_rs], ['mass', mass_rs], ['binary', bin_rs]]
         for i, p in enumerate(param_ranges):
             if not p.size:
                 sys.exit("ERROR: No values exist for {} range defined:\n\n"
@@ -179,7 +180,7 @@ def check(mypath, cl_files):
             # isoch_list, isoch_ma, isoch_ed = ip_list
             # Only read files if best fit process is set to run.
             # bf_flag = bf_params[0]
-            ip_list = isochp.ip(ps_params, bf_params[0])
+            ip_list = isochp.ip(ps_params, par_ranges, bf_params[0])
         except:
             print traceback.format_exc()
             sys.exit("ERROR: unknown error reading metallicity files.")
