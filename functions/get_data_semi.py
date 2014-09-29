@@ -40,8 +40,8 @@ def get_semi(clust_name, mode):
                 rad_flag_semi, err_flag_semi]
         else:
             # If the cluster was not found in the file, default to 'manual'.
-            print ("  WARNING: cluster not found in semi_input.dat file."
-                "  Default to 'manual' mode.")
-            mode = 'manual'
+            print ("  WARNING: cluster not found in semi_input.dat file.\n"
+                "  Using 'auto' mode.")
+            mode = 'auto'
 
     return mode, semi_return

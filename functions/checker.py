@@ -52,7 +52,8 @@ def check(mypath, cl_files):
 
     if mode == 'semi':
         # Check if semi_input.dat file exists.
-        if not isfile(join(mypath, 'semi_input.dat')):
+        semi_file = 'semi_input.dat'
+        if not isfile(join(mypath, semi_file)):
             # File semi_input.dat does not exist.
             sys.exit("ERROR: 'semi' mode is set but semi_input.dat file does"
                 " not exist.")
