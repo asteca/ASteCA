@@ -361,7 +361,7 @@ def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
                 # Reset best solution counter.
                 best_sol_count = 0
 
-                # For plotting purposes. Save index where the E/I perator
+                # For plotting purposes. Save index where the E/I operator
                 # was used.
                 ext_imm_indx.append([i])
 
