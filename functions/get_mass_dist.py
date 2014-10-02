@@ -17,6 +17,13 @@ def weighted_fast_samp(mass_init, probs, M_total):
     # given to each by the PDF.
     blocksize = 10000
     masses = np.random.choice(mass_init, size=blocksize, replace=True, p=probs)
+
+    #from scipy.stats import rv_discrete
+    #indexes = np.arange(len(mass_init))
+    #random_masses = rv_discrete(values=(indexes, probs))
+    #masses_indx = random_masses.rvs(size=blocksize)
+    #masses = mass_init[masses_indx]
+
     # Sum all the random masses selected (CDF)
     masses_sum = np.cumsum(masses)
 
@@ -34,8 +41,9 @@ def weighted_fast_samp(mass_init, probs, M_total):
 
     # Find index where the M_total value is found in samp_sum.
     last = np.searchsorted(masses_sum, M_total, side='right')
+    masses_pass = masses[:last + 1]
 
-    return masses[:last + 1]
+    return masses_pass
 
 
 def mass_dist(imf_pdf, M_total):

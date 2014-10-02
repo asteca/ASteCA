@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
 
-def disp_cent(x_data, y_data, mag_data, center_cl, h_filter):
+def disp_cent(x_data, y_data, mag_data, center_cl, cent_bin, h_filter):
     '''
     Show plot of cluster with value of center obtained.
     '''
@@ -26,6 +26,8 @@ def disp_cent(x_data, y_data, mag_data, center_cl, h_filter):
     # Set grid
     ax1.grid(b=True, which='major', color='k', linestyle='--', zorder=3)
     ax1.grid(b=True, which='minor', color='k', linestyle='--', zorder=3)
+    plt.axvline(x=cent_bin[0], linestyle='--', color='white')
+    plt.axhline(y=cent_bin[1], linestyle='--', color='white')
     plt.imshow(h_filter.transpose(), origin='lower')
 
     # 2 subplot: x,y finding chart of full frame

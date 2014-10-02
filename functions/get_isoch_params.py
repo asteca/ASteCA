@@ -217,7 +217,7 @@ def get_isochs(iso_select, cmd_select, met_f_filter, age_values, isoch_format):
     return isoch_list
 
 
-def ip(ps_params, par_ranges, bf_flag):
+def ip(ps_params, bf_flag):
     '''
     Read isochrones and parameters if best fit function is set to run.
     '''
@@ -227,7 +227,7 @@ def ip(ps_params, par_ranges, bf_flag):
     if bf_flag is True:
 
         # Unpack.
-        iso_path, cmd_select, iso_select = ps_params
+        iso_path, cmd_select, iso_select, par_ranges = ps_params
 
         # Read names of all metallicity files stored in isochrones path given.
         # I.e.: store all metallicity values available.

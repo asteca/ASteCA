@@ -39,7 +39,7 @@ def check(mypath, cl_files):
         # Read input parameters from params_input.dat file.
         mode, done_dir, gd_params, gh_params, gc_params, cr_params, kp_flag,\
         im_flag, er_params, fr_number, pv_params, da_params, ps_params,\
-        bf_params, sc_params, par_ranges, ga_params, rm_params, pl_params,\
+        bf_params, sc_params, ga_params, rm_params, pl_params,\
         flag_move_file, axes_params = gip(mypath)
     except Exception:
         # Halt code.
@@ -119,7 +119,7 @@ def check(mypath, cl_files):
     if bf_params[0]:
 
         # Unpack.
-        iso_path, cmd_select, iso_select = ps_params
+        iso_path, cmd_select, iso_select, par_ranges = ps_params
         m_rs, a_rs, e_rs, d_rs, mass_rs, bin_rs = par_ranges
 
         # Check that CMD is correctly set.
@@ -181,7 +181,7 @@ def check(mypath, cl_files):
             # isoch_list, isoch_ma, isoch_ed = ip_list
             # Only read files if best fit process is set to run.
             # bf_flag = bf_params[0]
-            ip_list = isochp.ip(ps_params, par_ranges, bf_params[0])
+            ip_list = isochp.ip(ps_params, bf_params[0])
         except:
             print traceback.format_exc()
             sys.exit("ERROR: unknown error reading metallicity files.")

@@ -23,9 +23,9 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
     cont_index, mag_data, col1_data, err_plot, err_flags, kp_params,
     cl_region, stars_out, stars_in_rjct, stars_out_rjct, integr_return, n_memb,
     flag_area_stronger, field_region, flag_pval_test,
-    pval_test_params, memb_prob_avrg_sort, lum_func, completeness, da_params,
-    bf_params, red_return, err_lst, bf_return, ga_params, er_params,
-    axes_params, par_ranges, pl_params):
+    pval_test_params, memb_prob_avrg_sort, lum_func, completeness, ip_list,
+    da_params, bf_params, red_return, err_lst, bf_return, ga_params, er_params,
+    axes_params, pl_params):
     '''
     Make all plots.
     '''
@@ -103,8 +103,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
     # Plot all outputs
     # figsize(x1, y1), GridSpec(y2, x2) --> To have square plots: x1/x2 =
     # y1/y2 = 2.5
-    fig = plt.figure(figsize=(20, 35))  # create the top-level container
-    gs1 = gridspec.GridSpec(14, 8)  # create a GridSpec object
+    fig = plt.figure(figsize=(20, 40))  # create the top-level container
+    gs1 = gridspec.GridSpec(16, 8)  # create a GridSpec object
 
     # 2D gaussian convolved histogram.
     ax0 = plt.subplot(gs1[0:2, 0:2])
@@ -837,14 +837,15 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
             # Round cluster parameters.
             cp_r, cp_e = err_r.round_sig_fig(isoch_fit_params[0],
                 isoch_fit_errors)
-        text1 = '$z = {} \pm {}$\n'.format(cp_r[0], cp_e[0])
-        text2 = '$log(age) = {} \pm {}$\n'.format(cp_r[1], cp_e[1])
-        text3 = '$E_{{(B-V)}} = {} \pm {}$\n'.format(cp_r[2], cp_e[2])
-        text4 = '$(m-M)_o = {} \pm {}$\n'.format(cp_r[3], cp_e[3])
-        text5 = '$M_{{\odot}} = {} \pm {}$\n'.format(cp_r[4], cp_e[4])
-        text6 = '$b_{{frac}} = {} \pm {}$'.format(cp_r[5], cp_e[5])
-        text = text1 + text2 + text3 + text4 + text5 + text6
-        plt.text(0.5, 0.7, text, transform=ax19.transAxes,
+        text1 = '$N = {}$\n'.format(len(synth_clst[0]))
+        text2 = '$z = {} \pm {}$\n'.format(cp_r[0], cp_e[0])
+        text3 = '$log(age) = {} \pm {}$\n'.format(cp_r[1], cp_e[1])
+        text4 = '$E_{{(B-V)}} = {} \pm {}$\n'.format(cp_r[2], cp_e[2])
+        text5 = '$(m-M)_o = {} \pm {}$\n'.format(cp_r[3], cp_e[3])
+        text6 = '$M_{{\odot}} = {} \pm {}$\n'.format(cp_r[4], cp_e[4])
+        text7 = '$b_{{frac}} = {} \pm {}$'.format(cp_r[5], cp_e[5])
+        text = text1 + text2 + text3 + text4 + text5 + text6 + text7
+        plt.text(0.5, 0.67, text, transform=ax19.transAxes,
                  bbox=dict(facecolor='white', alpha=0.6), fontsize=12)
         # Plot isochrone.
         plt.plot(shift_isoch[0], shift_isoch[1], 'r', lw=1.2)
@@ -857,24 +858,24 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
 
         m, a, e, d, mass, binar_f = isoch_fit_params[0]
         if N_b >= 2:
-            e_m, e_a, e_e, e_d, e_mas, e_bin = isoch_fit_errors
+            e_m, e_a, e_e, e_d, e_mass, e_bin = isoch_fit_errors
         else:
-            e_m, e_a, e_e, e_d, e_mas, e_bin = [0.] * len(isoch_fit_errors)
+            e_m, e_a, e_e, e_d, e_mass, e_bin = [0.] * len(isoch_fit_errors)
 
         # Set ranges used by plots below.
-        m_rs, a_rs, e_rs, d_rs, mass_rs, bin_rs = par_ranges
-        m_min, m_max = m_rs[:2]
-        a_min, a_max = a_rs[:2]
-        e_min, e_max = e_rs[:2]
-        d_min, d_max = d_rs[:2]
-        if m_min == m_max:
-            m_min, m_max = m_min - 0.1 * m_min, m_max + 0.1 * m_min
-        if a_min == a_max:
-            a_min, a_max = a_min - 0.1 * a_min, a_max + 0.1 * a_min
-        if e_min == e_max:
-            e_min, e_max = e_min - 0.1 * e_min, e_max + 0.1 * e_min
-        if d_min == d_max:
-            d_min, d_max = d_min - 0.1 * d_min, d_max + 0.1 * d_min
+        m_vals, a_vals, e_vals, d_vals, mass_vals, bin_vals = ip_list[1]
+        m_min, m_max = min(m_vals) - 0.1 * min(m_vals), \
+        max(m_vals) + 0.1 * min(m_vals)
+        a_min, a_max = min(a_vals) - 0.1 * min(a_vals), \
+        max(a_vals) + 0.1 * min(a_vals)
+        e_min, e_max = min(e_vals) - 0.1 * min(e_vals), \
+        max(e_vals) + 0.1 * min(e_vals)
+        d_min, d_max = min(d_vals) - 0.1 * min(d_vals), \
+        max(d_vals) + 0.1 * min(d_vals)
+        mass_min, mass_max = min(mass_vals) - 0.1 * min(mass_vals), \
+        max(mass_vals) + 0.1 * min(mass_vals)
+        bin_min, bin_max = min(bin_vals) - 0.1 * min(bin_vals), \
+        max(bin_vals) + 0.1 * min(bin_vals)
 
         # Age vs metallicity GA diagram.
         isoch_done = isoch_fit_params[3]
@@ -1053,6 +1054,28 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
         plt.axvline(x=d + e_d, linestyle='--', color='red')
         plt.axvline(x=d - e_d, linestyle='--', color='red')
         plt.axvline(x=d, linestyle='--', color='blue', zorder=3)
+
+        ax26 = plt.subplot(gs1[14:16, 0:2])
+        plt.xlim(mass_min, mass_max)
+        plt.ylim(bin_min, bin_max)
+        plt.xlabel('$M_{\odot}$', fontsize=16)
+        plt.ylabel('$b_{frac}$', fontsize=16)
+        plt.minorticks_on()
+        # Plot best fit point.
+        plt.scatter(mass, binar_f, marker='o', c='b', s=30)
+        # Plot ellipse error.
+        ax26 = plt.gca()
+        ellipse = Ellipse(xy=(mass, binar_f), width=2 * e_mass,
+            height=2 * e_bin, edgecolor='b', fc='None', lw=1.)
+        ax26.add_patch(ellipse)
+        # Plot density map.
+        hist, xedges, yedges = np.histogram2d(zip(*isoch_done[0])[4],
+                                              zip(*isoch_done[0])[5], bins=100)
+        # H_g is the 2D histogram with a gaussian filter applied
+        h_g = gaussian_filter(hist, 2, mode='constant')
+        plt.imshow(h_g.transpose(), origin='lower',
+                   extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]],
+                   cmap=plt.get_cmap('Reds'), aspect='auto')
 
     # Ignore warning issued by colorbar plotted in CMD with membership
     # probabilities.

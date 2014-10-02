@@ -157,15 +157,16 @@ def evaluation(err_lst, obs_clust, completeness, isoch_list, param_values,
     # Process each model selected.
     for model in zip(*p_lst):
 
-        ## Metallicity and age indexes.
-        m_i = param_values[0].index(model[0])
-        a_i = param_values[1].index(model[1])
-
-        # Check if this isochrone was already processed.
+        # Check if this isochrone/model was already processed.
         if model in isoch_done[0]:
             # Get likel_val value for this isochrone.
             likel_val = isoch_done[1][isoch_done[0].index(model)]
         else:
+
+            ## Metallicity and age indexes.
+            m_i = param_values[0].index(model[0])
+            a_i = param_values[1].index(model[1])
+
             isochrone = isoch_list[m_i][a_i]
             # Call likelihood function with m,a,e,d values.
             likel_val = i_l(err_lst, obs_clust, completeness, sc_params,
@@ -183,9 +184,7 @@ def evaluation(err_lst, obs_clust, completeness, isoch_list, param_values,
 
     # Sort according to the likelihood list.
     generation = [x for y, x in sorted(zip(likelihood, generation_list))]
-
-    # For plotting purposes: sort list in place putting the likelihood minimum
-    # value first.
+    # Sort list in place putting the likelihood minimum value first.
     likelihood.sort()
 
     return generation, likelihood, isoch_done
@@ -212,6 +211,7 @@ def ext_imm(best_sol, param_values, n_pop):
     # Generate (n_pop-n_el) random solutions.
     n_ran = n_pop - len(best_sol)
     p_lst_r = random_population(param_values, n_ran)
+    print p_lst_r[4]
 
     # Append immigrant random population to the best solution.
     generation_ei = best_sol + zip(*p_lst_r)
@@ -268,6 +268,15 @@ def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
     # Stores parameters of the solutions already processed and the likelihhods
     # obtained.
     isoch_done = [[], []]
+
+    ### TEMPORARY - DELETE
+    #print param_values
+    real_sol = [[0.0085], [8.0], [0.3], [12.4], [500.], [0.]]
+    generation_t, lkl_t, isoch_done_t = evaluation(err_lst, obs_clust,
+        completeness, isoch_list, param_values, real_sol,
+        sc_params, isoch_done, cmd_sel)
+    print 'Best sol:', generation_t[0], lkl_t[0]
+    ### TEMPORARY - DELETE
 
     # Evaluate initial random solutions in the objective function.
     generation, lkl, isoch_done = evaluation(err_lst, obs_clust,
@@ -383,6 +392,8 @@ def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
         # For plotting purposes.
         lkl_old[0].append(lkl[0])
         lkl_old[1].append(np.mean(lkl))
+
+        print i, generation[0], lkl[0], len(isoch_done[0])
 
     isoch_fit_params = [generation[0], lkl_old, ext_imm_indx, isoch_done]
 

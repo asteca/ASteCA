@@ -16,7 +16,7 @@ def brute_force(err_lst, obs_clust, completeness, ip_list, sc_params,
     isochrones.
     '''
 
-    isoch_list, param_values, param_rs = ip_list
+    isoch_list, param_values = ip_list[:-1]
 
     # Unpack parameters values.
     m_lst, a_lst, e_lst, d_lst, mass_lst, bin_lst = param_values

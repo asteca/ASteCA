@@ -9,8 +9,8 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
 
-def synth_clust_plot(mass_dist, isoch_inter, model, isoch_moved, isoch_cut,
-                     isoch_m_d0, isoch_m_d, clust_compl, clust_error):
+def synth_clust_plot(mass_dist, isochrone, model, isoch_moved, isoch_cut,
+    isoch_mass, isoch_binar, isoch_compl, isoch_error, path):
     '''
     Plot several diagrams related with the synthetic clusters.
     '''
@@ -19,11 +19,11 @@ def synth_clust_plot(mass_dist, isoch_inter, model, isoch_moved, isoch_cut,
 
     # figsize(x1, y1), GridSpec(y2, x2) --> To have square plots: x1/x2 =
     # y1/y2 = 2.5
-    fig = plt.figure(figsize=(20, 35))  # create the top-level container
-    gs = gridspec.GridSpec(14, 8)  # create a GridSpec object
+    fig = plt.figure(figsize=(10, 20))  # create the top-level container
+    gs = gridspec.GridSpec(8, 4)  # create a GridSpec object
 
     ax1 = plt.subplot(gs[0:2, 0:2])
-    ax1.set_title('Isochrone (interp)')
+    ax1.set_title('Isochrone')
     ax1.invert_yaxis()
     ax1.set_xlabel('$(B-V)_o$', fontsize=15)
     ax1.set_ylabel('$M_{V}$', fontsize=15)
@@ -36,12 +36,12 @@ def synth_clust_plot(mass_dist, isoch_inter, model, isoch_moved, isoch_cut,
              bbox=dict(facecolor='white', alpha=0.5), fontsize=15)
     plt.text(0.05, 0.92, 'a', transform=ax1.transAxes,
              bbox=dict(facecolor='white', alpha=0.5), fontsize=16)
-    plt.text(0.78, 0.92, 'N=%d' % len(isoch_inter[0]), transform=ax1.transAxes,
+    plt.text(0.78, 0.92, 'N=%d' % len(isochrone[0]), transform=ax1.transAxes,
              bbox=dict(facecolor='white', alpha=0.5), fontsize=14)
-    ax1.scatter(isoch_inter[0], isoch_inter[1], s=30, c='steelblue', lw=0.1)
+    ax1.scatter(isochrone[0], isochrone[1], s=30, c='steelblue', lw=0.1)
 
     ax2 = plt.subplot(gs[0:2, 2:4])
-    ax2.set_title('Shifted isochrone')
+    ax2.set_title('Shifted')
     ax2.invert_yaxis()
     ax2.minorticks_on()
     ax2.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
@@ -57,13 +57,13 @@ def synth_clust_plot(mass_dist, isoch_inter, model, isoch_moved, isoch_cut,
     ax2.scatter(isoch_moved[0], isoch_moved[1], s=30, c='steelblue', lw=0.1)
 
     ax3 = plt.subplot(gs[2:4, 0:2])
-    ax3.set_title('Max magnitude cut')
+    ax3.set_title('Max magnitude cut (interp)')
     ax3.invert_yaxis()
     ax3.minorticks_on()
     ax3.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
     plt.text(0.05, 0.92, 'c', transform=ax3.transAxes,
              bbox=dict(facecolor='white', alpha=0.5), fontsize=16)
-    plt.text(0.8, 0.92, 'N=%d' % len(isoch_cut[0]), transform=ax3.transAxes,
+    plt.text(0.78, 0.92, 'N=%d' % len(isoch_cut[0]), transform=ax3.transAxes,
              bbox=dict(facecolor='white', alpha=0.5), fontsize=14)
     ax3.scatter(isoch_cut[0], isoch_cut[1], s=30, c='steelblue', lw=0.3)
 
@@ -80,11 +80,12 @@ def synth_clust_plot(mass_dist, isoch_inter, model, isoch_moved, isoch_cut,
     plt.text(0.05, 0.92, 'd', transform=ax4.transAxes,
              bbox=dict(facecolor='white', alpha=0.5), fontsize=16)
     text1 = 'N=%d\n' % len(mass_dist)
-    text2 = '$M_{{\odot}} = {}$'.format(mass)
-    text = text1 + text2
-    plt.text(0.7, 0.87, text, transform=ax4.transAxes,
+    text2 = '$M_T = {}\,M_{{\odot}}$\n'.format(mass)
+    text3 = '$M = {:.1f}\,M_{{\odot}}$'.format(sum(mass_dist))
+    text = text1 + text2 + text3
+    plt.text(0.63, 0.8, text, transform=ax4.transAxes,
              bbox=dict(facecolor='white', alpha=0.5), fontsize=14)
-    ax4.hist(mass_dist, bins=50)
+    ax4.hist(mass_dist, bins=500)
 
     ax5 = plt.subplot(gs[4:6, 0:2])
     ax5.set_title('IMF masses')
@@ -93,10 +94,12 @@ def synth_clust_plot(mass_dist, isoch_inter, model, isoch_moved, isoch_cut,
     ax5.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
     plt.text(0.05, 0.92, 'e', transform=ax5.transAxes,
              bbox=dict(facecolor='white', alpha=0.5), fontsize=16)
-    text = 'N=%d' % len(isoch_m_d0[0])
-    plt.text(0.8, 0.92, text, transform=ax5.transAxes,
+    text1 = 'N=%d\n' % len(isoch_mass[0])
+    text2 = '$M = {:.1f}\,M_{{\odot}}$'.format(sum(isoch_mass[2]))
+    text = text1 + text2
+    plt.text(0.65, 0.87, text, transform=ax5.transAxes,
              bbox=dict(facecolor='white', alpha=0.5), fontsize=14)
-    ax5.scatter(isoch_m_d0[0], isoch_m_d0[1], s=30, c='steelblue', lw=0.5)
+    ax5.scatter(isoch_mass[0], isoch_mass[1], s=30, c='steelblue', lw=0.5)
 
     ax6 = plt.subplot(gs[4:6, 2:4])
     ax6.set_title('Binarity')
@@ -105,14 +108,15 @@ def synth_clust_plot(mass_dist, isoch_inter, model, isoch_moved, isoch_cut,
     ax6.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
     plt.text(0.05, 0.92, 'f', transform=ax6.transAxes,
              bbox=dict(facecolor='white', alpha=0.5), fontsize=16)
-    text1 = 'N=%d\n' % len(isoch_m_d[0])
-    text2 = '$b_{{frac}} = {}$'.format(bin_f)
-    text = text1 + text2
-    plt.text(0.74, 0.87, text, transform=ax6.transAxes,
+    text1 = 'N=%d\n' % len(isoch_binar[0])
+    text2 = '$b_{{frac}} = {}$\n'.format(bin_f)
+    text3 = '$M = {:.1f}\,M_{{\odot}}$'.format(sum(isoch_binar[2]))
+    text = text1 + text2 + text3
+    plt.text(0.65, 0.81, text, transform=ax6.transAxes,
              bbox=dict(facecolor='white', alpha=0.5), fontsize=14)
-    ax6.scatter(isoch_m_d[0], isoch_m_d[1], s=30, c='steelblue', lw=0.5)
+    ax6.scatter(isoch_binar[0], isoch_binar[1], s=30, c='steelblue', lw=0.5)
 
-    if isoch_m_d.any():
+    if isoch_compl.any():
         ax7 = plt.subplot(gs[6:8, 0:2])
         ax7.set_title('Completeness')
         ax7.invert_yaxis()
@@ -120,10 +124,12 @@ def synth_clust_plot(mass_dist, isoch_inter, model, isoch_moved, isoch_cut,
         ax7.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
         plt.text(0.05, 0.92, 'g', transform=ax7.transAxes,
                  bbox=dict(facecolor='white', alpha=0.5), fontsize=16)
-        plt.text(0.8, 0.92, 'N=%d' % len(clust_compl[0]),
-            transform=ax7.transAxes, bbox=dict(facecolor='white', alpha=0.5),
-            fontsize=14)
-        ax7.scatter(clust_compl[0], clust_compl[1], s=30, c='steelblue', lw=0.5)
+        text1 = 'N=%d\n' % len(isoch_compl[0])
+        text2 = '$M = {:.1f}\,M_{{\odot}}$'.format(sum(isoch_compl[2]))
+        text = text1 + text2
+        plt.text(0.65, 0.87, text, transform=ax7.transAxes,
+            bbox=dict(facecolor='white', alpha=0.5), fontsize=14)
+        ax7.scatter(isoch_compl[0], isoch_compl[1], s=30, c='steelblue', lw=0.5)
 
         ax8 = plt.subplot(gs[6:8, 2:4])
         ax8.set_title('Errors')
@@ -132,10 +138,10 @@ def synth_clust_plot(mass_dist, isoch_inter, model, isoch_moved, isoch_cut,
         ax8.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
         plt.text(0.05, 0.92, 'h', transform=ax8.transAxes,
                  bbox=dict(facecolor='white', alpha=0.5), fontsize=16)
-        plt.text(0.8, 0.92, 'N=%d' % len(clust_error[0]),
+        plt.text(0.8, 0.92, 'N=%d' % len(isoch_error[0]),
             transform=ax8.transAxes, bbox=dict(facecolor='white', alpha=0.5),
             fontsize=14)
-        ax8.scatter(clust_error[0], clust_error[2], marker='o', s=30,
+        ax8.scatter(isoch_error[0], isoch_error[2], marker='o', s=30,
             c='#4682b4', lw=0.5)
 
     for ax in [ax2, ax3, ax5, ax6, ax7, ax8]:
@@ -144,6 +150,6 @@ def synth_clust_plot(mass_dist, isoch_inter, model, isoch_moved, isoch_cut,
 
     #plt.show()
     fig.tight_layout()
-    plt.savefig('/home/synth_cl.png', dpi=300)
+    plt.savefig(path, dpi=300)
     print 'Synthetic cluster plotted'
     raw_input()

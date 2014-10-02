@@ -47,28 +47,30 @@ def imfs(imf_name, m_star, norm_const):
 
     elif imf_name == 'chabrier_2001':
         # Chabrier (2001) exponential form of the IMF.
+        # http://adsabs.harvard.edu/abs/2001ApJ...554.1274C
+        # Eq (8)
         imf_val = norm_const * 3. * m_star ** (-3.3) * \
             np.exp(-(716.4 / m_star) ** 0.25)
 
     return imf_val
 
 
-def integral_IMF_M(m_star, imf_sel, tot_mass):
+def integral_IMF_M(m_star, imf_sel, norm_const):
     '''
     Return the properly normalized function to perform the integration of the
     selected IMF. Returns mass values.
     '''
-    imf_val = m_star * imfs(imf_sel, m_star, tot_mass)
+    imf_val = m_star * imfs(imf_sel, m_star, norm_const)
     return imf_val
 
 
 #def integral_IMF_N(m_star, imf_sel, norm_const):
-#    '''
-#    Return the properly normalized function to perform the integration of the
-#    selected IMF. Returns number of stars.
-#    '''
-#    imf_val = imfs(imf_sel, m_star, norm_const)
-#    return imf_val
+    #'''
+    #Return the properly normalized function to perform the integration of the
+    #selected IMF. Returns number of stars.
+    #'''
+    #imf_val = imfs(imf_sel, m_star, norm_const)
+    #return imf_val
 
 
 def IMF_PDF(imf_sel):
@@ -90,18 +92,18 @@ def IMF_PDF(imf_sel):
     # Set IMF low mass limit.
     m_low = imfs_dict[imf_sel]
     # Set IMF max mass limit and interpolation step.
-    m_high, m_step = 100., 0.01
+    m_high, m_step = 500., 0.01
+
     # Normalize IMF to a total unit mass.
-    M = 1.
     norm_const = 1. / quad(integral_IMF_M, m_low, m_high,
-        args=(imf_sel, 1. / M))[0]
+        args=(imf_sel, 1.))[0]
 
     # Generate PDF for the given normalized IMF. First sublist contains
     # the masses, second the PDF values.
     pdf_arr = [[], []]
     pdf_sum = 0.
     m_upper = m_low
-    while pdf_sum < M:
+    while pdf_sum < 1.:
         pdf_val = integral_IMF_M(m_upper, imf_sel, norm_const) * m_step
         pdf_arr[0].append(m_upper)
         pdf_arr[1].append(pdf_val)
@@ -109,7 +111,7 @@ def IMF_PDF(imf_sel):
         m_upper = m_upper + m_step
 
     # Normalize probabilities to avoid 'np.random.choice' error if PDF doesn't
-    # add up *exactly* to 1.  with numpy > 1.8.0.
+    # add up *exactly* to 1. with numpy > 1.8.0.
     pdf_arr[1] /= np.asarray(pdf_arr[1]).sum()
 
     return np.asarray(pdf_arr)

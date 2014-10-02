@@ -70,7 +70,7 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
                 # Call bootstrap function with resampling to get the uncertainty
                 # in each parameter.
                 isoch_fit_errors = bootstrap(err_lst, obs_clust, completeness,
-                    ip_list, bf_params, sc_params, ga_params, ps_params)
+                    ip_list, bf_params, sc_params, ga_params, cmd_sel)
 
                 # Round errors to 1 significant digit and round params values
                 # to the corresponding number of significant digits given by

@@ -199,15 +199,17 @@ def get_center(x_data, y_data, mag_data, hist_lst, gc_params, mode,
         # Obtain approximate values for center coordinates using several
         # Gaussian filters with different standard deviation values, on the
         # 2D histogram.
-        hist_2d_g, cent_bin, approx_cents = center_approx(hist, xedges, yedges,
+        hist_2d_g, approx_cents = center_approx(hist, xedges, yedges,
             [st_dev_lst[0]])
 
+        kde_cent = approx_cents[0]
+        e_cent = [0., 0.]
+        cent_bin = bin_center(xedges, yedges, kde_cent)
+
         # Show plot with center obtained.
-        d_c(x_data, y_data, mag_data, approx_cents[0], hist_2d_g)
+        d_c(x_data, y_data, mag_data, kde_cent, cent_bin, hist_2d_g)
         plt.show()
 
-        kde_cent = [approx_cents[0]]
-        e_cent = [0., 0.]
         kde_plot = []
 
         wrong_answer = True
@@ -217,16 +219,12 @@ def get_center(x_data, y_data, mag_data, hist_lst, gc_params, mode,
                 print 'Value accepted.'
                 wrong_answer = False
             elif answer_cen == 'y':
+                kde_cent = []
                 print 'Input new center values.'
-                kde_cent[0] = float(raw_input('x: '))
-                kde_cent[1] = float(raw_input('y: '))
-
-                # Find bin where the center xy coordinates are located.
-                hist, xedges, yedges = hist_lst[:-1]
-                x_cent_bin = bisect.bisect_left(xedges, kde_cent[0])
-                y_cent_bin = bisect.bisect_left(yedges, kde_cent[1])
+                kde_cent.append(float(raw_input('x: ')))
+                kde_cent.append(float(raw_input('y: ')))
                 # Store center bin coords for the filtered hist.
-                cent_bin = [(x_cent_bin - 1), (y_cent_bin - 1)]
+                cent_bin = bin_center(xedges, yedges, kde_cent)
                 wrong_answer = False
                 flag_center_manual = True
             else:

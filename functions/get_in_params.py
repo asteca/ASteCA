@@ -163,16 +163,15 @@ def get_in_params(mypath):
     axes_params = [m_1, m_2, m_ord, xy_minmax]
 
     # Store photometric system params in lists.
-    ps_params = [iso_path, cmd_select, iso_select]
+    par_ranges = [m_rs, a_rs, e_rs, d_rs, mass_rs, bin_rs]
+    ps_params = [iso_path, cmd_select, iso_select, par_ranges]
 
     # Store GA params in lists.
     bf_params = [bf_flag, best_fit_algor, N_b]
     sc_params = [IMF_name, bin_mr]
-    par_ranges = [m_rs, a_rs, e_rs, d_rs, mass_rs, bin_rs]
     ga_params = [n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es]
     rm_params = [flag_red_memb, min_prob]
 
     return mode, done_dir, gd_params, gh_params, gc_params, cr_params, kp_flag,\
     im_flag, er_params, fr_number, pv_params, da_params, ps_params, bf_params,\
-    sc_params, par_ranges, ga_params, rm_params, pl_params, flag_move_file, \
-    axes_params
+    sc_params, ga_params, rm_params, pl_params, flag_move_file, axes_params
