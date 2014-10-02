@@ -163,7 +163,8 @@ GR       10
 #   if their errors are lower than 'be_e' (see below).
 # * be_e: maximum error value that stars in the bright end range can
 #   have without being rejected.
-# * N: number of sigmas to be used by the 'lowexp' method.
+# * N: number of sigmas to be used by the 'lowexp' method. For reference
+#   N=1.96 encloses the 95% confidence interval.
 #
 #       mode   e_max   be   be_e  N
 ER    eyefit    0.25    2.   0.1  0.5
@@ -258,8 +259,17 @@ PS_d					8.		15.		0.05
 #
 # IMF:  chabrier_2001 / kroupa_1993 / kroupa_2002
 #
-#             IMF   total_mass   frac_binar  mass_ratio
-SC  chabrier_2001         5000          0.5         0.7
+#             IMF
+SC  kroupa_2002
+#
+# Total mass.
+#						min 	max 	step
+TM                       10    10000      500
+#
+# Binary fraction.
+#
+#        mass_ratio		min 	max 	step
+FB              0.7      0.      1.      0.2
 
 # Genetic Algorithm parameters.
 # n_pop: number of chromosomes in the population.
