@@ -6,7 +6,7 @@ Created on Fri Jan 17 16:38:10 2014
 """
 
 import numpy as np
-from isoch_likelihood import isoch_likelihood as i_l
+from get_likelihood import isoch_likelihood as i_l
 
 
 def brute_force(err_lst, obs_clust, completeness, ip_list, st_d_bin_mr,

@@ -9,7 +9,7 @@ from synth_cluster import synth_clust as s_c
 import numpy as np
 
 
-def likelihood(synth_clust, obs_arr):
+def lk_func(synth_clust, obs_arr):
     '''
     Takes a synthetic cluster, compares it to the observed cluster and
     returns the weighted (log) likelihood value.
@@ -17,12 +17,12 @@ def likelihood(synth_clust, obs_arr):
     '''
 
     if not synth_clust.any():
-        isoch_score = 10000.
+        likelihood = 10000.
     else:
         # Store observed and synthetic clusters as arrays.
         #obs_arr = np.array(obs_clust)
         syn_arr = np.array(zip(*synth_clust))
-        clust_stars_probs = []
+        cl_stars_probs = []
 
         # Small value used to replace zeros.
         epsilon = 1e-10
@@ -48,21 +48,21 @@ def likelihood(synth_clust, obs_arr):
             # star[2] & Q[2] = magnitude
             B = np.square(star[4] - Q[0]) / e_col_2
             C = np.square(star[2] - Q[2]) / e_mag_2
-            synth_stars = np.exp(-0.5 * (B + C)) / np.sqrt(e_col_2 * e_mag_2)
+            star_prob = np.exp(-0.5 * (B + C)) / np.sqrt(e_col_2 * e_mag_2)
             # The final prob for this cluster star is the sum over all synthetic
             # stars. Use 1e-10 to avoid nan and inf values in the calculations
             # that follow.
-            clust_stars_probs.append(max(synth_stars.sum(), epsilon))
+            cl_stars_probs.append(max(star_prob.sum(), epsilon))
 
         # Store weights data (membership probabilities) into array.
         weights = np.array([zip(*obs_arr)[6]], dtype=float)
         # Weight probabilities for each cluster star.
-        weighted_probs = clust_stars_probs * weights / len(synth_clust[0])
+        clust_prob = cl_stars_probs * weights / len(synth_clust[0])
 
         # Final score: sum log likelihoods for each star in cluster.
-        isoch_score = min(-sum(np.log(np.asarray(weighted_probs[0]))), 10000.)
+        likelihood = min(-sum(np.log(np.asarray(clust_prob[0]))), 10000.)
 
-    return isoch_score
+    return likelihood
 
 
 def isoch_likelihood(err_lst, obs_clust, completeness, st_d_bin_mr, isochrone,
@@ -85,6 +85,6 @@ def isoch_likelihood(err_lst, obs_clust, completeness, st_d_bin_mr, isochrone,
 
     # Call function to obtain the likelihood by comparing the synthetic cluster
     # with the observed cluster.
-    isoch_lik = likelihood(synth_clust, obs_clust)
+    likelihood = lk_func(synth_clust, obs_clust)
 
-    return isoch_lik
+    return likelihood

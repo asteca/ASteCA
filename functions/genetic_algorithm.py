@@ -4,7 +4,7 @@ Created on Fri Jan 17 09:43:14 2014
 
 @author: gabriel
 """
-from isoch_likelihood import isoch_likelihood as i_l
+from get_likelihood import isoch_likelihood as i_l
 import random
 import numpy as np
 
@@ -153,14 +153,14 @@ def evaluation(err_lst, obs_clust, completeness, isoch_list, param_values,
     each one.
     '''
 
-    likelihood, generation_list = [], []
+    likel_lst, generation_list = [], []
     # Process each model selected.
     for model in zip(*p_lst):
 
         # Check if this isochrone/model was already processed.
         if model in isoch_done[0]:
             # Get likel_val value for this isochrone.
-            likel_val = isoch_done[1][isoch_done[0].index(model)]
+            likelihood = isoch_done[1][isoch_done[0].index(model)]
         else:
 
             ## Metallicity and age indexes.
@@ -169,25 +169,26 @@ def evaluation(err_lst, obs_clust, completeness, isoch_list, param_values,
 
             isochrone = isoch_list[m_i][a_i]
             # Call likelihood function with m,a,e,d values.
-            likel_val = i_l(err_lst, obs_clust, completeness, st_d_bin_mr,
+            likelihood = i_l(err_lst, obs_clust, completeness, st_d_bin_mr,
                             isochrone, model, cmd_sel)
             # Append data identifying the isochrone and the obtained
             # likelihood value to this *persistent* list.
             isoch_done[0].append(model)
-            isoch_done[1].append(likel_val)
+            isoch_done[1].append(likelihood)
 
         # Append same data to the lists that will be erased with each call
         # to this function.
         generation_list.append(model)
 #        likelihood.append(round(likel_val, 2))
-        likelihood.append(likel_val)
+        likel_lst.append(likelihood)
 
-    # Sort according to the likelihood list.
-    generation = [x for y, x in sorted(zip(likelihood, generation_list))]
+    # Sort according to the likelihood list. This puts the best model (ie:
+    # the one with the minimum likelihood value) first.
+    generation = [x for y, x in sorted(zip(likel_lst, generation_list))]
     # Sort list in place putting the likelihood minimum value first.
-    likelihood.sort()
+    likel_lst.sort()
 
-    return generation, likelihood, isoch_done
+    return generation, likel_lst, isoch_done
 
 
 def random_population(param_values, n_ran):
