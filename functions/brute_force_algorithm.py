@@ -9,7 +9,7 @@ import numpy as np
 from isoch_likelihood import isoch_likelihood as i_l
 
 
-def brute_force(err_lst, obs_clust, completeness, ip_list, sc_params,
+def brute_force(err_lst, obs_clust, completeness, ip_list, st_d_bin_mr,
                 ga_params, cmd_sel):
     '''
     Brute force algorithm that computes the likelihoods for *all* the defined
@@ -53,7 +53,7 @@ def brute_force(err_lst, obs_clust, completeness, ip_list, sc_params,
                             isochrone = isoch_list[m_i][a_i]
                             # Call likelihood function with m,a,e,d values.
                             likel_val = i_l(err_lst, obs_clust, completeness,
-                                sc_params, isochrone, params, cmd_sel)
+                                st_d_bin_mr, isochrone, params, cmd_sel)
                             # Store the likelihood for each synthetic cluster.
                             score[0].append(likel_val)
                             score[1].append(params)

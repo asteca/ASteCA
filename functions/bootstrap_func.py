@@ -22,7 +22,7 @@ def resample_replacement(obs_clust0):
 
 
 def bootstrap(err_lst, obs_clust0, completeness, ip_list, bf_params,
-             sc_params, ga_params, cmd_sel):
+             st_d_bin_mr, ga_params, cmd_sel):
     '''
     Bootstrap process, runs the selected algorithm a number of times each
     time generating a new observed cluster representation through resampling
@@ -50,7 +50,7 @@ def bootstrap(err_lst, obs_clust0, completeness, ip_list, bf_params,
             # process so it will not print percentages to screen.
             flag_print_perc = False
             params_boot.append(g_a(flag_print_perc, err_lst, obs_clust,
-            completeness, ip_list, sc_params, ga_params, cmd_sel)[0])
+            completeness, ip_list, st_d_bin_mr, ga_params, cmd_sel)[0])
 
         percentage_complete = (100.0 * (i + 1) / max(N_b, 2))
         while len(milestones) > 0 and percentage_complete >= milestones[0]:

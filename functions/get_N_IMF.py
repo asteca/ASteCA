@@ -9,7 +9,7 @@ import numpy as np
 from scipy.integrate import quad
 
 
-def imfs(imf_name, m_star, norm_const):
+def imfs(imf_name, m_star):
     '''
     Define any number of IMFs.
     '''
@@ -27,7 +27,7 @@ def imfs(imf_name, m_star, norm_const):
             i = 1
         elif m2 < m_star:
             i = 2
-        imf_val = norm_const * factor[i] * (m_star ** alpha[i])
+        imf_val = factor[i] * (m_star ** alpha[i])
 
     elif imf_name == 'kroupa_2002':
         # Kroupa (2002) piecewise IMF (taken from MASSCLEAN article).
@@ -43,40 +43,38 @@ def imfs(imf_name, m_star, norm_const):
             i = 1
         elif m2 < m_star:
             i = 2
-        imf_val = norm_const * factor[i] * (m_star ** alpha[i])
+        imf_val = factor[i] * (m_star ** alpha[i])
 
     elif imf_name == 'chabrier_2001':
         # Chabrier (2001) exponential form of the IMF.
         # http://adsabs.harvard.edu/abs/2001ApJ...554.1274C
         # Eq (8)
-        imf_val = norm_const * 3. * m_star ** (-3.3) * \
-            np.exp(-(716.4 / m_star) ** 0.25)
+        imf_val = 3. * m_star ** (-3.3) * np.exp(-(716.4 / m_star) ** 0.25)
 
     return imf_val
 
 
-def integral_IMF_M(m_star, imf_sel, norm_const):
+def integral_IMF_M(m_star, imf_sel):
     '''
     Return the properly normalized function to perform the integration of the
     selected IMF. Returns mass values.
     '''
-    imf_val = m_star * imfs(imf_sel, m_star, norm_const)
+    imf_val = m_star * imfs(imf_sel, m_star)
     return imf_val
 
 
-#def integral_IMF_N(m_star, imf_sel, norm_const):
-    #'''
-    #Return the properly normalized function to perform the integration of the
-    #selected IMF. Returns number of stars.
-    #'''
-    #imf_val = imfs(imf_sel, m_star, norm_const)
-    #return imf_val
-
-
-def IMF_PDF(imf_sel):
+def integral_IMF_N(m_star, imf_sel):
     '''
-    Returns the selected IMF's probability distribution function (PDF)
-    normalized to 1 solar mass.
+    Return the properly normalized function to perform the integration of the
+    selected IMF. Returns number of stars.
+    '''
+    imf_val = imfs(imf_sel, m_star)
+    return imf_val
+
+
+def N_IMF(imf_sel):
+    '''
+    Returns the number of stars per interval of mass for the selected IMF.
     '''
 
     # Low mass limits are defined for each IMF to avoid numerical
@@ -84,34 +82,26 @@ def IMF_PDF(imf_sel):
     imfs_dict = {'kroupa_1993': (0.081), 'chabrier_2001': (0.001),
         'kroupa_2002': (0.011)}
 
-    if imf_sel not in imfs_dict:
-        print ("  WARNING: Name of IMF ({}) is incorrect.\n"
-        "  Defaulting to Chabrier (2001).".format(imf_sel))
-        imf_sel = 'chabrier_2001'
-
     # Set IMF low mass limit.
     m_low = imfs_dict[imf_sel]
     # Set IMF max mass limit and interpolation step.
-    m_high, m_step = 500., 0.01
+    m_high, m_step = 500., 0.1
 
-    # Normalize IMF to a total unit mass.
+    # Obtain normalization constant.
     norm_const = 1. / quad(integral_IMF_M, m_low, m_high,
-        args=(imf_sel, 1.))[0]
+        args=(imf_sel))[0]
 
-    # Generate PDF for the given normalized IMF. First sublist contains
-    # the masses, second the PDF values.
-    pdf_arr = [[], []]
-    pdf_sum = 0.
+    # Obtain number of stars in each mass interval.
+    st_dist = [[], []]
     m_upper = m_low
-    while pdf_sum < 1.:
-        pdf_val = integral_IMF_M(m_upper, imf_sel, norm_const) * m_step
-        pdf_arr[0].append(m_upper)
-        pdf_arr[1].append(pdf_val)
-        pdf_sum += pdf_val
+    while m_upper < m_high:
+        m_lower = m_upper
         m_upper = m_upper + m_step
+        N_stars = quad(integral_IMF_N, m_lower, m_upper, args=(imf_sel))[0]
+        st_dist[0].append(m_upper)
+        st_dist[1].append(N_stars)
 
-    # Normalize probabilities to avoid 'np.random.choice' error if PDF doesn't
-    # add up *exactly* to 1. with numpy > 1.8.0.
-    pdf_arr[1] /= np.asarray(pdf_arr[1]).sum()
+    # Normalize number of stars by constant.
+    st_dist[1] = np.asarray(st_dist[1]) * norm_const
 
-    return np.asarray(pdf_arr)
+    return st_dist

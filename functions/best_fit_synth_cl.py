@@ -10,7 +10,7 @@ from brute_force_algorithm import brute_force as b_f
 from bootstrap_func import bootstrap
 from synth_cluster import synth_clust as s_c
 from error_round import round_sig_fig as rsf
-from get_IMF_PDF import IMF_PDF as i_p
+from get_N_IMF import N_IMF as N_imf
 from move_isochrone import move_isoch
 import numpy as np
 
@@ -33,11 +33,12 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
         # Remove IDs  and convert to array so likelihood function works.
         obs_clust = np.array(zip(*zip(*memb_prob_avrg_sort)[1:]), dtype=float)
 
-        # Obtain the selected IMF's PDF. We run it once because the array only
-        # depends on the IMF selected.
-        imf_pdf = i_p(sc_params[0])
-        # Replace the name of the IMF by its PDF.
-        sc_params[0] = imf_pdf
+        # Obtain the stars distrubuted on the selected IMF's. We run it once
+        # because the array only depends on the IMF selected.
+        st_dist = N_imf(sc_params[0])
+        # Pack stars distribution in IMF and binars mass ratio to be used by
+        # the synthetic cluster function.
+        st_d_bin_mr = [st_dist, sc_params[1]]
 
         # Call algorithm to calculate the likelihoods for the set of
         # isochrones and return the best fitting parameters.
@@ -46,7 +47,7 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
             print 'Using Brute Force algorithm.'
             # Brute force algorithm.
             isoch_fit_params = b_f(err_lst, obs_clust, completeness,
-                                   ip_list, sc_params, ga_params, cmd_sel)
+                                   ip_list, st_d_bin_mr, ga_params, cmd_sel)
             # Assign errors as the steps in each parameter.
             #param_rs = ip_list[2]
             isoch_fit_errors = [p_rs[2] for p_rs in ip_list[2]]
@@ -59,7 +60,7 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
             # so it will print percentages to screen.
             flag_print_perc = True
             isoch_fit_params = g_a(flag_print_perc, err_lst,
-                obs_clust, completeness, ip_list, sc_params,
+                obs_clust, completeness, ip_list, st_d_bin_mr,
                 ga_params, cmd_sel)
 
         print ("Best fit params obtained ({:g}, {:g}, {:g}, {:g}, {:g},"
@@ -70,7 +71,7 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
                 # Call bootstrap function with resampling to get the uncertainty
                 # in each parameter.
                 isoch_fit_errors = bootstrap(err_lst, obs_clust, completeness,
-                    ip_list, bf_params, sc_params, ga_params, cmd_sel)
+                    ip_list, bf_params, st_d_bin_mr, ga_params, cmd_sel)
 
                 # Round errors to 1 significant digit and round params values
                 # to the corresponding number of significant digits given by
@@ -96,7 +97,7 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
         # Generate shifted best fit isochrone.
         shift_isoch = move_isoch(cmd_sel, isoch_list[m_i][a_i][:2], e, d)
         # Generate best fit synthetic cluster.
-        synth_clst = s_c(err_lst, completeness, sc_params,
+        synth_clst = s_c(err_lst, completeness, st_d_bin_mr,
                          isoch_list[m_i][a_i], [-1., -1., e, d, mass, binar_f],
                          cmd_sel)
 

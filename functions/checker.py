@@ -186,6 +186,11 @@ def check(mypath, cl_files):
             print traceback.format_exc()
             sys.exit("ERROR: unknown error reading metallicity files.")
 
+    # Checki IMF defined.
+    imfs_dict = {'kroupa_1993', 'chabrier_2001', 'kroupa_2002'}
+    if sc_params[0] not in imfs_dict:
+        sys.exit("ERROR: Name of IMF ({}) is incorrect.".format(sc_params[0]))
+
     # Check that at least one photometric cluster file exists.
     if not cl_files:
         sys.exit("No photometric data files found in '/input' folder. Halting.")

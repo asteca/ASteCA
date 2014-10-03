@@ -147,7 +147,7 @@ def selection(generation, breed_prob):
 
 
 def evaluation(err_lst, obs_clust, completeness, isoch_list, param_values,
-                 p_lst, sc_params, isoch_done, cmd_sel):
+                 p_lst, st_d_bin_mr, isoch_done, cmd_sel):
     '''
     Evaluate each model in the objective function to obtain the fitness of
     each one.
@@ -169,7 +169,7 @@ def evaluation(err_lst, obs_clust, completeness, isoch_list, param_values,
 
             isochrone = isoch_list[m_i][a_i]
             # Call likelihood function with m,a,e,d values.
-            likel_val = i_l(err_lst, obs_clust, completeness, sc_params,
+            likel_val = i_l(err_lst, obs_clust, completeness, st_d_bin_mr,
                             isochrone, model, cmd_sel)
             # Append data identifying the isochrone and the obtained
             # likelihood value to this *persistent* list.
@@ -240,7 +240,7 @@ def num_binary_digits(param_rs):
 
 
 def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
-    sc_params, ga_params, cmd_sel):
+    st_d_bin_mr, ga_params, cmd_sel):
     '''
     Genetic algorithm adapted to find the best fit model-obervation.
     '''
@@ -274,14 +274,14 @@ def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
     real_sol = [[0.0085], [8.0], [0.3], [12.4], [500.], [0.]]
     generation_t, lkl_t, isoch_done_t = evaluation(err_lst, obs_clust,
         completeness, isoch_list, param_values, real_sol,
-        sc_params, isoch_done, cmd_sel)
+        st_d_bin_mr, isoch_done, cmd_sel)
     print 'Best sol:', generation_t[0], lkl_t[0]
     ### TEMPORARY - DELETE
 
     # Evaluate initial random solutions in the objective function.
     generation, lkl, isoch_done = evaluation(err_lst, obs_clust,
         completeness, isoch_list, param_values, p_lst_r,
-        sc_params, isoch_done, cmd_sel)
+        st_d_bin_mr, isoch_done, cmd_sel)
 
     # Store best solution for passing along in the 'Elitism' block.
     best_sol = generation[:n_el]
@@ -333,7 +333,7 @@ def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
         # Evaluate each new solution in the objective function and sort
         # according to the best solutions found.
         generation, lkl, isoch_done = evaluation(err_lst, obs_clust,
-            completeness, isoch_list, param_values, p_lst_e, sc_params,
+            completeness, isoch_list, param_values, p_lst_e, st_d_bin_mr,
             isoch_done, cmd_sel)
 
         ### Extinction/Immigration ###

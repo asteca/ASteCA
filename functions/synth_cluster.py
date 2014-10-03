@@ -33,13 +33,11 @@ def add_errors(isoch_compl, err_lst):
     # Replace all error values greater than e_max with e_max.
     sigma_mag[sigma_mag > e_max] = e_max
     sigma_col[sigma_col > e_max] = e_max
-    # Do the same but for a minimum error value. This ensures a
-    # reasonable error spread even for low magnitudes.
-    sigma_mag[sigma_mag < 0.05] = 0.05
-    sigma_col[sigma_col < 0.05] = 0.05
+
     # Call function to shift stars around these errors.
     col_gauss, mag_gauss = gauss_error(isoch_compl[0], sigma_col,
                                        isoch_compl[1], sigma_mag)
+
     isoch_error = [col_gauss, sigma_col, mag_gauss, sigma_mag]
 
     return isoch_error
@@ -226,7 +224,7 @@ def interp_isoch(isochrone):
     return isoch_inter
 
 
-def synth_clust(err_lst, completeness, sc_params, isochrone, model, cmd_sel):
+def synth_clust(err_lst, completeness, st_d_bin_mr, isochrone, model, cmd_sel):
     '''
     Main function.
 
@@ -235,7 +233,7 @@ def synth_clust(err_lst, completeness, sc_params, isochrone, model, cmd_sel):
     '''
 
     # Unpack synthetic cluster parameters.
-    imf_pdf, bin_mass_ratio = sc_params[0:2]
+    st_dist, bin_mass_ratio = st_d_bin_mr
     e, d, M_total, bin_frac = model[2:]
 
     # Move synth cluster with the values 'e' and 'd'.
@@ -256,13 +254,13 @@ def synth_clust(err_lst, completeness, sc_params, isochrone, model, cmd_sel):
 
         # Store mass distribution used to produce a synthetic cluster based on
         # a given theoretic isochrone.
-        mass_dist = m_d(imf_pdf, M_total)
+        mass_dist = m_d(st_dist, M_total)
 
         # Interpolate masses in mass_dist into the isochrone rejecting those
         # masses that fall outside of the isochrone's mass range.
         isoch_mass = mass_interp(isoch_cut, mass_dist)
 
-        print 'IMF:', len(mass_dist) / sum(mass_dist), '\n'
+        #print 'IMF:', len(mass_dist) / sum(mass_dist), '\n'
         #import matplotlib.pyplot as plt
         #plt.plot(*imf_pdf)
         ##plt.hist(mass_dist, bins=500)
@@ -274,8 +272,8 @@ def synth_clust(err_lst, completeness, sc_params, isochrone, model, cmd_sel):
             ##############################################################
             ## For plotting purposes: store a copy of this list before
             ## adding binaries since the list gets overwritten.
-            from copy import deepcopy
-            isoch_mass0 = deepcopy(isoch_mass)
+            #from copy import deepcopy
+            #isoch_mass0 = deepcopy(isoch_mass)
             ##############################################################
 
             # Assignment of binarity.
@@ -293,9 +291,9 @@ def synth_clust(err_lst, completeness, sc_params, isochrone, model, cmd_sel):
                 synth_clust = np.array(isoch_error + [isoch_compl[2]])
 
     ## Plot synthetic cluster.
-    from synth_plot import synth_clust_plot as s_c_p
-    path = '/home/gabriel/Descargas/synth_cl.png'
-    s_c_p(mass_dist, isochrone, model, isoch_moved, isoch_cut,
-          isoch_mass0, isoch_binar, isoch_compl, isoch_error, path)
+    #from synth_plot import synth_clust_plot as s_c_p
+    #path = '/path/synth_cl.png'
+    #s_c_p(mass_dist, isochrone, model, isoch_moved, isoch_cut,
+          #isoch_mass0, isoch_binar, isoch_compl, isoch_error, path)
 
     return synth_clust
