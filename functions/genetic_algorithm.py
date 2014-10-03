@@ -271,7 +271,7 @@ def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
 
     ### TEMPORARY - DELETE
     #print param_values
-    real_sol = [[0.0085], [8.0], [0.3], [12.4], [500.], [0.]]
+    real_sol = [[0.008], [8.0], [0.3], [12.4], [500.], [0.]]
     generation_t, lkl_t, isoch_done_t = evaluation(err_lst, obs_clust,
         completeness, isoch_list, param_values, real_sol,
         st_d_bin_mr, isoch_done, cmd_sel)
@@ -288,8 +288,8 @@ def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
 
     # For plotting purposes.
     lkl_old = [[], []]
-    # Stores indexes where the Ext/Imm operator was applied.
-    ext_imm_indx = []
+    # Stores indexes where a new best solution was found.
+    new_bs_indx = []
 
     # Initiate counters.
     best_sol_count, ext_imm_count = 0, 0
@@ -372,11 +372,10 @@ def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
                 # Reset best solution counter.
                 best_sol_count = 0
 
-                # For plotting purposes. Save index where the E/I operator
-                # was used.
-                ext_imm_indx.append([i])
-
         else:
+            # For plotting purposes. Save index where a new best solution
+            # was found.
+            new_bs_indx.append([i])
             # Update best solution for passing along in the 'Elitism' block.
             best_sol = generation[:n_el]
             # Reset counter.
@@ -395,6 +394,6 @@ def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
 
         print i, generation[0], lkl[0], len(isoch_done[0])
 
-    isoch_fit_params = [generation[0], lkl_old, ext_imm_indx, isoch_done]
+    isoch_fit_params = [generation[0], lkl_old, new_bs_indx, isoch_done]
 
     return isoch_fit_params

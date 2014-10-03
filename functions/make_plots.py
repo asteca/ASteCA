@@ -903,7 +903,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
                    cmap=plt.get_cmap('Blues'), aspect='auto')
 
         # GA diagram.
-        lkl_old, ext_imm_indx, isoch_done = isoch_fit_params[1], \
+        lkl_old, new_bs_indx, isoch_done = isoch_fit_params[1], \
         isoch_fit_params[2], isoch_fit_params[3]
         ax21 = plt.subplot(gs1[10:12, 2:6])
         plt.xlim(-0.5, n_gen + int(0.01 * n_gen))
@@ -930,8 +930,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
                   label='$L_{min}$')
         ax21.plot(range(len(lkl_old[0])), lkl_old[1], lw=1., c='blue',
                   label='$L_{mean}$')
-        # Plot extinction/immigration lines.
-        for lin in ext_imm_indx:
+        # Plot line marking a new best solution found.
+        for lin in new_bs_indx:
             plt.axvline(x=lin, linestyle='--', lw=2., color='green')
         # Legend.
         handles, labels = ax21.get_legend_handles_labels()

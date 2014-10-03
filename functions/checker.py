@@ -175,12 +175,6 @@ def check(mypath, cl_files):
         # Read metallicity files.
         try:
             # Store all isochrones in all the metallicity files in isoch_list.
-            # Store metallicity values and isochrones ages between the allowed
-            # ranges in isoch_ma; extinction and distance modulus values in
-            # isoch_ed.
-            # isoch_list, isoch_ma, isoch_ed = ip_list
-            # Only read files if best fit process is set to run.
-            # bf_flag = bf_params[0]
             ip_list = isochp.ip(ps_params, bf_params[0])
         except:
             print traceback.format_exc()
