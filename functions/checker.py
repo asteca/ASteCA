@@ -111,7 +111,7 @@ def check(mypath, cl_files):
             if not isfile(memb_file):
                 # File does not exist.
                 sys.exit("ERROR: 'read' mode was set for decontamination "
-                "algorithm but the file:\n {}\ndoes not "
+                "algorithm but the file:\n\n {}\n\ndoes not "
                 "exist.".format(memb_file))
 
     ip_list = []
@@ -135,7 +135,8 @@ def check(mypath, cl_files):
         # Check if /isochrones folder exists.
         if not isdir(iso_path):
             sys.exit("ERROR: 'Best synthetic cluster fit' function is set to"
-                " run but the folder:\n {}\ndoes not exists.".format(iso_path))
+                " run but the folder:\n\n {}\n\ndoes not exists.".format(
+                    iso_path))
 
         # Read names of all metallicity files stored in isochrones path given.
         # Also read full paths to metallicity files.

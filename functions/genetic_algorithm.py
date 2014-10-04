@@ -176,10 +176,9 @@ def evaluation(err_lst, obs_clust, completeness, isoch_list, param_values,
             isoch_done[0].append(model)
             isoch_done[1].append(likelihood)
 
-        # Append same data to the lists that will be erased with each call
+        # Append data to the lists that will be erased with each call
         # to this function.
         generation_list.append(model)
-#        likelihood.append(round(likel_val, 2))
         likel_lst.append(likelihood)
 
     # Sort according to the likelihood list. This puts the best model (ie:
@@ -269,15 +268,6 @@ def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
     # Stores parameters of the solutions already processed and the likelihhods
     # obtained.
     isoch_done = [[], []]
-
-    ### TEMPORARY - DELETE
-    #print param_values
-    real_sol = [[0.008], [8.0], [0.3], [12.4], [500.], [0.]]
-    generation_t, lkl_t, isoch_done_t = evaluation(err_lst, obs_clust,
-        completeness, isoch_list, param_values, real_sol,
-        st_d_bin_mr, isoch_done, cmd_sel)
-    print 'Best sol:', generation_t[0], lkl_t[0]
-    ### TEMPORARY - DELETE
 
     # Evaluate initial random solutions in the objective function.
     generation, lkl, isoch_done = evaluation(err_lst, obs_clust,
