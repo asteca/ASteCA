@@ -2,7 +2,7 @@
 *.dat
 !/param_files/*.dat
 isochrones/*
-!/isochrones/README_iso.md
+!/isochrones/README.md
 output/*
 input/*
 .python-version
