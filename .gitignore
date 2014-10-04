@@ -1,7 +1,8 @@
 *.pyc
 *.dat
 !/param_files/*.dat
-isochrones/
+isochrones/*
+!/isochrones/README_iso.md
 output/*
 input/*
 .python-version
