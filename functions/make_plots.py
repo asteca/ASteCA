@@ -877,8 +877,10 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
         bin_min, bin_max = min(bin_vals) - 0.1 * min(bin_vals), \
         max(bin_vals) + 0.1 * min(bin_vals)
 
+        lkl_old, new_bs_indx, model_done = isoch_fit_params[1], \
+        isoch_fit_params[2], isoch_fit_params[3]
+
         # Age vs metallicity GA diagram.
-        isoch_done = isoch_fit_params[3]
         plt.subplot(gs1[10:12, 0:2])
         # Axis limits.
         plt.xlim(m_min, m_max)
@@ -894,8 +896,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
                                 edgecolor='r', fc='None', lw=1.)
         ax20.add_patch(ellipse)
         # Plot density map.
-        hist, xedges, yedges = np.histogram2d(zip(*isoch_done[0])[0],
-                                              zip(*isoch_done[0])[1], bins=100)
+        hist, xedges, yedges = np.histogram2d(zip(*model_done[0])[0],
+                                              zip(*model_done[0])[1], bins=100)
         # H_g is the 2D histogram with a gaussian filter applied
         h_g = gaussian_filter(hist, 2, mode='constant')
         plt.imshow(h_g.transpose(), origin='lower',
@@ -903,8 +905,6 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
                    cmap=plt.get_cmap('Blues'), aspect='auto')
 
         # GA diagram.
-        lkl_old, new_bs_indx, isoch_done = isoch_fit_params[1], \
-        isoch_fit_params[2], isoch_fit_params[3]
         ax21 = plt.subplot(gs1[10:12, 2:6])
         plt.xlim(-0.5, n_gen + int(0.01 * n_gen))
         lkl_range = max(lkl_old[1]) - min(lkl_old[0])
@@ -917,7 +917,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
         plt.xlabel('Generation', fontsize=12)
         plt.ylabel('Likelihood', fontsize=12)
         text1 = '$N_{total} = %.2e\,;\,N_{btst} = %d$' '\n' % \
-        (len(isoch_done[0]), N_b)
+        (len(model_done[0]), N_b)
         text2 = '$n_{gen}=%d\,;\,n_{pop}=%d$' '\n' % (n_gen, n_pop)
         text3 = '$f_{dif}=%0.2f\,;\,cr_{sel}=%s$' '\n' % (fdif, cr_sel)
         text4 = '$p_{cross}=%0.2f\,;\,p_{mut}=%0.2f$' '\n' % (p_cross, p_mut)
@@ -932,7 +932,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
                   label='$L_{mean}$')
         # Plot line marking a new best solution found.
         for lin in new_bs_indx:
-            plt.axvline(x=lin, linestyle='--', lw=2., color='green')
+            lw_lin = 2. if lin > 0.05 * len(lkl_old[0]) else 0.5
+            plt.axvline(x=lin, linestyle='--', lw=lw_lin, color='green')
         # Legend.
         handles, labels = ax21.get_legend_handles_labels()
         leg = ax21.legend(handles, labels, loc='upper right', numpoints=1,
@@ -954,8 +955,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
                                 edgecolor='b', fc='None', lw=1.)
         ax21.add_patch(ellipse)
         # Plot density map.
-        hist, xedges, yedges = np.histogram2d(zip(*isoch_done[0])[2],
-                                              zip(*isoch_done[0])[3], bins=100)
+        hist, xedges, yedges = np.histogram2d(zip(*model_done[0])[2],
+                                              zip(*model_done[0])[3], bins=100)
         # H_g is the 2D histogram with a gaussian filter applied
         h_g = gaussian_filter(hist, 2, mode='constant')
         plt.imshow(h_g.transpose(), origin='lower',
@@ -974,8 +975,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
         text = '$z = {} \pm {}$'.format(cp_r[0], cp_e[0])
         plt.text(0.1, 0.93, text, transform=ax22.transAxes,
             bbox=dict(facecolor='white', alpha=0.5), fontsize=12)
-        hist, xedges, yedges = np.histogram2d(zip(*isoch_done[0])[0],
-                                              isoch_done[1], bins=100)
+        hist, xedges, yedges = np.histogram2d(zip(*model_done[0])[0],
+                                              model_done[1], bins=100)
         # H_g is the 2D histogram with a gaussian filter applied
         h_g = gaussian_filter(hist, 2, mode='constant')
         y_min_edge = max(0, min(lkl_old[0]) - 0.3 * min(lkl_old[0]))
@@ -998,8 +999,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
         text = '$log(age) = {} \pm {}$'.format(cp_r[1], cp_e[1])
         plt.text(0.1, 0.93, text, transform=ax23.transAxes,
             bbox=dict(facecolor='white', alpha=0.5), fontsize=12)
-        hist, xedges, yedges = np.histogram2d(zip(*isoch_done[0])[1],
-                                              isoch_done[1], bins=100)
+        hist, xedges, yedges = np.histogram2d(zip(*model_done[0])[1],
+                                              model_done[1], bins=100)
         # H_g is the 2D histogram with a gaussian filter applied
         h_g = gaussian_filter(hist, 2, mode='constant')
         plt.imshow(h_g.transpose(), origin='lower',
@@ -1021,8 +1022,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
         text = '$E_{{(B-V)}} = {} \pm {}$'.format(cp_r[2], cp_e[2])
         plt.text(0.1, 0.93, text, transform=ax24.transAxes,
             bbox=dict(facecolor='white', alpha=0.5), fontsize=12)
-        hist, xedges, yedges = np.histogram2d(zip(*isoch_done[0])[2],
-                                              isoch_done[1], bins=100)
+        hist, xedges, yedges = np.histogram2d(zip(*model_done[0])[2],
+                                              model_done[1], bins=100)
         # H_g is the 2D histogram with a gaussian filter applied
         h_g = gaussian_filter(hist, 2, mode='constant')
         plt.imshow(h_g.transpose(), origin='lower',
@@ -1044,8 +1045,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
         text = '$(m-M)_o = {} \pm {}$'.format(cp_r[3], cp_e[3])
         plt.text(0.1, 0.93, text, transform=ax25.transAxes,
             bbox=dict(facecolor='white', alpha=0.5), fontsize=12)
-        hist, xedges, yedges = np.histogram2d(zip(*isoch_done[0])[3],
-                                              isoch_done[1], bins=100)
+        hist, xedges, yedges = np.histogram2d(zip(*model_done[0])[3],
+                                              model_done[1], bins=100)
         # H_g is the 2D histogram with a gaussian filter applied
         h_g = gaussian_filter(hist, 2, mode='constant')
         plt.imshow(h_g.transpose(), origin='lower',
@@ -1069,8 +1070,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
             height=2 * e_bin, edgecolor='b', fc='None', lw=1.)
         ax26.add_patch(ellipse)
         # Plot density map.
-        hist, xedges, yedges = np.histogram2d(zip(*isoch_done[0])[4],
-                                              zip(*isoch_done[0])[5], bins=100)
+        hist, xedges, yedges = np.histogram2d(zip(*model_done[0])[4],
+                                              zip(*model_done[0])[5], bins=100)
         # H_g is the 2D histogram with a gaussian filter applied
         h_g = gaussian_filter(hist, 2, mode='constant')
         plt.imshow(h_g.transpose(), origin='lower',

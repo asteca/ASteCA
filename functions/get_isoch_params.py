@@ -217,6 +217,18 @@ def get_isochs(iso_select, cmd_select, met_f_filter, age_values, isoch_format):
     return isoch_list
 
 
+def interp_isoch(isochrone):
+    '''
+    Interpolate extra color, magnitude and masses into the isochrone.
+    '''
+    N = 1500
+    t, xp = np.linspace(0, 1, N), np.linspace(0, 1, len(isochrone[0]))
+    # Store isochrone's interpolated values.
+    isoch_inter = np.asarray([np.interp(t, xp, _) for _ in isochrone])
+
+    return isoch_inter
+
+
 def ip(ps_params, bf_flag):
     '''
     Read isochrones and parameters if best fit function is set to run.
@@ -254,15 +266,21 @@ def ip(ps_params, bf_flag):
         isoch_list = get_isochs(iso_select, cmd_select, met_f_filter,
             age_values, isoch_format)
 
+        # Interpolate extra points into all isochrones.
+        isochs_interp = [[] for _ in isoch_list]
+        for i, _ in enumerate(isoch_list):
+            for isoch in _:
+                isochs_interp[i].append(interp_isoch(isoch))
+
         # Pack params.
         param_values = [met_values, age_values] + param_ranges[2:]
-        ip_list = [isoch_list, param_values, param_rs]
+        ip_list = [isochs_interp, param_values, param_rs]
 
         lens = [len(_) for _ in param_values]
         total = reduce(lambda x, y: x * y, lens, 1)
-        print ("Theoretical isochrones read and stored:\n"
+        print ("Theoretical isochrones read, interpolated and stored:\n"
         "  {} metallicity values (z),\n"
-        "  {} isochrones per z,\n"
+        "  {} age values (per z),\n"
         "  {} reddening values,\n"
         "  {} distance values,\n"
         "  {} mass values,\n"

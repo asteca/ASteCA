@@ -212,18 +212,6 @@ def isoch_cut_mag(isoch_moved, completeness):
     return isoch_cut
 
 
-def interp_isoch(isochrone):
-    '''
-    Interpolate extra color, magnitude and masses into the isochrone.
-    '''
-    N = 1500
-    t, xp = np.linspace(0, 1, N), np.linspace(0, 1, len(isochrone[0]))
-    # Store isochrone's interpolated values.
-    isoch_inter = np.asarray([np.interp(t, xp, _) for _ in isochrone])
-
-    return isoch_inter
-
-
 def synth_clust(err_lst, completeness, st_d_bin_mr, isochrone, model, cmd_sel):
     '''
     Main function.
@@ -240,12 +228,8 @@ def synth_clust(err_lst, completeness, st_d_bin_mr, isochrone, model, cmd_sel):
     isoch_moved = move_isoch(cmd_sel, [isochrone[0], isochrone[1]], e, d) +\
     [isochrone[2]]
 
-    # Interpolate extra points in isochrone. Do this BEFORE cutting which
-    # sorts the points and created issues.
-    isoch_intp = interp_isoch(isoch_moved)
-
     # Get isochrone minus those stars beyond the magnitude cut.
-    isoch_cut = isoch_cut_mag(isoch_intp, completeness)
+    isoch_cut = isoch_cut_mag(isoch_moved, completeness)
 
     # Empty array to pass if at some point no stars are left.
     synth_clust = np.asarray([])
@@ -259,13 +243,6 @@ def synth_clust(err_lst, completeness, st_d_bin_mr, isochrone, model, cmd_sel):
         # Interpolate masses in mass_dist into the isochrone rejecting those
         # masses that fall outside of the isochrone's mass range.
         isoch_mass = mass_interp(isoch_cut, mass_dist)
-
-        #print 'IMF:', len(mass_dist) / sum(mass_dist), '\n'
-        #import matplotlib.pyplot as plt
-        #plt.plot(*imf_pdf)
-        ##plt.hist(mass_dist, bins=500)
-        #plt.show()
-        #raw_input()
 
         if isoch_mass.any():
 
@@ -290,10 +267,12 @@ def synth_clust(err_lst, completeness, st_d_bin_mr, isochrone, model, cmd_sel):
                 # Append masses.
                 synth_clust = np.array(isoch_error + [isoch_compl[2]])
 
+    ################################################################
     ## Plot synthetic cluster.
     #from synth_plot import synth_clust_plot as s_c_p
     #path = '/path/synth_cl.png'
     #s_c_p(mass_dist, isochrone, model, isoch_moved, isoch_cut,
           #isoch_mass0, isoch_binar, isoch_compl, isoch_error, path)
+    ################################################################
 
     return synth_clust

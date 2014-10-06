@@ -16,8 +16,9 @@ import get_isoch_params as isochp
 
 def check(mypath, cl_files):
     '''
-    Checks that the necessary files are in place and the parameters
-    given are consistent with the isochrones available before moving
+    Checks that the necessary files are in place, that the parameters stored
+    in the input file are valid and that the ranges given for the cluster
+    parameters are consistent with the isochrones available before moving
     on with the code.
     '''
 
@@ -48,7 +49,7 @@ def check(mypath, cl_files):
 
     # Check mode.
     if mode not in {'auto', 'semi', 'manual'}:
-        sys.exit("ERROR: 'mode' value is incorrect.")
+        sys.exit("ERROR: 'mode' value selected ({}) is not valid.".format(mode))
 
     if mode == 'semi':
         # Check if semi_input.dat file exists.
@@ -56,7 +57,48 @@ def check(mypath, cl_files):
         if not isfile(join(mypath, semi_file)):
             # File semi_input.dat does not exist.
             sys.exit("ERROR: 'semi' mode is set but semi_input.dat file does"
-                " not exist.")
+                "not exist.")
+
+    # Check px/deg.
+    if gd_params[-1] not in {'px', 'deg'}:
+        sys.exit("ERROR: the coordinates given in the input file ({})"
+                "are incorrect.".format(gd_params[-1]))
+
+    # Selected CMD.
+    if ps_params[1] not in {1, 2, 3, 4, 5, 6, 7}:
+        sys.exit("ERROR: CMD selected ({}) is not valid.".format(ps_params[1]))
+
+    # Output figure.
+    if pl_params[0] is True:
+        if pl_params[1] not in {'png', 'pdf', 'PNG', 'PDF'}:
+            sys.exit("ERROR: figure output format selected ({}) is"
+            "not valid.".format(pl_params[1]))
+
+    # 2D positional histogram.
+    if gh_params[0] not in {'auto', 'manual'}:
+        sys.exit("ERROR: mode selected ({}) for 2D histogram"
+        "is not valid.".format(gh_params[0]))
+
+    # Center finding function.
+    if gc_params[0] not in {'auto', 'manual'}:
+        sys.exit("ERROR: mode selected ({}) for center finding"
+        "function is not valid.".format(gc_params[0]))
+
+    # Radius finding function.
+    if cr_params[0] not in {'auto', 'manual'}:
+        sys.exit("ERROR: mode selected ({}) for radius finding"
+        "function is not valid.".format(cr_params[0]))
+
+    # Errors function.
+    if er_params[0] not in {'emax', 'lowexp', 'eyefit'}:
+        sys.exit("ERROR: mode selected ({}) for error rejecting"
+        "function is not valid.".format(er_params[0]))
+    if er_params[0] == 'emax' and len(er_params[1:]) < 1:
+        sys.exit("ERROR: missing parameters for error rejecting function")
+    if er_params[0] == 'eyefit' and len(er_params[1:]) < 3:
+        sys.exit("ERROR: missing parameters for error rejecting function")
+    if er_params[0] == 'lowexp' and len(er_params[1:]) < 4:
+        sys.exit("ERROR: missing parameters for error rejecting function")
 
     # Check KDE p-value custer probability function.
     R_in_place = False

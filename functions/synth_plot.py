@@ -23,7 +23,7 @@ def synth_clust_plot(mass_dist, isochrone, model, isoch_moved, isoch_cut,
     gs = gridspec.GridSpec(8, 4)  # create a GridSpec object
 
     ax1 = plt.subplot(gs[0:2, 0:2])
-    ax1.set_title('Isochrone')
+    ax1.set_title('Isochrone (interpolated)')
     ax1.invert_yaxis()
     ax1.set_xlabel('$(B-V)_o$', fontsize=15)
     ax1.set_ylabel('$M_{V}$', fontsize=15)
@@ -57,7 +57,7 @@ def synth_clust_plot(mass_dist, isochrone, model, isoch_moved, isoch_cut,
     ax2.scatter(isoch_moved[0], isoch_moved[1], s=30, c='steelblue', lw=0.1)
 
     ax3 = plt.subplot(gs[2:4, 0:2])
-    ax3.set_title('Max magnitude cut (interp)')
+    ax3.set_title('Max magnitude cut')
     ax3.invert_yaxis()
     ax3.minorticks_on()
     ax3.grid(b=True, which='major', color='gray', linestyle='--', lw=1)

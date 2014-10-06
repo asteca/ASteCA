@@ -122,9 +122,9 @@ def get_in_params(mypath):
 
     # Pack params in lists.
     pl_params = [flag_make_plot, plot_frmt, plot_dpi]
-    cr_params = [cr_params0, cr_params1]
     gh_params = [gh_params0, gh_params1]
     gc_params = [gc_params0, gc_params1]
+    cr_params = [cr_params0, cr_params1]
     pv_params = [pv0_params, pv1_params]
     da_params = [da0_params, da1_params]
 
@@ -150,11 +150,7 @@ def get_in_params(mypath):
     cmds_dic = {1: ('V', 'B', 21), 2: ('V', 'I', 12), 3: ('V', 'U', 21),
         4: ('{T_1}', 'C', 21), 5: ('J', 'H', 12), 6: ('H', 'J', 21),
         7: ('K', 'H', 21)}
-    # Catch error if CMD value is off in file.
-    try:
-        m_1, m_2, m_ord = cmds_dic[cmd_select]
-    except:
-        m_1, m_2, m_ord = ['X', 'X', 0]
+    m_1, m_2, m_ord = cmds_dic[cmd_select]
 
     # Fixed maximum and minimum axis values for the CMD plots.
     # col_min col_max mag_min mag_max

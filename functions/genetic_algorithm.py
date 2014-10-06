@@ -147,7 +147,7 @@ def selection(generation, breed_prob):
 
 
 def evaluation(err_lst, obs_clust, completeness, isoch_list, param_values,
-                 p_lst, st_d_bin_mr, isoch_done, cmd_sel):
+                 p_lst, st_d_bin_mr, model_done, cmd_sel):
     '''
     Evaluate each model in the objective function to obtain the fitness of
     each one.
@@ -157,29 +157,28 @@ def evaluation(err_lst, obs_clust, completeness, isoch_list, param_values,
     # Process each model selected.
     for model in zip(*p_lst):
 
-        # Check if this isochrone/model was already processed.
-        if model in isoch_done[0]:
+        # Check if this model was already processed.
+        if model in model_done[0]:
             # Get likel_val value for this isochrone.
-            likelihood = isoch_done[1][isoch_done[0].index(model)]
+            likelihood = model_done[1][model_done[0].index(model)]
         else:
-
-            ## Metallicity and age indexes.
+            # Metallicity and age indexes to identify isochrone.
             m_i = param_values[0].index(model[0])
             a_i = param_values[1].index(model[1])
-
             isochrone = isoch_list[m_i][a_i]
-            # Call likelihood function with m,a,e,d values.
+
+            # Call likelihood function for this model.
             likelihood = i_l(err_lst, obs_clust, completeness, st_d_bin_mr,
                             isochrone, model, cmd_sel)
             # Append data identifying the isochrone and the obtained
             # likelihood value to this *persistent* list.
-            isoch_done[0].append(model)
-            isoch_done[1].append(likelihood)
+            model_done[0].append(model)
+            model_done[1].append(likelihood)
 
-        # Append data to the lists that will be erased with each call
-        # to this function.
-        generation_list.append(model)
-        likel_lst.append(likelihood)
+            # Append data to the lists that will be erased with each call
+            # to this function.
+            generation_list.append(model)
+            likel_lst.append(likelihood)
 
     # Sort according to the likelihood list. This puts the best model (ie:
     # the one with the minimum likelihood value) first.
@@ -187,7 +186,7 @@ def evaluation(err_lst, obs_clust, completeness, isoch_list, param_values,
     # Sort list in place putting the likelihood minimum value first.
     likel_lst.sort()
 
-    return generation, likel_lst, isoch_done
+    return generation, likel_lst, model_done
 
 
 def random_population(param_values, n_ran):
@@ -239,11 +238,20 @@ def num_binary_digits(param_rs):
     return n_bin, p_delta, p_mins
 
 
-def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
+def gen_algor(flag_print_perc, err_lst, obs_cl, completeness, ip_list,
     st_d_bin_mr, ga_params, cmd_sel):
     '''
     Genetic algorithm adapted to find the best fit model-obervation.
     '''
+
+    # Square errors ans separate membership probabilities. Done here so
+    # as to not repeat the same calculations each time a new synthetic
+    # cluster is checked.
+    P = np.split(obs_cl, 7, axis=1)
+    # Square errors in color and magnitude. Store membership probabilities.
+    P[3], P[5], mem_probs = np.square(P[3]), np.square(P[5]), np.asarray(P[6])
+    # Re-pack.
+    obs_clust = [np.hstack(P), mem_probs]
 
     # Unpack.
     isoch_list, param_values, param_rs = ip_list
@@ -267,12 +275,12 @@ def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
 
     # Stores parameters of the solutions already processed and the likelihhods
     # obtained.
-    isoch_done = [[], []]
+    model_done = [[], []]
 
     # Evaluate initial random solutions in the objective function.
-    generation, lkl, isoch_done = evaluation(err_lst, obs_clust,
+    generation, lkl, model_done = evaluation(err_lst, obs_clust,
         completeness, isoch_list, param_values, p_lst_r,
-        st_d_bin_mr, isoch_done, cmd_sel)
+        st_d_bin_mr, model_done, cmd_sel)
 
     # Store best solution for passing along in the 'Elitism' block.
     best_sol = generation[:n_el]
@@ -323,9 +331,9 @@ def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
 
         # Evaluate each new solution in the objective function and sort
         # according to the best solutions found.
-        generation, lkl, isoch_done = evaluation(err_lst, obs_clust,
+        generation, lkl, model_done = evaluation(err_lst, obs_clust,
             completeness, isoch_list, param_values, p_lst_e, st_d_bin_mr,
-            isoch_done, cmd_sel)
+            model_done, cmd_sel)
 
         ### Extinction/Immigration ###
         # If the best solution has remained unchanged for n_ei
@@ -383,8 +391,8 @@ def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
         lkl_old[0].append(lkl[0])
         lkl_old[1].append(np.mean(lkl))
 
-        print i, generation[0], lkl[0], len(isoch_done[0])
+        print i, generation[0], lkl[0], len(model_done[0])
 
-    isoch_fit_params = [generation[0], lkl_old, new_bs_indx, isoch_done]
+    isoch_fit_params = [generation[0], lkl_old, new_bs_indx, model_done]
 
     return isoch_fit_params
