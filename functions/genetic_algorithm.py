@@ -130,7 +130,7 @@ def selection(generation, breed_prob):
     the breeding probability given by their fitness.
     '''
     select_chrom = []
-    # Draw len(generation) random numbers uniformelly distributed between [0,1)
+    # Draw len(generation) random numbers uniformly distributed between [0,1)
     ran_lst = np.random.uniform(0, sum(breed_prob), len(generation))
     # For each of these numbers, obtain the corresponding likelihood from the
     # breed_prob CDF.
@@ -175,10 +175,10 @@ def evaluation(err_lst, obs_clust, completeness, isoch_list, param_values,
             model_done[0].append(model)
             model_done[1].append(likelihood)
 
-            # Append data to the lists that will be erased with each call
-            # to this function.
-            generation_list.append(model)
-            likel_lst.append(likelihood)
+        # Append data to the lists that will be erased with each call
+        # to this function.
+        generation_list.append(model)
+        likel_lst.append(likelihood)
 
     # Sort according to the likelihood list. This puts the best model (ie:
     # the one with the minimum likelihood value) first.
