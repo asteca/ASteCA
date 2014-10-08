@@ -1,6 +1,6 @@
 # ASteCA
 
-**A**utomated **Ste**llar **C**luster **A**nalysis package.
+<b>A</b>utomated <b>Ste</b>llar <b>C</b>luster <b>A</b>nalysis package.
 
 ## Releases
 
