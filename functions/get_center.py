@@ -123,6 +123,11 @@ def get_center(x_data, y_data, mag_data, hist_lst, gc_params, mode,
     # Unpack
     hist, xedges, yedges, bin_width = hist_lst
 
+    # This is the radius used in auto and manual mode to restrict the search
+    # of the KDE center coordinates.
+    x_span, y_span = max(x_data) - min(x_data), max(y_data) - min(y_data)
+    radius = 0.25 * min(x_span, y_span)
+
     mode_semi = True
     if mode == 'semi':
         # Unpack semi values.
@@ -159,11 +164,6 @@ def get_center(x_data, y_data, mag_data, hist_lst, gc_params, mode,
         # 2D histogram.
         hist_2d_g, approx_cents = center_approx(hist, xedges, yedges,
             st_dev_lst)
-
-        # This is the radius used in auto mode to restrict the search of the
-        # KDE center coordinates.
-        x_span, y_span = max(x_data) - min(x_data), max(y_data) - min(y_data)
-        radius = 0.25 * min(x_span, y_span)
 
         # Call funct to obtain the pixel coords of the maximum KDE value.
         kde_cent, e_cent, kde_plot = kde_center(x_data, y_data, approx_cents,
@@ -202,8 +202,12 @@ def get_center(x_data, y_data, mag_data, hist_lst, gc_params, mode,
         hist_2d_g, approx_cents = center_approx(hist, xedges, yedges,
             [st_dev_lst[0]])
 
-        kde_cent = approx_cents[0]
-        e_cent = [0., 0.]
+        #kde_cent = approx_cents[0]
+        #e_cent = [0., 0.]
+        # Call funct to obtain the pixel coords of the maximum KDE value.
+        kde_cent, e_cent, kde_plot = kde_center(x_data, y_data, approx_cents,
+            radius, gc_params)
+
         cent_bin = bin_center(xedges, yedges, kde_cent)
 
         # Show plot with center obtained.

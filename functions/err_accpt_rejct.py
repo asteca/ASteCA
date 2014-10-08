@@ -159,8 +159,8 @@ def err_accpt_rejct(phot_data, axes_params, er_params, mode, semi_return):
                     wrong_answer = False
                     er_mode, er_params[0] = 'emax', 'emax'
                 elif answer_rad == 2:
-                    N_sig = float(raw_input('''Select number of sigmas to lift
-                    the curve: '''))
+                    N_sig = float(raw_input("Select number of sigmas to lift"
+                    " the curve: "))
                     err_pck[0][-1] = N_sig
                     # Call N sigma exp function.
                     acpt_indx, rjct_indx, err_plot = e_a_r_le(mag, e_mag,

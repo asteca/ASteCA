@@ -17,10 +17,10 @@ def disp_rad(phot_data, bin_width, center_params, clust_rad, backg_value,
     x_data, y_data, mag_data, col1_data = phot_data[1], phot_data[2], \
     phot_data[3], phot_data[5]
 
-    cent_bin, kde_centers, e_cent, st_dev_lst, hist_2d_g, kde_plot = \
-    center_params[:6]
+    cent_bin, kde_cent, e_cent = center_params[:3]
+    hist_2d_g = center_params[5]
 
-    center_cl = [kde_centers[0][0], kde_centers[0][1]]
+    center_cl = [kde_cent[0], kde_cent[1]]
     #h_not_filt, hist_xyedges, h_filter = center_params[:5]
     #xedges_min_db, yedges_min_db = hist_xyedges
     x_center_bin, y_center_bin = cent_bin
