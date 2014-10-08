@@ -216,17 +216,20 @@ DA  auto      100
 #   fitting process is to be run.
 # * algorithm: select algorithm to use in best fitting process,
 #   'brute' (Brute Force) / 'genet' (Genetic Algorithm)
-#   If 'brute' is selected, 'boot_num' is irrelevant.
-# * boot_num: number of times the bootstrap with replacement process will run.
-#   Minimum value is 2, anything less will skip the bootstrap process hence
-#   no errors will be assigned to the parameters.
+#   If 'brute' is selected, 'bootstrap' is irrelevant.
+# * bootstrap: number of times the bootstrap with replacement process will run
+#   in the GA algorithm. Minimum value is 2, anything less will skip the
+#   bootstrap process hence no errors will be assigned to the parameters.
 #
-#     flag  algorithm   boot_num
-BF    true      genet         10
+#     flag  algorithm   bootstrap
+BF    true      genet          10
 
 # Select set of isochrones to use.
 #
-# WARNING: Marigo only works with the first 4 CMDs and will be deprecated soon.
+# Marigo only works with the first 4 CMDs and will be     ######################### <-- WARNING
+# deprecated soon as it has been superseded by the
+# new PARSEC set.
+#
 # iso_select: MAR (Marigo) / PAR (PARSEC)
 #
 #    iso_select
@@ -238,9 +241,9 @@ PS          PAR
 #   - auto: will set the minimum probability value such that only the top
 #     half of stars with the highest probability are used.
 #   - manual: the minimum probability value has to be set manually in the
-#    'min_prob' parameter (0, 1).
+#    'prob_min' parameter (0, 1).
 #
-#    mode           min_prob
+#    mode           prob_min
 RM   auto              0.75
 
 # Ranges and steps for the parameters to be fitted.
@@ -262,9 +265,14 @@ PS_d					8.		15.		0.05
 #             IMF
 SC  kroupa_2002
 #
-# Total mass.
+# Total initial mass detection is not yet implemented.     ######################## <-- WARNING
+# Its value should be fixed to 1000 solar masses as it
+# is below. The best fit function will select always high
+# masses if a range is given for this parameter.
+#
+# Total initial mass (in solar masses).
 #						min 	max 	step
-TM                       10    10000      500
+TM                     1000    1001      200
 #
 # Binary fraction.
 #
@@ -272,21 +280,30 @@ TM                       10    10000      500
 FB              0.7      0.      1.      0.2
 
 # Genetic Algorithm parameters.
+#
 # n_pop: number of chromosomes in the population.
 # n_gen: number of generations to process.
-# fdif: Fitness differential. Establishes the 'selection pressure' for the
-# algorithm.
+# fdif: Fitness differential. Establishes the 'selection pressure'
+# for the algorithm.
+#
+# Crossover operator
 # p_cros: crossover probability.
-# (Crossover operator)
 # cr_sel: select 1-point (1P) or 2-point (2P) crossover.
+#
+# Mutation operator:
 # p_mut: mutation probability.
-# (Elitism operator)
-# n_el: number of best solutions to pass unchanged to the next generation
+#
+# Elitism operator:
+# n_el: number of best solutions to pass unchanged to the next
+# generation.
+#
+# Extinction/Immigration operator:
 # n_ei: number of generations allowed to run with the same best solution
-# before applying the Extinction/Immigration operator.
-# (Exit switch)
+# before calling for a new generation of random solutions.
+#
+# Exit switch:
 # n_es:number of times the Extinction/Immigration operator is allowed to run
-# returning the same best solution before exiting the generations loop.
+# returning the same best solution before exiting the GA.
 #
 #   n_pop  n_gen fdif p_cross cr_sel p_mut n_el n_ei n_es
 GA    100    100   1.    0.85     2P  0.01    1  100   10
