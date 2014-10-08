@@ -1,13 +1,14 @@
 # ASteCA
 
-The code is still under development. Version 0.1.0 will be released as soon as
-the following list of issues is addressed:
+**A**utomated **Ste**llar **C**luster **A**nalysis package.
 
-* [Issues left until version 0.1.0][1]
+## Releases
 
-A list of **Beta** releases can be accessed [here][2].
+The code is still under development. The latest release can be accessed [here][1].
 
-See the code's [site][3] for more information. <-- *Under development*.
+To see a list of the issues left until the next version is released, go [here][2].
+
+See the code's [web page][3] for more information. <-- *Under development*.
 
 Read the code's [documentation][9]. <-- *Under development*.
 
@@ -34,8 +35,8 @@ Constructed with the following guidelines:
 * A new *patch* release indicates a bugfix or small change which does not affect compatibility.
 * A new *build* release indicates this is a pre-release of the version.
 
-[1]: https://github.com/Gabriel-p/asteca/milestones/v0.1.0
-[2]: https://github.com/Gabriel-p/asteca/releases
+[1]: https://github.com/Gabriel-p/asteca/releases/latest
+[2]: https://github.com/Gabriel-p/asteca/milestones/v0.2.0
 [3]: http://gabriel-p.github.io/asteca/
 [4]: https://github.com/Gabriel-p/asteca/issues?q=is%3Aopen+is%3Aissue+label%3Abug
 [5]: https://github.com/Gabriel-p/asteca/issues?q=is%3Aopen+is%3Aissue+label%3Aenhancement
