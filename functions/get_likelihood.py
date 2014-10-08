@@ -60,33 +60,6 @@ def lk_func(synth_clust, obs_clust):
     return likelihood
 
 
-def saha_lkl(synth_clust, obs_clust):
-    '''
-    '''
-    from math import factorial as fct
-
-    P0, mem_probs = obs_clust
-    P = np.split(P0, 7, axis=1)
-    syn_arr = np.array(zip(*synth_clust))
-    Q = np.split(syn_arr, 5, axis=1)
-
-    d_hist1 = np.histogram2d(P[4].flatten(), P[2].flatten(), bins=100)[0]
-    d_hist2 = np.histogram2d(Q[0].flatten(), Q[2].flatten(), bins=100)[0]
-
-    lik = 0.
-    for el1 in zip(*(d_hist1, d_hist2)):
-        for el2 in zip(*(el1[0], el1[1])):
-            c = np.log((fct(el2[0] + el2[1])) / (fct(el2[0]) * fct(el2[1])))
-            lik += c
-
-    #S, M, B = len(P[0]), len(Q[0]), 100
-    #const = np.log((fct(S) * fct(M + B - 1)) / fct(M + S + B - 1))
-
-    likelihood = -(lik) / len(Q[0])
-
-    return likelihood
-
-
 def isoch_likelihood(err_lst, obs_clust, completeness, st_d_bin_mr, isochrone,
                      params, sys_sel):
     '''
@@ -108,6 +81,5 @@ def isoch_likelihood(err_lst, obs_clust, completeness, st_d_bin_mr, isochrone,
     # Call function to obtain the likelihood by comparing the synthetic cluster
     # with the observed cluster.
     likelihood = lk_func(synth_clust, obs_clust)
-    #likelihood = saha_lkl(synth_clust, obs_clust)
 
     return likelihood
