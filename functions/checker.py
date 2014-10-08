@@ -223,7 +223,7 @@ def check(mypath, cl_files):
             print traceback.format_exc()
             sys.exit("ERROR: unknown error reading metallicity files.")
 
-    # Checki IMF defined.
+    # Check IMF defined.
     imfs_dict = {'kroupa_1993', 'chabrier_2001', 'kroupa_2002'}
     if sc_params[0] not in imfs_dict:
         sys.exit("ERROR: Name of IMF ({}) is incorrect.".format(sc_params[0]))

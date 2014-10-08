@@ -238,20 +238,11 @@ def num_binary_digits(param_rs):
     return n_bin, p_delta, p_mins
 
 
-def gen_algor(flag_print_perc, err_lst, obs_cl, completeness, ip_list,
+def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
     st_d_bin_mr, ga_params, cmd_sel):
     '''
     Genetic algorithm adapted to find the best fit model-obervation.
     '''
-
-    # Square errors ans separate membership probabilities. Done here so
-    # as to not repeat the same calculations each time a new synthetic
-    # cluster is checked.
-    P = np.split(obs_cl, 7, axis=1)
-    # Square errors in color and magnitude. Store membership probabilities.
-    P[3], P[5], mem_probs = np.square(P[3]), np.square(P[5]), np.asarray(P[6])
-    # Re-pack.
-    obs_clust = [np.hstack(P), mem_probs]
 
     # Unpack.
     isoch_list, param_values, param_rs = ip_list
@@ -391,7 +382,7 @@ def gen_algor(flag_print_perc, err_lst, obs_cl, completeness, ip_list,
         lkl_old[0].append(lkl[0])
         lkl_old[1].append(np.mean(lkl))
 
-        print i, generation[0], lkl[0], len(model_done[0])
+        #print i, generation[0], lkl[0], len(model_done[0])
 
     isoch_fit_params = [generation[0], lkl_old, new_bs_indx, model_done]
 

@@ -46,7 +46,7 @@ def calc_integ_mag(st_reg):
 
 def field_reg_integ_mag_curve(fl_reg_m):
     '''
-    Return smooth averaged curve for integraed magnitude.
+    Return smooth averaged curve for integrated magnitude.
     '''
 
     # Average all field regions for the integrated magnitude.
