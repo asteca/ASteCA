@@ -9,7 +9,7 @@ from os.path import join, isfile, isdir
 import sys
 import traceback
 from subprocess import Popen, PIPE
-from get_in_params import get_in_params as gip
+import get_in_params as gip
 from get_names_paths import names_paths as n_p
 import get_isoch_params as isochp
 
@@ -37,21 +37,20 @@ def check(mypath, cl_files):
 
     # Check if params_input file is properly formatted.
     try:
-        # Read input parameters from params_input.dat file.
-        mode, done_dir, gd_params, gh_params, gc_params, cr_params, kp_flag,\
-        im_flag, er_params, fr_number, pv_params, da_params, ps_params,\
-        bf_params, sc_params, ga_params, rm_params, pl_params,\
-        flag_move_file = gip(mypath)
+        # Read input parameters from params_input.dat file. Initialize
+        # global variables.
+        gip.init(mypath)
     except Exception:
         # Halt code.
         print traceback.format_exc()
         sys.exit('ERROR: params_input.dat is badly formatted.')
 
     # Check mode.
-    if mode not in {'auto', 'semi', 'manual'}:
-        sys.exit("ERROR: 'mode' value selected ({}) is not valid.".format(mode))
+    if gip.mode not in {'auto', 'semi', 'manual'}:
+        sys.exit("ERROR: 'mode' value selected ({}) is not valid.".format(
+            gip.mode))
 
-    if mode == 'semi':
+    if gip.mode == 'semi':
         # Check if semi_input.dat file exists.
         semi_file = 'semi_input.dat'
         if not isfile(join(mypath, semi_file)):
@@ -60,49 +59,49 @@ def check(mypath, cl_files):
                 "not exist.")
 
     # Check px/deg.
-    if gd_params[0][-1] not in {'px', 'deg'}:
+    if gip.gd_params[0][-1] not in {'px', 'deg'}:
         sys.exit("ERROR: the coordinates given in the input file ({})"
-                "are incorrect.".format(gd_params[-1]))
+                "are incorrect.".format(gip.gd_params[-1]))
 
     # Output figure.
-    if pl_params[0] is True:
-        if pl_params[1] not in {'png', 'pdf', 'PNG', 'PDF'}:
+    if gip.pl_params[0] is True:
+        if gip.pl_params[1] not in {'png', 'pdf', 'PNG', 'PDF'}:
             sys.exit("ERROR: figure output format selected ({}) is"
-            "not valid.".format(pl_params[1]))
+            "not valid.".format(gip.pl_params[1]))
 
     # 2D positional histogram.
-    if gh_params[0] not in {'auto', 'manual'}:
+    if gip.gh_params[0] not in {'auto', 'manual'}:
         sys.exit("ERROR: mode selected ({}) for 2D histogram"
-        "is not valid.".format(gh_params[0]))
+        "is not valid.".format(gip.gh_params[0]))
 
     # Center finding function.
-    if gc_params[0] not in {'auto', 'manual'}:
+    if gip.gc_params[0] not in {'auto', 'manual'}:
         sys.exit("ERROR: mode selected ({}) for center finding"
-        "function is not valid.".format(gc_params[0]))
+        "function is not valid.".format(gip.gc_params[0]))
 
     # Radius finding function.
-    if cr_params[0] not in {'auto', 'manual'}:
+    if gip.cr_params[0] not in {'auto', 'manual'}:
         sys.exit("ERROR: mode selected ({}) for radius finding"
-        "function is not valid.".format(cr_params[0]))
+        "function is not valid.".format(gip.cr_params[0]))
 
     # Errors function.
-    if er_params[0] not in {'emax', 'lowexp', 'eyefit'}:
+    if gip.er_params[0] not in {'emax', 'lowexp', 'eyefit'}:
         sys.exit("ERROR: mode selected ({}) for error rejecting"
-        "function is not valid.".format(er_params[0]))
-    if er_params[0] == 'emax' and len(er_params[1:]) < 1:
+        "function is not valid.".format(gip.er_params[0]))
+    if gip.er_params[0] == 'emax' and len(gip.er_params[1:]) < 1:
         sys.exit("ERROR: missing parameters for error rejecting function")
-    if er_params[0] == 'eyefit' and len(er_params[1:]) < 3:
+    if gip.er_params[0] == 'eyefit' and len(gip.er_params[1:]) < 3:
         sys.exit("ERROR: missing parameters for error rejecting function")
-    if er_params[0] == 'lowexp' and len(er_params[1:]) < 4:
+    if gip.er_params[0] == 'lowexp' and len(gip.er_params[1:]) < 4:
         sys.exit("ERROR: missing parameters for error rejecting function")
 
     # Check KDE p-value custer probability function.
     R_in_place = False
-    if pv_params[0] not in {'auto', 'manual', 'skip'}:
+    if gip.pv_params[0] not in {'auto', 'manual', 'skip'}:
         sys.exit("ERROR: Wrong name ({}) for KDE p-value function "
-            "'mode'.".format(pv_params[0]))
+            "'mode'.".format(gip.pv_params[0]))
 
-    elif pv_params[0] in {'auto', 'manual'}:
+    elif gip.pv_params[0] in {'auto', 'manual'}:
 
         rpy2_inst, R_inst = True, True
         # Check if rpy2 package is installed.
@@ -134,7 +133,7 @@ def check(mypath, cl_files):
     # it will be skipped anyway.
 
     # Check decont algorithm params.
-    mode_da = da_params[0]
+    mode_da = gip.da_params[0]
     # Check if 'mode' was correctly set.
     if mode_da not in ['auto', 'manual', 'read', 'skip']:
         sys.exit("ERROR: Wrong name ({}) for decontamination algorithm "
@@ -154,10 +153,10 @@ def check(mypath, cl_files):
 
     ip_list = []
     # If best fit method is set to run.
-    if bf_params[0]:
+    if gip.bf_params[0]:
 
         # Unpack.
-        iso_path, cmd_select, iso_select, par_ranges = ps_params
+        iso_select, rv_ratio, par_ranges = gip.ps_params
         m_rs, a_rs, e_rs, d_rs, mass_rs, bin_rs = par_ranges
 
         # Check selected isochrones set.
@@ -209,15 +208,16 @@ def check(mypath, cl_files):
         # Read metallicity files.
         try:
             # Store all isochrones in all the metallicity files in isoch_list.
-            ip_list = isochp.ip(ps_params, bf_params[0])
+            ip_list = isochp.ip(gip.ps_params, gip.bf_params[0])
         except:
             print traceback.format_exc()
             sys.exit("ERROR: unknown error reading metallicity files.")
 
     # Check IMF defined.
     imfs_dict = {'kroupa_1993', 'chabrier_2001', 'kroupa_2002'}
-    if sc_params[0] not in imfs_dict:
-        sys.exit("ERROR: Name of IMF ({}) is incorrect.".format(sc_params[0]))
+    if gip.sc_params[0] not in imfs_dict:
+        sys.exit("ERROR: Name of IMF ({}) is incorrect.".format(
+            gip.sc_params[0]))
 
     # Check that at least one photometric cluster file exists.
     if not cl_files:

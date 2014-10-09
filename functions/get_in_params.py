@@ -8,16 +8,21 @@ Created on Tue Feb 11 14:03:44 2014
 from os.path import join
 
 
-def get_in_params(mypath):
+def init(mypath):
     '''
     This function reads the input data parameters stored in the
     'params_input.dat' file and returns them packaged for each function to use.
     '''
 
+    # Declare globals.
+    global mode, done_dir, gd_params, gh_params, gc_params, cr_params, kp_flag,\
+    im_flag, er_params, fr_number, pv_params, da_params, ps_params, bf_params,\
+    sc_params, ga_params, rm_params, pl_params, flag_move_file
+
     # Store path to input data file.
     data_file = join(mypath, 'params_input.dat')
 
-    # Accept these variations of 'true'.
+    # Accept these variations of the 'true' flag.
     true_lst = ('True', 'true', 'TRUE')
 
     # Read data from file.
@@ -90,6 +95,8 @@ def get_in_params(mypath):
                     N_b = int(reader[3])
                 elif reader[0] == 'PS':
                     iso_select = str(reader[1])
+                elif reader[0] == 'RV':
+                    rv_ratio = float(reader[1])
                 elif reader[0] == 'RM':
                     flag_red_memb = str(reader[1])
                     min_prob = float(reader[2])
@@ -131,17 +138,9 @@ def get_in_params(mypath):
     cr_params = [cr_params0, cr_params1]
     pv_params = [pv0_params, pv1_params]
     da_params = [da0_params, da1_params]
-
-    # Store photometric system params in lists.
     par_ranges = [m_rs, a_rs, e_rs, d_rs, mass_rs, bin_rs]
-    ps_params = [iso_select, par_ranges]
-
-    # Store GA params in lists.
+    ps_params = [iso_select, rv_ratio, par_ranges]
     bf_params = [bf_flag, best_fit_algor, N_b]
     sc_params = [IMF_name, bin_mr]
     ga_params = [n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es]
     rm_params = [flag_red_memb, min_prob]
-
-    return mode, done_dir, gd_params, gh_params, gc_params, cr_params, kp_flag,\
-    im_flag, er_params, fr_number, pv_params, da_params, ps_params, bf_params,\
-    sc_params, ga_params, rm_params, pl_params, flag_move_file

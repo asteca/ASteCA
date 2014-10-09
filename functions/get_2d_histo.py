@@ -1,12 +1,14 @@
 
 import numpy as np
+import get_in_params as gip
 
 
-def get_2d_histo(x_data, y_data, gh_params):
+def get_2d_histo(id_coords):
     '''
     Return list of 2D histograms for the positional data.
     '''
 
+    x_data, y_data = id_coords[1:]
     xmin, xmax = min(x_data), max(x_data)
     ymin, ymax = min(y_data), max(y_data)
     rang = [[xmin, xmax], [ymin, ymax]]
@@ -16,10 +18,10 @@ def get_2d_histo(x_data, y_data, gh_params):
     min_rang = min(x_rang, y_rang)
 
     # Bin width to create the 2D histogram.
-    if gh_params[0] == 'auto':
+    if gip.gh_params[0] == 'auto':
         bin_width = 1. * min_rang / 100.
     else:
-        bin_width = gh_params[1]
+        bin_width = gip.gh_params[1]
 
     # Number of bins in x,y given the bin width 'd_b'
     binsxy = [int((xmax - xmin) / bin_width), int((ymax - ymin) / bin_width)]

@@ -3,6 +3,7 @@
 """
 
 import numpy as np
+import get_in_params as gip
 
 
 def rem_bad_stars(id_star, x_data, y_data, mag_data, e_mag, col1_data,
@@ -28,14 +29,14 @@ def rem_bad_stars(id_star, x_data, y_data, mag_data, e_mag, col1_data,
     return id_clean, clean_array
 
 
-def get_data(data_file, gd_params, mags_colors):
+def get_data(data_file, mags_colors):
     '''
     Get photometric data from the cluster's data file.
     '''
 
     # Read indexes from input params.
-    id_inx, x_inx, y_inx = gd_params[0][:-1]
-    magnitudes, colors = gd_params[1], gd_params[2]
+    id_inx, x_inx, y_inx = gip.gd_params[0][:-1]
+    magnitudes, colors = gip.gd_params[1], gip.gd_params[2]
 
     # Loads the data in 'myfile' as a list of N lists where N is the number of
     # columns. Each of the N lists contains all the data for the column.
