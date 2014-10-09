@@ -37,29 +37,27 @@ MO  auto
 # Column numbers identifying the needed data as stored in the clusters'
 # photometric data files.
 #
-# id_star   x/ra  y/dec magnitude e_mag color e_col
-PD      0      1      2         3     4     5     6
-
-# Define the system of coordinates used in the data file.
-#
 # * coords: px / deg. Indicates if the observed frame is in pixels or degrees.
 #
-#    coords
-PX      px
-
-# Indicate the CMD to be used by the code to perform the analysis.
+# id_star   x/ra  y/dec  coords 
+PI      0      1      2      px
 #
-# * selection: [1, 7]
-# - 1: (B-V) vs V   ; UBVI (Johnson)
-# - 2: (V-I) vs V   ; UBVI (Johnson)
-# - 3: (U-V) vs V   ; UBVI (Johnson)
-# - 4: (C-T1) vs T1 ; Washington
-# - 5: (J-H) vs J   ; 2MASS
-# - 6: (J-H) vs H   ; 2MASS
-# - 7: (H-K) vs K   ; 2MASS
 #
-#    selection
-CMD          1
+# Photometric system identifiers.
+#
+# - 1: UBVI (Johnson)
+# - 2: 2MASS
+# - 3: Washington
+#
+#    mag1  e_mag1   mag2  e_mag2 ... # Columns for magnitudes and their errors.
+PM   3,1V     4,e   9,2J    10,e
+#
+#    col1  e_col1   col2  e_col2 ... # Columns for colors and their errors.
+PC  5,1UB     6,e  7,1BV     8,e
+#
+# Select axis of photometric diagram to be plotted.
+#      x     y
+PG  col1  col2
 ###############################################################################
 
 
