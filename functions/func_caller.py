@@ -6,6 +6,7 @@ import gc  # Garbage collector.
 from functions.get_in_params import get_in_params as gip
 from functions.get_names_paths import names_paths as n_p
 from functions.get_data_semi import get_semi as g_s
+from functions.phot_identify import identify_phot_data as ipd
 from functions.get_data import get_data as gd
 from functions.trim_frame import trim_frame as t_f
 from functions.get_2d_histo import get_2d_histo as g2dh
@@ -43,13 +44,7 @@ def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
     # Read input parameters from params_input.dat file.
     mode, done_dir, gd_params, gh_params, gc_params, cr_params, kp_flag, \
     im_flag, er_params, fr_number, pv_params, da_params, ps_params, bf_params,\
-    sc_params, ga_params, rm_params, pl_params, flag_move_file, \
-    axes_params = gip(mypath)
-
-    # Define system of coordinates used.
-    px_deg = gd_params[-1]
-    coord_lst = ['px', 'x', 'y'] if px_deg == 'px' else ['deg', 'ra', 'dec']
-    coord, x_name, y_name = coord_lst
+    sc_params, ga_params, rm_params, pl_params, flag_move_file = gip(mypath)
 
     # Get file names and paths.
     clust_name, data_file, memb_file, output_dir, output_subdir, \
@@ -59,8 +54,11 @@ def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
     # Get data from semi-data input file.
     mode, semi_return = g_s(clust_name, mode)
 
+    # Identify photometric data input.
+    mags_colors = ipd(gd_params)
+
     # Get cluster's photometric data from file.
-    phot_data = gd(data_file, gd_params)
+    phot_data = gd(data_file, gd_params, mags_colors)
     # If Manual mode is set, display frame and ask if it should be trimmed.
     phot_data = t_f(phot_data, mode)
     # Unpack coordinates, magnitude and color.
@@ -74,7 +72,7 @@ def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
 
     # Get cluster's center coordinates and errors.
     center_params = g_c(x_data, y_data, mag_data, hist_lst, gc_params,
-        mode, semi_return, coord_lst)
+        mode, semi_return)
     # Unpack values from list.
     cent_bin, kde_center = center_params[0], center_params[1]
 
@@ -85,17 +83,15 @@ def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
 
     # Get field density value in stars/px^2.
     field_dens = gfd(ring_density)
-    print 'Field density calculated ({:.1E} stars/{c}^2).'.format(field_dens,
-        c=coord)
+    print 'Field density calculated ({:.1E} stars/coords^2).'.format(field_dens)
 
     # Get cluster radius
     radius_params = gcr(phot_data, field_dens, cr_params, center_params,
-        rdp_params, semi_return, mode, bin_width, coord_lst)
+        rdp_params, semi_return, mode, bin_width)
     clust_rad = radius_params[0]
 
     # Get King profiles based on the density profiles.
-    kp_params = gkp(kp_flag, clust_rad, field_dens, radii, ring_density,
-        coord_lst)
+    kp_params = gkp(kp_flag, clust_rad, field_dens, radii, ring_density)
 
     # Get approximate number of cluster's members.
     n_memb, flag_num_memb_low, a_clust, n_clust = g_m_n(field_dens, clust_rad,
