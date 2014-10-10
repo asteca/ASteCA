@@ -8,6 +8,7 @@ Created on Mon Jul 29 10:06:31 2013
 from get_spiral import spiral as gs
 from get_histo_manual import manual_histo as mh
 import numpy as np
+import get_in_params as g
 
 
 def spiral_index(spiral, sp_indx, histo, x_c_b, y_c_b, num_bins_area):
@@ -82,7 +83,7 @@ def spiral_region(h_manual, sp_coords):
     return f_region
 
 
-def get_regions(hist_lst, cent_bin, clust_rad, stars_out, fr_number):
+def get_regions(hist_lst, cent_bin, clust_rad, stars_out):
     '''
     Define empty region around the cluster via a spiral centered on it
     and of area a bit larger than that defined by the cluster's radius.
@@ -127,22 +128,22 @@ def get_regions(hist_lst, cent_bin, clust_rad, stars_out, fr_number):
     else:
         # If the number of field regions defined is larger than the maximum
         # allowed, use the maximum.
-        if fr_number == 'max':
+        if g.fr_number == 'max':
             f_regions = f_regs_max
             print 'Using max number of field regions ({}).'.format(f_regions)
-        elif fr_number > f_regs_max:
+        elif g.fr_number > f_regs_max:
             f_regions = f_regs_max
             print ("  WARNING: Number of FR defined ({}) larger than\n"
             "  the maximum allowed ({}). "
-            "Using max number.").format(fr_number, f_regs_max)
-        elif fr_number < 0:
+            "Using max number.").format(g.fr_number, f_regs_max)
+        elif g.fr_number < 0:
             f_regions = f_regs_max
             print ("  WARNING: Number of FR defined ({}) is less than\n"
-            "  zero. Using max number ({}).").format(fr_number, f_regs_max)
+            "  zero. Using max number ({}).").format(g.fr_number, f_regs_max)
         else:
-            print ("Using defined number of field "
-            "regions ({}).".format(fr_number))
-            f_regions = fr_number
+            print ("Using defined number of field regions ({}).".format(
+                g.fr_number))
+            f_regions = g.fr_number
 
     # Get list that contains the spiral as a list of x,y coordinates (also
     # stored as lists) starting from the initial bin [0, 0].
@@ -200,5 +201,7 @@ def get_regions(hist_lst, cent_bin, clust_rad, stars_out, fr_number):
             print ('  WARNING: no field regions left after removal of those\n' +
             '  with less than 4 stars.')
             flag_area_stronger = True
+        else:
+            print "  Field regions obtained."
 
     return flag_area_stronger, field_regions

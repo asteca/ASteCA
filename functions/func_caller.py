@@ -2,7 +2,7 @@
 
 import time
 import gc  # Garbage collector.
-import get_in_params as gip
+import get_in_params as g
 from functions.get_names_paths import names_paths as n_p
 from functions.get_data_semi import get_semi as g_s
 from functions.phot_identify import identify_phot_data as ipd
@@ -43,16 +43,16 @@ def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
     # Get file names and paths.
     clust_name, data_file, memb_file, output_dir, output_subdir, \
     memb_file_out, write_name = n_p(mypath, cl_file)
-    print 'Analizing cluster {} ({}).'.format(clust_name, gip.mode)
+    print 'Analizing cluster {} ({}).'.format(clust_name, g.mode)
 
     # Get data from semi-data input file.
     semi_return = g_s(clust_name)
 
     # Identify photometric data input.
-    mags_colors = ipd()
+    phot_params = ipd()
 
     # Get cluster's photometric data from file.
-    id_coords, phot_data = gd(data_file, mags_colors)
+    id_coords, phot_data = gd(data_file, phot_params)
     # If Manual mode is set, display frame and ask if it should be trimmed.
     id_coords, phot_data = t_f(id_coords, phot_data)
 
@@ -77,7 +77,7 @@ def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
 
     # Get cluster radius
     radius_params = gcr(phot_data, field_dens, center_params, semi_return,
-        bin_width)
+        bin_width, rdp_params)
     clust_rad = radius_params[0]
 
     # Get King profiles based on the density profiles.
@@ -94,8 +94,8 @@ def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
     print 'Contamination index obtained ({:.2f}).'.format(cont_index)
 
     # Accept and reject stars based on their errors.
-    acpt_stars, rjct_stars, err_plot, err_flags, err_pck, er_params = \
-    ear(phot_data, semi_return)
+    acpt_stars, rjct_stars, err_plot, err_flags, err_pck = ear(id_coords,
+        phot_data, semi_return, phot_params[-1])
 
     # Get stars in and out of cluster's radius.
     cl_region, stars_out, stars_in_rjct, stars_out_rjct = gio(kde_center,
@@ -103,8 +103,8 @@ def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
     print "Stars separated in/out of cluster's boundaries."
 
     # Field regions around the cluster's center.
-    flag_area_stronger, field_region = g_r(hist_lst, cent_bin,
-        clust_rad, stars_out)
+    flag_area_stronger, field_region = g_r(hist_lst, cent_bin, clust_rad,
+        stars_out)
 
     # Get the luminosity function and completeness level for each magnitude
     # bin. The completeness will be used by the isochrone/synthetic cluster
@@ -157,7 +157,7 @@ def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
     print 'Data added to output file.'
 
     # Make plots
-    if gip.pl_params[0]:
+    if g.pl_params[0]:
         mp(output_subdir, clust_name, id_coords, phot_data,
             bin_width, center_params, rdp_params,
             field_dens, radius_params, cont_index,
@@ -165,7 +165,7 @@ def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
             stars_in_rjct, stars_out_rjct, integr_return, n_memb,
             flag_area_stronger, field_region, flag_pval_test,
             pval_test_params, memb_prob_avrg_sort, lum_func, completeness,
-            ip_list, red_return, err_lst, bf_return, er_params)
+            ip_list, red_return, err_lst, bf_return)
         print 'Plots created.'
 
     # Move file to 'done' dir if flag is set.

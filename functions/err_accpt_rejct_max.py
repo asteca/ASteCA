@@ -6,7 +6,7 @@ Created on Thu Jul 18 17:41:28 2013
 """
 
 
-def err_a_r_m(e_mag, e_col1, err_pck):
+def err_a_r_m(e_mag, e_col, err_pck):
     """
     Accept stars with photom errors < e_max both in mag and in color.
     """
@@ -17,11 +17,15 @@ def err_a_r_m(e_mag, e_col1, err_pck):
     # Initialize empty list to hold accepted/rejected stars' indexes.
     acpt_indx, rjct_indx = [], []
 
+    # Create list of combined errors for all stars.
+    em_z, ec_z = zip(*e_mag), zip(*e_col)
+    e_mc = [em_z[i] + ec_z[i] for i in range(len(em_z))]
+
     # Iterate through all stars
-    for st_ind in range(len(e_mag)):
+    for st_ind in range(len(e_mag[0])):
 
         # Reject stars with at least one error >= e_max.
-        if e_mag[st_ind] >= e_max or e_col1[st_ind] >= e_max:
+        if any(e >= e_max for e in e_mc[st_ind]):
             rjct_indx.append(st_ind)
         else:
             # Accept star.

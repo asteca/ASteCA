@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from scipy import stats
 from scipy.ndimage.filters import gaussian_filter
 from display_cent import disp_cent as d_c
+import get_in_params as g
 
 
 def center_approx(hist, xedges, yedges, st_dev_lst):
@@ -35,7 +36,7 @@ def center_approx(hist, xedges, yedges, st_dev_lst):
     return hist_2d_g, approx_cents
 
 
-def kde_center(x_data, y_data, approx_cent, radius, gc_params):
+def kde_center(x_data, y_data, approx_cent, radius):
     '''
     Find the KDE maximum value wich points to the center coordinates.
     '''
@@ -57,9 +58,9 @@ def kde_center(x_data, y_data, approx_cent, radius, gc_params):
     # Obtain Gaussian KDE.
     kernel = stats.gaussian_kde(values)
     # Define bandwidth value.
-    if gc_params[0] != 'auto':
+    if g.gc_params[0] != 'auto':
         # Change badwidth to manual value.
-        kernel.set_bandwidth(bw_method=gc_params[1])
+        kernel.set_bandwidth(bw_method=g.gc_params[1])
 
     # Define x,y grid.
     # Grid density (number of points).
@@ -105,8 +106,7 @@ def bin_center(xedges, yedges, kde_cent):
     return cent_bin
 
 
-def get_center(x_data, y_data, mag_data, hist_lst, gc_params, mode,
-    semi_return):
+def get_center(id_coords, phot_data, hist_lst, semi_return):
     """
     Obtains the center of the putative cluster. Returns the center values
     along with its errors and several arrays related to histograms, mainly for
@@ -119,6 +119,8 @@ def get_center(x_data, y_data, mag_data, hist_lst, gc_params, mode,
     flag_center_manual = False
 
     # Unpack
+    x_data, y_data = id_coords[1:]
+    mag_data = phot_data[0][0]
     hist, xedges, yedges, bin_width = hist_lst
 
     # This is the radius used in auto and manual mode to restrict the search
@@ -127,7 +129,7 @@ def get_center(x_data, y_data, mag_data, hist_lst, gc_params, mode,
     radius = 0.25 * min(x_span, y_span)
 
     mode_semi = True
-    if mode == 'semi':
+    if g.mode == 'semi':
         # Unpack semi values.
         cent_cl_semi, cl_rad_semi, cent_flag_semi = semi_return[:3]
 
@@ -140,7 +142,7 @@ def get_center(x_data, y_data, mag_data, hist_lst, gc_params, mode,
             # Call funct to obtain the pixel coords of the maximum KDE value.
             approx_cents = [cent_cl_semi]
             kde_cent, e_cent, kde_plot = kde_center(x_data, y_data,
-                approx_cents, cl_rad_semi, gc_params)
+                approx_cents, cl_rad_semi)
 
             # Find bin where the center xy coordinates are located.
             cent_bin = bin_center(xedges, yedges, kde_cent)
@@ -154,7 +156,7 @@ def get_center(x_data, y_data, mag_data, hist_lst, gc_params, mode,
             # Use 'auto' mode.
             mode_semi = False
 
-    if mode == 'auto' or mode_semi is False:
+    if g.mode == 'auto' or mode_semi is False:
 
         # Obtain approximate values for center coordinates using several
         # Gaussian filters with different standard deviation values, on the
@@ -164,7 +166,7 @@ def get_center(x_data, y_data, mag_data, hist_lst, gc_params, mode,
 
         # Call funct to obtain the pixel coords of the maximum KDE value.
         kde_cent, e_cent, kde_plot = kde_center(x_data, y_data, approx_cents,
-            radius, gc_params)
+            radius)
 
         # Find bin where the center xy coordinates are located.
         cent_bin = bin_center(xedges, yedges, kde_cent)
@@ -190,7 +192,7 @@ def get_center(x_data, y_data, mag_data, hist_lst, gc_params, mode,
 
     # If Manual mode is set, display center and ask the user to accept it or
     # input new one.
-    elif mode == 'manual':
+    elif g.mode == 'manual':
 
         # Obtain approximate values for center coordinates using several
         # Gaussian filters with different standard deviation values, on the
@@ -202,7 +204,7 @@ def get_center(x_data, y_data, mag_data, hist_lst, gc_params, mode,
         #e_cent = [0., 0.]
         # Call funct to obtain the pixel coords of the maximum KDE value.
         kde_cent, e_cent, kde_plot = kde_center(x_data, y_data, approx_cents,
-            radius, gc_params)
+            radius)
 
         cent_bin = bin_center(xedges, yedges, kde_cent)
 

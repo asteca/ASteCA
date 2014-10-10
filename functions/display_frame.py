@@ -25,8 +25,8 @@ def disp_frame(x_data, y_data, mag_data):
     # Set grid
     plt.grid(b=True, which='major', color='k', linestyle='-', zorder=1)
     plt.grid(b=True, which='minor', color='k', linestyle='-', zorder=1)
-    st_sizes_arr = 0.1 + 100. * 10 ** ((np.array(mag_data) -
-        min(mag_data)) / -2.5)
+    st_sizes_arr = 0.1 + 100. * 10 ** ((np.array(mag_data[0]) -
+        min(mag_data[0])) / -2.5)
     plt.scatter(x_data, y_data, marker='o', c='black', s=st_sizes_arr)
 
     plt.draw()

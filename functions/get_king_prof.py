@@ -7,6 +7,7 @@ Created on Fri Oct 25 10:54:00 2013
 
 import numpy as np
 from scipy.optimize import curve_fit
+import get_in_params as g
 
 
 def two_params(x, cd, rc, fd):
@@ -24,7 +25,7 @@ def three_params(x, rt, cd, rc, fd):
         1 / np.sqrt(1 + (rt / rc) ** 2)) ** 2 + fd
 
 
-def get_king_profile(kp_flag, clust_rad, field_dens, radii, ring_density):
+def get_king_profile(clust_rad, field_dens, radii, ring_density):
     '''
     Function to fit the 3-params King profile to a given radial density.
     The field density value is fixed and the core radius, tidal radius and
@@ -36,7 +37,7 @@ def get_king_profile(kp_flag, clust_rad, field_dens, radii, ring_density):
     flag_2pk_conver, flag_3pk_conver = False, False
 
     # Check flag to run or skip.
-    if kp_flag:
+    if g.kp_flag:
 
         # Field density value is fixed.
         fd = field_dens

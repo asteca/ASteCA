@@ -46,7 +46,7 @@ def init(mypath):
                     mags = reader[1:]
                 elif reader[0] == 'PC':
                     colors = reader[1:]
-                elif reader[0] == 'PG':
+                elif reader[0] == 'PD':
                     phot_diag = reader[1:]
 
                 # Output parameters.
