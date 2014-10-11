@@ -3,6 +3,7 @@
 """
 
 import numpy as np
+import get_in_params as g
 
 
 def likelihood(region, cl_reg_rad):
@@ -91,21 +92,24 @@ def mpas(cl_reg_rad, runs_fields_probs):
     return membership_prob_avrg_sort
 
 
-def bys_da(flag_area_stronger, cl_region, field_region, memb_file, da_params):
+def bys_da(flag_area_stronger, cl_region, field_regions, memb_file):
     '''
     Bayesian field decontamination algorithm.
     '''
 
-    mode_da, run_n = da_params
+    mode_da, run_n = g.da_params
 
     # Check if at least one field region was obtained.
     if mode_da in {'auto', 'manual'} and flag_area_stronger:
-        print "  WARNING: no field regions found. Using 'skip' mode."
+        print ("  WARNING: no field regions found. Skipping\n"
+        "  decontamination algorithm.")
         mode_da = 'skip'
 
     flag_decont_skip = False
     # Run algorithm for any of these selections.
     if mode_da in {'auto', 'manual'}:
+
+        print 'Applying decontamination algorithm.'
 
         # Set total number of runs.
         runs = 1000 if mode_da == 'auto' else run_n
@@ -129,9 +133,9 @@ def bys_da(flag_area_stronger, cl_region, field_region, memb_file, da_params):
         for run_num in range(runs):
 
             # This list will hold the probabilities for each field region.
-            field_reg_probs = [[] for _ in field_region]
+            field_reg_probs = [[] for _ in field_regions]
             # Iterate through all the 'field stars' regions that were populated.
-            for indx, fl_region in enumerate(field_region):
+            for indx, fl_region in enumerate(field_regions):
 
                 # Obtain likelihoods for each star in the clean cluster region
                 # using this field region, ie: P(A)

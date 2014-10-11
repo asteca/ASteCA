@@ -103,23 +103,23 @@ def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
     print "Stars separated in/out of cluster's boundaries."
 
     # Field regions around the cluster's center.
-    flag_area_stronger, field_region = g_r(hist_lst, cent_bin, clust_rad,
+    flag_area_stronger, field_regions = g_r(hist_lst, cent_bin, clust_rad,
         stars_out)
 
     # Get the luminosity function and completeness level for each magnitude
     # bin. The completeness will be used by the isochrone/synthetic cluster
     # fitting algorithm.
     lum_func, completeness = lf(flag_area_stronger, phot_data, cl_region,
-        field_region)
+        field_regions)
     print 'LF and Completeness magnitude levels obtained.'
 
     # Calculate integrated magnitude.
-    integr_return = g_i_m(cl_region, field_region, flag_area_stronger)
+    integr_return = g_i_m(cl_region, field_regions, flag_area_stronger)
 
     # Get physical cluster probability based on p_values distribution.
     if R_in_place:
         from functions.get_p_value import get_pval as g_pv
-        pval_test_params, flag_pval_test = g_pv(cl_region, field_region,
+        pval_test_params, flag_pval_test = g_pv(cl_region, field_regions,
             phot_data, flag_area_stronger)
     else:
         print 'Skipping KDE p-value function.'
@@ -127,8 +127,7 @@ def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
 
     # Apply decontamination algorithm if at least one equal-sized field region
     # was found around the cluster.
-    print 'Applying decontamination algorithm.'
-    decont_algor_return = dab(flag_area_stronger, cl_region, field_region,
+    decont_algor_return = dab(flag_area_stronger, cl_region, field_regions,
         memb_file)
     memb_prob_avrg_sort = decont_algor_return[0]
 
@@ -151,19 +150,18 @@ def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
     out_file_name = c_o_d_f(output_dir)
 
     # Add cluster data and flags to output file
-    a_d_o(out_file_name, write_name, center_params,
-        radius_params, kp_params, cont_index, n_memb, pval_test_params[0],
-        integr_return, err_flags, flag_num_memb_low, bf_return)
+    a_d_o(out_file_name, write_name, center_params, radius_params, kp_params,
+        cont_index, n_memb, pval_test_params[0], integr_return, err_flags,
+        flag_num_memb_low, bf_return)
     print 'Data added to output file.'
 
     # Make plots
     if g.pl_params[0]:
-        mp(output_subdir, clust_name, id_coords, phot_data,
-            bin_width, center_params, rdp_params,
-            field_dens, radius_params, cont_index,
-            err_plot, err_flags, kp_params, cl_region, stars_out,
+        mp(output_subdir, clust_name, phot_params, id_coords, phot_data,
+            bin_width, center_params, rdp_params, field_dens, radius_params,
+            cont_index, err_plot, err_flags, kp_params, cl_region, stars_out,
             stars_in_rjct, stars_out_rjct, integr_return, n_memb,
-            flag_area_stronger, field_region, flag_pval_test,
+            flag_area_stronger, field_regions, flag_pval_test,
             pval_test_params, memb_prob_avrg_sort, lum_func, completeness,
             ip_list, red_return, err_lst, bf_return)
         print 'Plots created.'

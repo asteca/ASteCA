@@ -63,7 +63,7 @@ def get_data(data_file, phot_params):
 
     # Read indexes from input params.
     id_inx, x_inx, y_inx = g.gd_params[0][:-1]
-    # INdexes.
+    # Indexes.
     magnitudes, colors, e_mags, e_cols = phot_params[0]
 
     # Loads the data in 'myfile' as a list of N lists where N is the number of

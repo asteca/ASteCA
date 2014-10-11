@@ -1,6 +1,6 @@
 
 
-def manual_histo(phot_data, xedges, yedges):
+def manual_histo(stars_out, xedges, yedges):
     '''
     Obtains a filled 2D histogram for the field with not only the number
     of stars per bin but also the values associated to each star.
@@ -15,7 +15,7 @@ def manual_histo(phot_data, xedges, yedges):
         H_manual.append([[0] for _ in xrange(len(yedges) - 1)])
 
     # Iterate through all the stars in the frame.
-    for star in phot_data:
+    for star in stars_out:
         xcoord, ycoord = star[1:3]
 
         # Iterate through all edges in the x axis.

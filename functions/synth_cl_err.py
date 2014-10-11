@@ -6,6 +6,7 @@ from functions.err_medians import err_med
 from functions.exp_function import exp_func
 from scipy.optimize import curve_fit
 import numpy as np
+import get_in_params as g
 
 
 # Define exponential function.
@@ -16,13 +17,13 @@ def exp_2p(x, a, b):
     return a * np.exp(x) + b
 
 
-def synth_clust_err(phot_data, err_pck, bf_params):
+def synth_clust_err(phot_data, err_pck):
     '''
     Generate exponential error function parameters to feed the synthetic
     cluster generation function.
     '''
 
-    bf_flag = bf_params[0]
+    bf_flag = g.bf_params[0]
 
     # Check if algorithm should run.
     if bf_flag:

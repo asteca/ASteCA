@@ -35,21 +35,22 @@ def mag_completeness(mag_data):
     return completeness
 
 
-def lf(flag_area_stronger, phot_data, cl_region, field_region):
+def lf(flag_area_stronger, phot_data, cl_region, field_regions):
     '''
     Obtain the Luminosity Function for the field regions and the cluster
     region normalized to their area. Substract the field curve from the
     cluster curve so as to clean it.
     '''
 
+    # Use 'main' magnitude defined.
     mag_data = np.asarray(phot_data[0][0])
-
     # Calculate number of bins used by the histograms.
     binwidth = 0.25
     x_min, x_max = min(mag_data) - 0.5, max(mag_data) + 0.5
     bins_n = np.arange(int(x_min), int(x_max + binwidth), binwidth)
 
-    mag_cl = zip(*cl_region)[3]
+    # Use 'main' magnitude defined, only stars in the cluster region.
+    mag_cl = zip(*zip(*cl_region)[3])[0]
     # Obtain histogram for cluster region.
     lf_clust, lf_edg_c = np.histogram(mag_cl, bins=bins_n)
 
@@ -62,9 +63,9 @@ def lf(flag_area_stronger, phot_data, cl_region, field_region):
     mag_fl = []
     if flag_area_stronger is not True:
 
-        for freg in field_region:
+        for freg in field_regions:
             for star in freg:
-                mag_fl.append(star[3])
+                mag_fl.append(star[3][0])
 
         # Obtain histogram for field region.
         lf_field, lf_edg_f = np.histogram(mag_fl, bins=bins_n)
@@ -72,7 +73,7 @@ def lf(flag_area_stronger, phot_data, cl_region, field_region):
         # Create arrays adding elements so plt.step will plot the first and last
         # vertical bars.
         x_fl = np.concatenate((np.array([0.]), lf_edg_f))
-        y_fl = np.concatenate((np.array([0.]), (lf_field / len(field_region)),
+        y_fl = np.concatenate((np.array([0.]), (lf_field / len(field_regions)),
             np.array([0.])))
     else:
         print '  WARNING: no field regions defined. Luminosity function'

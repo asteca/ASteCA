@@ -7,6 +7,7 @@ Created on Thu Nov 28 20:55:57 2013
 
 import numpy as np
 from scipy.interpolate import spline
+import get_in_params as g
 
 
 def calc_integ_mag(st_reg):
@@ -62,18 +63,17 @@ def field_reg_integ_mag_curve(fl_reg_m):
     return fl_reg_mag
 
 
-def integ_mag(im_flag, cl_region, field_region, axes_params,
-    flag_area_stronger):
+def integ_mag(cl_region, field_region, flag_area_stronger):
     '''
     Obtain integrated magnitude using all stars inside the cluster's radius for
     several limits in magnitude.
     '''
 
-    if im_flag:
+    if g.im_flag:
 
         # This variable tells me how the color is created, if the first
         # magnitude is substracted from the second one or the other way around.
-        m_ord = axes_params[2]
+        m_ord = g.axes_params[2]
         # Check how the second magnitude whould be formed.
         sig = 1. if m_ord == 21 else -1.
 
