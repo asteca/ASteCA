@@ -53,12 +53,10 @@ def identify_phot_data():
     diag_axis = []
     for axis in phot_diag:
         if axis[:3] == 'mag':
-            # For x axis.
-            diag_axis.append(0)
+            diag_axis.append(0)  # 0 points to magnitudes list.
             diag_axis.append(int(axis[-1]) - 1)
         else:
-            # For y axis.
-            diag_axis.append(1)
+            diag_axis.append(2)  # 2 points to colors list.
             diag_axis.append(int(axis[-1]) - 1)
     #
     # diag_axis = [index pointing to either mag or col, index pointing to

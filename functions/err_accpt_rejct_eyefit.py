@@ -44,7 +44,7 @@ def fit_curves(mag, mag_value, bright_end, e_mag_value, e_col_value):
     # Process colors.
     popt_col, pol_col, intersec_col = [], [], []
     for err_val in e_col_value:
-        # Fit curves for errors in magnitude.
+        # Fit curves for errors in color.
         pop, pol, inter = exp_fit(mag, bright_end, mag_value, err_val)
         intersec_col.append(inter)
         popt_col.append(pop)
@@ -216,7 +216,9 @@ def err_a_r_eyefit(mag, e_mag, e_col, params, diag_axis):
     top_val_left, top_val_right, bot_val_left, bot_val_right = \
     divide(mag_value, intersec_mag, intersec_col, diag_axis)
     # This list holds all the values necessary for plotting.
-    err_plot = [popt_mag, pol_mag, popt_col, pol_col,
-    top_val_left, top_val_right, bot_val_left, bot_val_right]
+    popt_mag_col = [popt_mag, popt_col]
+    pol_mag_col = [pol_mag, pol_col]
+    err_plot = [popt_mag_col, pol_mag_col, top_val_left, top_val_right,
+        bot_val_left, bot_val_right]
 
     return acpt_indx, rjct_indx, err_plot

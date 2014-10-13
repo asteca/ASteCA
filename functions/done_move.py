@@ -2,18 +2,19 @@
 from os.path import join, exists, isfile
 from os import rmdir, makedirs
 import shutil
+import get_in_params as g
 
 
-def done_move(flag_move_file, mypath, cl_file, done_dir, data_file, memb_file):
+def done_move(mypath, cl_file, data_file, memb_file):
     '''
     Move cluster data file to 'done' dir if flag is set.
     '''
 
     input_dir = join(mypath, 'input')
 
-    if flag_move_file:
+    if g.flag_move_file:
 
-        dst_dir = join(done_dir, cl_file[0])
+        dst_dir = join(g.done_dir, cl_file[0])
         # If the sub-dir doesn't exist, create it before moving the file.
         if not exists(dst_dir):
             makedirs(dst_dir)
