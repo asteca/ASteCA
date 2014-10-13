@@ -36,18 +36,31 @@ def identify_phot_data():
             colors.append(int(colum_indx))
             col_names.append(phot_name)
             # Separate magnitudes from color name.
-            all_mags.append(phot_name[0] + phot_name[1])
-            all_mags.append(phot_name[0] + phot_name[2])
+            m1, m2 = phot_name.split('-')
+            all_mags.append(phot_name[0] + m1[1:])
+            all_mags.append(phot_name[0] + m2)
         else:
             e_cols.append(int(colum_indx))
 
     # Remove duplicate magnitudes if they exist.
     all_mags = list(set(all_mags))
 
-    # Initialize for up to 20 photometric systems.
-    phot_systs = [[] for _ in range(20)]
+    # Identifiers for different photometric systems.
+    all_systs = {0: 'UBVRIJKH', 1: 'JHKs', 2: 'CMT1T2BVRI'}
+    # Initialize for up to 9 photometric systems.
+    phot_mags = [[] for _ in range(9)]
     for mag in all_mags:
-        phot_systs[int(mag[0]) - 1].append(mag[1])
+        # Extract full magnitude name.
+        m = mag[1:] if len(mag) > 2 else mag[1]
+        phot_mags[int(mag[0])].append(m)
+
+    # Create list with names of photometric systems.
+    phot_systs = []
+    for i, phot_syst in enumerate(phot_mags):
+        if phot_syst:
+            # Store names of folders that hold the Girardi isochrones that
+            # correspond to this photometric system.
+            phot_systs.append([all_systs[i], phot_syst])
 
     # Identify photometric data to plot.
     diag_axis = []
@@ -62,23 +75,6 @@ def identify_phot_data():
     # diag_axis = [index pointing to either mag or col, index pointing to
     # which mag or col, index pointing to mag or col, index pointing to which
     # mag or col]
-
-    print magnitudes, colors, e_mags, e_cols
-    print mag_names, col_names
-    print phot_systs
-    print diag_axis
-
-    ## Fix isochrones location according to the CMD and set selected.
-    #text1, text2 = 'none', 'none'
-    #if cmd_select in {1, 2, 3, 8}:
-        #text1 = 'ubvi'
-    #elif cmd_select in {4}:
-        #text1 = 'wash'
-    #elif cmd_select in {5, 6, 7}:
-        #text1 = '2mass'
-    #text2 = 'marigo' if iso_select == 'MAR' else 'parsec'
-    ## Set iso_path according to the above values.
-    #iso_path = join(mypath + '/isochrones/' + text1 + '_' + text2)
 
     phot_indexes = [magnitudes, colors, e_mags, e_cols]
     phot_names = [mag_names, col_names]

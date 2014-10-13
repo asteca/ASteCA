@@ -5,7 +5,6 @@ import gc  # Garbage collector.
 import get_in_params as g
 from functions.get_names_paths import names_paths as n_p
 from functions.get_data_semi import get_semi as g_s
-from functions.phot_identify import identify_phot_data as ipd
 from functions.get_data import get_data as gd
 from functions.trim_frame import trim_frame as t_f
 from functions.get_2d_histo import get_2d_histo as g2dh
@@ -32,7 +31,7 @@ from functions.cl_members_file import cluster_members_file as c_m_f
 from functions.done_move import done_move as dm
 
 
-def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
+def asteca_funcs(mypath, cl_file, phot_params, ip_list, R_in_place):
     '''
     Container that holds the calls to all the functions.
     '''
@@ -47,9 +46,6 @@ def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
 
     # Get data from semi-data input file.
     semi_return = g_s(clust_name)
-
-    # Identify photometric data input.
-    phot_params = ipd()
 
     # Get cluster's photometric data from file.
     id_coords, phot_data = gd(data_file, phot_params)

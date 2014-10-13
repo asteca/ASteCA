@@ -39,6 +39,8 @@ def rem_bad_stars(id_star, x_data, y_data, mag_data, e_mag, col_data,
 
     # Remove stars from the x, y coordinates.
     coord_clean_arr = np.delete(np.array([x_data, y_data]), del_indexes, axis=1)
+    # Array of positions with ALL stars.
+    #coord_dirt_arr = np.array([x_data, y_data])
 
     # Remove stars from the magnitude columns.
     m_clean_arr, em_clean_arr = [], []

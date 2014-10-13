@@ -19,6 +19,68 @@ import error_round as err_r
 import get_in_params as g
 
 
+def line(x, slope, intercept):
+    '''
+    Linar function.
+    '''
+    y = slope * x + intercept
+    return y
+
+
+def two_params(x, cd, rc, bg):
+    '''
+    Two parameters King profile fit.
+    '''
+    return bg + cd / (1 + (np.asarray(x) / rc) ** 2)
+
+
+def three_params(x, rt, cd, rc, bg):
+    '''
+    Three parameters King profile fit.
+    '''
+    return cd * (1 / np.sqrt(1 + (np.asarray(x) / rc) ** 2) -
+        1 / np.sqrt(1 + (rt / rc) ** 2)) ** 2 + bg
+
+
+def reject_outliers(data, m=6.5):
+    '''
+    Reject outliers from array.
+    http://stackoverflow.com/a/16562028/1391441
+    '''
+    d = np.abs(data - np.median(data))
+    mdev = np.median(d)
+    s = d / mdev if mdev else 0.
+    return data[s < m]
+
+
+def gen_ax_names(ax_n):
+    '''
+    Generate a correct axis name.
+    '''
+    if len(ax_n) > 1:
+        # It's a color.
+        if len(ax_n[0]) > 1:
+            # It's a magnitude with a sub-index.
+            c0 = ax_n[0][0] + '_{' + ax_n[0][1] + '}'
+        else:
+            c0 = ax_n[0]
+        if len(ax_n[1]) > 1:
+            c1 = ax_n[1][0] + '_{' + ax_n[1][1] + '}'
+        else:
+            c1 = ax_n[1]
+        ax_name = '(' + c0 + '-' + c1 + ')'
+    else:
+        # It's a magnitude.
+        if len(ax_n[0]) > 1:
+            # It's a magnitude with a sub-index.
+            m0 = ax_n[0][0] + '_{' + ax_n[0][1] + '}'
+        else:
+            m0 = ax_n[0]
+        ax_name = m0
+
+    return ax_name
+
+
 def make_plots(output_subdir, clust_name, phot_params, id_coords, phot_data,
     bin_width, center_params, rdp_params, field_dens, radius_params, cont_index,
     err_plot, err_flags, kp_params, cl_region, stars_out, stars_in_rjct,
@@ -29,50 +91,14 @@ def make_plots(output_subdir, clust_name, phot_params, id_coords, phot_data,
     Make all plots.
     '''
 
-    def line(x, slope, intercept):
-        '''
-        Linar function.
-        '''
-        y = slope * x + intercept
-        return y
-
-    def two_params(x, cd, rc, bg):
-        '''
-        Two parameters King profile fit.
-        '''
-        return bg + cd / (1 + (np.asarray(x) / rc) ** 2)
-
-    def three_params(x, rt, cd, rc, bg):
-        '''
-        Three parameters King profile fit.
-        '''
-        return cd * (1 / np.sqrt(1 + (np.asarray(x) / rc) ** 2) -
-            1 / np.sqrt(1 + (rt / rc) ** 2)) ** 2 + bg
-
-    def reject_outliers(data, m=6.5):
-        '''
-        Reject outliers from array.
-        http://stackoverflow.com/a/16562028/1391441
-        '''
-        d = np.abs(data - np.median(data))
-        mdev = np.median(d)
-        s = d / mdev if mdev else 0.
-        return data[s < m]
-
     # Define names for CMD axes.
     m_c_names, diag_axis = phot_params[1], phot_params[-1]
     x_axis = diag_axis[0] if diag_axis[0] <= 1 else 1
     y_axis = diag_axis[2] if diag_axis[2] <= 1 else 1
-    x_ax_n = m_c_names[x_axis][diag_axis[1]][1:]
-    y_ax_n = m_c_names[y_axis][diag_axis[3]][1:]
-    if len(x_ax_n) > 1:
-        x_ax = '(' + x_ax_n[0] + '-' + x_ax_n[1] + ')'
-    else:
-        x_ax = x_ax_n
-    if len(y_ax_n) > 1:
-        y_ax = '(' + y_ax_n[0] + '-' + y_ax_n[1] + ')'
-    else:
-        y_ax = y_ax_n
+    x_ax_n = m_c_names[x_axis][diag_axis[1]][1:].split('-')
+    y_ax_n = m_c_names[y_axis][diag_axis[3]][1:].split('-')
+    # For y photometric axis.
+    x_ax, y_ax = gen_ax_names(x_ax_n), gen_ax_names(y_ax_n)
 
     # Unpack coordinates and photometric data.
     x_data, y_data = id_coords[1:]
@@ -658,9 +684,9 @@ def make_plots(output_subdir, clust_name, phot_params, id_coords, phot_data,
     # completeness = [max_mag, bin_edges, max_indx, comp_perc]
     bin_edges, max_indx = completeness[1], completeness[2]
     mag_peak = bin_edges[max_indx]
+    text = '$' + y_ax + r',_{compl}\,\approx\,%0.1f$' % mag_peak
     ax12.vlines(x=mag_peak, ymin=0., ymax=plt.ylim()[1], color='k',
-        lw=1.5, linestyles='dashed',
-        label='$' + y_ax + r'_{compl}\,\approx\,%0.1f$' % mag_peak, zorder=1)
+        lw=1.5, linestyles='dashed', label=text, zorder=1)
     # Legends.
     leg11 = plt.legend(fancybox=True, loc='upper right', numpoints=1,
                        fontsize=13)
@@ -695,16 +721,16 @@ def make_plots(output_subdir, clust_name, phot_params, id_coords, phot_data,
         ax13.set_ylabel('$mag^*$', fontsize=18)
         ax13.minorticks_on()
         ax13.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
-        text1 = '$' + y_ax + '^{*}_{cl+fl}$'
-        text2 = '$' + x_ax0 + '^{*}_{cl+fl}$'
+        text1 = '$' + y_ax + '^{*} {cl+fl}$'
+        text2 = '$' + x_ax0 + '^{*} {cl+fl}$'
         # Cluster + field integrated magnitude curve.
         plt.plot(cl_reg_mag1[0], cl_reg_mag1[1], 'r-', lw=1., label=text1)
         # Cluster integrated magnitude.
         plt.plot(cl_reg_mag2[0], cl_reg_mag2[1], 'r:', lw=2., label=text2)
         # Check if field regiones were defined.
         if not flag_area_stronger:
-            text3 = '$' + y_ax + '^{*}_{fl}$'
-            text4 = '$' + x_ax0 + '^{*}_{fl}$'
+            text3 = '$' + y_ax + '^{*} {fl}$'
+            text4 = '$' + x_ax0 + '^{*} {fl}$'
             # Field average integrated magnitude curve.
             plt.plot(fl_reg_mag1[0], fl_reg_mag1[1], 'b-', lw=1., label=text3)
             # Field average integrated magnitude.

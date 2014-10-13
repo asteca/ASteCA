@@ -9,6 +9,7 @@ import os
 import re
 from os.path import join
 import numpy as np
+import get_in_params as g
 from girardi_isochs_format import isoch_format as i_format
 
 
@@ -238,17 +239,18 @@ def interp_isoch(isochrone):
     return isoch_inter
 
 
-def ip(ps_params, bf_flag):
+def ip():
     '''
     Read isochrones and parameters if best fit function is set to run.
     '''
 
     ip_list = []
     # Only read files of best fit method is set to run.
+    bf_flag = g.bf_params[0]
     if bf_flag is True:
 
         # Unpack.
-        iso_path, cmd_select, iso_select, par_ranges = ps_params
+        iso_select, par_ranges = g.ps_params[:-1]
 
         # Read names of all metallicity files stored in isochrones path given.
         # I.e.: store all metallicity values available.
