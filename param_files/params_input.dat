@@ -44,20 +44,28 @@ PI      0      1      2      px
 #
 #
 # Photometric system identifiers.
+# The first magnitude defined (in mag1) will be used as the one
+# determining the brightness of stars when plotted, the x axis for
+# the error rejection functions and the minimum brightness limit.
 #
-# - 1: UBVI (Johnson)
-# - 2: 2MASS
-# - 3: Washington
+# IMPORTANT: at least one magnitude and one color (with their errors)
+# must be defined.
 #
-#    mag1  e_mag1   mag2  e_mag2 ... # Columns for magnitudes and their errors.
-PM   3,1V     4,e   9,2J    10,e
+# - 0: UBVRIJKH		(cf. Maiz-Apellaniz 2006 + Bessell 1990)
+# - 1: JHKs			(2MASS)
+# - 2: CMT1T2BVRI	(Washington)
 #
-#    col1  e_col1   col2  e_col2 ... # Columns for colors and their errors.
-PC  5,1UB     6,e  7,1BV     8,e
+# Columns for magnitudes and their errors.
+#      mag1   e_mag1     mag2   e_mag2     mag3   e_mag3 ...
+PM    3,1Ks      6,e   
+#
+# Columns for colors and their errors.
+#      col1   e_col1     col2   e_col2     col3   e_col3 ...
+PC   5,0B-V      6,e   7,0U-B     8,e  9,2T1-T2     10,e
 #
 # Select axis of photometric diagram to be plotted.
 #      x     y
-PG  col1  col2
+PD  col3   mag1
 ###############################################################################
 
 
@@ -224,9 +232,8 @@ BF    true      genet          10
 
 # Select set of isochrones to use.
 #
-# Marigo only works with the first 4 CMDs and will be     ######################### <-- WARNING
-# deprecated soon as it has been superseded by the
-# new PARSEC set.
+# Marigo isochrones will be  deprecated soon as they     ######################### <-- WARNING
+# has been superseded by the new PARSEC set.
 #
 # iso_select: MAR (Marigo) / PAR (PARSEC)
 #
