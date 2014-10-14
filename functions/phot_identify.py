@@ -46,7 +46,7 @@ def identify_phot_data():
     all_mags = list(set(all_mags))
 
     # Identifiers for different photometric systems.
-    all_systs = {0: 'UBVRIJKH', 1: 'JHKs', 2: 'CMT1T2BVRI'}
+    all_systs = {0: 'UBVRIJHK', 1: 'JHKs', 2: 'CMT1T2BVRI'}
     # Initialize for up to 9 photometric systems.
     phot_mags = [[] for _ in range(9)]
     for mag in all_mags:

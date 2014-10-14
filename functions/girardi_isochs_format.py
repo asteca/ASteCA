@@ -5,15 +5,24 @@ Created on Tue Sep 23 13:03:39 2014
 @author: gabriel
 """
 
+import get_in_params as g
 
-def isoch_format(iso_select, syst):
+
+def age_f():
+    '''
+    Define reg expression to isolate the age of an isochrone.
+    '''
+    age_format = r"Age = \t(.+?) yr"
+    return age_format
+
+
+def i_format(syst):
     '''
     Read line start format and columns indexes for the selected set of
     Girardi isochrones and chosen CMD.
     '''
 
-    # Define reg expression to isolate the age of an isochrone.
-    age_format = r"Age = \t(.+?) yr"
+    iso_select = g.ps_params[0]
 
     # Assign values according to the system and set of isochrones selected.
     if iso_select == 'MAR':
@@ -30,7 +39,7 @@ def isoch_format(iso_select, syst):
     # Dictionary that stores the names and column indexes for each
     # magnitude defined in each phoyometric system.
     all_systs = {
-        'UBVRIJKH': (8, ['U', 'B', 'V', 'R', 'I', 'J', 'H', 'K']),
+        'UBVRIJHK': (8, ['U', 'B', 'V', 'R', 'I', 'J', 'H', 'K']),
         'JHKs': (8, ['J', 'H', 'Ks']),
         'CMT1T2BVRI': (8, ['C', 'M', 'T1', 'T2', 'B', 'V', 'R', 'I'])}
 
@@ -44,4 +53,4 @@ def isoch_format(iso_select, syst):
         # Store the correct column index for this magnitude.
         mags.append(all_systs[sys][0] + all_systs[sys][1].index(mag))
 
-    return line_start, age_format, mass_i, mass_a, mags
+    return line_start, mass_i, mass_a, mags
