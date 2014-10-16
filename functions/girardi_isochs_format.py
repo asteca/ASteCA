@@ -6,6 +6,7 @@ Created on Tue Sep 23 13:03:39 2014
 """
 
 import get_in_params as g
+from cmd_phot_systs import phot_mags as pm
 
 
 def age_f():
@@ -36,12 +37,8 @@ def i_format(syst):
         # Mass column.
         mass_i, mass_a = 2, 3
 
-    # Dictionary that stores the names and column indexes for each
-    # magnitude defined in each phoyometric system.
-    all_systs = {
-        'UBVRIJHK': (8, ['U', 'B', 'V', 'R', 'I', 'J', 'H', 'K']),
-        'JHKs': (8, ['J', 'H', 'Ks']),
-        'CMT1T2BVRI': (8, ['C', 'M', 'T1', 'T2', 'B', 'V', 'R', 'I'])}
+    # Get photometric systems dictionary.
+    all_systs = pm()
 
     # Identify indexes of magnitudes defined in the input paramrter file
     # as stored in its respective photometric system's metallicity files.

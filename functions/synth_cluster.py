@@ -100,7 +100,7 @@ def compl_func(isoch_binar, completeness):
     return isoch_compl
 
 
-def binarity(isoch_mass, isoch_cut, bin_frac, bin_mass_ratio, cmd_sel):
+def binarity(isoch_mass, isoch_cut, bin_frac, bin_mass_ratio):
     '''
     Randomly select a fraction of stars to be binaries.
     '''
@@ -254,7 +254,7 @@ def synth_clust(err_lst, completeness, st_d_bin_mr, isochrone, model):
 
             # Assignment of binarity.
             isoch_binar = binarity(isoch_mass, isoch_cut, bin_frac,
-                bin_mass_ratio, cmd_sel)
+                bin_mass_ratio)
 
             # Completeness limit removal of stars.
             isoch_compl = compl_func(isoch_binar, completeness)
