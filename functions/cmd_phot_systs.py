@@ -48,6 +48,7 @@ def phot_wavelengths(sys, mag):
 
     # Get index of magnitude as stored in the dictionary.
     m_idx = all_systs[sys][1].index(mag)
+    print mag, m_idx
     # Get effective wavelength for this magnitude.
     eff_wave = wave_dict[sys][m_idx]
 
