@@ -9,3 +9,5 @@ to be used by the code.
 
 **Important**: a properly formatted `params_input.dat` file should always be
 present in the root folder for **ASteCA** to work.
+
+This folder and its contents can be safely deleted.
