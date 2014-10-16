@@ -29,13 +29,13 @@ def i_format(syst):
     if iso_select == 'MAR':
         # String that identifies the beginning of a new isochrone.
         line_start = "#\tIsochrone\tZ ="
-        # Mass column.
-        mass_i, mass_a = 1, 2
+        # Mass columns and index where magnitudes begin.
+        mass_i, mass_a, mags_i = 1, 2, 7
     elif iso_select == 'PAR':
         # String that identifies the beginning of a new isochrone.
         line_start = "#\tIsochrone  Z = "
-        # Mass column.
-        mass_i, mass_a = 2, 3
+        # Mass columns and index where magnitudes begin.
+        mass_i, mass_a, mags_i = 2, 3, 8
 
     # Get photometric systems dictionary.
     all_systs = pm()
@@ -48,6 +48,6 @@ def i_format(syst):
     # For each magnitude defined in this photometric system.
     for mag in syst[1]:
         # Store the correct column index for this magnitude.
-        mags.append(all_systs[sys][0] + all_systs[sys][1].index(mag))
+        mags.append(mags_i + all_systs[sys].index(mag))
 
     return line_start, mass_i, mass_a, mags
