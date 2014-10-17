@@ -70,7 +70,7 @@ def check(mypath, cl_files):
     # Check px/deg.
     if g.gd_params[0][-1] not in {'px', 'deg'}:
         sys.exit("ERROR: the coordinates given in the input file ({})"
-                "are incorrect.".format(g.gd_params[-1]))
+                " are incorrect.".format(g.gd_params[0][-1]))
 
     # Output figure.
     if g.pl_params[0] is True:
