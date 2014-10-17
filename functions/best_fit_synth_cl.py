@@ -17,8 +17,6 @@ import get_in_params as g
 
 
 def best_fit(err_lst, red_memb_prob, completeness, ip_list):
-    #err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
-             #sc_params, ga_params, ps_params):
     '''
     Perform a best fitting process to find the cluster's parameters:
     E(B-V), distance (distance modulus), age and metallicity.

@@ -46,5 +46,4 @@ def field_dens(ring_density):
 
         field_dens = median
 
-    # Return background value obtained.
     return field_dens

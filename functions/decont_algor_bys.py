@@ -6,58 +6,6 @@ import numpy as np
 import get_in_params as g
 
 
-def likelihood(region, cl_reg_rad):
-    '''
-    Obtain the likelihood/membership probability for each star in the
-    region defined as that inside the cluster's radius.
-    '''
-
-    # Store cleaned cluster/field region and full cluster_region as arrays
-    # skipping IDs otherwise thw whole array is converted to strings.
-    # Cleaned cluster/field region.
-    cl_fl_arr = np.array(zip(*zip(*region)[1:]), dtype=float)
-    N = len(region)  # Number of stars in this region.
-    # Full cluster region.
-    cl_full_arr = np.array(zip(*zip(*cl_reg_rad)[1:]), dtype=float)
-
-    # Small value used to replace zeros.
-    epsilon = 1e-10
-
-    # Split full cluster region array.
-    P = np.split(cl_full_arr, 6, axis=1)
-    # Square errors in color and magnitude.
-    P[5] = np.square(P[5])  # color error
-    P[3] = np.square(P[3])  # magnitude error
-    P = np.hstack(P)
-
-    # Split array.
-    Q = np.split(cl_fl_arr, 6, axis=1)
-    # Square photometric errors.
-    Q[5] = np.square(Q[5])
-    Q[3] = np.square(Q[3])
-
-    # For every star in the full cluster region.
-    clust_stars_probs = []
-    for star in P:
-        # Squares sum of errors.
-        e_col_2 = np.maximum(star[5] + Q[5], epsilon)
-        e_mag_2 = np.maximum(star[3] + Q[3], epsilon)
-        # star[4] & Q[4] = colors
-        # star[2] & Q[2] = magnitude
-        B = np.square(star[4] - Q[4]) / e_col_2
-        C = np.square(star[2] - Q[2]) / e_mag_2
-        synth_stars = np.exp(-0.5 * (B + C)) / np.sqrt(e_col_2 * e_mag_2)
-
-        # The likelihood for this cluster star is the sum over all region
-        # stars.
-        likelihood = synth_stars.sum() / N
-
-        # Use 1e-10 to avoid nan and inf values.
-        clust_stars_probs.append(max(likelihood, epsilon))
-
-    return clust_stars_probs
-
-
 def mpas(cl_reg_rad, runs_fields_probs):
     """
     Append averaged probabilities to each star inside the cluster radius and
@@ -92,6 +40,64 @@ def mpas(cl_reg_rad, runs_fields_probs):
     return membership_prob_avrg_sort
 
 
+def likelihood(cl_fl_arr, cl_full_arr):
+    '''
+    Obtain the likelihood/membership probability for each star in the
+    region defined as that inside the cluster's radius.
+    '''
+
+    # Store cluster/field region and full cluster_region as arrays
+    # skipping IDs otherwise the whole array is converted to strings.
+    # Cluster/field region.
+    #cl_fl_arr = np.array(zip(*zip(*region)[1:]), dtype=float)
+    N = len(cl_fl_arr)  # Number of stars in this region.
+
+    # Small value used to replace zeros.
+    epsilon = 1e-10
+
+    ## Split full cluster region array.
+    #P = np.split(np.array(cl_full_arr), 7, axis=1)
+    ## Square errors in color and magnitude.
+    #P[4][0] = np.square(P[4][0])  # magnitude error
+    #P[6][0] = np.square(P[6][0])  # color1 error
+    #P[6][1] = np.square(P[6][1])  # color2 error
+    #P = np.hstack(P)
+
+    ## Split array.
+    #Q = np.split(np.array(cl_fl_arr), 7, axis=1)
+    ## Square photometric errors.
+    #Q[4][0] = np.square(Q[4][0])  # magnitude error
+    #Q[6][0] = np.square(Q[6][0])  # color1 error
+    #Q[6][1] = np.square(Q[6][1])  # color2 error
+    ##Q[5] = np.square(Q[5])
+    ##Q[3] = np.square(Q[3])
+
+    # For every star in the full cluster region.
+    clust_stars_probs = []
+    for star in cl_full_arr:
+        # Squares sum of errors.
+        e_mag_2 = np.square(star[4][0]) + np.square(cl_fl_arr[id_s][4][0])
+        e_col_12 = np.square(star[6][0]) + np.square(cl_fl_arr[id_s][6][0])
+        e_col_22 = np.square(star[6][1]) + np.square(cl_fl_arr[id_s][6][1])
+        # magnitude
+        B = np.square(star[3][0] - cl_fl_arr[id_s][3][0]) / e_mag_2
+        # color1
+        C = np.square(star[5][0] - cl_fl_arr[id_s][5][0]) / e_col_12
+        # color2
+        D = np.square(star[5][1] - cl_fl_arr[id_s][5][1]) / e_col_22
+        synth_stars = np.exp(-0.5 * (B + C + D)) / \
+        np.sqrt(e_mag_2 * e_col_12 * e_col_22)
+
+        # The likelihood for this cluster star is the sum over all region
+        # stars.
+        likelihood = synth_stars.sum() / N
+
+        # Use 1e-10 to avoid nan and inf values.
+        clust_stars_probs.append(max(likelihood, epsilon))
+
+    return clust_stars_probs
+
+
 def bys_da(flag_area_stronger, cl_region, field_regions, memb_file):
     '''
     Bayesian field decontamination algorithm.
@@ -113,9 +119,13 @@ def bys_da(flag_area_stronger, cl_region, field_regions, memb_file):
 
         # Set total number of runs.
         runs = 1000 if mode_da == 'auto' else run_n
+        print len(cl_region)
 
-        # cl_reg_rad = [[id,x,y,T1,eT1,CT1,eCT1], [], [], ...]
-        # len(cl_reg_rad) = number of stars inside the cluster's radius.
+        # Full cluster region without IDs.
+        #cl_full_arr = np.array(zip(*zip(*cl_reg_rad)[1:]), dtype=float)
+
+        # cl_region = [[id, x, y, [mags], [e_mags], [cols], [e_cols]], [], ...]
+        # len(cl_region) = number of stars inside the cluster's radius.
         # len(field_region[i]) = number of stars inside field region 'i'
 
         # This list holds one sub-list per run. Each of those sub-lists holds N

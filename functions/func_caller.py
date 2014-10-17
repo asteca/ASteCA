@@ -69,7 +69,8 @@ def asteca_funcs(mypath, cl_file, phot_params, ip_list, R_in_place):
 
     # Get field density value in stars/px^2.
     field_dens = gfd(ring_density)
-    print 'Field density calculated ({:.1E} stars/coords^2).'.format(field_dens)
+    print 'Field density calculated ({:.1E} stars/{}^2).'.format(field_dens,
+        g.gd_params[0][-1])
 
     # Get cluster radius
     radius_params = gcr(phot_data, field_dens, center_params, semi_return,
