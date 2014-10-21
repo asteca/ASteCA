@@ -1,6 +1,0 @@
-IMF sampling
-------------
-
-The initial mass function (IMF) is the distribution of initial masses
-for a population of stars. For a population of :math:`N` stars with
-masses :math:`m_i` and a total mass of :math:`M_T`:
