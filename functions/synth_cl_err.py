@@ -64,13 +64,12 @@ def synth_clust_err(phot_data, err_pck):
 
         # Unpack params. Use *main* magnitude.
         mag, e_mag, e_col = phot_data[0][0], phot_data[1], phot_data[3]
-        er_params, bright_end, n_interv, interv_mag, mag_value = err_pck
-        e_max = er_params[1]
+        e_max, mag_value = g.er_params[1], err_pck[3]
 
         # Call function to obtain the median points for magnitude
         # and color errors to fit the exponential curve.
-        e_mag_value, e_col_value = err_med('synth_clust', mag_value, e_max,
-            bright_end, n_interv, interv_mag, mag, e_mag, e_col)
+        e_mag_value, e_col_value = err_med('synth_clust', err_pck, mag, e_mag,
+            e_col)
 
         err_lst = [[], [], e_max]
 
