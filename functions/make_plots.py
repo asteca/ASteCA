@@ -954,18 +954,19 @@ def make_plots(output_subdir, clust_name, phot_params, id_coords, phot_data,
 
         # Set ranges used by plots below.
         m_vals, a_vals, e_vals, d_vals, mass_vals, bin_vals = ip_list[1]
-        m_min, m_max = min(m_vals) - 0.1 * min(m_vals), \
-        max(m_vals) + 0.1 * min(m_vals)
-        a_min, a_max = min(a_vals) - 0.1 * min(a_vals), \
-        max(a_vals) + 0.1 * min(a_vals)
-        e_min, e_max = min(e_vals) - 0.1 * min(e_vals), \
-        max(e_vals) + 0.1 * min(e_vals)
-        d_min, d_max = min(d_vals) - 0.1 * min(d_vals), \
-        max(d_vals) + 0.1 * min(d_vals)
-        mass_min, mass_max = min(mass_vals) - 0.1 * min(mass_vals), \
-        max(mass_vals) + 0.1 * min(mass_vals)
-        bin_min, bin_max = min(bin_vals) - 0.1 * min(bin_vals), \
-        max(bin_vals) + 0.1 * min(bin_vals)
+        delta_m = (max(m_vals) - min(m_vals)) * 0.05
+        delta_a = (max(a_vals) - min(a_vals)) * 0.05
+        delta_e = (max(e_vals) - min(e_vals)) * 0.05
+        delta_d = (max(d_vals) - min(d_vals)) * 0.05
+        delta_ms = (max(mass_vals) - min(mass_vals)) * 0.05
+        delta_b = (max(bin_vals) - min(bin_vals)) * 0.05
+        m_min, m_max = min(m_vals) - delta_m, max(m_vals) + delta_m
+        a_min, a_max = min(a_vals) - delta_a, max(a_vals) + delta_a
+        e_min, e_max = min(e_vals) - delta_e, max(e_vals) + delta_e
+        d_min, d_max = min(d_vals) - delta_d, max(d_vals) + delta_d
+        mass_min, mass_max = min(mass_vals) - delta_ms, \
+        max(mass_vals) + delta_ms
+        bin_min, bin_max = min(bin_vals) - delta_b, max(bin_vals) + delta_b
 
         lkl_old, new_bs_indx, model_done = isoch_fit_params[1], \
         isoch_fit_params[2], isoch_fit_params[3]
