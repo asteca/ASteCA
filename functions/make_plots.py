@@ -953,20 +953,19 @@ def make_plots(output_subdir, clust_name, phot_params, id_coords, phot_data,
             e_m, e_a, e_e, e_d, e_mass, e_bin = [0.] * len(isoch_fit_errors)
 
         # Set ranges used by plots below.
-        m_vals, a_vals, e_vals, d_vals, mass_vals, bin_vals = ip_list[1]
-        delta_m = (max(m_vals) - min(m_vals)) * 0.05
-        delta_a = (max(a_vals) - min(a_vals)) * 0.05
-        delta_e = (max(e_vals) - min(e_vals)) * 0.05
-        delta_d = (max(d_vals) - min(d_vals)) * 0.05
-        delta_ms = (max(mass_vals) - min(mass_vals)) * 0.05
-        delta_b = (max(bin_vals) - min(bin_vals)) * 0.05
-        m_min, m_max = min(m_vals) - delta_m, max(m_vals) + delta_m
-        a_min, a_max = min(a_vals) - delta_a, max(a_vals) + delta_a
-        e_min, e_max = min(e_vals) - delta_e, max(e_vals) + delta_e
-        d_min, d_max = min(d_vals) - delta_d, max(d_vals) + delta_d
-        mass_min, mass_max = min(mass_vals) - delta_ms, \
-        max(mass_vals) + delta_ms
-        bin_min, bin_max = min(bin_vals) - delta_b, max(bin_vals) + delta_b
+        min_max_p = []
+        for param in ip_list[2]:
+            if max(param) != min(param):
+                delta_p = (max(param) - min(param)) * 0.05
+            else:
+                delta_p = max(param) / 100.
+            min_max_p.append([min(param) - delta_p, max(param) + delta_p])
+        m_min, m_max = min_max_p[0]
+        a_min, a_max = min_max_p[1]
+        e_min, e_max = min_max_p[2]
+        d_min, d_max = min_max_p[3]
+        mass_min, mass_max = min_max_p[4]
+        bin_min, bin_max = min_max_p[5]
 
         lkl_old, new_bs_indx, model_done = isoch_fit_params[1], \
         isoch_fit_params[2], isoch_fit_params[3]
