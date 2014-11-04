@@ -6,9 +6,8 @@ python:
   - "3.2_with_system_site_packages"
 before_install:
     - sudo apt-get update
+ 	- sudo apt-get install -qq python-numpy python-scipy
 install:
-  - pip install numpy
   - pip install matplotlib
-  - pip install scipy
 notifications: 
   email: false
