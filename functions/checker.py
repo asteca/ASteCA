@@ -62,10 +62,10 @@ def check(mypath, cl_files):
     # Check photometric input params.
     phot_params = ipd()
 
-    print phot_params[0]
-    print phot_params[1]
-    print phot_params[2]
-    print phot_params[3]
+    print 'phot_params 0', phot_params[0]
+    print 'phot_params 1', phot_params[1]
+    print 'phot_params 2', phot_params[2]
+    print 'phot_params 3', phot_params[3]
 
     # Check px/deg.
     if g.gd_params[0][-1] not in {'px', 'deg'}:

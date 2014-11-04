@@ -34,21 +34,23 @@ def phot_mags():
 def phot_wavelengths(sys, mag):
     '''
     Return filter effective wavelength for the magnitude passed.
-    Values are given in inverse microns.
+    Values are given in Armstrongs.
     '''
 
     all_systs = phot_mags()
 
     wave_dict = {
-        # CCM 89, Table 3
-        'ubvrijhk': (2.78, 2.27, 1.82, 1.43, 1.11, 0.8, 0.63, 0.46),
-        '2mass': (),
-        'washington': ()
+        # Effective wavelengths in Angstroms from Girardi CMD table.
+        '2mass': (12329.79, 16395.59, 21522.05,),
+        'ubvrijhk': (3641.89, 4460.62, 5501.70, 6557.09, 8036.57, 12314.46,
+            16369.53, 21937.19),
+        'washington': (3982.34, 5120.46, 6420.73, 8077.89, 4487.10, 5523.22,
+            6557.09, 8036.57)
         }
 
     # Get index of magnitude as stored in the dictionary.
     m_idx = all_systs[sys].index(mag)
-    # Get effective wavelength for this magnitude.
-    eff_wave = wave_dict[sys][m_idx]
+    # Get effective wavelength for this magnitude in inverse microns.
+    eff_wave = 10000. / wave_dict[sys][m_idx]
 
     return eff_wave
