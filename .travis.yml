@@ -12,3 +12,5 @@ install:
   - pip install matplotlib
 notifications: 
   email: false
+# command to run tests
+script: nosetests
