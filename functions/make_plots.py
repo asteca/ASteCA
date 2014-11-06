@@ -49,7 +49,7 @@ def make_plots(output_subdir, clust_name, phot_params, id_coords, phot_data,
         return cd * (1 / np.sqrt(1 + (np.asarray(x) / rc) ** 2) -
             1 / np.sqrt(1 + (rt / rc) ** 2)) ** 2 + bg
 
-    def reject_outliers(data, m=6.5):
+    def reject_outliers(data, m=6.):
         '''
         Reject outliers from array.
         http://stackoverflow.com/a/16562028/1391441
@@ -85,7 +85,13 @@ def make_plots(output_subdir, clust_name, phot_params, id_coords, phot_data,
     coord, x_name, y_name = coord_lst
 
     # Define plot limits for *all* CMD diagrams.
+    #phot_x_s = sorted(phot_x)[int(len(phot_x) * 0.005):int(len(phot_x) * 0.995)]
+    #phot_y_s = sorted(phot_y)[int(len(phot_y) * 0.005):int(len(phot_y) * 0.995)]
     phot_x_s, phot_y_s = reject_outliers(phot_x), reject_outliers(phot_y)
+    print len(phot_x), len(phot_y)
+    print len(phot_x_s), len(phot_y_s)
+    print min(phot_x_s), max(phot_x_s)
+    print min(phot_y_s), max(phot_y_s)
     x_min_cmd, x_max_cmd = min(phot_x_s) - 0.5, max(phot_x_s) + 0.5
     y_min_cmd, y_max_cmd = max(phot_y_s) + 0.5, min(phot_y_s) - 0.5
 
@@ -510,11 +516,10 @@ def make_plots(output_subdir, clust_name, phot_params, id_coords, phot_data,
             bot_val_left, bot_val_right = err_plot
             # Plot left side of upper envelope (exponential).
             ax10.plot(top_val_left, exp_func(top_val_left,
-            *popt_mag_col[y_axis][diag_axis[3]]), 'r--', lw=2., zorder=3)
+            *popt_mag_col[y_axis][0]), 'r--', lw=2., zorder=3)
             # Plot right side of upper envelope (polynomial).
-            ax10.plot(top_val_right,
-                np.polyval(pol_mag_col[y_axis][diag_axis[3]],
-                    (top_val_right)), 'r--', lw=2., zorder=3)
+            ax10.plot(top_val_right, np.polyval(pol_mag_col[y_axis][0],
+            (top_val_right)), 'r--', lw=2., zorder=3)
         elif er_mode == 'lowexp':
             # Unpack params.
             popt_mag, popt_col1 = err_plot
@@ -581,12 +586,12 @@ def make_plots(output_subdir, clust_name, phot_params, id_coords, phot_data,
         # Plot curve(s) according to the method used.
         if er_mode == 'eyefit':
             # Plot left side of upper envelope (exponential).
-            ax11.plot(bot_val_left, exp_func(bot_val_left,
-            *popt_mag_col[x_axis][diag_axis[1]]), 'r--', lw=2., zorder=3)
+            ax11.plot(top_val_left, exp_func(top_val_left,
+            *popt_mag_col[x_axis][0]), 'r--', lw=2., zorder=3)
             # Plot right side of upper envelope (polynomial).
-            ax11.plot(bot_val_right,
-                np.polyval(pol_mag_col[x_axis][diag_axis[1]],
-                    (bot_val_right)), 'r--', lw=2., zorder=3)
+            ax11.plot(top_val_right, np.polyval(pol_mag_col[x_axis][0],
+            (top_val_right)), 'r--', lw=2., zorder=3)
+
         elif er_mode == 'lowexp':
             # Unpack params.
             popt_mag, popt_col1 = err_plot
