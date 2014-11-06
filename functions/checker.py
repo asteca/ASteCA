@@ -182,45 +182,45 @@ def check(mypath, cl_files):
                     " to run but the folder:\n\n {}\n\ndoes not exists.".format(
                         iso_path))
 
-        ## Read names of all metallicity files stored in isochrones path given.
-        ## Also read full paths to metallicity files.
-        #met_vals_all, met_files = isochp.get_metals(iso_path)
-        ## Read Girardi metallicity files format.
-        #isoch_format = isochp.i_format(iso_select)
-        ## Read all ages in the first metallicity file: met_files[0]
-        ## *WE ASUME ALL METALLICITY FILES HAVE THE SAME NUMBER OF AGE VALUES*
-        #age_vals_all = isochp.get_ages(met_files[0], isoch_format[1])
-        ## Get parameters ranges stored in params_input.dat file.
-        #param_ranges, param_rs = isochp.get_ranges(par_ranges)
-        ## Check that ranges are properly defined.
-        #p_names = [['metallicity', m_rs], ['age', a_rs], ['extinction', e_rs],
-            #['distance', d_rs], ['mass', mass_rs], ['binary', bin_rs]]
-        #for i, p in enumerate(param_ranges):
-            #if not p.size:
-                #sys.exit("ERROR: No values exist for {} range defined:\n\n"
-                #"min={}, max={}, step={}".format(p_names[i][0], *p_names[i][1]))
+        # Read names of all metallicity files stored in isochrones path given.
+        # Also read full paths to metallicity files.
+        met_vals_all, met_files = isochp.get_metals(iso_path)
+        # Read Girardi metallicity files format.
+        isoch_format = isochp.i_format(iso_select)
+        # Read all ages in the first metallicity file: met_files[0]
+        # *WE ASUME ALL METALLICITY FILES HAVE THE SAME NUMBER OF AGE VALUES*
+        age_vals_all = isochp.get_ages(met_files[0], isoch_format[1])
+        # Get parameters ranges stored in params_input.dat file.
+        param_ranges, param_rs = isochp.get_ranges(par_ranges)
+        # Check that ranges are properly defined.
+        p_names = [['metallicity', m_rs], ['age', a_rs], ['extinction', e_rs],
+            ['distance', d_rs], ['mass', mass_rs], ['binary', bin_rs]]
+        for i, p in enumerate(param_ranges):
+            if not p.size:
+                sys.exit("ERROR: No values exist for {} range defined:\n\n"
+                "min={}, max={}, step={}".format(p_names[i][0], *p_names[i][1]))
 
-        ## Check that metallicity and age min, max & steps values are correct.
-        ## Match values in metallicity and age ranges with those available.
-        #z_range, a_range = param_ranges[:2]
-        #met_f_filter, met_values, age_values = isochp.match_ranges(met_vals_all,
-            #met_files, age_vals_all, z_range, a_range)
+        # Check that metallicity and age min, max & steps values are correct.
+        # Match values in metallicity and age ranges with those available.
+        z_range, a_range = param_ranges[:2]
+        met_f_filter, met_values, age_values = isochp.match_ranges(met_vals_all,
+            met_files, age_vals_all, z_range, a_range)
 
-        #if len(z_range) > len(met_values):
-            #sys.exit("ERROR: one or more metallicity files could not be\n"
-            #"matched to the range given. The range defined was:\n\n"
-            #"{}\n\nand the closest available values are:\n\n"
-            #"{}".format(z_range, np.asarray(met_values)))
-        #if len(a_range) > len(age_values):
-            #sys.exit("ERROR: one or more isochrones could not be matched\n"
-            #"to the age range given. The range defined was:\n\n"
-            #"{}\n\nand the closest available values are:\n\n"
-            #"{}".format(a_range, np.asarray(age_values)))
+        if len(z_range) > len(met_values):
+            sys.exit("ERROR: one or more metallicity files could not be\n"
+            "matched to the range given. The range defined was:\n\n"
+            "{}\n\nand the closest available values are:\n\n"
+            "{}".format(z_range, np.asarray(met_values)))
+        if len(a_range) > len(age_values):
+            sys.exit("ERROR: one or more isochrones could not be matched\n"
+            "to the age range given. The range defined was:\n\n"
+            "{}\n\nand the closest available values are:\n\n"
+            "{}".format(a_range, np.asarray(age_values)))
 
         # Read metallicity files.
         try:
             # Store all isochrones in all the metallicity files in isoch_list.
-            ip_list = isochp.ip(mypath, phot_params)
+            ip_list = isochp.ip()
         except:
             print traceback.format_exc()
             sys.exit("ERROR: unknown error reading metallicity files.")
