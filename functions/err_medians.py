@@ -23,8 +23,8 @@ def err_med(method, mag_value, e_max, bright_end, n_interv, interv_mag,
     # [bright_end+(interv_mag*q) + bright_end+(interv_mag*(q+1))]/2.
     # where 'q' is the index that points to the interval being filled. Idem
     # for 'col1_interv' but with color errors.
-    mag_interv = [[] for _ in range(n_interv - 1)]
-    col1_interv = [[] for _ in range(n_interv - 1)]
+    mag_interv = [[] for _ in range(n_interv)]
+    col1_interv = [[] for _ in range(n_interv)]
 
     # Iterate through all stars
     for st_ind, st_mag in enumerate(mag):
@@ -37,7 +37,7 @@ def err_med(method, mag_value, e_max, bright_end, n_interv, interv_mag,
             # the curve fits for both the mag and the color.
 
             # Iterate through all intervals in magnitude.
-            for q in range(n_interv - 1):
+            for q in range(n_interv):
                 # Store star's errors in corresponding interval.
                 if st_mag < (bright_end + (interv_mag * (q + 1))) and \
                 st_mag >= (bright_end + (interv_mag * (q))):
@@ -67,7 +67,7 @@ def err_med(method, mag_value, e_max, bright_end, n_interv, interv_mag,
     sigma_prev = [0.05, 0.05]
 
     # Iterate through all intervals (lists) in the magnitude range.
-    for indx in range(n_interv - 1):
+    for indx in range(n_interv):
 
         # Iterate first for magnitude errors and then for color errors.
         for indx2, interv in enumerate([mag_interv[indx], col1_interv[indx]]):

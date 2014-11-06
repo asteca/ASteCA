@@ -49,11 +49,10 @@ def err_accpt_rejct(phot_data, axes_params, er_params, mode, semi_return):
     # Width of the intervals in magnitude.
     interv_mag = 0.5
     # Number of intervals.
-    n_interv = int(delta_mag / interv_mag)
+    n_interv = int(round(delta_mag / interv_mag))
     # Define list of points spanning the magnitude range starting from the
     # bright end.
-    mag_value = [bright_end + interv_mag * (q + 0.5) for q in
-    range(n_interv - 1)]
+    mag_value = [bright_end + interv_mag * (q + 0.5) for q in range(n_interv)]
 
     # Pack params to pass.
     err_pck = [er_params, bright_end, n_interv, interv_mag, mag_value]
