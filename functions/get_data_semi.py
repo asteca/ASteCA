@@ -5,7 +5,7 @@ Created on Fri Aug 16 11:12:55 2013
 @author: gabriel
 """
 
-import get_in_params as g
+import get_in_params as gip
 
 
 def get_semi(clust_name):
@@ -19,7 +19,7 @@ def get_semi(clust_name):
 
     semi_return = []
     # Mode is semi.
-    if g.mode == 'semi':
+    if gip.mode == 'semi':
 
         semi_file = 'semi_input.dat'
         # Flag to indicate if cluster was found in file.
@@ -49,6 +49,6 @@ def get_semi(clust_name):
             print ("  IMPORTANT: cluster not found in semi_input.dat file.\n"
                 "  Using 'auto' mode.")
             # Re-define global variable.
-            g.mode = 'auto'
+            gip.mode = 'auto'
 
     return semi_return

@@ -35,14 +35,12 @@ def mag_completeness(mag_data):
     return completeness
 
 
-def lf(flag_area_stronger, phot_data, cl_region, field_region):
+def lf(flag_area_stronger, mag_data, cl_region, field_region):
     '''
     Obtain the Luminosity Function for the field regions and the cluster
     region normalized to their area. Substract the field curve from the
     cluster curve so as to clean it.
     '''
-
-    mag_data = np.asarray(phot_data[0][0])
 
     # Calculate number of bins used by the histograms.
     binwidth = 0.25

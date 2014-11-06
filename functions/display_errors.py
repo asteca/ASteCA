@@ -6,10 +6,10 @@ from functions.exp_function import exp_func
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-import get_in_params as g
 
 
-def disp_errors(er_mode, mag, err_plot, acpt_stars, rjct_stars, err_pck):
+def disp_errors(er_mode, mag, err_plot, acpt_stars, rjct_stars, err_pck,
+    axes_params):
     '''
     Plot errors diagrams.
     '''
@@ -18,7 +18,7 @@ def disp_errors(er_mode, mag, err_plot, acpt_stars, rjct_stars, err_pck):
     er_params, bright_end, n_interv, interv_mag, mag_value = err_pck
     e_max, be, be_e = er_params[1:4]
     # Define names for CMD axes.
-    y_ax, x_ax0, m_ord = g.axes_params[0:3]
+    y_ax, x_ax0, m_ord = axes_params[0:3]
     if m_ord == 21:
         x_ax = '(' + x_ax0 + '-' + y_ax + ')'
     elif m_ord == 12:
