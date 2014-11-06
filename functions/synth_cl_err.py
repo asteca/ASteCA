@@ -16,16 +16,17 @@ def exp_2p(x, a, b):
     return a * np.exp(x) + b
 
 
-def synth_clust_err(phot_data, err_pck, bf_params):
+def synth_clust_err(phot_data, err_pck, bf_params, da_params):
     '''
     Generate exponential error function parameters to feed the synthetic
     cluster generation function.
     '''
 
-    bf_flag = bf_params[0]
+    da_flag, bf_flag = da_params[0], bf_params[0]
 
-    # Check if algorithm should run.
-    if bf_flag:
+    # Check if function should run. If DA was executed, we obtain these
+    # values for ploting purposes only.
+    if da_flag != 'skip' or bf_flag:
 
         # Unpack params.
         mag, e_mag, e_col1 = phot_data[3], phot_data[4], phot_data[6]

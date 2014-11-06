@@ -158,7 +158,7 @@ def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
 
     # Obtain exponential error function parameters to use by the
     # synthetic cluster creation function.
-    err_lst = sce(phot_data, err_pck, bf_params)
+    err_lst = sce(phot_data, err_pck, bf_params, da_params)
     # Obtain best fitting parameters for cluster.
     bf_return = bfsc(err_lst, red_memb_prob, completeness, ip_list, bf_params,
         sc_params, ga_params, ps_params)
