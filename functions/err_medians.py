@@ -2,7 +2,6 @@
 @author: gabriel
 """
 
-import get_in_params as g
 import numpy as np
 
 
@@ -52,7 +51,8 @@ def median_sigma(indx, interv, bright_end, mag_value, sigma_prev):
     return median, sigma, sigma_prev
 
 
-def err_med(method, err_pck, mag, e_mag, e_col):
+def err_med(method, mag_value, e_max, bright_end, n_interv, interv_mag,
+    mag, e_mag, e_col):
     '''
     1- Separate stars in magnitude intervals for errors of magnitude and of
     color.
@@ -62,17 +62,14 @@ def err_med(method, err_pck, mag, e_mag, e_col):
     color errors.
     '''
 
-    e_max = g.er_params[1]
-    be_m, interv_mag, mag_value = err_pck
-
     # Each list within the 'mag_interv' list holds all the magnitude error
     # values for all the stars in the interval 'q' which corresponds to the
     # mag value:
     # [bright_end+(interv_mag*q) + bright_end+(interv_mag*(q+1))]/2.
     # where 'q' is the index that points to the interval being filled. Idem
     # for 'col_interv' but with color errors.
-    mag_interv = [[[] for _ in mag_value] for _ in e_mag]
-    col_interv = [[[] for _ in mag_value] for _ in e_col]
+    mag_interv = [[[] for _ in range(n_interv)] for _ in e_mag]
+    col_interv = [[[] for _ in range(n_interv)] for _ in e_col]
 
     # Create list of combined errors for all stars.
     em_z, ec_z = zip(*e_mag), zip(*e_col)
@@ -82,16 +79,16 @@ def err_med(method, err_pck, mag, e_mag, e_col):
     for st_ind, st_mag in enumerate(mag):
 
         # Use only stars below the e_max limit.
-        if all(e < e_max for e in e_mc[st_ind]) and st_mag > be_m:
+        if all(e < e_max for e in e_mc[st_ind]) and st_mag > bright_end:
             # Store each star in its corresponding
             # interval in the segmented mag list which will be used to calculate
             # the curve fits for both the mag and the color.
 
             # Iterate through all intervals in magnitude.
-            for q in range(len(mag_value)):
+            for q in range(n_interv):
                 # Store star's errors in corresponding interval.
-                if (be_m + interv_mag * q) <= st_mag < (be_m +
-                interv_mag * (q + 1)):
+                if st_mag < (bright_end + (interv_mag * (q + 1))) and \
+                st_mag >= (bright_end + (interv_mag * (q))):
                     # for each magnitude defined.
                     for i, e_m in enumerate(e_mag):
                         # Star falls in this interval, store its e_mag value
@@ -124,11 +121,11 @@ def err_med(method, err_pck, mag, e_mag, e_col):
     for j, mag_i in enumerate(mag_interv):
 
         # Iterate through all intervals (lists) in the main magnitude range.
-        for indx in range(len(mag_value)):
+        for indx in range(n_interv):
             # Check that list is not empty.
             if sum(mag_i[indx]) != 0:
                 median, sigma, sigma_prev = median_sigma(indx, mag_i[indx],
-                    be_m, mag_value, sigma_prev)
+                    bright_end, mag_value, sigma_prev)
             # We obtained the median and sigma value for this interval.
             # Store just median OR median+sigma values depending on the
             # method selected.
@@ -139,10 +136,10 @@ def err_med(method, err_pck, mag, e_mag, e_col):
 
     # Now for colors.
     for j, col_i in enumerate(col_interv):
-        for indx in range(len(mag_value)):
+        for indx in range(n_interv):
             if sum(col_i[indx]) != 0:
                 median, sigma, sigma_prev = median_sigma(indx, col_i[indx],
-                    be_m, mag_value, sigma_prev)
+                    bright_end, mag_value, sigma_prev)
 
             if method == 'synth_clust':
                 e_col_value[j].append(median)
