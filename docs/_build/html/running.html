@@ -1,0 +1,220 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>3. Running &mdash; ASteCA  documentation</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+        <link rel="author" title="About these documents"
+              href="about.html"/>
+    <link rel="top" title="ASteCA  documentation" href="index.html"/>
+        <link rel="next" title="4. Synthetic clusters" href="synth_clust.html"/>
+        <link rel="prev" title="2. Download" href="download.html"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        <a href="index.html" class="fa fa-home"> ASteCA</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+        
+            <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="about.html">1. About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="download.html">2. Download</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="download.html#requirements">2.1. Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="download.html#python-dependencies">2.2. Python dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="download.html#python-distributions">2.3. Python distributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="download.html#extra-packages">2.4. Extra packages</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">3. Running</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#theoretical-isochrones">3.1. Theoretical isochrones</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="synth_clust.html">4. Synthetic clusters</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="synth_clust.html#imf-sampling">4.1. IMF sampling</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="cmd_support.html">5. Adding CMD support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="int_mags.html">6. Integrated magnitudes</a></li>
+</ul>
+
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">ASteCA</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>3. Running</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="_sources/running.txt" rel="nofollow"> View page source</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            
+  <div class="section" id="running">
+<h1>3. Running<a class="headerlink" href="#running" title="Permalink to this headline">¶</a></h1>
+<p>To run the code simply position a cluster’s photometric data file in the
+<tt class="docutils literal"><span class="pre">/input</span></tt> folder, modify the <tt class="docutils literal"><span class="pre">params_input.dat</span></tt> file to both
+inform the code of the distribution of columns in your photometric file
+and set the values for each function within the code.
+Photometric files can also be stored in <tt class="docutils literal"><span class="pre">/input</span></tt> inside a
+sub-folder.</p>
+<p><strong>Every</strong> file inside the <tt class="docutils literal"><span class="pre">/input</span></tt> folder (inside or outside a
+sub-folder) will be processed by <strong>ASteCA</strong>, with the exception of the
+membership probabilities files that end with a <tt class="docutils literal"><span class="pre">.memb.dat</span></tt> extension
+(see XXX).</p>
+<p>Once file(s) are in place and the <tt class="docutils literal"><span class="pre">params_input.dat</span></tt> file correctly
+modified, the code can be executed with the command:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>python asteca.py
+</pre></div>
+</div>
+<p>The <tt class="docutils literal"><span class="pre">CLUSTER.DAT</span></tt> file located in the <tt class="docutils literal"><span class="pre">/input</span></tt> folder contains
+a synthetic open cluster generated via the <a class="reference external" href="http://www.physics.uc.edu/~bogdan/massclean/">MASSCLEAN</a> package with the
+following parameter values:</p>
+<div class="highlight-python"><div class="highlight"><pre>z=
+log(age)=
+E(B-V)=
+(m-M)o=
+</pre></div>
+</div>
+<p>and serves as an example cluster to be analyzed with <strong>ASteCA</strong>.</p>
+<div class="section" id="theoretical-isochrones">
+<h2>3.1. Theoretical isochrones<a class="headerlink" href="#theoretical-isochrones" title="Permalink to this headline">¶</a></h2>
+<p><strong>ASteCA</strong> needs at least one set of theoretical isochrones stored in a
+<tt class="docutils literal"><span class="pre">/asteca/isochrones</span></tt> folder to be able to apply the function that
+estimates the clusters’ parameters. <a class="reference external" href="http://stev.oapd.inaf.it/cgi-bin/cmd">Girardi isochrones</a> are currently
+the default but any set can in practice be used (with minor changes made
+to the code). Please <a class="reference external" href="mailto:gabrielperren&#37;&#52;&#48;gmail&#46;com">contact me</a> if you wish
+to use a different set of theoretical isochrones.</p>
+<p>The isochrones can be downloaded manually or the package <a class="reference external" href="https://github.com/Gabriel-p/ezpadova">ezPadova-2</a>
+can be used to automatically fetch them from the site.</p>
+</div>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="synth_clust.html" class="btn btn-neutral float-right" title="4. Synthetic clusters"/>Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="download.html" class="btn btn-neutral" title="2. Download"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2014, Gabriel I Perren.
+    </p>
+  </div>
+
+  <a href="https://github.com/snide/sphinx_rtd_theme">Sphinx theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

@@ -1,0 +1,4 @@
+Installation
+============
+
+The packaged zip or tarball for the latest release can be downloaded from:
