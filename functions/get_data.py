@@ -11,7 +11,7 @@ def rem_bad_stars(id_star, x_data, y_data, mag_data, e_mag, col1_data,
     Remove stars from all lists that have too large magnitude or color
     values (or their errors) which indicates a bad photometry.
     '''
-    # Set photometric range for accepted stars.
+    # Set value of maximum limit.
     min_lim, max_lim = -50., 50.
 
     # Store indexes of stars that should be removed.
@@ -28,14 +28,13 @@ def rem_bad_stars(id_star, x_data, y_data, mag_data, e_mag, col1_data,
     return id_clean, clean_array
 
 
-def get_data(data_file, gd_params, mags_colors):
+def get_data(data_file, gd_params):
     '''
     Get photometric data from the cluster's data file.
     '''
 
     # Read indexes from input params.
-    id_inx, x_inx, y_inx = gd_params[0][:-1]
-    magnitudes, colors = gd_params[1], gd_params[2]
+    id_inx, x_inx, y_inx, m_inx, em_inx, c_inx, ec_inx = gd_params[:-1]
 
     # Loads the data in 'myfile' as a list of N lists where N is the number of
     # columns. Each of the N lists contains all the data for the column.
@@ -43,9 +42,9 @@ def get_data(data_file, gd_params, mags_colors):
     data = np.genfromtxt(data_file, dtype=float, filling_values=99.999,
                          unpack=True)
 
-    # Extract coordinates and photometric data colums, except IDs.
-    x_data, y_data = data[x_inx], data[y_inx]
-    mag_data, e_mag, col1_data, e_col1 = data[m_inx], data[em_inx],\
+    # Read data colums, except IDs.
+    x_data, y_data, mag_data, e_mag, col1_data, e_col1 = \
+    data[x_inx], data[y_inx], data[m_inx], data[em_inx],\
     data[c_inx], data[ec_inx]
 
     # Now read IDs as strings.

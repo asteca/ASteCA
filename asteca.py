@@ -30,8 +30,7 @@ def main():
     # As part of the checking process, and to save time, the isochrone
     # files are read and stored here.
     # The 'R_in_place' flag indicates that R and rpy2 are installed.
-    #ip_list, R_in_place = check(mypath, cl_files)
-    ip_list, R_in_place = [], False
+    ip_list, R_in_place = check(mypath, cl_files)
 
     # Import here to ensure the check has passed and all the necessary
     # packages are installed.

@@ -106,12 +106,14 @@ def bin_center(xedges, yedges, kde_cent):
 
 
 def get_center(x_data, y_data, mag_data, hist_lst, gc_params, mode,
-    semi_return):
+    semi_return, coord_lst):
     """
     Obtains the center of the putative cluster. Returns the center values
     along with its errors and several arrays related to histograms, mainly for
     plotting purposes.
     """
+
+    coord = coord_lst[0]
 
     st_dev_lst = [2., 2.5, 3., 3.5, 4.]
     # Set flags.
@@ -149,7 +151,8 @@ def get_center(x_data, y_data, mag_data, hist_lst, gc_params, mode,
             # 2D histogram with a gaussian filter applied.
             hist_2d_g = gaussian_filter(hist, st_dev_lst[0], mode='constant')
 
-            print 'Semi center found: ({:g}, {:g}).'.format(*kde_cent)
+            print 'Semi center found: ({:g}, {:g}) {c}.'.format(
+                *kde_cent, c=coord)
         else:
             # Use 'auto' mode.
             mode_semi = False
@@ -186,7 +189,8 @@ def get_center(x_data, y_data, mag_data, hist_lst, gc_params, mode,
             cent_std_dev[1] > 0.1 * kde_cent[1]:
             flag_center_std = True
 
-        print 'Auto center found: ({:g}, {:g}).'.format(*kde_cent)
+        print 'Auto center found: ({:g}, {:g}) {c}.'.format(*kde_cent,
+            c=coord)
 
     # If Manual mode is set, display center and ask the user to accept it or
     # input new one.

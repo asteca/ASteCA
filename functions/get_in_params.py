@@ -34,15 +34,12 @@ def get_in_params(mypath):
                     mode = str(reader[1])
 
                 # Input data parameters.
-                elif reader[0] == 'PI':
-                    id_coords = map(int, reader[1:4])
-                    id_coords.append(str(reader[4]))
-                elif reader[0] == 'PM':
-                    mags = reader[1:]
-                elif reader[0] == 'PC':
-                    colors = reader[1:]
-                elif reader[0] == 'PG':
-                    phot_diag = reader[1:]
+                elif reader[0] == 'PD':
+                    gd_params = map(int, reader[1:])
+                elif reader[0] == 'PX':
+                    gd_params.append(str(reader[1]))
+                elif reader[0] == 'CMD':
+                    cmd_select = int(reader[1])
 
                 # Output parameters.
                 elif reader[0] == 'MP':
@@ -124,7 +121,6 @@ def get_in_params(mypath):
                     n_es = int(reader[9])
 
     # Pack params in lists.
-    gd_params = [id_coords, mags, colors, phot_diag]
     pl_params = [flag_make_plot, plot_frmt, plot_dpi]
     gh_params = [gh_params0, gh_params1]
     gc_params = [gc_params0, gc_params1]
@@ -132,9 +128,39 @@ def get_in_params(mypath):
     pv_params = [pv0_params, pv1_params]
     da_params = [da0_params, da1_params]
 
+    # Fix isochrones location according to the CMD and set selected.
+    text1, text2 = 'none', 'none'
+    if cmd_select in {1, 2, 3}:
+        text1 = 'ubvi'
+    elif cmd_select in {4}:
+        text1 = 'wash'
+    elif cmd_select in {5, 6, 7}:
+        text1 = '2mass'
+    if iso_select == 'MAR':
+        text2 = 'marigo'
+    elif iso_select == 'PAR':
+        text2 = 'parsec'
+    # Set iso_path according to the above values.
+    iso_path = join(mypath + '/isochrones/' + text1 + '_' + text2)
+
+    # Fix magnitude and color names for the CMD axis.
+    # m_1 is the y axis magnitude, m_2 is the magnitude used to obtain the
+    # color index and the third value in each key indicates how the color
+    # is to be formed, e.g: '12' means (m_1 - m_2)
+    cmds_dic = {1: ('V', 'B', 21), 2: ('V', 'I', 12), 3: ('V', 'U', 21),
+        4: ('{T_1}', 'C', 21), 5: ('J', 'H', 12), 6: ('H', 'J', 21),
+        7: ('K', 'H', 21)}
+    m_1, m_2, m_ord = cmds_dic[cmd_select]
+
+    # Fixed maximum and minimum axis values for the CMD plots.
+    # col_min col_max mag_min mag_max
+    xy_minmax = [-1., 4., 7., 30.]
+    # Store axes params.
+    axes_params = [m_1, m_2, m_ord, xy_minmax]
+
     # Store photometric system params in lists.
     par_ranges = [m_rs, a_rs, e_rs, d_rs, mass_rs, bin_rs]
-    ps_params = [iso_select, par_ranges]
+    ps_params = [iso_path, cmd_select, iso_select, par_ranges]
 
     # Store GA params in lists.
     bf_params = [bf_flag, best_fit_algor, N_b]
@@ -144,4 +170,4 @@ def get_in_params(mypath):
 
     return mode, done_dir, gd_params, gh_params, gc_params, cr_params, kp_flag,\
     im_flag, er_params, fr_number, pv_params, da_params, ps_params, bf_params,\
-    sc_params, ga_params, rm_params, pl_params, flag_move_file
+    sc_params, ga_params, rm_params, pl_params, flag_move_file, axes_params

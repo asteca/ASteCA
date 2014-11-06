@@ -23,16 +23,16 @@ def isoch_format(iso_select, cmd_select):
         mass = 1
         if cmd_select == 1:
             # V, B
-            mags = [9, 8]
+            mag1, mag2 = 9, 8
         elif cmd_select == 2:
             # V, I
-            mags = [9, 11]
+            mag1, mag2 = 9, 11
         elif cmd_select == 3:
             # B, U
-            mags = [8, 7]
+            mag1, mag2 = 8, 7
         elif cmd_select == 4:
             # T1, C
-            mags = [9, 7]
+            mag1, mag2 = 9, 7
     elif iso_select == 'PAR':
         # String that identifies the beginning of a new isochrone.
         line_start = "#\tIsochrone  Z = "
@@ -40,27 +40,24 @@ def isoch_format(iso_select, cmd_select):
         mass = 2
         if cmd_select == 1:
             # V, B
-            mags = [10, 9]
+            mag1, mag2 = 10, 9
         elif cmd_select == 2:
             # V, I
-            mags = [10, 12]
+            mag1, mag2 = 10, 12
         if cmd_select == 3:
             # V, U
-            mags = [10, 8]
+            mag1, mag2 = 10, 8
         elif cmd_select == 4:
             # T1, C
-            mags = [10, 8]
+            mag1, mag2 = 10, 8
         elif cmd_select == 5:
             # J, H
-            mags = [8, 9]
+            mag1, mag2 = 8, 9
         elif cmd_select == 6:
             # H, J
-            mags = [9, 8]
+            mag1, mag2 = 9, 8
         elif cmd_select == 7:
             # K_s, H
-            mags = [10, 9]
-        elif cmd_select == 8:
-            # U, B, V
-            mags = [8, 9, 10]
+            mag1, mag2 = 10, 9
 
-    return line_start, age_format, mass, mags
+    return line_start, age_format, mass, mag1, mag2

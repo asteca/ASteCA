@@ -117,7 +117,7 @@ def match_ranges(met_vals_all, met_files, age_vals_all, z_range, a_range):
     return met_f_filter, met_values, age_values
 
 
-def read_met_file(met_f, age_values, cmd_select, isoch_format, gd_params):
+def read_met_file(met_f, age_values, cmd_select, isoch_format):
     '''
     Read a given metallicity file and return the isochrones for the ages
     within the age range.
@@ -125,7 +125,7 @@ def read_met_file(met_f, age_values, cmd_select, isoch_format, gd_params):
 
     # Read line start format and columns indexes for the selected set of
     # Girardi isochrones.
-    line_start, age_format, i_mass, i_mags = isoch_format
+    line_start, age_format, imass_idx, mag1_idx, mag2_idx = isoch_format
 
     # Initialize list that will hold all the isochrones for this
     # metallicity value.
@@ -135,9 +135,7 @@ def read_met_file(met_f, age_values, cmd_select, isoch_format, gd_params):
     with open(met_f, mode="r") as f_iso:
 
         # Define empty lists.
-        isoch_mag = [[] for _ in range(int(len(gd_params[1]) / 2))]
-        isoch_col = [[] for _ in range(int(len(gd_params[2]) / 2))]
-        isoch_mas = []
+        isoch_col, isoch_mag, isoch_mas = [], [], []
 
         # Initial value for age to avoid 'not defined' error.
         age = -99.
@@ -172,22 +170,15 @@ def read_met_file(met_f, age_values, cmd_select, isoch_format, gd_params):
                     # Color.
                     # Generate colors correctty <-- HARDCODED, FIX
                     if cmd_select in {2, 5}:
-                        isoch_col.append(float(reader[i_mags[0]]) -
-                        float(reader[i_mags[1]]))
-                    elif cmd_select == 8:
-                        # (U-B)
-                        isoch_col[0].append(float(reader[i_mags[0]]) -
-                        float(reader[i_mags[1]]))
-                        # (B-V)
-                        isoch_col[1].append(float(reader[i_mags[1]]) -
-                        float(reader[i_mags[2]]))
+                        isoch_col.append(float(reader[mag1_idx]) -
+                        float(reader[mag2_idx]))
                     else:
-                        isoch_col.append(float(reader[i_mags[1]]) -
-                        float(reader[i_mags[0]]))
+                        isoch_col.append(float(reader[mag2_idx]) -
+                        float(reader[mag1_idx]))
                     # Magnitude.
-                    isoch_mag.append(float(reader[i_mags[0]]))
+                    isoch_mag.append(float(reader[mag1_idx]))
                     # Mass
-                    isoch_mas.append(float(reader[i_mass]))
+                    isoch_mas.append(float(reader[imass_idx]))
 
         # Save the last isochrone when EOF is reached.
         else:

@@ -41,7 +41,7 @@ def check(mypath, cl_files):
         mode, done_dir, gd_params, gh_params, gc_params, cr_params, kp_flag,\
         im_flag, er_params, fr_number, pv_params, da_params, ps_params,\
         bf_params, sc_params, ga_params, rm_params, pl_params,\
-        flag_move_file = gip(mypath)
+        flag_move_file, axes_params = gip(mypath)
     except Exception:
         # Halt code.
         print traceback.format_exc()
@@ -60,9 +60,13 @@ def check(mypath, cl_files):
                 "not exist.")
 
     # Check px/deg.
-    if gd_params[0][-1] not in {'px', 'deg'}:
+    if gd_params[-1] not in {'px', 'deg'}:
         sys.exit("ERROR: the coordinates given in the input file ({})"
                 "are incorrect.".format(gd_params[-1]))
+
+    # Selected CMD.
+    if ps_params[1] not in {1, 2, 3, 4, 5, 6, 7}:
+        sys.exit("ERROR: CMD selected ({}) is not valid.".format(ps_params[1]))
 
     # Output figure.
     if pl_params[0] is True:
@@ -159,6 +163,11 @@ def check(mypath, cl_files):
         # Unpack.
         iso_path, cmd_select, iso_select, par_ranges = ps_params
         m_rs, a_rs, e_rs, d_rs, mass_rs, bin_rs = par_ranges
+
+        # Check that CMD is correctly set.
+        if cmd_select not in {1, 2, 3, 4, 5, 6, 7}:
+            sys.exit("ERROR: the stored CMD value ({}) does not match a valid"
+                " selection.".format(cmd_select))
 
         # Check selected isochrones set.
         if iso_select not in {'MAR', 'PAR'}:

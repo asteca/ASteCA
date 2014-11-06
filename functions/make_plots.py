@@ -64,12 +64,12 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
         x_ax = '(' + y_ax + '-' + x_ax0 + ')'
 
     # Define system of coordinates used.
-    px_deg = gd_params[0][-1]
+    px_deg = gd_params[-1]
     coord_lst = ['px', 'x', 'y'] if px_deg == 'px' else ['deg', 'ra', 'dec']
     coord, x_name, y_name = coord_lst
 
     # Define plot limits for *all* CMD diagrams.
-    x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd = -1., 4., 7., 30.
+    x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd = axes_params[3]
     col1_min, col1_max = max(x_min_cmd, min(col1_data) - 0.2),\
     min(x_max_cmd, max(col1_data) + 0.2)
     mag_min, mag_max = min(y_max_cmd, max(mag_data) + 0.5),\
