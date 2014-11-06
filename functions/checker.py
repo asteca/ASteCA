@@ -62,10 +62,10 @@ def check(mypath, cl_files):
     # Check photometric input params.
     phot_params = ipd()
 
-    print 'phot_params 0', phot_params[0]
-    print 'phot_params 1', phot_params[1]
-    print 'phot_params 2', phot_params[2]
-    print 'phot_params 3', phot_params[3]
+    print phot_params[0]
+    print phot_params[1]
+    print phot_params[2]
+    print phot_params[3]
 
     # Check px/deg.
     if g.gd_params[0][-1] not in {'px', 'deg'}:
@@ -92,10 +92,6 @@ def check(mypath, cl_files):
     if g.cr_params[0] not in {'auto', 'manual'}:
         sys.exit("ERROR: mode selected ({}) for radius finding"
         "function is not valid.".format(g.cr_params[0]))
-    if g.cr_params[0] is 'manual' and g.cr_params[1] < 4:
-        print ("  WARNING: number of points in manual radius\n"
-        "  mode is {} < 4. A value of 4 will be used.".format(
-        g.cr_params[1]))
 
     # Errors function.
     if g.er_params[0] not in {'emax', 'lowexp', 'eyefit'}:

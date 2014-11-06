@@ -122,12 +122,12 @@ CC   auto         0.25
 # Radius function parameters.
 #
 # * mode: auto / manual
-#   - auto: the 'points' parameter will set as 25% of the total number of
+#   - auto: the 'points' parameter will set as 20% of the total number of
 #     points in the radial density profile.
 #   - manual: the value in 'points' will be used.
 # * points: Number of points that must be found below a minimum delta around
 #   the background value. This condition indicates that the star density
-#   has stabilized.
+#   has stabilized. The 'auto' value is 25% of the points in the RDP.
 #
 #    mode   points
 CR   auto        5

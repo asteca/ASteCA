@@ -25,7 +25,7 @@ def get_mag_idx(mi, phot_params):
         for mag in sys[1]:
             if mag == mi:
                 # Index of magnitude in stored theoretical values obtained.
-                # Get wavelength in inverse microns for this magnitude.
+                # Get wavwlwngth in microns for this magnitude.
                 mw = pw(sys[0], mag)
                 # Get CCM coeficient for this magnitude.
                 ccm_c = gcc(mw)
@@ -41,26 +41,26 @@ def get_mc_order(phot_params, isochs_interp):
     '''
 
     isoch_order, ccm_coefs = [], [[], []]
-    for _met in isochs_interp:
+    for m_i, _m in enumerate(isochs_interp):
         met = []
-        for _isoch in _met:
+        for a_i, _a in enumerate(_m):
             # Append masses and make room for mags and colors.
-            isoch = [_isoch[0], _isoch[1], [], []]
+            isoch = [_a[0], _a[1], [], []]
             # Search and append ordered magnitudes.
             for m in phot_params[1][0]:
-                # Return index of this mag as stored in phot_params[2]
+                # Return index if this mag as stored in phot_params[2]
                 mi, ccm_i = get_mag_idx(m[1:], phot_params)
-                isoch[2].append(_isoch[mi])
+                isoch[2].append(_a[mi])
                 ccm_coefs[0].append(ccm_i)
             # Search and append ordered colors.
             for c in phot_params[1][1]:
-                # Return index of this mag as stored in phot_params[2]
+                # Return index if this mag as stored in phot_params[2]
                 c1, c2 = c[1:].split('-')
                 # Search for indexes of each magnitude in the color.
                 m1, ccm_1 = get_mag_idx(c1, phot_params)
                 m2, ccm_2 = get_mag_idx(c2, phot_params)
                 # Append color.
-                isoch[3].append((_isoch[m1] - _isoch[m2]))
+                isoch[3].append((_a[m1] - _a[m2]))
                 ccm_coefs[1].append((ccm_1 - ccm_2))
             met.append(isoch)
         isoch_order.append(met)
@@ -68,28 +68,19 @@ def get_mc_order(phot_params, isochs_interp):
     return isoch_order, ccm_coefs
 
 
-def interp_isoch(isoch_list):
+def interp_isoch(isochrone):
     '''
-    Interpolate extra points into the theoretical isochrones passed.
+    Interpolate extra points into the photometric data passed.
     '''
     N = 2000
-    t = np.linspace(0, 1, N)
-
-    isochs_interp = [[] for _ in isoch_list]
-    # For each metallicity value.
-    for i, met in enumerate(isoch_list):
-        # For each age value (ie: isochrone)
-        for isoch in met:
-            # Interpolate all magnitudes defined.
-            xp = np.linspace(0, 1, len(isoch[0]))
-            # Store isochrone's interpolated values.
-            isochs_interp[i].append(np.asarray([np.interp(t, xp, _)
-                for _ in isoch]))
+    t, xp = np.linspace(0, 1, N), np.linspace(0, 1, len(isochrone[0]))
+    # Store isochrone's interpolated values.
+    isoch_inter = np.asarray([np.interp(t, xp, _) for _ in isochrone])
 
     # *** DELETE ****
     #isoch_inter = np.asarray([np.array(_) for _ in isochrone])
 
-    return isochs_interp
+    return isoch_inter
 
 
 def read_met_file(met_f, age_values, line_start, mass_i, mass_a, mags_idx,
@@ -365,8 +356,8 @@ def ip(mypath, phot_params):
         param_ranges, param_rs, met_f_filter, met_values, age_values = \
         get_met_age_values(iso_path)
 
-        print '\n', 'met_vals', met_values
-        print 'age_vals', age_values
+        print '\n', met_values
+        print age_values
 
         print 'Interpolating all isochrones for each photometric system.'
         # Get isochrones for every photometric system defined.
@@ -382,7 +373,14 @@ def ip(mypath, phot_params):
             # isoch_list = [met_1, met_2, ..., met_P]
 
             # Interpolate extra points into all isochrones.
-            isochs_interp0 = interp_isoch(isoch_list)
+            isochs_interp0 = [[] for _ in isoch_list]
+            # For each metallicity value.
+            for i, _ in enumerate(isoch_list):
+                # For each age value (ie: isochrone)
+                for isoch in _:
+                    # Interpolate all magnitudes defined.
+                    isochs_interp0[i].append(interp_isoch(isoch))
+
             # For the first photometric system, store the masses that were
             # read.
             if sys_idx == 0:
