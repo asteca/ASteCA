@@ -239,52 +239,7 @@ def interp_isoch(isochrone):
     return isoch_inter
 
 
-def syst_isoch_generator(iso_path, phot_params):
-    '''
-    For the photometric system passed, obtain the interpolated isochrones
-    according to the magnitudes used.
-    '''
-
-    # Unpack.
-    iso_select, par_ranges = g.ps_params[:-1]
-
-    # Read names of all metallicity files stored in isochrones path given.
-    # I.e.: store all metallicity values available.
-    # Also read full paths to metallicity files.
-    met_vals_all, met_files = get_metals(iso_path)
-
-    # Read Girardi metallicity files format.
-    isoch_format = i_format(iso_select)
-
-    # Read all ages in the first metallicity file: met_files[0]
-    # *WE ASUME ALL METALLICITY FILES HAVE THE SAME NUMBER OF AGE VALUES*
-    # (that's why we use the first metallicity file stored to obtain all
-    # the age values)
-    # I.e: store all age values available.
-    age_vals_all = get_ages(met_files[0], isoch_format[1])
-
-    # Get parameters ranges stored in params_input.dat file.
-    param_ranges, param_rs = get_ranges(par_ranges)
-
-    # Match values in metallicity and age ranges with those available.
-    z_range, a_range = param_ranges[:2]
-    met_f_filter, met_values, age_values = match_ranges(met_vals_all,
-        met_files, age_vals_all, z_range, a_range)
-
-    # Get isochrones and their parameter values.
-    isoch_list = get_isochs(iso_select, met_f_filter, age_values,
-        isoch_format)
-
-    # Interpolate extra points into all isochrones.
-    isochs_interp = [[] for _ in isoch_list]
-    for i, _ in enumerate(isoch_list):
-        for isoch in _:
-            isochs_interp[i].append(interp_isoch(isoch))
-
-    return
-
-
-def ip(mypath, phot_params):
+def ip():
     '''
     Read isochrones and parameters if best fit function is set to run.
     '''
@@ -294,14 +249,43 @@ def ip(mypath, phot_params):
     bf_flag = g.bf_params[0]
     if bf_flag is True:
 
-        for syst in phot_params[2]:
-            iso_path = join(mypath + '/isochrones/' + syst[0])
+        # Unpack.
+        iso_select, par_ranges = g.ps_params[:-1]
 
-            isochs_interp = syst_isoch_generator(iso_path, phot_params)
+        # Read names of all metallicity files stored in isochrones path given.
+        # I.e.: store all metallicity values available.
+        # Also read full paths to metallicity files.
+        met_vals_all, met_files = get_metals(iso_path)
 
-            # Pack params.
-            param_values = [met_values, age_values] + param_ranges[2:]
-            ip_list = [isochs_interp, param_values, param_rs]
+        # Read Girardi metallicity files format.
+        isoch_format = i_format(iso_select, cmd_select)
+
+        # Read all ages in the first metallicity file: met_files[0]
+        # *WE ASUME ALL METALLICITY FILES HAVE THE SAME NUMBER OF AGE VALUES*
+        # I.e: store all age values available.
+        age_vals_all = get_ages(met_files[0], isoch_format[1])
+
+        # Get parameters ranges stored in params_input.dat file.
+        param_ranges, param_rs = get_ranges(par_ranges)
+
+        # Match values in metallicity and age ranges with those available.
+        z_range, a_range = param_ranges[:2]
+        met_f_filter, met_values, age_values = match_ranges(met_vals_all,
+            met_files, age_vals_all, z_range, a_range)
+
+        # Get isochrones and their parameter values.
+        isoch_list = get_isochs(iso_select, cmd_select, met_f_filter,
+            age_values, isoch_format)
+
+        # Interpolate extra points into all isochrones.
+        isochs_interp = [[] for _ in isoch_list]
+        for i, _ in enumerate(isoch_list):
+            for isoch in _:
+                isochs_interp[i].append(interp_isoch(isoch))
+
+        # Pack params.
+        param_values = [met_values, age_values] + param_ranges[2:]
+        ip_list = [isochs_interp, param_values, param_rs]
 
         lens = [len(_) for _ in param_values]
         total = reduce(lambda x, y: x * y, lens, 1)

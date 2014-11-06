@@ -220,7 +220,7 @@ def check(mypath, cl_files):
         # Read metallicity files.
         try:
             # Store all isochrones in all the metallicity files in isoch_list.
-            ip_list = isochp.ip()
+            ip_list = isochp.ip(g.ps_params, g.bf_params[0])
         except:
             print traceback.format_exc()
             sys.exit("ERROR: unknown error reading metallicity files.")

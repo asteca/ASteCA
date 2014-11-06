@@ -6,7 +6,7 @@ Created on Tue Sep 23 13:03:39 2014
 """
 
 
-def isoch_format(iso_select, syst):
+def isoch_format(iso_select, cmd_select):
     '''
     Read line start format and columns indexes for the selected set of
     Girardi isochrones and chosen CMD.
@@ -20,28 +20,47 @@ def isoch_format(iso_select, syst):
         # String that identifies the beginning of a new isochrone.
         line_start = "#\tIsochrone\tZ ="
         # Mass column.
-        mass_i, mass_a = 1, 2
+        mass = 1
+        if cmd_select == 1:
+            # V, B
+            mags = [9, 8]
+        elif cmd_select == 2:
+            # V, I
+            mags = [9, 11]
+        elif cmd_select == 3:
+            # B, U
+            mags = [8, 7]
+        elif cmd_select == 4:
+            # T1, C
+            mags = [9, 7]
     elif iso_select == 'PAR':
         # String that identifies the beginning of a new isochrone.
         line_start = "#\tIsochrone  Z = "
         # Mass column.
-        mass_i, mass_a = 2, 3
+        mass = 2
+        if cmd_select == 1:
+            # V, B
+            mags = [10, 9]
+        elif cmd_select == 2:
+            # V, I
+            mags = [10, 12]
+        if cmd_select == 3:
+            # V, U
+            mags = [10, 8]
+        elif cmd_select == 4:
+            # T1, C
+            mags = [10, 8]
+        elif cmd_select == 5:
+            # J, H
+            mags = [8, 9]
+        elif cmd_select == 6:
+            # H, J
+            mags = [9, 8]
+        elif cmd_select == 7:
+            # K_s, H
+            mags = [10, 9]
+        elif cmd_select == 8:
+            # U, B, V
+            mags = [8, 9, 10]
 
-    # Dictionary that stores the names and column indexes for each
-    # magnitude defined in each phoyometric system.
-    all_systs = {
-        'UBVRIJKH': (8, ['U', 'B', 'V', 'R', 'I', 'J', 'H', 'K']),
-        'JHKs': (8, ['J', 'H', 'Ks']),
-        'CMT1T2BVRI': (8, ['C', 'M', 'T1', 'T2', 'B', 'V', 'R', 'I'])}
-
-    # Identify indexes of magnitudes defined in the input paramrter file
-    # as stored in its respective photometric system's metallicity files.
-    mags = []
-    # Name of photometric system as defined in the dictionary above.
-    sys = syst[0]
-    # For each magnitude defined in this photometric system.
-    for mag in syst[1]:
-        # Store the correct column index for this magnitude.
-        mags.append(all_systs[sys][0] + all_systs[sys][1].index(mag))
-
-    return line_start, age_format, mass_i, mass_a, mags
+    return line_start, age_format, mass, mags

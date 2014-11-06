@@ -8,7 +8,7 @@ Created on Fri Jan 17 16:35:24 2014
 import numpy as np
 
 
-def move_isoch(isochrone, e, d):
+def move_isoch(cmd_sel, isochrone, e, d):
     '''
     Recieves an isochrone of a given age and metallicity and modifies
     its color and magnitude values according to given values for the extinction

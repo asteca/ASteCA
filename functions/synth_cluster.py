@@ -212,12 +212,12 @@ def isoch_cut_mag(isoch_moved, completeness):
     return isoch_cut
 
 
-def synth_clust(err_lst, completeness, st_d_bin_mr, isochrone, model):
+def synth_clust(err_lst, completeness, st_d_bin_mr, isochrone, model, cmd_sel):
     '''
     Main function.
 
     Takes an isochrone and returns a synthetic cluster created according to
-    a certain mass distribution and cluster parameters.
+    a certain mass distribution.
     '''
 
     # Unpack synthetic cluster parameters.
@@ -225,7 +225,8 @@ def synth_clust(err_lst, completeness, st_d_bin_mr, isochrone, model):
     e, d, M_total, bin_frac = model[2:]
 
     # Move synth cluster with the values 'e' and 'd'.
-    isoch_moved = move_isoch(isochrone, e, d)
+    isoch_moved = move_isoch(cmd_sel, [isochrone[0], isochrone[1]], e, d) +\
+    [isochrone[2]]
 
     # Get isochrone minus those stars beyond the magnitude cut.
     isoch_cut = isoch_cut_mag(isoch_moved, completeness)
