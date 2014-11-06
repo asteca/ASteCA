@@ -49,7 +49,7 @@ def err_accpt_rejct(id_coords, phot_data, semi_return, diag_axis):
 
     global er_params
 
-    # Unpack data. Use *main* magnitude.
+    # Unpack data.
     mag, e_mag, e_col = phot_data[0][0], phot_data[1], phot_data[3]
     er_mode, e_max, be = g.er_params[:3]
 

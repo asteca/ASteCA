@@ -408,6 +408,20 @@ def ip(mypath, phot_params):
         # metal_i =[age_i, ..., age_Q]
         # age_i = [mass_i, mass_a, [mag1, ..., magN], [col1, ..., colM]
 
+        import matplotlib.pyplot as plt
+        f, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2,)
+        ax1.set_title('BV vs V')
+        ax1.scatter(isochs_order[0][3][3][0], isochs_order[0][3][2][0])
+        ax2.set_title('BV vs UB')
+        ax2.scatter(isochs_order[0][3][3][0], isochs_order[0][3][3][1])
+        ax3.set_title('VI vs V')
+        ax3.scatter(isochs_order[0][3][3][2], isochs_order[0][3][2][0])
+        ax4.set_title('UB vs V')
+        ax4.scatter(isochs_order[0][3][3][1], isochs_order[0][3][2][0])
+        #plt.scatter(isochs_order[0][3][3][0][:500], isochs_order[0][3][3][1][:500])
+        plt.show()
+        raw_input()
+
         # Pack params.
         param_values = [met_values, age_values] + param_ranges[2:]
         ip_list = [isochs_order, ccm_coefs, param_values, param_rs]

@@ -60,6 +60,7 @@ def err_med(method, mag_value, e_max, bright_end, n_interv, interv_mag,
     2- Obtain histograms for each interval and get median of the
     interval and sigma value using the histogram. Do this for magnitude and
     color errors.
+
     '''
 
     # Each list within the 'mag_interv' list holds all the magnitude error
