@@ -20,9 +20,9 @@ def phot_mags():
     # - 2: CMT1T2BVRI  (Washington)
 
     d_sys = [
-        ('ubvrijhk', ['U', 'B', 'V', 'R', 'I', 'J', 'H', 'K']),
-        ('2mass', ['J', 'H', 'Ks']),
-        ('washington', ['C', 'M', 'T1', 'T2', 'B', 'V', 'R', 'I'])
+        ('ubvrijhk', [8, ['U', 'B', 'V', 'R', 'I', 'J', 'H', 'K']]),
+        ('2mass', [8, ['J', 'H', 'Ks']]),
+        ('washington', [8, ['C', 'M', 'T1', 'T2', 'B', 'V', 'R', 'I']])
         ]
 
     # Store as ordered dictionary.
@@ -47,7 +47,7 @@ def phot_wavelengths(sys, mag):
         }
 
     # Get index of magnitude as stored in the dictionary.
-    m_idx = all_systs[sys].index(mag)
+    m_idx = all_systs[sys][1].index(mag)
     # Get effective wavelength for this magnitude.
     eff_wave = wave_dict[sys][m_idx]
 
