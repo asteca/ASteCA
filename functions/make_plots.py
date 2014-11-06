@@ -86,11 +86,8 @@ def make_plots(output_subdir, clust_name, phot_params, id_coords, phot_data,
 
     # Define plot limits for *all* CMD diagrams.
     phot_x_s, phot_y_s = reject_outliers(phot_x), reject_outliers(phot_y)
-    x_max_cmd, x_min_cmd = max(phot_x_s) + 0.5, min(phot_x_s) - 0.5
+    x_min_cmd, x_max_cmd = min(phot_x_s) - 0.5, max(phot_x_s) + 0.5
     y_min_cmd, y_max_cmd = max(phot_y_s) + 0.5, min(phot_y_s) - 0.5
-    # If photometric axis y is a magnitude, make sure the brightest stars
-    # are plotted.
-    y_max_cmd = (min(phot_y) - 1.) if y_axis == 0 else y_max_cmd
 
     # Unpack params.
     # Parameters from get_center function.
