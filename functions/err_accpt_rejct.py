@@ -56,24 +56,20 @@ def err_accpt_rejct(id_coords, phot_data, semi_return, diag_axis):
     # Get value of brightest and dimmest stars.
     min_mag, max_mag = min(mag), max(mag)
     # Define max limit for the box that holds the brightest stars.
-    be_m = (min_mag + be)
+    bright_end = (min_mag + be)
     # Create a segmented list in magnitude.
     # Magnitude range.
-    delta_mag = max_mag - be_m
+    delta_mag = max_mag - bright_end
     # Width of the intervals in magnitude.
     interv_mag = 0.5
     # Number of intervals.
     n_interv = int(round(delta_mag / interv_mag))
     # Define list of points spanning the magnitude range starting from the
-    # bright end. The '+ interv_mag' term is intentional so that the
-    # err_medians function defines ranges around these values and they get
-    # positioned in the middle of the magnitude interval.
-    mag_value = [be_m + interv_mag * (q + interv_mag) for q in range(n_interv)]
+    # bright end.
+    mag_value = [bright_end + interv_mag * (q + 0.5) for q in range(n_interv)]
 
-    # Pack params to pass. These values are used by the 'eyefit' function and
-    # more importantly the err_medians function which is called by the
-    # synth_clust function.
-    err_pck = [be_m, interv_mag, mag_value]
+    # Pack params to pass.
+    err_pck = [g.er_params, bright_end, n_interv, interv_mag, mag_value]
 
     # Flag indicates that the function had to fall back to the
     # 'e_max'-based rejection method since the selected one failed.
@@ -104,14 +100,14 @@ def err_accpt_rejct(id_coords, phot_data, semi_return, diag_axis):
         # file.
         if er_mode == 'emax':
             # Call function to reject stars with errors > e_max.
-            acpt_indx, rjct_indx, err_plot = e_a_r_m(e_mag, e_col)
+            acpt_indx, rjct_indx, err_plot = e_a_r_m(e_mag, e_col, err_pck)
 
         elif er_mode in ('lowexp', 'eyefit'):
             try:
                 if er_mode == 'lowexp':
                     # Call N sigma exp function.
                     acpt_indx, rjct_indx, err_plot = e_a_r_le(mag, e_mag,
-                        e_col, be_m)
+                        e_col, err_pck)
 
                 elif er_mode == 'eyefit':
                     # Call 'eyefit' function.
@@ -121,13 +117,13 @@ def err_accpt_rejct(id_coords, phot_data, semi_return, diag_axis):
                 print ("  WARNING: {} function could not be fitted. Falling"
                 "  back to e_max function.".format(er_mode))
                 # Call function to reject stars with errors > e_max.
-                acpt_indx, rjct_indx, err_plot = e_a_r_m(e_mag, e_col)
+                acpt_indx, rjct_indx, err_plot = e_a_r_m(e_mag, e_col, err_pck)
                 err_max_fallback = True
 
         # If list of accepted stars is empty, fall back to e_max limit.
         if not acpt_indx and er_mode != 'emax':
             # Call function to reject stars with errors > e_max.
-            acpt_indx, rjct_indx, err_plot = e_a_r_m(e_mag, e_col)
+            acpt_indx, rjct_indx, err_plot = e_a_r_m(e_mag, e_col, err_pck)
             err_max_fallback = True
 
             if acpt_indx:
@@ -169,19 +165,20 @@ def err_accpt_rejct(id_coords, phot_data, semi_return, diag_axis):
                 'all stars): '))
 
                 if answer_rad == 1:
-                    e_max_n = float(raw_input('Select maximum error value: '))
-                    g.er_params[1] = e_max_n
+                    e_max = float(raw_input('Select maximum error value: '))
+                    err_pck[0][1] = e_max
                     # Call function to reject stars with errors > e_max.
-                    acpt_indx, rjct_indx, err_plot = e_a_r_m(e_mag, e_col)
+                    acpt_indx, rjct_indx, err_plot = e_a_r_m(e_mag, e_col,
+                        err_pck)
                     wrong_answer = False
                     er_mode, g.er_params[0] = 'emax', 'emax'
                 elif answer_rad == 2:
                     N_sig = float(raw_input("Select number of sigmas to lift"
                     " the curve: "))
-                    g.er_params[4] = N_sig
+                    err_pck[0][-1] = N_sig
                     # Call N sigma exp function.
                     acpt_indx, rjct_indx, err_plot = e_a_r_le(mag, e_mag,
-                        e_col, be_m)
+                        e_col, err_pck)
                     wrong_answer = False
                     er_mode, g.er_params[0] = 'lowexp', 'lowexp'
                 elif answer_rad == 3:
