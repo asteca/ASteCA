@@ -77,7 +77,7 @@ def add_data_output(out_file_name, write_name,
     with open(out_file_name, "a") as f_out:
         f_out.write('''{:<16} {:>8} {:>8} {:>8} {:>8} {:>8} \
 {:>8} {:>8} {:>8} {:>8} {:>8} \
-{:>8.2f} {:>8.0f} {:>8.0f} {:>8.0f} {:>8.2f} \
+{:>8.2f} {:>8.0f} {:>8.0f} {:>8.2f} {:>8.2f} \
 {:>8} {:>8} {:>8} {:>8} \
 {:>8} {:>8} {:>8} {:>8}'''.format(*line_f))
         # Flags.

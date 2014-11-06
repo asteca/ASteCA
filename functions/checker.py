@@ -62,7 +62,7 @@ def check(mypath, cl_files):
     # Check px/deg.
     if gd_params[-1] not in {'px', 'deg'}:
         sys.exit("ERROR: the coordinates given in the input file ({})"
-                "are incorrect.".format(gd_params[-1]))
+                " are incorrect.".format(gd_params[-1]))
 
     # Selected CMD.
     if ps_params[1] not in {1, 2, 3, 4, 5, 6, 7}:
@@ -88,6 +88,10 @@ def check(mypath, cl_files):
     if cr_params[0] not in {'auto', 'manual'}:
         sys.exit("ERROR: mode selected ({}) for radius finding"
         "function is not valid.".format(cr_params[0]))
+    if cr_params[0] is 'manual' and cr_params[1] < 4:
+        print ("  WARNING: number of points in manual radius\n"
+        "  mode is {} < 4. A value of 4 will be used.".format(
+        cr_params[1]))
 
     # Errors function.
     if er_params[0] not in {'emax', 'lowexp', 'eyefit'}:

@@ -34,6 +34,10 @@ def main_rad_algor(rdp_params, cr_params, field_dens, bin_width, coord):
         # (min 3 points)
         n_left = max(int(round(len(radii_c) * 0.25)), 3)
 
+    # Fix to a minimum value of 4 to avoid conclict when '(n_left - i)'
+    # happens below.
+    n_left = max(n_left, 4)
+
     # Delta step is fixed to 5%.
     delta_step = 5
 
