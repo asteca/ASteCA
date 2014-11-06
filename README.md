@@ -1,4 +1,4 @@
-# ASteCA [![Stories in Ready](https://badge.waffle.io/Gabriel-p/asteca.png?label=ready&title=Ready)](https://waffle.io/Gabriel-p/asteca)[![License](http://img.shields.io/badge/licence-GPLv3-blue.svg)](http://www.gnu.org/licenses/gpl-3.0.en.html)
+# ASteCA [![Stories in Ready](https://badge.waffle.io/Gabriel-p/asteca.png?label=ready&title=Ready)](https://waffle.io/Gabriel-p/asteca) [![License](http://img.shields.io/badge/licence-GPLv3-blue.svg)](http://www.gnu.org/licenses/gpl-3.0.en.html)
 
 <b>A</b>utomated <b>Ste</b>llar <b>C</b>luster <b>A</b>nalysis package.
 
