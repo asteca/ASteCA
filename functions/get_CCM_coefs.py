@@ -18,9 +18,6 @@ def ccm_model(mw):
 
     http://idlastro.gsfc.nasa.gov/ftp/pro/astro/ccm_unred.pro
 
-    There appears to be an error in the Far-UV range in the original IDL
-    routine where the maximum inverse wavelength is 11 and it should be 10
-    according to Cardelli et al. 1989 (pag 251, Eq (5,a,b)).
     '''
 
     if 0.3 <= mw < 1.1:
@@ -30,13 +27,13 @@ def ccm_model(mw):
     elif 1.1 <= mw < 3.3:
         # Optical/NIR.
         # Original coefficients from CCM89
-        #c1 = [1., 0.17699, -0.50447, -0.02427, 0.72085, 0.01979, -0.77530,
-            #0.32999]
-        #c2 = [0., 1.41338, 2.28305, 1.07233, -5.38434, -0.62251, 5.30260,
-            #-2.09002]
+        c1 = [1., 0.17699, -0.50447, -0.02427, 0.72085, 0.01979, -0.77530,
+            0.32999]
+        c2 = [0., 1.41338, 2.28305, 1.07233, -5.38434, -0.62251, 5.30260,
+            -2.09002]
         # New coefficients from O'Donnell (1994)
-        c1 = [1., 0.104, -0.609, 0.701, 1.137, -1.718, -0.827, 1.647, -0.505]
-        c2 = [0., 1.952, 2.908, -3.989, -7.985, 11.102, 5.491, -10.805, 3.347]
+        #c1 = [1., 0.104, -0.609, 0.701, 1.137, -1.718, -0.827, 1.647, -0.505]
+        #c2 = [0., 1.952, 2.908, -3.989, -7.985, 11.102, 5.491, -10.805, 3.347]
         y = mw - 1.82
         # Reverse because polyval starts from the highest degree.
         c1.reverse(), c2.reverse()
