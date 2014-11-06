@@ -4,6 +4,7 @@
 
 from functions.err_medians import err_med
 from functions.exp_function import exp_func
+import get_in_params as g
 from scipy.optimize import curve_fit
 import numpy as np
 
@@ -53,13 +54,14 @@ def fit_curves(mag, mag_value, bright_end, e_mag_value, e_col_value):
     return intersec_mag, intersec_col, popt_mag, pol_mag, popt_col, pol_col
 
 
-def separate_stars(mag, e_mag, e_col, e_max, bright_end, be_e,
-    intersec_mag, intersec_col, popt_mag, pol_mag, popt_col, pol_col):
+def separate_stars(mag, e_mag, e_col, bright_end, intersec_mag, intersec_col,
+    popt_mag, pol_mag, popt_col, pol_col):
     '''
     Use the curves obtained above to accept or reject stars in the
     magnitude range beyond the (brightest star + be) limit.
     '''
 
+    e_max, be_e = g.er_params[1], g.er_params[3]
     # Initialize empty lists.
     acpt_indx, rjct_indx = [], []
 
@@ -187,20 +189,18 @@ def divide(mag_value, intersec_mag, intersec_col, diag_axis):
     return top_val_left, top_val_right, bot_val_left, bot_val_right
 
 
-def err_a_r_eyefit(mag, e_mag, e_col, params, diag_axis):
+def err_a_r_eyefit(mag, e_mag, e_col, err_pck, diag_axis):
     '''
     Accept/reject stars based on an algorithm that attempts to imitate
     an 'eye fit' curve on a photometric error diagram.
     '''
 
     # Unpack params.
-    er_params, bright_end, n_interv, interv_mag, mag_value = params
-    e_max, be, be_e = er_params[1:-1]
+    bright_end, mag_value = err_pck[0], err_pck[2]
 
     # Call function to obtain the median+sigmas points for magnitude
     # and color errors to fit the curves below.
-    e_mag_value, e_col_value = err_med('eyefit', mag_value, e_max,
-        bright_end, n_interv, interv_mag, mag, e_mag, e_col)
+    e_mag_value, e_col_value = err_med('eyefit', err_pck, mag, e_mag, e_col)
 
     # Fit polynomial + exponential curves.
     intersec_mag, intersec_col, popt_mag, pol_mag, popt_col, pol_col = \
@@ -208,9 +208,8 @@ def err_a_r_eyefit(mag, e_mag, e_col, params, diag_axis):
 
     # Use the fitted curves to identify accepted/rejected stars and store
     # their indexes.
-    acpt_indx, rjct_indx = separate_stars(mag, e_mag, e_col, e_max,
-        bright_end, be_e, intersec_mag, intersec_col, popt_mag, pol_mag,
-        popt_col, pol_col)
+    acpt_indx, rjct_indx = separate_stars(mag, e_mag, e_col, bright_end,
+        intersec_mag, intersec_col, popt_mag, pol_mag, popt_col, pol_col)
 
     # Values are used for plotting purposes only.
     top_val_left, top_val_right, bot_val_left, bot_val_right = \

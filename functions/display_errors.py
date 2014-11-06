@@ -15,8 +15,8 @@ def disp_errors(er_mode, mag, err_plot, acpt_stars, rjct_stars, err_pck):
     '''
 
     # Error parameters.
-    er_params, bright_end, n_interv, interv_mag, mag_value = err_pck
-    e_max, be, be_e = er_params[1:4]
+    bright_end, interv_mag, mag_value = err_pck
+    e_max, be, be_e = g.er_params[1:4]
     # Define names for CMD axes.
     y_ax, x_ax0, m_ord = g.axes_params[0:3]
     if m_ord == 21:
