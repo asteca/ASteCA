@@ -60,18 +60,15 @@ def synth_clust_err(phot_data, err_pck, bf_params, da_params):
             # 2P exp but using only two magnitude values, ie: a min and a max.
             except RuntimeError:
 
-                    # Fit simple 2-params exponential curve.
-                    mag_value = [min(mag),
-                        max(mag) - (max(mag) - min(mag)) / 20.]
-                    e_mag_value = [0.01, e_max]
-                    popt_mag, pcov_mag = curve_fit(exp_2p, mag_value,
-                        e_mag_value)
-                    # Use the same values for color error.
-                    popt_col1, pcov_col = curve_fit(exp_2p, mag_value,
-                        e_mag_value)
-                    # Insert 'b' value into exponential function.
-                    popt_mag = np.insert(popt_mag, 1., 1.)
-                    popt_col1 = np.insert(popt_col1, 1., 1.)
+                # Fit simple 2-params exponential curve.
+                mag_value = [min(mag), max(mag) - (max(mag) - min(mag)) / 20.]
+                e_mag_value = [0.01, e_max]
+                popt_mag, pcov_mag = curve_fit(exp_2p, mag_value, e_mag_value)
+                # Use the same values for color error.
+                popt_col1, pcov_col = curve_fit(exp_2p, mag_value, e_mag_value)
+                # Insert 'b' value into exponential function.
+                popt_mag = np.insert(popt_mag, 1., 1.)
+                popt_col1 = np.insert(popt_col1, 1., 1.)
 
         err_lst = [popt_mag, popt_col1, e_max]
     else:
