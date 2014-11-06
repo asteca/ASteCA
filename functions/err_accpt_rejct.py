@@ -20,21 +20,21 @@ def err_sel_stars(acpt_indx, rjct_indx, id_coords, phot_data):
     # Initialize empty lists.
     acpt_stars, rjct_stars = [], []
 
+    mag_lst, e_mag_lst, col_lst, e_col_lst = [], [], [], []
     for st_ind in acpt_indx:
-        mag_lst = [m[st_ind] for m in mag]
-        e_mag_lst = [e[st_ind] for e in e_mag]
-        col_lst = [c[st_ind] for c in col]
-        e_col_lst = [e[st_ind] for e in e_col]
-
+        mag_lst.append([m[st_ind] for m in mag])
+        e_mag_lst.append([e[st_ind] for e in e_mag])
+        col_lst.append([c[st_ind] for c in col])
+        e_col_lst.append([e[st_ind] for e in e_col])
         acpt_stars.append([id_star[st_ind], x_data[st_ind], y_data[st_ind],
             mag_lst, e_mag_lst, col_lst, e_col_lst])
 
+    mag_lst, e_mag_lst, col_lst, e_col_lst = [], [], [], []
     for st_ind in rjct_indx:
-        mag_lst = [m[st_ind] for m in mag]
-        e_mag_lst = [e[st_ind] for e in e_mag]
-        col_lst = [c[st_ind] for c in col]
-        e_col_lst = [e[st_ind] for e in e_col]
-
+        mag_lst.append([m[st_ind] for m in mag])
+        e_mag_lst.append([e[st_ind] for e in e_mag])
+        col_lst.append([c[st_ind] for c in col])
+        e_col_lst.append([e[st_ind] for e in e_col])
         rjct_stars.append([id_star[st_ind], x_data[st_ind], y_data[st_ind],
             mag_lst, e_mag_lst, col_lst, e_col_lst])
 

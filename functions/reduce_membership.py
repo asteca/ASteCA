@@ -5,18 +5,16 @@ Created on Thu Mar 20 2014
 @author: gabriel
 """
 
-import get_in_params as g
 
-
-def red_memb(decont_algor_return):
+def red_memb(decont_algor_return, bf_params, rm_params):
     '''
     Reduce number of stars according to a given membership probability
     lower limit.
     '''
 
-    bf_flag = g.bf_params[0]
-    flag_red_memb, min_prob = g.rm_params
+    bf_flag = bf_params[0]
     memb_prob_avrg_sort, flag_decont_skip = decont_algor_return
+    flag_red_memb, min_prob = rm_params
 
     # Only run if best fit process is set to run.
     if bf_flag:

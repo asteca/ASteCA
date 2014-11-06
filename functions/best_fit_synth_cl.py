@@ -13,18 +13,17 @@ from error_round import round_sig_fig as rsf
 from get_N_IMF import N_IMF as N_imf
 from move_isochrone import move_isoch
 import numpy as np
-import get_in_params as g
 
 
-def best_fit(err_lst, red_memb_prob, completeness, ip_list):
-    #err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
-             #sc_params, ga_params, ps_params):
+def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
+             sc_params, ga_params, ps_params):
     '''
     Perform a best fitting process to find the cluster's parameters:
     E(B-V), distance (distance modulus), age and metallicity.
     '''
 
-    bf_flag, best_fit_algor, N_b = g.bf_params
+    bf_flag, best_fit_algor, N_b = bf_params
+    cmd_sel = ps_params[1]
 
     # Check if algorithm should run.
     if bf_flag:
@@ -32,7 +31,7 @@ def best_fit(err_lst, red_memb_prob, completeness, ip_list):
         print 'Searching for optimal parameters.'
 
         # Remove IDs  and convert to array so likelihood function works.
-        obs_cl = np.array(zip(*zip(*red_memb_prob)[1:]), dtype=float)
+        obs_cl = np.array(zip(*zip(*memb_prob_avrg_sort)[1:]), dtype=float)
         # Square errors ans separate membership probabilities. Done here so
         # as to not repeat the same calculations each time a new synthetic
         # cluster is checked.
@@ -45,10 +44,10 @@ def best_fit(err_lst, red_memb_prob, completeness, ip_list):
 
         # Obtain the stars distrubuted on the selected IMF's. We run it once
         # because the array only depends on the IMF selected.
-        st_dist = N_imf(g.sc_params[0])
+        st_dist = N_imf(sc_params[0])
         # Pack stars distribution in IMF and binars mass ratio to be used by
         # the synthetic cluster function.
-        st_d_bin_mr = [st_dist, g.sc_params[1]]
+        st_d_bin_mr = [st_dist, sc_params[1]]
 
         # Call algorithm to calculate the likelihoods for the set of
         # isochrones and return the best fitting parameters.
@@ -56,8 +55,8 @@ def best_fit(err_lst, red_memb_prob, completeness, ip_list):
 
             print 'Using Brute Force algorithm.'
             # Brute force algorithm.
-            isoch_fit_params = b_f(err_lst, obs_clust, completeness, ip_list,
-                st_d_bin_mr)
+            isoch_fit_params = b_f(err_lst, obs_clust, completeness,
+                                   ip_list, st_d_bin_mr, ga_params, cmd_sel)
             # Assign errors as the steps in each parameter.
             #param_rs = ip_list[2]
             isoch_fit_errors = [p_rs[2] for p_rs in ip_list[2]]
@@ -69,8 +68,9 @@ def best_fit(err_lst, red_memb_prob, completeness, ip_list):
             # Let the GA algor know this call comes from the main function
             # so it will print percentages to screen.
             flag_print_perc = True
-            isoch_fit_params = g_a(flag_print_perc, err_lst, obs_clust,
-                completeness, ip_list, st_d_bin_mr)
+            isoch_fit_params = g_a(flag_print_perc, err_lst,
+                obs_clust, completeness, ip_list, st_d_bin_mr,
+                ga_params, cmd_sel)
 
         print ("Best fit params obtained ({:g}, {:g}, {:g}, {:g}, {:g},"
             " {:g}).".format(*isoch_fit_params[0]))
@@ -80,7 +80,7 @@ def best_fit(err_lst, red_memb_prob, completeness, ip_list):
                 # Call bootstrap function with resampling to get the uncertainty
                 # in each parameter.
                 isoch_fit_errors = bootstrap(err_lst, obs_clust, completeness,
-                    ip_list, st_d_bin_mr)
+                    ip_list, bf_params, st_d_bin_mr, ga_params, cmd_sel)
 
                 # Round errors to 1 significant digit and round params values
                 # to the corresponding number of significant digits given by
@@ -104,10 +104,11 @@ def best_fit(err_lst, red_memb_prob, completeness, ip_list):
         except:
             m_i, a_i = [0, 0]
         # Generate shifted best fit isochrone.
-        shift_isoch = move_isoch(isoch_list[m_i][a_i][:2], e, d)
+        shift_isoch = move_isoch(cmd_sel, isoch_list[m_i][a_i][:2], e, d)
         # Generate best fit synthetic cluster.
         synth_clst = s_c(err_lst, completeness, st_d_bin_mr,
-                         isoch_list[m_i][a_i], [-1., -1., e, d, mass, binar_f])
+                         isoch_list[m_i][a_i], [-1., -1., e, d, mass, binar_f],
+                         cmd_sel)
 
     else:
         # Pass empty lists to make_plots.
