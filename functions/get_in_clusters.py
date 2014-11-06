@@ -30,7 +30,7 @@ def in_clusters(mypath):
         if files and root == input_dir:
             for name in files:
                 # Don't attempt to read membership data files.
-                if not name.endswith(('_memb.dat', '.md')):
+                if not name.endswith('_memb.dat'):
                     cl_files.append(['', name])
 
         # For files in sub-dirs.
@@ -38,7 +38,7 @@ def in_clusters(mypath):
             for subdir in dirs:
                 for name in listdir(join(input_dir, subdir)):
                     # Don't attempt to read membership data files.
-                    if not name.endswith(('_memb.dat', '.md')):
+                    if not name.endswith('_memb.dat'):
                         cl_files.append([subdir, name])
 
     # Return sorted list by cluster file name.

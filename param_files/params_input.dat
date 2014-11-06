@@ -233,11 +233,6 @@ BF    true      genet          10
 #    iso_select
 PS          PAR
 
-# Ratio of total to selective absorption.
-#
-#    Rv
-RV  3.1
-
 # Reduced membership.
 #
 # * mode: auto / manual / skip

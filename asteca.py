@@ -31,12 +31,7 @@ def main():
     # files are read and stored here.
     # The 'R_in_place' flag indicates that R and rpy2 are installed.
     #ip_list, R_in_place = check(mypath, cl_files)
-
-    #### DELETE AFTER checker function IS FIXED####
     ip_list, R_in_place = [], False
-    import functions.get_in_params as gip
-    gip.init(mypath)
-    #### DELETE####
 
     # Import here to ensure the check has passed and all the necessary
     # packages are installed.
