@@ -864,7 +864,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
 
         # Set ranges used by plots below.
         min_max_p = []
-        for param in ip_list[2]:
+        for param in ip_list[1]:
             if max(param) != min(param):
                 delta_p = (max(param) - min(param)) * 0.05
             else:
