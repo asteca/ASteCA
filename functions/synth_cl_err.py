@@ -55,12 +55,11 @@ def synth_clust_err(phot_data, err_pck):
     cluster generation function.
     '''
 
-    da_flag, bf_flag = g.da_params[0], g.bf_params[0]
+    bf_flag = g.bf_params[0]
     err_lst = []
 
-    # Check if function should run. If DA was executed, we obtain these
-    # values for ploting purposes only.
-    if da_flag != 'skip' or bf_flag:
+    # Check if algorithm should run.
+    if bf_flag:
 
         # Unpack params. Use *main* magnitude.
         mag, e_mag, e_col = phot_data[0][0], phot_data[1], phot_data[3]
