@@ -6,7 +6,6 @@ Created on Thu Oct 09 11:36:00 2014
 """
 
 import get_in_params as g
-from cmd_phot_systs import phot_mags as pm
 
 
 def identify_phot_data():
@@ -46,6 +45,8 @@ def identify_phot_data():
     # Remove duplicate magnitudes if they exist.
     all_mags = list(set(all_mags))
 
+    # Identifiers for different photometric systems.
+    all_systs = {0: 'UBVRIJHK', 1: 'JHKs', 2: 'CMT1T2BVRI'}
     # Initialize for up to 9 photometric systems.
     phot_mags = [[] for _ in range(9)]
     for mag in all_mags:
@@ -53,15 +54,13 @@ def identify_phot_data():
         m = mag[1:] if len(mag) > 2 else mag[1]
         phot_mags[int(mag[0])].append(m)
 
-    # Identifiers for different photometric systems.
-    all_systs = pm()
     # Create list with names of photometric systems.
     phot_systs = []
     for i, phot_syst in enumerate(phot_mags):
         if phot_syst:
             # Store names of folders that hold the Girardi isochrones that
             # correspond to this photometric system.
-            phot_systs.append([all_systs.keys()[i], phot_syst])
+            phot_systs.append([all_systs[i], phot_syst])
 
     # Identify photometric data to plot.
     diag_axis = []
