@@ -31,7 +31,7 @@ def bootstrap(err_lst, obs_clust, completeness, ip_list, bf_params,
 
     bf_flag, best_fit_algor, N_b = bf_params
 
-    print 'Begin bootstrap process (%d).' % N_b
+    print 'Start bootstrap process (%d).' % N_b
 
     # List that holds the parameters values obtained by the bootstrap
     # process.

@@ -210,6 +210,7 @@ def ext_imm(best_sol, param_values, n_pop):
     # Generate (n_pop-n_el) random solutions.
     n_ran = n_pop - len(best_sol)
     p_lst_r = random_population(param_values, n_ran)
+    print p_lst_r[4]
 
     # Append immigrant random population to the best solution.
     generation_ei = best_sol + zip(*p_lst_r)
