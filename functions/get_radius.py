@@ -105,8 +105,8 @@ def main_rad_algor(rdp_params, field_dens, bin_width):
         # No radius value found. Assign radius value as the middle element
         # in the radii list.
         clust_rad, e_rad = radii_c[int(len(radii_c) / 2.)], 0.
-        print '  WARNING: no radius found, setting value to: {:g} {}'.format(
-            clust_rad, g.gd_params[0][-1])
+        print '  WARNING: no radius found, setting value to: {:g}'.format(
+            clust_rad)
 
     return clust_rad, e_rad, flag_delta_total, flag_not_stable, flag_delta
 
@@ -131,8 +131,7 @@ def get_clust_rad(phot_data, field_dens, center_params, semi_return, bin_width,
     # Check if semi or manual mode are set.
     flag_radius_manual = False
     if g.mode == 'auto':
-        print 'Auto radius found: {:g} {}.'.format(clust_rad,
-            g.gd_params[0][-1])
+        print 'Auto radius found: {:g} px/deg.'.format(clust_rad)
 
     elif g.mode == 'semi':
         # Unpack semi values.
@@ -142,17 +141,15 @@ def get_clust_rad(phot_data, field_dens, center_params, semi_return, bin_width,
         if rad_flag_semi == 1:
             # Update values.
             clust_rad, e_rad = cl_rad_semi, 0.
-            print 'Semi radius set: {:g} {}.'.format(clust_rad,
-                g.gd_params[0][-1])
+            print 'Semi radius set: {:g} px/deg.'.format(clust_rad)
         else:
-            print 'Auto radius found: {:g} {}.'.format(clust_rad,
-                g.gd_params[0][-1])
+            print 'Auto radius found: {:g} px/deg.'.format(clust_rad)
 
     # If Manual mode is set, display radius and ask the user to accept it or
     # input new one.
     elif g.mode == 'manual':
 
-        print 'Radius found: {:g} {}.'.format(clust_rad, g.gd_params[0][-1])
+        print 'Radius found: {:g} px/deg.'.format(clust_rad)
         d_r(phot_data, bin_width, center_params, clust_rad, field_dens,
             rdp_params)
         plt.show()
