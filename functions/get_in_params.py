@@ -139,7 +139,7 @@ def init(mypath):
     pv_params = [pv0_params, pv1_params]
     da_params = [da0_params, da1_params]
     par_ranges = [m_rs, a_rs, e_rs, d_rs, mass_rs, bin_rs]
-    ps_params = [iso_select, par_ranges, rv_ratio]
+    ps_params = [iso_select, rv_ratio, par_ranges]
     bf_params = [bf_flag, best_fit_algor, N_b]
     sc_params = [IMF_name, bin_mr]
     ga_params = [n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es]

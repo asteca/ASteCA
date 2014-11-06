@@ -202,6 +202,6 @@ def get_regions(hist_lst, cent_bin, clust_rad, stars_out):
             '  with less than 4 stars.')
             flag_area_stronger = True
         else:
-            print "Field regions obtained."
+            print "  Field regions obtained."
 
     return flag_area_stronger, field_regions
