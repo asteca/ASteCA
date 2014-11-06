@@ -39,9 +39,10 @@ MO  auto
 #
 # * coords: px / deg. Indicates if the observed frame is in pixels or degrees.
 #
-#   id_star   x/ra  y/dec  coords 
-PI        0      1      2      px
-
+# id_star   x/ra  y/dec  coords 
+PI      0      1      2      px
+#
+#
 # Photometric system identifiers.
 # The first magnitude defined (in mag1) will be used as the one
 # determining the brightness of stars when plotted, the x axis for
@@ -56,11 +57,15 @@ PI        0      1      2      px
 #
 # Columns for magnitudes and their errors.
 #      mag1   e_mag1     mag2   e_mag2     mag3   e_mag3 ...
-PM    3,1Ks      6,e     9,0V   10,e
+PM    3,1Ks      6,e   
 #
 # Columns for colors and their errors.
 #      col1   e_col1     col2   e_col2     col3   e_col3 ...
 PC   5,0B-V      6,e   7,0U-B     8,e  9,2T1-T2     10,e
+#
+# Select axis of photometric diagram to be plotted.
+#      x     y
+PD  col3   mag1
 ###############################################################################
 
 
@@ -75,11 +80,6 @@ PC   5,0B-V      6,e   7,0U-B     8,e  9,2T1-T2     10,e
 #
 #    flag_make_plot  format  DPI
 MP             true     png  150
-
-
-# Select axis of photometric diagram to be plotted.
-#      x      y
-PD  col2   mag2
 
 # Move data file once it is processed?
 #
