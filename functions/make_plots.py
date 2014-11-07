@@ -868,7 +868,9 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
             if max(param) != min(param):
                 delta_p = (max(param) - min(param)) * 0.05
             else:
-                delta_p = max(param) / 100.
+                # The first max is there for when max(param)=0 (for example
+                # when 0 reddening is used)
+                delta_p = max(max(param) / 100., 0.0005)
             min_max_p.append([min(param) - delta_p, max(param) + delta_p])
         m_min, m_max = min_max_p[0]
         a_min, a_max = min_max_p[1]
@@ -890,11 +892,17 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
         plt.minorticks_on()
         # Plot best fit point.
         plt.scatter(m, a, marker='o', c='r', s=30)
-        # Plot ellipse error.
-        ax20 = plt.gca()
-        ellipse = Ellipse(xy=(m, a), width=2 * e_m, height=2 * e_a,
-                                edgecolor='r', fc='None', lw=1.)
-        ax20.add_patch(ellipse)
+        # Check if errors in both dimensions are defined.
+        if all([i > 0. for i in [e_m, e_a]]):
+            # Plot ellipse error.
+            ax20 = plt.gca()
+            ellipse = Ellipse(xy=(m, a), width=2 * e_m, height=2 * e_a,
+                                    edgecolor='r', fc='None', lw=1.)
+            ax20.add_patch(ellipse)
+        elif e_m < 0.:
+            plt.errorbar(m, a, yerr=e_a, color='r')
+        elif e_a < 0.:
+            plt.errorbar(m, a, xerr=e_m, color='r')
         # Plot density map.
         hist, xedges, yedges = np.histogram2d(zip(*model_done[0])[0],
                                               zip(*model_done[0])[1], bins=100)
@@ -949,11 +957,17 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
         plt.minorticks_on()
         # Plot best fit point.
         plt.scatter(e, d, marker='o', c='b', s=30)
-        # Plot ellipse error.
-        ax21 = plt.gca()
-        ellipse = Ellipse(xy=(e, d), width=2 * e_e, height=2 * e_d,
-                                edgecolor='b', fc='None', lw=1.)
-        ax21.add_patch(ellipse)
+        # Check if errors in both dimensions are defined.
+        if all([i > 0. for i in [e_e, e_d]]):
+            # Plot ellipse error.
+            ax21 = plt.gca()
+            ellipse = Ellipse(xy=(e, d), width=2 * e_e, height=2 * e_d,
+                                    edgecolor='b', fc='None', lw=1.)
+            ax21.add_patch(ellipse)
+        elif e_e < 0.:
+            plt.errorbar(e, d, yerr=e_d, color='b')
+        elif e_d < 0.:
+            plt.errorbar(e, d, xerr=e_e, color='b')
         # Plot density map.
         hist, xedges, yedges = np.histogram2d(zip(*model_done[0])[2],
                                               zip(*model_done[0])[3], bins=100)
@@ -1064,11 +1078,17 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
         plt.minorticks_on()
         # Plot best fit point.
         plt.scatter(mass, binar_f, marker='o', c='b', s=30)
-        # Plot ellipse error.
-        ax26 = plt.gca()
-        ellipse = Ellipse(xy=(mass, binar_f), width=2 * e_mass,
-            height=2 * e_bin, edgecolor='b', fc='None', lw=1.)
-        ax26.add_patch(ellipse)
+        # Check if errors in both dimensions are defined.
+        if all([i > 0. for i in [e_mass, e_bin]]):
+            # Plot ellipse error.
+            ax26 = plt.gca()
+            ellipse = Ellipse(xy=(mass, binar_f), width=2 * e_mass,
+                height=2 * e_bin, edgecolor='b', fc='None', lw=1.)
+            ax26.add_patch(ellipse)
+        elif e_mass < 0.:
+            plt.errorbar(mass, binar_f, yerr=e_bin, color='b')
+        elif e_bin < 0.:
+            plt.errorbar(mass, binar_f, xerr=e_mass, color='b')
         # Plot density map.
         hist, xedges, yedges = np.histogram2d(zip(*model_done[0])[4],
                                               zip(*model_done[0])[5], bins=100)

@@ -88,6 +88,11 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
                 # the errors.
                 isoch_fit_params[0], isoch_fit_errors = rsf(isoch_fit_params[0],
                     isoch_fit_errors)
+                # If any parameter has a single valued range, assign an error
+                # of -1.
+                for i, par_vals in enumerate(ip_list[1]):
+                    if min(par_vals) == max(par_vals):
+                        isoch_fit_errors[i] = -1.
             else:
                 print 'Skipping bootstrap process.'
                 isoch_fit_errors = [-1.] * len(isoch_fit_params[0])
