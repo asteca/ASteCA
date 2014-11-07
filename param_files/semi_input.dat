@@ -9,15 +9,19 @@
 # will be used. Any other value is interpreted as:
 # 1: 'emax', 2: 'lowexp', 3: 'eyefit'
 # 
-# 1 == True / 0 == False
 #
-# M1:	Manual center flag. If 'True' the coordinates given
-#		here will be used as initial approximate values for the
-#		cluster's true central coordinates. The latter will be
-#		searched inside the radius given in the 'rad' parameter.
+# M1:	Manual center flag.
+#		'0': Disabled, center will be searched automatically.
+# 		'1': The coordinates given will be used as initial
+#		approximate values for the cluster's true central
+#		coordinates. The latter will be	searched inside the
+#		radius given in the 'rad' parameter.
+#		'2': Value is fixed to what is given here.
 #
-# M2:	Radius value flag. If 'True' the radius for the cluster
-#		will be taken from the 'rad' value.
+# M2:	Radius value flag.
+#		'0': Disabled, radius will be searched automatically.
+#		'1': The radius for the cluster	will be taken from
+#		the 'rad' value.
 #
 # NAME         c_x          c_y          rad     err  M1 M2
 CLUSTER        1000.        1000.        250.      0   1  1

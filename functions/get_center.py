@@ -133,9 +133,7 @@ def get_center(x_data, y_data, mag_data, hist_lst, gc_params, mode,
         # Unpack semi values.
         cent_cl_semi, cl_rad_semi, cent_flag_semi = semi_return[:3]
 
-        # Only apply if flag is true, else skip semi-center assignment for
-        # this cluster.
-        if cent_flag_semi == 1:
+        if cent_flag_semi in [1, 2]:
             # Search for new center values using the center coordinates
             # and radius given as initial values.
 
@@ -144,15 +142,21 @@ def get_center(x_data, y_data, mag_data, hist_lst, gc_params, mode,
             kde_cent, e_cent, kde_plot = kde_center(x_data, y_data,
                 approx_cents, cl_rad_semi, gc_params)
 
+            # Re-write center values if fixed in semi input file.
+            if cent_flag_semi == 2:
+                kde_cent, e_cent = [float(i) for i in cent_cl_semi], [0., 0.]
+                print 'Semi center fixed: ({:g}, {:g}) {c}.'.format(*kde_cent,
+                    c=coord)
+            else:
+                print 'Semi center found: ({:g}, {:g}) {c}.'.format(*kde_cent,
+                    c=coord)
+
             # Find bin where the center xy coordinates are located.
             cent_bin = bin_center(xedges, yedges, kde_cent)
 
             # For plotting.
             # 2D histogram with a gaussian filter applied.
             hist_2d_g = gaussian_filter(hist, st_dev_lst[0], mode='constant')
-
-            print 'Semi center found: ({:g}, {:g}) {c}.'.format(
-                *kde_cent, c=coord)
         else:
             # Use 'auto' mode.
             mode_semi = False
@@ -202,8 +206,6 @@ def get_center(x_data, y_data, mag_data, hist_lst, gc_params, mode,
         hist_2d_g, approx_cents = center_approx(hist, xedges, yedges,
             [st_dev_lst[0]])
 
-        #kde_cent = approx_cents[0]
-        #e_cent = [0., 0.]
         # Call funct to obtain the pixel coords of the maximum KDE value.
         kde_cent, e_cent, kde_plot = kde_center(x_data, y_data, approx_cents,
             radius, gc_params)
