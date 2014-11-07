@@ -38,7 +38,7 @@ def check(mypath, cl_files):
     # Check if params_input file is properly formatted.
     try:
         # Read input parameters from params_input.dat file.
-        mode, done_dir, gd_params, gh_params, gc_params, cr_params, kp_flag,\
+        mode, done_dir, gd_params, gh_params, cr_params, kp_flag,\
         im_flag, er_params, fr_number, pv_params, da_params, ps_params,\
         bf_params, sc_params, ga_params, rm_params, pl_params,\
         flag_move_file, axes_params = gip(mypath)
@@ -78,11 +78,6 @@ def check(mypath, cl_files):
     if gh_params[0] not in {'auto', 'manual'}:
         sys.exit("ERROR: mode selected ({}) for 2D histogram"
         "is not valid.".format(gh_params[0]))
-
-    # Center finding function.
-    if gc_params[0] not in {'auto', 'manual'}:
-        sys.exit("ERROR: mode selected ({}) for center finding"
-        "function is not valid.".format(gc_params[0]))
 
     # Radius finding function.
     if cr_params[0] not in {'auto', 'manual'}:

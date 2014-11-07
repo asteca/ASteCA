@@ -102,17 +102,6 @@ MF       false   /path/to/folder
 #    mode   bin_width
 CH   auto         20.
 
-# Center finding function parameters.
-#
-# * mode: auto / manual
-#   - auto: the code will use Scott's rule to calculate the bandwidth of the
-#     KDE used to obtain the center value.
-#   - manual: the 'bandwidth' parameter will be used (otherwise its value is
-#     of no importance).
-#
-#    mode    bandwidth
-CC   auto         0.25
-
 # Radius function parameters.
 #
 # * mode: auto / manual

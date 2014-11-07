@@ -41,7 +41,7 @@ def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
     start = time.time()
 
     # Read input parameters from params_input.dat file.
-    mode, done_dir, gd_params, gh_params, gc_params, cr_params, kp_flag, \
+    mode, done_dir, gd_params, gh_params, cr_params, kp_flag, \
     im_flag, er_params, fr_number, pv_params, da_params, ps_params, bf_params,\
     sc_params, ga_params, rm_params, pl_params, flag_move_file, \
     axes_params = gip(mypath)
@@ -73,8 +73,8 @@ def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
     print "Frame's 2D histogram obtained"
 
     # Get cluster's center coordinates and errors.
-    center_params = g_c(x_data, y_data, mag_data, hist_lst, gc_params,
-        mode, semi_return, coord_lst)
+    center_params = g_c(x_data, y_data, mag_data, hist_lst, mode,
+        semi_return, coord_lst)
     # Unpack values from list.
     cent_bin, kde_center = center_params[0], center_params[1]
 
