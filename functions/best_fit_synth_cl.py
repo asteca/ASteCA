@@ -30,18 +30,19 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
 
         print 'Searching for optimal parameters.'
 
-        # Remove IDs and convert to array so likelihood function works.
-        obs_cl = np.array(zip(*zip(*memb_prob_avrg_sort)[1:]), dtype=float)
+        # Remove IDs  and convert to array so likelihood function works.
+        #obs_cl = np.array(zip(*zip(*memb_prob_avrg_sort)[1:]), dtype=float)
+        obs_clust = np.array(zip(*memb_prob_avrg_sort)[1:])
 
-        # Square errors and separate membership probabilities. Done here so
-        # as to not repeat the same calculations each time a new synthetic
-        # cluster is checked.
-        P = np.split(obs_cl, 7, axis=1)
-        # Square errors in color and magnitude. Store membership probabilities.
-        P[3], P[5], mem_probs = np.square(P[3]), np.square(P[5]), \
-        np.asarray(P[6])
-        # Re-pack.
-        obs_clust = [np.hstack(P), mem_probs]
+        ## Square errors ans separate membership probabilities. Done here so
+        ## as to not repeat the same calculations each time a new synthetic
+        ## cluster is checked.
+        #P = np.split(obs_cl, 7, axis=1)
+        ## Square errors in color and magnitude. Store membership probabilities.
+        #P[3], P[5], mem_probs = np.square(P[3]), np.square(P[5]), \
+        #np.asarray(P[6])
+        ## Re-pack.
+        #obs_clust = [np.hstack(P), mem_probs]
 
         # Obtain the stars distrubuted on the selected IMF's. We run it once
         # because the array only depends on the IMF selected.

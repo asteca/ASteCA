@@ -60,6 +60,72 @@ def lk_func(synth_clust, obs_clust):
     return likelihood
 
 
+def mighell(Q, P):
+    '''
+    '''
+
+    if not Q.any():
+        chi = 10000.
+    else:
+
+        # Unpack observed cluster with squared errors and membership
+        # probabilities separated into list.
+        #P, mem_probs = obs_clust
+
+        # Store synthetic clusters as array.
+        #syn_arr = np.array(zip(*(zip(*obs_arr)[:-2])))  # Observed cluster.
+        #Q = np.array(zip(*synth_clust))
+
+        # Split syn_arr.
+        #Q = np.split(syn_arr, 5, axis=1)
+
+        #P = np.split(P, 7, axis=1)
+        #print np.shape(P), np.shape(Q)
+        #print len(P[0]), len(Q[0])
+
+        d1 = np.array(zip(*[P[4], P[2]]))
+        d2 = np.array(zip(*[Q[0], Q[2]]))
+
+        #print np.shape(zip(*[P[4], P[2]])), np.shape(zip(*[Q[0], Q[2]]))
+        #print np.shape(d1), np.shape(d2)
+
+        # Number of bins.
+        b = np.sqrt(len(P[0])) * 2
+
+        # Range for the histograms.
+        x_min, x_max = min(P[4]), max(P[4])
+        y_min, y_max = min(P[2]), max(P[2])
+        rang = [np.linspace(x_min, x_max, b), np.linspace(y_min, y_max, b)]
+
+        d_1 = np.histogramdd(d1, bins=rang)[0]
+        d_2 = np.histogramdd(d2, bins=rang)[0]
+
+        chi = 0.
+        for el1 in zip(*(d_1, d_2)):
+            for el2 in zip(*(el1[0], el1[1])):
+                c = np.square(el2[0] + min(el2[0], 1) - el2[1]) / (el2[0] + 1)
+                chi += c
+
+        #print len(Q[0]), chi
+        #import matplotlib.pyplot as plt
+        #fig = plt.figure()
+        #ax1 = fig.add_subplot(1, 3, 1)
+        #ax2 = fig.add_subplot(1, 3, 2)
+        #ax3 = fig.add_subplot(1, 3, 3)
+        #ax1.imshow(d_1.transpose(), origin='lower', aspect='auto')
+        #ax2.imshow(d_2.transpose(), origin='lower', aspect='auto')
+        #ax3.scatter(P[4], P[2], c='r')
+        #ax3.scatter(Q[0], Q[2], c='b')
+        #text1 = 'chi = {:.2f}\n'.format(chi)
+        #text2 = 'N = {}'.format(len(Q[0]))
+        #text = text1 + text2
+        #ax3.text(0.05, 0.9, text, transform=ax3.transAxes)
+        #fig.subplots_adjust(hspace=1)
+        #plt.show()
+
+    return chi
+
+
 def isoch_likelihood(err_lst, obs_clust, completeness, st_d_bin_mr, isochrone,
                      params, sys_sel):
     '''
@@ -80,6 +146,7 @@ def isoch_likelihood(err_lst, obs_clust, completeness, st_d_bin_mr, isochrone,
 
     # Call function to obtain the likelihood by comparing the synthetic cluster
     # with the observed cluster.
-    likelihood = lk_func(synth_clust, obs_clust)
+    #likelihood = lk_func(synth_clust, obs_clust)
+    likelihood = mighell(synth_clust, obs_clust)
 
     return likelihood
