@@ -155,8 +155,8 @@ def synth_clust_plot(mass_dist, isochrone, model, isoch_moved, isoch_cut,
         ax.set_xlabel('$(B-V)$', fontsize=15)
         ax.set_ylabel('$V$', fontsize=15)
 
-    #plt.show()
-    fig.tight_layout()
-    plt.savefig(path, dpi=300)
+    plt.show()
+    #fig.tight_layout()
+    #plt.savefig(path, dpi=300)
     print 'Synthetic cluster plotted'
     raw_input()
