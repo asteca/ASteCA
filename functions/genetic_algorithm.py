@@ -287,7 +287,7 @@ def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
     best_sol_ei = []
 
     # Print percentage done.
-    milestones = [25, 50, 75, 100]
+    milestones = [20, 40, 60, 80, 100]
     # Begin processing the populations up to n_gen generations.
     for i in range(n_gen):
 
@@ -373,8 +373,8 @@ def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
         if flag_print_perc:
             percentage_complete = (100.0 * (i + 1) / n_gen)
             while len(milestones) > 0 and percentage_complete >= milestones[0]:
-                print "  {}% done".format(milestones[0])
-                print generation[0]
+                print ("  {}% done \t ({:g}, {:g}, {:g}, {:g}, {:g},"
+                " {:g})".format(milestones[0], *generation[0]))
                 # Remove that milestone from the list.
                 milestones = milestones[1:]
 

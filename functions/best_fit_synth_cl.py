@@ -73,8 +73,7 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
                 obs_clust, completeness, ip_list, st_d_bin_mr,
                 ga_params, cmd_sel)
 
-        print ("Best fit params obtained ({:g}, {:g}, {:g}, {:g}, {:g},"
-            " {:g}).".format(*isoch_fit_params[0]))
+        print ("Best fit params obtained.")
 
         if best_fit_algor == 'genet':
             if N_b >= 2:
