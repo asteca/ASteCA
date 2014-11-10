@@ -57,8 +57,22 @@ def get_data(data_file, gd_params):
     id_star, [x_data, y_data, mag_data, e_mag, col1_data, e_col1] = \
     rem_bad_stars(id_star, x_data, y_data, mag_data, e_mag, col1_data, e_col1)
 
+    data_names = ['x_coords', 'y_coords', 'magnitudes', 'color']
+    try:
+        for i, dat_lst in enumerate([x_data, y_data, mag_data, col1_data]):
+            if min(dat_lst) == max(dat_lst):
+                print ("  ERROR: the range defined for the column {}\n"
+                "  is badly defined. Halting. Check the input data"
+                "  format.").format(data_names[i])
+    except ValueError:
+        raise ValueError('Bad format for input data. Check input file.')
+
     print 'Data obtained from input file (N_stars: %d).' % len(id_star)
     if (n_old - len(id_star)) > 0:
-        print ' Entries rejected: %d.' % (n_old - len(id_star))
+        print '  Stars rejected: %d.' % (n_old - len(id_star))
+
+    if len(id_star) / n_old < 0.5:
+        print '  WARNING: {:.0f}% of stars rejected.'.format(100. *
+        (1. - float(len(id_star)) / float(n_old)))
 
     return id_star, x_data, y_data, mag_data, e_mag, col1_data, e_col1

@@ -42,10 +42,9 @@ def main():
         try:
             # Call function that calls all sub-functions sequentially.
             af(mypath, cl_file, ip_list, R_in_place)
-        except Exception, err:
-            print 'FATAL: Unknown error.'
-            print '{}/{} could not be processed.'.format(*cl_file)
-            print 'Error:', str(err), '\n'
+        except Exception:
+            print '\n!!! --> {}/{} could not be processed <-- !!!\n'.format(
+                *cl_file)
             print traceback.format_exc()
 
     print 'Full iteration completed.'
