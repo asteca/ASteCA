@@ -60,6 +60,57 @@ def lk_func(synth_clust, obs_clust):
     return likelihood
 
 
+#def lk_func2(synth_clust, obs_clust):
+    #'''
+    #Takes a synthetic cluster, compares it to the observed cluster and
+    #returns the weighted (log) likelihood value.
+    #This function follows the recipe given in Monteiro, Dias & Caetano (2010).
+    #'''
+
+    #if not synth_clust.any():
+        #likelihood = 10000.
+    #else:
+
+        ## Unpack observed cluster with squared errors and membership
+        ## probabilities separated into list.
+        #P, mem_probs = obs_clust
+
+        ## Store synthetic clusters as array.
+        ##syn_arr = np.array(zip(*(zip(*obs_arr)[:-2])))  # Observed cluster.
+        #syn_arr = np.array(zip(*synth_clust))
+        #cl_stars_probs = []
+
+        ## Split syn_arr.
+        #Q = np.split(syn_arr, 5, axis=1)
+        ## Square synthetic photometric errors.
+        #Q[1] = np.square(Q[1])
+        #Q[3] = np.square(Q[3])
+
+        ## Small value used to replace zeros.
+        #epsilon = 1e-10
+        #for star in P:
+            ## Squares sum of errors.
+            #e_col_2 = np.maximum(star[5] + Q[1], epsilon)
+            #e_mag_2 = np.maximum(star[3] + Q[3], epsilon)
+            ## star[4] & Q[0] = colors
+            ## star[2] & Q[2] = magnitudes
+            #B = np.square(star[4] - Q[0]) / e_col_2
+            #C = np.square(star[2] - Q[2]) / e_mag_2
+            #star_prob = np.exp(-0.5 * (B + C)) / np.sqrt(e_col_2 * e_mag_2)
+            ## The final prob for this cluster star is the sum over all synthetic
+            ## stars. Use 1e-10 to avoid nan and inf values in the calculations
+            ## that follow.
+            #cl_stars_probs.append(max(star_prob.sum(), epsilon))
+
+        ## Weight probabilities for each cluster star.
+        #clust_prob = abs(1. - cl_stars_probs * mem_probs)
+
+        ## Final score: sum log likelihoods for each star in cluster.
+        #likelihood = sum(np.log((np.asarray(clust_prob[0]))))
+
+    #return likelihood
+
+
 def mighell(Q, P):
     '''
     '''
@@ -148,5 +199,6 @@ def isoch_likelihood(err_lst, obs_clust, completeness, st_d_bin_mr, isochrone,
     # with the observed cluster.
     #likelihood = lk_func(synth_clust, obs_clust)
     likelihood = mighell(synth_clust, obs_clust)
+    #likelihood = lk_func2(synth_clust, obs_clust)
 
     return likelihood

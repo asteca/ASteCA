@@ -30,9 +30,8 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
 
         print 'Searching for optimal parameters.'
 
-        # Remove IDs  and convert to array so likelihood function works.
+        ## Remove IDs  and convert to array so likelihood function works.
         #obs_cl = np.array(zip(*zip(*memb_prob_avrg_sort)[1:]), dtype=float)
-        obs_clust = np.array(zip(*memb_prob_avrg_sort)[1:])
 
         ## Square errors ans separate membership probabilities. Done here so
         ## as to not repeat the same calculations each time a new synthetic
@@ -43,6 +42,9 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
         #np.asarray(P[6])
         ## Re-pack.
         #obs_clust = [np.hstack(P), mem_probs]
+
+        # Used by Mighell
+        obs_clust = np.array(zip(*memb_prob_avrg_sort)[1:])
 
         # Obtain the stars distrubuted on the selected IMF's. We run it once
         # because the array only depends on the IMF selected.
