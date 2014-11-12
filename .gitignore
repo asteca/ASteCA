@@ -4,6 +4,6 @@
 isochrones/*
 !/isochrones/README.md
 output/*
-#input/*
+input/*
 !/input/README.md
 .python-version
