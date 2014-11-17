@@ -31,7 +31,7 @@ Constructed with the following guidelines:
 * A new *patch* release indicates a bugfix or small change which does not affect compatibility.
 * A new *build* release indicates this is a pre-release of the version.
 
-[1]: https://github.com/acteca/asteca/releases/latest
+[1]: https://github.com/asteca/asteca/releases/latest
 [3]: http://asteca.github.io
 [4]: https://github.com/asteca/asteca/issues?q=is%3Aopen+is%3Aissue+label%3Abug
 [5]: https://github.com/asteca/asteca/issues?q=is%3Aopen+is%3Aissue+label%3Aenhancement
