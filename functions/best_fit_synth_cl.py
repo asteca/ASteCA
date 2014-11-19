@@ -30,21 +30,21 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
 
         print 'Searching for optimal parameters.'
 
-        ## Remove IDs  and convert to array so likelihood function works.
-        #obs_cl = np.array(zip(*zip(*memb_prob_avrg_sort)[1:]), dtype=float)
+        # Remove IDs  and convert to array so likelihood function works.
+        obs_cl = np.array(zip(*zip(*memb_prob_avrg_sort)[1:]), dtype=float)
 
-        ## Square errors ans separate membership probabilities. Done here so
-        ## as to not repeat the same calculations each time a new synthetic
-        ## cluster is checked.
-        #P = np.split(obs_cl, 7, axis=1)
-        ## Square errors in color and magnitude. Store membership probabilities.
-        #P[3], P[5], mem_probs = np.square(P[3]), np.square(P[5]), \
-        #np.asarray(P[6])
-        ## Re-pack.
-        #obs_clust = [np.hstack(P), mem_probs]
+        # Square errors ans separate membership probabilities. Done here so
+        # as to not repeat the same calculations each time a new synthetic
+        # cluster is checked.
+        P = np.split(obs_cl, 7, axis=1)
+        # Square errors in color and magnitude. Store membership probabilities.
+        P[3], P[5], mem_probs = np.square(P[3]), np.square(P[5]), \
+        np.asarray(P[6])
+        # Re-pack.
+        obs_clust = [np.hstack(P), mem_probs]
 
-        # Used by Mighell
-        obs_clust = np.array(zip(*memb_prob_avrg_sort)[1:])
+        # Used by Mighell and Dolphin
+        #obs_clust = np.array(zip(*memb_prob_avrg_sort)[1:])
 
         # Obtain the stars distrubuted on the selected IMF's. We run it once
         # because the array only depends on the IMF selected.
@@ -62,8 +62,11 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
             isoch_fit_params = b_f(err_lst, obs_clust, completeness,
                                    ip_list, st_d_bin_mr, ga_params, cmd_sel)
             # Assign errors as the steps in each parameter.
-            #param_rs = ip_list[2]
             isoch_fit_errors = [p_rs[2] for p_rs in ip_list[2]]
+            # If any parameter has a single valued range, assign an error of -1.
+            for i, par_vals in enumerate(ip_list[1]):
+                if min(par_vals) == max(par_vals):
+                    isoch_fit_errors[i] = -1.
 
         elif best_fit_algor == 'genet':
 
