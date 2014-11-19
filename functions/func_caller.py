@@ -54,7 +54,7 @@ def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
     # Get file names and paths.
     clust_name, data_file, memb_file, output_dir, output_subdir, \
     memb_file_out, write_name = n_p(mypath, cl_file)
-    print 'Analizing cluster {} ({}).'.format(clust_name, mode)
+    print 'Analizing cluster {}/{} ({}).'.format(cl_file[0], clust_name, mode)
 
     # Get data from semi-data input file.
     mode, semi_return = g_s(clust_name, mode)
