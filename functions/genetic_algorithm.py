@@ -232,7 +232,9 @@ def num_binary_digits(param_rs):
     p_interv = np.array(p_delta) / np.array(p_step)
 
     # Number of binary digits used to create the chromosomes.
-    n_bin = int(np.log(max(p_interv)) / np.log(2)) + 1
+    # The max function prevents an error when all parameter ranges are set to
+    # a unique value in which case the np.log is a negative float.
+    n_bin = max(int(np.log(max(p_interv)) / np.log(2)) + 1, 1)
 
     return n_bin, p_delta, p_mins
 
