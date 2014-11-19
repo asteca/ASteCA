@@ -289,7 +289,7 @@ def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
     best_sol_ei = []
 
     # Print percentage done.
-    milestones = [20, 40, 60, 80, 100]
+    milestones = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
     # Begin processing the populations up to n_gen generations.
     for i in range(n_gen):
 
