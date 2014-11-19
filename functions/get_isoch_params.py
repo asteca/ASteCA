@@ -53,42 +53,34 @@ def get_ranges(par_ranges):
     Calculate parameter ranges to be used by the selected best fit method.
     '''
 
-    m_rs, a_rs, e_rs, d_rs, mass_rs, bin_rs = par_ranges
-
-    # Store ranges and steps for these parameters.
-    z_min, z_max, z_step = m_rs
-    age_min, age_max, age_step = a_rs
-    e_bv_min, e_bv_max, e_bv_step = e_rs
-    dm_min, dm_max, dm_step = d_rs
-    mas_min, mas_max, mas_step = mass_rs
-    bin_min, bin_max, bin_step = bin_rs
+    # Copy to avoid modifiyng the real list.
+    param_rs = list(par_ranges)
 
     # UPDATE max values.
     # Add a small value to each max value to ensure that the range is a bit
     # larger than the one between the real min and max values. This simplifies
     # the input of data and ensures that the GA algorithm won't fail when
     # encoding/decoding the floats into their binary representations.
-    z_max = z_max + min(z_max / 100., z_step / 2.)
-    age_max = age_max + min(age_max / 100., age_step / 2.)
-    e_bv_max = e_bv_max + min(e_bv_max / 100., e_bv_step / 2.)
-    dm_max = dm_max + min(dm_max / 100., dm_step / 2.)
-    mas_max = mas_max + min(mas_max / 100., mas_step / 2.)
-    bin_max = bin_max + min(bin_max / 100., bin_step / 2.)
-
-    # Store min, *UPDATED* max values and steps for all parameters.
-    param_rs = [[z_min, z_max, z_step], [age_min, age_max, age_step],
-        [e_bv_min, e_bv_max, e_bv_step], [dm_min, dm_max, dm_step],
-        [mas_min, mas_max, mas_step], [bin_min, bin_max, bin_step]]
-
-    # Store all possible parameter values in array.
-    # param = [p_1, p_2, ..., p_n]
-    z_range = np.arange(z_min, z_max, z_step)
-    a_range = np.arange(age_min, age_max, age_step)
-    e_range = np.arange(e_bv_min, e_bv_max, e_bv_step)
-    d_range = np.arange(dm_min, dm_max, dm_step)
-    mas_range = np.arange(mas_min, mas_max, mas_step)
-    bin_range = np.arange(bin_min, bin_max, bin_step)
-    param_ranges = [z_range, a_range, e_range, d_range, mas_range, bin_range]
+    param_ranges = []
+    for param in param_rs:
+        # If min == max then set step value to be a very large number so
+        # the GA will select the number of digits in the encoding binary
+        # correctly.
+        if param[0] == param[1]:
+            param[2] = 1e6
+        #
+        # Differential to add to the max value.
+        diff = min(param[1] / 100., param[2] / 2.)
+        #
+        # Store min, *UPDATED* max values and steps for all parameters.
+        #
+        # If diff is zero it means either the max or the step values are
+        # zero for this parameter. In such case, use a very small value
+        # instead to allow the ranges to be obtained and the 'Encode'
+        # operator in the GA to work properly.
+        param[1] = (param[1] + diff) if diff > 0. else 0.0001
+        # Store all possible parameter values in array.
+        param_ranges.append(np.arange(*param))
 
     return param_ranges, param_rs
 
