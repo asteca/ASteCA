@@ -57,6 +57,25 @@ def lk_func(synth_clust, obs_clust):
         # Final score: sum log likelihoods for each star in cluster.
         likelihood = -sum(np.log(np.asarray(clust_prob[0])))
 
+        #print len(syn_arr), likelihood
+        #import matplotlib.pyplot as plt
+        #fig = plt.figure()
+        #ax1 = fig.add_subplot(1, 2, 1)
+        #ax2 = fig.add_subplot(1, 2, 2)
+        #ax1.scatter(zip(*P)[4], zip(*P)[2], c='r')
+        #ax2.scatter(Q[0], Q[2], c='b')
+        #text = 'N = {}'.format(len(zip(*P)[4]))
+        #ax1.text(0.6, 0.9, text, transform=ax1.transAxes)
+        #text1 = 'L = {:.2f}\n'.format(likelihood)
+        #text2 = 'N = {}'.format(len(syn_arr))
+        #text = text1 + text2
+        #ax2.text(0.6, 0.9, text, transform=ax2.transAxes)
+        ##fig.gca().invert_yaxis()
+        #ax1.invert_yaxis()
+        #ax2.invert_yaxis()
+        #fig.subplots_adjust(hspace=1)
+        #plt.show()
+
     return likelihood
 
 
@@ -67,21 +86,6 @@ def mighell(Q, P):
     if not Q.any():
         chi = 10000.
     else:
-
-        # Unpack observed cluster with squared errors and membership
-        # probabilities separated into list.
-        #P, mem_probs = obs_clust
-
-        # Store synthetic clusters as array.
-        #syn_arr = np.array(zip(*(zip(*obs_arr)[:-2])))  # Observed cluster.
-        #Q = np.array(zip(*synth_clust))
-
-        # Split syn_arr.
-        #Q = np.split(syn_arr, 5, axis=1)
-
-        #P = np.split(P, 7, axis=1)
-        #print np.shape(P), np.shape(Q)
-        #print len(P[0]), len(Q[0])
 
         d1 = np.array(zip(*[P[4], P[2]]))
         d2 = np.array(zip(*[Q[0], Q[2]]))
@@ -181,14 +185,10 @@ def dolphin(Q, P):
 def isoch_likelihood(err_lst, obs_clust, completeness, st_d_bin_mr, isochrone,
                      params, sys_sel):
     '''
-    Main function.
-
     Call with an isochrone of given values for metallicity and age and supply
     the extinction and distance modulus values to move that isochrone. Use
     that isochrone to generate a synthetic cluster with those parameters and
     finally compare it wiht the observed cluster.
-
-    e, d = extinction, distance modulus.
     '''
 
     # Generate synthetic cluster using this "moved" isochrone and a mass
@@ -198,8 +198,8 @@ def isoch_likelihood(err_lst, obs_clust, completeness, st_d_bin_mr, isochrone,
 
     # Call function to obtain the likelihood by comparing the synthetic cluster
     # with the observed cluster.
-    #likelihood = lk_func(synth_clust, obs_clust)
+    likelihood = lk_func(synth_clust, obs_clust)
     #likelihood = mighell(synth_clust, obs_clust)
-    likelihood = dolphin(synth_clust, obs_clust)
+    #likelihood = dolphin(synth_clust, obs_clust)
 
     return likelihood
