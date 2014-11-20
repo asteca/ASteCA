@@ -58,7 +58,11 @@ def lk_func(synth_clust, obs_clust):
         likelihood = -sum(np.log(np.asarray(clust_prob[0])))
 
         # BIC
-        likelihood = 2 * likelihood + len(syn_arr) * np.log(len(P[0]))
+        #likelihood = 2 * likelihood + len(syn_arr) * np.log(len(P[0]))
+
+        # AIC_c
+        n, p = len(P[0]), len(syn_arr)
+        likelihood = 2 * likelihood + 2 * p + (2 * p) * (p + 1) / (n - p - 1)
 
         #print len(syn_arr), likelihood
         #import matplotlib.pyplot as plt
