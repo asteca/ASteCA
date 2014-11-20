@@ -57,6 +57,9 @@ def lk_func(synth_clust, obs_clust):
         # Final score: sum log likelihoods for each star in cluster.
         likelihood = -sum(np.log(np.asarray(clust_prob[0])))
 
+        # BIC
+        likelihood = 2 * likelihood + len(syn_arr) * np.log(len(P[0]))
+
         #print len(syn_arr), likelihood
         #import matplotlib.pyplot as plt
         #fig = plt.figure()
@@ -69,8 +72,7 @@ def lk_func(synth_clust, obs_clust):
         #text1 = 'L = {:.2f}\n'.format(likelihood)
         #text2 = 'N = {}'.format(len(syn_arr))
         #text = text1 + text2
-        #ax2.text(0.6, 0.9, text, transform=ax2.transAxes)
-        ##fig.gca().invert_yaxis()
+        #ax2.text(0.5, 0.9, text, transform=ax2.transAxes)
         #ax1.invert_yaxis()
         #ax2.invert_yaxis()
         #fig.subplots_adjust(hspace=1)
@@ -142,8 +144,7 @@ def dolphin(Q, P):
         d2 = np.array(zip(*[Q[0], Q[2]]))
 
         # Number of bins.
-        b = np.sqrt(len(P[0])) * 0.7
-        #b = np.sqrt(len(Q[0])) * 2
+        b = np.sqrt(len(P[0])) * 2
 
         # Range for the histograms.
         x_min, x_max = min(P[4]), max(P[4])
@@ -155,11 +156,13 @@ def dolphin(Q, P):
 
         # Small value used to replace zeros.
         epsilon = 1e-10
-        poiss_lkl = 0.
+        #poiss_lkl = 0.
+        poiss_lkl = len(Q[0])
         for el1 in zip(*(d_1, d_2)):
             for el2 in zip(*(el1[0], el1[1])):
-                c = el2[1] - el2[0] + el2[0] * np.log(max(el2[0], epsilon) /
-                    max(el2[1], epsilon))
+                #c = el2[1] - el2[0] + el2[0] * np.log(max(el2[0], epsilon) /
+                    #max(el2[1], epsilon))
+                c = -1. * el2[0] * np.log(max(el2[1], epsilon))
                 poiss_lkl += c
 
         #print len(Q[0]), poiss_lkl
