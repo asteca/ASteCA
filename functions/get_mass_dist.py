@@ -35,7 +35,7 @@ def mass_dist(st_dist, M_total):
         else:
             # Generate N_st stars with masses randomly distributed between
             # m_low and m_up and store them in the dist_mass list.
-            dist_mass.extend(np.random.uniform(m_low, m_up, round(N_st)))
+            dist_mass.extend(np.random.uniform(m_low, m_up, int(round(N_st))))
             # Reset parameters.
             N_st_add, m_low = 0., m_up
 
