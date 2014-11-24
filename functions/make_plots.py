@@ -18,11 +18,53 @@ from functions.exp_function import exp_func
 import error_round as err_r
 
 
+def star_size(mag_data):
+    '''
+    Convert magnitudes into intensities and define sizes of stars in
+    finding chart.
+    '''
+    return 0.1 + 100. * 10 ** ((np.array(mag_data) - min(mag_data)) / -2.5)
+
+
+def line(x, slope, intercept):
+    '''
+    Linar function.
+    '''
+    y = slope * x + intercept
+    return y
+
+
+def two_params(x, cd, rc, bg):
+    '''
+    Two parameters King profile fit.
+    '''
+    return bg + cd / (1 + (np.asarray(x) / rc) ** 2)
+
+
+def three_params(x, rt, cd, rc, bg):
+    '''
+    Three parameters King profile fit.
+    '''
+    return cd * (1 / np.sqrt(1 + (np.asarray(x) / rc) ** 2) -
+        1 / np.sqrt(1 + (rt / rc) ** 2)) ** 2 + bg
+
+
+def reject_outliers(data, m=6.5):
+    '''
+    Reject outliers from array.
+    http://stackoverflow.com/a/16562028/1391441
+    '''
+    d = np.abs(data - np.median(data))
+    mdev = np.median(d)
+    s = d / mdev if mdev else 0.
+    return data[s < m]
+
+
 def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
     bin_width, center_params, rdp_params, field_dens, radius_params,
     cont_index, mag_data, col1_data, err_plot, err_flags, kp_params,
     cl_region, stars_out, stars_in_rjct, stars_out_rjct, integr_return, n_memb,
-    flag_area_stronger, field_region, flag_pval_test,
+    flag_area_stronger, field_regions, flag_pval_test,
     pval_test_params, memb_prob_avrg_sort, lum_func, completeness, ip_list,
     da_params, bf_params, red_return, err_lst, bf_return, ga_params, er_params,
     axes_params, pl_params):
@@ -30,38 +72,18 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
     Make all plots.
     '''
 
-    def star_size(x, a, c, area):
-        '''
-        Function to obtain the optimal star size for the scatter plot.
-        '''
-        return sum(a * np.exp(x * mag_data ** c)) / area - 0.001
-
-    def line(x, slope, intercept):
-        '''
-        Linar function.
-        '''
-        y = slope * x + intercept
-        return y
-
-    def two_params(x, cd, rc, bg):
-        '''
-        Two parameters King profile fit.
-        '''
-        return bg + cd / (1 + (np.asarray(x) / rc) ** 2)
-
-    def three_params(x, rt, cd, rc, bg):
-        '''
-        Three parameters King profile fit.
-        '''
-        return cd * (1 / np.sqrt(1 + (np.asarray(x) / rc) ** 2) -
-            1 / np.sqrt(1 + (rt / rc) ** 2)) ** 2 + bg
-
     # Define names for CMD axes.
+    y_axis = 0
     y_ax, x_ax0, m_ord = axes_params[0:3]
     if m_ord == 21:
         x_ax = '(' + x_ax0 + '-' + y_ax + ')'
     elif m_ord == 12:
         x_ax = '(' + y_ax + '-' + x_ax0 + ')'
+
+    # Unpack coordinates and photometric data.
+    #x_data, y_data = id_coords[1:]
+    phot_x = col1_data
+    phot_y = mag_data
 
     # Define system of coordinates used.
     px_deg = gd_params[-1]
@@ -69,11 +91,12 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
     coord, x_name, y_name = coord_lst
 
     # Define plot limits for *all* CMD diagrams.
-    x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd = axes_params[3]
-    col1_min, col1_max = max(x_min_cmd, min(col1_data) - 0.2),\
-    min(x_max_cmd, max(col1_data) + 0.2)
-    mag_min, mag_max = min(y_max_cmd, max(mag_data) + 0.5),\
-    max(y_min_cmd, min(mag_data) - 0.5)
+    phot_x_s, phot_y_s = reject_outliers(phot_x), reject_outliers(phot_y)
+    x_max_cmd, x_min_cmd = max(phot_x_s) + 0.5, min(phot_x_s) - 0.5
+    y_min_cmd, y_max_cmd = max(phot_y_s) + 0.5, min(phot_y_s) - 0.5
+    # If photometric axis y is a magnitude, make sure the brightest stars
+    # are plotted.
+    y_max_cmd = (min(phot_y) - 1.) if y_axis == 0 else y_max_cmd
 
     # Unpack params.
     # Parameters from get_center function.
@@ -217,8 +240,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
     plt.text(0.05, 0.9, text, transform=ax4.transAxes,
         bbox=dict(facecolor='white', alpha=0.85), fontsize=11)
     # Plot stars.
-    st_sizes_arr = 0.1 + 100. * 10 ** ((np.array(mag_data) -
-        min(mag_data)) / -2.5)
+    st_sizes_arr = star_size(mag_data)
     plt.scatter(x_data, y_data, marker='o', c='black', s=st_sizes_arr)
 
     # Radial density plot.
@@ -370,7 +392,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
     circle = plt.Circle((center_cl[0], center_cl[1]), clust_rad,
                         color='k', fill=False)
     fig.gca().add_artist(circle)
-    plt.text(0.4, 0.92, 'Cluster + %d Field regions' % (len(field_region)),
+    plt.text(0.4, 0.92, 'Cluster + %d Field regions' % (len(field_regions)),
              transform=ax7.transAxes,
              bbox=dict(facecolor='white', alpha=0.8), fontsize=12)
     # Plot cluster region.
@@ -379,7 +401,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
     if not flag_area_stronger:
         # Plot field stars regions.
         col = cycle(['DimGray', 'ForestGreen', 'maroon', 'RoyalBlue'])
-        for i, reg in enumerate(field_region):
+        for i, reg in enumerate(field_regions):
             stars_reg_temp = [[], []]
             for star in reg:
                 # star[1] is the x coordinate and star[2] the y coordinate
@@ -391,8 +413,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
     # Field stars CMD (stars outside cluster's radius)
     ax8 = plt.subplot(gs1[4:6, 2:4])
     #Set plot limits
-    plt.xlim(col1_min, col1_max)
-    plt.ylim(mag_min, mag_max)
+    plt.xlim(x_min_cmd, x_max_cmd)
+    plt.ylim(y_min_cmd, y_max_cmd)
     #Set axis labels
     plt.xlabel('$' + x_ax + '$', fontsize=18)
     plt.ylabel('$' + y_ax + '$', fontsize=18)
@@ -412,7 +434,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
                 s=15, zorder=1)
     # Plot stars within the field regions defined.
     stars_acpt_temp = [[], []]
-    for fr in field_region:
+    for fr in field_regions:
         for star in fr:
             stars_acpt_temp[0].append(star[5])
             stars_acpt_temp[1].append(star[3])
@@ -426,8 +448,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
     # Cluster's stars CMD (stars inside cluster's radius)
     ax9 = plt.subplot(gs1[4:6, 4:6])
     #Set plot limits
-    plt.xlim(col1_min, col1_max)
-    plt.ylim(mag_min, mag_max)
+    plt.xlim(x_min_cmd, x_max_cmd)
+    plt.ylim(y_min_cmd, y_max_cmd)
     #Set axis labels
     plt.xlabel('$' + x_ax + '$', fontsize=18)
     plt.ylabel('$' + y_ax + '$', fontsize=18)
@@ -594,9 +616,9 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
     # completeness = [max_mag, bin_edges, max_indx, comp_perc]
     bin_edges, max_indx = completeness[1], completeness[2]
     mag_peak = bin_edges[max_indx]
+    text = '$' + y_ax + r',_{compl}\,\approx\,%0.1f$' % mag_peak
     ax12.vlines(x=mag_peak, ymin=0., ymax=plt.ylim()[1], color='k',
-        lw=1.5, linestyles='dashed',
-        label='$' + y_ax + r'_{compl}\,\approx\,%0.1f$' % mag_peak, zorder=1)
+        lw=1.5, linestyles='dashed', label=text, zorder=1)
     # Legends.
     leg11 = plt.legend(fancybox=True, loc='upper right', numpoints=1,
                        fontsize=13)
@@ -738,7 +760,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
         # Color map, higher prob stars look redder.
         cm = plt.cm.get_cmap('RdYlBu_r')
         # Star sizes for dense and not dense regions.
-        star_size = 20 if field_dens > 0.005 else 35
+        st_size = 20 if field_dens > 0.005 else 35
         m_p_m_temp = [[], [], []]
         for star in memb_prob_avrg_sort:
             m_p_m_temp[0].append(star[1])
@@ -747,7 +769,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
         # Create new list with inverted values so higher prob stars are on top.
         m_p_m_temp_inv = [i[::-1] for i in m_p_m_temp]
         plt.scatter(m_p_m_temp_inv[0], m_p_m_temp_inv[1], marker='o',
-                    c=m_p_m_temp_inv[2], s=star_size, edgecolors='black',
+                    c=m_p_m_temp_inv[2], s=st_size, edgecolors='black',
                     cmap=cm, lw=0.5)
         out_clust_rad = [[], []]
         for star in stars_out:
@@ -759,14 +781,14 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
                     out_clust_rad[0].append(star[1])
                     out_clust_rad[1].append(star[2])
         plt.scatter(out_clust_rad[0], out_clust_rad[1], marker='o',
-                    s=star_size, edgecolors='black', facecolors='none', lw=0.5)
+                    s=st_size, edgecolors='black', facecolors='none', lw=0.5)
 
     if da_params[0] != 'skip' or bf_flag:
         # Star's membership probabilities on cluster's CMD.
         ax18 = plt.subplot(gs1[8:10, 4:6])
         #Set plot limits
-        plt.xlim(col1_min, col1_max)
-        plt.ylim(mag_min, mag_max)
+        plt.xlim(x_min_cmd, x_max_cmd)
+        plt.ylim(y_min_cmd, y_max_cmd)
         #Set axis labels
         plt.xlabel('$' + x_ax + '$', fontsize=18)
         plt.ylabel('$' + y_ax + '$', fontsize=18)
@@ -818,8 +840,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
     if bf_flag:
         ax19 = plt.subplot(gs1[8:10, 6:8])
         #Set plot limits
-        plt.xlim(col1_min, col1_max)
-        plt.ylim(mag_min, mag_max)
+        plt.xlim(x_min_cmd, x_max_cmd)
+        plt.ylim(y_min_cmd, y_max_cmd)
         #Set axis labels
         plt.xlabel('$' + x_ax + '$', fontsize=18)
         plt.ylabel('$' + y_ax + '$', fontsize=18)

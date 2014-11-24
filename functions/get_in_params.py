@@ -147,12 +147,8 @@ def get_in_params(mypath):
         4: ('{T_1}', 'C', 21), 5: ('J', 'H', 12), 6: ('H', 'J', 21),
         7: ('K', 'H', 21)}
     m_1, m_2, m_ord = cmds_dic[cmd_select]
-
-    # Fixed maximum and minimum axis values for the CMD plots.
-    # col_min col_max mag_min mag_max
-    xy_minmax = [-1., 4., 7., 30.]
     # Store axes params.
-    axes_params = [m_1, m_2, m_ord, xy_minmax]
+    axes_params = [m_1, m_2, m_ord]
 
     # Store photometric system params in lists.
     par_ranges = [m_rs, a_rs, e_rs, d_rs, mass_rs, bin_rs]
