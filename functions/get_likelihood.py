@@ -57,14 +57,19 @@ def lk_func(synth_clust, obs_clust):
         # Final score: sum log likelihoods for each star in cluster.
         likelihood = -sum(np.log(np.asarray(clust_prob[0])))
 
+        #n, p = len(P), len(syn_arr)
+
         # BIC
-        #likelihood = 2 * likelihood + len(syn_arr) * np.log(len(P[0]))
+        #likelihood = 2 * likelihood + p * np.log(n)
 
         # AIC_c
-        n, p = len(P[0]), len(syn_arr)
-        likelihood = 2 * likelihood + 2 * p + (2 * p) * (p + 1) / (n - p - 1)
+        #if (n - p) != 1:
+            #likelihood = 2 * likelihood + 2 * p + \
+            #(2 * p) * (p + 1) / (n - p - 1)
+        #else:
+            #likelihood = 2 * likelihood + 2 * p
 
-        #print len(syn_arr), likelihood
+        #print n, p, likelihood
         #import matplotlib.pyplot as plt
         #fig = plt.figure()
         #ax1 = fig.add_subplot(1, 2, 1)
@@ -136,7 +141,7 @@ def mighell(Q, P):
     return chi
 
 
-def dolphin(Q, P):
+def dolphin(Q, obs_clust):
     '''
     '''
 
@@ -144,19 +149,25 @@ def dolphin(Q, P):
         poiss_lkl = 10000.
     else:
 
+        P = obs_clust[0]
+        b_rx, b_ry = obs_clust[1]
+
         d1 = np.array(zip(*[P[4], P[2]]))
         d2 = np.array(zip(*[Q[0], Q[2]]))
 
-        # Number of bins.
-        b = np.sqrt(len(P[0])) * 2
+        ## Number of bins.
+        #b = np.sqrt(len(P[0])) * 2
 
         # Range for the histograms.
-        x_min, x_max = min(P[4]), max(P[4])
-        y_min, y_max = min(P[2]), max(P[2])
-        rang = [np.linspace(x_min, x_max, b), np.linspace(y_min, y_max, b)]
+        #x_min, x_max = min(P[4]), max(P[4])
+        #y_min, y_max = min(P[2]), max(P[2])
+        #rang = [np.linspace(x_min, x_max, b), np.linspace(y_min, y_max, b)]
 
-        d_1 = np.histogramdd(d1, bins=rang)[0]
-        d_2 = np.histogramdd(d2, bins=rang)[0]
+        #d_1 = np.histogramdd(d1, bins=rang)[0]
+        #d_2 = np.histogramdd(d2, bins=rang)[0]
+
+        d_1 = np.histogramdd(d1, bins=[b_rx, b_ry])[0]
+        d_2 = np.histogramdd(d2, bins=[b_rx, b_ry])[0]
 
         # Small value used to replace zeros.
         epsilon = 1e-10
@@ -205,8 +216,8 @@ def isoch_likelihood(err_lst, obs_clust, completeness, st_d_bin_mr, isochrone,
 
     # Call function to obtain the likelihood by comparing the synthetic cluster
     # with the observed cluster.
-    likelihood = lk_func(synth_clust, obs_clust)
+    #likelihood = lk_func(synth_clust, obs_clust)
     #likelihood = mighell(synth_clust, obs_clust)
-    #likelihood = dolphin(synth_clust, obs_clust)
+    likelihood = dolphin(synth_clust, obs_clust)
 
     return likelihood
