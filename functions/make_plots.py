@@ -999,6 +999,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
                    extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]],
                    cmap=plt.get_cmap('Reds'), aspect='auto')
 
+        #
+        # Metallicity/likelihood plot.
         ax22 = plt.subplot(gs1[12:14, 0:2])
         plt.ylim(max(0, min(lkl_old[0]) - 0.3 * min(lkl_old[0])),
             max(lkl_old[1]))
@@ -1023,6 +1025,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
         plt.axvline(x=m - e_m, linestyle='--', color='red')
         plt.axvline(x=m, linestyle='--', color='blue', zorder=3)
 
+        #
+        # Age/likelihood plot.
         ax23 = plt.subplot(gs1[12:14, 2:4])
         plt.ylim(max(0, min(lkl_old[0]) - 0.3 * min(lkl_old[0])),
             max(lkl_old[1]))
@@ -1046,6 +1050,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
         plt.axvline(x=a - e_a, linestyle='--', color='red')
         plt.axvline(x=a, linestyle='--', color='blue', zorder=3)
 
+        #
+        # Reddening/likelihood plot.
         ax24 = plt.subplot(gs1[12:14, 4:6])
         plt.ylim(max(0, min(lkl_old[0]) - 0.3 * min(lkl_old[0])),
             max(lkl_old[1]))
@@ -1069,6 +1075,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
         plt.axvline(x=e - e_e, linestyle='--', color='red')
         plt.axvline(x=e, linestyle='--', color='blue', zorder=3)
 
+        #
+        # Dist/likelihood plot.
         ax25 = plt.subplot(gs1[12:14, 6:8])
         plt.ylim(max(0, min(lkl_old[0]) - 0.3 * min(lkl_old[0])),
             max(lkl_old[1]))
@@ -1093,31 +1101,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
         plt.axvline(x=d, linestyle='--', color='blue', zorder=3)
 
         #
-        # Mass/likelihood plot.
+        # Mass/binary plot.
         ax26 = plt.subplot(gs1[14:16, 0:2])
-        plt.ylim(max(0, min(lkl_old[0]) - 0.3 * min(lkl_old[0])),
-            max(lkl_old[1]))
-        plt.xlim(mass_min, mass_max)
-        # Set minor ticks
-        ax26.minorticks_on()
-        ax26.tick_params(axis='y', which='major', labelsize=9)
-        plt.ylabel('Likelihood', fontsize=12)
-        plt.xlabel('$M_{\odot}$', fontsize=16)
-        text = '$M_{{\odot}} = {} \pm {}$'.format(cp_r[4], cp_e[4])
-        plt.text(0.1, 0.93, text, transform=ax26.transAxes,
-            bbox=dict(facecolor='white', alpha=0.5), fontsize=12)
-        hist, xedges, yedges = np.histogram2d(zip(*model_done[0])[4],
-                                              model_done[1], bins=100)
-        # H_g is the 2D histogram with a gaussian filter applied
-        h_g = gaussian_filter(hist, 2, mode='constant')
-        plt.imshow(h_g.transpose(), origin='lower',
-                   extent=[xedges[0], xedges[-1], y_min_edge, yedges[-1]],
-                   cmap=plt.get_cmap('gist_yarg'), aspect='auto')
-        plt.axvline(x=mass + e_mass, linestyle='--', color='red')
-        plt.axvline(x=mass - e_mass, linestyle='--', color='red')
-        plt.axvline(x=mass, linestyle='--', color='blue', zorder=3)
-
-        ax27 = plt.subplot(gs1[14:16, 2:4])
         plt.xlim(mass_min, mass_max)
         plt.ylim(bin_min, bin_max)
         plt.xlabel('$M_{\odot}$', fontsize=16)
@@ -1128,10 +1113,10 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
         # Check if errors in both dimensions are defined.
         if all([i > 0. for i in [e_mass, e_bin]]):
             # Plot ellipse error.
-            ax27 = plt.gca()
+            ax26 = plt.gca()
             ellipse = Ellipse(xy=(mass, binar_f), width=2 * e_mass,
                 height=2 * e_bin, edgecolor='b', fc='None', lw=1.)
-            ax27.add_patch(ellipse)
+            ax26.add_patch(ellipse)
         elif e_mass < 0.:
             plt.errorbar(mass, binar_f, yerr=e_bin, color='b')
         elif e_bin < 0.:
@@ -1144,6 +1129,56 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
         plt.imshow(h_g.transpose(), origin='lower',
                    extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]],
                    cmap=plt.get_cmap('Reds'), aspect='auto')
+
+        #
+        # Mass/likelihood plot.
+        ax27 = plt.subplot(gs1[14:16, 2:4])
+        plt.ylim(max(0, min(lkl_old[0]) - 0.3 * min(lkl_old[0])),
+            max(lkl_old[1]))
+        plt.xlim(mass_min, mass_max)
+        # Set minor ticks
+        ax27.minorticks_on()
+        ax27.tick_params(axis='y', which='major', labelsize=9)
+        plt.ylabel('Likelihood', fontsize=12)
+        plt.xlabel('$M_{\odot}$', fontsize=16)
+        text = '$M_{{\odot}} = {} \pm {}$'.format(cp_r[4], cp_e[4])
+        plt.text(0.1, 0.93, text, transform=ax27.transAxes,
+            bbox=dict(facecolor='white', alpha=0.5), fontsize=12)
+        hist, xedges, yedges = np.histogram2d(zip(*model_done[0])[4],
+                                              model_done[1], bins=100)
+        # H_g is the 2D histogram with a gaussian filter applied
+        h_g = gaussian_filter(hist, 2, mode='constant')
+        plt.imshow(h_g.transpose(), origin='lower',
+                   extent=[xedges[0], xedges[-1], y_min_edge, yedges[-1]],
+                   cmap=plt.get_cmap('gist_yarg'), aspect='auto')
+        plt.axvline(x=mass + e_mass, linestyle='--', color='red')
+        plt.axvline(x=mass - e_mass, linestyle='--', color='red')
+        plt.axvline(x=mass, linestyle='--', color='blue', zorder=3)
+
+        #
+        # Binary/likelihood plot.
+        ax28 = plt.subplot(gs1[14:16, 4:6])
+        plt.ylim(max(0, min(lkl_old[0]) - 0.3 * min(lkl_old[0])),
+            max(lkl_old[1]))
+        plt.xlim(bin_min, bin_max)
+        # Set minor ticks
+        ax28.minorticks_on()
+        ax28.tick_params(axis='y', which='major', labelsize=9)
+        plt.ylabel('Likelihood', fontsize=12)
+        plt.xlabel('$b_{frac}$', fontsize=16)
+        text = '$b_{{frac}} = {} \pm {}$'.format(cp_r[5], cp_e[5])
+        plt.text(0.1, 0.93, text, transform=ax28.transAxes,
+            bbox=dict(facecolor='white', alpha=0.5), fontsize=12)
+        hist, xedges, yedges = np.histogram2d(zip(*model_done[0])[5],
+                                              model_done[1], bins=100)
+        # H_g is the 2D histogram with a gaussian filter applied
+        h_g = gaussian_filter(hist, 2, mode='constant')
+        plt.imshow(h_g.transpose(), origin='lower',
+                   extent=[xedges[0], xedges[-1], y_min_edge, yedges[-1]],
+                   cmap=plt.get_cmap('gist_yarg'), aspect='auto')
+        plt.axvline(x=binar_f + e_bin, linestyle='--', color='red')
+        plt.axvline(x=binar_f - e_bin, linestyle='--', color='red')
+        plt.axvline(x=binar_f, linestyle='--', color='blue', zorder=3)
 
     # Ignore warning issued by colorbar plotted in CMD with membership
     # probabilities.
