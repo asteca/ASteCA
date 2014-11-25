@@ -81,7 +81,9 @@ def get_in_params(mypath):
                 elif reader[0] == 'BF':
                     bf_flag = True if reader[1] in true_lst else False
                     best_fit_algor = str(reader[2])
-                    N_b = int(reader[3])
+                    lkl_method = str(reader[3])
+                    bin_method = str(reader[4])
+                    N_b = int(reader[5])
                 elif reader[0] == 'PS':
                     iso_select = str(reader[1])
                 elif reader[0] == 'RM':
@@ -155,7 +157,7 @@ def get_in_params(mypath):
     ps_params = [iso_path, cmd_select, iso_select, par_ranges]
 
     # Store GA params in lists.
-    bf_params = [bf_flag, best_fit_algor, N_b]
+    bf_params = [bf_flag, best_fit_algor, lkl_method, bin_method, N_b]
     sc_params = [IMF_name, bin_mr]
     ga_params = [n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es]
     rm_params = [flag_red_memb, min_prob]

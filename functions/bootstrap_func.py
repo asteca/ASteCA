@@ -8,6 +8,7 @@ Created on Fri Mar 07 10:50:05 2014
 import numpy as np
 import random
 from genetic_algorithm import gen_algor as g_a
+from obs_clust_prepare import prepare as prep
 
 
 def resample_replacement(obs_clust):
@@ -21,7 +22,7 @@ def resample_replacement(obs_clust):
     return obs_cl
 
 
-def bootstrap(err_lst, obs_clust, completeness, ip_list, bf_params,
+def bootstrap(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
              st_d_bin_mr, ga_params, cmd_sel):
     '''
     Bootstrap process, runs the selected algorithm a number of times each
@@ -29,7 +30,7 @@ def bootstrap(err_lst, obs_clust, completeness, ip_list, bf_params,
     with replacement.
     '''
 
-    bf_flag, best_fit_algor, N_b = bf_params
+    best_fit_algor, lkl_method, bin_method, N_b = bf_params[1:]
 
     print 'Begin bootstrap process (%d).' % N_b
 
@@ -37,16 +38,15 @@ def bootstrap(err_lst, obs_clust, completeness, ip_list, bf_params,
     # process.
     params_boot = []
 
-    milestones = [15, 30, 45, 60, 75, 90, 100]
+    milestones = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
     # Begin bootstrap block (run a minimum of two times).
     for i in range(N_b):
 
-        # Unpack.
-        P, mem_probs = obs_clust
         # Resample cluster with replacement.
-        obs_cl_r = resample_replacement(P)
-        # Re-pack.
-        obs_cl = [obs_cl_r, mem_probs]
+        obs_cl_r = resample_replacement(memb_prob_avrg_sort)
+        # Obtain prepared observed cluster according to the likelihood method
+        # selected.
+        obs_cl = prep(obs_cl_r, lkl_method, bin_method)
 
         # Algorithm selected.
         if best_fit_algor == 'genet':

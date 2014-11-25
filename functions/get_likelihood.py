@@ -22,7 +22,7 @@ def lk_func(synth_clust, obs_clust):
 
         # Unpack observed cluster with squared errors and membership
         # probabilities separated into list.
-        P, mem_probs = obs_clust
+        P, mem_probs = obs_clust[1:]
 
         # Store synthetic clusters as array.
         #syn_arr = np.array(zip(*(zip(*obs_arr)[:-2])))  # Observed cluster.
@@ -149,34 +149,17 @@ def dolphin(Q, obs_clust):
         poiss_lkl = 10000.
     else:
 
-        P = obs_clust[0]
-        b_rx, b_ry = obs_clust[1]
+        cl_histo = obs_clust[1]
+        b_rx, b_ry = obs_clust[2]
 
-        d1 = np.array(zip(*[P[4], P[2]]))
-        d2 = np.array(zip(*[Q[0], Q[2]]))
-
-        ## Number of bins.
-        #b = np.sqrt(len(P[0])) * 2
-
-        # Range for the histograms.
-        #x_min, x_max = min(P[4]), max(P[4])
-        #y_min, y_max = min(P[2]), max(P[2])
-        #rang = [np.linspace(x_min, x_max, b), np.linspace(y_min, y_max, b)]
-
-        #d_1 = np.histogramdd(d1, bins=rang)[0]
-        #d_2 = np.histogramdd(d2, bins=rang)[0]
-
-        d_1 = np.histogramdd(d1, bins=[b_rx, b_ry])[0]
-        d_2 = np.histogramdd(d2, bins=[b_rx, b_ry])[0]
+        syn_mags_cols = np.array(zip(*[Q[0], Q[2]]))
+        syn_histo = np.histogramdd(syn_mags_cols, bins=[b_rx, b_ry])[0]
 
         # Small value used to replace zeros.
         epsilon = 1e-10
-        #poiss_lkl = 0.
         poiss_lkl = len(Q[0])
-        for el1 in zip(*(d_1, d_2)):
+        for el1 in zip(*(cl_histo, syn_histo)):
             for el2 in zip(*(el1[0], el1[1])):
-                #c = el2[1] - el2[0] + el2[0] * np.log(max(el2[0], epsilon) /
-                    #max(el2[1], epsilon))
                 c = -1. * el2[0] * np.log(max(el2[1], epsilon))
                 poiss_lkl += c
 
@@ -216,8 +199,9 @@ def isoch_likelihood(err_lst, obs_clust, completeness, st_d_bin_mr, isochrone,
 
     # Call function to obtain the likelihood by comparing the synthetic cluster
     # with the observed cluster.
-    #likelihood = lk_func(synth_clust, obs_clust)
-    #likelihood = mighell(synth_clust, obs_clust)
-    likelihood = dolphin(synth_clust, obs_clust)
+    if obs_clust[0] == 'tolstoy':
+        likelihood = lk_func(synth_clust, obs_clust)
+    else:
+        likelihood = dolphin(synth_clust, obs_clust)
 
     return likelihood
