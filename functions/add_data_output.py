@@ -84,7 +84,6 @@ def add_data_output(out_file_name, write_name,
     line = [write_name, cre_r,
         cont_index, n_c, n_c_k, prob_cl_kde, integ_col, cpe_r]
     # Flatten list.
-    print line
     line_f = list(flatten(line))
 
     # Write values to file.
