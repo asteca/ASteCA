@@ -839,6 +839,9 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
 
     # Synthetic cluster.
     if bf_flag:
+        # Shorter names.
+        cp_r, cp_e = isoch_fit_params[0], isoch_fit_errors
+
         ax19 = plt.subplot(gs1[8:10, 6:8])
         #Set plot limits
         plt.xlim(x_min_cmd, x_max_cmd)
@@ -851,15 +854,6 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
         ax19.xaxis.set_major_locator(MultipleLocator(1.0))
         ax19.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
         # Add text box
-        # See if bootstrap process was applied.
-        if N_b < 2:
-            # Round cluster params using the g format.
-            cp_r = ['{:g}'.format(_) for _ in isoch_fit_params[0]]
-            cp_e = isoch_fit_errors
-        else:
-            # Round cluster parameters.
-            cp_r, cp_e = err_r.round_sig_fig(isoch_fit_params[0],
-                isoch_fit_errors)
         text1 = '$N = {}$\n'.format(len(synth_clst[0]))
         text2 = '$z = {} \pm {}$\n'.format(cp_r[0], cp_e[0])
         text3 = '$log(age) = {} \pm {}$\n'.format(cp_r[1], cp_e[1])
