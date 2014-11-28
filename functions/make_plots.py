@@ -1022,9 +1022,11 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
         plt.imshow(h_g.transpose(), origin='lower',
                    extent=[xedges[0], xedges[-1], y_min_edge, yedges[-1]],
                    cmap=plt.get_cmap('gist_yarg'), aspect='auto')
-        plt.axvline(x=m + e_m, linestyle='--', color='red')
-        plt.axvline(x=m - e_m, linestyle='--', color='red')
         plt.axvline(x=m, linestyle='--', color='blue', zorder=3)
+        if cp_e[0] > 0.:
+            # Plot error bars only if errors where assigned.
+            plt.axvline(x=m + e_m, linestyle='--', color='red')
+            plt.axvline(x=m - e_m, linestyle='--', color='red')
 
         #
         # Age/likelihood plot.
@@ -1047,9 +1049,11 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
         plt.imshow(h_g.transpose(), origin='lower',
                    extent=[xedges[0], xedges[-1], y_min_edge, yedges[-1]],
                    cmap=plt.get_cmap('gist_yarg'), aspect='auto')
-        plt.axvline(x=a + e_a, linestyle='--', color='red')
-        plt.axvline(x=a - e_a, linestyle='--', color='red')
         plt.axvline(x=a, linestyle='--', color='blue', zorder=3)
+        if cp_e[1] > 0.:
+            # Plot error bars only if errors where assigned.
+            plt.axvline(x=a + e_a, linestyle='--', color='red')
+            plt.axvline(x=a - e_a, linestyle='--', color='red')
 
         #
         # Reddening/likelihood plot.
@@ -1072,9 +1076,11 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
         plt.imshow(h_g.transpose(), origin='lower',
                    extent=[xedges[0], xedges[-1], y_min_edge, yedges[-1]],
                    cmap=plt.get_cmap('gist_yarg'), aspect='auto')
-        plt.axvline(x=e + e_e, linestyle='--', color='red')
-        plt.axvline(x=e - e_e, linestyle='--', color='red')
         plt.axvline(x=e, linestyle='--', color='blue', zorder=3)
+        if cp_e[2] > 0.:
+            # Plot error bars only if errors where assigned.
+            plt.axvline(x=e + e_e, linestyle='--', color='red')
+            plt.axvline(x=e - e_e, linestyle='--', color='red')
 
         #
         # Dist/likelihood plot.
@@ -1097,9 +1103,11 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
         plt.imshow(h_g.transpose(), origin='lower',
                    extent=[xedges[0], xedges[-1], y_min_edge, yedges[-1]],
                    cmap=plt.get_cmap('gist_yarg'), aspect='auto')
-        plt.axvline(x=d + e_d, linestyle='--', color='red')
-        plt.axvline(x=d - e_d, linestyle='--', color='red')
         plt.axvline(x=d, linestyle='--', color='blue', zorder=3)
+        if cp_e[3] > 0.:
+            # Plot error bars only if errors where assigned.
+            plt.axvline(x=d + e_d, linestyle='--', color='red')
+            plt.axvline(x=d - e_d, linestyle='--', color='red')
 
         #
         # Mass/binary plot.
@@ -1152,9 +1160,11 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
         plt.imshow(h_g.transpose(), origin='lower',
                    extent=[xedges[0], xedges[-1], y_min_edge, yedges[-1]],
                    cmap=plt.get_cmap('gist_yarg'), aspect='auto')
-        plt.axvline(x=mass + e_mass, linestyle='--', color='red')
-        plt.axvline(x=mass - e_mass, linestyle='--', color='red')
         plt.axvline(x=mass, linestyle='--', color='blue', zorder=3)
+        if cp_e[4] > 0.:
+            # Plot error bars only if errors where assigned.
+            plt.axvline(x=mass + e_mass, linestyle='--', color='red')
+            plt.axvline(x=mass - e_mass, linestyle='--', color='red')
 
         #
         # Binary/likelihood plot.
@@ -1177,9 +1187,11 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
         plt.imshow(h_g.transpose(), origin='lower',
                    extent=[xedges[0], xedges[-1], y_min_edge, yedges[-1]],
                    cmap=plt.get_cmap('gist_yarg'), aspect='auto')
-        plt.axvline(x=binar_f + e_bin, linestyle='--', color='red')
-        plt.axvline(x=binar_f - e_bin, linestyle='--', color='red')
         plt.axvline(x=binar_f, linestyle='--', color='blue', zorder=3)
+        if cp_e[5] > 0.:
+            # Plot error bars only if errors where assigned.
+            plt.axvline(x=binar_f + e_bin, linestyle='--', color='red')
+            plt.axvline(x=binar_f - e_bin, linestyle='--', color='red')
 
     # Ignore warning issued by colorbar plotted in CMD with membership
     # probabilities.
