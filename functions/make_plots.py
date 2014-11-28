@@ -203,8 +203,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
     # x,y finding chart of full frame
     ax4 = plt.subplot(gs1[2:4, 0:2])
     #Set plot limits
-    #plt.xlim(x_min, x_max)
-    plt.xlim(282.62, 282.95)
+    plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
     #Set axis labels
     plt.xlabel('{} ({})'.format(x_name, coord), fontsize=12)
@@ -212,45 +211,34 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
     # Set minor ticks
     ax4.minorticks_on()
     # Plot r_cl.
-    center_cl, clust_rad_a, clust_rad_m = [282.775, -6.269], 0.045, 0.05  # auto, manual
-    circle = plt.Circle((center_cl[0], center_cl[1]), clust_rad_a, color='r',
+    circle = plt.Circle((center_cl[0], center_cl[1]), clust_rad, color='r',
         fill=False, lw=2.5)
     fig.gca().add_artist(circle)
-    circle = plt.Circle((center_cl[0], center_cl[1]), clust_rad_m, color='b',
-        fill=False, lw=2.5)
-    fig.gca().add_artist(circle)
-    text = 'NGC 6705 (M11)'
+    if flag_3pk_conver is True:
+        # Plot tidal radius.
+        circle = plt.Circle((center_cl[0], center_cl[1]), rt, color='g',
+            fill=False, lw=2.5)
+        fig.gca().add_artist(circle)
+        # Plot core radius.
+        if rc > 0:
+            circle = plt.Circle((center_cl[0], center_cl[1]), rc,
+                color='g', fill=False, ls='dashed', lw=2.5)
+            fig.gca().add_artist(circle)
+    elif flag_2pk_conver is True:
+        # Plot core radius.
+        if rc > 0:
+            circle = plt.Circle((center_cl[0], center_cl[1]), rc,
+                color='g', fill=False, ls='dashed', lw=2.5)
+            fig.gca().add_artist(circle)
+    # Add text box
+    center_cl_r, e_cent_r = err_r.round_sig_fig(center_cl, e_cent)
+    text1 = '${0}_{{cent}} = {1:g} \pm {2:g}\,{3}$'.format(x_name,
+        center_cl_r[0], e_cent_r[0], coord)
+    text2 = '${0}_{{cent}} = {1:g} \pm {2:g}\,{3}$'.format(y_name,
+        center_cl_r[1], e_cent_r[1], coord)
+    text = text1 + '\n' + text2
     plt.text(0.05, 0.9, text, transform=ax4.transAxes,
-        bbox=dict(facecolor='white', alpha=0.85), fontsize=16)
-
-    #circle = plt.Circle((center_cl[0], center_cl[1]), clust_rad, color='r',
-        #fill=False, lw=2.5)
-    #fig.gca().add_artist(circle)
-    #if flag_3pk_conver is True:
-        ## Plot tidal radius.
-        #circle = plt.Circle((center_cl[0], center_cl[1]), rt, color='g',
-            #fill=False, lw=2.5)
-        #fig.gca().add_artist(circle)
-        ## Plot core radius.
-        #if rc > 0:
-            #circle = plt.Circle((center_cl[0], center_cl[1]), rc,
-                #color='g', fill=False, ls='dashed', lw=2.5)
-            #fig.gca().add_artist(circle)
-    #elif flag_2pk_conver is True:
-        ## Plot core radius.
-        #if rc > 0:
-            #circle = plt.Circle((center_cl[0], center_cl[1]), rc,
-                #color='g', fill=False, ls='dashed', lw=2.5)
-            #fig.gca().add_artist(circle)
-    ## Add text box
-    #center_cl_r, e_cent_r = err_r.round_sig_fig(center_cl, e_cent)
-    #text1 = '${0}_{{cent}} = {1:g} \pm {2:g}\,{3}$'.format(x_name,
-        #center_cl_r[0], e_cent_r[0], coord)
-    #text2 = '${0}_{{cent}} = {1:g} \pm {2:g}\,{3}$'.format(y_name,
-        #center_cl_r[1], e_cent_r[1], coord)
-    #text = text1 + '\n' + text2
-    #plt.text(0.05, 0.9, text, transform=ax4.transAxes,
-        #bbox=dict(facecolor='white', alpha=0.85), fontsize=11)
+        bbox=dict(facecolor='white', alpha=0.85), fontsize=11)
     # Plot stars.
     st_sizes_arr = star_size(mag_data)
     ax4.set_aspect('equal')
