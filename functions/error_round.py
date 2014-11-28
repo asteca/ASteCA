@@ -47,6 +47,16 @@ def round_sig_fig(params, errors):
 
     # Round errors to 1 significant figure.
     errors_r = map(round_to_y, errors)
-    params_r = map(round_to_ref, params, errors_r)
+
+    # Round parameters to the number of significant figures in the erroi.
+    params_r = []
+    for i, p in enumerate(params):
+        if errors_r[i] > 0.:
+            params_r.append(round_to_ref(p, errors_r[i]))
+        else:
+            # In no error was assigned (i.e.: errors_r[i]=-1), don't attempt
+            # to call the rounding function. Instead simply write the value
+            # using the 'g' string format.
+            params_r.append(float('{:g}'.format(p)))
 
     return params_r, errors_r
