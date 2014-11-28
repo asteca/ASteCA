@@ -4,7 +4,20 @@
 
 import numpy as np
 from error_round import round_sig_fig as rsf
-from compiler.ast import flatten
+import collections
+
+
+def flatten(l):
+    '''
+    Flatten list.
+    '''
+    for el in l:
+        if isinstance(el, collections.Iterable) and not isinstance(el,
+            basestring):
+            for sub in flatten(el):
+                yield sub
+        else:
+            yield el
 
 
 def add_data_output(out_file_name, write_name,
@@ -71,7 +84,8 @@ def add_data_output(out_file_name, write_name,
     line = [write_name, cre_r,
         cont_index, n_c, n_c_k, prob_cl_kde, integ_col, cpe_r]
     # Flatten list.
-    line_f = flatten(line)
+    print line
+    line_f = list(flatten(line))
 
     # Write values to file.
     with open(out_file_name, "a") as f_out:
