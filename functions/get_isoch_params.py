@@ -228,7 +228,7 @@ def ip(ps_params, bf_flag):
 
     ip_list = []
     # Only read files of best fit method is set to run.
-    if bf_flag is True:
+    if bf_flag:
 
         # Unpack.
         iso_path, cmd_select, iso_select, par_ranges = ps_params
