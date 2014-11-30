@@ -70,6 +70,7 @@ CMD          1
 #
 # * flag_make_plot: True / False. If 'False', no output figure will be
 #   generated.
+#
 # * format: png / pdf. Format of the final image file.
 #
 #    flag_make_plot  format  DPI
@@ -79,6 +80,7 @@ MP             true     png  150
 #
 # * flag_move: True / False. The cluster's photometric file will be moved to
 #   the folder defined below if this flag is set to 'True'.
+#
 # * path: Path where the sub-folders are moved once processed if
 #   the flag is set to 'True'.
 #
@@ -97,6 +99,7 @@ MF       false   /path/to/folder
 #     heuristic value, only change it if you really need to since this will
 #     affect the RDP (primarily).
 #   - manual; use 'bin_width' parameter value.
+#
 # * bin_width: width of the bin in pixels or degrees, whatever the frame uses.
 #
 #    mode   bin_width
@@ -108,6 +111,7 @@ CH   auto         20.
 #   - auto: the 'points' parameter will set as 20% of the total number of
 #     points in the radial density profile.
 #   - manual: the value in 'points' will be used.
+#
 # * points: Number of points that must be found below a minimum delta around
 #   the background value. This condition indicates that the star density
 #   has stabilized. The 'auto' value is 25% of the points in the RDP.
@@ -145,13 +149,17 @@ GR       10
 #     the curve plus N sigmas.
 #   - eyefit: attempt an 'eye' fit process composed of a polynomial
 #     plus an exponential.
+#
 # * e_max: maximum error value a star can have in either its magnitude or
 #   color without being rejected. 
+#
 # * be: bright end, the magnitude value that will be added to the
 #   brightest star to determine the range where stars will be accepted
 #   if their errors are lower than 'be_e' (see below).
+#
 # * be_e: maximum error value that stars in the bright end range can
 #   have without being rejected.
+#
 # * N: number of sigmas to be used by the 'lowexp' method. For reference
 #   N=1.96 encloses the 95% confidence interval.
 #
@@ -203,15 +211,30 @@ DA  auto      100
 #
 # * flag: True / False. Flag that determines if the best synthetic cluster
 #   fitting process is to be run.
-# * algorithm: select algorithm to use in best fitting process,
-#   'brute' (Brute Force) / 'genet' (Genetic Algorithm)
-#   If 'brute' is selected, 'bootstrap' is irrelevant.
+#
+# * algorithm: brute / genet. Select algorithm to use in best fitting process.
+#   - brute: Brute Force algorithm, ie: all possible solutions are processed
+#     If 'brute' is selected, 'bootstrap' is irrelevant.
+#   - genet: Genetic Algorithm.
+#
+# * likelihood: tolstoy / dolphin. The function used to calculate the likelihood
+#   of each synthetic cluster.
+#   - tolstoy: uses a weighted bin-free statistic as that defined in
+#     Tolstoy & Saha (1996), Monteiro et al (2010) and Hernández & Valls-Gabaud
+#     (2008). If this method is selected, 'binning' is irrelevant.
+#   - dolphin: uses the 'Poisson likelihood ratio' (Eq. 10) defined in
+#     Dolphin (2002). This requires the selection of a binning method.
+#
+# * binning: blocks / knuth / scott/ freedman / sturges / sqrt
+#   Binning method to be used if the likelihood equation by 'dolphin' is
+#   selected. See docs for more information on each binning method.
+#
 # * bootstrap: number of times the bootstrap with replacement process will run
 #   in the GA algorithm. Minimum value is 2, anything less will skip the
 #   bootstrap process hence no errors will be assigned to the parameters.
 #
-#     flag  algorithm   bootstrap
-BF    true      genet          10
+#     flag  algorithm   likelihood  binning  bootstrap
+BF    false      genet     dolphin    knuth         10
 
 # Select set of isochrones to use.
 #
@@ -251,7 +274,7 @@ PS_d					8.		15.		0.05
 #
 # IMF:  chabrier_2001 / kroupa_1993 / kroupa_2002
 #
-#             IMF
+#           IMF
 SC  kroupa_2002
 #
 # Total initial mass detection is not yet implemented.     ######################## <-- WARNING
@@ -261,7 +284,7 @@ SC  kroupa_2002
 #
 # Total initial mass (in solar masses).
 #						min 	max 	step
-TM                     1000    1001      200
+TM                     1000    1000      100
 #
 # Binary fraction.
 #
@@ -270,12 +293,13 @@ FB              0.7      0.      1.      0.2
 
 # Genetic Algorithm parameters.
 #
+# General:
 # n_pop: number of chromosomes in the population.
 # n_gen: number of generations to process.
 # fdif: Fitness differential. Establishes the 'selection pressure'
 # for the algorithm.
 #
-# Crossover operator
+# Crossover operator:
 # p_cros: crossover probability.
 # cr_sel: select 1-point (1P) or 2-point (2P) crossover.
 #
