@@ -22,6 +22,11 @@ def check(mypath, cl_files):
     on with the code.
     '''
 
+    # Check that at least one photometric cluster file exists.
+    if not cl_files:
+        sys.exit("No photometric data files found in '/input' folder."
+        " Halting.")
+
     # Check packages installed.
     inst_packgs = pip.get_installed_distributions()
     inst_packgs_lst = ["%s" % (i.key) for i in inst_packgs]
@@ -247,11 +252,6 @@ def check(mypath, cl_files):
         if sc_params[0] not in imfs_dict:
             sys.exit("ERROR: Name of IMF ({}) is incorrect.".format(
                 sc_params[0]))
-
-        # Check that at least one photometric cluster file exists.
-        if not cl_files:
-            sys.exit("No photometric data files found in '/input' folder."
-            " Halting.")
 
     print 'Full check done.\n'
     return ip_list, R_in_place
