@@ -3,7 +3,6 @@
 from os.path import join, realpath, dirname
 from os import getcwd
 import traceback
-# Import files with defined functions.
 from functions.checker import check
 from functions.get_in_clusters import in_clusters
 

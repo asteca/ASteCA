@@ -32,7 +32,9 @@ def create_out_data_file(output_dir):
         out_data_file = open(out_file_name, 'w')
         now_time = strftime("%Y-%m-%d %H:%M:%S")
         out_data_file.write("#\n\
-# [%s]\n\
+# ASteCA \n\
+#\n\
+# [{}]\n\
 #\n\
 # NAME: Cluster's name.\n\
 # c_x: Cluster's x center coordinate.\n\
@@ -59,14 +61,18 @@ def create_out_data_file(output_dir):
 #          probably not a true cluster.\n\
 # int_col: Integrated color magnitude for all stars inside the cluster\n\
 #          radius, except those that were rejected due to large errors.\n\
-# met: Metallicity value (z) obtained via synthetic cluster fitting.\n\
+# met: Metallicity value (z).\n\
 # e_m: Metallicity error.\n\
-# age: log(age) for age in Gyr, idem metallicity.\n\
+# age: log(age).\n\
 # e_a: log(age) error.\n\
-# E(B-V): extinction, idem metallicity.\n\
+# E(B-V): extinction.\n\
 # e_E: Extinction error.\n\
-# dist: Distance modulus, idem metallicity.\n\
+# dist: Distance modulus.\n\
 # e_d: Distance error.\n\
+# M_i: Total initial mass.\n\
+# e_M: Mass error.\n\
+# bin_fr: Binary fraction.\n\
+# e_bf: Binary fraction error.\n\
 #\n\
 # M1 (flag_center_manual): Indicates that the center was set manually.\n\
 # M2 (flag_radius_manual): Indicates that the radius was set manually.\n\
@@ -99,7 +105,8 @@ def create_out_data_file(output_dir):
 #NAME                 c_x      e_x      c_y      e_y     r_cl    e_rcl      \
 r_c     e_rc      r_t     e_rt       CI     memb  memb_k   prob_cl  \
 int_col      met      e_m      age      e_a   E(B-V)      e_E     dist      \
-e_d      M1 M2  f1 f2 f3 f4 f5 f6 f7 f8 f9  FC\n" % now_time)
+e_d      M_i      e_M   bin_fr     e_bf      M1 M2  f1 f2 f3 f4 f5 f6 f7 f8 \
+f9  FC\n".format(now_time))
         out_data_file.close()
 
     return out_file_name

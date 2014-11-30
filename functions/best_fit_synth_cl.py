@@ -136,7 +136,7 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
         # Pass empty lists to make_plots.
         print 'Skipping parameters fitting process.'
         isoch_fit_params, isoch_fit_errors, shift_isoch, synth_clst = \
-        [[-1., -1., -1., -1., -1.]], [-1., -1., -1., -1., -1.], [], []
+        [[-1., -1., -1., -1., -1., -1.]], [-1., -1., -1., -1., -1., -1.], [], []
 
     bf_return = [isoch_fit_params, isoch_fit_errors, shift_isoch, synth_clst]
 
