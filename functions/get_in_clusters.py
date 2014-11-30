@@ -30,7 +30,7 @@ def in_clusters(mypath):
         for f in files:
             # Remove input_dir from sub-dir path.
             subdir = re.sub(r'^' + re.escape(input_dir), '', root)
-            # Don't attempt to read membership or .mf files.
+            # Don't attempt to read membership or .md files.
             if not f.endswith(('_memb.dat', '.md')):
                 cl_files.append([subdir, f])
 
