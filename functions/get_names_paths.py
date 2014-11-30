@@ -1,6 +1,6 @@
 
 from os.path import join, exists
-from os import mkdir, extsep
+from os import makedirs, extsep
 
 
 def names_paths(mypath, cl_file):
@@ -23,7 +23,7 @@ def names_paths(mypath, cl_file):
 
     # Generate output dir/subdir if it doesn't exist.
     if not exists(output_subdir):
-        mkdir(output_subdir)
+        makedirs(output_subdir)
 
     memb_file_out = join(output_subdir, clust_name + '_memb.dat')
     write_name = join(cl_file[0], clust_name)

@@ -6,7 +6,8 @@ Created on Fri Apr 04 2014
 """
 
 from os.path import join
-from os import listdir, walk
+from os import walk
+import re
 
 
 def in_clusters(mypath):
@@ -26,20 +27,12 @@ def in_clusters(mypath):
         if 'dont_read' in dirs:
             dirs.remove('dont_read')
 
-        # For files not in sub-dirs.
-        if files and root == input_dir:
-            for name in files:
-                # Don't attempt to read membership data files.
-                if not name.endswith(('_memb.dat', '.md')):
-                    cl_files.append(['', name])
-
-        # For files in sub-dirs.
-        if dirs:
-            for subdir in dirs:
-                for name in listdir(join(input_dir, subdir)):
-                    # Don't attempt to read membership data files.
-                    if not name.endswith(('_memb.dat', '.md')):
-                        cl_files.append([subdir, name])
+        for f in files:
+            # Remove input_dir from sub-dir path.
+            subdir = re.sub(r'^' + re.escape(input_dir), '', root)
+            # Don't attempt to read membership or .mf files.
+            if not f.endswith(('_memb.dat', '.md')):
+                cl_files.append([subdir, f])
 
     # Return sorted list by cluster file name.
     cl_files.sort(key=lambda x: x[1].lower())
