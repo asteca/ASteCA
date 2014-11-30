@@ -156,9 +156,28 @@ def check(mypath, cl_files):
                 "algorithm but the file:\n\n {}\n\ndoes not "
                 "exist.".format(memb_file))
 
-    ip_list = []
+    # Unpack.
+    bf_flag, best_fit_algor, lkl_method, bin_method, N_b = bf_params
+
     # If best fit method is set to run.
-    if bf_params[0]:
+    ip_list = []
+    if bf_flag:
+
+        # Check best fit method selected.
+        if best_fit_algor not in {'brute', 'genet'}:
+            sys.exit("ERROR: the selected best fit method '{}' does not match"
+                " a valid input.".format(best_fit_algor))
+
+        # Check likelihood method selected.
+        if lkl_method not in {'tolstoy', 'dolphin'}:
+            sys.exit("ERROR: the selected likelihood method '{}' does not match"
+                " a valid input.".format(lkl_method))
+
+        # Check binning method selected.
+        if lkl_method == 'dolphin' and bin_method not in {'blocks', 'knuth',
+            'scott', 'freedman', 'sturges', 'sqrt'}:
+            sys.exit("ERROR: the selected binning method '{}' does not match"
+                " a valid input.".format(bin_method))
 
         # Unpack.
         iso_path, cmd_select, iso_select, par_ranges = ps_params
@@ -223,14 +242,16 @@ def check(mypath, cl_files):
             print traceback.format_exc()
             sys.exit("ERROR: unknown error reading metallicity files.")
 
-    # Check IMF defined.
-    imfs_dict = {'kroupa_1993', 'chabrier_2001', 'kroupa_2002'}
-    if sc_params[0] not in imfs_dict:
-        sys.exit("ERROR: Name of IMF ({}) is incorrect.".format(sc_params[0]))
+        # Check IMF defined.
+        imfs_dict = {'kroupa_1993', 'chabrier_2001', 'kroupa_2002'}
+        if sc_params[0] not in imfs_dict:
+            sys.exit("ERROR: Name of IMF ({}) is incorrect.".format(
+                sc_params[0]))
 
-    # Check that at least one photometric cluster file exists.
-    if not cl_files:
-        sys.exit("No photometric data files found in '/input' folder. Halting.")
+        # Check that at least one photometric cluster file exists.
+        if not cl_files:
+            sys.exit("No photometric data files found in '/input' folder."
+            " Halting.")
 
     print 'Full check done.\n'
     return ip_list, R_in_place
