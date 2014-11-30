@@ -3,6 +3,7 @@
 from os.path import join, realpath, dirname
 from os import getcwd
 import traceback
+from functions import __version__
 from functions.checker import check
 from functions.get_in_clusters import in_clusters
 
@@ -11,9 +12,6 @@ def main():
     '''
     Main function. Reads input data files and calls the container function.
     '''
-
-    __version__ = "v0.1.1"
-
     print '\n'
     print '-------------------------------------------'
     print '            ASteCA %s' % __version__

@@ -5,6 +5,7 @@
 from time import strftime
 from os.path import exists, join
 from os import mkdir
+from functions import __version__
 
 
 def create_out_data_file(output_dir):
@@ -32,9 +33,9 @@ def create_out_data_file(output_dir):
         out_data_file = open(out_file_name, 'w')
         now_time = strftime("%Y-%m-%d %H:%M:%S")
         out_data_file.write("#\n\
-# ASteCA \n\
+# ASteCA {}\n\
 #\n\
-# [{}]\n\
+# Created: [{}]\n\
 #\n\
 # NAME: Cluster's name.\n\
 # c_x: Cluster's x center coordinate.\n\
@@ -106,7 +107,7 @@ def create_out_data_file(output_dir):
 r_c     e_rc      r_t     e_rt       CI     memb  memb_k   prob_cl  \
 int_col      met      e_m      age      e_a   E(B-V)      e_E     dist      \
 e_d      M_i      e_M   bin_fr     e_bf      M1 M2  f1 f2 f3 f4 f5 f6 f7 f8 \
-f9  FC\n".format(now_time))
+f9  FC\n".format(__version__, now_time))
         out_data_file.close()
 
     return out_file_name
