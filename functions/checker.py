@@ -30,8 +30,7 @@ def check(mypath, cl_files):
     # Check packages installed.
     inst_packgs = pip.get_installed_distributions()
     inst_packgs_lst = ["%s" % (i.key) for i in inst_packgs]
-    for pckg in ['numpy', 'matplotlib', 'scipy', 'astroml', 'scikit-learn',
-        'astropy']:
+    for pckg in ['numpy', 'matplotlib', 'scipy', 'astroml', 'scikit-learn']:
         if pckg not in inst_packgs_lst:
             print "ERROR: '{}' package is not installed.".format(pckg)
             sys.exit("Install with: pip install {}".format(pckg))
