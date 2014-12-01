@@ -9,14 +9,16 @@ from synth_cluster import synth_clust as s_c
 import numpy as np
 
 
-def lk_func(synth_clust, obs_clust):
+def tolstoy(Q, obs_clust):
     '''
     Takes a synthetic cluster, compares it to the observed cluster and
     returns the weighted (log) likelihood value.
-    This function follows the recipe given in Monteiro, Dias & Caetano (2010).
+    This function follows the recipe given in Tolstoy & Saha (1996),
+    Hernandez & Valls-Gabaud (2008) andMonteiro, Dias & Caetano (2010).
     '''
 
-    if not synth_clust.any():
+    if not Q.any():
+        # If synthetic cluster is empty, assign high likelihood value.
         likelihood = 10000.
     else:
 
@@ -26,7 +28,7 @@ def lk_func(synth_clust, obs_clust):
 
         # Store synthetic clusters as array.
         #syn_arr = np.array(zip(*(zip(*obs_arr)[:-2])))  # Observed cluster.
-        syn_arr = np.array(zip(*synth_clust))
+        syn_arr = np.array(zip(*Q))
         cl_stars_probs = []
 
         # Split syn_arr.
@@ -90,22 +92,32 @@ def lk_func(synth_clust, obs_clust):
     return likelihood
 
 
-def dolphin(Q, obs_clust):
+def dolphin(Q, P):
     '''
+    Takes a synthetic cluster, compares it to the observed cluster and
+    returns the weighted (log) likelihood value.
+    This function follows the recipe given in Dolphin (2002).
     '''
 
     if not Q.any():
+        # If synthetic cluster is empty, assign high likelihood value.
         poiss_lkl = 10000.
     else:
 
-        cl_histo = obs_clust[1]
-        b_rx, b_ry = obs_clust[2]
+        # Observed cluster's histogram.
+        cl_histo = P[1]
+        # Bin edges for each dimension.
+        b_rx, b_ry = P[2]
 
+        # Magnitude and color for the synthetic cluster.
         syn_mags_cols = np.array(zip(*[Q[0], Q[2]]))
+        # Histogram of the synthetic cluster, using the bin edges calculated
+        # with the observed cluster.
         syn_histo = np.histogramdd(syn_mags_cols, bins=[b_rx, b_ry])[0]
 
         # Small value used to replace zeros.
         epsilon = 1e-10
+        # Obtain inverse logarithmic 'Poisson likelihood ratio'.
         poiss_lkl = len(Q[0])
         for el1 in zip(*(cl_histo, syn_histo)):
             for el2 in zip(*(el1[0], el1[1])):
@@ -149,7 +161,7 @@ def isoch_likelihood(err_lst, obs_clust, completeness, st_d_bin_mr, isochrone,
     # Call function to obtain the likelihood by comparing the synthetic cluster
     # with the observed cluster.
     if obs_clust[0] == 'tolstoy':
-        likelihood = lk_func(synth_clust, obs_clust)
+        likelihood = tolstoy(synth_clust, obs_clust)
     else:
         likelihood = dolphin(synth_clust, obs_clust)
 

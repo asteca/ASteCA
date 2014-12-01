@@ -19,12 +19,13 @@ def prepare(memb_prob_avrg_sort, lkl_method, bin_method):
         # Remove IDs and re-pack converted to array.
         obs_cl = np.array(zip(*zip(*memb_prob_avrg_sort)[1:]), dtype=float)
 
-        # Square errors ans separate membership probabilities. Done here so
+        # Square errors and separate membership probabilities. Done here so
         # as to not repeat the same calculations each time a new synthetic
         # cluster is checked.
         P = np.split(obs_cl, 7, axis=1)
 
-        # Square errors in color and magnitude. Store membership probabilities.
+        # Square errors in color and magnitude. Store membership probabilities
+        # separately.
         P[3], P[5], mem_probs = np.square(P[3]), np.square(P[5]), \
         np.asarray(P[6])
 
