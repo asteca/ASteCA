@@ -183,7 +183,7 @@ def read_met_file(met_f, age_values, cmd_select, isoch_format):
     return metal_isoch
 
 
-def get_isochs(iso_select, cmd_select, met_f_filter, age_values, isoch_format):
+def get_isochs(cmd_select, met_f_filter, age_values, isoch_format):
     '''
     Stores the available isochrones of different metallicities and
     ages, according to the ranges given to these parameters.
@@ -255,8 +255,8 @@ def ip(ps_params, bf_flag):
             met_files, age_vals_all, z_range, a_range)
 
         # Get isochrones and their parameter values.
-        isoch_list = get_isochs(iso_select, cmd_select, met_f_filter,
-            age_values, isoch_format)
+        isoch_list = get_isochs(cmd_select, met_f_filter, age_values,
+            isoch_format)
 
         # Interpolate extra points into all isochrones.
         isochs_interp = [[] for _ in isoch_list]
@@ -268,9 +268,12 @@ def ip(ps_params, bf_flag):
         param_values = [met_values, age_values] + param_ranges[2:]
         ip_list = [isochs_interp, param_values, param_rs]
 
+        iso_ver = {'10': '1.0', '11': '1.1', '12': '1.2S'}
+        print ("PARSEC v{} theoretical isochrones read,".format(
+            iso_ver[iso_select[-2:]]))
         lens = [len(_) for _ in param_values]
         total = reduce(lambda x, y: x * y, lens, 1)
-        print ("Theoretical isochrones read, interpolated and stored:\n"
+        print ("interpolated and stored:\n"
         "  {} metallicity values (z),\n"
         "  {} age values (per z),\n"
         "  {} reddening values,\n"

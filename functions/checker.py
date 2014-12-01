@@ -193,7 +193,7 @@ def check(mypath, cl_files):
                 " selection.".format(cmd_select))
 
         # Check selected isochrones set.
-        if iso_select not in {'MAR', 'PAR'}:
+        if iso_select not in {'PAR10', 'PAR11', 'PAR12'}:
             sys.exit("ERROR: the selected isochrones set ({}) does not match a"
                 " valid input.".format(iso_select))
 

@@ -128,16 +128,13 @@ def get_in_params(mypath):
 
     # Fix isochrones location according to the CMD and set selected.
     text1, text2 = 'none', 'none'
+    text1 = 'parsec' + iso_select[-2:]
     if cmd_select in {1, 2, 3}:
-        text1 = 'ubvi'
+        text2 = 'ubvi'
     elif cmd_select in {4}:
-        text1 = 'wash'
+        text2 = 'wash'
     elif cmd_select in {5, 6, 7}:
-        text1 = '2mass'
-    if iso_select == 'MAR':
-        text2 = 'marigo'
-    elif iso_select == 'PAR':
-        text2 = 'parsec'
+        text2 = '2mass'
     # Set iso_path according to the above values.
     iso_path = join(mypath + '/isochrones/' + text1 + '_' + text2)
 

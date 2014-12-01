@@ -16,24 +16,7 @@ def isoch_format(iso_select, cmd_select):
     age_format = r"Age = \t(.+?) yr"
 
     # Assign values according to the system and set of isochrones selected.
-    if iso_select == 'MAR':
-        # String that identifies the beginning of a new isochrone.
-        line_start = "#\tIsochrone\tZ ="
-        # Mass column.
-        mass = 1
-        if cmd_select == 1:
-            # V, B
-            mag1, mag2 = 9, 8
-        elif cmd_select == 2:
-            # V, I
-            mag1, mag2 = 9, 11
-        elif cmd_select == 3:
-            # B, U
-            mag1, mag2 = 8, 7
-        elif cmd_select == 4:
-            # T1, C
-            mag1, mag2 = 9, 7
-    elif iso_select == 'PAR':
+    if iso_select in ['PAR10', 'PAR11', 'PAR12']:
         # String that identifies the beginning of a new isochrone.
         line_start = "#\tIsochrone  Z = "
         # Mass column.

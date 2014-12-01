@@ -236,16 +236,46 @@ DA  auto      100
 #     flag  algorithm   likelihood  binning  bootstrap
 BF    false      genet     dolphin    knuth         10
 
-# Select set of isochrones to use.
+# ** WARNING **
 #
-# Marigo only works with the first 4 CMDs and will be     ######################### <-- WARNING
-# deprecated soon as it has been superseded by the
-# new PARSEC set.
+# If the 'tolstoy' likelihood method is selected, the range for the total
+# initial mass below should be fixed to a unique value (1000 is good)
+# When this likelihood method is used, the best fit function will select always
+# high masses if a range is given for this parameter.
+# If you want to make the total initial mass a free parameter that varies within
+# a range, you need to use the 'dolphin' likelihood method instead.
+
+# Select set of isochrones to use. Only PARSEC tracks are accepted
+# for now.
 #
-# iso_select: MAR (Marigo) / PAR (PARSEC)
+# iso_select: PAR10 (v1.0) / PAR11 (v1.1) / PAR12 (v1.2S)
 #
 #    iso_select
-PS          PAR
+PS        PAR10
+
+# Synthetic cluster parameters.
+#
+# IMF:  chabrier_2001 / kroupa_1993 / kroupa_2002
+#
+#           IMF
+SC  kroupa_2002
+#
+# Ranges and steps for the parameters to be fitted.
+#
+# 						min 	max     step
+# Metallicity (z)		
+PS_m					0.0005	0.03    0.005
+# log(age)			
+PS_a					6.6		10.1    0.1
+# E(B-V)				
+PS_e					0.		0.4		0.01
+# Distance modulus		
+PS_d					8.		15.		0.2
+# Total initial mass (in solar masses).
+TM                     10     10000      100
+# Binary fraction.
+#        mass_ratio
+FB              0.7      0.      1.      0.2
 
 # Reduced membership.
 #
@@ -257,39 +287,6 @@ PS          PAR
 #
 #    mode           prob_min
 RM   auto              0.75
-
-# Ranges and steps for the parameters to be fitted.
-#
-# 						min 	max     step
-# Metallicity (z)		
-PS_m					0.0005	0.03    0.005
-# log(age)			
-PS_a					6.6		10.1    0.1
-# E(B-V)				
-PS_e					0.		0.4		0.01
-# Distance modulus		
-PS_d					8.		15.		0.05
-
-# Synthetic cluster parameters.
-#
-# IMF:  chabrier_2001 / kroupa_1993 / kroupa_2002
-#
-#           IMF
-SC  kroupa_2002
-#
-# Total initial mass detection is not yet implemented.     ######################## <-- WARNING
-# Its value should be fixed to 1000 solar masses as it
-# is below. The best fit function will select always high
-# masses if a range is given for this parameter.
-#
-# Total initial mass (in solar masses).
-#						min 	max 	step
-TM                     1000    1000      100
-#
-# Binary fraction.
-#
-#        mass_ratio		min 	max 	step
-FB              0.7      0.      1.      0.2
 
 # Genetic Algorithm parameters.
 #
