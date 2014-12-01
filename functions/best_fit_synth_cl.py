@@ -99,14 +99,16 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
         # isochrones and return the best fitting parameters.
         if best_fit_algor == 'brute':
 
-            print 'Using Brute Force algorithm.'
+            print 'Using Brute Force algorithm ({}).'.format(lkl_method + '/' +
+            bin_method if lkl_method == 'dolphin' else lkl_method)
             # Brute force algorithm.
             isoch_fit_params = b_f(err_lst, obs_clust, completeness,
                                    ip_list, st_d_bin_mr, ga_params, cmd_sel)
 
         elif best_fit_algor == 'genet':
 
-            print 'Using Genetic Algorithm.'
+            print 'Using Genetic Algorithm ({}).'.format(lkl_method + '/' +
+            bin_method if lkl_method == 'dolphin' else lkl_method)
             # Genetic algorithm.
             # Let the GA algor know this call comes from the main function
             # so it will print percentages to screen.
