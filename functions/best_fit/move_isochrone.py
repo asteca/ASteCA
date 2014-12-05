@@ -6,14 +6,18 @@ Created on Fri Jan 17 16:35:24 2014
 """
 
 import numpy as np
+from .._in import get_in_params as g
 
 
-def move_isoch(cmd_sel, isochrone, e, d):
+def move_isoch(isochrone, e, d):
     '''
     Recieves an isochrone of a given age and metallicity and modifies
     its color and magnitude values according to given values for the extinction
     E(B-V) (e) and distance modulus (d).
     '''
+
+    cmd_sel = g.ps_params[1]
+
     iso_moved = [[], []]
 
     if cmd_sel == 1:
