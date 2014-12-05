@@ -72,8 +72,8 @@ def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
     print "Frame's 2D histogram obtained"
 
     # Get cluster's center coordinates and errors.
-    center_params = g_c(x_data, y_data, mag_data, hist_lst, mode,
-        semi_return, coord_lst)
+    center_params = g_c(x_data, y_data, mag_data, hist_lst, semi_return,
+        coord_lst)
     # Unpack values from list.
     cent_bin, kde_center = center_params[0], center_params[1]
 
