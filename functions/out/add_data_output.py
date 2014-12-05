@@ -2,9 +2,10 @@
 @author: gabriel
 """
 
-import numpy as np
-from ..errors.error_round import round_sig_fig as rsf
 import collections
+import numpy as np
+from .._in import get_in_params as g
+from ..errors.error_round import round_sig_fig as rsf
 
 
 def flatten(l):
@@ -22,7 +23,7 @@ def flatten(l):
 
 def add_data_output(out_file_name, write_name,
     center_params, radius_params, kp_params, cont_index, n_c, prob_cl_kde,
-    integr_return, axes_params, err_flags, flag_num_memb_low, bf_return):
+    integr_return, err_flags, flag_num_memb_low, bf_return):
     '''
     Add data obtained to the 'data_output.dat' file.
     '''
@@ -41,7 +42,7 @@ def add_data_output(out_file_name, write_name,
     flag_3pk_no_conver = not flag_3pk_conver
 
     # Construct integrated color.
-    m_ord = axes_params[2]
+    m_ord = g.axes_params[2]
     if integr_return:
         integ_mag1, integ_mag2 = integr_return[2], integr_return[5]
         sig = 1. if m_ord == 21 else -1.

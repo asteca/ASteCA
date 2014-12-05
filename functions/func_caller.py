@@ -161,9 +161,9 @@ def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
     out_file_name = c_o_d_f(output_dir)
 
     # Add cluster data and flags to output file
-    a_d_o(out_file_name, write_name, center_params,
-        radius_params, kp_params, cont_index, n_memb, pval_test_params[0],
-        integr_return, axes_params, err_flags, flag_num_memb_low, bf_return)
+    a_d_o(out_file_name, write_name, center_params, radius_params, kp_params,
+        cont_index, n_memb, pval_test_params[0], integr_return, err_flags,
+        flag_num_memb_low, bf_return)
     print 'Data added to output file.'
 
     # Make plots
