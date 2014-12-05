@@ -2,19 +2,20 @@
 @author: gabriel
 """
 
-from ..errors.err_medians import err_med
-import functions.exp_function as ef
 from scipy.optimize import curve_fit
 import numpy as np
+from .._in import get_in_params as g
+from ..errors.err_medians import err_med
+import functions.exp_function as ef
 
 
-def synth_clust_err(phot_data, err_pck, bf_params, da_params):
+def synth_clust_err(phot_data, err_pck):
     '''
     Generate exponential error function parameters to feed the synthetic
     cluster generation function.
     '''
 
-    da_flag, bf_flag = da_params[0], bf_params[0]
+    da_flag, bf_flag = g.da_params[0], g.bf_params[0]
 
     # Check if function should run. If DA was executed, we obtain these
     # values for ploting purposes only.
