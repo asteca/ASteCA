@@ -126,8 +126,7 @@ def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
     print 'LF and Completeness magnitude levels obtained.'
 
     # Calculate integrated magnitude.
-    integr_return = g_i_m(im_flag, cl_region, field_region, axes_params,
-        flag_area_stronger)
+    integr_return = g_i_m(cl_region, field_region, flag_area_stronger)
 
     # Get physical cluster probability based on p_values distribution.
     if R_in_place:
