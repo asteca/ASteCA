@@ -95,9 +95,9 @@ def get_metals(iso_path):
     '''
 
     metal_files = sorted(os.listdir(iso_path))
-    met_vals_all, met_files = [], []
     # Iterate in order through all the metallicity files stored for the
     # selected set of isochrones.
+    met_vals_all, met_files = [], []
     for met_file in metal_files:
         # Extract metallicity value from the name of the file.
         # *THE NAME OF THE FILE IS IMPORTANT*
