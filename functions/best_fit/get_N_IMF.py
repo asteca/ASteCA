@@ -7,6 +7,7 @@ Created on Wed Feb  5 17:11:11 2014
 
 import numpy as np
 from scipy.integrate import quad
+from .._in import get_in_params as g
 
 
 def imfs(imf_name, m_star):
@@ -72,10 +73,12 @@ def integral_IMF_N(m_star, imf_sel):
     return imf_val
 
 
-def N_IMF(imf_sel):
+def N_IMF():
     '''
     Returns the number of stars per interval of mass for the selected IMF.
     '''
+
+    imf_sel = g.sc_params[0]
 
     # Low mass limits are defined for each IMF to avoid numerical
     # issues when integrating.
