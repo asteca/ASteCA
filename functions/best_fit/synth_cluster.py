@@ -5,12 +5,13 @@ Created on Tue Jan 28 15:22:10 2014
 @author: gabriel
 """
 
-from functions.exp_function import exp_3p
-from move_isochrone import move_isoch
-from get_mass_dist import mass_dist as m_d
 import numpy as np
 import random
 import itertools
+from .._in import get_in_params as g
+from functions.exp_function import exp_3p
+from move_isochrone import move_isoch
+from get_mass_dist import mass_dist as m_d
 
 
 def gauss_error(col, e_col, mag, e_mag):
@@ -100,10 +101,12 @@ def compl_func(isoch_binar, completeness):
     return isoch_compl
 
 
-def binarity(isoch_mass, isoch_cut, bin_frac, bin_mass_ratio, cmd_sel):
+def binarity(isoch_mass, isoch_cut, bin_frac):
     '''
     Randomly select a fraction of stars to be binaries.
     '''
+
+    bin_mass_ratio, cmd_sel = g.sc_params[1], g.ps_params[1]
 
     # Indexes of the randomly selected stars in isoch_m_d.
     bin_indxs = random.sample(range(len(isoch_mass[0])),
@@ -212,7 +215,7 @@ def isoch_cut_mag(isoch_moved, completeness):
     return isoch_cut
 
 
-def synth_clust(err_lst, completeness, st_d_bin_mr, isochrone, model, cmd_sel):
+def synth_clust(err_lst, completeness, st_dist, isochrone, params):
     '''
     Main function.
 
@@ -221,11 +224,10 @@ def synth_clust(err_lst, completeness, st_d_bin_mr, isochrone, model, cmd_sel):
     '''
 
     # Unpack synthetic cluster parameters.
-    st_dist, bin_mass_ratio = st_d_bin_mr
-    e, d, M_total, bin_frac = model[2:]
+    e, d, M_total, bin_frac = params[2:]
 
     # Move synth cluster with the values 'e' and 'd'.
-    isoch_moved = move_isoch(cmd_sel, [isochrone[0], isochrone[1]], e, d) +\
+    isoch_moved = move_isoch([isochrone[0], isochrone[1]], e, d) +\
     [isochrone[2]]
 
     # Get isochrone minus those stars beyond the magnitude cut.
@@ -254,8 +256,7 @@ def synth_clust(err_lst, completeness, st_d_bin_mr, isochrone, model, cmd_sel):
             ##############################################################
 
             # Assignment of binarity.
-            isoch_binar = binarity(isoch_mass, isoch_cut, bin_frac,
-                bin_mass_ratio, cmd_sel)
+            isoch_binar = binarity(isoch_mass, isoch_cut, bin_frac)
 
             # Completeness limit removal of stars.
             isoch_compl = compl_func(isoch_binar, completeness)
