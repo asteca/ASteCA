@@ -10,6 +10,7 @@ from scipy import stats
 from scipy.integrate import quad
 import rpy2.robjects as robjects
 from rpy2.robjects.packages import importr
+from .._in import get_in_params as g
 
 # Define variables to communicate with package 'R'.
 ks = importr('ks')
@@ -55,8 +56,7 @@ def get_CMD(region):
     return matrix
 
 
-def get_pval(cl_region, field_region, col1_data, mag_data, pv_params,
-        flag_area_stronger):
+def get_pval(cl_region, field_region, col1_data, mag_data, flag_area_stronger):
     '''
     Compare the cluster region KDE with all the field region KDEs using Duong's
     ks package (developed in R) to obtain a p-value. This value will be close
@@ -69,7 +69,7 @@ def get_pval(cl_region, field_region, col1_data, mag_data, pv_params,
     the cluster vs field and field vs field comparisons.
     '''
 
-    mode_pv, num_runs = pv_params
+    mode_pv, num_runs = g.pv_params
     flag_pval_test = True if mode_pv in {'auto', 'manual'} else False
 
     # skip test if < 10 members are found within the cluster's radius.
@@ -93,7 +93,7 @@ def get_pval(cl_region, field_region, col1_data, mag_data, pv_params,
         # field vs field comparisions.
         p_vals_cl, p_vals_f = [], []
         # Iterate a given number of times.
-        milestones = [25, 50, 75, 100]
+        milestones = [15, 30, 50, 70, 85, 100]
         for run_num in range(runs):
             # Loop through all the field regions.
             for indx, f_region in enumerate(field_region):

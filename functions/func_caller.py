@@ -132,7 +132,7 @@ def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
     if R_in_place:
         from phot_analysis.get_p_value import get_pval as g_pv
         pval_test_params, flag_pval_test = g_pv(cl_region, field_region,
-            col1_data, mag_data, pv_params, flag_area_stronger)
+            col1_data, mag_data, flag_area_stronger)
     else:
         print 'Skipping KDE p-value function.'
         flag_pval_test, pval_test_params = False, [-1., [], [], [], [], [], []]
