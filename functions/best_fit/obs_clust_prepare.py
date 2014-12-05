@@ -6,13 +6,16 @@ Created on Tue Nov 25 16:00:00 2014
 """
 import numpy as np
 from astroML.plotting import hist
+from .._in import get_in_params as g
 
 
-def prepare(memb_prob_avrg_sort, lkl_method, bin_method):
+def prepare(memb_prob_avrg_sort):
     '''
     Prepare observed cluster array here to save time when the algorithm to
     find the best synthetic cluster fit is used.
     '''
+
+    lkl_method, bin_method = g.bf_params[2:4]
 
     if lkl_method == 'tolstoy':
 

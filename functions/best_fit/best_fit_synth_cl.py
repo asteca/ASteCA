@@ -79,7 +79,6 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list):
     '''
 
     bf_flag, best_fit_algor, lkl_method, bin_method = g.bf_params[:-1]
-    #cmd_sel = g.ps_params[1]
 
     # Check if algorithm should run.
     if bf_flag:
