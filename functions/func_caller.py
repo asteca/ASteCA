@@ -93,8 +93,7 @@ def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
     clust_rad = radius_params[0]
 
     # Get King profiles based on the density profiles.
-    kp_params = gkp(kp_flag, clust_rad, field_dens, radii, ring_density,
-        coord_lst)
+    kp_params = gkp(clust_rad, field_dens, radii, ring_density, coord_lst)
 
     # Get approximate number of cluster's members.
     n_memb, flag_num_memb_low, a_clust, n_clust = g_m_n(field_dens, clust_rad,
