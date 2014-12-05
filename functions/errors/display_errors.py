@@ -2,23 +2,23 @@
 @author: gabriel
 """
 
-from functions.exp_function import exp_3p
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+from .._in import get_in_params as g
+from functions.exp_function import exp_3p
 
 
-def disp_errors(er_mode, mag, err_plot, acpt_stars, rjct_stars, err_pck,
-    axes_params):
+def disp_errors(er_mode, mag, err_plot, acpt_stars, rjct_stars, err_pck):
     '''
     Plot errors diagrams.
     '''
 
     # Error parameters.
-    er_params, bright_end, n_interv, interv_mag, mag_value = err_pck
-    e_max, be, be_e = er_params[1:4]
+    be_m, interv_mag, mag_value = err_pck
+    e_max, be, be_e = g.er_params[1:4]
     # Define names for CMD axes.
-    y_ax, x_ax0, m_ord = axes_params
+    y_ax, x_ax0, m_ord = g.axes_params
     if m_ord == 21:
         x_ax = '(' + x_ax0 + '-' + y_ax + ')'
     elif m_ord == 12:
