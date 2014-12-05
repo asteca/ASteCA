@@ -5,14 +5,16 @@
 from functions.exp_function import exp_3p
 from scipy.optimize import curve_fit
 import numpy as np
+from .._in import get_in_params as g
 
 
-def separate_stars(mag, e_mag, e_col1, e_max, be_e, bright_end,
-    popt_mag, popt_col1):
+def separate_stars(mag, e_mag, e_col1, be_m, popt_mag, popt_col1):
     '''
     Use the exponential curve obtained to accept/reject stars in the
     magnitude range beyond the (brightest star + be) limit.
     '''
+
+    e_max, be_e = g.er_params[1], g.er_params[3]
 
     # Initialize empty lists.
     acpt_indx, rjct_indx = [], []
@@ -27,7 +29,7 @@ def separate_stars(mag, e_mag, e_col1, e_max, be_e, bright_end,
             rjct_indx.append(st_ind)
         else:
             # For stars brighter than the bright end.
-            if mag[st_ind] <= bright_end:
+            if mag[st_ind] <= be_m:
                 # For values in this range accept all stars with both errors
                 # < be_e.
                 if e_mag[st_ind] < be_e and e_col1[st_ind] < be_e:
@@ -62,15 +64,11 @@ def separate_stars(mag, e_mag, e_col1, e_max, be_e, bright_end,
     return acpt_indx, rjct_indx
 
 
-def err_a_r_lowexp(mag, e_mag, e_col1, err_pck):
+def err_a_r_lowexp(mag, e_mag, e_col1, be_m):
     '''
     Find the exponential fit to the photometric errors in mag and color
     and reject stars beyond the N*sigma limit.
     '''
-
-    # Unpack params.
-    er_params, bright_end, n_interv, interv_mag, mag_value = err_pck
-    e_max, be, be_e, N_sig = er_params[1:]
 
     # Fit exponential curve for the magnitude.
     popt_mag, pcov_mag = curve_fit(exp_3p, mag, e_mag)
@@ -80,14 +78,15 @@ def err_a_r_lowexp(mag, e_mag, e_col1, err_pck):
     # Add a number of sigmas to one or more parameters of the exponential.
     sigmas_m = np.sqrt(np.diag(pcov_mag))
     sigmas_c = np.sqrt(np.diag(pcov_col1))
+    N_sig = g.er_params[4]
     for i in [0, 1, 2]:
         popt_mag[i] = popt_mag[i] + float(N_sig) * sigmas_m[i]
         popt_col1[i] = popt_col1[i] + float(N_sig) * sigmas_c[i]
 
     # Use the fitted curves to identify accepted/rejected stars and store
     # their indexes.
-    acpt_indx, rjct_indx = separate_stars(mag, e_mag, e_col1, e_max, be_e,
-        bright_end, popt_mag, popt_col1)
+    acpt_indx, rjct_indx = separate_stars(mag, e_mag, e_col1, be_m, popt_mag,
+        popt_col1)
 
     err_plot = [popt_mag, popt_col1]
 
