@@ -4,9 +4,11 @@ Created on Fri Jan 17 09:43:14 2014
 
 @author: gabriel
 """
-from get_likelihood import isoch_likelihood as i_l
+
 import random
 import numpy as np
+from .._in import get_in_params as g
+from get_likelihood import isoch_likelihood as i_l
 
 
 def encode(n_bin, p_delta, p_mins, int_popul):
@@ -147,7 +149,7 @@ def selection(generation, breed_prob):
 
 
 def evaluation(err_lst, obs_clust, completeness, isoch_list, param_values,
-                 p_lst, st_d_bin_mr, model_done, cmd_sel):
+                 p_lst, st_dist_mass, model_done):
     '''
     Evaluate each model in the objective function to obtain the fitness of
     each one.
@@ -168,8 +170,8 @@ def evaluation(err_lst, obs_clust, completeness, isoch_list, param_values,
             isochrone = isoch_list[m_i][a_i]
 
             # Call likelihood function for this model.
-            likelihood = i_l(err_lst, obs_clust, completeness, st_d_bin_mr,
-                            isochrone, model, cmd_sel)
+            likelihood = i_l(err_lst, obs_clust, completeness, st_dist_mass,
+                isochrone, model)
             # Append data identifying the isochrone and the obtained
             # likelihood value to this *persistent* list.
             model_done[0].append(model)
@@ -240,14 +242,14 @@ def num_binary_digits(param_rs):
 
 
 def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
-    st_d_bin_mr, ga_params, cmd_sel):
+    st_dist_mass):
     '''
     Genetic algorithm adapted to find the best fit model-obervation.
     '''
 
     # Unpack.
     isoch_list, param_values, param_rs = ip_list
-    n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es = ga_params
+    n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es = g.ga_params
     # Check if n_pop is odd. If it is sum 1 to avoid conflict if cr_sel
     # '2P' was selected.
     n_pop += n_pop % 2
@@ -271,8 +273,8 @@ def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
 
     # Evaluate initial random solutions in the objective function.
     generation, lkl, model_done = evaluation(err_lst, obs_clust,
-        completeness, isoch_list, param_values, p_lst_r,
-        st_d_bin_mr, model_done, cmd_sel)
+        completeness, isoch_list, param_values, p_lst_r, st_dist_mass,
+        model_done)
 
     # Store best solution for passing along in the 'Elitism' block.
     best_sol = generation[:n_el]
@@ -324,8 +326,8 @@ def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
         # Evaluate each new solution in the objective function and sort
         # according to the best solutions found.
         generation, lkl, model_done = evaluation(err_lst, obs_clust,
-            completeness, isoch_list, param_values, p_lst_e, st_d_bin_mr,
-            model_done, cmd_sel)
+            completeness, isoch_list, param_values, p_lst_e, st_dist_mass,
+            model_done)
 
         ### Extinction/Immigration ###
         # If the best solution has remained unchanged for n_ei
