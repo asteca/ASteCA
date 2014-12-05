@@ -35,7 +35,7 @@ def mag_completeness(mag_data):
     return completeness
 
 
-def lf(flag_area_stronger, mag_data, cl_region, field_region):
+def lf(flag_area_stronger, mag_data, cl_region, field_regions):
     '''
     Obtain the Luminosity Function for the field regions and the cluster
     region normalized to their area. Substract the field curve from the
@@ -60,7 +60,7 @@ def lf(flag_area_stronger, mag_data, cl_region, field_region):
     mag_fl = []
     if flag_area_stronger is not True:
 
-        for freg in field_region:
+        for freg in field_regions:
             for star in freg:
                 mag_fl.append(star[3])
 
@@ -70,7 +70,7 @@ def lf(flag_area_stronger, mag_data, cl_region, field_region):
         # Create arrays adding elements so plt.step will plot the first and last
         # vertical bars.
         x_fl = np.concatenate((np.array([0.]), lf_edg_f))
-        y_fl = np.concatenate((np.array([0.]), (lf_field / len(field_region)),
+        y_fl = np.concatenate((np.array([0.]), (lf_field / len(field_regions)),
             np.array([0.])))
     else:
         print '  WARNING: no field regions defined. Luminosity function'
