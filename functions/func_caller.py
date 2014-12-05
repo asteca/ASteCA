@@ -3,7 +3,7 @@
 import time
 import gc  # Garbage collector.
 #
-from _in.get_in_params import get_in_params as gip
+import _in.get_in_params as g
 from functions._in.get_names_paths import names_paths as n_p
 from functions._in.get_data_semi import get_semi as g_s
 from functions._in.get_data import get_data as gd
@@ -45,24 +45,18 @@ def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
     # Start timing this loop.
     start = time.time()
 
-    # Read input parameters from params_input.dat file.
-    mode, done_dir, gd_params, gh_params, cr_params, kp_flag, \
-    im_flag, er_params, fr_number, pv_params, da_params, ps_params, bf_params,\
-    sc_params, ga_params, rm_params, pl_params, flag_move_file, \
-    axes_params = gip(mypath)
-
     # Define system of coordinates used.
-    px_deg = gd_params[-1]
+    px_deg = g.gd_params[-1]
     coord_lst = ['px', 'x', 'y'] if px_deg == 'px' else ['deg', 'ra', 'dec']
     coord, x_name, y_name = coord_lst
 
     # Get file names and paths.
     clust_name, data_file, memb_file, output_dir, output_subdir, \
     memb_file_out, write_name = n_p(mypath, cl_file)
-    print 'Analizing cluster {}/{} ({}).'.format(cl_file[0], clust_name, mode)
+    print 'Analizing cluster {} ({}).'.format(clust_name, g.mode)
 
     # Get data from semi-data input file.
-    mode, semi_return = g_s(clust_name, mode)
+    semi_return = g_s(clust_name)
 
     # Get cluster's photometric data from file.
     phot_data = gd(data_file, gd_params)
