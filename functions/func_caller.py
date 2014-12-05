@@ -115,8 +115,8 @@ def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
     print "Stars separated in/out of cluster's boundaries."
 
     # Field regions around the cluster's center.
-    flag_area_stronger, field_region = g_r(hist_lst, cent_bin,
-        clust_rad, stars_out, fr_number)
+    flag_area_stronger, field_region = g_r(hist_lst, cent_bin, clust_rad,
+        stars_out)
 
     # Get the luminosity function and completeness level for each magnitude
     # bin. The completeness will be used by the isochrone/synthetic cluster
