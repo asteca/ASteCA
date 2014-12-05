@@ -167,16 +167,15 @@ def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
     print 'Data added to output file.'
 
     # Make plots
-    if pl_params[0]:
-        mp(output_subdir, clust_name, x_data, y_data, gd_params,
+    if g.pl_params[0]:
+        mp(output_subdir, clust_name, x_data, y_data,
             bin_width, center_params, rdp_params,
             field_dens, radius_params, cont_index, mag_data, col1_data,
             err_plot, err_flags, kp_params, cl_region, stars_out,
             stars_in_rjct, stars_out_rjct, integr_return, n_memb,
             flag_area_stronger, field_region, flag_pval_test,
             pval_test_params, memb_prob_avrg_sort, lum_func, completeness,
-            ip_list, da_params, bf_params, red_return, err_lst, bf_return,
-            ga_params, er_params, axes_params, pl_params)
+            ip_list, red_return, err_lst, bf_return)
         print 'Plots created.'
 
     # Move file to 'done' dir if flag is set.

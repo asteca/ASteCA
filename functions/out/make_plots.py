@@ -14,6 +14,7 @@ from matplotlib.patches import Ellipse
 from os.path import join
 import warnings
 # Custom functions.
+from .._in import get_in_params as g
 from functions.exp_function import exp_3p
 from ..errors import error_round as err_r
 
@@ -60,21 +61,20 @@ def reject_outliers(data, m=6.5):
     return data[s < m]
 
 
-def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
+def make_plots(output_subdir, clust_name, x_data, y_data,
     bin_width, center_params, rdp_params, field_dens, radius_params,
     cont_index, mag_data, col1_data, err_plot, err_flags, kp_params,
     cl_region, stars_out, stars_in_rjct, stars_out_rjct, integr_return, n_memb,
     flag_area_stronger, field_regions, flag_pval_test,
     pval_test_params, memb_prob_avrg_sort, lum_func, completeness, ip_list,
-    da_params, bf_params, red_return, err_lst, bf_return, ga_params, er_params,
-    axes_params, pl_params):
+    red_return, err_lst, bf_return):
     '''
     Make all plots.
     '''
 
     # Define names for CMD axes.
     y_axis = 0
-    y_ax, x_ax0, m_ord = axes_params[0:3]
+    y_ax, x_ax0, m_ord = g.axes_params[0:3]
     if m_ord == 21:
         x_ax = '(' + x_ax0 + '-' + y_ax + ')'
     elif m_ord == 12:
@@ -86,7 +86,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
     phot_y = mag_data
 
     # Define system of coordinates used.
-    px_deg = gd_params[-1]
+    px_deg = g.gd_params[-1]
     coord_lst = ['px', 'x', 'y'] if px_deg == 'px' else ['deg', 'ra', 'dec']
     coord, x_name, y_name = coord_lst
 
@@ -110,16 +110,16 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
     # King prof params.
     rc, e_rc, rt, e_rt, n_c_k, cd, flag_2pk_conver, flag_3pk_conver = kp_params
     # Error parameters.
-    er_mode, e_max, be, be_e, N_sig = er_params
+    er_mode, e_max, be, be_e, N_sig = g.er_params
     err_all_fallback, err_max_fallback = err_flags
     # Luminosity functions.
     x_cl, y_cl, x_fl, y_fl = lum_func
     # Reduced membership.
     min_prob = red_return[1]
     # Best isochrone fit params.
-    bf_flag, best_fit_algor, lkl_method, bin_method, N_b = bf_params
+    bf_flag, best_fit_algor, lkl_method, bin_method, N_b = g.bf_params
     # Genetic algorithm params.
-    n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es = ga_params
+    n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es = g.ga_params
     # Best fitting process results.
     isoch_fit_params, isoch_fit_errors, shift_isoch, synth_clst = bf_return
 
@@ -712,7 +712,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
         leg.get_frame().set_alpha(0.6)
 
     plot_colorbar = False
-    if da_params[0] != 'skip':
+    if g.da_params[0] != 'skip':
         # Histogram for the distribution of membership probabilities from the
         # decontamination algorithm.
         ax16 = plt.subplot(gs1[8:10, 0:2])
@@ -784,7 +784,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
         plt.scatter(out_clust_rad[0], out_clust_rad[1], marker='o',
                     s=st_size, edgecolors='black', facecolors='none', lw=0.5)
 
-    if da_params[0] != 'skip' or bf_flag:
+    if g.da_params[0] != 'skip' or bf_flag:
         # Star's membership probabilities on cluster's CMD.
         ax18 = plt.subplot(gs1[8:10, 4:6])
         #Set plot limits
@@ -1209,7 +1209,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
         cbar.ax.tick_params(labelsize=9)
 
     # Generate output file for each data file.
-    pl_fmt, pl_dpi = pl_params[1:3]
+    pl_fmt, pl_dpi = g.pl_params[1:3]
     plt.savefig(join(output_subdir, str(clust_name) + '.' + pl_fmt), dpi=pl_dpi)
 
     # Close to release memory.
