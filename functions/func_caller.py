@@ -67,7 +67,7 @@ def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
     phot_data[3], phot_data[5]
 
     # Obtain 2D histograms for the observed frame using several bin widths.
-    hist_lst = g2dh(x_data, y_data, gh_params)
+    hist_lst = g2dh(x_data, y_data)
     bin_width = hist_lst[-1]
     print "Frame's 2D histogram obtained"
 
