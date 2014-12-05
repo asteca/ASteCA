@@ -3,6 +3,7 @@
 """
 
 import numpy as np
+import get_in_params as g
 
 
 def rem_bad_stars(id_star, x_data, y_data, mag_data, e_mag, col1_data,
@@ -11,7 +12,7 @@ def rem_bad_stars(id_star, x_data, y_data, mag_data, e_mag, col1_data,
     Remove stars from all lists that have too large magnitude or color
     values (or their errors) which indicates a bad photometry.
     '''
-    # Set value of maximum limit.
+    # Set photometric range for accepted stars.
     min_lim, max_lim = -50., 50.
 
     # Store indexes of stars that should be removed.
@@ -28,13 +29,13 @@ def rem_bad_stars(id_star, x_data, y_data, mag_data, e_mag, col1_data,
     return id_clean, clean_array
 
 
-def get_data(data_file, gd_params):
+def get_data(data_file):
     '''
-    Get photometric data from the cluster's data file.
+    Get spatial and photometric data from the cluster's data file.
     '''
 
     # Read indexes from input params.
-    id_inx, x_inx, y_inx, m_inx, em_inx, c_inx, ec_inx = gd_params[:-1]
+    id_inx, x_inx, y_inx, m_inx, em_inx, c_inx, ec_inx = g.gd_params[:-1]
 
     # Loads the data in 'myfile' as a list of N lists where N is the number of
     # columns. Each of the N lists contains all the data for the column.
@@ -69,7 +70,7 @@ def get_data(data_file, gd_params):
 
     print 'Data obtained from input file (N_stars: %d).' % len(id_star)
     if (n_old - len(id_star)) > 0:
-        print '  Stars rejected: %d.' % (n_old - len(id_star))
+        print ' Entries rejected: %d.' % (n_old - len(id_star))
 
     if len(id_star) / n_old < 0.5:
         print '  WARNING: {:.0f}% of stars rejected.'.format(100. *

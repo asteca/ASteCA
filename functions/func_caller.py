@@ -59,7 +59,7 @@ def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
     semi_return = g_s(clust_name)
 
     # Get cluster's photometric data from file.
-    phot_data = gd(data_file, gd_params)
+    phot_data = gd(data_file)
     # If Manual mode is set, display frame and ask if it should be trimmed.
     phot_data = t_f(phot_data, mode)
     # Unpack coordinates, magnitude and color.
