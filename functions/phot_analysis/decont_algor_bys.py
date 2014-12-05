@@ -3,6 +3,41 @@
 """
 
 import numpy as np
+from .._in import get_in_params as g
+
+
+def mpas(cl_reg_rad, runs_fields_probs):
+    """
+    Append averaged probabilities to each star inside the cluster radius and
+    sort by their values.
+    """
+
+    # cl_reg_rad = [[id,x,y,mag,e_mag,color1,e_col1], [], [], ...]
+
+    # Average all Bayesian membership probabilities into a single value for
+    # each star inside 'cl_reg_rad'.
+    clust_reg_prob_avrg = np.asarray(runs_fields_probs).mean(1).mean(0)
+
+    # Create new list appending the membership probability to each star inside
+    # the cluster radius.
+    temp_prob_members = []
+    for st_indx, star in enumerate(cl_reg_rad):
+            temp_prob_members.append(star +
+            [round(clust_reg_prob_avrg[st_indx], 3)])
+
+    # Stars inside the cluster's radius are now saved in the list
+    # 'temp_prob_members' where each item contains the data for each
+    # star: [id,x,y,mag,e_mag,color1,e_col1,memb_prob].
+
+    # Sort this list first by the membership probability from max
+    # value (1) to min (0) and then by its error values and magnitude value,
+    # (in that order) from min to max value.
+    # item[7] is the star's memb_prob and item[3] its magnitude.
+    membership_prob_avrg_sort = sorted(temp_prob_members,
+                                       key=lambda item: (-item[7], item[4],
+                                                         item[6], item[3]))
+
+    return membership_prob_avrg_sort
 
 
 def likelihood(region, cl_reg_rad):
@@ -57,46 +92,12 @@ def likelihood(region, cl_reg_rad):
     return clust_stars_probs
 
 
-def mpas(cl_reg_rad, runs_fields_probs):
-    """
-    Append averaged probabilities to each star inside the cluster radius and
-    sort by their values.
-    """
-
-    # cl_reg_rad = [[id,x,y,mag,e_mag,color1,e_col1], [], [], ...]
-
-    # Average all Bayesian membership probabilities into a single value for
-    # each star inside 'cl_reg_rad'.
-    clust_reg_prob_avrg = np.asarray(runs_fields_probs).mean(1).mean(0)
-
-    # Create new list appending the membership probability to each star inside
-    # the cluster radius.
-    temp_prob_members = []
-    for st_indx, star in enumerate(cl_reg_rad):
-            temp_prob_members.append(star +
-            [round(clust_reg_prob_avrg[st_indx], 3)])
-
-    # Stars inside the cluster's radius are now saved in the list
-    # 'temp_prob_members' where each item contains the data for each
-    # star: [id,x,y,mag,e_mag,color1,e_col1,memb_prob].
-
-    # Sort this list first by the membership probability from max
-    # value (1) to min (0) and then by its error values and magnitude value,
-    # (in that order) from min to max value.
-    # item[7] is the star's memb_prob and item[3] its magnitude.
-    membership_prob_avrg_sort = sorted(temp_prob_members,
-                                       key=lambda item: (-item[7], item[4],
-                                                         item[6], item[3]))
-
-    return membership_prob_avrg_sort
-
-
-def bys_da(flag_area_stronger, cl_region, field_region, memb_file, da_params):
+def bys_da(flag_area_stronger, cl_region, field_region, memb_file):
     '''
     Bayesian field decontamination algorithm.
     '''
 
-    mode_da, run_n = da_params
+    mode_da, run_n = g.da_params
 
     # Check if at least one field region was obtained.
     if mode_da in {'auto', 'manual'} and flag_area_stronger:
@@ -106,6 +107,8 @@ def bys_da(flag_area_stronger, cl_region, field_region, memb_file, da_params):
     flag_decont_skip = False
     # Run algorithm for any of these selections.
     if mode_da in {'auto', 'manual'}:
+
+        print 'Applying decontamination algorithm.'
 
         # Set total number of runs.
         runs = 1000 if mode_da == 'auto' else run_n

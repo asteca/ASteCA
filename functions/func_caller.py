@@ -139,9 +139,8 @@ def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
 
     # Apply decontamination algorithm if at least one equal-sized field region
     # was found around the cluster.
-    print 'Applying decontamination algorithm.'
     decont_algor_return = dab(flag_area_stronger, cl_region, field_region,
-                            memb_file, da_params)
+        memb_file)
     memb_prob_avrg_sort = decont_algor_return[0]
 
     # Create data file with membership probabilities.
@@ -150,14 +149,13 @@ def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
 
     # Reduce number of stars in cluster according to a lower membership
     # probability or magnitude limit.
-    red_return = rm(decont_algor_return, bf_params, rm_params)
-    red_memb_prob = red_return[0]
+    red_return = rm(decont_algor_return)
 
     # Obtain exponential error function parameters to use by the
     # synthetic cluster creation function.
     err_lst = sce(phot_data, err_pck, bf_params, da_params)
     # Obtain best fitting parameters for cluster.
-    bf_return = bfsc(err_lst, red_memb_prob, completeness, ip_list, bf_params,
+    bf_return = bfsc(err_lst, red_memb_prob[0], completeness, ip_list, bf_params,
         sc_params, ga_params, ps_params)
 
     # Create output data file in /output dir if it doesn't exist.
