@@ -179,7 +179,7 @@ def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
         print 'Plots created.'
 
     # Move file to 'done' dir if flag is set.
-    dm(flag_move_file, mypath, cl_file, done_dir, data_file, memb_file)
+    dm(mypath, cl_file, data_file, memb_file)
 
     elapsed = time.time() - start
     m, s = divmod(elapsed, 60)
