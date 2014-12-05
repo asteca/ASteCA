@@ -8,19 +8,20 @@ Created on Tue Aug  6 10:20:44 2013
 import numpy as np
 import matplotlib.pyplot as plt
 from display_frame import disp_frame as d_f
+from .._in import get_in_params as g
 
 
-def trim_frame(phot_data, mode):
+def trim_frame(phot_data):
     '''
     Trim frame according to given values of new center and side lengths.
     '''
 
-    if mode == 'manual':
+    if g.mode == 'manual':
 
         # Unpack data.
         id_star, x_data, y_data, mag_data, e_mag, col1_data, e_col1 = phot_data
 
-        # Show plot with center obtained.
+        # Show full frame plot.
         d_f(x_data, y_data, mag_data)
         plt.show()
 
@@ -44,8 +45,8 @@ def trim_frame(phot_data, mode):
                 wrong_answer = False
 
                 # Empty new lists.
-                id_star2, x_data2, y_data2, T1_data2, e_T12, CT1_data2, \
-                e_CT12 = [], [], [], [], [], [], []
+                id_star2, x_data2, y_data2, mag_data2, e_m2, col_data2, \
+                e_c2 = [], [], [], [], [], [], []
 
                 # Iterate through all stars.
                 for st_indx, star in enumerate(id_star):
@@ -57,14 +58,14 @@ def trim_frame(phot_data, mode):
                         id_star2.append(star)
                         x_data2.append(x_data[st_indx])
                         y_data2.append(y_data[st_indx])
-                        T1_data2.append(mag_data[st_indx])
-                        e_T12.append(e_mag[st_indx])
-                        CT1_data2.append(col1_data[st_indx])
-                        e_CT12.append(e_col1[st_indx])
+                        mag_data2.append(mag_data[st_indx])
+                        e_m2.append(e_mag[st_indx])
+                        col_data2.append(col1_data[st_indx])
+                        e_c2.append(e_col1[st_indx])
 
                 phot_data_t = [np.array(id_star2), np.array(x_data2),
-                    np.array(y_data2), np.array(T1_data2), np.array(e_T12),
-                    np.array(CT1_data2), np.array(e_CT12)]
+                    np.array(y_data2), np.array(mag_data2), np.array(e_m2),
+                    np.array(col_data2), np.array(e_c2)]
             else:
                 print 'Wrong input. Try again.\n'
     else:
