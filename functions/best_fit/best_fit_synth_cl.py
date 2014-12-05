@@ -16,8 +16,8 @@ from get_N_IMF import N_IMF as N_imf
 from move_isochrone import move_isoch
 
 
-def synth_cl_plot(ip_list, isoch_fit_params, cmd_sel, err_lst, completeness,
-    st_d_bin_mr):
+def synth_cl_plot(ip_list, isoch_fit_params, err_lst, completeness,
+    st_dist_mass):
     '''
     For plotting purposes.
     '''
@@ -33,11 +33,10 @@ def synth_cl_plot(ip_list, isoch_fit_params, cmd_sel, err_lst, completeness,
     except:
         m_i, a_i = [0, 0]
     # Generate shifted best fit isochrone.
-    shift_isoch = move_isoch(cmd_sel, isoch_list[m_i][a_i][:2], e, d)
+    shift_isoch = move_isoch(isoch_list[m_i][a_i][:2], e, d)
     # Generate best fit synthetic cluster.
-    synth_clst = s_c(err_lst, completeness, st_d_bin_mr,
-                     isoch_list[m_i][a_i], [-1., -1., e, d, mass, binar_f],
-                     cmd_sel)
+    synth_clst = s_c(err_lst, completeness, st_dist_mass, isoch_list[m_i][a_i],
+        [-1., -1., e, d, mass, binar_f])
 
     return shift_isoch, synth_clst
 
