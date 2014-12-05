@@ -3,7 +3,7 @@
 """
 
 import numpy as np
-from error_round import round_sig_fig as rsf
+from ..errors.error_round import round_sig_fig as rsf
 import collections
 
 

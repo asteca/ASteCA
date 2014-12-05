@@ -2,34 +2,39 @@
 
 import time
 import gc  # Garbage collector.
-# Import files with defined functions.
-from functions.get_in_params import get_in_params as gip
-from functions.get_names_paths import names_paths as n_p
-from functions.get_data_semi import get_semi as g_s
-from functions.get_data import get_data as gd
-from functions.trim_frame import trim_frame as t_f
-from functions.get_2d_histo import get_2d_histo as g2dh
-from functions.get_center import get_center as g_c
-from functions.get_field_dens import field_dens as gfd
-from functions.get_dens_prof import get_dens_prof as gdp
-from functions.get_radius import get_clust_rad as gcr
-from functions.get_king_prof import get_king_profile as gkp
-from functions.err_accpt_rejct import err_accpt_rejct as ear
-from functions.get_in_out import get_in_out as gio
-from functions.get_integ_mag import integ_mag as g_i_m
-from functions.get_members_number import get_memb_num as g_m_n
-from functions.get_cont_index import cont_indx as g_c_i
-from functions.get_regions import get_regions as g_r
-from functions.decont_algor_bys import bys_da as dab
-from functions.get_lf import lf
-from functions.reduce_membership import red_memb as rm
-from functions.synth_cl_err import synth_clust_err as sce
-from functions.best_fit_synth_cl import best_fit as bfsc
-from functions.make_plots import make_plots as mp
-from functions.create_out_data_file import create_out_data_file as c_o_d_f
-from functions.add_data_output import add_data_output as a_d_o
-from functions.cl_members_file import cluster_members_file as c_m_f
-from functions.done_move import done_move as dm
+#
+from _in.get_in_params import get_in_params as gip
+from functions._in.get_names_paths import names_paths as n_p
+from functions._in.get_data_semi import get_semi as g_s
+from functions._in.get_data import get_data as gd
+#
+from functions.structure.trim_frame import trim_frame as t_f
+from functions.structure.get_2d_histo import get_2d_histo as g2dh
+from functions.structure.get_center import get_center as g_c
+from functions.structure.get_field_dens import field_dens as gfd
+from functions.structure.get_dens_prof import get_dens_prof as gdp
+from functions.structure.get_radius import get_clust_rad as gcr
+from functions.structure.get_king_prof import get_king_profile as gkp
+from functions.structure.get_in_out import get_in_out as gio
+from functions.structure.get_regions import get_regions as g_r
+#
+from functions.errors.err_accpt_rejct import err_accpt_rejct as ear
+#
+from functions.phot_analysis.get_integ_mag import integ_mag as g_i_m
+from functions.phot_analysis.get_members_number import get_memb_num as g_m_n
+from functions.phot_analysis.get_cont_index import cont_indx as g_c_i
+from functions.phot_analysis.decont_algor_bys import bys_da as dab
+from functions.phot_analysis.get_lf import lf
+#
+from functions.best_fit.reduce_membership import red_memb as rm
+from functions.best_fit.synth_cl_err import synth_clust_err as sce
+from functions.best_fit.best_fit_synth_cl import best_fit as bfsc
+#
+from functions.out.make_plots import make_plots as mp
+from functions.out.create_out_data_file import create_out_data_file as c_o_d_f
+from functions.out.add_data_output import add_data_output as a_d_o
+from functions.out.cl_members_file import cluster_members_file as c_m_f
+from functions.out.done_move import done_move as dm
 
 
 def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
@@ -133,7 +138,7 @@ def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
 
     # Get physical cluster probability based on p_values distribution.
     if R_in_place:
-        from functions.get_p_value import get_pval as g_pv
+        from phot_analysis.get_p_value import get_pval as g_pv
         pval_test_params, flag_pval_test = g_pv(cl_region, field_region,
             col1_data, mag_data, pv_params, flag_area_stronger)
     else:

@@ -2,18 +2,10 @@
 @author: gabriel
 """
 
-from functions.err_medians import err_med
-from functions.exp_function import exp_func
+from ..errors.err_medians import err_med
+import functions.exp_function as ef
 from scipy.optimize import curve_fit
 import numpy as np
-
-
-# Define exponential function.
-def exp_2p(x, a, b):
-    '''
-    Two-params exponential function.
-    '''
-    return a * np.exp(x) + b
 
 
 def synth_clust_err(phot_data, err_pck, bf_params, da_params):
@@ -40,16 +32,18 @@ def synth_clust_err(phot_data, err_pck, bf_params, da_params):
 
         try:
             # Fit 3-param exponential curve.
-            popt_mag, pcov_mag = curve_fit(exp_func, mag_value, e_mag_value)
-            popt_col1, pcov_col1 = curve_fit(exp_func, mag_value, e_col1_value)
+            popt_mag, pcov_mag = curve_fit(ef.exp_3p, mag_value, e_mag_value)
+            popt_col1, pcov_col1 = curve_fit(ef.exp_3p, mag_value, e_col1_value)
 
         # If the 3-param exponential fitting process fails.
         except RuntimeError:
 
             try:
                 # Fit simple 2-params exponential curve.
-                popt_mag, pcov_mag = curve_fit(exp_2p, mag_value, e_mag_value)
-                popt_col1, pcov_col = curve_fit(exp_2p, mag_value, e_col1_value)
+                popt_mag, pcov_mag = curve_fit(ef.exp_2p, mag_value,
+                    e_mag_value)
+                popt_col1, pcov_col = curve_fit(ef.exp_2p, mag_value,
+                    e_col1_value)
                 # Insert 'b' value into exponential function (not fitted here
                 # because otherwise the number of variables would be larger than
                 # the data points)
@@ -63,9 +57,11 @@ def synth_clust_err(phot_data, err_pck, bf_params, da_params):
                 # Fit simple 2-params exponential curve.
                 mag_value = [min(mag), max(mag) - (max(mag) - min(mag)) / 20.]
                 e_mag_value = [0.01, e_max]
-                popt_mag, pcov_mag = curve_fit(exp_2p, mag_value, e_mag_value)
+                popt_mag, pcov_mag = curve_fit(ef.exp_2p, mag_value,
+                    e_mag_value)
                 # Use the same values for color error.
-                popt_col1, pcov_col = curve_fit(exp_2p, mag_value, e_mag_value)
+                popt_col1, pcov_col = curve_fit(ef.exp_2p, mag_value,
+                    e_mag_value)
                 # Insert 'b' value into exponential function.
                 popt_mag = np.insert(popt_mag, 1., 1.)
                 popt_col1 = np.insert(popt_col1, 1., 1.)

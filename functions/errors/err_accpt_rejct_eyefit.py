@@ -2,8 +2,8 @@
 @author: gabriel
 """
 
-from functions.err_medians import err_med
-from functions.exp_function import exp_func
+from err_medians import err_med
+from functions.exp_function import exp_3p
 from scipy.optimize import curve_fit
 import numpy as np
 
@@ -18,7 +18,7 @@ def fit_curves(mag, mag_value, bright_end, e_mag_value, e_col1_value):
     for i, err_val in enumerate([e_mag_value, e_col1_value]):
 
         # Fit exponential envelope.
-        popt, pcov = curve_fit(exp_func, mag_value, err_val)
+        popt, pcov = curve_fit(exp_3p, mag_value, err_val)
         # Fit polynomial of grade 3 envelope.
         pol = np.polyfit(mag_value, err_val, 3)
         # Find point where curves intersect.
@@ -26,7 +26,7 @@ def fit_curves(mag, mag_value, bright_end, e_mag_value, e_col1_value):
         intersec = 0.
         mag_x = np.linspace(bright_end, max(mag), 100)
         for x_val in mag_x:
-            if np.polyval(pol, (x_val)) > exp_func(x_val, *popt):
+            if np.polyval(pol, (x_val)) > exp_3p(x_val, *popt):
                 intersec = x_val
                 break
 
@@ -78,7 +78,7 @@ def separate_stars(mag, e_mag, e_col1, e_max, bright_end, be_e,
                 mag_rjct = False
                 if mag[st_ind] <= intersec_mag:
                     # Compare with exponential.
-                    if e_mag[st_ind] > exp_func(mag[st_ind], *popt_mag):
+                    if e_mag[st_ind] > exp_3p(mag[st_ind], *popt_mag):
                         # Reject star.
                         mag_rjct = True
                 else:
@@ -90,7 +90,7 @@ def separate_stars(mag, e_mag, e_col1, e_max, bright_end, be_e,
                 col1_rjct = False
                 if mag[st_ind] <= intersec_col1:
                     # Compare with exponential.
-                    if e_col1[st_ind] > exp_func(mag[st_ind], *popt_col1):
+                    if e_col1[st_ind] > exp_3p(mag[st_ind], *popt_col1):
                         # Reject star.
                         col1_rjct = True
                 else:

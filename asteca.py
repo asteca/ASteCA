@@ -5,7 +5,7 @@ from os import getcwd
 import traceback
 from functions import __version__
 from functions.checker import check
-from functions.get_in_clusters import in_clusters
+from functions._in.get_in_clusters import in_clusters
 
 
 def main():

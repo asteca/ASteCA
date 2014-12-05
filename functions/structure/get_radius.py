@@ -3,7 +3,7 @@
 """
 
 import numpy as np
-from functions.display_rad import disp_rad as d_r
+from display_rad import disp_rad as d_r
 import matplotlib.pyplot as plt
 
 

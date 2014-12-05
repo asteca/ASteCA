@@ -2,7 +2,7 @@
 @author: gabriel
 """
 
-from functions.exp_function import exp_func
+from functions.exp_function import exp_3p
 from scipy.optimize import curve_fit
 import numpy as np
 
@@ -44,11 +44,11 @@ def separate_stars(mag, e_mag, e_col1, e_max, be_e, bright_end,
 
                 # Compare with exponential curve.
                 mag_rjct, col1_rjct = False, False
-                if e_mag[st_ind] > exp_func(mag[st_ind], *popt_mag):
+                if e_mag[st_ind] > exp_3p(mag[st_ind], *popt_mag):
                     # Reject star.
                     mag_rjct = True
 
-                if e_col1[st_ind] > exp_func(mag[st_ind], *popt_col1):
+                if e_col1[st_ind] > exp_3p(mag[st_ind], *popt_col1):
                     # Reject star.
                     col1_rjct = True
 
@@ -73,9 +73,9 @@ def err_a_r_lowexp(mag, e_mag, e_col1, err_pck):
     e_max, be, be_e, N_sig = er_params[1:]
 
     # Fit exponential curve for the magnitude.
-    popt_mag, pcov_mag = curve_fit(exp_func, mag, e_mag)
+    popt_mag, pcov_mag = curve_fit(exp_3p, mag, e_mag)
     # Fit exponential curve for the color.
-    popt_col1, pcov_col1 = curve_fit(exp_func, mag, e_col1)
+    popt_col1, pcov_col1 = curve_fit(exp_3p, mag, e_col1)
 
     # Add a number of sigmas to one or more parameters of the exponential.
     sigmas_m = np.sqrt(np.diag(pcov_mag))

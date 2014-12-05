@@ -14,8 +14,8 @@ from matplotlib.patches import Ellipse
 from os.path import join
 import warnings
 # Custom functions.
-from functions.exp_function import exp_func
-import error_round as err_r
+from functions.exp_function import exp_3p
+from ..errors import error_round as err_r
 
 
 def star_size(mag_data):
@@ -507,7 +507,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
             mag_val_right, col1_val_left, col1_val_right = err_plot
 
             # Plot left side of upper envelope (exponential).
-            ax10.plot(mag_val_left, exp_func(mag_val_left, *popt_umag), 'r--',
+            ax10.plot(mag_val_left, exp_3p(mag_val_left, *popt_umag), 'r--',
                 lw=2., zorder=3)
             # Plot right side of upper envelope (polynomial).
             ax10.plot(mag_val_right, np.polyval(pol_mag, (mag_val_right)),
@@ -517,7 +517,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
             popt_mag, popt_col1 = err_plot
             # Plot exponential curve.
             mag_x = np.linspace(bright_end, max(mag_data), 50)
-            ax10.plot(mag_x, exp_func(mag_x, *popt_mag), 'r-', zorder=3)
+            ax10.plot(mag_x, exp_3p(mag_x, *popt_mag), 'r-', zorder=3)
     # Plot rejected stars.
     if len(stars_out_rjct) > 0:
         # Only attempt to pot if any star is stored in the list.
@@ -563,7 +563,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
             mag_val_right, col1_val_left, col1_val_right = err_plot
 
             # Plot left side: exponential envelope.
-            ax11.plot(col1_val_left, exp_func(col1_val_left, *popt_col1), 'r--',
+            ax11.plot(col1_val_left, exp_3p(col1_val_left, *popt_col1), 'r--',
                 lw=2., zorder=3)
             # Plot right side: polynomial envelope.
             ax11.plot(col1_val_right, np.polyval(pol_col1, (col1_val_right)),
@@ -572,7 +572,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
             # Unpack params.
             popt_mag, popt_col1 = err_plot
             # Plot exponential curve.
-            ax11.plot(mag_x, exp_func(mag_x, *popt_col1), 'r-', zorder=3)
+            ax11.plot(mag_x, exp_3p(mag_x, *popt_col1), 'r-', zorder=3)
     # Plot rejected stars.
     if len(stars_out_rjct) > 0:
         # Only attempt to pot if any star is stored in the list.
@@ -830,8 +830,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data, gd_params,
             x_val = [min(x_max_cmd, max(col1_data) + 0.2) - 0.4] * len(mag_y)
             # Read average fitted values for exponential error fit.
             popt_mag, popt_col1 = err_lst[:2]
-            plt.errorbar(x_val, mag_y, yerr=exp_func(mag_y, *popt_mag),
-                         xerr=exp_func(mag_y, *popt_col1), fmt='k.', lw=0.8,
+            plt.errorbar(x_val, mag_y, yerr=exp_3p(mag_y, *popt_mag),
+                         xerr=exp_3p(mag_y, *popt_col1), fmt='k.', lw=0.8,
                          ms=0., zorder=4)
             # Plot colorbar (see bottom of file).
             if v_min_mp != v_max_mp:

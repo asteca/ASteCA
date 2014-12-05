@@ -2,7 +2,7 @@
 @author: gabriel
 """
 
-from functions.exp_function import exp_func
+from functions.exp_function import exp_3p
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
@@ -67,7 +67,7 @@ def disp_errors(er_mode, mag, err_plot, acpt_stars, rjct_stars, err_pck,
         mag_val_right, col1_val_left, col1_val_right = err_plot
 
         # Plot left side of upper envelope (exponential).
-        axm.plot(mag_val_left, exp_func(mag_val_left, *popt_umag), 'r--',
+        axm.plot(mag_val_left, exp_3p(mag_val_left, *popt_umag), 'r--',
             lw=2., zorder=3)
         # Plot right side of upper envelope (polynomial).
         axm.plot(mag_val_right, np.polyval(pol_mag, (mag_val_right)),
@@ -77,7 +77,7 @@ def disp_errors(er_mode, mag, err_plot, acpt_stars, rjct_stars, err_pck,
         popt_mag, popt_col1 = err_plot
         # Plot exponential curve.
         mag_x = np.linspace(bright_end, max(mag), 50)
-        axm.plot(mag_x, exp_func(mag_x, *popt_mag), 'r-', zorder=3)
+        axm.plot(mag_x, exp_3p(mag_x, *popt_mag), 'r-', zorder=3)
     # Plot stars.
     plt.scatter(stars_rjct_temp[0], stars_rjct_temp[1], marker='x', c='teal',
                 s=15, zorder=1)
@@ -123,7 +123,7 @@ def disp_errors(er_mode, mag, err_plot, acpt_stars, rjct_stars, err_pck,
         mag_val_right, col1_val_left, col1_val_right = err_plot
 
         # Plot left side: exponential envelope.
-        axc1.plot(col1_val_left, exp_func(col1_val_left, *popt_col1), 'r--',
+        axc1.plot(col1_val_left, exp_3p(col1_val_left, *popt_col1), 'r--',
             lw=2., zorder=3)
         # Plot right side: polynomial envelope.
         axc1.plot(col1_val_right, np.polyval(pol_col1, (col1_val_right)),
@@ -132,7 +132,7 @@ def disp_errors(er_mode, mag, err_plot, acpt_stars, rjct_stars, err_pck,
         # Unpack params.
         popt_mag, popt_col1 = err_plot
         # Plot exponential curve.
-        axc1.plot(mag_x, exp_func(mag_x, *popt_col1), 'r-', zorder=3)
+        axc1.plot(mag_x, exp_3p(mag_x, *popt_col1), 'r-', zorder=3)
     # Plot stars.
     plt.scatter(stars_rjct_temp[0], stars_rjct_temp[1], marker='x', c='teal',
                 s=15, zorder=1)

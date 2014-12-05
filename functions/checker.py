@@ -9,9 +9,10 @@ from os.path import join, isfile, isdir
 import sys
 import traceback
 from subprocess import Popen, PIPE
-from get_in_params import get_in_params as gip
-from get_names_paths import names_paths as n_p
-import get_isoch_params as isochp
+from _in.get_in_params import get_in_params as gip
+from _in.get_names_paths import names_paths as n_p
+import _in.get_isoch_params as isochp
+import _in.get_met_ages_values as gmav
 
 
 def check(mypath, cl_files):
@@ -205,14 +206,14 @@ def check(mypath, cl_files):
 
         # Read names of all metallicity files stored in isochrones path given.
         # Also read full paths to metallicity files.
-        met_vals_all, met_files = isochp.get_metals(iso_path)
+        met_vals_all, met_files = gmav.get_metals(iso_path)
         # Read Girardi metallicity files format.
         isoch_format = isochp.i_format(iso_select, cmd_select)
         # Read all ages in the first metallicity file: met_files[0]
         # *WE ASUME ALL METALLICITY FILES HAVE THE SAME NUMBER OF AGE VALUES*
-        age_vals_all = isochp.get_ages(met_files[0], isoch_format[1])
+        age_vals_all = gmav.get_ages(met_files[0], isoch_format[1])
         # Get parameters ranges stored in params_input.dat file.
-        param_ranges, param_rs = isochp.get_ranges(par_ranges)
+        param_ranges, param_rs = gmav.get_ranges(par_ranges)
         # Check that ranges are properly defined.
         p_names = [['metallicity', m_rs], ['age', a_rs], ['extinction', e_rs],
             ['distance', d_rs], ['mass', mass_rs], ['binary', bin_rs]]
@@ -224,7 +225,7 @@ def check(mypath, cl_files):
         # Check that metallicity and age min, max & steps values are correct.
         # Match values in metallicity and age ranges with those available.
         z_range, a_range = param_ranges[:2]
-        met_f_filter, met_values, age_values = isochp.match_ranges(met_vals_all,
+        met_f_filter, met_values, age_values = gmav.match_ranges(met_vals_all,
             met_files, age_vals_all, z_range, a_range)
 
         if len(z_range) > len(met_values):
