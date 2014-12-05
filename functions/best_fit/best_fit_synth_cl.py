@@ -42,11 +42,13 @@ def synth_cl_plot(ip_list, isoch_fit_params, cmd_sel, err_lst, completeness,
     return shift_isoch, synth_clst
 
 
-def params_errors(best_fit_algor, ip_list, N_b, err_lst, memb_prob_avrg_sort,
-    bf_params, completeness, ga_params, st_d_bin_mr, cmd_sel, isoch_fit_params):
+def params_errors(ip_list, err_lst, memb_prob_avrg_sort, completeness,
+    st_dist_mass, isoch_fit_params):
     '''
     Obtain errors for the fitted parameters.
     '''
+
+    best_fit_algor, N_b = g.bf_params[1], g.bf_params[-1]
 
     if  best_fit_algor == 'brute':
         # Assign errors as the steps in each parameter.
@@ -57,8 +59,7 @@ def params_errors(best_fit_algor, ip_list, N_b, err_lst, memb_prob_avrg_sort,
             # Call bootstrap function with resampling to get the uncertainty
             # in each parameter.
             isoch_fit_errors = bootstrap(err_lst, memb_prob_avrg_sort,
-                completeness, ip_list, bf_params, st_d_bin_mr, ga_params,
-                cmd_sel)
+                completeness, ip_list, st_dist_mass)
         else:
             print 'Skipping bootstrap process.'
             # No error assignment.
