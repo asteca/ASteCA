@@ -67,14 +67,14 @@ def synth_clust_err(phot_data, err_pck):
         e_mag_value, e_col_value = err_med('synth_clust', err_pck, mag, e_mag,
             e_col)
 
-        err_lst = [[], []]
+        err_lst = []
 
         for e_mag_v in [e_mag_value]:
             popt_mc = get_m_c_errors(mag, mag_value, e_mag_v)
-            err_lst[0].append(popt_mc)
+            err_lst.append(popt_mc)
 
         for e_col_v in [e_col_value]:
             popt_mc = get_m_c_errors(mag, mag_value, e_col_v)
-            err_lst[1].append(popt_mc)
+            err_lst.append(popt_mc)
 
     return err_lst

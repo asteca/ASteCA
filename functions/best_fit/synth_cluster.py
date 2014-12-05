@@ -28,9 +28,12 @@ def add_errors(isoch_compl, err_lst):
     '''
     Randomly move stars according to given error distributions.
     '''
-    popt_mag, popt_col1, e_max = err_lst
+
+    e_max = g.er_params[1]
+
+    popt_mag, popt_col = err_lst
     sigma_mag = np.array(exp_3p(isoch_compl[1], *popt_mag))
-    sigma_col = np.array(exp_3p(isoch_compl[1], *popt_col1))
+    sigma_col = np.array(exp_3p(isoch_compl[1], *popt_col))
     # Replace all error values greater than e_max with e_max.
     sigma_mag[sigma_mag > e_max] = e_max
     sigma_col[sigma_col > e_max] = e_max
