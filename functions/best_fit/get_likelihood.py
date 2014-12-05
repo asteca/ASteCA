@@ -144,8 +144,8 @@ def dolphin(Q, P):
     return poiss_lkl
 
 
-def isoch_likelihood(err_lst, obs_clust, completeness, st_d_bin_mr, isochrone,
-                     params, sys_sel):
+def isoch_likelihood(err_lst, obs_clust, completeness, st_dist_mass, isochrone,
+                     params):
     '''
     Call with an isochrone of given values for metallicity and age and supply
     the extinction and distance modulus values to move that isochrone. Use
@@ -155,8 +155,7 @@ def isoch_likelihood(err_lst, obs_clust, completeness, st_d_bin_mr, isochrone,
 
     # Generate synthetic cluster using this "moved" isochrone and a mass
     # distribution.
-    synth_clust = s_c(err_lst, completeness, st_d_bin_mr, isochrone, params,
-                      sys_sel)
+    synth_clust = s_c(err_lst, completeness, st_dist_mass, isochrone, params)
 
     # Call function to obtain the likelihood by comparing the synthetic cluster
     # with the observed cluster.
