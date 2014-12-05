@@ -101,7 +101,7 @@ def check(mypath, cl_files):
         sys.exit("ERROR: missing parameters for error rejecting function")
     if g.er_params[0] == 'eyefit' and len(g.er_params[1:]) < 3:
         sys.exit("ERROR: missing parameters for error rejecting function")
-    if g.er_params[0] == 'lowexp' and len(g.ver_params[1:]) < 4:
+    if g.er_params[0] == 'lowexp' and len(g.er_params[1:]) < 4:
         sys.exit("ERROR: missing parameters for error rejecting function")
 
     # Check KDE p-value custer probability function.
