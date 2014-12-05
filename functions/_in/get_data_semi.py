@@ -5,15 +5,21 @@ Created on Fri Aug 16 11:12:55 2013
 @author: gabriel
 """
 
+import get_in_params as g
 
-def get_semi(clust_name, mode):
+
+def get_semi(clust_name):
     '''
     Get center, radius and flags for semi automatic mode.
     '''
 
+    # Define here as global so as to be able to change it if cluster is not
+    # found in semi_input.dat file.
+    global mode
+
     semi_return = []
     # Mode is semi.
-    if mode == 'semi':
+    if g.mode == 'semi':
 
         semi_file = 'semi_input.dat'
         # Flag to indicate if cluster was found in file.
@@ -45,6 +51,7 @@ def get_semi(clust_name, mode):
             # If the cluster was not found in the file, default to 'manual'.
             print ("  IMPORTANT: cluster not found in semi_input.dat file.\n"
                 "  Using 'auto' mode.")
-            mode = 'auto'
+            # Re-define global variable.
+            g.mode = 'auto'
 
-    return mode, semi_return
+    return semi_return
