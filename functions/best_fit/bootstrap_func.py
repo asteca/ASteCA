@@ -7,6 +7,7 @@ Created on Fri Mar 07 10:50:05 2014
 
 import numpy as np
 import random
+from .._in import get_in_params as g
 from genetic_algorithm import gen_algor as g_a
 from obs_clust_prepare import prepare as prep
 
@@ -22,15 +23,15 @@ def resample_replacement(obs_clust):
     return obs_cl
 
 
-def bootstrap(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
-             st_d_bin_mr, ga_params, cmd_sel):
+def bootstrap(err_lst, memb_prob_avrg_sort, completeness, ip_list,
+    st_dist_mass):
     '''
     Bootstrap process, runs the selected algorithm a number of times each
     time generating a new observed cluster representation through resampling
     with replacement.
     '''
 
-    best_fit_algor, lkl_method, bin_method, N_b = bf_params[1:]
+    best_fit_algor, N_b = g.bf_params[1], g.bf_params[-1]
 
     print 'Begin bootstrap process (%d).' % N_b
 
@@ -46,7 +47,7 @@ def bootstrap(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
         obs_cl_r = resample_replacement(memb_prob_avrg_sort)
         # Obtain prepared observed cluster according to the likelihood method
         # selected.
-        obs_cl = prep(obs_cl_r, lkl_method, bin_method)
+        obs_cl = prep(obs_cl_r)
 
         # Algorithm selected.
         if best_fit_algor == 'genet':
@@ -54,7 +55,7 @@ def bootstrap(err_lst, memb_prob_avrg_sort, completeness, ip_list, bf_params,
             # process so it will not print percentages to screen.
             flag_print_perc = False
             params_boot.append(g_a(flag_print_perc, err_lst, obs_cl,
-            completeness, ip_list, st_d_bin_mr, ga_params, cmd_sel)[0])
+            completeness, ip_list, st_dist_mass)[0])
 
         percentage_complete = (100.0 * (i + 1) / max(N_b, 2))
         while len(milestones) > 0 and percentage_complete >= milestones[0]:
