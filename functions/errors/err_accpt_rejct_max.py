@@ -5,14 +5,16 @@ Created on Thu Jul 18 17:41:28 2013
 @author: gabriel
 """
 
+from .._in import get_in_params as g
 
-def err_a_r_m(e_mag, e_col1, err_pck):
+
+def err_a_r_m(e_mag, e_col1):
     """
     Accept stars with photom errors < e_max both in mag and in color.
     """
 
     # Unpack params.
-    e_max = err_pck[0][1]
+    e_max = g.er_params[1]
 
     # Initialize empty list to hold accepted/rejected stars' indexes.
     acpt_indx, rjct_indx = [], []

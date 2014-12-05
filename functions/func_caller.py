@@ -106,8 +106,8 @@ def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
     print 'Contamination index obtained ({:.2f}).'.format(cont_index)
 
     # Accept and reject stars based on their errors.
-    acpt_stars, rjct_stars, err_plot, err_flags, err_pck, er_params = \
-    ear(phot_data, axes_params, er_params, mode, semi_return)
+    acpt_stars, rjct_stars, err_plot, err_flags, err_pck = ear(phot_data,
+        semi_return)
 
     # Get stars in and out of cluster's radius.
     cl_region, stars_out, stars_in_rjct, stars_out_rjct = gio(kde_center,
