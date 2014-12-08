@@ -488,15 +488,15 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
     # Set minor ticks
     ax10.minorticks_on()
     # Plot e_max line.
-    ax10.hlines(y=e_max, xmin=x_min, xmax=x_max, color='r',
+    ax10.hlines(y=e_max, xmin=x_min, xmax=x_max, color='k',
         linestyles='dashed', zorder=2)
     # Plot rectangle.
     bright_end = min(mag_data) + be
-    ax10.vlines(x=bright_end + 0.05, ymin=-0.005, ymax=be_e, color='r',
+    ax10.vlines(x=bright_end + 0.05, ymin=-0.005, ymax=be_e, color='k',
                linestyles='dashed', zorder=2)
-    ax10.vlines(x=min(mag_data) - 0.05, ymin=-0.005, ymax=be_e, color='r',
+    ax10.vlines(x=min(mag_data) - 0.05, ymin=-0.005, ymax=be_e, color='k',
                linestyles='dashed', zorder=2)
-    ax10.hlines(y=be_e, xmin=min(mag_data), xmax=bright_end, color='r',
+    ax10.hlines(y=be_e, xmin=min(mag_data), xmax=bright_end, color='k',
                linestyles='dashed', zorder=2)
     # If any method could be used.
     if err_all_fallback is False and err_max_fallback is False:
@@ -507,17 +507,17 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
             mag_val_right, col1_val_left, col1_val_right = err_plot
 
             # Plot left side of upper envelope (exponential).
-            ax10.plot(mag_val_left, exp_3p(mag_val_left, *popt_umag), 'r--',
+            ax10.plot(mag_val_left, exp_3p(mag_val_left, *popt_umag), 'k--',
                 lw=2., zorder=3)
             # Plot right side of upper envelope (polynomial).
             ax10.plot(mag_val_right, np.polyval(pol_mag, (mag_val_right)),
-                'r--', lw=2., zorder=3)
+                'k--', lw=2., zorder=3)
         elif er_mode == 'lowexp':
             # Unpack params.
             popt_mag, popt_col1 = err_plot
             # Plot exponential curve.
             mag_x = np.linspace(bright_end, max(mag_data), 50)
-            ax10.plot(mag_x, exp_3p(mag_x, *popt_mag), 'r-', zorder=3)
+            ax10.plot(mag_x, exp_3p(mag_x, *popt_mag), 'k-', zorder=3)
     # Plot rejected stars.
     if len(stars_out_rjct) > 0:
         # Only attempt to pot if any star is stored in the list.
@@ -527,10 +527,10 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
         plt.scatter(zip(*stars_in_rjct)[3], zip(*stars_in_rjct)[3], marker='x',
             c='teal', s=15, zorder=1)
     # Plot accepted stars.
-    plt.scatter(zip(*cl_region)[3], zip(*cl_region)[4], marker='o', c='k',
-                s=1, zorder=2)
-    plt.scatter(zip(*stars_out)[3], zip(*stars_out)[4], marker='o', c='k',
-                s=1, zorder=2)
+    plt.scatter(zip(*stars_out)[3], zip(*stars_out)[4], marker='o', c='b',
+        s=5, zorder=2, lw=0.2)
+    plt.scatter(zip(*cl_region)[3], zip(*cl_region)[4], marker='o', c='r',
+        s=8, zorder=2, lw=0.4)
 
     # Color error
     ax11 = plt.subplot(gs1[5, 6:8])
@@ -544,15 +544,15 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
     # Set minor ticks
     ax11.minorticks_on()
     # Plot e_max line.
-    ax11.hlines(y=e_max, xmin=x_min, xmax=x_max, color='r',
+    ax11.hlines(y=e_max, xmin=x_min, xmax=x_max, color='k',
                linestyles='dashed', zorder=2)
     # Plot rectangle.
     bright_end = min(mag_data) + be
-    ax11.vlines(x=bright_end + 0.05, ymin=-0.005, ymax=be_e, color='r',
+    ax11.vlines(x=bright_end + 0.05, ymin=-0.005, ymax=be_e, color='k',
                linestyles='dashed', zorder=2)
-    ax11.vlines(x=min(mag_data) - 0.05, ymin=-0.005, ymax=be_e, color='r',
+    ax11.vlines(x=min(mag_data) - 0.05, ymin=-0.005, ymax=be_e, color='k',
                linestyles='dashed', zorder=2)
-    ax11.hlines(y=be_e, xmin=min(mag_data), xmax=bright_end, color='r',
+    ax11.hlines(y=be_e, xmin=min(mag_data), xmax=bright_end, color='k',
                linestyles='dashed', zorder=2)
     # If any method could be used.
     if err_all_fallback is False and err_max_fallback is False:
@@ -563,16 +563,16 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
             mag_val_right, col1_val_left, col1_val_right = err_plot
 
             # Plot left side: exponential envelope.
-            ax11.plot(col1_val_left, exp_3p(col1_val_left, *popt_col1), 'r--',
+            ax11.plot(col1_val_left, exp_3p(col1_val_left, *popt_col1), 'k--',
                 lw=2., zorder=3)
             # Plot right side: polynomial envelope.
             ax11.plot(col1_val_right, np.polyval(pol_col1, (col1_val_right)),
-                'r--', lw=2., zorder=3)
+                'k--', lw=2., zorder=3)
         elif er_mode == 'lowexp':
             # Unpack params.
             popt_mag, popt_col1 = err_plot
             # Plot exponential curve.
-            ax11.plot(mag_x, exp_3p(mag_x, *popt_col1), 'r-', zorder=3)
+            ax11.plot(mag_x, exp_3p(mag_x, *popt_col1), 'k-', zorder=3)
     # Plot rejected stars.
     if len(stars_out_rjct) > 0:
         # Only attempt to pot if any star is stored in the list.
@@ -582,11 +582,12 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
         plt.scatter(zip(*stars_in_rjct)[3], zip(*stars_in_rjct)[6], marker='x',
             c='teal', s=15, zorder=1)
     # Plot accepted stars.
-    plt.scatter(zip(*cl_region)[3], zip(*cl_region)[6], marker='o', c='k',
-                s=1, zorder=2)
-    plt.scatter(zip(*stars_out)[3], zip(*stars_out)[6], marker='o', c='k',
-                s=1, zorder=2)
+    plt.scatter(zip(*stars_out)[3], zip(*stars_out)[6], marker='o', c='b',
+        s=5, zorder=2, lw=0.2)
+    plt.scatter(zip(*cl_region)[3], zip(*cl_region)[6], marker='o', c='r',
+        s=8, zorder=2, lw=0.4)
 
+    #
     # LF of stars in cluster region and outside.
     ax12 = plt.subplot(gs1[6:8, 0:2])
     #Set plot limits
