@@ -48,7 +48,7 @@ def round_sig_fig(params, errors):
     # Round errors to 1 significant figure.
     errors_r = map(round_to_y, errors)
 
-    # Round parameters to the number of significant figures in the erroi.
+    # Round parameters to the number of significant figures in the error.
     params_r = []
     for i, p in enumerate(params):
         if errors_r[i] > 0.:
