@@ -46,7 +46,14 @@ def imfs(imf_name, m_star):
             i = 2
         imf_val = factor[i] * (m_star ** alpha[i])
 
-    elif imf_name == 'chabrier_2001':
+    elif imf_name == 'chabrier_2001_log':
+        # Chabrier (2001) lognormal form of the IMF.
+        # http://adsabs.harvard.edu/abs/2001ApJ...554.1274C
+        # Eq (7)
+        imf_val = (1. / (np.log(10) * m_star)) * 0.141 * \
+        np.exp(-((np.log10(m_star) - np.log10(0.1)) ** 2) / (2 * 0.627 ** 2))
+
+    elif imf_name == 'chabrier_2001_exp':
         # Chabrier (2001) exponential form of the IMF.
         # http://adsabs.harvard.edu/abs/2001ApJ...554.1274C
         # Eq (8)

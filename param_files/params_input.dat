@@ -255,7 +255,7 @@ PS        PAR10
 
 # Synthetic cluster parameters.
 #
-# IMF:  chabrier_2001 / kroupa_1993 / kroupa_2002
+# IMF:  chabrier_2001_exp / chabrier_2001_log / kroupa_1993 / kroupa_2002
 #
 #           IMF
 SC  kroupa_2002
