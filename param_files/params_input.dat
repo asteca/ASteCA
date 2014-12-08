@@ -108,7 +108,7 @@ CH   auto         20.
 # Radius function parameters.
 #
 # * mode: auto / manual
-#   - auto: the 'points' parameter will set as 20% of the total number of
+#   - auto: the 'points' parameter will set as 25% of the total number of
 #     points in the radial density profile.
 #   - manual: the value in 'points' will be used.
 #
