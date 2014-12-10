@@ -6,6 +6,25 @@ Created on Tue Feb 11 14:03:44 2014
 """
 
 from os.path import join
+import re
+
+
+def char_remove(in_lst):
+    '''
+    Correctly convert input data for parameters ranges to lists.
+    '''
+    l0 = []
+    if in_lst[1][0] in {'[', '(', '{'}:
+        print 'raw', in_lst[1:]
+        # Remove non-numeric characters and append numbers as floats.
+        l0.append([float(i) for i in re.findall('[0-9.]+', str(in_lst[1:]))])
+        # Store indicating that this is a list of values.
+        lst = ['l', map(float, l0[0])]
+    else:
+        # Store indicating that this is a range of values.
+        lst = ['r', map(float, in_lst[1:4])]
+
+    return lst
 
 
 def init(mypath):
@@ -91,26 +110,30 @@ def init(mypath):
                     N_b = int(reader[5])
                 elif reader[0] == 'PS':
                     iso_select = str(reader[1])
-                elif reader[0] == 'RM':
-                    flag_red_memb = str(reader[1])
-                    min_prob = float(reader[2])
-                elif reader[0] == 'PS_m':
-                    m_rs = map(float, reader[1:4])
-                elif reader[0] == 'PS_a':
-                    a_rs = map(float, reader[1:4])
-                elif reader[0] == 'PS_e':
-                    e_rs = map(float, reader[1:4])
-                elif reader[0] == 'PS_d':
-                    d_rs = map(float, reader[1:4])
 
                 # Synthetic cluster parameters.
                 elif reader[0] == 'SC':
                     IMF_name = str(reader[1])
+                elif reader[0] == 'PS_m':
+                    m_rs = char_remove(reader)
+                elif reader[0] == 'PS_a':
+                    a_rs = char_remove(reader)
+                elif reader[0] == 'PS_e':
+                    e_rs = char_remove(reader)
+                elif reader[0] == 'PS_d':
+                    d_rs = char_remove(reader)
                 elif reader[0] == 'TM':
-                    mass_rs = map(float, reader[1:4])
+                    mass_rs = char_remove(reader)
                 elif reader[0] == 'FB':
                     bin_mr = float(reader[1])
-                    bin_rs = map(float, reader[2:5])
+                    # Use [1:] since the mass ratio is located before the
+                    # range.
+                    bin_rs = char_remove(reader[1:])
+
+                # Reduce membership paramaters.
+                elif reader[0] == 'RM':
+                    flag_red_memb = str(reader[1])
+                    min_prob = float(reader[2])
 
                 # Genetic algorithm parameters.
                 elif reader[0] == 'GA':
