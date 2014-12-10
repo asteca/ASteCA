@@ -901,7 +901,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
         isoch_fit_params[2], isoch_fit_params[3]
 
         # Age vs metallicity GA diagram.
-        plt.subplot(gs1[10:12, 0:2])
+        ax20 = plt.subplot(gs1[10:12, 0:2])
         # Axis limits.
         plt.xlim(m_min, m_max)
         plt.ylim(a_min, a_max)
@@ -913,7 +913,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
         # Check if errors in both dimensions are defined.
         if all([i > 0. for i in [e_m, e_a]]):
             # Plot ellipse error.
-            ax20 = plt.gca()
+            plt.gca()
             ellipse = Ellipse(xy=(m, a), width=2 * e_m, height=2 * e_a,
                                     edgecolor='r', fc='None', lw=1.)
             ax20.add_patch(ellipse)
@@ -923,7 +923,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
             plt.errorbar(m, a, xerr=e_m, color='r')
         # Plot density map.
         hist, xedges, yedges = np.histogram2d(zip(*model_done[0])[0],
-                                              zip(*model_done[0])[1], bins=100)
+            zip(*model_done[0])[1], bins=100)
         # H_g is the 2D histogram with a gaussian filter applied
         h_g = gaussian_filter(hist, 2, mode='constant')
         plt.imshow(h_g.transpose(), origin='lower',
@@ -967,7 +967,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
         leg.get_frame().set_alpha(0.6)
 
         # Extinction vs distance modulus GA diagram.
-        plt.subplot(gs1[10:12, 6:8])
+        ax22 = plt.subplot(gs1[10:12, 6:8])
         plt.xlim(e_min, e_max)
         plt.ylim(d_min, d_max)
         plt.xlabel('$E_{(B-V)}$', fontsize=16)
@@ -978,10 +978,10 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
         # Check if errors in both dimensions are defined.
         if all([i > 0. for i in [e_e, e_d]]):
             # Plot ellipse error.
-            ax21 = plt.gca()
+            plt.gca()
             ellipse = Ellipse(xy=(e, d), width=2 * e_e, height=2 * e_d,
                                     edgecolor='b', fc='None', lw=1.)
-            ax21.add_patch(ellipse)
+            ax22.add_patch(ellipse)
         elif e_e < 0.:
             plt.errorbar(e, d, yerr=e_d, color='b')
         elif e_d < 0.:
@@ -997,17 +997,17 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
 
         #
         # Metallicity/likelihood plot.
-        ax22 = plt.subplot(gs1[12:14, 0:2])
+        ax23 = plt.subplot(gs1[12:14, 0:2])
         plt.ylim(max(0, min(lkl_old[0]) - 0.3 * min(lkl_old[0])),
             max(lkl_old[1]))
         plt.xlim(m_min, m_max)
         # Set minor ticks
-        ax22.minorticks_on()
-        ax22.tick_params(axis='y', which='major', labelsize=9)
+        ax23.minorticks_on()
+        ax23.tick_params(axis='y', which='major', labelsize=9)
         plt.ylabel('Likelihood', fontsize=12)
         plt.xlabel('$z$', fontsize=16)
         text = '$z = {} \pm {}$'.format(cp_r[0], cp_e[0])
-        plt.text(0.1, 0.93, text, transform=ax22.transAxes,
+        plt.text(0.1, 0.93, text, transform=ax23.transAxes,
             bbox=dict(facecolor='white', alpha=0.5), fontsize=12)
         hist, xedges, yedges = np.histogram2d(zip(*model_done[0])[0],
                                               model_done[1], bins=100)
@@ -1025,17 +1025,17 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
 
         #
         # Age/likelihood plot.
-        ax23 = plt.subplot(gs1[12:14, 2:4])
+        ax24 = plt.subplot(gs1[12:14, 2:4])
         plt.ylim(max(0, min(lkl_old[0]) - 0.3 * min(lkl_old[0])),
             max(lkl_old[1]))
         plt.xlim(a_min, a_max)
         # Set minor ticks
-        ax23.minorticks_on()
-        ax23.tick_params(axis='y', which='major', labelsize=9)
+        ax24.minorticks_on()
+        ax24.tick_params(axis='y', which='major', labelsize=9)
         plt.ylabel('Likelihood', fontsize=12)
         plt.xlabel('$log(age)$', fontsize=16)
         text = '$log(age) = {} \pm {}$'.format(cp_r[1], cp_e[1])
-        plt.text(0.1, 0.93, text, transform=ax23.transAxes,
+        plt.text(0.1, 0.93, text, transform=ax24.transAxes,
             bbox=dict(facecolor='white', alpha=0.5), fontsize=12)
         hist, xedges, yedges = np.histogram2d(zip(*model_done[0])[1],
                                               model_done[1], bins=100)
@@ -1052,17 +1052,17 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
 
         #
         # Reddening/likelihood plot.
-        ax24 = plt.subplot(gs1[12:14, 4:6])
+        ax25 = plt.subplot(gs1[12:14, 4:6])
         plt.ylim(max(0, min(lkl_old[0]) - 0.3 * min(lkl_old[0])),
             max(lkl_old[1]))
         plt.xlim(e_min, e_max)
         # Set minor ticks
-        ax24.minorticks_on()
-        ax24.tick_params(axis='y', which='major', labelsize=9)
+        ax25.minorticks_on()
+        ax25.tick_params(axis='y', which='major', labelsize=9)
         plt.ylabel('Likelihood', fontsize=12)
         plt.xlabel('$E_{(B-V)}$', fontsize=16)
         text = '$E_{{(B-V)}} = {} \pm {}$'.format(cp_r[2], cp_e[2])
-        plt.text(0.1, 0.93, text, transform=ax24.transAxes,
+        plt.text(0.1, 0.93, text, transform=ax25.transAxes,
             bbox=dict(facecolor='white', alpha=0.5), fontsize=12)
         hist, xedges, yedges = np.histogram2d(zip(*model_done[0])[2],
                                               model_done[1], bins=100)
@@ -1079,17 +1079,17 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
 
         #
         # Dist/likelihood plot.
-        ax25 = plt.subplot(gs1[12:14, 6:8])
+        ax26 = plt.subplot(gs1[12:14, 6:8])
         plt.ylim(max(0, min(lkl_old[0]) - 0.3 * min(lkl_old[0])),
             max(lkl_old[1]))
         plt.xlim(d_min, d_max)
         # Set minor ticks
-        ax25.minorticks_on()
-        ax25.tick_params(axis='y', which='major', labelsize=9)
+        ax26.minorticks_on()
+        ax26.tick_params(axis='y', which='major', labelsize=9)
         plt.ylabel('Likelihood', fontsize=12)
         plt.xlabel('$(m-M)_o$', fontsize=16)
         text = '$(m-M)_o = {} \pm {}$'.format(cp_r[3], cp_e[3])
-        plt.text(0.1, 0.93, text, transform=ax25.transAxes,
+        plt.text(0.1, 0.93, text, transform=ax26.transAxes,
             bbox=dict(facecolor='white', alpha=0.5), fontsize=12)
         hist, xedges, yedges = np.histogram2d(zip(*model_done[0])[3],
                                               model_done[1], bins=100)
@@ -1106,7 +1106,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
 
         #
         # Mass/binary plot.
-        ax26 = plt.subplot(gs1[14:16, 0:2])
+        ax27 = plt.subplot(gs1[14:16, 0:2])
         plt.xlim(mass_min, mass_max)
         plt.ylim(bin_min, bin_max)
         plt.xlabel('$M_{\odot}$', fontsize=16)
@@ -1117,10 +1117,10 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
         # Check if errors in both dimensions are defined.
         if all([i > 0. for i in [e_mass, e_bin]]):
             # Plot ellipse error.
-            ax26 = plt.gca()
+            plt.gca()
             ellipse = Ellipse(xy=(mass, binar_f), width=2 * e_mass,
                 height=2 * e_bin, edgecolor='b', fc='None', lw=1.)
-            ax26.add_patch(ellipse)
+            ax27.add_patch(ellipse)
         elif e_mass < 0.:
             plt.errorbar(mass, binar_f, yerr=e_bin, color='b')
         elif e_bin < 0.:
@@ -1136,17 +1136,17 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
 
         #
         # Mass/likelihood plot.
-        ax27 = plt.subplot(gs1[14:16, 2:4])
+        ax28 = plt.subplot(gs1[14:16, 2:4])
         plt.ylim(max(0, min(lkl_old[0]) - 0.3 * min(lkl_old[0])),
             max(lkl_old[1]))
         plt.xlim(mass_min, mass_max)
         # Set minor ticks
-        ax27.minorticks_on()
-        ax27.tick_params(axis='y', which='major', labelsize=9)
+        ax28.minorticks_on()
+        ax28.tick_params(axis='y', which='major', labelsize=9)
         plt.ylabel('Likelihood', fontsize=12)
         plt.xlabel('$M_{\odot}$', fontsize=16)
         text = '$M_{{\odot}} = {} \pm {}$'.format(cp_r[4], cp_e[4])
-        plt.text(0.1, 0.93, text, transform=ax27.transAxes,
+        plt.text(0.1, 0.93, text, transform=ax28.transAxes,
             bbox=dict(facecolor='white', alpha=0.5), fontsize=12)
         hist, xedges, yedges = np.histogram2d(zip(*model_done[0])[4],
                                               model_done[1], bins=100)
@@ -1163,17 +1163,17 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
 
         #
         # Binary/likelihood plot.
-        ax28 = plt.subplot(gs1[14:16, 4:6])
+        ax29 = plt.subplot(gs1[14:16, 4:6])
         plt.ylim(max(0, min(lkl_old[0]) - 0.3 * min(lkl_old[0])),
             max(lkl_old[1]))
         plt.xlim(bin_min, bin_max)
         # Set minor ticks
-        ax28.minorticks_on()
-        ax28.tick_params(axis='y', which='major', labelsize=9)
+        ax29.minorticks_on()
+        ax29.tick_params(axis='y', which='major', labelsize=9)
         plt.ylabel('Likelihood', fontsize=12)
         plt.xlabel('$b_{frac}$', fontsize=16)
         text = '$b_{{frac}} = {} \pm {}$'.format(cp_r[5], cp_e[5])
-        plt.text(0.1, 0.93, text, transform=ax28.transAxes,
+        plt.text(0.1, 0.93, text, transform=ax29.transAxes,
             bbox=dict(facecolor='white', alpha=0.5), fontsize=12)
         hist, xedges, yedges = np.histogram2d(zip(*model_done[0])[5],
                                               model_done[1], bins=100)
