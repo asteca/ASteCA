@@ -5,12 +5,16 @@ Created on Tue Sep 23 13:03:39 2014
 @author: gabriel
 """
 
+from .._in import get_in_params as g
 
-def isoch_format(iso_select, cmd_select):
+
+def isoch_format():
     '''
     Read line start format and columns indexes for the selected set of
     Girardi isochrones and chosen CMD.
     '''
+
+    cmd_select, iso_select = g.ps_params[1], g.ps_params[2]
 
     # Define reg expression to isolate the age of an isochrone.
     age_format = r"Age = \t(.+?) yr"

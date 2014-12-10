@@ -6,7 +6,7 @@ Created on Thu Jan  9 15:08:39 2014
 """
 
 import numpy as np
-from girardi_isochs_format import isoch_format as i_format
+from .._in import get_in_params as g
 from get_isochs import get_isochs as gi
 from get_met_ages_values import get_m_a_vls as gmav
 
@@ -23,30 +23,30 @@ def interp_isoch(isochrone):
     return isoch_inter
 
 
-def ip(ps_params, bf_flag):
+def ip():
     '''
     Read isochrones and parameters if best fit function is set to run.
     '''
 
     ip_list = []
     # Only read files of best fit method is set to run.
+    bf_flag = g.bf_params[0]
     if bf_flag:
 
         # Unpack.
-        iso_path, cmd_select, iso_select, par_ranges = ps_params
+        iso_path, iso_select = g.ps_params[0], g.ps_params[2]
 
         # Read Girardi metallicity files format.
-        isoch_format = i_format(iso_select, cmd_select)
+        #isoch_format = i_format(iso_select, cmd_select)
 
         # Obtain allowed metallicities and ages. Use the first photometric
         # system defined.
         # *WE ASUME ALL PHOTOMETRIC SYSTEMS CONTAIN THE SAME NUMBER OF
         # METALLICITY FILES*
-        param_ranges, param_rs, met_f_filter, met_values, age_values = \
-        gmav(iso_path, isoch_format, par_ranges)
+        param_ranges, met_f_filter, met_values, age_values = gmav(iso_path)
 
         # Get isochrones and their parameter values.
-        isoch_list = gi(cmd_select, met_f_filter, age_values, isoch_format)
+        isoch_list = gi(met_f_filter, age_values)
 
         # Interpolate extra points into all isochrones.
         isochs_interp = [[] for _ in isoch_list]
@@ -56,7 +56,7 @@ def ip(ps_params, bf_flag):
 
         # Pack params.
         param_values = [met_values, age_values] + param_ranges[2:]
-        ip_list = [isochs_interp, param_values, param_rs]
+        ip_list = [isochs_interp, param_values]
 
         iso_ver = {'10': '1.0', '11': '1.1', '12': '1.2S'}
         print ("PARSEC v{} theoretical isochrones read,".format(

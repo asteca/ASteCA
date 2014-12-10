@@ -7,17 +7,21 @@ Created on Fri Dec 5 12:00:00 2014
 
 import numpy as np
 import re
+from .._in import get_in_params as g
+from girardi_isochs_format import isoch_format as i_format
 
 
-def read_met_file(met_f, age_values, cmd_select, isoch_format):
+def read_met_file(met_f, age_values):
     '''
     Read a given metallicity file and return the isochrones for the ages
     within the age range.
     '''
 
+    cmd_select = g.ps_params[1]
+
     # Read line start format and columns indexes for the selected set of
     # Girardi isochrones.
-    line_start, age_format, imass_idx, mag1_idx, mag2_idx = isoch_format
+    line_start, age_format, imass_idx, mag1_idx, mag2_idx = i_format()
 
     # Initialize list that will hold all the isochrones for this
     # metallicity value.
@@ -83,7 +87,7 @@ def read_met_file(met_f, age_values, cmd_select, isoch_format):
     return metal_isoch
 
 
-def get_isochs(cmd_select, met_f_filter, age_values, isoch_format):
+def get_isochs(met_f_filter, age_values):
     '''
     Stores the available isochrones of different metallicities and
     ages, according to the ranges given to these parameters.
@@ -100,7 +104,7 @@ def get_isochs(cmd_select, met_f_filter, age_values, isoch_format):
     # selected set of isochrones.
     for met_f in met_f_filter:
 
-        metal_isoch = read_met_file(met_f, age_values, cmd_select, isoch_format)
+        metal_isoch = read_met_file(met_f, age_values)
 
         # Store list holding all the isochrones with the same metallicity
         # in the final isochrone list.

@@ -206,13 +206,11 @@ def check(mypath, cl_files):
         # Read names of all metallicity files stored in isochrones path given.
         # Also read full paths to metallicity files.
         met_vals_all, met_files = gmav.get_metals(iso_path)
-        # Read Girardi metallicity files format.
-        isoch_format = isochp.i_format(iso_select, cmd_select)
         # Read all ages in the first metallicity file: met_files[0]
         # *WE ASUME ALL METALLICITY FILES HAVE THE SAME NUMBER OF AGE VALUES*
-        age_vals_all = gmav.get_ages(met_files[0], isoch_format[1])
+        age_vals_all = gmav.get_ages(met_files[0])
         # Get parameters ranges stored in params_input.dat file.
-        param_ranges, param_rs = gmav.get_ranges(par_ranges)
+        param_ranges = gmav.get_ranges()
         # Check that ranges are properly defined.
         p_names = [['metallicity', m_rs], ['age', a_rs], ['extinction', e_rs],
             ['distance', d_rs], ['mass', mass_rs], ['binary', bin_rs]]
@@ -241,7 +239,7 @@ def check(mypath, cl_files):
         # Read metallicity files.
         try:
             # Store all isochrones in all the metallicity files in isoch_list.
-            ip_list = isochp.ip(g.ps_params, g.bf_params[0])
+            ip_list = isochp.ip()
         except:
             print traceback.format_exc()
             sys.exit("ERROR: unknown error reading metallicity files.")

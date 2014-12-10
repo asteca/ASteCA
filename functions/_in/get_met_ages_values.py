@@ -9,6 +9,8 @@ import numpy as np
 import os
 import re
 from os.path import join
+from .._in import get_in_params as g
+from girardi_isochs_format import isoch_format as i_format
 
 
 def match_ranges(met_vals_all, met_files, age_vals_all, z_range, a_range):
@@ -35,47 +37,44 @@ def match_ranges(met_vals_all, met_files, age_vals_all, z_range, a_range):
     return met_f_filter, met_values, age_values
 
 
-def get_ranges(par_ranges):
+def get_ranges():
     '''
     Calculate parameter ranges to be used by the selected best fit method.
     '''
 
-    # Copy to avoid modifiyng the real list.
-    param_rs = list(par_ranges)
+    par_ranges = g.ps_params[-1]
 
-    # UPDATE max values.
-    # Add a small value to each max value to ensure that the range is a bit
-    # larger than the one between the real min and max values. This simplifies
-    # the input of data and ensures that the GA algorithm won't fail when
-    # encoding/decoding the floats into their binary representations.
     param_ranges = []
-    for param in param_rs:
-        # If min == max then set step value to be a very large number so
-        # the GA will select the number of digits in the encoding binary
-        # correctly.
-        if param[0] == param[1]:
-            param[2] = 1e6
-        #
-        # Differential to add to the max value.
-        diff = min(param[1] / 100., param[2] / 2.)
-        #
-        # Store min, *UPDATED* max values and steps for all parameters.
-        #
-        # If diff is zero it means either the max or the step values are
-        # zero for this parameter. In such case, use a very small value
-        # instead to allow the ranges to be obtained and the 'Encode'
-        # operator in the GA to work properly.
-        param[1] = (param[1] + diff) if diff > 0. else 0.0001
-        # Store all possible parameter values in array.
-        param_ranges.append(np.arange(*param))
+    for param in par_ranges:
+        # List of values.
+        if param[0] == 'l':
+            # Store ordered values.
+            param[1].sort()
+            param_ranges.append(np.asarray(param[1]))
 
-    return param_ranges, param_rs
+        # Range of values.
+        else:
+            # If min == max store single value in array.
+            if param[1][0] == param[1][1]:
+                param_ranges.append(np.asarray([param[1][0]]))
+            else:
+                # Store range values in array.
+                p_rang = np.arange(*param[1])
+                # Add max value if not present.
+                if p_rang[-1] != param[1][1]:
+                    p_rang = np.append(p_rang, param[1][1])
+                # Store full range for this parameter.
+                param_ranges.append(p_rang)
+
+    return param_ranges
 
 
-def get_ages(met_file, age_format):
+def get_ages(met_file):
     '''
     Read all available ages in metallicity file.
     '''
+
+    age_format = i_format()[1]
 
     # Open the metallicity file.
     with open(met_file, mode="r") as f_iso:
@@ -108,7 +107,7 @@ def get_metals(iso_path):
     return met_vals_all, met_files
 
 
-def get_m_a_vls(iso_path, isoch_format, par_ranges):
+def get_m_a_vls(iso_path):
     '''
     Run once to obtain the correct metallicities and ages to be used
     by the code.
@@ -124,14 +123,14 @@ def get_m_a_vls(iso_path, isoch_format, par_ranges):
     # (that's why we use the first metallicity file stored to obtain all
     # the age values)
     # I.e: store all age values available.
-    age_vals_all = get_ages(metal_files[0], isoch_format[1])
+    age_vals_all = get_ages(metal_files[0])
 
     # Get parameters ranges stored in params_input.dat file.
-    param_ranges, param_rs = get_ranges(par_ranges)
+    param_ranges = get_ranges()
 
     # Match values in metallicity and age ranges with those available.
     z_range, a_range = param_ranges[:2]
     met_f_filter, met_values, age_values = match_ranges(met_vals_all,
         metal_files, age_vals_all, z_range, a_range)
 
-    return param_ranges, param_rs, met_f_filter, met_values, age_values
+    return param_ranges, met_f_filter, met_values, age_values

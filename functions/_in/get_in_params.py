@@ -15,7 +15,6 @@ def char_remove(in_lst):
     '''
     l0 = []
     if in_lst[1][0] in {'[', '(', '{'}:
-        print 'raw', in_lst[1:]
         # Remove non-numeric characters and append numbers as floats.
         l0.append([float(i) for i in re.findall('[0-9.]+', str(in_lst[1:]))])
         # Store indicating that this is a list of values.
