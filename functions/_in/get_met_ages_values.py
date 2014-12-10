@@ -54,15 +54,20 @@ def get_ranges():
 
         # Range of values.
         else:
+            # If only one value is defined.
+            if len(param[1]) == 1:
+                param_ranges.append(np.asarray([param[1][0]]))
             # If min == max store single value in array.
-            if param[1][0] == param[1][1]:
+            elif param[1][0] == param[1][1]:
                 param_ranges.append(np.asarray([param[1][0]]))
             else:
                 # Store range values in array.
                 p_rang = np.arange(*param[1])
-                # Add max value if not present.
-                if p_rang[-1] != param[1][1]:
-                    p_rang = np.append(p_rang, param[1][1])
+                # Skip if array is empty. Checker will catch this.
+                if p_rang.size:
+                    # Add max value if not present.
+                    if p_rang[-1] != param[1][1]:
+                        p_rang = np.append(p_rang, param[1][1])
                 # Store full range for this parameter.
                 param_ranges.append(p_rang)
 

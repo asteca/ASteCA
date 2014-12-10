@@ -36,9 +36,6 @@ def ip():
         # Unpack.
         iso_path, iso_select = g.ps_params[0], g.ps_params[2]
 
-        # Read Girardi metallicity files format.
-        #isoch_format = i_format(iso_select, cmd_select)
-
         # Obtain allowed metallicities and ages. Use the first photometric
         # system defined.
         # *WE ASUME ALL PHOTOMETRIC SYSTEMS CONTAIN THE SAME NUMBER OF

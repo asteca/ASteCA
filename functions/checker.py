@@ -12,7 +12,7 @@ from subprocess import Popen, PIPE
 import _in.get_in_params as g
 from _in.get_names_paths import names_paths as n_p
 import _in.get_isoch_params as isochp
-import _in.get_met_ages_values as gmav
+from _in.get_met_ages_values import get_m_a_vls
 
 
 def check(mypath, cl_files):
@@ -185,7 +185,12 @@ def check(mypath, cl_files):
 
         # Unpack.
         iso_path, cmd_select, iso_select, par_ranges = g.ps_params
-        m_rs, a_rs, e_rs, d_rs, mass_rs, bin_rs = par_ranges
+
+        # Check if /isochrones folder exists.
+        if not isdir(iso_path):
+            sys.exit("ERROR: 'Best synthetic cluster fit' function is set to"
+                " run but the folder:\n\n {}\n\ndoes not exists.".format(
+                    iso_path))
 
         # Check that CMD is correctly set.
         if cmd_select not in {1, 2, 3, 4, 5, 6, 7}:
@@ -197,33 +202,39 @@ def check(mypath, cl_files):
             sys.exit("ERROR: the selected isochrones set ({}) does not match a"
                 " valid input.".format(iso_select))
 
-        # Check if /isochrones folder exists.
-        if not isdir(iso_path):
-            sys.exit("ERROR: 'Best synthetic cluster fit' function is set to"
-                " run but the folder:\n\n {}\n\ndoes not exists.".format(
-                    iso_path))
+        if iso_select not in {'PAR10', 'PAR11', 'PAR12'}:
+            sys.exit("ERROR: the selected isochrones set ({}) does not match a"
+                " valid input.".format(iso_select))
 
-        # Read names of all metallicity files stored in isochrones path given.
-        # Also read full paths to metallicity files.
-        met_vals_all, met_files = gmav.get_metals(iso_path)
-        # Read all ages in the first metallicity file: met_files[0]
-        # *WE ASUME ALL METALLICITY FILES HAVE THE SAME NUMBER OF AGE VALUES*
-        age_vals_all = gmav.get_ages(met_files[0])
-        # Get parameters ranges stored in params_input.dat file.
-        param_ranges = gmav.get_ranges()
-        # Check that ranges are properly defined.
+        # Check that no parameter range is empty.
+        m_rs, a_rs, e_rs, d_rs, mass_rs, bin_rs = par_ranges
         p_names = [['metallicity', m_rs], ['age', a_rs], ['extinction', e_rs],
             ['distance', d_rs], ['mass', mass_rs], ['binary', bin_rs]]
+        for i, p in enumerate(par_ranges):
+            # Catch empty list.
+            if not p:
+                sys.exit("ERROR: Range defined for '{}' parameter is"
+                " empty".format(p_names[i][0]))
+            # Catch *almost* empty list since get_in_params perhaps added
+            # an identificator 'l' or 'r'. This prevents ranges given as
+            # empty lists (ie: [] or () or {}) from passing as valid ranges.
+            elif not p[1]:
+                sys.exit("ERROR: Range defined for '{}' parameter is"
+                " empty".format(p_names[i][0]))
+
+        # Get parameters values defined.
+        param_ranges, met_f_filter, met_values, age_values = \
+            get_m_a_vls(iso_path)
+        # Check that ranges are properly defined.
         for i, p in enumerate(param_ranges):
             if not p.size:
-                sys.exit("ERROR: No values exist for {} range defined:\n\n"
-                "min={}, max={}, step={}".format(p_names[i][0], *p_names[i][1]))
+                sys.exit("ERROR: No values exist for '{}' range defined:\n\n"
+                "min={}, max={}, step={}".format(p_names[i][0],
+                    *p_names[i][1][1]))
 
         # Check that metallicity and age min, max & steps values are correct.
         # Match values in metallicity and age ranges with those available.
         z_range, a_range = param_ranges[:2]
-        met_f_filter, met_values, age_values = gmav.match_ranges(met_vals_all,
-            met_files, age_vals_all, z_range, a_range)
 
         if len(z_range) > len(met_values):
             sys.exit("ERROR: one or more metallicity files could not be\n"

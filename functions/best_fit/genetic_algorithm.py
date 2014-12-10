@@ -219,19 +219,20 @@ def ext_imm(best_sol, param_values, n_pop):
     return generation_ei
 
 
-def num_binary_digits(param_rs):
+def num_binary_digits(param_values):
     '''
     Store parameters ranges and calculate the minimum number of binary digits
     needed to encode the solutions.
     '''
 
-    p_mins, p_delta, p_step = [], [], []
-    for param in param_rs:
-        p_mins.append(param[0])  # Used by the encode operator.
-        p_delta.append(param[1] - param[0])  # max - min value
-        p_step.append(param[2])  # step
+    p_mins, p_delta = [], []
+    for param in param_values:
+        p_mins.append(min(param))  # Used by the encode operator.
+        # If delta is zero it means a single value is being used. Set delta
+        # to a small value to avoid issues with Elitism operator.
+        p_delta.append(max(max(param) - min(param), 1e-10))
 
-    p_interv = np.array(p_delta) / np.array(p_step)
+    p_interv = np.array([len(_) for _ in param_values])
 
     # Number of binary digits used to create the chromosomes.
     # The max function prevents an error when all parameter ranges are set to
@@ -249,14 +250,14 @@ def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
     '''
 
     # Unpack.
-    isoch_list, param_values, param_rs = ip_list
+    isoch_list, param_values = ip_list
     n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es = g.ga_params
     # Check if n_pop is odd. If it is sum 1 to avoid conflict if cr_sel
     # '2P' was selected.
     n_pop += n_pop % 2
 
     # Get number of binary digits to use.
-    n_bin, p_delta, p_mins = num_binary_digits(param_rs)
+    n_bin, p_delta, p_mins = num_binary_digits(param_values)
 
     # Fitness.
     # Rank-based breeding probability. Independent of the fitness values,

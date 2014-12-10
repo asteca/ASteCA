@@ -65,9 +65,16 @@ def bootstrap(err_lst, memb_prob_avrg_sort, completeness, ip_list,
 
     # Calculate errors for each parameter.
     isoch_fit_errors = np.std(params_boot, 0)
-    # Errors can not be smaller than the steps in each parameter.
-    param_rs = ip_list[2]
+    # Errors can not be smaller than the largest step in each parameter.
+    par_vals = ip_list[1]
     for i, p_er in enumerate(isoch_fit_errors):
-        isoch_fit_errors[i] = max(param_rs[i][2], p_er)
+        # If any parameter has a single valued range, assign an error of -1.
+        if len(par_vals[i]) > 1:
+            # Find largest delta in this parameter used values.
+            largest_delta = np.diff(par_vals[i]).max()
+            # Store the maximum value.
+            isoch_fit_errors[i] = max(largest_delta, p_er)
+        else:
+            isoch_fit_errors[i] = -1.
 
     return isoch_fit_errors

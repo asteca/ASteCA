@@ -5,6 +5,7 @@ Created on Wed Feb 12 16:10:05 2014
 @author: gabriel
 """
 
+import numpy as np
 from .._in import get_in_params as g
 from obs_clust_prepare import prepare as prep
 from genetic_algorithm import gen_algor as g_a
@@ -50,8 +51,18 @@ def params_errors(ip_list, err_lst, memb_prob_avrg_sort, completeness,
     best_fit_algor, N_b = g.bf_params[1], g.bf_params[-1]
 
     if  best_fit_algor == 'brute':
-        # Assign errors as the steps in each parameter.
-        isoch_fit_errors = [p_rs[2] for p_rs in ip_list[2]]
+        isoch_fit_errors = []
+        # Assign errors as the largest step in each parameter.
+        par_vals = ip_list[1]
+        for pv in par_vals:
+            # If any parameter has a single valued range, assign an error of -1.
+            if len(pv) > 1:
+                # Find largest delta in this parameter used values.
+                largest_delta = np.diff(pv).max()
+                # Store the maximum value.
+                isoch_fit_errors.append(largest_delta)
+            else:
+                isoch_fit_errors.append(-1.)
 
     elif best_fit_algor == 'genet':
         if N_b >= 2:
@@ -63,11 +74,6 @@ def params_errors(ip_list, err_lst, memb_prob_avrg_sort, completeness,
             print 'Skipping bootstrap process.'
             # No error assignment.
             isoch_fit_errors = [-1.] * len(isoch_fit_params[0])
-
-    # If any parameter has a single valued range, assign an error of -1.
-    for i, par_vals in enumerate(ip_list[1]):
-        if min(par_vals) == max(par_vals):
-            isoch_fit_errors[i] = -1.
 
     return isoch_fit_errors
 

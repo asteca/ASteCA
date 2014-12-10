@@ -13,15 +13,19 @@ def char_remove(in_lst):
     '''
     Correctly convert input data for parameters ranges to lists.
     '''
-    l0 = []
-    if in_lst[1][0] in {'[', '(', '{'}:
-        # Remove non-numeric characters and append numbers as floats.
-        l0.append([float(i) for i in re.findall('[0-9.]+', str(in_lst[1:]))])
-        # Store indicating that this is a list of values.
-        lst = ['l', map(float, l0[0])]
-    else:
-        # Store indicating that this is a range of values.
-        lst = ['r', map(float, in_lst[1:4])]
+    lst = []
+    # If input list is empty, return empty list.
+    if in_lst[1:]:
+        l0 = []
+        if in_lst[1][0] in {'[', '(', '{'}:
+            # Remove non-numeric characters and append numbers as floats.
+            l0.append([float(i) for i in re.findall('[0-9.]+',
+                str(in_lst[1:]))])
+            # Store indicating that this is a list of values.
+            lst = ['l', map(float, l0[0])]
+        else:
+            # Store indicating that this is a range of values.
+            lst = ['r', map(float, in_lst[1:4])]
 
     return lst
 
