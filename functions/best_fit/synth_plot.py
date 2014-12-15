@@ -29,7 +29,7 @@ def synth_clust_plot(mass_dist, isochrone, model, isoch_moved, isoch_cut,
     ax1.set_ylabel('$M_{V}$', fontsize=15)
     ax1.minorticks_on()
     ax1.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
-    text1 = '$z = %0.4f$' '\n' % m
+    text1 = '$z = %0.6f$' '\n' % m
     text2 = '$log(age) = %0.2f$' % a
     text = text1 + text2
     plt.text(0.1, 0.1, text, transform=ax1.transAxes,
@@ -152,8 +152,8 @@ def synth_clust_plot(mass_dist, isochrone, model, isoch_moved, isoch_cut,
             c='#4682b4', lw=0.5)
 
     for ax in [ax2, ax3, ax5, ax6, ax7, ax8]:
-        ax.set_xlabel('$(B-V)$', fontsize=15)
-        ax.set_ylabel('$V$', fontsize=15)
+        ax.set_xlabel('$color$', fontsize=15)
+        ax.set_ylabel('$magnitude$', fontsize=15)
 
     plt.show()
     #fig.tight_layout()

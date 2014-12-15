@@ -274,9 +274,24 @@ def synth_clust(err_lst, completeness, st_dist, isochrone, params):
     ################################################################
     ## Plot synthetic cluster.
     #from synth_plot import synth_clust_plot as s_c_p
-    #path = '/path/synth_cl.png'
-    #s_c_p(mass_dist, isochrone, model, isoch_moved, isoch_cut,
+    #m, a = params[:2]
+    #out_name = str(m).split('.')[1] + '_' + str(a)
+    #path = '/path/' + out_name + '.png'
+    #s_c_p(mass_dist, isochrone, params, isoch_moved, isoch_cut,
           #isoch_mass0, isoch_binar, isoch_compl, isoch_error, path)
+    ################################################################
+
+    ################################################################
+    ## Write synthetic cluster to file.
+    #print m, a
+    #out_file_name = '/path/' + out_name + '.dat'
+    #with open(out_file_name, "w") as f_out:
+        #f_out.write('''#color    e_col   magnitude     e_mag     init_mass''')
+        #f_out.write('\n')
+    #with open(out_file_name, "a") as f_out:
+        #for line in zip(*synth_clust):
+                #f_out.write('''{:<8.3f} {:>8.3f} {:>8.3f} {:>8.3f} \
+#{:>8.2f}\n'''.format(*map(float, line)))
     ################################################################
 
     return synth_clust
