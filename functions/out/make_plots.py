@@ -19,12 +19,31 @@ from functions.exp_function import exp_3p
 from ..errors import error_round as err_r
 
 
+####################################################
+# Timer function: http://stackoverflow.com/a/21860100/1391441
+from contextlib import contextmanager
+import time
+
+
+@contextmanager
+def timeblock(label):
+    start = time.clock()
+    try:
+        yield
+    finally:
+        end = time.clock()
+        print ('{} elapsed: {}'.format(label, end - start))
+####################################################
+
+
 def star_size(mag_data):
     '''
     Convert magnitudes into intensities and define sizes of stars in
     finding chart.
     '''
-    return 0.1 + 100. * 10 ** ((np.array(mag_data) - min(mag_data)) / -2.5)
+    # Scale factor.
+    factor = 500. * (1 - 1 / (1 + 150 / len(mag_data) ** 0.85))
+    return 0.1 + factor * 10 ** ((np.array(mag_data) - min(mag_data)) / -2.5)
 
 
 def line(x, slope, intercept):
@@ -130,558 +149,579 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
     gs1 = gridspec.GridSpec(16, 8)  # create a GridSpec object
 
     # 2D gaussian convolved histogram.
-    ax0 = plt.subplot(gs1[0:2, 0:2])
-    plt.xlabel('{} (bins)'.format(x_name), fontsize=12)
-    plt.ylabel('{} (bins)'.format(y_name), fontsize=12)
-    ax0.minorticks_on()
-    plt.axvline(x=cent_bin[0], linestyle='--', color='white')
-    plt.axhline(y=cent_bin[1], linestyle='--', color='white')
-    # Radius
-    circle = plt.Circle((cent_bin[0], cent_bin[1]),
-        clust_rad / bin_width, color='w', fill=False)
-    fig.gca().add_artist(circle)
-    # Add text boxs.
-    bin_w_r = err_r.round_to_y(bin_width)
-    text = 'Bin $\simeq$ {0:g} {1}'.format(bin_w_r, coord)
-    ob = offsetbox.AnchoredText(text, loc=1, prop=dict(size=10))
-    ob.patch.set(boxstyle='square,pad=-0.2', alpha=0.85)
-    ax0.add_artist(ob)
-    plt.imshow(hist_2d_g.transpose(), origin='lower')
+    #with timeblock("0"):
+    try:
+        ax0 = plt.subplot(gs1[0:2, 0:2])
+        plt.xlabel('{} (bins)'.format(x_name), fontsize=12)
+        plt.ylabel('{} (bins)'.format(y_name), fontsize=12)
+        ax0.minorticks_on()
+        plt.axvline(x=cent_bin[0], linestyle='--', color='white')
+        plt.axhline(y=cent_bin[1], linestyle='--', color='white')
+        # Radius
+        circle = plt.Circle((cent_bin[0], cent_bin[1]),
+            clust_rad / bin_width, color='w', fill=False)
+        fig.gca().add_artist(circle)
+        # Add text boxs.
+        bin_w_r = err_r.round_to_y(bin_width)
+        text = 'Bin $\simeq$ {0:g} {1}'.format(bin_w_r, coord)
+        ob = offsetbox.AnchoredText(text, loc=1, prop=dict(size=10))
+        ob.patch.set(boxstyle='square,pad=-0.2', alpha=0.85)
+        ax0.add_artist(ob)
+        plt.imshow(hist_2d_g.transpose(), origin='lower')
+    except:
+        print "Couldn't plot density positional chart."
 
     # 2D Gaussian histograms' centers using different standard deviations.
-    ax1 = plt.subplot(gs1[0:2, 2:4])
-    # Get max and min values in x,y
-    x_min, x_max = min(x_data), max(x_data)
-    y_min, y_max = min(y_data), max(y_data)
-    #Set plot limits
-    plt.xlim(x_min, x_max)
-    plt.ylim(y_min, y_max)
-    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=12)
-    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=12)
-    ax1.minorticks_on()
-    ## Add lines through median values with std deviations.
-    cent_median, cent_std_dev = np.mean(np.array(approx_cents), axis=0), \
-    np.std(np.array(approx_cents), axis=0)
-    plt.axvline(x=cent_median[0], linestyle='-', color='k')
-    plt.axvline(x=cent_median[0] + cent_std_dev[0], linestyle='--',
-        color='k')
-    plt.axvline(x=cent_median[0] - cent_std_dev[0], linestyle='--',
-        color='k')
-    plt.axhline(y=cent_median[1], linestyle='-', color='k')
-    plt.axhline(y=cent_median[1] + cent_std_dev[1], linestyle='--',
-        color='k')
-    plt.axhline(y=cent_median[1] - cent_std_dev[1], linestyle='--',
-        color='k')
-    # Add stats box.
-    cent_med_r, cent_std_dev_r = err_r.round_sig_fig(cent_median, cent_std_dev)
-    text1 = (r"$(\tilde{{{0}}},\tilde{{{1}}}) = ({3:g},\;{4:g})\,"
-    "{2}$").format(x_name, y_name, coord, *cent_med_r)
-    text2 = ("$(\sigma_{{{0}}},\sigma_{{{1}}}) = ({3:g},\;{4:g})\,"
-    "{2}$").format(x_name, y_name, coord, *cent_std_dev_r)
-    text = text1 + '\n' + text2
-    plt.text(0.05, 0.9, text, transform=ax1.transAxes,
-        bbox=dict(facecolor='white', alpha=0.8), fontsize=11)
-    # Plot centers.
-    cols = cycle(['red', 'blue', 'green', 'black', 'cyan'])
-    for i, center in enumerate(approx_cents):
-        boxes = plt.gca()
-        length = (bin_width * st_dev_lst[i]) * 2.
-        boxes.add_patch(Rectangle(
-            (center[0] - (length / 2.), center[1] - (length / 2.)),
-            length, length,
-            facecolor='none', edgecolor=next(cols), ls='solid',
-            lw=1.5, zorder=(len(st_dev_lst) - i),
-            label='St dev: %.1f' % st_dev_lst[i]))
-    # get handles
-    handles, labels = ax1.get_legend_handles_labels()
-    # use them in the legend
-    leg1 = ax1.legend(handles, labels, loc='lower right', numpoints=1,
-        fontsize=7)
-    # Set the alpha value of the legend.
-    leg1.get_frame().set_alpha(0.5)
-
-    # x,y finding chart of full frame
-    ax4 = plt.subplot(gs1[2:4, 0:2])
-    #Set plot limits
-    plt.xlim(x_min, x_max)
-    plt.ylim(y_min, y_max)
-    #Set axis labels
-    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=12)
-    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=12)
-    # Set minor ticks
-    ax4.minorticks_on()
-    # Plot r_cl.
-    circle = plt.Circle((center_cl[0], center_cl[1]), clust_rad, color='r',
-        fill=False, lw=2.5)
-    fig.gca().add_artist(circle)
-    if flag_3pk_conver is True:
-        # Plot tidal radius.
-        circle = plt.Circle((center_cl[0], center_cl[1]), rt, color='g',
-            fill=False, lw=2.5)
-        fig.gca().add_artist(circle)
-        # Plot core radius.
-        if rc > 0:
-            circle = plt.Circle((center_cl[0], center_cl[1]), rc,
-                color='g', fill=False, ls='dashed', lw=2.5)
-            fig.gca().add_artist(circle)
-    elif flag_2pk_conver is True:
-        # Plot core radius.
-        if rc > 0:
-            circle = plt.Circle((center_cl[0], center_cl[1]), rc,
-                color='g', fill=False, ls='dashed', lw=2.5)
-            fig.gca().add_artist(circle)
-    # Add text box
-    center_cl_r, e_cent_r = err_r.round_sig_fig(center_cl, e_cent)
-    text1 = '${0}_{{cent}} = {1:g} \pm {2:g}\,{3}$'.format(x_name,
-        center_cl_r[0], e_cent_r[0], coord)
-    text2 = '${0}_{{cent}} = {1:g} \pm {2:g}\,{3}$'.format(y_name,
-        center_cl_r[1], e_cent_r[1], coord)
-    text = text1 + '\n' + text2
-    plt.text(0.05, 0.9, text, transform=ax4.transAxes,
-        bbox=dict(facecolor='white', alpha=0.85), fontsize=11)
-    # Plot stars.
-    st_sizes_arr = star_size(mag_data)
-    ax4.set_aspect('equal')
-    plt.scatter(x_data, y_data, marker='o', c='black', s=st_sizes_arr)
-
-    # Radial density plot.
-    ax5 = plt.subplot(gs1[2:4, 2:6])
-    # Get max and min values in x,y
-    x_min, x_max = max(min(radii) - (max(radii) / 20.), 0), \
-    max(radii) + (max(radii) / 20.)
-    delta_total = (max(ring_density) - field_dens)
-    delta_backg = 0.2 * delta_total
-    y_min, y_max = max((field_dens - delta_backg) - (max(ring_density) -
-    min(ring_density)) / 10, 0), max(ring_density) + (max(ring_density) -
-    min(ring_density)) / 10
-    # Set plot limits
-    plt.xlim(x_min, x_max)
-    plt.ylim(y_min, y_max)
-    # Set axes labels
-    plt.xlabel('radius ({})'.format(coord), fontsize=12)
-    plt.ylabel("stars/{}$^{{2}}$".format(coord), fontsize=12)
-    # Set grid
-    ax5.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
-    # Cluster's name.
-    text = str(clust_name)
-    plt.text(0.4, 0.9, text, transform=ax5.transAxes, fontsize=14)
-    # Round radii values.
-    rads_r, e_rads_r = err_r.round_sig_fig([rc, rt, clust_rad],
-        [e_rc, e_rt, e_rad])
-    # Legend texts
-    kp_text = '3P' if flag_3pk_conver else '2P'
-    texts = ['RDP ($\sim${0:g} {1})'.format(bin_w_r, coord),
-            '$d_{{field}}$ = {:.1E} $st/{}^{{2}}$'.format(field_dens, coord),
-            '{} King profile'.format(kp_text),
-            'r$_c$ = {0:g} $\pm$ {1:g} {2}'.format(rads_r[0], e_rads_r[0],
-                coord),
-            'r$_t$ = {0:g} $\pm$ {1:g} {2}'.format(rads_r[1], e_rads_r[1],
-                coord),
-            'r$_{{cl}}$ = {0:g} $\pm$ {1:g} {2}'.format(rads_r[2], e_rads_r[2],
-                coord)]
-    # Plot density profile with the smallest bin size
-    ax5.plot(radii, ring_density, 'ko-', zorder=3, label=texts[0])
-    # Plot poisson error bars
-    plt.errorbar(radii, ring_density, yerr=poisson_error, fmt='ko',
-                 zorder=1)
-    # Plot background level.
-    ax5.hlines(y=field_dens, xmin=0, xmax=max(radii),
-               label=texts[1], color='b', zorder=5)
-    # Approx middle of the graph.
-    arr_y_up = (y_max - y_min) / 2.3 + y_min
-    # Length and width of arrow head.
-    head_w, head_l = x_max * 0.023, (y_max - y_min) * 0.045
-    # Length of arrow.
-    arr_y_dwn = -1. * abs(arr_y_up - field_dens) * 0.76
-    # Plot 3-P King profile.
-    if flag_3pk_conver is True:
-        # Plot curve.
-        ax5.plot(radii, three_params(radii, rt, cd, rc, field_dens), 'g--',
-            label=texts[2], lw=2., zorder=3)
-        # Plot r_t radius as an arrow. vline is there to show the label.
-        ax5.vlines(x=rt, ymin=0., ymax=0., label=texts[4], color='g')
-        ax5.arrow(rt, arr_y_up, 0., arr_y_dwn, fc="g", ec="g",
-                  head_width=head_w, head_length=head_l, zorder=5)
-        # Plot r_c as a dashed line.
-        ax5.vlines(x=rc, ymin=0, ymax=three_params(rc, rt, cd, rc, field_dens),
-            label=texts[3], color='g', linestyles=':', lw=4., zorder=4)
-    # Plot 2-P King profile if 3-P was not found.
-    elif flag_2pk_conver is True:
-        # Plot curve.
-        ax5.plot(radii, two_params(radii, cd, rc, field_dens), 'g--',
-            label=texts[2], lw=2., zorder=3)
-        # Plot r_c as a dashed line.
-        ax5.vlines(x=rc, ymin=0, ymax=two_params(rc, cd, rc, field_dens),
-                   label=texts[3], color='g', linestyles=':', lw=4., zorder=4)
-    # Plot radius.
-    ax5.vlines(x=clust_rad, ymin=0, ymax=0., label=texts[5], color='r')
-    ax5.arrow(clust_rad, arr_y_up, 0., arr_y_dwn, fc="r",
-              ec="r", head_width=head_w, head_length=head_l, zorder=5)
-    # Plot radius error zone.
-    if e_rad > 0.:
-        plt.axvspan((clust_rad - e_rad), (clust_rad + e_rad), facecolor='grey',
-            alpha=0.5)
-    # get handles
-    handles, labels = ax5.get_legend_handles_labels()
-    # use them in the legend
-    ax5.legend(handles, labels, loc='upper right', numpoints=2, fontsize=12)
-    ax5.minorticks_on()
-
-    # Zoom on x,y finding chart
-    ax6 = plt.subplot(gs1[2:4, 6:8])
-    #Set plot limits
-    x_min, x_max = min(x_data), max(x_data)
-    y_min, y_max = min(y_data), max(y_data)
-    # If possible, zoom in.
-    x_zmin, x_zmax = max(x_min, (center_cl[0] - 1.5 * clust_rad)), \
-    min(x_max, (center_cl[0] + 1.5 * clust_rad))
-    y_zmin, y_zmax = max(y_min, (center_cl[1] - 1.5 * clust_rad)), \
-    min(y_max, (center_cl[1] + 1.5 * clust_rad))
-    # Prevent axis stretching.
-    if (x_zmax - x_zmin) != (y_zmax - y_zmin):
-        lst = [(x_zmax - x_zmin), (y_zmax - y_zmin)]
-        val, idx = min((val, idx) for (idx, val) in enumerate(lst))
-        if idx == 0:
-            x_zmax = x_zmin + lst[1]
-        else:
-            y_zmax = y_zmin + lst[0]
-    plt.xlim(x_zmin, x_zmax)
-    plt.ylim(y_zmin, y_zmax)
-    #Set axis labels
-    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=12)
-    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=12)
-    # Set minor ticks
-    ax6.minorticks_on()
-    # Add circle
-    circle = plt.Circle((center_cl[0], center_cl[1]), clust_rad, color='r',
-        fill=False, lw=1.5)
-    fig.gca().add_artist(circle)
-    text1 = 'Cluster (zoom)\n'
-    text2 = 'CI = %0.2f' % (cont_index)
-    text = text1 + text2
-    plt.text(0.62, 0.9, text, transform=ax6.transAxes,
-             bbox=dict(facecolor='white', alpha=0.85), fontsize=12)
-    # Plot contour levels.
-    # 'semi' and 'manual' modes do not produce any of these parameters.
-    # Skip KDE plot if one of those modes was used.
-    if kde_pl:
-        ext_range, x, y, k_pos = kde_pl
-        kde = np.reshape(k_pos.T, x.shape)
-        plt.imshow(np.rot90(kde), cmap=plt.cm.YlOrBr, extent=ext_range)
-        plt.contour(x, y, kde, 10, colors='k', linewidths=0.6)
-    # Plot stars.
-    plt.scatter(x_data, y_data, marker='o', c='black', s=st_sizes_arr, zorder=4)
-    #Plot center.
-    plt.scatter(center_cl[0], center_cl[1], color='w', s=40, lw=0.8,
-        marker='x', zorder=5)
-
-    # Cluster and field regions defined.
-    ax7 = plt.subplot(gs1[4:6, 0:2])
-    # Get max and min values in x,y
-    x_min, x_max = min(x_data), max(x_data)
-    y_min, y_max = min(y_data), max(y_data)
-    #Set plot limits
-    plt.xlim(x_min, x_max)
-    plt.ylim(y_min, y_max)
-    #Set axis labels
-    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=12)
-    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=12)
-    # Set minor ticks
-    ax7.minorticks_on()
-    ax7.grid(b=True, which='both', color='gray', linestyle='--', lw=0.5)
-    # Radius
-    circle = plt.Circle((center_cl[0], center_cl[1]), clust_rad,
-                        color='k', fill=False)
-    fig.gca().add_artist(circle)
-    plt.text(0.4, 0.92, 'Cluster + %d Field regions' % (len(field_regions)),
-             transform=ax7.transAxes,
-             bbox=dict(facecolor='white', alpha=0.8), fontsize=12)
-    # Plot cluster region.
-    plt.scatter(zip(*cl_region)[1], zip(*cl_region)[2], marker='o', c='red',
-                s=8, edgecolors='none')
-    if not flag_area_stronger:
-        # Plot field stars regions.
-        col = cycle(['DimGray', 'ForestGreen', 'maroon', 'RoyalBlue'])
-        for i, reg in enumerate(field_regions):
-            stars_reg_temp = [[], []]
-            for star in reg:
-                # star[1] is the x coordinate and star[2] the y coordinate
-                stars_reg_temp[0].append(star[1])
-                stars_reg_temp[1].append(star[2])
-            plt.scatter(stars_reg_temp[0], stars_reg_temp[1], marker='o',
-                        c=next(col), s=8, edgecolors='none')
-
-    # Field stars CMD (stars outside cluster's radius)
-    ax8 = plt.subplot(gs1[4:6, 2:4])
-    #Set plot limits
-    plt.xlim(x_min_cmd, x_max_cmd)
-    plt.ylim(y_min_cmd, y_max_cmd)
-    #Set axis labels
-    plt.xlabel('$' + x_ax + '$', fontsize=18)
-    plt.ylabel('$' + y_ax + '$', fontsize=18)
-    # Set minor ticks
-    ax8.minorticks_on()
-    # Only draw units on axis (ie: 1, 2, 3)
-    ax8.xaxis.set_major_locator(MultipleLocator(1.0))
-    # Set grid
-    ax8.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
-    # Plot rejected stars.
-    # Outside of the cluster region.
-    stars_rjct_temp = [[], []]
-    for star in stars_out_rjct:
-        stars_rjct_temp[0].append(star[5])
-        stars_rjct_temp[1].append(star[3])
-    plt.scatter(stars_rjct_temp[0], stars_rjct_temp[1], marker='x', c='teal',
-                s=15, zorder=1)
-    # Plot stars within the field regions defined.
-    stars_acpt_temp = [[], []]
-    for fr in field_regions:
-        for star in fr:
-            stars_acpt_temp[0].append(star[5])
-            stars_acpt_temp[1].append(star[3])
-    sz_pt = 0.2 if (len(stars_out_rjct) + len(stars_out)) > 5000 else 0.5
-    plt.scatter(stars_acpt_temp[0], stars_acpt_temp[1], marker='o', c='k',
-                s=sz_pt, zorder=2)
-    plt.text(0.53, 0.93, '$r > r_{cl}\,|\,N=%d$' % len(stars_acpt_temp[0]),
-        transform=ax8.transAxes, bbox=dict(facecolor='white', alpha=0.5),
-        fontsize=16)
-
-    # Cluster's stars CMD (stars inside cluster's radius)
-    ax9 = plt.subplot(gs1[4:6, 4:6])
-    #Set plot limits
-    plt.xlim(x_min_cmd, x_max_cmd)
-    plt.ylim(y_min_cmd, y_max_cmd)
-    #Set axis labels
-    plt.xlabel('$' + x_ax + '$', fontsize=18)
-    plt.ylabel('$' + y_ax + '$', fontsize=18)
-    # Set minor ticks
-    ax9.minorticks_on()
-    # Only draw units on axis (ie: 1, 2, 3)
-    ax9.xaxis.set_major_locator(MultipleLocator(1.0))
-    # Set grid
-    ax9.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
-    # Calculate total number of stars whitin cluster's radius.
-    tot_stars = len(stars_in_rjct) + len(cl_region)
-    text1 = '$r \leq r_{{cl}}\,|\,N={}$'.format(tot_stars)
-    text2 = r'$n_{{memb}} \approx {}$'.format(n_memb)
-    text = text1 + '\n' + text2
-    plt.text(0.55, 0.87, text, transform=ax9.transAxes,
-             bbox=dict(facecolor='white', alpha=0.5), fontsize=16)
-    # Plot stars in CMD.
-    if len(stars_in_rjct) > 0:
-        # Only attempt to pot if any star is stored in the list.
-        plt.scatter(zip(*stars_in_rjct)[5], zip(*stars_in_rjct)[3], marker='x',
-            c='teal', s=12, zorder=1)
-    sz_pt = 0.5 if (len(stars_in_rjct) + len(cl_region)) > 1000 else 1.
-    plt.scatter(zip(*cl_region)[5], zip(*cl_region)[3], marker='o', c='k',
-                s=sz_pt, zorder=2)
-
-    # Magnitude error
-    ax10 = plt.subplot(gs1[4, 6:8])
-    #Set plot limits
-    x_min, x_max = min(mag_data) - 0.5, max(mag_data) + 0.5
-    plt.xlim(x_min, x_max)
-    plt.ylim(-0.005, e_max + (e_max / 5.))
-    #Set axis labels
-    plt.ylabel('$\sigma_{' + y_ax + '}$', fontsize=18)
-    plt.xlabel('$' + y_ax + '$', fontsize=18)
-    # Set minor ticks
-    ax10.minorticks_on()
-    # Plot e_max line.
-    ax10.hlines(y=e_max, xmin=x_min, xmax=x_max, color='k',
-        linestyles='dashed', zorder=2)
-    # Plot rectangle.
-    bright_end = min(mag_data) + be
-    ax10.vlines(x=bright_end + 0.05, ymin=-0.005, ymax=be_e, color='k',
-               linestyles='dashed', zorder=2)
-    ax10.vlines(x=min(mag_data) - 0.05, ymin=-0.005, ymax=be_e, color='k',
-               linestyles='dashed', zorder=2)
-    ax10.hlines(y=be_e, xmin=min(mag_data), xmax=bright_end, color='k',
-               linestyles='dashed', zorder=2)
-    # If any method could be used.
-    if err_all_fallback is False and err_max_fallback is False:
-        # Plot curve(s) according to the method used.
-        if er_mode == 'eyefit':
-            # Unpack params.
-            popt_umag, pol_mag, popt_ucol1, pol_col1, mag_val_left, \
-            mag_val_right, col1_val_left, col1_val_right = err_plot
-
-            # Plot left side of upper envelope (exponential).
-            ax10.plot(mag_val_left, exp_3p(mag_val_left, *popt_umag), 'k--',
-                lw=2., zorder=3)
-            # Plot right side of upper envelope (polynomial).
-            ax10.plot(mag_val_right, np.polyval(pol_mag, (mag_val_right)),
-                'k--', lw=2., zorder=3)
-        elif er_mode == 'lowexp':
-            # Unpack params.
-            popt_mag, popt_col1 = err_plot
-            # Plot exponential curve.
-            mag_x = np.linspace(bright_end, max(mag_data), 50)
-            ax10.plot(mag_x, exp_3p(mag_x, *popt_mag), 'k-', zorder=3)
-    # Plot rejected stars.
-    if len(stars_out_rjct) > 0:
-        # Only attempt to pot if any star is stored in the list.
-        plt.scatter(zip(*stars_out_rjct)[3], zip(*stars_out_rjct)[4],
-            marker='x', c='teal', s=15, zorder=1)
-    if len(stars_in_rjct) > 0:
-        plt.scatter(zip(*stars_in_rjct)[3], zip(*stars_in_rjct)[3], marker='x',
-            c='teal', s=15, zorder=1)
-    # Plot accepted stars.
-    plt.scatter(zip(*stars_out)[3], zip(*stars_out)[4], marker='o', c='b',
-        s=5, zorder=2, lw=0.2)
-    plt.scatter(zip(*cl_region)[3], zip(*cl_region)[4], marker='o', c='r',
-        s=8, zorder=2, lw=0.4)
-
-    # Color error
-    ax11 = plt.subplot(gs1[5, 6:8])
-    #Set plot limits
-    x_min, x_max = min(mag_data) - 0.5, max(mag_data) + 0.5
-    plt.xlim(x_min, x_max)
-    plt.ylim(-0.005, e_max + (e_max / 5.))
-    #Set axis labels
-    plt.ylabel('$\sigma_{' + x_ax + '}$', fontsize=18)
-    plt.xlabel('$' + y_ax + '$', fontsize=18)
-    # Set minor ticks
-    ax11.minorticks_on()
-    # Plot e_max line.
-    ax11.hlines(y=e_max, xmin=x_min, xmax=x_max, color='k',
-               linestyles='dashed', zorder=2)
-    # Plot rectangle.
-    bright_end = min(mag_data) + be
-    ax11.vlines(x=bright_end + 0.05, ymin=-0.005, ymax=be_e, color='k',
-               linestyles='dashed', zorder=2)
-    ax11.vlines(x=min(mag_data) - 0.05, ymin=-0.005, ymax=be_e, color='k',
-               linestyles='dashed', zorder=2)
-    ax11.hlines(y=be_e, xmin=min(mag_data), xmax=bright_end, color='k',
-               linestyles='dashed', zorder=2)
-    # If any method could be used.
-    if err_all_fallback is False and err_max_fallback is False:
-        # Plot curve(s) according to the method used.
-        if er_mode == 'eyefit':
-            # Unpack params.
-            popt_mag, pol_mag, popt_col1, pol_col1, mag_val_left, \
-            mag_val_right, col1_val_left, col1_val_right = err_plot
-
-            # Plot left side: exponential envelope.
-            ax11.plot(col1_val_left, exp_3p(col1_val_left, *popt_col1), 'k--',
-                lw=2., zorder=3)
-            # Plot right side: polynomial envelope.
-            ax11.plot(col1_val_right, np.polyval(pol_col1, (col1_val_right)),
-                'k--', lw=2., zorder=3)
-        elif er_mode == 'lowexp':
-            # Unpack params.
-            popt_mag, popt_col1 = err_plot
-            # Plot exponential curve.
-            ax11.plot(mag_x, exp_3p(mag_x, *popt_col1), 'k-', zorder=3)
-    # Plot rejected stars.
-    if len(stars_out_rjct) > 0:
-        # Only attempt to pot if any star is stored in the list.
-        plt.scatter(zip(*stars_out_rjct)[3], zip(*stars_out_rjct)[6],
-            marker='x', c='teal', s=15, zorder=1)
-    if len(stars_in_rjct) > 0:
-        plt.scatter(zip(*stars_in_rjct)[3], zip(*stars_in_rjct)[6], marker='x',
-            c='teal', s=15, zorder=1)
-    # Plot accepted stars.
-    plt.scatter(zip(*stars_out)[3], zip(*stars_out)[6], marker='o', c='b',
-        s=5, zorder=2, lw=0.2)
-    plt.scatter(zip(*cl_region)[3], zip(*cl_region)[6], marker='o', c='r',
-        s=8, zorder=2, lw=0.4)
-
-    #
-    # LF of stars in cluster region and outside.
-    ax12 = plt.subplot(gs1[6:8, 0:2])
-    #Set plot limits
-    x_min, x_max = min(mag_data) - 0.5, max(mag_data) + 0.5
-    plt.xlim(x_max, x_min)
-    ax12.minorticks_on()
-    # Only draw units on axis (ie: 1, 2, 3)
-    ax12.xaxis.set_major_locator(MultipleLocator(2.0))
-    # Set grid
-    ax12.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
-    #Set axis labels
-    plt.xlabel('$' + y_ax + '$', fontsize=18)
-    plt.ylabel('$N^{\star}/A_{cl}$', fontsize=18)
-    # Cluster region LF (contaminated).
-    plt.step(x_cl, y_cl, where='post', color='r', ls='--', lw=1.5,
-        label='$LF_{cl+fl} \;(r \leq r_{cl})$', zorder=2)
-    # Check if field regiones were defined.
-    if flag_area_stronger is not True:
-        # Average field regions LF.
-        plt.step(x_fl, y_fl, where='post', color='b', ls='--', lw=1.5,
-            label='$LF_{fl} \;(r  > r_{cl})$', zorder=3)
-        # Cluster region LF - average field regions LF.
-        plt.step(x_cl, y_cl - y_fl, where='post', color='g', lw=1.7,
-            label='$LF_{cl}$', zorder=4)
-    # Force y axis min to 0.
-    plt.ylim(0., plt.ylim()[1])
-    # Completeness maximum value.
-    # completeness = [max_mag, bin_edges, max_indx, comp_perc]
-    bin_edges, max_indx = completeness[1], completeness[2]
-    mag_peak = bin_edges[max_indx]
-    text = '$' + y_ax + r',_{compl}\,\approx\,%0.1f$' % mag_peak
-    ax12.vlines(x=mag_peak, ymin=0., ymax=plt.ylim()[1], color='k',
-        lw=1.5, linestyles='dashed', label=text, zorder=1)
-    # Legends.
-    leg11 = plt.legend(fancybox=True, loc='upper right', numpoints=1,
-                       fontsize=13)
-    # Set the alpha value of the legend.
-    leg11.get_frame().set_alpha(0.7)
-
-    # Integrated magnitude and color.
-    if integr_return:
-        # Unpack values.
-        cl_reg_mag1, fl_reg_mag1, integ_mag1, cl_reg_mag2, fl_reg_mag2, \
-        integ_mag2 = integr_return
-        # Make plot
-        ax13 = plt.subplot(gs1[6:8, 2:4])
-        # If field lists are not empty.
-        if fl_reg_mag1[0].any() and fl_reg_mag2[0].any():
-            x_min = min(min(cl_reg_mag1[0]), min(fl_reg_mag1[0]),
-                min(cl_reg_mag2[0]), min(fl_reg_mag2[0])) - 0.2
-            x_max = max(max(cl_reg_mag1[0]), max(fl_reg_mag1[0]),
-                max(cl_reg_mag2[0]), max(fl_reg_mag2[0])) + 0.2
-            y_min = max(max(cl_reg_mag1[1]), max(fl_reg_mag1[1]),
-                max(cl_reg_mag2[1]), max(fl_reg_mag2[1])) + 0.2
-            y_max = min(min(cl_reg_mag1[1]), min(fl_reg_mag1[1]),
-                min(cl_reg_mag2[1]), min(fl_reg_mag2[1])) - 0.2
-        else:
-            x_min, x_max = min(min(cl_reg_mag1[0]), min(cl_reg_mag2[0])) - 0.2,\
-            max(max(cl_reg_mag1[0]), max(cl_reg_mag2[0])) + 0.2
-            y_min, y_max = max(max(cl_reg_mag1[1]), max(cl_reg_mag2[1])) + 0.2,\
-            min(min(cl_reg_mag1[1]), min(cl_reg_mag2[1])) - 0.2
+    with timeblock("1"):
+        ax1 = plt.subplot(gs1[0:2, 2:4])
+        # Get max and min values in x,y
+        x_min, x_max = min(x_data), max(x_data)
+        y_min, y_max = min(y_data), max(y_data)
+        #Set plot limits
         plt.xlim(x_min, x_max)
         plt.ylim(y_min, y_max)
-        ax13.set_xlabel('$mag$', fontsize=18)
-        ax13.set_ylabel('$mag^*$', fontsize=18)
-        ax13.minorticks_on()
-        ax13.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
-        text1 = '$' + y_ax + '^{*}_{cl+fl}$'
-        text2 = '$' + x_ax0 + '^{*}_{cl+fl}$'
-        # Cluster + field integrated magnitude curve.
-        plt.plot(cl_reg_mag1[0], cl_reg_mag1[1], 'r-', lw=1., label=text1)
-        # Cluster integrated magnitude.
-        plt.plot(cl_reg_mag2[0], cl_reg_mag2[1], 'r:', lw=2., label=text2)
-        # Check if field regiones were defined.
+        plt.xlabel('{} ({})'.format(x_name, coord), fontsize=12)
+        plt.ylabel('{} ({})'.format(y_name, coord), fontsize=12)
+        ax1.minorticks_on()
+        ## Add lines through median values with std deviations.
+        cent_median, cent_std_dev = np.mean(np.array(approx_cents), axis=0), \
+        np.std(np.array(approx_cents), axis=0)
+        plt.axvline(x=cent_median[0], linestyle='-', color='k')
+        plt.axvline(x=cent_median[0] + cent_std_dev[0], linestyle='--',
+            color='k')
+        plt.axvline(x=cent_median[0] - cent_std_dev[0], linestyle='--',
+            color='k')
+        plt.axhline(y=cent_median[1], linestyle='-', color='k')
+        plt.axhline(y=cent_median[1] + cent_std_dev[1], linestyle='--',
+            color='k')
+        plt.axhline(y=cent_median[1] - cent_std_dev[1], linestyle='--',
+            color='k')
+        # Add stats box.
+        cent_med_r, cent_std_dev_r = err_r.round_sig_fig(cent_median,
+            cent_std_dev)
+        text1 = (r"$(\tilde{{{0}}},\tilde{{{1}}}) = ({3:g},\;{4:g})\,"
+        "{2}$").format(x_name, y_name, coord, *cent_med_r)
+        text2 = ("$(\sigma_{{{0}}},\sigma_{{{1}}}) = ({3:g},\;{4:g})\,"
+        "{2}$").format(x_name, y_name, coord, *cent_std_dev_r)
+        text = text1 + '\n' + text2
+        plt.text(0.05, 0.9, text, transform=ax1.transAxes,
+            bbox=dict(facecolor='white', alpha=0.8), fontsize=11)
+        # Plot centers.
+        cols = cycle(['red', 'blue', 'green', 'black', 'cyan'])
+        for i, center in enumerate(approx_cents):
+            boxes = plt.gca()
+            length = (bin_width * st_dev_lst[i]) * 2.
+            boxes.add_patch(Rectangle(
+                (center[0] - (length / 2.), center[1] - (length / 2.)),
+                length, length,
+                facecolor='none', edgecolor=next(cols), ls='solid',
+                lw=1.5, zorder=(len(st_dev_lst) - i),
+                label='St dev: %.1f' % st_dev_lst[i]))
+        # get handles
+        handles, labels = ax1.get_legend_handles_labels()
+        # use them in the legend
+        leg1 = ax1.legend(handles, labels, loc='lower right', numpoints=1,
+            fontsize=7)
+        # Set the alpha value of the legend.
+        leg1.get_frame().set_alpha(0.5)
+
+    # x,y finding chart of full frame
+    with timeblock("2"):
+        ax4 = plt.subplot(gs1[2:4, 0:2])
+        #Set plot limits
+        plt.xlim(x_min, x_max)
+        plt.ylim(y_min, y_max)
+        #Set axis labels
+        plt.xlabel('{} ({})'.format(x_name, coord), fontsize=12)
+        plt.ylabel('{} ({})'.format(y_name, coord), fontsize=12)
+        # Set minor ticks
+        ax4.minorticks_on()
+        # Plot r_cl.
+        circle = plt.Circle((center_cl[0], center_cl[1]), clust_rad, color='r',
+            fill=False, lw=2.5)
+        fig.gca().add_artist(circle)
+        if flag_3pk_conver is True:
+            # Plot tidal radius.
+            circle = plt.Circle((center_cl[0], center_cl[1]), rt, color='g',
+                fill=False, lw=2.5)
+            fig.gca().add_artist(circle)
+            # Plot core radius.
+            if rc > 0:
+                circle = plt.Circle((center_cl[0], center_cl[1]), rc,
+                    color='g', fill=False, ls='dashed', lw=2.5)
+                fig.gca().add_artist(circle)
+        elif flag_2pk_conver is True:
+            # Plot core radius.
+            if rc > 0:
+                circle = plt.Circle((center_cl[0], center_cl[1]), rc,
+                    color='g', fill=False, ls='dashed', lw=2.5)
+                fig.gca().add_artist(circle)
+        # Add text box
+        center_cl_r, e_cent_r = err_r.round_sig_fig(center_cl, e_cent)
+        text1 = '${0}_{{cent}} = {1:g} \pm {2:g}\,{3}$'.format(x_name,
+            center_cl_r[0], e_cent_r[0], coord)
+        text2 = '${0}_{{cent}} = {1:g} \pm {2:g}\,{3}$'.format(y_name,
+            center_cl_r[1], e_cent_r[1], coord)
+        text = text1 + '\n' + text2
+        ob = offsetbox.AnchoredText(text, loc=2, prop=dict(size=11))
+        ob.patch.set(boxstyle='square,pad=-0.2', alpha=0.85)
+        ax4.add_artist(ob)
+        # Plot stars.
+        st_sizes_arr = star_size(mag_data)
+        ax4.set_aspect('equal')
+        plt.scatter(x_data, y_data, marker='o', c='black', s=st_sizes_arr)
+
+    # Radial density plot.
+    with timeblock("3"):
+        ax5 = plt.subplot(gs1[2:4, 2:6])
+        # Get max and min values in x,y
+        x_min, x_max = max(min(radii) - (max(radii) / 20.), 0), \
+        max(radii) + (max(radii) / 20.)
+        delta_total = (max(ring_density) - field_dens)
+        delta_backg = 0.2 * delta_total
+        y_min, y_max = max((field_dens - delta_backg) - (max(ring_density) -
+        min(ring_density)) / 10, 0), max(ring_density) + (max(ring_density) -
+        min(ring_density)) / 10
+        # Set plot limits
+        plt.xlim(x_min, x_max)
+        plt.ylim(y_min, y_max)
+        # Set axes labels
+        plt.xlabel('radius ({})'.format(coord), fontsize=12)
+        plt.ylabel("stars/{}$^{{2}}$".format(coord), fontsize=12)
+        # Set grid
+        ax5.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
+        # Cluster's name.
+        text = str(clust_name)
+        plt.text(0.4, 0.9, text, transform=ax5.transAxes, fontsize=14)
+        # Round radii values.
+        rads_r, e_rads_r = err_r.round_sig_fig([rc, rt, clust_rad],
+            [e_rc, e_rt, e_rad])
+        # Legend texts
+        kp_text = '3P' if flag_3pk_conver else '2P'
+        texts = ['RDP ($\sim${0:g} {1})'.format(bin_w_r, coord),
+                '$d_{{field}}$ = {:.1E} $st/{}^{{2}}$'.format(field_dens,
+                    coord),
+                '{} King profile'.format(kp_text),
+                'r$_c$ = {0:g} $\pm$ {1:g} {2}'.format(rads_r[0], e_rads_r[0],
+                    coord),
+                'r$_t$ = {0:g} $\pm$ {1:g} {2}'.format(rads_r[1], e_rads_r[1],
+                    coord),
+                'r$_{{cl}}$ = {0:g} $\pm$ {1:g} {2}'.format(rads_r[2],
+                    e_rads_r[2], coord)]
+        # Plot density profile with the smallest bin size
+        ax5.plot(radii, ring_density, 'ko-', zorder=3, label=texts[0])
+        # Plot poisson error bars
+        plt.errorbar(radii, ring_density, yerr=poisson_error, fmt='ko',
+                     zorder=1)
+        # Plot background level.
+        ax5.hlines(y=field_dens, xmin=0, xmax=max(radii),
+                   label=texts[1], color='b', zorder=5)
+        # Approx middle of the graph.
+        arr_y_up = (y_max - y_min) / 2.3 + y_min
+        # Length and width of arrow head.
+        head_w, head_l = x_max * 0.023, (y_max - y_min) * 0.045
+        # Length of arrow.
+        arr_y_dwn = -1. * abs(arr_y_up - field_dens) * 0.76
+        # Plot 3-P King profile.
+        if flag_3pk_conver is True:
+            # Plot curve.
+            ax5.plot(radii, three_params(radii, rt, cd, rc, field_dens), 'g--',
+                label=texts[2], lw=2., zorder=3)
+            # Plot r_t radius as an arrow. vline is there to show the label.
+            ax5.vlines(x=rt, ymin=0., ymax=0., label=texts[4], color='g')
+            ax5.arrow(rt, arr_y_up, 0., arr_y_dwn, fc="g", ec="g",
+                      head_width=head_w, head_length=head_l, zorder=5)
+            # Plot r_c as a dashed line.
+            ax5.vlines(x=rc, ymin=0, ymax=three_params(rc, rt, cd, rc,
+            field_dens), label=texts[3], color='g', linestyles=':', lw=4.,
+                zorder=4)
+        # Plot 2-P King profile if 3-P was not found.
+        elif flag_2pk_conver is True:
+            # Plot curve.
+            ax5.plot(radii, two_params(radii, cd, rc, field_dens), 'g--',
+                label=texts[2], lw=2., zorder=3)
+            # Plot r_c as a dashed line.
+            ax5.vlines(x=rc, ymin=0, ymax=two_params(rc, cd, rc, field_dens),
+                label=texts[3], color='g', linestyles=':', lw=4., zorder=4)
+        # Plot radius.
+        ax5.vlines(x=clust_rad, ymin=0, ymax=0., label=texts[5], color='r')
+        ax5.arrow(clust_rad, arr_y_up, 0., arr_y_dwn, fc="r",
+                  ec="r", head_width=head_w, head_length=head_l, zorder=5)
+        # Plot radius error zone.
+        if e_rad > 0.:
+            plt.axvspan((clust_rad - e_rad), (clust_rad + e_rad),
+                facecolor='grey', alpha=0.5)
+        # get handles
+        handles, labels = ax5.get_legend_handles_labels()
+        # use them in the legend
+        ax5.legend(handles, labels, loc='upper right', numpoints=2, fontsize=12)
+        ax5.minorticks_on()
+
+    # Zoom on x,y finding chart
+    with timeblock("4"):
+        ax6 = plt.subplot(gs1[2:4, 6:8])
+        #Set plot limits
+        x_min, x_max = min(x_data), max(x_data)
+        y_min, y_max = min(y_data), max(y_data)
+        # If possible, zoom in.
+        x_zmin, x_zmax = max(x_min, (center_cl[0] - 1.5 * clust_rad)), \
+        min(x_max, (center_cl[0] + 1.5 * clust_rad))
+        y_zmin, y_zmax = max(y_min, (center_cl[1] - 1.5 * clust_rad)), \
+        min(y_max, (center_cl[1] + 1.5 * clust_rad))
+        # Prevent axis stretching.
+        if (x_zmax - x_zmin) != (y_zmax - y_zmin):
+            lst = [(x_zmax - x_zmin), (y_zmax - y_zmin)]
+            val, idx = min((val, idx) for (idx, val) in enumerate(lst))
+            if idx == 0:
+                x_zmax = x_zmin + lst[1]
+            else:
+                y_zmax = y_zmin + lst[0]
+        plt.xlim(x_zmin, x_zmax)
+        plt.ylim(y_zmin, y_zmax)
+        #Set axis labels
+        plt.xlabel('{} ({})'.format(x_name, coord), fontsize=12)
+        plt.ylabel('{} ({})'.format(y_name, coord), fontsize=12)
+        # Set minor ticks
+        ax6.minorticks_on()
+        text1 = 'Cluster (zoom)\n'
+        text2 = 'CI = %0.2f' % (cont_index)
+        text = text1 + text2
+        plt.text(0.62, 0.9, text, transform=ax6.transAxes,
+                 bbox=dict(facecolor='white', alpha=0.85), fontsize=12)
+        # Plot contour levels if it was obtained.
+        if kde_pl:
+            ext_range, x, y, k_pos = kde_pl
+            kde = np.reshape(k_pos.T, x.shape)
+            plt.imshow(np.rot90(kde), cmap=plt.cm.YlOrBr, extent=ext_range)
+            plt.contour(x, y, kde, 10, colors='b', linewidths=0.6)
+        # Plot stars.
+        plt.scatter(x_data, y_data, marker='o', c='black', s=st_sizes_arr,
+            zorder=1)
+        # Plot center.
+        plt.scatter(center_cl[0], center_cl[1], color='w', s=40, lw=0.8,
+            marker='x', zorder=5)
+        # Plot radius.
+        circle = plt.Circle((center_cl[0], center_cl[1]), clust_rad, color='r',
+            fill=False, lw=1.5, zorder=5)
+        fig.gca().add_artist(circle)
+
+    # Cluster and field regions defined.
+    with timeblock("5"):
+        ax7 = plt.subplot(gs1[4:6, 0:2])
+        # Get max and min values in x,y
+        x_min, x_max = min(x_data), max(x_data)
+        y_min, y_max = min(y_data), max(y_data)
+        #Set plot limits
+        plt.xlim(x_min, x_max)
+        plt.ylim(y_min, y_max)
+        #Set axis labels
+        plt.xlabel('{} ({})'.format(x_name, coord), fontsize=12)
+        plt.ylabel('{} ({})'.format(y_name, coord), fontsize=12)
+        # Set minor ticks
+        ax7.minorticks_on()
+        ax7.grid(b=True, which='both', color='gray', linestyle='--', lw=0.5)
+        # Radius
+        circle = plt.Circle((center_cl[0], center_cl[1]), clust_rad,
+                            color='k', fill=False)
+        fig.gca().add_artist(circle)
+        plt.text(0.4, 0.92, 'Cluster + %d Field regions' % (len(field_regions)),
+                 transform=ax7.transAxes,
+                 bbox=dict(facecolor='white', alpha=0.8), fontsize=12)
+        # Plot cluster region.
+        plt.scatter(zip(*cl_region)[1], zip(*cl_region)[2], marker='o', c='red',
+                    s=8, edgecolors='none')
         if not flag_area_stronger:
-            text3 = '$' + y_ax + '^{*}_{fl}$'
-            text4 = '$' + x_ax0 + '^{*}_{fl}$'
-            # Field average integrated magnitude curve.
-            plt.plot(fl_reg_mag1[0], fl_reg_mag1[1], 'b-', lw=1., label=text3)
-            # Field average integrated magnitude.
-            plt.plot(fl_reg_mag2[0], fl_reg_mag2[1], 'b:', lw=2., label=text4)
-        # Check how the second magnitude whould be formed.
-        if m_ord == 21:
-            sig, text0 = 1., x_ax0 + '^{*} -' + y_ax
-        elif m_ord == 12:
-            sig, text0 = -1., y_ax + '^{*} -' + x_ax0
-        int_col = sig * (integ_mag2 - integ_mag1)
-        text = '$(' + text0 + '^{*} )_{cl} = %0.2f$' % int_col
-        plt.text(0.25, 0.15, text, transform=ax13.transAxes,
-             bbox=dict(facecolor='white', alpha=0.75), fontsize=13)
-        lines, labels = ax13.get_legend_handles_labels()
-        leg = ax13.legend(lines, labels, loc='lower right', numpoints=1,
-            fontsize=13)
-        leg.get_frame().set_alpha(0.75)
+            # Plot field stars regions.
+            col = cycle(['DimGray', 'ForestGreen', 'maroon', 'RoyalBlue'])
+            for i, reg in enumerate(field_regions):
+                stars_reg_temp = [[], []]
+                for star in reg:
+                    # star[1] is the x coordinate and star[2] the y coordinate
+                    stars_reg_temp[0].append(star[1])
+                    stars_reg_temp[1].append(star[2])
+                plt.scatter(stars_reg_temp[0], stars_reg_temp[1], marker='o',
+                            c=next(col), s=8, edgecolors='none')
+
+    # Field stars CMD (stars outside cluster's radius)
+    with timeblock("6"):
+        ax8 = plt.subplot(gs1[4:6, 2:4])
+        #Set plot limits
+        plt.xlim(x_min_cmd, x_max_cmd)
+        plt.ylim(y_min_cmd, y_max_cmd)
+        #Set axis labels
+        plt.xlabel('$' + x_ax + '$', fontsize=18)
+        plt.ylabel('$' + y_ax + '$', fontsize=18)
+        # Set minor ticks
+        ax8.minorticks_on()
+        # Only draw units on axis (ie: 1, 2, 3)
+        ax8.xaxis.set_major_locator(MultipleLocator(1.0))
+        # Set grid
+        ax8.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
+        # Plot rejected stars.
+        # Outside of the cluster region.
+        stars_rjct_temp = [[], []]
+        for star in stars_out_rjct:
+            stars_rjct_temp[0].append(star[5])
+            stars_rjct_temp[1].append(star[3])
+        plt.scatter(stars_rjct_temp[0], stars_rjct_temp[1], marker='x',
+            c='teal', s=15, zorder=1)
+        # Plot stars within the field regions defined.
+        stars_acpt_temp = [[], []]
+        for fr in field_regions:
+            for star in fr:
+                stars_acpt_temp[0].append(star[5])
+                stars_acpt_temp[1].append(star[3])
+        sz_pt = 0.2 if (len(stars_out_rjct) + len(stars_out)) > 5000 else 0.5
+        plt.scatter(stars_acpt_temp[0], stars_acpt_temp[1], marker='o', c='k',
+                    s=sz_pt, zorder=2)
+        plt.text(0.53, 0.93, '$r > r_{cl}\,|\,N=%d$' % len(stars_acpt_temp[0]),
+            transform=ax8.transAxes, bbox=dict(facecolor='white', alpha=0.5),
+            fontsize=16)
+
+    # Cluster's stars CMD (stars inside cluster's radius)
+    with timeblock("7"):
+        ax9 = plt.subplot(gs1[4:6, 4:6])
+        #Set plot limits
+        plt.xlim(x_min_cmd, x_max_cmd)
+        plt.ylim(y_min_cmd, y_max_cmd)
+        #Set axis labels
+        plt.xlabel('$' + x_ax + '$', fontsize=18)
+        plt.ylabel('$' + y_ax + '$', fontsize=18)
+        # Set minor ticks
+        ax9.minorticks_on()
+        # Only draw units on axis (ie: 1, 2, 3)
+        ax9.xaxis.set_major_locator(MultipleLocator(1.0))
+        # Set grid
+        ax9.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
+        # Calculate total number of stars whitin cluster's radius.
+        tot_stars = len(stars_in_rjct) + len(cl_region)
+        text1 = '$r \leq r_{{cl}}\,|\,N={}$'.format(tot_stars)
+        text2 = r'$n_{{memb}} \approx {}$'.format(n_memb)
+        text = text1 + '\n' + text2
+        plt.text(0.55, 0.87, text, transform=ax9.transAxes,
+                 bbox=dict(facecolor='white', alpha=0.5), fontsize=16)
+        # Plot stars in CMD.
+        if len(stars_in_rjct) > 0:
+            # Only attempt to pot if any star is stored in the list.
+            plt.scatter(zip(*stars_in_rjct)[5], zip(*stars_in_rjct)[3],
+                marker='x', c='teal', s=12, zorder=1)
+        sz_pt = 0.5 if (len(stars_in_rjct) + len(cl_region)) > 1000 else 1.
+        plt.scatter(zip(*cl_region)[5], zip(*cl_region)[3], marker='o', c='k',
+                    s=sz_pt, zorder=2)
+
+    # Magnitude error
+    with timeblock("8"):
+        ax10 = plt.subplot(gs1[4, 6:8])
+        #Set plot limits
+        x_min, x_max = min(mag_data) - 0.5, max(mag_data) + 0.5
+        plt.xlim(x_min, x_max)
+        plt.ylim(-0.005, e_max + (e_max / 5.))
+        #Set axis labels
+        plt.ylabel('$\sigma_{' + y_ax + '}$', fontsize=18)
+        plt.xlabel('$' + y_ax + '$', fontsize=18)
+        # Set minor ticks
+        ax10.minorticks_on()
+        # Plot e_max line.
+        ax10.hlines(y=e_max, xmin=x_min, xmax=x_max, color='k',
+            linestyles='dashed', zorder=2)
+        # Plot rectangle.
+        bright_end = min(mag_data) + be
+        ax10.vlines(x=bright_end + 0.05, ymin=-0.005, ymax=be_e, color='k',
+                   linestyles='dashed', zorder=2)
+        ax10.vlines(x=min(mag_data) - 0.05, ymin=-0.005, ymax=be_e, color='k',
+                   linestyles='dashed', zorder=2)
+        ax10.hlines(y=be_e, xmin=min(mag_data), xmax=bright_end, color='k',
+                   linestyles='dashed', zorder=2)
+        # If any method could be used.
+        if err_all_fallback is False and err_max_fallback is False:
+            # Plot curve(s) according to the method used.
+            if er_mode == 'eyefit':
+                # Unpack params.
+                popt_umag, pol_mag, popt_ucol1, pol_col1, mag_val_left, \
+                mag_val_right, col1_val_left, col1_val_right = err_plot
+
+                # Plot left side of upper envelope (exponential).
+                ax10.plot(mag_val_left, exp_3p(mag_val_left, *popt_umag), 'k--',
+                    lw=2., zorder=3)
+                # Plot right side of upper envelope (polynomial).
+                ax10.plot(mag_val_right, np.polyval(pol_mag, (mag_val_right)),
+                    'k--', lw=2., zorder=3)
+            elif er_mode == 'lowexp':
+                # Unpack params.
+                popt_mag, popt_col1 = err_plot
+                # Plot exponential curve.
+                mag_x = np.linspace(bright_end, max(mag_data), 50)
+                ax10.plot(mag_x, exp_3p(mag_x, *popt_mag), 'k-', zorder=3)
+        # Plot rejected stars.
+        if len(stars_out_rjct) > 0:
+            # Only attempt to pot if any star is stored in the list.
+            plt.scatter(zip(*stars_out_rjct)[3], zip(*stars_out_rjct)[4],
+                marker='x', c='teal', s=15, zorder=1)
+        if len(stars_in_rjct) > 0:
+            plt.scatter(zip(*stars_in_rjct)[3], zip(*stars_in_rjct)[3],
+                marker='x', c='teal', s=15, zorder=1)
+        # Plot accepted stars.
+        plt.scatter(zip(*stars_out)[3], zip(*stars_out)[4], marker='o', c='b',
+            s=5, zorder=2, lw=0.2)
+        plt.scatter(zip(*cl_region)[3], zip(*cl_region)[4], marker='o', c='r',
+            s=8, zorder=2, lw=0.4)
+
+    # Color error
+    with timeblock("9"):
+        ax11 = plt.subplot(gs1[5, 6:8])
+        #Set plot limits
+        x_min, x_max = min(mag_data) - 0.5, max(mag_data) + 0.5
+        plt.xlim(x_min, x_max)
+        plt.ylim(-0.005, e_max + (e_max / 5.))
+        #Set axis labels
+        plt.ylabel('$\sigma_{' + x_ax + '}$', fontsize=18)
+        plt.xlabel('$' + y_ax + '$', fontsize=18)
+        # Set minor ticks
+        ax11.minorticks_on()
+        # Plot e_max line.
+        ax11.hlines(y=e_max, xmin=x_min, xmax=x_max, color='k',
+                   linestyles='dashed', zorder=2)
+        # Plot rectangle.
+        bright_end = min(mag_data) + be
+        ax11.vlines(x=bright_end + 0.05, ymin=-0.005, ymax=be_e, color='k',
+                   linestyles='dashed', zorder=2)
+        ax11.vlines(x=min(mag_data) - 0.05, ymin=-0.005, ymax=be_e, color='k',
+                   linestyles='dashed', zorder=2)
+        ax11.hlines(y=be_e, xmin=min(mag_data), xmax=bright_end, color='k',
+                   linestyles='dashed', zorder=2)
+        # If any method could be used.
+        if err_all_fallback is False and err_max_fallback is False:
+            # Plot curve(s) according to the method used.
+            if er_mode == 'eyefit':
+                # Unpack params.
+                popt_mag, pol_mag, popt_col1, pol_col1, mag_val_left, \
+                mag_val_right, col1_val_left, col1_val_right = err_plot
+
+                # Plot left side: exponential envelope.
+                ax11.plot(col1_val_left, exp_3p(col1_val_left, *popt_col1),
+                    'k--', lw=2., zorder=3)
+                # Plot right side: polynomial envelope.
+                ax11.plot(col1_val_right, np.polyval(pol_col1,
+                (col1_val_right)), 'k--', lw=2., zorder=3)
+            elif er_mode == 'lowexp':
+                # Unpack params.
+                popt_mag, popt_col1 = err_plot
+                # Plot exponential curve.
+                ax11.plot(mag_x, exp_3p(mag_x, *popt_col1), 'k-', zorder=3)
+        # Plot rejected stars.
+        if len(stars_out_rjct) > 0:
+            # Only attempt to pot if any star is stored in the list.
+            plt.scatter(zip(*stars_out_rjct)[3], zip(*stars_out_rjct)[6],
+                marker='x', c='teal', s=15, zorder=1)
+        if len(stars_in_rjct) > 0:
+            plt.scatter(zip(*stars_in_rjct)[3], zip(*stars_in_rjct)[6],
+                marker='x', c='teal', s=15, zorder=1)
+        # Plot accepted stars.
+        plt.scatter(zip(*stars_out)[3], zip(*stars_out)[6], marker='o', c='b',
+            s=5, zorder=2, lw=0.2)
+        plt.scatter(zip(*cl_region)[3], zip(*cl_region)[6], marker='o', c='r',
+            s=8, zorder=2, lw=0.4)
+
+    # LF of stars in cluster region and outside.
+    with timeblock("10"):
+        ax12 = plt.subplot(gs1[6:8, 0:2])
+        #Set plot limits
+        x_min, x_max = min(mag_data) - 0.5, max(mag_data) + 0.5
+        plt.xlim(x_max, x_min)
+        ax12.minorticks_on()
+        # Only draw units on axis (ie: 1, 2, 3)
+        ax12.xaxis.set_major_locator(MultipleLocator(2.0))
+        # Set grid
+        ax12.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
+        #Set axis labels
+        plt.xlabel('$' + y_ax + '$', fontsize=18)
+        plt.ylabel('$N^{\star}/A_{cl}$', fontsize=18)
+        # Cluster region LF (contaminated).
+        plt.step(x_cl, y_cl, where='post', color='r', ls='--', lw=1.5,
+            label='$LF_{cl+fl} \;(r \leq r_{cl})$', zorder=2)
+        # Check if field regiones were defined.
+        if flag_area_stronger is not True:
+            # Average field regions LF.
+            plt.step(x_fl, y_fl, where='post', color='b', ls='--', lw=1.5,
+                label='$LF_{fl} \;(r  > r_{cl})$', zorder=3)
+            # Cluster region LF - average field regions LF.
+            plt.step(x_cl, y_cl - y_fl, where='post', color='g', lw=1.7,
+                label='$LF_{cl}$', zorder=4)
+        # Force y axis min to 0.
+        plt.ylim(0., plt.ylim()[1])
+        # Completeness maximum value.
+        # completeness = [max_mag, bin_edges, max_indx, comp_perc]
+        bin_edges, max_indx = completeness[1], completeness[2]
+        mag_peak = bin_edges[max_indx]
+        text = '$' + y_ax + r',_{compl}\,\approx\,%0.1f$' % mag_peak
+        ax12.vlines(x=mag_peak, ymin=0., ymax=plt.ylim()[1], color='k',
+            lw=1.5, linestyles='dashed', label=text, zorder=1)
+        # Legends.
+        leg11 = plt.legend(fancybox=True, loc='upper right', numpoints=1,
+                           fontsize=13)
+        # Set the alpha value of the legend.
+        leg11.get_frame().set_alpha(0.7)
+
+    # Integrated magnitude and color.
+    with timeblock("11"):
+        if integr_return:
+            # Unpack values.
+            cl_reg_mag1, fl_reg_mag1, integ_mag1, cl_reg_mag2, fl_reg_mag2, \
+            integ_mag2 = integr_return
+            # Make plot
+            ax13 = plt.subplot(gs1[6:8, 2:4])
+            # If field lists are not empty.
+            if fl_reg_mag1[0].any() and fl_reg_mag2[0].any():
+                x_min = min(min(cl_reg_mag1[0]), min(fl_reg_mag1[0]),
+                    min(cl_reg_mag2[0]), min(fl_reg_mag2[0])) - 0.2
+                x_max = max(max(cl_reg_mag1[0]), max(fl_reg_mag1[0]),
+                    max(cl_reg_mag2[0]), max(fl_reg_mag2[0])) + 0.2
+                y_min = max(max(cl_reg_mag1[1]), max(fl_reg_mag1[1]),
+                    max(cl_reg_mag2[1]), max(fl_reg_mag2[1])) + 0.2
+                y_max = min(min(cl_reg_mag1[1]), min(fl_reg_mag1[1]),
+                    min(cl_reg_mag2[1]), min(fl_reg_mag2[1])) - 0.2
+            else:
+                x_min, x_max = min(min(cl_reg_mag1[0]),
+                    min(cl_reg_mag2[0])) - 0.2, max(max(cl_reg_mag1[0]),
+                    max(cl_reg_mag2[0])) + 0.2
+                y_min, y_max = max(max(cl_reg_mag1[1]),
+                    max(cl_reg_mag2[1])) + 0.2, min(min(cl_reg_mag1[1]),
+                    min(cl_reg_mag2[1])) - 0.2
+            plt.xlim(x_min, x_max)
+            plt.ylim(y_min, y_max)
+            ax13.set_xlabel('$mag$', fontsize=18)
+            ax13.set_ylabel('$mag^*$', fontsize=18)
+            ax13.minorticks_on()
+            ax13.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
+            text1 = '$' + y_ax + '^{*}_{cl+fl}$'
+            text2 = '$' + x_ax0 + '^{*}_{cl+fl}$'
+            # Cluster + field integrated magnitude curve.
+            plt.plot(cl_reg_mag1[0], cl_reg_mag1[1], 'r-', lw=1., label=text1)
+            # Cluster integrated magnitude.
+            plt.plot(cl_reg_mag2[0], cl_reg_mag2[1], 'r:', lw=2., label=text2)
+            # Check if field regiones were defined.
+            if not flag_area_stronger:
+                text3 = '$' + y_ax + '^{*}_{fl}$'
+                text4 = '$' + x_ax0 + '^{*}_{fl}$'
+                # Field average integrated magnitude curve.
+                plt.plot(fl_reg_mag1[0], fl_reg_mag1[1], 'b-', lw=1.,
+                    label=text3)
+                # Field average integrated magnitude.
+                plt.plot(fl_reg_mag2[0], fl_reg_mag2[1], 'b:', lw=2.,
+                    label=text4)
+            # Check how the second magnitude whould be formed.
+            if m_ord == 21:
+                sig, text0 = 1., x_ax0 + '^{*} -' + y_ax
+            elif m_ord == 12:
+                sig, text0 = -1., y_ax + '^{*} -' + x_ax0
+            int_col = sig * (integ_mag2 - integ_mag1)
+            text = '$(' + text0 + '^{*} )_{cl} = %0.2f$' % int_col
+            plt.text(0.25, 0.15, text, transform=ax13.transAxes,
+                 bbox=dict(facecolor='white', alpha=0.75), fontsize=13)
+            lines, labels = ax13.get_legend_handles_labels()
+            leg = ax13.legend(lines, labels, loc='lower right', numpoints=1,
+                fontsize=13)
+            leg.get_frame().set_alpha(0.75)
 
     # Distribution of p_values.
     if flag_pval_test and not flag_area_stronger:
