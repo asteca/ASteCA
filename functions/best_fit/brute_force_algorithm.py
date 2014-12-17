@@ -21,8 +21,8 @@ def brute_force(err_lst, obs_clust, completeness, ip_list, st_d_bin_mr):
     m_lst, a_lst, e_lst, d_lst, mass_lst, bin_lst = param_values
 
     # Initiate list that will hold the likelihood values telling us how well
-    # each isochrone (syhtnetic cluster) fits the observed data.
-    score = [[], []]
+    # each isochrone (synthetic cluster) fits the observed data.
+    model_done = [[], []]
 
     tot_sols, i = reduce(lambda x, y: x * y,
         [len(_) for _ in param_values], 1), 0
@@ -54,8 +54,8 @@ def brute_force(err_lst, obs_clust, completeness, ip_list, st_d_bin_mr):
                             likel_val = i_l(err_lst, obs_clust, completeness,
                                 st_d_bin_mr, isochrone, params)
                             # Store the likelihood for each synthetic cluster.
-                            score[0].append(likel_val)
-                            score[1].append(params)
+                            model_done[0].append(params)
+                            model_done[1].append(likel_val)
 
                             # Print percentage done.
                             i += 1
@@ -69,8 +69,8 @@ def brute_force(err_lst, obs_clust, completeness, ip_list, st_d_bin_mr):
     # Find index of function with smallest likelihood value.
     # This index thus points to the isochrone that best fits the observed
     # group of stars.
-    best_fit_indx = np.argmin(score[0])
+    best_fit_indx = np.argmin(model_done[1])
 
-    isoch_fit_params = [score[1][best_fit_indx], score]
+    isoch_fit_params = [model_done[0][best_fit_indx], model_done]
 
     return isoch_fit_params
