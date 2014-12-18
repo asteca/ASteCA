@@ -139,7 +139,7 @@ def pl_mps_phot_diag(gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
                 vmax=v_max_mp)
     # If list is not empty.
     if m_p_m_temp_inv[1]:
-        # Plot error bars at several mag values.
+        # Plot error bars at several values.
         mag_y = np.arange(int(min(m_p_m_temp_inv[1]) + 0.5),
                           int(max(m_p_m_temp_inv[1]) + 0.5) + 0.1)
         x_val = [min(x_max_cmd, max(col_data) + 0.2) - 0.4] * len(mag_y)

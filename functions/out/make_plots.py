@@ -2,7 +2,6 @@
 @author: gabriel
 """
 
-import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from os.path import join
@@ -14,7 +13,7 @@ import mp_structure
 import mp_phot_analysis
 import mp_decont_algor
 import mp_best_fit
-from mp_star_size import star_size
+import prep_plots
 
 
 #############################################################
@@ -32,28 +31,9 @@ from mp_star_size import star_size
 #############################################################
 
 
-def line(x, slope, intercept):
-    '''
-    Linar function.
-    '''
-    y = slope * x + intercept
-    return y
-
-
-def reject_outliers(data, m=6.5):
-    '''
-    Reject outliers from array.
-    http://stackoverflow.com/a/16562028/1391441
-    '''
-    d = np.abs(data - np.median(data))
-    mdev = np.median(d)
-    s = d / mdev if mdev else 0.
-    return data[s < m]
-
-
 def make_plots(output_subdir, clust_name, x_data, y_data,
     bin_width, center_params, rdp_params, field_dens, radius_params,
-    cont_index, mag_data, col1_data, err_plot, err_flags, kp_params,
+    cont_index, mag_data, col_data, err_plot, err_flags, kp_params,
     cl_region, stars_out, stars_in_rjct, stars_out_rjct, integr_return, n_memb,
     flag_area_stronger, field_regions, flag_pval_test,
     pval_test_params, memb_prob_avrg_sort, lum_func, completeness, ip_list,
@@ -81,52 +61,16 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
     fig = plt.figure(figsize=(30, 25))  # create the top-level container
     gs = gridspec.GridSpec(10, 12)       # create a GridSpec object
 
-    # Get max and min values in x,y coordinates.
-    x_min, x_max = min(x_data), max(x_data)
-    y_min, y_max = min(y_data), max(y_data)
-
-    # Define system of coordinates used.
-    px_deg = g.gd_params[-1]
-    coord_lst = ['px', 'x', 'y'] if px_deg == 'px' else ['deg', 'ra', 'dec']
-    coord, x_name, y_name = coord_lst
-
-    # If possible, define zoomed frame.
-    x_zmin, x_zmax = max(x_min, (center_cl[0] - 1.5 * clust_rad)), \
-    min(x_max, (center_cl[0] + 1.5 * clust_rad))
-    y_zmin, y_zmax = max(y_min, (center_cl[1] - 1.5 * clust_rad)), \
-    min(y_max, (center_cl[1] + 1.5 * clust_rad))
-    # Prevent axis stretching.
-    if (x_zmax - x_zmin) != (y_zmax - y_zmin):
-        lst = [(x_zmax - x_zmin), (y_zmax - y_zmin)]
-        val, idx = min((val, idx) for (idx, val) in enumerate(lst))
-        if idx == 0:
-            x_zmax = x_zmin + lst[1]
-        else:
-            y_zmax = y_zmin + lst[0]
-
-    # Define names for photometric diagram axes.
-    y_axis = 0
-    y_ax, x_ax0, m_ord = g.axes_params[0:3]
-    if m_ord == 21:
-        x_ax = '(' + x_ax0 + '-' + y_ax + ')'
-    elif m_ord == 12:
-        x_ax = '(' + y_ax + '-' + x_ax0 + ')'
-
-    # Unpack coordinates and photometric data.
-    #x_data, y_data = id_coords[1:]
-    phot_x = col1_data
-    phot_y = mag_data
-
-    # Define plot limits for *all* photometric diagrams.
-    phot_x_s, phot_y_s = reject_outliers(phot_x), reject_outliers(phot_y)
-    x_max_cmd, x_min_cmd = max(phot_x_s) + 0.5, min(phot_x_s) - 0.5
-    y_min_cmd, y_max_cmd = max(phot_y_s) + 0.5, min(phot_y_s) - 0.5
-    # If photometric axis y is a magnitude, make sure the brighter stars
-    # are plotted.
-    y_max_cmd = (min(phot_y) - 1.) if y_axis == 0 else y_max_cmd
-
-    # Obtain proper sizes for plotted stars.
-    st_sizes_arr = star_size(mag_data)
+    # Obtain plotting parameters and data.
+    x_min, x_max, y_min, y_max = prep_plots.frame_max_min(x_data, y_data)
+    coord, x_name, y_name = prep_plots.coord_syst()
+    x_zmin, x_zmax, y_zmin, y_zmax = prep_plots.frame_zoomed(x_min, x_max,
+        y_min, y_max, center_cl, clust_rad)
+    x_ax, y_ax, x_ax0, y_axis = prep_plots.ax_names()
+    phot_x, phot_y = prep_plots.ax_data(mag_data, col_data)
+    x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd = prep_plots.diag_limits(y_axis,
+        phot_x, phot_y)
+    st_sizes_arr = prep_plots.star_size(mag_data)
 
     #
     # Structure plots.
@@ -164,7 +108,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
             stars_in_rjct, cl_region, n_memb],
         [gs, mag_data, y_ax, x_cl, y_cl, flag_area_stronger, x_fl, y_fl,
             completeness],
-        [gs, integr_return, y_ax, x_ax0, flag_area_stronger, m_ord],
+        [gs, integr_return, y_ax, x_ax0, flag_area_stronger],
         [gs, flag_pval_test, flag_area_stronger, pval_test_params]
         ]
     for n, args in enumerate(arglist, 1):
@@ -192,15 +136,13 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
                 plot_colorbar, v_min_mp, v_max_mp, sca, trans = \
                 mp_decont_algor.pl_mps_phot_diag(gs, fig, x_min_cmd, x_max_cmd,
                     y_min_cmd, y_max_cmd, x_ax, y_ax, memb_prob_avrg_sort,
-                    shift_isoch, col1_data, err_lst)
+                    shift_isoch, col_data, err_lst)
             except:
                 print("  WARNING: error when plotting MPs on cluster's "
                 "photom diagram.")
 
     #
     # Best fit plots.
-    best_fit_algor, N_b = g.bf_params[1], g.bf_params[-1]
-
     if bf_flag:
         arglist = [
             [gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
@@ -210,23 +152,11 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
             mp_best_fit.plot(n, *args)
 
     # Best fitting process plots for GA.
+    best_fit_algor = g.bf_params[1]
     if bf_flag and best_fit_algor == 'genet':
 
-        # Set errors to zero if bootstrap was not used, for plotting purposes.
-        if N_b >= 2:
-            p_errs = isoch_fit_errors
-        else:
-            p_errs = [0.] * len(isoch_fit_errors)
-
-        # Set parameter ranges used by GA plots.
-        min_max_p = []
-        for param in ip_list[1]:
-            # Set the delta for the parameter range. If only one value was
-            # used, set a very small delta value.
-            delta_p = (max(param) - min(param)) * 0.05 \
-            if max(param) != min(param) else 0.001
-            # Store parameter range.
-            min_max_p.append([min(param) - delta_p, max(param) + delta_p])
+        p_errs = prep_plots.error_vals(isoch_fit_errors)
+        min_max_p = prep_plots.param_ranges(ip_list)
 
         # Unpack.
         lkl_old, new_bs_indx, model_done = isoch_fit_params[1], \

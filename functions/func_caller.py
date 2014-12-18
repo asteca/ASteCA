@@ -32,7 +32,7 @@ from functions.best_fit.best_fit_synth_cl import best_fit as bfsc
 #
 from functions.out.make_plots import make_plots as mp
 from functions.out.create_out_data_file import create_out_data_file as c_o_d_f
-from functions.top_tiers import get_top_tiers as g_t_t
+from functions.out.top_tiers import get_top_tiers as g_t_t
 from functions.out.add_data_output import add_data_output as a_d_o
 from functions.out.cl_members_file import cluster_members_file as c_m_f
 from functions.out.done_move import done_move as dm
@@ -158,9 +158,6 @@ def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
     # Obtain best fitting parameters for cluster.
     bf_return = bfsc(err_lst, red_return[0], completeness, ip_list)
 
-    # Output top tiers models i best fit parameters were obtained.
-    g_t_t(bf_return)
-
     # Create output data file in /output dir if it doesn't exist.
     out_file_name = c_o_d_f(output_dir)
 
@@ -169,6 +166,10 @@ def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
         cont_index, n_memb, pval_test_params[0], integr_return, err_flags,
         flag_num_memb_low, bf_return)
     print 'Data added to output file.'
+
+    # Output top tiers models if best fit parameters were obtained.
+    g_t_t(clust_name, output_subdir, mag_data, col1_data, ip_list, err_lst,
+        completeness, bf_return)
 
     # Make plots
     if g.pl_params[0]:

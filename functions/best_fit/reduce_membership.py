@@ -25,7 +25,7 @@ def red_memb(decont_algor_return):
         if flag_red_memb in {'auto', 'manual'}:
 
             if flag_decont_skip is True:
-                print ("  WARNING: decontamination algorithm skipped."
+                print ("  WARNING: decontamination algorithm skipped.\n"
                 "  Can't apply membership reduction.")
                 skip_reduce = True
 

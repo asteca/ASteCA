@@ -217,12 +217,13 @@ def pl_lum_func(gs, mag_data, y_ax, x_cl, y_cl, flag_area_stronger, x_fl,
     leg.get_frame().set_alpha(0.7)
 
 
-def pl_integ_mag(gs, integr_return, y_ax, x_ax0, flag_area_stronger, m_ord):
+def pl_integ_mag(gs, integr_return, y_ax, x_ax0, flag_area_stronger):
     '''
     Integrated magnitudes.
     '''
     if integr_return:
         # Unpack values.
+        m_ord = g.axes_params[3]
         cl_reg_mag1, fl_reg_mag1, integ_mag1, cl_reg_mag2, fl_reg_mag2, \
         integ_mag2 = integr_return
         # Make plot
