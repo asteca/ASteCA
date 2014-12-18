@@ -182,7 +182,7 @@ IM      true
 #   - auto: the code will compare 100/(regions-1) times the CMDs of the
 #     cluster and field regions.
 #   - manual: the 'num' parameter determines the number of times the CMDs of
-#     cluster and field regions are compared.
+#     cluster and field regions are compared. Minimum value is 2.
 #   - skip: skip test.
 #
 #       mode   num

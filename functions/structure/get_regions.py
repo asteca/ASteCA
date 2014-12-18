@@ -99,7 +99,7 @@ def get_regions(hist_lst, cent_bin, clust_rad, stars_out):
     total_area = len(hist_2d[0]) * len(hist_2d) * (bin_width ** 2)
     cl_area = np.pi * clust_rad ** 2
 
-    # Begin with a length factor of 2.5 and decrease it to 2.0 if the maximu
+    # Begin with a length factor of 2.5 and decrease it to 2.0 if the maximum
     # number of field regions that can be defined is smaller than 1.
     for l_factor in np.arange(2.5, 1.99, -0.1):
         # l_factor: Length of the side of the square that contains the cluster.
@@ -136,10 +136,11 @@ def get_regions(hist_lst, cent_bin, clust_rad, stars_out):
             print ("  WARNING: Number of FR defined ({}) larger than\n"
             "  the maximum allowed ({}). "
             "Using max number.").format(g.fr_number, f_regs_max)
-        elif g.fr_number < 0:
+        elif g.fr_number <= 0:
             f_regions = f_regs_max
             print ("  WARNING: Number of FR defined ({}) is less than\n"
-            "  zero. Using max number ({}).").format(g.fr_number, f_regs_max)
+            "  or equal to zero. Using max number ({}).").format(g.fr_number,
+            f_regs_max)
         else:
             print ("Using defined number of field regions ({}).".format(
                 g.fr_number))
@@ -197,7 +198,7 @@ def get_regions(hist_lst, cent_bin, clust_rad, stars_out):
 
         # If after removing the empty regions no regions are left, raise the
         # flag.
-        if not(field_regions):
+        if f_regions > 0 and not(field_regions):
             print ('  WARNING: no field regions left after removal of those\n' +
             '  with less than 4 stars.')
             flag_area_stronger = True

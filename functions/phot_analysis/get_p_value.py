@@ -86,7 +86,8 @@ def get_pval(cl_region, field_region, col1_data, mag_data, flag_area_stronger):
 
         # Set number of runs for the p_value algorithm with a maximum of
         # 100 if only one field region was used.
-        runs = int(100 / len(field_region)) if mode_pv == 'auto' else num_runs
+        runs = int(100 / len(field_region)) if mode_pv == 'auto' else \
+        max(2, num_runs)
 
         # The first list holds all the p_values obtained comparing the cluster
         # region with the field regions, the second one holds p_values for
