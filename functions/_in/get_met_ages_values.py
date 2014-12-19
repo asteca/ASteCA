@@ -23,7 +23,7 @@ def match_ranges(met_vals_all, met_files, age_vals_all, z_range, a_range):
     met_f_filter, met_values = [], []
     for i, met in enumerate(met_vals_all):
         # Store metallicity file only if it's inside the given range.
-        if np.isclose(z_range, met, atol=0.0001).any():
+        if np.isclose(z_range, met, atol=0.00001).any():
             met_f_filter.append(met_files[i])
             met_values.append(met)
 
