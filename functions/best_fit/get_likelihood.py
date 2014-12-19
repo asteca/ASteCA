@@ -5,8 +5,9 @@ Created on Fri Jan 17 17:21:58 2014
 @author: gabriel
 """
 
-from synth_cluster import synth_clust as s_c
 import numpy as np
+from synth_cluster import synth_clust as s_c
+from .._in import get_in_params as g
 
 
 def tolstoy(Q, obs_clust):
@@ -24,7 +25,7 @@ def tolstoy(Q, obs_clust):
 
         # Unpack observed cluster with squared errors and membership
         # probabilities separated into list.
-        P, mem_probs = obs_clust[1:]
+        P, mem_probs = obs_clust
 
         # Store synthetic clusters as array.
         #syn_arr = np.array(zip(*(zip(*obs_arr)[:-2])))  # Observed cluster.
@@ -105,9 +106,9 @@ def dolphin(Q, P):
     else:
 
         # Observed cluster's histogram.
-        cl_histo = P[1]
+        cl_histo = P[0]
         # Bin edges for each dimension.
-        b_rx, b_ry = P[2]
+        b_rx, b_ry = P[1]
 
         # Magnitude and color for the synthetic cluster.
         syn_mags_cols = np.array(zip(*[Q[0], Q[2]]))
@@ -159,7 +160,8 @@ def isoch_likelihood(err_lst, obs_clust, completeness, st_dist_mass, isochrone,
 
     # Call function to obtain the likelihood by comparing the synthetic cluster
     # with the observed cluster.
-    if obs_clust[0] == 'tolstoy':
+    lkl_method = g.bf_params[2]
+    if lkl_method == 'tolstoy':
         likelihood = tolstoy(synth_clust, obs_clust)
     else:
         likelihood = dolphin(synth_clust, obs_clust)

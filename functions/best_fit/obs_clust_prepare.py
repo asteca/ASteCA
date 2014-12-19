@@ -33,7 +33,7 @@ def prepare(memb_prob_avrg_sort):
         np.asarray(P[6])
 
         # Pass observed cluster data.
-        obs_clust = [lkl_method, np.hstack(P), mem_probs]
+        obs_clust = [np.hstack(P), mem_probs]
 
     else:
 
@@ -61,6 +61,6 @@ def prepare(memb_prob_avrg_sort):
             weights=np.asarray(P[6]))[0]
 
         # Pass observed cluster data.
-        obs_clust = [lkl_method, cl_histo, [b_rx, b_ry]]
+        obs_clust = [cl_histo, [b_rx, b_ry]]
 
     return obs_clust
