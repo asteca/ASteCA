@@ -30,18 +30,18 @@ def top_tiers_file(output_subdir, clust_name, best_model, top_tiers):
 #\n\
 # Best model\n\
 #\n\
-# Lkl             z   log(age)     dist    E(B-V)        M     b_fr\n\
-{:<10} {:>8} {:>10} {:>8} {:>9} {:>8} {:>8}\n\n\
+# Lkl               z   log(age)    d (kpc)     E(B-V)     M (Mo)       b_fr\n\
+{:<10} {:>10} {:>10} {:>10} {:>10} {:>10} {:>10}\n\n\
 # Top tiers\n\
 #\n\
-# Lkl             z   log(age)     dist    E(B-V)        M     b_fr\n".format(
-    *best_model))
+# Lkl               z   log(age)    d (kpc)     E(B-V)     M (Mo)       b_fr\n"
+    .format(*best_model))
     out_data_file.close()
 
     # Write values to file.
     with open(out_file_name, "a") as f_out:
         for mod in top_tiers:
-            f_out.write('''{:<10} {:>8} {:>10} {:>8} {:>9} {:>8} {:>8}'''
+            f_out.write('''{:<10} {:>10} {:>10} {:>10} {:>10} {:>10} {:>10}'''
             .format(*mod))
             f_out.write('\n')
 
@@ -78,7 +78,7 @@ def plot_top_tiers(top_tiers_flo, output_subdir, clust_name, mag_data, col_data,
 
     # Generate all plots.
     for n, args in enumerate(synth_cls, 1):
-        top_tiers_plot.pl_bf_synth_cl(n, *args)
+        top_tiers_plot.plot(n, *args)
 
     fig.tight_layout()
     # Generate output file for each data file.
@@ -134,7 +134,9 @@ def get_top_tiers(clust_name, output_subdir, mag_data, col_data, ip_list,
             # Create output .dat file.
             top_tiers_file(output_subdir, clust_name, best_model, top_tiers_str)
             # Create output image.
-            plot_top_tiers(top_tiers_flo, output_subdir, clust_name, mag_data,
-                col_data, ip_list, err_lst, completeness)
-
-            print 'Top tier models saved to file and plotted.'
+            try:
+                plot_top_tiers(top_tiers_flo, output_subdir, clust_name,
+                    mag_data, col_data, ip_list, err_lst, completeness)
+                print 'Top tier models saved to file and plotted.'
+            except:
+                print("  ERROR: top tiers plot could not be generated.")

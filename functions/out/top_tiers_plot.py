@@ -93,26 +93,21 @@ def pl_bf_synth_cl(N, gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax,
                 c='#4682b4', lw=0.5)
 
 
-#def plot(N, *args):
-    #'''
-    #Handle each plot separately.
-    #'''
+def plot(N, *args):
+    '''
+    Handle each plot separately.
+    '''
+    plt_map = dict.fromkeys([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [pl_bf_synth_cl,
+        'synthetic cluster top tier number'])
 
-    #plt_map = {
-        #1: [pl_phot_err, 'upper error rejection function'],
-        #2: [pl_phot_err, 'lower error rejection function'],
-        #3: [pl_fl_diag, 'field regions photometric diagram'],
-        #4: [pl_cl_diag, 'cluster region photometric diagram'],
-        #5: [pl_lum_func, 'luminosity function'],
-        #6: [pl_integ_mag, 'integrated magnitudes'],
-        #7: [pl_p_vals, 'KDE p-values distribution']
-    #}
+    fxn = plt_map.get(N, None)[0]
+    if fxn is None:
+        raise ValueError("  ERROR: there is no plot {}.".format(N))
 
-    #fxn = plt_map.get(N, None)[0]
-    #if fxn is None:
-        #raise ValueError("  ERROR: there is no plot {}.".format(N))
-
-    #try:
-        #fxn(*args)
-    #except:
-        #print("  WARNING: error when plotting {}.".format(plt_map.get(N)[1]))
+    try:
+        fxn(N, *args)
+    except:
+        print("  WARNING: error when plotting {} {}.".format(plt_map.get(N)[1],
+            N))
+        if not args[7].any():
+            print ("           (synthetic cluster is empty).")
