@@ -169,10 +169,8 @@ def get_regions(hist_lst, cent_bin, clust_rad, stars_out):
         # to each bin.
         h_manual = mh(stars_out, xedges, yedges)
 
-        # This ensures that the decontamination algorithm uses CMD's
-        # of areas equal to the cluster area for the field regions since
-        # only stars inside the cluster's radius are used to obtain
-        # the cluster's CMD.
+        # This ensures that the areas of the field regions are equal
+        # to the cluster area.
         num_bins_area = int(np.pi * ((clust_rad / bin_width) ** 2))
 
         for _ in range(f_regions):
