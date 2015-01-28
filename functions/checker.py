@@ -212,14 +212,14 @@ def check(mypath, cl_files):
             ['distance', d_rs], ['mass', mass_rs], ['binary', bin_rs]]
         if min(mass_rs[1]) == 0:
             global mass_rs
+            print("WARNING: minimum total mass is zero in input params file.")
             if 10 in mass_rs[1]:
-                print("WARNING: minimum total mass is zero in input parameters"
-                " file.\nRemoving zero value from array.\n")
+                print("Removing zero value from mass array.\n")
                 del mass_rs[1][mass_rs[1].index(0)]
             else:
-                print("WARNING: minimum total mass is zero in input parameters"
-                " file.\nChanged minimum mass to 10.\n")
+                print("Changed minimum mass to 10.\n")
                 mass_rs[1][mass_rs[1].index(min(mass_rs[1]))] = 10.
+
         for i, p in enumerate(par_ranges):
             # Catch empty list.
             if not p:
