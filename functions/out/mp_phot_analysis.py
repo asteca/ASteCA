@@ -223,7 +223,7 @@ def pl_integ_mag(gs, integr_return, y_ax, x_ax0, flag_area_stronger):
     '''
     if integr_return:
         # Unpack values.
-        m_ord = g.axes_params[3]
+        m_ord = g.axes_params[2]
         cl_reg_mag1, fl_reg_mag1, integ_mag1, cl_reg_mag2, fl_reg_mag2, \
         integ_mag2 = integr_return
         # Make plot
