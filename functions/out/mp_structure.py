@@ -28,31 +28,6 @@ def three_params(x, rt, cd, rc, bg):
         1 / np.sqrt(1 + (rt / rc) ** 2)) ** 2 + bg
 
 
-def pl_hist_g(gs, fig, x_name, y_name, cent_bin, clust_rad, bin_width, err_r,
-    coord, hist_2d_g):
-    '''
-    2D gaussian convolved histogram.
-    '''
-    bin_w_r = err_r.round_to_y(bin_width)
-
-    ax = plt.subplot(gs[0:2, 6:8])
-    plt.xlabel('{} (bins)'.format(x_name), fontsize=12)
-    plt.ylabel('{} (bins)'.format(y_name), fontsize=12)
-    ax.minorticks_on()
-    plt.axvline(x=cent_bin[0], linestyle='--', color='white')
-    plt.axhline(y=cent_bin[1], linestyle='--', color='white')
-    # Radius
-    circle = plt.Circle((cent_bin[0], cent_bin[1]), clust_rad / bin_width,
-        color='w', fill=False)
-    fig.gca().add_artist(circle)
-    # Add text boxs.
-    text = 'Bin $\simeq$ {0:g} {1}'.format(bin_w_r, coord)
-    ob = offsetbox.AnchoredText(text, loc=1, prop=dict(size=10))
-    ob.patch.set(boxstyle='square,pad=-0.2', alpha=0.85)
-    ax.add_artist(ob)
-    plt.imshow(hist_2d_g.transpose(), origin='lower')
-
-
 def pl_centers(gs, x_min, x_max, y_min, y_max, x_name, y_name, coord,
     approx_cents, bin_width, st_dev_lst):
     '''
@@ -108,6 +83,31 @@ def pl_centers(gs, x_min, x_max, y_min, y_max, x_name, y_name, coord,
     leg.get_frame().set_alpha(0.5)
 
 
+def pl_hist_g(gs, fig, x_name, y_name, cent_bin, clust_rad, bin_width, err_r,
+    coord, hist_2d_g):
+    '''
+    2D gaussian convolved histogram.
+    '''
+    bin_w_r = err_r.round_to_y(bin_width)
+
+    ax = plt.subplot(gs[0:2, 2:4])
+    plt.xlabel('{} (bins)'.format(x_name), fontsize=12)
+    plt.ylabel('{} (bins)'.format(y_name), fontsize=12)
+    ax.minorticks_on()
+    plt.axvline(x=cent_bin[0], linestyle='--', color='white')
+    plt.axhline(y=cent_bin[1], linestyle='--', color='white')
+    # Radius
+    circle = plt.Circle((cent_bin[0], cent_bin[1]), clust_rad / bin_width,
+        color='w', fill=False)
+    fig.gca().add_artist(circle)
+    # Add text boxs.
+    text = 'Bin $\simeq$ {0:g} {1}'.format(bin_w_r, coord)
+    ob = offsetbox.AnchoredText(text, loc=1, prop=dict(size=10))
+    ob.patch.set(boxstyle='square,pad=-0.2', alpha=0.85)
+    ax.add_artist(ob)
+    plt.imshow(hist_2d_g.transpose(), origin='lower')
+
+
 def pl_rad_dens(gs, radii, ring_density, field_dens, coord, clust_name,
     kp_params, clust_rad, e_rad, poisson_error, bin_width):
     '''
@@ -118,7 +118,7 @@ def pl_rad_dens(gs, radii, ring_density, field_dens, coord, clust_name,
     # King prof params.
     rc, e_rc, rt, e_rt, n_c_k, cd, flag_2pk_conver, flag_3pk_conver = kp_params
 
-    ax = plt.subplot(gs[0:2, 2:6])
+    ax = plt.subplot(gs[0:2, 4:8])
     # Get max and min values in x,y
     x_min, x_max = max(min(radii) - (max(radii) / 20.), 0), \
     max(radii) + (max(radii) / 20.)
@@ -138,7 +138,8 @@ def pl_rad_dens(gs, radii, ring_density, field_dens, coord, clust_name,
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
     # Cluster's name.
     text = str(clust_name)
-    plt.text(0.4, 0.9, text, transform=ax.transAxes, fontsize=14)
+    #plt.text(0.4, 0.9, text, transform=ax.transAxes, fontsize=14)
+    plt.title(text, fontsize=14)
     # Round radii values.
     rads_r, e_rads_r = err_r.round_sig_fig([rc, rt, clust_rad],
         [e_rc, e_rt, e_rad])
