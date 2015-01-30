@@ -13,7 +13,7 @@ def get_semi(clust_name):
     Get center, radius and flags for semi automatic mode.
     '''
 
-    # Define here as global so as to be able to change it if cluster is not
+    # Define as global so as to be able to change it if the cluster is not
     # found in semi_input.dat file.
     global mode
 
