@@ -71,6 +71,15 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
     x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd = prep_plots.diag_limits(y_axis,
         phot_x, phot_y)
     st_sizes_arr = prep_plots.star_size(mag_data)
+    # Separate stars in zoomed frame.
+    x_data_z, y_data_z, mag_data_z = [], [], []
+    for i, st_x in enumerate(x_data):
+        st_y, st_mag = y_data[i], mag_data[i]
+        if x_zmin <= st_x <= x_zmax and y_zmin <= st_y <= y_zmax:
+            x_data_z.append(st_x)
+            y_data_z.append(st_y)
+            mag_data_z.append(st_mag)
+    st_sizes_arr_z = prep_plots.star_size(mag_data_z)
 
     #
     # Structure plots.
@@ -85,7 +94,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
         [gs, radii, ring_density, field_dens, coord, clust_name, kp_params,
             clust_rad, e_rad, poisson_error, bin_width],
         [gs, fig, x_zmin, x_zmax, y_zmin, y_zmax, x_name, y_name, coord,
-            cont_index, kde_pl, x_data, y_data, st_sizes_arr, center_cl,
+            cont_index, kde_pl, x_data_z, y_data_z, st_sizes_arr_z, center_cl,
             clust_rad],
         [gs, fig, x_min, x_max, y_min, y_max, x_name, y_name, coord,
             center_cl, clust_rad, field_regions, cl_region, flag_area_stronger]
