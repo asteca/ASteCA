@@ -12,103 +12,132 @@ def main_rad_algor(rdp_params, field_dens, bin_width, coord):
     '''
     This function holds the main algorithm that returns a radius value.
     '''
-
+    # Unpack values.
     radii, rdp_points = rdp_params[:2]
-    # Find maximum density value and assume this is the central density.
-    # Do not use previous values.
-    max_dens_ind = np.argmax(rdp_points)
-    rdp_points_c, radii_c = rdp_points[max_dens_ind:], radii[max_dens_ind:]
-
-    # Assign a value to the number of points that should be found below
-    # the delta values around the field density to attain the 'stabilized'
-    # condition.
-    mode_r = g.cr_params[0]
-    if mode_r not in {'auto', 'manual'}:
-        print "  WARNING: CR mode is not valid. Default to 'auto'."
-        mode_r = 'auto'
-    # Set params.
-    if mode_r == 'manual':
-        # Read the value from input file.
-        n_left = int(g.cr_params[1])
-    elif mode_r == 'auto':
-        # Calculate the value automatically --> 25% of the points in the RDP
-        # (min 3 points)
-        n_left = max(int(round(len(radii_c) * 0.25)), 3)
-
-    # Fix to a minimum value of 4 to avoid conclict when '(n_left - i)'
-    # happens below.
-    n_left = max(n_left, 4)
-
-    # Delta step is fixed to 5%.
-    delta_step = 5
 
     # Difference between max RDP density value and the field density value.
-    delta_total = (max(rdp_points_c) - field_dens)
-
+    delta_total = (max(rdp_points) - field_dens)
     # If the difference between the max density value and the field density is
     # less than 3 times the value of the field density, raise a flag.
     flag_delta_total = False
     if delta_total < 3 * field_dens:
         flag_delta_total = True
 
-    # Initialize index_rad value.
-    index_rad = []
-    for i in range(4):
+    # Find maximum density value and assume this is the central density.
+    # Do not use previous values.
+    #max_dens_ind = np.argmax(rdp_points)
+    #rdp_points_c = rdp_points[max_dens_ind:]
+    #radii_c = radii[max_dens_ind:]
 
-        # Store value for delta_percentage --> 20, 15, 10, 5
-        delta_percentage = (4. - i) * delta_step / 100.
-        # % of difference between max density value and field density.
-        delta_field = delta_percentage * delta_total
+    # Interpolate extra RDP points between those calculated.
+    N = 100
+    t, xp = np.linspace(0, 1, N), np.linspace(0, 1, len(rdp_points))
+    # Store RDP interpolated values.
+    rdp_points_i = np.interp(t, xp, rdp_points)
+    radii_i = np.interp(t, xp, radii)
+    p_width = (max(radii) - min(radii)) / N
 
-        # Initialize density values counter for points that fall inside the
-        # range determined by the delta value around the field density.
-        in_delta_val, index_rad_i, dens_dist = 0, 0, 1.e10
+    #
+    # Core algorithm for radius finding.
+    #
+    # Store each point in the RDP as a bar of given area, given by:
+    # (height of the point - field density value) x (bin width).
+    rad_found = []
+    for smooth_param in np.arange(0.01, 0.091, 0.01):
 
-        # Iterate through all values of star density in the RDP.
-        for index, item in enumerate(rdp_points_c):
-
-            # Condition to iterate until at least n_left points below the
-            # (delta + field density) value are found.
-            if in_delta_val < (n_left - i):
-
-                # If the density value is closer than 'delta_field' to the
-                # field density value or lower --> add it.
-                if item <= delta_field + field_dens:
-                    # Augment value of counter.
-                    in_delta_val += 1
-                    # Store radius value closer to the field density.
-                    if abs(item - field_dens) < dens_dist:
-                        dens_dist = abs(item - field_dens)
-                        index_rad_i = index
-                # If the RDP point is outside the (delta + field density) range
-                # reset all values.
-                else:
-                    # Reset.
-                    in_delta_val, index_rad_i, dens_dist = 0, 0, 1.e10
-            # If enough RDP points have been found within the fiel density
-            # range, store the radius value closer to the field density value
-            # and break out of the for loop.
+        rdp_perc = []
+        for dens_rad in rdp_points_i:
+            if dens_rad < (field_dens + smooth_param * delta_total):
+                rdp_perc.append(0.)
             else:
-                index_rad.append(index_rad_i)
-                break
+                rdp_perc.append(max((dens_rad - field_dens) * p_width, 0.))
 
-    # Raise a flag if only two radius values were found under the 4 deltas.
+        # Sum all areas to obtain total RDP area.
+        tot_rdp_dens = sum(rdp_perc)
+
+        # Convert each area to the given percentage it represents in the total
+        # RDP area, and add each previous percentage value. This way we generate
+        # a list containing the *cummulative* RDP percentages.
+        perc_dens = [rdp_perc[0] / tot_rdp_dens]
+        for i, perc in enumerate(rdp_perc[1:]):
+            d_perc = perc / tot_rdp_dens
+            perc_dens.append(perc_dens[i] + d_perc)
+
+        from scipy.optimize import curve_fit
+        def fit_func(x, a, b):
+            return 1 - 1 / (a * (x ** b) + 1)
+        ab_p, ab_e = curve_fit(fit_func, np.asarray(radii_i) / max(radii_i),
+            np.asarray(perc_dens))
+
+        #with open('/media/rest/github/asteca/output/cc.dat', "a") as f_out:
+            #f_out.write(''' {:>15.2f}   {:>15.2f}'''.format(*ab_p))
+            #f_out.write('\n')
+
+        import bisect
+        cc_lim = [10, 50, 100, 200, 400, float("inf")]
+        perc_lim = [0.9, 0.92, 0.94, 0.96, 0.97, 1.]
+        indx_lim = bisect.bisect(cc_lim, ab_p[0])
+        print ab_p[0], indx_lim, perc_lim[indx_lim]
+
+        #rad_found = []
+        #for p in np.arange(0.89, perc_lim[indx_lim], 0.01):
+        #for p in np.arange(0.9, 0.99, 0.01):
+        #p = 1.0 - smooth_param
+        p = perc_lim[indx_lim]
+        i_9x = min(range(len(perc_dens)), key=lambda i: abs(perc_dens[i] - p))
+        slope = []
+        for i, r in enumerate(radii_i[:i_9x]):
+            slope.append((perc_dens[i] - p) / (r - radii_i[i_9x]))
+        rad_found.append(radii_i[slope.index(min(slope))])
+            #print p, radii_i[slope.index(min(slope))]
+            #plt.scatter(radii_i[:i_9x], slope)
+        #plt.show()
+
+    # Check mode.
+    mode_r = g.cr_params[0]
+    if mode_r not in {'auto', 'manual'}:
+        print "  WARNING: CR mode is not valid. Default to 'auto'."
+        mode_r = 'auto'
+
+    # Raise a flag if less than two radius values were found under all the
+    # n_deltas values.
     flag_delta, flag_not_stable = False, False
-    if len(index_rad) < 3:
+    #if len(index_rad) < 3:
+    if len(rad_found) < 3:
         flag_delta = True
 
-    rad_found = []
-    for ind in index_rad:
-        # Use the stored indexes to obtain the actual radius values.
-        rad_found.append(radii_c[ind])
+    #rad_found = []
+    #for ind in index_rad:
+        ## Use the stored indexes to obtain the actual radii values.
+        #rad_found.append(radii_i[ind])
+
     # If at least one radius value was found.
     if rad_found:
-        clust_rad, e_rad = np.mean(rad_found), max(np.std(rad_found), bin_width)
+
+        print rad_found
+        raw_input()
+        from scipy import stats
+        import warnings
+        clust_rad, _std = np.mean(rad_found), np.std(rad_found)
+        # Catch warning if stats fails to obtain confidence interval.
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            conf_int = stats.norm.interval(0.68, loc=clust_rad, scale=_std /
+                np.sqrt(len(rad_found)))
+        # If stats returns a confidence interval with a NaN, discard it.
+        if np.any(np.isnan(conf_int)):
+            conf_int = [0., 0.]
+        conf_dif = abs(clust_rad - max(conf_int))
+        e_rad = max(conf_dif, bin_width)
+        # Prevent too small radius by fixing the minimum value to the second
+        # RDP point.
+        if clust_rad < radii[1]:
+            clust_rad = radii[1]
     else:
         flag_not_stable = True
         # No radius value found. Assign radius value as the middle element
-        # in the radii list.
-        clust_rad, e_rad = radii_c[int(len(radii_c) / 2.)], 0.
+        # in the full radii list.
+        clust_rad, e_rad = radii_i[int(len(radii_i) / 2.)], 0.
         print '  WARNING: no radius found, setting value to: {:g} {}'.format(
             clust_rad, coord)
 

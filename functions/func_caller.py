@@ -56,6 +56,11 @@ def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
     memb_file_out, write_name = n_p(mypath, cl_file)
     print 'Analizing cluster {} ({}).'.format(clust_name, g.mode)
 
+    # TEMPORARY - DELETE
+    with open('/media/rest/github/asteca/output/cc.dat', 'a') as f_out:
+        f_out.write('''{:<10}'''.format(clust_name))
+    # TEMPORARY - DELETE
+
     # Get data from semi-data input file.
     semi_return = g_s(clust_name)
 
