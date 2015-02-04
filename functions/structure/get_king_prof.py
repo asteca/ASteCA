@@ -71,7 +71,7 @@ def get_king_profile(clust_rad, field_dens, radii, ring_density, coord_lst):
             if rt > rc * 100. or rt <= 0. or rc <= 0.:
                 # Raise flag to reject fit.
                 flag_3pk_conver = False
-        except RuntimeError:
+        except:
             flag_3pk_conver = False
 
         # If 3-P King profile converged, ie: the tidal radius was found,
@@ -102,7 +102,7 @@ def get_king_profile(clust_rad, field_dens, radii, ring_density, coord_lst):
                 else:
                     e_rc = -1.
                 flag_2pk_conver = True
-            except RuntimeError:
+            except:
                 flag_2pk_conver = False
                 # Pass dummy values
                 rc, e_rc, rt, e_rt, n_c_k, cd = -1., -1., -1., -1., -1., -1.
