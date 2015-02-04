@@ -16,7 +16,7 @@ def mag_completeness(mag_data):
     # Max value of magnitude.
     max_mag = max(mag_data)
     # Number of bins.
-    bins = int((max(mag_data) - min(mag_data)) / 0.1)
+    bins = int((max_mag - min(mag_data)) / 0.1)
     # Get histogram.
     mag_hist, bin_edges = np.histogram(mag_data, bins)
     # Index of the bin with the maximum number of stars.
