@@ -5,7 +5,26 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from display_rad import disp_rad as d_r
+from scipy.optimize import curve_fit
+from scipy import stats
+from scipy import integrate
+from scipy.optimize import fsolve
+import warnings
 from .._in import get_in_params as g
+
+
+def fit_func(x, a, b):
+    '''
+    Function to fit the cummulative RDP.
+    '''
+    return 1 - 1 / (a * (x ** b) + 1)
+
+
+def fit_func_diff(x, a, b, c):
+    '''
+    Derivative of the cummulative RDP, equal to c.
+    '''
+    return (a * b * x ** (b - 1)) / (a * x ** b + 1) ** 2 - c
 
 
 def main_rad_algor(rdp_params, field_dens, bin_width, coord):
@@ -30,77 +49,132 @@ def main_rad_algor(rdp_params, field_dens, bin_width, coord):
     #radii_c = radii[max_dens_ind:]
 
     # Interpolate extra RDP points between those calculated.
-    N = 100
+    N = 1000
     t, xp = np.linspace(0, 1, N), np.linspace(0, 1, len(rdp_points))
-    # Store RDP interpolated values.
+    # Store interpolated RDP values.
     rdp_points_i = np.interp(t, xp, rdp_points)
-    radii_i = np.interp(t, xp, radii)
+    # Store interpolated normalized radii values.
+    radii_i = np.interp(t, xp, radii) / max(radii)
     p_width = (max(radii) - min(radii)) / N
 
     #
     # Core algorithm for radius finding.
     #
-    # Store each point in the RDP as a bar of given area, given by:
-    # (height of the point - field density value) x (bin width).
+    #
     rad_found = []
-    for smooth_param in np.arange(0.01, 0.091, 0.01):
+    #for smooth_param in np.arange(0.01, 0.091, 0.01):
 
+    try:
+        # Store each point in the RDP as a bar of given area, given by:
+        # (height of the point - field density value) x delta_radius / N.
         rdp_perc = []
         for dens_rad in rdp_points_i:
-            if dens_rad < (field_dens + smooth_param * delta_total):
-                rdp_perc.append(0.)
-            else:
+            #if dens_rad < (field_dens + smooth_param * delta_total):
+                #rdp_perc.append(0.)
+            #else:
                 rdp_perc.append(max((dens_rad - field_dens) * p_width, 0.))
 
         # Sum all areas to obtain total RDP area.
         tot_rdp_dens = sum(rdp_perc)
 
-        # Convert each area to the given percentage it represents in the total
-        # RDP area, and add each previous percentage value. This way we generate
-        # a list containing the *cummulative* RDP percentages.
+        # Convert each area to the given percentage it represents in the
+        # total RDP area, and add each previous percentage value. This way
+        # we generate a list containing the *cummulative* RDP percentages.
         perc_dens = [rdp_perc[0] / tot_rdp_dens]
         for i, perc in enumerate(rdp_perc[1:]):
             d_perc = perc / tot_rdp_dens
             perc_dens.append(perc_dens[i] + d_perc)
 
-        from scipy.optimize import curve_fit
-        def fit_func(x, a, b):
-            return 1 - 1 / (a * (x ** b) + 1)
-        ab_p, ab_e = curve_fit(fit_func, np.asarray(radii_i) / max(radii_i),
+        # Obtain best fit params for the RDP cumulative function.
+        ab, ab_e = curve_fit(fit_func, np.asarray(radii_i),
             np.asarray(perc_dens))
 
-        #with open('/media/rest/github/asteca/output/cc.dat', "a") as f_out:
-            #f_out.write(''' {:>15.2f}   {:>15.2f}'''.format(*ab_p))
-            #f_out.write('\n')
+        with open('/media/rest/github/asteca/output/cc.dat', "a") as f_out:
+            f_out.write(''' {:>15.2f}   {:>15.2f}'''.format(*ab))
+            f_out.write('\n')
 
-        import bisect
-        cc_lim = [10, 50, 100, 200, 400, float("inf")]
-        perc_lim = [0.9, 0.92, 0.94, 0.96, 0.97, 1.]
-        indx_lim = bisect.bisect(cc_lim, ab_p[0])
-        print ab_p[0], indx_lim, perc_lim[indx_lim]
+        # Define ranges of slope values to use according to how concentrated
+        # the RDP cummulative function is. The concentration is defined
+        # loosely by the 'a' parameter in the RDP cummulative function
+        # (ie: the parameter that multiplies the radius)
+        # A low value of 'a' means a loose RDP and a high value means the
+        # cummulative RDP is concentrated.
+        sl_rang = [[0.25, 0.351], [0.35, 0.51], [0.5, 0.751], [0.75, 0.951],
+            [0.95, 0.991]]
+        if ab[0] < 5.:
+            i_s = 4
+        elif 5. <= ab[0] < 10.:
+            i_s = 3
+        elif 10. <= ab[0] < 100.:
+            i_s = 2
+        elif 100. <= ab[0] < 1000.:
+            i_s = 1
+        else:
+            i_s = 0
 
-        #rad_found = []
-        #for p in np.arange(0.89, perc_lim[indx_lim], 0.01):
-        #for p in np.arange(0.9, 0.99, 0.01):
-        #p = 1.0 - smooth_param
-        p = perc_lim[indx_lim]
-        i_9x = min(range(len(perc_dens)), key=lambda i: abs(perc_dens[i] - p))
-        slope = []
-        for i, r in enumerate(radii_i[:i_9x]):
-            slope.append((perc_dens[i] - p) / (r - radii_i[i_9x]))
-        rad_found.append(radii_i[slope.index(min(slope))])
-            #print p, radii_i[slope.index(min(slope))]
-            #plt.scatter(radii_i[:i_9x], slope)
-        #plt.show()
+        # Evaluate the derivative of the fitted function in slope=c.
+        # The larger the slope value used, the smaller the radius.
+        for c in np.arange(sl_rang[i_s][0], sl_rang[i_s][1], 0.01):
+            # Estimated aprox solution (initial guess for fsolve)
+            est = (ab[0] * c / ab[1]) ** (-1 / (ab[1] + 1))
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                rad_p = fsolve(fit_func_diff, est, (ab[0], ab[1], c))
+            #print rad_p, est
 
-    # Check mode.
-    mode_r = g.cr_params[0]
-    if mode_r not in {'auto', 'manual'}:
-        print "  WARNING: CR mode is not valid. Default to 'auto'."
-        mode_r = 'auto'
+            # Store radius value found.
+            rad_found.append(rad_p * max(radii))
 
-    # Raise a flag if less than two radius values were found under all the
-    # n_deltas values.
+        ## Integrate the fit_func using the fitted a & b values.
+        #integ_tot = integrate.quad(fit_func, 0., 1.,
+            #(ab_p[0], ab_p[1]))[0]
+
+        #for lim in np.arange(0.95, 0.991, 0.01):
+            ## Integrate the fit_func using the fitted a & b values.
+            #integ_result = integrate.quad(fit_func, 0., lim,
+                #(ab_p[0], ab_p[1]))[0] / integ_tot
+
+            #print smooth_param, ab_p, integ_result
+            ##plt.scatter(radii_i, perc_dens)
+            ##plt.show()
+
+            ## Find index of radius value closest to the integral value.
+            #idx_integ = min(range(len(perc_dens)),
+                #key=lambda i: abs(perc_dens[i] - integ_result))
+
+            ## Store radius value found.
+            #rad_found.append(radii_i[idx_integ] * max(radii))
+
+    except:
+        pass
+
+        #import bisect
+        #cc_lim = [10, 50, 100, 200, 400, float("inf")]
+        #perc_lim = [0.9, 0.92, 0.94, 0.96, 0.97, 1.]
+        #indx_lim = bisect.bisect(cc_lim, ab_p[0])
+        #print ab_p[0], indx_lim, perc_lim[indx_lim]
+
+        ##rad_found = []
+        ##for p in np.arange(0.89, perc_lim[indx_lim], 0.01):
+        ##for p in np.arange(0.9, 0.99, 0.01):
+        ##p = 1.0 - smooth_param
+        #p = perc_lim[indx_lim]
+        #i_9x = min(range(len(perc_dens)), key=lambda i: abs(perc_dens[i] - p))
+        #slope = []
+        #for i, r in enumerate(radii_i[:i_9x]):
+            #slope.append((perc_dens[i] - p) / (r - radii_i[i_9x]))
+        #rad_found.append(radii_i[slope.index(min(slope))])
+            ##print p, radii_i[slope.index(min(slope))]
+            ##plt.scatter(radii_i[:i_9x], slope)
+        ##plt.show()
+
+    ## Check mode.
+    #mode_r = g.cr_params[0]
+    #if mode_r not in {'auto', 'manual'}:
+        #print "  WARNING: CR mode is not valid. Default to 'auto'."
+        #mode_r = 'auto'
+
+    # Raise a flag if less than two radius values were found.
     flag_delta, flag_not_stable = False, False
     #if len(index_rad) < 3:
     if len(rad_found) < 3:
@@ -114,10 +188,6 @@ def main_rad_algor(rdp_params, field_dens, bin_width, coord):
     # If at least one radius value was found.
     if rad_found:
 
-        print rad_found
-        raw_input()
-        from scipy import stats
-        import warnings
         clust_rad, _std = np.mean(rad_found), np.std(rad_found)
         # Catch warning if stats fails to obtain confidence interval.
         with warnings.catch_warnings():
