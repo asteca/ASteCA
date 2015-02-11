@@ -8,7 +8,7 @@ from display_rad import disp_rad as d_r
 from scipy.optimize import curve_fit
 from scipy import stats
 from scipy import integrate
-from scipy.optimize import fsolve
+#from scipy.optimize import fsolve
 import warnings
 from .._in import get_in_params as g
 
@@ -20,14 +20,21 @@ def fit_func(x, a, b):
     return 1 - 1 / (a * (x ** b) + 1)
 
 
-def fit_func_diff(x, a, b, c):
+def fit_func_inv(y, a, b):
     '''
-    Derivative of the cummulative RDP, equal to c.
+    Inverted fit_func.
     '''
-    return (a * b * x ** (b - 1)) / (a * x ** b + 1) ** 2 - c
+    return ((1 / a) * ((1 / (1 - y)) - 1)) ** (1 / b)
 
 
-def main_rad_algor(rdp_params, field_dens, bin_width, coord):
+def fit_func_diff(x, a, b):
+    '''
+    Derivative of the cummulative RDP.
+    '''
+    return (a * b * x ** (b - 1)) / (a * x ** b + 1) ** 2
+
+
+def main_rad_algor(rdp_params, field_dens, bin_width, coord, semi_return):
     '''
     This function holds the main algorithm that returns a radius value.
     '''
@@ -62,14 +69,13 @@ def main_rad_algor(rdp_params, field_dens, bin_width, coord):
     #
     #
     rad_found = []
-    #for smooth_param in np.arange(0.01, 0.091, 0.01):
 
     try:
         # Store each point in the RDP as a bar of given area, given by:
         # (height of the point - field density value) x delta_radius / N.
         rdp_perc = []
         for dens_rad in rdp_points_i:
-            #if dens_rad < (field_dens + smooth_param * delta_total):
+            #if dens_rad < (field_dens + 0.1 * delta_total):
                 #rdp_perc.append(0.)
             #else:
                 rdp_perc.append(max((dens_rad - field_dens) * p_width, 0.))
@@ -88,55 +94,108 @@ def main_rad_algor(rdp_params, field_dens, bin_width, coord):
         # Obtain best fit params for the RDP cumulative function.
         ab, ab_e = curve_fit(fit_func, np.asarray(radii_i),
             np.asarray(perc_dens))
+        a, b = ab
 
-        with open('/media/rest/github/asteca/output/cc.dat', "a") as f_out:
-            f_out.write(''' {:>15.2f}   {:>15.2f}'''.format(*ab))
-            f_out.write('\n')
+        # Integrate the fit_func using the fitted a & b values.
+        integ_tot = integrate.quad(fit_func, 0., 1., (a, b))[0]
 
-        # Define ranges of slope values to use according to how concentrated
-        # the RDP cummulative function is. The concentration is defined
-        # loosely by the 'a' parameter in the RDP cummulative function
-        # (ie: the parameter that multiplies the radius)
+        # Obtain radii values for the following cummulative RDP values.
+        rdp_i = [0.1, 0.25, 0.5, 0.75]
+        r_i = []
+        for i in rdp_i:
+            r_i.append(fit_func_inv(i, a, b))
+
+        # Obtain average slope in the range between these radii.
+        diff_avrg = []
+        for i in range(len(rdp_i) - 1):
+            diff_ij = []
+            for j in np.linspace(r_i[i], r_i[i + 1], 10):
+                diff_ij.append(fit_func_diff(j, a, b))
+            # Get average.
+            diff_avrg.append(np.mean(diff_ij))
+        #slope_1_2 = (rdp_1 - rdp_2) / (r_1 - r_2)
+        print r_i
+        print diff_avrg
+        y = fit_func(radii_i, a, b)
+        plt.plot(radii_i, y)
+        plt.scatter(radii_i, perc_dens)
+        plt.show()
+
+        # The concentration of the cluster is defined loosely by the 'a'
+        # parameter in the RDP cummulative function.
         # A low value of 'a' means a loose RDP and a high value means the
         # cummulative RDP is concentrated.
-        sl_rang = [[0.25, 0.351], [0.35, 0.51], [0.5, 0.751], [0.75, 0.951],
-            [0.95, 0.991]]
-        if ab[0] < 5.:
-            i_s = 4
-        elif 5. <= ab[0] < 10.:
-            i_s = 3
-        elif 10. <= ab[0] < 100.:
-            i_s = 2
-        elif 100. <= ab[0] < 1000.:
-            i_s = 1
-        else:
-            i_s = 0
+        diff_0205 = fit_func_diff(0.2, a, b) / fit_func_diff(0.5, a, b)
+        if diff_0205 > 20.:  # Very concentrated cluster.
+            dens_lim, diff_lim, int_lim = 0.10, 0.25, 0.99
+        elif 15. < diff_0205 <= 20.:  # Somewhat concentrated cluster.
+            dens_lim, diff_lim, int_lim = 0.10, 0.50, 0.95
+        elif 10. < diff_0205 <= 15.:  # Somewhat concentrated cluster.
+            dens_lim, diff_lim, int_lim = 0.15, 0.75, 0.9
+        elif 5. < diff_0205 <= 10.:  # Not so concentrated cluster.
+            dens_lim, diff_lim, int_lim = 0.20, 1.00, 0.8
+        elif diff_0205 < 5.:  # Loose cluster.
+            dens_lim, diff_lim, int_lim = 0.25, 1.25, 0.7
 
-        # Evaluate the derivative of the fitted function in slope=c.
-        # The larger the slope value used, the smaller the radius.
-        for c in np.arange(sl_rang[i_s][0], sl_rang[i_s][1], 0.01):
-            # Estimated aprox solution (initial guess for fsolve)
-            est = (ab[0] * c / ab[1]) ** (-1 / (ab[1] + 1))
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                rad_p = fsolve(fit_func_diff, est, (ab[0], ab[1], c))
-            #print rad_p, est
+        # Iterate throught the RDP values, starting from the closest one
+        # to the cluster's center.
+        rad_lim = 50
+        for i, r in enumerate(radii_i):
 
-            # Store radius value found.
-            rad_found.append(rad_p * max(radii))
+            # Evaluate the derivative of the fitted function in 'r'.
+            r_diff = fit_func_diff(r, a, b)
 
+            # Evaluate the integral of the fitted function in 'r'.
+            r_inte = integrate.quad(fit_func, 0., r, (a, b))[0]
+
+            # Evaluate the RDP in 'r'.
+            r_dens = rdp_points_i[i]
+
+            #print r, r * max(radii), abs(r_dens - field_dens), r_diff, r-r_inte
+            if len(rad_found) > rad_lim:
+                break
+            # All conditions met.
+            elif abs(r_dens - field_dens) <= dens_lim * delta_total and\
+                r_diff < diff_lim and \
+                (r - r_inte) >= int_lim * (1 - integ_tot):
+                    rad_found.append(r * max(radii))
+                    break
+            # Conditions density and diff.
+            elif abs(r_dens - field_dens) <= dens_lim * delta_total and \
+                r_diff < diff_lim:
+                rad_found.append(r * max(radii))
+            # Conditions density and integral.
+            elif abs(r_dens - field_dens) <= dens_lim * delta_total and \
+                (r - r_inte) >= int_lim * (1 - integ_tot):
+                rad_found.append(r * max(radii))
+            # Conditions diff and integral.
+            elif r_diff < diff_lim and \
+                (r - r_inte) >= int_lim * (1 - integ_tot):
+                rad_found.append(r * max(radii))
+
+        #for c in np.arange(sl_rang[i_s][0], sl_rang[i_s][1], 0.01):
+            ## Estimated aprox solution (initial guess for fsolve)
+            #est = (ab[0] * c / ab[1]) ** (-1 / (ab[1] + 1))
+            #with warnings.catch_warnings():
+                #warnings.simplefilter("ignore")
+                #rad_p = fsolve(fit_func_diff, est, (ab[0], ab[1], c))
+            ##print rad_p, est
+
+            ## Store radius value found.
+            #rad_found.append(rad_p * max(radii))
+
+        ##
+        ##
         ## Integrate the fit_func using the fitted a & b values.
-        #integ_tot = integrate.quad(fit_func, 0., 1.,
-            #(ab_p[0], ab_p[1]))[0]
+        #integ_tot = integrate.quad(fit_func, 0., 1., (ab[0], ab[1]))[0]
 
-        #for lim in np.arange(0.95, 0.991, 0.01):
+        #int_res = [[], []]
+        #for lim in np.arange(0.05, 0.991, 0.01):
             ## Integrate the fit_func using the fitted a & b values.
             #integ_result = integrate.quad(fit_func, 0., lim,
-                #(ab_p[0], ab_p[1]))[0] / integ_tot
-
-            #print smooth_param, ab_p, integ_result
-            ##plt.scatter(radii_i, perc_dens)
-            ##plt.show()
+                #(ab[0], ab[1]))[0] / integ_tot
+            #int_res[0].append(lim)
+            #int_res[1].append(fit_func(lim, ab[0], ab[1]) / integ_result)
 
             ## Find index of radius value closest to the integral value.
             #idx_integ = min(range(len(perc_dens)),
@@ -144,6 +203,33 @@ def main_rad_algor(rdp_params, field_dens, bin_width, coord):
 
             ## Store radius value found.
             #rad_found.append(radii_i[idx_integ] * max(radii))
+
+        #rad_semi = semi_return[1] / max(radii)
+        #per_in_rad_semi = fit_func(rad_semi, ab[0], ab[1])
+        #rad_di = []
+        #integ_tot = integrate.quad(fit_func, 0., 1., (ab[0], ab[1]))[0]
+        #for p in [0.5, 0.9]:
+            #r_p = ((1 / ab[0]) * ((1 / (1 - p)) - 1)) ** (1 / ab[1])
+            ## Derivative and integral evaluated in several values.
+            #rad_di.append(fit_func_diff(r_p, ab[0], ab[1]))
+            ## Integral
+            #rad_di.append(integrate.quad(fit_func, 0., r_p,
+                #(ab[0], ab[1]))[0] / integ_tot)
+
+        #rad_di = []
+        #for p in [0.5, 0.9]:
+            #r_p = ((1 / ab[0]) * ((1 / (1 - p)) - 1)) ** (1 / ab[1])
+            ## Derivative and integral evaluated in several values.
+            #rad_di.append(fit_func_diff(r_p, ab[0], ab[1]))
+
+        #x = ((ab[0] / rad_di[0]) ** (1 / rad_di[1])) * ab[1]
+        #slope = (0.97 - 0.9) / (0. - 400.)
+        #for x_i in np.linspace((x - x * 0.1), (x + x * 0.1), 10):
+            #r_p = max(slope * x_i + 0.97, 0.2)
+            #rad = ((1 / ab[0]) * ((1 / (1 - r_p)) - 1)) ** (1 / ab[1]) * max(radii)
+            #print x, x_i, r_p, rad
+
+            #rad_found.append(rad)
 
     except:
         pass
@@ -203,11 +289,20 @@ def main_rad_algor(rdp_params, field_dens, bin_width, coord):
         # RDP point.
         if clust_rad < radii[1]:
             clust_rad = radii[1]
+
+        p_r = []
+        for r in [0.2, 0.5]:
+            p_r.append(fit_func_diff(r, a, b))
+        with open('/media/rest/github/asteca/output/cc.dat', "a") as f_out:
+            f_out.write(''' {:>10.2f} {:>10.2f} {:>10.2f} {:>10.2f} {:>10.2f} {:>10.2f}'''.format(
+                a, b, fit_func(0.1, a, b), p_r[0] / p_r[1], semi_return[1], clust_rad))
+            f_out.write('\n')
+
     else:
         flag_not_stable = True
         # No radius value found. Assign radius value as the middle element
         # in the full radii list.
-        clust_rad, e_rad = radii_i[int(len(radii_i) / 2.)], 0.
+        clust_rad, e_rad = radii_i[int(len(radii_i) / 2.)] * max(radii), 0.
         print '  WARNING: no radius found, setting value to: {:g} {}'.format(
             clust_rad, coord)
 
@@ -230,7 +325,7 @@ def get_clust_rad(phot_data, field_dens, center_params, rdp_params,
     coord = coord_lst[0]
     # Call function that holds the radius finding algorithm.
     clust_rad, e_rad, flag_delta_total, flag_not_stable, flag_delta = \
-    main_rad_algor(rdp_params, field_dens, bin_width, coord)
+    main_rad_algor(rdp_params, field_dens, bin_width, coord, semi_return)
 
     # Check if semi or manual mode are set.
     flag_radius_manual = False
