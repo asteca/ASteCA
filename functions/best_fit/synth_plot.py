@@ -17,16 +17,16 @@ def synth_clust_plot(mass_dist, isochrone, model, isoch_moved, isoch_cut,
 
     m, a, e, d, mass, bin_f = model
 
-    # figsize(x1, y1), GridSpec(y2, x2) --> To have square plots: x1/x2 =
-    # y1/y2 = 2.5
+     #figsize(x1, y1), GridSpec(y2, x2) --> To have square plots: x1/x2 =
+     #y1/y2 = 2.5
     fig = plt.figure(figsize=(10, 20))  # create the top-level container
     gs = gridspec.GridSpec(8, 4)  # create a GridSpec object
 
     ax1 = plt.subplot(gs[0:2, 0:2])
     ax1.set_title('Isochrone (interpolated)')
     ax1.invert_yaxis()
-    ax1.set_xlabel('$(B-V)_o$', fontsize=15)
-    ax1.set_ylabel('$M_{V}$', fontsize=15)
+    ax1.set_xlabel('$color_o$', fontsize=15)
+    ax1.set_ylabel('$M_{o}$', fontsize=15)
     ax1.minorticks_on()
     ax1.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
     text1 = '$z = %0.6f$' '\n' % m
