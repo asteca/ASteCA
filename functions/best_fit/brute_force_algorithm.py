@@ -34,6 +34,10 @@ def brute_force(err_lst, obs_clust, completeness, ip_list, st_d_bin_mr):
         # Iterate through all ages.
         for a_i, a in enumerate(a_lst):
 
+            ## Age-mass relation.
+            #age_mass = 10 ** (1.8 * a - 12.8)
+            #mass_lst = [age_mass]
+
             # Iterate through all extinction values.
             for e in e_lst:
 

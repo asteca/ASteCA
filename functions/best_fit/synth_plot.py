@@ -80,7 +80,7 @@ def synth_clust_plot(mass_dist, isochrone, model, isoch_moved, isoch_cut,
     plt.text(0.05, 0.92, 'd', transform=ax4.transAxes,
              bbox=dict(facecolor='white', alpha=0.5), fontsize=16)
     text1 = 'N=%d\n' % len(mass_dist)
-    text2 = '$M_T = {}\,M_{{\odot}}$\n'.format(mass)
+    text2 = '$M_T = {:.1f}\,M_{{\odot}}$\n'.format(mass)
     text3 = '$M = {:.1f}\,M_{{\odot}}$'.format(sum(mass_dist))
     text = text1 + text2 + text3
     plt.text(0.56, 0.8, text, transform=ax4.transAxes,
@@ -145,7 +145,7 @@ def synth_clust_plot(mass_dist, isochrone, model, isoch_moved, isoch_cut,
         ax8.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
         plt.text(0.05, 0.92, 'h', transform=ax8.transAxes,
                  bbox=dict(facecolor='white', alpha=0.5), fontsize=16)
-        plt.text(0.75, 0.92, 'N=%d' % len(isoch_error[0]),
+        plt.text(0.6, 0.92, 'N=%d' % len(isoch_error[0]),
             transform=ax8.transAxes, bbox=dict(facecolor='white', alpha=0.5),
             fontsize=14)
         ax8.scatter(isoch_error[0], isoch_error[2], marker='o', s=30,
@@ -155,8 +155,11 @@ def synth_clust_plot(mass_dist, isochrone, model, isoch_moved, isoch_cut,
         ax.set_xlabel('$color$', fontsize=15)
         ax.set_ylabel('$magnitude$', fontsize=15)
 
-    plt.show()
-    #fig.tight_layout()
-    #plt.savefig(path, dpi=300)
+    #plt.show()
+    fig.tight_layout()
+    plt.savefig(path, dpi=300)
+    # Close to release memory.
+    plt.clf()
+    plt.close()
     print 'Synthetic cluster plotted'
-    raw_input()
+    #raw_input()
