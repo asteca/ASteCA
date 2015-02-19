@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import time
 from os.path import join, realpath, dirname
 from os import getcwd
 import traceback
@@ -16,6 +17,9 @@ def main():
     print '-------------------------------------------'
     print '            ASteCA %s' % __version__
     print '-------------------------------------------\n'
+
+    # Start timing loop.
+    start = time.time()
 
     # Get path where the code is running
     mypath = realpath(join(getcwd(), dirname(__file__)))
@@ -54,7 +58,10 @@ def main():
                 *cl_file)
             print traceback.format_exc()
 
-    print 'Full iteration completed.'
+    # End of run.
+    elapsed = time.time() - start
+    m, s = divmod(elapsed, 60)
+    print 'Full iteration completed in {:.0f}m {:.0f}s.'.format(m, s)
 
 
 if __name__ == "__main__":
