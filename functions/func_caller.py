@@ -98,6 +98,10 @@ def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
         semi_return, bin_width, coord_lst)
     clust_rad = radius_params[0]
 
+    # TEMPORARY - DELETE
+    return
+    # TEMPORARY - DELETE
+
     # Get King profiles based on the density profiles.
     kp_params = gkp(clust_rad, field_dens, radii, ring_density, coord_lst)
 
