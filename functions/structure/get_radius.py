@@ -106,16 +106,20 @@ def main_rad_algor(rdp_params, field_dens, bin_width, coord):
     # If at least one radius value was found.
     if rad_found:
         # Use the median to avoid outliers.
-        clust_rad, _std = np.median(rad_found), np.std(rad_found)
+        clust_rad = np.median(rad_found)
+
+        # Obtain error as the 1 sigma confidence interval (68.27%).
+        _std = np.std(rad_found)
         # Catch warning if stats fails to obtain confidence interval.
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            conf_int = stats.norm.interval(0.68, loc=clust_rad, scale=_std /
+            conf_int = stats.norm.interval(0.6827, loc=clust_rad, scale=_std /
                 np.sqrt(len(rad_found)))
         # If stats returns a confidence interval with a NaN, discard it.
         if np.any(np.isnan(conf_int)):
-            conf_int = [0., 0.]
-        conf_dif = abs(clust_rad - max(conf_int))
+            conf_dif = 0.
+        else:
+            conf_dif = abs(clust_rad - max(conf_int))
         e_rad = max(conf_dif, bin_width)
         # Prevent too small radius by fixing the minimum value to the second
         # RDP point.
