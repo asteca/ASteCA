@@ -56,11 +56,6 @@ def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
     memb_file_out, write_name = n_p(mypath, cl_file)
     print 'Analizing cluster {} ({}).'.format(clust_name, g.mode)
 
-    # TEMPORARY - DELETE
-    with open('/media/rest/github/asteca/output/cc.dat', 'a') as f_out:
-        f_out.write('''{:<10}'''.format(clust_name))
-    # TEMPORARY - DELETE
-
     # Get data from semi-data input file.
     semi_return = g_s(clust_name)
 
@@ -97,10 +92,6 @@ def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
     radius_params = gcr(phot_data, field_dens, center_params, rdp_params,
         semi_return, bin_width, coord_lst)
     clust_rad = radius_params[0]
-
-    # TEMPORARY - DELETE
-    return
-    # TEMPORARY - DELETE
 
     # Get King profiles based on the density profiles.
     kp_params = gkp(clust_rad, field_dens, radii, ring_density, coord_lst)
