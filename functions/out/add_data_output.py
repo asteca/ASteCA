@@ -21,9 +21,9 @@ def flatten(l):
             yield el
 
 
-def add_data_output(out_file_name, write_name,
-    center_params, radius_params, kp_params, cont_index, n_c, prob_cl_kde,
-    integr_return, err_flags, flag_num_memb_low, bf_return):
+def add_data_output(out_file_name, write_name, center_params, radius_params,
+    kp_params, cont_index, n_c, frac_cl_area, prob_cl_kde, integr_return,
+    err_flags, flag_num_memb_low, bf_return):
     '''
     Add data obtained to the 'data_output.dat' file.
     '''

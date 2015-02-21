@@ -20,6 +20,7 @@ def get_dens_prof(hist_lst, cent_bin):
 
     hist_2d, bin_width = hist_lst[0], hist_lst[-1]
     x_c_b, y_c_b = cent_bin
+    print 'center', x_c_b, y_c_b
 
     # Initialize lists.
     radii, ring_density, poisson_error = [], [], []
@@ -27,12 +28,13 @@ def get_dens_prof(hist_lst, cent_bin):
     # Number of bins that define the length of the largest square ring
     # around the center coordinates.
     bins = int(min(len(hist_2d[0]), len(hist_2d[1])) * 0.75)
-    # Number of square rings.
+    # Number of "square rings" to generate.
     sq_rings = int(bins * 0.5)
 
-    bins_in_rings = []
-    # Iterate through all the "square rings".
+    square_rings = []
+    # Iterate through all the square rings.
     for i in range(sq_rings):
+        bins_coords = []
 
         # Initialize bin_count for this square ring.
         ring_count, bin_count = 0, 0
@@ -48,21 +50,25 @@ def get_dens_prof(hist_lst, cent_bin):
                     ring_count = ring_count + st_in_bin
                     # Add 1 more bin to the "square ring".
                     bin_count += 1
+                    bins_coords.append([xindex - x_c_b, i])
                 # Bin is in the bottom row
                 elif yindex == (y_c_b - i) and abs(xindex - x_c_b) <= i:
                     ring_count = ring_count + st_in_bin
                     bin_count += 1
+                    bins_coords.append([xindex - x_c_b, -i])
                 # Bin is in the left column
                 elif xindex == (x_c_b - i) and abs(yindex - y_c_b) <= (i - 1):
                     ring_count = ring_count + st_in_bin
                     bin_count += 1
+                    bins_coords.append([-i, yindex - y_c_b])
                 # Bin is in the right column
                 elif xindex == (x_c_b + i) and abs(yindex - y_c_b) <= (i - 1):
                     ring_count = ring_count + st_in_bin
                     bin_count += 1
+                    bins_coords.append([i, yindex - y_c_b])
 
-        # Store bin and star counts in each square ring.
-        bins_in_rings.append([bin_count, ring_count])
+        # Store bin coords in each square ring.
+        square_rings.append(bins_coords)
         # If no stars are inside this square ring, set value to 1 to avoid a
         # division by zero.
         bin_count = 1 if bin_count == 0 else bin_count
@@ -79,4 +85,4 @@ def get_dens_prof(hist_lst, cent_bin):
         # and stored in 'ring_density'
         radii.append(bin_width / 2. + (bin_width * i))
 
-    return radii, ring_density, poisson_error, bins_in_rings
+    return radii, ring_density, poisson_error, square_rings

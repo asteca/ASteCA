@@ -96,16 +96,6 @@ def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
     # Get King profiles based on the density profiles.
     kp_params = gkp(clust_rad, field_dens, radii, ring_density, coord_lst)
 
-    # Get approximate number of cluster's members.
-    n_memb, flag_num_memb_low, a_clust, n_clust = g_m_n(field_dens, clust_rad,
-        rdp_params, bin_width)
-    print ("Approximate number of members in cluster obtained "
-        "({:.0f}).".format(n_memb))
-
-    # Get contamination index.
-    cont_index = g_c_i(field_dens, a_clust, n_clust)
-    print 'Contamination index obtained ({:.2f}).'.format(cont_index)
-
     # Accept and reject stars based on their errors.
     acpt_stars, rjct_stars, err_plot, err_flags, err_pck = ear(phot_data,
         semi_return)
@@ -114,6 +104,19 @@ def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
     cl_region, stars_out, stars_in_rjct, stars_out_rjct = gio(kde_center,
         clust_rad, acpt_stars, rjct_stars)
     print "Stars separated in/out of cluster's boundaries."
+    # Number of stars inside the cluster region (including stars with rejected
+    # photometric errors)
+    n_clust = len(cl_region) + len(stars_in_rjct,)
+
+    # Get approximate number of cluster's members.
+    n_memb, frac_cl_area, flag_num_memb_low, a_clust, n_clust = g_m_n(n_clust,
+        field_dens, clust_rad, rdp_params, bin_width)
+    print ("Approximate number of members in cluster obtained "
+        "({:.0f}).".format(n_memb))
+
+    # Get contamination index.
+    cont_index = g_c_i(field_dens, a_clust, n_clust)
+    print 'Contamination index obtained ({:.2f}).'.format(cont_index)
 
     # Field regions around the cluster's center.
     flag_area_stronger, field_region = g_r(hist_lst, cent_bin, clust_rad,
@@ -163,8 +166,8 @@ def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
 
     # Add cluster data and flags to output file
     a_d_o(out_file_name, write_name, center_params, radius_params, kp_params,
-        cont_index, n_memb, pval_test_params[0], integr_return, err_flags,
-        flag_num_memb_low, bf_return)
+        cont_index, n_memb, frac_cl_area, pval_test_params[0], integr_return,
+        err_flags, flag_num_memb_low, bf_return)
     print 'Data added to output file.'
 
     # Output top tiers models if best fit parameters were obtained.
