@@ -56,6 +56,7 @@ def create_out_data_file(output_dir):
 #       background.\n\
 # memb_k: Approximate number of cluster's members obtained integrating the\n\
 #         fitted 3-P King profile (if it converged).\n\
+# a_f: Fraction of cluster's area that is present in frame.\n\
 # prob_cl: Statistical comparision of cluster vs field KDEs. It is obtained\n\
 #          as 1 minus the overlap area between the KDEs. If the KDEs are\n\
 #          very similar this value will be low indicating the overdensity is\n\
@@ -104,7 +105,7 @@ def create_out_data_file(output_dir):
 #    field, etc.\n\
 #\n\
 #NAME                 c_x      e_x      c_y      e_y     r_cl    e_rcl      \
-r_c     e_rc      r_t     e_rt       CI     memb  memb_k   prob_cl  \
+r_c     e_rc      r_t     e_rt       CI     memb   memb_k      a_f  prob_cl  \
 int_col      met      e_m      age      e_a   E(B-V)      e_E     dist      \
 e_d      M_i      e_M   bin_fr     e_bf      M1 M2  f1 f2 f3 f4 f5 f6 f7 f8 \
 f9  FC\n".format(__version__, now_time))

@@ -20,7 +20,6 @@ def get_dens_prof(hist_lst, cent_bin):
 
     hist_2d, bin_width = hist_lst[0], hist_lst[-1]
     x_c_b, y_c_b = cent_bin
-    print 'center', x_c_b, y_c_b
 
     # Initialize lists.
     radii, ring_density, poisson_error = [], [], []
@@ -34,6 +33,7 @@ def get_dens_prof(hist_lst, cent_bin):
     square_rings = []
     # Iterate through all the square rings.
     for i in range(sq_rings):
+        # Store here the coordinates of the bins.
         bins_coords = []
 
         # Initialize bin_count for this square ring.

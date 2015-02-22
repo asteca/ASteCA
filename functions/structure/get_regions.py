@@ -5,7 +5,6 @@ Created on Mon Jul 29 10:06:31 2013
 @author: gabriel
 """
 
-import numpy as np
 from .._in import get_in_params as g
 from get_spiral import spiral as gs
 from get_histo_manual import manual_histo as mh
@@ -83,7 +82,7 @@ def spiral_region(h_manual, sp_coords):
     return f_region
 
 
-def get_regions(hist_lst, cent_bin, clust_rad, stars_out):
+def get_regions(hist_lst, cent_bin, clust_rad, cl_area, stars_out):
     '''
     Define empty region around the cluster via a spiral centered on it
     and of area a bit larger than that defined by the cluster's radius.
@@ -97,23 +96,10 @@ def get_regions(hist_lst, cent_bin, clust_rad, stars_out):
 
     # Get area as total number of bins in 2D hist times the area of each bin.
     total_area = len(hist_2d[0]) * len(hist_2d) * (bin_width ** 2)
-    cl_area = np.pi * clust_rad ** 2
-
-    # Begin with a length factor of 2.5 and decrease it to 2.0 if the maximum
-    # number of field regions that can be defined is smaller than 1.
-    for l_factor in np.arange(2.5, 1.99, -0.1):
-        # l_factor: Length of the side of the square that contains the cluster.
-
-        # Increase length if the radius is comparable to the bin width used,
-        # to make sure the region covers the entire cluster.
-        length = l_factor if clust_rad > 2 * bin_width else (2. * l_factor)
-        # Area of the square around the cluster area.
-        sq_area = (length * clust_rad) ** 2.
-        # Maximum number of field regions possible.
-        f_regs_max = int((total_area - sq_area) / cl_area)
-
-        if f_regs_max > 0:
-            break
+    # Define empty area around the cluster region.
+    sq_area = 2. * cl_area
+    # Maximum number of field regions possible.
+    f_regs_max = int((total_area - sq_area) / cl_area)
 
     # If the remaining area in the frame after substracting the cluster region
     # is smaller than the cluster's area, this means that the cluster is either
@@ -150,14 +136,12 @@ def get_regions(hist_lst, cent_bin, clust_rad, stars_out):
     # stored as lists) starting from the initial bin [0, 0].
     spiral = gs()
 
-    # Obtain empty area around cluster region.
-    # Calculate number of bins such that their combined area is
-    # approximately (l*r)^2. See that: num_bins_area * width_bins[0]^2 =
-    # (l*r)^2.
-    num_bins_area = int(round(((length * clust_rad / bin_width) ** 2), 0))
+    # Calculate number of bins such that their combined area equals the
+    # larger area around the cluster defined above.
+    num_bins_area = int(round(sq_area / (bin_width ** 2), 0))
     # Obtain index of spiral bin where field regions should begin to be formed.
-    # no_lst is not important here.
-    sp_indx, no_lst = spiral_index(spiral, 0, hist_2d, x_c_b, y_c_b,
+    # dummy_lst is not important here.
+    sp_indx, dummy_lst = spiral_index(spiral, 0, hist_2d, x_c_b, y_c_b,
         num_bins_area)
 
     # Obtain field regions.
@@ -171,7 +155,7 @@ def get_regions(hist_lst, cent_bin, clust_rad, stars_out):
 
         # This ensures that the areas of the field regions are equal
         # to the cluster area.
-        num_bins_area = int(np.pi * ((clust_rad / bin_width) ** 2))
+        num_bins_area = int(cl_area / (bin_width ** 2))
 
         for _ in range(f_regions):
             # Retrieve spiral index where this field region should end and
@@ -193,6 +177,9 @@ def get_regions(hist_lst, cent_bin, clust_rad, stars_out):
         # Delete empty regions this way to avoid messing with the indexes.
         for index in sorted(field_regs_del, reverse=True):
             del field_regions[index]
+        if field_regs_del:
+            print ('  {} field regions with less than 4 stars each were'
+            ' removed.').format(len(field_regs_del))
 
         # If after removing the empty regions no regions are left, raise the
         # flag.

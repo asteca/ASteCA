@@ -14,6 +14,7 @@ from functions.structure.get_center import get_center as g_c
 from functions.structure.get_field_dens import field_dens as gfd
 from functions.structure.get_dens_prof import get_dens_prof as gdp
 from functions.structure.get_radius import get_clust_rad as gcr
+from functions.structure.get_cluster_area import get_cl_area as g_a
 from functions.structure.get_king_prof import get_king_profile as gkp
 from functions.structure.get_in_out import get_in_out as gio
 from functions.structure.get_regions import get_regions as g_r
@@ -108,19 +109,23 @@ def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
     # photometric errors)
     n_clust = len(cl_region) + len(stars_in_rjct,)
 
+    # Get cluster's area.
+    cl_area, frac_cl_area = g_a(kde_center, clust_rad, x_data, y_data,
+        rdp_params, bin_width)
+    print "Area of cluster obtained."
+
     # Get approximate number of cluster's members.
-    n_memb, frac_cl_area, flag_num_memb_low, a_clust, n_clust = g_m_n(n_clust,
-        field_dens, clust_rad, rdp_params, bin_width)
+    n_memb, flag_num_memb_low = g_m_n(n_clust, cl_area, field_dens)
     print ("Approximate number of members in cluster obtained "
         "({:.0f}).".format(n_memb))
 
     # Get contamination index.
-    cont_index = g_c_i(field_dens, a_clust, n_clust)
+    cont_index = g_c_i(field_dens, cl_area, n_clust)
     print 'Contamination index obtained ({:.2f}).'.format(cont_index)
 
     # Field regions around the cluster's center.
     flag_area_stronger, field_region = g_r(hist_lst, cent_bin, clust_rad,
-        stars_out)
+        cl_area, stars_out)
 
     # Get the luminosity function and completeness level for each magnitude
     # bin. The completeness will be used by the isochrone/synthetic cluster
