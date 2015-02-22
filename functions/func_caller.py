@@ -143,8 +143,8 @@ def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
         pval_test_params, flag_pval_test = g_pv(cl_region, field_region,
             col1_data, mag_data, flag_area_stronger)
     else:
-        print 'Skipping KDE p-value function.'
-        flag_pval_test, pval_test_params = False, [-1., [], [], [], [], [], []]
+        print 'Missing package. Skipping KDE p-value test for cluster.'
+        flag_pval_test, pval_test_params = False, [-1.]
 
     # Apply decontamination algorithm if at least one equal-sized field region
     # was found around the cluster.

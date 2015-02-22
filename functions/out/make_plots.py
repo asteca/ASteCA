@@ -118,7 +118,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
         [gs, mag_data, y_ax, x_cl, y_cl, flag_area_stronger, x_fl, y_fl,
             completeness],
         [gs, integr_return, y_ax, x_ax0, flag_area_stronger],
-        [gs, flag_pval_test, flag_area_stronger, pval_test_params]
+        [gs, flag_pval_test, pval_test_params]
         ]
     for n, args in enumerate(arglist, 1):
         mp_phot_analysis.plot(n, *args)

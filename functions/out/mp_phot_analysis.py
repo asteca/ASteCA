@@ -124,18 +124,19 @@ def pl_fl_diag(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
         stars_rjct_temp[1].append(star[3])
     plt.scatter(stars_rjct_temp[0], stars_rjct_temp[1], marker='x',
         c='teal', s=15, zorder=1)
-    # Plot stars within the field regions defined.
-    stars_acpt_temp = [[], []]
-    for fr in field_regions:
-        for star in fr:
-            stars_acpt_temp[0].append(star[5])
-            stars_acpt_temp[1].append(star[3])
-    plt.text(0.53, 0.93, '$r > r_{cl}\,|\,N=%d$' % len(stars_acpt_temp[0]),
-        transform=ax.transAxes, bbox=dict(facecolor='white', alpha=0.5),
-        fontsize=16)
-    sz_pt = phot_diag_st_size(len(stars_acpt_temp[0]))
-    plt.scatter(stars_acpt_temp[0], stars_acpt_temp[1], marker='o', c='b',
-                s=sz_pt, lw=0.3, zorder=2)
+    # Plot stars within the field regions defined, if at least one exists.
+    if field_regions:
+        stars_acpt_temp = [[], []]
+        for fr in field_regions:
+            for star in fr:
+                stars_acpt_temp[0].append(star[5])
+                stars_acpt_temp[1].append(star[3])
+        plt.text(0.53, 0.93, '$r > r_{cl}\,|\,N=%d$' % len(stars_acpt_temp[0]),
+            transform=ax.transAxes, bbox=dict(facecolor='white', alpha=0.5),
+            fontsize=16)
+        sz_pt = phot_diag_st_size(len(stars_acpt_temp[0]))
+        plt.scatter(stars_acpt_temp[0], stars_acpt_temp[1], marker='o', c='b',
+                    s=sz_pt, lw=0.3, zorder=2)
 
 
 def pl_cl_diag(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
@@ -282,11 +283,11 @@ def pl_integ_mag(gs, integr_return, y_ax, x_ax0, flag_area_stronger):
         leg.get_frame().set_alpha(0.75)
 
 
-def pl_p_vals(gs, flag_pval_test, flag_area_stronger, pval_test_params):
+def pl_p_vals(gs, flag_pval_test, pval_test_params):
     '''
     Distribution of KDE p_values.
     '''
-    if flag_pval_test and not flag_area_stronger:
+    if flag_pval_test:
         # Extract parameters from list.
         prob_cl_kde, p_vals_cl, p_vals_f, kde_cl_1d, kde_f_1d, x_kde, y_over\
         = pval_test_params

@@ -72,17 +72,31 @@ def get_pval(cl_region, field_region, col1_data, mag_data, flag_area_stronger):
     mode_pv, num_runs = g.pv_params
     flag_pval_test = True if mode_pv in {'auto', 'manual'} else False
 
-    # skip test if < 10 members are found within the cluster's radius.
+    # Skip test if < 10 members are found within the cluster's radius.
     flag_few_members = False if len(cl_region) > 10 else True
-    if flag_pval_test and flag_few_members:
-        print '  WARNING: < 10 stars in cluster region, skipping test.'
-        flag_pval_test = False
 
     # Check if test is to be applied or skipped. Check if field regions
     # where found.
-    if flag_pval_test and not flag_area_stronger:
+    if not flag_pval_test:
+        print 'Skipping KDE p-value test for cluster.'
+        # Pass empty lists and re-write flag.
+        flag_pval_test, pval_test_params = False, [-1.]
 
-        print 'Obtaining p_value for cluster region vs field regions.'
+    elif flag_pval_test and flag_area_stronger:
+        print 'No field regions. Skipping KDE p-value test for cluster.'
+        # Pass empty lists and re-write flag.
+        flag_pval_test, pval_test_params = False, [-1.]
+
+    elif flag_pval_test and flag_few_members:
+        print ('  WARNING: < 10 stars in cluster region.'
+            ' Skipping KDE p-value test.')
+        # Pass empty lists and re-write flag.
+        flag_pval_test, pval_test_params = False, [-1.]
+
+    # Run process.
+    elif flag_pval_test:
+
+        print 'Obtaining KDE p-value for cluster vs field regions.'
 
         # Set number of runs for the p_value algorithm with a maximum of
         # 100 if only one field region was used.
@@ -125,7 +139,7 @@ def get_pval(cl_region, field_region, col1_data, mag_data, flag_area_stronger):
                 # Compare the field region used above with all the remaining
                 # field regions. This results in [N*(N+1)/2] combinations of
                 # field vs field comparisions.
-                for f_region2 in field_region[indx:]:
+                for f_region2 in field_region[(indx + 1):]:
 
                     # CMD for 2nd field region.
                     matrix_f2 = get_CMD(f_region2)
@@ -164,6 +178,8 @@ def get_pval(cl_region, field_region, col1_data, mag_data, flag_area_stronger):
         kernel_f = stats.gaussian_kde(p_vals_f)
         # KDE for plotting.
         kde_f_1d = np.reshape(kernel_f(x_kde).T, x_kde.shape)
+        #print max(kde_cl_1d), max(kde_f_1d)
+        #raw_input()
 
         # Calculate overlap between the two KDEs.
         def y_pts(pt):
@@ -183,11 +199,5 @@ def get_pval(cl_region, field_region, col1_data, mag_data, flag_area_stronger):
 
         print 'Probability of physical cluster obtained ({:.2f}).'.format(
             prob_cl_kde)
-
-    # Skip process.
-    else:
-        print 'Skipping p-value test for cluster.'
-        # Pass empty lists to make_plots.
-        pval_test_params = [-1., [], [], [], [], [], []]
 
     return pval_test_params, flag_pval_test
