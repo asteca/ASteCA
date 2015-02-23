@@ -9,10 +9,59 @@ from os.path import join, isfile, isdir
 import sys
 import traceback
 from subprocess import Popen, PIPE
-import _in.get_in_params as g
-from _in.get_names_paths import names_paths as n_p
-import _in.get_isoch_params as isochp
-from _in.get_met_ages_values import get_m_a_vls
+
+
+def pack_check():
+    '''
+    Check if packages are installed.
+    '''
+    inst_packgs = pip.get_installed_distributions()
+    inst_packgs_lst = ["%s" % (i.key) for i in inst_packgs]
+    missing_pckg = []
+    for pckg in ['numpy', 'matplotlib', 'scipy', 'astroml', 'scikit-learn']:
+        if pckg not in inst_packgs_lst:
+            missing_pckg.append(pckg)
+
+    if missing_pckg:
+        print "ERROR: the following packages are missing:\n"
+        for p in missing_pckg:
+            print " - {}".format(p)
+        sys.exit("Install with: pip install <package>")
+
+    return inst_packgs_lst
+
+
+def R_check(inst_packgs_lst):
+    '''
+    Check if R and rpy2 are installed.
+    '''
+    rpy2_inst, R_inst = True, True
+    # Check if rpy2 package is installed.
+    if 'rpy2' not in inst_packgs_lst:
+        rpy2_inst = False
+    # Now check for R.
+    proc = Popen(["which", "R"], stdout=PIPE, stderr=PIPE)
+    exit_code = proc.wait()
+    if exit_code != 0:
+        R_inst = False
+
+    R_in_place = False
+    # If both R and rpy2 packages are installed.
+    if R_inst and rpy2_inst:
+        # R and rpy2 package are installed, function is good to go.
+        R_in_place = True
+    else:
+        if R_inst and not rpy2_inst:
+            R_pack = "'rpy2' is"
+        if rpy2_inst and not R_inst:
+            R_pack = "'R' is"
+        if not R_inst and not rpy2_inst:
+            R_pack = "'R' and 'rpy2' are"
+        # Something is not installed and function was told to run.
+        print ("  WARNING: {} not installed and the 'KDE p-value test'\n"
+        "   was set to run. The function will be skipped.\n".format(R_pack))
+
+    return R_in_place
 
 
 def check(mypath, cl_files):
@@ -23,19 +72,20 @@ def check(mypath, cl_files):
     on with the code.
     '''
 
+    # Check that all packages are installed.
+    inst_packgs_lst = pack_check()
+    # If all packages are installed, load them up.
+    import numpy as np
+    # Custom functions.
+    import _in.get_in_params as g
+    from _in.get_names_paths import names_paths as n_p
+    import _in.get_isoch_params as isochp
+    from _in.get_met_ages_values import get_m_a_vls
+
     # Check that at least one photometric cluster file exists.
     if not cl_files:
         sys.exit("No photometric data files found in '/input' folder."
         " Halting.")
-
-    # Check packages installed.
-    inst_packgs = pip.get_installed_distributions()
-    inst_packgs_lst = ["%s" % (i.key) for i in inst_packgs]
-    for pckg in ['numpy', 'matplotlib', 'scipy', 'astroml', 'scikit-learn']:
-        if pckg not in inst_packgs_lst:
-            print "ERROR: '{}' package is not installed.".format(pckg)
-            sys.exit("Install with: pip install {}".format(pckg))
-    import numpy as np
 
     # Check if params_input.dat file exists.
     if not isfile(join(mypath, 'params_input.dat')):
@@ -102,41 +152,16 @@ def check(mypath, cl_files):
         sys.exit("ERROR: missing parameters for error rejecting function")
 
     # Check KDE p-value custer probability function.
-    R_in_place = False
     if g.pv_params[0] not in {'auto', 'manual', 'skip'}:
         sys.exit("ERROR: Wrong name ('{}') for KDE p-value function "
             "'mode'.".format(g.pv_params[0]))
-
     elif g.pv_params[0] in {'auto', 'manual'}:
-
-        rpy2_inst, R_inst = True, True
-        # Check if rpy2 package is installed.
-        if 'rpy2' not in inst_packgs_lst:
-            rpy2_inst = False
-        # Now check for R.
-        proc = Popen(["which", "R"], stdout=PIPE, stderr=PIPE)
-        exit_code = proc.wait()
-        if exit_code != 0:
-            R_inst = False
-
-        # If both R and rpy2 packages are installed.
-        if R_inst and rpy2_inst:
-            # R and rpy2 package are installed, function is good to go.
-            R_in_place = True
-        else:
-            if R_inst and not rpy2_inst:
-                R_pack = 'rpy2 is'
-            if rpy2_inst and not R_inst:
-                R_pack = 'R is'
-            if not R_inst and not rpy2_inst:
-                R_pack = 'R and rpy2 are'
-            # Something is not installed and function was told to run.
-            print ("  WARNING: '{}' not installed and the\n"
-            "  'KDE p-value test' was set to run. The\n"
-            "  function will be skipped.\n".format(R_pack))
-    #else:
-    # Something is not installed, but function was told not to run so
-    # it will be skipped anyway.
+        # Check if R and rpy2 are installed.
+        R_in_place = R_check(inst_packgs_lst)
+    else:
+        # Function was told not to run so we don't care if R and/or rpy2 are
+        # installed since it will be skipped anyway.
+        pass
 
     # Check decont algorithm params.
     mode_da = g.da_params[0]
