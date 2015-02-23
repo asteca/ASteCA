@@ -1,3 +1,6 @@
+
+# http://stackoverflow.com/questions/15761756/rpy2-check-if-package-is-installed
+
 from rpy2.rinterface import RRuntimeError
 from rpy2.robjects.packages import importr
 utils = importr('utils')
