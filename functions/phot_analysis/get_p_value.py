@@ -175,13 +175,13 @@ def get_pval(cl_region, field_region, col1_data, mag_data, flag_area_stronger):
         kde_cl_1d = np.reshape(kernel_cl(x_kde).T, x_kde.shape)
 
         # Obtain the 1D KDE for the field regions vs field regions.
+        print p_vals_f
+        raw_input()
         p_vals_f = p_vals_f if p_vals_f else [-99., -99., -99.]
         kernel_f = stats.gaussian_kde(p_vals_f)
 
         # KDE for plotting.
         kde_f_1d = np.reshape(kernel_f(x_kde).T, x_kde.shape)
-        #print max(kde_cl_1d), max(kde_f_1d)
-        #raw_input()
 
         # Calculate overlap between the two KDEs.
         def y_pts(pt):
