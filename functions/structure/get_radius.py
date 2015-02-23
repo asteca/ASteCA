@@ -32,16 +32,15 @@ def main_rad_algor(rdp_params, field_dens, bin_width, coord):
     # the delta values around the field density to attain the 'stabilized'
     # condition.
     mode_r = g.cr_params[0]
-    if mode_r not in {'auto', 'manual'}:
-        print "  WARNING: CR mode is not valid. Default to 'auto'."
-        mode_r = 'auto'
-    # Set params.
-    if mode_r == 'manual':
-        # Read the value from input file.
-        n_left = int(g.cr_params[1])
-    elif mode_r == 'auto':
-        # Fix to x% of the total number of interpolated points in the RDP.
+    if mode_r == 'low':
+        # Fix to 5% of the total number of interpolated points in the RDP.
+        n_left = int(0.05 * N)
+    elif mode_r == 'mid':
+        # Fix to 10% of the total number of interpolated points in the RDP.
         n_left = int(0.1 * N)
+    elif mode_r == 'high':
+        # Fix to 20% of the total number of interpolated points in the RDP.
+        n_left = int(0.2 * N)
 
     # Difference between max RDP density value and the field density value.
     delta_total = (max(rdp_points_c) - field_dens)
@@ -57,7 +56,7 @@ def main_rad_algor(rdp_params, field_dens, bin_width, coord):
     for k, delta_percentage in enumerate(np.arange(0.2, 0.1, -0.01)):
         # The 'k' param relaxes the condition that requires a certain number of
         # points to be located below the 'delta_field + field_dens' value
-        # to establish the RDP has stabilized.
+        # to establish that the RDP has stabilized.
         # The smaller the value of 'delta_field', the fewer the number of
         # consecutive points that are required.
 
@@ -72,8 +71,8 @@ def main_rad_algor(rdp_params, field_dens, bin_width, coord):
         # Iterate through all values of star density in the RDP.
         for index, dens in enumerate(rdp_points_c):
 
-            # Condition to iterate until at least n_left points below the
-            # (delta + field density) value are found.
+            # Condition to iterate until at least in_delta_val *consecutive*
+            # points below the (delta + field density) value are found.
             if in_delta_val < (n_left - (4 * k)):
 
                 # If the density value is closer than 'delta_field' to the

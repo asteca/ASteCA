@@ -105,19 +105,19 @@ MF       false   /path/to/folder
 #    mode   bin_width
 CH   auto         20.
 
-# Radius function parameters.
+
+# Radius assignment function.
 #
-# * mode: auto / manual
-#   - auto: the 'points' parameter will set as 25% of the total number of
-#     points in the radial density profile.
-#   - manual: the value in 'points' will be used.
+# * mode: low / mid / high. This parameter determines how aggressively
+#   the algorithm assigns the radius for the cluster.
+#   - low: will favor smaller radii. Useful when the cluster region is
+#     very contaminated, to prevent artificially large radii.
+#   - mid: (default) balanced option.
+#   - high: will favor larger radii. Useful when all possible members
+#     must be present.
 #
-# * points: Number of points that must be found below a minimum delta around
-#   the background value. This condition indicates that the star density
-#   has stabilized. The 'auto' value is 25% of the points in the RDP.
-#
-#    mode   points
-CR   auto        5
+#    mode
+CR   mid
 
 # King profile function.
 #

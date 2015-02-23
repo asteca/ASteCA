@@ -203,7 +203,8 @@ def pl_lum_func(gs, mag_data, y_ax, x_cl, y_cl, flag_area_stronger, x_fl,
         plt.step(x_cl, y_cl - y_fl, where='post', color='g', lw=1.7,
             label='$LF_{cl}$', zorder=4)
     # Force y axis min to 0.
-    plt.ylim(0., plt.ylim()[1])
+    max_y = max(max(y_cl), max(y_fl))
+    plt.ylim(0., max_y + 0.05 * max_y)
     # Completeness maximum value.
     # completeness = [max_mag, bin_edges, max_indx, comp_perc]
     bin_edges, max_indx = completeness[1], completeness[2]

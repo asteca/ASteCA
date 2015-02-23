@@ -53,7 +53,7 @@ def check(mypath, cl_files):
 
     # Check mode.
     if g.mode not in {'auto', 'semi', 'manual'}:
-        sys.exit("ERROR: 'mode' value selected ({}) is not valid.".format(
+        sys.exit("ERROR: 'mode' value selected ('{}') is not valid.".format(
             g.mode))
 
     if g.mode == 'semi':
@@ -66,7 +66,7 @@ def check(mypath, cl_files):
 
     # Check px/deg.
     if g.gd_params[-1] not in {'px', 'deg'}:
-        sys.exit("ERROR: the coordinates given in the input file ({})"
+        sys.exit("ERROR: the coordinates given in the input file ('{}')"
                 " are incorrect.".format(g.gd_params[-1]))
 
     # Selected CMD.
@@ -77,25 +77,22 @@ def check(mypath, cl_files):
     # Output figure.
     if g.pl_params[0] is True:
         if g.pl_params[1] not in {'png', 'pdf', 'PNG', 'PDF'}:
-            sys.exit("ERROR: figure output format selected ({}) is"
+            sys.exit("ERROR: figure output format selected ('{}') is"
             "not valid.".format(g.pl_params[1]))
 
     # 2D positional histogram.
     if g.gh_params[0] not in {'auto', 'manual'}:
-        sys.exit("ERROR: mode selected ({}) for 2D histogram"
+        sys.exit("ERROR: mode selected ('{}') for 2D histogram"
         "is not valid.".format(g.gh_params[0]))
 
     # Radius finding function.
-    if g.cr_params[0] not in {'auto', 'manual'}:
-        sys.exit("ERROR: mode selected ({}) for radius finding"
+    if g.cr_params[0] not in {'low', 'mid', 'high'}:
+        sys.exit("ERROR: mode selected ('{}') for radius finding"
         "function is not valid.".format(g.cr_params[0]))
-    if g.cr_params[0] is 'manual' and g.cr_params[1] < 4:
-        print ("  WARNING: number of points in manual radius\n"
-        "  mode is {} < 4. A value of 4 will be used.".format(g.cr_params[1]))
 
     # Errors function.
     if g.er_params[0] not in {'emax', 'lowexp', 'eyefit'}:
-        sys.exit("ERROR: mode selected ({}) for error rejecting"
+        sys.exit("ERROR: mode selected ('{}') for error rejecting"
         "function is not valid.".format(g.er_params[0]))
     if g.er_params[0] == 'emax' and len(g.er_params[1:]) < 1:
         sys.exit("ERROR: missing parameters for error rejecting function")
@@ -107,7 +104,7 @@ def check(mypath, cl_files):
     # Check KDE p-value custer probability function.
     R_in_place = False
     if g.pv_params[0] not in {'auto', 'manual', 'skip'}:
-        sys.exit("ERROR: Wrong name ({}) for KDE p-value function "
+        sys.exit("ERROR: Wrong name ('{}') for KDE p-value function "
             "'mode'.".format(g.pv_params[0]))
 
     elif g.pv_params[0] in {'auto', 'manual'}:
@@ -134,7 +131,7 @@ def check(mypath, cl_files):
             if not R_inst and not rpy2_inst:
                 R_pack = 'R and rpy2 are'
             # Something is not installed and function was told to run.
-            print ("  WARNING: {} not installed and the\n"
+            print ("  WARNING: '{}' not installed and the\n"
             "  'KDE p-value test' was set to run. The\n"
             "  function will be skipped.\n".format(R_pack))
     #else:
@@ -145,7 +142,7 @@ def check(mypath, cl_files):
     mode_da = g.da_params[0]
     # Check if 'mode' was correctly set.
     if mode_da not in ['auto', 'manual', 'read', 'skip']:
-        sys.exit("ERROR: Wrong name ({}) for decontamination algorithm "
+        sys.exit("ERROR: Wrong name ('{}') for decontamination algorithm "
             "'mode'.".format(mode_da))
 
     if mode_da == 'read':

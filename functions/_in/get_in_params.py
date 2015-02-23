@@ -82,8 +82,7 @@ def init(mypath):
                     gh_params0 = str(reader[1])
                     gh_params1 = float(reader[2])
                 elif reader[0] == 'CR':
-                    cr_params0 = str(reader[1])
-                    cr_params1 = float(reader[2])
+                    cr_params = str(reader[1])
                 elif reader[0] == 'KP':
                     kp_flag = True if reader[1] in true_lst else False
                 elif reader[0] == 'GR':
@@ -153,7 +152,7 @@ def init(mypath):
     # Pack params in lists.
     pl_params = [flag_make_plot, plot_frmt, plot_dpi]
     gh_params = [gh_params0, gh_params1]
-    cr_params = [cr_params0, cr_params1]
+    cr_params = [cr_params]
     pv_params = [pv0_params, pv1_params]
     da_params = [da0_params, da1_params]
 
