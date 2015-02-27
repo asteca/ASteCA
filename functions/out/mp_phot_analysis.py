@@ -202,8 +202,11 @@ def pl_lum_func(gs, mag_data, y_ax, x_cl, y_cl, flag_area_stronger, x_fl,
         # Cluster region LF - average field regions LF.
         plt.step(x_cl, y_cl - y_fl, where='post', color='g', lw=1.7,
             label='$LF_{cl}$', zorder=4)
-    # Force y axis min to 0.
-    max_y = max(max(y_cl), max(y_fl))
+        # Force y axis min to 0.
+        max_y = max(max(y_cl), max(y_fl))
+    else:
+        # Force y axis min to 0.
+        max_y = max(y_cl)
     plt.ylim(0., max_y + 0.05 * max_y)
     # Completeness maximum value.
     # completeness = [max_mag, bin_edges, max_indx, comp_perc]
