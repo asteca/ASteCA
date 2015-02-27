@@ -9,6 +9,9 @@ from os.path import join, isfile, isdir
 import sys
 import traceback
 from subprocess import Popen, PIPE
+from rpy2.rinterface import RRuntimeError
+from rpy2.robjects.packages import importr
+utils = importr('utils')
 
 
 def pack_check():
@@ -31,6 +34,18 @@ def pack_check():
     return inst_packgs_lst
 
 
+def R_inst_packages():
+    '''
+    Check installed packages inside R.
+    '''
+    try:
+        pack_lst = utils.installed_packages()
+        rpack = list(pack_lst.rx(True, 1))
+    except RRuntimeError:
+        rpack = []
+    return rpack
+
+
 def R_check(inst_packgs_lst):
     '''
     Check if R and rpy2 are installed.
@@ -48,8 +63,23 @@ def R_check(inst_packgs_lst):
     R_in_place = False
     # If both R and rpy2 packages are installed.
     if R_inst and rpy2_inst:
-        # R and rpy2 package are installed, function is good to go.
-        R_in_place = True
+        # Check if all needed packages within R are installed.
+        needed_packg = ['ks', 'rgl', 'mvtnorm', 'misc3d']
+        rpack = R_inst_packages()
+        missing_pckg = []
+        for pck in needed_packg:
+            if pck not in rpack:
+                missing_pckg.append(pck)
+
+        if not missing_pckg:
+            # R, rpy2 and all packages are installed, function is good to go.
+            R_in_place = True
+        else:
+            # A package is missing in R.
+            print ("  WARNING: the following packages are missing in R:\n")
+            for p in missing_pckg:
+                print " - {}".format(p)
+            print ("\n  The 'KDE p-value test' function will be skipped.\n")
     else:
         if R_inst and not rpy2_inst:
             R_pack = "'rpy2' is"
