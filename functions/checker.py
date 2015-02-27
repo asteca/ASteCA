@@ -259,11 +259,11 @@ def check(mypath, cl_files):
                 " valid input.".format(iso_select))
 
         # Check that no parameter range is empty.
+        global mass_rs
         m_rs, a_rs, e_rs, d_rs, mass_rs, bin_rs = par_ranges
         p_names = [['metallicity', m_rs], ['age', a_rs], ['extinction', e_rs],
             ['distance', d_rs], ['mass', mass_rs], ['binary', bin_rs]]
         if min(mass_rs[1]) == 0:
-            global mass_rs
             print("WARNING: minimum total mass is zero in input params file.")
             if 10 in mass_rs[1]:
                 print("Removing zero value from mass array.\n")
