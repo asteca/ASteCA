@@ -124,9 +124,10 @@ def get_regions(hist_lst, cent_bin, clust_rad, cl_area, stars_out):
             "Using max number.").format(g.fr_number, f_regs_max)
         elif g.fr_number <= 0:
             f_regions = f_regs_max
-            print ("  WARNING: Number of FR defined ({}) is less than\n"
-            "  or equal to zero. Using max number ({}).").format(g.fr_number,
-            f_regs_max)
+            print ("  WARNING: Number of FR ({}) is less than or equal\n"
+            "  zero. No field region will be defined.").format(
+                g.fr_number)
+            flag_area_stronger = True
         else:
             print ("Using defined number of field regions ({}).".format(
                 g.fr_number))
