@@ -174,30 +174,34 @@ def get_pval(cl_region, field_region, col1_data, mag_data, flag_area_stronger):
         # KDE for plotting.
         kde_cl_1d = np.reshape(kernel_cl(x_kde).T, x_kde.shape)
 
-        # Obtain the 1D KDE for the field regions vs field regions.
-        print p_vals_f
-        raw_input()
-        p_vals_f = p_vals_f if p_vals_f else [-99., -99., -99.]
-        kernel_f = stats.gaussian_kde(p_vals_f)
+        # Check if field regions were compared among each other.
+        if p_vals_f:
+            # Obtain the 1D KDE for the field regions vs field regions.
+            kernel_f = stats.gaussian_kde(p_vals_f)
 
-        # KDE for plotting.
-        kde_f_1d = np.reshape(kernel_f(x_kde).T, x_kde.shape)
+            # KDE for plotting.
+            kde_f_1d = np.reshape(kernel_f(x_kde).T, x_kde.shape)
 
-        # Calculate overlap between the two KDEs.
-        def y_pts(pt):
-            y_pt = min(kernel_cl(pt), kernel_f(pt))
-            return y_pt
+            # Calculate overlap between the two KDEs.
+            def y_pts(pt):
+                y_pt = min(kernel_cl(pt), kernel_f(pt))
+                return y_pt
 
-        overlap = quad(y_pts, -1., 2.)
-        # Store y values for plotting the overlap filled.
-        y_over = [float(y_pts(x_pt)) for x_pt in x_kde]
+            overlap = quad(y_pts, -1., 2.)
+            # Store y values for plotting the overlap filled.
+            y_over = [float(y_pts(x_pt)) for x_pt in x_kde]
 
-        # Probability value for the cluster.
-        prob_cl_kde = 1 - overlap[0]
+            # Probability value for the cluster.
+            prob_cl_kde = 1 - overlap[0]
+        else:
+            # If not, assign probability as 1 minus the average of the cluster
+            # vs the single field region used.
+            prob_cl_kde = 1. - np.mean(p_vals_cl)
+            # Pass empty lists for plotting.
+            kde_f_1d, y_over = [], []
 
         # Store all return params in a single list.
-        pval_test_params = [prob_cl_kde, p_vals_cl, p_vals_f, kde_cl_1d,
-            kde_f_1d, x_kde, y_over]
+        pval_test_params = [prob_cl_kde, kde_cl_1d, kde_f_1d, x_kde, y_over]
 
         print 'Probability of physical cluster obtained ({:.2f}).'.format(
             prob_cl_kde)
