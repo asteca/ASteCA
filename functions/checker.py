@@ -191,7 +191,7 @@ def check(mypath, cl_files):
     else:
         # Function was told not to run so we don't care if R and/or rpy2 are
         # installed since it will be skipped anyway.
-        pass
+        R_in_place = True
 
     # Check decont algorithm params.
     mode_da = g.da_params[0]
