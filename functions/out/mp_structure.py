@@ -279,9 +279,22 @@ def pl_zoom_frame(gs, fig, x_zmin, x_zmax, y_zmin, y_zmax, x_name, y_name,
     # Plot contour levels if it was obtained.
     if kde_pl:
         ext_range, x, y, k_pos = kde_pl
+        # Number of countour lines depends on how large the plotted area is
+        # compared with the area where the posotional KDE was obtained.
+        frac_xy = (x_zmax - x_zmin) / (ext_range[1] - ext_range[0])
+        if frac_xy > 2.:
+            c_lines = 10
+        elif 1. < frac_xy <= 2.:
+            c_lines = 15
+        elif 0.5 < frac_xy <= 1.:
+            c_lines = 20
+        elif 0.2 < frac_xy <= 0.5:
+            c_lines = 25
+        elif frac_xy <= 0.2:
+            c_lines = 30
         kde = np.reshape(k_pos.T, x.shape)
         plt.imshow(np.rot90(kde), cmap=plt.cm.YlOrBr, extent=ext_range)
-        plt.contour(x, y, kde, 10, colors='b', linewidths=0.6)
+        plt.contour(x, y, kde, c_lines, colors='b', linewidths=0.6)
     # Plot stars.
     plt.scatter(x_data, y_data, marker='o', c='black', s=st_sizes_arr,
         zorder=1)

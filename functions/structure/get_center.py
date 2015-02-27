@@ -44,7 +44,7 @@ def kde_center(x_data, y_data, approx_cent, radius):
     # Unpack approximate center values.
     x_cent_pix, y_cent_pix = approx_cent[0]
 
-    # Generate zoom around approx center value to spped things up.
+    # Generate zoom around approx center value to speed things up.
     xmin_z, xmax_z = x_cent_pix - radius, x_cent_pix + radius
     ymin_z, ymax_z = y_cent_pix - radius, y_cent_pix + radius
     # Use reduced region around the center.
@@ -120,9 +120,9 @@ def get_center(x_data, y_data, mag_data, hist_lst, semi_return, coord_lst):
     hist, xedges, yedges, bin_width = hist_lst
 
     # This is the radius used in auto and manual mode to restrict the search
-    # of the KDE center coordinates.
+    # of the KDE center coordinates to a smaller area (to improve performance).
     x_span, y_span = max(x_data) - min(x_data), max(y_data) - min(y_data)
-    radius = 0.25 * min(x_span, y_span)
+    radius = 0.5 * min(x_span, y_span)
 
     mode_semi = True
     if g.mode == 'semi':
