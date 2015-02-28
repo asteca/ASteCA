@@ -16,7 +16,7 @@ def reject_outliers(data, m=6.5):
     '''
     d = np.abs(data - np.median(data))
     mdev = np.median(d)
-    s = d / mdev if mdev else 0.
+    s = d / mdev if mdev else np.asarray([0. for _ in d])
     return data[s < m]
 
 
