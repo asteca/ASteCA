@@ -122,7 +122,7 @@ def get_center(x_data, y_data, mag_data, hist_lst, semi_return, coord_lst):
     # This is the radius used in auto and manual mode to restrict the search
     # of the KDE center coordinates to a smaller area (to improve performance).
     x_span, y_span = max(x_data) - min(x_data), max(y_data) - min(y_data)
-    radius = 0.5 * min(x_span, y_span)
+    radius = 0.25 * min(x_span, y_span)
 
     mode_semi = True
     if g.mode == 'semi':
