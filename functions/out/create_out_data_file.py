@@ -83,7 +83,7 @@ def create_out_data_file(output_dir):
 #    using several standard deviation smoothing values) is more than 10%% \n\
 #    away from the central position assigned.\n\
 # f2 (flag_center_std): The standard deviation for either center coordinate\n\
-#    is larger than 10%% of the coordinate's value.\n\
+#    is larger than 10% of the coordinate's value.\n\
 # f3 (flag_delta_total): The background value is smaller than a third of the\n\
 #    maximum radial density value.\n\
 # f4 (flag_not_stable): Not enough points found stabilized around the\n\
