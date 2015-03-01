@@ -286,7 +286,7 @@ FB              0.7      0.      1.      0.2
 #    'prob_min' parameter (0, 1).
 #
 #    mode           prob_min
-RM   auto              0.75
+RM   auto                0.5
 
 # Genetic Algorithm parameters.
 #
