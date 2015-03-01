@@ -45,9 +45,11 @@ def get_in_out(center_cl, clust_rad, acpt_stars, rjct_stars):
             cl_region_rjct.append(star)
 
     # Catch empty cluster region.
-    if not cl_region:
-        print ("\nERROR: no stars left in cluster region after removal\n"
-        "of stars with high photometric errors.")
+    if len(cl_region) <= 1:
+        print ("\nERROR: one or none stars left in cluster region after the\n"
+        "removal of stars with high photometric errors.")
         raise ValueError('Empty cluster region.')
+    elif 1 < len(cl_region) < 10:
+        print ("  WARNING: less than 10 stars present in cluster region.")
 
     return cl_region, stars_out, cl_region_rjct, stars_out_rjct
