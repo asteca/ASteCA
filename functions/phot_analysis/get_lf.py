@@ -73,8 +73,8 @@ def lf(flag_area_stronger, mag_data, cl_region, field_regions):
         y_fl = np.concatenate((np.array([0.]), (lf_field / len(field_regions)),
             np.array([0.])))
     else:
-        print '  WARNING: no field regions defined. Luminosity function'
-        print '  is not cleaned from field star contamination.'
+        print ("  WARNING: no field regions defined. Luminosity function\n"
+        "  is not cleaned from field star contamination.")
         # Pass dummy lists.
         x_fl, y_fl = [], []
 
