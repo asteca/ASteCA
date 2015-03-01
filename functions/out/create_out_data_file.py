@@ -48,6 +48,7 @@ def create_out_data_file(output_dir):
 # e_rc: Core radius error.\n\
 # r_t: Tidal radius (3-P King profile).\n\
 # e_rt: Tidal radius error.\n\
+# kcp: King's profile concentration parameter.\n\
 #\n\
 # CI: 'Contamination index' is a  measure of the contamination of field\n\
 #      stars in the cluster region. The closer to 1, the more contaminated \n\
@@ -105,10 +106,10 @@ def create_out_data_file(output_dir):
 #    field, etc.\n\
 #\n\
 #NAME                 c_x      e_x      c_y      e_y     r_cl    e_rcl      \
-r_c     e_rc      r_t     e_rt       CI     memb   memb_k      a_f  prob_cl  \
-int_col      met      e_m      age      e_a   E(B-V)      e_E     dist      \
-e_d      M_i      e_M   bin_fr     e_bf      M1 M2  f1 f2 f3 f4 f5 f6 f7 f8 \
-f9  FC\n".format(__version__, now_time))
+r_c     e_rc      r_t     e_rt      kcp       CI     memb   memb_k      \
+a_f  prob_cl  int_col      met      e_m      age      e_a   E(B-V)      \
+e_E     dist      e_d      M_i      e_M   bin_fr     e_bf      M1 M2  \
+f1 f2 f3 f4 f5 f6 f7 f8 f9  FC\n".format(__version__, now_time))
         out_data_file.close()
 
     return out_file_name

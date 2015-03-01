@@ -102,7 +102,8 @@ def pl_rad_dens(gs, radii, ring_density, field_dens, coord, clust_name,
     bin_w_r = err_r.round_to_y(bin_width)
 
     # King prof params.
-    rc, e_rc, rt, e_rt, n_c_k, cd, flag_2pk_conver, flag_3pk_conver = kp_params
+    rc, e_rc, rt, e_rt, n_c_k, kcp, cd, flag_2pk_conver, flag_3pk_conver = \
+    kp_params
 
     ax = plt.subplot(gs[0:2, 4:8])
     # Get max and min values in x,y
@@ -197,7 +198,8 @@ def pl_full_frame(gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max,
     x,y finding chart of full frame
     '''
     # King prof params.
-    rc, e_rc, rt, e_rt, n_c_k, cd, flag_2pk_conver, flag_3pk_conver = kp_params
+    rc, e_rc, rt, e_rt, n_c_k, kcp, cd, flag_2pk_conver, flag_3pk_conver = \
+    kp_params
 
     ax = plt.subplot(gs[0:2, 8:10])
     #Set plot limits

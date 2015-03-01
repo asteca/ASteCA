@@ -23,6 +23,9 @@ def get_king_profile(clust_rad, field_dens, radii, ring_density, coord_lst):
     # attempted.
     flag_2pk_conver, flag_3pk_conver = False, False
 
+    # Initial dummy values
+    rc, e_rc, rt, e_rt, n_c_k, kcp, cd = -1., -1., -1., -1., -1., -1., -1.
+
     # Check flag to run or skip.
     if g.kp_flag:
 
@@ -63,18 +66,20 @@ def get_king_profile(clust_rad, field_dens, radii, ring_density, coord_lst):
 
         # If 3-P King profile converged, ie: the tidal radius was found,
         # calculate approximate number of cluster members with eq (3) from
-        # Froebrich et al. (2007); 374, 399-408
+        # Froebrich et al. (2007); 374, 399-408 and the concentration parameter.
         if flag_3pk_conver:
             print 'Tidal radius obtained: {:g} {}.'.format(rt, coord)
             # Obtain approximate number of members.
             x = 1 + (rt / rc) ** 2
             n_c_k = int(round((np.pi * cd * rc ** 2) * (np.log(x) -
             4 + (4 * np.sqrt(x) + (x - 1)) / x)))
+            # Obtain concentration parameter.
+            kcp = np.log10(rt / rc)
         else:
             # If 3-param King fit did not converge.
             print '  WARNING: tidal radius could not be obtained.'
             # If 3-P King profile did not converge, pass dummy values
-            rt, e_rt, n_c_k = -1., -1., -1.
+            rt, e_rt, n_c_k, kcp = -1., -1., -1., -1.
 
             # Fit a 2P King profile first to obtain the maximum central
             # density and core radius.
@@ -93,18 +98,16 @@ def get_king_profile(clust_rad, field_dens, radii, ring_density, coord_lst):
             except:
                 flag_2pk_conver = False
                 # Pass dummy values
-                rc, e_rc, rt, e_rt, n_c_k, cd = -1., -1., -1., -1., -1., -1.
+                rc, e_rc, cd = -1., -1., -1.
 
             # If 2-param converged to zero or negative core radius.
             if rc <= 0:
                 flag_2pk_conver = False
                 # Pass dummy values
-                rc, e_rc, rt, e_rt, n_c_k, cd = -1., -1., -1., -1., -1., -1.
+                rc, e_rc, rt, e_rt, n_c_k, kcp, cd = -1., -1., -1., -1., -1., \
+                -1., -1.
 
             if flag_2pk_conver is False:
                 print '  WARNING: core radius could not be obtained.'
-    else:
-        # Pass dummy values
-        rc, e_rc, rt, e_rt, n_c_k, cd = -1., -1., -1., -1., -1., -1.
 
-    return rc, e_rc, rt, e_rt, n_c_k, cd, flag_2pk_conver, flag_3pk_conver
+    return rc, e_rc, rt, e_rt, n_c_k, kcp, cd, flag_2pk_conver, flag_3pk_conver

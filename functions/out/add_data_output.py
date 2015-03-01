@@ -34,12 +34,12 @@ def add_data_output(out_file_name, write_name, center_params, radius_params,
     clust_rad, e_rad = radius_params[:2]
     flag_delta_total, flag_not_stable, flag_delta, flag_radius_manual = \
     radius_params[-4:]
-    rc, e_rc, rt, e_rt, n_c_k = kp_params[:5]
-    err_all_fallback, err_max_fallback = err_flags
+    rc, e_rc, rt, e_rt, n_c_k, kcp = kp_params[:6]
     # Unpack KP flags.
     flag_2pk_conver, flag_3pk_conver = kp_params[-2:]
     # Invert flag.
     flag_3pk_no_conver = not flag_3pk_conver
+    err_all_fallback, err_max_fallback = err_flags
 
     # Construct integrated color.
     m_ord = g.axes_params[2]
@@ -82,7 +82,7 @@ def add_data_output(out_file_name, write_name, center_params, radius_params,
     cpe_r = [item for t in zip(cp_r, cp_e) for item in t]
 
     # Store all parameter values in list.
-    line = [write_name, cre_r, cont_index, n_memb, n_c_k, frac_cl_area,
+    line = [write_name, cre_r, kcp, cont_index, n_memb, n_c_k, frac_cl_area,
         prob_cl_kde, integ_col, cpe_r]
     # Flatten list.
     line_f = list(flatten(line))
@@ -90,7 +90,7 @@ def add_data_output(out_file_name, write_name, center_params, radius_params,
     # Write values to file.
     with open(out_file_name, "a") as f_out:
         f_out.write('''{:<16} {:>8} {:>8} {:>8} {:>8} {:>8} \
-{:>8} {:>8} {:>8} {:>8} {:>8} \
+{:>8} {:>8} {:>8} {:>8} {:>8} {:>8.2f} \
 {:>8.2f} {:>8.0f} {:>8.0f} {:>8.2f} {:>8.2f} {:>8.2f} \
 {:>8} {:>8} {:>8} {:>8} \
 {:>8} {:>8} {:>8} {:>8} \
