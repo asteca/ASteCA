@@ -107,8 +107,8 @@ def err_accpt_rejct(phot_data, semi_return):
                     acpt_indx, rjct_indx, err_plot = e_a_r_ef(mag, e_mag,
                         e_col1, err_pck)
             except RuntimeError:
-                print ("  WARNING: {} function could not be fitted. Falling"
-                "  back to e_max function.".format(er_mode))
+                print ("  WARNING: {} function could not be fitted.\n"
+                "  Falling back to e_max function.".format(er_mode))
                 # Call function to reject stars with errors > e_max.
                 acpt_indx, rjct_indx, err_plot = e_a_r_m(e_mag, e_col1)
                 err_max_fallback = True
@@ -120,12 +120,12 @@ def err_accpt_rejct(phot_data, semi_return):
             err_max_fallback = True
 
             if acpt_indx:
-                print ("  WARNING: No stars accepted based on their errors."
+                print ("  WARNING: No stars accepted based on their errors.\n"
                 "  Using all stars with errors < {}".format(e_max))
 
             # If there's still no accepted stars, use all.
             else:
-                print ("  WARNING: No stars accepted based on their errors."
+                print ("  WARNING: No stars accepted based on their errors.\n"
                 "  Using all stars.")
                 # Store all indexes.
                 acpt_indx, rjct_indx = [i for i in range(len(mag))], []
@@ -133,7 +133,7 @@ def err_accpt_rejct(phot_data, semi_return):
 
         # If the method used was e_max, use all stars.
         elif not acpt_indx and er_mode == 'emax':
-            print ("  WARNING: No stars accepted based on their errors."
+            print ("  WARNING: No stars accepted based on their errors.\n"
             "  Using all stars.")
             # Store all indexes.
             acpt_indx, rjct_indx = [i for i in range(len(mag))], []
@@ -189,7 +189,7 @@ def err_accpt_rejct(phot_data, semi_return):
                     print 'Wrong input. Try again.\n'
                 else:
                     if len(acpt_indx) == 0:
-                        print  ('No stars left after error rejection. Try'
+                        print  ('No stars left after error rejection.\nTry'
                         ' again with a different method or use all stars (4).')
                     else:
                         wrong_answer = False
