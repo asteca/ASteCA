@@ -11,23 +11,7 @@ import matplotlib.offsetbox as offsetbox
 from itertools import cycle
 from matplotlib.patches import Rectangle
 from ..errors import error_round as err_r
-
-
-def two_params(x, cd, rc, fd):
-    '''
-    Two parameters King profile fit.
-    '''
-    rc = 0.0001 if rc < 0.0001 else rc
-    return fd + cd / (1 + (np.asarray(x) / rc) ** 2)
-
-
-def three_params(x, rt, cd, rc, fd):
-    '''
-    Three parameters King profile fit.
-    '''
-    rc = 0.0001 if rc < 0.0001 else rc
-    return cd * (1 / np.sqrt(1 + (np.asarray(x) / rc) ** 2) -
-        1 / np.sqrt(1 + (rt / rc) ** 2)) ** 2 + fd
+from ..structure import king_prof_funcs as kpf
 
 
 def pl_centers(gs, x_min, x_max, y_min, y_max, x_name, y_name, coord,
@@ -174,23 +158,23 @@ def pl_rad_dens(gs, radii, ring_density, field_dens, coord, clust_name,
     # Plot 3-P King profile.
     if flag_3pk_conver:
         # Plot curve.
-        ax.plot(radii, three_params(radii, rt, cd, rc, field_dens), 'g--',
+        ax.plot(radii, kpf.three_params(radii, rt, cd, rc, field_dens), 'g--',
             label=texts[2], lw=2., zorder=3)
         # Plot r_t radius as an arrow. vline is there to show the label.
         ax.vlines(x=rt, ymin=0., ymax=0., label=texts[4], color='g')
         ax.arrow(rt, arr_y_up, 0., arr_y_dwn, fc="g", ec="g",
                   head_width=head_w, head_length=head_l, zorder=5)
         # Plot r_c as a dashed line.
-        ax.vlines(x=rc, ymin=0, ymax=three_params(rc, rt, cd, rc,
+        ax.vlines(x=rc, ymin=0, ymax=kpf.three_params(rc, rt, cd, rc,
         field_dens), label=texts[3], color='g', linestyles=':', lw=4.,
             zorder=4)
     # Plot 2-P King profile if 3-P was not found.
     elif flag_2pk_conver:
         # Plot curve.
-        ax.plot(radii, two_params(radii, cd, rc, field_dens), 'g--',
+        ax.plot(radii, kpf.two_params(radii, cd, rc, field_dens), 'g--',
             label=texts[2], lw=2., zorder=3)
         # Plot r_c as a dashed line.
-        ax.vlines(x=rc, ymin=0, ymax=two_params(rc, cd, rc, field_dens),
+        ax.vlines(x=rc, ymin=0, ymax=kpf.two_params(rc, cd, rc, field_dens),
             label=texts[3], color='g', linestyles=':', lw=4., zorder=4)
     # Plot radius.
     ax.vlines(x=clust_rad, ymin=0, ymax=0., label=texts[5], color='r')

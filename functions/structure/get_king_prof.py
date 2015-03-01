@@ -7,22 +7,8 @@ Created on Fri Oct 25 10:54:00 2013
 
 import numpy as np
 from scipy.optimize import curve_fit
+import king_prof_funcs as kpf
 from .._in import get_in_params as g
-
-
-def two_params(x, cd, rc, fd):
-    '''
-    Two parameters King profile fit.
-    '''
-    return fd + cd / (1 + (np.asarray(x) / rc) ** 2)
-
-
-def three_params(x, rt, cd, rc, fd):
-    '''
-    Three parameters King profile fit.
-    '''
-    return cd * (1 / np.sqrt(1 + (np.asarray(x) / rc) ** 2) -
-        1 / np.sqrt(1 + (rt / rc) ** 2)) ** 2 + fd
 
 
 def get_king_profile(clust_rad, field_dens, radii, ring_density, coord_lst):
@@ -57,7 +43,7 @@ def get_king_profile(clust_rad, field_dens, radii, ring_density, coord_lst):
         # Attempt to fit a 3-P King profile with the background value fixed.
         try:
             popt, pcov = curve_fit(lambda x, cd, rc,
-                rt: three_params(x, rt, cd, rc, fd), radii_k, ring_dens_k,
+                rt: kpf.three_params(x, rt, cd, rc, fd), radii_k, ring_dens_k,
                 guess3)
 
             # Unpack tidal radius and its error.
@@ -94,7 +80,8 @@ def get_king_profile(clust_rad, field_dens, radii, ring_density, coord_lst):
             # density and core radius.
             try:
                 popt, pcov = curve_fit(lambda x, cd,
-                    rc: two_params(x, cd, rc, fd), radii_k, ring_dens_k, guess2)
+                    rc: kpf.two_params(x, cd, rc, fd), radii_k, ring_dens_k,
+                    guess2)
                 # Unpack max density and core radius.
                 cd, rc = popt
                 # Obtain error in core radius.
