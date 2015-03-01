@@ -44,4 +44,10 @@ def get_in_out(center_cl, clust_rad, acpt_stars, rjct_stars):
             # Star is inside the cluster's radius limit.
             cl_region_rjct.append(star)
 
+    # Catch empty cluster region.
+    if not cl_region:
+        print ("\nERROR: no stars left in cluster region after removal\n"
+        "of stars with high photometric errors.")
+        raise ValueError('Empty cluster region.')
+
     return cl_region, stars_out, cl_region_rjct, stars_out_rjct
