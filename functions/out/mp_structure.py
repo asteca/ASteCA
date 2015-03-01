@@ -13,19 +13,21 @@ from matplotlib.patches import Rectangle
 from ..errors import error_round as err_r
 
 
-def two_params(x, cd, rc, bg):
+def two_params(x, cd, rc, fd):
     '''
     Two parameters King profile fit.
     '''
-    return bg + cd / (1 + (np.asarray(x) / rc) ** 2)
+    rc = 0.0001 if rc < 0.0001 else rc
+    return fd + cd / (1 + (np.asarray(x) / rc) ** 2)
 
 
-def three_params(x, rt, cd, rc, bg):
+def three_params(x, rt, cd, rc, fd):
     '''
     Three parameters King profile fit.
     '''
+    rc = 0.0001 if rc < 0.0001 else rc
     return cd * (1 / np.sqrt(1 + (np.asarray(x) / rc) ** 2) -
-        1 / np.sqrt(1 + (rt / rc) ** 2)) ** 2 + bg
+        1 / np.sqrt(1 + (rt / rc) ** 2)) ** 2 + fd
 
 
 def pl_centers(gs, x_min, x_max, y_min, y_max, x_name, y_name, coord,
@@ -170,7 +172,7 @@ def pl_rad_dens(gs, radii, ring_density, field_dens, coord, clust_name,
     # Length of arrow.
     arr_y_dwn = -1. * abs(arr_y_up - field_dens) * 0.76
     # Plot 3-P King profile.
-    if flag_3pk_conver is True:
+    if flag_3pk_conver:
         # Plot curve.
         ax.plot(radii, three_params(radii, rt, cd, rc, field_dens), 'g--',
             label=texts[2], lw=2., zorder=3)
@@ -183,7 +185,7 @@ def pl_rad_dens(gs, radii, ring_density, field_dens, coord, clust_name,
         field_dens), label=texts[3], color='g', linestyles=':', lw=4.,
             zorder=4)
     # Plot 2-P King profile if 3-P was not found.
-    elif flag_2pk_conver is True:
+    elif flag_2pk_conver:
         # Plot curve.
         ax.plot(radii, two_params(radii, cd, rc, field_dens), 'g--',
             label=texts[2], lw=2., zorder=3)

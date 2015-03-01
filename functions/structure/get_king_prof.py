@@ -67,7 +67,8 @@ def get_king_profile(clust_rad, field_dens, radii, ring_density, coord_lst):
             flag_3pk_conver = True
 
             # If fit converged to tidal radius that extends beyond 100 times
-            # the core radius, discard it.
+            # the core radius, or either radius is equal or less than zero;
+            # discard the fit.
             if rt > rc * 100. or rt <= 0. or rc <= 0.:
                 # Raise flag to reject fit.
                 flag_3pk_conver = False
@@ -77,18 +78,18 @@ def get_king_profile(clust_rad, field_dens, radii, ring_density, coord_lst):
         # If 3-P King profile converged, ie: the tidal radius was found,
         # calculate approximate number of cluster members with eq (3) from
         # Froebrich et al. (2007); 374, 399-408
-        if flag_3pk_conver is True:
+        if flag_3pk_conver:
             print 'Tidal radius obtained: {:g} {}.'.format(rt, coord)
+            # Obtain approximate number of members.
             x = 1 + (rt / rc) ** 2
             n_c_k = int(round((np.pi * cd * rc ** 2) * (np.log(x) -
             4 + (4 * np.sqrt(x) + (x - 1)) / x)))
         else:
+            # If 3-param King fit did not converge.
             print '  WARNING: tidal radius could not be obtained.'
             # If 3-P King profile did not converge, pass dummy values
             rt, e_rt, n_c_k = -1., -1., -1.
 
-        # If 3-param King fit did not converge.
-        if flag_3pk_conver is False:
             # Fit a 2P King profile first to obtain the maximum central
             # density and core radius.
             try:
@@ -107,8 +108,8 @@ def get_king_profile(clust_rad, field_dens, radii, ring_density, coord_lst):
                 # Pass dummy values
                 rc, e_rc, rt, e_rt, n_c_k, cd = -1., -1., -1., -1., -1., -1.
 
-            # If 2-param converged to negative core radius.
-            if rc < 0:
+            # If 2-param converged to zero or negative core radius.
+            if rc <= 0:
                 flag_2pk_conver = False
                 # Pass dummy values
                 rc, e_rc, rt, e_rt, n_c_k, cd = -1., -1., -1., -1., -1., -1.
