@@ -107,7 +107,7 @@ def pl_phot_err(gs, fig, up_low, x_ax, y_ax, mag_data, err_plot, err_flags,
 def pl_fl_diag(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
     stars_out_rjct, field_regions):
     '''
-    Field stars diagram (stars outside cluster's radius)
+    Field stars CMD/CCD diagram.
     '''
     ax = plt.subplot(gs[2:4, 4:6])
     #Set plot limits
