@@ -4,13 +4,13 @@
 
 ### Changed
 
-* Improved radius assignment algorithm ([#146](https://github.com/repo/issues/146)).
-* Detect cropped cluster region and use correct area when generating field regions ([#139](https://github.com/repo/issues/139), [#157](https://github.com/repo/issues/157)).
-* Fixed bug that crashed the code when top tiers synthetic clusters with no stars were plotted ([#147](https://github.com/repo/issues/147)). Added minimum total mass of 10Mo.
-* Fixed bug where KDE p-values for field vs field comparision was artificially increased by comparing a field region with itself ([#138](https://github.com/repo/issues/138)).
-* Obtain KDE p-value even if one field region is defined ([#114](https://github.com/repo/issues/114)).
-* Fixed small bug that prevented integrated magnitude curves from being plotted ([#145](https://github.com/repo/issues/145)).
-* Fixed several smaller bugs and issues ([#110](https://github.com/repo/issues/110), [#150](https://github.com/repo/issues/150), [#140](https://github.com/repo/issues/140), [#142](https://github.com/repo/issues/142), [#141](https://github.com/repo/issues/141), [#149](https://github.com/repo/issues/149), [#95](https://github.com/repo/issues/95), [#148](https://github.com/repo/issues/148), [#136](https://github.com/repo/issues/136)).
+* Improved radius assignment algorithm ([#146](https://github.com/asteca/asteca/issues/146)).
+* Detect cropped cluster region and use correct area when generating field regions ([#139](https://github.com/asteca/asteca/issues/139), [#157](https://github.com/asteca/asteca/issues/157)).
+* Fixed bug that crashed the code when top tiers synthetic clusters with no stars were plotted ([#147](https://github.com/asteca/asteca/issues/147)). Added minimum total mass of 10Mo.
+* Fixed bug where KDE p-values for field vs field comparision was artificially increased by comparing a field region with itself ([#138](https://github.com/asteca/asteca/issues/138)).
+* Obtain KDE p-value even if one field region is defined ([#114](https://github.com/asteca/asteca/issues/114)).
+* Fixed small bug that prevented integrated magnitude curves from being plotted ([#145](https://github.com/asteca/asteca/issues/145)).
+* Fixed several smaller bugs and issues ([#110](https://github.com/asteca/asteca/issues/110), [#150](https://github.com/asteca/asteca/issues/150), [#140](https://github.com/asteca/asteca/issues/140), [#142](https://github.com/asteca/asteca/issues/142), [#141](https://github.com/asteca/asteca/issues/141), [#149](https://github.com/asteca/asteca/issues/149), [#95](https://github.com/asteca/asteca/issues/95), [#148](https://github.com/asteca/asteca/issues/148), [#136](https://github.com/asteca/asteca/issues/136)).
 
 ### Caveats
 
@@ -20,10 +20,10 @@
 
 ### Changed
 
-* Improved plotting of crowded fields ([#62](https://github.com/repo/issues/62)).
-* Function to generate image is now more stable ([#112](https://github.com/repo/issues/112)). Re-arranged plots in output image.
-* Add _Top tiers_ models output ([#130](https://github.com/repo/issues/130)).
-* Fixed small bug in KDE p-values function ([#134](https://github.com/repo/issues/134)).
+* Improved plotting of crowded fields ([#62](https://github.com/asteca/asteca/issues/62)).
+* Function to generate image is now more stable ([#112](https://github.com/asteca/asteca/issues/112)). Re-arranged plots in output image.
+* Add _Top tiers_ models output ([#130](https://github.com/asteca/asteca/issues/130)).
+* Fixed small bug in KDE p-values function ([#134](https://github.com/asteca/asteca/issues/134)).
 * Minor re-arrangement with semi-input data.
 
 ### Caveats
@@ -34,11 +34,11 @@
 
 ### Changed:
 
-* Accept arrays of non-equispaced parameter values instead of only equispaced ranges ([#121](https://github.com/repo/issues/121)).
+* Accept arrays of non-equispaced parameter values instead of only equispaced ranges ([#121](https://github.com/asteca/asteca/issues/121)).
 * Added support for lognormal [Chabrier (2001)](http://adsabs.harvard.edu/abs/2001ApJ...554.1274C) IMF.
 * More precise encoding/decoding in genetic algorithm.
-* Functions separated into sections ([#125](https://github.com/repo/issues/125)).
-* Input parameters set as global variables ([#132](https://github.com/repo/issues/132)).
+* Functions separated into sections ([#125](https://github.com/asteca/asteca/issues/125)).
+* Input parameters set as global variables ([#132](https://github.com/asteca/asteca/issues/132)).
 
 ### Caveats
 
@@ -49,7 +49,7 @@
 ### Changed
 
 * Likelihood method now supports [Dolphin (2002)](http://adsabs.harvard.edu/abs/2002MNRAS.332...91D) _Poisson likelihood ratio_ function.
-* Closed [#120](https://github.com/repo/issues/120), [#101](https://github.com/repo/issues/101), [#129](https://github.com/repo/issues/129), [#124](https://github.com/repo/issues/124), [#102](https://github.com/repo/issues/102).
+* Closed [#120](https://github.com/asteca/asteca/issues/120), [#101](https://github.com/asteca/asteca/issues/101), [#129](https://github.com/asteca/asteca/issues/129), [#124](https://github.com/asteca/asteca/issues/124), [#102](https://github.com/asteca/asteca/issues/102).
 * Minor [position fix](https://github.com/asteca/asteca/commit/00538bda879009bae0a4e7565b124c8939c75d0f) for synthetic cluster text box in output plot.
 * Brute force algorithm now returns [correct errors](https://github.com/asteca/asteca/commit/afe30cbdff561a90986a638c55a4b7247fd0bc53).
 * Some fixes for when unique values in the input parameter ranges are used [[1]](https://github.com/asteca/asteca/commit/7cc383d799f2af5c1f1f8a6dcfc80e639461f02d) [[2]](https://github.com/asteca/asteca/commit/c6505025d4c3b6147a2913fad648dc18c125376b).
@@ -65,7 +65,7 @@ _More stable release._
 
 ### Changed
 
-* Closed [#113](https://github.com/repo/issues/113), [#116](https://github.com/repo/issues/116).
+* Closed [#113](https://github.com/asteca/asteca/issues/113), [#116](https://github.com/asteca/asteca/issues/116).
 * Minor [change](https://github.com/asteca/asteca/commit/3cffb4faa0c1dc6956aae2217c73afb4f392e53d) to error function.
 * Closed _Known issues_ from previous version.
 
@@ -79,7 +79,7 @@ _First <s>semi-stable</s> buggy release_
 
 ### Changed
 
-* Closed [#72](https://github.com/repo/issues/72), [#99](https://github.com/repo/issues/99), [#37](https://github.com/repo/issues/37).
+* Closed [#72](https://github.com/asteca/asteca/issues/72), [#99](https://github.com/asteca/asteca/issues/99), [#37](https://github.com/asteca/asteca/issues/37).
 * Changed the way the IMF was [sampled](https://github.com/Gabriel-p/asteca/commit/0671e74c52fbecde6bcbb1afb1c2624875156e57), now it should be faster and more precise.
 * Some speed improvements (moved things around mainly).
 * Binary fraction is now a free parameter.
@@ -101,7 +101,7 @@ to be selected. [Fixed](https://github.com/Gabriel-p/asteca/commit/c247fd7fa4cca
 
 ### Changed
 
-* Closed [#85](https://github.com/repo/issues/85), [#70](https://github.com/repo/issues/70), [#43](https://github.com/repo/issues/43), [#86](https://github.com/repo/issues/86).
+* Closed [#85](https://github.com/asteca/asteca/issues/85), [#70](https://github.com/asteca/asteca/issues/70), [#43](https://github.com/asteca/asteca/issues/43), [#86](https://github.com/asteca/asteca/issues/86).
 - Metallicity and age now take steps in the GA.
 - Add [checker](https://github.com/Gabriel-p/asteca/blob/master/functions/checker.py) function to make sure certain parameters are set correctly before running.
 * Number of points in `get_radius` increased 20% --> 25% of the RDP (https://github.com/Gabriel-p/asteca/commit/a2e9b8f16111d5adafe66fed1eb64ed8bc03997b)
@@ -110,7 +110,7 @@ to be selected. [Fixed](https://github.com/Gabriel-p/asteca/commit/c247fd7fa4cca
 
 ### Changed
 
-* Closed: [#89](https://github.com/repo/issues/89), [#77](https://github.com/repo/issues/77), [#80](https://github.com/repo/issues/80).
+* Closed: [#89](https://github.com/asteca/asteca/issues/89), [#77](https://github.com/asteca/asteca/issues/77), [#80](https://github.com/asteca/asteca/issues/80).
 * The `params_input.dat` and `semi_input.dat` files are now located at the top level next to `asteca.py`.
 * Cluster's photometric files are not longer required to be stored inside a sub-folder to be picked-up by the code.
 
@@ -124,7 +124,7 @@ to be selected. [Fixed](https://github.com/Gabriel-p/asteca/commit/c247fd7fa4cca
 
 ### Changed
 
-* Closed issues: [#15](https://github.com/repo/issues/15), [#73](https://github.com/repo/issues/73), [#53](https://github.com/repo/issues/53), [#24](https://github.com/repo/issues/24),  [#75](https://github.com/repo/issues/75), [#79](https://github.com/repo/issues/79), [#81](https://github.com/repo/issues/81), [#59](https://github.com/repo/issues/59), [#83](https://github.com/repo/issues/83), [#78](https://github.com/repo/issues/78), [#69](https://github.com/repo/issues/69), [#74](https://github.com/repo/issues/74).
+* Closed issues: [#15](https://github.com/asteca/asteca/issues/15), [#73](https://github.com/asteca/asteca/issues/73), [#53](https://github.com/asteca/asteca/issues/53), [#24](https://github.com/asteca/asteca/issues/24),  [#75](https://github.com/asteca/asteca/issues/75), [#79](https://github.com/asteca/asteca/issues/79), [#81](https://github.com/asteca/asteca/issues/81), [#59](https://github.com/asteca/asteca/issues/59), [#83](https://github.com/asteca/asteca/issues/83), [#78](https://github.com/asteca/asteca/issues/78), [#69](https://github.com/asteca/asteca/issues/69), [#74](https://github.com/asteca/asteca/issues/74).
 * Changed name of package (OCAAT --> ASteCA).
 * Added separate function to handle the spatial 2D histogram.
 * Changes to `get_center` function (now hopefully simpler)
