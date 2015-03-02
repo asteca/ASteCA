@@ -93,9 +93,15 @@ def pl_phot_err(gs, fig, up_low, x_ax, y_ax, mag_data, err_plot, err_flags,
             marker='x', c='teal', s=15, zorder=1)
     # Plot accepted stars.
     plt.scatter(zip(*stars_out)[3], zip(*stars_out)[j], marker='o', c='b',
-        s=5, zorder=2, lw=0.3)
+        s=5, zorder=2, lw=0.3, label='$\star_{fl}$')
     plt.scatter(zip(*cl_region)[3], zip(*cl_region)[j], marker='o', c='r',
-        s=8, zorder=2, lw=0.3)
+        s=8, zorder=2, lw=0.3, label='$\star_{cl}$')
+    if up_low == 'up':
+        # Legends.
+        leg = plt.legend(fancybox=True, loc='upper left', scatterpoints=1,
+            fontsize=16, markerscale=3., prop={'size': 13})
+        # Set the alpha value of the legend.
+        leg.get_frame().set_alpha(0.7)
 
 
 def pl_fl_diag(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
