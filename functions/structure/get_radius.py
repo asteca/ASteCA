@@ -136,7 +136,7 @@ def main_rad_algor(rdp_params, field_dens, bin_width, coord):
 
 
 def get_clust_rad(phot_data, field_dens, center_params, rdp_params,
-    semi_return, bin_width, coord_lst):
+    semi_return, bin_width):
     """
     Obtain the value for the cluster's radius by counting the number of points
     that fall within a given interval of the field density or lower. If this
@@ -148,7 +148,7 @@ def get_clust_rad(phot_data, field_dens, center_params, rdp_params,
     average all the radius values found for each interval.
     """
 
-    coord = coord_lst[0]
+    coord = g.gd_params[-1][0]
     # Call function that holds the radius finding algorithm.
     clust_rad, e_rad, flag_delta_total, flag_not_stable, flag_delta = \
     main_rad_algor(rdp_params, field_dens, bin_width, coord)

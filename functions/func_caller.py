@@ -47,11 +47,6 @@ def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
     # Start timing this loop.
     start = time.time()
 
-    # Define system of coordinates used.
-    px_deg = g.gd_params[-1]
-    coord_lst = ['px', 'x', 'y'] if px_deg == 'px' else ['deg', 'ra', 'dec']
-    coord, x_name, y_name = coord_lst
-
     # Get file names and paths.
     clust_name, data_file, memb_file, output_dir, output_subdir, \
     memb_file_out, write_name = n_p(mypath, cl_file)
@@ -74,8 +69,7 @@ def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
     print "Frame's 2D histogram obtained"
 
     # Get cluster's center coordinates and errors.
-    center_params = g_c(x_data, y_data, mag_data, hist_lst, semi_return,
-        coord_lst)
+    center_params = g_c(x_data, y_data, mag_data, hist_lst, semi_return)
     # Unpack values from list.
     cent_bin, kde_center = center_params[0], center_params[1]
 
@@ -86,16 +80,14 @@ def asteca_funcs(mypath, cl_file, ip_list, R_in_place):
 
     # Get field density value in stars/px^2.
     field_dens = gfd(ring_density)
-    print 'Field density calculated ({:.1E} stars/{c}^2).'.format(field_dens,
-        c=coord)
 
     # Get cluster radius
     radius_params = gcr(phot_data, field_dens, center_params, rdp_params,
-        semi_return, bin_width, coord_lst)
+        semi_return, bin_width)
     clust_rad = radius_params[0]
 
     # Get King profiles based on the density profiles.
-    kp_params = gkp(clust_rad, field_dens, radii, ring_density, coord_lst)
+    kp_params = gkp(clust_rad, field_dens, radii, ring_density)
 
     # Accept and reject stars based on their errors.
     acpt_stars, rjct_stars, err_plot, err_flags, err_pck = ear(phot_data,

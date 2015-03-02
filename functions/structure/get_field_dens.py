@@ -3,6 +3,7 @@
 """
 
 import numpy as np
+from .._in import get_in_params as g
 
 
 def field_dens(ring_density):
@@ -45,6 +46,10 @@ def field_dens(ring_density):
             stable_cond = True
 
         field_dens = median
+
+    coord = g.gd_params[-1][0]
+    print 'Field density calculated ({:.1E} stars/{c}^2).'.format(field_dens,
+        c=coord)
 
     # Return field density value obtained.
     return field_dens

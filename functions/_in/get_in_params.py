@@ -64,7 +64,13 @@ def init(mypath):
                 elif reader[0] == 'PD':
                     gd_params = map(int, reader[1:])
                 elif reader[0] == 'PX':
-                    gd_params.append(str(reader[1]))
+                    if str(reader[1]) == 'px':
+                        coord_lst = ['px', 'x', 'y']
+                    elif str(reader[1]) == 'deg':
+                        coord_lst = ['deg', 'ra', 'dec']
+                    else:
+                        coord_lst = ['none']
+                    gd_params.append(coord_lst)
                 elif reader[0] == 'CMD':
                     cmd_select = int(reader[1])
 

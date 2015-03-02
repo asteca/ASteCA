@@ -11,14 +11,14 @@ import king_prof_funcs as kpf
 from .._in import get_in_params as g
 
 
-def get_king_profile(clust_rad, field_dens, radii, ring_density, coord_lst):
+def get_king_profile(clust_rad, field_dens, radii, ring_density):
     '''
     Function to fit the 3-params King profile to a given radial density.
     The field density value is fixed and the core radius, tidal radius and
     maximum central density are fitted.
     '''
 
-    coord = coord_lst[0]
+    coord = g.gd_params[-1][0]
     # Flags that indicate either no convergence or that the fits were not
     # attempted.
     flag_2pk_conver, flag_3pk_conver = False, False

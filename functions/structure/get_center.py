@@ -102,14 +102,14 @@ def bin_center(xedges, yedges, kde_cent):
     return cent_bin
 
 
-def get_center(x_data, y_data, mag_data, hist_lst, semi_return, coord_lst):
+def get_center(x_data, y_data, mag_data, hist_lst, semi_return):
     """
     Obtains the center of the putative cluster. Returns the center values
     along with its errors and several arrays related to histograms, mainly for
     plotting purposes.
     """
 
-    coord = coord_lst[0]
+    coord = g.gd_params[-1][0]
 
     st_dev_lst = [2., 2.5, 3., 3.5, 4.]
     # Set flags.
