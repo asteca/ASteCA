@@ -1,6 +1,6 @@
 # Change Log
 
-## [[0.1.5]](https://github.com/asteca/asteca/releases/tag/v0.1.5) - 2015-03-02
+## [[v0.1.5]](https://github.com/asteca/asteca/releases/tag/v0.1.5) - 2015-03-02
 
 ### Changed
 
@@ -16,7 +16,7 @@
 
 * Same as version [0.1.2](https://github.com/asteca/asteca/releases/tag/v0.1.2).
 
-## [[0.1.4]](https://github.com/asteca/asteca/releases/tag/v0.1.4) - 2014-12-18
+## [[v0.1.4]](https://github.com/asteca/asteca/releases/tag/v0.1.4) - 2014-12-18
 
 ### Changed
 
@@ -30,7 +30,7 @@
 
 * Same as version [0.1.2](https://github.com/asteca/asteca/releases/tag/v0.1.2).
 
-## [[0.1.3]](https://github.com/asteca/asteca/releases/tag/v0.1.3) - 2014-12-10
+## [[v0.1.3]](https://github.com/asteca/asteca/releases/tag/v0.1.3) - 2014-12-10
 
 ### Changed:
 
@@ -44,7 +44,7 @@
 
 * Same as version [0.1.2](https://github.com/asteca/asteca/releases/tag/v0.1.2).
 
-## [[0.1.2]](https://github.com/asteca/asteca/releases/tag/v0.1.2) - 2014-12-01
+## [[v0.1.2]](https://github.com/asteca/asteca/releases/tag/v0.1.2) - 2014-12-01
 
 ### Changed
 
@@ -59,7 +59,7 @@
 
  * Still not sure why _tolstoy_ likelihood is biased towards high masses :confused:
 
-## [[0.1.1]](https://github.com/asteca/asteca/releases/tag/v0.1.1) - 2014-11-07
+## [[v0.1.1]](https://github.com/asteca/asteca/releases/tag/v0.1.1) - 2014-11-07
 
 _More stable release._
 
@@ -73,7 +73,7 @@ _More stable release._
 
  * Same as previous version.
 
-## [[0.1.0]](https://github.com/asteca/asteca/releases/tag/v0.1.0) - 2014-10-08
+## [[v0.1.0]](https://github.com/asteca/asteca/releases/tag/v0.1.0) - 2014-10-08
 
 _First <s>semi-stable</s> buggy release_
 
