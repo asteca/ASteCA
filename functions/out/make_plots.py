@@ -84,8 +84,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
     #
     # Structure plots.
     arglist = [
-        [gs, fig, x_name, y_name, cent_bin, clust_rad, bin_width,
-    err_r, coord, hist_2d_g],
+        [gs, fig, x_name, y_name, coord, cent_bin, clust_rad, bin_width,
+            err_r, hist_2d_g],
         [gs, x_min, x_max, y_min, y_max, x_name, y_name, coord, approx_cents,
             bin_width, st_dev_lst],
         [gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max,

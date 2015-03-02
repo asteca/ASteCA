@@ -6,6 +6,7 @@ from scipy import stats
 from scipy.ndimage.filters import gaussian_filter
 from display_cent import disp_cent as d_c
 from .._in import get_in_params as g
+from ..out import prep_plots as pp
 
 
 def center_approx(hist, xedges, yedges, st_dev_lst):
@@ -109,7 +110,7 @@ def get_center(x_data, y_data, mag_data, hist_lst, semi_return):
     plotting purposes.
     """
 
-    coord = g.gd_params[-1][0]
+    coord = pp.coord_syst()[0]
 
     st_dev_lst = [2., 2.5, 3., 3.5, 4.]
     # Set flags.

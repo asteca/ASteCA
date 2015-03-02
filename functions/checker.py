@@ -145,9 +145,9 @@ def check(mypath, cl_files):
                 " not exist.")
 
     # Check px/deg.
-    if g.gd_params[-1][0] not in {'px', 'deg'}:
-        sys.exit("ERROR: the coordinates given in the input file ('{}')"
-                " are incorrect.".format(g.gd_params[-1][0]))
+    if g.gd_params[-1] not in {'px', 'deg'}:
+        sys.exit("ERROR: the coordinate units given in the input parameters\n"
+                "file ('{}') are incorrect.".format(g.gd_params[-1]))
 
     # Selected CMD.
     if g.ps_params[1] not in {1, 2, 3, 4, 5, 6, 7}:

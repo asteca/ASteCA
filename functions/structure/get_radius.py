@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import warnings
 from display_rad import disp_rad as d_r
 from .._in import get_in_params as g
+from ..out import prep_plots as pp
 
 
 def main_rad_algor(rdp_params, field_dens, bin_width, coord):
@@ -148,7 +149,7 @@ def get_clust_rad(phot_data, field_dens, center_params, rdp_params,
     average all the radius values found for each interval.
     """
 
-    coord = g.gd_params[-1][0]
+    coord = pp.coord_syst()[0]
     # Call function that holds the radius finding algorithm.
     clust_rad, e_rad, flag_delta_total, flag_not_stable, flag_delta = \
     main_rad_algor(rdp_params, field_dens, bin_width, coord)

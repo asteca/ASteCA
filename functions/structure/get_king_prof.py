@@ -9,6 +9,7 @@ import numpy as np
 from scipy.optimize import curve_fit
 import king_prof_funcs as kpf
 from .._in import get_in_params as g
+from ..out import prep_plots as pp
 
 
 def get_king_profile(clust_rad, field_dens, radii, ring_density):
@@ -18,7 +19,7 @@ def get_king_profile(clust_rad, field_dens, radii, ring_density):
     maximum central density are fitted.
     '''
 
-    coord = g.gd_params[-1][0]
+    coord = pp.coord_syst()[0]
     # Flags that indicate either no convergence or that the fits were not
     # attempted.
     flag_2pk_conver, flag_3pk_conver = False, False

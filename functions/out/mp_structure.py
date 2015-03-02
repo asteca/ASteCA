@@ -69,8 +69,8 @@ def pl_centers(gs, x_min, x_max, y_min, y_max, x_name, y_name, coord,
     leg.get_frame().set_alpha(0.5)
 
 
-def pl_hist_g(gs, fig, x_name, y_name, cent_bin, clust_rad, bin_width, err_r,
-    coord, hist_2d_g):
+def pl_hist_g(gs, fig, x_name, y_name, coord, cent_bin, clust_rad, bin_width,
+    err_r, hist_2d_g):
     '''
     2D gaussian convolved histogram.
     '''
