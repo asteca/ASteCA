@@ -198,7 +198,7 @@ def get_pval(cl_region, field_region, col1_data, mag_data, flag_area_stronger):
             # vs the single field region used.
             prob_cl_kde = 1. - np.mean(p_vals_cl)
             # Pass empty lists for plotting.
-            kde_f_1d, y_over = [], []
+            kde_f_1d, y_over = np.asarray([]), []
 
         # Store all return params in a single list.
         pval_test_params = [prob_cl_kde, kde_cl_1d, kde_f_1d, x_kde, y_over]
