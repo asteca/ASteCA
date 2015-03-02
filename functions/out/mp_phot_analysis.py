@@ -137,9 +137,9 @@ def pl_fl_diag(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
             for star in fr:
                 stars_acpt_temp[0].append(star[5])
                 stars_acpt_temp[1].append(star[3])
-        plt.text(0.53, 0.93, '$r > r_{cl}\,|\,N=%d$' % len(stars_acpt_temp[0]),
-            transform=ax.transAxes, bbox=dict(facecolor='white', alpha=0.5),
-            fontsize=16)
+        plt.text(0.56, 0.93, '$\star_{field}\,|\,N=%d$' %
+            len(stars_acpt_temp[0]), transform=ax.transAxes,
+            bbox=dict(facecolor='white', alpha=0.5), fontsize=16)
         sz_pt = phot_diag_st_size(len(stars_acpt_temp[0]))
         plt.scatter(stars_acpt_temp[0], stars_acpt_temp[1], marker='o', c='b',
                     s=sz_pt, lw=0.3, zorder=2)
