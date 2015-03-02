@@ -198,12 +198,12 @@ def pl_lum_func(gs, mag_data, y_ax, x_cl, y_cl, flag_area_stronger, x_fl,
     plt.xlabel('$' + y_ax + '$', fontsize=18)
     plt.ylabel('$N^{\star}/A_{cl}$', fontsize=18)
     # Cluster region LF (contaminated).
-    plt.step(x_cl, y_cl, where='post', color='r', ls='--', lw=1.5,
+    plt.step(x_cl, y_cl, where='post', color='r', lw=1.,
         label='$LF_{cl+fl} \;(r \leq r_{cl})$', zorder=2)
     # Check if field regiones were defined.
     if flag_area_stronger is not True:
         # Average field regions LF.
-        plt.step(x_fl, y_fl, where='post', color='b', ls='--', lw=1.5,
+        plt.step(x_fl, y_fl, where='post', color='b', lw=1.,
             label='$LF_{fl} \;(\star_{field})$', zorder=3)
         # Cluster region LF - average field regions LF.
         plt.step(x_cl, y_cl - y_fl, where='post', color='g', lw=1.7,
