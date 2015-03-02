@@ -204,7 +204,7 @@ def pl_lum_func(gs, mag_data, y_ax, x_cl, y_cl, flag_area_stronger, x_fl,
     if flag_area_stronger is not True:
         # Average field regions LF.
         plt.step(x_fl, y_fl, where='post', color='b', ls='--', lw=1.5,
-            label='$LF_{fl} \;(r  > r_{cl})$', zorder=3)
+            label='$LF_{fl} \;(\star_{field})$', zorder=3)
         # Cluster region LF - average field regions LF.
         plt.step(x_cl, y_cl - y_fl, where='post', color='g', lw=1.7,
             label='$LF_{cl}$', zorder=4)

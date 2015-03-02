@@ -70,8 +70,8 @@ def lf(flag_area_stronger, mag_data, cl_region, field_regions):
         # Create arrays adding elements so plt.step will plot the first and last
         # vertical bars.
         x_fl = np.concatenate((np.array([0.]), lf_edg_f))
-        y_fl = np.concatenate((np.array([0.]), (lf_field / len(field_regions)),
-            np.array([0.])))
+        y_fl = np.concatenate((np.array([0.]),
+        (lf_field / float(len(field_regions))), np.array([0.])))
     else:
         print ("  WARNING: no field regions defined. Luminosity function\n"
         "  is not cleaned from field star contamination.")
