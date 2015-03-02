@@ -61,10 +61,20 @@ def get_data(data_file):
     data_names = ['x_coords', 'y_coords', 'magnitudes', 'color']
     try:
         for i, dat_lst in enumerate([x_data, y_data, mag_data, col1_data]):
+            # Check if array came back empty after removal of stars with
+            # bad photometry.
+            if not dat_lst.size:
+                print ("\n  ERROR: no stars left after removal of those with\n"
+                "  large mag/color or error values. Check input file.")
+                raise ValueError()
+            # Check if the range of any photometric column, excluding errors,
+            # is none.
             if min(dat_lst) == max(dat_lst):
-                print ("  ERROR: the range defined for the column {}\n"
-                "  is badly defined. Halting. Check the input data"
-                "  format.").format(data_names[i])
+                print ("\n  ERROR: the range defined for the '{}' column\n"
+                "  is zero. Halting. Check the input data format.").format(
+                    data_names[i])
+                raise ValueError()
+
     except ValueError:
         raise ValueError('Bad format for input data. Check input file.')
 
