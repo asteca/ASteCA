@@ -10,6 +10,8 @@ Read the code's [documentation][9]. <-- *Under development*.
 
 The code is still under (heavy) development. The latest release can be accessed [here][1].
 
+See the `CHANGELOG.md` file for a list of releases and the changes made in each.
+
 ## To do
 
 * List of open [bugs][4].
