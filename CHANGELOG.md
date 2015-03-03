@@ -1,10 +1,10 @@
 # Change Log
 
-## [[v0.1.5]](https://github.com/asteca/asteca/releases/tag/v0.1.5) - 2015-03-02
+## [[v0.1.5]](https://github.com/asteca/asteca/releases/tag/v0.1.5) - 2015-03-03
 
 ### Changed
 
-* Improved radius assignment algorithm ([#146](https://github.com/asteca/asteca/issues/146)).
+* Improved radius assignment algorithm ([#146](https://github.com/asteca/asteca/issues/146)). **Warning**: this breaks compatibility with the previous version of the `params_input.dat` file.
 * Detect cropped cluster region and use correct area when generating field regions ([#139](https://github.com/asteca/asteca/issues/139), [#157](https://github.com/asteca/asteca/issues/157)).
 * Fixed bug that crashed the code when top tiers synthetic clusters with no stars were plotted ([#147](https://github.com/asteca/asteca/issues/147)). Added minimum total mass of 10Mo.
 * Fixed bug where KDE p-values for field vs field comparision was artificially increased by comparing a field region with itself ([#138](https://github.com/asteca/asteca/issues/138)).
