@@ -12,6 +12,7 @@ from itertools import cycle
 from matplotlib.patches import Rectangle
 from ..errors import error_round as err_r
 from ..structure import king_prof_funcs as kpf
+from .._in import get_in_params as g
 
 
 def pl_centers(gs, x_min, x_max, y_min, y_max, x_name, y_name, coord,
@@ -123,10 +124,8 @@ def pl_rad_dens(gs, radii, ring_density, field_dens, coord, clust_name,
     plt.ylabel("stars/{}$^{{2}}$".format(coord), fontsize=12)
     # Set grid
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
-    # Cluster's name.
-    text = str(clust_name)
-    #plt.text(0.4, 0.9, text, transform=ax.transAxes, fontsize=14)
-    plt.title(text, fontsize=14)
+    # Cluster's name and mode used to process it.
+    plt.title(str(clust_name) + ' (' + g.mode + ')', fontsize=14)
     # Round radii values.
     rads_r, e_rads_r = err_r.round_sig_fig([rc, rt, clust_rad],
         [e_rc, e_rt, e_rad])
