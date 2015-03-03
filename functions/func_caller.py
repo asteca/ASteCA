@@ -48,7 +48,7 @@ def asteca_funcs(cl_file, ip_list, R_in_place):
     start = time.time()
 
     # Get file names and paths.
-    clust_name, data_file, memb_file, output_dir, output_subdir, \
+    clust_name, data_file, memb_file, output_dir, output_subdir, dst_dir,\
     memb_file_out, write_name = n_p(cl_file)
     print 'Analizing cluster {} ({}).'.format(clust_name, g.mode)
 
@@ -184,7 +184,7 @@ def asteca_funcs(cl_file, ip_list, R_in_place):
         print 'Plots created.'
 
     # Move file to 'done' dir if flag is set.
-    dm(cl_file, data_file, memb_file)
+    dm(dst_dir, data_file, memb_file)
 
     elapsed = time.time() - start
     m, s = divmod(elapsed, 60)
