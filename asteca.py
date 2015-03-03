@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import time
-from os.path import join, realpath, dirname
+from os.path import join, realpath, dirname, basename
 from os import getcwd
 import traceback
 from functions import __version__
@@ -25,7 +25,10 @@ def main():
     mypath = realpath(join(getcwd(), dirname(__file__)))
 
     # Read paths and names of all clusters stored inside /input.
-    cl_files = in_clusters(mypath)
+    # Get ending number in this 'asteca_xx.py' file.
+    file_end = basename(__file__)[-5:-3]
+    file_end = '' if not file_end.isdigit() else '_' + file_end
+    cl_files = in_clusters(mypath, file_end)
 
     # Checker function to verify that things are in place before running.
     # As part of the checking process, and to save time, the isochrone
@@ -52,10 +55,10 @@ def main():
 
         try:
             # Call function that calls all sub-functions sequentially.
-            af(mypath, cl_file, ip_list, R_in_place)
+            af(cl_file, ip_list, R_in_place)
         except Exception:
             print '\n!!! --> {}/{} could not be processed <-- !!!\n'.format(
-                *cl_file)
+                cl_file[-2], cl_file[-1])
             print traceback.format_exc()
 
     # End of run.

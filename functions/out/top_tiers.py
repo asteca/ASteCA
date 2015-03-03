@@ -137,6 +137,6 @@ def get_top_tiers(clust_name, output_subdir, mag_data, col_data, ip_list,
             try:
                 plot_top_tiers(top_tiers_flo, output_subdir, clust_name,
                     mag_data, col_data, ip_list, err_lst, completeness)
-                print 'Top tier models saved to file and plotted.'
+                print 'Top tier models plotted and saved to file.'
             except:
                 print("  ERROR: top tiers plot could not be generated.")

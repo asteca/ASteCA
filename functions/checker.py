@@ -205,7 +205,7 @@ def check(mypath, cl_files):
         for cl_file in cl_files:
 
             # Get memb file names.
-            memb_file = n_p(mypath, cl_file)[2]
+            memb_file = n_p(cl_file)[2]
             if not isfile(memb_file):
                 # File does not exist.
                 sys.exit("ERROR: 'read' mode was set for decontamination "
