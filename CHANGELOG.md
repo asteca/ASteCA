@@ -10,7 +10,7 @@
 * Fixed bug where KDE p-values for field vs field comparision was artificially increased by comparing a field region with itself ([#138](https://github.com/asteca/asteca/issues/138)).
 * Obtain KDE p-value even if one field region is defined ([#114](https://github.com/asteca/asteca/issues/114)).
 * Fixed small bug that prevented integrated magnitude curves from being plotted ([#145](https://github.com/asteca/asteca/issues/145)).
-* Fixed several smaller bugs and issues ([#110](https://github.com/asteca/asteca/issues/110), [#150](https://github.com/asteca/asteca/issues/150), [#140](https://github.com/asteca/asteca/issues/140), [#142](https://github.com/asteca/asteca/issues/142), [#141](https://github.com/asteca/asteca/issues/141), [#149](https://github.com/asteca/asteca/issues/149), [#95](https://github.com/asteca/asteca/issues/95), [#148](https://github.com/asteca/asteca/issues/148), [#136](https://github.com/asteca/asteca/issues/136), [#163](https://github.com/asteca/asteca/issues/163)).
+* Fixed several smaller bugs and issues ([#110](https://github.com/asteca/asteca/issues/110), [#150](https://github.com/asteca/asteca/issues/150), [#140](https://github.com/asteca/asteca/issues/140), [#142](https://github.com/asteca/asteca/issues/142), [#141](https://github.com/asteca/asteca/issues/141), [#149](https://github.com/asteca/asteca/issues/149), [#95](https://github.com/asteca/asteca/issues/95), [#148](https://github.com/asteca/asteca/issues/148), [#136](https://github.com/asteca/asteca/issues/136), [#163](https://github.com/asteca/asteca/issues/163), [#143](https://github.com/asteca/asteca/issues/143)).
 
 ### Caveats
 
