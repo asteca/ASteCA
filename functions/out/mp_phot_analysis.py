@@ -168,7 +168,7 @@ def pl_cl_diag(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
     text1 = '$r \leq r_{{cl}}\,|\,N={}$'.format(tot_stars)
     text2 = r'$n_{{memb}} \approx {}$'.format(n_memb)
     text = text1 + '\n' + text2
-    plt.text(0.55, 0.87, text, transform=ax.transAxes,
+    plt.text(0.55, 0.86, text, transform=ax.transAxes,
              bbox=dict(facecolor='white', alpha=0.5), fontsize=16)
     # Plot stars in CMD.
     if len(stars_in_rjct) > 0:

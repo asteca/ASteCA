@@ -48,7 +48,7 @@ def pl_centers(gs, x_min, x_max, y_min, y_max, x_name, y_name, coord,
     text2 = ("$(\sigma_{{{0}}},\sigma_{{{1}}}) = ({3:g},\;{4:g})\,"
     "{2}$").format(x_name, y_name, coord, *cent_std_dev_r)
     text = text1 + '\n' + text2
-    plt.text(0.05, 0.9, text, transform=ax.transAxes,
+    plt.text(0.03, 0.88, text, transform=ax.transAxes,
         bbox=dict(facecolor='white', alpha=0.8), fontsize=11)
     # Plot centers.
     cols = cycle(['red', 'blue', 'green', 'black', 'cyan'])
@@ -258,10 +258,10 @@ def pl_zoom_frame(gs, fig, x_zmin, x_zmax, y_zmin, y_zmax, x_name, y_name,
     plt.ylabel('{} ({})'.format(y_name, coord), fontsize=12)
     # Set minor ticks
     ax.minorticks_on()
-    text1 = 'Cluster (zoom)\n'
+    text1 = 'Cluster zoom\n'
     text2 = 'CI = %0.2f' % (cont_index)
     text = text1 + text2
-    plt.text(0.62, 0.9, text, transform=ax.transAxes,
+    plt.text(0.69, 0.9, text, transform=ax.transAxes,
              bbox=dict(facecolor='white', alpha=0.85), fontsize=12)
     # Plot contour levels if it was obtained.
     if kde_pl:

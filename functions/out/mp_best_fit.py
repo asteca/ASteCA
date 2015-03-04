@@ -39,8 +39,8 @@ def pl_bf_synth_cl(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
         text6 = '$M_{{\odot}} = {} \pm {}$\n'.format(cp_r[4], cp_e[4])
         text7 = '$b_{{frac}} = {} \pm {}$'.format(cp_r[5], cp_e[5])
         text = text1 + text2 + text3 + text4 + text5 + text6 + text7
-        plt.text(0.5, 0.65, text, transform=ax.transAxes,
-                 bbox=dict(facecolor='white', alpha=0.6), fontsize=12)
+        plt.text(0.54, 0.61, text, transform=ax.transAxes,
+                 bbox=dict(facecolor='white', alpha=0.6, pad=15), fontsize=12)
         # Plot isochrone.
         plt.plot(shift_isoch[0], shift_isoch[1], 'r', lw=1.2)
         # Plot synth clust.

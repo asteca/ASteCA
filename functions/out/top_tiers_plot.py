@@ -80,8 +80,8 @@ def pl_bf_synth_cl(N, gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax,
     text6 = '$M_{{\odot}} = {}$\n'.format(cp_r[4])
     text7 = '$b_{{frac}} = {}$'.format(cp_r[5])
     text = text1 + text2 + text3 + text4 + text5 + text6 + text7
-    plt.text(0.7, 0.67, text, transform=ax.transAxes,
-             bbox=dict(facecolor='white', alpha=0.6), fontsize=12)
+    plt.text(0.7, 0.63, text, transform=ax.transAxes,
+             bbox=dict(facecolor='white', alpha=0.6, pad=15), fontsize=12)
     # Number of top tier.
     ob = offsetbox.AnchoredText('{}'.format(N), loc=2, prop=dict(size=12))
     ob.patch.set(boxstyle='square,pad=-0.2', alpha=0.85)
