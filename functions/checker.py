@@ -9,9 +9,6 @@ from os.path import join, isfile, isdir
 import sys
 import traceback
 from subprocess import Popen, PIPE
-from rpy2.rinterface import RRuntimeError
-from rpy2.robjects.packages import importr
-utils = importr('utils')
 
 
 def pack_check():
@@ -38,6 +35,9 @@ def R_inst_packages():
     '''
     Check installed packages inside R.
     '''
+    from rpy2.rinterface import RRuntimeError
+    from rpy2.robjects.packages import importr
+    utils = importr('utils')
     try:
         pack_lst = utils.installed_packages()
         rpack = list(pack_lst.rx(True, 1))

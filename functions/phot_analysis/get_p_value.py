@@ -8,14 +8,7 @@ Created on Fri Nov  1 17:58:28 2013
 import numpy as np
 from scipy import stats
 from scipy.integrate import quad
-import rpy2.robjects as robjects
-from rpy2.robjects.packages import importr
 from .._in import get_in_params as g
-
-# Define variables to communicate with package 'R'.
-ks = importr('ks')
-kde_test = ks.kde_test
-hpi_kfe = ks.Hpi_kfe
 
 
 def gauss_error(col, e_col, mag, e_mag):
@@ -95,6 +88,13 @@ def get_pval(cl_region, field_region, col1_data, mag_data, flag_area_stronger):
 
     # Run process.
     elif flag_pval_test:
+
+        # Define variables to communicate with package 'R'.
+        import rpy2.robjects as robjects
+        from rpy2.robjects.packages import importr
+        ks = importr('ks')
+        kde_test = ks.kde_test
+        hpi_kfe = ks.Hpi_kfe
 
         print 'Obtaining KDE p-value for cluster vs field regions.'
 
