@@ -18,8 +18,11 @@ def names_paths(cl_file):
     # Hardcoded in/out folder names.
     out_fold = 'output'
 
-    # Store cluster's name without extension.
-    clust_name = cl_file[-1].split(extsep)[0]
+    # Split cluster's file into sections separated by dots.
+    cl_split = cl_file[-1].split(extsep)
+    # Join all the sections except the last one (the extension) and store the
+    # cluster's clean name.
+    clust_name = '.'.join(cl_split[:-1])
 
     # Generate hardcoded file names and paths.
     data_file = join(*cl_file)
