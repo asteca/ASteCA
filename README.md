@@ -1,6 +1,6 @@
-# ASteCA [Automated Stellar Cluster Analysis]
+[![arXiv](https://img.shields.io/badge/arXiv-1412.2366-yellowgreen.svg)](http://arxiv.org/abs/1412.2366) [![License](http://img.shields.io/badge/license-GPLv3-red.svg)](http://www.gnu.org/licenses/gpl-3.0.en.html) [![Stories in Ready](https://badge.waffle.io/asteca/asteca.svg?label=ready&title=Ready)](http://waffle.io/asteca/asteca) [![Stories in Progress](https://badge.waffle.io/asteca/asteca.svg?label=in_prog&title=In%20Progress)](http://waffle.io/asteca/asteca)
 
-[![arXiv](https://img.shields.io/badge/arXiv-1412.2366-yellowgreen.svg)](http://arxiv.org/abs/1412.2366) [![License](http://img.shields.io/badge/license-GPLv3-red.svg)](http://www.gnu.org/licenses/gpl-3.0.en.html) ||| [![Stories in Ready](https://badge.waffle.io/asteca/asteca.svg?label=ready&title=Ready)](http://waffle.io/asteca/asteca) [![Stories in Progress](https://badge.waffle.io/asteca/asteca.svg?label=in_prog&title=In%20Progress)](http://waffle.io/asteca/asteca)
+# ASteCA [Automated Stellar Cluster Analysis]
 
 The [ASteCA][3] package is designed to fully automatize the usual tests applied on <a href="https://en.wikipedia.org/wiki/Star_cluster">star clusters</a> in order to determine their characteristics: center, radius, stars' membership probabilities and associated intrinsic/extrinsic parameters: metallicity, age, reddening, distance, total mass, binarity fraction, etc.</p>
 
