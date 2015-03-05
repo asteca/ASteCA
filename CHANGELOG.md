@@ -1,5 +1,18 @@
 # Change Log
 
+## [[v0.1.61]](https://github.com/asteca/asteca/releases/tag/v0.1.61) - 2015-03-04
+
+### Changed
+
+* Added [_"lazy parallelization"_](https://github.com/asteca/asteca/commit/b536c84c2ad085bbe8ff10a0b6535618ae1ba09a) ability. Now the user can run as many instances of the code as needed simply by creating extra `asteca_xx.py` and `input_xx` folders where `xx` are integers of the form: 01, 02,..., 99.
+* [Reposition](https://github.com/asteca/asteca/commit/e7dec4b75a62ff397ee62cb322345f6b17b74ff6) several text boxes in output images, newer versions of `matplotlib` moved them from the previous position.
+* Fix [bad import](https://github.com/asteca/asteca/commit/9bed2166e9cc36faa7077c79c436c50e40801820) of `rpy2` package, positioned incorrectly in two functions.
+* Fix `DeprecationWarning` showing when `exp_function` was used ([#169](https://github.com/asteca/asteca/issues/169)).
+
+### Caveats
+
+* Same as version [0.1.2](https://github.com/asteca/asteca/releases/tag/v0.1.2).
+
 ## [[v0.1.5]](https://github.com/asteca/asteca/releases/tag/v0.1.5) - 2015-03-03
 
 ### Changed
