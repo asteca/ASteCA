@@ -179,6 +179,8 @@ def pl_lkl_dens(gs, ld_p, lkl_old, min_max_p, cp_r, cp_e, model_done,
     text = (ld_p + '$ = {} \pm {}$').format(xp, e_xp)
     plt.text(0.1, 0.93, text, transform=ax.transAxes,
         bbox=dict(facecolor='white', alpha=0.5), fontsize=12)
+    print ld_p
+    print np.mean(zip(*model_done[0])[cp]), np.std(zip(*model_done[0])[cp])
     hist, xedges, yedges = np.histogram2d(zip(*model_done[0])[cp],
         model_done[1], bins=100)
     # H_g is the 2D histogram with a gaussian filter applied
