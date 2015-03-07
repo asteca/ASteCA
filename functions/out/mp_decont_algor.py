@@ -55,7 +55,11 @@ def pl_chart_mps(gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
     '''
     ax = plt.subplot(gs[4:6, 4:6])
     #Set plot limits, Use 'zoom' x,y ranges.
-    plt.xlim(x_zmin, x_zmax)
+    if coord == 'deg':
+        # If RA is used, invert axis.
+        plt.xlim(x_zmax, x_zmin)
+    else:
+        plt.xlim(x_zmin, x_zmax)
     plt.ylim(y_zmin, y_zmax)
     #Set axis labels
     plt.xlabel('{} ({})'.format(x_name, coord), fontsize=12)

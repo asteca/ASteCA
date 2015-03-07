@@ -22,7 +22,11 @@ def pl_centers(gs, x_min, x_max, y_min, y_max, x_name, y_name, coord,
     '''
     ax = plt.subplot(gs[0:2, 0:2])
     #Set plot limits
-    plt.xlim(x_min, x_max)
+    if coord == 'deg':
+        # If RA is used, invert axis.
+        plt.xlim(x_max, x_min)
+    else:
+        plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
     plt.xlabel('{} ({})'.format(x_name, coord), fontsize=12)
     plt.ylabel('{} ({})'.format(y_name, coord), fontsize=12)
@@ -202,7 +206,11 @@ def pl_full_frame(gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max,
 
     ax = plt.subplot(gs[0:2, 8:10])
     #Set plot limits
-    plt.xlim(x_min, x_max)
+    if coord == 'deg':
+        # If RA is used, invert axis.
+        plt.xlim(x_max, x_min)
+    else:
+        plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
     #Set axis labels
     plt.xlabel('{} ({})'.format(x_name, coord), fontsize=12)
@@ -251,7 +259,11 @@ def pl_zoom_frame(gs, fig, x_zmin, x_zmax, y_zmin, y_zmax, x_name, y_name,
     Zoom on x,y finding chart.
     '''
     ax = plt.subplot(gs[0:2, 10:12])
-    plt.xlim(x_zmin, x_zmax)
+    if coord == 'deg':
+        # If RA is used, invert axis.
+        plt.xlim(x_zmax, x_zmin)
+    else:
+        plt.xlim(x_zmin, x_zmax)
     plt.ylim(y_zmin, y_zmax)
     #Set axis labels
     plt.xlabel('{} ({})'.format(x_name, coord), fontsize=12)
@@ -301,7 +313,11 @@ def pl_cl_fl_regions(gs, fig, x_min, x_max, y_min, y_max, x_name, y_name,
     '''
     ax = plt.subplot(gs[2:4, 0:2])
     #Set plot limits
-    plt.xlim(x_min, x_max)
+    if coord == 'deg':
+        # If RA is used, invert axis.
+        plt.xlim(x_max, x_min)
+    else:
+        plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
     #Set axis labels
     plt.xlabel('{} ({})'.format(x_name, coord), fontsize=12)
