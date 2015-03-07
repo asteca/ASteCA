@@ -29,7 +29,7 @@ def get_m_c_errors(mag, mag_value, e_mc_v):
             # Insert 'b' value into exponential function (not fitted here
             # because otherwise the number of variables would be larger than
             # the data points)
-            popt_mc = np.insert(popt_mc, 1., 1.)
+            popt_mc = np.insert(popt_mc, 1, 1.)
 
         # If the 2-param exponential fitting process also fails, try with a
         # 2P exp but using only two magnitude values, ie: a min and a max.
