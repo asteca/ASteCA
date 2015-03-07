@@ -131,8 +131,9 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
 
         arglist = [
             [gs, red_return, memb_prob_avrg_sort],
-            [gs, fig, x_zmin, x_zmax, y_zmin, y_zmax, center_cl, clust_rad,
-                field_dens, memb_prob_avrg_sort, stars_out]
+            [gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin, y_zmax,
+                center_cl, clust_rad, field_dens, memb_prob_avrg_sort,
+                stars_out]
             ]
         for n, args in enumerate(arglist, 1):
             mp_decont_algor.plot(n, *args)

@@ -47,8 +47,8 @@ def pl_mp_histo(gs, red_return, memb_prob_avrg_sort):
         plt.axvline(x=min_prob, linestyle='--', color='green', lw=2.5)
 
 
-def pl_chart_mps(gs, fig, x_zmin, x_zmax, y_zmin, y_zmax, center_cl, clust_rad,
-    field_dens, memb_prob_avrg_sort, stars_out):
+def pl_chart_mps(gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
+    y_zmax, center_cl, clust_rad, field_dens, memb_prob_avrg_sort, stars_out):
     '''
     Finding chart of cluster region with decontamination algorithm
     applied and colors assigned according to the probabilities obtained.
@@ -58,8 +58,8 @@ def pl_chart_mps(gs, fig, x_zmin, x_zmax, y_zmin, y_zmax, center_cl, clust_rad,
     plt.xlim(x_zmin, x_zmax)
     plt.ylim(y_zmin, y_zmax)
     #Set axis labels
-    plt.xlabel('x (px)', fontsize=12)
-    plt.ylabel('y (px)', fontsize=12)
+    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=12)
+    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=12)
     # Set minor ticks
     ax.minorticks_on()
     # Radius
