@@ -8,44 +8,57 @@ Created on Tue Dic 16 12:00:00 2014
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
+import matplotlib.offsetbox as offsetbox
 from matplotlib.ticker import FormatStrFormatter
 from functions.exp_function import exp_3p
 from .._in import get_in_params as g
 
 
-def pl_mp_histo(gs, red_return, memb_prob_avrg_sort):
+def pl_mp_histo(gs, n_memb_da, red_return, decont_algor_return):
     '''
     Histogram for the distribution of membership probabilities from the
     decontamination algorithm.
     '''
-    # Reduced membership.
-    min_prob = red_return[1]
-    ax = plt.subplot(gs[4:6, 2:4])
-    plt.xlim(0., 1.)
-    plt.xlabel('membership probability', fontsize=12)
-    plt.ylabel('N', fontsize=12)
-    ax.minorticks_on()
-    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
-    prob_data = [star[7] for star in memb_prob_avrg_sort]
-    # Histogram of the data.
-    n, bins, patches = plt.hist(prob_data, 25, normed=1)
-    # Get bin centers.
-    bin_centers = 0.5 * (bins[:-1] + bins[1:])
-    # scale values to interval [0,1]
-    col = bin_centers - min(bin_centers)
-    col /= max(col)
-    cm = plt.cm.get_cmap('RdYlBu_r')
-    # Plot histo colored according to colormap.
-    for c, p in zip(col, patches):
-        plt.setp(p, 'facecolor', cm(c))
-    # Plot minimum probability value used in best isochrone fit function, if
-    # it was used.
-    bf_flag = g.bf_params[0]
-    if bf_flag:
-        text = '$prob_{min}=%.2f$' % min_prob
-        plt.text(0.05, 0.92, text, transform=ax.transAxes,
-             bbox=dict(facecolor='white', alpha=0.85), fontsize=14)
-        plt.axvline(x=min_prob, linestyle='--', color='green', lw=2.5)
+    memb_prob_avrg_sort, flag_decont_skip = decont_algor_return
+    # Plot *only* if the DA was applied.
+    if not flag_decont_skip:
+        # Reduced membership.
+        min_prob = red_return[1]
+        ax = plt.subplot(gs[4:6, 2:4])
+        plt.xlim(0., 1.)
+        plt.xlabel('membership probability', fontsize=12)
+        plt.ylabel('N', fontsize=12)
+        ax.minorticks_on()
+        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
+        prob_data = [star[7] for star in memb_prob_avrg_sort]
+        # Histogram of the data.
+        n, bins, patches = plt.hist(prob_data, 20, normed=1)
+        # Get bin centers.
+        bin_centers = 0.5 * (bins[:-1] + bins[1:])
+        # scale values to interval [0,1]
+        col = bin_centers - min(bin_centers)
+        col /= max(col)
+        cm = plt.cm.get_cmap('RdYlBu_r')
+        # Plot histo colored according to colormap.
+        for c, p in zip(col, patches):
+            plt.setp(p, 'facecolor', cm(c))
+        # Plot minimum probability value used in best isochrone fit function,
+        # if it was used.
+        bf_flag = g.bf_params[0]
+        # Add text box.
+        text1 = '$prob_{min}=%.2f$' % min_prob
+        text2 = r'$n_{{DA-memb}} \approx {}$'.format(n_memb_da)
+        if bf_flag:
+            text = text1 + '\n' + text2
+            # Plot minimum probability line.
+            plt.axvline(x=min_prob, linestyle='--', color='green', lw=2.5)
+        else:
+            text = text2
+        #plt.text(0.05, 0.92, text, transform=ax.transAxes,
+             #bbox=dict(facecolor='white', alpha=0.85), fontsize=14)
+        ob = offsetbox.AnchoredText(text, loc=2, prop=dict(size=16))
+        ob.patch.set(boxstyle='square,pad=-0.2', alpha=0.85)
+        ax.add_artist(ob)
 
 
 def pl_chart_mps(gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,

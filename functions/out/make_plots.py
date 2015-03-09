@@ -35,8 +35,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
     bin_width, center_params, rdp_params, field_dens, radius_params,
     cont_index, mag_data, col_data, err_plot, err_flags, kp_params,
     cl_region, stars_out, stars_in_rjct, stars_out_rjct, integr_return, n_memb,
-    flag_area_stronger, field_regions, flag_pval_test,
-    pval_test_params, memb_prob_avrg_sort, lum_func, completeness, ip_list,
+    n_memb_da, flag_area_stronger, field_regions, flag_pval_test,
+    pval_test_params, decont_algor_return, lum_func, completeness, ip_list,
     red_return, err_lst, bf_return):
     '''
     Make all plots.
@@ -127,12 +127,12 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
     # Decontamination algorithm plots.
     da_flag, bf_flag = g.da_params[0], g.bf_params[0]
 
-    if g.da_params[0] != 'skip':
+    if da_flag != 'skip':
 
         arglist = [
-            [gs, red_return, memb_prob_avrg_sort],
+            [gs, n_memb_da, red_return, decont_algor_return],
             [gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin, y_zmax,
-                center_cl, clust_rad, field_dens, memb_prob_avrg_sort,
+                center_cl, clust_rad, field_dens, decont_algor_return[0],
                 stars_out]
             ]
         for n, args in enumerate(arglist, 1):
@@ -140,16 +140,16 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
 
     plot_colorbar = False
     if da_flag != 'skip' or bf_flag:
-            # This function is called separately since we need to retrieve some
-            # information from it to plot that #$%&! colorbar.
-            try:
-                plot_colorbar, v_min_mp, v_max_mp, sca, trans = \
-                mp_decont_algor.pl_mps_phot_diag(gs, fig, x_min_cmd, x_max_cmd,
-                    y_min_cmd, y_max_cmd, x_ax, y_ax, memb_prob_avrg_sort,
-                    shift_isoch, col_data, err_lst)
-            except:
-                print("  WARNING: error when plotting MPs on cluster's "
-                "photom diagram.")
+        # This function is called separately since we need to retrieve some
+        # information from it to plot that #$%&! colorbar.
+        try:
+            plot_colorbar, v_min_mp, v_max_mp, sca, trans = \
+            mp_decont_algor.pl_mps_phot_diag(gs, fig, x_min_cmd, x_max_cmd,
+                y_min_cmd, y_max_cmd, x_ax, y_ax, decont_algor_return[0],
+                shift_isoch, col_data, err_lst)
+        except:
+            print("  WARNING: error when plotting MPs on cluster's "
+            "photom diagram.")
 
     #
     # Best fit plots.

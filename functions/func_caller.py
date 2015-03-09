@@ -25,6 +25,7 @@ from functions.phot_analysis.get_integ_mag import integ_mag as g_i_m
 from functions.phot_analysis.get_members_number import get_memb_num as g_m_n
 from functions.phot_analysis.get_cont_index import cont_indx as g_c_i
 from functions.phot_analysis.decont_algor_bys import bys_da as dab
+from functions.phot_analysis.get_members_param import mp_members as m_m
 from functions.phot_analysis.get_lf import lf
 #
 from functions.best_fit.reduce_membership import red_memb as rm
@@ -148,6 +149,9 @@ def asteca_funcs(cl_file, ip_list, R_in_place):
     c_m_f(memb_file_out, memb_prob_avrg_sort)
     print 'Membership probabilities saved to file.'
 
+    # Obtain members parameter.
+    memb_par, n_memb_da = m_m(n_memb, decont_algor_return)
+
     # Reduce number of stars in cluster according to a lower membership
     # probability or magnitude limit.
     red_return = rm(decont_algor_return)
@@ -163,8 +167,9 @@ def asteca_funcs(cl_file, ip_list, R_in_place):
 
     # Add cluster data and flags to output file
     a_d_o(out_file_name, write_name, center_params, radius_params, kp_params,
-        cont_index, n_memb, frac_cl_area, pval_test_params[0], integr_return,
-        err_flags, flag_num_memb_low, bf_return)
+        cont_index, n_memb, memb_par, n_memb_da, frac_cl_area,
+        pval_test_params[0], integr_return, err_flags, flag_num_memb_low,
+        bf_return)
     print 'Data added to output file.'
 
     # Output top tiers models if best fit parameters were obtained.
@@ -177,9 +182,9 @@ def asteca_funcs(cl_file, ip_list, R_in_place):
             bin_width, center_params, rdp_params,
             field_dens, radius_params, cont_index, mag_data, col1_data,
             err_plot, err_flags, kp_params, cl_region, stars_out,
-            stars_in_rjct, stars_out_rjct, integr_return, n_memb,
+            stars_in_rjct, stars_out_rjct, integr_return, n_memb, n_memb_da,
             flag_area_stronger, field_region, flag_pval_test,
-            pval_test_params, memb_prob_avrg_sort, lum_func, completeness,
+            pval_test_params, decont_algor_return, lum_func, completeness,
             ip_list, red_return, err_lst, bf_return)
         print 'Plots created.'
 

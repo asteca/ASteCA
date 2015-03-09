@@ -22,8 +22,8 @@ def flatten(l):
 
 
 def add_data_output(out_file_name, write_name, center_params, radius_params,
-    kp_params, cont_index, n_memb, frac_cl_area, prob_cl_kde, integr_return,
-    err_flags, flag_num_memb_low, bf_return):
+    kp_params, cont_index, n_memb, memb_par, n_memb_da, frac_cl_area,
+    prob_cl_kde, integr_return, err_flags, flag_num_memb_low, bf_return):
     '''
     Add data obtained to the 'data_output.dat' file.
     '''
@@ -82,16 +82,16 @@ def add_data_output(out_file_name, write_name, center_params, radius_params,
     cpe_r = [item for t in zip(cp_r, cp_e) for item in t]
 
     # Store all parameter values in list.
-    line = [write_name, cre_r, kcp, cont_index, n_memb, n_c_k, frac_cl_area,
-        prob_cl_kde, integ_col, cpe_r]
+    line = [write_name, cre_r, kcp, cont_index, n_c_k, n_memb, n_memb_da,
+        memb_par, frac_cl_area, prob_cl_kde, integ_col, cpe_r]
     # Flatten list.
     line_f = list(flatten(line))
 
     # Write values to file.
     with open(out_file_name, "a") as f_out:
         f_out.write('''{:<16} {:>8} {:>8} {:>8} {:>8} {:>8} \
-{:>8} {:>8} {:>8} {:>8} {:>8} {:>8.2f} \
-{:>8.2f} {:>8.0f} {:>8.0f} {:>8.2f} {:>8.2f} {:>8.2f} \
+{:>8} {:>8} {:>8} {:>8} {:>8} {:>8.2f} {:>7.2f} {:>8.0f} \
+{:>8.0f} {:>8.0f} {:>9.2f} {:>7.2f} {:>8.2f} {:>8.2f} \
 {:>8} {:>8} {:>8} {:>8} \
 {:>8} {:>8} {:>8} {:>8} \
 {:>8} {:>8} {:>8} {:>8}'''.format(*line_f))
