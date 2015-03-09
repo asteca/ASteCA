@@ -27,7 +27,7 @@ def mp_members(n_memb, decont_algor_return):
             if star[7] >= 0.5:
                 n_memb_da += 1
 
-        if n_memb != 0 or n_memb_da != 0.:
+        if n_memb != 0 or n_memb_da != 0:
             # Obtain parameter.
             memb_par = (float(n_memb) - float(n_memb_da)) / \
                 (float(n_memb) + float(n_memb_da))
