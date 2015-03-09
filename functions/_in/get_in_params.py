@@ -134,7 +134,7 @@ def init(mypath):
 
                 # Reduce membership paramaters.
                 elif reader[0] == 'RM':
-                    flag_red_memb = str(reader[1])
+                    mode_red_memb = str(reader[1])
                     min_prob = float(reader[2])
 
                 # Genetic algorithm parameters.
@@ -187,4 +187,4 @@ def init(mypath):
     bf_params = [bf_flag, best_fit_algor, lkl_method, bin_method, N_b]
     sc_params = [IMF_name, bin_mr]
     ga_params = [n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es]
-    rm_params = [flag_red_memb, min_prob]
+    rm_params = [mode_red_memb, min_prob]

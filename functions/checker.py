@@ -249,14 +249,23 @@ def check(mypath, cl_files):
             sys.exit("ERROR: the stored CMD value ({}) does not match a valid"
                 " selection.".format(cmd_select))
 
+        # Check IMF defined.
+        imfs_dict = {'chabrier_2001_exp', 'chabrier_2001_log', 'kroupa_1993',
+            'kroupa_2002'}
+        if g.sc_params[0] not in imfs_dict:
+            sys.exit("ERROR: Name of IMF ({}) is incorrect.".format(
+                g.sc_params[0]))
+
+        # Check 'reduced memnership' method selected.
+        mode_red_memb, min_prob = g.rm_params
+        if mode_red_memb not in {'auto', 'manual', 'mag', 'skip'}:
+            sys.exit("ERROR: the selected reduced membership method ('{}')"
+                " does\nnot match a valid input.".format(mode_red_memb))
+
         # Check selected isochrones set.
         if iso_select not in {'PAR10', 'PAR11', 'PAR12'}:
-            sys.exit("ERROR: the selected isochrones set ({}) does not match a"
-                " valid input.".format(iso_select))
-
-        if iso_select not in {'PAR10', 'PAR11', 'PAR12'}:
-            sys.exit("ERROR: the selected isochrones set ({}) does not match a"
-                " valid input.".format(iso_select))
+            sys.exit("ERROR: the selected isochrones set ('{}') does\n"
+                "not match a valid input.".format(iso_select))
 
         # Check that no parameter range is empty.
         global mass_rs
@@ -316,13 +325,6 @@ def check(mypath, cl_files):
         except:
             print traceback.format_exc()
             sys.exit("ERROR: unknown error reading metallicity files.")
-
-        # Check IMF defined.
-        imfs_dict = {'chabrier_2001_exp', 'chabrier_2001_log', 'kroupa_1993',
-            'kroupa_2002'}
-        if g.sc_params[0] not in imfs_dict:
-            sys.exit("ERROR: Name of IMF ({}) is incorrect.".format(
-                g.sc_params[0]))
 
     print 'Full check done.\n'
     return ip_list, R_in_place

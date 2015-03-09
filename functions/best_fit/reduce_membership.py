@@ -15,14 +15,14 @@ def red_memb(decont_algor_return):
     '''
 
     bf_flag = g.bf_params[0]
-    flag_red_memb, min_prob = g.rm_params
+    mode_red_memb, min_prob = g.rm_params
     memb_prob_avrg_sort, flag_decont_skip = decont_algor_return
 
     # Only run if best fit process is set to run.
     if bf_flag:
 
         skip_reduce = False
-        if flag_red_memb in {'auto', 'manual'}:
+        if mode_red_memb in {'auto', 'manual'}:
 
             if flag_decont_skip is True:
                 print ("  WARNING: decontamination algorithm skipped.\n"
@@ -31,7 +31,7 @@ def red_memb(decont_algor_return):
 
             if skip_reduce is not True:
 
-                if flag_red_memb == 'auto':
+                if mode_red_memb == 'auto':
                     # Reject stars in the lower half of the membership
                     # probabilities list.
                     middle_indx = int(len(memb_prob_avrg_sort) / 2)
@@ -44,7 +44,7 @@ def red_memb(decont_algor_return):
                         red_memb = memb_prob_avrg_sort[:middle_indx]
                         min_prob = memb_prob_avrg_sort[middle_indx][7]
 
-                elif flag_red_memb == 'manual':
+                elif mode_red_memb == 'manual':
 
                     red_memb = []
                     for star in memb_prob_avrg_sort:
@@ -59,7 +59,7 @@ def red_memb(decont_algor_return):
                 # Skip reduction process.
                 red_memb, min_prob = memb_prob_avrg_sort, 0.
 
-        elif flag_red_memb == 'mag':
+        elif mode_red_memb == 'mag':
             # Reject stars beyond the given magnitude limit.
             red_list = []
             for star in memb_prob_avrg_sort:
