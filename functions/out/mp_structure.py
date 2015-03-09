@@ -8,6 +8,7 @@ Created on Tue Dic 16 12:00:00 2014
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.offsetbox as offsetbox
+from matplotlib.ticker import FormatStrFormatter
 from itertools import cycle
 from matplotlib.patches import Rectangle
 from ..errors import error_round as err_r
@@ -21,10 +22,13 @@ def pl_centers(gs, x_min, x_max, y_min, y_max, x_name, y_name, coord,
     2D Gaussian histograms' centers using different standard deviations.
     '''
     ax = plt.subplot(gs[0:2, 0:2])
+    ax.set_aspect('equal')
     #Set plot limits
     if coord == 'deg':
         # If RA is used, invert axis.
         plt.xlim(x_max, x_min)
+        # Set x axis to not use scientific notation.
+        ax.xaxis.set_major_formatter(FormatStrFormatter('%0.1f'))
     else:
         plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
@@ -52,8 +56,9 @@ def pl_centers(gs, x_min, x_max, y_min, y_max, x_name, y_name, coord,
     text2 = ("$(\sigma_{{{0}}},\sigma_{{{1}}}) = ({3:g},\;{4:g})\,"
     "{2}$").format(x_name, y_name, coord, *cent_std_dev_r)
     text = text1 + '\n' + text2
-    plt.text(0.03, 0.88, text, transform=ax.transAxes,
-        bbox=dict(facecolor='white', alpha=0.8), fontsize=11)
+    ob = offsetbox.AnchoredText(text, loc=2, prop=dict(size=11))
+    ob.patch.set(boxstyle='square,pad=-0.2', alpha=0.85)
+    ax.add_artist(ob)
     # Plot centers.
     cols = cycle(['red', 'blue', 'green', 'black', 'cyan'])
     for i, center in enumerate(approx_cents):
@@ -205,10 +210,13 @@ def pl_full_frame(gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max,
     kp_params
 
     ax = plt.subplot(gs[0:2, 8:10])
+    ax.set_aspect('equal')
     #Set plot limits
     if coord == 'deg':
         # If RA is used, invert axis.
         plt.xlim(x_max, x_min)
+        # Set x axis to not use scientific notation.
+        ax.xaxis.set_major_formatter(FormatStrFormatter('%0.1f'))
     else:
         plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
@@ -248,7 +256,6 @@ def pl_full_frame(gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max,
     ob.patch.set(boxstyle='square,pad=-0.2', alpha=0.85)
     ax.add_artist(ob)
     # Plot stars.
-    ax.set_aspect('equal')
     plt.scatter(x_data, y_data, marker='o', c='black', s=st_sizes_arr)
 
 
@@ -259,9 +266,12 @@ def pl_zoom_frame(gs, fig, x_zmin, x_zmax, y_zmin, y_zmax, x_name, y_name,
     Zoom on x,y finding chart.
     '''
     ax = plt.subplot(gs[0:2, 10:12])
+    ax.set_aspect('equal')
     if coord == 'deg':
         # If RA is used, invert axis.
         plt.xlim(x_zmax, x_zmin)
+        # Set x axis to not use scientific notation.
+        ax.xaxis.set_major_formatter(FormatStrFormatter('%0.1f'))
     else:
         plt.xlim(x_zmin, x_zmax)
     plt.ylim(y_zmin, y_zmax)
@@ -270,11 +280,11 @@ def pl_zoom_frame(gs, fig, x_zmin, x_zmax, y_zmin, y_zmax, x_name, y_name,
     plt.ylabel('{} ({})'.format(y_name, coord), fontsize=12)
     # Set minor ticks
     ax.minorticks_on()
-    text1 = 'Cluster zoom\n'
-    text2 = 'CI = %0.2f' % (cont_index)
-    text = text1 + text2
-    plt.text(0.69, 0.9, text, transform=ax.transAxes,
-             bbox=dict(facecolor='white', alpha=0.85), fontsize=12)
+    # Add text box.
+    text = 'Cluster zoom\nCI = %0.2f' % (cont_index)
+    ob = offsetbox.AnchoredText(text, loc=1, prop=dict(size=12))
+    ob.patch.set(boxstyle='square,pad=-0.2', alpha=0.85)
+    ax.add_artist(ob)
     # Plot contour levels if it was obtained.
     if kde_pl:
         ext_range, x, y, k_pos = kde_pl
@@ -312,10 +322,13 @@ def pl_cl_fl_regions(gs, fig, x_min, x_max, y_min, y_max, x_name, y_name,
     Cluster and field regions defined.
     '''
     ax = plt.subplot(gs[2:4, 0:2])
+    ax.set_aspect('equal')
     #Set plot limits
     if coord == 'deg':
         # If RA is used, invert axis.
         plt.xlim(x_max, x_min)
+        # Set x axis to not use scientific notation.
+        ax.xaxis.set_major_formatter(FormatStrFormatter('%0.1f'))
     else:
         plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
@@ -329,9 +342,11 @@ def pl_cl_fl_regions(gs, fig, x_min, x_max, y_min, y_max, x_name, y_name,
     circle = plt.Circle((center_cl[0], center_cl[1]), clust_rad,
                         color='k', fill=False)
     fig.gca().add_artist(circle)
-    plt.text(0.4, 0.92, 'Cluster + %d Field regions' % (len(field_regions)),
-             transform=ax.transAxes,
-             bbox=dict(facecolor='white', alpha=0.8), fontsize=12)
+    # Add text box.
+    text = 'Cluster + %d Field regions' % (len(field_regions))
+    ob = offsetbox.AnchoredText(text, loc=1, prop=dict(size=12))
+    ob.patch.set(boxstyle='square,pad=-0.2', alpha=0.85)
+    ax.add_artist(ob)
     # Plot cluster region.
     plt.scatter(zip(*cl_region)[1], zip(*cl_region)[2], marker='o', c='red',
                 s=8, edgecolors='none')

@@ -8,6 +8,7 @@ Created on Tue Dic 16 12:00:00 2014
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
+from matplotlib.ticker import FormatStrFormatter
 from functions.exp_function import exp_3p
 from .._in import get_in_params as g
 
@@ -58,6 +59,8 @@ def pl_chart_mps(gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
     if coord == 'deg':
         # If RA is used, invert axis.
         plt.xlim(x_zmax, x_zmin)
+        # Set x axis to not use scientific notation.
+        ax.xaxis.set_major_formatter(FormatStrFormatter('%0.1f'))
     else:
         plt.xlim(x_zmin, x_zmax)
     plt.ylim(y_zmin, y_zmax)
