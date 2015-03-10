@@ -258,7 +258,7 @@ def check(mypath, cl_files):
 
         # Check 'reduced memnership' method selected.
         mode_red_memb, min_prob = g.rm_params
-        if mode_red_memb not in {'auto', 'manual', 'mag', 'skip'}:
+        if mode_red_memb not in {'auto', 'man', 'top-h', 'mag', 'skip'}:
             sys.exit("ERROR: the selected reduced membership method ('{}')"
                 " does\nnot match a valid input.".format(mode_red_memb))
 
