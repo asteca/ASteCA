@@ -154,7 +154,7 @@ def asteca_funcs(cl_file, ip_list, R_in_place):
 
     # Reduce number of stars in cluster according to a lower membership
     # probability or magnitude limit.
-    red_return = rm(decont_algor_return)
+    red_return = rm(n_memb, decont_algor_return)
 
     # Obtain exponential error function parameters to use by the
     # synthetic cluster creation function.

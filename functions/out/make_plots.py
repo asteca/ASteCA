@@ -145,7 +145,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
         try:
             plot_colorbar, v_min_mp, v_max_mp, sca, trans = \
             mp_decont_algor.pl_mps_phot_diag(gs, fig, x_min_cmd, x_max_cmd,
-                y_min_cmd, y_max_cmd, x_ax, y_ax, decont_algor_return[0],
+                y_min_cmd, y_max_cmd, x_ax, y_ax, red_return,
                 shift_isoch, col_data, err_lst)
         except:
             print("  WARNING: error when plotting MPs on cluster's "
@@ -206,7 +206,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
     if plot_colorbar is True:
         import matplotlib.transforms as mts
         # Position and dimensions relative to the axes.
-        x0, y0, width, height = [0.67, 0.85, 0.2, 0.04]
+        x0, y0, width, height = [0.67, 0.92, 0.2, 0.04]
         # Transform them to get the ABSOLUTE POSITION AND DIMENSIONS
         Bbox = mts.Bbox.from_bounds(x0, y0, width, height)
         l, b, w, h = mts.TransformedBbox(Bbox, trans).bounds

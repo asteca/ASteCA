@@ -279,13 +279,13 @@ FB              0.7      0.      1.      0.2
 
 # Reduced membership.
 #
-# * mode: auto / manual / top-h / mag / skip
+# * mode: auto / man / top-h / mag / skip
 #   - auto: will set the minimum probability value such that only the top
 #     half of stars with the highest probability are used.
-#   - manual: the minimum probability value has to be set manually in the
-#    'prob_min' parameter (0, 1).
 #   - top-h: selects the top half of stars in the cluster region with the
 #     highest probability memberships.
+#   - man: the minimum probability value has to be set manually in the
+#    'prob_min' parameter (0, 1).
 #   - mag: switches the 'prob_min' value to a 'mag_min' value so the user can
 #     select a minimum magnitude to be used in the best fit function, instead
 #     of a minimum probability (the 'minimum magnitude' value is the value of
