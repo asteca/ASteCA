@@ -199,7 +199,7 @@ def pl_rad_dens(gs, radii, ring_density, field_dens, coord, clust_name,
     # get handles
     handles, labels = ax.get_legend_handles_labels()
     # use them in the legend
-    ax.legend(handles, labels, loc='upper right', numpoints=2, fontsize=12)
+    ax.legend(handles, labels, loc='upper right', numpoints=2, fontsize=11)
 
 
 def pl_full_frame(gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max,

@@ -8,6 +8,7 @@ Created on Tue Dic 16 12:00:00 2014
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
+import matplotlib.offsetbox as offsetbox
 from .._in import get_in_params as g
 from functions.exp_function import exp_3p
 
@@ -122,24 +123,28 @@ def pl_fl_diag(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
     ax.xaxis.set_major_locator(MultipleLocator(1.0))
     # Set grid
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
-    # Plot rejected stars.
-    # Outside of the cluster region.
+    # Plot rejected stars outside of the cluster region.
     stars_rjct_temp = [[], []]
     for star in stars_out_rjct:
         stars_rjct_temp[0].append(star[5])
         stars_rjct_temp[1].append(star[3])
     plt.scatter(stars_rjct_temp[0], stars_rjct_temp[1], marker='x',
         c='teal', s=15, zorder=1)
-    # Plot stars within the field regions defined, if at least one exists.
+    # Plot accepted stars within the field regions defined, if at least one
+    # exists.
     if field_regions:
         stars_acpt_temp = [[], []]
         for fr in field_regions:
             for star in fr:
                 stars_acpt_temp[0].append(star[5])
                 stars_acpt_temp[1].append(star[3])
-        plt.text(0.54, 0.93, '$\star_{field}\,|\,N=%d$' %
-            len(stars_acpt_temp[0]), transform=ax.transAxes,
-            bbox=dict(facecolor='white', alpha=0.5), fontsize=16)
+        # Add text box.
+        text = '$\star_{{field}}\,|\,N_{{accpt}}={}$'.format(
+            len(stars_acpt_temp[0]))
+        ob = offsetbox.AnchoredText(text, loc=1, prop=dict(size=14))
+        ob.patch.set(boxstyle='square,pad=-0.2', alpha=0.7)
+        ax.add_artist(ob)
+        # Get size of stars to plot.
         sz_pt = phot_diag_st_size(len(stars_acpt_temp[0]))
         plt.scatter(stars_acpt_temp[0], stars_acpt_temp[1], marker='o', c='b',
                     s=sz_pt, lw=0.3, zorder=2)
@@ -163,19 +168,19 @@ def pl_cl_diag(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
     ax.xaxis.set_major_locator(MultipleLocator(1.0))
     # Set grid
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
-    # Calculate total number of stars whitin cluster's radius.
-    tot_stars = len(stars_in_rjct) + len(cl_region)
-    text1 = '$r \leq r_{{cl}}\,|\,N={}$'.format(tot_stars)
+    # Add text box.
+    text1 = '$r \leq r_{{cl}}\,|\,N_{{accpt}}={}$'.format(len(cl_region))
     text2 = r'$n_{{memb}} \approx {}$'.format(n_memb)
     text = text1 + '\n' + text2
-    plt.text(0.55, 0.86, text, transform=ax.transAxes,
-             bbox=dict(facecolor='white', alpha=0.5), fontsize=16)
+    ob = offsetbox.AnchoredText(text, loc=1, prop=dict(size=14))
+    ob.patch.set(boxstyle='square,pad=-0.2', alpha=0.7)
+    ax.add_artist(ob)
     # Plot stars in CMD.
     if len(stars_in_rjct) > 0:
         # Only attempt to pot if any star is stored in the list.
         plt.scatter(zip(*stars_in_rjct)[5], zip(*stars_in_rjct)[3],
             marker='x', c='teal', s=12, zorder=1)
-    sz_pt = phot_diag_st_size(tot_stars)
+    sz_pt = phot_diag_st_size(len(cl_region))
     plt.scatter(zip(*cl_region)[5], zip(*cl_region)[3], marker='o', c='r',
                 s=sz_pt, lw=0.3, zorder=2)
 
@@ -222,8 +227,7 @@ def pl_lum_func(gs, mag_data, y_ax, x_cl, y_cl, flag_area_stronger, x_fl,
     ax.vlines(x=mag_peak, ymin=0., ymax=plt.ylim()[1], color='k',
         lw=1.5, linestyles='dashed', label=text, zorder=1)
     # Legends.
-    leg = plt.legend(fancybox=True, loc='upper right', numpoints=1,
-                       fontsize=13)
+    leg = plt.legend(fancybox=True, loc='upper right', numpoints=1, fontsize=12)
     # Set the alpha value of the legend.
     leg.get_frame().set_alpha(0.7)
 
@@ -278,7 +282,7 @@ def pl_integ_mag(gs, integr_return, y_ax, x_ax0, flag_area_stronger):
             # Field average integrated magnitude.
             plt.plot(fl_reg_mag2[0], fl_reg_mag2[1], 'b:', lw=2.,
                 label=text4)
-        # Check how the second magnitude whould be formed.
+        # Check how the second magnitude should be formed.
         if m_ord == 21:
             sig, text0 = 1., x_ax0 + '^{*} -' + y_ax
         elif m_ord == 12:
@@ -286,11 +290,11 @@ def pl_integ_mag(gs, integr_return, y_ax, x_ax0, flag_area_stronger):
         int_col = sig * (integ_mag2 - integ_mag1)
         text = '$(' + text0 + '^{*} )_{cl} = %0.2f$' % int_col
         plt.text(0.22, 0.15, text, transform=ax.transAxes,
-             bbox=dict(facecolor='white', alpha=0.75), fontsize=13)
+             bbox=dict(facecolor='white', alpha=0.75), fontsize=12)
         lines, labels = ax.get_legend_handles_labels()
         leg = ax.legend(lines, labels, loc='lower right', numpoints=1,
-            fontsize=13)
-        leg.get_frame().set_alpha(0.75)
+            fontsize=12)
+        leg.get_frame().set_alpha(0.7)
 
 
 def pl_p_vals(gs, flag_pval_test, pval_test_params):
