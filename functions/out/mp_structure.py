@@ -23,7 +23,7 @@ def pl_centers(gs, x_min, x_max, y_min, y_max, x_name, y_name, coord,
     '''
     ax = plt.subplot(gs[0:2, 0:2])
     ax.set_aspect('equal')
-    #Set plot limits
+    # Set plot limits
     if coord == 'deg':
         # If RA is used, invert axis.
         plt.xlim(x_max, x_min)
@@ -102,6 +102,9 @@ def pl_hist_g(gs, fig, x_name, y_name, coord, cent_bin, clust_rad, bin_width,
     ob.patch.set(boxstyle='square,pad=-0.2', alpha=0.85)
     ax.add_artist(ob)
     plt.imshow(hist_2d_g.transpose(), origin='lower')
+    # If RA is used, invert axis.
+    if coord == 'deg':
+        ax.invert_xaxis()
 
 
 def pl_rad_dens(gs, radii, ring_density, field_dens, coord, clust_name,
@@ -211,7 +214,7 @@ def pl_full_frame(gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max,
 
     ax = plt.subplot(gs[0:2, 8:10])
     ax.set_aspect('equal')
-    #Set plot limits
+    # Set plot limits
     if coord == 'deg':
         # If RA is used, invert axis.
         plt.xlim(x_max, x_min)
@@ -220,7 +223,7 @@ def pl_full_frame(gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max,
     else:
         plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
-    #Set axis labels
+    # Set axis labels
     plt.xlabel('{} ({})'.format(x_name, coord), fontsize=12)
     plt.ylabel('{} ({})'.format(y_name, coord), fontsize=12)
     # Set minor ticks
@@ -275,7 +278,7 @@ def pl_zoom_frame(gs, fig, x_zmin, x_zmax, y_zmin, y_zmax, x_name, y_name,
     else:
         plt.xlim(x_zmin, x_zmax)
     plt.ylim(y_zmin, y_zmax)
-    #Set axis labels
+    # Set axis labels
     plt.xlabel('{} ({})'.format(x_name, coord), fontsize=12)
     plt.ylabel('{} ({})'.format(y_name, coord), fontsize=12)
     # Set minor ticks
@@ -323,7 +326,7 @@ def pl_cl_fl_regions(gs, fig, x_min, x_max, y_min, y_max, x_name, y_name,
     '''
     ax = plt.subplot(gs[2:4, 0:2])
     ax.set_aspect('equal')
-    #Set plot limits
+    # Set plot limits
     if coord == 'deg':
         # If RA is used, invert axis.
         plt.xlim(x_max, x_min)
@@ -332,7 +335,7 @@ def pl_cl_fl_regions(gs, fig, x_min, x_max, y_min, y_max, x_name, y_name,
     else:
         plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
-    #Set axis labels
+    # Set axis labels
     plt.xlabel('{} ({})'.format(x_name, coord), fontsize=12)
     plt.ylabel('{} ({})'.format(y_name, coord), fontsize=12)
     # Set minor ticks
