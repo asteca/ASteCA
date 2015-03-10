@@ -51,13 +51,13 @@ def pl_centers(gs, x_min, x_max, y_min, y_max, x_name, y_name, coord,
     # Add stats box.
     cent_med_r, cent_std_dev_r = err_r.round_sig_fig(cent_median,
         cent_std_dev)
-    text1 = (r"$(\tilde{{{0}}},\tilde{{{1}}}) = ({3:g},\;{4:g})\,"
+    text1 = (r"$(\tilde{{{0}}},\,\tilde{{{1}}}) = ({3:g},\;{4:g})\,"
     "{2}$").format(x_name, y_name, coord, *cent_med_r)
-    text2 = ("$(\sigma_{{{0}}},\sigma_{{{1}}}) = ({3:g},\;{4:g})\,"
+    text2 = ("$(\sigma_{{{0}}},\,\sigma_{{{1}}}) = ({3:g},\;{4:g})\,"
     "{2}$").format(x_name, y_name, coord, *cent_std_dev_r)
     text = text1 + '\n' + text2
     ob = offsetbox.AnchoredText(text, loc=2, prop=dict(size=11))
-    ob.patch.set(boxstyle='square,pad=-0.2', alpha=0.85)
+    ob.patch.set(boxstyle='square,pad=0.', alpha=0.85)
     ax.add_artist(ob)
     # Plot centers.
     cols = cycle(['red', 'blue', 'green', 'black', 'cyan'])
