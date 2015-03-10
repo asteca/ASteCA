@@ -120,7 +120,7 @@ def integ_mag(cl_region, field_region, flag_area_stronger):
                 integ_mag2 = min(cl_reg_mag2[1])
 
         else:
-            print ("  WARNING: no field regions defined. Integrated magnitude"
+            print ("  WARNING: no field regions defined. Integrated magnitude\n"
             "  is not cleaned from field star contamination.")
             # Pass dummy lists.
             fl_reg_mag1, fl_reg_mag2 = [np.array([]), np.array([])], \
