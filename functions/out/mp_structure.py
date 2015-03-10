@@ -283,6 +283,10 @@ def pl_zoom_frame(gs, fig, x_zmin, x_zmax, y_zmin, y_zmax, x_name, y_name,
     plt.ylabel('{} ({})'.format(y_name, coord), fontsize=12)
     # Set minor ticks
     ax.minorticks_on()
+    # Plot radius.
+    circle = plt.Circle((center_cl[0], center_cl[1]), clust_rad, color='r',
+        fill=False, lw=1.5, zorder=5)
+    fig.gca().add_artist(circle)
     # Add text box.
     text = 'Cluster zoom\nCI = %0.2f' % (cont_index)
     ob = offsetbox.AnchoredText(text, loc=1, prop=dict(size=12))
@@ -313,10 +317,6 @@ def pl_zoom_frame(gs, fig, x_zmin, x_zmax, y_zmin, y_zmax, x_name, y_name,
     # Plot center.
     plt.scatter(center_cl[0], center_cl[1], color='w', s=40, lw=0.8,
         marker='x', zorder=5)
-    # Plot radius.
-    circle = plt.Circle((center_cl[0], center_cl[1]), clust_rad, color='r',
-        fill=False, lw=1.5, zorder=5)
-    fig.gca().add_artist(circle)
 
 
 def pl_cl_fl_regions(gs, fig, x_min, x_max, y_min, y_max, x_name, y_name,
