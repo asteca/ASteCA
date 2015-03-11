@@ -120,6 +120,20 @@ def pl_2_param_dens(gs, _2_params, min_max_p, cp_r, cp_e, model_done):
     yp_min, yp_max = min_max_p[my]
     plt.xlim(xp_min, xp_max)
     plt.ylim(yp_min, yp_max)
+
+    if _2_params in {'age-metal', 'metal-dist'}:
+        from ..errors import error_round as err
+        step_sz = err.round_to_y((xp_max - xp_min) / 4)
+        #print xp_min, xp_max, step_sz
+        #print np.arange(xp_min, xp_max, step_sz)
+        x_min_r = max(err.round_to_y(xp_min), 0.)
+        x_ticks = []
+        for i in np.arange(x_min_r, xp_max, step_sz):
+            x_ticks.append(i)
+        #print err.round_to_y(xp_min), err.round_to_y(xp_max), err.round_to_y(step_sz)
+        #print np.arange(err.round_to_y(xp_min), err.round_to_y(xp_max), err.round_to_y(step_sz))
+        ax.xaxis.set_ticks(x_ticks)
+
     plt.xlabel(x_label, fontsize=16)
     plt.ylabel(y_label, fontsize=16)
     plt.minorticks_on()
