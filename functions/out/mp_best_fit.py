@@ -10,7 +10,23 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
 from matplotlib.patches import Ellipse
 from scipy.ndimage.filters import gaussian_filter
+import math
 from .._in import get_in_params as g
+
+
+def BestTick(largest, mostticks):
+    minimum = largest / mostticks
+    magnitude = 10 ** math.floor(math.log(minimum) / math.log(10))
+    residual = minimum / magnitude
+    if residual > 5:
+        tick = 10 * magnitude
+    elif residual > 2:
+        tick = 5 * magnitude
+    elif residual > 1:
+        tick = 2 * magnitude
+    else:
+        tick = magnitude
+    return tick
 
 
 def pl_bf_synth_cl(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
@@ -122,17 +138,10 @@ def pl_2_param_dens(gs, _2_params, min_max_p, cp_r, cp_e, model_done):
     plt.ylim(yp_min, yp_max)
 
     if _2_params in {'age-metal', 'metal-dist'}:
-        from ..errors import error_round as err
-        step_sz = err.round_to_y((xp_max - xp_min) / 4)
-        #print xp_min, xp_max, step_sz
-        #print np.arange(xp_min, xp_max, step_sz)
-        x_min_r = max(err.round_to_y(xp_min), 0.)
-        x_ticks = []
-        for i in np.arange(x_min_r, xp_max, step_sz):
-            x_ticks.append(i)
-        #print err.round_to_y(xp_min), err.round_to_y(xp_max), err.round_to_y(step_sz)
-        #print np.arange(err.round_to_y(xp_min), err.round_to_y(xp_max), err.round_to_y(step_sz))
-        ax.xaxis.set_ticks(x_ticks)
+
+        st = BestTick((xp_max - xp_min), 6)
+        print st
+        ax.xaxis.set_ticks(np.arange(xp_min, xp_max, st))
 
     plt.xlabel(x_label, fontsize=16)
     plt.ylabel(y_label, fontsize=16)
