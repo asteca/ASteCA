@@ -164,7 +164,7 @@ GR       10
 #   N=1.96 encloses the 95% confidence interval.
 #
 #       mode   e_max   be   be_e  N
-ER    eyefit    0.25    2.   0.1  0.5
+ER      emax    0.25    2.   0.1  0.5
 
 # Integrated magnitudes.
 #
