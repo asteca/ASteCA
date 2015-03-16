@@ -7,6 +7,7 @@ Created on Tue Dic 16 12:00:00 2014
 
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.offsetbox as offsetbox
 from matplotlib.ticker import MultipleLocator
 from matplotlib.patches import Ellipse
 from scipy.ndimage.filters import gaussian_filter
@@ -69,6 +70,7 @@ def pl_ga_lkl(gs, lkl_old, model_done, new_bs_indx):
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=0.6)
     plt.xlabel('Generation', fontsize=12)
     plt.ylabel('Likelihood', fontsize=12)
+    # Add text box.
     text1 = '$N_{total} = %.2e\,;\,N_{btst} = %d$' '\n' % \
     (len(model_done[0]), N_b)
     text2 = '$n_{gen}=%d\,;\,n_{pop}=%d$' '\n' % (n_gen, n_pop)
@@ -76,8 +78,10 @@ def pl_ga_lkl(gs, lkl_old, model_done, new_bs_indx):
     text4 = '$p_{cross}=%0.2f\,;\,p_{mut}=%0.2f$' '\n' % (p_cross, p_mut)
     text5 = '$n_{el}=%d\,;\,n_{ei}=%d\,;\,n_{es}=%d$' % (n_el, n_ei, n_es)
     text = text1 + text2 + text3 + text4 + text5
-    plt.text(0.05, 0.73, text, transform=ax.transAxes,
-        bbox=dict(facecolor='white', alpha=0.75), fontsize=12)
+    ob = offsetbox.AnchoredText(text, loc=1, prop=dict(size=12))
+    ob.patch.set(boxstyle='square,pad=0.', alpha=0.85)
+    ax.add_artist(ob)
+
     # Plot likelihood minimum and mean lines.
     ax.plot(range(len(lkl_old[0])), lkl_old[0], lw=1., c='black',
               label='$L_{min}$')
@@ -89,9 +93,9 @@ def pl_ga_lkl(gs, lkl_old, model_done, new_bs_indx):
         plt.axvline(x=lin, linestyle='--', lw=lw_lin, color='green')
     # Legend.
     handles, labels = ax.get_legend_handles_labels()
-    leg = ax.legend(handles, labels, loc='upper right', numpoints=1,
-                      fontsize=12)
-    leg.get_frame().set_alpha(0.6)
+    leg = ax.legend(handles, labels, loc='upper left', numpoints=1,
+        fontsize=12)
+    leg.get_frame().set_alpha(0.7)
 
 
 def pl_2_param_dens(gs, _2_params, min_max_p, cp_r, cp_e, model_done):
