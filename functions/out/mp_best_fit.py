@@ -31,24 +31,27 @@ def pl_bf_synth_cl(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
     ax.xaxis.set_major_locator(MultipleLocator(1.0))
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
     if synth_clst.any():
-        # Add text box
-        text1 = '$N = {}$\n'.format(len(synth_clst[0]))
-        text2 = '$z = {} \pm {}$\n'.format(cp_r[0], cp_e[0])
-        text3 = '$log(age) = {} \pm {}$\n'.format(cp_r[1], cp_e[1])
-        text4 = '$E_{{(B-V)}} = {} \pm {}$\n'.format(cp_r[2], cp_e[2])
-        text5 = '$(m-M)_o = {} \pm {}$\n'.format(cp_r[3], cp_e[3])
-        text6 = '$M_{{\odot}} = {} \pm {}$\n'.format(cp_r[4], cp_e[4])
-        text7 = '$b_{{frac}} = {} \pm {}$'.format(cp_r[5], cp_e[5])
-        text = text1 + text2 + text3 + text4 + text5 + text6 + text7
-        plt.text(0.54, 0.61, text, transform=ax.transAxes,
-                 bbox=dict(facecolor='white', alpha=0.6, pad=15), fontsize=12)
-        # Plot isochrone.
-        plt.plot(shift_isoch[0], shift_isoch[1], 'r', lw=1.2)
         # Plot synth clust.
         plt.scatter(synth_clst[0], synth_clst[2], marker='o', s=40,
                     c='#4682b4', lw=0.5)
+        text1 = '\n$N_{{synth}} = {}$\n'.format(len(synth_clst[0]))
     else:
-        print ("  WARNING: empty synthetic cluster. Can't create plot.")
+        text1 = '\n$N_{{synth}} = {}$\n'.format(0)
+    # Add text box
+    text2 = '$z = {} \pm {}$\n'.format(cp_r[0], cp_e[0])
+    text3 = '$log(age) = {} \pm {}$\n'.format(cp_r[1], cp_e[1])
+    text4 = '$E_{{(B-V)}} = {} \pm {}$\n'.format(cp_r[2], cp_e[2])
+    text5 = '$(m-M)_o = {} \pm {}$\n'.format(cp_r[3], cp_e[3])
+    text6 = '$M_{{\odot}} = {} \pm {}$\n'.format(cp_r[4], cp_e[4])
+    text7 = '$b_{{frac}} = {} \pm {}$'.format(cp_r[5], cp_e[5])
+    text = text1 + text2 + text3 + text4 + text5 + text6 + text7
+    #plt.text(0.54, 0.61, text, transform=ax.transAxes,
+             #bbox=dict(facecolor='white', alpha=0.6, pad=15), fontsize=12)
+    ob = offsetbox.AnchoredText(text, pad=.2, loc=1, prop=dict(size=12))
+    ob.patch.set(alpha=0.85)
+    ax.add_artist(ob)
+    # Plot isochrone.
+    plt.plot(shift_isoch[0], shift_isoch[1], 'r', lw=1.2)
 
 
 def pl_ga_lkl(gs, lkl_old, model_done, new_bs_indx):
@@ -233,6 +236,6 @@ def plot(N, *args):
     try:
         fxn(*args)
     except:
-        #import traceback
-        #print traceback.format_exc()
+        import traceback
+        print traceback.format_exc()
         print("  WARNING: error when plotting {}.".format(plt_map.get(N)[1]))

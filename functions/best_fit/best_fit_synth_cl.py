@@ -129,6 +129,9 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list):
         shift_isoch, synth_clst = synth_cl_plot(ip_list, isoch_fit_params,
             err_lst, completeness, st_dist_mass)
 
+        if not synth_clst.any():
+            print ("  WARNING: best fit synthetic cluster found is empty.")
+
         # Round errors to 1 significant digit and round params values
         # to the corresponding number of significant digits given by
         # the errors.
