@@ -135,6 +135,17 @@ def param_ranges(ip_list):
     return min_max_p
 
 
+def likl_y_range(lkl_old):
+    '''
+    Obtain y axis range for the likelihood axis.
+    '''
+    lkl_range = max(lkl_old[1]) - min(lkl_old[0])
+    l_min_max = max(0., min(lkl_old[0]) - 0.1 * lkl_range), \
+    max(lkl_old[1]) + 0.1 * lkl_range
+
+    return l_min_max
+
+
 def BestTick(minv, maxv):
     '''
     Find optimal number and length of ticks for a given fixed maximum

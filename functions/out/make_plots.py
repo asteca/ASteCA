@@ -175,27 +175,27 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
         # Unpack.
         lkl_old, new_bs_indx, model_done = isoch_fit_params[1], \
         isoch_fit_params[2], isoch_fit_params[3]
-        # Obtain here the minimum likelihood axis value.
-        y_min_edge = max(0, min(lkl_old[0]) - 0.3 * min(lkl_old[0]))
+        l_min_max = prep_plots.likl_y_range(lkl_old)
+        l_max = l_min_max[1]
 
         arglist = [
+            [gs, l_min_max, lkl_old, model_done, new_bs_indx],
             [gs, 'age-metal', min_max_p, isoch_fit_params, p_errs, model_done],
             [gs, 'dist-ext', min_max_p, isoch_fit_params, p_errs, model_done],
             [gs, 'metal-dist', min_max_p, isoch_fit_params, p_errs, model_done],
             [gs, 'mass-binar', min_max_p, isoch_fit_params, p_errs, model_done],
-            [gs, lkl_old, model_done, new_bs_indx],
-            [gs, '$z$', lkl_old, min_max_p, isoch_fit_params, p_errs,
-                model_done, y_min_edge],
-            [gs, '$log(age)$', lkl_old, min_max_p, isoch_fit_params, p_errs,
-                model_done, y_min_edge],
-            [gs, '$E_{{(B-V)}}$', lkl_old, min_max_p, isoch_fit_params, p_errs,
-                model_done, y_min_edge],
-            [gs, '$(m-M)_o$', lkl_old, min_max_p, isoch_fit_params, p_errs,
-                model_done, y_min_edge],
-            [gs, '$M_{{\odot}}$', lkl_old, min_max_p, isoch_fit_params, p_errs,
-                model_done, y_min_edge],
-            [gs, '$b_{{frac}}$', lkl_old, min_max_p, isoch_fit_params, p_errs,
-                model_done, y_min_edge]
+            [gs, '$z$', l_max, lkl_old, min_max_p, isoch_fit_params, p_errs,
+                model_done],
+            [gs, '$log(age)$', l_max, lkl_old, min_max_p, isoch_fit_params,
+                p_errs, model_done],
+            [gs, '$E_{{(B-V)}}$', l_max, lkl_old, min_max_p, isoch_fit_params,
+                p_errs, model_done],
+            [gs, '$(m-M)_o$', l_max, lkl_old, min_max_p, isoch_fit_params,
+                p_errs, model_done],
+            [gs, '$M_{{\odot}}$', l_max, lkl_old, min_max_p, isoch_fit_params,
+                p_errs, model_done],
+            [gs, '$b_{{frac}}$', l_max, lkl_old, min_max_p, isoch_fit_params,
+                p_errs, model_done]
             ]
         for n, args in enumerate(arglist, 2):
             mp_best_fit.plot(n, *args)

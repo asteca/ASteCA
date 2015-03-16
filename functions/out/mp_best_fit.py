@@ -54,7 +54,7 @@ def pl_bf_synth_cl(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
     plt.plot(shift_isoch[0], shift_isoch[1], 'r', lw=1.2)
 
 
-def pl_ga_lkl(gs, lkl_old, model_done, new_bs_indx):
+def pl_ga_lkl(gs, l_min_max, lkl_old, model_done, new_bs_indx):
     '''
     Likelihood evolution for the GA.
     '''
@@ -64,9 +64,7 @@ def pl_ga_lkl(gs, lkl_old, model_done, new_bs_indx):
 
     ax = plt.subplot(gs[6:8, 0:4])
     plt.xlim(-0.5, n_gen + int(0.01 * n_gen))
-    lkl_range = max(lkl_old[1]) - min(lkl_old[0])
-    plt.ylim(min(lkl_old[0]) - 0.1 * lkl_range,
-             max(lkl_old[1]) + 0.1 * lkl_range)
+    plt.ylim(l_min_max[0], l_min_max[1])
     # Set minor ticks
     ax.minorticks_on()
     ax.tick_params(axis='y', which='major', labelsize=9)
@@ -158,8 +156,7 @@ def pl_2_param_dens(gs, _2_params, min_max_p, cp_r, cp_e, model_done):
                cmap=plt.get_cmap(d_map), aspect='auto')
 
 
-def pl_lkl_dens(gs, ld_p, lkl_old, min_max_p, cp_r, cp_e, model_done,
-    y_min_edge):
+def pl_lkl_dens(gs, ld_p, l_max, lkl_old, min_max_p, cp_r, cp_e, model_done):
     '''
     Parameter likelihood density plot.
     '''
@@ -179,8 +176,7 @@ def pl_lkl_dens(gs, ld_p, lkl_old, min_max_p, cp_r, cp_e, model_done,
 
     # Param values and errors.
     xp, e_xp = cp_r[0][cp], cp_e[cp]
-    # Limits.
-    plt.ylim(y_min_edge, max(lkl_old[1]))
+    # Set x axis limit.
     xp_min, xp_max = min_max_p[cp]
     # Special axis ticks for metallicity.
     if ld_p == '$z$':
@@ -197,22 +193,21 @@ def pl_lkl_dens(gs, ld_p, lkl_old, min_max_p, cp_r, cp_e, model_done,
     ob = offsetbox.AnchoredText(text, pad=0.1, loc=2, prop=dict(size=12))
     ob.patch.set(alpha=0.8)
     ax.add_artist(ob)
-
-    if ld_p == '$z$':
-        plt.scatter(zip(*model_done[0])[cp], model_done[1])
-    else:
-        hist, xedges, yedges = np.histogram2d(zip(*model_done[0])[cp],
-            model_done[1], bins=100)
-        # H_g is the 2D histogram with a gaussian filter applied
-        h_g = gaussian_filter(hist, 1, mode='constant')
-        plt.imshow(h_g.transpose(), origin='lower',
-                   extent=[xedges[0], xedges[-1], y_min_edge, yedges[-1]],
-                   cmap=plt.get_cmap('gist_yarg'), aspect='auto')
+    # Generate 2D Gaussian histogram.
+    hist, xedges, yedges = np.histogram2d(zip(*model_done[0])[cp],
+        model_done[1], bins=100)
+    # H_g is the 2D histogram with a gaussian filter applied
+    h_g = gaussian_filter(hist, 2, mode='constant')
+    plt.imshow(h_g.transpose(), origin='lower', extent=[xedges[0], xedges[-1],
+        yedges[0], yedges[-1]], cmap=plt.get_cmap('gist_yarg'),
+        aspect='auto')
     plt.axvline(x=xp, linestyle='--', color='blue', zorder=3)
     if e_xp > 0.:
         # Plot error bars only if errors where assigned.
         plt.axvline(x=xp + e_xp, linestyle='--', color='red')
         plt.axvline(x=xp - e_xp, linestyle='--', color='red')
+    # Set y axis limit.
+    plt.ylim(yedges[0], l_max)
 
 
 def plot(N, *args):
@@ -222,11 +217,11 @@ def plot(N, *args):
 
     plt_map = {
         1: [pl_bf_synth_cl, 'synthetic cluster'],
-        2: [pl_2_param_dens, 'age vs metallicity density map'],
-        3: [pl_2_param_dens, 'distance vs extinction density map'],
-        4: [pl_2_param_dens, 'z vs distance density map'],
-        5: [pl_2_param_dens, 'mass vs binarity density map'],
-        6: [pl_ga_lkl, 'GA likelihood evolution'],
+        2: [pl_ga_lkl, 'GA likelihood evolution'],
+        3: [pl_2_param_dens, 'age vs metallicity density map'],
+        4: [pl_2_param_dens, 'distance vs extinction density map'],
+        5: [pl_2_param_dens, 'z vs distance density map'],
+        6: [pl_2_param_dens, 'mass vs binarity density map'],
         7: [pl_lkl_dens, 'z likelihood density'],
         8: [pl_lkl_dens, 'age likelihood density'],
         9: [pl_lkl_dens, 'extinction likelihood density'],
