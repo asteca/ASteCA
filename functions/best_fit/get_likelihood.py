@@ -20,7 +20,7 @@ def tolstoy(Q, obs_clust):
 
     if not Q.any():
         # If synthetic cluster is empty, assign high likelihood value.
-        likelihood = 10000.
+        likelihood = 1e09
     else:
 
         # Unpack observed cluster with squared errors and membership
@@ -102,7 +102,7 @@ def dolphin(Q, P):
 
     if not Q.any():
         # If synthetic cluster is empty, assign high likelihood value.
-        poiss_lkl = 10000.
+        poiss_lkl = 1e09
     else:
 
         # Observed cluster's histogram.
