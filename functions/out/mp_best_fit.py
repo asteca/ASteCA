@@ -167,7 +167,7 @@ def pl_lkl_dens(gs, ld_p, lkl_old, min_max_p, cp_r, cp_e, model_done,
     if ld_p == '$z$':
         ax, cp = plt.subplot(gs[8:10, 0:2]), 0
     elif ld_p == '$log(age)$':
-        ax, cp = plt.subplot(gs[8:10, 2:4]), 1
+        ax, cp = plt.subplot(gs[8:10, 2:4]), 0
     elif ld_p == '$E_{{(B-V)}}$':
         ax, cp = plt.subplot(gs[8:10, 4:6]), 2
     elif ld_p == '$(m-M)_o$':
@@ -180,7 +180,7 @@ def pl_lkl_dens(gs, ld_p, lkl_old, min_max_p, cp_r, cp_e, model_done,
     # Param values and errors.
     xp, e_xp = cp_r[0][cp], cp_e[cp]
     # Limits.
-    plt.ylim(max(0, min(lkl_old[0]) - 0.3 * min(lkl_old[0])), max(lkl_old[1]))
+    plt.ylim(y_min_edge, max(lkl_old[1]))
     xp_min, xp_max = min_max_p[cp]
     # Special axis ticks for metallicity.
     if ld_p == '$z$':
@@ -192,16 +192,22 @@ def pl_lkl_dens(gs, ld_p, lkl_old, min_max_p, cp_r, cp_e, model_done,
     ax.tick_params(axis='y', which='major', labelsize=9)
     plt.ylabel('Likelihood', fontsize=12)
     plt.xlabel(ld_p, fontsize=16)
+    # Add textbox.
     text = (ld_p + '$ = {} \pm {}$').format(xp, e_xp)
-    plt.text(0.1, 0.93, text, transform=ax.transAxes,
-        bbox=dict(facecolor='white', alpha=0.5), fontsize=12)
-    hist, xedges, yedges = np.histogram2d(zip(*model_done[0])[cp],
-        model_done[1], bins=100)
-    # H_g is the 2D histogram with a gaussian filter applied
-    h_g = gaussian_filter(hist, 2, mode='constant')
-    plt.imshow(h_g.transpose(), origin='lower',
-               extent=[xedges[0], xedges[-1], y_min_edge, yedges[-1]],
-               cmap=plt.get_cmap('gist_yarg'), aspect='auto')
+    ob = offsetbox.AnchoredText(text, pad=0.1, loc=2, prop=dict(size=12))
+    ob.patch.set(alpha=0.8)
+    ax.add_artist(ob)
+
+    if ld_p == '$z$':
+        plt.scatter(zip(*model_done[0])[cp], model_done[1])
+    else:
+        hist, xedges, yedges = np.histogram2d(zip(*model_done[0])[cp],
+            model_done[1], bins=100)
+        # H_g is the 2D histogram with a gaussian filter applied
+        h_g = gaussian_filter(hist, 1, mode='constant')
+        plt.imshow(h_g.transpose(), origin='lower',
+                   extent=[xedges[0], xedges[-1], y_min_edge, yedges[-1]],
+                   cmap=plt.get_cmap('gist_yarg'), aspect='auto')
     plt.axvline(x=xp, linestyle='--', color='blue', zorder=3)
     if e_xp > 0.:
         # Plot error bars only if errors where assigned.
