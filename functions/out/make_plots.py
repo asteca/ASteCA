@@ -167,6 +167,10 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
 
         p_errs = prep_plots.error_vals(isoch_fit_errors)
         min_max_p = prep_plots.param_ranges(ip_list)
+        # Special axis ticks for metallicity.
+        xp_min, xp_max = min_max_p[0]
+        # Add values to the end of this list.
+        min_max_p.append(prep_plots.BestTick(xp_min, xp_max))
 
         # Unpack.
         lkl_old, new_bs_indx, model_done = isoch_fit_params[1], \

@@ -10,23 +10,7 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
 from matplotlib.patches import Ellipse
 from scipy.ndimage.filters import gaussian_filter
-import math
 from .._in import get_in_params as g
-
-
-def BestTick(largest, mostticks):
-    minimum = largest / mostticks
-    magnitude = 10 ** math.floor(math.log(minimum) / math.log(10))
-    residual = minimum / magnitude
-    if residual > 5:
-        tick = 10 * magnitude
-    elif residual > 2:
-        tick = 5 * magnitude
-    elif residual > 1:
-        tick = 2 * magnitude
-    else:
-        tick = magnitude
-    return tick
 
 
 def pl_bf_synth_cl(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
@@ -134,15 +118,13 @@ def pl_2_param_dens(gs, _2_params, min_max_p, cp_r, cp_e, model_done):
     # Axis limits.
     xp_min, xp_max = min_max_p[mx]
     yp_min, yp_max = min_max_p[my]
+    # Special axis ticks for metallicity.
+    if _2_params in {'age-metal', 'metal-dist'}:
+        z_xmin, z_step = min_max_p[-1]
+        ax.xaxis.set_ticks(np.arange(z_xmin, xp_max, z_step))
+
     plt.xlim(xp_min, xp_max)
     plt.ylim(yp_min, yp_max)
-
-    if _2_params in {'age-metal', 'metal-dist'}:
-
-        st = BestTick((xp_max - xp_min), 6)
-        print st
-        ax.xaxis.set_ticks(np.arange(xp_min, xp_max, st))
-
     plt.xlabel(x_label, fontsize=16)
     plt.ylabel(y_label, fontsize=16)
     plt.minorticks_on()
@@ -193,6 +175,10 @@ def pl_lkl_dens(gs, ld_p, lkl_old, min_max_p, cp_r, cp_e, model_done,
     # Limits.
     plt.ylim(max(0, min(lkl_old[0]) - 0.3 * min(lkl_old[0])), max(lkl_old[1]))
     xp_min, xp_max = min_max_p[cp]
+    # Special axis ticks for metallicity.
+    if ld_p == '$z$':
+        z_xmin, z_step = min_max_p[-1]
+        ax.xaxis.set_ticks(np.arange(z_xmin, xp_max, z_step))
     plt.xlim(xp_min, xp_max)
     # Set minor ticks
     ax.minorticks_on()
@@ -243,4 +229,6 @@ def plot(N, *args):
     try:
         fxn(*args)
     except:
+        #import traceback
+        #print traceback.format_exc()
         print("  WARNING: error when plotting {}.".format(plt_map.get(N)[1]))
