@@ -26,15 +26,17 @@ def pl_phot_err(gs, fig, up_low, x_ax, y_ax, mag_data, err_plot, err_flags,
     '''
     Photometric error rejection.
     '''
-    # Define parameters for upper and lower plots.
-    if up_low == 'up':
-        ax, ax_y, j = plt.subplot(gs[2, 2:4]), y_ax, 4
-    else:
-        ax, ax_y, j = plt.subplot(gs[3, 2:4]), x_ax, 6
-
     # Error parameters.
     er_mode, e_max, be, be_e, N_sig = g.er_params
     err_all_fallback, err_max_fallback = err_flags
+
+    # Define parameters for upper and lower plots.
+    if up_low == 'up':
+        ax, ax_y, j = plt.subplot(gs[2, 2:4]), y_ax, 4
+        # Print mode used to reject stars based on their errors.
+        plt.title('[' + str(er_mode) + ']', fontsize=10)
+    else:
+        ax, ax_y, j = plt.subplot(gs[3, 2:4]), x_ax, 6
 
     #Set plot limits
     x_min, x_max = min(mag_data) - 0.5, max(mag_data) + 0.5
