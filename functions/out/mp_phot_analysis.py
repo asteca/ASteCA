@@ -139,10 +139,10 @@ def pl_fl_diag(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
                 stars_acpt_temp[0].append(star[5])
                 stars_acpt_temp[1].append(star[3])
         # Add text box.
-        text = '$\star_{{field}}\,|\,N_{{accpt}}={}$'.format(
+        text = '$N_{{accpt}}={}\,(\star_{{field}})$'.format(
             len(stars_acpt_temp[0]))
-        ob = offsetbox.AnchoredText(text, loc=1, prop=dict(size=14))
-        ob.patch.set(boxstyle='square,pad=-0.2', alpha=0.7)
+        ob = offsetbox.AnchoredText(text, pad=0.2, loc=1, prop=dict(size=12))
+        ob.patch.set(alpha=0.7)
         ax.add_artist(ob)
         # Get size of stars to plot.
         sz_pt = phot_diag_st_size(len(stars_acpt_temp[0]))
@@ -169,11 +169,11 @@ def pl_cl_diag(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
     # Set grid
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
     # Add text box.
-    text1 = '$r \leq r_{{cl}}\,|\,N_{{accpt}}={}$'.format(len(cl_region))
+    text1 = '$N_{{accpt}}={}\,(r \leq r_{{cl}})$'.format(len(cl_region))
     text2 = r'$n_{{memb}} \approx {}$'.format(n_memb)
     text = text1 + '\n' + text2
-    ob = offsetbox.AnchoredText(text, loc=1, prop=dict(size=14))
-    ob.patch.set(boxstyle='square,pad=-0.2', alpha=0.7)
+    ob = offsetbox.AnchoredText(text, pad=0.2, loc=1, prop=dict(size=12))
+    ob.patch.set(alpha=0.7)
     ax.add_artist(ob)
     # Plot stars in CMD.
     if len(stars_in_rjct) > 0:
@@ -204,12 +204,12 @@ def pl_lum_func(gs, mag_data, y_ax, x_cl, y_cl, flag_area_stronger, x_fl,
     plt.ylabel('$N^{\star}/A_{cl}$', fontsize=18)
     # Cluster region LF (contaminated).
     plt.step(x_cl, y_cl, where='post', color='r', lw=1.,
-        label='$LF_{cl+fl} \;(r \leq r_{cl})$', zorder=2)
+        label='$LF_{cl+fl} \,(r \leq r_{cl})$', zorder=2)
     # Check if field regiones were defined.
     if flag_area_stronger is not True:
         # Average field regions LF.
         plt.step(x_fl, y_fl, where='post', color='b', lw=1.,
-            label='$LF_{fl} \;(\star_{field})$', zorder=3)
+            label='$LF_{fl} \,(\star_{field})$', zorder=3)
         # Cluster region LF - average field regions LF.
         plt.step(x_cl, y_cl - y_fl, where='post', color='g', lw=1.7,
             label='$LF_{cl}$', zorder=4)
