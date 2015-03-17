@@ -34,12 +34,6 @@ def median_sigma(indx, interv, be_m, mag_value, sigma_prev):
         else:
             hist_count = hist_count + bin_num
 
-    # Condition to keep sigma values low for low values of mag.
-    if mag_value[indx] < (be_m + 1.) and (median + sigma) > 0.05:
-        sigma = 0.025
-    elif (be_m + 1.) <= mag_value[indx] < (be_m + 2.) and median + sigma > 0.1:
-        sigma = 0.075
-
     # This condition prevents abrupt jumps in the value of sigma.
     sigma = min(sigma, sigma_prev * 1.25)
 
