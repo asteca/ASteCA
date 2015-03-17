@@ -83,8 +83,12 @@ def pl_phot_err(gs, fig, up_low, x_ax, y_ax, mag_data, err_plot, err_flags,
             mag_x = np.linspace(bright_end, max(mag_data), 50)
             # Unpack params.
             popt_mag, popt_col1 = err_plot
-            # Plot exponential curve.
-            ax.plot(mag_x, exp_3p(mag_x, *popt_mag), 'k-', zorder=3)
+            if up_low == 'up':
+                # Plot exponential curve.
+                ax.plot(mag_x, exp_3p(mag_x, *popt_mag), 'k-', zorder=3)
+            else:
+                # Plot exponential curve.
+                ax.plot(mag_x, exp_3p(mag_x, *popt_col1), 'k-', zorder=3)
 
     # Plot rejected stars.
     if len(stars_out_rjct) > 0:
