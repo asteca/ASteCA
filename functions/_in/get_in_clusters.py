@@ -41,6 +41,6 @@ def in_clusters(mypath, file_end):
                 cl_files.append([mypath, input_dir, subdir, f])
 
     # Return sorted list by cluster file name.
-    cl_files.sort(key=lambda x: x[1].lower())
+    cl_files.sort(key=lambda x: x[-1].lower())
 
     return cl_files
