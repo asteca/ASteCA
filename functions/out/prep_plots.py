@@ -7,18 +7,44 @@ Created on Thu Dic 18 12:00:00 2014
 
 from .._in import get_in_params as g
 import numpy as np
+from scipy import stats
+import matplotlib.pyplot as plt
 import math
 
 
-def reject_outliers(data, m=6.5):
+def kde_limits(phot_x, phot_y):
     '''
-    Reject outliers from array.
-    http://stackoverflow.com/a/16562028/1391441
+    Return photometric diagram limits taken from 2D KDE.
     '''
-    d = np.abs(data - np.median(data))
-    mdev = np.median(d)
-    s = d / mdev if mdev else np.asarray([0. for _ in d])
-    return data[s < m]
+
+    xmin, xmax = min(phot_x), max(phot_x)
+    ymin, ymax = min(phot_y), max(phot_y)
+    # Stack photometric data.
+    values = np.vstack([phot_x, phot_y])
+    # Obtain Gaussian KDE.
+    kernel = stats.gaussian_kde(values)
+    # Grid density (number of points).
+    gd = 25
+    gd_c = complex(0, gd)
+    # Define x,y grid.
+    x, y = np.mgrid[xmin:xmax:gd_c, ymin:ymax:gd_c]
+    positions = np.vstack([x.ravel(), y.ravel()])
+    # Evaluate kernel in grid positions.
+    k_pos = kernel(positions)
+
+    # Generate 30 countour lines.
+    cs = plt.contour(x, y, np.reshape(k_pos, x.shape), 30)
+    # Extract (x,y) points delimitating each line.
+    x_v, y_v = np.asarray([]), np.asarray([])
+    # Only use the outer curve.
+    col = cs.collections[0]
+    # If more than une region is defined by this curve (ie: the main sequence
+    # region plus a RC region), obtain x,y from all of them.
+    for lin in col.get_paths():
+        x_v = np.append(x_v, lin.vertices[:, 0])
+        y_v = np.append(y_v, lin.vertices[:, 1])
+
+    return x_v, y_v
 
 
 def frame_max_min(x_data, y_data):
@@ -87,12 +113,17 @@ def diag_limits(y_axis, phot_x, phot_y):
     '''
     Define plot limits for *all* photometric diagrams.
     '''
-    phot_x_s, phot_y_s = reject_outliers(phot_x), reject_outliers(phot_y)
-    x_max_cmd, x_min_cmd = max(phot_x_s) + 0.5, min(phot_x_s) - 0.5
-    y_min_cmd, y_max_cmd = max(phot_y_s) + 0.5, min(phot_y_s) - 0.5
-    # If photometric axis y is a magnitude, make sure the brighter stars
-    # are plotted.
-    y_max_cmd = (min(phot_y) - 1.) if y_axis == 0 else y_max_cmd
+    x_v, y_v = kde_limits(phot_x, phot_y)
+
+    # Define diagram limits.
+    x_min_cmd, x_max_cmd = min(x_v) - 1.25, max(x_v) + 1.25
+    y_min_cmd = max(y_v) + 1.25
+    # If photometric axis y is a magnitude, make sure the brightest star
+    # is always plotted.
+    if y_axis == 0:
+        y_max_cmd = min(phot_y) - 1.
+    else:
+        y_max_cmd = min(y_v) - 1.
 
     return x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd
 
