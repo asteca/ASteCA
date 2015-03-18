@@ -138,6 +138,45 @@ def star_size(mag_data):
     return 0.1 + factor * 10 ** ((np.array(mag_data) - min(mag_data)) / -2.5)
 
 
+def phot_diag_st_size(x):
+    '''
+    Calculate optimal size for stars in photometric diagram.
+    '''
+    a, b, c, d = 2.99, -2.81, 563.36, 15.02
+    return ((a - d) / (1 + ((x / c) ** b))) + d
+
+
+def separate_stars(x_data, y_data, mag_data, x_zmin, x_zmax, y_zmin, y_zmax,
+    stars_out_rjct, field_regions):
+    '''
+    Separate stars in lists.
+    '''
+    # Separate stars in zoomed frame.
+    x_data_z, y_data_z, mag_data_z = [], [], []
+    for i, st_x in enumerate(x_data):
+        st_y, st_mag = y_data[i], mag_data[i]
+        if x_zmin <= st_x <= x_zmax and y_zmin <= st_y <= y_zmax:
+            x_data_z.append(st_x)
+            y_data_z.append(st_y)
+            mag_data_z.append(st_mag)
+
+    # Generate list with *all* rejected stars outside of the cluster region.
+    stars_f_rjct = [[], []]
+    for star in stars_out_rjct:
+        stars_f_rjct[0].append(star[5])
+        stars_f_rjct[1].append(star[3])
+
+    # Generate list with stars within a defined field region.
+    stars_f_acpt = [[], []]
+    if field_regions:
+        for fr in field_regions:
+            for star in fr:
+                stars_f_acpt[0].append(star[5])
+                stars_f_acpt[1].append(star[3])
+
+    return x_data_z, y_data_z, mag_data_z, stars_f_rjct, stars_f_acpt
+
+
 def error_vals(isoch_fit_errors):
     '''
     Set errors to zero if bootstrap was not used, for plotting purposes.

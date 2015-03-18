@@ -70,16 +70,13 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
     phot_x, phot_y = prep_plots.ax_data(mag_data, col_data)
     x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd = prep_plots.diag_limits(y_axis,
         phot_x, phot_y)
+    x_data_z, y_data_z, mag_data_z, stars_f_rjct, stars_f_acpt = \
+    prep_plots.separate_stars(x_data, y_data, mag_data, x_zmin, x_zmax,
+        y_zmin, y_zmax, stars_out_rjct, field_regions)
     st_sizes_arr = prep_plots.star_size(mag_data)
-    # Separate stars in zoomed frame.
-    x_data_z, y_data_z, mag_data_z = [], [], []
-    for i, st_x in enumerate(x_data):
-        st_y, st_mag = y_data[i], mag_data[i]
-        if x_zmin <= st_x <= x_zmax and y_zmin <= st_y <= y_zmax:
-            x_data_z.append(st_x)
-            y_data_z.append(st_y)
-            mag_data_z.append(st_mag)
     st_sizes_arr_z = prep_plots.star_size(mag_data_z)
+    f_sz_pt = prep_plots.phot_diag_st_size(len(stars_f_acpt[0]))
+    cl_sz_pt = prep_plots.phot_diag_st_size(len(cl_region))
 
     #
     # Structure plots.
@@ -112,9 +109,9 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
         [gs, fig, 'low', x_ax, y_ax, mag_data, err_plot, err_flags,
             cl_region, stars_in_rjct, stars_out, stars_out_rjct],
         [gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
-            stars_out_rjct, field_regions],
+            stars_f_rjct, stars_f_acpt, f_sz_pt],
         [gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
-            stars_in_rjct, cl_region, n_memb],
+            stars_in_rjct, cl_region, n_memb, cl_sz_pt],
         [gs, mag_data, y_ax, x_cl, y_cl, flag_area_stronger, x_fl, y_fl,
             completeness],
         [gs, integr_return, y_ax, x_ax0, flag_area_stronger],

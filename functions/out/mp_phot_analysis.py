@@ -13,14 +13,6 @@ from .._in import get_in_params as g
 from functions.exp_function import exp_3p
 
 
-def phot_diag_st_size(x):
-    '''
-    Calculate optimal size for stars in photometric diagram.
-    '''
-    a, b, c, d = 2.99, -2.81, 563.36, 15.02
-    return ((a - d) / (1 + ((x / c) ** b))) + d
-
-
 def pl_phot_err(gs, fig, up_low, x_ax, y_ax, mag_data, err_plot, err_flags,
     cl_region, stars_in_rjct, stars_out, stars_out_rjct):
     '''
@@ -110,7 +102,7 @@ def pl_phot_err(gs, fig, up_low, x_ax, y_ax, mag_data, err_plot, err_flags,
 
 
 def pl_fl_diag(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
-    stars_out_rjct, field_regions):
+    stars_f_rjct, stars_f_acpt, f_sz_pt):
     '''
     Field stars CMD/CCD diagram.
     '''
@@ -127,35 +119,24 @@ def pl_fl_diag(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
     ax.xaxis.set_major_locator(MultipleLocator(1.0))
     # Set grid
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
-    # Plot rejected stars outside of the cluster region.
-    stars_rjct_temp = [[], []]
-    for star in stars_out_rjct:
-        stars_rjct_temp[0].append(star[5])
-        stars_rjct_temp[1].append(star[3])
-    plt.scatter(stars_rjct_temp[0], stars_rjct_temp[1], marker='x',
+    # Plot *all* rejected stars outside of the cluster region.
+    plt.scatter(stars_f_rjct[0], stars_f_rjct[1], marker='x',
         c='teal', s=15, zorder=1)
     # Plot accepted stars within the field regions defined, if at least one
     # exists.
-    if field_regions:
-        stars_acpt_temp = [[], []]
-        for fr in field_regions:
-            for star in fr:
-                stars_acpt_temp[0].append(star[5])
-                stars_acpt_temp[1].append(star[3])
+    if stars_f_acpt[0]:
         # Add text box.
         text = '$N_{{accpt}}={}\,(\star_{{field}})$'.format(
-            len(stars_acpt_temp[0]))
+            len(stars_f_acpt[0]))
         ob = offsetbox.AnchoredText(text, pad=0.2, loc=1, prop=dict(size=12))
         ob.patch.set(alpha=0.7)
         ax.add_artist(ob)
-        # Get size of stars to plot.
-        sz_pt = phot_diag_st_size(len(stars_acpt_temp[0]))
-        plt.scatter(stars_acpt_temp[0], stars_acpt_temp[1], marker='o', c='b',
-                    s=sz_pt, lw=0.3, zorder=2)
+        plt.scatter(stars_f_acpt[0], stars_f_acpt[1], marker='o', c='b',
+                    s=f_sz_pt, lw=0.3, zorder=2)
 
 
 def pl_cl_diag(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
-    stars_in_rjct, cl_region, n_memb):
+    stars_in_rjct, cl_region, n_memb, cl_sz_pt):
     '''
     Cluster's stars diagram (stars inside cluster's radius)
     '''
@@ -181,12 +162,11 @@ def pl_cl_diag(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
     ax.add_artist(ob)
     # Plot stars in CMD.
     if len(stars_in_rjct) > 0:
-        # Only attempt to pot if any star is stored in the list.
+        # Only attempt to plot if any star is stored in the list.
         plt.scatter(zip(*stars_in_rjct)[5], zip(*stars_in_rjct)[3],
             marker='x', c='teal', s=12, zorder=1)
-    sz_pt = phot_diag_st_size(len(cl_region))
     plt.scatter(zip(*cl_region)[5], zip(*cl_region)[3], marker='o', c='r',
-                s=sz_pt, lw=0.3, zorder=2)
+                s=cl_sz_pt, lw=0.3, zorder=2)
 
 
 def pl_lum_func(gs, mag_data, y_ax, x_cl, y_cl, flag_area_stronger, x_fl,
