@@ -100,7 +100,7 @@ def asteca_funcs(cl_file, ip_list, R_in_place):
     print "Stars separated in/out of cluster's boundaries."
     # Number of stars inside the cluster region (including stars with rejected
     # photometric errors)
-    n_clust = len(cl_region) + len(stars_in_rjct,)
+    n_clust = len(cl_region) + len(stars_in_rjct)
 
     # Get cluster's area.
     cl_area, frac_cl_area = g_a(kde_center, clust_rad, x_data, y_data,
