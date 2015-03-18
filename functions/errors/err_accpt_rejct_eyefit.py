@@ -2,8 +2,6 @@
 @author: gabriel
 """
 
-from functions.exp_function import exp_3p
-from scipy.optimize import curve_fit
 import numpy as np
 from .._in import get_in_params as g
 from err_medians import err_med
@@ -18,29 +16,25 @@ def fit_curves(mag, mag_value, bright_end, e_mag_value, e_col1_value):
     # Fit curves for errors in magnitude and color.
     for i, err_val in enumerate([e_mag_value, e_col1_value]):
 
-        # Fit exponential envelope.
-        popt, pcov = curve_fit(exp_3p, mag_value, err_val)
-        # Fit polynomial of grade 3 envelope.
-        pol = np.polyfit(mag_value, err_val, 3)
-        # Find point where curves intersect.
-        # Initialize value in case no intersect value is found.
-        intersec = 0.
-        mag_x = np.linspace(bright_end, max(mag), 100)
-        for x_val in mag_x:
-            if np.polyval(pol, (x_val)) > exp_3p(x_val, *popt):
-                intersec = x_val
-                break
+        # Fit polynomial envelope of grade 2.
+        pol = np.polyfit(mag_value, err_val, 2)
+        # Set half magnitude value between the bright end and the maximum
+        # as the point of intersection.
+        intersec = (max(mag_value) + bright_end) / 2.
+        # Define left max error value as the value of the polinomial fit in
+        # the intersection magnitude.
+        popt = np.polyval(pol, intersec)
 
         if i == 0:
-            popt_mag, pol_mag, intersec_mag = popt, pol, intersec
+            val_mag, pol_mag, intersec_mag = popt, pol, intersec
         elif i == 1:
-            popt_col1, pol_col1, intersec_col1 = popt, pol, intersec
+            val_col1, pol_col1, intersec_col1 = popt, pol, intersec
 
-    return intersec_mag, intersec_col1, popt_mag, pol_mag, popt_col1, pol_col1
+    return intersec_mag, intersec_col1, val_mag, pol_mag, val_col1, pol_col1
 
 
 def separate_stars(mag, e_mag, e_col1, be_m, intersec_mag, intersec_col1,
-    popt_mag, pol_mag, popt_col1, pol_col1):
+    val_mag, pol_mag, val_col1, pol_col1):
     '''
     Use the curves obtained above to accept or reject stars in the
     magnitude range beyond the (brightest star + be) limit.
@@ -80,8 +74,8 @@ def separate_stars(mag, e_mag, e_col1, be_m, intersec_mag, intersec_col1,
                 # value for each error and compare with the corresponding curve.
                 mag_rjct = False
                 if mag[st_ind] <= intersec_mag:
-                    # Compare with exponential.
-                    if e_mag[st_ind] > exp_3p(mag[st_ind], *popt_mag):
+                    # Compare with linear value.
+                    if e_mag[st_ind] > val_mag:
                         # Reject star.
                         mag_rjct = True
                 else:
@@ -92,8 +86,8 @@ def separate_stars(mag, e_mag, e_col1, be_m, intersec_mag, intersec_col1,
 
                 col1_rjct = False
                 if mag[st_ind] <= intersec_col1:
-                    # Compare with exponential.
-                    if e_col1[st_ind] > exp_3p(mag[st_ind], *popt_col1):
+                    # Compare with linear value.
+                    if e_col1[st_ind] > val_col1:
                         # Reject star.
                         col1_rjct = True
                 else:
@@ -114,9 +108,9 @@ def separate_stars(mag, e_mag, e_col1, be_m, intersec_mag, intersec_col1,
 
 def divide(mag_value, intersec_mag, intersec_col1):
     '''
-    Divide magnitude interval in two, the first fitted with the
-    exponential and the second with the polynomial. Do this for the errors in
-    magnitude and in color.
+    Divide magnitude interval in two, the first fitted with the linear value
+    and the second with the polynomial. Do this for the errors in magnitude
+    and in color.
     '''
 
     # Separate mag_values between those to the left and to the right of this
@@ -147,26 +141,25 @@ def err_a_r_eyefit(mag, e_mag, e_col1, err_pck):
 
     # Unpack params.
     bright_end, mag_value = err_pck[0], err_pck[2]
-    #e_max, be, be_e = g.er_params[1:-1]
 
     # Call function to obtain the median+sigmas points for magnitude
     # and color errors to fit the curves below.
     e_mag_value, e_col1_value = err_med('eyefit', err_pck, mag, e_mag, e_col1)
 
     # Fit polynomial + exponential curves.
-    intersec_mag, intersec_col1, popt_mag, pol_mag, popt_col1, pol_col1 = \
+    intersec_mag, intersec_col1, val_mag, pol_mag, val_col1, pol_col1 = \
     fit_curves(mag, mag_value, bright_end, e_mag_value, e_col1_value)
 
     # Use the fitted curves to identify accepted/rejected stars and store
     # their indexes.
     acpt_indx, rjct_indx = separate_stars(mag, e_mag, e_col1, bright_end,
-        intersec_mag, intersec_col1, popt_mag, pol_mag, popt_col1, pol_col1)
+        intersec_mag, intersec_col1, val_mag, pol_mag, val_col1, pol_col1)
 
     # Values are used for plotting purposes only.
     top_val_left, top_val_right, bot_val_left, bot_val_right = \
     divide(mag_value, intersec_mag, intersec_col1)
     # This list holds all the values necessary for plotting.
-    err_plot = [popt_mag, pol_mag, popt_col1, pol_col1, top_val_left,
+    err_plot = [val_mag, pol_mag, val_col1, pol_col1, top_val_left,
         top_val_right, bot_val_left, bot_val_right]
 
     return acpt_indx, rjct_indx, err_plot

@@ -63,22 +63,20 @@ def pl_phot_err(gs, fig, up_low, x_ax, y_ax, mag_data, err_plot, err_flags,
         # Plot curve(s) according to the method used.
         if er_mode == 'eyefit':
             # Unpack params.
-            popt_mag, pol_mag, popt_col, pol_col, mag_val_left, \
+            val_mag, pol_mag, val_col, pol_col, mag_val_left, \
             mag_val_right, col_val_left, col_val_right = err_plot
 
             if up_low == 'up':
-                val_left, popt_left = mag_val_left, popt_mag
+                val_left, popt_left = mag_val_left, val_mag
                 val_right, pol_right = mag_val_right, pol_mag
             else:
-                val_left, popt_left = col_val_left, popt_col
+                val_left, popt_left = col_val_left, val_col
                 val_right, pol_right = col_val_right, pol_col
 
-            # Plot left side of upper envelope (exponential).
-            ax.plot(val_left, exp_3p(val_left, *popt_left),
-                'k--', lw=2., zorder=3)
-            # Plot right side of upper envelope (polynomial).
-            ax.plot(val_right, np.polyval(pol_right, (val_right)),
-                'k--', lw=2., zorder=3)
+            # Combine left + right values.
+            m_v, e_v = val_left + val_right, [popt_left for _ in val_left] + \
+            list(np.polyval(pol_right, (val_right)))
+            ax.plot(m_v, e_v, 'k-', zorder=3)
         elif er_mode == 'lowexp':
             mag_x = np.linspace(bright_end, max(mag_data), 50)
             # Unpack params.
@@ -365,4 +363,6 @@ def plot(N, *args):
     try:
         fxn(*args)
     except:
+        #import traceback
+        #print traceback.format_exc()
         print("  WARNING: error when plotting {}.".format(plt_map.get(N)[1]))
