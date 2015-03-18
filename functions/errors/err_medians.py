@@ -6,7 +6,7 @@ import numpy as np
 from .._in import get_in_params as g
 
 
-def median_sigma(indx, interv, be_m, mag_value, sigma_prev):
+def median_sigma(interv, be_m, sigma_prev):
     '''
     Get median and standard deviation. We use the median instead of
     the mean to protect against outliers.
@@ -107,8 +107,8 @@ def err_med(method, err_pck, mag, e_mag, e_col):
     for indx in range(len(mag_value)):
         # Check that list is not empty.
         if sum(mag_interv[indx]) != 0:
-            median, sigma, sigma_prev = median_sigma(indx, mag_interv[indx],
-                be_m, mag_value, sigma_prev)
+            median, sigma, sigma_prev = median_sigma(mag_interv[indx],
+                be_m, sigma_prev)
 
         # We obtained the median and sigma value for this interval.
         # Store just median OR median+sigma values depending on the
@@ -121,8 +121,8 @@ def err_med(method, err_pck, mag, e_mag, e_col):
     # Now for colors.
     for indx in range(len(mag_value)):
         if sum(col_interv[indx]) != 0:
-            median, sigma, sigma_prev = median_sigma(indx, col_interv[indx],
-                be_m, mag_value, sigma_prev)
+            median, sigma, sigma_prev = median_sigma(col_interv[indx],
+                be_m, sigma_prev)
 
         if method == 'synth_clust':
             e_col_value.append(median)
