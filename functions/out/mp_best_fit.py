@@ -142,9 +142,10 @@ def pl_2_param_dens(gs, _2_params, min_max_p, cp_r, cp_e, model_done):
         ellipse = Ellipse(xy=(xp, yp), width=2 * e_xp, height=2 * e_yp,
                                 edgecolor=cp, fc='None', lw=1.)
         ax.add_patch(ellipse)
-    elif e_xp < 0.:
+    # Else plot an error bar in the corresponding dimension.
+    elif e_xp < 0. and e_yp > 0.:
         plt.errorbar(xp, yp, yerr=e_yp, color=cp)
-    elif e_yp < 0.:
+    elif e_yp < 0. and e_xp > 0.:
         plt.errorbar(xp, yp, xerr=e_xp, color=cp)
     # Plot density map.
     hist, xedges, yedges = np.histogram2d(zip(*model_done[0])[mx],
@@ -164,7 +165,7 @@ def pl_lkl_dens(gs, ld_p, l_max, lkl_old, min_max_p, cp_r, cp_e, model_done):
     if ld_p == '$z$':
         ax, cp = plt.subplot(gs[8:10, 0:2]), 0
     elif ld_p == '$log(age)$':
-        ax, cp = plt.subplot(gs[8:10, 2:4]), 0
+        ax, cp = plt.subplot(gs[8:10, 2:4]), 1
     elif ld_p == '$E_{{(B-V)}}$':
         ax, cp = plt.subplot(gs[8:10, 4:6]), 2
     elif ld_p == '$(m-M)_o$':

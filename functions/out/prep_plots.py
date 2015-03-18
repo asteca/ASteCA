@@ -177,18 +177,6 @@ def separate_stars(x_data, y_data, mag_data, x_zmin, x_zmax, y_zmin, y_zmax,
     return x_data_z, y_data_z, mag_data_z, stars_f_rjct, stars_f_acpt
 
 
-def error_vals(isoch_fit_errors):
-    '''
-    Set errors to zero if bootstrap was not used, for plotting purposes.
-    '''
-    N_b = g.bf_params[-1]
-    if N_b >= 2:
-        p_errs = isoch_fit_errors
-    else:
-        p_errs = [0.] * len(isoch_fit_errors)
-    return p_errs
-
-
 def param_ranges(ip_list):
     '''
     Set parameter ranges used by GA plots.

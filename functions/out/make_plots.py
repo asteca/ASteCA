@@ -162,7 +162,6 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
     best_fit_algor = g.bf_params[1]
     if bf_flag and best_fit_algor == 'genet':
 
-        p_errs = prep_plots.error_vals(isoch_fit_errors)
         min_max_p = prep_plots.param_ranges(ip_list)
         # Special axis ticks for metallicity.
         xp_min, xp_max = min_max_p[0]
@@ -177,22 +176,26 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
 
         arglist = [
             [gs, l_min_max, lkl_old, model_done, new_bs_indx],
-            [gs, 'age-metal', min_max_p, isoch_fit_params, p_errs, model_done],
-            [gs, 'dist-ext', min_max_p, isoch_fit_params, p_errs, model_done],
-            [gs, 'metal-dist', min_max_p, isoch_fit_params, p_errs, model_done],
-            [gs, 'mass-binar', min_max_p, isoch_fit_params, p_errs, model_done],
-            [gs, '$z$', l_max, lkl_old, min_max_p, isoch_fit_params, p_errs,
+            [gs, 'age-metal', min_max_p, isoch_fit_params, isoch_fit_errors,
                 model_done],
+            [gs, 'dist-ext', min_max_p, isoch_fit_params, isoch_fit_errors,
+                model_done],
+            [gs, 'metal-dist', min_max_p, isoch_fit_params, isoch_fit_errors,
+                model_done],
+            [gs, 'mass-binar', min_max_p, isoch_fit_params, isoch_fit_errors,
+                model_done],
+            [gs, '$z$', l_max, lkl_old, min_max_p, isoch_fit_params,
+                isoch_fit_errors, model_done],
             [gs, '$log(age)$', l_max, lkl_old, min_max_p, isoch_fit_params,
-                p_errs, model_done],
+                isoch_fit_errors, model_done],
             [gs, '$E_{{(B-V)}}$', l_max, lkl_old, min_max_p, isoch_fit_params,
-                p_errs, model_done],
+                isoch_fit_errors, model_done],
             [gs, '$(m-M)_o$', l_max, lkl_old, min_max_p, isoch_fit_params,
-                p_errs, model_done],
+                isoch_fit_errors, model_done],
             [gs, '$M_{{\odot}}$', l_max, lkl_old, min_max_p, isoch_fit_params,
-                p_errs, model_done],
+                isoch_fit_errors, model_done],
             [gs, '$b_{{frac}}$', l_max, lkl_old, min_max_p, isoch_fit_params,
-                p_errs, model_done]
+                isoch_fit_errors, model_done]
             ]
         for n, args in enumerate(arglist, 2):
             mp_best_fit.plot(n, *args)
