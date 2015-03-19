@@ -26,10 +26,10 @@ def get_m_c_errors(mag, mag_value, e_mc_v):
         try:
             # Fit simple 2-params exponential curve.
             popt_mc, dummy = curve_fit(ef.exp_2p, mag_value, e_mc_v)
-            # Insert 'b' value into exponential function (not fitted here
-            # because otherwise the number of variables would be larger than
-            # the data points)
-            popt_mc = np.insert(popt_mc, 1, 1.)
+            # Insert empty 'c' value to be fed later on to the 3P exponential
+            # function. This makes the 2P exp function equivalent with the 3P
+            # exp function, with the 'c' param 0.
+            popt_mc = np.insert(popt_mc, 2, 0.)
 
         # If the 2-param exponential fitting process also fails, try with a
         # 2P exp but using only two magnitude values, ie: a min and a max.
@@ -39,8 +39,8 @@ def get_m_c_errors(mag, mag_value, e_mc_v):
                 mag_value = [min(mag), max(mag) - (max(mag) - min(mag)) / 20.]
                 e_mc_r = [0.01, e_max]
                 popt_mc, dummy = curve_fit(ef.exp_2p, mag_value, e_mc_r)
-                # Insert 'b' value into exponential function.
-                popt_mc = np.insert(popt_mc, 1., 1.)
+                # Insert 'c' value into exponential function param list.
+                popt_mc = np.insert(popt_mc, 2, 0.)
 
     return popt_mc
 
@@ -66,8 +66,6 @@ def synth_clust_err(phot_data, err_pck):
         # and color errors to fit the exponential curve.
         e_mag_value, e_col_value = err_med('synth_clust', err_pck, mag, e_mag,
             e_col)
-
-        err_lst = []
 
         for e_mag_v in [e_mag_value]:
             popt_mc = get_m_c_errors(mag, mag_value, e_mag_v)

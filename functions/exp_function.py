@@ -16,4 +16,4 @@ def exp_2p(x, a, b):
     '''
     Two-params exponential function.
     '''
-    return a * np.exp(np.asarray(x)) + b
+    return a * np.exp(b * np.asarray(x))
