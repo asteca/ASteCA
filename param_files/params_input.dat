@@ -105,7 +105,6 @@ MF       false   /path/to/folder
 #    mode   bin_width
 CH   auto         20.
 
-
 # Radius assignment function.
 #
 # * mode: low / mid / high. This parameter determines how aggressively
@@ -145,8 +144,8 @@ GR       10
 #
 # * mode: emax / lowexp / eyefit
 #   - emax: uses the e_max value as a cut in photometric errors.
-#   - lowexp: fits an exponential and rejects any star beyond
-#     the curve plus N sigmas.
+#   - lowexp: fits an exponential and rejects any star beyond the upper
+#     prediction band, obtained using the 'C' confidence level value.
 #   - eyefit: attempt an 'eye' fit process composed of a polynomial
 #     plus an exponential.
 #
@@ -160,11 +159,12 @@ GR       10
 # * be_e: maximum error value that stars in the bright end range can
 #   have without being rejected.
 #
-# * N: number of sigmas to be used by the 'lowexp' method. For reference
-#   N=1.96 encloses the 95% confidence interval.
+# * C: confidence interval for the prediction band used by the 'lowexp' method.
+#   Accepted values are in the range (0., 1.], any value outside will default
+#   to C = 0.95. 
 #
-#       mode   e_max   be   be_e  N
-ER      emax    0.25    2.   0.1  0.5
+#       mode   e_max   be   be_e     C
+ER      emax    0.25    2.   0.1  0.95
 
 # Integrated magnitudes.
 #

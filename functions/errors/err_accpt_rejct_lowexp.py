@@ -2,10 +2,71 @@
 @author: gabriel
 """
 
-from functions.exp_function import exp_3p
+from functions.exp_function import exp_2p
 from scipy.optimize import curve_fit
+from scipy import stats
 import numpy as np
 from .._in import get_in_params as g
+
+
+def lin_func(x, a, b):
+    '''Linear function.'''
+    return a * np.asarray(x) + b
+
+
+def predband(x, xd, yd, f_vars, conf=0.95):
+    """
+    Code adapted from Rodrigo Nemmen's post:
+    http://astropython.blogspot.com.ar/2011/12/calculating-prediction-band-
+    of-linear.html
+
+    Calculates the prediction band of the linear regression model at the
+    desired confidence level.
+
+    Clarification of the difference between confidence and prediction bands:
+
+    "The prediction bands are further from the best-fit line than the
+    confidence bands, a lot further if you have many data points. The 95%
+    prediction band is the area in which you expect 95% of all data points
+    to fall. In contrast, the 95% confidence band is the area that has a
+    95% chance of containing the true regression line."
+    (from http://www.graphpad.com/guides/prism/6/curve-fitting/index.htm?
+    reg_graphing_tips_linear_regressio.htm)
+
+    Arguments:
+    - x: array with x values to calculate the confidence band.
+    - xd, yd: data arrays.
+    - a, b, c: linear fit parameters.
+    - conf: desired confidence level, by default 0.95 (2 sigma)
+
+    References:
+    1. http://www.JerryDallal.com/LHSP/slr.htm, Introduction to Simple Linear
+    Regression, Gerard E. Dallal, Ph.D.
+    """
+
+    alpha = 1. - conf    # Significance
+    N = xd.size          # data sample size
+    var_n = len(f_vars)  # Number of variables used by the fitted function.
+
+    # Quantile of Student's t distribution for p=(1 - alpha/2)
+    q = stats.t.ppf(1. - alpha / 2., N - var_n)
+
+    # Std. deviation of an individual measurement (Bevington, eq. 6.15)
+    se = np.sqrt(1. / (N - var_n) * np.sum((yd - lin_func(xd, *f_vars)) ** 2))
+
+    # Auxiliary definitions
+    sx = (x - xd.mean()) ** 2
+    sxd = np.sum((xd - xd.mean()) ** 2)
+
+    # Predicted values (best-fit model)
+    yp = lin_func(x, *f_vars)
+    # Prediction band
+    dy = q * se * np.sqrt(1. + (1. / N) + (sx / sxd))
+
+    # Return only upper prediction band.
+    upb = yp + dy
+
+    return upb
 
 
 def separate_stars(mag, e_mag, e_col1, be_m, popt_mag, popt_col1):
@@ -46,11 +107,11 @@ def separate_stars(mag, e_mag, e_col1, be_m, popt_mag, popt_col1):
 
                 # Compare with exponential curve.
                 mag_rjct, col1_rjct = False, False
-                if e_mag[st_ind] > exp_3p(mag[st_ind], *popt_mag):
+                if e_mag[st_ind] > exp_2p(mag[st_ind], *popt_mag):
                     # Reject star.
                     mag_rjct = True
 
-                if e_col1[st_ind] > exp_3p(mag[st_ind], *popt_col1):
+                if e_col1[st_ind] > exp_2p(mag[st_ind], *popt_col1):
                     # Reject star.
                     col1_rjct = True
 
@@ -70,18 +131,30 @@ def err_a_r_lowexp(mag, e_mag, e_col1, be_m):
     and reject stars beyond the N*sigma limit.
     '''
 
-    # Fit exponential curve for the magnitude.
-    popt_mag, pcov_mag = curve_fit(exp_3p, mag, e_mag)
-    # Fit exponential curve for the color.
-    popt_col1, pcov_col1 = curve_fit(exp_3p, mag, e_col1)
+    C = g.er_params[4]
+    C_val = C if 0. < C <= 1. else 0.95
+    # Generate equi-spaced mag values.
+    mag_l = np.linspace(mag.min(), mag.max(), 100)
 
-    # Add a number of sigmas to one or more parameters of the exponential.
-    sigmas_m = np.sqrt(np.diag(pcov_mag))
-    sigmas_c = np.sqrt(np.diag(pcov_col1))
-    N_sig = g.er_params[4]
-    for i in [0, 1, 2]:
-        popt_mag[i] = popt_mag[i] + float(N_sig) * sigmas_m[i]
-        popt_col1[i] = popt_col1[i] + float(N_sig) * sigmas_c[i]
+    # Find best fit of data with linear function, previous use of the log()
+    # function on the erros.
+    for i, err_col in enumerate([np.asarray(e_mag), np.asarray(e_col1)]):
+        # Replace bad values.
+        err_col[err_col <= 0.] = 0.001
+        # Apply natural logarithm to error values. Necessary since the
+        # prediction band function expects a *linear* regression model.
+        log_err = np.log(err_col)
+        # Find best fit using a linear function of the form y=a*x+b.
+        slope, intercept, d1, d2, d2 = stats.linregress(mag, log_err)
+        # Call function to generate the C_val upper prediction band values.
+        upb = predband(mag_l, mag, log_err, [slope, intercept], conf=C_val)
+        # Obtain 2P exp function parameters that best fit the upper prediction
+        # band. Exponentiate values because the prediction band is linear.
+        popt_2p, dummy = curve_fit(exp_2p, mag_l, np.exp(upb))
+        if i == 0:
+            popt_mag = popt_2p
+        else:
+            popt_col1 = popt_2p
 
     # Use the fitted curves to identify accepted/rejected stars and store
     # their indexes.

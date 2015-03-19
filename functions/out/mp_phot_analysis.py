@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
 import matplotlib.offsetbox as offsetbox
 from .._in import get_in_params as g
-from functions.exp_function import exp_3p
+from functions.exp_function import exp_2p
 
 
 def pl_phot_err(gs, fig, up_low, x_ax, y_ax, mag_data, err_plot, err_flags,
@@ -75,10 +75,10 @@ def pl_phot_err(gs, fig, up_low, x_ax, y_ax, mag_data, err_plot, err_flags,
             popt_mag, popt_col1 = err_plot
             if up_low == 'up':
                 # Plot exponential curve.
-                ax.plot(mag_x, exp_3p(mag_x, *popt_mag), 'k-', zorder=3)
+                ax.plot(mag_x, exp_2p(mag_x, *popt_mag), 'k-', zorder=3)
             else:
                 # Plot exponential curve.
-                ax.plot(mag_x, exp_3p(mag_x, *popt_col1), 'k-', zorder=3)
+                ax.plot(mag_x, exp_2p(mag_x, *popt_col1), 'k-', zorder=3)
 
     # Plot rejected stars.
     if len(stars_out_rjct) > 0:
