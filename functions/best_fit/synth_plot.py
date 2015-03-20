@@ -162,4 +162,4 @@ def synth_clust_plot(mass_dist, isochrone, model, isoch_moved, isoch_cut,
     plt.clf()
     plt.close()
     print 'Synthetic cluster plotted'
-    #raw_input()
+    raw_input()
