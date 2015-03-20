@@ -172,7 +172,6 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
         lkl_old, new_bs_indx, model_done = isoch_fit_params[1], \
         isoch_fit_params[2], isoch_fit_params[3]
         l_min_max = prep_plots.likl_y_range(lkl_old)
-        l_max = l_min_max[1]
 
         arglist = [
             [gs, l_min_max, lkl_old, model_done, new_bs_indx],
@@ -184,18 +183,18 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
                 model_done],
             [gs, 'mass-binar', min_max_p, isoch_fit_params, isoch_fit_errors,
                 model_done],
-            [gs, '$z$', l_max, lkl_old, min_max_p, isoch_fit_params,
+            [gs, '$z$', l_min_max[1], lkl_old, min_max_p, isoch_fit_params,
                 isoch_fit_errors, model_done],
-            [gs, '$log(age)$', l_max, lkl_old, min_max_p, isoch_fit_params,
-                isoch_fit_errors, model_done],
-            [gs, '$E_{{(B-V)}}$', l_max, lkl_old, min_max_p, isoch_fit_params,
-                isoch_fit_errors, model_done],
-            [gs, '$(m-M)_o$', l_max, lkl_old, min_max_p, isoch_fit_params,
-                isoch_fit_errors, model_done],
-            [gs, '$M_{{\odot}}$', l_max, lkl_old, min_max_p, isoch_fit_params,
-                isoch_fit_errors, model_done],
-            [gs, '$b_{{frac}}$', l_max, lkl_old, min_max_p, isoch_fit_params,
-                isoch_fit_errors, model_done]
+            [gs, '$log(age)$', l_min_max[1], lkl_old, min_max_p,
+                isoch_fit_params, isoch_fit_errors, model_done],
+            [gs, '$E_{{(B-V)}}$', l_min_max[1], lkl_old, min_max_p,
+                isoch_fit_params, isoch_fit_errors, model_done],
+            [gs, '$(m-M)_o$', l_min_max[1], lkl_old, min_max_p,
+                isoch_fit_params, isoch_fit_errors, model_done],
+            [gs, '$M_{{\odot}}$', l_min_max[1], lkl_old, min_max_p,
+                isoch_fit_params, isoch_fit_errors, model_done],
+            [gs, '$b_{{frac}}$', l_min_max[1], lkl_old, min_max_p,
+                isoch_fit_params, isoch_fit_errors, model_done]
             ]
         for n, args in enumerate(arglist, 2):
             mp_best_fit.plot(n, *args)
