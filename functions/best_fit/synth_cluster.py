@@ -213,7 +213,7 @@ def binarity(isoch_mass, isoch_cut, bin_frac):
         # Obtain color, magnitude and masses for each binary system.
         # Transform color to the second magnitude before obtaining
         # the new binary magnitude.
-        if cmd_sel in {2, 5}:
+        if cmd_sel in {2, 5, 9}:
             # E.g.: V vs (V-I)
             mag2_iso = isoch_mass[1][bin_indxs] - isoch_mass[0][bin_indxs]
             mag2_bin = bin_isoch[1] - bin_isoch[0]
@@ -373,7 +373,7 @@ def synth_clust(err_lst, completeness, st_dist, isochrone, params):
     #m, a = params[:2]
     #print m, a, M_total
     #out_name = str(m).split('.')[1] + '_' + str(a)
-    #out_folder = '/home/gabriel/Descargas/piatti_clusters/'
+    #out_folder = '/full_path/'
     #path = out_folder + out_name + '.png'
     #s_c_p(mass_dist, isochrone, params, isoch_moved, isoch_cut,
           #isoch_mass0, isoch_binar, isoch_compl, isoch_error, path)

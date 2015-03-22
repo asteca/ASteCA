@@ -150,9 +150,9 @@ def check(mypath, cl_files):
                 "file ('{}') are incorrect.".format(g.gd_params[-1]))
 
     # Selected CMD.
-    if g.ps_params[1] not in {1, 2, 3, 4, 5, 6, 7}:
-        sys.exit("ERROR: CMD selected ({}) is not valid.".format(
-            g.ps_params[1]))
+    if g.ps_params[1] not in {1, 2, 3, 4, 5, 6, 7, 8, 9}:
+        sys.exit("ERROR: the stored CMD value ({}) does not match a valid"
+            " selection.".format(g.ps_params[1]))
 
     # Output figure.
     if g.pl_params[0] is True:
@@ -236,18 +236,14 @@ def check(mypath, cl_files):
                 " a valid input.".format(bin_method))
 
         # Unpack.
-        iso_path, cmd_select, iso_select, par_ranges = g.ps_params
+        iso_path = g.ps_params[0]
+        iso_select, par_ranges = g.ps_params[2:]
 
         # Check if /isochrones folder exists.
         if not isdir(iso_path):
             sys.exit("ERROR: 'Best synthetic cluster fit' function is set to"
                 " run but the folder:\n\n {}\n\ndoes not exists.".format(
                     iso_path))
-
-        # Check that CMD is correctly set.
-        if cmd_select not in {1, 2, 3, 4, 5, 6, 7}:
-            sys.exit("ERROR: the stored CMD value ({}) does not match a valid"
-                " selection.".format(cmd_select))
 
         # Check IMF defined.
         imfs_dict = {'chabrier_2001_exp', 'chabrier_2001_log', 'kroupa_1993',

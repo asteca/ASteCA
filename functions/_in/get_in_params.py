@@ -160,11 +160,13 @@ def init(mypath):
     text1, text2 = 'none', 'none'
     text1 = 'parsec' + iso_select[-2:]
     if cmd_select in {1, 2, 3}:
-        text2 = 'ubvi'
+        text2 = 'ubvrijhk'
     elif cmd_select in {4}:
-        text2 = 'wash'
+        text2 = 'washington'
     elif cmd_select in {5, 6, 7}:
         text2 = '2mass'
+    elif cmd_select in {8, 9}:
+        text2 = 'sloan'
     # Set iso_path according to the above values.
     iso_path = join(mypath + '/isochrones/' + text1 + '_' + text2)
 
@@ -174,7 +176,7 @@ def init(mypath):
     # is to be formed, e.g: '12' means (m_1 - m_2)
     cmds_dic = {1: ('V', 'B', 21), 2: ('V', 'I', 12), 3: ('V', 'U', 21),
         4: ('{T_1}', 'C', 21), 5: ('J', 'H', 12), 6: ('H', 'J', 21),
-        7: ('K', 'H', 21)}
+        7: ('K', 'H', 21), 8: ('g', 'u', 21), 9: ('g', 'r', 12)}
     m_1, m_2, m_ord = cmds_dic[cmd_select]
     # Store axes params.
     axes_params = [m_1, m_2, m_ord]

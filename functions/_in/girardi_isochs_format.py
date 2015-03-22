@@ -46,5 +46,11 @@ def isoch_format():
         elif cmd_select == 7:
             # K_s, H
             mag1, mag2 = 10, 9
+        elif cmd_select == 8:
+            # g, u
+            mag1, mag2 = 9, 8
+        elif cmd_select == 9:
+            # g, r
+            mag1, mag2 = 9, 10
 
     return line_start, age_format, mass, mag1, mag2

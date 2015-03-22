@@ -106,4 +106,24 @@ def move_isoch(isochrone, e, d):
         iso_moved = [np.array(isochrone[0]) + 0.2 * e,
                      np.array(isochrone[1]) + d + A_K]
 
+    elif cmd_sel == 8:
+        # For SDSS ugriz system.
+        #
+        # E(u-g) = 1.125951*E(B-V)
+        # A_g = 1.20585*Av = 1.20585*3.1*E(B-V) = 3.738135*E(B-V)
+        #
+        A_g = 3.738135 * e
+        iso_moved = [np.array(isochrone[0]) + 1.125951 * e,
+                     np.array(isochrone[1]) + d + A_g]
+
+    elif cmd_sel == 9:
+        # For SDSS ugriz system.
+        #
+        # E(g-r) = 1.037353*E(B-V)
+        # A_g = 1.20585*Av = 1.20585*3.1*E(B-V) = 3.738135*E(B-V)
+        #
+        A_g = 3.738135 * e
+        iso_moved = [np.array(isochrone[0]) + 1.037353 * e,
+                     np.array(isochrone[1]) + d + A_g]
+
     return iso_moved

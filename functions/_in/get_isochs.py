@@ -65,7 +65,7 @@ def read_met_file(met_f, age_values):
                     reader = line.split()
                     # Color.
                     # Generate colors correctty <-- HARDCODED, FIX
-                    if cmd_select in {2, 5}:
+                    if cmd_select in {2, 5, 9}:
                         isoch_col.append(float(reader[mag1_idx]) -
                         float(reader[mag2_idx]))
                     else:
