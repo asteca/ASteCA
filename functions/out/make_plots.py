@@ -169,8 +169,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
         min_max_p.append(prep_plots.BestTick(xp_min, xp_max))
 
         # Unpack.
-        lkl_old, new_bs_indx, model_done = isoch_fit_params[1], \
-        isoch_fit_params[2], isoch_fit_params[3]
+        lkl_old, new_bs_indx, model_done = isoch_fit_params[1:4]
         l_min_max = prep_plots.likl_y_range(lkl_old)
 
         arglist = [
