@@ -386,7 +386,7 @@ def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
 
         # For plotting purposes.
         lkl_old[0].append(lkl[0])
-        lkl_old[1].append(np.mean(lkl))
+        lkl_old[1].append(np.mean(np.asarray(lkl)[np.asarray(lkl) < 1e09]))
 
         #print i, generation[0], lkl[0], len(model_done[0])
 

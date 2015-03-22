@@ -197,9 +197,10 @@ def likl_y_range(lkl_old):
     '''
     Obtain y axis range for the likelihood axis.
     '''
+    # Take limits from L_min curve.
     lkl_range = max(lkl_old[1]) - min(lkl_old[0])
-    l_min_max = max(0., min(lkl_old[0]) - 0.1 * lkl_range), \
-    max(lkl_old[1]) + 0.1 * lkl_range
+    l_min_max = [max(0., min(lkl_old[0]) - 0.1 * lkl_range),
+        max(lkl_old[1]) + 0.1 * lkl_range]
 
     return l_min_max
 
