@@ -205,14 +205,12 @@ def likl_y_range(lkl_old):
     return l_min_max
 
 
-def BestTick(minv, maxv):
+def BestTick(minv, maxv, max_char):
     '''
     Find optimal number and length of ticks for a given fixed maximum
     number of characters in the axis.
     '''
 
-    # Define maximum number of characters in axis.
-    max_char = 30
     st, diff_chars, st_indx = [], 1000, 0
     # Check these 4 possible sizes for the ticks and keep the best one.
     for i in range(4):
