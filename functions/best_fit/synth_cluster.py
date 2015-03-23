@@ -227,7 +227,10 @@ def binarity(isoch_mass, isoch_cut, bin_frac):
         mag_bin = -2.5 * np.log10(10 ** (-0.4 * isoch_mass[1][bin_indxs]) +
         10 ** (-0.4 * bin_isoch[1]))
         # Transform back first filter's magnitude into color.
-        col_bin = col_mag_bin - mag_bin
+        if cmd_sel in {2, 5, 9}:
+            col_bin = mag_bin - col_mag_bin
+        else:
+            col_bin = col_mag_bin - mag_bin
 
         # Add masses to obtain the system's mass.
         mass_bin = isoch_mass[2][bin_indxs] + bin_isoch[2]
