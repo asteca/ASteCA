@@ -106,6 +106,12 @@ def check(mypath, cl_files):
     inst_packgs_lst = pack_check()
     # If all packages are installed, load them up.
     import numpy as np
+    # Force matplotlib to not use any Xwindows backend. This call prevents
+    # the code from crashing when used in a computer cluster. See:
+    # http://stackoverflow.com/a/3054314/1391441
+    import matplotlib
+    matplotlib.use('Agg')
+
     # Custom functions.
     import _in.get_in_params as g
     from _in.get_names_paths import names_paths as n_p
