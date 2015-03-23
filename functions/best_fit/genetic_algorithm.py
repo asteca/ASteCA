@@ -386,7 +386,8 @@ def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
 
         # For plotting purposes.
         lkl_old[0].append(lkl[0])
-        lkl_old[1].append(np.mean(np.asarray(lkl)[np.asarray(lkl) < 1e09]))
+        # Discard large values associated with empty arrays from mean.
+        lkl_old[1].append(np.mean(np.asarray(lkl)[np.asarray(lkl) < 9.9e08]))
 
         #print i, generation[0], lkl[0], len(model_done[0])
 
