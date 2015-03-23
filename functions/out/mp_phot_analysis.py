@@ -327,13 +327,13 @@ def plot(N, *args):
     '''
 
     plt_map = {
-        1: [pl_phot_err, 'upper error rejection function'],
-        2: [pl_phot_err, 'lower error rejection function'],
-        3: [pl_fl_diag, 'field regions photometric diagram'],
-        4: [pl_cl_diag, 'cluster region photometric diagram'],
-        5: [pl_lum_func, 'luminosity function'],
-        6: [pl_integ_mag, 'integrated magnitudes'],
-        7: [pl_p_vals, 'KDE p-values distribution']
+        0: [pl_phot_err, 'upper error rejection function'],
+        1: [pl_phot_err, 'lower error rejection function'],
+        2: [pl_fl_diag, 'field regions photometric diagram'],
+        3: [pl_cl_diag, 'cluster region photometric diagram'],
+        4: [pl_lum_func, 'luminosity function'],
+        5: [pl_integ_mag, 'integrated magnitudes'],
+        6: [pl_p_vals, 'KDE p-values distribution']
     }
 
     fxn = plt_map.get(N, None)[0]

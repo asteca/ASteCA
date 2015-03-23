@@ -8,7 +8,6 @@ Created on Tue Dic 16 12:00:00 2014
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.offsetbox as offsetbox
-from matplotlib.ticker import FormatStrFormatter
 from itertools import cycle
 from matplotlib.patches import Rectangle
 from ..errors import error_round as err_r
@@ -16,22 +15,19 @@ from ..structure import king_prof_funcs as kpf
 from .._in import get_in_params as g
 
 
-def pl_centers(gs, x_min, x_max, y_min, y_max, x_name, y_name, coord,
+def pl_centers(gs, x_name, y_name, coord, x_min, x_max, y_min, y_max,
     approx_cents, bin_width, st_dev_lst):
     '''
     2D Gaussian histograms' centers using different standard deviations.
     '''
     ax = plt.subplot(gs[0:2, 0:2])
     ax.set_aspect('equal')
-    # Set plot limits
+    # Set plot limits.
+    plt.xlim(x_min, x_max)
+    plt.ylim(y_min, y_max)
     if coord == 'deg':
         # If RA is used, invert axis.
-        plt.xlim(x_max, x_min)
-        # Set x axis to not use scientific notation.
-        ax.xaxis.set_major_formatter(FormatStrFormatter('%0.1f'))
-    else:
-        plt.xlim(x_min, x_max)
-    plt.ylim(y_min, y_max)
+        ax.invert_xaxis()
     plt.xlabel('{} ({})'.format(x_name, coord), fontsize=12)
     plt.ylabel('{} ({})'.format(y_name, coord), fontsize=12)
     ax.minorticks_on()
@@ -51,9 +47,9 @@ def pl_centers(gs, x_min, x_max, y_min, y_max, x_name, y_name, coord,
     # Add stats box.
     cent_med_r, cent_std_dev_r = err_r.round_sig_fig(cent_median,
         cent_std_dev)
-    text1 = (r"$(\tilde{{{0}}},\,\tilde{{{1}}}) = ({3:g},\;{4:g})\,"
+    text1 = (r"$(\tilde{{{0}}},\,\tilde{{{1}}}) = ({3:g},\,{4:g})\,"
     "{2}$").format(x_name, y_name, coord, *cent_med_r)
-    text2 = ("$(\sigma_{{{0}}},\,\sigma_{{{1}}}) = ({3:g},\;{4:g})\,"
+    text2 = ("$(\sigma_{{{0}}},\,\sigma_{{{1}}}) = ({3:g},\,{4:g})\,"
     "{2}$").format(x_name, y_name, coord, *cent_std_dev_r)
     text = text1 + '\n' + text2
     ob = offsetbox.AnchoredText(text, loc=2, prop=dict(size=11))
@@ -215,14 +211,11 @@ def pl_full_frame(gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max,
     ax = plt.subplot(gs[0:2, 8:10])
     ax.set_aspect('equal')
     # Set plot limits
-    if coord == 'deg':
-        # If RA is used, invert axis.
-        plt.xlim(x_max, x_min)
-        # Set x axis to not use scientific notation.
-        ax.xaxis.set_major_formatter(FormatStrFormatter('%0.1f'))
-    else:
-        plt.xlim(x_min, x_max)
+    plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
+    # If RA is used, invert axis.
+    if coord == 'deg':
+        ax.invert_xaxis()
     # Set axis labels
     plt.xlabel('{} ({})'.format(x_name, coord), fontsize=12)
     plt.ylabel('{} ({})'.format(y_name, coord), fontsize=12)
@@ -262,22 +255,21 @@ def pl_full_frame(gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max,
     plt.scatter(x_data, y_data, marker='o', c='black', s=st_sizes_arr)
 
 
-def pl_zoom_frame(gs, fig, x_zmin, x_zmax, y_zmin, y_zmax, x_name, y_name,
-    coord, cont_index, kde_pl, x_data, y_data, st_sizes_arr, center_cl,
+def pl_zoom_frame(gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
+    y_zmax, cont_index, kde_pl, x_data, y_data, st_sizes_arr, center_cl,
     clust_rad):
     '''
     Zoom on x,y finding chart.
     '''
     ax = plt.subplot(gs[0:2, 10:12])
+    # Force square plot.
     ax.set_aspect('equal')
+    # Set plot limits.
+    plt.xlim(x_zmin, x_zmax)
+    plt.ylim(y_zmin, y_zmax)
     if coord == 'deg':
         # If RA is used, invert axis.
-        plt.xlim(x_zmax, x_zmin)
-        # Set x axis to not use scientific notation.
-        ax.xaxis.set_major_formatter(FormatStrFormatter('%0.1f'))
-    else:
-        plt.xlim(x_zmin, x_zmax)
-    plt.ylim(y_zmin, y_zmax)
+        ax.invert_xaxis()
     # Set axis labels
     plt.xlabel('{} ({})'.format(x_name, coord), fontsize=12)
     plt.ylabel('{} ({})'.format(y_name, coord), fontsize=12)
@@ -319,22 +311,19 @@ def pl_zoom_frame(gs, fig, x_zmin, x_zmax, y_zmin, y_zmax, x_name, y_name,
         marker='x', zorder=5)
 
 
-def pl_cl_fl_regions(gs, fig, x_min, x_max, y_min, y_max, x_name, y_name,
-    coord, center_cl, clust_rad, field_regions, cl_region, flag_area_stronger):
+def pl_cl_fl_regions(gs, fig, x_name, y_name, coord, x_min, x_max, y_min,
+    y_max, center_cl, clust_rad, field_regions, cl_region, flag_area_stronger):
     '''
     Cluster and field regions defined.
     '''
     ax = plt.subplot(gs[2:4, 0:2])
     ax.set_aspect('equal')
     # Set plot limits
-    if coord == 'deg':
-        # If RA is used, invert axis.
-        plt.xlim(x_max, x_min)
-        # Set x axis to not use scientific notation.
-        ax.xaxis.set_major_formatter(FormatStrFormatter('%0.1f'))
-    else:
-        plt.xlim(x_min, x_max)
+    plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
+    # If RA is used, invert axis.
+    if coord == 'deg':
+        ax.invert_xaxis()
     # Set axis labels
     plt.xlabel('{} ({})'.format(x_name, coord), fontsize=12)
     plt.ylabel('{} ({})'.format(y_name, coord), fontsize=12)
@@ -372,12 +361,12 @@ def plot(N, *args):
     '''
 
     plt_map = {
-        1: [pl_hist_g, 'density positional chart'],
-        2: [pl_centers, 'obtained centers in positional chart'],
-        3: [pl_full_frame, 'full frame'],
-        4: [pl_rad_dens, 'radial density function'],
-        5: [pl_zoom_frame, 'zoomed frame'],
-        6: [pl_cl_fl_regions, 'cluster and field regions defined']
+        0: [pl_hist_g, 'density positional chart'],
+        1: [pl_centers, 'obtained centers in positional chart'],
+        2: [pl_full_frame, 'full frame'],
+        3: [pl_rad_dens, 'radial density function'],
+        4: [pl_zoom_frame, 'zoomed frame'],
+        5: [pl_cl_fl_regions, 'cluster and field regions defined']
     }
 
     fxn = plt_map.get(N, None)[0]
@@ -387,4 +376,6 @@ def plot(N, *args):
     try:
         fxn(*args)
     except:
+        #import traceback
+        #print traceback.format_exc()
         print("  WARNING: error when plotting {}.".format(plt_map.get(N)[1]))

@@ -9,7 +9,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
 import matplotlib.offsetbox as offsetbox
-from matplotlib.ticker import FormatStrFormatter
 from functions.exp_function import exp_3p
 from .._in import get_in_params as g
 
@@ -75,14 +74,11 @@ def pl_chart_mps(gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
     '''
     ax = plt.subplot(gs[4:6, 4:6])
     #Set plot limits, Use 'zoom' x,y ranges.
-    if coord == 'deg':
-        # If RA is used, invert axis.
-        plt.xlim(x_zmax, x_zmin)
-        # Set x axis to not use scientific notation.
-        ax.xaxis.set_major_formatter(FormatStrFormatter('%0.1f'))
-    else:
-        plt.xlim(x_zmin, x_zmax)
+    plt.xlim(x_zmin, x_zmax)
     plt.ylim(y_zmin, y_zmax)
+    # If RA is used, invert axis.
+    if coord == 'deg':
+        ax.invert_xaxis()
     #Set axis labels
     plt.xlabel('{} ({})'.format(x_name, coord), fontsize=12)
     plt.ylabel('{} ({})'.format(y_name, coord), fontsize=12)
@@ -211,8 +207,8 @@ def plot(N, *args):
     '''
 
     plt_map = {
-        1: [pl_mp_histo, 'MPs histogram'],
-        2: [pl_chart_mps, 'frame with MPs coloring']
+        0: [pl_mp_histo, 'MPs histogram'],
+        1: [pl_chart_mps, 'frame with MPs coloring']
     }
 
     fxn = plt_map.get(N, None)[0]
@@ -222,4 +218,6 @@ def plot(N, *args):
     try:
         fxn(*args)
     except:
+        #import traceback
+        #print traceback.format_exc()
         print("  WARNING: error when plotting {}.".format(plt_map.get(N)[1]))

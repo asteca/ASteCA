@@ -83,20 +83,21 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
     arglist = [
         [gs, fig, x_name, y_name, coord, cent_bin, clust_rad, bin_width,
             err_r, hist_2d_g],
-        [gs, x_min, x_max, y_min, y_max, x_name, y_name, coord, approx_cents,
+        [gs, x_name, y_name, coord, x_min, x_max, y_min, y_max, approx_cents,
             bin_width, st_dev_lst],
         [gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max,
-            center_cl, clust_rad, e_cent, kp_params, mag_data, x_data,
-            y_data, st_sizes_arr],
+            center_cl, clust_rad, e_cent, kp_params, mag_data,
+            x_data, y_data, st_sizes_arr],
         [gs, radii, ring_density, field_dens, coord, clust_name, kp_params,
             clust_rad, e_rad, poisson_error, bin_width],
-        [gs, fig, x_zmin, x_zmax, y_zmin, y_zmax, x_name, y_name, coord,
-            cont_index, kde_pl, x_data_z, y_data_z, st_sizes_arr_z, center_cl,
-            clust_rad],
-        [gs, fig, x_min, x_max, y_min, y_max, x_name, y_name, coord,
-            center_cl, clust_rad, field_regions, cl_region, flag_area_stronger]
+        [gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin, y_zmax,
+            cont_index, kde_pl, x_data_z, y_data_z,
+            st_sizes_arr_z, center_cl, clust_rad],
+        [gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max,
+            center_cl, clust_rad, field_regions, cl_region,
+            flag_area_stronger]
         ]
-    for n, args in enumerate(arglist, 1):
+    for n, args in enumerate(arglist):
         #with timeblock("{}".format(n)):
         mp_structure.plot(n, *args)
 
@@ -117,7 +118,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
         [gs, integr_return, y_ax, x_ax0, flag_area_stronger],
         [gs, flag_pval_test, pval_test_params]
         ]
-    for n, args in enumerate(arglist, 1):
+    for n, args in enumerate(arglist):
         mp_phot_analysis.plot(n, *args)
 
     #
@@ -132,7 +133,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
                 center_cl, clust_rad, field_dens, decont_algor_return[0],
                 stars_out]
             ]
-        for n, args in enumerate(arglist, 1):
+        for n, args in enumerate(arglist):
             mp_decont_algor.plot(n, *args)
 
     plot_colorbar = False
@@ -155,7 +156,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
             [gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
                 synth_clst, isoch_fit_params[0], isoch_fit_errors, shift_isoch]
             ]
-        for n, args in enumerate(arglist, 1):
+        for n, args in enumerate(arglist):
             mp_best_fit.plot(n, *args)
 
     # Best fitting process plots for GA.
@@ -163,10 +164,11 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
     if bf_flag and best_fit_algor == 'genet':
 
         min_max_p = prep_plots.param_ranges(ip_list)
-        # Special axis ticks for metallicity.
+        # Get special axis ticks for metallicity.
         xp_min, xp_max = min_max_p[0]
+        # The maximum number of characters in the axis, '30', is HARD-CODED.
         # Add values to the end of this list.
-        min_max_p.append(prep_plots.BestTick(xp_min, xp_max))
+        min_max_p.append(prep_plots.BestTick(xp_min, xp_max, 30))
 
         # Unpack.
         lkl_old, new_bs_indx, model_done = isoch_fit_params[1:4]
@@ -195,7 +197,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
             [gs, '$b_{{frac}}$', l_min_max[1], lkl_old, min_max_p,
                 isoch_fit_params, isoch_fit_errors, model_done]
             ]
-        for n, args in enumerate(arglist, 2):
+        for n, args in enumerate(arglist, 1):
             mp_best_fit.plot(n, *args)
 
     # Ignore warning issued by colorbar plotted in photom diagram with

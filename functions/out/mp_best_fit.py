@@ -217,18 +217,18 @@ def plot(N, *args):
     '''
 
     plt_map = {
-        1: [pl_bf_synth_cl, 'synthetic cluster'],
-        2: [pl_ga_lkl, 'GA likelihood evolution'],
-        3: [pl_2_param_dens, 'age vs metallicity density map'],
-        4: [pl_2_param_dens, 'distance vs extinction density map'],
-        5: [pl_2_param_dens, 'z vs distance density map'],
-        6: [pl_2_param_dens, 'mass vs binarity density map'],
-        7: [pl_lkl_dens, 'z likelihood density'],
-        8: [pl_lkl_dens, 'age likelihood density'],
-        9: [pl_lkl_dens, 'extinction likelihood density'],
-        10: [pl_lkl_dens, 'distance likelihood density'],
-        11: [pl_lkl_dens, 'mass likelihood density'],
-        12: [pl_lkl_dens, 'binarity likelihood density']
+        0: [pl_bf_synth_cl, 'synthetic cluster'],
+        1: [pl_ga_lkl, 'GA likelihood evolution'],
+        2: [pl_2_param_dens, 'age vs metallicity density map'],
+        3: [pl_2_param_dens, 'distance vs extinction density map'],
+        4: [pl_2_param_dens, 'z vs distance density map'],
+        5: [pl_2_param_dens, 'mass vs binarity density map'],
+        6: [pl_lkl_dens, 'z likelihood density'],
+        7: [pl_lkl_dens, 'age likelihood density'],
+        8: [pl_lkl_dens, 'extinction likelihood density'],
+        9: [pl_lkl_dens, 'distance likelihood density'],
+        10: [pl_lkl_dens, 'mass likelihood density'],
+        11: [pl_lkl_dens, 'binarity likelihood density']
     }
 
     fxn = plt_map.get(N, None)[0]
@@ -238,6 +238,6 @@ def plot(N, *args):
     try:
         fxn(*args)
     except:
-        import traceback
-        print traceback.format_exc()
+        #import traceback
+        #print traceback.format_exc()
         print("  WARNING: error when plotting {}.".format(plt_map.get(N)[1]))
