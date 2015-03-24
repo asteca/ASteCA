@@ -39,7 +39,8 @@ def init(mypath):
     # Declare globals.
     global mode, done_dir, gd_params, gh_params, cr_params, kp_flag,\
     im_flag, er_params, fr_number, pv_params, da_params, ps_params, bf_params,\
-    sc_params, ga_params, rm_params, pl_params, flag_move_file, axes_params
+    sc_params, ga_params, rm_params, pl_params, flag_move_file, axes_params,\
+    flag_back_force
 
     # Store path to input data file.
     data_file = join(mypath, 'params_input.dat')
@@ -69,6 +70,8 @@ def init(mypath):
                     cmd_select = int(reader[1])
 
                 # Output parameters.
+                elif reader[0] == 'FB':
+                    flag_back_force = True if reader[1] in true_lst else False
                 elif reader[0] == 'MP':
                     flag_make_plot = True if reader[1] in true_lst else False
                     plot_frmt = str(reader[2])
@@ -126,7 +129,7 @@ def init(mypath):
                     d_rs = char_remove(reader)
                 elif reader[0] == 'TM':
                     mass_rs = char_remove(reader)
-                elif reader[0] == 'FB':
+                elif reader[0] == 'BI':
                     bin_mr = float(reader[1])
                     # Use [1:] since the mass ratio is located before the
                     # range.
@@ -148,6 +151,10 @@ def init(mypath):
                     n_el = int(reader[7])
                     n_ei = int(reader[8])
                     n_es = int(reader[9])
+
+                else:
+                    print ("  WARNING: Unknown '{}' parameters line in"
+                    "  'params_input.dat' file.\n").format(reader[0])
 
     # Pack params in lists.
     pl_params = [flag_make_plot, plot_frmt, plot_dpi]

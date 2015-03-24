@@ -106,11 +106,6 @@ def check(mypath, cl_files):
     inst_packgs_lst = pack_check()
     # If all packages are installed, load them up.
     import numpy as np
-    # Force matplotlib to not use any Xwindows backend. This call prevents
-    # the code from crashing when used in a computer cluster. See:
-    # http://stackoverflow.com/a/3054314/1391441
-    import matplotlib
-    matplotlib.use('Agg')
 
     # Custom functions.
     import _in.get_in_params as g
@@ -327,6 +322,14 @@ def check(mypath, cl_files):
         except:
             print traceback.format_exc()
             sys.exit("ERROR: unknown error reading metallicity files.")
+
+    # Force matplotlib to not use any Xwindows backend. This call prevents
+    # the code from crashing when used in a computer cluster. See:
+    # http://stackoverflow.com/a/3054314/1391441
+    if g.flag_back_force:
+        import matplotlib
+        matplotlib.use('Agg')
+        print "Forcing matplotlib to not use any Xwindows backend.\n"
 
     print 'Full check done.\n'
     return ip_list, R_in_place
