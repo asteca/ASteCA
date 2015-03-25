@@ -176,20 +176,18 @@ def get_clust_rad(phot_data, field_dens, center_params, rdp_params,
     elif g.mode == 'manual':
 
         print 'Radius found: {:g} {}.'.format(clust_rad, coord)
-        d_r(phot_data, bin_width, center_params, clust_rad, field_dens,
+        d_r(phot_data, bin_width, center_params, clust_rad, e_rad, field_dens,
             rdp_params)
         plt.show()
 
         wrong_answer = True
         while wrong_answer:
-            answer_rad = raw_input('Accept radius (otherwise input new one \
-manually)? (y/n) ')
-            if answer_rad == 'y':
+            answer_rad = raw_input('Input new radius value? (y/n) ')
+            if answer_rad == 'n':
                 print 'Value accepted.'
                 wrong_answer = False
-            elif answer_rad == 'n':
-                clust_rad_m = float(raw_input('Input new radius value (in \
-px): '))
+            elif answer_rad == 'y':
+                clust_rad_m = float(raw_input('radius: '))
                 # Update radius value.
                 clust_rad = clust_rad_m
                 wrong_answer = False

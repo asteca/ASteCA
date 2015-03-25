@@ -29,7 +29,6 @@ def disp_errors(er_mode, mag, err_plot, acpt_stars, rjct_stars, err_pck):
     gs = gridspec.GridSpec(2, 2)  # create a GridSpec object
 
     # Magnitude error
-
     stars_rjct_temp = [[], []]
     for star in rjct_stars:
         stars_rjct_temp[0].append(star[3])
@@ -85,7 +84,6 @@ def disp_errors(er_mode, mag, err_plot, acpt_stars, rjct_stars, err_pck):
                 s=1, zorder=2)
 
     # Color error
-
     stars_rjct_temp = [[], []]
     for star in rjct_stars:
         stars_rjct_temp[0].append(star[3])
@@ -138,69 +136,6 @@ def disp_errors(er_mode, mag, err_plot, acpt_stars, rjct_stars, err_pck):
                 s=15, zorder=1)
     plt.scatter(stars_acpt_temp[0], stars_acpt_temp[1], marker='o', c='k',
                 s=1, zorder=2)
-
-    #ax7 = plt.subplot(gs[0, 0:2])
-    ##Set plot limits
-    #plt.xlim(min(mag) - 0.5, max(mag) + 0.5)
-    #plt.ylim(-0.005, min(0.5, max(stars_rjct_temp[1])))
-    ##Set axis labels
-    #plt.ylabel('$\sigma_{' + y_ax + '}$', fontsize=18)
-    #plt.xlabel('$' + y_ax + '$', fontsize=18)
-    ## Set minor ticks
-    #ax7.minorticks_on()
-    ## Plot exponential fitted function.
-    #mag_x = np.linspace(bright_end, max(mag), 50)
-    ## Plot lower envelope.
-    #ax7.plot(mag_x, func(mag_x, *popt_mag), 'r-', zorder=3)
-    ## Plot left side of upper envelope (exponential).
-    #ax7.plot(mag_val_left, func(mag_val_left, *popt_umag), 'r--', lw=2.,
-             #zorder=3)
-    ## Plot right side of upper envelope (polynomial).
-    #ax7.plot(mag_val_right, np.polyval(pol_mag, (mag_val_right)), 'r--', lw=2.,
-             #zorder=3)
-    ## Plot rectangle.
-    #ax7.vlines(x=bright_end + 0.05, ymin=-0.005, ymax=be_e, color='r',
-               #linestyles='dashed', zorder=2)
-    #ax7.vlines(x=min(mag) - 0.05, ymin=-0.005, ymax=be_e, color='r',
-               #linestyles='dashed', zorder=2)
-    #ax7.hlines(y=be_e, xmin=min(mag), xmax=bright_end, color='r',
-               #linestyles='dashed', zorder=2)
-    ## Plot stars.
-    #plt.scatter(stars_rjct_temp[0], stars_rjct_temp[1], marker='x', c='teal',
-                #s=15, zorder=1)
-    #plt.scatter(stars_acpt_temp[0], stars_acpt_temp[1], marker='o', c='k',
-                #s=1, zorder=2)
-
-    ## C-T1 color error
-    #ax8 = plt.subplot(gs[1, 0:2])
-    ##Set plot limits
-    #plt.xlim(min(mag) - 0.5, max(mag) + 0.5)
-    #plt.ylim(-0.005, min(0.5, max(stars_rjct_temp[1])))
-    ##Set axis labels
-    #plt.ylabel('$\sigma_{' + x_ax + '}$', fontsize=18)
-    #plt.xlabel('$' + y_ax + '$', fontsize=18)
-    ## Set minor ticks
-    #ax8.minorticks_on()
-    ## Plot lower envelope.
-    #ax8.plot(mag_x, func(mag_x, *popt_col1), 'r-', zorder=3)
-    ## Plot left side of upper envelope (exponential).
-    #ax8.plot(col1_val_left, func(col1_val_left, *popt_ucol1), 'r--', lw=2.,
-             #zorder=3)
-    ## Plot right side of upper envelope (polynomial).
-    #ax8.plot(col1_val_right, np.polyval(pol_col1, (col1_val_right)), 'r--',
-             #lw=2., zorder=3)
-    ## Plot rectangle.
-    #ax8.vlines(x=bright_end + 0.05, ymin=-0.005, ymax=be_e, color='r',
-               #linestyles='dashed', zorder=2)
-    #ax8.vlines(x=min(mag) - 0.05, ymin=-0.005, ymax=be_e, color='r',
-               #linestyles='dashed', zorder=2)
-    #ax8.hlines(y=be_e, xmin=min(mag), xmax=bright_end, color='r',
-               #linestyles='dashed', zorder=2)
-    ## Plot stars.
-    #plt.scatter(stars_rjct_temp[0], stars_rjct_temp[1], marker='x', c='teal',
-                #s=15, zorder=1)
-    #plt.scatter(stars_acpt_temp[0], stars_acpt_temp[1], marker='o', c='k',
-                #s=1, zorder=2)
 
     plt.draw()
     print 'Plot displayed, waiting for it to be closed.'
