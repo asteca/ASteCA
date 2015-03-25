@@ -206,7 +206,8 @@ def err_accpt_rejct(phot_data, semi_return):
                 # Ask if keep or reject.
                 wrong_answer = True
                 while wrong_answer:
-                    mv_on = str(raw_input('Accept fit for errors? (y/n) '))
+                    mv_on = str(raw_input('Accept error based rejection?'
+                    '(y/n) '))
                     if mv_on == 'y':
                         print 'Fit accepted.'
                         wrong_answer = False

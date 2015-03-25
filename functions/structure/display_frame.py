@@ -14,6 +14,7 @@ def disp_frame(x_data, y_data, mag_data):
     coord, x_name, y_name = prep_plots.coord_syst()
     st_sizes_arr = prep_plots.star_size(mag_data)
 
+    plt.gca().set_aspect('equal')
     # Get max and min values in x,y
     x_min, x_max = min(x_data), max(x_data)
     y_min, y_max = min(y_data), max(y_data)

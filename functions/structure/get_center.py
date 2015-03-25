@@ -225,9 +225,8 @@ def get_center(x_data, y_data, mag_data, hist_lst, semi_return):
                 wrong_answer = False
             elif answer_cen == 'y':
                 kde_cent = []
-                print 'Input new center values.'
-                kde_cent.append(float(raw_input('x: ')))
-                kde_cent.append(float(raw_input('y: ')))
+                kde_cent.append(float(raw_input('x_center: ')))
+                kde_cent.append(float(raw_input('y_center: ')))
                 # Store center bin coords for the filtered hist.
                 cent_bin = bin_center(xedges, yedges, kde_cent)
                 wrong_answer = False

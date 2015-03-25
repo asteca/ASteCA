@@ -187,7 +187,7 @@ def get_clust_rad(phot_data, field_dens, center_params, rdp_params,
                 print 'Value accepted.'
                 wrong_answer = False
             elif answer_rad == 'y':
-                clust_rad_m = float(raw_input('radius: '))
+                clust_rad_m = float(raw_input('cluster_rad: '))
                 # Update radius value.
                 clust_rad = clust_rad_m
                 wrong_answer = False

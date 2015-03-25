@@ -39,6 +39,7 @@ def disp_cent(x_data, y_data, mag_data, center_cl, cent_bin, h_filter):
 
     # 2 subplot: x,y finding chart of full frame
     ax2 = plt.subplot(gs[0, 1])
+    ax2.set_aspect('equal')
     # Get max and min values in x,y
     x_min, x_max = min(x_data), max(x_data)
     y_min, y_max = min(y_data), max(y_data)
