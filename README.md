@@ -1,18 +1,34 @@
-[![arXiv](https://img.shields.io/badge/arXiv-1412.2366-yellowgreen.svg)](http://arxiv.org/abs/1412.2366) [![License](http://img.shields.io/badge/license-GPLv3-red.svg)](http://www.gnu.org/licenses/gpl-3.0.en.html) [![Stories in Ready](https://badge.waffle.io/asteca/asteca.svg?label=ready&title=Ready)](http://waffle.io/asteca/asteca) [![Stories in Progress](https://badge.waffle.io/asteca/asteca.svg?label=in_prog&title=In%20Progress)](http://waffle.io/asteca/asteca)
+[![AA](https://img.shields.io/badge/A%26A-576--A6%2C%202015-yellowgreen.svg)](http://www.aanda.org/articles/aa/abs/2015/04/aa24946-14/aa24946-14.html) [![License](http://img.shields.io/badge/license-GPLv3-red.svg)](http://www.gnu.org/licenses/gpl-3.0.en.html) [![Stories in Ready](https://badge.waffle.io/asteca/asteca.svg?label=ready&title=Ready)](http://waffle.io/asteca/asteca) [![Stories in Progress](https://badge.waffle.io/asteca/asteca.svg?label=in_prog&title=In%20Progress)](http://waffle.io/asteca/asteca)
 
 # ASteCA [Automated Stellar Cluster Analysis]
 
-The [ASteCA][3] package is designed to fully automatize the usual tests applied on <a href="https://en.wikipedia.org/wiki/Star_cluster">star clusters</a> in order to determine their characteristics: center, radius, stars' membership probabilities and associated intrinsic/extrinsic parameters: metallicity, age, reddening, distance, total mass, binarity fraction, etc.</p>
+The [ASteCA][3] package is designed to fully automatize the usual tests applied on [star clusters][12] in order to determine their characteristics: center, radius, stars membership probabilities and associated intrinsic/extrinsic parameters: metallicity, age, reddening, distance, total mass, binarity fraction, etc.</p>
 
-<p>The accompanying article describing the code in detail can be accessed <a href="http://arxiv.org/abs/1412.2366">via arXiv</a>.</p>
+Read the code's [documentation][9]. <-- *Still under development*.
 
-Read the code's [documentation][9]. <-- *Under development*.
+The accompanying article describing the code in detail can be accessed [via A&A][10],
+and referenced using the following BibTeX entry:
+
+````
+@article{Perren_2015,
+    author = {{Perren, G. I.} and {V\'azquez, R. A.} and {Piatti, A. E.}},
+    title = {ASteCA: Automated Stellar Cluster Analysis},
+    DOI= "10.1051/0004-6361/201424946",
+    url= "http://dx.doi.org/10.1051/0004-6361/201424946",
+    journal = {A\&A},
+    year = 2015,
+    volume = 576,
+    pages = "A6",
+    month = "04",
+}
+````
+
 
 ## Releases
 
 The code is still under (heavy) development. The latest release can be accessed [here][1].
 
-See the `CHANGELOG.md` file for a list of releases, the changes made in each and possible compatibility breaks with the previous version.
+See the [CHANGELOG.md][11] file for a list of releases, the changes made in each and possible compatibility breaks with the previous version.
 
 ## To do
 
@@ -57,3 +73,6 @@ Copyright (c) 2014 Gabriel Perren - Released under the GPL v3 license.
 [7]: https://github.com/asteca/asteca/issues
 [8]: http://semver.org/
 [9]: http://asteca.rtfd.org/
+[10]: http://www.aanda.org/articles/aa/abs/2015/04/aa24946-14/aa24946-14.html
+[11]: https://github.com/asteca/asteca/blob/master/CHANGELOG.md
+[12]: https://en.wikipedia.org/wiki/Star_cluster
