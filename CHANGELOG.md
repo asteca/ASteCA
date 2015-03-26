@@ -1,5 +1,30 @@
 # Change Log
 
+## [[v0.1.7]](https://github.com/asteca/asteca/releases/tag/v0.1.7) - 2015-03-26
+
+### Changed
+
+(**Warning**: this release breaks compatibility with the previous version of the `params_input.dat` file)
+
+* Re-write `lowexp` [error rejection method](https://github.com/asteca/asteca/commit/6b2857aefa2878ee5aba245a7fbf9cc1f423820b), now uses _prediction bands_ instead of _confidence intervals_.
+* Force `matplotlib`'s backend to make the code [work in servers](https://github.com/asteca/asteca/commit/197af6439baabd3e9db4039775aba721d84047a2) .
+* Fixed `eyefit` method for [error rejection](https://github.com/asteca/asteca/commit/d92be0c8e398739fba562d59ba35b11eeac9a9a0). It changed after fixing [#169](https://github.com/asteca/asteca/issues/169).
+* Added [SDSS CMDs](https://github.com/asteca/asteca/commit/2324a70f402ddbe9fdde203c3745f93b6d6dc545) `g vs (u-g)` & `g vs (g-r)`, at the request of Tjibaria Pijloo (Department of Astrophysics, Radboud University Nijmegen).
+* Fixed bug in binarity generation for the CMDs of the form `X vs (X-Y)` ([#181](https://github.com/asteca/asteca/issues/181)).
+* Smarter selection of stars to be used by the best fit function, improvements in several plots ([#171](https://github.com/asteca/asteca/issues/171), [#172](https://github.com/asteca/asteca/issues/172)).
+* Best fit function can now accept a _minimum magnitude_ value instead of just a _minimum probability_ value ([#115](https://github.com/asteca/asteca/issues/115)).
+* Added a `memb_par` parameter to compare the number of approximate cluster members obtained via the structural analysis and via the decontamination algorithm ([#162](https://github.com/asteca/asteca/issues/162)).
+* Code is now able to correctly read the names of files with [more than one dot in it's name](https://github.com/asteca/asteca/commit/c0358ed9526b835bfeeddf75804002ad51c69610).
+* Fixed bad [alphabetical ordering](https://github.com/asteca/asteca/commit/b6ca2a2df8b7e614dc9beb38e99400e3b69208bf) of input cluster files.
+* Better limits for photometric diagram ([#173](https://github.com/asteca/asteca/issues/173)).
+* Fixed `DeprecationWarning` [issue](https://github.com/asteca/asteca/commit/97d77f1d7f36adf6af6398a2f4a5b944598fda8f).
+* Invert x axis when [RA cords are used](https://github.com/asteca/asteca/commit/e99da37a398c446d71c59c43f4547434d0c9f7e7) (improved [here](https://github.com/asteca/asteca/commit/aeb7d7d097eb40289d2bb4c83adf433567bb28d0)).
+* Several fixes and improvements made to plotted diagrams ([5c7dc7f](https://github.com/asteca/asteca/commit/5c7dc7f9f348bf2bedb3eb86daf7decbbf83df33); [1642349](https://github.com/asteca/asteca/commit/16423496d22bb843294189fd121a0ed8a0c6e783); [b57028c](https://github.com/asteca/asteca/commit/b57028c93259afbf3cbebc905c482349fcb6ef7a); [240178a](https://github.com/asteca/asteca/commit/240178a3c797910d6a807a41a8dd6c2f94d82cfb); [9ec0ab8](https://github.com/asteca/asteca/commit/9ec0ab8c3d966e0dbe19c6b5cff65e1cb381c939); [fef14c4](https://github.com/asteca/asteca/commit/fef14c476b88bc9f82bcd39e96cee222a0628cdd); [db0df2a](https://github.com/asteca/asteca/commit/db0df2adc8d9821ab5122ba6b6482557627a779e); [575ebe7](https://github.com/asteca/asteca/commit/575ebe7de64c1c4da04eb7c18dfab4b8bd1b2751); [#177](https://github.com/asteca/asteca/issues/177); [#178](https://github.com/asteca/asteca/issues/178)).
+
+### Caveats
+
+* Same as version [0.1.2](https://github.com/asteca/asteca/releases/tag/v0.1.2).
+
 ## [[v0.1.61]](https://github.com/asteca/asteca/releases/tag/v0.1.61) - 2015-03-04
 
 ### Changed
@@ -17,7 +42,9 @@
 
 ### Changed
 
-* Improved radius assignment algorithm ([#146](https://github.com/asteca/asteca/issues/146)). **Warning**: this breaks compatibility with the previous version of the `params_input.dat` file.
+(**Warning**: this release breaks compatibility with the previous version of the `params_input.dat` file)
+
+* Improved radius assignment algorithm ([#146](https://github.com/asteca/asteca/issues/146)).
 * Detect cropped cluster region and use correct area when generating field regions ([#139](https://github.com/asteca/asteca/issues/139), [#157](https://github.com/asteca/asteca/issues/157)).
 * Fixed bug that crashed the code when top tiers synthetic clusters with no stars were plotted ([#147](https://github.com/asteca/asteca/issues/147)). Added minimum total mass of 10Mo.
 * Fixed bug where KDE p-values for field vs field comparision were artificially increased by comparing a field region with itself ([#138](https://github.com/asteca/asteca/issues/138)).
@@ -45,7 +72,7 @@
 
 ## [[v0.1.3]](https://github.com/asteca/asteca/releases/tag/v0.1.3) - 2014-12-10
 
-### Changed:
+### Changed
 
 * Accept arrays of non-equispaced parameter values instead of only equispaced ranges ([#121](https://github.com/asteca/asteca/issues/121)).
 * Added support for lognormal [Chabrier (2001)](http://adsabs.harvard.edu/abs/2001ApJ...554.1274C) IMF.
@@ -117,7 +144,7 @@ to be selected. [Fixed](https://github.com/Gabriel-p/asteca/commit/c247fd7fa4cca
 * Closed [#85](https://github.com/asteca/asteca/issues/85), [#70](https://github.com/asteca/asteca/issues/70), [#43](https://github.com/asteca/asteca/issues/43), [#86](https://github.com/asteca/asteca/issues/86).
 - Metallicity and age now take steps in the GA.
 - Add [checker](https://github.com/Gabriel-p/asteca/blob/master/functions/checker.py) function to make sure certain parameters are set correctly before running.
-* Number of points in `get_radius` increased 20% --> 25% of the RDP (https://github.com/Gabriel-p/asteca/commit/a2e9b8f16111d5adafe66fed1eb64ed8bc03997b)
+* Number of points in `get_radius` increased 20% --> 25% of [the RDP](https://github.com/Gabriel-p/asteca/commit/a2e9b8f16111d5adafe66fed1eb64ed8bc03997b).
 
 ## [[v3.0.0-beta]](https://github.com/asteca/asteca/releases/tag/v3.0.0-beta) - 2014-09-16
 
@@ -152,5 +179,4 @@ to be selected. [Fixed](https://github.com/Gabriel-p/asteca/commit/c247fd7fa4cca
 
 _First beta release_
 
-Version used (with some small changes) in the [original article](http://arxiv.org/abs/1412.2366).
-
+Version used (with some small changes) in the [original article](http://www.aanda.org/articles/aa/abs/2015/04/aa24946-14/aa24946-14.html).
