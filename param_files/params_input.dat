@@ -1,5 +1,5 @@
 ################################################################################
-#                   #### ASteCA input parameters file ###
+#                   *** ASteCA input parameters file ***
 #
 #
 # This file contains the values of the parameters used by ASteCA functions.
@@ -29,6 +29,14 @@
 #
 #    mode
 MO   auto
+
+# Force matplotlib backend to 'Agg'.
+#
+# * flag: true / false. Set to 'true' to prevent the error 'TclError: no
+#   display name and no $DISPLAY environment variable' when running the code
+#   in a server.
+#
+FB  false
 ################################################################################
 
 
@@ -68,14 +76,6 @@ CMD          1
 
 
 ########################## Output parameters ###################################
-
-# Force matplotlib backend to 'Agg'.
-#
-# * flag: true / false. Set to 'true' to prevent the error 'TclError: no
-#   display name and no $DISPLAY environment variable' when running the code
-#   in a server.
-#
-FB  false
 
 # Create output figure?
 #
@@ -188,6 +188,7 @@ IM   true
 # Test to determine the probability of the cluster being a physical entity
 # instead of a random over-density of stars, based on comparing its CMD with
 # field regions CMDs.
+#
 # * mode: auto / manual / skip
 #   - auto: the code will compare 100/(regions-1) times the CMDs of the
 #     cluster and field regions.
@@ -196,7 +197,12 @@ IM   true
 #   - skip: skip test.
 #
 #    mode   num
-PV   auto     2
+PV   auto   2
+################################################################################
+
+
+
+################ Decontamination algorithm parameters ##########################
 
 # Bayesian decontamination algorithm.
 #
@@ -211,6 +217,27 @@ PV   auto     2
 #
 #   mode     runs
 DA  auto      100
+
+# Reduced membership.
+#
+# Selection of stars to be used by the fitting function to estimate the
+# cluster's fundamental parameters.
+#
+# * mode: auto / man / top-h / mag / skip
+#   - auto: will set the minimum probability value such that only the top
+#     half of stars with the highest probability are used.
+#   - top-h: selects the top half of stars in the cluster region with the
+#     highest probability memberships.
+#   - man: the minimum probability value has to be set manually in the
+#    'prob_min' parameter (0, 1).
+#   - mag: switches the 'prob_min' value to a 'mag_min' value so the user can
+#     select a minimum magnitude to be used in the best fit function, instead
+#     of a minimum probability (the 'minimum magnitude' value is the value of
+#     the dimmest star wished to be taken into account in the fitting process).
+#   - skip: use all stars in cluster region.
+#
+#    mode           prob_min/mag_min
+RM   auto                        17
 ################################################################################
 
 
@@ -255,8 +282,7 @@ BF  false      genet      dolphin    knuth         10
 # If you want to make the total initial mass a free parameter that varies within
 # a range, you need to use the 'dolphin' likelihood method instead.
 
-# Select set of isochrones to use. Only PARSEC tracks are accepted
-# for now.
+# Select set of isochrones to use. Only PARSEC tracks are accepted for now.
 #
 # iso_select: PAR10 (v1.0) / PAR11 (v1.1) / PAR12 (v1.2S)
 #
@@ -286,24 +312,6 @@ TM                        10  10000      100
 #    Binary fraction.
 #    mass_ratio
 BI          0.7           0.     1.      0.2
-
-# Reduced membership.
-#
-# * mode: auto / man / top-h / mag / skip
-#   - auto: will set the minimum probability value such that only the top
-#     half of stars with the highest probability are used.
-#   - top-h: selects the top half of stars in the cluster region with the
-#     highest probability memberships.
-#   - man: the minimum probability value has to be set manually in the
-#    'prob_min' parameter (0, 1).
-#   - mag: switches the 'prob_min' value to a 'mag_min' value so the user can
-#     select a minimum magnitude to be used in the best fit function, instead
-#     of a minimum probability (the 'minimum magnitude' value is the value of
-#     the dimmest star wished to be taken into account in the fitting process).
-#   - skip: use all stars in cluster region.
-#
-#    mode           prob_min/mag_min
-RM   auto                        0.5
 
 # Genetic Algorithm parameters.
 #
