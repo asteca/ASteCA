@@ -184,8 +184,8 @@ def check(mypath, cl_files):
 
     # Check KDE p-value custer probability function.
     if g.pv_params[0] not in {'auto', 'manual', 'skip'}:
-        sys.exit("ERROR: Wrong name ('{}') for KDE p-value function "
-            "'mode'.".format(g.pv_params[0]))
+        sys.exit("ERROR: Wrong name ('{}') for 'mode' in KDE p-value test."
+            .format(g.pv_params[0]))
     elif g.pv_params[0] in {'auto', 'manual'}:
         # Check if R and rpy2 are installed.
         R_in_place = R_check(inst_packgs_lst)
