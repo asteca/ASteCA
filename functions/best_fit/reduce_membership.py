@@ -11,7 +11,7 @@ from ..phot_analysis.local_diag_clean import rm_stars as rm_s
 
 def nmemb_select(n_memb, memb_prob_avrg_sort):
     '''
-    Auto algorithm to select which stars to use by the best fit funtcion.
+    Algorithm to select which stars to use by the best fit funtcion.
     Will set the minimum probability value such that an equal number of
     stars are used in the best fit process, as the approximate number of
     members found when comparing the density of the cluster region with that
@@ -21,10 +21,7 @@ def nmemb_select(n_memb, memb_prob_avrg_sort):
 
     # Check approximate number of true members obtained by the structural
     # analysis.
-    if n_memb < 10:
-        print ("  WARNING: less than 10 stars identified as true\n"
-        "  cluster members. Using full list.")
-    else:
+    if n_memb > 10:
 
         # Total number of stars in the cluster region.
         n_tot = len(memb_prob_avrg_sort)
@@ -39,19 +36,83 @@ def nmemb_select(n_memb, memb_prob_avrg_sort):
             # membership probability values.
             indx, min_prob = n_memb, zip(*memb_prob_avrg_sort)[-1][n_memb]
 
-    # DEPRECATED
-    #elif n_memb_da >= n_memb:
-        ## There are more stars with MP>=0.5 than true members estimated by
-        ## the structural analysis. Use all stars with MP>=0.5.
-        #indx, min_prob = 0, 0.5
-        #for prob in zip(*memb_prob_avrg_sort)[-1]:
-            #if prob >= 0.5:
-                #indx += 1
-            #else:
-                #break
-
         red_memb_fit, red_memb_no_fit = memb_prob_avrg_sort[:indx], \
         memb_prob_avrg_sort[indx:]
+
+    else:
+        print ("  WARNING: less than 10 stars identified as true\n"
+        "  cluster members. Using full list.")
+
+    return red_memb_fit, red_memb_no_fit, min_prob
+
+
+def top_h(memb_prob_avrg_sort):
+    '''
+    Reject stars in the lower half of the membership probabilities list.
+    '''
+
+    red_memb_fit, red_memb_no_fit, min_prob = memb_prob_avrg_sort, [], -1.
+
+    middle_indx = int(len(memb_prob_avrg_sort) / 2)
+    red_fit = memb_prob_avrg_sort[:middle_indx]
+    # Check number of stars left.
+    if len(red_fit) > 10:
+        red_memb_fit, red_memb_no_fit, min_prob = red_fit, \
+        memb_prob_avrg_sort[middle_indx:], \
+        memb_prob_avrg_sort[middle_indx][-1]
+    else:
+        print ("  WARNING: less than 10 stars left after reducing\n"
+        "  by top half membership probability. Using full list.")
+
+    return red_memb_fit, red_memb_no_fit, min_prob
+
+
+def manual(memb_prob_avrg_sort, min_prob_man):
+    '''
+    Find index of star with membership probability < min_prob_man.
+    '''
+
+    red_memb_fit, red_memb_no_fit, min_prob = memb_prob_avrg_sort, [], -1.
+
+    indx = 0
+    for star in memb_prob_avrg_sort:
+        if star[-1] < min_prob_man:
+            break
+        else:
+            indx += 1
+
+    if len(memb_prob_avrg_sort[:indx]) > 10:
+        red_memb_fit, red_memb_no_fit, min_prob = \
+        memb_prob_avrg_sort[:indx], memb_prob_avrg_sort[indx:],\
+        min_prob_man
+    else:
+        print ("  WARNING: less than 10 stars left after reducing\n"
+        "  by manual membership probability. Using full list.")
+
+    return red_memb_fit, red_memb_no_fit, min_prob
+
+
+def man_mag(memb_prob_avrg_sort, min_prob_man):
+    '''
+    Reject stars beyond the given magnitude limit.
+    '''
+
+    red_memb_fit, red_memb_no_fit, min_prob = memb_prob_avrg_sort, [], -1.
+
+    red_fit, red_not_fit = [], []
+    for star in memb_prob_avrg_sort:
+        if star[3] <= min_prob_man:
+            red_fit.append(star)
+        else:
+            red_not_fit.append(star)
+
+    # Check number of stars left.
+    if len(red_fit) > 10:
+        red_memb_fit, red_memb_no_fit, min_prob = red_fit, red_not_fit,\
+        min_prob_man
+    else:
+        print ("  WARNING: less than 10 stars left after reducing\n"
+        "  by magnitude limit. Using full list.")
 
     return red_memb_fit, red_memb_no_fit, min_prob
 
@@ -65,76 +126,39 @@ def red_memb(n_memb, decont_algor_return, field_region):
     memb_prob_avrg_sort, flag_decont_skip = decont_algor_return
     mode_red_memb, local_bin, min_prob_man = g.rm_params
 
-    # Skip reduction process by default.
+    # Default assignment.
     red_memb_fit, red_memb_no_fit, min_prob = memb_prob_avrg_sort, [], -1.
 
-    # This mode works even if no MPs were assigned.
-    if mode_red_memb == 'local':
-        red_memb_fit, red_memb_no_fit, min_prob = rm_s(decont_algor_return,
-            field_region, local_bin)
+    if mode_red_memb == 'skip':
+        # Skip reduction process.
+        print 'Reduced membership function skipped.'
 
-        print 'Reduced membership function applied.'
-
-    elif flag_decont_skip is True:
+    # If the DA was skipped and any method but 'local' is selected, don't run.
+    elif flag_decont_skip and mode_red_memb != 'local':
         print ("  WARNING: decontamination algorithm was skipped.\n"
-        "  Can't apply selected membership reduction method.\n"
-        "  Using full list.")
+        "  Can't apply '{}' membership reduction method.\n"
+        "  Using full list.").format(mode_red_memb)
 
-    # These modes need the MPs assignation.
-    elif flag_decont_skip is False:
+    else:
+        # This mode works even if the DA did not run.
+        if mode_red_memb == 'local':
+            red_memb_fit, red_memb_no_fit, min_prob = \
+            rm_s(decont_algor_return, field_region, local_bin)
 
         if mode_red_memb == 'n-memb':
-            # Select the n_memb stars with the highest MPs.
             red_memb_fit, red_memb_no_fit, min_prob = nmemb_select(n_memb,
                 memb_prob_avrg_sort)
 
         elif mode_red_memb == 'top-h':
-            # Reject stars in the lower half of the membership
-            # probabilities list.
-            middle_indx = int(len(memb_prob_avrg_sort) / 2)
-            red_fit = memb_prob_avrg_sort[:middle_indx]
-            # Check number of stars left.
-            if len(red_fit) > 10:
-                red_memb_fit, red_memb_no_fit, min_prob = red_fit, \
-                memb_prob_avrg_sort[middle_indx:], \
-                memb_prob_avrg_sort[middle_indx][-1]
-            else:
-                print ("  WARNING: less than 10 stars left after reducing\n"
-                "  by top half membership probability. Using full list.")
+            red_memb_fit, red_memb_no_fit, min_prob = top_h(memb_prob_avrg_sort)
 
         elif mode_red_memb == 'man':
-            # Find index of star with membership probability < min_prob_man
-            indx = 0
-            for star in memb_prob_avrg_sort:
-                if star[-1] < min_prob_man:
-                    break
-                else:
-                    indx += 1
-
-            if len(memb_prob_avrg_sort[:indx]) > 10:
-                red_memb_fit, red_memb_no_fit, min_prob = \
-                memb_prob_avrg_sort[:indx], memb_prob_avrg_sort[indx:],\
-                min_prob_man
-            else:
-                print ("  WARNING: less than 10 stars left after reducing\n"
-                "  by manual membership probability. Using full list.")
+            red_memb_fit, red_memb_no_fit, min_prob = \
+            manual(memb_prob_avrg_sort, min_prob_man)
 
         elif mode_red_memb == 'mag':
-            # Reject stars beyond the given magnitude limit.
-            red_fit, red_not_fit = [], []
-            for star in memb_prob_avrg_sort:
-                if star[3] <= min_prob_man:
-                    red_fit.append(star)
-                else:
-                    red_not_fit.append(star)
-
-            # Check number of stars left.
-            if len(red_fit) > 10:
-                red_memb_fit, red_memb_no_fit, min_prob = red_fit, red_not_fit,\
-                min_prob_man
-            else:
-                print ("  WARNING: less than 10 stars left after reducing\n"
-                "  by magnitude limit. Using full list.")
+            red_memb_fit, red_memb_no_fit, min_prob = \
+            man_mag(memb_prob_avrg_sort, min_prob_man)
 
         print 'Reduced membership function applied.'
 
