@@ -146,6 +146,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
                 y_min_cmd, y_max_cmd, x_ax, y_ax, red_return,
                 shift_isoch, col_data, err_lst)
         except:
+            #import traceback
+            #print traceback.format_exc()
             print("  WARNING: error when plotting MPs on cluster's "
             "photom diagram.")
 
