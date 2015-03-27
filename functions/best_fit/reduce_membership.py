@@ -6,6 +6,7 @@ Created on Thu Mar 20 2014
 """
 
 from .._in import get_in_params as g
+from ..phot_analysis.local_diag_clean import rm_stars as rm_s
 
 
 def auto_select(n_memb, memb_prob_avrg_sort):
@@ -55,7 +56,7 @@ def auto_select(n_memb, memb_prob_avrg_sort):
     return red_memb_fit, red_memb_no_fit, min_prob
 
 
-def red_memb(n_memb, decont_algor_return):
+def red_memb(n_memb, decont_algor_return, field_region):
     '''
     Reduce number of stars according to a given membership probability
     lower limit or minimum magnitude limit.
@@ -69,14 +70,18 @@ def red_memb(n_memb, decont_algor_return):
     # Only run if best fit process is set to run.
     if bf_flag:
 
-        mode_red_memb, min_prob_man = g.rm_params
+        mode_red_memb, local_bin, min_prob_man = g.rm_params
 
         if flag_decont_skip is True:
             print ("  WARNING: decontamination algorithm was skipped.\n"
             "  Can't apply membership reduction. Using full list.")
 
-        elif mode_red_memb == 'auto':
-            # Select stars to use automatically.
+        elif mode_red_memb == 'local':
+            red_memb_fit, red_memb_no_fit, min_prob = rm_s(decont_algor_return,
+                field_region, local_bin)
+
+        elif mode_red_memb == 'n-memb':
+            # Select the n_memb stars with the highest MPs.
             red_memb_fit, red_memb_no_fit, min_prob = auto_select(n_memb,
                 memb_prob_avrg_sort)
 
@@ -127,5 +132,7 @@ def red_memb(n_memb, decont_algor_return):
             else:
                 print ("  WARNING: less than 10 stars left after reducing\n"
                 "  by magnitude limit. Using full list.")
+
+        print 'Reduced membership function applied.'
 
     return red_memb_fit, red_memb_no_fit, min_prob
