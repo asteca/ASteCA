@@ -223,8 +223,11 @@ DA  auto      100
 # Selection of stars to be used by the fitting function to estimate the
 # cluster's fundamental parameters.
 #
-# * mode: auto / man / top-h / mag / skip
-#   - auto: use the N stars with the highest MPs, where N is the approximate
+# * mode: local / n-memb / man / top-h / mag / skip
+#   - local: combines the assigned MPs with a cell by cell removal of stars in
+#     the photometric diagram. The stars discarded are those of lower MPs and
+#     the number is equal to the excess of field stars present in each cell.
+#   - n-memb: use the N stars with the highest MPs, where N is the approximate
 #     number of members found via the cluster region vs field region star
 #     density comparison.
 #   - top-h: selects the top half of all stars in the cluster region with the
@@ -237,8 +240,16 @@ DA  auto      100
 #     the dimmest star wished to be taken into account in the fitting process).
 #   - skip: use all stars in the cluster region.
 #
-#    mode           prob_min/mag_min
-RM   auto                        17
+# * binning: blocks / knuth / scott/ freedman / sturges / sqrt
+#   Binning method to be used if the 'local' method is selected. Otherwise
+#   this parameter is not used.
+#
+# * prob_min/mag_min: either the minimum probability value if the 'man' mode
+#   was selected, or the minimum magnitude value if the 'mag' mode was.
+#   Otherwise this parameter is not used.
+#
+#    mode    binning     prob_min/mag_min
+RM   local    blocks                   17
 ################################################################################
 
 
