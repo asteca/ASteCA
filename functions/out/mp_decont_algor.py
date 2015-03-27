@@ -173,8 +173,11 @@ def pl_mps_phot_diag(gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
         col_select_fit, col_select_no_fit, c_iso = '#4682b4', '#4682b4', 'r'
     # Plot stars *not* used in the best fit process.
     plt.scatter(m_p_m_no_fit_inv[0], m_p_m_no_fit_inv[1], marker='o',
-                c=col_select_no_fit, s=40, cmap=cm, lw=0.5, alpha=0.5,
+                c=col_select_no_fit, s=35, cmap=cm, lw=0.5, alpha=0.5,
                 vmin=v_min_mp, vmax=v_max_mp)
+    # Draw horizontal line over stars discarded.
+    plt.scatter(m_p_m_no_fit_inv[0], m_p_m_no_fit_inv[1], marker='_',
+                c='k', lw=0.5, alpha=0.5)
     # Plot stars used in the best fit process.
     sca = plt.scatter(m_p_m_fit_inv[0], m_p_m_fit_inv[1], marker='o',
                 c=col_select_fit, s=40, cmap=cm, lw=0.5, vmin=v_min_mp,
