@@ -38,7 +38,7 @@ def prepare(memb_prob_avrg_sort):
     else:
 
         # Remove ID's and zip.
-        P = np.array(zip(*memb_prob_avrg_sort)[1:])
+        P = np.array(zip(*memb_prob_avrg_sort)[1:], dtype='float')
 
         # Obtain bin edges for each dimension.
         if bin_method in ['sturges', 'sqrt']:
