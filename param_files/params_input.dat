@@ -272,7 +272,7 @@ RM   auto                        17
 #   bootstrap process hence no errors will be assigned to the parameters.
 #
 #    flag  algorithm   likelihood  binning  bootstrap
-BF  false      genet      dolphin    knuth         10
+BF   true      genet      dolphin    knuth         10
 
 # ** WARNING **
 #
