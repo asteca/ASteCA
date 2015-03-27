@@ -143,21 +143,16 @@ def asteca_funcs(cl_file, ip_list, R_in_place):
     # was found around the cluster.
     decont_algor_return = dab(flag_area_stronger, cl_region, field_region,
         memb_file)
-    memb_prob_avrg_sort = decont_algor_return[0]
-
-    # Create data file with membership probabilities.
-    c_m_f(memb_file_out, memb_prob_avrg_sort)
-    print 'Membership probabilities saved to file.'
 
     # Obtain members parameter.
     memb_par, n_memb_da = m_m(n_memb, decont_algor_return)
 
-    from functions.phot_analysis.local_diag_clean import rm_stars as rm_s
-    red_return = rm_s(decont_algor_return, field_region)
-
     # Reduce number of stars in cluster according to a lower membership
     # probability or magnitude limit.
-    #red_return = rm(n_memb, decont_algor_return)
+    red_return = rm(n_memb, decont_algor_return, field_region)
+
+    # Create data file with membership probabilities.
+    c_m_f(memb_file_out, red_return)
 
     # Obtain exponential error function parameters to use by the
     # synthetic cluster creation function.
