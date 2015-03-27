@@ -20,15 +20,15 @@ def cluster_members_file(memb_file_out, red_return):
     # Save cluster region with MPs obtained by the decont algor.
     with open(memb_file_out, "a") as f_out:
         for line in red_memb_fit:
-            line.append('1')  # Identify stars selected by the red_mem function.
+            l = line + ['1']  # Identify stars selected by the red_mem function.
             f_out.write('{:<8} {:>8.6f} {:>8.6f} {:>8.4f} {:>8.4f} {:>8.4f} \
-{:>8.4f} {:>8.4f} {:>6}'.format(*line))
+{:>8.4f} {:>8.4f} {:>6}'.format(*l))
             f_out.write('\n')
         # ^ Stars selected by the reduced membership function.
         for line in red_memb_no_fit:
-            line.append('0')
+            l = line + ['0']
             f_out.write('{:<8} {:>8.6f} {:>8.6f} {:>8.4f} {:>8.4f} {:>8.4f} \
-{:>8.4f} {:>8.4f} {:>6}'.format(*line))
+{:>8.4f} {:>8.4f} {:>6}'.format(*l))
             f_out.write('\n')
 
     print 'Membership probabilities saved to file.'
