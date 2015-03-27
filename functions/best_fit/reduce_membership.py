@@ -9,7 +9,7 @@ from .._in import get_in_params as g
 from ..phot_analysis.local_diag_clean import rm_stars as rm_s
 
 
-def auto_select(n_memb, memb_prob_avrg_sort):
+def nmemb_select(n_memb, memb_prob_avrg_sort):
     '''
     Auto algorithm to select which stars to use by the best fit funtcion.
     Will set the minimum probability value such that an equal number of
@@ -82,7 +82,7 @@ def red_memb(n_memb, decont_algor_return, field_region):
 
         elif mode_red_memb == 'n-memb':
             # Select the n_memb stars with the highest MPs.
-            red_memb_fit, red_memb_no_fit, min_prob = auto_select(n_memb,
+            red_memb_fit, red_memb_no_fit, min_prob = nmemb_select(n_memb,
                 memb_prob_avrg_sort)
 
         elif mode_red_memb == 'top-h':
