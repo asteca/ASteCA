@@ -152,9 +152,12 @@ def asteca_funcs(cl_file, ip_list, R_in_place):
     # Obtain members parameter.
     memb_par, n_memb_da = m_m(n_memb, decont_algor_return)
 
+    from functions.phot_analysis.local_diag_clean import rm_stars as rm_s
+    red_return = rm_s(decont_algor_return, field_region)
+
     # Reduce number of stars in cluster according to a lower membership
     # probability or magnitude limit.
-    red_return = rm(n_memb, decont_algor_return)
+    #red_return = rm(n_memb, decont_algor_return)
 
     # Obtain exponential error function parameters to use by the
     # synthetic cluster creation function.
