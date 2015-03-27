@@ -224,17 +224,18 @@ DA  auto      100
 # cluster's fundamental parameters.
 #
 # * mode: auto / man / top-h / mag / skip
-#   - auto: will set the minimum probability value such that only the top
-#     half of stars with the highest probability are used.
-#   - top-h: selects the top half of stars in the cluster region with the
-#     highest probability memberships.
+#   - auto: use the N stars with the highest MPs, where N is the approximate
+#     number of members found via the cluster region vs field region star
+#     density comparison.
+#   - top-h: selects the top half of all stars in the cluster region with the
+#     highest MPs.
 #   - man: the minimum probability value has to be set manually in the
 #    'prob_min' parameter (0, 1).
 #   - mag: switches the 'prob_min' value to a 'mag_min' value so the user can
 #     select a minimum magnitude to be used in the best fit function, instead
 #     of a minimum probability (the 'minimum magnitude' value is the value of
 #     the dimmest star wished to be taken into account in the fitting process).
-#   - skip: use all stars in cluster region.
+#   - skip: use all stars in the cluster region.
 #
 #    mode           prob_min/mag_min
 RM   auto                        17
