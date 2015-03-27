@@ -11,6 +11,10 @@ from .._in import get_in_params as g
 def auto_select(n_memb, memb_prob_avrg_sort):
     '''
     Auto algorithm to select which stars to use by the best fit funtcion.
+    Will set the minimum probability value such that an equal number of
+    stars are used in the best fit process, as the approximate number of
+    members found when comparing the density of the cluster region with that
+    of the field regions defined.
     '''
     red_memb_fit, red_memb_no_fit, min_prob = memb_prob_avrg_sort, [], -1.
 
