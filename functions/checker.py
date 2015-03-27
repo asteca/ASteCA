@@ -220,6 +220,19 @@ def check(mypath, cl_files):
     ip_list = []
     if bf_flag:
 
+        # Check 'Reduced membership' method selected.
+        mode_red_memb, local_bin, min_prob = g.rm_params
+        if mode_red_memb not in {'local', 'n-memb', 'man', 'top-h', 'mag',
+            'skip'}:
+            sys.exit("ERROR: the selected reduced membership method ('{}')"
+                " does\nnot match a valid input.".format(mode_red_memb))
+        # Check binning if 'local' method was selected.
+        if mode_red_memb == 'local' and local_bin not in {'blocks', 'knuth',
+            'scott', 'freedman', 'sturges', 'sqrt'}:
+            sys.exit("ERROR: the selected binning method '{}' for the 'Reduced"
+            "\nmembership' function does not match a valid input.".format(
+                local_bin))
+
         # Check best fit method selected.
         if best_fit_algor not in {'brute', 'genet'}:
             sys.exit("ERROR: the selected best fit method '{}' does not match"
@@ -252,12 +265,6 @@ def check(mypath, cl_files):
         if g.sc_params[0] not in imfs_dict:
             sys.exit("ERROR: Name of IMF ({}) is incorrect.".format(
                 g.sc_params[0]))
-
-        # Check 'reduced memnership' method selected.
-        mode_red_memb, min_prob = g.rm_params
-        if mode_red_memb not in {'auto', 'man', 'top-h', 'mag', 'skip'}:
-            sys.exit("ERROR: the selected reduced membership method ('{}')"
-                " does\nnot match a valid input.".format(mode_red_memb))
 
         # Check selected isochrones set.
         if iso_select not in {'PAR10', 'PAR11', 'PAR12'}:
