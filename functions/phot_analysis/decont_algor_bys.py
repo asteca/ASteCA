@@ -6,6 +6,19 @@ import numpy as np
 from .._in import get_in_params as g
 
 
+def sort_members(memb_lst):
+    '''
+    Sort this list first by the membership probability from max
+    value (1) to min (0) and then by its error values and magnitude value,
+    (in that order) from min to max value.
+    item[7] is the star's memb_prob and item[3] its magnitude.
+    '''
+    membership_prob_avrg_sort = sorted(memb_lst, key=lambda item: (-item[7],
+        item[4], item[6], item[3]))
+
+    return membership_prob_avrg_sort
+
+
 def mpas(cl_reg_rad, runs_fields_probs):
     """
     Append averaged probabilities to each star inside the cluster radius and
@@ -29,13 +42,8 @@ def mpas(cl_reg_rad, runs_fields_probs):
     # 'temp_prob_members' where each item contains the data for each
     # star: [id,x,y,mag,e_mag,color1,e_col1,memb_prob].
 
-    # Sort this list first by the membership probability from max
-    # value (1) to min (0) and then by its error values and magnitude value,
-    # (in that order) from min to max value.
-    # item[7] is the star's memb_prob and item[3] its magnitude.
-    membership_prob_avrg_sort = sorted(temp_prob_members,
-                                       key=lambda item: (-item[7], item[4],
-                                                         item[6], item[3]))
+    # Sort members list.
+    membership_prob_avrg_sort = sort_members(temp_prob_members)
 
     return membership_prob_avrg_sort
 
