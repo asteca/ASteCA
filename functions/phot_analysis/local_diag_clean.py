@@ -11,7 +11,7 @@ import operator
 from decont_algor_bys import sort_members
 
 
-def rm_stars(decont_algor_return, field_region):
+def rm_stars(decont_algor_return, field_region, local_bin):
     '''
     Takes the photometric diagram (CMD, CCD, etc.) of the cluster region with
     assigned MPs, divides it into su--regions according to the density within
@@ -19,20 +19,27 @@ def rm_stars(decont_algor_return, field_region):
     excess due to field star contamination.
     '''
 
-    memb_prob_avrg_sort, flag_decont_skip = decont_algor_return
+    memb_prob_avrg_sort = decont_algor_return[0]
 
     # Remove ID's and zip.
-    P = np.array(zip(*memb_prob_avrg_sort)[1:])
-    # Create lit with all magnitudes and colors defined.
+    P = np.array(zip(*memb_prob_avrg_sort)[1:], dtype='float')
+    # Create list with all magnitudes and colors defined.
     mag_col_cl = [P[4], P[2]]
 
     # Obtain bin edges for each photometric dimension using the cluster region
     # diagram.
-    #bins_method = 'scott'
-    bins_method = 'blocks'
     bin_edges = []
-    for mag_col in mag_col_cl:
-        bin_edges.append(hist(mag_col, bins=bins_method)[1])
+    if local_bin in ['sturges', 'sqrt']:
+        if local_bin == 'sturges':
+            b_num = 1 + np.log2(len(P[0]))
+        else:
+            b_num = np.sqrt(len(P[0]))
+
+        for mag_col in mag_col_cl:
+            bin_edges.append(np.histogram(mag_col, bins=b_num)[1])
+    else:
+        for mag_col in mag_col_cl:
+            bin_edges.append(hist(mag_col, bins=local_bin)[1])
 
     # Cluster region N-dimensional histogram.
     cl_hist = np.histogramdd(np.array(zip(*mag_col_cl)), bins=bin_edges)[0]
@@ -113,6 +120,7 @@ def rm_stars(decont_algor_return, field_region):
     #ax.invert_yaxis()
     #plt.show()
 
+    # Minimum probability in the list that contains the stars selected.
     min_prob = red_memb_fit[-1][-1]
 
     #return red_memb_fit, red_memb_no_fit, bin_edges

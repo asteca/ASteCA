@@ -59,28 +59,31 @@ def nmemb_select(n_memb, memb_prob_avrg_sort):
 def red_memb(n_memb, decont_algor_return, field_region):
     '''
     Reduce number of stars according to a given membership probability
-    lower limit or minimum magnitude limit.
+    lower limit, minimum magnitude limit or local density-based removal.
     '''
 
-    bf_flag = g.bf_params[0]
     memb_prob_avrg_sort, flag_decont_skip = decont_algor_return
+    mode_red_memb, local_bin, min_prob_man = g.rm_params
 
-    # Skip reduction process.
+    # Skip reduction process by default.
     red_memb_fit, red_memb_no_fit, min_prob = memb_prob_avrg_sort, [], -1.
-    # Only run if best fit process is set to run.
-    if bf_flag:
 
-        mode_red_memb, local_bin, min_prob_man = g.rm_params
+    # This mode works even if no MPs were assigned.
+    if mode_red_memb == 'local':
+        red_memb_fit, red_memb_no_fit, min_prob = rm_s(decont_algor_return,
+            field_region, local_bin)
 
-        if flag_decont_skip is True:
-            print ("  WARNING: decontamination algorithm was skipped.\n"
-            "  Can't apply membership reduction. Using full list.")
+        print 'Reduced membership function applied.'
 
-        elif mode_red_memb == 'local':
-            red_memb_fit, red_memb_no_fit, min_prob = rm_s(decont_algor_return,
-                field_region, local_bin)
+    elif flag_decont_skip is True:
+        print ("  WARNING: decontamination algorithm was skipped.\n"
+        "  Can't apply selected membership reduction method.\n"
+        "  Using full list.")
 
-        elif mode_red_memb == 'n-memb':
+    # These modes need the MPs assignation.
+    elif flag_decont_skip is False:
+
+        if mode_red_memb == 'n-memb':
             # Select the n_memb stars with the highest MPs.
             red_memb_fit, red_memb_no_fit, min_prob = nmemb_select(n_memb,
                 memb_prob_avrg_sort)
