@@ -124,6 +124,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
     #
     # Decontamination algorithm plots.
     da_flag, bf_flag = g.da_params[0], g.bf_params[0]
+    mode_red_memb = g.rm_params[0]
 
     if da_flag != 'skip':
 
@@ -137,7 +138,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
             mp_decont_algor.plot(n, *args)
 
     plot_colorbar = False
-    if da_flag != 'skip' or bf_flag:
+    if da_flag != 'skip' or mode_red_memb == 'local' or bf_flag:
         # This function is called separately since we need to retrieve some
         # information from it to plot that #$%&! colorbar.
         try:
