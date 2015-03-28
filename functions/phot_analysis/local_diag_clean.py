@@ -8,10 +8,11 @@ Created on Mon Mar 23 2015
 import numpy as np
 from astroML.plotting import hist
 import operator
+from .._in import get_in_params as g
 from decont_algor_bys import sort_members
 
 
-def rm_stars(decont_algor_return, field_region, local_bin):
+def rm_stars(decont_algor_return, field_region):
     '''
     Takes the photometric diagram (CMD, CCD, etc.) of the cluster region with
     assigned MPs, divides it into su--regions according to the density within
@@ -19,7 +20,8 @@ def rm_stars(decont_algor_return, field_region, local_bin):
     excess due to field star contamination.
     '''
 
-    memb_prob_avrg_sort = decont_algor_return[0]
+    memb_prob_avrg_sort, flag_decont_skip = decont_algor_return
+    local_bin = g.rm_params[1]
 
     # Remove ID's and zip.
     P = np.array(zip(*memb_prob_avrg_sort)[1:], dtype='float')

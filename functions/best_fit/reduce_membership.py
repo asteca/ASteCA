@@ -68,11 +68,12 @@ def top_h(memb_prob_avrg_sort):
     return red_memb_fit, red_memb_no_fit, red_plot_pars
 
 
-def manual(memb_prob_avrg_sort, min_prob_man):
+def manual(memb_prob_avrg_sort):
     '''
     Find index of star with membership probability < min_prob_man.
     '''
 
+    min_prob_man = g.rm_params[2]
     red_memb_fit, red_memb_no_fit, red_plot_pars = memb_prob_avrg_sort, [], []
 
     indx = 0
@@ -93,11 +94,12 @@ def manual(memb_prob_avrg_sort, min_prob_man):
     return red_memb_fit, red_memb_no_fit, red_plot_pars
 
 
-def man_mag(memb_prob_avrg_sort, min_prob_man):
+def man_mag(memb_prob_avrg_sort):
     '''
     Reject stars beyond the given magnitude limit.
     '''
 
+    min_prob_man = g.rm_params[2]
     red_memb_fit, red_memb_no_fit, red_plot_pars = memb_prob_avrg_sort, [], []
 
     red_fit, red_not_fit = [], []
@@ -125,7 +127,7 @@ def red_memb(n_memb, decont_algor_return, field_region):
     '''
 
     memb_prob_avrg_sort, flag_decont_skip = decont_algor_return
-    mode_red_memb, local_bin, min_prob_man = g.rm_params
+    mode_red_memb = g.rm_params[0]
 
     # Default assignment.
     red_memb_fit, red_memb_no_fit, red_plot_pars = memb_prob_avrg_sort, [], []
@@ -144,7 +146,7 @@ def red_memb(n_memb, decont_algor_return, field_region):
         # This mode works even if the DA did not run.
         if mode_red_memb == 'local':
             red_memb_fit, red_memb_no_fit, red_plot_pars = \
-            rm_s(decont_algor_return, field_region, local_bin)
+            rm_s(decont_algor_return, field_region)
 
         if mode_red_memb == 'n-memb':
             red_memb_fit, red_memb_no_fit, red_plot_pars = nmemb_select(n_memb,
@@ -156,11 +158,11 @@ def red_memb(n_memb, decont_algor_return, field_region):
 
         elif mode_red_memb == 'man':
             red_memb_fit, red_memb_no_fit, red_plot_pars = \
-            manual(memb_prob_avrg_sort, min_prob_man)
+            manual(memb_prob_avrg_sort)
 
         elif mode_red_memb == 'mag':
             red_memb_fit, red_memb_no_fit, red_plot_pars = \
-            man_mag(memb_prob_avrg_sort, min_prob_man)
+            man_mag(memb_prob_avrg_sort)
 
         print 'Reduced membership function applied.'
 
