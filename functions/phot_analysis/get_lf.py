@@ -35,7 +35,7 @@ def mag_completeness(mag_data):
     return completeness
 
 
-def lf(flag_area_stronger, mag_data, cl_region, field_regions):
+def lf(flag_no_fl_regs, mag_data, cl_region, field_regions):
     '''
     Obtain the Luminosity Function for the field regions and the cluster
     region normalized to their area. Substract the field curve from the
@@ -58,7 +58,7 @@ def lf(flag_area_stronger, mag_data, cl_region, field_regions):
 
     # Now for field regions.
     mag_fl = []
-    if flag_area_stronger is not True:
+    if flag_no_fl_regs is False:
 
         for freg in field_regions:
             for star in freg:

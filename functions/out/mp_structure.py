@@ -312,7 +312,7 @@ def pl_zoom_frame(gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
 
 
 def pl_cl_fl_regions(gs, fig, x_name, y_name, coord, x_min, x_max, y_min,
-    y_max, center_cl, clust_rad, field_regions, cl_region, flag_area_stronger):
+    y_max, center_cl, clust_rad, field_regions, cl_region, flag_no_fl_regs):
     '''
     Cluster and field regions defined.
     '''
@@ -342,7 +342,7 @@ def pl_cl_fl_regions(gs, fig, x_name, y_name, coord, x_min, x_max, y_min,
     # Plot cluster region.
     plt.scatter(zip(*cl_region)[1], zip(*cl_region)[2], marker='o', c='red',
                 s=8, edgecolors='none')
-    if not flag_area_stronger:
+    if not flag_no_fl_regs:
         # Plot field stars regions.
         col = cycle(['DimGray', 'ForestGreen', 'maroon', 'RoyalBlue'])
         for i, reg in enumerate(field_regions):

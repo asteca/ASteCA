@@ -106,11 +106,11 @@ def get_regions(hist_lst, cent_bin, clust_rad, cl_area, stars_out):
     # too large or the frame too small and no field region of equal area than
     # that of the cluster can be obtained.
     # Raise a flag.
-    flag_area_stronger = False
+    flag_no_fl_regs = False
     if f_regs_max < 1:
         print ("  WARNING: cluster region is too large or frame\n"
         "  is too small. No field regions available.")
-        flag_area_stronger = True
+        flag_no_fl_regs = True
     else:
         # If the number of field regions defined is larger than the maximum
         # allowed, use the maximum.
@@ -127,7 +127,7 @@ def get_regions(hist_lst, cent_bin, clust_rad, cl_area, stars_out):
             print ("  WARNING: Number of FR ({}) is less than or equal\n"
             "  zero. No field region will be defined.").format(
                 g.fr_number)
-            flag_area_stronger = True
+            flag_no_fl_regs = True
         else:
             print ("Using defined number of field regions ({}).".format(
                 g.fr_number))
@@ -145,10 +145,10 @@ def get_regions(hist_lst, cent_bin, clust_rad, cl_area, stars_out):
     sp_indx, dummy_lst = spiral_index(spiral, 0, hist_2d, x_c_b, y_c_b,
         num_bins_area)
 
-    # Obtain field regions.
+    # Obtain field regions only if it is possible.
     # This list holds all the field regions.
     field_regions = []
-    if not flag_area_stronger:
+    if flag_no_fl_regs is False:
 
         # Obtain filled 2D histogram for the field with star's values attached
         # to each bin.
@@ -187,6 +187,6 @@ def get_regions(hist_lst, cent_bin, clust_rad, cl_area, stars_out):
         if f_regions > 0 and not(field_regions):
             print ('  WARNING: no field regions left after removal of those\n' +
             '  with less than 4 stars.')
-            flag_area_stronger = True
+            flag_no_fl_regs = True
 
-    return flag_area_stronger, field_regions
+    return flag_no_fl_regs, field_regions

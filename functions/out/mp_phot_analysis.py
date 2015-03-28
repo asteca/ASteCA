@@ -169,7 +169,7 @@ def pl_cl_diag(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
                 s=cl_sz_pt, lw=0.3, zorder=2)
 
 
-def pl_lum_func(gs, mag_data, y_ax, x_cl, y_cl, flag_area_stronger, x_fl,
+def pl_lum_func(gs, mag_data, y_ax, x_cl, y_cl, flag_no_fl_regs, x_fl,
     y_fl, completeness):
     '''
     LF of stars in cluster region and outside.
@@ -190,7 +190,7 @@ def pl_lum_func(gs, mag_data, y_ax, x_cl, y_cl, flag_area_stronger, x_fl,
     plt.step(x_cl, y_cl, where='post', color='r', lw=1.,
         label='$LF_{cl+fl} \,(r \leq r_{cl})$', zorder=2)
     # Check if field regiones were defined.
-    if flag_area_stronger is not True:
+    if flag_no_fl_regs is not True:
         # Average field regions LF.
         plt.step(x_fl, y_fl, where='post', color='b', lw=1.,
             label='$LF_{fl} \,(\star_{field})$', zorder=3)
@@ -216,7 +216,7 @@ def pl_lum_func(gs, mag_data, y_ax, x_cl, y_cl, flag_area_stronger, x_fl,
     leg.get_frame().set_alpha(0.7)
 
 
-def pl_integ_mag(gs, integr_return, y_ax, x_ax0, flag_area_stronger):
+def pl_integ_mag(gs, integr_return, y_ax, x_ax0, flag_no_fl_regs):
     '''
     Integrated magnitudes.
     '''
@@ -257,7 +257,7 @@ def pl_integ_mag(gs, integr_return, y_ax, x_ax0, flag_area_stronger):
         # Cluster integrated magnitude.
         plt.plot(cl_reg_mag2[0], cl_reg_mag2[1], 'r:', lw=2., label=text2)
         # Check if field regiones were defined.
-        if not flag_area_stronger:
+        if not flag_no_fl_regs:
             text3 = '$' + y_ax + '^{*}_{fl}$'
             text4 = '$' + x_ax0 + '^{*}_{fl}$'
             # Field average integrated magnitude curve.

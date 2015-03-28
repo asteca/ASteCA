@@ -35,7 +35,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
     bin_width, center_params, rdp_params, field_dens, radius_params,
     cont_index, mag_data, col_data, err_plot, err_flags, kp_params,
     cl_region, stars_out, stars_in_rjct, stars_out_rjct, integr_return, n_memb,
-    n_memb_da, flag_area_stronger, field_regions, flag_pval_test,
+    n_memb_da, flag_no_fl_regs, field_regions, flag_pval_test,
     pval_test_params, decont_algor_return, lum_func, completeness, ip_list,
     red_return, err_lst, bf_return):
     '''
@@ -95,7 +95,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
             st_sizes_arr_z, center_cl, clust_rad],
         [gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max,
             center_cl, clust_rad, field_regions, cl_region,
-            flag_area_stronger]
+            flag_no_fl_regs]
         ]
     for n, args in enumerate(arglist):
         #with timeblock("{}".format(n)):
@@ -113,9 +113,9 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
             stars_f_rjct, stars_f_acpt, f_sz_pt],
         [gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
             stars_in_rjct, cl_region, n_memb, cl_sz_pt],
-        [gs, mag_data, y_ax, x_cl, y_cl, flag_area_stronger, x_fl, y_fl,
+        [gs, mag_data, y_ax, x_cl, y_cl, flag_no_fl_regs, x_fl, y_fl,
             completeness],
-        [gs, integr_return, y_ax, x_ax0, flag_area_stronger],
+        [gs, integr_return, y_ax, x_ax0, flag_no_fl_regs],
         [gs, flag_pval_test, pval_test_params]
         ]
     for n, args in enumerate(arglist):

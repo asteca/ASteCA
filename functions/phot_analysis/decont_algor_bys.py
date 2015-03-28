@@ -100,7 +100,7 @@ def likelihood(region, cl_reg_rad):
     return clust_stars_probs
 
 
-def bys_da(flag_area_stronger, cl_region, field_region, memb_file):
+def bys_da(flag_no_fl_regs, cl_region, field_region, memb_file):
     '''
     Bayesian field decontamination algorithm.
     '''
@@ -108,7 +108,7 @@ def bys_da(flag_area_stronger, cl_region, field_region, memb_file):
     mode_da, run_n = g.da_params
 
     # Check if at least one field region was obtained.
-    if mode_da in {'auto', 'manual'} and flag_area_stronger:
+    if mode_da in {'auto', 'manual'} and flag_no_fl_regs:
         print "  WARNING: no field regions found. Using 'skip' mode."
         mode_da = 'skip'
 

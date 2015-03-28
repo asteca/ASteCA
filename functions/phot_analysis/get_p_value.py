@@ -49,7 +49,7 @@ def get_CMD(region):
     return matrix
 
 
-def get_pval(cl_region, field_region, col1_data, mag_data, flag_area_stronger):
+def get_pval(cl_region, field_region, col1_data, mag_data, flag_no_fl_regs):
     '''
     Compare the cluster region KDE with all the field region KDEs using Duong's
     ks package (developed in R) to obtain a p-value. This value will be close
@@ -75,7 +75,7 @@ def get_pval(cl_region, field_region, col1_data, mag_data, flag_area_stronger):
         # Pass empty lists and re-write flag.
         flag_pval_test, pval_test_params = False, [-1.]
 
-    elif flag_pval_test and flag_area_stronger:
+    elif flag_pval_test and flag_no_fl_regs:
         print 'No field regions. Skipping KDE p-value test for cluster.'
         # Pass empty lists and re-write flag.
         flag_pval_test, pval_test_params = False, [-1.]

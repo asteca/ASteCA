@@ -117,31 +117,31 @@ def asteca_funcs(cl_file, ip_list, R_in_place):
     print 'Contamination index obtained ({:.2f}).'.format(cont_index)
 
     # Field regions around the cluster's center.
-    flag_area_stronger, field_region = g_r(hist_lst, cent_bin, clust_rad,
+    flag_no_fl_regs, field_region = g_r(hist_lst, cent_bin, clust_rad,
         cl_area, stars_out)
 
     # Get the luminosity function and completeness level for each magnitude
     # bin. The completeness will be used by the isochrone/synthetic cluster
     # fitting algorithm.
-    lum_func, completeness = lf(flag_area_stronger, mag_data, cl_region,
+    lum_func, completeness = lf(flag_no_fl_regs, mag_data, cl_region,
         field_region)
     print 'LF and Completeness magnitude levels obtained.'
 
     # Calculate integrated magnitude.
-    integr_return = g_i_m(cl_region, field_region, flag_area_stronger)
+    integr_return = g_i_m(cl_region, field_region, flag_no_fl_regs)
 
     # Get physical cluster probability based on p_values distribution.
     if R_in_place:
         from phot_analysis.get_p_value import get_pval as g_pv
         pval_test_params, flag_pval_test = g_pv(cl_region, field_region,
-            col1_data, mag_data, flag_area_stronger)
+            col1_data, mag_data, flag_no_fl_regs)
     else:
         print 'Missing package. Skipping KDE p-value test for cluster.'
         flag_pval_test, pval_test_params = False, [-1.]
 
     # Apply decontamination algorithm if at least one equal-sized field region
     # was found around the cluster.
-    decont_algor_return = dab(flag_area_stronger, cl_region, field_region,
+    decont_algor_return = dab(flag_no_fl_regs, cl_region, field_region,
         memb_file)
 
     # Obtain members parameter.
@@ -149,7 +149,7 @@ def asteca_funcs(cl_file, ip_list, R_in_place):
 
     # Reduce number of stars in cluster according to a lower membership
     # probability or magnitude limit.
-    red_return = rm(n_memb, decont_algor_return, field_region)
+    red_return = rm(n_memb, flag_no_fl_regs, decont_algor_return, field_region)
 
     # Create data file with membership probabilities.
     c_m_f(memb_file_out, red_return)
@@ -181,7 +181,7 @@ def asteca_funcs(cl_file, ip_list, R_in_place):
             field_dens, radius_params, cont_index, mag_data, col1_data,
             err_plot, err_flags, kp_params, cl_region, stars_out,
             stars_in_rjct, stars_out_rjct, integr_return, n_memb, n_memb_da,
-            flag_area_stronger, field_region, flag_pval_test,
+            flag_no_fl_regs, field_region, flag_pval_test,
             pval_test_params, decont_algor_return, lum_func, completeness,
             ip_list, red_return, err_lst, bf_return)
         print 'Plots created.'
