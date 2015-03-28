@@ -22,7 +22,7 @@ def pl_mp_histo(gs, n_memb_da, red_return, decont_algor_return):
     # Plot *only* if the DA was applied.
     if not flag_decont_skip:
         # Reduced membership.
-        red_memb_fit, min_prob = red_return[0], red_return[-1]
+        red_memb_fit, min_prob = red_return[0], red_return[-1][0]
         ax = plt.subplot(gs[4:6, 2:4])
         plt.xlim(0., 1.)
         plt.xlabel('MP (membership probability)', fontsize=12)

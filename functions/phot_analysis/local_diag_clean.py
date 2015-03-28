@@ -121,7 +121,7 @@ def rm_stars(decont_algor_return, field_region, local_bin):
     #plt.show()
 
     # Minimum probability in the list that contains the stars selected.
-    min_prob = red_memb_fit[-1][-1]
+    red_plot_pars = [red_memb_fit[-1][-1]]
 
     #return red_memb_fit, red_memb_no_fit, bin_edges
-    return red_memb_fit, red_memb_no_fit, min_prob
+    return red_memb_fit, red_memb_no_fit, red_plot_pars

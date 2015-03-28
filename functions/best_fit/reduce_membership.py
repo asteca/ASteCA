@@ -17,7 +17,7 @@ def nmemb_select(n_memb, memb_prob_avrg_sort):
     members found when comparing the density of the cluster region with that
     of the field regions defined.
     '''
-    red_memb_fit, red_memb_no_fit, min_prob = memb_prob_avrg_sort, [], -1.
+    red_memb_fit, red_memb_no_fit, red_plot_pars = memb_prob_avrg_sort, [], []
 
     # Check approximate number of true members obtained by the structural
     # analysis.
@@ -30,11 +30,12 @@ def nmemb_select(n_memb, memb_prob_avrg_sort):
         # use all stars in the cluster region.
         if n_memb >= n_tot:
             # Use all stars in the cluster region.
-            indx, min_prob = n_tot, 0.
+            indx, red_plot_pars = n_tot, [0.]
         else:
             # Use the first n_memb stars, ie: those stars with the highest
             # membership probability values.
-            indx, min_prob = n_memb, zip(*memb_prob_avrg_sort)[-1][n_memb]
+            indx, red_plot_pars = n_memb, \
+            [zip(*memb_prob_avrg_sort)[-1][n_memb]]
 
         red_memb_fit, red_memb_no_fit = memb_prob_avrg_sort[:indx], \
         memb_prob_avrg_sort[indx:]
@@ -43,7 +44,7 @@ def nmemb_select(n_memb, memb_prob_avrg_sort):
         print ("  WARNING: less than 10 stars identified as true\n"
         "  cluster members. Using full list.")
 
-    return red_memb_fit, red_memb_no_fit, min_prob
+    return red_memb_fit, red_memb_no_fit, red_plot_pars
 
 
 def top_h(memb_prob_avrg_sort):
@@ -51,20 +52,20 @@ def top_h(memb_prob_avrg_sort):
     Reject stars in the lower half of the membership probabilities list.
     '''
 
-    red_memb_fit, red_memb_no_fit, min_prob = memb_prob_avrg_sort, [], -1.
+    red_memb_fit, red_memb_no_fit, red_plot_pars = memb_prob_avrg_sort, [], []
 
     middle_indx = int(len(memb_prob_avrg_sort) / 2)
     red_fit = memb_prob_avrg_sort[:middle_indx]
     # Check number of stars left.
     if len(red_fit) > 10:
-        red_memb_fit, red_memb_no_fit, min_prob = red_fit, \
+        red_memb_fit, red_memb_no_fit, red_plot_pars = red_fit, \
         memb_prob_avrg_sort[middle_indx:], \
-        memb_prob_avrg_sort[middle_indx][-1]
+        [memb_prob_avrg_sort[middle_indx][-1]]
     else:
         print ("  WARNING: less than 10 stars left after reducing\n"
         "  by top half membership probability. Using full list.")
 
-    return red_memb_fit, red_memb_no_fit, min_prob
+    return red_memb_fit, red_memb_no_fit, red_plot_pars
 
 
 def manual(memb_prob_avrg_sort, min_prob_man):
@@ -72,7 +73,7 @@ def manual(memb_prob_avrg_sort, min_prob_man):
     Find index of star with membership probability < min_prob_man.
     '''
 
-    red_memb_fit, red_memb_no_fit, min_prob = memb_prob_avrg_sort, [], -1.
+    red_memb_fit, red_memb_no_fit, red_plot_pars = memb_prob_avrg_sort, [], []
 
     indx = 0
     for star in memb_prob_avrg_sort:
@@ -82,14 +83,14 @@ def manual(memb_prob_avrg_sort, min_prob_man):
             indx += 1
 
     if len(memb_prob_avrg_sort[:indx]) > 10:
-        red_memb_fit, red_memb_no_fit, min_prob = \
+        red_memb_fit, red_memb_no_fit, red_plot_pars = \
         memb_prob_avrg_sort[:indx], memb_prob_avrg_sort[indx:],\
-        min_prob_man
+        [min_prob_man]
     else:
         print ("  WARNING: less than 10 stars left after reducing\n"
         "  by manual membership probability. Using full list.")
 
-    return red_memb_fit, red_memb_no_fit, min_prob
+    return red_memb_fit, red_memb_no_fit, red_plot_pars
 
 
 def man_mag(memb_prob_avrg_sort, min_prob_man):
@@ -97,7 +98,7 @@ def man_mag(memb_prob_avrg_sort, min_prob_man):
     Reject stars beyond the given magnitude limit.
     '''
 
-    red_memb_fit, red_memb_no_fit, min_prob = memb_prob_avrg_sort, [], -1.
+    red_memb_fit, red_memb_no_fit, red_plot_pars = memb_prob_avrg_sort, [], []
 
     red_fit, red_not_fit = [], []
     for star in memb_prob_avrg_sort:
@@ -108,13 +109,13 @@ def man_mag(memb_prob_avrg_sort, min_prob_man):
 
     # Check number of stars left.
     if len(red_fit) > 10:
-        red_memb_fit, red_memb_no_fit, min_prob = red_fit, red_not_fit,\
-        min_prob_man
+        red_memb_fit, red_memb_no_fit, red_plot_pars = red_fit, red_not_fit,\
+        [min_prob_man]
     else:
         print ("  WARNING: less than 10 stars left after reducing\n"
         "  by magnitude limit. Using full list.")
 
-    return red_memb_fit, red_memb_no_fit, min_prob
+    return red_memb_fit, red_memb_no_fit, red_plot_pars
 
 
 def red_memb(n_memb, decont_algor_return, field_region):
@@ -127,7 +128,7 @@ def red_memb(n_memb, decont_algor_return, field_region):
     mode_red_memb, local_bin, min_prob_man = g.rm_params
 
     # Default assignment.
-    red_memb_fit, red_memb_no_fit, min_prob = memb_prob_avrg_sort, [], -1.
+    red_memb_fit, red_memb_no_fit, red_plot_pars = memb_prob_avrg_sort, [], []
 
     if mode_red_memb == 'skip':
         # Skip reduction process.
@@ -142,24 +143,25 @@ def red_memb(n_memb, decont_algor_return, field_region):
     else:
         # This mode works even if the DA did not run.
         if mode_red_memb == 'local':
-            red_memb_fit, red_memb_no_fit, min_prob = \
+            red_memb_fit, red_memb_no_fit, red_plot_pars = \
             rm_s(decont_algor_return, field_region, local_bin)
 
         if mode_red_memb == 'n-memb':
-            red_memb_fit, red_memb_no_fit, min_prob = nmemb_select(n_memb,
+            red_memb_fit, red_memb_no_fit, red_plot_pars = nmemb_select(n_memb,
                 memb_prob_avrg_sort)
 
         elif mode_red_memb == 'top-h':
-            red_memb_fit, red_memb_no_fit, min_prob = top_h(memb_prob_avrg_sort)
+            red_memb_fit, red_memb_no_fit, red_plot_pars = \
+            top_h(memb_prob_avrg_sort)
 
         elif mode_red_memb == 'man':
-            red_memb_fit, red_memb_no_fit, min_prob = \
+            red_memb_fit, red_memb_no_fit, red_plot_pars = \
             manual(memb_prob_avrg_sort, min_prob_man)
 
         elif mode_red_memb == 'mag':
-            red_memb_fit, red_memb_no_fit, min_prob = \
+            red_memb_fit, red_memb_no_fit, red_plot_pars = \
             man_mag(memb_prob_avrg_sort, min_prob_man)
 
         print 'Reduced membership function applied.'
 
-    return red_memb_fit, red_memb_no_fit, min_prob
+    return red_memb_fit, red_memb_no_fit, red_plot_pars
