@@ -52,11 +52,12 @@ def synth_clust_err(phot_data, err_pck):
     '''
 
     da_flag, bf_flag = g.da_params[0], g.bf_params[0]
+    mode_red_memb = g.rm_params[0]
     err_lst = []
 
     # Check if function should run. If DA was executed, we obtain these
     # values for ploting purposes only.
-    if da_flag != 'skip' or bf_flag:
+    if da_flag != 'skip' or mode_red_memb == 'local' or bf_flag:
 
         # Unpack params.
         mag, e_mag, e_col = phot_data[3], phot_data[4], phot_data[6]
