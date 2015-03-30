@@ -6,6 +6,7 @@ Created on Mon Mar 23 2015
 """
 
 import numpy as np
+import random
 from astroML.plotting import hist
 import operator
 from .._in import get_in_params as g
@@ -74,8 +75,8 @@ def get_clust_histo(memb_prob_avrg_sort, mag_col_cl, bin_edges):
 
 def get_fl_reg_hist(field_region, bin_edges, cl_hist):
     '''
-    Obtain the number of field region stars in each cell defined for the
-    N-dimensional photometric diagram.
+    Obtain the average number of field region stars in each cell defined for
+    the N-dimensional cluster region photometric diagram.
     '''
 
     # Empty field region array shaped like the cluster region array.
@@ -94,12 +95,11 @@ def get_fl_reg_hist(field_region, bin_edges, cl_hist):
     return f_hist
 
 
-def get_fit_stars(cl_hist_p, f_hist):
+def get_fit_stars(cl_hist_p, f_hist, flag_decont_skip):
     '''
-    Iterate through each N-dimensional cell of both cluster and field region
-    arrays and remove the excess of field stars in each one, selecting
-    those stars with the lowest assigned MPs if the DA was applied. Otherwise
-    select random stars.
+    Iterate through each N-dimensional cell of the cluster region array and
+    remove the excess of field stars in each one, selecting those with the
+    lowest assigned MPs if the DA was applied. Otherwise select random stars.
     '''
     # Flatten arrays to access all of its elements.
     cl_hist_p_flat = np.asarray(cl_hist_p).flatten()
@@ -107,19 +107,39 @@ def get_fit_stars(cl_hist_p, f_hist):
 
     red_memb_fit, red_memb_no_fit = [], []
     # For each cell defined.
-    for i in range(len(cl_hist_p_flat)):
+    #for i in range(len(cl_hist_p_flat)):
+    for i, cl_cell in enumerate(cl_hist_p_flat):
 
         # Get average number of field regions in this cell.
         N_fl_reg = f_hist_flat[i]
 
         if N_fl_reg > 0.:
             # Discard the excess of N_reg_fl stars from this cluster region.
-            # Discard those with the smallest MPs, and keep the rest.
-            red_memb_fit.append(cl_hist_p_flat[i][:-int(N_fl_reg)])
-            red_memb_no_fit.append(cl_hist_p_flat[i][-int(N_fl_reg):])
+
+            # If the DA was not applied, discard N_fl_reg *random* stars in
+            # the cell.
+            if flag_decont_skip:
+
+                if int(N_fl_reg) < len(cl_cell):
+                    # Generate list with randomized cell indexes.
+                    ran_indx = random.sample(xrange(len(cl_cell)), len(cl_cell))
+
+                    # Store len(cl_cell) - N_fl_reg stars
+                    red_memb_fit.append([cl_cell[i] for i in
+                        ran_indx[:-int(N_fl_reg)]])
+                    # Discard N_fl_reg stars.
+                    red_memb_no_fit.append([cl_cell[i] for i in
+                        ran_indx[-int(N_fl_reg):]])
+                else:
+                    # Discard *all* stars in the cell.
+                    red_memb_no_fit.append(cl_cell)
+            else:
+                # Discard those N_fl_reg with the smallest MPs, keep the rest.
+                red_memb_fit.append(cl_cell[:-int(N_fl_reg)])
+                red_memb_no_fit.append(cl_cell[-int(N_fl_reg):])
         else:
             # No field region stars in this cell, keep all stars.
-            red_memb_fit.append(cl_hist_p_flat[i])
+            red_memb_fit.append(cl_cell)
 
     # Flatten lists of stars and re-sort according to highest MPs.
     red_memb_fit = sort_members([i for sublst in red_memb_fit for i in sublst])
@@ -155,22 +175,24 @@ def rm_stars(decont_algor_return, field_region):
     # Obtain field regions histogram (only number of stars in each cell).
     f_hist = get_fl_reg_hist(field_region, bin_edges, cl_hist)
 
-    # Obtain stars separated in list to be used by the BF func and those
-    # discarded.
-    red_memb_fit, red_memb_no_fit = get_fit_stars(cl_hist_p, f_hist)
+    # Obtain stars separated in list to be used by the BF func and list of
+    # those discarded stars.
+    red_memb_fit, red_memb_no_fit = get_fit_stars(cl_hist_p, f_hist,
+        flag_decont_skip)
 
-    import matplotlib.pyplot as plt
-    fig, ax = plt.subplots()
-    plt.scatter(P[4], P[2])
-    ax.set_xticks(bin_edges[0], minor=False)
-    ax.set_yticks(bin_edges[1], minor=False)
-    ax.xaxis.grid(True, which='major')
-    ax.yaxis.grid(True, which='major')
-    ax.invert_yaxis()
-    plt.show()
+    #import matplotlib.pyplot as plt
+    #fig, ax = plt.subplots()
+    #plt.scatter(P[4], P[2])
+    #ax.set_xticks(bin_edges[0], minor=False)
+    #ax.set_yticks(bin_edges[1], minor=False)
+    #ax.xaxis.grid(True, which='major')
+    #ax.yaxis.grid(True, which='major')
+    #ax.invert_yaxis()
+    #plt.show()
 
-    # Minimum probability in the list that contains the stars selected.
-    red_plot_pars = [red_memb_fit[-1][-1]]
+    # Minimum probability of  selected stars.
+    min_prob = red_memb_fit[-1][-1]
+    # For plotting purposes.
+    red_plot_pars = [min_prob]
 
-    #return red_memb_fit, red_memb_no_fit, bin_edges
     return red_memb_fit, red_memb_no_fit, red_plot_pars
