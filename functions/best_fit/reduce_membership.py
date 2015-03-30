@@ -17,7 +17,7 @@ def nmemb_select(n_memb, memb_prob_avrg_sort):
     members found when comparing the density of the cluster region with that
     of the field regions defined.
     '''
-    red_memb_fit, red_memb_no_fit, red_plot_pars = memb_prob_avrg_sort, [], []
+    red_memb_fit, red_memb_no_fit, red_plot_pars = memb_prob_avrg_sort, [], [0.]
 
     # Check approximate number of true members obtained by the structural
     # analysis.
@@ -52,7 +52,7 @@ def top_h(memb_prob_avrg_sort):
     Reject stars in the lower half of the membership probabilities list.
     '''
 
-    red_memb_fit, red_memb_no_fit, red_plot_pars = memb_prob_avrg_sort, [], []
+    red_memb_fit, red_memb_no_fit, red_plot_pars = memb_prob_avrg_sort, [], [0.]
 
     middle_indx = int(len(memb_prob_avrg_sort) / 2)
     red_fit = memb_prob_avrg_sort[:middle_indx]
@@ -74,7 +74,7 @@ def manual(memb_prob_avrg_sort):
     '''
 
     min_prob_man = g.rm_params[2]
-    red_memb_fit, red_memb_no_fit, red_plot_pars = memb_prob_avrg_sort, [], []
+    red_memb_fit, red_memb_no_fit, red_plot_pars = memb_prob_avrg_sort, [], [0.]
 
     indx = 0
     for star in memb_prob_avrg_sort:
@@ -100,7 +100,7 @@ def man_mag(memb_prob_avrg_sort):
     '''
 
     min_prob_man = g.rm_params[2]
-    red_memb_fit, red_memb_no_fit, red_plot_pars = memb_prob_avrg_sort, [], []
+    red_memb_fit, red_memb_no_fit, red_plot_pars = memb_prob_avrg_sort, [], [0.]
 
     red_fit, red_not_fit = [], []
     for star in memb_prob_avrg_sort:
@@ -120,7 +120,7 @@ def man_mag(memb_prob_avrg_sort):
     return red_memb_fit, red_memb_no_fit, red_plot_pars
 
 
-def red_memb(n_memb, decont_algor_return, field_region):
+def red_memb(n_memb, flag_no_fl_regs, decont_algor_return, field_region):
     '''
     Reduce number of stars according to a given membership probability
     lower limit, minimum magnitude limit or local density-based removal.
@@ -130,7 +130,7 @@ def red_memb(n_memb, decont_algor_return, field_region):
     mode_red_memb = g.rm_params[0]
 
     # Default assignment.
-    red_memb_fit, red_memb_no_fit, red_plot_pars = memb_prob_avrg_sort, [], []
+    red_memb_fit, red_memb_no_fit, red_plot_pars = memb_prob_avrg_sort, [], [0.]
 
     if mode_red_memb == 'skip':
         # Skip reduction process.
@@ -142,8 +142,15 @@ def red_memb(n_memb, decont_algor_return, field_region):
         "  Can't apply '{}' membership reduction method.\n"
         "  Using full list.").format(mode_red_memb)
 
+    # If no field regions were defined, this mode won't work.
+    elif flag_no_fl_regs and mode_red_memb == 'local':
+        print ("  WARNING: no field regions were defined. Can't apply'\n"
+        "  '{}' membership reduction method. Using full list.").format(
+            mode_red_memb)
+
     else:
-        # This mode works even if the DA did not run.
+        # This mode works if the DA did not run but it needs field regions
+        # defined.
         if mode_red_memb == 'local':
             red_memb_fit, red_memb_no_fit, red_plot_pars = \
             rm_s(decont_algor_return, field_region)
