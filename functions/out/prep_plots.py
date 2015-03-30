@@ -6,6 +6,7 @@ Created on Thu Dic 18 12:00:00 2014
 """
 
 from .._in import get_in_params as g
+from functions.exp_function import exp_3p
 import numpy as np
 from scipy import stats
 import matplotlib.pyplot as plt
@@ -175,6 +176,88 @@ def separate_stars(x_data, y_data, mag_data, x_zmin, x_zmax, y_zmin, y_zmax,
                 stars_f_acpt[1].append(star[3])
 
     return x_data_z, y_data_z, mag_data_z, stars_f_rjct, stars_f_acpt
+
+
+def da_plots(center_cl, clust_rad, stars_out, x_zmin, x_zmax, y_zmin, y_zmax,
+    x_max_cmd, col_data, err_lst, red_return):
+    '''
+    Generate parameters for the finding chart and the photometric diagram
+    plotted with the MPs assigned by the DA.
+    '''
+
+    red_memb_fit, red_memb_no_fit = red_return[:2]
+
+    # Get extreme values for colorbar.
+    lst_comb = red_memb_fit + red_memb_no_fit
+    v_min_mp, v_max_mp = round(min(zip(*lst_comb)[-1]), 2), \
+    round(max(zip(*lst_comb)[-1]), 2)
+
+    # Decides if colorbar should be plotted.
+    plot_colorbar = False
+    if v_min_mp != v_max_mp:
+        plot_colorbar = True
+
+    # Finding chart.
+    # Arrange stars used in the best fit process.
+    m_p_m_temp = [[], [], []]
+    for star in red_memb_fit:
+        m_p_m_temp[0].append(star[1])
+        m_p_m_temp[1].append(star[2])
+        m_p_m_temp[2].append(star[7])
+    # Create new list with inverted values so higher prob stars are on top.
+    chart_fit_inv = [i[::-1] for i in m_p_m_temp]
+    # Arrange stars *not* used in the best fit process.
+    m_p_m_temp = [[], [], []]
+    for star in red_memb_no_fit:
+        m_p_m_temp[0].append(star[1])
+        m_p_m_temp[1].append(star[2])
+        m_p_m_temp[2].append(star[7])
+    # Create new list with inverted values so higher prob stars are on top.
+    chart_no_fit_inv = [i[::-1] for i in m_p_m_temp]
+
+    # Separate stars outside the cluster's radius.
+    out_clust_rad = [[], []]
+    for star in stars_out:
+        if x_zmin <= star[1] <= x_zmax and y_zmin <= star[2] <= y_zmax:
+            dist = np.sqrt((center_cl[0] - star[1]) ** 2 +
+            (center_cl[1] - star[2]) ** 2)
+            # Only plot stars outside the cluster's radius.
+            if dist >= clust_rad:
+                out_clust_rad[0].append(star[1])
+                out_clust_rad[1].append(star[2])
+
+    # Photometric diagram.
+    # Arrange stars used in the best fit process.
+    m_p_m_temp = [[], [], []]
+    for star in red_memb_fit:
+        m_p_m_temp[0].append(star[5])
+        m_p_m_temp[1].append(star[3])
+        m_p_m_temp[2].append(star[7])
+    # Create new list with inverted values so higher prob stars are on top.
+    diag_fit_inv = [i[::-1] for i in m_p_m_temp]
+    # Arrange stars *not* used in the best fit process.
+    m_p_m_temp = [[], [], []]
+    for star in red_memb_no_fit:
+        m_p_m_temp[0].append(star[5])
+        m_p_m_temp[1].append(star[3])
+        m_p_m_temp[2].append(star[7])
+    # Create new list with inverted values so higher prob stars are on top.
+    diag_no_fit_inv = [i[::-1] for i in m_p_m_temp]
+
+    # For plotting error bars in photom diag.
+    x_val, mag_y, x_err, y_err = [], [], [], []
+    if zip(*lst_comb)[3]:
+        mag_y = np.arange(int(min(zip(*lst_comb)[3]) + 0.5),
+                          int(max(zip(*lst_comb)[3]) + 0.5) + 0.1)
+        x_val = [min(x_max_cmd, max(col_data) + 0.2) - 0.4] * len(mag_y)
+        # Read average fitted values for exponential error fit.
+        popt_mag, popt_col1 = err_lst[:2]
+        x_err = exp_3p(mag_y, *popt_col1)
+        y_err = exp_3p(mag_y, *popt_mag)
+    err_bar = [x_val, mag_y, x_err, y_err]
+
+    return v_min_mp, v_max_mp, plot_colorbar, chart_fit_inv, chart_no_fit_inv, \
+    out_clust_rad, diag_fit_inv, diag_no_fit_inv, err_bar
 
 
 def param_ranges(ip_list):

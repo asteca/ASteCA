@@ -77,6 +77,10 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
     st_sizes_arr_z = prep_plots.star_size(mag_data_z)
     f_sz_pt = prep_plots.phot_diag_st_size(len(stars_f_acpt[0]))
     cl_sz_pt = prep_plots.phot_diag_st_size(len(cl_region))
+    v_min_mp, v_max_mp, plot_colorbar, chart_fit_inv, chart_no_fit_inv, \
+    out_clust_rad, diag_fit_inv, diag_no_fit_inv, err_bar = \
+        prep_plots.da_plots(center_cl, clust_rad, stars_out, x_zmin, x_zmax,
+        y_zmin, y_zmax, x_max_cmd, col_data, err_lst, red_return)
 
     #
     # Structure plots.
@@ -123,29 +127,32 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
 
     #
     # Decontamination algorithm plots.
-    da_flag, bf_flag = g.da_params[0], g.bf_params[0]
+    flag_decont_skip = decont_algor_return[1]
     mode_red_memb = g.rm_params[0]
+    bf_flag = g.bf_params[0]
 
-    if da_flag != 'skip':
-
+    # If the DA and the best fit functions were skipped and the reduced
+    # membership mode is any mode but 'local', do not plot.
+    if flag_decont_skip and bf_flag is False and mode_red_memb != 'local':
+        pass
+    else:
         arglist = [
             [gs, n_memb_da, red_return, decont_algor_return],
             [gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin, y_zmax,
-                center_cl, clust_rad, field_dens, decont_algor_return[0],
-                stars_out]
+                center_cl, clust_rad, field_dens, flag_decont_skip,
+                v_min_mp, v_max_mp, chart_fit_inv, chart_no_fit_inv,
+                out_clust_rad]
             ]
         for n, args in enumerate(arglist):
             mp_decont_algor.plot(n, *args)
 
-    plot_colorbar = False
-    if da_flag != 'skip' or mode_red_memb == 'local' or bf_flag:
         # This function is called separately since we need to retrieve some
         # information from it to plot that #$%&! colorbar.
         try:
-            plot_colorbar, v_min_mp, v_max_mp, sca, trans = \
-            mp_decont_algor.pl_mps_phot_diag(gs, fig, x_min_cmd, x_max_cmd,
-                y_min_cmd, y_max_cmd, x_ax, y_ax, red_return,
-                shift_isoch, col_data, err_lst)
+            sca, trans = mp_decont_algor.pl_mps_phot_diag(gs, fig,
+                x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
+                v_min_mp, v_max_mp, diag_fit_inv, diag_no_fit_inv,
+                shift_isoch, err_bar)
         except:
             #import traceback
             #print traceback.format_exc()
