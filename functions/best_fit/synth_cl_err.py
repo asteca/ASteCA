@@ -51,29 +51,23 @@ def synth_clust_err(phot_data, err_pck):
     cluster generation function.
     '''
 
-    da_flag, bf_flag = g.da_params[0], g.bf_params[0]
-    mode_red_memb = g.rm_params[0]
+    # Unpack params.
+    mag, e_mag, e_col = phot_data[3], phot_data[4], phot_data[6]
+    mag_value = err_pck[2]
+
+    # Call function to obtain the median points for magnitude
+    # and color errors to fit the exponential curve.
+    e_mag_value, e_col_value = err_med('synth_clust', err_pck, mag, e_mag,
+        e_col)
+
     err_lst = []
 
-    # Check if function should run. If DA was executed, we obtain these
-    # values for ploting purposes only.
-    if da_flag != 'skip' or mode_red_memb == 'local' or bf_flag:
+    for e_mag_v in [e_mag_value]:
+        popt_mc = get_m_c_errors(mag, mag_value, e_mag_v)
+        err_lst.append(popt_mc)
 
-        # Unpack params.
-        mag, e_mag, e_col = phot_data[3], phot_data[4], phot_data[6]
-        mag_value = err_pck[2]
-
-        # Call function to obtain the median points for magnitude
-        # and color errors to fit the exponential curve.
-        e_mag_value, e_col_value = err_med('synth_clust', err_pck, mag, e_mag,
-            e_col)
-
-        for e_mag_v in [e_mag_value]:
-            popt_mc = get_m_c_errors(mag, mag_value, e_mag_v)
-            err_lst.append(popt_mc)
-
-        for e_col_v in [e_col_value]:
-            popt_mc = get_m_c_errors(mag, mag_value, e_col_v)
-            err_lst.append(popt_mc)
+    for e_col_v in [e_col_value]:
+        popt_mc = get_m_c_errors(mag, mag_value, e_col_v)
+        err_lst.append(popt_mc)
 
     return err_lst
