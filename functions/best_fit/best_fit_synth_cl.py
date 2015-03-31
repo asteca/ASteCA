@@ -92,6 +92,8 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list):
         print 'Searching for optimal parameters.'
 
         obs_clust = prep(memb_prob_avrg_sort)
+        # Store for plotting purposes.
+        syn_b_edges = obs_clust[-1]
 
         # Obtain mass distribution using the selected IMF. We run it once
         # because the array only depends on the IMF selected.
@@ -141,9 +143,11 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list):
     else:
         # Pass empty lists to make_plots.
         print 'Skipping parameters fitting process.'
-        isoch_fit_params, isoch_fit_errors, shift_isoch, synth_clst = \
-        [[-1., -1., -1., -1., -1., -1.]], [-1., -1., -1., -1., -1., -1.], [], []
+        isoch_fit_params, isoch_fit_errors, shift_isoch, synth_clst, \
+        syn_b_edges = [[-1., -1., -1., -1., -1., -1.]], [-1., -1., -1., -1.,
+            -1., -1.], [], [], []
 
-    bf_return = [isoch_fit_params, isoch_fit_errors, shift_isoch, synth_clst]
+    bf_return = [isoch_fit_params, isoch_fit_errors, shift_isoch, synth_clst,
+        syn_b_edges]
 
     return bf_return

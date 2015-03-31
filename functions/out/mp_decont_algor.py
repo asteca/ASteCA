@@ -122,8 +122,8 @@ def pl_chart_mps(gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
 
 
 def pl_mps_phot_diag(gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
-    x_ax, y_ax, v_min_mp, v_max_mp, diag_fit_inv, diag_no_fit_inv, shift_isoch,
-    err_bar):
+    x_ax, y_ax, v_min_mp, v_max_mp, red_return, diag_fit_inv, diag_no_fit_inv,
+    shift_isoch, err_bar):
     '''
     Star's membership probabilities on cluster's photom diagram.
     '''
@@ -144,7 +144,18 @@ def pl_mps_phot_diag(gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
     # Set minor ticks
     ax.minorticks_on()
     ax.xaxis.set_major_locator(MultipleLocator(1.0))
-    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
+    # Plot grid.
+    if g.rm_params[0] == 'local':
+        bin_edges = red_return[-1][-1]
+        for x_ed in bin_edges[0]:
+            # vertical lines
+            ax.axvline(x_ed, linestyle=':', color='k', zorder=1)
+        for y_ed in bin_edges[1]:
+            # horizontal lines
+            ax.axhline(y_ed, linestyle=':', color='k', zorder=1)
+    else:
+        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1,
+            zorder=1)
     # This reversed colormap means higher prob stars will look redder.
     cm = plt.cm.get_cmap('RdYlBu_r')
     # If stars have a range of colors, use list of colors. Else use a single
@@ -157,17 +168,17 @@ def pl_mps_phot_diag(gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
     # Plot stars *not* used in the best fit process.
     plt.scatter(diag_no_fit_inv[0], diag_no_fit_inv[1], marker='o',
         c=col_select_no_fit, s=35, cmap=cm, lw=0.5, alpha=0.5, vmin=v_min_mp,
-        vmax=v_max_mp)
+        vmax=v_max_mp, zorder=4)
     # Draw horizontal line over stars discarded.
     plt.scatter(diag_no_fit_inv[0], diag_no_fit_inv[1], marker='_', c='k',
         lw=0.5, alpha=0.5)
     # Plot stars used in the best fit process.
     sca = plt.scatter(diag_fit_inv[0], diag_fit_inv[1], marker='o',
-                c=col_select_fit, s=40, cmap=cm, lw=0.5, vmin=v_min_mp,
-                vmax=v_max_mp)
+        c=col_select_fit, s=40, cmap=cm, lw=0.5, vmin=v_min_mp, vmax=v_max_mp,
+        zorder=4)
     # Plot isochrone if best fit process was used.
     if bf_flag:
-        plt.plot(shift_isoch[0], shift_isoch[1], c=c_iso, lw=1.2)
+        plt.plot(shift_isoch[0], shift_isoch[1], c=c_iso, lw=1.2, zorder=5)
     # If list is not empty, plot error bars at several values.
     if x_val:
         plt.errorbar(x_val, mag_y, yerr=y_err, xerr=x_err, fmt='k.', lw=0.8,

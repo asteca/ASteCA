@@ -53,7 +53,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
     # Luminosity functions.
     x_cl, y_cl, x_fl, y_fl = lum_func
     # Best fitting process results.
-    isoch_fit_params, isoch_fit_errors, shift_isoch, synth_clst = bf_return
+    isoch_fit_params, isoch_fit_errors, shift_isoch, synth_clst, syn_b_edges = \
+    bf_return
 
     # Plot all outputs
     # figsize(x1, y1), GridSpec(y2, x2) --> To have square plots: x1/x2 =
@@ -151,7 +152,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
         try:
             sca, trans = mp_decont_algor.pl_mps_phot_diag(gs, fig,
                 x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
-                v_min_mp, v_max_mp, diag_fit_inv, diag_no_fit_inv,
+                v_min_mp, v_max_mp, red_return, diag_fit_inv, diag_no_fit_inv,
                 shift_isoch, err_bar)
         except:
             #import traceback
@@ -164,7 +165,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
     if bf_flag:
         arglist = [
             [gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
-                synth_clst, isoch_fit_params[0], isoch_fit_errors, shift_isoch]
+                synth_clst, syn_b_edges, isoch_fit_params[0], isoch_fit_errors,
+                shift_isoch]
             ]
         for n, args in enumerate(arglist):
             mp_best_fit.plot(n, *args)

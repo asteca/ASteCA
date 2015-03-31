@@ -194,7 +194,7 @@ def rm_stars(decont_algor_return, field_region):
     #plt.show()
 
     # Store and pass for plotting purposes.
-    red_plot_pars = [min_prob]
+    red_plot_pars = [min_prob, bin_edges]
 
     # Check the number of stars selected.
     if len(red_memb_fit) < 10:

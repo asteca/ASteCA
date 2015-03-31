@@ -39,28 +39,30 @@ def prepare(memb_prob_avrg_sort):
 
         # Remove ID's and zip.
         P = np.array(zip(*memb_prob_avrg_sort)[1:], dtype='float')
+        mag_col_cl = [P[4], P[2]]
 
         # Obtain bin edges for each dimension.
+        bin_edges = []
         if bin_method in ['sturges', 'sqrt']:
             if bin_method == 'sturges':
-                b_num = 1 + np.log2(len(P[0]))
+                b_num = 1 + np.log2(len(mag_col_cl[0]))
             else:
-                b_num = np.sqrt(len(P[0]))
+                b_num = np.sqrt(len(mag_col_cl[0]))
 
-            b_rx = np.histogram(P[4], bins=b_num)[1]
-            b_ry = np.histogram(P[2], bins=b_num)[1]
+            for mag_col in mag_col_cl:
+                bin_edges.append(np.histogram(mag_col, bins=b_num)[1])
         else:
-            b_rx = hist(P[4], bins=bin_method)[1]
-            b_ry = hist(P[2], bins=bin_method)[1]
+            for mag_col in mag_col_cl:
+                bin_edges.append(hist(mag_col, bins=bin_method)[1])
 
         # Zip magnitudes and colors into array.
-        cl_mags_cols = np.array(zip(*[P[4], P[2]]))
+        cl_mags_cols = np.array(zip(*mag_col_cl))
 
-        # Obtain histogram for observed cluster.
-        cl_histo = np.histogramdd(cl_mags_cols, bins=[b_rx, b_ry],
+        # Obtain *weighted* histogram for observed cluster.
+        cl_histo = np.histogramdd(cl_mags_cols, bins=bin_edges,
             weights=np.asarray(P[6]))[0]
 
         # Pass observed cluster data.
-        obs_clust = [cl_histo, [b_rx, b_ry]]
+        obs_clust = [cl_histo, bin_edges]
 
     return obs_clust

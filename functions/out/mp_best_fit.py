@@ -15,7 +15,7 @@ from .._in import get_in_params as g
 
 
 def pl_bf_synth_cl(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
-    synth_clst, cp_r, cp_e, shift_isoch):
+    synth_clst, syn_b_edges, cp_r, cp_e, shift_isoch):
     '''
     Best fit synthetic cluster obtained.
     '''
@@ -29,7 +29,22 @@ def pl_bf_synth_cl(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
     # Set minor ticks
     ax.minorticks_on()
     ax.xaxis.set_major_locator(MultipleLocator(1.0))
-    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
+    # Plot grid.
+    if g.bf_params[2] == 'dolphin':
+        for x_ed in syn_b_edges[0]:
+            # vertical lines
+            ax.axvline(x_ed, linestyle=':', color='k', zorder=1)
+        for y_ed in syn_b_edges[1]:
+            # horizontal lines
+            ax.axhline(y_ed, linestyle=':', color='k', zorder=1)
+        # Add text box
+        text = '$({};\,{})$'.format(g.bf_params[2], g.bf_params[3])
+        ob = offsetbox.AnchoredText(text, pad=.2, loc=2, prop=dict(size=12))
+        ob.patch.set(alpha=0.85)
+        ax.add_artist(ob)
+    else:
+        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1,
+            zorder=1)
     if synth_clst.any():
         # Plot synth clust.
         plt.scatter(synth_clst[0], synth_clst[2], marker='o', s=40,
@@ -45,8 +60,6 @@ def pl_bf_synth_cl(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
     text6 = '$M_{{\odot}} = {} \pm {}$\n'.format(cp_r[4], cp_e[4])
     text7 = '$b_{{frac}} = {} \pm {}$'.format(cp_r[5], cp_e[5])
     text = text1 + text2 + text3 + text4 + text5 + text6 + text7
-    #plt.text(0.54, 0.61, text, transform=ax.transAxes,
-             #bbox=dict(facecolor='white', alpha=0.6, pad=15), fontsize=12)
     ob = offsetbox.AnchoredText(text, pad=.2, loc=1, prop=dict(size=12))
     ob.patch.set(alpha=0.85)
     ax.add_artist(ob)
