@@ -213,25 +213,25 @@ def check(mypath, cl_files):
                 "algorithm but the file:\n\n {}\n\ndoes not "
                 "exist.".format(memb_file))
 
+    # Check 'Reduced membership' method selected.
+    mode_red_memb, local_bin, min_prob = g.rm_params
+    if mode_red_memb not in {'local', 'n-memb', 'man', 'top-h', 'mag',
+        'skip'}:
+        sys.exit("ERROR: the selected reduced membership method ('{}')"
+            " does\nnot match a valid input.".format(mode_red_memb))
+    # Check binning if 'local' method was selected.
+    if mode_red_memb == 'local' and local_bin not in {'blocks', 'knuth',
+        'scott', 'freedman', 'sturges', 'sqrt'}:
+        sys.exit("ERROR: the selected binning method '{}' for the 'Reduced"
+        "\nmembership' function does not match a valid input.".format(
+            local_bin))
+
     # Unpack.
     bf_flag, best_fit_algor, lkl_method, bin_method, N_b = g.bf_params
 
     # If best fit method is set to run.
     ip_list = []
     if bf_flag:
-
-        # Check 'Reduced membership' method selected.
-        mode_red_memb, local_bin, min_prob = g.rm_params
-        if mode_red_memb not in {'local', 'n-memb', 'man', 'top-h', 'mag',
-            'skip'}:
-            sys.exit("ERROR: the selected reduced membership method ('{}')"
-                " does\nnot match a valid input.".format(mode_red_memb))
-        # Check binning if 'local' method was selected.
-        if mode_red_memb == 'local' and local_bin not in {'blocks', 'knuth',
-            'scott', 'freedman', 'sturges', 'sqrt'}:
-            sys.exit("ERROR: the selected binning method '{}' for the 'Reduced"
-            "\nmembership' function does not match a valid input.".format(
-                local_bin))
 
         # Check best fit method selected.
         if best_fit_algor not in {'brute', 'genet'}:
