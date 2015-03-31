@@ -85,4 +85,6 @@ def get_dens_prof(hist_lst, cent_bin):
         # and stored in 'ring_density'
         radii.append(bin_width / 2. + (bin_width * i))
 
+    print 'Radial density profile (RDP) calculated.'
+
     return radii, ring_density, poisson_error, square_rings

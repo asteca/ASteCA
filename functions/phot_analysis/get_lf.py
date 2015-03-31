@@ -86,4 +86,6 @@ def lf(flag_no_fl_regs, mag_data, cl_region, field_regions):
     mag_all = list(mag_cl) + mag_fl
     completeness = mag_completeness(mag_all)
 
+    print 'LF and completeness magnitude levels obtained.'
+
     return lum_func, completeness

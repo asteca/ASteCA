@@ -66,4 +66,6 @@ def get_cl_area(kde_center, clust_rad, x_data, y_data, rdp_params, bw):
         # Fraction of cluster's area present in frame.
         frac_cl_area = cl_area / (np.pi * clust_rad ** 2)
 
+    print "Area of cluster obtained."
+
     return cl_area, frac_cl_area

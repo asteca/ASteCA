@@ -24,4 +24,11 @@ def get_memb_num(n_clust, cl_area, field_dens):
     # Raise a flag if the number of members is < 10
     flag_num_memb_low = False if n_memb >= 10 else True
 
+    if flag_num_memb_low:
+        print ("  WARNING: only {:0.f} true members estimated in cluster"
+            " region.".format(n_memb))
+    else:
+        print ("Approximate number of members in cluster obtained "
+            "({:.0f}).".format(n_memb))
+
     return n_memb, flag_num_memb_low

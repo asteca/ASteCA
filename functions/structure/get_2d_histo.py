@@ -29,4 +29,6 @@ def get_2d_histo(x_data, y_data):
 
     hist_lst = [hist_2d, xedges, yedges, bin_width]
 
+    print "Frame's 2D histogram obtained"
+
     return hist_lst

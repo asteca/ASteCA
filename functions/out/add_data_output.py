@@ -99,3 +99,5 @@ def add_data_output(out_file_name, write_name, center_params, radius_params,
         f_out.write('''{:>8} {:>2} {:>3} {:>2} {:>2} {:>2} {:>2} {:>2} {:>2} \
 {:>2} {:>2} {:>3}'''.format(*int_flags))
         f_out.write('\n')
+
+    print "Cluster's parameters and flags added to output file."

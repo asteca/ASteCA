@@ -14,11 +14,10 @@ def cont_indx(field_dens, a_clust, n_clust):
 
     A small number (close to zero) means the field contamination in the
     cluster region is very small.
-    If this number equals 1, it means that an equal number of field stars
-    and cluster members are expected inside the cluster region. A number
-    larger than 1 means there are more field stars on average than there
-    are cluster members inside the cluster region (which isn't a good
-    sign).
+    If this number equals 0.5, it means that an equal number of field stars
+    and cluster members are expected inside the cluster region. A value of
+    1 means there are no expected cluster members inside the cluster region
+    (which isn't a good sign).
     '''
 
     # Star density in the cluster region.
@@ -26,5 +25,11 @@ def cont_indx(field_dens, a_clust, n_clust):
 
     # Final contamination index.
     cont_index = field_dens / cl_dens
+
+    if cont_index >= 1.:
+        print "  WARNING: contamination index obtained is high: {:.2f}".format(
+            cont_index)
+    else:
+        print 'Contamination index obtained ({:.2f}).'.format(cont_index)
 
     return cont_index

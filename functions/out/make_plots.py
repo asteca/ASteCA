@@ -239,3 +239,5 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
     # Close to release memory.
     plt.clf()
     plt.close()
+
+    print 'Plots created.'

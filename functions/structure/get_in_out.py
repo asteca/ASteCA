@@ -51,5 +51,7 @@ def get_in_out(center_cl, clust_rad, acpt_stars, rjct_stars):
         raise ValueError('Empty cluster region.')
     elif 1 < len(cl_region) < 10:
         print ("  WARNING: less than 10 stars present in cluster region.")
+    else:
+        print "Stars separated in/out of cluster's boundaries."
 
     return cl_region, stars_out, cl_region_rjct, stars_out_rjct

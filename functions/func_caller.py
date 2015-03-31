@@ -68,7 +68,6 @@ def asteca_funcs(cl_file, ip_list, R_in_place):
     # Obtain 2D histograms for the observed frame using several bin widths.
     hist_lst = g2dh(x_data, y_data)
     bin_width = hist_lst[-1]
-    print "Frame's 2D histogram obtained"
 
     # Get cluster's center coordinates and errors.
     center_params = g_c(x_data, y_data, mag_data, hist_lst, semi_return)
@@ -78,7 +77,6 @@ def asteca_funcs(cl_file, ip_list, R_in_place):
     # Get density profile
     rdp_params = gdp(hist_lst, cent_bin)
     radii, ring_density = rdp_params[:2]
-    print 'Radial density profile (RDP) calculated.'
 
     # Get field density value in stars/px^2.
     field_dens = gfd(ring_density)
@@ -98,7 +96,6 @@ def asteca_funcs(cl_file, ip_list, R_in_place):
     # Get stars in and out of cluster's radius.
     cl_region, stars_out, stars_in_rjct, stars_out_rjct = gio(kde_center,
         clust_rad, acpt_stars, rjct_stars)
-    print "Stars separated in/out of cluster's boundaries."
     # Number of stars inside the cluster region (including stars with rejected
     # photometric errors)
     n_clust = len(cl_region) + len(stars_in_rjct)
@@ -106,16 +103,12 @@ def asteca_funcs(cl_file, ip_list, R_in_place):
     # Get cluster's area.
     cl_area, frac_cl_area = g_a(kde_center, clust_rad, x_data, y_data,
         rdp_params, bin_width)
-    print "Area of cluster obtained."
 
     # Get approximate number of cluster's members.
     n_memb, flag_num_memb_low = g_m_n(n_clust, cl_area, field_dens)
-    print ("Approximate number of members in cluster obtained "
-        "({:.0f}).".format(n_memb))
 
     # Get contamination index.
     cont_index = g_c_i(field_dens, cl_area, n_clust)
-    print 'Contamination index obtained ({:.2f}).'.format(cont_index)
 
     # Field regions around the cluster's center.
     flag_no_fl_regs, field_region = g_r(hist_lst, cent_bin, clust_rad,
@@ -126,7 +119,6 @@ def asteca_funcs(cl_file, ip_list, R_in_place):
     # fitting algorithm.
     lum_func, completeness = lf(flag_no_fl_regs, mag_data, cl_region,
         field_region)
-    print 'LF and Completeness magnitude levels obtained.'
 
     # Calculate integrated magnitude.
     integr_return = g_i_m(cl_region, field_region, flag_no_fl_regs)
@@ -172,7 +164,6 @@ def asteca_funcs(cl_file, ip_list, R_in_place):
         cont_index, n_memb, memb_par, n_memb_da, frac_cl_area,
         pval_test_params[0], integr_return, err_flags, flag_num_memb_low,
         bf_return)
-    print "Cluster's parameters and flags added to output file."
 
     # Output top tiers models if best fit parameters were obtained.
     g_t_t(clust_name, output_subdir, mag_data, col1_data, ip_list, err_lst,
@@ -188,7 +179,6 @@ def asteca_funcs(cl_file, ip_list, R_in_place):
             flag_no_fl_regs, field_region, flag_pval_test,
             pval_test_params, decont_algor_return, lum_func, completeness,
             ip_list, red_return, err_lst, bf_return)
-        print 'Plots created.'
 
     # Move file to 'done' dir if flag is set.
     dm(dst_dir, data_file, memb_file)
