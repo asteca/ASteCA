@@ -23,7 +23,7 @@ def get_2d_histo(x_data, y_data):
     # Number of bins in x,y given the bin width 'd_b'
     binsxy = [int(x_rang / bin_width), int(y_rang / bin_width)]
 
-    # hist is the 2D histogran, *edges store the edges of the bins.
+    # hist is the 2D histogram, *edges store the edges of the bins.
     hist_2d, xedges, yedges = np.histogram2d(x_data, y_data,
         range=[[xmin, xmax], [ymin, ymax]], bins=binsxy)
 
