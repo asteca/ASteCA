@@ -22,8 +22,9 @@ def flatten(l):
 
 
 def add_data_output(out_file_name, write_name, center_params, radius_params,
-    kp_params, cont_index, n_memb, memb_par, n_memb_da, frac_cl_area,
-    prob_cl_kde, integr_return, err_flags, flag_num_memb_low, bf_return):
+    kp_params, cont_index, n_memb, memb_par, n_memb_da, flag_memb_par,
+    frac_cl_area, prob_cl_kde, integr_return, err_flags, flag_num_memb_low,
+    bf_return):
     '''
     Add data obtained to the 'data_output.dat' file.
     '''
@@ -54,7 +55,7 @@ def add_data_output(out_file_name, write_name, center_params, radius_params,
     flags_list = [flag_center_manual, flag_radius_manual, flag_center_med,
         flag_center_std, flag_delta_total, flag_not_stable, flag_delta,
         flag_3pk_no_conver, err_all_fallback, err_max_fallback,
-        flag_num_memb_low]
+        flag_num_memb_low, flag_memb_par]
 
     # Converty True & False flag values to 1 and 0 respectively.
     int_flags = [1 if flg else 0 for flg in flags_list]
@@ -97,7 +98,7 @@ def add_data_output(out_file_name, write_name, center_params, radius_params,
 {:>8} {:>8} {:>8} {:>8}'''.format(*line_f))
         # Flags.
         f_out.write('''{:>8} {:>2} {:>3} {:>2} {:>2} {:>2} {:>2} {:>2} {:>2} \
-{:>2} {:>2} {:>3}'''.format(*int_flags))
+{:>2} {:>2} {:>3} {:>3}'''.format(*int_flags))
         f_out.write('\n')
 
     print "Cluster's parameters and flags added to output file."

@@ -139,7 +139,7 @@ def asteca_funcs(cl_file, ip_list, R_in_place):
         memb_file)
 
     # Obtain members parameter.
-    memb_par, n_memb_da = m_m(n_memb, decont_algor_return)
+    memb_par, n_memb_da, flag_memb_par = m_m(n_memb, decont_algor_return)
 
     # Reduce number of stars in cluster according to a lower membership
     # probability or magnitude limit.
@@ -162,7 +162,7 @@ def asteca_funcs(cl_file, ip_list, R_in_place):
 
     # Add cluster data and flags to output file
     a_d_o(out_file_name, write_name, center_params, radius_params, kp_params,
-        cont_index, n_memb, memb_par, n_memb_da, frac_cl_area,
+        cont_index, n_memb, memb_par, n_memb_da, flag_memb_par, frac_cl_area,
         pval_test_params[0], integr_return, err_flags, flag_num_memb_low,
         bf_return)
 

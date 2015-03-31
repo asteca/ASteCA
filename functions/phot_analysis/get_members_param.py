@@ -17,7 +17,7 @@ def mp_members(n_memb, decont_algor_return):
 
     memb_prob_avrg_sort, flag_decont_skip = decont_algor_return
 
-    memb_par, n_memb_da = float("inf"), -1.
+    memb_par, n_memb_da, flag_memb_par = float("inf"), -1., False
     # Obtain parameter if the DA was applied.
     if not flag_decont_skip:
 
@@ -35,4 +35,10 @@ def mp_members(n_memb, decont_algor_return):
                 memb_par = (float(n_memb) - float(n_memb_da)) / \
                     (float(n_memb) + float(n_memb_da))
 
-    return memb_par, n_memb_da
+            # Set flag.
+            if abs(memb_par) > 0.33:
+                flag_memb_par = True
+                print ("  WARNING: the number of estimated true cluster"
+                " members\n  (structural vs. photometric) differ greatly.")
+
+    return memb_par, n_memb_da, flag_memb_par

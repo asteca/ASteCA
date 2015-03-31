@@ -82,29 +82,29 @@ def create_out_data_file(output_dir):
 # bin_fr: Binary fraction.\n\
 # e_bf: Binary fraction error.\n\
 #\n\
-# M1 (flag_center_manual): Indicates that the center was set manually.\n\
-# M2 (flag_radius_manual): Indicates that the radius was set manually.\n\
+# M1 Indicates that the center was set manually.\n\
+# M2 Indicates that the radius was set manually.\n\
 #\n\
-# f1 (flag_center_med): Either median cluster's central coordinates (obtained\n\
-#    using several standard deviation smoothing values) is more than 10%% \n\
-#    away from the central position assigned.\n\
-# f2 (flag_center_std): The standard deviation for either center coordinate\n\
-#    is larger than 10% of the coordinate's value.\n\
-# f3 (flag_delta_total): The background value is smaller than a third of the\n\
-#    maximum radial density value.\n\
-# f4 (flag_not_stable): Not enough points found stabilized around the\n\
-#    background value -> r = set to middle value of density profile.\n\
-# f5 (flag_delta): The delta range around the background used to attain the\n\
-#    stable condition to determine the radius is greater than 10%%. This\n\
-#    indicates a possible variable background.\n\
-# f6 (flag_king_no_conver): The process to fit a 3-P King profile to the\n\
-#    density points did not converge or did so to a tidal radius beyond the\n\
-#    ranges of the frame.\n\
-# f7 (err_all_fallback): no error rejection was possible.\n\
-# f8 (err_max_fallback): the function had to fall back to the 'e_max'-based\n\
-#    rejection method since the selected one failed.\n\
-# f9 (flag_num_memb_low): The number of approximate structural cluster\n\
-#    members ('n_memb') is < 10.\n\
+# f1 Either median cluster's central coordinates (obtained using several\n\
+#    standard deviation smoothing values) is more than 10% away from the\n\
+#    central position assigned.\n\
+# f2 The standard deviation for either center coordinate is larger than 10%\n\
+#    of the coordinate's value.\n\
+# f3 The background value is smaller than a third of the maximum radial\n\
+#    density value.\n\
+# f4 Not enough points found stabilized around the background value -->\n\
+#    clust_rad was set to the middle value in the density profile.\n\
+# f5 The delta range around the background used to attain the stable\n\
+#    condition to determine the radius is greater than 10%%. This indicates\n\
+#    a possible variable background.\n\
+# f6 The process to fit a 3-P King profile to the density points did not\n\
+#    converge or did so to a tidal radius beyond the ranges of the frame.\n\
+# f7 No error rejection was possible.\n\
+# f8 The function had to fall back to the 'e_max'-based rejection method\n\
+#    since the selected one failed.\n\
+# f9 The number of approximate structural cluster members ('n_memb') is < 10.\n\
+# f10 The number of approximate structural and photometric cluster members\n\
+#     differ greatly --> abs(n_memb_par) > 0.33.\n\
 #\n\
 # FC (flags count): Sum of all the flags values. The bigger this value the\n\
 #    more likely it is that there's a problem with the frame, ie: no cluster,\n\
@@ -116,7 +116,7 @@ r_c     e_rc      r_t     e_rt      kcp      CI   n_memb_k     n_memb  \
 n_memb_da  memb_par     a_f  prob_cl  int_col      met      e_m      age      \
 e_a   E(B-V)      e_E     dist      e_d      M_i      e_M   bin_fr     \
 e_bf      \
-M1 M2  f1 f2 f3 f4 f5 f6 f7 f8 f9  FC\n".format(__version__, now_time))
+M1 M2  f1 f2 f3 f4 f5 f6 f7 f8 f9 f10  FC\n".format(__version__, now_time))
         out_data_file.close()
 
     return out_file_name
