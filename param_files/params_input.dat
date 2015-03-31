@@ -17,6 +17,19 @@
 
 
 
+################################################################################
+# * Update checker.
+#
+# Check if a new version of ASteCA is available for download, and notify the
+# user when one is found. This requires less than 25 bytes of data and is thus
+# very quick. To turn this automatic check off, set this flag to 'false'.
+#
+#   flag
+UP  false
+################################################################################
+
+
+
 ################################### Mode #######################################
 
 # Mode used to run the code.

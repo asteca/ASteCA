@@ -37,7 +37,7 @@ def init(mypath):
     '''
 
     # Declare globals.
-    global mode, done_dir, gd_params, gh_params, cr_params, kp_flag,\
+    global up_flag, mode, done_dir, gd_params, gh_params, cr_params, kp_flag,\
     im_flag, er_params, fr_number, pv_params, da_params, ps_params, bf_params,\
     sc_params, ga_params, rm_params, pl_params, flag_move_file, axes_params,\
     flag_back_force
@@ -57,8 +57,12 @@ def init(mypath):
             if not line.startswith("#") and line.strip() != '':
                 reader = line.split()
 
+                # Updater.
+                if reader[0] == 'UP':
+                    up_flag = True if reader[1] in true_lst else False
+
                 # Mode.
-                if reader[0] == 'MO':
+                elif reader[0] == 'MO':
                     mode = str(reader[1])
 
                 # Input data parameters.

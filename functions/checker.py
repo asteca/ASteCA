@@ -4,6 +4,8 @@ Created on Tue Sep 22 09:00:00 2014
 
 @author: gabriel
 """
+
+from update_check import updater
 import pip
 from os.path import join, isfile, isdir
 import sys
@@ -131,6 +133,10 @@ def check(mypath, cl_files):
         # Halt code.
         print traceback.format_exc()
         sys.exit('ERROR: params_input.dat is badly formatted.')
+
+    # Check if a new version is available.
+    if g.up_flag:
+        updater()
 
     # Check mode.
     if g.mode not in {'auto', 'semi', 'manual'}:
