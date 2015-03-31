@@ -45,7 +45,8 @@ def names_paths(cl_file):
         makedirs(output_subdir)
 
     memb_file_out = join(output_subdir, clust_name + '_memb.dat')
+    synth_file_out = join(output_subdir, clust_name + '_synth.dat')
     write_name = join(cl_file[2], clust_name)
 
     return clust_name, data_file, memb_file, output_dir, output_subdir,\
-    dst_dir, memb_file_out, write_name
+    dst_dir, memb_file_out, synth_file_out, write_name

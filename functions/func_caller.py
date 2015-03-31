@@ -37,6 +37,7 @@ from functions.out.create_out_data_file import create_out_data_file as c_o_d_f
 from functions.out.top_tiers import get_top_tiers as g_t_t
 from functions.out.add_data_output import add_data_output as a_d_o
 from functions.out.cl_members_file import cluster_members_file as c_m_f
+from functions.out.synth_cl_file import make_file as s_c_f
 from functions.out.done_move import done_move as dm
 
 
@@ -50,7 +51,7 @@ def asteca_funcs(cl_file, ip_list, R_in_place):
 
     # Get file names and paths.
     clust_name, data_file, memb_file, output_dir, output_subdir, dst_dir,\
-    memb_file_out, write_name = n_p(cl_file)
+    memb_file_out, synth_file_out, write_name = n_p(cl_file)
     print 'Analizing cluster {} ({}).'.format(clust_name, g.mode)
 
     # Get data from semi-data input file.
@@ -160,6 +161,9 @@ def asteca_funcs(cl_file, ip_list, R_in_place):
     # Obtain best fitting parameters for cluster.
     bf_return = bfsc(err_lst, red_return[0], completeness, ip_list)
 
+    # Create output synthetic cluster file if one was found
+    s_c_f(bf_return[3], synth_file_out)
+
     # Create output data file in /output dir if it doesn't exist.
     out_file_name = c_o_d_f(output_dir)
 
@@ -168,7 +172,7 @@ def asteca_funcs(cl_file, ip_list, R_in_place):
         cont_index, n_memb, memb_par, n_memb_da, frac_cl_area,
         pval_test_params[0], integr_return, err_flags, flag_num_memb_low,
         bf_return)
-    print 'Data added to output file.'
+    print "Cluster's parameters and flags added to output file."
 
     # Output top tiers models if best fit parameters were obtained.
     g_t_t(clust_name, output_subdir, mag_data, col1_data, ip_list, err_lst,
