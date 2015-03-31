@@ -9,7 +9,7 @@ from .._in import get_in_params as g
 from ..phot_analysis.local_diag_clean import rm_stars as rm_s
 
 
-def nmemb_select(n_memb, memb_prob_avrg_sort):
+def nmemb_sel(n_memb, memb_prob_avrg_sort):
     '''
     Algorithm to select which stars to use by the best fit funtcion.
     Will set the minimum probability value such that an equal number of
@@ -43,6 +43,32 @@ def nmemb_select(n_memb, memb_prob_avrg_sort):
     else:
         print ("  WARNING: less than 10 stars identified as true\n"
         "  cluster members. Using full list.")
+
+    return red_memb_fit, red_memb_no_fit, red_plot_pars
+
+
+def mp_05(memb_prob_avrg_sort):
+    '''
+    Accept stars with MP>=0.5.
+    '''
+
+    red_memb_fit, red_memb_no_fit, red_plot_pars = memb_prob_avrg_sort, [], [0.]
+
+    # Separate stars by MPs.
+    red_fit, red_no_fit = [], []
+    for star in memb_prob_avrg_sort:
+        if star[-1] >= 0.5:
+            red_fit.append(star)
+        else:
+            red_no_fit.append(star)
+
+    # Check number of stars left.
+    if len(red_fit) > 10:
+        red_memb_fit, red_memb_no_fit, red_plot_pars = red_fit, red_no_fit,\
+        [0.5]
+    else:
+        print ("  WARNING: less than 10 stars left after reducing\n"
+        "  by MP>=0.5 selection. Using full list.")
 
     return red_memb_fit, red_memb_no_fit, red_plot_pars
 
@@ -155,11 +181,15 @@ def red_memb(n_memb, flag_no_fl_regs, decont_algor_return, field_region):
             red_memb_fit, red_memb_no_fit, red_plot_pars = \
             rm_s(decont_algor_return, field_region)
 
-        if mode_red_memb == 'n-memb':
-            red_memb_fit, red_memb_no_fit, red_plot_pars = nmemb_select(n_memb,
+        if mode_red_memb == 'n_memb':
+            red_memb_fit, red_memb_no_fit, red_plot_pars = nmemb_sel(n_memb,
                 memb_prob_avrg_sort)
 
-        elif mode_red_memb == 'top-h':
+        if mode_red_memb == 'mp_05':
+            red_memb_fit, red_memb_no_fit, red_plot_pars = \
+            mp_05(memb_prob_avrg_sort)
+
+        elif mode_red_memb == 'top_h':
             red_memb_fit, red_memb_no_fit, red_plot_pars = \
             top_h(memb_prob_avrg_sort)
 

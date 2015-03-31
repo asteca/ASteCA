@@ -48,7 +48,7 @@ def pl_mp_histo(gs, n_memb_da, red_return, decont_algor_return):
         if g.rm_params[0] == 'local':
             str_pm.append(g.rm_params[0] + ';\,' + g.rm_params[1])
         else:
-            str_pm.append(g.rm_params[0])
+            str_pm.append(g.rm_params[0].replace('_', '\_'))
         text1 = r'$n_{{memb-DA}}={}\,(MP \geq 0.5)$'.format(n_memb_da)
         text2 = r'${}_{{min}}={:.2f}\,({})$'.format(str_pm[2], min_prob,
             str_pm[3])
