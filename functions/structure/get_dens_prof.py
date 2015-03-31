@@ -26,10 +26,16 @@ def get_dens_prof(hist_lst, cent_bin):
 
     # Percentage of the frame where the RDP will be calculated.
     rdp_perc = 0.75
+    # Total length in both axis.
+    x_length, y_length = len(hist_2d[0]), len(hist_2d[1])
+    # Minimum legth in either axis.
+    min_length = min(x_length, y_length)
+    # Length where the RDP will be defined, in bin units.
+    rdp_length = min_length * rdp_perc
 
     # Number of bins that define the length of the largest square ring
     # around the center coordinates.
-    bins = int(min(len(hist_2d[0]), len(hist_2d[1])) * rdp_perc)
+    bins = int(rdp_length)
     # Number of "square rings" to generate.
     sq_rings = int(bins * 0.5)
 
@@ -88,6 +94,9 @@ def get_dens_prof(hist_lst, cent_bin):
         # and stored in 'ring_density'
         radii.append(bin_width / 2. + (bin_width * i))
 
+    # Transform from bin units to coordinate units before passing.
+    rdp_length = rdp_length * bin_width
+
     print 'Radial density profile (RDP) calculated.'
 
-    return radii, ring_density, poisson_error, square_rings
+    return radii, ring_density, poisson_error, square_rings, rdp_length

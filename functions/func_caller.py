@@ -105,10 +105,11 @@ def asteca_funcs(cl_file, ip_list, R_in_place):
         rdp_params, bin_width)
 
     # Get approximate number of cluster's members.
-    n_memb, flag_num_memb_low = g_m_n(n_clust, cl_area, field_dens)
+    n_memb, flag_num_memb_low = g_m_n(n_clust, cl_area, field_dens, clust_rad,
+        rdp_params[-1])
 
     # Get contamination index.
-    cont_index = g_c_i(n_clust, cl_area, field_dens)
+    cont_index = g_c_i(n_clust, cl_area, field_dens, clust_rad, rdp_params[-1])
 
     # Field regions around the cluster's center.
     flag_no_fl_regs, field_region = g_r(hist_lst, cent_bin, clust_rad,

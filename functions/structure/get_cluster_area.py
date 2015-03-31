@@ -27,7 +27,7 @@ def get_cl_area(kde_center, clust_rad, x_data, y_data, rdp_params, bw):
         frac_cl_area = 1.
 
     else:
-        square_rings = rdp_params[-1]
+        square_rings = rdp_params[3]
 
         # Index of point in RDP closer to the calculated cluster radius.
         sq_indx = int(round(((clust_rad - (bw / 2.)) / bw) + 1))

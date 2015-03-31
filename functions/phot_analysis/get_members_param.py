@@ -17,7 +17,7 @@ def mp_members(n_memb, decont_algor_return):
 
     memb_prob_avrg_sort, flag_decont_skip = decont_algor_return
 
-    memb_par, n_memb_da = float("inf"), -1
+    memb_par, n_memb_da = float("inf"), -1.
     # Obtain parameter if the DA was applied.
     if not flag_decont_skip:
 
@@ -27,9 +27,12 @@ def mp_members(n_memb, decont_algor_return):
             if star[7] >= 0.5:
                 n_memb_da += 1
 
-        if n_memb != 0 or n_memb_da != 0:
-            # Obtain parameter.
-            memb_par = (float(n_memb) - float(n_memb_da)) / \
-                (float(n_memb) + float(n_memb_da))
+        # Obtain only if n_memb was calculated.
+        if n_memb != -1.:
+
+            if n_memb != 0 or n_memb_da != 0:
+                # Obtain parameter.
+                memb_par = (float(n_memb) - float(n_memb_da)) / \
+                    (float(n_memb) + float(n_memb_da))
 
     return memb_par, n_memb_da
