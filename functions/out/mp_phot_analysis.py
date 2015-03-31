@@ -118,10 +118,10 @@ def pl_fl_diag(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
     # Only draw units on axis (ie: 1, 2, 3)
     ax.xaxis.set_major_locator(MultipleLocator(1.0))
     # Set grid
-    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
+    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1, zorder=1)
     # Plot *all* rejected stars outside of the cluster region.
     plt.scatter(stars_f_rjct[0], stars_f_rjct[1], marker='x',
-        c='teal', s=15, zorder=1)
+        c='teal', s=15, zorder=2)
     # Plot accepted stars within the field regions defined, if at least one
     # exists.
     if stars_f_acpt[0]:
@@ -132,7 +132,7 @@ def pl_fl_diag(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
         ob.patch.set(alpha=0.7)
         ax.add_artist(ob)
         plt.scatter(stars_f_acpt[0], stars_f_acpt[1], marker='o', c='b',
-                    s=f_sz_pt, lw=0.3, zorder=2)
+                    s=f_sz_pt, lw=0.3, zorder=3)
 
 
 def pl_cl_diag(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
@@ -152,7 +152,7 @@ def pl_cl_diag(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
     # Only draw units on axis (ie: 1, 2, 3)
     ax.xaxis.set_major_locator(MultipleLocator(1.0))
     # Set grid
-    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
+    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1, zorder=1)
     # Add text box.
     text1 = '$N_{{accpt}}={}\,(r \leq r_{{cl}})$'.format(len(cl_region))
     text2 = r'$n_{{memb}} \approx {}$'.format(n_memb)
@@ -164,9 +164,9 @@ def pl_cl_diag(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
     if len(stars_in_rjct) > 0:
         # Only attempt to plot if any star is stored in the list.
         plt.scatter(zip(*stars_in_rjct)[5], zip(*stars_in_rjct)[3],
-            marker='x', c='teal', s=12, zorder=1)
+            marker='x', c='teal', s=12, zorder=2)
     plt.scatter(zip(*cl_region)[5], zip(*cl_region)[3], marker='o', c='r',
-                s=cl_sz_pt, lw=0.3, zorder=2)
+                s=cl_sz_pt, lw=0.3, zorder=3)
 
 
 def pl_lum_func(gs, mag_data, y_ax, x_cl, y_cl, flag_no_fl_regs, x_fl,
@@ -182,7 +182,7 @@ def pl_lum_func(gs, mag_data, y_ax, x_cl, y_cl, flag_no_fl_regs, x_fl,
     # Only draw units on axis (ie: 1, 2, 3)
     ax.xaxis.set_major_locator(MultipleLocator(2.0))
     # Set grid
-    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
+    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1, zorder=1)
     #Set axis labels
     plt.xlabel('$' + y_ax + '$', fontsize=18)
     plt.ylabel('$N^{\star}/A_{cl}$', fontsize=18)
@@ -249,23 +249,26 @@ def pl_integ_mag(gs, integr_return, y_ax, x_ax0, flag_no_fl_regs):
         ax.set_xlabel('$mag$', fontsize=18)
         ax.set_ylabel('$mag^*$', fontsize=18)
         ax.minorticks_on()
-        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
+        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1,
+            zorder=1)
         text1 = '$' + y_ax + '^{*}_{cl+fl}$'
         text2 = '$' + x_ax0 + '^{*}_{cl+fl}$'
         # Cluster + field integrated magnitude curve.
-        plt.plot(cl_reg_mag1[0], cl_reg_mag1[1], 'r-', lw=1., label=text1)
+        plt.plot(cl_reg_mag1[0], cl_reg_mag1[1], 'r-', lw=1., label=text1,
+            zorder=2)
         # Cluster integrated magnitude.
-        plt.plot(cl_reg_mag2[0], cl_reg_mag2[1], 'r:', lw=2., label=text2)
+        plt.plot(cl_reg_mag2[0], cl_reg_mag2[1], 'r:', lw=2., label=text2,
+            zorder=2)
         # Check if field regiones were defined.
         if not flag_no_fl_regs:
             text3 = '$' + y_ax + '^{*}_{fl}$'
             text4 = '$' + x_ax0 + '^{*}_{fl}$'
             # Field average integrated magnitude curve.
             plt.plot(fl_reg_mag1[0], fl_reg_mag1[1], 'b-', lw=1.,
-                label=text3)
+                label=text3, zorder=2)
             # Field average integrated magnitude.
             plt.plot(fl_reg_mag2[0], fl_reg_mag2[1], 'b:', lw=2.,
-                label=text4)
+                label=text4, zorder=2)
         # Check how the second magnitude should be formed.
         if m_ord == 21:
             sig, text0 = 1., x_ax0 + '^{*} -' + y_ax
@@ -294,19 +297,20 @@ def pl_p_vals(gs, flag_pval_test, pval_test_params):
         plt.xlabel('p-values', fontsize=12)
         plt.ylabel('Density (normalized)', fontsize=12)
         ax.minorticks_on()
-        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
+        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1,
+            zorder=1)
         # Grid to background.
         ax.set_axisbelow(True)
         # Plot field vs field KDE.
         if kde_f_1d.any():
             max_kde = max(max(kde_f_1d), max(kde_cl_1d))
             plt.plot(x_kde, kde_f_1d / max_kde, c='b', ls='-', lw=1.,
-                label='$KDE_{fl}$')
+                label='$KDE_{fl}$', zorder=2)
         else:
             max_kde = max(kde_cl_1d)
         # Plot cluster vs field KDE.
         plt.plot(x_kde, kde_cl_1d / max_kde, c='r', ls='-', lw=1.,
-            label='$KDE_{cl}$')
+            label='$KDE_{cl}$', zorder=2)
         # Fill overlap.
         if y_over:
             plt.fill_between(x_kde, np.asarray(y_over) / max_kde, 0,
