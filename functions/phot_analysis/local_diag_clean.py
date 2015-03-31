@@ -146,7 +146,10 @@ def get_fit_stars(cl_hist_p, f_hist, flag_decont_skip):
     red_memb_no_fit = sort_members([i for sublst in red_memb_no_fit for i in
         sublst])
 
-    return red_memb_fit, red_memb_no_fit
+    # Minimum probability of  selected stars.
+    min_prob = red_memb_fit[-1][-1]
+
+    return red_memb_fit, red_memb_no_fit, min_prob
 
 
 def rm_stars(decont_algor_return, field_region):
@@ -177,7 +180,7 @@ def rm_stars(decont_algor_return, field_region):
 
     # Obtain stars separated in list to be used by the BF func and list of
     # those discarded stars.
-    red_memb_fit, red_memb_no_fit = get_fit_stars(cl_hist_p, f_hist,
+    red_memb_fit, red_memb_no_fit, min_prob = get_fit_stars(cl_hist_p, f_hist,
         flag_decont_skip)
 
     #import matplotlib.pyplot as plt
@@ -190,9 +193,14 @@ def rm_stars(decont_algor_return, field_region):
     #ax.invert_yaxis()
     #plt.show()
 
-    # Minimum probability of  selected stars.
-    min_prob = red_memb_fit[-1][-1]
-    # For plotting purposes.
+    # Store and pass for plotting purposes.
     red_plot_pars = [min_prob]
+
+    # Check the number of stars selected.
+    if len(red_memb_fit) < 10:
+        print ("  WARNING: less than 10 stars left after reducing\n"
+        "  by 'local' method. Using full list.")
+        red_memb_fit, red_memb_no_fit, red_plot_pars = memb_prob_avrg_sort, \
+        [], [0.]
 
     return red_memb_fit, red_memb_no_fit, red_plot_pars
