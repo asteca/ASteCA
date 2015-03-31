@@ -6,7 +6,7 @@ Created on Thu Nov 21 15:51:34 2013
 """
 
 
-def cont_indx(field_dens, a_clust, n_clust):
+def cont_indx(n_clust, cl_area, field_dens):
     '''
     Calculate the contamination index value. This parameter is defined as the
     ratio of field stars density over the density of stars in the cluster
@@ -21,7 +21,7 @@ def cont_indx(field_dens, a_clust, n_clust):
     '''
 
     # Star density in the cluster region.
-    cl_dens = n_clust / a_clust
+    cl_dens = n_clust / cl_area
 
     # Final contamination index.
     cont_index = field_dens / cl_dens

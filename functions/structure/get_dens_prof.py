@@ -24,9 +24,12 @@ def get_dens_prof(hist_lst, cent_bin):
     # Initialize lists.
     radii, ring_density, poisson_error = [], [], []
 
+    # Percentage of the frame where the RDP will be calculated.
+    rdp_perc = 0.75
+
     # Number of bins that define the length of the largest square ring
     # around the center coordinates.
-    bins = int(min(len(hist_2d[0]), len(hist_2d[1])) * 0.75)
+    bins = int(min(len(hist_2d[0]), len(hist_2d[1])) * rdp_perc)
     # Number of "square rings" to generate.
     sq_rings = int(bins * 0.5)
 
