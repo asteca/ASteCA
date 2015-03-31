@@ -215,11 +215,11 @@ def pl_lkl_dens(gs, ld_p, l_max, lkl_old, min_max_p, cp_r, cp_e, model_done):
     plt.imshow(h_g.transpose(), origin='lower', extent=[xedges[0], xedges[-1],
         yedges[0], yedges[-1]], cmap=plt.get_cmap('gist_yarg'),
         aspect='auto')
-    plt.axvline(x=xp, linestyle='--', color='blue', zorder=3)
+    plt.axvline(x=xp, linestyle='--', color='red', zorder=3)
     if e_xp > 0.:
         # Plot error bars only if errors where assigned.
-        plt.axvline(x=xp + e_xp, linestyle='--', color='red')
-        plt.axvline(x=xp - e_xp, linestyle='--', color='red')
+        plt.axvline(x=xp + e_xp, linestyle='--', color='blue')
+        plt.axvline(x=xp - e_xp, linestyle='--', color='blue')
     # Set y axis limit.
     plt.ylim(yedges[0], l_max)
 
