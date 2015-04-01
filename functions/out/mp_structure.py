@@ -53,7 +53,7 @@ def pl_centers(gs, x_name, y_name, coord, x_min, x_max, y_min, y_max,
     "{2}$").format(x_name, y_name, coord, *cent_std_dev_r)
     text = text1 + '\n' + text2
     ob = offsetbox.AnchoredText(text, loc=2, prop=dict(size=11))
-    ob.patch.set(boxstyle='square,pad=0.', alpha=0.85)
+    ob.patch.set(alpha=0.85)
     ax.add_artist(ob)
     # Plot centers.
     cols = cycle(['red', 'blue', 'green', 'black', 'cyan'])
@@ -94,8 +94,8 @@ def pl_hist_g(gs, fig, x_name, y_name, coord, cent_bin, clust_rad, bin_width,
     fig.gca().add_artist(circle)
     # Add text boxs.
     text = 'Bin $\simeq$ {0:g} {1}'.format(bin_w_r, coord)
-    ob = offsetbox.AnchoredText(text, loc=1, prop=dict(size=10))
-    ob.patch.set(boxstyle='square,pad=-0.2', alpha=0.85)
+    ob = offsetbox.AnchoredText(text, pad=0.2, loc=1, prop=dict(size=10))
+    ob.patch.set(alpha=0.85)
     ax.add_artist(ob)
     plt.imshow(hist_2d_g.transpose(), origin='lower')
     # If RA is used, invert axis.
@@ -248,8 +248,8 @@ def pl_full_frame(gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max,
     text2 = '${0}_{{cent}} = {1:g} \pm {2:g}\,{3}$'.format(y_name,
         center_cl_r[1], e_cent_r[1], coord)
     text = text1 + '\n' + text2
-    ob = offsetbox.AnchoredText(text, loc=2, prop=dict(size=11))
-    ob.patch.set(boxstyle='square,pad=-0.2', alpha=0.85)
+    ob = offsetbox.AnchoredText(text, pad=0.2, loc=2, prop=dict(size=11))
+    ob.patch.set(alpha=0.85)
     ax.add_artist(ob)
     # Plot stars.
     plt.scatter(x_data, y_data, marker='o', c='black', s=st_sizes_arr)
@@ -281,8 +281,8 @@ def pl_zoom_frame(gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
     fig.gca().add_artist(circle)
     # Add text box.
     text = 'Cluster zoom\nCI = %0.2f' % (cont_index)
-    ob = offsetbox.AnchoredText(text, loc=1, prop=dict(size=12))
-    ob.patch.set(boxstyle='square,pad=-0.2', alpha=0.85)
+    ob = offsetbox.AnchoredText(text, pad=0.2, loc=1, prop=dict(size=12))
+    ob.patch.set(alpha=0.85)
     ax.add_artist(ob)
     # Plot contour levels if it was obtained.
     if kde_pl:
@@ -336,8 +336,8 @@ def pl_cl_fl_regions(gs, fig, x_name, y_name, coord, x_min, x_max, y_min,
     fig.gca().add_artist(circle)
     # Add text box.
     text = 'Cluster + %d Field regions' % (len(field_regions))
-    ob = offsetbox.AnchoredText(text, loc=1, prop=dict(size=12))
-    ob.patch.set(boxstyle='square,pad=-0.2', alpha=0.85)
+    ob = offsetbox.AnchoredText(text, pad=0.2, loc=1, prop=dict(size=12))
+    ob.patch.set(alpha=0.85)
     ax.add_artist(ob)
     # Plot cluster region.
     plt.scatter(zip(*cl_region)[1], zip(*cl_region)[2], marker='o', c='red',
