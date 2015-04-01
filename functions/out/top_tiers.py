@@ -27,7 +27,7 @@ def top_tiers_file(output_subdir, clust_name, best_model, top_tiers):
 # The 'Top tiers' models present a difference of <5% with the best likelihood\n\
 # value found for the 'Best model' and one or more parameters differing\n\
 # >10% with the best value assigned for said parameter(s).\n\
-#\n\
+#\n\n\
 # Best model\n\
 #\n\
 # Lkl               z   log(age)    d (kpc)     E(B-V)     M (Mo)       b_fr\n\
@@ -129,14 +129,21 @@ def get_top_tiers(clust_name, output_subdir, mag_data, col_data, ip_list,
 
         # Check if at least one model was stored.
         if top_tiers_str:
+
             # Store best model values as strings.
             best_model = ['{:.3f}'.format(best_lik)] + map(str, best_mod)
+
             # Create output .dat file.
             top_tiers_file(output_subdir, clust_name, best_model, top_tiers_str)
-            # Create output image.
-            try:
-                plot_top_tiers(top_tiers_flo, output_subdir, clust_name,
-                    mag_data, col_data, ip_list, err_lst, completeness)
-                print 'Top tier models plotted and saved to file.'
-            except:
-                print("  ERROR: top tiers plot could not be generated.")
+
+            # Create output image if flag is 'true'.
+            if g.pl_params[0]:
+                try:
+                    plot_top_tiers(top_tiers_flo, output_subdir, clust_name,
+                        mag_data, col_data, ip_list, err_lst, completeness)
+                    print 'Top tier models saved to file and plotted.'
+                except:
+                    print("  ERROR: top tiers plot could not be generated.")
+            else:
+                # If top tiers were found but no plot is produced.
+                print "Top tier models saved to file."
