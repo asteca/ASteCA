@@ -33,5 +33,5 @@ def make_file(synth_clst, synth_file_out):
             print 'Best fit synthetic cluster saved to file.'
 
         else:
-            print ("  WARNING: empty synthetic cluster could not be saved to "
-            "file.")
+            print ("  WARNING: empty synthetic cluster could not be saved\n"
+            "  to file.")
