@@ -219,18 +219,24 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
         fig.tight_layout()
 
     # Plot colorbar down here so tight_layout won't move it around.
-    if plot_colorbar is True:
-        import matplotlib.transforms as mts
-        # Position and dimensions relative to the axes.
-        x0, y0, width, height = [0.67, 0.92, 0.2, 0.04]
-        # Transform them to get the ABSOLUTE POSITION AND DIMENSIONS
-        Bbox = mts.Bbox.from_bounds(x0, y0, width, height)
-        l, b, w, h = mts.TransformedBbox(Bbox, trans).bounds
-        # Create the axes and the colorbar.
-        cbaxes = fig.add_axes([l, b, w, h])
-        cbar = plt.colorbar(sca, cax=cbaxes, ticks=[v_min_mp, v_max_mp],
-            orientation='horizontal')
-        cbar.ax.tick_params(labelsize=9)
+    try:
+        if plot_colorbar is True:
+            import matplotlib.transforms as mts
+            # Position and dimensions relative to the axes.
+            x0, y0, width, height = [0.67, 0.92, 0.2, 0.04]
+            # Transform them to get the ABSOLUTE POSITION AND DIMENSIONS
+            Bbox = mts.Bbox.from_bounds(x0, y0, width, height)
+            l, b, w, h = mts.TransformedBbox(Bbox, trans).bounds
+            # Create the axes and the colorbar.
+            cbaxes = fig.add_axes([l, b, w, h])
+            cbar = plt.colorbar(sca, cax=cbaxes, ticks=[v_min_mp, v_max_mp],
+                orientation='horizontal')
+            cbar.ax.tick_params(labelsize=9)
+    except:
+        #import traceback
+        #print traceback.format_exc()
+        print("  WARNING: error when plotting colorbar on cluster's "
+        "photom diagram.")
 
     # Generate output file for each data file.
     pl_fmt, pl_dpi = g.pl_params[1:3]
