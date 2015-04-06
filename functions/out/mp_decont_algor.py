@@ -144,9 +144,9 @@ def pl_mps_phot_diag(gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
     # Set minor ticks
     ax.minorticks_on()
     ax.xaxis.set_major_locator(MultipleLocator(1.0))
-    # Plot grid.
-    if g.rm_params[0] == 'local':
-        bin_edges = red_return[-1][-1]
+    # Plot grid. If bin_edges == 0., it means the 'local' method was not used.
+    bin_edges = red_return[-1][-1]
+    if g.rm_params[0] == 'local' and bin_edges != 0.:
         for x_ed in bin_edges[0]:
             # vertical lines
             ax.axvline(x_ed, linestyle=':', color='k', zorder=1)
