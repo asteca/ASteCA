@@ -144,7 +144,11 @@ def phot_diag_st_size(x):
     Calculate optimal size for stars in photometric diagram.
     '''
     a, b, c, d = 2.99, -2.81, 563.36, 15.02
-    return ((a - d) / (1 + ((x / c) ** b))) + d
+    if x != 0:
+        return ((a - d) / (1 + ((x / c) ** b))) + d
+    else:
+        # If no field regions were defined.
+        return 0.
 
 
 def separate_stars(x_data, y_data, mag_data, x_zmin, x_zmax, y_zmin, y_zmax,

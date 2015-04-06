@@ -122,15 +122,14 @@ def pl_fl_diag(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
     # Plot *all* rejected stars outside of the cluster region.
     plt.scatter(stars_f_rjct[0], stars_f_rjct[1], marker='x',
         c='teal', s=15, zorder=2)
+    # Add text box.
+    text = '$N_{{accpt}}={}\,(\star_{{field}})$'.format(len(stars_f_acpt[0]))
+    ob = offsetbox.AnchoredText(text, pad=0.2, loc=1, prop=dict(size=12))
+    ob.patch.set(alpha=0.7)
+    ax.add_artist(ob)
     # Plot accepted stars within the field regions defined, if at least one
     # exists.
     if stars_f_acpt[0]:
-        # Add text box.
-        text = '$N_{{accpt}}={}\,(\star_{{field}})$'.format(
-            len(stars_f_acpt[0]))
-        ob = offsetbox.AnchoredText(text, pad=0.2, loc=1, prop=dict(size=12))
-        ob.patch.set(alpha=0.7)
-        ax.add_artist(ob)
         plt.scatter(stars_f_acpt[0], stars_f_acpt[1], marker='o', c='b',
                     s=f_sz_pt, lw=0.3, zorder=3)
 
