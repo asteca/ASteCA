@@ -101,13 +101,18 @@ def get_fit_stars(cl_hist_p, f_hist, flag_decont_skip):
     remove the excess of field stars in each one, selecting those with the
     lowest assigned MPs if the DA was applied. Otherwise select random stars.
     '''
+
+    # Only flatten list if more than 1 cell was defined.
+    if len(cl_hist_p) > 1:
+        cl_hist_p_flat = np.asarray(cl_hist_p).flatten()
+    else:
+        cl_hist_p_flat = cl_hist_p[0]
+
     # Flatten arrays to access all of its elements.
-    cl_hist_p_flat = np.asarray(cl_hist_p).flatten()
     f_hist_flat = f_hist.flatten()
 
     red_memb_fit, red_memb_no_fit = [], []
     # For each cell defined.
-    #for i in range(len(cl_hist_p_flat)):
     for i, cl_cell in enumerate(cl_hist_p_flat):
 
         # Get average number of field regions in this cell.
