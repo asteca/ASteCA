@@ -1,5 +1,23 @@
 # Change Log
 
+## [[v0.1.8]](https://github.com/asteca/asteca/releases/tag/v0.1.8) - 2015-04-09
+
+### Changed
+
+(**Warning**: this release breaks compatibility with the previous version of the `params_input.dat` file)
+
+* Added `local`  and `mp_05` methods to the selection of which stars to use in the best fit cluster parameter assignation process (#180, #183).
+* Added an _automatic update checker_ function that notifies the user if an updated version of `ASteCA` is available for download (#179).
+* Added grid lines over the photometric diagrams of the observed and synthetic cluster, showing the binning made by the method selected in each case (#131).
+* Best fit synthetic cluster found is now saved to file (#154).
+* Correctly obtain approximate number of members (`n_memb`) and contamination index (`CI`) when the cluster radius extends beyond the RDP, thus making the field star density value (`field_dens`) unreliable (#111).
+* Added `f10` flag to alert when the `memb_par` value is greater than +-0.33, which means that there are twice as many estimated true members in either method (#175).
+* Improved `top_tiers` plotting and saved file (#184).
+
+### Caveats
+
+* Same as version [0.1.2](https://github.com/asteca/asteca/releases/tag/v0.1.2).
+
 ## [[v0.1.7]](https://github.com/asteca/asteca/releases/tag/v0.1.7) - 2015-03-26
 
 ### Changed
