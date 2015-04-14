@@ -159,23 +159,30 @@ def evaluation(err_lst, obs_clust, completeness, isoch_list, param_values,
     # Process each model selected.
     for model in zip(*p_lst):
 
-        # Check if this model was already processed.
-        if model in model_done[0]:
-            # Get likel_val value for this isochrone.
-            likelihood = model_done[1][model_done[0].index(model)]
-        else:
-            # Metallicity and age indexes to identify isochrone.
-            m_i = param_values[0].index(model[0])
-            a_i = param_values[1].index(model[1])
-            isochrone = isoch_list[m_i][a_i]
+        # Metallicity and age indexes to identify isochrone.
+        m_i = param_values[0].index(model[0])
+        a_i = param_values[1].index(model[1])
+        isochrone = isoch_list[m_i][a_i]
 
-            # Call likelihood function for this model.
-            likelihood = i_l(err_lst, obs_clust, completeness, st_dist_mass,
-                isochrone, model)
-            # Append data identifying the isochrone and the obtained
-            # likelihood value to this *persistent* list.
-            model_done[0].append(model)
-            model_done[1].append(likelihood)
+        # Call likelihood function for this model.
+        likelihood = i_l(err_lst, obs_clust, completeness, st_dist_mass,
+            isochrone, model)
+
+        # Check if this model was already processed. Without this check here,
+        # the extinction/immigration operator becomes useless, since the best
+        # solution's likelihood value can vary slightly due to the re-sampling
+        # of the mass distribution.
+        #if model in model_done[0]:
+        try:
+            # Get old likelihood value for this model.
+            likel_old = model_done[1][model_done[0].index(model)]
+            # Compare with new value. If old one is smaller, pass old one.
+            # This keeps the likelihood always trending downwards.
+            if likel_old < likelihood:
+                likelihood = likel_old
+        except:
+            # Model was not processed before.
+            pass
 
         # Append data to the lists that will be erased with each call
         # to this function.
@@ -187,6 +194,11 @@ def evaluation(err_lst, obs_clust, completeness, isoch_list, param_values,
     generation = [x for y, x in sorted(zip(likel_lst, generation_list))]
     # Sort list in place putting the likelihood minimum value first.
     likel_lst.sort()
+
+    # Append data identifying the isochrone and the obtained
+    # likelihood value to this *persistent* list.
+    model_done[0] = generation + model_done[0]
+    model_done[1] = likel_lst + model_done[1]
 
     return generation, likel_lst, model_done
 
