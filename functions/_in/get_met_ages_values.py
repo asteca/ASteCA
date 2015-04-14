@@ -65,8 +65,9 @@ def get_ranges():
                 p_rang = np.arange(*param[1])
                 # Skip if array is empty. Checker will catch this.
                 if p_rang.size:
-                    # Add max value if not present.
-                    if p_rang[-1] != param[1][1]:
+                    # Add max value if not present. Check this way to avoid
+                    # floating point errors.
+                    if abs(p_rang[-1] - param[1][1]) > 0.0000001:
                         p_rang = np.append(p_rang, param[1][1])
                 # Store full range for this parameter.
                 param_ranges.append(p_rang)
