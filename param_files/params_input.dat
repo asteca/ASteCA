@@ -370,5 +370,5 @@ BI          0.7           0.     1.      0.2
 # returning the same best solution before exiting the GA.
 #
 #   n_pop  n_gen fdif p_cross cr_sel p_mut n_el n_ei n_es
-GA    100   1000   1.    0.85     2P  0.01    1   50   10
+GA    100   1000   1.    0.85     2P  0.05    1   50   10
 ################################################################################
