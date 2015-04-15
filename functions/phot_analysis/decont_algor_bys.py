@@ -6,6 +6,28 @@ import numpy as np
 from .._in import get_in_params as g
 
 
+def break_check(prob_avrg_old, runs_fields_probs):
+    '''
+    Check if DA converged to MPs within a 0.1% tolerance, for all stars inside
+    the cluster region.
+    '''
+
+    # Average all probabilities.
+    prob_avrg = np.asarray(runs_fields_probs).mean(1).mean(0)
+
+    # Check if probabilities changed less than 0.1% with respect to the
+    # previous iteration.
+    if np.allclose(prob_avrg_old, prob_avrg, 0.001):
+        # Arrays are equal within tolerance. Break out.
+        break_flag = True
+    else:
+        # Store new array in old one and proceed to new iteration.
+        prob_avrg_old = prob_avrg
+        break_flag = False
+
+    return prob_avrg_old, break_flag
+
+
 def sort_members(memb_lst):
     '''
     Sort this list first by the membership probability from max
@@ -135,6 +157,9 @@ def bys_da(flag_no_fl_regs, cl_region, field_region, memb_file):
         # A,B --> arrays ; p --> floats (Bayesian probabilities)
         runs_fields_probs = []
 
+        # Initial null probabilities for all stars in the cluster region.
+        prob_avrg_old = np.array([0.] * len(cl_region))
+
         # Run 'runs' times.
         milestones = [25, 50, 75, 100]
         for run_num in range(runs):
@@ -176,6 +201,13 @@ def bys_da(flag_no_fl_regs, cl_region, field_region, memb_file):
 
             # Append this list to the list that holds all the runs.
             runs_fields_probs.append(field_reg_probs)
+
+            # Check if probabilities converged. If so, break out.
+            prob_avrg_old, break_flag = break_check(prob_avrg_old,
+                runs_fields_probs)
+            if break_flag:
+                print '  MPs converged. Breaking out ({}).'.format(run_num)
+                break
 
             percentage_complete = (100.0 * (run_num + 1) / runs)
             while len(milestones) > 0 and percentage_complete >= milestones[0]:

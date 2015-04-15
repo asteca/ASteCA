@@ -220,16 +220,18 @@ PV   auto   2
 # Bayesian decontamination algorithm.
 #
 # * mode: auto / manual / read / skip
-#   - auto: the code will iterate a number of times defined internally (1000).
-#   - manual: the code will iterate a number of times given by the 'runs'
-#     parameter, otherwise this value is irrelevant.
+#   - auto: the code will iterate a maximum of 1000 times unless the membership
+#     probabilities (MPs) converge to within 0.1% values first.
+#   - manual: the code will iterate a maximum number of times given by the
+#     'iters' parameter, unless MPs convergence is reached first. Otherwise
+#     this value is irrelevant.
 #   - read: the code will attempt to read the probabilities from an existing
 #     file. This file should have the same format as the output '*_memb.dat'
 #     file created by the code and should be located in the input data folder.
 #   - skip: all stars will be assigned an equal probability of 1.
 #
-#   mode     runs
-DA  auto      100
+#    mode     iters (manual)
+DA   auto       200
 
 # Reduced membership.
 #
