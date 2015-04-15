@@ -336,13 +336,14 @@ def check(mypath, cl_files):
             print traceback.format_exc()
             sys.exit("ERROR: unknown error reading metallicity files.")
 
+    print 'Full check done.\n'
+
     # Force matplotlib to not use any Xwindows backend. This call prevents
     # the code from crashing when used in a computer cluster. See:
     # http://stackoverflow.com/a/3054314/1391441
     if g.flag_back_force:
         import matplotlib
         matplotlib.use('Agg')
-        print "Forcing matplotlib to not use any Xwindows backend.\n"
+        print "(Force matplotlib to not use any Xwindows backend)\n"
 
-    print 'Full check done.\n'
     return ip_list, R_in_place
