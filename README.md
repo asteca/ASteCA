@@ -74,5 +74,5 @@ Copyright (c) 2014 Gabriel Perren - Released under the GPL v3 license.
 [8]: http://semver.org/
 [9]: http://asteca.rtfd.org/
 [10]: http://www.aanda.org/articles/aa/abs/2015/04/aa24946-14/aa24946-14.html
-[11]: https://github.com/asteca/asteca/blob/master/CHANGELOG.md
+[11]: https://github.com/asteca/asteca/blob/active/CHANGELOG.md
 [12]: https://en.wikipedia.org/wiki/Star_cluster
