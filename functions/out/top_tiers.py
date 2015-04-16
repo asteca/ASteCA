@@ -28,7 +28,7 @@ def top_tiers_file(output_subdir, clust_name, best_model, top_tiers):
     out_data_file.write("#\n\
 # [ASteCA {}]\n\
 #\n\
-# Created: [{}]\n\
+# Created: {}\n\
 #\n\
 # The 'Top tiers' models present a difference of <5% with the best likelihood\n\
 # value found for the 'Best model' and one or more parameters differing\n\
