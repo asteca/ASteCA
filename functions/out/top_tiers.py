@@ -5,11 +5,12 @@ Created on Wed Dic 10 12:00:00 2014
 @author: gabriel
 """
 
-#import numpy as np
+from functions import __version__
 from .._in import get_in_params as g
 from os.path import join
 from ..best_fit.best_fit_synth_cl import synth_cl_plot as s_c_p
 from ..best_fit.get_N_IMF import N_IMF as N_imf
+from time import strftime
 import top_tiers_plot
 import prep_plots
 
@@ -21,9 +22,14 @@ def top_tiers_file(output_subdir, clust_name, best_model, top_tiers):
 
     # Output file name.
     out_file_name = join(output_subdir, clust_name + '_top_tiers.dat')
+    now_time = strftime("%Y-%m-%d %H:%M:%S")
 
     out_data_file = open(out_file_name, 'w')
     out_data_file.write("#\n\
+# [ASteCA {}]\n\
+#\n\
+# Created: [{}]\n\
+#\n\
 # The 'Top tiers' models present a difference of <5% with the best likelihood\n\
 # value found for the 'Best model' and one or more parameters differing\n\
 # >10% with the best value assigned for said parameter(s).\n\
@@ -35,7 +41,7 @@ def top_tiers_file(output_subdir, clust_name, best_model, top_tiers):
 # Top tiers\n\
 #\n\
 # Lkl               z   log(age)    d (kpc)     E(B-V)     M (Mo)       b_fr\n"
-    .format(*best_model))
+    .format(__version__, now_time, *best_model))
     out_data_file.close()
 
     # Write values to file.
@@ -61,6 +67,9 @@ def plot_top_tiers(top_tiers_flo, output_subdir, clust_name, mag_data, col_data,
     # y1/y2 = 2.5
     fig = plt.figure(figsize=(25, 10))  # create the top-level container
     gs = gridspec.GridSpec(4, 10)      # create a GridSpec object
+    # Add version number to top left.
+    ver = '[ASteCA ' + __version__ + ']'
+    plt.figtext(.954, .986, ver, fontsize=9, color='#585858')
 
     phot_x, phot_y = prep_plots.ax_data(mag_data, col_data)
     x_ax, y_ax, x_ax0, y_axis = prep_plots.ax_names()
