@@ -15,7 +15,7 @@ def main():
     '''
     print '\n'
     print '-------------------------------------------'
-    print '            ASteCA %s' % __version__
+    print '             [ASteCA %s]' % __version__
     print '-------------------------------------------\n'
 
     # Start timing loop.
