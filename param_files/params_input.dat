@@ -104,7 +104,7 @@ MP   true     png  150
 # * flag: true / false. The cluster's photometric file will be moved to the
 #   folder defined below if this flag is set to 'True'.
 #
-# * path: Path where the sub-folders are moved once processed if
+# * path: Path where the photometric files are moved once processed if
 #   the flag is set to 'True'.
 #
 #    flag   path
