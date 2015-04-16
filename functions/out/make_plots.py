@@ -7,6 +7,7 @@ import matplotlib.gridspec as gridspec
 from os.path import join
 import warnings
 # Custom functions.
+from functions import __version__
 from .._in import get_in_params as g
 from ..errors import error_round as err_r
 import mp_structure
@@ -60,7 +61,10 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
     # figsize(x1, y1), GridSpec(y2, x2) --> To have square plots: x1/x2 =
     # y1/y2 = 2.5
     fig = plt.figure(figsize=(30, 25))  # create the top-level container
-    gs = gridspec.GridSpec(10, 12)       # create a GridSpec object
+    gs = gridspec.GridSpec(10, 12)      # create a GridSpec object
+    # Add version number to top left.
+    ver = '[ASteCA ' + __version__ + ']'
+    plt.figtext(.959, .988, ver, fontsize=9, color='#585858')
 
     # Obtain plotting parameters and data.
     x_min, x_max, y_min, y_max = prep_plots.frame_max_min(x_data, y_data)
