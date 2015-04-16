@@ -3,7 +3,7 @@
 """
 
 from time import strftime
-from os.path import exists, join
+from os.path import exists, isfile, join
 from os import mkdir
 from functions import __version__
 
@@ -16,6 +16,8 @@ def create_out_data_file(output_dir):
 
     # Output file name.
     out_file_name = join(output_dir, 'asteca_output.dat')
+    # Current time and date.
+    now_time = strftime("%Y-%m-%d %H:%M:%S")
 
     # Check if output folder exists, if not create it.
     if not exists(output_dir):
@@ -23,19 +25,28 @@ def create_out_data_file(output_dir):
 
     # Check if file already exists. If it does append new values instead of
     # deleting/creating the file again.
-    try:
-        # File already exists -> don't create a new one and append new lines.
-        with open(out_file_name):
-            pass
+    if isfile(out_file_name):
+
+        # File already exists -> don't create a new one and replace old lines.
+        with open(out_file_name, 'r') as f:
+            # Read file into data var.
+            data = f.readlines()
+
+        # Modify these two lines
+        data[1] = '# [ASteCA {}]\n'.format(__version__)
+        data[3] = '# Modified: {}\n'.format(now_time)
+
+        # Write everything back.
+        with open(out_file_name, 'w') as f:
+            f.writelines(data)
+
     # File doesn't exist -> create new one.
-    except IOError:
-        print 'Output data file created.'
-        out_data_file = open(out_file_name, 'w')
-        now_time = strftime("%Y-%m-%d %H:%M:%S")
-        out_data_file.write("#\n\
-# ASteCA {}\n\
+    else:
+        with open(out_file_name, 'w') as out_data_file:
+            out_data_file.write("#\n\
+# [ASteCA {}]\n\
 #\n\
-# Created: [{}]\n\
+# Modified: [{}]\n\
 #\n\
 # NAME: Cluster's name.\n\
 # c_x: Cluster's x center coordinate.\n\
@@ -117,6 +128,6 @@ n_memb_da  memb_par     a_f  prob_cl  int_col      met      e_m      age      \
 e_a   E(B-V)      e_E     dist      e_d      M_i      e_M   bin_fr     \
 e_bf      \
 M1 M2  f1 f2 f3 f4 f5 f6 f7 f8 f9 f10  FC\n".format(__version__, now_time))
-        out_data_file.close()
+            print 'Output data file created.'
 
     return out_file_name
