@@ -54,14 +54,6 @@ def asteca_funcs(cl_file, ip_list, R_in_place):
     memb_file_out, synth_file_out, write_name = n_p(cl_file)
     print 'Analizing cluster {} ({}).'.format(clust_name, g.mode)
 
-    #################################################
-    ##   HORRIBLE HACK, DELETE AS SOON AS POSSIBLE.
-    # Call function to retrieve E(B-V) range for this cluster.
-    from functions.clusters_ext import get_ext_cl
-    # Re-write information on extinction range.
-    ip_list[1][2] = get_ext_cl(clust_name)
-    #################################################
-
     # Get data from semi-data input file.
     semi_return = g_s(clust_name)
 
