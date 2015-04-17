@@ -64,7 +64,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
     gs = gridspec.GridSpec(10, 12)      # create a GridSpec object
     # Add version number to top left.
     ver = '[ASteCA ' + __version__ + ']'
-    plt.figtext(.959, .988, ver, fontsize=9, color='#585858')
+    x_coord = 0.957 - (len(__version__) - 6) * 0.001
+    plt.figtext(x_coord, .988, ver, fontsize=9, color='#585858')
 
     # Obtain plotting parameters and data.
     x_min, x_max, y_min, y_max = prep_plots.frame_max_min(x_data, y_data)

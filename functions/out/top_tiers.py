@@ -69,7 +69,8 @@ def plot_top_tiers(top_tiers_flo, output_subdir, clust_name, mag_data, col_data,
     gs = gridspec.GridSpec(4, 10)      # create a GridSpec object
     # Add version number to top left.
     ver = '[ASteCA ' + __version__ + ']'
-    plt.figtext(.954, .986, ver, fontsize=9, color='#585858')
+    x_coord = 0.95 - (len(__version__) - 6) * 0.001
+    plt.figtext(x_coord, .986, ver, fontsize=9, color='#585858')
 
     phot_x, phot_y = prep_plots.ax_data(mag_data, col_data)
     x_ax, y_ax, x_ax0, y_axis = prep_plots.ax_names()
