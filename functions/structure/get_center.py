@@ -118,7 +118,7 @@ def get_center(x_data, y_data, mag_data, hist_lst, semi_return):
     flag_center_manual = False
 
     # Unpack
-    hist, xedges, yedges, bin_width = hist_lst
+    hist, xedges, yedges = hist_lst[:3]
 
     # This is the radius used in auto and manual mode to restrict the search
     # of the KDE center coordinates to a smaller area (to improve performance).
