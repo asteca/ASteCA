@@ -91,7 +91,7 @@ def kde_center(x_data, y_data, approx_cent, radius):
 
 def bin_center(xedges, yedges, kde_cent):
     '''
-    Take c,y coordinates and return the bin where they are located.
+    Take center coordinates and return the bin where they are located.
     Used to convert x,y center coordinates into the coordinates for the
     center bin.
     '''
