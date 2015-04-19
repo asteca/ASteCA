@@ -118,10 +118,11 @@ MF  false   /path/to/folder
 # 2D positional histogram of observed frame.
 #
 # * mode: auto / manual
-#   - auto: 1% of the minimum x,y range of the observed frame. This is a good
-#     heuristic value, only change it if you really need to since this will
-#     affect the RDP (primarily).
-#   - manual; use 'bin_width' parameter value.
+#   - auto: the bin width of the 2D histogram will be obtained as 1% of the
+#     minimum x,y range of the observed frame. This is a good heuristic value
+#     that will affect both the RDP generation and the estimation of the
+#     cluster's radius. Only use the 'manual' mode if you really need to.
+#   - manual: set the bin width via the 'bin_width' parameter.
 #
 # * bin_width: width of the bin in pixels or degrees, whatever the frame uses.
 #
