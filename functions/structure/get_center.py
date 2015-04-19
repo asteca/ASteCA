@@ -37,7 +37,7 @@ def center_approx(hist, xedges, yedges, st_dev_lst):
     return hist_2d_g, approx_cents
 
 
-def kde_center(x_data, y_data, approx_cent, radius):
+def kde_center_f(x_data, y_data, approx_cent, radius):
     '''
     Find the KDE maximum value wich points to the center coordinates.
     '''
@@ -138,7 +138,7 @@ def get_center(x_data, y_data, mag_data, hist_lst, semi_return):
 
             # Call funct to obtain the pixel coords of the maximum KDE value.
             approx_cents = [cent_cl_semi]
-            kde_cent, e_cent, kde_plot = kde_center(x_data, y_data,
+            kde_cent, e_cent, kde_plot = kde_center_f(x_data, y_data,
                 approx_cents, cl_rad_semi)
 
             # Re-write center values if fixed in semi input file.
@@ -169,7 +169,7 @@ def get_center(x_data, y_data, mag_data, hist_lst, semi_return):
             st_dev_lst)
 
         # Call funct to obtain the pixel coords of the maximum KDE value.
-        kde_cent, e_cent, kde_plot = kde_center(x_data, y_data, approx_cents,
+        kde_cent, e_cent, kde_plot = kde_center_f(x_data, y_data, approx_cents,
             radius)
 
         # Find bin where the center xy coordinates are located.
@@ -206,7 +206,7 @@ def get_center(x_data, y_data, mag_data, hist_lst, semi_return):
             [st_dev_lst[0]])
 
         # Call funct to obtain the pixel coords of the maximum KDE value.
-        kde_cent, e_cent, kde_plot = kde_center(x_data, y_data, approx_cents,
+        kde_cent, e_cent, kde_plot = kde_center_f(x_data, y_data, approx_cents,
             radius)
 
         cent_bin = bin_center(xedges, yedges, kde_cent)
