@@ -125,20 +125,35 @@ def dolphin(Q, P):
                 c = -1. * el2[0] * np.log(max(el2[1], epsilon))
                 poiss_lkl += c
 
+        ## The list passed in obs_clust_prepare must be modified for this
+        ## clock to work.
         #print len(Q[0]), poiss_lkl
         #import matplotlib.pyplot as plt
         #fig = plt.figure()
         #ax1 = fig.add_subplot(1, 3, 1)
         #ax2 = fig.add_subplot(1, 3, 2)
         #ax3 = fig.add_subplot(1, 3, 3)
-        #ax1.imshow(d_1.transpose(), origin='lower', aspect='auto')
-        #ax2.imshow(d_2.transpose(), origin='lower', aspect='auto')
-        #ax3.scatter(P[4], P[2], c='r')
-        #ax3.scatter(Q[0], Q[2], c='b')
-        #text1 = 'chi = {:.2f}\n'.format(poiss_lkl)
-        #text2 = 'N = {}'.format(len(Q[0]))
-        #text = text1 + text2
-        #ax3.text(0.05, 0.9, text, transform=ax3.transAxes)
+        #ax1.scatter(P[-1][0], P[-1][1], c='r', label='Obs clust')
+        #ax1.scatter(Q[0], Q[2], c='b', label='Synth clust')
+        #for x_ed in b_rx:
+            ## vertical lines
+            #ax1.axvline(x_ed, linestyle=':', color='k', zorder=1)
+        #for y_ed in b_ry:
+            ## horizontal lines
+            #ax1.axhline(y_ed, linestyle=':', color='k', zorder=1)
+        #ax1.legend(fancybox=True, loc='upper left', scatterpoints=1)
+        #ax2.imshow(cl_histo.transpose(), origin='lower', aspect='auto',
+            #interpolation="nearest", cmap=plt.cm.Reds)
+        #ax3.imshow(syn_histo.transpose(), origin='lower', aspect='auto',
+            #interpolation="nearest", cmap=plt.cm.Reds)
+        #ax1.invert_yaxis()
+        #ax2.invert_yaxis()
+        #ax3.invert_yaxis()
+        #ax2.text(0.05, 0.95, 'Obs clust 2D histo', transform=ax2.transAxes,
+            #fontsize=15)
+        #text = r'Synth clust 2D histo ($-\ln(PLR) \approx {:.2f}$)'.format(
+            #poiss_lkl)
+        #ax3.text(0.05, 0.95, text, transform=ax3.transAxes, fontsize=15)
         #fig.subplots_adjust(hspace=1)
         #plt.show()
 

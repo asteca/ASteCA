@@ -65,4 +65,7 @@ def prepare(memb_prob_avrg_sort):
         # Pass observed cluster data.
         obs_clust = [cl_histo, bin_edges]
 
+        # Pass this list instead if plotting in get_likelihood.
+        #obs_clust = [cl_histo, bin_edges, mag_col_cl]
+
     return obs_clust
