@@ -266,6 +266,10 @@ def check(mypath, cl_files):
             if cr_sel not in {'1P', '2P'}:
                 sys.exit("ERROR: GA 'cr_sel' operator is not a valid choice;\n"
                 "'{}' is set.".format(cr_sel))
+            # Number of solutions to pass to the nest generation (elitism)
+            if n_el >= n_pop:
+                sys.exit("ERROR: GA 'n_el' must be smaller than 'n_pop';\n"
+                "'{}' and '{}' are set respectively.".format(n_el, n_pop))
 
         # Check likelihood method selected.
         if lkl_method not in {'tolstoy', 'dolphin'}:
