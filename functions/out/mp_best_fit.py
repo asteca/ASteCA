@@ -76,7 +76,7 @@ def pl_ga_lkl(gs, l_min_max, lkl_old, model_done, new_bs_indx):
     n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es = g.ga_params
 
     ax = plt.subplot(gs[6:8, 0:4])
-    plt.xlim(-0.5, n_gen + int(0.01 * n_gen))
+    plt.xlim(-0.5, len(lkl_old[0]) + int(0.01 * len(lkl_old[0])))
     plt.ylim(l_min_max[0], l_min_max[1])
     # Set minor ticks
     ax.minorticks_on()
