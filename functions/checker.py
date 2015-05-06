@@ -28,7 +28,7 @@ def pack_check():
         print "ERROR: the following packages are missing:\n"
         for p in missing_pckg:
             print " - {}".format(p)
-        sys.exit("Install with: pip install <package>")
+        sys.exit("\nInstall with: pip install <package>\n")
 
     return inst_packgs_lst
 
