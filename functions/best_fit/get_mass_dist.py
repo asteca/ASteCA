@@ -16,9 +16,10 @@ def mass_dist(st_dist, M_total):
     mass.
     '''
     # Generate a number N of stars for each interval (m, m+dm) with masses
-    # randomly distributed within the interval.
+    # randomly distributed within the limiting masses that delimit the
+    # interval, ie: (m, m+dm).
 
-    # Normalize number of stars per interval  of mass according to total mass.
+    # Normalize number of stars per interval of mass according to total mass.
     mass_up, N_stars = st_dist[0], st_dist[1] * M_total
 
     # Generate stars in each interval.
@@ -26,9 +27,10 @@ def mass_dist(st_dist, M_total):
     m_low, N_st_add = 0.01, 0.
     for m_up, N_st in zip(*[mass_up, N_stars]):
         N_st += N_st_add
-        # If the number of stars is less than 1, add as many intervals as
-        # necessary until it is at least one and then generate that star(s)
-        # with a random mass in the m_low, m_up interval.
+        # If the number of stars in the interval is less than 1, combine as
+        # many adjacent intervals as necessary until it reaches at least one
+        # star and then generate that star(s) with a random mass in the
+        # m_low, m_up interval.
         if N_st < 1.:
             # Store this fraction to be added with the next one.
             N_st_add = N_st
@@ -36,7 +38,7 @@ def mass_dist(st_dist, M_total):
             # Generate N_st stars with masses randomly distributed between
             # m_low and m_up and store them in the dist_mass list.
             dist_mass.extend(np.random.uniform(m_low, m_up, int(round(N_st))))
-            # Reset parameters.
+            # Reset parameters and move on to the next interval.
             N_st_add, m_low = 0., m_up
 
     return dist_mass
