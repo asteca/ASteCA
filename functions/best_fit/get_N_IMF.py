@@ -90,7 +90,7 @@ def N_IMF():
 
     # Low mass limits are defined for each IMF to avoid numerical
     # issues when integrating.
-    imfs_dict = {'chabrier_2001_exp': (0.001), 'chabrier_2001_log': (0.001),
+    imfs_dict = {'chabrier_2001_exp': (0.01), 'chabrier_2001_log': (0.01),
         'kroupa_1993': (0.081), 'kroupa_2002': (0.011)}
 
     # Set IMF low mass limit.
