@@ -99,29 +99,27 @@ def N_IMF():
     # For m_high > 100 Mo the differences in the resulting normalization
     # constant are negligible. This is because th IMF drops very rapidly for
     # high masses.
-    # The step (m_step) should not be made too small since it has an impact
+    # The step (m_step) should not be too small since it will have an impact
     # on the performance of the get_mass_dist function.
     m_step = 0.1
 
     # Obtain normalization constant. This is equivalent to 'k' in Eq. (7)
-    # of Popescu & Hanson 2009 (138:1724-1740)
+    # of Popescu & Hanson 2009 (138:1724-1740; PH09)
     norm_const = 1. / quad(integral_IMF_M, m_low, m_high, args=(imf_sel))[0]
 
-    # Obtain number of stars in each mass interval.
+    # Obtain number of stars in each mass interval. Equivalent to the upper
+    # fraction of Eq. (8) in PH09, without the total mass.
     st_dist = [[], []]
     m_upper = m_low
     while m_upper < m_high:
         m_lower = m_upper
         m_upper = m_upper + m_step
+        # Number of stars in the (m_lower, m_upper) interval.
         N_stars = quad(integral_IMF_N, m_lower, m_upper, args=(imf_sel))[0]
         st_dist[0].append(m_upper)
         st_dist[1].append(N_stars)
 
     # Normalize number of stars by constant.
     st_dist[1] = np.asarray(st_dist[1]) * norm_const
-
-    import matplotlib.pyplot as plt
-    plt.scatter(*st_dist)
-    plt.show()
 
     return st_dist
