@@ -186,7 +186,7 @@ def binarity(isoch_mass, isoch_cut, bin_frac):
     Randomly select a fraction of stars to be binaries.
     '''
 
-    bin_mass_ratio, cmd_sel = g.sc_params[1], g.ps_params[1]
+    bin_mass_ratio, cmd_sel = g.sc_params[2], g.ps_params[1]
 
     # Indexes of the randomly selected stars in isoch_m_d.
     bin_indxs = random.sample(range(len(isoch_mass[0])),

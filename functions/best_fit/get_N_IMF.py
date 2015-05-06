@@ -86,7 +86,7 @@ def N_IMF():
     Returns the number of stars per interval of mass for the selected IMF.
     '''
 
-    imf_sel = g.sc_params[0]
+    imf_sel, m_high = g.sc_params[0], g.sc_params[1]
 
     # Low mass limits are defined for each IMF to avoid numerical
     # issues when integrating.
@@ -96,12 +96,12 @@ def N_IMF():
     # Set IMF low mass limit.
     m_low = imfs_dict[imf_sel]
     # Set IMF max mass limit and interpolation step.
-    # The value of the maximum mass (m_high) is not very important since beyond
-    # 100 Mo the differences in the resulting normalization constant are
-    # negligible. This is because th IMF drops very rapidly for high masses.
+    # For m_high > 100 Mo the differences in the resulting normalization
+    # constant are negligible. This is because th IMF drops very rapidly for
+    # high masses.
     # The step (m_step) should not be made too small since it has an impact
     # on the performance of the get_mass_dist function.
-    m_high, m_step = 500., 0.1
+    m_step = 0.1
 
     # Obtain normalization constant. This is equivalent to 'k' in Eq. (7)
     # of Popescu & Hanson 2009 (138:1724-1740)

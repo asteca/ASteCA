@@ -299,6 +299,30 @@ def check(mypath, cl_files):
             sys.exit("ERROR: Name of IMF ({}) is incorrect.".format(
                 g.sc_params[0]))
 
+        # Check binarity parameters.
+        # See if it is a list of values or a range.
+        if par_ranges[-1][0] == 'r':
+            if len(par_ranges[-1][-1]) > 1:
+                # Range: min, max, step. Store min and max in array.
+                bin_fr = np.array([par_ranges[-1][-1][0],
+                    par_ranges[-1][-1][1]])
+            else:
+                # Single value stored.
+                bin_fr = np.array([par_ranges[-1][-1][0]])
+        else:
+            # List: store all values in array.
+            bin_fr = np.array(par_ranges[-1][-1])
+        # Check all values in array.
+        for bin_fr_val in bin_fr:
+            if bin_fr_val > 1.:
+                sys.exit("ERROR: Binarity fraction value '{}' is out of\n"
+                    "boundaries. Please select a value in the range [0., 1.]".
+                    format(bin_fr_val))
+        if g.sc_params[-1] > 1.:
+            sys.exit("ERROR: Binary mass ratio set ('{}') is out of\n"
+                "boundaries. Please select a value in the range [0., 1.]".
+                format(g.sc_params[-1]))
+
         # Check selected isochrones set.
         if iso_select not in {'PAR10', 'PAR11', 'PAR12'}:
             sys.exit("ERROR: the selected isochrones set ('{}') does\n"

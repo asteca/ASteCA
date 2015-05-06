@@ -321,10 +321,13 @@ PS        PAR10
 
 # Synthetic cluster parameters.
 #
-# IMF:  chabrier_2001_exp / chabrier_2001_log / kroupa_1993 / kroupa_2002
+# * IMF: chabrier_2001_exp / chabrier_2001_log / kroupa_1993 / kroupa_2002
+#   Select IMF used to generate the synthetic clusters.
 #
-#    IMF
-SC  kroupa_2002
+# * m_high: Upper mass value for the IMF (in solar masses).
+#
+#    IMF                  m_high
+SC  kroupa_2002             120.
 #
 # Ranges and steps for the parameters to be fitted.
 #

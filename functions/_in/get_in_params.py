@@ -38,9 +38,9 @@ def init(mypath):
 
     # Declare globals.
     global up_flag, mode, done_dir, gd_params, gh_params, cr_params, kp_flag,\
-    im_flag, er_params, fr_number, pv_params, da_params, ps_params, bf_params,\
-    sc_params, ga_params, rm_params, pl_params, flag_move_file, axes_params,\
-    flag_back_force
+        im_flag, er_params, fr_number, pv_params, da_params, ps_params, \
+        bf_params, sc_params, ga_params, rm_params, pl_params, \
+        flag_move_file, axes_params, flag_back_force
 
     # Store path to input data file.
     data_file = join(mypath, 'params_input.dat')
@@ -129,6 +129,7 @@ def init(mypath):
                 # Synthetic cluster parameters.
                 elif reader[0] == 'SC':
                     IMF_name = str(reader[1])
+                    m_high = float(reader[2])
                 elif reader[0] == 'PS_m':
                     m_rs = char_remove(reader)
                 elif reader[0] == 'PS_a':
@@ -199,6 +200,6 @@ def init(mypath):
 
     # Store GA params in lists.
     bf_params = [bf_flag, best_fit_algor, lkl_method, bin_method, N_b]
-    sc_params = [IMF_name, bin_mr]
+    sc_params = [IMF_name, m_high, bin_mr]
     ga_params = [n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es]
     rm_params = [mode_red_memb, local_bin, min_prob]
