@@ -18,7 +18,7 @@ from move_isochrone import move_isoch
 
 
 def synth_cl_plot(ip_list, isoch_fit_params, err_lst, completeness,
-    st_dist_mass):
+        st_dist_mass):
     '''
     For plotting purposes.
     '''
@@ -43,19 +43,20 @@ def synth_cl_plot(ip_list, isoch_fit_params, err_lst, completeness,
 
 
 def params_errors(ip_list, err_lst, memb_prob_avrg_sort, completeness,
-    st_dist_mass, isoch_fit_params):
+        st_dist_mass, isoch_fit_params):
     '''
     Obtain errors for the fitted parameters.
     '''
 
     best_fit_algor, N_b = g.bf_params[1], g.bf_params[-1]
 
-    if  best_fit_algor == 'brute':
+    if best_fit_algor == 'brute':
         isoch_fit_errors = []
         # Assign errors as the largest step in each parameter.
         par_vals = ip_list[1]
         for pv in par_vals:
-            # If any parameter has a single valued range, assign an error of -1.
+            # If any parameter has a single valued range, assign an error
+            # of -1.
             if len(pv) > 1:
                 # Find largest delta in this parameter used values.
                 largest_delta = np.diff(pv).max()
@@ -103,8 +104,8 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list):
         # isochrones and return the best fitting parameters.
         if best_fit_algor == 'brute':
 
-            print 'Using Brute Force algorithm ({}).'.format(lkl_method + '; ' +
-            bin_method if lkl_method == 'dolphin' else lkl_method)
+            print 'Using Brute Force algorithm ({}).'.format(lkl_method + '; '
+            + bin_method if lkl_method == 'dolphin' else lkl_method)
             # Brute force algorithm.
             isoch_fit_params = b_f(err_lst, obs_clust, completeness, ip_list,
                 st_dist_mass)
@@ -144,8 +145,8 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list):
         # Pass empty lists to make_plots.
         print 'Skipping parameters fitting process.'
         isoch_fit_params, isoch_fit_errors, shift_isoch, synth_clst, \
-        syn_b_edges = [[-1., -1., -1., -1., -1., -1.]], [-1., -1., -1., -1.,
-            -1., -1.], [], [], []
+            syn_b_edges = [[-1., -1., -1., -1., -1., -1.]], [-1., -1., -1.,
+            -1., -1., -1.], [], [], []
 
     bf_return = [isoch_fit_params, isoch_fit_errors, shift_isoch, synth_clst,
         syn_b_edges]

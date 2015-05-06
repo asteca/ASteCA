@@ -51,7 +51,8 @@ def imfs(imf_name, m_star):
         # http://adsabs.harvard.edu/abs/2001ApJ...554.1274C
         # Eq (7)
         imf_val = (1. / (np.log(10) * m_star)) * 0.141 * \
-        np.exp(-((np.log10(m_star) - np.log10(0.1)) ** 2) / (2 * 0.627 ** 2))
+            np.exp(-((np.log10(m_star) - np.log10(0.1)) ** 2) /
+                (2 * 0.627 ** 2))
 
     elif imf_name == 'chabrier_2001_exp':
         # Chabrier (2001) exponential form of the IMF.
@@ -95,11 +96,16 @@ def N_IMF():
     # Set IMF low mass limit.
     m_low = imfs_dict[imf_sel]
     # Set IMF max mass limit and interpolation step.
+    # The value of the maximum mass (m_high) is not very important since beyond
+    # 100 Mo the differences in the resulting normalization constant are
+    # negligible. This is because th IMF drops very rapidly for high masses.
+    # The step (m_step) should not be made too small since it has an impact
+    # on the performance of the get_mass_dist function.
     m_high, m_step = 500., 0.1
 
-    # Obtain normalization constant.
-    norm_const = 1. / quad(integral_IMF_M, m_low, m_high,
-        args=(imf_sel))[0]
+    # Obtain normalization constant. This is equivalent to 'k' in Eq. (7)
+    # of Popescu & Hanson 2009 (138:1724-1740)
+    norm_const = 1. / quad(integral_IMF_M, m_low, m_high, args=(imf_sel))[0]
 
     # Obtain number of stars in each mass interval.
     st_dist = [[], []]
@@ -113,5 +119,9 @@ def N_IMF():
 
     # Normalize number of stars by constant.
     st_dist[1] = np.asarray(st_dist[1]) * norm_const
+
+    import matplotlib.pyplot as plt
+    plt.scatter(*st_dist)
+    plt.show()
 
     return st_dist

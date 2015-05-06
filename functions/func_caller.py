@@ -51,11 +51,11 @@ def asteca_funcs(cl_file, ip_list, R_in_place):
 
     # Get file names and paths.
     clust_name, data_file, memb_file, output_dir, output_subdir, dst_dir,\
-    memb_file_out, synth_file_out, write_name = n_p(cl_file)
+        memb_file_out, synth_file_out, write_name = n_p(cl_file)
     print 'Analizing cluster {} ({}).'.format(clust_name, g.mode)
 
     #################################################
-    ##   HORRIBLE HACK, DELETE AS SOON AS POSSIBLE.
+    # HORRIBLE HACK, DELETE AS SOON AS POSSIBLE.
     # Call function to retrieve E(B-V) range for this cluster.
     from functions.clusters_ext import get_ext_cl
     # Re-write information on extinction range.
@@ -71,7 +71,7 @@ def asteca_funcs(cl_file, ip_list, R_in_place):
     phot_data = t_f(phot_data)
     # Unpack coordinates, magnitude and color.
     x_data, y_data, mag_data, col1_data = phot_data[1], phot_data[2], \
-    phot_data[3], phot_data[5]
+        phot_data[3], phot_data[5]
 
     # Obtain 2D histograms for the observed frame using several bin widths.
     hist_lst = g2dh(x_data, y_data)
