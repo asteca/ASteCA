@@ -39,12 +39,12 @@ def add_errors(isoch_compl, err_lst):
     sigma_col[sigma_col > e_max] = e_max
 
     ###################################################################
-    ## Generate errors that depend only on the theoretical isochrone.
-    #b, c, max_err_mag, max_err_col = 0.25, 0.015, 0.1, 0.25
-    #a1 = (max_err_mag - c) / np.exp(b * max(isoch_compl[1]))
-    #a2 = (max_err_col - c) / np.exp(b * max(isoch_compl[1]))
-    #sigma_mag = a1 * np.exp(b * isoch_compl[1]) + c
-    #sigma_col = a2 * np.exp(b * isoch_compl[0]) + c
+    # # Generate errors that depend only on the theoretical isochrone.
+    # b, c, max_err_mag, max_err_col = 0.25, 0.015, 0.1, 0.25
+    # a1 = (max_err_mag - c) / np.exp(b * max(isoch_compl[1]))
+    # a2 = (max_err_col - c) / np.exp(b * max(isoch_compl[1]))
+    # sigma_mag = a1 * np.exp(b * isoch_compl[1]) + c
+    # sigma_col = a2 * np.exp(b * isoch_compl[0]) + c
     ###################################################################
 
     # Call function to shift stars around these errors.
@@ -113,72 +113,72 @@ def compl_func(isoch_binar, completeness):
     return isoch_compl
 
 
-#def compl_func2(isoch_binar):
-    #'''
-    #Remove random stars beyond a given magnitude limit according to a
-    #completeness decreasing function.
-    #'''
-    #import random as rd
+# def compl_func2(isoch_binar):
+#     '''
+#     Remove random stars beyond a given magnitude limit according to a
+#     completeness decreasing function.
+#     '''
+#     import random as rd
 
-    ## Magnitude value below the minumum magnitude where the completeness
-    ## removal should start.
-    #c_mags = 2.5
+#     # Magnitude value below the minumum magnitude where the completeness
+#     # removal should start.
+#     c_mags = 2.5
 
-    #mag_data = isoch_binar[1]
-    #max_mag = max(mag_data)
-    ## Number of bins.
-    #bins1 = int((max(mag_data) - min(mag_data)) / 0.2)
+#     mag_data = isoch_binar[1]
+#     max_mag = max(mag_data)
+#     # Number of bins.
+#     bins1 = int((max(mag_data) - min(mag_data)) / 0.2)
 
-    ## Histogram of magnitude values.
-    #mag_hist, bin_edg = np.histogram(mag_data, bins1)
-    ## Index of maximum magnitude bin, c_mags mags below the max mag value.
-    #max_indx = min(range(len(bin_edg)),
-        #key=lambda i: abs(bin_edg[i] - (max_mag - c_mags)))
-    #n1, p1 = mag_hist[max_indx], 100.
-    ## Get completeness percentages.
-    #a = rd.uniform(2., 4.)
-    ## Get percentages of completeness for each mag bin, according to the core
-    ## completeness function defined: 1 / (1 + np.exp(x - a))
-    #comp_perc = [(1 / (1 + np.exp(i - a))) * 100.
-        #for i in range(len(mag_hist[max_indx:]))]
-    ## Number of stars that should be removed from each bin.
-    #di = np.around((abs(mag_hist[max_indx:] - (n1 / p1) *
-        #np.asarray(comp_perc))), 0)
+#     # Histogram of magnitude values.
+#     mag_hist, bin_edg = np.histogram(mag_data, bins1)
+#     # Index of maximum magnitude bin, c_mags mags below the max mag value.
+#     max_indx = min(range(len(bin_edg)),
+#         key=lambda i: abs(bin_edg[i] - (max_mag - c_mags)))
+#     n1, p1 = mag_hist[max_indx], 100.
+#     # Get completeness percentages.
+#     a = rd.uniform(2., 4.)
+#     # Get percentages of completeness for each mag bin, according to the core
+#     # completeness function defined: 1 / (1 + np.exp(x - a))
+#     comp_perc = [(1 / (1 + np.exp(i - a))) * 100.
+#         for i in range(len(mag_hist[max_indx:]))]
+#     # Number of stars that should be removed from each bin.
+#     di = np.around((abs(mag_hist[max_indx:] - (n1 / p1) *
+#         np.asarray(comp_perc))), 0)
 
-    ## Store indexes of *all* elements in mag_data whose magnitude
-    ## value falls between the ranges given.
-    #c_indx = np.searchsorted(bin_edg[max_indx:], mag_data, side='left')
-    #N = len(bin_edg[max_indx:])
-    #mask = (c_indx > 0) & (c_indx < N)
-    #elements = c_indx[mask]
-    #indices = np.arange(c_indx.size)[mask]
-    #sorting_idx = np.argsort(elements, kind='mergesort')
-    #ind_sorted = indices[sorting_idx]
-    #x = np.searchsorted(elements, range(N), side='right',
-        #sorter=sorting_idx)
-    ## Indexes.
-    #rang_indx = [ind_sorted[x[i]:x[i + 1]] for i in range(N - 1)]
+#     # Store indexes of *all* elements in mag_data whose magnitude
+#     # value falls between the ranges given.
+#     c_indx = np.searchsorted(bin_edg[max_indx:], mag_data, side='left')
+#     N = len(bin_edg[max_indx:])
+#     mask = (c_indx > 0) & (c_indx < N)
+#     elements = c_indx[mask]
+#     indices = np.arange(c_indx.size)[mask]
+#     sorting_idx = np.argsort(elements, kind='mergesort')
+#     ind_sorted = indices[sorting_idx]
+#     x = np.searchsorted(elements, range(N), side='right',
+#         sorter=sorting_idx)
+#     # Indexes.
+#     rang_indx = [ind_sorted[x[i]:x[i + 1]] for i in range(N - 1)]
 
-    ## Pick a number (given by the list 'di') of random elements in
-    ## each range. Those are the indexes of the elements that
-    ## should be removed from the three sub-lists.
-    #rem_indx = []
-    #for indx, num in enumerate(di):
-        #if rang_indx[indx].any() and len(rang_indx[indx]) >= num:
-            #rem_indx.append(np.random.choice(rang_indx[indx],
-                #int(num), replace=False))
-        #else:
-            #rem_indx.append(rang_indx[indx])
+#     # Pick a number (given by the list 'di') of random elements in
+#     # each range. Those are the indexes of the elements that
+#     # should be removed from the three sub-lists.
+#     rem_indx = []
+#     for indx, num in enumerate(di):
+#         if rang_indx[indx].any() and len(rang_indx[indx]) >= num:
+#             rem_indx.append(np.random.choice(rang_indx[indx],
+#                 int(num), replace=False))
+#         else:
+#             rem_indx.append(rang_indx[indx])
 
-    ## Remove items from list.
-    ## itertools.chain() flattens the list of indexes and sorted()
-    ## with reverse=True inverts them so we don't change the
-    ## indexes of the elements in the lists after removing them.
-    #d_i = sorted(list(itertools.chain(*rem_indx)), reverse=True)
-    ## Remove those selected indexes from all the sub-lists.
-    #isoch_compl = np.delete(np.asarray(isoch_binar), d_i, axis=1)
+#     # Remove items from list.
+#     # itertools.chain() flattens the list of indexes and sorted()
+#     # with reverse=True inverts them so we don't change the
+#     # indexes of the elements in the lists after removing them.
+#     d_i = sorted(list(itertools.chain(*rem_indx)), reverse=True)
+#     # Remove those selected indexes from all the sub-lists.
+#     isoch_compl = np.delete(np.asarray(isoch_binar), d_i, axis=1)
 
-    #return isoch_compl
+#     return isoch_compl
 
 
 def binarity(isoch_mass, isoch_cut, bin_frac):
@@ -271,12 +271,12 @@ def mass_interp(isoch_cut, mass_dist):
     # Returns the indices that would sort the array.
     order = data[2, :].argsort()
     key = data[2, order]
-    ## Masses out of boundary to the left.
-    #reject_min = target[(target < key[0])]
-    #print sum(reject_min), min(reject_min), max(reject_min)
-    ## Masses out of boundary to the right.
-    #reject_max = target[(target > key[-1])]
-    #print sum(reject_max), min(reject_max), max(reject_max)
+    # # Masses out of boundary to the left.
+    # reject_min = target[(target < key[0])]
+    # print sum(reject_min), min(reject_min), max(reject_min)
+    # # Masses out of boundary to the right.
+    # reject_max = target[(target > key[-1])]
+    # print sum(reject_max), min(reject_max), max(reject_max)
     # Reject masses outside of isochrone mass range.
     target = target[(target >= key[0]) & (target <= key[-1])]
     # Call function to return closest elements (indexes)
@@ -316,14 +316,14 @@ def synth_clust(err_lst, completeness, st_dist, isochrone, params):
 
     # Move synth cluster with the values 'e' and 'd'.
     isoch_moved = move_isoch([isochrone[0], isochrone[1]], e, d) +\
-    [isochrone[2]]
+        [isochrone[2]]
 
     ##############################################################
-    ## To generate a synthetic cluster with the full isochrone length,
-    ## un-comment this line.
-    ## We take the max magnitude from the isochrone itself instead of using
-    ## the input cluster file.
-    #completeness[0] = max(isoch_moved[1]) + 0.5
+    # # To generate a synthetic cluster with the full isochrone length,
+    # # un-comment this line.
+    # # We take the max magnitude from the isochrone itself instead of using
+    # # the input cluster file.
+    # completeness[0] = max(isoch_moved[1]) + 0.5
     ##############################################################
 
     # Get isochrone minus those stars beyond the magnitude cut.
@@ -345,10 +345,10 @@ def synth_clust(err_lst, completeness, st_dist, isochrone, params):
         if isoch_mass.any():
 
             ##############################################################
-            ## For plotting purposes: store a copy of this list before
-            ## adding binaries since the list gets overwritten.
-            #from copy import deepcopy
-            #isoch_mass0 = deepcopy(isoch_mass)
+            # # For plotting purposes: store a copy of this list before
+            # # adding binaries since the list gets overwritten.
+            # from copy import deepcopy
+            # isoch_mass0 = deepcopy(isoch_mass)
             ##############################################################
 
             # Assignment of binarity.
@@ -358,9 +358,9 @@ def synth_clust(err_lst, completeness, st_dist, isochrone, params):
             isoch_compl = compl_func(isoch_binar, completeness)
 
             ##############################################################
-            ## Use when producing synthetic clusters from isochrones.
-            ## Comment the line above.
-            #isoch_compl = compl_func2(isoch_binar)
+            # # Use when producing synthetic clusters from isochrones.
+            # # Comment the line above.
+            # isoch_compl = compl_func2(isoch_binar)
             ##############################################################
 
             if isoch_compl.any():
@@ -371,27 +371,27 @@ def synth_clust(err_lst, completeness, st_dist, isochrone, params):
                 synth_clust = np.array(isoch_error + [isoch_compl[2]])
 
     ################################################################
-    ## Plot synthetic cluster.
-    #from synth_plot import synth_clust_plot as s_c_p
-    #m, a = params[:2]
-    #print m, a, M_total
-    #out_name = str(m).split('.')[1] + '_' + str(a)
-    #out_folder = '/full_path/'
-    #path = out_folder + out_name + '.png'
-    #s_c_p(mass_dist, isochrone, params, isoch_moved, isoch_cut,
-          #isoch_mass0, isoch_binar, isoch_compl, isoch_error, path)
+    # # Plot synthetic cluster.
+    # from synth_plot import synth_clust_plot as s_c_p
+    # m, a = params[:2]
+    # print m, a, M_total
+    # out_name = str(m).split('.')[1] + '_' + str(a)
+    # out_folder = '/full_path/'
+    # path = out_folder + out_name + '.png'
+    # s_c_p(mass_dist, isochrone, params, isoch_moved, isoch_cut,
+    #       isoch_mass0, isoch_binar, isoch_compl, isoch_error, path)
     ################################################################
 
     ################################################################
-    ## Write synthetic cluster to file.
-    #out_file_name = out_folder + out_name + '.dat'
-    #with open(out_file_name, "w") as f_out:
-        #f_out.write('''#color    e_col   magnitude     e_mag     init_mass''')
-        #f_out.write('\n')
-    #with open(out_file_name, "a") as f_out:
-        #for line in zip(*synth_clust):
-                #f_out.write('''{:<8.3f} {:>8.3f} {:>8.3f} {:>8.3f} \
-#{:>8.2f}\n'''.format(*map(float, line)))
+#     # Write synthetic cluster to file.
+#     out_file_name = out_folder + out_name + '.dat'
+#     with open(out_file_name, "w") as f_out:
+#         f_out.write('''#color    e_col   magnitude     e_mag    init_mass''')
+#         f_out.write('\n')
+#     with open(out_file_name, "a") as f_out:
+#         for line in zip(*synth_clust):
+#                 f_out.write('''{:<8.3f} {:>8.3f} {:>8.3f} {:>8.3f} \
+# {:>8.2f}\n'''.format(*map(float, line)))
     ################################################################
 
     return synth_clust
