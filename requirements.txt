@@ -1,0 +1,14 @@
+#
+# List of packages required for ASteCA to function properly.
+#
+# The 'rpy2' package can be omitted if the 'KDE p-value' function will
+# not be used.
+#
+# This file can be safely deleted.
+#
+numpy
+matplotlib
+scipy
+astroml
+scikit-learn
+rpy2
