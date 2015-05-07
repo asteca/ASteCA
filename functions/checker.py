@@ -222,12 +222,12 @@ def check(mypath, cl_files):
     # Check 'Reduced membership' method selected.
     mode_red_memb, local_bin, min_prob = g.rm_params
     if mode_red_memb not in {'local', 'n_memb', 'mp_05', 'top_h', 'man', 'mag',
-        'skip'}:
+            'skip'}:
         sys.exit("ERROR: the selected reduced membership method ('{}')"
             " does\nnot match a valid input.".format(mode_red_memb))
     # Check binning if 'local' method was selected.
     if mode_red_memb == 'local' and local_bin not in {'blocks', 'knuth',
-        'scott', 'freedman', 'sturges', 'sqrt'}:
+            'scott', 'freedman', 'sturges', 'sqrt'}:
         sys.exit("ERROR: the selected binning method '{}' for the 'Reduced"
         "\nmembership' function does not match a valid input.".format(
             local_bin))
@@ -247,7 +247,7 @@ def check(mypath, cl_files):
         if best_fit_algor == 'genet':
             # Check GA input params.
             n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es = \
-            g.ga_params
+                g.ga_params
             # First set of params.
             oper_dict0 = {'n_pop': n_pop, 'n_gen': n_gen, 'n_el': n_el,
                 'n_ei': n_ei, 'n_es': n_es}
@@ -261,7 +261,8 @@ def check(mypath, cl_files):
             for oper in oper_dict1:
                 if oper_dict1[oper] < 0. or oper_dict1[oper] > 1.:
                     sys.exit("ERROR: GA '{}' parameter is out of the valid\n"
-                    "[0., 1.] range; {} is set.".format(oper, oper_dict1[oper]))
+                    "[0., 1.] range; {} is set.".format(oper,
+                        oper_dict1[oper]))
             # Handle separately.
             if cr_sel not in {'1P', '2P'}:
                 sys.exit("ERROR: GA 'cr_sel' operator is not a valid choice;\n"
@@ -273,12 +274,12 @@ def check(mypath, cl_files):
 
         # Check likelihood method selected.
         if lkl_method not in {'tolstoy', 'dolphin'}:
-            sys.exit("ERROR: the selected likelihood method '{}' does not match"
-                " a valid input.".format(lkl_method))
+            sys.exit("ERROR: the selected likelihood method '{}' does not"
+                " match a valid input.".format(lkl_method))
 
         # Check binning method selected.
         if lkl_method == 'dolphin' and bin_method not in {'blocks', 'knuth',
-            'scott', 'freedman', 'sturges', 'sqrt'}:
+                'scott', 'freedman', 'sturges', 'sqrt'}:
             sys.exit("ERROR: the selected binning method '{}' does not match"
                 " a valid input.".format(bin_method))
 
@@ -398,3 +399,4 @@ def check(mypath, cl_files):
         print "(Force matplotlib to not use any Xwindows backend)\n"
 
     return ip_list, R_in_place
+    

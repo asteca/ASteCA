@@ -4,21 +4,23 @@ Created on Wed Feb  5 21:26:28 2014
 
 @author: gabriel
 """
+
+from .._in import get_in_params as g
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
 
 def synth_clust_plot(mass_dist, isochrone, model, isoch_moved, isoch_cut,
-    isoch_mass, isoch_binar, isoch_compl, isoch_error, path):
+        isoch_mass, isoch_binar, isoch_compl, isoch_error, path):
     '''
     Plot several diagrams related with the synthetic clusters.
     '''
 
     m, a, e, d, mass, bin_f = model
 
-     #figsize(x1, y1), GridSpec(y2, x2) --> To have square plots: x1/x2 =
-     #y1/y2 = 2.5
+    # figsize(x1, y1), GridSpec(y2, x2) --> To have square plots: x1/x2 =
+    # y1/y2 = 2.5
     fig = plt.figure(figsize=(10, 20))  # create the top-level container
     gs = gridspec.GridSpec(8, 4)  # create a GridSpec object
 
@@ -29,8 +31,8 @@ def synth_clust_plot(mass_dist, isochrone, model, isoch_moved, isoch_cut,
     ax1.set_ylabel('$M_{o}$', fontsize=15)
     ax1.minorticks_on()
     ax1.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
-    text1 = '$z = %0.6f$' '\n' % m
-    text2 = '$log(age) = %0.2f$' % a
+    text1 = '$z = {}$\n'.format(m)
+    text2 = '$log(age/yr) = %0.2f$' % a
     text = text1 + text2
     plt.text(0.1, 0.1, text, transform=ax1.transAxes,
              bbox=dict(facecolor='white', alpha=0.5), fontsize=15)
@@ -76,7 +78,8 @@ def synth_clust_plot(mass_dist, isochrone, model, isoch_moved, isoch_cut,
     ax4.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
     plt.arrow(0.83, 0.085, 0.1, 0., transform=ax4.transAxes, fc="k", ec="k",
         lw=1.5, head_width=0.01)
-    plt.text(0.83, 0.033, '(100)', transform=ax4.transAxes, fontsize=12)
+    m_high = '(' + str(g.sc_params[1]) + ')'
+    plt.text(0.83, 0.033, m_high, transform=ax4.transAxes, fontsize=12)
     plt.text(0.05, 0.92, 'd', transform=ax4.transAxes,
              bbox=dict(facecolor='white', alpha=0.5), fontsize=16)
     text1 = 'N=%d\n' % len(mass_dist)
@@ -90,7 +93,7 @@ def synth_clust_plot(mass_dist, isochrone, model, isoch_moved, isoch_cut,
     ax4.hist(mass_dist, bins=np.arange(min_d, max_d + bw, bw))
 
     ax5 = plt.subplot(gs[4:6, 0:2])
-    ax5.set_title('IMF masses')
+    ax5.set_title('IMF sampling')
     min_x, max_x = min(isoch_mass[0]), max(isoch_mass[0])
     plt.xlim(min_x - 0.75, max_x + 0.75)
     ax5.invert_yaxis()
@@ -135,7 +138,8 @@ def synth_clust_plot(mass_dist, isochrone, model, isoch_moved, isoch_cut,
         text = text1 + text2
         plt.text(0.6, 0.87, text, transform=ax7.transAxes,
             bbox=dict(facecolor='white', alpha=0.5), fontsize=14)
-        ax7.scatter(isoch_compl[0], isoch_compl[1], s=30, c='steelblue', lw=0.5)
+        ax7.scatter(isoch_compl[0], isoch_compl[1], s=30, c='steelblue',
+            lw=0.5)
 
         ax8 = plt.subplot(gs[6:8, 2:4])
         ax8.set_title('Errors')
@@ -155,7 +159,7 @@ def synth_clust_plot(mass_dist, isochrone, model, isoch_moved, isoch_cut,
         ax.set_xlabel('$color$', fontsize=15)
         ax.set_ylabel('$magnitude$', fontsize=15)
 
-    #plt.show()
+    # plt.show()
     fig.tight_layout()
     plt.savefig(path, dpi=300)
     # Close to release memory.

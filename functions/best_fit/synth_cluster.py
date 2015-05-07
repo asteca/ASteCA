@@ -244,44 +244,89 @@ def binarity(isoch_mass, isoch_cut, bin_frac):
     return isoch_mass
 
 
-def find_closest(A, target):
+def find_closest(key, target):
     '''
-    Helping function for mass interpolating into the isochrone.
-    Find closest target element for elements in A.
+    See: http://stackoverflow.com/a/8929827/1391441
+    Helper function for locating the mass values in the IMF distribution onto
+    the isochrone.
+    General: find closest target element for elements in key.
+
+    Returns an array of indexes of the same length as 'target'.
     '''
-    # A must be sorted
-    idx = A.searchsorted(target)
-    idx = np.clip(idx, 1, len(A) - 1)
-    left = A[idx - 1]
-    right = A[idx]
+
+    # Find indexes where the masses in 'target' should be located in 'key' such
+    # that if the masses in 'target' were inserted *before* these indices, the
+    # order of 'key' would be preserved. I.e.: pair masses in 'target' with the
+    # closest masses in 'key'.
+    # key must be sorted in ascending order.
+    idx = key.searchsorted(target)
+
+    # Convert indexes in the limits (both left and right) smaller than 1 and
+    # larger than 'len(key) - 1' to 1 and 'len(key) - 1', respectively.
+    idx = np.clip(idx, 1, len(key) - 1)
+
+    # left < target <= right for each element in 'target'.
+    left = key[idx - 1]
+    right = key[idx]
+
     # target - left < right - target is True (or 1) when target is closer to
-    # left and False (or 0) when target is closer to right
+    # left and False (or 0) when target is closer to right.
+    # The indexes stored in 'idx' point, for every element (IMF mass) in
+    # 'target' to the closest element (isochrone mass) in 'key'. Thus:
+    # target[XX] <closest> key[idx[XX]]
     idx -= target - left < right - target
+
     return idx
 
 
 def mass_interp(isoch_cut, mass_dist):
     '''
-    For each mass in the mass distribution, find the mass in the isochrone
-    closest to it while rejecting those masses that fall outside of the
-    isochrone's mass range.
+    For each mass in the IMF mass distribution, find the star in the isochrone
+    with the closest mass value and pass it forward.
+    Masses that fall outside of the isochrone's mass range are rejected.
     '''
     # Convert to arrays.
     data, target = np.array(isoch_cut), np.array(mass_dist)
-    # Returns the indices that would sort the array.
+
+    # Returns the indices that would sort the array (ie: the isochrone) with
+    # the minimum mass (hence the '2') value first.
+    # From the isoch_cut_mag function, stars are ordered according to the
+    # main magnitude from min to max.
     order = data[2, :].argsort()
+
+    # Returns an array with the mass values in the theoretical isochrone
+    # ordered from min to max.
     key = data[2, order]
-    # # Masses out of boundary to the left.
-    # reject_min = target[(target < key[0])]
-    # print sum(reject_min), min(reject_min), max(reject_min)
-    # # Masses out of boundary to the right.
-    # reject_max = target[(target > key[-1])]
-    # print sum(reject_max), min(reject_max), max(reject_max)
-    # Reject masses outside of isochrone mass range.
+
+    # try:
+    #     # Masses out of boundary to the left, ie: smaller masses.
+    #     reject_min = target[(target < key[0])]
+    #     print sum(reject_min), min(reject_min), max(reject_min), \
+    #         len(reject_min)
+    #     # Masses out of boundary to the right, ie: higher masses.
+    #     reject_max = target[(target > key[-1])]
+    #     print sum(reject_max), min(reject_max), max(reject_max), \
+    #         len(reject_max)
+    #     print reject_max, '\n'
+    # except:
+    #     pass
+
+    # Reject masses in the IMF mass distribution that are located outside of
+    # the theoretical isochrone's mass range.
     target = target[(target >= key[0]) & (target <= key[-1])]
-    # Call function to return closest elements (indexes)
+
+    # Obtain indexes for mass values in the 'target' array (i.e.: IMF mass
+    # distribution) pointing to where these masses should be located within
+    # the theoretical isochrone mass distribution.
     closest = find_closest(key, target)
-    # Store values in array and return.
+
+    # The indexes in 'closest' are used to *replicate* stars in the theoretical
+    # isochrone, following the mass distribution given by the IMF.
+    # This is: for every mass value in the IMF mass distribution, the star
+    # with the closest mass value in the theoretical isochrone is found, and
+    # finally these "closest" stars in the isochrone are stored and passed.
+    # The "interpolated" isochrone contains as many stars as masses in the
+    # IMF distribution were located between the isochrone's mass range.
     isoch_interp = data[:, order[closest]]
 
     return isoch_interp
@@ -293,13 +338,13 @@ def isoch_cut_mag(isoch_moved, max_mag):
     value found in the observation (entire field, not just the cluster
     region).
     '''
-    # Sort isochrone first according to magnitude values (min to max).
+    # Sort isochrone according to magnitude values (min to max).
     isoch_sort = zip(*sorted(zip(*isoch_moved), key=lambda x: x[1]))
     # Now remove values beyond max_mag (= completeness[0]).
     # Get index of closest mag value to max_mag.
     max_indx = min(range(len(isoch_sort[1])), key=lambda i:
     abs(isoch_sort[1][i] - max_mag))
-    # Remove elements.
+    # Discard elements beyond max_mag limit.
     isoch_cut = np.array([isoch_sort[i][0:max_indx] for i in range(3)])
 
     return isoch_cut
@@ -314,7 +359,7 @@ def synth_clust(err_lst, completeness, st_dist, isochrone, params):
     # Unpack synthetic cluster parameters.
     e, d, M_total, bin_frac = params[2:]
 
-    # Move synth cluster with the values 'e' and 'd'.
+    # Move theoretical isochrone using the values 'e' and 'd'.
     isoch_moved = move_isoch([isochrone[0], isochrone[1]], e, d) +\
         [isochrone[2]]
 
@@ -376,7 +421,7 @@ def synth_clust(err_lst, completeness, st_dist, isochrone, params):
     # m, a = params[:2]
     # print m, a, M_total
     # out_name = str(m).split('.')[1] + '_' + str(a)
-    # out_folder = '/full_path/'
+    # out_folder = '/home/gabriel/Descargas/'
     # path = out_folder + out_name + '.png'
     # s_c_p(mass_dist, isochrone, params, isoch_moved, isoch_cut,
     #       isoch_mass0, isoch_binar, isoch_compl, isoch_error, path)
