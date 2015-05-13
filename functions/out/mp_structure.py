@@ -16,7 +16,7 @@ from .._in import get_in_params as g
 
 
 def pl_centers(gs, x_name, y_name, coord, x_min, x_max, y_min, y_max,
-    approx_cents, bin_width, st_dev_lst):
+        approx_cents, bin_width, st_dev_lst):
     '''
     2D Gaussian histograms' centers using different standard deviations.
     '''
@@ -31,9 +31,9 @@ def pl_centers(gs, x_name, y_name, coord, x_min, x_max, y_min, y_max,
     plt.xlabel('{} ({})'.format(x_name, coord), fontsize=12)
     plt.ylabel('{} ({})'.format(y_name, coord), fontsize=12)
     ax.minorticks_on()
-    ## Add lines through median values with std deviations.
+    # Add lines through median values with std deviations.
     cent_median, cent_std_dev = np.mean(np.array(approx_cents), axis=0), \
-    np.std(np.array(approx_cents), axis=0)
+        np.std(np.array(approx_cents), axis=0)
     plt.axvline(x=cent_median[0], linestyle='-', color='k')
     plt.axvline(x=cent_median[0] + cent_std_dev[0], linestyle='--',
         color='k')
@@ -76,7 +76,7 @@ def pl_centers(gs, x_name, y_name, coord, x_min, x_max, y_min, y_max,
 
 
 def pl_hist_g(gs, fig, x_name, y_name, coord, cent_bin, clust_rad, bin_width,
-    err_r, hist_2d_g):
+        err_r, hist_2d_g):
     '''
     2D gaussian convolved histogram.
     '''
@@ -104,7 +104,7 @@ def pl_hist_g(gs, fig, x_name, y_name, coord, cent_bin, clust_rad, bin_width,
 
 
 def pl_rad_dens(gs, radii, ring_density, field_dens, coord, clust_name,
-    kp_params, clust_rad, e_rad, poisson_error, bin_width):
+        kp_params, clust_rad, e_rad, poisson_error, bin_width):
     '''
     Radial density plot.
     '''
@@ -112,12 +112,12 @@ def pl_rad_dens(gs, radii, ring_density, field_dens, coord, clust_name,
 
     # King prof params.
     rc, e_rc, rt, e_rt, n_c_k, kcp, cd, flag_2pk_conver, flag_3pk_conver = \
-    kp_params
+        kp_params
 
     ax = plt.subplot(gs[0:2, 4:8])
     # Get max and min values in x,y
     x_min, x_max = max(min(radii) - (max(radii) / 20.), 0), \
-    max(radii) + (max(radii) / 20.)
+        max(radii) + (max(radii) / 20.)
     delta_total = (max(ring_density) - field_dens)
     delta_backg = 0.2 * delta_total
     y_min, y_max = max((field_dens - delta_backg) - (max(ring_density) -
@@ -155,8 +155,8 @@ def pl_rad_dens(gs, radii, ring_density, field_dens, coord, clust_name,
     plt.errorbar(radii, ring_density, yerr=poisson_error, fmt='ko',
                  zorder=1)
     # Plot background level.
-    ax.hlines(y=field_dens, xmin=0, xmax=max(radii),
-               label=texts[1], color='b', zorder=5)
+    ax.hlines(y=field_dens, xmin=0, xmax=max(radii), label=texts[1],
+        color='b', zorder=5)
     # Approx middle of the graph.
     arr_y_up = (y_max - y_min) / 2.3 + y_min
     # Length and width of arrow head.
@@ -171,7 +171,7 @@ def pl_rad_dens(gs, radii, ring_density, field_dens, coord, clust_name,
         # Plot r_t radius as an arrow. vline is there to show the label.
         ax.vlines(x=rt, ymin=0., ymax=0., label=texts[4], color='g')
         ax.arrow(rt, arr_y_up, 0., arr_y_dwn, fc="g", ec="g",
-                  head_width=head_w, head_length=head_l, zorder=5)
+            head_width=head_w, head_length=head_l, zorder=5)
         # Plot r_c as a dashed line.
         ax.vlines(x=rc, ymin=0, ymax=kpf.three_params(rc, rt, cd, rc,
         field_dens), label=texts[3], color='g', linestyles=':', lw=4.,
@@ -186,8 +186,8 @@ def pl_rad_dens(gs, radii, ring_density, field_dens, coord, clust_name,
             label=texts[3], color='g', linestyles=':', lw=4., zorder=4)
     # Plot radius.
     ax.vlines(x=clust_rad, ymin=0, ymax=0., label=texts[5], color='r')
-    ax.arrow(clust_rad, arr_y_up, 0., arr_y_dwn, fc="r",
-              ec="r", head_width=head_w, head_length=head_l, zorder=5)
+    ax.arrow(clust_rad, arr_y_up, 0., arr_y_dwn, fc="r", ec="r",
+        head_width=head_w, head_length=head_l, zorder=5)
     # Plot radius error zone.
     if e_rad > 0.:
         plt.axvspan((clust_rad - e_rad), (clust_rad + e_rad),
@@ -200,13 +200,13 @@ def pl_rad_dens(gs, radii, ring_density, field_dens, coord, clust_name,
 
 def pl_full_frame(gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max,
     center_cl, clust_rad, e_cent, kp_params, mag_data, x_data, y_data,
-    st_sizes_arr):
+        st_sizes_arr):
     '''
     x,y finding chart of full frame
     '''
     # King prof params.
     rc, e_rc, rt, e_rt, n_c_k, kcp, cd, flag_2pk_conver, flag_3pk_conver = \
-    kp_params
+        kp_params
 
     ax = plt.subplot(gs[0:2, 8:10])
     ax.set_aspect('equal')
@@ -223,23 +223,23 @@ def pl_full_frame(gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max,
     ax.minorticks_on()
     # Plot r_cl.
     circle = plt.Circle((center_cl[0], center_cl[1]), clust_rad, color='r',
-        fill=False, lw=2.5)
+        fill=False, lw=1.5)
     fig.gca().add_artist(circle)
     if flag_3pk_conver is True:
         # Plot tidal radius.
         circle = plt.Circle((center_cl[0], center_cl[1]), rt, color='g',
-            fill=False, lw=2.5)
+            fill=False, lw=1.5)
         fig.gca().add_artist(circle)
         # Plot core radius.
         if rc > 0:
             circle = plt.Circle((center_cl[0], center_cl[1]), rc,
-                color='g', fill=False, ls='dashed', lw=2.5)
+                color='g', fill=False, ls='dashed', lw=1.)
             fig.gca().add_artist(circle)
     elif flag_2pk_conver is True:
         # Plot core radius.
         if rc > 0:
             circle = plt.Circle((center_cl[0], center_cl[1]), rc,
-                color='g', fill=False, ls='dashed', lw=2.5)
+                color='g', fill=False, ls='dashed', lw=1.)
             fig.gca().add_artist(circle)
     # Add text box
     center_cl_r, e_cent_r = err_r.round_sig_fig(center_cl, e_cent)
@@ -257,7 +257,7 @@ def pl_full_frame(gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max,
 
 def pl_zoom_frame(gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
     y_zmax, cont_index, kde_pl, x_data, y_data, st_sizes_arr, center_cl,
-    clust_rad):
+        clust_rad):
     '''
     Zoom on x,y finding chart.
     '''
@@ -312,7 +312,8 @@ def pl_zoom_frame(gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
 
 
 def pl_cl_fl_regions(gs, fig, x_name, y_name, coord, x_min, x_max, y_min,
-    y_max, center_cl, clust_rad, field_regions, cl_region, flag_no_fl_regs):
+    y_max, center_cl, clust_rad, field_regions, cl_region,
+        flag_no_fl_regs):
     '''
     Cluster and field regions defined.
     '''
@@ -376,6 +377,6 @@ def plot(N, *args):
     try:
         fxn(*args)
     except:
-        #import traceback
-        #print traceback.format_exc()
+        # import traceback
+        # print traceback.format_exc()
         print("  WARNING: error when plotting {}.".format(plt_map.get(N)[1]))
