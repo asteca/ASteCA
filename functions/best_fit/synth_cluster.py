@@ -298,18 +298,28 @@ def mass_interp(isoch_cut, mass_dist):
     # ordered from min to max.
     key = data[2, order]
 
+    # # Uncomment this block to see how many stars are being discarded
+    # # for having mass values outside of the isochrone's range.
+    # # Also uncomment the first block in the main function that uses the entire
+    # # isochrone (instead of one with a max-mag cut).
     # try:
+    #     print '\nMin, max mass values in isochrone: {:.3f}, {:.3f}'.format(
+    #         min(data[2]), max(data[2]))
+    #     print '\nTotal mass in mass_dist: {:.2f}'.format(sum(target))
     #     # Masses out of boundary to the left, ie: smaller masses.
     #     reject_min = target[(target < key[0])]
-    #     print sum(reject_min), min(reject_min), max(reject_min), \
-    #         len(reject_min)
+    #     print ("Rejected {} stars with masses in the range [{:.2f}, {:.2f}]\n"
+    #         "Total mass: {:.2f}".format(len(reject_min),
+    #             min(reject_min), max(reject_min), sum(reject_min)))
     #     # Masses out of boundary to the right, ie: higher masses.
     #     reject_max = target[(target > key[-1])]
-    #     print sum(reject_max), min(reject_max), max(reject_max), \
-    #         len(reject_max)
+    #     print ("Rejected {} stars with masses in the range [{:.2f}, {:.2f}]\n"
+    #         "Total mass: {:.2f}".format(len(reject_max),
+    #             min(reject_max), max(reject_max), sum(reject_max)))
     #     print reject_max, '\n'
     # except:
     #     pass
+    # raw_input()
 
     # Reject masses in the IMF mass distribution that are located outside of
     # the theoretical isochrone's mass range.
@@ -366,7 +376,7 @@ def synth_clust(err_lst, completeness, st_dist, isochrone, params):
     ##############################################################
     # # To generate a synthetic cluster with the full isochrone length,
     # # un-comment this line.
-    # # We take the max magnitude from the isochrone itself instead of using
+    # # This takes the max magnitude from the isochrone itself instead of using
     # # the input cluster file.
     # completeness[0] = max(isoch_moved[1]) + 0.5
     ##############################################################
