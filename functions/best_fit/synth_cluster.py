@@ -300,21 +300,21 @@ def mass_interp(isoch_cut, mass_dist):
 
     # # Uncomment this block to see how many stars are being discarded
     # # for having mass values outside of the isochrone's range.
-    # # Also uncomment the first block in the main function that uses the entire
-    # # isochrone (instead of one with a max-mag cut).
+    # # Also uncomment the first block in the main function that uses the
+    # # entire isochrone (instead of one with a max-mag cut).
     # try:
     #     print '\nMin, max mass values in isochrone: {:.3f}, {:.3f}'.format(
     #         min(data[2]), max(data[2]))
     #     print '\nTotal mass in mass_dist: {:.2f}'.format(sum(target))
     #     # Masses out of boundary to the left, ie: smaller masses.
     #     reject_min = target[(target < key[0])]
-    #     print ("Rejected {} stars with masses in the range [{:.2f}, {:.2f}]\n"
-    #         "Total mass: {:.2f}".format(len(reject_min),
+    #     print ("Rejected {} stars with masses in the range [{:.2f}, {:.2f}]"
+    #         "\nTotal mass: {:.2f}".format(len(reject_min),
     #             min(reject_min), max(reject_min), sum(reject_min)))
     #     # Masses out of boundary to the right, ie: higher masses.
     #     reject_max = target[(target > key[-1])]
-    #     print ("Rejected {} stars with masses in the range [{:.2f}, {:.2f}]\n"
-    #         "Total mass: {:.2f}".format(len(reject_max),
+    #     print ("Rejected {} stars with masses in the range [{:.2f}, {:.2f}]"
+    #         "\nTotal mass: {:.2f}".format(len(reject_max),
     #             min(reject_max), max(reject_max), sum(reject_max)))
     #     print reject_max, '\n'
     # except:
