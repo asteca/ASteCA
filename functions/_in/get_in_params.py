@@ -107,7 +107,7 @@ def init(mypath, pars_f_path):
                     da0_params = str(reader[1])
                     da1_params = int(reader[2])
 
-                # Reduce membership paramaters.
+                # Reduce membership parameters.
                 elif reader[0] == 'RM':
                     mode_red_memb = str(reader[1])
                     local_bin = str(reader[2])
