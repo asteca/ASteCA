@@ -96,7 +96,7 @@ def R_check(inst_packgs_lst):
     return R_in_place
 
 
-def check(mypath, cl_files):
+def check(mypath, file_end, cl_files):
     '''
     Checks that the necessary files are in place, that the parameters stored
     in the input file are valid and that the ranges given for the cluster
@@ -117,22 +117,36 @@ def check(mypath, cl_files):
 
     # Check that at least one photometric cluster file exists.
     if not cl_files:
-        sys.exit("No photometric data files found in '/input' folder."
-        " Halting.")
+        sys.exit("ERROR: no photometric data files found in '{}'\n"
+        "folder. Halting.".format('/input' + file_end))
 
-    # Check if params_input.dat file exists.
-    if not isfile(join(mypath, 'params_input.dat')):
-        sys.exit('ERROR: params_input.dat file does not exist.')
+    # Check if params_input_XX.dat file exists.
+    pars_f_name = 'params_input' + file_end + '.dat'
+    pars_f_path = join(mypath, pars_f_name)
+    if file_end == '':
+        if not isfile(pars_f_path):
+            sys.exit("ERROR: '{}' file does not exist.".format(pars_f_name))
+    else:
+        if not isfile(pars_f_path):
+            print ("  WARNING: {} file does not exist.\n  Falling back to"
+                " 'params_input.dat' file.\n".format(pars_f_name))
 
-    # Check if params_input file is properly formatted.
+            # Fall back to default file.
+            pars_f_name = 'params_input.dat'
+            pars_f_path = join(mypath, pars_f_name)
+            if not isfile(pars_f_path):
+                sys.exit("ERROR: '{}' file does not exist.".format(
+                    pars_f_name))
+
+    # Check if params_input_XX.dat file is properly formatted.
     try:
         # Read input parameters from params_input.dat file. Initialize
         # global variables.
-        g.init(mypath)
+        g.init(mypath, pars_f_path)
     except Exception:
         # Halt code.
         print traceback.format_exc()
-        sys.exit('ERROR: params_input.dat is badly formatted.')
+        sys.exit("ERROR: '{}' is badly formatted.".format(pars_f_name))
 
     # Check if a new version is available.
     if g.up_flag:

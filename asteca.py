@@ -34,7 +34,7 @@ def main():
     # As part of the checking process, and to save time, the isochrone
     # files are read and stored here.
     # The 'R_in_place' flag indicates that R and rpy2 are installed.
-    ip_list, R_in_place = check(mypath, cl_files)
+    ip_list, R_in_place = check(mypath, file_end, cl_files)
 
     # Store those global variables that could be changed when processing each
     # cluster.

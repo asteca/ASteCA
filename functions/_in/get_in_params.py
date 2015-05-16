@@ -30,7 +30,7 @@ def char_remove(in_lst):
     return lst
 
 
-def init(mypath):
+def init(mypath, pars_f_path):
     '''
     This function reads the input data parameters stored in the
     'params_input.dat' file and returns them packaged for each function to use.
@@ -42,14 +42,11 @@ def init(mypath):
         bf_params, sc_params, ga_params, rm_params, pl_params, \
         flag_move_file, axes_params, flag_back_force
 
-    # Store path to input data file.
-    data_file = join(mypath, 'params_input.dat')
-
     # Accept these variations of the 'true' flag.
     true_lst = ('True', 'true', 'TRUE')
 
     # Read data from file.
-    with open(data_file, "r") as f_dat:
+    with open(pars_f_path, "r") as f_dat:
 
         # Iterate through each line in the file.
         for line in f_dat:
