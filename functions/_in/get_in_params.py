@@ -20,7 +20,7 @@ def char_remove(in_lst):
         if in_lst[1][0] in {'[', '(', '{'}:
             # Remove non-numeric characters and append numbers as floats.
             l0.append([float(i) for i in re.findall('[0-9.]+',
-                str(in_lst[1:]))])
+                      str(in_lst[1:]))])
             # Store indicating that this is a list of values.
             lst = ['l', map(float, l0[0])]
         else:
@@ -160,7 +160,8 @@ def init(mypath, pars_f_path):
                     # Get parameters file name from path.
                     pars_f_name = pars_f_path.split('/')[-1]
                     print ("  WARNING: Unknown '{}' ID found in line {}\n"
-                    "  of '{}' file.\n").format(reader[0], l + 1, pars_f_name)
+                           "  of '{}' file.\n").format(
+                           reader[0], l + 1, pars_f_name)
 
     # Pack params in lists.
     pl_params = [flag_make_plot, plot_frmt, plot_dpi]
@@ -188,8 +189,8 @@ def init(mypath, pars_f_path):
     # color index and the third value in each key indicates how the color
     # is to be formed, e.g: '12' means (m_1 - m_2)
     cmds_dic = {1: ('V', 'B', 21), 2: ('V', 'I', 12), 3: ('V', 'U', 21),
-        4: ('{T_1}', 'C', 21), 5: ('J', 'H', 12), 6: ('H', 'J', 21),
-        7: ('K', 'H', 21), 8: ('g', 'u', 21), 9: ('g', 'r', 12)}
+                4: ('{T_1}', 'C', 21), 5: ('J', 'H', 12), 6: ('H', 'J', 21),
+                7: ('K', 'H', 21), 8: ('g', 'u', 21), 9: ('g', 'r', 12)}
     m_1, m_2, m_ord = cmds_dic[cmd_select]
     # Store axes params.
     axes_params = [m_1, m_2, m_ord]
