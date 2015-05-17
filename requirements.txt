@@ -4,11 +4,15 @@
 # The 'rpy2' package can be omitted if the 'KDE p-value' function will
 # not be used.
 #
+# To install all the dependencies listed here, use the command:
+#
+# pip install -r requirements.txt
+#
 # This file can be safely deleted.
 #
-numpy
-matplotlib
-scipy
-astroml
-scikit-learn
-rpy2
+numpy>=1.8.2,<2.0.0
+matplotlib>=1.3.1,<2.0.0
+scipy>=0.14.0,<1.0.0
+astroML>=0.2,<1.0
+scikit-learn>=0.14.1,<1.0.0
+rpy2>=2.4.3,<3.0.0
