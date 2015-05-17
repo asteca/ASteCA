@@ -33,7 +33,8 @@ def char_remove(in_lst):
 def init(mypath, pars_f_path):
     '''
     This function reads the input data parameters stored in the
-    'params_input.dat' file and returns them packaged for each function to use.
+    'params_input_XX.dat' file and returns them packaged for each function to
+    use.
     '''
 
     # Declare globals.
@@ -49,7 +50,7 @@ def init(mypath, pars_f_path):
     with open(pars_f_path, "r") as f_dat:
 
         # Iterate through each line in the file.
-        for line in f_dat:
+        for l, line in enumerate(f_dat):
 
             if not line.startswith("#") and line.strip() != '':
                 reader = line.split()
@@ -156,8 +157,10 @@ def init(mypath, pars_f_path):
                     n_es = int(reader[9])
 
                 else:
-                    print ("  WARNING: Unknown '{}' parameters line in"
-                    "  'params_input.dat' file.\n").format(reader[0])
+                    # Get parameters file name from path.
+                    pars_f_name = pars_f_path.split('/')[-1]
+                    print ("  WARNING: Unknown '{}' ID found in line {}\n"
+                    "  of '{}' file.\n").format(reader[0], l + 1, pars_f_name)
 
     # Pack params in lists.
     pl_params = [flag_make_plot, plot_frmt, plot_dpi]
