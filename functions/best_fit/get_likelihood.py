@@ -28,7 +28,7 @@ def tolstoy(Q, obs_clust):
         P, mem_probs = obs_clust
 
         # Store synthetic clusters as array.
-        #syn_arr = np.array(zip(*(zip(*obs_arr)[:-2])))  # Observed cluster.
+        # syn_arr = np.array(zip(*(zip(*obs_arr)[:-2])))  # Observed cluster.
         syn_arr = np.array(zip(*Q))
         cl_stars_probs = []
 
@@ -49,9 +49,9 @@ def tolstoy(Q, obs_clust):
             B = np.square(star[4] - Q[0]) / e_col_2
             C = np.square(star[2] - Q[2]) / e_mag_2
             star_prob = np.exp(-0.5 * (B + C)) / np.sqrt(e_col_2 * e_mag_2)
-            # The final prob for this cluster star is the sum over all synthetic
-            # stars. Use 1e-10 to avoid nan and inf values in the calculations
-            # that follow.
+            # The final prob for this cluster star is the sum over all
+            # synthetic stars. Use 1e-10 to avoid nan and inf values in the
+            # calculations that follow.
             cl_stars_probs.append(max(star_prob.sum(), epsilon))
 
         # Weight probabilities for each cluster star.
@@ -125,46 +125,59 @@ def dolphin(Q, P):
                 c = -1. * el2[0] * np.log(max(el2[1], epsilon))
                 poiss_lkl += c
 
-        # # The list passed in obs_clust_prepare must be modified for this
-        # # block to work.
-        # print 'x bin edges:', b_rx[0], b_rx[-1]
-        # print 'y bin edges:', b_ry[0], b_ry[-1]
-        # print len(Q[0]), poiss_lkl
-        # import matplotlib.pyplot as plt
-        # from matplotlib.ticker import MultipleLocator
-        # fig = plt.figure()
-        # ax1 = fig.add_subplot(1, 3, 1)
-        # ax2 = fig.add_subplot(1, 3, 2)
-        # ax2.minorticks_on()
-        # ax2.yaxis.set_major_locator(MultipleLocator(1.0))
-        # ax3 = fig.add_subplot(1, 3, 3)
-        # ax3.minorticks_on()
-        # ax3.yaxis.set_major_locator(MultipleLocator(1.0))
-        # ax1.scatter(P[-1][0], P[-1][1], c='r', label='Obs clust')
-        # ax1.scatter(Q[0], Q[2], c='b', label='Synth clust')
-        # for x_ed in b_rx:
-        #     # vertical lines
-        #     ax1.axvline(x_ed, linestyle=':', color='k', zorder=1)
-        # for y_ed in b_ry:
-        #     # horizontal lines
-        #     ax1.axhline(y_ed, linestyle=':', color='k', zorder=1)
-        # ax1.legend(fancybox=True, loc='upper left', scatterpoints=1)
-        # ax2.imshow(cl_histo.transpose(), origin='lower', aspect='auto',
-        #            interpolation="nearest", cmap=plt.cm.Reds,
-        #            extent=[b_rx[0], b_rx[-1], b_ry[0], b_ry[-1]])
-        # ax3.imshow(syn_histo.transpose(), origin='lower', aspect='auto',
-        #            interpolation="nearest", cmap=plt.cm.Reds,
-        #            extent=[b_rx[0], b_rx[-1], b_ry[0], b_ry[-1]])
+        # The list passed in obs_clust_prepare must be modified for this
+        # block to work.
+        print 'x bin edges:', b_rx[0], b_rx[-1]
+        print 'y bin edges:', b_ry[0], b_ry[-1]
+        print len(Q[0]), poiss_lkl
+        import matplotlib.pyplot as plt
+        from matplotlib.ticker import MultipleLocator
+        fig = plt.figure()
+        ax1 = fig.add_subplot(1, 3, 1)
+        x_extend = [min(P[-1][0]) - 1., max(P[-1][0]) + 1.]
+        y_extend = [max(P[-1][1]) + 5., min(P[-1][1]) - 5.]
+        ax1.set_xlim(x_extend)
+        ax1.set_ylim(y_extend)
+        ax2 = fig.add_subplot(1, 3, 2)
+        ax2.minorticks_on()
+        ax2.yaxis.set_major_locator(MultipleLocator(1.0))
+        ax3 = fig.add_subplot(1, 3, 3)
+        ax3.minorticks_on()
+        ax3.yaxis.set_major_locator(MultipleLocator(1.0))
+        ax1.scatter(P[-1][0], P[-1][1], c='r', label='Obs clust')
+        ax1.scatter(Q[0], Q[2], c='b', label='Synth clust')
+        for x_ed in b_rx:
+            # vertical lines
+            ax1.axvline(x_ed, linestyle=':', color='k', zorder=1)
+        for y_ed in b_ry:
+            # horizontal lines
+            ax1.axhline(y_ed, linestyle=':', color='k', zorder=1)
+        ax1.legend(fancybox=True, loc='lower left', scatterpoints=1)
+        ax2.imshow(cl_histo.transpose(), origin='lower', aspect='auto',
+                   interpolation="nearest", cmap=plt.cm.jet)
+                   # extent = [x_extend[0], x_extend[1], 14, -4])
+                   # extent=[x_extend[0], x_extend[1], y_extend[1], y_extend[0]])
+        ax3.imshow(syn_histo.transpose(), origin='lower', aspect='auto',
+                   interpolation="nearest", cmap=plt.cm.jet)
+                   # extent = [x_extend[0], x_extend[1], 14, -4])
+                   # extent=[x_extend[0], x_extend[1], y_extend[1], y_extend[0]])
         # ax1.invert_yaxis()
         # ax2.invert_yaxis()
         # ax3.invert_yaxis()
-        # ax2.text(0.05, 0.95, 'Obs clust 2D histo', transform=ax2.transAxes,
-        #          fontsize=15)
-        # text = r'Synth clust 2D histo ($-\ln(PLR) \approx {:.2f}$)'.format(
-        #     poiss_lkl)
-        # ax3.text(0.05, 0.95, text, transform=ax3.transAxes, fontsize=15)
-        # fig.subplots_adjust(hspace=1)
-        # plt.show()
+        ax2.text(0.05, 0.95, 'Obs clust 2D histo', transform=ax2.transAxes,
+                 fontsize=15)
+        text = r'Synth clust 2D histo ($-\ln(PLR) \approx {:.2f}$)'.format(
+            poiss_lkl)
+        ax3.text(0.05, 0.95, text, transform=ax3.transAxes, fontsize=15)
+        # Set limits for imshow.
+        # ax2.set_xlim(*x_extend)
+        # ax2.set_ylim(y_extend[0], y_extend[1])
+        ax2.set_ylim(14., -4)
+        # ax3.set_xlim(x_extend)
+        # ax3.set_ylim(y_extend[0], y_extend[1])
+        ax3.set_ylim(14., -4)
+        fig.subplots_adjust(hspace=1)
+        plt.show()
 
     return poiss_lkl
 
