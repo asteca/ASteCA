@@ -60,35 +60,35 @@ def tolstoy(Q, obs_clust):
         # Final score: sum log likelihoods for each star in cluster.
         likelihood = -sum(np.log(np.asarray(clust_prob[0])))
 
-        #n, p = len(P), len(syn_arr)
+        # n, p = len(P), len(syn_arr)
 
         # BIC
-        #likelihood = 2 * likelihood + p * np.log(n)
+        # likelihood = 2 * likelihood + p * np.log(n)
 
         # AIC_c
-        #if (n - p) != 1:
-            #likelihood = 2 * likelihood + 2 * p + \
-            #(2 * p) * (p + 1) / (n - p - 1)
-        #else:
-            #likelihood = 2 * likelihood + 2 * p
+        # if (n - p) != 1:
+        #     likelihood = 2 * likelihood + 2 * p + \
+        #     (2 * p) * (p + 1) / (n - p - 1)
+        # else:
+        #     likelihood = 2 * likelihood + 2 * p
 
-        #print n, p, likelihood
-        #import matplotlib.pyplot as plt
-        #fig = plt.figure()
-        #ax1 = fig.add_subplot(1, 2, 1)
-        #ax2 = fig.add_subplot(1, 2, 2)
-        #ax1.scatter(zip(*P)[4], zip(*P)[2], c='r')
-        #ax2.scatter(Q[0], Q[2], c='b')
-        #text = 'N = {}'.format(len(zip(*P)[4]))
-        #ax1.text(0.6, 0.9, text, transform=ax1.transAxes)
-        #text1 = 'L = {:.2f}\n'.format(likelihood)
-        #text2 = 'N = {}'.format(len(syn_arr))
-        #text = text1 + text2
-        #ax2.text(0.5, 0.9, text, transform=ax2.transAxes)
-        #ax1.invert_yaxis()
-        #ax2.invert_yaxis()
-        #fig.subplots_adjust(hspace=1)
-        #plt.show()
+        # print n, p, likelihood
+        # import matplotlib.pyplot as plt
+        # fig = plt.figure()
+        # ax1 = fig.add_subplot(1, 2, 1)
+        # ax2 = fig.add_subplot(1, 2, 2)
+        # ax1.scatter(zip(*P)[4], zip(*P)[2], c='r')
+        # ax2.scatter(Q[0], Q[2], c='b')
+        # text = 'N = {}'.format(len(zip(*P)[4]))
+        # ax1.text(0.6, 0.9, text, transform=ax1.transAxes)
+        # text1 = 'L = {:.2f}\n'.format(likelihood)
+        # text2 = 'N = {}'.format(len(syn_arr))
+        # text = text1 + text2
+        # ax2.text(0.5, 0.9, text, transform=ax2.transAxes)
+        # ax1.invert_yaxis()
+        # ax2.invert_yaxis()
+        # fig.subplots_adjust(hspace=1)
+        # plt.show()
 
     return likelihood
 
@@ -125,37 +125,46 @@ def dolphin(Q, P):
                 c = -1. * el2[0] * np.log(max(el2[1], epsilon))
                 poiss_lkl += c
 
-        ## The list passed in obs_clust_prepare must be modified for this
-        ## clock to work.
-        #print len(Q[0]), poiss_lkl
-        #import matplotlib.pyplot as plt
-        #fig = plt.figure()
-        #ax1 = fig.add_subplot(1, 3, 1)
-        #ax2 = fig.add_subplot(1, 3, 2)
-        #ax3 = fig.add_subplot(1, 3, 3)
-        #ax1.scatter(P[-1][0], P[-1][1], c='r', label='Obs clust')
-        #ax1.scatter(Q[0], Q[2], c='b', label='Synth clust')
-        #for x_ed in b_rx:
-            ## vertical lines
-            #ax1.axvline(x_ed, linestyle=':', color='k', zorder=1)
-        #for y_ed in b_ry:
-            ## horizontal lines
-            #ax1.axhline(y_ed, linestyle=':', color='k', zorder=1)
-        #ax1.legend(fancybox=True, loc='upper left', scatterpoints=1)
-        #ax2.imshow(cl_histo.transpose(), origin='lower', aspect='auto',
-            #interpolation="nearest", cmap=plt.cm.Reds)
-        #ax3.imshow(syn_histo.transpose(), origin='lower', aspect='auto',
-            #interpolation="nearest", cmap=plt.cm.Reds)
-        #ax1.invert_yaxis()
-        #ax2.invert_yaxis()
-        #ax3.invert_yaxis()
-        #ax2.text(0.05, 0.95, 'Obs clust 2D histo', transform=ax2.transAxes,
-            #fontsize=15)
-        #text = r'Synth clust 2D histo ($-\ln(PLR) \approx {:.2f}$)'.format(
-            #poiss_lkl)
-        #ax3.text(0.05, 0.95, text, transform=ax3.transAxes, fontsize=15)
-        #fig.subplots_adjust(hspace=1)
-        #plt.show()
+        # # The list passed in obs_clust_prepare must be modified for this
+        # # block to work.
+        # print 'x bin edges:', b_rx[0], b_rx[-1]
+        # print 'y bin edges:', b_ry[0], b_ry[-1]
+        # print len(Q[0]), poiss_lkl
+        # import matplotlib.pyplot as plt
+        # from matplotlib.ticker import MultipleLocator
+        # fig = plt.figure()
+        # ax1 = fig.add_subplot(1, 3, 1)
+        # ax2 = fig.add_subplot(1, 3, 2)
+        # ax2.minorticks_on()
+        # ax2.yaxis.set_major_locator(MultipleLocator(1.0))
+        # ax3 = fig.add_subplot(1, 3, 3)
+        # ax3.minorticks_on()
+        # ax3.yaxis.set_major_locator(MultipleLocator(1.0))
+        # ax1.scatter(P[-1][0], P[-1][1], c='r', label='Obs clust')
+        # ax1.scatter(Q[0], Q[2], c='b', label='Synth clust')
+        # for x_ed in b_rx:
+        #     # vertical lines
+        #     ax1.axvline(x_ed, linestyle=':', color='k', zorder=1)
+        # for y_ed in b_ry:
+        #     # horizontal lines
+        #     ax1.axhline(y_ed, linestyle=':', color='k', zorder=1)
+        # ax1.legend(fancybox=True, loc='upper left', scatterpoints=1)
+        # ax2.imshow(cl_histo.transpose(), origin='lower', aspect='auto',
+        #            interpolation="nearest", cmap=plt.cm.Reds,
+        #            extent=[b_rx[0], b_rx[-1], b_ry[0], b_ry[-1]])
+        # ax3.imshow(syn_histo.transpose(), origin='lower', aspect='auto',
+        #            interpolation="nearest", cmap=plt.cm.Reds,
+        #            extent=[b_rx[0], b_rx[-1], b_ry[0], b_ry[-1]])
+        # ax1.invert_yaxis()
+        # ax2.invert_yaxis()
+        # ax3.invert_yaxis()
+        # ax2.text(0.05, 0.95, 'Obs clust 2D histo', transform=ax2.transAxes,
+        #          fontsize=15)
+        # text = r'Synth clust 2D histo ($-\ln(PLR) \approx {:.2f}$)'.format(
+        #     poiss_lkl)
+        # ax3.text(0.05, 0.95, text, transform=ax3.transAxes, fontsize=15)
+        # fig.subplots_adjust(hspace=1)
+        # plt.show()
 
     return poiss_lkl
 
@@ -166,7 +175,7 @@ def isoch_likelihood(err_lst, obs_clust, completeness, st_dist_mass, isochrone,
     Call with an isochrone of given values for metallicity and age and supply
     the extinction and distance modulus values to move that isochrone. Use
     that isochrone to generate a synthetic cluster with those parameters and
-    finally compare it wiht the observed cluster.
+    finally compare it with the observed cluster.
     '''
 
     # Generate synthetic cluster using this "moved" isochrone and a mass

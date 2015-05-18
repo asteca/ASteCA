@@ -30,7 +30,7 @@ def prepare(memb_prob_avrg_sort):
         # Square errors in color and magnitude. Store membership probabilities
         # separately.
         P[3], P[5], mem_probs = np.square(P[3]), np.square(P[5]), \
-        np.asarray(P[6])
+            np.asarray(P[6])
 
         # Pass observed cluster data.
         obs_clust = [np.hstack(P), mem_probs]
@@ -59,13 +59,14 @@ def prepare(memb_prob_avrg_sort):
         cl_mags_cols = np.array(zip(*mag_col_cl))
 
         # Obtain *weighted* histogram for observed cluster.
-        cl_histo = np.histogramdd(cl_mags_cols, bins=bin_edges,
+        cl_histo = np.histogramdd(
+            cl_mags_cols, bins=bin_edges,
             weights=np.asarray(P[6]))[0]
 
         # Pass observed cluster data.
         obs_clust = [cl_histo, bin_edges]
 
         # Pass this list instead if plotting in get_likelihood.
-        #obs_clust = [cl_histo, bin_edges, mag_col_cl]
+        # obs_clust = [cl_histo, bin_edges, mag_col_cl]
 
     return obs_clust
