@@ -9,6 +9,34 @@ from astroML.plotting import hist
 from .._in import get_in_params as g
 
 
+def extend_bin_range(bin_edges):
+    '''
+    Used to define a coarse grid extending beyond the one obtained via the
+    observed cluster. It creates extra bins at the edges of the observed
+    cluster grid, to ensure that *all* stars in the synthetic clusters
+    generated are considered in the likelihood function.
+    '''
+    # Define width of extended bins.
+    bw = 2.
+
+    # Check that the edges are in fact below the [-5., 30] range for
+    # each magnitude/color (which they definitely should).
+    for i, phot_dimens_edge in enumerate(bin_edges):
+
+        if phot_dimens_edge[0] > -5.:
+            # Generate extra bin for left edge of this photometric
+            # dimension.
+            bin_edges[i] = np.insert(
+                bin_edges[i], 0, np.arange(-5., phot_dimens_edge[0], bw))
+        if phot_dimens_edge[-1] < 30.:
+            # Generate extra bin for right edge of this photometric
+            # dimension.
+            bin_edges[i] = np.append(
+                bin_edges[i], np.arange(phot_dimens_edge[-1] + bw, 30., bw))
+
+    return bin_edges
+
+
 def prepare(memb_prob_avrg_sort):
     '''
     Prepare observed cluster array here to save time when the algorithm to
@@ -41,7 +69,7 @@ def prepare(memb_prob_avrg_sort):
         P = np.array(zip(*memb_prob_avrg_sort)[1:], dtype='float')
         mag_col_cl = [P[4], P[2]]
 
-        # Obtain bin edges for each dimension.
+        # Obtain bin edges for each dimension, defining a grid.
         bin_edges = []
         if bin_method in ['sturges', 'sqrt']:
             if bin_method == 'sturges':
@@ -55,91 +83,20 @@ def prepare(memb_prob_avrg_sort):
             for mag_col in mag_col_cl:
                 bin_edges.append(hist(mag_col, bins=bin_method)[1])
 
+        # Extend bin ranges (grid).
+        bin_edges = extend_bin_range(bin_edges)
+
         # Zip magnitudes and colors into array.
         cl_mags_cols = np.array(zip(*mag_col_cl))
 
-        # # Obtain *weighted* histogram for observed cluster.
-        # cl_histo = np.histogramdd(
-        #     cl_mags_cols, bins=bin_edges,
-        #     weights=np.asarray(P[6]))[0]
-
-        # print cl_histo, '\n'
-
-        # Create extra bins at the edges to ensure that *all* stars in the
-        # synthetic clusters generated are considered.
-
-        print bin_edges, '\n'
-        # Check that the edges are in fact below the [-50., 50] range for
-        # each magnitude/color (which they definitely should).
-        for i, phot_dimens_edge in enumerate(bin_edges):
-
-            if phot_dimens_edge[0] > -30.:
-                # Generate extra bin for left edge of this photometric
-                # dimension.
-                bin_edges[i] = np.insert(
-                    bin_edges[i], 0, np.arange(-30., phot_dimens_edge[0], 0.5))
-            if phot_dimens_edge[-1] < 10.:
-                # Generate extra bin for right edge of this photometric
-                # dimension.
-                bin_edges[i] = np.append(
-                    bin_edges[i], np.arange(phot_dimens_edge[-1], 10.,  0.5))
-
-        print bin_edges
-        # Zip magnitudes and colors into array.
-        # cl_mags_cols = np.array(zip(*mag_col_cl))
-
         # Obtain *weighted* histogram for observed cluster.
         cl_histo = np.histogramdd(
-            cl_mags_cols, range=bin_edges,
-            weights=np.asarray(P[6]))[0]
-
-        # print cl_histo2
-        # import matplotlib.pyplot as plt
-        # from matplotlib.ticker import MultipleLocator
-        # b_rx, b_ry = bin_edges
-        # fig = plt.figure()
-        # ax1 = fig.add_subplot(1, 3, 1)
-        # x_extend = [min(mag_col_cl[0]) - 1., max(mag_col_cl[0]) + 1.]
-        # y_extend = [max(mag_col_cl[1]) + 5., min(mag_col_cl[1]) - 5.]
-        # ax1.set_xlim(x_extend)
-        # ax1.set_ylim(y_extend)
-        # ax2 = fig.add_subplot(1, 3, 2)
-        # ax2.minorticks_on()
-        # ax2.yaxis.set_major_locator(MultipleLocator(1.0))
-        # ax3 = fig.add_subplot(1, 3, 3)
-        # ax3.minorticks_on()
-        # ax3.yaxis.set_major_locator(MultipleLocator(1.0))
-        # ax1.scatter(mag_col_cl[0], mag_col_cl[1], c='r', label='Obs clust')
-        # for x_ed in b_rx:
-        #     # vertical lines
-        #     ax1.axvline(x_ed, linestyle=':', color='k', zorder=1)
-        # for y_ed in b_ry:
-        #     # horizontal lines
-        #     ax1.axhline(y_ed, linestyle=':', color='k', zorder=1)
-        # ax1.legend(fancybox=True, loc='lower left', scatterpoints=1)
-        # ax2.imshow(cl_histo.transpose(), origin='lower', aspect='auto',
-        #            interpolation="nearest", cmap=plt.cm.jet)
-        # ax3.imshow(cl_histo2.transpose(), origin='lower', aspect='auto',
-        #            interpolation="nearest", cmap=plt.cm.jet)
-        # # ax1.invert_yaxis()
-        # ax2.invert_yaxis()
-        # ax3.invert_yaxis()
-        # ax2.text(0.05, 0.95, 'Obs clust 2D histo', transform=ax2.transAxes,
-        #          fontsize=15)
-        # # Set limits for imshow.
-        # # # ax2.set_xlim(*x_extend)
-        # # # ax2.set_ylim(y_extend[0], y_extend[1])
-        # # ax2.set_ylim(14., -4)
-        # # # ax3.set_xlim(x_extend)
-        # # # ax3.set_ylim(y_extend[0], y_extend[1])
-        # # ax3.set_ylim(14., -4)
-        # fig.subplots_adjust(hspace=1)
-        # plt.show()
+            cl_mags_cols, bins=bin_edges, weights=np.asarray(P[6]))[0]
 
         # Pass observed cluster data.
-        # obs_clust = [cl_histo, bin_edges]
+        obs_clust = [cl_histo, bin_edges]
 
         # Pass this list instead if plotting in get_likelihood.
-        obs_clust = [cl_histo, bin_edges, mag_col_cl]
+        # obs_clust = [cl_histo, bin_edges, mag_col_cl]
 
     return obs_clust
