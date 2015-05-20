@@ -21,7 +21,7 @@ def fit_curves(mag, mag_value, bright_end, e_mag_value, e_col1_value):
         # Set half magnitude value between the bright end and the maximum
         # as the point of intersection.
         intersec = (max(mag_value) + bright_end) / 2.
-        # Define left max error value as the value of the polinomial fit in
+        # Define left max error value as the value of the polynomial fit in
         # the intersection magnitude.
         popt = np.polyval(pol, intersec)
 
@@ -34,7 +34,7 @@ def fit_curves(mag, mag_value, bright_end, e_mag_value, e_col1_value):
 
 
 def separate_stars(mag, e_mag, e_col1, be_m, intersec_mag, intersec_col1,
-    val_mag, pol_mag, val_col1, pol_col1):
+                   val_mag, pol_mag, val_col1, pol_col1):
     '''
     Use the curves obtained above to accept or reject stars in the
     magnitude range beyond the (brightest star + be) limit.
@@ -66,12 +66,14 @@ def separate_stars(mag, e_mag, e_col1, be_m, intersec_mag, intersec_col1,
                     rjct_indx.append(st_ind)
 
             else:
-            # For the reminder of stars, we check to see if they are located
-            # above or below the upper envelope for both errors. If they are
-            # above in either one, we reject them, otherwise we accept them.
+                # For the reminder of stars, we check to see if they are
+                # located above or below the upper envelope for both errors.
+                # If they are above in either one, we reject them, otherwise
+                # we accept them.
 
-                # Check if star is located to the left or right of the intersect
-                # value for each error and compare with the corresponding curve.
+                # Check if star is located to the left or right of the
+                # intersect value for each error and compare with the
+                # corresponding curve.
                 mag_rjct = False
                 if mag[st_ind] <= intersec_mag:
                     # Compare with linear value.
@@ -148,18 +150,19 @@ def err_a_r_eyefit(mag, e_mag, e_col1, err_pck):
 
     # Fit polynomial + exponential curves.
     intersec_mag, intersec_col1, val_mag, pol_mag, val_col1, pol_col1 = \
-    fit_curves(mag, mag_value, bright_end, e_mag_value, e_col1_value)
+        fit_curves(mag, mag_value, bright_end, e_mag_value, e_col1_value)
 
     # Use the fitted curves to identify accepted/rejected stars and store
     # their indexes.
     acpt_indx, rjct_indx = separate_stars(mag, e_mag, e_col1, bright_end,
-        intersec_mag, intersec_col1, val_mag, pol_mag, val_col1, pol_col1)
+                                          intersec_mag, intersec_col1, val_mag,
+                                          pol_mag, val_col1, pol_col1)
 
     # Values are used for plotting purposes only.
     top_val_left, top_val_right, bot_val_left, bot_val_right = \
-    divide(mag_value, intersec_mag, intersec_col1)
+        divide(mag_value, intersec_mag, intersec_col1)
     # This list holds all the values necessary for plotting.
     err_plot = [val_mag, pol_mag, val_col1, pol_col1, top_val_left,
-        top_val_right, bot_val_left, bot_val_right]
+                top_val_right, bot_val_left, bot_val_right]
 
     return acpt_indx, rjct_indx, err_plot

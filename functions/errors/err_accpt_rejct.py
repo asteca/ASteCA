@@ -21,11 +21,13 @@ def err_sel_stars(acpt_indx, rjct_indx, phot_data):
 
     for st_ind in acpt_indx:
         acpt_stars.append([id_star[st_ind], x_data[st_ind], y_data[st_ind],
-            mag[st_ind], e_mag[st_ind], col1[st_ind], e_col1[st_ind]])
+                          mag[st_ind], e_mag[st_ind], col1[st_ind],
+                          e_col1[st_ind]])
 
     for st_ind in rjct_indx:
         rjct_stars.append([id_star[st_ind], x_data[st_ind], y_data[st_ind],
-            mag[st_ind], e_mag[st_ind], col1[st_ind], e_col1[st_ind]])
+                          mag[st_ind], e_mag[st_ind], col1[st_ind],
+                          e_col1[st_ind]])
 
     return acpt_stars, rjct_stars
 
@@ -85,8 +87,8 @@ def err_accpt_rejct(phot_data, semi_return):
                     g.er_params[0] = er_mode
                     print 'Semi: using method selected: %s.' % er_mode
                 else:
-                    print ('  WARNING: wrong error method in semi input file.\n'
-                    '  Falling back to emax.')
+                    print ("  WARNING: wrong error method in semi input file."
+                           "\n  Falling back to emax.")
                     er_mode, g.er_params[0] = 'emax', 'emax'
 
         # Check which error rejection algorithm was selected in the input
@@ -100,15 +102,15 @@ def err_accpt_rejct(phot_data, semi_return):
                 if er_mode == 'lowexp':
                     # Call N sigma exp function.
                     acpt_indx, rjct_indx, err_plot = e_a_r_le(mag, e_mag,
-                        e_col1, be_m)
+                                                              e_col1, be_m)
 
                 elif er_mode == 'eyefit':
                     # Call 'eyefit' function.
                     acpt_indx, rjct_indx, err_plot = e_a_r_ef(mag, e_mag,
-                        e_col1, err_pck)
+                                                              e_col1, err_pck)
             except RuntimeError:
                 print ("  WARNING: {} function could not be fitted.\n"
-                "  Falling back to e_max function.".format(er_mode))
+                       "  Falling back to e_max function.".format(er_mode))
                 # Call function to reject stars with errors > e_max.
                 acpt_indx, rjct_indx, err_plot = e_a_r_m(e_mag, e_col1)
                 err_max_fallback = True
@@ -121,12 +123,12 @@ def err_accpt_rejct(phot_data, semi_return):
 
             if acpt_indx:
                 print ("  WARNING: No stars accepted based on their errors.\n"
-                "  Using all stars with errors < {}".format(e_max))
+                       "  Using all stars with errors < {}".format(e_max))
 
             # If there's still no accepted stars, use all.
             else:
                 print ("  WARNING: No stars accepted based on their errors.\n"
-                "  Using all stars.")
+                       "  Using all stars.")
                 # Store all indexes.
                 acpt_indx, rjct_indx = [i for i in range(len(mag))], []
                 err_all_fallback = True
@@ -134,7 +136,7 @@ def err_accpt_rejct(phot_data, semi_return):
         # If the method used was e_max, use all stars.
         elif not acpt_indx and er_mode == 'emax':
             print ("  WARNING: No stars accepted based on their errors.\n"
-            "  Using all stars.")
+                   "  Using all stars.")
             # Store all indexes.
             acpt_indx, rjct_indx = [i for i in range(len(mag))], []
             err_plot = []
@@ -152,9 +154,10 @@ def err_accpt_rejct(phot_data, semi_return):
 
             wrong_answer = True
             while wrong_answer:
-                answer_rad = int(raw_input('Choose a method for error-based '
-                'stars rejection:\n  1 (emax), 2 (lowexp), 3 (eyefit), 4 (use '
-                'all stars): '))
+                answer_rad = int(raw_input(
+                    "Choose a method for error-based "
+                    "stars rejection:\n  1 (emax), 2 (lowexp), 3 (eyefit),"
+                    " 4 (use all stars): "))
 
                 if answer_rad == 1:
                     e_max_n = float(raw_input('Select maximum error value: '))
@@ -165,17 +168,17 @@ def err_accpt_rejct(phot_data, semi_return):
                     er_mode, g.er_params[0] = 'emax', 'emax'
                 elif answer_rad == 2:
                     N_sig = float(raw_input("Select number of sigmas to lift"
-                    " the curve: "))
+                                            " the curve: "))
                     g.er_params[4] = N_sig
                     # Call N sigma exp function.
                     acpt_indx, rjct_indx, err_plot = e_a_r_le(mag, e_mag,
-                        e_col1, be_m)
+                                                              e_col1, be_m)
                     wrong_answer = False
                     er_mode, g.er_params[0] = 'lowexp', 'lowexp'
                 elif answer_rad == 3:
                     # Call 'eyefit' function.
                     acpt_indx, rjct_indx, err_plot = e_a_r_ef(mag, e_mag,
-                        e_col1, err_pck)
+                                                              e_col1, err_pck)
                     wrong_answer = False
                     er_mode, g.er_params[0] = 'eyefit', 'eyefit'
                 elif answer_rad == 4:
@@ -189,14 +192,15 @@ def err_accpt_rejct(phot_data, semi_return):
                     print 'Wrong input. Try again.\n'
                 else:
                     if len(acpt_indx) == 0:
-                        print  ('No stars left after error rejection.\nTry'
-                        ' again with a different method or use all stars (4).')
+                        print ("No stars left after error rejection.\nTry"
+                               " again with a different method or use all "
+                               "stars (4).")
                     else:
                         wrong_answer = False
 
             # Call function to store stars according to the returned indexes.
             acpt_stars, rjct_stars = err_sel_stars(acpt_indx, rjct_indx,
-                phot_data)
+                                                   phot_data)
 
             if answer_rad != 4:
                 print 'Plot error distributions.'
@@ -207,7 +211,7 @@ def err_accpt_rejct(phot_data, semi_return):
                 wrong_answer = True
                 while wrong_answer:
                     mv_on = str(raw_input('Accept error based rejection?'
-                    '(y/n) '))
+                                          '(y/n) '))
                     if mv_on == 'y':
                         print 'Fit accepted.'
                         wrong_answer = False

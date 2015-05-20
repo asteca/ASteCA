@@ -39,18 +39,18 @@ def disp_errors(er_mode, mag, err_plot, acpt_stars, rjct_stars, err_pck):
         stars_acpt_temp[1].append(star[4])
 
     axm = plt.subplot(gs[0, 0:2])
-    #Set plot limits
+    # Set plot limits
     x_min, x_max = min(mag) - 0.5, max(mag) + 0.5
     plt.xlim(x_min, x_max)
     plt.ylim(-0.005, e_max + (e_max / 5.))
-    #Set axis labels
+    # Set axis labels
     plt.ylabel('$\sigma_{' + y_ax + '}$', fontsize=18)
     plt.xlabel('$' + y_ax + '$', fontsize=18)
     # Set minor ticks
     axm.minorticks_on()
     # Plot e_max line.
     axm.hlines(y=e_max, xmin=x_min, xmax=x_max, color='r',
-        linestyles='dashed', zorder=2)
+               linestyles='dashed', zorder=2)
     # Plot rectangle.
     bright_end = min(mag) + be
     axm.vlines(x=bright_end + 0.05, ymin=-0.005, ymax=be_e, color='r',
@@ -62,15 +62,14 @@ def disp_errors(er_mode, mag, err_plot, acpt_stars, rjct_stars, err_pck):
     # Plot curve(s) according to the method used.
     if er_mode == 'eyefit':
         # Unpack params.
-        popt_umag, pol_mag, popt_ucol1, pol_col1, mag_val_left, \
-        mag_val_right, col1_val_left, col1_val_right = err_plot
+        val_mag, pol_mag, val_col, pol_col, mag_val_left, \
+            mag_val_right, col_val_left, col_val_right = err_plot
+        # Combine left + right values.
+        m_v, e_v = mag_val_left + mag_val_right, \
+            [val_mag for _ in mag_val_left] + list(np.polyval(pol_mag,
+                                                   (mag_val_right)))
+        axm.plot(m_v, e_v, 'k-', zorder=3)
 
-        # Plot left side of upper envelope (exponential).
-        axm.plot(mag_val_left, exp_3p(mag_val_left, *popt_umag), 'r--',
-            lw=2., zorder=3)
-        # Plot right side of upper envelope (polynomial).
-        axm.plot(mag_val_right, np.polyval(pol_mag, (mag_val_right)),
-            'r--', lw=2., zorder=3)
     elif er_mode == 'lowexp':
         # Unpack params.
         popt_mag, popt_col1 = err_plot
@@ -94,38 +93,37 @@ def disp_errors(er_mode, mag, err_plot, acpt_stars, rjct_stars, err_pck):
         stars_acpt_temp[1].append(star[6])
 
     axc1 = plt.subplot(gs[1, 0:2])
-    #Set plot limits
+    # Set plot limits
     x_min, x_max = min(mag) - 0.5, max(mag) + 0.5
     plt.xlim(x_min, x_max)
     plt.ylim(-0.005, e_max + (e_max / 5.))
-    #Set axis labels
+    # Set axis labels
     plt.ylabel('$\sigma_{' + x_ax + '}$', fontsize=18)
     plt.xlabel('$' + y_ax + '$', fontsize=18)
     # Set minor ticks
     axc1.minorticks_on()
     # Plot e_max line.
     axc1.hlines(y=e_max, xmin=x_min, xmax=x_max, color='r',
-               linestyles='dashed', zorder=2)
+                linestyles='dashed', zorder=2)
     # Plot rectangle.
     bright_end = min(mag) + be
     axc1.vlines(x=bright_end + 0.05, ymin=-0.005, ymax=be_e, color='r',
-               linestyles='dashed', zorder=2)
+                linestyles='dashed', zorder=2)
     axc1.vlines(x=min(mag) - 0.05, ymin=-0.005, ymax=be_e, color='r',
-               linestyles='dashed', zorder=2)
+                linestyles='dashed', zorder=2)
     axc1.hlines(y=be_e, xmin=min(mag), xmax=bright_end, color='r',
-               linestyles='dashed', zorder=2)
+                linestyles='dashed', zorder=2)
     # Plot curve(s) according to the method used.
     if er_mode == 'eyefit':
         # Unpack params.
-        popt_mag, pol_mag, popt_col1, pol_col1, mag_val_left, \
-        mag_val_right, col1_val_left, col1_val_right = err_plot
+        val_mag, pol_mag, val_col, pol_col, mag_val_left, \
+            mag_val_right, col_val_left, col_val_right = err_plot
+        # Combine left + right values.
+        m_v, e_v = col_val_left + col_val_right, \
+            [val_col for _ in col_val_left] + list(np.polyval(pol_col,
+                                                   (col_val_right)))
+        axc1.plot(m_v, e_v, 'k-', zorder=3)
 
-        # Plot left side: exponential envelope.
-        axc1.plot(col1_val_left, exp_3p(col1_val_left, *popt_col1), 'r--',
-            lw=2., zorder=3)
-        # Plot right side: polynomial envelope.
-        axc1.plot(col1_val_right, np.polyval(pol_col1, (col1_val_right)),
-            'r--', lw=2., zorder=3)
     elif er_mode == 'lowexp':
         # Unpack params.
         popt_mag, popt_col1 = err_plot
