@@ -9,34 +9,6 @@ from astroML.plotting import hist
 from .._in import get_in_params as g
 
 
-def extend_bin_range(bin_edges):
-    '''
-    Used to define a coarse grid extending beyond the one obtained via the
-    observed cluster. It creates extra bins at the edges of the observed
-    cluster grid, to ensure that *all* stars in the synthetic clusters
-    generated are considered in the likelihood function.
-    '''
-    # Define width of extended bins.
-    bw = 2.
-
-    # Check that the edges are in fact below the [-5., 30] range for
-    # each magnitude/color (which they definitely should).
-    for i, phot_dimens_edge in enumerate(bin_edges):
-
-        if phot_dimens_edge[0] > -5.:
-            # Generate extra bin for left edge of this photometric
-            # dimension.
-            bin_edges[i] = np.insert(
-                bin_edges[i], 0, np.arange(-5., phot_dimens_edge[0], bw))
-        if phot_dimens_edge[-1] < 30.:
-            # Generate extra bin for right edge of this photometric
-            # dimension.
-            bin_edges[i] = np.append(
-                bin_edges[i], np.arange(phot_dimens_edge[-1] + bw, 30., bw))
-
-    return bin_edges
-
-
 def prepare(memb_prob_avrg_sort):
     '''
     Prepare observed cluster array here to save time when the algorithm to
@@ -82,9 +54,6 @@ def prepare(memb_prob_avrg_sort):
         else:
             for mag_col in mag_col_cl:
                 bin_edges.append(hist(mag_col, bins=bin_method)[1])
-
-        # Extend bin ranges (grid).
-        bin_edges = extend_bin_range(bin_edges)
 
         # Zip magnitudes and colors into array.
         cl_mags_cols = np.array(zip(*mag_col_cl))
