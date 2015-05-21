@@ -72,4 +72,21 @@ def get_ext_cl(cl_name):
 
     print " Set max extinction value: {}".format(max(e_rs))
 
-    return e_rs
+    smc = ['L4', 'L5', 'L6', 'L7', 'L19', 'L27', 'HW47', 'BS121', 'L35',
+           'L45', 'L49', 'L50', 'L62', 'L63', 'L110', 'L113', 'L3', 'L28',
+           'HW66', 'L100', 'HW79', 'L102', 'L109', 'HW85', 'L114', 'L115',
+           'L30', 'L34', 'NGC294', 'L72', 'H86-70', 'BS35', 'BS265', 'H86-197',
+           'B34', 'B39', 'HW22', 'B47', 'L58', 'K38', 'BS88', 'B112', 'HW55',
+           'NGC419', 'HW67', 'HW31', 'NGC339', 'HW40', 'HW41', 'HW42', 'HW59',
+           'HW63', 'L91', 'AM3', 'L112', 'L106', 'L108', 'L111', 'HW84',
+           'HW86']
+
+    # Get galaxy.
+    if cl_name in smc:
+        print ' SMC cluster'
+        d_rs = np.arange(18.8, 19.201, 0.05)
+    else:
+        print ' LMC cluster'
+        d_rs = np.arange(18.3, 18.701, 0.05)
+
+    return e_rs, d_rs
