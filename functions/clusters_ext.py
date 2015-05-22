@@ -6,7 +6,8 @@ def get_ext_cl(cl_name):
     '''
     '''
     # Name, max_EBV
-    cl_exts = {'KMHK975': 0.312, 'KMHK1023': 0.312, 'SL551': 0.312,
+    cl_exts = {
+        'KMHK975': 0.312, 'KMHK1023': 0.312, 'SL551': 0.312,
         'BRHT38B': 0.312, 'KMHK1045': 0.312, 'H3': 0.312, 'SL588': 0.312,
         'H88-307': 0.275, 'HS390': 0.275, 'H88-316': 0.275, 'NGC2093': 0.246,
         'H88-320': 0.246, 'H88-331': 0.232, 'NGC2108': 0.196,
@@ -58,13 +59,27 @@ def get_ext_cl(cl_name):
         'HS8': 0.036, 'L3': 0.029, 'L5': 0.029, 'L6': 0.029, 'L7': 0.029,
         'HW47': 0.029, 'H86-197': 0.029, 'L102': 0.029, 'L108': 0.029,
         'HW84': 0.029, 'HW85': 0.029, 'L4': 0.022, 'HW67': 0.022,
-        'L109': 0.022, 'L115': 0.022, 'AM3': 0.014}
+        'L109': 0.022, 'L115': 0.022, 'AM3': 0.014
+    }
 
     # Get max ext value for this cluster.
     e_max = cl_exts[cl_name]
 
+    use_e_max = [
+        'BRHT4B', 'HS130', 'BSDL654', 'C11', 'KMHK378', 'H88-33', 'KMHK907',
+        'NGC1838', 'NGC1839', 'NGC1836', 'HS178', 'NGC1793', 'NGC1795',
+        'BSDL716', 'H88-279 ', 'L30', 'HW47', 'BS88', 'BSDL779', 'H88-188',
+        'LW224', 'H88-131', 'BSDL341', 'HS329', 'NGC1863  ', 'KMHK979',
+        'SL218', 'HS154 ', 'NGC1860', 'BSDL677', 'KMHK1719'
+    ]
+
+    if cl_name in use_e_max:
+        ext_extend = 0.
+    else:
+        ext_extend = 0.1
+
     # Obtain new extinction range.
-    e_rs = np.arange(0., (e_max + 0.1), 0.02)
+    e_rs = np.arange(0., (e_max + ext_extend), 0.02)
 
     # If list is empty, pass null extinction value.
     if not e_rs.any():
