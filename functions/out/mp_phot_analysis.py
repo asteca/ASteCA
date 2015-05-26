@@ -291,7 +291,7 @@ def pl_p_vals(gs, flag_pval_test, pval_test_params):
         # Extract parameters from list.
         prob_cl_kde, kde_cl_1d, kde_f_1d, x_kde, y_over = pval_test_params
         ax = plt.subplot(gs[4:6, 0:2])
-        plt.xlim(-0.5, 1.5)
+        plt.xlim(-0.15, 1.15)
         plt.ylim(0, 1.02)
         plt.xlabel('p-values', fontsize=12)
         plt.ylabel('Density (normalized)', fontsize=12)
