@@ -18,27 +18,28 @@ import prep_plots
 
 
 #############################################################
-## Timer function: http://stackoverflow.com/a/21860100/1391441
-#from contextlib import contextmanager
-#import time
-#@contextmanager
-#def timeblock(label):
-    #start = time.clock()
-    #try:
-        #yield
-    #finally:
-        #end = time.clock()
-        #print ('{} elapsed: {}'.format(label, end - start))
+# # Timer function: http://stackoverflow.com/a/21860100/1391441
+# from contextlib import contextmanager
+# import time
+# @contextmanager
+# def timeblock(label):
+#     start = time.clock()
+#     try:
+#         yield
+#     finally:
+#         end = time.clock()
+#         print ('{} elapsed: {}'.format(label, end - start))
 #############################################################
 
 
-def make_plots(output_subdir, clust_name, x_data, y_data,
-    bin_width, center_params, rdp_params, field_dens, radius_params,
-    cont_index, mag_data, col_data, err_plot, err_flags, kp_params,
-    cl_region, stars_out, stars_in_rjct, stars_out_rjct, integr_return, n_memb,
-    n_memb_da, flag_no_fl_regs, field_regions, flag_pval_test,
-    pval_test_params, decont_algor_return, lum_func, completeness, ip_list,
-    red_return, err_lst, bf_return):
+def make_plots(output_subdir, clust_name, x_data, y_data, bin_width,
+               center_params, rdp_params, field_dens, radius_params,
+               cont_index, mag_data, col_data, err_plot, err_flags, kp_params,
+               cl_region, stars_out, stars_in_rjct, stars_out_rjct,
+               integr_return, n_memb, n_memb_da, flag_no_fl_regs,
+               field_regions, flag_pval_test, pval_test_params,
+               decont_algor_return, lum_func, completeness, ip_list,
+               red_return, err_lst, bf_return):
     '''
     Make all plots.
     '''
@@ -46,7 +47,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
     # Unpack params.
     # Parameters from get_center function.
     cent_bin, center_cl, e_cent, approx_cents, st_dev_lst, hist_2d_g, \
-    kde_pl = center_params[:7]
+        kde_pl = center_params[:7]
     # RDP params.
     radii, ring_density, poisson_error = rdp_params[:3]
     # Parameters from get_radius function.
@@ -54,8 +55,8 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
     # Luminosity functions.
     x_cl, y_cl, x_fl, y_fl = lum_func
     # Best fitting process results.
-    isoch_fit_params, isoch_fit_errors, shift_isoch, synth_clst, syn_b_edges = \
-    bf_return
+    isoch_fit_params, isoch_fit_errors, shift_isoch, synth_clst, syn_b_edges =\
+        bf_return
 
     # Plot all outputs
     # figsize(x1, y1), GridSpec(y2, x2) --> To have square plots: x1/x2 =
@@ -70,23 +71,25 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
     # Obtain plotting parameters and data.
     x_min, x_max, y_min, y_max = prep_plots.frame_max_min(x_data, y_data)
     coord, x_name, y_name = prep_plots.coord_syst()
-    x_zmin, x_zmax, y_zmin, y_zmax = prep_plots.frame_zoomed(x_min, x_max,
-        y_min, y_max, center_cl, clust_rad)
+    x_zmin, x_zmax, y_zmin, y_zmax = prep_plots.frame_zoomed(
+        x_min, x_max, y_min, y_max, center_cl, clust_rad)
     x_ax, y_ax, x_ax0, y_axis = prep_plots.ax_names()
     phot_x, phot_y = prep_plots.ax_data(mag_data, col_data)
-    x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd = prep_plots.diag_limits(y_axis,
-        phot_x, phot_y)
+    x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd = prep_plots.diag_limits(
+        y_axis, phot_x, phot_y)
     x_data_z, y_data_z, mag_data_z, stars_f_rjct, stars_f_acpt = \
-    prep_plots.separate_stars(x_data, y_data, mag_data, x_zmin, x_zmax,
-        y_zmin, y_zmax, stars_out_rjct, field_regions)
+        prep_plots.separate_stars(x_data, y_data, mag_data, x_zmin, x_zmax,
+                                  y_zmin, y_zmax, stars_out_rjct,
+                                  field_regions)
     st_sizes_arr = prep_plots.star_size(mag_data)
     st_sizes_arr_z = prep_plots.star_size(mag_data_z)
     f_sz_pt = prep_plots.phot_diag_st_size(len(stars_f_acpt[0]))
     cl_sz_pt = prep_plots.phot_diag_st_size(len(cl_region))
     v_min_mp, v_max_mp, plot_colorbar, chart_fit_inv, chart_no_fit_inv, \
-    out_clust_rad, diag_fit_inv, diag_no_fit_inv, err_bar = \
+        out_clust_rad, diag_fit_inv, diag_no_fit_inv, err_bar = \
         prep_plots.da_plots(center_cl, clust_rad, stars_out, x_zmin, x_zmax,
-        y_zmin, y_zmax, x_max_cmd, col_data, err_lst, red_return)
+                            y_zmin, y_zmax, x_max_cmd, col_data, err_lst,
+                            red_return)
 
     #
     # Structure plots.
@@ -108,7 +111,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
             flag_no_fl_regs]
         ]
     for n, args in enumerate(arglist):
-        #with timeblock("{}".format(n)):
+        # with timeblock("{}".format(n)):
         mp_structure.plot(n, *args)
 
     #
@@ -155,15 +158,15 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
         # This function is called separately since we need to retrieve some
         # information from it to plot that #$%&! colorbar.
         try:
-            sca, trans = mp_decont_algor.pl_mps_phot_diag(gs, fig,
-                x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
-                v_min_mp, v_max_mp, red_return, diag_fit_inv, diag_no_fit_inv,
-                shift_isoch, err_bar)
+            sca, trans = mp_decont_algor.pl_mps_phot_diag(
+                gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax,
+                y_ax, v_min_mp, v_max_mp, red_return, diag_fit_inv,
+                diag_no_fit_inv, shift_isoch, err_bar)
         except:
-            #import traceback
-            #print traceback.format_exc()
+            # import traceback
+            # print traceback.format_exc()
             print("  WARNING: error when plotting MPs on cluster's "
-            "photom diagram.")
+                  "photom diagram.")
 
     #
     # Best fit plots.
@@ -217,7 +220,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
         for n, args in enumerate(arglist, 1):
             mp_best_fit.plot(n, *args)
 
-    # Ignore warning issued by colorbar plotted in photom diagram with
+    # Ignore warning issued by colorbar plotted in photometric diagram with
     # membership probabilities.
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
@@ -235,17 +238,18 @@ def make_plots(output_subdir, clust_name, x_data, y_data,
             # Create the axes and the colorbar.
             cbaxes = fig.add_axes([l, b, w, h])
             cbar = plt.colorbar(sca, cax=cbaxes, ticks=[v_min_mp, v_max_mp],
-                orientation='horizontal')
+                                orientation='horizontal')
             cbar.ax.tick_params(labelsize=9)
     except:
-        #import traceback
-        #print traceback.format_exc()
+        # import traceback
+        # print traceback.format_exc()
         print("  WARNING: error when plotting colorbar on cluster's "
-        "photom diagram.")
+              "photometric diagram.")
 
     # Generate output file for each data file.
     pl_fmt, pl_dpi = g.pl_params[1:3]
-    plt.savefig(join(output_subdir, str(clust_name) + '.' + pl_fmt), dpi=pl_dpi)
+    plt.savefig(join(output_subdir, str(clust_name) + '.' + pl_fmt),
+                dpi=pl_dpi)
 
     # Close to release memory.
     plt.clf()
