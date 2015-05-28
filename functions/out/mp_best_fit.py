@@ -63,7 +63,7 @@ def pl_bf_synth_cl(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
     ax_t = plt.subplot(gs[4:6, 10:12])
     ax_t.axis('off')  # Remove axis from frame.
     text1 = 'Synthetic cluster parameters:\n\n'
-    text2 = '$z\,\,\,\,\,\,\,\,\,=\, {} \pm {}$\n'.format(cp_r[0], cp_e[0])
+    text2 = '$z\quad\;\; =\, {} \pm {}$\n'.format(cp_r[0], cp_e[0])
     text3 = '$log(age)\, =\, {} \pm {}$\n'.format(cp_r[1], cp_e[1])
     text4 = '$E_{{(B-V)}}\,\,\, =\, {} \pm {}$\n'.format(cp_r[2], cp_e[2])
     text5 = '$(m-M)_o =\, {} \pm {}$\n'.format(cp_r[3], cp_e[3])
