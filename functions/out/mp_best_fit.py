@@ -63,12 +63,12 @@ def pl_bf_synth_cl(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
     ax_t = plt.subplot(gs[4:6, 10:12])
     ax_t.axis('off')  # Remove axis from frame.
     text1 = 'Synthetic cluster parameters:\n\n'
-    text2 = '$z\quad\;\; =\, {} \pm {}$\n'.format(cp_r[0], cp_e[0])
-    text3 = '$log(age)\, =\, {} \pm {}$\n'.format(cp_r[1], cp_e[1])
-    text4 = '$E_{{(B-V)}}\,\,\, =\, {} \pm {}$\n'.format(cp_r[2], cp_e[2])
-    text5 = '$(m-M)_o =\, {} \pm {}$\n'.format(cp_r[3], cp_e[3])
-    text6 = '$M_{{\odot}}\,\,\,\,\,\,=\, {} \pm {}$\n'.format(cp_r[4], cp_e[4])
-    text7 = '$b_{{frac}}\,\,\,\,\,\, =\, {} \pm {}$'.format(cp_r[5], cp_e[5])
+    text2 = r'$z\qquad\; =\, {} \pm {}$'.format(cp_r[0], cp_e[0]) + '\n'
+    text3 = r'$log(age)\, =\, {} \pm {}$'.format(cp_r[1], cp_e[1]) + '\n'
+    text4 = r'$E_{{(B-V)}}\;\,=\, {} \pm {}$'.format(cp_r[2], cp_e[2]) + '\n'
+    text5 = r'$(m-M)_o = {} \pm {}$'.format(cp_r[3], cp_e[3]) + '\n'
+    text6 = r'$M_{{\odot}}\quad\;=\,{} \pm {}$'.format(cp_r[4], cp_e[4]) + '\n'
+    text7 = r'$b_{{frac}}\quad\,\, =\, {} \pm {}$'.format(cp_r[5], cp_e[5])
     text = text1 + text2 + text3 + text4 + text5 + text6 + text7
     ob = offsetbox.AnchoredText(text, pad=1, loc=6, prop=dict(size=13))
     ob.patch.set(alpha=0.85)
