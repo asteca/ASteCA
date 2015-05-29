@@ -52,7 +52,7 @@ def asteca_funcs(cl_file, ip_list, R_in_place):
     # Get file names and paths.
     clust_name, data_file, memb_file, output_dir, output_subdir, dst_dir,\
         memb_file_out, synth_file_out, write_name = n_p(cl_file)
-    print 'Analizing cluster {} ({}).'.format(clust_name, g.mode)
+    print 'Analyzing cluster {} ({}).'.format(clust_name, g.mode)
 
     #################################################
     # HORRIBLE HACK, DELETE AS SOON AS POSSIBLE.
@@ -91,7 +91,7 @@ def asteca_funcs(cl_file, ip_list, R_in_place):
 
     # Get cluster radius
     radius_params = gcr(phot_data, field_dens, center_params, rdp_params,
-        semi_return, bin_width)
+                        semi_return, bin_width)
     clust_rad = radius_params[0]
 
     # Get King profiles based on the density profiles.
@@ -99,35 +99,35 @@ def asteca_funcs(cl_file, ip_list, R_in_place):
 
     # Accept and reject stars based on their errors.
     acpt_stars, rjct_stars, err_plot, err_flags, err_pck = ear(phot_data,
-        semi_return)
+                                                               semi_return)
 
     # Get stars in and out of cluster's radius.
-    cl_region, stars_out, stars_in_rjct, stars_out_rjct = gio(kde_center,
-        clust_rad, acpt_stars, rjct_stars)
+    cl_region, stars_out, stars_in_rjct, stars_out_rjct = gio(
+        kde_center, clust_rad, acpt_stars, rjct_stars)
     # Number of stars inside the cluster region (including stars with rejected
     # photometric errors)
     n_clust = len(cl_region) + len(stars_in_rjct)
 
     # Get cluster's area.
     cl_area, frac_cl_area = g_a(kde_center, clust_rad, x_data, y_data,
-        rdp_params, bin_width)
+                                rdp_params, bin_width)
 
     # Get approximate number of cluster's members.
     n_memb, flag_num_memb_low = g_m_n(n_clust, cl_area, field_dens, clust_rad,
-        rdp_params[-1])
+                                      rdp_params[-1])
 
     # Get contamination index.
     cont_index = g_c_i(n_clust, cl_area, field_dens, clust_rad, rdp_params[-1])
 
     # Field regions around the cluster's center.
     flag_no_fl_regs, field_region = g_r(hist_lst, cent_bin, clust_rad,
-        cl_area, stars_out)
+                                        cl_area, stars_out)
 
     # Get the luminosity function and completeness level for each magnitude
     # bin. The completeness will be used by the isochrone/synthetic cluster
     # fitting algorithm.
     lum_func, completeness = lf(flag_no_fl_regs, mag_data, cl_region,
-        field_region)
+                                field_region)
 
     # Calculate integrated magnitude.
     integr_return = g_i_m(cl_region, field_region, flag_no_fl_regs)
@@ -135,8 +135,8 @@ def asteca_funcs(cl_file, ip_list, R_in_place):
     # Get physical cluster probability based on p_values distribution.
     if R_in_place:
         from phot_analysis.get_p_value import get_pval as g_pv
-        pval_test_params, flag_pval_test = g_pv(cl_region, field_region,
-            col1_data, mag_data, flag_no_fl_regs)
+        pval_test_params, flag_pval_test = g_pv(
+            cl_region, field_region, col1_data, mag_data, flag_no_fl_regs)
     else:
         print 'Missing package. Skipping KDE p-value test for cluster.'
         flag_pval_test, pval_test_params = False, [-1.]
@@ -144,7 +144,7 @@ def asteca_funcs(cl_file, ip_list, R_in_place):
     # Apply decontamination algorithm if at least one equal-sized field region
     # was found around the cluster.
     decont_algor_return = dab(flag_no_fl_regs, cl_region, field_region,
-        memb_file)
+                              memb_file)
 
     # Obtain members parameter.
     memb_par, n_memb_da, flag_memb_par = m_m(n_memb, decont_algor_return)
@@ -170,13 +170,13 @@ def asteca_funcs(cl_file, ip_list, R_in_place):
 
     # Add cluster data and flags to output file
     a_d_o(out_file_name, write_name, center_params, radius_params, kp_params,
-        cont_index, n_memb, memb_par, n_memb_da, flag_memb_par, frac_cl_area,
-        pval_test_params[0], integr_return, err_flags, flag_num_memb_low,
-        bf_return)
+          cont_index, n_memb, memb_par, n_memb_da, flag_memb_par, frac_cl_area,
+          pval_test_params[0], integr_return, err_flags, flag_num_memb_low,
+          bf_return)
 
     # Output top tiers models if best fit parameters were obtained.
     g_t_t(clust_name, output_subdir, mag_data, col1_data, ip_list, err_lst,
-        completeness, bf_return)
+          completeness, bf_return)
 
     # Make plots
     if g.pl_params[0]:
@@ -195,7 +195,7 @@ def asteca_funcs(cl_file, ip_list, R_in_place):
     elapsed = time.time() - start
     m, s = divmod(elapsed, 60)
     print 'End of analysis for {} in {:.0f}m {:.0f}s.\n'.format(clust_name,
-        m, s)
+                                                                m, s)
 
     # Force the Garbage Collector to release unreferenced memory.
     gc.collect()
