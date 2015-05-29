@@ -65,27 +65,34 @@ def get_ext_cl(cl_name):
     # Get max ext value for this cluster.
     e_max = cl_exts[cl_name]
 
-    use_e_max = [
-        'BRHT4B', 'HS130', 'BSDL654', 'C11', 'KMHK378', 'H88-33', 'KMHK907',
-        'NGC1838', 'NGC1839', 'NGC1836', 'HS178', 'NGC1793', 'NGC1795',
-        'BSDL716', 'H88-279 ', 'L30', 'HW47', 'BS88', 'BSDL779', 'H88-188',
-        'LW224', 'H88-131', 'BSDL341', 'HS329', 'NGC1863  ', 'KMHK979',
-        'SL218', 'HS154 ', 'NGC1860', 'BSDL677', 'KMHK1719'
-    ]
+    # use_e_max = [
+    #     'BRHT4B', 'HS130', 'BSDL654', 'C11', 'KMHK378', 'H88-33', 'KMHK907',
+    #     'NGC1838', 'NGC1839', 'NGC1836', 'HS178', 'NGC1793', 'NGC1795',
+    #     'BSDL716', 'H88-279 ', 'L30', 'HW47', 'BS88', 'BSDL779', 'H88-188',
+    #     'LW224', 'H88-131', 'BSDL341', 'HS329', 'NGC1863  ', 'KMHK979',
+    #     'SL218', 'HS154 ', 'NGC1860', 'BSDL677', 'KMHK1719'
+    # ]
 
-    if cl_name in use_e_max:
-        ext_extend = 0.
+    # if cl_name in use_e_max:
+    #     ext_extend = 0.
+    # else:
+    #     ext_extend = 0.1
+
+    ext_extend = 0.
+    if e_max > 0.1:
+        step = 0.02
+    elif 0.05 <= e_max <= 0.1:
+        step = 0.01
     else:
-        ext_extend = 0.1
-
+        step = 0.005
     # Obtain new extinction range.
-    e_rs = np.arange(0., (e_max + ext_extend), 0.02)
+    e_rs = np.arange(0., (e_max + ext_extend), step)
 
     # If list is empty, pass null extinction value.
     if not e_rs.any():
         e_rs = [0.]
 
-    print " Set max extinction value: {}".format(max(e_rs))
+    print " Set max extinction value: {}, step: {}".format(max(e_rs), step)
 
     smc = ['L4', 'L5', 'L6', 'L7', 'L19', 'L27', 'HW47', 'BS121', 'L35',
            'L45', 'L49', 'L50', 'L62', 'L63', 'L110', 'L113', 'L3', 'L28',
@@ -99,9 +106,13 @@ def get_ext_cl(cl_name):
     # Get galaxy.
     if cl_name in smc:
         print ' SMC cluster'
-        d_rs = np.arange(18.8, 19.201, 0.05)
+        # d_rs = np.arange(18.8, 19.201, 0.05)
+        # de Grijs et al. (2015) +/- 0.1
+        d_rs = np.arange(18.86, 19.061, 0.02)
     else:
         print ' LMC cluster'
-        d_rs = np.arange(18.3, 18.701, 0.05)
+        # d_rs = np.arange(18.3, 18.701, 0.05)
+        # de Grijs et al. (2014) +/- 0.1
+        d_rs = np.arange(18.4, 18.601, 0.02)
 
     return e_rs, d_rs
