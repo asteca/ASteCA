@@ -38,19 +38,22 @@ def get_semi(clust_name):
                         if reader[0] == clust_name:
                             cl_cent_semi = [float(reader[1]), float(reader[2])]
                             cl_rad_semi = float(reader[3])
-                            cent_flag_semi, rad_flag_semi, err_flag_semi = \
-                            int(reader[4]), int(reader[5]), int(reader[6])
+                            cl_f_regs_semi = int(reader[4])
+                            cent_flag_semi, rad_flag_semi, freg_flag_semi, \
+                                err_flag_semi = int(reader[5]), \
+                                int(reader[6]), int(reader[7]), int(reader[8])
                             # Set flag to True if the cluster was found.
                             flag_clust_found = True
 
         # If cluster was found.
         if flag_clust_found:
-            semi_return = [cl_cent_semi, cl_rad_semi, cent_flag_semi,
-                rad_flag_semi, err_flag_semi]
+            semi_return = [cl_cent_semi, cl_rad_semi, cl_f_regs_semi,
+                           cent_flag_semi, rad_flag_semi, freg_flag_semi,
+                           err_flag_semi]
         else:
             # If the cluster was not found in the file, default to 'manual'.
             print ("  IMPORTANT: cluster's name not found in semi_input.dat\n"
-                "  file. Defaulting to 'auto' mode.")
+                   "  file. Defaulting to 'auto' mode.")
             # Re-define global variable.
             g.mode = 'auto'
 

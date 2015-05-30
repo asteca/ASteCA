@@ -114,7 +114,7 @@ def main_rad_algor(rdp_params, field_dens, bin_width, coord):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             conf_int = stats.norm.interval(0.6827, loc=clust_rad, scale=_std /
-                np.sqrt(len(rad_found)))
+                                           np.sqrt(len(rad_found)))
         # If stats returns a confidence interval with a NaN, discard it.
         if np.any(np.isnan(conf_int)):
             conf_dif = 0.
@@ -137,7 +137,7 @@ def main_rad_algor(rdp_params, field_dens, bin_width, coord):
 
 
 def get_clust_rad(phot_data, field_dens, center_params, rdp_params,
-    semi_return, bin_width):
+                  semi_return, bin_width):
     """
     Obtain the value for the cluster's radius by counting the number of points
     that fall within a given interval of the field density or lower. If this
@@ -152,7 +152,7 @@ def get_clust_rad(phot_data, field_dens, center_params, rdp_params,
     coord = pp.coord_syst()[0]
     # Call function that holds the radius finding algorithm.
     clust_rad, e_rad, flag_delta_total, flag_not_stable, flag_delta = \
-    main_rad_algor(rdp_params, field_dens, bin_width, coord)
+        main_rad_algor(rdp_params, field_dens, bin_width, coord)
 
     # Check if semi or manual mode are set.
     flag_radius_manual = False
@@ -161,8 +161,7 @@ def get_clust_rad(phot_data, field_dens, center_params, rdp_params,
 
     elif g.mode == 'semi':
         # Unpack semi values.
-        cent_cl_semi, cl_rad_semi, cent_flag_semi, rad_flag_semi, \
-        err_flag_semi = semi_return
+        cl_rad_semi, rad_flag_semi = semi_return[1], semi_return[4]
 
         if rad_flag_semi == 1:
             # Update values.
@@ -196,6 +195,6 @@ def get_clust_rad(phot_data, field_dens, center_params, rdp_params,
                 print 'Wrong input. Try again.\n'
 
     radius_params = [clust_rad, e_rad, flag_delta_total, flag_not_stable,
-        flag_delta, flag_radius_manual]
+                     flag_delta, flag_radius_manual]
 
     return radius_params

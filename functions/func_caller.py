@@ -120,8 +120,8 @@ def asteca_funcs(cl_file, ip_list, R_in_place):
     cont_index = g_c_i(n_clust, cl_area, field_dens, clust_rad, rdp_params[-1])
 
     # Field regions around the cluster's center.
-    flag_no_fl_regs, field_region = g_r(hist_lst, cent_bin, clust_rad,
-                                        cl_area, stars_out)
+    flag_no_fl_regs, field_region = g_r(semi_return, hist_lst, cent_bin,
+                                        clust_rad, cl_area, stars_out)
 
     # Get the luminosity function and completeness level for each magnitude
     # bin. The completeness will be used by the isochrone/synthetic cluster

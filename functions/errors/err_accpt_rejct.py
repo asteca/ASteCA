@@ -78,7 +78,7 @@ def err_accpt_rejct(phot_data, semi_return):
         # use and override the one in the input params file.
         if g.mode == 'semi':
             # Unpack semi flag
-            err_flag_semi = semi_return[4]
+            err_flag_semi = semi_return[6]
             if err_flag_semi != 0:
                 if err_flag_semi in {1, 2, 3}:
                     # Set error mode to use.

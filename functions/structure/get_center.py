@@ -128,7 +128,8 @@ def get_center(x_data, y_data, mag_data, hist_lst, semi_return):
     mode_semi = True
     if g.mode == 'semi':
         # Unpack semi values.
-        cent_cl_semi, cl_rad_semi, cent_flag_semi = semi_return[:3]
+        cent_cl_semi, cl_rad_semi = semi_return[:2]
+        cent_flag_semi = semi_return[3]
 
         # Only apply if flag is on of these values, else skip semi-center
         # assignment for this cluster.

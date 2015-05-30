@@ -14,10 +14,10 @@ def spiral_index(spiral, sp_indx, histo, x_c_b, y_c_b, num_bins_area):
     '''
     Take the fixed x,y coordinates for a squared spiral of bins (spiral)
     centered at [0,0] and an index (sp_indx) that points to a given
-    coordinate (where 0 means centger coords: [0,0]).
+    coordinate (where 0 means center coords: [0,0]).
 
     Center the spiral at the coordinates (x_c_b, y_c_b) for a 2D histogram
-    (histo) and loop through the spiralt storing the coordinates of each
+    (histo) and loop through the spiral storing the coordinates of each
     histogram bin until a given total area (num_bins_area) is obtained.
     '''
 
@@ -62,9 +62,9 @@ def spiral_region(h_manual, sp_coords):
      first one containing the x coordinates for every bin that corresponds
      to the region and the second list the y coordinates. We need to
      obtain the stars located inside each of those bins. To do this
-     we use 'h_manual' wich is a list that already contains the stars that
+     we use 'h_manual' which is a list that already contains the stars that
      fall inside each of the bins in the 2D histogram along with their
-     relevant data (ID, x, y, T1, etc..)
+     relevant data (ID, x, y, mag, etc..)
     '''
 
     # Initialize empty field region.
@@ -82,7 +82,8 @@ def spiral_region(h_manual, sp_coords):
     return f_region
 
 
-def get_regions(hist_lst, cent_bin, clust_rad, cl_area, stars_out):
+def get_regions(semi_return, hist_lst, cent_bin, clust_rad, cl_area,
+                stars_out):
     '''
     Define empty region around the cluster via a spiral centered on it
     and of area a bit larger than that defined by the cluster's radius.
@@ -94,6 +95,18 @@ def get_regions(hist_lst, cent_bin, clust_rad, cl_area, stars_out):
     hist_2d, xedges, yedges, bin_width = hist_lst
     x_c_b, y_c_b = cent_bin
 
+    # Number of field regions defined in 'params_input.dat' file.
+    f_regs_num = g.fr_number
+
+    # Check if semi is set.
+    if g.mode == 'semi':
+        # Unpack semi values.
+        cl_f_regs_semi, freg_flag_semi = semi_return[2], semi_return[5]
+
+        if freg_flag_semi == 1:
+            # Update value.
+            f_regs_num = cl_f_regs_semi
+
     # Get area as total number of bins in 2D hist times the area of each bin.
     total_area = len(hist_2d[0]) * len(hist_2d) * (bin_width ** 2)
     # Define empty area around the cluster region.
@@ -101,7 +114,7 @@ def get_regions(hist_lst, cent_bin, clust_rad, cl_area, stars_out):
     # Maximum number of field regions possible.
     f_regs_max = int((total_area - sq_area) / cl_area)
 
-    # If the remaining area in the frame after substracting the cluster region
+    # If the remaining area in the frame after subtracting the cluster region
     # is smaller than the cluster's area, this means that the cluster is either
     # too large or the frame too small and no field region of equal area than
     # that of the cluster can be obtained.
@@ -109,29 +122,29 @@ def get_regions(hist_lst, cent_bin, clust_rad, cl_area, stars_out):
     flag_no_fl_regs = False
     if f_regs_max < 1:
         print ("  WARNING: cluster region is too large or frame\n"
-        "  is too small. No field regions available.")
+               "  is too small. No field regions available.")
         flag_no_fl_regs = True
     else:
         # If the number of field regions defined is larger than the maximum
         # allowed, use the maximum.
-        if g.fr_number == 'max':
+        if f_regs_num == 'max':
             f_regions = f_regs_max
             print 'Using max number of field regions ({}).'.format(f_regions)
-        elif g.fr_number > f_regs_max:
+        elif f_regs_num > f_regs_max:
             f_regions = f_regs_max
             print ("  WARNING: Number of FR defined ({}) larger than\n"
-            "  the maximum allowed ({}). "
-            "Using max number.").format(g.fr_number, f_regs_max)
-        elif g.fr_number <= 0:
+                   "  the maximum allowed ({}). "
+                   "Using max number.").format(f_regs_num, f_regs_max)
+        elif f_regs_num <= 0:
             f_regions = f_regs_max
             print ("  WARNING: Number of FR ({}) is less than or equal\n"
-            "  zero. No field region will be defined.").format(
-                g.fr_number)
+                   "  zero. No field region will be defined.").format(
+                f_regs_num)
             flag_no_fl_regs = True
         else:
             print ("Using defined number of field regions ({}).".format(
-                g.fr_number))
-            f_regions = g.fr_number
+                f_regs_num))
+            f_regions = f_regs_num
 
     # Get list that contains the spiral as a list of x,y coordinates (also
     # stored as lists) starting from the initial bin [0, 0].
@@ -143,7 +156,7 @@ def get_regions(hist_lst, cent_bin, clust_rad, cl_area, stars_out):
     # Obtain index of spiral bin where field regions should begin to be formed.
     # dummy_lst is not important here.
     sp_indx, dummy_lst = spiral_index(spiral, 0, hist_2d, x_c_b, y_c_b,
-        num_bins_area)
+                                      num_bins_area)
 
     # Obtain field regions only if it is possible.
     # This list holds all the field regions.
@@ -162,7 +175,7 @@ def get_regions(hist_lst, cent_bin, clust_rad, cl_area, stars_out):
             # Retrieve spiral index where this field region should end and
             # coordinates of its bins.
             sp_indx, sp_coords = spiral_index(spiral, sp_indx, hist_2d, x_c_b,
-                y_c_b, num_bins_area)
+                                              y_c_b, num_bins_area)
             # Fill spiral section for this field region with all the stars
             # that fall inside of it.
             f_region = spiral_region(h_manual, sp_coords)
@@ -180,13 +193,13 @@ def get_regions(hist_lst, cent_bin, clust_rad, cl_area, stars_out):
             del field_regions[index]
         if field_regs_del:
             print ('  {} field regions with less than 4 stars each were'
-            ' removed.').format(len(field_regs_del))
+                   ' removed.').format(len(field_regs_del))
 
         # If after removing the empty regions no regions are left, raise the
         # flag.
         if f_regions > 0 and not(field_regions):
-            print ('  WARNING: no field regions left after removal of those\n' +
-            '  with less than 4 stars.')
+            print ('  WARNING: no field regions left after the removal of\n' +
+                   '  those containing less than 4 stars.')
             flag_no_fl_regs = True
 
     return flag_no_fl_regs, field_regions
