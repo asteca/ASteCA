@@ -36,21 +36,21 @@ def pl_centers(gs, x_name, y_name, coord, x_min, x_max, y_min, y_max,
         np.std(np.array(approx_cents), axis=0)
     plt.axvline(x=cent_median[0], linestyle='-', color='k')
     plt.axvline(x=cent_median[0] + cent_std_dev[0], linestyle='--',
-        color='k')
+                color='k')
     plt.axvline(x=cent_median[0] - cent_std_dev[0], linestyle='--',
-        color='k')
+                color='k')
     plt.axhline(y=cent_median[1], linestyle='-', color='k')
     plt.axhline(y=cent_median[1] + cent_std_dev[1], linestyle='--',
-        color='k')
+                color='k')
     plt.axhline(y=cent_median[1] - cent_std_dev[1], linestyle='--',
-        color='k')
+                color='k')
     # Add stats box.
     cent_med_r, cent_std_dev_r = err_r.round_sig_fig(cent_median,
-        cent_std_dev)
+                                                     cent_std_dev)
     text1 = (r"$(\tilde{{{0}}},\,\tilde{{{1}}}) = ({3:g},\,{4:g})\,"
-    "{2}$").format(x_name, y_name, coord, *cent_med_r)
+             "{2}$").format(x_name, y_name, coord, *cent_med_r)
     text2 = ("$(\sigma_{{{0}}},\,\sigma_{{{1}}}) = ({3:g},\,{4:g})\,"
-    "{2}$").format(x_name, y_name, coord, *cent_std_dev_r)
+             "{2}$").format(x_name, y_name, coord, *cent_std_dev_r)
     text = text1 + '\n' + text2
     ob = offsetbox.AnchoredText(text, loc=2, prop=dict(size=11))
     ob.patch.set(alpha=0.85)
@@ -70,13 +70,13 @@ def pl_centers(gs, x_name, y_name, coord, x_min, x_max, y_min, y_max,
     handles, labels = ax.get_legend_handles_labels()
     # use them in the legend
     leg = ax.legend(handles, labels, loc='lower right', numpoints=1,
-        fontsize=7)
+                    fontsize=7)
     # Set the alpha value of the legend.
     leg.get_frame().set_alpha(0.5)
 
 
 def pl_hist_g(gs, fig, x_name, y_name, coord, cent_bin, clust_rad, bin_width,
-        err_r, hist_2d_g):
+              err_r, hist_2d_g):
     '''
     2D gaussian convolved histogram.
     '''
@@ -90,7 +90,7 @@ def pl_hist_g(gs, fig, x_name, y_name, coord, cent_bin, clust_rad, bin_width,
     plt.axhline(y=cent_bin[1], linestyle='--', color='white')
     # Radius
     circle = plt.Circle((cent_bin[0], cent_bin[1]), clust_rad / bin_width,
-        color='w', fill=False)
+                        color='w', fill=False)
     fig.gca().add_artist(circle)
     # Add text boxs.
     text = 'Bin $\simeq$ {0:g} {1}'.format(bin_w_r, coord)
@@ -104,7 +104,7 @@ def pl_hist_g(gs, fig, x_name, y_name, coord, cent_bin, clust_rad, bin_width,
 
 
 def pl_rad_dens(gs, radii, ring_density, field_dens, coord, clust_name,
-        kp_params, clust_rad, e_rad, poisson_error, bin_width):
+                kp_params, clust_rad, e_rad, poisson_error, bin_width):
     '''
     Radial density plot.
     '''
@@ -120,9 +120,9 @@ def pl_rad_dens(gs, radii, ring_density, field_dens, coord, clust_name,
         max(radii) + (max(radii) / 20.)
     delta_total = (max(ring_density) - field_dens)
     delta_backg = 0.2 * delta_total
-    y_min, y_max = max((field_dens - delta_backg) - (max(ring_density) -
-    min(ring_density)) / 10, 0), max(ring_density) + (max(ring_density) -
-    min(ring_density)) / 10
+    y_min = max((field_dens - delta_backg) - (max(ring_density) -
+                min(ring_density)) / 10, 0)
+    y_max = max(ring_density) + (max(ring_density) - min(ring_density)) / 10
     # Set plot limits
     plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
@@ -136,19 +136,18 @@ def pl_rad_dens(gs, radii, ring_density, field_dens, coord, clust_name,
     plt.title(str(clust_name) + ' (' + g.mode + ')', fontsize=14)
     # Round radii values.
     rads_r, e_rads_r = err_r.round_sig_fig([rc, rt, clust_rad],
-        [e_rc, e_rt, e_rad])
+                                           [e_rc, e_rt, e_rad])
     # Legend texts
     kp_text = '3P' if flag_3pk_conver else '2P'
-    texts = ['RDP ($\sim${0:g} {1})'.format(bin_w_r, coord),
-            '$d_{{field}}$ = {:.1E} $st/{}^{{2}}$'.format(field_dens,
-                coord),
-            '{} King profile'.format(kp_text),
-            'r$_c$ = {0:g} $\pm$ {1:g} {2}'.format(rads_r[0], e_rads_r[0],
-                coord),
-            'r$_t$ = {0:g} $\pm$ {1:g} {2}'.format(rads_r[1], e_rads_r[1],
-                coord),
-            'r$_{{cl}}$ = {0:g} $\pm$ {1:g} {2}'.format(rads_r[2],
-                e_rads_r[2], coord)]
+    texts = [
+        'RDP ($\sim${0:g} {1})'.format(bin_w_r, coord),
+        '$d_{{field}}$ = {:.1E} $st/{}^{{2}}$'.format(field_dens, coord),
+        '{} King profile'.format(kp_text),
+        'r$_c$ = {0:g} $\pm$ {1:g} {2}'.format(rads_r[0], e_rads_r[0], coord),
+        'r$_t$ = {0:g} $\pm$ {1:g} {2}'.format(rads_r[1], e_rads_r[1], coord),
+        'r$_{{cl}}$ = {0:g} $\pm$ {1:g} {2}'.format(rads_r[2], e_rads_r[2],
+                                                    coord)
+    ]
     # Plot density profile with the smallest bin size
     ax.plot(radii, ring_density, 'ko-', zorder=3, label=texts[0])
     # Plot poisson error bars
@@ -156,7 +155,7 @@ def pl_rad_dens(gs, radii, ring_density, field_dens, coord, clust_name,
                  zorder=1)
     # Plot background level.
     ax.hlines(y=field_dens, xmin=0, xmax=max(radii), label=texts[1],
-        color='b', zorder=5)
+              color='b', zorder=5)
     # Approx middle of the graph.
     arr_y_up = (y_max - y_min) / 2.3 + y_min
     # Length and width of arrow head.
@@ -167,31 +166,31 @@ def pl_rad_dens(gs, radii, ring_density, field_dens, coord, clust_name,
     if flag_3pk_conver:
         # Plot curve.
         ax.plot(radii, kpf.three_params(radii, rt, cd, rc, field_dens), 'g--',
-            label=texts[2], lw=2., zorder=3)
+                label=texts[2], lw=2., zorder=3)
         # Plot r_t radius as an arrow. vline is there to show the label.
         ax.vlines(x=rt, ymin=0., ymax=0., label=texts[4], color='g')
         ax.arrow(rt, arr_y_up, 0., arr_y_dwn, fc="g", ec="g",
-            head_width=head_w, head_length=head_l, zorder=5)
+                 head_width=head_w, head_length=head_l, zorder=5)
         # Plot r_c as a dashed line.
         ax.vlines(x=rc, ymin=0, ymax=kpf.three_params(rc, rt, cd, rc,
-        field_dens), label=texts[3], color='g', linestyles=':', lw=4.,
-            zorder=4)
+                  field_dens), label=texts[3], color='g', linestyles=':',
+                  lw=4., zorder=4)
     # Plot 2-P King profile if 3-P was not found.
     elif flag_2pk_conver:
         # Plot curve.
         ax.plot(radii, kpf.two_params(radii, cd, rc, field_dens), 'g--',
-            label=texts[2], lw=2., zorder=3)
+                label=texts[2], lw=2., zorder=3)
         # Plot r_c as a dashed line.
         ax.vlines(x=rc, ymin=0, ymax=kpf.two_params(rc, cd, rc, field_dens),
-            label=texts[3], color='g', linestyles=':', lw=4., zorder=4)
+                  label=texts[3], color='g', linestyles=':', lw=4., zorder=4)
     # Plot radius.
     ax.vlines(x=clust_rad, ymin=0, ymax=0., label=texts[5], color='r')
     ax.arrow(clust_rad, arr_y_up, 0., arr_y_dwn, fc="r", ec="r",
-        head_width=head_w, head_length=head_l, zorder=5)
+             head_width=head_w, head_length=head_l, zorder=5)
     # Plot radius error zone.
     if e_rad > 0.:
         plt.axvspan((clust_rad - e_rad), (clust_rad + e_rad),
-            facecolor='grey', alpha=0.5)
+                    facecolor='grey', alpha=0.5)
     # get handles
     handles, labels = ax.get_legend_handles_labels()
     # use them in the legend
@@ -199,8 +198,8 @@ def pl_rad_dens(gs, radii, ring_density, field_dens, coord, clust_name,
 
 
 def pl_full_frame(gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max,
-    center_cl, clust_rad, e_cent, kp_params, mag_data, x_data, y_data,
-        st_sizes_arr):
+                  center_cl, clust_rad, e_cent, kp_params, mag_data, x_data,
+                  y_data, st_sizes_arr):
     '''
     x,y finding chart of full frame
     '''
@@ -223,30 +222,30 @@ def pl_full_frame(gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max,
     ax.minorticks_on()
     # Plot r_cl.
     circle = plt.Circle((center_cl[0], center_cl[1]), clust_rad, color='r',
-        fill=False, lw=1.5)
+                        fill=False, lw=1.5)
     fig.gca().add_artist(circle)
     if flag_3pk_conver is True:
         # Plot tidal radius.
         circle = plt.Circle((center_cl[0], center_cl[1]), rt, color='g',
-            fill=False, lw=1.5)
+                            fill=False, lw=1.5)
         fig.gca().add_artist(circle)
         # Plot core radius.
         if rc > 0:
-            circle = plt.Circle((center_cl[0], center_cl[1]), rc,
-                color='g', fill=False, ls='dashed', lw=1.)
+            circle = plt.Circle((center_cl[0], center_cl[1]), rc, color='g',
+                                fill=False, ls='dashed', lw=1.)
             fig.gca().add_artist(circle)
     elif flag_2pk_conver is True:
         # Plot core radius.
         if rc > 0:
             circle = plt.Circle((center_cl[0], center_cl[1]), rc,
-                color='g', fill=False, ls='dashed', lw=1.)
+                                color='g', fill=False, ls='dashed', lw=1.)
             fig.gca().add_artist(circle)
     # Add text box
     center_cl_r, e_cent_r = err_r.round_sig_fig(center_cl, e_cent)
-    text1 = '${0}_{{cent}} = {1:g} \pm {2:g}\,{3}$'.format(x_name,
-        center_cl_r[0], e_cent_r[0], coord)
-    text2 = '${0}_{{cent}} = {1:g} \pm {2:g}\,{3}$'.format(y_name,
-        center_cl_r[1], e_cent_r[1], coord)
+    text1 = '${0}_{{cent}} = {1:g} \pm {2:g}\,{3}$'.format(
+        x_name, center_cl_r[0], e_cent_r[0], coord)
+    text2 = '${0}_{{cent}} = {1:g} \pm {2:g}\,{3}$'.format(
+        y_name, center_cl_r[1], e_cent_r[1], coord)
     text = text1 + '\n' + text2
     ob = offsetbox.AnchoredText(text, pad=0.2, loc=2, prop=dict(size=11))
     ob.patch.set(alpha=0.85)
@@ -256,8 +255,8 @@ def pl_full_frame(gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max,
 
 
 def pl_zoom_frame(gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
-    y_zmax, cont_index, kde_pl, x_data, y_data, st_sizes_arr, center_cl,
-        clust_rad):
+                  y_zmax, cont_index, kde_pl, x_data, y_data, st_sizes_arr,
+                  center_cl, clust_rad):
     '''
     Zoom on x,y finding chart.
     '''
@@ -277,7 +276,7 @@ def pl_zoom_frame(gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
     ax.minorticks_on()
     # Plot radius.
     circle = plt.Circle((center_cl[0], center_cl[1]), clust_rad, color='r',
-        fill=False, lw=1.5, zorder=5)
+                        fill=False, lw=1.5, zorder=5)
     fig.gca().add_artist(circle)
     # Add text box.
     text = 'Cluster zoom\nCI = %0.2f' % (cont_index)
@@ -305,15 +304,15 @@ def pl_zoom_frame(gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
         plt.contour(x, y, kde, c_lines, colors='b', linewidths=0.6)
     # Plot stars.
     plt.scatter(x_data, y_data, marker='o', c='black', s=st_sizes_arr,
-        zorder=1)
+                zorder=1)
     # Plot center.
     plt.scatter(center_cl[0], center_cl[1], color='w', s=40, lw=0.8,
-        marker='x', zorder=5)
+                marker='x', zorder=5)
 
 
 def pl_cl_fl_regions(gs, fig, x_name, y_name, coord, x_min, x_max, y_min,
-    y_max, center_cl, clust_rad, field_regions, cl_region,
-        flag_no_fl_regs):
+                     y_max, center_cl, clust_rad, field_regions, cl_region,
+                     flag_no_fl_regs):
     '''
     Cluster and field regions defined.
     '''
