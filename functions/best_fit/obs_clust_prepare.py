@@ -9,6 +9,25 @@ from astroML.plotting import hist
 from .._in import get_in_params as g
 
 
+def sum_log(N):
+    '''
+    \sum i=1/N ln(i)
+    '''
+    a = np.arange(N)
+    return sum(np.log(a + 1))
+
+
+def sum_log_list(max_val=10000):
+    '''
+    '''
+
+    sum_log_lst = []
+    for _ in np.arange(max_val):
+        sum_log_lst.append(sum_log(_ + 1))
+
+    return sum_log_lst
+
+
 def prepare(memb_prob_avrg_sort):
     '''
     Prepare observed cluster array here to save time when the algorithm to
@@ -34,6 +53,41 @@ def prepare(memb_prob_avrg_sort):
 
         # Pass observed cluster data.
         obs_clust = [np.hstack(P), mem_probs]
+
+    elif lkl_method == 'saha':
+
+        SLL = sum_log_list()
+
+        # Remove ID's (to make entire array of floats) and zip.
+        P = np.array(zip(*memb_prob_avrg_sort)[1:], dtype='float')
+        mag_col_cl = [P[4], P[2]]
+
+        # Obtain bin edges for each dimension, defining a grid.
+        bin_edges = []
+        if bin_method in ['sturges', 'sqrt']:
+            if bin_method == 'sturges':
+                b_num = 1 + np.log2(len(mag_col_cl[0]))
+            else:
+                b_num = np.sqrt(len(mag_col_cl[0]))
+
+            for mag_col in mag_col_cl:
+                bin_edges.append(np.histogram(mag_col, bins=b_num)[1])
+        else:
+            for mag_col in mag_col_cl:
+                bin_edges.append(hist(mag_col, bins=bin_method)[1])
+
+        # Zip magnitudes and colors into array.
+        cl_mags_cols = np.array(zip(*mag_col_cl))
+
+        # Obtain *weighted* histogram for observed cluster.
+        cl_histo = np.histogramdd(
+            cl_mags_cols, bins=bin_edges, weights=np.asarray(P[6]))[0]
+
+        # Pass observed cluster data.
+        # obs_clust = [cl_histo, bin_edges, SLL]
+
+        # Pass this list instead if plotting in get_likelihood.
+        obs_clust = [cl_histo, bin_edges, SLL, mag_col_cl]
 
     else:
 

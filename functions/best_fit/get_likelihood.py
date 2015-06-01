@@ -10,12 +10,116 @@ from synth_cluster import synth_clust as s_c
 from .._in import get_in_params as g
 
 
+def saha(Q, P):
+    '''
+    Takes a synthetic cluster, compares it to the observed cluster and
+    returns the weighted (log) likelihood value.
+    This function follows the recipe given in Saha (1998).
+    '''
+
+    if not Q.any():
+        # If synthetic cluster is empty, assign high likelihood value.
+        saha_lkl = 1e09
+    else:
+
+        # Observed cluster's histogram.
+        cl_histo = P[0]
+        # Bin edges for each dimension.
+        b_rx, b_ry = P[1]
+        SLL = P[2]
+
+        # Magnitude and color for the synthetic cluster.
+        syn_mags_cols = np.array(zip(*[Q[0], Q[2]]))
+        # Histogram of the synthetic cluster, using the bin edges calculated
+        # with the observed cluster.
+        syn_histo = np.histogramdd(syn_mags_cols, bins=[b_rx, b_ry])[0]
+
+        # Small value used to replace zeros.
+        # epsilon = 1e-10
+
+        # Obtain inverse logarithmic 'Poisson likelihood ratio'.
+        saha_lkl = -1. * SLL[len(Q[0]) + len(b_rx) + len(b_ry) - 1] +\
+            SLL[len(Q[0]) + len(P[0]) + len(b_rx) + len(b_ry) - 1]
+
+        for el1 in zip(*(cl_histo, syn_histo)):
+            for el2 in zip(*(el1[0], el1[1])):
+                c = SLL[int(el2[0]) + int(el2[1])] - SLL[int(el2[0])] -\
+                    SLL[int(el2[1])]
+                saha_lkl -= c
+
+        # # The list passed in obs_clust_prepare must be modified for this
+        # # block to work.
+        # print len(Q[0]), saha_lkl
+        # import matplotlib.pyplot as plt
+        # from matplotlib.ticker import MultipleLocator
+
+        # # Define grid for 2D histograms.
+        # X, Y = np.meshgrid(b_rx, b_ry)
+        # # Extent of plots.
+        # x_extend = [min(P[-1][0]) - 1., max(P[-1][0]) + 1.]
+        # y_extend = [max(P[-1][1]) + 1., min(P[-1][1]) - 6.]
+
+        # # Define subplots.
+        # fig = plt.figure()
+        # ax1 = fig.add_subplot(1, 3, 1)
+        # ax1.set_xlim(x_extend)
+        # ax1.set_ylim(y_extend)
+        # ax2 = fig.add_subplot(1, 3, 2)
+        # ax2.minorticks_on()
+        # ax2.yaxis.set_major_locator(MultipleLocator(1.0))
+        # ax3 = fig.add_subplot(1, 3, 3)
+        # ax3.minorticks_on()
+        # ax3.yaxis.set_major_locator(MultipleLocator(1.0))
+
+        # # Scatter plot.
+        # ax1.scatter(P[-1][0], P[-1][1], c='r', label='Obs clust')
+        # ax1.scatter(Q[0], Q[2], c='b', label='Synth clust')
+        # for x_ed in b_rx:
+        #     # vertical lines
+        #     ax1.axvline(x_ed, linestyle=':', color='k', zorder=1)
+        # for y_ed in b_ry:
+        #     # horizontal lines
+        #     ax1.axhline(y_ed, linestyle=':', color='k', zorder=1)
+        # ax1.legend(fancybox=True, loc='lower left', scatterpoints=1)
+
+        # # Observed cluster 2D histo.
+        # # Rotate and flip H.
+        # H = np.rot90(cl_histo)
+        # H = np.flipud(H)
+        # ax2.pcolormesh(X, Y, H, cmap=plt.cm.Reds)
+        # ax2.text(0.05, 0.95, 'Obs clust 2D histo', transform=ax2.transAxes,
+        #          fontsize=15)
+
+        # # Synthetic cluster 2D histo.
+        # H = np.rot90(syn_histo)
+        # H = np.flipud(H)
+        # ax3.pcolormesh(X, Y, H, cmap=plt.cm.Reds)
+        # text = 'Synth clust 2D histo\n' +\
+        #     r'($-\ln(W) \approx {:.2f}$)'.format(saha_lkl)
+        # ax3.text(0.05, 0.9, text, transform=ax3.transAxes, fontsize=15)
+
+        # # Invert histograms axis.
+        # ax2.invert_yaxis()
+        # ax3.invert_yaxis()
+
+        # # Set limits for 2D histos.
+        # ax2.set_xlim(x_extend)
+        # ax2.set_ylim(y_extend)
+        # ax3.set_xlim(x_extend)
+        # ax3.set_ylim(y_extend)
+
+        # fig.subplots_adjust(hspace=1)
+        # plt.show()
+
+    return saha_lkl
+
+
 def tolstoy(Q, obs_clust):
     '''
     Takes a synthetic cluster, compares it to the observed cluster and
     returns the weighted (log) likelihood value.
     This function follows the recipe given in Tolstoy & Saha (1996),
-    Hernandez & Valls-Gabaud (2008) andMonteiro, Dias & Caetano (2010).
+    Hernandez & Valls-Gabaud (2008) and Monteiro, Dias & Caetano (2010).
     '''
 
     if not Q.any():
@@ -210,6 +314,8 @@ def isoch_likelihood(err_lst, obs_clust, completeness, st_dist_mass, isochrone,
     lkl_method = g.bf_params[2]
     if lkl_method == 'tolstoy':
         likelihood = tolstoy(synth_clust, obs_clust)
+    elif lkl_method == 'saha':
+        likelihood = saha(synth_clust, obs_clust)
     else:
         likelihood = dolphin(synth_clust, obs_clust)
 
