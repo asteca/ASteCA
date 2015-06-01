@@ -22,7 +22,7 @@ def encode(n_bin, p_delta, p_mins, int_popul):
         p_binar = []
         for i, p_del in enumerate(p_delta):
             p_binar.append(str(bin(int(((sol[i] - p_mins[i]) / p_del) *
-                (2 ** n_bin - 1))))[2:].zfill(n_bin))
+                           (2 ** n_bin - 1))))[2:].zfill(n_bin))
 
         # Combine binary strings to generate chromosome.
         chrom = ''.join(p_binar)
@@ -61,9 +61,11 @@ def crossover(chromosomes, p_cross, cr_sel):
                                                  2))
                 # Apply crossover on these two chromosomes.
                 cross_chrom.append(chrom_pair[0][:cp0] +
-                chrom_pair[1][cp0:cp1] + chrom_pair[0][cp1:])
+                                   chrom_pair[1][cp0:cp1] +
+                                   chrom_pair[0][cp1:])
                 cross_chrom.append(chrom_pair[1][:cp0] +
-                chrom_pair[0][cp0:cp1] + chrom_pair[1][cp1:])
+                                   chrom_pair[0][cp0:cp1] +
+                                   chrom_pair[1][cp1:])
         else:
             # Skip crossover operation.
             cross_chrom.append(chrom_pair[0])
@@ -79,7 +81,7 @@ def mutation(cross_chrom, p_mut):
     # For each chromosome flip their genes according to the probability p_mut.
     for i, elem in enumerate(cross_chrom):
         cross_chrom[i] = ''.join(char if random.random() > p_mut else
-        str(1 - int(char)) for char in elem)
+                                 str(1 - int(char)) for char in elem)
 
     return cross_chrom
 
@@ -95,7 +97,8 @@ def decode(param_values, n_bin, p_delta, p_mins, mut_chrom):
 
     for chrom in mut_chrom:
         # Split chromosome string.
-        chrom_split = [chrom[i:i + n_bin] for i in xrange(0, len(chrom), n_bin)]
+        chrom_split = [chrom[i:i + n_bin] for i in xrange(0, len(chrom),
+                       n_bin)]
 
         # Convert each binary into an integer for all parameters.
         b2i = [int(i, 2) for i in chrom_split]
@@ -149,7 +152,7 @@ def selection(generation, breed_prob):
 
 
 def evaluation(err_lst, obs_clust, completeness, isoch_list, param_values,
-                 p_lst, st_dist_mass, model_done):
+               p_lst, st_dist_mass, model_done):
     '''
     Evaluate each model in the objective function to obtain the fitness of
     each one.
@@ -166,13 +169,13 @@ def evaluation(err_lst, obs_clust, completeness, isoch_list, param_values,
 
         # Call likelihood function for this model.
         likelihood = i_l(err_lst, obs_clust, completeness, st_dist_mass,
-            isochrone, model)
+                         isochrone, model)
 
         # Check if this model was already processed. Without this check here,
         # the extinction/immigration operator becomes useless, since the best
         # solution's likelihood value can vary slightly due to the re-sampling
         # of the mass distribution.
-        #if model in model_done[0]:
+        # if model in model_done[0]:
         try:
             # Get old likelihood value for this model.
             likel_old = model_done[1][model_done[0].index(model)]
@@ -256,7 +259,7 @@ def num_binary_digits(param_values):
 
 
 def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
-    st_dist_mass):
+              st_dist_mass):
     '''
     Genetic algorithm adapted to find the best fit model-obervation.
     '''
@@ -276,19 +279,19 @@ def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
     # only depends on the total number of chromosomes n_pop and the fitness
     # differential fdif.
     fitness = [1. / n_pop + fdif * (n_pop + 1. - 2. * (i + 1.)) /
-        (n_pop * (n_pop + 1.)) for i in range(n_pop)]
+               (n_pop * (n_pop + 1.)) for i in range(n_pop)]
 
-    ### Initial random population evaluation. ###
+    # *** Initial random population evaluation ***
     p_lst_r = random_population(param_values, n_pop)
 
-    # Stores parameters of the solutions already processed and the likelihhods
+    # Stores parameters of the solutions already processed and the likelihoods
     # obtained.
     model_done = [[], []]
 
     # Evaluate initial random solutions in the objective function.
-    generation, lkl, model_done = evaluation(err_lst, obs_clust,
-        completeness, isoch_list, param_values, p_lst_r, st_dist_mass,
-        model_done)
+    generation, lkl, model_done = evaluation(
+        err_lst, obs_clust, completeness, isoch_list, param_values, p_lst_r,
+        st_dist_mass, model_done)
 
     # Store best solution for passing along in the 'Elitism' block.
     best_sol = generation[:n_el]
@@ -309,7 +312,7 @@ def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
     # Begin processing the populations up to n_gen generations.
     for i in range(n_gen):
 
-        #### Selection/Reproduction ###
+        # *** Selection/Reproduction ***
         # Select chromosomes for breeding from the current generation of
         # solutions according to breed_prob to generate the intermediate
         # population.
@@ -318,7 +321,7 @@ def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
         # Encode intermediate population's solutions into binary chromosomes.
         chromosomes = encode(n_bin, p_delta, p_mins, int_popul)
 
-        #### Breeding ###
+        # *** Breeding ***
         # Pair chromosomes by randomly shuffling them.
         random.shuffle(chromosomes)
 
@@ -329,7 +332,7 @@ def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
         # Apply mutation operation on random genes for every chromosome.
         mut_chrom = mutation(cross_chrom, p_mut)
 
-        ### Evaluation ###
+        # *** Evaluation ***
         # Decode the chromosomes into solutions to form the new generation.
         p_lst_d = decode(param_values, n_bin, p_delta, p_mins, mut_chrom)
 
@@ -339,11 +342,11 @@ def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
 
         # Evaluate each new solution in the objective function and sort
         # according to the best solutions found.
-        generation, lkl, model_done = evaluation(err_lst, obs_clust,
-            completeness, isoch_list, param_values, p_lst_e, st_dist_mass,
-            model_done)
+        generation, lkl, model_done = evaluation(
+            err_lst, obs_clust, completeness, isoch_list, param_values,
+            p_lst_e, st_dist_mass, model_done)
 
-        ### Extinction/Immigration ###
+        # *** Extinction/Immigration ***
         # If the best solution has remained unchanged for n_ei
         # generations, remove all chromosomes but the best ones (extinction)
         # and fill with random new solutions (immigration).
@@ -357,7 +360,7 @@ def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
             # If the number equals n_ei, apply Extinction/Immigration operator.
             if best_sol_count == n_ei:
 
-                ### Exit switch. ##
+                # *** Exit switch ***
                 # If n_es runs of the Ext/Imm operator have been applied with
                 # no changes to the best solution, apply the exit switch,
                 # ie: exit the GA.
@@ -388,20 +391,20 @@ def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
             # Reset counter.
             best_sol_count = 0
 
-        if flag_print_perc:
-            percentage_complete = (100.0 * (i + 1) / n_gen)
-            while len(milestones) > 0 and percentage_complete >= milestones[0]:
-                print ("  {:>3}% done       ({:g}, {:g}, {:g}, {:g}, {:g},"
-                " {:g})".format(milestones[0], *generation[0]))
-                # Remove that milestone from the list.
-                milestones = milestones[1:]
-
         # For plotting purposes.
         lkl_old[0].append(lkl[0])
         # Discard large values associated with empty arrays from mean.
         lkl_old[1].append(np.mean(np.asarray(lkl)[np.asarray(lkl) < 9.9e08]))
 
-        #print i, generation[0], lkl[0], len(model_done[0])
+        if flag_print_perc:
+            percentage_complete = (100.0 * (i + 1) / n_gen)
+            while len(milestones) > 0 and percentage_complete >= milestones[0]:
+                print ("  {:>3}% done       ({:g}, {:g}, {:g}, {:g}, {:g},"
+                       " {:g})".format(milestones[0], *generation[0]))
+                # Remove that milestone from the list.
+                milestones = milestones[1:]
+
+        # print i, generation[0], lkl[0], len(model_done[0])
 
     isoch_fit_params = [generation[0], lkl_old, new_bs_indx, model_done]
 
