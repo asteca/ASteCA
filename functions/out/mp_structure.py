@@ -16,12 +16,12 @@ from .._in import get_in_params as g
 
 
 def pl_centers(gs, x_name, y_name, coord, x_min, x_max, y_min, y_max,
-        approx_cents, bin_width, st_dev_lst):
+               asp_ratio, approx_cents, bin_width, st_dev_lst):
     '''
     2D Gaussian histograms' centers using different standard deviations.
     '''
     ax = plt.subplot(gs[0:2, 0:2])
-    ax.set_aspect('equal')
+    ax.set_aspect(aspect=asp_ratio)
     # Set plot limits.
     plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
@@ -75,10 +75,10 @@ def pl_centers(gs, x_name, y_name, coord, x_min, x_max, y_min, y_max,
     leg.get_frame().set_alpha(0.5)
 
 
-def pl_hist_g(gs, fig, x_name, y_name, coord, cent_bin, clust_rad, bin_width,
-              err_r, hist_2d_g):
+def pl_hist_g(gs, fig, asp_ratio, x_name, y_name, coord, cent_bin, clust_rad,
+              bin_width, err_r, hist_2d_g):
     '''
-    2D gaussian convolved histogram.
+    2D Gaussian convolved histogram.
     '''
     bin_w_r = err_r.round_to_y(bin_width)
 
@@ -92,7 +92,7 @@ def pl_hist_g(gs, fig, x_name, y_name, coord, cent_bin, clust_rad, bin_width,
     circle = plt.Circle((cent_bin[0], cent_bin[1]), clust_rad / bin_width,
                         color='w', fill=False)
     fig.gca().add_artist(circle)
-    # Add text boxs.
+    # Add text box.
     text = 'Bin $\simeq$ {0:g} {1}'.format(bin_w_r, coord)
     ob = offsetbox.AnchoredText(text, pad=0.2, loc=1, prop=dict(size=10))
     ob.patch.set(alpha=0.85)
@@ -101,6 +101,7 @@ def pl_hist_g(gs, fig, x_name, y_name, coord, cent_bin, clust_rad, bin_width,
     # If RA is used, invert axis.
     if coord == 'deg':
         ax.invert_xaxis()
+    ax.set_aspect(aspect=asp_ratio)
 
 
 def pl_rad_dens(gs, radii, ring_density, field_dens, coord, clust_name,
@@ -150,7 +151,7 @@ def pl_rad_dens(gs, radii, ring_density, field_dens, coord, clust_name,
     ]
     # Plot density profile with the smallest bin size
     ax.plot(radii, ring_density, 'ko-', zorder=3, label=texts[0])
-    # Plot poisson error bars
+    # Plot Poisson error bars
     plt.errorbar(radii, ring_density, yerr=poisson_error, fmt='ko',
                  zorder=1)
     # Plot background level.
@@ -198,8 +199,8 @@ def pl_rad_dens(gs, radii, ring_density, field_dens, coord, clust_name,
 
 
 def pl_full_frame(gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max,
-                  center_cl, clust_rad, e_cent, kp_params, mag_data, x_data,
-                  y_data, st_sizes_arr):
+                  asp_ratio, center_cl, clust_rad, e_cent, kp_params, mag_data,
+                  x_data, y_data, st_sizes_arr):
     '''
     x,y finding chart of full frame
     '''
@@ -208,7 +209,7 @@ def pl_full_frame(gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max,
         kp_params
 
     ax = plt.subplot(gs[0:2, 8:10])
-    ax.set_aspect('equal')
+    ax.set_aspect(aspect=asp_ratio)
     # Set plot limits
     plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
@@ -311,13 +312,13 @@ def pl_zoom_frame(gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
 
 
 def pl_cl_fl_regions(gs, fig, x_name, y_name, coord, x_min, x_max, y_min,
-                     y_max, center_cl, clust_rad, field_regions, cl_region,
-                     flag_no_fl_regs):
+                     y_max, asp_ratio, center_cl, clust_rad, field_regions,
+                     cl_region, flag_no_fl_regs):
     '''
     Cluster and field regions defined.
     '''
     ax = plt.subplot(gs[2:4, 0:2])
-    ax.set_aspect('equal')
+    ax.set_aspect(aspect=asp_ratio)
     # Set plot limits
     plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)

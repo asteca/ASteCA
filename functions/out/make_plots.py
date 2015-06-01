@@ -70,6 +70,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, bin_width,
 
     # Obtain plotting parameters and data.
     x_min, x_max, y_min, y_max = prep_plots.frame_max_min(x_data, y_data)
+    asp_ratio = prep_plots.aspect_ratio(x_min, x_max, y_min, y_max)
     coord, x_name, y_name = prep_plots.coord_syst()
     x_zmin, x_zmax, y_zmin, y_zmax = prep_plots.frame_zoomed(
         x_min, x_max, y_min, y_max, center_cl, clust_rad)
@@ -94,21 +95,26 @@ def make_plots(output_subdir, clust_name, x_data, y_data, bin_width,
     #
     # Structure plots.
     arglist = [
-        [gs, fig, x_name, y_name, coord, cent_bin, clust_rad, bin_width,
-            err_r, hist_2d_g],
-        [gs, x_name, y_name, coord, x_min, x_max, y_min, y_max, approx_cents,
-            bin_width, st_dev_lst],
-        [gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max,
-            center_cl, clust_rad, e_cent, kp_params, mag_data,
-            x_data, y_data, st_sizes_arr],
+        # pl_hist_g: 2D Gaussian convolved histogram.
+        [gs, fig, asp_ratio, x_name, y_name, coord, cent_bin, clust_rad,
+            bin_width, err_r, hist_2d_g],
+        # pl_centers: 2D Gaussian histograms' centers.
+        [gs, x_name, y_name, coord, x_min, x_max, y_min, y_max, asp_ratio,
+            approx_cents, bin_width, st_dev_lst],
+        # pl_full_frame: x,y finding chart of full frame.
+        [gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max, asp_ratio,
+            center_cl, clust_rad, e_cent, kp_params, mag_data, x_data, y_data,
+            st_sizes_arr],
+        # pl_rad_dens: Radial density plot.
         [gs, radii, ring_density, field_dens, coord, clust_name, kp_params,
             clust_rad, e_rad, poisson_error, bin_width],
+        # pl_zoom_frame: Zoom on x,y finding chart.
         [gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin, y_zmax,
             cont_index, kde_pl, x_data_z, y_data_z,
             st_sizes_arr_z, center_cl, clust_rad],
-        [gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max,
-            center_cl, clust_rad, field_regions, cl_region,
-            flag_no_fl_regs]
+        # pl_cl_fl_regions: Cluster and field regions defined.
+        [gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max, asp_ratio,
+            center_cl, clust_rad, field_regions, cl_region, flag_no_fl_regs]
         ]
     for n, args in enumerate(arglist):
         # with timeblock("{}".format(n)):
@@ -116,7 +122,6 @@ def make_plots(output_subdir, clust_name, x_data, y_data, bin_width,
 
     #
     # Photometric analysis plots.
-
     arglist = [
         [gs, fig, 'up', x_ax, y_ax, mag_data, err_plot, err_flags,
             cl_region, stars_in_rjct, stars_out, stars_out_rjct],

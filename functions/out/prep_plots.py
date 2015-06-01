@@ -57,6 +57,25 @@ def frame_max_min(x_data, y_data):
     return x_min, x_max, y_min, y_max
 
 
+def aspect_ratio(x_min, x_max, y_min, y_max):
+    '''
+    Define an optimal aspect ratio for full frame plots.
+    '''
+    x_range, y_range = abs(x_max - x_min), abs(y_max - y_min)
+    asp_ratio = float(min(x_range, y_range) / max(x_range, y_range))
+    print asp_ratio
+
+    # If the aspect ratio is smaller than 1:3.
+    if asp_ratio < 0.33:
+        print ("  WARNING: frame's aspect ratio ({:.2f}) is < 1:3.\n"
+               "  Cluster's plot will be stretched to 1:1.".format(asp_ratio))
+        asp_ratio = 'auto'
+    else:
+        asp_ratio = 'equal'
+
+    return asp_ratio
+
+
 def coord_syst():
     '''
     Define system of coordinates used.
@@ -71,9 +90,9 @@ def frame_zoomed(x_min, x_max, y_min, y_max, center_cl, clust_rad):
     If possible, define zoomed frame.
     '''
     x_zmin, x_zmax = max(x_min, (center_cl[0] - 1.5 * clust_rad)), \
-    min(x_max, (center_cl[0] + 1.5 * clust_rad))
+        min(x_max, (center_cl[0] + 1.5 * clust_rad))
     y_zmin, y_zmax = max(y_min, (center_cl[1] - 1.5 * clust_rad)), \
-    min(y_max, (center_cl[1] + 1.5 * clust_rad))
+        min(y_max, (center_cl[1] + 1.5 * clust_rad))
     # Prevent axis stretching.
     if (x_zmax - x_zmin) != (y_zmax - y_zmin):
         lst = [(x_zmax - x_zmin), (y_zmax - y_zmin)]
@@ -104,7 +123,7 @@ def ax_data(mag_data, col_data):
     '''
     Unpack coordinates and photometric data.
     '''
-    #x_data, y_data = id_coords[1:]
+    # x_data, y_data = id_coords[1:]
     phot_x = col_data
     phot_y = mag_data
     return phot_x, phot_y
@@ -152,7 +171,7 @@ def phot_diag_st_size(x):
 
 
 def separate_stars(x_data, y_data, mag_data, x_zmin, x_zmax, y_zmin, y_zmax,
-    stars_out_rjct, field_regions):
+                   stars_out_rjct, field_regions):
     '''
     Separate stars in lists.
     '''
@@ -183,7 +202,7 @@ def separate_stars(x_data, y_data, mag_data, x_zmin, x_zmax, y_zmin, y_zmax,
 
 
 def da_plots(center_cl, clust_rad, stars_out, x_zmin, x_zmax, y_zmin, y_zmax,
-    x_max_cmd, col_data, err_lst, red_return):
+             x_max_cmd, col_data, err_lst, red_return):
     '''
     Generate parameters for the finding chart and the photometric diagram
     plotted with the MPs assigned by the DA.
@@ -194,7 +213,7 @@ def da_plots(center_cl, clust_rad, stars_out, x_zmin, x_zmax, y_zmin, y_zmax,
     # Get extreme values for colorbar.
     lst_comb = red_memb_fit + red_memb_no_fit
     v_min_mp, v_max_mp = round(min(zip(*lst_comb)[-1]), 2), \
-    round(max(zip(*lst_comb)[-1]), 2)
+        round(max(zip(*lst_comb)[-1]), 2)
 
     # Decides if colorbar should be plotted.
     plot_colorbar = False
@@ -224,7 +243,7 @@ def da_plots(center_cl, clust_rad, stars_out, x_zmin, x_zmax, y_zmin, y_zmax,
     for star in stars_out:
         if x_zmin <= star[1] <= x_zmax and y_zmin <= star[2] <= y_zmax:
             dist = np.sqrt((center_cl[0] - star[1]) ** 2 +
-            (center_cl[1] - star[2]) ** 2)
+                           (center_cl[1] - star[2]) ** 2)
             # Only plot stars outside the cluster's radius.
             if dist >= clust_rad:
                 out_clust_rad[0].append(star[1])
@@ -260,8 +279,8 @@ def da_plots(center_cl, clust_rad, stars_out, x_zmin, x_zmax, y_zmin, y_zmax,
         y_err = exp_3p(mag_y, *popt_mag)
     err_bar = [x_val, mag_y, x_err, y_err]
 
-    return v_min_mp, v_max_mp, plot_colorbar, chart_fit_inv, chart_no_fit_inv, \
-    out_clust_rad, diag_fit_inv, diag_no_fit_inv, err_bar
+    return v_min_mp, v_max_mp, plot_colorbar, chart_fit_inv, \
+        chart_no_fit_inv, out_clust_rad, diag_fit_inv, diag_no_fit_inv, err_bar
 
 
 def param_ranges(ip_list):
@@ -273,7 +292,7 @@ def param_ranges(ip_list):
         # Set the delta for the parameter range. If only one value was
         # used, set a very small delta value.
         delta_p = (max(param) - min(param)) * 0.05 \
-        if max(param) != min(param) else 0.001
+            if max(param) != min(param) else 0.001
         # Store parameter range.
         min_max_p.append([min(param) - delta_p, max(param) + delta_p])
 
@@ -287,7 +306,7 @@ def likl_y_range(lkl_old):
     # Take limits from L_min curve.
     lkl_range = max(lkl_old[1]) - min(lkl_old[0])
     l_min_max = [max(0., min(lkl_old[0]) - 0.1 * lkl_range),
-        max(lkl_old[1]) + 0.1 * lkl_range]
+                 max(lkl_old[1]) + 0.1 * lkl_range]
 
     return l_min_max
 

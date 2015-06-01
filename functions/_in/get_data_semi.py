@@ -52,7 +52,7 @@ def get_semi(clust_name):
                            err_flag_semi]
         else:
             # If the cluster was not found in the file, default to 'manual'.
-            print ("  IMPORTANT: cluster's name not found in semi_input.dat\n"
+            print ("  WARNING: cluster's name not found in 'semi_input.dat'\n"
                    "  file. Defaulting to 'auto' mode.")
             # Re-define global variable.
             g.mode = 'auto'
