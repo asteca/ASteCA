@@ -63,7 +63,6 @@ def aspect_ratio(x_min, x_max, y_min, y_max):
     '''
     x_range, y_range = abs(x_max - x_min), abs(y_max - y_min)
     asp_ratio = float(min(x_range, y_range) / max(x_range, y_range))
-    print asp_ratio
 
     # If the aspect ratio is smaller than 1:3.
     if asp_ratio < 0.33:
