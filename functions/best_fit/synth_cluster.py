@@ -72,7 +72,7 @@ def compl_func(isoch_binar, completeness):
         pi = completeness[3]
         n1, p1 = synth_mag_hist[completeness[2]], pi[0]
         di = np.around((synth_mag_hist[completeness[2]:] -
-        (n1 / p1) * np.asarray(pi)), 0)
+                        (n1 / p1) * np.asarray(pi)), 0)
 
         # Store indexes of *all* elements in isoch_m_d whose magnitude
         # value falls between the ranges given.
@@ -85,7 +85,7 @@ def compl_func(isoch_binar, completeness):
         sorting_idx = np.argsort(elements, kind='mergesort')
         ind_sorted = indices[sorting_idx]
         x = np.searchsorted(elements, range(N), side='right',
-            sorter=sorting_idx)
+                            sorter=sorting_idx)
         # Indexes.
         rang_indx = [ind_sorted[x[i]:x[i + 1]] for i in range(N - 1)]
 
@@ -96,7 +96,7 @@ def compl_func(isoch_binar, completeness):
         for indx, num in enumerate(di):
             if rang_indx[indx].any() and len(rang_indx[indx]) >= num:
                 rem_indx.append(np.random.choice(rang_indx[indx],
-                    int(num), replace=False))
+                                int(num), replace=False))
             else:
                 rem_indx.append(rang_indx[indx])
 
@@ -198,8 +198,8 @@ def binarity(isoch_mass, isoch_cut, bin_frac):
     m1 = np.asarray(isoch_mass[2][bin_indxs])
     # Secondary masses.
     mass_bin0 = np.random.uniform(bin_mass_ratio * m1, m1)
-    # This prevents a rare error where apparently mass_bin0 is a float.
-    if not type(mass_bin0) is float:
+    # This prevents a rare error where apparently mass_bin0 is *not* a float.
+    if type(mass_bin0) is not float:
 
         # If any secondary mass falls outside of the lower isochrone's mass
         # range, change its value to the min value.
@@ -222,10 +222,10 @@ def binarity(isoch_mass, isoch_cut, bin_frac):
             mag2_iso = isoch_mass[0][bin_indxs] + isoch_mass[1][bin_indxs]
             mag2_bin = bin_isoch[0] + bin_isoch[1]
         col_mag_bin = -2.5 * np.log10(10 ** (-0.4 * mag2_iso) +
-        10 ** (-0.4 * mag2_bin))
+                                      10 ** (-0.4 * mag2_bin))
         # Magnitude in y axis.
         mag_bin = -2.5 * np.log10(10 ** (-0.4 * isoch_mass[1][bin_indxs]) +
-        10 ** (-0.4 * bin_isoch[1]))
+                                  10 ** (-0.4 * bin_isoch[1]))
         # Transform back first filter's magnitude into color.
         if cmd_sel in {2, 5, 9}:
             col_bin = mag_bin - col_mag_bin
@@ -353,7 +353,7 @@ def isoch_cut_mag(isoch_moved, max_mag):
     # Now remove values beyond max_mag (= completeness[0]).
     # Get index of closest mag value to max_mag.
     max_indx = min(range(len(isoch_sort[1])), key=lambda i:
-    abs(isoch_sort[1][i] - max_mag))
+                   abs(isoch_sort[1][i] - max_mag))
     # Discard elements beyond max_mag limit.
     isoch_cut = np.array([isoch_sort[i][0:max_indx] for i in range(3)])
 
