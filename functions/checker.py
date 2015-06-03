@@ -91,9 +91,24 @@ def R_check(inst_packgs_lst):
             R_pack = "'R' and 'rpy2' are"
         # Something is not installed and function was told to run.
         print ("  WARNING: {} not installed and the 'KDE p-value test'\n"
-        "   was set to run. The function will be skipped.\n".format(R_pack))
+               "   was set to run. The function will be skipped.\n".format(
+                    R_pack))
 
     return R_in_place
+
+
+def find_missing(arr_large, arr_small):
+    '''
+    Takes two arrays of floats, compares them and returns the missing
+    elements in the smaller one.
+    '''
+    # Convert to strings before comparing.
+    s1 = [str(_) for _ in arr_small]
+    s2 = [str(_) for _ in arr_large]
+    # Find missing elements. Convert to float and store.
+    missing = [float(_) for _ in s2 if _ not in set(s1)]
+
+    return missing
 
 
 def check(mypath, file_end, cl_files):
@@ -118,7 +133,7 @@ def check(mypath, file_end, cl_files):
     # Check that at least one photometric cluster file exists.
     if not cl_files:
         sys.exit("ERROR: no photometric data files found in '{}'\n"
-        "folder. Halting.".format('/input' + file_end))
+                 "folder. Halting.".format('/input' + file_end))
 
     # Check if params_input_XX.dat file exists.
     pars_f_name = 'params_input' + file_end + '.dat'
@@ -129,7 +144,7 @@ def check(mypath, file_end, cl_files):
     else:
         if not isfile(pars_f_path):
             print ("  WARNING: {} file does not exist.\n  Falling back to"
-                " 'params_input.dat' file.\n".format(pars_f_name))
+                   " 'params_input.dat' file.\n".format(pars_f_name))
 
             # Fall back to default file.
             pars_f_name = 'params_input.dat'
@@ -163,38 +178,38 @@ def check(mypath, file_end, cl_files):
         if not isfile(join(mypath, semi_file)):
             # File semi_input.dat does not exist.
             sys.exit("ERROR: 'semi' mode is set but semi_input.dat file does"
-                " not exist.")
+                     " not exist.")
 
     # Check px/deg.
     if g.gd_params[-1] not in {'px', 'deg'}:
         sys.exit("ERROR: the coordinate units given in the input parameters\n"
-                "file ('{}') are incorrect.".format(g.gd_params[-1]))
+                 "file ('{}') are incorrect.".format(g.gd_params[-1]))
 
     # Selected CMD.
     if g.ps_params[1] not in {1, 2, 3, 4, 5, 6, 7, 8, 9}:
         sys.exit("ERROR: the stored CMD value ({}) does not match a valid"
-            " selection.".format(g.ps_params[1]))
+                 " selection.".format(g.ps_params[1]))
 
     # Output figure.
     if g.pl_params[0] is True:
         if g.pl_params[1] not in {'png', 'pdf', 'PNG', 'PDF'}:
             sys.exit("ERROR: figure output format selected ('{}') is"
-            " not valid.".format(g.pl_params[1]))
+                     " not valid.".format(g.pl_params[1]))
 
     # 2D positional histogram.
     if g.gh_params[0] not in {'auto', 'manual'}:
         sys.exit("ERROR: mode selected ('{}') for 2D histogram"
-        " is not valid.".format(g.gh_params[0]))
+                 " is not valid.".format(g.gh_params[0]))
 
     # Radius finding function.
     if g.cr_params[0] not in {'low', 'mid', 'high'}:
         sys.exit("ERROR: mode selected ('{}') for radius finding"
-        " function is not valid.".format(g.cr_params[0]))
+                 " function is not valid.".format(g.cr_params[0]))
 
     # Errors function.
     if g.er_params[0] not in {'emax', 'lowexp', 'eyefit'}:
         sys.exit("ERROR: mode selected ('{}') for error rejecting"
-        " function is not valid.".format(g.er_params[0]))
+                 " function is not valid.".format(g.er_params[0]))
     if g.er_params[0] == 'emax' and len(g.er_params[1:]) < 1:
         sys.exit("ERROR: missing parameters for error rejecting function")
     if g.er_params[0] == 'eyefit' and len(g.er_params[1:]) < 3:
@@ -205,7 +220,7 @@ def check(mypath, file_end, cl_files):
     # Check KDE p-value custer probability function.
     if g.pv_params[0] not in {'auto', 'manual', 'skip'}:
         sys.exit("ERROR: Wrong name ('{}') for 'mode' in KDE p-value test."
-            .format(g.pv_params[0]))
+                 .format(g.pv_params[0]))
     elif g.pv_params[0] in {'auto', 'manual'}:
         # Check if R and rpy2 are installed.
         R_in_place = R_check(inst_packgs_lst)
@@ -219,7 +234,7 @@ def check(mypath, file_end, cl_files):
     # Check if 'mode' was correctly set.
     if mode_da not in ['auto', 'manual', 'read', 'skip']:
         sys.exit("ERROR: Wrong name ('{}') for decontamination algorithm "
-            "'mode'.".format(mode_da))
+                 "'mode'.".format(mode_da))
 
     if mode_da == 'read':
         # Check if file exists.
@@ -230,21 +245,22 @@ def check(mypath, file_end, cl_files):
             if not isfile(memb_file):
                 # File does not exist.
                 sys.exit("ERROR: 'read' mode was set for decontamination "
-                "algorithm but the file:\n\n {}\n\ndoes not "
-                "exist.".format(memb_file))
+                         "algorithm but the file:\n\n {}\n\ndoes not "
+                         "exist.".format(memb_file))
 
     # Check 'Reduced membership' method selected.
     mode_red_memb, local_bin, min_prob = g.rm_params
     if mode_red_memb not in {'local', 'n_memb', 'mp_05', 'top_h', 'man', 'mag',
-            'skip'}:
+                             'skip'}:
         sys.exit("ERROR: the selected reduced membership method ('{}')"
-            " does\nnot match a valid input.".format(mode_red_memb))
+                 " does\nnot match a valid input.".format(mode_red_memb))
     # Check binning if 'local' method was selected.
     if mode_red_memb == 'local' and local_bin not in {'blocks', 'knuth',
-            'scott', 'freedman', 'sturges', 'sqrt'}:
+                                                      'scott', 'freedman',
+                                                      'sturges', 'sqrt'}:
         sys.exit("ERROR: the selected binning method '{}' for the 'Reduced"
-        "\nmembership' function does not match a valid input.".format(
-            local_bin))
+                 "\nmembership' function does not match a valid input."
+                 .format(local_bin))
 
     # Unpack.
     bf_flag, best_fit_algor, lkl_method, bin_method, N_b = g.bf_params
@@ -256,7 +272,7 @@ def check(mypath, file_end, cl_files):
         # Check best fit method selected.
         if best_fit_algor not in {'brute', 'genet'}:
             sys.exit("ERROR: the selected best fit method '{}' does not match"
-                " a valid input.".format(best_fit_algor))
+                     " a valid input.".format(best_fit_algor))
 
         if best_fit_algor == 'genet':
             # Check GA input params.
@@ -264,38 +280,40 @@ def check(mypath, file_end, cl_files):
                 g.ga_params
             # First set of params.
             oper_dict0 = {'n_pop': n_pop, 'n_gen': n_gen, 'n_el': n_el,
-                'n_ei': n_ei, 'n_es': n_es}
+                          'n_ei': n_ei, 'n_es': n_es}
             for oper in oper_dict0:
                 if oper_dict0[oper] < 1:
                     sys.exit("ERROR: number must be greater than zero in\n"
-                    "'{}' GA parameter; {} is set.".format(oper,
-                    oper_dict0[oper]))
+                             "'{}' GA parameter; {} is set.".format(
+                                oper, oper_dict0[oper]))
             # Second set of params.
             oper_dict1 = {'fdif': fdif, 'p_cross': p_cross, 'p_mut': p_mut}
             for oper in oper_dict1:
                 if oper_dict1[oper] < 0. or oper_dict1[oper] > 1.:
                     sys.exit("ERROR: GA '{}' parameter is out of the valid\n"
-                    "[0., 1.] range; {} is set.".format(oper,
-                        oper_dict1[oper]))
+                             "[0., 1.] range; {} is set.".format(
+                                oper, oper_dict1[oper]))
             # Handle separately.
             if cr_sel not in {'1P', '2P'}:
                 sys.exit("ERROR: GA 'cr_sel' operator is not a valid choice;\n"
-                "'{}' is set.".format(cr_sel))
+                         "'{}' is set.".format(cr_sel))
             # Number of solutions to pass to the nest generation (elitism)
             if n_el >= n_pop:
                 sys.exit("ERROR: GA 'n_el' must be smaller than 'n_pop';\n"
-                "'{}' and '{}' are set respectively.".format(n_el, n_pop))
+                         "'{}' and '{}' are set respectively.".format(
+                            n_el, n_pop))
 
         # Check likelihood method selected.
         if lkl_method not in {'tolstoy', 'saha', 'dolphin'}:
             sys.exit("ERROR: the selected likelihood method '{}' does not"
-                " match a valid input.".format(lkl_method))
+                     " match a valid input.".format(lkl_method))
 
         # Check binning method selected.
         if lkl_method == 'dolphin' and bin_method not in {'blocks', 'knuth',
-                'scott', 'freedman', 'sturges', 'sqrt'}:
+                                                          'scott', 'freedman',
+                                                          'sturges', 'sqrt'}:
             sys.exit("ERROR: the selected binning method '{}' does not match"
-                " a valid input.".format(bin_method))
+                     " a valid input.".format(bin_method))
 
         # Unpack.
         iso_path = g.ps_params[0]
@@ -304,12 +322,12 @@ def check(mypath, file_end, cl_files):
         # Check if /isochrones folder exists.
         if not isdir(iso_path):
             sys.exit("ERROR: 'Best synthetic cluster fit' function is set to"
-                " run but the folder:\n\n {}\n\ndoes not exists.".format(
-                    iso_path))
+                     " run but the folder:\n\n {}\n\ndoes not exists."
+                     .format(iso_path))
 
         # Check IMF defined.
         imfs_dict = {'chabrier_2001_exp', 'chabrier_2001_log', 'kroupa_1993',
-            'kroupa_2002'}
+                     'kroupa_2002'}
         if g.sc_params[0] not in imfs_dict:
             sys.exit("ERROR: Name of IMF ({}) is incorrect.".format(
                 g.sc_params[0]))
@@ -320,7 +338,7 @@ def check(mypath, file_end, cl_files):
             if len(par_ranges[-1][-1]) > 1:
                 # Range: min, max, step. Store min and max in array.
                 bin_fr = np.array([par_ranges[-1][-1][0],
-                    par_ranges[-1][-1][1]])
+                                  par_ranges[-1][-1][1]])
             else:
                 # Single value stored.
                 bin_fr = np.array([par_ranges[-1][-1][0]])
@@ -331,23 +349,23 @@ def check(mypath, file_end, cl_files):
         for bin_fr_val in bin_fr:
             if bin_fr_val > 1.:
                 sys.exit("ERROR: Binarity fraction value '{}' is out of\n"
-                    "boundaries. Please select a value in the range [0., 1.]".
-                    format(bin_fr_val))
+                         "boundaries. Please select a value in the range "
+                         "[0., 1.]".format(bin_fr_val))
         if g.sc_params[-1] > 1.:
             sys.exit("ERROR: Binary mass ratio set ('{}') is out of\n"
-                "boundaries. Please select a value in the range [0., 1.]".
-                format(g.sc_params[-1]))
+                     "boundaries. Please select a value in the range [0., 1.]".
+                     format(g.sc_params[-1]))
 
         # Check selected isochrones set.
         if iso_select not in {'PAR10', 'PAR11', 'PAR12'}:
             sys.exit("ERROR: the selected isochrones set ('{}') does\n"
-                "not match a valid input.".format(iso_select))
+                     "not match a valid input.".format(iso_select))
 
         # Check that no parameter range is empty.
         global mass_rs
         m_rs, a_rs, e_rs, d_rs, mass_rs, bin_rs = par_ranges
         p_names = [['metallicity', m_rs], ['age', a_rs], ['extinction', e_rs],
-            ['distance', d_rs], ['mass', mass_rs], ['binary', bin_rs]]
+                   ['distance', d_rs], ['mass', mass_rs], ['binary', bin_rs]]
         if min(mass_rs[1]) == 0:
             print("WARNING: minimum total mass is zero in input params file.")
             if 10 in mass_rs[1]:
@@ -361,13 +379,13 @@ def check(mypath, file_end, cl_files):
             # Catch empty list.
             if not p:
                 sys.exit("ERROR: Range defined for '{}' parameter is"
-                " empty".format(p_names[i][0]))
+                         " empty".format(p_names[i][0]))
             # Catch *almost* empty list since get_in_params perhaps added
             # an identificator 'l' or 'r'. This prevents ranges given as
             # empty lists (ie: [] or () or {}) from passing as valid ranges.
             elif not p[1]:
                 sys.exit("ERROR: Range defined for '{}' parameter is"
-                " empty".format(p_names[i][0]))
+                         " empty".format(p_names[i][0]))
 
         # Get parameters values defined.
         param_ranges, met_f_filter, met_values, age_values = \
@@ -376,23 +394,29 @@ def check(mypath, file_end, cl_files):
         for i, p in enumerate(param_ranges):
             if not p.size:
                 sys.exit("ERROR: No values exist for '{}' range defined:\n\n"
-                "min={}, max={}, step={}".format(p_names[i][0],
-                    *p_names[i][1][1]))
+                         "min={}, max={}, step={}".format(p_names[i][0],
+                                                          *p_names[i][1][1]))
 
         # Check that metallicity and age min, max & steps values are correct.
         # Match values in metallicity and age ranges with those available.
         z_range, a_range = param_ranges[:2]
 
         if len(z_range) > len(met_values):
+            # Find missing elements.
+            missing = find_missing(z_range, met_values)
             sys.exit("ERROR: one or more metallicity files could not be\n"
-            "matched to the range given. The range defined was:\n\n"
-            "{}\n\nand the closest available values are:\n\n"
-            "{}".format(z_range, np.asarray(met_values)))
+                     "matched to the range given.\nThe range defined was:\n\n"
+                     "{}\n\nand the closest available values are:\n\n"
+                     "{}\n\nThe missing elements are:\n\n{}".format(
+                        z_range, np.asarray(met_values), missing))
         if len(a_range) > len(age_values):
+            # Find missing elements.
+            missing = find_missing(a_range, age_values)
             sys.exit("ERROR: one or more isochrones could not be matched\n"
-            "to the age range given. The range defined was:\n\n"
-            "{}\n\nand the closest available values are:\n\n"
-            "{}".format(a_range, np.asarray(age_values)))
+                     "to the age range given.\nThe range defined was:\n\n"
+                     "{}\n\nand the closest available values are:\n\n"
+                     "{}\n\nThe missing elements are:\n\n{}".format(
+                        a_range, np.asarray(age_values), missing))
 
         # Read metallicity files.
         try:
@@ -413,4 +437,3 @@ def check(mypath, file_end, cl_files):
         print "(Force matplotlib to not use any Xwindows backend)\n"
 
     return ip_list, R_in_place
-    
