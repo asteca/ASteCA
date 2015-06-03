@@ -27,6 +27,7 @@ def saha(Q, P):
         # Bin edges for each dimension.
         b_rx, b_ry = P[1]
         SLL = P[2]
+        W_O_O = P[4]
 
         # Magnitude and color for the synthetic cluster.
         syn_mags_cols = np.array(zip(*[Q[0], Q[2]]))
@@ -34,18 +35,17 @@ def saha(Q, P):
         # with the observed cluster.
         syn_histo = np.histogramdd(syn_mags_cols, bins=[b_rx, b_ry])[0]
 
-        # Small value used to replace zeros.
-        # epsilon = 1e-10
-
         # Obtain inverse logarithmic 'Poisson likelihood ratio'.
-        saha_lkl = -1. * SLL[len(Q[0]) + len(b_rx) + len(b_ry) - 1] +\
+        saha_lkl = SLL[len(Q[0]) + len(b_rx) + len(b_ry) - 1] -\
             SLL[len(Q[0]) + len(P[0]) + len(b_rx) + len(b_ry) - 1]
 
         for el1 in zip(*(cl_histo, syn_histo)):
             for el2 in zip(*(el1[0], el1[1])):
                 c = SLL[int(el2[0]) + int(el2[1])] - SLL[int(el2[0])] -\
                     SLL[int(el2[1])]
-                saha_lkl -= c
+                saha_lkl += c
+
+        saha_lkl = -1. * saha_lkl
 
         # # The list passed in obs_clust_prepare must be modified for this
         # # block to work.
@@ -56,8 +56,8 @@ def saha(Q, P):
         # # Define grid for 2D histograms.
         # X, Y = np.meshgrid(b_rx, b_ry)
         # # Extent of plots.
-        # x_extend = [min(P[-1][0]) - 1., max(P[-1][0]) + 1.]
-        # y_extend = [max(P[-1][1]) + 1., min(P[-1][1]) - 6.]
+        # x_extend = [min(P[3][0]) - 1., max(P[3][0]) + 1.]
+        # y_extend = [max(P[3][1]) + 1., min(P[3][1]) - 6.]
 
         # # Define subplots.
         # fig = plt.figure()
@@ -72,7 +72,7 @@ def saha(Q, P):
         # ax3.yaxis.set_major_locator(MultipleLocator(1.0))
 
         # # Scatter plot.
-        # ax1.scatter(P[-1][0], P[-1][1], c='r', label='Obs clust')
+        # ax1.scatter(P[3][0], P[3][1], c='r', label='Obs clust')
         # ax1.scatter(Q[0], Q[2], c='b', label='Synth clust')
         # for x_ed in b_rx:
         #     # vertical lines
@@ -110,6 +110,12 @@ def saha(Q, P):
 
         # fig.subplots_adjust(hspace=1)
         # plt.show()
+
+        if not isinstance(W_O_O, basestring):
+            # saha_lkl = abs(saha_lkl - W_O_O)
+            pass
+        else:
+            print 'First pass'
 
     return saha_lkl
 
