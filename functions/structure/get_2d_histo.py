@@ -24,8 +24,8 @@ def get_2d_histo(x_data, y_data):
     binsxy = [int(x_rang / bin_width), int(y_rang / bin_width)]
 
     # hist_2d is the 2D histogram, *edges store the edges of the bins.
-    hist_2d, xedges, yedges = np.histogram2d(x_data, y_data,
-        range=[[xmin, xmax], [ymin, ymax]], bins=binsxy)
+    hist_2d, xedges, yedges = np.histogram2d(
+        x_data, y_data, range=[[xmin, xmax], [ymin, ymax]], bins=binsxy)
 
     hist_lst = [hist_2d, xedges, yedges, bin_width]
 

@@ -18,7 +18,7 @@ def updater():
         # Get latest version number. Wait 3 seconds and break out if
         # there's no response from the server.
         f = urllib2.urlopen("https://raw.githubusercontent.com/asteca/"
-        "asteca/master/functions/__init__.py", timeout=3)
+                            "asteca/master/functions/__init__.py", timeout=3)
         s = f.read().split('"')
 
         if s[1] != __version__:
@@ -29,6 +29,6 @@ def updater():
             print "       http://asteca.github.io/"
             print "*******************************************\n"
     except:
-        #import traceback
-        #print traceback.format_exc()
+        # import traceback
+        # print traceback.format_exc()
         pass

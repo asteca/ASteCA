@@ -22,4 +22,4 @@ def three_params(x, rt, cd, rc, fd):
     '''
     rc = 0.0001 if rc < 0.0001 else rc
     return cd * (1 / np.sqrt(1 + (np.asarray(x) / rc) ** 2) -
-        1 / np.sqrt(1 + (rt / rc) ** 2)) ** 2 + fd
+                 1 / np.sqrt(1 + (rt / rc) ** 2)) ** 2 + fd
