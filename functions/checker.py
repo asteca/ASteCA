@@ -304,7 +304,7 @@ def check(mypath, file_end, cl_files):
                             n_el, n_pop))
 
         # Check likelihood method selected.
-        if lkl_method not in {'tolstoy', 'saha', 'dolphin'}:
+        if lkl_method not in {'tolstoy', 'dolphin'}:
             sys.exit("ERROR: the selected likelihood method '{}' does not"
                      " match a valid input.".format(lkl_method))
 
