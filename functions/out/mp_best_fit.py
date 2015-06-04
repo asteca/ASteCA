@@ -79,7 +79,7 @@ def pl_ga_lkl(gs, l_min_max, lkl_old, model_done, new_bs_indx):
     '''
     Likelihood evolution for the GA.
     '''
-    # Genetic algorithm params.
+    # Genetic algorithm parameters.
     N_b = g.bf_params[-1]
     n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es = g.ga_params
 
@@ -122,7 +122,7 @@ def pl_ga_lkl(gs, l_min_max, lkl_old, model_done, new_bs_indx):
 
 def pl_2_param_dens(gs, _2_params, min_max_p, cp_r, cp_e, model_done):
     '''
-    Param vs param solutions density map.
+    Parameter vs parameters solutions density map.
     '''
     # Define parameters for upper and lower plots.
     if _2_params == 'age-metal':
@@ -138,7 +138,7 @@ def pl_2_param_dens(gs, _2_params, min_max_p, cp_r, cp_e, model_done):
         ax, cp, d_map, mx, my = plt.subplot(gs[6:8, 10:12]), 'b', 'Reds', 4, 5
         x_label, y_label = '$M_{\odot}$', '$b_{frac}$'
 
-    # Param values and errors.
+    # Parameter values and errors.
     xp, e_xp = cp_r[0][mx], cp_e[mx]
     yp, e_yp = cp_r[0][my], cp_e[my]
     # Axis limits.
@@ -171,14 +171,14 @@ def pl_2_param_dens(gs, _2_params, min_max_p, cp_r, cp_e, model_done):
     # Plot density map.
     hist, xedges, yedges = np.histogram2d(zip(*model_done[0])[mx],
                                           zip(*model_done[0])[my], bins=100)
-    # H_g is the 2D histogram with a gaussian filter applied
+    # H_g is the 2D histogram with a Gaussian filter applied
     h_g = gaussian_filter(hist, 2, mode='constant')
     plt.imshow(h_g.transpose(), origin='lower',
                extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]],
                cmap=plt.get_cmap(d_map), aspect='auto')
 
 
-def pl_lkl_dens(gs, ld_p, l_max, lkl_old, min_max_p, cp_r, cp_e, model_done):
+def pl_lkl_dens(gs, ld_p, l_max, min_max_p, cp_r, cp_e, model_done):
     '''
     Parameter likelihood density plot.
     '''
@@ -196,7 +196,7 @@ def pl_lkl_dens(gs, ld_p, l_max, lkl_old, min_max_p, cp_r, cp_e, model_done):
     elif ld_p == '$b_{{frac}}$':
         ax, cp = plt.subplot(gs[8:10, 10:12]), 5
 
-    # Param values and errors.
+    # Parameter values and errors.
     xp, e_xp = cp_r[0][cp], cp_e[cp]
     # Set x axis limit.
     xp_min, xp_max = min_max_p[cp]
@@ -218,7 +218,7 @@ def pl_lkl_dens(gs, ld_p, l_max, lkl_old, min_max_p, cp_r, cp_e, model_done):
     # Generate 2D Gaussian histogram.
     hist, xedges, yedges = np.histogram2d(zip(*model_done[0])[cp],
                                           model_done[1], bins=100)
-    # H_g is the 2D histogram with a gaussian filter applied
+    # H_g is the 2D histogram with a Gaussian filter applied
     h_g = gaussian_filter(hist, 2, mode='constant')
     plt.imshow(h_g.transpose(), origin='lower', extent=[xedges[0], xedges[-1],
                yedges[0], yedges[-1]], cmap=plt.get_cmap('gist_yarg'),

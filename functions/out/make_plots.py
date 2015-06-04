@@ -177,6 +177,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, bin_width,
     # Best fit plots.
     if bf_flag:
         arglist = [
+            # pl_bf_synth_cl: Best fit synthetic cluster obtained.
             [gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
                 synth_clst, syn_b_edges, isoch_fit_params[0], isoch_fit_errors,
                 shift_isoch]
@@ -200,7 +201,9 @@ def make_plots(output_subdir, clust_name, x_data, y_data, bin_width,
         l_min_max = prep_plots.likl_y_range(lkl_old)
 
         arglist = [
+            # pl_ga_lkl: Likelihood evolution for the GA.
             [gs, l_min_max, lkl_old, model_done, new_bs_indx],
+            # pl_2_param_dens: Parameter vs parameters solutions density map.
             [gs, 'age-metal', min_max_p, isoch_fit_params, isoch_fit_errors,
                 model_done],
             [gs, 'dist-ext', min_max_p, isoch_fit_params, isoch_fit_errors,
@@ -209,18 +212,19 @@ def make_plots(output_subdir, clust_name, x_data, y_data, bin_width,
                 model_done],
             [gs, 'mass-binar', min_max_p, isoch_fit_params, isoch_fit_errors,
                 model_done],
-            [gs, '$z$', l_min_max[1], lkl_old, min_max_p, isoch_fit_params,
+            # pl_lkl_dens: Parameter likelihood density plot.
+            [gs, '$z$', l_min_max[1], min_max_p, isoch_fit_params,
                 isoch_fit_errors, model_done],
-            [gs, '$log(age)$', l_min_max[1], lkl_old, min_max_p,
-                isoch_fit_params, isoch_fit_errors, model_done],
-            [gs, '$E_{{(B-V)}}$', l_min_max[1], lkl_old, min_max_p,
-                isoch_fit_params, isoch_fit_errors, model_done],
-            [gs, '$(m-M)_o$', l_min_max[1], lkl_old, min_max_p,
-                isoch_fit_params, isoch_fit_errors, model_done],
-            [gs, '$M_{{\odot}}$', l_min_max[1], lkl_old, min_max_p,
-                isoch_fit_params, isoch_fit_errors, model_done],
-            [gs, '$b_{{frac}}$', l_min_max[1], lkl_old, min_max_p,
-                isoch_fit_params, isoch_fit_errors, model_done]
+            [gs, '$log(age)$', l_min_max[1], min_max_p, isoch_fit_params,
+                isoch_fit_errors, model_done],
+            [gs, '$E_{{(B-V)}}$', l_min_max[1], min_max_p, isoch_fit_params,
+                isoch_fit_errors, model_done],
+            [gs, '$(m-M)_o$', l_min_max[1], min_max_p, isoch_fit_params,
+                isoch_fit_errors, model_done],
+            [gs, '$M_{{\odot}}$', l_min_max[1], min_max_p, isoch_fit_params,
+                isoch_fit_errors, model_done],
+            [gs, '$b_{{frac}}$', l_min_max[1], min_max_p, isoch_fit_params,
+                isoch_fit_errors, model_done]
             ]
         for n, args in enumerate(arglist, 1):
             mp_best_fit.plot(n, *args)
