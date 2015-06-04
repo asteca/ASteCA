@@ -332,20 +332,20 @@ SC  kroupa_2002             120.
 #
 # Ranges and steps for the parameters to be fitted.
 #
-# 						min 	max     step
-#    Metallicity (z)		
-PS_m				  0.0005   0.03    0.005
-#    log(age)			
-PS_a				     6.6   10.1      0.1
-#    E(B-V)				
-PS_e                      0.    0.4     0.01
-#    Distance modulus		
-PS_d                      8.    15.      0.2
+#                        min     max     step
+#    Metallicity (z)        
+PS_m                  0.0005    0.03    0.005
+#    log(age)            
+PS_a                      6.    10.1     0.05
+#    E(B-V)                
+PS_e                      0.     1.      0.02
+#    Distance modulus        
+PS_d                      8.     15.      0.2
 #    Total initial mass (in solar masses).
-TM                        10  10000      100
+TM                        10   10000      100
 #    Binary fraction.
-#    mass_ratio
-BI          0.7           0.     1.      0.2
+#   min_mass_ratio
+BI             0.7        0.      1.      0.2
 
 # Genetic Algorithm parameters.
 #
