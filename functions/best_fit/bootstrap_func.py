@@ -18,13 +18,13 @@ def resample_replacement(obs_clust):
     process.
     '''
     obs_cl = np.array([random.choice(obs_clust) for _ in obs_clust],
-        dtype=float)
+                      dtype=float)
 
     return obs_cl
 
 
 def bootstrap(err_lst, memb_prob_avrg_sort, completeness, ip_list,
-    st_dist_mass):
+              st_dist_mass):
     '''
     Bootstrap process, runs the selected algorithm a number of times each
     time generating a new observed cluster representation through resampling
@@ -55,7 +55,7 @@ def bootstrap(err_lst, memb_prob_avrg_sort, completeness, ip_list,
             # process so it will not print percentages to screen.
             flag_print_perc = False
             params_boot.append(g_a(flag_print_perc, err_lst, obs_cl,
-            completeness, ip_list, st_dist_mass)[0])
+                               completeness, ip_list, st_dist_mass)[0])
 
         percentage_complete = (100.0 * (i + 1) / max(N_b, 2))
         while len(milestones) > 0 and percentage_complete >= milestones[0]:
