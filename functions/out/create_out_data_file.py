@@ -74,7 +74,7 @@ def create_out_data_file(output_dir):
 #           members ('n_memb') with the approximate photometric number of\n\
 #           members ('n_memb_da').\n\
 # a_f: Fraction of cluster's area that is present in frame.\n\
-# prob_cl: Statistical comparision of cluster vs field KDEs. It is obtained\n\
+# prob_cl: Statistical comparison of cluster vs field KDEs. It is obtained\n\
 #          as 1 minus the overlap area between the KDEs. If the KDEs are\n\
 #          very similar this value will be low indicating the overdensity is\n\
 #          probably not a true cluster.\n\
@@ -113,14 +113,14 @@ def create_out_data_file(output_dir):
 # f7 No error rejection was possible.\n\
 # f8 The function had to fall back to the 'e_max'-based rejection method\n\
 #    since the selected one failed.\n\
-# f9 The number of approximate structural cluster members ('n_memb') is < 10.\n\
+# f9 The number of approximate structural cluster members ('n_memb') is <10.\n\
 # f10 The number of approximate structural and photometric cluster members\n\
 #     differ greatly --> abs(n_memb_par) > 0.33.\n\
 #\n\
 # FC (flags count): Sum of all the flags values. The bigger this value the\n\
-#    more likely it is that there's a problem with the frame, ie: no cluster,\n\
-#    more than one cluster present in the frame, variable or too crowded\n\
-#    field, etc.\n\
+#    more likely it is that there's a problem with the frame, ie: no\n\
+#    cluster, more than one cluster present in the frame, variable or too\n\
+#    crowded field, etc.\n\
 #\n\
 #NAME                 c_x      e_x      c_y      e_y     r_cl    e_rcl      \
 r_c     e_rc      r_t     e_rt      kcp      CI   n_memb_k     n_memb  \

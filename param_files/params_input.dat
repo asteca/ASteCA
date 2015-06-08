@@ -43,7 +43,7 @@ UP  false
 #    mode
 MO   auto
 
-# Force matplotlib backend to 'Agg'.
+# Force matplotlib's backend to 'Agg'.
 #
 # * flag: true / false. Set to 'true' to prevent the error 'TclError: no
 #   display name and no $DISPLAY environment variable' when running the code

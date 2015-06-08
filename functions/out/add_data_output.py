@@ -13,8 +13,8 @@ def flatten(l):
     Flatten list.
     '''
     for el in l:
-        if isinstance(el, collections.Iterable) and not isinstance(el,
-            basestring):
+        if isinstance(el, collections.Iterable) and not \
+                isinstance(el, basestring):
             for sub in flatten(el):
                 yield sub
         else:
@@ -22,9 +22,9 @@ def flatten(l):
 
 
 def add_data_output(out_file_name, write_name, center_params, radius_params,
-    kp_params, cont_index, n_memb, memb_par, n_memb_da, flag_memb_par,
-    frac_cl_area, prob_cl_kde, integr_return, err_flags, flag_num_memb_low,
-    bf_return):
+                    kp_params, cont_index, n_memb, memb_par, n_memb_da,
+                    flag_memb_par, frac_cl_area, prob_cl_kde, integr_return,
+                    err_flags, flag_num_memb_low, bf_return):
     '''
     Add data obtained to the 'data_output.dat' file.
     '''
@@ -34,7 +34,7 @@ def add_data_output(out_file_name, write_name, center_params, radius_params,
     flag_center_med, flag_center_std, flag_center_manual = center_params[-3:]
     clust_rad, e_rad = radius_params[:2]
     flag_delta_total, flag_not_stable, flag_delta, flag_radius_manual = \
-    radius_params[-4:]
+        radius_params[-4:]
     rc, e_rc, rt, e_rt, n_c_k, kcp = kp_params[:6]
     # Unpack KP flags.
     flag_2pk_conver, flag_3pk_conver = kp_params[-2:]
@@ -53,11 +53,11 @@ def add_data_output(out_file_name, write_name, center_params, radius_params,
 
     # Create list containing all the flags.
     flags_list = [flag_center_manual, flag_radius_manual, flag_center_med,
-        flag_center_std, flag_delta_total, flag_not_stable, flag_delta,
-        flag_3pk_no_conver, err_all_fallback, err_max_fallback,
-        flag_num_memb_low, flag_memb_par]
+                  flag_center_std, flag_delta_total, flag_not_stable,
+                  flag_delta, flag_3pk_no_conver, err_all_fallback,
+                  err_max_fallback, flag_num_memb_low, flag_memb_par]
 
-    # Converty True & False flag values to 1 and 0 respectively.
+    # Convert True & False flag values to 1 and 0 respectively.
     int_flags = [1 if flg else 0 for flg in flags_list]
 
     # Sum all flags to obtain the FC value (flags count) and append to the
@@ -66,7 +66,7 @@ def add_data_output(out_file_name, write_name, center_params, radius_params,
 
     # Round structure parameters.
     cr_r, cr_e = rsf([center_cl[0], center_cl[1], clust_rad, rc, rt],
-        [e_cent[0], e_cent[1], e_rad, e_rc, e_rt])
+                     [e_cent[0], e_cent[1], e_rad, e_rc, e_rt])
     # Interwine these lists.
     cre_r = [item for t in zip(cr_r, cr_e) for item in t]
 
@@ -84,7 +84,7 @@ def add_data_output(out_file_name, write_name, center_params, radius_params,
 
     # Store all parameter values in list.
     line = [write_name, cre_r, kcp, cont_index, n_c_k, n_memb, n_memb_da,
-        memb_par, frac_cl_area, prob_cl_kde, integ_col, cpe_r]
+            memb_par, frac_cl_area, prob_cl_kde, integ_col, cpe_r]
     # Flatten list.
     line_f = list(flatten(line))
 
