@@ -115,7 +115,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, bin_width,
         # pl_cl_fl_regions: Cluster and field regions defined.
         [gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max, asp_ratio,
             center_cl, clust_rad, field_regions, cl_region, flag_no_fl_regs]
-        ]
+    ]
     for n, args in enumerate(arglist):
         # with timeblock("{}".format(n)):
         mp_structure.plot(n, *args)
@@ -123,19 +123,25 @@ def make_plots(output_subdir, clust_name, x_data, y_data, bin_width,
     #
     # Photometric analysis plots.
     arglist = [
+        # pl_phot_err: Photometric error rejection.
         [gs, fig, 'up', x_ax, y_ax, mag_data, err_plot, err_flags,
             cl_region, stars_in_rjct, stars_out, stars_out_rjct],
         [gs, fig, 'low', x_ax, y_ax, mag_data, err_plot, err_flags,
             cl_region, stars_in_rjct, stars_out, stars_out_rjct],
+        # pl_fl_diag: Field stars CMD/CCD diagram.
         [gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
             stars_f_rjct, stars_f_acpt, f_sz_pt],
+        # pl_cl_diag: Cluster's stars diagram (stars inside cluster's radius)
         [gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
             stars_in_rjct, cl_region, n_memb, cl_sz_pt],
+        # pl_lum_func: LF of stars in cluster region and outside.
         [gs, mag_data, y_ax, x_cl, y_cl, flag_no_fl_regs, x_fl, y_fl,
             completeness],
+        # pl_integ_mag: Integrated magnitudes.
         [gs, integr_return, y_ax, x_ax0, flag_no_fl_regs],
+        # pl_p_vals: Distribution of KDE p_values.
         [gs, flag_pval_test, pval_test_params]
-        ]
+    ]
     for n, args in enumerate(arglist):
         mp_phot_analysis.plot(n, *args)
 
@@ -156,7 +162,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, bin_width,
                 center_cl, clust_rad, field_dens, flag_decont_skip,
                 v_min_mp, v_max_mp, chart_fit_inv, chart_no_fit_inv,
                 out_clust_rad]
-            ]
+        ]
         for n, args in enumerate(arglist):
             mp_decont_algor.plot(n, *args)
 
@@ -181,7 +187,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, bin_width,
             [gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
                 synth_clst, syn_b_edges, isoch_fit_params[0], isoch_fit_errors,
                 shift_isoch]
-            ]
+        ]
         for n, args in enumerate(arglist):
             mp_best_fit.plot(n, *args)
 
@@ -225,7 +231,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, bin_width,
                 isoch_fit_errors, model_done],
             [gs, '$b_{{frac}}$', l_min_max[1], min_max_p, isoch_fit_params,
                 isoch_fit_errors, model_done]
-            ]
+        ]
         for n, args in enumerate(arglist, 1):
             mp_best_fit.plot(n, *args)
 

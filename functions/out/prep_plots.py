@@ -13,41 +13,6 @@ import matplotlib.pyplot as plt
 import math
 
 
-def kde_limits(phot_x, phot_y):
-    '''
-    Return photometric diagram limits taken from 2D KDE.
-    '''
-
-    xmin, xmax = min(phot_x), max(phot_x)
-    ymin, ymax = min(phot_y), max(phot_y)
-    # Stack photometric data.
-    values = np.vstack([phot_x, phot_y])
-    # Obtain Gaussian KDE.
-    kernel = stats.gaussian_kde(values)
-    # Grid density (number of points).
-    gd = 25
-    gd_c = complex(0, gd)
-    # Define x,y grid.
-    x, y = np.mgrid[xmin:xmax:gd_c, ymin:ymax:gd_c]
-    positions = np.vstack([x.ravel(), y.ravel()])
-    # Evaluate kernel in grid positions.
-    k_pos = kernel(positions)
-
-    # Generate 30 countour lines.
-    cs = plt.contour(x, y, np.reshape(k_pos, x.shape), 30)
-    # Extract (x,y) points delimitating each line.
-    x_v, y_v = np.asarray([]), np.asarray([])
-    # Only use the outer curve.
-    col = cs.collections[0]
-    # If more than une region is defined by this curve (ie: the main sequence
-    # region plus a RC region), obtain x,y from all of them.
-    for lin in col.get_paths():
-        x_v = np.append(x_v, lin.vertices[:, 0])
-        y_v = np.append(y_v, lin.vertices[:, 1])
-
-    return x_v, y_v
-
-
 def frame_max_min(x_data, y_data):
     '''
     Get max and min values in x,y coordinates.
@@ -108,7 +73,9 @@ def ax_names():
     '''
     Define names for photometric diagram axes.
     '''
+    # y_axis == 0 indicates that the y axis is a magnitude.
     y_axis = 0
+    # Create photometric axis names.
     y_ax, x_ax0, m_ord = g.axes_params[0:3]
     if m_ord == 21:
         x_ax = '(' + x_ax0 + '-' + y_ax + ')'
@@ -126,6 +93,42 @@ def ax_data(mag_data, col_data):
     phot_x = col_data
     phot_y = mag_data
     return phot_x, phot_y
+
+
+def kde_limits(phot_x, phot_y):
+    '''
+    Return photometric diagram limits taken from a 2D KDE.
+    '''
+
+    xmin, xmax = min(phot_x), max(phot_x)
+    ymin, ymax = min(phot_y), max(phot_y)
+    # Stack photometric data.
+    values = np.vstack([phot_x, phot_y])
+    # Obtain Gaussian KDE.
+    kernel = stats.gaussian_kde(values)
+    # Grid density (number of points).
+    gd = 25
+    gd_c = complex(0, gd)
+    # Define x,y grid.
+    x, y = np.mgrid[xmin:xmax:gd_c, ymin:ymax:gd_c]
+    positions = np.vstack([x.ravel(), y.ravel()])
+    # Evaluate kernel in grid positions.
+    k_pos = kernel(positions)
+
+    # Generate 30 contour lines.
+    cs = plt.contour(x, y, np.reshape(k_pos, x.shape), 30)
+    # Extract (x,y) points delimitating each line.
+    x_v, y_v = np.asarray([]), np.asarray([])
+    # Only use the outer curve.
+    col = cs.collections[0]
+    # If more than one region is defined by this curve (ie: the main sequence
+    # region plus a RC region or some other detached region), obtain x,y from
+    # all of them.
+    for lin in col.get_paths():
+        x_v = np.append(x_v, lin.vertices[:, 0])
+        y_v = np.append(y_v, lin.vertices[:, 1])
+
+    return x_v, y_v
 
 
 def diag_limits(y_axis, phot_x, phot_y):
