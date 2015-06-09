@@ -48,7 +48,7 @@ def pl_bf_synth_cl(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
     if synth_clst.any():
         # Plot synth clust.
         plt.scatter(synth_clst[0], synth_clst[2], marker='o', s=40,
-                    c='#4682b4', lw=0.5)
+                    c='#4682b4', lw=0.5, zorder=4)
         text1 = '$N_{{synth}} = {}$'.format(len(synth_clst[0]))
     else:
         text1 = '$N_{{synth}} = {}$'.format(0)
