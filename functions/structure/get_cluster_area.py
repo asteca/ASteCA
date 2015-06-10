@@ -7,7 +7,7 @@ Created on Fri Jul 19 09:58:13 2013
 import numpy as np
 
 
-def get_cl_area(kde_center, clust_rad, x_data, y_data, rdp_params, bw):
+def get_cl_area(kde_center, clust_rad, x_data, y_data, square_rings, bw):
     """
     Obtain the cluster's area. If the cluster is cropped, calculate the
     correct area by counting the bins that compose it's region.'
@@ -27,8 +27,6 @@ def get_cl_area(kde_center, clust_rad, x_data, y_data, rdp_params, bw):
         frac_cl_area = 1.
 
     else:
-        square_rings = rdp_params[3]
-
         # Index of point in RDP closer to the calculated cluster radius.
         sq_indx = int(round(((clust_rad - (bw / 2.)) / bw) + 1))
 
