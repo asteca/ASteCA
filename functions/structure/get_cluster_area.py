@@ -19,7 +19,7 @@ def get_cl_area(kde_center, clust_rad, x_data, y_data, rdp_params, bw):
     if kde_center[0] + clust_rad <= x_max and \
         kde_center[0] - clust_rad >= x_min and \
         kde_center[1] + clust_rad <= y_max and \
-        kde_center[1] - clust_rad >= y_min:
+            kde_center[1] - clust_rad >= y_min:
 
         # Cluster's area.
         cl_area = np.pi * clust_rad ** 2
@@ -33,7 +33,7 @@ def get_cl_area(kde_center, clust_rad, x_data, y_data, rdp_params, bw):
         sq_indx = int(round(((clust_rad - (bw / 2.)) / bw) + 1))
 
         sum_bins_in_rad = 0.
-        # For each square ring until reachong the limit imposed by the
+        # For each square ring until reaching the limit imposed by the
         # cluster's radius.
         for sq_ring in square_rings[:sq_indx]:
             # For each bin within this square ring.
