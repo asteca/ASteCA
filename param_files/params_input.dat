@@ -318,7 +318,7 @@ BF   true      genet      dolphin    knuth         10
 # iso_select: PAR10 (v1.0) / PAR11 (v1.1) / PAR12 (v1.2S)
 #
 #    iso_select
-PS        PAR10
+PS        PAR12
 
 # Synthetic cluster parameters.
 #

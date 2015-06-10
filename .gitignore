@@ -1,7 +1,7 @@
 *.pyc
 *.dat
 !/param_files/*.dat
-isochrones/*
+#isochrones/*
 !/isochrones/README.md
 output/*
 input/*
