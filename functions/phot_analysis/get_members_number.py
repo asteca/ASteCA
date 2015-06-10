@@ -33,13 +33,13 @@ def get_memb_num(n_clust, cl_area, field_dens, clust_rad, rdp_length):
 
         if flag_num_memb_low:
             print ("  WARNING: only {:.0f} true members estimated in cluster"
-                " region.".format(n_memb))
+                   " region.".format(n_memb))
         else:
             print ("Approximate number of members in cluster obtained "
-                "({:.0f}).".format(n_memb))
+                   "({:.0f}).".format(n_memb))
     else:
         print ("  WARNING: cluster radius is too large to obtain\n"
-        "  the approximate number of members.")
+               "  the approximate number of members.")
         n_memb, flag_num_memb_low = -1., True
 
     return n_memb, flag_num_memb_low
