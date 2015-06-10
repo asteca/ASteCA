@@ -84,10 +84,11 @@ def asteca_funcs(cl_file, ip_list, R_in_place):
 
     # Get density profile
     rdp_params = gdp(hist_lst, cent_bin)
-    radii, ring_density = rdp_params[:2]
+    radii, rdp_points, square_rings, rdp_length = rdp_params[:2] + \
+        rdp_params[3:]
 
     # Get field density value in stars/px^2.
-    field_dens = gfd(ring_density)
+    field_dens = gfd(rdp_points)
 
     # Get cluster radius
     radius_params = gcr(phot_data, field_dens, center_params, rdp_params,
@@ -95,7 +96,7 @@ def asteca_funcs(cl_file, ip_list, R_in_place):
     clust_rad = radius_params[0]
 
     # Get King profiles based on the density profiles.
-    kp_params = gkp(clust_rad, field_dens, radii, ring_density)
+    kp_params = gkp(clust_rad, field_dens, radii, rdp_points)
 
     # Accept and reject stars based on their errors.
     acpt_stars, rjct_stars, err_plot, err_flags, err_pck = ear(phot_data,
@@ -110,14 +111,14 @@ def asteca_funcs(cl_file, ip_list, R_in_place):
 
     # Get cluster's area.
     cl_area, frac_cl_area = g_a(kde_center, clust_rad, x_data, y_data,
-                                rdp_params, bin_width)
+                                square_rings, bin_width)
 
     # Get approximate number of cluster's members.
     n_memb, flag_num_memb_low = g_m_n(n_clust, cl_area, field_dens, clust_rad,
-                                      rdp_params[-1])
+                                      rdp_length)
 
     # Get contamination index.
-    cont_index = g_c_i(n_clust, cl_area, field_dens, clust_rad, rdp_params[-1])
+    cont_index = g_c_i(n_clust, cl_area, field_dens, clust_rad, rdp_length)
 
     # Field regions around the cluster's center.
     flag_no_fl_regs, field_region = g_r(semi_return, hist_lst, cent_bin,
