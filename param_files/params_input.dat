@@ -328,7 +328,7 @@ PS        PAR12
 # * m_high: Upper mass value for the IMF (in solar masses).
 #
 #    IMF                  m_high
-SC  kroupa_2002             120.
+SC  kroupa_2002             300.
 #
 # Ranges and steps for the parameters to be fitted.
 #
