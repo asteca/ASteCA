@@ -22,13 +22,13 @@ def get_dens_prof(hist_lst, cent_bin):
     x_c_b, y_c_b = cent_bin
 
     # Initialize lists.
-    radii, ring_density, poisson_error = [], [], []
+    radii, rdp_points, poisson_error = [], [], []
 
     # Percentage of the frame where the RDP will be calculated.
     rdp_perc = 0.75
     # Total length in both axis.
     x_length, y_length = len(hist_2d[0]), len(hist_2d[1])
-    # Minimum legth in either axis.
+    # Minimum length in either axis.
     min_length = min(x_length, y_length)
     # Length where the RDP will be defined, in bin units.
     rdp_length = min_length * rdp_perc
@@ -76,7 +76,7 @@ def get_dens_prof(hist_lst, cent_bin):
                     bin_count += 1
                     bins_coords.append([i, yindex - y_c_b])
 
-        # Store bin coords in each square ring.
+        # Store bin coordinates in each square ring.
         square_rings.append(bins_coords)
         # If no stars are inside this square ring, set value to 1 to avoid a
         # division by zero.
@@ -86,12 +86,12 @@ def get_dens_prof(hist_lst, cent_bin):
         area = bin_count * (bin_width ** 2)
 
         # Calculate density corresponding to "square ring" i
-        ring_density.append(ring_count / area)
+        rdp_points.append(ring_count / area)
         # Obtain the Poisson error bar for each value
         poisson_error.append(math.sqrt(ring_count) / area)
 
         # Store values for radii to go with the densities obtained above
-        # and stored in 'ring_density'
+        # and stored in 'rdp_points'
         radii.append(bin_width / 2. + (bin_width * i))
 
     # Transform from bin units to coordinate units before passing.
@@ -99,4 +99,4 @@ def get_dens_prof(hist_lst, cent_bin):
 
     print 'Radial density profile (RDP) calculated.'
 
-    return radii, ring_density, poisson_error, square_rings, rdp_length
+    return radii, rdp_points, poisson_error, square_rings, rdp_length
