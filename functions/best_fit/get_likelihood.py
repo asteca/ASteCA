@@ -192,6 +192,51 @@ def dolphin(Q, P):
     return poiss_lkl
 
 
+def mighell(Q, P):
+    '''
+    '''
+
+    if not Q.any():
+        chi = 10000.
+    else:
+
+        # Observed cluster's histogram.
+        cl_histo = P[0]
+        # Bin edges for each dimension.
+        b_rx, b_ry = P[1]
+
+        # Magnitude and color for the synthetic cluster.
+        syn_mags_cols = np.array(zip(*[Q[0], Q[2]]))
+        # Histogram of the synthetic cluster, using the bin edges calculated
+        # with the observed cluster.
+        syn_histo = np.histogramdd(syn_mags_cols, bins=[b_rx, b_ry])[0]
+
+        chi = 0.
+        for el1 in zip(*(cl_histo, syn_histo)):
+            for el2 in zip(*(el1[0], el1[1])):
+                c = np.square(el2[0] + min(el2[0], 1) - el2[1]) / (el2[0] + 1)
+                chi += c
+
+        # print len(Q[0]), chi
+        # import matplotlib.pyplot as plt
+        # fig = plt.figure()
+        # ax1 = fig.add_subplot(1, 3, 1)
+        # ax2 = fig.add_subplot(1, 3, 2)
+        # ax3 = fig.add_subplot(1, 3, 3)
+        # ax1.imshow(d_1.transpose(), origin='lower', aspect='auto')
+        # ax2.imshow(d_2.transpose(), origin='lower', aspect='auto')
+        # ax3.scatter(P[4], P[2], c='r')
+        # ax3.scatter(Q[0], Q[2], c='b')
+        # text1 = 'chi = {:.2f}\n'.format(chi)
+        # text2 = 'N = {}'.format(len(Q[0]))
+        # text = text1 + text2
+        # ax3.text(0.05, 0.9, text, transform=ax3.transAxes)
+        # fig.subplots_adjust(hspace=1)
+        # plt.show()
+
+    return chi
+
+
 def isoch_likelihood(err_lst, obs_clust, completeness, st_dist_mass, isochrone,
                      params):
     '''
@@ -212,5 +257,6 @@ def isoch_likelihood(err_lst, obs_clust, completeness, st_dist_mass, isochrone,
         likelihood = tolstoy(synth_clust, obs_clust)
     else:
         likelihood = dolphin(synth_clust, obs_clust)
+        # likelihood = mighell(synth_clust, obs_clust)
 
     return likelihood
