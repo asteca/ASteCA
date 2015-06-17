@@ -258,7 +258,7 @@ DA   auto       200
 #     the dimmest star wished to be taken into account in the fitting process).
 #   - skip: use all stars in the cluster region.
 #
-# * binning: blocks / knuth / scott/ freedman / sturges / sqrt
+# * binning: blocks / knuth / scott/ freedman / sturges / sqrt / bb
 #   Binning method to be used if the 'local' method is selected. Otherwise
 #   this parameter is not used.
 #
@@ -292,7 +292,7 @@ RM   local    blocks                   17
 #   - dolphin: uses the 'Poisson likelihood ratio' (Eq. 10) defined in
 #     Dolphin (2002). This requires the selection of a binning method.
 #
-# * binning: blocks / knuth / scott/ freedman / sturges / sqrt
+# * binning: blocks / knuth / scott/ freedman / sturges / sqrt / bb
 #   Binning method to be used if the likelihood equation by 'dolphin' is
 #   selected. See docs for more information on each binning method.
 #

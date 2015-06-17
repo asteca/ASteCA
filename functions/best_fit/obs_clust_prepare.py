@@ -5,8 +5,8 @@ Created on Tue Nov 25 16:00:00 2014
 @author: gabriel
 """
 import numpy as np
-from astroML.plotting import hist
 from .._in import get_in_params as g
+from ..phot_analysis.local_diag_clean import bin_edges_f
 
 
 def prepare(memb_prob_avrg_sort):
@@ -42,18 +42,7 @@ def prepare(memb_prob_avrg_sort):
         mag_col_cl = [P[4], P[2]]
 
         # Obtain bin edges for each dimension, defining a grid.
-        bin_edges = []
-        if bin_method in ['sturges', 'sqrt']:
-            if bin_method == 'sturges':
-                b_num = 1 + np.log2(len(mag_col_cl[0]))
-            else:
-                b_num = np.sqrt(len(mag_col_cl[0]))
-
-            for mag_col in mag_col_cl:
-                bin_edges.append(np.histogram(mag_col, bins=b_num)[1])
-        else:
-            for mag_col in mag_col_cl:
-                bin_edges.append(hist(mag_col, bins=bin_method)[1])
+        bin_edges = bin_edges_f(bin_method, mag_col_cl)
 
         # Zip magnitudes and colors into array.
         cl_mags_cols = np.array(zip(*mag_col_cl))

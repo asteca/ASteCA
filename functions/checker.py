@@ -255,9 +255,9 @@ def check(mypath, file_end, cl_files):
         sys.exit("ERROR: the selected reduced membership method ('{}')"
                  " does\nnot match a valid input.".format(mode_red_memb))
     # Check binning if 'local' method was selected.
-    if mode_red_memb == 'local' and local_bin not in {'blocks', 'knuth',
-                                                      'scott', 'freedman',
-                                                      'sturges', 'sqrt'}:
+    bin_methods_dict = {'blocks', 'knuth', 'scott', 'freedman', 'sturges',
+                        'sqrt', 'bb'}
+    if mode_red_memb == 'local' and local_bin not in bin_methods_dict:
         sys.exit("ERROR: the selected binning method '{}' for the 'Reduced"
                  "\nmembership' function does not match a valid input."
                  .format(local_bin))
@@ -309,11 +309,10 @@ def check(mypath, file_end, cl_files):
                      " match a valid input.".format(lkl_method))
 
         # Check binning method selected.
-        if lkl_method == 'dolphin' and bin_method not in {'blocks', 'knuth',
-                                                          'scott', 'freedman',
-                                                          'sturges', 'sqrt'}:
-            sys.exit("ERROR: the selected binning method '{}' does not match"
-                     " a valid input.".format(bin_method))
+        if lkl_method == 'dolphin' and bin_method not in bin_methods_dict:
+            sys.exit("ERROR: the selected binning method '{}' for the 'Best"
+                     "\nfit' function does not match a valid input."
+                     .format(bin_method))
 
         # Unpack.
         iso_path = g.ps_params[0]

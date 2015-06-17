@@ -13,23 +13,33 @@ from .._in import get_in_params as g
 from decont_algor_bys import sort_members
 
 
-def bin_edges_f(local_bin, mag_col_cl):
+def bin_edges_f(bin_method, mag_col_cl):
     '''
     Obtain bin edges for each photometric dimension using the cluster region
     diagram.
     '''
     bin_edges = []
-    if local_bin in ['sturges', 'sqrt']:
-        if local_bin == 'sturges':
+    if bin_method in ['sturges', 'sqrt']:
+        if bin_method == 'sturges':
             b_num = 1 + np.log2(len(mag_col_cl[0]))
         else:
             b_num = np.sqrt(len(mag_col_cl[0]))
 
         for mag_col in mag_col_cl:
             bin_edges.append(np.histogram(mag_col, bins=b_num)[1])
+
+    elif bin_method == 'bb':
+        # Based on Bonatto & Bica (2007) 377, 3, 1301-1323. Fixed bin width
+        # of 0.25 for colors and 0.5 for magnitudes.
+        b_num = [(max(mag_col_cl[0]) - min(mag_col_cl[0])) / 0.25,
+                 (max(mag_col_cl[1]) - min(mag_col_cl[1])) / 0.5]
+
+        for i, mag_col in enumerate(mag_col_cl):
+            bin_edges.append(np.histogram(mag_col, bins=b_num[i])[1])
+
     else:
         for mag_col in mag_col_cl:
-            bin_edges.append(hist(mag_col, bins=local_bin)[1])
+            bin_edges.append(hist(mag_col, bins=bin_method)[1])
 
     return bin_edges
 
