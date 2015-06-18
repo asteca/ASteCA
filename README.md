@@ -21,7 +21,8 @@ development*. Keep this in mind if you want to use it on your research.
 
 After downloading the package, and assuming all necessary dependencies are
 installed (see the code's [requirements][3]), simply open a terminal, move
-into the `asteca/` folder and run:
+into the unpacked `ASteCA-x.x.x/` folder (where `x.x.x` is the version number)
+and run:
 
 ````
 python asteca.py
