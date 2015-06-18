@@ -1,188 +1,283 @@
 # Change Log
 
-## [[v0.1.8]](https://github.com/asteca/asteca/releases/tag/v0.1.8) - 2015-04-09
+
+## [[v0.1.9]][132] - 2015-06-18
 
 ### Changed
 
-(**Warning**: this release breaks compatibility with the previous version of the `params_input.dat` file)
+(**Warning**: this release breaks compatibility with the previous version of
+the `params_input.dat` & `semi_input.dat` files)
 
-* Added `local`  and `mp_05` methods to the selection of which stars to use in the best fit cluster parameter assignation process ([#180](https://github.com/asteca/asteca/issues/180), [#183](https://github.com/asteca/asteca/issues/183)).
-* Added an _automatic update checker_ function that notifies the user if an updated version of `ASteCA` is available for download ([#179](https://github.com/asteca/asteca/issues/179)).
-* Added grid lines over the photometric diagrams of the observed and synthetic cluster, showing the binning made by the method selected in each case ([#131](https://github.com/asteca/asteca/issues/131)).
-* Best fit synthetic cluster found is now saved to file ([#154](https://github.com/asteca/asteca/issues/154)).
-* Correctly obtain approximate number of members (`n_memb`) and contamination index (`CI`) when the cluster radius extends beyond the RDP, thus making the field star density value (`field_dens`) unreliable ([#111](https://github.com/asteca/asteca/issues/111)).
-* Added `f10` flag to alert when the `memb_par` value is greater than +-0.33, which means that there are twice as many estimated true members in either method ([#175](https://github.com/asteca/asteca/issues/175)).
-* Improved `top_tiers` plotting and saved file ([#184](https://github.com/asteca/asteca/issues/184)).
+* Models (ie: isochrone + extinction +distance modulus + mass distribution +
+  binarity) are now evaluated *each time the GA selects them as a solution*,
+  thus a new mass distribution is generated ([#186][131]). This has a
+  performance cost, but provides higher accuracy in the best model assignment
+  process since a single model can now be evaluated with a slightly different
+  mass distribution several times (only with GA, *Brute Force* method will only
+  process a model once).
+* Added an _exit switch_ to the decontamination algorithm. It will stop
+  iterations if the MPs converged to 0.1% tolerance values for all the stars
+  in the cluster region (compared to the previous iteration). This speeds up
+  the function considerably ([#185][130]).
+* The upper mass value in the IMF can now be [modified via the input
+  parameters file][129].
+* Code can now read `params_input_XX.dat` files when [using lazy
+  parallelization][128].
+* Number of field regions [can now be set individually][127] via the
+  `semi_input.dat` file.
+* [Added 'bb' binning method][125] based on [Bonnato & Bica (2007)][126]. Sets
+  bin widths of 0.25 and 0.5 for colors and magnitudes respectively.
+* Fixed bug in `manual` mode when [displaying errors][124].
+* Fixed bug when narrow frames were plotted ([#168][123]).
+* Moved text box outside of synthetic cluster's plot to improve its visibility (#205).
+* Closed [#13][122]. Saha's W likelihood needs the number of model points to be
+  fixed, which prevents it from being used when the mass varies. There's
+  nothing to be gained by adding this function.
+* Caveat dragged from version [0.1.2][51] is [resolved][121].
+
+
+## [[v0.1.8]][120] - 2015-04-09
+
+### Changed
+
+(**Warning**: this release breaks compatibility with the previous version of
+the `params_input.dat` file)
+
+* Added `local`  and `mp_05` methods to the selection of which stars to use in
+  the best fit cluster parameter assignation process ([#180][119], [#183][118]).
+* Added an _automatic update checker_ function that notifies the user if an
+  updated version of `ASteCA` is available for download ([#179][117]).
+* Added grid lines over the photometric diagrams of the observed and synthetic
+  cluster, showing the binning made by the method selected in each case
+  ([#131][116]).
+* Best fit synthetic cluster found is now saved to file ([#154][115]).
+* Correctly obtain approximate number of members (`n_memb`) and contamination
+  index (`CI`) when the cluster radius extends beyond the RDP, thus making the
+  field star density value (`field_dens`) unreliable ([#111][114]).
+* Added `f10` flag to alert when the `memb_par` value is greater than +-0.33,
+  which means that there are twice as many estimated true members in either
+  method ([#175][113]).
+* Improved `top_tiers` plotting and saved file ([#184][112]).
 
 ### Caveats
 
-* Same as version [0.1.2](https://github.com/asteca/asteca/releases/tag/v0.1.2).
+* Same as version [0.1.2][51].
 
-## [[v0.1.7]](https://github.com/asteca/asteca/releases/tag/v0.1.7) - 2015-03-26
+
+## [[v0.1.7]][111] - 2015-03-26
 
 ### Changed
 
-(**Warning**: this release breaks compatibility with the previous version of the `params_input.dat` file)
+(**Warning**: this release breaks compatibility with the previous version of
+the `params_input.dat` file)
 
-* Re-write `lowexp` [error rejection method](https://github.com/asteca/asteca/commit/6b2857aefa2878ee5aba245a7fbf9cc1f423820b), now uses _prediction bands_ instead of _confidence intervals_.
-* Force `matplotlib`'s backend to make the code [work in servers](https://github.com/asteca/asteca/commit/197af6439baabd3e9db4039775aba721d84047a2) .
-* Fixed `eyefit` method for [error rejection](https://github.com/asteca/asteca/commit/d92be0c8e398739fba562d59ba35b11eeac9a9a0). It changed after fixing [#169](https://github.com/asteca/asteca/issues/169).
-* Added [SDSS CMDs](https://github.com/asteca/asteca/commit/2324a70f402ddbe9fdde203c3745f93b6d6dc545) `g vs (u-g)` & `g vs (g-r)`, at the request of Tjibaria Pijloo (Department of Astrophysics, Radboud University Nijmegen).
-* Fixed bug in binarity generation for the CMDs of the form `X vs (X-Y)` ([#181](https://github.com/asteca/asteca/issues/181)).
-* Smarter selection of stars to be used by the best fit function, improvements in several plots ([#171](https://github.com/asteca/asteca/issues/171), [#172](https://github.com/asteca/asteca/issues/172)).
-* Best fit function can now accept a _minimum magnitude_ value instead of just a _minimum probability_ value ([#115](https://github.com/asteca/asteca/issues/115)).
-* Added a `memb_par` parameter to compare the number of approximate cluster members obtained via the structural analysis and via the decontamination algorithm ([#162](https://github.com/asteca/asteca/issues/162)).
-* Code is now able to correctly read the names of files with [more than one dot in it's name](https://github.com/asteca/asteca/commit/c0358ed9526b835bfeeddf75804002ad51c69610).
-* Fixed bad [alphabetical ordering](https://github.com/asteca/asteca/commit/b6ca2a2df8b7e614dc9beb38e99400e3b69208bf) of input cluster files.
-* Better limits for photometric diagram ([#173](https://github.com/asteca/asteca/issues/173)).
-* Fixed `DeprecationWarning` [issue](https://github.com/asteca/asteca/commit/97d77f1d7f36adf6af6398a2f4a5b944598fda8f).
-* Invert x axis when [RA cords are used](https://github.com/asteca/asteca/commit/e99da37a398c446d71c59c43f4547434d0c9f7e7) (improved [here](https://github.com/asteca/asteca/commit/aeb7d7d097eb40289d2bb4c83adf433567bb28d0)).
-* Several fixes and improvements made to plotted diagrams ([5c7dc7f](https://github.com/asteca/asteca/commit/5c7dc7f9f348bf2bedb3eb86daf7decbbf83df33); [1642349](https://github.com/asteca/asteca/commit/16423496d22bb843294189fd121a0ed8a0c6e783); [b57028c](https://github.com/asteca/asteca/commit/b57028c93259afbf3cbebc905c482349fcb6ef7a); [240178a](https://github.com/asteca/asteca/commit/240178a3c797910d6a807a41a8dd6c2f94d82cfb); [9ec0ab8](https://github.com/asteca/asteca/commit/9ec0ab8c3d966e0dbe19c6b5cff65e1cb381c939); [fef14c4](https://github.com/asteca/asteca/commit/fef14c476b88bc9f82bcd39e96cee222a0628cdd); [db0df2a](https://github.com/asteca/asteca/commit/db0df2adc8d9821ab5122ba6b6482557627a779e); [575ebe7](https://github.com/asteca/asteca/commit/575ebe7de64c1c4da04eb7c18dfab4b8bd1b2751); [#177](https://github.com/asteca/asteca/issues/177); [#178](https://github.com/asteca/asteca/issues/178)).
+* Re-write `lowexp` [error rejection method][110], now uses _prediction bands_ 
+  instead of _confidence intervals_.
+* Force `matplotlib`'s backend to make the code [work in servers][109].
+* Fixed `eyefit` method for [error rejection][108]. It changed after fixing
+  [#169][81].
+* Added [SDSS CMDs][107] `g vs (u-g)` & `g vs (g-r)`, at the request of
+  Tjibaria Pijloo (Department of Astrophysics, Radboud University Nijmegen).
+* Fixed bug in binarity generation for the CMDs of the form `X vs (X-Y)`
+  ([#181][106]).
+* Smarter selection of stars to be used by the best fit function, improvements
+  in several plots ([#171][105], [#172][104]).
+* Best fit function can now accept a _minimum magnitude_ value instead of just
+  a _minimum probability_ value ([#115][103]).
+* Added a `memb_par` parameter to compare the number of approximate cluster
+  members obtained via the structural analysis and via the decontamination
+  algorithm ([#162][102]).
+* Code is now able to correctly read the names of files with [more than one
+  dot in it's name][101].
+* Fixed bad [alphabetical ordering][100] of input cluster files.
+* Better limits for photometric diagram ([#173][99]).
+* Fixed `DeprecationWarning` [issue][98].
+* Invert x axis when [RA cords are used][97] (improved [here][96]).
+* Several fixes and improvements made to plotted diagrams ([5c7dc7f][95];
+  [1642349][94]; [b57028c][93]; [240178a][92]; [9ec0ab8][91]; [fef14c4][90];
+  [db0df2a][89]; [575ebe7][88]; [#177][87]; [#178][86]).
 
 ### Caveats
 
-* Same as version [0.1.2](https://github.com/asteca/asteca/releases/tag/v0.1.2).
+* Same as version [0.1.2][51].
 
-## [[v0.1.61]](https://github.com/asteca/asteca/releases/tag/v0.1.61) - 2015-03-04
+
+## [[v0.1.61]][85] - 2015-03-04
 
 ### Changed
 
-* Added [_"lazy parallelization"_](https://github.com/asteca/asteca/commit/b536c84c2ad085bbe8ff10a0b6535618ae1ba09a) ability. Now the user can run as many instances of the code as needed simply by creating extra `asteca_xx.py` and `input_xx` folders where `xx` are integers of the form: 01, 02,..., 99.
-* [Reposition](https://github.com/asteca/asteca/commit/e7dec4b75a62ff397ee62cb322345f6b17b74ff6) several text boxes in output images, newer versions of `matplotlib` moved them from the previous position.
-* Fix [bad import](https://github.com/asteca/asteca/commit/9bed2166e9cc36faa7077c79c436c50e40801820) of `rpy2` package, positioned incorrectly in two functions.
-* Fix `DeprecationWarning` showing when `exp_function` was used ([#169](https://github.com/asteca/asteca/issues/169)).
+* Added [_"lazy parallelization"_][84] ability. Now the user can run as many
+  instances of the code as needed simply by creating extra `asteca_xx.py` and
+  `input_xx` folders where `xx` are integers of the form: 01, 02,..., 99.
+* [Reposition][83] several text boxes in output images, newer versions of
+  `matplotlib` moved them from the previous position.
+* Fix [bad import][82] of `rpy2` package, positioned incorrectly in two
+  functions.
+* Fix `DeprecationWarning` showing when `exp_function` was used ([#169][81]).
 
 ### Caveats
 
-* Same as version [0.1.2](https://github.com/asteca/asteca/releases/tag/v0.1.2).
+* Same as version [0.1.2][51].
 
-## [[v0.1.5]](https://github.com/asteca/asteca/releases/tag/v0.1.5) - 2015-03-03
+
+## [[v0.1.5]][80] - 2015-03-03
 
 ### Changed
 
-(**Warning**: this release breaks compatibility with the previous version of the `params_input.dat` file)
+(**Warning**: this release breaks compatibility with the previous version of
+the `params_input.dat` file)
 
-* Improved radius assignment algorithm ([#146](https://github.com/asteca/asteca/issues/146)).
-* Detect cropped cluster region and use correct area when generating field regions ([#139](https://github.com/asteca/asteca/issues/139), [#157](https://github.com/asteca/asteca/issues/157)).
-* Fixed bug that crashed the code when top tiers synthetic clusters with no stars were plotted ([#147](https://github.com/asteca/asteca/issues/147)). Added minimum total mass of 10Mo.
-* Fixed bug where KDE p-values for field vs field comparision were artificially increased by comparing a field region with itself ([#138](https://github.com/asteca/asteca/issues/138)).
-* Obtain KDE p-value even if one field region is defined ([#114](https://github.com/asteca/asteca/issues/114)).
-* Fixed small bug that prevented integrated magnitude curves from being plotted ([#145](https://github.com/asteca/asteca/issues/145)).
-* Fixed several smaller bugs and issues ([#110](https://github.com/asteca/asteca/issues/110), [#150](https://github.com/asteca/asteca/issues/150), [#140](https://github.com/asteca/asteca/issues/140), [#142](https://github.com/asteca/asteca/issues/142), [#141](https://github.com/asteca/asteca/issues/141), [#149](https://github.com/asteca/asteca/issues/149), [#95](https://github.com/asteca/asteca/issues/95), [#148](https://github.com/asteca/asteca/issues/148), [#136](https://github.com/asteca/asteca/issues/136), [#163](https://github.com/asteca/asteca/issues/163), [#143](https://github.com/asteca/asteca/issues/143)).
+* Improved radius assignment algorithm ([#146][79]).
+* Detect cropped cluster region and use correct area when generating field
+  regions ([#139][78], [#157][77]).
+* Fixed bug that crashed the code when top tiers synthetic clusters with no
+  stars were plotted ([#147][76]). Added minimum total mass of 10Mo.
+* Fixed bug where KDE p-values for field vs field comparison were artificially
+  increased by comparing a field region with itself ([#138][75]).
+* Obtain KDE p-value even if one field region is defined ([#114][74]).
+* Fixed small bug that prevented integrated magnitude curves from being plotted
+  ([#145][73]).
+* Fixed several smaller bugs and issues ([#110][72], [#150][71], [#140][70],
+  [#142][69], [#141][68], [#149][67], [#95][66], [#148][65], [#136][64],
+  [#163][63], [#143][62]).
 
 ### Caveats
 
-* Same as version [0.1.2](https://github.com/asteca/asteca/releases/tag/v0.1.2).
+* Same as version [0.1.2][51].
 
-## [[v0.1.4]](https://github.com/asteca/asteca/releases/tag/v0.1.4) - 2014-12-18
+
+## [[v0.1.4]][61] - 2014-12-18
 
 ### Changed
 
-* Improved plotting of crowded fields ([#62](https://github.com/asteca/asteca/issues/62)).
-* Function to generate image is now more stable ([#112](https://github.com/asteca/asteca/issues/112)). Re-arranged plots in output image.
-* Add _Top tiers_ models output ([#130](https://github.com/asteca/asteca/issues/130)).
-* Fixed small bug in KDE p-values function ([#134](https://github.com/asteca/asteca/issues/134)).
+* Improved plotting of crowded fields ([#62][60]).
+* Function to generate image is now more stable ([#112][59]). Re-arranged plots
+  in output image.
+* Add _Top tiers_ models output ([#130][58]).
+* Fixed small bug in KDE p-values function ([#134][57]).
 * Minor re-arrangement with semi-input data.
 
 ### Caveats
 
-* Same as version [0.1.2](https://github.com/asteca/asteca/releases/tag/v0.1.2).
+* Same as version [0.1.2][51].
 
-## [[v0.1.3]](https://github.com/asteca/asteca/releases/tag/v0.1.3) - 2014-12-10
+## [[v0.1.3]][56] - 2014-12-10
 
 ### Changed
 
-* Accept arrays of non-equispaced parameter values instead of only equispaced ranges ([#121](https://github.com/asteca/asteca/issues/121)).
-* Added support for lognormal [Chabrier (2001)](http://adsabs.harvard.edu/abs/2001ApJ...554.1274C) IMF.
+* Accept arrays of non-equispaced parameter values instead of only equispaced
+  ranges ([#121][55]).
+* Added support for log-normal [Chabrier (2001)][54] IMF.
 * More precise encoding/decoding in genetic algorithm.
-* Functions separated into sections ([#125](https://github.com/asteca/asteca/issues/125)).
-* Input parameters set as global variables ([#132](https://github.com/asteca/asteca/issues/132)).
+* Functions separated into sections ([#125][53]).
+* Input parameters set as global variables ([#132][52]).
 
 ### Caveats
 
-* Same as version [0.1.2](https://github.com/asteca/asteca/releases/tag/v0.1.2).
+* Same as version [0.1.2][51].
 
-## [[v0.1.2]](https://github.com/asteca/asteca/releases/tag/v0.1.2) - 2014-12-01
+
+## [[v0.1.2]][51] - 2014-12-01
 
 ### Changed
 
-* Likelihood method now supports [Dolphin (2002)](http://adsabs.harvard.edu/abs/2002MNRAS.332...91D) _Poisson likelihood ratio_ function.
-* Closed [#120](https://github.com/asteca/asteca/issues/120), [#101](https://github.com/asteca/asteca/issues/101), [#129](https://github.com/asteca/asteca/issues/129), [#124](https://github.com/asteca/asteca/issues/124), [#102](https://github.com/asteca/asteca/issues/102).
-* Minor [position fix](https://github.com/asteca/asteca/commit/00538bda879009bae0a4e7565b124c8939c75d0f) for synthetic cluster text box in output plot.
-* Brute force algorithm now returns [correct errors](https://github.com/asteca/asteca/commit/afe30cbdff561a90986a638c55a4b7247fd0bc53).
-* Some fixes for when unique values in the input parameter ranges are used [[1]](https://github.com/asteca/asteca/commit/7cc383d799f2af5c1f1f8a6dcfc80e639461f02d) [[2]](https://github.com/asteca/asteca/commit/c6505025d4c3b6147a2913fad648dc18c125376b).
-* Replaced deprecated [compiler package](https://github.com/asteca/asteca/commit/f9e8c5edba5f5ca8cc33ec1afb4d137f7167e8df) used to flatten list.
+* Likelihood method now supports [Dolphin (2002)][50] _Poisson likelihood
+  ratio_ function.
+* Closed [#120][49], [#101][48], [#129][47], [#124][46], [#102][45].
+* Minor [position fix][44] for synthetic cluster text box in output plot.
+* Brute force algorithm now returns [correct errors][43].
+* Some fixes for when unique values in the input parameter ranges are used
+  ([[1]][42], [[2]][41]).
+* Replaced deprecated [compiler package][40] used to flatten list.
 
 ### Caveats
 
- * Still not sure why _tolstoy_ likelihood is biased towards high masses :confused:
+ * Still not sure why _tolstoy_ likelihood is biased towards high masses
+   :confused:
 
-## [[v0.1.1]](https://github.com/asteca/asteca/releases/tag/v0.1.1) - 2014-11-07
+
+## [[v0.1.1]][39] - 2014-11-07
 
 _More stable release._
 
 ### Changed
 
-* Closed [#113](https://github.com/asteca/asteca/issues/113), [#116](https://github.com/asteca/asteca/issues/116).
-* Minor [change](https://github.com/asteca/asteca/commit/3cffb4faa0c1dc6956aae2217c73afb4f392e53d) to error function.
+* Closed [#113][38], [#116][37].
+* Minor [change][36] to error function.
 * Closed _Known issues_ from previous version.
 
 ### Caveats
 
  * Same as previous version.
 
-## [[v0.1.0]](https://github.com/asteca/asteca/releases/tag/v0.1.0) - 2014-10-08
+
+## [[v0.1.0]][35] - 2014-10-08
 
 _First <s>semi-stable</s> buggy release_
 
 ### Changed
 
-* Closed [#72](https://github.com/asteca/asteca/issues/72), [#99](https://github.com/asteca/asteca/issues/99), [#37](https://github.com/asteca/asteca/issues/37).
-* Changed the way the IMF was [sampled](https://github.com/Gabriel-p/asteca/commit/0671e74c52fbecde6bcbb1afb1c2624875156e57), now it should be faster and more precise.
+* Closed [#72][34], [#99][33], [#37][32].
+* Changed the way the IMF was [sampled][31], now it should be faster and more
+  precise.
 * Some speed improvements (moved things around mainly).
 * Binary fraction is now a free parameter.
 
 ### Known issues
 
- * **Serious bug**: if the DA is set to run but the _Best fit method_ isn't, the final plot can't be produced since the `syn_cl_err` function isn't used ([fixed](https://github.com/Gabriel-p/asteca/commit/3e806bd0af5d7fcd7c8f2940716df880f4c1b67d) in next release).
- * Forgotten `print` prints out mass values every time the E/I operator is applied ([fixed](https://github.com/Gabriel-p/asteca/commit/8b313ef60fddccc41fd6fb7b9746f75f3e867d39) in next release).
- * If the number of points (`n_left`) in the radius finding function is smaller than 4, a very small radius is likely
-to be selected. [Fixed](https://github.com/Gabriel-p/asteca/commit/c247fd7fa4cca4d6bb341263434a4a43a4778efd) in next release.
+* **Serious bug**: if the DA is set to run but the _Best fit method_ isn't,
+  the final plot can't be produced since the `syn_cl_err` function isn't used
+  ([fixed][30] in next release).
+* Forgotten `print` prints out mass values every time the E/I operator is
+  applied ([fixed][29] in next release).
+* If the number of points (`n_left`) in the radius finding function is smaller
+  than 4, a very small radius is likely to be selected. [Fixed][28] in next
+  release.
 
 ### Caveats
 
- * The total initial mass can be set as a free parameter but the likelihood function will select always synthetic clusters of high mass. Thus it is advised to leave this parameter fixed to 1000 solar masses.
- * The binary fraction found is not stored in the output data file.
- * Some density map plots for mass and binary fraction are missing.
+* The total initial mass can be set as a free parameter but the likelihood
+  function will select always synthetic clusters of high mass. Thus it is
+  advised to leave this parameter fixed to 1000 solar masses.
+* The binary fraction found is not stored in the output data file.
+* Some density map plots for mass and binary fraction are missing.
 
-## [[v4.0.0-beta]](https://github.com/asteca/asteca/releases/tag/v4.0.0-beta) - 2014-09-23
 
-### Changed
-
-* Closed [#85](https://github.com/asteca/asteca/issues/85), [#70](https://github.com/asteca/asteca/issues/70), [#43](https://github.com/asteca/asteca/issues/43), [#86](https://github.com/asteca/asteca/issues/86).
-- Metallicity and age now take steps in the GA.
-- Add [checker](https://github.com/Gabriel-p/asteca/blob/master/functions/checker.py) function to make sure certain parameters are set correctly before running.
-* Number of points in `get_radius` increased 20% --> 25% of [the RDP](https://github.com/Gabriel-p/asteca/commit/a2e9b8f16111d5adafe66fed1eb64ed8bc03997b).
-
-## [[v3.0.0-beta]](https://github.com/asteca/asteca/releases/tag/v3.0.0-beta) - 2014-09-16
+## [[v4.0.0-beta]][27] - 2014-09-23
 
 ### Changed
 
-* Closed: [#89](https://github.com/asteca/asteca/issues/89), [#77](https://github.com/asteca/asteca/issues/77), [#80](https://github.com/asteca/asteca/issues/80).
-* The `params_input.dat` and `semi_input.dat` files are now located at the top level next to `asteca.py`.
-* Cluster's photometric files are not longer required to be stored inside a sub-folder to be picked-up by the code.
+* Closed [#85][26], [#70][25], [#43][24], [#86][23].
+* Metallicity and age now take steps in the GA.
+* Add [checker][22] function to make sure certain parameters are set correctly
+  before running.
+* Number of points in `get_radius` increased 20% --> 25% of [the RDP][21].
 
-## [[v2.0.1-beta]](https://github.com/asteca/asteca/releases/tag/v2.0.1-beta) - 2014-09-15
+
+## [[v3.0.0-beta]][20] - 2014-09-16
+
+### Changed
+
+* Closed: [#89][19], [#77][18], [#80][17].
+* The `params_input.dat` and `semi_input.dat` files are now located at the top
+  level next to `asteca.py`.
+* Cluster's photometric files are not longer required to be stored inside a
+  sub-folder to be picked-up by the code.
+
+
+## [[v2.0.1-beta]][16] - 2014-09-15
 
 ### Changed
 
 * Correct version number.
 
-## [[v2.0.0-beta]](https://github.com/asteca/asteca/releases/tag/v2.0.0-beta) - 2014-09-11
+
+## [[v2.0.0-beta]][15] - 2014-09-11
 
 ### Changed
 
-* Closed issues: [#15](https://github.com/asteca/asteca/issues/15), [#73](https://github.com/asteca/asteca/issues/73), [#53](https://github.com/asteca/asteca/issues/53), [#24](https://github.com/asteca/asteca/issues/24),  [#75](https://github.com/asteca/asteca/issues/75), [#79](https://github.com/asteca/asteca/issues/79), [#81](https://github.com/asteca/asteca/issues/81), [#59](https://github.com/asteca/asteca/issues/59), [#83](https://github.com/asteca/asteca/issues/83), [#78](https://github.com/asteca/asteca/issues/78), [#69](https://github.com/asteca/asteca/issues/69), [#74](https://github.com/asteca/asteca/issues/74).
+* Closed issues: [#15][14], [#73][13], [#53][12], [#24][11], [#75][10],
+  [#79][9], [#81][8], [#59][7], [#83][6], [#78][5], [#69][4], [#74][3].
 * Changed name of package (OCAAT --> ASteCA).
 * Added separate function to handle the spatial 2D histogram.
 * Changes to `get_center` function (now hopefully simpler)
@@ -190,11 +285,147 @@ to be selected. [Fixed](https://github.com/Gabriel-p/asteca/commit/c247fd7fa4cca
 * Added 2MASS CMD support for _J vs (J-H)_, _H vs (J-H)_ and _K vs (H-K)_.
 * Improve field star regions integrated magnitudes curve averaging.
 * Simplify process of adding a new CMD.
-* Added details on how the integrated magnitude calculation is done in the manual.
+* Added details on how the integrated magnitude calculation is done in the
+  manual.
 * Lots of minor edits/corrections.
 
-## [[v1.0.0-beta]](https://github.com/asteca/asteca/releases/tag/v1.0.0-beta) - 2014-08-24
+## [[v1.0.0-beta]][2] - 2014-08-24
 
 _First beta release_
 
-Version used (with some small changes) in the [original article](http://www.aanda.org/articles/aa/abs/2015/04/aa24946-14/aa24946-14.html).
+Version used (with some small changes) in the [original article][1].
+
+
+________________________________________________________________________________
+[1]: http://www.aanda.org/articles/aa/abs/2015/04/aa24946-14/aa24946-14.html
+[2]: https://github.com/asteca/asteca/releases/tag/v1.0.0-beta
+[3]: https://github.com/asteca/asteca/issues/74
+[4]: https://github.com/asteca/asteca/issues/69
+[5]: https://github.com/asteca/asteca/issues/78
+[6]: https://github.com/asteca/asteca/issues/83
+[7]: https://github.com/asteca/asteca/issues/59
+[8]: https://github.com/asteca/asteca/issues/81
+[9]: https://github.com/asteca/asteca/issues/79
+[10]: https://github.com/asteca/asteca/issues/75
+[11]: https://github.com/asteca/asteca/issues/24
+[12]: https://github.com/asteca/asteca/issues/53
+[13]: https://github.com/asteca/asteca/issues/73
+[14]: https://github.com/asteca/asteca/issues/15
+[15]: https://github.com/asteca/asteca/releases/tag/v2.0.0-beta
+[16]: https://github.com/asteca/asteca/releases/tag/v2.0.1-beta
+[17]: https://github.com/asteca/asteca/issues/80
+[18]: https://github.com/asteca/asteca/issues/77
+[19]: https://github.com/asteca/asteca/issues/89
+[20]: https://github.com/asteca/asteca/releases/tag/v3.0.0-beta
+[21]: https://github.com/Gabriel-p/asteca/commit/a2e9b8f16111d5adafe66fed1eb64ed8bc03997b
+[22]: https://github.com/Gabriel-p/asteca/blob/master/functions/checker.py
+[23]: https://github.com/asteca/asteca/issues/86
+[24]: https://github.com/asteca/asteca/issues/43
+[25]: https://github.com/asteca/asteca/issues/70
+[26]: https://github.com/asteca/asteca/issues/85
+[27]: https://github.com/asteca/asteca/releases/tag/v4.0.0-beta
+[28]: https://github.com/Gabriel-p/asteca/commit/c247fd7fa4cca4d6bb341263434a4a43a4778efd
+[29]: https://github.com/Gabriel-p/asteca/commit/8b313ef60fddccc41fd6fb7b9746f75f3e867d39
+[30]: https://github.com/Gabriel-p/asteca/commit/3e806bd0af5d7fcd7c8f2940716df880f4c1b67d
+[31]: https://github.com/Gabriel-p/asteca/commit/0671e74c52fbecde6bcbb1afb1c2624875156e57
+[32]: https://github.com/asteca/asteca/issues/37
+[33]: https://github.com/asteca/asteca/issues/99
+[34]: https://github.com/asteca/asteca/issues/72
+[35]: https://github.com/asteca/asteca/releases/tag/v0.1.0
+[36]: https://github.com/asteca/asteca/commit/3cffb4faa0c1dc6956aae2217c73afb4f392e53d
+[37]: https://github.com/asteca/asteca/issues/116
+[38]: https://github.com/asteca/asteca/issues/113
+[39]: https://github.com/asteca/asteca/releases/tag/v0.1.1
+[40]: https://github.com/asteca/asteca/commit/f9e8c5edba5f5ca8cc33ec1afb4d137f7167e8df
+[41]: https://github.com/asteca/asteca/commit/c6505025d4c3b6147a2913fad648dc18c125376b
+[42]: https://github.com/asteca/asteca/commit/7cc383d799f2af5c1f1f8a6dcfc80e639461f02d
+[43]: https://github.com/asteca/asteca/commit/afe30cbdff561a90986a638c55a4b7247fd0bc53
+[44]: https://github.com/asteca/asteca/commit/00538bda879009bae0a4e7565b124c8939c75d0f
+[45]: https://github.com/asteca/asteca/issues/102
+[46]: https://github.com/asteca/asteca/issues/124
+[47]: https://github.com/asteca/asteca/issues/129
+[48]: https://github.com/asteca/asteca/issues/101
+[49]: https://github.com/asteca/asteca/issues/120
+[50]: http://adsabs.harvard.edu/abs/2002MNRAS.332...91D
+[51]: https://github.com/asteca/asteca/releases/tag/v0.1.2
+[52]: https://github.com/asteca/asteca/issues/132
+[53]: https://github.com/asteca/asteca/issues/125
+[54]: http://adsabs.harvard.edu/abs/2001ApJ...554.1274C
+[55]: https://github.com/asteca/asteca/issues/121
+[56]: https://github.com/asteca/asteca/releases/tag/v0.1.3
+[57]: https://github.com/asteca/asteca/issues/134
+[58]: https://github.com/asteca/asteca/issues/130
+[59]: https://github.com/asteca/asteca/issues/112
+[60]: https://github.com/asteca/asteca/issues/62
+[61]: https://github.com/asteca/asteca/releases/tag/v0.1.4
+[62]: https://github.com/asteca/asteca/issues/143
+[63]: https://github.com/asteca/asteca/issues/163
+[64]: https://github.com/asteca/asteca/issues/136
+[65]: https://github.com/asteca/asteca/issues/148
+[66]: https://github.com/asteca/asteca/issues/95
+[67]: https://github.com/asteca/asteca/issues/149
+[68]: https://github.com/asteca/asteca/issues/141
+[69]: https://github.com/asteca/asteca/issues/142
+[70]: https://github.com/asteca/asteca/issues/140
+[71]: https://github.com/asteca/asteca/issues/150
+[72]: https://github.com/asteca/asteca/issues/110
+[73]: https://github.com/asteca/asteca/issues/145
+[74]: https://github.com/asteca/asteca/issues/114
+[75]: https://github.com/asteca/asteca/issues/138
+[76]: https://github.com/asteca/asteca/issues/147
+[77]: https://github.com/asteca/asteca/issues/157
+[78]: https://github.com/asteca/asteca/issues/139
+[79]: https://github.com/asteca/asteca/issues/146
+[80]: https://github.com/asteca/asteca/releases/tag/v0.1.5
+[81]: https://github.com/asteca/asteca/issues/169
+[82]: https://github.com/asteca/asteca/commit/9bed2166e9cc36faa7077c79c436c50e40801820
+[83]: https://github.com/asteca/asteca/commit/e7dec4b75a62ff397ee62cb322345f6b17b74ff6
+[84]: https://github.com/asteca/asteca/commit/b536c84c2ad085bbe8ff10a0b6535618ae1ba09a
+[85]: https://github.com/asteca/asteca/releases/tag/v0.1.61
+[86]: https://github.com/asteca/asteca/issues/178
+[87]: https://github.com/asteca/asteca/issues/177
+[88]: https://github.com/asteca/asteca/commit/575ebe7de64c1c4da04eb7c18dfab4b8bd1b2751
+[89]: https://github.com/asteca/asteca/commit/db0df2adc8d9821ab5122ba6b6482557627a779e
+[90]: https://github.com/asteca/asteca/commit/fef14c476b88bc9f82bcd39e96cee222a0628cdd
+[91]: https://github.com/asteca/asteca/commit/9ec0ab8c3d966e0dbe19c6b5cff65e1cb381c939
+[92]: https://github.com/asteca/asteca/commit/240178a3c797910d6a807a41a8dd6c2f94d82cfb
+[93]: https://github.com/asteca/asteca/commit/b57028c93259afbf3cbebc905c482349fcb6ef7a
+[94]: https://github.com/asteca/asteca/commit/16423496d22bb843294189fd121a0ed8a0c6e783
+[95]: https://github.com/asteca/asteca/commit/5c7dc7f9f348bf2bedb3eb86daf7decbbf83df33
+[96]: https://github.com/asteca/asteca/commit/aeb7d7d097eb40289d2bb4c83adf433567bb28d0
+[97]: https://github.com/asteca/asteca/commit/e99da37a398c446d71c59c43f4547434d0c9f7e7
+[98]: https://github.com/asteca/asteca/commit/97d77f1d7f36adf6af6398a2f4a5b944598fda8f
+[99]: https://github.com/asteca/asteca/issues/173
+[100]: https://github.com/asteca/asteca/commit/b6ca2a2df8b7e614dc9beb38e99400e3b69208bf
+[101]: https://github.com/asteca/asteca/commit/c0358ed9526b835bfeeddf75804002ad51c69610
+[102]: https://github.com/asteca/asteca/issues/162
+[103]: https://github.com/asteca/asteca/issues/115
+[104]: https://github.com/asteca/asteca/issues/172
+[105]: https://github.com/asteca/asteca/issues/171
+[106]: https://github.com/asteca/asteca/issues/181
+[107]: https://github.com/asteca/asteca/commit/2324a70f402ddbe9fdde203c3745f93b6d6dc545
+[108]: https://github.com/asteca/asteca/commit/d92be0c8e398739fba562d59ba35b11eeac9a9a0
+[109]: https://github.com/asteca/asteca/commit/197af6439baabd3e9db4039775aba721d84047a2
+[110]: https://github.com/asteca/asteca/commit/6b2857aefa2878ee5aba245a7fbf9cc1f423820b
+[111]: https://github.com/asteca/asteca/releases/tag/v0.1.7
+[112]: https://github.com/asteca/asteca/issues/184
+[113]: https://github.com/asteca/asteca/issues/175
+[114]: https://github.com/asteca/asteca/issues/111
+[115]: https://github.com/asteca/asteca/issues/154
+[116]: https://github.com/asteca/asteca/issues/131
+[117]: https://github.com/asteca/asteca/issues/179
+[118]: https://github.com/asteca/asteca/issues/183
+[119]: https://github.com/asteca/asteca/issues/180
+[120]: https://github.com/asteca/asteca/releases/tag/v0.1.8
+[121]: https://github.com/asteca/ASteCA/commit/ff3b240ec3d1b2339ce51cf262e71810a33b6517
+[122]: https://github.com/asteca/asteca/issues/13
+[123]: https://github.com/asteca/asteca/issues/168
+[124]: https://github.com/asteca/asteca/commit/2e4b1d8f8a084e78bc56d52df494a796a6909de6
+[125]: https://github.com/asteca/ASteCA/commit/d35c5611708d249e730bef77b0ee14226cce14de
+[126]: http://adsabs.harvard.edu/abs/2007MNRAS.377.1301B
+[127]: https://github.com/asteca/ASteCA/commit/dc4c9223b0ec0a02904e30025eec50dfdc13637d
+[128]: https://github.com/asteca/asteca/commit/f2508355d8136c2d5a6216093e6f9eda02bd99c1
+[129]: https://github.com/asteca/asteca/commit/4b1a897d69cf85b1c0263d738cf2132d9924eb9c
+[130]: https://github.com/asteca/asteca/issues/185
+[131]: https://github.com/asteca/asteca/issues/186
+[132]: https://github.com/asteca/asteca/releases/tag/v0.1.9
