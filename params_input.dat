@@ -336,7 +336,7 @@ SC  kroupa_2002             300.
 #    Metallicity (z)        
 PS_m                  0.0005    0.03    0.005
 #    log(age)            
-PS_a                      6.    10.1     0.05
+PS_a                      6.     10.      0.5
 #    E(B-V)                
 PS_e                      0.     1.      0.02
 #    Distance modulus        
