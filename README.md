@@ -11,14 +11,41 @@ The [ASteCA][1] package is designed to fully automatize the usual tests
 applied on [star clusters][2] in order to determine their characteristics:
 center, radius, stars membership probabilities and associated
 intrinsic/extrinsic parameters: metallicity, age, reddening, distance, total
-mass, binarity fraction, etc.</p>
+mass, binarity fraction, etc.
 
-Read the code's [documentation][3] for details on how to use **ASteCA**.
-Notice that the docs are still under development and many sections will be
-incomplete or just empty, until I have the time to finish them.
+**IMPORTANT**: until the release of v1.0.0 the package will be *under heavy
+development*. Keep this in mind if you want to use it on your research.
+
+
+## Running
+
+After downloading the package, and assuming all necessary dependencies are
+installed (see the code's [requirements][3]), simply open a terminal, move
+into the `asteca/` folder and run:
+
+````
+python asteca.py
+````
+
+Read the code's [documentation][4] for more details on how to use **ASteCA**.
+
+Notice that, as the code itself, the docs are *still under development* and
+many sections will be incomplete or just empty. The docs will be improved as
+new versions are released.
+
+
+## Releases
+
+The latest release can always be accessed [here][5].
+
+See the [CHANGELOG.md][6] file for a list of previous releases, the changes
+made in each one, and possible compatibility breaks with older versions.
+
+
+## Referencing
 
 The accompanying article describing the code in detail can be accessed
-[via A&A][4], and referenced using the following BibTeX entry:
+[via A&A][7], and referenced using the following BibTeX entry:
 
 ````
 @article{Perren_2015,
@@ -34,32 +61,29 @@ The accompanying article describing the code in detail can be accessed
 }
 ````
 
-## Releases
+This article will rapidly become outdated as new versions are released. For an
+up to date description of **ASteCA** please refer to the online documentation.
 
-The code is still *under heavy development*. The latest release can be
-accessed [here][5].
-
-See the [CHANGELOG.md][6] file for a list of releases, the changes made in
-each and possible compatibility breaks with the previous version.
 
 ## To do
 
-* List of open [bugs][7].
-* List of planned [enhancements][8].
-* High priority [issues][9].
-* All open [issues][10].
+* List of open [bugs][8].
+* List of planned [enhancements][9].
+* High priority [issues][10].
+* All open [issues][11].
 
 ________________________________________________________________________________
 [1]: http://asteca.github.io
 [2]: https://en.wikipedia.org/wiki/Star_cluster
-[3]: http://asteca.rtfd.org/
-[4]: http://www.aanda.org/articles/aa/abs/2015/04/aa24946-14/aa24946-14.html
+[3]: http://asteca.readthedocs.org/en/latest/download.html#requirements
+[4]: http://asteca.rtfd.org/
 [5]: https://github.com/asteca/asteca/releases/latest
 [6]: https://github.com/asteca/asteca/blob/active/CHANGELOG.md
-[7]: https://github.com/asteca/asteca/issues?q=is%3Aopen+is%3Aissue+label%3Abug
-[8]: https://github.com/asteca/asteca/issues?q=is%3Aopen+is%3Aissue+label%3Aenhancement
-[9]: https://github.com/asteca/asteca/issues?q=is%3Aopen+is%3Aissue+label%3Ap%3Ahigh
-[10]: https://github.com/asteca/asteca/issues
+[7]: http://www.aanda.org/articles/aa/abs/2015/04/aa24946-14/aa24946-14.html
+[8]: https://github.com/asteca/asteca/issues?q=is%3Aopen+is%3Aissue+label%3Abug
+[9]: https://github.com/asteca/asteca/issues?q=is%3Aopen+is%3Aissue+label%3Aenhancement
+[10]: https://github.com/asteca/asteca/issues?q=is%3Aopen+is%3Aissue+label%3Ap%3Ahigh
+[11]: https://github.com/asteca/asteca/issues
 
 
 #### License
@@ -99,6 +123,7 @@ Constructed with the following guidelines:
   affect compatibility.
 * A new *build* release indicates this is a pre-release of the version.
 
+________________________________________________________________________________
 [19]: http://semver.org/
 [20]: http://www.aanda.org/articles/aa/abs/2015/04/aa24946-14/aa24946-14.html
 [21]: http://www.gnu.org/licenses/gpl-3.0.en.html
