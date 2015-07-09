@@ -145,7 +145,7 @@ def num_memb_conc_param(flag_3pk_conver, cd, rt, rc):
 
 def get_king_profile(clust_rad, field_dens, radii, rdp_points):
     '''
-    Function to fit the 3-params King profile to a given radial density.
+    Function to fit a King profile to a given radial density.
     The field density value is fixed and the core radius, tidal radius and
     maximum central density are fitted.
     '''
@@ -165,8 +165,6 @@ def get_king_profile(clust_rad, field_dens, radii, rdp_points):
         # Initial guesses for fit: max_dens, rt, rc
         max_dens, rt_guess, rc_guess = max(rdp_points), clust_rad, \
             clust_rad / 2.
-        # USE AT SOME POINT?
-        # max_dens, rt, rc = max(rdp_points), 2. * clust_rad, clust_rad * 0.4
 
         # Skip first radius value if it is smaller than the second value. This
         # makes it easier for the KP to converge.
