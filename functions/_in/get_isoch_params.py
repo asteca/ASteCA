@@ -60,13 +60,14 @@ def ip():
             iso_ver[iso_select[-2:]]))
         lens = [len(_) for _ in param_values]
         total = reduce(lambda x, y: x * y, lens, 1)
-        print ("interpolated and stored:\n"
-        "  {} metallicity values (z),\n"
-        "  {} age values (per z),\n"
-        "  {} reddening values,\n"
-        "  {} distance values,\n"
-        "  {} mass values,\n"
-        "  {} binary fraction values.".format(*lens))
-        print "  = {:.1e} approx total models.".format(total)
+        print (
+            "interpolated and stored:\n"
+            "  {} metallicity values (z),\n"
+            "  {} age values (per z),\n"
+            "  {} reddening values,\n"
+            "  {} distance values,\n"
+            "  {} mass values,\n"
+            "  {} binary fraction values.".format(*lens))
+        print "  = {:.1e} approx total models.\n".format(total)
 
     return ip_list

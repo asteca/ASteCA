@@ -48,7 +48,7 @@ def read_met_file(met_f, age_values):
                     # Store color, magnitudes and masses for this
                     # isochrone.
                     metal_isoch.append([isoch_col, isoch_mag,
-                        isoch_mas])
+                                        isoch_mas])
                     # Reset lists.
                     isoch_col, isoch_mag, isoch_mas = [], [], []
 
@@ -67,10 +67,10 @@ def read_met_file(met_f, age_values):
                     # Generate colors correctty <-- HARDCODED, FIX
                     if cmd_select in {2, 5, 9}:
                         isoch_col.append(float(reader[mag1_idx]) -
-                        float(reader[mag2_idx]))
+                                         float(reader[mag2_idx]))
                     else:
                         isoch_col.append(float(reader[mag2_idx]) -
-                        float(reader[mag1_idx]))
+                                         float(reader[mag1_idx]))
                     # Magnitude.
                     isoch_mag.append(float(reader[mag1_idx]))
                     # Mass
