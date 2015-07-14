@@ -119,6 +119,8 @@ def check(mypath, file_end, cl_files):
     on with the code.
     '''
 
+    print('Checking input parameters...\n')
+
     # Check that all packages are installed.
     inst_packgs_lst = pack_check()
     # If all packages are installed, load them up.
