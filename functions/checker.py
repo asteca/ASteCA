@@ -102,7 +102,7 @@ def R_check(inst_packgs_lst):
             R_pack = "'R' and 'rpy2' are"
         # Something is not installed and function was told to run.
         print ("  WARNING: {} not installed and the 'KDE p-value test'\n"
-               "   was set to run. The function will be skipped.\n".format(
+               "  was set to run. The function will be skipped.\n".format(
                     R_pack))
 
     return R_in_place
