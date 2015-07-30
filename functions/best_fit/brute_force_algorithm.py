@@ -25,7 +25,7 @@ def brute_force(err_lst, obs_clust, completeness, ip_list, st_d_bin_mr):
     model_done = [[], []]
 
     tot_sols, i = reduce(lambda x, y: x * y,
-        [len(_) for _ in param_values], 1), 0
+                         [len(_) for _ in param_values], 1), 0
 
     milestones = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
     # Iterate through all metallicities.
@@ -34,9 +34,9 @@ def brute_force(err_lst, obs_clust, completeness, ip_list, st_d_bin_mr):
         # Iterate through all ages.
         for a_i, a in enumerate(a_lst):
 
-            ## Age-mass relation.
-            #age_mass = 10 ** (1.8 * a - 12.8)
-            #mass_lst = [age_mass]
+            # # Age-mass relation.
+            # age_mass = 10 ** (1.8 * a - 12.8)
+            # mass_lst = [age_mass]
 
             # Iterate through all extinction values.
             for e in e_lst:
@@ -56,7 +56,7 @@ def brute_force(err_lst, obs_clust, completeness, ip_list, st_d_bin_mr):
                             isochrone = isoch_list[m_i][a_i]
                             # Call likelihood function with m,a,e,d values.
                             likel_val = i_l(err_lst, obs_clust, completeness,
-                                st_d_bin_mr, isochrone, params)
+                                            st_d_bin_mr, isochrone, params)
                             # Store the likelihood for each synthetic cluster.
                             model_done[0].append(params)
                             model_done[1].append(likel_val)
@@ -65,7 +65,7 @@ def brute_force(err_lst, obs_clust, completeness, ip_list, st_d_bin_mr):
                             i += 1
                             percentage_complete = (100.0 * (i + 1) / tot_sols)
                             while len(milestones) > 0 and \
-                            percentage_complete >= milestones[0]:
+                                    percentage_complete >= milestones[0]:
                                 print "  {}% done".format(milestones[0])
                                 # Remove that milestone from the list.
                                 milestones = milestones[1:]

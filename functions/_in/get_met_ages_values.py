@@ -15,7 +15,7 @@ from girardi_isochs_format import isoch_format as i_format
 
 def match_ranges(met_vals_all, met_files, age_vals_all, z_range, a_range):
     '''
-    Matches available matallicity and ages values with those stored in the
+    Matches available metallicity and ages values with those stored in the
     ranges given to these two parameters.
     '''
 
@@ -84,7 +84,7 @@ def get_ages(met_file):
 
     # Open the metallicity file.
     with open(met_file, mode="r") as f_iso:
-        regex = age_format  # Define regular exoresion.
+        regex = age_format  # Define regular expression.
         ages0 = re.findall(regex, f_iso.read())  # Find all instances.
         ages1 = np.asarray(map(float, ages0))  # Map to floats.
         ages2 = np.log10(ages1)  # Take log10
@@ -124,11 +124,14 @@ def get_m_a_vls(iso_path):
     # Also read full paths to metallicity files.
     met_vals_all, metal_files = get_metals(iso_path)
 
-    # Read all ages from the first metallicity file defined.
+    # Read all ages from the *first* metallicity file defined.
+    #
     # *WE ASUME ALL METALLICITY FILES HAVE THE SAME NUMBER OF AGE VALUES*
     # (that's why we use the first metallicity file stored to obtain all
     # the age values)
-    # I.e: store all age values available.
+    #
+    # I.e: all metallicity files should contain the same amount and values for
+    # the ages, otherwise something *will* fail down the line.
     age_vals_all = get_ages(metal_files[0])
 
     # Get parameters ranges stored in params_input.dat file.
@@ -136,7 +139,7 @@ def get_m_a_vls(iso_path):
 
     # Match values in metallicity and age ranges with those available.
     z_range, a_range = param_ranges[:2]
-    met_f_filter, met_values, age_values = match_ranges(met_vals_all,
-        metal_files, age_vals_all, z_range, a_range)
+    met_f_filter, met_values, age_values = match_ranges(
+        met_vals_all, metal_files, age_vals_all, z_range, a_range)
 
     return param_ranges, met_f_filter, met_values, age_values
