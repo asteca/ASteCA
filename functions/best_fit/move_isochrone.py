@@ -11,7 +11,7 @@ from .._in import get_in_params as g
 
 def move_isoch(isochrone, e, d):
     '''
-    Recieves an isochrone of a given age and metallicity and modifies
+    Receives an isochrone of a given age and metallicity and modifies
     its color and magnitude values according to given values for the extinction
     E(B-V) (e) and distance modulus (d).
     '''
