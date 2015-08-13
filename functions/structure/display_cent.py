@@ -22,7 +22,7 @@ def disp_cent(x_data, y_data, mag_data, center_cl, cent_bin, h_filter):
 
     # 1 subplot: 2D filtered histogram
     ax1 = plt.subplot(gs[0, 0])
-    #Set axis labels.
+    # Set axis labels.
     plt.xlabel('{} (bins)'.format(x_name), fontsize=12)
     plt.ylabel('{} (bins)'.format(y_name), fontsize=12)
     # Set minor ticks
@@ -43,7 +43,7 @@ def disp_cent(x_data, y_data, mag_data, center_cl, cent_bin, h_filter):
     # Get max and min values in x,y
     x_min, x_max = min(x_data), max(x_data)
     y_min, y_max = min(y_data), max(y_data)
-    #Set plot limits
+    # Set plot limits
     plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
     if coord == 'deg':

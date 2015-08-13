@@ -18,15 +18,15 @@ def center_approx(hist, xedges, yedges, st_dev_lst):
     approx_cents = []
     for indx, st_dev in enumerate(st_dev_lst):
 
-        # 2D histogram with a gaussian filter applied.
+        # 2D histogram with a Gaussian filter applied.
         h_g = gaussian_filter(hist, st_dev, mode='constant')
 
         # x,y coordinates of the bin with the maximum value in the 2D
         # filtered histogram.
         x_cent_bin, y_cent_bin = np.unravel_index(h_g.argmax(), h_g.shape)
         # x,y coords of the center of the above bin.
-        x_cent_pix, y_cent_pix = np.average(xedges[x_cent_bin:x_cent_bin + 2]),\
-        np.average(yedges[y_cent_bin:y_cent_bin + 2])
+        x_cent_pix = np.average(xedges[x_cent_bin:x_cent_bin + 2])
+        y_cent_pix = np.average(yedges[y_cent_bin:y_cent_bin + 2])
 
         # Only pass this one for plotting.
         if indx == 0:
@@ -39,7 +39,7 @@ def center_approx(hist, xedges, yedges, st_dev_lst):
 
 def kde_center_f(x_data, y_data, approx_cent, radius):
     '''
-    Find the KDE maximum value wich points to the center coordinates.
+    Find the KDE maximum value pointing to the center coordinates.
     '''
 
     # Unpack approximate center values.
@@ -75,8 +75,7 @@ def kde_center_f(x_data, y_data, approx_cent, radius):
     k_pos_plot = k_pos
     # The error is associated with the grid density used and the
     # zoomed area defined.
-    x_range, y_range = max(x_zoom) - min(x_zoom), max(y_zoom) - \
-    min(y_zoom)
+    x_range, y_range = max(x_zoom) - min(x_zoom), max(y_zoom) - min(y_zoom)
     e_cent = [x_range / gd, y_range / gd]
     # Coordinates of max value in x,y grid (ie: center position).
     x_cent_kde, y_cent_kde = positions.T[np.argmax(k_pos)]
@@ -139,23 +138,23 @@ def get_center(x_data, y_data, mag_data, hist_lst, semi_return):
 
             # Call funct to obtain the pixel coords of the maximum KDE value.
             approx_cents = [cent_cl_semi]
-            kde_cent, e_cent, kde_plot = kde_center_f(x_data, y_data,
-                approx_cents, cl_rad_semi)
+            kde_cent, e_cent, kde_plot = kde_center_f(
+                    x_data, y_data, approx_cents, cl_rad_semi)
 
             # Re-write center values if fixed in semi input file.
             if cent_flag_semi == 2:
                 kde_cent, e_cent = [float(i) for i in cent_cl_semi], [0., 0.]
                 print 'Semi center fixed: ({:g}, {:g}) {c}.'.format(*kde_cent,
-                    c=coord)
+                                                                    c=coord)
             else:
                 print 'Semi center found: ({:g}, {:g}) {c}.'.format(*kde_cent,
-                    c=coord)
+                                                                    c=coord)
 
             # Find bin where the center xy coordinates are located.
             cent_bin = bin_center(xedges, yedges, kde_cent)
 
             # For plotting.
-            # 2D histogram with a gaussian filter applied.
+            # 2D histogram with a Gaussian filter applied.
             hist_2d_g = gaussian_filter(hist, st_dev_lst[0], mode='constant')
         else:
             # Use 'auto' mode.
@@ -167,11 +166,11 @@ def get_center(x_data, y_data, mag_data, hist_lst, semi_return):
         # Gaussian filters with different standard deviation values, on the
         # 2D histogram.
         hist_2d_g, approx_cents = center_approx(hist, xedges, yedges,
-            st_dev_lst)
+                                                st_dev_lst)
 
         # Call funct to obtain the pixel coords of the maximum KDE value.
         kde_cent, e_cent, kde_plot = kde_center_f(x_data, y_data, approx_cents,
-            radius)
+                                                  radius)
 
         # Find bin where the center xy coordinates are located.
         cent_bin = bin_center(xedges, yedges, kde_cent)
@@ -180,21 +179,21 @@ def get_center(x_data, y_data, mag_data, hist_lst, semi_return):
         # instead of mean to reject possible outliers) and the standard
         # deviation using all the coordinates obtained.
         cent_median, cent_std_dev = np.mean(np.array(approx_cents), axis=0), \
-        np.std(np.array(approx_cents), axis=0)
+            np.std(np.array(approx_cents), axis=0)
 
         # Raise a flag if either median cluster's central coordinate is
         # more than 10% away from the ones assigned as the cluster's center.
         if abs(cent_median[0] - kde_cent[0]) > 0.1 * kde_cent[0] \
-        or abs(cent_median[1] - kde_cent[1]) > 0.1 * kde_cent[1]:
+                or abs(cent_median[1] - kde_cent[1]) > 0.1 * kde_cent[1]:
             flag_center_med = True
-        # Raise a flag if the standard deviation for either coord is larger than
-        # 10% of the center coord values.
+        # Raise a flag if the standard deviation for either coord is larger
+        # than 10% of the center coord values.
         if cent_std_dev[0] > 0.1 * kde_cent[0] or \
-            cent_std_dev[1] > 0.1 * kde_cent[1]:
+                cent_std_dev[1] > 0.1 * kde_cent[1]:
             flag_center_std = True
 
         print 'Auto center found: ({:g}, {:g}) {c}.'.format(*kde_cent,
-            c=coord)
+                                                            c=coord)
 
     # If Manual mode is set, display center and ask the user to accept it or
     # input new one.
@@ -204,11 +203,11 @@ def get_center(x_data, y_data, mag_data, hist_lst, semi_return):
         # Gaussian filters with different standard deviation values, on the
         # 2D histogram.
         hist_2d_g, approx_cents = center_approx(hist, xedges, yedges,
-            [st_dev_lst[0]])
+                                                [st_dev_lst[0]])
 
         # Call funct to obtain the pixel coords of the maximum KDE value.
         kde_cent, e_cent, kde_plot = kde_center_f(x_data, y_data, approx_cents,
-            radius)
+                                                  radius)
 
         cent_bin = bin_center(xedges, yedges, kde_cent)
 
@@ -236,7 +235,7 @@ def get_center(x_data, y_data, mag_data, hist_lst, semi_return):
                 print 'Wrong input. Try again.\n'
 
     center_params = [cent_bin, kde_cent, e_cent, approx_cents, st_dev_lst,
-        hist_2d_g, kde_plot, flag_center_med, flag_center_std,
-        flag_center_manual]
+                     hist_2d_g, kde_plot, flag_center_med, flag_center_std,
+                     flag_center_manual]
 
     return center_params
