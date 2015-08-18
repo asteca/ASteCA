@@ -9,14 +9,13 @@ from ..out import prep_plots
 
 
 def disp_rad(phot_data, bin_width, center_params, clust_rad, e_rad, field_dens,
-    rdp_params):
+             rdp_params):
     '''
     Plot cluster and its radius.
     '''
 
     # Unpack.
-    x_data, y_data, mag_data, col1_data = phot_data[1], phot_data[2], \
-    phot_data[3], phot_data[5]
+    x_data, y_data, mag_data = phot_data[1], phot_data[2], phot_data[3]
     cent_bin, kde_cent, e_cent = center_params[:3]
     hist_2d_g = center_params[5]
     center_cl = [kde_cent[0], kde_cent[1]]
@@ -32,7 +31,7 @@ def disp_rad(phot_data, bin_width, center_params, clust_rad, e_rad, field_dens,
 
     # 2D filtered histogram, smallest bin width.
     ax1 = plt.subplot(gs[0, 0])
-    #Set axis labels.
+    # Set axis labels.
     plt.xlabel('{} (bins)'.format(x_name), fontsize=12)
     plt.ylabel('{} (bins)'.format(y_name), fontsize=12)
     ax1.minorticks_on()
@@ -40,7 +39,7 @@ def disp_rad(phot_data, bin_width, center_params, clust_rad, e_rad, field_dens,
     plt.axhline(y=y_center_bin, linestyle='--', color='white')
     # Radius
     circle = plt.Circle((x_center_bin, y_center_bin),
-        clust_rad / bin_width, color='w', fill=False)
+                        clust_rad / bin_width, color='w', fill=False)
     fig.gca().add_artist(circle)
     # Add text boxs.
     text = 'Bin $\simeq$ {:.0f} {}'.format(bin_width, coord)
@@ -58,7 +57,7 @@ def disp_rad(phot_data, bin_width, center_params, clust_rad, e_rad, field_dens,
     # Get max and min values in x,y
     x_min, x_max = min(x_data), max(x_data)
     y_min, y_max = min(y_data), max(y_data)
-    #Set plot limits
+    # Set plot limits
     plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
     if coord == 'deg':
@@ -86,13 +85,13 @@ def disp_rad(phot_data, bin_width, center_params, clust_rad, e_rad, field_dens,
     ax3 = plt.subplot(gs[1, 0:2])
     # Get max and min values in x,y
     x_min, x_max = min(radii) - (max(radii) / 10.), \
-    max(radii) + (max(radii) / 10.)
+        max(radii) + (max(radii) / 10.)
     max(radii) + (max(radii) / 20.)
     delta_total = (max(ring_density) - field_dens)
     delta_backg = 0.2 * delta_total
-    y_min, y_max = (field_dens - delta_backg) - (max(ring_density) -
-    min(ring_density)) / 10, max(ring_density) + (max(ring_density) -
-    min(ring_density)) / 10
+    y_min = (field_dens - delta_backg) - (max(ring_density) -
+                                          min(ring_density)) / 10
+    y_max = max(ring_density) + (max(ring_density) - min(ring_density)) / 10
     # Set plot limits
     plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
@@ -101,9 +100,9 @@ def disp_rad(phot_data, bin_width, center_params, clust_rad, e_rad, field_dens,
     plt.ylabel("stars/{}$^{{2}}$".format(coord), fontsize=12)
     # Legend texts
     texts = ['RDP ($\sim${:.0f} {})'.format(bin_width, coord),
-            '$d_{{field}}$ = {:.1E} $st/{}^{{2}}$'.format(field_dens, coord),
-            'r$_{{cl}}$ = {0:g} $\pm$ {1:g} {2}'.format(clust_rad, e_rad,
-                coord)]
+             '$d_{{field}}$ = {:.1E} $st/{}^{{2}}$'.format(field_dens, coord),
+             'r$_{{cl}}$ = {0:g} $\pm$ {1:g} {2}'.format(clust_rad, e_rad,
+                                                         coord)]
     # Plot density profile with the smallest bin size
     ax3.plot(radii, ring_density, 'ko-', zorder=3, label=texts[0])
     # Plot poisson error bars

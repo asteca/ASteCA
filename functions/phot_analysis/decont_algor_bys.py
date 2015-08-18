@@ -36,7 +36,7 @@ def sort_members(memb_lst):
     item[7] is the star's memb_prob and item[3] its magnitude.
     '''
     membership_prob_avrg_sort = sorted(memb_lst, key=lambda item: (-item[7],
-        item[4], item[6], item[3]))
+                                       item[4], item[6], item[3]))
 
     return membership_prob_avrg_sort
 
@@ -57,8 +57,8 @@ def mpas(cl_reg_rad, runs_fields_probs):
     # the cluster radius.
     temp_prob_members = []
     for st_indx, star in enumerate(cl_reg_rad):
-            temp_prob_members.append(star +
-            [round(clust_reg_prob_avrg[st_indx], 3)])
+        temp_prob_members.append(star + [round(clust_reg_prob_avrg[st_indx],
+                                               3)])
 
     # Stars inside the cluster's radius are now saved in the list
     # 'temp_prob_members' where each item contains the data for each
@@ -77,7 +77,7 @@ def likelihood(region, cl_reg_rad):
     '''
 
     # Store cleaned cluster/field region and full cluster_region as arrays
-    # skipping IDs otherwise thw whole array is converted to strings.
+    # skipping IDs otherwise the whole array is converted to strings.
     # Cleaned cluster/field region.
     cl_fl_arr = np.array(zip(*zip(*region)[1:]), dtype=float)
     N = len(region)  # Number of stars in this region.
@@ -166,7 +166,8 @@ def bys_da(flag_no_fl_regs, cl_region, field_region, memb_file):
 
             # This list will hold the probabilities for each field region.
             field_reg_probs = [[] for _ in field_region]
-            # Iterate through all the 'field stars' regions that were populated.
+            # Iterate through all the 'field stars' regions that were
+            # populated.
             for indx, fl_region in enumerate(field_region):
 
                 # Obtain likelihoods for each star in the clean cluster region
@@ -204,7 +205,7 @@ def bys_da(flag_no_fl_regs, cl_region, field_region, memb_file):
 
             # Check if probabilities converged. If so, break out.
             prob_avrg_old, break_flag = break_check(prob_avrg_old,
-                runs_fields_probs)
+                                                    runs_fields_probs)
             if break_flag:
                 print '  MPs converged. Breaking out ({}).'.format(run_num)
                 break

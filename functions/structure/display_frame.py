@@ -18,13 +18,13 @@ def disp_frame(x_data, y_data, mag_data):
     # Get max and min values in x,y
     x_min, x_max = min(x_data), max(x_data)
     y_min, y_max = min(y_data), max(y_data)
-    #Set plot limits
+    # Set plot limits
     plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
+    # If RA is used, invert axis.
     if coord == 'deg':
-        # If RA is used, invert axis.
         plt.gca().invert_xaxis()
-    #Set axis labels
+    # Set axis labels
     plt.xlabel('{} ({})'.format(x_name, coord), fontsize=12)
     plt.ylabel('{} ({})'.format(y_name, coord), fontsize=12)
     # Set minor ticks

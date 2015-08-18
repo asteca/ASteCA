@@ -39,21 +39,22 @@ def trim_frame(phot_data):
                 print 'Input center of new frame (in px).'
                 temp_cent.append(float(raw_input('x: ')))
                 temp_cent.append(float(raw_input('y: ')))
-                print 'Input side lenght for new frame (in px).'
+                print 'Input side length for new frame (in px).'
                 temp_side.append(float(raw_input('x_side: ')))
                 temp_side.append(float(raw_input('y_side: ')))
                 wrong_answer = False
 
                 # Empty new lists.
                 id_star2, x_data2, y_data2, mag_data2, e_m2, col_data2, \
-                e_c2 = [], [], [], [], [], [], []
+                    e_c2 = [], [], [], [], [], [], []
 
                 # Iterate through all stars.
                 for st_indx, star in enumerate(id_star):
 
-                    # Check if star is inside new frame boudaries.
+                    # Check if star is inside new frame boundaries.
                     if abs(temp_cent[0] - x_data[st_indx]) < temp_side[0] / 2.\
-                    and abs(temp_cent[1] - y_data[st_indx]) < temp_side[1] / 2.:
+                        and abs(temp_cent[1] - y_data[st_indx]) < \
+                            temp_side[1] / 2.:
 
                         id_star2.append(star)
                         x_data2.append(x_data[st_indx])
@@ -64,8 +65,9 @@ def trim_frame(phot_data):
                         e_c2.append(e_col1[st_indx])
 
                 phot_data_t = [np.array(id_star2), np.array(x_data2),
-                    np.array(y_data2), np.array(mag_data2), np.array(e_m2),
-                    np.array(col_data2), np.array(e_c2)]
+                               np.array(y_data2), np.array(mag_data2),
+                               np.array(e_m2), np.array(col_data2),
+                               np.array(e_c2)]
             else:
                 print 'Wrong input. Try again.\n'
     else:

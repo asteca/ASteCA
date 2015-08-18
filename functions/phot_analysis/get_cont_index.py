@@ -35,12 +35,12 @@ def cont_indx(n_clust, cl_area, field_dens, clust_rad, rdp_length):
 
         if cont_index >= 1.:
             print ("  WARNING: CI value obtained is too high: "
-            "{:.2f}".format(cont_index))
+                   "{:.2f}".format(cont_index))
         else:
             print 'Contamination index obtained ({:.2f}).'.format(cont_index)
     else:
         print ("  WARNING: cluster radius is too large to obtain\n"
-        "  a reliable contamination index value.")
+               "  a reliable contamination index value.")
         cont_index = -1.
 
     return cont_index
