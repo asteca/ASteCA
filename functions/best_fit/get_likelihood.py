@@ -9,6 +9,22 @@ import numpy as np
 from synth_cluster import synth_clust as s_c
 from .._in import get_in_params as g
 
+#############################################################
+# # Timer function: http://stackoverflow.com/a/21860100/1391441
+# from contextlib import contextmanager
+# import time
+
+
+# @contextmanager
+# def timeblock(label):
+#     start = time.clock()
+#     try:
+#         yield
+#     finally:
+#         end = time.clock()
+#         print ('{} elapsed: {}'.format(label, end - start))
+#############################################################
+
 
 def tolstoy(Q, obs_clust):
     '''
@@ -110,12 +126,14 @@ def dolphin(Q, P):
         # Bin edges for each dimension.
         b_rx, b_ry = P[1]
 
+        # with timeblock("  Histodd"):
         # Magnitude and color for the synthetic cluster.
         syn_mags_cols = np.array(zip(*[Q[0], Q[2]]))
         # Histogram of the synthetic cluster, using the bin edges calculated
         # with the observed cluster.
         syn_histo = np.histogramdd(syn_mags_cols, bins=[b_rx, b_ry])[0]
 
+        # with timeblock("  log(lkl)"):
         # Small value used to replace zeros.
         epsilon = 1e-10
         # Obtain inverse logarithmic 'Poisson likelihood ratio'.

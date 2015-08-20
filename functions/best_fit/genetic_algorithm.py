@@ -10,6 +10,22 @@ import numpy as np
 from .._in import get_in_params as g
 from get_likelihood import isoch_likelihood as i_l
 
+#############################################################
+# # Timer function: http://stackoverflow.com/a/21860100/1391441
+# from contextlib import contextmanager
+# import time
+
+
+# @contextmanager
+# def timeblock(label):
+#     start = time.clock()
+#     try:
+#         yield
+#     finally:
+#         end = time.clock()
+#         print ('{} elapsed: {}'.format(label, end - start))
+#############################################################
+
 
 def encode(n_bin, p_delta, p_mins, int_popul):
     '''
@@ -168,6 +184,7 @@ def evaluation(err_lst, obs_clust, completeness, isoch_list, param_values,
         isochrone = isoch_list[m_i][a_i]
 
         # Call likelihood function for this model.
+        # with timeblock(" Likelihood"):
         likelihood = i_l(err_lst, obs_clust, completeness, st_dist_mass,
                          isochrone, model)
 
@@ -176,6 +193,7 @@ def evaluation(err_lst, obs_clust, completeness, isoch_list, param_values,
         # solution's likelihood value can vary slightly due to the re-sampling
         # of the mass distribution.
         # if model in model_done[0]:
+        # with timeblock(" Compare"):
         try:
             # Get old likelihood value for this model.
             likel_old = model_done[1][model_done[0].index(model)]
@@ -194,12 +212,14 @@ def evaluation(err_lst, obs_clust, completeness, isoch_list, param_values,
 
     # Sort according to the likelihood list. This puts the best model (ie:
     # the one with the minimum likelihood value) first.
+    # with timeblock(" sort"):
     generation = [x for y, x in sorted(zip(likel_lst, generation_list))]
     # Sort list in place putting the likelihood minimum value first.
     likel_lst.sort()
 
     # Append data identifying the isochrone and the obtained
     # likelihood value to this *persistent* list.
+    # with timeblock(" Append"):
     model_done[0] = generation + model_done[0]
     model_done[1] = likel_lst + model_done[1]
 
@@ -313,15 +333,18 @@ def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
     for i in range(n_gen):
 
         # *** Selection/Reproduction ***
+        # with timeblock("Selec/Repo"):
         # Select chromosomes for breeding from the current generation of
         # solutions according to breed_prob to generate the intermediate
         # population.
         int_popul = selection(generation, fitness)
 
-        # Encode intermediate population's solutions into binary chromosomes.
+        # Encode intermediate population's solutions into binary
+        # chromosomes.
         chromosomes = encode(n_bin, p_delta, p_mins, int_popul)
 
         # *** Breeding ***
+        # with timeblock("Breeding"):
         # Pair chromosomes by randomly shuffling them.
         random.shuffle(chromosomes)
 
@@ -334,14 +357,17 @@ def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
 
         # *** Evaluation ***
         # Decode the chromosomes into solutions to form the new generation.
+        # with timeblock("Decode"):
         p_lst_d = decode(param_values, n_bin, p_delta, p_mins, mut_chrom)
 
         # Elitism: make sure that the best n_el solutions from the previous
         # generation are passed unchanged into this next generation.
+        # with timeblock("Elitism"):
         p_lst_e = elitism(best_sol, p_lst_d)
 
         # Evaluate each new solution in the objective function and sort
         # according to the best solutions found.
+        # with timeblock("Evaluation"):
         generation, lkl, model_done = evaluation(
             err_lst, obs_clust, completeness, isoch_list, param_values,
             p_lst_e, st_dist_mass, model_done)
