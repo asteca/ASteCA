@@ -14,19 +14,19 @@ from move_isochrone import move_isoch
 from get_mass_dist import mass_dist as m_d
 
 #############################################################
-# Timer function: http://stackoverflow.com/a/21860100/1391441
-from contextlib import contextmanager
-import time
+# # Timer function: http://stackoverflow.com/a/21860100/1391441
+# from contextlib import contextmanager
+# import time
 
 
-@contextmanager
-def timeblock(label):
-    start = time.clock()
-    try:
-        yield
-    finally:
-        end = time.clock()
-        print ('{} elapsed: {}'.format(label, end - start))
+# @contextmanager
+# def timeblock(label):
+#     start = time.clock()
+#     try:
+#         yield
+#     finally:
+#         end = time.clock()
+#         print ('{} elapsed: {}'.format(label, end - start))
 #############################################################
 
 
