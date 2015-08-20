@@ -266,6 +266,7 @@ def isoch_likelihood(err_lst, obs_clust, completeness, st_dist_mass, isochrone,
 
     # Generate synthetic cluster using this "moved" isochrone and a mass
     # distribution.
+    # with timeblock("  synth_cl"):
     synth_clust = s_c(err_lst, completeness, st_dist_mass, isochrone, params)
 
     # Call function to obtain the likelihood by comparing the synthetic cluster
