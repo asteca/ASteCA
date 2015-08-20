@@ -13,6 +13,22 @@ from functions.exp_function import exp_3p
 from move_isochrone import move_isoch
 from get_mass_dist import mass_dist as m_d
 
+#############################################################
+# Timer function: http://stackoverflow.com/a/21860100/1391441
+from contextlib import contextmanager
+import time
+
+
+@contextmanager
+def timeblock(label):
+    start = time.clock()
+    try:
+        yield
+    finally:
+        end = time.clock()
+        print ('{} elapsed: {}'.format(label, end - start))
+#############################################################
+
 
 def gauss_error(col, e_col, mag, e_mag):
     '''
@@ -369,6 +385,7 @@ def synth_clust(err_lst, completeness, st_dist, isochrone, params):
     # Unpack synthetic cluster parameters.
     e, d, M_total, bin_frac = params[2:]
 
+    # with timeblock("move"):
     # Move theoretical isochrone using the values 'e' and 'd'.
     isoch_moved = move_isoch([isochrone[0], isochrone[1]], e, d) +\
         [isochrone[2]]
@@ -382,6 +399,7 @@ def synth_clust(err_lst, completeness, st_dist, isochrone, params):
     ##############################################################
 
     # Get isochrone minus those stars beyond the magnitude cut.
+    # with timeblock("cut"):
     isoch_cut = isoch_cut_mag(isoch_moved, completeness[0])
 
     # Empty array to pass if at some point no stars are left.
@@ -391,10 +409,12 @@ def synth_clust(err_lst, completeness, st_dist, isochrone, params):
 
         # Store mass distribution used to produce a synthetic cluster based on
         # a given theoretic isochrone.
+        # with timeblock("mass_dist"):
         mass_dist = m_d(st_dist, M_total)
 
         # Interpolate masses in mass_dist into the isochrone rejecting those
         # masses that fall outside of the isochrone's mass range.
+        # with timeblock("interp"):
         isoch_mass = mass_interp(isoch_cut, mass_dist)
 
         if isoch_mass.any():
@@ -407,9 +427,11 @@ def synth_clust(err_lst, completeness, st_dist, isochrone, params):
             ##############################################################
 
             # Assignment of binarity.
+            # with timeblock("binar"):
             isoch_binar = binarity(isoch_mass, isoch_cut, bin_frac)
 
             # Completeness limit removal of stars.
+            # with timeblock("compl"):
             isoch_compl = compl_func(isoch_binar, completeness)
 
             ##############################################################
@@ -421,8 +443,10 @@ def synth_clust(err_lst, completeness, st_dist, isochrone, params):
             if isoch_compl.any():
 
                 # Get errors according to errors distribution.
+                # with timeblock("errors"):
                 isoch_error = add_errors(isoch_compl, err_lst)
                 # Append masses.
+                # with timeblock("app_mass"):
                 synth_clust = np.array(isoch_error + [isoch_compl[2]])
 
     ################################################################
