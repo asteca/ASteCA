@@ -24,7 +24,7 @@ installed (see the code's [requirements][3]), simply open a terminal, move
 into the unpacked **ASteCA** folder and run:
 
 ````
-python asteca.py
+$ python asteca.py
 ````
 
 Read the code's [documentation][4] for more details on how to use **ASteCA**.
