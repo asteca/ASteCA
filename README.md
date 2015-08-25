@@ -75,7 +75,7 @@ up to date description of **ASteCA** please refer to the online documentation.
 ________________________________________________________________________________
 [1]: http://asteca.github.io
 [2]: https://en.wikipedia.org/wiki/Star_cluster
-[3]: http://asteca.readthedocs.org/en/latest/download.html#requirements
+[3]: http://asteca.readthedocs.org/en/latest/requirements.html
 [4]: http://asteca.rtfd.org/
 [5]: https://github.com/asteca/asteca/releases/latest
 [6]: https://github.com/asteca/asteca/blob/active/CHANGELOG.md
