@@ -1,7 +1,20 @@
 # Change Log
 
 
-## [[v0.1.9]][132] - 2015-06-18
+## [[v0.1.9.1]][139] - 2015-08-25
+
+### Changed
+
+* Fixed rounding of errors that returned 0. values if error was larger than
+  value ([#213][138]).
+* Check if `pip` module is installed + search for installed packages [globally,
+  not locally][137].
+* Catch [badly formatted][136] input data file.
+* Restructure [King radii obtention][135].
+* [Correctly plot stars][134] in cluster region, not used in best fit function.
+
+
+## [[v0.1.9]][133] - 2015-06-18
 
 ### Changed
 
@@ -10,7 +23,7 @@ the `params_input.dat` & `semi_input.dat` files)
 
 * Models (ie: isochrone + extinction +distance modulus + mass distribution +
   binarity) are now evaluated *each time the GA selects them as a solution*,
-  thus a new mass distribution is generated ([#186][131]). This has a
+  thus a new mass distribution is generated ([#186][132]). This has a
   performance cost, but provides higher accuracy in the best model assignment
   process since a single model can now be evaluated with a slightly different
   mass distribution several times (only with GA, *Brute Force* method will only
@@ -18,18 +31,19 @@ the `params_input.dat` & `semi_input.dat` files)
 * Added an _exit switch_ to the decontamination algorithm. It will stop
   iterations if the MPs converged to 0.1% tolerance values for all the stars
   in the cluster region (compared to the previous iteration). This speeds up
-  the function considerably ([#185][130]).
+  the function considerably ([#185][131]).
 * The upper mass value in the IMF can now be [modified via the input
-  parameters file][129].
+  parameters file][130].
 * Code can now read `params_input_XX.dat` files when [using lazy
-  parallelization][128].
-* Number of field regions [can now be set individually][127] via the
+  parallelization][129].
+* Number of field regions [can now be set individually][128] via the
   `semi_input.dat` file.
-* [Added 'bb' binning method][125] based on [Bonnato & Bica (2007)][126]. Sets
+* [Added 'bb' binning method][126] based on [Bonnato & Bica (2007)][127]. Sets
   bin widths of 0.25 and 0.5 for colors and magnitudes respectively.
-* Fixed bug in `manual` mode when [displaying errors][124].
-* Fixed bug when narrow frames were plotted ([#168][123]).
-* Moved text box outside of synthetic cluster's plot to improve its visibility (#205).
+* Fixed bug in `manual` mode when [displaying errors][125].
+* Fixed bug when narrow frames were plotted ([#168][124]).
+* Moved text box outside of synthetic cluster's plot to improve its visibility
+  ([#205][123]).
 * Closed [#13][122]. Saha's W likelihood needs the number of model points to be
   fixed, which prevents it from being used when the mass varies. There's
   nothing to be gained by adding this function.
@@ -419,13 +433,20 @@ ________________________________________________________________________________
 [120]: https://github.com/asteca/asteca/releases/tag/v0.1.8
 [121]: https://github.com/asteca/ASteCA/commit/ff3b240ec3d1b2339ce51cf262e71810a33b6517
 [122]: https://github.com/asteca/asteca/issues/13
-[123]: https://github.com/asteca/asteca/issues/168
-[124]: https://github.com/asteca/asteca/commit/2e4b1d8f8a084e78bc56d52df494a796a6909de6
-[125]: https://github.com/asteca/ASteCA/commit/d35c5611708d249e730bef77b0ee14226cce14de
-[126]: http://adsabs.harvard.edu/abs/2007MNRAS.377.1301B
-[127]: https://github.com/asteca/ASteCA/commit/dc4c9223b0ec0a02904e30025eec50dfdc13637d
-[128]: https://github.com/asteca/asteca/commit/f2508355d8136c2d5a6216093e6f9eda02bd99c1
-[129]: https://github.com/asteca/asteca/commit/4b1a897d69cf85b1c0263d738cf2132d9924eb9c
-[130]: https://github.com/asteca/asteca/issues/185
-[131]: https://github.com/asteca/asteca/issues/186
-[132]: https://github.com/asteca/asteca/releases/tag/v0.1.9
+[123]: https://github.com/asteca/asteca/issues/205
+[124]: https://github.com/asteca/asteca/issues/168
+[125]: https://github.com/asteca/asteca/commit/2e4b1d8f8a084e78bc56d52df494a796a6909de6
+[126]: https://github.com/asteca/ASteCA/commit/d35c5611708d249e730bef77b0ee14226cce14de
+[127]: http://adsabs.harvard.edu/abs/2007MNRAS.377.1301B
+[128]: https://github.com/asteca/ASteCA/commit/dc4c9223b0ec0a02904e30025eec50dfdc13637d
+[129]: https://github.com/asteca/asteca/commit/f2508355d8136c2d5a6216093e6f9eda02bd99c1
+[130]: https://github.com/asteca/asteca/commit/4b1a897d69cf85b1c0263d738cf2132d9924eb9c
+[131]: https://github.com/asteca/asteca/issues/185
+[132]: https://github.com/asteca/asteca/issues/186
+[133]: https://github.com/asteca/asteca/releases/tag/v0.1.9
+[134]: https://github.com/asteca/ASteCA/commit/c3ccc376a5d46415ae45b9f2e4572be50b75847d
+[135]: https://github.com/asteca/ASteCA/commit/4d201b76edace038d6651b7c43ac997728de1c82
+[136]: https://github.com/asteca/ASteCA/commit/11ed705d9b23730ef8752d4553139c45700c0074
+[137]: https://github.com/asteca/ASteCA/commit/3d04bb5247e001cf033a3df47e9f89e21c9dd2e5
+[138]: https://github.com/asteca/asteca/issues/213
+[139]: https://github.com/asteca/asteca/releases/tag/v0.1.9.1
