@@ -77,7 +77,7 @@ def R_check(inst_packgs_lst):
     # If both R and rpy2 packages are installed.
     if R_inst and rpy2_inst:
         # Check if all needed packages within R are installed.
-        needed_packg = ['ks', 'rgl', 'mvtnorm', 'misc3d']
+        needed_packg = ['ks', 'rgl']
         rpack = R_inst_packages()
         missing_pckg = []
         for pck in needed_packg:
