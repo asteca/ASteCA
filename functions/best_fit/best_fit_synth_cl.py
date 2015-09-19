@@ -18,7 +18,7 @@ from move_isochrone import move_isoch
 
 
 def synth_cl_plot(ip_list, isoch_fit_params, err_lst, completeness,
-        st_dist_mass):
+                  st_dist_mass):
     '''
     For plotting purposes.
     '''
@@ -37,13 +37,13 @@ def synth_cl_plot(ip_list, isoch_fit_params, err_lst, completeness,
     shift_isoch = move_isoch(isoch_list[m_i][a_i][:2], e, d)
     # Generate best fit synthetic cluster.
     synth_clst = s_c(err_lst, completeness, st_dist_mass, isoch_list[m_i][a_i],
-        [-1., -1., e, d, mass, binar_f])
+                     [-1., -1., e, d, mass, binar_f])
 
     return shift_isoch, synth_clst
 
 
 def params_errors(ip_list, err_lst, memb_prob_avrg_sort, completeness,
-        st_dist_mass, isoch_fit_params):
+                  st_dist_mass, isoch_fit_params):
     '''
     Obtain errors for the fitted parameters.
     '''
@@ -70,7 +70,7 @@ def params_errors(ip_list, err_lst, memb_prob_avrg_sort, completeness,
             # Call bootstrap function with resampling to get the uncertainty
             # in each parameter.
             isoch_fit_errors = bootstrap(err_lst, memb_prob_avrg_sort,
-                completeness, ip_list, st_dist_mass)
+                                         completeness, ip_list, st_dist_mass)
         else:
             print 'Skipping bootstrap process.'
             # No error assignment.
@@ -104,33 +104,37 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list):
         # isochrones and return the best fitting parameters.
         if best_fit_algor == 'brute':
 
-            print 'Using Brute Force algorithm ({}).'.format(lkl_method + '; '
-            + bin_method if lkl_method == 'dolphin' else lkl_method)
+            print 'Using Brute Force algorithm ({}).'.format(
+                lkl_method + '; ' + bin_method if lkl_method == 'dolphin'
+                else lkl_method)
             # Brute force algorithm.
             isoch_fit_params = b_f(err_lst, obs_clust, completeness, ip_list,
-                st_dist_mass)
+                                   st_dist_mass)
 
         elif best_fit_algor == 'genet':
 
-            print 'Using Genetic Algorithm ({}).'.format(lkl_method + '; ' +
-            bin_method if lkl_method == 'dolphin' else lkl_method)
+            print 'Using Genetic Algorithm ({}).'.format(
+                lkl_method + '; ' + bin_method if lkl_method == 'dolphin'
+                else lkl_method)
             # Genetic algorithm.
             # Let the GA algor know this call comes from the main function
             # so it will print percentages to screen.
             flag_print_perc = True
             isoch_fit_params = g_a(flag_print_perc, err_lst, obs_clust,
-                completeness, ip_list, st_dist_mass)
+                                   completeness, ip_list, st_dist_mass)
 
-        print ("Best fit params obtained.")
+        print ("Best fit parameters obtained.")
 
         # Assign errors for each parameter.
         isoch_fit_errors = params_errors(ip_list, err_lst, memb_prob_avrg_sort,
-            completeness, st_dist_mass, isoch_fit_params)
+                                         completeness, st_dist_mass,
+                                         isoch_fit_params)
 
         # Generate shifted isochrone and synthetic cluster for plotting.
         # Do this BEFORE rounding the parameter values.
         shift_isoch, synth_clst = synth_cl_plot(ip_list, isoch_fit_params,
-            err_lst, completeness, st_dist_mass)
+                                                err_lst, completeness,
+                                                st_dist_mass)
 
         if not synth_clst.any():
             print ("  WARNING: best fit synthetic cluster found is empty.")
@@ -139,16 +143,16 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list):
         # to the corresponding number of significant digits given by
         # the errors.
         isoch_fit_params[0], isoch_fit_errors = rsf(isoch_fit_params[0],
-            isoch_fit_errors)
+                                                    isoch_fit_errors)
 
     else:
         # Pass empty lists to make_plots.
         print 'Skipping parameters fitting process.'
         isoch_fit_params, isoch_fit_errors, shift_isoch, synth_clst, \
-            syn_b_edges = [[-1., -1., -1., -1., -1., -1.]], [-1., -1., -1.,
-            -1., -1., -1.], [], [], []
+            syn_b_edges = [[-1., -1., -1., -1., -1., -1.]], \
+            [-1., -1., -1., -1., -1., -1.], [], [], []
 
     bf_return = [isoch_fit_params, isoch_fit_errors, shift_isoch, synth_clst,
-        syn_b_edges]
+                 syn_b_edges]
 
     return bf_return
