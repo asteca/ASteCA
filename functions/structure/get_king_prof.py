@@ -230,7 +230,7 @@ def get_king_profile(clust_rad, field_dens, radii, rdp_points):
 
         elif flag_2pk_conver:
             # Set precision of printed values.
-            text2 = '{:.1f}' if coord == 'px' else '{:g}, {:g}'
+            text2 = '{:.1f}' if coord == 'px' else '{:g}'
             text = 'Only core radius obtained: ' + text2 + ' {}.'
             print text.format(rc, coord)
 
