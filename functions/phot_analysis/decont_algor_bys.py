@@ -6,7 +6,7 @@ import numpy as np
 from .._in import get_in_params as g
 
 
-def break_check(prob_avrg_old, runs_fields_probs):
+def break_check(prob_avrg_old, runs_fields_probs, runs, run_num):
     '''
     Check if DA converged to MPs within a 0.1% tolerance, for all stars inside
     the cluster region.
@@ -15,15 +15,21 @@ def break_check(prob_avrg_old, runs_fields_probs):
     # Average all probabilities.
     prob_avrg = np.asarray(runs_fields_probs).mean(1).mean(0)
 
+    # Set flag.
+    break_flag = False
+
     # Check if probabilities changed less than 0.1% with respect to the
     # previous iteration.
     if np.allclose(prob_avrg_old, prob_avrg, 0.001):
-        # Arrays are equal within tolerance. Break out.
-        break_flag = True
-    else:
+        # Check that at least 10% of iterations have passed.
+        if run_num >= max(1, int(0.1 * runs)):
+            # Arrays are equal within tolerance and enough iterations have
+            # passed. Break out.
+            break_flag = True
+
+    if break_flag is False:
         # Store new array in old one and proceed to new iteration.
         prob_avrg_old = prob_avrg
-        break_flag = False
 
     return prob_avrg_old, break_flag
 
@@ -205,7 +211,8 @@ def bys_da(flag_no_fl_regs, cl_region, field_region, memb_file):
 
             # Check if probabilities converged. If so, break out.
             prob_avrg_old, break_flag = break_check(prob_avrg_old,
-                                                    runs_fields_probs)
+                                                    runs_fields_probs,
+                                                    runs, run_num)
             if break_flag:
                 print '  MPs converged. Breaking out ({}).'.format(run_num)
                 break
