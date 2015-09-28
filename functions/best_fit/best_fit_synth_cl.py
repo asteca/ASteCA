@@ -94,7 +94,7 @@ def best_fit(err_lst, memb_prob_avrg_sort, completeness, ip_list):
 
         obs_clust = prep(memb_prob_avrg_sort)
         # Store for plotting purposes.
-        syn_b_edges = obs_clust[-1]
+        syn_b_edges = obs_clust[1]
 
         # Obtain mass distribution using the selected IMF. We run it once
         # because the array only depends on the IMF selected.
