@@ -43,6 +43,14 @@ def prepare(memb_prob_avrg_sort):
 
         # Obtain bin edges for each dimension, defining a grid.
         bin_edges = bin_edges_f(bin_method, mag_col_cl)
+        # Extend bind edges so that synthetic stars beyond the cluster's bin
+        # limits will be taken into account by the likelihood function.
+        b_c_min, b_c_max = min(P[4]) - 2., max(P[4]) + 2  # color
+        b_m_min, b_m_max = min(P[2]) - 3., max(P[2]) + 3  # magnitude
+        bin_edges[0] = np.insert(bin_edges[0], [0, bin_edges[0].size],
+                                 [b_c_min, b_c_max])
+        bin_edges[1] = np.insert(bin_edges[1], [0, bin_edges[1].size],
+                                 [b_m_min, b_m_max])
 
         # Zip magnitudes and colors into array.
         cl_mags_cols = np.array(zip(*mag_col_cl))
@@ -54,7 +62,7 @@ def prepare(memb_prob_avrg_sort):
         # Pass observed cluster data.
         obs_clust = [cl_histo, bin_edges]
 
-        # Pass this list instead if plotting in get_likelihood.
+        # # Pass this list instead if plotting in get_likelihood.
         # obs_clust = [cl_histo, bin_edges, mag_col_cl]
 
     return obs_clust
