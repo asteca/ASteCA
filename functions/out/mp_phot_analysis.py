@@ -305,12 +305,12 @@ def pl_p_vals(gs, flag_pval_test, pval_test_params):
         # Plot field vs field KDE.
         if kde_f_1d.any():
             max_kde = max(max(kde_f_1d), max(kde_cl_1d))
-            plt.plot(x_kde, kde_f_1d / max_kde, c='b', ls='-', lw=1.,
+            plt.plot(x_kde, kde_f_1d / max_kde, color='b', ls='-', lw=1.,
                      label='$KDE_{fl}$', zorder=2)
         else:
             max_kde = max(kde_cl_1d)
         # Plot cluster vs field KDE.
-        plt.plot(x_kde, kde_cl_1d / max_kde, c='r', ls='-', lw=1.,
+        plt.plot(x_kde, kde_cl_1d / max_kde, color='r', ls='-', lw=1.,
                  label='$KDE_{cl}$', zorder=2)
         # Fill overlap.
         if y_over:
