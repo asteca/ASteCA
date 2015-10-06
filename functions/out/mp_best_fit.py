@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import matplotlib.offsetbox as offsetbox
 from matplotlib.ticker import MultipleLocator
 from matplotlib.patches import Ellipse
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy.ndimage.filters import gaussian_filter
 from .._in import get_in_params as g
 
@@ -184,17 +185,18 @@ def pl_lkl_scatt(gs, ld_p, min_max_p, cp_r, cp_e, model_done):
     '''
     # Define parameters for upper and lower plots.
     if ld_p == '$z$':
-        ax, cp = plt.subplot(gs[8:10, 0:2]), 0
+        ax, cp, ci, zlab = plt.subplot(gs[8:10, 0:2]), 0, 1, '$log(age)$'
+        plt.ylabel('Likelihood', fontsize=12)
     elif ld_p == '$log(age)$':
-        ax, cp = plt.subplot(gs[8:10, 2:4]), 1
+        ax, cp, ci, zlab = plt.subplot(gs[8:10, 2:4]), 1, 2, '$E_{{(B-V)}}$'
     elif ld_p == '$E_{{(B-V)}}$':
-        ax, cp = plt.subplot(gs[8:10, 4:6]), 2
+        ax, cp, ci, zlab = plt.subplot(gs[8:10, 4:6]), 2, 3, '$(m-M)_o$'
     elif ld_p == '$(m-M)_o$':
-        ax, cp = plt.subplot(gs[8:10, 6:8]), 3
+        ax, cp, ci, zlab = plt.subplot(gs[8:10, 6:8]), 3, 1, '$log(age)$'
     elif ld_p == '$M_{{\odot}}$':
-        ax, cp = plt.subplot(gs[8:10, 8:10]), 4
+        ax, cp, ci, zlab = plt.subplot(gs[8:10, 8:10]), 4, 5, '$b_{{frac}}$'
     elif ld_p == '$b_{{frac}}$':
-        ax, cp = plt.subplot(gs[8:10, 10:12]), 5
+        ax, cp, ci, zlab = plt.subplot(gs[8:10, 10:12]), 5, 4, '$M_{{\odot}}$'
 
     # Parameter values and errors.
     xp, e_xp = cp_r[0][cp], cp_e[cp]
@@ -208,7 +210,6 @@ def pl_lkl_scatt(gs, ld_p, min_max_p, cp_r, cp_e, model_done):
     # Set minor ticks
     ax.minorticks_on()
     ax.tick_params(axis='y', which='major', labelsize=9)
-    plt.ylabel('Likelihood', fontsize=12)
     plt.xlabel(ld_p, fontsize=16)
     # Add textbox.
     text = (ld_p + '$ = {} \pm {}$').format(xp, e_xp)
@@ -217,15 +218,25 @@ def pl_lkl_scatt(gs, ld_p, min_max_p, cp_r, cp_e, model_done):
     ax.add_artist(ob)
     plt.axvline(x=xp, linestyle='--', color='red', zorder=2)
     # Plot scatter points over likelihood density map.
-    plt.scatter(zip(*model_done[0])[cp], model_done[1], color='#739474',
-                s=12, edgecolors='k', lw=0.3, zorder=3)
+    cm = plt.cm.get_cmap('RdYlBu_r')
+    col_arr = [float(_) for _ in zip(*model_done[0])[ci]]
+    SC = plt.scatter(zip(*model_done[0])[cp], model_done[1], marker='o',
+                     c=col_arr, s=25, edgecolors='k',
+                     lw=0.2, edgecolor='w', cmap=cm, zorder=3)
     if e_xp > 0.:
         # Plot error bars only if errors where assigned.
         plt.axvline(x=xp + e_xp, linestyle='--', color='blue')
         plt.axvline(x=xp - e_xp, linestyle='--', color='blue')
     # Set y axis limit.
     plt.ylim(min(model_done[1]) - min(model_done[1]) * 0.1,
-             min(model_done[1]) * 2)
+             min(model_done[1]) * 2.5)
+    # Position colorbar.
+    the_divider = make_axes_locatable(ax)
+    color_axis = the_divider.append_axes("right", size="2%", pad=0.1)
+    # Colorbar.
+    cbar = plt.colorbar(SC, cax=color_axis)
+    cbar.set_label(zlab, fontsize=12, labelpad=4)
+    cbar.ax.tick_params(labelsize=8)
 
 
 def plot(N, *args):
@@ -255,6 +266,6 @@ def plot(N, *args):
     try:
         fxn(*args)
     except:
-        # import traceback
-        # print traceback.format_exc()
+        import traceback
+        print traceback.format_exc()
         print("  WARNING: error when plotting {}.".format(plt_map.get(N)[1]))
