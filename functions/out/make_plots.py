@@ -209,7 +209,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, bin_width,
         arglist = [
             # pl_ga_lkl: Likelihood evolution for the GA.
             [gs, l_min_max, lkl_old, model_done, new_bs_indx],
-            # pl_2_param_dens: Parameter vs parameters solutions density map.
+            # pl_2_param_dens: Parameter vs parameters solutions scatter map.
             [gs, 'age-metal', min_max_p, isoch_fit_params, isoch_fit_errors,
                 model_done],
             [gs, 'dist-ext', min_max_p, isoch_fit_params, isoch_fit_errors,
@@ -219,18 +219,18 @@ def make_plots(output_subdir, clust_name, x_data, y_data, bin_width,
             [gs, 'mass-binar', min_max_p, isoch_fit_params, isoch_fit_errors,
                 model_done],
             # pl_lkl_dens: Parameter likelihood density plot.
-            [gs, '$z$', l_min_max[1], min_max_p, isoch_fit_params,
+            [gs, '$z$', min_max_p, isoch_fit_params, isoch_fit_errors,
+                model_done],
+            [gs, '$log(age)$', min_max_p, isoch_fit_params, isoch_fit_errors,
+                model_done],
+            [gs, '$E_{{(B-V)}}$', min_max_p, isoch_fit_params,
                 isoch_fit_errors, model_done],
-            [gs, '$log(age)$', l_min_max[1], min_max_p, isoch_fit_params,
+            [gs, '$(m-M)_o$', min_max_p, isoch_fit_params, isoch_fit_errors,
+                model_done],
+            [gs, '$M_{{\odot}}$', min_max_p, isoch_fit_params,
                 isoch_fit_errors, model_done],
-            [gs, '$E_{{(B-V)}}$', l_min_max[1], min_max_p, isoch_fit_params,
-                isoch_fit_errors, model_done],
-            [gs, '$(m-M)_o$', l_min_max[1], min_max_p, isoch_fit_params,
-                isoch_fit_errors, model_done],
-            [gs, '$M_{{\odot}}$', l_min_max[1], min_max_p, isoch_fit_params,
-                isoch_fit_errors, model_done],
-            [gs, '$b_{{frac}}$', l_min_max[1], min_max_p, isoch_fit_params,
-                isoch_fit_errors, model_done]
+            [gs, '$b_{{frac}}$', min_max_p, isoch_fit_params, isoch_fit_errors,
+                model_done]
         ]
         for n, args in enumerate(arglist, 1):
             mp_best_fit.plot(n, *args)

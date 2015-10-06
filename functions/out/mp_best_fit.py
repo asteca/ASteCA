@@ -178,9 +178,9 @@ def pl_2_param_dens(gs, _2_params, min_max_p, cp_r, cp_e, model_done):
                cmap=plt.get_cmap(d_map), aspect='auto')
 
 
-def pl_lkl_dens(gs, ld_p, l_max, min_max_p, cp_r, cp_e, model_done):
+def pl_lkl_scatt(gs, ld_p, min_max_p, cp_r, cp_e, model_done):
     '''
-    Parameter likelihood density plot.
+    Parameter likelihood scatter plot.
     '''
     # Define parameters for upper and lower plots.
     if ld_p == '$z$':
@@ -215,21 +215,17 @@ def pl_lkl_dens(gs, ld_p, l_max, min_max_p, cp_r, cp_e, model_done):
     ob = offsetbox.AnchoredText(text, pad=0.1, loc=2, prop=dict(size=12))
     ob.patch.set(alpha=0.8)
     ax.add_artist(ob)
-    # Generate 2D Gaussian histogram.
-    hist, xedges, yedges = np.histogram2d(zip(*model_done[0])[cp],
-                                          model_done[1], bins=100)
-    # H_g is the 2D histogram with a Gaussian filter applied
-    h_g = gaussian_filter(hist, 2, mode='constant')
-    plt.imshow(h_g.transpose(), origin='lower', extent=[xedges[0], xedges[-1],
-               yedges[0], yedges[-1]], cmap=plt.get_cmap('gist_yarg'),
-               aspect='auto')
-    plt.axvline(x=xp, linestyle='--', color='red', zorder=3)
+    plt.axvline(x=xp, linestyle='--', color='red', zorder=2)
+    # Plot scatter points over likelihood density map.
+    plt.scatter(zip(*model_done[0])[cp], model_done[1], color='#739474',
+                s=12, edgecolors='k', lw=0.3, zorder=3)
     if e_xp > 0.:
         # Plot error bars only if errors where assigned.
         plt.axvline(x=xp + e_xp, linestyle='--', color='blue')
         plt.axvline(x=xp - e_xp, linestyle='--', color='blue')
     # Set y axis limit.
-    plt.ylim(yedges[0], l_max)
+    plt.ylim(min(model_done[1]) - min(model_done[1]) * 0.1,
+             min(model_done[1]) * 2)
 
 
 def plot(N, *args):
@@ -244,12 +240,12 @@ def plot(N, *args):
         3: [pl_2_param_dens, 'distance vs extinction density map'],
         4: [pl_2_param_dens, 'z vs distance density map'],
         5: [pl_2_param_dens, 'mass vs binarity density map'],
-        6: [pl_lkl_dens, 'z likelihood density'],
-        7: [pl_lkl_dens, 'age likelihood density'],
-        8: [pl_lkl_dens, 'extinction likelihood density'],
-        9: [pl_lkl_dens, 'distance likelihood density'],
-        10: [pl_lkl_dens, 'mass likelihood density'],
-        11: [pl_lkl_dens, 'binarity likelihood density']
+        6: [pl_lkl_scatt, 'z likelihood scatter'],
+        7: [pl_lkl_scatt, 'age likelihood scatter'],
+        8: [pl_lkl_scatt, 'extinction likelihood scatter'],
+        9: [pl_lkl_scatt, 'distance likelihood scatter'],
+        10: [pl_lkl_scatt, 'mass likelihood scatter'],
+        11: [pl_lkl_scatt, 'binarity likelihood scatter']
     }
 
     fxn = plt_map.get(N, None)[0]
