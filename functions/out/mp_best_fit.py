@@ -107,7 +107,7 @@ def pl_ga_lkl(gs, l_min_max, lkl_old, model_done, new_bs_indx):
 
     # Plot likelihood minimum and mean lines.
     ax.plot(range(len(lkl_old[0])), lkl_old[0], lw=1., c='black',
-            label='$L_{min}$')
+            label='$L_{{min}}={:.1f}$'.format(min(lkl_old[0])))
     ax.plot(range(len(lkl_old[0])), lkl_old[1], lw=1., c='blue',
             label='$L_{mean}$')
     # Plot line marking a new best solution found.
