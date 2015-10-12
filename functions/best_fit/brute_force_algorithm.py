@@ -66,7 +66,7 @@ def brute_force(err_lst, obs_clust, completeness, ip_list, st_d_bin_mr):
                             percentage_complete = (100.0 * (i + 1) / tot_sols)
                             while len(milestones) > 0 and \
                                     percentage_complete >= milestones[0]:
-                                print "  {}% done".format(milestones[0])
+                                print " {:>3}% done".format(milestones[0])
                                 # Remove that milestone from the list.
                                 milestones = milestones[1:]
 
