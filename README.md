@@ -105,7 +105,7 @@ this program. If not, see http://www.gnu.org/licenses/.
 
 Copyright (c) 2014 Gabriel Perren - Released under the GPL v3 license.
 
-#### Versioning
+#### Versioning (from v1.0.0 onwards)
 
 Version numbering follows the [Semantic Versioning][19] guidelines. Releases
 will be numbered
