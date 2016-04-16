@@ -199,7 +199,7 @@ def check(mypath, file_end, cl_files):
                  "file ('{}') are incorrect.".format(g.gd_params[-1]))
 
     # Selected CMD.
-    if g.ps_params[1] not in {1, 2, 3, 4, 5, 6, 7, 8, 9}:
+    if g.ps_params[1] not in {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}:
         sys.exit("ERROR: the stored CMD value ({}) does not match a valid"
                  " selection.".format(g.ps_params[1]))
 
