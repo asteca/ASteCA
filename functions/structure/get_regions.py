@@ -132,13 +132,13 @@ def get_regions(semi_return, hist_lst, cent_bin, clust_rad, cl_area,
             print 'Using max number of field regions ({}).'.format(f_regions)
         elif f_regs_num > f_regs_max:
             f_regions = f_regs_max
-            print ("  WARNING: Number of FR defined ({}) larger than\n"
+            print ("  WARNING: Number of FR defined ({}) is larger than\n"
                    "  the maximum allowed ({}). "
                    "Using max number.").format(f_regs_num, f_regs_max)
         elif f_regs_num <= 0:
             f_regions = f_regs_max
             print ("  WARNING: Number of FR ({}) is less than or equal\n"
-                   "  zero. No field region will be defined.").format(
+                   "  to zero. No field region will be defined.").format(
                 f_regs_num)
             flag_no_fl_regs = True
         else:

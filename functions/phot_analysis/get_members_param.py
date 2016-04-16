@@ -39,6 +39,7 @@ def mp_members(n_memb, decont_algor_return):
             if abs(memb_par) > 0.33:
                 flag_memb_par = True
                 print ("  WARNING: the number of estimated true cluster"
-                " members\n  (structural vs. photometric) differ greatly.")
+                       " members\n  (structural vs. photometric) differ"
+                       " greatly.")
 
     return memb_par, n_memb_da, flag_memb_par

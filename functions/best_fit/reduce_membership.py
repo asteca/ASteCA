@@ -158,7 +158,7 @@ def red_memb(n_memb, flag_no_fl_regs, decont_algor_return, field_region):
 
     # If no field regions were defined, this mode won't work.
     elif flag_no_fl_regs and mode_red_memb == 'local':
-        print ("  WARNING: no field regions were defined. Can't apply'\n"
+        print ("  WARNING: no field regions were defined. Can't apply\n"
                "  '{}' membership reduction method. Using full list.").format(
                mode_red_memb)
 

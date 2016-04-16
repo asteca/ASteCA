@@ -97,7 +97,7 @@ def get_fl_reg_hist(field_region, bin_edges, cl_hist):
         # Create list with all magnitudes and colors defined.
         mag_col_fl = [Q[4], Q[2]]
         f_hist = f_hist + np.histogramdd(np.array(zip(*mag_col_fl)),
-            bins=bin_edges)[0]
+                                         bins=bin_edges)[0]
 
     # Average number of stars in each cell/bin and round to integer.
     f_hist = np.around(f_hist / len(field_region), 0)
@@ -137,14 +137,15 @@ def get_fit_stars(cl_hist_p, f_hist, flag_decont_skip):
 
                 if int(N_fl_reg) < len(cl_cell):
                     # Generate list with randomized cell indexes.
-                    ran_indx = random.sample(xrange(len(cl_cell)), len(cl_cell))
+                    ran_indx = random.sample(
+                        xrange(len(cl_cell)), len(cl_cell))
 
                     # Store len(cl_cell) - N_fl_reg stars
                     red_memb_fit.append([cl_cell[i] for i in
-                        ran_indx[:-int(N_fl_reg)]])
+                                         ran_indx[:-int(N_fl_reg)]])
                     # Discard N_fl_reg stars.
                     red_memb_no_fit.append([cl_cell[i] for i in
-                        ran_indx[-int(N_fl_reg):]])
+                                            ran_indx[-int(N_fl_reg):]])
                 else:
                     # Discard *all* stars in the cell.
                     red_memb_no_fit.append(cl_cell)
@@ -159,7 +160,7 @@ def get_fit_stars(cl_hist_p, f_hist, flag_decont_skip):
     # Flatten lists of stars and re-sort according to highest MPs.
     red_memb_fit = sort_members([i for sublst in red_memb_fit for i in sublst])
     red_memb_no_fit = sort_members([i for sublst in red_memb_no_fit for i in
-        sublst])
+                                    sublst])
 
     # Minimum probability of  selected stars.
     min_prob = red_memb_fit[-1][-1]
@@ -188,15 +189,15 @@ def rm_stars(decont_algor_return, field_region):
 
     # Obtain N-dimensional cluster region histogram.
     cl_hist_p, cl_hist = get_clust_histo(memb_prob_avrg_sort, mag_col_cl,
-        bin_edges)
+                                         bin_edges)
 
     # Obtain field regions histogram (only number of stars in each cell).
     f_hist = get_fl_reg_hist(field_region, bin_edges, cl_hist)
 
     # Obtain stars separated in list to be used by the BF func and list of
     # those discarded stars.
-    red_memb_fit, red_memb_no_fit, min_prob = get_fit_stars(cl_hist_p, f_hist,
-        flag_decont_skip)
+    red_memb_fit, red_memb_no_fit, min_prob = get_fit_stars(
+        cl_hist_p, f_hist, flag_decont_skip)
 
     #import matplotlib.pyplot as plt
     #fig, ax = plt.subplots()
@@ -214,8 +215,8 @@ def rm_stars(decont_algor_return, field_region):
     # Check the number of stars selected.
     if len(red_memb_fit) < 10:
         print ("  WARNING: less than 10 stars left after reducing\n"
-        "  by 'local' method. Using full list.")
+               "  by 'local' method. Using full list.")
         red_memb_fit, red_memb_no_fit, red_plot_pars = memb_prob_avrg_sort, \
-        [], [0.]
+            [], [0.]
 
     return red_memb_fit, red_memb_no_fit, red_plot_pars
