@@ -171,8 +171,8 @@ def get_fit_stars(cl_hist_p, f_hist, flag_decont_skip):
 def rm_stars(decont_algor_return, field_region):
     '''
     Takes the photometric diagram (CMD, CCD, etc.) of the cluster region with
-    assigned MPs, divides it into su--regions according to the density within
-    it, and removes in each sub-regiona number of stars equal to the average
+    assigned MPs, divides it into sub-regions according to the density within
+    it, and removes in each sub-regions number of stars equal to the average
     excess due to field star contamination.
     '''
 
