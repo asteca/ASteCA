@@ -1,6 +1,21 @@
 # Change Log
 
 
+## [[v0.1.9.2]][146] - 2016-04-17
+
+### Changed
+
+* Add support for three CMDs in the [Strömgren photometric system][145]
+  (requested by J. Hughes Clark).
+* Change likelihood density plots to [scatter plots][144] which show more
+  information.
+* Add extra condition for DA break: minimum 10% of the runs [must have
+  passed][143].
+* Fix bug with ['mag' mode][142] in 'Reduced membership', wouldn't run if the
+  Bayesian DA was skipped.
+* Fix minor bug ([#241][140]) when [printing KP results to screen][141].
+
+
 ## [[v0.1.9.1]][139] - 2015-08-25
 
 ### Changed
@@ -450,3 +465,10 @@ ________________________________________________________________________________
 [137]: https://github.com/asteca/ASteCA/commit/3d04bb5247e001cf033a3df47e9f89e21c9dd2e5
 [138]: https://github.com/asteca/asteca/issues/213
 [139]: https://github.com/asteca/asteca/releases/tag/v0.1.9.1
+[140]: https://github.com/asteca/asteca/issues/241
+[141]: https://github.com/asteca/ASteCA/commit/62ffe4dad93fd5291900c08aa05af9e1c1cee5f2
+[142]: https://github.com/asteca/ASteCA/commit/272ed205d4beaaa8d3a10b2c664550140e238053
+[143]: https://github.com/asteca/ASteCA/commit/7095c0cd043804cce25d27a9e16650ecf8a2f7a5
+[144]: https://github.com/asteca/ASteCA/commit/6bac8749ba9b6b8c0fbaa2b226cca272e110e1cf
+[145]: https://en.wikipedia.org/wiki/Str%C3%B6mgren_photometric_system
+[146]: https://github.com/asteca/asteca/releases/tag/v0.1.9.2
