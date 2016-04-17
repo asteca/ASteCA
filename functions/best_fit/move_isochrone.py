@@ -128,32 +128,31 @@ def move_isoch(isochrone, e, d):
 
     elif cmd_sel == 10:
         # For Stroemgren system.
+        # From: Carreta et al. (2011) http://arxiv.org/abs/1109.3199
         #
-        # E(b-y) = 0.7*E(B-V)
-        # A_y = 1.*A_V = 3.1*E(B-V)
+        # E(b-y) = 0.772*E(B-V)
+        # A_y = 3.277*E(B-V) (\sim 1.*A_V)
         #
-        A_y = 3.1 * e
-        iso_moved = [np.array(isochrone[0]) + 0.7*e,
+        A_y = 3.277 * e
+        iso_moved = [np.array(isochrone[0]) + 0.772*e,
                      np.array(isochrone[1]) + d + A_y]
 
     elif cmd_sel == 11:
         # For Stroemgren system.
         #
-        # E(v-y) = 1.33*E(B-V)
-        # A_y = 1.*A_V = 3.1*E(B-V)
+        # E(v-y) = 1.275*E(B-V)
         #
-        A_y = 3.1 * e
-        iso_moved = [np.array(isochrone[0]) + 1.33*e,
+        A_y = 3.277 * e
+        iso_moved = [np.array(isochrone[0]) + 1.275*e,
                      np.array(isochrone[1]) + d + A_y]
 
     elif cmd_sel == 12:
         # For Stroemgren system.
         #
-        # E(u-y) = 1.84*E(B-V)
-        # A_y = 1.*A_V = 3.1*E(B-V)
+        # E(u-y) = 1.954*E(B-V)
         #
-        A_y = 3.1 * e
-        iso_moved = [np.array(isochrone[0]) + 1.84*e,
+        A_y = 3.277 * e
+        iso_moved = [np.array(isochrone[0]) + 1.954*e,
                      np.array(isochrone[1]) + d + A_y]
 
     return iso_moved
