@@ -356,7 +356,7 @@ BI             0.7        0.      1.      0.2
 # for the algorithm.
 #
 # Crossover operator:
-# p_cros: crossover probability.
+# p_cross: crossover probability.
 # cr_sel: select 1-point (1P) or 2-point (2P) crossover.
 #
 # Mutation operator:
