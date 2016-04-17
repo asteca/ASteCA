@@ -17,7 +17,8 @@
 
 
 
-################################################################################
+############################ ASteCA's inner flags ##############################
+
 # * Update checker.
 #
 # Check if a new version of ASteCA is available for download, and notify the
@@ -26,6 +27,14 @@
 #
 #   flag
 UP  false
+
+# Force matplotlib's backend to 'Agg'.
+#
+# * flag: true / false. Set to 'true' to prevent the error 'TclError: no
+#   display name and no $DISPLAY environment variable' when running the code
+#   in a server.
+#
+FB  false
 ################################################################################
 
 
@@ -42,14 +51,6 @@ UP  false
 #
 #    mode
 MO   auto
-
-# Force matplotlib's backend to 'Agg'.
-#
-# * flag: true / false. Set to 'true' to prevent the error 'TclError: no
-#   display name and no $DISPLAY environment variable' when running the code
-#   in a server.
-#
-FB  false
 ################################################################################
 
 
@@ -71,7 +72,7 @@ PX      px
 
 # Indicate the CMD to be used by the code to perform the analysis.
 #
-# * selection: [1, 9]
+# * selection: [1, 12]
 # - 1: (B-V) vs V   ; UBVI (Johnson)
 # - 2: (V-I) vs V   ; UBVI (Johnson)
 # - 3: (U-V) vs V   ; UBVI (Johnson)
@@ -81,6 +82,9 @@ PX      px
 # - 7: (H-K) vs K   ; 2MASS
 # - 8: (u-g) vs g   ; SDSS ugriz
 # - 9: (g-r) vs g   ; SDSS ugriz
+# - 10: (b-y) vs y   ; Stroemgren
+# - 11: (v-y) vs y   ; Stroemgren
+# - 12: (u-y) vs y   ; Stroemgren
 #
 #    selection
 CMD          1
@@ -308,8 +312,7 @@ BF   true      genet      dolphin    knuth         10
 # If the 'tolstoy' likelihood method is selected, the range for the total
 # initial mass below should be fixed to a unique value (1000 is good)
 # When this likelihood method is used, the best fit function will select always
-# high masses if a range is given for this parameter, see Tolstoy & Saha (1996),
-# end of Sect 3.1.
+# high masses if a range is given for this parameter.
 # If you want to make the total initial mass a free parameter that varies within
 # a range, you need to use the 'dolphin' likelihood method instead.
 
