@@ -150,8 +150,9 @@ def red_memb(n_memb, flag_no_fl_regs, decont_algor_return, field_region):
         # Skip reduction process.
         print 'Reduced membership function skipped.'
 
-    # If the DA was skipped and any method but 'local' is selected, don't run.
-    elif flag_decont_skip and mode_red_memb != 'local':
+    # If the DA was skipped and any method but 'local' or 'mag' is selected,
+    # don't run.
+    elif flag_decont_skip and mode_red_memb not in ['local', 'mag']:
         print ("  WARNING: decontamination algorithm was skipped.\n"
                "  Can't apply '{}' membership reduction method.\n"
                "  Using full list.").format(mode_red_memb)
