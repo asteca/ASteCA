@@ -218,7 +218,7 @@ def pl_lkl_scatt(gs, ld_p, min_max_p, cp_r, cp_e, model_done):
     ax.add_artist(ob)
     plt.axvline(x=xp, linestyle='--', color='red', zorder=2)
     # Plot scatter points over likelihood density map.
-    cm = plt.cm.get_cmap('RdYlBu_r')
+    cm = plt.cm.get_cmap('viridis')
     col_arr = [float(_) for _ in zip(*model_done[0])[ci]]
     SC = plt.scatter(zip(*model_done[0])[cp], model_done[1], marker='o',
                      c=col_arr, s=25, edgecolors='k',
@@ -228,8 +228,12 @@ def pl_lkl_scatt(gs, ld_p, min_max_p, cp_r, cp_e, model_done):
         plt.axvline(x=xp + e_xp, linestyle='--', color='blue')
         plt.axvline(x=xp - e_xp, linestyle='--', color='blue')
     # Set y axis limit.
-    plt.ylim(min(model_done[1]) - min(model_done[1]) * 0.1,
-             min(model_done[1]) * 2.5)
+    min_lik = min(model_done[1])
+    if min_lik > 0:
+        min_y, max_y = min_lik - min_lik*0.1, 2.5*min_lik
+    else:
+        min_y, max_y = min_lik + min_lik*0.1, -2.5*min_lik
+    plt.ylim(min_y, max_y)
     # Position colorbar.
     the_divider = make_axes_locatable(ax)
     color_axis = the_divider.append_axes("right", size="2%", pad=0.1)
