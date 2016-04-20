@@ -72,9 +72,9 @@ def integ_mag(cl_region, field_region, flag_no_fl_regs):
     if g.im_flag:
 
         # This variable tells me how the color is created, if the first
-        # magnitude is substracted from the second one or the other way around.
+        # magnitude is subtracted from the second one or the other way around.
         m_ord = g.axes_params[2]
-        # Check how the second magnitude whould be formed.
+        # Check how the second magnitude should be formed.
         sig = 1. if m_ord == 21 else -1.
 
         # Only use stars inside cluster's radius.
