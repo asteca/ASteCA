@@ -314,14 +314,15 @@ def mass_interp(isoch_cut, mass_dist):
     # ordered from min to max.
     key = data[2, order]
 
+    ##########################################################################
     # # Uncomment this block to see how many stars are being discarded
     # # for having mass values outside of the isochrone's range.
     # # Also uncomment the first block in the main function that uses the
     # # entire isochrone (instead of one with a max-mag cut).
     # try:
-    #     print '\nMin, max mass values in isochrone: {:.3f}, {:.3f}'.format(
+    #     print 'Min, max mass values in isochrone: {:.3f}, {:.3f}'.format(
     #         min(data[2]), max(data[2]))
-    #     print '\nTotal mass in mass_dist: {:.2f}'.format(sum(target))
+    #     print 'Total mass in mass_dist: {:.2f}'.format(sum(target))
     #     # Masses out of boundary to the left, ie: smaller masses.
     #     reject_min = target[(target < key[0])]
     #     print ("Rejected {} stars with masses in the range [{:.2f}, {:.2f}]"
@@ -332,10 +333,12 @@ def mass_interp(isoch_cut, mass_dist):
     #     print ("Rejected {} stars with masses in the range [{:.2f}, {:.2f}]"
     #         "\nTotal mass: {:.2f}".format(len(reject_max),
     #             min(reject_max), max(reject_max), sum(reject_max)))
-    #     print reject_max, '\n'
+    #     print 'Total mass in isochrone: {:0.2f}\n'.format(
+    #         sum(target) - sum(reject_min) - sum(reject_max))
     # except:
     #     pass
     # raw_input()
+    ##########################################################################
 
     # Reject masses in the IMF mass distribution that are located outside of
     # the theoretical isochrone's mass range.
@@ -398,6 +401,8 @@ def synth_clust(err_lst, completeness, st_dist, isochrone, params):
     # # un-comment this line.
     # # This takes the max magnitude from the isochrone itself instead of using
     # # the input cluster file.
+    # print "\nCluster's log(age): {:0.2f}".format(params[1])
+    # print 'Fixed total mass: {:0.2f}'.format(M_total)
     # completeness[0] = max(isoch_moved[1]) + 0.5
     ##############################################################
 
