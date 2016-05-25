@@ -1,6 +1,14 @@
 # Change Log
 
 
+## [[v0.1.9.3]][148] - 2016-05-25
+
+### Changed
+
+* Add support for CMD in the [HST/ACS WFC photometric system][147] (requested
+  by Daniel Arbelaez).
+
+
 ## [[v0.1.9.2]][146] - 2016-04-17
 
 ### Changed
@@ -472,3 +480,5 @@ ________________________________________________________________________________
 [144]: https://github.com/asteca/ASteCA/commit/6bac8749ba9b6b8c0fbaa2b226cca272e110e1cf
 [145]: https://en.wikipedia.org/wiki/Str%C3%B6mgren_photometric_system
 [146]: https://github.com/asteca/asteca/releases/tag/v0.1.9.2
+[147]: http://www.stsci.edu/hst/acs
+[148]: https://github.com/asteca/asteca/releases/tag/v0.1.9.3
