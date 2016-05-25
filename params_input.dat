@@ -85,6 +85,7 @@ PX      px
 # - 10: (b-y) vs y   ; Stroemgren
 # - 11: (v-y) vs y   ; Stroemgren
 # - 12: (u-y) vs y   ; Stroemgren
+# - 13: (F606W - F814W) vs F606W   ; HST/ACS WFC
 #
 #    selection
 CMD          1
