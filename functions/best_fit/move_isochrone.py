@@ -155,4 +155,14 @@ def move_isoch(isochrone, e, d):
         iso_moved = [np.array(isochrone[0]) + 1.954*e,
                      np.array(isochrone[1]) + d + A_y]
 
+    elif cmd_sel == 13:
+        # For HST/ACS WFC system. Use average values for cool/hot stars from
+        # http://adsabs.harvard.edu/abs/2005MNRAS.357.1038B
+        #
+        # E(F606W-F814W) = 1.072*E(B-V)
+        #
+        A_F606W = 2.6875 * e
+        iso_moved = [np.array(isochrone[0]) + 0.921*e,
+                     np.array(isochrone[1]) + d + A_F606W]
+
     return iso_moved
