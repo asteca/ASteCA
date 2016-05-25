@@ -183,6 +183,8 @@ def init(mypath, pars_f_path):
         text2 = 'sloan'
     elif cmd_select in {10, 11, 12}:
         text2 = 'stroemgren'
+    elif cmd_select in {13}:
+        text2 = 'acs_wfc'
     # Set iso_path according to the above values.
     iso_path = join(mypath + '/isochrones/' + text1 + '_' + text2)
 
