@@ -25,11 +25,11 @@ def num_exec():
     if args.N:
         if args.N < 99:
             file_end = "{:0>2}".format(args.N)
-            print("Will load parameters from params_input_{}.dat\n".format(
-                file_end))
+            print("Will load parameters from 'params_input_{}.dat'"
+                  " file.\n".format(file_end))
         else:
-            print("Integer must be smaller than 99. Fall back to default"
-                  " params_input.dat file.\n")
+            print("Integer must be smaller than 99. Fall back to\ndefault"
+                  " 'params_input.dat' file.\n")
 
     return file_end
 
