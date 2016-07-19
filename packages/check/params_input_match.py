@@ -128,7 +128,7 @@ def check(bin_methods_dict):
         p_names = [['metallicity', m_rs], ['age', a_rs], ['extinction', e_rs],
                    ['distance', d_rs], ['mass', mass_rs], ['binary', bin_rs]]
         if min(mass_rs[1]) == 0:
-            print("WARNING: minimum total mass is zero in input params file.")
+            print("WARNING: minimum total mass is zero in params_input file.")
             if 10 in mass_rs[1]:
                 print("Removing zero value from mass array.\n")
                 del mass_rs[1][mass_rs[1].index(0)]
@@ -142,7 +142,7 @@ def check(bin_methods_dict):
                 sys.exit("ERROR: Range defined for '{}' parameter is"
                          " empty".format(p_names[i][0]))
             # Catch *almost* empty list since get_in_params perhaps added
-            # an identificator 'l' or 'r'. This prevents ranges given as
+            # an identifier 'l' or 'r'. This prevents ranges given as
             # empty lists (ie: [] or () or {}) from passing as valid ranges.
             elif not p[1]:
                 sys.exit("ERROR: Range defined for '{}' parameter is"
@@ -162,19 +162,22 @@ def check(bin_methods_dict):
         # Match values in metallicity and age ranges with those available.
         z_range, a_range = param_ranges[:2]
 
+        err_mssg = "ERROR: one or more metallicity files could not be\n" +\
+                   "matched to the range given.\n\n" +\
+                   "The defined values are:\n\n" +\
+                   "{}\n\nand the closest available values are:\n\n" +\
+                   "{}\n\nThe missing elements are:\n\n{}"
         if len(z_range) > len(met_values):
             # Find missing elements.
             missing = find_missing(z_range, met_values)
-            sys.exit("ERROR: one or more metallicity files could not be\n"
-                     "matched to the range given.\nThe range defined was:\n\n"
-                     "{}\n\nand the closest available values are:\n\n"
-                     "{}\n\nThe missing elements are:\n\n{}".format(
-                         z_range, np.asarray(met_values), missing))
+            sys.exit(err_mssg.format(z_range, np.asarray(met_values),
+                     np.asarray(missing)))
+        err_mssg = "ERROR: one or more isochrones could not be matched\n" +\
+                   "to the age range given.\n\nThe defined values are:\n\n" +\
+                   "{}\n\nand the closest available values are:\n\n" +\
+                   "{}\n\nThe missing elements are:\n\n{}"
         if len(a_range) > len(age_values):
             # Find missing elements.
             missing = find_missing(a_range, age_values)
-            sys.exit("ERROR: one or more isochrones could not be matched\n"
-                     "to the age range given.\nThe range defined was:\n\n"
-                     "{}\n\nand the closest available values are:\n\n"
-                     "{}\n\nThe missing elements are:\n\n{}".format(
-                         a_range, np.asarray(age_values), missing))
+            sys.exit(err_mssg.format(a_range, np.asarray(age_values),
+                     np.asarray(missing)))
