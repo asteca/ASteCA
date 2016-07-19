@@ -1,16 +1,10 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Apr 04 2014
-
-@author: gabriel
-"""
 
 from os.path import join
 from os import walk
 import re
 
 
-def in_clusters(mypath, file_end):
+def main(mypath, file_end):
     '''
     Store the paths and names of all the input clusters stored in the
     input_dir folder.

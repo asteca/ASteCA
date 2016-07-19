@@ -1,16 +1,10 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Feb 11 14:03:44 2014
-
-@author: gabriel
-"""
 
 from os.path import join, exists
 from os import makedirs, extsep
-from .._in import get_in_params as g
+from ..inp import input_params as g
 
 
-def names_paths(cl_file):
+def main(cl_file):
     '''
     Generate names and paths to be used by several functions.
     '''
@@ -28,7 +22,7 @@ def names_paths(cl_file):
     data_file = join(*cl_file)
     # Path to membership probabilities file if it exists.
     memb_file = join(cl_file[0], cl_file[1], cl_file[2],
-        clust_name + '_memb.dat')
+                     clust_name + '_memb.dat')
     # Root output dir.
     output_dir = join(cl_file[0], out_fold)
     # Output subdir and 'done' dir.
@@ -49,4 +43,4 @@ def names_paths(cl_file):
     write_name = join(cl_file[2], clust_name)
 
     return clust_name, data_file, memb_file, output_dir, output_subdir,\
-    dst_dir, memb_file_out, synth_file_out, write_name
+        dst_dir, memb_file_out, synth_file_out, write_name

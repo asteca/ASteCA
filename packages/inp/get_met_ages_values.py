@@ -9,8 +9,8 @@ import numpy as np
 import os
 import re
 from os.path import join
-from .._in import get_in_params as g
-from girardi_isochs_format import isoch_format as i_format
+from ..inp import input_params as g
+import isochs_format
 
 
 def match_ranges(met_vals_all, met_files, age_vals_all, z_range, a_range):
@@ -80,7 +80,7 @@ def get_ages(met_file):
     Read all available ages in metallicity file.
     '''
 
-    age_format = i_format()[1]
+    age_format = isochs_format.main()[1]
 
     # Open the metallicity file.
     with open(met_file, mode="r") as f_iso:
@@ -113,7 +113,7 @@ def get_metals(iso_path):
     return met_vals_all, met_files
 
 
-def get_m_a_vls(iso_path):
+def main(iso_path):
     '''
     Run once to obtain the correct metallicities and ages to be used
     by the code.

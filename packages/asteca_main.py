@@ -1,13 +1,12 @@
-# -*- coding: utf-8 -*-
 
 import time
 from os.path import join, realpath, dirname
 from os import getcwd
 import argparse
 import traceback
-from functions import __version__
-from functions.checker import check
-from functions._in.get_in_clusters import in_clusters
+from _version import __version__
+from packages.inp import input_clusters
+from packages.checker import check_all
 
 
 def num_exec():
@@ -37,40 +36,39 @@ def num_exec():
 
 def main():
     """
-    Main function. Reads input data files and calls the container function.
+    Reads input data files and calls the container function.
     """
     # Start timing loop.
     start = time.time()
 
-    print('\n')
-    print('-------------------------------------------')
+    print('\n-------------------------------------------')
     print('             [ASteCA {}]'.format(__version__))
     print('-------------------------------------------\n')
 
     file_end = num_exec()
 
-    # Root path where the code is running. Remove 'functions' from path.
-    mypath = realpath(join(getcwd(), dirname(__file__)))[:-9]
+    # Root path where the code is running. Remove 'packages' from path.
+    mypath = realpath(join(getcwd(), dirname(__file__)))[:-8]
 
     # Read paths and names of all clusters stored inside /input.
-    cl_files = in_clusters(mypath, file_end)
+    cl_files = input_clusters.main(mypath, file_end)
 
     # Checker function to verify that things are in place before running.
     # As part of the checking process, and to save time, the isochrone
     # files are read and stored here.
     # The 'R_in_place' flag indicates that R and rpy2 are installed.
-    ip_list, R_in_place = check(mypath, file_end, cl_files)
+    ip_list, R_in_place = check_all(mypath, file_end, cl_files)
 
     # Store those global variables that could be changed when processing each
     # cluster.
     # Import *after* checker function.
-    import functions._in.get_in_params as g
+    import packages.inp.input_params as g
     global mode, er_params
     mode_orig, er_params_orig = g.mode, g.er_params
 
     # Import here to ensure the check has passed and all the necessary
-    # packages are installed.
-    from functions.func_caller import asteca_funcs as af
+    # packagesages are installed.
+    from packages.func_caller import asteca_funcs as af
 
     # Iterate through all cluster files.
     for cl_file in cl_files:
@@ -79,7 +77,7 @@ def main():
         g.mode, g.er_params = mode_orig, er_params_orig
 
         try:
-            # Call function that calls all sub-functions sequentially.
+            # Call module that calls all sub-modules sequentially.
             af(cl_file, ip_list, R_in_place)
         except Exception:
             print '\n!!! --> {}/{} could not be processed <-- !!!\n'.format(
@@ -90,7 +88,3 @@ def main():
     elapsed = time.time() - start
     m, s = divmod(elapsed, 60)
     print 'Full run completed in {:.0f}m {:.0f}s.'.format(m, s)
-
-
-if __name__ == "__main__":
-    main()

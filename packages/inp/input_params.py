@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Feb 11 14:03:44 2014
-
-@author: gabriel
-"""
 
 from os.path import join
 import re

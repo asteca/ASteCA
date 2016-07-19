@@ -6,9 +6,9 @@ Created on Thu Jan  9 15:08:39 2014
 """
 
 import numpy as np
-from .._in import get_in_params as g
-from get_isochs import get_isochs as gi
-from get_met_ages_values import get_m_a_vls as gmav
+from ..inp import input_params as g
+import read_isochs
+import get_met_ages_values
 
 
 def interp_isoch(isochrone):
@@ -23,7 +23,7 @@ def interp_isoch(isochrone):
     return isoch_inter
 
 
-def ip():
+def main():
     '''
     Read isochrones and parameters if best fit function is set to run.
     '''
@@ -40,10 +40,11 @@ def ip():
         # system defined.
         # *WE ASUME ALL PHOTOMETRIC SYSTEMS CONTAIN THE SAME NUMBER OF
         # METALLICITY FILES*
-        param_ranges, met_f_filter, met_values, age_values = gmav(iso_path)
+        param_ranges, met_f_filter, met_values, age_values =\
+            get_met_ages_values.main(iso_path)
 
         # Get isochrones and their parameter values.
-        isoch_list = gi(met_f_filter, age_values)
+        isoch_list = read_isochs.main(met_f_filter, age_values)
 
         # Interpolate extra points into all isochrones.
         isochs_interp = [[] for _ in isoch_list]

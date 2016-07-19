@@ -1,5 +1,5 @@
 
-from functions import asteca_main
+from packages import asteca_main
 
 
 asteca_main.main()

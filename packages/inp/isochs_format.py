@@ -1,14 +1,8 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Sep 23 13:03:39 2014
 
-@author: gabriel
-"""
-
-from .._in import get_in_params as g
+from ..inp import input_params as g
 
 
-def isoch_format():
+def main():
     '''
     Read line start format and columns indexes for the selected set of
     Girardi isochrones and chosen CMD.

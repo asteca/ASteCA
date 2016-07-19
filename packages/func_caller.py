@@ -3,47 +3,47 @@
 import time
 import gc  # Garbage collector.
 #
-import _in.get_in_params as g
-from functions._in.get_names_paths import names_paths as n_p
-from functions._in.get_data_semi import get_semi as g_s
-from functions._in.get_data import get_data as gd
+import inp.get_in_params as g
+from packages.inp.get_names_paths import names_paths as n_p
+from packages.inp.get_data_semi import get_semi as g_s
+from packages.inp.get_data import get_data as gd
 #
-from functions.structure.trim_frame import trim_frame as t_f
-from functions.structure.get_2d_histo import get_2d_histo as g2dh
-from functions.structure.get_center import get_center as g_c
-from functions.structure.get_field_dens import field_dens as gfd
-from functions.structure.get_dens_prof import get_dens_prof as gdp
-from functions.structure.get_radius import get_clust_rad as gcr
-from functions.structure.get_cluster_area import get_cl_area as g_a
-from functions.structure.get_king_prof import get_king_profile as gkp
-from functions.structure.get_in_out import get_in_out as gio
-from functions.structure.get_regions import get_regions as g_r
+from packages.structure.trim_frame import trim_frame as t_f
+from packages.structure.get_2d_histo import get_2d_histo as g2dh
+from packages.structure.get_center import get_center as g_c
+from packages.structure.get_field_dens import field_dens as gfd
+from packages.structure.get_dens_prof import get_dens_prof as gdp
+from packages.structure.get_radius import get_clust_rad as gcr
+from packages.structure.get_cluster_area import get_cl_area as g_a
+from packages.structure.get_king_prof import get_king_profile as gkp
+from packages.structure.get_in_out import get_in_out as gio
+from packages.structure.get_regions import get_regions as g_r
 #
-from functions.errors.err_accpt_rejct import err_accpt_rejct as ear
+from packages.errors.err_accpt_rejct import err_accpt_rejct as ear
 #
-from functions.phot_analysis.get_integ_mag import integ_mag as g_i_m
-from functions.phot_analysis.get_members_number import get_memb_num as g_m_n
-from functions.phot_analysis.get_cont_index import cont_indx as g_c_i
-from functions.phot_analysis.decont_algor_bys import bys_da as dab
-from functions.phot_analysis.get_members_param import mp_members as m_m
-from functions.phot_analysis.get_lf import lf
+from packages.phot_analysis.get_integ_mag import integ_mag as g_i_m
+from packages.phot_analysis.get_members_number import get_memb_num as g_m_n
+from packages.phot_analysis.get_cont_index import cont_indx as g_c_i
+from packages.phot_analysis.decont_algor_bys import bys_da as dab
+from packages.phot_analysis.get_members_param import mp_members as m_m
+from packages.phot_analysis.get_lf import lf
 #
-from functions.best_fit.reduce_membership import red_memb as rm
-from functions.best_fit.synth_cl_err import synth_clust_err as sce
-from functions.best_fit.best_fit_synth_cl import best_fit as bfsc
+from packages.best_fit.reduce_membership import red_memb as rm
+from packages.best_fit.synth_cl_err import synth_clust_err as sce
+from packages.best_fit.best_fit_synth_cl import best_fit as bfsc
 #
-from functions.out.make_plots import make_plots as mp
-from functions.out.create_out_data_file import create_out_data_file as c_o_d_f
-from functions.out.top_tiers import get_top_tiers as g_t_t
-from functions.out.add_data_output import add_data_output as a_d_o
-from functions.out.cl_members_file import cluster_members_file as c_m_f
-from functions.out.synth_cl_file import make_file as s_c_f
-from functions.out.done_move import done_move as dm
+from packages.out.make_plots import make_plots as mp
+from packages.out.create_out_data_file import create_out_data_file as c_o_d_f
+from packages.out.top_tiers import get_top_tiers as g_t_t
+from packages.out.add_data_output import add_data_output as a_d_o
+from packages.out.cl_members_file import cluster_members_file as c_m_f
+from packages.out.synth_cl_file import make_file as s_c_f
+from packages.out.done_move import done_move as dm
 
 
 def asteca_funcs(cl_file, ip_list, R_in_place):
     '''
-    Container that holds the calls to all the functions.
+    Container that holds the calls to all the modules and functions.
     '''
 
     # Start timing this loop.
