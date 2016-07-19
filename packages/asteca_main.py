@@ -67,7 +67,7 @@ def main():
     mode_orig, er_params_orig = g.mode, g.er_params
 
     # Import here to ensure the check has passed and all the necessary
-    # packagesages are installed.
+    # packages are installed.
     from packages.func_caller import asteca_funcs as af
 
     # Iterate through all cluster files.
