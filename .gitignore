@@ -1,8 +1,8 @@
 # ignore everything in root
-*
+/*
 # except for this file
 !asteca.py
 # except for this folder
 !/packages
 # But do ignore these files
-/packages/*.pyc
+*.pyc
