@@ -1,10 +1,7 @@
-"""
-@author: gabriel
-"""
 
 import numpy as np
-from .._in import get_in_params as g
-from err_medians import err_med
+from ..inp import input_params as g
+import err_medians
 
 
 def fit_curves(mag, mag_value, bright_end, e_mag_value, e_col1_value):
@@ -135,7 +132,7 @@ def divide(mag_value, intersec_mag, intersec_col1):
     return mag_val_left, mag_val_right, col1_val_left, col1_val_right
 
 
-def err_a_r_eyefit(mag, e_mag, e_col1, err_pck):
+def main(mag, e_mag, e_col1, err_pck):
     '''
     Accept/reject stars based on an algorithm that attempts to imitate
     an 'eye fit' curve on a photometric error diagram.
@@ -146,7 +143,8 @@ def err_a_r_eyefit(mag, e_mag, e_col1, err_pck):
 
     # Call function to obtain the median+sigmas points for magnitude
     # and color errors to fit the curves below.
-    e_mag_value, e_col1_value = err_med('eyefit', err_pck, mag, e_mag, e_col1)
+    e_mag_value, e_col1_value = err_medians.main('eyefit', err_pck, mag,
+                                                 e_mag, e_col1)
 
     # Fit polynomial + exponential curves.
     intersec_mag, intersec_col1, val_mag, pol_mag, val_col1, pol_col1 = \

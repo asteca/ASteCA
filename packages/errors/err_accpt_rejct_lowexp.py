@@ -1,12 +1,9 @@
-"""
-@author: gabriel
-"""
 
-from functions.exp_function import exp_2p
 from scipy.optimize import curve_fit
 from scipy import stats
 import numpy as np
-from .._in import get_in_params as g
+from ..math_f import exp_function
+from ..inp import input_params as g
 
 
 def lin_func(x, a, b):
@@ -101,17 +98,19 @@ def separate_stars(mag, e_mag, e_col1, be_m, popt_mag, popt_col1):
                     rjct_indx.append(st_ind)
 
             else:
-            # For the reminder of stars, we check to see if they are located
-            # above or below the exp envelope for both errors. If they are
-            # above in either one, we reject them, otherwise we accept them.
+                # For the reminder of stars, we check to see if they are
+                # located above or below the exp envelope for both errors.
+                # If they are above in either one, we reject them, otherwise
+                # we accept them.
 
                 # Compare with exponential curve.
                 mag_rjct, col1_rjct = False, False
-                if e_mag[st_ind] > exp_2p(mag[st_ind], *popt_mag):
+                if e_mag[st_ind] > exp_function.exp_2p(mag[st_ind], *popt_mag):
                     # Reject star.
                     mag_rjct = True
 
-                if e_col1[st_ind] > exp_2p(mag[st_ind], *popt_col1):
+                if e_col1[st_ind] > exp_function.exp_2p(mag[st_ind],
+                                                        *popt_col1):
                     # Reject star.
                     col1_rjct = True
 
@@ -125,7 +124,7 @@ def separate_stars(mag, e_mag, e_col1, be_m, popt_mag, popt_col1):
     return acpt_indx, rjct_indx
 
 
-def err_a_r_lowexp(mag, e_mag, e_col1, be_m):
+def main(mag, e_mag, e_col1, be_m):
     '''
     Find the exponential fit to the photometric errors in mag and color
     and reject stars beyond the N*sigma limit.
@@ -150,7 +149,7 @@ def err_a_r_lowexp(mag, e_mag, e_col1, be_m):
         upb = predband(mag_l, mag, log_err, [slope, intercept], conf=C_val)
         # Obtain 2P exp function parameters that best fit the upper prediction
         # band. Exponentiate values because the prediction band is linear.
-        popt_2p, dummy = curve_fit(exp_2p, mag_l, np.exp(upb))
+        popt_2p, dummy = curve_fit(exp_function.exp_2p, mag_l, np.exp(upb))
         if i == 0:
             popt_mag = popt_2p
         else:
@@ -159,7 +158,7 @@ def err_a_r_lowexp(mag, e_mag, e_col1, be_m):
     # Use the fitted curves to identify accepted/rejected stars and store
     # their indexes.
     acpt_indx, rjct_indx = separate_stars(mag, e_mag, e_col1, be_m, popt_mag,
-        popt_col1)
+                                          popt_col1)
 
     err_plot = [popt_mag, popt_col1]
 

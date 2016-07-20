@@ -1,12 +1,6 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Dic 18 12:00:00 2014
 
-@author: gabriel
-"""
-
-from .._in import get_in_params as g
-from functions.exp_function import exp_3p
+from ..inp import input_params as g
+from ..math_f import exp_function
 import numpy as np
 from scipy import stats
 import matplotlib.pyplot as plt
@@ -277,8 +271,8 @@ def da_plots(center_cl, clust_rad, stars_out, x_zmin, x_zmax, y_zmin, y_zmax,
         x_val = [min(x_max_cmd, max(col_data) + 0.2) - 0.4] * len(mag_y)
         # Read average fitted values for exponential error fit.
         popt_mag, popt_col1 = err_lst[:2]
-        x_err = exp_3p(mag_y, *popt_col1)
-        y_err = exp_3p(mag_y, *popt_mag)
+        x_err = exp_function.exp_3p(mag_y, *popt_col1)
+        y_err = exp_function.exp_3p(mag_y, *popt_mag)
     err_bar = [x_val, mag_y, x_err, y_err]
 
     return v_min_mp, v_max_mp, plot_colorbar, chart_fit_inv, \

@@ -1,17 +1,11 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Aug  6 10:20:44 2013
-
-@author: gabriel
-"""
 
 import numpy as np
 import matplotlib.pyplot as plt
-from display_frame import disp_frame as d_f
-from .._in import get_in_params as g
+import display_frame
+from ..inp import input_params as g
 
 
-def trim_frame(phot_data):
+def main(phot_data):
     '''
     Trim frame according to given values of new center and side lengths.
     '''
@@ -22,7 +16,7 @@ def trim_frame(phot_data):
         id_star, x_data, y_data, mag_data, e_mag, col1_data, e_col1 = phot_data
 
         # Show full frame plot.
-        d_f(x_data, y_data, mag_data)
+        display_frame.main(x_data, y_data, mag_data)
         plt.show()
 
         wrong_answer = True

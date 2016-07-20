@@ -1,11 +1,8 @@
-"""
-@author: gabriel
-"""
 
 import numpy as np
 
 
-def get_in_out(center_cl, clust_rad, acpt_stars, rjct_stars):
+def main(center_cl, clust_rad, acpt_stars, rjct_stars):
     """
     Separate stars between those inside the cluster's radius and those outside.
     """

@@ -1,13 +1,7 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Nov 28 20:55:57 2013
-
-@author: gabriel
-"""
 
 import numpy as np
 from scipy.interpolate import spline
-from .._in import get_in_params as g
+from ..inp import input_params as g
 
 
 def calc_integ_mag(st_reg):
@@ -63,7 +57,7 @@ def field_reg_integ_mag_curve(fl_reg_m):
     return fl_reg_mag
 
 
-def integ_mag(cl_region, field_region, flag_no_fl_regs):
+def main(cl_region, field_region, flag_no_fl_regs):
     '''
     Obtain integrated magnitude using all stars inside the cluster's radius for
     several limits in magnitude.
@@ -97,39 +91,43 @@ def integ_mag(cl_region, field_region, flag_no_fl_regs):
                 fl_reg_m[0].append(calc_integ_mag(zip(*f_reg)[3]))
                 # Second magnitude values.
                 fl_reg_m[1].append(calc_integ_mag(np.asarray(zip(*f_reg)[3]) +
-                    sig * np.asarray(zip(*f_reg)[5])))
+                                   sig * np.asarray(zip(*f_reg)[5])))
 
             fl_reg_mag1 = field_reg_integ_mag_curve(fl_reg_m[0])
             fl_reg_mag2 = field_reg_integ_mag_curve(fl_reg_m[1])
 
             # Obtain integrated magnitude of clean cluster region, ie:
-            # substracting the field contribution.
+            # subtracting the field contribution.
             if min(fl_reg_mag1[1]) >= min(cl_reg_mag1[1]):
-                integ_mag1 = -2.5 * np.log10(1 - 10 ** ((min(fl_reg_mag1[1]) -
-                min(cl_reg_mag1[1])) / -2.5)) + min(cl_reg_mag1[1])
+                integ_mag1 = -2.5 * np.log10(
+                    1 - 10**((min(fl_reg_mag1[1]) -
+                              min(cl_reg_mag1[1])) / -2.5)) +\
+                    min(cl_reg_mag1[1])
             else:
                 # If the field is brighter than the cluster.
                 integ_mag1 = min(cl_reg_mag1[1])
 
             # Obtain integrated second magnitude of clean cluster region.
             if min(fl_reg_mag2[1]) >= min(cl_reg_mag2[1]):
-                integ_mag2 = -2.5 * np.log10(1 - 10 ** ((min(fl_reg_mag2[1]) -
-                min(cl_reg_mag2[1])) / -2.5)) + min(cl_reg_mag2[1])
+                integ_mag2 = -2.5 * np.log10(
+                    1 - 10**((min(fl_reg_mag2[1]) -
+                              min(cl_reg_mag2[1])) / -2.5)) +\
+                    min(cl_reg_mag2[1])
             else:
                 # If the field is brighter than the cluster.
                 integ_mag2 = min(cl_reg_mag2[1])
 
         else:
-            print ("  WARNING: no field regions defined. Integrated magnitude\n"
-            "  is not cleaned from field star contamination.")
+            print("  WARNING: no field regions defined. Integrated magnitude\n"
+                  "  is not cleaned from field star contamination.")
             # Pass dummy lists.
-            fl_reg_mag1, fl_reg_mag2 = [np.array([]), np.array([])], \
-            [np.array([]), np.array([])]
+            fl_reg_mag1, fl_reg_mag2 = [np.array([]), np.array([])],\
+                [np.array([]), np.array([])]
             integ_mag1 = min(cl_reg_mag1[1])
             integ_mag2 = min(cl_reg_mag2[1])
 
         integr_return = [cl_reg_mag1, fl_reg_mag1, integ_mag1, cl_reg_mag2,
-            fl_reg_mag2, integ_mag2]
+                         fl_reg_mag2, integ_mag2]
 
         int_col = sig * (integ_mag2 - integ_mag1)
         print 'Integrated color magnitude distribution obtained (%0.2f).' % \

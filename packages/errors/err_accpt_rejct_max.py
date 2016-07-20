@@ -1,14 +1,8 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Jul 18 17:41:28 2013
 
-@author: gabriel
-"""
-
-from .._in import get_in_params as g
+from ..inp import input_params as g
 
 
-def err_a_r_m(e_mag, e_col1):
+def main(e_mag, e_col1):
     """
     Accept stars with photom errors < e_max both in mag and in color.
     """

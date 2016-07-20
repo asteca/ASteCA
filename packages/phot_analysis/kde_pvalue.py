@@ -1,14 +1,8 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Nov  1 17:58:28 2013
-
-@author: gabriel
-"""
 
 import numpy as np
 from scipy import stats
 from scipy.integrate import quad
-from .._in import get_in_params as g
+from ..inp import input_params as g
 
 
 def gauss_error(col, e_col, mag, e_mag):
@@ -49,7 +43,7 @@ def get_CMD(region):
     return matrix
 
 
-def get_pval(cl_region, field_region, col1_data, mag_data, flag_no_fl_regs):
+def main(cl_region, field_region, col1_data, mag_data, flag_no_fl_regs):
     '''
     Compare the cluster region KDE with all the field region KDEs using Duong's
     ks package (developed in R) to obtain a p-value. This value will be close
@@ -82,7 +76,7 @@ def get_pval(cl_region, field_region, col1_data, mag_data, flag_no_fl_regs):
 
     elif flag_pval_test and flag_few_members:
         print ('  WARNING: < 10 stars in cluster region.'
-            ' Skipping KDE p-value test.')
+               ' Skipping KDE p-value test.')
         # Pass empty lists and re-write flag.
         flag_pval_test, pval_test_params = False, [-1.]
 
@@ -101,7 +95,7 @@ def get_pval(cl_region, field_region, col1_data, mag_data, flag_no_fl_regs):
         # Set number of runs for the p_value algorithm with a maximum of
         # 100 if only one field region was used.
         runs = int(100 / len(field_region)) if mode_pv == 'auto' else \
-        max(2, num_runs)
+            max(2, num_runs)
 
         # The first list holds all the p_values obtained comparing the cluster
         # region with the field regions, the second one holds p_values for
@@ -122,7 +116,7 @@ def get_pval(cl_region, field_region, col1_data, mag_data, flag_no_fl_regs):
 
                 # Create matrices for these CMDs.
                 m_cl = robjects.r.matrix(robjects.FloatVector(matrix_cl),
-                                       nrow=rows_cl, byrow=True)
+                                         nrow=rows_cl, byrow=True)
                 m_f1 = robjects.r.matrix(robjects.FloatVector(matrix_f1),
                                          nrow=rows_f1, byrow=True)
                 # Bandwith matrices.

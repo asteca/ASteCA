@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from scipy import stats
 from scipy.ndimage.filters import gaussian_filter
 from display_cent import disp_cent as d_c
-from .._in import get_in_params as g
+from ..inp import input_params as g
 from ..out import prep_plots as pp
 
 
@@ -102,7 +102,7 @@ def bin_center(xedges, yedges, kde_cent):
     return cent_bin
 
 
-def get_center(x_data, y_data, mag_data, hist_lst, semi_return):
+def main(x_data, y_data, mag_data, hist_lst, semi_return):
     """
     Obtains the center of the putative cluster. Returns the center values
     along with its errors and several arrays related to histograms, mainly for
@@ -139,7 +139,7 @@ def get_center(x_data, y_data, mag_data, hist_lst, semi_return):
             # Call funct to obtain the pixel coords of the maximum KDE value.
             approx_cents = [cent_cl_semi]
             kde_cent, e_cent, kde_plot = kde_center_f(
-                    x_data, y_data, approx_cents, cl_rad_semi)
+                x_data, y_data, approx_cents, cl_rad_semi)
 
             # Re-write center values if fixed in semi input file.
             if cent_flag_semi == 2:

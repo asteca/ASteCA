@@ -1,12 +1,9 @@
-"""
-@author: gabriel
-"""
 
 import matplotlib.pyplot as plt
 from ..out import prep_plots
 
 
-def disp_frame(x_data, y_data, mag_data):
+def main(x_data, y_data, mag_data):
     '''
     Show full frame.
     '''

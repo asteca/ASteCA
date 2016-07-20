@@ -1,12 +1,9 @@
-"""
-@author: gabriel
-"""
 
 from scipy.optimize import curve_fit
 import numpy as np
-from .._in import get_in_params as g
-from ..errors.err_medians import err_med
-import functions.exp_function as ef
+from ..inp import input_params as g
+from ..errors import err_medians
+from ..math_f import exp_function
 
 
 def get_m_c_errors(mag, mag_value, e_mc_v):
@@ -18,14 +15,14 @@ def get_m_c_errors(mag, mag_value, e_mc_v):
 
     try:
         # Fit 3-param exponential curve.
-        popt_mc, dummy = curve_fit(ef.exp_3p, mag_value, e_mc_v)
+        popt_mc, dummy = curve_fit(exp_function.exp_3p, mag_value, e_mc_v)
 
     # If the 3-param exponential fitting process fails.
     except RuntimeError:
 
         try:
             # Fit simple 2-params exponential curve.
-            popt_mc, dummy = curve_fit(ef.exp_2p, mag_value, e_mc_v)
+            popt_mc, dummy = curve_fit(exp_function.exp_2p, mag_value, e_mc_v)
             # Insert empty 'c' value to be fed later on to the 3P exponential
             # function. This makes the 2P exp function equivalent with the 3P
             # exp function, with the 'c' param 0.
@@ -38,14 +35,15 @@ def get_m_c_errors(mag, mag_value, e_mc_v):
                 # Fit simple 2-params exponential curve.
                 mag_value = [min(mag), max(mag) - (max(mag) - min(mag)) / 20.]
                 e_mc_r = [0.01, e_max]
-                popt_mc, dummy = curve_fit(ef.exp_2p, mag_value, e_mc_r)
+                popt_mc, dummy = curve_fit(exp_function.exp_2p, mag_value,
+                                           e_mc_r)
                 # Insert 'c' value into exponential function param list.
                 popt_mc = np.insert(popt_mc, 2, 0.)
 
     return popt_mc
 
 
-def synth_clust_err(phot_data, err_pck):
+def main(phot_data, err_pck):
     '''
     Generate exponential error function parameters to feed the synthetic
     cluster generation function.
@@ -57,8 +55,8 @@ def synth_clust_err(phot_data, err_pck):
 
     # Call function to obtain the median points for magnitude
     # and color errors to fit the exponential curve.
-    e_mag_value, e_col_value = err_med('synth_clust', err_pck, mag, e_mag,
-        e_col)
+    e_mag_value, e_col_value = err_medians.main('synth_clust', err_pck, mag,
+                                                e_mag, e_col)
 
     err_lst = []
 

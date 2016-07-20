@@ -1,12 +1,9 @@
-"""
-@author: gabriel
-"""
 
 import numpy as np
 from ..out import prep_plots as pp
 
 
-def field_dens(ring_density):
+def main(ring_density):
     """
     Get field density level of stars through an iterative process. Start with
     the complete set of radial density points and obtain its median and
@@ -48,8 +45,8 @@ def field_dens(ring_density):
         field_dens = median
 
     coord = pp.coord_syst()[0]
-    print 'Field density calculated ({:.1E} stars/{c}^2).'.format(field_dens,
-        c=coord)
+    print 'Field density calculated ({:.1E} stars/{c}^2).'.format(
+        field_dens, c=coord)
 
     # Return field density value obtained.
     return field_dens

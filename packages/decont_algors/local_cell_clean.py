@@ -1,16 +1,10 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Mar 23 2015
-
-@author: gabriel
-"""
 
 import numpy as np
 import random
 from astroML.plotting import hist
 import operator
-from .._in import get_in_params as g
-from decont_algor_bys import sort_members
+from ..inp import input_params as g
+from bayesian_da import sort_members
 
 
 def bin_edges_f(bin_method, mag_col_cl):
@@ -168,12 +162,12 @@ def get_fit_stars(cl_hist_p, f_hist, flag_decont_skip):
     return red_memb_fit, red_memb_no_fit, min_prob
 
 
-def rm_stars(decont_algor_return, field_region):
+def main(decont_algor_return, field_region):
     '''
     Takes the photometric diagram (CMD, CCD, etc.) of the cluster region with
-    assigned MPs, divides it into sub-regions according to the density within
-    it, and removes in each sub-regions number of stars equal to the average
-    excess due to field star contamination.
+    assigned MPs, divides it into sub-regions (cells) according to the
+    density within it, and removes in each sub-region a number of stars
+    equal to the average excess due to field star contamination.
     '''
 
     memb_prob_avrg_sort, flag_decont_skip = decont_algor_return
@@ -199,15 +193,15 @@ def rm_stars(decont_algor_return, field_region):
     red_memb_fit, red_memb_no_fit, min_prob = get_fit_stars(
         cl_hist_p, f_hist, flag_decont_skip)
 
-    #import matplotlib.pyplot as plt
-    #fig, ax = plt.subplots()
-    #plt.scatter(P[4], P[2])
-    #ax.set_xticks(bin_edges[0], minor=False)
-    #ax.set_yticks(bin_edges[1], minor=False)
-    #ax.xaxis.grid(True, which='major')
-    #ax.yaxis.grid(True, which='major')
-    #ax.invert_yaxis()
-    #plt.show()
+    # import matplotlib.pyplot as plt
+    # fig, ax = plt.subplots()
+    # plt.scatter(P[4], P[2])
+    # ax.set_xticks(bin_edges[0], minor=False)
+    # ax.set_yticks(bin_edges[1], minor=False)
+    # ax.xaxis.grid(True, which='major')
+    # ax.yaxis.grid(True, which='major')
+    # ax.invert_yaxis()
+    # plt.show()
 
     # Store and pass for plotting purposes.
     red_plot_pars = [min_prob, bin_edges]

@@ -1,9 +1,6 @@
-"""
-@author: gabriel
-"""
 
 import numpy as np
-from .._in import get_in_params as g
+from ..inp import input_params as g
 
 
 def break_check(prob_avrg_old, runs_fields_probs, runs, run_num):
@@ -128,7 +125,7 @@ def likelihood(region, cl_reg_rad):
     return clust_stars_probs
 
 
-def bys_da(flag_no_fl_regs, cl_region, field_region, memb_file):
+def main(flag_no_fl_regs, cl_region, field_region, memb_file):
     '''
     Bayesian field decontamination algorithm.
     '''

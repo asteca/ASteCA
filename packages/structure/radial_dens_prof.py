@@ -1,11 +1,8 @@
-"""
-@author: gabriel
-"""
 
 import math
 
 
-def get_dens_prof(hist_lst, cent_bin):
+def main(hist_lst, cent_bin):
     """
     Calculate the density profile by counting the number of stars in the center
     bin first (r aprox width_bin/2 px), then moving to the 8 adyacent bins

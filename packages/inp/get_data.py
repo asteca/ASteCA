@@ -1,9 +1,6 @@
-"""
-@author: gabriel
-"""
 
 import numpy as np
-import get_in_params as g
+import input_params as g
 
 
 def rem_bad_stars(id_star, x_data, y_data, mag_data, e_mag, col1_data,
@@ -29,7 +26,7 @@ def rem_bad_stars(id_star, x_data, y_data, mag_data, e_mag, col1_data,
     return id_clean, clean_array
 
 
-def get_data(data_file):
+def main(data_file):
     '''
     Get spatial and photometric data from the cluster's data file.
     '''

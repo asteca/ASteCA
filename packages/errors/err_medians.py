@@ -1,9 +1,6 @@
-"""
-@author: gabriel
-"""
 
 import numpy as np
-from .._in import get_in_params as g
+from ..inp import input_params as g
 
 
 def median_sigma(interv, be_m, sigma_prev):
@@ -43,7 +40,7 @@ def median_sigma(interv, be_m, sigma_prev):
     return median, sigma, sigma_prev
 
 
-def err_med(method, err_pck, mag, e_mag, e_col):
+def main(method, err_pck, mag, e_mag, e_col):
     '''
     1- Separate stars in magnitude intervals for errors of magnitude and of
     color.
@@ -72,14 +69,14 @@ def err_med(method, err_pck, mag, e_mag, e_col):
         # Use only stars below the e_max limit.
         if e_mag[st_ind] < e_max and e_col[st_ind] < e_max and st_mag > be_m:
             # Store each star in its corresponding
-            # interval in the segmented mag list which will be used to calculate
-            # the curve fits for both the mag and the color.
+            # interval in the segmented mag list which will be used to
+            # calculate the curve fits for both the mag and the color.
 
             # Iterate through all intervals in magnitude.
             for q in range(len(mag_value)):
                 # Store star's errors in corresponding interval.
-                if (be_m + interv_mag * q) <= st_mag < (be_m +
-                interv_mag * (q + 1)):
+                if (be_m + interv_mag * q) <= st_mag < (be_m + interv_mag *
+                                                        (q + 1)):
                     # Star falls in this interval, store its e_mag value
                     mag_interv[q].append(e_mag[st_ind])
                     # Star falls in this interval, store its e_col1 value
@@ -108,7 +105,7 @@ def err_med(method, err_pck, mag, e_mag, e_col):
         # Check that list is not empty.
         if sum(mag_interv[indx]) != 0:
             median, sigma, sigma_prev = median_sigma(mag_interv[indx],
-                be_m, sigma_prev)
+                                                     be_m, sigma_prev)
 
         # We obtained the median and sigma value for this interval.
         # Store just median OR median+sigma values depending on the
@@ -122,7 +119,7 @@ def err_med(method, err_pck, mag, e_mag, e_col):
     for indx in range(len(mag_value)):
         if sum(col_interv[indx]) != 0:
             median, sigma, sigma_prev = median_sigma(col_interv[indx],
-                be_m, sigma_prev)
+                                                     be_m, sigma_prev)
 
         if method == 'synth_clust':
             e_col_value.append(median)

@@ -3,33 +3,34 @@
 import time
 import gc  # Garbage collector.
 #
-import inp.get_in_params as g
-from packages.inp.get_names_paths import names_paths as n_p
-from packages.inp.get_data_semi import get_semi as g_s
-from packages.inp.get_data import get_data as gd
+import inp.input_params as g
+from packages.inp import names_paths
+from packages.inp import get_data_semi
+from packages.inp import get_data
 #
-from packages.structure.trim_frame import trim_frame as t_f
-from packages.structure.get_2d_histo import get_2d_histo as g2dh
-from packages.structure.get_center import get_center as g_c
-from packages.structure.get_field_dens import field_dens as gfd
-from packages.structure.get_dens_prof import get_dens_prof as gdp
-from packages.structure.get_radius import get_clust_rad as gcr
-from packages.structure.get_cluster_area import get_cl_area as g_a
-from packages.structure.get_king_prof import get_king_profile as gkp
-from packages.structure.get_in_out import get_in_out as gio
-from packages.structure.get_regions import get_regions as g_r
+from packages.structure import trim_frame
+from packages.structure import histo_2d
+from packages.structure import center
+from packages.structure import radius
+from packages.structure import king_profile
+from packages.structure import field_regions
+from packages.structure import field_density
+from packages.structure import radial_dens_prof
+from packages.structure import cluster_area
+from packages.structure import stars_in_out_cl_reg
 #
-from packages.errors.err_accpt_rejct import err_accpt_rejct as ear
+from packages.errors import err_accpt_rejct
 #
-from packages.phot_analysis.get_integ_mag import integ_mag as g_i_m
+from packages.phot_analysis import integrated_mag
 from packages.phot_analysis.get_members_number import get_memb_num as g_m_n
 from packages.phot_analysis.get_cont_index import cont_indx as g_c_i
-from packages.phot_analysis.decont_algor_bys import bys_da as dab
 from packages.phot_analysis.get_members_param import mp_members as m_m
 from packages.phot_analysis.get_lf import lf
 #
-from packages.best_fit.reduce_membership import red_memb as rm
-from packages.best_fit.synth_cl_err import synth_clust_err as sce
+from packages.decont_algors import bayesian_da
+from packages.decont_algors import membership_removal
+#
+from packages.best_fit import synth_cl_err
 from packages.best_fit.best_fit_synth_cl import best_fit as bfsc
 #
 from packages.out.make_plots import make_plots as mp
@@ -51,59 +52,60 @@ def asteca_funcs(cl_file, ip_list, R_in_place):
 
     # Get file names and paths.
     clust_name, data_file, memb_file, output_dir, output_subdir, dst_dir,\
-        memb_file_out, synth_file_out, write_name = n_p(cl_file)
+        memb_file_out, synth_file_out, write_name = names_paths.main(cl_file)
     print 'Analyzing cluster {} ({}).'.format(clust_name, g.mode)
 
     # Get data from semi-data input file.
-    semi_return = g_s(clust_name)
+    semi_return = get_data_semi.main(clust_name)
 
     # Get cluster's photometric data from file.
-    phot_data = gd(data_file)
+    phot_data = get_data.main(data_file)
     # If Manual mode is set, display frame and ask if it should be trimmed.
-    phot_data = t_f(phot_data)
+    phot_data = trim_frame.main(phot_data)
     # Unpack coordinates, magnitude and color.
     x_data, y_data, mag_data, col1_data = phot_data[1], phot_data[2], \
         phot_data[3], phot_data[5]
 
     # Obtain 2D histograms for the observed frame using several bin widths.
-    hist_lst = g2dh(x_data, y_data)
+    hist_lst = histo_2d.main(x_data, y_data)
     bin_width = hist_lst[-1]
 
     # Get cluster's center coordinates and errors.
-    center_params = g_c(x_data, y_data, mag_data, hist_lst, semi_return)
+    center_params = center.main(x_data, y_data, mag_data, hist_lst,
+                                semi_return)
     # Unpack values from list.
     cent_bin, kde_center = center_params[0], center_params[1]
 
     # Get density profile
-    rdp_params = gdp(hist_lst, cent_bin)
+    rdp_params = radial_dens_prof.main(hist_lst, cent_bin)
     radii, rdp_points, square_rings, rdp_length = rdp_params[:2] + \
         rdp_params[3:]
 
     # Get field density value in stars/px^2.
-    field_dens = gfd(rdp_points)
+    field_dens = field_density.main(rdp_points)
 
     # Get cluster radius
-    radius_params = gcr(phot_data, field_dens, center_params, rdp_params,
-                        semi_return, bin_width)
+    radius_params = radius.main(phot_data, field_dens, center_params,
+                                rdp_params, semi_return, bin_width)
     clust_rad = radius_params[0]
 
     # Get King profiles based on the density profiles.
-    kp_params = gkp(clust_rad, field_dens, radii, rdp_points)
+    kp_params = king_profile.main(clust_rad, field_dens, radii, rdp_points)
 
     # Accept and reject stars based on their errors.
-    acpt_stars, rjct_stars, err_plot, err_flags, err_pck = ear(phot_data,
-                                                               semi_return)
+    acpt_stars, rjct_stars, err_plot, err_flags, err_pck =\
+        err_accpt_rejct.main(phot_data, semi_return)
 
     # Get stars in and out of cluster's radius.
-    cl_region, stars_out, stars_in_rjct, stars_out_rjct = gio(
-        kde_center, clust_rad, acpt_stars, rjct_stars)
+    cl_region, stars_out, stars_in_rjct, stars_out_rjct =\
+        stars_in_out_cl_reg.main(kde_center, clust_rad, acpt_stars, rjct_stars)
     # Number of stars inside the cluster region (including stars with rejected
     # photometric errors)
     n_clust = len(cl_region) + len(stars_in_rjct)
 
     # Get cluster's area.
-    cl_area, frac_cl_area = g_a(kde_center, clust_rad, x_data, y_data,
-                                square_rings, bin_width)
+    cl_area, frac_cl_area = cluster_area.main(
+        kde_center, clust_rad, x_data, y_data, square_rings, bin_width)
 
     # Get approximate number of cluster's members.
     n_memb, flag_num_memb_low = g_m_n(n_clust, cl_area, field_dens, clust_rad,
@@ -113,8 +115,8 @@ def asteca_funcs(cl_file, ip_list, R_in_place):
     cont_index = g_c_i(n_clust, cl_area, field_dens, clust_rad, rdp_length)
 
     # Field regions around the cluster's center.
-    flag_no_fl_regs, field_region = g_r(semi_return, hist_lst, cent_bin,
-                                        clust_rad, cl_area, stars_out)
+    flag_no_fl_regs, field_region = field_regions.main(
+        semi_return, hist_lst, cent_bin, clust_rad, cl_area, stars_out)
 
     # Get the luminosity function and completeness level for each magnitude
     # bin. The completeness will be used by the isochrone/synthetic cluster
@@ -123,12 +125,13 @@ def asteca_funcs(cl_file, ip_list, R_in_place):
                                 field_region)
 
     # Calculate integrated magnitude.
-    integr_return = g_i_m(cl_region, field_region, flag_no_fl_regs)
+    integr_return = integrated_mag.main(cl_region, field_region,
+                                        flag_no_fl_regs)
 
     # Get physical cluster probability based on p_values distribution.
     if R_in_place:
-        from phot_analysis.get_p_value import get_pval as g_pv
-        pval_test_params, flag_pval_test = g_pv(
+        from phot_analysis import kde_pvalue
+        pval_test_params, flag_pval_test = kde_pvalue.main(
             cl_region, field_region, col1_data, mag_data, flag_no_fl_regs)
     else:
         print 'Missing package. Skipping KDE p-value test for cluster.'
@@ -136,24 +139,25 @@ def asteca_funcs(cl_file, ip_list, R_in_place):
 
     # Apply decontamination algorithm if at least one equal-sized field region
     # was found around the cluster.
-    decont_algor_return = dab(flag_no_fl_regs, cl_region, field_region,
-                              memb_file)
+    bayes_da_return = bayesian_da.main(flag_no_fl_regs, cl_region,
+                                       field_region, memb_file)
 
     # Obtain members parameter.
-    memb_par, n_memb_da, flag_memb_par = m_m(n_memb, decont_algor_return)
+    memb_par, n_memb_da, flag_memb_par = m_m(n_memb, bayes_da_return)
 
     # Reduce number of stars in cluster according to a lower membership
     # probability or magnitude limit.
-    red_return = rm(n_memb, flag_no_fl_regs, decont_algor_return, field_region)
+    memb_remove = membership_removal.main(n_memb, flag_no_fl_regs,
+                                          bayes_da_return, field_region)
 
     # Create data file with membership probabilities.
-    c_m_f(memb_file_out, red_return)
+    c_m_f(memb_file_out, memb_remove)
 
     # Obtain exponential error function parameters to use by the
     # synthetic cluster creation function.
-    err_lst = sce(phot_data, err_pck)
+    err_lst = synth_cl_err.main(phot_data, err_pck)
     # Obtain best fitting parameters for cluster.
-    bf_return = bfsc(err_lst, red_return[0], completeness, ip_list)
+    bf_return = bfsc(err_lst, memb_remove[0], completeness, ip_list)
 
     # Create output synthetic cluster file if one was found
     s_c_f(bf_return[3], synth_file_out)
@@ -179,8 +183,8 @@ def asteca_funcs(cl_file, ip_list, R_in_place):
             err_plot, err_flags, kp_params, cl_region, stars_out,
             stars_in_rjct, stars_out_rjct, integr_return, n_memb, n_memb_da,
             flag_no_fl_regs, field_region, flag_pval_test,
-            pval_test_params, decont_algor_return, lum_func, completeness,
-            ip_list, red_return, err_lst, bf_return)
+            pval_test_params, bayes_da_return, lum_func, completeness,
+            ip_list, memb_remove, err_lst, bf_return)
 
     # Move file to 'done' dir if flag is set.
     dm(dst_dir, data_file, memb_file)

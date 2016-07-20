@@ -1,15 +1,12 @@
-"""
-@author: gabriel
-"""
 
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-from .._in import get_in_params as g
-from functions.exp_function import exp_3p
+from ..inp import input_params as g
+from ..math_f import exp_function
 
 
-def disp_errors(er_mode, mag, err_plot, acpt_stars, rjct_stars, err_pck):
+def main(er_mode, mag, err_plot, acpt_stars, rjct_stars, err_pck):
     '''
     Plot errors diagrams.
     '''
@@ -75,7 +72,7 @@ def disp_errors(er_mode, mag, err_plot, acpt_stars, rjct_stars, err_pck):
         popt_mag, popt_col1 = err_plot
         # Plot exponential curve.
         mag_x = np.linspace(bright_end, max(mag), 50)
-        axm.plot(mag_x, exp_3p(mag_x, *popt_mag), 'r-', zorder=3)
+        axm.plot(mag_x, exp_function.exp_3p(mag_x, *popt_mag), 'r-', zorder=3)
     # Plot stars.
     plt.scatter(stars_rjct_temp[0], stars_rjct_temp[1], marker='x', c='teal',
                 s=15, zorder=1)
@@ -128,7 +125,8 @@ def disp_errors(er_mode, mag, err_plot, acpt_stars, rjct_stars, err_pck):
         # Unpack params.
         popt_mag, popt_col1 = err_plot
         # Plot exponential curve.
-        axc1.plot(mag_x, exp_3p(mag_x, *popt_col1), 'r-', zorder=3)
+        axc1.plot(mag_x, exp_function.exp_3p(mag_x, *popt_col1), 'r-',
+                  zorder=3)
     # Plot stars.
     plt.scatter(stars_rjct_temp[0], stars_rjct_temp[1], marker='x', c='teal',
                 s=15, zorder=1)

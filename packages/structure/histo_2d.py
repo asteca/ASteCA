@@ -1,9 +1,9 @@
 
 import numpy as np
-from .._in import get_in_params as g
+from ..inp import input_params as g
 
 
-def get_2d_histo(x_data, y_data):
+def main(x_data, y_data):
     '''
     Return 2D histogram for the positional data.
     '''

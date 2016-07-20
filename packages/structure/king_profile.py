@@ -1,16 +1,10 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Oct 25 10:54:00 2013
-
-@author: gabriel
-"""
 
 import numpy as np
 from scipy.optimize import curve_fit
 import warnings
 from scipy.optimize import OptimizeWarning
 import king_prof_funcs as kpf
-from .._in import get_in_params as g
+from ..inp import input_params as g
 from ..out import prep_plots as pp
 
 
@@ -143,7 +137,7 @@ def num_memb_conc_param(flag_3pk_conver, cd, rt, rc):
     return n_c_k, kcp
 
 
-def get_king_profile(clust_rad, field_dens, radii, rdp_points):
+def main(clust_rad, field_dens, radii, rdp_points):
     '''
     Function to fit a King profile to a given radial density.
     The field density value is fixed and the core radius, tidal radius and

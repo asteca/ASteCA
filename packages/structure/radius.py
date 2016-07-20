@@ -1,17 +1,14 @@
-"""
-@author: gabriel
-"""
 
 import numpy as np
 from scipy import stats
 import matplotlib.pyplot as plt
 import warnings
 from display_rad import disp_rad as d_r
-from .._in import get_in_params as g
+from ..inp import input_params as g
 from ..out import prep_plots as pp
 
 
-def main_rad_algor(rdp_params, field_dens, bin_width, coord):
+def main(rdp_params, field_dens, bin_width, coord):
     '''
     This function holds the main algorithm that returns a radius value.
     '''

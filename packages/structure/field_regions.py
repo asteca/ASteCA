@@ -1,11 +1,5 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Jul 29 10:06:31 2013
 
-@author: gabriel
-"""
-
-from .._in import get_in_params as g
+from ..inp import input_params as g
 from get_spiral import spiral as gs
 from get_histo_manual import manual_histo as mh
 
@@ -82,7 +76,7 @@ def spiral_region(h_manual, sp_coords):
     return f_region
 
 
-def get_regions(semi_return, hist_lst, cent_bin, clust_rad, cl_area,
+def main(semi_return, hist_lst, cent_bin, clust_rad, cl_area,
                 stars_out):
     '''
     Define empty region around the cluster via a spiral centered on it

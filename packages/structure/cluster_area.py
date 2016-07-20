@@ -1,13 +1,8 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Jul 19 09:58:13 2013
 
-@author: gabriel
-"""
 import numpy as np
 
 
-def get_cl_area(kde_center, clust_rad, x_data, y_data, square_rings, bw):
+def main(kde_center, clust_rad, x_data, y_data, square_rings, bw):
     """
     Obtain the cluster's area. If the cluster is cropped, calculate the
     correct area by counting the bins that compose it's region.'

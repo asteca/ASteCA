@@ -1,13 +1,10 @@
-"""
-@author: gabriel
-"""
 
 import matplotlib.pyplot as plt
-from .._in import get_in_params as g
-from display_errors import disp_errors as d_e
-from err_accpt_rejct_lowexp import err_a_r_lowexp as e_a_r_le
-from err_accpt_rejct_eyefit import err_a_r_eyefit as e_a_r_ef
-from err_accpt_rejct_max import err_a_r_m as e_a_r_m
+from ..inp import input_params as g
+import display_errors
+import err_accpt_rejct_lowexp as e_a_r_le
+import err_accpt_rejct_eyefit as e_a_r_ef
+import err_accpt_rejct_max as e_a_r_mx
 
 
 def err_sel_stars(acpt_indx, rjct_indx, phot_data):
@@ -32,7 +29,7 @@ def err_sel_stars(acpt_indx, rjct_indx, phot_data):
     return acpt_stars, rjct_stars
 
 
-def err_accpt_rejct(phot_data, semi_return):
+def main(phot_data, semi_return):
     """
     Accept and reject stars in and out of the cluster's boundaries according to
     a given criteria based on their photometric errors.
@@ -95,30 +92,30 @@ def err_accpt_rejct(phot_data, semi_return):
         # file.
         if er_mode == 'emax':
             # Call function to reject stars with errors > e_max.
-            acpt_indx, rjct_indx, err_plot = e_a_r_m(e_mag, e_col1)
+            acpt_indx, rjct_indx, err_plot = e_a_r_mx.main(e_mag, e_col1)
 
         elif er_mode in ('lowexp', 'eyefit'):
             try:
                 if er_mode == 'lowexp':
                     # Call N sigma exp function.
-                    acpt_indx, rjct_indx, err_plot = e_a_r_le(mag, e_mag,
-                                                              e_col1, be_m)
+                    acpt_indx, rjct_indx, err_plot = e_a_r_le.main(
+                        mag, e_mag, e_col1, be_m)
 
                 elif er_mode == 'eyefit':
                     # Call 'eyefit' function.
-                    acpt_indx, rjct_indx, err_plot = e_a_r_ef(mag, e_mag,
-                                                              e_col1, err_pck)
+                    acpt_indx, rjct_indx, err_plot = e_a_r_ef.main(
+                        mag, e_mag, e_col1, err_pck)
             except RuntimeError:
                 print ("  WARNING: {} function could not be fitted.\n"
                        "  Falling back to e_max function.".format(er_mode))
                 # Call function to reject stars with errors > e_max.
-                acpt_indx, rjct_indx, err_plot = e_a_r_m(e_mag, e_col1)
+                acpt_indx, rjct_indx, err_plot = e_a_r_mx.main(e_mag, e_col1)
                 err_max_fallback = True
 
         # If list of accepted stars is empty, fall back to e_max limit.
         if not acpt_indx and er_mode != 'emax':
             # Call function to reject stars with errors > e_max.
-            acpt_indx, rjct_indx, err_plot = e_a_r_m(e_mag, e_col1)
+            acpt_indx, rjct_indx, err_plot = e_a_r_mx.main(e_mag, e_col1)
             err_max_fallback = True
 
             if acpt_indx:
@@ -163,7 +160,8 @@ def err_accpt_rejct(phot_data, semi_return):
                     e_max_n = float(raw_input('Select maximum error value: '))
                     g.er_params[1] = e_max_n
                     # Call function to reject stars with errors > e_max.
-                    acpt_indx, rjct_indx, err_plot = e_a_r_m(e_mag, e_col1)
+                    acpt_indx, rjct_indx, err_plot = e_a_r_mx.main(
+                        e_mag, e_col1)
                     wrong_answer = False
                     er_mode, g.er_params[0] = 'emax', 'emax'
                 elif answer_rad == 2:
@@ -171,14 +169,14 @@ def err_accpt_rejct(phot_data, semi_return):
                                             " the curve: "))
                     g.er_params[4] = N_sig
                     # Call N sigma exp function.
-                    acpt_indx, rjct_indx, err_plot = e_a_r_le(mag, e_mag,
-                                                              e_col1, be_m)
+                    acpt_indx, rjct_indx, err_plot = e_a_r_le.main(
+                        mag, e_mag, e_col1, be_m)
                     wrong_answer = False
                     er_mode, g.er_params[0] = 'lowexp', 'lowexp'
                 elif answer_rad == 3:
                     # Call 'eyefit' function.
-                    acpt_indx, rjct_indx, err_plot = e_a_r_ef(mag, e_mag,
-                                                              e_col1, err_pck)
+                    acpt_indx, rjct_indx, err_plot = e_a_r_ef.main(
+                        mag, e_mag, e_col1, err_pck)
                     wrong_answer = False
                     er_mode, g.er_params[0] = 'eyefit', 'eyefit'
                 elif answer_rad == 4:
@@ -205,7 +203,8 @@ def err_accpt_rejct(phot_data, semi_return):
             if answer_rad != 4:
                 print 'Plot error distributions.'
                 # Display automatic errors rejection.
-                d_e(er_mode, mag, err_plot, acpt_stars, rjct_stars, err_pck)
+                display_errors.main(er_mode, mag, err_plot, acpt_stars,
+                                    rjct_stars, err_pck)
                 plt.show()
                 # Ask if keep or reject.
                 wrong_answer = True

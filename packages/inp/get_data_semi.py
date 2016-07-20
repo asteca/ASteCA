@@ -1,14 +1,8 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Aug 16 11:12:55 2013
 
-@author: gabriel
-"""
-
-import get_in_params as g
+import input_params as g
 
 
-def get_semi(clust_name):
+def main(clust_name):
     '''
     Get center, radius and flags for semi automatic mode.
     '''
