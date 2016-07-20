@@ -1,6 +1,6 @@
 *.pyc
 *.dat
-!/defvals/*
+!packages/defvals/*
 input/*
 isochrones/*
 output/*

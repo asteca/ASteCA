@@ -1,0 +1,31 @@
+#
+# NAME: Cluster's name.
+# c_x:  Cluster's x center coordinate in pixels.
+# c_y:  Cluster's y center coordinate in pixels.
+# rad:  Cluster's radius in pixels.
+# f_regs: Number of field regions to obtain around the cluster.
+#
+#
+# MC:   Manual center flag.
+#       '0': Disabled, center will be searched automatically.
+#       '1': The coordinates given will be used as initial approximate values
+#       for the cluster's true central coordinates. The latter will be searched
+#       inside the radius given in the 'rad' parameter.
+#       '2': Value is fixed to what is given here.
+#
+# MR:   Radius value flag.
+#       '0': Disabled, radius will be searched automatically.
+#       '1': The radius for the cluster will be taken from the 'rad' value.
+#
+# MF:  Manual field regions flag.
+#      '0': Disabled, field regions number will be obtained from the
+#      'params_input.dat' file.
+#      '1': The number of field regions will be taken from the 'f_regs' value.      
+#
+# ME:   Error rejection method. Allowed values are [0, 1, 2, 3].
+#       The '0' value means the mode set in the input parameters file will be
+#       used. Any other value is interpreted as:
+#       1: 'emax', 2: 'lowexp', 3: 'eyefit'
+#
+# NAME         c_x          c_y          rad     f_regs    MC  MR  MF  ME
+CLUSTER        1000.        1000.        250.         7     0   0   0   0

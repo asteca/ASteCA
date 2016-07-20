@@ -44,6 +44,9 @@ def check(mypath):
                             print("WARNING: file {}\nis not present.\n".format(
                                 n_f_path))
 
+                    print("Copy isochrones/ folder to the root folder.\n")
+                    # Now copy isochrones/ folder to root folder.
+
             # If both files could be copied to the root folder,
             # change .first_run file so it won't be done again.
             if success == 2:
