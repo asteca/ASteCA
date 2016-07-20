@@ -1,5 +1,6 @@
 
 from check import pack
+from check import first_run
 from check import update
 from check import clusters
 from check import params_file
@@ -19,8 +20,13 @@ def check_all(mypath, file_end, cl_files):
     """
     print('Checking input parameters...\n')
 
-    # Check that all packages are installed.
+    # Check that all the essential packages are installed.
     inst_packgs_lst = pack.check()
+
+    # Check .first_run file.
+    first_run.check(mypath)
+    import pdb; pdb.set_trace()  # breakpoint 0dafb5f1 //
+
 
     # Check if input cluster files exist.
     clusters.check(cl_files, file_end)
@@ -59,6 +65,6 @@ def check_all(mypath, file_end, cl_files):
     if flag_back_force:
         import matplotlib
         matplotlib.use('Agg')
-        print "(Force matplotlib to not use any Xwindows backend)\n"
+        print("(Force matplotlib to not use any Xwindows backend)\n")
 
     return ip_list, R_in_place

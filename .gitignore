@@ -1,11 +1,7 @@
 *.pyc
 *.dat
-!params_input.dat
-!semi_input.dat
-/def_params/*
-isochrones/*
-!/isochrones/README.md
-output/*
+!/defvals/*
 input/*
-!/input/README.md
+isochrones/*
+output/*
 .python-version
