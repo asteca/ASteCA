@@ -1,6 +1,5 @@
 
 from check import pack
-from check import first_run
 from check import update
 from check import clusters
 from check import params_file
@@ -22,11 +21,6 @@ def check_all(mypath, file_end, cl_files):
 
     # Check that all the essential packages are installed.
     inst_packgs_lst = pack.check()
-
-    # Check .first_run file.
-    first_run.check(mypath)
-    import pdb; pdb.set_trace()  # breakpoint 0dafb5f1 //
-
 
     # Check if input cluster files exist.
     clusters.check(cl_files, file_end)

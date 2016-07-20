@@ -5,6 +5,7 @@ from os import getcwd
 import argparse
 import traceback
 from _version import __version__
+from packages.first_run import check_1strun
 from packages.inp import input_clusters
 from packages.checker import check_all
 
@@ -45,10 +46,14 @@ def main():
     print('             [ASteCA {}]'.format(__version__))
     print('-------------------------------------------\n')
 
-    file_end = num_exec()
-
     # Root path where the code is running. Remove 'packages' from path.
     mypath = realpath(join(getcwd(), dirname(__file__)))[:-8]
+
+    # Check .first_run file.
+    check_1strun(mypath)
+
+    # Read command-line argument.
+    file_end = num_exec()
 
     # Read paths and names of all clusters stored inside /input.
     cl_files = input_clusters.main(mypath, file_end)
