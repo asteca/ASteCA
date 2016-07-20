@@ -1,7 +1,8 @@
-*.pyc
-*.dat
-!packages/defvals/*
-input/*
-isochrones/*
-output/*
-.python-version
+# ignore everything in root
+*
+# except for this file
+!asteca.py
+# except for this folder
+!/packages
+# But do ignore these files
+/packages/*.pyc
