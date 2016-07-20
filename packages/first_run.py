@@ -33,6 +33,23 @@ def files_copy(mypath, success):
     return success
 
 
+def name_generate(f_path):
+    """
+    Check if the folder name passed, modified to have a '1' at the end of
+    its name, exists. If not, use this integer ('1') and pass it on.
+    If it is used, keep incrementing the integer until a folder name that
+    is not used is found.
+    """
+    taken, nn = True, 1
+    while taken is True:
+        n_path = f_path[:-1] + str(nn) + '/'
+        if not os.path.isdir(n_path):
+            taken = False
+        else:
+            nn += 1
+    return str(nn)
+
+
 def folder_copy(mypath, success):
     """
     Copy data folders to root folder.
@@ -48,7 +65,13 @@ def folder_copy(mypath, success):
             if os.path.isdir(i_fo_path):
                 print("Folder {}/ already present in root folder.".format(
                     i_fo))
-                print("Rename to {}".format(i_fo + '_OLD/'))
+                # Check if 'OLD' folder already exists. If not, take the
+                # 'OLD' name. If it does exist, find a name that doesn't.
+                nn = name_generate(o_fo_path) if os.path.isdir(o_fo_path)\
+                    else ''
+                # Generate 'OLD' folder name.
+                o_fo_path = mypath + i_fo + '_OLD' + nn + '/'
+                print("Rename to {}".format(i_fo + '_OLD' + nn + '/'))
                 os.rename(i_fo_path, o_fo_path)
             # Copy into root folder.
             print("Copy {}/ to root folder.\n".format(i_fo))
@@ -70,18 +93,20 @@ def check_1strun(mypath):
         fr_file = mypath + 'packages/.first_run'
         if os.path.isfile(fr_file):
 
-            success = 0
+            # Read .first_run file.
             with open(fr_file) as f:
                 N = str(f.read())
-                if N == '0':
-                    print("* First run of the code detected *\n")
-                    success = files_copy(mypath, success)
-                    success = folder_copy(mypath, success)
 
-                elif N in ['1', '2', '3']:
-                    print("First run copy process was left incomplete. Check\n"
-                          "that all necessary folders and input files are\n"
-                          "present in the root folder.\n")
+            success = 0
+            if N == '0':
+                print("* First run of the code detected *\n")
+                success = files_copy(mypath, success)
+                success = folder_copy(mypath, success)
+
+            elif N in ['1', '2', '3']:
+                print("First run copy process was left incomplete. Check\n"
+                      "that all necessary folders and input files are\n"
+                      "present in the root folder.\n")
 
             # After both input .dat files, and both the isochrones/ and input/
             # folders could be copied to the root folder, change the
@@ -92,6 +117,6 @@ def check_1strun(mypath):
         else:
             print("ERROR: No 'packages/.first_run' file present.\n")
     except:
-        print("ERROR: Could not check/copy input .dat files\n"
+        print("ERROR: Could not check/copy data files and folders\n"
               "to root folder.\n")
         print(traceback.format_exc())
