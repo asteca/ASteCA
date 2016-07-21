@@ -73,7 +73,7 @@ def main():
 
     # Import here to ensure the check has passed and all the necessary
     # packages are installed.
-    from packages.func_caller import asteca_funcs as af
+    from packages import func_caller
 
     # Iterate through all cluster files.
     for cl_file in cl_files:
@@ -83,7 +83,7 @@ def main():
 
         try:
             # Call module that calls all sub-modules sequentially.
-            af(cl_file, ip_list, R_in_place)
+            func_caller.main(cl_file, ip_list, R_in_place)
         except Exception:
             print '\n!!! --> {}/{} could not be processed <-- !!!\n'.format(
                 cl_file[-2], cl_file[-1])

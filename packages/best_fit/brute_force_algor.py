@@ -1,15 +1,9 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Jan 17 16:38:10 2014
-
-@author: gabriel
-"""
 
 import numpy as np
-from get_likelihood import isoch_likelihood as i_l
+import sc_likelihood
 
 
-def brute_force(err_lst, obs_clust, completeness, ip_list, st_d_bin_mr):
+def main(err_lst, obs_clust, completeness, ip_list, st_d_bin_mr):
     '''
     Brute force algorithm that computes the likelihoods for *all* the defined
     isochrones.
@@ -55,8 +49,9 @@ def brute_force(err_lst, obs_clust, completeness, ip_list, st_d_bin_mr):
                             # Call likelihood function with m,a,e,d values.
                             isochrone = isoch_list[m_i][a_i]
                             # Call likelihood function with m,a,e,d values.
-                            likel_val = i_l(err_lst, obs_clust, completeness,
-                                            st_d_bin_mr, isochrone, params)
+                            likel_val = sc_likelihood.main(
+                                err_lst, obs_clust, completeness, st_d_bin_mr,
+                                isochrone, params)
                             # Store the likelihood for each synthetic cluster.
                             model_done[0].append(params)
                             model_done[1].append(likel_val)

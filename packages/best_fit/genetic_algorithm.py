@@ -1,14 +1,8 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Jan 17 09:43:14 2014
-
-@author: gabriel
-"""
 
 import random
 import numpy as np
-from .._in import get_in_params as g
-from get_likelihood import isoch_likelihood as i_l
+from ..inp import input_params as g
+import sc_likelihood
 
 #############################################################
 # # Timer function: http://stackoverflow.com/a/21860100/1391441
@@ -185,8 +179,8 @@ def evaluation(err_lst, obs_clust, completeness, isoch_list, param_values,
 
         # Call likelihood function for this model.
         # with timeblock(" Likelihood"):
-        likelihood = i_l(err_lst, obs_clust, completeness, st_dist_mass,
-                         isochrone, model)
+        likelihood = sc_likelihood.main(err_lst, obs_clust, completeness,
+                                        st_dist_mass, isochrone, model)
 
         # Check if this model was already processed. Without this check here,
         # the extinction/immigration operator becomes useless, since the best
@@ -278,10 +272,10 @@ def num_binary_digits(param_values):
     return n_bin, p_delta, p_mins
 
 
-def gen_algor(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
-              st_dist_mass):
+def main(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
+         st_dist_mass):
     '''
-    Genetic algorithm adapted to find the best fit model-obervation.
+    Genetic algorithm adapted to find the best fit model-observation.
     '''
 
     # Unpack.

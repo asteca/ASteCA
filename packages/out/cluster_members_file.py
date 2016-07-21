@@ -1,12 +1,6 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Aug  5 17:04:26 2013
-
-@author: gabriel
-"""
 
 
-def cluster_members_file(memb_file_out, red_return):
+def main(memb_file_out, red_return):
     '''
     Create output data file with stars inside the cluster radius along with
     their membership probabilities.
@@ -20,7 +14,8 @@ def cluster_members_file(memb_file_out, red_return):
     # Save cluster region with MPs obtained by the decont algor.
     with open(memb_file_out, "a") as f_out:
         for line in red_memb_fit:
-            l = line + ['1']  # Identify stars selected by the red_mem function.
+            # Identify stars selected by the red_mem function.
+            l = line + ['1']
             f_out.write('{:<8} {:>8.6f} {:>8.6f} {:>8.4f} {:>8.4f} {:>8.4f} \
 {:>8.4f} {:>8.4f} {:>6}'.format(*l))
             f_out.write('\n')
@@ -31,4 +26,4 @@ def cluster_members_file(memb_file_out, red_return):
 {:>8.4f} {:>8.4f} {:>6}'.format(*l))
             f_out.write('\n')
 
-    print 'Membership probabilities saved to file.'
+    print('Membership probabilities saved to file.')

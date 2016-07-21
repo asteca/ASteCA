@@ -1,13 +1,7 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Feb  5 17:11:11 2014
-
-@author: gabriel
-"""
 
 import numpy as np
 from scipy.integrate import quad
-from .._in import get_in_params as g
+from ..inp import input_params as g
 
 
 def imfs(imf_name, m_star):
@@ -37,7 +31,7 @@ def imfs(imf_name, m_star):
         alpha = [-0.3, -1.3, -2.3]
         m0, m1, m2 = [0.01, 0.08, 0.5]
         factor = [(1. / m1) ** alpha[0], (1. / m1) ** alpha[1],
-            ((m2 / m1) ** alpha[1]) * ((1. / m2) ** alpha[2])]
+                  ((m2 / m1) ** alpha[1]) * ((1. / m2) ** alpha[2])]
         if m0 < m_star <= m1:
             i = 0
         elif m1 < m_star <= m2:
@@ -52,7 +46,7 @@ def imfs(imf_name, m_star):
         # Eq (7)
         imf_val = (1. / (np.log(10) * m_star)) * 0.141 * \
             np.exp(-((np.log10(m_star) - np.log10(0.1)) ** 2) /
-                (2 * 0.627 ** 2))
+                   (2 * 0.627 ** 2))
 
     elif imf_name == 'chabrier_2001_exp':
         # Chabrier (2001) exponential form of the IMF.
@@ -81,7 +75,7 @@ def integral_IMF_N(m_star, imf_sel):
     return imf_val
 
 
-def N_IMF():
+def main():
     '''
     Returns the number of stars per interval of mass for the selected IMF.
     '''
@@ -91,7 +85,7 @@ def N_IMF():
     # Low mass limits are defined for each IMF to avoid numerical
     # issues when integrating.
     imfs_dict = {'chabrier_2001_exp': (0.01), 'chabrier_2001_log': (0.01),
-        'kroupa_1993': (0.081), 'kroupa_2002': (0.011)}
+                 'kroupa_1993': (0.081), 'kroupa_2002': (0.011)}
 
     # Set IMF low mass limit.
     m_low = imfs_dict[imf_sel]

@@ -1,15 +1,10 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Nov 25 16:00:00 2014
 
-@author: gabriel
-"""
 import numpy as np
-from .._in import get_in_params as g
-from ..phot_analysis.local_diag_clean import bin_edges_f
+from ..inp import input_params as g
+from ..decont_algors.local_cell_clean import bin_edges_f
 
 
-def prepare(memb_prob_avrg_sort):
+def main(memb_prob_avrg_sort):
     '''
     Prepare observed cluster array here to save time when the algorithm to
     find the best synthetic cluster fit is used.

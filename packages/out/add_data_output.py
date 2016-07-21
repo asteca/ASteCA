@@ -1,11 +1,8 @@
-"""
-@author: gabriel
-"""
 
 import collections
 import numpy as np
-from .._in import get_in_params as g
-from ..errors.error_round import round_sig_fig as rsf
+from ..inp import input_params as g
+from ..errors.error_round import round_sig_fig
 
 
 def flatten(l):
@@ -21,10 +18,10 @@ def flatten(l):
             yield el
 
 
-def add_data_output(out_file_name, write_name, center_params, radius_params,
-                    kp_params, cont_index, n_memb, memb_par, n_memb_da,
-                    flag_memb_par, frac_cl_area, prob_cl_kde, integr_return,
-                    err_flags, flag_num_memb_low, bf_return):
+def main(out_file_name, write_name, center_params, radius_params,
+         kp_params, cont_index, n_memb, memb_par, n_memb_da,
+         flag_memb_par, frac_cl_area, prob_cl_kde, integr_return,
+         err_flags, flag_num_memb_low, bf_return):
     '''
     Add data obtained to the 'data_output.dat' file.
     '''
@@ -65,8 +62,8 @@ def add_data_output(out_file_name, write_name, center_params, radius_params,
     int_flags.append(sum(int_flags[2:]))
 
     # Round structure parameters.
-    cr_r, cr_e = rsf([center_cl[0], center_cl[1], clust_rad, rc, rt],
-                     [e_cent[0], e_cent[1], e_rad, e_rc, e_rt])
+    cr_r, cr_e = round_sig_fig([center_cl[0], center_cl[1], clust_rad, rc, rt],
+                               [e_cent[0], e_cent[1], e_rad, e_rc, e_rt])
     # Interwine these lists.
     cre_r = [item for t in zip(cr_r, cr_e) for item in t]
 
@@ -78,7 +75,7 @@ def add_data_output(out_file_name, write_name, center_params, radius_params,
         cp_r = ['{:g}'.format(_) for _ in bf_return[0][0]]
     else:
         # Round cluster parameters.
-        cp_r, cp_e = rsf(bf_return[0][0], bf_return[1])
+        cp_r, cp_e = round_sig_fig(bf_return[0][0], bf_return[1])
     # Interwine these lists.
     cpe_r = [item for t in zip(cp_r, cp_e) for item in t]
 

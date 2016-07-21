@@ -1,15 +1,9 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Jan 17 16:35:24 2014
-
-@author: gabriel
-"""
 
 import numpy as np
-from .._in import get_in_params as g
+from ..inp import input_params as g
 
 
-def move_isoch(isochrone, e, d):
+def main(isochrone, e, d):
     '''
     Receives an isochrone of a given age and metallicity and modifies
     its color and magnitude values according to given values for the extinction

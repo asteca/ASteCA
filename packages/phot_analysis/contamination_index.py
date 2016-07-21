@@ -1,12 +1,6 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Nov 21 15:51:34 2013
-
-@author: gabriel
-"""
 
 
-def cont_indx(n_clust, cl_area, field_dens, clust_rad, rdp_length):
+def main(n_clust, cl_area, field_dens, clust_rad, rdp_length):
     '''
     Calculate the contamination index value. This parameter is defined as the
     ratio of field stars density over the density of stars in the cluster
@@ -34,13 +28,13 @@ def cont_indx(n_clust, cl_area, field_dens, clust_rad, rdp_length):
         cont_index = field_dens / cl_dens
 
         if cont_index >= 1.:
-            print ("  WARNING: CI value obtained is too high: "
-                   "{:.2f}".format(cont_index))
+            print("  WARNING: CI value obtained is too high: "
+                  "{:.2f}".format(cont_index))
         else:
-            print 'Contamination index obtained ({:.2f}).'.format(cont_index)
+            print('Contamination index obtained ({:.2f}).'.format(cont_index))
     else:
-        print ("  WARNING: cluster radius is too large to obtain\n"
-               "  a reliable contamination index value.")
+        print("  WARNING: cluster radius is too large to obtain\n"
+              "  a reliable contamination index value.")
         cont_index = -1.
 
     return cont_index

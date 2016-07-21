@@ -1,18 +1,12 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Dic 16 12:00:00 2014
-
-@author: gabriel
-"""
 
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.offsetbox as offsetbox
 from itertools import cycle
 from matplotlib.patches import Rectangle
-from ..errors import error_round as err_r
+from ..errors import error_round
 from ..structure import king_prof_funcs as kpf
-from .._in import get_in_params as g
+from ..inp import input_params as g
 
 
 def pl_centers(gs, x_name, y_name, coord, x_min, x_max, y_min, y_max,
@@ -45,8 +39,8 @@ def pl_centers(gs, x_name, y_name, coord, x_min, x_max, y_min, y_max,
     plt.axhline(y=cent_median[1] - cent_std_dev[1], linestyle='--',
                 color='k')
     # Add stats box.
-    cent_med_r, cent_std_dev_r = err_r.round_sig_fig(cent_median,
-                                                     cent_std_dev)
+    cent_med_r, cent_std_dev_r = error_round.round_sig_fig(
+        cent_median, cent_std_dev)
     text1 = (r"$(\tilde{{{0}}},\,\tilde{{{1}}}) = ({3:g},\,{4:g})\,"
              "{2}$").format(x_name, y_name, coord, *cent_med_r)
     text2 = ("$(\sigma_{{{0}}},\,\sigma_{{{1}}}) = ({3:g},\,{4:g})\,"
@@ -76,11 +70,11 @@ def pl_centers(gs, x_name, y_name, coord, x_min, x_max, y_min, y_max,
 
 
 def pl_hist_g(gs, fig, asp_ratio, x_name, y_name, coord, cent_bin, clust_rad,
-              bin_width, err_r, hist_2d_g):
+              bin_width, hist_2d_g):
     '''
     2D Gaussian convolved histogram.
     '''
-    bin_w_r = err_r.round_to_y(bin_width)
+    bin_w_r = error_round.round_to_y(bin_width)
 
     ax = plt.subplot(gs[0:2, 2:4])
     plt.xlabel('{} (bins)'.format(x_name), fontsize=12)
@@ -109,7 +103,7 @@ def pl_rad_dens(gs, radii, ring_density, field_dens, coord, clust_name,
     '''
     Radial density plot.
     '''
-    bin_w_r = err_r.round_to_y(bin_width)
+    bin_w_r = error_round.round_to_y(bin_width)
 
     # King prof params.
     rc, e_rc, rt, e_rt, n_c_k, kcp, cd, flag_2pk_conver, flag_3pk_conver = \
@@ -136,8 +130,8 @@ def pl_rad_dens(gs, radii, ring_density, field_dens, coord, clust_name,
     # Cluster's name and mode used to process it.
     plt.title(str(clust_name) + ' (' + g.mode + ')', fontsize=14)
     # Round radii values.
-    rads_r, e_rads_r = err_r.round_sig_fig([rc, rt, clust_rad],
-                                           [e_rc, e_rt, e_rad])
+    rads_r, e_rads_r = error_round.round_sig_fig(
+        [rc, rt, clust_rad], [e_rc, e_rt, e_rad])
     # Legend texts
     kp_text = '3P' if flag_3pk_conver else '2P'
     texts = [
@@ -242,7 +236,7 @@ def pl_full_frame(gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max,
                                 color='g', fill=False, ls='dashed', lw=1.)
             fig.gca().add_artist(circle)
     # Add text box
-    center_cl_r, e_cent_r = err_r.round_sig_fig(center_cl, e_cent)
+    center_cl_r, e_cent_r = error_round.round_sig_fig(center_cl, e_cent)
     text1 = '${0}_{{cent}} = {1:g} \pm {2:g}\,{3}$'.format(
         x_name, center_cl_r[0], e_cent_r[0], coord)
     text2 = '${0}_{{cent}} = {1:g} \pm {2:g}\,{3}$'.format(

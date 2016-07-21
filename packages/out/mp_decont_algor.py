@@ -1,15 +1,9 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Dic 16 12:00:00 2014
-
-@author: gabriel
-"""
 
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
 import matplotlib.offsetbox as offsetbox
 import numpy as np
-from .._in import get_in_params as g
+from ..inp import input_params as g
 
 
 def pl_mp_histo(gs, n_memb_da, red_return, decont_algor_return):
@@ -32,7 +26,7 @@ def pl_mp_histo(gs, n_memb_da, red_return, decont_algor_return):
         # Histogram of the data.
         n_bins = int((max(prob_data) - min(prob_data)) / 0.025)
         # Normalized histogram.
-        weights = np.ones_like(prob_data)/len(prob_data)
+        weights = np.ones_like(prob_data) / len(prob_data)
         n, bins, patches = plt.hist(prob_data, n_bins, weights=weights,
                                     normed=0)
         # Get bin centers.

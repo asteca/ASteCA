@@ -1,14 +1,11 @@
-"""
-@author: gabriel
-"""
 
 from time import strftime
 from os.path import exists, isfile, join
 from os import mkdir
-from functions import __version__
+from .._version import __version__
 
 
-def create_out_data_file(output_dir):
+def main(output_dir):
     '''
     Create output data file with headers. This will not overwrite any old
     output data file already in the folder.

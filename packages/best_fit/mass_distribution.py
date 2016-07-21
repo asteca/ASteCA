@@ -1,17 +1,12 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Jan 15 15:26:39 2014
 
-@author: gabriel
-"""
-
-# http://www.astro.ru.nl/~slarsen/teaching/Galaxies/cmd.pdf
-# http://python4mpia.github.io/fitting_data/MC-sampling-from-Salpeter.html
 import numpy as np
 
 
-def mass_dist(st_dist, M_total):
+def main(st_dist, M_total):
     '''
+    http://www.astro.ru.nl/~slarsen/teaching/Galaxies/cmd.pdf
+    http://python4mpia.github.io/fitting_data/MC-sampling-from-Salpeter.html
+
     Returns a mass distribution according to a given IMF and a total cluster
     mass.
     '''

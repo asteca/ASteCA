@@ -1,15 +1,10 @@
-"""
-@author: gabriel
-"""
 
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from os.path import join
 import warnings
-# Custom functions.
-from functions import __version__
-from .._in import get_in_params as g
-from ..errors import error_round as err_r
+from .._version import __version__
+from ..inp import input_params as g
 import mp_structure
 import mp_phot_analysis
 import mp_decont_algor
@@ -32,14 +27,14 @@ import prep_plots
 #############################################################
 
 
-def make_plots(output_subdir, clust_name, x_data, y_data, bin_width,
-               center_params, rdp_params, field_dens, radius_params,
-               cont_index, mag_data, col_data, err_plot, err_flags, kp_params,
-               cl_region, stars_out, stars_in_rjct, stars_out_rjct,
-               integr_return, n_memb, n_memb_da, flag_no_fl_regs,
-               field_regions, flag_pval_test, pval_test_params,
-               decont_algor_return, lum_func, completeness, ip_list,
-               red_return, err_lst, bf_return):
+def main(output_subdir, clust_name, x_data, y_data, bin_width,
+         center_params, rdp_params, field_dens, radius_params,
+         cont_index, mag_data, col_data, err_plot, err_flags, kp_params,
+         cl_region, stars_out, stars_in_rjct, stars_out_rjct,
+         integr_return, n_memb, n_memb_da, flag_no_fl_regs,
+         field_regions, flag_pval_test, pval_test_params,
+         decont_algor_return, lum_func, completeness, ip_list,
+         red_return, err_lst, bf_return):
     '''
     Make all plots.
     '''
@@ -97,7 +92,7 @@ def make_plots(output_subdir, clust_name, x_data, y_data, bin_width,
     arglist = [
         # pl_hist_g: 2D Gaussian convolved histogram.
         [gs, fig, asp_ratio, x_name, y_name, coord, cent_bin, clust_rad,
-            bin_width, err_r, hist_2d_g],
+            bin_width, hist_2d_g],
         # pl_centers: 2D Gaussian histograms' centers.
         [gs, x_name, y_name, coord, x_min, x_max, y_min, y_max, asp_ratio,
             approx_cents, bin_width, st_dev_lst],

@@ -8,7 +8,7 @@ from ..inp import input_params as g
 from ..out import prep_plots as pp
 
 
-def main(rdp_params, field_dens, bin_width, coord):
+def main_rad_algor(rdp_params, field_dens, bin_width, coord):
     '''
     This function holds the main algorithm that returns a radius value.
     '''
@@ -133,8 +133,8 @@ def main(rdp_params, field_dens, bin_width, coord):
     return clust_rad, e_rad, flag_delta_total, flag_not_stable, flag_delta
 
 
-def get_clust_rad(phot_data, field_dens, center_params, rdp_params,
-                  semi_return, bin_width):
+def main(phot_data, field_dens, center_params, rdp_params,
+         semi_return, bin_width):
     """
     Obtain the value for the cluster's radius by counting the number of points
     that fall within a given interval of the field density or lower. If this

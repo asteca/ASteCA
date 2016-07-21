@@ -1,16 +1,10 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Dic 10 12:00:00 2014
 
-@author: gabriel
-"""
-
-from functions import __version__
-from .._in import get_in_params as g
 from os.path import join
-from ..best_fit.best_fit_synth_cl import synth_cl_plot as s_c_p
-from ..best_fit.get_N_IMF import N_IMF as N_imf
 from time import strftime
+from .._version import __version__
+from ..inp import input_params as g
+from ..best_fit.best_fit_synth_cl import synth_cl_plot
+from ..best_fit import imf
 import top_tiers_plot
 import prep_plots
 
@@ -48,12 +42,12 @@ def top_tiers_file(output_subdir, clust_name, best_model, top_tiers):
     with open(out_file_name, "a") as f_out:
         for mod in top_tiers:
             f_out.write('''{:<10} {:>10} {:>10} {:>10} {:>10} {:>10} {:>10}'''
-            .format(*mod))
+                        .format(*mod))
             f_out.write('\n')
 
 
-def plot_top_tiers(top_tiers_flo, output_subdir, clust_name, mag_data, col_data,
-    ip_list, err_lst, completeness):
+def plot_top_tiers(top_tiers_flo, output_subdir, clust_name, mag_data,
+                   col_data, ip_list, err_lst, completeness):
     '''
     Plot all top tiers.
     '''
@@ -61,7 +55,7 @@ def plot_top_tiers(top_tiers_flo, output_subdir, clust_name, mag_data, col_data,
     import matplotlib.gridspec as gridspec
 
     # Obtain mass distribution using the selected IMF.
-    st_dist_mass = N_imf()
+    st_dist_mass = imf.main()
 
     # figsize(x1, y1), GridSpec(y2, x2) --> To have square plots: x1/x2 =
     # y1/y2 = 2.5
@@ -74,17 +68,17 @@ def plot_top_tiers(top_tiers_flo, output_subdir, clust_name, mag_data, col_data,
 
     phot_x, phot_y = prep_plots.ax_data(mag_data, col_data)
     x_ax, y_ax, x_ax0, y_axis = prep_plots.ax_names()
-    x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd = prep_plots.diag_limits(y_axis,
-        phot_x, phot_y)
+    x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd = prep_plots.diag_limits(
+        y_axis, phot_x, phot_y)
 
     synth_cls = []
     for mod in top_tiers_flo:
         # Call function to generate synthetic cluster.
-        shift_isoch, synth_clst = s_c_p(ip_list, [mod], err_lst, completeness,
-            st_dist_mass)
+        shift_isoch, synth_clst = synth_cl_plot(
+            ip_list, [mod], err_lst, completeness, st_dist_mass)
         # Store plotting parameters.
         synth_cls.append([gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
-            x_ax, y_ax, synth_clst, mod, shift_isoch])
+                         x_ax, y_ax, synth_clst, mod, shift_isoch])
 
     # Generate all plots.
     for n, args in enumerate(synth_cls, 1):
@@ -94,14 +88,14 @@ def plot_top_tiers(top_tiers_flo, output_subdir, clust_name, mag_data, col_data,
     # Generate output file for each data file.
     pl_fmt, pl_dpi = g.pl_params[1:3]
     plt.savefig(join(output_subdir, clust_name + '_top_tiers.' + pl_fmt),
-        dpi=pl_dpi)
+                dpi=pl_dpi)
     # Close to release memory.
     plt.clf()
     plt.close()
 
 
-def get_top_tiers(clust_name, output_subdir, mag_data, col_data, ip_list,
-    err_lst, completeness, bf_return):
+def main(clust_name, output_subdir, mag_data, col_data, ip_list,
+         err_lst, completeness, bf_return):
     '''
     Obtain top tier models, produce data file and output image.
     '''
@@ -144,13 +138,15 @@ def get_top_tiers(clust_name, output_subdir, mag_data, col_data, ip_list,
             best_model = ['{:.3f}'.format(best_lik)] + map(str, best_mod)
 
             # Create output .dat file.
-            top_tiers_file(output_subdir, clust_name, best_model, top_tiers_str)
+            top_tiers_file(output_subdir, clust_name, best_model,
+                           top_tiers_str)
 
             # Create output image if flag is 'true'.
             if g.pl_params[0]:
                 try:
-                    plot_top_tiers(top_tiers_flo, output_subdir, clust_name,
-                        mag_data, col_data, ip_list, err_lst, completeness)
+                    plot_top_tiers(
+                        top_tiers_flo, output_subdir, clust_name, mag_data,
+                        col_data, ip_list, err_lst, completeness)
                     print 'Top tier models saved to file and plotted.'
                 except:
                     print("  ERROR: top tiers plot could not be generated.")

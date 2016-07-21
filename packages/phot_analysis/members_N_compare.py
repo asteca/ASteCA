@@ -1,12 +1,6 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Mar 09 12:00:00 2015
-
-@author: gabriel
-"""
 
 
-def mp_members(n_memb, decont_algor_return):
+def main(n_memb, bayes_da_return):
     '''
     Compare the estimated number of true members obtained via the stars density
     analysis done in `get_members_number` with the number of stars in the
@@ -15,7 +9,7 @@ def mp_members(n_memb, decont_algor_return):
     stars.
     '''
 
-    memb_prob_avrg_sort, flag_decont_skip = decont_algor_return
+    memb_prob_avrg_sort, flag_decont_skip = bayes_da_return
 
     memb_par, n_memb_da, flag_memb_par = float("inf"), -1., False
     # Obtain parameter if the DA was applied.
@@ -38,8 +32,8 @@ def mp_members(n_memb, decont_algor_return):
             # Set flag.
             if abs(memb_par) > 0.33:
                 flag_memb_par = True
-                print ("  WARNING: the number of estimated true cluster"
-                       " members\n  (structural vs. photometric) differ"
-                       " greatly.")
+                print("  WARNING: the number of estimated true cluster"
+                      " members\n  (structural vs. photometric) differ"
+                      " greatly.")
 
     return memb_par, n_memb_da, flag_memb_par

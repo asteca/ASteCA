@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 import time
 import gc  # Garbage collector.
@@ -22,27 +21,27 @@ from packages.structure import stars_in_out_cl_reg
 from packages.errors import err_accpt_rejct
 #
 from packages.phot_analysis import integrated_mag
-from packages.phot_analysis.get_members_number import get_memb_num as g_m_n
-from packages.phot_analysis.get_cont_index import cont_indx as g_c_i
-from packages.phot_analysis.get_members_param import mp_members as m_m
-from packages.phot_analysis.get_lf import lf
+from packages.phot_analysis import members_number
+from packages.phot_analysis import contamination_index
+from packages.phot_analysis import members_N_compare
+from packages.phot_analysis import luminosity_func
 #
 from packages.decont_algors import bayesian_da
 from packages.decont_algors import membership_removal
 #
 from packages.best_fit import synth_cl_err
-from packages.best_fit.best_fit_synth_cl import best_fit as bfsc
+from packages.best_fit import best_fit_synth_cl
 #
-from packages.out.make_plots import make_plots as mp
-from packages.out.create_out_data_file import create_out_data_file as c_o_d_f
-from packages.out.top_tiers import get_top_tiers as g_t_t
-from packages.out.add_data_output import add_data_output as a_d_o
-from packages.out.cl_members_file import cluster_members_file as c_m_f
-from packages.out.synth_cl_file import make_file as s_c_f
-from packages.out.done_move import done_move as dm
+from packages.out import make_plots
+from packages.out import create_out_data_file
+from packages.out import top_tiers
+from packages.out import add_data_output
+from packages.out import cluster_members_file
+from packages.out import synth_cl_file
+from packages.out import done_move
 
 
-def asteca_funcs(cl_file, ip_list, R_in_place):
+def main(cl_file, ip_list, R_in_place):
     '''
     Container that holds the calls to all the modules and functions.
     '''
@@ -108,11 +107,12 @@ def asteca_funcs(cl_file, ip_list, R_in_place):
         kde_center, clust_rad, x_data, y_data, square_rings, bin_width)
 
     # Get approximate number of cluster's members.
-    n_memb, flag_num_memb_low = g_m_n(n_clust, cl_area, field_dens, clust_rad,
-                                      rdp_length)
+    n_memb, flag_num_memb_low = members_number.main(
+        n_clust, cl_area, field_dens, clust_rad, rdp_length)
 
     # Get contamination index.
-    cont_index = g_c_i(n_clust, cl_area, field_dens, clust_rad, rdp_length)
+    cont_index = contamination_index.main(n_clust, cl_area, field_dens,
+                                          clust_rad, rdp_length)
 
     # Field regions around the cluster's center.
     flag_no_fl_regs, field_region = field_regions.main(
@@ -121,8 +121,8 @@ def asteca_funcs(cl_file, ip_list, R_in_place):
     # Get the luminosity function and completeness level for each magnitude
     # bin. The completeness will be used by the isochrone/synthetic cluster
     # fitting algorithm.
-    lum_func, completeness = lf(flag_no_fl_regs, mag_data, cl_region,
-                                field_region)
+    lum_func, completeness = luminosity_func.main(
+        flag_no_fl_regs, mag_data, cl_region, field_region)
 
     # Calculate integrated magnitude.
     integr_return = integrated_mag.main(cl_region, field_region,
@@ -143,7 +143,8 @@ def asteca_funcs(cl_file, ip_list, R_in_place):
                                        field_region, memb_file)
 
     # Obtain members parameter.
-    memb_par, n_memb_da, flag_memb_par = m_m(n_memb, bayes_da_return)
+    memb_par, n_memb_da, flag_memb_par = members_N_compare.main(
+        n_memb, bayes_da_return)
 
     # Reduce number of stars in cluster according to a lower membership
     # probability or magnitude limit.
@@ -151,33 +152,36 @@ def asteca_funcs(cl_file, ip_list, R_in_place):
                                           bayes_da_return, field_region)
 
     # Create data file with membership probabilities.
-    c_m_f(memb_file_out, memb_remove)
+    cluster_members_file.main(memb_file_out, memb_remove)
 
     # Obtain exponential error function parameters to use by the
     # synthetic cluster creation function.
     err_lst = synth_cl_err.main(phot_data, err_pck)
     # Obtain best fitting parameters for cluster.
-    bf_return = bfsc(err_lst, memb_remove[0], completeness, ip_list)
+    bf_return = best_fit_synth_cl.main(err_lst, memb_remove[0], completeness,
+                                       ip_list)
 
     # Create output synthetic cluster file if one was found
-    s_c_f(bf_return[3], synth_file_out)
+    synth_cl_file.main(bf_return[3], synth_file_out)
 
     # Create output data file in /output dir if it doesn't exist.
-    out_file_name = c_o_d_f(output_dir)
+    out_file_name = create_out_data_file.main(output_dir)
 
     # Add cluster data and flags to output file
-    a_d_o(out_file_name, write_name, center_params, radius_params, kp_params,
-          cont_index, n_memb, memb_par, n_memb_da, flag_memb_par, frac_cl_area,
-          pval_test_params[0], integr_return, err_flags, flag_num_memb_low,
-          bf_return)
+    add_data_output.main(
+        out_file_name, write_name, center_params, radius_params, kp_params,
+        cont_index, n_memb, memb_par, n_memb_da, flag_memb_par, frac_cl_area,
+        pval_test_params[0], integr_return, err_flags, flag_num_memb_low,
+        bf_return)
 
     # Output top tiers models if best fit parameters were obtained.
-    g_t_t(clust_name, output_subdir, mag_data, col1_data, ip_list, err_lst,
-          completeness, bf_return)
+    top_tiers.main(clust_name, output_subdir, mag_data, col1_data, ip_list,
+                   err_lst, completeness, bf_return)
 
     # Make plots
     if g.pl_params[0]:
-        mp(output_subdir, clust_name, x_data, y_data,
+        make_plots.main(
+            output_subdir, clust_name, x_data, y_data,
             bin_width, center_params, rdp_params,
             field_dens, radius_params, cont_index, mag_data, col1_data,
             err_plot, err_flags, kp_params, cl_region, stars_out,
@@ -187,7 +191,7 @@ def asteca_funcs(cl_file, ip_list, R_in_place):
             ip_list, memb_remove, err_lst, bf_return)
 
     # Move file to 'done' dir if flag is set.
-    dm(dst_dir, data_file, memb_file)
+    done_move.main(dst_dir, data_file, memb_file)
 
     elapsed = time.time() - start
     m, s = divmod(elapsed, 60)

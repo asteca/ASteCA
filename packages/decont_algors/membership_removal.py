@@ -143,7 +143,7 @@ def main(n_memb, flag_no_fl_regs, bayes_da_return, field_region):
 
     if mode_rem_memb == 'skip':
         # Skip reduction process.
-        print('Reduced membership function skipped.')
+        print('Membership-based removal function skipped.')
 
     # If the DA was skipped and any method but 'local' or 'mag' is selected,
     # don't run.
@@ -185,6 +185,6 @@ def main(n_memb, flag_no_fl_regs, bayes_da_return, field_region):
             rem_memb_fit, rem_memb_no_fit, rem_plot_pars = \
                 man_mag(memb_prob_avrg_sort)
 
-        print('Reduced membership function applied.')
+        print('Membership-based removal function applied.')
 
     return rem_memb_fit, rem_memb_no_fit, rem_plot_pars

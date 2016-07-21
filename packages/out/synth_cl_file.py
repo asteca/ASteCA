@@ -1,14 +1,8 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Mar 31 12:00:00 2015
 
-@author: gabriel
-"""
-
-from .._in import get_in_params as g
+from ..inp import input_params as g
 
 
-def make_file(synth_clst, synth_file_out):
+def main(synth_clst, synth_file_out):
     '''
     Create output data file with stars in the best fit synthetic cluster found
     by the 'Best Fit' function.
@@ -26,12 +20,13 @@ def make_file(synth_clst, synth_file_out):
             with open(synth_file_out, "w") as f_out:
                 f_out.write("#mag    e_mag    col1   e_col1    m_ini\n")
                 for line in zip(*synth_clst):
-                    f_out.write("{:<8.4f} {:>8.4f} {:>8.4f} {:>8.4f}"
-                     " {:>8.4f}\n".format(line[2], line[3], line[0],
-                         line[1], line[4]))
+                    f_out.write(
+                        "{:<8.4f} {:>8.4f} {:>8.4f} {:>8.4f}"
+                        " {:>8.4f}\n".format(line[2], line[3], line[0],
+                                             line[1], line[4]))
 
-            print 'Best fit synthetic cluster saved to file.'
+            print('Best fit synthetic cluster saved to file.')
 
         else:
-            print ("  WARNING: empty synthetic cluster could not be saved\n"
-            "  to file.")
+            print("  WARNING: empty synthetic cluster could not be saved\n"
+                  "  to file.")

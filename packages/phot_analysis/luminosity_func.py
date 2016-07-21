@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Jul 12 11:50:00 2014
-
-@author: gabriel
-"""
 
 import numpy as np
 
@@ -35,7 +29,7 @@ def mag_completeness(mag_data):
     return completeness
 
 
-def lf(flag_no_fl_regs, mag_data, cl_region, field_regions):
+def main(flag_no_fl_regs, mag_data, cl_region, field_regions):
     '''
     Obtain the Luminosity Function for the field regions and the cluster
     region normalized to their area. Substract the field curve from the
@@ -67,14 +61,15 @@ def lf(flag_no_fl_regs, mag_data, cl_region, field_regions):
         # Obtain histogram for field region.
         lf_field, lf_edg_f = np.histogram(mag_fl, bins=bins_n)
 
-        # Create arrays adding elements so plt.step will plot the first and last
-        # vertical bars.
+        # Create arrays adding elements so plt.step will plot the first and
+        # last vertical bars.
         x_fl = np.concatenate((np.array([0.]), lf_edg_f))
         y_fl = np.concatenate((np.array([0.]),
-        (lf_field / float(len(field_regions))), np.array([0.])))
+                              (lf_field / float(len(field_regions))),
+                              np.array([0.])))
     else:
-        print ("  WARNING: no field regions defined. Luminosity function\n"
-        "  is not cleaned from field star contamination.")
+        print("  WARNING: no field regions defined. Luminosity function\n"
+              "  is not cleaned from field star contamination.")
         # Pass dummy lists.
         x_fl, y_fl = [], []
 
@@ -86,6 +81,6 @@ def lf(flag_no_fl_regs, mag_data, cl_region, field_regions):
     mag_all = list(mag_cl) + mag_fl
     completeness = mag_completeness(mag_all)
 
-    print 'LF and completeness magnitude levels obtained.'
+    print('LF and completeness magnitude levels obtained.')
 
     return lum_func, completeness

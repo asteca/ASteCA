@@ -1,12 +1,6 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Jul 19 09:58:13 2013
-
-@author: gabriel
-"""
 
 
-def get_memb_num(n_clust, cl_area, field_dens, clust_rad, rdp_length):
+def main(n_clust, cl_area, field_dens, clust_rad, rdp_length):
     """
     Calculate the approximate number of cluster's members inside the cluster's
     radius. The process is as follows: field_dens is the density of field
@@ -32,14 +26,14 @@ def get_memb_num(n_clust, cl_area, field_dens, clust_rad, rdp_length):
         flag_num_memb_low = False if n_memb >= 10 else True
 
         if flag_num_memb_low:
-            print ("  WARNING: only {:.0f} true members estimated in cluster"
-                   " region.".format(n_memb))
+            print("  WARNING: only {:.0f} true members estimated in cluster"
+                  " region.".format(n_memb))
         else:
-            print ("Approximate number of members in cluster obtained "
-                   "({:.0f}).".format(n_memb))
+            print("Approximate number of members in cluster obtained "
+                  "({:.0f}).".format(n_memb))
     else:
-        print ("  WARNING: cluster radius is too large to obtain\n"
-               "  the approximate number of members.")
+        print("  WARNING: cluster radius is too large to obtain\n"
+              "  the approximate number of members.")
         n_memb, flag_num_memb_low = -1., True
 
     return n_memb, flag_num_memb_low

@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Dic 16 12:00:00 2014
-
-@author: gabriel
-"""
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -12,7 +6,7 @@ from matplotlib.ticker import MultipleLocator
 from matplotlib.patches import Ellipse
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy.ndimage.filters import gaussian_filter
-from .._in import get_in_params as g
+from ..inp import input_params as g
 
 
 def pl_bf_synth_cl(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,

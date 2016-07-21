@@ -1,17 +1,11 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Jan 28 15:22:10 2014
-
-@author: gabriel
-"""
 
 import numpy as np
 import random
 import itertools
-from .._in import get_in_params as g
-from functions.exp_function import exp_3p
-from move_isochrone import move_isoch
-from get_mass_dist import mass_dist as m_d
+from ..inp import input_params as g
+from ..math_f import exp_function
+import move_isochrone
+import mass_distribution
 
 #############################################################
 # # Timer function: http://stackoverflow.com/a/21860100/1391441
@@ -48,8 +42,8 @@ def add_errors(isoch_compl, err_lst):
     e_max = g.er_params[1]
 
     popt_mag, popt_col = err_lst
-    sigma_mag = np.array(exp_3p(isoch_compl[1], *popt_mag))
-    sigma_col = np.array(exp_3p(isoch_compl[1], *popt_col))
+    sigma_mag = np.array(exp_function.exp_3p(isoch_compl[1], *popt_mag))
+    sigma_col = np.array(exp_function.exp_3p(isoch_compl[1], *popt_col))
     # Replace all error values greater than e_max with e_max.
     sigma_mag[sigma_mag > e_max] = e_max
     sigma_col[sigma_col > e_max] = e_max
@@ -382,7 +376,7 @@ def isoch_cut_mag(isoch_moved, max_mag):
     return isoch_cut
 
 
-def synth_clust(err_lst, completeness, st_dist, isochrone, params):
+def main(err_lst, completeness, st_dist, isochrone, params):
     '''
     Takes an isochrone and returns a synthetic cluster created according to
     a certain mass distribution.
@@ -393,7 +387,7 @@ def synth_clust(err_lst, completeness, st_dist, isochrone, params):
 
     # with timeblock("move"):
     # Move theoretical isochrone using the values 'e' and 'd'.
-    isoch_moved = move_isoch([isochrone[0], isochrone[1]], e, d) +\
+    isoch_moved = move_isochrone.main([isochrone[0], isochrone[1]], e, d) +\
         [isochrone[2]]
 
     ##############################################################
@@ -418,7 +412,7 @@ def synth_clust(err_lst, completeness, st_dist, isochrone, params):
         # Store mass distribution used to produce a synthetic cluster based on
         # a given theoretic isochrone.
         # with timeblock("mass_dist"):
-        mass_dist = m_d(st_dist, M_total)
+        mass_dist = mass_distribution.main(st_dist, M_total)
 
         # Interpolate masses in mass_dist into the isochrone rejecting those
         # masses that fall outside of the isochrone's mass range.

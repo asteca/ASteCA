@@ -1,15 +1,9 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Mar 07 10:50:05 2014
-
-@author: gabriel
-"""
 
 import numpy as np
 import random
-from .._in import get_in_params as g
-from genetic_algorithm import gen_algor as g_a
-from obs_clust_prepare import prepare as prep
+from ..inp import input_params as g
+import genetic_algorithm
+import obs_clust_prepare
 
 
 def resample_replacement(obs_clust):
@@ -47,15 +41,16 @@ def bootstrap(err_lst, memb_prob_avrg_sort, completeness, ip_list,
         obs_cl_r = resample_replacement(memb_prob_avrg_sort)
         # Obtain prepared observed cluster according to the likelihood method
         # selected.
-        obs_cl = prep(obs_cl_r)
+        obs_cl = obs_clust_prepare.main(obs_cl_r)
 
         # Algorithm selected.
         if best_fit_algor == 'genet':
             # Let the GA algor know this call comes from the bootstrap
             # process so it will not print percentages to screen.
             flag_print_perc = False
-            params_boot.append(g_a(flag_print_perc, err_lst, obs_cl,
-                               completeness, ip_list, st_dist_mass)[0])
+            params_boot.append(genetic_algorithm.main(
+                flag_print_perc, err_lst, obs_cl, completeness, ip_list,
+                st_dist_mass)[0])
 
         percentage_complete = (100.0 * (i + 1) / max(N_b, 2))
         while len(milestones) > 0 and percentage_complete >= milestones[0]:
