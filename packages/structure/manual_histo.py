@@ -1,6 +1,6 @@
 
 
-def manual_histo(phot_data, xedges, yedges):
+def main(phot_data, xedges, yedges):
     '''
     Obtains a filled 2D histogram for the field with not only the number
     of stars per bin but also the values associated to each star.

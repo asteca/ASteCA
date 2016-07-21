@@ -72,19 +72,19 @@ PX      px
 
 # Indicate the CMD to be used by the code to perform the analysis.
 #
-# * selection: [1, 12]
-# - 1: (B-V) vs V   ; UBVI (Johnson)
-# - 2: (V-I) vs V   ; UBVI (Johnson)
-# - 3: (U-V) vs V   ; UBVI (Johnson)
-# - 4: (C-T1) vs T1 ; Washington
-# - 5: (J-H) vs J   ; 2MASS
-# - 6: (J-H) vs H   ; 2MASS
-# - 7: (H-K) vs K   ; 2MASS
-# - 8: (u-g) vs g   ; SDSS ugriz
-# - 9: (g-r) vs g   ; SDSS ugriz
-# - 10: (b-y) vs y   ; Stroemgren
-# - 11: (v-y) vs y   ; Stroemgren
-# - 12: (u-y) vs y   ; Stroemgren
+# * selection: [1, 13]             ; Photometric system
+# - 1: (B-V) vs V                  ; UBVI (Johnson)
+# - 2: (V-I) vs V                  ; UBVI (Johnson)
+# - 3: (U-V) vs V                  ; UBVI (Johnson)
+# - 4: (C-T1) vs T1                ; Washington
+# - 5: (J-H) vs J                  ; 2MASS
+# - 6: (J-H) vs H                  ; 2MASS
+# - 7: (H-K) vs K                  ; 2MASS
+# - 8: (u-g) vs g                  ; SDSS ugriz
+# - 9: (g-r) vs g                  ; SDSS ugriz
+# - 10: (b-y) vs y                 ; Stroemgren
+# - 11: (v-y) vs y                 ; Stroemgren
+# - 12: (u-y) vs y                 ; Stroemgren
 # - 13: (F606W - F814W) vs F606W   ; HST/ACS WFC
 #
 #    selection

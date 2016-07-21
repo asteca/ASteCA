@@ -52,7 +52,7 @@ def main(cl_file, ip_list, R_in_place):
     # Get file names and paths.
     clust_name, data_file, memb_file, output_dir, output_subdir, dst_dir,\
         memb_file_out, synth_file_out, write_name = names_paths.main(cl_file)
-    print 'Analyzing cluster {} ({}).'.format(clust_name, g.mode)
+    print('Analyzing cluster {} ({} mode).'.format(clust_name, g.mode))
 
     # Get data from semi-data input file.
     semi_return = get_data_semi.main(clust_name)
@@ -134,7 +134,7 @@ def main(cl_file, ip_list, R_in_place):
         pval_test_params, flag_pval_test = kde_pvalue.main(
             cl_region, field_region, col1_data, mag_data, flag_no_fl_regs)
     else:
-        print 'Missing package. Skipping KDE p-value test for cluster.'
+        print('Missing package. Skipping KDE p-value test for cluster.')
         flag_pval_test, pval_test_params = False, [-1.]
 
     # Apply decontamination algorithm if at least one equal-sized field region
@@ -195,8 +195,8 @@ def main(cl_file, ip_list, R_in_place):
 
     elapsed = time.time() - start
     m, s = divmod(elapsed, 60)
-    print 'End of analysis for {} in {:.0f}m {:.0f}s.\n'.format(clust_name,
-                                                                m, s)
+    print('End of analysis for {} in {:.0f}m {:.0f}s.\n'.format(
+        clust_name, m, s))
 
     # Force the Garbage Collector to release unreferenced memory.
     gc.collect()

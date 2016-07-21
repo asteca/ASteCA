@@ -1,7 +1,7 @@
 
 from ..inp import input_params as g
-from get_spiral import spiral as gs
-from get_histo_manual import manual_histo as mh
+import spiral as sp
+import manual_histo
 
 
 def spiral_index(spiral, sp_indx, histo, x_c_b, y_c_b, num_bins_area):
@@ -77,7 +77,7 @@ def spiral_region(h_manual, sp_coords):
 
 
 def main(semi_return, hist_lst, cent_bin, clust_rad, cl_area,
-                stars_out):
+         stars_out):
     '''
     Define empty region around the cluster via a spiral centered on it
     and of area a bit larger than that defined by the cluster's radius.
@@ -142,7 +142,7 @@ def main(semi_return, hist_lst, cent_bin, clust_rad, cl_area,
 
     # Get list that contains the spiral as a list of x,y coordinates (also
     # stored as lists) starting from the initial bin [0, 0].
-    spiral = gs()
+    spiral = sp()
 
     # Calculate number of bins such that their combined area equals the
     # larger area around the cluster defined above.
@@ -159,7 +159,7 @@ def main(semi_return, hist_lst, cent_bin, clust_rad, cl_area,
 
         # Obtain filled 2D histogram for the field with star's values attached
         # to each bin.
-        h_manual = mh(stars_out, xedges, yedges)
+        h_manual = manual_histo.main(stars_out, xedges, yedges)
 
         # This ensures that the areas of the field regions are equal
         # to the cluster area.

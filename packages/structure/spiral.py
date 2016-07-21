@@ -1,9 +1,5 @@
-"""
-@author: gabriel
-"""
 
-
-def spiral():
+def main():
     '''
     Create a list containing lists of two items. These two items are the
     x and y coordinates of a spiral array starting from [0,0] and moving

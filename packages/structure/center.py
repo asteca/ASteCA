@@ -217,22 +217,27 @@ def main(x_data, y_data, mag_data, hist_lst, semi_return):
 
         kde_plot = []
 
-        wrong_answer = True
-        while wrong_answer:
+        # Ask if the user accepts the center coordinates found, or if new ones
+        # should be used.
+        while True:
             answer_cen = raw_input('Input new center values? (y/n) ')
             if answer_cen == 'n':
                 print 'Value accepted.'
-                wrong_answer = False
+                break
             elif answer_cen == 'y':
                 kde_cent = []
-                kde_cent.append(float(raw_input('x_center: ')))
-                kde_cent.append(float(raw_input('y_center: ')))
-                # Store center bin coords for the filtered hist.
-                cent_bin = bin_center(xedges, yedges, kde_cent)
-                wrong_answer = False
-                flag_center_manual = True
+                try:
+                    kde_cent.append(float(raw_input('x_center: ')))
+                    kde_cent.append(float(raw_input('y_center: ')))
+                    # Store center bin coords for the filtered hist.
+                    cent_bin = bin_center(xedges, yedges, kde_cent)
+                    flag_center_manual = True
+                    break
+                except:
+                    print("Sorry, input is not valid. Try again.")
+                    continue
             else:
-                print 'Wrong input. Try again.\n'
+                print("Sorry, input is not valid. Try again.\n")
 
     center_params = [cent_bin, kde_cent, e_cent, approx_cents, st_dev_lst,
                      hist_2d_g, kde_plot, flag_center_med, flag_center_std,

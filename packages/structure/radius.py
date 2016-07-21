@@ -8,7 +8,7 @@ from ..inp import input_params as g
 from ..out import prep_plots as pp
 
 
-def main_rad_algor(rdp_params, field_dens, bin_width, coord):
+def radius_algor(rdp_params, field_dens, bin_width, coord):
     '''
     This function holds the main algorithm that returns a radius value.
     '''
@@ -127,8 +127,8 @@ def main_rad_algor(rdp_params, field_dens, bin_width, coord):
         # No radius value found. Assign radius value as the middle element
         # in the radii list.
         clust_rad, e_rad = radii_c[int(len(radii_c) / 2.)], 0.
-        print '  WARNING: no radius found, setting value to: {:g} {}'.format(
-            clust_rad, coord)
+        print('  WARNING: no radius found, setting value to: {:g} {}'.format(
+            clust_rad, coord))
 
     return clust_rad, e_rad, flag_delta_total, flag_not_stable, flag_delta
 
@@ -149,12 +149,12 @@ def main(phot_data, field_dens, center_params, rdp_params,
     coord = pp.coord_syst()[0]
     # Call function that holds the radius finding algorithm.
     clust_rad, e_rad, flag_delta_total, flag_not_stable, flag_delta = \
-        main_rad_algor(rdp_params, field_dens, bin_width, coord)
+        radius_algor(rdp_params, field_dens, bin_width, coord)
 
     # Check if semi or manual mode are set.
     flag_radius_manual = False
     if g.mode == 'auto':
-        print 'Auto radius found: {:g} {}.'.format(clust_rad, coord)
+        print('Auto radius found: {:g} {}.'.format(clust_rad, coord))
 
     elif g.mode == 'semi':
         # Unpack semi values.
@@ -163,9 +163,9 @@ def main(phot_data, field_dens, center_params, rdp_params,
         if rad_flag_semi == 1:
             # Update values.
             clust_rad, e_rad = cl_rad_semi, 0.
-            print 'Semi radius set: {:g} {}.'.format(clust_rad, coord)
+            print('Semi radius set: {:g} {}.'.format(clust_rad, coord))
         else:
-            print 'Auto radius found: {:g} {}.'.format(clust_rad, coord)
+            print('Auto radius found: {:g} {}.'.format(clust_rad, coord))
 
     # If Manual mode is set, display radius and ask the user to accept it or
     # input new one.
@@ -176,20 +176,24 @@ def main(phot_data, field_dens, center_params, rdp_params,
             rdp_params)
         plt.show()
 
-        wrong_answer = True
-        while wrong_answer:
+        # Ask if the radius is accepted, or a if a another one should be used.
+        while True:
             answer_rad = raw_input('Input new radius value? (y/n) ')
             if answer_rad == 'n':
-                print 'Value accepted.'
-                wrong_answer = False
+                print('Value accepted.')
+                break
             elif answer_rad == 'y':
-                clust_rad_m = float(raw_input('cluster_rad: '))
-                # Update radius value.
-                clust_rad = clust_rad_m
-                wrong_answer = False
-                flag_radius_manual = True
+                try:
+                    clust_rad_m = float(raw_input('cluster_rad: '))
+                    # Update radius value.
+                    clust_rad = clust_rad_m
+                    flag_radius_manual = True
+                    break
+                except:
+                    print("Sorry, input is not valid. Try again.")
+                    continue
             else:
-                print 'Wrong input. Try again.\n'
+                print("Sorry, input is not valid. Try again.\n")
 
     radius_params = [clust_rad, e_rad, flag_delta_total, flag_not_stable,
                      flag_delta, flag_radius_manual]
