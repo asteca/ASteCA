@@ -239,10 +239,11 @@ PV   auto   2
 #    mode     iters (manual)
 DA   auto       200
 
-# Reduced membership.
+# Membership-based removal.
 #
-# Selection of stars to be used by the fitting function to estimate the
-# cluster's fundamental parameters.
+# Performs a selection of stars in the cluster region, to be used by the
+# synthetic cluster match function. Stars are removed either based on their
+# assigned membership probabilities (MPs), or randomly (if MPs are missing).
 #
 # * mode: local / n_memb  / mp_05 / top_h / man / mag / skip
 #   - local: combines the assigned MPs with a cell by cell removal of stars in
