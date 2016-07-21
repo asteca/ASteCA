@@ -17,8 +17,8 @@ def resample_replacement(obs_clust):
     return obs_cl
 
 
-def bootstrap(err_lst, memb_prob_avrg_sort, completeness, ip_list,
-              st_dist_mass):
+def main(err_lst, memb_prob_avrg_sort, completeness, ip_list,
+         st_dist_mass):
     '''
     Bootstrap process, runs the selected algorithm a number of times each
     time generating a new observed cluster representation through resampling
