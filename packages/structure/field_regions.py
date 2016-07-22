@@ -142,7 +142,7 @@ def main(semi_return, hist_lst, cent_bin, clust_rad, cl_area,
 
     # Get list that contains the spiral as a list of x,y coordinates (also
     # stored as lists) starting from the initial bin [0, 0].
-    spiral = sp()
+    spiral = sp.main()
 
     # Calculate number of bins such that their combined area equals the
     # larger area around the cluster defined above.
