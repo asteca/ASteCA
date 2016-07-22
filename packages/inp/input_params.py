@@ -153,9 +153,9 @@ def init(mypath, pars_f_path):
                 else:
                     # Get parameters file name from path.
                     pars_f_name = pars_f_path.split('/')[-1]
-                    print ("  WARNING: Unknown '{}' ID found in line {}\n"
-                           "  of '{}' file.\n").format(
-                           reader[0], l + 1, pars_f_name)
+                    print("  WARNING: Unknown '{}' ID found in line {}\n"
+                          "  of '{}' file.\n").format(
+                        reader[0], l + 1, pars_f_name)
 
     # Pack params in lists.
     pl_params = [flag_make_plot, plot_frmt, plot_dpi]

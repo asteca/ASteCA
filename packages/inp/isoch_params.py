@@ -1,14 +1,8 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Jan  9 15:08:39 2014
-
-@author: gabriel
-"""
 
 import numpy as np
 from ..inp import input_params as g
 import read_isochs
-import get_met_ages_values
+import met_ages_values
 
 
 def interp_isoch(isochrone):
@@ -41,7 +35,7 @@ def main():
         # *WE ASUME ALL PHOTOMETRIC SYSTEMS CONTAIN THE SAME NUMBER OF
         # METALLICITY FILES*
         param_ranges, met_f_filter, met_values, age_values =\
-            get_met_ages_values.main(iso_path)
+            met_ages_values.main(iso_path)
 
         # Get isochrones and their parameter values.
         isoch_list = read_isochs.main(met_f_filter, age_values)

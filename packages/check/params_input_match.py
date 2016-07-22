@@ -2,7 +2,7 @@
 import sys
 import numpy as np
 from os.path import isdir
-from ..inp import get_met_ages_values
+from ..inp import met_ages_values
 from ..inp import input_params as g
 
 
@@ -150,7 +150,7 @@ def check(bin_methods_dict):
 
         # Get parameters values defined.
         param_ranges, met_f_filter, met_values, age_values = \
-            get_met_ages_values.main(iso_path)
+            met_ages_values.main(iso_path)
         # Check that ranges are properly defined.
         for i, p in enumerate(param_ranges):
             if not p.size:
