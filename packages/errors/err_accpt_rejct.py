@@ -149,74 +149,84 @@ def main(phot_data, semi_return):
         move_on = False
         while not move_on:
 
-            wrong_answer = True
-            while wrong_answer:
-                answer_rad = int(raw_input(
-                    "Choose a method for error-based "
-                    "stars rejection:\n  1 (emax), 2 (lowexp), 3 (eyefit),"
-                    " 4 (use all stars): "))
+            while True:
+                try:
+                    answer_rad = int(raw_input(
+                        "Choose a method for error-based stars rejection:\n"
+                        "  1 (emax), 2 (lowexp), 3 (eyefit),"
+                        " 4 (use all stars): "))
 
-                if answer_rad == 1:
-                    e_max_n = float(raw_input('Select maximum error value: '))
-                    g.er_params[1] = e_max_n
-                    # Call function to reject stars with errors > e_max.
-                    acpt_indx, rjct_indx, err_plot = e_a_r_mx.main(
-                        e_mag, e_col1)
-                    wrong_answer = False
-                    er_mode, g.er_params[0] = 'emax', 'emax'
-                elif answer_rad == 2:
-                    N_sig = float(raw_input("Select number of sigmas to lift"
-                                            " the curve: "))
-                    g.er_params[4] = N_sig
-                    # Call N sigma exp function.
-                    acpt_indx, rjct_indx, err_plot = e_a_r_le.main(
-                        mag, e_mag, e_col1, be_m)
-                    wrong_answer = False
-                    er_mode, g.er_params[0] = 'lowexp', 'lowexp'
-                elif answer_rad == 3:
-                    # Call 'eyefit' function.
-                    acpt_indx, rjct_indx, err_plot = e_a_r_ef.main(
-                        mag, e_mag, e_col1, err_pck)
-                    wrong_answer = False
-                    er_mode, g.er_params[0] = 'eyefit', 'eyefit'
-                elif answer_rad == 4:
-                    # Store all indexes.
-                    acpt_indx, rjct_indx = [i for i in range(len(mag))], []
-                    err_plot, g.er_params[0] = [], ''
-                    err_all_fallback = True
-                    wrong_answer = False
+                    if answer_rad == 1:
+                        e_max_n = raw_input(
+                            'Select maximum error value: ')
+                        g.er_params[1] = float(e_max_n)
+                        # Call function to reject stars with errors > e_max.
+                        acpt_indx, rjct_indx, err_plot = e_a_r_mx.main(
+                            e_mag, e_col1)
+                        er_mode, g.er_params[0] = 'emax', 'emax'
+                        break
+                    elif answer_rad == 2:
+                        N_sig = raw_input(
+                            "Select number of sigmas to lift the curve: ")
+                        g.er_params[4] = float(N_sig)
+                        # Call N sigma exp function.
+                        acpt_indx, rjct_indx, err_plot = e_a_r_le.main(
+                            mag, e_mag, e_col1, be_m)
+                        er_mode, g.er_params[0] = 'lowexp', 'lowexp'
+                        break
+                    elif answer_rad == 3:
+                        # Call 'eyefit' function.
+                        acpt_indx, rjct_indx, err_plot = e_a_r_ef.main(
+                            mag, e_mag, e_col1, err_pck)
+                        er_mode, g.er_params[0] = 'eyefit', 'eyefit'
+                        break
+                    elif answer_rad == 4:
+                        # Store all indexes.
+                        acpt_indx, rjct_indx = [i for i in range(len(mag))], []
+                        err_plot, g.er_params[0] = [], ''
+                        err_all_fallback = True
+                        break
 
-                if answer_rad not in {1, 2, 3, 4}:
-                    print 'Wrong input. Try again.\n'
-                else:
-                    if len(acpt_indx) == 0:
-                        print ("No stars left after error rejection.\nTry"
-                               " again with a different method or use all "
-                               "stars (4).")
+                    if answer_rad not in {1, 2, 3, 4}:
+                        print("Sorry, input is not valid. Try again.\n")
                     else:
-                        wrong_answer = False
+                        if len(acpt_indx) == 0:
+                            print ("No stars left after error rejection.\nTry"
+                                   " again with a different method or use all "
+                                   "stars (4).")
+                        else:
+                            break
+                except:
+                    print("Sorry, input is not valid. Try again.")
 
             # Call function to store stars according to the returned indexes.
             acpt_stars, rjct_stars = err_sel_stars(acpt_indx, rjct_indx,
                                                    phot_data)
 
             if answer_rad != 4:
-                print 'Plot error distributions.'
+                print("Plot error distributions.")
                 # Display automatic errors rejection.
                 display_errors.main(er_mode, mag, err_plot, acpt_stars,
                                     rjct_stars, err_pck)
                 plt.show()
                 # Ask if keep or reject.
-                wrong_answer = True
-                while wrong_answer:
-                    mv_on = str(raw_input('Accept error based rejection?'
-                                          ' (y/n) '))
-                    if mv_on == 'y':
-                        print 'Fit accepted.'
-                        wrong_answer = False
-                        move_on = True
-                    elif mv_on == 'n':
-                        wrong_answer = False
+                while True:
+                    try:
+                        mv_on = raw_input('Accept error based rejection?'
+                                          ' (y/n) ')
+                        mv_on = str(mv_on)
+                        print type(mv_on)
+                        if mv_on == 'y':
+                            print 'Fit accepted.'
+                            move_on = True
+                            break
+                        elif mv_on == 'n':
+                            print("Fit rejected.")
+                            break
+                        else:
+                            print("Sorry, input is not valid. Try again.")
+                    except:
+                        print("Sorry, input is not valid. Try again.")
             else:
                 move_on = True
 

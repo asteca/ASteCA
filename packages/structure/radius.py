@@ -191,7 +191,6 @@ def main(phot_data, field_dens, center_params, rdp_params,
                     break
                 except:
                     print("Sorry, input is not valid. Try again.")
-                    continue
             else:
                 print("Sorry, input is not valid. Try again.\n")
 

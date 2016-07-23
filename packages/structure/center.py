@@ -235,7 +235,6 @@ def main(x_data, y_data, mag_data, hist_lst, semi_return):
                     break
                 except:
                     print("Sorry, input is not valid. Try again.")
-                    continue
             else:
                 print("Sorry, input is not valid. Try again.\n")
 
