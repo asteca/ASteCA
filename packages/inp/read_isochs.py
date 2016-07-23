@@ -16,7 +16,7 @@ def read_met_file(met_f, age_values):
     # Read line start format and columns indexes for the selected set of
     # Girardi isochrones.
     line_start, age_format, imass_idx, mag1_idx, mag2_idx =\
-        isochs_format.main()
+        isochs_format.main(met_f)
 
     # Initialize list that will hold all the isochrones for this
     # metallicity value.

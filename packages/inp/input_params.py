@@ -34,7 +34,7 @@ def init(mypath, pars_f_path):
     # Declare globals.
     global up_flag, mode, done_dir, gd_params, gh_params, cr_params, kp_flag,\
         im_flag, er_params, fr_number, pv_params, da_params, ps_params, \
-        bf_params, sc_params, ga_params, rm_params, pl_params, \
+        tracks_dict, bf_params, sc_params, ga_params, rm_params, pl_params, \
         flag_move_file, axes_params, flag_back_force
 
     # Accept these variations of the 'true' flag.
@@ -166,7 +166,13 @@ def init(mypath, pars_f_path):
 
     # Fix isochrones location according to the CMD and set selected.
     text1, text2 = 'none', 'none'
-    text1 = 'parsec' + iso_select[-2:]
+    # Map isochrones set selection to proper name.
+    iso_sys = {'PAR10': 'parsec10', 'PAR11': 'parsec11',
+               'PAR12': 'parsec12', 'MAR08': 'marigo08',
+               'MAR08B': 'marigo08B', 'MAR08A': 'marigo08A)',
+               'GIR02': 'girardi02'}
+    text1 = iso_sys.get(iso_select)
+    # Generate correct name for the isochrones path.
     if cmd_select in {1, 2, 3}:
         text2 = 'ubvrijhk'
     elif cmd_select in {4}:
@@ -181,6 +187,13 @@ def init(mypath, pars_f_path):
         text2 = 'acs_wfc'
     # Set iso_path according to the above values.
     iso_path = join(mypath + '/isochrones/' + text1 + '_' + text2)
+
+    # Dictionary mapping selected tracks to the right name.
+    tracks_dict = {'PAR10': 'PARSEC v1.0', 'PAR11': 'PARSEC v1.1',
+                   'PAR12': 'PARSEC v1.2S', 'MAR08': 'Marigo (2008)',
+                   'MAR08B': 'Marigo (2008, Case B)',
+                   'MAR08A': 'Marigo (2008, Case A)',
+                   'GIR02': 'Girardi (2002)'}
 
     # Fix magnitude and color names for the CMD axis.
     # m_1 is the y axis magnitude, m_2 is the magnitude used to obtain the

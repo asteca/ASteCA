@@ -74,7 +74,7 @@ def get_ages(met_file):
     Read all available ages in metallicity file.
     '''
 
-    age_format = isochs_format.main()[1]
+    age_format = isochs_format.girardi_age_format()
 
     # Open the metallicity file.
     with open(met_file, mode="r") as f_iso:

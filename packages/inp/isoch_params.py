@@ -50,13 +50,17 @@ def main():
         param_values = [met_values, age_values] + param_ranges[2:]
         ip_list = [isochs_interp, param_values]
 
-        iso_ver = {'10': '1.0', '11': '1.1', '12': '1.2S'}
-        print ("PARSEC v{} theoretical isochrones read,".format(
-            iso_ver[iso_select[-2:]]))
+        # Obtain number of models in the solutions space.
         lens = [len(_) for _ in param_values]
         total = reduce(lambda x, y: x * y, lens, 1)
+        # Map isochrones set selection to proper name.
+        iso_print = g.tracks_dict.get(iso_select)
+        # Extract photometric system used,m from the isochrone's folder name.
+        syst = g.ps_params[0].split('_', 1)[1]
+        print("{} theoretical isochrones in the '{}'".format(
+            iso_print, syst))
         print (
-            "interpolated and stored:\n"
+            "photometric system read, interpolated, and stored.\n"
             "  {} metallicity values (z),\n"
             "  {} age values (per z),\n"
             "  {} reddening values,\n"

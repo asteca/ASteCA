@@ -318,9 +318,9 @@ BF   true      genet      dolphin    knuth         10
 # If you want to make the total initial mass a free parameter that varies within
 # a range, you need to use the 'dolphin' likelihood method instead.
 
-# Select set of isochrones to use. Only PARSEC tracks are accepted for now.
+# Select set of evolutionary tracks to use.
 #
-# iso_select: PAR10 (v1.0) / PAR11 (v1.1) / PAR12 (v1.2S)
+# iso_select: GIR02 (Girardi 2002) / PAR10 (v1.0) / PAR11 (v1.1) / PAR12 (v1.2S)
 #
 #    iso_select
 PS        PAR12

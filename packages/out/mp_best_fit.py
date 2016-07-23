@@ -41,7 +41,7 @@ def pl_bf_synth_cl(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
         ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1,
                 zorder=1)
     if synth_clst.any():
-        # Plot synth clust.
+        # Plot synthetic cluster.
         plt.scatter(synth_clst[0], synth_clst[2], marker='o', s=40,
                     c='#4682b4', lw=0.5, zorder=4)
         text1 = '$N_{{synth}} = {}$'.format(len(synth_clst[0]))
@@ -57,14 +57,17 @@ def pl_bf_synth_cl(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
     # Add text box to the right of the synthetic cluster.
     ax_t = plt.subplot(gs[4:6, 10:12])
     ax_t.axis('off')  # Remove axis from frame.
-    text1 = 'Synthetic cluster parameters:\n\n'
-    text2 = r'$z\qquad\; =\, {} \pm {}$'.format(cp_r[0], cp_e[0]) + '\n'
-    text3 = r'$log(age)\, =\, {} \pm {}$'.format(cp_r[1], cp_e[1]) + '\n'
-    text4 = r'$E_{{(B-V)}}\;\,=\, {} \pm {}$'.format(cp_r[2], cp_e[2]) + '\n'
-    text5 = r'$(m-M)_o = {} \pm {}$'.format(cp_r[3], cp_e[3]) + '\n'
-    text6 = r'$M_{{\odot}}\quad\;=\,{} \pm {}$'.format(cp_r[4], cp_e[4]) + '\n'
-    text7 = r'$b_{{frac}}\quad\,\, =\, {} \pm {}$'.format(cp_r[5], cp_e[5])
-    text = text1 + text2 + text3 + text4 + text5 + text6 + text7
+    # Map isochrones set selection to proper name.
+    iso_print = g.tracks_dict.get(g.ps_params[2])
+    t1 = 'Synthetic cluster parameters\n(Tracks: {})\n\n'.format(iso_print)
+    t2 = r'$z\qquad\; =\, {} \pm {}$'.format(cp_r[0], cp_e[0]) + '\n'
+    t3 = r'$log(age)\, =\, {} \pm {}$'.format(cp_r[1], cp_e[1]) + '\n'
+    t4 = r'$E_{{(B-V)}}\;\,=\, {} \pm {}$'.format(cp_r[2], cp_e[2]) + '\n'
+    t5 = r'$(m-M)_o = {} \pm {}$'.format(cp_r[3], cp_e[3]) + '\n'
+    t6 = r'$M\,(M_{{\odot}})\quad\;=\,{} \pm {}$'.format(
+        cp_r[4], cp_e[4]) + '\n'
+    t7 = r'$b_{{frac}}\quad\,\, =\, {} \pm {}$'.format(cp_r[5], cp_e[5]) + '\n'
+    text = t1 + t2 + t3 + t4 + t5 + t6 + t7
     ob = offsetbox.AnchoredText(text, pad=1, loc=6, prop=dict(size=13))
     ob.patch.set(alpha=0.85)
     ax_t.add_artist(ob)

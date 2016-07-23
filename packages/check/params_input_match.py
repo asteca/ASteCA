@@ -118,7 +118,7 @@ def check(bin_methods_dict):
                      format(g.sc_params[-1]))
 
         # Check selected isochrones set.
-        if iso_select not in {'PAR10', 'PAR11', 'PAR12'}:
+        if iso_select not in {'GIR02', 'PAR10', 'PAR11', 'PAR12'}:
             sys.exit("ERROR: the selected isochrones set ('{}') does\n"
                      "not match a valid input.".format(iso_select))
 
