@@ -59,7 +59,8 @@ def pl_bf_synth_cl(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
     ax_t.axis('off')  # Remove axis from frame.
     # Map isochrones set selection to proper name.
     iso_print = g.tracks_dict.get(g.ps_params[2])
-    t1 = 'Synthetic cluster parameters\n(Tracks: {})\n\n'.format(iso_print)
+    t1 = r'$Synthetic\;cluster\;parameters$' + '\n' + \
+        r'$[Tracks:\;{}]$'.format(iso_print.replace(' ', '\;')) + '\n\n'
     t2 = r'$z\qquad\; =\, {} \pm {}$'.format(cp_r[0], cp_e[0]) + '\n'
     t3 = r'$log(age)\, =\, {} \pm {}$'.format(cp_r[1], cp_e[1]) + '\n'
     t4 = r'$E_{{(B-V)}}\;\,=\, {} \pm {}$'.format(cp_r[2], cp_e[2]) + '\n'
@@ -134,7 +135,7 @@ def pl_2_param_dens(gs, _2_params, min_max_p, cp_r, cp_e, model_done):
         x_label, y_label = '$z$', '$(m-M)_o$'
     elif _2_params == 'mass-binar':
         ax, cp, d_map, mx, my = plt.subplot(gs[6:8, 10:12]), 'b', 'Reds', 4, 5
-        x_label, y_label = '$M_{\odot}$', '$b_{frac}$'
+        x_label, y_label = '$M\,(M_{{\odot}})$', '$b_{frac}$'
 
     # Parameter values and errors.
     xp, e_xp = cp_r[0][mx], cp_e[mx]
@@ -190,10 +191,11 @@ def pl_lkl_scatt(gs, ld_p, min_max_p, cp_r, cp_e, model_done):
         ax, cp, ci, zlab = plt.subplot(gs[8:10, 4:6]), 2, 3, '$(m-M)_o$'
     elif ld_p == '$(m-M)_o$':
         ax, cp, ci, zlab = plt.subplot(gs[8:10, 6:8]), 3, 1, '$log(age)$'
-    elif ld_p == '$M_{{\odot}}$':
+    elif ld_p == '$M\,(M_{{\odot}})$':
         ax, cp, ci, zlab = plt.subplot(gs[8:10, 8:10]), 4, 5, '$b_{{frac}}$'
     elif ld_p == '$b_{{frac}}$':
-        ax, cp, ci, zlab = plt.subplot(gs[8:10, 10:12]), 5, 4, '$M_{{\odot}}$'
+        ax, cp, ci, zlab = plt.subplot(gs[8:10, 10:12]), 5, 4,\
+            '$M\,(M_{{\odot}})$'
 
     # Parameter values and errors.
     xp, e_xp = cp_r[0][cp], cp_e[cp]

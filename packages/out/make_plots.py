@@ -222,7 +222,7 @@ def main(output_subdir, clust_name, x_data, y_data, bin_width,
                 isoch_fit_errors, model_done],
             [gs, '$(m-M)_o$', min_max_p, isoch_fit_params, isoch_fit_errors,
                 model_done],
-            [gs, '$M_{{\odot}}$', min_max_p, isoch_fit_params,
+            [gs, '$M\,(M_{{\odot}})$', min_max_p, isoch_fit_params,
                 isoch_fit_errors, model_done],
             [gs, '$b_{{frac}}$', min_max_p, isoch_fit_params, isoch_fit_errors,
                 model_done]
