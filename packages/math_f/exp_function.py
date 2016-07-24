@@ -1,6 +1,3 @@
-"""
-@author: gabriel
-"""
 
 import numpy as np
 
