@@ -98,9 +98,10 @@ def get_metals(iso_path):
     # selected set of isochrones.
     met_vals_all, met_files = [], []
     for met_file in metal_files:
-        # Extract metallicity value from the name of the file.
         # *THE NAME OF THE FILE IS IMPORTANT*
-        met_vals_all.append(float(met_file[:-4]))
+        # Extract metallicity value from the name of the file.
+        # Replace underscores in file names with decimal points.
+        met_vals_all.append(float(met_file[:-4].replace('_', '.')))
         # Store full path to file.
         met_files.append(join(iso_path, met_file))
 
