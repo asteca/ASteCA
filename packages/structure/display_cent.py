@@ -5,7 +5,7 @@ import matplotlib.offsetbox as offsetbox
 from ..out import prep_plots
 
 
-def disp_cent(x_data, y_data, mag_data, center_cl, cent_bin, h_filter):
+def main(x_data, y_data, mag_data, center_cl, cent_bin, h_filter):
     '''
     Show plot of cluster with value of center obtained.
     '''
@@ -68,4 +68,4 @@ def disp_cent(x_data, y_data, mag_data, center_cl, cent_bin, h_filter):
     plt.scatter(x_data, y_data, marker='o', c='black', s=st_sizes_arr)
 
     plt.draw()
-    print 'Plot displayed, waiting for it to be closed.'
+    print('Plot displayed, waiting for it to be closed.')

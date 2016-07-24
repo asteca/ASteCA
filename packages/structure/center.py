@@ -4,9 +4,9 @@ import bisect
 import matplotlib.pyplot as plt
 from scipy import stats
 from scipy.ndimage.filters import gaussian_filter
-from display_cent import disp_cent as d_c
 from ..inp import input_params as g
-from ..out import prep_plots as pp
+from ..out import prep_plots
+import display_cent
 
 
 def center_approx(hist, xedges, yedges, st_dev_lst):
@@ -109,7 +109,7 @@ def main(x_data, y_data, mag_data, hist_lst, semi_return):
     plotting purposes.
     """
 
-    coord = pp.coord_syst()[0]
+    coord = prep_plots.coord_syst()[0]
 
     st_dev_lst = [2., 2.5, 3., 3.5, 4.]
     # Set flags.
@@ -212,9 +212,10 @@ def main(x_data, y_data, mag_data, hist_lst, semi_return):
         cent_bin = bin_center(xedges, yedges, kde_cent)
 
         # Show plot with center obtained.
-        d_c(x_data, y_data, mag_data, kde_cent, cent_bin, hist_2d_g)
+        display_cent.main(x_data, y_data, mag_data, kde_cent, cent_bin,
+                          hist_2d_g)
         plt.show()
-
+        # No KDE plot is 'manual' mode is used.
         kde_plot = []
 
         # Ask if the user accepts the center coordinates found, or if new ones
