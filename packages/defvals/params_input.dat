@@ -320,7 +320,14 @@ BF   true      genet      dolphin    knuth         10
 
 # Select set of evolutionary tracks to use.
 #
-# iso_select: GIR02 (Girardi 2002) / PAR10 (v1.0) / PAR11 (v1.1) / PAR12 (v1.2S)
+# iso_select:
+# - PAR12          ; PARSEC v1.2S
+# - PAR11          ; PARSEC v1.1
+# - PAR10          ; PARSEC v1.0
+# - MAR08A         ; Marigo 2008, Case A
+# - MAR08B         ; Marigo 2008, Case B
+# - MAR08          ; Marigo 2008
+# - GIR02          ; Girardi 2002
 #
 #    iso_select
 PS        PAR12

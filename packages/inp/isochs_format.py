@@ -22,7 +22,7 @@ def main(met_f):
     if iso_select in ['PAR10', 'PAR11', 'PAR12']:
         # String that identifies the beginning of a new isochrone.
         line_start = "#\tIsochrone  Z = "
-    elif iso_select in ['GIR02']:
+    elif iso_select in ['GIR02', 'MAR08', 'MAR08B', 'MAR08A']:
         # String that identifies the beginning of a new isochrone.
         line_start = "#\tIsochrone\tZ = "
 
