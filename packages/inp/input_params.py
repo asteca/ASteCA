@@ -167,10 +167,10 @@ def init(mypath, pars_f_path):
     # Fix isochrones location according to the CMD and set selected.
     text1, text2 = 'none', 'none'
     # Map isochrones set selection to proper name.
-    iso_sys = {'PAR10': 'parsec10', 'PAR11': 'parsec11',
-               'PAR12': 'parsec12', 'MAR08': 'marigo08',
-               'MAR08B': 'marigo08B', 'MAR08A': 'marigo08A',
-               'GIR02': 'girardi02'}
+    iso_sys = {'PAR12C': 'parsec12C', 'PAR12': 'parsec12',
+               'PAR10': 'parsec10', 'PAR11': 'parsec11',
+               'MAR08A': 'marigo08A', 'MAR08B': 'marigo08B',
+               'MAR08': 'marigo08', 'GIR02': 'girardi02'}
     text1 = iso_sys.get(iso_select)
     # Generate correct name for the isochrones path.
     if cmd_select in {1, 2, 3}:
@@ -189,10 +189,10 @@ def init(mypath, pars_f_path):
     iso_path = join(mypath + '/isochrones/' + text1 + '_' + text2)
 
     # Dictionary mapping selected tracks to the right name.
-    tracks_dict = {'PAR10': 'PARSEC v1.0', 'PAR11': 'PARSEC v1.1',
-                   'PAR12': 'PARSEC v1.2S', 'MAR08': 'Marigo (2008)',
-                   'MAR08B': 'Marigo (2008, Case B)',
-                   'MAR08A': 'Marigo (2008, Case A)',
+    tracks_dict = {'PAR12C': 'COLIBRI PR16',
+                   'PAR12': 'PARSEC v1.2S', 'PAR10': 'PARSEC v1.0',
+                   'PAR11': 'PARSEC v1.1', 'MAR08A': 'Marigo (2008, Case A)',
+                   'MAR08B': 'Marigo (2008, Case B)', 'MAR08': 'Marigo (2008)',
                    'GIR02': 'Girardi (2002)'}
 
     # Fix magnitude and color names for the CMD axis.

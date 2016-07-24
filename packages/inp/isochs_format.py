@@ -19,7 +19,7 @@ def main(met_f):
     cmd_select, iso_select = g.ps_params[1], g.ps_params[2]
 
     # Assign values according to the system and set of isochrones selected.
-    if iso_select in ['PAR10', 'PAR11', 'PAR12']:
+    if iso_select in ['PAR10', 'PAR11', 'PAR12', 'PAR12C']:
         # String that identifies the beginning of a new isochrone.
         line_start = "#\tIsochrone  Z = "
     elif iso_select in ['GIR02', 'MAR08', 'MAR08B', 'MAR08A']:
