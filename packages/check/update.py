@@ -1,4 +1,5 @@
 
+import traceback
 import urllib2
 from packages._version import __version__
 
@@ -22,6 +23,5 @@ def check():
             print "       http://asteca.github.io/"
             print "*******************************************\n"
     except:
-        # import traceback
-        # print traceback.format_exc()
-        pass
+        print("  WARNING: could not check for code updates.\n")
+        print traceback.format_exc()
