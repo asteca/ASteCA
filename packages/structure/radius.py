@@ -3,9 +3,9 @@ import numpy as np
 from scipy import stats
 import matplotlib.pyplot as plt
 import warnings
-from display_rad import disp_rad as d_r
 from ..inp import input_params as g
-from ..out import prep_plots as pp
+import display_rad
+from ..out import prep_plots
 
 
 def radius_algor(rdp_params, field_dens, bin_width, coord):
@@ -146,7 +146,7 @@ def main(phot_data, field_dens, center_params, rdp_params,
     average all the radius values found for each interval.
     """
 
-    coord = pp.coord_syst()[0]
+    coord = prep_plots.coord_syst()[0]
     # Call function that holds the radius finding algorithm.
     clust_rad, e_rad, flag_delta_total, flag_not_stable, flag_delta = \
         radius_algor(rdp_params, field_dens, bin_width, coord)
@@ -172,8 +172,8 @@ def main(phot_data, field_dens, center_params, rdp_params,
     elif g.mode == 'manual':
 
         print 'Radius found: {:g} {}.'.format(clust_rad, coord)
-        d_r(phot_data, bin_width, center_params, clust_rad, e_rad, field_dens,
-            rdp_params)
+        display_rad.main(phot_data, bin_width, center_params, clust_rad,
+                         e_rad, field_dens, rdp_params)
         plt.show()
 
         # Ask if the radius is accepted, or a if a another one should be used.

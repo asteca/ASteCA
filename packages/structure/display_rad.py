@@ -1,6 +1,3 @@
-"""
-@author: gabriel
-"""
 
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
@@ -8,8 +5,8 @@ import matplotlib.offsetbox as offsetbox
 from ..out import prep_plots
 
 
-def disp_rad(phot_data, bin_width, center_params, clust_rad, e_rad, field_dens,
-             rdp_params):
+def main(phot_data, bin_width, center_params, clust_rad, e_rad, field_dens,
+         rdp_params):
     '''
     Plot cluster and its radius.
     '''
@@ -128,4 +125,4 @@ def disp_rad(phot_data, bin_width, center_params, clust_rad, e_rad, field_dens,
     ax3.minorticks_on()
 
     plt.draw()
-    print 'Plot displayed, waiting for it to be closed.'
+    print('Plot displayed, waiting for it to be closed.')

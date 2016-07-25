@@ -1,6 +1,6 @@
 
 import numpy as np
-from ..out import prep_plots as pp
+from ..out import prep_plots
 
 
 def main(ring_density):
@@ -44,9 +44,9 @@ def main(ring_density):
 
         field_dens = median
 
-    coord = pp.coord_syst()[0]
-    print 'Field density calculated ({:.1E} stars/{c}^2).'.format(
-        field_dens, c=coord)
+    coord = prep_plots.coord_syst()[0]
+    print('Field density calculated ({:.1E} stars/{c}^2).'.format(
+          field_dens, c=coord))
 
     # Return field density value obtained.
     return field_dens

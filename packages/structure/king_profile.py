@@ -5,7 +5,7 @@ import warnings
 from scipy.optimize import OptimizeWarning
 import king_prof_funcs as kpf
 from ..inp import input_params as g
-from ..out import prep_plots as pp
+from ..out import prep_plots
 
 
 def fit_3P_King_prof(fd, radii_k, ring_dens_k, guess3):
@@ -215,7 +215,7 @@ def main(clust_rad, field_dens, radii, rdp_points):
         n_c_k, kcp = num_memb_conc_param(flag_3pk_conver, cd, rt, rc)
 
         # Print results.
-        coord = pp.coord_syst()[0]
+        coord = prep_plots.coord_syst()[0]
         if flag_3pk_conver:
             # Set precision of printed values.
             text2 = '{:.1f}, {:.1f}' if coord == 'px' else '{:g}, {:g}'
@@ -229,6 +229,6 @@ def main(clust_rad, field_dens, radii, rdp_points):
             print text.format(rc, coord)
 
         else:
-            print "Core & tidal radii not found."
+            print("Core & tidal radii not found.")
 
     return rc, e_rc, rt, e_rt, n_c_k, kcp, cd, flag_2pk_conver, flag_3pk_conver
