@@ -1,6 +1,17 @@
 # Change Log
 
 
+## [[v0.1.9.4]][152] - 2016-07-25
+
+### Changed
+
+* Add support for five tracks from the CMD service ([#276][151]).
+* Read metallicity files with underscores instead of decimal dots ([#277][150]).
+* Several important structural changes ([#273][149]): add `first_run` check,
+  re-arrange and re-name modules, and move almost every part of the code into
+  the `packages/` folder.
+
+
 ## [[v0.1.9.3]][148] - 2016-05-25
 
 ### Changed
@@ -482,3 +493,7 @@ ________________________________________________________________________________
 [146]: https://github.com/asteca/asteca/releases/tag/v0.1.9.2
 [147]: http://www.stsci.edu/hst/acs
 [148]: https://github.com/asteca/asteca/releases/tag/v0.1.9.3
+[149]: https://github.com/asteca/asteca/issues/273
+[150]: https://github.com/asteca/ASteCA/issues/277
+[151]: https://github.com/asteca/ASteCA/issues/276
+[152]: https://github.com/asteca/asteca/releases/tag/v0.1.9.4

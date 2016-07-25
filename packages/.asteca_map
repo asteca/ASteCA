@@ -1,0 +1,77 @@
+
+
+/ asteca_run*
+    |--> check_1strun
+    |--> inp/input_clusters
+    |--> checker
+        |--> check/pack
+        |--> check/clusters
+        |--> check/params_file
+        |--> check/update
+        |--> check/params_input_struct*
+        |--> check/params_input_pval*
+        |--> check/params_input_decont*
+            |--> inp/names_paths* (1)
+        |--> check/params_input_match*
+            |--> inp/met_ages_values* (1)
+                |--> inp/isochs_format* (1)
+        |--> check/read_met_files
+            |--> inp/isoch_params*
+                |--> inp/met_ages_values* (2)
+                  |--> inp/isochs_format* (2)
+                |--> inp/read_isochs*
+                  |--> inp/isochs_format* (3)
+    |--> func_caller
+        |--> inp/names_paths* (2)
+        |--> inp/get_data_semi*
+        |--> inp/get_data*
+        |--> structure/trim_frame*
+            |--> structure/display_frame
+                |--> out/prep_plots* (1)
+                  |--> math_f/exp_function (1)
+        |--> structure/histo_2d*
+        |--> structure/center*
+            |--> out/prep_plots* (2)
+                |--> math_f/exp_function (2)
+            |--> structure/display_cent
+                |--> out/prep_plots* (3)
+                    |--> math_f/exp_function (3)
+        |--> structure/radial_dens_prof
+        |--> structure/field_density
+            |--> out/prep_plots* (4)
+                |--> math_f/exp_function (4)
+        |--> structure/radius*
+            |--> structure/display_rad
+                |--> out/prep_plots* (5)
+                    |--> math_f/exp_function (5)
+            |--> out/prep_plots* (6)
+                |--> math_f/exp_function (6)
+        |--> structure/king_profile*
+            |--> structure/king_prof_funcs
+            |--> out/prep_plots* (7)
+                |--> math_f/exp_function (7)
+
+
+from packages.errors import err_accpt_rejct
+from packages.structure import stars_in_out_cl_reg
+from packages.structure import cluster_area
+from packages.phot_analysis import members_number
+from packages.phot_analysis import contamination_index
+from packages.structure import field_regions
+from packages.phot_analysis import luminosity_func
+from packages.phot_analysis import integrated_mag
+# from phot_analysis import kde_pvalue
+from packages.decont_algors import bayesian_da
+from packages.phot_analysis import members_N_compare
+from packages.decont_algors import membership_removal
+from packages.out import cluster_members_file
+from packages.best_fit import synth_cl_err
+from packages.best_fit import best_fit_synth_cl
+from packages.out import synth_cl_file
+from packages.out import create_out_data_file
+from packages.out import add_data_output
+from packages.out import top_tiers
+from packages.out import make_plots
+from packages.out import done_move
+
+*: calls `inp/input_params as g`

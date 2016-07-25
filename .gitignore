@@ -1,11 +1,8 @@
+# ignore everything in root
+/*
+# except for this file
+!asteca.py
+# except for this folder
+!/packages
+# But do ignore these files
 *.pyc
-*.dat
-!params_input.dat
-!semi_input.dat
-/def_params/*
-isochrones/*
-!/isochrones/README.md
-output/*
-input/*
-!/input/README.md
-.python-version

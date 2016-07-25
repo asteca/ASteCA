@@ -1,0 +1,392 @@
+################################################################################
+#                   *** ASteCA input parameters file ***
+#
+#
+# This file contains the values of the parameters used by ASteCA functions.
+# Any empty line or lines that begin with a # character will be ignored and as
+# many as needed can be added to this file.
+#
+# The blocks are independent and can be moved around as the user sees fit.
+#
+# * DO NOT modify the ID strings in the first column of each line, these are
+#   used by the code to identify the parameters in that line.
+# * DO NOT write less values than those required in each line or the code
+#   will halt.
+#
+################################################################################
+
+
+
+############################ ASteCA's inner flags ##############################
+
+# * Update checker.
+#
+# Check if a new version of ASteCA is available for download, and notify the
+# user when one is found. This requires less than 25 bytes of data and is thus
+# very quick. To turn this automatic check off, set this flag to 'false'.
+#
+#   flag
+UP  false
+
+# Force matplotlib's backend to 'Agg'.
+#
+# * flag: true / false. Set to 'true' to prevent the error 'TclError: no
+#   display name and no $DISPLAY environment variable' when running the code
+#   in a server.
+#
+FB  false
+################################################################################
+
+
+
+################################### Mode #######################################
+
+# Mode used to run the code.
+#
+# * mode: auto / semi / manual
+#   - auto: does not require user intervention of any kind.
+#   - semi: takes input values from the 'semi_input.dat' file.
+#   - manual: asks the user for some values (center, radius) but will also
+#     give you the chance to have them automatically calculated.
+#
+#    mode
+MO   auto
+################################################################################
+
+
+
+######################### Input data parameters ################################
+
+# Column numbers identifying the needed data as stored in the clusters'
+# photometric data files.
+#
+#    id_star   x/ra  y/dec magnitude e_mag color e_col
+PD         0      1      2         3     4     5     6
+
+# Define the system of coordinates used in the data file.
+#
+# * coords: px / deg. Indicates if the observed frame is in pixels or degrees.
+#
+#    coords
+PX      px
+
+# Indicate the CMD to be used by the code to perform the analysis.
+#
+# * selection: [1, 13]             ; Photometric system
+# - 1: (B-V) vs V                  ; UBVI (Johnson)
+# - 2: (V-I) vs V                  ; UBVI (Johnson)
+# - 3: (U-V) vs V                  ; UBVI (Johnson)
+# - 4: (C-T1) vs T1                ; Washington
+# - 5: (J-H) vs J                  ; 2MASS
+# - 6: (J-H) vs H                  ; 2MASS
+# - 7: (H-K) vs K                  ; 2MASS
+# - 8: (u-g) vs g                  ; SDSS ugriz
+# - 9: (g-r) vs g                  ; SDSS ugriz
+# - 10: (b-y) vs y                 ; Stroemgren
+# - 11: (v-y) vs y                 ; Stroemgren
+# - 12: (u-y) vs y                 ; Stroemgren
+# - 13: (F606W - F814W) vs F606W   ; HST/ACS WFC
+#
+#    selection
+CMD          1
+################################################################################
+
+
+
+########################## Output parameters ###################################
+
+# Create output figure?
+#
+# * flag: true / false. If 'False', no output figure will be generated.
+#
+# * format: png / pdf. Format of the final image file.
+#
+#    flag  format  DPI
+MP   true     png  150
+
+# Move data file once it is processed?
+#
+# * flag: true / false. The cluster's photometric file will be moved to the
+#   folder defined below if this flag is set to 'True'.
+#
+# * path: Path where the photometric files are moved once processed if
+#   the flag is set to 'True'.
+#
+#    flag   path
+MF  false   /path/to/folder
+################################################################################
+
+
+
+################### Structure functions parameters #############################
+
+# 2D positional histogram of observed frame.
+#
+# * mode: auto / manual
+#   - auto: the bin width of the 2D histogram will be obtained as 1% of the
+#     minimum x,y range of the observed frame. This is a good heuristic value
+#     that will affect both the RDP generation and the estimation of the
+#     cluster's radius. Only use the 'manual' mode if you really need to.
+#   - manual: set the bin width via the 'bin_width' parameter.
+#
+# * bin_width: width of the bin in pixels or degrees, whatever the frame uses.
+#
+#    mode   bin_width
+CH   auto         20.
+
+# Radius assignment function.
+#
+# * mode: low / mid / high. This parameter determines how aggressively
+#   the algorithm assigns the radius for the cluster.
+#   - low: will favor smaller radii. Useful when the cluster region is
+#     very contaminated, to prevent artificially large radii.
+#   - mid: (default) balanced option.
+#   - high: will favor larger radii. Useful when all possible members
+#     must be present.
+#
+#    mode
+CR    mid
+
+# King profile function.
+#
+# * flag: true / false. If 'True' the code will attempt to fit a King
+#   profile to the radial density profile of the cluster.
+#
+#    flag
+KP   true
+
+# Field star regions.
+#
+# * regions: number of field regions around the cluster that the code will
+#   attempt to define. If the keyword 'max' is used, then the maximum possible
+#   number will be used.
+#
+#    regions
+GR        10
+################################################################################
+
+
+
+################## Photometric functions parameters ############################
+
+# Errors rejection function.
+#
+# * mode: emax / lowexp / eyefit
+#   - emax: uses the e_max value as a cut in photometric errors.
+#   - lowexp: fits an exponential and rejects any star beyond the upper
+#     prediction band, obtained using the 'C' confidence level value.
+#   - eyefit: attempt an 'eye' fit process composed of a polynomial
+#     plus an exponential.
+#
+# * e_max: maximum error value a star can have in either its magnitude or
+#   color without being rejected. 
+#
+# * be: bright end, the magnitude value that will be added to the
+#   brightest star to determine the range where stars will be accepted
+#   if their errors are lower than 'be_e' (see below).
+#
+# * be_e: maximum error value that stars in the bright end range can
+#   have without being rejected.
+#
+# * C: confidence interval for the prediction band used by the 'lowexp' method.
+#   Accepted values are in the range (0., 1.], any value outside will default
+#   to C = 0.95. 
+#
+#    mode   e_max   be   be_e     C
+ER   emax    0.25    2.   0.1  0.95
+
+# Integrated magnitudes.
+#
+# flag: true / false. Switch to apply or skip.
+#
+#    flag
+IM   true
+
+# KDE p-value test.
+#
+# Test to determine the probability of the cluster being a physical entity
+# instead of a random over-density of stars, based on comparing its CMD with
+# field regions CMDs.
+#
+# * mode: auto / manual / skip
+#   - auto: the code will compare 100/(regions-1) times the CMDs of the
+#     cluster and field regions.
+#   - manual: the 'num' parameter determines the number of times the CMDs of
+#     cluster and field regions are compared. Minimum value is 2.
+#   - skip: skip test.
+#
+#    mode   num
+PV   auto   2
+################################################################################
+
+
+
+################ Decontamination algorithm parameters ##########################
+
+# Bayesian decontamination algorithm.
+#
+# * mode: auto / manual / read / skip
+#   - auto: the code will iterate a maximum of 1000 times unless the membership
+#     probabilities (MPs) converge to within 0.1% values first.
+#   - manual: the code will iterate a maximum number of times given by the
+#     'iters' parameter, unless MPs convergence is reached first. Otherwise
+#     this value is irrelevant.
+#   - read: the code will attempt to read the probabilities from an existing
+#     file. This file should have the same format as the output '*_memb.dat'
+#     file created by the code and should be located in the input data folder.
+#   - skip: all stars will be assigned an equal probability of 1.
+#
+#    mode     iters (manual)
+DA   auto       200
+
+# Membership-based removal.
+#
+# Performs a selection of stars in the cluster region, to be used by the
+# synthetic cluster match function. Stars are removed either based on their
+# assigned membership probabilities (MPs), or randomly (if MPs are missing).
+#
+# * mode: local / n_memb  / mp_05 / top_h / man / mag / skip
+#   - local: combines the assigned MPs with a cell by cell removal of stars in
+#     the photometric diagram. The stars discarded are those of lower MPs and
+#     the number is equal to the excess of field stars present in each cell.
+#   - n_memb: use the N stars with the highest MPs, where N is the approximate
+#     number of members found via the cluster region vs field region star
+#     density comparison.
+#   - mp_05: selects only those stars with MP>=0.5, i.e.: stars with higher
+#     probability of being a cluster member than a field star.
+#   - top_h: selects the top half of all stars in the cluster region with the
+#     highest MPs.
+#   - man: the minimum probability value has to be set manually in the
+#    'prob_min' parameter (0, 1).
+#   - mag: switches the 'prob_min' value to a 'mag_min' value so the user can
+#     select a minimum magnitude to be used in the best fit function, instead
+#     of a minimum probability (the 'minimum magnitude' value is the value of
+#     the dimmest star wished to be taken into account in the fitting process).
+#   - skip: use all stars in the cluster region.
+#
+# * binning: blocks / knuth / scott/ freedman / sturges / sqrt / bb
+#   Binning method to be used if the 'local' method is selected. Otherwise
+#   this parameter is not used.
+#
+# * prob_min/mag_min: either the minimum probability value if the 'man' mode
+#   was selected, or the minimum magnitude value if the 'mag' mode was.
+#   Otherwise this parameter is not used.
+#
+#    mode    binning     prob_min/mag_min
+RM   local    blocks                   17
+################################################################################
+
+
+
+#################### Cluster parameters assignation ############################
+
+# Best synthetic cluster fit.
+#
+# * flag: true / false. Determines if the best synthetic cluster fitting
+#   process should run.
+#
+# * algorithm: brute / genet. Select algorithm to use in best fitting process.
+#   - brute: Brute Force algorithm, ie: all possible solutions are processed
+#     If 'brute' is selected, 'bootstrap' is irrelevant.
+#   - genet: Genetic Algorithm.
+#
+# * likelihood: tolstoy / dolphin. The function used to calculate the likelihood
+#   of each synthetic cluster.
+#   - tolstoy: uses a weighted bin-free statistic as that defined in
+#     Tolstoy & Saha (1996), Monteiro et al (2010) and Hernández & Valls-Gabaud
+#     (2008). If this method is selected, 'binning' is irrelevant.
+#   - dolphin: uses the 'Poisson likelihood ratio' (Eq. 10) defined in
+#     Dolphin (2002). This requires the selection of a binning method.
+#
+# * binning: blocks / knuth / scott/ freedman / sturges / sqrt / bb
+#   Binning method to be used if the likelihood equation by 'dolphin' is
+#   selected. See docs for more information on each binning method.
+#
+# * bootstrap: number of times the bootstrap with replacement process will run
+#   in the GA algorithm. Minimum value is 2, anything less will skip the
+#   bootstrap process hence no errors will be assigned to the parameters.
+#
+#    flag  algorithm   likelihood  binning  bootstrap
+BF   true      genet      dolphin    knuth         10
+
+# ** WARNING **
+#
+# If the 'tolstoy' likelihood method is selected, the range for the total
+# initial mass below should be fixed to a unique value (1000 is good)
+# When this likelihood method is used, the best fit function will select always
+# high masses if a range is given for this parameter.
+# If you want to make the total initial mass a free parameter that varies within
+# a range, you need to use the 'dolphin' likelihood method instead.
+
+# Select set of evolutionary tracks to use.
+#
+# iso_select:
+# - PAR12C         ; PARSEC v1.2 + COLIBRI PR16
+# - PAR12          ; PARSEC v1.2S
+# - PAR11          ; PARSEC v1.1
+# - PAR10          ; PARSEC v1.0
+# - MAR08A         ; Marigo 2008, Case A
+# - MAR08B         ; Marigo 2008, Case B
+# - MAR08          ; Marigo 2008
+# - GIR02          ; Girardi 2002
+#
+#    iso_select
+PS        PAR12
+
+# Synthetic cluster parameters.
+#
+# * IMF: chabrier_2001_exp / chabrier_2001_log / kroupa_1993 / kroupa_2002
+#   Select IMF used to generate the synthetic clusters.
+#
+# * m_high: Upper mass value for the IMF (in solar masses).
+#
+#    IMF                  m_high
+SC  kroupa_2002             300.
+#
+# Ranges and steps for the parameters to be fitted.
+#
+#                        min     max     step
+#    Metallicity (z)        
+PS_m                  0.0005    0.03    0.005
+#    log(age)            
+PS_a                      6.     10.      0.5
+#    E(B-V)                
+PS_e                      0.     1.      0.02
+#    Distance modulus        
+PS_d                      8.     15.      0.2
+#    Total initial mass (in solar masses).
+TM                        10   10000      100
+#    Binary fraction.
+#   min_mass_ratio
+BI             0.7        0.      1.      0.2
+
+# Genetic Algorithm parameters.
+#
+# General:
+# n_pop: number of chromosomes in the population.
+# n_gen: number of generations to process.
+# fdif: Fitness differential. Establishes the 'selection pressure'
+# for the algorithm.
+#
+# Crossover operator:
+# p_cross: crossover probability.
+# cr_sel: select 1-point (1P) or 2-point (2P) crossover.
+#
+# Mutation operator:
+# p_mut: mutation probability.
+#
+# Elitism operator:
+# n_el: number of best solutions to pass unchanged to the next
+# generation.
+#
+# Extinction/Immigration operator:
+# n_ei: number of generations allowed to run with the same best solution
+# before calling for a new generation of random solutions.
+#
+# Exit switch:
+# n_es:number of times the Extinction/Immigration operator is allowed to run
+# returning the same best solution before exiting the GA.
+#
+#   n_pop  n_gen fdif p_cross cr_sel p_mut n_el n_ei n_es
+GA    100   1000   1.    0.85     2P  0.05    1   50   10
+################################################################################
