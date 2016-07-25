@@ -18,8 +18,12 @@ def char_remove(in_lst):
             # Store indicating that this is a list of values.
             lst = ['l', map(float, l0[0])]
         else:
-            # Store indicating that this is a range of values.
-            lst = ['r', map(float, in_lst[1:4])]
+            if len(in_lst[1:4]) < 3:
+                # Not enough values to define a range. Store as list of values.
+                lst = ['l', map(float, in_lst[1:4])]
+            else:
+                # Store indicating that this is a range of values.
+                lst = ['r', map(float, in_lst[1:4])]
 
     return lst
 
@@ -102,7 +106,7 @@ def init(mypath, pars_f_path):
                     da0_params = str(reader[1])
                     da1_params = int(reader[2])
 
-                # Reduce membership parameters.
+                # Membership based removal parameters.
                 elif reader[0] == 'RM':
                     mode_red_memb = str(reader[1])
                     local_bin = str(reader[2])

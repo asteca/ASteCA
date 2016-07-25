@@ -86,6 +86,12 @@ def check(bin_methods_dict):
                      " run but the folder:\n\n {}\n\ndoes not exists."
                      .format(iso_path))
 
+        # Check selected isochrones set.
+        if iso_select not in {'GIR02', 'MAR08', 'MAR08B', 'MAR08A', 'PAR10',
+                              'PAR11', 'PAR12', 'PAR12C'}:
+            sys.exit("ERROR: the selected isochrones set ('{}') does\n"
+                     "not match a valid input.".format(iso_select))
+
         # Check IMF defined.
         imfs_dict = {'chabrier_2001_exp', 'chabrier_2001_log', 'kroupa_1993',
                      'kroupa_2002'}
@@ -93,11 +99,39 @@ def check(bin_methods_dict):
             sys.exit("ERROR: Name of IMF ({}) is incorrect.".format(
                 g.sc_params[0]))
 
+        # Check that no parameter range is empty.
+        global mass_rs
+        m_rs, a_rs, e_rs, d_rs, mass_rs, bin_rs = par_ranges
+        p_names = [['metallicity', m_rs], ['age', a_rs], ['extinction', e_rs],
+                   ['distance', d_rs], ['mass', mass_rs], ['binary', bin_rs]]
+        if min(mass_rs[1]) == 0:
+            print("WARNING: minimum total mass is zero in params_input file.")
+            if 10 in mass_rs[1]:
+                print("Removing zero value from mass array.\n")
+                del mass_rs[1][mass_rs[1].index(0)]
+            else:
+                print("Changed minimum mass to 10.\n")
+                mass_rs[1][mass_rs[1].index(min(mass_rs[1]))] = 10.
+
+        for i, p in enumerate(par_ranges):
+            print p
+            # Catch empty list.
+            if not p:
+                sys.exit("ERROR: Range defined for '{}' parameter is"
+                         " empty".format(p_names[i][0]))
+            # Catch *almost* empty list since inp/input_params perhaps added
+            # an identifier 'l' or 'r'. This prevents ranges given as
+            # empty lists (ie: [] or () or {}) from passing as valid ranges.
+            elif not p[1]:
+                sys.exit("ERROR: Range defined for '{}' parameter is"
+                         " empty".format(p_names[i][0]))
+
         # Check binarity parameters.
         # See if it is a list of values or a range.
         if par_ranges[-1][0] == 'r':
+            # Range: min, max, step. Store min and max in array.
             if len(par_ranges[-1][-1]) > 1:
-                # Range: min, max, step. Store min and max in array.
+                # More than one value
                 bin_fr = np.array([par_ranges[-1][-1][0],
                                   par_ranges[-1][-1][1]])
             else:
@@ -116,38 +150,6 @@ def check(bin_methods_dict):
             sys.exit("ERROR: Binary mass ratio set ('{}') is out of\n"
                      "boundaries. Please select a value in the range [0., 1.]".
                      format(g.sc_params[-1]))
-
-        # Check selected isochrones set.
-        if iso_select not in {'GIR02', 'MAR08', 'MAR08B', 'MAR08A', 'PAR10',
-                              'PAR11', 'PAR12', 'PAR12C'}:
-            sys.exit("ERROR: the selected isochrones set ('{}') does\n"
-                     "not match a valid input.".format(iso_select))
-
-        # Check that no parameter range is empty.
-        global mass_rs
-        m_rs, a_rs, e_rs, d_rs, mass_rs, bin_rs = par_ranges
-        p_names = [['metallicity', m_rs], ['age', a_rs], ['extinction', e_rs],
-                   ['distance', d_rs], ['mass', mass_rs], ['binary', bin_rs]]
-        if min(mass_rs[1]) == 0:
-            print("WARNING: minimum total mass is zero in params_input file.")
-            if 10 in mass_rs[1]:
-                print("Removing zero value from mass array.\n")
-                del mass_rs[1][mass_rs[1].index(0)]
-            else:
-                print("Changed minimum mass to 10.\n")
-                mass_rs[1][mass_rs[1].index(min(mass_rs[1]))] = 10.
-
-        for i, p in enumerate(par_ranges):
-            # Catch empty list.
-            if not p:
-                sys.exit("ERROR: Range defined for '{}' parameter is"
-                         " empty".format(p_names[i][0]))
-            # Catch *almost* empty list since get_in_params perhaps added
-            # an identifier 'l' or 'r'. This prevents ranges given as
-            # empty lists (ie: [] or () or {}) from passing as valid ranges.
-            elif not p[1]:
-                sys.exit("ERROR: Range defined for '{}' parameter is"
-                         " empty".format(p_names[i][0]))
 
         # Get parameters values defined.
         param_ranges, met_f_filter, met_values, age_values = \
