@@ -2,6 +2,7 @@
 /*
 # except for this file
 !asteca.py
+!/packages/.first_run
 # except for this folder
 !/packages
 # But do ignore these files
