@@ -6,4 +6,3 @@
 !/packages
 # But do ignore these files
 *.pyc
-/packages/.first_run
