@@ -1,6 +1,15 @@
 # Change Log
 
 
+## [[v0.1.9.5]][155] - 2016-08-07
+
+### Changed
+
+* Remove forgotten print line.
+* Print relevant information when data con not be read ([#262][154]).
+* Fix bad range issue ([#226][153]).
+
+
 ## [[v0.1.9.4]][152] - 2016-07-25
 
 ### Changed
@@ -497,3 +506,6 @@ ________________________________________________________________________________
 [150]: https://github.com/asteca/ASteCA/issues/277
 [151]: https://github.com/asteca/ASteCA/issues/276
 [152]: https://github.com/asteca/asteca/releases/tag/v0.1.9.4
+[153]: https://github.com/asteca/asteca/issues/226
+[154]: https://github.com/asteca/asteca/issues/262
+[155]: https://github.com/asteca/asteca/releases/tag/v0.1.9.5
