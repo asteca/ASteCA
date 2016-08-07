@@ -26,7 +26,7 @@
 # very quick. To turn this automatic check off, set this flag to 'false'.
 #
 #   flag
-UP  false
+UP  true
 
 # Force matplotlib's backend to 'Agg'.
 #

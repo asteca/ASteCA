@@ -1,5 +1,4 @@
 
-import traceback
 import urllib2
 from packages._version import __version__
 
@@ -8,11 +7,14 @@ def check():
     '''
     Checks if a new version of the code is available for download.
     '''
+    print("Checking for updates...")
+    t_out = 3.
     try:
         # Get latest version number. Wait 3 seconds and break out if
         # there's no response from the server.
         f = urllib2.urlopen("https://raw.githubusercontent.com/asteca/"
-                            "AsteCA/master/packages/_version.py", timeout=3)
+                            "AsteCA/master/packages/_version.py",
+                            timeout=t_out)
         s = f.read().split('"')
 
         if s[1] != __version__:
@@ -22,6 +24,8 @@ def check():
             print "   Get the latest version '{}' from:\n".format(s[1][1:])
             print "       http://asteca.github.io/"
             print "*******************************************\n"
-    except:
-        print("  WARNING: could not check for code updates.\n")
-        print traceback.format_exc()
+        else:
+            print("You are running the latest version of ASteCA.\n")
+    except urllib2.URLError:
+        print("  WARNING: could not check for code updates.\n"
+              "  Connection timed out after {} sec.\n".format(t_out))
