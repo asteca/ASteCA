@@ -1,5 +1,6 @@
 
 import numpy as np
+import traceback
 import input_params as g
 
 
@@ -41,9 +42,10 @@ def main(data_file):
         data = np.genfromtxt(data_file, dtype=float, filling_values=99.999,
                              unpack=True)
     except ValueError:
-        print ("\n  ERROR: the number of columns is likely unequal\n"
-               "  among rows. Check the input data file.")
-        raise ValueError("ERROR: Data input file is badly formatted.")
+        print traceback.format_exc()
+        raise ValueError("ERROR: could not read data input file:\n  {}\n"
+                         "  Check that all rows are filled (i.e., no blank"
+                         " spaces)\n  for all columns.\n".format(data_file))
 
     try:
         # Read data columns, except IDs.
@@ -57,9 +59,9 @@ def main(data_file):
         id_star = data[id_inx]
         n_old = len(id_star)
     except IndexError:
-        print ("\n  ERROR: data input file contains fewer columns than\n"
-               "  those given in 'params_input.dat'.")
-        raise IndexError("ERROR: Data input file is badly formatted.")
+        raise IndexError("ERROR: data input file:\n  {}\n  contains "
+                         "fewer columns than those given "
+                         "in 'params_input.dat'.".format(data_file))
 
     # If any mag or color value (or their errors) is too large, discard
     # that star.
@@ -68,29 +70,25 @@ def main(data_file):
                       e_col1)
 
     data_names = ['x_coords', 'y_coords', 'magnitudes', 'color']
-    try:
-        for i, dat_lst in enumerate([x_data, y_data, mag_data, col1_data]):
-            # Check if array came back empty after removal of stars with
-            # bad photometry.
-            if not dat_lst.size:
-                print ("\n  ERROR: no stars left after removal of those with\n"
-                       "  large mag/color or error values. Check input file.")
-                raise ValueError()
-            # Check if the range of any photometric column, excluding errors,
-            # is none.
-            if min(dat_lst) == max(dat_lst):
-                print ("\n  ERROR: the range defined for the '{}' column\n"
-                       "  is zero. Check the input data format."
-                       ).format(data_names[i])
-                raise ValueError("ERROR: Data input file is badly formatted.")
-
-    except ValueError:
-        raise ValueError('Bad format for input data. Check input file.')
+    # Check read coordinates, and photometry.
+    for i, dat_lst in enumerate([x_data, y_data, mag_data, col1_data]):
+        # Check if array came back empty after removal of stars with
+        # bad photometry.
+        if not dat_lst.size:
+            raise ValueError("ERROR: no stars left after removal of those "
+                             "with\n large mag/color or error values. Check "
+                             "input file.")
+        # Check if the range of any photometric column, excluding errors,
+        # is none.
+        if min(dat_lst) == max(dat_lst):
+            raise ValueError("ERROR: the range for the '{}' column\n"
+                             "  is zero. Check the input data format.".format(
+                                 data_names[i]))
 
     print 'Data obtained from input file (N_stars: %d).' % len(id_star)
     frac_reject = (float(n_old) - len(id_star)) / float(n_old)
     if frac_reject > 0.05:
-        print ("  WARNING: {:.0f}% of stars in file were"
-               " rejected.".format(100. * frac_reject))
+        print("  WARNING: {:.0f}% of stars in file were"
+              " rejected.".format(100. * frac_reject))
 
     return id_star, x_data, y_data, mag_data, e_mag, col1_data, e_col1
