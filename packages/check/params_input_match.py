@@ -114,7 +114,6 @@ def check(bin_methods_dict):
                 mass_rs[1][mass_rs[1].index(min(mass_rs[1]))] = 10.
 
         for i, p in enumerate(par_ranges):
-            print p
             # Catch empty list.
             if not p:
                 sys.exit("ERROR: Range defined for '{}' parameter is"
