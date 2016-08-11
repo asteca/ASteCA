@@ -99,7 +99,7 @@ def main(cl_region, field_region, col1_data, mag_data, flag_no_fl_regs):
 
         # The first list holds all the p_values obtained comparing the cluster
         # region with the field regions, the second one holds p_values for
-        # field vs field comparisions.
+        # field vs field comparisons.
         p_vals_cl, p_vals_f = [], []
         # Iterate a given number of times.
         milestones = [15, 30, 50, 70, 85, 100]
