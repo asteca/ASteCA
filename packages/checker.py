@@ -6,8 +6,6 @@ from check import params_file
 from check import params_input_struct
 from check import params_input_pval
 from check import params_input_decont
-from check import params_input_match
-from check import read_met_files
 
 
 def check_all(mypath, file_end, cl_files):
@@ -46,9 +44,13 @@ def check_all(mypath, file_end, cl_files):
     params_input_decont.check(cl_files, bin_methods_dict)
 
     # Check the best synthetic cluster match parameters.
+    # Import here after the needed packages were checked to be present, since
+    # this imports numpy.
+    from check import params_input_match
     params_input_match.check(bin_methods_dict)
 
     # Check and store metallicity files.
+    from check import read_met_files
     ip_list = read_met_files.check_get()
 
     print 'Full check done.\n'
