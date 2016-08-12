@@ -3,38 +3,37 @@ import time
 import gc  # Garbage collector.
 #
 import inp.input_params as g
-from packages.inp import names_paths
-from packages.inp import get_data_semi
-from packages.inp import get_data
-#
-from packages.structure import trim_frame
-from packages.structure import histo_2d
-from packages.structure import center
-from packages.structure import radial_dens_prof
-from packages.structure import field_density
-from packages.structure import radius
-from packages.structure import king_profile
-from packages.errors import err_accpt_rejct
-from packages.structure import stars_in_out_cl_reg
-from packages.structure import cluster_area
-from packages.phot_analysis import members_number
-from packages.phot_analysis import contamination_index
-from packages.structure import field_regions
-from packages.phot_analysis import luminosity_func
-from packages.phot_analysis import integrated_mag
+from inp import names_paths
+from inp import get_data_semi
+from inp import get_data
+from structure import trim_frame
+from structure import histo_2d
+from structure import center
+from structure import radial_dens_prof
+from structure import field_density
+from structure import radius
+from structure import king_profile
+from errors import err_accpt_rejct
+from structure import stars_in_out_cl_reg
+from structure import cluster_area
+from phot_analysis import members_number
+from phot_analysis import contamination_index
+from structure import field_regions
+from phot_analysis import luminosity_func
+from phot_analysis import integrated_mag
 # from phot_analysis import kde_pvalue
-from packages.decont_algors import bayesian_da
-from packages.phot_analysis import members_N_compare
-from packages.decont_algors import membership_removal
-from packages.out import cluster_members_file
-from packages.best_fit import synth_cl_err
-from packages.best_fit import best_fit_synth_cl
-from packages.out import synth_cl_file
-from packages.out import create_out_data_file
-from packages.out import add_data_output
-from packages.out import top_tiers
-from packages.out import make_plots
-from packages.out import done_move
+from decont_algors import bayesian_da
+from phot_analysis import members_N_compare
+from decont_algors import membership_removal
+from out import cluster_members_file
+from best_fit import synth_cl_err
+from best_fit import best_fit_synth_cl
+from out import synth_cl_file
+from out import create_out_data_file
+from out import add_data_output
+from out import top_tiers
+from out import make_plots
+from out import done_move
 
 
 def main(cl_file, ip_list, R_in_place):
