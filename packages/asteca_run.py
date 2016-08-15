@@ -6,7 +6,6 @@ import argparse
 import traceback
 from _version import __version__
 from packages.first_run import check_1strun
-from packages.inp import input_clusters
 from packages.checker import check_all
 
 
@@ -55,14 +54,11 @@ def main():
     # Read command-line argument.
     file_end = num_exec()
 
-    # Read paths and names of all clusters stored inside /input.
-    cl_files = input_clusters.main(mypath, file_end)
-
     # Checker function to verify that things are in place before running.
     # As part of the checking process, and to save time, the isochrone
     # files are read and stored here.
     # The 'R_in_place' flag indicates that R and rpy2 are installed.
-    ip_list, R_in_place = check_all(mypath, file_end, cl_files)
+    cl_files, ip_list, R_in_place = check_all(mypath, file_end)
 
     # Store those global variables that could be changed when processing each
     # cluster.

@@ -8,7 +8,7 @@ from check import params_input_pval
 from check import params_input_decont
 
 
-def check_all(mypath, file_end, cl_files):
+def check_all(mypath, file_end):
     """
     Checks that the necessary files are in place, the parameters stored
     in the input file are valid and that the ranges given for the cluster
@@ -21,7 +21,7 @@ def check_all(mypath, file_end, cl_files):
     inst_packgs_lst = pack.check()
 
     # Check if input cluster files exist.
-    clusters.check(cl_files, file_end)
+    cl_files = clusters.check(mypath, file_end)
 
     # Check if 'params_input.dat' file exists. Initialize global variables.
     flag_updt, flag_back_force = params_file.check(mypath, file_end)
@@ -53,7 +53,8 @@ def check_all(mypath, file_end, cl_files):
     from check import read_met_files
     ip_list = read_met_files.check_get()
 
-    print 'Full check done.\n'
+    print("Full check done. Clusters to process: {}\n".format(
+        len(cl_files)))
 
     # Force matplotlib to not use any Xwindows backend. This call prevents
     # the code from crashing when used in a computer cluster. See:
@@ -63,4 +64,4 @@ def check_all(mypath, file_end, cl_files):
         matplotlib.use('Agg')
         print("(Force matplotlib to not use any Xwindows backend)\n")
 
-    return ip_list, R_in_place
+    return cl_files, ip_list, R_in_place
