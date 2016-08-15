@@ -1,10 +1,9 @@
 
 from os.path import join, exists
 from os import makedirs, extsep
-from ..inp import input_params as g
 
 
-def main(cl_file):
+def main(cl_file, done_dir, **kwargs):
     '''
     Generate names and paths to be used by several functions.
     '''
@@ -29,10 +28,10 @@ def main(cl_file):
     if cl_file[1][-2:].isdigit():
         # If the 'input' folder has numbers at the end.
         output_subdir = join(output_dir, cl_file[1], cl_file[2])
-        dst_dir = join(g.done_dir, cl_file[1], cl_file[2])
+        dst_dir = join(done_dir, cl_file[1], cl_file[2])
     else:
         output_subdir = join(output_dir, cl_file[2])
-        dst_dir = join(g.done_dir, cl_file[2])
+        dst_dir = join(done_dir, cl_file[2])
 
     # Generate output dir/subdir if it doesn't exist.
     if not exists(output_subdir):

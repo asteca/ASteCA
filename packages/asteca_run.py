@@ -57,8 +57,7 @@ def main():
     # Checker function to verify that things are in place before running.
     # As part of the checking process, and to save time, the isochrone
     # files are read and stored here.
-    # The 'R_in_place' flag indicates that R and rpy2 are installed.
-    cl_files, pd, ip_list, R_in_place = check_all(mypath, file_end)
+    cl_files, pd = check_all(mypath, file_end)
 
     # Import here to ensure the check has passed and all the necessary
     # packages are installed.
@@ -71,7 +70,7 @@ def main():
 
         try:
             # Call module that calls all sub-modules sequentially.
-            func_caller.main(cl_file, ip_list, R_in_place)
+            func_caller.main(cl_file, pd)
         except Exception:
             print '\n!!! --> {}/{} could not be processed <-- !!!\n'.format(
                 cl_file[-2], cl_file[-1])

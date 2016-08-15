@@ -27,7 +27,10 @@ def check_all(mypath, file_end):
     pd = params_file.check(mypath, file_end)
 
     # Check that R and rpy2 are installed, if necessary.
+    # R_in_place = True indicates that R and rpy2 are installed.
     R_in_place = params_input_pval.check(inst_packgs_lst, **pd)
+    # Add to parameters dict.
+    pd['R_in_place'] = R_in_place
 
     # Check if a new version is available.
     if pd['up_flag']:
@@ -52,6 +55,7 @@ def check_all(mypath, file_end):
     # Check and store metallicity files.
     from check import read_met_files
     ip_list = read_met_files.check_get(pd)
+    pd['ip_list'] = ip_list
 
     print("Full check done. Clusters to process: {}\n".format(
         len(cl_files)))
@@ -64,4 +68,4 @@ def check_all(mypath, file_end):
         matplotlib.use('Agg')
         print("(Force matplotlib to not use any Xwindows backend)\n")
 
-    return cl_files, pd, ip_list, R_in_place
+    return cl_files, pd

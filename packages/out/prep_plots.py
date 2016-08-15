@@ -1,5 +1,4 @@
 
-from ..inp import input_params as g
 from ..math_f import exp_function
 import numpy as np
 from scipy import stats
@@ -34,11 +33,11 @@ def aspect_ratio(x_min, x_max, y_min, y_max):
     return asp_ratio
 
 
-def coord_syst():
+def coord_syst(gd_params):
     '''
     Define system of coordinates used.
     '''
-    px_deg = g.gd_params[-1]
+    px_deg = gd_params[-1]
     coord_lst = ['px', 'x', 'y'] if px_deg == 'px' else ['deg', 'ra', 'dec']
     return coord_lst
 
@@ -63,14 +62,14 @@ def frame_zoomed(x_min, x_max, y_min, y_max, center_cl, clust_rad):
     return x_zmin, x_zmax, y_zmin, y_zmax
 
 
-def ax_names():
+def ax_names(axes_params):
     '''
     Define names for photometric diagram axes.
     '''
     # y_axis == 0 indicates that the y axis is a magnitude.
     y_axis = 0
     # Create photometric axis names.
-    y_ax, x_ax0, m_ord = g.axes_params[0:3]
+    y_ax, x_ax0, m_ord = axes_params[0:3]
     if m_ord == 21:
         x_ax = '(' + x_ax0 + '-' + y_ax + ')'
     elif m_ord == 12:
@@ -144,14 +143,14 @@ def diag_limits(y_axis, phot_x, phot_y):
     return x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd
 
 
-def star_size(mag_data):
+def star_size(mags):
     '''
     Convert magnitudes into intensities and define sizes of stars in
     finding chart.
     '''
     # Scale factor.
-    factor = 500. * (1 - 1 / (1 + 150 / len(mag_data) ** 0.85))
-    return 0.1 + factor * 10 ** ((np.array(mag_data) - min(mag_data)) / -2.5)
+    factor = 500. * (1 - 1 / (1 + 150 / len(mags) ** 0.85))
+    return 0.1 + factor * 10 ** ((np.array(mags) - min(mags)) / -2.5)
 
 
 def phot_diag_st_size(x):

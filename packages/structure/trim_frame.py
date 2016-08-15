@@ -2,21 +2,19 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import display_frame
-from ..inp import input_params as g
 
 
-def main(phot_data):
+def main(cld, mode, gd_params, **kwargs):
     '''
     Trim frame according to given values of new center and side lengths.
     '''
-
-    if g.mode == 'manual':
-
-        # Unpack data.
-        id_star, x_data, y_data, mag_data, e_mag, col1_data, e_col1 = phot_data
+    if mode == 'manual':
+        # Unpack dictionary.
+        ids, x, y, mags, em, cols, ec = cld['ids'], cld['x'], cld['y'],\
+            cld['mags'], cld['em'], cld['cols'], cld['ec']
 
         # Show full frame plot.
-        display_frame.main(x_data, y_data, mag_data)
+        display_frame.main(x, y, mags, gd_params)
         plt.show()
 
         # Ask to trim frame.
@@ -24,7 +22,6 @@ def main(phot_data):
             temp_cent, temp_side = [], []
             answer_fra = raw_input('Trim frame? (y/n) ')
             if answer_fra == 'n':
-                phot_data_t = phot_data
                 break
             elif answer_fra == 'y':
                 try:
@@ -35,36 +32,33 @@ def main(phot_data):
                     temp_side.append(float(raw_input('x_side: ')))
                     temp_side.append(float(raw_input('y_side: ')))
                     # Empty new lists.
-                    id_star2, x_data2, y_data2, mag_data2, e_m2, col_data2, \
-                        e_c2 = [], [], [], [], [], [], []
+                    ids2, x2, y2, mags2, em2, cols2, ec2 = [], [], [], [],\
+                        [], [], []
 
                     # Iterate through all stars.
-                    for st_indx, star in enumerate(id_star):
+                    for i, star in enumerate(ids):
 
                         # Check if star is inside new frame boundaries.
-                        if abs(temp_cent[0] - x_data[st_indx]) < \
-                            temp_side[0] / 2. and \
-                            abs(temp_cent[1] - y_data[st_indx]) < \
-                                temp_side[1] / 2.:
+                        if abs(temp_cent[0] - x[i]) < temp_side[0] / 2. and \
+                                abs(temp_cent[1] - y[i]) < temp_side[1] / 2.:
 
-                            id_star2.append(star)
-                            x_data2.append(x_data[st_indx])
-                            y_data2.append(y_data[st_indx])
-                            mag_data2.append(mag_data[st_indx])
-                            e_m2.append(e_mag[st_indx])
-                            col_data2.append(col1_data[st_indx])
-                            e_c2.append(e_col1[st_indx])
+                            ids2.append(star)
+                            x2.append(x[i])
+                            y2.append(y[i])
+                            mags2.append(mags[i])
+                            em2.append(em[i])
+                            cols2.append(cols[i])
+                            ec2.append(ec[i])
 
-                    phot_data_t = [np.array(id_star2), np.array(x_data2),
-                                   np.array(y_data2), np.array(mag_data2),
-                                   np.array(e_m2), np.array(col_data2),
-                                   np.array(e_c2)]
+                    # Re-create dictionary.
+                    cld['ids'], cld['x'], cld['y'], cld['mags'], cld['em'],\
+                        cld['cols'], cld['ec'] = np.array(ids2),\
+                        np.array(x2), np.array(y2), np.array(mags2),\
+                        np.array(em2), np.array(cols2), np.array(ec2)
                     break
                 except:
-                    print("Sorry, input is not valid. Try again.")
+                    print("Sorry, input is not valid. Try again\n.")
             else:
                 print("Sorry, input is not valid. Try again.\n")
-    else:
-        phot_data_t = phot_data
 
-    return phot_data_t
+    return cld

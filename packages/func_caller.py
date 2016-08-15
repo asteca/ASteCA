@@ -2,7 +2,6 @@
 import time
 import gc  # Garbage collector.
 #
-import inp.input_params as g
 from inp import names_paths
 from inp import get_data_semi
 from inp import get_data
@@ -36,7 +35,7 @@ from out import make_plots
 from out import done_move
 
 
-def main(cl_file, ip_list, R_in_place):
+def main(cl_file, pd):
     '''
     Container that holds the calls to all the modules and functions.
     '''
@@ -46,19 +45,20 @@ def main(cl_file, ip_list, R_in_place):
 
     # Get file names and paths.
     clust_name, data_file, memb_file, output_dir, output_subdir, dst_dir,\
-        memb_file_out, synth_file_out, write_name = names_paths.main(cl_file)
-    print('Analyzing cluster {} ({} mode).'.format(clust_name, g.mode))
+        memb_file_out, synth_file_out, write_name = names_paths.main(
+            cl_file, **pd)
+    print('Analyzing cluster {} ({} mode).'.format(clust_name, pd['mode']))
 
     # Get data from semi-data input file.
-    semi_return = get_data_semi.main(clust_name)
+    semi_return, pd = get_data_semi.main(clust_name, pd)
 
     # Get cluster's photometric data from file.
-    phot_data = get_data.main(data_file)
+    cld = get_data.main(data_file, **pd)
     # If Manual mode is set, display frame and ask if it should be trimmed.
-    phot_data = trim_frame.main(phot_data)
-    # Unpack coordinates, magnitude and color.
-    x_data, y_data, mag_data, col1_data = phot_data[1], phot_data[2], \
-        phot_data[3], phot_data[5]
+    phot_data = trim_frame.main(cld, **pd)
+    # # Unpack coordinates, magnitude and color.
+    # x_data, y_data, mag_data, col1_data = phot_data[1], phot_data[2], \
+    #     phot_data[3], phot_data[5]
 
     # Obtain 2D histograms for the observed frame using several bin widths.
     hist_lst = histo_2d.main(x_data, y_data)
