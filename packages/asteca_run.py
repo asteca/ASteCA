@@ -58,14 +58,10 @@ def main():
     # As part of the checking process, and to save time, the isochrone
     # files are read and stored here.
     # The 'R_in_place' flag indicates that R and rpy2 are installed.
-    cl_files, ip_list, R_in_place = check_all(mypath, file_end)
+    pd, cl_files, ip_list, R_in_place = check_all(mypath, file_end)
 
-    # Store those global variables that could be changed when processing each
-    # cluster.
-    # Import *after* checker function.
-    import packages.inp.input_params as g
-    global mode, er_params
-    mode_orig, er_params_orig = g.mode, g.er_params
+    # Store variables that could be changed when processing each cluster.
+    mode_orig, er_params_orig = pd['mode'], pd['er_params']
 
     # Import here to ensure the check has passed and all the necessary
     # packages are installed.
@@ -75,7 +71,7 @@ def main():
     for cl_file in cl_files:
 
         # Set these variables to their original global values.
-        g.mode, g.er_params = mode_orig, er_params_orig
+        pd['mode'], pd['er_params'] = mode_orig, er_params_orig
 
         try:
             # Call module that calls all sub-modules sequentially.

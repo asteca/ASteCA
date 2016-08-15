@@ -11,7 +11,7 @@ from check import params_input_decont
 def check_all(mypath, file_end):
     """
     Checks that the necessary files are in place, the parameters stored
-    in the input file are valid and that the ranges given for the cluster
+    in the input file are valid, and that the ranges given for the cluster
     parameters are consistent with the isochrones available before moving
     on with the code.
     """
@@ -23,14 +23,14 @@ def check_all(mypath, file_end):
     # Check if input cluster files exist.
     cl_files = clusters.check(mypath, file_end)
 
-    # Check if 'params_input.dat' file exists. Initialize global variables.
-    flag_updt, flag_back_force = params_file.check(mypath, file_end)
+    # Read parameters from 'params_input.dat' file.
+    pd = params_file.check(mypath, file_end)
 
     # Check that R and rpy2 are installed, if necessary.
     R_in_place = params_input_pval.check(inst_packgs_lst)
 
     # Check if a new version is available.
-    if flag_updt:
+    if pd['flag_updt']:
         update.check()
 
     # Check that structural parameters are properly given.
@@ -59,7 +59,7 @@ def check_all(mypath, file_end):
     # Force matplotlib to not use any Xwindows backend. This call prevents
     # the code from crashing when used in a computer cluster. See:
     # http://stackoverflow.com/a/3054314/1391441
-    if flag_back_force:
+    if pd['flag_back_force']:
         import matplotlib
         matplotlib.use('Agg')
         print("(Force matplotlib to not use any Xwindows backend)\n")
