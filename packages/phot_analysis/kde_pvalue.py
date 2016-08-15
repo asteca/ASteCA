@@ -43,7 +43,7 @@ def get_CMD(region):
     return matrix
 
 
-def main(cl_region, field_region, col1_data, mag_data, flag_no_fl_regs):
+def KDE_test(cl_region, field_region, col1_data, mag_data, flag_no_fl_regs):
     '''
     Compare the cluster region KDE with all the field region KDEs using Duong's
     ks package (developed in R) to obtain a p-value. This value will be close
@@ -199,5 +199,20 @@ def main(cl_region, field_region, col1_data, mag_data, flag_no_fl_regs):
 
         print 'Probability of physical cluster obtained ({:.2f}).'.format(
             prob_cl_kde)
+
+    return pval_test_params, flag_pval_test
+
+
+def main(R_in_place, cl_region, field_region, col1_data, mag_data,
+         flag_no_fl_regs):
+    """
+    Only run function if the necessary application and packages are in place.
+    """
+    if R_in_place:
+        pval_test_params, flag_pval_test = KDE_test(
+            cl_region, field_region, col1_data, mag_data, flag_no_fl_regs)
+    else:
+        print('Missing package. Skipping KDE p-value test for cluster.')
+        flag_pval_test, pval_test_params = False, [-1.]
 
     return pval_test_params, flag_pval_test

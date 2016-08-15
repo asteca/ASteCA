@@ -21,7 +21,7 @@ from phot_analysis import contamination_index
 from structure import field_regions
 from phot_analysis import luminosity_func
 from phot_analysis import integrated_mag
-# from phot_analysis import kde_pvalue
+from phot_analysis import kde_pvalue
 from decont_algors import bayesian_da
 from phot_analysis import members_N_compare
 from decont_algors import membership_removal
@@ -124,13 +124,9 @@ def main(cl_file, ip_list, R_in_place):
                                         flag_no_fl_regs)
 
     # Get physical cluster probability based on p_values distribution.
-    if R_in_place:
-        from phot_analysis import kde_pvalue
-        pval_test_params, flag_pval_test = kde_pvalue.main(
-            cl_region, field_region, col1_data, mag_data, flag_no_fl_regs)
-    else:
-        print('Missing package. Skipping KDE p-value test for cluster.')
-        flag_pval_test, pval_test_params = False, [-1.]
+    pval_test_params, flag_pval_test = kde_pvalue.main(
+        R_in_place, cl_region, field_region, col1_data, mag_data,
+        flag_no_fl_regs)
 
     # Apply decontamination algorithm if at least one equal-sized field region
     # was found around the cluster.

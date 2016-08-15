@@ -26,15 +26,15 @@ def check_all(mypath, file_end, cl_files):
     # Check if 'params_input.dat' file exists. Initialize global variables.
     flag_updt, flag_back_force = params_file.check(mypath, file_end)
 
+    # Check that R and rpy2 are installed, if necessary.
+    R_in_place = params_input_pval.check(inst_packgs_lst)
+
     # Check if a new version is available.
     if flag_updt:
         update.check()
 
     # Check that structural parameters are properly given.
     params_input_struct.check(mypath, cl_files)
-
-    # Check that R and rpy2 are installed, if necessary.
-    R_in_place = params_input_pval.check(inst_packgs_lst)
 
     # Define dictionary of accepted binning methods.
     bin_methods_dict = {'blocks', 'knuth', 'scott', 'freedman', 'sturges',
