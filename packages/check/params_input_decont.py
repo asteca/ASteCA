@@ -1,17 +1,16 @@
 
 import sys
 from os.path import isfile
-import packages.inp.input_params as g
 from packages.inp import names_paths
 
 
-def check(cl_files, bin_methods_dict):
+def check(cl_files, bin_methods_dict, da_params, rm_params, **kwargs):
     """
     Check parameters related to the decontamination algorithm functions.
     """
 
     # Check decontamination algorithm params.
-    mode_da = g.da_params[0]
+    mode_da = da_params[0]
     # Check if 'mode' was correctly set.
     if mode_da not in ['auto', 'manual', 'read', 'skip']:
         sys.exit("ERROR: Wrong name ('{}') for decontamination algorithm "
@@ -30,7 +29,7 @@ def check(cl_files, bin_methods_dict):
                          "exist.".format(memb_file))
 
     # Check 'Reduced membership' method selected.
-    mode_red_memb, local_bin, min_prob = g.rm_params
+    mode_red_memb, local_bin, min_prob = rm_params
     if mode_red_memb not in {'local', 'n_memb', 'mp_05', 'top_h', 'man', 'mag',
                              'skip'}:
         sys.exit("ERROR: the selected reduced membership method ('{}')"

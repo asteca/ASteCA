@@ -58,20 +58,16 @@ def main():
     # As part of the checking process, and to save time, the isochrone
     # files are read and stored here.
     # The 'R_in_place' flag indicates that R and rpy2 are installed.
-    pd, cl_files, ip_list, R_in_place = check_all(mypath, file_end)
-
-    # Store variables that could be changed when processing each cluster.
-    mode_orig, er_params_orig = pd['mode'], pd['er_params']
+    cl_files, pd, ip_list, R_in_place = check_all(mypath, file_end)
 
     # Import here to ensure the check has passed and all the necessary
     # packages are installed.
     from packages import func_caller
 
+    # Store variables that could be changed when processing each cluster.
+    mode_orig, er_params_orig = pd['mode'], pd['er_params']
     # Iterate through all cluster files.
     for cl_file in cl_files:
-
-        # Set these variables to their original global values.
-        pd['mode'], pd['er_params'] = mode_orig, er_params_orig
 
         try:
             # Call module that calls all sub-modules sequentially.
@@ -80,6 +76,9 @@ def main():
             print '\n!!! --> {}/{} could not be processed <-- !!!\n'.format(
                 cl_file[-2], cl_file[-1])
             print traceback.format_exc()
+
+        # Set these variables to their original global values.
+        pd['mode'], pd['er_params'] = mode_orig, er_params_orig
 
     # End of run.
     elapsed = time.time() - start

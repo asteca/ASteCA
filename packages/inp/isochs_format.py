@@ -1,6 +1,4 @@
 
-from ..inp import input_params as g
-
 
 def girardi_age_format():
     """
@@ -10,13 +8,13 @@ def girardi_age_format():
     return age_format
 
 
-def main(met_f):
+def main(met_f, ps_params):
     '''
     Read line start format and columns indexes for the selected set of
     Girardi isochrones and chosen CMD.
     '''
 
-    cmd_select, iso_select = g.ps_params[1], g.ps_params[2]
+    cmd_select, iso_select = ps_params[1], ps_params[2]
 
     # Assign values according to the system and set of isochrones selected.
     if iso_select in ['PAR10', 'PAR11', 'PAR12', 'PAR12C']:

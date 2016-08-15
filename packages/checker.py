@@ -27,31 +27,31 @@ def check_all(mypath, file_end):
     pd = params_file.check(mypath, file_end)
 
     # Check that R and rpy2 are installed, if necessary.
-    R_in_place = params_input_pval.check(inst_packgs_lst)
+    R_in_place = params_input_pval.check(inst_packgs_lst, **pd)
 
     # Check if a new version is available.
-    if pd['flag_updt']:
+    if pd['up_flag']:
         update.check()
 
     # Check that structural parameters are properly given.
-    params_input_struct.check(mypath, cl_files)
+    params_input_struct.check(mypath, cl_files, **pd)
 
     # Define dictionary of accepted binning methods.
     bin_methods_dict = {'blocks', 'knuth', 'scott', 'freedman', 'sturges',
                         'sqrt', 'bb'}
 
     # Check decontamination algorithm parameters.
-    params_input_decont.check(cl_files, bin_methods_dict)
+    params_input_decont.check(cl_files, bin_methods_dict, **pd)
 
     # Check the best synthetic cluster match parameters.
     # Import here after the needed packages were checked to be present, since
     # this imports numpy.
     from check import params_input_match
-    params_input_match.check(bin_methods_dict)
+    params_input_match.check(bin_methods_dict, **pd)
 
     # Check and store metallicity files.
     from check import read_met_files
-    ip_list = read_met_files.check_get()
+    ip_list = read_met_files.check_get(pd)
 
     print("Full check done. Clusters to process: {}\n".format(
         len(cl_files)))
@@ -64,4 +64,4 @@ def check_all(mypath, file_end):
         matplotlib.use('Agg')
         print("(Force matplotlib to not use any Xwindows backend)\n")
 
-    return cl_files, ip_list, R_in_place
+    return cl_files, pd, ip_list, R_in_place

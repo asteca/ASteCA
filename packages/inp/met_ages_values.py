@@ -3,7 +3,6 @@ import numpy as np
 import os
 import re
 from os.path import join
-from ..inp import input_params as g
 import isochs_format
 
 
@@ -31,12 +30,12 @@ def match_ranges(met_vals_all, met_files, age_vals_all, z_range, a_range):
     return met_f_filter, met_values, age_values
 
 
-def get_ranges():
+def get_ranges(ps_params):
     '''
     Calculate parameter ranges to be used by the selected best fit method.
     '''
 
-    par_ranges = g.ps_params[-1]
+    par_ranges = ps_params[-1]
 
     param_ranges = []
     for param in par_ranges:
@@ -108,7 +107,7 @@ def get_metals(iso_path):
     return met_vals_all, met_files
 
 
-def main(iso_path):
+def main(iso_path, ps_params):
     '''
     Run once to obtain the correct metallicities and ages to be used
     by the code.
@@ -130,7 +129,7 @@ def main(iso_path):
     age_vals_all = get_ages(metal_files[0])
 
     # Get parameters ranges stored in params_input.dat file.
-    param_ranges = get_ranges()
+    param_ranges = get_ranges(ps_params)
 
     # Match values in metallicity and age ranges with those available.
     z_range, a_range = param_ranges[:2]

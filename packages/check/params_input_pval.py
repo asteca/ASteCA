@@ -1,7 +1,6 @@
 
 import sys
 from subprocess import Popen, PIPE
-import packages.inp.input_params as g
 
 
 def R_inst_packages():
@@ -68,17 +67,17 @@ def R_check(inst_packgs_lst):
     return R_in_place
 
 
-def check(inst_packgs_lst):
+def check(inst_packgs_lst, pv_params, **kwargs):
     """
     Check that the R statistical software and the rpy2 package are installed,
     if necessary.
     """
 
     # Check KDE p-value cluster probability function.
-    if g.pv_params[0] not in {'auto', 'manual', 'skip'}:
+    if pv_params[0] not in {'auto', 'manual', 'skip'}:
         sys.exit("ERROR: Wrong name ('{}') for 'mode' in KDE p-value test."
-                 .format(g.pv_params[0]))
-    elif g.pv_params[0] in {'auto', 'manual'}:
+                 .format(pv_params[0]))
+    elif pv_params[0] in {'auto', 'manual'}:
         # Check if R and rpy2 are installed.
         R_in_place = R_check(inst_packgs_lst)
     else:
