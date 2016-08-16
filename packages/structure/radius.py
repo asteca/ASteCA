@@ -3,12 +3,11 @@ import numpy as np
 from scipy import stats
 import matplotlib.pyplot as plt
 import warnings
-from ..inp import input_params as g
 import display_rad
 from ..out import prep_plots
 
 
-def radius_algor(rdp_params, field_dens, bin_width, coord):
+def radius_algor(rdp_params, field_dens, bin_width, coord, cr_params):
     '''
     This function holds the main algorithm that returns a radius value.
     '''
@@ -29,7 +28,7 @@ def radius_algor(rdp_params, field_dens, bin_width, coord):
     # Assign a value to the number of points that should be found below
     # the delta values around the field density to attain the 'stabilized'
     # condition.
-    mode_r = g.cr_params[0]
+    mode_r = cr_params[0]
     if mode_r == 'low':
         # Fix to 5% of the total number of interpolated points in the RDP.
         n_left = int(0.05 * N)
@@ -133,8 +132,7 @@ def radius_algor(rdp_params, field_dens, bin_width, coord):
     return clust_rad, e_rad, flag_delta_total, flag_not_stable, flag_delta
 
 
-def main(phot_data, field_dens, center_params, rdp_params,
-         semi_return, bin_width):
+def main(cld, clp, mode, cr_params, gd_params, semi_return, **kwargs):
     """
     Obtain the value for the cluster's radius by counting the number of points
     that fall within a given interval of the field density or lower. If this
@@ -146,17 +144,21 @@ def main(phot_data, field_dens, center_params, rdp_params,
     average all the radius values found for each interval.
     """
 
-    coord = prep_plots.coord_syst()[0]
+    # Unpack
+    field_dens, center_params, rdp_params, bin_width = clp['field_dens'],\
+        clp['center_params'], clp['rdp_params'], clp['hist_lst'][-1]
+
+    coord = prep_plots.coord_syst(gd_params)[0]
     # Call function that holds the radius finding algorithm.
     clust_rad, e_rad, flag_delta_total, flag_not_stable, flag_delta = \
-        radius_algor(rdp_params, field_dens, bin_width, coord)
+        radius_algor(rdp_params, field_dens, bin_width, coord, cr_params)
 
     # Check if semi or manual mode are set.
     flag_radius_manual = False
-    if g.mode == 'auto':
+    if mode == 'auto':
         print('Auto radius found: {:g} {}.'.format(clust_rad, coord))
 
-    elif g.mode == 'semi':
+    elif mode == 'semi':
         # Unpack semi values.
         cl_rad_semi, rad_flag_semi = semi_return[1], semi_return[4]
 
@@ -169,11 +171,11 @@ def main(phot_data, field_dens, center_params, rdp_params,
 
     # If Manual mode is set, display radius and ask the user to accept it or
     # input new one.
-    elif g.mode == 'manual':
+    elif mode == 'manual':
 
         print 'Radius found: {:g} {}.'.format(clust_rad, coord)
-        display_rad.main(phot_data, bin_width, center_params, clust_rad,
-                         e_rad, field_dens, rdp_params)
+        display_rad.main(cld, bin_width, center_params, clust_rad, e_rad,
+                         field_dens, rdp_params)
         plt.show()
 
         # Ask if the radius is accepted, or a if a another one should be used.
@@ -196,5 +198,6 @@ def main(phot_data, field_dens, center_params, rdp_params,
 
     radius_params = [clust_rad, e_rad, flag_delta_total, flag_not_stable,
                      flag_delta, flag_radius_manual]
+    clp['radius_params'] = radius_params
 
-    return radius_params
+    return clp

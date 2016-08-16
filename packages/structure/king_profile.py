@@ -4,7 +4,6 @@ from scipy.optimize import curve_fit
 import warnings
 from scipy.optimize import OptimizeWarning
 import king_prof_funcs as kpf
-from ..inp import input_params as g
 from ..out import prep_plots
 
 
@@ -137,13 +136,15 @@ def num_memb_conc_param(flag_3pk_conver, cd, rt, rc):
     return n_c_k, kcp
 
 
-def main(clust_rad, field_dens, radii, rdp_points):
+def main(clp, kp_flag, gd_params, **kwargs):
     '''
     Function to fit a King profile to a given radial density.
     The field density value is fixed and the core radius, tidal radius and
     maximum central density are fitted.
     '''
 
+    clust_rad, field_dens, radii, rdp_points = clp['radius_params'][0],\
+        clp['field_dens'], clp['rdp_params'][0], clp['rdp_params'][1]
     # Flags that indicate either no convergence or that the fits were not
     # attempted.
     flag_2pk_conver, flag_3pk_conver = False, False
@@ -152,7 +153,7 @@ def main(clust_rad, field_dens, radii, rdp_points):
     rc, e_rc, rt, e_rt, n_c_k, kcp, cd = -1., -1., -1., -1., -1., -1., -1.
 
     # Check flag to run or skip.
-    if g.kp_flag:
+    if kp_flag:
 
         # Field density value is fixed.
         fd = field_dens
@@ -215,7 +216,7 @@ def main(clust_rad, field_dens, radii, rdp_points):
         n_c_k, kcp = num_memb_conc_param(flag_3pk_conver, cd, rt, rc)
 
         # Print results.
-        coord = prep_plots.coord_syst()[0]
+        coord = prep_plots.coord_syst(gd_params)[0]
         if flag_3pk_conver:
             # Set precision of printed values.
             text2 = '{:.1f}, {:.1f}' if coord == 'px' else '{:g}, {:g}'
@@ -231,4 +232,6 @@ def main(clust_rad, field_dens, radii, rdp_points):
         else:
             print("Core & tidal radii not found.")
 
-    return rc, e_rc, rt, e_rt, n_c_k, kcp, cd, flag_2pk_conver, flag_3pk_conver
+    clp['kp_params'] = [rc, e_rc, rt, e_rt, n_c_k, kcp, cd, flag_2pk_conver,
+                        flag_3pk_conver]
+    return clp

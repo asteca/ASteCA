@@ -4,7 +4,6 @@ import bisect
 import matplotlib.pyplot as plt
 from scipy import stats
 from scipy.ndimage.filters import gaussian_filter
-from ..inp import input_params as g
 from ..out import prep_plots
 import display_cent
 
@@ -102,14 +101,14 @@ def bin_center(xedges, yedges, kde_cent):
     return cent_bin
 
 
-def main(x_data, y_data, mag_data, hist_lst, semi_return):
+def main(cld, clp, mode, gd_params, semi_return, **kwargs):
     """
     Obtains the center of the putative cluster. Returns the center values
     along with its errors and several arrays related to histograms, mainly for
     plotting purposes.
     """
 
-    coord = prep_plots.coord_syst()[0]
+    coord = prep_plots.coord_syst(gd_params)[0]
 
     st_dev_lst = [2., 2.5, 3., 3.5, 4.]
     # Set flags.
@@ -117,15 +116,16 @@ def main(x_data, y_data, mag_data, hist_lst, semi_return):
     flag_center_manual = False
 
     # Unpack
-    hist, xedges, yedges = hist_lst[:3]
+    hist, xedges, yedges = clp['hist_lst'][:3]
+    x, y, mags = cld['x'], cld['y'], cld['mags']
 
     # This is the radius used in auto and manual mode to restrict the search
     # of the KDE center coordinates to a smaller area (to improve performance).
-    x_span, y_span = max(x_data) - min(x_data), max(y_data) - min(y_data)
+    x_span, y_span = max(x) - min(x), max(y) - min(y)
     radius = 0.25 * min(x_span, y_span)
 
     mode_semi = True
-    if g.mode == 'semi':
+    if mode == 'semi':
         # Unpack semi values.
         cent_cl_semi, cl_rad_semi = semi_return[:2]
         cent_flag_semi = semi_return[3]
@@ -139,7 +139,7 @@ def main(x_data, y_data, mag_data, hist_lst, semi_return):
             # Call funct to obtain the pixel coords of the maximum KDE value.
             approx_cents = [cent_cl_semi]
             kde_cent, e_cent, kde_plot = kde_center_f(
-                x_data, y_data, approx_cents, cl_rad_semi)
+                x, y, approx_cents, cl_rad_semi)
 
             # Re-write center values if fixed in semi input file.
             if cent_flag_semi == 2:
@@ -160,7 +160,7 @@ def main(x_data, y_data, mag_data, hist_lst, semi_return):
             # Use 'auto' mode.
             mode_semi = False
 
-    if g.mode == 'auto' or mode_semi is False:
+    if mode == 'auto' or mode_semi is False:
 
         # Obtain approximate values for center coordinates using several
         # Gaussian filters with different standard deviation values, on the
@@ -169,7 +169,7 @@ def main(x_data, y_data, mag_data, hist_lst, semi_return):
                                                 st_dev_lst)
 
         # Call funct to obtain the pixel coords of the maximum KDE value.
-        kde_cent, e_cent, kde_plot = kde_center_f(x_data, y_data, approx_cents,
+        kde_cent, e_cent, kde_plot = kde_center_f(x, y, approx_cents,
                                                   radius)
 
         # Find bin where the center xy coordinates are located.
@@ -197,7 +197,7 @@ def main(x_data, y_data, mag_data, hist_lst, semi_return):
 
     # If Manual mode is set, display center and ask the user to accept it or
     # input new one.
-    elif g.mode == 'manual':
+    elif mode == 'manual':
 
         # Obtain approximate values for center coordinates using several
         # Gaussian filters with different standard deviation values, on the
@@ -206,13 +206,13 @@ def main(x_data, y_data, mag_data, hist_lst, semi_return):
                                                 [st_dev_lst[0]])
 
         # Call funct to obtain the pixel coords of the maximum KDE value.
-        kde_cent, e_cent, kde_plot = kde_center_f(x_data, y_data, approx_cents,
+        kde_cent, e_cent, kde_plot = kde_center_f(x, y, approx_cents,
                                                   radius)
 
         cent_bin = bin_center(xedges, yedges, kde_cent)
 
         # Show plot with center obtained.
-        display_cent.main(x_data, y_data, mag_data, kde_cent, cent_bin,
+        display_cent.main(x, y, mags, kde_cent, cent_bin,
                           hist_2d_g)
         plt.show()
         # No KDE plot is 'manual' mode is used.
@@ -242,5 +242,7 @@ def main(x_data, y_data, mag_data, hist_lst, semi_return):
     center_params = [cent_bin, kde_cent, e_cent, approx_cents, st_dev_lst,
                      hist_2d_g, kde_plot, flag_center_med, flag_center_std,
                      flag_center_manual]
+    # Add data to dictionary.
+    clp['center_params'] = center_params
 
-    return center_params
+    return clp

@@ -5,14 +5,14 @@ import matplotlib.offsetbox as offsetbox
 from ..out import prep_plots
 
 
-def main(phot_data, bin_width, center_params, clust_rad, e_rad, field_dens,
+def main(cld, bin_width, center_params, clust_rad, e_rad, field_dens,
          rdp_params):
     '''
     Plot cluster and its radius.
     '''
 
     # Unpack.
-    x_data, y_data, mag_data = phot_data[1], phot_data[2], phot_data[3]
+    x, y, mags = cld['x'], cld['y'], cld['mags']
     cent_bin, kde_cent, e_cent = center_params[:3]
     hist_2d_g = center_params[5]
     center_cl = [kde_cent[0], kde_cent[1]]
@@ -20,7 +20,7 @@ def main(phot_data, bin_width, center_params, clust_rad, e_rad, field_dens,
     radii, ring_density, poisson_error = rdp_params[:3]
 
     coord, x_name, y_name = prep_plots.coord_syst()
-    st_sizes_arr = prep_plots.star_size(mag_data)
+    st_sizes_arr = prep_plots.star_size(mags)
 
     # Plot all outputs
     fig = plt.figure(figsize=(12, 12))
@@ -52,8 +52,8 @@ def main(phot_data, bin_width, center_params, clust_rad, e_rad, field_dens,
     ax2 = plt.subplot(gs[0, 1])
     ax2.set_aspect('equal')
     # Get max and min values in x,y
-    x_min, x_max = min(x_data), max(x_data)
-    y_min, y_max = min(y_data), max(y_data)
+    x_min, x_max = min(x), max(x)
+    y_min, y_max = min(y), max(y)
     # Set plot limits
     plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
@@ -76,7 +76,7 @@ def main(phot_data, bin_width, center_params, clust_rad, e_rad, field_dens,
     ob.patch.set(boxstyle='square,pad=-0.2', alpha=0.85)
     plt.gca().add_artist(ob)
     # Plot stars.
-    plt.scatter(x_data, y_data, marker='o', c='black', s=st_sizes_arr)
+    plt.scatter(x, y, marker='o', c='black', s=st_sizes_arr)
 
     # Radial density plot.
     ax3 = plt.subplot(gs[1, 0:2])

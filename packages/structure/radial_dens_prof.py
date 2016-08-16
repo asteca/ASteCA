@@ -2,7 +2,7 @@
 import math
 
 
-def main(hist_lst, cent_bin):
+def main(clp):
     """
     Calculate the density profile by counting the number of stars in the center
     bin first (r aprox width_bin/2 px), then moving to the 8 adyacent bins
@@ -15,8 +15,8 @@ def main(hist_lst, cent_bin):
     the "ring densities" for those approximate values of r.
     """
 
-    hist_2d, bin_width = hist_lst[0], hist_lst[-1]
-    x_c_b, y_c_b = cent_bin
+    hist_2d, bin_width = clp['hist_lst'][0], clp['hist_lst'][-1]
+    x_c_b, y_c_b = clp['center_params'][0]
 
     # Initialize lists.
     radii, rdp_points, poisson_error = [], [], []
@@ -95,5 +95,7 @@ def main(hist_lst, cent_bin):
     rdp_length = rdp_length * bin_width
 
     print 'Radial density profile (RDP) calculated.'
+    clp['rdp_params'] = [radii, rdp_points, poisson_error, square_rings,
+                         rdp_length]
 
-    return radii, rdp_points, poisson_error, square_rings, rdp_length
+    return clp

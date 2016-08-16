@@ -46,4 +46,7 @@ def main(clust_name, pd):
             # Re-define mode parameter.
             pd['mode'] = 'auto'
 
-    return semi_return, pd
+    # Add 'semi' mode data to dictionary.
+    pd['semi_return'] = semi_return
+
+    return pd

@@ -37,7 +37,7 @@ from out import done_move
 
 def main(cl_file, pd):
     '''
-    Container that holds the calls to all the modules and functions.
+    Container that holds the calls to all the moduli and functions.
     '''
 
     # Start timing this loop.
@@ -47,48 +47,46 @@ def main(cl_file, pd):
     clust_name, data_file, memb_file, output_dir, output_subdir, dst_dir,\
         memb_file_out, synth_file_out, write_name = names_paths.main(
             cl_file, **pd)
-    print('Analyzing cluster {} ({} mode).'.format(clust_name, pd['mode']))
+    print("Analyzing cluster {} ({} mode).".format(clust_name, pd['mode']))
 
-    # Get data from semi-data input file.
-    semi_return, pd = get_data_semi.main(clust_name, pd)
+    # Get data from semi-data input file. Add to dictionary.
+    pd = get_data_semi.main(clust_name, pd)
 
-    # Get cluster's photometric data from file.
+    # Get cluster's data from file, as dictionary.
     cld = get_data.main(data_file, **pd)
     # If Manual mode is set, display frame and ask if it should be trimmed.
-    phot_data = trim_frame.main(cld, **pd)
+    cld = trim_frame.main(cld, **pd)
     # # Unpack coordinates, magnitude and color.
     # x_data, y_data, mag_data, col1_data = phot_data[1], phot_data[2], \
     #     phot_data[3], phot_data[5]
 
-    # Obtain 2D histograms for the observed frame using several bin widths.
-    hist_lst = histo_2d.main(x_data, y_data)
-    bin_width = hist_lst[-1]
+    # Obtain 2D coordinates histogram for the observed frame.
+    # Return cluster's parameters dictionary 'clp'.
+    clp = histo_2d.main(pd, **cld)
+    # bin_width = hist_lst[-1]
 
     # Get cluster's center coordinates and errors.
-    center_params = center.main(x_data, y_data, mag_data, hist_lst,
-                                semi_return)
+    clp = center.main(cld, clp, **pd)
     # Unpack values from list.
-    cent_bin, kde_center = center_params[0], center_params[1]
+    # cent_bin, kde_center = center_params[0], center_params[1]
 
     # Get density profile
-    rdp_params = radial_dens_prof.main(hist_lst, cent_bin)
-    radii, rdp_points, square_rings, rdp_length = rdp_params[:2] + \
-        rdp_params[3:]
+    clp = radial_dens_prof.main(clp)
+    # radii, rdp_points, square_rings, rdp_length = rdp_params[:2] + \
+    #     rdp_params[3:]
 
     # Get field density value in stars/px^2.
-    field_dens = field_density.main(rdp_points)
+    clp = field_density.main(clp, **pd)
 
     # Get cluster radius
-    radius_params = radius.main(phot_data, field_dens, center_params,
-                                rdp_params, semi_return, bin_width)
-    clust_rad = radius_params[0]
+    clp = radius.main(cld, clp, **pd)
+    # clust_rad = radius_params[0]
 
     # Get King profiles based on the density profiles.
-    kp_params = king_profile.main(clust_rad, field_dens, radii, rdp_points)
+    clp = king_profile.main(clp, **pd)
 
     # Accept and reject stars based on their errors.
-    acpt_stars, rjct_stars, err_plot, err_flags, err_pck =\
-        err_accpt_rejct.main(phot_data, semi_return)
+    clp, pd = err_accpt_rejct.main(cld, clp, pd)
 
     # Get stars in and out of cluster's radius.
     cl_region, stars_out, stars_in_rjct, stars_out_rjct =\
