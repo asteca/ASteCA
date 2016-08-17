@@ -187,7 +187,7 @@ def main(cld, clp, pd):
                         break
 
                     if answer_rad not in {1, 2, 3, 4}:
-                        print("Sorry, input is not valid. Try again.\n")
+                        print("Sorry, input is not valid. Try again.")
                     else:
                         if len(acpt_indx) == 0:
                             print("No stars left after error rejection.\nTry"
@@ -203,20 +203,17 @@ def main(cld, clp, pd):
                                                    cld)
 
             if answer_rad != 4:
-                print("Plot error distributions.")
                 # Display automatic errors rejection.
                 display_errors.main(er_mode, mag, err_plot, acpt_stars,
-                                    rjct_stars, err_pck)
+                                    rjct_stars, err_pck, **pd)
                 plt.show()
                 # Ask if keep or reject.
                 while True:
                     try:
                         mv_on = raw_input('Accept error based rejection?'
                                           ' (y/n) ')
-                        mv_on = str(mv_on)
-                        print type(mv_on)
                         if mv_on == 'y':
-                            print 'Fit accepted.'
+                            print("Fit accepted.")
                             move_on = True
                             break
                         elif mv_on == 'n':

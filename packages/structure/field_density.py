@@ -13,7 +13,7 @@ def main(clp, gd_params, **kwargs):
     """
 
     # Copy list.
-    reduced_rd = list(clp['rdp_params'][1])
+    reduced_rd = list(clp['rdp_points'])
 
     stable_cond = False
     while stable_cond is False:
@@ -44,9 +44,9 @@ def main(clp, gd_params, **kwargs):
 
         field_dens = median
 
+    clp['field_dens'] = field_dens
     coord = prep_plots.coord_syst(gd_params)[0]
     print("Field density calculated ({:.1E} stars/{c}^2).".format(
           field_dens, c=coord))
-    clp['field_dens'] = field_dens
 
     return clp

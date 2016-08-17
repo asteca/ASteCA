@@ -36,10 +36,10 @@ def main(pd, x, y, **kwargs):
                  "block of the 'params_input.dat' file, check that it is"
                  "not too large.\n")
 
-    hist_lst = [hist_2d, xedges, yedges, bin_width]
     # Create cluster's parameters dictionary.
-    clp = {'hist_lst': hist_lst}
+    clp = {'hist_2d': hist_2d, 'xedges': xedges, 'yedges': yedges,
+           'bin_width': bin_width}
 
-    print("Frame's 2D histogram obtained")
+    print("Frame's 2D histogram obtained.")
 
     return clp

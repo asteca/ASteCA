@@ -57,8 +57,8 @@ def main(cld, mode, gd_params, **kwargs):
                         np.array(em2), np.array(cols2), np.array(ec2)
                     break
                 except:
-                    print("Sorry, input is not valid. Try again\n.")
+                    print("Sorry, input is not valid. Try again.")
             else:
-                print("Sorry, input is not valid. Try again.\n")
+                print("Sorry, input is not valid. Try again.")
 
     return cld

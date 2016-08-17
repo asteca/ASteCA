@@ -1,17 +1,12 @@
 
-from ..inp import input_params as g
 import local_cell_clean
 
 
 def nmemb_sel(n_memb, memb_prob_avrg_sort):
     '''
     Algorithm to select which stars to use by the best fit function.
-    Will set the minimum probability value such that an equal number of
-    stars are used in the best fit process, as the approximate number of
-    members found when comparing the density of the cluster region with that
-    of the field regions defined.
     '''
-    rem_memb_fit, rem_memb_no_fit, rem_plot_pars = memb_prob_avrg_sort, [], \
+    cl_reg_fit, cl_reg_no_fit, cl_reg_clean_plot = memb_prob_avrg_sort, [], \
         [0.]
 
     # Check approximate number of true members obtained by the structural
@@ -25,21 +20,21 @@ def nmemb_sel(n_memb, memb_prob_avrg_sort):
         # use all stars in the cluster region.
         if n_memb >= n_tot:
             # Use all stars in the cluster region.
-            indx, rem_plot_pars = n_tot, [0.]
+            indx, cl_reg_clean_plot = n_tot, [0.]
         else:
             # Use the first n_memb stars, ie: those stars with the highest
             # membership probability values.
-            indx, rem_plot_pars = n_memb, \
+            indx, cl_reg_clean_plot = n_memb, \
                 [zip(*memb_prob_avrg_sort)[-1][n_memb]]
 
-        rem_memb_fit, rem_memb_no_fit = memb_prob_avrg_sort[:indx], \
+        cl_reg_fit, cl_reg_no_fit = memb_prob_avrg_sort[:indx], \
             memb_prob_avrg_sort[indx:]
 
     else:
         print("  WARNING: less than 10 stars identified as true\n"
               "  cluster members. Using full list.")
 
-    return rem_memb_fit, rem_memb_no_fit, rem_plot_pars
+    return cl_reg_fit, cl_reg_no_fit, cl_reg_clean_plot
 
 
 def top_h(memb_prob_avrg_sort):
@@ -47,33 +42,33 @@ def top_h(memb_prob_avrg_sort):
     Reject stars in the lower half of the membership probabilities list.
     '''
 
-    rem_memb_fit, rem_memb_no_fit, rem_plot_pars = memb_prob_avrg_sort, [], \
+    cl_reg_fit, cl_reg_no_fit, cl_reg_clean_plot = memb_prob_avrg_sort, [], \
         [0.]
 
     middle_indx = int(len(memb_prob_avrg_sort) / 2)
     rem_fit = memb_prob_avrg_sort[:middle_indx]
     # Check number of stars left.
     if len(rem_fit) > 10:
-        rem_memb_fit, rem_memb_no_fit, rem_plot_pars = rem_fit, \
+        cl_reg_fit, cl_reg_no_fit, cl_reg_clean_plot = rem_fit, \
             memb_prob_avrg_sort[middle_indx:], \
             [memb_prob_avrg_sort[middle_indx][-1]]
     else:
         print("  WARNING: less than 10 stars left after reducing\n"
               "  by top half membership probability. Using full list.")
 
-    return rem_memb_fit, rem_memb_no_fit, rem_plot_pars
+    return cl_reg_fit, cl_reg_no_fit, cl_reg_clean_plot
 
 
-def manual(memb_prob_avrg_sort, min_prob=None):
+def manual(memb_prob_avrg_sort, rm_params, min_prob=None):
     '''
     Find index of star with membership probability < min_prob.
     '''
-    rem_memb_fit, rem_memb_no_fit, rem_plot_pars = memb_prob_avrg_sort, [], \
+    cl_reg_fit, cl_reg_no_fit, cl_reg_clean_plot = memb_prob_avrg_sort, [], \
         [0.]
 
     if min_prob is None:
         # Manual mode.
-        min_prob_man = g.rm_params[2]
+        min_prob_man = rm_params[2]
     else:
         # MP>=0.5 mode.
         min_prob_man = min_prob
@@ -86,7 +81,7 @@ def manual(memb_prob_avrg_sort, min_prob=None):
             indx += 1
 
     if len(memb_prob_avrg_sort[:indx]) > 10:
-        rem_memb_fit, rem_memb_no_fit, rem_plot_pars = \
+        cl_reg_fit, cl_reg_no_fit, cl_reg_clean_plot = \
             memb_prob_avrg_sort[:indx], memb_prob_avrg_sort[indx:],\
             [min_prob_man]
     else:
@@ -97,16 +92,16 @@ def manual(memb_prob_avrg_sort, min_prob=None):
             print("  WARNING: less than 10 stars left after reducing\n"
                   "  by MP>=0.5 selection. Using full list.")
 
-    return rem_memb_fit, rem_memb_no_fit, rem_plot_pars
+    return cl_reg_fit, cl_reg_no_fit, cl_reg_clean_plot
 
 
-def man_mag(memb_prob_avrg_sort):
+def man_mag(memb_prob_avrg_sort, rm_params):
     '''
     Reject stars beyond the given magnitude limit.
     '''
 
-    min_prob_man = g.rm_params[2]
-    rem_memb_fit, rem_memb_no_fit, rem_plot_pars = memb_prob_avrg_sort, [],\
+    min_prob_man = rm_params[2]
+    cl_reg_fit, cl_reg_no_fit, cl_reg_clean_plot = memb_prob_avrg_sort, [],\
         [0.]
 
     rem_fit, rem_not_fit = [], []
@@ -118,27 +113,30 @@ def man_mag(memb_prob_avrg_sort):
 
     # Check number of stars left.
     if len(rem_fit) > 10:
-        rem_memb_fit, rem_memb_no_fit, rem_plot_pars = rem_fit, rem_not_fit,\
+        cl_reg_fit, cl_reg_no_fit, cl_reg_clean_plot = rem_fit, rem_not_fit,\
             [min_prob_man]
     else:
         print("  WARNING: less than 10 stars left after reducing\n"
               "  by magnitude limit. Using full list.")
 
-    return rem_memb_fit, rem_memb_no_fit, rem_plot_pars
+    return cl_reg_fit, cl_reg_no_fit, cl_reg_clean_plot
 
 
-def main(n_memb, flag_no_fl_regs, bayes_da_return, field_region):
+def main(clp, rm_params, **kwargs):
     '''
     Remove stars from cluster region, according to a given membership
     probability lower limit, minimum magnitude limit or local density-based
     removal.
     '''
 
-    memb_prob_avrg_sort, flag_decont_skip = bayes_da_return
-    mode_rem_memb = g.rm_params[0]
+    n_memb, flag_no_fl_regs, field_regions, memb_prob_avrg_sort,\
+        flag_decont_skip = [
+            clp[_] for _ in ['n_memb', 'flag_no_fl_regs', 'field_regions',
+                             'memb_prob_avrg_sort', 'flag_decont_skip']]
+    mode_rem_memb = rm_params[0]
 
     # Default assignment.
-    rem_memb_fit, rem_memb_no_fit, rem_plot_pars = memb_prob_avrg_sort, [], \
+    cl_reg_fit, cl_reg_no_fit, cl_reg_clean_plot = memb_prob_avrg_sort, [], \
         [0.]
 
     if mode_rem_memb == 'skip':
@@ -162,29 +160,32 @@ def main(n_memb, flag_no_fl_regs, bayes_da_return, field_region):
         # This mode works if the DA did not run but it needs field regions
         # defined.
         if mode_rem_memb == 'local':
-            rem_memb_fit, rem_memb_no_fit, rem_plot_pars = \
-                local_cell_clean.main(bayes_da_return, field_region)
+            cl_reg_fit, cl_reg_no_fit, cl_reg_clean_plot = \
+                local_cell_clean.main(field_regions, memb_prob_avrg_sort,
+                                      flag_decont_skip, rm_params)
 
         if mode_rem_memb == 'n_memb':
-            rem_memb_fit, rem_memb_no_fit, rem_plot_pars = nmemb_sel(
+            cl_reg_fit, cl_reg_no_fit, cl_reg_clean_plot = nmemb_sel(
                 n_memb, memb_prob_avrg_sort)
 
         if mode_rem_memb == 'mp_05':
-            rem_memb_fit, rem_memb_no_fit, rem_plot_pars = \
-                manual(memb_prob_avrg_sort, 0.5)
+            cl_reg_fit, cl_reg_no_fit, cl_reg_clean_plot = \
+                manual(memb_prob_avrg_sort, rm_params, 0.5)
 
         elif mode_rem_memb == 'top_h':
-            rem_memb_fit, rem_memb_no_fit, rem_plot_pars = \
+            cl_reg_fit, cl_reg_no_fit, cl_reg_clean_plot = \
                 top_h(memb_prob_avrg_sort)
 
         elif mode_rem_memb == 'man':
-            rem_memb_fit, rem_memb_no_fit, rem_plot_pars = \
-                manual(memb_prob_avrg_sort)
+            cl_reg_fit, cl_reg_no_fit, cl_reg_clean_plot = \
+                manual(memb_prob_avrg_sort, rm_params)
 
         elif mode_rem_memb == 'mag':
-            rem_memb_fit, rem_memb_no_fit, rem_plot_pars = \
+            cl_reg_fit, cl_reg_no_fit, cl_reg_clean_plot = \
                 man_mag(memb_prob_avrg_sort)
 
         print('Membership-based removal function applied.')
 
-    return rem_memb_fit, rem_memb_no_fit, rem_plot_pars
+    clp['cl_reg_fit'], clp['cl_reg_no_fit'], clp['cl_reg_clean_plot'] =\
+        cl_reg_fit, cl_reg_no_fit, cl_reg_clean_plot
+    return clp

@@ -7,12 +7,13 @@ import display_rad
 from ..out import prep_plots
 
 
-def radius_algor(rdp_params, field_dens, bin_width, coord, cr_params):
+def radius_algor(clp, coord, cr_params):
     '''
     This function holds the main algorithm that returns a radius value.
     '''
 
-    radii, rdp_points = rdp_params[:2]
+    radii, rdp_points, bin_width, field_dens = clp['radii'],\
+        clp['rdp_points'], clp['bin_width'], clp['field_dens']
     # Find maximum density value and assume this is the central density.
     # Do not use previous values.
     max_dens_ind = np.argmax(rdp_points)
@@ -144,14 +145,10 @@ def main(cld, clp, mode, cr_params, gd_params, semi_return, **kwargs):
     average all the radius values found for each interval.
     """
 
-    # Unpack
-    field_dens, center_params, rdp_params, bin_width = clp['field_dens'],\
-        clp['center_params'], clp['rdp_params'], clp['hist_lst'][-1]
-
     coord = prep_plots.coord_syst(gd_params)[0]
     # Call function that holds the radius finding algorithm.
     clust_rad, e_rad, flag_delta_total, flag_not_stable, flag_delta = \
-        radius_algor(rdp_params, field_dens, bin_width, coord, cr_params)
+        radius_algor(clp, coord, cr_params)
 
     # Check if semi or manual mode are set.
     flag_radius_manual = False
@@ -174,8 +171,7 @@ def main(cld, clp, mode, cr_params, gd_params, semi_return, **kwargs):
     elif mode == 'manual':
 
         print 'Radius found: {:g} {}.'.format(clust_rad, coord)
-        display_rad.main(cld, bin_width, center_params, clust_rad, e_rad,
-                         field_dens, rdp_params)
+        display_rad.main(cld, clp, gd_params, clust_rad, e_rad)
         plt.show()
 
         # Ask if the radius is accepted, or a if a another one should be used.
@@ -194,10 +190,12 @@ def main(cld, clp, mode, cr_params, gd_params, semi_return, **kwargs):
                 except:
                     print("Sorry, input is not valid. Try again.")
             else:
-                print("Sorry, input is not valid. Try again.\n")
+                print("Sorry, input is not valid. Try again.")
 
-    radius_params = [clust_rad, e_rad, flag_delta_total, flag_not_stable,
-                     flag_delta, flag_radius_manual]
-    clp['radius_params'] = radius_params
+    # Add data to dictionary.
+    clp['clust_rad'], clp['e_rad'], clp['flag_delta_total'],\
+        clp['flag_not_stable'], clp['flag_delta'],\
+        clp['flag_radius_manual'] = clust_rad, e_rad, flag_delta_total,\
+        flag_not_stable, flag_delta, flag_radius_manual
 
     return clp

@@ -2,20 +2,20 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-from ..inp import input_params as g
 from ..math_f import exp_function
 
 
-def main(er_mode, mag, err_plot, acpt_stars, rjct_stars, err_pck):
+def main(er_mode, mag, err_plot, acpt_stars, rjct_stars, err_pck, er_params,
+         axes_params, **kwargs):
     '''
     Plot errors diagrams.
     '''
 
     # Error parameters.
     be_m, interv_mag, mag_value = err_pck
-    e_max, be, be_e = g.er_params[1:4]
+    e_max, be, be_e = er_params[1:4]
     # Define names for CMD axes.
-    y_ax, x_ax0, m_ord = g.axes_params
+    y_ax, x_ax0, m_ord = axes_params
     if m_ord == 21:
         x_ax = '(' + x_ax0 + '-' + y_ax + ')'
     elif m_ord == 12:
@@ -134,4 +134,4 @@ def main(er_mode, mag, err_plot, acpt_stars, rjct_stars, err_pck):
                 s=1, zorder=2)
 
     plt.draw()
-    print 'Plot displayed, waiting for it to be closed.'
+    print("<<Plot displayed. Will continue after it is closed.>>")

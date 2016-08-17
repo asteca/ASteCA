@@ -23,7 +23,7 @@ from phot_analysis import integrated_mag
 from phot_analysis import kde_pvalue
 from decont_algors import bayesian_da
 from phot_analysis import members_N_compare
-from decont_algors import membership_removal
+from decont_algors import cl_region_clean
 from out import cluster_members_file
 from best_fit import synth_cl_err
 from best_fit import best_fit_synth_cl
@@ -56,26 +56,18 @@ def main(cl_file, pd):
     cld = get_data.main(data_file, **pd)
     # If Manual mode is set, display frame and ask if it should be trimmed.
     cld = trim_frame.main(cld, **pd)
-    # # Unpack coordinates, magnitude and color.
-    # x_data, y_data, mag_data, col1_data = phot_data[1], phot_data[2], \
-    #     phot_data[3], phot_data[5]
 
     # Obtain 2D coordinates histogram for the observed frame.
     # Return cluster's parameters dictionary 'clp'.
     clp = histo_2d.main(pd, **cld)
-    # bin_width = hist_lst[-1]
 
     # Get cluster's center coordinates and errors.
     clp = center.main(cld, clp, **pd)
-    # Unpack values from list.
-    # cent_bin, kde_center = center_params[0], center_params[1]
 
     # Get density profile
     clp = radial_dens_prof.main(clp)
-    # radii, rdp_points, square_rings, rdp_length = rdp_params[:2] + \
-    #     rdp_params[3:]
 
-    # Get field density value in stars/px^2.
+    # Get field density value in stars/<area unit>.
     clp = field_density.main(clp, **pd)
 
     # Get cluster radius
@@ -89,63 +81,47 @@ def main(cl_file, pd):
     clp, pd = err_accpt_rejct.main(cld, clp, pd)
 
     # Get stars in and out of cluster's radius.
-    cl_region, stars_out, stars_in_rjct, stars_out_rjct =\
-        stars_in_out_cl_reg.main(kde_center, clust_rad, acpt_stars, rjct_stars)
-    # Number of stars inside the cluster region (including stars with rejected
-    # photometric errors)
-    n_clust = len(cl_region) + len(stars_in_rjct)
+    clp = stars_in_out_cl_reg.main(clp)
 
     # Get cluster's area.
-    cl_area, frac_cl_area = cluster_area.main(
-        kde_center, clust_rad, x_data, y_data, square_rings, bin_width)
+    clp = cluster_area.main(clp, **cld)
 
     # Get approximate number of cluster's members.
-    n_memb, flag_num_memb_low = members_number.main(
-        n_clust, cl_area, field_dens, clust_rad, rdp_length)
+    clp = members_number.main(clp)
 
     # Get contamination index.
-    cont_index = contamination_index.main(n_clust, cl_area, field_dens,
-                                          clust_rad, rdp_length)
+    clp = contamination_index.main(clp)
 
     # Field regions around the cluster's center.
-    flag_no_fl_regs, field_region = field_regions.main(
-        semi_return, hist_lst, cent_bin, clust_rad, cl_area, stars_out)
+    clp = field_regions.main(clp, **pd)
 
     # Get the luminosity function and completeness level for each magnitude
     # bin. The completeness will be used by the isochrone/synthetic cluster
     # fitting algorithm.
-    lum_func, completeness = luminosity_func.main(
-        flag_no_fl_regs, mag_data, cl_region, field_region)
+    clp = luminosity_func.main(clp, **cld)
 
     # Calculate integrated magnitude.
-    integr_return = integrated_mag.main(cl_region, field_region,
-                                        flag_no_fl_regs)
+    clp = integrated_mag.main(clp, **pd)
 
     # Get physical cluster probability based on p_values distribution.
-    pval_test_params, flag_pval_test = kde_pvalue.main(
-        R_in_place, cl_region, field_region, col1_data, mag_data,
-        flag_no_fl_regs)
+    clp = kde_pvalue.main(clp, **pd)
 
-    # Apply decontamination algorithm if at least one equal-sized field region
-    # was found around the cluster.
-    bayes_da_return = bayesian_da.main(flag_no_fl_regs, cl_region,
-                                       field_region, memb_file)
+    # Apply decontamination algorithm.
+    clp = bayesian_da.main(clp, memb_file, **pd)
 
     # Obtain members parameter.
-    memb_par, n_memb_da, flag_memb_par = members_N_compare.main(
-        n_memb, bayes_da_return)
+    clp = members_N_compare.main(clp)
 
     # Reduce number of stars in cluster according to a lower membership
     # probability or magnitude limit.
-    memb_remove = membership_removal.main(n_memb, flag_no_fl_regs,
-                                          bayes_da_return, field_region)
+    clp = cl_region_clean.main(clp, **pd)
 
     # Create data file with membership probabilities.
-    cluster_members_file.main(memb_file_out, memb_remove)
+    cluster_members_file.main(memb_file_out, clp)
 
     # Obtain exponential error function parameters to use by the
     # synthetic cluster creation function.
-    err_lst = synth_cl_err.main(phot_data, err_pck)
+    clp = synth_cl_err.main(cld, clp)
     # Obtain best fitting parameters for cluster.
     bf_return = best_fit_synth_cl.main(err_lst, memb_remove[0], completeness,
                                        ip_list)

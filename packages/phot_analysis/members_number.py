@@ -1,6 +1,6 @@
 
 
-def main(n_clust, cl_area, field_dens, clust_rad, rdp_length):
+def main(clp):
     """
     Calculate the approximate number of cluster's members inside the cluster's
     radius. The process is as follows: field_dens is the density of field
@@ -11,6 +11,9 @@ def main(n_clust, cl_area, field_dens, clust_rad, rdp_length):
 
     n_c = n_clust - [field_dens * cluster_area]
     """
+
+    n_clust, cl_area, field_dens, clust_rad, rdp_length = clp['n_clust'],\
+        clp['cl_area'], clp['field_dens'], clp['clust_rad'], clp['rdp_length']
 
     # If the cluster radius exceeds the length of the area where the field
     # density value was obtained (ie: the extension of the RDP), then do not
@@ -36,4 +39,5 @@ def main(n_clust, cl_area, field_dens, clust_rad, rdp_length):
               "  the approximate number of members.")
         n_memb, flag_num_memb_low = -1., True
 
-    return n_memb, flag_num_memb_low
+    clp['n_memb'], clp['flag_num_memb_low'] = n_memb, flag_num_memb_low
+    return clp

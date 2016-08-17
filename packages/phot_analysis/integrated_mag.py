@@ -1,7 +1,6 @@
 
 import numpy as np
 from scipy.interpolate import spline
-from ..inp import input_params as g
 
 
 def calc_integ_mag(st_reg):
@@ -57,17 +56,18 @@ def field_reg_integ_mag_curve(fl_reg_m):
     return fl_reg_mag
 
 
-def main(cl_region, field_region, flag_no_fl_regs):
+def main(clp, im_flag, axes_params, **kwargs):
     '''
     Obtain integrated magnitude using all stars inside the cluster's radius for
     several limits in magnitude.
     '''
-
-    if g.im_flag:
+    cl_region, field_regions, flag_no_fl_regs = [
+        clp[_] for _ in ['cl_region', 'field_regions', 'flag_no_fl_regs']]
+    if im_flag:
 
         # This variable tells me how the color is created, if the first
         # magnitude is subtracted from the second one or the other way around.
-        m_ord = g.axes_params[2]
+        m_ord = axes_params[2]
         # Check how the second magnitude should be formed.
         sig = 1. if m_ord == 21 else -1.
 
@@ -86,7 +86,7 @@ def main(cl_region, field_region, flag_no_fl_regs):
 
             # Run for every field region defined.
             fl_reg_m = [[], []]
-            for f_reg in field_region:
+            for f_reg in field_regions:
                 # First magnitude values.
                 fl_reg_m[0].append(calc_integ_mag(zip(*f_reg)[3]))
                 # Second magnitude values.
@@ -130,11 +130,12 @@ def main(cl_region, field_region, flag_no_fl_regs):
                          fl_reg_mag2, integ_mag2]
 
         int_col = sig * (integ_mag2 - integ_mag1)
-        print 'Integrated color magnitude distribution obtained (%0.2f).' % \
-            int_col
+        print('Integrated color magnitude distribution'
+              ' obtained ({:.2f}).'.format(int_col))
 
     else:
-        print 'Skipping integrated magnitudes function.'
+        print('Skipping integrated magnitudes function.')
         integr_return = []
 
-    return integr_return
+    clp['integr_return'] = integr_return
+    return clp

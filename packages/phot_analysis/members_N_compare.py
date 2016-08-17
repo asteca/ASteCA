@@ -1,6 +1,6 @@
 
 
-def main(n_memb, bayes_da_return):
+def main(clp):
     '''
     Compare the estimated number of true members obtained via the stars density
     analysis done in `get_members_number` with the number of stars in the
@@ -9,7 +9,8 @@ def main(n_memb, bayes_da_return):
     stars.
     '''
 
-    memb_prob_avrg_sort, flag_decont_skip = bayes_da_return
+    n_memb, memb_prob_avrg_sort, flag_decont_skip = clp['n_memb'],\
+        clp['memb_prob_avrg_sort'], clp['flag_decont_skip']
 
     memb_par, n_memb_da, flag_memb_par = float("inf"), -1., False
     # Obtain parameter if the DA was applied.
@@ -36,4 +37,6 @@ def main(n_memb, bayes_da_return):
                       " members\n  (structural vs. photometric) differ"
                       " greatly.")
 
-    return memb_par, n_memb_da, flag_memb_par
+    clp['memb_par'], clp['n_memb_da'], clp['flag_memb_par'] =\
+        memb_par, n_memb_da, flag_memb_par
+    return clp

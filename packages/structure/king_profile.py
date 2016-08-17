@@ -143,8 +143,8 @@ def main(clp, kp_flag, gd_params, **kwargs):
     maximum central density are fitted.
     '''
 
-    clust_rad, field_dens, radii, rdp_points = clp['radius_params'][0],\
-        clp['field_dens'], clp['rdp_params'][0], clp['rdp_params'][1]
+    clust_rad, field_dens, radii, rdp_points = clp['clust_rad'],\
+        clp['field_dens'], clp['radii'], clp['rdp_points']
     # Flags that indicate either no convergence or that the fits were not
     # attempted.
     flag_2pk_conver, flag_3pk_conver = False, False
@@ -232,6 +232,8 @@ def main(clp, kp_flag, gd_params, **kwargs):
         else:
             print("Core & tidal radii not found.")
 
-    clp['kp_params'] = [rc, e_rc, rt, e_rt, n_c_k, kcp, cd, flag_2pk_conver,
-                        flag_3pk_conver]
+    clp['core_rad'], clp['e_core'], clp['tidal_rad'], clp['e_tidal'],\
+        clp['K_memb_num'], clp['K_conct_par'], clp['K_cent_dens'],\
+        clp['flag_2pk_conver'], clp['flag_3pk_conver'] = rc, e_rc, rt, e_rt,\
+        n_c_k, kcp, cd, flag_2pk_conver, flag_3pk_conver
     return clp

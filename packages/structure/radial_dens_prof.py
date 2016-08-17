@@ -15,8 +15,8 @@ def main(clp):
     the "ring densities" for those approximate values of r.
     """
 
-    hist_2d, bin_width = clp['hist_lst'][0], clp['hist_lst'][-1]
-    x_c_b, y_c_b = clp['center_params'][0]
+    hist_2d, bin_width = clp['hist_2d'], clp['bin_width']
+    x_c_b, y_c_b = clp['cent_bin']
 
     # Initialize lists.
     radii, rdp_points, poisson_error = [], [], []
@@ -94,8 +94,13 @@ def main(clp):
     # Transform from bin units to coordinate units before passing.
     rdp_length = rdp_length * bin_width
 
-    print 'Radial density profile (RDP) calculated.'
-    clp['rdp_params'] = [radii, rdp_points, poisson_error, square_rings,
-                         rdp_length]
+    print('Radial density profile (RDP) calculated.')
 
-    return clp
+    # Add data to dictionary.
+    rdp_params = {'radii': radii, 'rdp_points': rdp_points,
+                  'poisson_error': poisson_error, 'square_rings': square_rings,
+                  'rdp_length': rdp_length}
+    # Update 'clp' dictionary.
+    clp_updt = clp.copy()
+    clp_updt.update(rdp_params)
+    return clp_updt

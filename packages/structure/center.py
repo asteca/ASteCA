@@ -116,7 +116,7 @@ def main(cld, clp, mode, gd_params, semi_return, **kwargs):
     flag_center_manual = False
 
     # Unpack
-    hist, xedges, yedges = clp['hist_lst'][:3]
+    hist_2d, xedges, yedges = clp['hist_2d'], clp['xedges'], clp['yedges']
     x, y, mags = cld['x'], cld['y'], cld['mags']
 
     # This is the radius used in auto and manual mode to restrict the search
@@ -155,7 +155,8 @@ def main(cld, clp, mode, gd_params, semi_return, **kwargs):
 
             # For plotting.
             # 2D histogram with a Gaussian filter applied.
-            hist_2d_g = gaussian_filter(hist, st_dev_lst[0], mode='constant')
+            hist_2d_g = gaussian_filter(hist_2d, st_dev_lst[0],
+                                        mode='constant')
         else:
             # Use 'auto' mode.
             mode_semi = False
@@ -165,7 +166,7 @@ def main(cld, clp, mode, gd_params, semi_return, **kwargs):
         # Obtain approximate values for center coordinates using several
         # Gaussian filters with different standard deviation values, on the
         # 2D histogram.
-        hist_2d_g, approx_cents = center_approx(hist, xedges, yedges,
+        hist_2d_g, approx_cents = center_approx(hist_2d, xedges, yedges,
                                                 st_dev_lst)
 
         # Call funct to obtain the pixel coords of the maximum KDE value.
@@ -202,7 +203,7 @@ def main(cld, clp, mode, gd_params, semi_return, **kwargs):
         # Obtain approximate values for center coordinates using several
         # Gaussian filters with different standard deviation values, on the
         # 2D histogram.
-        hist_2d_g, approx_cents = center_approx(hist, xedges, yedges,
+        hist_2d_g, approx_cents = center_approx(hist_2d, xedges, yedges,
                                                 [st_dev_lst[0]])
 
         # Call funct to obtain the pixel coords of the maximum KDE value.
@@ -212,8 +213,7 @@ def main(cld, clp, mode, gd_params, semi_return, **kwargs):
         cent_bin = bin_center(xedges, yedges, kde_cent)
 
         # Show plot with center obtained.
-        display_cent.main(x, y, mags, kde_cent, cent_bin,
-                          hist_2d_g)
+        display_cent.main(x, y, mags, kde_cent, cent_bin, hist_2d_g, gd_params)
         plt.show()
         # No KDE plot is 'manual' mode is used.
         kde_plot = []
@@ -237,12 +237,17 @@ def main(cld, clp, mode, gd_params, semi_return, **kwargs):
                 except:
                     print("Sorry, input is not valid. Try again.")
             else:
-                print("Sorry, input is not valid. Try again.\n")
+                print("Sorry, input is not valid. Try again.")
 
-    center_params = [cent_bin, kde_cent, e_cent, approx_cents, st_dev_lst,
-                     hist_2d_g, kde_plot, flag_center_med, flag_center_std,
-                     flag_center_manual]
     # Add data to dictionary.
-    clp['center_params'] = center_params
+    center_params = {
+        'cent_bin': cent_bin, 'clust_cent': kde_cent, 'e_cent': e_cent,
+        'approx_cents': approx_cents, 'st_dev_lst': st_dev_lst,
+        'hist_2d_g': hist_2d_g, 'kde_plot': kde_plot,
+        'flag_center_med': flag_center_med, 'flag_center_std': flag_center_std,
+        'flag_center_manual': flag_center_manual}
+    # Update 'clp' dictionary.
+    clp_updt = clp.copy()
+    clp_updt.update(center_params)
 
-    return clp
+    return clp_updt

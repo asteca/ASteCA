@@ -2,7 +2,6 @@
 import numpy as np
 from scipy import stats
 from scipy.integrate import quad
-from ..inp import input_params as g
 
 
 def gauss_error(col, e_col, mag, e_mag):
@@ -43,7 +42,7 @@ def get_CMD(region):
     return matrix
 
 
-def KDE_test(cl_region, field_region, col1_data, mag_data, flag_no_fl_regs):
+def KDE_test(clp, pv_params):
     '''
     Compare the cluster region KDE with all the field region KDEs using Duong's
     ks package (developed in R) to obtain a p-value. This value will be close
@@ -55,8 +54,10 @@ def KDE_test(cl_region, field_region, col1_data, mag_data, flag_no_fl_regs):
     minus the overlap between the KDEs of the distributions of p-values for
     the cluster vs field and field vs field comparisons.
     '''
-
-    mode_pv, num_runs = g.pv_params
+    cl_region, field_region, flag_no_fl_regs = [
+        clp[_] for _ in ['cl_region', 'field_region', 'flag_no_fl_regs']]
+    # mags, cols = cld['mags'], cld['cols']
+    mode_pv, num_runs = pv_params
     flag_pval_test = True if mode_pv in {'auto', 'manual'} else False
 
     # Skip test if < 10 members are found within the cluster's radius.
@@ -119,7 +120,7 @@ def KDE_test(cl_region, field_region, col1_data, mag_data, flag_no_fl_regs):
                                          nrow=rows_cl, byrow=True)
                 m_f1 = robjects.r.matrix(robjects.FloatVector(matrix_f1),
                                          nrow=rows_f1, byrow=True)
-                # Bandwith matrices.
+                # Bandwidth matrices.
                 hpic = hpi_kfe(x=m_cl, binned=True)
                 hpif1 = hpi_kfe(x=m_f1, binned=True)
 
@@ -203,16 +204,16 @@ def KDE_test(cl_region, field_region, col1_data, mag_data, flag_no_fl_regs):
     return pval_test_params, flag_pval_test
 
 
-def main(R_in_place, cl_region, field_region, col1_data, mag_data,
-         flag_no_fl_regs):
+def main(clp, pv_params, R_in_place, **kwargs):
     """
     Only run function if the necessary application and packages are in place.
     """
     if R_in_place:
-        pval_test_params, flag_pval_test = KDE_test(
-            cl_region, field_region, col1_data, mag_data, flag_no_fl_regs)
+        pval_test_params, flag_pval_test = KDE_test(clp, pv_params)
     else:
         print('Missing package. Skipping KDE p-value test for cluster.')
         flag_pval_test, pval_test_params = False, [-1.]
 
-    return pval_test_params, flag_pval_test
+    clp['pval_test_params'], clp['flag_pval_test'] =\
+        pval_test_params, flag_pval_test
+    return clp

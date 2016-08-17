@@ -3,7 +3,6 @@ import numpy as np
 import random
 from astroML.plotting import hist
 import operator
-from ..inp import input_params as g
 from bayesian_da import sort_members
 
 
@@ -162,16 +161,14 @@ def get_fit_stars(cl_hist_p, f_hist, flag_decont_skip):
     return red_memb_fit, red_memb_no_fit, min_prob
 
 
-def main(decont_algor_return, field_region):
+def main(field_regions, memb_prob_avrg_sort, flag_decont_skip, rm_params):
     '''
     Takes the photometric diagram (CMD, CCD, etc.) of the cluster region with
     assigned MPs, divides it into sub-regions (cells) according to the
     density within it, and removes in each sub-region a number of stars
     equal to the average excess due to field star contamination.
     '''
-
-    memb_prob_avrg_sort, flag_decont_skip = decont_algor_return
-    local_bin = g.rm_params[1]
+    local_bin = rm_params[1]
 
     # Remove ID's and zip.
     P = np.array(zip(*memb_prob_avrg_sort)[1:], dtype='float')
@@ -186,7 +183,7 @@ def main(decont_algor_return, field_region):
                                          bin_edges)
 
     # Obtain field regions histogram (only number of stars in each cell).
-    f_hist = get_fl_reg_hist(field_region, bin_edges, cl_hist)
+    f_hist = get_fl_reg_hist(field_regions, bin_edges, cl_hist)
 
     # Obtain stars separated in list to be used by the BF func and list of
     # those discarded stars.

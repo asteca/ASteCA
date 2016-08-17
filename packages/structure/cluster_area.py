@@ -2,19 +2,21 @@
 import numpy as np
 
 
-def main(kde_center, clust_rad, x_data, y_data, square_rings, bw):
+def main(clp, x, y, **kwargs):
     """
     Obtain the cluster's area. If the cluster is cropped, calculate the
     correct area by counting the bins that compose it's region.'
     """
+    clust_cent, clust_rad, square_rings, bin_width = clp['clust_cent'],\
+        clp['clust_rad'], clp['rdp_points'], clp['bin_width']
 
-    x_max, x_min = max(x_data), min(x_data)
-    y_max, y_min = max(y_data), min(y_data)
+    x_max, x_min = max(x), min(x)
+    y_max, y_min = max(y), min(y)
     # Check if a portion of the cluster's region falls outside the frame.
-    if kde_center[0] + clust_rad <= x_max and \
-        kde_center[0] - clust_rad >= x_min and \
-        kde_center[1] + clust_rad <= y_max and \
-            kde_center[1] - clust_rad >= y_min:
+    if clust_cent[0] + clust_rad <= x_max and \
+        clust_cent[0] - clust_rad >= x_min and \
+        clust_cent[1] + clust_rad <= y_max and \
+            clust_cent[1] - clust_rad >= y_min:
 
         # Cluster's area.
         cl_area = np.pi * clust_rad ** 2
@@ -23,7 +25,7 @@ def main(kde_center, clust_rad, x_data, y_data, square_rings, bw):
 
     else:
         # Index of point in RDP closer to the calculated cluster radius.
-        sq_indx = int(round(((clust_rad - (bw / 2.)) / bw) + 1))
+        sq_indx = int(round(((clust_rad - (bin_width / 2.)) / bin_width) + 1))
 
         sum_bins_in_rad = 0.
         # For each square ring until reaching the limit imposed by the
@@ -39,26 +41,29 @@ def main(kde_center, clust_rad, x_data, y_data, square_rings, bw):
                 # Coordinates of farthest corner of bin.
                 x_cor, y_cor = x_b + x_s / 2., y_b + y_s / 2.
                 # Coordinates of corner of bin with center in (0., 0.)
-                x_c, y_c = (x_cor * bw) + (bw / 2.), (y_cor * bw) + (bw / 2.)
+                x_c, y_c = (x_cor * bin_width) + (bin_width / 2.),\
+                    (y_cor * bin_width) + (bin_width / 2.)
                 # Distance of center to corner of bin.
                 bin_dist = np.sqrt(x_c ** 2 + y_c ** 2)
                 # Length of bin diagonal.
-                bin_diag = np.sqrt(2 * bw ** 2)
+                bin_diag = np.sqrt(2 * bin_width ** 2)
                 if bin_dist - clust_rad > bin_diag:
                     # The entire bin is outside of the cluster radius range.
                     pass
                 elif 0. < bin_dist - clust_rad <= bin_diag:
                     # Add a portion of the bin to the total sum of bins.
-                    sum_bins_in_rad += min(1., (bin_dist - clust_rad) / bw)
+                    sum_bins_in_rad += min(1., (bin_dist - clust_rad) /
+                                           bin_width)
                 else:
                     # Add entire bin.
                     sum_bins_in_rad += 1.
 
         # Cluster's area.
-        cl_area = (sum_bins_in_rad * bw ** 2)
+        cl_area = (sum_bins_in_rad * bin_width ** 2)
         # Fraction of cluster's area present in frame.
         frac_cl_area = cl_area / (np.pi * clust_rad ** 2)
 
-    print "Area of cluster obtained."
+    clp['cl_area'], clp['frac_cl_area'] = cl_area, frac_cl_area
+    print("Area of cluster obtained.")
 
-    return cl_area, frac_cl_area
+    return clp
