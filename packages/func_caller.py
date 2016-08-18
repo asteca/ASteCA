@@ -121,10 +121,10 @@ def main(cl_file, pd):
 
     # Obtain exponential error function parameters to use by the
     # synthetic cluster creation function.
-    clp = synth_cl_err.main(cld, clp)
+    clp = synth_cl_err.main(cld, clp, **pd)
     # Obtain best fitting parameters for cluster.
-    bf_return = best_fit_synth_cl.main(err_lst, memb_remove[0], completeness,
-                                       ip_list)
+    clp = best_fit_synth_cl.main(clp, **pd)
+        # err_lst, memb_remove[0], completeness, ip_list)
 
     # Create output synthetic cluster file if one was found
     synth_cl_file.main(bf_return[3], synth_file_out)

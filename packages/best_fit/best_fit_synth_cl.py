@@ -1,6 +1,5 @@
 
 import numpy as np
-from ..inp import input_params as g
 import obs_clust_prepare
 import genetic_algorithm
 import brute_force_algor
@@ -38,12 +37,12 @@ def synth_cl_plot(ip_list, isoch_fit_params, err_lst, completeness,
 
 
 def params_errors(ip_list, err_lst, memb_prob_avrg_sort, completeness,
-                  st_dist_mass, isoch_fit_params):
+                  st_dist_mass, isoch_fit_params, bf_params):
     '''
     Obtain errors for the fitted parameters.
     '''
 
-    best_fit_algor, N_b = g.bf_params[1], g.bf_params[-1]
+    best_fit_algor, N_b = bf_params[1], bf_params[-1]
 
     if best_fit_algor == 'brute':
         isoch_fit_errors = []
@@ -75,26 +74,27 @@ def params_errors(ip_list, err_lst, memb_prob_avrg_sort, completeness,
     return isoch_fit_errors
 
 
-def main(err_lst, memb_prob_avrg_sort, completeness, ip_list):
+def main(clp, ip_list, bf_params, sc_params, ga_params, **kwargs):
     '''
     Perform a best fitting process to find the cluster's fundamental
     parameters.
     '''
-
-    bf_flag, best_fit_algor, lkl_method, bin_method = g.bf_params[:-1]
+    err_lst, memb_prob_avrg_sort, completeness = clp['err_lst'],\
+        clp['memb_prob_avrg_sort'], clp['completeness']
+    bf_flag, best_fit_algor, lkl_method, bin_method = bf_params[:-1]
 
     # Check if algorithm should run.
     if bf_flag:
 
         print('Searching for optimal parameters.')
 
-        obs_clust = obs_clust_prepare.main(memb_prob_avrg_sort)
+        obs_clust = obs_clust_prepare.main(memb_prob_avrg_sort, bf_params)
         # Store for plotting purposes.
         syn_b_edges = obs_clust[1]
 
         # Obtain mass distribution using the selected IMF. We run it once
         # because the array only depends on the IMF selected.
-        st_dist_mass = imf.main()
+        st_dist_mass = imf.main(sc_params)
 
         # Call algorithm to calculate the likelihoods for the set of
         # isochrones and return the best fitting parameters.
@@ -105,7 +105,8 @@ def main(err_lst, memb_prob_avrg_sort, completeness, ip_list):
                 else lkl_method))
             # Brute force algorithm.
             isoch_fit_params = brute_force_algor.main(
-                err_lst, obs_clust, completeness, ip_list, st_dist_mass)
+                bf_params, err_lst, obs_clust, completeness, ip_list,
+                st_dist_mass)
 
         elif best_fit_algor == 'genet':
 
@@ -118,14 +119,14 @@ def main(err_lst, memb_prob_avrg_sort, completeness, ip_list):
             flag_print_perc = True
             isoch_fit_params = genetic_algorithm.main(
                 flag_print_perc, err_lst, obs_clust, completeness, ip_list,
-                st_dist_mass)
+                st_dist_mass, ga_params, bf_params)
 
         print("Best fit parameters obtained.")
 
         # Assign errors for each parameter.
         isoch_fit_errors = params_errors(ip_list, err_lst, memb_prob_avrg_sort,
                                          completeness, st_dist_mass,
-                                         isoch_fit_params)
+                                         isoch_fit_params, bf_params)
 
         # Generate shifted isochrone and synthetic cluster for plotting.
         # Do this BEFORE rounding the parameter values.

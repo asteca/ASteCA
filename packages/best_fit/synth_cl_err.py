@@ -1,17 +1,18 @@
 
 from scipy.optimize import curve_fit
 import numpy as np
-from ..inp import input_params as g
 from ..errors import err_medians
 from ..math_f import exp_function
 
 
-def get_m_c_errors(mag, mag_value, e_mc_v):
+def get_m_c_errors(mags, err_pck, e_mc_v, er_params):
     '''
     Fit 3P or 2P exponential curve.
     '''
-
-    e_max = g.er_params[1]
+    # List of points spanning the magnitude range starting from the bright end.
+    mag_value = err_pck[2]
+    # Maximum accepted photometric error value.
+    e_max = er_params[1]
 
     try:
         # Fit 3-param exponential curve.
@@ -33,7 +34,8 @@ def get_m_c_errors(mag, mag_value, e_mc_v):
         except RuntimeError:
 
                 # Fit simple 2-params exponential curve.
-                mag_value = [min(mag), max(mag) - (max(mag) - min(mag)) / 20.]
+                mag_value = [min(mags), max(mags) - (max(mags) -
+                             min(mags)) / 20.]
                 e_mc_r = [0.01, e_max]
                 popt_mc, dummy = curve_fit(exp_function.exp_2p, mag_value,
                                            e_mc_r)
@@ -43,29 +45,30 @@ def get_m_c_errors(mag, mag_value, e_mc_v):
     return popt_mc
 
 
-def main(phot_data, err_pck):
+def main(cld, clp, er_params, **kwargs):
     '''
     Generate exponential error function parameters to feed the synthetic
     cluster generation function.
     '''
 
     # Unpack params.
-    mag, e_mag, e_col = phot_data[3], phot_data[4], phot_data[6]
-    mag_value = err_pck[2]
+    err_pck = clp['err_pck']
+    mags = cld['mags']
 
     # Call function to obtain the median points for magnitude
     # and color errors to fit the exponential curve.
-    e_mag_value, e_col_value = err_medians.main('synth_clust', err_pck, mag,
-                                                e_mag, e_col)
+    e_mag_value, e_col_value = err_medians.main('synth_clust', err_pck, cld,
+                                                er_params)
 
     err_lst = []
 
     for e_mag_v in [e_mag_value]:
-        popt_mc = get_m_c_errors(mag, mag_value, e_mag_v)
+        popt_mc = get_m_c_errors(mags, err_pck, e_mag_v, er_params)
         err_lst.append(popt_mc)
 
     for e_col_v in [e_col_value]:
-        popt_mc = get_m_c_errors(mag, mag_value, e_col_v)
+        popt_mc = get_m_c_errors(mags, err_pck, e_col_v, er_params)
         err_lst.append(popt_mc)
 
-    return err_lst
+    clp['err_lst'] = err_lst
+    return clp

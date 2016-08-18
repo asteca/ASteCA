@@ -1,7 +1,6 @@
 
 import numpy as np
 import synth_cluster
-from ..inp import input_params as g
 
 #############################################################
 # # Timer function: http://stackoverflow.com/a/21860100/1391441
@@ -264,7 +263,7 @@ def mighell(Q, P):
     return chi
 
 
-def main(err_lst, obs_clust, completeness, st_dist_mass, isochrone,
+def main(bf_params, err_lst, obs_clust, completeness, st_dist_mass, isochrone,
          params):
     '''
     Call with an isochrone of given values for metallicity and age and supply
@@ -281,7 +280,7 @@ def main(err_lst, obs_clust, completeness, st_dist_mass, isochrone,
 
     # Call function to obtain the likelihood by comparing the synthetic cluster
     # with the observed cluster.
-    lkl_method = g.bf_params[2]
+    lkl_method = bf_params[2]
     if lkl_method == 'tolstoy':
         likelihood = tolstoy(synth_clust, obs_clust)
     else:
