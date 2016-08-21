@@ -25,16 +25,12 @@ def main(bf_params, ps_params, tracks_dict, **kwargs):
     # Only read files of best fit method is set to run.
     bf_flag = bf_params[0]
     if bf_flag:
-
-        # Unpack.
-        iso_path, iso_select = ps_params[0], ps_params[2]
-
         # Obtain allowed metallicities and ages. Use the first photometric
         # system defined.
         # *WE ASUME ALL PHOTOMETRIC SYSTEMS CONTAIN THE SAME NUMBER OF
         # METALLICITY FILES*
         param_ranges, met_f_filter, met_values, age_values =\
-            met_ages_values.main(iso_path, ps_params)
+            met_ages_values.main(ps_params)
 
         # Get isochrones and their parameter values.
         isoch_list = read_isochs.main(met_f_filter, age_values, ps_params)
@@ -52,20 +48,14 @@ def main(bf_params, ps_params, tracks_dict, **kwargs):
         # Obtain number of models in the solutions space.
         lens = [len(_) for _ in param_values]
         total = reduce(lambda x, y: x * y, lens, 1)
-        # Map isochrones set selection to proper name.
-        iso_print = tracks_dict.get(iso_select)
-        # Extract photometric system used,m from the isochrone's folder name.
-        syst = ps_params[0].split('_', 1)[1]
-        print("{} theoretical isochrones in the '{}'".format(
-            iso_print, syst))
-        print (
-            "photometric system read, interpolated, and stored.\n"
+        print(
+            "Number of values per parameter:\n"
             "  {} metallicity values (z),\n"
             "  {} age values (per z),\n"
             "  {} reddening values,\n"
             "  {} distance values,\n"
             "  {} mass values,\n"
             "  {} binary fraction values.".format(*lens))
-        print "  = {:.1e} approx total models.\n".format(total)
+        print("  = {:.1e} approx total models.\n".format(total))
 
     return ip_list

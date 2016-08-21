@@ -61,14 +61,17 @@ def pl_bf_synth_cl(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
     iso_print = tracks_dict.get(iso_select)
     t1 = r'$Synthetic\;cluster\;parameters$' + '\n' + \
         r'$[Tracks:\;{}]$'.format(iso_print.replace(' ', '\;')) + '\n\n'
-    t2 = r'$z\qquad\; =\, {} \pm {}$'.format(cp_r[0], cp_e[0]) + '\n'
-    t3 = r'$log(age)\, =\, {} \pm {}$'.format(cp_r[1], cp_e[1]) + '\n'
-    t4 = r'$E_{{(B-V)}}\;\,=\, {} \pm {}$'.format(cp_r[2], cp_e[2]) + '\n'
-    t5 = r'$(m-M)_o = {} \pm {}$'.format(cp_r[3], cp_e[3]) + '\n'
-    t6 = r'$M\,(M_{{\odot}})\quad\;=\,{} \pm {}$'.format(
-        cp_r[4], cp_e[4]) + '\n'
-    t7 = r'$b_{{frac}}\quad\,\, =\, {} \pm {}$'.format(cp_r[5], cp_e[5]) + '\n'
-    text = t1 + t2 + t3 + t4 + t5 + t6 + t7
+    t2 = r'$z$' + '            ' + r'$=\, {} \pm {}$'.format(cp_r[0], cp_e[0])
+    t3 = r'$\log(age)$' + '   ' + r'$=\, {} \pm {}$'.format(cp_r[1], cp_e[1])
+    t4 = r'$E_{{(B-V)}}$' + '    ' + r'$=\, {} \pm {}$'.format(
+        cp_r[2], cp_e[2])
+    t5 = r'$(m-M)_o=\, {} \pm {}$'.format(cp_r[3], cp_e[3])
+    t6 = r'$M\,(M_{{\odot}})$' + '   ' + r'$=\,{} \pm {}$'.format(
+        cp_r[4], cp_e[4])
+    t7 = r'$b_{{frac}}$' + '        ' + r'$=\, {} \pm {}$'.format(
+        cp_r[5], cp_e[5])
+    text = t1 + t2 + '\n' + t3 + '\n' + t4 + '\n' + t5 + '\n' + t6 + '\n' +\
+        t7 + '\n'
     ob = offsetbox.AnchoredText(text, pad=1, loc=6, prop=dict(size=13))
     ob.patch.set(alpha=0.85)
     ax_t.add_artist(ob)
@@ -245,7 +248,6 @@ def plot(N, *args):
     '''
     Handle each plot separately.
     '''
-
     plt_map = {
         0: [pl_bf_synth_cl, 'synthetic cluster'],
         1: [pl_ga_lkl, 'GA likelihood evolution'],
@@ -268,6 +270,6 @@ def plot(N, *args):
     try:
         fxn(*args)
     except:
-        import traceback
-        print traceback.format_exc()
+        # import traceback
+        # print traceback.format_exc()
         print("  WARNING: error when plotting {}.".format(plt_map.get(N)[1]))

@@ -215,6 +215,10 @@ def main(mypath, pars_f_path):
     ga_params = [n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es]
     rm_params = [mode_red_memb, local_bin, min_prob]
 
+    # Define tuple of accepted binning methods.
+    bin_methods = ('blocks', 'knuth', 'scott', 'freedman', 'sturges',
+                   'sqrt', 'bb')
+
     # Store all read parameters in dictionary.
     pd = {'up_flag': up_flag, 'mode': mode, 'done_dir': done_dir,
           'gd_params': gd_params, 'gh_params': gh_params,
@@ -225,7 +229,8 @@ def main(mypath, pars_f_path):
           'bf_params': bf_params, 'sc_params': sc_params,
           'ga_params': ga_params, 'rm_params': rm_params,
           'pl_params': pl_params, 'flag_move_file': flag_move_file,
-          'axes_params': axes_params, 'flag_back_force': flag_back_force}
+          'axes_params': axes_params, 'flag_back_force': flag_back_force,
+          'bin_methods': bin_methods}
 
     # Return parameters dictionary 'pd'
     return pd

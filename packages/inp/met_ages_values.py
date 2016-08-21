@@ -107,7 +107,7 @@ def get_metals(iso_path):
     return met_vals_all, met_files
 
 
-def main(iso_path, ps_params):
+def main(ps_params):
     '''
     Run once to obtain the correct metallicities and ages to be used
     by the code.
@@ -116,6 +116,7 @@ def main(iso_path, ps_params):
     # Read names of all metallicity files stored in isochrones path given.
     # I.e.: store all metallicity values available.
     # Also read full paths to metallicity files.
+    iso_path = ps_params[0]
     met_vals_all, metal_files = get_metals(iso_path)
 
     # Read all ages from the *first* metallicity file defined.

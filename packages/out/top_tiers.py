@@ -47,15 +47,15 @@ def top_tiers_file(output_subdir, clust_name, best_model, top_tiers):
             f_out.write('\n')
 
 
-def plot_top_tiers(top_tiers_flo, output_subdir, clust_name, mag_data,
-                   col_data, ip_list, err_lst, completeness, pd):
+def plot_top_tiers(top_tiers_flo, output_subdir, clust_name, mags,
+                   cols, ip_list, err_lst, completeness, pd):
     '''
     Plot all top tiers.
     '''
-    e_max, bin_mass_ratio, cmd_sel, pl_params = pd['e_max'],\
-        pd['bin_mass_ratio'], pd['cmd_sel'], pd['pl_params']
+    e_max, bin_mr, cmd_sel, pl_params = pd['er_params'][1],\
+        pd['sc_params'][2], pd['ps_params'][1], pd['pl_params']
     # Obtain mass distribution using the selected IMF.
-    st_dist_mass = imf.main()
+    st_dist_mass = imf.main(pd['sc_params'])
 
     # figsize(x1, y1), GridSpec(y2, x2) --> To have square plots: x1/x2 =
     # y1/y2 = 2.5
@@ -66,8 +66,8 @@ def plot_top_tiers(top_tiers_flo, output_subdir, clust_name, mag_data,
     x_coord = 0.95 - (len(__version__) - 6) * 0.001
     plt.figtext(x_coord, .986, ver, fontsize=9, color='#585858')
 
-    phot_x, phot_y = prep_plots.ax_data(mag_data, col_data)
-    x_ax, y_ax, x_ax0, y_axis = prep_plots.ax_names()
+    phot_x, phot_y = prep_plots.ax_data(mags, cols)
+    x_ax, y_ax, x_ax0, y_axis = prep_plots.ax_names(pd['axes_params'])
     x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd = prep_plots.diag_limits(
         y_axis, phot_x, phot_y)
 
@@ -76,7 +76,7 @@ def plot_top_tiers(top_tiers_flo, output_subdir, clust_name, mag_data,
         # Call function to generate synthetic cluster.
         shift_isoch, synth_clst = synth_cl_plot(
             ip_list, [mod], err_lst, completeness, st_dist_mass,
-            e_max, bin_mass_ratio, cmd_sel)
+            e_max, bin_mr, cmd_sel)
         # Store plotting parameters.
         synth_cls.append([gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
                          x_ax, y_ax, synth_clst, mod, shift_isoch])
@@ -101,8 +101,8 @@ def main(npd, cld, pd, err_lst, completeness, isoch_fit_params, **kwargs):
     '''
 
     clust_name, output_subdir = npd['clust_name'], npd['output_subdir']
-    ip_list, mags, cols, bf_flag = cld['mags'], cld['cols'],\
-        pd['bf_params'][0], pd['ip_list']
+    ip_list, bf_flag = pd['ip_list'], pd['bf_params'][0]
+    mags, cols = cld['mags'], cld['cols']
 
     if bf_flag:
         all_models = isoch_fit_params[-1]
@@ -151,6 +151,8 @@ def main(npd, cld, pd, err_lst, completeness, isoch_fit_params, **kwargs):
                         cols, ip_list, err_lst, completeness, pd)
                     print('Top tier models saved to file and plotted.')
                 except:
+                    import traceback
+                    print traceback.format_exc()
                     print("  ERROR: top tiers plot could not be generated.")
             else:
                 # If top tiers were found but no plot is produced.

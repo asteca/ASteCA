@@ -19,8 +19,7 @@ def find_missing(arr_large, arr_small):
     return missing
 
 
-def check(bin_methods_dict, bf_params, ps_params, sc_params, ga_params,
-          **kwargs):
+def check(bin_methods, bf_params, ps_params, sc_params, ga_params, **kwargs):
     """
     Check all parameters related to the search for the best synthetic cluster
     match.
@@ -71,7 +70,7 @@ def check(bin_methods_dict, bf_params, ps_params, sc_params, ga_params,
                      " match a valid input.".format(lkl_method))
 
         # Check binning method selected.
-        if lkl_method == 'dolphin' and bin_method not in bin_methods_dict:
+        if lkl_method == 'dolphin' and bin_method not in bin_methods:
             sys.exit("ERROR: the selected binning method '{}' for the 'Best"
                      "\nfit' function does not match a valid input."
                      .format(bin_method))
@@ -152,7 +151,7 @@ def check(bin_methods_dict, bf_params, ps_params, sc_params, ga_params,
 
         # Get parameters values defined.
         param_ranges, met_f_filter, met_values, age_values = \
-            met_ages_values.main(iso_path, ps_params)
+            met_ages_values.main(ps_params)
         # Check that ranges are properly defined.
         for i, p in enumerate(param_ranges):
             if not p.size:
@@ -164,8 +163,8 @@ def check(bin_methods_dict, bf_params, ps_params, sc_params, ga_params,
         # Match values in metallicity and age ranges with those available.
         z_range, a_range = param_ranges[:2]
 
-        err_mssg = "ERROR: one or more metallicity files could not be\n" +\
-                   "matched to the range given.\n\n" +\
+        err_mssg = "ERROR: one or more metallicity files\n" +\
+                   "could not be matched to the range given.\n\n" +\
                    "The defined values are:\n\n" +\
                    "{}\n\nand the closest available values are:\n\n" +\
                    "{}\n\nThe missing elements are:\n\n{}"

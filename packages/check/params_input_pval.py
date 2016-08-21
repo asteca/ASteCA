@@ -67,17 +67,18 @@ def R_check(inst_packgs_lst):
     return R_in_place
 
 
-def check(inst_packgs_lst, pv_params, **kwargs):
+def check(inst_packgs_lst, pd):
     """
     Check that the R statistical software and the rpy2 package are installed,
     if necessary.
+    R_in_place = True indicates that R and rpy2 are installed.
     """
-
+    kde_test_mode = pd['pv_params'][0]
     # Check KDE p-value cluster probability function.
-    if pv_params[0] not in {'auto', 'manual', 'skip'}:
+    if kde_test_mode not in {'auto', 'manual', 'skip'}:
         sys.exit("ERROR: Wrong name ('{}') for 'mode' in KDE p-value test."
-                 .format(pv_params[0]))
-    elif pv_params[0] in {'auto', 'manual'}:
+                 .format(kde_test_mode))
+    elif kde_test_mode in {'auto', 'manual'}:
         # Check if R and rpy2 are installed.
         R_in_place = R_check(inst_packgs_lst)
     else:
@@ -85,4 +86,6 @@ def check(inst_packgs_lst, pv_params, **kwargs):
         # installed since it will be skipped anyway.
         R_in_place = True
 
-    return R_in_place
+    # Add to parameters dict.
+    pd['R_in_place'] = R_in_place
+    return pd

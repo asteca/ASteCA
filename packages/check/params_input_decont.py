@@ -4,7 +4,7 @@ from os.path import isfile
 from packages.inp import names_paths
 
 
-def check(cl_files, bin_methods_dict, da_params, rm_params, **kwargs):
+def check(cl_files, bin_methods, da_params, rm_params, **kwargs):
     """
     Check parameters related to the decontamination algorithm functions.
     """
@@ -21,7 +21,7 @@ def check(cl_files, bin_methods_dict, da_params, rm_params, **kwargs):
         for cl_file in cl_files:
 
             # Get memb file names.
-            memb_file = names_paths.main(cl_file)[2]
+            memb_file = names_paths.memb_file_name(cl_file)
             if not isfile(memb_file):
                 # File does not exist.
                 sys.exit("ERROR: 'read' mode was set for decontamination "
@@ -35,7 +35,7 @@ def check(cl_files, bin_methods_dict, da_params, rm_params, **kwargs):
         sys.exit("ERROR: the selected reduced membership method ('{}')"
                  " does\nnot match a valid input.".format(mode_red_memb))
     # Check binning if 'local' method was selected.
-    if mode_red_memb == 'local' and local_bin not in bin_methods_dict:
+    if mode_red_memb == 'local' and local_bin not in bin_methods:
         sys.exit("ERROR: the selected binning method '{}' for the 'Reduced"
                  "\nmembership' function does not match a valid input."
                  .format(local_bin))
