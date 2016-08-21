@@ -160,8 +160,9 @@ def selection(generation, breed_prob):
     return select_chrom
 
 
-def evaluation(bf_params, err_lst, obs_clust, completeness, isoch_list,
-               param_values, p_lst, st_dist_mass, model_done):
+def evaluation(lkl_method, e_max, bin_mass_ratio, cmd_sel, err_lst, obs_clust,
+               completeness, isoch_list, param_values, p_lst, st_dist_mass,
+               model_done):
     '''
     Evaluate each model in the objective function to obtain the fitness of
     each one.
@@ -179,8 +180,8 @@ def evaluation(bf_params, err_lst, obs_clust, completeness, isoch_list,
         # Call likelihood function for this model.
         # with timeblock(" Likelihood"):
         likelihood = sc_likelihood.main(
-            bf_params, err_lst, obs_clust, completeness, st_dist_mass,
-            isochrone, model)
+            lkl_method, e_max, bin_mass_ratio, cmd_sel, err_lst, obs_clust,
+            completeness, st_dist_mass, isochrone, model)
 
         # Check if this model was already processed. Without this check here,
         # the extinction/immigration operator becomes useless, since the best
@@ -273,12 +274,12 @@ def num_binary_digits(param_values):
 
 
 def main(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
-         st_dist_mass, ga_params, bf_params):
+         st_dist_mass, ga_params, lkl_method, cmd_sel, e_max, bin_mass_ratio):
     '''
     Genetic algorithm adapted to find the best fit model-observation.
     '''
 
-    # Unpack.
+    # Unpack parameters that affect how the synthetic cluster is generated.
     isoch_list, param_values = ip_list
     n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es = ga_params
     # Check if n_pop is odd. If it is sum 1 to avoid conflict if cr_sel
@@ -304,8 +305,9 @@ def main(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
 
     # Evaluate initial random solutions in the objective function.
     generation, lkl, model_done = evaluation(
-        bf_params, err_lst, obs_clust, completeness, isoch_list, param_values,
-        p_lst_r, st_dist_mass, model_done)
+        lkl_method, e_max, bin_mass_ratio, cmd_sel, err_lst, obs_clust,
+        completeness, isoch_list, param_values, p_lst_r, st_dist_mass,
+        model_done)
 
     # Store best solution for passing along in the 'Elitism' block.
     best_sol = generation[:n_el]
@@ -363,8 +365,9 @@ def main(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
         # according to the best solutions found.
         # with timeblock("Evaluation"):
         generation, lkl, model_done = evaluation(
-            err_lst, obs_clust, completeness, isoch_list, param_values,
-            p_lst_e, st_dist_mass, model_done)
+            lkl_method, e_max, bin_mass_ratio, cmd_sel, err_lst, obs_clust,
+            completeness, isoch_list, param_values, p_lst_e, st_dist_mass,
+            model_done)
 
         # *** Extinction/Immigration ***
         # If the best solution has remained unchanged for n_ei

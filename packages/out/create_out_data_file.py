@@ -1,18 +1,16 @@
 
 from time import strftime
-from os.path import exists, isfile, join
+from os.path import exists, isfile
 from os import mkdir
 from .._version import __version__
 
 
-def main(output_dir):
+def main(npd):
     '''
     Create output data file with headers. This will not overwrite any old
     output data file already in the folder.
     '''
-
-    # Output file name.
-    out_file_name = join(output_dir, 'asteca_output.dat')
+    output_dir, out_file_name = npd['output_dir'], npd['out_file_name']
     # Current time and date.
     now_time = strftime("%Y-%m-%d %H:%M:%S")
 
@@ -127,4 +125,3 @@ e_bf      \
 M1 M2  f1 f2 f3 f4 f5 f6 f7 f8 f9 f10  FC\n".format(__version__, now_time))
             print 'Output data file created.'
 
-    return out_file_name

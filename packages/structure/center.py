@@ -101,7 +101,8 @@ def bin_center(xedges, yedges, kde_cent):
     return cent_bin
 
 
-def main(cld, clp, mode, gd_params, semi_return, **kwargs):
+def main(cld, clp, mode, gd_params, cl_cent_semi, cl_rad_semi, cent_flag_semi,
+         **kwargs):
     """
     Obtains the center of the putative cluster. Returns the center values
     along with its errors and several arrays related to histograms, mainly for
@@ -126,10 +127,6 @@ def main(cld, clp, mode, gd_params, semi_return, **kwargs):
 
     mode_semi = True
     if mode == 'semi':
-        # Unpack semi values.
-        cent_cl_semi, cl_rad_semi = semi_return[:2]
-        cent_flag_semi = semi_return[3]
-
         # Only apply if flag is on of these values, else skip semi-center
         # assignment for this cluster.
         if cent_flag_semi in [1, 2]:
@@ -137,13 +134,13 @@ def main(cld, clp, mode, gd_params, semi_return, **kwargs):
             # and radius given as initial values.
 
             # Call funct to obtain the pixel coords of the maximum KDE value.
-            approx_cents = [cent_cl_semi]
+            approx_cents = [cl_cent_semi]
             kde_cent, e_cent, kde_plot = kde_center_f(
                 x, y, approx_cents, cl_rad_semi)
 
             # Re-write center values if fixed in semi input file.
             if cent_flag_semi == 2:
-                kde_cent, e_cent = [float(i) for i in cent_cl_semi], [0., 0.]
+                kde_cent, e_cent = [float(i) for i in cl_cent_semi], [0., 0.]
                 print 'Semi center fixed: ({:g}, {:g}) {c}.'.format(*kde_cent,
                                                                     c=coord)
             else:

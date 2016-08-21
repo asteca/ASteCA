@@ -6,11 +6,11 @@ from matplotlib.ticker import MultipleLocator
 from matplotlib.patches import Ellipse
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy.ndimage.filters import gaussian_filter
-from ..inp import input_params as g
 
 
 def pl_bf_synth_cl(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
-                   synth_clst, syn_b_edges, cp_r, cp_e, shift_isoch):
+                   synth_clst, syn_b_edges, cp_r, cp_e, shift_isoch,
+                   lkl_method, bin_method, tracks_dict, iso_select):
     '''
     Best fit synthetic cluster obtained.
     '''
@@ -25,7 +25,7 @@ def pl_bf_synth_cl(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
     ax.minorticks_on()
     ax.xaxis.set_major_locator(MultipleLocator(1.0))
     # Plot grid.
-    if g.bf_params[2] == 'dolphin':
+    if lkl_method == 'dolphin':
         for x_ed in syn_b_edges[0]:
             # vertical lines
             ax.axvline(x_ed, linestyle=':', color='k', zorder=1)
@@ -33,7 +33,7 @@ def pl_bf_synth_cl(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
             # horizontal lines
             ax.axhline(y_ed, linestyle=':', color='k', zorder=1)
         # Add text box
-        text = '$({};\,{})$'.format(g.bf_params[2], g.bf_params[3])
+        text = '$({};\,{})$'.format(lkl_method, bin_method)
         ob = offsetbox.AnchoredText(text, pad=.2, loc=1, prop=dict(size=12))
         ob.patch.set(alpha=0.85)
         ax.add_artist(ob)
@@ -58,7 +58,7 @@ def pl_bf_synth_cl(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
     ax_t = plt.subplot(gs[4:6, 10:12])
     ax_t.axis('off')  # Remove axis from frame.
     # Map isochrones set selection to proper name.
-    iso_print = g.tracks_dict.get(g.ps_params[2])
+    iso_print = tracks_dict.get(iso_select)
     t1 = r'$Synthetic\;cluster\;parameters$' + '\n' + \
         r'$[Tracks:\;{}]$'.format(iso_print.replace(' ', '\;')) + '\n\n'
     t2 = r'$z\qquad\; =\, {} \pm {}$'.format(cp_r[0], cp_e[0]) + '\n'
@@ -74,13 +74,12 @@ def pl_bf_synth_cl(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
     ax_t.add_artist(ob)
 
 
-def pl_ga_lkl(gs, l_min_max, lkl_old, model_done, new_bs_indx):
+def pl_ga_lkl(gs, l_min_max, lkl_old, model_done, new_bs_indx, ga_params, N_b):
     '''
     Likelihood evolution for the GA.
     '''
     # Genetic algorithm parameters.
-    N_b = g.bf_params[-1]
-    n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es = g.ga_params
+    n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es = ga_params
 
     ax = plt.subplot(gs[6:8, 0:4])
     plt.xlim(-0.5, len(lkl_old[0]) + int(0.01 * len(lkl_old[0])))

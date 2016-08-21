@@ -263,8 +263,8 @@ def mighell(Q, P):
     return chi
 
 
-def main(bf_params, err_lst, obs_clust, completeness, st_dist_mass, isochrone,
-         params):
+def main(lkl_method, e_max, bin_mass_ratio, cmd_sel, err_lst, obs_clust,
+         completeness, st_dist_mass, isochrone, synth_cl_params):
     '''
     Call with an isochrone of given values for metallicity and age and supply
     the extinction and distance modulus values to move that isochrone. Use
@@ -276,11 +276,11 @@ def main(bf_params, err_lst, obs_clust, completeness, st_dist_mass, isochrone,
     # distribution.
     # with timeblock("  synth_cl"):
     synth_clust = synth_cluster.main(err_lst, completeness, st_dist_mass,
-                                     isochrone, params)
+                                     isochrone, synth_cl_params, e_max,
+                                     bin_mass_ratio, cmd_sel,)
 
     # Call function to obtain the likelihood by comparing the synthetic cluster
     # with the observed cluster.
-    lkl_method = bf_params[2]
     if lkl_method == 'tolstoy':
         likelihood = tolstoy(synth_clust, obs_clust)
     else:

@@ -3,13 +3,11 @@ import numpy as np
 from ..decont_algors.local_cell_clean import bin_edges_f
 
 
-def main(memb_prob_avrg_sort, bf_params):
+def main(memb_prob_avrg_sort, lkl_method, bin_method):
     '''
     Prepare observed cluster array here to save time when the algorithm to
     find the best synthetic cluster fit is used.
     '''
-
-    lkl_method, bin_method = bf_params[2:4]
 
     if lkl_method == 'tolstoy':
 

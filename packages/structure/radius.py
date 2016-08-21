@@ -133,7 +133,8 @@ def radius_algor(clp, coord, cr_params):
     return clust_rad, e_rad, flag_delta_total, flag_not_stable, flag_delta
 
 
-def main(cld, clp, mode, cr_params, gd_params, semi_return, **kwargs):
+def main(cld, clp, mode, cr_params, gd_params, cl_rad_semi, rad_flag_semi,
+         **kwargs):
     """
     Obtain the value for the cluster's radius by counting the number of points
     that fall within a given interval of the field density or lower. If this
@@ -156,9 +157,6 @@ def main(cld, clp, mode, cr_params, gd_params, semi_return, **kwargs):
         print('Auto radius found: {:g} {}.'.format(clust_rad, coord))
 
     elif mode == 'semi':
-        # Unpack semi values.
-        cl_rad_semi, rad_flag_semi = semi_return[1], semi_return[4]
-
         if rad_flag_semi == 1:
             # Update values.
             clust_rad, e_rad = cl_rad_semi, 0.

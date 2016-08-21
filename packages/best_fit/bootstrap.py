@@ -1,7 +1,6 @@
 
 import numpy as np
 import random
-from ..inp import input_params as g
 import genetic_algorithm
 import obs_clust_prepare
 
@@ -17,17 +16,15 @@ def resample_replacement(obs_clust):
     return obs_cl
 
 
-def main(err_lst, memb_prob_avrg_sort, completeness, ip_list,
-         st_dist_mass):
+def main(ga_params, cmd_sel, e_max, err_lst, memb_prob_avrg_sort,
+         completeness, ip_list, st_dist_mass, best_fit_algor, N_b, lkl_method,
+         bin_method, bin_mass_ratio):
     '''
     Bootstrap process, runs the selected algorithm a number of times each
     time generating a new observed cluster representation through resampling
     with replacement.
     '''
-
-    best_fit_algor, N_b = g.bf_params[1], g.bf_params[-1]
-
-    print 'Begin bootstrap process (%d).' % N_b
+    print('Begin bootstrap process ({}).'.format(N_b))
 
     # List that holds the parameters values obtained by the bootstrap
     # process.
@@ -41,7 +38,7 @@ def main(err_lst, memb_prob_avrg_sort, completeness, ip_list,
         obs_cl_r = resample_replacement(memb_prob_avrg_sort)
         # Obtain prepared observed cluster according to the likelihood method
         # selected.
-        obs_cl = obs_clust_prepare.main(obs_cl_r)
+        obs_cl = obs_clust_prepare.main(obs_cl_r, lkl_method, bin_method)
 
         # Algorithm selected.
         if best_fit_algor == 'genet':
@@ -50,7 +47,8 @@ def main(err_lst, memb_prob_avrg_sort, completeness, ip_list,
             flag_print_perc = False
             params_boot.append(genetic_algorithm.main(
                 flag_print_perc, err_lst, obs_cl, completeness, ip_list,
-                st_dist_mass)[0])
+                st_dist_mass, ga_params, lkl_method, cmd_sel, e_max,
+                bin_mass_ratio)[0])
 
         percentage_complete = (100.0 * (i + 1) / max(N_b, 2))
         while len(milestones) > 0 and percentage_complete >= milestones[0]:

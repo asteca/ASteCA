@@ -114,7 +114,7 @@ def get_fit_stars(cl_hist_p, f_hist, flag_decont_skip):
     # Flatten arrays to access all of its elements.
     f_hist_flat = f_hist.flatten()
 
-    red_memb_fit, red_memb_no_fit = [], []
+    cl_reg_fit, cl_reg_no_fit = [], []
     # For each cell defined.
     for i, cl_cell in enumerate(cl_hist_p_flat):
 
@@ -134,31 +134,31 @@ def get_fit_stars(cl_hist_p, f_hist, flag_decont_skip):
                         xrange(len(cl_cell)), len(cl_cell))
 
                     # Store len(cl_cell) - N_fl_reg stars
-                    red_memb_fit.append([cl_cell[i] for i in
-                                         ran_indx[:-int(N_fl_reg)]])
+                    cl_reg_fit.append([cl_cell[i] for i in
+                                      ran_indx[:-int(N_fl_reg)]])
                     # Discard N_fl_reg stars.
-                    red_memb_no_fit.append([cl_cell[i] for i in
-                                            ran_indx[-int(N_fl_reg):]])
+                    cl_reg_no_fit.append([cl_cell[i] for i in
+                                         ran_indx[-int(N_fl_reg):]])
                 else:
                     # Discard *all* stars in the cell.
-                    red_memb_no_fit.append(cl_cell)
+                    cl_reg_no_fit.append(cl_cell)
             else:
                 # Discard those N_fl_reg with the smallest MPs, keep the rest.
-                red_memb_fit.append(cl_cell[:-int(N_fl_reg)])
-                red_memb_no_fit.append(cl_cell[-int(N_fl_reg):])
+                cl_reg_fit.append(cl_cell[:-int(N_fl_reg)])
+                cl_reg_no_fit.append(cl_cell[-int(N_fl_reg):])
         else:
             # No field region stars in this cell, keep all stars.
-            red_memb_fit.append(cl_cell)
+            cl_reg_fit.append(cl_cell)
 
     # Flatten lists of stars and re-sort according to highest MPs.
-    red_memb_fit = sort_members([i for sublst in red_memb_fit for i in sublst])
-    red_memb_no_fit = sort_members([i for sublst in red_memb_no_fit for i in
-                                    sublst])
+    cl_reg_fit = sort_members([i for sublst in cl_reg_fit for i in sublst])
+    cl_reg_no_fit = sort_members([i for sublst in cl_reg_no_fit for i in
+                                 sublst])
 
     # Minimum probability of  selected stars.
-    min_prob = red_memb_fit[-1][-1]
+    min_prob = cl_reg_fit[-1][-1]
 
-    return red_memb_fit, red_memb_no_fit, min_prob
+    return cl_reg_fit, cl_reg_no_fit, min_prob
 
 
 def main(field_regions, memb_prob_avrg_sort, flag_decont_skip, rm_params):
@@ -187,7 +187,7 @@ def main(field_regions, memb_prob_avrg_sort, flag_decont_skip, rm_params):
 
     # Obtain stars separated in list to be used by the BF func and list of
     # those discarded stars.
-    red_memb_fit, red_memb_no_fit, min_prob = get_fit_stars(
+    cl_reg_fit, cl_reg_no_fit, min_prob = get_fit_stars(
         cl_hist_p, f_hist, flag_decont_skip)
 
     # import matplotlib.pyplot as plt
@@ -201,13 +201,13 @@ def main(field_regions, memb_prob_avrg_sort, flag_decont_skip, rm_params):
     # plt.show()
 
     # Store and pass for plotting purposes.
-    red_plot_pars = [min_prob, bin_edges]
+    cl_reg_clean_plot = [min_prob, bin_edges]
 
     # Check the number of stars selected.
-    if len(red_memb_fit) < 10:
+    if len(cl_reg_fit) < 10:
         print ("  WARNING: less than 10 stars left after reducing\n"
                "  by 'local' method. Using full list.")
-        red_memb_fit, red_memb_no_fit, red_plot_pars = memb_prob_avrg_sort, \
+        cl_reg_fit, cl_reg_no_fit, cl_reg_clean_plot = memb_prob_avrg_sort, \
             [], [0.]
 
-    return red_memb_fit, red_memb_no_fit, red_plot_pars
+    return cl_reg_fit, cl_reg_no_fit, cl_reg_clean_plot

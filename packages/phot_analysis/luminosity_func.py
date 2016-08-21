@@ -34,6 +34,9 @@ def main(clp, mags, **kwargs):
     Obtain the Luminosity Function for the field regions and the cluster
     region normalized to their area. Subtract the field curve from the
     cluster curve so as to clean it.
+
+    The completeness will be used by the isochrone/synthetic cluster
+    fitting algorithm.
     '''
     cl_region, field_regions, flag_no_fl_regs = [
         clp[_] for _ in ['cl_region', 'field_regions', 'flag_no_fl_regs']]

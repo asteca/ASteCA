@@ -72,8 +72,8 @@ def main():
             # Call module that calls all sub-modules sequentially.
             func_caller.main(cl_file, pd)
         except Exception:
-            print '\n!!! --> {}/{} could not be processed <-- !!!\n'.format(
-                cl_file[-2], cl_file[-1])
+            print('\n!!! --> {}/{} '.format(cl_file[-2], cl_file[-1]) +
+                  'could not be successfully processed <-- !!!\n')
             print traceback.format_exc()
 
         # Set these variables to their original global values.

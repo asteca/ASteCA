@@ -1,6 +1,6 @@
 
 
-def main(memb_file_out, clp):
+def main(clp, memb_file_out, **kwargs):
     '''
     Create output data file with stars inside the cluster radius along with
     their membership probabilities.

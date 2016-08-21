@@ -36,9 +36,9 @@ def main(cld, clp, pd):
     """
 
     # Unpack data.
+    mode = pd['mode']
     mag, e_mag, e_col1 = cld['mags'], cld['em'], cld['ec']
     er_mode, e_max, be = pd['er_params'][:3]
-    mode, semi_return = pd['mode'], pd['semi_return']
 
     # Get value of brightest and dimmest stars.
     min_mag, max_mag = min(mag), max(mag)
@@ -74,7 +74,7 @@ def main(cld, clp, pd):
         # use and override the one in the input params file.
         if mode == 'semi':
             # Unpack semi flag
-            err_flag_semi = semi_return[6]
+            err_flag_semi = pd['err_flag_semi']
             if err_flag_semi != 0:
                 if err_flag_semi in {1, 2, 3}:
                     # Set error mode to use.
@@ -106,8 +106,8 @@ def main(cld, clp, pd):
                     acpt_indx, rjct_indx, err_plot = e_a_r_ef.main(
                         err_pck, cld, **pd)
             except RuntimeError:
-                print ("  WARNING: {} function could not be fitted.\n"
-                       "  Falling back to e_max function.".format(er_mode))
+                print("  WARNING: {} function could not be fitted.\n"
+                      "  Falling back to e_max function.".format(er_mode))
                 # Call function to reject stars with errors > e_max.
                 acpt_indx, rjct_indx, err_plot = e_a_r_mx.main(cld, **pd)
                 err_max_fallback = True
@@ -119,21 +119,21 @@ def main(cld, clp, pd):
             err_max_fallback = True
 
             if acpt_indx:
-                print ("  WARNING: No stars accepted based on their errors.\n"
-                       "  Using all stars with errors < {}".format(e_max))
+                print("  WARNING: No stars accepted based on their errors.\n"
+                      "  Using all stars with errors < {}".format(e_max))
 
             # If there's still no accepted stars, use all.
             else:
-                print ("  WARNING: No stars accepted based on their errors.\n"
-                       "  Using all stars.")
+                print("  WARNING: No stars accepted based on their errors.\n"
+                      "  Using all stars.")
                 # Store all indexes.
                 acpt_indx, rjct_indx = [i for i in range(len(mag))], []
                 err_all_fallback = True
 
         # If the method used was e_max, use all stars.
         elif not acpt_indx and er_mode == 'emax':
-            print ("  WARNING: No stars accepted based on their errors.\n"
-                   "  Using all stars.")
+            print("  WARNING: No stars accepted based on their errors.\n"
+                  "  Using all stars.")
             # Store all indexes.
             acpt_indx, rjct_indx = [i for i in range(len(mag))], []
             err_plot = []

@@ -3,19 +3,18 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
 import matplotlib.offsetbox as offsetbox
 import numpy as np
-from ..inp import input_params as g
 
 
-def pl_mp_histo(gs, n_memb_da, red_return, decont_algor_return):
+def pl_mp_histo(
+        gs, n_memb_da, memb_prob_avrg_sort, flag_decont_skip, cl_reg_fit,
+        min_prob, mode_red_memb, local_bin):
     '''
     Histogram for the distribution of membership probabilities from the
     decontamination algorithm.
     '''
-    memb_prob_avrg_sort, flag_decont_skip = decont_algor_return
     # Only attempt to plot if the DA was applied.
     if flag_decont_skip is False:
         # Reduced membership.
-        red_memb_fit, min_prob = red_return[0], red_return[-1][0]
         ax = plt.subplot(gs[4:6, 2:4])
         plt.xlim(0., 1.)
         plt.xlabel('MP (membership probability)', fontsize=12)
@@ -39,19 +38,19 @@ def pl_mp_histo(gs, n_memb_da, red_return, decont_algor_return):
         for c, p in zip(col, patches):
             plt.setp(p, 'facecolor', cm(c))
         # Add text box.
-        if g.rm_params[0] == 'mag':
+        if mode_red_memb == 'mag':
             str_pm = ['mag', '\leq', 'mag']
         else:
             str_pm = ['MP', '\geq', 'prob']
-        if g.rm_params[0] == 'local':
-            str_pm.append(g.rm_params[0] + ';\,' + g.rm_params[1])
+        if mode_red_memb == 'local':
+            str_pm.append(mode_red_memb + ';\,' + local_bin)
         else:
-            str_pm.append(g.rm_params[0].replace('_', '\_'))
+            str_pm.append(mode_red_memb.replace('_', '\_'))
         text1 = r'$n_{{memb-DA}}={}\,(MP \geq 0.5)$'.format(n_memb_da)
         text2 = r'${}_{{min}}={:.2f}\,({})$'.format(str_pm[2], min_prob,
                                                     str_pm[3])
         text3 = r'$N_{{fit}}={} \, ({} {} {}_{{min}})$'.format(
-            len(red_memb_fit), str_pm[0], str_pm[1], str_pm[2])
+            len(cl_reg_fit), str_pm[0], str_pm[1], str_pm[2])
         text = text1 + '\n' + text2 + '\n' + text3
         # Plot minimum probability line.
         plt.axvline(x=min_prob, linestyle='--', color='green', lw=2.5)
@@ -63,9 +62,9 @@ def pl_mp_histo(gs, n_memb_da, red_return, decont_algor_return):
 
 
 def pl_chart_mps(gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
-                 y_zmax, center_cl, clust_rad, field_dens, flag_decont_skip,
+                 y_zmax, clust_cent, clust_rad, field_dens, flag_decont_skip,
                  v_min_mp, v_max_mp, chart_fit_inv, chart_no_fit_inv,
-                 out_clust_rad):
+                 out_clust_rad, mode_red_memb, local_bin):
     '''
     Finding chart of cluster region with decontamination algorithm
     applied and colors assigned according to the probabilities obtained.
@@ -83,15 +82,15 @@ def pl_chart_mps(gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
     # Set minor ticks
     ax.minorticks_on()
     # Radius
-    circle = plt.Circle((center_cl[0], center_cl[1]), clust_rad, color='red',
+    circle = plt.Circle((clust_cent[0], clust_cent[1]), clust_rad, color='red',
                         fill=False)
     fig.gca().add_artist(circle)
     ob = offsetbox.AnchoredText('Cluster region', loc=1, prop=dict(size=12))
     ob.patch.set(boxstyle='square,pad=-0.2', alpha=0.85)
     ax.add_artist(ob)
     # If DA was skipped, print info on 'local' method here.
-    if flag_decont_skip and g.rm_params[0] == 'local':
-        text = r'$({})$'.format(g.rm_params[0] + ';\,' + g.rm_params[1])
+    if flag_decont_skip and mode_red_memb == 'local':
+        text = r'$({})$'.format(mode_red_memb + ';\,' + local_bin)
         ob = offsetbox.AnchoredText(text, pad=0.2, loc=2, prop=dict(size=12))
         ob.patch.set(alpha=0.85)
         ax.add_artist(ob)
@@ -123,12 +122,12 @@ def pl_chart_mps(gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
 
 
 def pl_mps_phot_diag(gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
-                     x_ax, y_ax, v_min_mp, v_max_mp, red_return, diag_fit_inv,
-                     diag_no_fit_inv, shift_isoch, err_bar):
+                     x_ax, y_ax, v_min_mp, v_max_mp, diag_fit_inv,
+                     diag_no_fit_inv, shift_isoch, err_bar, mode_red_memb,
+                     bin_edges, bf_flag):
     '''
-    Star's membership probabilities on cluster's photom diagram.
+    Star's membership probabilities on cluster's photometric diagram.
     '''
-    bf_flag = g.bf_params[0]
     x_val, mag_y, x_err, y_err = err_bar
     ax = plt.subplot(gs[4:6, 6:8])
     # Set plot limits
@@ -146,8 +145,7 @@ def pl_mps_phot_diag(gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
     ax.minorticks_on()
     ax.xaxis.set_major_locator(MultipleLocator(1.0))
     # Plot grid. If bin_edges == 0., it means the 'local' method was not used.
-    bin_edges = red_return[-1][-1]
-    if g.rm_params[0] == 'local' and bin_edges != 0.:
+    if mode_red_memb == 'local' and bin_edges != 0.:
         for x_ed in bin_edges[0]:
             # vertical lines
             ax.axvline(x_ed, linestyle=':', color='k', zorder=1)

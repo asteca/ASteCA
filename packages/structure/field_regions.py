@@ -76,7 +76,7 @@ def spiral_region(h_manual, sp_coords):
     return f_region
 
 
-def main(clp, mode, fr_number, semi_return, **kwargs):
+def main(clp, mode, fr_number, cl_f_regs_semi, freg_flag_semi, **kwargs):
     '''
     Define empty region around the cluster via a spiral centered on it
     and of area a bit larger than that defined by the cluster's radius.
@@ -94,9 +94,6 @@ def main(clp, mode, fr_number, semi_return, **kwargs):
 
     # Check if semi is set.
     if mode == 'semi':
-        # Unpack semi values.
-        cl_f_regs_semi, freg_flag_semi = semi_return[2], semi_return[5]
-
         if freg_flag_semi == 1:
             # Update value.
             f_regs_num = cl_f_regs_semi

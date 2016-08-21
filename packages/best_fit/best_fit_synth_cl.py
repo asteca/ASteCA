@@ -11,7 +11,7 @@ import move_isochrone
 
 
 def synth_cl_plot(ip_list, isoch_fit_params, err_lst, completeness,
-                  st_dist_mass):
+                  st_dist_mass, e_max, bin_mass_ratio, cmd_sel):
     '''
     For plotting purposes.
     '''
@@ -27,23 +27,22 @@ def synth_cl_plot(ip_list, isoch_fit_params, err_lst, completeness,
     except:
         m_i, a_i = [0, 0]
     # Generate shifted best fit isochrone.
-    shift_isoch = move_isochrone.main(isoch_list[m_i][a_i][:2], e, d)
+    shift_isoch = move_isochrone.main(isoch_list[m_i][a_i][:2], e, d, cmd_sel)
     # Generate best fit synthetic cluster.
     synth_clst = synth_cluster.main(
         err_lst, completeness, st_dist_mass, isoch_list[m_i][a_i],
-        [-1., -1., e, d, mass, binar_f])
+        [-1., -1., e, d, mass, binar_f], e_max, bin_mass_ratio, cmd_sel)
 
     return shift_isoch, synth_clst
 
 
-def params_errors(ip_list, err_lst, memb_prob_avrg_sort, completeness,
-                  st_dist_mass, isoch_fit_params, bf_params):
+def params_errors(ip_list, ga_params, err_lst, memb_prob_avrg_sort,
+                  completeness, st_dist_mass, isoch_fit_params, cmd_sel,
+                  e_max, best_fit_algor, N_b, lkl_method, bin_method,
+                  bin_mass_ratio):
     '''
     Obtain errors for the fitted parameters.
     '''
-
-    best_fit_algor, N_b = bf_params[1], bf_params[-1]
-
     if best_fit_algor == 'brute':
         isoch_fit_errors = []
         # Assign errors as the largest step in each parameter.
@@ -64,8 +63,9 @@ def params_errors(ip_list, err_lst, memb_prob_avrg_sort, completeness,
             # Call bootstrap function with resampling to get the uncertainty
             # in each parameter.
             isoch_fit_errors = bootstrap.main(
-                err_lst, memb_prob_avrg_sort, completeness, ip_list,
-                st_dist_mass)
+                ga_params, cmd_sel, e_max, err_lst, memb_prob_avrg_sort,
+                completeness, ip_list, st_dist_mass, best_fit_algor, N_b,
+                lkl_method, bin_method, bin_mass_ratio)
         else:
             print('Skipping bootstrap process.')
             # No error assignment.
@@ -74,21 +74,24 @@ def params_errors(ip_list, err_lst, memb_prob_avrg_sort, completeness,
     return isoch_fit_errors
 
 
-def main(clp, ip_list, bf_params, sc_params, ga_params, **kwargs):
+def main(clp, ip_list, er_params, bf_params, sc_params, ga_params, ps_params,
+         **kwargs):
     '''
     Perform a best fitting process to find the cluster's fundamental
     parameters.
     '''
     err_lst, memb_prob_avrg_sort, completeness = clp['err_lst'],\
         clp['memb_prob_avrg_sort'], clp['completeness']
-    bf_flag, best_fit_algor, lkl_method, bin_method = bf_params[:-1]
+    bf_flag, best_fit_algor, lkl_method, bin_method, N_b = bf_params
+    e_max, bin_mass_ratio, cmd_sel = er_params[1], sc_params[2], ps_params[1]
 
     # Check if algorithm should run.
     if bf_flag:
 
         print('Searching for optimal parameters.')
 
-        obs_clust = obs_clust_prepare.main(memb_prob_avrg_sort, bf_params)
+        obs_clust = obs_clust_prepare.main(
+            memb_prob_avrg_sort, lkl_method, bin_method)
         # Store for plotting purposes.
         syn_b_edges = obs_clust[1]
 
@@ -105,8 +108,8 @@ def main(clp, ip_list, bf_params, sc_params, ga_params, **kwargs):
                 else lkl_method))
             # Brute force algorithm.
             isoch_fit_params = brute_force_algor.main(
-                bf_params, err_lst, obs_clust, completeness, ip_list,
-                st_dist_mass)
+                lkl_method, e_max, bin_mass_ratio, cmd_sel, err_lst,
+                obs_clust, completeness, ip_list, st_dist_mass)
 
         elif best_fit_algor == 'genet':
 
@@ -119,20 +122,23 @@ def main(clp, ip_list, bf_params, sc_params, ga_params, **kwargs):
             flag_print_perc = True
             isoch_fit_params = genetic_algorithm.main(
                 flag_print_perc, err_lst, obs_clust, completeness, ip_list,
-                st_dist_mass, ga_params, bf_params)
+                st_dist_mass, ga_params, lkl_method, cmd_sel, e_max,
+                bin_mass_ratio)
 
         print("Best fit parameters obtained.")
 
         # Assign errors for each parameter.
-        isoch_fit_errors = params_errors(ip_list, err_lst, memb_prob_avrg_sort,
-                                         completeness, st_dist_mass,
-                                         isoch_fit_params, bf_params)
+        isoch_fit_errors = params_errors(
+            ip_list, ga_params, err_lst, memb_prob_avrg_sort, completeness,
+            st_dist_mass, isoch_fit_params, cmd_sel, e_max, best_fit_algor,
+            N_b, lkl_method, bin_method, bin_mass_ratio)
 
         # Generate shifted isochrone and synthetic cluster for plotting.
         # Do this BEFORE rounding the parameter values.
         shift_isoch, synth_clst = synth_cl_plot(ip_list, isoch_fit_params,
                                                 err_lst, completeness,
-                                                st_dist_mass)
+                                                st_dist_mass, e_max,
+                                                bin_mass_ratio, cmd_sel)
 
         if not synth_clst.any():
             print("  WARNING: best fit synthetic cluster found is empty.")
@@ -150,7 +156,7 @@ def main(clp, ip_list, bf_params, sc_params, ga_params, **kwargs):
             syn_b_edges = [[-1., -1., -1., -1., -1., -1.]], \
             [-1., -1., -1., -1., -1., -1.], [], [], []
 
-    bf_return = [isoch_fit_params, isoch_fit_errors, shift_isoch, synth_clst,
-                 syn_b_edges]
-
-    return bf_return
+    clp['isoch_fit_params'], clp['isoch_fit_errors'], clp['shift_isoch'],\
+        clp['synth_clst'], clp['syn_b_edges'] = isoch_fit_params,\
+        isoch_fit_errors, shift_isoch, synth_clst, syn_b_edges
+    return clp

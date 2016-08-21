@@ -1,17 +1,13 @@
 
 import numpy as np
-from ..inp import input_params as g
 
 
-def main(isochrone, e, d):
+def main(isochrone, e, d, cmd_sel):
     '''
     Receives an isochrone of a given age and metallicity and modifies
     its color and magnitude values according to given values for the extinction
     E(B-V) (e) and distance modulus (d).
     '''
-
-    cmd_sel = g.ps_params[1]
-
     iso_moved = [[], []]
 
     if cmd_sel == 1:

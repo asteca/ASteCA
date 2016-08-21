@@ -25,11 +25,12 @@ def rem_bad_stars(ids, x, y, mags, em, cols, ec):
     return id_clean, clean_array
 
 
-def main(data_file, gd_params, **kwargs):
+def main(npd, gd_params, **kwargs):
     '''
     Get spatial and photometric data from the cluster's data file.
     '''
 
+    data_file = npd['data_file']
     # Read indexes from input parameters.
     id_inx, x_inx, y_inx, m_inx, em_inx, c_inx, ec_inx = gd_params[:-1]
 

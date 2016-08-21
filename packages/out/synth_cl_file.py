@@ -1,21 +1,18 @@
 
-from ..inp import input_params as g
 
-
-def main(synth_clst, synth_file_out):
+def main(clp, npd, bf_params, **kwargs):
     '''
     Create output data file with stars in the best fit synthetic cluster found
     by the 'Best Fit' function.
     '''
-
-    bf_flag = g.bf_params[0]
-
+    synth_clst = clp['synth_clst']
+    bf_flag = bf_params[0]
     # Check if function should run.
     if bf_flag:
 
         # If cluster is not empty.
         if synth_clst.any():
-
+            synth_file_out = npd['synth_file_out']
             # Save best fit synthetic cluster found to file.
             with open(synth_file_out, "w") as f_out:
                 f_out.write("#mag    e_mag    col1   e_col1    m_ini\n")

@@ -43,17 +43,15 @@ def main(cl_file, pd):
     # Start timing this loop.
     start = time.time()
 
-    # Get file names and paths.
-    clust_name, data_file, memb_file, output_dir, output_subdir, dst_dir,\
-        memb_file_out, synth_file_out, write_name = names_paths.main(
-            cl_file, **pd)
-    print("Analyzing cluster {} ({} mode).".format(clust_name, pd['mode']))
+    # Get file names (n) and paths (p) dictionary (d).
+    npd = names_paths.main(cl_file, **pd)
 
     # Get data from semi-data input file. Add to dictionary.
-    pd = get_data_semi.main(clust_name, pd)
+    pd = get_data_semi.main(pd, **npd)
 
     # Get cluster's data from file, as dictionary.
-    cld = get_data.main(data_file, **pd)
+    cld = get_data.main(npd, **pd)
+
     # If Manual mode is set, display frame and ask if it should be trimmed.
     cld = trim_frame.main(cld, **pd)
 
@@ -95,9 +93,7 @@ def main(cl_file, pd):
     # Field regions around the cluster's center.
     clp = field_regions.main(clp, **pd)
 
-    # Get the luminosity function and completeness level for each magnitude
-    # bin. The completeness will be used by the isochrone/synthetic cluster
-    # fitting algorithm.
+    # Get luminosity function and completeness level for each magnitude bin.
     clp = luminosity_func.main(clp, **cld)
 
     # Calculate integrated magnitude.
@@ -107,7 +103,7 @@ def main(cl_file, pd):
     clp = kde_pvalue.main(clp, **pd)
 
     # Apply decontamination algorithm.
-    clp = bayesian_da.main(clp, memb_file, **pd)
+    clp = bayesian_da.main(clp, npd, **pd)
 
     # Obtain members parameter.
     clp = members_N_compare.main(clp)
@@ -117,51 +113,37 @@ def main(cl_file, pd):
     clp = cl_region_clean.main(clp, **pd)
 
     # Create data file with membership probabilities.
-    cluster_members_file.main(memb_file_out, clp)
+    cluster_members_file.main(clp, **npd)
 
     # Obtain exponential error function parameters to use by the
     # synthetic cluster creation function.
     clp = synth_cl_err.main(cld, clp, **pd)
+
     # Obtain best fitting parameters for cluster.
     clp = best_fit_synth_cl.main(clp, **pd)
-        # err_lst, memb_remove[0], completeness, ip_list)
 
     # Create output synthetic cluster file if one was found
-    synth_cl_file.main(bf_return[3], synth_file_out)
+    synth_cl_file.main(clp, npd, **pd)
 
     # Create output data file in /output dir if it doesn't exist.
-    out_file_name = create_out_data_file.main(output_dir)
+    create_out_data_file.main(npd)
 
     # Add cluster data and flags to output file
-    add_data_output.main(
-        out_file_name, write_name, center_params, radius_params, kp_params,
-        cont_index, n_memb, memb_par, n_memb_da, flag_memb_par, frac_cl_area,
-        pval_test_params[0], integr_return, err_flags, flag_num_memb_low,
-        bf_return)
+    add_data_output.main(npd, pd, **clp)
 
     # Output top tiers models if best fit parameters were obtained.
-    top_tiers.main(clust_name, output_subdir, mag_data, col1_data, ip_list,
-                   err_lst, completeness, bf_return)
+    top_tiers.main(npd, cld, pd, **clp)
 
     # Make plots
-    if g.pl_params[0]:
-        make_plots.main(
-            output_subdir, clust_name, x_data, y_data,
-            bin_width, center_params, rdp_params,
-            field_dens, radius_params, cont_index, mag_data, col1_data,
-            err_plot, err_flags, kp_params, cl_region, stars_out,
-            stars_in_rjct, stars_out_rjct, integr_return, n_memb, n_memb_da,
-            flag_no_fl_regs, field_region, flag_pval_test,
-            pval_test_params, bayes_da_return, lum_func, completeness,
-            ip_list, memb_remove, err_lst, bf_return)
+    make_plots.main(npd, cld, pd, **clp)
 
-    # Move file to 'done' dir if flag is set.
-    done_move.main(dst_dir, data_file, memb_file)
+    # Move file to 'done' dir (if flag is set).
+    done_move.main(pd, **npd)
 
     elapsed = time.time() - start
     m, s = divmod(elapsed, 60)
     print('End of analysis for {} in {:.0f}m {:.0f}s.\n'.format(
-        clust_name, m, s))
+        npd['clust_name'], m, s))
 
     # Force the Garbage Collector to release unreferenced memory.
     gc.collect()

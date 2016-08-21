@@ -124,7 +124,7 @@ def likelihood(region, cl_reg_rad):
     return clust_stars_probs
 
 
-def main(clp, memb_file, da_params, **kwargs):
+def main(clp, npd, da_params, **kwargs):
     '''
     Bayesian field decontamination algorithm.
     '''
@@ -224,6 +224,7 @@ def main(clp, memb_file, da_params, **kwargs):
     elif mode_da == 'read':
         print('Reading membership probabilities from file.')
         # Read IDs from file.
+        memb_file = npd['memb_file']
         data = np.genfromtxt(memb_file, dtype=str, unpack=True)
         id_list = data[0].tolist()
         # Read probabilities from file.

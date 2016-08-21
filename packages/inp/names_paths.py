@@ -3,11 +3,10 @@ from os.path import join, exists
 from os import makedirs, extsep
 
 
-def main(cl_file, done_dir, **kwargs):
+def main(cl_file, done_dir, mode, **kwargs):
     '''
     Generate names and paths to be used by several functions.
     '''
-
     # Hardcoded in/out folder names.
     out_fold = 'output'
 
@@ -40,6 +39,14 @@ def main(cl_file, done_dir, **kwargs):
     memb_file_out = join(output_subdir, clust_name + '_memb.dat')
     synth_file_out = join(output_subdir, clust_name + '_synth.dat')
     write_name = join(cl_file[2], clust_name)
+    out_file_name = join(output_dir, 'asteca_output.dat')
 
-    return clust_name, data_file, memb_file, output_dir, output_subdir,\
-        dst_dir, memb_file_out, synth_file_out, write_name
+    print("Analyzing cluster {} ({} mode).".format(clust_name, mode))
+
+    npd = {
+        'clust_name': clust_name, 'data_file': data_file,
+        'memb_file': memb_file, 'output_dir': output_dir,
+        'out_file_name': out_file_name, 'output_subdir': output_subdir,
+        'dst_dir': dst_dir, 'memb_file_out': memb_file_out,
+        'synth_file_out': synth_file_out, 'write_name': write_name}
+    return npd
