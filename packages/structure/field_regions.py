@@ -120,20 +120,21 @@ def main(clp, mode, fr_number, cl_f_regs_semi, freg_flag_semi, **kwargs):
         # allowed, use the maximum.
         if f_regs_num == 'max':
             f_regions = f_regs_max
-            print 'Using max number of field regions ({}).'.format(f_regions)
+            print('Using maximum number of field regions ({}).'.format(
+                f_regions))
         elif f_regs_num > f_regs_max:
             f_regions = f_regs_max
-            print ("  WARNING: Number of FR defined ({}) is larger than\n"
-                   "  the maximum allowed ({}). "
-                   "Using max number.").format(f_regs_num, f_regs_max)
+            print("  WARNING: Number of FR defined ({}) is larger than\n"
+                  "  the maximum allowed ({}). "
+                  "Using max number.").format(f_regs_num, f_regs_max)
         elif f_regs_num <= 0:
             f_regions = f_regs_max
-            print ("  WARNING: Number of FR ({}) is less than or equal\n"
-                   "  to zero. No field region will be defined.").format(
+            print("  WARNING: Number of FR ({}) is less than or equal\n"
+                  "  to zero. No field region will be defined.").format(
                 f_regs_num)
             flag_no_fl_regs = True
         else:
-            print ("Using defined number of field regions ({}).".format(
+            print("Using defined number of field regions ({}).".format(
                 f_regs_num))
             f_regions = f_regs_num
 
@@ -183,14 +184,14 @@ def main(clp, mode, fr_number, cl_f_regs_semi, freg_flag_semi, **kwargs):
         for index in sorted(field_regs_del, reverse=True):
             del field_regions[index]
         if field_regs_del:
-            print ('  {} field regions with less than 4 stars each were'
-                   ' removed.').format(len(field_regs_del))
+            print('  {} field regions with less than 4 stars each were'
+                  ' removed.').format(len(field_regs_del))
 
         # If after removing the empty regions no regions are left, raise the
         # flag.
         if f_regions > 0 and not(field_regions):
-            print ('  WARNING: no field regions left after the removal of\n' +
-                   '  those containing less than 4 stars.')
+            print('  WARNING: no field regions left after the removal of\n' +
+                  '  those containing less than 4 stars.')
             flag_no_fl_regs = True
 
     clp['flag_no_fl_regs'], clp['field_regions'] = flag_no_fl_regs,\
