@@ -157,9 +157,10 @@ KP   true
 
 # Field star regions.
 #
-# * regions: number of field regions around the cluster that the code will
-#   attempt to define. If the keyword 'max' is used, then the maximum possible
-#   number will be used.
+# * regions: N / max
+#   - N: number of field regions around the cluster that the code will
+#   attempt to define.
+#   - max: use maximum possible number of field regions in the frame.
 #
 #    regions
 GR        10
