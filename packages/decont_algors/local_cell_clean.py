@@ -12,7 +12,7 @@ def bin_edges_f(bin_method, mag_col_cl):
     diagram.
     '''
     bin_edges = []
-    if bin_method in ['sturges', 'sqrt']:
+    if bin_method in ('sturges', 'sqrt'):
         if bin_method == 'sturges':
             b_num = 1 + np.log2(len(mag_col_cl[0]))
         else:
@@ -28,7 +28,7 @@ def bin_edges_f(bin_method, mag_col_cl):
                  (max(mag_col_cl[1]) - min(mag_col_cl[1])) / 0.5]
 
         for i, mag_col in enumerate(mag_col_cl):
-            bin_edges.append(np.histogram(mag_col, bins=b_num[i])[1])
+            bin_edges.append(np.histogram(mag_col, bins=int(b_num[i]))[1])
 
     else:
         for mag_col in mag_col_cl:
@@ -59,7 +59,7 @@ def get_clust_histo(memb_prob_avrg_sort, mag_col_cl, bin_edges):
     cl_st_indx = []
     # Store indexes for each dimension.
     for i, mag_col in enumerate(mag_col_cl):
-        # Set correct indexes for array substracting 1, since 'np.digitize'
+        # Set correct indexes for array subtracting 1, since 'np.digitize'
         # counts one more bin to the right by default.
         cl_st_indx.append(np.digitize(mag_col, bin_edges[i]) - 1)
 
