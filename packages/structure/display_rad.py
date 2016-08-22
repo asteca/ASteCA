@@ -12,8 +12,8 @@ def main(cld, clp, gd_params, clust_rad, e_rad):
 
     # Unpack.
     x, y, mags = cld['x'], cld['y'], cld['mags']
-    cent_bin, kde_cent, bin_width, hist_2d_g, radii, rdp_points,\
-        poisson_error, field_dens = clp['cent_bin'], clp['kde_cent'],\
+    cent_bin, clust_cent, bin_width, hist_2d_g, radii, rdp_points,\
+        poisson_error, field_dens = clp['cent_bin'], clp['clust_cent'],\
         clp['bin_width'], clp['hist_2d_g'], clp['radii'],\
         clp['rdp_points'], clp['poisson_error'], clp['field_dens']
 
@@ -63,12 +63,12 @@ def main(cld, clp, gd_params, clust_rad, e_rad):
     plt.ylabel('{} ({})'.format(y_name, coord), fontsize=12)
     # Set minor ticks
     ax2.minorticks_on()
-    circle = plt.Circle((kde_cent[0], kde_cent[1]), clust_rad, color='r',
+    circle = plt.Circle((clust_cent[0], clust_cent[1]), clust_rad, color='r',
                         fill=False)
     fig.gca().add_artist(circle)
     # Add text box
-    text1 = '${0}_{{cent}} = {1:g}\,{2}$'.format(x_name, kde_cent[0], coord)
-    text2 = '${0}_{{cent}} = {1:g}\,{2}$'.format(y_name, kde_cent[1], coord)
+    text1 = '${0}_{{cent}} = {1:g}\,{2}$'.format(x_name, clust_cent[0], coord)
+    text2 = '${0}_{{cent}} = {1:g}\,{2}$'.format(y_name, clust_cent[1], coord)
     text = text1 + '\n' + text2
     ob = offsetbox.AnchoredText(text, loc=2, prop=dict(size=11))
     ob.patch.set(boxstyle='square,pad=-0.2', alpha=0.85)

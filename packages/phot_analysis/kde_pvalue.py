@@ -153,7 +153,7 @@ def KDE_test(clp, pv_params):
 
             percentage_complete = (100.0 * (run_num + 1) / runs)
             while len(milestones) > 0 and percentage_complete >= milestones[0]:
-                print "  {}% done".format(milestones[0])
+                print "  {}%".format(milestones[0])
                 # Remove that milestone from the list.
                 milestones = milestones[1:]
 

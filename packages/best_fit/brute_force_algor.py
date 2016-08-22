@@ -63,7 +63,7 @@ def main(lkl_method, e_max, bin_mass_ratio, cmd_sel, err_lst, obs_clust,
                             percentage_complete = (100.0 * (i + 1) / tot_sols)
                             while len(milestones) > 0 and \
                                     percentage_complete >= milestones[0]:
-                                print " {:>3}% done".format(milestones[0])
+                                print " {:>3}%".format(milestones[0])
                                 # Remove that milestone from the list.
                                 milestones = milestones[1:]
 

@@ -61,15 +61,13 @@ def pl_bf_synth_cl(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
     iso_print = tracks_dict.get(iso_select)
     t1 = r'$Synthetic\;cluster\;parameters$' + '\n' + \
         r'$[Tracks:\;{}]$'.format(iso_print.replace(' ', '\;')) + '\n\n'
-    t2 = r'$z$' + '            ' + r'$=\, {} \pm {}$'.format(cp_r[0], cp_e[0])
-    t3 = r'$\log(age)$' + '   ' + r'$=\, {} \pm {}$'.format(cp_r[1], cp_e[1])
-    t4 = r'$E_{{(B-V)}}$' + '    ' + r'$=\, {} \pm {}$'.format(
-        cp_r[2], cp_e[2])
+    t2 = r'$z \hspace{{4.25}}=\,{}\pm {}$'.format(cp_r[0], cp_e[0])
+    t3 = r'$\log(age) \hspace{{0.75}}=\,{}\pm {}$'.format(cp_r[1], cp_e[1])
+    t4 = r'$E_{{(B-V)}} \hspace{{1.3}}=\,{}\pm {}$'.format(cp_r[2], cp_e[2])
     t5 = r'$(m-M)_o=\, {} \pm {}$'.format(cp_r[3], cp_e[3])
-    t6 = r'$M\,(M_{{\odot}})$' + '   ' + r'$=\,{} \pm {}$'.format(
+    t6 = r'$M\,(M_{{\odot}}) \hspace{{0.85}} =\,{}\pm {}$'.format(
         cp_r[4], cp_e[4])
-    t7 = r'$b_{{frac}}$' + '        ' + r'$=\, {} \pm {}$'.format(
-        cp_r[5], cp_e[5])
+    t7 = r'$b_{{frac}} \hspace{{2.7}}=\,{}\pm {}$'.format(cp_r[5], cp_e[5])
     text = t1 + t2 + '\n' + t3 + '\n' + t4 + '\n' + t5 + '\n' + t6 + '\n' +\
         t7 + '\n'
     ob = offsetbox.AnchoredText(text, pad=1, loc=6, prop=dict(size=13))

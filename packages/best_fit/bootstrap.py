@@ -52,7 +52,7 @@ def main(ga_params, cmd_sel, e_max, err_lst, memb_prob_avrg_sort,
 
         percentage_complete = (100.0 * (i + 1) / max(N_b, 2))
         while len(milestones) > 0 and percentage_complete >= milestones[0]:
-            print "  {}% done".format(milestones[0])
+            print "  {}%".format(milestones[0])
             # Remove that milestone from the list.
             milestones = milestones[1:]
 
