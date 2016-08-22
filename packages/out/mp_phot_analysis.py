@@ -3,17 +3,17 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
 import matplotlib.offsetbox as offsetbox
-from ..inp import input_params as g
 from ..math_f import exp_function
 
 
-def pl_phot_err(gs, fig, up_low, x_ax, y_ax, mag_data, err_plot, err_flags,
-                cl_region, stars_in_rjct, stars_out, stars_out_rjct):
+def pl_phot_err(gs, fig, er_params, up_low, x_ax, y_ax, mag_data, err_plot,
+                err_flags, cl_region, stars_in_rjct, stars_out,
+                stars_out_rjct):
     '''
     Photometric error rejection.
     '''
     # Error parameters.
-    er_mode, e_max, be, be_e, N_sig = g.er_params
+    er_mode, e_max, be, be_e, N_sig = er_params
     err_all_fallback, err_max_fallback = err_flags
 
     # Define parameters for upper and lower plots.
@@ -215,13 +215,13 @@ def pl_lum_func(gs, mag_data, y_ax, x_cl, y_cl, flag_no_fl_regs, x_fl,
     leg.get_frame().set_alpha(0.7)
 
 
-def pl_integ_mag(gs, integr_return, y_ax, x_ax0, flag_no_fl_regs):
+def pl_integ_mag(gs, axes_params, integr_return, y_ax, x_ax0, flag_no_fl_regs):
     '''
     Integrated magnitudes.
     '''
     if integr_return:
         # Unpack values.
-        m_ord = g.axes_params[2]
+        m_ord = axes_params[2]
         cl_reg_mag1, fl_reg_mag1, integ_mag1, cl_reg_mag2, fl_reg_mag2, \
             integ_mag2 = integr_return
         # Make plot

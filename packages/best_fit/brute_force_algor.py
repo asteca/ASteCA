@@ -3,7 +3,8 @@ import numpy as np
 import sc_likelihood
 
 
-def main(err_lst, obs_clust, completeness, ip_list, st_d_bin_mr):
+def main(lkl_method, e_max, bin_mass_ratio, cmd_sel, err_lst, obs_clust,
+         completeness, ip_list, st_d_bin_mr):
     '''
     Brute force algorithm that computes the likelihoods for *all* the defined
     isochrones.
@@ -44,16 +45,17 @@ def main(err_lst, obs_clust, completeness, ip_list, st_d_bin_mr):
                         # Iterate through all binary fractions.
                         for bin_frac in bin_lst:
 
-                            params = [m, a, e, d, mass, bin_frac]
+                            model = [m, a, e, d, mass, bin_frac]
 
                             # Call likelihood function with m,a,e,d values.
                             isochrone = isoch_list[m_i][a_i]
                             # Call likelihood function with m,a,e,d values.
                             likel_val = sc_likelihood.main(
+                                lkl_method, e_max, bin_mass_ratio, cmd_sel,
                                 err_lst, obs_clust, completeness, st_d_bin_mr,
-                                isochrone, params)
+                                isochrone, model)
                             # Store the likelihood for each synthetic cluster.
-                            model_done[0].append(params)
+                            model_done[0].append(model)
                             model_done[1].append(likel_val)
 
                             # Print percentage done.
@@ -61,7 +63,7 @@ def main(err_lst, obs_clust, completeness, ip_list, st_d_bin_mr):
                             percentage_complete = (100.0 * (i + 1) / tot_sols)
                             while len(milestones) > 0 and \
                                     percentage_complete >= milestones[0]:
-                                print " {:>3}% done".format(milestones[0])
+                                print " {:>3}%".format(milestones[0])
                                 # Remove that milestone from the list.
                                 milestones = milestones[1:]
 

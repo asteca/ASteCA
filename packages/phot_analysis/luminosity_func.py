@@ -2,17 +2,17 @@
 import numpy as np
 
 
-def mag_completeness(mag_data):
+def mag_completeness(mags):
     '''
     Calculate the completeness level in each magnitude bin beyond the one
     with the maximum count (ie: the assumed 100% completeness limit)
     '''
     # Max value of magnitude.
-    max_mag = max(mag_data)
+    max_mag = max(mags)
     # Number of bins.
-    bins = int((max_mag - min(mag_data)) / 0.1)
+    bins = int((max_mag - min(mags)) / 0.1)
     # Get histogram.
-    mag_hist, bin_edges = np.histogram(mag_data, bins)
+    mag_hist, bin_edges = np.histogram(mags, bins)
     # Index of the bin with the maximum number of stars.
     max_indx = mag_hist.argmax(axis=0)
     # Total number of stars beyond the peak bin (included).
@@ -29,16 +29,21 @@ def mag_completeness(mag_data):
     return completeness
 
 
-def main(flag_no_fl_regs, mag_data, cl_region, field_regions):
+def main(clp, mags, **kwargs):
     '''
     Obtain the Luminosity Function for the field regions and the cluster
-    region normalized to their area. Substract the field curve from the
+    region normalized to their area. Subtract the field curve from the
     cluster curve so as to clean it.
+
+    The completeness will be used by the isochrone/synthetic cluster
+    fitting algorithm.
     '''
+    cl_region, field_regions, flag_no_fl_regs = [
+        clp[_] for _ in ['cl_region', 'field_regions', 'flag_no_fl_regs']]
 
     # Calculate number of bins used by the histograms.
     binwidth = 0.25
-    x_min, x_max = min(mag_data) - 0.5, max(mag_data) + 0.5
+    x_min, x_max = min(mags) - 0.5, max(mags) + 0.5
     bins_n = np.arange(int(x_min), int(x_max + binwidth), binwidth)
 
     mag_cl = zip(*cl_region)[3]
@@ -83,4 +88,5 @@ def main(flag_no_fl_regs, mag_data, cl_region, field_regions):
 
     print('LF and completeness magnitude levels obtained.')
 
-    return lum_func, completeness
+    clp['lum_func'], clp['completeness'] = lum_func, completeness
+    return clp

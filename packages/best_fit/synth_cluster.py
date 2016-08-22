@@ -2,7 +2,6 @@
 import numpy as np
 import random
 import itertools
-from ..inp import input_params as g
 from ..math_f import exp_function
 import move_isochrone
 import mass_distribution
@@ -34,12 +33,10 @@ def gauss_error(col, e_col, mag, e_mag):
     return col_gauss, mag_gauss
 
 
-def add_errors(isoch_compl, err_lst):
+def add_errors(isoch_compl, err_lst, e_max):
     '''
     Randomly move stars according to given error distributions.
     '''
-
-    e_max = g.er_params[1]
 
     popt_mag, popt_col = err_lst
     sigma_mag = np.array(exp_function.exp_3p(isoch_compl[1], *popt_mag))
@@ -191,13 +188,10 @@ def compl_func(isoch_binar, completeness):
 #     return isoch_compl
 
 
-def binarity(isoch_mass, isoch_cut, bin_frac):
+def binarity(isoch_mass, isoch_cut, bin_frac, bin_mass_ratio, cmd_sel):
     '''
     Randomly select a fraction of stars to be binaries.
     '''
-
-    bin_mass_ratio, cmd_sel = g.sc_params[2], g.ps_params[1]
-
     # Indexes of the randomly selected stars in isoch_m_d.
     bin_indxs = random.sample(range(len(isoch_mass[0])),
                               int(bin_frac * len(isoch_mass[0])))
@@ -376,26 +370,27 @@ def isoch_cut_mag(isoch_moved, max_mag):
     return isoch_cut
 
 
-def main(err_lst, completeness, st_dist, isochrone, params):
+def main(err_lst, completeness, st_dist, isochrone, synth_cl_params,
+         e_max, bin_mass_ratio, cmd_sel):
     '''
     Takes an isochrone and returns a synthetic cluster created according to
     a certain mass distribution.
     '''
 
     # Unpack synthetic cluster parameters.
-    e, d, M_total, bin_frac = params[2:]
+    e, d, M_total, bin_frac = synth_cl_params[2:]
 
     # with timeblock("move"):
     # Move theoretical isochrone using the values 'e' and 'd'.
-    isoch_moved = move_isochrone.main([isochrone[0], isochrone[1]], e, d) +\
-        [isochrone[2]]
+    isoch_moved = move_isochrone.main(
+        [isochrone[0], isochrone[1]], e, d, cmd_sel) + [isochrone[2]]
 
     ##############################################################
     # # To generate a synthetic cluster with the full isochrone length,
     # # un-comment this line.
     # # This takes the max magnitude from the isochrone itself instead of using
     # # the input cluster file.
-    # print "\nCluster's log(age): {:0.2f}".format(params[1])
+    # print "\nCluster's log(age): {:0.2f}".format(synth_cl_params[1])
     # print 'Fixed total mass: {:0.2f}'.format(M_total)
     # completeness[0] = max(isoch_moved[1]) + 0.5
     ##############################################################
@@ -430,7 +425,8 @@ def main(err_lst, completeness, st_dist, isochrone, params):
 
             # Assignment of binarity.
             # with timeblock("binar"):
-            isoch_binar = binarity(isoch_mass, isoch_cut, bin_frac)
+            isoch_binar = binarity(isoch_mass, isoch_cut, bin_frac,
+                                   bin_mass_ratio, cmd_sel)
 
             # Completeness limit removal of stars.
             # with timeblock("compl"):
@@ -446,7 +442,7 @@ def main(err_lst, completeness, st_dist, isochrone, params):
 
                 # Get errors according to errors distribution.
                 # with timeblock("errors"):
-                isoch_error = add_errors(isoch_compl, err_lst)
+                isoch_error = add_errors(isoch_compl, err_lst, e_max)
                 # Append masses.
                 # with timeblock("app_mass"):
                 synth_clust = np.array(isoch_error + [isoch_compl[2]])

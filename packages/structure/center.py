@@ -4,7 +4,6 @@ import bisect
 import matplotlib.pyplot as plt
 from scipy import stats
 from scipy.ndimage.filters import gaussian_filter
-from ..inp import input_params as g
 from ..out import prep_plots
 import display_cent
 
@@ -102,14 +101,15 @@ def bin_center(xedges, yedges, kde_cent):
     return cent_bin
 
 
-def main(x_data, y_data, mag_data, hist_lst, semi_return):
+def main(cld, clp, mode, gd_params, cl_cent_semi, cl_rad_semi, cent_flag_semi,
+         **kwargs):
     """
     Obtains the center of the putative cluster. Returns the center values
     along with its errors and several arrays related to histograms, mainly for
     plotting purposes.
     """
 
-    coord = prep_plots.coord_syst()[0]
+    coord = prep_plots.coord_syst(gd_params)[0]
 
     st_dev_lst = [2., 2.5, 3., 3.5, 4.]
     # Set flags.
@@ -117,19 +117,16 @@ def main(x_data, y_data, mag_data, hist_lst, semi_return):
     flag_center_manual = False
 
     # Unpack
-    hist, xedges, yedges = hist_lst[:3]
+    hist_2d, xedges, yedges = clp['hist_2d'], clp['xedges'], clp['yedges']
+    x, y, mags = cld['x'], cld['y'], cld['mags']
 
     # This is the radius used in auto and manual mode to restrict the search
     # of the KDE center coordinates to a smaller area (to improve performance).
-    x_span, y_span = max(x_data) - min(x_data), max(y_data) - min(y_data)
+    x_span, y_span = max(x) - min(x), max(y) - min(y)
     radius = 0.25 * min(x_span, y_span)
 
     mode_semi = True
-    if g.mode == 'semi':
-        # Unpack semi values.
-        cent_cl_semi, cl_rad_semi = semi_return[:2]
-        cent_flag_semi = semi_return[3]
-
+    if mode == 'semi':
         # Only apply if flag is on of these values, else skip semi-center
         # assignment for this cluster.
         if cent_flag_semi in [1, 2]:
@@ -137,13 +134,13 @@ def main(x_data, y_data, mag_data, hist_lst, semi_return):
             # and radius given as initial values.
 
             # Call funct to obtain the pixel coords of the maximum KDE value.
-            approx_cents = [cent_cl_semi]
+            approx_cents = [cl_cent_semi]
             kde_cent, e_cent, kde_plot = kde_center_f(
-                x_data, y_data, approx_cents, cl_rad_semi)
+                x, y, approx_cents, cl_rad_semi)
 
             # Re-write center values if fixed in semi input file.
             if cent_flag_semi == 2:
-                kde_cent, e_cent = [float(i) for i in cent_cl_semi], [0., 0.]
+                kde_cent, e_cent = [float(i) for i in cl_cent_semi], [0., 0.]
                 print 'Semi center fixed: ({:g}, {:g}) {c}.'.format(*kde_cent,
                                                                     c=coord)
             else:
@@ -155,21 +152,22 @@ def main(x_data, y_data, mag_data, hist_lst, semi_return):
 
             # For plotting.
             # 2D histogram with a Gaussian filter applied.
-            hist_2d_g = gaussian_filter(hist, st_dev_lst[0], mode='constant')
+            hist_2d_g = gaussian_filter(hist_2d, st_dev_lst[0],
+                                        mode='constant')
         else:
             # Use 'auto' mode.
             mode_semi = False
 
-    if g.mode == 'auto' or mode_semi is False:
+    if mode == 'auto' or mode_semi is False:
 
         # Obtain approximate values for center coordinates using several
         # Gaussian filters with different standard deviation values, on the
         # 2D histogram.
-        hist_2d_g, approx_cents = center_approx(hist, xedges, yedges,
+        hist_2d_g, approx_cents = center_approx(hist_2d, xedges, yedges,
                                                 st_dev_lst)
 
         # Call funct to obtain the pixel coords of the maximum KDE value.
-        kde_cent, e_cent, kde_plot = kde_center_f(x_data, y_data, approx_cents,
+        kde_cent, e_cent, kde_plot = kde_center_f(x, y, approx_cents,
                                                   radius)
 
         # Find bin where the center xy coordinates are located.
@@ -197,23 +195,22 @@ def main(x_data, y_data, mag_data, hist_lst, semi_return):
 
     # If Manual mode is set, display center and ask the user to accept it or
     # input new one.
-    elif g.mode == 'manual':
+    elif mode == 'manual':
 
         # Obtain approximate values for center coordinates using several
         # Gaussian filters with different standard deviation values, on the
         # 2D histogram.
-        hist_2d_g, approx_cents = center_approx(hist, xedges, yedges,
+        hist_2d_g, approx_cents = center_approx(hist_2d, xedges, yedges,
                                                 [st_dev_lst[0]])
 
         # Call funct to obtain the pixel coords of the maximum KDE value.
-        kde_cent, e_cent, kde_plot = kde_center_f(x_data, y_data, approx_cents,
+        kde_cent, e_cent, kde_plot = kde_center_f(x, y, approx_cents,
                                                   radius)
 
         cent_bin = bin_center(xedges, yedges, kde_cent)
 
         # Show plot with center obtained.
-        display_cent.main(x_data, y_data, mag_data, kde_cent, cent_bin,
-                          hist_2d_g)
+        display_cent.main(x, y, mags, kde_cent, cent_bin, hist_2d_g, gd_params)
         plt.show()
         # No KDE plot is 'manual' mode is used.
         kde_plot = []
@@ -237,10 +234,17 @@ def main(x_data, y_data, mag_data, hist_lst, semi_return):
                 except:
                     print("Sorry, input is not valid. Try again.")
             else:
-                print("Sorry, input is not valid. Try again.\n")
+                print("Sorry, input is not valid. Try again.")
 
-    center_params = [cent_bin, kde_cent, e_cent, approx_cents, st_dev_lst,
-                     hist_2d_g, kde_plot, flag_center_med, flag_center_std,
-                     flag_center_manual]
+    # Add data to dictionary.
+    center_params = {
+        'cent_bin': cent_bin, 'clust_cent': kde_cent, 'e_cent': e_cent,
+        'approx_cents': approx_cents, 'st_dev_lst': st_dev_lst,
+        'hist_2d_g': hist_2d_g, 'kde_plot': kde_plot,
+        'flag_center_med': flag_center_med, 'flag_center_std': flag_center_std,
+        'flag_center_manual': flag_center_manual}
+    # Update 'clp' dictionary.
+    clp_updt = clp.copy()
+    clp_updt.update(center_params)
 
-    return center_params
+    return clp_updt

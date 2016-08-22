@@ -6,7 +6,6 @@ from itertools import cycle
 from matplotlib.patches import Rectangle
 from ..errors import error_round
 from ..structure import king_prof_funcs as kpf
-from ..inp import input_params as g
 
 
 def pl_centers(gs, x_name, y_name, coord, x_min, x_max, y_min, y_max,
@@ -98,26 +97,24 @@ def pl_hist_g(gs, fig, asp_ratio, x_name, y_name, coord, cent_bin, clust_rad,
     ax.set_aspect(aspect=asp_ratio)
 
 
-def pl_rad_dens(gs, radii, ring_density, field_dens, coord, clust_name,
-                kp_params, clust_rad, e_rad, poisson_error, bin_width):
+def pl_rad_dens(gs, mode, radii, rdp_points, field_dens, coord, clust_name,
+                clust_rad, e_rad, poisson_error, bin_width, core_rad, e_core,
+                tidal_rad, e_tidal, K_cent_dens, flag_2pk_conver,
+                flag_3pk_conver):
     '''
     Radial density plot.
     '''
     bin_w_r = error_round.round_to_y(bin_width)
 
-    # King prof params.
-    rc, e_rc, rt, e_rt, n_c_k, kcp, cd, flag_2pk_conver, flag_3pk_conver = \
-        kp_params
-
     ax = plt.subplot(gs[0:2, 4:8])
     # Get max and min values in x,y
     x_min, x_max = max(min(radii) - (max(radii) / 20.), 0), \
         max(radii) + (max(radii) / 20.)
-    delta_total = (max(ring_density) - field_dens)
+    delta_total = (max(rdp_points) - field_dens)
     delta_backg = 0.2 * delta_total
-    y_min = max((field_dens - delta_backg) - (max(ring_density) -
-                min(ring_density)) / 10, 0)
-    y_max = max(ring_density) + (max(ring_density) - min(ring_density)) / 10
+    y_min = max((field_dens - delta_backg) - (max(rdp_points) -
+                min(rdp_points)) / 10, 0)
+    y_max = max(rdp_points) + (max(rdp_points) - min(rdp_points)) / 10
     # Set plot limits
     plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
@@ -128,10 +125,10 @@ def pl_rad_dens(gs, radii, ring_density, field_dens, coord, clust_name,
     # Set grid
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
     # Cluster's name and mode used to process it.
-    plt.title(str(clust_name) + ' (' + g.mode + ')', fontsize=14)
+    plt.title(str(clust_name) + ' (' + mode + ')', fontsize=14)
     # Round radii values.
     rads_r, e_rads_r = error_round.round_sig_fig(
-        [rc, rt, clust_rad], [e_rc, e_rt, e_rad])
+        [core_rad, tidal_rad, clust_rad], [e_core, e_tidal, e_rad])
     # Legend texts
     kp_text = '3P' if flag_3pk_conver else '2P'
     texts = [
@@ -144,9 +141,9 @@ def pl_rad_dens(gs, radii, ring_density, field_dens, coord, clust_name,
                                                     coord)
     ]
     # Plot density profile with the smallest bin size
-    ax.plot(radii, ring_density, 'ko-', zorder=3, label=texts[0])
+    ax.plot(radii, rdp_points, 'ko-', zorder=3, label=texts[0])
     # Plot Poisson error bars
-    plt.errorbar(radii, ring_density, yerr=poisson_error, fmt='ko',
+    plt.errorbar(radii, rdp_points, yerr=poisson_error, fmt='ko',
                  zorder=1)
     # Plot background level.
     ax.hlines(y=field_dens, xmin=0, xmax=max(radii), label=texts[1],
@@ -160,24 +157,27 @@ def pl_rad_dens(gs, radii, ring_density, field_dens, coord, clust_name,
     # Plot 3-P King profile.
     if flag_3pk_conver:
         # Plot curve.
-        ax.plot(radii, kpf.three_params(radii, rt, cd, rc, field_dens), 'g--',
-                label=texts[2], lw=2., zorder=3)
+        ax.plot(radii, kpf.three_params(
+            radii, tidal_rad, K_cent_dens, core_rad, field_dens),
+            'g--', label=texts[2], lw=2., zorder=3)
         # Plot r_t radius as an arrow. vline is there to show the label.
-        ax.vlines(x=rt, ymin=0., ymax=0., label=texts[4], color='g')
-        ax.arrow(rt, arr_y_up, 0., arr_y_dwn, fc="g", ec="g",
+        ax.vlines(x=tidal_rad, ymin=0., ymax=0., label=texts[4], color='g')
+        ax.arrow(tidal_rad, arr_y_up, 0., arr_y_dwn, fc="g", ec="g",
                  head_width=head_w, head_length=head_l, zorder=5)
         # Plot r_c as a dashed line.
-        ax.vlines(x=rc, ymin=0, ymax=kpf.three_params(rc, rt, cd, rc,
-                  field_dens), label=texts[3], color='g', linestyles=':',
-                  lw=4., zorder=4)
+        ax.vlines(x=core_rad, ymin=0, ymax=kpf.three_params(
+            core_rad, tidal_rad, K_cent_dens, core_rad, field_dens),
+            label=texts[3], color='g', linestyles=':', lw=4., zorder=4)
     # Plot 2-P King profile if 3-P was not found.
     elif flag_2pk_conver:
         # Plot curve.
-        ax.plot(radii, kpf.two_params(radii, cd, rc, field_dens), 'g--',
-                label=texts[2], lw=2., zorder=3)
+        ax.plot(radii, kpf.two_params(
+            radii, K_cent_dens, core_rad, field_dens), 'g--', label=texts[2],
+            lw=2., zorder=3)
         # Plot r_c as a dashed line.
-        ax.vlines(x=rc, ymin=0, ymax=kpf.two_params(rc, cd, rc, field_dens),
-                  label=texts[3], color='g', linestyles=':', lw=4., zorder=4)
+        ax.vlines(x=core_rad, ymin=0, ymax=kpf.two_params(
+            core_rad, K_cent_dens, core_rad, field_dens), label=texts[3],
+            color='g', linestyles=':', lw=4., zorder=4)
     # Plot radius.
     ax.vlines(x=clust_rad, ymin=0, ymax=0., label=texts[5], color='r')
     ax.arrow(clust_rad, arr_y_up, 0., arr_y_dwn, fc="r", ec="r",
@@ -192,16 +192,13 @@ def pl_rad_dens(gs, radii, ring_density, field_dens, coord, clust_name,
     ax.legend(handles, labels, loc='upper right', numpoints=2, fontsize=11)
 
 
-def pl_full_frame(gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max,
-                  asp_ratio, center_cl, clust_rad, e_cent, kp_params, mag_data,
-                  x_data, y_data, st_sizes_arr):
+def pl_full_frame(
+        gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max, asp_ratio,
+        clust_cent, clust_rad, e_cent, x, y, st_sizes_arr, core_rad, e_core,
+        tidal_rad, e_tidal, K_conct_par, flag_2pk_conver, flag_3pk_conver):
     '''
     x,y finding chart of full frame
     '''
-    # King prof params.
-    rc, e_rc, rt, e_rt, n_c_k, kcp, cd, flag_2pk_conver, flag_3pk_conver = \
-        kp_params
-
     ax = plt.subplot(gs[0:2, 8:10])
     ax.set_aspect(aspect=asp_ratio)
     # Set plot limits
@@ -216,27 +213,30 @@ def pl_full_frame(gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max,
     # Set minor ticks
     ax.minorticks_on()
     # Plot r_cl.
-    circle = plt.Circle((center_cl[0], center_cl[1]), clust_rad, color='r',
+    circle = plt.Circle((clust_cent[0], clust_cent[1]), clust_rad, color='r',
                         fill=False, lw=1.5)
     fig.gca().add_artist(circle)
     if flag_3pk_conver is True:
         # Plot tidal radius.
-        circle = plt.Circle((center_cl[0], center_cl[1]), rt, color='g',
-                            fill=False, lw=1.5)
+        circle = plt.Circle(
+            (clust_cent[0], clust_cent[1]), tidal_rad, color='g', fill=False,
+            lw=1.5)
         fig.gca().add_artist(circle)
         # Plot core radius.
-        if rc > 0:
-            circle = plt.Circle((center_cl[0], center_cl[1]), rc, color='g',
-                                fill=False, ls='dashed', lw=1.)
+        if core_rad > 0:
+            circle = plt.Circle(
+                (clust_cent[0], clust_cent[1]), core_rad, color='g',
+                fill=False, ls='dashed', lw=1.)
             fig.gca().add_artist(circle)
     elif flag_2pk_conver is True:
         # Plot core radius.
-        if rc > 0:
-            circle = plt.Circle((center_cl[0], center_cl[1]), rc,
-                                color='g', fill=False, ls='dashed', lw=1.)
+        if core_rad > 0:
+            circle = plt.Circle(
+                (clust_cent[0], clust_cent[1]), core_rad, color='g',
+                fill=False, ls='dashed', lw=1.)
             fig.gca().add_artist(circle)
     # Add text box
-    center_cl_r, e_cent_r = error_round.round_sig_fig(center_cl, e_cent)
+    center_cl_r, e_cent_r = error_round.round_sig_fig(clust_cent, e_cent)
     text1 = '${0}_{{cent}} = {1:g} \pm {2:g}\,{3}$'.format(
         x_name, center_cl_r[0], e_cent_r[0], coord)
     text2 = '${0}_{{cent}} = {1:g} \pm {2:g}\,{3}$'.format(
@@ -246,7 +246,7 @@ def pl_full_frame(gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max,
     ob.patch.set(alpha=0.85)
     ax.add_artist(ob)
     # Plot stars.
-    plt.scatter(x_data, y_data, marker='o', c='black', s=st_sizes_arr)
+    plt.scatter(x, y, marker='o', c='black', s=st_sizes_arr)
 
 
 def pl_zoom_frame(gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
@@ -371,6 +371,6 @@ def plot(N, *args):
     try:
         fxn(*args)
     except:
+        print("  WARNING: error when plotting {}.".format(plt_map.get(N)[1]))
         # import traceback
         # print traceback.format_exc()
-        print("  WARNING: error when plotting {}.".format(plt_map.get(N)[1]))

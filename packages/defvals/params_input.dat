@@ -157,9 +157,10 @@ KP   true
 
 # Field star regions.
 #
-# * regions: number of field regions around the cluster that the code will
-#   attempt to define. If the keyword 'max' is used, then the maximum possible
-#   number will be used.
+# * regions: N / max
+#   - N: number of field regions around the cluster that the code will
+#   attempt to define.
+#   - max: use maximum possible number of field regions in the frame.
 #
 #    regions
 GR        10
@@ -239,11 +240,12 @@ PV   auto   2
 #    mode     iters (manual)
 DA   auto       200
 
-# Membership-based removal.
+# Cluster region field stars removal.
 #
 # Performs a selection of stars in the cluster region, to be used by the
-# synthetic cluster match function. Stars are removed either based on their
-# assigned membership probabilities (MPs), or randomly (if MPs are missing).
+# synthetic cluster match function. Possible field stars are removed either
+# based on their assigned membership probabilities (MPs), magnitude, or
+# randomly (if MPs are missing).
 #
 # * mode: local / n_memb  / mp_05 / top_h / man / mag / skip
 #   - local: combines the assigned MPs with a cell by cell removal of stars in

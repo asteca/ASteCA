@@ -1,7 +1,5 @@
 
 import collections
-import numpy as np
-from ..inp import input_params as g
 from ..errors.error_round import round_sig_fig
 
 
@@ -18,29 +16,26 @@ def flatten(l):
             yield el
 
 
-def main(out_file_name, write_name, center_params, radius_params,
-         kp_params, cont_index, n_memb, memb_par, n_memb_da,
-         flag_memb_par, frac_cl_area, prob_cl_kde, integr_return,
-         err_flags, flag_num_memb_low, bf_return):
+def main(npd, pd, clust_cent, e_cent, flag_center_med, flag_center_std,
+         flag_center_manual, clust_rad, e_rad, flag_delta_total,
+         flag_not_stable, flag_delta, flag_radius_manual, core_rad,
+         e_core, tidal_rad, e_tidal, K_memb_num, K_conct_par, flag_2pk_conver,
+         flag_3pk_conver, cont_index, n_memb, memb_par, n_memb_da,
+         flag_memb_par, frac_cl_area, pval_test_params, integr_return,
+         err_flags, flag_num_memb_low, isoch_fit_params, isoch_fit_errors,
+         **kwargs):
     '''
     Add data obtained to the 'data_output.dat' file.
     '''
 
     # Unpack data.
-    center_cl, e_cent = center_params[1], center_params[2]
-    flag_center_med, flag_center_std, flag_center_manual = center_params[-3:]
-    clust_rad, e_rad = radius_params[:2]
-    flag_delta_total, flag_not_stable, flag_delta, flag_radius_manual = \
-        radius_params[-4:]
-    rc, e_rc, rt, e_rt, n_c_k, kcp = kp_params[:6]
-    # Unpack KP flags.
-    flag_2pk_conver, flag_3pk_conver = kp_params[-2:]
+    out_file_name, write_name = npd['out_file_name'], npd['write_name']
     # Invert flag.
     flag_3pk_no_conver = not flag_3pk_conver
     err_all_fallback, err_max_fallback = err_flags
 
     # Construct integrated color.
-    m_ord = g.axes_params[2]
+    m_ord = pd['axes_params'][2]
     if integr_return:
         integ_mag1, integ_mag2 = integr_return[2], integr_return[5]
         sig = 1. if m_ord == 21 else -1.
@@ -62,26 +57,29 @@ def main(out_file_name, write_name, center_params, radius_params,
     int_flags.append(sum(int_flags[2:]))
 
     # Round structure parameters.
-    cr_r, cr_e = round_sig_fig([center_cl[0], center_cl[1], clust_rad, rc, rt],
-                               [e_cent[0], e_cent[1], e_rad, e_rc, e_rt])
+    cr_r, cr_e = round_sig_fig(
+        [clust_cent[0], clust_cent[1], clust_rad, core_rad, tidal_rad],
+        [e_cent[0], e_cent[1], e_rad, e_core, e_tidal])
     # Interwine these lists.
     cre_r = [item for t in zip(cr_r, cr_e) for item in t]
 
     # Round cluster parameters.
     # See if bootstrap process was applied.
-    cp_e = bf_return[1]
-    if np.array([_ == -1. for _ in cp_e]).all():
+    N_b = pd['bf_params'][-1]
+    if N_b >= 2:
         # Round cluster params using the g format.
-        cp_r = ['{:g}'.format(_) for _ in bf_return[0][0]]
+        cp_r = ['{:g}'.format(_) for _ in isoch_fit_params[0]]
+        cp_e = isoch_fit_errors
     else:
         # Round cluster parameters.
-        cp_r, cp_e = round_sig_fig(bf_return[0][0], bf_return[1])
+        cp_r, cp_e = round_sig_fig(isoch_fit_params[0], isoch_fit_errors)
     # Interwine these lists.
     cpe_r = [item for t in zip(cp_r, cp_e) for item in t]
 
     # Store all parameter values in list.
-    line = [write_name, cre_r, kcp, cont_index, n_c_k, n_memb, n_memb_da,
-            memb_par, frac_cl_area, prob_cl_kde, integ_col, cpe_r]
+    line = [write_name, cre_r, K_conct_par, cont_index, K_memb_num,
+            n_memb, n_memb_da, memb_par, frac_cl_area, pval_test_params[0],
+            integ_col, cpe_r]
     # Flatten list.
     line_f = list(flatten(line))
 
@@ -98,4 +96,4 @@ def main(out_file_name, write_name, center_params, radius_params,
 {:>2} {:>2} {:>3} {:>3}'''.format(*int_flags))
         f_out.write('\n')
 
-    print "Cluster's parameters and flags added to output file."
+    print("Cluster's parameters and flags added to output file.")

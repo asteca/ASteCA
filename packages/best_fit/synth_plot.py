@@ -1,17 +1,11 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Feb  5 21:26:28 2014
 
-@author: gabriel
-"""
-
-from .._in import get_in_params as g
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
 
-def synth_clust_plot(mass_dist, isochrone, model, isoch_moved, isoch_cut,
+def synth_clust_plot(
+        mass_dist, isochrone, model, isoch_moved, isoch_cut,
         isoch_mass, isoch_binar, isoch_compl, isoch_error, path):
     '''
     Plot several diagrams related with the synthetic clusters.
@@ -77,8 +71,10 @@ def synth_clust_plot(mass_dist, isochrone, model, isoch_moved, isoch_cut,
     plt.xlim(0, 10)
     ax4.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
     plt.arrow(0.83, 0.085, 0.1, 0., transform=ax4.transAxes, fc="k", ec="k",
-        lw=1.5, head_width=0.01)
-    m_high = '(' + str(g.sc_params[1]) + ')'
+              lw=1.5, head_width=0.01)
+    # This value should be entered manually to not disrupt the 'synth_cluster'
+    # module.
+    m_high = '(' + str(sc_params[1]) + ')'
     plt.text(0.83, 0.033, m_high, transform=ax4.transAxes, fontsize=12)
     plt.text(0.05, 0.92, 'd', transform=ax4.transAxes,
              bbox=dict(facecolor='white', alpha=0.5), fontsize=16)
@@ -137,9 +133,9 @@ def synth_clust_plot(mass_dist, isochrone, model, isoch_moved, isoch_cut,
         text2 = '$M = {:.1f}\,M_{{\odot}}$'.format(sum(isoch_compl[2]))
         text = text1 + text2
         plt.text(0.6, 0.87, text, transform=ax7.transAxes,
-            bbox=dict(facecolor='white', alpha=0.5), fontsize=14)
+                 bbox=dict(facecolor='white', alpha=0.5), fontsize=14)
         ax7.scatter(isoch_compl[0], isoch_compl[1], s=30, c='steelblue',
-            lw=0.5)
+                    lw=0.5)
 
         ax8 = plt.subplot(gs[6:8, 2:4])
         ax8.set_title('Errors')
@@ -149,11 +145,12 @@ def synth_clust_plot(mass_dist, isochrone, model, isoch_moved, isoch_cut,
         ax8.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
         plt.text(0.05, 0.92, 'h', transform=ax8.transAxes,
                  bbox=dict(facecolor='white', alpha=0.5), fontsize=16)
-        plt.text(0.6, 0.92, 'N=%d' % len(isoch_error[0]),
+        plt.text(
+            0.6, 0.92, 'N=%d' % len(isoch_error[0]),
             transform=ax8.transAxes, bbox=dict(facecolor='white', alpha=0.5),
             fontsize=14)
         ax8.scatter(isoch_error[0], isoch_error[2], marker='o', s=30,
-            c='#4682b4', lw=0.5)
+                    c='#4682b4', lw=0.5)
 
     for ax in [ax2, ax3, ax5, ax6, ax7, ax8]:
         ax.set_xlabel('$color$', fontsize=15)

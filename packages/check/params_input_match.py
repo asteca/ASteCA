@@ -3,7 +3,6 @@ import sys
 import numpy as np
 from os.path import isdir
 from ..inp import met_ages_values
-from ..inp import input_params as g
 
 
 def find_missing(arr_large, arr_small):
@@ -20,14 +19,14 @@ def find_missing(arr_large, arr_small):
     return missing
 
 
-def check(bin_methods_dict):
+def check(bin_methods, bf_params, ps_params, sc_params, ga_params, **kwargs):
     """
     Check all parameters related to the search for the best synthetic cluster
     match.
     """
 
     # Unpack.
-    bf_flag, best_fit_algor, lkl_method, bin_method, N_b = g.bf_params
+    bf_flag, best_fit_algor, lkl_method, bin_method, N_b = bf_params
     # If best fit method is set to run.
     if bf_flag:
 
@@ -39,7 +38,7 @@ def check(bin_methods_dict):
         if best_fit_algor == 'genet':
             # Check GA input params.
             n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es = \
-                g.ga_params
+                ga_params
             # First set of params.
             oper_dict0 = {'n_pop': n_pop, 'n_gen': n_gen, 'n_el': n_el,
                           'n_ei': n_ei, 'n_es': n_es}
@@ -71,14 +70,14 @@ def check(bin_methods_dict):
                      " match a valid input.".format(lkl_method))
 
         # Check binning method selected.
-        if lkl_method == 'dolphin' and bin_method not in bin_methods_dict:
+        if lkl_method == 'dolphin' and bin_method not in bin_methods:
             sys.exit("ERROR: the selected binning method '{}' for the 'Best"
                      "\nfit' function does not match a valid input."
                      .format(bin_method))
 
         # Unpack.
-        iso_path = g.ps_params[0]
-        iso_select, par_ranges = g.ps_params[2:]
+        iso_path = ps_params[0]
+        iso_select, par_ranges = ps_params[2:]
 
         # Check if /isochrones folder exists.
         if not isdir(iso_path):
@@ -95,9 +94,9 @@ def check(bin_methods_dict):
         # Check IMF defined.
         imfs_dict = {'chabrier_2001_exp', 'chabrier_2001_log', 'kroupa_1993',
                      'kroupa_2002'}
-        if g.sc_params[0] not in imfs_dict:
+        if sc_params[0] not in imfs_dict:
             sys.exit("ERROR: Name of IMF ({}) is incorrect.".format(
-                g.sc_params[0]))
+                sc_params[0]))
 
         # Check that no parameter range is empty.
         global mass_rs
@@ -145,14 +144,14 @@ def check(bin_methods_dict):
                 sys.exit("ERROR: Binarity fraction value '{}' is out of\n"
                          "boundaries. Please select a value in the range "
                          "[0., 1.]".format(bin_fr_val))
-        if g.sc_params[-1] > 1.:
+        if sc_params[-1] > 1.:
             sys.exit("ERROR: Binary mass ratio set ('{}') is out of\n"
                      "boundaries. Please select a value in the range [0., 1.]".
-                     format(g.sc_params[-1]))
+                     format(sc_params[-1]))
 
         # Get parameters values defined.
         param_ranges, met_f_filter, met_values, age_values = \
-            met_ages_values.main(iso_path)
+            met_ages_values.main(ps_params)
         # Check that ranges are properly defined.
         for i, p in enumerate(param_ranges):
             if not p.size:
@@ -164,8 +163,8 @@ def check(bin_methods_dict):
         # Match values in metallicity and age ranges with those available.
         z_range, a_range = param_ranges[:2]
 
-        err_mssg = "ERROR: one or more metallicity files could not be\n" +\
-                   "matched to the range given.\n\n" +\
+        err_mssg = "ERROR: one or more metallicity files\n" +\
+                   "could not be matched to the range given.\n\n" +\
                    "The defined values are:\n\n" +\
                    "{}\n\nand the closest available values are:\n\n" +\
                    "{}\n\nThe missing elements are:\n\n{}"

@@ -1,18 +1,17 @@
 
-from ..inp import input_params as g
 import spiral as sp
 import manual_histo
 
 
-def spiral_index(spiral, sp_indx, histo, x_c_b, y_c_b, num_bins_area):
+def spiral_index(spiral, sp_indx, histo, cent_bin, num_bins_area):
     '''
     Take the fixed x,y coordinates for a squared spiral of bins (spiral)
     centered at [0,0] and an index (sp_indx) that points to a given
     coordinate (where 0 means center coords: [0,0]).
 
-    Center the spiral at the coordinates (x_c_b, y_c_b) for a 2D histogram
-    (histo) and loop through the spiral storing the coordinates of each
-    histogram bin until a given total area (num_bins_area) is obtained.
+    Center the spiral at the coordinates (cent_bin[0], cent_bin[1]) for a
+    2D histogram (histo) and loop through the spiral storing the coordinates
+    of each histogram bin until a given total area (num_bins_area) is obtained.
     '''
 
     # Initialize the bin counter that indicates how many bins are already
@@ -28,7 +27,7 @@ def spiral_index(spiral, sp_indx, histo, x_c_b, y_c_b, num_bins_area):
 
             # Check if the bin exists in the 2D histogram.
             try:
-                histo[x_c_b + sp_item[0]][y_c_b + sp_item[1]]
+                histo[cent_bin[0] + sp_item[0]][cent_bin[1] + sp_item[1]]
             except IndexError:
                 pass  # Item out of histogram range.
             else:
@@ -37,11 +36,12 @@ def spiral_index(spiral, sp_indx, histo, x_c_b, y_c_b, num_bins_area):
                 # as negative values, ie: list1[1][-2]; which in this
                 # case makes no sense because it would fall out of the
                 # 2D histogram.
-                if (x_c_b + sp_item[0]) >= 0 and (y_c_b + sp_item[1]) >= 0:
+                if (cent_bin[0] + sp_item[0]) >= 0 and\
+                        (cent_bin[1] + sp_item[1]) >= 0:
                     # If the item exists, we store the coordinates of
                     # that bin in this region in both coordinates.
-                    sp_coords[0].append(x_c_b + sp_item[0])
-                    sp_coords[1].append(y_c_b + sp_item[1])
+                    sp_coords[0].append(cent_bin[0] + sp_item[0])
+                    sp_coords[1].append(cent_bin[1] + sp_item[1])
                     # Increase the bin count.
                     bin_count += 1
                     # Store the index of the last bin.
@@ -76,8 +76,7 @@ def spiral_region(h_manual, sp_coords):
     return f_region
 
 
-def main(semi_return, hist_lst, cent_bin, clust_rad, cl_area,
-         stars_out):
+def main(clp, mode, fr_number, cl_f_regs_semi, freg_flag_semi, **kwargs):
     '''
     Define empty region around the cluster via a spiral centered on it
     and of area a bit larger than that defined by the cluster's radius.
@@ -86,17 +85,15 @@ def main(semi_return, hist_lst, cent_bin, clust_rad, cl_area,
     region.
     '''
 
-    hist_2d, xedges, yedges, bin_width = hist_lst
-    x_c_b, y_c_b = cent_bin
+    hist_2d, xedges, yedges, bin_width, cent_bin, cl_area, stars_out = [
+        clp[_] for _ in ['hist_2d', 'xedges', 'yedges', 'bin_width',
+                         'cent_bin', 'cl_area', 'stars_out']]
 
     # Number of field regions defined in 'params_input.dat' file.
-    f_regs_num = g.fr_number
+    f_regs_num = fr_number
 
     # Check if semi is set.
-    if g.mode == 'semi':
-        # Unpack semi values.
-        cl_f_regs_semi, freg_flag_semi = semi_return[2], semi_return[5]
-
+    if mode == 'semi':
         if freg_flag_semi == 1:
             # Update value.
             f_regs_num = cl_f_regs_semi
@@ -123,20 +120,21 @@ def main(semi_return, hist_lst, cent_bin, clust_rad, cl_area,
         # allowed, use the maximum.
         if f_regs_num == 'max':
             f_regions = f_regs_max
-            print 'Using max number of field regions ({}).'.format(f_regions)
+            print('Using maximum number of field regions ({}).'.format(
+                f_regions))
         elif f_regs_num > f_regs_max:
             f_regions = f_regs_max
-            print ("  WARNING: Number of FR defined ({}) is larger than\n"
-                   "  the maximum allowed ({}). "
-                   "Using max number.").format(f_regs_num, f_regs_max)
+            print("  WARNING: Number of FR defined ({}) is larger than\n"
+                  "  the maximum allowed ({}). "
+                  "Using max number.").format(f_regs_num, f_regs_max)
         elif f_regs_num <= 0:
             f_regions = f_regs_max
-            print ("  WARNING: Number of FR ({}) is less than or equal\n"
-                   "  to zero. No field region will be defined.").format(
+            print("  WARNING: Number of FR ({}) is less than or equal\n"
+                  "  to zero. No field region will be defined.").format(
                 f_regs_num)
             flag_no_fl_regs = True
         else:
-            print ("Using defined number of field regions ({}).".format(
+            print("Using defined number of field regions ({}).".format(
                 f_regs_num))
             f_regions = f_regs_num
 
@@ -149,7 +147,7 @@ def main(semi_return, hist_lst, cent_bin, clust_rad, cl_area,
     num_bins_area = int(round(sq_area / (bin_width ** 2), 0))
     # Obtain index of spiral bin where field regions should begin to be formed.
     # dummy_lst is not important here.
-    sp_indx, dummy_lst = spiral_index(spiral, 0, hist_2d, x_c_b, y_c_b,
+    sp_indx, dummy_lst = spiral_index(spiral, 0, hist_2d, cent_bin,
                                       num_bins_area)
 
     # Obtain field regions only if it is possible.
@@ -168,8 +166,8 @@ def main(semi_return, hist_lst, cent_bin, clust_rad, cl_area,
         for _ in range(f_regions):
             # Retrieve spiral index where this field region should end and
             # coordinates of its bins.
-            sp_indx, sp_coords = spiral_index(spiral, sp_indx, hist_2d, x_c_b,
-                                              y_c_b, num_bins_area)
+            sp_indx, sp_coords = spiral_index(spiral, sp_indx, hist_2d,
+                                              cent_bin, num_bins_area)
             # Fill spiral section for this field region with all the stars
             # that fall inside of it.
             f_region = spiral_region(h_manual, sp_coords)
@@ -186,14 +184,16 @@ def main(semi_return, hist_lst, cent_bin, clust_rad, cl_area,
         for index in sorted(field_regs_del, reverse=True):
             del field_regions[index]
         if field_regs_del:
-            print ('  {} field regions with less than 4 stars each were'
-                   ' removed.').format(len(field_regs_del))
+            print('  {} field regions with less than 4 stars each were'
+                  ' removed.').format(len(field_regs_del))
 
         # If after removing the empty regions no regions are left, raise the
         # flag.
         if f_regions > 0 and not(field_regions):
-            print ('  WARNING: no field regions left after the removal of\n' +
-                   '  those containing less than 4 stars.')
+            print('  WARNING: no field regions left after the removal of\n' +
+                  '  those containing less than 4 stars.')
             flag_no_fl_regs = True
 
-    return flag_no_fl_regs, field_regions
+    clp['flag_no_fl_regs'], clp['field_regions'] = flag_no_fl_regs,\
+        field_regions
+    return clp

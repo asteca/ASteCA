@@ -28,18 +28,11 @@ def char_remove(in_lst):
     return lst
 
 
-def init(mypath, pars_f_path):
+def main(mypath, pars_f_path):
     '''
     This function reads the input data parameters stored in the
-    'params_input_XX.dat' file and returns them packaged for each function to
-    use.
+    'params_input_XX.dat' file and returns a dictionary.
     '''
-
-    # Declare globals.
-    global up_flag, mode, done_dir, gd_params, gh_params, cr_params, kp_flag,\
-        im_flag, er_params, fr_number, pv_params, da_params, ps_params, \
-        tracks_dict, bf_params, sc_params, ga_params, rm_params, pl_params, \
-        flag_move_file, axes_params, flag_back_force
 
     # Accept these variations of the 'true' flag.
     true_lst = ('True', 'true', 'TRUE')
@@ -57,7 +50,7 @@ def init(mypath, pars_f_path):
                 if reader[0] == 'UP':
                     up_flag = True if reader[1] in true_lst else False
 
-                # Mode.
+                # Set global mode (i.e, for all clusters processed).
                 elif reader[0] == 'MO':
                     mode = str(reader[1])
 
@@ -221,3 +214,23 @@ def init(mypath, pars_f_path):
     sc_params = [IMF_name, m_high, bin_mr]
     ga_params = [n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es]
     rm_params = [mode_red_memb, local_bin, min_prob]
+
+    # Define tuple of accepted binning methods.
+    bin_methods = ('blocks', 'knuth', 'scott', 'freedman', 'sturges',
+                   'sqrt', 'bb')
+
+    # Store all read parameters in dictionary.
+    pd = {'up_flag': up_flag, 'mode': mode, 'done_dir': done_dir,
+          'gd_params': gd_params, 'gh_params': gh_params,
+          'cr_params': cr_params, 'kp_flag': kp_flag, 'im_flag': im_flag,
+          'er_params': er_params, 'fr_number': fr_number,
+          'pv_params': pv_params, 'da_params': da_params,
+          'ps_params': ps_params, 'tracks_dict': tracks_dict,
+          'bf_params': bf_params, 'sc_params': sc_params,
+          'ga_params': ga_params, 'rm_params': rm_params,
+          'pl_params': pl_params, 'flag_move_file': flag_move_file,
+          'axes_params': axes_params, 'flag_back_force': flag_back_force,
+          'bin_methods': bin_methods}
+
+    # Return parameters dictionary 'pd'
+    return pd

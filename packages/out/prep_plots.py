@@ -1,5 +1,4 @@
 
-from ..inp import input_params as g
 from ..math_f import exp_function
 import numpy as np
 from scipy import stats
@@ -34,23 +33,23 @@ def aspect_ratio(x_min, x_max, y_min, y_max):
     return asp_ratio
 
 
-def coord_syst():
+def coord_syst(gd_params):
     '''
     Define system of coordinates used.
     '''
-    px_deg = g.gd_params[-1]
+    px_deg = gd_params[-1]
     coord_lst = ['px', 'x', 'y'] if px_deg == 'px' else ['deg', 'ra', 'dec']
     return coord_lst
 
 
-def frame_zoomed(x_min, x_max, y_min, y_max, center_cl, clust_rad):
+def frame_zoomed(x_min, x_max, y_min, y_max, clust_cent, clust_rad):
     '''
     If possible, define zoomed frame.
     '''
-    x_zmin, x_zmax = max(x_min, (center_cl[0] - 1.5 * clust_rad)), \
-        min(x_max, (center_cl[0] + 1.5 * clust_rad))
-    y_zmin, y_zmax = max(y_min, (center_cl[1] - 1.5 * clust_rad)), \
-        min(y_max, (center_cl[1] + 1.5 * clust_rad))
+    x_zmin, x_zmax = max(x_min, (clust_cent[0] - 1.5 * clust_rad)), \
+        min(x_max, (clust_cent[0] + 1.5 * clust_rad))
+    y_zmin, y_zmax = max(y_min, (clust_cent[1] - 1.5 * clust_rad)), \
+        min(y_max, (clust_cent[1] + 1.5 * clust_rad))
     # Prevent axis stretching.
     if (x_zmax - x_zmin) != (y_zmax - y_zmin):
         lst = [(x_zmax - x_zmin), (y_zmax - y_zmin)]
@@ -63,14 +62,14 @@ def frame_zoomed(x_min, x_max, y_min, y_max, center_cl, clust_rad):
     return x_zmin, x_zmax, y_zmin, y_zmax
 
 
-def ax_names():
+def ax_names(axes_params):
     '''
     Define names for photometric diagram axes.
     '''
     # y_axis == 0 indicates that the y axis is a magnitude.
     y_axis = 0
     # Create photometric axis names.
-    y_ax, x_ax0, m_ord = g.axes_params[0:3]
+    y_ax, x_ax0, m_ord = axes_params[0:3]
     if m_ord == 21:
         x_ax = '(' + x_ax0 + '-' + y_ax + ')'
     elif m_ord == 12:
@@ -144,14 +143,14 @@ def diag_limits(y_axis, phot_x, phot_y):
     return x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd
 
 
-def star_size(mag_data):
+def star_size(mags):
     '''
     Convert magnitudes into intensities and define sizes of stars in
     finding chart.
     '''
     # Scale factor.
-    factor = 500. * (1 - 1 / (1 + 150 / len(mag_data) ** 0.85))
-    return 0.1 + factor * 10 ** ((np.array(mag_data) - min(mag_data)) / -2.5)
+    factor = 500. * (1 - 1 / (1 + 150 / len(mags) ** 0.85))
+    return 0.1 + factor * 10 ** ((np.array(mags) - min(mags)) / -2.5)
 
 
 def phot_diag_st_size(x):
@@ -197,17 +196,15 @@ def separate_stars(x_data, y_data, mag_data, x_zmin, x_zmax, y_zmin, y_zmax,
     return x_data_z, y_data_z, mag_data_z, stars_f_rjct, stars_f_acpt
 
 
-def da_plots(center_cl, clust_rad, stars_out, x_zmin, x_zmax, y_zmin, y_zmax,
-             x_max_cmd, col_data, err_lst, red_return):
+def da_plots(clust_cent, clust_rad, stars_out, x_zmin, x_zmax, y_zmin, y_zmax,
+             x_max_cmd, cols, err_lst, cl_reg_fit, cl_reg_no_fit):
     '''
     Generate parameters for the finding chart and the photometric diagram
     plotted with the MPs assigned by the DA.
     '''
 
-    red_memb_fit, red_memb_no_fit = red_return[:2]
-
     # Get extreme values for colorbar.
-    lst_comb = red_memb_fit + red_memb_no_fit
+    lst_comb = cl_reg_fit + cl_reg_no_fit
     v_min_mp, v_max_mp = round(min(zip(*lst_comb)[-1]), 2), \
         round(max(zip(*lst_comb)[-1]), 2)
 
@@ -219,7 +216,7 @@ def da_plots(center_cl, clust_rad, stars_out, x_zmin, x_zmax, y_zmin, y_zmax,
     # Finding chart.
     # Arrange stars used in the best fit process.
     m_p_m_temp = [[], [], []]
-    for star in red_memb_fit:
+    for star in cl_reg_fit:
         m_p_m_temp[0].append(star[1])
         m_p_m_temp[1].append(star[2])
         m_p_m_temp[2].append(star[7])
@@ -227,7 +224,7 @@ def da_plots(center_cl, clust_rad, stars_out, x_zmin, x_zmax, y_zmin, y_zmax,
     chart_fit_inv = [i[::-1] for i in m_p_m_temp]
     # Arrange stars *not* used in the best fit process.
     m_p_m_temp = [[], [], []]
-    for star in red_memb_no_fit:
+    for star in cl_reg_no_fit:
         m_p_m_temp[0].append(star[1])
         m_p_m_temp[1].append(star[2])
         m_p_m_temp[2].append(star[7])
@@ -238,8 +235,8 @@ def da_plots(center_cl, clust_rad, stars_out, x_zmin, x_zmax, y_zmin, y_zmax,
     out_clust_rad = [[], []]
     for star in stars_out:
         if x_zmin <= star[1] <= x_zmax and y_zmin <= star[2] <= y_zmax:
-            dist = np.sqrt((center_cl[0] - star[1]) ** 2 +
-                           (center_cl[1] - star[2]) ** 2)
+            dist = np.sqrt((clust_cent[0] - star[1]) ** 2 +
+                           (clust_cent[1] - star[2]) ** 2)
             # Only plot stars outside the cluster's radius.
             if dist >= clust_rad:
                 out_clust_rad[0].append(star[1])
@@ -248,7 +245,7 @@ def da_plots(center_cl, clust_rad, stars_out, x_zmin, x_zmax, y_zmin, y_zmax,
     # Photometric diagram.
     # Arrange stars used in the best fit process.
     m_p_m_temp = [[], [], []]
-    for star in red_memb_fit:
+    for star in cl_reg_fit:
         m_p_m_temp[0].append(star[5])
         m_p_m_temp[1].append(star[3])
         m_p_m_temp[2].append(star[7])
@@ -256,19 +253,19 @@ def da_plots(center_cl, clust_rad, stars_out, x_zmin, x_zmax, y_zmin, y_zmax,
     diag_fit_inv = [i[::-1] for i in m_p_m_temp]
     # Arrange stars *not* used in the best fit process.
     m_p_m_temp = [[], [], []]
-    for star in red_memb_no_fit:
+    for star in cl_reg_no_fit:
         m_p_m_temp[0].append(star[5])
         m_p_m_temp[1].append(star[3])
         m_p_m_temp[2].append(star[7])
     # Create new list with inverted values so higher prob stars are on top.
     diag_no_fit_inv = [i[::-1] for i in m_p_m_temp]
 
-    # For plotting error bars in photom diag.
+    # For plotting error bars in photometric diagram.
     x_val, mag_y, x_err, y_err = [], [], [], []
     if zip(*lst_comb)[3]:
         mag_y = np.arange(int(min(zip(*lst_comb)[3]) + 0.5),
                           int(max(zip(*lst_comb)[3]) + 0.5) + 0.1)
-        x_val = [min(x_max_cmd, max(col_data) + 0.2) - 0.4] * len(mag_y)
+        x_val = [min(x_max_cmd, max(cols) + 0.2) - 0.4] * len(mag_y)
         # Read average fitted values for exponential error fit.
         popt_mag, popt_col1 = err_lst[:2]
         x_err = exp_function.exp_3p(mag_y, *popt_col1)

@@ -6,11 +6,11 @@ from matplotlib.ticker import MultipleLocator
 from matplotlib.patches import Ellipse
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy.ndimage.filters import gaussian_filter
-from ..inp import input_params as g
 
 
 def pl_bf_synth_cl(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
-                   synth_clst, syn_b_edges, cp_r, cp_e, shift_isoch):
+                   synth_clst, syn_b_edges, cp_r, cp_e, shift_isoch,
+                   lkl_method, bin_method, tracks_dict, iso_select):
     '''
     Best fit synthetic cluster obtained.
     '''
@@ -25,7 +25,7 @@ def pl_bf_synth_cl(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
     ax.minorticks_on()
     ax.xaxis.set_major_locator(MultipleLocator(1.0))
     # Plot grid.
-    if g.bf_params[2] == 'dolphin':
+    if lkl_method == 'dolphin':
         for x_ed in syn_b_edges[0]:
             # vertical lines
             ax.axvline(x_ed, linestyle=':', color='k', zorder=1)
@@ -33,7 +33,7 @@ def pl_bf_synth_cl(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
             # horizontal lines
             ax.axhline(y_ed, linestyle=':', color='k', zorder=1)
         # Add text box
-        text = '$({};\,{})$'.format(g.bf_params[2], g.bf_params[3])
+        text = '$({};\,{})$'.format(lkl_method, bin_method)
         ob = offsetbox.AnchoredText(text, pad=.2, loc=1, prop=dict(size=12))
         ob.patch.set(alpha=0.85)
         ax.add_artist(ob)
@@ -58,29 +58,29 @@ def pl_bf_synth_cl(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
     ax_t = plt.subplot(gs[4:6, 10:12])
     ax_t.axis('off')  # Remove axis from frame.
     # Map isochrones set selection to proper name.
-    iso_print = g.tracks_dict.get(g.ps_params[2])
+    iso_print = tracks_dict.get(iso_select)
     t1 = r'$Synthetic\;cluster\;parameters$' + '\n' + \
         r'$[Tracks:\;{}]$'.format(iso_print.replace(' ', '\;')) + '\n\n'
-    t2 = r'$z\qquad\; =\, {} \pm {}$'.format(cp_r[0], cp_e[0]) + '\n'
-    t3 = r'$log(age)\, =\, {} \pm {}$'.format(cp_r[1], cp_e[1]) + '\n'
-    t4 = r'$E_{{(B-V)}}\;\,=\, {} \pm {}$'.format(cp_r[2], cp_e[2]) + '\n'
-    t5 = r'$(m-M)_o = {} \pm {}$'.format(cp_r[3], cp_e[3]) + '\n'
-    t6 = r'$M\,(M_{{\odot}})\quad\;=\,{} \pm {}$'.format(
-        cp_r[4], cp_e[4]) + '\n'
-    t7 = r'$b_{{frac}}\quad\,\, =\, {} \pm {}$'.format(cp_r[5], cp_e[5]) + '\n'
-    text = t1 + t2 + t3 + t4 + t5 + t6 + t7
+    t2 = r'$z \hspace{{4.25}}=\,{}\pm {}$'.format(cp_r[0], cp_e[0])
+    t3 = r'$\log(age) \hspace{{0.75}}=\,{}\pm {}$'.format(cp_r[1], cp_e[1])
+    t4 = r'$E_{{(B-V)}} \hspace{{1.3}}=\,{}\pm {}$'.format(cp_r[2], cp_e[2])
+    t5 = r'$(m-M)_o=\, {} \pm {}$'.format(cp_r[3], cp_e[3])
+    t6 = r'$M\,(M_{{\odot}}) \hspace{{0.85}} =\,{}\pm {}$'.format(
+        cp_r[4], cp_e[4])
+    t7 = r'$b_{{frac}} \hspace{{2.7}}=\,{}\pm {}$'.format(cp_r[5], cp_e[5])
+    text = t1 + t2 + '\n' + t3 + '\n' + t4 + '\n' + t5 + '\n' + t6 + '\n' +\
+        t7 + '\n'
     ob = offsetbox.AnchoredText(text, pad=1, loc=6, prop=dict(size=13))
     ob.patch.set(alpha=0.85)
     ax_t.add_artist(ob)
 
 
-def pl_ga_lkl(gs, l_min_max, lkl_old, model_done, new_bs_indx):
+def pl_ga_lkl(gs, l_min_max, lkl_old, model_done, new_bs_indx, ga_params, N_b):
     '''
     Likelihood evolution for the GA.
     '''
     # Genetic algorithm parameters.
-    N_b = g.bf_params[-1]
-    n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es = g.ga_params
+    n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es = ga_params
 
     ax = plt.subplot(gs[6:8, 0:4])
     plt.xlim(-0.5, len(lkl_old[0]) + int(0.01 * len(lkl_old[0])))
@@ -246,7 +246,6 @@ def plot(N, *args):
     '''
     Handle each plot separately.
     '''
-
     plt_map = {
         0: [pl_bf_synth_cl, 'synthetic cluster'],
         1: [pl_ga_lkl, 'GA likelihood evolution'],
@@ -269,6 +268,6 @@ def plot(N, *args):
     try:
         fxn(*args)
     except:
-        import traceback
-        print traceback.format_exc()
+        # import traceback
+        # print traceback.format_exc()
         print("  WARNING: error when plotting {}.".format(plt_map.get(N)[1]))
