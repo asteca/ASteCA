@@ -19,7 +19,7 @@ def bin_edges_f(bin_method, mag_col_cl):
             b_num = np.sqrt(len(mag_col_cl[0]))
 
         for mag_col in mag_col_cl:
-            bin_edges.append(np.histogram(mag_col, bins=b_num)[1])
+            bin_edges.append(np.histogram(mag_col, bins=int(b_num))[1])
 
     elif bin_method == 'bb':
         # Based on Bonatto & Bica (2007) 377, 3, 1301-1323. Fixed bin width
@@ -200,14 +200,11 @@ def main(field_regions, memb_prob_avrg_sort, flag_decont_skip, rm_params):
     # ax.invert_yaxis()
     # plt.show()
 
-    # Store and pass for plotting purposes.
-    cl_reg_clean_plot = [min_prob, bin_edges]
-
     # Check the number of stars selected.
     if len(cl_reg_fit) < 10:
         print ("  WARNING: less than 10 stars left after reducing\n"
                "  by 'local' method. Using full list.")
-        cl_reg_fit, cl_reg_no_fit, cl_reg_clean_plot = memb_prob_avrg_sort, \
-            [], [0.]
+        cl_reg_fit, cl_reg_no_fit, min_prob, bin_edges = memb_prob_avrg_sort,\
+            [], 0., 0.
 
-    return cl_reg_fit, cl_reg_no_fit, cl_reg_clean_plot
+    return cl_reg_fit, cl_reg_no_fit, min_prob, bin_edges
