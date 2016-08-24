@@ -57,39 +57,23 @@ MO   auto
 
 ######################### Input data parameters ################################
 
-# Column numbers identifying the needed data as stored in the clusters'
-# photometric data files.
-#
-#    id_star   x/ra  y/dec magnitude e_mag color e_col
-PD         0      1      2         3     4     5     6
-
-# Define the system of coordinates used in the data file.
+# Columns for the ID's and the coordinates used in the data file.
 #
 # * coords: px / deg. Indicates if the observed frame is in pixels or degrees.
 #
-#    coords
-PX      px
+#   id_star   x/ra  y/dec  coords 
+PI        0      1      2      px
 
-# Indicate the CMD to be used by the code to perform the analysis.
+# Columns for the photometric data.
 #
-# * selection: [1, 13]             ; Photometric system
-# - 1: (B-V) vs V                  ; UBVI (Johnson)
-# - 2: (V-I) vs V                  ; UBVI (Johnson)
-# - 3: (U-V) vs V                  ; UBVI (Johnson)
-# - 4: (C-T1) vs T1                ; Washington
-# - 5: (J-H) vs J                  ; 2MASS
-# - 6: (J-H) vs H                  ; 2MASS
-# - 7: (H-K) vs K                  ; 2MASS
-# - 8: (u-g) vs g                  ; SDSS ugriz
-# - 9: (g-r) vs g                  ; SDSS ugriz
-# - 10: (b-y) vs y                 ; Stroemgren
-# - 11: (v-y) vs y                 ; Stroemgren
-# - 12: (u-y) vs y                 ; Stroemgren
-# - 13: (F606W - F814W) vs F606W   ; HST/ACS WFC
+# Magnitude and error.
+#        mag    e_mag
+PM     3,0,V        4
 #
-#    selection
-CMD          1
-################################################################################
+# Color and error.
+#         col    e_col
+PC   5,0,B-V         6
+###############################################################################
 
 
 

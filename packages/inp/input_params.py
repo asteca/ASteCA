@@ -55,12 +55,14 @@ def main(mypath, pars_f_path):
                     mode = str(reader[1])
 
                 # Input data parameters.
-                elif reader[0] == 'PD':
-                    gd_params = map(int, reader[1:])
-                elif reader[0] == 'PX':
-                    gd_params.append(str(reader[1]))
-                elif reader[0] == 'CMD':
-                    cmd_select = int(reader[1])
+                elif reader[0] == 'PI':
+                    id_coords = map(int, reader[1:-1]) + [reader[-1]]
+                elif reader[0] == 'PM':
+                    id_mags = reader[1:]
+                elif reader[0] == 'PC':
+                    id_cols = reader[1:]
+                    import pdb; pdb.set_trace()  # breakpoint c1c99b1c //
+
 
                 # Output parameters.
                 elif reader[0] == 'FB':
