@@ -5,9 +5,6 @@ def main():
     filter defined in each photometric system, as presented in the CMD
     Girardi et al. service: http://stev.oapd.inaf.it/cgi-bin/cmd
 
-    Dashes (-) in filter names have been replaced by underscores (_) in the
-    systems: akari, decam, decam_vista.
-
     Capitalization of the filter names matters!
     '''
     all_systs = {
@@ -26,8 +23,8 @@ def main():
                           "L'", 'M')),
         '6': ('akari', (
               'IRC_N2', 'IRC_N3', 'IRC_N4', 'MIRS_S7', 'MIRS_S9w', 'MIRS_S11',
-              'MIRL_L15', 'MIRL_L18W', 'MIRL_L24', 'FIS_N60', 'FIS_WIDE_L',
-              'FIS_WIDE_S', 'FIS_N160')),
+              'MIRL_L15', 'MIRL_L18W', 'MIRL_L24', 'FIS_N60', 'FIS_WIDE-L',
+              'FIS_WIDE-S', 'FIS_N160')),
         '7': ('batc', (
               'U', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'm',
               'n', 'o', 'p', 't')),
@@ -40,10 +37,10 @@ def main():
                'l15', 'l16', 'l17', 'l18', 'l19', 'l20', 'I', 'H', 'NBS',
                'DSSI2', 'J', 'H', 'Ks')),
         '12': ('dcmc', ('I', 'J', 'H', 'Ks')),
-        '13': ('decam', ('DECam_u', 'DES_g', 'DES_r', 'DES_i', 'DES_z',
-                         'DES_Y')),
-        '14': ('decam_vista', ('DECam_u', 'DES_g', 'DES_r', 'DES_i', 'DES_z',
-                               'DES_Y', 'Z', 'Y', 'J', 'H', 'Ks')),
+        '13': ('decam', ('DECam-u', 'DES-g', 'DES-r', 'DES-i', 'DES-z',
+                         'DES-Y')),
+        '14': ('decam_vista', ('DECam-u', 'DES-g', 'DES-r', 'DES-i', 'DES-z',
+                               'DES-Y', 'Z', 'Y', 'J', 'H', 'Ks')),
         '15': ('denis', ('I', 'J', 'Ks')),
         '16': ('dmc14', (
                'band1', 'band2', 'band3', 'band4', 'band5', 'band6', 'band7',

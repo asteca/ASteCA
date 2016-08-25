@@ -16,7 +16,7 @@ def interp_isoch(isochrone):
     return isoch_inter
 
 
-def main(bf_params, ps_params, tracks_dict, **kwargs):
+def main(bf_params, ps_params, **kwargs):
     '''
     Read isochrones and parameters if best fit function is set to run.
     '''

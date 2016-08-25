@@ -29,10 +29,8 @@ def check_all(mypath, file_end):
     pd = params_file.check(mypath, file_end)
 
     # Check that the magnitude and color names were properly given.
-    # If they are, store also the name of the proper isochrones folder.
+    # If they are, store also the name of the proper isochrones folders.
     pd = photom_names.check(mypath, pd)
-    import pdb; pdb.set_trace()  # breakpoint 6f394ddd //
-    
 
     # Check that R and rpy2 are installed, if necessary.
     pd = params_input_pval.check(inst_packgs_lst, pd)

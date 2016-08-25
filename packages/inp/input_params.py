@@ -112,7 +112,7 @@ def main(mypath, pars_f_path):
                     bin_method = str(reader[4])
                     N_b = int(reader[5])
                 elif reader[0] == 'PS':
-                    iso_select = str(reader[1])
+                    evol_track = str(reader[1])
 
                 # Synthetic cluster parameters.
                 elif reader[0] == 'SC':
@@ -160,29 +160,20 @@ def main(mypath, pars_f_path):
     pv_params = [pv0_params, pv1_params]
     da_params = [da0_params, da1_params]
 
-    # Dictionary mapping selected tracks to the right name.
-    tracks_dict = {'PAR12C': 'COLIBRI PR16',
-                   'PAR12': 'PARSEC v1.2S', 'PAR10': 'PARSEC v1.0',
-                   'PAR11': 'PARSEC v1.1', 'MAR08A': 'Marigo (2008, Case A)',
-                   'MAR08B': 'Marigo (2008, Case B)', 'MAR08': 'Marigo (2008)',
-                   'GIR02': 'Girardi (2002)'}
-
-    # # Fix magnitude and color names for the CMD axis.
-    # # m_1 is the y axis magnitude, m_2 is the magnitude used to obtain the
-    # # color index and the third value in each key indicates how the color
-    # # is to be formed, e.g: '12' means (m_1 - m_2)
-    # cmds_dic = {1: ('V', 'B', 21), 2: ('V', 'I', 12), 3: ('V', 'U', 21),
-    #             4: ('{T_1}', 'C', 21), 5: ('J', 'H', 12), 6: ('H', 'J', 21),
-    #             7: ('K', 'H', 21), 8: ('g', 'u', 21), 9: ('g', 'r', 12),
-    #             10: ('y', 'b', 21), 11: ('y', 'v', 21), 12: ('y', 'u', 21),
-    #             13: ('F606W', 'F814W', 12)}
-    # m_1, m_2, m_ord = cmds_dic[cmd_select]
-    # # Store axes params.
-    # axes_params = [m_1, m_2, m_ord]
+    # Map evolutionary tracks selection to proper names, and name of the folder
+    # where they should be stored.
+    cmd_evol_tracks = {
+        'PAR12C': ('parsec12C', 'COLIBRI PR16'),
+        'PAR12': ('parsec12', 'PARSEC v1.2S'),
+        'PAR10': ('parsec10', 'PARSEC v1.0'),
+        'PAR11': ('parsec11', 'PARSEC v1.1'),
+        'MAR08A': ('marigo08A', 'Marigo (2008, Case A)'),
+        'MAR08B': ('marigo08B', 'Marigo (2008, Case B)'),
+        'MAR08': ('marigo08', 'Marigo (2008)'),
+        'GIR02': ('girardi02', 'Girardi (2002)')}
 
     # Store photometric system params in lists.
     par_ranges = [m_rs, a_rs, e_rs, d_rs, mass_rs, bin_rs]
-    ps_params = [iso_select, par_ranges]
 
     # Store GA params in lists.
     bf_params = [bf_flag, best_fit_algor, lkl_method, bin_method, N_b]
@@ -198,11 +189,12 @@ def main(mypath, pars_f_path):
     pd = {
         'up_flag': up_flag, 'mode': mode, 'done_dir': done_dir,
         'id_coords': id_coords, 'id_mags': id_mags, 'id_cols': id_cols,
+        'evol_track': evol_track, 'par_ranges': par_ranges,
+        'cmd_evol_tracks': cmd_evol_tracks,
         'gh_params': gh_params,
         'cr_params': cr_params, 'kp_flag': kp_flag, 'im_flag': im_flag,
         'er_params': er_params, 'fr_number': fr_number,
         'pv_params': pv_params, 'da_params': da_params,
-        'ps_params': ps_params, 'tracks_dict': tracks_dict,
         'bf_params': bf_params, 'sc_params': sc_params,
         'ga_params': ga_params, 'rm_params': rm_params,
         'pl_params': pl_params, 'flag_move_file': flag_move_file,

@@ -68,11 +68,11 @@ PI        0      1      2      px
 #
 # Magnitude and error.
 #        mag    e_mag
-PM     3,0,V        4
+PM     3,4,V        4
 #
 # Color and error.
 #         col    e_col
-PC   5,0,B-V         6
+PC    5,4,B,V        6
 ###############################################################################
 
 
@@ -306,7 +306,6 @@ BF   true      genet      dolphin    knuth         10
 
 # Select set of evolutionary tracks to use.
 #
-# iso_select:
 # - PAR12C         ; PARSEC v1.2 + COLIBRI PR16
 # - PAR12          ; PARSEC v1.2S
 # - PAR11          ; PARSEC v1.1
@@ -316,7 +315,7 @@ BF   true      genet      dolphin    knuth         10
 # - MAR08          ; Marigo 2008
 # - GIR02          ; Girardi 2002
 #
-#    iso_select
+#    evol_track
 PS        PAR12
 
 # Synthetic cluster parameters.
