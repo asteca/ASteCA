@@ -2,6 +2,7 @@
 import numpy as np
 import read_isochs
 import met_ages_values
+from ..check import CMD_phot_systs_filts
 
 
 def interp_isoch(isochrone):
@@ -16,7 +17,8 @@ def interp_isoch(isochrone):
     return isoch_inter
 
 
-def main(bf_params, ps_params, **kwargs):
+def main(cmd_evol_tracks, evol_track, bf_params, iso_paths, par_ranges,
+         all_syst_filters, **kwargs):
     '''
     Read isochrones and parameters if best fit function is set to run.
     '''
@@ -25,17 +27,25 @@ def main(bf_params, ps_params, **kwargs):
     # Only read files of best fit method is set to run.
     bf_flag = bf_params[0]
     if bf_flag:
+        # Print info about tracks.
+        print("Process {} theoretical isochrones".format(
+            cmd_evol_tracks[evol_track][1]))
+
+        for syst in all_syst_filters:
+            print("in the '{}' photometric system.\n".format(
+                CMD_phot_systs_filts.main()[syst[0]][0]))
+
         # Obtain allowed metallicities and ages. Use the first photometric
         # system defined.
         # *WE ASUME ALL PHOTOMETRIC SYSTEMS CONTAIN THE SAME NUMBER OF
         # METALLICITY FILES*
         param_ranges, met_f_filter, met_values, age_values =\
-            met_ages_values.main(ps_params)
+            met_ages_values.main(iso_paths, par_ranges)
 
         # Get isochrones and their parameter values.
-        isoch_list = read_isochs.main(met_f_filter, age_values, ps_params)
+        isoch_list = read_isochs.main(met_f_filter, age_values)
 
-        # Interpolate extra points into all isochrones.
+        # Interpolate extra points into all the isochrones.
         isochs_interp = [[] for _ in isoch_list]
         for i, _ in enumerate(isoch_list):
             for isoch in _:

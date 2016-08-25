@@ -19,7 +19,8 @@ def find_missing(arr_large, arr_small):
     return missing
 
 
-def check(bin_methods, bf_params, ps_params, sc_params, ga_params, **kwargs):
+def check(IMF_name, evol_track, bin_methods, bf_params, cmd_evol_tracks,
+          iso_paths, imf_funcs, par_ranges, sc_params, ga_params, **kwargs):
     """
     Check all parameters related to the search for the best synthetic cluster
     match.
@@ -31,7 +32,7 @@ def check(bin_methods, bf_params, ps_params, sc_params, ga_params, **kwargs):
     if bf_flag:
 
         # Check best fit method selected.
-        if best_fit_algor not in {'brute', 'genet'}:
+        if best_fit_algor not in ('brute', 'genet'):
             sys.exit("ERROR: the selected best fit method '{}' does not match"
                      " a valid input.".format(best_fit_algor))
 
@@ -55,7 +56,7 @@ def check(bin_methods, bf_params, ps_params, sc_params, ga_params, **kwargs):
                              "[0., 1.] range; {} is set.".format(
                                  oper, oper_dict1[oper]))
             # Handle separately.
-            if cr_sel not in {'1P', '2P'}:
+            if cr_sel not in ('1P', '2P'):
                 sys.exit("ERROR: GA 'cr_sel' operator is not a valid choice;\n"
                          "'{}' is set.".format(cr_sel))
             # Number of solutions to pass to the nest generation (elitism)
@@ -65,7 +66,7 @@ def check(bin_methods, bf_params, ps_params, sc_params, ga_params, **kwargs):
                              n_el, n_pop))
 
         # Check likelihood method selected.
-        if lkl_method not in {'tolstoy', 'dolphin'}:
+        if lkl_method not in ('tolstoy', 'dolphin'):
             sys.exit("ERROR: the selected likelihood method '{}' does not"
                      " match a valid input.".format(lkl_method))
 
@@ -75,31 +76,24 @@ def check(bin_methods, bf_params, ps_params, sc_params, ga_params, **kwargs):
                      "\nfit' function does not match a valid input."
                      .format(bin_method))
 
-        # Unpack.
-        iso_path = ps_params[0]
-        iso_select, par_ranges = ps_params[2:]
-
         # Check if /isochrones folder exists.
-        if not isdir(iso_path):
-            sys.exit("ERROR: 'Best synthetic cluster fit' function is set to"
-                     " run but the folder:\n\n {}\n\ndoes not exists."
-                     .format(iso_path))
+        for iso_path in iso_paths:
+            if not isdir(iso_path):
+                sys.exit(
+                    "ERROR: 'Best synthetic cluster fit' function is set to"
+                    " run but the folder:\n\n {}\n\ndoes not exists."
+                    .format(iso_path))
 
         # Check selected isochrones set.
-        if iso_select not in {'GIR02', 'MAR08', 'MAR08B', 'MAR08A', 'PAR10',
-                              'PAR11', 'PAR12', 'PAR12C'}:
+        if evol_track not in cmd_evol_tracks.keys():
             sys.exit("ERROR: the selected isochrones set ('{}') does\n"
-                     "not match a valid input.".format(iso_select))
+                     "not match a valid input.".format(evol_track))
 
         # Check IMF defined.
-        imfs_dict = {'chabrier_2001_exp', 'chabrier_2001_log', 'kroupa_1993',
-                     'kroupa_2002'}
-        if sc_params[0] not in imfs_dict:
-            sys.exit("ERROR: Name of IMF ({}) is incorrect.".format(
-                sc_params[0]))
+        if IMF_name not in imf_funcs:
+            sys.exit("ERROR: Name of IMF ({}) is incorrect.".format(IMF_name))
 
         # Check that no parameter range is empty.
-        global mass_rs
         m_rs, a_rs, e_rs, d_rs, mass_rs, bin_rs = par_ranges
         p_names = [['metallicity', m_rs], ['age', a_rs], ['extinction', e_rs],
                    ['distance', d_rs], ['mass', mass_rs], ['binary', bin_rs]]
@@ -151,7 +145,7 @@ def check(bin_methods, bf_params, ps_params, sc_params, ga_params, **kwargs):
 
         # Get parameters values defined.
         param_ranges, met_f_filter, met_values, age_values = \
-            met_ages_values.main(ps_params)
+            met_ages_values.main(iso_paths, par_ranges)
         # Check that ranges are properly defined.
         for i, p in enumerate(param_ranges):
             if not p.size:
@@ -168,11 +162,14 @@ def check(bin_methods, bf_params, ps_params, sc_params, ga_params, **kwargs):
                    "The defined values are:\n\n" +\
                    "{}\n\nand the closest available values are:\n\n" +\
                    "{}\n\nThe missing elements are:\n\n{}"
-        if len(z_range) > len(met_values):
-            # Find missing elements.
-            missing = find_missing(z_range, met_values)
-            sys.exit(err_mssg.format(z_range, np.asarray(met_values),
-                     np.asarray(missing)))
+        # Go through the values extracted from the metallicity files present
+        # in each photometric system used.
+        for met_vs in met_values:
+            if len(z_range) > len(met_vs):
+                # Find missing elements.
+                missing = find_missing(z_range, met_values)
+                sys.exit(err_mssg.format(z_range, np.asarray(met_values),
+                         np.asarray(missing)))
         err_mssg = "ERROR: one or more isochrones could not be matched\n" +\
                    "to the age range given.\n\nThe defined values are:\n\n" +\
                    "{}\n\nand the closest available values are:\n\n" +\

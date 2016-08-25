@@ -4,9 +4,9 @@ from check import update
 from check import clusters
 from check import params_file
 from check import photom_names
-from check import params_input_struct
-from check import params_input_pval
-from check import params_input_decont
+from check import params_struct
+from check import params_pval
+from check import params_decont
 
 
 def check_all(mypath, file_end):
@@ -33,31 +33,22 @@ def check_all(mypath, file_end):
     pd = photom_names.check(mypath, pd)
 
     # Check that R and rpy2 are installed, if necessary.
-    pd = params_input_pval.check(inst_packgs_lst, pd)
+    pd = params_pval.check(inst_packgs_lst, pd)
 
     # Check if a new version is available.
     update.check(**pd)
 
     # Check that structural parameters are properly given.
-    params_input_struct.check(mypath, cl_files, **pd)
+    params_struct.check(mypath, cl_files, **pd)
 
     # Check decontamination algorithm parameters.
-    params_input_decont.check(cl_files, **pd)
-
-    # Print info about tracks.
-    # Map isochrones set selection to proper name.
-    iso_select = pd['ps_params'][2]
-    iso_print = pd['tracks_dict'].get(iso_select)
-    # Extract photometric system used,m from the isochrone's folder name.
-    syst = pd['ps_params'][0].split('_', 1)[1]
-    print("Process {} theoretical isochrones".format(iso_print))
-    print("in the '{}' photometric system.\n".format(syst))
+    params_decont.check(cl_files, **pd)
 
     # Check the best synthetic cluster match parameters.
     # Import here after the needed packages were checked to be present, since
     # this imports numpy.
-    from check import params_input_match
-    params_input_match.check(**pd)
+    from check import params_match
+    params_match.check(**pd)
 
     # Check and store metallicity files.
     from check import read_met_files

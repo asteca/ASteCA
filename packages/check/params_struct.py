@@ -3,7 +3,7 @@ import sys
 from os.path import join, isfile
 
 
-def check(mypath, cl_files, mode, gd_params, ps_params, pl_params, gh_params,
+def check(mypath, cl_files, mode, id_coords, pl_params, gh_params,
           cr_params, er_params, **kwargs):
     """
     Check that the parameters are properly written.
@@ -23,14 +23,9 @@ def check(mypath, cl_files, mode, gd_params, ps_params, pl_params, gh_params,
                      " not exist.")
 
     # Check px/deg.
-    if gd_params[-1] not in {'px', 'deg'}:
+    if id_coords[-1] not in ('px', 'deg'):
         sys.exit("ERROR: the coordinate units given in the input parameters\n"
-                 "file ('{}') are incorrect.".format(gd_params[-1]))
-
-    # Selected CMD.
-    if ps_params[1] not in {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13}:
-        sys.exit("ERROR: the stored CMD value ({}) does not match a valid"
-                 " selection.".format(ps_params[1]))
+                 "file ('{}') are incorrect.".format(id_coords[-1]))
 
     # Output figure.
     if pl_params[0] is True:

@@ -86,7 +86,7 @@ def check(mypath, pd):
     for p_syst in all_syst_filters:
         text2 = all_systs[p_syst[0]][0]
         # Set iso_path according to the above values.
-        iso_paths.append(join(mypath + '/isochrones/' + text1 + '_' + text2))
+        iso_paths.append(join(mypath + 'isochrones/' + text1 + '_' + text2))
     pd['iso_paths'] = iso_paths
 
     return pd

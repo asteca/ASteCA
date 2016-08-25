@@ -4,13 +4,11 @@ import re
 import isochs_format
 
 
-def read_met_file(met_f, age_values, ps_params):
+def read_met_file(met_f, age_values):
     '''
     Read a given metallicity file and return the isochrones for the ages
     within the age range.
     '''
-
-    cmd_select = ps_params[1]
 
     # Read line start format and columns indexes for the selected set of
     # Girardi isochrones.
@@ -81,16 +79,17 @@ def read_met_file(met_f, age_values, ps_params):
     return metal_isoch
 
 
-def main(met_f_filter, age_values, ps_params):
+def main(met_f_filter, age_values):
     '''
     Stores the available isochrones of different metallicities and
     ages, according to the ranges given to these parameters.
     '''
 
-    # Lists that store the colors, magnitudes and masses of the isochrones.
+    # Lists that store the magnitudes, colors, and other data from the
+    # isochrones.
     # isoch_list = [metal_1, ..., metal_M]
     # metal_i = [isoch_i1, ..., isoch_iN]
-    # isoch_ij = [colors, magnitudes, mass]
+    # isoch_ij = [colors, magnitudes, mass, etc]
     # isoch_list[i][j] --> i: metallicity index ; j: age index
     isoch_list = []
 

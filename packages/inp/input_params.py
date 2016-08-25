@@ -177,13 +177,16 @@ def main(mypath, pars_f_path):
 
     # Store GA params in lists.
     bf_params = [bf_flag, best_fit_algor, lkl_method, bin_method, N_b]
-    sc_params = [IMF_name, m_high, bin_mr]
+    sc_params = [m_high, bin_mr]
     ga_params = [n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es]
     rm_params = [mode_red_memb, local_bin, min_prob]
 
     # Define tuple of accepted binning methods.
     bin_methods = ('blocks', 'knuth', 'scott', 'freedman', 'sturges',
                    'sqrt', 'bb')
+    # Accepted IMF functions.
+    imf_funcs = ('chabrier_2001_exp', 'chabrier_2001_log', 'kroupa_1993',
+                 'kroupa_2002')
 
     # Store all read parameters in dictionary.
     pd = {
@@ -199,7 +202,8 @@ def main(mypath, pars_f_path):
         'ga_params': ga_params, 'rm_params': rm_params,
         'pl_params': pl_params, 'flag_move_file': flag_move_file,
         'flag_back_force': flag_back_force,
-        'bin_methods': bin_methods}
+        'bin_methods': bin_methods, 'imf_funcs': imf_funcs,
+        'IMF_name': IMF_name}
 
     # Return parameters dictionary 'pd'
     return pd
