@@ -3,6 +3,7 @@ from check import pack
 from check import update
 from check import clusters
 from check import params_file
+from check import photom_names
 from check import params_input_struct
 from check import params_input_pval
 from check import params_input_decont
@@ -26,6 +27,12 @@ def check_all(mypath, file_end):
     # Read parameters from 'params_input.dat' file. Return a dictionary
     # containing all the parameter values.
     pd = params_file.check(mypath, file_end)
+
+    # Check that the magnitude and color names were properly given.
+    # If they are, store also the name of the proper isochrones folder.
+    pd = photom_names.check(mypath, pd)
+    import pdb; pdb.set_trace()  # breakpoint 6f394ddd //
+    
 
     # Check that R and rpy2 are installed, if necessary.
     pd = params_input_pval.check(inst_packgs_lst, pd)

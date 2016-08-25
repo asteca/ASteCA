@@ -1,5 +1,4 @@
 
-from os.path import join
 import re
 
 
@@ -61,8 +60,6 @@ def main(mypath, pars_f_path):
                     id_mags = reader[1:]
                 elif reader[0] == 'PC':
                     id_cols = reader[1:]
-                    import pdb; pdb.set_trace()  # breakpoint c1c99b1c //
-
 
                 # Output parameters.
                 elif reader[0] == 'FB':
@@ -163,30 +160,6 @@ def main(mypath, pars_f_path):
     pv_params = [pv0_params, pv1_params]
     da_params = [da0_params, da1_params]
 
-    # Fix isochrones location according to the CMD and set selected.
-    text1, text2 = 'none', 'none'
-    # Map isochrones set selection to proper name.
-    iso_sys = {'PAR12C': 'parsec12C', 'PAR12': 'parsec12',
-               'PAR10': 'parsec10', 'PAR11': 'parsec11',
-               'MAR08A': 'marigo08A', 'MAR08B': 'marigo08B',
-               'MAR08': 'marigo08', 'GIR02': 'girardi02'}
-    text1 = iso_sys.get(iso_select)
-    # Generate correct name for the isochrones path.
-    if cmd_select in {1, 2, 3}:
-        text2 = 'ubvrijhk'
-    elif cmd_select in {4}:
-        text2 = 'washington'
-    elif cmd_select in {5, 6, 7}:
-        text2 = '2mass'
-    elif cmd_select in {8, 9}:
-        text2 = 'sloan'
-    elif cmd_select in {10, 11, 12}:
-        text2 = 'stroemgren'
-    elif cmd_select in {13}:
-        text2 = 'acs_wfc'
-    # Set iso_path according to the above values.
-    iso_path = join(mypath + '/isochrones/' + text1 + '_' + text2)
-
     # Dictionary mapping selected tracks to the right name.
     tracks_dict = {'PAR12C': 'COLIBRI PR16',
                    'PAR12': 'PARSEC v1.2S', 'PAR10': 'PARSEC v1.0',
@@ -194,22 +167,22 @@ def main(mypath, pars_f_path):
                    'MAR08B': 'Marigo (2008, Case B)', 'MAR08': 'Marigo (2008)',
                    'GIR02': 'Girardi (2002)'}
 
-    # Fix magnitude and color names for the CMD axis.
-    # m_1 is the y axis magnitude, m_2 is the magnitude used to obtain the
-    # color index and the third value in each key indicates how the color
-    # is to be formed, e.g: '12' means (m_1 - m_2)
-    cmds_dic = {1: ('V', 'B', 21), 2: ('V', 'I', 12), 3: ('V', 'U', 21),
-                4: ('{T_1}', 'C', 21), 5: ('J', 'H', 12), 6: ('H', 'J', 21),
-                7: ('K', 'H', 21), 8: ('g', 'u', 21), 9: ('g', 'r', 12),
-                10: ('y', 'b', 21), 11: ('y', 'v', 21), 12: ('y', 'u', 21),
-                13: ('F606W', 'F814W', 12)}
-    m_1, m_2, m_ord = cmds_dic[cmd_select]
-    # Store axes params.
-    axes_params = [m_1, m_2, m_ord]
+    # # Fix magnitude and color names for the CMD axis.
+    # # m_1 is the y axis magnitude, m_2 is the magnitude used to obtain the
+    # # color index and the third value in each key indicates how the color
+    # # is to be formed, e.g: '12' means (m_1 - m_2)
+    # cmds_dic = {1: ('V', 'B', 21), 2: ('V', 'I', 12), 3: ('V', 'U', 21),
+    #             4: ('{T_1}', 'C', 21), 5: ('J', 'H', 12), 6: ('H', 'J', 21),
+    #             7: ('K', 'H', 21), 8: ('g', 'u', 21), 9: ('g', 'r', 12),
+    #             10: ('y', 'b', 21), 11: ('y', 'v', 21), 12: ('y', 'u', 21),
+    #             13: ('F606W', 'F814W', 12)}
+    # m_1, m_2, m_ord = cmds_dic[cmd_select]
+    # # Store axes params.
+    # axes_params = [m_1, m_2, m_ord]
 
     # Store photometric system params in lists.
     par_ranges = [m_rs, a_rs, e_rs, d_rs, mass_rs, bin_rs]
-    ps_params = [iso_path, cmd_select, iso_select, par_ranges]
+    ps_params = [iso_select, par_ranges]
 
     # Store GA params in lists.
     bf_params = [bf_flag, best_fit_algor, lkl_method, bin_method, N_b]
@@ -222,17 +195,19 @@ def main(mypath, pars_f_path):
                    'sqrt', 'bb')
 
     # Store all read parameters in dictionary.
-    pd = {'up_flag': up_flag, 'mode': mode, 'done_dir': done_dir,
-          'gd_params': gd_params, 'gh_params': gh_params,
-          'cr_params': cr_params, 'kp_flag': kp_flag, 'im_flag': im_flag,
-          'er_params': er_params, 'fr_number': fr_number,
-          'pv_params': pv_params, 'da_params': da_params,
-          'ps_params': ps_params, 'tracks_dict': tracks_dict,
-          'bf_params': bf_params, 'sc_params': sc_params,
-          'ga_params': ga_params, 'rm_params': rm_params,
-          'pl_params': pl_params, 'flag_move_file': flag_move_file,
-          'axes_params': axes_params, 'flag_back_force': flag_back_force,
-          'bin_methods': bin_methods}
+    pd = {
+        'up_flag': up_flag, 'mode': mode, 'done_dir': done_dir,
+        'id_coords': id_coords, 'id_mags': id_mags, 'id_cols': id_cols,
+        'gh_params': gh_params,
+        'cr_params': cr_params, 'kp_flag': kp_flag, 'im_flag': im_flag,
+        'er_params': er_params, 'fr_number': fr_number,
+        'pv_params': pv_params, 'da_params': da_params,
+        'ps_params': ps_params, 'tracks_dict': tracks_dict,
+        'bf_params': bf_params, 'sc_params': sc_params,
+        'ga_params': ga_params, 'rm_params': rm_params,
+        'pl_params': pl_params, 'flag_move_file': flag_move_file,
+        'flag_back_force': flag_back_force,
+        'bin_methods': bin_methods}
 
     # Return parameters dictionary 'pd'
     return pd
