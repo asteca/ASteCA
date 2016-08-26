@@ -89,12 +89,14 @@ def get_ages(met_file):
 
 def get_metals(iso_paths):
     '''
-    Read names of all metallicity files stored in isochrones path given and
+    Read names of all metallicity files stored in each isochrones' path, and
     store them along with the z values they represent.
     '''
 
     met_vals_all, met_files = [], []
+    # For each photometric system used.
     for iso_path in iso_paths:
+        # List all metallicity files in folder.
         metal_files = sorted(os.listdir(iso_path))
         # Iterate in order through all the metallicity files stored for the
         # selected set of isochrones.
@@ -116,8 +118,7 @@ def get_metals(iso_paths):
 
 def main(iso_paths, par_ranges):
     '''
-    Run once to obtain the correct metallicities and ages to be used
-    by the code.
+    Obtain the correct metallicities and ages used by the code.
     '''
 
     # Read names of all metallicity files stored in the isochrones paths given.

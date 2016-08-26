@@ -2,32 +2,18 @@
 import sys
 import numpy as np
 from os.path import isdir
-from ..inp import met_ages_values
 
 
-def find_missing(arr_large, arr_small):
-    '''
-    Takes two arrays of floats, compares them and returns the missing
-    elements in the smaller one.
-    '''
-    # Convert to strings before comparing.
-    s1 = [str(_) for _ in arr_small]
-    s2 = [str(_) for _ in arr_large]
-    # Find missing elements. Convert to float and store.
-    missing = [float(_) for _ in s2 if _ not in set(s1)]
-
-    return missing
-
-
-def check(IMF_name, evol_track, bin_methods, bf_params, cmd_evol_tracks,
-          iso_paths, imf_funcs, par_ranges, sc_params, ga_params, **kwargs):
+def check(IMF_name, evol_track, bin_methods, bf_flag, bf_params,
+          cmd_evol_tracks, iso_paths, imf_funcs, par_ranges, sc_params,
+          ga_params, **kwargs):
     """
     Check all parameters related to the search for the best synthetic cluster
     match.
     """
 
     # Unpack.
-    bf_flag, best_fit_algor, lkl_method, bin_method, N_b = bf_params
+    best_fit_algor, lkl_method, bin_method, N_b = bf_params
     # If best fit method is set to run.
     if bf_flag:
 
@@ -142,40 +128,3 @@ def check(IMF_name, evol_track, bin_methods, bf_params, cmd_evol_tracks,
             sys.exit("ERROR: Binary mass ratio set ('{}') is out of\n"
                      "boundaries. Please select a value in the range [0., 1.]".
                      format(sc_params[-1]))
-
-        # Get parameters values defined.
-        param_ranges, met_f_filter, met_values, age_values = \
-            met_ages_values.main(iso_paths, par_ranges)
-        # Check that ranges are properly defined.
-        for i, p in enumerate(param_ranges):
-            if not p.size:
-                sys.exit("ERROR: No values exist for '{}' range defined:\n\n"
-                         "min={}, max={}, step={}".format(p_names[i][0],
-                                                          *p_names[i][1][1]))
-
-        # Check that metallicity and age min, max & steps values are correct.
-        # Match values in metallicity and age ranges with those available.
-        z_range, a_range = param_ranges[:2]
-
-        err_mssg = "ERROR: one or more metallicity files\n" +\
-                   "could not be matched to the range given.\n\n" +\
-                   "The defined values are:\n\n" +\
-                   "{}\n\nand the closest available values are:\n\n" +\
-                   "{}\n\nThe missing elements are:\n\n{}"
-        # Go through the values extracted from the metallicity files present
-        # in each photometric system used.
-        for met_vs in met_values:
-            if len(z_range) > len(met_vs):
-                # Find missing elements.
-                missing = find_missing(z_range, met_values)
-                sys.exit(err_mssg.format(z_range, np.asarray(met_values),
-                         np.asarray(missing)))
-        err_mssg = "ERROR: one or more isochrones could not be matched\n" +\
-                   "to the age range given.\n\nThe defined values are:\n\n" +\
-                   "{}\n\nand the closest available values are:\n\n" +\
-                   "{}\n\nThe missing elements are:\n\n{}"
-        if len(a_range) > len(age_values):
-            # Find missing elements.
-            missing = find_missing(a_range, age_values)
-            sys.exit(err_mssg.format(a_range, np.asarray(age_values),
-                     np.asarray(missing)))

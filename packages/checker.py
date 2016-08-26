@@ -20,6 +20,9 @@ def check_all(mypath, file_end):
 
     # Check that all the essential packages are installed.
     inst_packgs_lst = pack.check()
+    # Import here after the needed packages were checked to be present.
+    from check import params_match
+    from check import read_met_files
 
     # Check if input cluster files exist.
     cl_files = clusters.check(mypath, file_end)
@@ -28,30 +31,26 @@ def check_all(mypath, file_end):
     # containing all the parameter values.
     pd = params_file.check(mypath, file_end)
 
+    # Check if a new version is available.
+    update.check(**pd)
+
     # Check that the magnitude and color names were properly given.
     # If they are, store also the name of the proper isochrones folders.
     pd = photom_names.check(mypath, pd)
 
-    # Check that R and rpy2 are installed, if necessary.
-    pd = params_pval.check(inst_packgs_lst, pd)
-
-    # Check if a new version is available.
-    update.check(**pd)
-
     # Check that structural parameters are properly given.
     params_struct.check(mypath, cl_files, **pd)
+
+    # Check that R and rpy2 are installed, if necessary.
+    pd = params_pval.check(inst_packgs_lst, pd)
 
     # Check decontamination algorithm parameters.
     params_decont.check(cl_files, **pd)
 
     # Check the best synthetic cluster match parameters.
-    # Import here after the needed packages were checked to be present, since
-    # this imports numpy.
-    from check import params_match
     params_match.check(**pd)
 
     # Check and store metallicity files.
-    from check import read_met_files
     pd = read_met_files.check_get(pd)
 
     # Force matplotlib to not use any Xwindows backend. This call prevents

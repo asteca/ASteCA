@@ -9,7 +9,7 @@ def check(cl_files, bin_methods, da_params, rm_params, **kwargs):
     Check parameters related to the decontamination algorithm functions.
     """
 
-    # Check decontamination algorithm params.
+    # Check decontamination algorithm parameters.
     mode_da = da_params[0]
     # Check if 'mode' was correctly set.
     if mode_da not in ['auto', 'manual', 'read', 'skip']:
@@ -20,7 +20,7 @@ def check(cl_files, bin_methods, da_params, rm_params, **kwargs):
         # Check if file exists.
         for cl_file in cl_files:
 
-            # Get memb file names.
+            # Get file name for membership files.
             memb_file = names_paths.memb_file_name(cl_file)
             if not isfile(memb_file):
                 # File does not exist.
