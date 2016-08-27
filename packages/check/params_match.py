@@ -96,13 +96,13 @@ def check(IMF_name, evol_track, bin_methods, bf_flag, bf_params,
             # Catch empty list.
             if not p:
                 sys.exit("ERROR: Range defined for '{}' parameter is"
-                         " empty".format(p_names[i][0]))
+                         " empty.".format(p_names[i][0]))
             # Catch *almost* empty list since inp/input_params perhaps added
             # an identifier 'l' or 'r'. This prevents ranges given as
             # empty lists (ie: [] or () or {}) from passing as valid ranges.
             elif not p[1]:
                 sys.exit("ERROR: Range defined for '{}' parameter is"
-                         " empty".format(p_names[i][0]))
+                         " empty.".format(p_names[i][0]))
 
         # Check binarity parameters.
         # See if it is a list of values or a range.

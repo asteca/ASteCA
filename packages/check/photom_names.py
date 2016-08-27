@@ -88,9 +88,11 @@ def check(mypath, pd):
             iso_paths.append(
                 join(mypath + 'isochrones/' + text1 + '_' + text2))
 
-        # Remove when support for multiple photometric system is in place.
-        if len(all_syst_filters) > 1:
-            sys.exit("ERROR: more than one photometric system defined.")
+        print all_syst_filters
+        print iso_paths
+        # # Remove when support for multiple photometric system is in place.
+        # if len(all_syst_filters) > 1:
+        #     sys.exit("ERROR: more than one photometric system defined.")
 
     # Add data to parameters dictionary.
     pd['mag_clmns'], pd['e_mag_clmns'], pd['filters'], pd['col_clmns'],\

@@ -27,10 +27,13 @@ def ranges_files_check(pd):
     *WE ASUME ALL PHOTOMETRIC SYSTEMS CONTAIN THE SAME NUMBER OF
     METALLICITY FILES*
     """
-
-    # Get parameters values defined.
-    param_ranges, met_f_filter, met_values, age_values = \
-        met_ages_values.main(pd['iso_paths'], pd['par_ranges'])
+    try:
+        # Get parameters values defined.
+        param_ranges, met_f_filter, met_values, age_values = \
+            met_ages_values.main(pd['iso_paths'], pd['par_ranges'])
+    except:
+        print traceback.format_exc()
+        sys.exit("\nERROR: error storing metallicity files.")
 
     # Check that ranges are properly defined.
     m_rs, a_rs, e_rs, d_rs, mass_rs, bin_rs = pd['par_ranges']
@@ -38,7 +41,7 @@ def ranges_files_check(pd):
                ['distance', d_rs], ['mass', mass_rs], ['binary', bin_rs]]
     for i, p in enumerate(param_ranges):
         if not p.size:
-            sys.exit("ERROR: No values exist for '{}' range defined:\n\n"
+            sys.exit("ERROR: No values exist for '{}' range defined:\n"
                      "min={}, max={}, step={}".format(p_names[i][0],
                                                       *p_names[i][1][1]))
 
@@ -69,10 +72,7 @@ def ranges_files_check(pd):
         sys.exit(err_mssg.format(a_range, np.asarray(age_values),
                  np.asarray(missing)))
 
-    # Store in dictionary.
-    pd['param_ranges'], pd['met_f_filter'], pd['met_values'],\
-        pd['age_values'] = param_ranges, met_f_filter, met_values, age_values
-    return pd
+    return param_ranges, met_f_filter, met_values, age_values
 
 
 def check_get(pd):
@@ -80,13 +80,11 @@ def check_get(pd):
     Check that all metallicity files needed are in place. To save time, we
     store the data and pass it.
     """
-    try:
-        # Read metallicity files.
-        pd = ranges_files_check(pd)
-        # Store all isochrones in all the metallicity files in isoch_list.
-        pd = isoch_params.main(pd)
-    except:
-        print traceback.format_exc()
-        sys.exit("\nERROR: unknown error reading metallicity files.")
+    # Read metallicity files' names, store proper ranges for all parameters,
+    # and available metallicities and ages.
+    param_ranges, met_f_filter, met_values, age_values = ranges_files_check(pd)
+    # Store all isochrones in all the metallicity files in isoch_list.
+    pd = isoch_params.main(pd, param_ranges, met_f_filter, met_values,
+                           age_values)
 
     return pd
