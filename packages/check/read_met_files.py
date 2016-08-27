@@ -80,11 +80,16 @@ def check_get(pd):
     Check that all metallicity files needed are in place. To save time, we
     store the data and pass it.
     """
-    # Read metallicity files' names, store proper ranges for all parameters,
-    # and available metallicities and ages.
-    param_ranges, met_f_filter, met_values, age_values = ranges_files_check(pd)
-    # Store all isochrones in all the metallicity files in isoch_list.
-    pd = isoch_params.main(pd, param_ranges, met_f_filter, met_values,
-                           age_values)
+    # Only read files if best fit method is set to run.
+    if pd['bf_flag']:
+        # Read metallicity files' names, store proper ranges for all
+        # parameters, and available metallicities and ages.
+        param_ranges, met_f_filter, met_values, age_values =\
+            ranges_files_check(pd)
+        # Store parameters.
+        pd['param_values'] = [met_values, age_values] + param_ranges[2:]
+
+        # Store all isochrones in all the metallicity files.
+        pd = isoch_params.main(pd, met_f_filter, age_values)
 
     return pd
