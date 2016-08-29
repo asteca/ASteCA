@@ -201,7 +201,7 @@ def main(mypath, pars_f_path):
 
                 # Input data parameters.
                 elif reader[0] == 'PI':
-                    id_coords = map(int, reader[1:-1]) + [reader[-1]]
+                    id_coords = reader[1:]
                 elif reader[0] == 'PM':
                     id_mags = reader[1:]
                 elif reader[0] == 'PC':

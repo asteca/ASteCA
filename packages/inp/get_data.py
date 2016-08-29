@@ -1,6 +1,7 @@
 
 import numpy as np
 import traceback
+import itertools
 
 
 def rem_bad_stars(ids, x, y, mags, em, cols, ec):
@@ -12,28 +13,31 @@ def rem_bad_stars(ids, x, y, mags, em, cols, ec):
     min_lim, max_lim = -50., 50.
 
     # Store indexes of stars that should be removed.
-    lists_arr = zip(mags, em, cols, ec)
+    lists_arr = list(zip(*itertools.chain(mags, em, cols, ec)))
     del_indexes = [i for i, t in enumerate(lists_arr) if
                    any(e > max_lim for e in t) or any(e < min_lim for e in t)]
 
     # Remove stars from id list first since this are strings.
     id_clean = np.delete(np.array(ids), del_indexes)
-    # Remove stars from the rest of the lists simultaneously.
-    clean_array = np.delete(np.array([x, y, mags, em,
-                            cols, ec]), del_indexes, axis=1)
+    # Remove stars from the coordinates lists.
+    x_clean, y_clean = np.delete(np.array([x, y]), del_indexes, axis=1)
+    # Remove stars from the rest of the lists.
+    mags_clean = np.delete(np.array(mags), del_indexes, axis=1)
+    em_clean = np.delete(np.array(em), del_indexes, axis=1)
+    cols_clean = np.delete(np.array(cols), del_indexes, axis=1)
+    ec_clean = np.delete(np.array(mags), del_indexes, axis=1)
 
-    return id_clean, clean_array
+    return id_clean, x_clean, y_clean, mags_clean, em_clean, cols_clean,\
+        ec_clean
 
 
-def main(npd, gd_params, **kwargs):
+def main(npd, id_indx, x_indx, y_indx, mag_indx, e_mag_indx, col_indx,
+         e_col_indx, **kwargs):
     '''
     Get spatial and photometric data from the cluster's data file.
     '''
 
     data_file = npd['data_file']
-    # Read indexes from input parameters.
-    id_inx, x_inx, y_inx, m_inx, em_inx, c_inx, ec_inx = gd_params[:-1]
-
     # Loads the data in 'data_file' as a list of N lists where N is the number
     # of columns. Each of the N lists contains all the data for the column.
     # If any string is found (for example 'INDEF') it is converted to 99.999.
@@ -47,24 +51,32 @@ def main(npd, gd_params, **kwargs):
                          " spaces)\n  for all columns.\n".format(data_file))
 
     try:
-        # Read data columns, except IDs.
-        x, y, mags, em, cols, ec = \
-            data[x_inx], data[y_inx], data[m_inx], data[em_inx], data[c_inx],\
-            data[ec_inx]
+        # Read coordinates data.
+        x, y = data[x_indx], data[y_indx]
+        # Read magnitudes.
+        mags, em = [], []
+        for mi, emi in zip(*[mag_indx, e_mag_indx]):
+            mags.append(data[mi])
+            em.append(data[emi])
+        # Read colors.
+        cols, ec = [], []
+        for ci, eci in zip(*[col_indx, e_col_indx]):
+            cols.append(data[ci])
+            ec.append(data[eci])
 
         # Now read IDs as strings. Do this separately so numeric IDs are not
         # converted into floats by np.genfromtxt. I.e.: 190 --> 190.0
         data = np.genfromtxt(data_file, dtype=str, unpack=True)
-        ids = data[id_inx]
+        ids = data[id_indx]
         n_old = len(ids)
     except IndexError:
         raise IndexError("ERROR: data input file:\n  {}\n  contains "
                          "fewer columns than those given "
                          "in 'params_input.dat'.".format(data_file))
 
-    # If any mag or color value (or their errors) is too large, discard
+    # If any magnitude or color value (or their errors) is too large, discard
     # that star.
-    ids, [x, y, mags, em, cols, ec] = rem_bad_stars(
+    ids, x, y, mags, em, cols, ec = rem_bad_stars(
         ids, x, y, mags, em, cols, ec)
 
     data_names = ['x_coords', 'y_coords', 'magnitudes', 'color']

@@ -23,18 +23,29 @@ def check(mypath, pd):
     properly generate the synthetic clusters (if the best match function is
     set to run).
     """
+
+    # Read column indexes for the IDs and the coordinates, and the coordinate
+    # format used (pixels or degrees)
+    try:
+        id_indx, x_indx, y_indx, coords = pd['id_coords']
+        id_indx, x_indx, y_indx = map(int, [id_indx, x_indx, y_indx])
+        coords = str(coords)
+    except:
+        sys.exit("ERROR: bad format for the IDs and coordinates\n"
+                 "column indexes in 'params_input.dat'.")
+
     # Dictionary of photometric systems defined in the CMD service.
     all_systs = pd['cmd_systs']
 
     # Extract magnitudes (filters) data.
-    mag_clmns, e_mag_clmns, filters = [], [], []
+    mag_indx, e_mag_indx, filters = [], [], []
     for mag in pd['id_mags'][0::2]:
         try:
             colum_indx, phot_syst, filter_name = mag.split(',')
         except:
             sys.exit("ERROR: bad formatting for filter '{}'".format(mag))
         # Used to read data from cluster file in 'get_data.
-        mag_clmns.append(int(colum_indx))
+        mag_indx.append(int(colum_indx))
         if pd['bf_flag']:
             # Check.
             phot_syst_filt_check(all_systs, mag, phot_syst, filter_name)
@@ -43,20 +54,20 @@ def check(mypath, pd):
         filters.append((phot_syst, filter_name))
     # Extract magnitude error columns.
     if len(pd['id_mags'][1::2]) == len(pd['id_mags'][0::2]):
-        for e_mag_idx in pd['id_mags'][1::2]:
-            e_mag_clmns.append(int(e_mag_idx))
+        for colum_indx in pd['id_mags'][1::2]:
+            e_mag_indx.append(int(colum_indx))
     elif len(pd['id_mags'][1::2]) < len(pd['id_mags'][0::2]):
         sys.exit("ERROR: missing error column index for filter"
                  " in 'params_input dat'.")
 
     # Extract colors data.
-    col_clmns, e_col_clmns, c_filters, colors = [], [], [], []
+    col_indx, e_col_indx, c_filters, colors = [], [], [], []
     for col in pd['id_cols'][0::2]:
         try:
             colum_indx, phot_syst, filter_name1, filter_name2 = col.split(',')
         except:
             sys.exit("ERROR: bad formatting for color '{}'".format(col))
-        col_clmns.append(int(colum_indx))
+        col_indx.append(int(colum_indx))
         if pd['bf_flag']:
             # Check.
             phot_syst_filt_check(all_systs, col, phot_syst, filter_name1)
@@ -66,8 +77,8 @@ def check(mypath, pd):
         colors.append((phot_syst, filter_name1 + ',' + filter_name2))
     # Extract colors error columns.
     if len(pd['id_cols'][1::2]) == len(pd['id_cols'][0::2]):
-        for e_col_idx in pd['id_cols'][1::2]:
-            e_col_clmns.append(int(e_col_idx))
+        for colum_indx in pd['id_cols'][1::2]:
+            e_col_indx.append(int(colum_indx))
     elif len(pd['id_cols'][1::2]) < len(pd['id_cols'][0::2]):
         sys.exit("ERROR: missing error column index for color"
                  " in 'params_input dat'.")
@@ -102,9 +113,11 @@ def check(mypath, pd):
             sys.exit("ERROR: more than one photometric system defined.")
 
     # Add data to parameters dictionary.
-    pd['mag_clmns'], pd['e_mag_clmns'], pd['filters'], pd['col_clmns'],\
-        pd['e_col_clmns'], pd['colors'], pd['all_syst_filters'],\
-        pd['iso_paths'] = mag_clmns, e_mag_clmns, filters, col_clmns,\
-        e_col_clmns, colors, all_syst_filters, iso_paths
+    pd['id_indx'], pd['x_indx'], pd['y_indx'], pd['coords'],\
+        pd['mag_indx'], pd['e_mag_indx'], pd['filters'], pd['col_indx'],\
+        pd['e_col_indx'], pd['colors'], pd['all_syst_filters'],\
+        pd['iso_paths'] = id_indx, x_indx, y_indx, coords, mag_indx,\
+        e_mag_indx, filters, col_indx, e_col_indx, colors,\
+        all_syst_filters, iso_paths
 
     return pd

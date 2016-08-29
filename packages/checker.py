@@ -38,7 +38,8 @@ def check_all(mypath, file_end):
     # If they are, store also the name of the proper isochrones folders.
     pd = photom_names.check(mypath, pd)
 
-    # Check that structural parameters are properly given.
+    # Check that mode, coordinates, figure, and structural parameters
+    # are properly given.
     params_struct.check(mypath, cl_files, **pd)
 
     # Check that R and rpy2 are installed, if necessary.
