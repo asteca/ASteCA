@@ -50,7 +50,7 @@ def chunker(seq, size):
 
 def crossover(chromosomes, p_cross, cr_sel):
     '''
-    Applies the crosssover operator over each chromosome.
+    Applies the crossover operator over each chromosome.
     '''
     cross_chrom = []
     # Take two chromosomes at a time.

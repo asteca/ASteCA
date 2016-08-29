@@ -41,9 +41,13 @@ def check(mypath, pd):
         # Name of photometric system and filter, used to extract its
         # synthetic data from the correct theoretical isochrone.
         filters.append((phot_syst, filter_name))
-    # Store error column number.
-    for e_mag_idx in pd['id_mags'][1::2]:
+    # Extract magnitude error columns.
+    if len(pd['id_mags'][1::2]) == len(pd['id_mags'][0::2]):
+        for e_mag_idx in pd['id_mags'][1::2]:
             e_mag_clmns.append(int(e_mag_idx))
+    elif len(pd['id_mags'][1::2]) < len(pd['id_mags'][0::2]):
+        sys.exit("ERROR: missing error column index for filter"
+                 " in 'params_input dat'.")
 
     # Extract colors data.
     col_clmns, e_col_clmns, c_filters, colors = [], [], [], []
@@ -60,8 +64,13 @@ def check(mypath, pd):
         c_filters.append((phot_syst, filter_name1))
         c_filters.append((phot_syst, filter_name2))
         colors.append((phot_syst, filter_name1 + ',' + filter_name2))
-    for e_col_idx in pd['id_cols'][1::2]:
-        e_col_clmns.append(int(e_col_idx))
+    # Extract colors error columns.
+    if len(pd['id_cols'][1::2]) == len(pd['id_cols'][0::2]):
+        for e_col_idx in pd['id_cols'][1::2]:
+            e_col_clmns.append(int(e_col_idx))
+    elif len(pd['id_cols'][1::2]) < len(pd['id_cols'][0::2]):
+        sys.exit("ERROR: missing error column index for color"
+                 " in 'params_input dat'.")
 
     all_syst_filters, iso_paths = [], []
     if pd['bf_flag']:
@@ -88,11 +97,9 @@ def check(mypath, pd):
             iso_paths.append(
                 join(mypath + 'isochrones/' + text1 + '_' + text2))
 
-        print all_syst_filters
-        print iso_paths
-        # # Remove when support for multiple photometric system is in place.
-        # if len(all_syst_filters) > 1:
-        #     sys.exit("ERROR: more than one photometric system defined.")
+        # Remove when support for multiple photometric system is in place.
+        if len(all_syst_filters) > 1:
+            sys.exit("ERROR: more than one photometric system defined.")
 
     # Add data to parameters dictionary.
     pd['mag_clmns'], pd['e_mag_clmns'], pd['filters'], pd['col_clmns'],\

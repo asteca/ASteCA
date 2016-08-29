@@ -3,16 +3,80 @@ import numpy as np
 import read_isochs
 
 
-def interp_isoch(isochrone, N=1500):
+def arrange_filters(isoch_list, all_syst_filters, filters, colors, **kwargs):
+    """
+    Take the list of filters stored, create the necessary colors, and arrange
+    all magnitudes and colors according to the order given to the photometric
+    data read from file.
+    """
+    # Extract names of all read filters in the order in which they are stored
+    # in 'isoch_list'.
+    all_filts = []
+    for ps in all_syst_filters:
+        all_filts = all_filts + list(ps[1:])
+
+    # Store the index of each filter read from data, as they are stored in
+    # 'isoch_list'.
+    fi = []
+    for f in filters:
+        fi.append(all_filts.index(f[1]))
+    # Create list of theoretical magnitudes, in the same orders as they are
+    # read from the cluster's data file.
+    mags_the = []
+    for met in isoch_list:
+        m = []
+        for age in met:
+            a = []
+            for i in fi:
+                a.append(age[i])
+            m.append(a)
+        mags_the.append(m)
+
+    # Store the index of each filter for each color read from data, as they
+    # are stored in 'isoch_list'.
+    fci = []
+    for c in colors:
+        ci = []
+        for f in c[1].split(','):
+            ci.append(all_filts.index(f))
+        fci.append(ci)
+    # Create list of theoretical colors, in the same orders as they are
+    # read from the cluster's data file.
+    cols_the = []
+    for met in isoch_list:
+        m = []
+        for age in met:
+            a = []
+            for ic in fci:
+                # Generate color in the sense it was given in
+                # 'params_input.dat'.
+                a.append(np.array(age[ic[0]]) - np.array(age[ic[1]]))
+            m.append(a)
+        cols_the.append(m)
+
+    return mags_the, cols_the
+
+
+def interp_isoch_data(data, N=2000):
     '''
     Interpolate extra values for all the parameters in the theoretic
     isochrones.
     '''
-    t, xp = np.linspace(0, 1, N), np.linspace(0, 1, len(isochrone[0]))
-    # Store isochrone's interpolated values.
-    isoch_inter = np.asarray([np.interp(t, xp, _) for _ in isochrone])
+    interp_data = []
+    # For each metallicity value list.
+    for met in data:
+        m = []
+        # For each age value list.
+        for age in met:
+            a = []
+            # For each filter/color/extra parameter in list.
+            for f in age:
+                t, xp = np.linspace(0, 1, N), np.linspace(0, 1, len(f))
+                a.append(np.interp(t, xp, f))
+            m.append(a)
+        interp_data.append(m)
 
-    return isoch_inter
+    return interp_data
 
 
 def main(pd, met_f_filter, age_values):
@@ -20,7 +84,7 @@ def main(pd, met_f_filter, age_values):
     Read isochrones and parameters if best fit function is set to run.
     '''
     # Print info about tracks.
-    print("Process {} theoretical isochrones".format(
+    print("Processing {} theoretical isochrones".format(
         pd['cmd_evol_tracks'][pd['evol_track']][1]))
 
     for syst in pd['all_syst_filters']:
@@ -31,16 +95,18 @@ def main(pd, met_f_filter, age_values):
     isoch_list, extra_pars = read_isochs.main(met_f_filter, age_values,
                                               **pd)
 
-    # Interpolate extra points into all the isochrones.
-    isochs_interp = [[] for _ in isoch_list]
-    for i, _ in enumerate(isoch_list):
-        for isoch in _:
-            isochs_interp[i].append(interp_isoch(isoch))
-
     # Take the synthetic data from the unique filters read, create the
     # necessary colors, and position the magnitudes and colors in the
     # same sense they are read from the cluster's data file.
-    pd['isochs_theor'] = arrange_filters(isochs_interp)
+    mags_the, cols_the = arrange_filters(isoch_list, **pd)
+
+    # Interpolate extra points into all the isochrones.
+    mags_interp = interp_isoch_data(mags_the)
+    cols_interp = interp_isoch_data(cols_the)
+    extra_pars_interp = interp_isoch_data(extra_pars)
+
+    pd['mags_interp'], pd['cols_interp'], pd['extra_pars_interp'] =\
+        mags_interp, cols_interp, extra_pars_interp
 
     # Obtain number of models in the solutions space.
     lens = [len(_) for _ in pd['param_values']]
