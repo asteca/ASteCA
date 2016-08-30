@@ -1,12 +1,11 @@
 
 
-def main(clp, npd, bf_params, **kwargs):
+def main(clp, npd, bf_flag, **kwargs):
     '''
     Create output data file with stars in the best fit synthetic cluster found
     by the 'Best Fit' function.
     '''
     synth_clst = clp['synth_clst']
-    bf_flag = bf_params[0]
     # Check if function should run.
     if bf_flag:
 

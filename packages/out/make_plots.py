@@ -62,7 +62,7 @@ def main(
         # Obtain plotting parameters and data.
         x_min, x_max, y_min, y_max = prep_plots.frame_max_min(x, y)
         asp_ratio = prep_plots.aspect_ratio(x_min, x_max, y_min, y_max)
-        coord, x_name, y_name = prep_plots.coord_syst(pd['gd_params'])
+        coord, x_name, y_name = prep_plots.coord_syst(pd['coords'])
         x_zmin, x_zmax, y_zmin, y_zmax = prep_plots.frame_zoomed(
             x_min, x_max, y_min, y_max, clust_cent, clust_rad)
         x_ax, y_ax, x_ax0, y_axis = prep_plots.ax_names(pd['axes_params'])
@@ -144,10 +144,10 @@ def main(
         #
         # Decontamination algorithm plots.
         mode_red_memb, local_bin = pd['rm_params'][0], pd['rm_params'][1]
-        bf_flag, lkl_method, bin_method, N_b = pd['bf_params'][0],\
-            pd['bf_params'][2], pd['bf_params'][3], pd['bf_params'][4]
-        iso_select = pd['ps_params'][2]
+        lkl_method, bin_method, N_b = pd['bf_params'][2], pd['bf_params'][3],\
+            pd['bf_params'][4]
         min_prob, bin_edges = cl_reg_clean_plot
+        bf_flag = pd['bf_flag']
 
         # If the DA and the best fit functions were skipped and the reduced
         # membership mode is any mode but 'local', do not plot.
@@ -189,7 +189,7 @@ def main(
                 [gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
                  synth_clst, syn_b_edges, isoch_fit_params[0],
                  isoch_fit_errors, shift_isoch, lkl_method, bin_method,
-                 pd['tracks_dict'], iso_select]
+                 pd['cmd_evol_tracks'], pd['evol_track']]
             ]
             for n, args in enumerate(arglist):
                 mp_best_fit.plot(n, *args)

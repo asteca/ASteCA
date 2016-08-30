@@ -101,10 +101,9 @@ def main(npd, cld, pd, err_lst, completeness, isoch_fit_params, **kwargs):
     '''
 
     clust_name, output_subdir = npd['clust_name'], npd['output_subdir']
-    ip_list, bf_flag = pd['ip_list'], pd['bf_params'][0]
     mags, cols = cld['mags'], cld['cols']
 
-    if bf_flag:
+    if pd['bf_flag']:
         all_models = isoch_fit_params[-1]
 
         # Sort all models/solutions by their (minimum) likelihood values.
@@ -148,7 +147,7 @@ def main(npd, cld, pd, err_lst, completeness, isoch_fit_params, **kwargs):
                 try:
                     plot_top_tiers(
                         top_tiers_flo, output_subdir, clust_name, mags,
-                        cols, ip_list, err_lst, completeness, pd)
+                        cols, pd['ip_list'], err_lst, completeness, pd)
                     print('Top tier models saved to file and plotted.')
                 except:
                     import traceback

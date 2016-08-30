@@ -250,7 +250,7 @@ def pl_full_frame(
 
 
 def pl_zoom_frame(gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
-                  y_zmax, cont_index, kde_pl, x_data, y_data, st_sizes_arr,
+                  y_zmax, cont_index, kde_plot, x_data, y_data, st_sizes_arr,
                   center_cl, clust_rad):
     '''
     Zoom on x,y finding chart.
@@ -279,8 +279,8 @@ def pl_zoom_frame(gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
     ob.patch.set(alpha=0.85)
     ax.add_artist(ob)
     # Plot contour levels if it was obtained.
-    if kde_pl:
-        ext_range, x, y, k_pos = kde_pl
+    if kde_plot:
+        ext_range, x, y, k_pos = kde_plot
         # Number of countour lines depends on how large the plotted area is
         # compared with the area where the posotional KDE was obtained.
         frac_xy = (x_zmax - x_zmin) / (ext_range[1] - ext_range[0])

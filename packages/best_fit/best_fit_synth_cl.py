@@ -74,15 +74,15 @@ def params_errors(ip_list, ga_params, err_lst, memb_prob_avrg_sort,
     return isoch_fit_errors
 
 
-def main(clp, ip_list, er_params, bf_params, sc_params, ga_params, ps_params,
-         **kwargs):
+def main(clp, bf_flag, ip_list, er_params, bf_params, sc_params, ga_params,
+         ps_params, **kwargs):
     '''
     Perform a best fitting process to find the cluster's fundamental
     parameters.
     '''
     err_lst, memb_prob_avrg_sort, completeness = clp['err_lst'],\
         clp['memb_prob_avrg_sort'], clp['completeness']
-    bf_flag, best_fit_algor, lkl_method, bin_method, N_b = bf_params
+    best_fit_algor, lkl_method, bin_method, N_b = bf_params
     e_max, bin_mass_ratio, cmd_sel = er_params[1], sc_params[2], ps_params[1]
 
     # Check if algorithm should run.

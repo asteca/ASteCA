@@ -33,12 +33,11 @@ def aspect_ratio(x_min, x_max, y_min, y_max):
     return asp_ratio
 
 
-def coord_syst(gd_params):
+def coord_syst(coords):
     '''
     Define system of coordinates used.
     '''
-    px_deg = gd_params[-1]
-    coord_lst = ['px', 'x', 'y'] if px_deg == 'px' else ['deg', 'ra', 'dec']
+    coord_lst = ['px', 'x', 'y'] if coords == 'px' else ['deg', 'ra', 'dec']
     return coord_lst
 
 

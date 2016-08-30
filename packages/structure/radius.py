@@ -133,7 +133,7 @@ def radius_algor(clp, coord, cr_params):
     return clust_rad, e_rad, flag_delta_total, flag_not_stable, flag_delta
 
 
-def main(cld, clp, mode, cr_params, gd_params, cl_rad_semi, rad_flag_semi,
+def main(cld, clp, mode, cr_params, coords, cl_rad_semi, rad_flag_semi,
          **kwargs):
     """
     Obtain the value for the cluster's radius by counting the number of points
@@ -146,7 +146,7 @@ def main(cld, clp, mode, cr_params, gd_params, cl_rad_semi, rad_flag_semi,
     average all the radius values found for each interval.
     """
 
-    coord = prep_plots.coord_syst(gd_params)[0]
+    coord = prep_plots.coord_syst(coords)[0]
     # Call function that holds the radius finding algorithm.
     clust_rad, e_rad, flag_delta_total, flag_not_stable, flag_delta = \
         radius_algor(clp, coord, cr_params)
@@ -169,7 +169,7 @@ def main(cld, clp, mode, cr_params, gd_params, cl_rad_semi, rad_flag_semi,
     elif mode == 'manual':
 
         print 'Radius found: {:g} {}.'.format(clust_rad, coord)
-        display_rad.main(cld, clp, gd_params, clust_rad, e_rad)
+        display_rad.main(cld, clp, coords, clust_rad, e_rad)
         plt.show()
 
         # Ask if the radius is accepted, or a if a another one should be used.

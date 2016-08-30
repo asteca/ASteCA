@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import display_frame
 
 
-def main(cld, mode, gd_params, **kwargs):
+def main(cld, mode, coords, **kwargs):
     '''
     Trim frame according to given values of new center and side lengths.
     '''
@@ -14,7 +14,7 @@ def main(cld, mode, gd_params, **kwargs):
             cld['mags'], cld['em'], cld['cols'], cld['ec']
 
         # Show full frame plot.
-        display_frame.main(x, y, mags, gd_params)
+        display_frame.main(x, y, mags, coords)
         plt.show()
 
         # Ask to trim frame.

@@ -10,7 +10,7 @@ from scipy.ndimage.filters import gaussian_filter
 
 def pl_bf_synth_cl(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
                    synth_clst, syn_b_edges, cp_r, cp_e, shift_isoch,
-                   lkl_method, bin_method, tracks_dict, iso_select):
+                   lkl_method, bin_method, cmd_evol_tracks, evol_track):
     '''
     Best fit synthetic cluster obtained.
     '''
@@ -58,7 +58,7 @@ def pl_bf_synth_cl(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
     ax_t = plt.subplot(gs[4:6, 10:12])
     ax_t.axis('off')  # Remove axis from frame.
     # Map isochrones set selection to proper name.
-    iso_print = tracks_dict.get(iso_select)
+    iso_print = cmd_evol_tracks[evol_track][1]
     t1 = r'$Synthetic\;cluster\;parameters$' + '\n' + \
         r'$[Tracks:\;{}]$'.format(iso_print.replace(' ', '\;')) + '\n\n'
     t2 = r'$z \hspace{{4.25}}=\,{}\pm {}$'.format(cp_r[0], cp_e[0])

@@ -5,7 +5,7 @@ import matplotlib.offsetbox as offsetbox
 from ..out import prep_plots
 
 
-def main(cld, clp, gd_params, clust_rad, e_rad):
+def main(cld, clp, coords, clust_rad, e_rad):
     '''
     Plot cluster and its radius.
     '''
@@ -17,7 +17,7 @@ def main(cld, clp, gd_params, clust_rad, e_rad):
         clp['bin_width'], clp['hist_2d_g'], clp['radii'],\
         clp['rdp_points'], clp['poisson_error'], clp['field_dens']
 
-    coord, x_name, y_name = prep_plots.coord_syst(gd_params)
+    coord, x_name, y_name = prep_plots.coord_syst(coords)
     st_sizes_arr = prep_plots.star_size(mags)
 
     # Plot all outputs

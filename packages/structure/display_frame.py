@@ -3,12 +3,12 @@ import matplotlib.pyplot as plt
 from ..out import prep_plots
 
 
-def main(x, y, mags, gd_params):
+def main(x, y, mags, coords):
     '''
     Show full frame.
     '''
 
-    coord, x_name, y_name = prep_plots.coord_syst(gd_params)
+    coord, x_name, y_name = prep_plots.coord_syst(coords)
     st_sizes_arr = prep_plots.star_size(mags)
 
     plt.gca().set_aspect('equal')

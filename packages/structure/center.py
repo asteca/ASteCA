@@ -56,33 +56,37 @@ def kde_center_f(x_data, y_data, approx_cent, radius):
     values = np.vstack([x_zoom, y_zoom])
 
     # Obtain Gaussian KDE.
-    kernel = stats.gaussian_kde(values)
+    try:
+        kernel = stats.gaussian_kde(values)
+        # Define x,y grid.
+        # Grid density (number of points).
+        gd = 100
+        gd_c = complex(0, gd)
+        x, y = np.mgrid[xmin_z:xmax_z:gd_c, ymin_z:ymax_z:gd_c]
+        positions = np.vstack([x.ravel(), y.ravel()])
 
-    # Define x,y grid.
-    # Grid density (number of points).
-    gd = 100
-    gd_c = complex(0, gd)
-    x, y = np.mgrid[xmin_z:xmax_z:gd_c, ymin_z:ymax_z:gd_c]
-    positions = np.vstack([x.ravel(), y.ravel()])
+        # Evaluate kernel in grid positions.
+        k_pos = kernel(positions)
+        # Usa values obtained with the approx center derived via the minimum
+        # standard deviation value applied to the 2D histogram.
+        ext_range = [xmin_z, xmax_z, ymin_z, ymax_z]
+        x_grid, y_grid = x, y
+        k_pos_plot = k_pos
+        # The error is associated with the grid density used and the
+        # zoomed area defined.
+        x_range, y_range = max(x_zoom) - min(x_zoom), max(y_zoom) - min(y_zoom)
+        e_cent = [x_range / gd, y_range / gd]
+        # Coordinates of max value in x,y grid (ie: center position).
+        x_cent_kde, y_cent_kde = positions.T[np.argmax(k_pos)]
+        # Append values to list.
+        kde_center = [x_cent_kde, y_cent_kde]
 
-    # Evaluate kernel in grid positions.
-    k_pos = kernel(positions)
-    # Usa values obtained with the approx center derived via the minimum
-    # standard deviation value applied to the 2D histogram.
-    ext_range = [xmin_z, xmax_z, ymin_z, ymax_z]
-    x_grid, y_grid = x, y
-    k_pos_plot = k_pos
-    # The error is associated with the grid density used and the
-    # zoomed area defined.
-    x_range, y_range = max(x_zoom) - min(x_zoom), max(y_zoom) - min(y_zoom)
-    e_cent = [x_range / gd, y_range / gd]
-    # Coordinates of max value in x,y grid (ie: center position).
-    x_cent_kde, y_cent_kde = positions.T[np.argmax(k_pos)]
-    # Append values to list.
-    kde_center = [x_cent_kde, y_cent_kde]
-
-    # Pass for plotting.
-    kde_plot = [ext_range, x_grid, y_grid, k_pos_plot]
+        # Pass for plotting.
+        kde_plot = [ext_range, x_grid, y_grid, k_pos_plot]
+    except ValueError:
+        print("  WARNING: KDE center could not be obtained. Using\n"
+              "  approximate center coordinates.")
+        kde_center, e_cent, kde_plot = [x_cent_pix, y_cent_pix], [0., 0.], []
 
     return kde_center, e_cent, kde_plot
 
@@ -101,7 +105,7 @@ def bin_center(xedges, yedges, kde_cent):
     return cent_bin
 
 
-def main(cld, clp, mode, gd_params, cl_cent_semi, cl_rad_semi, cent_flag_semi,
+def main(cld, clp, mode, coords, cl_cent_semi, cl_rad_semi, cent_flag_semi,
          **kwargs):
     """
     Obtains the center of the putative cluster. Returns the center values
@@ -109,7 +113,7 @@ def main(cld, clp, mode, gd_params, cl_cent_semi, cl_rad_semi, cent_flag_semi,
     plotting purposes.
     """
 
-    coord = prep_plots.coord_syst(gd_params)[0]
+    coord = prep_plots.coord_syst(coords)[0]
 
     st_dev_lst = [2., 2.5, 3., 3.5, 4.]
     # Set flags.
@@ -210,7 +214,7 @@ def main(cld, clp, mode, gd_params, cl_cent_semi, cl_rad_semi, cent_flag_semi,
         cent_bin = bin_center(xedges, yedges, kde_cent)
 
         # Show plot with center obtained.
-        display_cent.main(x, y, mags, kde_cent, cent_bin, hist_2d_g, gd_params)
+        display_cent.main(x, y, mags, kde_cent, cent_bin, hist_2d_g, coords)
         plt.show()
         # No KDE plot is 'manual' mode is used.
         kde_plot = []
