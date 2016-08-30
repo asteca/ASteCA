@@ -105,7 +105,7 @@ def main(npd, id_indx, x_indx, y_indx, mag_indx, e_mag_indx, col_indx,
     print 'Data obtained from input file (N_stars: %d).' % len(ids)
     frac_reject = (float(n_old) - len(ids)) / float(n_old)
     if frac_reject > 0.05:
-        print("  WARNING: {:.0f}% of stars in file were"
+        print("  WARNING: {:.0f}% of stars in cluster's file were"
               " rejected.".format(100. * frac_reject))
 
     # Create cluster's data dictionary.

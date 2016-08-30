@@ -40,8 +40,8 @@ def main(cld, clp, pd):
     mags = cld['mags']
     er_mode, e_max, be = pd['er_params'][:3]
 
-    # Get value of brightest and dimmest stars.
-    min_mag, max_mag = min(mags), max(mags)
+    # Get value of brightest and dimmest stars. USE THE MAIN MAGNITUDE.
+    min_mag, max_mag = min(mags[0]), max(mags[0])
     # Define max limit for the box that holds the brightest stars.
     be_m = (min_mag + be)
     # Create a segmented list in magnitude.
@@ -127,7 +127,7 @@ def main(cld, clp, pd):
                 print("  WARNING: No stars accepted based on their errors.\n"
                       "  Using all stars.")
                 # Store all indexes.
-                acpt_indx, rjct_indx = [i for i in range(len(mags))], []
+                acpt_indx, rjct_indx = range(len(mags[0])), []
                 err_all_fallback = True
 
         # If the method used was e_max, use all stars.
@@ -135,7 +135,7 @@ def main(cld, clp, pd):
             print("  WARNING: No stars accepted based on their errors.\n"
                   "  Using all stars.")
             # Store all indexes.
-            acpt_indx, rjct_indx = [i for i in range(len(mags))], []
+            acpt_indx, rjct_indx = range(len(mags[0])), []
             err_plot = []
             err_all_fallback = True
 
@@ -181,8 +181,7 @@ def main(cld, clp, pd):
                         break
                     elif answer_rad == 4:
                         # Store all indexes.
-                        acpt_indx, rjct_indx = [i for i in range(len(mags))],\
-                            []
+                        acpt_indx, rjct_indx = range(len(mags[0])), []
                         err_plot, pd['er_params'][0] = [], ''
                         err_all_fallback = True
                         break
@@ -205,7 +204,7 @@ def main(cld, clp, pd):
 
             if answer_rad != 4:
                 # Display automatic errors rejection.
-                display_errors.main(er_mode, mags, err_plot, acpt_stars,
+                display_errors.main(er_mode, mags[0], err_plot, acpt_stars,
                                     rjct_stars, err_pck, **pd)
                 plt.show()
                 # Ask if keep or reject.
