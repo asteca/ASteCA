@@ -3,11 +3,11 @@ import numpy as np
 from scipy.integrate import quad
 
 
-def imfs(imf_name, m_star):
+def imfs(IMF_name, m_star):
     '''
     Define any number of IMFs.
     '''
-    if imf_name == 'kroupa_1993':
+    if IMF_name == 'kroupa_1993':
         # Kroupa, Tout & Gilmore. (1993) piecewise IMF.
         # http://adsabs.harvard.edu/abs/1993MNRAS.262..545K
         # Eq. (13), p. 572 (28)
@@ -23,7 +23,7 @@ def imfs(imf_name, m_star):
             i = 2
         imf_val = factor[i] * (m_star ** alpha[i])
 
-    elif imf_name == 'kroupa_2002':
+    elif IMF_name == 'kroupa_2002':
         # Kroupa (2002) piecewise IMF (taken from MASSCLEAN article).
         # http://adsabs.harvard.edu/abs/2002Sci...295...82K
         # Eq. (2) & (3), p. 1725
@@ -39,7 +39,7 @@ def imfs(imf_name, m_star):
             i = 2
         imf_val = factor[i] * (m_star ** alpha[i])
 
-    elif imf_name == 'chabrier_2001_log':
+    elif IMF_name == 'chabrier_2001_log':
         # Chabrier (2001) lognormal form of the IMF.
         # http://adsabs.harvard.edu/abs/2001ApJ...554.1274C
         # Eq (7)
@@ -47,7 +47,7 @@ def imfs(imf_name, m_star):
             np.exp(-((np.log10(m_star) - np.log10(0.1)) ** 2) /
                    (2 * 0.627 ** 2))
 
-    elif imf_name == 'chabrier_2001_exp':
+    elif IMF_name == 'chabrier_2001_exp':
         # Chabrier (2001) exponential form of the IMF.
         # http://adsabs.harvard.edu/abs/2001ApJ...554.1274C
         # Eq (8)
@@ -56,38 +56,35 @@ def imfs(imf_name, m_star):
     return imf_val
 
 
-def integral_IMF_M(m_star, imf_sel):
+def integral_IMF_M(m_star, IMF_name):
     '''
     Return the properly normalized function to perform the integration of the
     selected IMF. Returns mass values.
     '''
-    imf_val = m_star * imfs(imf_sel, m_star)
+    imf_val = m_star * imfs(IMF_name, m_star)
     return imf_val
 
 
-def integral_IMF_N(m_star, imf_sel):
+def integral_IMF_N(m_star, IMF_name):
     '''
     Return the properly normalized function to perform the integration of the
     selected IMF. Returns number of stars.
     '''
-    imf_val = imfs(imf_sel, m_star)
+    imf_val = imfs(IMF_name, m_star)
     return imf_val
 
 
-def main(sc_params):
+def main(IMF_name, m_high):
     '''
     Returns the number of stars per interval of mass for the selected IMF.
     '''
-
-    imf_sel, m_high = sc_params[0], sc_params[1]
-
     # Low mass limits are defined for each IMF to avoid numerical
     # issues when integrating.
     imfs_dict = {'chabrier_2001_exp': (0.01), 'chabrier_2001_log': (0.01),
                  'kroupa_1993': (0.081), 'kroupa_2002': (0.011)}
 
     # Set IMF low mass limit.
-    m_low = imfs_dict[imf_sel]
+    m_low = imfs_dict[IMF_name]
     # Set IMF max mass limit and interpolation step.
     # For m_high > 100 Mo the differences in the resulting normalization
     # constant are negligible. This is because th IMF drops very rapidly for
@@ -98,7 +95,7 @@ def main(sc_params):
 
     # Obtain normalization constant. This is equivalent to 'k' in Eq. (7)
     # of Popescu & Hanson 2009 (138:1724-1740; PH09)
-    norm_const = 1. / quad(integral_IMF_M, m_low, m_high, args=(imf_sel))[0]
+    norm_const = 1. / quad(integral_IMF_M, m_low, m_high, args=(IMF_name))[0]
 
     # Obtain number of stars in each mass interval. Equivalent to the upper
     # fraction of Eq. (8) in PH09, without the total mass.
@@ -108,7 +105,7 @@ def main(sc_params):
         m_lower = m_upper
         m_upper = m_upper + m_step
         # Number of stars in the (m_lower, m_upper) interval.
-        N_stars = quad(integral_IMF_N, m_lower, m_upper, args=(imf_sel))[0]
+        N_stars = quad(integral_IMF_N, m_lower, m_upper, args=(IMF_name))[0]
         st_dist[0].append(m_upper)
         st_dist[1].append(N_stars)
 

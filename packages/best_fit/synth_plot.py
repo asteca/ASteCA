@@ -74,8 +74,8 @@ def synth_clust_plot(
               lw=1.5, head_width=0.01)
     # This value should be entered manually to not disrupt the 'synth_cluster'
     # module.
-    m_high = '(' + str(sc_params[1]) + ')'
-    plt.text(0.83, 0.033, m_high, transform=ax4.transAxes, fontsize=12)
+    m_high_str = '(' + str(m_high) + ')'
+    plt.text(0.83, 0.033, m_high_str, transform=ax4.transAxes, fontsize=12)
     plt.text(0.05, 0.92, 'd', transform=ax4.transAxes,
              bbox=dict(facecolor='white', alpha=0.5), fontsize=16)
     text1 = 'N=%d\n' % len(mass_dist)

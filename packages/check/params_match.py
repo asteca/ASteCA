@@ -5,7 +5,7 @@ from os.path import isdir
 
 
 def check(IMF_name, evol_track, bin_methods, bf_flag, bf_params,
-          cmd_evol_tracks, iso_paths, imf_funcs, par_ranges, sc_params,
+          cmd_evol_tracks, iso_paths, imf_funcs, par_ranges, bin_mr,
           ga_params, **kwargs):
     """
     Check all parameters related to the search for the best synthetic cluster
@@ -124,7 +124,7 @@ def check(IMF_name, evol_track, bin_methods, bf_flag, bf_params,
                 sys.exit("ERROR: Binarity fraction value '{}' is out of\n"
                          "boundaries. Please select a value in the range "
                          "[0., 1.]".format(bin_fr_val))
-        if sc_params[-1] > 1.:
+        if not 0. <= bin_mr <= 1.:
             sys.exit("ERROR: Binary mass ratio set ('{}') is out of\n"
                      "boundaries. Please select a value in the range [0., 1.]".
-                     format(sc_params[-1]))
+                     format(bin_mr))

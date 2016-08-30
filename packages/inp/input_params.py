@@ -326,7 +326,6 @@ def main(mypath, pars_f_path):
 
     # Store GA params in lists.
     bf_params = [best_fit_algor, lkl_method, bin_method, N_b]
-    sc_params = [m_high, bin_mr]
     ga_params = [n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es]
     rm_params = [mode_red_memb, local_bin, min_prob]
 
@@ -344,12 +343,13 @@ def main(mypath, pars_f_path):
         'evol_track': evol_track, 'par_ranges': par_ranges,
         'cmd_evol_tracks': cmd_evol_tracks, 'bf_flag': bf_flag,
         'cmd_systs': cmd_systs, 'bin_methods': bin_methods,
-        'imf_funcs': imf_funcs, 'IMF_name': IMF_name,
+        'imf_funcs': imf_funcs, 'IMF_name': IMF_name, 'm_high': m_high,
+        'bin_mr': bin_mr,
         'gh_params': gh_params,
         'cr_params': cr_params, 'kp_flag': kp_flag, 'im_flag': im_flag,
         'er_params': er_params, 'fr_number': fr_number,
         'pv_params': pv_params, 'da_params': da_params,
-        'bf_params': bf_params, 'sc_params': sc_params,
+        'bf_params': bf_params,
         'ga_params': ga_params, 'rm_params': rm_params,
         'pl_params': pl_params, 'flag_move_file': flag_move_file,
         'flag_back_force': flag_back_force}
