@@ -5,20 +5,14 @@ import matplotlib.offsetbox as offsetbox
 from ..out import prep_plots
 
 
-def main(cld, clp, coords, clust_rad, e_rad):
+def main(
+        x, y, mmag, coords, clust_rad, e_rad, cent_bin, clust_cent, bin_width,
+        hist_2d_g, radii, rdp_points, poisson_error, field_dens, **kwargs):
     '''
     Plot cluster and its radius.
     '''
-
-    # Unpack.
-    x, y, mags = cld['x'], cld['y'], cld['mags']
-    cent_bin, clust_cent, bin_width, hist_2d_g, radii, rdp_points,\
-        poisson_error, field_dens = clp['cent_bin'], clp['clust_cent'],\
-        clp['bin_width'], clp['hist_2d_g'], clp['radii'],\
-        clp['rdp_points'], clp['poisson_error'], clp['field_dens']
-
     coord, x_name, y_name = prep_plots.coord_syst(coords)
-    st_sizes_arr = prep_plots.star_size(mags)
+    st_sizes_arr = prep_plots.star_size(mmag)
 
     # Plot all outputs
     fig = plt.figure(figsize=(12, 12))
@@ -100,7 +94,7 @@ def main(cld, clp, coords, clust_rad, e_rad):
                                                          coord)]
     # Plot density profile with the smallest bin size
     ax3.plot(radii, rdp_points, 'ko-', zorder=3, label=texts[0])
-    # Plot poisson error bars
+    # Plot Poisson error bars
     plt.errorbar(radii, rdp_points, yerr=poisson_error, fmt='ko',
                  zorder=1)
     # Plot background level.

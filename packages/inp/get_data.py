@@ -25,7 +25,7 @@ def rem_bad_stars(ids, x, y, mags, em, cols, ec):
     mags_clean = np.delete(np.array(mags), del_indexes, axis=1)
     em_clean = np.delete(np.array(em), del_indexes, axis=1)
     cols_clean = np.delete(np.array(cols), del_indexes, axis=1)
-    ec_clean = np.delete(np.array(mags), del_indexes, axis=1)
+    ec_clean = np.delete(np.array(ec), del_indexes, axis=1)
 
     return id_clean, x_clean, y_clean, mags_clean, em_clean, cols_clean,\
         ec_clean

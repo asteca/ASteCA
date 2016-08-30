@@ -29,7 +29,7 @@ def fit_curves(mag_value, bright_end, e_mag_value, e_col1_value):
     return intersec_mag, intersec_col1, val_mag, pol_mag, val_col1, pol_col1
 
 
-def separate_stars(mags, em, ec, er_params, be_m, intersec_mag, intersec_col1,
+def separate_stars(mmag, em, ec, er_params, be_m, intersec_mag, intersec_col1,
                    val_mag, pol_mag, val_col1, pol_col1):
     '''
     Use the curves obtained above to accept or reject stars in the
@@ -39,27 +39,24 @@ def separate_stars(mags, em, ec, er_params, be_m, intersec_mag, intersec_col1,
     e_max, be_e = er_params[1], er_params[3]
 
     # Initialize empty lists.
-    acpt_indx, rjct_indx = [], []
+    acpt_indx = []
 
     # Iterate through all stars and accept or reject those beyond
     # the (brightest star + be mag) limit according to the curve
     # obtained for the errors in magnitude and color.
-    for st_ind, st_mag in enumerate(mags):
+    for st_ind, st_mag in enumerate(mmag):
 
         # Reject stars with at least one error >= e_max.
         if em[st_ind] >= e_max or ec[st_ind] >= e_max:
-            rjct_indx.append(st_ind)
+            pass
         else:
             # For stars brighter than the bright end.
-            if mags[st_ind] <= be_m:
+            if mmag[st_ind] <= be_m:
                 # For values in this range accept all stars with both errors
                 # < be_e.
                 if em[st_ind] < be_e and ec[st_ind] < be_e:
                     # Accept star.
                     acpt_indx.append(st_ind)
-                else:
-                    # Reject star.
-                    rjct_indx.append(st_ind)
 
             else:
                 # For the reminder of stars, we check to see if they are
@@ -71,37 +68,37 @@ def separate_stars(mags, em, ec, er_params, be_m, intersec_mag, intersec_col1,
                 # intersect value for each error and compare with the
                 # corresponding curve.
                 mag_rjct = False
-                if mags[st_ind] <= intersec_mag:
+                if mmag[st_ind] <= intersec_mag:
                     # Compare with linear value.
                     if em[st_ind] > val_mag:
                         # Reject star.
                         mag_rjct = True
                 else:
                     # Compare with polynomial.
-                    if em[st_ind] > np.polyval(pol_mag, (mags[st_ind])):
+                    if em[st_ind] > np.polyval(pol_mag, (mmag[st_ind])):
                         # Reject star.
                         mag_rjct = True
 
                 col1_rjct = False
-                if mags[st_ind] <= intersec_col1:
+                if mmag[st_ind] <= intersec_col1:
                     # Compare with linear value.
                     if ec[st_ind] > val_col1:
                         # Reject star.
                         col1_rjct = True
                 else:
                     # Compare with polynomial.
-                    if ec[st_ind] > np.polyval(pol_col1, (mags[st_ind])):
+                    if ec[st_ind] > np.polyval(pol_col1, (mmag[st_ind])):
                         # Reject star.
                         col1_rjct = True
 
                 if mag_rjct or col1_rjct:
                     # Reject star.
-                    rjct_indx.append(st_ind)
+                    pass
                 else:
                     # Accept star.
                     acpt_indx.append(st_ind)
 
-    return acpt_indx, rjct_indx
+    return acpt_indx
 
 
 def divide(mag_value, intersec_mag, intersec_col1):
@@ -138,7 +135,7 @@ def main(err_pck, cld, er_params, **kwargs):
     '''
 
     # Unpack params.
-    mags, em, ec = cld['mags'], cld['em'], cld['ec']
+    mmag, em, ec = cld['mags'][0], cld['em'][0], cld['ec'][0]
     bright_end, mag_value = err_pck[0], err_pck[2]
 
     # Call function to obtain the median+sigmas points for magnitude
@@ -152,9 +149,9 @@ def main(err_pck, cld, er_params, **kwargs):
 
     # Use the fitted curves to identify accepted/rejected stars and store
     # their indexes.
-    acpt_indx, rjct_indx = separate_stars(mags, em, ec, er_params, bright_end,
-                                          intersec_mag, intersec_col1, val_mag,
-                                          pol_mag, val_col1, pol_col1)
+    acpt_indx = separate_stars(
+        mmag, em, ec, er_params, bright_end, intersec_mag, intersec_col1,
+        val_mag, pol_mag, val_col1, pol_col1)
 
     # Values are used for plotting purposes only.
     top_val_left, top_val_right, bot_val_left, bot_val_right = \
@@ -163,4 +160,4 @@ def main(err_pck, cld, er_params, **kwargs):
     err_plot = [val_mag, pol_mag, val_col1, pol_col1, top_val_left,
                 top_val_right, bot_val_left, bot_val_right]
 
-    return acpt_indx, rjct_indx, err_plot
+    return acpt_indx, err_plot

@@ -3,13 +3,13 @@ import matplotlib.pyplot as plt
 from ..out import prep_plots
 
 
-def main(x, y, mags, coords):
+def main(x, y, mmag, coords):
     '''
     Show full frame.
     '''
 
     coord, x_name, y_name = prep_plots.coord_syst(coords)
-    st_sizes_arr = prep_plots.star_size(mags)
+    st_sizes_arr = prep_plots.star_size(mmag)
 
     plt.gca().set_aspect('equal')
     # Get max and min values in x,y

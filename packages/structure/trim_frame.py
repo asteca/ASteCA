@@ -13,8 +13,8 @@ def main(cld, mode, coords, **kwargs):
         ids, x, y, mags, em, cols, ec = cld['ids'], cld['x'], cld['y'],\
             cld['mags'], cld['em'], cld['cols'], cld['ec']
 
-        # Show full frame plot.
-        display_frame.main(x, y, mags, coords)
+        # Show full frame plot. Use main magnitude.
+        display_frame.main(x, y, mags[0], coords)
         plt.show()
 
         # Ask to trim frame.
@@ -31,9 +31,12 @@ def main(cld, mode, coords, **kwargs):
                     print('Input full side length for new frame (in px).')
                     temp_side.append(float(raw_input('x_side: ')))
                     temp_side.append(float(raw_input('y_side: ')))
+
                     # Empty new lists.
-                    ids2, x2, y2, mags2, em2, cols2, ec2 = [], [], [], [],\
-                        [], [], []
+                    ids2, x2, y2 = [], [], []
+                    mags2, em2, cols2, ec2 = [[] for _ in mags],\
+                        [[] for _ in mags], [[] for _ in cols],\
+                        [[] for _ in cols]
 
                     # Iterate through all stars.
                     for i, star in enumerate(ids):
@@ -45,10 +48,12 @@ def main(cld, mode, coords, **kwargs):
                             ids2.append(star)
                             x2.append(x[i])
                             y2.append(y[i])
-                            mags2.append(mags[i])
-                            em2.append(em[i])
-                            cols2.append(cols[i])
-                            ec2.append(ec[i])
+                            for j, m in enumerate(mags):
+                                mags2[j].append(m[i])
+                                em2[j].append(em[j][i])
+                            for j, c in enumerate(cols):
+                                cols2[j].append(c[i])
+                                ec2[j].append(ec[j][i])
 
                     # Re-create dictionary.
                     cld['ids'], cld['x'], cld['y'], cld['mags'], cld['em'],\

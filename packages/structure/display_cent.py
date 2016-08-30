@@ -5,13 +5,13 @@ import matplotlib.offsetbox as offsetbox
 from ..out import prep_plots
 
 
-def main(x, y, mags, center_cl, cent_bin, h_filter, coords):
+def main(x, y, mmag, center_cl, cent_bin, h_filter, coords):
     '''
     Show plot of cluster with value of center obtained.
     '''
 
     coord, x_name, y_name = prep_plots.coord_syst(coords)
-    st_sizes_arr = prep_plots.star_size(mags)
+    st_sizes_arr = prep_plots.star_size(mmag)
 
     # Plot all outputs
     plt.figure(figsize=(18, 8))  # create the top-level container

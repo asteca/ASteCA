@@ -142,14 +142,14 @@ def diag_limits(y_axis, phot_x, phot_y):
     return x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd
 
 
-def star_size(mags):
+def star_size(mag):
     '''
     Convert magnitudes into intensities and define sizes of stars in
     finding chart.
     '''
     # Scale factor.
-    factor = 500. * (1 - 1 / (1 + 150 / len(mags) ** 0.85))
-    return 0.1 + factor * 10 ** ((np.array(mags) - min(mags)) / -2.5)
+    factor = 500. * (1 - 1 / (1 + 150 / len(mag) ** 0.85))
+    return 0.1 + factor * 10 ** ((np.array(mag) - min(mag)) / -2.5)
 
 
 def phot_diag_st_size(x):

@@ -169,7 +169,8 @@ def main(cld, clp, mode, cr_params, coords, cl_rad_semi, rad_flag_semi,
     elif mode == 'manual':
 
         print 'Radius found: {:g} {}.'.format(clust_rad, coord)
-        display_rad.main(cld, clp, coords, clust_rad, e_rad)
+        display_rad.main(cld['x'], cld['y'], cld['mags'][0], coords, clust_rad,
+                         e_rad, **clp)
         plt.show()
 
         # Ask if the radius is accepted, or a if a another one should be used.

@@ -122,7 +122,7 @@ def main(cld, clp, mode, coords, cl_cent_semi, cl_rad_semi, cent_flag_semi,
 
     # Unpack
     hist_2d, xedges, yedges = clp['hist_2d'], clp['xedges'], clp['yedges']
-    x, y, mags = cld['x'], cld['y'], cld['mags']
+    x, y = cld['x'], cld['y']
 
     # This is the radius used in auto and manual mode to restrict the search
     # of the KDE center coordinates to a smaller area (to improve performance).
@@ -213,8 +213,9 @@ def main(cld, clp, mode, coords, cl_cent_semi, cl_rad_semi, cent_flag_semi,
 
         cent_bin = bin_center(xedges, yedges, kde_cent)
 
-        # Show plot with center obtained.
-        display_cent.main(x, y, mags, kde_cent, cent_bin, hist_2d_g, coords)
+        # Show plot with center obtained. Use main magnitude.
+        display_cent.main(x, y, cld['mags'][0], kde_cent, cent_bin, hist_2d_g,
+                          coords)
         plt.show()
         # No KDE plot is 'manual' mode is used.
         kde_plot = []

@@ -49,7 +49,7 @@ def main(method, err_pck, cld, er_params):
     color errors.
     '''
 
-    mags, em, ec = cld['mags'], cld['em'], cld['ec']
+    mmag, em, ec = cld['mags'][0], cld['em'][0], cld['ec'][0]
     e_max = er_params[1]
     be_m, interv_mag, mag_value = err_pck
 
@@ -63,7 +63,7 @@ def main(method, err_pck, cld, er_params):
     col_interv = [[] for _ in mag_value]
 
     # Iterate through all stars
-    for st_ind, st_mag in enumerate(mags):
+    for st_ind, st_mag in enumerate(mmag):
 
         # Use only stars below the e_max limit.
         if em[st_ind] < e_max and ec[st_ind] < e_max and st_mag > be_m:
