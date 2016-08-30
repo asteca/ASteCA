@@ -79,21 +79,28 @@ def main(npd, id_indx, x_indx, y_indx, mag_indx, e_mag_indx, col_indx,
     ids, x, y, mags, em, cols, ec = rem_bad_stars(
         ids, x, y, mags, em, cols, ec)
 
-    data_names = ['x_coords', 'y_coords', 'magnitudes', 'color']
-    # Check read coordinates, and photometry.
-    for i, dat_lst in enumerate([x, y, mags, cols]):
-        # Check if array came back empty after removal of stars with
-        # bad photometry.
-        if not dat_lst.size:
-            raise ValueError("ERROR: no stars left after removal of those "
-                             "with\n  large mag/color or error values. Check "
-                             "input file.")
-        # Check if the range of any photometric column, excluding errors,
-        # is none.
+    # Check if array came back empty after removal of stars with
+    # bad photometry.
+    if not x.size:
+        raise ValueError("ERROR: no stars left after removal of those "
+                         "with\n large mag/color or error values. Check "
+                         "input file.")
+
+    # Check if the range of any coordinate column is zero.
+    data_names = ['x_coords', 'y_coords']
+    for i, dat_lst in enumerate([x, y]):
         if min(dat_lst) == max(dat_lst):
             raise ValueError("ERROR: the range for the '{}' column\n"
-                             "  is zero. Check the input data format.".format(
+                             "is zero. Check the input data format.".format(
                                  data_names[i]))
+    # Check if the range of any photometric column is zero.
+    data_names = ['magnitude', 'color']
+    for i, dat_lst in enumerate([mags, cols]):
+        for mc in dat_lst:
+            if min(mc) == max(mc):
+                raise ValueError(
+                    "ERROR: the range for {} column {} is\nzero."
+                    " Check the input data format.".format(data_names[i], i))
 
     print 'Data obtained from input file (N_stars: %d).' % len(ids)
     frac_reject = (float(n_old) - len(ids)) / float(n_old)
