@@ -45,8 +45,8 @@ def main(clp):
 
     # Catch empty cluster region.
     if len(cl_region) <= 1:
-        print("\n  ERROR: <1 stars left in cluster region after the\n"
-              "  removal of stars with large photometric errors.")
+        print("\nERROR: <=1 stars left in cluster region after the\n"
+              "removal of stars with large photometric errors.")
         raise ValueError('Empty cluster region.')
     elif 1 < len(cl_region) < 10:
         print("  WARNING: less than 10 stars present in cluster region.")
