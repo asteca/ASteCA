@@ -17,10 +17,10 @@ def main(clp, memb_file_out, **kwargs):
     # Save cluster region with MPs obtained by the decontamination algorithm.
     with open(memb_file_out, "a") as f_out:
         for line in cl_reg_fit:
-            # Identify stars selected by the red_mem function.
+            # Identify stars selected by the removal function.
             l = line + ['1']
             f_out.write(txt.format(*l))
-        # ^ Stars selected by the reduced membership function.
+        # Stars rejected by the removal function.
         for line in cl_reg_no_fit:
             l = line + ['0']
             f_out.write(txt.format(*l))
