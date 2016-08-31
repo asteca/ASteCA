@@ -164,20 +164,23 @@ def phot_diag_st_size(x):
         return 0.
 
 
-def separate_stars(x_data, y_data, mag_data, x_zmin, x_zmax, y_zmin, y_zmax,
-                   stars_out_rjct, field_regions):
+def zoomed_frame(x, y, mags, x_zmin, x_zmax, y_zmin, y_zmax):
     '''
-    Separate stars in lists.
+    Separate stars for zoomed frame. Use main magnitude.
     '''
-    # Separate stars in zoomed frame.
     x_data_z, y_data_z, mag_data_z = [], [], []
-    for i, st_x in enumerate(x_data):
-        st_y, st_mag = y_data[i], mag_data[i]
+    for st_x, st_y, st_mag in zip(x, y, mags[0]):
         if x_zmin <= st_x <= x_zmax and y_zmin <= st_y <= y_zmax:
             x_data_z.append(st_x)
             y_data_z.append(st_y)
             mag_data_z.append(st_mag)
 
+    return x_data_z, y_data_z, mag_data_z
+
+
+def field_region_stars(stars_out_rjct, field_regions):
+    """
+    """
     # Generate list with *all* rejected stars outside of the cluster region.
     stars_f_rjct = [[], []]
     for star in stars_out_rjct:
@@ -192,7 +195,7 @@ def separate_stars(x_data, y_data, mag_data, x_zmin, x_zmax, y_zmin, y_zmax,
                 stars_f_acpt[0].append(star[5])
                 stars_f_acpt[1].append(star[3])
 
-    return x_data_z, y_data_z, mag_data_z, stars_f_rjct, stars_f_acpt
+    return stars_f_rjct, stars_f_acpt
 
 
 def da_plots(clust_cent, clust_rad, stars_out, x_zmin, x_zmax, y_zmin, y_zmax,

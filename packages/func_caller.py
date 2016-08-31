@@ -31,6 +31,7 @@ from out import synth_cl_file
 from out import create_out_data_file
 from out import add_data_output
 from out import top_tiers
+from out import make_A_plot
 from out import make_plots
 from out import done_move
 
@@ -92,6 +93,9 @@ def main(cl_file, pd):
 
     # Field regions around the cluster's center.
     clp = field_regions.main(clp, **pd)
+
+    # Make A block plots.
+    make_A_plot.main(npd, cld, pd, **clp)
 
     # Get luminosity function and completeness level for each magnitude bin.
     clp = luminosity_func.main(clp, **cld)

@@ -4,7 +4,6 @@ import matplotlib.gridspec as gridspec
 from os.path import join
 import warnings
 from .._version import __version__
-import mp_structure
 import mp_phot_analysis
 import mp_decont_algor
 import mp_best_fit
@@ -61,7 +60,6 @@ def main(
 
         # Obtain plotting parameters and data.
         x_min, x_max, y_min, y_max = prep_plots.frame_max_min(x, y)
-        asp_ratio = prep_plots.aspect_ratio(x_min, x_max, y_min, y_max)
         coord, x_name, y_name = prep_plots.coord_syst(pd['coords'])
         x_zmin, x_zmax, y_zmin, y_zmax = prep_plots.frame_zoomed(
             x_min, x_max, y_min, y_max, clust_cent, clust_rad)
@@ -69,12 +67,8 @@ def main(
         phot_x, phot_y = prep_plots.ax_data(mags, cols)
         x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd = prep_plots.diag_limits(
             y_axis, phot_x, phot_y)
-        x_data_z, y_data_z, mag_data_z, stars_f_rjct, stars_f_acpt = \
-            prep_plots.separate_stars(x, y, mags, x_zmin, x_zmax,
-                                      y_zmin, y_zmax, stars_out_rjct,
-                                      field_regions)
-        st_sizes_arr = prep_plots.star_size(mags)
-        st_sizes_arr_z = prep_plots.star_size(mag_data_z)
+        stars_f_rjct, stars_f_acpt = prep_plots.field_region_stars(
+            stars_out_rjct, field_regions)
         f_sz_pt = prep_plots.phot_diag_st_size(len(stars_f_acpt[0]))
         cl_sz_pt = prep_plots.phot_diag_st_size(len(cl_region))
         v_min_mp, v_max_mp, plot_colorbar, chart_fit_inv, chart_no_fit_inv, \
@@ -82,38 +76,6 @@ def main(
             prep_plots.da_plots(
                 clust_cent, clust_rad, stars_out, x_zmin, x_zmax, y_zmin,
                 y_zmax, x_max_cmd, cols, err_lst, cl_reg_fit, cl_reg_no_fit)
-
-        #
-        # Structure plots.
-        arglist = [
-            # pl_hist_g: 2D Gaussian convolved histogram.
-            [gs, fig, asp_ratio, x_name, y_name, coord, cent_bin, clust_rad,
-                bin_width, hist_2d_g],
-            # pl_centers: 2D Gaussian histograms' centers.
-            [gs, x_name, y_name, coord, x_min, x_max, y_min, y_max, asp_ratio,
-                approx_cents, bin_width, st_dev_lst],
-            # pl_full_frame: x,y finding chart of full frame.
-            [gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max,
-             asp_ratio, clust_cent, clust_rad, e_cent, x, y, st_sizes_arr,
-             core_rad, e_core, tidal_rad, e_tidal, K_conct_par,
-             flag_2pk_conver, flag_3pk_conver],
-            # pl_rad_dens: Radial density plot.
-            [gs, pd['mode'], radii, rdp_points, field_dens, coord,
-             npd['clust_name'], clust_rad, e_rad, poisson_error, bin_width,
-             core_rad, e_core, tidal_rad, e_tidal, K_cent_dens,
-             flag_2pk_conver, flag_3pk_conver],
-            # pl_zoom_frame: Zoom on x,y finding chart.
-            [gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin, y_zmax,
-                cont_index, kde_plot, x_data_z, y_data_z,
-                st_sizes_arr_z, clust_cent, clust_rad],
-            # pl_cl_fl_regions: Cluster and field regions defined.
-            [gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max,
-                asp_ratio, clust_cent, clust_rad, field_regions, cl_region,
-                flag_no_fl_regs]
-        ]
-        for n, args in enumerate(arglist):
-            # with timeblock("{}".format(n)):
-            mp_structure.plot(n, *args)
 
         #
         # Photometric analysis plots.
