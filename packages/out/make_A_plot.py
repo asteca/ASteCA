@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from os.path import join
 import warnings
-from .._version import __version__
 import mp_structure
+import add_version_plot
 import prep_plots
 
 
@@ -32,7 +32,6 @@ def main(
     '''
     Make A block plots.
     '''
-
     # flag_make_plot = pd['pl_params'][0]
     if pd['pl_params'][0]:
 
@@ -40,10 +39,7 @@ def main(
         # y1/y2 = 2.5
         fig = plt.figure(figsize=(30, 25))  # create the top-level container
         gs = gridspec.GridSpec(10, 12)      # create a GridSpec object
-        # Add version number to top left.
-        ver = '[ASteCA ' + __version__ + ']'
-        x_coord = 0.957 - (len(__version__) - 6) * 0.001
-        plt.figtext(x_coord, .988, ver, fontsize=9, color='#585858')
+        add_version_plot.main()
 
         # Obtain plotting parameters and data.
         x_min, x_max, y_min, y_max = prep_plots.frame_max_min(
@@ -97,11 +93,11 @@ def main(
         # Generate output file for each data file.
         pl_fmt, pl_dpi = pd['pl_params'][1:3]
         plt.savefig(
-            join(npd['output_subdir'], str('A_' + npd['clust_name']) +
-                 '.' + pl_fmt), dpi=pl_dpi, bbox_inches='tight')
+            join(npd['output_subdir'], str(npd['clust_name']) +
+                 '_A.' + pl_fmt), dpi=pl_dpi, bbox_inches='tight')
 
         # Close to release memory.
         plt.clf()
         plt.close()
 
-        print("Plots from block 'A' created.")
+        print("<<Plots from 'A' block created>>")

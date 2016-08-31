@@ -64,9 +64,10 @@ def main(clp, im_flag, **kwargs):
         clp[_] for _ in ['cl_region', 'field_regions', 'flag_no_fl_regs']]
     if im_flag:
         # Only use stars inside cluster's radius.
-        cl_reg_mag = []
+        # For each magnitude defined.
+        cl_reg_imag = []
         for mag in zip(*zip(*cl_region)[3]):
-            cl_reg_mag.append(calc_integ_mag(mag))
+            cl_reg_imag.append(calc_integ_mag(mag))
 
         if flag_no_fl_regs is False:
 
@@ -79,14 +80,14 @@ def main(clp, im_flag, **kwargs):
                 fl_regs_int_m.append(fl_reg_m)
 
             # For each defined magnitude.
-            fl_reg_mag = []
+            fl_reg_imag = []
             for f_mags in zip(*fl_regs_int_m):
-                fl_reg_mag.append(field_reg_integ_mag_curve(f_mags))
+                fl_reg_imag.append(field_reg_integ_mag_curve(f_mags))
 
             # Obtain integrated magnitude of clean cluster region, ie:
             # subtracting the field contribution.
             integ_mag = []
-            for fl_m, cl_m in zip(fl_reg_mag, cl_reg_mag):
+            for fl_m, cl_m in zip(fl_reg_imag, cl_reg_imag):
                 if min(fl_m[1]) >= min(cl_m[1]):
                     integ_mag.append(-2.5 * np.log10(
                         1 - 10**((min(fl_m[1]) - min(cl_m[1])) / -2.5)) +
@@ -98,18 +99,16 @@ def main(clp, im_flag, **kwargs):
             print("  WARNING: no field regions defined. Integrated magnitude\n"
                   "  is not cleaned from field star contamination.")
             # Pass dummy lists.
-            fl_reg_mag = []
-            integ_mag = []
-            for cl_m in cl_reg_mag:
+            fl_reg_imag, integ_mag = [], []
+            for cl_m in cl_reg_imag:
                 integ_mag.append(min(cl_m[1]))
-
-        integr_return = [cl_reg_mag, fl_reg_mag, integ_mag]
 
         print('Integrated magnitude distribution obtained ({:.2f}).'.format(
             integ_mag[0]))
     else:
         print('Skipping integrated magnitudes function.')
-        integr_return = []
+        cl_reg_imag, fl_reg_imag, integ_mag = [], [], []
 
-    clp['integr_return'] = integr_return
+    clp['cl_reg_imag'], clp['fl_reg_imag'], clp['integ_mag'] =\
+        cl_reg_imag, fl_reg_imag, integ_mag
     return clp

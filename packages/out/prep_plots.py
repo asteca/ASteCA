@@ -61,30 +61,16 @@ def frame_zoomed(x_min, x_max, y_min, y_max, clust_cent, clust_rad):
     return x_zmin, x_zmax, y_zmin, y_zmax
 
 
-def ax_names(axes_params):
+def ax_names(filters, colors):
     '''
     Define names for photometric diagram axes.
     '''
     # y_axis == 0 indicates that the y axis is a magnitude.
     y_axis = 0
     # Create photometric axis names.
-    y_ax, x_ax0, m_ord = axes_params[0:3]
-    if m_ord == 21:
-        x_ax = '(' + x_ax0 + '-' + y_ax + ')'
-    elif m_ord == 12:
-        x_ax = '(' + y_ax + '-' + x_ax0 + ')'
-
-    return x_ax, y_ax, x_ax0, y_axis
-
-
-def ax_data(mag_data, col_data):
-    '''
-    Unpack coordinates and photometric data.
-    '''
-    # x_data, y_data = id_coords[1:]
-    phot_x = col_data
-    phot_y = mag_data
-    return phot_x, phot_y
+    x_ax = '(' + colors[0][1].replace(',', '-') + ')'
+    y_ax = filters[0][1]
+    return x_ax, y_ax, y_axis
 
 
 def kde_limits(phot_x, phot_y):
@@ -109,7 +95,7 @@ def kde_limits(phot_x, phot_y):
 
     # Generate 30 contour lines.
     cs = plt.contour(x, y, np.reshape(k_pos, x.shape), 30)
-    # Extract (x,y) points delimitating each line.
+    # Extract (x,y) points delimiting each line.
     x_v, y_v = np.asarray([]), np.asarray([])
     # Only use the outer curve.
     col = cs.collections[0]
@@ -127,7 +113,7 @@ def diag_limits(y_axis, phot_x, phot_y):
     '''
     Define plot limits for *all* photometric diagrams.
     '''
-    x_v, y_v = kde_limits(phot_x, phot_y)
+    x_v, y_v = kde_limits(phot_x[0], phot_y[0])
 
     # Define diagram limits.
     x_min_cmd, x_max_cmd = min(x_v) - 1.25, max(x_v) + 1.25
@@ -135,7 +121,7 @@ def diag_limits(y_axis, phot_x, phot_y):
     # If photometric axis y is a magnitude, make sure the brightest star
     # is always plotted.
     if y_axis == 0:
-        y_max_cmd = min(phot_y) - 1.
+        y_max_cmd = min(phot_y[0]) - 1.
     else:
         y_max_cmd = min(y_v) - 1.
 
@@ -180,20 +166,20 @@ def zoomed_frame(x, y, mags, x_zmin, x_zmax, y_zmin, y_zmax):
 
 def field_region_stars(stars_out_rjct, field_regions):
     """
+    Generate list with *all* rejected stars outside of the cluster region, and
+    all stars within a defined field region.
     """
-    # Generate list with *all* rejected stars outside of the cluster region.
     stars_f_rjct = [[], []]
     for star in stars_out_rjct:
-        stars_f_rjct[0].append(star[5])
-        stars_f_rjct[1].append(star[3])
+        stars_f_rjct[0].append(star[5][0])
+        stars_f_rjct[1].append(star[3][0])
 
-    # Generate list with stars within a defined field region.
     stars_f_acpt = [[], []]
     if field_regions:
         for fr in field_regions:
             for star in fr:
-                stars_f_acpt[0].append(star[5])
-                stars_f_acpt[1].append(star[3])
+                stars_f_acpt[0].append(star[5][0])
+                stars_f_acpt[1].append(star[3][0])
 
     return stars_f_rjct, stars_f_acpt
 

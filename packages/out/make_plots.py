@@ -4,7 +4,6 @@ import matplotlib.gridspec as gridspec
 from os.path import join
 import warnings
 from .._version import __version__
-import mp_phot_analysis
 import mp_decont_algor
 import mp_best_fit
 import prep_plots
@@ -45,8 +44,6 @@ def main(
 
         # Unpack params.
         x, y, mags, cols = cld['x'], cld['y'], cld['mags'], cld['cols']
-        # Luminosity functions.
-        x_cl, y_cl, x_fl, y_fl = lum_func
 
         # Plot all outputs
         # figsize(x1, y1), GridSpec(y2, x2) --> To have square plots: x1/x2 =
@@ -69,41 +66,12 @@ def main(
             y_axis, phot_x, phot_y)
         stars_f_rjct, stars_f_acpt = prep_plots.field_region_stars(
             stars_out_rjct, field_regions)
-        f_sz_pt = prep_plots.phot_diag_st_size(len(stars_f_acpt[0]))
-        cl_sz_pt = prep_plots.phot_diag_st_size(len(cl_region))
         v_min_mp, v_max_mp, plot_colorbar, chart_fit_inv, chart_no_fit_inv, \
             out_clust_rad, diag_fit_inv, diag_no_fit_inv, err_bar = \
             prep_plots.da_plots(
                 clust_cent, clust_rad, stars_out, x_zmin, x_zmax, y_zmin,
                 y_zmax, x_max_cmd, cols, err_lst, cl_reg_fit, cl_reg_no_fit)
 
-        #
-        # Photometric analysis plots.
-        arglist = [
-            # pl_phot_err: Photometric error rejection.
-            [gs, fig, pd['er_params'], 'up', x_ax, y_ax, mags, err_plot,
-             err_flags, cl_region, cl_region_rjct, stars_out, stars_out_rjct],
-            [gs, fig, pd['er_params'], 'low', x_ax, y_ax, mags, err_plot,
-             err_flags, cl_region, cl_region_rjct, stars_out, stars_out_rjct],
-            # pl_fl_diag: Field stars CMD/CCD diagram.
-            [gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
-                stars_f_rjct, stars_f_acpt, f_sz_pt],
-            # pl_cl_diag: Cluster's stars diagram (stars inside cluster's rad)
-            [gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
-                cl_region_rjct, cl_region, n_memb, cl_sz_pt],
-            # pl_lum_func: LF of stars in cluster region and outside.
-            [gs, mags, y_ax, x_cl, y_cl, flag_no_fl_regs, x_fl, y_fl,
-                completeness],
-            # pl_integ_mag: Integrated magnitudes.
-            [gs, pd['axes_params'], integr_return, y_ax, x_ax0,
-             flag_no_fl_regs],
-            # pl_p_vals: Distribution of KDE p_values.
-            [gs, flag_pval_test, pval_test_params]
-        ]
-        for n, args in enumerate(arglist):
-            mp_phot_analysis.plot(n, *args)
-
-        #
         # Decontamination algorithm plots.
         mode_red_memb, local_bin = pd['rm_params'][0], pd['rm_params'][1]
         lkl_method, bin_method, N_b = pd['bf_params'][2], pd['bf_params'][3],\

@@ -32,6 +32,7 @@ from out import create_out_data_file
 from out import add_data_output
 from out import top_tiers
 from out import make_A_plot
+from out import make_B_plot
 from out import make_plots
 from out import done_move
 
@@ -105,6 +106,11 @@ def main(cl_file, pd):
 
     # Get physical cluster probability based on p_values distribution.
     clp = kde_pvalue.main(clp, **pd)
+
+    # Make A block plots.
+    make_B_plot.main(npd, cld, pd, **clp)
+    import pdb; pdb.set_trace()  # breakpoint 6362dd05 //
+    
 
     # Apply decontamination algorithm.
     clp = bayesian_da.main(clp, npd, **pd)
