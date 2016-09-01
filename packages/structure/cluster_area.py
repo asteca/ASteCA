@@ -8,7 +8,7 @@ def main(clp, x, y, **kwargs):
     correct area by counting the bins that compose it's region.'
     """
     clust_cent, clust_rad, square_rings, bin_width = clp['clust_cent'],\
-        clp['clust_rad'], clp['rdp_points'], clp['bin_width']
+        clp['clust_rad'], clp['square_rings'], clp['bin_width']
 
     x_max, x_min = max(x), min(x)
     y_max, y_min = max(y), min(y)

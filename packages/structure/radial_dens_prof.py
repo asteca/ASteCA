@@ -97,10 +97,7 @@ def main(clp):
     print('Radial density profile (RDP) calculated.')
 
     # Add data to dictionary.
-    rdp_params = {'radii': radii, 'rdp_points': rdp_points,
-                  'poisson_error': poisson_error, 'square_rings': square_rings,
-                  'rdp_length': rdp_length}
-    # Update 'clp' dictionary.
-    clp_updt = clp.copy()
-    clp_updt.update(rdp_params)
-    return clp_updt
+    clp['radii'], clp['rdp_points'], clp['poisson_error'],\
+        clp['square_rings'], clp['rdp_length'] = radii, rdp_points,\
+        poisson_error, square_rings, rdp_length
+    return clp

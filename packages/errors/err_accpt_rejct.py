@@ -75,6 +75,11 @@ def main(cld, clp, pd):
     # err_medians function defines ranges around these values and they get
     # positioned in the middle of the magnitude interval.
     mag_value = [be_m + interv_mag * (q + interv_mag) for q in range(n_interv)]
+    if not mag_value:
+        raise ValueError(
+            "\nERROR: magnitude interval is empty. Max and min\n"
+            "magnitude values are: {}, {}.\nCheck your input data"
+            " columns.".format(max_mag, min_mag))
 
     # Pack params to pass. These values are used by the 'eyefit' function and
     # more importantly the err_medians function which is called by the

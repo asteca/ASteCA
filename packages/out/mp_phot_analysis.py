@@ -257,7 +257,7 @@ def pl_integ_mag(gs, cl_reg_imag, fl_reg_imag, integ_mag, y_ax,
             # Field average integrated magnitude curve.
             plt.plot(fl_reg_imag[0][0], fl_reg_imag[0][1], 'b-', lw=1.,
                      label=text3, zorder=2)
-        text = '$(' + y_ax + '^{*} )_{cl} = %0.2f$' % integ_mag[0]
+        text = r'$' + y_ax + '^{{*}}_{{cl}} = {:.2f}$'.format(integ_mag[0])
         plt.text(0.22, 0.15, text, transform=ax.transAxes,
                  bbox=dict(facecolor='white', alpha=0.75), fontsize=12)
         lines, labels = ax.get_legend_handles_labels()

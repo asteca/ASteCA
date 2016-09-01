@@ -3,8 +3,7 @@ import sys
 from os.path import join, isfile
 
 
-def check(mypath, cl_files, mode, coords, pl_params, gh_params,
-          cr_params, er_params, **kwargs):
+def check(mypath, mode, coords, pl_params, gh_params, cr_params, **kwargs):
     """
     Check that the parameters are properly written.
     """
@@ -42,14 +41,3 @@ def check(mypath, cl_files, mode, coords, pl_params, gh_params,
     if cr_params[0] not in ('low', 'mid', 'high'):
         sys.exit("ERROR: mode selected ('{}') for radius finding"
                  " function is not valid.".format(cr_params[0]))
-
-    # Errors function.
-    if er_params[0] not in ('emax', 'lowexp', 'eyefit'):
-        sys.exit("ERROR: mode selected ('{}') for error rejecting"
-                 " function is not valid.".format(er_params[0]))
-    if er_params[0] == 'emax' and len(er_params[1:]) < 1:
-        sys.exit("ERROR: missing parameters for error rejecting function")
-    if er_params[0] == 'eyefit' and len(er_params[1:]) < 3:
-        sys.exit("ERROR: missing parameters for error rejecting function")
-    if er_params[0] == 'lowexp' and len(er_params[1:]) < 4:
-        sys.exit("ERROR: missing parameters for error rejecting function")

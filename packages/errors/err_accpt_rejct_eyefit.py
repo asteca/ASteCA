@@ -11,7 +11,6 @@ def fit_curves(mag_value, bright_end, e_mag_value, e_col1_value):
 
     # Fit curves for errors in magnitude and color.
     for i, err_val in enumerate([e_mag_value, e_col1_value]):
-
         # Fit polynomial envelope of grade 2.
         pol = np.polyfit(mag_value, err_val, 2)
         # Set half magnitude value between the bright end and the maximum
