@@ -329,8 +329,6 @@ def plot(N, *args):
     try:
         fxn(*args)
     except:
-        import traceback
-        print traceback.format_exc()
+        # import traceback
+        # print traceback.format_exc()
         print("  WARNING: error when plotting {}.".format(plt_map.get(N)[1]))
-        import pdb; pdb.set_trace()  # breakpoint 8bedfce6 //
-

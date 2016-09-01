@@ -19,13 +19,13 @@ def get_CMD(region):
     col_lst, e_col_lst, mag_lst, e_mag_lst = [], [], [], []
     for star in region:
         # Color data.
-        col_lst.append(star[5])
+        col_lst.append(star[5][0])
         # Color error.
-        e_col_lst.append(star[6])
+        e_col_lst.append(star[6][0])
         # Magnitude data.
-        mag_lst.append(star[3])
+        mag_lst.append(star[3][0])
         # Magnitude error.
-        e_mag_lst.append(star[4])
+        e_mag_lst.append(star[4][0])
 
     # Move magnitude and colors randomly according to their errors,
     # using a Gaussian function.
@@ -48,8 +48,10 @@ def KDE_test(clp, pv_params):
     ks package (developed in R) to obtain a p-value. This value will be close
     to 1 if the cluster region is very similar to the field regions and
     closer to 0 as it differentiates from it.
+
     As a rule of thumb, a p-value > 0.05 (ie: 5%) indicates that one should
-    reject the null hypothesis that the KDEs arose from ther same distribution.
+    reject the null hypothesis that the KDEs arose from the same distribution.
+
     We assign a probability of the overdensity being a real cluster as 1
     minus the overlap between the KDEs of the distributions of p-values for
     the cluster vs field and field vs field comparisons.
@@ -58,7 +60,7 @@ def KDE_test(clp, pv_params):
         clp[_] for _ in ['cl_region', 'field_regions', 'flag_no_fl_regs']]
     # mags, cols = cld['mags'], cld['cols']
     mode_pv, num_runs = pv_params
-    flag_pval_test = True if mode_pv in {'auto', 'manual'} else False
+    flag_pval_test = True if mode_pv in ('auto', 'manual') else False
 
     # Skip test if < 10 members are found within the cluster's radius.
     flag_few_members = False if len(cl_region) > 10 else True
@@ -66,18 +68,18 @@ def KDE_test(clp, pv_params):
     # Check if test is to be applied or skipped. Check if field regions
     # where found.
     if not flag_pval_test:
-        print 'Skipping KDE p-value test for cluster.'
+        print('Skipping KDE p-value test for cluster.')
         # Pass empty lists and re-write flag.
         flag_pval_test, pval_test_params = False, [-1.]
 
     elif flag_pval_test and flag_no_fl_regs:
-        print 'No field regions. Skipping KDE p-value test for cluster.'
+        print('No field regions. Skipping KDE p-value test for cluster.')
         # Pass empty lists and re-write flag.
         flag_pval_test, pval_test_params = False, [-1.]
 
     elif flag_pval_test and flag_few_members:
-        print ('  WARNING: < 10 stars in cluster region.'
-               ' Skipping KDE p-value test.')
+        print('  WARNING: < 10 stars in cluster region.'
+              ' Skipping KDE p-value test.')
         # Pass empty lists and re-write flag.
         flag_pval_test, pval_test_params = False, [-1.]
 
@@ -91,7 +93,7 @@ def KDE_test(clp, pv_params):
         kde_test = ks.kde_test
         hpi_kfe = ks.Hpi_kfe
 
-        print 'Obtaining KDE p-value for cluster vs field regions.'
+        print('Obtaining KDE p-value for cluster vs field regions.')
 
         # Set number of runs for the p_value algorithm with a maximum of
         # 100 if only one field region was used.
@@ -133,7 +135,7 @@ def KDE_test(clp, pv_params):
 
                 # Compare the field region used above with all the remaining
                 # field regions. This results in [N*(N+1)/2] combinations of
-                # field vs field comparisions.
+                # field vs field comparisons.
                 for f_region2 in field_regions[(indx + 1):]:
 
                     # CMD for 2nd field region.
@@ -198,8 +200,8 @@ def KDE_test(clp, pv_params):
         # Store all return params in a single list.
         pval_test_params = [prob_cl_kde, kde_cl_1d, kde_f_1d, x_kde, y_over]
 
-        print 'Probability of physical cluster obtained ({:.2f}).'.format(
-            prob_cl_kde)
+        print('Probability of physical cluster obtained ({:.2f}).'.format(
+            prob_cl_kde))
 
     return pval_test_params, flag_pval_test
 
