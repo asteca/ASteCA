@@ -17,6 +17,22 @@
 
 
 
+################################### Mode #######################################
+
+# Mode used to run the code.
+#
+# * mode: auto / semi / manual
+#   - auto: does not require user intervention of any kind.
+#   - semi: takes input values from the 'semi_input.dat' file.
+#   - manual: asks the user for some values (center, radius) but will also
+#     give you the chance to have them automatically calculated.
+#
+#    mode
+MO   auto
+################################################################################
+
+
+
 ############################ ASteCA's inner flags ##############################
 
 # * Update checker.
@@ -35,22 +51,6 @@ UP  true
 #   in a server.
 #
 FB  false
-################################################################################
-
-
-
-################################### Mode #######################################
-
-# Mode used to run the code.
-#
-# * mode: auto / semi / manual
-#   - auto: does not require user intervention of any kind.
-#   - semi: takes input values from the 'semi_input.dat' file.
-#   - manual: asks the user for some values (center, radius) but will also
-#     give you the chance to have them automatically calculated.
-#
-#    mode
-MO   auto
 ################################################################################
 
 
