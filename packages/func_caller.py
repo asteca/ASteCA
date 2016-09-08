@@ -33,6 +33,7 @@ from out import add_data_output
 from out import top_tiers
 from out import make_A_plot
 from out import make_B_plot
+from out import make_C_plot
 from out import make_plots
 from out import done_move
 
@@ -96,7 +97,7 @@ def main(cl_file, pd):
     clp = field_regions.main(clp, **pd)
 
     # Make A block plots.
-    make_A_plot.main(npd, cld, pd, **clp)
+    # make_A_plot.main(npd, cld, pd, **clp)
 
     # Get luminosity function and completeness level for each magnitude bin.
     clp = luminosity_func.main(clp, **cld)
@@ -107,10 +108,8 @@ def main(cl_file, pd):
     # Get physical cluster probability based on p_values distribution.
     clp = kde_pvalue.main(clp, **pd)
 
-    # Make A block plots.
-    make_B_plot.main(npd, cld, pd, **clp)
-    import pdb; pdb.set_trace()  # breakpoint 6362dd05 //
-    
+    # Make B block plots.
+    # make_B_plot.main(npd, cld, pd, **clp)
 
     # Apply decontamination algorithm.
     clp = bayesian_da.main(clp, npd, **pd)
@@ -121,6 +120,9 @@ def main(cl_file, pd):
     # Reduce number of stars in cluster according to a lower membership
     # probability or magnitude limit.
     clp = cl_region_clean.main(clp, **pd)
+
+    # Make C block plots.
+    make_C_plot.main(npd, cld, pd, **clp)
 
     # Create data file with membership probabilities.
     cluster_members_file.main(clp, **npd)
