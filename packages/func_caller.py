@@ -73,7 +73,6 @@ def main(cl_file, pd):
 
     # Get cluster radius
     clp = radius.main(cld, clp, **pd)
-    # clust_rad = radius_params[0]
 
     # Get King profiles based on the density profiles.
     clp = king_profile.main(clp, **pd)

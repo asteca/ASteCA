@@ -102,7 +102,7 @@ def pl_phot_err(gs, fig, er_params, up_low, x_ax, y_ax, mags, err_plot,
 
 
 def pl_fl_diag(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
-               stars_f_rjct, stars_f_acpt, f_sz_pt):
+               stars_f_rjct, stars_f_acpt, f_sz_pt, err_bar):
     '''
     Field stars CMD/CCD diagram.
     '''
@@ -133,10 +133,15 @@ def pl_fl_diag(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
     if stars_f_acpt[0]:
         plt.scatter(stars_f_acpt[0], stars_f_acpt[1], marker='o', c='b',
                     s=f_sz_pt, lw=0.3, zorder=3)
+    # If list is not empty, plot error bars at several values.
+    x_val, mag_y, x_err, y_err = err_bar
+    if x_val:
+        plt.errorbar(x_val, mag_y, yerr=y_err, xerr=x_err, fmt='k.', lw=0.8,
+                     ms=0., zorder=4)
 
 
 def pl_cl_diag(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
-               cl_region_rjct, cl_region, n_memb, cl_sz_pt):
+               cl_region_rjct, cl_region, n_memb, cl_sz_pt, err_bar):
     '''
     Cluster's stars diagram (stars inside cluster's radius)
     '''
@@ -170,6 +175,11 @@ def pl_cl_diag(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
     plt.scatter(
         zip(*zip(*cl_region)[5])[0], zip(*zip(*cl_region)[3])[0], marker='o',
         c='r', s=cl_sz_pt, lw=0.3, zorder=3)
+    # If list is not empty, plot error bars at several values.
+    x_val, mag_y, x_err, y_err = err_bar
+    if x_val:
+        plt.errorbar(x_val, mag_y, yerr=y_err, xerr=x_err, fmt='k.', lw=0.8,
+                     ms=0., zorder=4)
 
 
 def pl_lum_func(gs, mags, y_ax, flag_no_fl_regs, lum_func, completeness):
@@ -329,6 +339,6 @@ def plot(N, *args):
     try:
         fxn(*args)
     except:
-        # import traceback
-        # print traceback.format_exc()
+        import traceback
+        print traceback.format_exc()
         print("  WARNING: error when plotting {}.".format(plt_map.get(N)[1]))

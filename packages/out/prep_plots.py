@@ -185,7 +185,7 @@ def field_region_stars(stars_out_rjct, field_regions):
 
 
 def da_plots(clust_cent, clust_rad, stars_out, x_zmin, x_zmax, y_zmin, y_zmax,
-             x_max_cmd, cols, err_lst, cl_reg_fit, cl_reg_no_fit):
+             cl_reg_fit, cl_reg_no_fit):
     '''
     Generate parameters for the finding chart and the photometric diagram
     plotted with the MPs assigned by the DA.
@@ -235,21 +235,27 @@ def da_plots(clust_cent, clust_rad, stars_out, x_zmin, x_zmax, y_zmin, y_zmax,
                 out_clust_rad[0].append(star[1])
                 out_clust_rad[1].append(star[2])
 
-    # For plotting error bars in photometric diagram.
+    return v_min_mp, v_max_mp, plot_colorbar, chart_fit_inv, \
+        chart_no_fit_inv, out_clust_rad, diag_fit_inv, diag_no_fit_inv
+
+
+def error_bars(stars_phot, cols, x_min_cmd, err_lst):
+    """
+    Calculate error bars for plotting in photometric diagram.
+    """
+    mmag = zip(*zip(*stars_phot)[3])[0]
     x_val, mag_y, x_err, y_err = [], [], [], []
-    main_mag = zip(*zip(*lst_comb)[3])[0]
-    if main_mag:
+    if mmag:
         mag_y = np.arange(
-            int(min(main_mag) + 0.5), int(max(main_mag) + 0.5) + 0.1)
-        x_val = [min(x_max_cmd, max(cols[0]) + 0.2) - 0.4] * len(mag_y)
+            int(min(mmag) + 0.5), int(max(mmag) + 0.5) + 0.1)
+        x_val = [x_min_cmd + 0.4] * len(mag_y)
         # Read average fitted values for exponential error fit.
         popt_mag, popt_col1 = err_lst
         x_err = exp_function.exp_3p(mag_y, *popt_col1)
         y_err = exp_function.exp_3p(mag_y, *popt_mag)
     err_bar = [x_val, mag_y, x_err, y_err]
 
-    return v_min_mp, v_max_mp, plot_colorbar, chart_fit_inv, \
-        chart_no_fit_inv, out_clust_rad, diag_fit_inv, diag_no_fit_inv, err_bar
+    return err_bar
 
 
 def param_ranges(ip_list):

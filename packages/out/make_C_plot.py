@@ -34,11 +34,11 @@ def main(
         x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd = prep_plots.diag_limits(
             y_axis, cld['cols'], cld['mags'])
         v_min_mp, v_max_mp, plot_colorbar, chart_fit_inv, chart_no_fit_inv, \
-            out_clust_rad, diag_fit_inv, diag_no_fit_inv, err_bar = \
-            prep_plots.da_plots(
+            out_clust_rad, diag_fit_inv, diag_no_fit_inv = prep_plots.da_plots(
                 clust_cent, clust_rad, stars_out, x_zmin, x_zmax, y_zmin,
-                y_zmax, x_max_cmd, cld['cols'], err_lst, cl_reg_fit,
-                cl_reg_no_fit)
+                y_zmax, cl_reg_fit, cl_reg_no_fit)
+        err_bar = prep_plots.error_bars(
+            cl_reg_fit + cl_reg_no_fit, cld['cols'], x_min_cmd, err_lst)
 
         # Decontamination algorithm plots.
         mode_red_memb, local_bin = pd['rm_params'][0], pd['rm_params'][1]
