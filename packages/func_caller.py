@@ -13,19 +13,19 @@ from structure import field_density
 from structure import radius
 from structure import king_profile
 from errors import err_accpt_rejct
+from errors import err_range_avrg
 from structure import stars_in_out_cl_reg
 from structure import cluster_area
+from structure import field_regions
 from phot_analysis import members_number
 from phot_analysis import contamination_index
-from structure import field_regions
 from phot_analysis import luminosity_func
 from phot_analysis import integrated_mag
 from phot_analysis import kde_pvalue
 from decont_algors import bayesian_da
-from phot_analysis import members_N_compare
+from decont_algors import members_N_compare
 from decont_algors import cl_region_clean
 from out import cluster_members_file
-from best_fit import synth_cl_err
 from best_fit import best_fit_synth_cl
 from out import synth_cl_file
 from out import create_out_data_file
@@ -81,20 +81,23 @@ def main(cl_file, pd):
     # Accept and reject stars based on their errors.
     clp, pd = err_accpt_rejct.main(cld, clp, pd)
 
+    # Obtain exponential fir for the errors.
+    clp = err_range_avrg.main(cld, clp, **pd)
+
     # Get stars in and out of cluster's radius.
     clp = stars_in_out_cl_reg.main(clp)
 
     # Get cluster's area.
     clp = cluster_area.main(clp, **cld)
 
+    # Field regions around the cluster's center.
+    clp = field_regions.main(clp, **pd)
+
     # Get approximate number of cluster's members.
     clp = members_number.main(clp)
 
     # Get contamination index.
     clp = contamination_index.main(clp)
-
-    # Field regions around the cluster's center.
-    clp = field_regions.main(clp, **pd)
 
     # Make A block plots.
     # make_A_plot.main(npd, cld, pd, **clp)
@@ -109,7 +112,7 @@ def main(cl_file, pd):
     clp = kde_pvalue.main(clp, **pd)
 
     # Make B block plots.
-    # make_B_plot.main(npd, cld, pd, **clp)
+    make_B_plot.main(npd, cld, pd, **clp)
 
     # Apply decontamination algorithm.
     clp = bayesian_da.main(clp, npd, **pd)
@@ -123,13 +126,11 @@ def main(cl_file, pd):
 
     # Make C block plots.
     make_C_plot.main(npd, cld, pd, **clp)
+    import pdb; pdb.set_trace()  # breakpoint 10ab9e3d //
+
 
     # Create data file with membership probabilities.
     cluster_members_file.main(clp, **npd)
-
-    # Obtain exponential error function parameters to use by the
-    # synthetic cluster creation function.
-    clp = synth_cl_err.main(cld, clp, **pd)
 
     # Obtain best fitting parameters for cluster.
     clp = best_fit_synth_cl.main(clp, **pd)

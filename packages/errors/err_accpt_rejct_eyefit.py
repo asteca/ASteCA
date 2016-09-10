@@ -136,15 +136,17 @@ def main(err_pck, cld, er_params, **kwargs):
     # Unpack params.
     mmag, em, ec = cld['mags'][0], cld['em'][0], cld['ec'][0]
     bright_end, mag_value = err_pck[0], err_pck[2]
+    e_max = er_params[1]
 
     # Call function to obtain the median+sigmas points for magnitude
     # and color errors to fit the curves below.
-    e_mag_value, e_col1_value = err_medians.main('eyefit', err_pck, cld,
-                                                 er_params)
+    e_mc_medians = []
+    for e_mc in cld['em'].tolist() + cld['ec'].tolist():
+        e_mc_medians.append(err_medians.main(err_pck, e_max, mmag, e_mc, 1.))
 
     # Fit polynomial + exponential curves.
     intersec_mag, intersec_col1, val_mag, pol_mag, val_col1, pol_col1 = \
-        fit_curves(mag_value, bright_end, e_mag_value, e_col1_value)
+        fit_curves(mag_value, bright_end, *e_mc_medians)
 
     # Use the fitted curves to identify accepted/rejected stars and store
     # their indexes.

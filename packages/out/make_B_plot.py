@@ -36,8 +36,7 @@ def main(
         add_version_plot.main()
 
         # # Obtain plotting parameters and data.
-        x_ax, y_ax, y_axis = prep_plots.ax_names(
-            pd['filters'], pd['colors'])
+        x_ax, y_ax, y_axis = prep_plots.ax_names(pd['filters'], pd['colors'])
         x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd = prep_plots.diag_limits(
             y_axis, cld['cols'], cld['mags'])
         stars_f_rjct, stars_f_acpt = prep_plots.field_region_stars(

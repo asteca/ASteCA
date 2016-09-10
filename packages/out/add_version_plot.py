@@ -9,4 +9,4 @@ def main():
     """
     ver = '[ASteCA ' + __version__ + ']'
     x_coord = 0.957 - (len(__version__) - 6) * 0.001
-    plt.figtext(x_coord, .988, ver, fontsize=9, color='#585858')
+    plt.figtext(x_coord, .993, ver, fontsize=9, color='#585858')

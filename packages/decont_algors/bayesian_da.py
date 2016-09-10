@@ -127,7 +127,8 @@ def main(clp, npd, da_params, **kwargs):
 
     # Check if at least one equal-sized field region was obtained.
     if mode_da in ('auto', 'manual') and flag_no_fl_regs:
-        print("  WARNING: no field regions found.")
+        print("  WARNING: no field regions found. Will not "
+              "apply decontamination algorithm.")
         mode_da = 'skip'
 
     flag_decont_skip = False
@@ -216,7 +217,7 @@ def main(clp, npd, da_params, **kwargs):
                                                     runs_fields_probs,
                                                     runs, run_num)
             if break_flag:
-                print('  MPs converged. Breaking out ({}).'.format(run_num))
+                print('  MPs converged in iteration {}.'.format(run_num))
                 break
 
             percentage_complete = (100.0 * (run_num + 1) / runs)

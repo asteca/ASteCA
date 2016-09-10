@@ -74,8 +74,9 @@ def main(cld, clp, pd):
     # bright end. The '+ interv_mag' term is intentional so that the
     # err_medians function defines ranges around these values and they get
     # positioned in the middle of the magnitude interval.
-    mag_value = [be_m + interv_mag * (q + interv_mag) for q in range(n_interv)]
-    if not mag_value:
+    mmag_interv_pts = [
+        be_m + interv_mag * (q + interv_mag) for q in range(n_interv)]
+    if not mmag_interv_pts:
         raise ValueError(
             "\nERROR: magnitude interval is empty. Max and min\n"
             "magnitude values are: {}, {}.\nCheck your input data"
@@ -84,7 +85,7 @@ def main(cld, clp, pd):
     # Pack params to pass. These values are used by the 'eyefit' function and
     # more importantly the err_medians function which is called by the
     # synth_clust function.
-    err_pck = [be_m, interv_mag, mag_value]
+    err_pck = [be_m, interv_mag, mmag_interv_pts]
 
     # Flag indicates that the function had to fall back to the
     # 'e_max'-based rejection method since the selected one failed.

@@ -15,12 +15,13 @@ def pl_mp_histo(
     # Only attempt to plot if the DA was applied.
     if flag_decont_skip is False:
         # Reduced membership.
-        ax = plt.subplot(gs[4:6, 2:4])
+        ax = plt.subplot(gs[0:2, 6:8])
         plt.xlim(0., 1.)
         plt.xlabel('MP (membership probability)', fontsize=12)
         plt.ylabel('N (normalized)', fontsize=12)
         ax.minorticks_on()
-        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
+        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1,
+                zorder=1)
         prob_data = [star[7] for star in memb_prob_avrg_sort]
         # Histogram of the data.
         n_bins = int((max(prob_data) - min(prob_data)) / 0.025)
@@ -36,7 +37,7 @@ def pl_mp_histo(
         cm = plt.cm.get_cmap('RdYlBu_r')
         # Plot histo colored according to colormap.
         for c, p in zip(col, patches):
-            plt.setp(p, 'facecolor', cm(c))
+            plt.setp(p, 'facecolor', cm(c), zorder=3)
         # Add text box.
         if mode_red_memb == 'mag':
             str_pm = ['mag', '\leq', 'mag']
@@ -53,7 +54,8 @@ def pl_mp_histo(
             len(cl_reg_fit), str_pm[0], str_pm[1], str_pm[2])
         text = text1 + '\n' + text2 + '\n' + text3
         # Plot minimum probability line.
-        plt.axvline(x=min_prob, linestyle='--', color='green', lw=2.5)
+        plt.axvline(x=min_prob, linestyle='--', color='green', lw=2.5,
+                    zorder=3)
         ob = offsetbox.AnchoredText(text, loc=2, prop=dict(size=12))
         ob.patch.set(boxstyle='square,pad=0.05', alpha=0.85)
         ax.add_artist(ob)
@@ -69,7 +71,7 @@ def pl_chart_mps(gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
     Finding chart of cluster region with decontamination algorithm
     applied and colors assigned according to the probabilities obtained.
     '''
-    ax = plt.subplot(gs[4:6, 4:6])
+    ax = plt.subplot(gs[0:2, 8:10])
     # Set plot limits, Use 'zoom' x,y ranges.
     plt.xlim(x_zmin, x_zmax)
     plt.ylim(y_zmin, y_zmax)
@@ -106,12 +108,13 @@ def pl_chart_mps(gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
     # Star sizes for dense and not dense regions.
     st_size = 20 if field_dens > 0.005 else 35
     # Plot stars *not* used in the best fit process.
-    plt.scatter(chart_no_fit_inv[0], chart_no_fit_inv[1], marker='o',
-                c=col_select_no_fit, s=st_size, edgecolors='black', cmap=cm,
-                alpha=0.5, lw=0.5, vmin=v_min_mp, vmax=v_max_mp)
+    plt.scatter(
+        chart_no_fit_inv[0], chart_no_fit_inv[1], marker='o',
+        c=col_select_no_fit, s=st_size, edgecolors='black', cmap=cm,
+        alpha=0.5, lw=0.5, vmin=v_min_mp, vmax=v_max_mp)
     # Add line to stars not used in the best bit process.
-    plt.scatter(chart_no_fit_inv[0], chart_no_fit_inv[1], marker='_', c='k',
-                lw=0.5, alpha=0.5)
+    plt.scatter(chart_no_fit_inv[0], chart_no_fit_inv[1], marker='_',
+                c='k', lw=0.5, alpha=0.5)
     # Plot stars selected to be used in the best bit process.
     plt.scatter(chart_fit_inv[0], chart_fit_inv[1], marker='o',
                 c=col_select_fit, s=st_size, edgecolors='black', cmap=cm,
@@ -123,13 +126,12 @@ def pl_chart_mps(gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
 
 def pl_mps_phot_diag(gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
                      x_ax, y_ax, v_min_mp, v_max_mp, diag_fit_inv,
-                     diag_no_fit_inv, shift_isoch, err_bar, mode_red_memb,
-                     bin_edges, bf_flag):
+                     diag_no_fit_inv, err_bar, mode_red_memb, bin_edges):
     '''
     Star's membership probabilities on cluster's photometric diagram.
     '''
     x_val, mag_y, x_err, y_err = err_bar
-    ax = plt.subplot(gs[4:6, 6:8])
+    ax = plt.subplot(gs[0:2, 10:12])
     # Set plot limits
     plt.xlim(x_min_cmd, x_max_cmd)
     plt.ylim(y_min_cmd, y_max_cmd)
@@ -160,10 +162,10 @@ def pl_mps_phot_diag(gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
     # If stars have a range of colors, use list of colors. Else use a single
     # color.
     if v_min_mp != v_max_mp:
-        col_select_fit, col_select_no_fit, c_iso = diag_fit_inv[2], \
-            diag_no_fit_inv[2], 'g'
+        col_select_fit, col_select_no_fit = diag_fit_inv[2], \
+            diag_no_fit_inv[2]
     else:
-        col_select_fit, col_select_no_fit, c_iso = '#4682b4', '#4682b4', 'r'
+        col_select_fit, col_select_no_fit = '#4682b4', '#4682b4'
     # Plot stars *not* used in the best fit process.
     plt.scatter(diag_no_fit_inv[0], diag_no_fit_inv[1], marker='o',
                 c=col_select_no_fit, s=35, cmap=cm, lw=0.5, alpha=0.5,
@@ -175,9 +177,6 @@ def pl_mps_phot_diag(gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
     sca = plt.scatter(diag_fit_inv[0], diag_fit_inv[1], marker='o',
                       c=col_select_fit, s=40, cmap=cm, lw=0.5, vmin=v_min_mp,
                       vmax=v_max_mp, zorder=4)
-    # Plot isochrone if best fit process was used.
-    if bf_flag:
-        plt.plot(shift_isoch[0], shift_isoch[1], c=c_iso, lw=1.2, zorder=5)
     # If list is not empty, plot error bars at several values.
     if x_val:
         plt.errorbar(x_val, mag_y, yerr=y_err, xerr=x_err, fmt='k.', lw=0.8,

@@ -197,27 +197,32 @@ def da_plots(clust_cent, clust_rad, stars_out, x_zmin, x_zmax, y_zmin, y_zmax,
         round(max(zip(*lst_comb)[-1]), 2)
 
     # Decides if colorbar should be plotted.
-    plot_colorbar = False
-    if v_min_mp != v_max_mp:
-        plot_colorbar = True
+    plot_colorbar = True if v_min_mp != v_max_mp else False
 
-    # Finding chart.
     # Arrange stars used in the best fit process.
-    m_p_m_temp = [[], [], []]
-    for star in cl_reg_fit:
-        m_p_m_temp[0].append(star[1])
-        m_p_m_temp[1].append(star[2])
-        m_p_m_temp[2].append(star[7])
-    # Create new list with inverted values so higher prob stars are on top.
-    chart_fit_inv = [i[::-1] for i in m_p_m_temp]
+    cl_reg_fit = zip(*cl_reg_fit)
+    # Finding chart data. Invert values so higher prob stars are on top.
+    chart_fit_inv = [i[::-1] for i in
+                     [cl_reg_fit[1], cl_reg_fit[2], cl_reg_fit[7]]]
+    # Photometric diagram.
+    diag_fit_inv = [
+        i[::-1] for i in [zip(*cl_reg_fit[5])[0], zip(*cl_reg_fit[3])[0],
+                          cl_reg_fit[7]]]
+
     # Arrange stars *not* used in the best fit process.
-    m_p_m_temp = [[], [], []]
-    for star in cl_reg_no_fit:
-        m_p_m_temp[0].append(star[1])
-        m_p_m_temp[1].append(star[2])
-        m_p_m_temp[2].append(star[7])
-    # Create new list with inverted values so higher prob stars are on top.
-    chart_no_fit_inv = [i[::-1] for i in m_p_m_temp]
+    if cl_reg_no_fit:
+        cl_reg_no_fit = zip(*cl_reg_no_fit)
+        # Finding chart data.
+        chart_no_fit_inv = [
+            i[::-1] for i in [cl_reg_no_fit[1], cl_reg_no_fit[2],
+                              cl_reg_no_fit[7]]]
+        # Photometric diagram.
+        diag_no_fit_inv = [
+            i[::-1] for i in [
+                zip(*cl_reg_no_fit[5])[0], zip(*cl_reg_no_fit[3])[0],
+                zip(*cl_reg_no_fit[7])[0]]]
+    else:
+        chart_no_fit_inv, diag_no_fit_inv = [[], [], []], [[], [], []]
 
     # Separate stars outside the cluster's radius.
     out_clust_rad = [[], []]
@@ -230,32 +235,15 @@ def da_plots(clust_cent, clust_rad, stars_out, x_zmin, x_zmax, y_zmin, y_zmax,
                 out_clust_rad[0].append(star[1])
                 out_clust_rad[1].append(star[2])
 
-    # Photometric diagram.
-    # Arrange stars used in the best fit process.
-    m_p_m_temp = [[], [], []]
-    for star in cl_reg_fit:
-        m_p_m_temp[0].append(star[5])
-        m_p_m_temp[1].append(star[3])
-        m_p_m_temp[2].append(star[7])
-    # Create new list with inverted values so higher prob stars are on top.
-    diag_fit_inv = [i[::-1] for i in m_p_m_temp]
-    # Arrange stars *not* used in the best fit process.
-    m_p_m_temp = [[], [], []]
-    for star in cl_reg_no_fit:
-        m_p_m_temp[0].append(star[5])
-        m_p_m_temp[1].append(star[3])
-        m_p_m_temp[2].append(star[7])
-    # Create new list with inverted values so higher prob stars are on top.
-    diag_no_fit_inv = [i[::-1] for i in m_p_m_temp]
-
     # For plotting error bars in photometric diagram.
     x_val, mag_y, x_err, y_err = [], [], [], []
-    if zip(*lst_comb)[3]:
-        mag_y = np.arange(int(min(zip(*lst_comb)[3]) + 0.5),
-                          int(max(zip(*lst_comb)[3]) + 0.5) + 0.1)
-        x_val = [min(x_max_cmd, max(cols) + 0.2) - 0.4] * len(mag_y)
+    main_mag = zip(*zip(*lst_comb)[3])[0]
+    if main_mag:
+        mag_y = np.arange(
+            int(min(main_mag) + 0.5), int(max(main_mag) + 0.5) + 0.1)
+        x_val = [min(x_max_cmd, max(cols[0]) + 0.2) - 0.4] * len(mag_y)
         # Read average fitted values for exponential error fit.
-        popt_mag, popt_col1 = err_lst[:2]
+        popt_mag, popt_col1 = err_lst
         x_err = exp_function.exp_3p(mag_y, *popt_col1)
         y_err = exp_function.exp_3p(mag_y, *popt_mag)
     err_bar = [x_val, mag_y, x_err, y_err]
