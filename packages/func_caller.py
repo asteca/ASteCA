@@ -128,8 +128,8 @@ def main(cl_file, pd):
 
     # Create data file with membership probabilities.
     cluster_members_file.main(clp, **npd)
-    import pdb; pdb.set_trace()  # breakpoint 1671a593 //
-
+    import pdb; pdb.set_trace()  # breakpoint 64dd0b14 //
+    
 
     # Obtain best fitting parameters for cluster.
     clp = best_fit_synth_cl.main(clp, **pd)
