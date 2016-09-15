@@ -81,7 +81,7 @@ def main(
             if plot_colorbar is True:
                 import matplotlib.transforms as mts
                 # Position and dimensions relative to the axes.
-                x0, y0, width, height = [0.67, 0.92, 0.2, 0.04]
+                x0, y0, width, height = [0.74, 0.93, 0.2, 0.04]
                 # Transform them to get the ABSOLUTE POSITION AND DIMENSIONS
                 Bbox = mts.Bbox.from_bounds(x0, y0, width, height)
                 l, b, w, h = mts.TransformedBbox(Bbox, trans).bounds

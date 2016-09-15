@@ -111,7 +111,7 @@ def main(cl_file, pd):
     clp = kde_pvalue.main(clp, **pd)
 
     # Make B block plots.
-    make_B_plot.main(npd, cld, pd, **clp)
+    # make_B_plot.main(npd, cld, pd, **clp)
 
     # Apply decontamination algorithm.
     clp = bayesian_da.main(clp, npd, **pd)
@@ -125,11 +125,11 @@ def main(cl_file, pd):
 
     # Make C block plots.
     make_C_plot.main(npd, cld, pd, **clp)
-    import pdb; pdb.set_trace()  # breakpoint 10ab9e3d //
-
 
     # Create data file with membership probabilities.
     cluster_members_file.main(clp, **npd)
+    import pdb; pdb.set_trace()  # breakpoint 1671a593 //
+
 
     # Obtain best fitting parameters for cluster.
     clp = best_fit_synth_cl.main(clp, **pd)

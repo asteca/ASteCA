@@ -86,9 +86,8 @@ def get_fl_reg_hist(field_region, bin_edges, cl_hist):
     f_hist = np.zeros(shape=np.shape(cl_hist))
     # Add stars in all the defined field regions.
     for freg in field_region:
-        Q = np.array(zip(*freg)[1:])
         # Create list with all magnitudes and colors defined.
-        mag_col_fl = [Q[4], Q[2]]
+        mag_col_fl = [zip(*zip(*freg)[1:][4])[0], zip(*zip(*freg)[1:][2])[0]]
         f_hist = f_hist + np.histogramdd(np.array(zip(*mag_col_fl)),
                                          bins=bin_edges)[0]
 
@@ -163,17 +162,18 @@ def get_fit_stars(cl_hist_p, f_hist, flag_decont_skip):
 
 def main(field_regions, memb_prob_avrg_sort, flag_decont_skip, rm_params):
     '''
-    Takes the photometric diagram (CMD, CCD, etc.) of the cluster region with
-    assigned MPs, divides it into sub-regions (cells) according to the
-    density within it, and removes in each sub-region a number of stars
+    Takes the photometric diagram of the cluster region with assigned MPs,
+    divides it into sub-regions (cells) according to the
+    density within it, and removes from each sub-region a number of stars
     equal to the average excess due to field star contamination.
     '''
     local_bin = rm_params[1]
 
     # Remove ID's and zip.
-    P = np.array(zip(*memb_prob_avrg_sort)[1:], dtype='float')
+    mmag, col = zip(*zip(*memb_prob_avrg_sort)[1:][2])[0],\
+        zip(*zip(*memb_prob_avrg_sort)[1:][4])[0]
     # Create list with all magnitudes and colors defined.
-    mag_col_cl = [P[4], P[2]]
+    mag_col_cl = [col, mmag]
 
     # Obtain bin edges.
     bin_edges = bin_edges_f(local_bin, mag_col_cl)
@@ -192,7 +192,7 @@ def main(field_regions, memb_prob_avrg_sort, flag_decont_skip, rm_params):
 
     # import matplotlib.pyplot as plt
     # fig, ax = plt.subplots()
-    # plt.scatter(P[4], P[2])
+    # plt.scatter(col, mmag)
     # ax.set_xticks(bin_edges[0], minor=False)
     # ax.set_yticks(bin_edges[1], minor=False)
     # ax.xaxis.grid(True, which='major')

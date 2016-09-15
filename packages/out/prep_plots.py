@@ -220,7 +220,7 @@ def da_plots(clust_cent, clust_rad, stars_out, x_zmin, x_zmax, y_zmin, y_zmax,
         diag_no_fit_inv = [
             i[::-1] for i in [
                 zip(*cl_reg_no_fit[5])[0], zip(*cl_reg_no_fit[3])[0],
-                zip(*cl_reg_no_fit[7])[0]]]
+                cl_reg_no_fit[7]]]
     else:
         chart_no_fit_inv, diag_no_fit_inv = [[], [], []], [[], [], []]
 
