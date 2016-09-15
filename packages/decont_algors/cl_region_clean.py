@@ -107,7 +107,8 @@ def man_mag(memb_prob_avrg_sort, rm_params):
 
     rem_fit, rem_not_fit = [], []
     for star in memb_prob_avrg_sort:
-        if star[3] <= min_mag_man:
+        # Usa main mag.
+        if star[3][0] <= min_mag_man:
             # Keep stars brighter that the magnitude limit.
             rem_fit.append(star)
         else:

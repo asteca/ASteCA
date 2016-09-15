@@ -49,7 +49,9 @@ def mpas(cl_reg_rad, runs_fields_probs):
     sort by their values.
     """
 
-    # cl_reg_rad = [[id,x,y,mag,e_mag,color1,e_col1], [], [], ...]
+    # cl_reg_rad = [star1, star2, star3, ...]
+    # starX = [id, x, y, mags, em, cols, ec]
+    # mags = [mag1, mag2, mag3, ...]
 
     # Average all Bayesian membership probabilities into a single value for
     # each star inside 'cl_reg_rad'.
@@ -64,7 +66,8 @@ def mpas(cl_reg_rad, runs_fields_probs):
 
     # Stars inside the cluster's radius are now saved in the list
     # 'temp_prob_members' where each item contains the data for each
-    # star: [id,x,y,mag,e_mag,color1,e_col1,memb_prob].
+    # star:
+    # starX = [id, x, y, mags, em, cols, ec, memb_prob].
 
     # Sort members list.
     membership_prob_avrg_sort = sort_members(temp_prob_members)
