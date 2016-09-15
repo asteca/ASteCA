@@ -84,8 +84,7 @@ def likelihood(region, cl_phot):
     r_phot = [zip(*zip(*region)[1:][2]), zip(*zip(*region)[1:][3]),
               zip(*zip(*region)[1:][4]), zip(*zip(*region)[1:][5])]
 
-    # Square errors in color and magnitude.
-    # Full cluster region.
+    # Full cluster region. Square errors in color and magnitude.
     P = [cl_phot[0][0], np.square(cl_phot[1][0]), cl_phot[2][0],
          np.square(cl_phot[3][0])]
     # Cleaned cluster/field region.
