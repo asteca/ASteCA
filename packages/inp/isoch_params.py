@@ -101,12 +101,9 @@ def main(pd, met_f_filter, age_values):
     mags_the, cols_the = arrange_filters(isoch_list, **pd)
 
     # Interpolate extra points into all the isochrones.
-    mags_interp = interp_isoch_data(mags_the)
-    cols_interp = interp_isoch_data(cols_the)
-    extra_pars_interp = interp_isoch_data(extra_pars)
-
-    pd['mags_interp'], pd['cols_interp'], pd['extra_pars_interp'] =\
-        mags_interp, cols_interp, extra_pars_interp
+    pd['mags_interp'] = interp_isoch_data(mags_the)
+    pd['cols_interp'] = interp_isoch_data(cols_the)
+    pd['extra_pars_interp'] = interp_isoch_data(extra_pars)
 
     # Obtain number of models in the solutions space.
     lens = [len(_) for _ in pd['param_values']]

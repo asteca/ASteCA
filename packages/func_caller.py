@@ -124,12 +124,10 @@ def main(cl_file, pd):
     clp = cl_region_clean.main(clp, **pd)
 
     # Make C block plots.
-    make_C_plot.main(npd, cld, pd, **clp)
+    # make_C_plot.main(npd, cld, pd, **clp)
 
     # Create data file with membership probabilities.
     cluster_members_file.main(clp, **npd)
-    import pdb; pdb.set_trace()  # breakpoint 64dd0b14 //
-    
 
     # Obtain best fitting parameters for cluster.
     clp = best_fit_synth_cl.main(clp, **pd)

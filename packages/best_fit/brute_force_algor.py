@@ -3,15 +3,13 @@ import numpy as np
 import sc_likelihood
 
 
-def main(lkl_method, e_max, bin_mass_ratio, cmd_sel, err_lst, obs_clust,
-         completeness, ip_list, st_d_bin_mr):
+def main(lkl_method, e_max, bin_mass_ratio, err_lst, obs_clust, ext_coefs,
+         completeness, param_values, mags_interp, cols_interp,
+         extra_pars_interp, st_d_bin_mr):
     '''
     Brute force algorithm that computes the likelihoods for *all* the defined
     isochrones.
     '''
-
-    isoch_list, param_values = ip_list
-
     # Unpack parameters values.
     m_lst, a_lst, e_lst, d_lst, mass_lst, bin_lst = param_values
 
@@ -44,23 +42,27 @@ def main(lkl_method, e_max, bin_mass_ratio, cmd_sel, err_lst, obs_clust,
 
                         # Iterate through all binary fractions.
                         for bin_frac in bin_lst:
-
                             model = [m, a, e, d, mass, bin_frac]
 
                             # Call likelihood function with m,a,e,d values.
-                            isochrone = isoch_list[m_i][a_i]
+                            isochrone = [mags_interp[m_i][a_i],
+                                         cols_interp[m_i][a_i]]
+                            extra_pars = extra_pars_interp[m_i][a_i]
                             # Call likelihood function with m,a,e,d values.
                             likel_val = sc_likelihood.main(
-                                lkl_method, e_max, bin_mass_ratio, cmd_sel,
-                                err_lst, obs_clust, completeness, st_d_bin_mr,
-                                isochrone, model)
-                            # Store the likelihood for each synthetic cluster.
+                                lkl_method, e_max, bin_mass_ratio,
+                                err_lst, obs_clust, completeness,
+                                st_d_bin_mr, isochrone, extra_pars,
+                                ext_coefs, model)
+                            # Store the likelihood for each synthetic
+                            # cluster.
                             model_done[0].append(model)
                             model_done[1].append(likel_val)
 
                             # Print percentage done.
                             i += 1
-                            percentage_complete = (100.0 * (i + 1) / tot_sols)
+                            percentage_complete = (100.0 * (i + 1) /
+                                                   tot_sols)
                             while len(milestones) > 0 and \
                                     percentage_complete >= milestones[0]:
                                 print " {:>3}%".format(milestones[0])

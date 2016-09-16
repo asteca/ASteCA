@@ -1,6 +1,7 @@
 
 import numpy as np
 import obs_clust_prepare
+import get_ext_coefs
 import genetic_algorithm
 import brute_force_algor
 import bootstrap
@@ -74,8 +75,9 @@ def params_errors(ip_list, ga_params, err_lst, memb_prob_avrg_sort,
     return isoch_fit_errors
 
 
-def main(clp, bf_flag, ip_list, er_params, bf_params, IMF_name, m_high,
-         bin_mr, ga_params, ps_params, **kwargs):
+def main(clp, bf_flag, er_params, bf_params, IMF_name, m_high, bin_mr,
+         ga_params, param_values, mags_interp, cols_interp, extra_pars_interp,
+         all_syst_filters, filters, colors, **kwargs):
     '''
     Perform a best fitting process to find the cluster's fundamental
     parameters.
@@ -83,7 +85,7 @@ def main(clp, bf_flag, ip_list, er_params, bf_params, IMF_name, m_high,
     err_lst, memb_prob_avrg_sort, completeness = clp['err_lst'],\
         clp['memb_prob_avrg_sort'], clp['completeness']
     best_fit_algor, lkl_method, bin_method, N_b = bf_params
-    e_max, cmd_sel = er_params[1], ps_params[1]
+    e_max = er_params[1]
 
     # Check if algorithm should run.
     if bf_flag:
@@ -94,6 +96,9 @@ def main(clp, bf_flag, ip_list, er_params, bf_params, IMF_name, m_high,
             memb_prob_avrg_sort, lkl_method, bin_method)
         # Store for plotting purposes.
         syn_b_edges = obs_clust[1]
+
+        # Obtain extinction coefficients.
+        ext_coefs = get_ext_coefs.main(all_syst_filters, filters, colors)
 
         # Obtain mass distribution using the selected IMF. We run it once
         # because the array only depends on the IMF selected.
@@ -108,8 +113,9 @@ def main(clp, bf_flag, ip_list, er_params, bf_params, IMF_name, m_high,
                 else lkl_method))
             # Brute force algorithm.
             isoch_fit_params = brute_force_algor.main(
-                lkl_method, e_max, bin_mr, cmd_sel, err_lst,
-                obs_clust, completeness, ip_list, st_dist_mass)
+                lkl_method, e_max, bin_mr, err_lst, obs_clust, ext_coefs,
+                completeness, param_values, mags_interp, cols_interp,
+                extra_pars_interp, st_dist_mass)
 
         elif best_fit_algor == 'genet':
 
@@ -121,9 +127,8 @@ def main(clp, bf_flag, ip_list, er_params, bf_params, IMF_name, m_high,
             # so it will print percentages to screen.
             flag_print_perc = True
             isoch_fit_params = genetic_algorithm.main(
-                flag_print_perc, err_lst, obs_clust, completeness, ip_list,
-                st_dist_mass, ga_params, lkl_method, cmd_sel, e_max,
-                bin_mr)
+                flag_print_perc, err_lst, obs_clust, ext_coefs, completeness,
+                ip_list, st_dist_mass, ga_params, lkl_method, e_max, bin_mr)
 
         print("Best fit parameters obtained.")
 

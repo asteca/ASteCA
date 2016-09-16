@@ -274,7 +274,7 @@ def num_binary_digits(param_values):
 
 
 def main(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
-         st_dist_mass, ga_params, lkl_method, cmd_sel, e_max, bin_mass_ratio):
+         st_dist_mass, ga_params, lkl_method, e_max, bin_mass_ratio):
     '''
     Genetic algorithm adapted to find the best fit model-observation.
     '''

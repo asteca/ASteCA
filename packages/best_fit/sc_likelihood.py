@@ -263,8 +263,9 @@ def mighell(Q, P):
     return chi
 
 
-def main(lkl_method, e_max, bin_mass_ratio, cmd_sel, err_lst, obs_clust,
-         completeness, st_dist_mass, isochrone, synth_cl_params):
+def main(lkl_method, e_max, bin_mass_ratio, err_lst, obs_clust,
+         completeness, st_dist_mass, isochrone, extra_pars, ext_coefs,
+         synth_cl_params):
     '''
     Call with an isochrone of given values for metallicity and age and supply
     the extinction and distance modulus values to move that isochrone. Use
@@ -274,10 +275,10 @@ def main(lkl_method, e_max, bin_mass_ratio, cmd_sel, err_lst, obs_clust,
 
     # Generate synthetic cluster using this "moved" isochrone and a mass
     # distribution.
-    # with timeblock("  synth_cl"):
+    # with timeblock("synth_cl"):
     synth_clust = synth_cluster.main(err_lst, completeness, st_dist_mass,
-                                     isochrone, synth_cl_params, e_max,
-                                     bin_mass_ratio, cmd_sel,)
+                                     isochrone, extra_pars, ext_coefs,
+                                     synth_cl_params, e_max, bin_mass_ratio)
 
     # Call function to obtain the likelihood by comparing the synthetic cluster
     # with the observed cluster.

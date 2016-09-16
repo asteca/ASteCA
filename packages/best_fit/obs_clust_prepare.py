@@ -8,9 +8,7 @@ def main(memb_prob_avrg_sort, lkl_method, bin_method):
     Prepare observed cluster array here to save time when the algorithm to
     find the best synthetic cluster fit is used.
     '''
-
     if lkl_method == 'tolstoy':
-
         # Remove IDs and re-pack converted to array.
         obs_cl = np.array(zip(*zip(*memb_prob_avrg_sort)[1:]), dtype=float)
 
@@ -28,10 +26,13 @@ def main(memb_prob_avrg_sort, lkl_method, bin_method):
         obs_clust = [np.hstack(P), mem_probs]
 
     else:
-
         # Remove ID's (to make entire array of floats) and zip.
-        P = np.array(zip(*memb_prob_avrg_sort)[1:], dtype='float')
-        mag_col_cl = [P[4], P[2]]
+        # Use first magnitude and color.
+        # TODO
+        mag = zip(*zip(*memb_prob_avrg_sort)[1:][2])[0]
+        col = zip(*zip(*memb_prob_avrg_sort)[1:][4])[0]
+        prob = zip(*memb_prob_avrg_sort)[1:][6]
+        mag_col_cl = [col, mag]
 
         # Obtain bin edges for each dimension, defining a grid.
         bin_edges = bin_edges_f(bin_method, mag_col_cl)
@@ -41,7 +42,7 @@ def main(memb_prob_avrg_sort, lkl_method, bin_method):
 
         # Obtain *weighted* histogram for observed cluster.
         cl_histo = np.histogramdd(
-            cl_mags_cols, bins=bin_edges, weights=np.asarray(P[6]))[0]
+            cl_mags_cols, bins=bin_edges, weights=np.asarray(prob))[0]
 
         # Pass observed cluster data.
         obs_clust = [cl_histo, bin_edges]

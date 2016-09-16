@@ -370,8 +370,8 @@ def isoch_cut_mag(isoch_moved, max_mag):
     return isoch_cut
 
 
-def main(err_lst, completeness, st_dist, isochrone, synth_cl_params,
-         e_max, bin_mass_ratio, cmd_sel):
+def main(err_lst, completeness, st_dist, isochrone, extra_pars, ext_coefs,
+         synth_cl_params, e_max, bin_mass_ratio):
     '''
     Takes an isochrone and returns a synthetic cluster created according to
     a certain mass distribution.
@@ -382,8 +382,8 @@ def main(err_lst, completeness, st_dist, isochrone, synth_cl_params,
 
     # with timeblock("move"):
     # Move theoretical isochrone using the values 'e' and 'd'.
-    isoch_moved = move_isochrone.main(
-        [isochrone[0], isochrone[1]], e, d, cmd_sel) + [isochrone[2]]
+    isoch_moved = move_isochrone.main(isochrone, e, d, ext_coefs) +\
+        extra_pars
 
     ##############################################################
     # # To generate a synthetic cluster with the full isochrone length,

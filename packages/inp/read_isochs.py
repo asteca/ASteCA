@@ -68,17 +68,17 @@ def filters_and_extra_pars(
     effective temperatures, etc.)
     """
     # Depends on the photometric system analyzed.
-    l = isochs_format.read_line_start(met_f, line_start)
+    l_s = isochs_format.read_line_start(met_f, line_start)
     if j >= 0:
         identif = 'filters data'
         # Column indexes for all the filters defined in this system.
         uniq_fltrs = all_syst_filters[j][1:]
         # Column numbers for the filters defined in this system.
-        ids = isochs_format.girardi_filters_ids(l, uniq_fltrs)
+        ids = isochs_format.girardi_filters_ids(l_s, uniq_fltrs)
     else:
         identif = 'extra parameters'
         # Column numbers for the extra parameters for this metallicity.
-        ids = isochs_format.cmd_common_ids(l)
+        ids = isochs_format.cmd_common_ids(l_s)
 
     try:
         met_f_ages = read_met_file(
