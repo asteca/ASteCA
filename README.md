@@ -38,7 +38,7 @@ new versions are released.
 
 The latest release can always be accessed [here][5].
 
-See the [CHANGELOG.md][6] file for a list of previous releases, the changes
+See the [CHANGELOG][6] file for a list of previous releases, the changes
 made in each one, and possible compatibility breaks with older versions.
 
 
@@ -78,7 +78,7 @@ ________________________________________________________________________________
 [3]: http://asteca.readthedocs.org/en/latest/requirements.html
 [4]: http://asteca.rtfd.org/
 [5]: https://github.com/asteca/asteca/releases/latest
-[6]: https://github.com/asteca/asteca/blob/active/CHANGELOG.md
+[6]: https://github.com/asteca/ASteCA/blob/master/CHANGELOG.md
 [7]: http://www.aanda.org/articles/aa/abs/2015/04/aa24946-14/aa24946-14.html
 [8]: https://github.com/asteca/asteca/issues?q=is%3Aopen+is%3Aissue+label%3Abug
 [9]: https://github.com/asteca/asteca/issues?q=is%3Aopen+is%3Aissue+label%3Aenhancement
@@ -104,24 +104,6 @@ You should have received a copy of the GNU General Public License along with
 this program. If not, see http://www.gnu.org/licenses/.
 
 Copyright (c) 2014 Gabriel Perren - Released under the GPL v3 license.
-
-#### Versioning (from v1.0.0 onwards)
-
-Version numbering follows the [Semantic Versioning][19] guidelines. Releases
-will be numbered
-with the following format:
-
-`<major>.<minor>.<patch>-<build>`
-
-Constructed with the following guidelines:
-
-* A new *major* release indicates a large change where backwards compatibility
-  is broken.
-* A new *minor* release indicates a normal change that maintains backwards
-  compatibility.
-* A new *patch* release indicates a bugfix or small change which does not
-  affect compatibility.
-* A new *build* release indicates this is a pre-release of the version.
 
 ________________________________________________________________________________
 [19]: http://semver.org/
