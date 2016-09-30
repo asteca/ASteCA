@@ -95,7 +95,7 @@ def main(clp, bf_flag, er_params, bf_params, IMF_name, m_high, bin_mr,
         obs_clust = obs_clust_prepare.main(
             memb_prob_avrg_sort, lkl_method, bin_method)
         # Store for plotting purposes.
-        syn_b_edges = obs_clust[1]
+        syn_b_edges = obs_clust[1] if lkl_method == 'dolphin' else []
 
         # Obtain extinction coefficients.
         ext_coefs = get_ext_coefs.main(all_syst_filters, filters, colors)
