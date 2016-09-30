@@ -2,10 +2,10 @@
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from os.path import join
-import warnings
 from .._version import __version__
 import mp_best_fit
 import prep_plots
+from ..synth_clust import synth_cl_plot
 
 
 #############################################################
@@ -33,7 +33,7 @@ def main(
         field_regions, flag_pval_test, pval_test_params, lum_func,
         completeness, memb_prob_avrg_sort, flag_decont_skip, cl_reg_fit,
         cl_reg_no_fit, cl_reg_clean_plot, err_lst, isoch_fit_params,
-        isoch_fit_errors, shift_isoch, synth_clst, syn_b_edges, **kwargs):
+        isoch_fit_errors, syn_b_edges, **kwargs):
     '''
     Make all plots.
     '''
@@ -70,6 +70,13 @@ def main(
             prep_plots.da_plots(
                 clust_cent, clust_rad, stars_out, x_zmin, x_zmax, y_zmin,
                 y_zmax, x_max_cmd, cols, err_lst, cl_reg_fit, cl_reg_no_fit)
+
+        # Obtain best fit synthetic cluster, and its isochrone.
+        shift_isoch, synth_clst = synth_cl_plot.main(
+            ip_list, isoch_fit_params, err_lst, completeness, st_dist_mass,
+            e_max, bin_mr, cmd_sel)
+        if not synth_clst.any():
+            print("  WARNING: best fit synthetic cluster found is empty.")
 
         #
         # Best fit plots.

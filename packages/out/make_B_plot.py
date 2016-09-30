@@ -7,17 +7,6 @@ import mp_phot_analysis
 import add_version_plot
 import prep_plots
 
-# npd, cld, pd, bin_width, cent_bin, clust_cent, e_cent, approx_cents,
-# st_dev_lst, hist_2d_g, kde_plot, radii, rdp_points, poisson_error,
-# field_dens, clust_rad, e_rad, cont_index, err_plot, err_flags,
-# core_rad, e_core, tidal_rad, e_tidal, K_conct_par, K_cent_dens,
-# flag_2pk_conver, flag_3pk_conver, cl_region, stars_out, cl_region_rjct,
-# stars_out_rjct, integr_return, n_memb, n_memb_da, flag_no_fl_regs,
-# field_regions, flag_pval_test, pval_test_params, lum_func,
-# completeness, memb_prob_avrg_sort, flag_decont_skip, cl_reg_fit,
-# cl_reg_no_fit, cl_reg_clean_plot, err_lst, isoch_fit_params,
-# isoch_fit_errors, shift_isoch, synth_clst, syn_b_edges, **kwargs
-
 
 def main(
         npd, cld, pd, err_plot, err_flags, cl_region, cl_region_rjct,

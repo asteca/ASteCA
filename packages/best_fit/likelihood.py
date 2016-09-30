@@ -1,6 +1,6 @@
 
 import numpy as np
-import synth_cluster
+from ..synth_clust import synth_cluster
 
 #############################################################
 # # Timer function: http://stackoverflow.com/a/21860100/1391441

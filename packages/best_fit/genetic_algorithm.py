@@ -1,7 +1,7 @@
 
 import random
 import numpy as np
-import sc_likelihood
+import likelihood
 
 #############################################################
 # # Timer function: http://stackoverflow.com/a/21860100/1391441
@@ -168,7 +168,7 @@ def evaluation(lkl_method, e_max, bin_mass_ratio, cmd_sel, err_lst, obs_clust,
     each one.
     '''
 
-    likel_lst, generation_list = [], []
+    lkl_lst, generation_list = [], []
     # Process each model selected.
     for model in zip(*p_lst):
 
@@ -179,7 +179,7 @@ def evaluation(lkl_method, e_max, bin_mass_ratio, cmd_sel, err_lst, obs_clust,
 
         # Call likelihood function for this model.
         # with timeblock(" Likelihood"):
-        likelihood = sc_likelihood.main(
+        lkl = likelihood.main(
             lkl_method, e_max, bin_mass_ratio, cmd_sel, err_lst, obs_clust,
             completeness, st_dist_mass, isochrone, model)
 
@@ -191,11 +191,11 @@ def evaluation(lkl_method, e_max, bin_mass_ratio, cmd_sel, err_lst, obs_clust,
         # with timeblock(" Compare"):
         try:
             # Get old likelihood value for this model.
-            likel_old = model_done[1][model_done[0].index(model)]
+            lkl_old = model_done[1][model_done[0].index(model)]
             # Compare with new value. If old one is smaller, pass old one.
             # This keeps the likelihood always trending downwards.
-            if likel_old < likelihood:
-                likelihood = likel_old
+            if lkl_old < lkl:
+                lkl = lkl_old
         except:
             # Model was not processed before.
             pass
@@ -203,22 +203,22 @@ def evaluation(lkl_method, e_max, bin_mass_ratio, cmd_sel, err_lst, obs_clust,
         # Append data to the lists that will be erased with each call
         # to this function.
         generation_list.append(model)
-        likel_lst.append(likelihood)
+        lkl_lst.append(lkl)
 
     # Sort according to the likelihood list. This puts the best model (ie:
     # the one with the minimum likelihood value) first.
     # with timeblock(" sort"):
-    generation = [x for y, x in sorted(zip(likel_lst, generation_list))]
+    generation = [x for y, x in sorted(zip(lkl_lst, generation_list))]
     # Sort list in place putting the likelihood minimum value first.
-    likel_lst.sort()
+    lkl_lst.sort()
 
     # Append data identifying the isochrone and the obtained
     # likelihood value to this *persistent* list.
     # with timeblock(" Append"):
     model_done[0] = generation + model_done[0]
-    model_done[1] = likel_lst + model_done[1]
+    model_done[1] = lkl_lst + model_done[1]
 
-    return generation, likel_lst, model_done
+    return generation, lkl_lst, model_done
 
 
 def random_population(param_values, n_ran):

@@ -4,8 +4,8 @@ from time import strftime
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from .._version import __version__
-from ..best_fit.best_fit_synth_cl import synth_cl_plot
-from ..best_fit import imf
+from ..synth_clust import synth_cl_plot
+from ..synth_clust import imf
 import top_tiers_plot
 import prep_plots
 
@@ -74,7 +74,7 @@ def plot_top_tiers(top_tiers_flo, output_subdir, clust_name, mags,
     synth_cls = []
     for mod in top_tiers_flo:
         # Call function to generate synthetic cluster.
-        shift_isoch, synth_clst = synth_cl_plot(
+        shift_isoch, synth_clst = synth_cl_plot.main(
             ip_list, [mod], err_lst, completeness, st_dist_mass,
             e_max, bin_mr, cmd_sel)
         # Store plotting parameters.

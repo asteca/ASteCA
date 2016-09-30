@@ -1,6 +1,6 @@
 
 import numpy as np
-import sc_likelihood
+import likelihood
 
 
 def main(lkl_method, e_max, bin_mass_ratio, err_lst, obs_clust, ext_coefs,
@@ -45,7 +45,7 @@ def main(lkl_method, e_max, bin_mass_ratio, err_lst, obs_clust, ext_coefs,
                                          cols_interp[m_i][a_i]]
                             extra_pars = extra_pars_interp[m_i][a_i]
                             # Call likelihood function with m,a,e,d values.
-                            likel_val = sc_likelihood.main(
+                            lkl = likelihood.main(
                                 lkl_method, e_max, bin_mass_ratio,
                                 err_lst, obs_clust, completeness,
                                 st_d_bin_mr, isochrone, extra_pars,
@@ -53,7 +53,7 @@ def main(lkl_method, e_max, bin_mass_ratio, err_lst, obs_clust, ext_coefs,
                             # Store the likelihood for each synthetic
                             # cluster.
                             model_done[0].append(model)
-                            model_done[1].append(likel_val)
+                            model_done[1].append(lkl)
 
                             # Print percentage done.
                             i += 1
