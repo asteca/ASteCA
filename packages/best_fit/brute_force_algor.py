@@ -27,10 +27,6 @@ def main(lkl_method, e_max, bin_mass_ratio, err_lst, obs_clust, ext_coefs,
         # Iterate through all ages.
         for a_i, a in enumerate(a_lst):
 
-            # # Age-mass relation.
-            # age_mass = 10 ** (1.8 * a - 12.8)
-            # mass_lst = [age_mass]
-
             # Iterate through all extinction values.
             for e in e_lst:
 
