@@ -33,11 +33,10 @@ def tolstoy(Q, obs_clust):
     else:
 
         # Unpack observed cluster with squared errors and membership
-        # probabilities separated into list.
+        # probabilities.
         P, mem_probs = obs_clust
 
         # Store synthetic clusters as array.
-        # syn_arr = np.array(zip(*(zip(*obs_arr)[:-2])))  # Observed cluster.
         syn_arr = np.array(zip(*Q))
         cl_stars_probs = []
 
@@ -49,10 +48,25 @@ def tolstoy(Q, obs_clust):
 
         # Small value used to replace zeros.
         epsilon = 1e-10
-        for star in P:
-            # Squares sum of errors.
-            e_col_2 = np.maximum(star[5] + Q[1], epsilon)
-            e_mag_2 = np.maximum(star[3] + Q[3], epsilon)
+        # For each observed star.
+        for o_st in P:
+            # star = [photom_dimension_1, photom_dimension_2, ...]
+            # photom_dimension_X = [mag/col, e_mag/col]
+
+            # For each synthetic star.
+            for s_st in Q:
+
+                # For each photometric dimension stored.
+                e_sum, p_delta = [], []
+                for i, phot_d in enumerate(o_st):
+                    # Sum of squared photometric errors, for this observed star,
+                    # and this photometric dimension.
+                    e_sum.append(o_st[1] + s_st)
+                    # Difference between the observed star's photometric mag/color,
+                    # and the 
+
+            # e_col_2 = np.maximum(star[5] + Q[1], epsilon)
+            # e_mag_2 = np.maximum(star[3] + Q[3], epsilon)
             # star[4] & Q[0] = colors
             # star[2] & Q[2] = magnitudes
             B = np.square(star[4] - Q[0]) / e_col_2
@@ -62,26 +76,28 @@ def tolstoy(Q, obs_clust):
             # synthetic stars. Use 1e-10 to avoid nan and inf values in the
             # calculations that follow.
             cl_stars_probs.append(max(star_prob.sum(), epsilon))
+            import pdb; pdb.set_trace()  # breakpoint b2ee0bdc //
+
 
         # Weight probabilities for each cluster star.
         clust_prob = cl_stars_probs * mem_probs / len(syn_arr)
 
         # Final score: sum log likelihoods for each star in cluster.
-        likelihood = -sum(np.log(np.asarray(clust_prob[0])))
+        tolstoy_lkl = -sum(np.log(np.asarray(clust_prob[0])))
 
         # n, p = len(P), len(syn_arr)
 
         # BIC
-        # likelihood = 2 * likelihood + p * np.log(n)
+        # tolstoy_lkl = 2 * tolstoy_lkl + p * np.log(n)
 
         # AIC_c
         # if (n - p) != 1:
-        #     likelihood = 2 * likelihood + 2 * p + \
+        #     tolstoy_lkl = 2 * tolstoy_lkl + 2 * p + \
         #     (2 * p) * (p + 1) / (n - p - 1)
         # else:
-        #     likelihood = 2 * likelihood + 2 * p
+        #     tolstoy_lkl = 2 * tolstoy_lkl + 2 * p
 
-        # print n, p, likelihood
+        # print n, p, tolstoy_lkl
         # import matplotlib.pyplot as plt
         # fig = plt.figure()
         # ax1 = fig.add_subplot(1, 2, 1)
@@ -90,7 +106,7 @@ def tolstoy(Q, obs_clust):
         # ax2.scatter(Q[0], Q[2], c='b')
         # text = 'N = {}'.format(len(zip(*P)[4]))
         # ax1.text(0.6, 0.9, text, transform=ax1.transAxes)
-        # text1 = 'L = {:.2f}\n'.format(likelihood)
+        # text1 = 'L = {:.2f}\n'.format(tolstoy_lkl)
         # text2 = 'N = {}'.format(len(syn_arr))
         # text = text1 + text2
         # ax2.text(0.5, 0.9, text, transform=ax2.transAxes)
@@ -99,7 +115,7 @@ def tolstoy(Q, obs_clust):
         # fig.subplots_adjust(hspace=1)
         # plt.show()
 
-    return likelihood
+    return tolstoy_lkl
 
 
 def dolphin_plot(Q, P, b_rx, b_ry, cl_histo, syn_histo, likel):
@@ -176,7 +192,7 @@ def dolphin_plot(Q, P, b_rx, b_ry, cl_histo, syn_histo, likel):
     plt.show()
 
 
-def dolphin(Q, P):
+def dolphin(Q, obs_clust):
     '''
     Takes a synthetic cluster, compares it to the observed cluster and
     returns the weighted (log) likelihood value.
@@ -189,9 +205,9 @@ def dolphin(Q, P):
     else:
 
         # Observed cluster's histogram.
-        cl_histo = P[0]
+        cl_histo = obs_clust[0]
         # Bin edges for each dimension.
-        b_rx, b_ry = P[1]
+        b_rx, b_ry = obs_clust[1]
 
         # with timeblock("  Histodd"):
         # Magnitude and color for the synthetic cluster.

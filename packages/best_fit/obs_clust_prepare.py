@@ -5,25 +5,21 @@ from ..decont_algors.local_cell_clean import bin_edges_f
 
 def main(memb_prob_avrg_sort, lkl_method, bin_method):
     '''
-    Prepare observed cluster array here to save time when the algorithm to
+    Prepare observed cluster array here to save time before the algorithm to
     find the best synthetic cluster fit is used.
     '''
     if lkl_method == 'tolstoy':
-        # Remove IDs and re-pack converted to array.
-        obs_cl = np.array(zip(*zip(*memb_prob_avrg_sort)[1:]), dtype=float)
-
-        # Square errors and separate membership probabilities. Done here so
-        # as to not repeat the same calculations each time a new synthetic
-        # cluster is checked.
-        P = np.split(obs_cl, 7, axis=1)
-
-        # Square errors in color and magnitude. Store membership probabilities
-        # separately.
-        P[3], P[5], mem_probs = np.square(P[3]), np.square(P[5]), \
-            np.asarray(P[6])
+        # Extract photometric data, and membership probabilities.
+        # Square errors here to not repeat the same calculations each time a
+        # new synthetic cluster is checked.
+        mags = zip(*zip(*memb_prob_avrg_sort)[3])
+        e_mags = np.square(zip(*zip(*memb_prob_avrg_sort)[4]))
+        cols = zip(*zip(*memb_prob_avrg_sort)[5])
+        e_cols = np.square(zip(*zip(*memb_prob_avrg_sort)[6]))
+        mem_probs = zip(*memb_prob_avrg_sort)[7]
 
         # Pass observed cluster data.
-        obs_clust = [np.hstack(P), mem_probs]
+        obs_clust = [mags, e_mags, cols, e_cols, mem_probs]
 
     else:
         # Remove ID's (to make entire array of floats) and zip.
