@@ -11,7 +11,6 @@ def main(isoch_moved, max_mag):
     # Sort isochrone according to magnitude values (min to max).
     # with timeblock(" cut1"):
     isoch_sort = zip(*sorted(zip(*isoch_moved), key=lambda x: x[1]))
-    # Now remove values beyond max_mag (= completeness[0]).
     # Get index of closest mag value to max_mag.
     # with timeblock(" cut2"):
     max_indx = min(range(len(isoch_sort[1])), key=lambda i:

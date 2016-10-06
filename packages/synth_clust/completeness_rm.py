@@ -5,8 +5,9 @@ import itertools
 
 def main(isoch_binar, completeness):
     '''
-    Remove a number of stars according to the percentages of star loss find in
-    get_completeness for the real observation.
+    Remove a number of stars according to the percentages of star loss found in
+    the mag_completeness function of the luminosity module, for the real
+    observation.
     '''
     # If stars exist in the isochrone beyond the completeness magnitude
     # level, then apply the removal of stars. Otherwise, skip it.
@@ -21,7 +22,7 @@ def main(isoch_binar, completeness):
         di = np.around((synth_mag_hist[completeness[2]:] -
                         (n1 / p1) * np.asarray(pi)), 0)
 
-        # Store indexes of *all* elements in isoch_m_d whose magnitude
+        # Store indexes of *all* elements in isoch_binar whose magnitude
         # value falls between the ranges given.
         c_indx = np.searchsorted(completeness[1][completeness[2]:],
                                  isoch_binar[1], side='left')
@@ -38,7 +39,7 @@ def main(isoch_binar, completeness):
 
         # Pick a number (given by the list 'di') of random elements in
         # each range. Those are the indexes of the elements that
-        # should be removed from the three sub-lists.
+        # should be removed from the sub-lists.
         rem_indx = []
         for indx, num in enumerate(di):
             if rang_indx[indx].any() and len(rang_indx[indx]) >= num:
@@ -52,7 +53,7 @@ def main(isoch_binar, completeness):
         # with reverse=True inverts them so we don't change the
         # indexes of the elements in the lists after removing them.
         d_i = sorted(list(itertools.chain(*rem_indx)), reverse=True)
-        # Remove those selected indexes from the three sub-lists.
+        # Remove those selected indexes from the sub-lists.
         isoch_compl = np.delete(np.asarray(isoch_binar), d_i, axis=1)
     else:
         isoch_compl = np.asarray(isoch_binar)

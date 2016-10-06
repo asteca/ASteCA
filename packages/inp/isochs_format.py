@@ -36,16 +36,16 @@ def read_line_start(met_f, line_start):
             # following line.
             if line.startswith(line_start):
                 # Line found, split into column names.
-                l = f_iso.next().split()
+                ls = f_iso.next().split()
                 # Remove first element from list, the comment character.
-                if l[0] == '#':
-                    del l[0]
+                if ls[0] == '#':
+                    del ls[0]
                 else:
                     print("  WARNING: theoretical isochrones are not\n"
                           "  formatted as expected!")
                 break
 
-    return l
+    return ls
 
 
 def cmd_common_ids(l):

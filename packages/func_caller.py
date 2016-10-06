@@ -19,7 +19,7 @@ from structure import cluster_area
 from structure import field_regions
 from phot_analysis import members_number
 from phot_analysis import contamination_index
-from phot_analysis import luminosity_func
+from phot_analysis import luminosity
 from phot_analysis import integrated_mag
 from phot_analysis import kde_pvalue
 from decont_algors import bayesian_da
@@ -102,7 +102,7 @@ def main(cl_file, pd):
     # make_A_plot.main(npd, cld, pd, **clp)
 
     # Get luminosity function and completeness level for each magnitude bin.
-    clp = luminosity_func.main(clp, **cld)
+    clp = luminosity.main(clp, **cld)
 
     # Calculate integrated magnitude.
     clp = integrated_mag.main(clp, **pd)
