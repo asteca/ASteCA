@@ -81,7 +81,7 @@ def main(err_lst, completeness, st_dist, isochrone, extra_pars, ext_coefs,
             # Assignment of binarity.
             # with timeblock("binar"):
             isoch_binar = binarity.main(isoch_mass, isoch_cut, bin_frac,
-                                   bin_mass_ratio, cmd_sel)
+                                        bin_mass_ratio)
 
             # Completeness limit removal of stars.
             # with timeblock("compl"):

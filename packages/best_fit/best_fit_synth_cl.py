@@ -49,8 +49,8 @@ def params_errors(ip_list, ga_params, err_lst, memb_prob_avrg_sort,
 
 
 def main(clp, bf_flag, er_params, bf_params, IMF_name, m_high, bin_mr,
-         ga_params, param_values, mags_interp, cols_interp, extra_pars_interp,
-         all_syst_filters, filters, colors, **kwargs):
+         ga_params, param_values, all_syst_filters, filters, colors,
+         theor_tracks, **kwargs):
     '''
     Perform a best fitting process to find the cluster's fundamental
     parameters.
@@ -87,8 +87,7 @@ def main(clp, bf_flag, er_params, bf_params, IMF_name, m_high, bin_mr,
             # Brute force algorithm.
             isoch_fit_params = brute_force_algor.main(
                 lkl_method, e_max, bin_mr, err_lst, obs_clust, ext_coefs,
-                completeness, param_values, mags_interp, cols_interp,
-                extra_pars_interp, st_dist_mass)
+                completeness, param_values, theor_tracks, st_dist_mass)
 
         elif best_fit_algor == 'genet':
 
