@@ -192,7 +192,7 @@ def binarity(isoch_mass, isoch_cut, bin_frac, bin_mass_ratio, cmd_sel):
     '''
     Randomly select a fraction of stars to be binaries.
     '''
-    # Indexes of the randomly selected stars in isoch_m_d.
+    # Indexes of the randomly selected stars in isoch_mass.
     bin_indxs = random.sample(range(len(isoch_mass[0])),
                               int(bin_frac * len(isoch_mass[0])))
 
@@ -202,7 +202,7 @@ def binarity(isoch_mass, isoch_cut, bin_frac, bin_mass_ratio, cmd_sel):
     m1 = np.asarray(isoch_mass[2][bin_indxs])
     # Secondary masses.
     mass_bin0 = np.random.uniform(bin_mass_ratio * m1, m1)
-    # This prevents a rare error where apparently mass_bin0 is *not* a float.
+    # This prevents a rare error where apparently mass_bin0 is a float.
     if type(mass_bin0) is not float:
 
         # If any secondary mass falls outside of the lower isochrone's mass
