@@ -22,7 +22,7 @@ def arrange_filters(isoch_list, all_syst_filters, filters, colors, **kwargs):
         fi.append(all_filts.index(f[1]))
     # Create list of theoretical magnitudes, in the same orders as they are
     # read from the cluster's data file.
-    mags_the = []
+    mags_theor = []
     for met in isoch_list:
         m = []
         for age in met:
@@ -30,7 +30,7 @@ def arrange_filters(isoch_list, all_syst_filters, filters, colors, **kwargs):
             for i in fi:
                 a.append(age[i])
             m.append(a)
-        mags_the.append(m)
+        mags_theor.append(m)
 
     # Store the index of each filter for each color read from data, as they
     # are stored in 'isoch_list'.
@@ -42,7 +42,7 @@ def arrange_filters(isoch_list, all_syst_filters, filters, colors, **kwargs):
         fci.append(ci)
     # Create list of theoretical colors, in the same orders as they are
     # read from the cluster's data file.
-    cols_the = []
+    cols_theor = []
     for met in isoch_list:
         m = []
         for age in met:
@@ -52,12 +52,34 @@ def arrange_filters(isoch_list, all_syst_filters, filters, colors, **kwargs):
                 # 'params_input.dat'.
                 a.append(np.array(age[ic[0]]) - np.array(age[ic[1]]))
             m.append(a)
-        cols_the.append(m)
+        cols_theor.append(m)
 
-    return mags_the, cols_the
+    # Create list of theoretical colors, in the same orders as they are
+    # read from the cluster's data file.
+    # mags_cols_theor = [met1, met2, ..., metN]
+    # metX = [age1, age2, ..., age_M]
+    # ageX = [color1, color2, ..., colorP]
+    # colorX = [filter1, filter2], such that: color = filter1 - filter2
+    mags_cols_theor = []
+    for met in isoch_list:
+        m = []
+        for age in met:
+            a = []
+            # For each color defined.
+            for ic in fci:
+                # For each filter of this color.
+                filts = []
+                for f in ic:
+                    # Store each magnitude for each color defined.
+                    filts.append(age[f])
+                a.append(filts)
+            m.append(a)
+        mags_cols_theor.append(m)
+
+    return mags_theor, cols_theor, mags_cols_theor
 
 
-def interp_isoch_data(data, N=2000):
+def interp_isoch_data(data, data_frmt=None, N=2000):
     '''
     Interpolate extra values for all the parameters in the theoretic
     isochrones.
@@ -70,9 +92,18 @@ def interp_isoch_data(data, N=2000):
         for age in met:
             a = []
             # For each filter/color/extra parameter in list.
-            for f in age:
-                t, xp = np.linspace(0, 1, N), np.linspace(0, 1, len(f))
-                a.append(np.interp(t, xp, f))
+            for fce in age:
+                # This list, unlike the others, contains one more level of
+                # sub-lists below: one for each color defined.
+                if data_frmt == 'mags_cols':
+                    fc = []
+                    for f in fce:
+                        t, xp = np.linspace(0, 1, N), np.linspace(0, 1, len(f))
+                        fc.append(np.interp(t, xp, f))
+                    a.append(fc)
+                else:
+                    t, xp = np.linspace(0, 1, N), np.linspace(0, 1, len(fce))
+                    a.append(np.interp(t, xp, fce))
             m.append(a)
         interp_data.append(m)
 
@@ -98,11 +129,15 @@ def main(pd, met_f_filter, age_values):
     # Take the synthetic data from the unique filters read, create the
     # necessary colors, and position the magnitudes and colors in the
     # same sense they are read from the cluster's data file.
-    mags_the, cols_the = arrange_filters(isoch_list, **pd)
+    # The mags_cols_theor list contains the magnitudes used to create the
+    # defined colors. This is necessary to properly add binarity to the
+    # synthetic clusters later on.
+    mags_theor, cols_theor, mags_cols_theor = arrange_filters(isoch_list, **pd)
 
     # Interpolate extra points into all the isochrones.
-    pd['mags_interp'] = interp_isoch_data(mags_the)
-    pd['cols_interp'] = interp_isoch_data(cols_the)
+    pd['mags_interp'] = interp_isoch_data(mags_theor)
+    pd['cols_interp'] = interp_isoch_data(cols_theor)
+    pd['mags_cols_interp'] = interp_isoch_data(mags_cols_theor, 'mags_cols')
     pd['extra_pars_interp'] = interp_isoch_data(extra_pars)
 
     # Obtain number of models in the solutions space.
