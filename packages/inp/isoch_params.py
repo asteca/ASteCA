@@ -58,8 +58,8 @@ def arrange_filters(isoch_list, all_syst_filters, filters, colors, **kwargs):
     # read from the cluster's data file.
     # mags_cols_theor = [met1, met2, ..., metN]
     # metX = [age1, age2, ..., age_M]
-    # ageX = [color1, color2, ..., colorP]
-    # colorX = [filter1, filter2], such that: color = filter1 - filter2
+    # ageX = [filter1, filter2, filter3, filter4, ..., filterQ]
+    # such that: color1 = filter1 - filter2, color1 = filter3 - filter4, ...
     mags_cols_theor = []
     for met in isoch_list:
         m = []
@@ -68,18 +68,15 @@ def arrange_filters(isoch_list, all_syst_filters, filters, colors, **kwargs):
             # For each color defined.
             for ic in fci:
                 # For each filter of this color.
-                filts = []
-                for f in ic:
-                    # Store each magnitude for each color defined.
-                    filts.append(age[f])
-                a.append(filts)
+                a.append(age[ic[0]])
+                a.append(age[ic[1]])
             m.append(a)
         mags_cols_theor.append(m)
 
     return mags_theor, cols_theor, mags_cols_theor
 
 
-def interp_isoch_data(data, data_frmt=None, N=2000):
+def interp_isoch_data(data, N=2000):
     '''
     Interpolate extra values for all the parameters in the theoretic
     isochrones.
@@ -93,17 +90,8 @@ def interp_isoch_data(data, data_frmt=None, N=2000):
             a = []
             # For each filter/color/extra parameter in list.
             for fce in age:
-                # This list, unlike the others, contains one more level of
-                # sub-lists below: one for each color defined.
-                if data_frmt == 'mags_cols':
-                    fc = []
-                    for f in fce:
-                        t, xp = np.linspace(0, 1, N), np.linspace(0, 1, len(f))
-                        fc.append(np.interp(t, xp, f))
-                    a.append(fc)
-                else:
-                    t, xp = np.linspace(0, 1, N), np.linspace(0, 1, len(fce))
-                    a.append(np.interp(t, xp, fce))
+                t, xp = np.linspace(0, 1, N), np.linspace(0, 1, len(fce))
+                a.append(np.interp(t, xp, fce))
             m.append(a)
         interp_data.append(m)
 
@@ -134,11 +122,26 @@ def main(pd, met_f_filter, age_values):
     # synthetic clusters later on.
     mags_theor, cols_theor, mags_cols_theor = arrange_filters(isoch_list, **pd)
 
-    # Interpolate extra points into all the isochrones.
-    pd['mags_interp'] = interp_isoch_data(mags_theor)
-    pd['cols_interp'] = interp_isoch_data(cols_theor)
-    pd['mags_cols_interp'] = interp_isoch_data(mags_cols_theor, 'mags_cols')
-    pd['extra_pars_interp'] = interp_isoch_data(extra_pars)
+    # Interpolate extra points into all the filters, colors, filters of colors,
+    # and extra parameters (masses, etc)
+    a = interp_isoch_data(mags_theor)
+    b = interp_isoch_data(cols_theor)
+    c = interp_isoch_data(mags_cols_theor)
+    d = interp_isoch_data(extra_pars)
+    # Create list structured as:
+    # theor_tracks = [m1, m2, .., mN]
+    # mX = [age1, age2, ..., ageM]
+    # ageX = [f1, f2, ..., c1, c2, ..., fc1, fc2, ..., m_ini, .., m_bol]
+    # where fX are the indivifual filters (mags), cX are the colors, fcX are
+    # the filters that make up the colors (where c1=(fc1-fc2), c2=(fc3-fc4)),
+    # and the final lists are the six extra parameters.
+    # Create empty lists for each metallicity, and empty sublists for each age.
+    theor_tracks = [[[] for _ in a[0]] for _ in a]
+    for l in [a, b, c, d]:
+        for i, mx in enumerate(l):
+            for j, ax in enumerate(mx):
+                theor_tracks[i][j] = theor_tracks[i][j] + ax
+    pd['theor_tracks'] = theor_tracks
 
     # Obtain number of models in the solutions space.
     lens = [len(_) for _ in pd['param_values']]
