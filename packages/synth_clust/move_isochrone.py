@@ -32,7 +32,6 @@ def main(isochrone, e, d, ext_coefs, N_fc):
         # Ax = cx * Av
         #
         Ax = (ext_coefs[fi][0] + ext_coefs[fi][1] / Rv) * Av
-        print 'filter', Ax / Av
         iso_moved.append(np.array(mag) + d + Ax)
 
     # Move colors.
@@ -45,14 +44,12 @@ def main(isochrone, e, d, ext_coefs, N_fc):
         #
         Ex = ((ext_coefs[Nf + ci][0][0] + ext_coefs[Nf + ci][0][1] / Rv) -
               (ext_coefs[Nf + ci][1][0] + ext_coefs[Nf + ci][1][1] / Rv)) * Av
-        print 'color', Ex / e
         iso_moved.append(np.array(col) + Ex)
 
     # Move filters that make up the colors.
     for fci, fcol in enumerate(isochrone[(Nf + Nc):((Nf + Nc) + (Nc * 2))]):
         Ax = (ext_coefs[(Nf + Nc) + fci][0] +
               ext_coefs[(Nf + Nc) + fci][1] / Rv) * Av
-        print 'filt_c', Ax / Av
         iso_moved.append(np.array(fcol) + d + Ax)
 
     # Append the extra parameters, not affected by distance/reddening.
