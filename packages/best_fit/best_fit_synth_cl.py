@@ -49,8 +49,8 @@ def params_errors(ip_list, ga_params, err_lst, memb_prob_avrg_sort,
 
 
 def main(clp, bf_flag, er_params, bf_params, IMF_name, m_high, bin_mr,
-         ga_params, fundam_params, cmd_systs, all_syst_filters, filters, colors,
-         theor_tracks, **kwargs):
+         ga_params, fundam_params, cmd_systs, all_syst_filters, filters,
+         colors, theor_tracks, **kwargs):
     '''
     Perform a best fitting process to find the cluster's fundamental
     parameters.
@@ -64,6 +64,8 @@ def main(clp, bf_flag, er_params, bf_params, IMF_name, m_high, bin_mr,
     if bf_flag:
 
         print('Searching for optimal parameters.')
+        print filters
+        print colors
 
         obs_clust = obs_clust_prepare.main(
             memb_prob_avrg_sort, lkl_method, bin_method)
