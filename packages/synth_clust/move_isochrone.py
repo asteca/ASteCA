@@ -2,7 +2,7 @@
 import numpy as np
 
 
-def main(isochrone, e, d, ext_coefs):
+def main(isochrone, e, d, ext_coefs, N_fc):
     '''
     Receives an isochrone of a given age and metallicity and modifies
     its color and magnitude values according to given values for the extinction

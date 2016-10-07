@@ -144,7 +144,7 @@ def main(pd, met_f_filter, age_values):
     pd['theor_tracks'] = theor_tracks
 
     # Obtain number of models in the solutions space.
-    lens = [len(_) for _ in pd['param_values']]
+    lens = [len(_) for _ in pd['fundam_params']]
     total = reduce(lambda x, y: x * y, lens, 1)
     print(
         "Number of values per parameter:\n"

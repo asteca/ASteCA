@@ -9,14 +9,14 @@ def main(ip_list, isoch_fit_params, err_lst, completeness,
     # Generate shifted isochrone and synthetic cluster for plotting.
     '''
     # Get list of stored isochrones and their parameters.
-    isoch_list, param_values = ip_list[0], ip_list[1]
+    isoch_list, fundam_params = ip_list[0], ip_list[1]
     # Read best fit values for all parameters.
     m, a, e, d, mass, binar_f = isoch_fit_params[0]
     # Find indexes for metallicity and age. If indexes are not found due
     # to some difference in the significant figures, use the indexes
     # [0, 0] to prevent the code from halting.
     try:
-        m_i, a_i = param_values[0].index(m), param_values[1].index(a)
+        m_i, a_i = fundam_params[0].index(m), fundam_params[1].index(a)
     except:
         m_i, a_i = [0, 0]
     # Generate shifted best fit isochrone.

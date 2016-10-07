@@ -95,14 +95,14 @@ def mutation(cross_chrom, p_mut):
     return cross_chrom
 
 
-def decode(param_values, n_bin, p_delta, p_mins, mut_chrom):
+def decode(fundam_params, n_bin, p_delta, p_mins, mut_chrom):
     '''
     Decode the chromosomes into its real values to be evaluated by the
     objective function.
     '''
 
     # Initialize empty list with as many sub-lists as parameters.
-    p_lst = [[] for _ in range(len(param_values))]
+    p_lst = [[] for _ in range(len(fundam_params))]
 
     for chrom in mut_chrom:
         # Split chromosome string.
@@ -117,7 +117,7 @@ def decode(param_values, n_bin, p_delta, p_mins, mut_chrom):
             # Map integer to the real parameter value.
             p_r = p_mins[i] + (b2i[i] * p_del / (2 ** n_bin - 1))
             # Find the closest value in the parameters list.
-            p = min(param_values[i], key=lambda x: abs(x - p_r))
+            p = min(fundam_params[i], key=lambda x: abs(x - p_r))
             # Store this last value.
             p_lst[i].append(p)
 
@@ -161,7 +161,7 @@ def selection(generation, breed_prob):
 
 
 def evaluation(lkl_method, e_max, bin_mass_ratio, cmd_sel, err_lst, obs_clust,
-               completeness, isoch_list, param_values, p_lst, st_dist_mass,
+               completeness, isoch_list, fundam_params, p_lst, st_dist_mass,
                model_done):
     '''
     Evaluate each model in the objective function to obtain the fitness of
@@ -173,8 +173,8 @@ def evaluation(lkl_method, e_max, bin_mass_ratio, cmd_sel, err_lst, obs_clust,
     for model in zip(*p_lst):
 
         # Metallicity and age indexes to identify isochrone.
-        m_i = param_values[0].index(model[0])
-        a_i = param_values[1].index(model[1])
+        m_i = fundam_params[0].index(model[0])
+        a_i = fundam_params[1].index(model[1])
         isochrone = isoch_list[m_i][a_i]
 
         # Call likelihood function for this model.
@@ -221,27 +221,27 @@ def evaluation(lkl_method, e_max, bin_mass_ratio, cmd_sel, err_lst, obs_clust,
     return generation, lkl_lst, model_done
 
 
-def random_population(param_values, n_ran):
+def random_population(fundam_params, n_ran):
     '''
     Generate a random set of parameter values to use as a random population.
     '''
     # Pick n_ran initial random solutions from each list storing all the
     # possible parameters values. These lists store real values.
     p_lst = []
-    for param in param_values:
+    for param in fundam_params:
         p_lst.append([random.choice(param) for _ in range(n_ran)])
 
     return p_lst
 
 
-def ext_imm(best_sol, param_values, n_pop):
+def ext_imm(best_sol, fundam_params, n_pop):
     '''
     Append a new random population to the best solution so far.
     '''
 
     # Generate (n_pop-n_el) random solutions.
     n_ran = n_pop - len(best_sol)
-    p_lst_r = random_population(param_values, n_ran)
+    p_lst_r = random_population(fundam_params, n_ran)
 
     # Append immigrant random population to the best solution.
     generation_ei = best_sol + zip(*p_lst_r)
@@ -249,20 +249,20 @@ def ext_imm(best_sol, param_values, n_pop):
     return generation_ei
 
 
-def num_binary_digits(param_values):
+def num_binary_digits(fundam_params):
     '''
     Store parameters ranges and calculate the minimum number of binary digits
     needed to encode the solutions.
     '''
 
     p_mins, p_delta = [], []
-    for param in param_values:
+    for param in fundam_params:
         p_mins.append(min(param))  # Used by the encode operator.
         # If delta is zero it means a single value is being used. Set delta
         # to a small value to avoid issues with Elitism operator.
         p_delta.append(max(max(param) - min(param), 1e-10))
 
-    p_interv = np.array([len(_) for _ in param_values])
+    p_interv = np.array([len(_) for _ in fundam_params])
 
     # Number of binary digits used to create the chromosomes.
     # The max function prevents an error when all parameter ranges are set to
@@ -280,14 +280,14 @@ def main(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
     '''
 
     # Unpack parameters that affect how the synthetic cluster is generated.
-    isoch_list, param_values = ip_list
+    isoch_list, fundam_params = ip_list
     n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es = ga_params
     # Check if n_pop is odd. If it is sum 1 to avoid conflict if cr_sel
     # '2P' was selected.
     n_pop += n_pop % 2
 
     # Get number of binary digits to use.
-    n_bin, p_delta, p_mins = num_binary_digits(param_values)
+    n_bin, p_delta, p_mins = num_binary_digits(fundam_params)
 
     # Fitness.
     # Rank-based breeding probability. Independent of the fitness values,
@@ -297,7 +297,7 @@ def main(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
                (n_pop * (n_pop + 1.)) for i in range(n_pop)]
 
     # *** Initial random population evaluation ***
-    p_lst_r = random_population(param_values, n_pop)
+    p_lst_r = random_population(fundam_params, n_pop)
 
     # Stores parameters of the solutions already processed and the likelihoods
     # obtained.
@@ -306,7 +306,7 @@ def main(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
     # Evaluate initial random solutions in the objective function.
     generation, lkl, model_done = evaluation(
         lkl_method, e_max, bin_mass_ratio, cmd_sel, err_lst, obs_clust,
-        completeness, isoch_list, param_values, p_lst_r, st_dist_mass,
+        completeness, isoch_list, fundam_params, p_lst_r, st_dist_mass,
         model_done)
 
     # Store best solution for passing along in the 'Elitism' block.
@@ -354,7 +354,7 @@ def main(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
         # *** Evaluation ***
         # Decode the chromosomes into solutions to form the new generation.
         # with timeblock("Decode"):
-        p_lst_d = decode(param_values, n_bin, p_delta, p_mins, mut_chrom)
+        p_lst_d = decode(fundam_params, n_bin, p_delta, p_mins, mut_chrom)
 
         # Elitism: make sure that the best n_el solutions from the previous
         # generation are passed unchanged into this next generation.
@@ -366,7 +366,7 @@ def main(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
         # with timeblock("Evaluation"):
         generation, lkl, model_done = evaluation(
             lkl_method, e_max, bin_mass_ratio, cmd_sel, err_lst, obs_clust,
-            completeness, isoch_list, param_values, p_lst_e, st_dist_mass,
+            completeness, isoch_list, fundam_params, p_lst_e, st_dist_mass,
             model_done)
 
         # *** Extinction/Immigration ***
@@ -400,7 +400,7 @@ def main(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
                     ext_imm_count = 0
 
                 # Apply Extinction/Immigration operator.
-                generation = ext_imm(best_sol, param_values, n_pop)
+                generation = ext_imm(best_sol, fundam_params, n_pop)
 
                 # Reset best solution counter.
                 best_sol_count = 0

@@ -25,20 +25,21 @@ import add_errors
 #############################################################
 
 
-def main(err_lst, completeness, st_dist, isochrone, extra_pars, ext_coefs,
-         synth_cl_params, e_max, bin_mass_ratio):
+def main(e_max, bin_mass_ratio, err_lst, completeness, st_dist_mass, isochrone,
+         ext_coefs, N_fc, synth_cl_params):
     '''
     Takes an isochrone and returns a synthetic cluster created according to
     a certain mass distribution.
     '''
 
-    # Unpack synthetic cluster parameters.
+    # Unpack synthetic cluster parameters. The first two elements are the
+    # metallicity and the age, which are already incorporated in the selected
+    # isochrone.
     e, d, M_total, bin_frac = synth_cl_params[2:]
 
     # with timeblock("move"):
     # Move theoretical isochrone using the values 'e' and 'd'.
-    isoch_moved = move_isochrone.main(isochrone, e, d, ext_coefs) +\
-        extra_pars
+    isoch_moved = move_isochrone.main(isochrone, e, d, ext_coefs, N_fc)
 
     ##############################################################
     # # To generate a synthetic cluster with the full isochrone length,
@@ -62,7 +63,7 @@ def main(err_lst, completeness, st_dist, isochrone, extra_pars, ext_coefs,
         # Store mass distribution used to produce a synthetic cluster based on
         # a given theoretic isochrone.
         # with timeblock("mass_dist"):
-        mass_dist = mass_distribution.main(st_dist, M_total)
+        mass_dist = mass_distribution.main(st_dist_mass, M_total)
 
         # Interpolate masses in mass_dist into the isochrone rejecting those
         # masses that fall outside of the isochrone's mass range.

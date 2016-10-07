@@ -280,7 +280,7 @@ def mighell(Q, P):
 
 
 def main(lkl_method, e_max, bin_mass_ratio, err_lst, obs_clust,
-         completeness, st_dist_mass, isochrone, extra_pars, ext_coefs,
+         completeness, st_dist_mass, isochrone, ext_coefs, N_fc,
          synth_cl_params):
     '''
     Call with an isochrone of given values for metallicity and age and supply
@@ -292,9 +292,9 @@ def main(lkl_method, e_max, bin_mass_ratio, err_lst, obs_clust,
     # Generate synthetic cluster using this "moved" isochrone and a mass
     # distribution.
     # with timeblock("synth_cl"):
-    synth_clust = synth_cluster.main(err_lst, completeness, st_dist_mass,
-                                     isochrone, extra_pars, ext_coefs,
-                                     synth_cl_params, e_max, bin_mass_ratio)
+    synth_clust = synth_cluster.main(
+        e_max, bin_mass_ratio, err_lst, completeness, st_dist_mass, isochrone,
+        ext_coefs, N_fc, synth_cl_params)
 
     # Call function to obtain the likelihood by comparing the synthetic cluster
     # with the observed cluster.

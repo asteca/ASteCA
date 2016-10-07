@@ -86,8 +86,9 @@ def check_get(pd):
         # parameters, and available metallicities and ages.
         param_ranges, met_f_filter, met_values, age_values =\
             ranges_files_check(pd)
-        # Store parameters.
-        pd['param_values'] = [met_values, age_values] + param_ranges[2:]
+        # Store all the accepted values for the metallicity and age, and the
+        # ranges of accepted values for the rest of the fundamental parameters.
+        pd['fundam_params'] = [met_values, age_values] + param_ranges[2:]
 
         # Store all isochrones in all the metallicity files.
         pd = isoch_params.main(pd, met_f_filter, age_values)

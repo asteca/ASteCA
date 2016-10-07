@@ -49,7 +49,7 @@ def params_errors(ip_list, ga_params, err_lst, memb_prob_avrg_sort,
 
 
 def main(clp, bf_flag, er_params, bf_params, IMF_name, m_high, bin_mr,
-         ga_params, param_values, cmd_systs, all_syst_filters, filters, colors,
+         ga_params, fundam_params, cmd_systs, all_syst_filters, filters, colors,
          theor_tracks, **kwargs):
     '''
     Perform a best fitting process to find the cluster's fundamental
@@ -78,6 +78,9 @@ def main(clp, bf_flag, er_params, bf_params, IMF_name, m_high, bin_mr,
         # because the array only depends on the IMF selected.
         st_dist_mass = imf.main(IMF_name, m_high)
 
+        # Store the number of defined filters and colors.
+        N_fc = [len(filters), len(colors)]
+
         # Call algorithm to calculate the likelihoods for the set of
         # isochrones and return the best fitting parameters.
         if best_fit_algor == 'brute':
@@ -87,8 +90,9 @@ def main(clp, bf_flag, er_params, bf_params, IMF_name, m_high, bin_mr,
                 else lkl_method))
             # Brute force algorithm.
             isoch_fit_params = brute_force_algor.main(
-                lkl_method, e_max, bin_mr, err_lst, obs_clust, ext_coefs,
-                completeness, param_values, theor_tracks, st_dist_mass)
+                lkl_method, e_max, bin_mr, err_lst, completeness,
+                fundam_params, obs_clust, theor_tracks, ext_coefs,
+                st_dist_mass, N_fc)
 
         elif best_fit_algor == 'genet':
 

@@ -3,24 +3,24 @@ import numpy as np
 import likelihood
 
 
-def main(lkl_method, e_max, bin_mass_ratio, err_lst, obs_clust, ext_coefs,
-         completeness, param_values, mags_interp, cols_interp,
-         extra_pars_interp, st_d_bin_mr):
+def main(lkl_method, e_max, bin_mr, err_lst, completeness, fundam_params,
+         obs_clust, theor_tracks, ext_coefs, st_dist_mass, N_fc):
     '''
     Brute force algorithm that computes the likelihoods for *all* the defined
     isochrones.
     '''
     # Unpack parameters values.
-    m_lst, a_lst, e_lst, d_lst, mass_lst, bin_lst = param_values
+    m_lst, a_lst, e_lst, d_lst, mass_lst, bin_lst = fundam_params
 
     # Initiate list that will hold the likelihood values telling us how well
     # each isochrone (synthetic cluster) fits the observed data.
     model_done = [[], []]
 
+    # Count the number of total models/solutions to explore.
     tot_sols, i = reduce(lambda x, y: x * y,
-                         [len(_) for _ in param_values], 1), 0
-
+                         [len(_) for _ in fundam_params], 1), 0
     milestones = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+
     # Iterate through all metallicities.
     for m_i, m in enumerate(m_lst):
 
@@ -30,7 +30,7 @@ def main(lkl_method, e_max, bin_mass_ratio, err_lst, obs_clust, ext_coefs,
             # Iterate through all extinction values.
             for e in e_lst:
 
-                # Iterate through all distance modulus.
+                # Iterate through all distance moduli.
                 for d in d_lst:
 
                     # Iterate through all masses.
@@ -41,15 +41,12 @@ def main(lkl_method, e_max, bin_mass_ratio, err_lst, obs_clust, ext_coefs,
                             model = [m, a, e, d, mass, bin_frac]
 
                             # Call likelihood function with m,a,e,d values.
-                            isochrone = [mags_interp[m_i][a_i],
-                                         cols_interp[m_i][a_i]]
-                            extra_pars = extra_pars_interp[m_i][a_i]
+                            isochrone = theor_tracks[m_i][a_i]
                             # Call likelihood function with m,a,e,d values.
                             lkl = likelihood.main(
-                                lkl_method, e_max, bin_mass_ratio,
-                                err_lst, obs_clust, completeness,
-                                st_d_bin_mr, isochrone, extra_pars,
-                                ext_coefs, model)
+                                lkl_method, e_max, bin_mr, err_lst, obs_clust,
+                                completeness, st_dist_mass, isochrone,
+                                ext_coefs, N_fc, model)
                             # Store the likelihood for each synthetic
                             # cluster.
                             model_done[0].append(model)
