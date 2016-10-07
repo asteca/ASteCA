@@ -49,7 +49,7 @@ def params_errors(ip_list, ga_params, err_lst, memb_prob_avrg_sort,
 
 
 def main(clp, bf_flag, er_params, bf_params, IMF_name, m_high, bin_mr,
-         ga_params, param_values, all_syst_filters, filters, colors,
+         ga_params, param_values, cmd_systs, all_syst_filters, filters, colors,
          theor_tracks, **kwargs):
     '''
     Perform a best fitting process to find the cluster's fundamental
@@ -71,7 +71,8 @@ def main(clp, bf_flag, er_params, bf_params, IMF_name, m_high, bin_mr,
         syn_b_edges = obs_clust[1] if lkl_method == 'dolphin' else []
 
         # Obtain extinction coefficients.
-        ext_coefs = extin_coefs.main(all_syst_filters, filters, colors)
+        ext_coefs = extin_coefs.main(
+            cmd_systs, all_syst_filters, filters, colors)
 
         # Obtain mass distribution using the selected IMF. We run it once
         # because the array only depends on the IMF selected.
