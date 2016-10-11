@@ -36,4 +36,4 @@ def main(st_dist, M_total):
             # Reset parameters and move on to the next interval.
             N_st_add, m_low = 0., m_up
 
-    return dist_mass
+    return np.asarray(dist_mass)

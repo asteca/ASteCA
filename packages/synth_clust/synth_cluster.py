@@ -68,7 +68,7 @@ def main(e_max, bin_mass_ratio, err_lst, completeness, st_dist_mass, isochrone,
         # Interpolate masses in mass_dist into the isochrone rejecting those
         # masses that fall outside of the isochrone's mass range.
         # with timeblock("interp"):
-        isoch_mass = mass_interp.main(isoch_cut, mass_dist)
+        isoch_mass = mass_interp.main(isoch_cut, mass_dist, N_fc)
 
         if isoch_mass.any():
 
@@ -82,7 +82,7 @@ def main(e_max, bin_mass_ratio, err_lst, completeness, st_dist_mass, isochrone,
             # Assignment of binarity.
             # with timeblock("binar"):
             isoch_binar = binarity.main(isoch_mass, isoch_cut, bin_frac,
-                                        bin_mass_ratio)
+                                        bin_mass_ratio, N_fc)
 
             # Completeness limit removal of stars.
             # with timeblock("compl"):

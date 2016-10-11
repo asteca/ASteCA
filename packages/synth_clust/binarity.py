@@ -1,63 +1,87 @@
 
 import numpy as np
 import random
+import mass_interp
 
 
-def main(isoch_mass, isoch_cut, bin_frac, bin_mass_ratio):
+def mag_combine(m1, m2):
+    """
+    Combine two magnitudes.
+    """
+    return -2.5 * np.log10(10 ** (-0.4 * m1) + 10 ** (-0.4 * m2))
+
+
+def main(isoch_mass, isoch_cut, bin_frac, bin_mass_ratio, N_fc):
     '''
     Randomly select a fraction of stars to be binaries.
     '''
-    # Indexes of the randomly selected stars in isoch_mass.
-    bin_indxs = random.sample(range(len(isoch_mass[0])),
-                              int(bin_frac * len(isoch_mass[0])))
+    # If the binary fraction is zero, skip whole process.
+    if bin_frac > 0.:
+        # Indexes of the randomly selected stars in isoch_mass.
+        bin_indxs = random.sample(range(len(isoch_mass[0])),
+                                  int(bin_frac * len(isoch_mass[0])))
 
-    # Calculate the secondary masses of these binary stars between
-    # bin_mass_ratio*m1 and m1, where m1 is the primary mass.
-    # Primary masses.
-    m1 = np.asarray(isoch_mass[2][bin_indxs])
-    # Secondary masses.
-    mass_bin0 = np.random.uniform(bin_mass_ratio * m1, m1)
-    # This prevents a rare error where apparently mass_bin0 is a float.
-    if type(mass_bin0) is not float:
-
+        # Calculate the secondary masses of these binary stars between
+        # bin_mass_ratio*m1 and m1, where m1 is the primary mass.
+        # Index if m_ini.
+        m_ini = N_fc[0] + N_fc[1] + 2 * N_fc[1]
+        # Primary masses.
+        m1 = np.asarray(isoch_mass[m_ini][bin_indxs])
+        # Secondary masses.
+        mass_bin0 = np.random.uniform(bin_mass_ratio * m1, m1)
         # If any secondary mass falls outside of the lower isochrone's mass
         # range, change its value to the min value.
-        mass_bin = np.maximum(min(isoch_mass[2]), mass_bin0)
+        mass_bin = np.maximum(min(isoch_mass[m_ini]), mass_bin0)
 
         # Find color and magnitude values for each secondary star. This will
         # slightly change the values of the masses since they will be
         # assigned to the closest value found in the interpolated isochrone.
-        bin_isoch = mass_interp(isoch_cut, mass_bin)
+        bin_isoch = mass_interp.main(isoch_cut, mass_bin, N_fc)
 
-        # Obtain color, magnitude and masses for each binary system.
-        # Transform color to the second magnitude before obtaining
-        # the new binary magnitude.
-        if cmd_sel in {2, 5, 9}:
-            # E.g.: V vs (V-I)
-            mag2_iso = isoch_mass[1][bin_indxs] - isoch_mass[0][bin_indxs]
-            mag2_bin = bin_isoch[1] - bin_isoch[0]
-        else:
-            # E.g.: V vs (B-V)
-            mag2_iso = isoch_mass[0][bin_indxs] + isoch_mass[1][bin_indxs]
-            mag2_bin = bin_isoch[0] + bin_isoch[1]
-        col_mag_bin = -2.5 * np.log10(10 ** (-0.4 * mag2_iso) +
-                                      10 ** (-0.4 * mag2_bin))
-        # Magnitude in y axis.
-        mag_bin = -2.5 * np.log10(10 ** (-0.4 * isoch_mass[1][bin_indxs]) +
-                                  10 ** (-0.4 * bin_isoch[1]))
-        # Transform back first filter's magnitude into color.
-        if cmd_sel in {2, 5, 9}:
-            col_bin = mag_bin - col_mag_bin
-        else:
-            col_bin = col_mag_bin - mag_bin
+        # Calculate unresolved magnitude for each filter/magnitude defined.
+        mag_bin = []
+        for i, m in enumerate(isoch_mass[:N_fc[0]]):
+            mag_bin.append(mag_combine(m[bin_indxs], bin_isoch[i]))
 
-        # Add masses to obtain the system's mass.
-        mass_bin = isoch_mass[2][bin_indxs] + bin_isoch[2]
+        # Calculate unresolved color for each color defined.
+        # Lower/upper index where filters that make up colors start/finish.
+        fcl = N_fc[0] + N_fc[1]
+        fcu = fcl + 2 * N_fc[1]
+        # Extract only the portion that contains the color filters.
+        filt_colors, bin_f_cols = isoch_mass[fcl:fcu], bin_isoch[fcl:fcu]
 
-        # Update array with new values of color, magnitude and masses.
-        for indx, i in enumerate(bin_indxs):
-            isoch_mass[0][i] = col_bin[indx]
-            isoch_mass[1][i] = mag_bin[indx]
-            isoch_mass[2][i] = mass_bin[indx]
+        # Filters composing the colors, i.e.: C = (f1 - f2).
+        f1, f2 = [], []
+        # The [::2] slice indicates even positions, starting from 0.
+        for m, bin_m in zip(*[filt_colors[::2], bin_f_cols[::2]]):
+            f1.append(mag_combine(m[bin_indxs], bin_m))
+        # The [1::2] slice indicates odd positions.
+        for m, bin_m in zip(*[filt_colors[1::2], bin_f_cols[1::2]]):
+            f2.append(mag_combine(m[bin_indxs], bin_m))
+
+        # Create the colors affected by binarity.
+        col_bin = []
+        for f_1, f_2 in zip(*[f1, f2]):
+            col_bin.append(f_1 - f_2)
+
+        # Add masses to obtain the binary system's mass.
+        mass_bin = isoch_mass[m_ini][bin_indxs] + bin_isoch[m_ini]
+
+        # Update array with new values of magnitudes, colors, and masses.
+        for i in range(N_fc[0]):
+            for indx, j in enumerate(bin_indxs):
+                isoch_mass[i][j] = mag_bin[indx]
+
+        for i in range(N_fc[0], N_fc[1]):
+            for indx, j in enumerate(bin_indxs):
+                isoch_mass[i][j] = col_bin[indx]
+
+        for indx, j in enumerate(bin_indxs):
+            isoch_mass[m_ini][j] = mass_bin[indx]
+
+        # for indx, i in enumerate(bin_indxs):
+        #     isoch_mass[0][i] = col_bin[indx]
+        #     isoch_mass[1][i] = mag_bin[indx]
+        #     isoch_mass[2][i] = mass_bin[indx]
 
     return isoch_mass

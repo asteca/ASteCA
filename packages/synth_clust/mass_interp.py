@@ -37,24 +37,22 @@ def find_closest(key, target):
     return idx
 
 
-def main(isoch_cut, mass_dist):
+def main(isoch_cut, mass_dist, N_fc):
     '''
     For each mass in the IMF mass distribution, find the star in the isochrone
     with the closest mass value and pass it forward.
     Masses that fall outside of the isochrone's mass range are rejected.
     '''
-    # Convert to arrays.
-    data, target = np.array(isoch_cut), np.array(mass_dist)
-
-    # Returns the indices that would sort the array (ie: the isochrone) with
-    # the minimum mass (hence the '2') value first.
+    # Returns the indices that would sort the isochrone with
+    # the minimum mass. This is why we use the 'm_ini' index.
     # From the isoch_cut_mag function, stars are ordered according to the
     # main magnitude from min to max.
-    order = data[2, :].argsort()
+    m_ini = N_fc[0] + N_fc[1] + 2 * N_fc[1]
+    order = isoch_cut[m_ini, :].argsort()
 
     # Returns an array with the mass values in the theoretical isochrone
     # ordered from min to max.
-    key = data[2, order]
+    key = isoch_cut[m_ini, order]
 
     ##########################################################################
     # # Uncomment this block to see how many stars are being discarded
@@ -63,20 +61,20 @@ def main(isoch_cut, mass_dist):
     # # entire isochrone (instead of one with a max-mag cut).
     # try:
     #     print 'Min, max mass values in isochrone: {:.3f}, {:.3f}'.format(
-    #         min(data[2]), max(data[2]))
-    #     print 'Total mass in mass_dist: {:.2f}'.format(sum(target))
+    #         min(isoch_cut[m_ini]), max(isoch_cut[m_ini]))
+    #     print 'Total mass in mass_dist: {:.2f}'.format(sum(mass_dist))
     #     # Masses out of boundary to the left, ie: smaller masses.
-    #     reject_min = target[(target < key[0])]
+    #     reject_min = mass_dist[(mass_dist < key[0])]
     #     print ("Rejected {} stars with masses in the range [{:.2f}, {:.2f}]"
     #         "\nTotal mass: {:.2f}".format(len(reject_min),
     #             min(reject_min), max(reject_min), sum(reject_min)))
     #     # Masses out of boundary to the right, ie: higher masses.
-    #     reject_max = target[(target > key[-1])]
+    #     reject_max = mass_dist[(mass_dist > key[-1])]
     #     print ("Rejected {} stars with masses in the range [{:.2f}, {:.2f}]"
     #         "\nTotal mass: {:.2f}".format(len(reject_max),
     #             min(reject_max), max(reject_max), sum(reject_max)))
     #     print 'Total mass in isochrone: {:0.2f}\n'.format(
-    #         sum(target) - sum(reject_min) - sum(reject_max))
+    #         sum(mass_dist) - sum(reject_min) - sum(reject_max))
     # except:
     #     pass
     # raw_input()
@@ -84,12 +82,12 @@ def main(isoch_cut, mass_dist):
 
     # Reject masses in the IMF mass distribution that are located outside of
     # the theoretical isochrone's mass range.
-    target = target[(target >= key[0]) & (target <= key[-1])]
+    mass_dist = mass_dist[(mass_dist >= key[0]) & (mass_dist <= key[-1])]
 
-    # Obtain indexes for mass values in the 'target' array (i.e.: IMF mass
+    # Obtain indexes for mass values in the 'mass_dist' array (i.e.: IMF mass
     # distribution) pointing to where these masses should be located within
     # the theoretical isochrone mass distribution.
-    closest = find_closest(key, target)
+    closest = find_closest(key, mass_dist)
 
     # The indexes in 'closest' are used to *replicate* stars in the theoretical
     # isochrone, following the mass distribution given by the IMF.
@@ -98,6 +96,6 @@ def main(isoch_cut, mass_dist):
     # finally these "closest" stars in the isochrone are stored and passed.
     # The "interpolated" isochrone contains as many stars as masses in the
     # IMF distribution were located between the isochrone's mass range.
-    isoch_interp = data[:, order[closest]]
+    isoch_interp = isoch_cut[:, order[closest]]
 
     return isoch_interp
