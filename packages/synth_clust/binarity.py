@@ -15,7 +15,7 @@ def main(isoch_mass, isoch_cut, bin_frac, bin_mass_ratio, N_fc):
     '''
     Randomly select a fraction of stars to be binaries.
     '''
-    # If the binary fraction is zero, skip whole process.
+    # If the binary fraction is zero, skip the whole process.
     if bin_frac > 0.:
         # Indexes of the randomly selected stars in isoch_mass.
         bin_indxs = random.sample(range(len(isoch_mass[0])),
@@ -23,7 +23,7 @@ def main(isoch_mass, isoch_cut, bin_frac, bin_mass_ratio, N_fc):
 
         # Calculate the secondary masses of these binary stars between
         # bin_mass_ratio*m1 and m1, where m1 is the primary mass.
-        # Index if m_ini.
+        # Index of m_ini, stored in the theoretical isochrones.
         m_ini = N_fc[0] + N_fc[1] + 2 * N_fc[1]
         # Primary masses.
         m1 = np.asarray(isoch_mass[m_ini][bin_indxs])
@@ -34,11 +34,12 @@ def main(isoch_mass, isoch_cut, bin_frac, bin_mass_ratio, N_fc):
         mass_bin = np.maximum(min(isoch_mass[m_ini]), mass_bin0)
 
         # Find color and magnitude values for each secondary star. This will
-        # slightly change the values of the masses since they will be
+        # slightly change the values of the masses, since they will be
         # assigned to the closest value found in the interpolated isochrone.
         bin_isoch = mass_interp.main(isoch_cut, mass_bin, N_fc)
 
-        # Calculate unresolved magnitude for each filter/magnitude defined.
+        # Calculate unresolved binary magnitude for each filter/magnitude
+        # defined.
         mag_bin = []
         for i, m in enumerate(isoch_mass[:N_fc[0]]):
             mag_bin.append(mag_combine(m[bin_indxs], bin_isoch[i]))
@@ -70,18 +71,13 @@ def main(isoch_mass, isoch_cut, bin_frac, bin_mass_ratio, N_fc):
         # Update array with new values of magnitudes, colors, and masses.
         for i in range(N_fc[0]):
             for indx, j in enumerate(bin_indxs):
-                isoch_mass[i][j] = mag_bin[indx]
+                isoch_mass[i][j] = mag_bin[i][indx]
 
-        for i in range(N_fc[0], N_fc[1]):
+        for i in range(N_fc[1]):
             for indx, j in enumerate(bin_indxs):
-                isoch_mass[i][j] = col_bin[indx]
+                isoch_mass[N_fc[0] + i][j] = col_bin[i][indx]
 
         for indx, j in enumerate(bin_indxs):
             isoch_mass[m_ini][j] = mass_bin[indx]
-
-        # for indx, i in enumerate(bin_indxs):
-        #     isoch_mass[0][i] = col_bin[indx]
-        #     isoch_mass[1][i] = mag_bin[indx]
-        #     isoch_mass[2][i] = mass_bin[indx]
 
     return isoch_mass
