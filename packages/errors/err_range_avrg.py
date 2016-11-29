@@ -54,7 +54,8 @@ def main(cld, clp, er_params, **kwargs):
     '''
     mmag, e_max = cld['mags'][0], er_params[1]
 
-    # Call function to obtain the median points for photometric errors,
+    # Call function to obtain the median points for photometric errors.
+    # Append magnitude values first, and colors after.
     e_mc_medians = []
     for e_mc in cld['em'].tolist() + cld['ec'].tolist():
         e_mc_medians.append(
