@@ -73,10 +73,10 @@ def main(e_max, bin_mass_ratio, err_lst, completeness, st_dist_mass, isochrone,
         if isoch_mass.any():
 
             ##############################################################
-            # # For plotting purposes: store a copy of this list before
-            # # adding binaries since the list gets overwritten.
-            # from copy import deepcopy
-            # isoch_mass0 = deepcopy(isoch_mass)
+            # For plotting purposes: store a copy of this list before
+            # adding binaries since the list gets overwritten.
+            from copy import deepcopy
+            isoch_mass0 = deepcopy(isoch_mass)
             ##############################################################
 
             # Assignment of binarity.
@@ -98,21 +98,22 @@ def main(e_max, bin_mass_ratio, err_lst, completeness, st_dist_mass, isochrone,
 
                 # Get errors according to errors distribution.
                 # with timeblock("errors"):
-                isoch_error = add_errors.main(isoch_compl, err_lst, e_max)
-                # Append masses.
-                # with timeblock("app_mass"):
-                synth_clust = np.array(isoch_error + [isoch_compl[2]])
+                synth_clust = add_errors.main(
+                    isoch_compl, err_lst, e_max, N_fc)
 
     ################################################################
-    # # Plot synthetic cluster.
-    # from synth_plot import synth_clust_plot as s_c_p
-    # m, a = params[:2]
-    # print m, a, M_total
-    # out_name = str(m).split('.')[1] + '_' + str(a)
-    # out_folder = '/home/gabriel/Descargas/'
-    # path = out_folder + out_name + '.png'
-    # s_c_p(mass_dist, isochrone, params, isoch_moved, isoch_cut,
-    #       isoch_mass0, isoch_binar, isoch_compl, isoch_error, path)
+    # Plot synthetic cluster.
+    from synth_plot import synth_clust_plot as s_c_p
+    m, a = synth_cl_params[:2]
+    import pdb; pdb.set_trace()  # breakpoint aaef8e03 //
+    
+    print m, a, M_total
+    out_name = str(m).split('.')[1] + '_' + str(a)
+    # out_name = 'synth_clust'
+    out_folder = '/home/gabriel/Descargas/'
+    path = out_folder + out_name + '.png'
+    s_c_p(mass_dist, isochrone, synth_cl_params, isoch_moved, isoch_cut,
+          isoch_mass0, isoch_binar, isoch_compl, synth_clust, path)
     ################################################################
 
     ################################################################

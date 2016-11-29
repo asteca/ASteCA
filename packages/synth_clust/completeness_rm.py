@@ -11,21 +11,22 @@ def main(isoch_binar, completeness):
     '''
     # If stars exist in the isochrone beyond the completeness magnitude
     # level, then apply the removal of stars. Otherwise, skip it.
-    if max(isoch_binar[1]) > completeness[1][completeness[2]]:
+    # completeness = [max_mag, bin_edges, max_indx, comp_perc]
+    if max(isoch_binar[0]) > completeness[1][completeness[2]]:
 
         # Get histogram. completeness[1] = bin_edges of the observed
         # region histogram.
-        synth_mag_hist, bin_edges = np.histogram(isoch_binar[1],
+        synth_mag_hist, bin_edges = np.histogram(isoch_binar[0],
                                                  completeness[1])
         pi = completeness[3]
         n1, p1 = synth_mag_hist[completeness[2]], pi[0]
         di = np.around((synth_mag_hist[completeness[2]:] -
                         (n1 / p1) * np.asarray(pi)), 0)
 
-        # Store indexes of *all* elements in isoch_binar whose magnitude
+        # Store indexes of *all* elements in isoch_binar whose main magnitude
         # value falls between the ranges given.
         c_indx = np.searchsorted(completeness[1][completeness[2]:],
-                                 isoch_binar[1], side='left')
+                                 isoch_binar[0], side='left')
         N = len(completeness[1][completeness[2]:])
         mask = (c_indx > 0) & (c_indx < N)
         elements = c_indx[mask]
@@ -53,7 +54,7 @@ def main(isoch_binar, completeness):
         # with reverse=True inverts them so we don't change the
         # indexes of the elements in the lists after removing them.
         d_i = sorted(list(itertools.chain(*rem_indx)), reverse=True)
-        # Remove those selected indexes from the sub-lists.
+        # Remove those selected indexes from *all* sub-lists.
         isoch_compl = np.delete(np.asarray(isoch_binar), d_i, axis=1)
     else:
         isoch_compl = np.asarray(isoch_binar)

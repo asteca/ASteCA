@@ -12,7 +12,7 @@ def gauss_error(mc, e_mc):
     return mc_gauss
 
 
-def main(isoch_compl, err_lst, e_max):
+def main(isoch_compl, err_lst, e_max, N_fc):
     '''
     Randomly move stars according to given error distributions.
     '''
@@ -39,4 +39,7 @@ def main(isoch_compl, err_lst, e_max):
         # 2nd photom dimension, associated error, etc.
         isoch_error.append([mc_gauss, sigma_mc])
 
-    return isoch_error
+    # Append extra information.
+    synth_clust = np.array(isoch_error + [isoch_compl[(N_fc[0] + N_fc[1]):]])
+
+    return synth_clust

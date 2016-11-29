@@ -5,13 +5,13 @@ import matplotlib.gridspec as gridspec
 
 
 def synth_clust_plot(
-        mass_dist, isochrone, model, isoch_moved, isoch_cut,
+        mass_dist, isochrone, synth_cl_params, isoch_moved, isoch_cut,
         isoch_mass, isoch_binar, isoch_compl, isoch_error, path):
     '''
     Plot several diagrams related with the synthetic clusters.
     '''
 
-    m, a, e, d, mass, bin_f = model
+    m, a, e, d, M_total, bin_frac = synth_cl_params
 
     # figsize(x1, y1), GridSpec(y2, x2) --> To have square plots: x1/x2 =
     # y1/y2 = 2.5
@@ -74,12 +74,13 @@ def synth_clust_plot(
               lw=1.5, head_width=0.01)
     # This value should be entered manually to not disrupt the 'synth_cluster'
     # module.
+    m_high = 300.
     m_high_str = '(' + str(m_high) + ')'
     plt.text(0.83, 0.033, m_high_str, transform=ax4.transAxes, fontsize=12)
     plt.text(0.05, 0.92, 'd', transform=ax4.transAxes,
              bbox=dict(facecolor='white', alpha=0.5), fontsize=16)
     text1 = 'N=%d\n' % len(mass_dist)
-    text2 = '$M_T = {:.1f}\,M_{{\odot}}$\n'.format(mass)
+    text2 = '$M_T = {:.1f}\,M_{{\odot}}$\n'.format(M_total)
     text3 = '$M = {:.1f}\,M_{{\odot}}$'.format(sum(mass_dist))
     text = text1 + text2 + text3
     plt.text(0.56, 0.8, text, transform=ax4.transAxes,
@@ -113,7 +114,7 @@ def synth_clust_plot(
     plt.text(0.05, 0.92, 'f', transform=ax6.transAxes,
              bbox=dict(facecolor='white', alpha=0.5), fontsize=16)
     text1 = 'N=%d\n' % len(isoch_binar[0])
-    text2 = '$b_{{frac}} = {}$\n'.format(bin_f)
+    text2 = '$b_{{frac}} = {}$\n'.format(bin_frac)
     text3 = '$M = {:.1f}\,M_{{\odot}}$'.format(sum(isoch_binar[2]))
     text = text1 + text2 + text3
     plt.text(0.6, 0.81, text, transform=ax6.transAxes,
