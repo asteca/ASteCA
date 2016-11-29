@@ -105,14 +105,12 @@ def main(e_max, bin_mass_ratio, err_lst, completeness, st_dist_mass, isochrone,
     # Plot synthetic cluster.
     from synth_plot import synth_clust_plot as s_c_p
     m, a = synth_cl_params[:2]
-    import pdb; pdb.set_trace()  # breakpoint aaef8e03 //
-    
     print m, a, M_total
     out_name = str(m).split('.')[1] + '_' + str(a)
     # out_name = 'synth_clust'
     out_folder = '/home/gabriel/Descargas/'
     path = out_folder + out_name + '.png'
-    s_c_p(mass_dist, isochrone, synth_cl_params, isoch_moved, isoch_cut,
+    s_c_p(N_fc, mass_dist, isochrone, synth_cl_params, isoch_moved, isoch_cut,
           isoch_mass0, isoch_binar, isoch_compl, synth_clust, path)
     ################################################################
 

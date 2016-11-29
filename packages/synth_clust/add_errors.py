@@ -18,7 +18,7 @@ def main(isoch_compl, err_lst, e_max, N_fc):
     '''
     # Fit parameters for the 3 params exponential function, are stored in
     # err_lst with magnitude values first, and colors later.
-    isoch_error = []
+    isoch_error = [[], []]
     for i, popt_mc in enumerate(err_lst):
         # isoch_compl[0] is the main magnitude.
         sigma_mc = np.array(exp_function.exp_3p(isoch_compl[0], *popt_mc))
@@ -35,11 +35,13 @@ def main(isoch_compl, err_lst, e_max, N_fc):
         # Call function to shift stars around these errors.
         mc_gauss = gauss_error(isoch_compl[i], sigma_mc)
 
-        # Create list with: 1st photometric dimension, associated error,
-        # 2nd photom dimension, associated error, etc.
-        isoch_error.append([mc_gauss, sigma_mc])
+        # Create list with photometric dimensions in first sub-list, and
+        # associated errors in the second.
+        isoch_error[0].append(mc_gauss)
+        isoch_error[1].append(sigma_mc)
 
     # Append extra information.
-    synth_clust = np.array(isoch_error + [isoch_compl[(N_fc[0] + N_fc[1]):]])
+    synth_clust = np.array(
+        isoch_error + list(isoch_compl[(N_fc[0] + N_fc[1]):]))
 
     return synth_clust
