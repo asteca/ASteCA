@@ -28,15 +28,15 @@ def main(isoch_mass, isoch_cut, bin_frac, bin_mass_ratio, N_fc):
         # Primary masses.
         m1 = np.asarray(isoch_mass[m_ini][bin_indxs])
         # Secondary masses.
-        mass_bin0 = np.random.uniform(bin_mass_ratio * m1, m1)
         # If any secondary mass falls outside of the lower isochrone's mass
         # range, change its value to the min value.
-        mass_bin = np.maximum(min(isoch_mass[m_ini]), mass_bin0)
+        m2 = np.maximum(min(
+            isoch_mass[m_ini]), np.random.uniform(bin_mass_ratio * m1, m1))
 
         # Find color and magnitude values for each secondary star. This will
         # slightly change the values of the masses, since they will be
         # assigned to the closest value found in the interpolated isochrone.
-        bin_isoch = mass_interp.main(isoch_cut, mass_bin, N_fc)
+        bin_isoch = mass_interp.main(isoch_cut, m2, N_fc)
 
         # Calculate unresolved binary magnitude for each filter/magnitude
         # defined.
@@ -65,9 +65,6 @@ def main(isoch_mass, isoch_cut, bin_frac, bin_mass_ratio, N_fc):
         for f_1, f_2 in zip(*[f1, f2]):
             col_bin.append(f_1 - f_2)
 
-        # Add masses to obtain the binary system's mass.
-        mass_bin = isoch_mass[m_ini][bin_indxs] + bin_isoch[m_ini]
-
         # Update array with new values of magnitudes, colors, and masses.
         for i in range(N_fc[0]):
             for indx, j in enumerate(bin_indxs):
@@ -77,7 +74,8 @@ def main(isoch_mass, isoch_cut, bin_frac, bin_mass_ratio, N_fc):
             for indx, j in enumerate(bin_indxs):
                 isoch_mass[N_fc[0] + i][j] = col_bin[i][indx]
 
+        # Add masses to obtain the binary system's mass.
         for indx, j in enumerate(bin_indxs):
-            isoch_mass[m_ini][j] = mass_bin[indx]
+            isoch_mass[m_ini][j] += bin_isoch[m_ini][indx]
 
     return isoch_mass
