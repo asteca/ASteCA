@@ -78,4 +78,4 @@ def main(isoch_mass, isoch_cut, bin_frac, bin_mass_ratio, N_fc):
         for indx, j in enumerate(bin_indxs):
             isoch_mass[m_ini][j] += bin_isoch[m_ini][indx]
 
-    return isoch_mass
+    return isoch_mass, bin_indxs

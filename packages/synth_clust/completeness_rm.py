@@ -3,7 +3,7 @@ import numpy as np
 import itertools
 
 
-def main(isoch_binar, completeness):
+def main(isoch_binar, binar_idx0, completeness):
     '''
     Remove a number of stars according to the percentages of star loss found in
     the mag_completeness function of the luminosity module, for the real
@@ -56,10 +56,17 @@ def main(isoch_binar, completeness):
         d_i = sorted(list(itertools.chain(*rem_indx)), reverse=True)
         # Remove those selected indexes from *all* sub-lists.
         isoch_compl = np.delete(np.asarray(isoch_binar), d_i, axis=1)
-    else:
-        isoch_compl = np.asarray(isoch_binar)
 
-    return isoch_compl
+        # Remove stars from the binaries list that were removed by the
+        # completeness process.
+        binar_idx1 = np.setdiff1d(binar_idx0, d_i.sort())
+        # Correct indexes of stars after completeness removal, so they will
+        # point to the actual binary systems.
+        binar_idx = binar_idx1 - np.searchsorted(d_i, binar_idx1)
+    else:
+        isoch_compl, binar_idx = np.asarray(isoch_binar), []
+
+    return isoch_compl, binar_idx
 
 
 # def compl_func2(isoch_binar):

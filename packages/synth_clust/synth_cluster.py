@@ -81,12 +81,13 @@ def main(e_max, bin_mass_ratio, err_lst, completeness, st_dist_mass, isochrone,
 
             # Assignment of binarity.
             # with timeblock("binar"):
-            isoch_binar = binarity.main(isoch_mass, isoch_cut, bin_frac,
-                                        bin_mass_ratio, N_fc)
+            isoch_binar, binar_idx0 = binarity.main(
+                isoch_mass, isoch_cut, bin_frac, bin_mass_ratio, N_fc)
 
             # Completeness limit removal of stars.
             # with timeblock("compl"):
-            isoch_compl = completeness_rm.main(isoch_binar, completeness)
+            isoch_compl, binar_idx = completeness_rm.main(
+                isoch_binar, binar_idx0, completeness)
 
             ##############################################################
             # # Use when producing synthetic clusters from isochrones.
@@ -111,7 +112,8 @@ def main(e_max, bin_mass_ratio, err_lst, completeness, st_dist_mass, isochrone,
     out_folder = '/home/gabriel/Descargas/'
     path = out_folder + out_name + '.png'
     s_c_p(N_fc, mass_dist, isochrone, synth_cl_params, isoch_moved, isoch_cut,
-          isoch_mass0, isoch_binar, isoch_compl, synth_clust, path)
+          isoch_mass0, isoch_binar, binar_idx0, isoch_compl, binar_idx,
+          synth_clust, path)
     ################################################################
 
     ################################################################

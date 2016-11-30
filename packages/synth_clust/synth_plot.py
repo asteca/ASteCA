@@ -6,7 +6,8 @@ import matplotlib.gridspec as gridspec
 
 def synth_clust_plot(
         N_fc, mass_dist, isochrone, synth_cl_params, isoch_moved, isoch_cut,
-        isoch_mass, isoch_binar, isoch_compl, synth_clust, path):
+        isoch_mass, isoch_binar, binar_idx, isoch_compl, compl_idx,
+        synth_clust, path):
     '''
     Plot several diagrams related with the synthetic clusters.
     '''
@@ -123,8 +124,12 @@ def synth_clust_plot(
     text = text1 + text2 + text3
     plt.text(0.6, 0.81, text, transform=ax6.transAxes,
              bbox=dict(facecolor='white', alpha=0.5), fontsize=14)
-    ax6.scatter(isoch_binar[N_fc[0]], isoch_binar[0], s=30, c='steelblue',
-                lw=0.5)
+    binar_x, binar_y = isoch_binar[N_fc[0]][binar_idx],\
+        isoch_binar[0][binar_idx]
+    sing_x, sing_y = np.delete(isoch_binar[N_fc[0]], binar_idx),\
+        np.delete(isoch_binar[0], binar_idx)
+    ax6.scatter(sing_x, sing_y, s=30, c='steelblue', lw=0.5)
+    ax6.scatter(binar_x, binar_y, s=30, c='red', lw=0.5)
 
     if isoch_compl.any():
         ax7 = plt.subplot(gs[6:8, 0:2])
@@ -140,8 +145,12 @@ def synth_clust_plot(
         text = text1 + text2
         plt.text(0.6, 0.87, text, transform=ax7.transAxes,
                  bbox=dict(facecolor='white', alpha=0.5), fontsize=14)
-        ax7.scatter(isoch_compl[N_fc[0]], isoch_compl[0], s=30, c='steelblue',
-                    lw=0.5)
+        binar_x, binar_y = isoch_compl[N_fc[0]][compl_idx],\
+            isoch_compl[0][compl_idx]
+        sing_x, sing_y = np.delete(isoch_compl[N_fc[0]], compl_idx),\
+            np.delete(isoch_compl[0], compl_idx)
+        ax7.scatter(binar_x, binar_y, s=30, c='red', lw=0.5)
+        ax7.scatter(sing_x, sing_y, s=30, c='steelblue', lw=0.5)
 
         ax8 = plt.subplot(gs[6:8, 2:4])
         ax8.set_title('Errors')
@@ -155,8 +164,14 @@ def synth_clust_plot(
             0.6, 0.92, 'N=%d' % len(synth_clust[0][0]),
             transform=ax8.transAxes, bbox=dict(facecolor='white', alpha=0.5),
             fontsize=14)
-        ax8.scatter(synth_clust[0][N_fc[0]], synth_clust[0][0], marker='o',
-                    s=30, c='#4682b4', lw=0.5)
+        # ax8.scatter(synth_clust[0][N_fc[0]], synth_clust[0][0], marker='o',
+        #             s=30, c='#4682b4', lw=0.5)
+        binar_x, binar_y = synth_clust[0][N_fc[0]][compl_idx],\
+            synth_clust[0][0][compl_idx]
+        sing_x, sing_y = np.delete(synth_clust[0][N_fc[0]], compl_idx),\
+            np.delete(synth_clust[0][0], compl_idx)
+        ax8.scatter(sing_x, sing_y, s=30, c='steelblue', lw=0.5)
+        ax8.scatter(binar_x, binar_y, s=30, c='red', lw=0.5)
 
     for ax in [ax2, ax3, ax5, ax6, ax7, ax8]:
         ax.set_xlabel('$color$', fontsize=15)
