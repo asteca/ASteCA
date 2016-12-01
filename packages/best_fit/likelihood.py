@@ -200,17 +200,16 @@ def dolphin(Q, obs_clust):
     '''
 
     if not Q.any():
-        # If synthetic cluster is empty, assign high likelihood value.
+        # If synthetic cluster is empty, assign a large likelihood value.
         poiss_lkl = 1e09
     else:
-
+        # with timeblock("  Histodd"):
         # Observed cluster's histogram.
         cl_histo = obs_clust[0]
         # Bin edges for each dimension.
         b_rx, b_ry = obs_clust[1]
 
-        # with timeblock("  Histodd"):
-        # Magnitude and color for the synthetic cluster.
+        # Magnitude sand colors for the synthetic cluster.
         syn_mags_cols = np.array(zip(*[Q[0], Q[2]]))
         # Histogram of the synthetic cluster, using the bin edges calculated
         # with the observed cluster.
@@ -287,6 +286,8 @@ def main(lkl_method, e_max, bin_mass_ratio, err_lst, obs_clust,
     the extinction and distance modulus values to move that isochrone. Use
     that isochrone to generate a synthetic cluster with those parameters and
     finally compare it with the observed cluster.
+
+    synth_clust = []
     '''
 
     # Generate synthetic cluster using this "moved" isochrone and a mass
