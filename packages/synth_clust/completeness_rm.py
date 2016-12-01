@@ -59,7 +59,9 @@ def main(isoch_binar, binar_idx0, completeness):
 
         # Remove stars from the binaries list that were removed by the
         # completeness process.
-        binar_idx1 = np.setdiff1d(binar_idx0, d_i.sort())
+        # Sort list first, so smaller indexes are first.
+        d_i.sort()
+        binar_idx1 = np.setdiff1d(binar_idx0, d_i)
         # Correct indexes of stars after completeness removal, so they will
         # point to the actual binary systems.
         binar_idx = binar_idx1 - np.searchsorted(d_i, binar_idx1)

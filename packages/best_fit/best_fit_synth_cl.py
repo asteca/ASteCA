@@ -64,8 +64,8 @@ def main(clp, bf_flag, er_params, bf_params, IMF_name, m_high, bin_mr,
     if bf_flag:
 
         print('Searching for optimal parameters.')
-        print filters
-        print colors
+        print filters  # DELETE
+        print colors  # DELETE
 
         obs_clust = obs_clust_prepare.main(
             memb_prob_avrg_sort, lkl_method, bin_method)

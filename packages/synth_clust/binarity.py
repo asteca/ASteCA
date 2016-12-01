@@ -16,11 +16,12 @@ def main(isoch_mass, isoch_cut, bin_frac, bin_mass_ratio, N_fc):
     Randomly select a fraction of stars to be binaries.
     '''
     # If the binary fraction is zero, skip the whole process.
+    bin_indxs = []
     if bin_frac > 0.:
-        # Indexes of the randomly selected stars in isoch_mass.
+        # Indexes of the randomly selected stars in isoch_mass (without
+        # replacement).
         bin_indxs = random.sample(range(len(isoch_mass[0])),
                                   int(bin_frac * len(isoch_mass[0])))
-
         # Calculate the secondary masses of these binary stars between
         # bin_mass_ratio*m1 and m1, where m1 is the primary mass.
         # Index of m_ini, stored in the theoretical isochrones.
@@ -28,10 +29,10 @@ def main(isoch_mass, isoch_cut, bin_frac, bin_mass_ratio, N_fc):
         # Primary masses.
         m1 = np.asarray(isoch_mass[m_ini][bin_indxs])
         # Secondary masses.
+        m2 = np.random.uniform(bin_mass_ratio * m1, m1)
         # If any secondary mass falls outside of the lower isochrone's mass
         # range, change its value to the min value.
-        m2 = np.maximum(min(
-            isoch_mass[m_ini]), np.random.uniform(bin_mass_ratio * m1, m1))
+        m2 = np.maximum(min(isoch_mass[m_ini]), m2)
 
         # Find color and magnitude values for each secondary star. This will
         # slightly change the values of the masses, since they will be

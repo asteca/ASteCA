@@ -12,7 +12,7 @@ def gauss_error(mc, e_mc):
     return mc_gauss
 
 
-def main(isoch_compl, err_lst, e_max, N_fc):
+def main(isoch_compl, binar_idx, err_lst, e_max, N_fc):
     '''
     Randomly move stars according to given error distributions.
     '''
@@ -40,8 +40,9 @@ def main(isoch_compl, err_lst, e_max, N_fc):
         isoch_error[0].append(mc_gauss)
         isoch_error[1].append(sigma_mc)
 
-    # Append extra information.
+    # Append indexes that identify binaries, and extra information.
     synth_clust = np.array(
-        isoch_error + list(isoch_compl[(N_fc[0] + N_fc[1]):]))
+        isoch_error + list(binar_idx) +
+        list(isoch_compl[(N_fc[0] + N_fc[1]):]))
 
     return synth_clust

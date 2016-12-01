@@ -73,10 +73,10 @@ def main(e_max, bin_mass_ratio, err_lst, completeness, st_dist_mass, isochrone,
         if isoch_mass.any():
 
             ##############################################################
-            # For plotting purposes: store a copy of this list before
-            # adding binaries since the list gets overwritten.
-            from copy import deepcopy
-            isoch_mass0 = deepcopy(isoch_mass)
+            # # For plotting purposes: store a copy of this list before
+            # # adding binaries since the list gets overwritten.
+            # from copy import deepcopy
+            # isoch_mass0 = deepcopy(isoch_mass)
             ##############################################################
 
             # Assignment of binarity.
@@ -87,7 +87,7 @@ def main(e_max, bin_mass_ratio, err_lst, completeness, st_dist_mass, isochrone,
             # Completeness limit removal of stars.
             # with timeblock("compl"):
             isoch_compl, binar_idx = completeness_rm.main(
-                isoch_binar, binar_idx0, completeness)
+                isoch_binar, binar_idx0, completeness)            
 
             ##############################################################
             # # Use when producing synthetic clusters from isochrones.
@@ -100,20 +100,20 @@ def main(e_max, bin_mass_ratio, err_lst, completeness, st_dist_mass, isochrone,
                 # Get errors according to errors distribution.
                 # with timeblock("errors"):
                 synth_clust = add_errors.main(
-                    isoch_compl, err_lst, e_max, N_fc)
+                    isoch_compl, binar_idx, err_lst, e_max, N_fc)
 
     ################################################################
-    # Plot synthetic cluster.
-    from synth_plot import synth_clust_plot as s_c_p
-    m, a = synth_cl_params[:2]
-    print m, a, M_total
-    out_name = str(m).split('.')[1] + '_' + str(a)
-    # out_name = 'synth_clust'
-    out_folder = '/home/gabriel/Descargas/'
-    path = out_folder + out_name + '.png'
-    s_c_p(N_fc, mass_dist, isochrone, synth_cl_params, isoch_moved, isoch_cut,
-          isoch_mass0, isoch_binar, binar_idx0, isoch_compl, binar_idx,
-          synth_clust, path)
+    # # Plot synthetic cluster.
+    # from synth_plot import synth_clust_plot as s_c_p
+    # m, a = synth_cl_params[:2]
+    # print m, a, M_total
+    # out_name = str(m).split('.')[1] + '_' + str(a)
+    # # out_name = 'synth_clust'
+    # out_folder = '/home/gabriel/Descargas/'
+    # path = out_folder + out_name + '.png'
+    # s_c_p(N_fc, mass_dist, isochrone, synth_cl_params, isoch_moved, isoch_cut,
+    #       isoch_mass0, isoch_binar, binar_idx0, isoch_compl, binar_idx,
+    #       synth_clust, path)
     ################################################################
 
     ################################################################
