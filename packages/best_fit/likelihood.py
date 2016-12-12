@@ -287,7 +287,12 @@ def main(lkl_method, e_max, bin_mass_ratio, err_lst, obs_clust,
     that isochrone to generate a synthetic cluster with those parameters and
     finally compare it with the observed cluster.
 
-    synth_clust = []
+    synth_clust = [photom_dims, photom_errs, binar_idx, extra_info]
+    photom_dims = [mag1, mag2, ..., magN, col1, col2, ..., colM]
+    photom_errs = [e_m1, e_m2, ..., e_mN, e_c1, e_c2, ..., e_CM]
+    binar_idx = [ids of binary systems for stars in photom_dims]
+    extra info = lists with additional information, from the theoretical
+                 isochrones.
     '''
 
     # Generate synthetic cluster using this "moved" isochrone and a mass
