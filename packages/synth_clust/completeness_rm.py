@@ -16,8 +16,7 @@ def main(isoch_binar, binar_idx0, completeness):
 
         # Get histogram. completeness[1] = bin_edges of the observed
         # region histogram.
-        synth_mag_hist, bin_edges = np.histogram(isoch_binar[0],
-                                                 completeness[1])
+        synth_mag_hist = np.histogram(isoch_binar[0], completeness[1])[0]
         pi = completeness[3]
         n1, p1 = synth_mag_hist[completeness[2]], pi[0]
         di = np.around((synth_mag_hist[completeness[2]:] -

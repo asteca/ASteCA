@@ -87,7 +87,7 @@ def main(e_max, bin_mass_ratio, err_lst, completeness, st_dist_mass, isochrone,
             # Completeness limit removal of stars.
             # with timeblock("compl"):
             isoch_compl, binar_idx = completeness_rm.main(
-                isoch_binar, binar_idx0, completeness)            
+                isoch_binar, binar_idx0, completeness)
 
             ##############################################################
             # # Use when producing synthetic clusters from isochrones.
