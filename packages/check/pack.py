@@ -14,8 +14,7 @@ def check():
         inst_packgs = pip.get_installed_distributions(local_only=False)
         inst_packgs_lst = ["%s" % (i.key) for i in inst_packgs]
         missing_pckg = []
-        for pckg in ['numpy', 'matplotlib', 'scipy', 'astroml',
-                     'scikit-learn']:
+        for pckg in ['numpy', 'matplotlib', 'scipy', 'astroml']:
             if pckg not in inst_packgs_lst:
                 missing_pckg.append(pckg)
 
