@@ -87,6 +87,9 @@ def likelihood(region, cl_phot):
     r_phot = [zip(*zip(*region)[1:][2]), zip(*zip(*region)[1:][3]),
               zip(*zip(*region)[1:][4]), zip(*zip(*region)[1:][5])]
 
+    # TODO The second [0] index means we are using the first magnitude and
+    # color defined. This should be generalized to N magnitudes and M colors
+    # eventually.
     # Full cluster region. Square errors in color and magnitude.
     P = [cl_phot[0][0], np.square(cl_phot[1][0]), cl_phot[2][0],
          np.square(cl_phot[3][0])]
@@ -142,9 +145,9 @@ def main(clp, npd, da_params, **kwargs):
         # Set total number of runs.
         runs = 1000 if mode_da == 'auto' else run_n
 
-        # cl_region = [[id, x, y, mags, em, cols, ec], [], [], ...]
+        # cl_region = [[id, x, y, mags, e_mags, cols, e_cols], [], [], ...]
         # len(cl_region) = number of stars inside the cluster's radius.
-        # len(cl_region[3]) = number of magnitudes defined.
+        # len(cl_region[_][3]) = number of magnitudes defined.
         # len(field_regions) = number of field regions.
         # len(field_regions[i]) = number of stars inside field region 'i'.
 
