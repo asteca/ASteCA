@@ -169,7 +169,9 @@ def main(field_regions, memb_prob_avrg_sort, flag_decont_skip, rm_params):
     '''
     local_bin = rm_params[1]
 
-    # Remove ID's and zip.
+    # TODO [0] means we are using the first defined magnitude and color.
+    # Generalize to N magnitudes and M colors.ç
+    # Remove ID's (hence the [1:]).
     mmag, col = zip(*zip(*memb_prob_avrg_sort)[1:][2])[0],\
         zip(*zip(*memb_prob_avrg_sort)[1:][4])[0]
     # Create list with all magnitudes and colors defined.
