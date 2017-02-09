@@ -111,9 +111,9 @@ def main(e_max, bin_mass_ratio, err_lst, completeness, st_dist_mass, isochrone,
     # # out_name = 'synth_clust'
     # out_folder = '/home/gabriel/Descargas/'
     # path = out_folder + out_name + '.png'
-    # s_c_p(N_fc, mass_dist, isochrone, synth_cl_params, isoch_moved, isoch_cut,
-    #       isoch_mass0, isoch_binar, binar_idx0, isoch_compl, binar_idx,
-    #       synth_clust, path)
+    # s_c_p(N_fc, mass_dist, isochrone, synth_cl_params, isoch_moved,
+    #       isoch_cut, isoch_mass0, isoch_binar, binar_idx0, isoch_compl,
+    #       binar_idx, synth_clust, path)
     ################################################################
 
     ################################################################
