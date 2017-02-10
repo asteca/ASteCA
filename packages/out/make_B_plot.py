@@ -32,10 +32,8 @@ def main(
             stars_out_rjct, field_regions)
         f_sz_pt = prep_plots.phot_diag_st_size(len(stars_f_acpt[0]))
         cl_sz_pt = prep_plots.phot_diag_st_size(len(cl_region))
-        err_bar_fl = prep_plots.error_bars(
-            stars_out, cld['cols'], x_min_cmd, err_lst)
-        err_bar_cl = prep_plots.error_bars(
-            cl_region, cld['cols'], x_min_cmd, err_lst)
+        err_bar_fl = prep_plots.error_bars(stars_out, x_min_cmd, err_lst)
+        err_bar_cl = prep_plots.error_bars(cl_region, x_min_cmd, err_lst)
 
         # Photometric analysis plots.
         arglist = [

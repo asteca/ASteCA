@@ -239,18 +239,24 @@ def da_plots(clust_cent, clust_rad, stars_out, x_zmin, x_zmax, y_zmin, y_zmax,
         chart_no_fit_inv, out_clust_rad, diag_fit_inv, diag_no_fit_inv
 
 
-def error_bars(stars_phot, cols, x_min_cmd, err_lst):
+def error_bars(stars_out, x_min_cmd, err_lst):
     """
     Calculate error bars for plotting in photometric diagram.
     """
-    mmag = zip(*zip(*stars_phot)[3])[0]
+    # Use main magnitude.
+    mmag = zip(*zip(*stars_out)[3])[0]
     x_val, mag_y, x_err, y_err = [], [], [], []
     if mmag:
+        # List of y values where error bars are plotted.
         mag_y = np.arange(
             int(min(mmag) + 0.5), int(max(mmag) + 0.5) + 0.1)
+        # List of x values where error bars are plotted.
         x_val = [x_min_cmd + 0.4] * len(mag_y)
         # Read average fitted values for exponential error fit.
-        popt_mag, popt_col1 = err_lst
+        # Magnitude values are positioned first and colors after in the list
+        # 'err_lst'.
+        # TODO generalize to N dimensions
+        popt_mag, popt_col1 = err_lst[0], err_lst[1]
         x_err = exp_function.exp_3p(mag_y, *popt_col1)
         y_err = exp_function.exp_3p(mag_y, *popt_mag)
     err_bar = [x_val, mag_y, x_err, y_err]
