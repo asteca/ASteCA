@@ -55,7 +55,7 @@ def main(cld, clp, pd):
 
     # Unpack data.
     mode = pd['mode']
-    # USE THE MAIN MAGNITUDE.
+    # Use main magnitude.
     mmag = cld['mags'][0]
     er_mode, e_max, be = pd['er_params'][:3]
 
