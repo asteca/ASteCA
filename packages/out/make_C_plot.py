@@ -38,7 +38,7 @@ def main(
                 clust_cent, clust_rad, stars_out, x_zmin, x_zmax, y_zmin,
                 y_zmax, cl_reg_fit, cl_reg_no_fit)
         err_bar = prep_plots.error_bars(
-            cl_reg_fit + cl_reg_no_fit, cld['cols'], x_min_cmd, err_lst)
+            cl_reg_fit + cl_reg_no_fit, x_min_cmd, err_lst)
 
         # Decontamination algorithm plots.
         mode_red_memb, local_bin = pd['rm_params'][0], pd['rm_params'][1]
