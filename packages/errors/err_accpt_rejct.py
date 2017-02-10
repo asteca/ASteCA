@@ -246,7 +246,7 @@ def main(cld, clp, pd):
             else:
                 move_on = True
 
-    print("Stars accepted/rejected based on their errors.")
+    print("Stars rejected based on their errors ({}).".format(len(rjct_stars)))
 
     clp['err_flags'] = [err_all_fallback, err_max_fallback]
     clp['acpt_stars'], clp['rjct_stars'], clp['err_plot'],\
