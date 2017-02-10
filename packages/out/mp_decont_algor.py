@@ -148,10 +148,11 @@ def pl_mps_phot_diag(gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
     ax.xaxis.set_major_locator(MultipleLocator(1.0))
     # Plot grid. If bin_edges == 0., it means the 'local' method was not used.
     if mode_red_memb == 'local' and bin_edges != 0.:
-        for x_ed in bin_edges[0]:
+        # TODO using first magnitude and color. Generalize to N-dimensions.
+        for x_ed in bin_edges[1]:
             # vertical lines
             ax.axvline(x_ed, linestyle=':', color='k', zorder=1)
-        for y_ed in bin_edges[1]:
+        for y_ed in bin_edges[0]:
             # horizontal lines
             ax.axhline(y_ed, linestyle=':', color='k', zorder=1)
     else:
