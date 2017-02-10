@@ -8,13 +8,14 @@ def main(stars_out, xedges, yedges):
 
     # Create the empty list that will hold the information of each star that
     # falls within a given bin in the 2D histogram.
-    # H = [ [[num of stars in bin], [star 1 data (id,x,y,T1, etc..)],
+    # H = [ [[num of stars in bin], [star 1 data (id,x,y,mag, etc..)],
     # [star 2 data], [star 3 data], ...], [], [], ..., [] ]
     H_manual = []
     for i in range(len(xedges) - 1):
         H_manual.append([[0] for _ in xrange(len(yedges) - 1)])
 
-    # Iterate through all the stars in the frame.
+    # Iterate through all the stars in the frame, located outside of the
+    # cluster region.
     for star in stars_out:
         xcoord, ycoord = star[1:3]
 

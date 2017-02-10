@@ -1,6 +1,6 @@
 
 import spiral as sp
-import manual_histo
+import field_manual_histo
 
 
 def spiral_index(spiral, sp_indx, histo, cent_bin, num_bins_area):
@@ -157,7 +157,7 @@ def main(clp, mode, fr_number, cl_f_regs_semi, freg_flag_semi, **kwargs):
 
         # Obtain filled 2D histogram for the field with star's values attached
         # to each bin.
-        h_manual = manual_histo.main(stars_out, xedges, yedges)
+        h_manual = field_manual_histo.main(stars_out, xedges, yedges)
 
         # This ensures that the areas of the field regions are equal
         # to the cluster area.
