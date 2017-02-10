@@ -99,7 +99,7 @@ def main(cl_file, pd):
     clp = contamination_index.main(clp)
 
     # Make A block plots.
-    # make_A_plot.main(npd, cld, pd, **clp)
+    make_A_plot.main(npd, cld, pd, **clp)
 
     # Get luminosity function and completeness level for each magnitude bin.
     clp = luminosity.main(clp, **cld)
@@ -111,7 +111,7 @@ def main(cl_file, pd):
     clp = kde_pvalue.main(clp, **pd)
 
     # Make B block plots.
-    # make_B_plot.main(npd, cld, pd, **clp)
+    make_B_plot.main(npd, cld, pd, **clp)
 
     # Apply decontamination algorithm.
     clp = bayesian_da.main(clp, npd, **pd)
@@ -124,7 +124,7 @@ def main(cl_file, pd):
     clp = cl_region_clean.main(clp, **pd)
 
     # Make C block plots.
-    # make_C_plot.main(npd, cld, pd, **clp)
+    make_C_plot.main(npd, cld, pd, **clp)
 
     # Create data file with membership probabilities.
     cluster_members_file.main(clp, **npd)
