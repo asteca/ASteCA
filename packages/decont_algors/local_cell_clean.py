@@ -9,7 +9,8 @@ from bayesian_da import sort_members
 def bin_edges_f(bin_method, mags_cols_cl):
     '''
     Obtain bin edges for each photometric dimension using the cluster region
-    diagram.
+    diagram. The 'bin_edges' list will contain all magnitudes first, and then
+    all colors (in the same order in which they are read).
     '''
     bin_edges = []
     if bin_method in ('sturges', 'sqrt'):
