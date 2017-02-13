@@ -19,103 +19,73 @@ from ..synth_clust import synth_cluster
 #############################################################
 
 
-def tolstoy(Q, obs_clust):
+def tolstoy(synth_clust, obs_clust):
     '''
     Takes a synthetic cluster, compares it to the observed cluster and
     returns the weighted (log) likelihood value.
     This function follows the recipe given in Tolstoy & Saha (1996),
     Hernandez & Valls-Gabaud (2008) and Monteiro, Dias & Caetano (2010).
     '''
+    synth_phot, synth_errors = synth_clust[0]
 
-    if not Q.any():
-        # If synthetic cluster is empty, assign high likelihood value.
-        likelihood = 1e09
+    # If synthetic cluster is empty, assign high likelihood value.
+    if not synth_phot[0].any():
+        likelihood = 1.e09
     else:
 
-        # Unpack observed cluster with squared errors and membership
-        # probabilities.
-        P, mem_probs = obs_clust
+        # Unpack observed cluster's photometry, its squared errors, and its
+        # membership probabilities.
+        obs_st, mem_probs = obs_clust
 
-        # Store synthetic clusters as array.
-        syn_arr = np.array(zip(*Q))
-        cl_stars_probs = []
-
-        # Split syn_arr.
-        Q = np.split(syn_arr, 5, axis=1)
         # Square synthetic photometric errors.
-        Q[1] = np.square(Q[1])
-        Q[3] = np.square(Q[3])
+        synth_errors = np.square(synth_errors)
+        # Create list with the proper format for the synthetic cluster.
+        syn_st = []
+        for st_phot, st_e_phot in zip(zip(*synth_phot), zip(*synth_errors)):
+            syn_st.append(zip(*[st_phot, st_e_phot]))
 
-        # Small value used to replace zeros.
-        epsilon = 1e-10
+        # Probability for each observed star.
+        cl_stars_probs = []
         # For each observed star.
-        for o_st in P:
-            # star = [photom_dimension_1, photom_dimension_2, ...]
-            # photom_dimension_X = [mag/col, e_mag/col]
+        for o_st in obs_st:
+            # o_st = [phot_1, phot_2, phot_3, ...]
+            # o_phot_j = [phot_val, error]
 
+            # Summatory over all synthetic stars.
+            syn_sum = 0.
             # For each synthetic star.
-            for s_st in Q:
+            for s_st in syn_st:
+                # s_st = [phot_1, phot_2, phot_3, ...]
+                # s_phot_j = [phot_val, error]
 
+                # Summatory for each photometric dimension.
+                exp_sum, err_mult = 0., 1.
                 # For each photometric dimension stored.
-                e_sum, p_delta = [], []
-                for i, phot_d in enumerate(o_st):
-                    # Sum of squared photometric errors, for this observed star,
-                    # and this photometric dimension.
-                    e_sum.append(o_st[1] + s_st)
-                    # Difference between the observed star's photometric mag/color,
-                    # and the 
+                for k, o_p in enumerate(o_st):
+                    # Photometric difference squared, divided by the sum of
+                    # the squared photometric errors, for this observed star,
+                    # compared to this synthetic star, in this photometric
+                    # dimension.
+                    exp_sum += np.square(o_p[0] - s_st[k][0]) /\
+                        (o_p[1] + s_st[k][1])
+                    # Multiplication of square root of the sum of the squared
+                    # photometric errors.
+                    err_mult = err_mult * (o_p[1] + s_st[k][1])
 
-            # e_col_2 = np.maximum(star[5] + Q[1], epsilon)
-            # e_mag_2 = np.maximum(star[3] + Q[3], epsilon)
-            # star[4] & Q[0] = colors
-            # star[2] & Q[2] = magnitudes
-            B = np.square(star[4] - Q[0]) / e_col_2
-            C = np.square(star[2] - Q[2]) / e_mag_2
-            star_prob = np.exp(-0.5 * (B + C)) / np.sqrt(e_col_2 * e_mag_2)
-            # The final prob for this cluster star is the sum over all
+                # Probability that the observed star 'o_st' is a star from
+                # this synthetic model.
+                syn_sum += np.exp(-0.5 * exp_sum) / np.sqrt(err_mult)
+
+            # The final prob for this observed star is the sum over all
             # synthetic stars. Use 1e-10 to avoid nan and inf values in the
             # calculations that follow.
-            cl_stars_probs.append(max(star_prob.sum(), epsilon))
-            import pdb; pdb.set_trace()  # breakpoint b2ee0bdc //
+            cl_stars_probs.append(max(syn_sum, 1.e-10))
 
+        # Final score: sum log likelihoods for each star in cluster, weighted
+        # by its probability.
+        likelihood = -sum(np.log(cl_stars_probs * mem_probs / len(syn_st)))
 
-        # Weight probabilities for each cluster star.
-        clust_prob = cl_stars_probs * mem_probs / len(syn_arr)
-
-        # Final score: sum log likelihoods for each star in cluster.
-        tolstoy_lkl = -sum(np.log(np.asarray(clust_prob[0])))
-
-        # n, p = len(P), len(syn_arr)
-
-        # BIC
-        # tolstoy_lkl = 2 * tolstoy_lkl + p * np.log(n)
-
-        # AIC_c
-        # if (n - p) != 1:
-        #     tolstoy_lkl = 2 * tolstoy_lkl + 2 * p + \
-        #     (2 * p) * (p + 1) / (n - p - 1)
-        # else:
-        #     tolstoy_lkl = 2 * tolstoy_lkl + 2 * p
-
-        # print n, p, tolstoy_lkl
-        # import matplotlib.pyplot as plt
-        # fig = plt.figure()
-        # ax1 = fig.add_subplot(1, 2, 1)
-        # ax2 = fig.add_subplot(1, 2, 2)
-        # ax1.scatter(zip(*P)[4], zip(*P)[2], c='r')
-        # ax2.scatter(Q[0], Q[2], c='b')
-        # text = 'N = {}'.format(len(zip(*P)[4]))
-        # ax1.text(0.6, 0.9, text, transform=ax1.transAxes)
-        # text1 = 'L = {:.2f}\n'.format(tolstoy_lkl)
-        # text2 = 'N = {}'.format(len(syn_arr))
-        # text = text1 + text2
-        # ax2.text(0.5, 0.9, text, transform=ax2.transAxes)
-        # ax1.invert_yaxis()
-        # ax2.invert_yaxis()
-        # fig.subplots_adjust(hspace=1)
-        # plt.show()
-
-    return tolstoy_lkl
+    return likelihood
 
 
 def dolphin_plot(Q, P, b_rx, b_ry, cl_histo, syn_histo, likel):
