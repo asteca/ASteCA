@@ -37,8 +37,8 @@ def main(
 
         # figsize(x1, y1), GridSpec(y2, x2) --> To have square plots: x1/x2 =
         # y1/y2 = 2.5
-        fig = plt.figure(figsize=(30, 25))  # create the top-level container
-        gs = gridspec.GridSpec(10, 12)      # create a GridSpec object
+        fig = plt.figure(figsize=(30, 25))
+        gs = gridspec.GridSpec(10, 12)
         add_version_plot.main()
 
         # Obtain plotting parameters and data.
