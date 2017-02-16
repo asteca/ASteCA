@@ -41,7 +41,8 @@ def main(isoch_compl, binar_idx, err_lst, e_max, N_fc):
         isoch_error[1].append(sigma_mc)
 
     # Append indexes that identify binaries, and extra information.
-    synth_clust = [isoch_error] + list(binar_idx) +\
-        list(isoch_compl[(N_fc[0] + N_fc[1]):])
+    # isoch_compl = [f1, f2, .., c1, c2, .., fc1, fc2, .., extra_pars(6)]
+    synth_clust = [isoch_error] + [binar_idx.tolist()] +\
+        [isoch_compl[(N_fc[0] + N_fc[1] + 2 * N_fc[1]):].tolist()]
 
     return synth_clust
