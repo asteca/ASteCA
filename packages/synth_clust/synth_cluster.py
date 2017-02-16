@@ -1,5 +1,4 @@
 
-import numpy as np
 import move_isochrone
 import cut_max_mag
 import mass_distribution
