@@ -10,18 +10,17 @@ from ..synth_clust import imf
 from ..synth_clust import synth_cl_plot
 
 
-def params_errors(ip_list, ga_params, err_lst, memb_prob_avrg_sort,
-                  completeness, st_dist_mass, isoch_fit_params, cmd_sel,
-                  e_max, best_fit_algor, N_b, lkl_method, bin_method,
-                  bin_mass_ratio):
+def params_errors(
+    lkl_method, e_max, bin_mr, err_lst, completeness, fundam_params,
+        memb_prob_avrg_sort, theor_tracks, ext_coefs, st_dist_mass, N_fc,
+        ga_params, bin_method, best_fit_algor, isoch_fit_params, N_b):
     '''
     Obtain errors for the fitted parameters.
     '''
     if best_fit_algor == 'brute':
         isoch_fit_errors = []
         # Assign errors as the largest step in each parameter.
-        par_vals = ip_list[1]
-        for pv in par_vals:
+        for pv in fundam_params:
             # If any parameter has a single valued range, assign an error
             # of -1.
             if len(pv) > 1:
@@ -37,9 +36,9 @@ def params_errors(ip_list, ga_params, err_lst, memb_prob_avrg_sort,
             # Call bootstrap function with resampling to get the uncertainty
             # in each parameter.
             isoch_fit_errors = bootstrap.main(
-                ga_params, cmd_sel, e_max, err_lst, memb_prob_avrg_sort,
-                completeness, ip_list, st_dist_mass, best_fit_algor, N_b,
-                lkl_method, bin_method, bin_mass_ratio)
+                lkl_method, e_max, bin_mr, err_lst, completeness,
+                fundam_params, memb_prob_avrg_sort, theor_tracks, ext_coefs,
+                st_dist_mass, N_fc, ga_params, bin_method, best_fit_algor, N_b)
         else:
             print('Skipping bootstrap process.')
             # No error assignment.
@@ -106,16 +105,17 @@ def main(clp, bf_flag, er_params, bf_params, IMF_name, m_high, bin_mr,
             # so it will print percentages to screen.
             flag_print_perc = True
             isoch_fit_params = genetic_algorithm.main(
-                flag_print_perc, err_lst, obs_clust, ext_coefs, completeness,
-                ip_list, st_dist_mass, ga_params, lkl_method, e_max, bin_mr)
+                lkl_method, e_max, bin_mr, err_lst, completeness,
+                fundam_params, obs_clust, theor_tracks, ext_coefs,
+                st_dist_mass, N_fc, ga_params, flag_print_perc)
 
         print("Best fit parameters obtained.")
 
         # Assign errors for each parameter.
         isoch_fit_errors = params_errors(
-            ip_list, ga_params, err_lst, memb_prob_avrg_sort, completeness,
-            st_dist_mass, isoch_fit_params, cmd_sel, e_max, best_fit_algor,
-            N_b, lkl_method, bin_method, bin_mr)
+            lkl_method, e_max, bin_mr, err_lst, completeness, fundam_params,
+            memb_prob_avrg_sort, theor_tracks, ext_coefs, st_dist_mass, N_fc,
+            ga_params, bin_method, best_fit_algor, isoch_fit_params, N_b)
 
         # Round errors to 1 significant digit and round params values
         # to the corresponding number of significant digits given by

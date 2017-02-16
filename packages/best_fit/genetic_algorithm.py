@@ -160,8 +160,8 @@ def selection(generation, breed_prob):
     return select_chrom
 
 
-def evaluation(lkl_method, e_max, bin_mass_ratio, cmd_sel, err_lst, obs_clust,
-               completeness, isoch_list, fundam_params, p_lst, st_dist_mass,
+def evaluation(lkl_method, e_max, bin_mr, err_lst, completeness, fundam_params,
+               obs_clust, theor_tracks, ext_coefs, st_dist_mass, N_fc, p_lst,
                model_done):
     '''
     Evaluate each model in the objective function to obtain the fitness of
@@ -175,13 +175,13 @@ def evaluation(lkl_method, e_max, bin_mass_ratio, cmd_sel, err_lst, obs_clust,
         # Metallicity and age indexes to identify isochrone.
         m_i = fundam_params[0].index(model[0])
         a_i = fundam_params[1].index(model[1])
-        isochrone = isoch_list[m_i][a_i]
+        isochrone = theor_tracks[m_i][a_i]
 
         # Call likelihood function for this model.
         # with timeblock(" Likelihood"):
         lkl = likelihood.main(
-            lkl_method, e_max, bin_mass_ratio, cmd_sel, err_lst, obs_clust,
-            completeness, st_dist_mass, isochrone, model)
+            lkl_method, e_max, bin_mr, err_lst, obs_clust, completeness,
+            st_dist_mass, isochrone, ext_coefs, N_fc, model)
 
         # Check if this model was already processed. Without this check here,
         # the extinction/immigration operator becomes useless, since the best
@@ -273,14 +273,13 @@ def num_binary_digits(fundam_params):
     return n_bin, p_delta, p_mins
 
 
-def main(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
-         st_dist_mass, ga_params, lkl_method, e_max, bin_mass_ratio):
+def main(lkl_method, e_max, bin_mr, err_lst, completeness, fundam_params,
+         obs_clust, theor_tracks, ext_coefs, st_dist_mass, N_fc, ga_params,
+         flag_print_perc):
     '''
-    Genetic algorithm adapted to find the best fit model-observation.
+    Genetic algorithm. Finds the best fit model-observation.
     '''
 
-    # Unpack parameters that affect how the synthetic cluster is generated.
-    isoch_list, fundam_params = ip_list
     n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es = ga_params
     # Check if n_pop is odd. If it is sum 1 to avoid conflict if cr_sel
     # '2P' was selected.
@@ -305,8 +304,8 @@ def main(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
 
     # Evaluate initial random solutions in the objective function.
     generation, lkl, model_done = evaluation(
-        lkl_method, e_max, bin_mass_ratio, cmd_sel, err_lst, obs_clust,
-        completeness, isoch_list, fundam_params, p_lst_r, st_dist_mass,
+        lkl_method, e_max, bin_mr, err_lst, completeness, fundam_params,
+        obs_clust, theor_tracks, ext_coefs, st_dist_mass, N_fc, p_lst_r,
         model_done)
 
     # Store best solution for passing along in the 'Elitism' block.
@@ -365,8 +364,8 @@ def main(flag_print_perc, err_lst, obs_clust, completeness, ip_list,
         # according to the best solutions found.
         # with timeblock("Evaluation"):
         generation, lkl, model_done = evaluation(
-            lkl_method, e_max, bin_mass_ratio, cmd_sel, err_lst, obs_clust,
-            completeness, isoch_list, fundam_params, p_lst_e, st_dist_mass,
+            lkl_method, e_max, bin_mr, err_lst, completeness, fundam_params,
+            obs_clust, theor_tracks, ext_coefs, st_dist_mass, N_fc, p_lst_e,
             model_done)
 
         # *** Extinction/Immigration ***

@@ -10,15 +10,14 @@ def resample_replacement(obs_clust):
     Resamples the observed cluster with replacement. Used by the bootstrap
     process.
     '''
-    obs_cl = np.array([random.choice(obs_clust) for _ in obs_clust],
-                      dtype=float)
+    obs_cl = [random.choice(obs_clust) for _ in obs_clust]
 
     return obs_cl
 
 
-def main(ga_params, cmd_sel, e_max, err_lst, memb_prob_avrg_sort,
-         completeness, ip_list, st_dist_mass, best_fit_algor, N_b, lkl_method,
-         bin_method, bin_mass_ratio):
+def main(lkl_method, e_max, bin_mr, err_lst, completeness, fundam_params,
+         memb_prob_avrg_sort, theor_tracks, ext_coefs, st_dist_mass, N_fc,
+         ga_params, bin_method, best_fit_algor, N_b):
     '''
     Bootstrap process, runs the selected algorithm a number of times each
     time generating a new observed cluster representation through resampling
@@ -46,9 +45,9 @@ def main(ga_params, cmd_sel, e_max, err_lst, memb_prob_avrg_sort,
             # process so it will not print percentages to screen.
             flag_print_perc = False
             params_boot.append(genetic_algorithm.main(
-                flag_print_perc, err_lst, obs_cl, completeness, ip_list,
-                st_dist_mass, ga_params, lkl_method, cmd_sel, e_max,
-                bin_mass_ratio)[0])
+                lkl_method, e_max, bin_mr, err_lst, completeness,
+                fundam_params, obs_cl, theor_tracks, ext_coefs,
+                st_dist_mass, N_fc, ga_params, flag_print_perc)[0])
 
         percentage_complete = (100.0 * (i + 1) / max(N_b, 2))
         while len(milestones) > 0 and percentage_complete >= milestones[0]:
@@ -59,12 +58,11 @@ def main(ga_params, cmd_sel, e_max, err_lst, memb_prob_avrg_sort,
     # Calculate errors for each parameter.
     isoch_fit_errors = np.std(params_boot, 0)
     # Errors can not be smaller than the largest step in each parameter.
-    par_vals = ip_list[1]
     for i, p_er in enumerate(isoch_fit_errors):
         # If any parameter has a single valued range, assign an error of -1.
-        if len(par_vals[i]) > 1:
+        if len(fundam_params[i]) > 1:
             # Find largest delta in this parameter used values.
-            largest_delta = np.diff(par_vals[i]).max()
+            largest_delta = np.diff(fundam_params[i]).max()
             # Store the maximum value.
             isoch_fit_errors[i] = max(largest_delta, p_er)
         else:
