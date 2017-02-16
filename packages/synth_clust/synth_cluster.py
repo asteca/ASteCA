@@ -55,8 +55,8 @@ def main(e_max, bin_mass_ratio, err_lst, completeness, st_dist_mass, isochrone,
     # with timeblock("cut"):
     isoch_cut = cut_max_mag.main(isoch_moved, completeness[0])
 
-    # Empty array to pass if at some point no stars are left.
-    synth_clust = np.asarray([])
+    # Empty list to pass if at some point no stars are left.
+    synth_clust = []
     # Check for an empty array.
     if isoch_cut.any():
 
