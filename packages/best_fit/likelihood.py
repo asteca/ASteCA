@@ -26,15 +26,14 @@ def tolstoy(synth_clust, obs_clust):
     This function follows the recipe given in Tolstoy & Saha (1996),
     Hernandez & Valls-Gabaud (2008) and Monteiro, Dias & Caetano (2010).
     '''
-    synth_phot, synth_errors = synth_clust[0]
 
     # If synthetic cluster is empty, assign high likelihood value.
-    if not synth_phot[0].any():
-        likelihood = 1.e09
+    if not synth_clust:
+        tlst_lkl = 1.e09
     else:
-
-        # Unpack observed cluster's photometry, its squared errors, and its
-        # membership probabilities.
+        # synthetic cluster's photometry and errors.
+        synth_phot, synth_errors = synth_clust[0]
+        # Observed cluster's photometry and membership probabilities.
         obs_st, mem_probs = obs_clust
 
         # Square synthetic photometric errors.
@@ -83,9 +82,9 @@ def tolstoy(synth_clust, obs_clust):
 
         # Final score: sum log likelihoods for each star in cluster, weighted
         # by its probability.
-        likelihood = -sum(np.log(cl_stars_probs * mem_probs / len(syn_st)))
+        tlst_lkl = -sum(np.log(cl_stars_probs * mem_probs / len(syn_st)))
 
-    return likelihood
+    return tlst_lkl
 
 
 def dolphin_plot(Q, P, b_rx, b_ry, cl_histo, syn_histo, likel):
@@ -162,45 +161,44 @@ def dolphin_plot(Q, P, b_rx, b_ry, cl_histo, syn_histo, likel):
     plt.show()
 
 
-def dolphin(Q, obs_clust):
+def dolphin(synth_clust, obs_clust):
     '''
     Takes a synthetic cluster, compares it to the observed cluster and
     returns the weighted (log) likelihood value.
     This function follows the recipe given in Dolphin (2002).
     '''
 
-    if not Q.any():
+    # If synthetic cluster is empty, assign high likelihood value.
+    if not synth_clust:
         # If synthetic cluster is empty, assign a large likelihood value.
-        poiss_lkl = 1e09
+        dolph_lkl = 1e09
     else:
         # with timeblock("  Histodd"):
-        # Observed cluster's histogram.
-        cl_histo = obs_clust[0]
-        # Bin edges for each dimension.
-        b_rx, b_ry = obs_clust[1]
-
-        # Magnitude sand colors for the synthetic cluster.
-        syn_mags_cols = np.array(zip(*[Q[0], Q[2]]))
-        # Histogram of the synthetic cluster, using the bin edges calculated
-        # with the observed cluster.
-        syn_histo = np.histogramdd(syn_mags_cols, bins=[b_rx, b_ry])[0]
+        synth_phot = synth_clust[0][0]
+        # Observed cluster's histogram and bin edges for each dimension.
+        cl_histo, bin_edges = obs_clust
 
         # with timeblock("  log(lkl)"):
-        # Small value used to replace zeros.
-        epsilon = 1e-10
+        # Histogram of the synthetic cluster, using the bin edges calculated
+        # with the observed cluster.
+        syn_histo = np.histogramdd(synth_phot, bins=bin_edges)[0]
+
+        # Flatten N-dimensional histograms.
+        cl_histo_f = np.array(cl_histo).flatten()
+        syn_histo_f = np.array(syn_histo).flatten()
+        # Assign small value to the zero elements in 'syn_histo_f'.
+        syn_histo_f[syn_histo_f == 0] = 1.e-9
+
         # Obtain inverse logarithmic 'Poisson likelihood ratio'.
-        poiss_lkl = len(Q[0])
-        for el1 in zip(*(cl_histo, syn_histo)):
-            for el2 in zip(*(el1[0], el1[1])):
-                c = -1. * el2[0] * np.log(max(el2[1], epsilon))
-                poiss_lkl += c
+        dolph_lkl = 2. * (
+            len(synth_phot[0]) - sum(cl_histo_f * np.log(syn_histo_f)))
 
         # Call this function to see histograms produced.
         # *IMPORTANT*: The list passed in obs_clust_prepare must be modified
         # for this block to work.
-        # dolphin_plot(Q, P, b_rx, b_ry, cl_histo, syn_histo, poiss_lkl)
+        # dolphin_plot(Q, P, b_rx, b_ry, cl_histo, syn_histo, dolph_lkl)
 
-    return poiss_lkl
+    return dolph_lkl
 
 
 def mighell(Q, P):
@@ -252,28 +250,23 @@ def main(lkl_method, e_max, bin_mass_ratio, err_lst, obs_clust,
          completeness, st_dist_mass, isochrone, ext_coefs, N_fc,
          synth_cl_params):
     '''
-    Call with an isochrone of given values for metallicity and age and supply
-    the extinction and distance modulus values to move that isochrone. Use
-    that isochrone to generate a synthetic cluster with those parameters and
-    finally compare it with the observed cluster.
-
-    synth_clust = [photom_dims, photom_errs, binar_idx, extra_info]
-    photom_dims = [mag1, mag2, ..., magN, col1, col2, ..., colM]
-    photom_errs = [e_m1, e_m2, ..., e_mN, e_c1, e_c2, ..., e_CM]
-    binar_idx = [ids of binary systems for stars in photom_dims]
-    extra info = lists with additional information, from the theoretical
-                 isochrones.
+    Generate synthetic cluster with an isochrone of given values for
+    metallicity and age. Match the synthetic cluster to the observed cluster.
     '''
 
-    # Generate synthetic cluster using this "moved" isochrone and a mass
-    # distribution.
+    # Generate synthetic cluster..
     # with timeblock("synth_cl"):
     synth_clust = synth_cluster.main(
         e_max, bin_mass_ratio, err_lst, completeness, st_dist_mass, isochrone,
         ext_coefs, N_fc, synth_cl_params)
+    # synth_clust = [photom_dims, photom_errs, binar_idx, extra_info]
+    # photom_dims = [mag1, mag2, ..., magN, col1, col2, ..., colM]
+    # photom_errs = [e_m1, e_m2, ..., e_mN, e_c1, e_c2, ..., e_CM]
+    # binar_idx = [ids of binary systems for stars in photom_dims]
+    # extra info = lists with additional information, from the theoretical
+    #              isochrones.
 
-    # Call function to obtain the likelihood by comparing the synthetic cluster
-    # with the observed cluster.
+    # Obtain the likelihood matching the synthetic and observed clusters.
     if lkl_method == 'tolstoy':
         likelihood = tolstoy(synth_clust, obs_clust)
     else:
