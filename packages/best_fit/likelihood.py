@@ -76,13 +76,16 @@ def tolstoy(synth_clust, obs_clust):
                 syn_sum += np.exp(-0.5 * exp_sum) / np.sqrt(err_mult)
 
             # The final prob for this observed star is the sum over all
-            # synthetic stars. Use 1e-10 to avoid nan and inf values in the
-            # calculations that follow.
-            cl_stars_probs.append(max(syn_sum, 1.e-10))
+            # synthetic stars.
+            cl_stars_probs.append(syn_sum)
 
-        # Final score: sum log likelihoods for each star in cluster, weighted
-        # by its probability.
-        tlst_lkl = -sum(np.log(cl_stars_probs * mem_probs / len(syn_st)))
+        # Weight the probability of each observed star by its MP.
+        # Use 1e-10 to avoid inf values in the np.log that follows.
+        cl_stars_probs_w = cl_stars_probs * mem_probs
+        cl_stars_probs_w[cl_stars_probs_w == 0.] = 1.e-10
+        # Normalize by the number of synthetic stars, and sum the (negative)
+        # logarithms to obtain the final likelihood.
+        tlst_lkl = -sum(np.log(cl_stars_probs_w / len(syn_st)))
 
     return tlst_lkl
 
