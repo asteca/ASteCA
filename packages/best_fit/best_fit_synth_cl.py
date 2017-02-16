@@ -7,7 +7,6 @@ import bootstrap
 from ..errors import error_round
 from ..synth_clust import extin_coefs
 from ..synth_clust import imf
-from ..synth_clust import synth_cl_plot
 
 
 def params_errors(
@@ -117,6 +116,8 @@ def main(clp, bf_flag, er_params, bf_params, IMF_name, m_high, bin_mr,
             memb_prob_avrg_sort, theor_tracks, ext_coefs, st_dist_mass, N_fc,
             ga_params, bin_method, best_fit_algor, isoch_fit_params, N_b)
 
+        # TODO Move this to the end of the code, before plotting and storing
+        # data to out file.
         # Round errors to 1 significant digit and round params values
         # to the corresponding number of significant digits given by
         # the errors.
@@ -126,10 +127,11 @@ def main(clp, bf_flag, er_params, bf_params, IMF_name, m_high, bin_mr,
     else:
         # Pass empty lists to make_plots.
         print('Skipping parameters fitting process.')
-        isoch_fit_params, isoch_fit_errors, syn_b_edges =\
-            [[-1., -1., -1., -1., -1., -1.]], \
-            [-1., -1., -1., -1., -1., -1.], []
+        isoch_fit_params, isoch_fit_errors, syn_b_edges, st_dist_mass, N_fc,\
+            ext_coefs = [[-1., -1., -1., -1., -1., -1.]],\
+            [-1., -1., -1., -1., -1., -1.], [], [], [], [], []
 
-    clp['isoch_fit_params'], clp['isoch_fit_errors'], clp['syn_b_edges'] =\
-        isoch_fit_params, isoch_fit_errors, syn_b_edges
+    clp['isoch_fit_params'], clp['isoch_fit_errors'], clp['syn_b_edges'],\
+        clp['ext_coefs'], clp['st_dist_mass'], clp['N_fc'] = isoch_fit_params,\
+        isoch_fit_errors, syn_b_edges, ext_coefs, st_dist_mass, N_fc
     return clp
