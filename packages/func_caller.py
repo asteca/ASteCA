@@ -133,7 +133,7 @@ def main(cl_file, pd):
     clp = best_fit_synth_cl.main(clp, **pd)
 
     # Create output synthetic cluster file if one was found
-    synth_cl_file.main(clp, npd, **pd)
+    clp = synth_cl_file.main(clp, npd, **pd)
 
     # Create output data file in /output dir if it doesn't exist.
     create_out_data_file.main(npd)
