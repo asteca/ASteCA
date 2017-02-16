@@ -132,7 +132,7 @@ def main(pd, met_f_filter, age_values):
     # theor_tracks = [m1, m2, .., mN]
     # mX = [age1, age2, ..., ageM]
     # ageX = [f1, f2, ..., c1, c2, ..., fc1, fc2, ..., m_ini, .., m_bol]
-    # where fX are the indivifual filters (mags), cX are the colors, fcX are
+    # where fX are the individual filters (mags), cX are the colors, fcX are
     # the filters that make up the colors (where c1=(fc1-fc2), c2=(fc3-fc4)),
     # and the final lists are the six extra parameters.
     # Create empty lists for each metallicity, and empty sublists for each age.
