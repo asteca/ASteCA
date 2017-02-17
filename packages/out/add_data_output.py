@@ -21,7 +21,7 @@ def main(npd, pd, clust_cent, e_cent, flag_center_med, flag_center_std,
          flag_not_stable, flag_delta, flag_radius_manual, core_rad,
          e_core, tidal_rad, e_tidal, K_memb_num, K_conct_par, flag_2pk_conver,
          flag_3pk_conver, cont_index, n_memb, memb_par, n_memb_da,
-         flag_memb_par, frac_cl_area, pval_test_params, integr_return,
+         flag_memb_par, frac_cl_area, pval_test_params, integ_mag,
          err_flags, flag_num_memb_low, isoch_fit_params, isoch_fit_errors,
          **kwargs):
     '''
@@ -33,15 +33,6 @@ def main(npd, pd, clust_cent, e_cent, flag_center_med, flag_center_std,
     # Invert flag.
     flag_3pk_no_conver = not flag_3pk_conver
     err_all_fallback, err_max_fallback = err_flags
-
-    # Construct integrated color.
-    m_ord = pd['axes_params'][2]
-    if integr_return:
-        integ_mag1, integ_mag2 = integr_return[2], integr_return[5]
-        sig = 1. if m_ord == 21 else -1.
-        integ_col = sig * (integ_mag2 - integ_mag1)
-    else:
-        integ_col = -99.
 
     # Create list containing all the flags.
     flags_list = [flag_center_manual, flag_radius_manual, flag_center_med,
@@ -77,9 +68,10 @@ def main(npd, pd, clust_cent, e_cent, flag_center_med, flag_center_std,
     cpe_r = [item for t in zip(cp_r, cp_e) for item in t]
 
     # Store all parameter values in list.
+    # TODO using main magnitude only
     line = [write_name, cre_r, K_conct_par, cont_index, K_memb_num,
             n_memb, n_memb_da, memb_par, frac_cl_area, pval_test_params[0],
-            integ_col, cpe_r]
+            integ_mag[0], cpe_r]
     # Flatten list.
     line_f = list(flatten(line))
 
