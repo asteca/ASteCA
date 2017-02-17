@@ -14,10 +14,6 @@ def main(npd):
     # Current time and date.
     now_time = strftime("%Y-%m-%d %H:%M:%S")
 
-    # Check if output folder exists, if not create it.
-    if not exists(output_dir):
-        mkdir(output_dir)
-
     # Check if file already exists. If it does append new values instead of
     # deleting/creating the file again.
     if isfile(out_file_name):
