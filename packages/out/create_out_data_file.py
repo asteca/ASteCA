@@ -1,7 +1,6 @@
 
 from time import strftime
-from os.path import exists, isfile
-from os import mkdir
+from os.path import isfile
 from .._version import __version__
 
 
@@ -10,7 +9,7 @@ def main(npd):
     Create output data file with headers. This will not overwrite any old
     output data file already in the folder.
     '''
-    output_dir, out_file_name = npd['output_dir'], npd['out_file_name']
+    out_file_name = npd['out_file_name']
     # Current time and date.
     now_time = strftime("%Y-%m-%d %H:%M:%S")
 
@@ -25,7 +24,7 @@ def main(npd):
 
         # Modify these two lines
         data[1] = '# [ASteCA {}]\n'.format(__version__)
-        data[3] = '# Modified: {}\n'.format(now_time)
+        data[3] = '# Modified: [{}]\n'.format(now_time)
 
         # Write everything back.
         with open(out_file_name, 'w') as f:

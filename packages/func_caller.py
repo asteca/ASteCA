@@ -135,7 +135,7 @@ def main(cl_file, pd):
     # Create output synthetic cluster file if one was found
     clp = synth_cl_file.main(clp, npd, **pd)
 
-    # Create output data file in /output dir if it doesn't exist.
+    # Create template output data file in /output dir.
     create_out_data_file.main(npd)
 
     # Add cluster data and flags to output file
