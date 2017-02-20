@@ -58,7 +58,4 @@ def main(memb_prob_avrg_sort, lkl_method, bin_method):
         # Store and pass to use in likelihood function.
         obs_clust = [cl_histo, bin_edges]
 
-        # # Pass this list instead if plotting in get_likelihood.
-        # obs_clust = [cl_histo, bin_edges, mags_cols_cl]
-
     return obs_clust
