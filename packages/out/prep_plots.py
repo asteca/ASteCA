@@ -184,30 +184,28 @@ def field_region_stars(stars_out_rjct, field_regions):
     return stars_f_rjct, stars_f_acpt
 
 
-def da_plots(clust_cent, clust_rad, stars_out, x_zmin, x_zmax, y_zmin, y_zmax,
-             cl_reg_fit, cl_reg_no_fit):
-    '''
-    Generate parameters for the finding chart and the photometric diagram
-    plotted with the MPs assigned by the DA.
-    '''
-
-    # Get extreme values for colorbar.
+def da_colorbar_range(cl_reg_fit, cl_reg_no_fit):
+    """
+    Extreme values for colorbar.
+    """
     lst_comb = cl_reg_fit + cl_reg_no_fit
     v_min_mp, v_max_mp = round(min(zip(*lst_comb)[-1]), 2), \
         round(max(zip(*lst_comb)[-1]), 2)
 
-    # Decides if colorbar should be plotted.
-    plot_colorbar = True if v_min_mp != v_max_mp else False
+    return v_min_mp, v_max_mp
 
+
+def da_find_chart(
+    clust_cent, clust_rad, stars_out, x_zmin, x_zmax, y_zmin, y_zmax,
+        cl_reg_fit, cl_reg_no_fit):
+    '''
+    Finding chart with MPs assigned by the DA.
+    '''
     # Arrange stars used in the best fit process.
     cl_reg_fit = zip(*cl_reg_fit)
     # Finding chart data. Invert values so higher prob stars are on top.
     chart_fit_inv = [i[::-1] for i in
                      [cl_reg_fit[1], cl_reg_fit[2], cl_reg_fit[7]]]
-    # Photometric diagram.
-    diag_fit_inv = [
-        i[::-1] for i in [zip(*cl_reg_fit[5])[0], zip(*cl_reg_fit[3])[0],
-                          cl_reg_fit[7]]]
 
     # Arrange stars *not* used in the best fit process.
     if cl_reg_no_fit:
@@ -216,13 +214,8 @@ def da_plots(clust_cent, clust_rad, stars_out, x_zmin, x_zmax, y_zmin, y_zmax,
         chart_no_fit_inv = [
             i[::-1] for i in [cl_reg_no_fit[1], cl_reg_no_fit[2],
                               cl_reg_no_fit[7]]]
-        # Photometric diagram.
-        diag_no_fit_inv = [
-            i[::-1] for i in [
-                zip(*cl_reg_no_fit[5])[0], zip(*cl_reg_no_fit[3])[0],
-                cl_reg_no_fit[7]]]
     else:
-        chart_no_fit_inv, diag_no_fit_inv = [[], [], []], [[], [], []]
+        chart_no_fit_inv = [[], [], []]
 
     # Separate stars outside the cluster's radius.
     out_clust_rad = [[], []]
@@ -235,8 +228,37 @@ def da_plots(clust_cent, clust_rad, stars_out, x_zmin, x_zmax, y_zmin, y_zmax,
                 out_clust_rad[0].append(star[1])
                 out_clust_rad[1].append(star[2])
 
-    return v_min_mp, v_max_mp, plot_colorbar, chart_fit_inv, \
-        chart_no_fit_inv, out_clust_rad, diag_fit_inv, diag_no_fit_inv
+    return chart_fit_inv, chart_no_fit_inv, out_clust_rad
+
+
+def da_phot_diag(cl_reg_fit, cl_reg_no_fit, v_min_mp, v_max_mp):
+    '''
+    Generate parameters for the photometric diagram plotted with the MPs
+    assigned by the DA.
+    '''
+
+    # Decides if colorbar should be plotted.
+    plot_colorbar = True if v_min_mp != v_max_mp else False
+
+    # Arrange stars used in the best fit process.
+    cl_reg_fit = zip(*cl_reg_fit)
+    # Photometric diagram.
+    diag_fit_inv = [
+        i[::-1] for i in [zip(*cl_reg_fit[5])[0], zip(*cl_reg_fit[3])[0],
+                          cl_reg_fit[7]]]
+
+    # Arrange stars *not* used in the best fit process.
+    if cl_reg_no_fit:
+        cl_reg_no_fit = zip(*cl_reg_no_fit)
+        # Photometric diagram.
+        diag_no_fit_inv = [
+            i[::-1] for i in [
+                zip(*cl_reg_no_fit[5])[0], zip(*cl_reg_no_fit[3])[0],
+                cl_reg_no_fit[7]]]
+    else:
+        diag_no_fit_inv = [[], [], []]
+
+    return plot_colorbar, diag_fit_inv, diag_no_fit_inv
 
 
 def error_bars(stars_phot, x_min_cmd, err_lst):
@@ -264,12 +286,12 @@ def error_bars(stars_phot, x_min_cmd, err_lst):
     return err_bar
 
 
-def param_ranges(ip_list):
+def param_ranges(fundam_params):
     '''
-    Set parameter ranges used by GA plots.
+    Parameter ranges used by GA plots.
     '''
     min_max_p = []
-    for param in ip_list[1]:
+    for param in fundam_params:
         # Set the delta for the parameter range. If only one value was
         # used, set a very small delta value.
         delta_p = (max(param) - min(param)) * 0.05 \

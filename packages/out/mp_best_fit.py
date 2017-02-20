@@ -8,13 +8,67 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy.ndimage.filters import gaussian_filter
 
 
+def pl_mps_phot_diag(gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
+                     x_ax, y_ax, v_min_mp, v_max_mp, diag_fit_inv,
+                     err_bar, syn_b_edges, shift_isoch):
+    '''
+    Star's membership probabilities on cluster's photometric diagram.
+    '''
+    x_val, mag_y, x_err, y_err = err_bar
+    ax = plt.subplot(gs[0:2, 0:2])
+    # Set plot limits
+    plt.xlim(x_min_cmd, x_max_cmd)
+    plt.ylim(y_min_cmd, y_max_cmd)
+    # Set axis labels
+    plt.xlabel('$' + x_ax + '$', fontsize=18)
+    plt.ylabel('$' + y_ax + '$', fontsize=18)
+    # Add text box.
+    text = '$N_{{fit}}={}$'.format(len(diag_fit_inv[0]))
+    ob = offsetbox.AnchoredText(text, loc=2, prop=dict(size=14))
+    ob.patch.set(boxstyle='square,pad=-0.2', alpha=0.85)
+    ax.add_artist(ob)
+    # Set minor ticks
+    ax.minorticks_on()
+    ax.xaxis.set_major_locator(MultipleLocator(1.0))
+    # Plot grid.
+    for x_ed in syn_b_edges[1]:
+        # vertical lines
+        ax.axvline(x_ed, linestyle=':', color='k', zorder=1)
+    for y_ed in syn_b_edges[0]:
+        # horizontal lines
+        ax.axhline(y_ed, linestyle=':', color='k', zorder=1)
+    # This reversed colormap means higher prob stars will look redder.
+    cm = plt.cm.get_cmap('RdYlBu_r')
+    # If stars have a range of colors, use list of colors. Else use a single
+    # color.
+    if v_min_mp != v_max_mp:
+        col_select_fit = diag_fit_inv[2]
+    else:
+        col_select_fit = '#4682b4'
+    # Plot stars used in the best fit process.
+    sca = plt.scatter(diag_fit_inv[0], diag_fit_inv[1], marker='o',
+                      c=col_select_fit, s=40, cmap=cm, lw=0.5, vmin=v_min_mp,
+                      vmax=v_max_mp, zorder=4)
+    # TODO using main magnitude and first color.
+    # Plot isochrone.
+    plt.plot(shift_isoch[1], shift_isoch[0], 'g', lw=1.2)
+    # If list is not empty, plot error bars at several values.
+    if x_val:
+        plt.errorbar(x_val, mag_y, yerr=y_err, xerr=x_err, fmt='k.', lw=0.8,
+                     ms=0., zorder=4)
+    # For plotting the colorbar (see bottom of make_plots file).
+    trans = ax.transAxes + fig.transFigure.inverted()
+
+    return sca, trans
+
+
 def pl_bf_synth_cl(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
                    synth_clst, syn_b_edges, cp_r, cp_e, shift_isoch,
                    lkl_method, bin_method, cmd_evol_tracks, evol_track):
     '''
     Best fit synthetic cluster obtained.
     '''
-    ax = plt.subplot(gs[4:6, 8:10])
+    ax = plt.subplot(gs[0:2, 2:4])
     # Set plot limits
     plt.xlim(x_min_cmd, x_max_cmd)
     plt.ylim(y_min_cmd, y_max_cmd)
@@ -26,10 +80,10 @@ def pl_bf_synth_cl(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
     ax.xaxis.set_major_locator(MultipleLocator(1.0))
     # Plot grid.
     if lkl_method == 'dolphin':
-        for x_ed in syn_b_edges[0]:
+        for x_ed in syn_b_edges[1]:
             # vertical lines
             ax.axvline(x_ed, linestyle=':', color='k', zorder=1)
-        for y_ed in syn_b_edges[1]:
+        for y_ed in syn_b_edges[0]:
             # horizontal lines
             ax.axhline(y_ed, linestyle=':', color='k', zorder=1)
         # Add text box
@@ -40,22 +94,24 @@ def pl_bf_synth_cl(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
     else:
         ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1,
                 zorder=1)
-    if synth_clst.any():
+    if synth_clst:
+        # TODO using main magnitude and first color
         # Plot synthetic cluster.
-        plt.scatter(synth_clst[0], synth_clst[2], marker='o', s=40,
+        plt.scatter(synth_clst[0][0][1], synth_clst[0][0][0], marker='o', s=40,
                     c='#4682b4', lw=0.5, zorder=4)
-        text1 = '$N_{{synth}} = {}$'.format(len(synth_clst[0]))
+        text1 = '$N_{{synth}} = {}$'.format(len(synth_clst[0][0][0]))
     else:
         text1 = '$N_{{synth}} = {}$'.format(0)
     # Add text box
     ob = offsetbox.AnchoredText(text1, pad=.2, loc=2, prop=dict(size=14))
     ob.patch.set(alpha=0.85)
     ax.add_artist(ob)
+    # TODO using main magnitude and first color.
     # Plot isochrone.
-    plt.plot(shift_isoch[0], shift_isoch[1], 'r', lw=1.2)
+    plt.plot(shift_isoch[1], shift_isoch[0], 'r', lw=1.2)
 
     # Add text box to the right of the synthetic cluster.
-    ax_t = plt.subplot(gs[4:6, 10:12])
+    ax_t = plt.subplot(gs[0:2, 4:6])
     ax_t.axis('off')  # Remove axis from frame.
     # Map isochrones set selection to proper name.
     iso_print = cmd_evol_tracks[evol_track][1]
@@ -82,7 +138,7 @@ def pl_ga_lkl(gs, l_min_max, lkl_old, model_done, new_bs_indx, ga_params, N_b):
     # Genetic algorithm parameters.
     n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es = ga_params
 
-    ax = plt.subplot(gs[6:8, 0:4])
+    ax = plt.subplot(gs[2:4, 0:4])
     plt.xlim(-0.5, len(lkl_old[0]) + int(0.01 * len(lkl_old[0])))
     plt.ylim(l_min_max[0], l_min_max[1])
     # Set minor ticks
@@ -125,16 +181,16 @@ def pl_2_param_dens(gs, _2_params, min_max_p, cp_r, cp_e, model_done):
     '''
     # Define parameters for upper and lower plots.
     if _2_params == 'age-metal':
-        ax, cp, d_map, mx, my = plt.subplot(gs[6:8, 4:6]), 'r', 'Blues', 0, 1
+        ax, cp, d_map, mx, my = plt.subplot(gs[2:4, 4:6]), 'r', 'Blues', 0, 1
         x_label, y_label = '$z$', '$log(age)$'
     elif _2_params == 'dist-ext':
-        ax, cp, d_map, mx, my = plt.subplot(gs[6:8, 6:8]), 'b', 'Reds', 2, 3
+        ax, cp, d_map, mx, my = plt.subplot(gs[2:4, 6:8]), 'b', 'Reds', 2, 3
         x_label, y_label = '$E_{(B-V)}$', '$(m-M)_o$'
     elif _2_params == 'metal-dist':
-        ax, cp, d_map, mx, my = plt.subplot(gs[6:8, 8:10]), 'r', 'Blues', 0, 3
+        ax, cp, d_map, mx, my = plt.subplot(gs[2:4, 8:10]), 'r', 'Blues', 0, 3
         x_label, y_label = '$z$', '$(m-M)_o$'
     elif _2_params == 'mass-binar':
-        ax, cp, d_map, mx, my = plt.subplot(gs[6:8, 10:12]), 'b', 'Reds', 4, 5
+        ax, cp, d_map, mx, my = plt.subplot(gs[2:4, 10:12]), 'b', 'Reds', 4, 5
         x_label, y_label = '$M\,(M_{{\odot}})$', '$b_{frac}$'
 
     # Parameter values and errors.
@@ -183,18 +239,18 @@ def pl_lkl_scatt(gs, ld_p, min_max_p, cp_r, cp_e, model_done):
     '''
     # Define parameters for upper and lower plots.
     if ld_p == '$z$':
-        ax, cp, ci, zlab = plt.subplot(gs[8:10, 0:2]), 0, 1, '$log(age)$'
+        ax, cp, ci, zlab = plt.subplot(gs[4:6, 0:2]), 0, 1, '$log(age)$'
         plt.ylabel('Likelihood', fontsize=12)
     elif ld_p == '$log(age)$':
-        ax, cp, ci, zlab = plt.subplot(gs[8:10, 2:4]), 1, 2, '$E_{{(B-V)}}$'
+        ax, cp, ci, zlab = plt.subplot(gs[4:6, 2:4]), 1, 2, '$E_{{(B-V)}}$'
     elif ld_p == '$E_{{(B-V)}}$':
-        ax, cp, ci, zlab = plt.subplot(gs[8:10, 4:6]), 2, 3, '$(m-M)_o$'
+        ax, cp, ci, zlab = plt.subplot(gs[4:6, 4:6]), 2, 3, '$(m-M)_o$'
     elif ld_p == '$(m-M)_o$':
-        ax, cp, ci, zlab = plt.subplot(gs[8:10, 6:8]), 3, 1, '$log(age)$'
+        ax, cp, ci, zlab = plt.subplot(gs[4:6, 6:8]), 3, 1, '$log(age)$'
     elif ld_p == '$M\,(M_{{\odot}})$':
-        ax, cp, ci, zlab = plt.subplot(gs[8:10, 8:10]), 4, 5, '$b_{{frac}}$'
+        ax, cp, ci, zlab = plt.subplot(gs[4:6, 8:10]), 4, 5, '$b_{{frac}}$'
     elif ld_p == '$b_{{frac}}$':
-        ax, cp, ci, zlab = plt.subplot(gs[8:10, 10:12]), 5, 4,\
+        ax, cp, ci, zlab = plt.subplot(gs[4:6, 10:12]), 5, 4,\
             '$M\,(M_{{\odot}})$'
 
     # Parameter values and errors.
@@ -229,9 +285,9 @@ def pl_lkl_scatt(gs, ld_p, min_max_p, cp_r, cp_e, model_done):
     # Set y axis limit.
     min_lik = min(model_done[1])
     if min_lik > 0:
-        min_y, max_y = min_lik - min_lik*0.1, 2.5*min_lik
+        min_y, max_y = min_lik - min_lik * 0.1, 2.5 * min_lik
     else:
-        min_y, max_y = min_lik + min_lik*0.1, -2.5*min_lik
+        min_y, max_y = min_lik + min_lik * 0.1, -2.5 * min_lik
     plt.ylim(min_y, max_y)
     # Position colorbar.
     the_divider = make_axes_locatable(ax)
@@ -268,6 +324,6 @@ def plot(N, *args):
     try:
         fxn(*args)
     except:
-        # import traceback
-        # print traceback.format_exc()
+        import traceback
+        print traceback.format_exc()
         print("  WARNING: error when plotting {}.".format(plt_map.get(N)[1]))

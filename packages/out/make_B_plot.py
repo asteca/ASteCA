@@ -2,7 +2,6 @@
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from os.path import join
-import warnings
 import mp_phot_analysis
 import add_version_plot
 import prep_plots
@@ -18,8 +17,6 @@ def main(
     '''
     # flag_make_plot = pd['pl_params'][0]
     if pd['pl_params'][0]:
-        # figsize(x1, y1), GridSpec(y2, x2) --> To have square plots: x1/x2 =
-        # y1/y2 = 2.5
         fig = plt.figure(figsize=(30, 25))
         gs = gridspec.GridSpec(10, 12)
         add_version_plot.main()
@@ -60,18 +57,12 @@ def main(
         for n, args in enumerate(arglist):
             mp_phot_analysis.plot(n, *args)
 
-        # Ignore warning issued by colorbar plotted in photometric diagram with
-        # membership probabilities.
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            fig.tight_layout()
-
-        # Generate output file for each data file.
+        # Generate output file.
+        fig.tight_layout()
         pl_fmt, pl_dpi = pd['pl_params'][1:3]
         plt.savefig(
             join(npd['output_subdir'], str(npd['clust_name']) +
                  '_B.' + pl_fmt), dpi=pl_dpi, bbox_inches='tight')
-
         # Close to release memory.
         plt.clf()
         plt.close()
