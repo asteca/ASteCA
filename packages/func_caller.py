@@ -34,7 +34,7 @@ from out import top_tiers
 from out import make_A_plot
 from out import make_B_plot
 from out import make_C_plot
-from out import make_plots
+from out import make_D_plot
 from out import done_move
 
 
@@ -98,7 +98,6 @@ def main(cl_file, pd):
     # Get contamination index.
     clp = contamination_index.main(clp)
 
-    # Make A block plots.
     make_A_plot.main(npd, cld, pd, **clp)
 
     # Get luminosity function and completeness level for each magnitude bin.
@@ -110,7 +109,6 @@ def main(cl_file, pd):
     # Get physical cluster probability based on p_values distribution.
     clp = kde_pvalue.main(clp, **pd)
 
-    # Make B block plots.
     make_B_plot.main(npd, cld, pd, **clp)
 
     # Apply decontamination algorithm.
@@ -123,7 +121,6 @@ def main(cl_file, pd):
     # probability or magnitude limit.
     clp = cl_region_clean.main(clp, **pd)
 
-    # Make C block plots.
     make_C_plot.main(npd, cld, pd, **clp)
 
     # Create data file with membership probabilities.
@@ -144,8 +141,7 @@ def main(cl_file, pd):
     # Output top tiers models if best fit parameters were obtained.
     top_tiers.main(npd, cld, pd, **clp)
 
-    # Make plots
-    make_plots.main(npd, cld, pd, **clp)
+    make_D_plot.main(npd, cld, pd, **clp)
 
     # Move file to 'done' dir (if flag is set).
     done_move.main(pd, **npd)

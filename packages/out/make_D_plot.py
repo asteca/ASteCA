@@ -8,21 +8,6 @@ import prep_plots
 from ..synth_clust import synth_cl_plot
 
 
-#############################################################
-# # Timer function: http://stackoverflow.com/a/21860100/1391441
-# from contextlib import contextmanager
-# import time
-# @contextmanager
-# def timeblock(label):
-#     start = time.clock()
-#     try:
-#         yield
-#     finally:
-#         end = time.clock()
-#         print ('{} elapsed: {}'.format(label, end - start))
-#############################################################
-
-
 def main(
         npd, cld, pd, bin_width, cent_bin, clust_cent, e_cent, approx_cents,
         st_dev_lst, hist_2d_g, kde_plot, radii, rdp_points, poisson_error,
