@@ -1,7 +1,7 @@
 
 import numpy as np
 import random
-from astroML.plotting import hist
+from astropy.stats import bayesian_blocks, knuth_bin_width
 import operator
 from bayesian_da import sort_members
 
@@ -35,11 +35,19 @@ def bin_edges_f(bin_method, mags_cols_cl):
             b_num = (max(col) - min(col)) / 0.25
             bin_edges.append(np.histogram(col, bins=int(b_num))[1])
 
-    else:
+    elif bin_method == 'knuth':
         for mag in mags_cols_cl[0]:
-            bin_edges.append(hist(mag, bins=bin_method)[1])
+            bin_edges.append(knuth_bin_width(
+                mag, return_bins=True, quiet=True)[1])
         for col in mags_cols_cl[1]:
-            bin_edges.append(hist(col, bins=bin_method)[1])
+            bin_edges.append(knuth_bin_width(
+                col, return_bins=True, quiet=True)[1])
+
+    elif bin_method == 'blocks':
+        for mag in mags_cols_cl[0]:
+            bin_edges.append(bayesian_blocks(mag))
+        for col in mags_cols_cl[1]:
+            bin_edges.append(bayesian_blocks(col))
 
     return bin_edges
 
