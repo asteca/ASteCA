@@ -62,53 +62,13 @@ def pl_mps_phot_diag(gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
     return sca, trans
 
 
-def pl_hess_diag(
-    gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax, lkl_method,
-        syn_b_edges, hess_diag):
-    """
-    """
-    ax = plt.subplot(gs[0:2, 2:4])
-    # Set plot limits
-    plt.xlim(x_min_cmd, x_max_cmd)
-    plt.ylim(y_min_cmd, y_max_cmd)
-    # Set axis labels
-    plt.xlabel('$' + x_ax + '$', fontsize=18)
-    plt.ylabel('$' + y_ax + '$', fontsize=18)
-    # Set minor ticks
-    ax.minorticks_on()
-    ax.xaxis.set_major_locator(MultipleLocator(1.0))
-    # Plot grid.
-    if lkl_method == 'dolphin':
-        for x_ed in syn_b_edges[1]:
-            # vertical lines
-            ax.axvline(x_ed, linestyle=':', color='k', zorder=1)
-        for y_ed in syn_b_edges[0]:
-            # horizontal lines
-            ax.axhline(y_ed, linestyle=':', color='k', zorder=1)
-        # # Add text box
-        # text = '$({};\,{})$'.format(lkl_method, bin_method)
-        # ob = offsetbox.AnchoredText(text, pad=.2, loc=1, prop=dict(size=12))
-        # ob.patch.set(alpha=0.85)
-        # ax.add_artist(ob)
-
-        # Grid for pcolormesh, using first two dimensions
-        X, Y = np.meshgrid(syn_b_edges[1], syn_b_edges[0])
-        HA = np.rot90(hess_diag)
-        HA = np.flipud(HA)
-        ax.pcolormesh(X, Y, HA, cmap=plt.cm.Blues)
-        # Manipulate axis and ranges.
-        ax.invert_yaxis()
-        # ax.set_xlim(x_extend)
-        # ax.set_ylim(y_extend)
-
-
 def pl_bf_synth_cl(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
                    synth_clst, syn_b_edges, cp_r, cp_e, shift_isoch,
                    lkl_method, bin_method, cmd_evol_tracks, evol_track):
     '''
     Best fit synthetic cluster obtained.
     '''
-    ax = plt.subplot(gs[0:2, 4:6])
+    ax = plt.subplot(gs[0:2, 2:4])
     # Set plot limits
     plt.xlim(x_min_cmd, x_max_cmd)
     plt.ylim(y_min_cmd, y_max_cmd)
@@ -151,7 +111,7 @@ def pl_bf_synth_cl(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
     plt.plot(shift_isoch[1], shift_isoch[0], 'r', lw=1.2)
 
     # Add text box to the right of the synthetic cluster.
-    ax_t = plt.subplot(gs[0:2, 6:8])
+    ax_t = plt.subplot(gs[0:2, 4:6])
     ax_t.axis('off')  # Remove axis from frame.
     # Map isochrones set selection to proper name.
     iso_print = cmd_evol_tracks[evol_track][1]
@@ -343,19 +303,18 @@ def plot(N, *args):
     Handle each plot separately.
     '''
     plt_map = {
-        0: [pl_hess_diag, 'Hess diagram'],
-        1: [pl_bf_synth_cl, 'synthetic cluster'],
-        2: [pl_ga_lkl, 'GA likelihood evolution'],
-        3: [pl_2_param_dens, 'age vs metallicity density map'],
-        4: [pl_2_param_dens, 'distance vs extinction density map'],
-        5: [pl_2_param_dens, 'z vs distance density map'],
-        6: [pl_2_param_dens, 'mass vs binarity density map'],
-        7: [pl_lkl_scatt, 'z likelihood scatter'],
-        8: [pl_lkl_scatt, 'age likelihood scatter'],
-        9: [pl_lkl_scatt, 'extinction likelihood scatter'],
-        10: [pl_lkl_scatt, 'distance likelihood scatter'],
-        11: [pl_lkl_scatt, 'mass likelihood scatter'],
-        12: [pl_lkl_scatt, 'binarity likelihood scatter']
+        0: [pl_bf_synth_cl, 'synthetic cluster'],
+        1: [pl_ga_lkl, 'GA likelihood evolution'],
+        2: [pl_2_param_dens, 'age vs metallicity density map'],
+        3: [pl_2_param_dens, 'distance vs extinction density map'],
+        4: [pl_2_param_dens, 'z vs distance density map'],
+        5: [pl_2_param_dens, 'mass vs binarity density map'],
+        6: [pl_lkl_scatt, 'z likelihood scatter'],
+        7: [pl_lkl_scatt, 'age likelihood scatter'],
+        8: [pl_lkl_scatt, 'extinction likelihood scatter'],
+        9: [pl_lkl_scatt, 'distance likelihood scatter'],
+        10: [pl_lkl_scatt, 'mass likelihood scatter'],
+        11: [pl_lkl_scatt, 'binarity likelihood scatter']
     }
 
     fxn = plt_map.get(N, None)[0]

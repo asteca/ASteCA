@@ -1,6 +1,5 @@
 
 from ..math_f import exp_function
-from ..best_fit import obs_clust_prepare
 import numpy as np
 from scipy import stats
 import matplotlib.pyplot as plt
@@ -357,25 +356,3 @@ def BestTick(minv, maxv, max_char):
         xmin = int(round(minv / st[st_indx])) * st[st_indx]
 
     return xmin, st[st_indx]
-
-
-def get_hess(lkl_method, bin_method, cl_reg_fit, synth_clust):
-    """
-    """
-    hess_diag = []
-    if lkl_method == 'dolphin':
-        synth_phot = synth_clust[0][0]
-        # Observed cluster's histogram and bin edges for each dimension.
-        cl_histo, bin_edges = obs_clust_prepare.main(
-            cl_reg_fit, lkl_method, bin_method)
-
-        # Histogram of the synthetic cluster, using the bin edges calculated
-        # with the observed cluster.
-        syn_histo = np.histogramdd(synth_phot, bins=bin_edges)[0]
-
-        hess_nd = cl_histo - syn_histo
-        hess_diag = hess_nd.reshape(hess_nd.shape[:2] + (-1,)).sum(axis=-1)
-        print([len(_) for _ in bin_edges])
-        print(np.shape(cl_histo), np.shape(syn_histo), np.shape(hess_diag))
-
-    return hess_diag
