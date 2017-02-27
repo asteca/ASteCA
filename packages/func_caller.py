@@ -17,8 +17,8 @@ from errors import err_range_avrg
 from structure import stars_in_out_cl_reg
 from structure import cluster_area
 from structure import field_regions
+from structure import contamination_index
 from phot_analysis import members_number
-from phot_analysis import contamination_index
 from phot_analysis import luminosity
 from phot_analysis import integrated_mag
 from phot_analysis import kde_pvalue
@@ -92,13 +92,13 @@ def main(cl_file, pd):
     # Field regions around the cluster's center.
     clp = field_regions.main(clp, **pd)
 
-    # Get approximate number of cluster's members.
-    clp = members_number.main(clp)
-
     # Get contamination index.
     clp = contamination_index.main(clp)
 
     make_A_plot.main(npd, cld, pd, **clp)
+
+    # Get approximate number of cluster's members.
+    clp = members_number.main(clp)
 
     # Get luminosity function and completeness level for each magnitude bin.
     clp = luminosity.main(clp, **cld)
