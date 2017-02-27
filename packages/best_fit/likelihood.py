@@ -90,80 +90,6 @@ def tolstoy(synth_clust, obs_clust):
     return tlst_lkl
 
 
-def dolphin_plot(bin_edges, cl_histo, syn_histo, likel):
-    '''
-    Plots Dolphin histograms.
-    '''
-
-    print(likel)
-    import matplotlib.pyplot as plt
-    # from matplotlib.ticker import MultipleLocator
-
-    # # Define grid for 2D histograms.
-    # X, Y = np.meshgrid(b_rx, b_ry)
-    # # Extent of plots.
-    # x_extend = [min(P[-1][0]) - 1., max(P[-1][0]) + 1.]
-    # y_extend = [max(P[-1][1]) + 1., min(P[-1][1]) - 6.]
-
-    # # Define subplots.
-    # fig = plt.figure()
-    # ax0 = fig.add_subplot(1, 4, 1)
-    # ax0.set_xlim(x_extend)
-    # ax0.set_ylim(y_extend)
-    # ax1 = fig.add_subplot(1, 4, 2)
-    # ax2 = fig.add_subplot(1, 4, 3)
-    # ax2.minorticks_on()
-    # ax2.yaxis.set_major_locator(MultipleLocator(1.0))
-    # ax3 = fig.add_subplot(1, 4, 4)
-    # ax3.minorticks_on()
-    # ax3.yaxis.set_major_locator(MultipleLocator(1.0))
-
-    # # Scatter plot for cluster region + synth cluster.
-    # ax0.scatter(P[-1][0], P[-1][1], c='r', label='Obs clust')
-    # ax0.scatter(Q[0], Q[2], c='b', label='Synth clust')
-    # for x_ed in bin_edges[1]:
-    #     # vertical lines
-    #     ax0.axvline(x_ed, linestyle=':', color='k', zorder=1)
-    # for y_ed in bin_edges[0]:
-    #     # horizontal lines
-    #     ax0.axhline(y_ed, linestyle=':', color='k', zorder=1)
-    # ax0.legend(fancybox=True, loc='lower left', scatterpoints=1)
-
-    # # Scatter plot for synth clust.
-    # ax1.scatter(Q[0], Q[2], c='b', label='Synth clust')
-    # ax1.invert_yaxis()
-    # ax1.legend(fancybox=True, loc='lower left', scatterpoints=1)
-
-    # Observed cluster 2D histo.
-    # Rotate and flip H.
-    H = np.rot90(cl_histo)
-    H = np.flipud(H)
-    ax2.pcolormesh(X, Y, H, cmap=plt.cm.Reds)
-    ax2.text(0.05, 0.95, 'Obs clust 2D histo', transform=ax2.transAxes,
-             fontsize=15)
-
-    # Synthetic cluster 2D histo.
-    H = np.rot90(syn_histo)
-    H = np.flipud(H)
-    ax3.pcolormesh(X, Y, H, cmap=plt.cm.Reds)
-    text = r'Synth clust 2D histo ($-\ln(PLR) \approx {:.2f}$)'.format(
-        likel)
-    ax3.text(0.05, 0.95, text, transform=ax3.transAxes, fontsize=15)
-
-    # Invert histograms axis.
-    ax2.invert_yaxis()
-    ax3.invert_yaxis()
-
-    # Set limits for 2D histos.
-    ax2.set_xlim(x_extend)
-    ax2.set_ylim(y_extend)
-    ax3.set_xlim(x_extend)
-    ax3.set_ylim(y_extend)
-
-    fig.subplots_adjust(hspace=1)
-    plt.show()
-
-
 def dolphin(synth_clust, obs_clust):
     '''
     Takes a synthetic cluster, compares it to the observed cluster and
@@ -195,11 +121,6 @@ def dolphin(synth_clust, obs_clust):
         # Obtain inverse logarithmic 'Poisson likelihood ratio'.
         dolph_lkl = 2. * (
             len(synth_phot[0]) - sum(cl_histo_f * np.log(syn_histo_f)))
-
-        # Call this function to see histograms produced.
-        # *IMPORTANT*: The list passed in obs_clust_prepare must be modified
-        # for this block to work.
-        dolphin_plot(bin_edges, cl_histo, syn_histo, dolph_lkl)
 
     return dolph_lkl
 

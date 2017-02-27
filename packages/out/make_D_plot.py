@@ -79,10 +79,15 @@ def main(
         x_ax, y_ax, y_axis = prep_plots.ax_names(pd['filters'], pd['colors'])
         x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd = prep_plots.diag_limits(
             y_axis, cld['cols'], cld['mags'])
+        hess_diag = prep_plots.get_hess(
+            lkl_method, bin_method, cl_reg_fit, synth_clst)
 
         # Best fit plots.
         if pd['bf_flag']:
             arglist = [
+                # hess_diag_pl: Hess diagram 'observed - synthetic'
+                [gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
+                 lkl_method, syn_b_edges, hess_diag],
                 # pl_bf_synth_cl: Best fit synthetic cluster obtained.
                 [gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
                  synth_clst, syn_b_edges, isoch_fit_params[0],
@@ -133,7 +138,7 @@ def main(
                 [gs, '$b_{{frac}}$', min_max_p, isoch_fit_params,
                  isoch_fit_errors, model_done]
             ]
-            for n, args in enumerate(arglist, 1):
+            for n, args in enumerate(arglist, 2):
                 mp_best_fit.plot(n, *args)
 
         if pd['bf_flag']:
