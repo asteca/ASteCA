@@ -53,8 +53,8 @@ def main(clp, bf_flag, er_params, bf_params, IMF_name, m_high, bin_mr,
     Perform a best fitting process to find the cluster's fundamental
     parameters.
     '''
-    err_lst, memb_prob_avrg_sort, completeness = clp['err_lst'],\
-        clp['memb_prob_avrg_sort'], clp['completeness']
+    err_lst, cl_reg_fit, completeness = clp['err_lst'],\
+        clp['cl_reg_fit'], clp['completeness']
     best_fit_algor, lkl_method, bin_method, N_b = bf_params
     e_max = er_params[1]
 
@@ -66,7 +66,7 @@ def main(clp, bf_flag, er_params, bf_params, IMF_name, m_high, bin_mr,
         print colors  # DELETE
 
         obs_clust = obs_clust_prepare.main(
-            memb_prob_avrg_sort, lkl_method, bin_method)
+            cl_reg_fit, lkl_method, bin_method)
         # Store for plotting purposes.
         syn_b_edges = obs_clust[1] if lkl_method == 'dolphin' else []
 
@@ -113,7 +113,7 @@ def main(clp, bf_flag, er_params, bf_params, IMF_name, m_high, bin_mr,
         # Assign errors for each parameter.
         isoch_fit_errors = params_errors(
             lkl_method, e_max, bin_mr, err_lst, completeness, fundam_params,
-            memb_prob_avrg_sort, theor_tracks, ext_coefs, st_dist_mass, N_fc,
+            cl_reg_fit, theor_tracks, ext_coefs, st_dist_mass, N_fc,
             ga_params, bin_method, best_fit_algor, isoch_fit_params, N_b)
 
         # TODO Move this to the end of the code, before plotting and storing
