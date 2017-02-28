@@ -89,7 +89,7 @@ def check_get(pd):
         # Store all the accepted values for the metallicity and age, and the
         # ranges of accepted values for the rest of the fundamental parameters.
         # The 'metal_values' list contains duplicated sub-lists for each
-        #photometric system defined. We store only one.
+        # photometric system defined. We store only one.
         pd['fundam_params'] = [met_values[0], age_values] + param_ranges[2:]
 
         # Store all isochrones in all the metallicity files.
