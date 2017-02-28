@@ -52,19 +52,19 @@ def ranges_files_check(pd):
     err_mssg = "ERROR: one or more metallicity files\n" +\
                "could not be matched to the range given.\n\n" +\
                "The defined values are:\n\n" +\
-               "{}\n\nand the closest available values are:\n\n" +\
+               "{}\n\nand the values read are:\n\n" +\
                "{}\n\nThe missing elements are:\n\n{}"
     # Go through the values extracted from the metallicity files present
     # in each photometric system used.
     for met_vs in met_values:
         if len(z_range) > len(met_vs):
             # Find missing elements.
-            missing = find_missing(z_range, met_values)
-            sys.exit(err_mssg.format(z_range, np.asarray(met_values),
+            missing = find_missing(z_range, met_vs)
+            sys.exit(err_mssg.format(z_range, np.asarray(met_vs),
                      np.asarray(missing)))
     err_mssg = "ERROR: one or more isochrones could not be matched\n" +\
                "to the age range given.\n\nThe defined values are:\n\n" +\
-               "{}\n\nand the closest available values are:\n\n" +\
+               "{}\n\nand the values read are:\n\n" +\
                "{}\n\nThe missing elements are:\n\n{}"
     if len(a_range) > len(age_values):
         # Find missing elements.
