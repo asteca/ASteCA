@@ -269,6 +269,8 @@ def main(mypath, pars_f_path):
                 elif reader[0] == 'SC':
                     IMF_name = str(reader[1])
                     m_high = float(reader[2])
+                elif reader[0] == 'RV':
+                    R_V = float(reader[1])
                 elif reader[0] == 'PS_m':
                     m_rs = char_remove(reader)
                 elif reader[0] == 'PS_a':
@@ -349,7 +351,7 @@ def main(mypath, pars_f_path):
         'cmd_evol_tracks': cmd_evol_tracks, 'bf_flag': bf_flag,
         'cmd_systs': cmd_systs, 'bin_methods': bin_methods,
         'imf_funcs': imf_funcs, 'IMF_name': IMF_name, 'm_high': m_high,
-        'bin_mr': bin_mr,
+        'R_V': R_V, 'bin_mr': bin_mr,
         'gh_params': gh_params,
         'cr_params': cr_params, 'kp_flag': kp_flag, 'im_flag': im_flag,
         'er_params': er_params, 'fr_number': fr_number,

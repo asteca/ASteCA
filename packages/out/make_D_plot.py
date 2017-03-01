@@ -90,9 +90,10 @@ def main(
                  lkl_method, syn_b_edges, hess_diag],
                 # pl_bf_synth_cl: Best fit synthetic cluster obtained.
                 [gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
-                 synth_clst, syn_b_edges, isoch_fit_params[0],
-                 isoch_fit_errors, shift_isoch, lkl_method, bin_method,
-                 pd['cmd_evol_tracks'], pd['evol_track']]
+                 synth_clst, syn_b_edges, pd['IMF_name'], pd['R_V'],
+                 isoch_fit_params[0], isoch_fit_errors, shift_isoch,
+                 lkl_method, bin_method, pd['cmd_evol_tracks'],
+                 pd['evol_track']]
             ]
             for n, args in enumerate(arglist):
                 mp_best_fit.plot(n, *args)

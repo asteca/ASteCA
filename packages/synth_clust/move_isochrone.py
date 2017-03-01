@@ -2,7 +2,7 @@
 import numpy as np
 
 
-def main(isochrone, e, d, ext_coefs, N_fc):
+def main(isochrone, e, d, R_V, ext_coefs, N_fc):
     '''
     Receives an isochrone of a given age and metallicity and modifies
     its color and magnitude values according to given values for the extinction
@@ -22,8 +22,7 @@ def main(isochrone, e, d, ext_coefs, N_fc):
     '''
     iso_moved = []
 
-    Rv = 3.1  # TODO fix in #170
-    Av = Rv * e
+    Av = R_V * e
     Nf, Nc = N_fc
 
     # Move filters.
@@ -31,25 +30,25 @@ def main(isochrone, e, d, ext_coefs, N_fc):
         # mx = Mx + dist_mod + Ax
         # Ax = cx * Av
         #
-        Ax = (ext_coefs[fi][0] + ext_coefs[fi][1] / Rv) * Av
+        Ax = (ext_coefs[fi][0] + ext_coefs[fi][1] / R_V) * Av
         iso_moved.append(np.array(mag) + d + Ax)
 
     # Move colors.
     for ci, col in enumerate(isochrone[Nf:(Nf + Nc)]):
         # (m1 - m2)o = (m1 - m2)i + E(m1 - m2)
         # E(m1 - m2) = A_m1 - A_m2
-        # A_x = ef * Av ; ef = a + b/Rv (CCM model)
+        # A_x = ef * Av ; ef = a + b/R_V (CCM model)
         # E(m1 - m2) = (ef_m1 - ef_m2) * Av
-        # E(m1 - m2) = (ef_m1 - ef_m2) * Rv * E(B-V)
+        # E(m1 - m2) = (ef_m1 - ef_m2) * R_V * E(B-V)
         #
-        Ex = ((ext_coefs[Nf + ci][0][0] + ext_coefs[Nf + ci][0][1] / Rv) -
-              (ext_coefs[Nf + ci][1][0] + ext_coefs[Nf + ci][1][1] / Rv)) * Av
+        Ex = ((ext_coefs[Nf + ci][0][0] + ext_coefs[Nf + ci][0][1] / R_V) -
+              (ext_coefs[Nf + ci][1][0] + ext_coefs[Nf + ci][1][1] / R_V)) * Av
         iso_moved.append(np.array(col) + Ex)
 
     # Move filters that make up the colors.
     for fci, fcol in enumerate(isochrone[(Nf + Nc):((Nf + Nc) + (Nc * 2))]):
         Ax = (ext_coefs[(Nf + Nc) + fci][0] +
-              ext_coefs[(Nf + Nc) + fci][1] / Rv) * Av
+              ext_coefs[(Nf + Nc) + fci][1] / R_V) * Av
         iso_moved.append(np.array(fcol) + d + Ax)
 
     # Append the extra parameters, not affected by distance/reddening.

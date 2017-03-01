@@ -171,7 +171,7 @@ def mighell(Q, P):
 
 
 def main(lkl_method, e_max, bin_mass_ratio, err_lst, obs_clust,
-         completeness, st_dist_mass, isochrone, ext_coefs, N_fc,
+         completeness, st_dist_mass, isochrone, R_V, ext_coefs, N_fc,
          synth_cl_params):
     '''
     Generate synthetic cluster with an isochrone of given values for
@@ -182,7 +182,7 @@ def main(lkl_method, e_max, bin_mass_ratio, err_lst, obs_clust,
     # with timeblock("synth_cl"):
     synth_clust = synth_cluster.main(
         e_max, bin_mass_ratio, err_lst, completeness, st_dist_mass, isochrone,
-        ext_coefs, N_fc, synth_cl_params)
+        R_V, ext_coefs, N_fc, synth_cl_params)
     # synth_clust = [photom_dims, photom_errs, binar_idx, extra_info]
     # photom_dims = [mag1, mag2, ..., magN, col1, col2, ..., colM]
     # photom_errs = [e_m1, e_m2, ..., e_mN, e_c1, e_c2, ..., e_CM]

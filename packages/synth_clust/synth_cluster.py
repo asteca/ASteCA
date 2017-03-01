@@ -25,7 +25,7 @@ import add_errors
 
 
 def main(e_max, bin_mass_ratio, err_lst, completeness, st_dist_mass, isochrone,
-         ext_coefs, N_fc, synth_cl_params):
+         R_V, ext_coefs, N_fc, synth_cl_params):
     '''
     Takes an isochrone and returns a synthetic cluster created according to
     a certain mass distribution.
@@ -38,7 +38,7 @@ def main(e_max, bin_mass_ratio, err_lst, completeness, st_dist_mass, isochrone,
 
     # with timeblock("move"):
     # Move theoretical isochrone using the values 'e' and 'd'.
-    isoch_moved = move_isochrone.main(isochrone, e, d, ext_coefs, N_fc)
+    isoch_moved = move_isochrone.main(isochrone, e, d, R_V, ext_coefs, N_fc)
 
     ##############################################################
     # # To generate a synthetic cluster with the full isochrone length,

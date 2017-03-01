@@ -107,9 +107,10 @@ def pl_hess_diag(
         leg.get_frame().set_alpha(0.7)
 
 
-def pl_bf_synth_cl(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
-                   synth_clst, syn_b_edges, cp_r, cp_e, shift_isoch,
-                   lkl_method, bin_method, cmd_evol_tracks, evol_track):
+def pl_bf_synth_cl(
+    gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax, synth_clst,
+        syn_b_edges, IMF_name, R_V, cp_r, cp_e, shift_isoch, lkl_method,
+        bin_method, cmd_evol_tracks, evol_track):
     '''
     Best fit synthetic cluster obtained.
     '''
@@ -162,16 +163,19 @@ def pl_bf_synth_cl(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
     # Map isochrones set selection to proper name.
     iso_print = cmd_evol_tracks[evol_track][1]
     t1 = r'$Synthetic\;cluster\;parameters$' + '\n' + \
-        r'$[Tracks:\;{}]$'.format(iso_print.replace(' ', '\;')) + '\n\n'
-    t2 = r'$z \hspace{{4.25}}=\,{}\pm {}$'.format(cp_r[0], cp_e[0])
-    t3 = r'$\log(age) \hspace{{0.75}}=\,{}\pm {}$'.format(cp_r[1], cp_e[1])
-    t4 = r'$E_{{(B-V)}} \hspace{{1.3}}=\,{}\pm {}$'.format(cp_r[2], cp_e[2])
-    t5 = r'$(m-M)_o=\, {} \pm {}$'.format(cp_r[3], cp_e[3])
-    t6 = r'$M\,(M_{{\odot}}) \hspace{{0.85}} =\,{}\pm {}$'.format(
+        r'$[Tracks:\;{}]$'.format(iso_print.replace(' ', '\;'))
+    t2 = r'$IMF \hspace{{3.}}:\,{}$'.format(
+        IMF_name.replace('_', '\;').title())
+    t3 = r'$R_{{V}} \hspace{{3.4}}=\,{}$'.format(R_V)
+    t4 = r'$z \hspace{{4.25}}=\,{}\pm {}$'.format(cp_r[0], cp_e[0])
+    t5 = r'$\log(age) \hspace{{0.75}}=\,{}\pm {}$'.format(cp_r[1], cp_e[1])
+    t6 = r'$E_{{(B-V)}} \hspace{{1.3}}=\,{}\pm {}$'.format(cp_r[2], cp_e[2])
+    t7 = r'$(m-M)_o=\, {} \pm {}$'.format(cp_r[3], cp_e[3])
+    t8 = r'$M\,(M_{{\odot}}) \hspace{{0.85}} =\,{}\pm {}$'.format(
         cp_r[4], cp_e[4])
-    t7 = r'$b_{{frac}} \hspace{{2.7}}=\,{}\pm {}$'.format(cp_r[5], cp_e[5])
-    text = t1 + t2 + '\n' + t3 + '\n' + t4 + '\n' + t5 + '\n' + t6 + '\n' +\
-        t7 + '\n'
+    t9 = r'$b_{{frac}} \hspace{{2.7}}=\,{}\pm {}$'.format(cp_r[5], cp_e[5])
+    text = t1 + '\n\n' + t2 + '\n' + t3 + '\n' + t4 + '\n' + t5 + '\n' + t6 +\
+        '\n' + t7 + '\n' + t8 + '\n' + t9
     ob = offsetbox.AnchoredText(text, pad=1, loc=6, prop=dict(size=13))
     ob.patch.set(alpha=0.85)
     ax_t.add_artist(ob)

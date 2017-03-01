@@ -4,7 +4,7 @@ import synth_cluster
 
 
 def main(e_max, bin_mr, fundam_params, theor_tracks, isoch_fit_params, err_lst,
-         completeness, st_dist_mass, ext_coefs, N_fc):
+         completeness, st_dist_mass, R_V, ext_coefs, N_fc):
     '''
     # Generate shifted isochrone and synthetic cluster for plotting.
     '''
@@ -22,10 +22,10 @@ def main(e_max, bin_mr, fundam_params, theor_tracks, isoch_fit_params, err_lst,
               "  cluster not found.")
     # Generate shifted best fit isochrone.
     isochrone = theor_tracks[m_i][a_i]
-    shift_isoch = move_isochrone.main(isochrone, e, d, ext_coefs, N_fc)
+    shift_isoch = move_isochrone.main(isochrone, e, d, R_V, ext_coefs, N_fc)
     # Generate best fit synthetic cluster.
     synth_clst = synth_cluster.main(
-        e_max, bin_mr, err_lst, completeness, st_dist_mass, isochrone,
+        e_max, bin_mr, err_lst, completeness, st_dist_mass, isochrone, R_V,
         ext_coefs, N_fc, synth_cl_params)
 
     return shift_isoch, synth_clst

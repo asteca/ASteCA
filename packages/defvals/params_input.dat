@@ -330,6 +330,11 @@ PS        PAR12
 #    IMF                  m_high
 SC  kroupa_2002             300.
 #
+# * R_V: ratio of total to selective absorption.
+#
+#      R_V
+RV     3.1
+#
 # Ranges and steps for the parameters to be fitted.
 #
 #                        min     max     step

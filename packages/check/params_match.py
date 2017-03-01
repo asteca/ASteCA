@@ -4,7 +4,7 @@ import numpy as np
 from os.path import isdir
 
 
-def check(IMF_name, evol_track, bin_methods, bf_flag, bf_params,
+def check(IMF_name, R_V, evol_track, bin_methods, bf_flag, bf_params,
           cmd_evol_tracks, iso_paths, imf_funcs, par_ranges, bin_mr,
           ga_params, **kwargs):
     """
@@ -78,6 +78,11 @@ def check(IMF_name, evol_track, bin_methods, bf_flag, bf_params,
         # Check IMF defined.
         if IMF_name not in imf_funcs:
             sys.exit("ERROR: Name of IMF ({}) is incorrect.".format(IMF_name))
+
+        # Check R_V defined.
+        if R_V <= .0:
+            sys.exit("ERROR: Ratio of total to selective absorption\n"
+                     "R_V ({}) must be positive defined.".format(R_V))
 
         # Check that no parameter range is empty.
         m_rs, a_rs, e_rs, d_rs, mass_rs, bin_rs = par_ranges

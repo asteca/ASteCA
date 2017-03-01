@@ -161,8 +161,8 @@ def selection(generation, breed_prob):
 
 
 def evaluation(lkl_method, e_max, bin_mr, err_lst, completeness, fundam_params,
-               obs_clust, theor_tracks, ext_coefs, st_dist_mass, N_fc, p_lst,
-               model_done):
+               obs_clust, theor_tracks, R_V, ext_coefs, st_dist_mass, N_fc,
+               p_lst, model_done):
     '''
     Evaluate each model in the objective function to obtain the fitness of
     each one.
@@ -181,7 +181,7 @@ def evaluation(lkl_method, e_max, bin_mr, err_lst, completeness, fundam_params,
         # with timeblock(" Likelihood"):
         lkl = likelihood.main(
             lkl_method, e_max, bin_mr, err_lst, obs_clust, completeness,
-            st_dist_mass, isochrone, ext_coefs, N_fc, model)
+            st_dist_mass, isochrone, R_V, ext_coefs, N_fc, model)
 
         # Check if this model was already processed. Without this check here,
         # the extinction/immigration operator becomes useless, since the best
@@ -274,8 +274,8 @@ def num_binary_digits(fundam_params):
 
 
 def main(lkl_method, e_max, bin_mr, err_lst, completeness, fundam_params,
-         obs_clust, theor_tracks, ext_coefs, st_dist_mass, N_fc, ga_params,
-         flag_print_perc):
+         obs_clust, theor_tracks, R_V, ext_coefs, st_dist_mass, N_fc,
+         ga_params, flag_print_perc):
     '''
     Genetic algorithm. Finds the best fit model-observation.
     '''
@@ -305,7 +305,7 @@ def main(lkl_method, e_max, bin_mr, err_lst, completeness, fundam_params,
     # Evaluate initial random solutions in the objective function.
     generation, lkl, model_done = evaluation(
         lkl_method, e_max, bin_mr, err_lst, completeness, fundam_params,
-        obs_clust, theor_tracks, ext_coefs, st_dist_mass, N_fc, p_lst_r,
+        obs_clust, theor_tracks, R_V, ext_coefs, st_dist_mass, N_fc, p_lst_r,
         model_done)
 
     # Store best solution for passing along in the 'Elitism' block.
@@ -365,8 +365,8 @@ def main(lkl_method, e_max, bin_mr, err_lst, completeness, fundam_params,
         # with timeblock("Evaluation"):
         generation, lkl, model_done = evaluation(
             lkl_method, e_max, bin_mr, err_lst, completeness, fundam_params,
-            obs_clust, theor_tracks, ext_coefs, st_dist_mass, N_fc, p_lst_e,
-            model_done)
+            obs_clust, theor_tracks, R_V, ext_coefs, st_dist_mass, N_fc,
+            p_lst_e, model_done)
 
         # *** Extinction/Immigration ***
         # If the best solution has remained unchanged for n_ei

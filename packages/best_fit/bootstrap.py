@@ -16,7 +16,7 @@ def resample_replacement(obs_clust):
 
 
 def main(lkl_method, e_max, bin_mr, err_lst, completeness, fundam_params,
-         memb_prob_avrg_sort, theor_tracks, ext_coefs, st_dist_mass, N_fc,
+         memb_prob_avrg_sort, theor_tracks, R_V, ext_coefs, st_dist_mass, N_fc,
          ga_params, bin_method, best_fit_algor, N_b):
     '''
     Bootstrap process, runs the selected algorithm a number of times each
@@ -46,7 +46,7 @@ def main(lkl_method, e_max, bin_mr, err_lst, completeness, fundam_params,
             flag_print_perc = False
             params_boot.append(genetic_algorithm.main(
                 lkl_method, e_max, bin_mr, err_lst, completeness,
-                fundam_params, obs_cl, theor_tracks, ext_coefs,
+                fundam_params, obs_cl, theor_tracks, R_V, ext_coefs,
                 st_dist_mass, N_fc, ga_params, flag_print_perc)[0])
 
         percentage_complete = (100.0 * (i + 1) / max(N_b, 2))

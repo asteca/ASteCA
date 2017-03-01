@@ -11,7 +11,7 @@ from ..synth_clust import imf
 
 def params_errors(
     lkl_method, e_max, bin_mr, err_lst, completeness, fundam_params,
-        memb_prob_avrg_sort, theor_tracks, ext_coefs, st_dist_mass, N_fc,
+        memb_prob_avrg_sort, theor_tracks, R_V, ext_coefs, st_dist_mass, N_fc,
         ga_params, bin_method, best_fit_algor, isoch_fit_params, N_b):
     '''
     Obtain errors for the fitted parameters.
@@ -36,8 +36,9 @@ def params_errors(
             # in each parameter.
             isoch_fit_errors = bootstrap.main(
                 lkl_method, e_max, bin_mr, err_lst, completeness,
-                fundam_params, memb_prob_avrg_sort, theor_tracks, ext_coefs,
-                st_dist_mass, N_fc, ga_params, bin_method, best_fit_algor, N_b)
+                fundam_params, memb_prob_avrg_sort, theor_tracks, R_V,
+                ext_coefs, st_dist_mass, N_fc, ga_params, bin_method,
+                best_fit_algor, N_b)
         else:
             print('Skipping bootstrap process.')
             # No error assignment.
@@ -46,7 +47,7 @@ def params_errors(
     return isoch_fit_errors
 
 
-def main(clp, bf_flag, er_params, bf_params, IMF_name, m_high, bin_mr,
+def main(clp, bf_flag, er_params, bf_params, IMF_name, m_high, R_V, bin_mr,
          ga_params, fundam_params, cmd_systs, all_syst_filters, filters,
          colors, theor_tracks, **kwargs):
     '''
@@ -91,7 +92,7 @@ def main(clp, bf_flag, er_params, bf_params, IMF_name, m_high, bin_mr,
             # Brute force algorithm.
             isoch_fit_params = brute_force_algor.main(
                 lkl_method, e_max, bin_mr, err_lst, completeness,
-                fundam_params, obs_clust, theor_tracks, ext_coefs,
+                fundam_params, obs_clust, theor_tracks, R_V, ext_coefs,
                 st_dist_mass, N_fc)
 
         elif best_fit_algor == 'genet':
@@ -105,7 +106,7 @@ def main(clp, bf_flag, er_params, bf_params, IMF_name, m_high, bin_mr,
             flag_print_perc = True
             isoch_fit_params = genetic_algorithm.main(
                 lkl_method, e_max, bin_mr, err_lst, completeness,
-                fundam_params, obs_clust, theor_tracks, ext_coefs,
+                fundam_params, obs_clust, theor_tracks, R_V, ext_coefs,
                 st_dist_mass, N_fc, ga_params, flag_print_perc)
 
         print("Best fit parameters obtained.")
@@ -113,7 +114,7 @@ def main(clp, bf_flag, er_params, bf_params, IMF_name, m_high, bin_mr,
         # Assign errors for each parameter.
         isoch_fit_errors = params_errors(
             lkl_method, e_max, bin_mr, err_lst, completeness, fundam_params,
-            cl_reg_fit, theor_tracks, ext_coefs, st_dist_mass, N_fc,
+            cl_reg_fit, theor_tracks, R_V, ext_coefs, st_dist_mass, N_fc,
             ga_params, bin_method, best_fit_algor, isoch_fit_params, N_b)
 
         # TODO Move this to the end of the code, before plotting and storing
