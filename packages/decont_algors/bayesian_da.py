@@ -132,8 +132,8 @@ def main(clp, npd, da_params, **kwargs):
 
     # Check if at least one equal-sized field region was obtained.
     if mode_da in ('auto', 'manual') and flag_no_fl_regs:
-        print("  WARNING: no field regions found. Will not "
-              "apply decontamination algorithm.")
+        print("  WARNING: no field regions found. Will not\n"
+              "  apply decontamination algorithm.")
         mode_da = 'skip'
 
     flag_decont_skip = False
