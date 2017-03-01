@@ -24,12 +24,13 @@ def pl_mps_phot_diag(gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
     plt.ylabel('$' + y_ax + '$', fontsize=18)
     # Add text box.
     text = '$N_{{fit}}={}$'.format(len(diag_fit_inv[0]))
-    ob = offsetbox.AnchoredText(text, loc=2, prop=dict(size=14))
+    ob = offsetbox.AnchoredText(text, loc=4, prop=dict(size=14))
     ob.patch.set(boxstyle='square,pad=-0.2', alpha=0.85)
     ax.add_artist(ob)
     # Set minor ticks
     ax.minorticks_on()
     ax.xaxis.set_major_locator(MultipleLocator(1.0))
+    ax.set_title("Observed", fontsize=9)
     # Plot grid.
     for x_ed in syn_b_edges[1]:
         # vertical lines
@@ -56,7 +57,7 @@ def pl_mps_phot_diag(gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
     if x_val:
         plt.errorbar(x_val, mag_y, yerr=y_err, xerr=x_err, fmt='k.', lw=0.8,
                      ms=0., zorder=4)
-    # For plotting the colorbar (see bottom of make_plots file).
+    # For plotting the colorbar (see bottom of make_D_plot file).
     trans = ax.transAxes + fig.transFigure.inverted()
 
     return sca, trans
@@ -77,7 +78,9 @@ def pl_hess_diag(
     # Set minor ticks
     ax.minorticks_on()
     ax.xaxis.set_major_locator(MultipleLocator(1.0))
-    # Plot grid.
+    ax.set_title("Hess diagram (observed - synthetic)", fontsize=9)
+    # TODO this assumes that the first photom dimen is the main mag, and the
+    # second the color.
     if lkl_method == 'dolphin':
         for x_ed in syn_b_edges[1]:
             # vertical lines
@@ -85,21 +88,23 @@ def pl_hess_diag(
         for y_ed in syn_b_edges[0]:
             # horizontal lines
             ax.axhline(y_ed, linestyle=':', color='k', zorder=1)
-        # # Add text box
-        # text = '$({};\,{})$'.format(lkl_method, bin_method)
-        # ob = offsetbox.AnchoredText(text, pad=.2, loc=1, prop=dict(size=12))
-        # ob.patch.set(alpha=0.85)
-        # ax.add_artist(ob)
-
         # Grid for pcolormesh, using first two dimensions
-        X, Y = np.meshgrid(syn_b_edges[1], syn_b_edges[0])
+        Y, X = np.meshgrid(syn_b_edges[0], syn_b_edges[1])
         HA = np.rot90(hess_diag)
         HA = np.flipud(HA)
-        ax.pcolormesh(X, Y, HA, cmap=plt.cm.Blues)
-        # Manipulate axis and ranges.
-        ax.invert_yaxis()
-        # ax.set_xlim(x_extend)
-        # ax.set_ylim(y_extend)
+        r = int(max(1, min(abs(HA.min()), abs(HA.max()))))
+        ax.pcolormesh(X, Y, HA, cmap=plt.cm.bwr, vmin=-1 * r, vmax=r,
+                      zorder=1)
+        # Add text box.
+        plt.scatter(-100., -100., marker='s', lw=0., s=60, c='#0B02F8',
+                    label='-{}'.format(r))
+        plt.scatter(-100., -100., marker='s', lw=0., s=60, c='#FB0605',
+                    label='{}'.format(r))
+        # Legend.
+        handles, labels = ax.get_legend_handles_labels()
+        leg = ax.legend(handles, labels, loc='lower right', scatterpoints=1,
+                        fontsize=10)
+        leg.get_frame().set_alpha(0.7)
 
 
 def pl_bf_synth_cl(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
@@ -118,6 +123,7 @@ def pl_bf_synth_cl(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
     # Set minor ticks
     ax.minorticks_on()
     ax.xaxis.set_major_locator(MultipleLocator(1.0))
+    ax.set_title("Synthetic (best match)", fontsize=9)
     # Plot grid.
     if lkl_method == 'dolphin':
         for x_ed in syn_b_edges[1]:
@@ -143,7 +149,7 @@ def pl_bf_synth_cl(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
     else:
         text1 = '$N_{{synth}} = {}$'.format(0)
     # Add text box
-    ob = offsetbox.AnchoredText(text1, pad=.2, loc=2, prop=dict(size=14))
+    ob = offsetbox.AnchoredText(text1, pad=.2, loc=3, prop=dict(size=14))
     ob.patch.set(alpha=0.85)
     ax.add_artist(ob)
     # TODO using main magnitude and first color.
