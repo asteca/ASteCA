@@ -13,17 +13,13 @@ def bin_edges_f(bin_method, mags_cols_cl):
     all colors (in the same order in which they are read).
     '''
     bin_edges = []
-    if bin_method in ('sturges', 'sqrt'):
-        N_stars = len(mags_cols_cl[0])
-        if bin_method == 'sturges':
-            b_num = 1 + np.log2(N_stars)
-        else:
-            b_num = np.sqrt(N_stars)
+    if bin_method in (
+            'auto', 'fd', 'doane', 'scott', 'rice', 'sturges', 'sqrt'):
 
         for mag in mags_cols_cl[0]:
-            bin_edges.append(np.histogram(mag, bins=int(b_num))[1])
+            bin_edges.append(np.histogram(mag, bins=bin_method)[1])
         for col in mags_cols_cl[1]:
-            bin_edges.append(np.histogram(col, bins=int(b_num))[1])
+            bin_edges.append(np.histogram(col, bins=bin_method)[1])
 
     elif bin_method == 'bb':
         # Based on Bonatto & Bica (2007) 377, 3, 1301-1323. Fixed bin width
