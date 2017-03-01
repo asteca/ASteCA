@@ -109,7 +109,7 @@ def pl_rad_dens(gs, mode, radii, rdp_points, field_dens, coord, clust_name,
     ax = plt.subplot(gs[0:2, 4:8])
     # Get max and min values in x,y
     x_min, x_max = max(min(radii) - (max(radii) / 20.), 0), \
-        max(radii) + (max(radii) / 20.)
+        min(max(radii) + (max(radii) / 20.), 3. * clust_rad)
     delta_total = (max(rdp_points) - field_dens)
     delta_backg = 0.2 * delta_total
     y_min = max((field_dens - delta_backg) - (max(rdp_points) -
