@@ -68,8 +68,6 @@ def main(clp, bf_flag, er_params, bf_params, IMF_name, m_high, R_V, bin_mr,
 
         obs_clust = obs_clust_prepare.main(
             cl_reg_fit, lkl_method, bin_method)
-        # Store for plotting purposes.
-        syn_b_edges = obs_clust[1] if lkl_method == 'dolphin' else []
 
         # Obtain extinction coefficients.
         ext_coefs = extin_coefs.main(
@@ -128,11 +126,11 @@ def main(clp, bf_flag, er_params, bf_params, IMF_name, m_high, R_V, bin_mr,
     else:
         # Pass empty lists to make_plots.
         print('Skipping parameters fitting process.')
-        isoch_fit_params, isoch_fit_errors, syn_b_edges, st_dist_mass, N_fc,\
-            ext_coefs = [[-1., -1., -1., -1., -1., -1.]],\
-            [-1., -1., -1., -1., -1., -1.], [], [], [], [], []
+        isoch_fit_params, isoch_fit_errors, st_dist_mass, N_fc, ext_coefs =\
+            [[-1., -1., -1., -1., -1., -1.]], [-1., -1., -1., -1., -1., -1.],\
+            [], [], [], []
 
-    clp['isoch_fit_params'], clp['isoch_fit_errors'], clp['syn_b_edges'],\
-        clp['ext_coefs'], clp['st_dist_mass'], clp['N_fc'] = isoch_fit_params,\
-        isoch_fit_errors, syn_b_edges, ext_coefs, st_dist_mass, N_fc
+    clp['isoch_fit_params'], clp['isoch_fit_errors'], clp['ext_coefs'],\
+        clp['st_dist_mass'], clp['N_fc'] = isoch_fit_params,\
+        isoch_fit_errors, ext_coefs, st_dist_mass, N_fc
     return clp

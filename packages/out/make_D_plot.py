@@ -62,7 +62,7 @@ def plot_observed_cluster(
 
 
 def main(
-        npd, cld, pd, synth_clst, shift_isoch, syn_b_edges, isoch_fit_params,
+        npd, cld, pd, synth_clst, shift_isoch, isoch_fit_params,
         isoch_fit_errors, cl_reg_fit, cl_reg_no_fit, err_lst,
         **kwargs):
     '''
