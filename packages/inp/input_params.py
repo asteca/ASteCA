@@ -319,7 +319,7 @@ def main(mypath, pars_f_path):
     # Map evolutionary tracks selection to proper names, and name of the folder
     # where they should be stored.
     cmd_evol_tracks = {
-        'PAR12C': ('parsec12C', 'COLIBRI PR16'),
+        # 'PAR12C': ('parsec12C', 'COLIBRI PR16'),
         'PAR12': ('parsec12', 'PARSEC v1.2S'),
         'PAR10': ('parsec10', 'PARSEC v1.0'),
         'PAR11': ('parsec11', 'PARSEC v1.1'),
