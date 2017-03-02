@@ -96,12 +96,12 @@ def pl_hess_diag(
         HA = np.rot90(hess_data['hess_diag'])
         HA = np.flipud(HA)
         # Add text box.
-        import pickle
-        with open('edges.pkl', 'w') as f:
-            pickle.dump(hess_data['hess_edges'], f)
-        with open('data.pkl', 'w') as f:
-            pickle.dump(HA, f)
-        print(HA.min(), HA.max(), 1. - HA.max() / (HA.max() - HA.min()))
+        # import pickle
+        # with open('edges.pkl', 'w') as f:
+        #     pickle.dump(hess_data['hess_edges'], f)
+        # with open('data.pkl', 'w') as f:
+        #     pickle.dump(HA, f)
+        # print(HA.min(), HA.max(), 1. - HA.max() / (HA.max() - HA.min()))
         if HA.min() < 0:
             plt.scatter(-100., -100., marker='s', lw=0., s=60, c='#0B02F8',
                         label='{}'.format(int(HA.min())))
