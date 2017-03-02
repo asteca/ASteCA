@@ -363,30 +363,41 @@ def get_hess(lkl_method, bin_method, cl_reg_fit, synth_clust):
     """
     Hess diagram of observed minus best match synthetic cluster.
     """
-    hess_diag = []
     if lkl_method == 'dolphin':
-        synth_phot = synth_clust[0][0]
         # Observed cluster's histogram and bin edges for each dimension.
         cl_histo, bin_edges = obs_clust_prepare.main(
             cl_reg_fit, lkl_method, bin_method)
+    elif lkl_method == 'tolstoy':
+        # Observed cluster's histogram and bin edges for each dimension.
+        cl_histo, bin_edges = obs_clust_prepare.main(
+            cl_reg_fit, 'dolphin', 'bb')
 
-        # Histogram of the synthetic cluster, using the bin edges calculated
-        # with the observed cluster.
-        syn_histo = np.histogramdd(synth_phot, bins=bin_edges)[0]
+    # Histogram of the synthetic cluster, using the bin edges calculated
+    # with the observed cluster.
+    hess_diag = np.array([])
+    if synth_clust:
+        synth_phot = synth_clust[0][0]
+        if synth_phot:
+            syn_histo = np.histogramdd(synth_phot, bins=bin_edges)[0]
+            hess_nd = cl_histo - syn_histo
+            # TODO this uses the first two defined photometric dimensions.
+            hess_diag = hess_nd.reshape(hess_nd.shape[:2] + (-1,)).sum(axis=-1)
 
-        hess_nd = cl_histo - syn_histo
-        # TODO this uses the first two defined photometric dimensions.
-        hess_diag = hess_nd.reshape(hess_nd.shape[:2] + (-1,)).sum(axis=-1)
-        # print([len(_) for _ in bin_edges])
-        # print(np.shape(cl_histo), np.shape(syn_histo), np.shape(hess_diag))
-        # import pickle
-        # with open('obs_cl.pkl', 'w') as f:
-        #     pickle.dump(cl_reg_fit, f)
-        # with open('obs_cl_h.pkl', 'w') as f:
-        #     pickle.dump(cl_histo, f)
-        # with open('bin_edges.pkl', 'w') as f:
-        #     pickle.dump(bin_edges, f)
-        # with open('syn_cl_h.pkl', 'w') as f:
-        #     pickle.dump(syn_histo, f)
+    if not hess_diag.size:
+        print("  WARNING: the synthetic cluster is empty.")
 
-    return hess_diag
+    # print([len(_) for _ in bin_edges])
+    # print(np.shape(cl_histo), np.shape(syn_histo), np.shape(hess_diag))
+    # import pickle
+    # with open('obs_cl.pkl', 'w') as f:
+    #     pickle.dump(cl_reg_fit, f)
+    # with open('obs_cl_h.pkl', 'w') as f:
+    #     pickle.dump(cl_histo, f)
+    # with open('bin_edges.pkl', 'w') as f:
+    #     pickle.dump(bin_edges, f)
+    # with open('syn_cl_h.pkl', 'w') as f:
+    #     pickle.dump(syn_histo, f)
+
+    hess_data = {'hess_diag': hess_diag, 'hess_edges': bin_edges}
+
+    return hess_data

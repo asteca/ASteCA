@@ -5,12 +5,13 @@ import matplotlib.offsetbox as offsetbox
 from matplotlib.ticker import MultipleLocator
 from matplotlib.patches import Ellipse
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+from matplotlib.colors import LinearSegmentedColormap
 from scipy.ndimage.filters import gaussian_filter
 
 
 def pl_mps_phot_diag(gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
                      x_ax, y_ax, v_min_mp, v_max_mp, diag_fit_inv,
-                     err_bar, syn_b_edges, shift_isoch):
+                     err_bar, lkl_method, hess_data, shift_isoch):
     '''
     Star's membership probabilities on cluster's photometric diagram.
     '''
@@ -31,13 +32,15 @@ def pl_mps_phot_diag(gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
     ax.minorticks_on()
     ax.xaxis.set_major_locator(MultipleLocator(1.0))
     ax.set_title("Observed", fontsize=9)
+    # TODO this assumes that the first photom dimen is the main mag, and the
+    # second the color.
     # Plot grid.
-    for x_ed in syn_b_edges[1]:
+    for x_ed in hess_data['hess_edges'][1]:
         # vertical lines
         ax.axvline(x_ed, linestyle=':', color='k', zorder=1)
-    for y_ed in syn_b_edges[0]:
+    for y_ed in hess_data['hess_edges'][0]:
         # horizontal lines
-        ax.axhline(y_ed, linestyle=':', color='k', zorder=1)
+            ax.axhline(y_ed, linestyle=':', color='k', zorder=1)
     # This reversed colormap means higher prob stars will look redder.
     cm = plt.cm.get_cmap('RdYlBu_r')
     # If stars have a range of colors, use list of colors. Else use a single
@@ -65,7 +68,7 @@ def pl_mps_phot_diag(gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
 
 def pl_hess_diag(
     gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax, lkl_method,
-        syn_b_edges, hess_diag):
+        hess_data):
     """
     """
     ax = plt.subplot(gs[0:2, 2:4])
@@ -81,35 +84,51 @@ def pl_hess_diag(
     ax.set_title("Hess diagram (observed - synthetic)", fontsize=9)
     # TODO this assumes that the first photom dimen is the main mag, and the
     # second the color.
-    if lkl_method == 'dolphin':
-        for x_ed in syn_b_edges[1]:
-            # vertical lines
-            ax.axvline(x_ed, linestyle=':', color='k', zorder=1)
-        for y_ed in syn_b_edges[0]:
-            # horizontal lines
-            ax.axhline(y_ed, linestyle=':', color='k', zorder=1)
-        # Grid for pcolormesh, using first two dimensions
-        Y, X = np.meshgrid(syn_b_edges[0], syn_b_edges[1])
-        HA = np.rot90(hess_diag)
+    for x_ed in hess_data['hess_edges'][1]:
+        # vertical lines
+        ax.axvline(x_ed, linestyle=':', color='k', zorder=1)
+    for y_ed in hess_data['hess_edges'][0]:
+        # horizontal lines
+        ax.axhline(y_ed, linestyle=':', color='k', zorder=1)
+    # Grid for pcolormesh, using first two dimensions
+    Y, X = np.meshgrid(hess_data['hess_edges'][0], hess_data['hess_edges'][1])
+    if hess_data['hess_diag'].size:
+        HA = np.rot90(hess_data['hess_diag'])
         HA = np.flipud(HA)
-        r = int(max(1, min(abs(HA.min()), abs(HA.max()))))
-        ax.pcolormesh(X, Y, HA, cmap=plt.cm.bwr, vmin=-1 * r, vmax=r,
-                      zorder=1)
         # Add text box.
-        plt.scatter(-100., -100., marker='s', lw=0., s=60, c='#0B02F8',
-                    label='-{}'.format(r))
-        plt.scatter(-100., -100., marker='s', lw=0., s=60, c='#FB0605',
-                    label='{}'.format(r))
+        import pickle
+        with open('edges.pkl', 'w') as f:
+            pickle.dump(hess_data['hess_edges'], f)
+        with open('data.pkl', 'w') as f:
+            pickle.dump(HA, f)
+        print(HA.min(), HA.max(), 1. - HA.max() / (HA.max() - HA.min()))
+        if HA.min() < 0:
+            plt.scatter(-100., -100., marker='s', lw=0., s=60, c='#0B02F8',
+                        label='{}'.format(int(HA.min())))
+        if HA.max() > 0:
+            plt.scatter(-100., -100., marker='s', lw=0., s=60, c='#FB0605',
+                        label='{}'.format(int(HA.max())))
+        if HA.min() == 0:
+            cmap = LinearSegmentedColormap.from_list(
+                'mycmap', [(0, 'white'), (1, 'red')])
+        else:
+            zero_pt = 1. - HA.max() / (HA.max() - HA.min())
+            cmap = LinearSegmentedColormap.from_list(
+                'mycmap', [(0, 'blue'), (zero_pt, 'white'), (1, 'red')])
+        # r = max(1, max(abs(HA.min()), abs(HA.max())))
+        ax.pcolormesh(X, Y, HA, cmap=cmap, vmin=HA.min(), vmax=HA.max(),
+                      zorder=1)
         # Legend.
         handles, labels = ax.get_legend_handles_labels()
-        leg = ax.legend(handles, labels, loc='lower right', scatterpoints=1,
-                        fontsize=10)
+        leg = ax.legend(
+            handles, labels, loc='lower right', scatterpoints=1, ncol=2,
+            columnspacing=.2, handletextpad=-.3, fontsize=10)
         leg.get_frame().set_alpha(0.7)
 
 
 def pl_bf_synth_cl(
     gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax, synth_clst,
-        syn_b_edges, IMF_name, R_V, cp_r, cp_e, shift_isoch, lkl_method,
+        hess_data, IMF_name, R_V, cp_r, cp_e, shift_isoch, lkl_method,
         bin_method, cmd_evol_tracks, evol_track):
     '''
     Best fit synthetic cluster obtained.
@@ -126,21 +145,19 @@ def pl_bf_synth_cl(
     ax.xaxis.set_major_locator(MultipleLocator(1.0))
     ax.set_title("Synthetic (best match)", fontsize=9)
     # Plot grid.
-    if lkl_method == 'dolphin':
-        for x_ed in syn_b_edges[1]:
-            # vertical lines
-            ax.axvline(x_ed, linestyle=':', color='k', zorder=1)
-        for y_ed in syn_b_edges[0]:
-            # horizontal lines
-            ax.axhline(y_ed, linestyle=':', color='k', zorder=1)
-        # Add text box
-        text = '$({};\,{})$'.format(lkl_method, bin_method)
-        ob = offsetbox.AnchoredText(text, pad=.2, loc=1, prop=dict(size=12))
-        ob.patch.set(alpha=0.85)
-        ax.add_artist(ob)
-    else:
-        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1,
-                zorder=1)
+    # TODO this assumes that the first photom dimen is the main mag, and the
+    # second the color.
+    for x_ed in hess_data['hess_edges'][1]:
+        # vertical lines
+        ax.axvline(x_ed, linestyle=':', color='k', zorder=1)
+    for y_ed in hess_data['hess_edges'][0]:
+        # horizontal lines
+        ax.axhline(y_ed, linestyle=':', color='k', zorder=1)
+    # Add text box
+    text = '$({};\,{})$'.format(lkl_method, bin_method)
+    ob = offsetbox.AnchoredText(text, pad=.2, loc=1, prop=dict(size=12))
+    ob.patch.set(alpha=0.85)
+    ax.add_artist(ob)
     if synth_clst:
         # TODO using main magnitude and first color
         # Plot synthetic cluster.
