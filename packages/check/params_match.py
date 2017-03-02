@@ -80,7 +80,7 @@ def check(IMF_name, R_V, evol_track, bin_methods, bf_flag, bf_params,
             sys.exit("ERROR: Name of IMF ({}) is incorrect.".format(IMF_name))
 
         # Check R_V defined.
-        if R_V <= .0:
+        if R_V <= 0.:
             sys.exit("ERROR: Ratio of total to selective absorption\n"
                      "R_V ({}) must be positive defined.".format(R_V))
 
@@ -88,14 +88,10 @@ def check(IMF_name, R_V, evol_track, bin_methods, bf_flag, bf_params,
         m_rs, a_rs, e_rs, d_rs, mass_rs, bin_rs = par_ranges
         p_names = [['metallicity', m_rs], ['age', a_rs], ['extinction', e_rs],
                    ['distance', d_rs], ['mass', mass_rs], ['binary', bin_rs]]
-        if min(mass_rs[1]) == 0:
-            print("WARNING: minimum total mass is zero in params_input file.")
-            if 10 in mass_rs[1]:
-                print("Removing zero value from mass array.\n")
-                del mass_rs[1][mass_rs[1].index(0)]
-            else:
-                print("Changed minimum mass to 10.\n")
-                mass_rs[1][mass_rs[1].index(min(mass_rs[1]))] = 10.
+        if min(mass_rs[1]) == 0.:
+            print("  WARNING: minimum total mass is zero in params_input"
+                  " file.\n  Changed minimum mass to 10.\n")
+            mass_rs[1][mass_rs[1].index(min(mass_rs[1]))] = 10.
 
         for i, p in enumerate(par_ranges):
             # Catch empty list.
