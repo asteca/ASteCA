@@ -199,7 +199,7 @@ def pl_full_frame(
     '''
     x,y finding chart of full frame
     '''
-    ax = plt.subplot(gs[0:2, 8:10])
+    ax = plt.subplot(gs[2:4, 2:4])
     ax.set_aspect(aspect=asp_ratio)
     # Set plot limits
     plt.xlim(x_min, x_max)
@@ -255,7 +255,7 @@ def pl_zoom_frame(gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
     '''
     Zoom on x,y finding chart.
     '''
-    ax = plt.subplot(gs[0:2, 10:12])
+    ax = plt.subplot(gs[2:4, 4:6])
     # Force square plot.
     ax.set_aspect('equal')
     # Set plot limits.
@@ -311,7 +311,7 @@ def pl_cl_fl_regions(gs, fig, x_name, y_name, coord, x_min, x_max, y_min,
     '''
     Cluster and field regions defined.
     '''
-    ax = plt.subplot(gs[2:4, 0:2])
+    ax = plt.subplot(gs[2:4, 6:8])
     ax.set_aspect(aspect=asp_ratio)
     # Set plot limits
     plt.xlim(x_min, x_max)

@@ -95,7 +95,9 @@ def kde_limits(phot_x, phot_y):
     k_pos = kernel(positions)
 
     # Generate 30 contour lines.
+    plt.figure()
     cs = plt.contour(x, y, np.reshape(k_pos, x.shape), 30)
+    plt.close()
     # Extract (x,y) points delimiting each line.
     x_v, y_v = np.asarray([]), np.asarray([])
     # Only use the outer curve.

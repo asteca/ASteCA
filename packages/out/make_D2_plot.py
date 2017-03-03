@@ -4,7 +4,7 @@ import matplotlib.gridspec as gridspec
 from os.path import join
 import warnings
 import add_version_plot
-import mp_best_fit
+import mp_best_fit2
 import prep_plots
 
 
@@ -23,7 +23,7 @@ def plot_observed_cluster(
 
     try:
         # pl_mps_phot_diag
-        sca, trans = mp_best_fit.pl_mps_phot_diag(
+        sca, trans = mp_best_fit2.pl_mps_phot_diag(
             gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
             x_ax, y_ax, v_min_mp, v_max_mp, diag_fit_inv,
             err_bar, lkl_method, hess_data, shift_isoch)
@@ -66,14 +66,14 @@ def main(
         isoch_fit_errors, cl_reg_fit, cl_reg_no_fit, err_lst,
         **kwargs):
     '''
-    Make D block plots.
+    Make D2 block plots.
     '''
 
     # flag_make_plot = pd['pl_params'][0]
     if pd['pl_params'][0]:
         fig = plt.figure(figsize=(30, 25))
         gs = gridspec.GridSpec(10, 12)
-        add_version_plot.main()
+        add_version_plot.main(.55)
 
         best_fit_algor, lkl_method, bin_method, N_b = pd['bf_params']
         x_ax, y_ax, y_axis = prep_plots.ax_names(pd['filters'], pd['colors'])
@@ -96,51 +96,7 @@ def main(
                  pd['evol_track']]
             ]
             for n, args in enumerate(arglist):
-                mp_best_fit.plot(n, *args)
-
-            # Best fitting process plots for GA.
-            if best_fit_algor == 'genet':
-
-                min_max_p = prep_plots.param_ranges(pd['fundam_params'])
-                # Get special axis ticks for metallicity.
-                xp_min, xp_max = min_max_p[0]
-                # The max number of characters in the axis '30', is HARD-CODED.
-                # Add values to the end of this list.
-                min_max_p.append(prep_plots.BestTick(xp_min, xp_max, 30))
-
-                # Unpack.
-                lkl_old, new_bs_indx, model_done = isoch_fit_params[1:4]
-                l_min_max = prep_plots.likl_y_range(lkl_old)
-
-                arglist = [
-                    # pl_ga_lkl: Likelihood evolution for the GA.
-                    [gs, l_min_max, lkl_old, model_done, new_bs_indx,
-                     pd['ga_params'], N_b],
-                    # pl_2_param_dens: Param vs param solutions scatter map.
-                    [gs, 'age-metal', min_max_p, isoch_fit_params,
-                     isoch_fit_errors, model_done],
-                    [gs, 'dist-ext', min_max_p, isoch_fit_params,
-                        isoch_fit_errors, model_done],
-                    [gs, 'metal-dist', min_max_p, isoch_fit_params,
-                     isoch_fit_errors, model_done],
-                    [gs, 'mass-binar', min_max_p, isoch_fit_params,
-                     isoch_fit_errors, model_done],
-                    # pl_lkl_scatt: Parameter likelihood density plot.
-                    [gs, '$z$', min_max_p, isoch_fit_params, isoch_fit_errors,
-                        model_done],
-                    [gs, '$log(age)$', min_max_p, isoch_fit_params,
-                     isoch_fit_errors, model_done],
-                    [gs, '$E_{{(B-V)}}$', min_max_p, isoch_fit_params,
-                        isoch_fit_errors, model_done],
-                    [gs, '$(m-M)_o$', min_max_p, isoch_fit_params,
-                     isoch_fit_errors, model_done],
-                    [gs, '$M\,(M_{{\odot}})$', min_max_p, isoch_fit_params,
-                        isoch_fit_errors, model_done],
-                    [gs, '$b_{{frac}}$', min_max_p, isoch_fit_params,
-                     isoch_fit_errors, model_done]
-                ]
-                for n, args in enumerate(arglist, 2):
-                    mp_best_fit.plot(n, *args)
+                mp_best_fit2.plot(n, *args)
 
             # tight_layout is called here
             v_min_mp, v_max_mp = prep_plots.da_colorbar_range(
@@ -148,6 +104,7 @@ def main(
             plot_colorbar, diag_fit_inv, diag_no_fit_inv =\
                 prep_plots.da_phot_diag(
                     cl_reg_fit, cl_reg_no_fit, v_min_mp, v_max_mp)
+            # Photometric diagram.
             plot_observed_cluster(
                 cld, pd, fig, gs, cl_reg_fit, cl_reg_no_fit, err_lst, v_min_mp,
                 v_max_mp, plot_colorbar, diag_fit_inv, lkl_method, hess_data,
@@ -157,9 +114,9 @@ def main(
         pl_fmt, pl_dpi = pd['pl_params'][1:3]
         plt.savefig(
             join(npd['output_subdir'], str(npd['clust_name']) +
-                 '_D.' + pl_fmt), dpi=pl_dpi, bbox_inches='tight')
+                 '_D2.' + pl_fmt), dpi=pl_dpi, bbox_inches='tight')
         # Close to release memory.
         plt.clf()
         plt.close()
 
-        print("<<Plots from 'D' block created>>")
+        print("<<Plots from 'D2' block created>>")

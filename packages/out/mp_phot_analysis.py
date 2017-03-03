@@ -187,7 +187,7 @@ def pl_lum_func(gs, mags, y_ax, flag_no_fl_regs, lum_func, completeness):
     LF of stars in cluster region and outside.
     '''
     x_cl, y_cl, x_fl, y_fl = lum_func
-    ax = plt.subplot(gs[0:2, 6:8])
+    ax = plt.subplot(gs[2:4, 0:2])
     # Set plot limits
     x_min, x_max = min(mags[0]) - 0.5, max(mags[0]) + 0.5
     plt.xlim(x_max, x_min)
@@ -238,7 +238,7 @@ def pl_integ_mag(gs, cl_reg_imag, fl_reg_imag, integ_mag, y_ax,
     '''
     if integ_mag:
         # Make plot
-        ax = plt.subplot(gs[0:2, 8:10])
+        ax = plt.subplot(gs[2:4, 2:4])
         # If field lists are not empty.
         if fl_reg_imag:
             x_min = min(min(cl_reg_imag[0][0]), min(fl_reg_imag[0][0])) - 0.2
@@ -283,7 +283,7 @@ def pl_p_vals(gs, flag_pval_test, pval_test_params):
     if flag_pval_test:
         # Extract parameters from list.
         prob_cl_kde, kde_cl_1d, kde_f_1d, x_kde, y_over = pval_test_params
-        ax = plt.subplot(gs[0:2, 10:12])
+        ax = plt.subplot(gs[2:4, 4:6])
         plt.xlim(-0.15, 1.15)
         plt.ylim(0, 1.02)
         plt.xlabel('p-values', fontsize=12)

@@ -19,7 +19,7 @@ def main(
     if pd['pl_params'][0]:
         fig = plt.figure(figsize=(30, 25))
         gs = gridspec.GridSpec(10, 12)
-        add_version_plot.main()
+        add_version_plot.main(.46)
 
         # # Obtain plotting parameters and data.
         x_ax, y_ax, y_axis = prep_plots.ax_names(pd['filters'], pd['colors'])
