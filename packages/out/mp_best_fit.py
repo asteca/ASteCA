@@ -110,12 +110,11 @@ def pl_hess_diag(
                         label='{}'.format(int(HA.max())))
         if HA.min() == 0:
             cmap = LinearSegmentedColormap.from_list(
-                'mycmap', [(0, 'white'), (1, 'red')])
+                'mycmap', [(0, 'white'), (1, 'red')], N=400)
         else:
             zero_pt = 1. - HA.max() / (HA.max() - HA.min())
             cmap = LinearSegmentedColormap.from_list(
-                'mycmap', [(0, 'blue'), (zero_pt, 'white'), (1, 'red')])
-        # r = max(1, max(abs(HA.min()), abs(HA.max())))
+                'mycmap', [(0, 'blue'), (zero_pt, 'white'), (1, 'red')], N=400)
         ax.pcolormesh(X, Y, HA, cmap=cmap, vmin=HA.min(), vmax=HA.max(),
                       zorder=1)
         # Legend.
