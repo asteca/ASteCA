@@ -388,18 +388,6 @@ def get_hess(lkl_method, bin_method, cl_reg_fit, synth_clust):
     if not hess_diag.size:
         print("  WARNING: the synthetic cluster is empty.")
 
-    # print([len(_) for _ in bin_edges])
-    # print(np.shape(cl_histo), np.shape(syn_histo), np.shape(hess_diag))
-    # import pickle
-    # with open('obs_cl.pkl', 'w') as f:
-    #     pickle.dump(cl_reg_fit, f)
-    # with open('obs_cl_h.pkl', 'w') as f:
-    #     pickle.dump(cl_histo, f)
-    # with open('bin_edges.pkl', 'w') as f:
-    #     pickle.dump(bin_edges, f)
-    # with open('syn_cl_h.pkl', 'w') as f:
-    #     pickle.dump(syn_histo, f)
-
     hess_data = {'hess_diag': hess_diag, 'hess_edges': bin_edges}
 
     return hess_data

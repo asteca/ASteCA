@@ -67,6 +67,7 @@ def pl_hess_diag(
     gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax, lkl_method,
         hess_data):
     """
+    Hess diagram of observed minus best match synthetic cluster.
     """
     ax = plt.subplot(gs[0:2, 2:4])
     # Set plot limits
@@ -99,31 +100,20 @@ def pl_hess_diag(
         if HD.max() > 0:
             plt.scatter(-100., -100., marker='s', lw=0., s=60, c='#FB0605',
                         label='{}'.format(int(HD.max())))
+        # Define custom colorbar.
         if HD.min() == 0:
             cmap = LinearSegmentedColormap.from_list(
                 'mycmap', [(0, 'white'), (1, 'red')])
         else:
-            # Define zero point for empty bins which should be colored in
-            # white.
-            data_value_for_white_color = 1. - HD.max() / (HD.max() - HD.min())
-            # Normalize to range.
-            zero_pt = (data_value_for_white_color - HD.min()) /\
-                      (HD.max() - HD.min())
-            if abs(HD.max()) > abs(HD.min()):
-                white_val = data_value_for_white_color
-            else:
-                white_val = zero_pt
-            print(HD.min(), HD.max(), data_value_for_white_color,
-                  zero_pt, white_val)
+            # Zero point for empty bins which should be colored in white.
+            zero_pt = (0. - HD.min()) / float(HD.max() - HD.min())
+            N = 256.
+            zero_pt0 = np.floor(zero_pt * (N - 1)) / (N - 1)
+            zero_pt1 = np.ceil(zero_pt * (N - 1)) / (N - 1)
+            print(zero_pt0, zero_pt1)
             cmap = LinearSegmentedColormap.from_list(
-                'mycmap', [(0, 'blue'), (white_val, 'white'), (1, 'red')])
-
-        import pickle
-        with open('edges.pkl', 'w') as f:
-            pickle.dump(hess_data['hess_edges'], f)
-        with open('data.pkl', 'w') as f:
-            pickle.dump(HD, f)
-
+                'mycmap', [(0, 'blue'), (zero_pt0, 'white'), (zero_pt1,
+                           'white'), (1, 'red')], N=N)
         ax.pcolormesh(X, Y, HD, cmap=cmap, vmin=HD.min(), vmax=HD.max(),
                       zorder=1)
         # Legend.
