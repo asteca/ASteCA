@@ -111,57 +111,6 @@ def dolphin(synth_clust, obs_clust):
         # Histogram of the synthetic cluster, using the bin edges calculated
         # with the observed cluster.
         syn_histo = np.histogramdd(synth_phot, bins=bin_edges)[0]
-
-        import matplotlib.pyplot as plt
-        from matplotlib.colors import LinearSegmentedColormap
-        ax = plt.subplot(111)
-        plt.xlim(-1.5, 2.5)
-        plt.ylim(20, 9.5)
-        hess_nd = cl_histo - syn_histo
-        # TODO this uses the first two defined photometric dimensions.
-        hess_diag = hess_nd.reshape(hess_nd.shape[:2] + (-1,)).sum(axis=-1)
-        for x_ed in bin_edges[1]:
-            # vertical lines
-            ax.axvline(x_ed, linestyle=':', color='k', zorder=1)
-        for y_ed in bin_edges[0]:
-            # horizontal lines
-            ax.axhline(y_ed, linestyle=':', color='k', zorder=1)
-        # Grid for pcolormesh, using first two dimensions
-        Y, X = np.meshgrid(bin_edges[0], bin_edges[1])
-        if hess_diag.size:
-            HD = np.rot90(hess_diag)
-            HD = np.flipud(HD)
-            # Add text box.
-            if HD.min() < 0:
-                plt.scatter(-100., -100., marker='s', lw=0., s=60, c='#0B02F8',
-                            label='{}'.format(int(HD.min())))
-            if HD.max() > 0:
-                plt.scatter(-100., -100., marker='s', lw=0., s=60, c='#FB0605',
-                            label='{}'.format(int(HD.max())))
-            # Define custom colorbar.
-            if HD.min() == 0:
-                cmap = LinearSegmentedColormap.from_list(
-                    'mycmap', [(0, 'white'), (1, 'red')])
-            else:
-                # Zero point for empty bins which should be colored in white.
-                zero_pt = (0. - HD.min()) / float(HD.max() - HD.min())
-                N = 256.
-                zero_pt0 = np.floor(zero_pt * (N - 1)) / (N - 1)
-                zero_pt1 = np.ceil(zero_pt * (N - 1)) / (N - 1)
-                print(zero_pt0, zero_pt1)
-                cmap = LinearSegmentedColormap.from_list(
-                    'mycmap', [(0, 'blue'), (zero_pt0, 'white'), (zero_pt1,
-                               'white'), (1, 'red')], N=N)
-            import pickle
-            with open('edges.pkl', 'wb') as f:
-                pickle.dump(bin_edges, f)
-            with open('data.pkl', 'wb') as f:
-                pickle.dump(HD, f)
-            ax.pcolormesh(X, Y, HD, cmap=cmap, vmin=HD.min(), vmax=HD.max(),
-                          zorder=1)
-            plt.show()
-
-
         # Flatten N-dimensional histograms.
         cl_histo_f = np.array(cl_histo).flatten()
         syn_histo_f = np.array(syn_histo).flatten()
