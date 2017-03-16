@@ -110,7 +110,6 @@ def pl_hess_diag(
             N = 256.
             zero_pt0 = np.floor(zero_pt * (N - 1)) / (N - 1)
             zero_pt1 = np.ceil(zero_pt * (N - 1)) / (N - 1)
-            print(zero_pt0, zero_pt1)
             cmap = LinearSegmentedColormap.from_list(
                 'mycmap', [(0, 'blue'), (zero_pt0, 'white'), (zero_pt1,
                            'white'), (1, 'red')], N=N)
