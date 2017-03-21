@@ -43,16 +43,16 @@ def pl_mps_phot_diag(gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
     # If stars have a range of colors, use list of colors. Else use a single
     # color.
     if v_min_mp != v_max_mp:
-        col_select_fit = diag_fit_inv[2]
+        col_select_fit, isoch_col = diag_fit_inv[2], 'g'
     else:
-        col_select_fit = '#4682b4'
+        col_select_fit, isoch_col = '#4682b4', 'r'
     # Plot stars used in the best fit process.
     sca = plt.scatter(diag_fit_inv[0], diag_fit_inv[1], marker='o',
                       c=col_select_fit, s=40, cmap=cm, lw=0.5, vmin=v_min_mp,
                       vmax=v_max_mp, zorder=4)
     # TODO using main magnitude and first color.
     # Plot isochrone.
-    plt.plot(shift_isoch[1], shift_isoch[0], 'g', lw=1.2)
+    plt.plot(shift_isoch[1], shift_isoch[0], isoch_col, lw=1.2, zorder=6)
     # If list is not empty, plot error bars at several values.
     if x_val:
         plt.errorbar(x_val, mag_y, yerr=y_err, xerr=x_err, fmt='k.', lw=0.8,
@@ -169,7 +169,7 @@ def pl_bf_synth_cl(
     ax.add_artist(ob)
     # TODO using main magnitude and first color.
     # Plot isochrone.
-    plt.plot(shift_isoch[1], shift_isoch[0], 'r', lw=1.2)
+    plt.plot(shift_isoch[1], shift_isoch[0], 'r', lw=1.2, zorder=6)
 
     # Add text box to the right of the synthetic cluster.
     ax_t = plt.subplot(gs[0:2, 6:8])
