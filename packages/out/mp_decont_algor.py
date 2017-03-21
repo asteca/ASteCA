@@ -25,19 +25,23 @@ def pl_mp_histo(
         prob_data = [star[7] for star in memb_prob_avrg_sort]
         # Histogram of the data.
         n_bins = int((max(prob_data) - min(prob_data)) / 0.025)
-        # Normalized histogram.
-        weights = np.ones_like(prob_data) / len(prob_data)
-        n, bins, patches = plt.hist(prob_data, n_bins, weights=weights,
-                                    normed=0)
-        # Get bin centers.
-        bin_centers = 0.5 * (bins[:-1] + bins[1:])
-        # scale values to interval [0,1]
-        col = bin_centers - min(bin_centers)
-        col /= max(col)
-        cm = plt.cm.get_cmap('RdYlBu_r')
-        # Plot histo colored according to colormap.
-        for c, p in zip(col, patches):
-            plt.setp(p, 'facecolor', cm(c), zorder=3)
+        if n_bins > 0:
+            # Normalized histogram.
+            weights = np.ones_like(prob_data) / len(prob_data)
+            n, bins, patches = plt.hist(prob_data, n_bins, weights=weights,
+                                        normed=0)
+            # Get bin centers.
+            bin_centers = 0.5 * (bins[:-1] + bins[1:])
+            # scale values to interval [0,1]
+            col = bin_centers - min(bin_centers)
+            col /= max(col)
+            cm = plt.cm.get_cmap('RdYlBu_r')
+            # Plot histo colored according to colormap.
+            for c, p in zip(col, patches):
+                plt.setp(p, 'facecolor', cm(c), zorder=3)
+        else:
+            print("  WARNING: all MPs are equal valued. "
+                  "Can not plot MPs histogram.")
         # Add text box.
         if mode_red_memb == 'mag':
             str_pm = ['mag', '\leq', 'mag']
