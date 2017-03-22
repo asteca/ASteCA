@@ -328,7 +328,7 @@ def main(mypath, pars_f_path):
         'MAR08': ('marigo08', 'Marigo (2008)'),
         'GIR02': ('girardi02', 'Girardi (2002)')}
 
-    # Store photometric system params in lists.
+    # Photometric system parameters.
     par_ranges = [m_rs, a_rs, e_rs, d_rs, mass_rs, bin_rs]
 
     # Store GA params in lists.
