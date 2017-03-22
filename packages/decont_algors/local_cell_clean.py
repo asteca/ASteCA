@@ -45,12 +45,12 @@ def bin_edges_f(bin_method, mags_cols_cl):
         for col in mags_cols_cl[1]:
             bin_edges.append(bayesian_blocks(col))
 
+    # To be used when # is implemented.
     elif bin_method == 'man':
+        b_num = 10
         for mag in mags_cols_cl[0]:
-            b_num = 10
             bin_edges.append(np.histogram(mag, bins=int(b_num))[1])
         for col in mags_cols_cl[1]:
-            b_num = 10
             bin_edges.append(np.histogram(col, bins=int(b_num))[1])
 
     return bin_edges
