@@ -45,7 +45,7 @@ def bin_edges_f(bin_method, mags_cols_cl):
         for col in mags_cols_cl[1]:
             bin_edges.append(bayesian_blocks(col))
 
-    # To be used when # is implemented.
+    # To be used when #325 is implemented.
     elif bin_method == 'man':
         b_num = 10
         for mag in mags_cols_cl[0]:
