@@ -37,7 +37,7 @@ def main(
         # y1/y2 = 2.5
         fig = plt.figure(figsize=(30, 25))
         gs = gridspec.GridSpec(10, 12)
-        add_version_plot.main(.63)
+        add_version_plot.main(x_fix=.63)
 
         # Obtain plotting parameters and data.
         x_min, x_max, y_min, y_max = prep_plots.frame_max_min(
