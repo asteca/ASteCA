@@ -58,7 +58,12 @@ def main(lkl_method, e_max, bin_mr, err_lst, completeness, fundam_params,
                                                    tot_sols)
                             while len(milestones) > 0 and \
                                     percentage_complete >= milestones[0]:
-                                print " {:>3}%".format(milestones[0])
+                                best_fit_indx = np.argmin(model_done[1])
+                                print (" {:>3}%  L={:.1f} ({:g}, {:g}, {:g},"
+                                       " {:g}, {:g}, {:g})".format(
+                                           milestones[0],
+                                           model_done[1][best_fit_indx],
+                                           *model_done[0][best_fit_indx]))
                                 # Remove that milestone from the list.
                                 milestones = milestones[1:]
 
