@@ -338,7 +338,7 @@ def main(mypath, pars_f_path):
 
     # Define tuple of accepted binning methods.
     bin_methods = ('blocks', 'knuth', 'bb', 'auto', 'fd', 'doane', 'scott',
-                   'rice', 'sturges', 'sqrt')
+                   'rice', 'sturges', 'sqrt', 'man')
     # Accepted IMF functions.
     imf_funcs = ('chabrier_2001_exp', 'chabrier_2001_log', 'kroupa_1993',
                  'kroupa_2002')
