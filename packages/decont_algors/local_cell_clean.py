@@ -12,6 +12,9 @@ def bin_edges_f(bin_method, mags_cols_cl):
     diagram. The 'bin_edges' list will contain all magnitudes first, and then
     all colors (in the same order in which they are read).
     '''
+    # DELETE after testing #325
+    # if bin_method != 'blocks':
+    #     bin_method = 'man'
     bin_edges = []
     if bin_method in (
             'auto', 'fd', 'doane', 'scott', 'rice', 'sturges', 'sqrt'):
@@ -45,9 +48,11 @@ def bin_edges_f(bin_method, mags_cols_cl):
         for col in mags_cols_cl[1]:
             bin_edges.append(bayesian_blocks(col))
 
-    # To be used when #325 is implemented.
+    # To be used when #325 is implemented. For 4 or more dimensions a
+    # reasonable rule of thumb for the number of bins for each dimension
+    # appears to be: 1.e6**(1. / d), where d is the number of dimensions.
     elif bin_method == 'man':
-        b_num = 10
+        b_num = 1e6**(1. / 5)
         for mag in mags_cols_cl[0]:
             bin_edges.append(np.histogram(mag, bins=int(b_num))[1])
         for col in mags_cols_cl[1]:
