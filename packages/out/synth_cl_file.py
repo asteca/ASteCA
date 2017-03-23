@@ -8,7 +8,7 @@ def main(clp, npd, er_params, bf_flag, fundam_params, bin_mr, filters,
     Create output data file with stars in the best fit synthetic cluster found
     by the 'Best Fit' function.
     '''
-    # Check if function should run.
+    clp['synth_clst'], clp['shift_isoch'] = [], []
     if bf_flag:
 
         e_max = er_params[1]
@@ -53,7 +53,6 @@ def main(clp, npd, er_params, bf_flag, fundam_params, bin_mr, filters,
             clp['synth_clst'], clp['shift_isoch'] = synth_clst, shift_isoch
 
         else:
-            clp['synth_clst'], clp['shift_isoch'] = [], []
             print("  ERROR: empty synthetic cluster could not be saved\n"
                   "  to file.")
 

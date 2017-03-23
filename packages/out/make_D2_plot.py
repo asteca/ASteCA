@@ -68,47 +68,43 @@ def main(
     '''
     Make D2 block plots.
     '''
-
     # flag_make_plot = pd['pl_params'][0]
-    if pd['pl_params'][0]:
+    if pd['pl_params'][0] and pd['bf_flag']:
         fig = plt.figure(figsize=(30, 25))
         gs = gridspec.GridSpec(10, 12)
         add_version_plot.main(.55)
 
         best_fit_algor, lkl_method, bin_method, N_b = pd['bf_params']
         x_ax, y_ax, y_axis = prep_plots.ax_names(pd['filters'], pd['colors'])
-        x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd = prep_plots.diag_limits(
-            y_axis, cld['cols'], cld['mags'])
+        x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd =\
+            prep_plots.diag_limits(y_axis, cld['cols'], cld['mags'])
         hess_data = prep_plots.get_hess(
             lkl_method, bin_method, cl_reg_fit, synth_clst)
 
-        # Best fit plots.
-        if pd['bf_flag']:
-            arglist = [
-                # hess_diag_pl: Hess diagram 'observed - synthetic'
-                [gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
-                 lkl_method, hess_data],
-                # pl_bf_synth_cl: Best fit synthetic cluster obtained.
-                [gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
-                 synth_clst, hess_data, pd['IMF_name'], pd['R_V'],
-                 isoch_fit_params[0], isoch_fit_errors, shift_isoch,
-                 lkl_method, bin_method, pd['cmd_evol_tracks'],
-                 pd['evol_track']]
-            ]
-            for n, args in enumerate(arglist):
-                mp_best_fit2.plot(n, *args)
+        arglist = [
+            # hess_diag_pl: Hess diagram 'observed - synthetic'
+            [gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
+             lkl_method, hess_data],
+            # pl_bf_synth_cl: Best fit synthetic cluster obtained.
+            [gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
+             synth_clst, hess_data, pd['IMF_name'], pd['R_V'],
+             isoch_fit_params[0], isoch_fit_errors, shift_isoch,
+             lkl_method, bin_method, pd['cmd_evol_tracks'],
+             pd['evol_track']]
+        ]
+        for n, args in enumerate(arglist):
+            mp_best_fit2.plot(n, *args)
 
-            # tight_layout is called here
-            v_min_mp, v_max_mp = prep_plots.da_colorbar_range(
-                cl_reg_fit, cl_reg_no_fit)
-            plot_colorbar, diag_fit_inv, diag_no_fit_inv =\
-                prep_plots.da_phot_diag(
-                    cl_reg_fit, cl_reg_no_fit, v_min_mp, v_max_mp)
-            # Photometric diagram.
-            plot_observed_cluster(
-                cld, pd, fig, gs, cl_reg_fit, cl_reg_no_fit, err_lst, v_min_mp,
-                v_max_mp, plot_colorbar, diag_fit_inv, lkl_method, hess_data,
-                shift_isoch)
+        # tight_layout is called here
+        v_min_mp, v_max_mp = prep_plots.da_colorbar_range(
+            cl_reg_fit, cl_reg_no_fit)
+        plot_colorbar, diag_fit_inv, diag_no_fit_inv = prep_plots.da_phot_diag(
+            cl_reg_fit, cl_reg_no_fit, v_min_mp, v_max_mp)
+        # Photometric diagram.
+        plot_observed_cluster(
+            cld, pd, fig, gs, cl_reg_fit, cl_reg_no_fit, err_lst, v_min_mp,
+            v_max_mp, plot_colorbar, diag_fit_inv, lkl_method, hess_data,
+            shift_isoch)
 
         # Generate output file.
         pl_fmt, pl_dpi = pd['pl_params'][1:3]
