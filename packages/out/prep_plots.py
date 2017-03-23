@@ -365,14 +365,11 @@ def get_hess(lkl_method, bin_method, cl_reg_fit, synth_clust):
     """
     Hess diagram of observed minus best match synthetic cluster.
     """
-    if lkl_method in ['dolphin', 'mighell']:
-        # Observed cluster's histogram and bin edges for each dimension.
-        cl_histo, bin_edges = obs_clust_prepare.main(
-            cl_reg_fit, lkl_method, bin_method)
-    elif lkl_method == 'tolstoy':
-        # Observed cluster's histogram and bin edges for each dimension.
-        cl_histo, bin_edges = obs_clust_prepare.main(
-            cl_reg_fit, 'dolphin', 'bb')
+    if lkl_method == 'tolstoy':
+        lkl_method, bin_method = 'dolphin', 'bb'
+    # Observed cluster's histogram and bin edges for each dimension.
+    bin_edges, cl_histo = obs_clust_prepare.main(
+        cl_reg_fit, lkl_method, bin_method)[-2:]
 
     # Histogram of the synthetic cluster, using the bin edges calculated
     # with the observed cluster.

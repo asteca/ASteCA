@@ -55,7 +55,14 @@ def main(cl_reg_fit, lkl_method, bin_method):
         cl_histo = np.histogramdd(
             mags_cols_cl[0] + mags_cols_cl[1], bins=bin_edges)[0]
 
+        # Flatten N-dimensional histogram.
+        cl_histo_f = np.array(cl_histo).ravel()
+        # Remove all bins where n_i = 0 (no observed stars).
+        cl_z_idx = [cl_histo_f != 0]
+        cl_histo_f = cl_histo_f[cl_z_idx]
+
         # Store and pass to use in likelihood function.
-        obs_clust = [cl_histo, bin_edges]
+        # 'cl_histo' is used to obtain the Hess diagram when plotting.
+        obs_clust = [cl_histo_f, cl_z_idx, bin_edges, cl_histo]
 
     return obs_clust
