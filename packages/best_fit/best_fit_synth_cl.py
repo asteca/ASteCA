@@ -63,11 +63,21 @@ def main(clp, bf_flag, er_params, bf_params, IMF_name, m_high, R_V, bin_mr,
     if bf_flag:
 
         print('Searching for optimal parameters.')
-        print filters  # DELETE
-        print colors  # DELETE
-
+        # DELETE
+        print(filters)
+        print(colors)
         obs_clust = obs_clust_prepare.main(
             cl_reg_fit, lkl_method, bin_method)
+        N, B = len(cl_reg_fit), np.prod([len(_) for _ in obs_clust[1]])
+        print('N:', N, 'B:', B)
+        cl_histo_f = np.array(obs_clust[0]).ravel()
+        B_p = np.count_nonzero(cl_histo_f)
+        print('B != 0:', B_p)
+        # Mighell likelihood testing
+        print('Best chi approx:', B_p / (1. + float(N) / B_p))
+        mig_chi = np.sum(np.clip(cl_histo_f, 0, 1) / (cl_histo_f + 1.))
+        print("Best chi:", mig_chi)
+        # DELETE
 
         # Obtain extinction coefficients.
         ext_coefs = extin_coefs.main(
@@ -128,7 +138,7 @@ def main(clp, bf_flag, er_params, bf_params, IMF_name, m_high, R_V, bin_mr,
         print('Skipping parameters fitting process.')
         isoch_fit_params, isoch_fit_errors, st_dist_mass, N_fc, ext_coefs =\
             [[-1., -1., -1., -1., -1., -1.]], [-1., -1., -1., -1., -1., -1.],\
-            [], [], [], []
+            [], [], []
 
     clp['isoch_fit_params'], clp['isoch_fit_errors'], clp['ext_coefs'],\
         clp['st_dist_mass'], clp['N_fc'] = isoch_fit_params,\
