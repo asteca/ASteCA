@@ -52,12 +52,12 @@ def check(IMF_name, R_V, evol_track, bin_methods, bf_flag, bf_params,
                              n_el, n_pop))
 
         # Check likelihood method selected.
-        if lkl_method not in ('tolstoy', 'dolphin'):
+        if lkl_method not in ('tolstoy', 'dolphin', 'mighell'):
             sys.exit("ERROR: the selected likelihood method '{}' does not"
                      " match a valid input.".format(lkl_method))
 
         # Check binning method selected.
-        if lkl_method == 'dolphin' and bin_method not in bin_methods:
+        if lkl_method != 'tolstoy' and bin_method not in bin_methods:
             sys.exit("ERROR: the selected binning method '{}' for the 'Best"
                      "\nfit' function does not match a valid input."
                      .format(bin_method))

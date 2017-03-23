@@ -365,7 +365,7 @@ def get_hess(lkl_method, bin_method, cl_reg_fit, synth_clust):
     """
     Hess diagram of observed minus best match synthetic cluster.
     """
-    if lkl_method == 'dolphin':
+    if lkl_method in ['dolphin', 'mighell']:
         # Observed cluster's histogram and bin edges for each dimension.
         cl_histo, bin_edges = obs_clust_prepare.main(
             cl_reg_fit, lkl_method, bin_method)
