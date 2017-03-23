@@ -3,7 +3,7 @@ import numpy as np
 import read_isochs
 
 
-def arrange_filters(isoch_list, all_syst_filters, filters, colors, **kwargs):
+def arrange_filters(isoch_list, all_syst_filters, filters, colors):
     """
     Take the list of filters stored, create the necessary colors, and arrange
     all magnitudes and colors according to the order given to the photometric
@@ -98,21 +98,23 @@ def interp_isoch_data(data, N=2000):
     return interp_data
 
 
-def main(pd, met_f_filter, age_values):
+def main(met_f_filter, age_values, cmd_evol_tracks, evol_track,
+         all_syst_filters, cmd_systs, filters, colors, fundam_params,
+         **kwargs):
     '''
     Read isochrones and parameters if best fit function is set to run.
     '''
     # Print info about tracks.
     print("Processing {} theoretical isochrones".format(
-        pd['cmd_evol_tracks'][pd['evol_track']][1]))
+        cmd_evol_tracks[evol_track][1]))
 
-    for syst in pd['all_syst_filters']:
+    for syst in all_syst_filters:
         print("in the '{}' photometric system.\n".format(
-            pd['cmd_systs'][syst[0]][0]))
+            cmd_systs[syst[0]][0]))
 
     # Get isochrones and their extra parameters (mass, etc.).
     isoch_list, extra_pars = read_isochs.main(met_f_filter, age_values,
-                                              **pd)
+                                              evol_track, all_syst_filters)
 
     # Take the synthetic data from the unique filters read, create the
     # necessary colors, and position the magnitudes and colors in the
@@ -120,7 +122,8 @@ def main(pd, met_f_filter, age_values):
     # The mags_cols_theor list contains the magnitudes used to create the
     # defined colors. This is necessary to properly add binarity to the
     # synthetic clusters later on.
-    mags_theor, cols_theor, mags_cols_theor = arrange_filters(isoch_list, **pd)
+    mags_theor, cols_theor, mags_cols_theor = arrange_filters(
+        isoch_list, all_syst_filters, filters, colors)
 
     # Interpolate extra points into all the filters, colors, filters of colors,
     # and extra parameters (masses, etc)
@@ -141,10 +144,9 @@ def main(pd, met_f_filter, age_values):
         for i, mx in enumerate(l):
             for j, ax in enumerate(mx):
                 theor_tracks[i][j] = theor_tracks[i][j] + ax
-    pd['theor_tracks'] = theor_tracks
 
     # Obtain number of models in the solutions space.
-    lens = [len(_) for _ in pd['fundam_params']]
+    lens = [len(_) for _ in fundam_params]
     total = reduce(lambda x, y: x * y, lens, 1)
     print(
         "Number of values per parameter:\n"
@@ -156,4 +158,4 @@ def main(pd, met_f_filter, age_values):
         "  {} binary fraction values.".format(*lens))
     print("  = {:.1e} approx total models.\n".format(total))
 
-    return pd
+    return theor_tracks

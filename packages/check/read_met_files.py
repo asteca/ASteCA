@@ -20,7 +20,7 @@ def find_missing(arr_large, arr_small):
     return missing
 
 
-def ranges_files_check(pd):
+def ranges_files_check(iso_paths, par_ranges, **kwargs):
     """
     Obtain allowed metallicities and ages. Use the first photometric
     system defined.
@@ -30,13 +30,13 @@ def ranges_files_check(pd):
     try:
         # Get parameters values defined.
         param_ranges, met_f_filter, met_values, age_values = \
-            met_ages_values.main(pd['iso_paths'], pd['par_ranges'])
+            met_ages_values.main(iso_paths, par_ranges)
     except:
         print traceback.format_exc()
         sys.exit("\nERROR: error storing metallicity files.")
 
     # Check that ranges are properly defined.
-    m_rs, a_rs, e_rs, d_rs, mass_rs, bin_rs = pd['par_ranges']
+    m_rs, a_rs, e_rs, d_rs, mass_rs, bin_rs = par_ranges
     p_names = [['metallicity', m_rs], ['age', a_rs], ['extinction', e_rs],
                ['distance', d_rs], ['mass', mass_rs], ['binary', bin_rs]]
     for i, p in enumerate(param_ranges):
@@ -80,12 +80,13 @@ def check_get(pd):
     Check that all metallicity files needed are in place. To save time, we
     store the data and pass it.
     """
-    # Only read files if best fit method is set to run.
+    # Only read files if best fit method is set to run. Else pass empty list.
+    pd['fundam_params'], pd['theor_tracks'] = [], []
     if pd['bf_flag']:
         # Read metallicity files' names, store proper ranges for all
         # parameters, and available metallicities and ages.
         param_ranges, met_f_filter, met_values, age_values =\
-            ranges_files_check(pd)
+            ranges_files_check(**pd)
         # Store all the accepted values for the metallicity and age, and the
         # ranges of accepted values for the rest of the fundamental parameters.
         # The 'metal_values' list contains duplicated sub-lists for each
@@ -93,6 +94,6 @@ def check_get(pd):
         pd['fundam_params'] = [met_values[0], age_values] + param_ranges[2:]
 
         # Store all isochrones in all the metallicity files.
-        pd = isoch_params.main(pd, met_f_filter, age_values)
+        pd['theor_tracks'] = isoch_params.main(met_f_filter, age_values, **pd)
 
     return pd

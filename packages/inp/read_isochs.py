@@ -91,7 +91,7 @@ def filters_and_extra_pars(
     return met_f_ages
 
 
-def main(met_f_filter, age_values, evol_track, all_syst_filters, **kwargs):
+def main(met_f_filter, age_values, evol_track, all_syst_filters):
     '''
     Stores the available isochrones of different metallicities and
     ages, according to the ranges given to these parameters.
