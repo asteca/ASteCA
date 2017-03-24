@@ -30,12 +30,12 @@ from best_fit import best_fit_synth_cl
 from out import synth_cl_file
 from out import create_out_data_file
 from out import add_data_output
-from out import top_tiers
 from out import make_A_plot
 from out import make_B_plot
 from out import make_C_plot
 from out import make_D1_plot
 from out import make_D2_plot
+from out import top_tiers
 from out import done_move
 
 
@@ -139,14 +139,14 @@ def main(cl_file, pd):
     # Add cluster data and flags to output file
     add_data_output.main(npd, pd, **clp)
 
-    # Output top tiers models if best fit parameters were obtained.
-    top_tiers.main(npd, cld, pd, **clp)
-
     # Plot result of best match algorithm.
     make_D1_plot.main(npd, pd, **clp)
 
     # Plot final best match found.
     make_D2_plot.main(npd, cld, pd, **clp)
+
+    # Plot top tiers models and save to file.
+    top_tiers.main(npd, cld, pd, **clp)
 
     # Move file to 'done' dir (if flag is set).
     done_move.main(pd, **npd)

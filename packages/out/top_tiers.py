@@ -10,7 +10,8 @@ import top_tiers_plot
 import prep_plots
 
 
-def top_tiers_file(output_subdir, clust_name, best_model, top_tiers):
+def top_tiers_file(output_subdir, clust_name, best_model, top_tiers, X_lkl,
+                   X_par):
     '''
     Create output file containing top tiers.
     '''
@@ -25,18 +26,19 @@ def top_tiers_file(output_subdir, clust_name, best_model, top_tiers):
 #\n\
 # Created: {}\n\
 #\n\
-# The 'Top tiers' models present a difference of <5% with the best likelihood\n\
-# value found for the 'Best model' and one or more parameters differing\n\
-# >10% with the best value assigned for said parameter(s).\n\
+# The 'Top tiers' models present a difference of <{}% with the best \
+likelihood\n# value found for the 'Best model' and one or more parameters \
+differing\n# >{}% with the best value assigned for said parameter(s).\n\
 #\n\n\
 # Best model\n\
 #\n\
-# Lkl               z   log(age)    d (kpc)     E(B-V)     M (Mo)       b_fr\n\
+# Lkl               z   log(age)    E(B-V)      dist_m     M (Mo)       b_fr\n\
 {:<10} {:>10} {:>10} {:>10} {:>10} {:>10} {:>10}\n\n\
 # Top tiers\n\
 #\n\
-# Lkl               z   log(age)    d (kpc)     E(B-V)     M (Mo)       b_fr\n"
-    .format(__version__, now_time, *best_model))
+# Lkl               z   log(age)    E(B-V)      dist_m     M (Mo)       b_fr\n"
+                        .format(__version__, now_time, int(X_lkl * 100),
+                                int(X_par * 100), *best_model))
     out_data_file.close()
 
     # Write values to file.
@@ -47,13 +49,13 @@ def top_tiers_file(output_subdir, clust_name, best_model, top_tiers):
             f_out.write('\n')
 
 
-def plot_top_tiers(top_tiers_flo, output_subdir, clust_name, mags,
-                   cols, ip_list, err_lst, completeness, pd):
+def plot_top_tiers(pd, top_tiers_flo, output_subdir, clust_name, mags,
+                   cols, isoch_fit_params, ext_coefs, N_fc, err_lst,
+                   completeness):
     '''
     Plot all top tiers.
     '''
-    e_max, bin_mr, cmd_sel, pl_params = pd['er_params'][1],\
-        pd['bin_mr'], pd['ps_params'][1], pd['pl_params']
+    e_max = pd['er_params'][1]
     # Obtain mass distribution using the selected IMF.
     st_dist_mass = imf.main(pd['IMF_name'], pd['m_high'])
 
@@ -66,17 +68,17 @@ def plot_top_tiers(top_tiers_flo, output_subdir, clust_name, mags,
     x_coord = 0.95 - (len(__version__) - 6) * 0.001
     plt.figtext(x_coord, .986, ver, fontsize=9, color='#585858')
 
-    phot_x, phot_y = prep_plots.ax_data(mags, cols)
-    x_ax, y_ax, x_ax0, y_axis = prep_plots.ax_names(pd['axes_params'])
+    x_ax, y_ax, y_axis = prep_plots.ax_names(pd['filters'], pd['colors'])
     x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd = prep_plots.diag_limits(
-        y_axis, phot_x, phot_y)
+        y_axis, cols, mags)
 
     synth_cls = []
     for mod in top_tiers_flo:
         # Call function to generate synthetic cluster.
         shift_isoch, synth_clst = synth_cl_plot.main(
-            ip_list, [mod], err_lst, completeness, st_dist_mass,
-            e_max, bin_mr, cmd_sel)
+            e_max, pd['bin_mr'], pd['fundam_params'], pd['theor_tracks'],
+            isoch_fit_params, err_lst, completeness, st_dist_mass, pd['R_V'],
+            ext_coefs, N_fc)
         # Store plotting parameters.
         synth_cls.append([gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
                          x_ax, y_ax, synth_clst, mod, shift_isoch])
@@ -87,15 +89,16 @@ def plot_top_tiers(top_tiers_flo, output_subdir, clust_name, mags,
 
     fig.tight_layout()
     # Generate output file for each data file.
-    pl_fmt, pl_dpi = pl_params[1:3]
-    plt.savefig(join(output_subdir, clust_name + '_top_tiers.' + pl_fmt),
+    pl_fmt, pl_dpi = pd['pl_params'][1:3]
+    plt.savefig(join(output_subdir, clust_name + '_D3.' + pl_fmt),
                 dpi=pl_dpi)
     # Close to release memory.
     plt.clf()
     plt.close()
 
 
-def main(npd, cld, pd, err_lst, completeness, isoch_fit_params, **kwargs):
+def main(npd, cld, pd, err_lst, ext_coefs, N_fc, completeness,
+         isoch_fit_params, **kwargs):
     '''
     Obtain top tier models, produce data file and output image.
     '''
@@ -109,24 +112,32 @@ def main(npd, cld, pd, err_lst, completeness, isoch_fit_params, **kwargs):
         # Sort all models/solutions by their (minimum) likelihood values.
         all_m_sort = sorted(zip(*all_models), key=lambda x: x[1])
         best_mod, best_lik = all_m_sort[0][0], all_m_sort[0][1]
-        best_lik_5 = best_lik * 0.05
+        # 'X_lkl' is the percentage that determines how close to the best
+        # likelihood a 'top tier' must be.
+        X_lkl = 0.1
+        best_lik_X = best_lik * X_lkl
 
+        # 'X_par' is the percentage that determines how far away from the best
+        # match parameter value a 'top tier's parameter value must be.
+        X_par = 0.1
         top_tiers_str, top_tiers_flo = [], []
         # Compare every model/solution with the best one.
         for mod in all_m_sort[1:]:
-            # If the likelihood is closer than 5% to the min likelihood.
-            if (mod[1] - best_lik) < best_lik_5:
-                # If any parameter has a difference larger than 10%.
+            # If the likelihood is closer than X% to the min likelihood.
+            if (mod[1] - best_lik) < best_lik_X:
+                # If any parameter has a difference larger than X_par%.
                 mod_flag, p_mark = False, []
                 for i, p in enumerate(mod[0]):
-                    if abs(p - best_mod[i]) > best_mod[i] * 0.1:
+                    if abs(p - best_mod[i]) > best_mod[i] * X_par:
                         mod_flag = True
                         p_mark.append(str(p) + '*')
                     else:
                         p_mark.append(str(p))
                 if mod_flag:
-                    top_tiers_str.append(['{:.3f}'.format(mod[1])] + p_mark)
-                    top_tiers_flo.append(mod[0])
+                    if mod[0] not in top_tiers_flo:
+                        top_tiers_str.append(
+                            ['{:.3f}'.format(mod[1])] + p_mark)
+                        top_tiers_flo.append(mod[0])
             # Exit when 10 models are stored.
             if len(top_tiers_str) == 10:
                 break
@@ -139,20 +150,19 @@ def main(npd, cld, pd, err_lst, completeness, isoch_fit_params, **kwargs):
 
             # Create output .dat file.
             top_tiers_file(output_subdir, clust_name, best_model,
-                           top_tiers_str)
+                           top_tiers_str, X_lkl, X_par)
+            print("Top tier models saved to file.")
 
             # Create output image if flag is 'true'.
             flag_make_plot = pd['pl_params'][0]
             if flag_make_plot:
                 try:
                     plot_top_tiers(
-                        top_tiers_flo, output_subdir, clust_name, mags,
-                        cols, pd['ip_list'], err_lst, completeness, pd)
-                    print('Top tier models saved to file and plotted.')
+                        pd, top_tiers_flo, output_subdir, clust_name, mags,
+                        cols, isoch_fit_params, ext_coefs, N_fc, err_lst,
+                        completeness)
+                    print("<<Plots from 'D3' block created>>")
                 except:
                     import traceback
                     print traceback.format_exc()
                     print("  ERROR: top tiers plot could not be generated.")
-            else:
-                # If top tiers were found but no plot is produced.
-                print("Top tier models saved to file.")
