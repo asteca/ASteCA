@@ -11,7 +11,7 @@ from ..synth_clust import imf
 
 def params_errors(
     lkl_method, e_max, bin_mr, err_lst, completeness, fundam_params,
-        memb_prob_avrg_sort, theor_tracks, R_V, ext_coefs, st_dist_mass, N_fc,
+        cl_reg_fit, theor_tracks, R_V, ext_coefs, st_dist_mass, N_fc,
         ga_params, bin_method, best_fit_algor, isoch_fit_params, N_b):
     '''
     Obtain errors for the fitted parameters.
@@ -36,7 +36,7 @@ def params_errors(
             # in each parameter.
             isoch_fit_errors = bootstrap.main(
                 lkl_method, e_max, bin_mr, err_lst, completeness,
-                fundam_params, memb_prob_avrg_sort, theor_tracks, R_V,
+                fundam_params, cl_reg_fit, theor_tracks, R_V,
                 ext_coefs, st_dist_mass, N_fc, ga_params, bin_method,
                 best_fit_algor, N_b)
         else:
@@ -54,23 +54,25 @@ def main(clp, bf_flag, er_params, bf_params, IMF_name, m_high, R_V, bin_mr,
     Perform a best fitting process to find the cluster's fundamental
     parameters.
     '''
-    err_lst, cl_reg_fit, completeness = clp['err_lst'],\
-        clp['cl_reg_fit'], clp['completeness']
-    best_fit_algor, lkl_method, bin_method, N_b = bf_params
-    e_max = er_params[1]
-
     # Check if algorithm should run.
     if bf_flag:
-
         print('Searching for optimal parameters.')
+
+        err_lst, cl_reg_fit, completeness = clp['err_lst'],\
+            clp['cl_reg_fit'], clp['completeness']
+        best_fit_algor, lkl_method, bin_method, N_b = bf_params
+        e_max = er_params[1]
+
+        # Process observed cluster. This list contains data used by the
+        # likelihoods, and for plotting.
+        obs_clust = obs_clust_prepare.main(cl_reg_fit, lkl_method, bin_method)
+
         # DELETE
         print(filters)
         print(colors)
-        obs_clust = obs_clust_prepare.main(
-            cl_reg_fit, lkl_method, bin_method)
-        N, B = len(cl_reg_fit), np.prod([len(_) for _ in obs_clust[1]])
+        cl_histo_f = obs_clust[2]
+        N, B = len(cl_reg_fit), len(cl_histo_f)
         print('N:', N, 'B:', B)
-        cl_histo_f = np.array(obs_clust[0]).ravel()
         B_p = np.count_nonzero(cl_histo_f)
         print('B != 0:', B_p)
         # Mighell likelihood testing

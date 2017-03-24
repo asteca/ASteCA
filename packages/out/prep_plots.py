@@ -369,7 +369,7 @@ def get_hess(lkl_method, bin_method, cl_reg_fit, synth_clust):
         lkl_method, bin_method = 'dolphin', 'bb'
     # Observed cluster's histogram and bin edges for each dimension.
     bin_edges, cl_histo = obs_clust_prepare.main(
-        cl_reg_fit, lkl_method, bin_method)[-2:]
+        cl_reg_fit, lkl_method, bin_method)[:2]
 
     # Histogram of the synthetic cluster, using the bin edges calculated
     # with the observed cluster.

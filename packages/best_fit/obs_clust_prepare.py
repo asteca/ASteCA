@@ -26,21 +26,21 @@ def main(cl_reg_fit, lkl_method, bin_method):
         e_mags_cols.append(np.square(e_c))
 
     # Store membership probabilities here.
-    probs = np.array(zip(*cl_reg_fit)[1:][6])
+    memb_probs = np.array(zip(*cl_reg_fit)[1:][6])
 
     if lkl_method == 'tolstoy':
-        # Store and pass to use in likelihood function. The 'all_st' list is
+        # Store and pass to use in likelihood function. The 'obs_st' list is
         # made up of:
-        # all_st = [star_1, star_2, ...]
+        # obs_st = [star_1, star_2, ...]
         # star_i = [phot_1, phot_2, phot_3, ...]
         # phot_j = [phot_val, error]
         # Where 'phot_j' is a photometric dimension (magnitude or color), and
         # 'phot_val', 'error' the associated value and error for 'star_i'.
-        all_st = []
+        obs_st = []
         mags_cols = mags_cols_cl[0] + mags_cols_cl[1]
         for st_phot, st_e_phot in zip(zip(*mags_cols), zip(*e_mags_cols)):
-            all_st.append(zip(*[st_phot, st_e_phot]))
-        obs_clust = [all_st, probs]
+            obs_st.append(zip(*[st_phot, st_e_phot]))
+        obs_clust = [obs_st, memb_probs]
 
     else:
         # Obtain bin edges for each dimension, defining a grid.
@@ -57,12 +57,15 @@ def main(cl_reg_fit, lkl_method, bin_method):
 
         # Flatten N-dimensional histogram.
         cl_histo_f = np.array(cl_histo).ravel()
-        # Remove all bins where n_i = 0 (no observed stars).
-        cl_z_idx = [cl_histo_f != 0]
-        cl_histo_f = cl_histo_f[cl_z_idx]
 
-        # Store and pass to use in likelihood function.
-        # 'cl_histo' is used to obtain the Hess diagram when plotting.
-        obs_clust = [cl_histo_f, cl_z_idx, bin_edges, cl_histo]
+        # Index of bins where n_i = 0 (no observed stars). Used by the
+        # 'Dolphin' and 'Mighell' likelihoods.
+        cl_z_idx = [cl_histo_f != 0]
+
+        # Remove all bins where n_i = 0 (no observed stars). Used by the
+        # 'Dolphin' likelihood.
+        cl_histo_f_z = cl_histo_f[cl_z_idx]
+
+        obs_clust = [bin_edges, cl_histo, cl_histo_f, cl_z_idx, cl_histo_f_z]
 
     return obs_clust

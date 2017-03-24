@@ -45,7 +45,7 @@ def tolstoy(synth_clust, obs_clust):
     \end{equation}
     '''
 
-    # If synthetic cluster is empty, assign high likelihood value.
+    # If synthetic cluster is empty, assign large likelihood value.
     if not synth_clust:
         tlst_lkl = 1.e09
     else:
@@ -95,14 +95,16 @@ def dolphin(synth_clust, obs_clust):
     This function follows the recipe given in Dolphin (2002).
     '''
 
-    # If synthetic cluster is empty, assign high likelihood value.
+    # If synthetic cluster is empty, assign large likelihood value.
     if not synth_clust:
-        # If synthetic cluster is empty, assign a large likelihood value.
         dolph_lkl = 1.e09
     else:
         synth_phot = synth_clust[0][0]
         # Observed cluster's histogram and bin edges for each dimension.
-        cl_histo_f, cl_z_idx, bin_edges = obs_clust[:3]
+        bin_edges = obs_clust[0]
+        # Indexes of n_i=0 elements in flattened observed cluster array,
+        # and the array with no n_i=0 elements.
+        cl_z_idx, cl_histo_f_z = obs_clust[-2:]
 
         # Histogram of the synthetic cluster, using the bin edges calculated
         # with the observed cluster.
@@ -110,16 +112,16 @@ def dolphin(synth_clust, obs_clust):
         # Flatten N-dimensional histogram.
         syn_histo_f = np.array(syn_histo).ravel()
         # Remove all bins where n_i = 0 (no observed stars).
-        syn_histo_f = syn_histo_f[cl_z_idx]
+        syn_histo_f_z = syn_histo_f[cl_z_idx]
 
-        # Assign small value to the zero elements in 'syn_histo_f'.
+        # Assign small value to the m_i = 0 elements in 'syn_histo_f_z'.
         # The value equals 1 star divided among all empty bins.
-        syn_histo_f[syn_histo_f == 0] =\
-            1. / max(np.count_nonzero(syn_histo_f == 0), 1.)
+        syn_histo_f_z[syn_histo_f_z == 0] =\
+            1. / max(np.count_nonzero(syn_histo_f_z == 0), 1.)
 
         # Obtain inverse logarithmic 'Poisson likelihood ratio'.
         dolph_lkl = synth_phot[0].size -\
-            np.sum(cl_histo_f * np.log(syn_histo_f))
+            np.sum(cl_histo_f_z * np.log(syn_histo_f_z))
 
     return dolph_lkl
 
@@ -131,7 +133,9 @@ def mighell(synth_clust, obs_clust):
         mig_chi = 1.e09
     else:
         # Observed cluster's histogram and bin edges for each dimension.
-        cl_histo_f, cl_z_idx, bin_edges = obs_clust[:3]
+        bin_edges = obs_clust[0]
+        # Observed cluster's flattened histogram and indexes of n_i=0 elements.
+        cl_histo_f, cl_z_idx = obs_clust[2:4]
 
         # Synthetic cluster.
         synth_phot = synth_clust[0][0]
@@ -141,14 +145,15 @@ def mighell(synth_clust, obs_clust):
 
         # Flatten N-dimensional histogram.
         syn_histo_f = np.array(syn_histo).ravel()
-        # Remove bins that are empty in both arrays.
-        z = (cl_histo_f != 0) | (syn_histo_f != 0)
-        cl_histo_f, syn_histo_f = cl_histo_f[z], syn_histo_f[z]
+        # Indexes of bins that are empty in both arrays.
+        z = cl_z_idx[0] | (syn_histo_f != 0)
+        # Remove those bins.
+        cl_histo_f_z, syn_histo_f_z = cl_histo_f[z], syn_histo_f[z]
 
         # Final chi.
         mig_chi = np.sum(np.square(
-            cl_histo_f + np.clip(cl_histo_f, 0, 1) - syn_histo_f) /
-            (cl_histo_f + 1.))
+            cl_histo_f_z + np.clip(cl_histo_f_z, 0, 1) - syn_histo_f_z) /
+            (cl_histo_f_z + 1.))
 
     return mig_chi
 
@@ -161,7 +166,7 @@ def main(lkl_method, e_max, bin_mass_ratio, err_lst, obs_clust,
     metallicity and age. Match the synthetic cluster to the observed cluster.
     '''
 
-    # Generate synthetic cluster..
+    # Generate synthetic cluster.
     # with timeblock("synth_cl"):
     synth_clust = synth_cluster.main(
         e_max, bin_mass_ratio, err_lst, completeness, st_dist_mass, isochrone,
