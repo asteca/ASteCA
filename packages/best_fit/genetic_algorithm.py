@@ -196,7 +196,7 @@ def evaluation(lkl_method, e_max, bin_mr, err_lst, completeness, fundam_params,
             # This keeps the likelihood always trending downwards.
             if lkl_old < lkl:
                 lkl = lkl_old
-        except:
+        except ValueError:
             # Model was not processed before.
             pass
 
