@@ -16,7 +16,7 @@ def resample_replacement(obs_clust):
 
 
 def main(lkl_method, e_max, bin_mr, err_lst, completeness, fundam_params,
-         memb_prob_avrg_sort, theor_tracks, R_V, ext_coefs, st_dist_mass, N_fc,
+         cl_reg_fit, theor_tracks, R_V, ext_coefs, st_dist_mass, N_fc,
          ga_params, bin_method, best_fit_algor, N_b):
     '''
     Bootstrap process, runs the selected algorithm a number of times each
@@ -34,7 +34,7 @@ def main(lkl_method, e_max, bin_mr, err_lst, completeness, fundam_params,
     for i in range(N_b):
 
         # Resample cluster with replacement.
-        obs_cl_r = resample_replacement(memb_prob_avrg_sort)
+        obs_cl_r = resample_replacement(cl_reg_fit)
         # Obtain prepared observed cluster according to the likelihood method
         # selected.
         obs_cl = obs_clust_prepare.main(obs_cl_r, lkl_method, bin_method)
