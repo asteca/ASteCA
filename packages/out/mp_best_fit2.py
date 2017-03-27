@@ -21,7 +21,7 @@ def pl_mps_phot_diag(gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
     plt.xlabel('$' + x_ax + '$', fontsize=18)
     plt.ylabel('$' + y_ax + '$', fontsize=18)
     # Add text box.
-    text = '$N_{{fit}}={}$'.format(len(diag_fit_inv[0]))
+    text = '$N_{{fit}}={}$'.format(len(diag_fit_inv[2]))
     ob = offsetbox.AnchoredText(text, loc=4, prop=dict(size=14))
     ob.patch.set(boxstyle='square,pad=-0.2', alpha=0.85)
     ax.add_artist(ob)
@@ -47,7 +47,7 @@ def pl_mps_phot_diag(gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
     else:
         col_select_fit, isoch_col = '#4682b4', 'r'
     # Plot stars used in the best fit process.
-    sca = plt.scatter(diag_fit_inv[0], diag_fit_inv[1], marker='o',
+    sca = plt.scatter(diag_fit_inv[1][0], diag_fit_inv[0][0], marker='o',
                       c=col_select_fit, s=40, cmap=cm, lw=0.5, vmin=v_min_mp,
                       vmax=v_max_mp, zorder=4)
     # TODO using main magnitude and first color.

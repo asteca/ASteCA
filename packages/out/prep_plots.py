@@ -245,19 +245,22 @@ def da_phot_diag(cl_reg_fit, cl_reg_no_fit, v_min_mp, v_max_mp):
 
     # Arrange stars used in the best fit process.
     cl_reg_fit = zip(*cl_reg_fit)
-    # Photometric diagram.
-    diag_fit_inv = [
-        i[::-1] for i in [zip(*cl_reg_fit[5])[0], zip(*cl_reg_fit[3])[0],
-                          cl_reg_fit[7]]]
+    # Magnitudes.
+    diag_fit_inv = [[i[::-1] for i in zip(*cl_reg_fit[3])]]
+    # Colors.
+    diag_fit_inv += [[i[::-1] for i in zip(*cl_reg_fit[5])]]
+    # membership probabilities.
+    diag_fit_inv += [cl_reg_fit[7][::-1]]
 
     # Arrange stars *not* used in the best fit process.
     if cl_reg_no_fit:
         cl_reg_no_fit = zip(*cl_reg_no_fit)
-        # Photometric diagram.
-        diag_no_fit_inv = [
-            i[::-1] for i in [
-                zip(*cl_reg_no_fit[5])[0], zip(*cl_reg_no_fit[3])[0],
-                cl_reg_no_fit[7]]]
+        # Magnitudes.
+        diag_no_fit_inv = [[i[::-1] for i in zip(*cl_reg_no_fit[3])]]
+        # Colors.
+        diag_no_fit_inv += [[i[::-1] for i in zip(*cl_reg_no_fit[5])]]
+        # membership probabilities.
+        diag_no_fit_inv += [cl_reg_no_fit[7][::-1]]
     else:
         diag_no_fit_inv = [[], [], []]
 
