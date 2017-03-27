@@ -100,7 +100,7 @@ def main(
             cl_reg_fit, cl_reg_no_fit)
         plot_colorbar, diag_fit_inv, diag_no_fit_inv = prep_plots.da_phot_diag(
             cl_reg_fit, cl_reg_no_fit, v_min_mp, v_max_mp)
-        # Photometric diagram.
+        # Main photometric diagram of observed cluster.
         plot_observed_cluster(
             cld, pd, fig, gs, cl_reg_fit, cl_reg_no_fit, err_lst, v_min_mp,
             v_max_mp, plot_colorbar, diag_fit_inv, lkl_method, hess_data,

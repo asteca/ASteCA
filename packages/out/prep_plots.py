@@ -237,9 +237,9 @@ def da_find_chart(
 def da_phot_diag(cl_reg_fit, cl_reg_no_fit, v_min_mp, v_max_mp):
     '''
     Generate parameters for the photometric diagram plotted with the MPs
-    assigned by the DA.
+    assigned by the DA. The stars are inverted according to their MPs, so that
+    those with larger probabilities are plotted last.
     '''
-
     # Decides if colorbar should be plotted.
     plot_colorbar = True if v_min_mp != v_max_mp else False
 

@@ -70,15 +70,15 @@ def main(clp, bf_flag, er_params, bf_params, IMF_name, m_high, R_V, bin_mr,
         # DELETE
         print(filters)
         print(colors)
-        cl_histo_f = obs_clust[2]
-        N, B = len(cl_reg_fit), len(cl_histo_f)
-        print('N:', N, 'B:', B)
-        B_p = np.count_nonzero(cl_histo_f)
-        print('B != 0:', B_p)
-        # Mighell likelihood testing
-        print('Best chi approx:', B_p / (1. + float(N) / B_p))
-        mig_chi = np.sum(np.clip(cl_histo_f, 0, 1) / (cl_histo_f + 1.))
-        print("Best chi:", mig_chi)
+        # cl_histo_f = obs_clust[2]
+        # N, B = len(cl_reg_fit), len(cl_histo_f)
+        # print('N:', N, 'B:', B)
+        # B_p = np.count_nonzero(cl_histo_f)
+        # print('B != 0:', B_p)
+        # # Mighell likelihood testing
+        # print('Best chi approx:', B_p / (1. + float(N) / B_p))
+        # mig_chi = np.sum(np.clip(cl_histo_f, 0, 1) / (cl_histo_f + 1.))
+        # print("Best chi:", mig_chi)
         # DELETE
 
         # Obtain extinction coefficients.
