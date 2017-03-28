@@ -24,7 +24,7 @@ def pl_ga_lkl(gs, l_min_max, lkl_old, model_done, new_bs_indx, ga_params, N_b):
     plt.xlabel('Generation', fontsize=12)
     plt.ylabel('Likelihood', fontsize=12)
     # Add text box.
-    text1 = '$N_{total} = %.2e\,;\,N_{btst} = %d$' '\n' % \
+    text1 = '$N_{total} = %.1e\,;\,N_{btst} = %d$' '\n' % \
         (len(model_done[0]), N_b)
     text2 = '$n_{gen}=%d\,;\,n_{pop}=%d$' '\n' % (n_gen, n_pop)
     text3 = '$f_{dif}=%0.2f\,;\,cr_{sel}=%s$' '\n' % (fdif, cr_sel)
