@@ -52,7 +52,8 @@ def pl_mps_phot_diag(gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
                       vmax=v_max_mp, zorder=4)
     # TODO using main magnitude and first color.
     # Plot isochrone.
-    plt.plot(shift_isoch[1], shift_isoch[0], isoch_col, lw=1.2, zorder=6)
+    if shift_isoch:
+        plt.plot(shift_isoch[1], shift_isoch[0], isoch_col, lw=1.2, zorder=6)
     # If list is not empty, plot error bars at several values.
     if x_val:
         plt.errorbar(x_val, mag_y, yerr=y_err, xerr=x_err, fmt='k.', lw=0.8,
@@ -161,15 +162,14 @@ def pl_bf_synth_cl(
         plt.scatter(synth_clst[0][0][1], synth_clst[0][0][0], marker='o', s=40,
                     c='#4682b4', lw=0.5, zorder=4)
         text1 = '$N_{{synth}} = {}$'.format(len(synth_clst[0][0][0]))
+        # Plot isochrone.
+        plt.plot(shift_isoch[1], shift_isoch[0], 'r', lw=1.2, zorder=6)
     else:
         text1 = '$N_{{synth}} = {}$'.format(0)
     # Add text box
     ob = offsetbox.AnchoredText(text1, pad=.2, loc=3, prop=dict(size=14))
     ob.patch.set(alpha=0.85)
     ax.add_artist(ob)
-    # TODO using main magnitude and first color.
-    # Plot isochrone.
-    plt.plot(shift_isoch[1], shift_isoch[0], 'r', lw=1.2, zorder=6)
 
     # Add text box to the right of the synthetic cluster.
     ax_t = plt.subplot(gs[0:2, 6:8])

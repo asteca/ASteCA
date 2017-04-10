@@ -104,5 +104,5 @@ def plot(N, *args):
     except:
         print("  WARNING: error when plotting {} {}.".format(
             plt_map.get(N)[1], N))
-        if not args[7].any():
+        if not args[7]:
             print ("           (synthetic cluster is empty).")
