@@ -213,7 +213,7 @@ def main(clp, pv_params, R_in_place, **kwargs):
     if R_in_place:
         pval_test_params, flag_pval_test = KDE_test(clp, pv_params)
     else:
-        print('Missing package. Skipping KDE p-value test for cluster.')
+        print("  WARNING: missing package, skipping KDE p-value test.")
         flag_pval_test, pval_test_params = False, [-1.]
 
     clp['pval_test_params'], clp['flag_pval_test'] =\
