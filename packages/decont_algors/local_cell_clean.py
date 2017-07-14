@@ -45,14 +45,15 @@ def bin_edges_f(bin_method, mags_cols_cl):
         for col in mags_cols_cl[1]:
             bin_edges.append(bayesian_blocks(col))
 
+    # TODO this method is currently hidden from the params file.
     # To be used when #325 is implemented. Currently used to test
     # multi-dimensional likelihoods.
     #
     # For 4 to 6 dimensions the rule below appears to be a somewhat reasonable
     # rule of thumb for the number of bins for each dimension.
-    # There appears to be a trade-off between a large number of bins which
+    # There is a trade-off between a large number of smaller bins which
     # better match features of the observed cluster but benefits larger
-    # mass values, and fewer bins which better match masses but losing
+    # mass values, and fewer larger bins which better match masses but losing
     # finer details of the cluster.
     elif bin_method == 'man':
         d = len(mags_cols_cl[0]) + len(mags_cols_cl[1])
@@ -226,6 +227,7 @@ def main(field_regions, memb_prob_avrg_sort, flag_decont_skip, rm_params):
     cl_reg_fit, cl_reg_no_fit, min_prob = get_fit_stars(
         cl_hist_p, f_hist, flag_decont_skip)
 
+    # DELETE
     # import matplotlib.pyplot as plt
     # for i, y_phot in enumerate(mags_cols_cl_arr):
     #     for j, x_phot in enumerate(mags_cols_cl_arr[(i + 1):]):
