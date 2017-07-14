@@ -28,9 +28,9 @@ def check(mypath, pd):
     # format used (pixels or degrees)
     try:
         id_indx, x_indx, y_indx, coords = pd['id_coords']
-        id_indx, x_indx, y_indx, coords = map(int, [id_indx, x_indx, y_indx]),\
-            str(coords)
-    except ValueError:
+        id_indx, x_indx, y_indx = map(int, [id_indx, x_indx, y_indx])
+        coords = str(coords)
+    except:
         sys.exit("ERROR: bad format for the IDs and coordinates\n"
                  "column indexes in 'params_input.dat'.")
 
@@ -42,7 +42,7 @@ def check(mypath, pd):
     for mag in pd['id_mags'][0::2]:
         try:
             colum_indx, phot_syst, filter_name = mag.split(',')
-        except ValueError:
+        except:
             sys.exit("ERROR: bad formatting for filter '{}'".format(mag))
         # Used to read data from cluster file in 'get_data.
         mag_indx.append(int(colum_indx))
@@ -65,7 +65,7 @@ def check(mypath, pd):
     for col in pd['id_cols'][0::2]:
         try:
             colum_indx, phot_syst, filter_name1, filter_name2 = col.split(',')
-        except ValueError:
+        except:
             sys.exit("ERROR: bad formatting for color '{}'".format(col))
         col_indx.append(int(colum_indx))
         if pd['bf_flag']:
@@ -108,9 +108,9 @@ def check(mypath, pd):
             iso_paths.append(
                 join(mypath + 'isochrones/' + text1 + '_' + text2))
 
-        # REMOVE when support for multiple photometric system is in place.
-        if len(all_syst_filters) > 1:
-            sys.exit("ERROR: more than one photometric system defined.")
+        # # REMOVE when support for multiple photometric system is in place.
+        # if len(all_syst_filters) > 1:
+        #     sys.exit("ERROR: more than one photometric system defined.")
 
     # Add data to parameters dictionary.
     pd['id_indx'], pd['x_indx'], pd['y_indx'], pd['coords'],\
