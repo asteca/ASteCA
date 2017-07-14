@@ -28,8 +28,8 @@ def check(mypath, pd):
     # format used (pixels or degrees)
     try:
         id_indx, x_indx, y_indx, coords = pd['id_coords']
-        id_indx, x_indx, y_indx, coords = map(int, [id_indx, x_indx, y_indx]),\
-            str(coords)
+        id_indx, x_indx, y_indx = map(int, [id_indx, x_indx, y_indx])
+        coords = str(coords)
     except ValueError:
         sys.exit("ERROR: bad format for the IDs and coordinates\n"
                  "column indexes in 'params_input.dat'.")
