@@ -89,10 +89,10 @@ def pl_phot_err(gs, fig, er_params, up_low, x_ax, y_ax, mags, err_plot,
     # Plot accepted stars.
     plt.scatter(
         zip(*zip(*stars_out)[3])[0], zip(*zip(*stars_out)[j])[0], marker='o',
-        c='b', s=5, zorder=2, lw=0.3, label='$r > r_{cl}$')
+        c='b', s=5, zorder=2, lw=0.3, edgecolor='k', label='$r > r_{cl}$')
     plt.scatter(
         zip(*zip(*cl_region)[3])[0], zip(*zip(*cl_region)[j])[0], marker='o',
-        c='r', s=10, zorder=2, lw=0.6, label='$r \leq r_{cl}}$')
+        c='r', s=10, zorder=2, lw=0.6, edgecolor='k', label='$r \leq r_{cl}}$')
     if up_low == 'up':
         # Legends.
         leg = plt.legend(fancybox=True, loc='upper left', scatterpoints=1,
@@ -132,7 +132,7 @@ def pl_fl_diag(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
     # exists.
     if stars_f_acpt[0]:
         plt.scatter(stars_f_acpt[0], stars_f_acpt[1], marker='o', c='b',
-                    s=f_sz_pt, lw=0.3, zorder=3)
+                    s=f_sz_pt, lw=0.3, edgecolor='k', zorder=3)
     # If list is not empty, plot error bars at several values.
     x_val, mag_y, x_err, y_err = err_bar
     if x_val:
@@ -174,7 +174,7 @@ def pl_cl_diag(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
             marker='x', c='teal', s=12, zorder=2)
     plt.scatter(
         zip(*zip(*cl_region)[5])[0], zip(*zip(*cl_region)[3])[0], marker='o',
-        c='r', s=cl_sz_pt, lw=0.3, zorder=3)
+        c='r', s=cl_sz_pt, lw=0.3, edgecolor='k', zorder=3)
     # If list is not empty, plot error bars at several values.
     x_val, mag_y, x_err, y_err = err_bar
     if x_val:
@@ -268,8 +268,12 @@ def pl_integ_mag(gs, cl_reg_imag, fl_reg_imag, integ_mag, y_ax,
             plt.plot(fl_reg_imag[0][0], fl_reg_imag[0][1], 'b-', lw=1.,
                      label=text3, zorder=2)
         text = r'$' + y_ax + '^{{*}}_{{cl}} = {:.2f}$'.format(integ_mag[0])
-        plt.text(0.22, 0.15, text, transform=ax.transAxes,
-                 bbox=dict(facecolor='white', alpha=0.75), fontsize=12)
+        # plt.text(0.22, 0.15, text, transform=ax.transAxes,
+        #          bbox=dict(facecolor='white', alpha=0.75), fontsize=12)
+        ob = offsetbox.AnchoredText(text, pad=0.2, loc=7, prop=dict(size=12))
+        ob.patch.set(alpha=0.75)
+        ax.add_artist(ob)
+
         lines, labels = ax.get_legend_handles_labels()
         leg = ax.legend(lines, labels, loc='lower right', numpoints=1,
                         fontsize=12)

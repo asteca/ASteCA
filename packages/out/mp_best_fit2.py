@@ -34,10 +34,10 @@ def pl_mps_phot_diag(gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
     # Plot grid.
     for x_ed in hess_data['hess_edges'][1]:
         # vertical lines
-        ax.axvline(x_ed, linestyle=':', color='k', zorder=1)
+        ax.axvline(x_ed, linestyle=':', lw=.8, color='k', zorder=1)
     for y_ed in hess_data['hess_edges'][0]:
         # horizontal lines
-            ax.axhline(y_ed, linestyle=':', color='k', zorder=1)
+            ax.axhline(y_ed, linestyle=':', lw=.8, color='k', zorder=1)
     # This reversed colormap means higher prob stars will look redder.
     cm = plt.cm.get_cmap('RdYlBu_r')
     # If stars have a range of colors, use list of colors. Else use a single
@@ -48,8 +48,8 @@ def pl_mps_phot_diag(gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
         col_select_fit, isoch_col = '#4682b4', 'r'
     # Plot stars used in the best fit process.
     sca = plt.scatter(diag_fit_inv[1][0], diag_fit_inv[0][0], marker='o',
-                      c=col_select_fit, s=40, cmap=cm, lw=0.5, vmin=v_min_mp,
-                      vmax=v_max_mp, zorder=4)
+                      c=col_select_fit, s=40, cmap=cm, lw=0.5, edgecolor='k',
+                      vmin=v_min_mp, vmax=v_max_mp, zorder=4)
     # TODO using main magnitude and first color.
     # Plot isochrone.
     if shift_isoch:
@@ -85,10 +85,10 @@ def pl_hess_diag(
     # second the color.
     for x_ed in hess_data['hess_edges'][1]:
         # vertical lines
-        ax.axvline(x_ed, linestyle=':', color='k', zorder=1)
+        ax.axvline(x_ed, linestyle=':', lw=.8, color='k', zorder=1)
     for y_ed in hess_data['hess_edges'][0]:
         # horizontal lines
-        ax.axhline(y_ed, linestyle=':', color='k', zorder=1)
+        ax.axhline(y_ed, linestyle=':', lw=.8, color='k', zorder=1)
     # Grid for pcolormesh, using first two dimensions
     Y, X = np.meshgrid(hess_data['hess_edges'][0], hess_data['hess_edges'][1])
     if hess_data['hess_diag'].size:
@@ -147,10 +147,10 @@ def pl_bf_synth_cl(
     # second the color.
     for x_ed in hess_data['hess_edges'][1]:
         # vertical lines
-        ax.axvline(x_ed, linestyle=':', color='k', zorder=1)
+        ax.axvline(x_ed, linestyle=':', lw=.8, color='k', zorder=1)
     for y_ed in hess_data['hess_edges'][0]:
         # horizontal lines
-        ax.axhline(y_ed, linestyle=':', color='k', zorder=1)
+        ax.axhline(y_ed, linestyle=':', lw=.8, color='k', zorder=1)
     # Add text box
     text = '$({};\,{})$'.format(lkl_method, bin_method)
     ob = offsetbox.AnchoredText(text, pad=.2, loc=1, prop=dict(size=12))
@@ -160,7 +160,7 @@ def pl_bf_synth_cl(
         # TODO using main magnitude and first color
         # Plot synthetic cluster.
         plt.scatter(synth_clst[0][0][1], synth_clst[0][0][0], marker='o', s=40,
-                    c='#4682b4', lw=0.5, zorder=4)
+                    c='#4682b4', lw=0.5, edgecolor='k', zorder=4)
         text1 = '$N_{{synth}} = {}$'.format(len(synth_clst[0][0][0]))
         # Plot isochrone.
         plt.plot(shift_isoch[1], shift_isoch[0], 'r', lw=1.2, zorder=6)
@@ -178,19 +178,19 @@ def pl_bf_synth_cl(
     iso_print = cmd_evol_tracks[evol_track][1]
     t1 = r'$Synthetic\;cluster\;parameters$' + '\n' + \
         r'$[Tracks:\;{}]$'.format(iso_print.replace(' ', '\;'))
-    t2 = r'$IMF \hspace{{3.}}:\,{}$'.format(
+    t2 = r'$IMF \hspace{{3.}}:\;{}$'.format(
         IMF_name.replace('_', '\;').title())
-    t3 = r'$R_{{V}} \hspace{{3.4}}=\,{}$'.format(R_V)
-    t4 = r'$z \hspace{{4.25}}=\,{}\pm {}$'.format(cp_r[0], cp_e[0])
-    t5 = r'$\log(age) \hspace{{0.75}}=\,{}\pm {}$'.format(cp_r[1], cp_e[1])
-    t6 = r'$E_{{(B-V)}} \hspace{{1.3}}=\,{}\pm {}$'.format(cp_r[2], cp_e[2])
-    t7 = r'$(m-M)_o=\, {} \pm {}$'.format(cp_r[3], cp_e[3])
-    t8 = r'$M\,(M_{{\odot}}) \hspace{{0.85}} =\,{}\pm {}$'.format(
+    t3 = r'$R_{{V}} \hspace{{3.2}}=\;{}$'.format(R_V)
+    t4 = r'$z \hspace{{3.9}}=\;{}\pm {}$'.format(cp_r[0], cp_e[0])
+    t5 = r'$\log(age) \hspace{{0.17}}=\;{}\pm {}$'.format(cp_r[1], cp_e[1])
+    t6 = r'$E_{{(B-V)}} \hspace{{1.35}}=\;{}\pm {}$'.format(cp_r[2], cp_e[2])
+    t7 = r'$(m-M)_o=\;{} \pm {}$'.format(cp_r[3], cp_e[3])
+    t8 = r'$M\,(M_{{\odot}}) \hspace{{1.07}} =\;{:.0f}\pm {}$'.format(
         cp_r[4], cp_e[4])
-    t9 = r'$b_{{frac}} \hspace{{2.7}}=\,{}\pm {}$'.format(cp_r[5], cp_e[5])
+    t9 = r'$b_{{frac}} \hspace{{2.37}}=\;{}\pm {}$'.format(cp_r[5], cp_e[5])
     text = t1 + '\n\n' + t2 + '\n' + t3 + '\n' + t4 + '\n' + t5 + '\n' + t6 +\
         '\n' + t7 + '\n' + t8 + '\n' + t9
-    ob = offsetbox.AnchoredText(text, pad=1, loc=6, prop=dict(size=13))
+    ob = offsetbox.AnchoredText(text, pad=1, loc=6, prop=dict(size=11))
     ob.patch.set(alpha=0.85)
     ax_t.add_artist(ob)
 

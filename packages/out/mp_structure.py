@@ -90,7 +90,7 @@ def pl_hist_g(gs, fig, asp_ratio, x_name, y_name, coord, cent_bin, clust_rad,
     ob = offsetbox.AnchoredText(text, pad=0.2, loc=1, prop=dict(size=10))
     ob.patch.set(alpha=0.85)
     ax.add_artist(ob)
-    plt.imshow(hist_2d_g.transpose(), origin='lower')
+    plt.imshow(hist_2d_g.transpose(), origin='lower', cmap="jet")
     # If RA is used, invert axis.
     if coord == 'deg':
         ax.invert_xaxis()

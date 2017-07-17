@@ -137,14 +137,13 @@ def pl_lkl_scatt(gs, ld_p, min_max_p, cp_r, cp_e, model_done):
     if ld_p == '$z$':
         z_xmin, z_step = min_max_p[-1]
         ax.xaxis.set_ticks(np.arange(z_xmin, xp_max, z_step))
-    plt.xlim(xp_min, xp_max)
     # Set minor ticks
     ax.minorticks_on()
     ax.tick_params(axis='y', which='major', labelsize=9)
     plt.xlabel(ld_p, fontsize=16)
     # Add textbox.
     text = (ld_p + '$ = {} \pm {}$').format(xp, e_xp)
-    ob = offsetbox.AnchoredText(text, pad=0.1, loc=2, prop=dict(size=12))
+    ob = offsetbox.AnchoredText(text, pad=0.1, loc=2, prop=dict(size=10))
     ob.patch.set(alpha=0.8)
     ax.add_artist(ob)
     plt.axvline(x=xp, linestyle='--', color='red', zorder=2)
@@ -165,6 +164,7 @@ def pl_lkl_scatt(gs, ld_p, min_max_p, cp_r, cp_e, model_done):
     else:
         min_y, max_y = min_lik + min_lik * 0.1, -2.5 * min_lik
     plt.ylim(min_y, max_y)
+    plt.xlim(xp_min, xp_max)
     # Position colorbar.
     the_divider = make_axes_locatable(ax)
     color_axis = the_divider.append_axes("right", size="2%", pad=0.1)

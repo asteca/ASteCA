@@ -39,6 +39,7 @@ def pl_mp_histo(
             # Plot histo colored according to colormap.
             for c, p in zip(col, patches):
                 plt.setp(p, 'facecolor', cm(c), zorder=3)
+                plt.setp(p, 'edgecolor', 'k')
         else:
             print("  WARNING: all MPs are equal valued. "
                   "Can not plot MPs histogram.")
@@ -60,7 +61,7 @@ def pl_mp_histo(
         # Plot minimum probability line.
         plt.axvline(x=min_prob, linestyle='--', color='green', lw=2.5,
                     zorder=3)
-        ob = offsetbox.AnchoredText(text, loc=2, prop=dict(size=12))
+        ob = offsetbox.AnchoredText(text, loc=2, prop=dict(size=10))
         ob.patch.set(boxstyle='square,pad=0.05', alpha=0.85)
         ax.add_artist(ob)
         # Avoid showing the value 0.0 in the y axis.
@@ -155,10 +156,10 @@ def pl_mps_phot_diag(gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
         # TODO using first magnitude and color. Generalize to N-dimensions.
         for x_ed in bin_edges[1]:
             # vertical lines
-            ax.axvline(x_ed, linestyle=':', color='k', zorder=1)
+            ax.axvline(x_ed, linestyle=':', lw=.8, color='k', zorder=1)
         for y_ed in bin_edges[0]:
             # horizontal lines
-            ax.axhline(y_ed, linestyle=':', color='k', zorder=1)
+            ax.axhline(y_ed, linestyle=':', lw=.8, color='k', zorder=1)
     else:
         ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1,
                 zorder=1)
@@ -173,15 +174,15 @@ def pl_mps_phot_diag(gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
         col_select_fit, col_select_no_fit = '#4682b4', '#4682b4'
     # Plot stars *not* used in the best fit process.
     plt.scatter(diag_no_fit_inv[1][0], diag_no_fit_inv[0][0], marker='o',
-                c=col_select_no_fit, s=35, cmap=cm, lw=0.5, alpha=0.5,
-                vmin=v_min_mp, vmax=v_max_mp, zorder=2)
+                c=col_select_no_fit, s=35, cmap=cm, lw=0.5, edgecolor='k',
+                alpha=0.5, vmin=v_min_mp, vmax=v_max_mp, zorder=2)
     # Draw horizontal line over stars discarded.
     plt.scatter(diag_no_fit_inv[1][0], diag_no_fit_inv[0][0],
                 marker='_', c='k', lw=0.5, alpha=0.5, zorder=3)
     # Plot stars used in the best fit process.
     sca = plt.scatter(diag_fit_inv[1][0], diag_fit_inv[0][0], marker='o',
-                      c=col_select_fit, s=40, cmap=cm, lw=0.5, vmin=v_min_mp,
-                      vmax=v_max_mp, zorder=4)
+                      c=col_select_fit, s=40, cmap=cm, lw=0.5, edgecolor='k',
+                      vmin=v_min_mp, vmax=v_max_mp, zorder=4)
     # If list is not empty, plot error bars at several values.
     if x_val:
         plt.errorbar(x_val, mag_y, yerr=y_err, xerr=x_err, fmt='k.', lw=0.8,
