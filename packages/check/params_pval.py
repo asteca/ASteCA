@@ -19,24 +19,24 @@ def R_inst_packages():
 
 
 def R_check(inst_packgs_lst):
-    '''
-    Check if R and rpy2 are installed.
-    '''
+    """
+    Check if R, the ks r package, and rpy2 are installed.
+    """
     rpy2_inst, R_inst = True, True
     # Check if rpy2 package is installed.
     if 'rpy2' not in inst_packgs_lst:
         rpy2_inst = False
     # Now check for R.
     proc = Popen(["which", "R"], stdout=PIPE, stderr=PIPE)
-    exit_code = proc.wait()
-    if exit_code != 0:
+    stdoutdata = proc.communicate()[0]
+    if stdoutdata == '':
         R_inst = False
 
     R_in_place = False
     # If both R and rpy2 packages are installed.
     if R_inst and rpy2_inst:
-        # Check if all needed packages within R are installed.
-        needed_packg = ['ks', 'rgl']
+        # Check if needed packages within R are installed.
+        needed_packg = ['ks']
         rpack = R_inst_packages()
         missing_pckg = []
         for pck in needed_packg:
@@ -86,6 +86,6 @@ def check(inst_packgs_lst, pd):
         # installed since it will be skipped anyway.
         R_in_place = True
 
-    # Add to parameters dict.
+    # Add to parameters dictionary.
     pd['R_in_place'] = R_in_place
     return pd
