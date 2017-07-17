@@ -3,6 +3,24 @@ import numpy as np
 import random
 import genetic_algorithm
 import obs_clust_prepare
+import sys
+
+
+def update_progress(total, progress):
+    """
+    Displays or updates a console progress bar.
+
+    Original source: https://stackoverflow.com/a/15860757/1391441
+    """
+    barLength, status = 20, ""
+    progress = round(float(progress) / float(total), 1)
+    if progress >= 1.:
+        progress, status = 1, "\r\n"
+    block = int(round(barLength * progress))
+    text = "\r[{0}] {1}% {2}".format(
+        "#" * block + "-" * (barLength - block), progress * 100, status)
+    sys.stdout.write(text)
+    sys.stdout.flush()
 
 
 def resample_replacement(obs_clust):
@@ -25,11 +43,9 @@ def main(lkl_method, e_max, bin_mr, err_lst, completeness, fundam_params,
     '''
     print('Begin bootstrap process ({}).'.format(N_b))
 
-    # List that holds the parameters values obtained by the bootstrap
-    # process.
+    # Holds the parameter values obtained by the bootstrap process.
     params_boot = []
 
-    milestones = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
     # Begin bootstrap block (run a minimum of two times).
     for i in range(N_b):
 
@@ -41,7 +57,7 @@ def main(lkl_method, e_max, bin_mr, err_lst, completeness, fundam_params,
 
         # Algorithm selected.
         if best_fit_algor == 'genet':
-            # Let the GA algor know this call comes from the bootstrap
+            # Let the GA algorithm know this call comes from the bootstrap
             # process so it will not print percentages to screen.
             flag_print_perc = False
             params_boot.append(genetic_algorithm.main(
@@ -49,21 +65,16 @@ def main(lkl_method, e_max, bin_mr, err_lst, completeness, fundam_params,
                 fundam_params, obs_cl, theor_tracks, R_V, ext_coefs,
                 st_dist_mass, N_fc, ga_params, flag_print_perc)[0])
 
-        percentage_complete = (100.0 * (i + 1) / max(N_b, 2))
-        while len(milestones) > 0 and percentage_complete >= milestones[0]:
-            print "  {}%".format(milestones[0])
-            # Remove that milestone from the list.
-            milestones = milestones[1:]
+        update_progress(N_b, i + 1)
 
-    # Calculate errors for each parameter.
+    # Calculate errors for each fundamental parameter.
     isoch_fit_errors = np.std(params_boot, 0)
-    # Errors can not be smaller than the largest step in each parameter.
     for i, p_er in enumerate(isoch_fit_errors):
         # If any parameter has a single valued range, assign an error of -1.
         if len(fundam_params[i]) > 1:
             # Find largest delta in this parameter used values.
             largest_delta = np.diff(fundam_params[i]).max()
-            # Store the maximum value.
+            # Errors can not be smaller than the largest step in each parameter
             isoch_fit_errors[i] = max(largest_delta, p_er)
         else:
             isoch_fit_errors[i] = -1.
