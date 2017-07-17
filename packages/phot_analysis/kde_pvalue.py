@@ -13,6 +13,7 @@ def gauss_error(col, e_col, mag, e_mag):
 
 
 def get_CMD(region):
+    # TODO generalize to N dimensions
 
     # Obtain CMD for given region.
     # Format field region data.
@@ -43,11 +44,11 @@ def get_CMD(region):
 
 
 def KDE_test(clp, pv_params):
-    '''
+    """
     Compare the cluster region KDE with all the field region KDEs using Duong's
-    ks package (developed in R) to obtain a p-value. This value will be close
-    to 1 if the cluster region is very similar to the field regions and
-    closer to 0 as it differentiates from it.
+    R-ks package to obtain a p-value. This value will be close to 1 if the
+    cluster region is very similar to the field regions and closer to 0 as it
+    differentiates from it.
 
     As a rule of thumb, a p-value > 0.05 (ie: 5%) indicates that one should
     reject the null hypothesis that the KDEs arose from the same distribution.
@@ -55,7 +56,7 @@ def KDE_test(clp, pv_params):
     We assign a probability of the overdensity being a real cluster as 1
     minus the overlap between the KDEs of the distributions of p-values for
     the cluster vs field and field vs field comparisons.
-    '''
+    """
     cl_region, field_regions, flag_no_fl_regs = [
         clp[_] for _ in ['cl_region', 'field_regions', 'flag_no_fl_regs']]
     # mags, cols = cld['mags'], cld['cols']
@@ -197,7 +198,7 @@ def KDE_test(clp, pv_params):
             # Pass empty lists for plotting.
             kde_f_1d, y_over = np.asarray([]), []
 
-        # Store all return params in a single list.
+        # Store all parameters in a single list.
         pval_test_params = [prob_cl_kde, kde_cl_1d, kde_f_1d, x_kde, y_over]
 
         print('Probability of physical cluster obtained ({:.2f}).'.format(
