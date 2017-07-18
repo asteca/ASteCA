@@ -118,8 +118,7 @@ def main(cl_file, pd):
     # Obtain members parameter.
     clp = members_N_compare.main(clp)
 
-    # Reduce number of stars in cluster according to a lower membership
-    # probability or magnitude limit.
+    # Remove stars from the observed cluster according to a selected method.
     clp = cl_region_clean.main(clp, **pd)
 
     make_C_plot.main(npd, cld, pd, **clp)

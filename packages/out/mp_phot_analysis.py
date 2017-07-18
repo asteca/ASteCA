@@ -218,8 +218,8 @@ def pl_lum_func(gs, mags, y_ax, flag_no_fl_regs, lum_func, completeness):
         max_y = max(y_cl)
     plt.ylim(0., max_y + 0.05 * max_y)
     # Completeness maximum value.
-    # completeness = [max_mag, bin_edges, max_indx, comp_perc]
-    bin_edges, max_indx = completeness[1], completeness[2]
+    # completeness = [bin_edges, max_indx, comp_perc]
+    bin_edges, max_indx = completeness[0], completeness[1]
     mag_peak = bin_edges[max_indx]
     text = '$' + y_ax + r',_{compl}\,\approx\,%0.1f$' % mag_peak
     ax.vlines(x=mag_peak, ymin=0., ymax=plt.ylim()[1], color='k',

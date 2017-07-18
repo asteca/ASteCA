@@ -34,8 +34,8 @@ def resample_replacement(obs_clust):
 
 
 def main(lkl_method, e_max, bin_mr, err_lst, completeness, fundam_params,
-         cl_reg_fit, theor_tracks, R_V, ext_coefs, st_dist_mass, N_fc,
-         ga_params, bin_method, best_fit_algor, N_b):
+         cl_max_mag, max_mag_syn, theor_tracks, R_V, ext_coefs, st_dist_mass,
+         N_fc, ga_params, bin_method, best_fit_algor, N_b):
     '''
     Bootstrap process, runs the selected algorithm a number of times each
     time generating a new observed cluster representation through resampling
@@ -50,7 +50,7 @@ def main(lkl_method, e_max, bin_mr, err_lst, completeness, fundam_params,
     for i in range(N_b):
 
         # Resample cluster with replacement.
-        obs_cl_r = resample_replacement(cl_reg_fit)
+        obs_cl_r = resample_replacement(cl_max_mag)
         # Obtain prepared observed cluster according to the likelihood method
         # selected.
         obs_cl = obs_clust_prepare.main(obs_cl_r, lkl_method, bin_method)
@@ -61,7 +61,7 @@ def main(lkl_method, e_max, bin_mr, err_lst, completeness, fundam_params,
             # process so it will not print percentages to screen.
             flag_print_perc = False
             params_boot.append(genetic_algorithm.main(
-                lkl_method, e_max, bin_mr, err_lst, completeness,
+                lkl_method, e_max, bin_mr, err_lst, completeness, max_mag_syn,
                 fundam_params, obs_cl, theor_tracks, R_V, ext_coefs,
                 st_dist_mass, N_fc, ga_params, flag_print_perc)[0])
 

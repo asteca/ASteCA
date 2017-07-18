@@ -158,8 +158,8 @@ def mighell(synth_clust, obs_clust):
     return mig_chi
 
 
-def main(lkl_method, e_max, bin_mass_ratio, err_lst, obs_clust,
-         completeness, st_dist_mass, isochrone, R_V, ext_coefs, N_fc,
+def main(lkl_method, e_max, bin_mass_ratio, err_lst, obs_clust, completeness,
+         max_mag_syn, st_dist_mass, isochrone, R_V, ext_coefs, N_fc,
          synth_cl_params):
     '''
     Generate synthetic cluster with an isochrone of given values for
@@ -169,8 +169,8 @@ def main(lkl_method, e_max, bin_mass_ratio, err_lst, obs_clust,
     # Generate synthetic cluster.
     # with timeblock("synth_cl"):
     synth_clust = synth_cluster.main(
-        e_max, bin_mass_ratio, err_lst, completeness, st_dist_mass, isochrone,
-        R_V, ext_coefs, N_fc, synth_cl_params)
+        e_max, bin_mass_ratio, err_lst, completeness, max_mag_syn,
+        st_dist_mass, isochrone, R_V, ext_coefs, N_fc, synth_cl_params)
     # synth_clust = [photom_dims, photom_errs, binar_idx, extra_info]
     # photom_dims = [mag1, mag2, ..., magN, col1, col2, ..., colM]
     # photom_errs = [e_m1, e_m2, ..., e_mN, e_c1, e_c2, ..., e_CM]

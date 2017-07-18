@@ -1,4 +1,5 @@
 
+import itertools
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from os.path import join
@@ -9,17 +10,15 @@ import prep_plots
 
 
 def plot_observed_cluster(
-    cld, pd, fig, gs, cl_reg_fit, cl_reg_no_fit, err_lst, v_min_mp, v_max_mp,
-        plot_colorbar, diag_fit_inv, lkl_method, hess_data, shift_isoch):
+    cld, pd, fig, gs, cl_max_mag, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
+    err_lst, v_min_mp, v_max_mp, plot_colorbar, diag_fit_inv, lkl_method,
+        hess_data, shift_isoch):
     """
     This function is called separately since we need to retrieve some
     information from it to plot that #$%&! colorbar.
     """
     x_ax, y_ax, y_axis = prep_plots.ax_names(pd['filters'], pd['colors'])
-    x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd = prep_plots.diag_limits(
-        y_axis, cld['cols'], cld['mags'])
-    err_bar = prep_plots.error_bars(
-        cl_reg_fit + cl_reg_no_fit, x_min_cmd, err_lst)
+    err_bar = prep_plots.error_bars(cl_max_mag, x_min_cmd, err_lst)
 
     try:
         # pl_mps_phot_diag
@@ -63,8 +62,7 @@ def plot_observed_cluster(
 
 def main(
         npd, cld, pd, synth_clst, shift_isoch, isoch_fit_params,
-        isoch_fit_errors, cl_reg_fit, cl_reg_no_fit, err_lst,
-        **kwargs):
+        isoch_fit_errors, cl_max_mag, err_lst, **kwargs):
     '''
     Make D2 block plots.
     '''
@@ -76,10 +74,13 @@ def main(
 
         best_fit_algor, lkl_method, bin_method, N_b = pd['bf_params']
         x_ax, y_ax, y_axis = prep_plots.ax_names(pd['filters'], pd['colors'])
+        # TODO using first magnitude and color defined
+        firts_col = list(itertools.chain.from_iterable(zip(*cl_max_mag)[5]))
+        first_mag = list(itertools.chain.from_iterable(zip(*cl_max_mag)[3]))
         x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd =\
-            prep_plots.diag_limits(y_axis, cld['cols'], cld['mags'])
+            prep_plots.diag_limits(y_axis, firts_col, first_mag)
         hess_data = prep_plots.get_hess(
-            lkl_method, bin_method, cl_reg_fit, synth_clst)
+            lkl_method, bin_method, cl_max_mag, synth_clst)
 
         arglist = [
             # hess_diag_pl: Hess diagram 'observed - synthetic'
@@ -96,15 +97,14 @@ def main(
             mp_best_fit2.plot(n, *args)
 
         # tight_layout is called here
-        v_min_mp, v_max_mp = prep_plots.da_colorbar_range(
-            cl_reg_fit, cl_reg_no_fit)
-        plot_colorbar, diag_fit_inv, diag_no_fit_inv = prep_plots.da_phot_diag(
-            cl_reg_fit, cl_reg_no_fit, v_min_mp, v_max_mp)
+        v_min_mp, v_max_mp = prep_plots.da_colorbar_range(cl_max_mag, [])
+        plot_colorbar, diag_fit_inv, dummy = prep_plots.da_phot_diag(
+            cl_max_mag, [], v_min_mp, v_max_mp)
         # Main photometric diagram of observed cluster.
         plot_observed_cluster(
-            cld, pd, fig, gs, cl_reg_fit, cl_reg_no_fit, err_lst, v_min_mp,
-            v_max_mp, plot_colorbar, diag_fit_inv, lkl_method, hess_data,
-            shift_isoch)
+            cld, pd, fig, gs, cl_max_mag, x_min_cmd, x_max_cmd, y_min_cmd,
+            y_max_cmd, err_lst, v_min_mp, v_max_mp, plot_colorbar,
+            diag_fit_inv, lkl_method, hess_data, shift_isoch)
 
         # Generate output file.
         pl_fmt, pl_dpi = pd['pl_params'][1:3]

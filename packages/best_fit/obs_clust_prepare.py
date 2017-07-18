@@ -3,7 +3,7 @@ import numpy as np
 from ..decont_algors.local_cell_clean import bin_edges_f
 
 
-def main(cl_reg_fit, lkl_method, bin_method):
+def main(cl_max_mag, lkl_method, bin_method):
     '''
     Prepare observed cluster array here to save time before the algorithm to
     find the best synthetic cluster fit is used.
@@ -12,21 +12,21 @@ def main(cl_reg_fit, lkl_method, bin_method):
     # Extract photometric data, and membership probabilities. Remove ID's to
     # make entire array of floats.
     mags_cols_cl = [[], []]
-    for mag in zip(*zip(*cl_reg_fit)[1:][2]):
+    for mag in zip(*zip(*cl_max_mag)[1:][2]):
         mags_cols_cl[0].append(mag)
-    for col in zip(*zip(*cl_reg_fit)[1:][4]):
+    for col in zip(*zip(*cl_max_mag)[1:][4]):
         mags_cols_cl[1].append(col)
 
     # Square errors here to not repeat the same calculations each time a
     # new synthetic cluster is matched.
     e_mags_cols = []
-    for e_m in zip(*zip(*cl_reg_fit)[1:][3]):
+    for e_m in zip(*zip(*cl_max_mag)[1:][3]):
         e_mags_cols.append(np.square(e_m))
-    for e_c in zip(*zip(*cl_reg_fit)[1:][5]):
+    for e_c in zip(*zip(*cl_max_mag)[1:][5]):
         e_mags_cols.append(np.square(e_c))
 
     # Store membership probabilities here.
-    memb_probs = np.array(zip(*cl_reg_fit)[1:][6])
+    memb_probs = np.array(zip(*cl_max_mag)[1:][6])
 
     if lkl_method == 'tolstoy':
         # Store and pass to use in likelihood function. The 'obs_st' list is

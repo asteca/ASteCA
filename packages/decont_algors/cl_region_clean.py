@@ -95,36 +95,6 @@ def manual(memb_prob_avrg_sort, rm_params, min_prob_i=None):
     return cl_reg_fit, cl_reg_no_fit, min_prob
 
 
-def man_mag(memb_prob_avrg_sort, rm_params):
-    '''
-    Reject stars beyond the given magnitude limit. In this function, 'min_prob'
-    actually represents a minimum (maximum) accepted magnitude rather than a
-    membership probability value.
-    '''
-
-    min_mag_man = rm_params[2]
-    cl_reg_fit, cl_reg_no_fit, min_prob = memb_prob_avrg_sort, [], 0.
-
-    rem_fit, rem_not_fit = [], []
-    for star in memb_prob_avrg_sort:
-        # Usa main mag.
-        if star[3][0] <= min_mag_man:
-            # Keep stars brighter that the magnitude limit.
-            rem_fit.append(star)
-        else:
-            rem_not_fit.append(star)
-
-    # Check number of stars left.
-    if len(rem_fit) > 10:
-        cl_reg_fit, cl_reg_no_fit, min_prob = rem_fit, rem_not_fit,\
-            min_mag_man
-    else:
-        print("  WARNING: less than 10 stars left after reducing\n"
-              "  by magnitude limit. No removal applied.")
-
-    return cl_reg_fit, cl_reg_no_fit, min_prob
-
-
 def main(clp, rm_params, **kwargs):
     '''
     Remove stars from cluster region, according to a given membership
@@ -179,10 +149,6 @@ def main(clp, rm_params, **kwargs):
 
         elif mode_rem_memb == 'man':
             cl_reg_fit, cl_reg_no_fit, min_prob = manual(
-                memb_prob_avrg_sort, rm_params)
-
-        elif mode_rem_memb == 'mag':
-            cl_reg_fit, cl_reg_no_fit, min_prob = man_mag(
                 memb_prob_avrg_sort, rm_params)
 
         print('Cluster region field stars removal function applied.')

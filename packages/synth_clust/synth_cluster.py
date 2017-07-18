@@ -24,12 +24,29 @@ import add_errors
 #############################################################
 
 
-def main(e_max, bin_mass_ratio, err_lst, completeness, st_dist_mass, isochrone,
-         R_V, ext_coefs, N_fc, synth_cl_params):
-    '''
+def main(e_max, bin_mass_ratio, err_lst, completeness, max_mag_syn,
+         st_dist_mass, isochrone, R_V, ext_coefs, N_fc, synth_cl_params):
+    """
     Takes an isochrone and returns a synthetic cluster created according to
     a certain mass distribution.
-    '''
+
+    The synthetic cluster returned has the shape:
+
+    synth_clust = [photometry, binary_idxs, extra_pars]
+
+    photometry = [photom, errors]
+    photom = [f1, f2, ..., fF, c1, c2, ..., cC]
+    (where F and C are the total number of filters and colors defined)
+
+    errors = [ef1, ef2, ..., efF, ec1, ec2, ..., ecC]
+    (photometric errrors for each photometric dimension defined)
+
+    Correct indexes of binary systems after completeness removal.
+    binary_idxs = [i1, i2, ..., iN]
+
+    Six lists containing the theoretical tracks extra parameters.
+    extra_pars = [l1, l2, ..., l6]
+    """
 
     # Unpack synthetic cluster parameters. The first two elements are the
     # metallicity and the age, which are already incorporated in the selected
@@ -47,12 +64,12 @@ def main(e_max, bin_mass_ratio, err_lst, completeness, st_dist_mass, isochrone,
     # # the input cluster file.
     # print "\nCluster's log(age): {:0.2f}".format(synth_cl_params[1])
     # print 'Fixed total mass: {:0.2f}'.format(M_total)
-    # completeness[0] = max(isoch_moved[1]) + 0.5
+    # max_mag = max(isoch_moved[1]) + 0.5
     ##############################################################
 
     # Get isochrone minus those stars beyond the magnitude cut.
     # with timeblock("cut"):
-    isoch_cut = cut_max_mag.main(isoch_moved, completeness[0])
+    isoch_cut = cut_max_mag.main(isoch_moved, max_mag_syn)
 
     # Empty list to pass if at some point no stars are left.
     synth_clust = []

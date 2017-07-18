@@ -51,7 +51,7 @@ differing\n# >{}% with the best value assigned for said parameter(s).\n\
 
 def plot_top_tiers(pd, top_tiers_flo, output_subdir, clust_name, mags,
                    cols, isoch_fit_params, ext_coefs, N_fc, err_lst,
-                   completeness):
+                   completeness, max_mag_syn):
     '''
     Plot all top tiers.
     '''
@@ -69,16 +69,20 @@ def plot_top_tiers(pd, top_tiers_flo, output_subdir, clust_name, mags,
     plt.figtext(x_coord, .986, ver, fontsize=9, color='#585858')
 
     x_ax, y_ax, y_axis = prep_plots.ax_names(pd['filters'], pd['colors'])
-    x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd = prep_plots.diag_limits(
-        y_axis, cols, mags)
 
     synth_cls = []
     for mod in top_tiers_flo:
         # Call function to generate synthetic cluster.
         shift_isoch, synth_clst = synth_cl_plot.main(
             e_max, pd['bin_mr'], pd['fundam_params'], pd['theor_tracks'],
-            isoch_fit_params, err_lst, completeness, st_dist_mass, pd['R_V'],
-            ext_coefs, N_fc)
+            isoch_fit_params, err_lst, completeness, max_mag_syn,
+            st_dist_mass, pd['R_V'], ext_coefs, N_fc)
+
+        # TODO using first magnitude and color defined
+        first_col, first_mag = synth_clst[0][0][1], synth_clst[0][0][0]
+        x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd = prep_plots.diag_limits(
+            y_axis, first_col, first_mag)
+
         # Store plotting parameters.
         synth_cls.append([gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
                          x_ax, y_ax, synth_clst, mod, shift_isoch])
@@ -97,16 +101,14 @@ def plot_top_tiers(pd, top_tiers_flo, output_subdir, clust_name, mags,
     plt.close()
 
 
-def main(npd, cld, pd, err_lst, ext_coefs, N_fc, completeness,
+def main(npd, cld, pd, err_lst, ext_coefs, N_fc, completeness, max_mag_syn,
          isoch_fit_params, **kwargs):
     '''
     Obtain top tier models, produce data file and output image.
     '''
 
-    clust_name, output_subdir = npd['clust_name'], npd['output_subdir']
-    mags, cols = cld['mags'], cld['cols']
-
     if pd['bf_flag']:
+        clust_name, output_subdir = npd['clust_name'], npd['output_subdir']
         all_models = isoch_fit_params[-1]
 
         # Sort all models/solutions by their (minimum) likelihood values.
@@ -158,9 +160,9 @@ def main(npd, cld, pd, err_lst, ext_coefs, N_fc, completeness,
             if flag_make_plot:
                 try:
                     plot_top_tiers(
-                        pd, top_tiers_flo, output_subdir, clust_name, mags,
-                        cols, isoch_fit_params, ext_coefs, N_fc, err_lst,
-                        completeness)
+                        pd, top_tiers_flo, output_subdir, clust_name,
+                        cld['mags'], cld['cols'], isoch_fit_params, ext_coefs,
+                        N_fc, err_lst, completeness, max_mag_syn)
                     print("<<Plots from 'D3' block created>>")
                 except:
                     import traceback

@@ -231,7 +231,7 @@ DA   auto       200
 # based on their assigned membership probabilities (MPs), magnitude, or
 # randomly (if MPs are missing).
 #
-# * mode: local / n_memb  / mp_05 / top_h / man / mag / skip
+# * mode: local / n_memb / mp_05 / top_h / man / skip
 #   - local: combines the assigned MPs with a cell by cell removal of stars in
 #     the photometric diagram. The stars discarded are those of lower MPs and
 #     the number is equal to the excess of field stars present in each cell.
@@ -244,10 +244,6 @@ DA   auto       200
 #     highest MPs.
 #   - man: the minimum probability value has to be set manually in the
 #    'prob_min' parameter (0, 1).
-#   - mag: switches the 'prob_min' value to a 'mag_min' value so the user can
-#     select a minimum magnitude to be used in the best fit function, instead
-#     of a minimum probability (the 'minimum magnitude' value is the value of
-#     the dimmest star wished to be taken into account in the fitting process).
 #   - skip: use all stars in the cluster region.
 #
 # * binning: blocks / knuth / bb / auto / fd / doane / scott / rice /
@@ -292,7 +288,7 @@ RM   local    blocks                   17
 #
 # * bootstrap: number of times the bootstrap with replacement process will run
 #   in the GA algorithm. Minimum value is 2, anything less will skip the
-#   bootstrap process hence no errors will be assigned to the parameters.
+#   bootstrap process and no errors will be assigned to the parameters.
 #
 #    flag  algorithm   likelihood  binning  bootstrap
 BF   true      genet      dolphin    knuth         10
@@ -321,6 +317,14 @@ PS        PAR12
 
 # Synthetic cluster parameters.
 #
+#  * Max mag: max / val. Select a maximum magnitude to be used in the best fit
+#    process. This limit affects both the observed and synthetic cluster.
+#    - max: use the maximum observed magnitude available.
+#    - val: (float) manually select the maximum magnitude value to use.
+#
+#    max_mag
+MM       max
+#
 # * IMF: chabrier_2001_exp / chabrier_2001_log / kroupa_1993 / kroupa_2002
 #   Select IMF used to generate the synthetic clusters.
 #
@@ -334,7 +338,7 @@ SC  kroupa_2002             300.
 #      R_V
 RV     3.1
 #
-# Ranges and steps for the parameters to be fitted.
+# * Ranges and steps for the parameters to be fitted.
 #
 #                        min     max     step
 #    Metallicity (z)        

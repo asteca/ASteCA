@@ -4,7 +4,7 @@ import numpy as np
 from os.path import isdir
 
 
-def check(IMF_name, R_V, evol_track, bin_methods, bf_flag, bf_params,
+def check(max_mag, IMF_name, R_V, evol_track, bin_methods, bf_flag, bf_params,
           cmd_evol_tracks, iso_paths, imf_funcs, par_ranges, bin_mr,
           ga_params, **kwargs):
     """
@@ -74,6 +74,12 @@ def check(IMF_name, R_V, evol_track, bin_methods, bf_flag, bf_params,
         if evol_track not in cmd_evol_tracks.keys():
             sys.exit("ERROR: the selected isochrones set ('{}') does\n"
                      "not match a valid input.".format(evol_track))
+
+        # Check IMF defined.
+        if isinstance(max_mag, str):
+            if max_mag != 'max':
+                sys.exit("ERROR: Maximum magnitude value selected ({}) is"
+                         " not valid.".format(max_mag))
 
         # Check IMF defined.
         if IMF_name not in imf_funcs:

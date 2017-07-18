@@ -15,7 +15,8 @@ def main(clp, npd, er_params, bf_flag, fundam_params, bin_mr, filters,
         shift_isoch, synth_clst = synth_cl_plot.main(
             e_max, bin_mr, fundam_params, theor_tracks,
             clp['isoch_fit_params'], clp['err_lst'], clp['completeness'],
-            clp['st_dist_mass'], R_V, clp['ext_coefs'], clp['N_fc'])
+            clp['max_mag_syn'], clp['st_dist_mass'], R_V, clp['ext_coefs'],
+            clp['N_fc'])
 
         # If cluster is not empty.
         if synth_clst:

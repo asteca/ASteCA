@@ -28,7 +28,7 @@ def pl_mps_phot_diag(gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
     # Set minor ticks
     ax.minorticks_on()
     ax.xaxis.set_major_locator(MultipleLocator(1.0))
-    ax.set_title("Observed", fontsize=9)
+    ax.set_title("Observed", fontsize=10)
     # TODO this assumes that the first photom dimen is the main mag, and the
     # second the color.
     # Plot grid.
@@ -80,7 +80,7 @@ def pl_hess_diag(
     # Set minor ticks
     ax.minorticks_on()
     ax.xaxis.set_major_locator(MultipleLocator(1.0))
-    ax.set_title("Hess diagram (observed - synthetic)", fontsize=9)
+    ax.set_title("Hess diagram (observed - synthetic)", fontsize=10)
     # TODO this assumes that the first photom dimen is the main mag, and the
     # second the color.
     for x_ed in hess_data['hess_edges'][1]:
@@ -141,7 +141,7 @@ def pl_bf_synth_cl(
     # Set minor ticks
     ax.minorticks_on()
     ax.xaxis.set_major_locator(MultipleLocator(1.0))
-    ax.set_title("Synthetic (best match)", fontsize=9)
+    ax.set_title("Synthetic (best match)", fontsize=10)
     # Plot grid.
     # TODO this assumes that the first photom dimen is the main mag, and the
     # second the color.

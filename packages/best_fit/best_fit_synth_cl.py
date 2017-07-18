@@ -1,5 +1,6 @@
 
 import numpy as np
+import copy
 import obs_clust_prepare
 import genetic_algorithm
 import brute_force_algor
@@ -9,10 +10,41 @@ from ..synth_clust import extin_coefs
 from ..synth_clust import imf
 
 
+def max_mag_cut(cl_reg_fit, max_mag):
+    '''
+    Reject stars beyond the given magnitude limit.
+    '''
+    # Maximum observed (main) magnitude.
+    max_mag_obs = max(list(zip(*zip(*cl_reg_fit)[1:][2])[0]))
+
+    if max_mag == 'max':
+        # No magnitude cut applied.
+        cl_max_mag, max_mag_syn = copy.deepcopy(cl_reg_fit), max_mag_obs
+    else:
+        star_lst = []
+        for star in cl_reg_fit:
+            # Check main magnitude value.
+            if star[3][0] <= max_mag:
+                # Keep stars brighter that the magnitude limit.
+                star_lst.append(star)
+
+        # Check number of stars left.
+        if len(star_lst) > 10:
+            cl_max_mag, max_mag_syn = star_lst, max_mag
+            print("Maximum magnitude cut at {:.1f} mag applied".format(
+                max_mag))
+        else:
+            cl_max_mag, max_mag_syn = copy.deepcopy(cl_reg_fit), max_mag_obs
+            print("  WARNING: less than 10 stars left after removing\n"
+                  "  stars by magnitude limit. No removal applied.")
+
+    return cl_max_mag, max_mag_syn
+
+
 def params_errors(
     lkl_method, e_max, bin_mr, err_lst, completeness, fundam_params,
-        cl_reg_fit, theor_tracks, R_V, ext_coefs, st_dist_mass, N_fc,
-        ga_params, bin_method, best_fit_algor, isoch_fit_params, N_b):
+        cl_max_mag, max_mag_syn, theor_tracks, R_V, ext_coefs, st_dist_mass,
+        N_fc, ga_params, bin_method, best_fit_algor, isoch_fit_params, N_b):
     '''
     Obtain errors for the fitted parameters.
     '''
@@ -36,7 +68,7 @@ def params_errors(
             # in each parameter.
             isoch_fit_errors = bootstrap.main(
                 lkl_method, e_max, bin_mr, err_lst, completeness,
-                fundam_params, cl_reg_fit, theor_tracks, R_V,
+                fundam_params, cl_max_mag, max_mag_syn, theor_tracks, R_V,
                 ext_coefs, st_dist_mass, N_fc, ga_params, bin_method,
                 best_fit_algor, N_b)
         else:
@@ -47,9 +79,9 @@ def params_errors(
     return isoch_fit_errors
 
 
-def main(clp, bf_flag, er_params, bf_params, IMF_name, m_high, R_V, bin_mr,
-         ga_params, fundam_params, cmd_systs, all_syst_filters, filters,
-         colors, theor_tracks, **kwargs):
+def main(clp, bf_flag, er_params, bf_params, max_mag, IMF_name, m_high, R_V,
+         bin_mr, ga_params, fundam_params, cmd_systs, all_syst_filters,
+         filters, colors, theor_tracks, **kwargs):
     '''
     Perform a best fitting process to find the cluster's fundamental
     parameters.
@@ -63,15 +95,18 @@ def main(clp, bf_flag, er_params, bf_params, IMF_name, m_high, R_V, bin_mr,
         best_fit_algor, lkl_method, bin_method, N_b = bf_params
         e_max = er_params[1]
 
+        # Remove stars beyond the maximum magnitude limit, if it was set.
+        cl_max_mag, max_mag_syn = max_mag_cut(cl_reg_fit, max_mag)
+
         # Process observed cluster. This list contains data used by the
         # likelihoods, and for plotting.
-        obs_clust = obs_clust_prepare.main(cl_reg_fit, lkl_method, bin_method)
+        obs_clust = obs_clust_prepare.main(cl_max_mag, lkl_method, bin_method)
 
         # DELETE
         print(filters)
         print(colors)
         # cl_histo_f = obs_clust[2]
-        # N, B = len(cl_reg_fit), len(cl_histo_f)
+        # N, B = len(cl_max_mag), len(cl_histo_f)
         # print('N:', N, 'B:', B)
         # B_p = np.count_nonzero(cl_histo_f)
         # print('B != 0:', B_p)
@@ -101,7 +136,7 @@ def main(clp, bf_flag, er_params, bf_params, IMF_name, m_high, R_V, bin_mr,
                 else lkl_method))
             # Brute force algorithm.
             isoch_fit_params = brute_force_algor.main(
-                lkl_method, e_max, bin_mr, err_lst, completeness,
+                lkl_method, e_max, bin_mr, err_lst, completeness, max_mag_syn,
                 fundam_params, obs_clust, theor_tracks, R_V, ext_coefs,
                 st_dist_mass, N_fc)
 
@@ -115,7 +150,7 @@ def main(clp, bf_flag, er_params, bf_params, IMF_name, m_high, R_V, bin_mr,
             # so it will print percentages to screen.
             flag_print_perc = True
             isoch_fit_params = genetic_algorithm.main(
-                lkl_method, e_max, bin_mr, err_lst, completeness,
+                lkl_method, e_max, bin_mr, err_lst, completeness, max_mag_syn,
                 fundam_params, obs_clust, theor_tracks, R_V, ext_coefs,
                 st_dist_mass, N_fc, ga_params, flag_print_perc)
 
@@ -124,8 +159,9 @@ def main(clp, bf_flag, er_params, bf_params, IMF_name, m_high, R_V, bin_mr,
         # Assign errors for each parameter.
         isoch_fit_errors = params_errors(
             lkl_method, e_max, bin_mr, err_lst, completeness, fundam_params,
-            cl_reg_fit, theor_tracks, R_V, ext_coefs, st_dist_mass, N_fc,
-            ga_params, bin_method, best_fit_algor, isoch_fit_params, N_b)
+            cl_max_mag, max_mag_syn, theor_tracks, R_V, ext_coefs,
+            st_dist_mass, N_fc, ga_params, bin_method, best_fit_algor,
+            isoch_fit_params, N_b)
 
         # TODO Move this to the end of the code, before plotting and storing
         # data to out file.
@@ -138,11 +174,13 @@ def main(clp, bf_flag, er_params, bf_params, IMF_name, m_high, R_V, bin_mr,
     else:
         # Pass empty lists to make_plots.
         print('Skipping parameters fitting process.')
-        isoch_fit_params, isoch_fit_errors, st_dist_mass, N_fc, ext_coefs =\
+        cl_max_mag, max_mag_syn, isoch_fit_params, isoch_fit_errors,\
+            st_dist_mass, N_fc, ext_coefs = [], -1.,\
             [[-1., -1., -1., -1., -1., -1.]], [-1., -1., -1., -1., -1., -1.],\
             [], [], []
 
-    clp['isoch_fit_params'], clp['isoch_fit_errors'], clp['ext_coefs'],\
-        clp['st_dist_mass'], clp['N_fc'] = isoch_fit_params,\
+    clp['cl_max_mag'], clp['max_mag_syn'], clp['isoch_fit_params'],\
+        clp['isoch_fit_errors'], clp['ext_coefs'], clp['st_dist_mass'],\
+        clp['N_fc'] = cl_max_mag, max_mag_syn, isoch_fit_params,\
         isoch_fit_errors, ext_coefs, st_dist_mass, N_fc
     return clp

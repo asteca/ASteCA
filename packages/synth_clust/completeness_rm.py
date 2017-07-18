@@ -11,22 +11,22 @@ def main(isoch_binar, binar_idx0, completeness):
     '''
     # If stars exist in the isochrone beyond the completeness magnitude
     # level, then apply the removal of stars. Otherwise, skip it.
-    # completeness = [max_mag, bin_edges, max_indx, comp_perc]
-    if max(isoch_binar[0]) > completeness[1][completeness[2]]:
+    # completeness = [bin_edges, max_indx, comp_perc]
+    if max(isoch_binar[0]) > completeness[0][completeness[1]]:
 
-        # Get histogram. completeness[1] = bin_edges of the observed
+        # Get histogram. completeness[0] = bin_edges of the observed
         # region histogram.
-        synth_mag_hist = np.histogram(isoch_binar[0], completeness[1])[0]
-        pi = completeness[3]
-        n1, p1 = synth_mag_hist[completeness[2]], pi[0]
-        di = np.around((synth_mag_hist[completeness[2]:] -
+        synth_mag_hist = np.histogram(isoch_binar[0], completeness[0])[0]
+        pi = completeness[2]
+        n1, p1 = synth_mag_hist[completeness[1]], pi[0]
+        di = np.around((synth_mag_hist[completeness[1]:] -
                         (n1 / p1) * np.asarray(pi)), 0)
 
         # Store indexes of *all* elements in isoch_binar whose main magnitude
         # value falls between the ranges given.
-        c_indx = np.searchsorted(completeness[1][completeness[2]:],
+        c_indx = np.searchsorted(completeness[0][completeness[1]:],
                                  isoch_binar[0], side='left')
-        N = len(completeness[1][completeness[2]:])
+        N = len(completeness[0][completeness[1]:])
         mask = (c_indx > 0) & (c_indx < N)
         elements = c_indx[mask]
         indices = np.arange(c_indx.size)[mask]

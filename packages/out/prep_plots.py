@@ -116,7 +116,7 @@ def diag_limits(y_axis, phot_x, phot_y):
     '''
     Define plot limits for *all* photometric diagrams.
     '''
-    x_v, y_v = kde_limits(phot_x[0], phot_y[0])
+    x_v, y_v = kde_limits(phot_x, phot_y)
 
     # Define diagram limits.
     x_min_cmd, x_max_cmd = min(x_v) - 1.25, max(x_v) + 1.25
@@ -124,7 +124,7 @@ def diag_limits(y_axis, phot_x, phot_y):
     # If photometric axis y is a magnitude, make sure the brightest star
     # is always plotted.
     if y_axis == 0:
-        y_max_cmd = min(phot_y[0]) - 1.
+        y_max_cmd = min(phot_y) - 1.
     else:
         y_max_cmd = min(y_v) - 1.
 
@@ -364,7 +364,7 @@ def BestTick(minv, maxv, max_char):
     return xmin, st[st_indx]
 
 
-def get_hess(lkl_method, bin_method, cl_reg_fit, synth_clust):
+def get_hess(lkl_method, bin_method, cl_max_mag, synth_clust):
     """
     Hess diagram of observed minus best match synthetic cluster.
     """
@@ -372,7 +372,7 @@ def get_hess(lkl_method, bin_method, cl_reg_fit, synth_clust):
         lkl_method, bin_method = 'dolphin', 'bb'
     # Observed cluster's histogram and bin edges for each dimension.
     bin_edges, cl_histo = obs_clust_prepare.main(
-        cl_reg_fit, lkl_method, bin_method)[:2]
+        cl_max_mag, lkl_method, bin_method)[:2]
 
     # Histogram of the synthetic cluster, using the bin edges calculated
     # with the observed cluster.
