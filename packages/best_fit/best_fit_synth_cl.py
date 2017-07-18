@@ -5,7 +5,6 @@ import obs_clust_prepare
 import genetic_algorithm
 import brute_force_algor
 import bootstrap
-from ..errors import error_round
 from ..synth_clust import extin_coefs
 from ..synth_clust import imf
 
@@ -30,7 +29,11 @@ def max_mag_cut(cl_reg_fit, max_mag):
 
         # Check number of stars left.
         if len(star_lst) > 10:
-            cl_max_mag, max_mag_syn = star_lst, max_mag
+            # For the synthetic clusters, use the minimum value between the
+            # selected 'max_mag' value and the maximum observed magnitude.
+            # This prevents large 'max_mag' values from generating synthetic
+            # clusters with low mass stars in the not-observed region.
+            cl_max_mag, max_mag_syn = star_lst, min(max_mag, max_mag_obs)
             print("Maximum magnitude cut at {:.1f} mag applied".format(
                 max_mag))
         else:
@@ -103,8 +106,8 @@ def main(clp, bf_flag, er_params, bf_params, max_mag, IMF_name, m_high, R_V,
         obs_clust = obs_clust_prepare.main(cl_max_mag, lkl_method, bin_method)
 
         # DELETE
-        print(filters)
-        print(colors)
+        # print(filters)
+        # print(colors)
         # cl_histo_f = obs_clust[2]
         # N, B = len(cl_max_mag), len(cl_histo_f)
         # print('N:', N, 'B:', B)
@@ -162,15 +165,6 @@ def main(clp, bf_flag, er_params, bf_params, max_mag, IMF_name, m_high, R_V,
             cl_max_mag, max_mag_syn, theor_tracks, R_V, ext_coefs,
             st_dist_mass, N_fc, ga_params, bin_method, best_fit_algor,
             isoch_fit_params, N_b)
-
-        # TODO Move this to the end of the code, before plotting and storing
-        # data to out file.
-        # Round errors to 1 significant digit and round params values
-        # to the corresponding number of significant digits given by
-        # the errors.
-        isoch_fit_params[0], isoch_fit_errors = error_round.round_sig_fig(
-            isoch_fit_params[0], isoch_fit_errors)
-
     else:
         # Pass empty lists to make_plots.
         print('Skipping parameters fitting process.')
