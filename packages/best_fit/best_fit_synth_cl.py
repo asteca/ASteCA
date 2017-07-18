@@ -35,7 +35,7 @@ def max_mag_cut(cl_reg_fit, max_mag):
             # clusters with low mass stars in the not-observed region.
             cl_max_mag, max_mag_syn = star_lst, min(max_mag, max_mag_obs)
             print("Maximum magnitude cut at {:.1f} mag applied".format(
-                max_mag))
+                max_mag_syn))
         else:
             cl_max_mag, max_mag_syn = copy.deepcopy(cl_reg_fit), max_mag_obs
             print("  WARNING: less than 10 stars left after removing\n"
