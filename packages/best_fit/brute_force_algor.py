@@ -18,8 +18,7 @@ def main(lkl_method, e_max, bin_mr, err_lst, completeness, max_mag_syn,
     model_done = [[], []]
 
     # Count the number of total models/solutions to explore.
-    tot_sols, i = reduce(lambda x, y: x * y,
-                         [len(_) for _ in fundam_params], 1), 0
+    tot_sols, i = np.prod([len(_) for _ in fundam_params]), 0
     milestones = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
 
     # Iterate through all metallicities.

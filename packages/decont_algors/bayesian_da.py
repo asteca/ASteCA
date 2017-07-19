@@ -1,5 +1,6 @@
 
 import numpy as np
+from .. import update_progress
 
 
 def break_check(prob_avrg_old, runs_fields_probs, runs, run_num):
@@ -172,7 +173,6 @@ def main(clp, npd, da_params, **kwargs):
                    zip(*zip(*cl_region)[1:][4]), zip(*zip(*cl_region)[1:][5])]
 
         # Run 'runs' times.
-        milestones = [25, 50, 75, 100]
         for run_num in range(runs):
 
             # This list will hold the probabilities for each field region.
@@ -224,12 +224,7 @@ def main(clp, npd, da_params, **kwargs):
             if break_flag:
                 print('  MPs converged in iteration {}.'.format(run_num))
                 break
-
-            percentage_complete = (100.0 * (run_num + 1) / runs)
-            while len(milestones) > 0 and percentage_complete >= milestones[0]:
-                print "  {}%".format(milestones[0])
-                # Remove that milestone from the list.
-                milestones = milestones[1:]
+            update_progress.updt(runs, run_num + 1)
 
     elif mode_da == 'read':
         print('Reading membership probabilities from file.')

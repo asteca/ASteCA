@@ -1,4 +1,5 @@
 
+from .. import update_progress
 import numpy as np
 from scipy import stats
 from scipy.integrate import quad
@@ -106,7 +107,6 @@ def KDE_test(clp, pv_params):
         # field vs field comparisons.
         p_vals_cl, p_vals_f = [], []
         # Iterate a given number of times.
-        milestones = [15, 30, 50, 70, 85, 100]
         for run_num in range(runs):
             # Loop through all the field regions.
             for indx, f_region in enumerate(field_regions):
@@ -154,11 +154,7 @@ def KDE_test(clp, pv_params):
                     # Store field vs field p-value.
                     p_vals_f.append(float(str(p_val_f)[4:].replace(',', '.')))
 
-            percentage_complete = (100.0 * (run_num + 1) / runs)
-            while len(milestones) > 0 and percentage_complete >= milestones[0]:
-                print "  {}%".format(milestones[0])
-                # Remove that milestone from the list.
-                milestones = milestones[1:]
+            update_progress.updt(runs, run_num + 1)
 
         # For plotting purposes.
 
