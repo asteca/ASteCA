@@ -46,12 +46,8 @@ def main(cl_max_mag, lkl_method, bin_method):
         # Obtain bin edges for each dimension, defining a grid.
         bin_edges = bin_edges_f(bin_method, mags_cols_cl)
 
-        # Obtain *weighted* histogram for observed cluster. Put all magnitudes
+        # Obtain histogram for observed cluster. Put all magnitudes
         # and colors into a single list.
-
-        # TODO Owing to #308 I've removed 'weights=prob' from histogramdd,
-        # until I have time to make more tests.
-
         cl_histo = np.histogramdd(
             mags_cols_cl[0] + mags_cols_cl[1], bins=bin_edges)[0]
 
