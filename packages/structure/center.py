@@ -241,15 +241,15 @@ def main(cld, clp, mode, coords, cl_cent_semi, cl_rad_semi, cent_flag_semi,
             else:
                 print("Sorry, input is not valid. Try again.")
 
+    # Removed, waiting for #164 to be implemented
+    # 'approx_cents': approx_cents, 'st_dev_lst': st_dev_lst,
+
     # Add data to dictionary.
     center_params = {
         'cent_bin': cent_bin, 'clust_cent': kde_cent, 'e_cent': e_cent,
-        'approx_cents': approx_cents, 'st_dev_lst': st_dev_lst,
         'hist_2d_g': hist_2d_g, 'kde_plot': kde_plot,
         'flag_center_med': flag_center_med, 'flag_center_std': flag_center_std,
         'flag_center_manual': flag_center_manual}
-    # Update 'clp' dictionary.
-    clp_updt = clp.copy()
-    clp_updt.update(center_params)
+    clp.update(center_params)
 
-    return clp_updt
+    return clp

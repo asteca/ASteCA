@@ -172,7 +172,7 @@ def pl_bf_synth_cl(
     ax.add_artist(ob)
 
     # Add text box to the right of the synthetic cluster.
-    ax_t = plt.subplot(gs[0:2, 6:8])
+    ax_t = plt.subplot(gs[0:2, 6:7])
     ax_t.axis('off')  # Remove axis from frame.
     # Map isochrones set selection to proper name.
     iso_print = cmd_evol_tracks[evol_track][1]
@@ -190,7 +190,8 @@ def pl_bf_synth_cl(
     t9 = r'$b_{{frac}} \hspace{{2.37}}=\;{}\pm {}$'.format(cp_r[5], cp_e[5])
     text = t1 + '\n\n' + t2 + '\n' + t3 + '\n' + t4 + '\n' + t5 + '\n' + t6 +\
         '\n' + t7 + '\n' + t8 + '\n' + t9
-    ob = offsetbox.AnchoredText(text, pad=1, loc=6, prop=dict(size=11))
+    ob = offsetbox.AnchoredText(
+        text, pad=1, loc=6, borderpad=-5, prop=dict(size=11))
     ob.patch.set(alpha=0.85)
     ax_t.add_artist(ob)
 

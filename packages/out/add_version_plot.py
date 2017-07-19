@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from .._version import __version__
 
 
-def main(x_fix=0.957, y_fix=.996):
+def main(x_fix=0.02, y_fix=.996):
     """
     Add version number to top left of plot.
     """

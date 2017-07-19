@@ -24,7 +24,7 @@ import prep_plots
 def main(
         npd, cld, pd, clust_cent, e_cent, K_cent_dens, clust_rad, e_rad,
         poisson_error, stars_out_rjct, field_regions, cent_bin, bin_width,
-        hist_2d_g, approx_cents, st_dev_lst, core_rad, e_core, tidal_rad,
+        hist_2d_g, core_rad, e_core, tidal_rad,
         e_tidal, K_conct_par, flag_2pk_conver, flag_3pk_conver, radii,
         rdp_points, field_dens, cont_index, kde_plot, cl_region,
         flag_no_fl_regs, **kwargs):
@@ -37,7 +37,7 @@ def main(
         # y1/y2 = 2.5
         fig = plt.figure(figsize=(30, 25))
         gs = gridspec.GridSpec(10, 12)
-        add_version_plot.main(x_fix=.63)
+        add_version_plot.main()
 
         # Obtain plotting parameters and data.
         x_min, x_max, y_min, y_max = prep_plots.frame_max_min(
@@ -56,9 +56,6 @@ def main(
             # pl_hist_g: 2D Gaussian convolved histogram.
             [gs, fig, asp_ratio, x_name, y_name, coord, cent_bin, clust_rad,
                 bin_width, hist_2d_g],
-            # pl_centers: 2D Gaussian histograms' centers.
-            [gs, x_name, y_name, coord, x_min, x_max, y_min, y_max, asp_ratio,
-                approx_cents, bin_width, st_dev_lst],
             # pl_full_frame: x,y finding chart of full frame.
             [gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max,
              asp_ratio, clust_cent, clust_rad, e_cent, cld['x'], cld['y'],

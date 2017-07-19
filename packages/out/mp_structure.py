@@ -3,68 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.offsetbox as offsetbox
 from itertools import cycle
-from matplotlib.patches import Rectangle
 from ..structure import king_prof_funcs as kpf
-
-
-def pl_centers(gs, x_name, y_name, coord, x_min, x_max, y_min, y_max,
-               asp_ratio, approx_cents, bin_width, st_dev_lst):
-    '''
-    2D Gaussian histograms' centers using different standard deviations.
-    '''
-    ax = plt.subplot(gs[0:2, 0:2])
-    ax.set_aspect(aspect=asp_ratio)
-    # Set plot limits.
-    plt.xlim(x_min, x_max)
-    plt.ylim(y_min, y_max)
-    if coord == 'deg':
-        # If RA is used, invert axis.
-        ax.invert_xaxis()
-    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=12)
-    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=12)
-    ax.minorticks_on()
-    # Add lines through median values with std deviations.
-    cent_median, cent_std_dev = np.mean(np.array(approx_cents), axis=0), \
-        np.std(np.array(approx_cents), axis=0)
-    plt.axvline(x=cent_median[0], linestyle='-', color='k')
-    plt.axvline(x=cent_median[0] + cent_std_dev[0], linestyle='--',
-                color='k')
-    plt.axvline(x=cent_median[0] - cent_std_dev[0], linestyle='--',
-                color='k')
-    plt.axhline(y=cent_median[1], linestyle='-', color='k')
-    plt.axhline(y=cent_median[1] + cent_std_dev[1], linestyle='--',
-                color='k')
-    plt.axhline(y=cent_median[1] - cent_std_dev[1], linestyle='--',
-                color='k')
-    # Add stats box.
-    cent_med_r = [round(_, 0) for _ in cent_median]
-    cent_std_dev_r = [round(_, 0) for _ in cent_std_dev]
-    text1 = (r"$(\tilde{{{0}}},\,\tilde{{{1}}}) = ({3:g},\,{4:g})\,"
-             "{2}$").format(x_name, y_name, coord, *cent_med_r)
-    text2 = ("$(\sigma_{{{0}}},\,\sigma_{{{1}}}) = ({3:g},\,{4:g})\,"
-             "{2}$").format(x_name, y_name, coord, *cent_std_dev_r)
-    text = text1 + '\n' + text2
-    ob = offsetbox.AnchoredText(text, loc=2, prop=dict(size=11))
-    ob.patch.set(alpha=0.85)
-    ax.add_artist(ob)
-    # Plot centers.
-    cols = cycle(['red', 'blue', 'green', 'black', 'cyan'])
-    for i, center in enumerate(approx_cents):
-        boxes = plt.gca()
-        length = (bin_width * st_dev_lst[i]) * 2.
-        boxes.add_patch(Rectangle(
-            (center[0] - (length / 2.), center[1] - (length / 2.)),
-            length, length,
-            facecolor='none', edgecolor=next(cols), ls='solid',
-            lw=1.5, zorder=(len(st_dev_lst) - i),
-            label='St dev: %.1f' % st_dev_lst[i]))
-    # get handles
-    handles, labels = ax.get_legend_handles_labels()
-    # use them in the legend
-    leg = ax.legend(handles, labels, loc='lower right', numpoints=1,
-                    fontsize=7)
-    # Set the alpha value of the legend.
-    leg.get_frame().set_alpha(0.5)
 
 
 def pl_hist_g(gs, fig, asp_ratio, x_name, y_name, coord, cent_bin, clust_rad,
@@ -73,7 +12,7 @@ def pl_hist_g(gs, fig, asp_ratio, x_name, y_name, coord, cent_bin, clust_rad,
     2D Gaussian convolved histogram.
     '''
 
-    ax = plt.subplot(gs[0:2, 2:4])
+    ax = plt.subplot(gs[0:2, 0:2])
     plt.xlabel('{} (bins)'.format(x_name), fontsize=12)
     plt.ylabel('{} (bins)'.format(y_name), fontsize=12)
     ax.minorticks_on()
@@ -102,7 +41,7 @@ def pl_rad_dens(gs, mode, radii, rdp_points, field_dens, coord, clust_name,
     '''
     Radial density plot.
     '''
-    ax = plt.subplot(gs[0:2, 4:8])
+    ax = plt.subplot(gs[0:2, 2:6])
     # Get max and min values in x,y
     x_min, x_max = max(min(radii) - (max(radii) / 20.), 0), \
         min(max(radii) + (max(radii) / 20.), 3. * clust_rad)
@@ -192,7 +131,7 @@ def pl_full_frame(
     '''
     x,y finding chart of full frame
     '''
-    ax = plt.subplot(gs[2:4, 2:4])
+    ax = plt.subplot(gs[2:4, 0:2])
     ax.set_aspect(aspect=asp_ratio)
     # Set plot limits
     plt.xlim(x_min, x_max)
@@ -247,7 +186,7 @@ def pl_zoom_frame(gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
     '''
     Zoom on x,y finding chart.
     '''
-    ax = plt.subplot(gs[2:4, 4:6])
+    ax = plt.subplot(gs[2:4, 2:4])
     # Force square plot.
     ax.set_aspect('equal')
     # Set plot limits.
@@ -303,7 +242,7 @@ def pl_cl_fl_regions(gs, fig, x_name, y_name, coord, x_min, x_max, y_min,
     '''
     Cluster and field regions defined.
     '''
-    ax = plt.subplot(gs[2:4, 6:8])
+    ax = plt.subplot(gs[2:4, 4:6])
     ax.set_aspect(aspect=asp_ratio)
     # Set plot limits
     plt.xlim(x_min, x_max)
@@ -349,11 +288,10 @@ def plot(N, *args):
 
     plt_map = {
         0: [pl_hist_g, 'density positional chart'],
-        1: [pl_centers, 'obtained centers in positional chart'],
-        2: [pl_full_frame, 'full frame'],
-        3: [pl_rad_dens, 'radial density function'],
-        4: [pl_zoom_frame, 'zoomed frame'],
-        5: [pl_cl_fl_regions, 'cluster and field regions defined']
+        1: [pl_full_frame, 'full frame'],
+        2: [pl_rad_dens, 'radial density function'],
+        3: [pl_zoom_frame, 'zoomed frame'],
+        4: [pl_cl_fl_regions, 'cluster and field regions defined']
     }
 
     fxn = plt_map.get(N, None)[0]

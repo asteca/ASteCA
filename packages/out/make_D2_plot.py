@@ -70,7 +70,7 @@ def main(
     if pd['pl_params'][0] and pd['bf_flag']:
         fig = plt.figure(figsize=(30, 25))
         gs = gridspec.GridSpec(10, 12)
-        add_version_plot.main(.55)
+        add_version_plot.main()
 
         best_fit_algor, lkl_method, bin_method, N_b = pd['bf_params']
         x_ax, y_ax, y_axis = prep_plots.ax_names(pd['filters'], pd['colors'])

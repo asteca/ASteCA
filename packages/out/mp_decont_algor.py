@@ -15,7 +15,7 @@ def pl_mp_histo(
     # Only attempt to plot if the DA was applied.
     if flag_decont_skip is False:
         # Reduced membership.
-        ax = plt.subplot(gs[0:2, 6:8])
+        ax = plt.subplot(gs[0:2, 0:2])
         plt.xlim(0., 1.)
         plt.xlabel('MP (membership probability)', fontsize=12)
         plt.ylabel('N (normalized)', fontsize=12)
@@ -76,10 +76,11 @@ def pl_chart_mps(gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
     Finding chart of cluster region with decontamination algorithm
     applied and colors assigned according to the probabilities obtained.
     '''
-    ax = plt.subplot(gs[0:2, 8:10])
+    ax = plt.subplot(gs[0:2, 2:4])
     # Set plot limits, Use 'zoom' x,y ranges.
     plt.xlim(x_zmin, x_zmax)
     plt.ylim(y_zmin, y_zmax)
+    ax.set_title('Cluster region', fontsize=12)
     # If RA is used, invert axis.
     if coord == 'deg':
         ax.invert_xaxis()
@@ -92,9 +93,6 @@ def pl_chart_mps(gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
     circle = plt.Circle((clust_cent[0], clust_cent[1]), clust_rad, color='red',
                         fill=False)
     fig.gca().add_artist(circle)
-    ob = offsetbox.AnchoredText('Cluster region', loc=1, prop=dict(size=12))
-    ob.patch.set(boxstyle='square,pad=-0.2', alpha=0.85)
-    ax.add_artist(ob)
     # If DA was skipped, print info on 'local' method here.
     if flag_decont_skip and mode_red_memb == 'local':
         text = r'$({})$'.format(mode_red_memb + ';\,' + local_bin)
@@ -136,7 +134,7 @@ def pl_mps_phot_diag(gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
     Star's membership probabilities on cluster's photometric diagram.
     '''
     x_val, mag_y, x_err, y_err = err_bar
-    ax = plt.subplot(gs[0:2, 10:12])
+    ax = plt.subplot(gs[0:2, 4:6])
     # Set plot limits
     plt.xlim(x_min_cmd, x_max_cmd)
     plt.ylim(y_min_cmd, y_max_cmd)

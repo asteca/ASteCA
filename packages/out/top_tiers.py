@@ -6,6 +6,7 @@ import matplotlib.gridspec as gridspec
 from .._version import __version__
 from ..synth_clust import synth_cl_plot
 from ..synth_clust import imf
+import add_version_plot
 import top_tiers_plot
 import prep_plots
 
@@ -61,12 +62,9 @@ def plot_top_tiers(pd, top_tiers_flo, output_subdir, clust_name, mags,
 
     # figsize(x1, y1), GridSpec(y2, x2) --> To have square plots: x1/x2 =
     # y1/y2 = 2.5
-    fig = plt.figure(figsize=(25, 10))  # create the top-level container
-    gs = gridspec.GridSpec(4, 10)      # create a GridSpec object
-    # Add version number to top left.
-    ver = '[ASteCA ' + __version__ + ']'
-    x_coord = 0.95 - (len(__version__) - 6) * 0.001
-    plt.figtext(x_coord, .986, ver, fontsize=9, color='#585858')
+    fig = plt.figure(figsize=(30, 25))  # create the top-level container
+    gs = gridspec.GridSpec(10, 12)      # create a GridSpec object
+    add_version_plot.main(y_fix=.998)
 
     x_ax, y_ax, y_axis = prep_plots.ax_names(pd['filters'], pd['colors'])
 
@@ -95,7 +93,7 @@ def plot_top_tiers(pd, top_tiers_flo, output_subdir, clust_name, mags,
     # Generate output file for each data file.
     pl_fmt, pl_dpi = pd['pl_params'][1:3]
     plt.savefig(join(output_subdir, clust_name + '_D3.' + pl_fmt),
-                dpi=pl_dpi)
+                dpi=pl_dpi, bbox_inches='tight')
     # Close to release memory.
     plt.clf()
     plt.close()
