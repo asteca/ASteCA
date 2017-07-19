@@ -251,12 +251,11 @@ DA   auto       200
 #   Binning method to be used if the 'local' method is selected. Otherwise
 #   this parameter is not used.
 #
-# * prob_min/mag_min: either the minimum probability value if the 'man' mode
-#   was selected, or the minimum magnitude value if the 'mag' mode was.
-#   Otherwise this parameter is not used.
+# * prob_min: minimum accepted probability value if the 'man' mode was
+#   selected. Otherwise this parameter is not used.
 #
-#    mode    binning     prob_min/mag_min
-RM   local    blocks                   17
+#    mode    binning     prob_min
+RM   local    blocks          0.5
 ################################################################################
 
 
