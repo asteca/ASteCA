@@ -77,6 +77,6 @@ def main(lkl_method, e_max, bin_mr, err_lst, completeness, fundam_params,
             # Errors can not be smaller than the largest step in each parameter
             isoch_fit_errors[i] = max(largest_delta, p_er)
         else:
-            isoch_fit_errors[i] = -1.
+            isoch_fit_errors[i] = np.nan
 
     return isoch_fit_errors

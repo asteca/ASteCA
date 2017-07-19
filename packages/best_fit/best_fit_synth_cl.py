@@ -63,7 +63,7 @@ def params_errors(
                 # Store the maximum value.
                 isoch_fit_errors.append(largest_delta)
             else:
-                isoch_fit_errors.append(-1.)
+                isoch_fit_errors.append(np.nan)
 
     elif best_fit_algor == 'genet':
         if N_b >= 2:
@@ -75,9 +75,9 @@ def params_errors(
                 ext_coefs, st_dist_mass, N_fc, ga_params, bin_method,
                 best_fit_algor, N_b)
         else:
-            print('Skipping bootstrap process.')
+            print('Skip bootstrap process.')
             # No error assignment.
-            isoch_fit_errors = [-1.] * len(isoch_fit_params[0])
+            isoch_fit_errors = [np.nan] * len(isoch_fit_params[0])
 
     return isoch_fit_errors
 
@@ -167,11 +167,11 @@ def main(clp, bf_flag, er_params, bf_params, max_mag, IMF_name, m_high, R_V,
             isoch_fit_params, N_b)
     else:
         # Pass empty lists to make_plots.
-        print('Skipping parameters fitting process.')
+        print('Skip parameters fitting process.')
         cl_max_mag, max_mag_syn, isoch_fit_params, isoch_fit_errors,\
             st_dist_mass, N_fc, ext_coefs = [], -1.,\
-            [[-1., -1., -1., -1., -1., -1.]], [-1., -1., -1., -1., -1., -1.],\
-            [], [], []
+            [[np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]],\
+            [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan], [], [], []
 
     clp['cl_max_mag'], clp['max_mag_syn'], clp['isoch_fit_params'],\
         clp['isoch_fit_errors'], clp['ext_coefs'], clp['st_dist_mass'],\

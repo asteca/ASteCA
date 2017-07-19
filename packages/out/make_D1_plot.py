@@ -30,10 +30,14 @@ def main(
         # Add values to the end of this list.
         min_max_p.append(prep_plots.BestTick(xp_min, xp_max, 30))
 
+        # Extract outside of 'if' block so it works when the 'brute force'
+        # algorithm was used
+        model_done = isoch_fit_params[-1]
+
         # Best fitting process plots for GA.
         if best_fit_algor == 'genet':
 
-            lkl_old, new_bs_indx, model_done = isoch_fit_params[1:]
+            lkl_old, new_bs_indx = isoch_fit_params[1:3]
             l_min_max = prep_plots.likl_y_range(lkl_old)
 
             arglist = [
