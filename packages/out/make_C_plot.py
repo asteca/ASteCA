@@ -121,4 +121,4 @@ def main(
         plt.clf()
         plt.close()
 
-        print("<<Plots from 'C' block created>>")
+        print("<<Plots for C block created>>")

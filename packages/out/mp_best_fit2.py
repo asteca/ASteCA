@@ -185,7 +185,7 @@ def pl_bf_synth_cl(
     t5 = r'$\log(age) \hspace{{0.17}}=\;{}\pm {}$'.format(cp_r[1], cp_e[1])
     t6 = r'$E_{{(B-V)}} \hspace{{1.35}}=\;{}\pm {}$'.format(cp_r[2], cp_e[2])
     t7 = r'$(m-M)_o=\;{} \pm {}$'.format(cp_r[3], cp_e[3])
-    t8 = r'$M\,(M_{{\odot}}) \hspace{{1.07}} =\;{:.0f}\pm {}$'.format(
+    t8 = r'$M\,(M_{{\odot}}) \hspace{{1.07}} =\;{}\pm {}$'.format(
         cp_r[4], cp_e[4])
     t9 = r'$b_{{frac}} \hspace{{2.37}}=\;{}\pm {}$'.format(cp_r[5], cp_e[5])
     text = t1 + '\n\n' + t2 + '\n' + t3 + '\n' + t4 + '\n' + t5 + '\n' + t6 +\

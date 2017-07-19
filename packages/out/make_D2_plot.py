@@ -61,8 +61,8 @@ def plot_observed_cluster(
 
 
 def main(
-        npd, cld, pd, synth_clst, shift_isoch, isoch_fit_params,
-        isoch_fit_errors, cl_max_mag, err_lst, **kwargs):
+        npd, cld, pd, synth_clst, shift_isoch, fit_params_r,
+        fit_errors_r, cl_max_mag, err_lst, **kwargs):
     '''
     Make D2 block plots.
     '''
@@ -89,7 +89,7 @@ def main(
             # pl_bf_synth_cl: Best fit synthetic cluster obtained.
             [gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
              synth_clst, hess_data, pd['IMF_name'], pd['R_V'],
-             isoch_fit_params[0], isoch_fit_errors, shift_isoch,
+             fit_params_r, fit_errors_r, shift_isoch,
              lkl_method, bin_method, pd['cmd_evol_tracks'],
              pd['evol_track']]
         ]
@@ -115,4 +115,4 @@ def main(
         plt.clf()
         plt.close()
 
-        print("<<Plots from 'D2' block created>>")
+        print("<<Plots for D2 block created>>")

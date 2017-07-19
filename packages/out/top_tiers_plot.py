@@ -85,7 +85,7 @@ def pl_bf_synth_cl(N, gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax,
     # Plot synth clust.
     # TODO using main magnitude and first color
     plt.scatter(synth_clst[0][0][1], synth_clst[0][0][0], marker='o', s=40,
-                c='#4682b4', lw=0.5)
+                c='#4682b4', lw=0.5, edgecolor='k')
 
 
 def plot(N, *args):

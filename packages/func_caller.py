@@ -14,6 +14,7 @@ from structure import radius
 from structure import king_profile
 from errors import err_accpt_rejct
 from errors import err_range_avrg
+from errors import error_round
 from structure import stars_in_out_cl_reg
 from structure import cluster_area
 from structure import field_regions
@@ -134,6 +135,9 @@ def main(cl_file, pd):
 
     # Create template output data file in /output dir.
     create_out_data_file.main(npd)
+
+    # Round fundamental parameters fitted and their errors
+    clp = error_round.fundParams(clp)
 
     # Add cluster data and flags to output file
     add_data_output.main(npd, pd, **clp)

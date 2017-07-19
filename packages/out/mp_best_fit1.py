@@ -70,8 +70,8 @@ def pl_2_param_dens(gs, _2_params, min_max_p, cp_r, cp_e, model_done):
         x_label, y_label = '$M\,(M_{{\odot}})$', '$b_{frac}$'
 
     # Parameter values and errors.
-    xp, e_xp = cp_r[0][mx], cp_e[mx]
-    yp, e_yp = cp_r[0][my], cp_e[my]
+    xp, e_xp = map(float, [cp_r[mx], cp_e[mx]])
+    yp, e_yp = map(float, [cp_r[my], cp_e[my]])
     # Axis limits.
     xp_min, xp_max = min_max_p[mx]
     yp_min, yp_max = min_max_p[my]
@@ -130,7 +130,7 @@ def pl_lkl_scatt(gs, ld_p, min_max_p, cp_r, cp_e, model_done):
             '$M\,(M_{{\odot}})$'
 
     # Parameter values and errors.
-    xp, e_xp = cp_r[0][cp], cp_e[cp]
+    xp, e_xp = map(float, [cp_r[cp], cp_e[cp]])
     # Set x axis limit.
     xp_min, xp_max = min_max_p[cp]
     # Special axis ticks for metallicity.

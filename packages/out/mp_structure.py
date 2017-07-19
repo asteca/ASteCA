@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 import matplotlib.offsetbox as offsetbox
 from itertools import cycle
 from matplotlib.patches import Rectangle
-from ..errors import error_round
 from ..structure import king_prof_funcs as kpf
 
 
@@ -38,8 +37,8 @@ def pl_centers(gs, x_name, y_name, coord, x_min, x_max, y_min, y_max,
     plt.axhline(y=cent_median[1] - cent_std_dev[1], linestyle='--',
                 color='k')
     # Add stats box.
-    cent_med_r, cent_std_dev_r = error_round.round_sig_fig(
-        cent_median, cent_std_dev)
+    cent_med_r = [round(_, 0) for _ in cent_median]
+    cent_std_dev_r = [round(_, 0) for _ in cent_std_dev]
     text1 = (r"$(\tilde{{{0}}},\,\tilde{{{1}}}) = ({3:g},\,{4:g})\,"
              "{2}$").format(x_name, y_name, coord, *cent_med_r)
     text2 = ("$(\sigma_{{{0}}},\,\sigma_{{{1}}}) = ({3:g},\,{4:g})\,"
@@ -73,7 +72,6 @@ def pl_hist_g(gs, fig, asp_ratio, x_name, y_name, coord, cent_bin, clust_rad,
     '''
     2D Gaussian convolved histogram.
     '''
-    bin_w_r = error_round.round_to_y(bin_width)
 
     ax = plt.subplot(gs[0:2, 2:4])
     plt.xlabel('{} (bins)'.format(x_name), fontsize=12)
@@ -86,7 +84,7 @@ def pl_hist_g(gs, fig, asp_ratio, x_name, y_name, coord, cent_bin, clust_rad,
                         color='w', fill=False)
     fig.gca().add_artist(circle)
     # Add text box.
-    text = 'Bin $\simeq$ {0:g} {1}'.format(bin_w_r, coord)
+    text = 'Bin $\simeq$ {0:g} {1}'.format(round(bin_width, 1), coord)
     ob = offsetbox.AnchoredText(text, pad=0.2, loc=1, prop=dict(size=10))
     ob.patch.set(alpha=0.85)
     ax.add_artist(ob)
@@ -98,14 +96,12 @@ def pl_hist_g(gs, fig, asp_ratio, x_name, y_name, coord, cent_bin, clust_rad,
 
 
 def pl_rad_dens(gs, mode, radii, rdp_points, field_dens, coord, clust_name,
-                clust_rad, e_rad, poisson_error, bin_width, core_rad, e_core,
-                tidal_rad, e_tidal, K_cent_dens, flag_2pk_conver,
+                clust_rad, e_rad, poisson_error, bin_width, core_rad,
+                e_core, tidal_rad, e_tidal, K_cent_dens, flag_2pk_conver,
                 flag_3pk_conver):
     '''
     Radial density plot.
     '''
-    bin_w_r = error_round.round_to_y(bin_width)
-
     ax = plt.subplot(gs[0:2, 4:8])
     # Get max and min values in x,y
     x_min, x_max = max(min(radii) - (max(radii) / 20.), 0), \
@@ -126,19 +122,16 @@ def pl_rad_dens(gs, mode, radii, rdp_points, field_dens, coord, clust_name,
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
     # Cluster's name and mode used to process it.
     plt.title(str(clust_name) + ' (' + mode + ')', fontsize=14)
-    # Round radii values.
-    rads_r, e_rads_r = error_round.round_sig_fig(
-        [core_rad, tidal_rad, clust_rad], [e_core, e_tidal, e_rad])
     # Legend texts
     kp_text = '3P' if flag_3pk_conver else '2P'
     texts = [
-        'RDP ($\sim${0:g} {1})'.format(bin_w_r, coord),
+        'RDP ($\sim${:.0f} {})'.format(bin_width, coord),
         '$d_{{field}}$ = {:.1E} $st/{}^{{2}}$'.format(field_dens, coord),
         '{} King profile'.format(kp_text),
-        'r$_c$ = {0:g} $\pm$ {1:g} {2}'.format(rads_r[0], e_rads_r[0], coord),
-        'r$_t$ = {0:g} $\pm$ {1:g} {2}'.format(rads_r[1], e_rads_r[1], coord),
-        'r$_{{cl}}$ = {0:g} $\pm$ {1:g} {2}'.format(rads_r[2], e_rads_r[2],
-                                                    coord)
+        'r$_c$ = {0:.0f} $\pm$ {1:.0f} {2}'.format(core_rad, e_core, coord),
+        'r$_t$ = {0:.0f} $\pm$ {1:.0f} {2}'.format(tidal_rad, e_tidal, coord),
+        'r$_{{cl}}$ = {0:.0f} $\pm$ {1:.0f} {2}'.format(
+            clust_rad, e_rad, coord)
     ]
     # Plot density profile with the smallest bin size
     ax.plot(radii, rdp_points, 'ko-', zorder=3, label=texts[0])
@@ -236,11 +229,10 @@ def pl_full_frame(
                 fill=False, ls='dashed', lw=1.)
             fig.gca().add_artist(circle)
     # Add text box
-    center_cl_r, e_cent_r = error_round.round_sig_fig(clust_cent, e_cent)
-    text1 = '${0}_{{cent}} = {1:g} \pm {2:g}\,{3}$'.format(
-        x_name, center_cl_r[0], e_cent_r[0], coord)
-    text2 = '${0}_{{cent}} = {1:g} \pm {2:g}\,{3}$'.format(
-        y_name, center_cl_r[1], e_cent_r[1], coord)
+    text1 = '${0}_{{cent}} = {1:.0f} \pm {2:.0f}\,{3}$'.format(
+        x_name, clust_cent[0], e_cent[0], coord)
+    text2 = '${0}_{{cent}} = {1:.0f} \pm {2:.0f}\,{3}$'.format(
+        y_name, clust_cent[1], e_cent[1], coord)
     text = text1 + '\n' + text2
     ob = offsetbox.AnchoredText(text, pad=0.2, loc=2, prop=dict(size=11))
     ob.patch.set(alpha=0.85)

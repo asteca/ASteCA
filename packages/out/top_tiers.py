@@ -163,7 +163,7 @@ def main(npd, cld, pd, err_lst, ext_coefs, N_fc, completeness, max_mag_syn,
                         pd, top_tiers_flo, output_subdir, clust_name,
                         cld['mags'], cld['cols'], isoch_fit_params, ext_coefs,
                         N_fc, err_lst, completeness, max_mag_syn)
-                    print("<<Plots from 'D3' block created>>")
+                    print("<<Plots for D3 block created>>")
                 except:
                     import traceback
                     print traceback.format_exc()

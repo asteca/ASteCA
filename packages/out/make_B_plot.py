@@ -68,4 +68,4 @@ def main(
         plt.clf()
         plt.close()
 
-        print("<<Plots from 'B' block created>>")
+        print("<<Plots for B block created>>")

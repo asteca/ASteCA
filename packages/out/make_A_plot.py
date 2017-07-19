@@ -92,4 +92,4 @@ def main(
         plt.clf()
         plt.close()
 
-        print("<<Plots from 'A' block created>>")
+        print("<<Plots for A block created>>")

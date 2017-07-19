@@ -8,7 +8,7 @@ import prep_plots
 
 
 def main(
-        npd, pd, isoch_fit_params, isoch_fit_errors, **kwargs):
+        npd, pd, isoch_fit_params, fit_params_r, fit_errors_r, **kwargs):
     '''
     Make D1 block plots.
     '''
@@ -30,12 +30,10 @@ def main(
         # Add values to the end of this list.
         min_max_p.append(prep_plots.BestTick(xp_min, xp_max, 30))
 
-        model_done = isoch_fit_params[-1]
-
         # Best fitting process plots for GA.
         if best_fit_algor == 'genet':
 
-            lkl_old, new_bs_indx = isoch_fit_params[1:3]
+            lkl_old, new_bs_indx, model_done = isoch_fit_params[1:]
             l_min_max = prep_plots.likl_y_range(lkl_old)
 
             arglist = [
@@ -43,32 +41,31 @@ def main(
                 [gs, l_min_max, lkl_old, model_done, new_bs_indx,
                  pd['ga_params'], N_b],
                 # pl_2_param_dens: Param vs param solutions scatter map.
-                [gs, 'age-metal', min_max_p, isoch_fit_params,
-                 isoch_fit_errors, model_done],
-                [gs, 'dist-ext', min_max_p, isoch_fit_params,
-                    isoch_fit_errors, model_done],
-                [gs, 'metal-dist', min_max_p, isoch_fit_params,
-                 isoch_fit_errors, model_done],
-                [gs, 'mass-binar', min_max_p, isoch_fit_params,
-                 isoch_fit_errors, model_done]
+                [gs, 'age-metal', min_max_p, fit_params_r, fit_errors_r,
+                 model_done],
+                [gs, 'dist-ext', min_max_p, fit_params_r, fit_errors_r,
+                 model_done],
+                [gs, 'metal-dist', min_max_p, fit_params_r, fit_errors_r,
+                 model_done],
+                [gs, 'mass-binar', min_max_p, fit_params_r, fit_errors_r,
+                 model_done]
             ]
             for n, args in enumerate(arglist):
                 mp_best_fit1.plot(n, *args)
 
         arglist = [
             # pl_lkl_scatt: Parameter likelihood density plot.
-            [gs, '$z$', min_max_p, isoch_fit_params, isoch_fit_errors,
-                model_done],
-            [gs, '$log(age)$', min_max_p, isoch_fit_params,
-             isoch_fit_errors, model_done],
-            [gs, '$E_{{(B-V)}}$', min_max_p, isoch_fit_params,
-                isoch_fit_errors, model_done],
-            [gs, '$(m-M)_o$', min_max_p, isoch_fit_params,
-             isoch_fit_errors, model_done],
-            [gs, '$M\,(M_{{\odot}})$', min_max_p, isoch_fit_params,
-                isoch_fit_errors, model_done],
-            [gs, '$b_{{frac}}$', min_max_p, isoch_fit_params,
-             isoch_fit_errors, model_done]
+            [gs, '$z$', min_max_p, fit_params_r, fit_errors_r, model_done],
+            [gs, '$log(age)$', min_max_p, fit_params_r, fit_errors_r,
+             model_done],
+            [gs, '$E_{{(B-V)}}$', min_max_p, fit_params_r, fit_errors_r,
+             model_done],
+            [gs, '$(m-M)_o$', min_max_p, fit_params_r, fit_errors_r,
+             model_done],
+            [gs, '$M\,(M_{{\odot}})$', min_max_p, fit_params_r, fit_errors_r,
+             model_done],
+            [gs, '$b_{{frac}}$', min_max_p, fit_params_r, fit_errors_r,
+             model_done]
         ]
         for n, args in enumerate(arglist):
             mp_best_fit1.plot(n + 5, *args)
@@ -83,4 +80,4 @@ def main(
         plt.clf()
         plt.close()
 
-        print("<<Plots from 'D1' block created>>")
+        print("<<Plots for D1 block created>>")
