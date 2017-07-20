@@ -3,16 +3,31 @@
 #
 #
 # This file contains the values of the parameters used by ASteCA functions.
-# Any empty line or lines that begin with a # character will be ignored and as
-# many as needed can be added to this file.
-#
-# The blocks are independent and can be moved around as the user sees fit.
+# Any empty line or lines that begin with a # character will be ignored.
 #
 # * DO NOT modify the ID strings in the first column of each line, these are
 #   used by the code to identify the parameters in that line.
 # * DO NOT write less values than those required in each line or the code
 #   will halt.
 #
+################################################################################
+
+
+
+############################ ASteCA's inner flags ##############################
+
+# Update checker.
+# Check if a new version of ASteCA is available for download, and notify the
+# user when one is found. Downloads less than 25 bytes of data and is thus
+# very quick.
+#
+UP  true
+
+# Force matplotlib's backend to 'Agg'.
+# Set to 'true' to prevent the error 'TclError: no display name and no
+# $DISPLAY environment variable' when running the code in a server.
+#
+FB  false
 ################################################################################
 
 
@@ -33,38 +48,16 @@ MO   auto
 
 
 
-############################ ASteCA's inner flags ##############################
-
-# * Update checker.
-#
-# Check if a new version of ASteCA is available for download, and notify the
-# user when one is found. This requires less than 25 bytes of data and is thus
-# very quick. To turn this automatic check off, set this flag to 'false'.
-#
-#   flag
-UP  true
-
-# Force matplotlib's backend to 'Agg'.
-#
-# * flag: true / false. Set to 'true' to prevent the error 'TclError: no
-#   display name and no $DISPLAY environment variable' when running the code
-#   in a server.
-#
-FB  false
-################################################################################
-
-
-
 ######################### Input data parameters ################################
 
-# Columns for the ID's and the coordinates used in the data file.
+# Columns for the ID's and x,y coordinates in the data file.
 #
 # * coords: px / deg. Indicates if the observed frame is in pixels or degrees.
 #
 #   id_star   x/ra  y/dec  coords 
 PI        0      1      2      px
 
-# Columns for the photometric data.
+# Columns for the photometric data in the data file.
 #
 # Magnitude and error.
 #        mag    e_mag
@@ -79,22 +72,24 @@ PC    5,4,B,V        6
 
 ########################## Output parameters ###################################
 
-# Create output figure?
+# Create output figures?
 #
-# * flag: true / false. If 'False', no output figure will be generated.
+# * flag: true / false. If 'false', no output figure will be generated.
 #
 # * format: png / pdf. Format of the final image file.
 #
-#    flag  format  DPI
-MP   true     png  150
+# * DPI: (integer). Manages the size of the generated image files.
+#
+#    flag    format     DPI
+MP   true       png     150
 
 # Move data file once it is processed?
 #
 # * flag: true / false. The cluster's photometric file will be moved to the
-#   folder defined below if this flag is set to 'True'.
+#   folder defined below if this flag is set to 'true'.
 #
 # * path: Path where the photometric files are moved once processed if
-#   the flag is set to 'True'.
+#   the flag is set to 'true'. Otherwise ignored.
 #
 #    flag   path
 MF  false   /path/to/folder
@@ -104,16 +99,17 @@ MF  false   /path/to/folder
 
 ################### Structure functions parameters #############################
 
-# 2D positional histogram of observed frame.
+# Center assignment function.
 #
 # * mode: auto / manual
-#   - auto: the bin width of the 2D histogram will be obtained as 1% of the
-#     minimum x,y range of the observed frame. This is a good heuristic value
-#     that will affect both the RDP generation and the estimation of the
-#     cluster's radius. Only use the 'manual' mode if you really need to.
+#   - auto: the bin width of the (x,y) 2D histogram will be obtained as 1% of
+#     the minimum x,y range of the observed frame. This value will affect both
+#     the radial density profile generation, and thus the estimation of the
+#     cluster's radius.
 #   - manual: set the bin width via the 'bin_width' parameter.
 #
-# * bin_width: width of the bin in pixels or degrees, whatever the frame uses.
+# * bin_width: width of the 2D histogram bin in pixels or degrees. Otherwise
+#   ignored.
 #
 #    mode   bin_width
 CH   auto         20.
@@ -133,13 +129,15 @@ CR    mid
 
 # King profile function.
 #
-# * flag: true / false. If 'True' the code will attempt to fit a King
-#   profile to the radial density profile of the cluster.
+# Attempt to fit a King profile to the radial density profile of the defined
+# cluster region.
+#
+# * flag: true / false
 #
 #    flag
 KP   true
 
-# Field star regions.
+# Field stars regions.
 #
 # * regions: N / max
 #   - N: number of field regions around the cluster that the code will
@@ -157,7 +155,7 @@ GR        10
 # Errors rejection function.
 #
 # * mode: emax / lowexp / eyefit
-#   - emax: uses the e_max value as a cut in photometric errors.
+#   - emax: uses the 'e_max' value as a cut in photometric errors.
 #   - lowexp: fits an exponential and rejects any star beyond the upper
 #     prediction band, obtained using the 'C' confidence level value.
 #   - eyefit: attempt an 'eye' fit process composed of a polynomial
@@ -180,18 +178,20 @@ GR        10
 #    mode   e_max   be   be_e     C
 ER   emax    0.25    2.   0.1  0.95
 
-# Integrated magnitudes.
+# Integrated magnitude.
 #
-# flag: true / false. Switch to apply or skip.
+# Estimate the integrated magnitude for the cluster region, cleaned from field
+# stars contamination when possible.
+#
+# flag: true / false
 #
 #    flag
 IM   true
 
 # KDE p-value test.
 #
-# Test to determine the probability of the cluster being a physical entity
-# instead of a random over-density of stars, based on comparing its CMD with
-# field regions CMDs.
+# Determine the probability of the cluster region being a physical entity, as
+# opposed to a random over-density of field stars.
 #
 # * mode: auto / manual / skip
 #   - auto: the code will compare 100/(regions-1) times the CMDs of the
