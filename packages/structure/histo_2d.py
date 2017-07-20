@@ -16,10 +16,10 @@ def main(pd, x, y, **kwargs):
     x_rang, y_rang = (xmax - xmin), (ymax - ymin)
 
     # Bin width to create the 2D histogram.
-    if pd['histo_struct_method'] == 'auto':
+    if pd['center_method'] == 'auto':
         bin_width = min(x_rang, y_rang) / 100.
     else:
-        bin_width = pd['histo_struct_bw']
+        bin_width = pd['center_bw']
 
     # Number of bins in x,y given the bin width.
     binsxy = [int(x_rang / bin_width), int(y_rang / bin_width)]

@@ -3,7 +3,7 @@ import sys
 from os.path import join, isfile
 
 
-def check(mypath, mode, coords, flag_make_plot, plot_frmt, histo_struct_method,
+def check(mypath, mode, coords, flag_make_plot, plot_frmt, center_method,
           radius_method, **kwargs):
     """
     Check that the parameters are properly written.
@@ -34,9 +34,9 @@ def check(mypath, mode, coords, flag_make_plot, plot_frmt, histo_struct_method,
                      " not valid.".format(plot_frmt))
 
     # 2D positional histogram.
-    if histo_struct_method not in ('auto', 'manual'):
-        sys.exit("ERROR: mode selected ('{}') for 2D histogram"
-                 " is not valid.".format(histo_struct_method))
+    if center_method not in ('auto', 'manual'):
+        sys.exit("ERROR: mode selected ('{}') for 2D histogram obtention"
+                 " is not valid.".format(center_method))
 
     # Radius finding function.
     if radius_method not in ('low', 'mid', 'high'):

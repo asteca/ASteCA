@@ -75,8 +75,8 @@ def main(mypath, pars_f_path):
 
                 # Structure functions parameters.
                 elif reader[0] == 'CH':
-                    histo_struct_method = str(reader[1])
-                    histo_struct_bw = float(reader[2])
+                    center_method = str(reader[1])
+                    center_bw = float(reader[2])
                 elif reader[0] == 'CR':
                     radius_method = str(reader[1])
                 elif reader[0] == 'KP':
@@ -95,11 +95,11 @@ def main(mypath, pars_f_path):
                 elif reader[0] == 'PV':
                     pvalue_mode = str(reader[1])
                     pvalue_runs = int(reader[2])
+
+                # Membership based removal parameters.
                 elif reader[0] == 'DA':
                     bayesda_mode = str(reader[1])
                     bayesda_runs = int(reader[2])
-
-                # Membership based removal parameters.
                 elif reader[0] == 'RM':
                     fld_clean_mode = str(reader[1])
                     fld_clean_bin = str(reader[2])
@@ -161,8 +161,14 @@ def main(mypath, pars_f_path):
                           "  of '{}' file.\n").format(
                         reader[0], l + 1, pars_f_name)
 
-    # Dictionary with data on the CMD service photometric systems.
-    cmd_systs = CMD_phot_systs.main()
+    # Accepted field stars removal methods.
+    fld_rem_methods = ('local', 'n_memb', 'mp_05', 'top_h', 'man', 'all')
+    # Accepted binning methods.
+    bin_methods = ('fixed', 'auto', 'fd', 'doane', 'scott', 'rice', 'sqrt',
+                   'sturges', 'knuth', 'blocks')
+    # Accepted IMF functions.
+    imf_funcs = ('chabrier_2001_exp', 'chabrier_2001_log', 'kroupa_1993',
+                 'kroupa_2002')
 
     # Map evolutionary tracks selection to proper names, and name of the folder
     # where they should be stored.
@@ -176,43 +182,40 @@ def main(mypath, pars_f_path):
         'MAR08': ('marigo08', 'Marigo (2008)'),
         'GIR02': ('girardi02', 'Girardi (2002)')}
 
-    # Photometric system parameters.
-    par_ranges = [m_rs, a_rs, e_rs, d_rs, mass_rs, bin_rs]
+    # Dictionary with data on the CMD service photometric systems.
+    cmd_systs = CMD_phot_systs.main()
+
     # GA parameters.
     bf_params = [best_fit_algor, lkl_method, bin_method, N_b]
     ga_params = [n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es]
-
-    # Accepted field stars removal methods.
-    fld_rem_methods = ('local', 'n_memb', 'mp_05', 'top_h', 'man', 'all')
-    # Accepted binning methods.
-    bin_methods = ('fixed', 'auto', 'fd', 'doane', 'scott', 'rice', 'sqrt',
-                   'sturges', 'knuth', 'blocks')
-    # Accepted IMF functions.
-    imf_funcs = ('chabrier_2001_exp', 'chabrier_2001_log', 'kroupa_1993',
-                 'kroupa_2002')
+    # Photometric system parameters.
+    par_ranges = [m_rs, a_rs, e_rs, d_rs, mass_rs, bin_rs]
 
     pd = {
-        'up_flag': up_flag, 'mode': mode, 'done_dir': done_dir,
+        'up_flag': up_flag, 'flag_back_force': flag_back_force, 'mode': mode,
         'id_coords': id_coords, 'id_mags': id_mags, 'id_cols': id_cols,
-        'radius_method': radius_method,
-        'histo_struct_method': histo_struct_method,
-        'histo_struct_bw': histo_struct_bw, 'pvalue_mode': pvalue_mode,
-        'pvalue_runs': pvalue_runs, 'bayesda_mode': bayesda_mode,
-        'bayesda_runs': bayesda_runs,
-        'evol_track': evol_track, 'par_ranges': par_ranges,
-        'cmd_evol_tracks': cmd_evol_tracks, 'bf_flag': bf_flag,
-        'cmd_systs': cmd_systs, 'fld_rem_methods': fld_rem_methods,
-        'bin_methods': bin_methods, 'imf_funcs': imf_funcs,
-        'max_mag': max_mag, 'IMF_name': IMF_name, 'm_high': m_high,
-        'R_V': R_V, 'bin_mr': bin_mr, 'flag_make_plot': flag_make_plot,
-        'plot_frmt': plot_frmt, 'plot_dpi': plot_dpi,
+        'flag_make_plot': flag_make_plot, 'plot_frmt': plot_frmt,
+        'plot_dpi': plot_dpi,
+        'flag_move_file': flag_move_file, 'done_dir': done_dir,
+        'center_method': center_method, 'center_bw': center_bw,
+        'radius_method': radius_method, 'kp_flag': kp_flag,
+        'fr_number': fr_number, 'im_flag': im_flag,
+        'pvalue_mode': pvalue_mode, 'pvalue_runs': pvalue_runs,
+        'bayesda_mode': bayesda_mode, 'bayesda_runs': bayesda_runs,
         'fld_clean_mode': fld_clean_mode, 'fld_clean_bin': fld_clean_bin,
         'fld_clean_prob': fld_clean_prob,
-        'flag_move_file': flag_move_file, 'flag_back_force': flag_back_force,
+        'bf_flag': bf_flag,
+        'evol_track': evol_track,
+        # Synthetic cluster parameters
+        'max_mag': max_mag, 'IMF_name': IMF_name, 'm_high': m_high,
+        'R_V': R_V, 'bin_mr': bin_mr,
+        # Fixed accepted parameter values and photometric systems.
+        'fld_rem_methods': fld_rem_methods, 'bin_methods': bin_methods,
+        'imf_funcs': imf_funcs, 'cmd_evol_tracks': cmd_evol_tracks,
+        'cmd_systs': cmd_systs,
         # v These lists need to be re-fomatted
-        'kp_flag': kp_flag, 'im_flag': im_flag,
-        'er_params': er_params, 'fr_number': fr_number,
-        'bf_params': bf_params, 'ga_params': ga_params}
+        'er_params': er_params, 'bf_params': bf_params,
+        'ga_params': ga_params, 'par_ranges': par_ranges}
 
     # Return parameters dictionary.
     return pd
