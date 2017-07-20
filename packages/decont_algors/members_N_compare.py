@@ -33,9 +33,8 @@ def main(clp):
             # Set flag.
             if abs(memb_par) > 0.33:
                 flag_memb_par = True
-                print("  WARNING: the number of estimated true cluster"
-                      " members\n  (structural vs. photometric) differ"
-                      " greatly.")
+                print("  WARNING: structural vs. photometric true cluster"
+                      " members\n  estimated differ by a factor > 2.")
 
     clp['memb_par'], clp['n_memb_da'], clp['flag_memb_par'] =\
         memb_par, n_memb_da, flag_memb_par
