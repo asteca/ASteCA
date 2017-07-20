@@ -91,9 +91,8 @@ def plot_top_tiers(pd, top_tiers_flo, output_subdir, clust_name, mags,
 
     fig.tight_layout()
     # Generate output file for each data file.
-    pl_fmt, pl_dpi = pd['pl_params'][1:3]
-    plt.savefig(join(output_subdir, clust_name + '_D3.' + pl_fmt),
-                dpi=pl_dpi, bbox_inches='tight')
+    plt.savefig(join(output_subdir, clust_name + '_D3.' + pd['plot_frmt']),
+                dpi=pd['plot_dpi'], bbox_inches='tight')
     # Close to release memory.
     plt.clf()
     plt.close()
@@ -154,8 +153,7 @@ def main(npd, cld, pd, err_lst, ext_coefs, N_fc, completeness, max_mag_syn,
             print("Top tier models saved to file.")
 
             # Create output image if flag is 'true'.
-            flag_make_plot = pd['pl_params'][0]
-            if flag_make_plot:
+            if pd['flag_make_plot']:
                 try:
                     plot_top_tiers(
                         pd, top_tiers_flo, output_subdir, clust_name,

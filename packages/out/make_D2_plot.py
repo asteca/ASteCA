@@ -66,8 +66,7 @@ def main(
     '''
     Make D2 block plots.
     '''
-    # flag_make_plot = pd['pl_params'][0]
-    if pd['pl_params'][0] and pd['bf_flag']:
+    if pd['flag_make_plot'] and pd['bf_flag']:
         fig = plt.figure(figsize=(30, 25))
         gs = gridspec.GridSpec(10, 12)
         add_version_plot.main()
@@ -107,10 +106,10 @@ def main(
             diag_fit_inv, lkl_method, hess_data, shift_isoch)
 
         # Generate output file.
-        pl_fmt, pl_dpi = pd['pl_params'][1:3]
         plt.savefig(
             join(npd['output_subdir'], str(npd['clust_name']) +
-                 '_D2.' + pl_fmt), dpi=pl_dpi, bbox_inches='tight')
+                 '_D2.' + pd['plot_frmt']), dpi=pd['plot_dpi'],
+            bbox_inches='tight')
         # Close to release memory.
         plt.clf()
         plt.close()

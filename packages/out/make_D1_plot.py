@@ -12,8 +12,7 @@ def main(
     '''
     Make D1 block plots.
     '''
-    # flag_make_plot = pd['pl_params'][0]
-    if pd['pl_params'][0] and pd['bf_flag']:
+    if pd['flag_make_plot'] and pd['bf_flag']:
         best_fit_algor, lkl_method, bin_method, N_b = pd['bf_params']
 
         fig = plt.figure(figsize=(30, 25))
@@ -76,10 +75,10 @@ def main(
 
         # Generate output file.
         fig.tight_layout()
-        pl_fmt, pl_dpi = pd['pl_params'][1:3]
         plt.savefig(
             join(npd['output_subdir'], str(npd['clust_name']) +
-                 '_D1.' + pl_fmt), dpi=pl_dpi, bbox_inches='tight')
+                 '_D1.' + pd['plot_frmt']), dpi=pd['plot_dpi'],
+            bbox_inches='tight')
         # Close to release memory.
         plt.clf()
         plt.close()

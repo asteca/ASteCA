@@ -122,29 +122,26 @@ def likelihood(region, cl_phot):
     return clust_stars_probs
 
 
-def main(clp, npd, da_params, **kwargs):
+def main(clp, npd, bayesda_mode, bayesda_runs, **kwargs):
     '''
     Bayesian field decontamination algorithm.
     '''
 
-    flag_no_fl_regs, cl_region, field_regions = [
-        clp[_] for _ in ['flag_no_fl_regs', 'cl_region', 'field_regions']]
-    mode_da, run_n = da_params
-
     # Check if at least one equal-sized field region was obtained.
-    if mode_da in ('auto', 'manual') and flag_no_fl_regs:
+    if bayesda_mode in ('auto', 'manual') and clp['flag_no_fl_regs']:
         print("  WARNING: no field regions found. Will not\n"
               "  apply decontamination algorithm.")
         mode_da = 'skip'
 
     flag_decont_skip = False
     # Run algorithm for any of these selections.
-    if mode_da in ('auto', 'manual'):
+    if bayesda_mode in ('auto', 'manual'):
 
         print('Applying decontamination algorithm.')
+        cl_region = clp['cl_region']  # shorter
 
         # Set total number of runs.
-        runs = 1000 if mode_da == 'auto' else run_n
+        runs = 1000 if bayesda_mode == 'auto' else bayesda_runs
 
         # cl_region = [[id, x, y, mags, e_mags, cols, e_cols], [], [], ...]
         # len(cl_region) = number of stars inside the cluster's radius.
@@ -176,10 +173,10 @@ def main(clp, npd, da_params, **kwargs):
         for run_num in range(runs):
 
             # This list will hold the probabilities for each field region.
-            field_reg_probs = [[] for _ in field_regions]
+            field_reg_probs = [[] for _ in clp['field_regions']]
             # Iterate through all the 'field stars' regions that were
             # populated.
-            for indx, fl_region in enumerate(field_regions):
+            for indx, fl_region in enumerate(clp['field_regions']):
 
                 # Obtain likelihood, for each star in the cluster region, of
                 # being a field star.

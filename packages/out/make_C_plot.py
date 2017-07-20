@@ -70,8 +70,7 @@ def main(
     '''
     Make C block plots.
     '''
-    # flag_make_plot = pd['pl_params'][0]
-    if pd['pl_params'][0]:
+    if pd['flag_make_plot']:
         fig = plt.figure(figsize=(30, 25))
         gs = gridspec.GridSpec(10, 12)
         add_version_plot.main()
@@ -113,10 +112,10 @@ def main(
             mode_fld_clean, bin_edges)
 
         # Generate output file.
-        pl_fmt, pl_dpi = pd['pl_params'][1:3]
         plt.savefig(
             join(npd['output_subdir'], str(npd['clust_name']) +
-                 '_C.' + pl_fmt), dpi=pl_dpi, bbox_inches='tight')
+                 '_C.' + pd['plot_frmt']), dpi=pd['plot_dpi'],
+            bbox_inches='tight')
         # Close to release memory.
         plt.clf()
         plt.close()

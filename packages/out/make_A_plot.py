@@ -31,8 +31,7 @@ def main(
     '''
     Make A block plots.
     '''
-    # flag_make_plot = pd['pl_params'][0]
-    if pd['pl_params'][0]:
+    if pd['flag_make_plot']:
         # figsize(x1, y1), GridSpec(y2, x2) --> To have square plots: x1/x2 =
         # y1/y2 = 2.5
         fig = plt.figure(figsize=(30, 25))
@@ -81,10 +80,10 @@ def main(
 
         # Generate output file.
         fig.tight_layout()
-        pl_fmt, pl_dpi = pd['pl_params'][1:3]
         plt.savefig(
             join(npd['output_subdir'], str(npd['clust_name']) +
-                 '_A.' + pl_fmt), dpi=pl_dpi, bbox_inches='tight')
+                 '_A.' + pd['plot_frmt']), dpi=pd['plot_dpi'],
+            bbox_inches='tight')
         # Close to release memory.
         plt.clf()
         plt.close()

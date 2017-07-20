@@ -3,7 +3,8 @@ import sys
 from os.path import join, isfile
 
 
-def check(mypath, mode, coords, pl_params, gh_params, radius_method, **kwargs):
+def check(mypath, mode, coords, flag_make_plot, plot_frmt, histo_struct_method,
+          radius_method, **kwargs):
     """
     Check that the parameters are properly written.
     """
@@ -27,15 +28,15 @@ def check(mypath, mode, coords, pl_params, gh_params, radius_method, **kwargs):
                  "file are incorrect.".format(coords))
 
     # Output figure.
-    if pl_params[0]:
-        if pl_params[1] not in ('png', 'pdf', 'PNG', 'PDF'):
+    if flag_make_plot:
+        if plot_frmt not in ('png', 'pdf', 'PNG', 'PDF'):
             sys.exit("ERROR: figure output format selected ('{}') is"
-                     " not valid.".format(pl_params[1]))
+                     " not valid.".format(plot_frmt))
 
     # 2D positional histogram.
-    if gh_params[0] not in ('auto', 'manual'):
+    if histo_struct_method not in ('auto', 'manual'):
         sys.exit("ERROR: mode selected ('{}') for 2D histogram"
-                 " is not valid.".format(gh_params[0]))
+                 " is not valid.".format(histo_struct_method))
 
     # Radius finding function.
     if radius_method not in ('low', 'mid', 'high'):

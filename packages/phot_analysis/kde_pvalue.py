@@ -44,7 +44,7 @@ def get_CMD(region):
     return matrix
 
 
-def KDE_test(clp, pv_params):
+def KDE_test(clp, pvalue_mode, pvalue_runs):
     """
     Compare the cluster region KDE with all the field region KDEs using Duong's
     R-ks package to obtain a p-value. This value will be close to 1 if the
@@ -61,8 +61,7 @@ def KDE_test(clp, pv_params):
     cl_region, field_regions, flag_no_fl_regs = [
         clp[_] for _ in ['cl_region', 'field_regions', 'flag_no_fl_regs']]
     # mags, cols = cld['mags'], cld['cols']
-    mode_pv, num_runs = pv_params
-    flag_pval_test = True if mode_pv in ('auto', 'manual') else False
+    flag_pval_test = True if pvalue_mode in ('auto', 'manual') else False
 
     # Skip test if < 10 members are found within the cluster's radius.
     flag_few_members = False if len(cl_region) > 10 else True
@@ -99,8 +98,8 @@ def KDE_test(clp, pv_params):
 
         # Set number of runs for the p_value algorithm with a maximum of
         # 100 if only one field region was used.
-        runs = int(100 / len(field_regions)) if mode_pv == 'auto' else \
-            max(2, num_runs)
+        runs = int(100 / len(field_regions)) if pvalue_mode == 'auto' else \
+            max(2, pvalue_runs)
 
         # The first list holds all the p_values obtained comparing the cluster
         # region with the field regions, the second one holds p_values for
@@ -203,12 +202,13 @@ def KDE_test(clp, pv_params):
     return pval_test_params, flag_pval_test
 
 
-def main(clp, pv_params, R_in_place, **kwargs):
+def main(clp, pvalue_mode, pvalue_runs, R_in_place, **kwargs):
     """
     Only run function if the necessary application and packages are in place.
     """
     if R_in_place:
-        pval_test_params, flag_pval_test = KDE_test(clp, pv_params)
+        pval_test_params, flag_pval_test = KDE_test(
+            clp, pvalue_mode, pvalue_runs)
     else:
         print("  WARNING: missing package, skipping KDE p-value test.")
         flag_pval_test, pval_test_params = False, [-1.]
