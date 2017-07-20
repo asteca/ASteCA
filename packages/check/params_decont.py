@@ -4,7 +4,8 @@ from os.path import isfile
 from packages.inp import names_paths
 
 
-def check(cl_files, bin_methods, da_params, rm_params, **kwargs):
+def check(cl_files, fld_rem_methods, bin_methods, da_params, rm_params,
+          **kwargs):
     """
     Check parameters related to the decontamination algorithm functions.
     """
@@ -28,11 +29,10 @@ def check(cl_files, bin_methods, da_params, rm_params, **kwargs):
                          "algorithm but the file:\n\n {}\n\ndoes not "
                          "exist.".format(memb_file))
 
-    # Check 'Reduced membership' method selected.
+    # Check 'field stars removal' method selected.
     mode_red_memb, local_bin, min_prob = rm_params
-    if mode_red_memb not in {'local', 'n_memb', 'mp_05', 'top_h', 'man', 'mag',
-                             'skip'}:
-        sys.exit("ERROR: the selected reduced membership method ('{}')"
+    if mode_red_memb not in fld_rem_methods:
+        sys.exit("ERROR: the selected field stars removal method ('{}')"
                  " does\nnot match a valid input.".format(mode_red_memb))
     # Check binning if 'local' method was selected.
     if mode_red_memb == 'local' and local_bin not in bin_methods:

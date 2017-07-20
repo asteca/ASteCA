@@ -246,8 +246,8 @@ DA   auto       200
 #    'prob_min' parameter (0, 1).
 #   - skip: use all stars in the cluster region.
 #
-# * binning: blocks / knuth / bb / auto / fd / doane / scott / rice /
-#            sturges / sqrt
+# * binning: fixed / auto / fd / doane / scott / rice / sqrt
+#            sturges / knuth / blocks
 #   Binning method to be used if the 'local' method is selected. Otherwise
 #   this parameter is not used.
 #
@@ -255,7 +255,7 @@ DA   auto       200
 #   selected. Otherwise this parameter is not used.
 #
 #    mode    binning     prob_min
-RM   local    blocks          0.5
+RM   local    fixed          0.5
 ################################################################################
 
 
@@ -280,8 +280,8 @@ RM   local    blocks          0.5
 #   - dolphin: uses the 'Poisson likelihood ratio' (Eq. 10) defined in
 #     Dolphin (2002). This requires the selection of a binning method.
 #
-# * binning: blocks / knuth / bb / auto / fd / doane / scott / rice /
-#            sturges / sqrt
+# * binning: fixed / auto / fd / doane / scott / rice / sqrt
+#            sturges / knuth / blocks
 #   Binning method to be used if the likelihood equation by 'dolphin' is
 #   selected. See docs for more information on each binning method.
 #
@@ -290,7 +290,7 @@ RM   local    blocks          0.5
 #   bootstrap process and no errors will be assigned to the parameters.
 #
 #    flag  algorithm   likelihood  binning  bootstrap
-BF   true      genet      dolphin    knuth         10
+BF   true      genet      dolphin    auto         10
 
 # ** WARNING **
 #

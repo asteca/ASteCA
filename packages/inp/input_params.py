@@ -251,7 +251,7 @@ def main(mypath, pars_f_path):
 
                 # Membership based removal parameters.
                 elif reader[0] == 'RM':
-                    mode_red_memb = str(reader[1])
+                    mode_fld_clean = str(reader[1])
                     local_bin = str(reader[2])
                     min_prob = float(reader[3])
 
@@ -339,11 +339,13 @@ def main(mypath, pars_f_path):
     # Store GA params in lists.
     bf_params = [best_fit_algor, lkl_method, bin_method, N_b]
     ga_params = [n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es]
-    rm_params = [mode_red_memb, local_bin, min_prob]
+    rm_params = [mode_fld_clean, local_bin, min_prob]
 
-    # Define tuple of accepted binning methods.
-    bin_methods = ('blocks', 'knuth', 'bb', 'auto', 'fd', 'doane', 'scott',
-                   'rice', 'sturges', 'sqrt', 'man')
+    # Accepted field stars removal methods.
+    fld_rem_methods = ('local', 'n_memb', 'mp_05', 'top_h', 'man', 'skip')
+    # Accepted binning methods.
+    bin_methods = ('fixed', 'auto', 'fd', 'doane', 'scott', 'rice', 'sqrt',
+                   'sturges', 'knuth', 'blocks')
     # Accepted IMF functions.
     imf_funcs = ('chabrier_2001_exp', 'chabrier_2001_log', 'kroupa_1993',
                  'kroupa_2002')
@@ -354,17 +356,17 @@ def main(mypath, pars_f_path):
         'id_coords': id_coords, 'id_mags': id_mags, 'id_cols': id_cols,
         'evol_track': evol_track, 'par_ranges': par_ranges,
         'cmd_evol_tracks': cmd_evol_tracks, 'bf_flag': bf_flag,
-        'cmd_systs': cmd_systs, 'bin_methods': bin_methods,
-        'imf_funcs': imf_funcs, 'max_mag': max_mag, 'IMF_name': IMF_name,
-        'm_high': m_high, 'R_V': R_V, 'bin_mr': bin_mr,
-        'gh_params': gh_params,
-        'cr_params': cr_params, 'kp_flag': kp_flag, 'im_flag': im_flag,
+        'cmd_systs': cmd_systs, 'fld_rem_methods': fld_rem_methods,
+        'bin_methods': bin_methods, 'imf_funcs': imf_funcs,
+        'max_mag': max_mag, 'IMF_name': IMF_name, 'm_high': m_high,
+        'R_V': R_V, 'bin_mr': bin_mr,
+        'gh_params': gh_params, 'cr_params': cr_params,
+        'kp_flag': kp_flag, 'im_flag': im_flag,
         'er_params': er_params, 'fr_number': fr_number,
         'pv_params': pv_params, 'da_params': da_params,
-        'bf_params': bf_params,
-        'ga_params': ga_params, 'rm_params': rm_params,
-        'pl_params': pl_params, 'flag_move_file': flag_move_file,
-        'flag_back_force': flag_back_force}
+        'bf_params': bf_params, 'ga_params': ga_params,
+        'rm_params': rm_params, 'pl_params': pl_params,
+        'flag_move_file': flag_move_file, 'flag_back_force': flag_back_force}
 
     # Return parameters dictionary 'pd'
     return pd
