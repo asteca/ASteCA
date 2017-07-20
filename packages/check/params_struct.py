@@ -3,7 +3,7 @@ import sys
 from os.path import join, isfile
 
 
-def check(mypath, mode, coords, pl_params, gh_params, cr_params, **kwargs):
+def check(mypath, mode, coords, pl_params, gh_params, radius_method, **kwargs):
     """
     Check that the parameters are properly written.
     """
@@ -38,6 +38,6 @@ def check(mypath, mode, coords, pl_params, gh_params, cr_params, **kwargs):
                  " is not valid.".format(gh_params[0]))
 
     # Radius finding function.
-    if cr_params[0] not in ('low', 'mid', 'high'):
+    if radius_method not in ('low', 'mid', 'high'):
         sys.exit("ERROR: mode selected ('{}') for radius finding"
-                 " function is not valid.".format(cr_params[0]))
+                 " function is not valid.".format(radius_method))

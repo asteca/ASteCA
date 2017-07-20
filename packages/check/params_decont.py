@@ -30,12 +30,12 @@ def check(cl_files, fld_rem_methods, bin_methods, da_params, rm_params,
                          "exist.".format(memb_file))
 
     # Check 'field stars removal' method selected.
-    mode_red_memb, local_bin, min_prob = rm_params
-    if mode_red_memb not in fld_rem_methods:
+    mode_fld_clean, local_bin, min_prob = rm_params
+    if mode_fld_clean not in fld_rem_methods:
         sys.exit("ERROR: the selected field stars removal method ('{}')"
-                 " does\nnot match a valid input.".format(mode_red_memb))
+                 " does\nnot match a valid input.".format(mode_fld_clean))
     # Check binning if 'local' method was selected.
-    if mode_red_memb == 'local' and local_bin not in bin_methods:
+    if mode_fld_clean == 'local' and local_bin not in bin_methods:
         sys.exit("ERROR: the selected binning method '{}' for the 'Reduced"
                  "\nmembership' function does not match a valid input."
                  .format(local_bin))

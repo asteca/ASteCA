@@ -7,7 +7,7 @@ import numpy as np
 
 def pl_mp_histo(
         gs, n_memb_da, memb_prob_avrg_sort, flag_decont_skip, cl_reg_fit,
-        min_prob, mode_red_memb, local_bin):
+        min_prob, mode_fld_clean, local_bin):
     '''
     Histogram for the distribution of membership probabilities from the
     decontamination algorithm.
@@ -44,14 +44,11 @@ def pl_mp_histo(
             print("  WARNING: all MPs are equal valued. "
                   "Can not plot MPs histogram.")
         # Add text box.
-        if mode_red_memb == 'mag':
-            str_pm = ['mag', '\leq', 'mag']
+        str_pm = ['MP', '\geq', 'prob']
+        if mode_fld_clean == 'local':
+            str_pm.append(mode_fld_clean + ';\,' + local_bin)
         else:
-            str_pm = ['MP', '\geq', 'prob']
-        if mode_red_memb == 'local':
-            str_pm.append(mode_red_memb + ';\,' + local_bin)
-        else:
-            str_pm.append(mode_red_memb.replace('_', '\_'))
+            str_pm.append(mode_fld_clean.replace('_', '\_'))
         text1 = r'$n_{{memb-DA}}={}\,(MP \geq 0.5)$'.format(n_memb_da)
         text2 = r'${}_{{min}}={:.2f}\,({})$'.format(str_pm[2], min_prob,
                                                     str_pm[3])
@@ -71,7 +68,7 @@ def pl_mp_histo(
 def pl_chart_mps(gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
                  y_zmax, clust_cent, clust_rad, field_dens, flag_decont_skip,
                  v_min_mp, v_max_mp, chart_fit_inv, chart_no_fit_inv,
-                 out_clust_rad, mode_red_memb, local_bin):
+                 out_clust_rad, mode_fld_clean, local_bin):
     '''
     Finding chart of cluster region with decontamination algorithm
     applied and colors assigned according to the probabilities obtained.
@@ -94,8 +91,8 @@ def pl_chart_mps(gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
                         fill=False)
     fig.gca().add_artist(circle)
     # If DA was skipped, print info on 'local' method here.
-    if flag_decont_skip and mode_red_memb == 'local':
-        text = r'$({})$'.format(mode_red_memb + ';\,' + local_bin)
+    if flag_decont_skip and mode_fld_clean == 'local':
+        text = r'$({})$'.format(mode_fld_clean + ';\,' + local_bin)
         ob = offsetbox.AnchoredText(text, pad=0.2, loc=2, prop=dict(size=12))
         ob.patch.set(alpha=0.85)
         ax.add_artist(ob)
@@ -129,7 +126,7 @@ def pl_chart_mps(gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
 
 def pl_mps_phot_diag(gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
                      x_ax, y_ax, v_min_mp, v_max_mp, diag_fit_inv,
-                     diag_no_fit_inv, err_bar, mode_red_memb, bin_edges):
+                     diag_no_fit_inv, err_bar, mode_fld_clean, bin_edges):
     '''
     Star's membership probabilities on cluster's photometric diagram.
     '''
@@ -150,7 +147,7 @@ def pl_mps_phot_diag(gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
     ax.minorticks_on()
     ax.xaxis.set_major_locator(MultipleLocator(1.0))
     # Plot grid. If bin_edges == 0., it means the 'local' method was not used.
-    if mode_red_memb == 'local' and bin_edges != 0.:
+    if mode_fld_clean == 'local' and bin_edges != 0.:
         # TODO using first magnitude and color. Generalize to N-dimensions.
         for x_ed in bin_edges[1]:
             # vertical lines

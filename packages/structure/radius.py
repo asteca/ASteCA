@@ -7,7 +7,7 @@ import display_rad
 from ..out import prep_plots
 
 
-def radius_algor(clp, coord, cr_params):
+def radius_algor(clp, coord, radius_method):
     '''
     This function holds the main algorithm that returns a radius value.
     '''
@@ -29,16 +29,9 @@ def radius_algor(clp, coord, cr_params):
     # Assign a value to the number of points that should be found below
     # the delta values around the field density to attain the 'stabilized'
     # condition.
-    mode_r = cr_params[0]
-    if mode_r == 'low':
-        # Fix to 5% of the total number of interpolated points in the RDP.
-        n_left = int(0.05 * N)
-    elif mode_r == 'mid':
-        # Fix to 10% of the total number of interpolated points in the RDP.
-        n_left = int(0.1 * N)
-    elif mode_r == 'high':
-        # Fix to 20% of the total number of interpolated points in the RDP.
-        n_left = int(0.2 * N)
+    # Fix to X% of the total number of interpolated points in the RDP.
+    lmh = {'low': 0.05, 'mid': 0.1, 'high': 0.2}
+    n_left = int(lmh[radius_method] * N)
 
     # Difference between max RDP density value and the field density value.
     delta_total = (max(rdp_points_c) - field_dens)
@@ -133,7 +126,7 @@ def radius_algor(clp, coord, cr_params):
     return clust_rad, e_rad, flag_delta_total, flag_not_stable, flag_delta
 
 
-def main(cld, clp, mode, cr_params, coords, cl_rad_semi, rad_flag_semi,
+def main(cld, clp, mode, radius_method, coords, cl_rad_semi, rad_flag_semi,
          **kwargs):
     """
     Obtain the value for the cluster's radius by counting the number of points
@@ -149,7 +142,7 @@ def main(cld, clp, mode, cr_params, coords, cl_rad_semi, rad_flag_semi,
     coord = prep_plots.coord_syst(coords)[0]
     # Call function that holds the radius finding algorithm.
     clust_rad, e_rad, flag_delta_total, flag_not_stable, flag_delta = \
-        radius_algor(clp, coord, cr_params)
+        radius_algor(clp, coord, radius_method)
 
     # Check if semi or manual mode are set.
     flag_radius_manual = False

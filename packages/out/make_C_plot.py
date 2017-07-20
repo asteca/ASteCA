@@ -10,7 +10,7 @@ import prep_plots
 
 def plot_observed_cluster(
     cld, pd, fig, gs, cl_reg_fit, cl_reg_no_fit, err_lst, v_min_mp, v_max_mp,
-        plot_colorbar, diag_fit_inv, diag_no_fit_inv, mode_red_memb,
+        plot_colorbar, diag_fit_inv, diag_no_fit_inv, mode_fld_clean,
         bin_edges):
     """
     This function is called separately since we need to retrieve some
@@ -28,7 +28,7 @@ def plot_observed_cluster(
         sca, trans = mp_decont_algor.pl_mps_phot_diag(
             gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax,
             y_ax, v_min_mp, v_max_mp, diag_fit_inv, diag_no_fit_inv,
-            err_bar, mode_red_memb, bin_edges)
+            err_bar, mode_fld_clean, bin_edges)
     except:
         # import traceback
         # print traceback.format_exc()
@@ -90,18 +90,18 @@ def main(
                 y_zmax, cl_reg_fit, cl_reg_no_fit)
 
         # Decontamination algorithm plots.
-        mode_red_memb, local_bin = pd['rm_params'][0], pd['rm_params'][1]
+        mode_fld_clean, local_bin = pd['rm_params'][0], pd['rm_params'][1]
         min_prob, bin_edges = cl_reg_clean_plot
 
         arglist = [
             # pl_mp_histo
             [gs, n_memb_da, memb_prob_avrg_sort, flag_decont_skip,
-             cl_reg_fit, min_prob, mode_red_memb, local_bin],
+             cl_reg_fit, min_prob, mode_fld_clean, local_bin],
             # pl_chart_mps
             [gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
              y_zmax, clust_cent, clust_rad, field_dens, flag_decont_skip,
              v_min_mp, v_max_mp, chart_fit_inv, chart_no_fit_inv,
-             out_clust_rad, mode_red_memb, local_bin]]
+             out_clust_rad, mode_fld_clean, local_bin]]
         for n, args in enumerate(arglist):
             mp_decont_algor.plot(n, *args)
 
@@ -110,7 +110,7 @@ def main(
         plot_observed_cluster(
             cld, pd, fig, gs, cl_reg_fit, cl_reg_no_fit, err_lst, v_min_mp,
             v_max_mp, plot_colorbar, diag_fit_inv, diag_no_fit_inv,
-            mode_red_memb, bin_edges)
+            mode_fld_clean, bin_edges)
 
         # Generate output file.
         pl_fmt, pl_dpi = pd['pl_params'][1:3]
