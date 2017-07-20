@@ -242,7 +242,7 @@ DA   auto       200
 #     probability of being a cluster member than a field star.
 #   - top_h: selects the top half of all stars in the cluster region with the
 #     highest MPs.
-#   - man: the minimum probability value has to be set manually in the
+#   - man: the minimum accepted probability value has to be set manually in the
 #    'prob_min' parameter (0, 1).
 #   - skip: use all stars in the cluster region.
 #

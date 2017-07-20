@@ -205,7 +205,7 @@ def pl_zoom_frame(gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
                         fill=False, lw=1.5, zorder=5)
     fig.gca().add_artist(circle)
     # Add text box.
-    text = 'Cluster zoom\nCI = %0.2f' % (cont_index)
+    text = "CI = {:.2f}".format(cont_index)
     ob = offsetbox.AnchoredText(text, pad=0.2, loc=1, prop=dict(size=12))
     ob.patch.set(alpha=0.85)
     ax.add_artist(ob)
