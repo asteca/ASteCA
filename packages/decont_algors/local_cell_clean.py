@@ -194,14 +194,13 @@ def get_fit_stars(cl_hist_p, f_hist, flag_decont_skip):
     return cl_reg_fit, cl_reg_no_fit, min_prob
 
 
-def main(field_regions, memb_prob_avrg_sort, flag_decont_skip, rm_params):
+def main(field_regions, memb_prob_avrg_sort, flag_decont_skip, fld_clean_bin):
     '''
     Takes the photometric diagram of the cluster region with assigned MPs,
     divides it into sub-regions (cells) according to the
     density within it, and removes from each sub-region a number of stars
     equal to the average excess due to field star contamination.
     '''
-    local_bin = rm_params[1]
 
     # Remove ID's (hence the [1:]).
     mags_cols_cl = [[], []]
@@ -211,7 +210,7 @@ def main(field_regions, memb_prob_avrg_sort, flag_decont_skip, rm_params):
         mags_cols_cl[1].append(col)
 
     # Obtain bin edges.
-    bin_edges = bin_edges_f(local_bin, mags_cols_cl)
+    bin_edges = bin_edges_f(fld_clean_bin, mags_cols_cl)
 
     # Convert into single N dimensional array.
     mags_cols_cl_arr = np.array(mags_cols_cl[0] + mags_cols_cl[1])

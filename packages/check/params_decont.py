@@ -4,8 +4,8 @@ from os.path import isfile
 from packages.inp import names_paths
 
 
-def check(cl_files, fld_rem_methods, bin_methods, bayesda_mode, rm_params,
-          **kwargs):
+def check(cl_files, fld_rem_methods, bin_methods, bayesda_mode, fld_clean_mode,
+          fld_clean_bin, **kwargs):
     """
     Check parameters related to the decontamination algorithm functions.
     """
@@ -29,12 +29,11 @@ def check(cl_files, fld_rem_methods, bin_methods, bayesda_mode, rm_params,
                          "exist.".format(memb_file))
 
     # Check 'field stars removal' method selected.
-    mode_fld_clean, local_bin, min_prob = rm_params
-    if mode_fld_clean not in fld_rem_methods:
+    if fld_clean_mode not in fld_rem_methods:
         sys.exit("ERROR: the selected field stars removal method ('{}')"
-                 " does\nnot match a valid input.".format(mode_fld_clean))
+                 " does\nnot match a valid input.".format(fld_clean_mode))
     # Check binning if 'local' method was selected.
-    if mode_fld_clean == 'local' and local_bin not in bin_methods:
+    if fld_clean_mode == 'local' and fld_clean_bin not in bin_methods:
         sys.exit("ERROR: the selected binning method '{}' for the 'Reduced"
                  "\nmembership' function does not match a valid input."
-                 .format(local_bin))
+                 .format(fld_clean_bin))

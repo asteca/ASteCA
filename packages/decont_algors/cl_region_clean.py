@@ -60,7 +60,7 @@ def top_h(memb_prob_avrg_sort):
     return cl_reg_fit, cl_reg_no_fit, min_prob
 
 
-def manual(memb_prob_avrg_sort, rm_params, min_prob_i=None):
+def manual(memb_prob_avrg_sort, fld_clean_prob, min_prob_i=None):
     '''
     Find index of star with membership probability < min_prob_i.
     '''
@@ -68,7 +68,7 @@ def manual(memb_prob_avrg_sort, rm_params, min_prob_i=None):
 
     if min_prob_i is None:
         # Manual mode.
-        min_prob_man = rm_params[2]
+        min_prob_man = fld_clean_prob
     else:
         # MP>=0.5 mode.
         min_prob_man = min_prob_i
@@ -86,16 +86,17 @@ def manual(memb_prob_avrg_sort, rm_params, min_prob_i=None):
             min_prob_man
     else:
         if min_prob_i is None:
-            print("  WARNING: less than 10 stars left after removing\n"
-                  "  by manual membership probability. No removal applied.")
+            print("  WARNING: fewer than 10 stars left after removing\n"
+                  "  stars with MP<={:.2f}. No removal applied.".format(
+                      min_prob_man))
         else:
-            print("  WARNING: less than 10 stars left after removing\n"
-                  "  by MP>=0.5 selection. No removal applied.")
+            print("  WARNING: fewer than 10 stars left after removing\n"
+                  "  stars with MP<=0.5. No removal applied.")
 
     return cl_reg_fit, cl_reg_no_fit, min_prob
 
 
-def main(clp, rm_params, **kwargs):
+def main(clp, fld_clean_mode, fld_clean_bin, fld_clean_prob, **kwargs):
     '''
     Remove stars from cluster region, according to a given membership
     probability lower limit, minimum magnitude limit or local density-based
@@ -106,50 +107,49 @@ def main(clp, rm_params, **kwargs):
         flag_decont_skip = [
             clp[_] for _ in ('n_memb', 'flag_no_fl_regs', 'field_regions',
                              'memb_prob_avrg_sort', 'flag_decont_skip')]
-    mode_rem_memb = rm_params[0]
 
     # Default assignment.
     cl_reg_fit, cl_reg_no_fit, min_prob, bin_edges = memb_prob_avrg_sort, [],\
         0., 0.
 
-    if mode_rem_memb == 'skip':
+    if fld_clean_mode == 'skip':
         # Skip reduction process.
         print('Cluster region field stars removal function skipped.')
 
     # If the DA was skipped and any method but 'local' or 'mag' is selected,
     # don't run.
-    elif flag_decont_skip and mode_rem_memb not in ('local', 'mag'):
+    elif flag_decont_skip and fld_clean_mode not in ('local', 'mag'):
         print("  WARNING: decontamination algorithm was skipped.\n"
               "  Can't apply '{}' field stars removal method.".format(
-                  mode_rem_memb))
+                  fld_clean_mode))
 
     # If no field regions were defined, this mode won't work.
-    elif flag_no_fl_regs and mode_rem_memb == 'local':
+    elif flag_no_fl_regs and fld_clean_mode == 'local':
         print("  WARNING: no field regions were defined. Can't apply\n"
-              "  '{}' field stars removal method.".format(mode_rem_memb))
+              "  '{}' field stars removal method.".format(fld_clean_mode))
 
     else:
         # This mode works if the DA did not run but it needs field regions
         # defined.
-        if mode_rem_memb == 'local':
+        if fld_clean_mode == 'local':
             cl_reg_fit, cl_reg_no_fit, min_prob, bin_edges =\
                 local_cell_clean.main(field_regions, memb_prob_avrg_sort,
-                                      flag_decont_skip, rm_params)
+                                      flag_decont_skip, fld_clean_bin)
 
-        if mode_rem_memb == 'n_memb':
+        if fld_clean_mode == 'n_memb':
             cl_reg_fit, cl_reg_no_fit, min_prob = nmemb_sel(
                 n_memb, memb_prob_avrg_sort)
 
-        if mode_rem_memb == 'mp_05':
+        if fld_clean_mode == 'mp_05':
             cl_reg_fit, cl_reg_no_fit, min_prob = manual(
-                memb_prob_avrg_sort, rm_params, 0.5)
+                memb_prob_avrg_sort, fld_clean_prob, 0.5)
 
-        elif mode_rem_memb == 'top_h':
+        elif fld_clean_mode == 'top_h':
             cl_reg_fit, cl_reg_no_fit, min_prob = top_h(memb_prob_avrg_sort)
 
-        elif mode_rem_memb == 'man':
+        elif fld_clean_mode == 'man':
             cl_reg_fit, cl_reg_no_fit, min_prob = manual(
-                memb_prob_avrg_sort, rm_params)
+                memb_prob_avrg_sort, fld_clean_prob)
 
         print('Cluster region field stars removal function applied.')
 

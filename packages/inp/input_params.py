@@ -101,9 +101,9 @@ def main(mypath, pars_f_path):
 
                 # Membership based removal parameters.
                 elif reader[0] == 'RM':
-                    mode_fld_clean = str(reader[1])
-                    local_bin = str(reader[2])
-                    min_prob = float(reader[3])
+                    fld_clean_mode = str(reader[1])
+                    fld_clean_bin = str(reader[2])
+                    fld_clean_prob = float(reader[3])
 
                 # Cluster parameters assignation.
                 elif reader[0] == 'BF':
@@ -181,7 +181,6 @@ def main(mypath, pars_f_path):
     # GA parameters.
     bf_params = [best_fit_algor, lkl_method, bin_method, N_b]
     ga_params = [n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es]
-    rm_params = [mode_fld_clean, local_bin, min_prob]
 
     # Accepted field stars removal methods.
     fld_rem_methods = ('local', 'n_memb', 'mp_05', 'top_h', 'man', 'skip')
@@ -207,12 +206,13 @@ def main(mypath, pars_f_path):
         'max_mag': max_mag, 'IMF_name': IMF_name, 'm_high': m_high,
         'R_V': R_V, 'bin_mr': bin_mr, 'flag_make_plot': flag_make_plot,
         'plot_frmt': plot_frmt, 'plot_dpi': plot_dpi,
+        'fld_clean_mode': fld_clean_mode, 'fld_clean_bin': fld_clean_bin,
+        'fld_clean_prob': fld_clean_prob,
         'flag_move_file': flag_move_file, 'flag_back_force': flag_back_force,
         # v These lists need to be re-fomatted
         'kp_flag': kp_flag, 'im_flag': im_flag,
         'er_params': er_params, 'fr_number': fr_number,
-        'bf_params': bf_params, 'ga_params': ga_params,
-        'rm_params': rm_params}
+        'bf_params': bf_params, 'ga_params': ga_params}
 
     # Return parameters dictionary.
     return pd
