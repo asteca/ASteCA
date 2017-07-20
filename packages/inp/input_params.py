@@ -183,7 +183,7 @@ def main(mypath, pars_f_path):
     ga_params = [n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es]
 
     # Accepted field stars removal methods.
-    fld_rem_methods = ('local', 'n_memb', 'mp_05', 'top_h', 'man', 'skip')
+    fld_rem_methods = ('local', 'n_memb', 'mp_05', 'top_h', 'man', 'all')
     # Accepted binning methods.
     bin_methods = ('fixed', 'auto', 'fd', 'doane', 'scott', 'rice', 'sqrt',
                    'sturges', 'knuth', 'blocks')

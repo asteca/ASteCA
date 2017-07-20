@@ -112,9 +112,9 @@ def main(clp, fld_clean_mode, fld_clean_bin, fld_clean_prob, **kwargs):
     cl_reg_fit, cl_reg_no_fit, min_prob, bin_edges = memb_prob_avrg_sort, [],\
         0., 0.
 
-    if fld_clean_mode == 'skip':
+    if fld_clean_mode == 'all':
         # Skip reduction process.
-        print('Cluster region field stars removal function skipped.')
+        print('No field star removal applied on cluster region.')
 
     # If the DA was skipped and any method but 'local' or 'mag' is selected,
     # don't run.

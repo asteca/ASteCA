@@ -262,7 +262,7 @@ def da_phot_diag(cl_reg_fit, cl_reg_no_fit, v_min_mp, v_max_mp):
         # membership probabilities.
         diag_no_fit_inv += [cl_reg_no_fit[7][::-1]]
     else:
-        diag_no_fit_inv = [[], [], []]
+        diag_no_fit_inv = [[[]], [[]], []]
 
     return plot_colorbar, diag_fit_inv, diag_no_fit_inv
 

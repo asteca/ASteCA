@@ -211,8 +211,8 @@ PV   auto      2
 # Bayesian decontamination algorithm.
 #
 # * mode: auto / manual / read / skip
-#   - auto: the code will iterate a maximum of 1000 times unless the membership
-#     probabilities (MPs) converge to within 0.1% values first.
+#   - auto: the code will iterate a maximum of 1000 times or until the
+#     membership probabilities (MPs) converge to within 0.1% values first.
 #   - manual: the code will iterate a maximum number of times given by the
 #     'runs' parameter, unless MPs convergence is reached first. Otherwise
 #     this value is irrelevant.
@@ -228,10 +228,9 @@ DA   auto      200
 #
 # Performs a selection of stars in the cluster region, to be used by the
 # synthetic cluster match function. Possible field stars are removed either
-# based on their assigned membership probabilities (MPs), magnitude, or
-# randomly (if MPs are missing).
+# based on their assigned MPs, or randomly (if MPs are missing).
 #
-# * mode: local / n_memb / mp_05 / top_h / man / skip
+# * mode: local / n_memb / mp_05 / top_h / man / all
 #   - local: combines the assigned MPs with a cell by cell removal of stars in
 #     the photometric diagram. The stars discarded are those of lower MPs and
 #     the number is equal to the excess of field stars present in each cell.
@@ -244,7 +243,7 @@ DA   auto      200
 #     highest MPs.
 #   - man: the minimum accepted probability value has to be set manually in the
 #    'prob_min' parameter (0, 1).
-#   - skip: use all stars in the cluster region.
+#   - all: use all stars in the cluster region.
 #
 # * binning: fixed / auto / fd / doane / scott / rice / sqrt
 #            sturges / knuth / blocks
