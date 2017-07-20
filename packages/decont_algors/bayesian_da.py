@@ -131,7 +131,7 @@ def main(clp, npd, bayesda_mode, bayesda_runs, **kwargs):
     if bayesda_mode in ('auto', 'manual') and clp['flag_no_fl_regs']:
         print("  WARNING: no field regions found. Will not\n"
               "  apply decontamination algorithm.")
-        mode_da = 'skip'
+        bayesda_mode = 'skip'
 
     flag_decont_skip = False
     # Run algorithm for any of these selections.
@@ -223,7 +223,7 @@ def main(clp, npd, bayesda_mode, bayesda_runs, **kwargs):
                 break
             update_progress.updt(runs, run_num + 1)
 
-    elif mode_da == 'read':
+    elif bayesda_mode == 'read':
         print('Reading membership probabilities from file.')
         # Read IDs from file.
         memb_file = npd['memb_file']
@@ -248,7 +248,7 @@ def main(clp, npd, bayesda_mode, bayesda_runs, **kwargs):
         # Store probabilities in list.
         runs_fields_probs = [[probs]]
 
-    elif mode_da == 'skip':
+    elif bayesda_mode == 'skip':
         print('Assign equal probabilities to all stars in cluster region.')
         # Assign equal probabilities to all stars.
         runs_fields_probs = [[[1.] * len(cl_region)]]
