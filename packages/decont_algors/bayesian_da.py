@@ -133,12 +133,11 @@ def main(clp, npd, bayesda_mode, bayesda_runs, **kwargs):
               "  apply decontamination algorithm.")
         bayesda_mode = 'skip'
 
+    cl_region = clp['cl_region']  # shorter
     flag_decont_skip = False
     # Run algorithm for any of these selections.
     if bayesda_mode in ('auto', 'manual'):
-
         print('Applying decontamination algorithm.')
-        cl_region = clp['cl_region']  # shorter
 
         # Set total number of runs.
         runs = 1000 if bayesda_mode == 'auto' else bayesda_runs
