@@ -64,7 +64,7 @@ def main():
     from packages import func_caller
 
     # Store variables that could be changed when processing each cluster.
-    mode_orig, er_params_orig = pd['mode'], pd['er_params']
+    er_params_orig = pd['er_params']
     # Iterate through all cluster files.
     for cl_file in cl_files:
 
@@ -77,7 +77,7 @@ def main():
             print traceback.format_exc()
 
         # Set these variables to their original global values.
-        pd['mode'], pd['er_params'] = mode_orig, er_params_orig
+        pd['er_params'] = er_params_orig
 
     # End of run.
     elapsed = time.time() - start

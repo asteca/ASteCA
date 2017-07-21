@@ -105,7 +105,7 @@ def bin_center(xedges, yedges, kde_cent):
     return cent_bin
 
 
-def main(cld, clp, mode, coords, cl_cent_semi, cl_rad_semi, cent_flag_semi,
+def main(cld, clp, run_mode, coords, cl_cent_semi, cl_rad_semi, cent_flag_semi,
          **kwargs):
     """
     Obtains the center of the putative cluster. Returns the center values
@@ -130,8 +130,8 @@ def main(cld, clp, mode, coords, cl_cent_semi, cl_rad_semi, cent_flag_semi,
     radius = 0.25 * min(x_span, y_span)
 
     mode_semi = True
-    if mode == 'semi':
-        # Only apply if flag is on of these values, else skip semi-center
+    if run_mode == 'semi':
+        # Only apply if flag is one of these values, else skip semi-center
         # assignment for this cluster.
         if cent_flag_semi in [1, 2]:
             # Search for new center values using the center coordinates
@@ -162,7 +162,7 @@ def main(cld, clp, mode, coords, cl_cent_semi, cl_rad_semi, cent_flag_semi,
             # Use 'auto' mode.
             mode_semi = False
 
-    if mode == 'auto' or mode_semi is False:
+    if run_mode == 'auto' or mode_semi is False:
 
         # Obtain approximate values for center coordinates using several
         # Gaussian filters with different standard deviation values, on the
@@ -199,7 +199,7 @@ def main(cld, clp, mode, coords, cl_cent_semi, cl_rad_semi, cent_flag_semi,
 
     # If Manual mode is set, display center and ask the user to accept it or
     # input new one.
-    elif mode == 'manual':
+    elif run_mode == 'manual':
 
         # Obtain approximate values for center coordinates using several
         # Gaussian filters with different standard deviation values, on the
@@ -236,7 +236,7 @@ def main(cld, clp, mode, coords, cl_cent_semi, cl_rad_semi, cent_flag_semi,
                     cent_bin = bin_center(xedges, yedges, kde_cent)
                     flag_center_manual = True
                     break
-                except:
+                except Exception:
                     print("Sorry, input is not valid. Try again.")
             else:
                 print("Sorry, input is not valid. Try again.")

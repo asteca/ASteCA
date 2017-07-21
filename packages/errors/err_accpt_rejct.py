@@ -52,9 +52,6 @@ def main(cld, clp, pd):
     Accept and reject stars in and out of the cluster's boundaries according to
     a given criteria based on their photometric errors.
     """
-
-    # Unpack data.
-    mode = pd['mode']
     # Use main magnitude.
     mmag = cld['mags'][0]
     er_mode, e_max, be = pd['er_params'][:3]
@@ -94,10 +91,10 @@ def main(cld, clp, pd):
     err_all_fallback = False
 
     # Check selected mode.
-    if mode in ('auto', 'semi'):
+    if pd['run_mode'] in ('auto', 'semi'):
         # If 'semi' is set, check for the flag that indicates which method to
         # use and override the one in the input params file.
-        if mode == 'semi':
+        if pd['run_mode'] == 'semi':
             # Unpack semi flag
             err_flag_semi = pd['err_flag_semi']
             if err_flag_semi != 0:
@@ -167,7 +164,7 @@ def main(cld, clp, pd):
     # If 'manual' mode is set, display errors distributions and ask the user
     # to accept it or else use all stars except those with errors > e_max in
     # either the magnitude or the color.
-    elif mode == 'manual':
+    elif pd['run_mode'] == 'manual':
         move_on = False
         while not move_on:
             while True:
@@ -214,7 +211,7 @@ def main(cld, clp, pd):
                                   "stars (4).")
                         else:
                             break
-                except:
+                except Exception:
                     import traceback
                     print traceback.format_exc()
                     print("Sorry, input is not valid. Try again.")
@@ -241,7 +238,7 @@ def main(cld, clp, pd):
                             break
                         else:
                             print("Sorry, input is not valid. Try again.")
-                    except:
+                    except Exception:
                         print("Sorry, input is not valid. Try again.")
             else:
                 move_on = True

@@ -4,11 +4,11 @@ import matplotlib.pyplot as plt
 import display_frame
 
 
-def main(cld, mode, coords, **kwargs):
+def main(cld, run_mode, coords, **kwargs):
     '''
     Trim frame according to given values of new center and side lengths.
     '''
-    if mode == 'manual':
+    if run_mode == 'manual':
         # Unpack dictionary.
         ids, x, y, mags, em, cols, ec = cld['ids'], cld['x'], cld['y'],\
             cld['mags'], cld['em'], cld['cols'], cld['ec']
@@ -61,7 +61,7 @@ def main(cld, mode, coords, **kwargs):
                         np.array(x2), np.array(y2), np.array(mags2),\
                         np.array(em2), np.array(cols2), np.array(ec2)
                     break
-                except:
+                except Exception:
                     print("Sorry, input is not valid. Try again.")
             else:
                 print("Sorry, input is not valid. Try again.")

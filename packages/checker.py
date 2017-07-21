@@ -3,6 +3,7 @@ from check import pack
 from check import update
 from check import clusters
 from check import params_file
+from check import semi_list
 from check import photom_names
 from check import params_struct
 from check import params_errors
@@ -31,6 +32,9 @@ def check_all(mypath, file_end):
     # Read parameters from 'params_input.dat' file. Return a dictionary
     # containing all the parameter values.
     pd = params_file.check(mypath, file_end)
+
+    # If mode is 'semi', check that all cluster in '/input' folder are listed.
+    semi_list.check(cl_files, **pd)
 
     # Check if a new version is available.
     update.check(**pd)

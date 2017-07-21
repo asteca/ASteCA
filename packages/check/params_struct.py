@@ -3,18 +3,18 @@ import sys
 from os.path import join, isfile
 
 
-def check(mypath, mode, coords, flag_make_plot, plot_frmt, center_method,
+def check(mypath, run_mode, coords, flag_make_plot, plot_frmt, center_method,
           radius_method, **kwargs):
     """
     Check that the parameters are properly written.
     """
 
     # Check mode.
-    if mode not in ('auto', 'semi', 'manual'):
+    if run_mode not in ('auto', 'semi', 'manual'):
         sys.exit("ERROR: 'mode' value selected ('{}') is not valid.".format(
-            mode))
+            run_mode))
 
-    if mode == 'semi':
+    if run_mode == 'semi':
         # Check if semi_input.dat file exists.
         semi_file = 'semi_input.dat'
         if not isfile(join(mypath, semi_file)):

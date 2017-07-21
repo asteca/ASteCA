@@ -61,7 +61,7 @@ def main(
              st_sizes_arr, core_rad, e_core, tidal_rad, e_tidal, K_conct_par,
              flag_2pk_conver, flag_3pk_conver],
             # pl_rad_dens: Radial density plot.
-            [gs, pd['mode'], radii, rdp_points, field_dens, coord,
+            [gs, pd['run_mode'], radii, rdp_points, field_dens, coord,
              npd['clust_name'], clust_rad, e_rad, poisson_error, bin_width,
              core_rad, e_core, tidal_rad, e_tidal, K_cent_dens,
              flag_2pk_conver, flag_3pk_conver],

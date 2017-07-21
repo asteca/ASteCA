@@ -52,7 +52,7 @@ def main(mypath, pars_f_path):
 
                 # Set global mode (i.e, for all clusters processed).
                 elif reader[0] == 'MO':
-                    mode = str(reader[1])
+                    run_mode = str(reader[1])
 
                 # Input data parameters.
                 elif reader[0] == 'PI':
@@ -192,7 +192,8 @@ def main(mypath, pars_f_path):
     par_ranges = [m_rs, a_rs, e_rs, d_rs, mass_rs, bin_rs]
 
     pd = {
-        'up_flag': up_flag, 'flag_back_force': flag_back_force, 'mode': mode,
+        'up_flag': up_flag, 'flag_back_force': flag_back_force,
+        'run_mode': run_mode,
         'id_coords': id_coords, 'id_mags': id_mags, 'id_cols': id_cols,
         'flag_make_plot': flag_make_plot, 'plot_frmt': plot_frmt,
         'plot_dpi': plot_dpi,
@@ -213,7 +214,7 @@ def main(mypath, pars_f_path):
         'fld_rem_methods': fld_rem_methods, 'bin_methods': bin_methods,
         'imf_funcs': imf_funcs, 'cmd_evol_tracks': cmd_evol_tracks,
         'cmd_systs': cmd_systs,
-        # v These lists need to be re-fomatted
+        # v These lists need to be re-formatted
         'er_params': er_params, 'bf_params': bf_params,
         'ga_params': ga_params, 'par_ranges': par_ranges}
 

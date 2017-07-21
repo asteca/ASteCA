@@ -126,7 +126,7 @@ def radius_algor(clp, coord, radius_method):
     return clust_rad, e_rad, flag_delta_total, flag_not_stable, flag_delta
 
 
-def main(cld, clp, mode, radius_method, coords, cl_rad_semi, rad_flag_semi,
+def main(cld, clp, run_mode, radius_method, coords, cl_rad_semi, rad_flag_semi,
          **kwargs):
     """
     Obtain the value for the cluster's radius by counting the number of points
@@ -146,10 +146,10 @@ def main(cld, clp, mode, radius_method, coords, cl_rad_semi, rad_flag_semi,
 
     # Check if semi or manual mode are set.
     flag_radius_manual = False
-    if mode == 'auto':
+    if run_mode == 'auto':
         print('Auto radius found: {:g} {}.'.format(clust_rad, coord))
 
-    elif mode == 'semi':
+    elif run_mode == 'semi':
         if rad_flag_semi == 1:
             # Update values.
             clust_rad, e_rad = cl_rad_semi, 0.
@@ -159,7 +159,7 @@ def main(cld, clp, mode, radius_method, coords, cl_rad_semi, rad_flag_semi,
 
     # If Manual mode is set, display radius and ask the user to accept it or
     # input new one.
-    elif mode == 'manual':
+    elif run_mode == 'manual':
 
         print 'Radius found: {:g} {}.'.format(clust_rad, coord)
         display_rad.main(cld['x'], cld['y'], cld['mags'][0], coords, clust_rad,
@@ -179,7 +179,7 @@ def main(cld, clp, mode, radius_method, coords, cl_rad_semi, rad_flag_semi,
                     clust_rad = clust_rad_m
                     flag_radius_manual = True
                     break
-                except:
+                except Exception:
                     print("Sorry, input is not valid. Try again.")
             else:
                 print("Sorry, input is not valid. Try again.")
