@@ -110,8 +110,8 @@ def main(mypath, pars_f_path):
                     bf_flag = True if reader[1] in true_lst else False
                     best_fit_algor = str(reader[2])
                     lkl_method = str(reader[3])
-                    bin_method = str(reader[4])
-                    N_b = int(reader[5])
+                    lkl_binning = str(reader[4])
+                    N_bootstrap = int(reader[5])
                 elif reader[0] == 'PS':
                     evol_track = str(reader[1])
 
@@ -144,15 +144,15 @@ def main(mypath, pars_f_path):
 
                 # Genetic algorithm parameters.
                 elif reader[0] == 'GA':
-                    n_pop = int(reader[1])
-                    n_gen = int(reader[2])
-                    fdif = float(reader[3])
-                    p_cross = float(reader[4])
-                    cr_sel = str(reader[5])
-                    p_mut = float(reader[6])
-                    n_el = int(reader[7])
-                    n_ei = int(reader[8])
-                    n_es = int(reader[9])
+                    N_pop = int(reader[1])
+                    N_gen = int(reader[2])
+                    fit_diff = float(reader[3])
+                    cross_prob = float(reader[4])
+                    cross_sel = str(reader[5])
+                    mut_prob = float(reader[6])
+                    N_el = int(reader[7])
+                    N_ei = int(reader[8])
+                    N_es = int(reader[9])
 
                 else:
                     # Get parameters file name from path.
@@ -185,9 +185,6 @@ def main(mypath, pars_f_path):
     # Dictionary with data on the CMD service photometric systems.
     cmd_systs = CMD_phot_systs.main()
 
-    # GA parameters.
-    bf_params = [best_fit_algor, lkl_method, bin_method, N_b]
-    ga_params = [n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es]
     # Photometric system parameters.
     par_ranges = [m_rs, a_rs, e_rs, d_rs, mass_rs, bin_rs]
 
@@ -202,21 +199,27 @@ def main(mypath, pars_f_path):
         'radius_method': radius_method, 'kp_flag': kp_flag,
         'fr_number': fr_number, 'im_flag': im_flag,
         'pvalue_mode': pvalue_mode, 'pvalue_runs': pvalue_runs,
+        # Decontamination algorithm parameters.
         'bayesda_mode': bayesda_mode, 'bayesda_runs': bayesda_runs,
         'fld_clean_mode': fld_clean_mode, 'fld_clean_bin': fld_clean_bin,
         'fld_clean_prob': fld_clean_prob,
-        'bf_flag': bf_flag,
-        'evol_track': evol_track,
+        # Best fit parameters.
+        'bf_flag': bf_flag, 'best_fit_algor': best_fit_algor,
+        'lkl_method': lkl_method, 'lkl_binning': lkl_binning,
+        'N_bootstrap': N_bootstrap, 'evol_track': evol_track,
         # Synthetic cluster parameters
         'max_mag': max_mag, 'IMF_name': IMF_name, 'm_high': m_high,
         'R_V': R_V, 'bin_mr': bin_mr,
+        # Genetic algorithm parameters.
+        'N_pop': N_pop, 'N_gen': N_gen, 'fit_diff': fit_diff,
+        'cross_prob': cross_prob, 'cross_sel': cross_sel, 'mut_prob': mut_prob,
+        'N_el': N_el, 'N_ei': N_ei, 'N_es': N_es,
         # Fixed accepted parameter values and photometric systems.
         'fld_rem_methods': fld_rem_methods, 'bin_methods': bin_methods,
         'imf_funcs': imf_funcs, 'cmd_evol_tracks': cmd_evol_tracks,
         'cmd_systs': cmd_systs,
         # v These lists need to be re-formatted
-        'er_params': er_params, 'bf_params': bf_params,
-        'ga_params': ga_params, 'par_ranges': par_ranges}
+        'er_params': er_params, 'par_ranges': par_ranges}
 
     # Return parameters dictionary.
     return pd

@@ -13,11 +13,9 @@ def main(
     Make D1 block plots.
     '''
     if pd['flag_make_plot'] and pd['bf_flag']:
-        best_fit_algor, lkl_method, bin_method, N_b = pd['bf_params']
-
         fig = plt.figure(figsize=(30, 25))
         gs = gridspec.GridSpec(10, 12)
-        if best_fit_algor == 'genet':
+        if pd['best_fit_algor'] == 'genet':
             add_version_plot.main()
         else:
             add_version_plot.main(y_fix=.8)
@@ -34,7 +32,7 @@ def main(
         model_done = isoch_fit_params[-1]
 
         # Best fitting process plots for GA.
-        if best_fit_algor == 'genet':
+        if pd['best_fit_algor'] == 'genet':
 
             lkl_old, new_bs_indx = isoch_fit_params[1:3]
             l_min_max = prep_plots.likl_y_range(lkl_old)
@@ -42,7 +40,9 @@ def main(
             arglist = [
                 # pl_ga_lkl: Likelihood evolution for the GA.
                 [gs, l_min_max, lkl_old, model_done, new_bs_indx,
-                 pd['ga_params'], N_b],
+                 pd['N_pop'], pd['N_gen'], pd['fit_diff'], pd['cross_prob'],
+                 pd['cross_sel'], pd['mut_prob'], pd['N_el'], pd['N_ei'],
+                 pd['N_es'], pd['N_bootstrap']],
                 # pl_2_param_dens: Param vs param solutions scatter map.
                 [gs, 'age-metal', min_max_p, fit_params_r, fit_errors_r,
                  model_done],

@@ -103,6 +103,7 @@ def check_1strun(mypath):
     copying the new ones into the root folder.
     """
 
+    first_run_flag = False
     try:
         fr_file = mypath + 'packages/.first_run'
         if os.path.isfile(fr_file):
@@ -116,6 +117,7 @@ def check_1strun(mypath):
                 print("* First run of the code detected *\n")
                 success = files_copy(mypath, success)
                 success = folder_copy(mypath, success)
+                first_run_flag = True
 
             elif N in ['1', '2', '3']:
                 print("First run copy process was left incomplete. Check\n"
@@ -134,3 +136,5 @@ def check_1strun(mypath):
         print("ERROR: Could not check/copy data files and folders\n"
               "to root folder.\n")
         print(traceback.format_exc())
+
+    return first_run_flag

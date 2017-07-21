@@ -48,7 +48,7 @@ def chunker(seq, size):
     return (seq[pos:pos + size] for pos in xrange(0, len(seq), size))
 
 
-def crossover(chromosomes, p_cross, cr_sel):
+def crossover(chromosomes, cross_prob, cross_sel):
     '''
     Applies the crossover operator over each chromosome.
     '''
@@ -56,15 +56,15 @@ def crossover(chromosomes, p_cross, cr_sel):
     # Take two chromosomes at a time.
     for chrom_pair in chunker(chromosomes, 2):
         r = random.random()
-        if r <= p_cross:
+        if r <= cross_prob:
 
-            if cr_sel == '1P':
+            if cross_sel == '1P':
                 # Select one random crossover point.
                 cp = random.randint(0, len(chrom_pair[0]))
                 # Apply crossover on these two chromosomes.
                 cross_chrom.append(chrom_pair[0][:cp] + chrom_pair[1][cp:])
                 cross_chrom.append(chrom_pair[1][:cp] + chrom_pair[0][cp:])
-            elif cr_sel == '2P':
+            elif cross_sel == '2P':
                 # Select two random crossover points.
                 cp0, cp1 = np.sort(random.sample(range(0, len(chrom_pair[0])),
                                                  2))
@@ -83,13 +83,14 @@ def crossover(chromosomes, p_cross, cr_sel):
     return cross_chrom
 
 
-def mutation(cross_chrom, p_mut):
+def mutation(cross_chrom, mut_prob):
     '''
     Applies the mutation operator over random genes in each chromosome.
     '''
-    # For each chromosome flip their genes according to the probability p_mut.
+    # For each chromosome flip their genes according to the probability
+    # mut_prob.
     for i, elem in enumerate(cross_chrom):
-        cross_chrom[i] = ''.join(char if random.random() > p_mut else
+        cross_chrom[i] = ''.join(char if random.random() > mut_prob else
                                  str(1 - int(char)) for char in elem)
 
     return cross_chrom
@@ -126,11 +127,11 @@ def decode(fundam_params, n_bin, p_delta, p_mins, mut_chrom):
 
 def elitism(best_sol, p_lst):
     '''
-    Pass the best n_el solutions unchanged to the next generation.
+    Pass the best N_el solutions unchanged to the next generation.
     '''
 
-    # Append the n_el best solutions to the beginning of the list, pushing
-    # out n_el solutions located on the end (right) of the list.
+    # Append the N_el best solutions to the beginning of the list, pushing
+    # out N_el solutions located on the end (right) of the list.
     p_lst_r = []
     for i, pars in enumerate(p_lst):
         p_lst_r.append(list(zip(*best_sol)[i]) + pars[:-len(best_sol)])
@@ -234,13 +235,13 @@ def random_population(fundam_params, n_ran):
     return p_lst
 
 
-def ext_imm(best_sol, fundam_params, n_pop):
+def ext_imm(best_sol, fundam_params, N_pop):
     '''
     Append a new random population to the best solution so far.
     '''
 
-    # Generate (n_pop-n_el) random solutions.
-    n_ran = n_pop - len(best_sol)
+    # Generate (N_pop-N_el) random solutions.
+    n_ran = N_pop - len(best_sol)
     p_lst_r = random_population(fundam_params, n_ran)
 
     # Append immigrant random population to the best solution.
@@ -275,28 +276,28 @@ def num_binary_digits(fundam_params):
 
 def main(lkl_method, e_max, bin_mr, err_lst, completeness, max_mag_syn,
          fundam_params, obs_clust, theor_tracks, R_V, ext_coefs, st_dist_mass,
-         N_fc, ga_params, flag_print_perc):
+         N_fc, N_pop, N_gen, fit_diff, cross_prob, cross_sel, mut_prob, N_el,
+         N_ei, N_es, flag_print_perc):
     '''
     Genetic algorithm. Finds the best fit model-observation.
     '''
 
-    n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es = ga_params
-    # Check if n_pop is odd. If it is sum 1 to avoid conflict if cr_sel
+    # Check if N_pop is odd. If it is sum 1 to avoid conflict if cross_sel
     # '2P' was selected.
-    n_pop += n_pop % 2
+    N_pop += N_pop % 2
 
     # Get number of binary digits to use.
     n_bin, p_delta, p_mins = num_binary_digits(fundam_params)
 
     # Fitness.
     # Rank-based breeding probability. Independent of the fitness values,
-    # only depends on the total number of chromosomes n_pop and the fitness
-    # differential fdif.
-    fitness = [1. / n_pop + fdif * (n_pop + 1. - 2. * (i + 1.)) /
-               (n_pop * (n_pop + 1.)) for i in range(n_pop)]
+    # only depends on the total number of chromosomes N_pop and the fitness
+    # differential fit_diff.
+    fitness = [1. / N_pop + fit_diff * (N_pop + 1. - 2. * (i + 1.)) /
+               (N_pop * (N_pop + 1.)) for i in range(N_pop)]
 
     # *** Initial random population evaluation ***
-    p_lst_r = random_population(fundam_params, n_pop)
+    p_lst_r = random_population(fundam_params, N_pop)
 
     # Stores parameters of the solutions already processed and the likelihoods
     # obtained.
@@ -309,7 +310,7 @@ def main(lkl_method, e_max, bin_mr, err_lst, completeness, max_mag_syn,
         N_fc, p_lst_r, model_done)
 
     # Store best solution for passing along in the 'Elitism' block.
-    best_sol = generation[:n_el]
+    best_sol = generation[:N_el]
 
     # For plotting purposes.
     lkl_old = [[], []]
@@ -324,8 +325,8 @@ def main(lkl_method, e_max, bin_mr, err_lst, completeness, max_mag_syn,
 
     # Print percentage done.
     milestones = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
-    # Begin processing the populations up to n_gen generations.
-    for i in range(n_gen):
+    # Begin processing the populations up to N_gen generations.
+    for i in range(N_gen):
 
         # *** Selection/Reproduction ***
         # with timeblock("Selec/Repo"):
@@ -344,18 +345,18 @@ def main(lkl_method, e_max, bin_mr, err_lst, completeness, max_mag_syn,
         random.shuffle(chromosomes)
 
         # Apply crossover operation on each subsequent pair of chromosomes
-        # with a p_cross probability (crossover probability)
-        cross_chrom = crossover(chromosomes, p_cross, cr_sel)
+        # with a cross_prob probability (crossover probability)
+        cross_chrom = crossover(chromosomes, cross_prob, cross_sel)
 
         # Apply mutation operation on random genes for every chromosome.
-        mut_chrom = mutation(cross_chrom, p_mut)
+        mut_chrom = mutation(cross_chrom, mut_prob)
 
         # *** Evaluation ***
         # Decode the chromosomes into solutions to form the new generation.
         # with timeblock("Decode"):
         p_lst_d = decode(fundam_params, n_bin, p_delta, p_mins, mut_chrom)
 
-        # Elitism: make sure that the best n_el solutions from the previous
+        # Elitism: make sure that the best N_el solutions from the previous
         # generation are passed unchanged into this next generation.
         # with timeblock("Elitism"):
         p_lst_e = elitism(best_sol, p_lst_d)
@@ -369,7 +370,7 @@ def main(lkl_method, e_max, bin_mr, err_lst, completeness, max_mag_syn,
             st_dist_mass, N_fc, p_lst_e, model_done)
 
         # *** Extinction/Immigration ***
-        # If the best solution has remained unchanged for n_ei
+        # If the best solution has remained unchanged for N_ei
         # generations, remove all chromosomes but the best ones (extinction)
         # and fill with random new solutions (immigration).
 
@@ -379,17 +380,17 @@ def main(lkl_method, e_max, bin_mr, err_lst, completeness, max_mag_syn,
             best_sol_count += 1
 
             # Check how many times the best_sol has remained unchanged.
-            # If the number equals n_ei, apply Extinction/Immigration operator.
-            if best_sol_count == n_ei:
+            # If the number equals N_ei, apply Extinction/Immigration operator.
+            if best_sol_count == N_ei:
 
                 # *** Exit switch ***
-                # If n_es runs of the Ext/Imm operator have been applied with
+                # If N_es runs of the Ext/Imm operator have been applied with
                 # no changes to the best solution, apply the exit switch,
                 # ie: exit the GA.
                 if best_sol[0] == best_sol_ei:
                     # Increase Ext/Imm operator counter.
                     ext_imm_count += 1
-                    if ext_imm_count == n_es:
+                    if ext_imm_count == N_es:
                         # Exit generations loop.
                         break
                 else:
@@ -399,7 +400,7 @@ def main(lkl_method, e_max, bin_mr, err_lst, completeness, max_mag_syn,
                     ext_imm_count = 0
 
                 # Apply Extinction/Immigration operator.
-                generation = ext_imm(best_sol, fundam_params, n_pop)
+                generation = ext_imm(best_sol, fundam_params, N_pop)
 
                 # Reset best solution counter.
                 best_sol_count = 0
@@ -409,7 +410,7 @@ def main(lkl_method, e_max, bin_mr, err_lst, completeness, max_mag_syn,
             # was found.
             new_bs_indx.append([i])
             # Update best solution for passing along in the 'Elitism' block.
-            best_sol = generation[:n_el]
+            best_sol = generation[:N_el]
             # Reset counter.
             best_sol_count = 0
 
@@ -419,7 +420,7 @@ def main(lkl_method, e_max, bin_mr, err_lst, completeness, max_mag_syn,
         lkl_old[1].append(np.mean(np.asarray(lkl)[np.asarray(lkl) < 9.9e08]))
 
         if flag_print_perc:
-            percentage_complete = (100.0 * (i + 1) / n_gen)
+            percentage_complete = (100.0 * (i + 1) / N_gen)
             while len(milestones) > 0 and percentage_complete >= milestones[0]:
                 print (" {:>3}%  L={:.1f} ({:g}, {:g}, {:g}, {:g}, {:g},"
                        " {:g})".format(milestones[0], lkl[0], *generation[0]))

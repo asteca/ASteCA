@@ -26,9 +26,9 @@ def plot_observed_cluster(
             gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
             x_ax, y_ax, v_min_mp, v_max_mp, diag_fit_inv,
             err_bar, lkl_method, hess_data, shift_isoch)
-    except:
-        import traceback
-        print traceback.format_exc()
+    except Exception:
+        # import traceback
+        # print traceback.format_exc()
         print("  WARNING: error when plotting MPs on cluster's "
               "photometric diagram.")
 
@@ -53,16 +53,15 @@ def plot_observed_cluster(
                 sca, cax=cbaxes, ticks=[v_min_mp, v_max_mp],
                 orientation='horizontal')
             cbar.ax.tick_params(labelsize=9)
-    except:
+    except Exception:
         # import traceback
         # print traceback.format_exc()
         print("  WARNING: error when plotting colorbar on cluster's "
               "photometric diagram.")
 
 
-def main(
-        npd, cld, pd, synth_clst, shift_isoch, fit_params_r,
-        fit_errors_r, cl_max_mag, err_lst, **kwargs):
+def main(npd, cld, pd, synth_clst, shift_isoch, fit_params_r, fit_errors_r,
+         cl_max_mag, err_lst, **kwargs):
     '''
     Make D2 block plots.
     '''
@@ -71,7 +70,6 @@ def main(
         gs = gridspec.GridSpec(10, 12)
         add_version_plot.main()
 
-        best_fit_algor, lkl_method, bin_method, N_b = pd['bf_params']
         x_ax, y_ax, y_axis = prep_plots.ax_names(pd['filters'], pd['colors'])
         # TODO using first magnitude and color defined
         firts_col = list(itertools.chain.from_iterable(zip(*cl_max_mag)[5]))
@@ -79,17 +77,17 @@ def main(
         x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd =\
             prep_plots.diag_limits(y_axis, firts_col, first_mag)
         hess_data = prep_plots.get_hess(
-            lkl_method, bin_method, cl_max_mag, synth_clst)
+            pd['lkl_method'], pd['lkl_binning'], cl_max_mag, synth_clst)
 
         arglist = [
             # hess_diag_pl: Hess diagram 'observed - synthetic'
             [gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
-             lkl_method, hess_data],
+             pd['lkl_method'], hess_data],
             # pl_bf_synth_cl: Best fit synthetic cluster obtained.
             [gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
              synth_clst, hess_data, pd['IMF_name'], pd['R_V'],
              fit_params_r, fit_errors_r, shift_isoch,
-             lkl_method, bin_method, pd['cmd_evol_tracks'],
+             pd['lkl_method'], pd['lkl_binning'], pd['cmd_evol_tracks'],
              pd['evol_track']]
         ]
         for n, args in enumerate(arglist):
@@ -103,7 +101,7 @@ def main(
         plot_observed_cluster(
             cld, pd, fig, gs, cl_max_mag, x_min_cmd, x_max_cmd, y_min_cmd,
             y_max_cmd, err_lst, v_min_mp, v_max_mp, plot_colorbar,
-            diag_fit_inv, lkl_method, hess_data, shift_isoch)
+            diag_fit_inv, pd['lkl_method'], hess_data, shift_isoch)
 
         # Generate output file.
         plt.savefig(

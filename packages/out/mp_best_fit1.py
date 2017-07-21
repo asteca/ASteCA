@@ -7,13 +7,12 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy.ndimage.filters import gaussian_filter
 
 
-def pl_ga_lkl(gs, l_min_max, lkl_old, model_done, new_bs_indx, ga_params, N_b):
+def pl_ga_lkl(gs, l_min_max, lkl_old, model_done, new_bs_indx, N_pop, N_gen,
+              fit_diff, cross_prob, cross_sel, mut_prob, N_el, N_ei, N_es,
+              N_b):
     '''
     Likelihood evolution for the GA.
     '''
-    # Genetic algorithm parameters.
-    n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es = ga_params
-
     ax = plt.subplot(gs[0:2, 0:4])
     plt.xlim(-0.5, len(lkl_old[0]) + int(0.01 * len(lkl_old[0])))
     plt.ylim(l_min_max[0], l_min_max[1])
@@ -26,10 +25,10 @@ def pl_ga_lkl(gs, l_min_max, lkl_old, model_done, new_bs_indx, ga_params, N_b):
     # Add text box.
     text1 = '$N_{total} = %.1e\,;\,N_{btst} = %d$' '\n' % \
         (len(model_done[0]), N_b)
-    text2 = '$n_{gen}=%d\,;\,n_{pop}=%d$' '\n' % (n_gen, n_pop)
-    text3 = '$f_{dif}=%0.2f\,;\,cr_{sel}=%s$' '\n' % (fdif, cr_sel)
-    text4 = '$p_{cross}=%0.2f\,;\,p_{mut}=%0.2f$' '\n' % (p_cross, p_mut)
-    text5 = '$n_{el}=%d\,;\,n_{ei}=%d\,;\,n_{es}=%d$' % (n_el, n_ei, n_es)
+    text2 = '$n_{gen}=%d\,;\,n_{pop}=%d$' '\n' % (N_gen, N_pop)
+    text3 = '$f_{dif}=%0.2f\,;\,cr_{sel}=%s$' '\n' % (fit_diff, cross_sel)
+    text4 = '$p_{cross}=%0.2f\,;\,p_{mut}=%0.2f$' '\n' % (cross_prob, mut_prob)
+    text5 = '$n_{el}=%d\,;\,n_{ei}=%d\,;\,n_{es}=%d$' % (N_el, N_ei, N_es)
     text = text1 + text2 + text3 + text4 + text5
     ob = offsetbox.AnchoredText(text, loc=1, prop=dict(size=12))
     ob.patch.set(boxstyle='square,pad=0.', alpha=0.85)

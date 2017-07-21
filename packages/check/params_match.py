@@ -4,16 +4,15 @@ import numpy as np
 from os.path import isdir
 
 
-def check(max_mag, IMF_name, R_V, evol_track, bin_methods, bf_flag, bf_params,
-          cmd_evol_tracks, iso_paths, imf_funcs, par_ranges, bin_mr,
-          ga_params, **kwargs):
+def check(bf_flag, best_fit_algor, lkl_method, lkl_binning, N_bootstrap,
+          evol_track, max_mag, IMF_name, R_V, bin_mr, bin_methods,
+          cmd_evol_tracks, iso_paths, imf_funcs, par_ranges,
+          N_pop, N_gen, fit_diff, cross_prob, cross_sel, mut_prob, N_el,
+          N_ei, N_es, **kwargs):
     """
     Check all parameters related to the search for the best synthetic cluster
     match.
     """
-
-    # Unpack.
-    best_fit_algor, lkl_method, bin_method, N_b = bf_params
     # If best fit method is set to run.
     if bf_flag:
 
@@ -24,32 +23,31 @@ def check(max_mag, IMF_name, R_V, evol_track, bin_methods, bf_flag, bf_params,
 
         if best_fit_algor == 'genet':
             # Check GA input params.
-            n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es = \
-                ga_params
             # First set of params.
-            oper_dict0 = {'n_pop': n_pop, 'n_gen': n_gen, 'n_el': n_el,
-                          'n_ei': n_ei, 'n_es': n_es}
+            oper_dict0 = {'n_pop': N_pop, 'n_gen': N_gen, 'n_el': N_el,
+                          'n_ei': N_ei, 'n_es': N_es}
             for oper in oper_dict0:
                 if oper_dict0[oper] < 1:
                     sys.exit("ERROR: number must be greater than zero in\n"
                              "'{}' GA parameter; {} is set.".format(
                                  oper, oper_dict0[oper]))
             # Second set of params.
-            oper_dict1 = {'fdif': fdif, 'p_cross': p_cross, 'p_mut': p_mut}
+            oper_dict1 = {'fdif': fit_diff, 'p_cross': cross_prob,
+                          'p_mut': mut_prob}
             for oper in oper_dict1:
                 if oper_dict1[oper] < 0. or oper_dict1[oper] > 1.:
                     sys.exit("ERROR: GA '{}' parameter is out of the valid\n"
                              "[0., 1.] range; {} is set.".format(
                                  oper, oper_dict1[oper]))
             # Handle separately.
-            if cr_sel not in ('1P', '2P'):
+            if cross_sel not in ('1P', '2P'):
                 sys.exit("ERROR: GA 'cr_sel' operator is not a valid choice;\n"
-                         "'{}' is set.".format(cr_sel))
+                         "'{}' is set.".format(cross_sel))
             # Number of solutions to pass to the nest generation (elitism)
-            if n_el >= n_pop:
+            if N_el >= N_pop:
                 sys.exit("ERROR: GA 'n_el' must be smaller than 'n_pop';\n"
                          "'{}' and '{}' are set respectively.".format(
-                             n_el, n_pop))
+                             N_el, N_pop))
 
         # Check likelihood method selected.
         if lkl_method not in ('tolstoy', 'dolphin', 'mighell'):
@@ -57,10 +55,10 @@ def check(max_mag, IMF_name, R_V, evol_track, bin_methods, bf_flag, bf_params,
                      " match a valid input.".format(lkl_method))
 
         # Check binning method selected.
-        if lkl_method != 'tolstoy' and bin_method not in bin_methods:
+        if lkl_method != 'tolstoy' and lkl_binning not in bin_methods:
             sys.exit("ERROR: the selected binning method '{}' for the 'Best"
                      "\nfit' function does not match a valid input."
-                     .format(bin_method))
+                     .format(lkl_binning))
 
         # Check if /isochrones folder exists.
         for iso_path in iso_paths:

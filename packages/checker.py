@@ -11,7 +11,7 @@ from check import params_pval
 from check import params_decont
 
 
-def check_all(mypath, file_end):
+def check_all(mypath, first_run_flag, file_end):
     """
     Checks that the necessary files are in place, the parameters stored
     in the input file are valid, and that the ranges given for the cluster
@@ -72,5 +72,10 @@ def check_all(mypath, file_end):
 
     print("Full check done.\n\nNumber of clusters to analyze: {}\n".format(
         len(cl_files)))
+
+    # Change these values if this is the first run, for quick processing.
+    if first_run_flag:
+        pd['pvalue_runs'], pd['bayesda_runs'], pd['N_bootstrap'],\
+            pd['N_pop'], pd['N_gen'] = 2, 2, 2, 20, 20
 
     return cl_files, pd

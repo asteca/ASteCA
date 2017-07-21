@@ -49,7 +49,7 @@ def main():
     mypath = realpath(join(getcwd(), dirname(__file__)))[:-8]
 
     # Check .first_run file.
-    check_1strun(mypath)
+    first_run_flag = check_1strun(mypath)
 
     # Read command-line argument.
     file_end = num_exec()
@@ -57,7 +57,7 @@ def main():
     # Checker function to verify that things are in place before running.
     # As part of the checking process, and to save time, the isochrone
     # files are read and stored here.
-    cl_files, pd = check_all(mypath, file_end)
+    cl_files, pd = check_all(mypath, first_run_flag, file_end)
 
     # Import here to ensure the check has passed and all the necessary
     # packages are installed.

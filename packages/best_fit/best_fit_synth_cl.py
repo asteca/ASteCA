@@ -47,7 +47,8 @@ def max_mag_cut(cl_reg_fit, max_mag):
 def params_errors(
     lkl_method, e_max, bin_mr, err_lst, completeness, fundam_params,
         cl_max_mag, max_mag_syn, theor_tracks, R_V, ext_coefs, st_dist_mass,
-        N_fc, ga_params, bin_method, best_fit_algor, isoch_fit_params, N_b):
+        N_fc, N_pop, N_gen, fit_diff, cross_prob, cross_sel, mut_prob, N_el,
+        N_ei, N_es, lkl_binning, best_fit_algor, isoch_fit_params, N_b):
     '''
     Obtain errors for the fitted parameters.
     '''
@@ -72,7 +73,8 @@ def params_errors(
             isoch_fit_errors = bootstrap.main(
                 lkl_method, e_max, bin_mr, err_lst, completeness,
                 fundam_params, cl_max_mag, max_mag_syn, theor_tracks, R_V,
-                ext_coefs, st_dist_mass, N_fc, ga_params, bin_method,
+                ext_coefs, st_dist_mass, N_fc, N_pop, N_gen, fit_diff,
+                cross_prob, cross_sel, mut_prob, N_el, N_ei, N_es, lkl_binning,
                 best_fit_algor, N_b)
         else:
             print('Skip bootstrap process.')
@@ -82,9 +84,11 @@ def params_errors(
     return isoch_fit_errors
 
 
-def main(clp, bf_flag, er_params, bf_params, max_mag, IMF_name, m_high, R_V,
-         bin_mr, ga_params, fundam_params, cmd_systs, all_syst_filters,
-         filters, colors, theor_tracks, **kwargs):
+def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning, N_bootstrap,
+         max_mag, IMF_name, m_high, R_V, bin_mr, fundam_params, N_pop, N_gen,
+         fit_diff, cross_prob, cross_sel, mut_prob, N_el, N_ei, N_es,
+         cmd_systs, all_syst_filters, filters, colors, theor_tracks,
+         er_params, **kwargs):
     '''
     Perform a best fitting process to find the cluster's fundamental
     parameters.
@@ -95,7 +99,6 @@ def main(clp, bf_flag, er_params, bf_params, max_mag, IMF_name, m_high, R_V,
 
         err_lst, cl_reg_fit, completeness = clp['err_lst'],\
             clp['cl_reg_fit'], clp['completeness']
-        best_fit_algor, lkl_method, bin_method, N_b = bf_params
         e_max = er_params[1]
 
         # Remove stars beyond the maximum magnitude limit, if it was set.
@@ -103,7 +106,7 @@ def main(clp, bf_flag, er_params, bf_params, max_mag, IMF_name, m_high, R_V,
 
         # Process observed cluster. This list contains data used by the
         # likelihoods, and for plotting.
-        obs_clust = obs_clust_prepare.main(cl_max_mag, lkl_method, bin_method)
+        obs_clust = obs_clust_prepare.main(cl_max_mag, lkl_method, lkl_binning)
 
         # DELETE
         # print(filters)
@@ -135,7 +138,7 @@ def main(clp, bf_flag, er_params, bf_params, max_mag, IMF_name, m_high, R_V,
         if best_fit_algor == 'brute':
 
             print('Using Brute Force algorithm ({}).'.format(
-                lkl_method + '; ' + bin_method if lkl_method == 'dolphin'
+                lkl_method + '; ' + lkl_binning if lkl_method == 'dolphin'
                 else lkl_method))
             # Brute force algorithm.
             isoch_fit_params = brute_force_algor.main(
@@ -146,7 +149,7 @@ def main(clp, bf_flag, er_params, bf_params, max_mag, IMF_name, m_high, R_V,
         elif best_fit_algor == 'genet':
 
             print('Using Genetic Algorithm ({}).'.format(
-                lkl_method + '; ' + bin_method if lkl_method == 'dolphin'
+                lkl_method + '; ' + lkl_binning if lkl_method == 'dolphin'
                 else lkl_method))
             # Genetic algorithm.
             # Let the GA algor know this call comes from the main function
@@ -155,7 +158,8 @@ def main(clp, bf_flag, er_params, bf_params, max_mag, IMF_name, m_high, R_V,
             isoch_fit_params = genetic_algorithm.main(
                 lkl_method, e_max, bin_mr, err_lst, completeness, max_mag_syn,
                 fundam_params, obs_clust, theor_tracks, R_V, ext_coefs,
-                st_dist_mass, N_fc, ga_params, flag_print_perc)
+                st_dist_mass, N_fc, N_pop, N_gen, fit_diff, cross_prob,
+                cross_sel, mut_prob, N_el, N_ei, N_es, flag_print_perc)
 
         print("Best fit parameters obtained.")
 
@@ -163,8 +167,9 @@ def main(clp, bf_flag, er_params, bf_params, max_mag, IMF_name, m_high, R_V,
         isoch_fit_errors = params_errors(
             lkl_method, e_max, bin_mr, err_lst, completeness, fundam_params,
             cl_max_mag, max_mag_syn, theor_tracks, R_V, ext_coefs,
-            st_dist_mass, N_fc, ga_params, bin_method, best_fit_algor,
-            isoch_fit_params, N_b)
+            st_dist_mass, N_fc, N_pop, N_gen, fit_diff, cross_prob, cross_sel,
+            mut_prob, N_el, N_ei, N_es, lkl_binning, best_fit_algor,
+            isoch_fit_params, N_bootstrap)
     else:
         # Pass empty lists to make_plots.
         print('Skip parameters fitting process.')
