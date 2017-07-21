@@ -254,7 +254,7 @@ DA   auto      200
 #   selected. Otherwise this parameter is not used.
 #
 #    mode    binning     prob_min
-RM   local    fixed          0.5
+RM   local    fixed           0.5
 ################################################################################
 
 

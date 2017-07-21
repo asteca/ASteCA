@@ -75,7 +75,8 @@ def check_all(mypath, first_run_flag, file_end):
 
     # Change these values if this is the first run, for quick processing.
     if first_run_flag:
-        pd['pvalue_runs'], pd['bayesda_runs'], pd['N_bootstrap'],\
-            pd['N_pop'], pd['N_gen'] = 2, 2, 2, 20, 20
+        pd['pvalue_mode'], pd['pvalue_runs'], pd['bayesda_mode'],\
+            pd['bayesda_runs'], pd['N_bootstrap'], pd['N_pop'], pd['N_gen'] =\
+            'manual', 2, 'manual', 2, 2, 50, 10
 
     return cl_files, pd
