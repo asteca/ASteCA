@@ -6,14 +6,14 @@ import obs_clust_prepare
 from .. import update_progress
 
 
-def resample_replacement(obs_clust):
+def resample_replacement(cl_max_mag):
     '''
     Resamples the observed cluster with replacement. Used by the bootstrap
     process.
     '''
-    obs_cl = [random.choice(obs_clust) for _ in obs_clust]
+    cl_max_mag_ran = [random.choice(cl_max_mag) for _ in cl_max_mag]
 
-    return obs_cl
+    return cl_max_mag_ran
 
 
 def main(lkl_method, e_max, bin_mr, err_lst, completeness, fundam_params,
@@ -34,10 +34,10 @@ def main(lkl_method, e_max, bin_mr, err_lst, completeness, fundam_params,
     for i in range(N_b):
 
         # Resample cluster with replacement.
-        obs_cl_r = resample_replacement(cl_max_mag)
+        cl_max_mag_ran = resample_replacement(cl_max_mag)
         # Obtain prepared observed cluster according to the likelihood method
         # selected.
-        obs_cl = obs_clust_prepare.main(obs_cl_r, lkl_method, bin_method)
+        obs_cl = obs_clust_prepare.main(cl_max_mag_ran, lkl_method, bin_method)
 
         # Algorithm selected.
         if best_fit_algor == 'genet':
