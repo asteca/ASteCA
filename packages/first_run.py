@@ -130,7 +130,7 @@ def check_1strun(mypath):
                     fw.write("4")
         else:
             print("ERROR: No 'packages/.first_run' file present.\n")
-    except:
+    except Exception:
         print("ERROR: Could not check/copy data files and folders\n"
               "to root folder.\n")
         print(traceback.format_exc())
