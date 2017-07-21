@@ -46,10 +46,10 @@ def main(cl_max_mag, lkl_method, bin_method):
         # Obtain bin edges for each dimension, defining a grid.
         bin_edges = bin_edges_f(bin_method, mags_cols_cl)
 
-        # Obtain histogram for observed cluster. Put all magnitudes
-        # and colors into a single list.
-        cl_histo = np.histogramdd(
-            mags_cols_cl[0] + mags_cols_cl[1], bins=bin_edges)[0]
+        # Put all magnitudes and colors into a single list.
+        obs_mags_cols = mags_cols_cl[0] + mags_cols_cl[1]
+        # Obtain histogram for observed cluster.
+        cl_histo = np.histogramdd(obs_mags_cols, bins=bin_edges)[0]
 
         # Flatten N-dimensional histogram.
         cl_histo_f = np.array(cl_histo).ravel()
@@ -62,6 +62,11 @@ def main(cl_max_mag, lkl_method, bin_method):
         # 'Dolphin' likelihood.
         cl_histo_f_z = cl_histo_f[cl_z_idx]
 
-        obs_clust = [bin_edges, cl_histo, cl_histo_f, cl_z_idx, cl_histo_f_z]
+        # sum(n_i * ln(n_i)) - N
+        dolphin_cst = np.sum(cl_histo_f_z * np.log(cl_histo_f_z)) -\
+            len(obs_mags_cols[0])
+
+        obs_clust = [bin_edges, cl_histo, cl_histo_f, cl_z_idx, cl_histo_f_z,
+                     dolphin_cst]
 
     return obs_clust

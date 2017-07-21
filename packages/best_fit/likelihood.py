@@ -104,7 +104,7 @@ def dolphin(synth_clust, obs_clust):
         bin_edges = obs_clust[0]
         # Indexes of n_i=0 elements in flattened observed cluster array,
         # and the array with no n_i=0 elements.
-        cl_z_idx, cl_histo_f_z = obs_clust[-2:]
+        cl_z_idx, cl_histo_f_z, dolphin_cst = obs_clust[-3:]
 
         # Histogram of the synthetic cluster, using the bin edges calculated
         # with the observed cluster.
@@ -120,8 +120,10 @@ def dolphin(synth_clust, obs_clust):
             1. / max(np.count_nonzero(syn_histo_f_z == 0), 1.)
 
         # Obtain inverse logarithmic 'Poisson likelihood ratio'.
-        dolph_lkl = synth_phot[0].size -\
-            np.sum(cl_histo_f_z * np.log(syn_histo_f_z))
+        # 2 * (M - sum(n_i * ln(m_i)) + sum(n_i * ln(n_i)) - N)
+        dolph_lkl = 2. * (
+            synth_phot[0].size - np.sum(cl_histo_f_z * np.log(syn_histo_f_z)) +
+            dolphin_cst)
 
     return dolph_lkl
 
