@@ -66,6 +66,7 @@ def main(cl_file, pd):
     # Return cluster's parameters dictionary 'clp'.
     clp = histo_2d.main(**cld)
 
+    # Gaussian filtered 2D x,y histograms.
     clp = xy_density.main(clp, **pd)
 
     make_A1_plot.main(npd, cld, pd, **clp)
