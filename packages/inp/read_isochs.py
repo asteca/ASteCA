@@ -83,12 +83,16 @@ def filters_and_extra_pars(
     try:
         met_f_ages = read_met_file(
             met_f, age_values, line_start, age_format, ids)
-    except:
+    except Exception:
         print traceback.format_exc()
         sys.exit("Error reading {} from \n'{}'\n"
                  "metallicity file.".format(identif, met_f))
 
     return met_f_ages
+
+
+def checkEqual(lst):
+    return lst[1:] == lst[:-1]
 
 
 def main(met_f_filter, age_values, evol_track, all_syst_filters):
@@ -144,5 +148,14 @@ def main(met_f_filter, age_values, evol_track, all_syst_filters):
             met_fls[0], -1)
         # Store in list.
         extra_pars.append(e_pars)
+
+    # Check that all metallicity files contain the same number of ages.
+    if not checkEqual([len(_) for _ in isoch_list]):
+        for i, met_fls in enumerate(zip(*met_f_filter)):
+            print("Metallicity file:")
+            print(met_fls[0])
+            print("contains {} ages".format(len(isoch_list[i])))
+        sys.exit("ERROR: not all metallicity files contain the same number\n"
+                 "of defined ages.")
 
     return isoch_list, extra_pars

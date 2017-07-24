@@ -31,7 +31,7 @@ def ranges_files_check(iso_paths, par_ranges, **kwargs):
         # Get parameters values defined.
         param_ranges, met_f_filter, met_values, age_values = \
             met_ages_values.main(iso_paths, par_ranges)
-    except:
+    except Exception:
         print traceback.format_exc()
         sys.exit("\nERROR: error storing metallicity files.")
 
