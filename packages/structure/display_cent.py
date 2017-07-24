@@ -29,7 +29,7 @@ def main(x, y, mmag, center_cl, cent_bin, h_filter, coords):
     ax1.grid(b=True, which='minor', color='k', linestyle='--', zorder=3)
     plt.axvline(x=cent_bin[0], linestyle='--', color='white')
     plt.axhline(y=cent_bin[1], linestyle='--', color='white')
-    plt.imshow(h_filter.transpose(), origin='lower')
+    plt.imshow(h_filter.transpose(), origin='lower', cmap=plt.get_cmap('OrRd'))
     if coord == 'deg':
         # If RA is used, invert axis.
         plt.gca().invert_xaxis()

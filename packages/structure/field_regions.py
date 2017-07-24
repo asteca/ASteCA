@@ -84,11 +84,6 @@ def main(clp, run_mode, fr_number, cl_f_regs_semi, freg_flag_semi, **kwargs):
     Define as many field regions as requested (or permitted) around this empty
     region.
     '''
-
-    hist_2d, xedges, yedges, bin_width, cent_bin, cl_area, stars_out = [
-        clp[_] for _ in ['hist_2d', 'xedges', 'yedges', 'bin_width',
-                         'cent_bin', 'cl_area', 'stars_out']]
-
     # Number of field regions defined in 'params_input.dat' file.
     f_regs_num = fr_number
 
@@ -99,11 +94,12 @@ def main(clp, run_mode, fr_number, cl_f_regs_semi, freg_flag_semi, **kwargs):
             f_regs_num = cl_f_regs_semi
 
     # Get area as total number of bins in 2D hist times the area of each bin.
-    total_area = len(hist_2d[0]) * len(hist_2d) * (bin_width ** 2)
+    total_area = len(clp['hist_2d'][0][0]) * len(clp['hist_2d'][0]) *\
+        (clp['bin_width'] ** 2)
     # Define empty area around the cluster region.
-    sq_area = 2. * cl_area
+    sq_area = 2. * clp['cl_area']
     # Maximum number of field regions possible.
-    f_regs_max = int((total_area - sq_area) / cl_area)
+    f_regs_max = int((total_area - sq_area) / clp['cl_area'])
 
     # If the remaining area in the frame after subtracting the cluster region
     # is smaller than the cluster's area, this means that the cluster is either
@@ -144,11 +140,11 @@ def main(clp, run_mode, fr_number, cl_f_regs_semi, freg_flag_semi, **kwargs):
 
     # Calculate number of bins such that their combined area equals the
     # larger area around the cluster defined above.
-    num_bins_area = int(round(sq_area / (bin_width ** 2), 0))
+    num_bins_area = int(round(sq_area / (clp['bin_width'] ** 2), 0))
     # Obtain index of spiral bin where field regions should begin to be formed.
     # dummy_lst is not important here.
-    sp_indx, dummy_lst = spiral_index(spiral, 0, hist_2d, cent_bin,
-                                      num_bins_area)
+    sp_indx, dummy_lst = spiral_index(
+        spiral, 0, clp['hist_2d'][0], clp['bin_cent'], num_bins_area)
 
     # Obtain field regions only if it is possible.
     # This list holds all the field regions.
@@ -157,17 +153,19 @@ def main(clp, run_mode, fr_number, cl_f_regs_semi, freg_flag_semi, **kwargs):
 
         # Obtain filled 2D histogram for the field with star's values attached
         # to each bin.
-        h_manual = field_manual_histo.main(stars_out, xedges, yedges)
+        h_manual = field_manual_histo.main(
+            clp['stars_out'], clp['xedges'], clp['yedges'])
 
         # This ensures that the areas of the field regions are equal
         # to the cluster area.
-        num_bins_area = int(cl_area / (bin_width ** 2))
+        num_bins_area = int(clp['cl_area'] / (clp['bin_width'] ** 2))
 
         for _ in range(f_regions):
             # Retrieve spiral index where this field region should end and
             # coordinates of its bins.
-            sp_indx, sp_coords = spiral_index(spiral, sp_indx, hist_2d,
-                                              cent_bin, num_bins_area)
+            sp_indx, sp_coords = spiral_index(
+                spiral, sp_indx, clp['hist_2d'][0], clp['bin_cent'],
+                num_bins_area)
             # Fill spiral section for this field region with all the stars
             # that fall inside of it.
             f_region = spiral_region(h_manual, sp_coords)

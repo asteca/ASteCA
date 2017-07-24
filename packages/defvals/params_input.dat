@@ -101,23 +101,16 @@ MF  false   /path/to/folder
 
 # Center assignment function.
 #
-# * mode: auto / manual
-#   - auto: the bin width of the (x,y) 2D histogram will be obtained as 1% of
-#     the minimum x,y range of the observed frame. This value will affect both
-#     the radial density profile generation, and thus the estimation of the
-#     cluster's radius.
-#   - manual: set the bin width via the 'bin_width' parameter.
+# * stddev: (float) the standard deviation of the Gaussian filter applied to
+#   the 2-dimensional (x,y) histogram of stars coordinates.
 #
-# * bin_width: width of the 2D histogram bin in pixels or degrees. Otherwise
-#   ignored.
-#
-#    mode   bin_width
-CH   auto         20.
+#    stddev
+CH       3.
 
 # Radius assignment function.
 #
-# * mode: low / mid / high. This parameter determines how aggressively
-#   the algorithm assigns the radius for the cluster.
+# * mode: low / mid / high. Determines how aggressively the algorithm assigns
+#   the radius for the cluster.
 #   - low: will favor smaller radii. Useful when the cluster region is
 #     very contaminated, to prevent artificially large radii.
 #   - mid: (default) balanced option.

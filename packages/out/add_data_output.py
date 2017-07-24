@@ -15,12 +15,12 @@ def flatten(l):
             yield el
 
 
-def main(npd, pd, flag_center_med, flag_center_std, flag_center_manual,
+def main(npd, pd, flag_center_std, flag_center_manual,
          flag_delta_total, flag_not_stable, flag_delta, flag_radius_manual,
          flag_2pk_conver, flag_3pk_conver, flag_memb_par, flag_num_memb_low,
          err_flags, K_memb_num, K_conct_par, cont_index, n_memb, memb_par,
-         n_memb_da, frac_cl_area, pval_test_params, integ_mag, clust_cent,
-         e_cent, clust_rad, e_rad, core_rad, e_core, tidal_rad, e_tidal,
+         n_memb_da, frac_cl_area, pval_test_params, integ_mag, kde_cent,
+         clust_rad, e_rad, core_rad, e_core, tidal_rad, e_tidal,
          fit_params_r, fit_errors_r, **kwargs):
     '''
     Add data obtained to the 'data_output.dat' file.
@@ -33,7 +33,7 @@ def main(npd, pd, flag_center_med, flag_center_std, flag_center_manual,
     err_all_fallback, err_max_fallback = err_flags
 
     # Create list containing all the flags.
-    flags_list = [flag_center_manual, flag_radius_manual, flag_center_med,
+    flags_list = [flag_center_manual, flag_radius_manual,
                   flag_center_std, flag_delta_total, flag_not_stable,
                   flag_delta, flag_3pk_no_conver, err_all_fallback,
                   err_max_fallback, flag_num_memb_low, flag_memb_par]
@@ -47,11 +47,10 @@ def main(npd, pd, flag_center_med, flag_center_std, flag_center_manual,
 
     # Round structure parameters.
     cr_r = ["{:.0f}".format(_) for _ in
-            [clust_cent[0], clust_cent[1], clust_rad, core_rad, tidal_rad]]
-    cr_e = ["{:.0f}".format(_) for _ in
-            [e_cent[0], e_cent[1], e_rad, e_core, e_tidal]]
+            [kde_cent[0], kde_cent[1], clust_rad, core_rad, tidal_rad]]
+    cr_e = ["{:.0f}".format(_) for _ in [e_rad, e_core, e_tidal]]
     # Interwine these lists.
-    cre_r = [item for t in zip(cr_r, cr_e) for item in t]
+    cre_r = cr_r[:2] + [item for t in zip(cr_r[2:], cr_e) for item in t]
     # Rounded cluster parameters and errors.
     cpe_r = [item for t in zip(fit_params_r, fit_errors_r) for item in t]
 
@@ -65,14 +64,14 @@ def main(npd, pd, flag_center_med, flag_center_std, flag_center_manual,
 
     # Write values to file.
     with open(out_file_name, "a") as f_out:
-        f_out.write('''{:<16} {:>8} {:>8} {:>8} {:>8} {:>8} \
+        f_out.write('''{:<16} {:>8} {:>8} {:>8} \
 {:>8} {:>8} {:>8} {:>8} {:>8} {:>8.2f} {:>7.2f} {:>10.0f} \
 {:>10.0f} {:>10.0f} {:>9.2f} {:>7.2f} {:>8.2f} {:>8.2f} \
 {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} \
 {:>8} {:>8} {:>8} {:>8}'''.format(*line_f))
         # Flags.
-        f_out.write('''{:>8} {:>2} {:>3} {:>2} {:>2} {:>2} {:>2} {:>2} {:>2} \
-{:>2} {:>2} {:>3} {:>3}'''.format(*int_flags))
+        f_out.write('''{:>8} {:>2} {:>3} {:>2} {:>2} {:>2} {:>2} {:>2} \
+{:>2} {:>2} {:>2} {:>3}'''.format(*int_flags))
         f_out.write('\n')
 
     print("Analysis results added to output file.")

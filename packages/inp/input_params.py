@@ -75,8 +75,7 @@ def main(mypath, pars_f_path):
 
                 # Structure functions parameters.
                 elif reader[0] == 'CH':
-                    center_method = str(reader[1])
-                    center_bw = float(reader[2])
+                    center_stddev = float(reader[1])
                 elif reader[0] == 'CR':
                     radius_method = str(reader[1])
                 elif reader[0] == 'KP':
@@ -195,9 +194,8 @@ def main(mypath, pars_f_path):
         'flag_make_plot': flag_make_plot, 'plot_frmt': plot_frmt,
         'plot_dpi': plot_dpi,
         'flag_move_file': flag_move_file, 'done_dir': done_dir,
-        'center_method': center_method, 'center_bw': center_bw,
-        'radius_method': radius_method, 'kp_flag': kp_flag,
-        'fr_number': fr_number, 'im_flag': im_flag,
+        'center_stddev': center_stddev, 'radius_method': radius_method,
+        'kp_flag': kp_flag, 'fr_number': fr_number, 'im_flag': im_flag,
         'pvalue_mode': pvalue_mode, 'pvalue_runs': pvalue_runs,
         # Decontamination algorithm parameters.
         'bayesda_mode': bayesda_mode, 'bayesda_runs': bayesda_runs,

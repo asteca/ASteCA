@@ -66,7 +66,7 @@ def pl_mp_histo(
 
 
 def pl_chart_mps(gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
-                 y_zmax, clust_cent, clust_rad, field_dens, flag_decont_skip,
+                 y_zmax, kde_cent, clust_rad, field_dens, flag_decont_skip,
                  v_min_mp, v_max_mp, chart_fit_inv, chart_no_fit_inv,
                  out_clust_rad, mode_fld_clean, local_bin):
     '''
@@ -87,7 +87,7 @@ def pl_chart_mps(gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
     # Set minor ticks
     ax.minorticks_on()
     # Radius
-    circle = plt.Circle((clust_cent[0], clust_cent[1]), clust_rad, color='red',
+    circle = plt.Circle((kde_cent[0], kde_cent[1]), clust_rad, color='red',
                         fill=False)
     fig.gca().add_artist(circle)
     # If DA was skipped, print info on 'local' method here.

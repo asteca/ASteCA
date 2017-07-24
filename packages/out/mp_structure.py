@@ -6,7 +6,7 @@ from itertools import cycle
 from ..structure import king_prof_funcs as kpf
 
 
-def pl_hist_g(gs, fig, asp_ratio, x_name, y_name, coord, cent_bin, clust_rad,
+def pl_center(gs, fig, asp_ratio, x_name, y_name, coord, bin_cent, clust_rad,
               bin_width, hist_2d_g):
     '''
     2D Gaussian convolved histogram.
@@ -16,11 +16,12 @@ def pl_hist_g(gs, fig, asp_ratio, x_name, y_name, coord, cent_bin, clust_rad,
     plt.xlabel('{} (bins)'.format(x_name), fontsize=12)
     plt.ylabel('{} (bins)'.format(y_name), fontsize=12)
     ax.minorticks_on()
-    plt.axvline(x=cent_bin[0], linestyle='--', color='white')
-    plt.axhline(y=cent_bin[1], linestyle='--', color='white')
+    plt.axvline(x=bin_cent[0], linestyle='--', color='white')
+    plt.axhline(y=bin_cent[1], linestyle='--', color='white')
     # Radius
-    circle = plt.Circle((cent_bin[0], cent_bin[1]), clust_rad / bin_width,
-                        color='w', fill=False)
+    circle = plt.Circle(
+        (bin_cent[0], bin_cent[1]), clust_rad / bin_width, color='w',
+        fill=False)
     fig.gca().add_artist(circle)
     # Add text box.
     text = 'Bin $\simeq$ {0:g} {1}'.format(round(bin_width, 1), coord)
@@ -126,7 +127,7 @@ def pl_rad_dens(gs, mode, radii, rdp_points, field_dens, coord, clust_name,
 
 def pl_full_frame(
         gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max, asp_ratio,
-        clust_cent, clust_rad, e_cent, x, y, st_sizes_arr, core_rad, e_core,
+        kde_cent, clust_rad, x, y, st_sizes_arr, core_rad, e_core,
         tidal_rad, e_tidal, K_conct_par, flag_2pk_conver, flag_3pk_conver):
     '''
     x,y finding chart of full frame
@@ -145,33 +146,31 @@ def pl_full_frame(
     # Set minor ticks
     ax.minorticks_on()
     # Plot r_cl.
-    circle = plt.Circle((clust_cent[0], clust_cent[1]), clust_rad, color='r',
+    circle = plt.Circle((kde_cent[0], kde_cent[1]), clust_rad, color='r',
                         fill=False, lw=1.5)
     fig.gca().add_artist(circle)
     if flag_3pk_conver is True:
         # Plot tidal radius.
         circle = plt.Circle(
-            (clust_cent[0], clust_cent[1]), tidal_rad, color='g', fill=False,
+            (kde_cent[0], kde_cent[1]), tidal_rad, color='g', fill=False,
             lw=1.5)
         fig.gca().add_artist(circle)
         # Plot core radius.
         if core_rad > 0:
             circle = plt.Circle(
-                (clust_cent[0], clust_cent[1]), core_rad, color='g',
+                (kde_cent[0], kde_cent[1]), core_rad, color='g',
                 fill=False, ls='dashed', lw=1.)
             fig.gca().add_artist(circle)
     elif flag_2pk_conver is True:
         # Plot core radius.
         if core_rad > 0:
             circle = plt.Circle(
-                (clust_cent[0], clust_cent[1]), core_rad, color='g',
+                (kde_cent[0], kde_cent[1]), core_rad, color='g',
                 fill=False, ls='dashed', lw=1.)
             fig.gca().add_artist(circle)
     # Add text box
-    text1 = '${0}_{{cent}} = {1:.0f} \pm {2:.0f}\,{3}$'.format(
-        x_name, clust_cent[0], e_cent[0], coord)
-    text2 = '${0}_{{cent}} = {1:.0f} \pm {2:.0f}\,{3}$'.format(
-        y_name, clust_cent[1], e_cent[1], coord)
+    text1 = '${0}_{{cent}} = {1:.0f}\,{2}$'.format(x_name, kde_cent[0], coord)
+    text2 = '${0}_{{cent}} = {1:.0f}\,{2}$'.format(y_name, kde_cent[1], coord)
     text = text1 + '\n' + text2
     ob = offsetbox.AnchoredText(text, pad=0.2, loc=2, prop=dict(size=11))
     ob.patch.set(alpha=0.85)
@@ -182,7 +181,7 @@ def pl_full_frame(
 
 def pl_zoom_frame(gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
                   y_zmax, cont_index, kde_plot, x_data, y_data, st_sizes_arr,
-                  center_cl, clust_rad):
+                  kde_cent, clust_rad):
     '''
     Zoom on x,y finding chart.
     '''
@@ -201,7 +200,7 @@ def pl_zoom_frame(gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
     # Set minor ticks
     ax.minorticks_on()
     # Plot radius.
-    circle = plt.Circle((center_cl[0], center_cl[1]), clust_rad, color='r',
+    circle = plt.Circle((kde_cent[0], kde_cent[1]), clust_rad, color='r',
                         fill=False, lw=1.5, zorder=5)
     fig.gca().add_artist(circle)
     # Add text box.
@@ -212,8 +211,8 @@ def pl_zoom_frame(gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
     # Plot contour levels if it was obtained.
     if kde_plot:
         ext_range, x, y, k_pos = kde_plot
-        # Number of countour lines depends on how large the plotted area is
-        # compared with the area where the posotional KDE was obtained.
+        # Number of contour lines depends on how large the plotted area is
+        # compared with the area where the positional KDE was obtained.
         frac_xy = (x_zmax - x_zmin) / (ext_range[1] - ext_range[0])
         if frac_xy > 2.:
             c_lines = 10
@@ -232,12 +231,12 @@ def pl_zoom_frame(gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
     plt.scatter(x_data, y_data, marker='o', c='black', s=st_sizes_arr,
                 zorder=1)
     # Plot center.
-    plt.scatter(center_cl[0], center_cl[1], color='w', s=40, lw=0.8,
+    plt.scatter(kde_cent[0], kde_cent[1], color='w', s=40, lw=0.8,
                 marker='x', zorder=5)
 
 
 def pl_cl_fl_regions(gs, fig, x_name, y_name, coord, x_min, x_max, y_min,
-                     y_max, asp_ratio, center_cl, clust_rad, field_regions,
+                     y_max, asp_ratio, kde_cent, clust_rad, field_regions,
                      cl_region, flag_no_fl_regs):
     '''
     Cluster and field regions defined.
@@ -257,7 +256,7 @@ def pl_cl_fl_regions(gs, fig, x_name, y_name, coord, x_min, x_max, y_min,
     ax.minorticks_on()
     ax.grid(b=True, which='both', color='gray', linestyle='--', lw=0.5)
     # Radius
-    circle = plt.Circle((center_cl[0], center_cl[1]), clust_rad,
+    circle = plt.Circle((kde_cent[0], kde_cent[1]), clust_rad,
                         color='k', fill=False)
     fig.gca().add_artist(circle)
     # Add text box.
@@ -287,7 +286,7 @@ def plot(N, *args):
     '''
 
     plt_map = {
-        0: [pl_hist_g, 'density positional chart'],
+        0: [pl_center, 'density positional chart'],
         1: [pl_full_frame, 'full frame'],
         2: [pl_rad_dens, 'radial density function'],
         3: [pl_zoom_frame, 'zoomed frame'],
@@ -302,5 +301,5 @@ def plot(N, *args):
         fxn(*args)
     except:
         print("  WARNING: error when plotting {}.".format(plt_map.get(N)[1]))
-        # import traceback
-        # print traceback.format_exc()
+        import traceback
+        print traceback.format_exc()

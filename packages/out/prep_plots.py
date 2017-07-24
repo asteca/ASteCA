@@ -42,14 +42,14 @@ def coord_syst(coords):
     return coord_lst
 
 
-def frame_zoomed(x_min, x_max, y_min, y_max, clust_cent, clust_rad):
+def frame_zoomed(x_min, x_max, y_min, y_max, kde_cent, clust_rad):
     '''
     If possible, define zoomed frame.
     '''
-    x_zmin, x_zmax = max(x_min, (clust_cent[0] - 1.5 * clust_rad)), \
-        min(x_max, (clust_cent[0] + 1.5 * clust_rad))
-    y_zmin, y_zmax = max(y_min, (clust_cent[1] - 1.5 * clust_rad)), \
-        min(y_max, (clust_cent[1] + 1.5 * clust_rad))
+    x_zmin, x_zmax = max(x_min, (kde_cent[0] - 1.5 * clust_rad)), \
+        min(x_max, (kde_cent[0] + 1.5 * clust_rad))
+    y_zmin, y_zmax = max(y_min, (kde_cent[1] - 1.5 * clust_rad)), \
+        min(y_max, (kde_cent[1] + 1.5 * clust_rad))
     # Prevent axis stretching.
     if (x_zmax - x_zmin) != (y_zmax - y_zmin):
         lst = [(x_zmax - x_zmin), (y_zmax - y_zmin)]
@@ -131,14 +131,18 @@ def diag_limits(y_axis, phot_x, phot_y):
     return x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd
 
 
-def star_size(mag):
+def star_size(mag, N=None, min_m=None):
     '''
     Convert magnitudes into intensities and define sizes of stars in
     finding chart.
     '''
     # Scale factor.
-    factor = 500. * (1 - 1 / (1 + 150 / len(mag) ** 0.85))
-    return 0.1 + factor * 10 ** ((np.array(mag) - min(mag)) / -2.5)
+    if N is None:
+        N = len(mag)
+    if min_m is None:
+        min_m = min(mag)
+    factor = 500. * (1 - 1 / (1 + 150 / N ** 0.85))
+    return 0.1 + factor * 10 ** ((np.array(mag) - min_m) / -2.5)
 
 
 def phot_diag_st_size(x):
@@ -199,7 +203,7 @@ def da_colorbar_range(cl_reg_fit, cl_reg_no_fit):
 
 
 def da_find_chart(
-    clust_cent, clust_rad, stars_out, x_zmin, x_zmax, y_zmin, y_zmax,
+    kde_cent, clust_rad, stars_out, x_zmin, x_zmax, y_zmin, y_zmax,
         cl_reg_fit, cl_reg_no_fit):
     '''
     Finding chart with MPs assigned by the DA.
@@ -224,8 +228,8 @@ def da_find_chart(
     out_clust_rad = [[], []]
     for star in stars_out:
         if x_zmin <= star[1] <= x_zmax and y_zmin <= star[2] <= y_zmax:
-            dist = np.sqrt((clust_cent[0] - star[1]) ** 2 +
-                           (clust_cent[1] - star[2]) ** 2)
+            dist = np.sqrt((kde_cent[0] - star[1]) ** 2 +
+                           (kde_cent[1] - star[2]) ** 2)
             # Only plot stars outside the cluster's radius.
             if dist >= clust_rad:
                 out_clust_rad[0].append(star[1])

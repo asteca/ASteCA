@@ -65,7 +65,7 @@ def plot_observed_cluster(
 
 def main(
         npd, cld, pd, cl_reg_clean_plot, flag_decont_skip, n_memb_da,
-        memb_prob_avrg_sort, cl_reg_fit, cl_reg_no_fit, clust_cent,
+        memb_prob_avrg_sort, cl_reg_fit, cl_reg_no_fit, kde_cent,
         clust_rad, field_dens, stars_out, err_lst, **kwargs):
     '''
     Make C block plots.
@@ -79,13 +79,13 @@ def main(
         x_min, x_max, y_min, y_max = prep_plots.frame_max_min(
             cld['x'], cld['y'])
         x_zmin, x_zmax, y_zmin, y_zmax = prep_plots.frame_zoomed(
-            x_min, x_max, y_min, y_max, clust_cent, clust_rad)
+            x_min, x_max, y_min, y_max, kde_cent, clust_rad)
         coord, x_name, y_name = prep_plots.coord_syst(pd['coords'])
         v_min_mp, v_max_mp = prep_plots.da_colorbar_range(
             cl_reg_fit, cl_reg_no_fit)
         chart_fit_inv, chart_no_fit_inv, out_clust_rad =\
             prep_plots.da_find_chart(
-                clust_cent, clust_rad, stars_out, x_zmin, x_zmax, y_zmin,
+                kde_cent, clust_rad, stars_out, x_zmin, x_zmax, y_zmin,
                 y_zmax, cl_reg_fit, cl_reg_no_fit)
 
         # Decontamination algorithm plots.
@@ -97,7 +97,7 @@ def main(
              cl_reg_fit, min_prob, pd['fld_clean_mode'], pd['fld_clean_bin']],
             # pl_chart_mps
             [gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
-             y_zmax, clust_cent, clust_rad, field_dens, flag_decont_skip,
+             y_zmax, kde_cent, clust_rad, field_dens, flag_decont_skip,
              v_min_mp, v_max_mp, chart_fit_inv, chart_no_fit_inv,
              out_clust_rad, pd['fld_clean_mode'], pd['fld_clean_bin']]]
         for n, args in enumerate(arglist):

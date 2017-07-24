@@ -22,14 +22,13 @@ import prep_plots
 #############################################################
 
 def main(
-        npd, cld, pd, clust_cent, e_cent, K_cent_dens, clust_rad, e_rad,
-        poisson_error, stars_out_rjct, field_regions, cent_bin, bin_width,
-        hist_2d_g, core_rad, e_core, tidal_rad,
-        e_tidal, K_conct_par, flag_2pk_conver, flag_3pk_conver, radii,
-        rdp_points, field_dens, cont_index, kde_plot, cl_region,
-        flag_no_fl_regs, **kwargs):
+        npd, cld, pd, kde_cent, kde_plot, K_cent_dens, clust_rad,
+        e_rad, poisson_error, stars_out_rjct, field_regions, bin_cent,
+        bin_width, hist_2d_g, core_rad, e_core, tidal_rad, e_tidal,
+        K_conct_par, flag_2pk_conver, flag_3pk_conver, radii, rdp_points,
+        field_dens, cont_index, cl_region, flag_no_fl_regs, **kwargs):
     '''
-    Make A block plots.
+    Make A2 block plots.
     '''
     if pd['flag_make_plot']:
         # figsize(x1, y1), GridSpec(y2, x2) --> To have square plots: x1/x2 =
@@ -44,7 +43,7 @@ def main(
         asp_ratio = prep_plots.aspect_ratio(x_min, x_max, y_min, y_max)
         coord, x_name, y_name = prep_plots.coord_syst(pd['coords'])
         x_zmin, x_zmax, y_zmin, y_zmax = prep_plots.frame_zoomed(
-            x_min, x_max, y_min, y_max, clust_cent, clust_rad)
+            x_min, x_max, y_min, y_max, kde_cent, clust_rad)
         x_data_z, y_data_z, mag_data_z = prep_plots.zoomed_frame(
             cld['x'], cld['y'], cld['mags'], x_zmin, x_zmax, y_zmin, y_zmax)
         st_sizes_arr = prep_plots.star_size(cld['mags'][0])
@@ -52,12 +51,12 @@ def main(
 
         # Structure plots.
         arglist = [
-            # pl_hist_g: 2D Gaussian convolved histogram.
-            [gs, fig, asp_ratio, x_name, y_name, coord, cent_bin, clust_rad,
-                bin_width, hist_2d_g],
+            # pl_center: 2D Gaussian convolved histogram.
+            [gs, fig, asp_ratio, x_name, y_name, coord, bin_cent, clust_rad,
+                bin_width, hist_2d_g[0]],
             # pl_full_frame: x,y finding chart of full frame.
             [gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max,
-             asp_ratio, clust_cent, clust_rad, e_cent, cld['x'], cld['y'],
+             asp_ratio, kde_cent, clust_rad, cld['x'], cld['y'],
              st_sizes_arr, core_rad, e_core, tidal_rad, e_tidal, K_conct_par,
              flag_2pk_conver, flag_3pk_conver],
             # pl_rad_dens: Radial density plot.
@@ -68,10 +67,10 @@ def main(
             # pl_zoom_frame: Zoom on x,y finding chart.
             [gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin, y_zmax,
                 cont_index, kde_plot, x_data_z, y_data_z,
-                st_sizes_arr_z, clust_cent, clust_rad],
+                st_sizes_arr_z, kde_cent, clust_rad],
             # pl_cl_fl_regions: Cluster and field regions defined.
             [gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max,
-                asp_ratio, clust_cent, clust_rad, field_regions, cl_region,
+                asp_ratio, kde_cent, clust_rad, field_regions, cl_region,
                 flag_no_fl_regs]
         ]
         for n, args in enumerate(arglist):
@@ -82,10 +81,10 @@ def main(
         fig.tight_layout()
         plt.savefig(
             join(npd['output_subdir'], str(npd['clust_name']) +
-                 '_A.' + pd['plot_frmt']), dpi=pd['plot_dpi'],
+                 '_A2.' + pd['plot_frmt']), dpi=pd['plot_dpi'],
             bbox_inches='tight')
         # Close to release memory.
         plt.clf()
         plt.close()
 
-        print("<<Plots for A block created>>")
+        print("<<Plots for A2 block created>>")

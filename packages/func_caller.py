@@ -7,6 +7,7 @@ from inp import get_data_semi
 from inp import get_data
 from structure import trim_frame
 from structure import histo_2d
+from structure import xy_density
 from structure import center
 from structure import radial_dens_prof
 from structure import field_density
@@ -31,7 +32,8 @@ from best_fit import best_fit_synth_cl
 from out import synth_cl_file
 from out import create_out_data_file
 from out import add_data_output
-from out import make_A_plot
+from out import make_A1_plot
+from out import make_A2_plot
 from out import make_B_plot
 from out import make_C_plot
 from out import make_D1_plot
@@ -62,7 +64,11 @@ def main(cl_file, pd):
 
     # Obtain 2D coordinates histogram for the observed frame.
     # Return cluster's parameters dictionary 'clp'.
-    clp = histo_2d.main(pd, **cld)
+    clp = histo_2d.main(**cld)
+
+    clp = xy_density.main(clp, **pd)
+
+    make_A1_plot.main(npd, cld, pd, **clp)
 
     # Get cluster's center coordinates and errors.
     clp = center.main(cld, clp, **pd)
@@ -97,7 +103,7 @@ def main(cl_file, pd):
     # Get contamination index.
     clp = contamination_index.main(clp)
 
-    make_A_plot.main(npd, cld, pd, **clp)
+    make_A2_plot.main(npd, cld, pd, **clp)
 
     # Get approximate number of cluster's members.
     clp = members_number.main(clp)

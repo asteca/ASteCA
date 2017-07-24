@@ -161,7 +161,7 @@ def main(cld, clp, run_mode, radius_method, coords, cl_rad_semi, rad_flag_semi,
     # input new one.
     elif run_mode == 'manual':
 
-        print 'Radius found: {:g} {}.'.format(clust_rad, coord)
+        print('Radius found: {:g} {}.'.format(clust_rad, coord))
         display_rad.main(cld['x'], cld['y'], cld['mags'][0], coords, clust_rad,
                          e_rad, **clp)
         plt.show()
