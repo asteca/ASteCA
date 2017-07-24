@@ -14,7 +14,7 @@ def pl_full_frame(
     ax = plt.subplot(gs_map.get(N))
 
     ax.set_aspect(aspect=asp_ratio)
-    plt.title("{}: {}".format(main_mag, mag_range), fontsize=10)
+    plt.title("{}: {}".format(main_mag, mag_range), fontsize=12)
     # Set plot limits
     plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
@@ -46,14 +46,16 @@ def pl_densxy(N, gs, fig, asp_ratio, x_name, y_name, coord, st_dev_lst,
 
     if N in [5, 6, 7]:
         plt.title("Standard deviation: {:.1f}".format(st_dev_lst[N - 5]),
-                  fontsize=10)
+                  fontsize=12)
     plt.xlabel('{} (bins)'.format(x_name), fontsize=12)
     plt.ylabel('{} (bins)'.format(y_name), fontsize=12)
     ax.minorticks_on()
-    plt.axvline(x=cent_bin[0], linestyle='--', color='blue')
-    plt.axhline(y=cent_bin[1], linestyle='--', color='blue')
+    plt.axvline(x=cent_bin[0], linestyle='--', lw=.85, color='blue')
+    plt.axhline(y=cent_bin[1], linestyle='--', lw=.85, color='blue')
+    plt.scatter(*cent_bin, marker='x', color='w', s=20)
     plt.imshow(hist_2d_g.transpose(), origin='lower',
                cmap=plt.get_cmap('OrRd'))
+    plt.contour(hist_2d_g.transpose(), 5, colors='#551a8b', linewidths=0.5)
     # If RA is used, invert axis.
     if coord == 'deg':
         ax.invert_xaxis()
