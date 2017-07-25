@@ -102,7 +102,7 @@ def main(clp, im_flag, **kwargs):
             print("  WARNING: no field regions defined. Integrated magnitude\n"
                   "  is not cleaned from field star contamination.")
             # Pass dummy lists.
-            fl_reg_imag, integ_mag = [], [np.nan]
+            fl_reg_imag, integ_mag = [], []
             for cl_m in cl_reg_imag:
                 integ_mag.append(min(cl_m[1]))
 
