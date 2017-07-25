@@ -93,6 +93,9 @@ def main(clp, im_flag, **kwargs):
                         1 - 10**((min(fl_m[1]) - min(cl_m[1])) / -2.5)) +
                         min(cl_m[1]))
                 else:
+                    print("  WARNING: integrated magnitude of field regions\n"
+                          "  is larger than that of cluster+field region.\n"
+                          "  Storing cluster+field region integrated mag.")
                     # If the field is brighter than the cluster.
                     integ_mag.append(min(cl_m[1]))
         else:

@@ -236,7 +236,7 @@ def pl_integ_mag(gs, cl_reg_imag, fl_reg_imag, integ_mag, y_ax,
     '''
     Integrated magnitudes.
     '''
-    if integ_mag:
+    if cl_reg_imag:
         # Make plot
         ax = plt.subplot(gs[2:4, 2:4])
         # If field lists are not empty.
@@ -268,8 +268,6 @@ def pl_integ_mag(gs, cl_reg_imag, fl_reg_imag, integ_mag, y_ax,
             plt.plot(fl_reg_imag[0][0], fl_reg_imag[0][1], 'b-', lw=1.,
                      label=text3, zorder=2)
         text = r'$' + y_ax + '^{{*}}_{{cl}} = {:.2f}$'.format(integ_mag[0])
-        # plt.text(0.22, 0.15, text, transform=ax.transAxes,
-        #          bbox=dict(facecolor='white', alpha=0.75), fontsize=12)
         ob = offsetbox.AnchoredText(text, pad=0.2, loc=7, prop=dict(size=12))
         ob.patch.set(alpha=0.75)
         ax.add_artist(ob)
