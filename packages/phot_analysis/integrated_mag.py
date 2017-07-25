@@ -99,7 +99,7 @@ def main(clp, im_flag, **kwargs):
             print("  WARNING: no field regions defined. Integrated magnitude\n"
                   "  is not cleaned from field star contamination.")
             # Pass dummy lists.
-            fl_reg_imag, integ_mag = [], []
+            fl_reg_imag, integ_mag = [], [np.nan]
             for cl_m in cl_reg_imag:
                 integ_mag.append(min(cl_m[1]))
 
@@ -107,7 +107,7 @@ def main(clp, im_flag, **kwargs):
             integ_mag[0]))
     else:
         print('Skipping integrated magnitudes function.')
-        cl_reg_imag, fl_reg_imag, integ_mag = [], [], []
+        cl_reg_imag, fl_reg_imag, integ_mag = [], [], [np.nan]
 
     clp['cl_reg_imag'], clp['fl_reg_imag'], clp['integ_mag'] =\
         cl_reg_imag, fl_reg_imag, integ_mag
