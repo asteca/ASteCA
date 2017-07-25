@@ -50,11 +50,11 @@ def pl_densxy(N, gs, fig, asp_ratio, x_name, y_name, coord, st_dev_lst,
     plt.xlabel('{} (bins)'.format(x_name), fontsize=12)
     plt.ylabel('{} (bins)'.format(y_name), fontsize=12)
     ax.minorticks_on()
-    plt.axvline(x=cent_bin[0], linestyle='--', lw=.85, color='blue')
-    plt.axhline(y=cent_bin[1], linestyle='--', lw=.85, color='blue')
+    plt.axvline(x=cent_bin[0], linestyle='--', lw=.85, color='green')
+    plt.axhline(y=cent_bin[1], linestyle='--', lw=.85, color='green')
     plt.scatter(*cent_bin, marker='x', color='w', s=20)
     plt.imshow(hist_2d_g.transpose(), origin='lower',
-               cmap=plt.get_cmap('OrRd'))
+               cmap=plt.get_cmap('RdYlBu_r'))
     plt.contour(hist_2d_g.transpose(), 5, colors='#551a8b', linewidths=0.5)
     # If RA is used, invert axis.
     if coord == 'deg':

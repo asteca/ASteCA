@@ -16,11 +16,11 @@ def pl_center(gs, fig, asp_ratio, x_name, y_name, coord, bin_cent, clust_rad,
     plt.xlabel('{} (bins)'.format(x_name), fontsize=12)
     plt.ylabel('{} (bins)'.format(y_name), fontsize=12)
     ax.minorticks_on()
-    plt.axvline(x=bin_cent[0], linestyle='--', color='white')
-    plt.axhline(y=bin_cent[1], linestyle='--', color='white')
+    plt.axvline(x=bin_cent[0], linestyle='--', color='green')
+    plt.axhline(y=bin_cent[1], linestyle='--', color='green')
     # Radius
     circle = plt.Circle(
-        (bin_cent[0], bin_cent[1]), clust_rad / bin_width, color='w',
+        (bin_cent[0], bin_cent[1]), clust_rad / bin_width, color='green',
         fill=False)
     fig.gca().add_artist(circle)
     # Add text box.
@@ -28,7 +28,9 @@ def pl_center(gs, fig, asp_ratio, x_name, y_name, coord, bin_cent, clust_rad,
     ob = offsetbox.AnchoredText(text, pad=0.2, loc=1, prop=dict(size=10))
     ob.patch.set(alpha=0.85)
     ax.add_artist(ob)
-    plt.imshow(hist_2d_g.transpose(), origin='lower', cmap="jet")
+    plt.imshow(hist_2d_g.transpose(), origin='lower',
+               cmap=plt.get_cmap('RdYlBu_r'))
+    plt.contour(hist_2d_g.transpose(), 5, colors='#551a8b', linewidths=0.5)
     # If RA is used, invert axis.
     if coord == 'deg':
         ax.invert_xaxis()

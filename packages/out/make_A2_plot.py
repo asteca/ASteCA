@@ -53,7 +53,7 @@ def main(
         arglist = [
             # pl_center: 2D Gaussian convolved histogram.
             [gs, fig, asp_ratio, x_name, y_name, coord, bin_cent, clust_rad,
-                bin_width, hist_2d_g[0]],
+                bin_width, hist_2d_g[1]],
             # pl_full_frame: x,y finding chart of full frame.
             [gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max,
              asp_ratio, kde_cent, clust_rad, cld['x'], cld['y'],
