@@ -63,11 +63,8 @@ def main():
     # packages are installed.
     from packages import func_caller
 
-    # Store variables that could be changed when processing each cluster.
-    er_params_orig = pd['er_params']
     # Iterate through all cluster files.
     for cl_file in cl_files:
-
         try:
             # Call module that calls all sub-modules sequentially.
             func_caller.main(cl_file, pd)
@@ -75,9 +72,6 @@ def main():
             print('\n!!! --> {}/{} '.format(cl_file[-2], cl_file[-1]) +
                   'could not be successfully processed <-- !!!\n')
             print traceback.format_exc()
-
-        # Set these variables to their original global values.
-        pd['er_params'] = er_params_orig
 
     # End of run.
     elapsed = time.time() - start

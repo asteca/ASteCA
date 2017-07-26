@@ -89,7 +89,7 @@ def main(cl_file, pd):
     # Accept and reject stars based on their errors.
     clp, pd = err_accpt_rejct.main(cld, clp, pd)
 
-    # Obtain exponential fir for the errors.
+    # Obtain exponential fit for the errors.
     clp = err_range_avrg.main(cld, clp, **pd)
 
     # Get stars in and out of cluster's radius.

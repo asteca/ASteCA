@@ -12,7 +12,7 @@ def gauss_error(mc, e_mc):
     return mc_gauss
 
 
-def main(isoch_compl, binar_idx, err_lst, e_max, N_fc):
+def main(isoch_compl, binar_idx, err_lst, err_max, N_fc):
     '''
     Randomly move stars according to given error distributions.
     '''
@@ -22,8 +22,8 @@ def main(isoch_compl, binar_idx, err_lst, e_max, N_fc):
     for i, popt_mc in enumerate(err_lst):
         # isoch_compl[0] is the main magnitude.
         sigma_mc = np.array(exp_function.exp_3p(isoch_compl[0], *popt_mc))
-        # Replace all error values greater than e_max with e_max.
-        sigma_mc[sigma_mc > e_max] = e_max
+        # Replace all error values greater than err_max with err_max.
+        sigma_mc[sigma_mc > err_max] = err_max
 
         ###################################################################
         # # Generate errors that depend only on the theoretical isochrone.

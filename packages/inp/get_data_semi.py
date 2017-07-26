@@ -24,12 +24,10 @@ def main(pd, clust_name, **kwargs):
                             pd['cent_flag_semi'] = int(reader[5])
                             pd['rad_flag_semi'] = int(reader[6])
                             pd['freg_flag_semi'] = int(reader[7])
-                            pd['err_flag_semi'] = int(reader[8])
     else:
         # Fill with dummy values since these variables are required later on.
         pd['cl_cent_semi'], pd['cl_rad_semi'], pd['cl_f_regs_semi'],\
             pd['cent_flag_semi'], pd['rad_flag_semi'],\
-            pd['freg_flag_semi'], pd['err_flag_semi'] = [], -1., 0, 0,\
-            0, 0, 0
+            pd['freg_flag_semi'] = [], -1., 0, 0, 0, 0
 
     return pd

@@ -51,12 +51,11 @@ differing\n# >{}% with the best value assigned for said parameter(s).\n\
 
 
 def plot_top_tiers(pd, top_tiers_flo, output_subdir, clust_name, mags,
-                   cols, isoch_fit_params, ext_coefs, N_fc, err_lst,
+                   cols, isoch_fit_params, ext_coefs, N_fc, err_max, err_lst,
                    completeness, max_mag_syn):
     '''
     Plot all top tiers.
     '''
-    e_max = pd['er_params'][1]
     # Obtain mass distribution using the selected IMF.
     st_dist_mass = imf.main(pd['IMF_name'], pd['m_high'])
 
@@ -72,7 +71,7 @@ def plot_top_tiers(pd, top_tiers_flo, output_subdir, clust_name, mags,
     for mod in top_tiers_flo:
         # Call function to generate synthetic cluster.
         shift_isoch, synth_clst = synth_cl_plot.main(
-            e_max, pd['bin_mr'], pd['fundam_params'], pd['theor_tracks'],
+            err_max, pd['bin_mr'], pd['fundam_params'], pd['theor_tracks'],
             isoch_fit_params, err_lst, completeness, max_mag_syn,
             st_dist_mass, pd['R_V'], ext_coefs, N_fc)
 
@@ -98,8 +97,8 @@ def plot_top_tiers(pd, top_tiers_flo, output_subdir, clust_name, mags,
     plt.close()
 
 
-def main(npd, cld, pd, err_lst, ext_coefs, N_fc, completeness, max_mag_syn,
-         isoch_fit_params, **kwargs):
+def main(npd, cld, pd, err_max, err_lst, ext_coefs, N_fc, completeness,
+         max_mag_syn, isoch_fit_params, **kwargs):
     '''
     Obtain top tier models, produce data file and output image.
     '''
@@ -158,9 +157,9 @@ def main(npd, cld, pd, err_lst, ext_coefs, N_fc, completeness, max_mag_syn,
                     plot_top_tiers(
                         pd, top_tiers_flo, output_subdir, clust_name,
                         cld['mags'], cld['cols'], isoch_fit_params, ext_coefs,
-                        N_fc, err_lst, completeness, max_mag_syn)
+                        N_fc, err_max, err_lst, completeness, max_mag_syn)
                     print("<<Plots for D3 block created>>")
-                except:
+                except Exception:
                     import traceback
                     print traceback.format_exc()
                     print("  ERROR: top tiers plot could not be generated.")

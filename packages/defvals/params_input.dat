@@ -161,32 +161,14 @@ GR       10
 
 ################## Photometric functions parameters ############################
 
-# Errors rejection function.
+# Error rejection.
 #
-# * mode: emax / lowexp / eyefit
+# * e_max: [float]
+#   Maximum error value a star can have in either its magnitude or color
+#   without being rejected. 
 #
-#   - emax: uses the 'e_max' value as a cut in photometric errors.
-#   - lowexp: fits an exponential and rejects any star beyond the upper
-#     prediction band, obtained using the 'C' confidence level value.
-#   - eyefit: attempt an 'eye' fit process composed of a polynomial
-#     plus an exponential.
-#
-# * e_max: maximum error value a star can have in either its magnitude or
-#   color without being rejected. 
-#
-# * be: bright end, the magnitude value that will be added to the
-#   brightest star to determine the range where stars will be accepted
-#   if their errors are lower than 'be_e' (see below).
-#
-# * be_e: maximum error value that stars in the bright end range can
-#   have without being rejected.
-#
-# * C: confidence interval for the prediction band used by the 'lowexp' method.
-#   Accepted values are in the range (0., 1.], any value outside will default
-#   to C = 0.95. 
-#
-#   mode   e_max   be   be_e     C
-ER  emax    0.25    2.   0.1  0.95
+#   e_max
+ER   0.25
 
 # Integrated magnitude.
 #

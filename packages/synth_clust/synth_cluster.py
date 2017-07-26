@@ -24,7 +24,7 @@ import add_errors
 #############################################################
 
 
-def main(e_max, bin_mass_ratio, err_lst, completeness, max_mag_syn,
+def main(err_max, bin_mass_ratio, err_lst, completeness, max_mag_syn,
          st_dist_mass, isochrone, R_V, ext_coefs, N_fc, synth_cl_params):
     """
     Takes an isochrone and returns a synthetic cluster created according to
@@ -116,7 +116,7 @@ def main(e_max, bin_mass_ratio, err_lst, completeness, max_mag_syn,
                 # Get errors according to errors distribution.
                 # with timeblock("errors"):
                 synth_clust = add_errors.main(
-                    isoch_compl, binar_idx, err_lst, e_max, N_fc)
+                    isoch_compl, binar_idx, err_lst, err_max, N_fc)
 
     ################################################################
     # # Plot synthetic cluster.

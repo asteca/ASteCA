@@ -88,7 +88,7 @@ def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning, N_bootstrap,
          max_mag, IMF_name, m_high, R_V, bin_mr, fundam_params, N_pop, N_gen,
          fit_diff, cross_prob, cross_sel, mut_prob, N_el, N_ei, N_es,
          cmd_systs, all_syst_filters, filters, colors, theor_tracks,
-         er_params, **kwargs):
+         **kwargs):
     '''
     Perform a best fitting process to find the cluster's fundamental
     parameters.
@@ -97,9 +97,8 @@ def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning, N_bootstrap,
     if bf_flag:
         print('Searching for optimal parameters.')
 
-        err_lst, cl_reg_fit, completeness = clp['err_lst'],\
-            clp['cl_reg_fit'], clp['completeness']
-        e_max = er_params[1]
+        err_lst, cl_reg_fit, completeness, e_max = clp['err_lst'],\
+            clp['cl_reg_fit'], clp['completeness'], clp['err_max']
 
         # Remove stars beyond the maximum magnitude limit, if it was set.
         cl_max_mag, max_mag_syn = max_mag_cut(cl_reg_fit, max_mag)

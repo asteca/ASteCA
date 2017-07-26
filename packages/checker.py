@@ -6,7 +6,6 @@ from check import params_file
 from check import semi_list
 from check import photom_names
 from check import params_struct
-from check import params_errors
 from check import params_pval
 from check import params_decont
 
@@ -46,9 +45,6 @@ def check_all(mypath, first_run_flag, file_end):
     # Check that mode, coordinates, figure, and structural parameters
     # are properly given.
     params_struct.check(mypath, **pd)
-
-    # Check that the errors module parameters are correct.
-    params_errors.check(**pd)
 
     # Check that R and rpy2 are installed, if necessary.
     pd = params_pval.check(inst_packgs_lst, pd)

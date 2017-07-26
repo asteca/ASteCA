@@ -3,23 +3,18 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
 import matplotlib.offsetbox as offsetbox
-from ..math_f import exp_function
 
 
-def pl_phot_err(gs, fig, er_params, up_low, x_ax, y_ax, mags, err_plot,
-                err_flags, cl_region, stars_in_rjct, stars_out,
-                stars_out_rjct):
+def pl_phot_err(gs, fig, up_low, x_ax, y_ax, mags, err_max, cl_region,
+                stars_in_rjct, stars_out, stars_out_rjct):
     '''
     Photometric error rejection.
     '''
-    # Error parameters.
-    er_mode, e_max, be, be_e, N_sig = er_params
-    err_all_fallback, err_max_fallback = err_flags
-
     # Define parameters for upper and lower plots.
     if up_low == 'up':
         ax, ax_y, j = plt.subplot(gs[0, 0:2]), y_ax, 4
         # Print mode used to reject stars based on their errors.
+        er_mode = 'auto' if err_max != 'nan' else 'manual'
         plt.title('[' + str(er_mode) + ']', fontsize=10)
     else:
         ax, ax_y, j = plt.subplot(gs[1, 0:2]), x_ax, 6
@@ -27,55 +22,11 @@ def pl_phot_err(gs, fig, er_params, up_low, x_ax, y_ax, mags, err_plot,
     # Set plot limits
     x_min, x_max = min(mags[0]) - 0.5, max(mags[0]) + 0.5
     plt.xlim(x_min, x_max)
-    plt.ylim(-0.005, e_max + (e_max / 5.))
     # Set axis labels
     plt.ylabel('$\sigma_{' + ax_y + '}$', fontsize=18)
     plt.xlabel('$' + y_ax + '$', fontsize=18)
     # Set minor ticks
     ax.minorticks_on()
-    # Plot e_max line.
-    ax.hlines(y=e_max, xmin=x_min, xmax=x_max, color='k',
-              linestyles='dashed', zorder=2)
-    # Plot rectangle.
-    bright_end = min(mags[0]) + be
-    ax.vlines(x=bright_end + 0.05, ymin=-0.005, ymax=be_e, color='k',
-              linestyles='dashed', zorder=2)
-    ax.vlines(x=min(mags[0]) - 0.05, ymin=-0.005, ymax=be_e, color='k',
-              linestyles='dashed', zorder=2)
-    ax.hlines(y=be_e, xmin=min(mags[0]), xmax=bright_end, color='k',
-              linestyles='dashed', zorder=2)
-    # If any method could be used.
-    if err_all_fallback is False and err_max_fallback is False:
-        # Plot curve(s) according to the method used.
-        if er_mode == 'eyefit':
-            # Unpack params.
-            val_mag, pol_mag, val_col, pol_col, mag_val_left, \
-                mag_val_right, col_val_left, col_val_right = err_plot
-
-            if up_low == 'up':
-                val_left, popt_left = mag_val_left, val_mag
-                val_right, pol_right = mag_val_right, pol_mag
-            else:
-                val_left, popt_left = col_val_left, val_col
-                val_right, pol_right = col_val_right, pol_col
-
-            # Combine left + right values.
-            m_v, e_v = val_left + val_right, [popt_left for _ in val_left] + \
-                list(np.polyval(pol_right, (val_right)))
-            ax.plot(m_v, e_v, 'k-', zorder=3)
-        elif er_mode == 'lowexp':
-            mag_x = np.linspace(bright_end, max(mags[0]), 50)
-            # Unpack params.
-            popt_mag, popt_col1 = err_plot
-            if up_low == 'up':
-                # Plot exponential curve.
-                ax.plot(mag_x, exp_function.exp_2p(mag_x, *popt_mag),
-                        'k-', zorder=3)
-            else:
-                # Plot exponential curve.
-                ax.plot(mag_x, exp_function.exp_2p(mag_x, *popt_col1),
-                        'k-', zorder=3)
-
     # Plot rejected stars.
     if len(stars_out_rjct) > 0:
         # Only attempt to pot if any star is stored in the list.
@@ -99,6 +50,13 @@ def pl_phot_err(gs, fig, er_params, up_low, x_ax, y_ax, mags, err_plot,
                          fontsize=16, markerscale=2.5, prop={'size': 13})
         # Set the alpha value of the legend.
         leg.get_frame().set_alpha(0.7)
+    if err_max != 'nan':
+        plt.ylim(-0.005, err_max + (err_max / 5.))
+        # Plot err_max line.
+        ax.hlines(y=err_max, xmin=x_min, xmax=x_max, color='k',
+                  linestyles='dashed', zorder=2)
+    else:
+        plt.ylim(-0.005, plt.ylim()[1])
 
 
 def pl_fl_diag(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,

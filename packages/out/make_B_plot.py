@@ -8,7 +8,7 @@ import prep_plots
 
 
 def main(
-        npd, cld, pd, err_plot, err_flags, cl_region, cl_region_rjct,
+        npd, cld, pd, err_max, cl_region, cl_region_rjct,
         stars_out, stars_out_rjct, err_lst, field_regions, n_memb,
         flag_no_fl_regs, lum_func, completeness, cl_reg_imag, fl_reg_imag,
         integ_mag, flag_pval_test, pval_test_params, **kwargs):
@@ -35,12 +35,10 @@ def main(
         # Photometric analysis plots.
         arglist = [
             # pl_phot_err: Photometric error rejection.
-            [gs, fig, pd['er_params'], 'up', x_ax, y_ax, cld['mags'],
-             err_plot, err_flags, cl_region, cl_region_rjct, stars_out,
-             stars_out_rjct],
-            [gs, fig, pd['er_params'], 'low', x_ax, y_ax, cld['mags'],
-             err_plot, err_flags, cl_region, cl_region_rjct, stars_out,
-             stars_out_rjct],
+            [gs, fig, 'up', x_ax, y_ax, cld['mags'], err_max, cl_region,
+             cl_region_rjct, stars_out, stars_out_rjct],
+            [gs, fig, 'low', x_ax, y_ax, cld['mags'], err_max, cl_region,
+             cl_region_rjct, stars_out, stars_out_rjct],
             # pl_fl_diag: Field stars CMD/CCD diagram.
             [gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
                 stars_f_rjct, stars_f_acpt, f_sz_pt, err_bar_fl],

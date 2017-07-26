@@ -88,7 +88,7 @@ def main(mypath, pars_f_path):
 
                 # Photometric functions parameters.
                 elif reader[0] == 'ER':
-                    er_params = [str(reader[1])] + map(float, reader[2:])
+                    err_max = float(reader[1])
                 elif reader[0] == 'IM':
                     im_flag = True if reader[1] in true_lst else False
                 elif reader[0] == 'PV':
@@ -194,8 +194,9 @@ def main(mypath, pars_f_path):
         'plot_dpi': plot_dpi,
         'flag_move_file': flag_move_file, 'done_dir': done_dir,
         'center_stddev': center_stddev, 'radius_method': radius_method,
-        'kp_flag': kp_flag, 'fr_number': fr_number, 'im_flag': im_flag,
-        'pvalue_mode': pvalue_mode, 'pvalue_runs': pvalue_runs,
+        'kp_flag': kp_flag, 'fr_number': fr_number, 'err_max': err_max,
+        'im_flag': im_flag, 'pvalue_mode': pvalue_mode,
+        'pvalue_runs': pvalue_runs,
         # Decontamination algorithm parameters.
         'bayesda_mode': bayesda_mode, 'bayesda_runs': bayesda_runs,
         'fld_clean_mode': fld_clean_mode, 'fld_clean_bin': fld_clean_bin,
@@ -216,7 +217,7 @@ def main(mypath, pars_f_path):
         'imf_funcs': imf_funcs, 'cmd_evol_tracks': cmd_evol_tracks,
         'cmd_systs': cmd_systs,
         # v These lists need to be re-formatted
-        'er_params': er_params, 'par_ranges': par_ranges}
+        'par_ranges': par_ranges}
 
     # Return parameters dictionary.
     return pd

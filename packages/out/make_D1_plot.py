@@ -16,8 +16,8 @@ def main(
         fig = plt.figure(figsize=(30, 25))
         gs = gridspec.GridSpec(10, 12)
         if pd['best_fit_algor'] == 'genet':
-            add_version_plot.main()
-        else:
+            add_version_plot.main(y_fix=.999)
+        elif pd['best_fit_algor'] == 'brute':
             add_version_plot.main(y_fix=.8)
 
         min_max_p = prep_plots.param_ranges(pd['fundam_params'])

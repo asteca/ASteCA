@@ -96,10 +96,8 @@ def main(npd):
 # f5 The process to fit a 3-P King profile to the density points did not\n\
 #    converge or did so to a tidal radius beyond the ranges of the frame.\n\
 # f6 No error rejection was possible.\n\
-# f7 The function had to fall back to the 'e_max'-based rejection method\n\
-#    since the selected one failed.\n\
-# f8 The number of approximate structural cluster members ('n_memb') is <10.\n\
-# f9 The number of approximate structural and photometric cluster members\n\
+# f7 The number of approximate structural cluster members ('n_memb') is <10.\n\
+# f8 The number of approximate structural and photometric cluster members\n\
 #    differ greatly --> abs(n_memb_par) > 0.33.\n\
 #\n\
 # FC (flags count): Sum of all the flags values. The bigger this value the\n\
@@ -112,5 +110,5 @@ r_c     e_rc      r_t     e_rt      kcp      CI   n_memb_k     n_memb  \
 n_memb_da  memb_par     a_f  prob_cl  int_col      met      e_m      age      \
 e_a   E(B-V)      e_E     dist      e_d      M_i      e_M   bin_fr     \
 e_bf      \
-M1 M2  f1 f2 f3 f4 f5 f6 f7 f8 f9  FC\n".format(__version__, now_time))
+M1 M2  f1 f2 f3 f4 f5 f6 f7 f8  FC\n".format(__version__, now_time))
             print 'Output data file created.'
