@@ -58,13 +58,11 @@ def KDE_test(clp, pvalue_mode, pvalue_runs):
     minus the overlap between the KDEs of the distributions of p-values for
     the cluster vs field and field vs field comparisons.
     """
-    cl_region, field_regions, flag_no_fl_regs = [
-        clp[_] for _ in ['cl_region', 'field_regions', 'flag_no_fl_regs']]
     # mags, cols = cld['mags'], cld['cols']
-    flag_pval_test = True if pvalue_mode in ('auto', 'manual') else False
+    flag_pval_test = True if pvalue_mode else False
 
     # Skip test if < 10 members are found within the cluster's radius.
-    flag_few_members = False if len(cl_region) > 10 else True
+    flag_few_members = False if len(clp['cl_region']) > 10 else True
 
     # Check if test is to be applied or skipped. Check if field regions
     # where found.
@@ -73,7 +71,7 @@ def KDE_test(clp, pvalue_mode, pvalue_runs):
         # Pass empty lists and re-write flag.
         flag_pval_test, pval_test_params = False, [-1.]
 
-    elif flag_pval_test and flag_no_fl_regs:
+    elif flag_pval_test and clp['flag_no_fl_regs']:
         print('No field regions. Skipping KDE p-value test for cluster.')
         # Pass empty lists and re-write flag.
         flag_pval_test, pval_test_params = False, [-1.]
@@ -98,7 +96,9 @@ def KDE_test(clp, pvalue_mode, pvalue_runs):
 
         # Set number of runs for the p_value algorithm with a maximum of
         # 100 if only one field region was used.
-        runs = int(100 / len(field_regions)) if pvalue_mode == 'auto' else \
+        if pvalue_runs == 0:
+            runs = int(100 / len(clp['field_regions']))
+        else:
             max(2, pvalue_runs)
 
         # The first list holds all the p_values obtained comparing the cluster
@@ -108,10 +108,10 @@ def KDE_test(clp, pvalue_mode, pvalue_runs):
         # Iterate a given number of times.
         for run_num in range(runs):
             # Loop through all the field regions.
-            for indx, f_region in enumerate(field_regions):
+            for indx, f_region in enumerate(clp['field_regions']):
 
                 # CMD for cluster region.
-                matrix_cl = get_CMD(cl_region)
+                matrix_cl = get_CMD(clp['cl_region'])
                 rows_cl = int(len(matrix_cl) / 2)
                 # CMD for 1st field region.
                 matrix_f1 = get_CMD(f_region)
@@ -136,7 +136,7 @@ def KDE_test(clp, pvalue_mode, pvalue_runs):
                 # Compare the field region used above with all the remaining
                 # field regions. This results in [N*(N+1)/2] combinations of
                 # field vs field comparisons.
-                for f_region2 in field_regions[(indx + 1):]:
+                for f_region2 in clp['field_regions'][(indx + 1):]:
 
                     # CMD for 2nd field region.
                     matrix_f2 = get_CMD(f_region2)

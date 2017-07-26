@@ -74,10 +74,7 @@ def check(inst_packgs_lst, pd):
     R_in_place = True indicates that R and rpy2 are installed.
     """
     # Check KDE p-value cluster probability function.
-    if pd['pvalue_mode'] not in ('auto', 'manual', 'skip'):
-        sys.exit("ERROR: Wrong name ('{}') for 'mode' in KDE p-value test."
-                 .format(pd['pvalue_mode']))
-    elif pd['pvalue_mode'] in {'auto', 'manual'}:
+    if pd['pvalue_mode']:
         # Check if R and rpy2 are installed.
         R_in_place = R_check(inst_packgs_lst)
     else:

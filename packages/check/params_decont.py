@@ -4,19 +4,23 @@ from os.path import isfile
 from packages.inp import names_paths
 
 
-def check(cl_files, fld_rem_methods, bin_methods, bayesda_mode, fld_clean_mode,
-          fld_clean_bin, **kwargs):
+def check(cl_files, fld_rem_methods, bin_methods, bayesda_mode, bayesda_runs,
+          fld_clean_mode, fld_clean_bin, **kwargs):
     """
     Check parameters related to the decontamination algorithm functions.
     """
 
     # Check decontamination algorithm parameters.
     # Check if 'mode' was correctly set.
-    if bayesda_mode not in ['auto', 'manual', 'read', 'skip']:
+    if bayesda_mode not in ['y', 'n', 'r']:
         sys.exit("ERROR: Wrong name ('{}') for decontamination algorithm "
                  "'mode'.".format(bayesda_mode))
 
-    if bayesda_mode == 'read':
+    if bayesda_runs <= 0:
+        sys.exit("ERROR: decontamination algorithm 'runs' must be greater"
+                 " than zero.")
+
+    if bayesda_mode == 'r':
         # Check if file exists.
         for cl_file in cl_files:
 
@@ -24,7 +28,7 @@ def check(cl_files, fld_rem_methods, bin_methods, bayesda_mode, fld_clean_mode,
             memb_file = names_paths.memb_file_name(cl_file)
             if not isfile(memb_file):
                 # File does not exist.
-                sys.exit("ERROR: 'read' mode was set for decontamination "
+                sys.exit("ERROR: 'r' mode was set for decontamination "
                          "algorithm but the file:\n\n {}\n\ndoes not "
                          "exist.".format(memb_file))
 

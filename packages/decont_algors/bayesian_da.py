@@ -128,19 +128,16 @@ def main(clp, npd, bayesda_mode, bayesda_runs, **kwargs):
     '''
 
     # Check if at least one equal-sized field region was obtained.
-    if bayesda_mode in ('auto', 'manual') and clp['flag_no_fl_regs']:
+    if bayesda_mode in ('y', 'r') and clp['flag_no_fl_regs']:
         print("  WARNING: no field regions found. Will not\n"
               "  apply decontamination algorithm.")
-        bayesda_mode = 'skip'
+        bayesda_mode = 'n'
 
     cl_region = clp['cl_region']  # shorter
     flag_decont_skip = False
     # Run algorithm for any of these selections.
-    if bayesda_mode in ('auto', 'manual'):
+    if bayesda_mode == 'y':
         print('Applying decontamination algorithm.')
-
-        # Set total number of runs.
-        runs = 1000 if bayesda_mode == 'auto' else bayesda_runs
 
         # cl_region = [[id, x, y, mags, e_mags, cols, e_cols], [], [], ...]
         # len(cl_region) = number of stars inside the cluster's radius.
@@ -169,7 +166,7 @@ def main(clp, npd, bayesda_mode, bayesda_runs, **kwargs):
                    zip(*zip(*cl_region)[1:][4]), zip(*zip(*cl_region)[1:][5])]
 
         # Run 'runs' times.
-        for run_num in range(runs):
+        for run_num in range(bayesda_runs):
 
             # This list will hold the probabilities for each field region.
             field_reg_probs = [[] for _ in clp['field_regions']]
@@ -214,15 +211,14 @@ def main(clp, npd, bayesda_mode, bayesda_runs, **kwargs):
             runs_fields_probs.append(field_reg_probs)
 
             # Check if probabilities converged. If so, break out.
-            prob_avrg_old, break_flag = break_check(prob_avrg_old,
-                                                    runs_fields_probs,
-                                                    runs, run_num)
+            prob_avrg_old, break_flag = break_check(
+                prob_avrg_old, runs_fields_probs, bayesda_runs, run_num)
             if break_flag:
                 print('  MPs converged in iteration {}.'.format(run_num))
                 break
-            update_progress.updt(runs, run_num + 1)
+            update_progress.updt(bayesda_runs, run_num + 1)
 
-    elif bayesda_mode == 'read':
+    elif bayesda_mode == 'r':
         print('Reading membership probabilities from file.')
         # Read IDs from file.
         memb_file = npd['memb_file']
@@ -247,7 +243,7 @@ def main(clp, npd, bayesda_mode, bayesda_runs, **kwargs):
         # Store probabilities in list.
         runs_fields_probs = [[probs]]
 
-    elif bayesda_mode == 'skip':
+    elif bayesda_mode == 'n':
         print('Assign equal probabilities to all stars in cluster region.')
         # Assign equal probabilities to all stars.
         runs_fields_probs = [[[1.] * len(cl_region)]]

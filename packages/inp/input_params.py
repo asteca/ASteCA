@@ -35,7 +35,7 @@ def main(mypath, pars_f_path):
     '''
 
     # Accept these variations of the 'true' flag.
-    true_lst = ('True', 'true', 'TRUE')
+    true_lst = ('y', 'yes', 'Yes', 'YES')
 
     # Read data from file.
     with open(pars_f_path, "r") as f_dat:
@@ -92,7 +92,7 @@ def main(mypath, pars_f_path):
                 elif reader[0] == 'IM':
                     im_flag = True if reader[1] in true_lst else False
                 elif reader[0] == 'PV':
-                    pvalue_mode = str(reader[1])
+                    pvalue_mode = True if reader[1] in true_lst else False
                     pvalue_runs = int(reader[2])
 
                 # Membership based removal parameters.
@@ -136,10 +136,9 @@ def main(mypath, pars_f_path):
                 elif reader[0] == 'TM':
                     mass_rs = char_remove(reader)
                 elif reader[0] == 'BI':
+                    bin_rs = char_remove(reader)
+                elif reader[0] == 'BI_m':
                     bin_mr = float(reader[1])
-                    # Use [1:] since the mass ratio is located before the
-                    # range.
-                    bin_rs = char_remove(reader[1:])
 
                 # Genetic algorithm parameters.
                 elif reader[0] == 'GA':

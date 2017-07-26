@@ -60,6 +60,12 @@ def check(bf_flag, best_fit_algor, lkl_method, lkl_binning, N_bootstrap,
                      "\nfit' function does not match a valid input."
                      .format(lkl_binning))
 
+        # Check binning method selected.
+        if lkl_method == 'tolstoy':
+            if len(par_ranges[-2][1]) > 1:
+                sys.exit("ERROR: 'tolstoy' method was selected but more than"
+                         "\none initial mass value is set.")
+
         # Check if /isochrones folder exists.
         for iso_path in iso_paths:
             if not isdir(iso_path):
