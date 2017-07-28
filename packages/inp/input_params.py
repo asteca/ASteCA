@@ -69,7 +69,7 @@ def main(mypath, pars_f_path):
                     flag_make_plot = True if reader[1] in true_lst else False
                     plot_frmt = str(reader[2])
                     plot_dpi = int(reader[3])
-                elif reader[0] == 'MF':
+                elif reader[0] == 'MD':
                     flag_move_file = True if reader[1] in true_lst else False
                     done_dir = str(reader[2])
 
@@ -107,31 +107,28 @@ def main(mypath, pars_f_path):
                 # Cluster parameters assignation.
                 elif reader[0] == 'BF':
                     bf_flag = True if reader[1] in true_lst else False
-                    best_fit_algor = str(reader[2])
-                    lkl_method = str(reader[3])
-                    lkl_binning = str(reader[4])
-                    N_bootstrap = int(reader[5])
+                elif reader[0] == 'LK':
+                    lkl_method = str(reader[1])
+                    lkl_binning = str(reader[2])
                 elif reader[0] == 'PS':
                     evol_track = str(reader[1])
-
-                # Synthetic cluster parameters.
+                elif reader[0] == 'RV':
+                    R_V = float(reader[1])
+                elif reader[0] == 'MF':
+                    IMF_name = str(reader[1])
+                    m_high = float(reader[2])
                 elif reader[0] == 'MM':
                     try:
                         max_mag = float(reader[1])
                     except ValueError:
                         max_mag = str(reader[1])
-                elif reader[0] == 'SC':
-                    IMF_name = str(reader[1])
-                    m_high = float(reader[2])
-                elif reader[0] == 'RV':
-                    R_V = float(reader[1])
-                elif reader[0] == 'PS_m':
+                elif reader[0] == 'MZ':
                     m_rs = char_remove(reader)
-                elif reader[0] == 'PS_a':
+                elif reader[0] == 'LA':
                     a_rs = char_remove(reader)
-                elif reader[0] == 'PS_e':
+                elif reader[0] == 'BV':
                     e_rs = char_remove(reader)
-                elif reader[0] == 'PS_d':
+                elif reader[0] == 'DM':
                     d_rs = char_remove(reader)
                 elif reader[0] == 'TM':
                     mass_rs = char_remove(reader)
@@ -139,6 +136,10 @@ def main(mypath, pars_f_path):
                     bin_rs = char_remove(reader)
                 elif reader[0] == 'BI_m':
                     bin_mr = float(reader[1])
+
+                elif reader[0] == 'AB':
+                    best_fit_algor = str(reader[1])
+                    N_bootstrap = int(reader[2])
 
                 # Genetic algorithm parameters.
                 elif reader[0] == 'GA':

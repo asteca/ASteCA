@@ -105,7 +105,7 @@ MP     y       png     150
 #   set to 'y'. Otherwise ignored.
 #
 #   flag              path
-MF     n              none
+MD     n              none
 ################################################################################
 
 
@@ -168,7 +168,7 @@ GR       10
 #   without being rejected. 
 #
 #   e_max
-ER   0.25
+ER    0.3
 
 # Integrated magnitude.
 #
@@ -257,21 +257,18 @@ RM  local      fixed          0.5
 #
 # * flag: y / n
 #   If 'n', no fundamental parameters estimation will be attempted on the
-#   observed cluster.
+#   observed cluster and all the values below are ignored.
 #
-# * algorithm: genet / brute
-#   Select algorithm to use in best fitting process:
-#
-#   - genet: Genetic Algorithm (GA).
-#   - brute: Brute Force algorithm, ie: all possible solutions are processed
-#     If 'brute' is selected, 'bootstrap' is ignored.
+#   flag
+BF     y 
+
+# Likelihood method.
 #
 # * likelihood: tolstoy / dolphin
-#   The function used to calculate the likelihood of each synthetic cluster.
 #
 #   - tolstoy: uses a weighted bin-free statistic as that defined in
 #     Tolstoy & Saha (1996), Monteiro et al (2010) and Hernández & Valls-Gabaud
-#     (2008). If this method is selected, 'binning' is irrelevant.
+#     (2008). If this method is selected, 'binning' is ignored.
 #   - dolphin: uses the 'Poisson likelihood ratio' (Eq. 10) defined in
 #     Dolphin (2002). This requires the selection of a binning method.
 #
@@ -280,19 +277,12 @@ RM  local      fixed          0.5
 #   Binning method to be used if the likelihood equation by 'dolphin' is
 #   selected. Otherwise this parameter is ignored.
 #
-# * bootstrap: [integer]
-#   Number of times the bootstrap with replacement process will run
-#   in the GA algorithm. Minimum value is 2, anything less will skip the
-#   bootstrap process and no errors will be assigned to the parameters.
-#
-#   flag  algorithm   likelihood  binning  bootstrap
-BF     y      genet      dolphin    auto         10
+#   likelihood  binning
+LK     dolphin     auto
 
-# Synthetic cluster parameters.
+# Set of evolutionary tracks.
 #
 # * evol_track: [selection]
-#   Set of evolutionary tracks to use. Must be present in the '/isochrones'
-#   folder.
 #
 #   - PAR12:  PARSEC v1.2S
 #   - PAR11:  PARSEC v1.1
@@ -304,19 +294,17 @@ BF     y      genet      dolphin    auto         10
 #
 #   evol_track
 PS       PAR12
+
+# Ratio of total to selective absorption.
 #
-# * Maximum mag: max / [float]
-#   Select a maximum magnitude cut to be used in the best fit process. This
-#   limit affects both the observed and synthetic cluster.
+# * R_V: [float]
 #
-#   - max: use the maximum observed magnitude (i.e.: no cut is applied).
-#   - [float]: manually select the maximum magnitude value to use.
-#
-#   max_mag
-MM      max
+#   R_V
+RV  3.1
+
+# IMF used to populate the synthetic clusters.
 #
 # * IMF: [selection]
-#   IMF used to generate the synthetic clusters.
 #
 #   - kroupa_2002:       Kroupa (2002) 295.82K, Eq. (2) & (3)
 #   - chabrier_2001_exp: Chabrier (2001) 554.1274C, Eq (8)
@@ -327,34 +315,40 @@ MM      max
 #   Upper mass value for the IMF (in solar masses).
 #
 #   IMF                 m_high
-SC  kroupa_2002           150.
+MF  kroupa_2002            150
+
+# Maximum magnitude cut.
 #
-# * R_V: [float]
-#   Ratio of total to selective absorption.
+# * Maximum mag: max / [float]
+#   Select a maximum magnitude cut to be used in the best fit process. This
+#   limit affects both the observed and synthetic cluster.
 #
-#   R_V
-RV  3.1
+#   - max: use the maximum observed magnitude (i.e.: no cut is applied).
+#   - [float]: manually select the maximum magnitude value to use.
 #
-# * Ranges and steps for the fitted fundamental parameters.
+#   max_mag
+MM      max
+
+# Ranges and steps for the fitted fundamental parameters.
 #
-#                        min     max     step
-#     Metallicity (z)
-PS_m                  0.0005    0.03    0.005
+#                        min      max     step
+#   Metallicity (z)
+MZ                    0.0005     0.03    0.005
 #
-#     log(age)
-PS_a                      6.     10.      0.5
+#   log(age)
+LA                         6       10      0.5
 #
-#     E(B-V)
-PS_e                      0.     1.      0.02
+#   E(B-V)
+BV                         0        1     0.02
 #
-#     Distance modulus
-PS_d                      8.     15.      0.2
+#   Distance modulus
+DM                         8       15      0.2
 #
-#     Total initial mass (in solar masses).
-TM                        10   10000      100
+#   Total initial mass (in solar masses)
+TM                        10    10000      100
 #
-#     Binary fraction.
-BI                        0.      1.      0.2
+#   Binary fraction
+BI                         0        1      0.2
 #
 # - min_mass_ratio: 0<[float]<=1
 #   Minimum mass ratio for the generation of binaries. Ignored if
@@ -362,6 +356,22 @@ BI                        0.      1.      0.2
 #
 #     min_mass_ratio
 BI_m              .7
+
+# Algorithm used to maximize the likelihood.
+#
+# * algorithm: genet / brute
+#
+#   - genet: Genetic Algorithm (GA).
+#   - brute: Brute Force algorithm, ie: all possible solutions are processed
+#     If 'brute' is selected, 'bootstrap' is ignored.
+#
+# * bootstrap: [integer]
+#   Number of times the bootstrap with replacement process will run
+#   in the GA algorithm. Minimum value is 2, anything less will skip the
+#   bootstrap process and no errors will be assigned to the parameters.
+#
+#   algorithm   bootstrap
+AB      genet          10
 
 # Genetic Algorithm parameters.
 #
