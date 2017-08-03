@@ -21,8 +21,7 @@ from ..synth_clust import synth_cluster
 
 def tolstoy(synth_clust, obs_clust):
     '''
-    Compares the observed cluster with a synthetic cluster,
-    returns the weighted (log) likelihood value.
+    Weighted (log) likelihood.
     This function follows the recipe given in Tolstoy & Saha (1996),
     Hernandez & Valls-Gabaud (2008) and Monteiro, Dias & Caetano (2010).
 
@@ -90,9 +89,7 @@ def tolstoy(synth_clust, obs_clust):
 
 def dolphin(synth_clust, obs_clust):
     '''
-    Takes a synthetic cluster, compares it to the observed cluster and
-    returns the weighted (log) likelihood value.
-    This function follows the recipe given in Dolphin (2002).
+    Poisson likelihood ratio as defined in Dolphin (2002).
     '''
 
     # If synthetic cluster is empty, assign large likelihood value.
@@ -125,11 +122,19 @@ def dolphin(synth_clust, obs_clust):
             synth_phot[0].size - np.sum(cl_histo_f_z * np.log(syn_histo_f_z)) +
             dolphin_cst)
 
+        # print(dolph_lkl)
+        # from scipy.stats import chisquare
+        # from scipy.stats import chi2
+        # chsqr = chisquare(cl_histo_f_z, f_exp=syn_histo_f_z, ddof=7)
+        # print(chsqr)
+        # print(chi2.sf(chsqr[0], len(cl_histo_f_z) - 1 - 7))
+
     return dolph_lkl
 
 
 def mighell(synth_clust, obs_clust):
     '''
+    Chi gamma squared distribution defined in Mighell (1999)
     '''
     if not synth_clust:
         mig_chi = 1.e09

@@ -69,11 +69,11 @@ PI        0      1      2      px
 #
 # Magnitude and error.
 #        mag    e_mag
-PM     3,4,V        4
+PM     3,5,V        4
 #
 # Color and error.
 #         col    e_col
-PC    5,4,B,V        6
+PC    5,5,B,V        6
 ###############################################################################
 
 
