@@ -59,7 +59,7 @@ def files_folders_check(mypath):
             print("Folder {}/ copied to root folder.\n".format(i_fo))
 
 
-def check_1strun(mypath):
+def main(mypath):
     """
     Check if this is the first run of the code or not. If it is, attempt to
     copy input .dat files and input/, isochrones/ folders from packages/ folder
@@ -72,7 +72,7 @@ def check_1strun(mypath):
         if os.path.isfile(fr_file):
             # Read .first_run file.
             with open(fr_file) as f:
-                N = str(f.read())
+                N = str(f.read()).rstrip()
             # If this is the first run.
             if N == '0':
                 print("* First run of the code detected *\n")

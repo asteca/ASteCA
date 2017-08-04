@@ -1,6 +1,6 @@
 
 from check import pack
-from first_run import check_1strun
+from check import first_run
 from check import update
 from check import clusters
 from check import params_file
@@ -24,7 +24,7 @@ def check_all(mypath, file_end):
     inst_packgs_lst = pack.check()
 
     # Check .first_run file.
-    first_run_flag = check_1strun(mypath)
+    first_run_flag = first_run.main(mypath)
 
     # Import here after the needed packages were checked to be present.
     from check import params_match
