@@ -4,8 +4,6 @@
 !asteca.py
 # and this file
 !environment.yml
-# and this one
-!phot_systs.dat
 # and this folder
 !/packages
 # But do ignore these files

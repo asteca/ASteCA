@@ -7,13 +7,13 @@ import traceback
 
 def files_folders_check(mypath):
     """
-    Check if input .dat files and input folders already exist in root folder.
+    Check if input files and input folders already exist in root folder.
     """
     success = 0
     # Check files
-    for i_f in ['params', 'semi']:
-        i_f_path = mypath + i_f + '_input.dat'
-        n_f_path = mypath + 'packages/defvals/' + i_f + '_input.dat'
+    for i_f in ['params_input.dat', 'semi_input.dat', 'phot_systs.dat']:
+        i_f_path = mypath + i_f
+        n_f_path = mypath + 'packages/defvals/' + i_f
         # First, check if the file exists in packages/ (it should)
         if os.path.isfile(n_f_path):
             # Now check if it exists in the root folder.
@@ -21,7 +21,7 @@ def files_folders_check(mypath):
                 # File exist in root folder. Rename it.
                 sys.exit("File '{}' is already present in root folder.\n"
                          "Please rename/delete it and try again.\n".format(
-                             i_f + '_input.dat'))
+                             i_f))
             else:
                 success += 1
         else:
@@ -42,21 +42,21 @@ def files_folders_check(mypath):
         else:
             print("WARNING: folder {}\nis not present.\n".format(n_fo_path))
 
-    if success == 4:
+    if success == 5:
         # Copy files into root folder.
-        for i_f in ['params', 'semi']:
-            i_f_path = mypath + i_f + '_input.dat'
-            n_f_path = mypath + 'packages/defvals/' + i_f + '_input.dat'
+        for i_f in ['params_input.dat', 'semi_input.dat', 'phot_systs.dat']:
+            i_f_path = mypath + i_f
+            n_f_path = mypath + 'packages/defvals/' + i_f
             copyfile(n_f_path, i_f_path)
-            print("File {} copied to root folder.\n".format(
-                i_f + '_input.dat'))
+            print("File {} copied to root folder.".format(i_f))
         # Copy folders into root folder.
         for i_fo in ['isochrones', 'input']:
             i_fo_path = mypath + i_fo + '/'
             n_fo_path = mypath + 'packages/defvals/' + i_fo + '/'
             # Copy folders into root folder.
             copytree(n_fo_path, i_fo_path)
-            print("Folder {}/ copied to root folder.\n".format(i_fo))
+            print("Folder {}/ copied to root folder.".format(i_fo))
+        print("")
 
 
 def main(mypath):
