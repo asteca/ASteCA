@@ -78,6 +78,6 @@ def check_all(mypath, file_end):
     if first_run_flag:
         pd['pvalue_mode'], pd['pvalue_runs'], pd['bayesda_mode'],\
             pd['bayesda_runs'], pd['N_bootstrap'], pd['N_pop'], pd['N_gen'] =\
-            'manual', 2, 'manual', 2, 2, 50, 10
+            'manual', 2, 'y', 2, 2, 50, 10
 
     return cl_files, pd
