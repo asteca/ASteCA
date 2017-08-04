@@ -65,7 +65,8 @@ MO   auto
 #   id_star   x/ra  y/dec  coords 
 PI        0      1      2      px
 
-# Columns for the photometric data in the data file.
+# Columns for the photometric data in the data file. The IDs for the supported
+# photometric systems are stored in the 'phot_systs.dat' file.
 #
 # Magnitude and error.
 #        mag    e_mag

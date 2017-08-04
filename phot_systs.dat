@@ -1,0 +1,68 @@
+# Photometric Systems, CMD 3.0
+#
+# ID    CMD_ID                                  Photometric system
+#
+0       2mass_spitzer                           2MASS + Spitzer (IRAC+MIPS)
+1       2mass_spitzer_wise                      2MASS + Spitzer (IRAC+MIPS) + WISE
+2       2mass                                   2MASS JHKs
+3       ogle_2mass_spitzer                      OGLE + 2MASS + Spitzer (IRAC+MIPS)
+4       2mass_spitzer_wise_washington_ddo51     2MASS+Spitzer+WISE+Washington+DDO51
+5       ubvrijhk                                UBVRIJHK (cf. Maiz-Apellaniz 2006 + Bessell 1990)
+6       bessell                                 UBVRIJHKLMN (cf. Bessell 1990 + Bessell &amp; Brett 1988)
+7       akari                                   AKARI
+8       batc                                    BATC
+9       megacam_wircam                          CFHT Megacam + Wircam (all ABmags)
+10      wircam                                  CFHT Wircam
+11      megacam                                 CFHT/Megacam u*g'r'i'z'
+12      ciber                                   CIBER
+13      decam                                   DECAM (ABmags)
+14      decam_vista                             DECAM ugrizY (ABmags) + VISTA ZYJHKs (Vegamags)
+15      denis                                   DENIS
+16      dmc14                                   DMC 14 filters
+17      dmc15                                   DMC 15 filters
+18      eis                                     ESO/EIS (WFI UBVRIZ + SOFI JHK)
+19      wfi                                     ESO/WFI
+20      wfi2                                    ESO/WFI2
+21      galex_sloan                             GALEX FUV+NUV (Vegamag) + SDSS ugriz (ABmags)
+22      galex                                   GALEX FUV+NUV + Johnson's UBV (Maiz-Apellaniz version), all Vegamags
+23      gaia_tycho2_2mass                       Gaia + Tycho2 + 2MASS (all Vegamags)
+24      gaia                                    Gaia's G, G_BP and G_RP (Vegamags)
+25      UVbright                                HST+GALEX+Swift/UVOT UV filters
+26      acs_hrc                                 HST/ACS HRC
+27      acs_wfc                                 HST/ACS WFC
+28      nicmosab                                HST/NICMOS AB
+29      nicmosvega                              HST/NICMOS Vega
+30      stis                                    HST/STIS imaging mode, Vegamag
+31      wfc3_wideverywide                       HST/WFC3 all W+LP+X filters (UVIS1+IR, final throughputs)
+32      wfc3_verywide                           HST/WFC3 long-pass and extremely wide filters (UVIS1, final throughputs)
+33      wfc3_medium                             HST/WFC3 medium filters (UVIS1+IR, final throughputs)
+34      wfc3_wide                               HST/WFC3 wide filters (UVIS1+IR, final throughputs)
+35      wfpc2                                   HST/WFPC2 (Vegamag, cf. Holtzman et al. 1995)
+36      int_wfc                                 INT/WFC (Vegamag)
+37      iphas                                   IPHAS
+38      jwst_wide                               JWST wide filters
+39      kepler                                  Kepler + SDSS griz + DDO51 (in ABmags)
+40      kepler_2mass                            Kepler + SDSS griz + DDO51 (in ABmags) + 2MASS (~Vegamag)
+41      lbt_lbc                                 LBT/LBC (Vegamag)
+42      lsst                                    LSST ugrizY, March 2012 total filter throughputs (all ABmags)
+43      noao_ctio_mosaic2                       NOAO/CTIO/MOSAIC2 (Vegamag)
+44      ogle                                    OGLE-II
+45      panstarrs1                              Pan-STARRS1
+46      splus                                   S-PLUS (Vegamags)
+47      sloan                                   SDSS ugriz
+48      sloan_2mass                             SDSS ugriz + 2MASS JHKs
+49      sloan_ukidss                            SDSS ugriz + UKIDSS ZYJHK
+50      swift_uvot                              SWIFT/UVOT UVW2, UVM2, UVW1,u (Vegamag)
+51      spitzer                                 Spitzer IRAC+MIPS
+52      stroemgren                              Stroemgren-Crawford
+53      suprimecam                              Subaru/Suprime-Cam (ABmags)
+54      TESS_2mass                              TESS + 2MASS (Vegamags)
+55      TESS_2mass_kepler                       TESS + 2MASS (Vegamags) + Kepler + SDSS griz + DDO51 (in ABmags)
+56      ukidss                                  UKIDSS ZYJHK (Vegamag)
+57      visir                                   VISIR
+58      vista                                   VISTA ZYJHKs (Vegamag)
+59      vphas                                   VPHAS+ (ABmags)
+60      vst_omegacam                            VST/OMEGACAM (ABmag)
+61      vilnius                                 Vilnius
+62      washington_ddo51                        Washington CMT1T2 + DDO51
+63      deltaa                                  deltaa (Paunzen) + UBV (Maiz-Apellaniz), in Vegamags
