@@ -99,7 +99,7 @@ def KDE_test(clp, pvalue_mode, pvalue_runs):
         if pvalue_runs == 0:
             runs = int(100 / len(clp['field_regions']))
         else:
-            max(2, pvalue_runs)
+            runs = max(2, pvalue_runs)
 
         # The first list holds all the p_values obtained comparing the cluster
         # region with the field regions, the second one holds p_values for
