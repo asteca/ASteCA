@@ -40,9 +40,10 @@ def pl_mps_phot_diag(gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
             ax.axhline(y_ed, linestyle=':', lw=.8, color='k', zorder=1)
     # This reversed colormap means higher prob stars will look redder.
     cm = plt.cm.get_cmap('RdYlBu_r')
-    # If stars have a range of colors, use list of colors. Else use a single
-    # color.
-    if v_min_mp != v_max_mp:
+    # If the 'tolstoy method was used AND the stars have a range of colors.
+    # Currently the 'dolphin' likelihood does not use MPs in the fit, so it's
+    # confusing to color stars is if it did.
+    if lkl_method == 'tolstoy' and v_min_mp != v_max_mp:
         col_select_fit, isoch_col = diag_fit_inv[2], 'g'
     else:
         col_select_fit, isoch_col = '#4682b4', 'r'
