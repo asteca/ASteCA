@@ -1,5 +1,6 @@
 
 from check import pack
+from first_run import check_1strun
 from check import update
 from check import clusters
 from check import params_file
@@ -10,7 +11,7 @@ from check import params_pval
 from check import params_decont
 
 
-def check_all(mypath, first_run_flag, file_end):
+def check_all(mypath, file_end):
     """
     Checks that the necessary files are in place, the parameters stored
     in the input file are valid, and that the ranges given for the cluster
@@ -21,6 +22,10 @@ def check_all(mypath, first_run_flag, file_end):
 
     # Check that all the essential packages are installed.
     inst_packgs_lst = pack.check()
+
+    # Check .first_run file.
+    first_run_flag = check_1strun(mypath)
+
     # Import here after the needed packages were checked to be present.
     from check import params_match
     from check import read_met_files
