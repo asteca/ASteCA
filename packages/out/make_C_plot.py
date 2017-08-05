@@ -29,7 +29,7 @@ def plot_observed_cluster(
             gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax,
             y_ax, v_min_mp, v_max_mp, diag_fit_inv, diag_no_fit_inv,
             err_bar, mode_fld_clean, bin_edges)
-    except:
+    except Exception:
         # import traceback
         # print traceback.format_exc()
         print("  WARNING: error when plotting MPs on cluster's "
@@ -56,7 +56,7 @@ def plot_observed_cluster(
                 sca, cax=cbaxes, ticks=[v_min_mp, v_max_mp],
                 orientation='horizontal')
             cbar.ax.tick_params(labelsize=9)
-    except:
+    except Exception:
         # import traceback
         # print traceback.format_exc()
         print("  WARNING: error when plotting colorbar on cluster's "
