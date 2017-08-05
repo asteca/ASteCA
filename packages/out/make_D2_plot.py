@@ -96,7 +96,7 @@ def main(npd, cld, pd, synth_clst, shift_isoch, fit_params_r, fit_errors_r,
         # tight_layout is called here
         v_min_mp, v_max_mp = prep_plots.da_colorbar_range(cl_max_mag, [])
         plot_colorbar, diag_fit_inv, dummy = prep_plots.da_phot_diag(
-            cl_max_mag, [], v_min_mp, v_max_mp)
+            cl_max_mag, [], v_min_mp, v_max_mp, pd['lkl_method'])
         # Main photometric diagram of observed cluster.
         plot_observed_cluster(
             cld, pd, fig, gs, cl_max_mag, x_min_cmd, x_max_cmd, y_min_cmd,
