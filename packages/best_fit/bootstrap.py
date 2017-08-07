@@ -3,22 +3,23 @@ import numpy as np
 import random
 import genetic_algorithm
 import obs_clust_prepare
+from .. import update_progress
 
 
-def resample_replacement(obs_clust):
+def resample_replacement(cl_max_mag):
     '''
     Resamples the observed cluster with replacement. Used by the bootstrap
     process.
     '''
-    obs_cl = np.array([random.choice(obs_clust) for _ in obs_clust],
-                      dtype=float)
+    cl_max_mag_ran = [random.choice(cl_max_mag) for _ in cl_max_mag]
 
-    return obs_cl
+    return cl_max_mag_ran
 
 
-def main(ga_params, cmd_sel, e_max, err_lst, memb_prob_avrg_sort,
-         completeness, ip_list, st_dist_mass, best_fit_algor, N_b, lkl_method,
-         bin_method, bin_mass_ratio):
+def main(lkl_method, e_max, bin_mr, err_lst, completeness, fundam_params,
+         cl_max_mag, max_mag_syn, theor_tracks, R_V, ext_coefs, st_dist_mass,
+         N_fc, N_pop, N_gen, fit_diff, cross_prob, cross_sel, mut_prob, N_el,
+         N_ei, N_es, bin_method, best_fit_algor, N_b):
     '''
     Bootstrap process, runs the selected algorithm a number of times each
     time generating a new observed cluster representation through resampling
@@ -26,48 +27,41 @@ def main(ga_params, cmd_sel, e_max, err_lst, memb_prob_avrg_sort,
     '''
     print('Begin bootstrap process ({}).'.format(N_b))
 
-    # List that holds the parameters values obtained by the bootstrap
-    # process.
+    # Holds the parameter values obtained by the bootstrap process.
     params_boot = []
 
-    milestones = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
     # Begin bootstrap block (run a minimum of two times).
     for i in range(N_b):
 
         # Resample cluster with replacement.
-        obs_cl_r = resample_replacement(memb_prob_avrg_sort)
+        cl_max_mag_ran = resample_replacement(cl_max_mag)
         # Obtain prepared observed cluster according to the likelihood method
         # selected.
-        obs_cl = obs_clust_prepare.main(obs_cl_r, lkl_method, bin_method)
+        obs_cl = obs_clust_prepare.main(cl_max_mag_ran, lkl_method, bin_method)
 
         # Algorithm selected.
         if best_fit_algor == 'genet':
-            # Let the GA algor know this call comes from the bootstrap
+            # Let the GA algorithm know this call comes from the bootstrap
             # process so it will not print percentages to screen.
             flag_print_perc = False
             params_boot.append(genetic_algorithm.main(
-                flag_print_perc, err_lst, obs_cl, completeness, ip_list,
-                st_dist_mass, ga_params, lkl_method, cmd_sel, e_max,
-                bin_mass_ratio)[0])
+                lkl_method, e_max, bin_mr, err_lst, completeness, max_mag_syn,
+                fundam_params, obs_cl, theor_tracks, R_V, ext_coefs,
+                st_dist_mass, N_fc, N_pop, N_gen, fit_diff, cross_prob,
+                cross_sel, mut_prob, N_el, N_ei, N_es, flag_print_perc)[0])
 
-        percentage_complete = (100.0 * (i + 1) / max(N_b, 2))
-        while len(milestones) > 0 and percentage_complete >= milestones[0]:
-            print "  {}%".format(milestones[0])
-            # Remove that milestone from the list.
-            milestones = milestones[1:]
+        update_progress.updt(N_b, i + 1)
 
-    # Calculate errors for each parameter.
+    # Calculate errors for each fundamental parameter.
     isoch_fit_errors = np.std(params_boot, 0)
-    # Errors can not be smaller than the largest step in each parameter.
-    par_vals = ip_list[1]
     for i, p_er in enumerate(isoch_fit_errors):
         # If any parameter has a single valued range, assign an error of -1.
-        if len(par_vals[i]) > 1:
+        if len(fundam_params[i]) > 1:
             # Find largest delta in this parameter used values.
-            largest_delta = np.diff(par_vals[i]).max()
-            # Store the maximum value.
+            largest_delta = np.diff(fundam_params[i]).max()
+            # Errors can not be smaller than the largest step in each parameter
             isoch_fit_errors[i] = max(largest_delta, p_er)
         else:
-            isoch_fit_errors[i] = -1.
+            isoch_fit_errors[i] = np.nan
 
     return isoch_fit_errors

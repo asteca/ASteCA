@@ -5,20 +5,14 @@ import matplotlib.offsetbox as offsetbox
 from ..out import prep_plots
 
 
-def main(cld, clp, gd_params, clust_rad, e_rad):
+def main(
+        x, y, mmag, coords, clust_rad, e_rad, bin_cent, kde_cent, bin_width,
+        hist_2d_g, radii, rdp_points, poisson_error, field_dens, **kwargs):
     '''
     Plot cluster and its radius.
     '''
-
-    # Unpack.
-    x, y, mags = cld['x'], cld['y'], cld['mags']
-    cent_bin, clust_cent, bin_width, hist_2d_g, radii, rdp_points,\
-        poisson_error, field_dens = clp['cent_bin'], clp['clust_cent'],\
-        clp['bin_width'], clp['hist_2d_g'], clp['radii'],\
-        clp['rdp_points'], clp['poisson_error'], clp['field_dens']
-
-    coord, x_name, y_name = prep_plots.coord_syst(gd_params)
-    st_sizes_arr = prep_plots.star_size(mags)
+    coord, x_name, y_name = prep_plots.coord_syst(coords)
+    st_sizes_arr = prep_plots.star_size(mmag)
 
     # Plot all outputs
     fig = plt.figure(figsize=(12, 12))
@@ -30,10 +24,10 @@ def main(cld, clp, gd_params, clust_rad, e_rad):
     plt.xlabel('{} (bins)'.format(x_name), fontsize=12)
     plt.ylabel('{} (bins)'.format(y_name), fontsize=12)
     ax1.minorticks_on()
-    plt.axvline(x=cent_bin[0], linestyle='--', color='white')
-    plt.axhline(y=cent_bin[1], linestyle='--', color='white')
+    plt.axvline(x=bin_cent[0], linestyle='--', color='white')
+    plt.axhline(y=bin_cent[1], linestyle='--', color='white')
     # Radius
-    circle = plt.Circle((cent_bin[0], cent_bin[1]),
+    circle = plt.Circle((bin_cent[0], bin_cent[1]),
                         clust_rad / bin_width, color='w', fill=False)
     fig.gca().add_artist(circle)
     # Add text boxs.
@@ -41,7 +35,7 @@ def main(cld, clp, gd_params, clust_rad, e_rad):
     ob = offsetbox.AnchoredText(text, loc=1, prop=dict(size=10))
     ob.patch.set(boxstyle='square,pad=-0.2', alpha=0.85)
     fig.gca().add_artist(ob)
-    plt.imshow(hist_2d_g.transpose(), origin='lower')
+    plt.imshow(hist_2d_g[1].transpose(), origin='lower')
     if coord == 'deg':
         # If RA is used, invert axis.
         plt.gca().invert_xaxis()
@@ -63,12 +57,12 @@ def main(cld, clp, gd_params, clust_rad, e_rad):
     plt.ylabel('{} ({})'.format(y_name, coord), fontsize=12)
     # Set minor ticks
     ax2.minorticks_on()
-    circle = plt.Circle((clust_cent[0], clust_cent[1]), clust_rad, color='r',
+    circle = plt.Circle((kde_cent[0], kde_cent[1]), clust_rad, color='r',
                         fill=False)
     fig.gca().add_artist(circle)
     # Add text box
-    text1 = '${0}_{{cent}} = {1:g}\,{2}$'.format(x_name, clust_cent[0], coord)
-    text2 = '${0}_{{cent}} = {1:g}\,{2}$'.format(y_name, clust_cent[1], coord)
+    text1 = '${0}_{{cent}} = {1:g}\,{2}$'.format(x_name, kde_cent[0], coord)
+    text2 = '${0}_{{cent}} = {1:g}\,{2}$'.format(y_name, kde_cent[1], coord)
     text = text1 + '\n' + text2
     ob = offsetbox.AnchoredText(text, loc=2, prop=dict(size=11))
     ob.patch.set(boxstyle='square,pad=-0.2', alpha=0.85)
@@ -100,7 +94,7 @@ def main(cld, clp, gd_params, clust_rad, e_rad):
                                                          coord)]
     # Plot density profile with the smallest bin size
     ax3.plot(radii, rdp_points, 'ko-', zorder=3, label=texts[0])
-    # Plot poisson error bars
+    # Plot Poisson error bars
     plt.errorbar(radii, rdp_points, yerr=poisson_error, fmt='ko',
                  zorder=1)
     # Plot background level.

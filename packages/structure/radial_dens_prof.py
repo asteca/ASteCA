@@ -15,30 +15,13 @@ def main(clp):
     the "ring densities" for those approximate values of r.
     """
 
-    hist_2d, bin_width = clp['hist_2d'], clp['bin_width']
-    x_c_b, y_c_b = clp['cent_bin']
+    x_c_b, y_c_b = clp['bin_cent']
 
-    # Initialize lists.
-    radii, rdp_points, poisson_error = [], [], []
-
-    # Percentage of the frame where the RDP will be calculated.
-    rdp_perc = 0.75
-    # Total length in both axis.
-    x_length, y_length = len(hist_2d[0]), len(hist_2d[1])
-    # Minimum length in either axis.
-    min_length = min(x_length, y_length)
-    # Length where the RDP will be defined, in bin units.
-    rdp_length = min_length * rdp_perc
-
-    # Number of bins that define the length of the largest square ring
-    # around the center coordinates.
-    bins = int(rdp_length)
-    # Number of "square rings" to generate.
-    sq_rings = int(bins * 0.5)
-
-    square_rings = []
-    # Iterate through all the square rings.
-    for i in range(sq_rings):
+    square_rings, radii, rdp_points, poisson_error = [], [], [], []
+    # Use max x,y length defined in the 2D histogram.
+    rdp_length = max(len(clp['hist_2d'][0]), len(clp['hist_2d'][0][0]))
+    # Iterate through all the bins in the largest dimension.
+    for i in range(rdp_length):
         # Store here the coordinates of the bins.
         bins_coords = []
 
@@ -46,7 +29,7 @@ def main(clp):
         ring_count, bin_count = 0, 0
 
         # Iterate through bins in the x dimension for the 2D hist.
-        for xindex, xitem in enumerate(hist_2d):
+        for xindex, xitem in enumerate(clp['hist_2d'][0]):
             # Iterate through bins in the y dimension for the 2D hist.
             for yindex, st_in_bin in enumerate(xitem):
 
@@ -73,6 +56,11 @@ def main(clp):
                     bin_count += 1
                     bins_coords.append([i, yindex - y_c_b])
 
+        # Break when no more bins are stored in this square ring. This means
+        # we reached the border of the frame.
+        if bin_count == 0:
+            break
+
         # Store bin coordinates in each square ring.
         square_rings.append(bins_coords)
         # If no stars are inside this square ring, set value to 1 to avoid a
@@ -80,7 +68,7 @@ def main(clp):
         bin_count = 1 if bin_count == 0 else bin_count
         # The number of bins times the area of each bin gives the area of
         # this square ring.
-        area = bin_count * (bin_width ** 2)
+        area = bin_count * (clp['bin_width'] ** 2)
 
         # Calculate density corresponding to "square ring" i
         rdp_points.append(ring_count / area)
@@ -89,18 +77,15 @@ def main(clp):
 
         # Store values for radii to go with the densities obtained above
         # and stored in 'rdp_points'
-        radii.append(bin_width / 2. + (bin_width * i))
+        radii.append(clp['bin_width'] / 2. + (clp['bin_width'] * i))
 
     # Transform from bin units to coordinate units before passing.
-    rdp_length = rdp_length * bin_width
+    rdp_length = rdp_length * clp['bin_width']
 
     print('Radial density profile (RDP) calculated.')
 
     # Add data to dictionary.
-    rdp_params = {'radii': radii, 'rdp_points': rdp_points,
-                  'poisson_error': poisson_error, 'square_rings': square_rings,
-                  'rdp_length': rdp_length}
-    # Update 'clp' dictionary.
-    clp_updt = clp.copy()
-    clp_updt.update(rdp_params)
-    return clp_updt
+    clp['radii'], clp['rdp_points'], clp['poisson_error'],\
+        clp['square_rings'], clp['rdp_length'] = radii, rdp_points,\
+        poisson_error, square_rings, rdp_length
+    return clp

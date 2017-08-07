@@ -7,7 +7,7 @@ import numpy as np
 
 def pl_mp_histo(
         gs, n_memb_da, memb_prob_avrg_sort, flag_decont_skip, cl_reg_fit,
-        min_prob, mode_red_memb, local_bin):
+        min_prob, mode_fld_clean, local_bin):
     '''
     Histogram for the distribution of membership probabilities from the
     decontamination algorithm.
@@ -15,37 +15,40 @@ def pl_mp_histo(
     # Only attempt to plot if the DA was applied.
     if flag_decont_skip is False:
         # Reduced membership.
-        ax = plt.subplot(gs[4:6, 2:4])
+        ax = plt.subplot(gs[0:2, 0:2])
         plt.xlim(0., 1.)
         plt.xlabel('MP (membership probability)', fontsize=12)
         plt.ylabel('N (normalized)', fontsize=12)
         ax.minorticks_on()
-        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
+        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1,
+                zorder=1)
         prob_data = [star[7] for star in memb_prob_avrg_sort]
         # Histogram of the data.
         n_bins = int((max(prob_data) - min(prob_data)) / 0.025)
-        # Normalized histogram.
-        weights = np.ones_like(prob_data) / len(prob_data)
-        n, bins, patches = plt.hist(prob_data, n_bins, weights=weights,
-                                    normed=0)
-        # Get bin centers.
-        bin_centers = 0.5 * (bins[:-1] + bins[1:])
-        # scale values to interval [0,1]
-        col = bin_centers - min(bin_centers)
-        col /= max(col)
-        cm = plt.cm.get_cmap('RdYlBu_r')
-        # Plot histo colored according to colormap.
-        for c, p in zip(col, patches):
-            plt.setp(p, 'facecolor', cm(c))
+        if n_bins > 0:
+            # Normalized histogram.
+            weights = np.ones_like(prob_data) / len(prob_data)
+            n, bins, patches = plt.hist(prob_data, n_bins, weights=weights,
+                                        normed=0)
+            # Get bin centers.
+            bin_centers = 0.5 * (bins[:-1] + bins[1:])
+            # scale values to interval [0,1]
+            col = bin_centers - min(bin_centers)
+            col /= max(col)
+            cm = plt.cm.get_cmap('RdYlBu_r')
+            # Plot histo colored according to colormap.
+            for c, p in zip(col, patches):
+                plt.setp(p, 'facecolor', cm(c), zorder=3)
+                plt.setp(p, 'edgecolor', 'k')
+        else:
+            print("  WARNING: all MPs are equal valued. "
+                  "Can not plot MPs histogram.")
         # Add text box.
-        if mode_red_memb == 'mag':
-            str_pm = ['mag', '\leq', 'mag']
+        str_pm = ['MP', '\geq', 'prob']
+        if mode_fld_clean == 'local':
+            str_pm.append(mode_fld_clean + ';\,' + local_bin)
         else:
-            str_pm = ['MP', '\geq', 'prob']
-        if mode_red_memb == 'local':
-            str_pm.append(mode_red_memb + ';\,' + local_bin)
-        else:
-            str_pm.append(mode_red_memb.replace('_', '\_'))
+            str_pm.append(mode_fld_clean.replace('_', '\_'))
         text1 = r'$n_{{memb-DA}}={}\,(MP \geq 0.5)$'.format(n_memb_da)
         text2 = r'${}_{{min}}={:.2f}\,({})$'.format(str_pm[2], min_prob,
                                                     str_pm[3])
@@ -53,8 +56,9 @@ def pl_mp_histo(
             len(cl_reg_fit), str_pm[0], str_pm[1], str_pm[2])
         text = text1 + '\n' + text2 + '\n' + text3
         # Plot minimum probability line.
-        plt.axvline(x=min_prob, linestyle='--', color='green', lw=2.5)
-        ob = offsetbox.AnchoredText(text, loc=2, prop=dict(size=12))
+        plt.axvline(x=min_prob, linestyle='--', color='green', lw=2.5,
+                    zorder=3)
+        ob = offsetbox.AnchoredText(text, loc=2, prop=dict(size=10))
         ob.patch.set(boxstyle='square,pad=0.05', alpha=0.85)
         ax.add_artist(ob)
         # Avoid showing the value 0.0 in the y axis.
@@ -62,17 +66,18 @@ def pl_mp_histo(
 
 
 def pl_chart_mps(gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
-                 y_zmax, clust_cent, clust_rad, field_dens, flag_decont_skip,
+                 y_zmax, kde_cent, clust_rad, field_dens, flag_decont_skip,
                  v_min_mp, v_max_mp, chart_fit_inv, chart_no_fit_inv,
-                 out_clust_rad, mode_red_memb, local_bin):
+                 out_clust_rad, mode_fld_clean, local_bin):
     '''
     Finding chart of cluster region with decontamination algorithm
     applied and colors assigned according to the probabilities obtained.
     '''
-    ax = plt.subplot(gs[4:6, 4:6])
+    ax = plt.subplot(gs[0:2, 2:4])
     # Set plot limits, Use 'zoom' x,y ranges.
     plt.xlim(x_zmin, x_zmax)
     plt.ylim(y_zmin, y_zmax)
+    ax.set_title('Cluster region', fontsize=12)
     # If RA is used, invert axis.
     if coord == 'deg':
         ax.invert_xaxis()
@@ -82,15 +87,12 @@ def pl_chart_mps(gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
     # Set minor ticks
     ax.minorticks_on()
     # Radius
-    circle = plt.Circle((clust_cent[0], clust_cent[1]), clust_rad, color='red',
+    circle = plt.Circle((kde_cent[0], kde_cent[1]), clust_rad, color='red',
                         fill=False)
     fig.gca().add_artist(circle)
-    ob = offsetbox.AnchoredText('Cluster region', loc=1, prop=dict(size=12))
-    ob.patch.set(boxstyle='square,pad=-0.2', alpha=0.85)
-    ax.add_artist(ob)
     # If DA was skipped, print info on 'local' method here.
-    if flag_decont_skip and mode_red_memb == 'local':
-        text = r'$({})$'.format(mode_red_memb + ';\,' + local_bin)
+    if flag_decont_skip and mode_fld_clean == 'local':
+        text = r'$({})$'.format(mode_fld_clean + ';\,' + local_bin)
         ob = offsetbox.AnchoredText(text, pad=0.2, loc=2, prop=dict(size=12))
         ob.patch.set(alpha=0.85)
         ax.add_artist(ob)
@@ -106,12 +108,13 @@ def pl_chart_mps(gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
     # Star sizes for dense and not dense regions.
     st_size = 20 if field_dens > 0.005 else 35
     # Plot stars *not* used in the best fit process.
-    plt.scatter(chart_no_fit_inv[0], chart_no_fit_inv[1], marker='o',
-                c=col_select_no_fit, s=st_size, edgecolors='black', cmap=cm,
-                alpha=0.5, lw=0.5, vmin=v_min_mp, vmax=v_max_mp)
+    plt.scatter(
+        chart_no_fit_inv[0], chart_no_fit_inv[1], marker='o',
+        c=col_select_no_fit, s=st_size, edgecolors='black', cmap=cm,
+        alpha=0.5, lw=0.5, vmin=v_min_mp, vmax=v_max_mp)
     # Add line to stars not used in the best bit process.
-    plt.scatter(chart_no_fit_inv[0], chart_no_fit_inv[1], marker='_', c='k',
-                lw=0.5, alpha=0.5)
+    plt.scatter(chart_no_fit_inv[0], chart_no_fit_inv[1], marker='_',
+                c='k', lw=0.5, alpha=0.5)
     # Plot stars selected to be used in the best bit process.
     plt.scatter(chart_fit_inv[0], chart_fit_inv[1], marker='o',
                 c=col_select_fit, s=st_size, edgecolors='black', cmap=cm,
@@ -123,13 +126,12 @@ def pl_chart_mps(gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
 
 def pl_mps_phot_diag(gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
                      x_ax, y_ax, v_min_mp, v_max_mp, diag_fit_inv,
-                     diag_no_fit_inv, shift_isoch, err_bar, mode_red_memb,
-                     bin_edges, bf_flag):
+                     diag_no_fit_inv, err_bar, mode_fld_clean, bin_edges):
     '''
     Star's membership probabilities on cluster's photometric diagram.
     '''
     x_val, mag_y, x_err, y_err = err_bar
-    ax = plt.subplot(gs[4:6, 6:8])
+    ax = plt.subplot(gs[0:2, 4:6])
     # Set plot limits
     plt.xlim(x_min_cmd, x_max_cmd)
     plt.ylim(y_min_cmd, y_max_cmd)
@@ -137,7 +139,7 @@ def pl_mps_phot_diag(gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
     plt.xlabel('$' + x_ax + '$', fontsize=18)
     plt.ylabel('$' + y_ax + '$', fontsize=18)
     # Add text box.
-    text = '$N_{{fit}}={}$'.format(len(diag_fit_inv[0]))
+    text = '$N_{{fit}}={}$'.format(len(diag_fit_inv[2]))
     ob = offsetbox.AnchoredText(text, loc=2, prop=dict(size=14))
     ob.patch.set(boxstyle='square,pad=-0.2', alpha=0.85)
     ax.add_artist(ob)
@@ -145,13 +147,14 @@ def pl_mps_phot_diag(gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
     ax.minorticks_on()
     ax.xaxis.set_major_locator(MultipleLocator(1.0))
     # Plot grid. If bin_edges == 0., it means the 'local' method was not used.
-    if mode_red_memb == 'local' and bin_edges != 0.:
-        for x_ed in bin_edges[0]:
+    if mode_fld_clean == 'local' and bin_edges != 0.:
+        # TODO using first magnitude and color. Generalize to N-dimensions.
+        for x_ed in bin_edges[1]:
             # vertical lines
-            ax.axvline(x_ed, linestyle=':', color='k', zorder=1)
-        for y_ed in bin_edges[1]:
+            ax.axvline(x_ed, linestyle=':', lw=.8, color='k', zorder=1)
+        for y_ed in bin_edges[0]:
             # horizontal lines
-            ax.axhline(y_ed, linestyle=':', color='k', zorder=1)
+            ax.axhline(y_ed, linestyle=':', lw=.8, color='k', zorder=1)
     else:
         ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1,
                 zorder=1)
@@ -160,24 +163,21 @@ def pl_mps_phot_diag(gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
     # If stars have a range of colors, use list of colors. Else use a single
     # color.
     if v_min_mp != v_max_mp:
-        col_select_fit, col_select_no_fit, c_iso = diag_fit_inv[2], \
-            diag_no_fit_inv[2], 'g'
+        col_select_fit, col_select_no_fit = diag_fit_inv[2], \
+            diag_no_fit_inv[2]
     else:
-        col_select_fit, col_select_no_fit, c_iso = '#4682b4', '#4682b4', 'r'
+        col_select_fit, col_select_no_fit = '#4682b4', '#4682b4'
     # Plot stars *not* used in the best fit process.
-    plt.scatter(diag_no_fit_inv[0], diag_no_fit_inv[1], marker='o',
-                c=col_select_no_fit, s=35, cmap=cm, lw=0.5, alpha=0.5,
-                vmin=v_min_mp, vmax=v_max_mp, zorder=2)
+    plt.scatter(diag_no_fit_inv[1][0], diag_no_fit_inv[0][0], marker='o',
+                c=col_select_no_fit, s=35, cmap=cm, lw=0.5, edgecolor='k',
+                alpha=0.5, vmin=v_min_mp, vmax=v_max_mp, zorder=2)
     # Draw horizontal line over stars discarded.
-    plt.scatter(diag_no_fit_inv[0], diag_no_fit_inv[1], marker='_', c='k',
-                lw=0.5, alpha=0.5, zorder=3)
+    plt.scatter(diag_no_fit_inv[1][0], diag_no_fit_inv[0][0],
+                marker='_', c='k', lw=0.5, alpha=0.5, zorder=3)
     # Plot stars used in the best fit process.
-    sca = plt.scatter(diag_fit_inv[0], diag_fit_inv[1], marker='o',
-                      c=col_select_fit, s=40, cmap=cm, lw=0.5, vmin=v_min_mp,
-                      vmax=v_max_mp, zorder=4)
-    # Plot isochrone if best fit process was used.
-    if bf_flag:
-        plt.plot(shift_isoch[0], shift_isoch[1], c=c_iso, lw=1.2, zorder=5)
+    sca = plt.scatter(diag_fit_inv[1][0], diag_fit_inv[0][0], marker='o',
+                      c=col_select_fit, s=40, cmap=cm, lw=0.5, edgecolor='k',
+                      vmin=v_min_mp, vmax=v_max_mp, zorder=4)
     # If list is not empty, plot error bars at several values.
     if x_val:
         plt.errorbar(x_val, mag_y, yerr=y_err, xerr=x_err, fmt='k.', lw=0.8,

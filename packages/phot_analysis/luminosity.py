@@ -7,10 +7,8 @@ def mag_completeness(mags):
     Calculate the completeness level in each magnitude bin beyond the one
     with the maximum count (ie: the assumed 100% completeness limit)
     '''
-    # Max value of magnitude.
-    max_mag = max(mags)
     # Number of bins.
-    bins = int((max_mag - min(mags)) / 0.1)
+    bins = int((max(mags) - min(mags)) / 0.1)
     # Get histogram.
     mag_hist, bin_edges = np.histogram(mags, bins)
     # Index of the bin with the maximum number of stars.
@@ -24,7 +22,7 @@ def mag_completeness(mags):
     comp_perc = [(i * 100.) / total for i in mag_hist[max_indx:]]
 
     # Store everything in a single list.
-    completeness = [max_mag, bin_edges, max_indx, comp_perc]
+    completeness = [bin_edges, max_indx, comp_perc]
 
     return completeness
 
@@ -43,10 +41,11 @@ def main(clp, mags, **kwargs):
 
     # Calculate number of bins used by the histograms.
     binwidth = 0.25
-    x_min, x_max = min(mags) - 0.5, max(mags) + 0.5
+    x_min, x_max = min(mags[0]) - 0.5, max(mags[0]) + 0.5
     bins_n = np.arange(int(x_min), int(x_max + binwidth), binwidth)
 
-    mag_cl = zip(*cl_region)[3]
+    # USE MAIN MAGINTUDE.
+    mag_cl = zip(*zip(*cl_region)[3])[0]
     # Obtain histogram for cluster region.
     lf_clust, lf_edg_c = np.histogram(mag_cl, bins=bins_n)
 
@@ -55,13 +54,13 @@ def main(clp, mags, **kwargs):
     x_cl = np.concatenate((np.array([0.]), lf_edg_c))
     y_cl = np.concatenate((np.array([0.]), lf_clust, np.array([0.])))
 
-    # Now for field regions.
+    # Now for field regions. USE MAIN MAGINTUDE.
     mag_fl = []
     if flag_no_fl_regs is False:
 
         for freg in field_regions:
             for star in freg:
-                mag_fl.append(star[3])
+                mag_fl.append(star[3][0])
 
         # Obtain histogram for field region.
         lf_field, lf_edg_f = np.histogram(mag_fl, bins=bins_n)

@@ -1,53 +1,61 @@
 
 import numpy as np
+import copy
 import obs_clust_prepare
 import genetic_algorithm
 import brute_force_algor
 import bootstrap
-import synth_cluster
-from ..errors import error_round
-import imf
-import move_isochrone
+from ..synth_clust import extin_coefs
+from ..synth_clust import imf
 
 
-def synth_cl_plot(ip_list, isoch_fit_params, err_lst, completeness,
-                  st_dist_mass, e_max, bin_mass_ratio, cmd_sel):
+def max_mag_cut(cl_reg_fit, max_mag):
     '''
-    For plotting purposes.
+    Reject stars beyond the given magnitude limit.
     '''
-    # Get list of stored isochrones and their parameters.
-    isoch_list, param_values = ip_list[0], ip_list[1]
-    # Read best fit values for all parameters.
-    m, a, e, d, mass, binar_f = isoch_fit_params[0]
-    # Find indexes for metallicity and age. If indexes are not found due
-    # to some difference in the significant figures, use the indexes
-    # [0, 0] to prevent the code from halting.
-    try:
-        m_i, a_i = param_values[0].index(m), param_values[1].index(a)
-    except:
-        m_i, a_i = [0, 0]
-    # Generate shifted best fit isochrone.
-    shift_isoch = move_isochrone.main(isoch_list[m_i][a_i][:2], e, d, cmd_sel)
-    # Generate best fit synthetic cluster.
-    synth_clst = synth_cluster.main(
-        err_lst, completeness, st_dist_mass, isoch_list[m_i][a_i],
-        [-1., -1., e, d, mass, binar_f], e_max, bin_mass_ratio, cmd_sel)
+    # Maximum observed (main) magnitude.
+    max_mag_obs = max(list(zip(*zip(*cl_reg_fit)[1:][2])[0]))
 
-    return shift_isoch, synth_clst
+    if max_mag == 'max':
+        # No magnitude cut applied.
+        cl_max_mag, max_mag_syn = copy.deepcopy(cl_reg_fit), max_mag_obs
+    else:
+        star_lst = []
+        for star in cl_reg_fit:
+            # Check main magnitude value.
+            if star[3][0] <= max_mag:
+                # Keep stars brighter that the magnitude limit.
+                star_lst.append(star)
+
+        # Check number of stars left.
+        if len(star_lst) > 10:
+            # For the synthetic clusters, use the minimum value between the
+            # selected 'max_mag' value and the maximum observed magnitude.
+            # This prevents large 'max_mag' values from generating synthetic
+            # clusters with low mass stars in the not-observed region.
+            cl_max_mag, max_mag_syn = star_lst, min(max_mag, max_mag_obs)
+            print("Maximum magnitude cut at {:.1f} mag applied".format(
+                max_mag_syn))
+        else:
+            cl_max_mag, max_mag_syn = copy.deepcopy(cl_reg_fit), max_mag_obs
+            print("  WARNING: less than 10 stars left after removing\n"
+                  "  stars by magnitude limit. No removal applied.")
+
+    return cl_max_mag, max_mag_syn
 
 
-def params_errors(ip_list, ga_params, err_lst, memb_prob_avrg_sort,
-                  completeness, st_dist_mass, isoch_fit_params, cmd_sel,
-                  e_max, best_fit_algor, N_b, lkl_method, bin_method,
-                  bin_mass_ratio):
+def params_errors(
+    lkl_method, e_max, bin_mr, err_lst, completeness, fundam_params,
+        cl_max_mag, max_mag_syn, theor_tracks, R_V, ext_coefs, st_dist_mass,
+        N_fc, N_pop, N_gen, fit_diff, cross_prob, cross_sel, mut_prob, N_el,
+        N_ei, N_es, lkl_binning, best_fit_algor, isoch_fit_params, N_b):
     '''
     Obtain errors for the fitted parameters.
     '''
     if best_fit_algor == 'brute':
         isoch_fit_errors = []
         # Assign errors as the largest step in each parameter.
-        par_vals = ip_list[1]
-        for pv in par_vals:
+        for pv in fundam_params:
             # If any parameter has a single valued range, assign an error
             # of -1.
             if len(pv) > 1:
@@ -56,107 +64,121 @@ def params_errors(ip_list, ga_params, err_lst, memb_prob_avrg_sort,
                 # Store the maximum value.
                 isoch_fit_errors.append(largest_delta)
             else:
-                isoch_fit_errors.append(-1.)
+                isoch_fit_errors.append(np.nan)
 
     elif best_fit_algor == 'genet':
         if N_b >= 2:
             # Call bootstrap function with resampling to get the uncertainty
             # in each parameter.
             isoch_fit_errors = bootstrap.main(
-                ga_params, cmd_sel, e_max, err_lst, memb_prob_avrg_sort,
-                completeness, ip_list, st_dist_mass, best_fit_algor, N_b,
-                lkl_method, bin_method, bin_mass_ratio)
+                lkl_method, e_max, bin_mr, err_lst, completeness,
+                fundam_params, cl_max_mag, max_mag_syn, theor_tracks, R_V,
+                ext_coefs, st_dist_mass, N_fc, N_pop, N_gen, fit_diff,
+                cross_prob, cross_sel, mut_prob, N_el, N_ei, N_es, lkl_binning,
+                best_fit_algor, N_b)
         else:
-            print('Skipping bootstrap process.')
+            print('Skip bootstrap process.')
             # No error assignment.
-            isoch_fit_errors = [-1.] * len(isoch_fit_params[0])
+            isoch_fit_errors = [np.nan] * len(isoch_fit_params[0])
 
     return isoch_fit_errors
 
 
-def main(clp, ip_list, er_params, bf_params, sc_params, ga_params, ps_params,
+def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning, N_bootstrap,
+         max_mag, IMF_name, m_high, R_V, bin_mr, fundam_params, N_pop, N_gen,
+         fit_diff, cross_prob, cross_sel, mut_prob, N_el, N_ei, N_es,
+         cmd_systs, all_syst_filters, filters, colors, theor_tracks,
          **kwargs):
     '''
     Perform a best fitting process to find the cluster's fundamental
     parameters.
     '''
-    err_lst, memb_prob_avrg_sort, completeness = clp['err_lst'],\
-        clp['memb_prob_avrg_sort'], clp['completeness']
-    bf_flag, best_fit_algor, lkl_method, bin_method, N_b = bf_params
-    e_max, bin_mass_ratio, cmd_sel = er_params[1], sc_params[2], ps_params[1]
-
     # Check if algorithm should run.
     if bf_flag:
-
         print('Searching for optimal parameters.')
 
-        obs_clust = obs_clust_prepare.main(
-            memb_prob_avrg_sort, lkl_method, bin_method)
-        # Store for plotting purposes.
-        syn_b_edges = obs_clust[1]
+        err_lst, cl_reg_fit, completeness, e_max = clp['err_lst'],\
+            clp['cl_reg_fit'], clp['completeness'], clp['err_max']
+
+        # Remove stars beyond the maximum magnitude limit, if it was set.
+        cl_max_mag, max_mag_syn = max_mag_cut(cl_reg_fit, max_mag)
+
+        # Process observed cluster. This list contains data used by the
+        # likelihoods, and for plotting.
+        obs_clust = obs_clust_prepare.main(cl_max_mag, lkl_method, lkl_binning)
+
+        # DELETE
+        # print(filters)
+        # print(colors)
+        # cl_histo_f = obs_clust[2]
+        # N, B = len(cl_max_mag), len(cl_histo_f)
+        # print('N:', N, 'B:', B)
+        # B_p = np.count_nonzero(cl_histo_f)
+        # print('B != 0:', B_p)
+        # # Mighell likelihood testing
+        # print('Best chi approx:', B_p / (1. + float(N) / B_p))
+        # mig_chi = np.sum(np.clip(cl_histo_f, 0, 1) / (cl_histo_f + 1.))
+        # print("Best chi:", mig_chi)
+        # DELETE
+
+        # Obtain extinction coefficients.
+        ext_coefs = extin_coefs.main(
+            cmd_systs, all_syst_filters, filters, colors)
 
         # Obtain mass distribution using the selected IMF. We run it once
         # because the array only depends on the IMF selected.
-        st_dist_mass = imf.main(sc_params)
+        st_dist_mass = imf.main(IMF_name, m_high)
+
+        # Store the number of defined filters and colors.
+        N_fc = [len(filters), len(colors)]
 
         # Call algorithm to calculate the likelihoods for the set of
         # isochrones and return the best fitting parameters.
         if best_fit_algor == 'brute':
 
             print('Using Brute Force algorithm ({}).'.format(
-                lkl_method + '; ' + bin_method if lkl_method == 'dolphin'
+                lkl_method + '; ' + lkl_binning if lkl_method == 'dolphin'
                 else lkl_method))
             # Brute force algorithm.
             isoch_fit_params = brute_force_algor.main(
-                lkl_method, e_max, bin_mass_ratio, cmd_sel, err_lst,
-                obs_clust, completeness, ip_list, st_dist_mass)
+                lkl_method, e_max, bin_mr, err_lst, completeness, max_mag_syn,
+                fundam_params, obs_clust, theor_tracks, R_V, ext_coefs,
+                st_dist_mass, N_fc)
 
         elif best_fit_algor == 'genet':
 
             print('Using Genetic Algorithm ({}).'.format(
-                lkl_method + '; ' + bin_method if lkl_method == 'dolphin'
+                lkl_method + '; ' + lkl_binning if lkl_method == 'dolphin'
                 else lkl_method))
             # Genetic algorithm.
             # Let the GA algor know this call comes from the main function
             # so it will print percentages to screen.
             flag_print_perc = True
             isoch_fit_params = genetic_algorithm.main(
-                flag_print_perc, err_lst, obs_clust, completeness, ip_list,
-                st_dist_mass, ga_params, lkl_method, cmd_sel, e_max,
-                bin_mass_ratio)
+                lkl_method, e_max, bin_mr, err_lst, completeness, max_mag_syn,
+                fundam_params, obs_clust, theor_tracks, R_V, ext_coefs,
+                st_dist_mass, N_fc, N_pop, N_gen, fit_diff, cross_prob,
+                cross_sel, mut_prob, N_el, N_ei, N_es, flag_print_perc)
 
         print("Best fit parameters obtained.")
 
         # Assign errors for each parameter.
         isoch_fit_errors = params_errors(
-            ip_list, ga_params, err_lst, memb_prob_avrg_sort, completeness,
-            st_dist_mass, isoch_fit_params, cmd_sel, e_max, best_fit_algor,
-            N_b, lkl_method, bin_method, bin_mass_ratio)
-
-        # Generate shifted isochrone and synthetic cluster for plotting.
-        # Do this BEFORE rounding the parameter values.
-        shift_isoch, synth_clst = synth_cl_plot(ip_list, isoch_fit_params,
-                                                err_lst, completeness,
-                                                st_dist_mass, e_max,
-                                                bin_mass_ratio, cmd_sel)
-
-        if not synth_clst.any():
-            print("  WARNING: best fit synthetic cluster found is empty.")
-
-        # Round errors to 1 significant digit and round params values
-        # to the corresponding number of significant digits given by
-        # the errors.
-        isoch_fit_params[0], isoch_fit_errors = error_round.round_sig_fig(
-            isoch_fit_params[0], isoch_fit_errors)
-
+            lkl_method, e_max, bin_mr, err_lst, completeness, fundam_params,
+            cl_max_mag, max_mag_syn, theor_tracks, R_V, ext_coefs,
+            st_dist_mass, N_fc, N_pop, N_gen, fit_diff, cross_prob, cross_sel,
+            mut_prob, N_el, N_ei, N_es, lkl_binning, best_fit_algor,
+            isoch_fit_params, N_bootstrap)
     else:
         # Pass empty lists to make_plots.
-        print('Skipping parameters fitting process.')
-        isoch_fit_params, isoch_fit_errors, shift_isoch, synth_clst, \
-            syn_b_edges = [[-1., -1., -1., -1., -1., -1.]], \
-            [-1., -1., -1., -1., -1., -1.], [], [], []
+        print('Skip parameters fitting process.')
+        cl_max_mag, max_mag_syn, isoch_fit_params, isoch_fit_errors,\
+            st_dist_mass, N_fc, ext_coefs = [], -1.,\
+            [[np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]],\
+            [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan], [], [], []
 
-    clp['isoch_fit_params'], clp['isoch_fit_errors'], clp['shift_isoch'],\
-        clp['synth_clst'], clp['syn_b_edges'] = isoch_fit_params,\
-        isoch_fit_errors, shift_isoch, synth_clst, syn_b_edges
+    clp['cl_max_mag'], clp['max_mag_syn'], clp['isoch_fit_params'],\
+        clp['isoch_fit_errors'], clp['ext_coefs'], clp['st_dist_mass'],\
+        clp['N_fc'] = cl_max_mag, max_mag_syn, isoch_fit_params,\
+        isoch_fit_errors, ext_coefs, st_dist_mass, N_fc
     return clp

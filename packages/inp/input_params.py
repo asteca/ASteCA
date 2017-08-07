@@ -1,6 +1,6 @@
 
-from os.path import join
 import re
+import CMD_phot_systs
 
 
 def char_remove(in_lst):
@@ -35,7 +35,7 @@ def main(mypath, pars_f_path):
     '''
 
     # Accept these variations of the 'true' flag.
-    true_lst = ('True', 'true', 'TRUE')
+    true_lst = ('y', 'yes', 'Yes', 'YES')
 
     # Read data from file.
     with open(pars_f_path, "r") as f_dat:
@@ -49,103 +49,109 @@ def main(mypath, pars_f_path):
                 # Updater.
                 if reader[0] == 'UP':
                     up_flag = True if reader[1] in true_lst else False
+                # Matplotlib backend
+                elif reader[0] == 'FB':
+                    flag_back_force = True if reader[1] in true_lst else False
 
                 # Set global mode (i.e, for all clusters processed).
                 elif reader[0] == 'MO':
-                    mode = str(reader[1])
+                    run_mode = str(reader[1])
 
                 # Input data parameters.
-                elif reader[0] == 'PD':
-                    gd_params = map(int, reader[1:])
-                elif reader[0] == 'PX':
-                    gd_params.append(str(reader[1]))
-                elif reader[0] == 'CMD':
-                    cmd_select = int(reader[1])
+                elif reader[0] == 'PI':
+                    id_coords = reader[1:]
+                elif reader[0] == 'PM':
+                    id_mags = reader[1:]
+                elif reader[0] == 'PC':
+                    id_cols = reader[1:]
 
                 # Output parameters.
-                elif reader[0] == 'FB':
-                    flag_back_force = True if reader[1] in true_lst else False
                 elif reader[0] == 'MP':
-                    flag_make_plot = True if reader[1] in true_lst else False
-                    plot_frmt = str(reader[2])
-                    plot_dpi = int(reader[3])
-                elif reader[0] == 'MF':
+                    flag_make_plot = reader[1:]
+                elif reader[0] == 'PF':
+                    plot_frmt = str(reader[1])
+                    plot_dpi = int(reader[2])
+                elif reader[0] == 'MD':
                     flag_move_file = True if reader[1] in true_lst else False
                     done_dir = str(reader[2])
 
                 # Structure functions parameters.
                 elif reader[0] == 'CH':
-                    gh_params0 = str(reader[1])
-                    gh_params1 = float(reader[2])
+                    center_stddev = float(reader[1])
                 elif reader[0] == 'CR':
-                    cr_params = str(reader[1])
+                    radius_method = str(reader[1])
                 elif reader[0] == 'KP':
                     kp_flag = True if reader[1] in true_lst else False
                 elif reader[0] == 'GR':
                     try:
                         fr_number = int(reader[1])
-                    except:
+                    except ValueError:
                         fr_number = str(reader[1])
 
                 # Photometric functions parameters.
                 elif reader[0] == 'ER':
-                    er_params = [str(reader[1])] + map(float, reader[2:])
+                    err_max = float(reader[1])
                 elif reader[0] == 'IM':
                     im_flag = True if reader[1] in true_lst else False
                 elif reader[0] == 'PV':
-                    pv0_params = str(reader[1])
-                    pv1_params = int(reader[2])
-                elif reader[0] == 'DA':
-                    da0_params = str(reader[1])
-                    da1_params = int(reader[2])
+                    pvalue_runs = int(reader[1])
 
                 # Membership based removal parameters.
+                elif reader[0] == 'DA':
+                    bayesda_runs = int(reader[1])
                 elif reader[0] == 'RM':
-                    mode_red_memb = str(reader[1])
-                    local_bin = str(reader[2])
-                    min_prob = float(reader[3])
+                    fld_clean_mode = str(reader[1])
+                    fld_clean_bin = str(reader[2])
+                    fld_clean_prob = float(reader[3])
 
                 # Cluster parameters assignation.
                 elif reader[0] == 'BF':
                     bf_flag = True if reader[1] in true_lst else False
-                    best_fit_algor = str(reader[2])
-                    lkl_method = str(reader[3])
-                    bin_method = str(reader[4])
-                    N_b = int(reader[5])
+                elif reader[0] == 'LK':
+                    lkl_method = str(reader[1])
+                    lkl_binning = str(reader[2])
                 elif reader[0] == 'PS':
-                    iso_select = str(reader[1])
-
-                # Synthetic cluster parameters.
-                elif reader[0] == 'SC':
+                    evol_track = str(reader[1])
+                elif reader[0] == 'RV':
+                    R_V = float(reader[1])
+                elif reader[0] == 'MF':
                     IMF_name = str(reader[1])
                     m_high = float(reader[2])
-                elif reader[0] == 'PS_m':
+                elif reader[0] == 'MM':
+                    try:
+                        max_mag = float(reader[1])
+                    except ValueError:
+                        max_mag = str(reader[1])
+                elif reader[0] == 'MZ':
                     m_rs = char_remove(reader)
-                elif reader[0] == 'PS_a':
+                elif reader[0] == 'LA':
                     a_rs = char_remove(reader)
-                elif reader[0] == 'PS_e':
+                elif reader[0] == 'BV':
                     e_rs = char_remove(reader)
-                elif reader[0] == 'PS_d':
+                elif reader[0] == 'DM':
                     d_rs = char_remove(reader)
                 elif reader[0] == 'TM':
                     mass_rs = char_remove(reader)
                 elif reader[0] == 'BI':
+                    bin_rs = char_remove(reader)
+                elif reader[0] == 'BI_m':
                     bin_mr = float(reader[1])
-                    # Use [1:] since the mass ratio is located before the
-                    # range.
-                    bin_rs = char_remove(reader[1:])
+
+                elif reader[0] == 'AB':
+                    best_fit_algor = str(reader[1])
+                    N_bootstrap = int(reader[2])
 
                 # Genetic algorithm parameters.
                 elif reader[0] == 'GA':
-                    n_pop = int(reader[1])
-                    n_gen = int(reader[2])
-                    fdif = float(reader[3])
-                    p_cross = float(reader[4])
-                    cr_sel = str(reader[5])
-                    p_mut = float(reader[6])
-                    n_el = int(reader[7])
-                    n_ei = int(reader[8])
-                    n_es = int(reader[9])
+                    N_pop = int(reader[1])
+                    N_gen = int(reader[2])
+                    fit_diff = float(reader[3])
+                    cross_prob = float(reader[4])
+                    cross_sel = str(reader[5])
+                    mut_prob = float(reader[6])
+                    N_el = int(reader[7])
+                    N_ei = int(reader[8])
+                    N_es = int(reader[9])
 
                 else:
                     # Get parameters file name from path.
@@ -154,83 +160,65 @@ def main(mypath, pars_f_path):
                           "  of '{}' file.\n").format(
                         reader[0], l + 1, pars_f_name)
 
-    # Pack params in lists.
-    pl_params = [flag_make_plot, plot_frmt, plot_dpi]
-    gh_params = [gh_params0, gh_params1]
-    cr_params = [cr_params]
-    pv_params = [pv0_params, pv1_params]
-    da_params = [da0_params, da1_params]
+    # Accepted field stars removal methods.
+    fld_rem_methods = ('local', 'n_memb', 'mp_05', 'top_h', 'man', 'all')
+    # Accepted binning methods.
+    bin_methods = ('fixed', 'auto', 'fd', 'doane', 'scott', 'rice', 'sqrt',
+                   'sturges', 'knuth', 'blocks')
+    # Accepted IMF functions.
+    imf_funcs = ('chabrier_2001_exp', 'chabrier_2001_log', 'kroupa_1993',
+                 'kroupa_2002')
 
-    # Fix isochrones location according to the CMD and set selected.
-    text1, text2 = 'none', 'none'
-    # Map isochrones set selection to proper name.
-    iso_sys = {'PAR12C': 'parsec12C', 'PAR12': 'parsec12',
-               'PAR10': 'parsec10', 'PAR11': 'parsec11',
-               'MAR08A': 'marigo08A', 'MAR08B': 'marigo08B',
-               'MAR08': 'marigo08', 'GIR02': 'girardi02'}
-    text1 = iso_sys.get(iso_select)
-    # Generate correct name for the isochrones path.
-    if cmd_select in {1, 2, 3}:
-        text2 = 'ubvrijhk'
-    elif cmd_select in {4}:
-        text2 = 'washington'
-    elif cmd_select in {5, 6, 7}:
-        text2 = '2mass'
-    elif cmd_select in {8, 9}:
-        text2 = 'sloan'
-    elif cmd_select in {10, 11, 12}:
-        text2 = 'stroemgren'
-    elif cmd_select in {13}:
-        text2 = 'acs_wfc'
-    # Set iso_path according to the above values.
-    iso_path = join(mypath + '/isochrones/' + text1 + '_' + text2)
+    # Map evolutionary tracks selection to proper names, and name of the folder
+    # where they should be stored.
+    cmd_evol_tracks = {
+        # 'PAR12C': ('parsec12C', 'COLIBRI PR16'),
+        'PAR12': ('parsec12', 'PARSEC v1.2S'),
+        'PAR10': ('parsec10', 'PARSEC v1.0'),
+        'PAR11': ('parsec11', 'PARSEC v1.1'),
+        'MAR08A': ('marigo08A', 'Marigo (2008, Case A)'),
+        'MAR08B': ('marigo08B', 'Marigo (2008, Case B)'),
+        'MAR08': ('marigo08', 'Marigo (2008)'),
+        'GIR02': ('girardi02', 'Girardi (2002)')}
 
-    # Dictionary mapping selected tracks to the right name.
-    tracks_dict = {'PAR12C': 'COLIBRI PR16',
-                   'PAR12': 'PARSEC v1.2S', 'PAR10': 'PARSEC v1.0',
-                   'PAR11': 'PARSEC v1.1', 'MAR08A': 'Marigo (2008, Case A)',
-                   'MAR08B': 'Marigo (2008, Case B)', 'MAR08': 'Marigo (2008)',
-                   'GIR02': 'Girardi (2002)'}
+    # Dictionary with data on the CMD service photometric systems.
+    cmd_systs = CMD_phot_systs.main()
 
-    # Fix magnitude and color names for the CMD axis.
-    # m_1 is the y axis magnitude, m_2 is the magnitude used to obtain the
-    # color index and the third value in each key indicates how the color
-    # is to be formed, e.g: '12' means (m_1 - m_2)
-    cmds_dic = {1: ('V', 'B', 21), 2: ('V', 'I', 12), 3: ('V', 'U', 21),
-                4: ('{T_1}', 'C', 21), 5: ('J', 'H', 12), 6: ('H', 'J', 21),
-                7: ('K', 'H', 21), 8: ('g', 'u', 21), 9: ('g', 'r', 12),
-                10: ('y', 'b', 21), 11: ('y', 'v', 21), 12: ('y', 'u', 21),
-                13: ('F606W', 'F814W', 12)}
-    m_1, m_2, m_ord = cmds_dic[cmd_select]
-    # Store axes params.
-    axes_params = [m_1, m_2, m_ord]
-
-    # Store photometric system params in lists.
+    # Photometric system parameters.
     par_ranges = [m_rs, a_rs, e_rs, d_rs, mass_rs, bin_rs]
-    ps_params = [iso_path, cmd_select, iso_select, par_ranges]
 
-    # Store GA params in lists.
-    bf_params = [bf_flag, best_fit_algor, lkl_method, bin_method, N_b]
-    sc_params = [IMF_name, m_high, bin_mr]
-    ga_params = [n_pop, n_gen, fdif, p_cross, cr_sel, p_mut, n_el, n_ei, n_es]
-    rm_params = [mode_red_memb, local_bin, min_prob]
+    pd = {
+        'up_flag': up_flag, 'flag_back_force': flag_back_force,
+        'run_mode': run_mode,
+        'id_coords': id_coords, 'id_mags': id_mags, 'id_cols': id_cols,
+        'flag_make_plot': flag_make_plot, 'plot_frmt': plot_frmt,
+        'plot_dpi': plot_dpi,
+        'flag_move_file': flag_move_file, 'done_dir': done_dir,
+        'center_stddev': center_stddev, 'radius_method': radius_method,
+        'kp_flag': kp_flag, 'fr_number': fr_number, 'err_max': err_max,
+        'im_flag': im_flag, 'pvalue_runs': pvalue_runs,
+        # Decontamination algorithm parameters.
+        'bayesda_runs': bayesda_runs,
+        # Cluster region field stars removal parameters.
+        'fld_clean_mode': fld_clean_mode, 'fld_clean_bin': fld_clean_bin,
+        'fld_clean_prob': fld_clean_prob,
+        # Best fit parameters.
+        'bf_flag': bf_flag, 'best_fit_algor': best_fit_algor,
+        'lkl_method': lkl_method, 'lkl_binning': lkl_binning,
+        'N_bootstrap': N_bootstrap, 'evol_track': evol_track,
+        # Synthetic cluster parameters
+        'max_mag': max_mag, 'IMF_name': IMF_name, 'm_high': m_high,
+        'R_V': R_V, 'bin_mr': bin_mr,
+        # Genetic algorithm parameters.
+        'N_pop': N_pop, 'N_gen': N_gen, 'fit_diff': fit_diff,
+        'cross_prob': cross_prob, 'cross_sel': cross_sel, 'mut_prob': mut_prob,
+        'N_el': N_el, 'N_ei': N_ei, 'N_es': N_es,
+        # Fixed accepted parameter values and photometric systems.
+        'fld_rem_methods': fld_rem_methods, 'bin_methods': bin_methods,
+        'imf_funcs': imf_funcs, 'cmd_evol_tracks': cmd_evol_tracks,
+        'cmd_systs': cmd_systs,
+        # v These lists need to be re-formatted
+        'par_ranges': par_ranges}
 
-    # Define tuple of accepted binning methods.
-    bin_methods = ('blocks', 'knuth', 'scott', 'freedman', 'sturges',
-                   'sqrt', 'bb')
-
-    # Store all read parameters in dictionary.
-    pd = {'up_flag': up_flag, 'mode': mode, 'done_dir': done_dir,
-          'gd_params': gd_params, 'gh_params': gh_params,
-          'cr_params': cr_params, 'kp_flag': kp_flag, 'im_flag': im_flag,
-          'er_params': er_params, 'fr_number': fr_number,
-          'pv_params': pv_params, 'da_params': da_params,
-          'ps_params': ps_params, 'tracks_dict': tracks_dict,
-          'bf_params': bf_params, 'sc_params': sc_params,
-          'ga_params': ga_params, 'rm_params': rm_params,
-          'pl_params': pl_params, 'flag_move_file': flag_move_file,
-          'axes_params': axes_params, 'flag_back_force': flag_back_force,
-          'bin_methods': bin_methods}
-
-    # Return parameters dictionary 'pd'
+    # Return parameters dictionary.
     return pd

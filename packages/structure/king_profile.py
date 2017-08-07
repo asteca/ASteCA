@@ -136,7 +136,7 @@ def num_memb_conc_param(flag_3pk_conver, cd, rt, rc):
     return n_c_k, kcp
 
 
-def main(clp, kp_flag, gd_params, **kwargs):
+def main(clp, kp_flag, coords, **kwargs):
     '''
     Function to fit a King profile to a given radial density.
     The field density value is fixed and the core radius, tidal radius and
@@ -216,7 +216,7 @@ def main(clp, kp_flag, gd_params, **kwargs):
         n_c_k, kcp = num_memb_conc_param(flag_3pk_conver, cd, rt, rc)
 
         # Print results.
-        coord = prep_plots.coord_syst(gd_params)[0]
+        coord = prep_plots.coord_syst(coords)[0]
         if flag_3pk_conver:
             # Set precision of printed values.
             text2 = '{:.1f}, {:.1f}' if coord == 'px' else '{:g}, {:g}'

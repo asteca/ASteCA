@@ -5,7 +5,6 @@ from os import getcwd
 import argparse
 import traceback
 from _version import __version__
-from packages.first_run import check_1strun
 from packages.checker import check_all
 
 
@@ -48,9 +47,6 @@ def main():
     # Root path where the code is running. Remove 'packages' from path.
     mypath = realpath(join(getcwd(), dirname(__file__)))[:-8]
 
-    # Check .first_run file.
-    check_1strun(mypath)
-
     # Read command-line argument.
     file_end = num_exec()
 
@@ -63,11 +59,8 @@ def main():
     # packages are installed.
     from packages import func_caller
 
-    # Store variables that could be changed when processing each cluster.
-    mode_orig, er_params_orig = pd['mode'], pd['er_params']
     # Iterate through all cluster files.
     for cl_file in cl_files:
-
         try:
             # Call module that calls all sub-modules sequentially.
             func_caller.main(cl_file, pd)
@@ -75,9 +68,6 @@ def main():
             print('\n!!! --> {}/{} '.format(cl_file[-2], cl_file[-1]) +
                   'could not be successfully processed <-- !!!\n')
             print traceback.format_exc()
-
-        # Set these variables to their original global values.
-        pd['mode'], pd['er_params'] = mode_orig, er_params_orig
 
     # End of run.
     elapsed = time.time() - start

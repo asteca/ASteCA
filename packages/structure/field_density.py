@@ -3,7 +3,7 @@ import numpy as np
 from ..out import prep_plots
 
 
-def main(clp, gd_params, **kwargs):
+def main(clp, coords, **kwargs):
     """
     Get field density level of stars through an iterative process. Start with
     the complete set of radial density points and obtain its median and
@@ -45,7 +45,7 @@ def main(clp, gd_params, **kwargs):
         field_dens = median
 
     clp['field_dens'] = field_dens
-    coord = prep_plots.coord_syst(gd_params)[0]
+    coord = prep_plots.coord_syst(coords)[0]
     print("Field density calculated ({:.1E} stars/{c}^2).".format(
           field_dens, c=coord))
 

@@ -2,127 +2,49 @@
 import numpy as np
 
 
-def median_sigma(interv, be_m, sigma_prev):
+def main(mmag, err_max, e_mc, be_m, interv_mag, n_interv):
     '''
-    Get median and standard deviation. We use the median instead of
-    the mean to protect against outliers.
+    Store median of photometric errors for each main magnitude interval
+    Do this for magnitude and color errors.
     '''
-
-    median = np.median(interv)
-
-    # Generate interval's histogram.
-    hist, bin_edges = np.histogram(interv, bins=50)
-    bin_centres = (bin_edges[:-1] + bin_edges[1:]) / 2
-    # Get number of stars in the interval and initialize the stars
-    # counter.
-    hist_total, hist_count = sum(hist), 0.
-
-    # Set value for percentage of stars required to obtain 'sigma'.
-    perc = 95.
-    # Get the sigma value in the hist that holds perc% of the stars
-    # in the interval by iterating through all bins in this hist.
-    for bin_ind, bin_num in enumerate(hist):
-        # Set sigma value as center of this bin.
-        sigma = bin_centres[bin_ind]
-        # If condition is met, jump out of for loop.
-        if hist_count >= perc * hist_total / 100.:
-            break
-        else:
-            hist_count = hist_count + bin_num
-
-    # This condition prevents abrupt jumps in the value of sigma.
-    sigma = min(sigma, sigma_prev * 1.25)
-
-    # Update sigma_prev value.
-    sigma_prev = sigma
-
-    return median, sigma, sigma_prev
-
-
-def main(method, err_pck, cld, er_params):
-    '''
-    1- Separate stars in magnitude intervals for errors of magnitude and of
-    color.
-
-    2- Obtain histograms for each interval and get median of the
-    interval and sigma value using the histogram. Do this for magnitude and
-    color errors.
-    '''
-
-    mags, em, ec = cld['mags'], cld['em'], cld['ec']
-    e_max = er_params[1]
-    be_m, interv_mag, mag_value = err_pck
-
-    # Each list within the 'mag_interv' list holds all the magnitude error
+    # Each list within the 'mc_interv' list holds all the photometric error
     # values for all the stars in the interval 'q' which corresponds to the
     # mag value:
     # [bright_end+(interv_mag*q) + bright_end+(interv_mag*(q+1))]/2.
-    # where 'q' is the index that points to the interval being filled. Idem
-    # for 'col1_interv' but with color errors.
-    mag_interv = [[] for _ in mag_value]
-    col_interv = [[] for _ in mag_value]
+    # where 'q' is the index that points to the interval being filled.
+    mc_interv = [[] for _ in range(n_interv)]
 
-    # Iterate through all stars
-    for st_ind, st_mag in enumerate(mags):
+    # Iterate through all stars.
+    for st_ind, st_mag in enumerate(mmag):
 
-        # Use only stars below the e_max limit.
-        if em[st_ind] < e_max and ec[st_ind] < e_max and st_mag > be_m:
-            # Store each star in its corresponding
-            # interval in the segmented mag list which will be used to
-            # calculate the curve fits for both the mag and the color.
+        # Use only stars above the bright end, and below the err_max limit.
+        if be_m < st_mag and e_mc[st_ind] < err_max:
+            # Store each star in its corresponding interval in the segmented
+            # mag list. Will be used to calculate the curve fit.
 
             # Iterate through all intervals in magnitude.
-            for q in range(len(mag_value)):
+            for q in range(n_interv):
                 # Store star's errors in corresponding interval.
                 if (be_m + interv_mag * q) <= st_mag < (be_m + interv_mag *
                                                         (q + 1)):
-                    # Star falls in this interval, store its em value
-                    mag_interv[q].append(em[st_ind])
-                    # Star falls in this interval, store its ec value
-                    col_interv[q].append(ec[st_ind])
+                    # Star falls in this interval, store its error value.
+                    mc_interv[q].append(e_mc[st_ind])
                     break
 
-    # We have the magnitude errors of stars beyond the (brightest
-    # star + 2.) limit stored in magnitude intervals in the 'mag_interv' list
-    # and the same for color errors in the 'col_interv'. We need to find
-    # the histogram for each interval and store its mean and mean+sigma in the
-    # lists 'e_mag_value' and 'e_col_value'. The values in these lists will be
-    # used to fit the curve for the magnitude and color photometric errors.
+    # We have the photometric errors of stars within the (be_m, err_max) range,
+    # stored in magnitude intervals (from the main magnitude) in the
+    # 'mc_interv' list.
 
-    # 'e_mag_value' will hold two lists: the first one for the mean of the
-    # fitted Gaussians for the stars in the interval corresponding to the
-    # mag_value and the second one corresponding to the mean plus one standard
-    # deviation (sigma) for the same mag interval (for the upper curve). Idem
-    # for the 'e_col_value' but for the color.
-    e_mag_value, e_col_value = [], []
-
-    # Initial values for median, sigma and sifma_prev.
-    median, sigma, sigma_prev = 0.01, 0.005, 0.05
-
-    # Iterate through all intervals (lists) in the magnitude range.
-    for indx in range(len(mag_value)):
+    # 'e_mc_value' will hold the median photometric error for each interval
+    # of the main magnitude.
+    e_mc_value = []
+    # Initial value for the median.
+    median = 0.01
+    # Iterate through all intervals (lists) in the main magnitude range.
+    for interv in mc_interv:
         # Check that list is not empty.
-        if sum(mag_interv[indx]) != 0:
-            median, sigma, sigma_prev = median_sigma(mag_interv[indx],
-                                                     be_m, sigma_prev)
+        if interv:
+            median = np.median(interv)
+        e_mc_value.append(median)
 
-        # We obtained the median and sigma value for this interval.
-        # Store just median OR median+sigma values depending on the
-        # method selected.
-        if method == 'synth_clust':
-            e_mag_value.append(median)
-        elif method == 'eyefit':
-            e_mag_value.append(median + sigma)
-
-    # Now for colors.
-    for indx in range(len(mag_value)):
-        if sum(col_interv[indx]) != 0:
-            median, sigma, sigma_prev = median_sigma(col_interv[indx],
-                                                     be_m, sigma_prev)
-
-        if method == 'synth_clust':
-            e_col_value.append(median)
-        elif method == 'eyefit':
-            e_col_value.append(median + sigma)
-
-    return e_mag_value, e_col_value
+    return e_mc_value

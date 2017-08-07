@@ -1,50 +1,79 @@
 
 import numpy as np
 import random
-from astroML.plotting import hist
+from astropy.stats import bayesian_blocks, knuth_bin_width
 import operator
 from bayesian_da import sort_members
 
 
-def bin_edges_f(bin_method, mag_col_cl):
+def bin_edges_f(bin_method, mags_cols_cl):
     '''
     Obtain bin edges for each photometric dimension using the cluster region
-    diagram.
+    diagram. The 'bin_edges' list will contain all magnitudes first, and then
+    all colors (in the same order in which they are read).
     '''
     bin_edges = []
-    if bin_method in ('sturges', 'sqrt'):
-        if bin_method == 'sturges':
-            b_num = 1 + np.log2(len(mag_col_cl[0]))
-        else:
-            b_num = np.sqrt(len(mag_col_cl[0]))
+    if bin_method in (
+            'auto', 'fd', 'doane', 'scott', 'rice', 'sturges', 'sqrt'):
 
-        for mag_col in mag_col_cl:
-            bin_edges.append(np.histogram(mag_col, bins=int(b_num))[1])
+        for mag in mags_cols_cl[0]:
+            bin_edges.append(np.histogram(mag, bins=bin_method)[1])
+        for col in mags_cols_cl[1]:
+            bin_edges.append(np.histogram(col, bins=bin_method)[1])
 
-    elif bin_method == 'bb':
-        # Based on Bonatto & Bica (2007) 377, 3, 1301-1323. Fixed bin width
-        # of 0.25 for colors and 0.5 for magnitudes.
-        b_num = [(max(mag_col_cl[0]) - min(mag_col_cl[0])) / 0.25,
-                 (max(mag_col_cl[1]) - min(mag_col_cl[1])) / 0.5]
+    elif bin_method == 'fixed':
+        # Based on Bonatto & Bica (2007) 377, 3, 1301-1323 but using double
+        # the values used by them (0.25 for colors and 0.5 for magnitudes)
+        for mag in mags_cols_cl[0]:
+            b_num = (max(mag) - min(mag)) / 1.
+            bin_edges.append(np.histogram(mag, bins=int(b_num))[1])
+        for col in mags_cols_cl[1]:
+            b_num = (max(col) - min(col)) / .5
+            bin_edges.append(np.histogram(col, bins=int(b_num))[1])
 
-        for i, mag_col in enumerate(mag_col_cl):
-            bin_edges.append(np.histogram(mag_col, bins=int(b_num[i]))[1])
+    elif bin_method == 'knuth':
+        for mag in mags_cols_cl[0]:
+            bin_edges.append(knuth_bin_width(
+                mag, return_bins=True, quiet=True)[1])
+        for col in mags_cols_cl[1]:
+            bin_edges.append(knuth_bin_width(
+                col, return_bins=True, quiet=True)[1])
 
-    else:
-        for mag_col in mag_col_cl:
-            bin_edges.append(hist(mag_col, bins=bin_method)[1])
+    elif bin_method == 'blocks':
+        for mag in mags_cols_cl[0]:
+            bin_edges.append(bayesian_blocks(mag))
+        for col in mags_cols_cl[1]:
+            bin_edges.append(bayesian_blocks(col))
+
+    # TODO this method is currently hidden from the params file.
+    # To be used when #325 is implemented. Currently used to test
+    # multi-dimensional likelihoods.
+    #
+    # For 4 to 6 dimensions the rule below appears to be a somewhat reasonable
+    # rule of thumb for the number of bins for each dimension.
+    # There is a trade-off between a large number of smaller bins which
+    # better match features of the observed cluster but benefits larger
+    # mass values, and fewer larger bins which better match masses but losing
+    # finer details of the cluster.
+    elif bin_method == 'man':
+        d = len(mags_cols_cl[0]) + len(mags_cols_cl[1])
+        b_num = [15, 10, 7][d - 4]
+        for mag in mags_cols_cl[0]:
+            bin_edges.append(np.histogram(mag, bins=int(b_num))[1])
+        for col in mags_cols_cl[1]:
+            bin_edges.append(np.histogram(col, bins=int(b_num))[1])
 
     return bin_edges
 
 
-def get_clust_histo(memb_prob_avrg_sort, mag_col_cl, bin_edges):
+def get_clust_histo(memb_prob_avrg_sort, mags_cols_cl, bin_edges):
     '''
     Generate the N-dimensional cluster region histogram, with each star
     positioned in its corresponding cell.
     '''
 
     # Cluster region N-dimensional histogram.
-    cl_hist = np.histogramdd(np.array(zip(*mag_col_cl)), bins=bin_edges)[0]
+    cl_hist = np.histogramdd(np.array(zip(*mags_cols_cl)), bins=bin_edges)[0]
     # np.shape(cl_hist) gives the tuple containing one element per dimension,
     # indicating how many cells that dimension was divided into.
 
@@ -58,7 +87,7 @@ def get_clust_histo(memb_prob_avrg_sort, mag_col_cl, bin_edges):
     # cell/bin.
     cl_st_indx = []
     # Store indexes for each dimension.
-    for i, mag_col in enumerate(mag_col_cl):
+    for i, mag_col in enumerate(mags_cols_cl):
         # Set correct indexes for array subtracting 1, since 'np.digitize'
         # counts one more bin to the right by default.
         cl_st_indx.append(np.digitize(mag_col, bin_edges[i]) - 1)
@@ -76,7 +105,7 @@ def get_clust_histo(memb_prob_avrg_sort, mag_col_cl, bin_edges):
     return cl_hist_p, cl_hist
 
 
-def get_fl_reg_hist(field_region, bin_edges, cl_hist):
+def get_fl_reg_hist(field_regions, bin_edges, cl_hist):
     '''
     Obtain the average number of field region stars in each cell defined for
     the N-dimensional cluster region photometric diagram.
@@ -85,15 +114,19 @@ def get_fl_reg_hist(field_region, bin_edges, cl_hist):
     # Empty field region array shaped like the cluster region array.
     f_hist = np.zeros(shape=np.shape(cl_hist))
     # Add stars in all the defined field regions.
-    for freg in field_region:
-        Q = np.array(zip(*freg)[1:])
+    for freg in field_regions:
         # Create list with all magnitudes and colors defined.
-        mag_col_fl = [Q[4], Q[2]]
-        f_hist = f_hist + np.histogramdd(np.array(zip(*mag_col_fl)),
+        mags_cols_fl = []
+        for mag in zip(*zip(*freg)[1:][2]):
+            mags_cols_fl.append(mag)
+        for col in zip(*zip(*freg)[1:][4]):
+            mags_cols_fl.append(col)
+        # N-dimension histogram for each field region.
+        f_hist = f_hist + np.histogramdd(np.array(zip(*mags_cols_fl)),
                                          bins=bin_edges)[0]
 
     # Average number of stars in each cell/bin and round to integer.
-    f_hist = np.around(f_hist / len(field_region), 0)
+    f_hist = np.around(f_hist / len(field_regions), 0)
 
     return f_hist
 
@@ -155,31 +188,34 @@ def get_fit_stars(cl_hist_p, f_hist, flag_decont_skip):
     cl_reg_no_fit = sort_members([i for sublst in cl_reg_no_fit for i in
                                  sublst])
 
-    # Minimum probability of  selected stars.
+    # Minimum probability of selected stars.
     min_prob = cl_reg_fit[-1][-1]
 
     return cl_reg_fit, cl_reg_no_fit, min_prob
 
 
-def main(field_regions, memb_prob_avrg_sort, flag_decont_skip, rm_params):
+def main(field_regions, memb_prob_avrg_sort, flag_decont_skip, fld_clean_bin):
     '''
-    Takes the photometric diagram (CMD, CCD, etc.) of the cluster region with
-    assigned MPs, divides it into sub-regions (cells) according to the
-    density within it, and removes in each sub-region a number of stars
+    Takes the photometric diagram of the cluster region with assigned MPs,
+    divides it into sub-regions (cells) according to the
+    density within it, and removes from each sub-region a number of stars
     equal to the average excess due to field star contamination.
     '''
-    local_bin = rm_params[1]
 
-    # Remove ID's and zip.
-    P = np.array(zip(*memb_prob_avrg_sort)[1:], dtype='float')
-    # Create list with all magnitudes and colors defined.
-    mag_col_cl = [P[4], P[2]]
+    # Remove ID's (hence the [1:]).
+    mags_cols_cl = [[], []]
+    for mag in zip(*zip(*memb_prob_avrg_sort)[1:][2]):
+        mags_cols_cl[0].append(mag)
+    for col in zip(*zip(*memb_prob_avrg_sort)[1:][4]):
+        mags_cols_cl[1].append(col)
 
     # Obtain bin edges.
-    bin_edges = bin_edges_f(local_bin, mag_col_cl)
+    bin_edges = bin_edges_f(fld_clean_bin, mags_cols_cl)
 
+    # Convert into single N dimensional array.
+    mags_cols_cl_arr = np.array(mags_cols_cl[0] + mags_cols_cl[1])
     # Obtain N-dimensional cluster region histogram.
-    cl_hist_p, cl_hist = get_clust_histo(memb_prob_avrg_sort, mag_col_cl,
+    cl_hist_p, cl_hist = get_clust_histo(memb_prob_avrg_sort, mags_cols_cl_arr,
                                          bin_edges)
 
     # Obtain field regions histogram (only number of stars in each cell).
@@ -190,15 +226,18 @@ def main(field_regions, memb_prob_avrg_sort, flag_decont_skip, rm_params):
     cl_reg_fit, cl_reg_no_fit, min_prob = get_fit_stars(
         cl_hist_p, f_hist, flag_decont_skip)
 
+    # DELETE
     # import matplotlib.pyplot as plt
-    # fig, ax = plt.subplots()
-    # plt.scatter(P[4], P[2])
-    # ax.set_xticks(bin_edges[0], minor=False)
-    # ax.set_yticks(bin_edges[1], minor=False)
-    # ax.xaxis.grid(True, which='major')
-    # ax.yaxis.grid(True, which='major')
-    # ax.invert_yaxis()
-    # plt.show()
+    # for i, y_phot in enumerate(mags_cols_cl_arr):
+    #     for j, x_phot in enumerate(mags_cols_cl_arr[(i + 1):]):
+    #         fig, ax = plt.subplots()
+    #         plt.scatter(x_phot, y_phot)
+    #         ax.set_yticks(bin_edges[i], minor=False)
+    #         ax.set_xticks(bin_edges[len(mags_cols_cl[0]) + j], minor=False)
+    #         ax.xaxis.grid(True, which='major')
+    #         ax.yaxis.grid(True, which='major')
+    #         ax.invert_yaxis()
+    #         plt.show()
 
     # Check the number of stars selected.
     if len(cl_reg_fit) < 10:
@@ -206,5 +245,8 @@ def main(field_regions, memb_prob_avrg_sort, flag_decont_skip, rm_params):
                "  by 'local' method. Using full list.")
         cl_reg_fit, cl_reg_no_fit, min_prob, bin_edges = memb_prob_avrg_sort,\
             [], 0., 0.
+    else:
+        print("Stars removed using 'local' method ({})".format(
+            len(cl_reg_no_fit)))
 
     return cl_reg_fit, cl_reg_no_fit, min_prob, bin_edges
