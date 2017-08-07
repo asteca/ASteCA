@@ -152,7 +152,7 @@ def main(npd, cld, pd, err_max, err_lst, ext_coefs, N_fc, completeness,
             print("Top tier models saved to file.")
 
             # Create output image if flag is 'true'.
-            if pd['flag_make_plot']:
+            if 'D3' in pd['flag_make_plot']:
                 try:
                     plot_top_tiers(
                         pd, top_tiers_flo, output_subdir, clust_name,
@@ -163,3 +163,5 @@ def main(npd, cld, pd, err_max, err_lst, ext_coefs, N_fc, completeness,
                     import traceback
                     print traceback.format_exc()
                     print("  ERROR: top tiers plot could not be generated.")
+            else:
+                print("<<Skip D3 block plot>>")

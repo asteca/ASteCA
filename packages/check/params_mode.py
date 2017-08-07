@@ -1,15 +1,27 @@
 
 import sys
+from os.path import join, isfile
 from os import extsep
 
 
-def check(cl_files, run_mode, **kwargs):
+def check(mypath, cl_files, run_mode, **kwargs):
     """
-    Check that the parameters are properly written.
+    Check that running mode parameters are properly written.
     """
-    semi_file = 'semi_input.dat'  # HARDCODED
-    # Mode is semi.
+
+    # Check mode.
+    if run_mode not in ('auto', 'semi', 'manual'):
+        sys.exit("ERROR: 'mode' value selected ('{}') is not valid.".format(
+            run_mode))
+
+    semi_file = 'semi_input.dat'
     if run_mode == 'semi':
+        # Check if semi_input.dat file exists.
+        if not isfile(join(mypath, semi_file)):
+            # File semi_input.dat does not exist.
+            sys.exit("ERROR: 'semi' mode is set but 'semi_input.dat' file does"
+                     " not exist.")
+
         for clust_path in cl_files:
             clust_name = clust_path[-1].split(extsep)[0]
             # Flag to indicate if cluster was found in file.

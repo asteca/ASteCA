@@ -70,7 +70,7 @@ def main(
     '''
     Make C block plots.
     '''
-    if pd['flag_make_plot']:
+    if 'C' in pd['flag_make_plot']:
         fig = plt.figure(figsize=(30, 25))
         gs = gridspec.GridSpec(10, 12)
         add_version_plot.main()
@@ -120,3 +120,5 @@ def main(
         plt.close()
 
         print("<<Plots for C block created>>")
+    else:
+        print("<<Skip C block plot>>")

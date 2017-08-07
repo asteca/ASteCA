@@ -13,7 +13,7 @@ def main(
     '''
     Make A1 block plots.
     '''
-    if pd['flag_make_plot']:
+    if 'A1' in pd['flag_make_plot']:
         # figsize(x1, y1), GridSpec(y2, x2) --> To have square plots: x1/x2 =
         # y1/y2 = 2.5
         fig = plt.figure(figsize=(30, 25))
@@ -66,3 +66,5 @@ def main(
         plt.close()
 
         print("<<Plots for A1 block created>>")
+    else:
+        print("<<Skip A1 block plot>>")

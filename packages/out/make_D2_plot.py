@@ -65,7 +65,7 @@ def main(npd, cld, pd, synth_clst, shift_isoch, fit_params_r, fit_errors_r,
     '''
     Make D2 block plots.
     '''
-    if pd['flag_make_plot'] and pd['bf_flag']:
+    if 'D2' in pd['flag_make_plot'] and pd['bf_flag']:
         fig = plt.figure(figsize=(30, 25))
         gs = gridspec.GridSpec(10, 12)
         add_version_plot.main()
@@ -113,3 +113,5 @@ def main(npd, cld, pd, synth_clst, shift_isoch, fit_params_r, fit_errors_r,
         plt.close()
 
         print("<<Plots for D2 block created>>")
+    else:
+        print("<<Skip D2 block plot>>")

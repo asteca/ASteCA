@@ -83,17 +83,29 @@ PC    5,5,B,V        6
 
 # Create output figures?
 #
-# * flag: y / n
-#   If 'n', no output figure will be generated.
+# * blocks: A1 A2 B C D1 D2 D3
+#   Select one or more identifier to decide which plots will be produced. Leave
+#   empty for no output plots.
 #
+#   - A1: (x,y) density maps
+#   - A2: structural analysis
+#   - B:  photometric analysis
+#   - C:  decontamination algorithm
+#   - D1: likelihood minimization
+#   - D2: best fit synthetic cluster match
+#   - D3: top tier matches (if any were found)
+#
+#   blocks
+MP   A1 A2 B C D1 D2 D3
+
 # * format: png / pdf
 #   Format of the final image file.
 #
 # * DPI: [integer]
 #   Manages the size of the generated image files.
 #
-#   flag    format     DPI
-MP     y       png     150
+#   format     DPI
+PF     png     150
 
 # Move data file once it is processed?
 #

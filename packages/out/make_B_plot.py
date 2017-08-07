@@ -15,7 +15,7 @@ def main(
     '''
     Make B block plots.
     '''
-    if pd['flag_make_plot']:
+    if 'B' in pd['flag_make_plot']:
         fig = plt.figure(figsize=(30, 25))
         gs = gridspec.GridSpec(10, 12)
         add_version_plot.main()
@@ -66,3 +66,5 @@ def main(
         plt.close()
 
         print("<<Plots for B block created>>")
+    else:
+        print("<<Skip B block plot>>")

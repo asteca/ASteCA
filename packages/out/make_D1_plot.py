@@ -12,7 +12,7 @@ def main(
     '''
     Make D1 block plots.
     '''
-    if pd['flag_make_plot'] and pd['bf_flag']:
+    if 'D1' in pd['flag_make_plot'] and pd['bf_flag']:
         fig = plt.figure(figsize=(30, 25))
         gs = gridspec.GridSpec(10, 12)
         if pd['best_fit_algor'] == 'genet':
@@ -84,3 +84,5 @@ def main(
         plt.close()
 
         print("<<Plots for D1 block created>>")
+    else:
+        print("<<Skip D1 block plot>>")

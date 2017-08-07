@@ -49,6 +49,9 @@ def main(mypath, pars_f_path):
                 # Updater.
                 if reader[0] == 'UP':
                     up_flag = True if reader[1] in true_lst else False
+                # Matplotlib backend
+                elif reader[0] == 'FB':
+                    flag_back_force = True if reader[1] in true_lst else False
 
                 # Set global mode (i.e, for all clusters processed).
                 elif reader[0] == 'MO':
@@ -63,12 +66,11 @@ def main(mypath, pars_f_path):
                     id_cols = reader[1:]
 
                 # Output parameters.
-                elif reader[0] == 'FB':
-                    flag_back_force = True if reader[1] in true_lst else False
                 elif reader[0] == 'MP':
-                    flag_make_plot = True if reader[1] in true_lst else False
-                    plot_frmt = str(reader[2])
-                    plot_dpi = int(reader[3])
+                    flag_make_plot = reader[1:]
+                elif reader[0] == 'PF':
+                    plot_frmt = str(reader[1])
+                    plot_dpi = int(reader[2])
                 elif reader[0] == 'MD':
                     flag_move_file = True if reader[1] in true_lst else False
                     done_dir = str(reader[2])

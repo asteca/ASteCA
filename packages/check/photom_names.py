@@ -34,6 +34,11 @@ def check(mypath, pd):
         sys.exit("ERROR: bad format for the IDs and coordinates\n"
                  "column indexes in 'params_input.dat'.")
 
+    # Check px/deg.
+    if coords not in ('px', 'deg'):
+        sys.exit("ERROR: coordinate units '{}' given in the input parameters\n"
+                 "file are incorrect.".format(coords))
+
     # Dictionary of photometric systems defined in the CMD service.
     all_systs = pd['cmd_systs']
 
@@ -108,7 +113,7 @@ def check(mypath, pd):
             iso_paths.append(
                 join(mypath + 'isochrones/' + text1 + '_' + text2))
 
-        # REMOVE when support for multiple photometric system is in place.
+        # REMOVE when support for multiple photometric systems is in place.
         if len(all_syst_filters) > 1:
             sys.exit("ERROR: more than one photometric system defined.")
 
