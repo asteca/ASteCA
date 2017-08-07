@@ -94,8 +94,7 @@ def main(mypath, pars_f_path):
                 elif reader[0] == 'IM':
                     im_flag = True if reader[1] in true_lst else False
                 elif reader[0] == 'PV':
-                    pvalue_mode = True if reader[1] in true_lst else False
-                    pvalue_runs = int(reader[2])
+                    pvalue_runs = int(reader[1])
 
                 # Membership based removal parameters.
                 elif reader[0] == 'DA':
@@ -198,8 +197,7 @@ def main(mypath, pars_f_path):
         'flag_move_file': flag_move_file, 'done_dir': done_dir,
         'center_stddev': center_stddev, 'radius_method': radius_method,
         'kp_flag': kp_flag, 'fr_number': fr_number, 'err_max': err_max,
-        'im_flag': im_flag, 'pvalue_mode': pvalue_mode,
-        'pvalue_runs': pvalue_runs,
+        'im_flag': im_flag, 'pvalue_runs': pvalue_runs,
         # Decontamination algorithm parameters.
         'bayesda_mode': bayesda_mode, 'bayesda_runs': bayesda_runs,
         'fld_clean_mode': fld_clean_mode, 'fld_clean_bin': fld_clean_bin,

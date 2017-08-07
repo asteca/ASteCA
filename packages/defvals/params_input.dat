@@ -194,17 +194,15 @@ IM     y
 
 # KDE p-value test.
 #
-# * flag: y / n
-#   Determine the probability of the cluster region being a physical entity, as
-#   opposed to a random over-density of field stars.
+# Probability of the cluster region of being a physical entity, as opposed
+# to a random over-density of field stars.
 #
 # * runs: [integer]
 #   Number of times the CMDs of the cluster and field regions are compared.
-#   Minimum value is 2. If this value is set to '0', the code will run
-#   '100/regions' times, where 'regions' is the number of field regions defined.
+#   If '0', the function will be skipped.
 #
-#   flag   runs
-PV     y      0
+#   runs
+PV     2
 ################################################################################
 
 

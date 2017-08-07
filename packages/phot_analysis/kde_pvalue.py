@@ -44,7 +44,7 @@ def get_CMD(region):
     return matrix
 
 
-def KDE_test(clp, pvalue_mode, pvalue_runs):
+def KDE_test(clp, pvalue_runs):
     """
     Compare the cluster region KDE with all the field region KDEs using Duong's
     R-ks package to obtain a p-value. This value will be close to 1 if the
@@ -59,7 +59,7 @@ def KDE_test(clp, pvalue_mode, pvalue_runs):
     the cluster vs field and field vs field comparisons.
     """
     # mags, cols = cld['mags'], cld['cols']
-    flag_pval_test = True if pvalue_mode else False
+    flag_pval_test = True if pvalue_runs > 0 else False
 
     # Skip test if < 10 members are found within the cluster's radius.
     flag_few_members = False if len(clp['cl_region']) > 10 else True
@@ -94,19 +94,18 @@ def KDE_test(clp, pvalue_mode, pvalue_runs):
 
         print('Obtaining KDE p-value for cluster vs field regions.')
 
-        # Set number of runs for the p_value algorithm with a maximum of
-        # 100 if only one field region was used.
-        if pvalue_runs == 0:
-            runs = int(100 / len(clp['field_regions']))
-        else:
-            runs = max(2, pvalue_runs)
+        if len(clp['field_regions']) == 1 and pvalue_runs == 1:
+            pvalue_runs = 2
+            print("  WARNING: only 1 field region defined. Function\n"
+                  "  will run 2 times.")
 
         # The first list holds all the p_values obtained comparing the cluster
         # region with the field regions, the second one holds p_values for
         # field vs field comparisons.
         p_vals_cl, p_vals_f = [], []
         # Iterate a given number of times.
-        for run_num in range(runs):
+        run_total, runs = int(pvalue_runs * len(clp['field_regions'])), 0
+        for run_num in range(pvalue_runs):
             # Loop through all the field regions.
             for indx, f_region in enumerate(clp['field_regions']):
 
@@ -153,7 +152,8 @@ def KDE_test(clp, pvalue_mode, pvalue_runs):
                     # Store field vs field p-value.
                     p_vals_f.append(float(str(p_val_f)[4:].replace(',', '.')))
 
-            update_progress.updt(runs, run_num + 1)
+                runs += 1
+                update_progress.updt(run_total, runs)
 
         # For plotting purposes.
 
@@ -202,16 +202,15 @@ def KDE_test(clp, pvalue_mode, pvalue_runs):
     return pval_test_params, flag_pval_test
 
 
-def main(clp, pvalue_mode, pvalue_runs, R_in_place, **kwargs):
+def main(clp, pvalue_runs, R_in_place, **kwargs):
     """
     Only run function if the necessary application and packages are in place.
     """
     if R_in_place:
-        pval_test_params, flag_pval_test = KDE_test(
-            clp, pvalue_mode, pvalue_runs)
+        pval_test_params, flag_pval_test = KDE_test(clp, pvalue_runs)
     else:
         print("  WARNING: missing package, skipping KDE p-value test.")
-        flag_pval_test, pval_test_params = False, [-1.]
+        pval_test_params, flag_pval_test = [np.nan], False
 
     clp['pval_test_params'], clp['flag_pval_test'] =\
         pval_test_params, flag_pval_test
