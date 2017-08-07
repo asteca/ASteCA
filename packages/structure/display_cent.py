@@ -5,13 +5,13 @@ import matplotlib.offsetbox as offsetbox
 from ..out import prep_plots
 
 
-def main(x_data, y_data, mag_data, center_cl, cent_bin, h_filter):
+def main(x, y, mmag, center_cl, cent_bin, h_filter, coords):
     '''
     Show plot of cluster with value of center obtained.
     '''
 
-    coord, x_name, y_name = prep_plots.coord_syst()
-    st_sizes_arr = prep_plots.star_size(mag_data)
+    coord, x_name, y_name = prep_plots.coord_syst(coords)
+    st_sizes_arr = prep_plots.star_size(mmag)
 
     # Plot all outputs
     plt.figure(figsize=(18, 8))  # create the top-level container
@@ -29,7 +29,7 @@ def main(x_data, y_data, mag_data, center_cl, cent_bin, h_filter):
     ax1.grid(b=True, which='minor', color='k', linestyle='--', zorder=3)
     plt.axvline(x=cent_bin[0], linestyle='--', color='white')
     plt.axhline(y=cent_bin[1], linestyle='--', color='white')
-    plt.imshow(h_filter.transpose(), origin='lower')
+    plt.imshow(h_filter.transpose(), origin='lower', cmap=plt.get_cmap('OrRd'))
     if coord == 'deg':
         # If RA is used, invert axis.
         plt.gca().invert_xaxis()
@@ -38,8 +38,8 @@ def main(x_data, y_data, mag_data, center_cl, cent_bin, h_filter):
     ax2 = plt.subplot(gs[0, 1])
     ax2.set_aspect('equal')
     # Get max and min values in x,y
-    x_min, x_max = min(x_data), max(x_data)
-    y_min, y_max = min(y_data), max(y_data)
+    x_min, x_max = min(x), max(x)
+    y_min, y_max = min(y), max(y)
     # Set plot limits
     plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
@@ -65,7 +65,7 @@ def main(x_data, y_data, mag_data, center_cl, cent_bin, h_filter):
     ob.patch.set(boxstyle='square,pad=-0.2', alpha=0.85)
     plt.gca().add_artist(ob)
     # Plot stars.
-    plt.scatter(x_data, y_data, marker='o', c='black', s=st_sizes_arr)
+    plt.scatter(x, y, marker='o', c='black', s=st_sizes_arr)
 
     plt.draw()
-    print('Plot displayed, waiting for it to be closed.')
+    print("<<Plot displayed. Will continue after it is closed.>>")

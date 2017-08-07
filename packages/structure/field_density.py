@@ -3,7 +3,7 @@ import numpy as np
 from ..out import prep_plots
 
 
-def main(ring_density):
+def main(clp, coords, **kwargs):
     """
     Get field density level of stars through an iterative process. Start with
     the complete set of radial density points and obtain its median and
@@ -12,10 +12,10 @@ def main(ring_density):
     the process until no points are left beyond the 1 sigma level.
     """
 
-    stable_cond = False
     # Copy list.
-    reduced_rd = list(ring_density)
+    reduced_rd = list(clp['rdp_points'])
 
+    stable_cond = False
     while stable_cond is False:
 
         # Obtain median and standard deviation.
@@ -44,9 +44,9 @@ def main(ring_density):
 
         field_dens = median
 
-    coord = prep_plots.coord_syst()[0]
-    print('Field density calculated ({:.1E} stars/{c}^2).'.format(
+    clp['field_dens'] = field_dens
+    coord = prep_plots.coord_syst(coords)[0]
+    print("Field density calculated ({:.1E} stars/{c}^2).".format(
           field_dens, c=coord))
 
-    # Return field density value obtained.
-    return field_dens
+    return clp

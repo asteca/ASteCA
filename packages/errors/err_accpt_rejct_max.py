@@ -1,28 +1,22 @@
 
-from ..inp import input_params as g
 
-
-def main(e_mag, e_col1):
+def main(cld, err_max):
     """
-    Accept stars with photom errors < e_max both in mag and in color.
+    Accept stars with photometric errors < e_max both in mag and in color.
     """
+    # USE FIRST MAGNITUDE AND COLOR READ.
+    em, ec = cld['em'][0], cld['ec'][0]
 
-    # Unpack params.
-    e_max = g.er_params[1]
-
-    # Initialize empty list to hold accepted/rejected stars' indexes.
-    acpt_indx, rjct_indx = [], []
-
+    # Initialize empty list to hold accepted stars' indexes.
+    acpt_indx = []
     # Iterate through all stars
-    for st_ind in range(len(e_mag)):
+    for st_ind in range(len(em)):
 
-        # Reject stars with at least one error >= e_max.
-        if e_mag[st_ind] >= e_max or e_col1[st_ind] >= e_max:
-            rjct_indx.append(st_ind)
+        # Reject stars with at least one error >= err_max.
+        if em[st_ind] >= err_max or ec[st_ind] >= err_max:
+            pass
         else:
             # Accept star.
             acpt_indx.append(st_ind)
 
-    # Pass empty list.
-    err_plot = []
-    return acpt_indx, rjct_indx, err_plot
+    return acpt_indx

@@ -2,15 +2,14 @@
 from os.path import exists, isfile
 from os import makedirs
 import shutil
-from ..inp import input_params as g
 
 
-def main(dst_dir, data_file, memb_file):
+def main(pd, dst_dir, data_file, memb_file, **kwargs):
     '''
     Move cluster data file to 'done' dir if flag is set.
     '''
 
-    if g.flag_move_file:
+    if pd['flag_move_file']:
 
         # If the sub-dir doesn't exist, create it before moving the file.
         if not exists(dst_dir):

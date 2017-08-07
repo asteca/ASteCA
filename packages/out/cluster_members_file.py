@@ -1,29 +1,29 @@
 
 
-def main(memb_file_out, red_return):
+def main(clp, memb_file_out, **kwargs):
     '''
     Create output data file with stars inside the cluster radius along with
     their membership probabilities.
     '''
 
-    red_memb_fit, red_memb_no_fit = red_return[:2]
+    cl_reg_fit, cl_reg_no_fit = clp['cl_reg_fit'], clp['cl_reg_no_fit']
 
     with open(memb_file_out, 'w') as out_data_file:
-        out_data_file.write("#ID x y mag e_mag col1 e_col1 memb_prob sel\n")
+        out_data_file.write(
+            "#ID                  x             y       "
+            "mag     e_mag       col     e_col memb_prob     sel\n")
 
-    # Save cluster region with MPs obtained by the decont algor.
+    frmt = '{:<8}  {:>12.6f}  {:>12.6f}  {:>8.3f}  {:>8.3f}  {:>8.3f}  ' +\
+        '{:>8.3f}  {:>8.2f}  {:>6}\n'
+
+    idx = ['1', '0']
+    # Save cluster region with MPs obtained by the decontamination algorithm.
     with open(memb_file_out, "a") as f_out:
-        for line in red_memb_fit:
-            # Identify stars selected by the red_mem function.
-            l = line + ['1']
-            f_out.write('{:<8} {:>8.6f} {:>8.6f} {:>8.4f} {:>8.4f} {:>8.4f} \
-{:>8.4f} {:>8.4f} {:>6}'.format(*l))
-            f_out.write('\n')
-        # ^ Stars selected by the reduced membership function.
-        for line in red_memb_no_fit:
-            l = line + ['0']
-            f_out.write('{:<8} {:>8.6f} {:>8.6f} {:>8.4f} {:>8.4f} {:>8.4f} \
-{:>8.4f} {:>8.4f} {:>6}'.format(*l))
-            f_out.write('\n')
+        for i, reg in enumerate([cl_reg_fit, cl_reg_no_fit]):
+            for line in reg:
+                # Identify stars selected by the removal function.
+                txt = line[:3] + [line[3][0]] + [line[4][0]] + [line[5][0]] +\
+                    [line[6][0]] + [line[7]] + [idx[i]]
+                f_out.write(frmt.format(*txt))
 
     print('Membership probabilities saved to file.')

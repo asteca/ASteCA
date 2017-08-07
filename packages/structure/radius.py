@@ -3,17 +3,17 @@ import numpy as np
 from scipy import stats
 import matplotlib.pyplot as plt
 import warnings
-from ..inp import input_params as g
 import display_rad
 from ..out import prep_plots
 
 
-def radius_algor(rdp_params, field_dens, bin_width, coord):
+def radius_algor(clp, coord, radius_method):
     '''
     This function holds the main algorithm that returns a radius value.
     '''
 
-    radii, rdp_points = rdp_params[:2]
+    radii, rdp_points, bin_width, field_dens = clp['radii'],\
+        clp['rdp_points'], clp['bin_width'], clp['field_dens']
     # Find maximum density value and assume this is the central density.
     # Do not use previous values.
     max_dens_ind = np.argmax(rdp_points)
@@ -29,16 +29,9 @@ def radius_algor(rdp_params, field_dens, bin_width, coord):
     # Assign a value to the number of points that should be found below
     # the delta values around the field density to attain the 'stabilized'
     # condition.
-    mode_r = g.cr_params[0]
-    if mode_r == 'low':
-        # Fix to 5% of the total number of interpolated points in the RDP.
-        n_left = int(0.05 * N)
-    elif mode_r == 'mid':
-        # Fix to 10% of the total number of interpolated points in the RDP.
-        n_left = int(0.1 * N)
-    elif mode_r == 'high':
-        # Fix to 20% of the total number of interpolated points in the RDP.
-        n_left = int(0.2 * N)
+    # Fix to X% of the total number of interpolated points in the RDP.
+    lmh = {'low': 0.05, 'mid': 0.1, 'high': 0.2}
+    n_left = int(lmh[radius_method] * N)
 
     # Difference between max RDP density value and the field density value.
     delta_total = (max(rdp_points_c) - field_dens)
@@ -133,8 +126,8 @@ def radius_algor(rdp_params, field_dens, bin_width, coord):
     return clust_rad, e_rad, flag_delta_total, flag_not_stable, flag_delta
 
 
-def main(phot_data, field_dens, center_params, rdp_params,
-         semi_return, bin_width):
+def main(cld, clp, run_mode, radius_method, coords, cl_rad_semi, rad_flag_semi,
+         **kwargs):
     """
     Obtain the value for the cluster's radius by counting the number of points
     that fall within a given interval of the field density or lower. If this
@@ -146,20 +139,17 @@ def main(phot_data, field_dens, center_params, rdp_params,
     average all the radius values found for each interval.
     """
 
-    coord = prep_plots.coord_syst()[0]
+    coord = prep_plots.coord_syst(coords)[0]
     # Call function that holds the radius finding algorithm.
     clust_rad, e_rad, flag_delta_total, flag_not_stable, flag_delta = \
-        radius_algor(rdp_params, field_dens, bin_width, coord)
+        radius_algor(clp, coord, radius_method)
 
     # Check if semi or manual mode are set.
     flag_radius_manual = False
-    if g.mode == 'auto':
+    if run_mode == 'auto':
         print('Auto radius found: {:g} {}.'.format(clust_rad, coord))
 
-    elif g.mode == 'semi':
-        # Unpack semi values.
-        cl_rad_semi, rad_flag_semi = semi_return[1], semi_return[4]
-
+    elif run_mode == 'semi':
         if rad_flag_semi == 1:
             # Update values.
             clust_rad, e_rad = cl_rad_semi, 0.
@@ -169,11 +159,11 @@ def main(phot_data, field_dens, center_params, rdp_params,
 
     # If Manual mode is set, display radius and ask the user to accept it or
     # input new one.
-    elif g.mode == 'manual':
+    elif run_mode == 'manual':
 
-        print 'Radius found: {:g} {}.'.format(clust_rad, coord)
-        display_rad.main(phot_data, bin_width, center_params, clust_rad,
-                         e_rad, field_dens, rdp_params)
+        print('Radius found: {:g} {}.'.format(clust_rad, coord))
+        display_rad.main(cld['x'], cld['y'], cld['mags'][0], coords, clust_rad,
+                         e_rad, **clp)
         plt.show()
 
         # Ask if the radius is accepted, or a if a another one should be used.
@@ -189,12 +179,15 @@ def main(phot_data, field_dens, center_params, rdp_params,
                     clust_rad = clust_rad_m
                     flag_radius_manual = True
                     break
-                except:
+                except Exception:
                     print("Sorry, input is not valid. Try again.")
             else:
-                print("Sorry, input is not valid. Try again.\n")
+                print("Sorry, input is not valid. Try again.")
 
-    radius_params = [clust_rad, e_rad, flag_delta_total, flag_not_stable,
-                     flag_delta, flag_radius_manual]
+    # Add data to dictionary.
+    clp['clust_rad'], clp['e_rad'], clp['flag_delta_total'],\
+        clp['flag_not_stable'], clp['flag_delta'],\
+        clp['flag_radius_manual'] = clust_rad, e_rad, flag_delta_total,\
+        flag_not_stable, flag_delta, flag_radius_manual
 
-    return radius_params
+    return clp

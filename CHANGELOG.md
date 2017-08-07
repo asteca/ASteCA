@@ -1,6 +1,30 @@
 # Change Log
 
 
+## [[v0.2.0]][175] - 2017-08-07
+
+### Changed
+
+* Generalized code to accept an arbitrary CMD in any _single_ photometric
+  system supported by the [CMD service][173] ([#24][174]).
+* Identify binary systems in synthetic clusters ([#199][172]).
+* Plots are now produced per blocks, instead of all together at the
+  end ([#271][171])
+* Switch dependency requirement from astroML to astropy ([#303][170]).
+* Remove unused error rejection modes ([#331][169])
+* Simplify params_input.dat file ([#217][168])
+* Add density maps analysis for center function ([#164][167])
+* Remove weight added to the observed cluster CMD's histogram ([#308][166])
+* Fix bad parameter rounding ([#248][165])
+* Add 'max mag' cut for synthetic clusters ([#302][163], [#264][164])
+* Simplify installation steps ([#88][161], [#315][162])
+* Plot results of brute force minimization ([#100][160])
+* Make extinction parameter Rv a manual input parameter ([#314][159])
+* Use numpy's binning methods ([#317][158])
+* Modify RDP limit ([#294][157])
+* Store extra data from theoretical isochrones ([#201][156])
+
+
 ## [[v0.1.9.5]][155] - 2016-08-07
 
 ### Changed
@@ -509,3 +533,23 @@ ________________________________________________________________________________
 [153]: https://github.com/asteca/asteca/issues/226
 [154]: https://github.com/asteca/asteca/issues/262
 [155]: https://github.com/asteca/asteca/releases/tag/v0.1.9.5
+[156]: https://github.com/asteca/ASteCA/issues/201
+[157]: https://github.com/asteca/ASteCA/issues/294
+[158]: https://github.com/asteca/ASteCA/issues/317
+[159]: https://github.com/asteca/ASteCA/issues/314
+[160]: https://github.com/asteca/ASteCA/issues/100
+[161]: https://github.com/asteca/ASteCA/issues/88
+[162]: https://github.com/asteca/ASteCA/issues/315
+[163]: https://github.com/asteca/ASteCA/issues/302
+[164]: https://github.com/asteca/ASteCA/issues/264
+[165]: https://github.com/asteca/ASteCA/issues/248
+[166]: https://github.com/asteca/ASteCA/issues/308
+[167]: https://github.com/asteca/ASteCA/issues/164
+[168]: https://github.com/asteca/ASteCA/issues/217
+[169]: https://github.com/asteca/ASteCA/issues/331
+[170]: https://github.com/asteca/ASteCA/issues/303
+[171]: https://github.com/asteca/ASteCA/issues/271
+[172]: https://github.com/asteca/ASteCA/issues/199
+[173]: http://stev.oapd.inaf.it/cgi-bin/cmd
+[174]: https://github.com/asteca/ASteCA/issues/24
+[175]: https://github.com/asteca/asteca/releases/tag/v0.2.0

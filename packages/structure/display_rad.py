@@ -5,22 +5,14 @@ import matplotlib.offsetbox as offsetbox
 from ..out import prep_plots
 
 
-def main(phot_data, bin_width, center_params, clust_rad, e_rad, field_dens,
-         rdp_params):
+def main(
+        x, y, mmag, coords, clust_rad, e_rad, bin_cent, kde_cent, bin_width,
+        hist_2d_g, radii, rdp_points, poisson_error, field_dens, **kwargs):
     '''
     Plot cluster and its radius.
     '''
-
-    # Unpack.
-    x_data, y_data, mag_data = phot_data[1], phot_data[2], phot_data[3]
-    cent_bin, kde_cent, e_cent = center_params[:3]
-    hist_2d_g = center_params[5]
-    center_cl = [kde_cent[0], kde_cent[1]]
-    x_center_bin, y_center_bin = cent_bin
-    radii, ring_density, poisson_error = rdp_params[:3]
-
-    coord, x_name, y_name = prep_plots.coord_syst()
-    st_sizes_arr = prep_plots.star_size(mag_data)
+    coord, x_name, y_name = prep_plots.coord_syst(coords)
+    st_sizes_arr = prep_plots.star_size(mmag)
 
     # Plot all outputs
     fig = plt.figure(figsize=(12, 12))
@@ -32,10 +24,10 @@ def main(phot_data, bin_width, center_params, clust_rad, e_rad, field_dens,
     plt.xlabel('{} (bins)'.format(x_name), fontsize=12)
     plt.ylabel('{} (bins)'.format(y_name), fontsize=12)
     ax1.minorticks_on()
-    plt.axvline(x=x_center_bin, linestyle='--', color='white')
-    plt.axhline(y=y_center_bin, linestyle='--', color='white')
+    plt.axvline(x=bin_cent[0], linestyle='--', color='white')
+    plt.axhline(y=bin_cent[1], linestyle='--', color='white')
     # Radius
-    circle = plt.Circle((x_center_bin, y_center_bin),
+    circle = plt.Circle((bin_cent[0], bin_cent[1]),
                         clust_rad / bin_width, color='w', fill=False)
     fig.gca().add_artist(circle)
     # Add text boxs.
@@ -43,7 +35,7 @@ def main(phot_data, bin_width, center_params, clust_rad, e_rad, field_dens,
     ob = offsetbox.AnchoredText(text, loc=1, prop=dict(size=10))
     ob.patch.set(boxstyle='square,pad=-0.2', alpha=0.85)
     fig.gca().add_artist(ob)
-    plt.imshow(hist_2d_g.transpose(), origin='lower')
+    plt.imshow(hist_2d_g[1].transpose(), origin='lower')
     if coord == 'deg':
         # If RA is used, invert axis.
         plt.gca().invert_xaxis()
@@ -52,8 +44,8 @@ def main(phot_data, bin_width, center_params, clust_rad, e_rad, field_dens,
     ax2 = plt.subplot(gs[0, 1])
     ax2.set_aspect('equal')
     # Get max and min values in x,y
-    x_min, x_max = min(x_data), max(x_data)
-    y_min, y_max = min(y_data), max(y_data)
+    x_min, x_max = min(x), max(x)
+    y_min, y_max = min(y), max(y)
     # Set plot limits
     plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
@@ -65,18 +57,18 @@ def main(phot_data, bin_width, center_params, clust_rad, e_rad, field_dens,
     plt.ylabel('{} ({})'.format(y_name, coord), fontsize=12)
     # Set minor ticks
     ax2.minorticks_on()
-    circle = plt.Circle((center_cl[0], center_cl[1]), clust_rad, color='r',
+    circle = plt.Circle((kde_cent[0], kde_cent[1]), clust_rad, color='r',
                         fill=False)
     fig.gca().add_artist(circle)
     # Add text box
-    text1 = '${0}_{{cent}} = {1:g}\,{2}$'.format(x_name, center_cl[0], coord)
-    text2 = '${0}_{{cent}} = {1:g}\,{2}$'.format(y_name, center_cl[1], coord)
+    text1 = '${0}_{{cent}} = {1:g}\,{2}$'.format(x_name, kde_cent[0], coord)
+    text2 = '${0}_{{cent}} = {1:g}\,{2}$'.format(y_name, kde_cent[1], coord)
     text = text1 + '\n' + text2
     ob = offsetbox.AnchoredText(text, loc=2, prop=dict(size=11))
     ob.patch.set(boxstyle='square,pad=-0.2', alpha=0.85)
     plt.gca().add_artist(ob)
     # Plot stars.
-    plt.scatter(x_data, y_data, marker='o', c='black', s=st_sizes_arr)
+    plt.scatter(x, y, marker='o', c='black', s=st_sizes_arr)
 
     # Radial density plot.
     ax3 = plt.subplot(gs[1, 0:2])
@@ -84,11 +76,11 @@ def main(phot_data, bin_width, center_params, clust_rad, e_rad, field_dens,
     x_min, x_max = min(radii) - (max(radii) / 10.), \
         max(radii) + (max(radii) / 10.)
     max(radii) + (max(radii) / 20.)
-    delta_total = (max(ring_density) - field_dens)
+    delta_total = (max(rdp_points) - field_dens)
     delta_backg = 0.2 * delta_total
-    y_min = (field_dens - delta_backg) - (max(ring_density) -
-                                          min(ring_density)) / 10
-    y_max = max(ring_density) + (max(ring_density) - min(ring_density)) / 10
+    y_min = (field_dens - delta_backg) - (max(rdp_points) -
+                                          min(rdp_points)) / 10
+    y_max = max(rdp_points) + (max(rdp_points) - min(rdp_points)) / 10
     # Set plot limits
     plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
@@ -101,9 +93,9 @@ def main(phot_data, bin_width, center_params, clust_rad, e_rad, field_dens,
              'r$_{{cl}}$ = {0:g} $\pm$ {1:g} {2}'.format(clust_rad, e_rad,
                                                          coord)]
     # Plot density profile with the smallest bin size
-    ax3.plot(radii, ring_density, 'ko-', zorder=3, label=texts[0])
-    # Plot poisson error bars
-    plt.errorbar(radii, ring_density, yerr=poisson_error, fmt='ko',
+    ax3.plot(radii, rdp_points, 'ko-', zorder=3, label=texts[0])
+    # Plot Poisson error bars
+    plt.errorbar(radii, rdp_points, yerr=poisson_error, fmt='ko',
                  zorder=1)
     # Plot background level.
     ax3.hlines(y=field_dens, xmin=0, xmax=max(radii),
@@ -125,4 +117,4 @@ def main(phot_data, bin_width, center_params, clust_rad, e_rad, field_dens,
     ax3.minorticks_on()
 
     plt.draw()
-    print('Plot displayed, waiting for it to be closed.')
+    print("<<Plot displayed. Will continue after it is closed.>>")
