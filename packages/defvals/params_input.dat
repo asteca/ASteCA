@@ -211,20 +211,19 @@ PV     2
 
 # Bayesian decontamination algorithm.
 #
-# * flag: y / n / r
-#   Iterate a maximum of [runs] times or until the membership probabilities
-#   (MPs) converge to within 0.1% values first. If the flag is set to 'n',
-#   all stars will be assigned a MP of 1.
-#   If the 'r' flag is used, the code will attempt to read the probabilities
-#   from an existing file. This file should have the same format as the
-#   output '*_memb.dat' file created by the code, and should be located in the
-#   input data folder.
+# Iterate a maximum of [runs] times  
 #
-# * runs: 0<[integer]
-#   Maximum number of iterations processed by the code.
+# * runs: [integer]
+#   If '0', all stars will be assigned membership probabilities (MP) of
+#   1 (i.e.: no DA applied).
+#   If '1', the code will attempt to read the MPs from an existing file.
+#   This file should have the same format as the output '*_memb.dat' file
+#   created by the code, and should be located in the 'input' data folder.
+#   Ir 'runs' > 1, the function will iterate a maximum of 'runs' times or until
+#   the MPs converge to within 0.1% values.
 #
-#   flag     runs
-DA     y     1000
+#   runs
+DA  1000
 
 # Cluster region field stars removal.
 #

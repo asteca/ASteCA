@@ -122,21 +122,52 @@ def likelihood(region, cl_phot):
     return clust_stars_probs
 
 
-def main(clp, npd, bayesda_mode, bayesda_runs, **kwargs):
+def main(clp, npd, bayesda_runs, **kwargs):
     '''
     Bayesian field decontamination algorithm.
     '''
 
     # Check if at least one equal-sized field region was obtained.
-    if bayesda_mode in ('y', 'r') and clp['flag_no_fl_regs']:
+    if bayesda_runs > 1 and clp['flag_no_fl_regs']:
         print("  WARNING: no field regions found. Will not\n"
               "  apply decontamination algorithm.")
-        bayesda_mode = 'n'
+        bayesda_runs = 0
 
     cl_region = clp['cl_region']  # shorter
+
     flag_decont_skip = False
-    # Run algorithm for any of these selections.
-    if bayesda_mode == 'y':
+    if bayesda_runs == 0:
+        print('Assign equal probabilities to all stars in cluster region.')
+        # Assign equal probabilities to all stars.
+        runs_fields_probs = [[[1.] * len(cl_region)]]
+        flag_decont_skip = True
+
+    elif bayesda_runs == 1:
+        print('Reading membership probabilities from file.')
+        # Read IDs from file.
+        memb_file = npd['memb_file']
+        data = np.genfromtxt(memb_file, dtype=str, unpack=True)
+        id_list = data[0].tolist()
+        # Read probabilities from file.
+        data = np.genfromtxt(memb_file, dtype=float, unpack=True)
+        memb_probs = data[7].tolist()
+
+        probs = []
+        # Assign probabilities read from file according to the star's IDs.
+        # Those stars not present in the list are assigned a very low value.
+        for indx, star in enumerate(cl_region):
+            if star[0] in id_list:
+                # Index of star in file.
+                i = id_list.index(star[0])
+                # Assign the probability stored in file for this star.
+                probs.append(memb_probs[i])
+            else:
+                probs.append(0.01)
+
+        # Store probabilities in list.
+        runs_fields_probs = [[probs]]
+
+    elif bayesda_runs > 1:
         print('Applying decontamination algorithm.')
 
         # cl_region = [[id, x, y, mags, e_mags, cols, e_cols], [], [], ...]
@@ -214,40 +245,9 @@ def main(clp, npd, bayesda_mode, bayesda_runs, **kwargs):
             prob_avrg_old, break_flag = break_check(
                 prob_avrg_old, runs_fields_probs, bayesda_runs, run_num)
             if break_flag:
-                print('  MPs converged in iteration {}.'.format(run_num))
+                print('| MPs converged in iteration {}.'.format(run_num))
                 break
             update_progress.updt(bayesda_runs, run_num + 1)
-
-    elif bayesda_mode == 'r':
-        print('Reading membership probabilities from file.')
-        # Read IDs from file.
-        memb_file = npd['memb_file']
-        data = np.genfromtxt(memb_file, dtype=str, unpack=True)
-        id_list = data[0].tolist()
-        # Read probabilities from file.
-        data = np.genfromtxt(memb_file, dtype=float, unpack=True)
-        memb_probs = data[7].tolist()
-
-        probs = []
-        # Assign probabilities read from file according to the star's IDs.
-        # Those stars not present in the list are assigned a very low value.
-        for indx, star in enumerate(cl_region):
-            if star[0] in id_list:
-                # Index of star in file.
-                i = id_list.index(star[0])
-                # Assign the probability stored in file for this star.
-                probs.append(memb_probs[i])
-            else:
-                probs.append(0.01)
-
-        # Store probabilities in list.
-        runs_fields_probs = [[probs]]
-
-    elif bayesda_mode == 'n':
-        print('Assign equal probabilities to all stars in cluster region.')
-        # Assign equal probabilities to all stars.
-        runs_fields_probs = [[[1.] * len(cl_region)]]
-        flag_decont_skip = True
 
     # Call function to average all probabilities.
     memb_prob_avrg_sort = mpas(cl_region, runs_fields_probs)

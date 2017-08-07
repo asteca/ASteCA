@@ -98,8 +98,7 @@ def main(mypath, pars_f_path):
 
                 # Membership based removal parameters.
                 elif reader[0] == 'DA':
-                    bayesda_mode = str(reader[1])
-                    bayesda_runs = int(reader[2])
+                    bayesda_runs = int(reader[1])
                 elif reader[0] == 'RM':
                     fld_clean_mode = str(reader[1])
                     fld_clean_bin = str(reader[2])
@@ -199,7 +198,8 @@ def main(mypath, pars_f_path):
         'kp_flag': kp_flag, 'fr_number': fr_number, 'err_max': err_max,
         'im_flag': im_flag, 'pvalue_runs': pvalue_runs,
         # Decontamination algorithm parameters.
-        'bayesda_mode': bayesda_mode, 'bayesda_runs': bayesda_runs,
+        'bayesda_runs': bayesda_runs,
+        # Cluster region field stars removal parameters.
         'fld_clean_mode': fld_clean_mode, 'fld_clean_bin': fld_clean_bin,
         'fld_clean_prob': fld_clean_prob,
         # Best fit parameters.
