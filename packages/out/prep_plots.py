@@ -274,12 +274,15 @@ def da_phot_diag(cl_reg_fit, cl_reg_no_fit, v_min_mp, v_max_mp,
     return plot_colorbar, diag_fit_inv, diag_no_fit_inv
 
 
-def error_bars(stars_phot, x_min_cmd, err_lst):
+def error_bars(stars_phot, x_min_cmd, err_lst, all_flag=None):
     """
     Calculate error bars for plotting in photometric diagram.
     """
     # Use main magnitude.
-    mmag = zip(*zip(*stars_phot)[3])[0]
+    if all_flag == 'all':
+        mmag = stars_phot.tolist()
+    else:
+        mmag = zip(*zip(*stars_phot)[3])[0]
     x_val, mag_y, x_err, y_err = [], [], [], []
     if mmag:
         # List of y values where error bars are plotted.

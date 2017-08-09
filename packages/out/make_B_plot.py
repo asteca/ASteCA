@@ -18,7 +18,7 @@ def main(
     if 'B' in pd['flag_make_plot']:
         fig = plt.figure(figsize=(30, 25))
         gs = gridspec.GridSpec(10, 12)
-        add_version_plot.main()
+        add_version_plot.main(y_fix=.998)
 
         # # Obtain plotting parameters and data.
         x_ax, y_ax, y_axis = prep_plots.ax_names(pd['filters'], pd['colors'])
@@ -31,14 +31,16 @@ def main(
         cl_sz_pt = prep_plots.phot_diag_st_size(len(cl_region))
         err_bar_fl = prep_plots.error_bars(stars_out, x_min_cmd, err_lst)
         err_bar_cl = prep_plots.error_bars(cl_region, x_min_cmd, err_lst)
+        err_bar_all = prep_plots.error_bars(
+            cld['mags'][0], x_min_cmd, err_lst, 'all')
 
         # Photometric analysis plots.
         arglist = [
             # pl_phot_err: Photometric error rejection.
             [gs, fig, 'up', x_ax, y_ax, cld['mags'], err_max, cl_region,
-             cl_region_rjct, stars_out, stars_out_rjct],
+             cl_region_rjct, stars_out, stars_out_rjct, err_bar_all],
             [gs, fig, 'low', x_ax, y_ax, cld['mags'], err_max, cl_region,
-             cl_region_rjct, stars_out, stars_out_rjct],
+             cl_region_rjct, stars_out, stars_out_rjct, err_bar_all],
             # pl_fl_diag: Field stars CMD/CCD diagram.
             [gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
                 stars_f_rjct, stars_f_acpt, f_sz_pt, err_bar_fl],
