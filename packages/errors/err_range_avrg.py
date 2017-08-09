@@ -10,19 +10,21 @@ def errorData(mmag):
     Use the main magnitude to determine the error parameters that will be
     used in the synthetic cluster generation.
     """
-    # Define max limit for the box that holds the brightest stars.
-    be_m = min(mmag) + 2.
-    # Create a segmented list in magnitude.
+    # Define 'bright end' leaving out the brightest stars.
+    be_m = min(mmag) + 1.
     # Magnitude range.
     delta_mag = max(mmag) - be_m
     # Width of the intervals in magnitude.
     interv_mag = 0.5
     # Number of intervals.
     n_interv = int(round(delta_mag / interv_mag))
+    # Create a segmented list in magnitude.
     # Define list of points spanning the magnitude range starting from the
     # bright end. The '+ interv_mag' term is intentional so that the
     # err_medians function defines ranges around these values and they get
     # positioned in the middle of the magnitude interval.
+    if n_interv < 2:
+        print("  WARNING: main magnitude range is very small.")
     mmag_interv_pts = [
         be_m + interv_mag * (q + interv_mag) for q in range(n_interv)]
 
@@ -34,9 +36,15 @@ def get_m_c_errors(mags, e_mc_v, err_max, mmag_interv_pts):
     Fit 3P or 2P exponential curve.
     '''
     try:
-        # Fit 3-param exponential curve.
-        popt_mc, dummy = curve_fit(
-            exp_function.exp_3p, mmag_interv_pts, e_mc_v)
+        if len(mmag_interv_pts) >= 3:
+            # Fit 3-param exponential curve.
+            popt_mc, dummy = curve_fit(
+                exp_function.exp_3p, mmag_interv_pts, e_mc_v)
+        else:
+            # If the length of this list is 2, it means that the main
+            # magnitude length is too small. If this is the case, do not
+            # attempt to fit a 3 parameter exp function since it will fail.
+            raise RuntimeError
 
     # If the 3-param exponential fitting process fails.
     except RuntimeError:
@@ -46,8 +54,9 @@ def get_m_c_errors(mags, e_mc_v, err_max, mmag_interv_pts):
             popt_mc, dummy = curve_fit(
                 exp_function.exp_2p, mmag_interv_pts, e_mc_v)
             # Insert empty 'c' value to be fed later on to the 3P exponential
-            # function. This makes the 2P exp function equivalent with the 3P
-            # exp function, with the 'c' param 0.
+            # function used to obtain the plotted error bars. This makes the
+            # 2P exp function equivalent with the 3P exp function, with the
+            # 'c' parameter equal to 0.
             popt_mc = np.insert(popt_mc, 2, 0.)
 
         # If the 2-param exponential fitting process also fails, try with a

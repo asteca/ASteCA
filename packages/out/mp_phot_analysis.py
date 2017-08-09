@@ -6,16 +6,13 @@ import matplotlib.offsetbox as offsetbox
 
 
 def pl_phot_err(gs, fig, up_low, x_ax, y_ax, mags, err_max, cl_region,
-                stars_in_rjct, stars_out, stars_out_rjct):
+                stars_in_rjct, stars_out, stars_out_rjct, err_bar_all):
     '''
     Photometric error rejection.
     '''
     # Define parameters for upper and lower plots.
     if up_low == 'up':
         ax, ax_y, j = plt.subplot(gs[0, 0:2]), y_ax, 4
-        # Print mode used to reject stars based on their errors.
-        er_mode = 'auto' if err_max != 'nan' else 'manual'
-        plt.title('[' + str(er_mode) + ']', fontsize=10)
     else:
         ax, ax_y, j = plt.subplot(gs[1, 0:2]), x_ax, 6
 
@@ -25,6 +22,7 @@ def pl_phot_err(gs, fig, up_low, x_ax, y_ax, mags, err_max, cl_region,
     # Set axis labels
     plt.ylabel('$\sigma_{' + ax_y + '}$', fontsize=18)
     plt.xlabel('$' + y_ax + '$', fontsize=18)
+    ax.set_facecolor('#EFF0F1')
     # Set minor ticks
     ax.minorticks_on()
     # Plot rejected stars.
@@ -40,23 +38,34 @@ def pl_phot_err(gs, fig, up_low, x_ax, y_ax, mags, err_max, cl_region,
     # Plot accepted stars.
     plt.scatter(
         zip(*zip(*stars_out)[3])[0], zip(*zip(*stars_out)[j])[0], marker='o',
-        c='b', s=5, zorder=2, lw=0.3, edgecolor='k', label='$r > r_{cl}$')
+        c='b', s=5, zorder=2, lw=0.1, edgecolor='k', label='$r > r_{cl}$')
     plt.scatter(
         zip(*zip(*cl_region)[3])[0], zip(*zip(*cl_region)[j])[0], marker='o',
-        c='r', s=10, zorder=2, lw=0.6, edgecolor='k', label='$r \leq r_{cl}}$')
+        c='r', s=10, zorder=2, lw=0.3, edgecolor='k', label='$r \leq r_{cl}}$')
     if up_low == 'up':
         # Legends.
         leg = plt.legend(fancybox=True, loc='upper left', scatterpoints=1,
                          fontsize=16, markerscale=2.5, prop={'size': 13})
         # Set the alpha value of the legend.
         leg.get_frame().set_alpha(0.7)
-    if err_max != 'nan':
+    # Plot error curve
+    if up_low == 'up':
+        plt.plot(err_bar_all[1], err_bar_all[3], color='#ffff00', ls='--',
+                 zorder=4)
+    else:
+        plt.plot(err_bar_all[1], err_bar_all[2], color='#ffff00', ls='--',
+                 zorder=4)
+    if err_max != 'all':
         plt.ylim(-0.005, err_max + (err_max / 5.))
         # Plot err_max line.
         ax.hlines(y=err_max, xmin=x_min, xmax=x_max, color='k',
                   linestyles='dashed', zorder=2)
     else:
         plt.ylim(-0.005, plt.ylim()[1])
+    if err_max != 'all':
+        # Plot err_max line.
+        ax.hlines(y=err_max, xmin=x_min, xmax=x_max, color='k',
+                  linestyles='dashed', zorder=2)
 
 
 def pl_fl_diag(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,

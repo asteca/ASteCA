@@ -87,7 +87,7 @@ def main(cld, clp, pd):
                     break
                 elif answer_rad == 2:
                     # Store all indexes.
-                    acpt_indx, e_max_man = range(len(mmag)), 'nan'
+                    acpt_indx, e_max_man = range(len(mmag)), 'all'
                     break
                 if answer_rad not in (1, 2):
                     print("Sorry, input is not valid. Try again.")
