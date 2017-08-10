@@ -209,25 +209,42 @@ PV     2
 
 ################ Decontamination algorithm parameters ##########################
 
-# Bayesian decontamination algorithm.
+# Decontamination algorithm selection.
 #
-# Iterate a maximum of [runs] times  
+# Assign membership probabilities (MPs) to stars within the cluster region via
+# a selected decontamination algorithm (DA).
 #
-# * runs: [integer]
-#   If '0', all stars will be assigned membership probabilities (MP) of
-#   1 (i.e.: no DA applied).
-#   If '1', the code will attempt to read the MPs from an existing file.
-#   This file should have the same format as the output '*_memb.dat' file
-#   created by the code, and should be located in the 'input' data folder.
-#   Ir 'runs' > 1, the function will iterate a maximum of 'runs' times or until
-#   the MPs converge to within 0.1% values.
+# * algor: bayes / fixed / read / skip
 #
-#   runs
-DA  1000
+#   - bayes: Bayesian DA. Number of iterations set via the 'runs' parameter.
+#   - fixed: assign MPs to four fixed sections of the sequence.
+#   - read: read MPs from an existing file.
+#   - skip: all stars are assigned MP=1 (i.e.: no DA applied).
+#
+# * runs: [integer]>=2
+#   The Bayesian DA will iterate a maximum of 'runs' times or until the MPs
+#   converge to within 0.1% values. Minimum value is 2. If any other algorithm
+#   is selected, this parameter is ignored.
+#
+# * fport: 0<=[float]<=1
+#   Portion of the cluster's sequence (starting from the brightest star) that
+#   is assigned an MP of 1, if 'fixed' algorithm is selected. Otherwise this
+#   parameter is ignored.
+#
+# * id_col: [integer]
+#   Column number for the stars' IDs in the membership file, if the 'read'
+#   algorithm is selected. Otherwise this parameter is ignored.
+#
+# * mp_col: [integer]
+#   Column number for the stars' MPs in the membership file, if the 'read'
+#   algorithm is selected. Otherwise this parameter is ignored.
+#
+#   algor   runs   fport   id_col   mp_col
+DA  bayes   1000      .4        0        7
 
 # Cluster region field stars removal.
 #
-# Performs a selection of stars in the cluster region, to be used by the
+# Performs a selection of stars within the cluster region, to be used by the
 # synthetic cluster match function. Possible field stars are removed either
 # based on their assigned MPs, or randomly (if MPs are missing).
 #

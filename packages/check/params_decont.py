@@ -4,26 +4,37 @@ from os.path import isfile
 from packages.inp import names_paths
 
 
-def check(cl_files, fld_rem_methods, bin_methods, bayesda_runs, fld_clean_mode,
-          fld_clean_bin, **kwargs):
+def check(cl_files, da_algor, da_algors_accpt, bayesda_runs, fixedda_port,
+          fld_rem_methods, bin_methods, fld_clean_mode, fld_clean_bin,
+          **kwargs):
     """
     Check parameters related to the decontamination algorithm functions.
     """
 
-    # Check decontamination algorithm parameters.
-    if bayesda_runs < 0:
-        sys.exit("ERROR: decontamination algorithm 'runs' must be zero"
-                 " or greater.")
+    # Check selected algorithm.
+    if da_algor not in da_algors_accpt:
+        sys.exit("ERROR: the selected decontamination algorithm ({})\n"
+                 "is not recognized.".format(da_algor))
+
+    if da_algor == 'bayes':
+        # Check Bayesian decontamination algorithm parameters.
+        if bayesda_runs < 2:
+            sys.exit("ERROR: must input 'runs'>=2 for the Bayesian DA.")
+
+    if da_algor == 'fixed':
+        # Check Bayesian decontamination algorithm parameters.
+        if fixedda_port > 1 or fixedda_port < 0:
+            sys.exit("ERROR: 'fport' can not be outside the [0, 1] range.")
+
     # 'Read' mode is set.
-    if bayesda_runs == 1:
+    if da_algor == 'read':
         # Check if file exists.
         for cl_file in cl_files:
-
             # Get file name for membership files.
             memb_file = names_paths.memb_file_name(cl_file)
             if not isfile(memb_file):
                 # File does not exist.
-                sys.exit("ERROR: 'r' mode was set for decontamination "
+                sys.exit("ERROR: 'read' mode was set for decontamination "
                          "algorithm but the file:\n\n {}\n\ndoes not "
                          "exist.".format(memb_file))
 

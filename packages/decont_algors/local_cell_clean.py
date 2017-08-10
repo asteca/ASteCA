@@ -3,7 +3,7 @@ import numpy as np
 import random
 from astropy.stats import bayesian_blocks, knuth_bin_width
 import operator
-from bayesian_da import sort_members
+from decont_algors import sort_members
 
 
 def bin_edges_f(bin_method, mags_cols_cl):

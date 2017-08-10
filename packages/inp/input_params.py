@@ -96,9 +96,15 @@ def main(mypath, pars_f_path):
                 elif reader[0] == 'PV':
                     pvalue_runs = int(reader[1])
 
-                # Membership based removal parameters.
+                # Decontamination algorithm parameters
                 elif reader[0] == 'DA':
-                    bayesda_runs = int(reader[1])
+                    da_algor = reader[1]
+                    bayesda_runs = int(reader[2])
+                    fixedda_port = float(reader[3])
+                    readda_idcol = int(reader[4])
+                    readda_mpcol = int(reader[5])
+
+                # Cluster region field stars removal.
                 elif reader[0] == 'RM':
                     fld_clean_mode = str(reader[1])
                     fld_clean_bin = str(reader[2])
@@ -160,6 +166,8 @@ def main(mypath, pars_f_path):
                           "  of '{}' file.\n").format(
                         reader[0], l + 1, pars_f_name)
 
+    # Accepted decontamination algorithms.
+    da_algors_accpt = ('bayes', 'fixed', 'read', 'skip')
     # Accepted field stars removal methods.
     fld_rem_methods = ('local', 'n_memb', 'mp_05', 'top_h', 'man', 'all')
     # Accepted binning methods.
@@ -198,7 +206,9 @@ def main(mypath, pars_f_path):
         'kp_flag': kp_flag, 'fr_number': fr_number, 'err_max': err_max,
         'im_flag': im_flag, 'pvalue_runs': pvalue_runs,
         # Decontamination algorithm parameters.
-        'bayesda_runs': bayesda_runs,
+        'da_algor': da_algor, 'bayesda_runs': bayesda_runs,
+        'fixedda_port': fixedda_port,
+        'readda_idcol': readda_idcol, 'readda_mpcol': readda_mpcol,
         # Cluster region field stars removal parameters.
         'fld_clean_mode': fld_clean_mode, 'fld_clean_bin': fld_clean_bin,
         'fld_clean_prob': fld_clean_prob,
@@ -214,9 +224,9 @@ def main(mypath, pars_f_path):
         'cross_prob': cross_prob, 'cross_sel': cross_sel, 'mut_prob': mut_prob,
         'N_el': N_el, 'N_ei': N_ei, 'N_es': N_es,
         # Fixed accepted parameter values and photometric systems.
-        'fld_rem_methods': fld_rem_methods, 'bin_methods': bin_methods,
-        'imf_funcs': imf_funcs, 'cmd_evol_tracks': cmd_evol_tracks,
-        'cmd_systs': cmd_systs,
+        'da_algors_accpt': da_algors_accpt, 'fld_rem_methods': fld_rem_methods,
+        'bin_methods': bin_methods, 'imf_funcs': imf_funcs,
+        'cmd_evol_tracks': cmd_evol_tracks, 'cmd_systs': cmd_systs,
         # v These lists need to be re-formatted
         'par_ranges': par_ranges}
 
