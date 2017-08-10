@@ -103,7 +103,7 @@ def main(cl_file, pd):
     clp, pd = err_accpt_rejct.main(cld, clp, pd)
 
     # Obtain exponential fit for the errors.
-    clp = err_range_avrg.main(cld, clp, **pd)
+    clp = err_range_avrg.main(clp)
 
     # Get stars in and out of cluster's radius.
     clp = stars_in_out_cl_reg.main(clp)
