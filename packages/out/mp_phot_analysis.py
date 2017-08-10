@@ -55,17 +55,9 @@ def pl_phot_err(gs, fig, up_low, x_ax, y_ax, mags, err_max, cl_region,
     else:
         plt.plot(err_bar_all[1], err_bar_all[2], color='#ffff00', ls='--',
                  zorder=4)
-    if err_max != 'all':
-        plt.ylim(-0.005, err_max + (err_max / 5.))
-        # Plot err_max line.
-        ax.hlines(y=err_max, xmin=x_min, xmax=x_max, color='k',
-                  linestyles='dashed', zorder=2)
-    else:
-        plt.ylim(-0.005, plt.ylim()[1])
-    if err_max != 'all':
-        # Plot err_max line.
-        ax.hlines(y=err_max, xmin=x_min, xmax=x_max, color='k',
-                  linestyles='dashed', zorder=2)
+    ax.hlines(y=err_max, xmin=x_min, xmax=x_max, color='k',
+              linestyles='dashed', zorder=2)
+    plt.ylim(-0.005, plt.ylim()[1])
 
 
 def pl_fl_diag(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,

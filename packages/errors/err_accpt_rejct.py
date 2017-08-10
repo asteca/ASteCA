@@ -45,6 +45,19 @@ def err_sel_stars(acpt_indx, cld):
     return acpt_stars, rjct_stars
 
 
+def maxError(cld):
+    """
+    Find the maximum error value across magnitudes and colors.
+    """
+    e_max_all = 0.
+    for em in cld['em']:
+        e_max_all = max(e_max_all, max(em))
+    for ec in cld['ec']:
+        e_max_all = max(e_max_all, max(ec))
+
+    return e_max_all
+
+
 def main(cld, clp, pd):
     """
     Accept and reject stars in and out of the cluster's boundaries according to
@@ -56,9 +69,9 @@ def main(cld, clp, pd):
     err_all_fallback = False
 
     if pd['run_mode'] in ('auto', 'semi'):
-        e_max_man = pd['err_max']
+        e_max_val = pd['err_max']
         # Call function to reject stars with errors > e_max.
-        acpt_indx = e_a_r_mx.main(cld, e_max_man)
+        acpt_indx = e_a_r_mx.main(cld, e_max_val)
         if not acpt_indx:
             print("  WARNING: No stars accepted based on their errors.\n"
                   "  Using all stars.")
@@ -72,6 +85,7 @@ def main(cld, clp, pd):
     # to accept it or else use all stars except those with errors > e_max in
     # either the magnitude or the color.
     elif pd['run_mode'] == 'manual':
+        e_max_all = maxError(cld)
         move_on = False
         while not move_on:
             while True:
@@ -80,14 +94,14 @@ def main(cld, clp, pd):
                     "  1 (emax), 2 (use all stars): "))
 
                 if answer_rad == 1:
-                    e_max_man = float(raw_input(
+                    e_max_val = float(raw_input(
                         'Select maximum error value: '))
                     # Call function to reject stars with errors > e_max.
-                    acpt_indx = e_a_r_mx.main(cld, e_max_man)
+                    acpt_indx = e_a_r_mx.main(cld, e_max_val)
                     break
                 elif answer_rad == 2:
                     # Store all indexes.
-                    acpt_indx, e_max_man = range(len(mmag)), 'all'
+                    acpt_indx, e_max_val = range(len(mmag)), e_max_all
                     break
                 if answer_rad not in (1, 2):
                     print("Sorry, input is not valid. Try again.")
@@ -105,7 +119,7 @@ def main(cld, clp, pd):
                 # Display automatic errors rejection.
                 display_errors.main(
                     pd['filters'], pd['colors'], mmag, acpt_stars,
-                    rjct_stars, e_max_man)
+                    rjct_stars, e_max_val)
                 plt.show()
                 # Ask if keep or reject.
                 while True:
@@ -129,6 +143,6 @@ def main(cld, clp, pd):
     print("Stars rejected based on their errors ({}).".format(len(rjct_stars)))
 
     clp['err_all_fallback'], clp['acpt_stars'], clp['rjct_stars'],\
-        clp['err_max'] = err_all_fallback, acpt_stars, rjct_stars, e_max_man
+        clp['err_max'] = err_all_fallback, acpt_stars, rjct_stars, e_max_val
 
     return clp, pd

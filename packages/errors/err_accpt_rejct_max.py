@@ -4,7 +4,7 @@ def main(cld, err_max):
     """
     Accept stars with photometric errors < e_max both in mag and in color.
     """
-    # USE FIRST MAGNITUDE AND COLOR READ.
+    # TODO USING FIRST MAGNITUDE AND COLOR READ.
     em, ec = cld['em'][0], cld['ec'][0]
 
     # Initialize empty list to hold accepted stars' indexes.

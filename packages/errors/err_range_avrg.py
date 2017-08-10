@@ -31,7 +31,7 @@ def errorData(mmag):
     return be_m, interv_mag, n_interv, mmag_interv_pts
 
 
-def get_m_c_errors(mags, e_mc_v, err_max, mmag_interv_pts):
+def get_m_c_errors(mags, e_mc_v, mmag_interv_pts):
     '''
     Fit 3P or 2P exponential curve.
     '''
@@ -60,14 +60,14 @@ def get_m_c_errors(mags, e_mc_v, err_max, mmag_interv_pts):
             popt_mc = np.insert(popt_mc, 2, 0.)
 
         # If the 2-param exponential fitting process also fails, try with a
-        # 2P exp but using only two magnitude values, ie: a min and a max.
+        # 2P exp but using only min and max error values.
         except RuntimeError:
             print("  2P exponential error function fit failed."
                   " Perform min-max magnitude fit.")
             # Fit simple 2-params exponential curve.
             mmag_interv_pts = [min(mags), max(mags) - (max(mags) -
                                min(mags)) / 20.]
-            e_mc_r = [0.01, err_max]
+            e_mc_r = [min(e_mc_v), max(e_mc_v)]
             popt_mc, dummy = curve_fit(exp_function.exp_2p, mmag_interv_pts,
                                        e_mc_r)
             # Insert 'c' value into exponential function param list.
@@ -76,29 +76,30 @@ def get_m_c_errors(mags, e_mc_v, err_max, mmag_interv_pts):
     return popt_mc
 
 
-def main(cld, clp, err_max, **kwargs):
+def main(clp):
     '''
     Fit an exponential function to the errors in each photometric dimension,
     using the main magnitude as the x coordinate.
     This data is used to display the error bars, and more importantly, to
     generate the synthetic clusters in the best match module.
     '''
-    # Use the main magnitude.
-    mmag = cld['mags'][0]
-
+    # Use the main magnitude after max error rejection.
+    mmag = list(zip(*(zip(*clp['acpt_stars'])[3])))[0]
     be_m, interv_mag, n_interv, mmag_interv_pts = errorData(mmag)
 
     # Obtain the median points for photometric errors. Append magnitude
     # values first, and colors after.
+    e_mags = list(zip(*(zip(*clp['acpt_stars'])[4])))
+    e_cols = list(zip(*(zip(*clp['acpt_stars'])[6])))
     e_mc_medians = []
-    for e_mc in cld['em'].tolist() + cld['ec'].tolist():
+    for e_mc in e_mags + e_cols:
         e_mc_medians.append(err_medians.main(
-            mmag, err_max, e_mc, be_m, interv_mag, n_interv))
+            mmag, e_mc, be_m, interv_mag, n_interv))
 
     # Fit exponential curve for each photometric error dimension.
     err_lst = []
     for e_mc_v in e_mc_medians:
-        popt_mc = get_m_c_errors(mmag, e_mc_v, err_max, mmag_interv_pts)
+        popt_mc = get_m_c_errors(mmag, e_mc_v, mmag_interv_pts)
         err_lst.append(popt_mc)
 
     clp['err_lst'] = err_lst
