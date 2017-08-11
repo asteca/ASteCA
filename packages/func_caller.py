@@ -24,7 +24,7 @@ from phot_analysis import members_number
 from phot_analysis import luminosity
 from phot_analysis import integrated_mag
 from phot_analysis import kde_pvalue
-from decont_algors import bayesian_da
+from decont_algors import decont_algors
 from decont_algors import members_N_compare
 from decont_algors import cl_region_clean
 from out import cluster_members_file
@@ -103,7 +103,7 @@ def main(cl_file, pd):
     clp, pd = err_accpt_rejct.main(cld, clp, pd)
 
     # Obtain exponential fit for the errors.
-    clp = err_range_avrg.main(cld, clp, **pd)
+    clp = err_range_avrg.main(clp)
 
     # Get stars in and out of cluster's radius.
     clp = stars_in_out_cl_reg.main(clp)
@@ -134,7 +134,7 @@ def main(cl_file, pd):
     make_B_plot.main(npd, cld, pd, **clp)
 
     # Apply decontamination algorithm.
-    clp = bayesian_da.main(clp, npd, **pd)
+    clp = decont_algors.main(clp, npd, **pd)
 
     # Obtain members parameter.
     clp = members_N_compare.main(clp)

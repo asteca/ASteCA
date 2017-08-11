@@ -1,6 +1,17 @@
 # Change Log
 
 
+## [[v0.2.1]][180] - 2017-08-11
+
+### Changed
+
+* Fix issue with 'tolstoy' likelihood estimation ([#340][179])
+* Fix a couple of issues with the error curve fitting ([#338][178])
+* Add 'fixed' MPs algorithm (useful when no field region is available)
+  ([#326][177])
+* Fix crash when obtaining error curve ([#256][176])
+
+
 ## [[v0.2.0]][175] - 2017-08-07
 
 ### Changed
@@ -553,3 +564,8 @@ ________________________________________________________________________________
 [173]: http://stev.oapd.inaf.it/cgi-bin/cmd
 [174]: https://github.com/asteca/ASteCA/issues/24
 [175]: https://github.com/asteca/asteca/releases/tag/v0.2.0
+[176]: https://github.com/asteca/ASteCA/issues/256
+[177]: https://github.com/asteca/ASteCA/issues/326
+[178]: https://github.com/asteca/ASteCA/issues/338
+[179]: https://github.com/asteca/ASteCA/issues/340
+[180]: https://github.com/asteca/asteca/releases/tag/v0.2.1

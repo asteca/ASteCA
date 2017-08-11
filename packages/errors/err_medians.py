@@ -2,7 +2,7 @@
 import numpy as np
 
 
-def main(mmag, err_max, e_mc, be_m, interv_mag, n_interv):
+def main(mmag, e_mc, be_m, interv_mag, n_interv):
     '''
     Store median of photometric errors for each main magnitude interval
     Do this for magnitude and color errors.
@@ -17,8 +17,9 @@ def main(mmag, err_max, e_mc, be_m, interv_mag, n_interv):
     # Iterate through all stars.
     for st_ind, st_mag in enumerate(mmag):
 
-        # Use only stars above the bright end, and below the err_max limit.
-        if be_m < st_mag and e_mc[st_ind] < err_max:
+        # Use only stars above the bright end. All stars are already below
+        # the err_max limit.
+        if be_m < st_mag:
             # Store each star in its corresponding interval in the segmented
             # mag list. Will be used to calculate the curve fit.
 

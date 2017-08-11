@@ -1,5 +1,4 @@
 
-import itertools
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from os.path import join
@@ -72,10 +71,10 @@ def main(npd, cld, pd, synth_clst, shift_isoch, fit_params_r, fit_errors_r,
 
         x_ax, y_ax, y_axis = prep_plots.ax_names(pd['filters'], pd['colors'])
         # TODO using first magnitude and color defined
-        firts_col = list(itertools.chain.from_iterable(zip(*cl_max_mag)[5]))
-        first_mag = list(itertools.chain.from_iterable(zip(*cl_max_mag)[3]))
+        first_col = list(zip(*zip(*cl_max_mag)[5])[0])
+        first_mag = list(zip(*zip(*cl_max_mag)[3])[0])
         x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd =\
-            prep_plots.diag_limits(y_axis, firts_col, first_mag)
+            prep_plots.diag_limits(y_axis, first_col, first_mag)
         hess_data = prep_plots.get_hess(
             pd['lkl_method'], pd['lkl_binning'], cl_max_mag, synth_clst)
 
