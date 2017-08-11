@@ -61,7 +61,8 @@ def read_met_file(met_f, age_values, line_start, age_format, column_ids):
 
 
 def filters_and_extra_pars(
-        age_values, all_syst_filters, age_format, line_start, met_f, j):
+        evol_track, age_values, all_syst_filters, age_format, line_start,
+        met_f, j):
     """
     Read the data from all the filters in all the photometric systems defined,
     and also the extra parameters for each metallicity and age value (masses,
@@ -78,7 +79,7 @@ def filters_and_extra_pars(
     else:
         identif = 'extra parameters'
         # Column numbers for the extra parameters for this metallicity.
-        ids = isochs_format.cmd_common_ids(l_s)
+        ids = isochs_format.cmd_common_ids(evol_track, l_s)
 
     try:
         met_f_ages = read_met_file(
@@ -129,7 +130,8 @@ def main(met_f_filter, age_values, evol_track, all_syst_filters):
         for j, met_f in enumerate(met_fls):
 
             metal_isoch = filters_and_extra_pars(
-                age_values, all_syst_filters, age_format, line_start, met_f, j)
+                evol_track, age_values, all_syst_filters, age_format,
+                line_start, met_f, j)
             # Store list holding all the isochrones with the same metallicity
             # in the final isochrone list.
             all_systs.append(metal_isoch)
@@ -144,7 +146,7 @@ def main(met_f_filter, age_values, evol_track, all_syst_filters):
         # all the ages defined, and store it in a separate list with the same
         # order as the 'isoch_list' array.
         e_pars = filters_and_extra_pars(
-            age_values, all_syst_filters, age_format, line_start,
+            evol_track, age_values, all_syst_filters, age_format, line_start,
             met_fls[0], -1)
         # Store in list.
         extra_pars.append(e_pars)
