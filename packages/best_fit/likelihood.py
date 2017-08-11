@@ -78,11 +78,12 @@ def tolstoy(synth_clust, obs_clust):
 
         # Multiply by membership probabilities.
         sum_M_MP = mem_probs * sum_M
-        # Remove 0. elements before applying the logarithm below.
-        sum_N = sum_M_MP[sum_M_MP != 0.]
+        # Replace 0. elements before applying the logarithm below.
+        sum_M_MP[sum_M_MP == 0.] = 1e-7
+        sum_N = sum(np.log(sum_M_MP))
 
         # Final negative logarithmic likelihood
-        tlst_lkl = len(obs_st) * np.log(len(syn_st)) - sum(np.log(sum_N))
+        tlst_lkl = len(obs_st) * np.log(len(syn_st)) - sum_N
 
     return tlst_lkl
 

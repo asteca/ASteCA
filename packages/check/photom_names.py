@@ -118,8 +118,8 @@ def check(mypath, pd):
             sys.exit("ERROR: more than one photometric system defined.")
 
     # # REMOVE
-    # print("Magnitudes defined: {}".format(*filters))
-    # print("Colors defined: {}".format(*colors))
+    # print("Magnitudes defined: {}".format(filters))
+    # print("Colors defined: {}\n".format(colors))
 
     # Add data to parameters dictionary.
     pd['id_indx'], pd['x_indx'], pd['y_indx'], pd['coords'],\
