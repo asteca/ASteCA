@@ -8,7 +8,7 @@ from matplotlib.colors import LinearSegmentedColormap
 
 def pl_mps_phot_diag(gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
                      x_ax, y_ax, v_min_mp, v_max_mp, diag_fit_inv,
-                     err_bar, lkl_method, hess_data, shift_isoch):
+                     err_bar, hess_data, shift_isoch):
     '''
     Star's membership probabilities on cluster's photometric diagram.
     '''
@@ -43,7 +43,7 @@ def pl_mps_phot_diag(gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
     # If the 'tolstoy method was used AND the stars have a range of colors.
     # Currently the 'dolphin' likelihood does not use MPs in the fit, so it's
     # confusing to color stars is if it did.
-    if lkl_method == 'tolstoy' and v_min_mp != v_max_mp:
+    if v_min_mp != v_max_mp:
         col_select_fit, isoch_col = diag_fit_inv[2], 'g'
     else:
         col_select_fit, isoch_col = '#4682b4', 'r'

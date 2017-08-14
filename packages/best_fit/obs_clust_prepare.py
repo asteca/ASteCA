@@ -42,7 +42,7 @@ def main(cl_max_mag, lkl_method, bin_method):
             obs_st.append(zip(*[st_phot, st_e_phot]))
         obs_clust = [obs_st, memb_probs]
 
-    else:
+    elif lkl_method in ['dolphin', 'mighell']:
         # Obtain bin edges for each dimension, defining a grid.
         bin_edges = bin_edges_f(bin_method, mags_cols_cl)
 
@@ -51,8 +51,18 @@ def main(cl_max_mag, lkl_method, bin_method):
         # Obtain histogram for observed cluster.
         cl_histo = np.histogramdd(obs_mags_cols, bins=bin_edges)[0]
 
-        # Flatten N-dimensional histogram.
+        # Generate a weighted histogram: "the values of the returned
+        # histogram are equal to the sum of the weights belonging to the
+        # samples falling into each bin."
+        w = np.histogramdd(
+            obs_mags_cols, bins=bin_edges, weights=memb_probs)[0]
+        # Divide by the number of stars in each bin to obtain the average MP
+        # per bin (add a small float to avoid a 'ZeroDivisionError')
+        bin_weight = w / (cl_histo + 1.e-9)
+
+        # Flatten N-dimensional histograms.
         cl_histo_f = np.array(cl_histo).ravel()
+        bin_weight_f = np.array(bin_weight).ravel()
 
         # Index of bins where n_i = 0 (no observed stars). Used by the
         # 'Dolphin' and 'Mighell' likelihoods.
@@ -61,12 +71,18 @@ def main(cl_max_mag, lkl_method, bin_method):
         # Remove all bins where n_i = 0 (no observed stars). Used by the
         # 'Dolphin' likelihood.
         cl_histo_f_z = cl_histo_f[cl_z_idx]
+        bin_weight_f_z = bin_weight_f[cl_z_idx]
 
-        # sum(n_i * ln(n_i)) - N
-        dolphin_cst = np.sum(cl_histo_f_z * np.log(cl_histo_f_z)) -\
-            len(obs_mags_cols[0])
+        # (Weighted) Dolphin n_i dependent constant.
+        # n_i constant: 2 * [sum(n_i * ln(n_i)) - N] =
+        # 2 * [sum(n_i * ln(n_i)) - sum(n_i)] =
+        # 2 * sum(n_i * ln(n_i) - n_i) =
+        # 2 * sum(n_i * (ln(n_i) - 1)) =
+        # Weighted: 2 * sum(w_i * n_i * (ln(n_i) - 1))
+        dolphin_cst = 2. * np.sum(
+            bin_weight_f_z * cl_histo_f_z * (np.log(cl_histo_f_z) - 1.))
 
         obs_clust = [bin_edges, cl_histo, cl_histo_f, cl_z_idx, cl_histo_f_z,
-                     dolphin_cst]
+                     dolphin_cst, bin_weight_f_z]
 
     return obs_clust

@@ -10,8 +10,8 @@ import prep_plots
 
 def plot_observed_cluster(
     cld, pd, fig, gs, cl_max_mag, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
-    err_lst, v_min_mp, v_max_mp, plot_colorbar, diag_fit_inv, lkl_method,
-        hess_data, shift_isoch):
+    err_lst, v_min_mp, v_max_mp, plot_colorbar, diag_fit_inv, hess_data,
+        shift_isoch):
     """
     This function is called separately since we need to retrieve some
     information from it to plot that #$%&! colorbar.
@@ -24,7 +24,7 @@ def plot_observed_cluster(
         sca, trans = mp_best_fit2.pl_mps_phot_diag(
             gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
             x_ax, y_ax, v_min_mp, v_max_mp, diag_fit_inv,
-            err_bar, lkl_method, hess_data, shift_isoch)
+            err_bar, hess_data, shift_isoch)
     except Exception:
         # import traceback
         # print traceback.format_exc()
@@ -95,12 +95,12 @@ def main(npd, cld, pd, synth_clst, shift_isoch, fit_params_r, fit_errors_r,
         # tight_layout is called here
         v_min_mp, v_max_mp = prep_plots.da_colorbar_range(cl_max_mag, [])
         plot_colorbar, diag_fit_inv, dummy = prep_plots.da_phot_diag(
-            cl_max_mag, [], v_min_mp, v_max_mp, pd['lkl_method'])
+            cl_max_mag, [], v_min_mp, v_max_mp)
         # Main photometric diagram of observed cluster.
         plot_observed_cluster(
             cld, pd, fig, gs, cl_max_mag, x_min_cmd, x_max_cmd, y_min_cmd,
             y_max_cmd, err_lst, v_min_mp, v_max_mp, plot_colorbar,
-            diag_fit_inv, pd['lkl_method'], hess_data, shift_isoch)
+            diag_fit_inv, hess_data, shift_isoch)
 
         # Generate output file.
         plt.savefig(

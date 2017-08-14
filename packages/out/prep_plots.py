@@ -238,17 +238,14 @@ def da_find_chart(
     return chart_fit_inv, chart_no_fit_inv, out_clust_rad
 
 
-def da_phot_diag(cl_reg_fit, cl_reg_no_fit, v_min_mp, v_max_mp,
-                 lkl_method=None):
+def da_phot_diag(cl_reg_fit, cl_reg_no_fit, v_min_mp, v_max_mp):
     '''
     Generate parameters for the photometric diagram plotted with the MPs
     assigned by the DA. The stars are inverted according to their MPs, so that
     those with larger probabilities are plotted last.
     '''
     # Decide if colorbar should be plotted.
-    plot_colorbar = False
-    if lkl_method in [None, 'tolstoy'] and v_min_mp != v_max_mp:
-        plot_colorbar = True
+    plot_colorbar = True if v_min_mp != v_max_mp else False
 
     # Arrange stars used in the best fit process.
     cl_reg_fit = zip(*cl_reg_fit)
