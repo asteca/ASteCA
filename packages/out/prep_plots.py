@@ -1,5 +1,7 @@
 
 from ..math_f import exp_function
+from ..best_fit.obs_clust_prepare import dataProcess
+from ..decont_algors.local_cell_clean import bin_edges_f
 import numpy as np
 from scipy import stats
 import matplotlib.pyplot as plt
@@ -129,7 +131,6 @@ def diag_limits(yaxis, phot_x, phot_y):
     else:
         y_max_cmd = min(y_v) - 1.
 
-    print(x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd)
     return x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd
 
 
@@ -373,27 +374,79 @@ def BestTick(minv, maxv, max_char):
     return xmin, st[st_indx]
 
 
-def get_histos(obs_mags_cols, synth_phot, hess_xedges, hess_yedges):
+def packData(lkl_method, lkl_binning, cl_max_mag, synth_clst, shift_isoch,
+             colors, filters, cld):
     """
-    Observed cluster's histogram and bin edges for each dimension.
+    Properly select and pack data for CMD/CCD of observed and synthetic
+    clusters, and their Hess diagram.
     """
-    # 2D histogram for observed cluster.
-    cl_histo = np.histogram2d(
-        *obs_mags_cols, bins=[hess_xedges, hess_yedges])[0]
+    bin_method = 'auto' if lkl_method == 'tolstoy' else lkl_binning
+    mags_cols_cl, dummy = dataProcess(cl_max_mag)
+    # Obtain bin edges for each dimension, defining a grid.
+    bin_edges = bin_edges_f(bin_method, mags_cols_cl)
 
-    # 2D histogram of the synthetic cluster, using the bin edges calculated
-    # with the observed cluster.
-    syn_histo = np.histogram2d(*synth_phot, bins=[hess_xedges, hess_yedges])[0]
+    N_mags, N_cols = len(filters), len(colors)
 
-    return cl_histo, syn_histo
+    # CMD of main magnitude and first color defined.
+    # Used to defined limits.
+    x_phot_all, y_phot_all = cld['cols'][0], cld['mags'][0]
+    frst_obs_mag, frst_obs_col = list(zip(*zip(*cl_max_mag)[3])[0]),\
+        list(zip(*zip(*cl_max_mag)[5])[0])
+    frst_synth_col, frst_synth_mag = synth_clst[0][0][1],\
+        synth_clst[0][0][0]
+    frst_col_edgs, frst_mag_edgs = bin_edges[1], bin_edges[0]
+    # Filters and colors are appended continuously in 'shift_isoch'. If
+    # there are 3 defined filters, then the first color starts at the
+    # index 3. This is why 'N_mags' is used as the 'first color' index.
+    frst_col_isoch, frst_mag_isoch = shift_isoch[N_mags], shift_isoch[0]
+    # gs plot coords.
+    gs_y1, gs_y2 = 0, 2
+    # Index of observed filter/color to scatter plot.
+    i_obs_x, i_obs_y = 0, 0
+    hr_diags = [
+        [x_phot_all, y_phot_all, frst_obs_col, frst_obs_mag, frst_synth_col,
+         frst_synth_mag, frst_col_edgs, frst_mag_edgs, frst_col_isoch,
+         frst_mag_isoch, colors[0], filters[0], 'mag', i_obs_x, i_obs_y,
+         gs_y1, gs_y2]]
+
+    # If more than one color was defined, plot an extra CMD (main magnitude
+    # versus first color), and an extra CCD (first color versus second color)
+    if N_cols > 1:
+        scnd_obs_col = list(zip(*zip(*cl_max_mag)[5])[1])
+        scnd_synth_col = synth_clst[0][0][2]
+        scnd_col_edgs = bin_edges[2]
+        scnd_col_isoch = shift_isoch[N_mags + 1]
+        # CMD of main magnitude and second color defined.
+        x_phot_all, y_phot_all = cld['cols'][1], cld['mags'][0]
+        gs_y1, gs_y2 = 2, 4
+        i_obs_x, i_obs_y = 1, 0
+        hr_diags.append(
+            [x_phot_all, y_phot_all, scnd_obs_col, frst_obs_mag,
+             scnd_synth_col, frst_synth_mag, scnd_col_edgs, frst_mag_edgs,
+             shift_isoch[2], frst_mag_isoch, colors[1], filters[0], 'mag',
+             i_obs_x, i_obs_y, gs_y1, gs_y2])
+        # CCD of first and second color defined.
+        x_phot_all, y_phot_all = cld['cols'][0], cld['cols'][1]
+        gs_y1, gs_y2 = 4, 6
+        i_obs_x, i_obs_y = 0, 1
+        hr_diags.append(
+            [x_phot_all, y_phot_all, frst_obs_col, scnd_obs_col,
+             frst_synth_col, scnd_synth_col, frst_col_edgs, scnd_col_edgs,
+             frst_col_isoch, scnd_col_isoch, colors[0], colors[1], 'col',
+             i_obs_x, i_obs_y, gs_y1, gs_y2])
+
+    return hr_diags
 
 
 def get_hess(obs_mags_cols, synth_phot, hess_xedges, hess_yedges):
     """
     Hess diagram of observed minus best match synthetic cluster.
     """
-    cl_histo, syn_histo = get_histos(
-        obs_mags_cols, synth_phot, hess_xedges, hess_yedges)
+    # 2D histogram of the observed cluster.
+    cl_histo = np.histogram2d(
+        *obs_mags_cols, bins=[hess_xedges, hess_yedges])[0]
+    # 2D histogram of the synthetic cluster.
+    syn_histo = np.histogram2d(*synth_phot, bins=[hess_xedges, hess_yedges])[0]
 
     # Grid for pcolormesh.
     hess_x, hess_y = np.meshgrid(hess_xedges, hess_yedges)
@@ -402,8 +455,6 @@ def get_hess(obs_mags_cols, synth_phot, hess_xedges, hess_yedges):
     hess_diag = np.array([])
     if syn_histo.size:
         hess_diag = cl_histo - syn_histo
-        # TODO this uses the first two defined photometric dimensions.
-        # hess_diag = hess_nd.reshape(hess_nd.shape[:2] + (-1,)).sum(axis=-1)
         if hess_diag.size:
             HD = np.rot90(hess_diag)
             HD = np.flipud(HD)

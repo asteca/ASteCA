@@ -9,7 +9,7 @@ from matplotlib.colors import LinearSegmentedColormap
 def pl_mps_phot_diag(
         gs, gs_y1, gs_y2, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
         x_ax, y_ax, v_min_mp, v_max_mp, obs_x, obs_y, obs_MPs,
-        err_bar, hess_xedges, hess_yedges, x_isoch, y_isoch, plt_xlabel):
+        err_bar, hess_xedges, hess_yedges, x_isoch, y_isoch):
     '''
     Star's membership probabilities on cluster's photometric diagram.
     '''
@@ -19,8 +19,7 @@ def pl_mps_phot_diag(
     plt.xlim(x_min_cmd, x_max_cmd)
     plt.ylim(y_min_cmd, y_max_cmd)
     # Set axis labels
-    if plt_xlabel or gs_y1 == 4:
-        plt.xlabel('$' + x_ax + '$', fontsize=18)
+    plt.xlabel('$' + x_ax + '$', fontsize=18)
     plt.ylabel('$' + y_ax + '$', fontsize=18)
     # Add text box.
     if gs_y1 == 0:
@@ -33,8 +32,6 @@ def pl_mps_phot_diag(
     ax.xaxis.set_major_locator(MultipleLocator(1.0))
     if gs_y1 == 0:
         ax.set_title("Observed", fontsize=10)
-    # TODO this assumes that the first photom dimen is the main mag, and the
-    # second the color.
     # Plot grid.
     for x_ed in hess_xedges:
         # vertical lines
@@ -55,7 +52,6 @@ def pl_mps_phot_diag(
     sca = plt.scatter(obs_x, obs_y, marker='o',
                       c=col_select_fit, s=40, cmap=cm, lw=0.5, edgecolor='k',
                       vmin=v_min_mp, vmax=v_max_mp, zorder=4)
-    # TODO using main magnitude and first color.
     # Plot isochrone.
     plt.plot(x_isoch, y_isoch, isoch_col, lw=1.2, zorder=6)
     # If list is not empty, plot error bars at several values.
@@ -70,7 +66,7 @@ def pl_mps_phot_diag(
 
 def pl_hess_diag(
     gs, gs_y1, gs_y2, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
-        lkl_method, hess_xedges, hess_yedges, hess_x, hess_y, HD, plt_xlabel):
+        lkl_method, hess_xedges, hess_yedges, hess_x, hess_y, HD):
     """
     Hess diagram of observed minus best match synthetic cluster.
     """
@@ -79,16 +75,12 @@ def pl_hess_diag(
     plt.xlim(x_min_cmd, x_max_cmd)
     plt.ylim(y_min_cmd, y_max_cmd)
     # Set axis labels
-    if plt_xlabel or gs_y1 == 4:
-        plt.xlabel('$' + x_ax + '$', fontsize=18)
-    # plt.ylabel('$' + y_ax + '$', fontsize=18)
+    plt.xlabel('$' + x_ax + '$', fontsize=18)
     # Set minor ticks
     ax.minorticks_on()
     ax.xaxis.set_major_locator(MultipleLocator(1.0))
     if gs_y1 == 0:
         ax.set_title("Hess diagram (observed - synthetic)", fontsize=10)
-    # TODO this assumes that the first photom dimen is the main mag, and the
-    # second the color.
     for x_ed in hess_xedges:
         # vertical lines
         ax.axvline(x_ed, linestyle=':', lw=.8, color='k', zorder=1)
@@ -129,8 +121,7 @@ def pl_hess_diag(
 def pl_bf_synth_cl(
     gs, gs_y1, gs_y2, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
         hess_xedges, hess_yedges, x_synth, y_synth, IMF_name, R_V, cp_r, cp_e,
-        x_isoch, y_isoch, lkl_method, bin_method, cmd_evol_tracks, evol_track,
-        plt_xlabel):
+        x_isoch, y_isoch, lkl_method, bin_method, cmd_evol_tracks, evol_track):
     '''
     Best fit synthetic cluster obtained.
     '''
@@ -139,9 +130,7 @@ def pl_bf_synth_cl(
     plt.xlim(x_min_cmd, x_max_cmd)
     plt.ylim(y_min_cmd, y_max_cmd)
     # Set axis labels
-    if plt_xlabel or gs_y1 == 4:
-        plt.xlabel('$' + x_ax + '$', fontsize=18)
-    # plt.ylabel('$' + y_ax + '$', fontsize=18)
+    plt.xlabel('$' + x_ax + '$', fontsize=18)
     # Set minor ticks
     ax.minorticks_on()
     ax.xaxis.set_major_locator(MultipleLocator(1.0))
@@ -153,8 +142,6 @@ def pl_bf_synth_cl(
         ob.patch.set(alpha=0.85)
         ax.add_artist(ob)
     # Plot grid.
-    # TODO this assumes that the first photom dimen is the main mag, and the
-    # second the color.
     for x_ed in hess_xedges:
         # vertical lines
         ax.axvline(x_ed, linestyle=':', lw=.8, color='k', zorder=1)
@@ -215,7 +202,7 @@ def plot(N, *args):
 
     try:
         fxn(*args)
-    except:
+    except Exception:
         import traceback
         print traceback.format_exc()
         print("  WARNING: error when plotting {}.".format(plt_map.get(N)[1]))
