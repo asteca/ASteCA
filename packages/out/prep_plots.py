@@ -62,16 +62,18 @@ def frame_zoomed(x_min, x_max, y_min, y_max, kde_cent, clust_rad):
     return x_zmin, x_zmax, y_zmin, y_zmax
 
 
-def ax_names(filters, colors):
+def ax_names(x, y, yaxis):
     '''
     Define names for photometric diagram axes.
     '''
-    # y_axis == 0 indicates that the y axis is a magnitude.
-    y_axis = 0
     # Create photometric axis names.
-    x_ax = '(' + colors[0][1].replace(',', '-') + ')'
-    y_ax = filters[0][1]
-    return x_ax, y_ax, y_axis
+    x_ax = '(' + x[1].replace(',', '-') + ')'
+    # yaxis indicates if the y axis is a magnitude or a color.
+    if yaxis == 'mag':
+        y_ax = y[1]
+    else:
+        y_ax = '(' + y[1].replace(',', '-') + ')'
+    return x_ax, y_ax
 
 
 def kde_limits(phot_x, phot_y):
@@ -112,7 +114,7 @@ def kde_limits(phot_x, phot_y):
     return x_v, y_v
 
 
-def diag_limits(y_axis, phot_x, phot_y):
+def diag_limits(yaxis, phot_x, phot_y):
     '''
     Define plot limits for *all* photometric diagrams.
     '''
@@ -123,11 +125,12 @@ def diag_limits(y_axis, phot_x, phot_y):
     y_min_cmd = max(y_v) + 1.25
     # If photometric axis y is a magnitude, make sure the brightest star
     # is always plotted.
-    if y_axis == 0:
+    if yaxis == 'mag':
         y_max_cmd = min(phot_y) - 1.
     else:
         y_max_cmd = min(y_v) - 1.
 
+    print(x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd)
     return x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd
 
 
@@ -371,30 +374,52 @@ def BestTick(minv, maxv, max_char):
     return xmin, st[st_indx]
 
 
-def get_hess(lkl_method, bin_method, cl_max_mag, synth_clust):
+def get_histos(synth_clust, lkl_method, bin_method, cl_max_mag):
     """
-    Hess diagram of observed minus best match synthetic cluster.
+    Observed cluster's histogram and bin edges for each dimension.
     """
     if lkl_method == 'tolstoy':
         lkl_method, bin_method = 'dolphin', 'auto'
-    # Observed cluster's histogram and bin edges for each dimension.
     bin_edges, cl_histo = obs_clust_prepare.main(
         cl_max_mag, lkl_method, bin_method)[:2]
 
     # Histogram of the synthetic cluster, using the bin edges calculated
     # with the observed cluster.
-    hess_diag = np.array([])
+    syn_histo = np.array([])
     if synth_clust:
         synth_phot = synth_clust[0][0]
         if synth_phot:
+            import pdb; pdb.set_trace()  # breakpoint 756d4974 //
+            
             syn_histo = np.histogramdd(synth_phot, bins=bin_edges)[0]
-            hess_nd = cl_histo - syn_histo
-            # TODO this uses the first two defined photometric dimensions.
-            hess_diag = hess_nd.reshape(hess_nd.shape[:2] + (-1,)).sum(axis=-1)
-
-    if not hess_diag.size:
+    else:
         print("  WARNING: the synthetic cluster is empty.")
 
-    hess_data = {'hess_diag': hess_diag, 'hess_edges': bin_edges}
+    return cl_histo, syn_histo, bin_edges
 
-    return hess_data
+
+def get_hess(cl_histo, syn_histo, hess_xedges, hess_yedges, i, j):
+    """
+    Hess diagram of observed minus best match synthetic cluster.
+    """
+    # Grid for pcolormesh.
+    hess_y, hess_x = np.meshgrid(hess_yedges, hess_xedges)
+
+    # Hess diagram: observed minus synthetic.
+    hess_diag = np.array([])
+    if syn_histo.size:
+        hess_nd = cl_histo - syn_histo
+        # TODO this uses the first two defined photometric dimensions.
+        # hess_diag = hess_nd.reshape(hess_nd.shape[:2] + (-1,)).sum(axis=-1)
+        print(i, j, hess_nd.shape)
+        hess_diag = hess_nd.reshape((hess_nd.shape[i], hess_nd.shape[j]) + (-1,)).sum(axis=-1)
+        if hess_diag.size:
+            HD = np.rot90(hess_diag)
+            HD = np.flipud(HD)
+        else:
+            HD = np.array([])
+
+    if not HD.size:
+        print("  WARNING: the Hess diagram could no be obtained.")
+
+    return hess_x, hess_y, HD

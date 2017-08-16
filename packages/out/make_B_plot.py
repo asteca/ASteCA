@@ -21,10 +21,11 @@ def main(
         add_version_plot.main(y_fix=.999)
 
         # # Obtain plotting parameters and data.
-        x_ax, y_ax, y_axis = prep_plots.ax_names(pd['filters'], pd['colors'])
+        x_ax, y_ax = prep_plots.ax_names(
+            pd['colors'][0], pd['filters'][0], 'mag')
         # TODO using first magnitude and color defined
         x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd = prep_plots.diag_limits(
-            y_axis, cld['cols'][0], cld['mags'][0])
+            'mag', cld['cols'][0], cld['mags'][0])
         stars_f_rjct, stars_f_acpt = prep_plots.field_region_stars(
             stars_out_rjct, field_regions)
         f_sz_pt = prep_plots.phot_diag_st_size(len(stars_f_acpt[0]))

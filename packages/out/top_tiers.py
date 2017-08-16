@@ -65,7 +65,7 @@ def plot_top_tiers(pd, top_tiers_flo, output_subdir, clust_name, mags,
     gs = gridspec.GridSpec(10, 12)      # create a GridSpec object
     add_version_plot.main(y_fix=.998)
 
-    x_ax, y_ax, y_axis = prep_plots.ax_names(pd['filters'], pd['colors'])
+    x_ax, y_ax = prep_plots.ax_names(pd['colors'][0], pd['filters'][0], 'mag')
 
     synth_cls = []
     for mod in top_tiers_flo:
@@ -78,7 +78,7 @@ def plot_top_tiers(pd, top_tiers_flo, output_subdir, clust_name, mags,
         # TODO using first magnitude and color defined
         first_col, first_mag = synth_clst[0][0][1], synth_clst[0][0][0]
         x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd = prep_plots.diag_limits(
-            y_axis, first_col, first_mag)
+            'mag', first_col, first_mag)
 
         # Store plotting parameters.
         synth_cls.append([gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
