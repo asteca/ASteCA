@@ -69,17 +69,23 @@ def main(npd, cld, pd, synth_clst, shift_isoch, fit_params_r, fit_errors_r,
         gs = gridspec.GridSpec(10, 12)
         add_version_plot.main()
 
-        cl_histo, syn_histo, bin_edges = prep_plots.get_histos(
-            synth_clst, pd['lkl_method'], pd['lkl_binning'], cl_max_mag)
+        from ..best_fit.obs_clust_prepare import dataProcess
+        from ..decont_algors.local_cell_clean import bin_edges_f
 
-        # Magnitude and colors defined
+        bin_method = 'auto' if pd['lkl_method'] == 'tolstoy' else\
+            pd['lkl_binning']
+        mags_cols_cl, dummy = dataProcess(cl_max_mag)
+        # Obtain bin edges for each dimension, defining a grid.
+        bin_edges = bin_edges_f(bin_method, mags_cols_cl)
+
+        # First magnitude and color defined
         first_mag = list(zip(*zip(*cl_max_mag)[3])[0])
         first_col = list(zip(*zip(*cl_max_mag)[5])[0])
         hr_diags = [
             [first_col, first_mag, pd['colors'][0], pd['filters'][0], 'mag',
              bin_edges[1], bin_edges[0], synth_clst[0][0][1],
              synth_clst[0][0][0], shift_isoch[1], shift_isoch[0],
-             0, 0, 0, 1, 0, 2]]
+             0, 0, 0, 2]]
         # If more than one color was defined.
         if len(pd['colors']) > 1:
             plt_xlabel = False
@@ -88,22 +94,22 @@ def main(npd, cld, pd, synth_clst, shift_isoch, fit_params_r, fit_errors_r,
                 [secnd_col, first_mag, pd['colors'][1], pd['filters'][0],
                  'mag', bin_edges[2], bin_edges[0], synth_clst[0][0][2],
                  synth_clst[0][0][0], shift_isoch[2], shift_isoch[0],
-                 1, 0, 0, 2, 2, 4])
+                 1, 0, 2, 4])
             hr_diags.append(
                 [first_col, secnd_col, pd['colors'][0], pd['colors'][1],
                  'col', bin_edges[1], bin_edges[2], synth_clst[0][0][1],
                  synth_clst[0][0][2], shift_isoch[1], shift_isoch[2],
-                 0, 1, 2, 1, 4, 6])
+                 0, 1, 4, 6])
         else:
             plt_xlabel = True
 
         for diag in hr_diags:
             phot_x, phot_y, x_name, y_name, yaxis, hess_xedges, hess_yedges,\
                 x_synth, y_synth, x_isoch, y_isoch,\
-                i_obs_x, i_obs_y, i, j, gs_y1, gs_y2 = diag
+                i_obs_x, i_obs_y, gs_y1, gs_y2 = diag
 
             hess_x, hess_y, HD = prep_plots.get_hess(
-                cl_histo, syn_histo, hess_xedges, hess_yedges, i, j)
+                [phot_x, phot_y], [x_synth, y_synth], hess_xedges, hess_yedges)
 
             # DELETE
             import numpy as np

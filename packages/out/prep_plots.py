@@ -1,6 +1,5 @@
 
 from ..math_f import exp_function
-from ..best_fit import obs_clust_prepare
 import numpy as np
 from scipy import stats
 import matplotlib.pyplot as plt
@@ -374,45 +373,37 @@ def BestTick(minv, maxv, max_char):
     return xmin, st[st_indx]
 
 
-def get_histos(synth_clust, lkl_method, bin_method, cl_max_mag):
+def get_histos(obs_mags_cols, synth_phot, hess_xedges, hess_yedges):
     """
     Observed cluster's histogram and bin edges for each dimension.
     """
-    if lkl_method == 'tolstoy':
-        lkl_method, bin_method = 'dolphin', 'auto'
-    bin_edges, cl_histo = obs_clust_prepare.main(
-        cl_max_mag, lkl_method, bin_method)[:2]
+    # 2D histogram for observed cluster.
+    cl_histo = np.histogram2d(
+        *obs_mags_cols, bins=[hess_xedges, hess_yedges])[0]
 
-    # Histogram of the synthetic cluster, using the bin edges calculated
+    # 2D histogram of the synthetic cluster, using the bin edges calculated
     # with the observed cluster.
-    syn_histo = np.array([])
-    if synth_clust:
-        synth_phot = synth_clust[0][0]
-        if synth_phot:
-            import pdb; pdb.set_trace()  # breakpoint 756d4974 //
-            
-            syn_histo = np.histogramdd(synth_phot, bins=bin_edges)[0]
-    else:
-        print("  WARNING: the synthetic cluster is empty.")
+    syn_histo = np.histogram2d(*synth_phot, bins=[hess_xedges, hess_yedges])[0]
 
-    return cl_histo, syn_histo, bin_edges
+    return cl_histo, syn_histo
 
 
-def get_hess(cl_histo, syn_histo, hess_xedges, hess_yedges, i, j):
+def get_hess(obs_mags_cols, synth_phot, hess_xedges, hess_yedges):
     """
     Hess diagram of observed minus best match synthetic cluster.
     """
+    cl_histo, syn_histo = get_histos(
+        obs_mags_cols, synth_phot, hess_xedges, hess_yedges)
+
     # Grid for pcolormesh.
-    hess_y, hess_x = np.meshgrid(hess_yedges, hess_xedges)
+    hess_x, hess_y = np.meshgrid(hess_xedges, hess_yedges)
 
     # Hess diagram: observed minus synthetic.
     hess_diag = np.array([])
     if syn_histo.size:
-        hess_nd = cl_histo - syn_histo
+        hess_diag = cl_histo - syn_histo
         # TODO this uses the first two defined photometric dimensions.
         # hess_diag = hess_nd.reshape(hess_nd.shape[:2] + (-1,)).sum(axis=-1)
-        print(i, j, hess_nd.shape)
-        hess_diag = hess_nd.reshape((hess_nd.shape[i], hess_nd.shape[j]) + (-1,)).sum(axis=-1)
         if hess_diag.size:
             HD = np.rot90(hess_diag)
             HD = np.flipud(HD)

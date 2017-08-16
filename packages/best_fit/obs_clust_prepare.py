@@ -3,32 +3,41 @@ import numpy as np
 from ..decont_algors.local_cell_clean import bin_edges_f
 
 
-def main(cl_max_mag, lkl_method, bin_method):
-    '''
-    Prepare observed cluster array here to save time before the algorithm to
-    find the best synthetic cluster fit is used.
-    '''
-
-    # Extract photometric data, and membership probabilities. Remove ID's to
-    # make entire array of floats.
+def dataProcess(cl_max_mag):
+    """
+    Extract photometric data, and membership probabilities. Remove ID's to
+    make entire array of floats.
+    """
     mags_cols_cl = [[], []]
     for mag in zip(*zip(*cl_max_mag)[1:][2]):
         mags_cols_cl[0].append(mag)
     for col in zip(*zip(*cl_max_mag)[1:][4]):
         mags_cols_cl[1].append(col)
 
-    # Square errors here to not repeat the same calculations each time a
-    # new synthetic cluster is matched.
-    e_mags_cols = []
-    for e_m in zip(*zip(*cl_max_mag)[1:][3]):
-        e_mags_cols.append(np.square(e_m))
-    for e_c in zip(*zip(*cl_max_mag)[1:][5]):
-        e_mags_cols.append(np.square(e_c))
-
     # Store membership probabilities here.
     memb_probs = np.array(zip(*cl_max_mag)[1:][6])
 
+    return mags_cols_cl, memb_probs
+
+
+def main(cl_max_mag, lkl_method, bin_method):
+    '''
+    Prepare observed cluster array here to save time before the algorithm to
+    find the best synthetic cluster fit is used.
+    '''
+
+    mags_cols_cl, memb_probs = dataProcess(cl_max_mag)
+
     if lkl_method == 'tolstoy':
+
+        # Square errors here to not repeat the same calculations each time a
+        # new synthetic cluster is matched.
+        e_mags_cols = []
+        for e_m in zip(*zip(*cl_max_mag)[1:][3]):
+            e_mags_cols.append(np.square(e_m))
+        for e_c in zip(*zip(*cl_max_mag)[1:][5]):
+            e_mags_cols.append(np.square(e_c))
+
         # Store and pass to use in likelihood function. The 'obs_st' list is
         # made up of:
         # obs_st = [star_1, star_2, ...]
