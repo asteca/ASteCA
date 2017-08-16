@@ -17,7 +17,7 @@ def plot_observed_cluster(
     information from it to plot that #$%&! colorbar.
     """
     x_ax, y_ax = prep_plots.ax_names(pd['colors'][0], pd['filters'][0], 'mag')
-    # TODO using first magnitude and color defined
+    # Uses first magnitude and color defined
     x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd = prep_plots.diag_limits(
         'mag', cld['cols'][0], cld['mags'][0])
     err_bar = prep_plots.error_bars(
