@@ -111,6 +111,10 @@ def main(met_f_filter, age_values, cmd_evol_tracks, evol_track,
     for syst in all_syst_filters:
         print("in the '{}' photometric system.\n".format(
             cmd_systs[syst[0]][0]))
+    fs = ', '.join(_[1] for _ in filters)
+    cs = ', '.join('(' + _[1].replace(',', '-') + ')' for _ in colors)
+    print("Filter: {}".format(fs))
+    print("Color:  {}\n".format(cs))
 
     # Get isochrones and their extra parameters (mass, etc.).
     isoch_list, extra_pars = read_isochs.main(met_f_filter, age_values,

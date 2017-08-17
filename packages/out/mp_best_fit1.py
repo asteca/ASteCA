@@ -157,11 +157,11 @@ def pl_lkl_scatt(gs, ld_p, min_max_p, cp_r, cp_e, model_done):
         plt.axvline(x=xp + e_xp, linestyle='--', color='blue')
         plt.axvline(x=xp - e_xp, linestyle='--', color='blue')
     # Set y axis limit.
-    min_lik = min(model_done[1])
+    min_lik, max_lik = min(model_done[1]), max(model_done[1])
     if min_lik > 0:
-        min_y, max_y = min_lik - min_lik * 0.1, 2.5 * min_lik
+        min_y, max_y = min_lik - min_lik * 0.1, min(2.5 * min_lik, max_lik)
     else:
-        min_y, max_y = min_lik + min_lik * 0.1, -2.5 * min_lik
+        min_y, max_y = min_lik + min_lik * 0.1, min(-2.5 * min_lik, max_lik)
     plt.ylim(min_y, max_y)
     plt.xlim(xp_min, xp_max)
     # Position colorbar.
