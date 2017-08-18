@@ -1,5 +1,6 @@
 
 import numpy as np
+from scipy.stats import binned_statistic_dd
 from ..decont_algors.local_cell_clean import bin_edges_f
 
 
@@ -20,7 +21,7 @@ def dataProcess(cl_max_mag):
     return mags_cols_cl, memb_probs
 
 
-def main(cl_max_mag, lkl_method, bin_method):
+def main(cl_max_mag, lkl_method, bin_method, lkl_weight):
     '''
     Prepare observed cluster array here to save time before the algorithm to
     find the best synthetic cluster fit is used.
@@ -60,18 +61,15 @@ def main(cl_max_mag, lkl_method, bin_method):
         # Obtain histogram for observed cluster.
         cl_histo = np.histogramdd(obs_mags_cols, bins=bin_edges)[0]
 
-        # Generate a weighted histogram: "the values of the returned
-        # histogram are equal to the sum of the weights belonging to the
-        # samples falling into each bin."
-        w = np.histogramdd(
-            obs_mags_cols, bins=bin_edges, weights=memb_probs)[0]
-        # Divide by the number of stars in each bin to obtain the average MP
-        # per bin (add a small float to avoid a 'ZeroDivisionError')
-        bin_weight = w / (cl_histo + 1.e-9)
+        w_stat = {'mean': np.mean, 'max': np.max, 'median': np.median}
+        # Weights that will be applied to each bin.
+        bin_w = np.nan_to_num(binned_statistic_dd(
+            obs_mags_cols, memb_probs, statistic=w_stat[lkl_weight],
+            bins=bin_edges)[0])
 
         # Flatten N-dimensional histograms.
         cl_histo_f = np.array(cl_histo).ravel()
-        bin_weight_f = np.array(bin_weight).ravel()
+        bin_weight_f = np.array(bin_w).ravel()
 
         # Index of bins where n_i = 0 (no observed stars). Used by the
         # 'Dolphin' and 'Mighell' likelihoods.

@@ -6,9 +6,9 @@ from os.path import isdir
 
 def check(bf_flag, best_fit_algor, lkl_method, lkl_binning, N_bootstrap,
           evol_track, max_mag, IMF_name, R_V, bin_mr, bin_methods,
-          cmd_evol_tracks, iso_paths, imf_funcs, par_ranges,
-          N_pop, N_gen, fit_diff, cross_prob, cross_sel, mut_prob, N_el,
-          N_ei, N_es, **kwargs):
+          lkl_weight, bin_weights, cmd_evol_tracks, iso_paths, imf_funcs,
+          par_ranges, N_pop, N_gen, fit_diff, cross_prob, cross_sel,
+          mut_prob, N_el, N_ei, N_es, **kwargs):
     """
     Check all parameters related to the search for the best synthetic cluster
     match.
@@ -60,7 +60,13 @@ def check(bf_flag, best_fit_algor, lkl_method, lkl_binning, N_bootstrap,
                      "\nfit' function does not match a valid input."
                      .format(lkl_binning))
 
-        # Check binning method selected.
+        # Check binning weight method selected.
+        if lkl_method != 'tolstoy' and lkl_weight not in bin_weights:
+            sys.exit("ERROR: the selected weight method '{}' for the 'Best"
+                     "\nfit' function does not match a valid input."
+                     .format(lkl_weight))
+
+        # Check mass range selected.
         if lkl_method == 'tolstoy':
             if len(par_ranges[-2][1]) > 1:
                 sys.exit("ERROR: 'tolstoy' method was selected but more than"
