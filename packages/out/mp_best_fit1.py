@@ -95,13 +95,11 @@ def pl_2_param_dens(gs, _2_params, min_max_p, cp_r, cp_e, model_done):
         ax.add_patch(ellipse)
     # Else plot an error bar in the corresponding dimension.
     elif np.isnan(e_xp) and ~np.isnan(e_yp):
-        print("yerror")
         plt.errorbar(xp, yp, yerr=e_yp, color=cp, zorder=4)
     elif np.isnan(e_yp) and ~np.isnan(e_xp):
-        print("xerror")
         plt.errorbar(xp, yp, xerr=e_xp, color=cp, zorder=4)
     # Plot best fit point.
-    plt.scatter(xp, yp, marker='x', c=cp, s=50, linewidth=2, zorder=4)
+    plt.scatter(xp, yp, marker='x', c=cp, s=30, linewidth=2, zorder=4)
 
     # Select the minimum likelihood for each (x,y) pair in the density plot.
     x_par, y_par = list(zip(*model_done[0])[mx]), list(zip(*model_done[0])[my])
