@@ -330,48 +330,48 @@ def likl_y_range(lkl_old):
     return l_min_max
 
 
-def BestTick(minv, maxv, max_char):
-    '''
-    Find optimal number and length of ticks for a given fixed maximum
-    number of characters in the axis.
-    '''
+# def BestTick(minv, maxv, max_char):
+#     '''
+#     Find optimal number and length of ticks for a given fixed maximum
+#     number of characters in the axis.
+#     '''
 
-    st, diff_chars, st_indx = [], 1000, 0
-    # Check these 4 possible sizes for the ticks and keep the best one.
-    for i in range(4):
-        mostticks = i + 4
+#     st, diff_chars, st_indx = [], 1000, 0
+#     # Check these 4 possible sizes for the ticks and keep the best one.
+#     for i in range(4):
+#         mostticks = i + 4
 
-        minimum = (maxv - minv) / mostticks
-        magnitude = 10 ** math.floor(math.log(minimum) / math.log(10))
-        residual = minimum / magnitude
-        if residual > 5:
-            tick = 10 * magnitude
-        elif residual > 2:
-            tick = 5 * magnitude
-        elif residual > 1:
-            tick = 2 * magnitude
-        else:
-            tick = magnitude
+#         minimum = (maxv - minv) / mostticks
+#         magnitude = 10 ** math.floor(math.log(minimum) / math.log(10))
+#         residual = minimum / magnitude
+#         if residual > 5:
+#             tick = 10 * magnitude
+#         elif residual > 2:
+#             tick = 5 * magnitude
+#         elif residual > 1:
+#             tick = 2 * magnitude
+#         else:
+#             tick = magnitude
 
-        st.append(tick)
-        # Count the number of chars used by this step.
-        ms = (i + 4) * (len(str(tick)) - 1)
-        # Only use if it is less than the fixed max value of chars.
-        if ms <= max_char:
-            if (max_char - ms) < diff_chars:
-                # Store the closest value to max_chars.
-                diff_chars = (max_char - ms)
-                st_indx = i
+#         st.append(tick)
+#         # Count the number of chars used by this step.
+#         ms = (i + 4) * (len(str(tick)) - 1)
+#         # Only use if it is less than the fixed max value of chars.
+#         if ms <= max_char:
+#             if (max_char - ms) < diff_chars:
+#                 # Store the closest value to max_chars.
+#                 diff_chars = (max_char - ms)
+#                 st_indx = i
 
-    # Set min tick value according to the best step length selected above.
-    if minv <= 0.:
-        xmin = 0.
-    elif minv <= st[st_indx]:
-        xmin = st[st_indx]
-    else:
-        xmin = int(round(minv / st[st_indx])) * st[st_indx]
+#     # Set min tick value according to the best step length selected above.
+#     if minv <= 0.:
+#         xmin = 0.
+#     elif minv <= st[st_indx]:
+#         xmin = st[st_indx]
+#     else:
+#         xmin = int(round(minv / st[st_indx])) * st[st_indx]
 
-    return xmin, st[st_indx]
+#     return xmin, st[st_indx]
 
 
 def packData(lkl_method, lkl_binning, cl_max_mag, synth_clst, shift_isoch,

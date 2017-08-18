@@ -21,11 +21,11 @@ def main(
             add_version_plot.main(y_fix=.8)
 
         min_max_p = prep_plots.param_ranges(pd['fundam_params'])
-        # Get special axis ticks for metallicity.
-        xp_min, xp_max = min_max_p[0]
-        # The max number of characters in the axis '30', is HARD-CODED.
-        # Add values to the end of this list.
-        min_max_p.append(prep_plots.BestTick(xp_min, xp_max, 30))
+        # # Get special axis ticks for metallicity.
+        # xp_min, xp_max = min_max_p[0]
+        # # The max number of characters in the axis '30', is HARD-CODED.
+        # # Add values to the end of this list.
+        # min_max_p.append(prep_plots.BestTick(xp_min, xp_max, 30))
 
         # Extract outside of 'if' block so it works when the 'brute force'
         # algorithm was used
@@ -48,7 +48,7 @@ def main(
                  model_done],
                 [gs, 'dist-ext', min_max_p, fit_params_r, fit_errors_r,
                  model_done],
-                [gs, 'metal-dist', min_max_p, fit_params_r, fit_errors_r,
+                [gs, 'ext-age', min_max_p, fit_params_r, fit_errors_r,
                  model_done],
                 [gs, 'mass-binar', min_max_p, fit_params_r, fit_errors_r,
                  model_done]
