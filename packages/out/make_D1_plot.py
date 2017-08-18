@@ -21,6 +21,7 @@ def main(
             add_version_plot.main(y_fix=.8)
 
         min_max_p = prep_plots.param_ranges(pd['fundam_params'])
+        # DEPRECATED (DELETE)
         # # Get special axis ticks for metallicity.
         # xp_min, xp_max = min_max_p[0]
         # # The max number of characters in the axis '30', is HARD-CODED.
