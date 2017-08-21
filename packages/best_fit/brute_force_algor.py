@@ -6,10 +6,16 @@ import likelihood
 def main(lkl_method, e_max, bin_mr, err_lst, completeness, max_mag_syn,
          fundam_params, obs_clust, theor_tracks, R_V, ext_coefs, st_dist_mass,
          N_fc):
-    '''
+    """
     Brute force algorithm that computes the likelihoods for *all* the defined
     isochrones.
-    '''
+
+    It is possible that this algorithm returns a *larger* likelihood than the
+    GA. This is counter-intuitive, but it is because the GA samples the IMF
+    *each time* a mass value is checked, and the same mass value can be checked
+    several times. The BF algorithm on the other hand does this only *once*
+    per mass value.
+    """
     # Unpack parameters values.
     m_lst, a_lst, e_lst, d_lst, mass_lst, bin_lst = fundam_params
 
