@@ -50,7 +50,7 @@ def check(bf_flag, best_fit_algor, lkl_method, lkl_binning, N_bootstrap,
                              N_el, N_pop))
 
         # Check likelihood method selected.
-        if lkl_method not in ('tolstoy', 'dolphin', 'mighell'):
+        if lkl_method not in ('tolstoy', 'duong', 'dolphin', 'mighell'):
             sys.exit("ERROR: the selected likelihood method '{}' does not"
                      " match a valid input.".format(lkl_method))
 
