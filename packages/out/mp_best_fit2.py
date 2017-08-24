@@ -53,7 +53,7 @@ def pl_mps_phot_diag(
                       c=col_select_fit, s=40, cmap=cm, lw=0.5, edgecolor='k',
                       vmin=v_min_mp, vmax=v_max_mp, zorder=4)
     # Plot isochrone.
-    plt.plot(x_isoch, y_isoch, isoch_col, lw=1.2, zorder=6)
+    plt.plot(x_isoch, y_isoch, isoch_col, lw=1., zorder=6)
     # If list is not empty, plot error bars at several values.
     if x_val:
         plt.errorbar(x_val, mag_y, yerr=y_err, xerr=x_err, fmt='k.', lw=0.8,
@@ -120,8 +120,9 @@ def pl_hess_diag(
 
 def pl_bf_synth_cl(
     gs, gs_y1, gs_y2, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
-        hess_xedges, hess_yedges, x_synth, y_synth, IMF_name, R_V, cp_r, cp_e,
-        x_isoch, y_isoch, lkl_method, bin_method, cmd_evol_tracks, evol_track):
+        hess_xedges, hess_yedges, x_synth, y_synth, binar_idx, IMF_name, R_V,
+        cp_r, cp_e, x_isoch, y_isoch, lkl_method, bin_method, cmd_evol_tracks,
+        evol_track):
     '''
     Best fit synthetic cluster obtained.
     '''
@@ -149,10 +150,15 @@ def pl_bf_synth_cl(
         # horizontal lines
         ax.axhline(y_ed, linestyle=':', lw=.8, color='k', zorder=1)
     # Plot synthetic cluster.
-    plt.scatter(x_synth, y_synth, marker='o', s=40,
-                c='#4682b4', lw=0.5, edgecolor='k', zorder=4)
+    single_idx = [_ for _ in range(len(x_synth)) if _ not in binar_idx]
+    # Single systems
+    plt.scatter(x_synth[single_idx], y_synth[single_idx], marker='o', s=40,
+                c='#4682b4', lw=0.5, edgecolor='k', zorder=2)
+    # Binary systems
+    plt.scatter(x_synth[binar_idx], y_synth[binar_idx], marker='o', s=30,
+                c='#F34C4C', lw=0.35, edgecolor='k', zorder=3)
     # Plot isochrone.
-    plt.plot(x_isoch, y_isoch, 'r', lw=1.2, zorder=6)
+    plt.plot(x_isoch, y_isoch, '#21B001', lw=1., zorder=6)
     if gs_y1 == 0:
         # Add text box
         text1 = '$N_{{synth}} = {}$'.format(len(x_synth))

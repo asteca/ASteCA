@@ -73,8 +73,9 @@ def main(npd, cld, pd, synth_clst, shift_isoch, fit_params_r, fit_errors_r,
             pd['lkl_method'], pd['lkl_binning'], cl_max_mag, synth_clst,
             shift_isoch, pd['colors'], pd['filters'], cld)
         for (x_phot_all, y_phot_all, x_phot_obs, y_phot_obs, x_synth_phot,
-             y_synth_phot, hess_xedges, hess_yedges, x_isoch, y_isoch, x_name,
-             y_name, yaxis, i_obs_x, i_obs_y, gs_y1, gs_y2) in hr_diags:
+             y_synth_phot, binar_idx, hess_xedges, hess_yedges, x_isoch,
+             y_isoch, x_name, y_name, yaxis, i_obs_x, i_obs_y, gs_y1,
+             gs_y2) in hr_diags:
 
             hess_x, hess_y, HD = prep_plots.get_hess(
                 [x_phot_obs, y_phot_obs], [x_synth_phot, y_synth_phot],
@@ -91,9 +92,10 @@ def main(npd, cld, pd, synth_clst, shift_isoch, fit_params_r, fit_errors_r,
                 # pl_bf_synth_cl: Best fit synthetic cluster obtained.
                 [gs, gs_y1, gs_y2, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
                  x_ax, y_ax, hess_xedges, hess_yedges, x_synth_phot,
-                 y_synth_phot, pd['IMF_name'], pd['R_V'], fit_params_r,
-                 fit_errors_r, x_isoch, y_isoch, pd['lkl_method'],
-                 pd['lkl_binning'], pd['cmd_evol_tracks'], pd['evol_track']]
+                 y_synth_phot, binar_idx, pd['IMF_name'], pd['R_V'],
+                 fit_params_r, fit_errors_r, x_isoch, y_isoch,
+                 pd['lkl_method'], pd['lkl_binning'], pd['cmd_evol_tracks'],
+                 pd['evol_track']]
             ]
             for n, args in enumerate(arglist):
                 mp_best_fit2.plot(n, *args)

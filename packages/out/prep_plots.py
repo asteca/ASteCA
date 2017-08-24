@@ -5,7 +5,7 @@ from ..decont_algors.local_cell_clean import bin_edges_f
 import numpy as np
 from scipy import stats
 import matplotlib.pyplot as plt
-import math
+# import math
 
 
 def frame_max_min(x_data, y_data):
@@ -394,6 +394,8 @@ def packData(lkl_method, lkl_binning, cl_max_mag, synth_clst, shift_isoch,
         list(zip(*zip(*cl_max_mag)[5])[0])
     frst_synth_col, frst_synth_mag = synth_clst[0][0][1],\
         synth_clst[0][0][0]
+    # Indexes of binary systems.
+    binar_idx = synth_clst[1]
     frst_col_edgs, frst_mag_edgs = bin_edges[1], bin_edges[0]
     # Filters and colors are appended continuously in 'shift_isoch'. If
     # there are 3 defined filters, then the first color starts at the
@@ -405,9 +407,9 @@ def packData(lkl_method, lkl_binning, cl_max_mag, synth_clst, shift_isoch,
     i_obs_x, i_obs_y = 0, 0
     hr_diags = [
         [x_phot_all, y_phot_all, frst_obs_col, frst_obs_mag, frst_synth_col,
-         frst_synth_mag, frst_col_edgs, frst_mag_edgs, frst_col_isoch,
-         frst_mag_isoch, colors[0], filters[0], 'mag', i_obs_x, i_obs_y,
-         gs_y1, gs_y2]]
+         frst_synth_mag, binar_idx, frst_col_edgs, frst_mag_edgs,
+         frst_col_isoch, frst_mag_isoch, colors[0], filters[0], 'mag',
+         i_obs_x, i_obs_y, gs_y1, gs_y2]]
 
     # If more than one color was defined, plot an extra CMD (main magnitude
     # versus first color), and an extra CCD (first color versus second color)
@@ -422,18 +424,18 @@ def packData(lkl_method, lkl_binning, cl_max_mag, synth_clst, shift_isoch,
         i_obs_x, i_obs_y = 1, 0
         hr_diags.append(
             [x_phot_all, y_phot_all, scnd_obs_col, frst_obs_mag,
-             scnd_synth_col, frst_synth_mag, scnd_col_edgs, frst_mag_edgs,
-             shift_isoch[2], frst_mag_isoch, colors[1], filters[0], 'mag',
-             i_obs_x, i_obs_y, gs_y1, gs_y2])
+             scnd_synth_col, frst_synth_mag, binar_idx, scnd_col_edgs,
+             frst_mag_edgs, shift_isoch[2], frst_mag_isoch, colors[1],
+             filters[0], 'mag', i_obs_x, i_obs_y, gs_y1, gs_y2])
         # CCD of first and second color defined.
         x_phot_all, y_phot_all = cld['cols'][0], cld['cols'][1]
         gs_y1, gs_y2 = 4, 6
         i_obs_x, i_obs_y = 0, 1
         hr_diags.append(
             [x_phot_all, y_phot_all, frst_obs_col, scnd_obs_col,
-             frst_synth_col, scnd_synth_col, frst_col_edgs, scnd_col_edgs,
-             frst_col_isoch, scnd_col_isoch, colors[0], colors[1], 'col',
-             i_obs_x, i_obs_y, gs_y1, gs_y2])
+             frst_synth_col, scnd_synth_col, binar_idx, frst_col_edgs,
+             scnd_col_edgs, frst_col_isoch, scnd_col_isoch, colors[0],
+             colors[1], 'col', i_obs_x, i_obs_y, gs_y1, gs_y2])
 
     return hr_diags
 
