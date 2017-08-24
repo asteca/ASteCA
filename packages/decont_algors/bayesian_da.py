@@ -81,7 +81,7 @@ def main(cl_region, field_regions, bayesda_runs):
     '''
     Bayesian field decontamination algorithm.
     '''
-    print('Applying decontamination algorithm.')
+    print('Applying Bayesian DA.')
 
     # cl_region = [[id, x, y, mags, e_mags, cols, e_cols], [], [], ...]
     # len(cl_region) = number of stars inside the cluster's radius.
