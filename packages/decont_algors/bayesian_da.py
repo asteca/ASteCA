@@ -81,7 +81,7 @@ def main(cl_region, field_regions, bayesda_runs):
     '''
     Bayesian field decontamination algorithm.
     '''
-    print('Applying Bayesian DA.')
+    print('Applying Bayesian DA ({} runs).'.format(bayesda_runs))
 
     # cl_region = [[id, x, y, mags, e_mags, cols, e_cols], [], [], ...]
     # len(cl_region) = number of stars inside the cluster's radius.
@@ -109,7 +109,7 @@ def main(cl_region, field_regions, bayesda_runs):
     cl_phot = [zip(*zip(*cl_region)[1:][2]), zip(*zip(*cl_region)[1:][3]),
                zip(*zip(*cl_region)[1:][4]), zip(*zip(*cl_region)[1:][5])]
 
-    # Run 'runs' times.
+    # Run 'bayesda_runs' times.
     for run_num in range(bayesda_runs):
 
         # This list will hold the probabilities for each field region.
