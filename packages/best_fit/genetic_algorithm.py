@@ -392,6 +392,8 @@ def main(lkl_method, e_max, bin_mr, err_lst, completeness, max_mag_syn,
                     ext_imm_count += 1
                     if ext_imm_count == N_es:
                         # Exit generations loop.
+                        if flag_print_perc:
+                            print("  GA exit switch applied.")
                         break
                 else:
                     # Update best solution.

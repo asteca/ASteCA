@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import matplotlib.offsetbox as offsetbox
 from matplotlib.patches import Ellipse
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-from scipy.ndimage.filters import gaussian_filter
+import scipy.interpolate
 
 
 def pl_ga_lkl(gs, l_min_max, lkl_old, model_done, new_bs_indx, N_pop, N_gen,
@@ -56,56 +56,87 @@ def pl_2_param_dens(gs, _2_params, min_max_p, cp_r, cp_e, model_done):
     '''
     # Define parameters for upper and lower plots.
     if _2_params == 'age-metal':
-        ax, cp, d_map, mx, my = plt.subplot(gs[0:2, 4:6]), 'r', 'Blues', 0, 1
+        gs_x1, gs_x2, cp, d_map, mx, my = 4, 6, 'r', 'GnBu_r', 0, 1
         x_label, y_label = '$z$', '$log(age)$'
     elif _2_params == 'dist-ext':
-        ax, cp, d_map, mx, my = plt.subplot(gs[0:2, 6:8]), 'b', 'Reds', 2, 3
+        gs_x1, gs_x2, cp, d_map, mx, my = 6, 8, 'b', 'YlOrBr_r', 2, 3
         x_label, y_label = '$E_{(B-V)}$', '$(m-M)_o$'
-    elif _2_params == 'metal-dist':
-        ax, cp, d_map, mx, my = plt.subplot(gs[0:2, 8:10]), 'r', 'Blues', 0, 3
-        x_label, y_label = '$z$', '$(m-M)_o$'
+    elif _2_params == 'ext-age':
+        gs_x1, gs_x2, cp, d_map, mx, my = 8, 10, 'r', 'GnBu_r', 2, 1
+        x_label, y_label = '$E_{(B-V)}$', '$log(age)$'
     elif _2_params == 'mass-binar':
-        ax, cp, d_map, mx, my = plt.subplot(gs[0:2, 10:12]), 'b', 'Reds', 4, 5
+        gs_x1, gs_x2, cp, d_map, mx, my = 10, 12, 'b', 'YlOrBr_r', 4, 5
         x_label, y_label = '$M\,(M_{{\odot}})$', '$b_{frac}$'
 
+    ax = plt.subplot(gs[0:2, gs_x1:gs_x2])
     # Parameter values and errors.
     xp, e_xp = map(float, [cp_r[mx], cp_e[mx]])
     yp, e_yp = map(float, [cp_r[my], cp_e[my]])
     # Axis limits.
     xp_min, xp_max = min_max_p[mx]
     yp_min, yp_max = min_max_p[my]
-    # Special axis ticks for metallicity.
-    if _2_params in {'age-metal', 'metal-dist'}:
-        z_xmin, z_step = min_max_p[-1]
-        ax.xaxis.set_ticks(np.arange(z_xmin, xp_max, z_step))
-
+    # # Special axis ticks for metallicity.
+    # if _2_params in {'age-metal', 'metal-dist'}:
+    #     z_xmin, z_step = min_max_p[-1]
+    #     ax.xaxis.set_ticks(np.arange(z_xmin, xp_max, z_step))
     plt.xlim(xp_min, xp_max)
     plt.ylim(yp_min, yp_max)
+    # To specify the number of ticks on both or any single axes
+    ax.locator_params(nbins=5)
     plt.xlabel(x_label, fontsize=16)
     plt.ylabel(y_label, fontsize=16)
     plt.minorticks_on()
-    # Plot best fit point.
-    plt.scatter(xp, yp, marker='o', c=cp, s=30)
     # Check if errors in both dimensions are defined.
-    if all([i > 0. for i in [e_xp, e_yp]]):
+    if all([~np.isnan(_) for _ in [e_xp, e_yp]]):
         # Plot ellipse error.
         plt.gca()
         ellipse = Ellipse(xy=(xp, yp), width=2 * e_xp, height=2 * e_yp,
-                          edgecolor=cp, fc='None', lw=1.)
+                          edgecolor=cp, fc='None', lw=1., zorder=4)
         ax.add_patch(ellipse)
     # Else plot an error bar in the corresponding dimension.
-    elif e_xp < 0. and e_yp > 0.:
-        plt.errorbar(xp, yp, yerr=e_yp, color=cp)
-    elif e_yp < 0. and e_xp > 0.:
-        plt.errorbar(xp, yp, xerr=e_xp, color=cp)
-    # Plot density map.
-    hist, xedges, yedges = np.histogram2d(zip(*model_done[0])[mx],
-                                          zip(*model_done[0])[my], bins=100)
-    # H_g is the 2D histogram with a Gaussian filter applied
-    h_g = gaussian_filter(hist, 2, mode='constant')
-    plt.imshow(h_g.transpose(), origin='lower',
-               extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]],
-               cmap=plt.get_cmap(d_map), aspect='auto')
+    elif np.isnan(e_xp) and ~np.isnan(e_yp):
+        plt.errorbar(xp, yp, yerr=e_yp, color=cp, zorder=4)
+    elif np.isnan(e_yp) and ~np.isnan(e_xp):
+        plt.errorbar(xp, yp, xerr=e_xp, color=cp, zorder=4)
+    # Plot best fit point.
+    plt.scatter(xp, yp, marker='x', c=cp, s=30, linewidth=2, zorder=4)
+
+    # Select the minimum likelihood for each (x,y) pair in the density plot.
+    x_par, y_par = list(zip(*model_done[0])[mx]), list(zip(*model_done[0])[my])
+    z_lkl = model_done[1]
+    xy_unq, z_unq = [], []
+    for i, xy in enumerate(zip(*[x_par, y_par])):
+        if xy in xy_unq:
+            if z_unq[xy_unq.index(xy)] > z_lkl[i]:
+                z_unq[xy_unq.index(xy)] = z_lkl[i]
+        else:
+            xy_unq.append(xy)
+            z_unq.append(np.log(z_lkl[i] + 1.))
+    # Generate density ploy.
+    # Sources:
+    # https://stackoverflow.com/a/3867302/1391441
+    # https://stackoverflow.com/a/9008576/1391441
+    x, y = np.array(zip(*xy_unq)[0]), np.array(zip(*xy_unq)[1])
+    z = np.asarray(z_unq)
+    xmin, xmax, ymin, ymax = min(x), max(x), min(y), max(y)
+    # Only plot if one of the parameters was not fixed
+    if xmin != xmax or ymin != ymax:
+        if xmin == xmax:
+            xmin, xmax = xp_min, xp_max
+        if ymin == ymax:
+            ymin, ymax = yp_min, yp_max
+        # Set up a regular grid of interpolation points
+        xi, yi = np.linspace(xmin, xmax, 200), np.linspace(ymin, ymax, 200)
+        xi, yi = np.meshgrid(xi, yi)
+        # Normalize data.
+        x_new, xi_new = (x - xmin) / (xmax - xmin), (xi - xmin) / (xmax - xmin)
+        y_new, yi_new = (y - ymin) / (ymax - ymin), (yi - ymin) / (ymax - ymin)
+        # Interpolate new data.
+        rbf = scipy.interpolate.Rbf(x_new, y_new, z, function='linear')
+        zi = rbf(xi_new, yi_new)
+        # Plot density map.
+        plt.pcolormesh(xi, yi, zi, cmap=plt.get_cmap(d_map), zorder=2)
+        plt.contour(xi, yi, zi, 2, colors='#551a8b', linewidths=0.5, zorder=3)
 
 
 def pl_lkl_scatt(gs, ld_p, min_max_p, cp_r, cp_e, model_done):
@@ -157,13 +188,14 @@ def pl_lkl_scatt(gs, ld_p, min_max_p, cp_r, cp_e, model_done):
         plt.axvline(x=xp + e_xp, linestyle='--', color='blue')
         plt.axvline(x=xp - e_xp, linestyle='--', color='blue')
     # Set y axis limit.
-    min_lik = min(model_done[1])
+    min_lik, max_lik = min(model_done[1]), max(model_done[1])
     if min_lik > 0:
-        min_y, max_y = min_lik - min_lik * 0.1, 2.5 * min_lik
+        min_y, max_y = min_lik - min_lik * 0.1, min(2.5 * min_lik, max_lik)
     else:
-        min_y, max_y = min_lik + min_lik * 0.1, -2.5 * min_lik
+        min_y, max_y = min_lik + min_lik * 0.1, min(-2.5 * min_lik, max_lik)
     plt.ylim(min_y, max_y)
     plt.xlim(xp_min, xp_max)
+    ax.locator_params(nbins=5)
     # Position colorbar.
     the_divider = make_axes_locatable(ax)
     color_axis = the_divider.append_axes("right", size="2%", pad=0.1)
@@ -181,7 +213,7 @@ def plot(N, *args):
         0: [pl_ga_lkl, 'GA likelihood evolution'],
         1: [pl_2_param_dens, 'age vs metallicity density map'],
         2: [pl_2_param_dens, 'distance vs extinction density map'],
-        3: [pl_2_param_dens, 'z vs distance density map'],
+        3: [pl_2_param_dens, 'age vs extinction density map'],
         4: [pl_2_param_dens, 'mass vs binarity density map'],
         5: [pl_lkl_scatt, 'z likelihood scatter'],
         6: [pl_lkl_scatt, 'age likelihood scatter'],
@@ -197,7 +229,7 @@ def plot(N, *args):
 
     try:
         fxn(*args)
-    except:
+    except Exception:
         import traceback
         print traceback.format_exc()
         print("  WARNING: error when plotting {}.".format(plt_map.get(N)[1]))

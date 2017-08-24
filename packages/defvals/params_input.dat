@@ -304,8 +304,12 @@ BF     y
 #   Binning method to be used if the likelihood equation by 'dolphin' is
 #   selected. Otherwise this parameter is ignored.
 #
-#   likelihood  binning
-LK     dolphin     auto
+# * weight: mean / median / max
+#   Weight applied to each bin defined by the 'binning' parameter, if 'dolphin'
+#   is selected. Otherwise this parameter is ignored.
+#
+#   likelihood  binning    weight
+LK     dolphin     auto      mean
 
 # Set of evolutionary tracks.
 #

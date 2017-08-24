@@ -104,6 +104,11 @@ def main(met_f_filter, age_values, cmd_evol_tracks, evol_track,
     '''
     Read isochrones and parameters if best fit function is set to run.
     '''
+    # Filters and colors
+    fs = ', '.join(_[1] for _ in filters)
+    cs = ', '.join('(' + _[1].replace(',', '-') + ')' for _ in colors)
+    print("Filter: {}".format(fs))
+    print("Color:  {}\n".format(cs))
     # Print info about tracks.
     print("Processing {} theoretical isochrones".format(
         cmd_evol_tracks[evol_track][1]))

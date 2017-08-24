@@ -1,6 +1,7 @@
 
 from ..math_f import exp_function
-from ..best_fit import obs_clust_prepare
+from ..best_fit.obs_clust_prepare import dataProcess
+from ..decont_algors.local_cell_clean import bin_edges_f
 import numpy as np
 from scipy import stats
 import matplotlib.pyplot as plt
@@ -62,16 +63,18 @@ def frame_zoomed(x_min, x_max, y_min, y_max, kde_cent, clust_rad):
     return x_zmin, x_zmax, y_zmin, y_zmax
 
 
-def ax_names(filters, colors):
+def ax_names(x, y, yaxis):
     '''
     Define names for photometric diagram axes.
     '''
-    # y_axis == 0 indicates that the y axis is a magnitude.
-    y_axis = 0
     # Create photometric axis names.
-    x_ax = '(' + colors[0][1].replace(',', '-') + ')'
-    y_ax = filters[0][1]
-    return x_ax, y_ax, y_axis
+    x_ax = '(' + x[1].replace(',', '-') + ')'
+    # yaxis indicates if the y axis is a magnitude or a color.
+    if yaxis == 'mag':
+        y_ax = y[1]
+    else:
+        y_ax = '(' + y[1].replace(',', '-') + ')'
+    return x_ax, y_ax
 
 
 def kde_limits(phot_x, phot_y):
@@ -112,7 +115,7 @@ def kde_limits(phot_x, phot_y):
     return x_v, y_v
 
 
-def diag_limits(y_axis, phot_x, phot_y):
+def diag_limits(yaxis, phot_x, phot_y):
     '''
     Define plot limits for *all* photometric diagrams.
     '''
@@ -123,7 +126,7 @@ def diag_limits(y_axis, phot_x, phot_y):
     y_min_cmd = max(y_v) + 1.25
     # If photometric axis y is a magnitude, make sure the brightest star
     # is always plotted.
-    if y_axis == 0:
+    if yaxis == 'mag':
         y_max_cmd = min(phot_y) - 1.
     else:
         y_max_cmd = min(y_v) - 1.
@@ -327,74 +330,138 @@ def likl_y_range(lkl_old):
     return l_min_max
 
 
-def BestTick(minv, maxv, max_char):
-    '''
-    Find optimal number and length of ticks for a given fixed maximum
-    number of characters in the axis.
-    '''
+# def BestTick(minv, maxv, max_char):
+#     '''
+#     Find optimal number and length of ticks for a given fixed maximum
+#     number of characters in the axis.
+#     '''
 
-    st, diff_chars, st_indx = [], 1000, 0
-    # Check these 4 possible sizes for the ticks and keep the best one.
-    for i in range(4):
-        mostticks = i + 4
+#     st, diff_chars, st_indx = [], 1000, 0
+#     # Check these 4 possible sizes for the ticks and keep the best one.
+#     for i in range(4):
+#         mostticks = i + 4
 
-        minimum = (maxv - minv) / mostticks
-        magnitude = 10 ** math.floor(math.log(minimum) / math.log(10))
-        residual = minimum / magnitude
-        if residual > 5:
-            tick = 10 * magnitude
-        elif residual > 2:
-            tick = 5 * magnitude
-        elif residual > 1:
-            tick = 2 * magnitude
-        else:
-            tick = magnitude
+#         minimum = (maxv - minv) / mostticks
+#         magnitude = 10 ** math.floor(math.log(minimum) / math.log(10))
+#         residual = minimum / magnitude
+#         if residual > 5:
+#             tick = 10 * magnitude
+#         elif residual > 2:
+#             tick = 5 * magnitude
+#         elif residual > 1:
+#             tick = 2 * magnitude
+#         else:
+#             tick = magnitude
 
-        st.append(tick)
-        # Count the number of chars used by this step.
-        ms = (i + 4) * (len(str(tick)) - 1)
-        # Only use if it is less than the fixed max value of chars.
-        if ms <= max_char:
-            if (max_char - ms) < diff_chars:
-                # Store the closest value to max_chars.
-                diff_chars = (max_char - ms)
-                st_indx = i
+#         st.append(tick)
+#         # Count the number of chars used by this step.
+#         ms = (i + 4) * (len(str(tick)) - 1)
+#         # Only use if it is less than the fixed max value of chars.
+#         if ms <= max_char:
+#             if (max_char - ms) < diff_chars:
+#                 # Store the closest value to max_chars.
+#                 diff_chars = (max_char - ms)
+#                 st_indx = i
 
-    # Set min tick value according to the best step length selected above.
-    if minv <= 0.:
-        xmin = 0.
-    elif minv <= st[st_indx]:
-        xmin = st[st_indx]
-    else:
-        xmin = int(round(minv / st[st_indx])) * st[st_indx]
+#     # Set min tick value according to the best step length selected above.
+#     if minv <= 0.:
+#         xmin = 0.
+#     elif minv <= st[st_indx]:
+#         xmin = st[st_indx]
+#     else:
+#         xmin = int(round(minv / st[st_indx])) * st[st_indx]
 
-    return xmin, st[st_indx]
+#     return xmin, st[st_indx]
 
 
-def get_hess(lkl_method, bin_method, cl_max_mag, synth_clust):
+def packData(lkl_method, lkl_binning, cl_max_mag, synth_clst, shift_isoch,
+             colors, filters, cld):
+    """
+    Properly select and pack data for CMD/CCD of observed and synthetic
+    clusters, and their Hess diagram.
+    """
+    bin_method = 'auto' if lkl_method == 'tolstoy' else lkl_binning
+    mags_cols_cl, dummy = dataProcess(cl_max_mag)
+    # Obtain bin edges for each dimension, defining a grid.
+    bin_edges = bin_edges_f(bin_method, mags_cols_cl)
+
+    N_mags, N_cols = len(filters), len(colors)
+
+    # CMD of main magnitude and first color defined.
+    # Used to defined limits.
+    x_phot_all, y_phot_all = cld['cols'][0], cld['mags'][0]
+    frst_obs_mag, frst_obs_col = list(zip(*zip(*cl_max_mag)[3])[0]),\
+        list(zip(*zip(*cl_max_mag)[5])[0])
+    frst_synth_col, frst_synth_mag = synth_clst[0][0][1],\
+        synth_clst[0][0][0]
+    frst_col_edgs, frst_mag_edgs = bin_edges[1], bin_edges[0]
+    # Filters and colors are appended continuously in 'shift_isoch'. If
+    # there are 3 defined filters, then the first color starts at the
+    # index 3. This is why 'N_mags' is used as the 'first color' index.
+    frst_col_isoch, frst_mag_isoch = shift_isoch[N_mags], shift_isoch[0]
+    # gs plot coords.
+    gs_y1, gs_y2 = 0, 2
+    # Index of observed filter/color to scatter plot.
+    i_obs_x, i_obs_y = 0, 0
+    hr_diags = [
+        [x_phot_all, y_phot_all, frst_obs_col, frst_obs_mag, frst_synth_col,
+         frst_synth_mag, frst_col_edgs, frst_mag_edgs, frst_col_isoch,
+         frst_mag_isoch, colors[0], filters[0], 'mag', i_obs_x, i_obs_y,
+         gs_y1, gs_y2]]
+
+    # If more than one color was defined, plot an extra CMD (main magnitude
+    # versus first color), and an extra CCD (first color versus second color)
+    if N_cols > 1:
+        scnd_obs_col = list(zip(*zip(*cl_max_mag)[5])[1])
+        scnd_synth_col = synth_clst[0][0][2]
+        scnd_col_edgs = bin_edges[2]
+        scnd_col_isoch = shift_isoch[N_mags + 1]
+        # CMD of main magnitude and second color defined.
+        x_phot_all, y_phot_all = cld['cols'][1], cld['mags'][0]
+        gs_y1, gs_y2 = 2, 4
+        i_obs_x, i_obs_y = 1, 0
+        hr_diags.append(
+            [x_phot_all, y_phot_all, scnd_obs_col, frst_obs_mag,
+             scnd_synth_col, frst_synth_mag, scnd_col_edgs, frst_mag_edgs,
+             shift_isoch[2], frst_mag_isoch, colors[1], filters[0], 'mag',
+             i_obs_x, i_obs_y, gs_y1, gs_y2])
+        # CCD of first and second color defined.
+        x_phot_all, y_phot_all = cld['cols'][0], cld['cols'][1]
+        gs_y1, gs_y2 = 4, 6
+        i_obs_x, i_obs_y = 0, 1
+        hr_diags.append(
+            [x_phot_all, y_phot_all, frst_obs_col, scnd_obs_col,
+             frst_synth_col, scnd_synth_col, frst_col_edgs, scnd_col_edgs,
+             frst_col_isoch, scnd_col_isoch, colors[0], colors[1], 'col',
+             i_obs_x, i_obs_y, gs_y1, gs_y2])
+
+    return hr_diags
+
+
+def get_hess(obs_mags_cols, synth_phot, hess_xedges, hess_yedges):
     """
     Hess diagram of observed minus best match synthetic cluster.
     """
-    if lkl_method == 'tolstoy':
-        lkl_method, bin_method = 'dolphin', 'auto'
-    # Observed cluster's histogram and bin edges for each dimension.
-    bin_edges, cl_histo = obs_clust_prepare.main(
-        cl_max_mag, lkl_method, bin_method)[:2]
+    # 2D histogram of the observed cluster.
+    cl_histo = np.histogram2d(
+        *obs_mags_cols, bins=[hess_xedges, hess_yedges])[0]
+    # 2D histogram of the synthetic cluster.
+    syn_histo = np.histogram2d(*synth_phot, bins=[hess_xedges, hess_yedges])[0]
 
-    # Histogram of the synthetic cluster, using the bin edges calculated
-    # with the observed cluster.
+    # Grid for pcolormesh.
+    hess_x, hess_y = np.meshgrid(hess_xedges, hess_yedges)
+
+    # Hess diagram: observed minus synthetic.
     hess_diag = np.array([])
-    if synth_clust:
-        synth_phot = synth_clust[0][0]
-        if synth_phot:
-            syn_histo = np.histogramdd(synth_phot, bins=bin_edges)[0]
-            hess_nd = cl_histo - syn_histo
-            # TODO this uses the first two defined photometric dimensions.
-            hess_diag = hess_nd.reshape(hess_nd.shape[:2] + (-1,)).sum(axis=-1)
+    if syn_histo.size:
+        hess_diag = cl_histo - syn_histo
+        if hess_diag.size:
+            HD = np.rot90(hess_diag)
+            HD = np.flipud(HD)
+        else:
+            HD = np.array([])
 
-    if not hess_diag.size:
-        print("  WARNING: the synthetic cluster is empty.")
+    if not HD.size:
+        print("  WARNING: the Hess diagram could no be obtained.")
 
-    hess_data = {'hess_diag': hess_diag, 'hess_edges': bin_edges}
-
-    return hess_data
+    return hess_x, hess_y, HD

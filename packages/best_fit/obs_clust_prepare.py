@@ -1,34 +1,44 @@
 
 import numpy as np
+from scipy.stats import binned_statistic_dd
 from ..decont_algors.local_cell_clean import bin_edges_f
 
 
-def main(cl_max_mag, lkl_method, bin_method):
-    '''
-    Prepare observed cluster array here to save time before the algorithm to
-    find the best synthetic cluster fit is used.
-    '''
-
-    # Extract photometric data, and membership probabilities. Remove ID's to
-    # make entire array of floats.
+def dataProcess(cl_max_mag):
+    """
+    Extract photometric data, and membership probabilities. Remove ID's to
+    make entire array of floats.
+    """
     mags_cols_cl = [[], []]
     for mag in zip(*zip(*cl_max_mag)[1:][2]):
         mags_cols_cl[0].append(mag)
     for col in zip(*zip(*cl_max_mag)[1:][4]):
         mags_cols_cl[1].append(col)
 
-    # Square errors here to not repeat the same calculations each time a
-    # new synthetic cluster is matched.
-    e_mags_cols = []
-    for e_m in zip(*zip(*cl_max_mag)[1:][3]):
-        e_mags_cols.append(np.square(e_m))
-    for e_c in zip(*zip(*cl_max_mag)[1:][5]):
-        e_mags_cols.append(np.square(e_c))
-
     # Store membership probabilities here.
     memb_probs = np.array(zip(*cl_max_mag)[1:][6])
 
+    return mags_cols_cl, memb_probs
+
+
+def main(cl_max_mag, lkl_method, bin_method, lkl_weight):
+    '''
+    Prepare observed cluster array here to save time before the algorithm to
+    find the best synthetic cluster fit is used.
+    '''
+
+    mags_cols_cl, memb_probs = dataProcess(cl_max_mag)
+
     if lkl_method == 'tolstoy':
+
+        # Square errors here to not repeat the same calculations each time a
+        # new synthetic cluster is matched.
+        e_mags_cols = []
+        for e_m in zip(*zip(*cl_max_mag)[1:][3]):
+            e_mags_cols.append(np.square(e_m))
+        for e_c in zip(*zip(*cl_max_mag)[1:][5]):
+            e_mags_cols.append(np.square(e_c))
+
         # Store and pass to use in likelihood function. The 'obs_st' list is
         # made up of:
         # obs_st = [star_1, star_2, ...]
@@ -42,6 +52,32 @@ def main(cl_max_mag, lkl_method, bin_method):
             obs_st.append(zip(*[st_phot, st_e_phot]))
         obs_clust = [obs_st, memb_probs]
 
+    elif lkl_method == 'duong':
+        # Define variables to communicate with package 'R'.
+        import rpy2.robjects as robjects
+        from rpy2.robjects.packages import importr
+        ks = importr('ks')
+        kde_test = ks.kde_test
+        hpi_kfe = ks.Hpi_kfe
+
+        # CMD for cluster region.
+        mags_cols = mags_cols_cl[0] + mags_cols_cl[1]
+        matrix_cl = np.ravel(np.column_stack((mags_cols)))
+        # matrix_cl = []
+        # for st in obs_st:
+        #     matrix_cl.append(st[0][0])
+        #     matrix_cl.append(st[1][0])
+        rows_cl = int(len(matrix_cl) / 2)
+
+        # Create matrices for these CMDs.
+        m_cl = robjects.r.matrix(robjects.FloatVector(matrix_cl),
+                                 nrow=rows_cl, byrow=True)
+
+        # Bandwidth matrices.
+        hpic = hpi_kfe(x=m_cl, binned=True)
+
+        obs_clust = [kde_test, hpi_kfe, m_cl, hpic]
+
     elif lkl_method in ['dolphin', 'mighell']:
         # Obtain bin edges for each dimension, defining a grid.
         bin_edges = bin_edges_f(bin_method, mags_cols_cl)
@@ -51,18 +87,15 @@ def main(cl_max_mag, lkl_method, bin_method):
         # Obtain histogram for observed cluster.
         cl_histo = np.histogramdd(obs_mags_cols, bins=bin_edges)[0]
 
-        # Generate a weighted histogram: "the values of the returned
-        # histogram are equal to the sum of the weights belonging to the
-        # samples falling into each bin."
-        w = np.histogramdd(
-            obs_mags_cols, bins=bin_edges, weights=memb_probs)[0]
-        # Divide by the number of stars in each bin to obtain the average MP
-        # per bin (add a small float to avoid a 'ZeroDivisionError')
-        bin_weight = w / (cl_histo + 1.e-9)
+        w_stat = {'mean': np.mean, 'max': np.max, 'median': np.median}
+        # Weights that will be applied to each bin.
+        bin_w = np.nan_to_num(binned_statistic_dd(
+            obs_mags_cols, memb_probs, statistic=w_stat[lkl_weight],
+            bins=bin_edges)[0])
 
         # Flatten N-dimensional histograms.
         cl_histo_f = np.array(cl_histo).ravel()
-        bin_weight_f = np.array(bin_weight).ravel()
+        bin_weight_f = np.array(bin_w).ravel()
 
         # Index of bins where n_i = 0 (no observed stars). Used by the
         # 'Dolphin' and 'Mighell' likelihoods.
