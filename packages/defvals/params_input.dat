@@ -110,15 +110,11 @@ PF     png     150
 # Move data file once it is processed?
 #
 # * flag: y / n
-#   The cluster's photometric file will be moved to the folder defined below
+#   The cluster's photometric file will be moved to the '/output/done/' folder
 #   if this flag is set to 'y'.
 #
-# * path: [/path/to/folder]
-#   Path where the photometric files are moved once processed if the flag is
-#   set to 'y'. Otherwise ignored.
-#
-#   flag              path
-MD     n              none
+#   flag
+MD     n
 ################################################################################
 
 

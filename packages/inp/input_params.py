@@ -73,7 +73,6 @@ def main(mypath, pars_f_path):
                     plot_dpi = int(reader[2])
                 elif reader[0] == 'MD':
                     flag_move_file = True if reader[1] in true_lst else False
-                    done_dir = str(reader[2])
 
                 # Structure functions parameters.
                 elif reader[0] == 'CH':
@@ -203,7 +202,7 @@ def main(mypath, pars_f_path):
         'id_coords': id_coords, 'id_mags': id_mags, 'id_cols': id_cols,
         'flag_make_plot': flag_make_plot, 'plot_frmt': plot_frmt,
         'plot_dpi': plot_dpi,
-        'flag_move_file': flag_move_file, 'done_dir': done_dir,
+        'flag_move_file': flag_move_file,
         'center_stddev': center_stddev, 'radius_method': radius_method,
         'kp_flag': kp_flag, 'fr_number': fr_number, 'err_max': err_max,
         'im_flag': im_flag, 'pvalue_runs': pvalue_runs,
