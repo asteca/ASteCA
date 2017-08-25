@@ -151,7 +151,8 @@ def main(clp, fld_clean_mode, fld_clean_bin, fld_clean_prob, **kwargs):
             cl_reg_fit, cl_reg_no_fit, min_prob = manual(
                 memb_prob_avrg_sort, fld_clean_prob)
 
-        print('Cluster region field stars removal function applied.')
+        print("Stars selected in cluster region with '{}' method ({}).".format(
+            fld_clean_mode, len(cl_reg_fit)))
 
     clp['cl_reg_fit'], clp['cl_reg_no_fit'], clp['cl_reg_clean_plot'] =\
         cl_reg_fit, cl_reg_no_fit, [min_prob, bin_edges]
