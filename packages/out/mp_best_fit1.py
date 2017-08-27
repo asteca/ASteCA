@@ -75,10 +75,6 @@ def pl_2_param_dens(gs, _2_params, min_max_p, cp_r, cp_e, model_done):
     # Axis limits.
     xp_min, xp_max = min_max_p[mx]
     yp_min, yp_max = min_max_p[my]
-    # # Special axis ticks for metallicity.
-    # if _2_params in {'age-metal', 'metal-dist'}:
-    #     z_xmin, z_step = min_max_p[-1]
-    #     ax.xaxis.set_ticks(np.arange(z_xmin, xp_max, z_step))
     plt.xlim(xp_min, xp_max)
     plt.ylim(yp_min, yp_max)
     # To specify the number of ticks on both or any single axes
@@ -101,26 +97,48 @@ def pl_2_param_dens(gs, _2_params, min_max_p, cp_r, cp_e, model_done):
     # Plot best fit point.
     plt.scatter(xp, yp, marker='x', c=cp, s=30, linewidth=2, zorder=4)
 
+    def selectMinLkl(x, y, z):
+        """
+        Select the xy pairs with the smallest z values.
+        Source: https://stackoverflow.com/a/45887552/1391441
+        """
+        # Get grouped lex-sort indices
+        sidx = np.lexsort([x, y])
+        # Lex-sort x, y, z
+        x_sorted = x[sidx]
+        y_sorted = y[sidx]
+        z_sorted = z[sidx]
+
+        # Get equality mask between each sorted X and Y elem against previous
+        # ones. The non-zero indices of its inverted mask gives us the indices
+        # where the new groupings start. We are calling those as cut_idx.
+        seq_eq_mask = (x_sorted[1:] == x_sorted[:-1]) &\
+            (y_sorted[1:] == y_sorted[:-1])
+        cut_idx = np.flatnonzero(np.concatenate(([True], ~seq_eq_mask)))
+
+        # Use those cut_idx to get intervalled minimum values
+        minZ = np.minimum.reduceat(z_sorted, cut_idx)
+
+        # Make tuples of the groupings of x,y and the corresponding min Z
+        # values.
+        return (zip(x_sorted[cut_idx], y_sorted[cut_idx]), minZ.tolist())
+
     # Select the minimum likelihood for each (x,y) pair in the density plot.
-    x_par, y_par = list(zip(*model_done[0])[mx]), list(zip(*model_done[0])[my])
-    z_lkl = model_done[1]
-    xy_unq, z_unq = [], []
-    for i, xy in enumerate(zip(*[x_par, y_par])):
-        if xy in xy_unq:
-            if z_unq[xy_unq.index(xy)] > z_lkl[i]:
-                z_unq[xy_unq.index(xy)] = z_lkl[i]
-        else:
-            xy_unq.append(xy)
-            z_unq.append(np.log(z_lkl[i] + 1.))
+    z_lkl = np.log(np.asarray(model_done[1]) + 1.)
+    xy_unq, z = selectMinLkl(
+        np.array(zip(*model_done[0])[mx]), np.array(zip(*model_done[0])[my]),
+        z_lkl)
+
     # Generate density ploy.
     # Sources:
     # https://stackoverflow.com/a/3867302/1391441
     # https://stackoverflow.com/a/9008576/1391441
     x, y = np.array(zip(*xy_unq)[0]), np.array(zip(*xy_unq)[1])
-    z = np.asarray(z_unq)
     xmin, xmax, ymin, ymax = min(x), max(x), min(y), max(y)
     # Only plot if one of the parameters was not fixed
     if xmin != xmax or ymin != ymax:
+        # import time
+        # s = time.clock()
         if xmin == xmax:
             xmin, xmax = xp_min, xp_max
         if ymin == ymax:
@@ -137,6 +155,7 @@ def pl_2_param_dens(gs, _2_params, min_max_p, cp_r, cp_e, model_done):
         # Plot density map.
         plt.pcolormesh(xi, yi, zi, cmap=plt.get_cmap(d_map), zorder=2)
         plt.contour(xi, yi, zi, 2, colors='#551a8b', linewidths=0.5, zorder=3)
+        # print(time.clock() - s)
 
 
 def pl_lkl_scatt(gs, ld_p, min_max_p, cp_r, cp_e, model_done):
@@ -163,10 +182,8 @@ def pl_lkl_scatt(gs, ld_p, min_max_p, cp_r, cp_e, model_done):
     xp, e_xp = map(float, [cp_r[cp], cp_e[cp]])
     # Set x axis limit.
     xp_min, xp_max = min_max_p[cp]
-    # Special axis ticks for metallicity.
-    if ld_p == '$z$':
-        z_xmin, z_step = min_max_p[-1]
-        ax.xaxis.set_ticks(np.arange(z_xmin, xp_max, z_step))
+    plt.xlim(xp_min, xp_max)
+    ax.locator_params(nbins=5)
     # Set minor ticks
     ax.minorticks_on()
     ax.tick_params(axis='y', which='major', labelsize=9)
@@ -194,7 +211,6 @@ def pl_lkl_scatt(gs, ld_p, min_max_p, cp_r, cp_e, model_done):
     else:
         min_y, max_y = min_lik + min_lik * 0.1, min(-2.5 * min_lik, max_lik)
     plt.ylim(min_y, max_y)
-    plt.xlim(xp_min, xp_max)
     ax.locator_params(nbins=5)
     # Position colorbar.
     the_divider = make_axes_locatable(ax)
