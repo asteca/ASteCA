@@ -26,4 +26,4 @@ def main(clp, memb_file_out, **kwargs):
                     [line[6][0]] + [line[7]] + [idx[i]]
                 f_out.write(frmt.format(*txt))
 
-    print('Membership probabilities saved to file.')
+    print('Cluster region saved to file.')
