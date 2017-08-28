@@ -2,6 +2,21 @@
 import numpy as np
 import traceback
 import itertools
+from collections import defaultdict
+
+
+def list_duplicates(seq):
+    """
+    Find and report duplicates in list.
+
+    Source: https://stackoverflow.com/a/5419576/1391441
+    """
+    tally = defaultdict(list)
+    for i, item in enumerate(seq):
+        tally[item].append(i)
+    dups = ((key, map(str, locs)) for key, locs in tally.items()
+            if len(locs) > 1)
+    return dups
 
 
 def rem_bad_stars(ids, x, y, mags, em, cols, ec):
@@ -45,7 +60,7 @@ def main(npd, id_indx, x_indx, y_indx, mag_indx, e_mag_indx, col_indx,
         data = np.genfromtxt(data_file, dtype=float, filling_values=99.999,
                              unpack=True)
     except ValueError:
-        print traceback.format_exc()
+        print(traceback.format_exc())
         raise ValueError("ERROR: could not read data input file:\n  {}\n"
                          "  Check that all rows are filled (i.e., no blank"
                          " spaces)\n  for all columns.\n".format(data_file))
@@ -69,6 +84,15 @@ def main(npd, id_indx, x_indx, y_indx, mag_indx, e_mag_indx, col_indx,
         data = np.genfromtxt(data_file, dtype=str, unpack=True)
         ids = data[id_indx]
         n_old = len(ids)
+
+        dups = list(list_duplicates(ids))
+        if dups:
+            print("ERROR: duplicated IDs found in data file:")
+            for dup in dups:
+                print("  ID '{}' found in lines: {}".format(dup[0],
+                      ", ".join(dup[1])))
+            raise ValueError("Duplicated IDs found.")
+
     except IndexError:
         raise IndexError("ERROR: data input file:\n  {}\n  contains "
                          "fewer columns than those given "
@@ -102,7 +126,7 @@ def main(npd, id_indx, x_indx, y_indx, mag_indx, e_mag_indx, col_indx,
                     "ERROR: the range for {} column {} is\nzero."
                     " Check the input data format.".format(data_names[i], i))
 
-    print 'Data obtained from input file (N_stars: %d).' % len(ids)
+    print('Data obtained from input file (N_stars: {}).'.format(len(ids)))
     frac_reject = (float(n_old) - len(ids)) / float(n_old)
     if frac_reject > 0.05:
         print("  WARNING: {:.0f}% of stars in cluster's file were"
