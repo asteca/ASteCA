@@ -21,8 +21,6 @@ def main(clp, x, y, **kwargs):
         frac_cl_area = 1.
 
     else:
-        print("  WARNING: only a portion of the cluster\n"
-              "  is present in the observed frame.")
         # Index of point in RDP closer to the calculated cluster radius.
         sq_indx = int(
             round(((clp['clust_rad'] - (clp['bin_width'] / 2.)) /
@@ -63,6 +61,9 @@ def main(clp, x, y, **kwargs):
         cl_area = (sum_bins_in_rad * clp['bin_width'] ** 2)
         # Fraction of cluster's area present in frame.
         frac_cl_area = cl_area / (np.pi * clp['clust_rad'] ** 2)
+
+        print("  WARNING: only a portion of the cluster\n  is present "
+              "in the observed frame ({:.2f}).".format(frac_cl_area))
 
     clp['cl_area'], clp['frac_cl_area'] = cl_area, frac_cl_area
     print("Area of cluster obtained.")
