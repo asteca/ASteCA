@@ -154,7 +154,7 @@ def pl_2_param_dens(gs, _2_params, min_max_p, cp_r, cp_e, model_done):
         zi = rbf(xi_new, yi_new)
         # Plot density map.
         plt.pcolormesh(xi, yi, zi, cmap=plt.get_cmap(d_map), zorder=2)
-        plt.contour(xi, yi, zi, 2, colors='#551a8b', linewidths=0.5, zorder=3)
+        plt.contour(xi, yi, zi, 4, colors='#551a8b', linewidths=0.5, zorder=3)
         # print(time.clock() - s)
 
 
