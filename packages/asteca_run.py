@@ -67,9 +67,10 @@ def main():
         except Exception:
             print('\n!!! --> {}/{} '.format(cl_file[-2], cl_file[-1]) +
                   'could not be successfully processed <-- !!!\n')
-            print traceback.format_exc()
+            print(traceback.format_exc())
 
     # End of run.
     elapsed = time.time() - start
     m, s = divmod(elapsed, 60)
-    print 'Full run completed in {:.0f}m {:.0f}s.'.format(m, s)
+    h, m = divmod(m, 60)
+    print('Full run completed in {:.0f}h {:.0f}m {:.0f}s'.format(h, m, s))
