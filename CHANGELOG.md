@@ -1,6 +1,19 @@
 # Change Log
 
 
+## [[v0.2.2]][188] - 2017-08-29
+
+### Changed
+
+* Add weights to binned likelihood ([#216][187])
+* Fix [bug in progress bar][186].
+* Identify binaries in [plotted HR diagram][185].
+* Modify the information presented by the [2-parameters density plots][183].
+  Takes care of [#71][184].
+* Smarter empty field region around cluster region ([#345][182]).
+* Detect stars with duplicate IDs in data file ([#212][181]).
+
+
 ## [[v0.2.1]][180] - 2017-08-11
 
 ### Changed
@@ -569,3 +582,11 @@ ________________________________________________________________________________
 [178]: https://github.com/asteca/ASteCA/issues/338
 [179]: https://github.com/asteca/ASteCA/issues/340
 [180]: https://github.com/asteca/asteca/releases/tag/v0.2.1
+[181]: https://github.com/asteca/ASteCA/issues/212
+[182]: https://github.com/asteca/ASteCA/issues/345
+[183]: https://github.com/asteca/ASteCA/commit/ec38070b4bb2c6d48d50c2bbd265f15bcc6347ee
+[184]: https://github.com/asteca/ASteCA/issues/71
+[185]: https://github.com/asteca/ASteCA/commit/7c650fb9b65090ea54064d385aa28087b3008c80
+[186]: https://github.com/asteca/ASteCA/commit/65d1f89bd0992120c8401c80ef976ba3c3803c38
+[187]: https://github.com/asteca/ASteCA/issues/216
+[188]: https://github.com/asteca/asteca/releases/tag/v0.2.2
