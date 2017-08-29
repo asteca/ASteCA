@@ -42,26 +42,32 @@ def read_line_start(met_f, line_start):
                     del ls[0]
                 else:
                     print("  WARNING: theoretical isochrones are not\n"
-                          "  formatted as expected!")
+                          "  formatted as expected!\n")
                 break
 
     return ls
 
 
-def cmd_common_ids(l):
+def cmd_common_ids(evol_track, l):
     """
     These parameters are equivalent across photometric systems in a given
-    set of CMD evolutionary tracks. Their column numbers should also be equal
-    (as far as I checked!)
+    set of CMD evolutionary tracks.
+    The new PARSEC sets have an extra Z column at the position zero, that
+    Marigo sets do not have.
     """
     # Get indexes of initial mass, magnitudes, etc.
     M_ini, M_act, logLLo, logTe, logG, mbol = l.index('M_ini'),\
         l.index('M_act'), l.index('logL/Lo'), l.index('logTe'),\
         l.index('logG'), l.index('mbol')
 
-    if [M_ini, M_act, logLLo, logTe, logG, mbol] != [2, 3, 4, 5, 6, 7]:
-        print("  WARNING: extra parameters in isochrones are not\n"
-              "  positioned as expected!")
+    if evol_track in ['PAR10', 'PAR11', 'PAR12', 'PAR12C']:
+        if [M_ini, M_act, logLLo, logTe, logG, mbol] != [2, 3, 4, 5, 6, 7]:
+            print("  WARNING: extra parameters in isochrones are not\n"
+                  "  positioned as expected!\n")
+    elif evol_track in ['GIR02', 'MAR08', 'MAR08B', 'MAR08A']:
+        if [M_ini, M_act, logLLo, logTe, logG, mbol] != [1, 2, 3, 4, 5, 6]:
+            print("  WARNING: extra parameters in isochrones are not\n"
+                  "  positioned as expected!\n")
 
     return [M_ini, M_act, logLLo, logTe, logG, mbol]
 

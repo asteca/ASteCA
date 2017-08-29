@@ -103,14 +103,9 @@ def main(clp, fld_clean_mode, fld_clean_bin, fld_clean_prob, **kwargs):
     removal.
     '''
 
-    n_memb, flag_no_fl_regs, field_regions, memb_prob_avrg_sort,\
-        flag_decont_skip = [
-            clp[_] for _ in ('n_memb', 'flag_no_fl_regs', 'field_regions',
-                             'memb_prob_avrg_sort', 'flag_decont_skip')]
-
     # Default assignment.
-    cl_reg_fit, cl_reg_no_fit, min_prob, bin_edges = memb_prob_avrg_sort, [],\
-        0., 0.
+    cl_reg_fit, cl_reg_no_fit, min_prob, bin_edges =\
+        clp['memb_prob_avrg_sort'], [], 0., 0.
 
     if fld_clean_mode == 'all':
         # Skip reduction process.
@@ -118,13 +113,13 @@ def main(clp, fld_clean_mode, fld_clean_bin, fld_clean_prob, **kwargs):
 
     # If the DA was skipped and any method but 'local' or 'mag' is selected,
     # don't run.
-    elif flag_decont_skip and fld_clean_mode not in ('local', 'mag'):
+    elif clp['flag_decont_skip'] and fld_clean_mode not in ('local', 'mag'):
         print("  WARNING: decontamination algorithm was skipped.\n"
               "  Can't apply '{}' field stars removal method.".format(
                   fld_clean_mode))
 
     # If no field regions were defined, this mode won't work.
-    elif flag_no_fl_regs and fld_clean_mode == 'local':
+    elif clp['flag_no_fl_regs'] and fld_clean_mode == 'local':
         print("  WARNING: no field regions were defined. Can't apply\n"
               "  '{}' field stars removal method.".format(fld_clean_mode))
 
@@ -133,25 +128,28 @@ def main(clp, fld_clean_mode, fld_clean_bin, fld_clean_prob, **kwargs):
         # defined.
         if fld_clean_mode == 'local':
             cl_reg_fit, cl_reg_no_fit, min_prob, bin_edges =\
-                local_cell_clean.main(field_regions, memb_prob_avrg_sort,
-                                      flag_decont_skip, fld_clean_bin)
+                local_cell_clean.main(
+                    clp['field_regions'], clp['memb_prob_avrg_sort'],
+                    clp['flag_decont_skip'], fld_clean_bin)
 
         if fld_clean_mode == 'n_memb':
             cl_reg_fit, cl_reg_no_fit, min_prob = nmemb_sel(
-                n_memb, memb_prob_avrg_sort)
+                clp['n_memb'], clp['memb_prob_avrg_sort'])
 
         if fld_clean_mode == 'mp_05':
             cl_reg_fit, cl_reg_no_fit, min_prob = manual(
-                memb_prob_avrg_sort, fld_clean_prob, 0.5)
+                clp['memb_prob_avrg_sort'], fld_clean_prob, 0.5)
 
         elif fld_clean_mode == 'top_h':
-            cl_reg_fit, cl_reg_no_fit, min_prob = top_h(memb_prob_avrg_sort)
+            cl_reg_fit, cl_reg_no_fit, min_prob = top_h(
+                clp['memb_prob_avrg_sort'])
 
         elif fld_clean_mode == 'man':
             cl_reg_fit, cl_reg_no_fit, min_prob = manual(
-                memb_prob_avrg_sort, fld_clean_prob)
+                clp['memb_prob_avrg_sort'], fld_clean_prob)
 
-        print('Cluster region field stars removal function applied.')
+        print("Stars selected in cluster region, '{}' method ({}).".format(
+            fld_clean_mode, len(cl_reg_fit)))
 
     clp['cl_reg_fit'], clp['cl_reg_no_fit'], clp['cl_reg_clean_plot'] =\
         cl_reg_fit, cl_reg_no_fit, [min_prob, bin_edges]

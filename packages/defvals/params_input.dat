@@ -110,15 +110,11 @@ PF     png     150
 # Move data file once it is processed?
 #
 # * flag: y / n
-#   The cluster's photometric file will be moved to the folder defined below
+#   The cluster's photometric file will be moved to the '/output/done/' folder
 #   if this flag is set to 'y'.
 #
-# * path: [/path/to/folder]
-#   Path where the photometric files are moved once processed if the flag is
-#   set to 'y'. Otherwise ignored.
-#
-#   flag              path
-MD     n              none
+#   flag
+MD     n
 ################################################################################
 
 
@@ -304,8 +300,12 @@ BF     y
 #   Binning method to be used if the likelihood equation by 'dolphin' is
 #   selected. Otherwise this parameter is ignored.
 #
-#   likelihood  binning
-LK     dolphin     auto
+# * weight: mean / median / max
+#   Weight applied to each bin defined by the 'binning' parameter, if 'dolphin'
+#   is selected. Otherwise this parameter is ignored.
+#
+#   likelihood  binning    weight
+LK     dolphin     auto      mean
 
 # Set of evolutionary tracks.
 #

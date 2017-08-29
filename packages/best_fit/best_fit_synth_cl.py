@@ -48,7 +48,8 @@ def params_errors(
     lkl_method, e_max, bin_mr, err_lst, completeness, fundam_params,
         cl_max_mag, max_mag_syn, theor_tracks, R_V, ext_coefs, st_dist_mass,
         N_fc, N_pop, N_gen, fit_diff, cross_prob, cross_sel, mut_prob, N_el,
-        N_ei, N_es, lkl_binning, best_fit_algor, isoch_fit_params, N_b):
+        N_ei, N_es, lkl_binning, lkl_weight, best_fit_algor, isoch_fit_params,
+        N_b):
     '''
     Obtain errors for the fitted parameters.
     '''
@@ -75,7 +76,7 @@ def params_errors(
                 fundam_params, cl_max_mag, max_mag_syn, theor_tracks, R_V,
                 ext_coefs, st_dist_mass, N_fc, N_pop, N_gen, fit_diff,
                 cross_prob, cross_sel, mut_prob, N_el, N_ei, N_es, lkl_binning,
-                best_fit_algor, N_b)
+                lkl_weight, best_fit_algor, N_b)
         else:
             print('Skip bootstrap process.')
             # No error assignment.
@@ -84,10 +85,10 @@ def params_errors(
     return isoch_fit_errors
 
 
-def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning, N_bootstrap,
-         max_mag, IMF_name, m_high, R_V, bin_mr, fundam_params, N_pop, N_gen,
-         fit_diff, cross_prob, cross_sel, mut_prob, N_el, N_ei, N_es,
-         cmd_systs, all_syst_filters, filters, colors, theor_tracks,
+def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning, lkl_weight,
+         N_bootstrap, max_mag, IMF_name, m_high, R_V, bin_mr, fundam_params,
+         N_pop, N_gen, fit_diff, cross_prob, cross_sel, mut_prob, N_el, N_ei,
+         N_es, cmd_systs, all_syst_filters, filters, colors, theor_tracks,
          **kwargs):
     '''
     Perform a best fitting process to find the cluster's fundamental
@@ -105,7 +106,8 @@ def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning, N_bootstrap,
 
         # Process observed cluster. This list contains data used by the
         # likelihoods, and for plotting.
-        obs_clust = obs_clust_prepare.main(cl_max_mag, lkl_method, lkl_binning)
+        obs_clust = obs_clust_prepare.main(
+            cl_max_mag, lkl_method, lkl_binning, lkl_weight)
 
         # DELETE
         # print(filters)
@@ -167,8 +169,8 @@ def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning, N_bootstrap,
             lkl_method, e_max, bin_mr, err_lst, completeness, fundam_params,
             cl_max_mag, max_mag_syn, theor_tracks, R_V, ext_coefs,
             st_dist_mass, N_fc, N_pop, N_gen, fit_diff, cross_prob, cross_sel,
-            mut_prob, N_el, N_ei, N_es, lkl_binning, best_fit_algor,
-            isoch_fit_params, N_bootstrap)
+            mut_prob, N_el, N_ei, N_es, lkl_binning, lkl_weight,
+            best_fit_algor, isoch_fit_params, N_bootstrap)
     else:
         # Pass empty lists to make_plots.
         print('Skip parameters fitting process.')

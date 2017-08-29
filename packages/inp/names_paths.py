@@ -28,12 +28,12 @@ def memb_file_name(cl_file):
     return memb_file
 
 
-def main(cl_file, done_dir, run_mode, **kwargs):
+def main(cl_file, run_mode, **kwargs):
     '''
     Generate names and paths to be used by several functions.
     '''
-    # Hardcoded in/out folder names.
-    out_fold = 'output'
+    # Hard-coded folder names.
+    out_fold, done_fold = 'output', 'done'
 
     # Extract cluster's name from file.
     clust_name = get_clust_name(cl_file)
@@ -48,10 +48,10 @@ def main(cl_file, done_dir, run_mode, **kwargs):
     if cl_file[1][-2:].isdigit():
         # If the 'input' folder has numbers at the end.
         output_subdir = join(output_dir, cl_file[1], cl_file[2])
-        dst_dir = join(done_dir, cl_file[1], cl_file[2])
+        dst_dir = join(output_dir, done_fold, cl_file[1], cl_file[2])
     else:
         output_subdir = join(output_dir, cl_file[2])
-        dst_dir = join(done_dir, cl_file[2])
+        dst_dir = join(output_dir, done_fold, cl_file[2])
 
     # Generate output dir/subdir if it doesn't exist.
     if not exists(output_subdir):

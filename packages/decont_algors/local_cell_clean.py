@@ -245,8 +245,5 @@ def main(field_regions, memb_prob_avrg_sort, flag_decont_skip, fld_clean_bin):
                "  by 'local' method. Using full list.")
         cl_reg_fit, cl_reg_no_fit, min_prob, bin_edges = memb_prob_avrg_sort,\
             [], 0., 0.
-    else:
-        print("Stars removed using 'local' method ({})".format(
-            len(cl_reg_no_fit)))
 
     return cl_reg_fit, cl_reg_no_fit, min_prob, bin_edges

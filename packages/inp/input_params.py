@@ -73,7 +73,6 @@ def main(mypath, pars_f_path):
                     plot_dpi = int(reader[2])
                 elif reader[0] == 'MD':
                     flag_move_file = True if reader[1] in true_lst else False
-                    done_dir = str(reader[2])
 
                 # Structure functions parameters.
                 elif reader[0] == 'CH':
@@ -116,6 +115,7 @@ def main(mypath, pars_f_path):
                 elif reader[0] == 'LK':
                     lkl_method = str(reader[1])
                     lkl_binning = str(reader[2])
+                    lkl_weight = str(reader[3])
                 elif reader[0] == 'PS':
                     evol_track = str(reader[1])
                 elif reader[0] == 'RV':
@@ -173,6 +173,7 @@ def main(mypath, pars_f_path):
     # Accepted binning methods.
     bin_methods = ('fixed', 'auto', 'fd', 'doane', 'scott', 'rice', 'sqrt',
                    'sturges', 'knuth', 'blocks')
+    bin_weights = ('mean', 'median', 'max')
     # Accepted IMF functions.
     imf_funcs = ('chabrier_2001_exp', 'chabrier_2001_log', 'kroupa_1993',
                  'kroupa_2002')
@@ -201,7 +202,7 @@ def main(mypath, pars_f_path):
         'id_coords': id_coords, 'id_mags': id_mags, 'id_cols': id_cols,
         'flag_make_plot': flag_make_plot, 'plot_frmt': plot_frmt,
         'plot_dpi': plot_dpi,
-        'flag_move_file': flag_move_file, 'done_dir': done_dir,
+        'flag_move_file': flag_move_file,
         'center_stddev': center_stddev, 'radius_method': radius_method,
         'kp_flag': kp_flag, 'fr_number': fr_number, 'err_max': err_max,
         'im_flag': im_flag, 'pvalue_runs': pvalue_runs,
@@ -215,7 +216,8 @@ def main(mypath, pars_f_path):
         # Best fit parameters.
         'bf_flag': bf_flag, 'best_fit_algor': best_fit_algor,
         'lkl_method': lkl_method, 'lkl_binning': lkl_binning,
-        'N_bootstrap': N_bootstrap, 'evol_track': evol_track,
+        'lkl_weight': lkl_weight, 'N_bootstrap': N_bootstrap,
+        'evol_track': evol_track,
         # Synthetic cluster parameters
         'max_mag': max_mag, 'IMF_name': IMF_name, 'm_high': m_high,
         'R_V': R_V, 'bin_mr': bin_mr,
@@ -225,7 +227,8 @@ def main(mypath, pars_f_path):
         'N_el': N_el, 'N_ei': N_ei, 'N_es': N_es,
         # Fixed accepted parameter values and photometric systems.
         'da_algors_accpt': da_algors_accpt, 'fld_rem_methods': fld_rem_methods,
-        'bin_methods': bin_methods, 'imf_funcs': imf_funcs,
+        'bin_methods': bin_methods, 'bin_weights': bin_weights,
+        'imf_funcs': imf_funcs,
         'cmd_evol_tracks': cmd_evol_tracks, 'cmd_systs': cmd_systs,
         # v These lists need to be re-formatted
         'par_ranges': par_ranges}

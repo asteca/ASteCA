@@ -25,7 +25,9 @@ def main(
             cld['x'], cld['y'])
         asp_ratio = prep_plots.aspect_ratio(x_min, x_max, y_min, y_max)
         coord, x_name, y_name = prep_plots.coord_syst(pd['coords'])
-        x_ax, y_ax, y_axis = prep_plots.ax_names(pd['filters'], pd['colors'])
+        # Use first magnitude and color
+        x_ax, y_ax = prep_plots.ax_names(
+            pd['colors'][0], pd['filters'][0], 'mag')
 
         N_all, min_mag_all = len(cld['mags'][0]), min(cld['mags'][0])
         # Structure plots.

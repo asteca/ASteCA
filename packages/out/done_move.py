@@ -17,14 +17,15 @@ def main(pd, dst_dir, data_file, memb_file, **kwargs):
         try:
             shutil.move(data_file, dst_dir)
             print('Photometric data file moved.')
-        except:
-            print("Data file already exists in 'done' destination folder.")
+        except shutil.Error:
+            print("  WARNING: Data file already exists in 'done' destination\n"
+                  "  folder. Could not move the file.")
 
         # Also move *memb_data.dat file if it exists.
         if isfile(memb_file):
             try:
                 shutil.move(memb_file, dst_dir)
                 print('Membership data file moved.')
-            except:
-                print("Membership file already exists in 'done' "
-                      "destination folder.")
+            except shutil.Error:
+                print("  WARNING: Membership file already exists in 'done'\n"
+                      "  destination folder. Could not move the file.")

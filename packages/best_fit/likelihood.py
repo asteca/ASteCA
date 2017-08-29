@@ -88,6 +88,50 @@ def tolstoy(synth_clust, obs_clust):
     return tlst_lkl
 
 
+def duong(synth_clust, obs_clust):
+    """
+    """
+    import rpy2.robjects as robjects
+    from rpy2.rinterface import RRuntimeError
+    if not synth_clust:
+        duong_pval = 1.e09
+    else:
+        # synthetic cluster's photometry and errors.
+        synth_phot, synth_errors = synth_clust[0]
+        # Observed cluster's photometry and membership probabilities.
+        kde_test, hpi_kfe, m_cl, hpic = obs_clust
+
+        # CMD for synthetic cluster.
+        matrix_f1 = np.ravel(np.column_stack((synth_phot)))
+        rows_f1 = int(len(matrix_f1) / 2)
+
+        m_f1 = robjects.r.matrix(robjects.FloatVector(matrix_f1),
+                                 nrow=rows_f1, byrow=True)
+
+        try:
+            # TODO this is the second line that takes the most time.
+            # hpif1 = hpi_kfe(x=m_f1, binned=True)
+
+            # Call 'ks' function to obtain p_value.
+            # TODO: this line takes forever
+            # TODO: this statistic seems to select lower masses
+
+            # Should I:
+            # 1. explicit different bandwidths with H1,H2?
+            # res_cl = kde_test(x1=m_cl, x2=m_f1, H1=hpic, H2=hpif1)
+            # 2. use the same bandwidth defined for the cluster (hpic)?
+            # res_cl = kde_test(x1=m_cl, x2=m_f1, H1=hpic, H2=hpic)
+            # 3. not explicit any bandwidth?
+            res_cl = kde_test(x1=m_cl, x2=m_f1)
+            p_val_cl = res_cl.rx2('pvalue')
+            # Store cluster vs field p-value.
+            duong_pval = 1. - p_val_cl[0]
+        except RRuntimeError:
+            duong_pval = 1.
+
+    return duong_pval
+
+
 def dolphin(synth_clust, obs_clust):
     '''
     Poisson likelihood ratio as defined in Dolphin (2002).
@@ -102,7 +146,7 @@ def dolphin(synth_clust, obs_clust):
         bin_edges = obs_clust[0]
         # Indexes of n_i=0 elements in flattened observed cluster array,
         # and the array with no n_i=0 elements.
-        cl_z_idx, cl_histo_f_z, dolphin_cst = obs_clust[-3:]
+        cl_z_idx, cl_histo_f_z, dolphin_cst, bin_weight_f_z = obs_clust[-4:]
 
         # Histogram of the synthetic cluster, using the bin edges calculated
         # with the observed cluster.
@@ -117,11 +161,15 @@ def dolphin(synth_clust, obs_clust):
         syn_histo_f_z[syn_histo_f_z == 0] =\
             1. / max(np.count_nonzero(syn_histo_f_z == 0), 1.)
 
-        # Obtain inverse logarithmic 'Poisson likelihood ratio'.
-        # 2 * (M - sum(n_i * ln(m_i)) + sum(n_i * ln(n_i)) - N)
-        dolph_lkl = 2. * (
-            synth_phot[0].size - np.sum(cl_histo_f_z * np.log(syn_histo_f_z)) +
-            dolphin_cst)
+        # M = synth_phot[0].size
+        # Cash's C statistic: 2 * sum(m_i - n_i * ln(m_i))
+        # weighted: 2 * sum(w_i * (m_i - n_i * ln(m_i)))
+        C_cash = 2. * np.sum(
+            bin_weight_f_z * (
+                syn_histo_f_z - cl_histo_f_z * np.log(syn_histo_f_z)))
+
+        # Obtain (weighted) inverse logarithmic 'Poisson likelihood ratio'.
+        dolph_lkl = C_cash + dolphin_cst
 
         # print(dolph_lkl)
         # from scipy.stats import chisquare
@@ -189,6 +237,8 @@ def main(lkl_method, e_max, bin_mass_ratio, err_lst, obs_clust, completeness,
     # Obtain the likelihood matching the synthetic and observed clusters.
     if lkl_method == 'tolstoy':
         likelihood = tolstoy(synth_clust, obs_clust)
+    elif lkl_method == 'duong':
+        likelihood = duong(synth_clust, obs_clust)
     elif lkl_method == 'dolphin':
         likelihood = dolphin(synth_clust, obs_clust)
     elif lkl_method == 'mighell':

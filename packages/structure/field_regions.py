@@ -1,4 +1,5 @@
 
+import numpy as np
 import spiral as sp
 import field_manual_histo
 
@@ -76,6 +77,34 @@ def spiral_region(h_manual, sp_coords):
     return f_region
 
 
+def fieldRegs(hist_2d, bin_width, cl_area):
+    """
+    Estimate the maximum number of field regions that can possibly be defined,
+    and the number of bins whose combined area equals the cluster region
+    plus the empty region around it.
+    """
+    # Number of bins in x and y.
+    x_bins, y_bins = len(hist_2d[0][0]), len(hist_2d[0])
+    # Total area: total number of bins in 2D hist times the area of each bin.
+    total_area = x_bins * y_bins * (bin_width ** 2)
+
+    # Several empty areas, in decreasing order of size.
+    sq_areas = np.arange(2., 1.2, -.05) * cl_area
+    # All the possible total number of field regions.
+    f_regs_all = [int(_) for _ in (total_area - sq_areas) / cl_area]
+
+    # Find the first index where the number of field regions is >= 1. If
+    # none is found, then the index '0' is returned, as desired.
+    i = np.argmax(np.array(f_regs_all) >= 1)
+    sq_area, f_regs_max = sq_areas[i], f_regs_all[i]
+
+    # Number of bins such that their combined area equals the
+    # larger 'sq_area' area around the cluster.
+    num_bins_sqarea = int(round(sq_area / (bin_width ** 2), 0))
+
+    return num_bins_sqarea, f_regs_max
+
+
 def main(clp, run_mode, fr_number, cl_f_regs_semi, freg_flag_semi, **kwargs):
     '''
     Define empty region around the cluster via a spiral centered on it
@@ -93,19 +122,11 @@ def main(clp, run_mode, fr_number, cl_f_regs_semi, freg_flag_semi, **kwargs):
             # Update value.
             f_regs_num = cl_f_regs_semi
 
-    # Get area as total number of bins in 2D hist times the area of each bin.
-    total_area = len(clp['hist_2d'][0][0]) * len(clp['hist_2d'][0]) *\
-        (clp['bin_width'] ** 2)
-    # Define empty area around the cluster region.
-    sq_area = 2. * clp['cl_area']
-    # Maximum number of field regions possible.
-    f_regs_max = int((total_area - sq_area) / clp['cl_area'])
+    num_bins_sqarea, f_regs_max = fieldRegs(
+        clp['hist_2d'], clp['bin_width'], clp['cl_area'])
 
-    # If the remaining area in the frame after subtracting the cluster region
-    # is smaller than the cluster's area, this means that the cluster is either
-    # too large or the frame too small and no field region of equal area than
-    # that of the cluster can be obtained.
-    # Raise a flag.
+    # If the maximum number of field regions that can be formed is zero, it
+    # means that the cluster is either too large or the frame too small.
     flag_no_fl_regs = False
     if f_regs_max < 1:
         print ("  WARNING: cluster region is too large or frame\n"
@@ -134,22 +155,18 @@ def main(clp, run_mode, fr_number, cl_f_regs_semi, freg_flag_semi, **kwargs):
                 f_regs_num))
             f_regions = f_regs_num
 
-    # Get list that contains the spiral as a list of x,y coordinates (also
-    # stored as lists) starting from the initial bin [0, 0].
-    spiral = sp.main()
-
-    # Calculate number of bins such that their combined area equals the
-    # larger area around the cluster defined above.
-    num_bins_area = int(round(sq_area / (clp['bin_width'] ** 2), 0))
-    # Obtain index of spiral bin where field regions should begin to be formed.
-    # dummy_lst is not important here.
-    sp_indx, dummy_lst = spiral_index(
-        spiral, 0, clp['hist_2d'][0], clp['bin_cent'], num_bins_area)
-
     # Obtain field regions only if it is possible.
-    # This list holds all the field regions.
     field_regions = []
     if flag_no_fl_regs is False:
+
+        # List that contains the spiral as a list of x,y coordinates (also
+        # stored as lists) starting from the initial bin [0, 0].
+        spiral = sp.main()
+
+        # Index of spiral bin where field regions should begin to be
+        # formed. dummy list is not important here.
+        sp_indx, dummy = spiral_index(
+            spiral, 0, clp['hist_2d'][0], clp['bin_cent'], num_bins_sqarea)
 
         # Obtain filled 2D histogram for the field with star's values attached
         # to each bin.

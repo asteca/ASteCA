@@ -116,10 +116,11 @@ def check(mypath, pd):
         # REMOVE when support for multiple photometric systems is in place.
         if len(all_syst_filters) > 1:
             sys.exit("ERROR: more than one photometric system defined.")
-
-    # # REMOVE
-    # print("Magnitudes defined: {}".format(filters))
-    # print("Colors defined: {}\n".format(colors))
+        # REMOVE when support for multiple mags/colors is in place.
+        if len(filters) > 1:
+            sys.exit("ERROR: more than one filter defined.")
+        if len(colors) > 1:
+            sys.exit("ERROR: more than one color defined.")
 
     # Add data to parameters dictionary.
     pd['id_indx'], pd['x_indx'], pd['y_indx'], pd['coords'],\

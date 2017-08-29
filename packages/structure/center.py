@@ -38,12 +38,12 @@ def kde_center(x_data, y_data, cents_xy, radius):
     # Evaluate kernel in grid positions.
     k_pos = kernel(positions)
     # Coordinates of max value in x,y grid (ie: center position).
-    kde_center = positions.T[np.argmax(k_pos)]
+    kde_cent = positions.T[np.argmax(k_pos)]
 
     # Pass for plotting.
     kde_plot = [ext_range, x_grid, y_grid, k_pos]
 
-    return kde_center, kde_plot
+    return kde_cent, kde_plot
 
 
 def main(cld, clp, run_mode, center_stddev, coords, cl_cent_semi, cl_rad_semi,
