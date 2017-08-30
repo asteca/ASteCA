@@ -1,6 +1,11 @@
 
 import numpy as np
-from ..math_f import exp_function
+if __package__ is None:
+    from os import sys, path
+    sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
+    from math_f import exp_function
+else:
+    from ..math_f import exp_function
 
 
 def gauss_error(mc, e_mc):
