@@ -74,10 +74,63 @@ def integral_IMF_N(m_star, IMF_name):
     return imf_val
 
 
-def main(IMF_name, m_high):
+def starsInterv(m_low, mass_up, N_stars):
+    """
+    Distribute the N_stars in each mass interval, so that each interval
+    contains at least one star.
+    """
+    m_low_i, m_up_i, N_stars_i = [], [], []
+    N_st_add = 0.
+    for m_up, N_st in zip(*[mass_up, N_stars]):
+        N_st += N_st_add
+        # If the number of stars in the interval is less than 1, combine as
+        # many adjacent intervals as necessary until it reaches at least one
+        # star and then generate that star(s) with a random mass in the
+        # m_low, m_up interval.
+        if N_st < 1.:
+            # Store this fraction to be added with the next one.
+            N_st_add = N_st
+        else:
+            # The N_st stars will be randomly distributed between
+            # m_low and m_up limits.
+            m_low_i.append(m_low)
+            m_up_i.append(m_up)
+            N_stars_i.append(int(round(N_st)))
+            # Reset parameters and move on to the next interval.
+            N_st_add, m_low = 0., m_up
+
+    return m_low_i, m_up_i, N_stars_i
+
+
+def massDist(m_low, mass_up, N_dist, masses):
+    """
+    Given the mass distribution from the sampled IMF, obtain for each mass
+    defined: the total number of stars, and the scale and base factors
+    that will distribute them properly later on.
+    """
+    st_dist_mass = {}
+
+    for M_total in masses:
+        # Normalize number of stars per interval of mass according to total
+        # mass.
+        N_stars = N_dist * M_total
+        # Distribute the N_stars for this total mass.
+        m_low_i, m_up_i, N_stars_i = starsInterv(m_low, mass_up, N_stars)
+
+        # Store mass distribution parameters.
+        N_stars_total = np.sum(N_stars_i)
+        base = np.repeat(m_low_i, N_stars_i)
+        scale = np.repeat(m_up_i, N_stars_i) - base
+        st_dist_mass[M_total] = [base, scale, N_stars_total]
+
+    return st_dist_mass
+
+
+def main(IMF_name, m_high, masses):
     '''
     Returns the number of stars per interval of mass for the selected IMF.
     '''
+    print("Sampling selected IMF ({}).".format(IMF_name))
     # Low mass limits are defined for each IMF to avoid numerical
     # issues when integrating.
     imfs_dict = {'chabrier_2001_exp': (0.01), 'chabrier_2001_log': (0.01),
@@ -85,31 +138,36 @@ def main(IMF_name, m_high):
 
     # Set IMF low mass limit.
     m_low = imfs_dict[IMF_name]
-    # Set IMF max mass limit and interpolation step.
-    # For m_high > 100 Mo the differences in the resulting normalization
-    # constant are negligible. This is because th IMF drops very rapidly for
-    # high masses.
+    # Set IMF mass interpolation step.
     # The step (m_step) should not be too small since it will have an impact
-    # on the performance of the get_mass_dist function.
+    # on the performance of the 'mass_distribution' function.
     m_step = 0.1
 
     # Obtain normalization constant. This is equivalent to 'k' in Eq. (7)
     # of Popescu & Hanson 2009 (138:1724-1740; PH09)
+    # For m_high > 100 Mo the differences in the resulting normalization
+    # constant are negligible. This is because th IMF drops very rapidly for
+    # high masses.
     norm_const = 1. / quad(integral_IMF_M, m_low, m_high, args=(IMF_name))[0]
 
     # Obtain number of stars in each mass interval. Equivalent to the upper
     # fraction of Eq. (8) in PH09, without the total mass.
-    st_dist = [[], []]
+    mass_up, N_dist = [], []
     m_upper = m_low
     while m_upper < m_high:
         m_lower = m_upper
         m_upper = m_upper + m_step
         # Number of stars in the (m_lower, m_upper) interval.
         N_stars = quad(integral_IMF_N, m_lower, m_upper, args=(IMF_name))[0]
-        st_dist[0].append(m_upper)
-        st_dist[1].append(N_stars)
+        mass_up.append(m_upper)
+        N_dist.append(N_stars)
 
     # Normalize number of stars by constant.
-    st_dist[1] = np.asarray(st_dist[1]) * norm_const
+    N_dist = np.asarray(N_dist) * norm_const
 
-    return st_dist
+    st_dist_mass = massDist(m_low, mass_up, N_dist, masses)
+    # import pickle
+    # with open('packages/synth_clust/st_dist_mass.pickle', 'wb') as f:
+    #     pickle.dump([st_dist_mass, masses], f)
+
+    return st_dist_mass

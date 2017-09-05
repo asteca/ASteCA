@@ -57,7 +57,8 @@ def plot_top_tiers(pd, top_tiers_flo, output_subdir, clust_name, mags,
     Plot all top tiers.
     '''
     # Obtain mass distribution using the selected IMF.
-    st_dist_mass = imf.main(pd['IMF_name'], pd['m_high'])
+    st_dist_mass = imf.main(
+        pd['IMF_name'], pd['m_high'], pd['fundam_params'][4])
 
     # figsize(x1, y1), GridSpec(y2, x2) --> To have square plots: x1/x2 =
     # y1/y2 = 2.5

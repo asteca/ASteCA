@@ -147,20 +147,30 @@ if __name__ == "__main__":
     import pickle
     import numpy as np
 
-    with open('synth_clust.pickle', 'rb') as f:
+    with open('synth_clust_OLD.pickle', 'rb') as f:
         err_max, bin_mass_ratio, err_lst, completeness, max_mag_syn,\
             st_dist_mass, isochrone, R_V, ext_coefs, N_fc, synth_cl_params =\
             pickle.load(f)
 
+    with open('st_dist_mass.pickle', 'rb') as f:
+        st_dist_mass_new, masses = pickle.load(f)
+    st_dist_mass = st_dist_mass_new
+    print("Data read.")
+
     M_min = 50.
-    M_max = [1000., 5000., 10000., 25000., 50000., 100000., 250000.]
+    # M_max = [1000., 5000., 10000., 25000., 50000., 100000., 250000.]
+    M_max = [1000.]
     N = 10000
     tot_times = 0.
     for M in M_max:
         times = np.array([0., 0., 0., 0., 0., 0., 0.])
         for _ in range(N):
-            age, ext, dm, M_total = 8., np.random.uniform(0., 2.),\
-                np.random.uniform(8., 20.), np.random.uniform(M_min, M)
+            age, ext, dm = 8., np.random.uniform(0., 2.),\
+                np.random.uniform(8., 20.)
+            # OLD
+            # M_total = np.random.uniform(M_min, M)
+            # NEW
+            M_total = np.random.choice(masses)
             synth_cl_params = (0.0155, age, ext, dm, M_total, 0.5)
 
             times = times + main(

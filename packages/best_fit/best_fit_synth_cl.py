@@ -96,8 +96,6 @@ def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning, lkl_weight,
     '''
     # Check if algorithm should run.
     if bf_flag:
-        print('Searching for optimal parameters.')
-
         err_lst, cl_reg_fit, completeness, e_max = clp['err_lst'],\
             clp['cl_reg_fit'], clp['completeness'], clp['err_max']
 
@@ -129,10 +127,12 @@ def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning, lkl_weight,
 
         # Obtain mass distribution using the selected IMF. We run it once
         # because the array only depends on the IMF selected.
-        st_dist_mass = imf.main(IMF_name, m_high)
+        st_dist_mass = imf.main(IMF_name, m_high, fundam_params[4])
 
         # Store the number of defined filters and colors.
         N_fc = [len(filters), len(colors)]
+
+        print('Searching for optimal parameters.')
 
         # Call algorithm to calculate the likelihoods for the set of
         # isochrones and return the best fitting parameters.
