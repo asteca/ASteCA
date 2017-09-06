@@ -52,14 +52,10 @@ differing\n# >{}% with the best value assigned for said parameter(s).\n\
 
 def plot_top_tiers(pd, top_tiers_flo, output_subdir, clust_name, mags,
                    cols, isoch_fit_params, ext_coefs, N_fc, err_max, err_lst,
-                   completeness, max_mag_syn):
+                   completeness, max_mag_syn, st_dist_mass):
     '''
     Plot all top tiers.
     '''
-    # Obtain mass distribution using the selected IMF.
-    st_dist_mass = imf.main(
-        pd['IMF_name'], pd['m_high'], pd['fundam_params'][4])
-
     # figsize(x1, y1), GridSpec(y2, x2) --> To have square plots: x1/x2 =
     # y1/y2 = 2.5
     fig = plt.figure(figsize=(30, 25))  # create the top-level container
@@ -99,7 +95,7 @@ def plot_top_tiers(pd, top_tiers_flo, output_subdir, clust_name, mags,
 
 
 def main(npd, cld, pd, err_max, err_lst, ext_coefs, N_fc, completeness,
-         max_mag_syn, isoch_fit_params, **kwargs):
+         max_mag_syn, st_dist_mass, isoch_fit_params, **kwargs):
     '''
     Obtain top tier models, produce data file and output image.
     '''
@@ -158,7 +154,8 @@ def main(npd, cld, pd, err_max, err_lst, ext_coefs, N_fc, completeness,
                     plot_top_tiers(
                         pd, top_tiers_flo, output_subdir, clust_name,
                         cld['mags'], cld['cols'], isoch_fit_params, ext_coefs,
-                        N_fc, err_max, err_lst, completeness, max_mag_syn)
+                        N_fc, err_max, err_lst, completeness, max_mag_syn,
+                        st_dist_mass)
                     print("<<Plots for D3 block created>>")
                 except Exception:
                     import traceback
