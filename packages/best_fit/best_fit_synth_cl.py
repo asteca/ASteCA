@@ -1,47 +1,12 @@
 
 import numpy as np
-import copy
+import max_mag_cut
 import obs_clust_prepare
 import genetic_algorithm
 import brute_force_algor
 import bootstrap
 from ..synth_clust import extin_coefs
 from ..synth_clust import imf
-
-
-def max_mag_cut(cl_reg_fit, max_mag):
-    '''
-    Reject stars beyond the given magnitude limit.
-    '''
-    # Maximum observed (main) magnitude.
-    max_mag_obs = max(list(zip(*zip(*cl_reg_fit)[1:][2])[0]))
-
-    if max_mag == 'max':
-        # No magnitude cut applied.
-        cl_max_mag, max_mag_syn = copy.deepcopy(cl_reg_fit), max_mag_obs
-    else:
-        star_lst = []
-        for star in cl_reg_fit:
-            # Check main magnitude value.
-            if star[3][0] <= max_mag:
-                # Keep stars brighter that the magnitude limit.
-                star_lst.append(star)
-
-        # Check number of stars left.
-        if len(star_lst) > 10:
-            # For the synthetic clusters, use the minimum value between the
-            # selected 'max_mag' value and the maximum observed magnitude.
-            # This prevents large 'max_mag' values from generating synthetic
-            # clusters with low mass stars in the not-observed region.
-            cl_max_mag, max_mag_syn = star_lst, min(max_mag, max_mag_obs)
-            print("Maximum magnitude cut at {:.1f} mag applied".format(
-                max_mag_syn))
-        else:
-            cl_max_mag, max_mag_syn = copy.deepcopy(cl_reg_fit), max_mag_obs
-            print("  WARNING: less than 10 stars left after removing\n"
-                  "  stars by magnitude limit. No removal applied.")
-
-    return cl_max_mag, max_mag_syn
 
 
 def params_errors(
@@ -100,7 +65,7 @@ def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning, lkl_weight,
             clp['cl_reg_fit'], clp['completeness'], clp['err_max']
 
         # Remove stars beyond the maximum magnitude limit, if it was set.
-        cl_max_mag, max_mag_syn = max_mag_cut(cl_reg_fit, max_mag)
+        cl_max_mag, max_mag_syn = max_mag_cut.main(cl_reg_fit, max_mag)
 
         # Process observed cluster. This list contains data used by the
         # likelihoods, and for plotting.
