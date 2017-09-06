@@ -174,13 +174,13 @@ def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning, lkl_weight,
     else:
         # Pass empty lists to make_plots.
         print('Skip parameters fitting process.')
-        cl_max_mag, max_mag_syn, isoch_fit_params, isoch_fit_errors,\
-            st_dist_mass, N_fc, ext_coefs = [], -1.,\
+        cl_max_mag, max_mag_syn, ext_coefs, st_dist_mass, N_fc,\
+            isoch_fit_params, isoch_fit_errors = [], -1., [], {}, [],\
             [[np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]],\
-            [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan], [], [], []
+            [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]
 
-    clp['cl_max_mag'], clp['max_mag_syn'], clp['isoch_fit_params'],\
-        clp['isoch_fit_errors'], clp['ext_coefs'], clp['st_dist_mass'],\
-        clp['N_fc'] = cl_max_mag, max_mag_syn, isoch_fit_params,\
-        isoch_fit_errors, ext_coefs, st_dist_mass, N_fc
+    clp['cl_max_mag'], clp['max_mag_syn'], clp['ext_coefs'],\
+        clp['st_dist_mass'], clp['N_fc'], clp['isoch_fit_params'],\
+        clp['isoch_fit_errors'] = cl_max_mag, max_mag_syn, ext_coefs,\
+        st_dist_mass, N_fc, isoch_fit_params, isoch_fit_errors
     return clp
