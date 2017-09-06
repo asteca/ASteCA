@@ -11,35 +11,64 @@ def main(isoch_binar, binar_idx0, completeness):
     '''
     # If stars exist in the isochrone beyond the completeness magnitude
     # level, then apply the removal of stars. Otherwise, skip it.
+
     # completeness = [bin_edges, max_indx, comp_perc]
+    # 'bin_edges' of the observed region histogram.
     if max(isoch_binar[0]) > completeness[0][completeness[1]]:
 
-        # Get histogram. completeness[0] = bin_edges of the observed
-        # region histogram.
+        # import time
+        # t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15,\
+        #     t16 = 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,\
+        #     0.
+
+        # Get histogram.
+        # s = time.clock()
         synth_mag_hist = np.histogram(isoch_binar[0], completeness[0])[0]
         pi = completeness[2]
         n1, p1 = synth_mag_hist[completeness[1]], pi[0]
+        # t1 = time.clock() - s
+        # s = time.clock()
         di = np.around((synth_mag_hist[completeness[1]:] -
                         (n1 / p1) * np.asarray(pi)), 0)
+        # t2 = time.clock() - s
 
         # Store indexes of *all* elements in isoch_binar whose main magnitude
         # value falls between the ranges given.
+        # s = time.clock()
         c_indx = np.searchsorted(completeness[0][completeness[1]:],
                                  isoch_binar[0], side='left')
+        # t3 = time.clock() - s
+        # s = time.clock()
         N = len(completeness[0][completeness[1]:])
+        # t4 = time.clock() - s
+        # s = time.clock()
         mask = (c_indx > 0) & (c_indx < N)
+        # t5 = time.clock() - s
+        # s = time.clock()
         elements = c_indx[mask]
+        # t6 = time.clock() - s
+        # s = time.clock()
         indices = np.arange(c_indx.size)[mask]
+        # t7 = time.clock() - s
+        # s = time.clock()
         sorting_idx = np.argsort(elements, kind='mergesort')
+        # t8 = time.clock() - s
+        # s = time.clock()
         ind_sorted = indices[sorting_idx]
+        # t9 = time.clock() - s
+        # s = time.clock()
         x = np.searchsorted(elements, range(N), side='right',
                             sorter=sorting_idx)
+        # t10 = time.clock() - s
         # Indexes.
+        # s = time.clock()
         rang_indx = [ind_sorted[x[i]:x[i + 1]] for i in range(N - 1)]
+        # t11 = time.clock() - s
 
         # Pick a number (given by the list 'di') of random elements in
         # each range. Those are the indexes of the elements that
         # should be removed from the sub-lists.
+        # s = time.clock()
         rem_indx = []
         for indx, num in enumerate(di):
             if rang_indx[indx].any() and len(rang_indx[indx]) >= num:
@@ -47,27 +76,187 @@ def main(isoch_binar, binar_idx0, completeness):
                                 int(num), replace=False))
             else:
                 rem_indx.append(rang_indx[indx])
+        # t12 = time.clock() - s
 
         # Remove items from list.
         # itertools.chain() flattens the list of indexes and sorted()
         # with reverse=True inverts them so we don't change the
         # indexes of the elements in the lists after removing them.
+        # s = time.clock()
         d_i = sorted(list(itertools.chain(*rem_indx)), reverse=True)
+        # t13 = time.clock() - s
         # Remove those selected indexes from *all* sub-lists.
+        # s = time.clock()
         isoch_compl = np.delete(np.asarray(isoch_binar), d_i, axis=1)
+        # t14 = time.clock() - s
 
         # Remove stars from the binaries list that were removed by the
         # completeness process.
         # Sort list first, so smaller indexes are first.
+        # s = time.clock()
         d_i.sort()
         binar_idx1 = np.setdiff1d(binar_idx0, d_i)
+        # t15 = time.clock() - s
         # Correct indexes of stars after completeness removal, so they will
         # point to the actual binary systems.
+        # s = time.clock()
         binar_idx = binar_idx1 - np.searchsorted(d_i, binar_idx1)
+        # t16 = time.clock() - s
     else:
-        isoch_compl, binar_idx = np.asarray(isoch_binar), []
+        isoch_compl, binar_idx = np.asarray(isoch_binar), binar_idx0
 
     return isoch_compl, binar_idx
+    # return np.array([t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13,
+    #                  t14, t15, t16])
+
+
+def indxRem(di, rang_indx):
+    lens = np.array([len(i) for i in rang_indx])
+    di0 = np.minimum(lens, di.astype(int))
+    invalid_mask = lens[:, None] <= np.arange(lens.max())
+    rand_nums = np.random.rand(len(lens), lens.max())
+    rand_nums[invalid_mask] = 1
+    shuffled_indx = np.argpartition(rand_nums, lens - 1, axis=1)
+
+    out = []
+    for i, all_idx in enumerate(shuffled_indx):
+        if lens[i] == 0:
+            out.append(np.array([]))
+        else:
+            slice_idx = all_idx[:di0[i]]
+            out.append(rang_indx[i][slice_idx])
+    return out
+
+
+def main_new(isoch_binar, binar_idx0, completeness):
+    '''
+    Remove a number of stars according to the percentages of star loss found in
+    the mag_completeness function of the luminosity module, for the real
+    observation.
+    '''
+    # If stars exist in the isochrone beyond the completeness magnitude
+    # level, then apply the removal of stars. Otherwise, skip it.
+
+    # completeness = [bin_edges, max_indx, comp_perc]
+    # 'bin_edges' of the observed region histogram.
+
+    bin_edges, max_indx, comp_perc = completeness
+    if np.max(isoch_binar[0]) > bin_edges[max_indx]:
+
+        import time
+        t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15,\
+            t16 = 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,\
+            0.
+
+        # Histogram of synthetic cluster so far.
+        s = time.clock()
+        synth_mag_hist = np.histogram(isoch_binar[0], bin_edges)[0]
+        n1, p1 = synth_mag_hist[max_indx], comp_perc[0]
+        t1 = time.clock() - s
+        s = time.clock()
+        # Number of elements that should be removed from each range beyond
+        # 'max_indx', in the synthetic cluster's histogram. The number is
+        # obtained relative to the peak value.
+        di = np.rint(
+            (synth_mag_hist[max_indx:] - (n1 / p1) * np.asarray(comp_perc)))
+        t2 = time.clock() - s
+
+        # Store indexes of *all* elements in 'isoch_binar' whose main magnitude
+        # value falls between the ranges given.
+        s = time.clock()
+        c_indx = np.searchsorted(bin_edges[max_indx:],
+                                 isoch_binar[0], side='left')
+        t3 = time.clock() - s
+        s = time.clock()
+        N = len(bin_edges[max_indx:])
+        t4 = time.clock() - s
+        s = time.clock()
+        mask = (c_indx > 0) & (c_indx < N)
+        t5 = time.clock() - s
+        s = time.clock()
+        elements = c_indx[mask]
+        t6 = time.clock() - s
+        s = time.clock()
+        indices = np.arange(c_indx.size)[mask]
+        t7 = time.clock() - s
+        # s = time.clock()
+        sorting_idx = np.argsort(elements, kind='mergesort')
+        t8 = time.clock() - s
+        s = time.clock()
+        ind_sorted = indices[sorting_idx]
+        t9 = time.clock() - s
+        s = time.clock()
+        x = np.searchsorted(elements, range(N), side='right',
+                            sorter=sorting_idx)
+        t10 = time.clock() - s
+        # Indexes.
+        s = time.clock()
+        rang_indx = [ind_sorted[x[i]:x[i + 1]] for i in range(N - 1)]
+        t11 = time.clock() - s
+
+        # Pick a number (given by the list 'di') of random elements in
+        # each range. Those are the indexes of the elements that
+        # should be removed from the sub-lists.
+        s = time.clock()
+        rem_indx = indxRem(di.astype(int), rang_indx)
+        t12 = time.clock() - s
+
+        # Remove items from list.
+        # itertools.chain() flattens the list of indexes and np.sort()
+        # with [::-1] inverts them so we don't change the
+        # indexes of the elements in the lists after removing them.
+        s = time.clock()
+        d_i = np.sort(list(itertools.chain(*rem_indx)))[::-1]
+        t13 = time.clock() - s
+        # Remove those selected indexes from *all* sub-lists.
+        s = time.clock()
+        isoch_compl = np.delete(np.asarray(isoch_binar), d_i, axis=1)
+        t14 = time.clock() - s
+
+        # Remove stars from the binaries list that were removed by the
+        # completeness process.
+        # Sort list first, so smaller indexes are first.
+        s = time.clock()
+        d_i.sort()
+        binar_idx1 = np.setdiff1d(binar_idx0, d_i)
+        t15 = time.clock() - s
+        # Correct indexes of stars after completeness removal, so they will
+        # point to the actual binary systems.
+        s = time.clock()
+        binar_idx = binar_idx1 - np.searchsorted(d_i, binar_idx1)
+        t16 = time.clock() - s
+    else:
+        isoch_compl, binar_idx = np.asarray(isoch_binar), binar_idx0
+
+    # return isoch_compl, binar_idx
+    return np.array([t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13,
+                     t14, t15, t16])
+
+
+if __name__ == '__main__':
+
+    import pickle
+
+    with open('completeness.pickle', 'rb') as f:
+        isoch_binar, binar_idx0, completeness = pickle.load(f)
+
+    N = 20000
+    times = np.array([0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
+                      0., 0.])
+    for _ in range(N):
+        times = times + main_new(isoch_binar, binar_idx0, completeness)
+
+    times_perc = np.round(100. * times / times.sum(), 1)
+    print("{:7.2f}    {}".format(
+        times.sum(), "    ".join(map(str, times))))
+
+    # import matplotlib.pyplot as plt
+    # x_bars = np.arange(0, 16, 1)
+    # plt.bar(x_bars, times_perc)
+    # plt.xticks(x_bars,
+    #     ('1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13',
+    #      '14', '15', '16'))
+    # plt.show()
 
 
 # def compl_func2(isoch_binar):
