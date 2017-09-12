@@ -158,7 +158,7 @@ def main(cl_region, field_regions, bayesda_runs):
         prob_avrg_old, break_flag = break_check(
             prob_avrg_old, runs_fields_probs, bayesda_runs, run_num)
         if break_flag:
-            print('| MPs converged in iteration {}.'.format(run_num))
+            print('| MPs converged (run {}).'.format(run_num))
             break
         update_progress.updt(bayesda_runs, run_num + 1)
 
