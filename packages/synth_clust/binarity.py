@@ -19,11 +19,11 @@ def main(isoch_mass, isoch_cut, bin_frac, bin_mass_ratio, N_fc):
     '''
     Randomly select a fraction of stars to be binaries.
     '''
-    # If the binary fraction is zero, skip the whole process.
     bin_indxs = []
+    # If the binary fraction is zero, skip the whole process.
     if bin_frac > 0.:
         # Indexes of the randomly selected stars (without replacement) in
-        # soch_mass to be converted to binary systems.
+        # 'isoch_mass' to be converted to binary systems.
         bin_indxs = np.random.choice(
             len(isoch_mass[0]), int(bin_frac * len(isoch_mass[0])),
             replace=False)
