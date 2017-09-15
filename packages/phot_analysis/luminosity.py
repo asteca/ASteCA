@@ -7,19 +7,22 @@ def mag_completeness(mags):
     Calculate the completeness level in each magnitude bin beyond the one
     with the maximum count (ie: the assumed 100% completeness limit)
     '''
-    # Number of bins.
+    # Number of bins given 0.1 mag width.
     bins = int((max(mags) - min(mags)) / 0.1)
-    # Get histogram.
     mag_hist, bin_edges = np.histogram(mags, bins)
     # Index of the bin with the maximum number of stars.
     max_indx = mag_hist.argmax(axis=0)
-    # Total number of stars beyond the peak bin (included).
-    total = sum(mag_hist[max_indx:])
+
     # Get percentages per interval beyond the maximum interval (included).
     # These values tell me the percentages of stars beyond the magnitude peak
     # that are located inside each magnitude bin. The peak magnitude bin (the
     # first one) will have the biggest percentage.
-    comp_perc = [(i * 100.) / total for i in mag_hist[max_indx:]]
+    # total = sum(mag_hist[max_indx:])
+    # comp_perc = np.array([(i * 100.) / total for i in mag_hist[max_indx:]])
+    # comp_perc = comp_perc / comp_perc[0]
+
+    # Percentage of stars in each bin assuming the first one is 100%.
+    comp_perc = mag_hist[max_indx:] / float(mag_hist[max_indx])
 
     # Store everything in a single list.
     completeness = [bin_edges, max_indx, comp_perc]

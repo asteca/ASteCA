@@ -152,6 +152,9 @@ if __name__ == "__main__":
             st_dist_mass, isochrone, R_V, ext_coefs, N_fc, synth_cl_params =\
             pickle.load(f)
 
+    # New completness_rm function
+    completeness[2] = np.array(completeness[2]) / completeness[2][0]
+
     with open('st_dist_mass.pickle', 'rb') as f:
         st_dist_mass_new, masses = pickle.load(f)
     st_dist_mass = st_dist_mass_new
@@ -159,8 +162,8 @@ if __name__ == "__main__":
 
     M_min = 50.
     # M_max = [1000., 5000., 10000., 25000., 50000., 100000., 250000.]
-    M_max = [1000.]
-    N = 10000
+    M_max = [10000.]
+    N = 5000
     tot_times = 0.
     for M in M_max:
         times = np.array([0., 0., 0., 0., 0., 0., 0.])
@@ -180,7 +183,7 @@ if __name__ == "__main__":
         tot_times = tot_times + times.sum()
         times_perc = np.round(100. * times / times.sum(), 1)
         print("{:2.0f}-{:6.0f} {:7.2f}    {}".format(
-            M_min, M, times.sum(), "    ".join(map(str, times_perc))))
+            M_min, M, times.sum(), "    ".join(map(str, times))))
 
     print(tot_times)
     # import matplotlib.pyplot as plt
