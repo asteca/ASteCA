@@ -67,8 +67,8 @@ def plot(N, *args):
     Handle each plot separately.
     '''
     if N < 5:
-        plt_map = dict.fromkeys([0, 1, 2, 3, 4], [pl_full_frame,
-                                'full frame'])
+        plt_map = dict.fromkeys(
+            [0, 1, 2, 3, 4], [pl_full_frame, 'full frame'])
     else:
         plt_map = dict.fromkeys(
             [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19],
@@ -80,7 +80,7 @@ def plot(N, *args):
 
     try:
         fxn(N, *args)
-    except:
+    except Exception:
         print("  WARNING: error when plotting {}.".format(plt_map.get(N)[1]))
         import traceback
-        print traceback.format_exc()
+        print(traceback.format_exc())

@@ -3,23 +3,19 @@ import numpy as np
 
 
 def mag_completeness(mags):
-    '''
+    """
     Calculate the completeness level in each magnitude bin beyond the one
     with the maximum count (ie: the assumed 100% completeness limit)
-    '''
-    # Number of bins.
+    """
+    # Number of bins given 0.1 mag width.
     bins = int((max(mags) - min(mags)) / 0.1)
-    # Get histogram.
     mag_hist, bin_edges = np.histogram(mags, bins)
     # Index of the bin with the maximum number of stars.
     max_indx = mag_hist.argmax(axis=0)
-    # Total number of stars beyond the peak bin (included).
-    total = sum(mag_hist[max_indx:])
-    # Get percentages per interval beyond the maximum interval (included).
-    # These values tell me the percentages of stars beyond the magnitude peak
-    # that are located inside each magnitude bin. The peak magnitude bin (the
-    # first one) will have the biggest percentage.
-    comp_perc = [(i * 100.) / total for i in mag_hist[max_indx:]]
+
+    # Percentage of stars in each bin beyond the maximum interval (included),
+    # assuming the first one is 100%.
+    comp_perc = mag_hist[max_indx:] / float(mag_hist[max_indx])
 
     # Store everything in a single list.
     completeness = [bin_edges, max_indx, comp_perc]
@@ -28,14 +24,14 @@ def mag_completeness(mags):
 
 
 def main(clp, mags, **kwargs):
-    '''
+    """
     Obtain the Luminosity Function for the field regions and the cluster
     region normalized to their area. Subtract the field curve from the
     cluster curve so as to clean it.
 
     The completeness will be used by the isochrone/synthetic cluster
     fitting algorithm.
-    '''
+    """
     cl_region, field_regions, flag_no_fl_regs = [
         clp[_] for _ in ['cl_region', 'field_regions', 'flag_no_fl_regs']]
 

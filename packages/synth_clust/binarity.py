@@ -1,38 +1,45 @@
 
 import numpy as np
-import random
 import mass_interp
 
 
 def mag_combine(m1, m2):
     """
-    Combine two magnitudes.
+    Combine two magnitudes. This is a faster re-ordering of the standard
+    formula:
+
+    -2.5 * np.log10(10 ** (-0.4 * m1) + 10 ** (-0.4 * m2))
+
     """
-    return -2.5 * np.log10(10 ** (-0.4 * m1) + 10 ** (-0.4 * m2))
+    c = 10 ** -.4
+    return -2.5 * (-.4 * m1 + np.log10(1. + c ** (m2 - m1)))
 
 
 def main(isoch_mass, isoch_cut, bin_frac, bin_mass_ratio, N_fc):
     '''
     Randomly select a fraction of stars to be binaries.
     '''
-    # If the binary fraction is zero, skip the whole process.
     bin_indxs = []
+    # If the binary fraction is zero, skip the whole process.
     if bin_frac > 0.:
-        # Indexes of the randomly selected stars in isoch_mass (without
-        # replacement).
-        bin_indxs = random.sample(range(len(isoch_mass[0])),
-                                  int(bin_frac * len(isoch_mass[0])))
+        # Indexes of the randomly selected stars (without replacement) in
+        # 'isoch_mass' to be converted to binary systems.
+        bin_indxs = np.random.choice(
+            len(isoch_mass[0]), int(bin_frac * len(isoch_mass[0])),
+            replace=False)
+
         # Calculate the secondary masses of these binary stars between
         # bin_mass_ratio*m1 and m1, where m1 is the primary mass.
-        # Index of m_ini, stored in the theoretical isochrones.
+        # Index of m_ini (theoretical initial mass),
+        # stored in the theoretical isochrones.
         m_ini = N_fc[0] + N_fc[1] + 2 * N_fc[1]
-        # Primary masses.
+        # Draw the random 'bin_indxs' primary masses.
         m1 = np.asarray(isoch_mass[m_ini][bin_indxs])
-        # Secondary masses.
+        # Generate the random 'bin_indxs' secondary masses.
         m2 = np.random.uniform(bin_mass_ratio * m1, m1)
         # If any secondary mass falls outside of the lower isochrone's mass
         # range, change its value to the min value.
-        m2 = np.maximum(min(isoch_mass[m_ini]), m2)
+        m2 = np.maximum(np.min(isoch_mass[m_ini]), m2)
 
         # Find color and magnitude values for each secondary star. This will
         # slightly change the values of the masses, since they will be
@@ -67,16 +74,15 @@ def main(isoch_mass, isoch_cut, bin_frac, bin_mass_ratio, N_fc):
             col_bin.append(f_1 - f_2)
 
         # Update array with new values of magnitudes, colors, and masses.
+        # New magnitudes.
         for i in range(N_fc[0]):
-            for indx, j in enumerate(bin_indxs):
-                isoch_mass[i][j] = mag_bin[i][indx]
+            isoch_mass[i][bin_indxs] = mag_bin[i]
 
+        # New colors.
         for i in range(N_fc[1]):
-            for indx, j in enumerate(bin_indxs):
-                isoch_mass[N_fc[0] + i][j] = col_bin[i][indx]
+            isoch_mass[N_fc[0] + i][bin_indxs] = col_bin[i]
 
         # Add masses to obtain the binary system's mass.
-        for indx, j in enumerate(bin_indxs):
-            isoch_mass[m_ini][j] += bin_isoch[m_ini][indx]
+        isoch_mass[m_ini][bin_indxs] += bin_isoch[m_ini]
 
     return isoch_mass, bin_indxs

@@ -16,7 +16,7 @@ def main(e_max, bin_mr, fundam_params, theor_tracks, isoch_fit_params, err_lst,
     # [0, 0] to prevent the code from halting.
     try:
         m_i, a_i = fundam_params[0].index(m), fundam_params[1].index(a)
-    except:
+    except Exception:
         m_i, a_i = [0, 0]
         print("  WARNING: metallicity and age for best match synthetic\n"
               "  cluster not found.")

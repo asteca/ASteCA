@@ -193,23 +193,20 @@ def pl_lkl_scatt(gs, ld_p, min_max_p, cp_r, cp_e, model_done):
     ob = offsetbox.AnchoredText(text, pad=0.1, loc=2, prop=dict(size=10))
     ob.patch.set(alpha=0.8)
     ax.add_artist(ob)
-    plt.axvline(x=xp, linestyle='--', color='red', zorder=2)
+    plt.axvline(x=xp, linestyle='--', color='red', zorder=4)
     # Plot scatter points over likelihood density map.
     cm = plt.cm.get_cmap('viridis')
     col_arr = [float(_) for _ in zip(*model_done[0])[ci]]
     SC = plt.scatter(zip(*model_done[0])[cp], model_done[1], marker='o',
                      c=col_arr, s=25, edgecolors='k',
-                     lw=0.2, edgecolor='w', cmap=cm, zorder=3)
+                     lw=0.2, edgecolor='w', cmap=cm, zorder=2)
     if e_xp > 0.:
         # Plot error bars only if errors where assigned.
-        plt.axvline(x=xp + e_xp, linestyle='--', color='blue')
-        plt.axvline(x=xp - e_xp, linestyle='--', color='blue')
+        plt.axvline(x=xp + e_xp, linestyle='--', color='blue', zorder=4)
+        plt.axvline(x=xp - e_xp, linestyle='--', color='blue', zorder=4)
     # Set y axis limit.
-    min_lik, max_lik = min(model_done[1]), max(model_done[1])
-    if min_lik > 0:
-        min_y, max_y = min_lik - min_lik * 0.1, min(2.5 * min_lik, max_lik)
-    else:
-        min_y, max_y = min_lik + min_lik * 0.1, min(-2.5 * min_lik, max_lik)
+    min_lik, med_lik = min(model_done[1]), np.median(model_done[1])
+    min_y, max_y = min_lik - min_lik * 0.1, min(2.5 * min_lik, 1.2 * med_lik)
     plt.ylim(min_y, max_y)
     ax.locator_params(nbins=5)
     # Position colorbar.

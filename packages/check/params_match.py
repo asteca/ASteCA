@@ -85,7 +85,7 @@ def check(bf_flag, best_fit_algor, lkl_method, lkl_binning, N_bootstrap,
             sys.exit("ERROR: the selected isochrones set ('{}') does\n"
                      "not match a valid input.".format(evol_track))
 
-        # Check IMF defined.
+        # Check maximum magnitude limit defined.
         if isinstance(max_mag, str):
             if max_mag != 'max':
                 sys.exit("ERROR: Maximum magnitude value selected ({}) is"
@@ -120,6 +120,15 @@ def check(bf_flag, best_fit_algor, lkl_method, lkl_binning, N_bootstrap,
             elif not p[1]:
                 sys.exit("ERROR: Range defined for '{}' parameter is"
                          " empty.".format(p_names[i][0]))
+
+        # Check mass range.
+        if mass_rs[0] == 'r':
+            if len(np.arange(mass_rs[1][0], mass_rs[1][1],
+                   mass_rs[1][2])) > 100 and mass_rs[1][1] > 1e5:
+                print("  WARNING: the number of masses defined is > 100 and\n"
+                      "  the max mass is large ({:.0f}). This could cause\n"
+                      "  memory issues when sampling the IMF.\n".format(
+                          mass_rs[1][1]))
 
         # Check binarity parameters.
         # See if it is a list of values or a range.
