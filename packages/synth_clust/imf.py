@@ -166,9 +166,5 @@ def main(IMF_name, m_high, masses):
     N_dist = np.asarray(N_dist) * norm_const
 
     st_dist_mass = massDist(m_low, mass_up, N_dist, masses)
-    # DELETE
-    # import pickle
-    # with open('packages/synth_clust/st_dist_mass.pickle', 'wb') as f:
-    #     pickle.dump([st_dist_mass, masses], f)
 
     return st_dist_mass

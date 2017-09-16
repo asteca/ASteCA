@@ -142,54 +142,35 @@ def main(err_max, bin_mass_ratio, err_lst, completeness, max_mag_syn,
     return synth_clust
 
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
 
-    import pickle
-    import numpy as np
+#     import pickle
+#     import numpy as np
 
-    with open('synth_clust_OLD.pickle', 'rb') as f:
-        err_max, bin_mass_ratio, err_lst, completeness, max_mag_syn,\
-            st_dist_mass, isochrone, R_V, ext_coefs, N_fc, synth_cl_params =\
-            pickle.load(f)
+#     with open('synth_clust.pickle', 'rb') as f:
+#         err_max, bin_mass_ratio, err_lst, completeness, max_mag_syn,\
+#             st_dist_mass, isochrone, R_V, ext_coefs, N_fc, synth_cl_params =\
+#             pickle.load(f)
+#     print("Data read.")
 
-    # New completness_rm function
-    completeness[2] = np.array(completeness[2]) / completeness[2][0]
+#     M_min, M_max, M_step = 50., ???, ???
+#     masses = np.arange(M_min, M_max, M_step)
 
-    with open('st_dist_mass.pickle', 'rb') as f:
-        st_dist_mass_new, masses = pickle.load(f)
-    st_dist_mass = st_dist_mass_new
-    print("Data read.")
+#     N = 10000
+#     times = np.array([0., 0., 0., 0., 0., 0., 0.])
+#     for _ in range(N):
+#         ext = np.random.uniform(0., 2.)
+#         dm = np.random.uniform(8., 20.)
+#         M_total = np.random.choice(masses)
+#         bf = np.random.uniform(0., 1.)
+#         synth_cl_params[2:] = (ext, dm, M_total, bf)
 
-    M_min = 50.
-    # M_max = [1000., 5000., 10000., 25000., 50000., 100000., 250000.]
-    M_max = [1000.]
-    N = 10000
-    tot_times = 0.
-    for M in M_max:
-        times = np.array([0., 0., 0., 0., 0., 0., 0.])
-        for _ in range(N):
-            age, ext, dm = 8., np.random.uniform(0., 2.),\
-                np.random.uniform(8., 20.)
-            # OLD
-            # M_total = np.random.uniform(M_min, M)
-            # NEW
-            M_total = np.random.choice(masses)
-            synth_cl_params = (0.0155, age, ext, dm, M_total, 0.5)
+#         times = times + main(
+#             err_max, bin_mass_ratio, err_lst, completeness, max_mag_syn,
+#             st_dist_mass, isochrone, R_V, ext_coefs, N_fc, synth_cl_params)
 
-            times = times + main(
-                err_max, bin_mass_ratio, err_lst, completeness, max_mag_syn,
-                st_dist_mass, isochrone, R_V, ext_coefs, N_fc, synth_cl_params)
+#     times_perc = np.round(100. * times / times.sum(), 1)
+#     print("{:2.0f}-{:6.0f} {:7.2f}    {}".format(
+#         M_min, M, times.sum(), "    ".join(map(str, times_perc))))
 
-        tot_times = tot_times + times.sum()
-        times_perc = np.round(100. * times / times.sum(), 1)
-        print("{:2.0f}-{:6.0f} {:7.2f}    {}".format(
-            M_min, M, times.sum(), "    ".join(map(str, times_perc))))
-
-    print(tot_times)
-    # import matplotlib.pyplot as plt
-    # x_bars = np.arange(0, 7, 1)
-    # plt.bar(x_bars, times)
-    # plt.xticks(
-    #     x_bars,
-    #     ('move', 'cut', 'M_dist', 'M_interp', 'binar', 'complet', 'errrors'))
-    # plt.show()
+#     print(times.sum())
