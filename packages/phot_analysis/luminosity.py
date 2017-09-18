@@ -6,10 +6,10 @@ def mag_completeness(mags):
     """
     Calculate the completeness level in each magnitude bin beyond the one
     with the maximum count (ie: the assumed 100% completeness limit)
+
+    This will be used by the isochrone/synthetic cluster fitting algorithm.
     """
-    # Number of bins given 0.1 mag width.
-    bins = int((max(mags) - min(mags)) / 0.1)
-    mag_hist, bin_edges = np.histogram(mags, bins)
+    mag_hist, bin_edges = np.histogram(mags, 50)
     # Index of the bin with the maximum number of stars.
     max_indx = mag_hist.argmax(axis=0)
 
@@ -31,41 +31,46 @@ def main(clp, mags, **kwargs):
 
     The completeness will be used by the isochrone/synthetic cluster
     fitting algorithm.
+
+    USE MAIN MAGINTUDE.
     """
-    cl_region, field_regions, flag_no_fl_regs = [
-        clp[_] for _ in ['cl_region', 'field_regions', 'flag_no_fl_regs']]
 
-    # Calculate number of bins used by the histograms.
-    binwidth = 0.25
-    x_min, x_max = min(mags[0]) - 0.5, max(mags[0]) + 0.5
-    bins_n = np.arange(int(x_min), int(x_max + binwidth), binwidth)
+    # Get the completeness level for each magnitude bin.
+    completeness = mag_completeness(mags[0])
 
-    # USE MAIN MAGINTUDE.
-    mag_cl = zip(*zip(*cl_region)[3])[0]
+    # This is the curve for the entire observed frame, normalized to the area
+    # of the cluster.
+    lf_all, lf_edg_all = np.histogram(mags[0], bins=completeness[1])
+    x_all = np.concatenate((np.array([0.]), lf_edg_all))
+    y_all = np.concatenate(
+        (np.array([0.]), lf_all / clp['frame_norm'], np.array([0.])))
+
     # Obtain histogram for cluster region.
-    lf_clust, lf_edg_c = np.histogram(mag_cl, bins=bins_n)
+    mag_cl = zip(*zip(*clp['cl_region'])[3])[0]
+    lf_clust, lf_edg_c = np.histogram(mag_cl, bins=completeness[1])
 
     # Create arrays adding elements so plt.step will plot the first and last
     # vertical bars.
     x_cl = np.concatenate((np.array([0.]), lf_edg_c))
     y_cl = np.concatenate((np.array([0.]), lf_clust, np.array([0.])))
 
-    # Now for field regions. USE MAIN MAGINTUDE.
+    # Now for field regions.
     mag_fl = []
-    if flag_no_fl_regs is False:
+    if clp['flag_no_fl_regs'] is False:
 
-        for freg in field_regions:
+        # Extract main magnitudes for all stars in all field regions defined.
+        for freg in clp['field_regions']:
             for star in freg:
                 mag_fl.append(star[3][0])
 
         # Obtain histogram for field region.
-        lf_field, lf_edg_f = np.histogram(mag_fl, bins=bins_n)
+        lf_field, lf_edg_f = np.histogram(mag_fl, bins=completeness[1])
 
         # Create arrays adding elements so plt.step will plot the first and
         # last vertical bars.
         x_fl = np.concatenate((np.array([0.]), lf_edg_f))
         y_fl = np.concatenate((np.array([0.]),
-                              (lf_field / float(len(field_regions))),
+                              (lf_field / float(len(clp['field_regions']))),
                               np.array([0.])))
     else:
         print("  WARNING: no field regions defined. Luminosity function\n"
@@ -74,12 +79,7 @@ def main(clp, mags, **kwargs):
         x_fl, y_fl = [], []
 
     # Pack values.
-    lum_func = [x_cl, y_cl, x_fl, y_fl]
-
-    # Get the completeness level for each magnitude bin. This will be used by
-    # the isochrone/synthetic cluster fitting algorithm.
-    mag_all = list(mag_cl) + mag_fl
-    completeness = mag_completeness(mag_all)
+    lum_func = [x_cl, y_cl, x_fl, y_fl, x_all, y_all]
 
     print('LF and completeness magnitude levels obtained.')
 

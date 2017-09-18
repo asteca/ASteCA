@@ -141,15 +141,12 @@ def pl_cl_diag(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
                      ms=0., zorder=4)
 
 
-def pl_lum_func(gs, mags, y_ax, flag_no_fl_regs, lum_func, completeness):
+def pl_lum_func(gs, y_ax, flag_no_fl_regs, lum_func, completeness):
     '''
     LF of stars in cluster region and outside.
     '''
-    x_cl, y_cl, x_fl, y_fl = lum_func
+    x_cl, y_cl, x_fl, y_fl, x_all, y_all = lum_func
     ax = plt.subplot(gs[2:4, 0:2])
-    # Set plot limits
-    x_min, x_max = min(mags[0]) - 0.5, max(mags[0]) + 0.5
-    plt.xlim(x_max, x_min)
     ax.minorticks_on()
     # Only draw units on axis (ie: 1, 2, 3)
     ax.xaxis.set_major_locator(MultipleLocator(2.0))
@@ -159,6 +156,10 @@ def pl_lum_func(gs, mags, y_ax, flag_no_fl_regs, lum_func, completeness):
     # Set axis labels
     plt.xlabel('$' + y_ax + '$', fontsize=18)
     plt.ylabel('$N^{\star}/A_{cl}$', fontsize=18)
+
+    # All frame.
+    plt.step(x_all, y_all, where='post', color='k', lw=1.5, linestyle=':',
+             label='Frame', zorder=2)
     # Cluster region LF (contaminated).
     plt.step(x_cl, y_cl, where='post', color='r', lw=1.,
              label='$LF_{cl+fl} \,(r \leq r_{cl})$', zorder=2)
@@ -170,11 +171,12 @@ def pl_lum_func(gs, mags, y_ax, flag_no_fl_regs, lum_func, completeness):
         # Cluster region LF - average field regions LF.
         plt.step(x_cl, y_cl - y_fl, where='post', color='g', lw=1.7,
                  label='$LF_{cl}$', zorder=4)
-        # Force y axis min to 0.
         max_y = max(max(y_cl), max(y_fl))
     else:
-        # Force y axis min to 0.
         max_y = max(y_cl)
+    # Set plot limits
+    x_min, x_max = x_cl[-1] + .3, x_cl[1] - .3
+    plt.xlim(x_min, x_max)
     plt.ylim(0., max_y + 0.05 * max_y)
     # Completeness maximum value.
     # completeness = [bin_edges, max_indx, comp_perc]
@@ -299,7 +301,7 @@ def plot(N, *args):
 
     try:
         fxn(*args)
-    except:
+    except Exception:
         import traceback
-        print traceback.format_exc()
+        print(traceback.format_exc())
         print("  WARNING: error when plotting {}.".format(plt_map.get(N)[1]))
