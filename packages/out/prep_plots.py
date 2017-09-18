@@ -5,7 +5,6 @@ from ..decont_algors.local_cell_clean import bin_edges_f
 import numpy as np
 from scipy import stats
 import matplotlib.pyplot as plt
-# import math
 
 
 def frame_max_min(x_data, y_data):

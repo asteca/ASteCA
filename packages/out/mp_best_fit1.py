@@ -121,41 +121,49 @@ def pl_2_param_dens(gs, _2_params, min_max_p, cp_r, cp_e, model_done):
 
         # Make tuples of the groupings of x,y and the corresponding min Z
         # values.
-        return (zip(x_sorted[cut_idx], y_sorted[cut_idx]), minZ.tolist())
+        return x_sorted[cut_idx], y_sorted[cut_idx], minZ.tolist()
 
     # Select the minimum likelihood for each (x,y) pair in the density plot.
     z_lkl = np.log(np.asarray(model_done[1]) + 1.)
-    xy_unq, z = selectMinLkl(
+    x, y, z = selectMinLkl(
         np.array(zip(*model_done[0])[mx]), np.array(zip(*model_done[0])[my]),
         z_lkl)
 
-    # Generate density ploy.
-    # Sources:
-    # https://stackoverflow.com/a/3867302/1391441
-    # https://stackoverflow.com/a/9008576/1391441
-    x, y = np.array(zip(*xy_unq)[0]), np.array(zip(*xy_unq)[1])
+    # Plot density map.
     xmin, xmax, ymin, ymax = min(x), max(x), min(y), max(y)
-    # Only plot if one of the parameters was not fixed
+    # If at least one of the parameters was not fixed.
     if xmin != xmax or ymin != ymax:
-        # import time
-        # s = time.clock()
         if xmin == xmax:
             xmin, xmax = xp_min, xp_max
         if ymin == ymax:
             ymin, ymax = yp_min, yp_max
+
         # Set up a regular grid of interpolation points
         xi, yi = np.linspace(xmin, xmax, 200), np.linspace(ymin, ymax, 200)
         xi, yi = np.meshgrid(xi, yi)
-        # Normalize data.
-        x_new, xi_new = (x - xmin) / (xmax - xmin), (xi - xmin) / (xmax - xmin)
-        y_new, yi_new = (y - ymin) / (ymax - ymin), (yi - ymin) / (ymax - ymin)
-        # Interpolate new data.
-        rbf = scipy.interpolate.Rbf(x_new, y_new, z, function='linear')
-        zi = rbf(xi_new, yi_new)
-        # Plot density map.
-        plt.pcolormesh(xi, yi, zi, cmap=plt.get_cmap(d_map), zorder=2)
-        plt.contour(xi, yi, zi, 4, colors='#551a8b', linewidths=0.5, zorder=3)
-        # print(time.clock() - s)
+        # Normalize data and grid.
+        # Source: https://stackoverflow.com/a/3867302/1391441
+        x_new, x_grid = (x - xmin) / (xmax - xmin), (xi - xmin) / (xmax - xmin)
+        y_new, y_grid = (y - ymin) / (ymax - ymin), (yi - ymin) / (ymax - ymin)
+
+        if xmin != xmax and ymin != ymax and len(x) > 2500:
+            # Use 'griddata' if no parameter was fixed, and the number of
+            # unique solutions is large.
+            zi = scipy.interpolate.griddata(
+                (x_new, y_new), z, (x_grid, y_grid), method='linear')
+            plt.imshow(zi, vmin=min(z), vmax=max(z), origin='lower',
+                       extent=[xmin, xmax, ymin, ymax],
+                       cmap=plt.get_cmap(d_map), zorder=2)
+            ax.set_aspect('auto')
+        else:
+            # Use 'Rbf' if one parameter was fixed, or if the number of
+            # solutions is small.
+            # Source: https://stackoverflow.com/a/9008576/1391441
+            rbf = scipy.interpolate.Rbf(x_new, y_new, z, function='linear')
+            zi = rbf(x_grid, y_grid)
+            plt.pcolormesh(xi, yi, zi, cmap=plt.get_cmap(d_map), zorder=2)
+
+        plt.contour(xi, yi, zi, 5, colors='#551a8b', linewidths=0.5, zorder=3)
 
 
 def pl_lkl_scatt(gs, ld_p, min_max_p, cp_r, cp_e, model_done):
@@ -244,5 +252,5 @@ def plot(N, *args):
         fxn(*args)
     except Exception:
         import traceback
-        print traceback.format_exc()
+        print(traceback.format_exc())
         print("  WARNING: error when plotting {}.".format(plt_map.get(N)[1]))
