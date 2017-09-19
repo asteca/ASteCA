@@ -9,6 +9,10 @@ def main(clp, x, y, **kwargs):
     """
     x_max, x_min = max(x), min(x)
     y_max, y_min = max(y), min(y)
+
+    # Used to normalize the LF of the entire frame.
+    frame_area = (x_max - x_min) * (y_max - y_min)
+
     # Check if a portion of the cluster's region falls outside the frame.
     if clp['kde_cent'][0] + clp['clust_rad'] <= x_max and \
         clp['kde_cent'][0] - clp['clust_rad'] >= x_min and \
@@ -65,7 +69,11 @@ def main(clp, x, y, **kwargs):
         print("  WARNING: only a portion of the cluster\n  is present "
               "in the observed frame ({:.2f}).".format(frac_cl_area))
 
-    clp['cl_area'], clp['frac_cl_area'] = cl_area, frac_cl_area
+    # Normalization of frame to cluster area, used by LF plotting.
+    frame_norm = frame_area / cl_area
+
+    clp['cl_area'], clp['frac_cl_area'], clp['frame_norm'] =\
+        cl_area, frac_cl_area, frame_norm
     print("Area of cluster obtained.")
 
     return clp

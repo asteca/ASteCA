@@ -49,7 +49,7 @@ def main(
             [gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
                 cl_region_rjct, cl_region, n_memb, cl_sz_pt, err_bar_cl],
             # pl_lum_func: LF of stars in cluster region and outside.
-            [gs, cld['mags'], y_ax, flag_no_fl_regs, lum_func, completeness],
+            [gs, y_ax, flag_no_fl_regs, lum_func, completeness],
             # pl_integ_mag: Integrated magnitudes.
             [gs, cl_reg_imag, fl_reg_imag, integ_mag, y_ax, flag_no_fl_regs],
             # pl_p_vals: Distribution of KDE p_values.
