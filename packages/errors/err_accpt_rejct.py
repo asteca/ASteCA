@@ -1,46 +1,38 @@
 
+import numpy as np
 import matplotlib.pyplot as plt
 import display_errors
 import err_accpt_rejct_max as e_a_r_mx
 
 
-def err_sel_stars(acpt_indx, cld):
+def err_sel_stars(acpt_indx, rjct_indx, cld):
     '''
-    Go through the lists of indexes to select accepted/rejected stars.
+    Select accepted/rejected stars.
     '''
-    # Unpack data.
-    ids, x, y, mags, em, cols, ec = cld['ids'], cld['x'], cld['y'],\
-        cld['mags'], cld['em'], cld['cols'], cld['ec']
-    # Initialize empty lists.
-    acpt_stars, rjct_stars = [], []
-    # For every star in the cluster's file.
-    for i, st_idx in enumerate(ids):
-        if i in acpt_indx:
-            # Separate magnitudes and their errors.
-            m_a, e_ma = [], []
-            for j, m in enumerate(mags):
-                m_a.append(m[i])
-                e_ma.append(em[j][i])
-            # Separate colors and their errors.
-            c_a, e_ca = [], []
-            for j, c in enumerate(cols):
-                c_a.append(c[i])
-                e_ca.append(ec[j][i])
-            # Store all data on accepted star in list.
-            acpt_stars.append([st_idx, x[i], y[i], m_a, e_ma, c_a, e_ca])
-        else:
-            # Separate magnitudes and their errors.
-            m_r, e_mr = [], []
-            for j, m in enumerate(mags):
-                m_r.append(m[i])
-                e_mr.append(em[j][i])
-            # Separate colors and their errors.
-            c_r, e_cr = [], []
-            for j, c in enumerate(cols):
-                c_r.append(c[i])
-                e_cr.append(ec[j][i])
-            # Store all data on accepted star in list.
-            rjct_stars.append([st_idx, x[i], y[i], m_r, e_mr, c_r, e_cr])
+    mags_z, em_z = np.array(zip(*cld['mags'])), np.array(zip(*cld['em']))
+    cols_z, ec_z = np.array(zip(*cld['cols'])), np.array(zip(*cld['ec']))
+
+    idx_a = np.array(cld['ids'])[acpt_indx].tolist()
+    x_a = np.array(cld['x'])[acpt_indx].tolist()
+    y_a = np.array(cld['y'])[acpt_indx].tolist()
+    mags_a = mags_z[acpt_indx].tolist()
+    em_a = em_z[acpt_indx].tolist()
+    cols_a = cols_z[acpt_indx].tolist()
+    ec_a = ec_z[acpt_indx].tolist()
+
+    idx_r = np.array(cld['ids'])[rjct_indx].tolist()
+    x_r = np.array(cld['x'])[rjct_indx].tolist()
+    y_r = np.array(cld['y'])[rjct_indx].tolist()
+    mags_r = mags_z[rjct_indx].tolist()
+    em_r = em_z[rjct_indx].tolist()
+    cols_r = cols_z[rjct_indx].tolist()
+    ec_r = ec_z[rjct_indx].tolist()
+
+    # Store everything as lists.
+    acpt_stars = [
+        list(_) for _ in zip(*[idx_a, x_a, y_a, mags_a, em_a, cols_a, ec_a])]
+    rjct_stars = [
+        list(_) for _ in zip(*[idx_r, x_r, y_r, mags_r, em_r, cols_r, ec_r])]
 
     return acpt_stars, rjct_stars
 
@@ -71,7 +63,7 @@ def main(cld, clp, pd):
     if pd['run_mode'] in ('auto', 'semi'):
         e_max_val = pd['err_max']
         # Call function to reject stars with errors > e_max.
-        acpt_indx = e_a_r_mx.main(cld, e_max_val)
+        acpt_indx, rjct_indx = e_a_r_mx.main(cld, e_max_val)
         if not acpt_indx:
             print("  WARNING: No stars accepted based on their errors.\n"
                   "  Using all stars.")
@@ -79,7 +71,7 @@ def main(cld, clp, pd):
             acpt_indx, err_all_fallback = range(len(mmag)), True
 
         # Call function to store stars according to the returned indexes.
-        acpt_stars, rjct_stars = err_sel_stars(acpt_indx, cld)
+        acpt_stars, rjct_stars = err_sel_stars(acpt_indx, rjct_indx, cld)
 
     # If 'manual' mode is set, display errors distributions and ask the user
     # to accept it or else use all stars except those with errors > e_max in
@@ -97,7 +89,7 @@ def main(cld, clp, pd):
                     e_max_val = float(raw_input(
                         'Select maximum error value: '))
                     # Call function to reject stars with errors > e_max.
-                    acpt_indx = e_a_r_mx.main(cld, e_max_val)
+                    acpt_indx, rjct_indx = e_a_r_mx.main(cld, e_max_val)
                     break
                 elif answer_rad == 2:
                     # Store all indexes.
@@ -113,7 +105,7 @@ def main(cld, clp, pd):
                         break
 
             # Call function to store stars according to the returned indexes.
-            acpt_stars, rjct_stars = err_sel_stars(acpt_indx, cld)
+            acpt_stars, rjct_stars = err_sel_stars(acpt_indx, rjct_indx, cld)
 
             if answer_rad == 1:
                 # Display automatic errors rejection.

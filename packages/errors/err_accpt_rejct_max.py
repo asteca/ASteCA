@@ -1,22 +1,14 @@
 
+import numpy as np
+
 
 def main(cld, err_max):
     """
-    Accept stars with photometric errors < e_max both in mag and in color.
+    Accept stars with photometric errors < e_max in mag and color.
     """
-    # TODO USING FIRST MAGNITUDE AND COLOR READ.
-    em, ec = cld['em'][0], cld['ec'][0]
+    acpt_indx = np.flatnonzero(
+        ((cld['em'] < err_max).all(0) & (cld['ec'] < err_max).all(0))).tolist()
+    rjct_indx = np.setdiff1d(
+        np.arange(len(cld['em'][0])), acpt_indx).tolist()
 
-    # Initialize empty list to hold accepted stars' indexes.
-    acpt_indx = []
-    # Iterate through all stars
-    for st_ind in range(len(em)):
-
-        # Reject stars with at least one error >= err_max.
-        if em[st_ind] >= err_max or ec[st_ind] >= err_max:
-            pass
-        else:
-            # Accept star.
-            acpt_indx.append(st_ind)
-
-    return acpt_indx
+    return acpt_indx, rjct_indx
