@@ -4,11 +4,10 @@ from .. import update_progress
 
 
 def break_check(prob_avrg_old, runs_fields_probs, runs, run_num):
-    '''
+    """
     Check if DA converged to MPs within a 0.1% tolerance, for all stars inside
     the cluster region.
-    '''
-
+    """
     # Average all probabilities.
     prob_avrg = np.asarray(runs_fields_probs).mean(1).mean(0)
 
@@ -31,50 +30,56 @@ def break_check(prob_avrg_old, runs_fields_probs, runs, run_num):
     return prob_avrg_old, break_flag
 
 
-def likelihood(region, cl_phot):
-    '''
+def likelihood(region, cl_reg_prep):
+    """
     Obtain the likelihood, for each star in the cluster region, of being a
     member of the region passed.
-    '''
-    # Number of stars in this region.
-    N = len(region)
-    # Store cleaned cluster/field region and full cluster_region as arrays
-    # skipping IDs otherwise the whole array is converted to strings.
-    r_phot = [zip(*zip(*region)[1:][2]), zip(*zip(*region)[1:][3]),
-              zip(*zip(*region)[1:][4]), zip(*zip(*region)[1:][5])]
 
-    # TODO The second [0] index means we are using the first magnitude and
-    # color defined. This should be generalized to N magnitudes and M colors
-    # eventually.
-    # Full cluster region. Square errors in color and magnitude.
-    P = [cl_phot[0][0], np.square(cl_phot[1][0]), cl_phot[2][0],
-         np.square(cl_phot[3][0])]
-    # Cleaned cluster/field region.
-    Q = [np.asarray(r_phot[0][0]), np.square(r_phot[1][0]),
-         np.asarray(r_phot[2][0]), np.square(r_phot[3][0])]
+    This is basically the core of the 'tolstoy' likelihood.
 
-    # Small value used to replace zeros.
-    epsilon = 1e-10
-    # For every star in the full cluster region.
-    clust_stars_probs = []
-    for star in zip(*P):
-        # Squares sum of errors.
-        e_col_2 = np.maximum(star[3] + Q[3], epsilon)
-        e_mag_2 = np.maximum(star[1] + Q[1], epsilon)
-        # star[2] & Q[2] = colors
-        # star[0] & Q[0] = magnitude
-        B = np.square(star[2] - Q[2]) / e_col_2
-        C = np.square(star[0] - Q[0]) / e_mag_2
-        synth_stars = np.exp(-0.5 * (B + C)) / np.sqrt(e_col_2 * e_mag_2)
+    See https://github.com/asteca/ASteCA/issues/352 for an explanation of the
+    changes made since the old version.
+    """
+    # Photometric difference (cluster_region - region), for all dimensions.
+    phot_dif = np.array(cl_reg_prep)[:, None, :, 0] -\
+        np.array(region)[None, :, :, 0]
+    # Sum of squared photometric errors, for all dimensions.
+    sigma_sum = np.array(cl_reg_prep)[:, None, :, 1] +\
+        np.array(region)[None, :, :, 1]
 
-        # The likelihood for this cluster star is the sum over all region
-        # stars.
-        likelihood = synth_stars.sum() / N
+    # Sum for all photometric dimensions.
+    Dsum = (np.square(phot_dif) / sigma_sum).sum(axis=-1)
+    # Product of summed squared sigmas.
+    sigma_prod = np.prod(sigma_sum, axis=-1)
+    # All elements inside summatory.
+    sum_M_j = np.exp(-0.5 * Dsum) / np.sqrt(sigma_prod)
+    # Sum for all stars in this 'region'.
+    sum_M = np.sum(sum_M_j, axis=-1)
+    sum_M[sum_M <= 1e-7] = 1e-7
 
-        # Use 1e-10 to avoid nan and inf values.
-        clust_stars_probs.append(max(likelihood, epsilon))
+    return sum_M
 
-    return clust_stars_probs
+
+def reg_data(region):
+    """
+    Generate list with photometric data in the correct format.
+    """
+    region_z = list(zip(*region))
+    # Square errors.
+    sq_em, sq_ec = np.square(region_z[4]), np.square(region_z[6])
+    # Put each magnitude and color into a separate list.
+    mags, cols = list(zip(*region_z[3])), list(zip(*region_z[5]))
+    e_mags, e_cols = list(zip(*sq_em)), list(zip(*sq_ec))
+
+    # Combine photometry and errors.
+    phot = np.array(mags + cols)
+    ephot = np.array(e_mags + e_cols)
+    # Generate list with the appropriate format.
+    phot_err = []
+    for phot_i, ephot_i in zip(zip(*phot), zip(*ephot)):
+        phot_err.append(zip(*[phot_i, ephot_i]))
+
+    return phot_err
 
 
 def main(cl_region, field_regions, bayesda_runs):
@@ -102,54 +107,48 @@ def main(cl_region, field_regions, bayesda_runs):
     # Initial null probabilities for all stars in the cluster region.
     prob_avrg_old = np.array([0.] * len(cl_region))
 
-    # Extract magnitudes and colors (and their errors) for all stars
-    # in the cluster region. The [1:] is meant to leave out the IDs when
-    # zipping, otherwise all floats are converted to strings.
-    # This is done here to save time.
-    cl_phot = [zip(*zip(*cl_region)[1:][2]), zip(*zip(*cl_region)[1:][3]),
-               zip(*zip(*cl_region)[1:][4]), zip(*zip(*cl_region)[1:][5])]
+    # Magnitudes and colors (and their errors) for all stars in the cluster
+    # region, stored with the appropriate format.
+    cl_reg_prep = reg_data(cl_region)
+    # Likelihoods between all field regions and the cluster region.
+    fl_likelihoods = []
+    for fl_region in field_regions:
+        # Obtain likelihood, for each star in the cluster region, of
+        # being a field star.
+        fl_reg_prep = reg_data(fl_region)
+        # Number of stars in field region.
+        n_fl = len(fl_region)
+        fl_likelihoods.append([n_fl, likelihood(fl_reg_prep, cl_reg_prep)])
+
+    # Create copy of the cluster region to be shuffled below.
+    clust_reg_shuffle = cl_reg_prep[:]
 
     # Run 'bayesda_runs' times.
     for run_num in range(bayesda_runs):
+        field_reg_probs = []
+        # Iterate through all the 'field stars' regions that were populated.
+        for n_fl, fl_lkl in fl_likelihoods:
 
-        # This list will hold the probabilities for each field region.
-        field_reg_probs = [[] for _ in field_regions]
-        # Iterate through all the 'field stars' regions that were
-        # populated.
-        for indx, fl_region in enumerate(field_regions):
-
-            # Obtain likelihood, for each star in the cluster region, of
-            # being a field star.
-            fl_lkl = likelihood(fl_region, cl_phot)
-            # Store number of stars in field region.
-            n_fl = len(fl_region)
-
-            # Randomly shuffle the stars in the cluster region.
-            clust_reg_shuffle = cl_region[:]
-            np.random.shuffle(clust_reg_shuffle)
-            # Remove n_fl random stars from the cluster region and pass
-            # it to the function that obtains the likelihoods for each
-            # star in the "cleaned" cluster region, ie: P(B)
             if n_fl < len(cl_region):
-                clust_reg_clean = clust_reg_shuffle[n_fl:]
+                # Randomly shuffle the stars within the cluster region.
+                np.random.shuffle(clust_reg_shuffle)
+                # Remove n_fl random stars from the cluster region and
+                # obtain the likelihoods for each star in this "cleaned"
+                # cluster region.
+                cl_lkl = likelihood(clust_reg_shuffle[n_fl:], cl_reg_prep)
             else:
-                # If field region has more stars than the cluster region,
-                # don't remove any star. This should not happen though.
-                clust_reg_clean = clust_reg_shuffle
-            # Obtain likelihood, for each star in the cluster region, of
-            # being a true cluster member.
-            cl_lkl = likelihood(clust_reg_clean, cl_phot)
+                # If there are *more* field region stars than the total of
+                # stars within the cluster region (highly contaminated
+                # cluster), assign zero likelihood of being a true member to
+                # all stars within the cluster region.
+                cl_lkl = np.array([1e-7] * len(cl_region))
 
-            # Obtain Bayesian probability for each star in cl_region.
-            n_cl = len(clust_reg_clean)
-            p_a, p_b = np.array(cl_lkl), np.array(fl_lkl)
-            bayes_prob = 1. / (1. + (n_fl * p_b) / (n_cl * p_a))
-            # Store probabilities obtained with this field region.
-            field_reg_probs[indx] = bayes_prob
-
-        # Now we have the probabilities of each star in 'cl_region' of
-        # being an actual cluster member (membership) in 'field_reg_probs',
-        # one sub-list per field region.
+            # Bayesian probability for each star within the cluster region.
+            bayes_prob = 1. / (1. + (fl_lkl / cl_lkl))
+            # Now we have 'bayesda_runs' probabilities for each star in
+            # 'cl_region' of being an true cluster member (MPs) stored in
+            # 'field_reg_probs', for this field region.
+            field_reg_probs.append(bayes_prob)
 
         # Append this list to the list that holds all the runs.
         runs_fields_probs.append(field_reg_probs)
