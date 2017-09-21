@@ -27,6 +27,13 @@ def kde_center(x_data, y_data, cents_xy, radius):
             y_zoom.append(y_data[indx])
     values = np.vstack([x_zoom, y_zoom])
 
+    # Check if there is at least one star selected here.
+    if not values.any():
+        raise ValueError(
+            "ERROR: cluster region is empty and no center value\n"
+            "could be estimated. Check that x,y columns are correct\n"
+            "in 'params_input.dat' file.")
+
     # Obtain Gaussian KDE.
     kernel = stats.gaussian_kde(values)
     # Grid density (number of points).
