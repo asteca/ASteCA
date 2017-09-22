@@ -176,8 +176,12 @@ def main(cl_file, pd):
 
     elapsed = time.time() - start
     m, s = divmod(elapsed, 60)
-    print('End of analysis for {} in {:.0f}m {:.0f}s.\n'.format(
-        npd['clust_name'], m, s))
+    if m > 60:
+        h, m = divmod(m, 60)
+        t = "{:.0f}h {:.0f}m {:.0f}s".format(h, m, s)
+    else:
+        t = "{:.0f}m {:.0f}s".format(m, s)
+    print('End of analysis for {} in {}.\n'.format(npd['clust_name'], t))
 
     # Force the Garbage Collector to release unreferenced memory.
     gc.collect()
