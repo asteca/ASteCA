@@ -30,6 +30,9 @@ def main(clp, x, y, **kwargs):
             round(((clp['clust_rad'] - (clp['bin_width'] / 2.)) /
                    clp['bin_width']) + 1))
 
+        # Length of bin diagonal.
+        bin_diag = np.sqrt(2 * clp['bin_width'] ** 2)
+
         sum_bins_in_rad = 0.
         # For each square ring until reaching the limit imposed by the
         # cluster's radius.
@@ -48,15 +51,13 @@ def main(clp, x, y, **kwargs):
                 y_c = (y_cor * clp['bin_width']) + (clp['bin_width'] / 2.)
                 # Distance of center to corner of bin.
                 bin_dist = np.sqrt(x_c ** 2 + y_c ** 2)
-                # Length of bin diagonal.
-                bin_diag = np.sqrt(2 * clp['bin_width'] ** 2)
                 if bin_dist - clp['clust_rad'] > bin_diag:
                     # The entire bin is outside of the cluster radius range.
                     pass
                 elif 0. < bin_dist - clp['clust_rad'] <= bin_diag:
                     # Add a portion of the bin to the total sum of bins.
-                    sum_bins_in_rad += min(1., (bin_dist - clp['clust_rad']) /
-                                           clp['bin_width'])
+                    sum_bins_in_rad += min(
+                        1., (bin_dist - clp['clust_rad']) / clp['bin_width'])
                 else:
                     # Add entire bin.
                     sum_bins_in_rad += 1.
