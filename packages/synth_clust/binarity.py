@@ -15,16 +15,29 @@ def mag_combine(m1, m2):
     return -2.5 * (-.4 * m1 + np.log10(1. + c ** (m2 - m1)))
 
 
+# import numexpr as ne
+# def mag_combine_new(m1, m2):
+#     return ne.evaluate("m1 - 2.5 * log10( 1.0 + 10 ** (-0.4 * (m2-m1)))")
+
+
 def main(isoch_mass, isoch_cut, bin_frac, bin_mass_ratio, N_fc):
     '''
     Randomly select a fraction of stars to be binaries.
+
+    1. Select a random number of N unique indexes (a fraction of the total
+       number of stars in the synth cluster so far)
+    2. Draw random secondary masses for those N selected stars.
+    3. Position those stars onto the isochrone, according to their masses.
+    4. Calculate the magnitudes for the binary system.
+    5. Calculate the colors for the binary system.
+    6. Update magnitudes, colors, and masses for each binary system.
     '''
     bin_indxs = []
     # If the binary fraction is zero, skip the whole process.
     if bin_frac > 0.:
 
         # import time
-        # t1, t2, t3, t4, t5, t6, t7, t8 = 0., 0., 0., 0., 0., 0., 0., 0.
+        # t1, t2, t3, t4, t5, t6 = 0., 0., 0., 0., 0., 0.
 
         # Indexes of the randomly selected stars (without replacement) in
         # 'isoch_mass' to be converted to binary systems.
@@ -71,9 +84,7 @@ def main(isoch_mass, isoch_cut, bin_frac, bin_mass_ratio, N_fc):
         fcu = fcl + 2 * N_fc[1]
         # Extract only the portion that contains the color filters.
         filt_colors, bin_f_cols = isoch_mass[fcl:fcu], bin_isoch[fcl:fcu]
-        # t5 += time.clock() - s
 
-        # s = time.clock()
         # Filters composing the colors, i.e.: C = (f1 - f2).
         f1, f2 = [], []
         # The [::2] slice indicates even positions, starting from 0.
@@ -82,14 +93,12 @@ def main(isoch_mass, isoch_cut, bin_frac, bin_mass_ratio, N_fc):
         # The [1::2] slice indicates odd positions.
         for m, bin_m in zip(*[filt_colors[1::2], bin_f_cols[1::2]]):
             f2.append(mag_combine(m[bin_indxs], bin_m))
-        # t6 += time.clock() - s
 
-        # s = time.clock()
         # Create the colors affected by binarity.
         col_bin = []
         for f_1, f_2 in zip(*[f1, f2]):
             col_bin.append(f_1 - f_2)
-        # t7 += time.clock() - s
+        # t5 += time.clock() - s
 
         # s = time.clock()
         # Update array with new values of magnitudes, colors, and masses.
@@ -102,18 +111,31 @@ def main(isoch_mass, isoch_cut, bin_frac, bin_mass_ratio, N_fc):
 
         # Add masses to obtain the binary system's mass.
         isoch_mass[m_ini][bin_indxs] += bin_isoch[m_ini]
-        # t8 += time.clock() - s
+        # t6 += time.clock() - s
 
     return isoch_mass, bin_indxs
-    # return np.array([t1, t2, t3, t4, t5, t6, t7, t8])
+    # return np.array([t1, t2, t3, t4, t5, t6])
 
 
 if __name__ == '__main__':
 
+    import pickle
+    import matplotlib.pyplot as plt
+
+    with open('binar.pickle', 'rb') as f:
+        isoch_mass, isoch_cut, bin_frac, bin_mass_ratio, N_fc = pickle.load(f)
+    isoch_mass0 = isoch_mass.copy()
+    print("Data read.")
+
     N = 10000
-    times = np.array([0., 0., 0., 0., 0., 0., 0., 0.])
+    times = np.array([0., 0., 0., 0., 0., 0.])
     for _ in range(N):
 
-        times += main()
+        times += main(isoch_mass, isoch_cut, bin_frac, bin_mass_ratio, N_fc)
+        isoch_mass = isoch_mass0.copy()
 
     print("{:7.2f}:  {}".format(times.sum(), "  ".join(map(str, times))))
+
+    times_perc = np.round(100. * times / times.sum(), 1)
+    plt.bar(np.arange(6) + 1, times_perc)
+    plt.show()
