@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from .._version import __version__
 from ..synth_clust import synth_cl_plot
-from ..synth_clust import imf
 import add_version_plot
 import top_tiers_plot
 import prep_plots
@@ -91,7 +90,7 @@ def plot_top_tiers(pd, top_tiers_flo, output_subdir, clust_name, mags,
                 dpi=pd['plot_dpi'], bbox_inches='tight')
     # Close to release memory.
     plt.clf()
-    plt.close()
+    plt.close("all")
 
 
 def main(npd, cld, pd, err_max, err_lst, ext_coefs, N_fc, completeness,
@@ -159,7 +158,7 @@ def main(npd, cld, pd, err_max, err_lst, ext_coefs, N_fc, completeness,
                     print("<<Plots for D3 block created>>")
                 except Exception:
                     import traceback
-                    print traceback.format_exc()
+                    print(traceback.format_exc())
                     print("  ERROR: top tiers plot could not be generated.")
             else:
                 print("<<Skip D3 block plot>>")

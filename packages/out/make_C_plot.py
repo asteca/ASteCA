@@ -117,7 +117,7 @@ def main(
             bbox_inches='tight')
         # Close to release memory.
         plt.clf()
-        plt.close()
+        plt.close("all")
 
         print("<<Plots for C block created>>")
     else:
