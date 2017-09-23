@@ -9,6 +9,10 @@ def main(clp, x, y, **kwargs):
     """
     x_max, x_min = max(x), min(x)
     y_max, y_min = max(y), min(y)
+
+    # Used to normalize the LF of the entire frame.
+    frame_area = (x_max - x_min) * (y_max - y_min)
+
     # Check if a portion of the cluster's region falls outside the frame.
     if clp['kde_cent'][0] + clp['clust_rad'] <= x_max and \
         clp['kde_cent'][0] - clp['clust_rad'] >= x_min and \
@@ -25,6 +29,9 @@ def main(clp, x, y, **kwargs):
         sq_indx = int(
             round(((clp['clust_rad'] - (clp['bin_width'] / 2.)) /
                    clp['bin_width']) + 1))
+
+        # Length of bin diagonal.
+        bin_diag = np.sqrt(2 * clp['bin_width'] ** 2)
 
         sum_bins_in_rad = 0.
         # For each square ring until reaching the limit imposed by the
@@ -44,15 +51,13 @@ def main(clp, x, y, **kwargs):
                 y_c = (y_cor * clp['bin_width']) + (clp['bin_width'] / 2.)
                 # Distance of center to corner of bin.
                 bin_dist = np.sqrt(x_c ** 2 + y_c ** 2)
-                # Length of bin diagonal.
-                bin_diag = np.sqrt(2 * clp['bin_width'] ** 2)
                 if bin_dist - clp['clust_rad'] > bin_diag:
                     # The entire bin is outside of the cluster radius range.
                     pass
                 elif 0. < bin_dist - clp['clust_rad'] <= bin_diag:
                     # Add a portion of the bin to the total sum of bins.
-                    sum_bins_in_rad += min(1., (bin_dist - clp['clust_rad']) /
-                                           clp['bin_width'])
+                    sum_bins_in_rad += min(
+                        1., (bin_dist - clp['clust_rad']) / clp['bin_width'])
                 else:
                     # Add entire bin.
                     sum_bins_in_rad += 1.
@@ -65,7 +70,11 @@ def main(clp, x, y, **kwargs):
         print("  WARNING: only a portion of the cluster\n  is present "
               "in the observed frame ({:.2f}).".format(frac_cl_area))
 
-    clp['cl_area'], clp['frac_cl_area'] = cl_area, frac_cl_area
+    # Normalization of frame to cluster area, used by LF plotting.
+    frame_norm = frame_area / cl_area
+
+    clp['cl_area'], clp['frac_cl_area'], clp['frame_norm'] =\
+        cl_area, frac_cl_area, frame_norm
     print("Area of cluster obtained.")
 
     return clp

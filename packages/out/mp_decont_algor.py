@@ -204,7 +204,7 @@ def plot(N, *args):
 
     try:
         fxn(*args)
-    except:
-        # import traceback
-        # print traceback.format_exc()
+    except Exception:
+        import traceback
+        print(traceback.format_exc())
         print("  WARNING: error when plotting {}.".format(plt_map.get(N)[1]))

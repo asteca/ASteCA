@@ -1,6 +1,19 @@
 # Change Log
 
 
+## [[v0.2.3]][194] - 2017-09-23
+
+### Changed
+
+* Improved performance of synthetic cluster generation ([#227][193]). Code is
+  now ~4X faster.
+* Fix excessive use of memory by Rbf interpolation ([#350][192])
+* Use equal bin widths in LF and completeness function ([#300][191])
+* Faster star separation by errors ([#351][190])
+* Generalize Bayesian DA to N-dimensions, fix statistical issues, improve
+  performance ([#352][189])
+
+
 ## [[v0.2.2]][188] - 2017-08-29
 
 ### Changed
@@ -590,3 +603,9 @@ ________________________________________________________________________________
 [186]: https://github.com/asteca/ASteCA/commit/65d1f89bd0992120c8401c80ef976ba3c3803c38
 [187]: https://github.com/asteca/ASteCA/issues/216
 [188]: https://github.com/asteca/asteca/releases/tag/v0.2.2
+[189]: https://github.com/asteca/ASteCA/issues/352
+[190]: https://github.com/asteca/ASteCA/issues/351
+[191]: https://github.com/asteca/ASteCA/issues/300
+[192]: https://github.com/asteca/ASteCA/issues/350
+[193]: https://github.com/asteca/ASteCA/issues/227
+[194]: https://github.com/asteca/asteca/releases/tag/v0.2.3

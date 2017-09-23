@@ -64,6 +64,12 @@ def check_all(mypath, file_end):
     # Check the best synthetic cluster match parameters.
     params_match.check(**pd)
 
+    # Filters and colors names.
+    fs = ', '.join(_[1] for _ in pd['filters'])
+    cs = ', '.join('(' + _[1].replace(',', '-') + ')' for _ in pd['colors'])
+    print("Filter: {}".format(fs))
+    print("Color:  {}\n".format(cs))
+
     # Check and store metallicity files.
     pd = read_met_files.check_get(pd)
 

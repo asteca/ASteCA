@@ -125,7 +125,7 @@ def main(npd, cld, pd, synth_clst, shift_isoch, fit_params_r, fit_errors_r,
             bbox_inches='tight')
         # Close to release memory.
         plt.clf()
-        plt.close()
+        plt.close("all")
 
         print("<<Plots for D2 block created>>")
     else:

@@ -101,7 +101,7 @@ def plot(N, *args):
 
     try:
         fxn(N, *args)
-    except:
+    except Exception:
         print("  WARNING: error when plotting {} {}.".format(
             plt_map.get(N)[1], N))
         if not args[7]:

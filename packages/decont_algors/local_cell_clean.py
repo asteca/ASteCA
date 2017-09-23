@@ -22,13 +22,13 @@ def bin_edges_f(bin_method, mags_cols_cl):
             bin_edges.append(np.histogram(col, bins=bin_method)[1])
 
     elif bin_method == 'fixed':
-        # Based on Bonatto & Bica (2007) 377, 3, 1301-1323 but using double
+        # Based on Bonatto & Bica (2007) 377, 3, 1301-1323 but using larger
         # the values used by them (0.25 for colors and 0.5 for magnitudes)
         for mag in mags_cols_cl[0]:
-            b_num = (max(mag) - min(mag)) / 1.
+            b_num = max(2, (max(mag) - min(mag)) / 1.)
             bin_edges.append(np.histogram(mag, bins=int(b_num))[1])
         for col in mags_cols_cl[1]:
-            b_num = (max(col) - min(col)) / .5
+            b_num = max(2, (max(col) - min(col)) / .5)
             bin_edges.append(np.histogram(col, bins=int(b_num))[1])
 
     elif bin_method == 'knuth':
