@@ -32,18 +32,24 @@ def main(err_max, bin_mass_ratio, err_lst, completeness, max_mag_syn,
     extra_pars = [l1, l2, ..., l6]
     """
 
+    # import pickle
+    # with open('synth_clust.pickle', 'wb') as f:
+    #         pickle.dump(
+    #             (err_lst, completeness, max_mag_syn, isochrone,
+    #              ext_coefs, N_fc), f)
+
     # Unpack synthetic cluster parameters. The first two elements are the
     # metallicity and the age, which are already incorporated in the selected
     # isochrone.
     e, d, M_total, bin_frac = synth_cl_params[2:]
 
-    # import time
-    # t1, t2, t3, t4, t5, t6, t7 = 0., 0., 0., 0., 0., 0., 0.
+    import time
+    t1, t2, t3, t4, t5, t6, t7 = 0., 0., 0., 0., 0., 0., 0.
 
-    # s = time.clock()
+    s = time.clock()
     # Move theoretical isochrone using the values 'e' and 'd'.
     isoch_moved = move_isochrone.main(isochrone, e, d, R_V, ext_coefs, N_fc)
-    # t1 = time.clock() - s
+    t1 = time.clock() - s
 
     ##############################################################
     # # To generate a synthetic cluster with the full isochrone length,
@@ -55,27 +61,27 @@ def main(err_max, bin_mass_ratio, err_lst, completeness, max_mag_syn,
     # max_mag = max(isoch_moved[1]) + 0.5
     ##############################################################
 
-    # s = time.clock()
+    s = time.clock()
     # Get isochrone minus those stars beyond the magnitude cut.
     isoch_cut = cut_max_mag.main(isoch_moved, max_mag_syn)
-    # t2 = time.clock() - s
+    t2 = time.clock() - s
 
     # Empty list to pass if at some point no stars are left.
     synth_clust = []
     # Check for an empty array.
     if isoch_cut.any():
 
-        # s = time.clock()
+        s = time.clock()
         # Store mass distribution used to produce a synthetic cluster based on
         # a given theoretic isochrone.
         mass_dist = mass_distribution.main(st_dist_mass, M_total)
-        # t3 = time.clock() - s
+        t3 = time.clock() - s
 
-        # s = time.clock()
+        s = time.clock()
         # Interpolate masses in mass_dist into the isochrone rejecting those
         # masses that fall outside of the isochrone's mass range.
         isoch_mass = mass_interp.main(isoch_cut, mass_dist, N_fc)
-        # t4 = time.clock() - s
+        t4 = time.clock() - s
 
         if isoch_mass.any():
 
@@ -86,17 +92,17 @@ def main(err_max, bin_mass_ratio, err_lst, completeness, max_mag_syn,
             # isoch_mass0 = deepcopy(isoch_mass)
             ##############################################################
 
-            # s = time.clock()
+            s = time.clock()
             # Assignment of binarity.
             isoch_binar, binar_idx0 = binarity.main(
                 isoch_mass, isoch_cut, bin_frac, bin_mass_ratio, N_fc)
-            # t5 = time.clock() - s
+            t5 = time.clock() - s
 
-            # s = time.clock()
+            s = time.clock()
             # Completeness limit removal of stars.
             isoch_compl, binar_idx = completeness_rm.main(
                 isoch_binar, binar_idx0, completeness)
-            # t6 = time.clock() - s
+            t6 = time.clock() - s
 
             ##############################################################
             # # Use when producing synthetic clusters from isochrones.
@@ -106,11 +112,11 @@ def main(err_max, bin_mass_ratio, err_lst, completeness, max_mag_syn,
 
             if isoch_compl.any():
 
-                # s = time.clock()
+                s = time.clock()
                 # Get errors according to errors distribution.
                 synth_clust = add_errors.main(
                     isoch_compl, binar_idx, err_lst, err_max, N_fc)
-                # t7 = time.clock() - s
+                t7 = time.clock() - s
 
     ################################################################
     # # Plot synthetic cluster.
@@ -138,39 +144,48 @@ def main(err_max, bin_mass_ratio, err_lst, completeness, max_mag_syn,
 # {:>8.2f}\n'''.format(*map(float, line)))
     ################################################################
 
-    # return np.array([t1, t2, t3, t4, t5, t6, t7])
-    return synth_clust
+    return np.array([t1, t2, t3, t4, t5, t6, t7])
+    # return synth_clust
 
 
-# if __name__ == "__main__":
+if __name__ == "__main__":
 
-#     import pickle
-#     import numpy as np
+    import pickle
+    import numpy as np
+    from synth_clust import imf
+    import sys
+    mpath = sys.path[0].replace('synth_clust', '').replace('packages/', '')
 
-#     with open('synth_clust.pickle', 'rb') as f:
-#         err_max, bin_mass_ratio, err_lst, completeness, max_mag_syn,\
-#             st_dist_mass, isochrone, R_V, ext_coefs, N_fc, synth_cl_params =\
-#             pickle.load(f)
-#     print("Data read.")
+    with open(mpath + 'synth_clust.pickle', 'rb') as f:
+        err_lst, completeness, max_mag_syn, isochrone, ext_coefs, N_fc =\
+            pickle.load(f)
+    print("Data read.")
+    err_max, bin_mass_ratio, R_V = .3, .7, 3.1
 
-#     M_min, M_max, M_step = 50., ???, ???
-#     masses = np.arange(M_min, M_max, M_step)
+    M_max = 250000.
 
-#     N = 10000
-#     times = np.array([0., 0., 0., 0., 0., 0., 0.])
-#     for _ in range(N):
-#         ext = np.random.uniform(0., 2.)
-#         dm = np.random.uniform(8., 20.)
-#         M_total = np.random.choice(masses)
-#         bf = np.random.uniform(0., 1.)
-#         synth_cl_params[2:] = (ext, dm, M_total, bf)
+    # set step for 100 masses
+    M_step = M_max / 100.
+    M_min = 50.
+    masses = np.arange(M_min, M_max, M_step)
+    st_dist_mass = imf.main('kroupa_2002', 150., masses)
+    print("Running")
 
-#         times = times + main(
-#             err_max, bin_mass_ratio, err_lst, completeness, max_mag_syn,
-#             st_dist_mass, isochrone, R_V, ext_coefs, N_fc, synth_cl_params)
+    N = 10000
+    times = np.array([0., 0., 0., 0., 0., 0., 0.])
+    for _ in range(N):
+        ext = np.random.uniform(0., 2.)
+        dm = np.random.uniform(8., 20.)
+        M_total = np.random.choice(masses)
+        bf = np.random.uniform(0., 1.)
+        synth_cl_params = (np.nan, np.nan, ext, dm, M_total, bf)
 
-#     times_perc = np.round(100. * times / times.sum(), 1)
-#     print("{:2.0f}-{:6.0f} {:7.2f}    {}".format(
-#         M_min, M, times.sum(), "    ".join(map(str, times_perc))))
+        times = times + main(
+            err_max, bin_mass_ratio, err_lst, completeness, max_mag_syn,
+            st_dist_mass, isochrone, R_V, ext_coefs, N_fc, synth_cl_params)
 
-#     print(times.sum())
+    times_perc = np.round(100. * times / times.sum(), 1)
+    print("{:2.0f}-{:6.0f} {:7.2f}    {}".format(
+        M_min, M_max, times.sum(), "    ".join(map(str, times_perc))))
+
+    print(times.sum())
