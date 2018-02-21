@@ -1,6 +1,12 @@
 
 import numpy as np
-from ..math_f import exp_function
+print(__name__)
+if __name__ == 'add_errors':
+    import sys, os
+    sys.path.append(os.path.abspath(os.path.join('..', '')))
+    from math_f import exp_function
+else:
+    from ..math_f import exp_function
 
 
 def gauss_error(rnd, mc, e_mc):
