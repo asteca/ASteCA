@@ -51,10 +51,10 @@ def params_errors(
 
 
 def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning, lkl_weight,
-         N_bootstrap, max_mag, IMF_name, m_high, R_V, bin_mr, fundam_params,
-         N_pop, N_gen, fit_diff, cross_prob, cross_sel, mut_prob, N_el, N_ei,
-         N_es, cmd_systs, all_syst_filters, filters, colors, theor_tracks,
-         **kwargs):
+         N_bootstrap, max_mag, IMF_name, m_high, m_sample_flag, R_V, bin_mr,
+         fundam_params, N_pop, N_gen, fit_diff, cross_prob, cross_sel,
+         mut_prob, N_el, N_ei, N_es, cmd_systs, all_syst_filters, filters,
+         colors, theor_tracks, **kwargs):
     '''
     Perform a best fitting process to find the cluster's fundamental
     parameters.
@@ -92,7 +92,8 @@ def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning, lkl_weight,
 
         # Obtain mass distribution using the selected IMF. We run it once
         # because the array only depends on the IMF selected.
-        st_dist_mass = imf.main(IMF_name, m_high, fundam_params[4])
+        st_dist_mass = imf.main(
+            IMF_name, m_high, m_sample_flag, fundam_params[4])
 
         # Store the number of defined filters and colors.
         N_fc = [len(filters), len(colors)]

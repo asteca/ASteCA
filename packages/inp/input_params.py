@@ -123,25 +123,27 @@ def main(mypath, pars_f_path):
                 elif reader[0] == 'MF':
                     IMF_name = str(reader[1])
                     m_high = float(reader[2])
+                    m_sample_flag = True if reader[3] in true_lst else False
                 elif reader[0] == 'MM':
                     try:
                         max_mag = float(reader[1])
                     except ValueError:
                         max_mag = str(reader[1])
+
                 elif reader[0] == 'MZ':
                     m_rs = char_remove(reader)
                 elif reader[0] == 'LA':
                     a_rs = char_remove(reader)
-                elif reader[0] == 'BV':
-                    e_rs = char_remove(reader)
-                elif reader[0] == 'DM':
-                    d_rs = char_remove(reader)
                 elif reader[0] == 'TM':
                     mass_rs = char_remove(reader)
                 elif reader[0] == 'BI':
                     bin_rs = char_remove(reader)
                 elif reader[0] == 'BI_m':
                     bin_mr = float(reader[1])
+                elif reader[0] == 'BV':
+                    e_rs = char_remove(reader)
+                elif reader[0] == 'DM':
+                    d_rs = char_remove(reader)
 
                 elif reader[0] == 'AB':
                     best_fit_algor = str(reader[1])
@@ -220,6 +222,7 @@ def main(mypath, pars_f_path):
         'evol_track': evol_track,
         # Synthetic cluster parameters
         'max_mag': max_mag, 'IMF_name': IMF_name, 'm_high': m_high,
+        'm_sample_flag': m_sample_flag,
         'R_V': R_V, 'bin_mr': bin_mr,
         # Genetic algorithm parameters.
         'N_pop': N_pop, 'N_gen': N_gen, 'fit_diff': fit_diff,
