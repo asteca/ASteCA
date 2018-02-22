@@ -1,6 +1,5 @@
 
 import numpy as np
-print(__name__)
 if __name__ == 'add_errors':
     import sys, os
     sys.path.append(os.path.abspath(os.path.join('..', '')))
