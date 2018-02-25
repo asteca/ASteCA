@@ -15,5 +15,10 @@ def main(st_dist, M_total):
     interval, ie: (m, m+dm).
 
     """
-    base, scale, N_stars = st_dist[M_total]
-    return np.random.random(N_stars) * scale + base
+    if st_dist[M_total][-1] is True:
+        base, scale, N_stars = st_dist[M_total][:-1]
+        mass_dist = np.random.random(N_stars) * scale + base
+    else:
+        mass_dist = st_dist[M_total]
+
+    return mass_dist

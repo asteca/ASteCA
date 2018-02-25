@@ -1,6 +1,11 @@
 
 import numpy as np
-from ..math_f import exp_function
+if __name__ == 'add_errors':
+    import sys, os
+    sys.path.append(os.path.abspath(os.path.join('..', '')))
+    from math_f import exp_function
+else:
+    from ..math_f import exp_function
 
 
 def gauss_error(rnd, mc, e_mc):
@@ -12,7 +17,7 @@ def gauss_error(rnd, mc, e_mc):
     return mc_gauss
 
 
-def main(isoch_compl, binar_idx, err_lst, err_max, N_fc):
+def main(isoch_compl, err_lst, err_max, m_ini, N_fc):
     """
     Randomly move stars according to given error distributions.
 
@@ -49,9 +54,7 @@ def main(isoch_compl, binar_idx, err_lst, err_max, N_fc):
         isoch_error[0].append(mc_gauss)
         isoch_error[1].append(sigma_mc)
 
-    # Append indexes that identify binaries, and extra information.
-    # isoch_compl = [f1, f2, .., c1, c2, .., fc1, fc2, .., extra_pars(6)]
-    synth_clust = [isoch_error] + [list(binar_idx)] +\
-        [list(isoch_compl[(N_fc[0] + N_fc[1] + 2 * N_fc[1]):])]
+    # Append extra information (binary prob, binary mass, 6 extra params).
+    synth_clust = [isoch_error] + [list(isoch_compl[(m_ini - 2):])]
 
     return synth_clust

@@ -8,3 +8,5 @@
 !/packages
 # But do ignore these files
 *.pyc
+*.pickle
+

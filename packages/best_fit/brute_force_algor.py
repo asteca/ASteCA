@@ -1,11 +1,11 @@
 
 import numpy as np
+from ..synth_clust import synth_cluster
 import likelihood
 
 
-def main(lkl_method, e_max, bin_mr, err_lst, completeness, max_mag_syn,
-         fundam_params, obs_clust, theor_tracks, R_V, ext_coefs, st_dist_mass,
-         N_fc, N_bf=1):
+def main(lkl_method, e_max, err_lst, completeness, max_mag_syn, fundam_params,
+         obs_clust, theor_tracks, R_V, ext_coefs, st_dist_mass, N_fc, N_bf=1):
     """
     Brute force algorithm that computes the likelihoods for *all* the defined
     isochrones.
@@ -53,12 +53,17 @@ def main(lkl_method, e_max, bin_mr, err_lst, completeness, max_mag_syn,
                             # In place for #347
                             for _ in range(N_bf):
                                 model = [met, age, e, d, mass, bf]
-                                # Call likelihood function for this model.
-                                lkl = likelihood.main(
-                                    lkl_method, e_max, bin_mr, err_lst,
-                                    obs_clust, completeness, max_mag_syn,
+
+                                # Generate synthetic cluster.
+                                synth_clust = synth_cluster.main(
+                                    e_max, err_lst, completeness, max_mag_syn,
                                     st_dist_mass, isochrone, R_V, ext_coefs,
                                     N_fc, model)
+
+                                # Call likelihood function for this model.
+                                lkl = likelihood.main(
+                                    lkl_method, synth_clust, obs_clust)
+
                                 # Store likelihood and synthetic cluster.
                                 model_done[0].append(model)
                                 model_done[1].append(lkl)

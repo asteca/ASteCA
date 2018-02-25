@@ -102,7 +102,7 @@ def starsInterv(m_low, mass_up, N_stars):
     return m_low_i, m_up_i, N_stars_i
 
 
-def massDist(m_low, mass_up, N_dist, masses):
+def massDist(m_sample_flag, m_low, mass_up, N_dist, masses):
     """
     Given the mass distribution from the sampled IMF, obtain for each mass
     defined: the total number of stars, and the scale and base factors
@@ -121,12 +121,21 @@ def massDist(m_low, mass_up, N_dist, masses):
         N_stars_total = np.sum(N_stars_i)
         base = np.repeat(m_low_i, N_stars_i)
         scale = np.repeat(m_up_i, N_stars_i) - base
-        st_dist_mass[M_total] = [base, scale, N_stars_total]
+
+        # Either pass the values so that each synthetic cluster can generate
+        # its own mass distribution, or generate it once here.
+        if m_sample_flag is True:
+            # Add flag to the list to avoid having to pass 'm_sample_flag'
+            # across the code.
+            st_dist_mass[M_total] = [base, scale, N_stars_total, True]
+        else:
+            st_dist_mass[M_total] =\
+                np.random.random(N_stars_total) * scale + base
 
     return st_dist_mass
 
 
-def main(IMF_name, m_high, masses):
+def main(IMF_name, m_high, m_sample_flag, masses):
     '''
     Returns the number of stars per interval of mass for the selected IMF.
     '''
@@ -165,6 +174,6 @@ def main(IMF_name, m_high, masses):
     # Normalize number of stars by constant.
     N_dist = np.asarray(N_dist) * norm_const
 
-    st_dist_mass = massDist(m_low, mass_up, N_dist, masses)
+    st_dist_mass = massDist(m_sample_flag, m_low, mass_up, N_dist, masses)
 
     return st_dist_mass

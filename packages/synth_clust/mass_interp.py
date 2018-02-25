@@ -37,7 +37,7 @@ def find_closest(key, target):
     return idx
 
 
-def main(isoch_cut, mass_dist, N_fc):
+def main(isoch_cut, mass_dist, m_ini):
     '''
     For each mass in the IMF mass distribution, find the star in the isochrone
     with the closest mass value and pass it forward.
@@ -45,9 +45,6 @@ def main(isoch_cut, mass_dist, N_fc):
     '''
     # Returns the indices that would sort the isochrone with
     # the minimum mass. This is why we use the 'm_ini' index.
-    # From the isoch_cut_mag function, stars are ordered according to the
-    # main magnitude from min to max.
-    m_ini = N_fc[0] + N_fc[1] + 2 * N_fc[1]
     order = isoch_cut[m_ini, :].argsort()
 
     # Returns an array with the mass values in the theoretical isochrone

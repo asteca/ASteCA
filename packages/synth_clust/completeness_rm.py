@@ -62,27 +62,18 @@ def indxRem(di, rang_indx):
     return np.asarray(out)
 
 
-def remStars(isoch_binar, binar_idx0, d_i):
+def remStars(isoch_binar, d_i):
     """
     Remove all stars pointed to by 'd_i' from all the sub-arrays in
-    'isoch_binar'. Update the 'binar_idx0' array of indexes, to point
-    to the correct binary systems after the removal of stars.
+    'isoch_binar'.
     """
     # Remove those selected indexes from *all* sub-lists.
     isoch_compl = np.delete(isoch_binar, d_i, axis=1)
 
-    # Remove stars from the binaries list that were removed by the
-    # completeness process.
-    # Sorted elements of 'binar_idx0' that are not in 'd_i'.
-    binar_idx1 = np.setdiff1d(binar_idx0, d_i)
-    # Correct indexes of stars after completeness removal, so they will
-    # point to the actual binary systems.
-    binar_idx = binar_idx1 - np.searchsorted(d_i, binar_idx1)
-
-    return isoch_compl, binar_idx
+    return isoch_compl
 
 
-def main(isoch_binar, binar_idx0, completeness):
+def main(isoch_binar, completeness):
     """
     Remove a number of stars according to the percentages of star loss found in
     the 'mag_completeness' function of the luminosity module, for the real
@@ -118,8 +109,8 @@ def main(isoch_binar, binar_idx0, completeness):
         d_i = indxRem(di, rang_indx)
 
         # Remove stars and update list of binary systems indexes.
-        isoch_compl, binar_idx = remStars(isoch_binar, binar_idx0, d_i)
+        isoch_compl = remStars(isoch_binar, d_i)
     else:
-        isoch_compl, binar_idx = isoch_binar, binar_idx0
+        isoch_compl = isoch_binar
 
-    return isoch_compl, binar_idx
+    return isoch_compl
