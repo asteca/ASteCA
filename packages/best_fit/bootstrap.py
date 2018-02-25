@@ -16,7 +16,7 @@ def resample_replacement(cl_max_mag):
     return cl_max_mag_ran
 
 
-def main(lkl_method, e_max, bin_mr, err_lst, completeness, fundam_params,
+def main(lkl_method, e_max, err_lst, completeness, fundam_params,
          cl_max_mag, max_mag_syn, theor_tracks, R_V, ext_coefs, st_dist_mass,
          N_fc, N_pop, N_gen, fit_diff, cross_prob, cross_sel, mut_prob, N_el,
          N_ei, N_es, lkl_binning, lkl_weight, best_fit_algor, N_b):
@@ -46,7 +46,7 @@ def main(lkl_method, e_max, bin_mr, err_lst, completeness, fundam_params,
             # process so it will not print percentages to screen.
             flag_print_perc = False
             params_boot.append(genetic_algorithm.main(
-                lkl_method, e_max, bin_mr, err_lst, completeness, max_mag_syn,
+                lkl_method, e_max, err_lst, completeness, max_mag_syn,
                 fundam_params, obs_cl, theor_tracks, R_V, ext_coefs,
                 st_dist_mass, N_fc, N_pop, N_gen, fit_diff, cross_prob,
                 cross_sel, mut_prob, N_el, N_ei, N_es, flag_print_perc)[0])

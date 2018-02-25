@@ -10,8 +10,8 @@ from ..synth_clust import imf
 
 
 def params_errors(
-    lkl_method, e_max, bin_mr, err_lst, completeness, fundam_params,
-        cl_max_mag, max_mag_syn, theor_tracks, R_V, ext_coefs, st_dist_mass,
+    lkl_method, e_max, err_lst, completeness, fundam_params, cl_max_mag,
+        max_mag_syn, theor_tracks, R_V, ext_coefs, st_dist_mass,
         N_fc, N_pop, N_gen, fit_diff, cross_prob, cross_sel, mut_prob, N_el,
         N_ei, N_es, lkl_binning, lkl_weight, best_fit_algor, isoch_fit_params,
         N_b):
@@ -37,9 +37,9 @@ def params_errors(
             # Call bootstrap function with resampling to get the uncertainty
             # in each parameter.
             isoch_fit_errors = bootstrap.main(
-                lkl_method, e_max, bin_mr, err_lst, completeness,
-                fundam_params, cl_max_mag, max_mag_syn, theor_tracks, R_V,
-                ext_coefs, st_dist_mass, N_fc, N_pop, N_gen, fit_diff,
+                lkl_method, e_max, err_lst, completeness, fundam_params,
+                cl_max_mag, max_mag_syn, theor_tracks, R_V, ext_coefs,
+                st_dist_mass, N_fc, N_pop, N_gen, fit_diff,
                 cross_prob, cross_sel, mut_prob, N_el, N_ei, N_es, lkl_binning,
                 lkl_weight, best_fit_algor, N_b)
         else:
@@ -53,8 +53,8 @@ def params_errors(
 def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning, lkl_weight,
          N_bootstrap, max_mag, IMF_name, m_high, m_sample_flag, R_V, bin_mr,
          fundam_params, N_pop, N_gen, fit_diff, cross_prob, cross_sel,
-         mut_prob, N_el, N_ei, N_es, cmd_systs, all_syst_filters, filters,
-         colors, theor_tracks, **kwargs):
+         mut_prob, N_el, N_ei, N_es, cmd_systs, filters, colors,
+         theor_tracks, **kwargs):
     '''
     Perform a best fitting process to find the cluster's fundamental
     parameters.
@@ -87,8 +87,7 @@ def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning, lkl_weight,
         # DELETE
 
         # Obtain extinction coefficients.
-        ext_coefs = extin_coefs.main(
-            cmd_systs, all_syst_filters, filters, colors)
+        ext_coefs = extin_coefs.main(cmd_systs, filters, colors)
 
         # Obtain mass distribution using the selected IMF. We run it once
         # because the array only depends on the IMF selected.
@@ -109,7 +108,7 @@ def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning, lkl_weight,
                 else lkl_method))
             # Brute force algorithm.
             isoch_fit_params = brute_force_algor.main(
-                lkl_method, e_max, bin_mr, err_lst, completeness, max_mag_syn,
+                lkl_method, e_max, err_lst, completeness, max_mag_syn,
                 fundam_params, obs_clust, theor_tracks, R_V, ext_coefs,
                 st_dist_mass, N_fc)
 
@@ -123,16 +122,16 @@ def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning, lkl_weight,
             # so it will print percentages to screen.
             flag_print_perc = True
             isoch_fit_params = genetic_algorithm.main(
-                lkl_method, e_max, bin_mr, err_lst, completeness, max_mag_syn,
+                lkl_method, e_max, err_lst, completeness, max_mag_syn,
                 fundam_params, obs_clust, theor_tracks, R_V, ext_coefs,
                 st_dist_mass, N_fc, N_pop, N_gen, fit_diff, cross_prob,
                 cross_sel, mut_prob, N_el, N_ei, N_es, flag_print_perc)
 
         print("Best fit parameters obtained.")
 
-        # Assign errors for each parameter.
+        # Assign uncertainties for each parameter.
         isoch_fit_errors = params_errors(
-            lkl_method, e_max, bin_mr, err_lst, completeness, fundam_params,
+            lkl_method, e_max, err_lst, completeness, fundam_params,
             cl_max_mag, max_mag_syn, theor_tracks, R_V, ext_coefs,
             st_dist_mass, N_fc, N_pop, N_gen, fit_diff, cross_prob, cross_sel,
             mut_prob, N_el, N_ei, N_es, lkl_binning, lkl_weight,

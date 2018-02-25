@@ -10,11 +10,15 @@ def main(isochrone, e, d, R_V, ext_coefs, N_fc):
 
     N_fc is the number of filters (N_fc[0]), and colors defined (N_fc[1]).
 
-                 |------Nf----|  |------Nc-----|  |---2*Nc-----|
-    isochrone = [f1, f2, .., fN, c1, c2, .., cNc, fc1, .., fc2Nc, m_ini, ..]
+                 |------Nf-----|  |------Nc-----|
+    isochrone = [f1, f2, .., fNf, c1, c2, .., cNc,
 
-                 |----Nf----|  |-----Nc-----|  |-----2*Nc-----|
-    ext_coefs = [cf1, .., cfNf, cc1, .., ccNc, cfc1, .., cfc2Nc]
+                 |-----Nf----|  |--------Nc------|
+                 f1b, .., fNfb, c1b, c2b, .., cNcb, bp, mb, m_ini,.., m_bol
+    ]
+
+                 |----Nf----|  |-----Nc-----|
+    ext_coefs = [cf1, .., cfNf, cc1, .., ccNc]
     where:
     cfX = [a, b]  ; ccX = [[a1, b1], [a2, b2]]  ; cfcX = [a, b]
     and:
@@ -45,13 +49,24 @@ def main(isochrone, e, d, R_V, ext_coefs, N_fc):
               (ext_coefs[Nf + ci][1][0] + ext_coefs[Nf + ci][1][1] / R_V)) * Av
         iso_moved.append(np.array(col) + Ex)
 
-    # Move filters that make up the colors.
-    for fci, fcol in enumerate(isochrone[(Nf + Nc):((Nf + Nc) + (Nc * 2))]):
-        Ax = (ext_coefs[(Nf + Nc) + fci][0] +
-              ext_coefs[(Nf + Nc) + fci][1] / R_V) * Av
-        iso_moved.append(np.array(fcol) + d + Ax)
+    # Move filters with binary data.
+    for fi, mag in enumerate(isochrone[(Nf + Nc):(Nf + Nc + Nf)]):
+        Ax = (ext_coefs[fi][0] + ext_coefs[fi][1] / R_V) * Av
+        iso_moved.append(np.array(mag) + d + Ax)
+
+    # Move colors with binary data.
+    for ci, col in enumerate(isochrone[(Nf + Nc + Nf):(Nf + Nc + Nf + Nc)]):
+        Ex = ((ext_coefs[Nf + ci][0][0] + ext_coefs[Nf + ci][0][1] / R_V) -
+              (ext_coefs[Nf + ci][1][0] + ext_coefs[Nf + ci][1][1] / R_V)) * Av
+        iso_moved.append(np.array(col) + Ex)
 
     # Append the extra parameters, not affected by distance/reddening.
-    iso_moved = iso_moved + isochrone[((Nf + Nc) + (Nc * 2)):]
+    iso_moved = iso_moved + list(isochrone[(2 * Nf + 2 * Nc):])
 
-    return iso_moved
+    # import matplotlib.pyplot as plt
+    # plt.scatter(iso_moved[1], iso_moved[0], c='g')
+    # plt.scatter(iso_moved[4], iso_moved[3], c='r')
+    # plt.gca().invert_yaxis()
+    # plt.show()
+
+    return np.array(iso_moved)

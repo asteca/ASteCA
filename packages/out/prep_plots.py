@@ -394,7 +394,7 @@ def packData(lkl_method, lkl_binning, cl_max_mag, synth_clst, shift_isoch,
     frst_synth_col, frst_synth_mag = synth_clst[0][0][1],\
         synth_clst[0][0][0]
     # Indexes of binary systems.
-    binar_idx = synth_clst[1]
+    binar_idx = synth_clst[1][0]
     frst_col_edgs, frst_mag_edgs = bin_edges[1], bin_edges[0]
     # Filters and colors are appended continuously in 'shift_isoch'. If
     # there are 3 defined filters, then the first color starts at the
