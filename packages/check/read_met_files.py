@@ -94,6 +94,7 @@ def check_get(pd):
         pd['fundam_params'] = [met_values[0], age_values] + param_ranges[2:]
 
         # Store all isochrones in all the metallicity files.
-        pd['theor_tracks'] = isoch_params.main(met_f_filter, age_values, **pd)
+        pd['theor_tracks'], pd['plot_isoch_data'] = isoch_params.main(
+            met_f_filter, age_values, **pd)
 
     return pd
