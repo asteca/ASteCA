@@ -9,7 +9,6 @@ def main(isoch_moved, max_mag_syn):
     region).
     '''
     # Sort isochrone according to magnitude values (min to max).
-    isoch_moved = np.array(isoch_moved)
     isoch_sort = isoch_moved[:, isoch_moved[0].argsort(kind='mergesort')]
     # Get index of closest mag value to max_mag_syn.
     max_indx = np.argmin(np.abs(isoch_sort[0] - max_mag_syn))
