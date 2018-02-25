@@ -3,8 +3,9 @@ import move_isochrone
 import synth_cluster
 
 
-def main(e_max, fundam_params, theor_tracks, isoch_fit_params, err_lst,
-         completeness, max_mag_syn, st_dist_mass, R_V, ext_coefs, N_fc):
+def main(e_max, fundam_params, theor_tracks, plot_isoch_data, isoch_fit_params,
+         err_lst, completeness, max_mag_syn, st_dist_mass, R_V, ext_coefs,
+         N_fc):
     '''
     # Generate shifted isochrone and synthetic cluster for plotting.
     '''
@@ -20,10 +21,13 @@ def main(e_max, fundam_params, theor_tracks, isoch_fit_params, err_lst,
         m_i, a_i = [0, 0]
         print("  WARNING: metallicity and age for best match synthetic\n"
               "  cluster not found.")
+
     # Generate shifted best fit isochrone.
-    isochrone = theor_tracks[m_i][a_i]
+    isochrone = plot_isoch_data[m_i][a_i]
     shift_isoch = move_isochrone.main(isochrone, e, d, R_V, ext_coefs, N_fc)
+
     # Generate best fit synthetic cluster.
+    isochrone = theor_tracks[m_i][a_i]
     synth_clst = synth_cluster.main(
         e_max, err_lst, completeness, max_mag_syn, st_dist_mass, isochrone,
         R_V, ext_coefs, N_fc, synth_cl_params)

@@ -67,9 +67,9 @@ def plot_top_tiers(pd, top_tiers_flo, output_subdir, clust_name, mags,
     for mod in top_tiers_flo:
         # Call function to generate synthetic cluster.
         shift_isoch, synth_clst = synth_cl_plot.main(
-            err_max, pd['bin_mr'], pd['fundam_params'], pd['theor_tracks'],
-            isoch_fit_params, err_lst, completeness, max_mag_syn,
-            st_dist_mass, pd['R_V'], ext_coefs, N_fc)
+            err_max, pd['fundam_params'], pd['theor_tracks'],
+            pd['plot_isoch_data'], isoch_fit_params, err_lst, completeness,
+            max_mag_syn, st_dist_mass, pd['R_V'], ext_coefs, N_fc)
 
         # TODO using first magnitude and color defined
         first_col, first_mag = synth_clst[0][0][1], synth_clst[0][0][0]

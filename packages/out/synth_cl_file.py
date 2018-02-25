@@ -3,7 +3,7 @@ from ..synth_clust import synth_cl_plot
 
 
 def main(clp, npd, bf_flag, fundam_params, filters, colors, theor_tracks,
-         R_V, **kwargs):
+         plot_isoch_data, R_V, **kwargs):
     '''
     Create output data file with stars in the best fit synthetic cluster found
     by the 'Best Fit' function.
@@ -11,7 +11,7 @@ def main(clp, npd, bf_flag, fundam_params, filters, colors, theor_tracks,
     clp['synth_clst'], clp['shift_isoch'] = [], []
     if bf_flag:
         shift_isoch, synth_clst = synth_cl_plot.main(
-            clp['err_max'], fundam_params, theor_tracks,
+            clp['err_max'], fundam_params, theor_tracks, plot_isoch_data,
             clp['isoch_fit_params'], clp['err_lst'], clp['completeness'],
             clp['max_mag_syn'], clp['st_dist_mass'], R_V, clp['ext_coefs'],
             clp['N_fc'])

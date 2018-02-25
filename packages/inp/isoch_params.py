@@ -134,6 +134,9 @@ def main(met_f_filter, age_values, cmd_evol_tracks, evol_track, bin_mr,
     c = interp_isoch_data(mags_cols_theor, N_interp)
     d = interp_isoch_data(extra_pars, N_interp)
 
+    # The magnitudes for each defined color ('c') are used here and
+    # discarded after the colors (and magnitudes) with binarity assignment
+    # are obtained.
     print("Generating binary data (b_mr={:.2f})\n".format(bin_mr))
     mags_binar, cols_binar, probs_binar, mass_binar = binarity.binarGen(
         N_interp, a, c, d, bin_mr)
@@ -151,12 +154,29 @@ def main(met_f_filter, age_values, cmd_evol_tracks, evol_track, bin_mr,
     # mb:  binary masses
     # m_ini,..., m_bol: six extra parameters.
 
-    # Create empty lists for each metallicity, and empty sublists for each age.
+    # Combine all data into a single array of shape:
+    # (N_z, N_age, N_data, N_interp), where 'N_data' is the number of
+    # sub-arrays in each array.
+    comb_data = np.concatenate(
+        (a, b, mags_binar, cols_binar, probs_binar, mass_binar, d), axis=2)
+
+    # Sort all isochrones according to the main magnitude (min to max).
+    # This is necessary so that the cut_max_mag() function does not need
+    # to do this every time a new synthetic cluster is generated.
+
     theor_tracks = [[[] for _ in a[0]] for _ in a]
-    for l in [a, b, mags_binar, cols_binar, probs_binar, mass_binar, d]:
-        for i, mx in enumerate(l):
-            for j, ax in enumerate(mx):
-                theor_tracks[i][j] = theor_tracks[i][j] + ax
+    for i, mx in enumerate(comb_data):
+        for j, ax in enumerate(mx):
+            theor_tracks[i][j] = ax[:, ax[0].argsort(kind='mergesort')]
+
+    # The above sorting destroys the original order of the isochrones. This
+    # results in messy plots for the "best fit isochrone" at the end.
+    # (see: https://stackoverflow.com/q/35606712/1391441,
+    #       https://stackoverflow.com/q/37742358/1391441)
+    # To avoid this, we also store the not-interpolated, not sorted original
+    # values for the magnitudes and colors; just for the purpose of plotting
+    # the final isochrones.
+    plot_isoch_data = np.concatenate((mags_theor, cols_theor), axis=2)
 
     # Obtain number of models in the solutions space.
     lens = [len(_) for _ in fundam_params]
@@ -175,4 +195,4 @@ def main(met_f_filter, age_values, cmd_evol_tracks, evol_track, bin_mr,
     # with open('theor_tracks.pickle', 'wb') as f:
     #         pickle.dump((theor_tracks), f)
 
-    return theor_tracks
+    return theor_tracks, plot_isoch_data
