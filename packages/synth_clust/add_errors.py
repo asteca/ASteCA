@@ -1,6 +1,6 @@
 
 import numpy as np
-if __name__ == 'add_errors':
+if __name__ in ['add_errors', '__main__']:
     import sys, os
     sys.path.append(os.path.abspath(os.path.join('..', '')))
     from math_f import exp_function
@@ -12,12 +12,12 @@ def gauss_error(rnd, mc, e_mc):
     '''
     Randomly move mag and color through a Gaussian function.
     '''
-    mc_gauss = mc + rnd * e_mc
+    mc_gauss = mc + rnd[:len(mc)] * e_mc
 
     return mc_gauss
 
 
-def main(isoch_compl, err_lst, err_max, m_ini, N_fc):
+def main(isoch_compl, err_lst, err_max, m_ini, err_rnd):
     """
     Randomly move stars according to given error distributions.
 
@@ -26,11 +26,7 @@ def main(isoch_compl, err_lst, err_max, m_ini, N_fc):
     """
 
     isoch_error = [[], []]
-    i_s, i_l = 0, len(isoch_compl[0])
 
-    # Generate once a random array with enough length to apply for all
-    # photometric dimensions.
-    rnd = np.random.normal(0, 1, len(isoch_compl[0]) * sum(N_fc))
     for i, popt_mc in enumerate(err_lst):
         # isoch_compl[0] is the main magnitude.
         sigma_mc = np.array(exp_function.exp_3p(isoch_compl[0], *popt_mc))
@@ -45,9 +41,7 @@ def main(isoch_compl, err_lst, err_max, m_ini, N_fc):
         ###################################################################
 
         # Randomly move stars around these errors.
-        mc_gauss = gauss_error(
-            rnd[i_s:i_l * (i + 1)], isoch_compl[i], sigma_mc)
-        i_s = i_l * (i + 1)
+        mc_gauss = gauss_error(err_rnd, isoch_compl[i], sigma_mc)
 
         # Create list with photometric dimensions in first sub-list, and
         # associated errors in the second.

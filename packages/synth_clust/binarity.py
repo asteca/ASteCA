@@ -16,7 +16,8 @@ def mag_combine(m1, m2):
 
 
 def binarGen(
-        N_interp, mags_theor, mags_cols_theor, extra_pars, bin_mass_ratio):
+        binar_fracs, N_interp, mags_theor, mags_cols_theor, extra_pars,
+        bin_mass_ratio):
     '''
 
     0. Assign N unique indexes by dividing range of stars by their total
@@ -32,77 +33,90 @@ def binarGen(
         7. Assign unique probability values for each interpolated star.
 
     '''
-    # All theoretical isochrones are interpolated with the same length,
-    # assign unique binarity probabilities to each star randomly.
-    unq_b_probs = np.arange(N_interp) / float(N_interp)
 
-    mags_binar, cols_binar, probs_binar, mass_binar = [], [], [], []
-    # For each metallicity defined.
-    for mx, _ in enumerate(mags_theor):
+    # If binary_fraction = 0. don't bother obtaining the binary magnitudes,
+    # colors, etc.
+    if binar_fracs.any():
 
-        mag_bin, col_bin, prob_bin, mass_bin = [], [], [], []
-        # For each age defined.
-        for ax, isoch in enumerate(_):
+        print("Generating binary data (b_mr={:.2f})\n".format(bin_mass_ratio))
+        # All theoretical isochrones are interpolated with the same length,
+        # assign unique binarity probabilities to each star randomly.
+        unq_b_probs = np.arange(N_interp) / float(N_interp)
 
-            # Extract initial masses for this isochrone.
-            mass_ini = extra_pars[mx][ax][0]
+        mags_binar, cols_binar, probs_binar, mass_binar = [], [], [], []
+        # For each metallicity defined.
+        for mx, _ in enumerate(mags_theor):
 
-            # Calculate random secondary masses of these binary stars between
-            # bin_mass_ratio*m1 and m1, where m1 is the primary mass.
-            m2 = np.random.uniform(bin_mass_ratio * mass_ini, mass_ini)
-            # If any secondary mass falls outside of the lower isochrone's mass
-            # range, change its value to the min value.
-            m2 = np.maximum(np.min(mass_ini), m2)
+            mag_bin, col_bin, prob_bin, mass_bin = [], [], [], []
+            # For each age defined.
+            for ax, isoch in enumerate(_):
 
-            # Obtain indexes for mass values in the 'm2' array pointing to
-            # the closest mass in the theoretical isochrone.
-            bin_m_close = find_closest(mass_ini, m2)
+                # Extract initial masses for this isochrone.
+                mass_ini = extra_pars[mx][ax][0]
 
-            # Calculate unresolved binary magnitude for each filter/magnitude
-            # defined.
-            temp = []
-            for mag in isoch:
-                temp.append(mag_combine(mag, mag[bin_m_close]))
-            mag_bin.append(temp)
+                # Calculate random secondary masses of these binary stars
+                # between bin_mass_ratio*m1 and m1, where m1 is the primary
+                # mass.
+                m2 = np.random.uniform(bin_mass_ratio * mass_ini, mass_ini)
+                # If any secondary mass falls outside of the lower isochrone's
+                # mass range, change its value to the min value.
+                m2 = np.maximum(np.min(mass_ini), m2)
 
-            # Calculate unresolved color for each color defined.
-            filt_colors = mags_cols_theor[mx][ax]
+                # Obtain indexes for mass values in the 'm2' array pointing to
+                # the closest mass in the theoretical isochrone.
+                bin_m_close = find_closest(mass_ini, m2)
 
-            # Filters composing the colors, i.e.: C = (f1 - f2).
-            f1, f2 = [], []
-            # The [::2] slice indicates even positions, starting from 0.
-            for m in filt_colors[::2]:
-                f1.append(mag_combine(m, m[bin_m_close]))
-            # The [1::2] slice indicates odd positions.
-            for m in filt_colors[1::2]:
-                f2.append(mag_combine(m, m[bin_m_close]))
+                # Calculate unresolved binary magnitude for each
+                # filter/magnitude defined.
+                temp = []
+                for mag in isoch:
+                    temp.append(mag_combine(mag, mag[bin_m_close]))
+                mag_bin.append(temp)
 
-            # Create the colors affected by binarity.
-            temp = []
-            for f_1, f_2 in zip(*[f1, f2]):
-                temp.append(f_1 - f_2)
-            col_bin.append(temp)
+                # Calculate unresolved color for each color defined.
+                filt_colors = mags_cols_theor[mx][ax]
 
-            # import matplotlib.pyplot as plt
-            # print(mx, ax)
-            # print(min(isoch[0]), max(isoch[0]))
-            # plt.scatter(filt_colors[0] - filt_colors[1], isoch[0], c='g')
-            # plt.scatter(col_bin[0], mag_bin[0], c='r')
-            # plt.gca().invert_yaxis()
-            # plt.show()
+                # Filters composing the colors, i.e.: C = (f1 - f2).
+                f1, f2 = [], []
+                # The [::2] slice indicates even positions, starting from 0.
+                for m in filt_colors[::2]:
+                    f1.append(mag_combine(m, m[bin_m_close]))
+                # The [1::2] slice indicates odd positions.
+                for m in filt_colors[1::2]:
+                    f2.append(mag_combine(m, m[bin_m_close]))
 
-            # Add masses to obtain the binary system's mass.
-            mass_bin.append([mass_ini + mass_ini[bin_m_close]])
+                # Create the colors affected by binarity.
+                temp = []
+                for f_1, f_2 in zip(*[f1, f2]):
+                    temp.append(f_1 - f_2)
+                col_bin.append(temp)
 
-            # Shuffle binarity probabilities.
-            np.random.shuffle(unq_b_probs)
-            prob_bin.append([unq_b_probs])
+                # import matplotlib.pyplot as plt
+                # print(mx, ax)
+                # print(min(isoch[0]), max(isoch[0]))
+                # plt.scatter(filt_colors[0] - filt_colors[1], isoch[0], c='g')
+                # plt.scatter(col_bin[0], mag_bin[0], c='r')
+                # plt.gca().invert_yaxis()
+                # plt.show()
 
-        # Store for each metallicity value.
-        mags_binar.append(mag_bin)
-        cols_binar.append(col_bin)
-        probs_binar.append(prob_bin)
-        mass_binar.append(mass_bin)
+                # Add masses to obtain the binary system's mass.
+                mass_bin.append([mass_ini + mass_ini[bin_m_close]])
+
+                # Shuffle binarity probabilities.
+                np.random.shuffle(unq_b_probs)
+                prob_bin.append([unq_b_probs])
+
+            # Store for each metallicity value.
+            mags_binar.append(mag_bin)
+            cols_binar.append(col_bin)
+            probs_binar.append(prob_bin)
+            mass_binar.append(mass_bin)
+    else:
+        mags_binar, cols_binar, mass_binar =\
+            np.zeros(np.shape(mags_theor)),\
+            np.zeros(np.shape(mags_cols_theor)),\
+            np.array(extra_pars)[:, :, :1, :]
+        probs_binar = np.zeros(np.shape(mass_binar))
 
     return mags_binar, cols_binar, probs_binar, mass_binar
 

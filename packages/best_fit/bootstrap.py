@@ -18,8 +18,9 @@ def resample_replacement(cl_max_mag):
 
 def main(lkl_method, e_max, err_lst, completeness, fundam_params,
          cl_max_mag, max_mag_syn, theor_tracks, R_V, ext_coefs, st_dist_mass,
-         N_fc, N_pop, N_gen, fit_diff, cross_prob, cross_sel, mut_prob, N_el,
-         N_ei, N_es, lkl_binning, lkl_weight, best_fit_algor, N_b):
+         N_fc, err_rnd, N_pop, N_gen, fit_diff, cross_prob, cross_sel,
+         mut_prob, N_el, N_ei, N_es, lkl_binning, lkl_weight, best_fit_algor,
+         N_b):
     '''
     Bootstrap process, runs the selected algorithm a number of times each
     time generating a new observed cluster representation through resampling
@@ -48,8 +49,9 @@ def main(lkl_method, e_max, err_lst, completeness, fundam_params,
             params_boot.append(genetic_algorithm.main(
                 lkl_method, e_max, err_lst, completeness, max_mag_syn,
                 fundam_params, obs_cl, theor_tracks, R_V, ext_coefs,
-                st_dist_mass, N_fc, N_pop, N_gen, fit_diff, cross_prob,
-                cross_sel, mut_prob, N_el, N_ei, N_es, flag_print_perc)[0])
+                st_dist_mass, N_fc, err_rnd, N_pop, N_gen, fit_diff,
+                cross_prob, cross_sel, mut_prob, N_el, N_ei, N_es,
+                flag_print_perc)[0])
 
         update_progress.updt(N_b, i + 1)
 
