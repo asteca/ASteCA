@@ -144,8 +144,8 @@ def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning, lkl_weight,
     else:
         # Pass empty lists to make_plots.
         print('Skip parameters fitting process.')
-        cl_max_mag, max_mag_syn, ext_coefs, st_dist_mass, N_fc,\
-            isoch_fit_params, isoch_fit_errors = [], -1., [], {}, [],\
+        cl_max_mag, max_mag_syn, ext_coefs, st_dist_mass, N_fc, err_rnd,\
+            isoch_fit_params, isoch_fit_errors = [], -1., [], {}, [], [],\
             [[np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]],\
             [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]
 
