@@ -164,7 +164,7 @@ def selection(generation, breed_prob):
 
 def evaluation(lkl_method, e_max, err_lst, completeness, max_mag_syn,
                fundam_params, obs_clust, theor_tracks, R_V, ext_coefs,
-               st_dist_mass, N_fc, p_lst, model_done):
+               st_dist_mass, N_fc, err_rnd, p_lst, model_done):
     '''
     Evaluate each model in the objective function to obtain the fitness of
     each one.
@@ -182,7 +182,7 @@ def evaluation(lkl_method, e_max, err_lst, completeness, max_mag_syn,
         # Generate synthetic cluster.
         synth_clust = synth_cluster.main(
             e_max, err_lst, completeness, max_mag_syn, st_dist_mass, isochrone,
-            R_V, ext_coefs, N_fc, model)
+            R_V, ext_coefs, N_fc, err_rnd, model)
 
         # Call likelihood function for this model.
         # with timeblock(" Likelihood"):
@@ -279,9 +279,9 @@ def num_binary_digits(fundam_params):
 
 
 def main(lkl_method, e_max, err_lst, completeness, max_mag_syn, fundam_params,
-         obs_clust, theor_tracks, R_V, ext_coefs, st_dist_mass, N_fc, N_pop,
-         N_gen, fit_diff, cross_prob, cross_sel, mut_prob, N_el, N_ei, N_es,
-         flag_print_perc):
+         obs_clust, theor_tracks, R_V, ext_coefs, st_dist_mass, N_fc, err_rnd,
+         N_pop, N_gen, fit_diff, cross_prob, cross_sel, mut_prob, N_el, N_ei,
+         N_es, flag_print_perc):
     '''
     Genetic algorithm. Finds the best fit model-observation.
     '''
@@ -310,8 +310,8 @@ def main(lkl_method, e_max, err_lst, completeness, max_mag_syn, fundam_params,
     # Evaluate initial random solutions in the objective function.
     generation, lkl, model_done = evaluation(
         lkl_method, e_max, err_lst, completeness, max_mag_syn, fundam_params,
-        obs_clust, theor_tracks, R_V, ext_coefs, st_dist_mass, N_fc, p_lst_r,
-        model_done)
+        obs_clust, theor_tracks, R_V, ext_coefs, st_dist_mass, N_fc, err_rnd,
+        p_lst_r, model_done)
 
     # Store best solution for passing along in the 'Elitism' block.
     best_sol = generation[:N_el]
@@ -371,7 +371,7 @@ def main(lkl_method, e_max, err_lst, completeness, max_mag_syn, fundam_params,
         generation, lkl, model_done = evaluation(
             lkl_method, e_max, err_lst, completeness, max_mag_syn,
             fundam_params, obs_clust, theor_tracks, R_V, ext_coefs,
-            st_dist_mass, N_fc, p_lst_e, model_done)
+            st_dist_mass, N_fc, err_rnd, p_lst_e, model_done)
 
         # *** Extinction/Immigration ***
         # If the best solution has remained unchanged for N_ei

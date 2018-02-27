@@ -62,17 +62,6 @@ def indxRem(di, rang_indx):
     return np.asarray(out)
 
 
-def remStars(isoch_binar, d_i):
-    """
-    Remove all stars pointed to by 'd_i' from all the sub-arrays in
-    'isoch_binar'.
-    """
-    # Remove those selected indexes from *all* sub-lists.
-    isoch_compl = np.delete(isoch_binar, d_i, axis=1)
-
-    return isoch_compl
-
-
 def main(isoch_binar, completeness):
     """
     Remove a number of stars according to the percentages of star loss found in
@@ -108,8 +97,10 @@ def main(isoch_binar, completeness):
         # should be removed from the sub-lists.
         d_i = indxRem(di, rang_indx)
 
-        # Remove stars and update list of binary systems indexes.
-        isoch_compl = remStars(isoch_binar, d_i)
+        # Remove stars pointed to by 'd_i' from *all* the sub-arrays in
+        # 'isoch_binar'.
+        isoch_compl = np.delete(isoch_binar, d_i, axis=1)
+
     else:
         isoch_compl = isoch_binar
 

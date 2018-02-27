@@ -9,7 +9,7 @@ import add_errors
 
 
 def main(err_max, err_lst, completeness, max_mag_syn, st_dist_mass,
-         isochrone, R_V, ext_coefs, N_fc, synth_cl_params):
+         isochrone, R_V, ext_coefs, N_fc, err_rnd, synth_cl_params):
     """
     Takes an isochrone and returns a synthetic cluster created according to
     a certain mass distribution.
@@ -115,7 +115,7 @@ def main(err_max, err_lst, completeness, max_mag_syn, st_dist_mass,
                 # s = time.clock()
                 # Get errors according to errors distribution.
                 synth_clust = add_errors.main(
-                    isoch_compl, err_lst, err_max, m_ini, N_fc)
+                    isoch_compl, err_lst, err_max, m_ini, err_rnd)
                 # t7 = time.clock() - s
 
     ################################################################
@@ -162,6 +162,8 @@ if __name__ == "__main__":
     m_sample_flag = False
     st_dist_mass = imf.main('kroupa_2002', 150., m_sample_flag, masses)
 
+    err_rnd = np.random.normal(0, 1, 1000000)
+
     Nm, Na = np.shape(theor_tracks)[0], np.shape(theor_tracks)[1]
     # mi, ai = 15, 30
     # isochrone = theor_tracks[mi][ai]
@@ -181,7 +183,7 @@ if __name__ == "__main__":
 
         times = times + main(
             err_max, err_lst, completeness, max_mag_syn, st_dist_mass,
-            isochrone, R_V, ext_coefs, N_fc, synth_cl_params)
+            isochrone, R_V, ext_coefs, N_fc, err_rnd, synth_cl_params)
 
     times_perc = np.round(100. * times / times.sum(), 1)
     print("{:2.0f}-{:6.0f} {:7.2f}    {}".format(
