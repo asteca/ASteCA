@@ -50,8 +50,8 @@ differing\n# >{}% with the best value assigned for said parameter(s).\n\
 
 
 def plot_top_tiers(pd, top_tiers_flo, output_subdir, clust_name, mags,
-                   cols, isoch_fit_params, ext_coefs, N_fc, err_max, err_lst,
-                   completeness, max_mag_syn, st_dist_mass):
+                   cols, isoch_fit_params, ext_coefs, N_fc, err_rnd, err_max,
+                   err_lst, completeness, max_mag_syn, st_dist_mass):
     '''
     Plot all top tiers.
     '''
@@ -69,7 +69,7 @@ def plot_top_tiers(pd, top_tiers_flo, output_subdir, clust_name, mags,
         shift_isoch, synth_clst = synth_cl_plot.main(
             err_max, pd['fundam_params'], pd['theor_tracks'],
             pd['plot_isoch_data'], isoch_fit_params, err_lst, completeness,
-            max_mag_syn, st_dist_mass, pd['R_V'], ext_coefs, N_fc)
+            max_mag_syn, st_dist_mass, pd['R_V'], ext_coefs, N_fc, err_rnd)
 
         # TODO using first magnitude and color defined
         first_col, first_mag = synth_clst[0][0][1], synth_clst[0][0][0]
@@ -93,8 +93,8 @@ def plot_top_tiers(pd, top_tiers_flo, output_subdir, clust_name, mags,
     plt.close("all")
 
 
-def main(npd, cld, pd, err_max, err_lst, ext_coefs, N_fc, completeness,
-         max_mag_syn, st_dist_mass, isoch_fit_params, **kwargs):
+def main(npd, cld, pd, err_max, err_lst, ext_coefs, N_fc, err_rnd,
+         completeness, max_mag_syn, st_dist_mass, isoch_fit_params, **kwargs):
     '''
     Obtain top tier models, produce data file and output image.
     '''
@@ -153,8 +153,8 @@ def main(npd, cld, pd, err_max, err_lst, ext_coefs, N_fc, completeness,
                     plot_top_tiers(
                         pd, top_tiers_flo, output_subdir, clust_name,
                         cld['mags'], cld['cols'], isoch_fit_params, ext_coefs,
-                        N_fc, err_max, err_lst, completeness, max_mag_syn,
-                        st_dist_mass)
+                        N_fc, err_rnd, err_max, err_lst, completeness,
+                        max_mag_syn, st_dist_mass)
                     print("<<Plots for D3 block created>>")
                 except Exception:
                     import traceback
