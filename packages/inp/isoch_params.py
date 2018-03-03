@@ -29,7 +29,7 @@ def arrange_filters(isoch_list, all_syst_filters, filters, colors):
         for age in met:
             a = []
             for i in fi:
-                a.append(age[i])
+                a.append(np.array(age[i]))
             m.append(a)
         mags_theor.append(m)
 
