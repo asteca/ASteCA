@@ -32,23 +32,18 @@ def main(err_max, err_lst, completeness, max_mag_syn, st_dist_mass,
     extra_pars = [l1, l2, ..., l6]
     """
 
-    # import pickle
-    # with open('synth_clust.pickle', 'wb') as f:
-    #         pickle.dump(
-    #             (err_lst, completeness, max_mag_syn, ext_coefs, N_fc), f)
-
     # Unpack synthetic cluster parameters. The first two elements are the
     # metallicity and the age, which are already incorporated in the selected
     # isochrone.
     e, d, M_total, bin_frac = synth_cl_params[2:]
 
-    # import time
-    # t1, t2, t3, t4, t5, t6, t7 = 0., 0., 0., 0., 0., 0., 0.
+    import time
+    t1, t2, t3, t4, t5, t6, t7 = 0., 0., 0., 0., 0., 0., 0.
 
-    # s = time.clock()
+    s = time.clock()
     # Move theoretical isochrone using the values 'e' and 'd'.
-    isoch_moved = move_isochrone.main(isochrone, e, d, R_V, ext_coefs, N_fc)
-    # t1 = time.clock() - s
+    isoch_moved = move_isochrone.main(isochrone, e, d, R_V, ext_coefs)
+    t1 = time.clock() - s
 
     ##############################################################
     # # To generate a synthetic cluster with the full isochrone length,
@@ -60,30 +55,30 @@ def main(err_max, err_lst, completeness, max_mag_syn, st_dist_mass,
     # max_mag = max(isoch_moved[1]) + 0.5
     ##############################################################
 
-    # s = time.clock()
+    s = time.clock()
     # Get isochrone minus those stars beyond the magnitude cut.
     isoch_cut = cut_max_mag.main(isoch_moved, max_mag_syn)
-    # t2 = time.clock() - s
+    t2 = time.clock() - s
 
     # Empty list to pass if at some point no stars are left.
     synth_clust = []
     # Check for an empty array.
     if isoch_cut.any():
 
-        # s = time.clock()
+        s = time.clock()
         # Mass distribution to produce a synthetic cluster based on
         # a given IMF and total mass.
         mass_dist = mass_distribution.main(st_dist_mass, M_total)
-        # t3 = time.clock() - s
+        t3 = time.clock() - s
 
-        # s = time.clock()
+        s = time.clock()
         # Index of m_ini (theoretical initial mass), stored in the theoretical
         # isochrones.
         m_ini = 2 * N_fc[0] + 2 * N_fc[1] + 2
         # Interpolate masses in mass_dist into the isochrone rejecting those
         # masses that fall outside of the isochrone's mass range.
         isoch_mass = mass_interp.main(isoch_cut, mass_dist, m_ini)
-        # t4 = time.clock() - s
+        t4 = time.clock() - s
 
         if isoch_mass.any():
 
@@ -94,15 +89,15 @@ def main(err_max, err_lst, completeness, max_mag_syn, st_dist_mass,
             # isoch_mass0 = deepcopy(isoch_mass)
             ##############################################################
 
-            # s = time.clock()
+            s = time.clock()
             # Assignment of binarity.
             isoch_binar = binarity.main(isoch_mass, bin_frac, m_ini, N_fc)
-            # t5 = time.clock() - s
+            t5 = time.clock() - s
 
-            # s = time.clock()
+            s = time.clock()
             # Completeness limit removal of stars.
             isoch_compl = completeness_rm.main(isoch_binar, completeness)
-            # t6 = time.clock() - s
+            t6 = time.clock() - s
 
             ##############################################################
             # # Use when producing synthetic clusters from isochrones.
@@ -112,11 +107,11 @@ def main(err_max, err_lst, completeness, max_mag_syn, st_dist_mass,
 
             if isoch_compl.any():
 
-                # s = time.clock()
+                s = time.clock()
                 # Get errors according to errors distribution.
                 synth_clust = add_errors.main(
                     isoch_compl, err_lst, err_max, m_ini, err_rnd)
-                # t7 = time.clock() - s
+                t7 = time.clock() - s
 
     ################################################################
     # # Plot synthetic cluster.
@@ -132,8 +127,8 @@ def main(err_max, err_lst, completeness, max_mag_syn, st_dist_mass,
     #       binar_idx, synth_clust, path)
     ################################################################
 
-    # return np.array([t1, t2, t3, t4, t5, t6, t7])
-    return synth_clust
+    return np.array([t1, t2, t3, t4, t5, t6, t7])
+    # return synth_clust
 
 
 if __name__ == "__main__":
@@ -144,14 +139,51 @@ if __name__ == "__main__":
     import sys
     mpath = sys.path[0].replace('synth_clust', '').replace('packages/', '')
 
+    # Data for RUP42 file (2.2 Mb) with BV, UB colors read
     print("Reading data")
+    bin_mr = .7
     with open(mpath + 'theor_tracks.pickle', 'rb') as f:
         theor_tracks = pickle.load(f)
-    with open(mpath + 'synth_clust.pickle', 'rb') as f:
-        err_lst, completeness, max_mag_syn, ext_coefs, N_fc = pickle.load(f)
-    print("Data read.")
+    err_max = .3
+    err_lst = [
+        np.array([4.82905373e-17, 1.60540044e+00, 3.04244535e-02]),
+        np.array([2.91192261e-10, 8.99472478e-01, 4.53498125e-02]),
+        np.array([5.83560740e-06, 4.79509209e-01, 3.82828812e-02])]
+    completeness = [
+        np.array([8.695, 8.96248, 9.22996, 9.49744, 9.76492, 10.0324,
+                  10.29988, 10.56736, 10.83484, 11.10232, 11.3698, 11.63728,
+                  11.90476, 12.17224, 12.43972, 12.7072, 12.97468, 13.24216,
+                  13.50964, 13.77712, 14.0446, 14.31208, 14.57956, 14.84704,
+                  15.11452, 15.382, 15.64948, 15.91696, 16.18444, 16.45192,
+                  16.7194, 16.98688, 17.25436, 17.52184, 17.78932, 18.0568,
+                  18.32428, 18.59176, 18.85924, 19.12672, 19.3942, 19.66168,
+                  19.92916, 20.19664, 20.46412, 20.7316, 20.99908, 21.26656,
+                  21.53404, 21.80152, 22.069]), 37,
+        np.array([1., 0.98684211, 0.90131579, 0.82017544, 0.63048246,
+                  0.36074561, 0.18311404, 0.10087719, 0.04166667, 0.01644737,
+                  0.01754386, 0.00438596, 0.00109649])]
+    max_mag_syn = 20.99
+    # ext_coefs = [
+    #     (0.99974902186052628, -0.0046292182005786527),
+    #     [(0.9999253931841896, 0.94553192328962365),
+    #      (0.99974902186052628, -0.0046292182005786527)],
+    #     [(0.96420188342499813, 1.784213363585738),
+    #      (0.9999253931841896, 0.94553192328962365)]]
 
-    err_max, bin_mr, R_V = .3, .7, 3.1
+    ext_coefs = [
+        np.array([[9.99749022e-01], [1.76371324e-04], [-3.57235098e-02],
+                  [9.99749022e-01], [1.76371324e-04], [-3.57235098e-02],
+                  [0.00000000e+00], [0.00000000e+00], [0.00000000e+00],
+                  [0.00000000e+00], [0.00000000e+00], [0.00000000e+00],
+                  [0.00000000e+00], [0.00000000e+00]]),
+        np.array([[-0.00462922], [0.95016114], [0.83868144], [-0.00462922],
+                  [0.95016114], [0.83868144], [0.], [0.], [0.], [0.], [0.],
+                  [0.], [0.], [0.]]),
+        np.array([[1.], [0.], [0.], [1.], [0.], [0.], [0.], [0.], [0.], [0.],
+                 [0.], [0.], [0.], [0.]])]
+    N_fc = [1, 2]
+    R_V = 3.1
+    print("Data read.")
 
     M_max = 1000.
 
@@ -186,7 +218,5 @@ if __name__ == "__main__":
             isochrone, R_V, ext_coefs, N_fc, err_rnd, synth_cl_params)
 
     times_perc = np.round(100. * times / times.sum(), 1)
-    print("{:2.0f}-{:6.0f} {:7.2f}    {}".format(
+    print("    {:2.0f}-{:6.0f} {:7.2f}    {}".format(
         M_min, M_max, times.sum(), "    ".join(map(str, times_perc))))
-
-    print(times.sum())

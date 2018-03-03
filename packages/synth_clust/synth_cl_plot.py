@@ -24,7 +24,8 @@ def main(e_max, fundam_params, theor_tracks, plot_isoch_data, isoch_fit_params,
 
     # Generate shifted best fit isochrone.
     isochrone = plot_isoch_data[m_i][a_i]
-    shift_isoch = move_isochrone.main(isochrone, e, d, R_V, ext_coefs, N_fc)
+    shift_isoch = move_isochrone.isochMv(isochrone, e, d, R_V, ext_coefs, N_fc)
+    # shift_isoch = move_isochrone.main(isochrone, e, d, R_V, ext_coefs, N_fc)
 
     # Generate best fit synthetic cluster.
     isochrone = theor_tracks[m_i][a_i]

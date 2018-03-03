@@ -58,9 +58,9 @@ def ccm_model(mw):
             "the CCM model limit (10 [1/micron]).".format(mw))
 
     # ccm_coef = a + b / Rv
-    ccm_coefs = [a, b]
+    # ccm_coefs = [a, b]
 
-    return ccm_coefs
+    return a, b
 
 
 def main(cmd_systs, filters, colors):
@@ -68,7 +68,35 @@ def main(cmd_systs, filters, colors):
     Obtain extinction coefficients for all the observed filters and colors,
     in the order in which they are stored in theor_tracks.
     """
-    ext_coefs = []
+    # # OLD
+    # ext_coefs = []
+
+    # # For filters.
+    # for f in filters:
+    #     # f[0]: photometric system; f[1]: name of filter
+    #     # Index of filter
+    #     fi = cmd_systs[f[0]][1].index(f[1])
+    #     # Effective wavelength in Armstrong.
+    #     eff_wave = cmd_systs[f[0]][2][fi]
+    #     # CCM coefficient for this filter. Use the effective wavelength in
+    #     # inverse microns.
+    #     ext_coefs.append(ccm_model(10000. / eff_wave))
+
+    # # For colors.
+    # for c in colors:
+    #     # c[0]: photometric system; c[1]: color index
+    #     # Index of filters.
+    #     ci1 = cmd_systs[c[0]][1].index(c[1].split(',')[0])
+    #     ci2 = cmd_systs[c[0]][1].index(c[1].split(',')[1])
+    #     # Effective wavelength in Armstrong.
+    #     eff_wave1 = cmd_systs[c[0]][2][ci1]
+    #     eff_wave2 = cmd_systs[c[0]][2][ci2]
+    #     # CCM coefficient for this filter. Use the effective wavelength in
+    #     # inverse microns.
+    #     ext_coefs.append([ccm_model(10000. / eff_wave1),
+    #                       ccm_model(10000. / eff_wave2)])
+
+    a_ext_coefs, b_ext_coefs = [], []
 
     # For filters.
     for f in filters:
@@ -79,7 +107,9 @@ def main(cmd_systs, filters, colors):
         eff_wave = cmd_systs[f[0]][2][fi]
         # CCM coefficient for this filter. Use the effective wavelength in
         # inverse microns.
-        ext_coefs.append(ccm_model(10000. / eff_wave))
+        a, b = ccm_model(10000. / eff_wave)
+        a_ext_coefs.append(a)
+        b_ext_coefs.append(b)
 
     # For colors.
     for c in colors:
@@ -90,9 +120,20 @@ def main(cmd_systs, filters, colors):
         # Effective wavelength in Armstrong.
         eff_wave1 = cmd_systs[c[0]][2][ci1]
         eff_wave2 = cmd_systs[c[0]][2][ci2]
-        # CCM coefficient for this filter. Use the effective wavelength in
-        # inverse microns.
-        ext_coefs.append([ccm_model(10000. / eff_wave1),
-                          ccm_model(10000. / eff_wave2)])
+        # CCM coefficients for this color.
+        a1, b1 = ccm_model(10000. / eff_wave1)
+        a2, b2 = ccm_model(10000. / eff_wave2)
+        a_ext_coefs.append(a1 - a2)
+        b_ext_coefs.append(b1 - b2)
+
+    # Double for binary mags and colors.
+    a_ext_coefs = a_ext_coefs + a_ext_coefs + [0.] * 8  # TODO hardcoded
+    b_ext_coefs = b_ext_coefs + b_ext_coefs + [0.] * 8
+
+    dm_arr = np.zeros(len(a_ext_coefs))
+    dm_arr[0], dm_arr[len(filters) + len(colors)] = 1., 1.
+
+    ext_coefs = [np.vstack(np.array(_)) for _ in [
+                 a_ext_coefs, b_ext_coefs, dm_arr]]
 
     return ext_coefs
