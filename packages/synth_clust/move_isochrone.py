@@ -4,7 +4,9 @@ import numpy as np
 
 def isochMv(isochrone, e, d, R_V, ext_coefs, N_fc):
     """
-    Obtain values used to move the magnitudes and colors.
+    Move isochrone. Similar to the manin() function except this one only
+    acts on the first sum(N_fc) sub-arrays (since the remaining extra
+    parameters are not stored for the isochrone plotting process)
     """
     Av = R_V * e
     mv = (ext_coefs[0] + ext_coefs[1] / R_V) * Av + ext_coefs[2] * d
@@ -15,73 +17,6 @@ def isochMv(isochrone, e, d, R_V, ext_coefs, N_fc):
 
 def main(isochrone, e, d, R_V, ext_coefs):
     """
-    Obtain values used to move the magnitudes and colors.
-    """
-
-    Av = R_V * e
-    # Nf, Nc = N_fc
-
-    # Method 1
-    # # Magnitudes
-    # # mx = Mx + dist_mod + cx * Av
-    # # A_mv = dist_mod + cx * Av
-    # #
-    # A_mv = d + (ext_coefs[0][:, 0] + ext_coefs[0][:, 1] / R_V) * Av
-
-    # # Colors
-    # # (m1 - m2)o = (m1 - m2)i + E(m1 - m2)
-    # # E(m1 - m2) = A_m1 - A_m2
-    # # A_x = ef * Av ; ef = a + b/R_V (CCM model)
-    # # E(m1 - m2) = (ef_m1 - ef_m2) * Av
-    # # E(m1 - m2) = (ef_m1 - ef_m2) * R_V * E(B-V)
-    # #
-    # E_mv = ((ext_coefs[1][:, 0][:, 0] + ext_coefs[1][:, 0][:, 1] / R_V) -
-    #         (ext_coefs[1][:, 1][:, 0] + ext_coefs[1][:, 1][:, 1] / R_V)) * Av
-
-    # # Store two times: once for the original magnitudes and colors, and once
-    # # for the binary values of these magnitudes and colors.
-    # A_E_mv = np.vstack(np.hstack([A_mv, E_mv, A_mv, E_mv]))
-
-    # iso_moved = np.append(
-    #     isochrone[:len(A_E_mv)] + A_E_mv, isochrone[len(A_E_mv):], axis=0)
-
-    # Method 2
-    # a1 = np.vstack(d + (ext_coefs[0][:, 0] + ext_coefs[0][:, 1] / R_V) * Av)
-    # a2 = np.vstack(
-    #     ((ext_coefs[1][:, 0][:, 0] + ext_coefs[1][:, 0][:, 1] / R_V) -
-    #      (ext_coefs[1][:, 1][:, 0] + ext_coefs[1][:, 1][:, 1] / R_V)) * Av)
-
-    # isochrone[:Nf] = isochrone[:Nf] + a1
-    # isochrone[Nf:(Nf + Nc)] = isochrone[Nf:(Nf + Nc)] + a2
-    # isochrone[(Nf + Nc):(Nf + Nc + Nf)] =\
-    #     isochrone[(Nf + Nc):(Nf + Nc + Nf)] + a1
-    # isochrone[(Nf + Nc + Nf):(Nf + Nc + Nf + Nc)] =\
-    #     isochrone[(Nf + Nc + Nf):(Nf + Nc + Nf + Nc)] + a2
-
-    # # Method 3
-    # a1 = d + (ext_coefs[0][:, 0] + ext_coefs[0][:, 1] / R_V) * Av
-    # a2 = ((ext_coefs[1][:, 0][:, 0] + ext_coefs[1][:, 0][:, 1] / R_V) -
-    #       (ext_coefs[1][:, 1][:, 0] + ext_coefs[1][:, 1][:, 1] / R_V)) * Av
-
-    # a3 = np.concatenate((a1, a2, a1, a2))[:, None]
-
-    # # This one works
-    # # iso_moved = list(isochrone[:2 * sum(N_fc)] + a3)
-    # # iso_moved = np.array(iso_moved + list(isochrone[(2 * sum(N_fc)):]))
-
-    # # This one does not
-    # isochrone[:2 * sum(N_fc)] = isochrone[:2 * sum(N_fc)] + a3
-    # iso_moved = isochrone
-
-    # Method 4
-    mv = (ext_coefs[0] + ext_coefs[1] / R_V) * Av + ext_coefs[2] * d
-    iso_moved = isochrone + mv
-
-    return iso_moved
-
-
-def main_old(isochrone, e, d, R_V, ext_coefs, N_fc):
-    '''
     Receives an isochrone of a given age and metallicity and modifies
     its color and magnitude values according to given values for the extinction
     E(B-V) (e) and distance modulus (d).
@@ -95,85 +30,41 @@ def main_old(isochrone, e, d, R_V, ext_coefs, N_fc):
                  f1b, .., fNfb, c1b, c2b, .., cNcb, bp, mb, m_ini,.., m_bol
     ]
 
-                 |----Nf----|  |-----Nc-----|
-    ext_coefs = [cf1, .., cfNf, cc1, .., ccNc]
+    ext_coefs = [a_coefs, b_coefs, dist_coeff]
     where:
-    cfX = [a, b]  ; ccX = [[a1, b1], [a2, b2]]
-    and:
-    ccm_coef = a + b / Rv = ext_coefs[0] + ext_coefs[1] / Rv
-    '''
-    Av = R_V * e
-    Nf, Nc = N_fc
-    iso_moved = []
-    # Move filters.
-    for fi, mag in enumerate(isochrone[:Nf]):
-        # mx = Mx + dist_mod + Ax
-        # Ax = cx * Av
-        #
-        Ax = (ext_coefs[fi][0] + ext_coefs[fi][1] / R_V) * Av
-        iso_moved.append(np.array(mag) + d + Ax)
+               |----Nf----|    |----Nc----|   |----Nf----|   |----Nc----|
+    a_coefs = [af1, .., afNf, ac1, .., acNc, af1, .., afNf, ac1, .., acNc
+               |--------N_extra_pars-------|
+               0., 0., 0., 0., 0., 0., 0., 0.]
+    with: N_extra_pars is the number of parameters for each isochrone minus
+          the magnitudes and colors times two (to account fot the binarity
+          duplication)
+               |----Nf----|    |----Nc----|   |----Nf----|   |----Nc----|
+    b_coefs = [bf1, .., bfNf, bc1, .., bcNc, bf1, .., bfNf, bc1, .., bcNc
+               |--------N_extra_pars-------|
+               0., 0., 0., 0., 0., 0., 0., 0.]
+                      |-(Nf-1)+Nc-|       |-(Nf-1)+Nc+N_extra_pars-|
+    dist_coeff = [1., 0., ......, 0., 1., 0.,0., ................, 0.]
 
-    # Move colors.
-    for ci, col in enumerate(isochrone[Nf:(Nf + Nc)]):
-        # (m1 - m2)o = (m1 - m2)i + E(m1 - m2)
-        # E(m1 - m2) = A_m1 - A_m2
-        # A_x = ef * Av ; ef = a + b/R_V (CCM model)
-        # E(m1 - m2) = (ef_m1 - ef_m2) * Av
-        # E(m1 - m2) = (ef_m1 - ef_m2) * R_V * E(B-V)
-        #
-        Ex = ((ext_coefs[Nf + ci][0][0] + ext_coefs[Nf + ci][0][1] / R_V) -
-              (ext_coefs[Nf + ci][1][0] + ext_coefs[Nf + ci][1][1] / R_V)) * Av
-        iso_moved.append(np.array(col) + Ex)
+    such that:
+    ef = a + b / Rv
 
-    # Move filters with binary data.
-    for fi, mag in enumerate(isochrone[(Nf + Nc):(Nf + Nc + Nf)]):
-        Ax = (ext_coefs[fi][0] + ext_coefs[fi][1] / R_V) * Av
-        iso_moved.append(np.array(mag) + d + Ax)
+    Ax = ef * Av
+    m_obs = M_int + Ax + dist_mod
+    m_obs = M_int + ef * R_V * E(B-V) + dist_mod
 
-    # Move colors with binary data.
-    for ci, col in enumerate(isochrone[(Nf + Nc + Nf):(Nf + Nc + Nf + Nc)]):
-        Ex = ((ext_coefs[Nf + ci][0][0] + ext_coefs[Nf + ci][0][1] / R_V) -
-              (ext_coefs[Nf + ci][1][0] + ext_coefs[Nf + ci][1][1] / R_V)) * Av
-        iso_moved.append(np.array(col) + Ex)
+    E(m1 - m2) = A_m1 - A_m2
+               = (ef_m1 - ef_m2) * Av
+               = [(a1 + b1/Rv) - (a2 + b2/Rv)] * Av
+               = [(a1 - a2) + (b1 - b2)/Rv] * Av
+               = (a12 + b12/Rv) * Av
+               = (a12 + b12/Rv) * R_V * E(B-V)
+    (m1 - m2)_obs = (m1 - m2)_int + E(m1 - m2)
+    (m1 - m2)_obs = (m1 - m2)_int + (a12 + b12/Rv) * R_V * E(B-V)
+    """
 
-    # Append the extra parameters, not affected by distance/reddening.
-    iso_moved = iso_moved + list(isochrone[(2 * Nf + 2 * Nc):])
+    # Av = R_V * e
+    mv = (ext_coefs[0] + ext_coefs[1] / R_V) * R_V * e + ext_coefs[2] * d
+    iso_moved = isochrone + mv
 
     return iso_moved
-
-
-if __name__ == '__main__':
-    import time as t
-    import sys
-    import pickle
-    mpath = sys.path[0].replace('synth_clust', '').replace('packages/', '')
-    with open(mpath + 'moved.pickle', 'rb') as f:
-        isochrone, e, d, R_V, ext_coefs, N_fc = pickle.load(f)
-
-    ext_coefs_new = [
-        np.array([[9.99749022e-01], [-3.57235098e-02], [1.76371324e-04],
-                  [9.99749022e-01], [-3.57235098e-02], [1.76371324e-04],
-                  [0.00000000e+00], [0.00000000e+00], [0.00000000e+00],
-                  [0.00000000e+00], [0.00000000e+00], [0.00000000e+00],
-                  [0.00000000e+00], [0.00000000e+00]]),
-        np.array([[-0.00462922], [0.83868144], [0.95016114], [-0.00462922],
-                  [0.83868144], [0.95016114], [0.], [0.], [0.], [0.], [0.],
-                  [0.], [0.], [0.]]),
-        np.array([[1.], [0.], [0.], [1.], [0.], [0.], [0.], [0.], [0.], [0.],
-                 [0.], [0.], [0.], [0.]])]
-
-    N = 100000
-
-    s = t.clock()
-    for _ in range(N):
-        iso_moved = main(isochrone, e, d, R_V, ext_coefs, N_fc)
-    t1 = t.clock() - s
-
-    s = t.clock()
-    for _ in range(N):
-        iso_moved2 = main_n(isochrone, e, d, R_V, ext_coefs_new)
-    t2 = t.clock() - s
-
-    print(t1, t2)
-    print(np.all([np.allclose(
-        x1, x2) for x1, x2 in zip(*[iso_moved, iso_moved2])]))

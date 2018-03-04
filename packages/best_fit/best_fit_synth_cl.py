@@ -87,7 +87,10 @@ def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning, lkl_weight,
         # DELETE
 
         # Obtain extinction coefficients.
-        ext_coefs = extin_coefs.main(cmd_systs, filters, colors)
+        # This parameter determines the total number of sub-arrays for each
+        # isochrone stored.
+        ext_shape = len(theor_tracks[0][0])
+        ext_coefs = extin_coefs.main(cmd_systs, filters, colors, ext_shape)
 
         # Obtain mass distribution using the selected IMF. We run it once
         # because the array only depends on the IMF selected.
