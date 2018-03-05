@@ -61,6 +61,6 @@ def main(isochrone, e, d, R_V, ext_coefs, N_fc):
         iso_moved.append(np.array(col) + Ex)
 
     # Append the extra parameters, not affected by distance/reddening.
-    iso_moved = iso_moved + list(isochrone[(2 * Nf + 2 * Nc):])
+    iso_moved = np.array(iso_moved + list(isochrone[(2 * Nf + 2 * Nc):]))
 
     return iso_moved
