@@ -9,7 +9,7 @@ import add_errors
 
 
 def main(err_max, err_lst, completeness, max_mag_syn, st_dist_mass,
-         isochrone, R_V, ext_coefs, N_fc, err_rnd, synth_cl_params):
+         isochrone, R_V, ext_coefs, N_fc, err_rnd, synth_cl_params, mv_m):
     """
     Takes an isochrone and returns a synthetic cluster created according to
     a certain mass distribution.
@@ -37,13 +37,24 @@ def main(err_max, err_lst, completeness, max_mag_syn, st_dist_mass,
     # isochrone.
     e, d, M_total, bin_frac = synth_cl_params[2:]
 
-    # import time
-    # t1, t2, t3, t4, t5, t6, t7 = 0., 0., 0., 0., 0., 0., 0.
+    import time
+    t1, t2, t3, t4, t5, t6, t7 = 0., 0., 0., 0., 0., 0., 0.
 
-    # s = time.clock()
-    # Move theoretical isochrone using the values 'e' and 'd'.
-    isoch_moved = move_isochrone.main(isochrone, e, d, R_V, ext_coefs)
-    # t1 = time.clock() - s
+    if mv_m == '1':
+        s = time.clock()
+        # Move theoretical isochrone using the values 'e' and 'd'.
+        isoch_moved = move_isochrone.main_old(isochrone, e, d, R_V, ext_coefs, N_fc)
+        t1 = time.clock() - s
+    elif mv_m == '2':
+        s = time.clock()
+        # Move theoretical isochrone using the values 'e' and 'd'.
+        isoch_moved = move_isochrone.main_n1(isochrone, e, d, R_V, ext_coefs)
+        t1 = time.clock() - s
+    elif mv_m == '3':
+        s = time.clock()
+        # Move theoretical isochrone using the values 'e' and 'd'.
+        isoch_moved = move_isochrone.main_n2(isochrone, e, d, R_V, ext_coefs)
+        t1 = time.clock() - s
 
     ##############################################################
     # # To generate a synthetic cluster with the full isochrone length,
@@ -55,30 +66,30 @@ def main(err_max, err_lst, completeness, max_mag_syn, st_dist_mass,
     # max_mag = max(isoch_moved[1]) + 0.5
     ##############################################################
 
-    # s = time.clock()
+    s = time.clock()
     # Get isochrone minus those stars beyond the magnitude cut.
     isoch_cut = cut_max_mag.main(isoch_moved, max_mag_syn)
-    # t2 = time.clock() - s
+    t2 = time.clock() - s
 
     # Empty list to pass if at some point no stars are left.
     synth_clust = []
     # Check for an empty array.
     if isoch_cut.any():
 
-        # s = time.clock()
+        s = time.clock()
         # Mass distribution to produce a synthetic cluster based on
         # a given IMF and total mass.
         mass_dist = mass_distribution.main(st_dist_mass, M_total)
-        # t3 = time.clock() - s
+        t3 = time.clock() - s
 
-        # s = time.clock()
+        s = time.clock()
         # Index of m_ini (theoretical initial mass), stored in the theoretical
         # isochrones.
         m_ini = 2 * N_fc[0] + 2 * N_fc[1] + 2
         # Interpolate masses in mass_dist into the isochrone rejecting those
         # masses that fall outside of the isochrone's mass range.
         isoch_mass = mass_interp.main(isoch_cut, mass_dist, m_ini)
-        # t4 = time.clock() - s
+        t4 = time.clock() - s
 
         if isoch_mass.any():
 
@@ -89,15 +100,15 @@ def main(err_max, err_lst, completeness, max_mag_syn, st_dist_mass,
             # isoch_mass0 = deepcopy(isoch_mass)
             ##############################################################
 
-            # s = time.clock()
+            s = time.clock()
             # Assignment of binarity.
             isoch_binar = binarity.main(isoch_mass, bin_frac, m_ini, N_fc)
-            # t5 = time.clock() - s
+            t5 = time.clock() - s
 
-            # s = time.clock()
+            s = time.clock()
             # Completeness limit removal of stars.
             isoch_compl = completeness_rm.main(isoch_binar, completeness)
-            # t6 = time.clock() - s
+            t6 = time.clock() - s
 
             ##############################################################
             # # Use when producing synthetic clusters from isochrones.
@@ -107,11 +118,11 @@ def main(err_max, err_lst, completeness, max_mag_syn, st_dist_mass,
 
             if isoch_compl.any():
 
-                # s = time.clock()
+                s = time.clock()
                 # Get errors according to errors distribution.
                 synth_clust = add_errors.main(
                     isoch_compl, err_lst, err_max, m_ini, err_rnd)
-                # t7 = time.clock() - s
+                t7 = time.clock() - s
 
     ################################################################
     # # Plot synthetic cluster.
@@ -127,8 +138,8 @@ def main(err_max, err_lst, completeness, max_mag_syn, st_dist_mass,
     #       binar_idx, synth_clust, path)
     ################################################################
 
-    # return np.array([t1, t2, t3, t4, t5, t6, t7])
-    return synth_clust
+    return np.array([t1, t2, t3, t4, t5, t6, t7])
+    # return synth_clust
 
 
 if __name__ == "__main__":
@@ -163,13 +174,13 @@ if __name__ == "__main__":
                   0.36074561, 0.18311404, 0.10087719, 0.04166667, 0.01644737,
                   0.01754386, 0.00438596, 0.00109649])]
     max_mag_syn = 20.99
-    # ext_coefs_old = [
-    #     (0.99974902186052628, -0.0046292182005786527),
-    #     [(0.9999253931841896, 0.94553192328962365),
-    #      (0.99974902186052628, -0.0046292182005786527)],
-    #     [(0.96420188342499813, 1.784213363585738),
-    #      (0.9999253931841896, 0.94553192328962365)]]
-    ext_coefs = [
+    ext_coefs_old = [
+        (0.99974902186052628, -0.0046292182005786527),
+        [(0.9999253931841896, 0.94553192328962365),
+         (0.99974902186052628, -0.0046292182005786527)],
+        [(0.96420188342499813, 1.784213363585738),
+         (0.9999253931841896, 0.94553192328962365)]]
+    ext_coefs = np.array([
         np.array([[9.99749022e-01], [1.76371324e-04], [-3.57235098e-02],
                   [9.99749022e-01], [1.76371324e-04], [-3.57235098e-02],
                   [0.00000000e+00], [0.00000000e+00], [0.00000000e+00],
@@ -179,43 +190,64 @@ if __name__ == "__main__":
                   [0.95016114], [0.83868144], [0.], [0.], [0.], [0.], [0.],
                   [0.], [0.], [0.]]),
         np.array([[1.], [0.], [0.], [1.], [0.], [0.], [0.], [0.], [0.], [0.],
-                 [0.], [0.], [0.], [0.]])]
+                 [0.], [0.], [0.], [0.]])])
     N_fc = [1, 2]
     R_V = 3.1
     print("Data read.")
 
-    M_max = 1000.
-
-    # set step for 100 masses
-    M_step = M_max / 100.
-    M_min = 50.
-    masses = np.arange(M_min, M_max, M_step)
-    m_sample_flag = False
-    st_dist_mass = imf.main('kroupa_2002', 150., m_sample_flag, masses)
-
-    err_rnd = np.random.normal(0, 1, 1000000)
-
     Nm, Na = np.shape(theor_tracks)[0], np.shape(theor_tracks)[1]
-    # mi, ai = 15, 30
-    # isochrone = theor_tracks[mi][ai]
 
+    M_max_all = [1000., 5000., 10000., 25000., 50000., 100000., 250000.]
     print("Running")
-    N = 10000
-    times = np.array([0., 0., 0., 0., 0., 0., 0.])
-    for _ in range(N):
-        ext = np.random.uniform(0., 2.)
-        dm = np.random.uniform(8., 20.)
-        M_total = np.random.choice(masses)
-        bf = np.random.uniform(0., 1.)
-        synth_cl_params = (np.nan, np.nan, ext, dm, M_total, bf)
+    times_all = 0.
+    for M_max in M_max_all:
 
-        mi, ai = np.random.choice(Nm), np.random.choice(Na)
-        isochrone = theor_tracks[mi][ai]
+        # set step for 100 masses
+        M_step = M_max / 100.
+        M_min = 50.
+        masses = np.arange(M_min, M_max, M_step)
+        m_sample_flag = False
+        st_dist_mass = imf.main('kroupa_2002', 150., m_sample_flag, masses)
 
-        times = times + main(
-            err_max, err_lst, completeness, max_mag_syn, st_dist_mass,
-            isochrone, R_V, ext_coefs, N_fc, err_rnd, synth_cl_params)
+        err_rnd = np.random.normal(0, 1, 1000000)
 
-    times_perc = np.round(100. * times / times.sum(), 1)
-    print("    {:2.0f}-{:6.0f} {:7.2f}    {}".format(
-        M_min, M_max, times.sum(), "    ".join(map(str, times_perc))))
+        N = 50000
+        times1 = np.array([0., 0., 0., 0., 0., 0., 0.])
+        times2 = np.array([0., 0., 0., 0., 0., 0., 0.])
+        times3 = np.array([0., 0., 0., 0., 0., 0., 0.])
+        for _ in range(N):
+            ext = np.random.uniform(0., 2.)
+            dm = np.random.uniform(8., 20.)
+            M_total = np.random.choice(masses)
+            bf = np.random.uniform(0., 1.)
+            synth_cl_params = (np.nan, np.nan, ext, dm, M_total, bf)
+
+            mi, ai = np.random.choice(Nm), np.random.choice(Na)
+            isochrone = theor_tracks[mi][ai]
+
+            times1 = times1 + main(
+                err_max, err_lst, completeness, max_mag_syn, st_dist_mass,
+                isochrone, R_V, ext_coefs_old, N_fc, err_rnd, synth_cl_params, '1')
+
+            times2 = times2 + main(
+                err_max, err_lst, completeness, max_mag_syn, st_dist_mass,
+                isochrone, R_V, ext_coefs, N_fc, err_rnd, synth_cl_params, '2')
+
+            times3 = times3 + main(
+                err_max, err_lst, completeness, max_mag_syn, st_dist_mass,
+                isochrone, R_V, ext_coefs, N_fc, err_rnd, synth_cl_params, '3')
+
+        times_perc = np.round(100. * times1 / times1.sum(), 1)
+        print("    {:2.0f}-{:6.0f} {:7.2f}    {}".format(
+            M_min, M_max, times1.sum(), "    ".join(map(str, times_perc))))
+
+        times_perc = np.round(100. * times2 / times2.sum(), 1)
+        print("    {:2.0f}-{:6.0f} {:7.2f}    {}".format(
+            M_min, M_max, times2.sum(), "    ".join(map(str, times_perc))))
+
+        times_perc = np.round(100. * times3 / times3.sum(), 1)
+        print("    {:2.0f}-{:6.0f} {:7.2f}    {}".format(
+            M_min, M_max, times3.sum(), "    ".join(map(str, times_perc))))
+
+    #     times_all += times.sum()
+    # print("    Total time: ~{:.3f} s --> ~xx% faster".format(times_all))

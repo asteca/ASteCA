@@ -111,7 +111,7 @@ def main(cmd_systs, filters, colors, ext_shape):
     dm_arr[0], dm_arr[len(filters) + len(colors)] = 1., 1.
 
     # Store in the proper format for move_isochrone().
-    ext_coefs = [np.vstack(np.array(_)) for _ in [
-                 a_ext_coefs, b_ext_coefs, dm_arr]]
+    ext_coefs = np.array([
+        np.vstack(np.array(_)) for _ in [a_ext_coefs, b_ext_coefs, dm_arr]])
 
     return ext_coefs
