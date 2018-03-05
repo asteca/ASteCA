@@ -5,7 +5,7 @@ import synth_cluster
 
 def main(e_max, fundam_params, theor_tracks, plot_isoch_data, isoch_fit_params,
          err_lst, completeness, max_mag_syn, st_dist_mass, R_V, ext_coefs,
-         N_fc, err_rnd):
+         N_fc, cmpl_rnd, err_rnd):
     '''
     # Generate shifted isochrone and synthetic cluster for plotting.
     '''
@@ -30,6 +30,6 @@ def main(e_max, fundam_params, theor_tracks, plot_isoch_data, isoch_fit_params,
     isochrone = theor_tracks[m_i][a_i]
     synth_clst = synth_cluster.main(
         e_max, err_lst, completeness, max_mag_syn, st_dist_mass, isochrone,
-        R_V, ext_coefs, N_fc, err_rnd, synth_cl_params)
+        R_V, ext_coefs, N_fc, cmpl_rnd, err_rnd, synth_cl_params)
 
     return shift_isoch, synth_clst

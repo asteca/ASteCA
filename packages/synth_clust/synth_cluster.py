@@ -9,7 +9,7 @@ import add_errors
 
 
 def main(err_max, err_lst, completeness, max_mag_syn, st_dist_mass,
-         isochrone, R_V, ext_coefs, N_fc, err_rnd, synth_cl_params):
+         isochrone, R_V, ext_coefs, N_fc, cmpl_rnd, err_rnd, synth_cl_params):
     """
     Takes an isochrone and returns a synthetic cluster created according to
     a certain mass distribution.
@@ -37,13 +37,13 @@ def main(err_max, err_lst, completeness, max_mag_syn, st_dist_mass,
     # isochrone.
     e, d, M_total, bin_frac = synth_cl_params[2:]
 
-    import time
-    t1, t2, t3, t4, t5, t6, t7 = 0., 0., 0., 0., 0., 0., 0.
+    # import time
+    # t1, t2, t3, t4, t5, t6, t7 = 0., 0., 0., 0., 0., 0., 0.
 
-    s = time.clock()
+    # s = time.clock()
     # Move theoretical isochrone using the values 'e' and 'd'.
     isoch_moved = move_isochrone.main(isochrone, e, d, R_V, ext_coefs, N_fc)
-    t1 = time.clock() - s
+    # t1 = time.clock() - s
 
     ##############################################################
     # # To generate a synthetic cluster with the full isochrone length,
@@ -55,30 +55,30 @@ def main(err_max, err_lst, completeness, max_mag_syn, st_dist_mass,
     # max_mag = max(isoch_moved[1]) + 0.5
     ##############################################################
 
-    s = time.clock()
+    # s = time.clock()
     # Get isochrone minus those stars beyond the magnitude cut.
     isoch_cut = cut_max_mag.main(isoch_moved, max_mag_syn)
-    t2 = time.clock() - s
+    # t2 = time.clock() - s
 
     # Empty list to pass if at some point no stars are left.
     synth_clust = []
     # Check for an empty array.
     if isoch_cut.any():
 
-        s = time.clock()
+        # s = time.clock()
         # Mass distribution to produce a synthetic cluster based on
         # a given IMF and total mass.
         mass_dist = mass_distribution.main(st_dist_mass, M_total)
-        t3 = time.clock() - s
+        # t3 = time.clock() - s
 
-        s = time.clock()
+        # s = time.clock()
         # Index of m_ini (theoretical initial mass), stored in the theoretical
         # isochrones.
         m_ini = 2 * N_fc[0] + 2 * N_fc[1] + 2
         # Interpolate masses in mass_dist into the isochrone rejecting those
         # masses that fall outside of the isochrone's mass range.
         isoch_mass = mass_interp.main(isoch_cut, mass_dist, m_ini)
-        t4 = time.clock() - s
+        # t4 = time.clock() - s
 
         if isoch_mass.any():
 
@@ -89,15 +89,16 @@ def main(err_max, err_lst, completeness, max_mag_syn, st_dist_mass,
             # isoch_mass0 = deepcopy(isoch_mass)
             ##############################################################
 
-            s = time.clock()
+            # s = time.clock()
             # Assignment of binarity.
             isoch_binar = binarity.main(isoch_mass, bin_frac, m_ini, N_fc)
-            t5 = time.clock() - s
+            # t5 = time.clock() - s
 
-            s = time.clock()
+            # s = time.clock()
             # Completeness limit removal of stars.
-            isoch_compl = completeness_rm.main(isoch_binar, completeness)
-            t6 = time.clock() - s
+            isoch_compl = completeness_rm.main(
+                isoch_binar, completeness, cmpl_rnd)
+            # t6 = time.clock() - s
 
             ##############################################################
             # # Use when producing synthetic clusters from isochrones.
@@ -107,11 +108,11 @@ def main(err_max, err_lst, completeness, max_mag_syn, st_dist_mass,
 
             if isoch_compl.any():
 
-                s = time.clock()
+                # s = time.clock()
                 # Get errors according to errors distribution.
                 synth_clust = add_errors.main(
                     isoch_compl, err_lst, err_max, m_ini, err_rnd)
-                t7 = time.clock() - s
+                # t7 = time.clock() - s
 
     ################################################################
     # # Plot synthetic cluster.
@@ -187,6 +188,7 @@ if __name__ == "__main__":
         m_sample_flag = False
         st_dist_mass = imf.main('kroupa_2002', 150., m_sample_flag, masses)
 
+        cmpl_rnd = np.random.uniform(0., 1., 1000000)
         err_rnd = np.random.normal(0, 1, 1000000)
 
         N = 10000
@@ -203,7 +205,8 @@ if __name__ == "__main__":
 
             times = times + main(
                 err_max, err_lst, completeness, max_mag_syn, st_dist_mass,
-                isochrone, R_V, ext_coefs, N_fc, err_rnd, synth_cl_params)
+                isochrone, R_V, ext_coefs, N_fc, cmpl_rnd, err_rnd,
+                synth_cl_params)
 
         times_perc = np.round(100. * times / times.sum(), 1)
         print("    {:2.0f}-{:6.0f} {:7.2f}    {}".format(

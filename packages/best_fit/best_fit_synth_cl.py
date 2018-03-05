@@ -12,9 +12,9 @@ from ..synth_clust import imf
 def params_errors(
     lkl_method, e_max, err_lst, completeness, fundam_params, cl_max_mag,
         max_mag_syn, theor_tracks, R_V, ext_coefs, st_dist_mass, N_fc,
-        err_rnd, N_pop, N_gen, fit_diff, cross_prob, cross_sel, mut_prob, N_el,
-        N_ei, N_es, lkl_binning, lkl_weight, best_fit_algor, isoch_fit_params,
-        N_b):
+        cmpl_rnd, err_rnd, N_pop, N_gen, fit_diff, cross_prob, cross_sel,
+        mut_prob, N_el, N_ei, N_es, lkl_binning, lkl_weight, best_fit_algor,
+        isoch_fit_params, N_b):
     '''
     Obtain errors for the fitted parameters.
     '''
@@ -39,7 +39,7 @@ def params_errors(
             isoch_fit_errors = bootstrap.main(
                 lkl_method, e_max, err_lst, completeness, fundam_params,
                 cl_max_mag, max_mag_syn, theor_tracks, R_V, ext_coefs,
-                st_dist_mass, N_fc, err_rnd, N_pop, N_gen, fit_diff,
+                st_dist_mass, N_fc, cmpl_rnd, err_rnd, N_pop, N_gen, fit_diff,
                 cross_prob, cross_sel, mut_prob, N_el, N_ei, N_es, lkl_binning,
                 lkl_weight, best_fit_algor, N_b)
         else:
@@ -100,9 +100,10 @@ def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning, lkl_weight,
         # Store the number of defined filters and colors.
         N_fc = [len(filters), len(colors)]
 
-        # HARDCODED: generate 1e6 random floats to use in the synthetic cluster
-        # error adding.
-        err_rnd = np.random.normal(0, 1, 1000000)
+        # HARDCODED: generate random floats to use in the synthetic cluster
+        # completeness removal and error adding.
+        cmpl_rnd = np.random.uniform(0., 1., 1000000)
+        err_rnd = np.random.normal(0., 1., 1000000)
 
         print('Searching for optimal parameters.')
 
@@ -117,7 +118,7 @@ def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning, lkl_weight,
             isoch_fit_params = brute_force_algor.main(
                 lkl_method, e_max, err_lst, completeness, max_mag_syn,
                 fundam_params, obs_clust, theor_tracks, R_V, ext_coefs,
-                st_dist_mass, N_fc, err_rnd)
+                st_dist_mass, N_fc, cmpl_rnd, err_rnd)
 
         elif best_fit_algor == 'genet':
 
@@ -131,7 +132,7 @@ def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning, lkl_weight,
             isoch_fit_params = genetic_algorithm.main(
                 lkl_method, e_max, err_lst, completeness, max_mag_syn,
                 fundam_params, obs_clust, theor_tracks, R_V, ext_coefs,
-                st_dist_mass, N_fc, err_rnd, N_pop, N_gen, fit_diff,
+                st_dist_mass, N_fc, cmpl_rnd, err_rnd, N_pop, N_gen, fit_diff,
                 cross_prob, cross_sel, mut_prob, N_el, N_ei, N_es,
                 flag_print_perc)
 
@@ -141,20 +142,20 @@ def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning, lkl_weight,
         isoch_fit_errors = params_errors(
             lkl_method, e_max, err_lst, completeness, fundam_params,
             cl_max_mag, max_mag_syn, theor_tracks, R_V, ext_coefs,
-            st_dist_mass, N_fc, err_rnd, N_pop, N_gen, fit_diff, cross_prob,
-            cross_sel, mut_prob, N_el, N_ei, N_es, lkl_binning, lkl_weight,
-            best_fit_algor, isoch_fit_params, N_bootstrap)
+            st_dist_mass, N_fc, cmpl_rnd, err_rnd, N_pop, N_gen, fit_diff,
+            cross_prob, cross_sel, mut_prob, N_el, N_ei, N_es, lkl_binning,
+            lkl_weight, best_fit_algor, isoch_fit_params, N_bootstrap)
     else:
         # Pass empty lists to make_plots.
         print('Skip parameters fitting process.')
-        cl_max_mag, max_mag_syn, ext_coefs, st_dist_mass, N_fc, err_rnd,\
-            isoch_fit_params, isoch_fit_errors = [], -1., [], {}, [], [],\
-            [[np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]],\
+        cl_max_mag, max_mag_syn, ext_coefs, st_dist_mass, N_fc, cmpl_rnd,\
+            err_rnd, isoch_fit_params, isoch_fit_errors = [], -1., [], {}, [],\
+            [], [], [[np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]],\
             [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]
 
     clp['cl_max_mag'], clp['max_mag_syn'], clp['ext_coefs'],\
-        clp['st_dist_mass'], clp['N_fc'], clp['err_rnd'],\
+        clp['st_dist_mass'], clp['N_fc'], clp['cmpl_rnd'], clp['err_rnd'],\
         clp['isoch_fit_params'], clp['isoch_fit_errors'] =\
-        cl_max_mag, max_mag_syn, ext_coefs, st_dist_mass, N_fc, err_rnd,\
-        isoch_fit_params, isoch_fit_errors
+        cl_max_mag, max_mag_syn, ext_coefs, st_dist_mass, N_fc, cmpl_rnd,\
+        err_rnd, isoch_fit_params, isoch_fit_errors
     return clp
