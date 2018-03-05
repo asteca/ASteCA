@@ -67,7 +67,7 @@ def main(cmd_systs, filters, colors, ext_shape):
     Obtain extinction coefficients for all the observed filters and colors,
     in the order in which they are stored in theor_tracks.
     """
-    a_ext_coefs, b_ext_coefs = [], []
+    ext_coefs = []
 
     # For filters.
     for f in filters:
@@ -78,9 +78,7 @@ def main(cmd_systs, filters, colors, ext_shape):
         eff_wave = cmd_systs[f[0]][2][fi]
         # CCM coefficient for this filter. Use the effective wavelength in
         # inverse microns.
-        a, b = ccm_model(10000. / eff_wave)
-        a_ext_coefs.append(a)
-        b_ext_coefs.append(b)
+        ext_coefs.append(ccm_model(10000. / eff_wave))
 
     # For colors.
     for c in colors:
@@ -91,27 +89,9 @@ def main(cmd_systs, filters, colors, ext_shape):
         # Effective wavelength in Armstrong.
         eff_wave1 = cmd_systs[c[0]][2][ci1]
         eff_wave2 = cmd_systs[c[0]][2][ci2]
-        # CCM coefficients for this color.
-        a1, b1 = ccm_model(10000. / eff_wave1)
-        a2, b2 = ccm_model(10000. / eff_wave2)
-        a_ext_coefs.append(a1 - a2)
-        b_ext_coefs.append(b1 - b2)
-
-    # Double for binary mags and colors.
-    a_ext_coefs = a_ext_coefs + a_ext_coefs
-    b_ext_coefs = b_ext_coefs + b_ext_coefs
-    # Add zeros to account for the shape of the isochrones and the extra
-    # parameters present.
-    a_ext_coefs = a_ext_coefs + [0.] * (ext_shape - len(a_ext_coefs))
-    b_ext_coefs = b_ext_coefs + [0.] * (ext_shape - len(b_ext_coefs))
-
-    # Arrays of zeros except for the positions of the magnitudes, to use
-    # for multiplying with the distance modulus and move the magnitudes.
-    dm_arr = np.zeros(len(a_ext_coefs))
-    dm_arr[0], dm_arr[len(filters) + len(colors)] = 1., 1.
-
-    # Store in the proper format for move_isochrone().
-    ext_coefs = np.array([
-        np.vstack(np.array(_)) for _ in [a_ext_coefs, b_ext_coefs, dm_arr]])
+        # CCM coefficient for this filter. Use the effective wavelength in
+        # inverse microns.
+        ext_coefs.append([ccm_model(10000. / eff_wave1),
+                          ccm_model(10000. / eff_wave2)])
 
     return ext_coefs

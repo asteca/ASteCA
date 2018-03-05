@@ -9,7 +9,7 @@ import add_errors
 
 
 def main(err_max, err_lst, completeness, max_mag_syn, st_dist_mass,
-         isochrone, R_V, ext_coefs, N_fc, err_rnd, synth_cl_params, mv_m):
+         isochrone, R_V, ext_coefs, N_fc, err_rnd, synth_cl_params):
     """
     Takes an isochrone and returns a synthetic cluster created according to
     a certain mass distribution.
@@ -40,21 +40,10 @@ def main(err_max, err_lst, completeness, max_mag_syn, st_dist_mass,
     import time
     t1, t2, t3, t4, t5, t6, t7 = 0., 0., 0., 0., 0., 0., 0.
 
-    if mv_m == '1':
-        s = time.clock()
-        # Move theoretical isochrone using the values 'e' and 'd'.
-        isoch_moved = move_isochrone.main_old(isochrone, e, d, R_V, ext_coefs, N_fc)
-        t1 = time.clock() - s
-    elif mv_m == '2':
-        s = time.clock()
-        # Move theoretical isochrone using the values 'e' and 'd'.
-        isoch_moved = move_isochrone.main_n1(isochrone, e, d, R_V, ext_coefs)
-        t1 = time.clock() - s
-    elif mv_m == '3':
-        s = time.clock()
-        # Move theoretical isochrone using the values 'e' and 'd'.
-        isoch_moved = move_isochrone.main_n2(isochrone, e, d, R_V, ext_coefs)
-        t1 = time.clock() - s
+    s = time.clock()
+    # Move theoretical isochrone using the values 'e' and 'd'.
+    isoch_moved = move_isochrone.main(isochrone, e, d, R_V, ext_coefs, N_fc)
+    t1 = time.clock() - s
 
     ##############################################################
     # # To generate a synthetic cluster with the full isochrone length,
@@ -138,8 +127,8 @@ def main(err_max, err_lst, completeness, max_mag_syn, st_dist_mass,
     #       binar_idx, synth_clust, path)
     ################################################################
 
-    return np.array([t1, t2, t3, t4, t5, t6, t7])
-    # return synth_clust
+    # return np.array([t1, t2, t3, t4, t5, t6, t7])
+    return synth_clust
 
 
 if __name__ == "__main__":
@@ -174,23 +163,12 @@ if __name__ == "__main__":
                   0.36074561, 0.18311404, 0.10087719, 0.04166667, 0.01644737,
                   0.01754386, 0.00438596, 0.00109649])]
     max_mag_syn = 20.99
-    ext_coefs_old = [
+    ext_coefs = [
         (0.99974902186052628, -0.0046292182005786527),
         [(0.9999253931841896, 0.94553192328962365),
          (0.99974902186052628, -0.0046292182005786527)],
         [(0.96420188342499813, 1.784213363585738),
          (0.9999253931841896, 0.94553192328962365)]]
-    ext_coefs = np.array([
-        np.array([[9.99749022e-01], [1.76371324e-04], [-3.57235098e-02],
-                  [9.99749022e-01], [1.76371324e-04], [-3.57235098e-02],
-                  [0.00000000e+00], [0.00000000e+00], [0.00000000e+00],
-                  [0.00000000e+00], [0.00000000e+00], [0.00000000e+00],
-                  [0.00000000e+00], [0.00000000e+00]]),
-        np.array([[-0.00462922], [0.95016114], [0.83868144], [-0.00462922],
-                  [0.95016114], [0.83868144], [0.], [0.], [0.], [0.], [0.],
-                  [0.], [0.], [0.]]),
-        np.array([[1.], [0.], [0.], [1.], [0.], [0.], [0.], [0.], [0.], [0.],
-                 [0.], [0.], [0.], [0.]])])
     N_fc = [1, 2]
     R_V = 3.1
     print("Data read.")
@@ -211,10 +189,8 @@ if __name__ == "__main__":
 
         err_rnd = np.random.normal(0, 1, 1000000)
 
-        N = 50000
-        times1 = np.array([0., 0., 0., 0., 0., 0., 0.])
-        times2 = np.array([0., 0., 0., 0., 0., 0., 0.])
-        times3 = np.array([0., 0., 0., 0., 0., 0., 0.])
+        N = 10000
+        times = np.array([0., 0., 0., 0., 0., 0., 0.])
         for _ in range(N):
             ext = np.random.uniform(0., 2.)
             dm = np.random.uniform(8., 20.)
@@ -225,29 +201,13 @@ if __name__ == "__main__":
             mi, ai = np.random.choice(Nm), np.random.choice(Na)
             isochrone = theor_tracks[mi][ai]
 
-            times1 = times1 + main(
+            times = times + main(
                 err_max, err_lst, completeness, max_mag_syn, st_dist_mass,
-                isochrone, R_V, ext_coefs_old, N_fc, err_rnd, synth_cl_params, '1')
+                isochrone, R_V, ext_coefs, N_fc, err_rnd, synth_cl_params)
 
-            times2 = times2 + main(
-                err_max, err_lst, completeness, max_mag_syn, st_dist_mass,
-                isochrone, R_V, ext_coefs, N_fc, err_rnd, synth_cl_params, '2')
-
-            times3 = times3 + main(
-                err_max, err_lst, completeness, max_mag_syn, st_dist_mass,
-                isochrone, R_V, ext_coefs, N_fc, err_rnd, synth_cl_params, '3')
-
-        times_perc = np.round(100. * times1 / times1.sum(), 1)
+        times_perc = np.round(100. * times / times.sum(), 1)
         print("    {:2.0f}-{:6.0f} {:7.2f}    {}".format(
-            M_min, M_max, times1.sum(), "    ".join(map(str, times_perc))))
+            M_min, M_max, times.sum(), "    ".join(map(str, times_perc))))
 
-        times_perc = np.round(100. * times2 / times2.sum(), 1)
-        print("    {:2.0f}-{:6.0f} {:7.2f}    {}".format(
-            M_min, M_max, times2.sum(), "    ".join(map(str, times_perc))))
-
-        times_perc = np.round(100. * times3 / times3.sum(), 1)
-        print("    {:2.0f}-{:6.0f} {:7.2f}    {}".format(
-            M_min, M_max, times3.sum(), "    ".join(map(str, times_perc))))
-
-    #     times_all += times.sum()
-    # print("    Total time: ~{:.3f} s --> ~xx% faster".format(times_all))
+        times_all += times.sum()
+    print("    Total time: ~{:.3f} s --> ~xx% faster".format(times_all))
