@@ -28,7 +28,7 @@ def idxFind(N, c_indx):
     return rang_indx
 
 
-def indxRem(di, rang_indx):
+def indxRem(di, rang_indx, cmpl_rnd):
     """
     Select a fixed number (given by 'di') of random indexes in 'rang_indx'.
     These correspond to the stars that will be removed in each magnitude
@@ -39,9 +39,12 @@ def indxRem(di, rang_indx):
     lens = np.array([len(_) for _ in rang_indx])
     di0 = np.minimum(lens, di)
     invalid_mask = lens[:, None] <= np.arange(lens.max())
-    # Create a 2D random array in interval [0,1) to cover the max. length of
+
+    # Create a 2D random array in interval [0,1) to cover the max length of
     # subarrays.
-    rand_nums = np.random.rand(len(lens), lens.max())
+    rand_nums = np.copy(cmpl_rnd[:len(lens) * lens.max()].reshape(
+        len(lens), lens.max()))
+
     # For each subarray, set the invalid places to 1.0. Get argsort for each
     # row. Those 1s corresponding to the invalid places would stay at the back
     # because there were no 1s in the original random array. Thus, we have the
@@ -62,7 +65,7 @@ def indxRem(di, rang_indx):
     return np.asarray(out)
 
 
-def main(isoch_binar, completeness):
+def main(isoch_binar, completeness, cmpl_rnd):
     """
     Remove a number of stars according to the percentages of star loss found in
     the 'mag_completeness' function of the luminosity module, for the real
@@ -95,7 +98,7 @@ def main(isoch_binar, completeness):
         # Pick a number (given by the list 'di') of random elements in
         # each range. Those are the indexes of the elements that
         # should be removed from the sub-lists.
-        d_i = indxRem(di, rang_indx)
+        d_i = indxRem(di, rang_indx, cmpl_rnd)
 
         # Remove stars pointed to by 'd_i' from *all* the sub-arrays in
         # 'isoch_binar'.

@@ -9,7 +9,7 @@ import add_errors
 
 
 def main(err_max, err_lst, completeness, max_mag_syn, st_dist_mass,
-         isochrone, R_V, ext_coefs, N_fc, err_rnd, synth_cl_params):
+         isochrone, R_V, ext_coefs, N_fc, cmpl_rnd, err_rnd, synth_cl_params):
     """
     Takes an isochrone and returns a synthetic cluster created according to
     a certain mass distribution.
@@ -31,11 +31,6 @@ def main(err_max, err_lst, completeness, max_mag_syn, st_dist_mass,
     Six lists containing the theoretical tracks extra parameters.
     extra_pars = [l1, l2, ..., l6]
     """
-
-    # import pickle
-    # with open('synth_clust.pickle', 'wb') as f:
-    #         pickle.dump(
-    #             (err_lst, completeness, max_mag_syn, ext_coefs, N_fc), f)
 
     # Unpack synthetic cluster parameters. The first two elements are the
     # metallicity and the age, which are already incorporated in the selected
@@ -101,7 +96,8 @@ def main(err_max, err_lst, completeness, max_mag_syn, st_dist_mass,
 
             # s = time.clock()
             # Completeness limit removal of stars.
-            isoch_compl = completeness_rm.main(isoch_binar, completeness)
+            isoch_compl = completeness_rm.main(
+                isoch_binar, completeness, cmpl_rnd)
             # t6 = time.clock() - s
 
             ##############################################################
@@ -144,49 +140,77 @@ if __name__ == "__main__":
     import sys
     mpath = sys.path[0].replace('synth_clust', '').replace('packages/', '')
 
+    # Data for RUP42 file (2.2 Mb) with BV, UB colors read
     print("Reading data")
+    bin_mr = .7
     with open(mpath + 'theor_tracks.pickle', 'rb') as f:
         theor_tracks = pickle.load(f)
-    with open(mpath + 'synth_clust.pickle', 'rb') as f:
-        err_lst, completeness, max_mag_syn, ext_coefs, N_fc = pickle.load(f)
+    err_max = .3
+    err_lst = [
+        np.array([4.82905373e-17, 1.60540044e+00, 3.04244535e-02]),
+        np.array([2.91192261e-10, 8.99472478e-01, 4.53498125e-02]),
+        np.array([5.83560740e-06, 4.79509209e-01, 3.82828812e-02])]
+    completeness = [
+        np.array([8.695, 8.96248, 9.22996, 9.49744, 9.76492, 10.0324,
+                  10.29988, 10.56736, 10.83484, 11.10232, 11.3698, 11.63728,
+                  11.90476, 12.17224, 12.43972, 12.7072, 12.97468, 13.24216,
+                  13.50964, 13.77712, 14.0446, 14.31208, 14.57956, 14.84704,
+                  15.11452, 15.382, 15.64948, 15.91696, 16.18444, 16.45192,
+                  16.7194, 16.98688, 17.25436, 17.52184, 17.78932, 18.0568,
+                  18.32428, 18.59176, 18.85924, 19.12672, 19.3942, 19.66168,
+                  19.92916, 20.19664, 20.46412, 20.7316, 20.99908, 21.26656,
+                  21.53404, 21.80152, 22.069]), 37,
+        np.array([1., 0.98684211, 0.90131579, 0.82017544, 0.63048246,
+                  0.36074561, 0.18311404, 0.10087719, 0.04166667, 0.01644737,
+                  0.01754386, 0.00438596, 0.00109649])]
+    max_mag_syn = 20.99
+    ext_coefs = [
+        (0.99974902186052628, -0.0046292182005786527),
+        [(0.9999253931841896, 0.94553192328962365),
+         (0.99974902186052628, -0.0046292182005786527)],
+        [(0.96420188342499813, 1.784213363585738),
+         (0.9999253931841896, 0.94553192328962365)]]
+    N_fc = [1, 2]
+    R_V = 3.1
     print("Data read.")
 
-    err_max, bin_mr, R_V = .3, .7, 3.1
-
-    M_max = 1000.
-
-    # set step for 100 masses
-    M_step = M_max / 100.
-    M_min = 50.
-    masses = np.arange(M_min, M_max, M_step)
-    m_sample_flag = False
-    st_dist_mass = imf.main('kroupa_2002', 150., m_sample_flag, masses)
-
-    err_rnd = np.random.normal(0, 1, 1000000)
-
     Nm, Na = np.shape(theor_tracks)[0], np.shape(theor_tracks)[1]
-    # mi, ai = 15, 30
-    # isochrone = theor_tracks[mi][ai]
 
+    M_max_all = [1000., 5000., 10000., 25000., 50000., 100000., 250000.]
     print("Running")
-    N = 10000
-    times = np.array([0., 0., 0., 0., 0., 0., 0.])
-    for _ in range(N):
-        ext = np.random.uniform(0., 2.)
-        dm = np.random.uniform(8., 20.)
-        M_total = np.random.choice(masses)
-        bf = np.random.uniform(0., 1.)
-        synth_cl_params = (np.nan, np.nan, ext, dm, M_total, bf)
+    times_all = 0.
+    for M_max in M_max_all:
 
-        mi, ai = np.random.choice(Nm), np.random.choice(Na)
-        isochrone = theor_tracks[mi][ai]
+        # set step for 100 masses
+        M_step = M_max / 100.
+        M_min = 50.
+        masses = np.arange(M_min, M_max, M_step)
+        m_sample_flag = False
+        st_dist_mass = imf.main('kroupa_2002', 150., m_sample_flag, masses)
 
-        times = times + main(
-            err_max, err_lst, completeness, max_mag_syn, st_dist_mass,
-            isochrone, R_V, ext_coefs, N_fc, err_rnd, synth_cl_params)
+        cmpl_rnd = np.random.uniform(0., 1., 1000000)
+        err_rnd = np.random.normal(0, 1, 1000000)
 
-    times_perc = np.round(100. * times / times.sum(), 1)
-    print("{:2.0f}-{:6.0f} {:7.2f}    {}".format(
-        M_min, M_max, times.sum(), "    ".join(map(str, times_perc))))
+        N = 10000
+        times = np.array([0., 0., 0., 0., 0., 0., 0.])
+        for _ in range(N):
+            ext = np.random.uniform(0., 2.)
+            dm = np.random.uniform(8., 20.)
+            M_total = np.random.choice(masses)
+            bf = np.random.uniform(0., 1.)
+            synth_cl_params = (np.nan, np.nan, ext, dm, M_total, bf)
 
-    print(times.sum())
+            mi, ai = np.random.choice(Nm), np.random.choice(Na)
+            isochrone = theor_tracks[mi][ai]
+
+            times = times + main(
+                err_max, err_lst, completeness, max_mag_syn, st_dist_mass,
+                isochrone, R_V, ext_coefs, N_fc, cmpl_rnd, err_rnd,
+                synth_cl_params)
+
+        times_perc = np.round(100. * times / times.sum(), 1)
+        print("    {:2.0f}-{:6.0f} {:7.2f}    {}".format(
+            M_min, M_max, times.sum(), "    ".join(map(str, times_perc))))
+
+        times_all += times.sum()
+    print("    Total time: ~{:.3f} s --> ~xx% faster".format(times_all))

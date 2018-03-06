@@ -14,7 +14,7 @@ def main(clp, npd, bf_flag, fundam_params, filters, colors, theor_tracks,
             clp['err_max'], fundam_params, theor_tracks, plot_isoch_data,
             clp['isoch_fit_params'], clp['err_lst'], clp['completeness'],
             clp['max_mag_syn'], clp['st_dist_mass'], R_V, clp['ext_coefs'],
-            clp['N_fc'], clp['err_rnd'])
+            clp['N_fc'], clp['cmpl_rnd'], clp['err_rnd'])
 
         # If cluster is not empty.
         if synth_clst:

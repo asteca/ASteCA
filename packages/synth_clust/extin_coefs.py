@@ -7,6 +7,8 @@ def ccm_model(mw):
     Cardelli, Clayton, and Mathis (1989 ApJ. 345, 245) model for extinction
     coefficients with updated coefficients for near-UV from O'Donnell (1994).
 
+    ccm_coef = a + b / Rv
+
     Implementation taken from:
 
     http://idlastro.gsfc.nasa.gov/ftp/pro/astro/ccm_unred.pro
@@ -57,13 +59,10 @@ def ccm_model(mw):
             "The effective wavelength is {} [1/micron], beyond "
             "the CCM model limit (10 [1/micron]).".format(mw))
 
-    # ccm_coef = a + b / Rv
-    ccm_coefs = [a, b]
-
-    return ccm_coefs
+    return a, b
 
 
-def main(cmd_systs, filters, colors):
+def main(cmd_systs, filters, colors, ext_shape):
     """
     Obtain extinction coefficients for all the observed filters and colors,
     in the order in which they are stored in theor_tracks.
