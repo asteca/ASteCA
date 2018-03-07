@@ -1,6 +1,7 @@
 
 import numpy as np
 import max_mag_cut
+import emcee_algor  # TODO add to needed packages
 import obs_clust_prepare
 import genetic_algorithm
 import brute_force_algor
@@ -9,21 +10,16 @@ from ..synth_clust import extin_coefs
 from ..synth_clust import imf
 
 
-def params_errors(
-    lkl_method, e_max, err_lst, completeness, fundam_params, cl_max_mag,
-        max_mag_syn, theor_tracks, R_V, ext_coefs, st_dist_mass, N_fc,
-        cmpl_rnd, err_rnd, N_pop, N_gen, fit_diff, cross_prob, cross_sel,
-        mut_prob, N_el, N_ei, N_es, lkl_binning, lkl_weight, best_fit_algor,
-        isoch_fit_params, N_b):
+def params_errors(best_fit_algor, args):
     '''
-    Obtain errors for the fitted parameters.
+    Obtain uncertainties for the fitted parameters.
     '''
     if best_fit_algor == 'brute':
+        fundam_params = args
         isoch_fit_errors = []
         # Assign errors as the largest step in each parameter.
         for pv in fundam_params:
-            # If any parameter has a single valued range, assign an error
-            # of -1.
+            # If any parameter has a single valued range, assign 'nan'.
             if len(pv) > 1:
                 # Find largest delta in this parameter used values.
                 largest_delta = np.diff(pv).max()
@@ -33,28 +29,35 @@ def params_errors(
                 isoch_fit_errors.append(np.nan)
 
     elif best_fit_algor == 'genet':
-        if N_b >= 2:
-            # Call bootstrap function with resampling to get the uncertainty
-            # in each parameter.
-            isoch_fit_errors = bootstrap.main(
-                lkl_method, e_max, err_lst, completeness, fundam_params,
-                cl_max_mag, max_mag_syn, theor_tracks, R_V, ext_coefs,
-                st_dist_mass, N_fc, cmpl_rnd, err_rnd, N_pop, N_gen, fit_diff,
-                cross_prob, cross_sel, mut_prob, N_el, N_ei, N_es, lkl_binning,
-                lkl_weight, best_fit_algor, N_b)
-        else:
-            print('Skip bootstrap process.')
-            # No error assignment.
-            isoch_fit_errors = [np.nan] * len(isoch_fit_params[0])
+        isoch_fit_errors = bootstrap.main(*args)
+
+    elif best_fit_algor == 'emcee':
+        varIdxs, emcee_trace = args
+        isoch_fit_errors = []
+        # TODO hard-coded for 6 parameters
+        j = 0
+        for i in range(6):
+            if i in varIdxs:
+                pm = np.percentile(emcee_trace[i - j], 50)  # Median
+                #  16th and 84th percentiles (1 sigma)
+                ph = np.percentile(emcee_trace[i - j], 84) - pm
+                pl = pm - np.percentile(emcee_trace[i - j], 16)
+                print(pm, ph, pl)
+                # TODO fix this
+                err = .5 * (ph + pl) if max(ph, pl) > 0. else np.nan
+                isoch_fit_errors.append(err)
+            else:
+                isoch_fit_errors.append(np.nan)
+                j += 1
 
     return isoch_fit_errors
 
 
 def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning, lkl_weight,
-         N_bootstrap, max_mag, IMF_name, m_high, m_sample_flag, R_V, bin_mr,
+         N_bootstrap, max_mag, IMF_name, m_high, m_sample_flag, R_V,
          fundam_params, N_pop, N_gen, fit_diff, cross_prob, cross_sel,
-         mut_prob, N_el, N_ei, N_es, cmd_systs, filters, colors,
-         theor_tracks, **kwargs):
+         mut_prob, N_el, N_ei, N_es, nwalkers, nsteps, nburn, cmd_systs,
+         filters, colors, theor_tracks, **kwargs):
     '''
     Perform a best fitting process to find the cluster's fundamental
     parameters.
@@ -119,6 +122,8 @@ def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning, lkl_weight,
                 lkl_method, e_max, err_lst, completeness, max_mag_syn,
                 fundam_params, obs_clust, theor_tracks, R_V, ext_coefs,
                 st_dist_mass, N_fc, cmpl_rnd, err_rnd)
+            # Assign uncertainties for each parameter.
+            isoch_fit_errors = params_errors(best_fit_algor, fundam_params)
 
         elif best_fit_algor == 'genet':
 
@@ -126,7 +131,7 @@ def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning, lkl_weight,
                 lkl_method + '; ' + lkl_binning if lkl_method == 'dolphin'
                 else lkl_method))
             # Genetic algorithm.
-            # Let the GA algor know this call comes from the main function
+            # Let the GA know this call comes from the main function
             # so it will print percentages to screen.
             flag_print_perc = True
             isoch_fit_params = genetic_algorithm.main(
@@ -135,16 +140,30 @@ def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning, lkl_weight,
                 st_dist_mass, N_fc, cmpl_rnd, err_rnd, N_pop, N_gen, fit_diff,
                 cross_prob, cross_sel, mut_prob, N_el, N_ei, N_es,
                 flag_print_perc)
+            # Assign uncertainties.
+            isoch_fit_errors = params_errors(
+                best_fit_algor,
+                [lkl_method, e_max, err_lst, completeness, fundam_params,
+                 cl_max_mag, max_mag_syn, theor_tracks, R_V, ext_coefs,
+                 st_dist_mass, N_fc, cmpl_rnd, err_rnd, N_pop, N_gen, fit_diff,
+                 cross_prob, cross_sel, mut_prob, N_el, N_ei, N_es,
+                 lkl_binning, lkl_weight, N_bootstrap, False,
+                 isoch_fit_params])
+
+        elif best_fit_algor == 'emcee':
+            print('Using emcee algorithm ({}).'.format(
+                lkl_method + '; ' + lkl_binning if lkl_method == 'dolphin'
+                else lkl_method))
+            isoch_fit_params = emcee_algor.main(
+                lkl_method, e_max, err_lst, completeness, max_mag_syn,
+                fundam_params, obs_clust, theor_tracks, R_V, ext_coefs,
+                st_dist_mass, N_fc, nwalkers, nsteps, nburn)
+            # Assign uncertainties.
+            isoch_fit_errors = params_errors(
+                best_fit_algor, isoch_fit_params[2:])
 
         print("Best fit parameters obtained.")
 
-        # Assign uncertainties for each parameter.
-        isoch_fit_errors = params_errors(
-            lkl_method, e_max, err_lst, completeness, fundam_params,
-            cl_max_mag, max_mag_syn, theor_tracks, R_V, ext_coefs,
-            st_dist_mass, N_fc, cmpl_rnd, err_rnd, N_pop, N_gen, fit_diff,
-            cross_prob, cross_sel, mut_prob, N_el, N_ei, N_es, lkl_binning,
-            lkl_weight, best_fit_algor, isoch_fit_params, N_bootstrap)
     else:
         # Pass empty lists to make_plots.
         print('Skip parameters fitting process.')

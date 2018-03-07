@@ -20,32 +20,28 @@ def main(lkl_method, e_max, err_lst, completeness, fundam_params,
          cl_max_mag, max_mag_syn, theor_tracks, R_V, ext_coefs, st_dist_mass,
          N_fc, cmpl_rnd, err_rnd, N_pop, N_gen, fit_diff, cross_prob,
          cross_sel, mut_prob, N_el, N_ei, N_es, lkl_binning, lkl_weight,
-         best_fit_algor, N_b):
+         N_b, flag_print_perc, isoch_fit_params):
     '''
     Bootstrap process, runs the selected algorithm a number of times each
     time generating a new observed cluster representation through resampling
     with replacement.
     '''
-    print('Begin bootstrap process ({}).'.format(N_b))
+    if N_b >= 2:
+        print('Begin bootstrap process ({}).'.format(N_b))
 
-    # Holds the parameter values obtained by the bootstrap process.
-    params_boot = []
+        # Holds the parameter values obtained by the bootstrap process.
+        params_boot = []
 
-    # Begin bootstrap block (run a minimum of two times).
-    for i in range(N_b):
+        # Begin bootstrap block (run a minimum of two times).
+        for i in range(N_b):
 
-        # Resample cluster with replacement.
-        cl_max_mag_ran = resample_replacement(cl_max_mag)
-        # Obtain prepared observed cluster according to the likelihood method
-        # selected.
-        obs_cl = obs_clust_prepare.main(
-            cl_max_mag_ran, lkl_method, lkl_binning, lkl_weight)
+            # Resample cluster with replacement.
+            cl_max_mag_ran = resample_replacement(cl_max_mag)
+            # Obtain prepared observed cluster according to the likelihood
+            # method selected.
+            obs_cl = obs_clust_prepare.main(
+                cl_max_mag_ran, lkl_method, lkl_binning, lkl_weight)
 
-        # Algorithm selected.
-        if best_fit_algor == 'genet':
-            # Let the GA algorithm know this call comes from the bootstrap
-            # process so it will not print percentages to screen.
-            flag_print_perc = False
             params_boot.append(genetic_algorithm.main(
                 lkl_method, e_max, err_lst, completeness, max_mag_syn,
                 fundam_params, obs_cl, theor_tracks, R_V, ext_coefs,
@@ -53,18 +49,23 @@ def main(lkl_method, e_max, err_lst, completeness, fundam_params,
                 cross_prob, cross_sel, mut_prob, N_el, N_ei, N_es,
                 flag_print_perc)[0])
 
-        update_progress.updt(N_b, i + 1)
+            update_progress.updt(N_b, i + 1)
 
-    # Calculate errors for each fundamental parameter.
-    isoch_fit_errors = np.std(params_boot, 0)
-    for i, p_er in enumerate(isoch_fit_errors):
-        # If any parameter has a single valued range, assign an error of -1.
-        if len(fundam_params[i]) > 1:
-            # Find largest delta in this parameter used values.
-            largest_delta = np.diff(fundam_params[i]).max()
-            # Errors can not be smaller than the largest step in each parameter
-            isoch_fit_errors[i] = max(largest_delta, p_er)
-        else:
-            isoch_fit_errors[i] = np.nan
+        # Calculate errors for each fundamental parameter.
+        isoch_fit_errors = np.std(params_boot, 0)
+        for i, p_er in enumerate(isoch_fit_errors):
+            # If any parameter has a single valued range, assign 'nan'
+            if len(fundam_params[i]) > 1:
+                # Find largest delta in this parameter used values.
+                largest_delta = np.diff(fundam_params[i]).max()
+                # Errors can not be smaller than the largest step in each
+                # parameter
+                isoch_fit_errors[i] = max(largest_delta, p_er)
+            else:
+                isoch_fit_errors[i] = np.nan
+    else:
+        print('Skip bootstrap process.')
+        # No error assignment.
+        isoch_fit_errors = [np.nan] * len(isoch_fit_params[0])
 
     return isoch_fit_errors
