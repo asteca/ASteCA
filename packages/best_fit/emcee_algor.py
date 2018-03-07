@@ -1,8 +1,9 @@
 
-import likelihood
 import numpy as np
 import random
 import emcee
+from ..synth_clust import synth_cluster
+import likelihood
 from .. import update_progress
 
 
@@ -83,20 +84,23 @@ def log_prior(model, fundam_params, varIdxs, ranges):
 def log_likelihood(model_proper, fundam_params, lkl_args):
     """
     """
-    theor_tracks, lkl_method, e_max, bin_mr, err_lst,\
-        obs_clust, completeness, max_mag_syn, st_dist_mass, R_V,\
-        ext_coefs, N_fc = lkl_args
+    theor_tracks, lkl_method, obs_clust, e_max, err_lst, completeness,\
+        max_mag_syn, st_dist_mass, R_V, ext_coefs, N_fc, cmpl_rnd, err_rnd =\
+        lkl_args
 
     # Metallicity and age indexes to identify isochrone.
     m_i = fundam_params[0].index(model_proper[0])
     a_i = fundam_params[1].index(model_proper[1])
     isochrone = theor_tracks[m_i][a_i]
 
+    # Generate synthetic cluster.
+    synth_clust = synth_cluster.main(
+        e_max, err_lst, completeness, max_mag_syn, st_dist_mass, isochrone,
+        R_V, ext_coefs, N_fc, cmpl_rnd, err_rnd, model_proper)
+
     # Call likelihood function for this model.
     lkl = likelihood.main(
-        lkl_method, e_max, bin_mr, err_lst, obs_clust, completeness,
-        max_mag_syn, st_dist_mass, isochrone, R_V, ext_coefs, N_fc,
-        model_proper)
+        lkl_method, synth_clust, obs_clust)
 
     return -lkl
 
@@ -110,9 +114,9 @@ def log_posterior(model, varIdxs, ranges, fundam_params, lkl_args):
     return lp + log_likelihood(model, fundam_params, lkl_args)
 
 
-def main(lkl_method, e_max, bin_mr, err_lst, completeness, max_mag_syn,
+def main(lkl_method, e_max, err_lst, completeness, max_mag_syn,
          fundam_params, obs_clust, theor_tracks, R_V, ext_coefs, st_dist_mass,
-         N_fc, nwalkers, nsteps, nburn, *args):
+         N_fc, cmpl_rnd, err_rnd, nwalkers, nsteps, nburn, *args):
     """
 
     nwalkers: number of MCMC walkers
@@ -141,7 +145,7 @@ def main(lkl_method, e_max, bin_mr, err_lst, completeness, max_mag_syn,
 
     # import genetic_algorithm
     # isoch_fit_params = genetic_algorithm.main(
-    #     lkl_method, e_max, bin_mr, err_lst, completeness, max_mag_syn,
+    #     lkl_method, e_max, err_lst, completeness, max_mag_syn,
     #     fundam_params, obs_clust, theor_tracks, R_V, ext_coefs,
     #     st_dist_mass, N_fc, N_pop, N_gen, fit_diff, cross_prob,
     #     cross_sel, mut_prob, N_el, N_ei, N_es, False)
@@ -150,9 +154,8 @@ def main(lkl_method, e_max, bin_mr, err_lst, completeness, max_mag_syn,
     #     isoch_fit_params[-1][0][:nwalkers]).T[varIdxs].T
 
     lkl_args = [
-        theor_tracks, lkl_method, e_max, bin_mr,
-        err_lst, obs_clust, completeness, max_mag_syn, st_dist_mass, R_V,
-        ext_coefs, N_fc]
+        theor_tracks, lkl_method, obs_clust, e_max, err_lst, completeness,
+        max_mag_syn, st_dist_mass, R_V, ext_coefs, N_fc, cmpl_rnd, err_rnd]
 
     # from emcee import PTSampler
     # ntemps = 20
@@ -237,7 +240,8 @@ def main(lkl_method, e_max, bin_mr, err_lst, completeness, max_mag_syn,
     # Pass the best model fit found (MAP).
     idx = np.argmax(sampler.flatlnprobability)
     best = closeSol(fundam_params, varIdxs, sampler.flatchain[idx])
-    print("Best sol", best)
+    print("Best sol (MAP): {:.4f} {:.2f} {:.2f} {:.2f} {:.0f} {:.1f}".format(
+        *best))
 
     # Throw-out the burn-in points and reshape.
     # emcee_trace = sampler.chain[:, nburn:, :].reshape(-1, ndim).T
@@ -252,15 +256,17 @@ def main(lkl_method, e_max, bin_mr, err_lst, completeness, max_mag_syn,
 
     # This number should be between approximately 0.25 and 0.5 if everything
     # went as planned.
-    print("Mean acceptance fraction:", np.mean(sampler.acceptance_fraction))
+    print("Mean acceptance fraction: {:.3f}".format(
+        np.mean(sampler.acceptance_fraction)))
 
     # Estimate the integrated autocorrelation time for the time series in each
     # parameter.
     try:
-        print("Autocorrelation time:", sampler.get_autocorr_time())
+        print("Autocorrelation time: {:.2f}".format(
+            sampler.get_autocorr_time()))
     except Exception:
-        print("The chain is too short to reliably estimate the autocorrelation"
-              " time")
+        print("  WARNING: the chain is too short to reliably estimat\n"
+              "  the autocorrelation time")
 
     # # TODO un-comment to generate corner plot
     # import matplotlib.pyplot as plt

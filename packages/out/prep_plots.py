@@ -317,14 +317,19 @@ def param_ranges(fundam_params):
     return min_max_p
 
 
-def likl_y_range(lkl_old):
+def likl_y_range(opt_method, lkl_old):
     '''
     Obtain y axis range for the likelihood axis.
     '''
-    # Take limits from L_min curve.
-    lkl_range = max(lkl_old[1]) - min(lkl_old[0])
-    l_min_max = [max(0., min(lkl_old[0]) - 0.1 * lkl_range),
-                 max(lkl_old[1]) + 0.1 * lkl_range]
+    if opt_method == 'emcee':
+        l_min_max = [
+            max(0., min(lkl_old) - .2 * min(lkl_old)),
+            np.median(lkl_old[:int(.1 * len(lkl_old))]) * 1.5]
+    elif opt_method == 'genet':
+        # Take limits from L_min curve.
+        lkl_range = max(lkl_old[1]) - min(lkl_old[0])
+        l_min_max = [max(0., min(lkl_old[0]) - 0.1 * lkl_range),
+                     max(lkl_old[1]) + 0.1 * lkl_range]
 
     return l_min_max
 

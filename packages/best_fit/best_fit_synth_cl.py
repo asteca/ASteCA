@@ -36,13 +36,14 @@ def params_errors(best_fit_algor, args):
         isoch_fit_errors = []
         # TODO hard-coded for 6 parameters
         j = 0
+        print("Best sol (median +- (84, 16) perc)")
         for i in range(6):
             if i in varIdxs:
                 pm = np.percentile(emcee_trace[i - j], 50)  # Median
                 #  16th and 84th percentiles (1 sigma)
                 ph = np.percentile(emcee_trace[i - j], 84) - pm
                 pl = pm - np.percentile(emcee_trace[i - j], 16)
-                print(pm, ph, pl)
+                print("  {:.4f} +- ({:.4f}, {:.4f})".format(pm, ph, pl))
                 # TODO fix this
                 err = .5 * (ph + pl) if max(ph, pl) > 0. else np.nan
                 isoch_fit_errors.append(err)
@@ -157,7 +158,7 @@ def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning, lkl_weight,
             isoch_fit_params = emcee_algor.main(
                 lkl_method, e_max, err_lst, completeness, max_mag_syn,
                 fundam_params, obs_clust, theor_tracks, R_V, ext_coefs,
-                st_dist_mass, N_fc, nwalkers, nsteps, nburn)
+                st_dist_mass, N_fc, cmpl_rnd, err_rnd, nwalkers, nsteps, nburn)
             # Assign uncertainties.
             isoch_fit_errors = params_errors(
                 best_fit_algor, isoch_fit_params[2:])
