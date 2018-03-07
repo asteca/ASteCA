@@ -56,8 +56,8 @@ def params_errors(best_fit_algor, args):
 def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning, lkl_weight,
          N_bootstrap, max_mag, IMF_name, m_high, m_sample_flag, R_V,
          fundam_params, N_pop, N_gen, fit_diff, cross_prob, cross_sel,
-         mut_prob, N_el, N_ei, N_es, nwalkers, nsteps, nburn, cmd_systs,
-         filters, colors, theor_tracks, **kwargs):
+         mut_prob, N_el, N_ei, N_es, cmd_systs, filters, colors, theor_tracks,
+         nwalkers=0, nsteps=0., nburn=0., **kwargs):
     '''
     Perform a best fitting process to find the cluster's fundamental
     parameters.

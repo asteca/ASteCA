@@ -47,6 +47,9 @@ def read_met_file(met_f, age_values, line_start, age_format, column_ids):
                 # Save data for each isochrone.
                 if not line.startswith("#"):
                     reader = line.split()
+
+                    # # Don't read PMS stars.
+                    # if reader[-1] != '0':
                     for i, id_num in enumerate(column_ids):
                         # Store data in column.
                         isoch_data[i].append(float(reader[id_num]))
@@ -85,7 +88,7 @@ def filters_and_extra_pars(
         met_f_ages = read_met_file(
             met_f, age_values, line_start, age_format, ids)
     except Exception:
-        print traceback.format_exc()
+        print(traceback.format_exc())
         sys.exit("Error reading {} from \n'{}'\n"
                  "metallicity file.".format(identif, met_f))
 

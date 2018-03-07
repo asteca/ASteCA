@@ -4,11 +4,11 @@ import numpy as np
 from os.path import isdir
 
 
-def check(bf_flag, best_fit_algor, lkl_method, lkl_binning, N_bootstrap,
-          evol_track, max_mag, IMF_name, R_V, bin_mr, bin_methods,
-          lkl_weight, bin_weights, cmd_evol_tracks, iso_paths, imf_funcs,
-          par_ranges, N_pop, N_gen, fit_diff, cross_prob, cross_sel,
-          mut_prob, N_el, N_ei, N_es, **kwargs):
+def check(bf_flag, best_fit_algor, lkl_method, lkl_methods, lkl_binning,
+          optimz_algors, N_bootstrap, evol_track, max_mag, IMF_name, R_V,
+          bin_mr, bin_methods, lkl_weight, bin_weights, cmd_evol_tracks,
+          iso_paths, imf_funcs, par_ranges, N_pop, N_gen, fit_diff,
+          cross_prob, cross_sel, mut_prob, N_el, N_ei, N_es, **kwargs):
     """
     Check all parameters related to the search for the best synthetic cluster
     match.
@@ -17,7 +17,7 @@ def check(bf_flag, best_fit_algor, lkl_method, lkl_binning, N_bootstrap,
     if bf_flag:
 
         # Check best fit method selected.
-        if best_fit_algor not in ('brute', 'genet'):
+        if best_fit_algor not in optimz_algors:
             sys.exit("ERROR: the selected best fit method '{}' does not match"
                      " a valid input.".format(best_fit_algor))
 
@@ -50,7 +50,7 @@ def check(bf_flag, best_fit_algor, lkl_method, lkl_binning, N_bootstrap,
                              N_el, N_pop))
 
         # Check likelihood method selected.
-        if lkl_method not in ('tolstoy', 'duong', 'dolphin', 'mighell'):
+        if lkl_method not in lkl_methods:
             sys.exit("ERROR: the selected likelihood method '{}' does not"
                      " match a valid input.".format(lkl_method))
 
