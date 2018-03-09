@@ -138,7 +138,7 @@ def main(met_f_filter, age_values, cmd_evol_tracks, evol_track, bin_mr,
     # discarded after the colors (and magnitudes) with binarity assignment
     # are obtained.
     mags_binar, cols_binar, probs_binar, mass_binar = binarity.binarGen(
-        fundam_params[5], N_interp, a, c, d, bin_mr)
+        fundam_params[5], N_interp, a, b, c, d, bin_mr)
 
     # Create list structured as:
     # theor_tracks = [m1, m2, .., mN]
