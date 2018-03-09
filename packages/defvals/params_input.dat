@@ -340,19 +340,7 @@ PS       PAR12
 #   IMF                 m_high           m_sample
 MF  kroupa_2002            150                  n
 
-# Maximum magnitude cut.
-#
-# * Maximum mag: max / [float]
-#   Select a maximum magnitude cut to be used in the best fit process. This
-#   limit affects both the observed and synthetic cluster.
-#
-#   - max: use the maximum observed magnitude (i.e.: no cut is applied).
-#   - [float]: manually select the maximum magnitude value to use.
-#
-#   max_mag
-MM      max
-
-# Ranges and steps for the fitted fundamental parameters.
+# Ranges and steps for the intrinsic fundamental parameters.
 #
 #                        min      max     step
 #   Metallicity (z)
@@ -373,17 +361,31 @@ BI                         0        1      0.2
 #
 #     min_mass_ratio
 BI_m              .7
+
+# Ranges and steps for the extrinsic fundamental parameters.
 #
+#                        min      max     step
 #   E(B-V)
 BV                         0        1     0.02
 #
-# Ratio of total to selective absorption.
+# Ratio of total to selective absorption (R_V).
 #
-#      R_V
-RV     3.1
+RV                         3.1
 #
 #   Distance modulus
 DM                         8       15      0.2
+
+# Maximum magnitude cut.
+#
+# * Maximum mag: max / [float]
+#   Select a maximum magnitude cut to be used in the best fit process. This
+#   limit affects both the observed and synthetic cluster.
+#
+#   - max: use the maximum observed magnitude (i.e.: no cut is applied).
+#   - [float]: manually select the maximum magnitude value to use.
+#
+#   max_mag
+MM      max
 
 # Algorithm used to maximize the likelihood.
 #

@@ -303,7 +303,7 @@ def error_bars(stars_phot, x_min_cmd, err_lst, all_flag=None):
 
 def param_ranges(fundam_params):
     '''
-    Parameter ranges used by GA plots.
+    Parameter ranges used by several plots.
     '''
     min_max_p = []
     for param in fundam_params:
@@ -315,6 +315,25 @@ def param_ranges(fundam_params):
         min_max_p.append([min(param) - delta_p, max(param) + delta_p])
 
     return min_max_p
+
+
+def p2_ranges(min_max_p, varIdxs, model_done, nwalkers, nsteps, nburn):
+    '''
+    Parameter ranges used by 'emcee' 2-param density plots.
+    '''
+    min_max_p2 = []
+    for vi in range(6):  # TODO hard-coded to 6 parameters
+        if vi in varIdxs:
+            model = varIdxs.index(vi)
+            hx, edge = np.histogram(
+                model_done[model], range=min_max_p[vi], bins=50)
+            # x% of the post-burn-in synthetic clusters explored.
+            non_z = np.nonzero(hx > int(.005 * nwalkers * (nsteps - nburn)))
+            min_max_p2.append([edge[non_z[0][0]], edge[non_z[0][-1]]])
+        else:
+            min_max_p2.append(min_max_p[vi])
+
+    return min_max_p2
 
 
 def likl_y_range(opt_method, lkl_old):

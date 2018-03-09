@@ -71,7 +71,11 @@ def main(
                 mp_best_fit1_GA.plot(n, *args)
 
         if pd['best_fit_algor'] == 'emcee':
-            pars_chains, varIdxs = isoch_fit_params[1:3]
+            pars_chains, m_accpt_fr, varIdxs = isoch_fit_params[1:4]
+            # Limits for the 2-dens plots.
+            min_max_p2 = prep_plots.p2_ranges(
+                min_max_p, varIdxs, model_done, pd['nwalkers'], pd['nsteps'],
+                pd['nburn'])
 
             # pl_2_param_dens: Param vs param density map.
             for p2 in [
@@ -79,7 +83,7 @@ def main(
                     'metal-binar', 'age-ext', 'age-dist', 'age-mass',
                     'age-binar', 'ext-dist', 'ext-mass', 'ext-binar',
                     'dist-mass', 'dist-binar', 'mass-binar']:
-                args = [p2, gs, min_max_p, fit_params_r, fit_errors_r,
+                args = [p2, gs, min_max_p2, fit_params_r, fit_errors_r,
                         varIdxs, model_done]
                 mp_best_fit1_emcee.plot(0, *args)
 
@@ -98,7 +102,8 @@ def main(
             for p in ['metal', 'age', 'ext', 'dist', 'mass', 'binar']:
                 args = [
                     p, gs, min_max_p, fit_params_r, pd['nwalkers'],
-                    pd['nsteps'], pd['nburn'], varIdxs, pars_chains]
+                    pd['nsteps'], pd['nburn'], m_accpt_fr, varIdxs,
+                    pars_chains]
                 mp_best_fit1_emcee.plot(3, *args)
 
         # Generate output file.

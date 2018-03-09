@@ -97,10 +97,11 @@ def plot_top_tiers(pd, top_tiers_flo, output_subdir, clust_name, mags,
 def main(npd, cld, pd, err_max, err_lst, ext_coefs, N_fc, cmpl_rnd, err_rnd,
          completeness, max_mag_syn, st_dist_mass, isoch_fit_params, **kwargs):
     '''
-    Obtain top tier models, produce data file and output image.
+    Obtain top tier models, produce data file and output image. Don't run
+    if the 'emcee' method was used.
     '''
 
-    if pd['bf_flag']:
+    if pd['bf_flag'] and pd['best_fit_algor'] != 'emcee':
         clust_name, output_subdir = npd['clust_name'], npd['output_subdir']
         all_models = isoch_fit_params[-1]
 

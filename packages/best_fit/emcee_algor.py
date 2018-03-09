@@ -211,11 +211,11 @@ def main(lkl_method, e_max, err_lst, completeness, max_mag_syn,
 
         # Print progress.
         percentage_complete = (100.0 * (i + 1) / nsteps)
-        while len(milestones) > 0 and percentage_complete >= milestones[0]:
+        if len(milestones) > 0 and percentage_complete >= milestones[0]:
 
             # Discard -np.inf posterior values.
             idx_keep = result[1] > -np.inf
-            # Store best solution in this iteration.
+            # Store MAP solution in this iteration.
             idx_best = np.argmin(-result[1][idx_keep])
 
             best_sol_run = [result[0][idx_best], -result[1][idx_best]]
@@ -232,7 +232,7 @@ def main(lkl_method, e_max, err_lst, completeness, max_mag_syn,
                   ", {:g}, {:g})".format(milestones[0], maf, lkl, *best))
             milestones = milestones[1:]
 
-    # TODO should I pass the 'best' solution (max likelihood) or the median?
+    # TODO should I pass the MAP solution or the median?
 
     # Pass the median as the best model fit found.
     # best = closeSol(fundam_params, np.median(emcee_trace, axis=1))
@@ -240,8 +240,25 @@ def main(lkl_method, e_max, err_lst, completeness, max_mag_syn,
     # Pass the best model fit found (MAP).
     idx = np.argmax(sampler.flatlnprobability)
     best = closeSol(fundam_params, varIdxs, sampler.flatchain[idx])
-    print("Best sol (MAP): {:.4f} {:.2f} {:.2f} {:.2f} {:.0f} {:.1f}".format(
+    print("MAP sol: {:g} {:g} {:.3f} {:.2f} {:g} {:g}".format(
         *best))
+
+    # This number should be between approximately 0.25 and 0.5 if everything
+    # went as planned.
+    m_accpt_fr = np.mean(sampler.acceptance_fraction)
+    print("Mean acceptance fraction: {:.3f}".format(m_accpt_fr))
+    if m_accpt_fr > .5 or m_accpt_fr < .25:
+        print("  WARNING: mean acceptance fraction is outside of the\n"
+              "  recommended range.")
+
+    # Estimate the integrated autocorrelation time for the time series in each
+    # parameter.
+    try:
+        print("Autocorrelation time: {:.2f}".format(
+            sampler.get_autocorr_time()))
+    except Exception:
+        print("  WARNING: the chain is too short to reliably estimate\n"
+              "  the autocorrelation time.")
 
     # Throw-out the burn-in points and reshape.
     # emcee_trace = sampler.chain[:, nburn:, :].reshape(-1, ndim).T
@@ -252,21 +269,7 @@ def main(lkl_method, e_max, err_lst, completeness, max_mag_syn,
     pars_chains = sampler.chain.T
 
     isoch_fit_params = [
-        best, [pars_chains_bi, pars_chains], varIdxs, emcee_trace]
-
-    # This number should be between approximately 0.25 and 0.5 if everything
-    # went as planned.
-    print("Mean acceptance fraction: {:.3f}".format(
-        np.mean(sampler.acceptance_fraction)))
-
-    # Estimate the integrated autocorrelation time for the time series in each
-    # parameter.
-    try:
-        print("Autocorrelation time: {:.2f}".format(
-            sampler.get_autocorr_time()))
-    except Exception:
-        print("  WARNING: the chain is too short to reliably estimat\n"
-              "  the autocorrelation time")
+        best, [pars_chains_bi, pars_chains], m_accpt_fr, varIdxs, emcee_trace]
 
     # # TODO un-comment to generate corner plot
     # import matplotlib.pyplot as plt
