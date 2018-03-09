@@ -1,5 +1,6 @@
 
 import numpy as np
+from scipy import stats
 import matplotlib.pyplot as plt
 import matplotlib.offsetbox as offsetbox
 from matplotlib.patches import Ellipse
@@ -48,12 +49,12 @@ def pl_2_param_dens(_2_params, gs, min_max_p2, cp_r, cp_e, varIdxs, model_done):
         plt.ylabel(y_label, fontsize=16)
         plt.yticks(rotation=45)
     else:
-        ax.tick_params(labelleft='off')
+        ax.tick_params(labelleft=False)
     if gs_y2 == 12:
         plt.xlabel(x_label, fontsize=16)
         plt.xticks(rotation=45)
     else:
-        ax.tick_params(labelbottom='off')
+        ax.tick_params(labelbottom=False)
     plt.minorticks_on()
 
     if mx in varIdxs and my in varIdxs:
@@ -106,7 +107,7 @@ def pl_param_pf(par_name, gs, min_max_p, cp_r, cp_e, varIdxs, model_done):
     xp, e_xp = map(float, [cp_r[cp], cp_e[cp]])
     # Set x axis limit.
     xp_min, xp_max = min_max_p[cp]
-    ax.set_xlim(xp_min, xp_max)
+    # ax.set_xlim(xp_min, xp_max)
     ax.locator_params(nbins=5)
     # Set minor ticks
     ax.minorticks_on()
@@ -114,8 +115,8 @@ def pl_param_pf(par_name, gs, min_max_p, cp_r, cp_e, varIdxs, model_done):
         plt.xlabel(ld_p, fontsize=16)
         plt.xticks(rotation=45)
     # else:
-    #     ax.tick_params(labelbottom='off')
-    ax.tick_params(axis='y', which='major', labelleft='off')
+    #     ax.tick_params(labelbottom=False)
+    ax.tick_params(axis='y', which='major', labelleft=False)
     # Add textbox.
     ob = offsetbox.AnchoredText(ld_p, pad=0.1, loc=9, prop=dict(size=10))
     ob.patch.set(alpha=0.8)
@@ -123,13 +124,21 @@ def pl_param_pf(par_name, gs, min_max_p, cp_r, cp_e, varIdxs, model_done):
 
     if cp in varIdxs:
         c_model = varIdxs.index(cp)
-        plt.hist(
-            model_done[c_model], bins=20, range=[xp_min, xp_max],
-            color='k', histtype='step', linewidth=1.5)
-        # Same histogram but with more bins.
-        plt.hist(
-            model_done[c_model], bins=50, facecolor='grey', alpha=0.3,
-            range=[xp_min, xp_max],)
+
+        # Define KDE limits.
+        x_kde = np.mgrid[xp_min:xp_max:100j]
+        kernel_cl = stats.gaussian_kde(model_done[c_model])
+        # KDE for plotting.
+        kde = np.reshape(kernel_cl(x_kde).T, x_kde.shape)
+        plt.plot(x_kde, kde / max(kde), color='k', lw=1.5)
+
+        # Obtain the bin values and edges using numpy
+        hist, bin_edges = np.histogram(model_done[c_model], bins=25)
+        # Plot bars with the proper positioning, height, and width.
+        plt.bar(
+            (bin_edges[1:] + bin_edges[:-1]) * .5, hist / float(hist.max()),
+            width=(bin_edges[1] - bin_edges[0]), color='grey', alpha=0.3)
+
         # Best fit (MAP).
         plt.axvline(
             x=xp, linestyle='--', color='red', zorder=4,
@@ -194,7 +203,7 @@ def pl_pdf_half(par_name, gs, min_max_p, varIdxs, model_done):
     ax.locator_params(nbins=5)
     # Set minor ticks
     ax.minorticks_on()
-    ax.tick_params(axis='y', which='major', labelleft='off', labelbottom='off')
+    ax.tick_params(axis='y', which='major', labelleft=False, labelbottom=False)
 
     if cp in varIdxs:
         c_model = varIdxs.index(cp)
@@ -250,7 +259,7 @@ def pl_param_chain(
     if cp == 5:
         plt.xlabel("Steps")
     else:
-        ax.tick_params(labelbottom='off')
+        ax.tick_params(labelbottom=False)
     plt.ylabel(labels[cp])
     ax.set_xlim(0, nburn + nsteps)
 
@@ -274,6 +283,7 @@ def plot(N, *args):
     '''
     Handle each plot separately.
     '''
+    plt.style.use('seaborn-darkgrid')
     plt_map = {
         0: [pl_2_param_dens, args[0] + ' density map'],
         1: [pl_param_pf, args[0] + ' probability function'],

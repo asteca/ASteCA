@@ -317,7 +317,7 @@ def param_ranges(fundam_params):
     return min_max_p
 
 
-def p2_ranges(min_max_p, varIdxs, model_done, nwalkers, nsteps, nburn):
+def p2_ranges(min_max_p, varIdxs, model_done, nwalkers, nsteps):
     '''
     Parameter ranges used by 'emcee' 2-param density plots.
     '''
@@ -327,8 +327,8 @@ def p2_ranges(min_max_p, varIdxs, model_done, nwalkers, nsteps, nburn):
             model = varIdxs.index(vi)
             hx, edge = np.histogram(
                 model_done[model], range=min_max_p[vi], bins=50)
-            # x% of the post-burn-in synthetic clusters explored.
-            non_z = np.nonzero(hx > int(.005 * nwalkers * (nsteps - nburn)))
+            # x% of the total number of synthetic clusters explored.
+            non_z = np.nonzero(hx > int(.005 * nwalkers * nsteps))
             min_max_p2.append([edge[non_z[0][0]], edge[non_z[0][-1]]])
         else:
             min_max_p2.append(min_max_p[vi])

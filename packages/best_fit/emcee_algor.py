@@ -44,8 +44,11 @@ def closeSol(fundam_params, varIdxs, model):
     """
     model_proper, j = [], 0
     for i, par in enumerate(fundam_params):
+        # If this parameter is one of the 'free' parameters.
         if i in varIdxs:
+            # If it is the parameter metallicity, age or mass.
             if i in [0, 1, 4]:
+                # Select the closest value in the array of allowed values.
                 model_proper.append(
                     min(par, key=lambda x: abs(x - model[i - j])))
             else:
@@ -65,6 +68,8 @@ def log_prior(model, fundam_params, varIdxs, ranges):
         r[0] <= p <= r[1] for p, r in zip(*[model, ranges[varIdxs]])]
 
     lp, model_proper = -np.inf, []
+    # If some parameter is outside of the given ranges, don't bother obtaining
+    # the proper model and just pass -inf
     if all(check_ranges):
         model_proper = closeSol(fundam_params, varIdxs, model)
 

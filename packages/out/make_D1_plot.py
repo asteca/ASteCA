@@ -74,8 +74,7 @@ def main(
             pars_chains, m_accpt_fr, varIdxs = isoch_fit_params[1:4]
             # Limits for the 2-dens plots.
             min_max_p2 = prep_plots.p2_ranges(
-                min_max_p, varIdxs, model_done, pd['nwalkers'], pd['nsteps'],
-                pd['nburn'])
+                min_max_p, varIdxs, model_done, pd['nwalkers'], pd['nsteps'])
 
             # pl_2_param_dens: Param vs param density map.
             for p2 in [
