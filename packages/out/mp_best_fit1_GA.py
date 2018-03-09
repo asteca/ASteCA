@@ -7,7 +7,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 import scipy.interpolate
 
 
-def pl_ga_lkl(gs, l_min_max, lkl_old, model_done, new_bs_indx, N_pop, N_gen,
+def pl_GA_lkl(gs, l_min_max, lkl_old, model_done, new_bs_indx, N_pop, N_gen,
               fit_diff, cross_prob, cross_sel, mut_prob, N_el, N_ei, N_es,
               N_b):
     '''
@@ -22,32 +22,63 @@ def pl_ga_lkl(gs, l_min_max, lkl_old, model_done, new_bs_indx, N_pop, N_gen,
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=0.6)
     plt.xlabel('Generation', fontsize=12)
     plt.ylabel('Likelihood', fontsize=12)
-    # Add text box.
-    text1 = '$N_{total} = %.1e\,;\,N_{btst} = %d$' '\n' % \
-        (len(model_done[0]), N_b)
-    text2 = '$n_{gen}=%d\,;\,n_{pop}=%d$' '\n' % (N_gen, N_pop)
-    text3 = '$f_{dif}=%0.2f\,;\,cr_{sel}=%s$' '\n' % (fit_diff, cross_sel)
-    text4 = '$p_{cross}=%0.2f\,;\,p_{mut}=%0.2f$' '\n' % (cross_prob, mut_prob)
-    text5 = '$n_{el}=%d\,;\,n_{ei}=%d\,;\,n_{es}=%d$' % (N_el, N_ei, N_es)
-    text = text1 + text2 + text3 + text4 + text5
-    ob = offsetbox.AnchoredText(text, loc=1, prop=dict(size=12))
-    ob.patch.set(boxstyle='square,pad=0.', alpha=0.85)
-    ax.add_artist(ob)
 
     # Plot likelihood minimum and mean lines.
-    ax.plot(range(len(lkl_old[0])), lkl_old[0], lw=1., c='black',
+    ax.plot(range(len(lkl_old[0])), lkl_old[0], lw=1., c='green',
             label='$L_{{min}}={:.1f}$'.format(min(lkl_old[0])))
-    ax.plot(range(len(lkl_old[0])), lkl_old[1], lw=1., c='blue',
+    ax.plot(range(len(lkl_old[0])), lkl_old[1], lw=1., c='k',
             label='$L_{mean}$')
     # Plot line marking a new best solution found.
     for lin in new_bs_indx:
-        lw_lin = 2. if lin > 0.05 * len(lkl_old[0]) else 0.5
-        plt.axvline(x=lin, linestyle='--', lw=lw_lin, color='green')
+        lw_lin = 1.5 if lin > 0.05 * len(lkl_old[0]) else 0.5
+        plt.axvline(x=lin, linestyle='--', lw=lw_lin, color='blue')
+    # Add text box.
+    text1 = '$N_{{total}}={:.1E}\,;\,N_{{btst}}={}$'.format(
+        len(model_done[0]), N_b)
+    text2 = '$n_{{gen}}={}\,;\,n_{{pop}}={}$'.format(N_gen, N_pop)
+    text3 = '$f_{{dif}}={:.2f}\,;\,cr_{{sel}}={}$'.format(
+        fit_diff, cross_sel)
+    text4 = '$p_{{cross}}={:.2f}\,;\,p_{{mut}}={:.2f}$'.format(
+        cross_prob, mut_prob)
+    text5 = '$n_{{el}}={}\,;\,n_{{ei}}={}\,;\,n_{{es}}={}$'.format(
+        N_el, N_ei, N_es)
+    text = text1 + '\n' + text2 + '\n' + text3 + '\n' + text4 + '\n' +\
+        text5
+    ob = offsetbox.AnchoredText(text, loc=1, prop=dict(size=12))
+    ob.patch.set(boxstyle='square,pad=0.', alpha=0.85)
+    ax.add_artist(ob)
     # Legend.
     handles, labels = ax.get_legend_handles_labels()
     leg = ax.legend(handles, labels, loc='upper left', numpoints=1,
                     fontsize=12)
     leg.get_frame().set_alpha(0.7)
+
+
+def selectMinLkl(x, y, z):
+    """
+    Select the xy pairs with the smallest z values.
+    Source: https://stackoverflow.com/a/45887552/1391441
+    """
+    # Get grouped lex-sort indices
+    sidx = np.lexsort([x, y])
+    # Lex-sort x, y, z
+    x_sorted = x[sidx]
+    y_sorted = y[sidx]
+    z_sorted = z[sidx]
+
+    # Get equality mask between each sorted X and Y elem against previous
+    # ones. The non-zero indices of its inverted mask gives us the indices
+    # where the new groupings start. We are calling those as cut_idx.
+    seq_eq_mask = (x_sorted[1:] == x_sorted[:-1]) &\
+        (y_sorted[1:] == y_sorted[:-1])
+    cut_idx = np.flatnonzero(np.concatenate(([True], ~seq_eq_mask)))
+
+    # Use those cut_idx to get intervalled minimum values
+    minZ = np.minimum.reduceat(z_sorted, cut_idx)
+
+    # Make tuples of the groupings of x,y and the corresponding min Z
+    # values.
+    return x_sorted[cut_idx], y_sorted[cut_idx], minZ.tolist()
 
 
 def pl_2_param_dens(gs, _2_params, min_max_p, cp_r, cp_e, model_done):
@@ -97,33 +128,7 @@ def pl_2_param_dens(gs, _2_params, min_max_p, cp_r, cp_e, model_done):
     # Plot best fit point.
     plt.scatter(xp, yp, marker='x', c=cp, s=30, linewidth=2, zorder=4)
 
-    def selectMinLkl(x, y, z):
-        """
-        Select the xy pairs with the smallest z values.
-        Source: https://stackoverflow.com/a/45887552/1391441
-        """
-        # Get grouped lex-sort indices
-        sidx = np.lexsort([x, y])
-        # Lex-sort x, y, z
-        x_sorted = x[sidx]
-        y_sorted = y[sidx]
-        z_sorted = z[sidx]
-
-        # Get equality mask between each sorted X and Y elem against previous
-        # ones. The non-zero indices of its inverted mask gives us the indices
-        # where the new groupings start. We are calling those as cut_idx.
-        seq_eq_mask = (x_sorted[1:] == x_sorted[:-1]) &\
-            (y_sorted[1:] == y_sorted[:-1])
-        cut_idx = np.flatnonzero(np.concatenate(([True], ~seq_eq_mask)))
-
-        # Use those cut_idx to get intervalled minimum values
-        minZ = np.minimum.reduceat(z_sorted, cut_idx)
-
-        # Make tuples of the groupings of x,y and the corresponding min Z
-        # values.
-        return x_sorted[cut_idx], y_sorted[cut_idx], minZ.tolist()
-
-    # Select the minimum likelihood for each (x,y) pair in the density plot.
+    # Minimum likelihood for each (x,y) pair in the density plot.
     z_lkl = np.log(np.asarray(model_done[1]) + 1.)
     x, y, z = selectMinLkl(
         np.array(zip(*model_done[0])[mx]), np.array(zip(*model_done[0])[my]),
@@ -201,17 +206,12 @@ def pl_lkl_scatt(gs, ld_p, min_max_p, cp_r, cp_e, model_done):
     ob = offsetbox.AnchoredText(text, pad=0.1, loc=2, prop=dict(size=10))
     ob.patch.set(alpha=0.8)
     ax.add_artist(ob)
-    plt.axvline(x=xp, linestyle='--', color='red', zorder=4)
     # Plot scatter points over likelihood density map.
     cm = plt.cm.get_cmap('viridis')
     col_arr = [float(_) for _ in zip(*model_done[0])[ci]]
     SC = plt.scatter(zip(*model_done[0])[cp], model_done[1], marker='o',
                      c=col_arr, s=25, edgecolors='k',
                      lw=0.2, edgecolor='w', cmap=cm, zorder=2)
-    if e_xp > 0.:
-        # Plot error bars only if errors where assigned.
-        plt.axvline(x=xp + e_xp, linestyle='--', color='blue', zorder=4)
-        plt.axvline(x=xp - e_xp, linestyle='--', color='blue', zorder=4)
     # Set y axis limit.
     min_lik, med_lik = min(model_done[1]), np.median(model_done[1])
     min_y, max_y = min_lik - min_lik * 0.1, min(2.5 * min_lik, 1.2 * med_lik)
@@ -224,6 +224,12 @@ def pl_lkl_scatt(gs, ld_p, min_max_p, cp_r, cp_e, model_done):
     cbar = plt.colorbar(SC, cax=color_axis)
     cbar.set_label(zlab, fontsize=12, labelpad=4)
     cbar.ax.tick_params(labelsize=8)
+    # Best fit and errors.
+    plt.axvline(x=xp, linestyle='--', color='red', zorder=4)
+    if e_xp > 0.:
+        # Plot error bars only if errors where assigned.
+        plt.axvline(x=xp + e_xp, linestyle='--', color='blue', zorder=4)
+        plt.axvline(x=xp - e_xp, linestyle='--', color='blue', zorder=4)
 
 
 def plot(N, *args):
@@ -231,7 +237,7 @@ def plot(N, *args):
     Handle each plot separately.
     '''
     plt_map = {
-        0: [pl_ga_lkl, 'GA likelihood evolution'],
+        0: [pl_GA_lkl, 'GA likelihood evolution'],
         1: [pl_2_param_dens, 'age vs metallicity density map'],
         2: [pl_2_param_dens, 'distance vs extinction density map'],
         3: [pl_2_param_dens, 'age vs extinction density map'],

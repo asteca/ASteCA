@@ -22,8 +22,8 @@ def mag_combine(m1, m2):
 
 
 def binarGen(
-        binar_fracs, N_interp, mags_theor, mags_cols_theor, extra_pars,
-        bin_mass_ratio):
+        binar_fracs, N_interp, mags_theor, cols_theor, mags_cols_theor,
+        extra_pars, bin_mass_ratio):
     '''
 
     0. Assign N unique indexes by dividing range of stars by their total
@@ -120,7 +120,7 @@ def binarGen(
     else:
         mags_binar, cols_binar, mass_binar =\
             np.zeros(np.shape(mags_theor)),\
-            np.zeros(np.shape(mags_cols_theor)),\
+            np.zeros(np.shape(cols_theor)),\
             np.array(extra_pars)[:, :, :1, :]
         probs_binar = np.zeros(np.shape(mass_binar))
 

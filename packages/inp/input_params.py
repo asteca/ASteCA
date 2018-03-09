@@ -37,6 +37,9 @@ def main(mypath, pars_f_path):
     # Accept these variations of the 'true' flag.
     true_lst = ('y', 'yes', 'Yes', 'YES')
 
+    # TODO remove once 'emcee' is in place in the params_input file
+    nwalkers, nsteps, nburn = 0, 0, 0
+
     # Read data from file.
     with open(pars_f_path, "r") as f_dat:
 
@@ -149,6 +152,12 @@ def main(mypath, pars_f_path):
                     best_fit_algor = str(reader[1])
                     N_bootstrap = int(reader[2])
 
+                # emcee algorithm parameters.
+                elif reader[0] == 'EM':
+                    nwalkers = int(reader[1])
+                    nsteps = int(reader[2])
+                    nburn = int(reader[3])
+
                 # Genetic algorithm parameters.
                 elif reader[0] == 'GA':
                     N_pop = int(reader[1])
@@ -176,9 +185,13 @@ def main(mypath, pars_f_path):
     bin_methods = ('fixed', 'auto', 'fd', 'doane', 'scott', 'rice', 'sqrt',
                    'sturges', 'knuth', 'blocks')
     bin_weights = ('mean', 'median', 'max')
+    # Likelihood methods.
+    lkl_methods = ('tolstoy', 'duong', 'dolphin', 'mighell')
     # Accepted IMF functions.
     imf_funcs = ('chabrier_2001_exp', 'chabrier_2001_log', 'kroupa_1993',
                  'kroupa_2002')
+    # Optimizing algorithm
+    optimz_algors = ('brute', 'genet', 'emcee')
 
     # Map evolutionary tracks selection to proper names, and name of the folder
     # where they should be stored.
@@ -224,6 +237,8 @@ def main(mypath, pars_f_path):
         'max_mag': max_mag, 'IMF_name': IMF_name, 'm_high': m_high,
         'm_sample_flag': m_sample_flag,
         'R_V': R_V, 'bin_mr': bin_mr,
+        # emcee algorithm parameters.
+        'nwalkers': nwalkers, 'nsteps': nsteps, 'nburn': nburn,
         # Genetic algorithm parameters.
         'N_pop': N_pop, 'N_gen': N_gen, 'fit_diff': fit_diff,
         'cross_prob': cross_prob, 'cross_sel': cross_sel, 'mut_prob': mut_prob,
@@ -231,7 +246,8 @@ def main(mypath, pars_f_path):
         # Fixed accepted parameter values and photometric systems.
         'da_algors_accpt': da_algors_accpt, 'fld_rem_methods': fld_rem_methods,
         'bin_methods': bin_methods, 'bin_weights': bin_weights,
-        'imf_funcs': imf_funcs,
+        'imf_funcs': imf_funcs, 'lkl_methods': lkl_methods,
+        'optimz_algors': optimz_algors,
         'cmd_evol_tracks': cmd_evol_tracks, 'cmd_systs': cmd_systs,
         # v These lists need to be re-formatted
         'par_ranges': par_ranges}
