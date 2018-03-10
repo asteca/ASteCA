@@ -154,9 +154,9 @@ def main(mypath, pars_f_path):
 
                 # emcee algorithm parameters.
                 elif reader[0] == 'EM':
-                    nwalkers = int(reader[1])
-                    nsteps = int(reader[2])
-                    nburn = int(reader[3])
+                    nwalkers = int(float(reader[1]))
+                    nsteps = int(float(reader[2]))
+                    nburn = int(float(reader[3]))
 
                 # Genetic algorithm parameters.
                 elif reader[0] == 'GA':
