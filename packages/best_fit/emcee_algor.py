@@ -1,7 +1,7 @@
 
 import numpy as np
 import random
-import emcee
+# import emcee  # TODO not in place yet
 from ..synth_clust import synth_cluster
 import likelihood
 from .. import update_progress
