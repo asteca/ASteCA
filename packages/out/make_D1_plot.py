@@ -88,7 +88,7 @@ def main(
 
             # pl_param_pf: Parameters probability functions.
             for p in ['metal', 'age', 'ext', 'dist', 'mass', 'binar']:
-                args = [p, gs, min_max_p, fit_params_r, fit_errors_r,
+                args = [p, gs, min_max_p2, fit_params_r, fit_errors_r,
                         varIdxs, model_done]
                 mp_best_fit1_emcee.plot(1, *args)
 

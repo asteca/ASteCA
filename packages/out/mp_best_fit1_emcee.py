@@ -83,7 +83,7 @@ def pl_2_param_dens(_2_params, gs, min_max_p2, cp_r, cp_e, varIdxs, model_done):
     ax.set_aspect('auto')
 
 
-def pl_param_pf(par_name, gs, min_max_p, cp_r, cp_e, varIdxs, model_done):
+def pl_param_pf(par_name, gs, min_max_p2, cp_r, cp_e, varIdxs, model_done):
     '''
     Parameter posterior plot.
     '''
@@ -106,8 +106,8 @@ def pl_param_pf(par_name, gs, min_max_p, cp_r, cp_e, varIdxs, model_done):
     # Parameter values and errors.
     xp, e_xp = map(float, [cp_r[cp], cp_e[cp]])
     # Set x axis limit.
-    xp_min, xp_max = min_max_p[cp]
-    # ax.set_xlim(xp_min, xp_max)
+    xp_min, xp_max = min_max_p2[cp]
+    ax.set_xlim(xp_min, xp_max)
     ax.locator_params(nbins=5)
     # Set minor ticks
     ax.minorticks_on()
@@ -126,7 +126,8 @@ def pl_param_pf(par_name, gs, min_max_p, cp_r, cp_e, varIdxs, model_done):
         c_model = varIdxs.index(cp)
 
         # Define KDE limits.
-        x_kde = np.mgrid[xp_min:xp_max:100j]
+        x_rang = .1 * (xp_max - xp_min)
+        x_kde = np.mgrid[xp_min - x_rang:xp_max + x_rang:100j]
         kernel_cl = stats.gaussian_kde(model_done[c_model])
         # KDE for plotting.
         kde = np.reshape(kernel_cl(x_kde).T, x_kde.shape)
@@ -139,10 +140,15 @@ def pl_param_pf(par_name, gs, min_max_p, cp_r, cp_e, varIdxs, model_done):
             (bin_edges[1:] + bin_edges[:-1]) * .5, hist / float(hist.max()),
             width=(bin_edges[1] - bin_edges[0]), color='grey', alpha=0.3)
 
-        # Best fit (MAP).
+        # MAP
         plt.axvline(
             x=xp, linestyle='--', color='red', zorder=4,
             label=("MAP (" + p + ")").format(xp))
+        # Mode (using KDE)
+        x_mode = x_kde[np.argmax(kde)]
+        plt.axvline(
+            x=x_mode, linestyle='--', color='cyan', zorder=4,
+            label=("Mode (" + p + ")").format(x_mode))
         # Mean
         x_mean = np.mean(model_done[c_model])
         plt.axvline(
@@ -164,6 +170,7 @@ def pl_param_pf(par_name, gs, min_max_p, cp_r, cp_e, varIdxs, model_done):
                     pm - pl, pm + ph))
             plt.axvline(
                 x=pm - pl, linestyle=':', color='orange', zorder=4)
+
         cur_ylim = ax.get_ylim()
         ax.set_ylim([0, cur_ylim[1]])
         plt.legend(fontsize='small')
@@ -301,3 +308,4 @@ def plot(N, *args):
         import traceback
         print(traceback.format_exc())
         print("  WARNING: error when plotting {}.".format(plt_map.get(N)[1]))
+    plt.style.use('default')

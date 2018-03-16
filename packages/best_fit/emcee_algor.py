@@ -74,8 +74,8 @@ def log_prior(model, fundam_params, varIdxs, ranges):
         model_proper = closeSol(fundam_params, varIdxs, model)
 
         # # Gaussian prior.
-        # mu_std = [[0.0155, 8., .3, 12.3, 500., 0.],
-        #           [0.00005, .3, .2, .5, 500., 0.000001]]
+        # mu_std = [[0.0155, 8., .3, 13., 2000., 0.],
+        #           [0.005, .5, .5, .5, 1000., 0.01]]
         # pr_pars = -np.square(
         #     (np.asarray(model_proper) - mu_std[0]) / mu_std[1])
         # lp = np.sum(pr_pars)
@@ -234,7 +234,7 @@ def main(lkl_method, e_max, err_lst, completeness, max_mag_syn,
                 lkl = best_sol_old[1]
             maf = np.mean(sampler.acceptance_fraction)
             print(" {:>3}% ({:.3f}) L={:.1f} ({:g}, {:g}, {:.3f}, {:.2f}"
-                  ", {:g}, {:g})".format(milestones[0], maf, lkl, *best))
+                  ", {:g}, {:.2f})".format(milestones[0], maf, lkl, *best))
             milestones = milestones[1:]
 
     # TODO should I pass the MAP solution or the median?
@@ -245,7 +245,7 @@ def main(lkl_method, e_max, err_lst, completeness, max_mag_syn,
     # Pass the best model fit found (MAP).
     idx = np.argmax(sampler.flatlnprobability)
     best = closeSol(fundam_params, varIdxs, sampler.flatchain[idx])
-    print("MAP sol: {:g} {:g} {:.3f} {:.2f} {:g} {:g}".format(
+    print("MAP sol: {:g} {:g} {:.3f} {:.2f} {:g} {:.2f}".format(
         *best))
 
     # This number should be between approximately 0.25 and 0.5 if everything
