@@ -7,6 +7,8 @@ def ccm_model(mw):
     Cardelli, Clayton, and Mathis (1989 ApJ. 345, 245) model for extinction
     coefficients with updated coefficients for near-UV from O'Donnell (1994).
 
+    ccm_coef = a + b / Rv
+
     Implementation taken from:
 
     http://idlastro.gsfc.nasa.gov/ftp/pro/astro/ccm_unred.pro
@@ -57,13 +59,10 @@ def ccm_model(mw):
             "The effective wavelength is {} [1/micron], beyond "
             "the CCM model limit (10 [1/micron]).".format(mw))
 
-    # ccm_coef = a + b / Rv
-    ccm_coefs = [a, b]
-
-    return ccm_coefs
+    return a, b
 
 
-def main(cmd_systs, all_syst_filters, filters, colors):
+def main(cmd_systs, filters, colors, ext_shape):
     """
     Obtain extinction coefficients for all the observed filters and colors,
     in the order in which they are stored in theor_tracks.
@@ -94,19 +93,5 @@ def main(cmd_systs, all_syst_filters, filters, colors):
         # inverse microns.
         ext_coefs.append([ccm_model(10000. / eff_wave1),
                           ccm_model(10000. / eff_wave2)])
-
-    # For filters that make up the colors.
-    for c in colors:
-        # c[0]: photometric system; c[1]: color index
-        # Index of filters.
-        ci1 = cmd_systs[c[0]][1].index(c[1].split(',')[0])
-        ci2 = cmd_systs[c[0]][1].index(c[1].split(',')[1])
-        # Effective wavelength in Armstrong.
-        eff_wave1 = cmd_systs[c[0]][2][ci1]
-        eff_wave2 = cmd_systs[c[0]][2][ci2]
-        # CCM coefficient for this filter. Use the effective wavelength in
-        # inverse microns.
-        ext_coefs.append(ccm_model(10000. / eff_wave1))
-        ext_coefs.append(ccm_model(10000. / eff_wave2))
 
     return ext_coefs

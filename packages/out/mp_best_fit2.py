@@ -150,12 +150,12 @@ def pl_bf_synth_cl(
         # horizontal lines
         ax.axhline(y_ed, linestyle=':', lw=.8, color='k', zorder=1)
     # Plot synthetic cluster.
-    single_idx = [_ for _ in range(len(x_synth)) if _ not in binar_idx]
+    single_idx, bin_idx = binar_idx <= 1., binar_idx > 1.
     # Single systems
     plt.scatter(x_synth[single_idx], y_synth[single_idx], marker='o', s=40,
                 c='#4682b4', lw=0.5, edgecolor='k', zorder=2)
     # Binary systems
-    plt.scatter(x_synth[binar_idx], y_synth[binar_idx], marker='o', s=30,
+    plt.scatter(x_synth[bin_idx], y_synth[bin_idx], marker='o', s=30,
                 c='#F34C4C', lw=0.35, edgecolor='k', zorder=3)
     # Plot isochrone.
     plt.plot(x_isoch, y_isoch, '#21B001', lw=1., zorder=6)

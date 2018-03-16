@@ -119,8 +119,8 @@ def check(mypath, pd):
         # REMOVE when support for multiple mags/colors is in place.
         if len(filters) > 1:
             sys.exit("ERROR: more than one filter defined.")
-        if len(colors) > 1:
-            sys.exit("ERROR: more than one color defined.")
+        if len(colors) > 2:
+            sys.exit("ERROR: more than two colors defined.")
 
     # Add data to parameters dictionary.
     pd['id_indx'], pd['x_indx'], pd['y_indx'], pd['coords'],\

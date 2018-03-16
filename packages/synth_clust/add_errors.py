@@ -1,18 +1,23 @@
 
 import numpy as np
-from ..math_f import exp_function
+if __name__ in ['add_errors', '__main__']:
+    import sys, os
+    sys.path.append(os.path.abspath(os.path.join('..', '')))
+    from math_f import exp_function
+else:
+    from ..math_f import exp_function
 
 
 def gauss_error(rnd, mc, e_mc):
     '''
     Randomly move mag and color through a Gaussian function.
     '''
-    mc_gauss = mc + rnd * e_mc
+    mc_gauss = mc + rnd[:len(mc)] * e_mc
 
     return mc_gauss
 
 
-def main(isoch_compl, binar_idx, err_lst, err_max, N_fc):
+def main(isoch_compl, err_lst, err_max, m_ini, err_rnd):
     """
     Randomly move stars according to given error distributions.
 
@@ -21,11 +26,7 @@ def main(isoch_compl, binar_idx, err_lst, err_max, N_fc):
     """
 
     isoch_error = [[], []]
-    i_s, i_l = 0, len(isoch_compl[0])
 
-    # Generate once a random array with enough length to apply for all
-    # photometric dimensions.
-    rnd = np.random.normal(0, 1, len(isoch_compl[0]) * sum(N_fc))
     for i, popt_mc in enumerate(err_lst):
         # isoch_compl[0] is the main magnitude.
         sigma_mc = np.array(exp_function.exp_3p(isoch_compl[0], *popt_mc))
@@ -40,18 +41,14 @@ def main(isoch_compl, binar_idx, err_lst, err_max, N_fc):
         ###################################################################
 
         # Randomly move stars around these errors.
-        mc_gauss = gauss_error(
-            rnd[i_s:i_l * (i + 1)], isoch_compl[i], sigma_mc)
-        i_s = i_l * (i + 1)
+        mc_gauss = gauss_error(err_rnd, isoch_compl[i], sigma_mc)
 
         # Create list with photometric dimensions in first sub-list, and
         # associated errors in the second.
         isoch_error[0].append(mc_gauss)
         isoch_error[1].append(sigma_mc)
 
-    # Append indexes that identify binaries, and extra information.
-    # isoch_compl = [f1, f2, .., c1, c2, .., fc1, fc2, .., extra_pars(6)]
-    synth_clust = [isoch_error] + [list(binar_idx)] +\
-        [list(isoch_compl[(N_fc[0] + N_fc[1] + 2 * N_fc[1]):])]
+    # Append extra information (binary prob, binary mass, 6 extra params).
+    synth_clust = [isoch_error] + [list(isoch_compl[(m_ini - 2):])]
 
     return synth_clust

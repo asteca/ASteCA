@@ -1,5 +1,19 @@
 # Change Log
 
+## [[v0.2.4]][198] - 2018-03-16
+
+### Changed
+
+* Extend support for up to two colors.
+* Improved performance ([#357][197]):
+  * Make mass sampling optional ([#373][196])
+  * Move binarity assignment outside of the synthetic cluster generation.
+  * Move isochrone sorting outside of the synthetic cluster generation.
+  * Move random floats for photometric errors outside of the synthetic
+    cluster generation.
+  * Move random floats for completeness outside of the synthetic cluster
+    generation. Code is now ~3.3X faster
+
 
 ## [[v0.2.3]][194] - 2017-09-23
 
@@ -50,6 +64,8 @@
 * Switch dependency requirement from astroML to astropy ([#303][170]).
 * Remove unused error rejection modes ([#331][169])
 * Simplify params_input.dat file ([#217][168])
+* Check that all metallicity files contain the same number of age
+  values ([#218][195])
 * Add density maps analysis for center function ([#164][167])
 * Remove weight added to the observed cluster CMD's histogram ([#308][166])
 * Fix bad parameter rounding ([#248][165])
@@ -609,3 +625,7 @@ ________________________________________________________________________________
 [192]: https://github.com/asteca/ASteCA/issues/350
 [193]: https://github.com/asteca/ASteCA/issues/227
 [194]: https://github.com/asteca/asteca/releases/tag/v0.2.3
+[195]: https://github.com/asteca/ASteCA/issues/218
+[196]: https://github.com/asteca/ASteCA/issues/373
+[197]: https://github.com/asteca/ASteCA/issues/357
+[198]: https://github.com/asteca/asteca/releases/tag/v0.2.4

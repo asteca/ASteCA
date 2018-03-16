@@ -81,7 +81,7 @@ def check_get(pd):
     store the data and pass it.
     """
     # Only read files if best fit method is set to run. Else pass empty list.
-    pd['fundam_params'], pd['theor_tracks'] = [], []
+    pd['fundam_params'], pd['theor_tracks'], pd['plot_isoch_data'] = [], [], []
     if pd['bf_flag']:
         # Read metallicity files' names, store proper ranges for all
         # parameters, and available metallicities and ages.
@@ -94,6 +94,7 @@ def check_get(pd):
         pd['fundam_params'] = [met_values[0], age_values] + param_ranges[2:]
 
         # Store all isochrones in all the metallicity files.
-        pd['theor_tracks'] = isoch_params.main(met_f_filter, age_values, **pd)
+        pd['theor_tracks'], pd['plot_isoch_data'] = isoch_params.main(
+            met_f_filter, age_values, **pd)
 
     return pd

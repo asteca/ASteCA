@@ -322,13 +322,6 @@ LK     dolphin     auto      mean
 #   evol_track
 PS       PAR12
 
-# Ratio of total to selective absorption.
-#
-# * R_V: [float]
-#
-#   R_V
-RV  3.1
-
 # IMF used to populate the synthetic clusters.
 #
 # * IMF: [selection]
@@ -341,8 +334,46 @@ RV  3.1
 # * m_high: [float]
 #   Upper mass value for the IMF (in solar masses).
 #
-#   IMF                 m_high
-MF  kroupa_2002            150
+# * m_sample: y / n
+#   Unique random sample of masses for each synthetic cluster.
+#
+#   IMF                 m_high           m_sample
+MF  kroupa_2002            150                  n
+
+# Ranges and steps for the intrinsic fundamental parameters.
+#
+#                        min      max     step
+#   Metallicity (z)
+MZ                    0.0005     0.03    0.005
+#
+#   log(age)
+LA                         6       10      0.5
+#
+#   Total initial mass (solar masses)
+TM                        10    10000      100
+#
+#   Binary fraction
+BI                         0        1      0.2
+#
+# - min_mass_ratio: 0<[float]<=1
+#   Minimum mass ratio for the generation of binaries. Ignored if
+#   'Binary fraction' is fixed to '0.'
+#
+#     min_mass_ratio
+BI_m              .7
+
+# Ranges and steps for the extrinsic fundamental parameters.
+#
+#                        min      max     step
+#   E(B-V)
+BV                         0        1     0.02
+#
+# Ratio of total to selective absorption (R_V).
+#
+RV                         3.1
+#
+#   Distance modulus
+DM                         8       15      0.2
 
 # Maximum magnitude cut.
 #
@@ -355,34 +386,6 @@ MF  kroupa_2002            150
 #
 #   max_mag
 MM      max
-
-# Ranges and steps for the fitted fundamental parameters.
-#
-#                        min      max     step
-#   Metallicity (z)
-MZ                    0.0005     0.03    0.005
-#
-#   log(age)
-LA                         6       10      0.5
-#
-#   E(B-V)
-BV                         0        1     0.02
-#
-#   Distance modulus
-DM                         8       15      0.2
-#
-#   Total initial mass (in solar masses)
-TM                        10    10000      100
-#
-#   Binary fraction
-BI                         0        1      0.2
-#
-# - min_mass_ratio: 0<[float]<=1
-#   Minimum mass ratio for the generation of binaries. Ignored if
-#   'Binary fraction' is fixed to '0.'
-#
-#     min_mass_ratio
-BI_m              .7
 
 # Algorithm used to maximize the likelihood.
 #

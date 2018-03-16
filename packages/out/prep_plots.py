@@ -303,7 +303,7 @@ def error_bars(stars_phot, x_min_cmd, err_lst, all_flag=None):
 
 def param_ranges(fundam_params):
     '''
-    Parameter ranges used by GA plots.
+    Parameter ranges used by several plots.
     '''
     min_max_p = []
     for param in fundam_params:
@@ -317,14 +317,37 @@ def param_ranges(fundam_params):
     return min_max_p
 
 
-def likl_y_range(lkl_old):
+def p2_ranges(min_max_p, varIdxs, model_done, nwalkers, nsteps):
+    '''
+    Parameter ranges used by 'emcee' 2-param density plots.
+    '''
+    min_max_p2 = []
+    for vi in range(6):  # TODO hard-coded to 6 parameters
+        if vi in varIdxs:
+            model = varIdxs.index(vi)
+            hx, edge = np.histogram(
+                model_done[model], range=min_max_p[vi], bins=25)
+            non_z = np.nonzero(hx > 0)
+            min_max_p2.append([edge[non_z[0][0]], edge[non_z[0][-1]]])
+        else:
+            min_max_p2.append(min_max_p[vi])
+
+    return min_max_p2
+
+
+def likl_y_range(opt_method, lkl_old):
     '''
     Obtain y axis range for the likelihood axis.
     '''
-    # Take limits from L_min curve.
-    lkl_range = max(lkl_old[1]) - min(lkl_old[0])
-    l_min_max = [max(0., min(lkl_old[0]) - 0.1 * lkl_range),
-                 max(lkl_old[1]) + 0.1 * lkl_range]
+    if opt_method == 'emcee':
+        l_min_max = [
+            max(0., min(lkl_old) - .2 * min(lkl_old)),
+            np.median(lkl_old[:int(.1 * len(lkl_old))]) * 1.5]
+    elif opt_method == 'genet':
+        # Take limits from L_min curve.
+        lkl_range = max(lkl_old[1]) - min(lkl_old[0])
+        l_min_max = [max(0., min(lkl_old[0]) - 0.1 * lkl_range),
+                     max(lkl_old[1]) + 0.1 * lkl_range]
 
     return l_min_max
 
@@ -394,7 +417,7 @@ def packData(lkl_method, lkl_binning, cl_max_mag, synth_clst, shift_isoch,
     frst_synth_col, frst_synth_mag = synth_clst[0][0][1],\
         synth_clst[0][0][0]
     # Indexes of binary systems.
-    binar_idx = synth_clst[1]
+    binar_idx = synth_clst[1][0]
     frst_col_edgs, frst_mag_edgs = bin_edges[1], bin_edges[0]
     # Filters and colors are appended continuously in 'shift_isoch'. If
     # there are 3 defined filters, then the first color starts at the

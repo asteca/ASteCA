@@ -1,5 +1,7 @@
 # Photometric Systems, CMD 3.0
 #
+# Retrieved: 2018-03-16
+#
 # ID    CMD_ID                                  Photometric system                                                                  Filters
 #
 0       2mass_spitzer                           2MASS + Spitzer (IRAC+MIPS)                                                         J   H   Ks  [3.6]   [4.5]   [5.8]   [8.0]   [24]    [70]    [160]
@@ -14,10 +16,10 @@
 9       megacam_wircam                          CFHT Megacam + Wircam (all ABmags)                                                  u*  g'  r'  i'  z'  Y   J   H   Ks
 10      wircam                                  CFHT Wircam                                                                         Y   J   H   Ks
 11      megacam                                 CFHT/Megacam u*g'r'i'z'                                                             u*  g'  r'  i'  z'
-12      ciber                                   ciber                                                                               l06 l07 l08 l09 l10 l11 l12 l13 l14 l15 l16 l17 l18 l19 l20 I   H   NBS DSSI2   J   H   Ks
+12      ciber                                   CIBER                                                                               l06 l07 l08 l09 l10 l11 l12 l13 l14 l15 l16 l17 l18 l19 l20 I   H   NBS DSSI2   J   H   Ks
 13      decam                                   DECAM (ABmags)                                                                      u   g   r   i   z   Y
 14      decam_vista                             DECAM ugrizY (ABmags) + VISTA ZYJHKs (Vegamags)                                     DECAMu  DECAMg  DECAMr  DECAMi  DECAMz  DECAMY  VISTAZ  VISTAY  VISTAJ  VISTAH  VISTAKs
-15      denis                                   denis                                                                               I   J   Ks
+15      denis                                   DENIS                                                                               I   J   Ks
 16      dmc14                                   DMC 14 filters                                                                      band1   band2   band3   band4   band5   band6   band7   band8   band9   band10  band11  band12  band13  band14
 17      dmc15                                   DMC 15 filters                                                                      band1   band2   band3   band4   band5   band6   band7   band8   band9   band10  band11  band12  band13  band14  band15
 18      eis                                     ESO/EIS (WFI UBVRIZ + SOFI JHK)                                                     u_wfi841    b_wfi842    v_wfi843    r_wfi844    i_wfi845    z_wfi846    j_sofi  h_sofi  k_sofi
@@ -40,29 +42,33 @@
 35      wfpc2                                   HST/WFPC2 (Vegamag, cf. Holtzman et al. 1995)                                       F170W   F218W   F255W   F300W   F336W   F380W   F439W   F450W   F555W   F569W   F606W   F622W   F675W   F702W   F791W   F814W   F850LP
 36      int_wfc                                 INT/WFC (Vegamag)                                                                   u   g   r   i   z
 37      iphas                                   IPHAS                                                                               gR  gI  Ha
-38      jwst_wide                               JWST wide filters                                                                   F070W   F090W   F115W   F150W   F200W   F277W   F356W   F444W
-39      kepler                                  Kepler + SDSS griz + DDO51 (in ABmags)                                              Kepler  g   r   i   z   DDO51_finf
-40      kepler_2mass                            Kepler + SDSS griz + DDO51 (in ABmags) + 2MASS (~Vegamag)                           Kepler  g   r   i   z   DDO51_finf  J   H   Ks
-41      lbt_lbc                                 LBT/LBC (Vegamag)                                                                   blue_Uspec  blue_U  blue_B  blue_g  blue_V  blue_r  red_V   red_i   red_I   red_r   red_R   red_z   red_Y
-42      lsst                                    LSST ugrizY, March 2012 total filter throughputs (all ABmags)                       u   g   r   i   z   Y
-43      noao_ctio_mosaic2                       NOAO/CTIO/MOSAIC2 (Vegamag)                                                         u   U   B   g   V   i   I   r   R   z
-44      ogle                                    OGLE-II                                                                             U   B   V   I
-45      panstarrs1                              Pan-STARRS1                                                                         gP1 rP1 iP1 zP1 yP1 wP1
-46      splus                                   S-PLUS (Vegamags)                                                                   uJAVA   F378    F395    F410    F430    gSDSS   F515    rSDSS   F660    iSDSS   F861    zSDSS
-47      sloan                                   SDSS ugriz                                                                          u   g   r   i   z
-48      sloan_2mass                             SDSS ugriz + 2MASS JHKs                                                             u   g   r   i   z   J   H   Ks
-49      sloan_ukidss                            SDSS ugriz + UKIDSS ZYJHK                                                           u   g   r   i   z   Z   Y   J   H   K
-50      swift_uvot                              SWIFT/UVOT UVW2, UVM2, UVW1,u (Vegamag)                                             UVW2    UVM2    UVW1    u
-51      spitzer                                 Spitzer IRAC+MIPS                                                                   IRAC_3.6    IRAC_4.5    IRAC_5.8    IRAC_8.0    MIPS_24 MIPS_70 MIPS_160
-52      stroemgren                              Stroemgren-Crawford                                                                 V   u   v   b   y   Hb_w    Hb_n
-53      suprimecam                              Subaru/Suprime-Cam (ABmags)                                                         B   V   R   I   g   r   i   z
-54      TESS_2mass                              TESS + 2MASS (Vegamags)                                                             TESS    J   H   Ks
-55      TESS_2mass_kepler                       TESS + 2MASS (Vegamags) + Kepler + SDSS griz + DDO51 (in ABmags)                    TESS    J   H   Ks  Kepler  g   r   i   z   DDO51_finf
-56      ukidss                                  UKIDSS ZYJHK (Vegamag)                                                              Z   Y   J   H   K
-57      visir                                   VISIR                                                                               F606W   F814W   Ks  PAH1
-58      vista                                   VISTA ZYJHKs (Vegamag)                                                              Z   Y   J   H   Ks
-59      vphas                                   VPHAS+ (ABmags)                                                                     u   g   r   i   z   Ha
-60      vst_omegacam                            VST/OMEGACAM (ABmag)                                                                u   g   r   i   z
-61      vilnius                                 Vilnius                                                                             U   P   X   Y   Z   V   S
-62      washington_ddo51                        Washington CMT1T2 + DDO51                                                           C   M   T1  T2  DDO51_finf  DDO51_f7.9  DDO51_f2.9
-63      deltaa                                  deltaa (Paunzen) + UBV (Maiz-Apellaniz), in Vegamags                                g1  g2  y   U   B   V
+38      jwst_miri_wide                          JWST MIRI wide filters, Vegamags                                                    F560W   F770W   F1000W  F1130W  F1280W  F1500W  F1800W  F2100W  F2550W
+39      jwst_nircam_wide                        JWST NIRCam wide+verywide filters, Vegamags                                         F070W  F090W   F115W   F150W   F200W   F277W   F356W   F444W   F150W2  F322W2
+40      kepler                                  Kepler + SDSS griz + DDO51 (in ABmags)                                              Kepler  g   r   i   z   DDO51_finf
+41      kepler_2mass                            Kepler + SDSS griz + DDO51 (in ABmags) + 2MASS (~Vegamag)                           Kepler  g   r   i   z   DDO51_finf  J   H   Ks
+42      lbt_lbc                                 LBT/LBC (Vegamag)                                                                   blue_Uspec  blue_U  blue_B  blue_g  blue_V  blue_r  red_V   red_i   red_I   red_r   red_R   red_z   red_Y
+43      lsst_wfirst_proposed2017                LSST (ABmags) + WFIRST proposed filters (Vegamags)                                  u   g   r   i   z   Y   R062    Z087    Y106    J129    H158    F184    W149
+44      lsst                                    LSST ugrizY, March 2012 total filter throughputs (all ABmags)                       u   g   r   i   z   Y
+45      noao_ctio_mosaic2                       NOAO/CTIO/MOSAIC2 (Vegamag)                                                         u   U   B   g   V   i   I   r   R   z
+46      ogle                                    OGLE-II                                                                             U   B   V   I
+47      panstarrs1                              Pan-STARRS1                                                                         gP1 rP1 iP1 zP1 yP1 wP1
+48      splus                                   S-PLUS (Vegamags), revised on Nov. 2017                                             uJAVA   F378    F395    F410    F430    gSDSS   F515    rSDSS   F660    iSDSS   F861    zSDSS
+49      sloan                                   SDSS ugriz                                                                          u   g   r   i   z
+50      sloan_2mass                             SDSS ugriz + 2MASS JHKs                                                             u   g   r   i   z   J   H   Ks
+51      sloan_ukidss                            SDSS ugriz + UKIDSS ZYJHK                                                           u   g   r   i   z   Z   Y   J   H   K
+52      swift_uvot                              SWIFT/UVOT UVW2, UVM2, UVW1,u (Vegamag)                                             UVW2    UVM2    UVW1    u
+53      spitzer                                 Spitzer IRAC+MIPS                                                                   IRAC_3.6    IRAC_4.5    IRAC_5.8    IRAC_8.0    MIPS_24 MIPS_70 MIPS_160
+54      stroemgren                              Stroemgren-Crawford                                                                 V   u   v   b   y   Hb_w    Hb_n
+55      suprimecam                              Subaru/Suprime-Cam (ABmags)                                                         B   V   R   I   g   r   i   z
+56      TESS_2mass                              TESS + 2MASS (Vegamags)                                                             TESS    J   H   Ks
+57      TESS_2mass_kepler                       TESS + 2MASS (Vegamags) + Kepler + SDSS griz + DDO51 (in ABmags)                    TESS    J   H   Ks  Kepler  g   r   i   z   DDO51_finf
+58      ukidss                                  UKIDSS ZYJHK (Vegamag)                                                              Z   Y   J   H   K
+59      uvit                                    UVIT (all ABmags)                                                                   F148W    F148Wa  F154W   F172M   F169M   N242W   N245N   N263M   N219M   N279N   V461W   V391M   V347M   V435ND  V420W
+60      visir                                   VISIR                                                                               F606W   F814W   Ks  PAH1
+61      vista                                   VISTA ZYJHKs (Vegamag)                                                              Z   Y   J   H   Ks
+62      vphas                                   VPHAS+ (ABmags)                                                                     u   g   r   i   z   Ha
+63      vst_omegacam                            VST/OMEGACAM (ABmag)                                                                u   g   r   i   z
+64      vilnius                                 Vilnius                                                                             U   P   X   Y   Z   V   S
+65      wfirst_proposed2017                     WFIRST proposed filters, Vegamags                                                   R062  Z087    Y106    J129    H158    F184    W149
+66      washington_ddo51                        Washington CMT1T2 + DDO51                                                           C   M   T1  T2  DDO51_finf  DDO51_f7.9  DDO51_f2.9
+67      deltaa                                  deltaa (Paunzen) + UBV (Maiz-Apellaniz), in Vegamags                                g1  g2  y   U   B   V
