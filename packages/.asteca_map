@@ -1,14 +1,14 @@
 
-
 / asteca_run
-    |--> check_1strun
-    |--> inp/input_clusters
     |--> checker
         |--> check/pack
+        |--> check/first_run
         |--> check/clusters
         |--> check/params_file
         |--> check/update
+        |--> check/params_mode
         |--> check/photom_names
+        |--> check/params_out
         |--> check/params_struct
         |--> check/params_pval
         |--> check/params_decont
