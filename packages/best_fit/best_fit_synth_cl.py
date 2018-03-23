@@ -36,14 +36,11 @@ def params_errors(best_fit_algor, args):
         isoch_fit_errors = []
         # TODO hard-coded for 6 parameters
         j = 0
-        print("Median (16, 84) perc")
         for i in range(6):
             if i in varIdxs:
-                pm = np.percentile(emcee_trace[i - j], 50)  # Median
                 #  16th and 84th percentiles (1 sigma)
                 ph = np.percentile(emcee_trace[i - j], 84)
                 pl = np.percentile(emcee_trace[i - j], 16)
-                # print("  {:.4f} ({:.4f}, {:.4f})".format(pm, pl, ph))
                 # TODO fix this
                 err = .5 * (ph - pl)
                 isoch_fit_errors.append(err)
