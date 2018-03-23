@@ -2,7 +2,6 @@
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
 import matplotlib.offsetbox as offsetbox
-import numpy as np
 
 
 def pl_mp_histo(
@@ -27,9 +26,7 @@ def pl_mp_histo(
         n_bins = int((max(prob_data) - min(prob_data)) / 0.025)
         if n_bins > 0:
             # Normalized histogram.
-            weights = np.ones_like(prob_data) / len(prob_data)
-            n, bins, patches = plt.hist(prob_data, n_bins, weights=weights,
-                                        normed=0)
+            n, bins, patches = plt.hist(prob_data, n_bins, density=True)
             # Get bin centers.
             bin_centers = 0.5 * (bins[:-1] + bins[1:])
             # scale values to interval [0,1]
