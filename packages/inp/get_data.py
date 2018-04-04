@@ -1,5 +1,6 @@
 
 import numpy as np
+from astropy.io import ascii
 import traceback
 import itertools
 from collections import defaultdict
@@ -55,12 +56,15 @@ def main(npd, id_indx, x_indx, y_indx, mag_indx, e_mag_indx, col_indx,
     data_file = npd['data_file']
     # Loads the data in 'data_file' as a list of N lists where N is the number
     # of columns. Each of the N lists contains all the data for the column.
-    # If any string is found (for example 'INDEF') it is converted to 99.999.
+    # If an 'INDEF' string is found it is converted to 99.999.
     try:
         data = np.genfromtxt(data_file, dtype=float, filling_values=99.999,
                              unpack=True)
-    except ValueError:
-        print(traceback.format_exc())
+        # data = ascii.read(data_file, fill_values=[('INDEF', '0')])
+        # data.fill_value = -99.9999
+        # data = data.filled()
+    # except ValueError:
+    except ascii.InconsistentTableError:
         raise ValueError("ERROR: could not read data input file:\n  {}\n"
                          "  Check that all rows are filled (i.e., no blank"
                          " spaces)\n  for all columns.\n".format(data_file))
