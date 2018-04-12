@@ -166,14 +166,14 @@ def pl_mps_phot_diag(gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
         col_select_fit, col_select_no_fit = '#4682b4', '#4682b4'
     # Plot stars *not* used in the best fit process.
     plt.scatter(diag_no_fit_inv[1][0], diag_no_fit_inv[0][0], marker='o',
-                c=col_select_no_fit, s=35, cmap=cm, lw=0.5, edgecolor='k',
+                c=col_select_no_fit, s=25, cmap=cm, lw=0.5, edgecolor='k',
                 alpha=0.5, vmin=v_min_mp, vmax=v_max_mp, zorder=2)
     # Draw horizontal line over stars discarded.
     plt.scatter(diag_no_fit_inv[1][0], diag_no_fit_inv[0][0],
                 marker='_', c='k', lw=0.5, alpha=0.5, zorder=3)
     # Plot stars used in the best fit process.
     sca = plt.scatter(diag_fit_inv[1][0], diag_fit_inv[0][0], marker='o',
-                      c=col_select_fit, s=40, cmap=cm, lw=0.5, edgecolor='k',
+                      c=col_select_fit, s=30, cmap=cm, lw=0.5, edgecolor='k',
                       vmin=v_min_mp, vmax=v_max_mp, zorder=4)
     # If list is not empty, plot error bars at several values.
     if x_val:
