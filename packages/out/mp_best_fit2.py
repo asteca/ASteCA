@@ -50,7 +50,7 @@ def pl_mps_phot_diag(
         col_select_fit, isoch_col = '#4682b4', 'r'
     # Plot stars used in the best fit process.
     sca = plt.scatter(obs_x, obs_y, marker='o',
-                      c=col_select_fit, s=40, cmap=cm, lw=0.5, edgecolor='k',
+                      c=col_select_fit, s=30, cmap=cm, lw=0.5, edgecolor='k',
                       vmin=v_min_mp, vmax=v_max_mp, zorder=4)
     # Plot isochrone.
     plt.plot(x_isoch, y_isoch, isoch_col, lw=1., zorder=6)
@@ -152,7 +152,7 @@ def pl_bf_synth_cl(
     # Plot synthetic cluster.
     single_idx, bin_idx = binar_idx <= 1., binar_idx > 1.
     # Single systems
-    plt.scatter(x_synth[single_idx], y_synth[single_idx], marker='o', s=40,
+    plt.scatter(x_synth[single_idx], y_synth[single_idx], marker='o', s=30,
                 c='#4682b4', lw=0.5, edgecolor='k', zorder=2)
     # Binary systems
     plt.scatter(x_synth[bin_idx], y_synth[bin_idx], marker='o', s=30,
