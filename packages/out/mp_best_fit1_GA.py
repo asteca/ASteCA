@@ -212,11 +212,18 @@ def pl_lkl_scatt(gs, ld_p, min_max_p, cp_r, cp_e, model_done):
     SC = plt.scatter(zip(*model_done[0])[cp], model_done[1], marker='o',
                      c=col_arr, s=25, edgecolors='k',
                      lw=0.2, edgecolor='w', cmap=cm, zorder=2)
+    # Best fit and errors.
+    plt.axvline(x=xp, linestyle='--', color='red', zorder=4)
+    if e_xp > 0.:
+        # Plot error bars only if errors where assigned.
+        plt.axvline(x=xp + e_xp, linestyle='--', color='blue', zorder=4)
+        plt.axvline(x=xp - e_xp, linestyle='--', color='blue', zorder=4)
     # Set y axis limit.
     min_lik, med_lik = min(model_done[1]), np.median(model_done[1])
     min_y, max_y = min_lik - min_lik * 0.1, min(2.5 * min_lik, 1.2 * med_lik)
     plt.ylim(min_y, max_y)
     ax.locator_params(nbins=5)
+
     # Position colorbar.
     the_divider = make_axes_locatable(ax)
     color_axis = the_divider.append_axes("right", size="2%", pad=0.1)
@@ -224,12 +231,6 @@ def pl_lkl_scatt(gs, ld_p, min_max_p, cp_r, cp_e, model_done):
     cbar = plt.colorbar(SC, cax=color_axis)
     cbar.set_label(zlab, fontsize=12, labelpad=4)
     cbar.ax.tick_params(labelsize=8)
-    # Best fit and errors.
-    plt.axvline(x=xp, linestyle='--', color='red', zorder=4)
-    if e_xp > 0.:
-        # Plot error bars only if errors where assigned.
-        plt.axvline(x=xp + e_xp, linestyle='--', color='blue', zorder=4)
-        plt.axvline(x=xp - e_xp, linestyle='--', color='blue', zorder=4)
 
 
 def plot(N, *args):
