@@ -119,25 +119,9 @@ def log_posterior(model, varIdxs, ranges, fundam_params, lkl_args):
     return lp + log_likelihood(model, fundam_params, lkl_args)
 
 
-def main(lkl_method, e_max, err_lst, completeness, max_mag_syn,
-         fundam_params, obs_clust, theor_tracks, R_V, ext_coefs, st_dist_mass,
-         N_fc, cmpl_rnd, err_rnd, nwalkers, nsteps, nburn, *args):
+def burnIn(nwalkers, nburn, fundam_params, varIdxs, sampler):
     """
-
-    nwalkers: number of MCMC walkers
-    nwalkers: number of MCMC steps to take
-    nburn: "burn-in" period to let chains stabilize
-
-    TODO: add error in check func:
-
-    AssertionError: The number of walkers needs to be more than twice the
-    dimension of your parameter space... unless you're crazy!
-
-    AssertionError: The number of walkers must be even.
     """
-
-    varIdxs, ndim, ranges = varPars(fundam_params)
-
     # Random initial models.
     starting_guesses = random_population(fundam_params, varIdxs, nwalkers)
 
@@ -158,55 +142,97 @@ def main(lkl_method, e_max, err_lst, completeness, max_mag_syn,
     # starting_guesses = np.asarray(
     #     isoch_fit_params[-1][0][:nwalkers]).T[varIdxs].T
 
+    N_b = 5
+    N_total, N_done = nburn * N_b, 0
+    # Run burn-in.
+    print("     Burn-in stage")
+    for _ in range(N_b):
+
+        for i, result in enumerate(
+                sampler.sample(starting_guesses, iterations=nburn)):
+            update_progress.updt(N_total, N_done + i + 1)
+        N_done += nburn
+
+        pos, prob, state = result
+
+        # Discard -np.inf posterior values.
+        idx_keep = prob > -np.inf
+        # Store best solution in this iteration.
+        idx_best = np.argmin(-prob[idx_keep])
+        best_sol = [pos[idx_best], -prob[idx_best]]
+
+        # Small ball (N sigma) around the best solution.
+        mean_p, std_p = pos.mean(axis=0), pos.std(axis=0)
+        low, high = mean_p - 3. * std_p, mean_p + 3. * std_p
+
+        starting_guesses = []
+        for p in pos:
+
+            # Check that all elements in 'p' are between the (low,high)
+            # values.
+            flag = True
+            for i, v in enumerate(p):
+                # If any element is not inside its range, break out.
+                if v <= low[i] or v >= high[i]:
+                    flag = False
+                    break
+
+            if flag is True:
+                starting_guesses.append(p)
+            else:
+                # If at least one element was not inside its range, store the
+                # fill_value
+                starting_guesses.append(best_sol[0])
+
+        starting_guesses = np.asarray(starting_guesses)
+
+    # Store burn-in chain phase.
+    pars_chains_bi = sampler.chain.T[:, :nburn, :]
+    # if _ == 0:
+    #     pars_chains_bi = sampler.chain.T
+    # else:
+    #     pars_chains_bi = np.concatenate(
+    #         (pars_chains_bi, sampler.chain.T), axis=1)
+
+    # # Reset the chain to remove the burn-in samples.
+    # sampler.reset()
+
+    return pos, prob, state, best_sol, pars_chains_bi
+
+
+def main(lkl_method, e_max, err_lst, completeness, max_mag_syn,
+         fundam_params, obs_clust, theor_tracks, R_V, ext_coefs, st_dist_mass,
+         N_fc, cmpl_rnd, err_rnd, nwalkers, nsteps, nburn, *args):
+    """
+
+    nwalkers: number of MCMC walkers
+    nwalkers: number of MCMC steps to take
+    nburn: "burn-in" period to let chains stabilize
+
+    TODO: add error in check func:
+
+    AssertionError: The number of walkers needs to be more than twice the
+    dimension of your parameter space... unless you're crazy!
+
+    AssertionError: The number of walkers must be even.
+    """
+
+    varIdxs, ndim, ranges = varPars(fundam_params)
+
     lkl_args = [
         theor_tracks, lkl_method, obs_clust, e_max, err_lst, completeness,
         max_mag_syn, st_dist_mass, R_V, ext_coefs, N_fc, cmpl_rnd, err_rnd]
-
-    # from emcee import PTSampler
-    # ntemps = 20
-
-    # sampler = PTSampler(
-    #     ntemps, nwalkers, ndim, logp=log_prior, logl=log_likelihood,
-    #     logpargs=[fundam_params, varIdxs, ranges],
-    #     loglargs=[fundam_params, varIdxs, lkl_args])
-
-    # # Burn-in
-    # p0 = []
-    # for _ in range(ntemps):
-    #     p0.append(random_population(fundam_params, varIdxs, nwalkers))
-    # p0 = np.asarray(p0)
-    # print(p0.shape, ntemps, nwalkers, ndim)
-    # for p, lnprob, lnlike in sampler.sample(p0, iterations=nburn):
-    #     pass
-    # sampler.reset()
-
-    # for p, lnprob, lnlike in sampler.sample(
-    #         p, lnprob0=lnprob, lnlike0=lnlike, iterations=nsteps, thin=2):
-    #     pass
 
     # Generate sampler.
     sampler = emcee.EnsembleSampler(
         nwalkers, ndim, log_posterior,
         args=[varIdxs, ranges, fundam_params, lkl_args])
 
-    # Run burn-in.
-    print("     Burn-in stage")
-    for i, result in enumerate(
-            sampler.sample(starting_guesses, iterations=nburn)):
-        update_progress.updt(nburn, i + 1)
-    pos, prob, state = result
+    pos, prob, state, best_sol_old, pars_chains_bi = burnIn(
+        nwalkers, nburn, fundam_params, varIdxs, sampler)
 
-    # pos, prob, state = sampler.run_mcmc(starting_guesses, nburn)
-
-    # Store burn-in chain phase.
-    pars_chains_bi = sampler.chain.T
     # Reset the chain to remove the burn-in samples.
     sampler.reset()
-    # Discard -np.inf posterior values.
-    idx_keep = prob > -np.inf
-    # Store best solution in this iteration.
-    idx_best = np.argmin(-prob[idx_keep])
-    best_sol_old = [pos[idx_best], -prob[idx_best]]
 
     milestones = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
     # Run 'nsteps'
@@ -227,14 +253,14 @@ def main(lkl_method, e_max, err_lst, completeness, max_mag_syn,
             # Check if a new optimal solution was found.
             if best_sol_run[1] < best_sol_old[1]:
                 best = closeSol(fundam_params, varIdxs, best_sol_run[0])
-                lkl = best_sol_run[1]
+                logprob = best_sol_run[1]
                 best_sol_old = [best_sol_run[0], best_sol_run[1]]
             else:
                 best = closeSol(fundam_params, varIdxs, best_sol_old[0])
-                lkl = best_sol_old[1]
+                logprob = best_sol_old[1]
             maf = np.mean(sampler.acceptance_fraction)
             print(" {:>3}% ({:.3f}) L={:.1f} ({:g}, {:g}, {:.3f}, {:.2f}"
-                  ", {:g}, {:.2f})".format(milestones[0], maf, lkl, *best))
+                  ", {:g}, {:.2f})".format(milestones[0], maf, logprob, *best))
             milestones = milestones[1:]
 
     # TODO should I pass the MAP solution or the median?
@@ -265,8 +291,6 @@ def main(lkl_method, e_max, err_lst, completeness, max_mag_syn,
         print("  WARNING: the chain is too short to reliably estimate\n"
               "  the autocorrelation time.")
 
-    # Throw-out the burn-in points and reshape.
-    # emcee_trace = sampler.chain[:, nburn:, :].reshape(-1, ndim).T
     # Re-shape trace for all parameters.
     emcee_trace = sampler.chain.reshape(-1, ndim).T
 
