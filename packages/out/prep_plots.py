@@ -325,10 +325,10 @@ def p2_ranges(min_max_p, varIdxs, model_done, nwalkers, nsteps):
     for vi in range(6):  # TODO hard-coded to 6 parameters
         if vi in varIdxs:
             model = varIdxs.index(vi)
-            hx, edge = np.histogram(
-                model_done[model], range=min_max_p[vi], bins=25)
-            non_z = np.nonzero(hx > 0)
-            min_max_p2.append([edge[non_z[0][0]], edge[non_z[0][-1]]])
+            hx, edge = np.histogram(model_done[model], bins=20)
+            # non_z = np.nonzero(hx > 0)
+            # min_max_p2.append([edge[non_z[0][0]], edge[non_z[0][-1]]])
+            min_max_p2.append([edge[0], edge[-1]])
         else:
             min_max_p2.append(min_max_p[vi])
 
