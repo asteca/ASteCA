@@ -80,9 +80,11 @@ def kde_limits(phot_x, phot_y):
     '''
     Return photometric diagram limits taken from a 2D KDE.
     '''
-
     xmin, xmax = min(phot_x), max(phot_x)
     ymin, ymax = min(phot_y), max(phot_y)
+    # Mask nan values.
+    mask = ~(np.isnan(phot_x) | np.isnan(phot_y))
+    phot_x, phot_y = phot_x[mask], phot_y[mask]
     # Stack photometric data.
     values = np.vstack([phot_x, phot_y])
     # Obtain Gaussian KDE.
