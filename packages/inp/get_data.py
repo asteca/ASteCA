@@ -1,8 +1,6 @@
 
 import numpy as np
 from astropy.io import ascii
-import traceback
-import itertools
 from collections import defaultdict
 
 
@@ -20,50 +18,34 @@ def list_duplicates(seq):
     return dups
 
 
-def rem_bad_stars(ids, x, y, mags, em, cols, ec):
-    '''
-    Remove stars from all lists that have too large magnitude or color
-    values (or their errors) which indicates a bad photometry.
-    '''
-    # Set photometric range for accepted stars.
-    min_lim, max_lim = -50., 50.
+def fill_cols(tbl, fill=np.nan, kind='f'):
+    """
+    In-place fill of 'tbl' columns which have dtype 'kind' with 'fill' value.
 
-    # Store indexes of stars that should be removed.
-    lists_arr = list(zip(*itertools.chain(mags, em, cols, ec)))
-    del_indexes = [i for i, t in enumerate(lists_arr) if
-                   any(e > max_lim for e in t) or any(e < min_lim for e in t)]
-
-    # Remove stars from id list first since this are strings.
-    id_clean = np.delete(np.array(ids), del_indexes)
-    # Remove stars from the coordinates lists.
-    x_clean, y_clean = np.delete(np.array([x, y]), del_indexes, axis=1)
-    # Remove stars from the rest of the lists.
-    mags_clean = np.delete(np.array(mags), del_indexes, axis=1)
-    em_clean = np.delete(np.array(em), del_indexes, axis=1)
-    cols_clean = np.delete(np.array(cols), del_indexes, axis=1)
-    ec_clean = np.delete(np.array(ec), del_indexes, axis=1)
-
-    return id_clean, x_clean, y_clean, mags_clean, em_clean, cols_clean,\
-        ec_clean
+    Source: https://stackoverflow.com/a/50164954/1391441
+    """
+    for col in tbl.itercols():
+        if col.dtype.kind == kind:
+            col[...] = col.filled(fill)
 
 
 def main(npd, id_indx, x_indx, y_indx, mag_indx, e_mag_indx, col_indx,
          e_col_indx, **kwargs):
     '''
-    Get spatial and photometric data from the cluster's data file.
+    Read all data from the cluster's data file.
     '''
 
     data_file = npd['data_file']
-    # Loads the data in 'data_file' as a list of N lists where N is the number
-    # of columns. Each of the N lists contains all the data for the column.
-    # If an 'INDEF' string is found it is converted to 99.999.
     try:
-        data = np.genfromtxt(data_file, dtype=float, filling_values=99.999,
-                             unpack=True)
-        # data = ascii.read(data_file, fill_values=[('INDEF', '0')])
-        # data.fill_value = -99.9999
-        # data = data.filled()
-    # except ValueError:
+        # Name of IDs column (the '+ 1' is because astropy Tables' first column
+        # is named 'col1', not 'col0'). Store IDs as strings.
+        id_colname = 'col' + str(id_indx + 1)
+        data = ascii.read(
+            data_file, fill_values=[('INDEF', '0'), ('9999.99', '0')],
+            converters={id_colname: [ascii.convert_numpy(np.str)]})
+        # Change masked elements with 'nan' values, in place.
+        fill_cols(data)
+
     except ascii.InconsistentTableError:
         raise ValueError("ERROR: could not read data input file:\n  {}\n"
                          "  Check that all rows are filled (i.e., no blank"
@@ -71,24 +53,21 @@ def main(npd, id_indx, x_indx, y_indx, mag_indx, e_mag_indx, col_indx,
 
     try:
         # Read coordinates data.
-        x, y = data[x_indx], data[y_indx]
+        x, y = np.array(data.columns[x_indx]), np.array(data.columns[y_indx])
         # Read magnitudes.
         mags, em = [], []
         for mi, emi in zip(*[mag_indx, e_mag_indx]):
-            mags.append(data[mi])
-            em.append(data[emi])
+            mags.append(np.array(data.columns[mi]))
+            em.append(np.array(data.columns[emi]))
         # Read colors.
         cols, ec = [], []
         for ci, eci in zip(*[col_indx, e_col_indx]):
-            cols.append(data[ci])
-            ec.append(data[eci])
+            cols.append(np.array(data.columns[ci]))
+            ec.append(np.array(data.columns[eci]))
+        mags, cols, em, ec = np.array(mags), np.array(cols), np.array(em),\
+            np.array(ec)
 
-        # Now read IDs as strings. Do this separately so numeric IDs are not
-        # converted into floats by np.genfromtxt. I.e.: 190 --> 190.0
-        data = np.genfromtxt(data_file, dtype=str, unpack=True)
-        ids = data[id_indx]
-        n_old = len(ids)
-
+        ids = np.array(data.columns[id_indx])
         dups = list(list_duplicates(ids))
         if dups:
             print("ERROR: duplicated IDs found in data file:")
@@ -102,22 +81,10 @@ def main(npd, id_indx, x_indx, y_indx, mag_indx, e_mag_indx, col_indx,
                          "fewer columns than those given "
                          "in 'params_input.dat'.".format(data_file))
 
-    # If any magnitude or color value (or their errors) is too large, discard
-    # that star.
-    ids, x, y, mags, em, cols, ec = rem_bad_stars(
-        ids, x, y, mags, em, cols, ec)
-
-    # Check if array came back empty after removal of stars with
-    # bad photometry.
-    if not x.size:
-        raise ValueError("ERROR: no stars left after removal of those "
-                         "with\n large mag/color or error values. Check "
-                         "input file.")
-
     # Check if the range of any coordinate column is zero.
     data_names = ['x_coords', 'y_coords']
     for i, dat_lst in enumerate([x, y]):
-        if min(dat_lst) == max(dat_lst):
+        if np.min(dat_lst) == np.max(dat_lst):
             raise ValueError("ERROR: the range for the '{}' column\n"
                              "is zero. Check the input data format.".format(
                                  data_names[i]))
@@ -125,18 +92,25 @@ def main(npd, id_indx, x_indx, y_indx, mag_indx, e_mag_indx, col_indx,
     data_names = ['magnitude', 'color']
     for i, dat_lst in enumerate([mags, cols]):
         for mc in dat_lst:
-            if min(mc) == max(mc):
+            if np.min(mc) == np.max(mc):
                 raise ValueError(
                     "ERROR: the range for {} column {} is\nzero."
                     " Check the input data format.".format(data_names[i], i))
 
-    print('Data obtained from input file (N_stars: {}).'.format(len(ids)))
-    frac_reject = (float(n_old) - len(ids)) / float(n_old)
+    N_ids = ids.size
+    m_size, c_size = [], []
+    for m in mags:
+        m_size.append(np.count_nonzero(~np.isnan(m)))
+    for c in cols:
+        c_size.append(np.count_nonzero(~np.isnan(c)))
+    N_min = min(m_size + c_size)
+    print('Data lines in input file (N_stars: {}).'.format(N_ids))
+    frac_reject = (N_ids - N_min) / float(N_ids)
     if frac_reject > 0.05:
-        print("  WARNING: {:.0f}% of stars in cluster's file were"
-              " rejected.".format(100. * frac_reject))
+        print("  WARNING: {:.0f}% of stars in input file contain\n"
+              "  invalid photometric data.".format(100. * frac_reject))
 
     # Create cluster's data dictionary.
-    cld = {'ids': ids, 'x': x, 'y': y, 'mags': mags, 'em': em, 'cols': cols,
-           'ec': ec}
+    cld = {'ids': ids, 'x': x, 'y': y, 'mags': mags, 'em': em,
+           'cols': cols, 'ec': ec}
     return cld
