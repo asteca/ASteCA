@@ -10,7 +10,7 @@ def mag_ranges(x, y, mags):
     """
     main_mag = mags[0]
     m0, m4 = min(main_mag), max(main_mag)
-    mag_step = np.ptp(main_mag) / 4.
+    mag_step = (m4 - m0) / 4.
     m1, m2, m3 = m0 + mag_step, m0 + 2. * mag_step, m0 + 3. * mag_step
 
     xy_mag_ranges = [
