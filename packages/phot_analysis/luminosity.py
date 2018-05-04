@@ -32,7 +32,7 @@ def main(clp, mags, **kwargs):
     The completeness will be used by the isochrone/synthetic cluster
     fitting algorithm.
 
-    USE MAIN MAGINTUDE.
+    Uses the main magnitude.
     """
 
     # Get the completeness level for each magnitude bin.
