@@ -1,5 +1,6 @@
 
 import numpy as np
+import warnings
 
 
 def mag_completeness(mags):
@@ -9,8 +10,10 @@ def mag_completeness(mags):
 
     This will be used by the isochrone/synthetic cluster fitting algorithm.
     """
-    mag_hist, bin_edges = np.histogram(
-        mags, 50, range=(np.nanmin(mags), np.nanmax(mags)))
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        mag_hist, bin_edges = np.histogram(
+            mags, 50, range=(np.nanmin(mags), np.nanmax(mags)))
     # Index of the bin with the maximum number of stars.
     max_indx = mag_hist.argmax(axis=0)
 
