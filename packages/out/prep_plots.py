@@ -80,8 +80,6 @@ def kde_limits(phot_x, phot_y):
     '''
     Return photometric diagram limits taken from a 2D KDE.
     '''
-    xmin, xmax = min(phot_x), max(phot_x)
-    ymin, ymax = min(phot_y), max(phot_y)
     # Mask nan values.
     mask = ~(np.isnan(phot_x) | np.isnan(phot_y))
     phot_x, phot_y = phot_x[mask], phot_y[mask]
@@ -93,6 +91,8 @@ def kde_limits(phot_x, phot_y):
     gd = 25
     gd_c = complex(0, gd)
     # Define x,y grid.
+    xmin, xmax = min(phot_x), max(phot_x)
+    ymin, ymax = min(phot_y), max(phot_y)
     x, y = np.mgrid[xmin:xmax:gd_c, ymin:ymax:gd_c]
     positions = np.vstack([x.ravel(), y.ravel()])
     # Evaluate kernel in grid positions.
