@@ -25,8 +25,13 @@ def fill_cols(tbl, fill=np.nan, kind='f'):
     Source: https://stackoverflow.com/a/50164954/1391441
     """
     for col in tbl.itercols():
-        if col.dtype.kind == kind:
-            col[...] = col.filled(fill)
+        try:
+            if col.dtype.kind == kind:
+                col[...] = col.filled(fill)
+        except AttributeError:
+            # If there where no elements to mask, the type is 'Column' and
+            # not 'MaskedColumn', so .filled() is not a valid attribute.
+            pass
 
 
 def main(npd, id_indx, x_indx, y_indx, mag_indx, e_mag_indx, col_indx,
