@@ -1,6 +1,5 @@
 
 import numpy as np
-import warnings
 
 
 def main(mmag, e_mc, be_m, interv_mag, n_interv):
@@ -42,18 +41,15 @@ def main(mmag, e_mc, be_m, interv_mag, n_interv):
     e_mc_value = []
     # Initial value for the median.
     median = 0.01
-    # Catch numpy warning when all elements in slice are 'nan' values.
-    np.seterr(all='warn')
-    warnings.filterwarnings('error')
     # Iterate through all intervals (lists) in the main magnitude range.
     for interv in mc_interv:
         # Check that list is not empty.
         if interv:
-            try:
-                median = np.nanmedian(interv)
-            except RuntimeWarning:
+            if np.isnan(interv).all():
                 # If slice contains all 'nan' values, use previous median
                 pass
+            else:
+                median = np.nanmedian(interv)
 
         e_mc_value.append(median)
 
