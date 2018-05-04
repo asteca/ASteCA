@@ -1,6 +1,6 @@
 
 import numpy as np
-from scipy.interpolate import spline
+from scipy.interpolate import BSpline
 
 
 def calc_integ_mag(st_reg):
@@ -49,8 +49,9 @@ def field_reg_integ_mag_curve(fl_reg_m):
     fl_reg_mag = []
     # Magnitude values.
     fl_reg_mag.append(np.linspace(min(fl_reg_avr[0]), max(fl_reg_avr[0]), 100))
-    # Integ magnitude values.
-    fl_reg_mag.append(spline(fl_reg_avr[0], fl_reg_avr[1], fl_reg_mag[0]))
+    # Integrated magnitude values.
+    spl = BSpline(fl_reg_avr[0], fl_reg_avr[1], 3)
+    fl_reg_mag.append(spl(fl_reg_avr[0]))
 
     return fl_reg_mag
 
