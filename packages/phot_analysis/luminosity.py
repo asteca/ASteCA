@@ -9,7 +9,8 @@ def mag_completeness(mags):
 
     This will be used by the isochrone/synthetic cluster fitting algorithm.
     """
-    mag_hist, bin_edges = np.histogram(mags, 50)
+    mag_hist, bin_edges = np.histogram(
+        mags, 50, range=(np.nanmin(mags), np.nanmax(mags)))
     # Index of the bin with the maximum number of stars.
     max_indx = mag_hist.argmax(axis=0)
 
@@ -40,14 +41,18 @@ def main(clp, mags, **kwargs):
 
     # This is the curve for the entire observed frame, normalized to the area
     # of the cluster.
-    lf_all, lf_edg_all = np.histogram(mags[0], bins=completeness[1])
+    lf_all, lf_edg_all = np.histogram(
+        mags[0], bins=completeness[1],
+        range=(np.nanmin(mags[0]), np.nanmax(mags[0])))
     x_all = np.concatenate((np.array([0.]), lf_edg_all))
     y_all = np.concatenate(
         (np.array([0.]), lf_all / clp['frame_norm'], np.array([0.])))
 
     # Obtain histogram for cluster region.
     mag_cl = zip(*zip(*clp['cl_region'])[3])[0]
-    lf_clust, lf_edg_c = np.histogram(mag_cl, bins=completeness[1])
+    lf_clust, lf_edg_c = np.histogram(
+        mag_cl, bins=completeness[1],
+        range=(np.nanmin(mag_cl), np.nanmax(mag_cl)))
 
     # Create arrays adding elements so plt.step will plot the first and last
     # vertical bars.
@@ -64,7 +69,9 @@ def main(clp, mags, **kwargs):
                 mag_fl.append(star[3][0])
 
         # Obtain histogram for field region.
-        lf_field, lf_edg_f = np.histogram(mag_fl, bins=completeness[1])
+        lf_field, lf_edg_f = np.histogram(
+            mag_fl, bins=completeness[1],
+            range=(np.nanmin(mag_fl), np.nanmax(mag_fl)))
 
         # Create arrays adding elements so plt.step will plot the first and
         # last vertical bars.
