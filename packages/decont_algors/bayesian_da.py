@@ -30,7 +30,7 @@ def break_check(prob_avrg_old, runs_fields_probs, runs, run_num):
     return prob_avrg_old, break_flag
 
 
-def likelihood(region, cl_reg_prep):
+def likelihood(region, w_r, cl_reg_prep, w_c):
     """
     Obtain the likelihood, for each star in the cluster region, of being a
     member of the region passed.
@@ -47,22 +47,27 @@ def likelihood(region, cl_reg_prep):
     sigma_sum = np.array(cl_reg_prep)[:, None, :, 1] +\
         np.array(region)[None, :, :, 1]
 
+    phot_dif[np.isnan(phot_dif)] = 0.
+    sigma_sum[np.isnan(sigma_sum)] = 1.
+
     # Sum for all photometric dimensions.
     Dsum = (np.square(phot_dif) / sigma_sum).sum(axis=-1)
     # Product of summed squared sigmas.
     sigma_prod = np.prod(sigma_sum, axis=-1)
     # All elements inside summatory.
-    sum_M_j = np.exp(-0.5 * Dsum) / np.sqrt(sigma_prod)
+    sum_M_j = w_r * np.exp(-0.5 * Dsum) / np.sqrt(sigma_prod)
     # Sum for all stars in this 'region'.
     sum_M = np.sum(sum_M_j, axis=-1)
     sum_M[sum_M <= 1e-7] = 1e-7
+    sum_M = sum_M * w_c
 
     return sum_M
 
 
 def reg_data(region):
     """
-    Generate list with photometric data in the correct format.
+    Generate list with photometric data in the correct format, and obtain the
+    "dimensional" weights used by the likelihood.
     """
     region_z = list(zip(*region))
     # Square errors.
@@ -74,12 +79,22 @@ def reg_data(region):
     # Combine photometry and errors.
     phot = np.array(mags + cols)
     ephot = np.array(e_mags + e_cols)
-    # Generate list with the appropriate format.
-    phot_err = []
-    for phot_i, ephot_i in zip(zip(*phot), zip(*ephot)):
-        phot_err.append(zip(*[phot_i, ephot_i]))
+    # Generate array with the appropriate format.
+    phot_err = np.stack((phot, ephot)).T
 
-    return phot_err
+    # Total number of information dimensions.
+    d_T = len(mags) + len(cols)
+    d_info = np.zeros(len(region))
+    for m in mags:
+        d_info += ~np.isnan(m)
+    for c in cols:
+        d_info += ~np.isnan(c)
+    # Final "dimensional information" weight. Equals 1. if the star
+    # contains valid data in ell the defined information dimensions. Otherwise
+    # it is a smaller float, up to zero when the star has no valid data.
+    wi = d_info / d_T
+
+    return phot_err, wi
 
 
 def main(cl_region, field_regions, bayesda_runs):
@@ -105,23 +120,24 @@ def main(cl_region, field_regions, bayesda_runs):
     runs_fields_probs = []
 
     # Initial null probabilities for all stars in the cluster region.
-    prob_avrg_old = np.array([0.] * len(cl_region))
+    prob_avrg_old = np.zeros(len(cl_region))
 
     # Magnitudes and colors (and their errors) for all stars in the cluster
     # region, stored with the appropriate format.
-    cl_reg_prep = reg_data(cl_region)
+    cl_reg_prep, w_cl = reg_data(cl_region)
     # Likelihoods between all field regions and the cluster region.
     fl_likelihoods = []
     for fl_region in field_regions:
         # Obtain likelihood, for each star in the cluster region, of
         # being a field star.
-        fl_reg_prep = reg_data(fl_region)
+        fl_reg_prep, w_fl = reg_data(fl_region)
         # Number of stars in field region.
         n_fl = len(fl_region)
-        fl_likelihoods.append([n_fl, likelihood(fl_reg_prep, cl_reg_prep)])
+        fl_likelihoods.append([n_fl, likelihood(
+            fl_reg_prep, w_fl, cl_reg_prep, w_cl)])
 
     # Create copy of the cluster region to be shuffled below.
-    clust_reg_shuffle = cl_reg_prep[:]
+    clust_reg_shuffle, w_cl_shuffle = cl_reg_prep[:], w_cl[:]
 
     # Run 'bayesda_runs' times.
     for run_num in range(bayesda_runs):
@@ -131,11 +147,15 @@ def main(cl_region, field_regions, bayesda_runs):
 
             if n_fl < len(cl_region):
                 # Randomly shuffle the stars within the cluster region.
-                np.random.shuffle(clust_reg_shuffle)
+                p = np.random.permutation(len(clust_reg_shuffle))
+                clust_reg_shuffle, w_cl_shuffle = clust_reg_shuffle[p],\
+                    w_cl_shuffle[p]
                 # Remove n_fl random stars from the cluster region and
                 # obtain the likelihoods for each star in this "cleaned"
                 # cluster region.
-                cl_lkl = likelihood(clust_reg_shuffle[n_fl:], cl_reg_prep)
+                cl_lkl = likelihood(
+                    clust_reg_shuffle[n_fl:], w_cl_shuffle[n_fl:],
+                    cl_reg_prep, w_cl)
             else:
                 # If there are *more* field region stars than the total of
                 # stars within the cluster region (highly contaminated
