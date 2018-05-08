@@ -97,20 +97,23 @@ def main(cl_file, pd):
     # Get cluster radius
     clp = radius.main(cld, clp, **pd)
 
+    # Get cluster's area.
+    clp = cluster_area.main(clp, **cld)
+
     # Get King profiles based on the density profiles.
     clp = king_profile.main(clp, **pd)
 
+    # ^ All the functions above use the dataset containing 'nan' values.
+    # v Those below use the *complete* dataset, ie: no 'nan' values.
+
     # Accept and reject stars based on their errors.
-    clp, pd = err_accpt_rejct.main(cld, clp, pd)
+    clp = err_accpt_rejct.main(cld, clp, **pd)
 
     # Obtain exponential fit for the errors.
     clp = err_range_avrg.main(clp)
 
     # Get stars in and out of cluster's radius.
     clp = stars_in_out_cl_reg.main(clp)
-
-    # Get cluster's area.
-    clp = cluster_area.main(clp, **cld)
 
     # Field regions around the cluster's center.
     clp = field_regions.main(clp, **pd)
