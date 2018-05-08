@@ -5,7 +5,7 @@ import gc  # Garbage collector.
 from inp import names_paths
 from inp import get_data_semi
 from inp import get_data
-from structure import trim_frame
+# from structure import trim_frame
 from structure import histo_2d
 from structure import xy_density
 from structure import center
