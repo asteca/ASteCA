@@ -23,7 +23,7 @@ def bin_edges_f(bin_method, mags_cols_cl):
 
     elif bin_method == 'fixed':
         # Based on Bonatto & Bica (2007) 377, 3, 1301-1323 but using larger
-        # the values used by them (0.25 for colors and 0.5 for magnitudes)
+        # values than those used there (0.25 for colors and 0.5 for magnitudes)
         for mag in mags_cols_cl[0]:
             b_num = max(2, (max(mag) - min(mag)) / 1.)
             bin_edges.append(np.histogram(mag, bins=int(b_num))[1])
