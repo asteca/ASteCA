@@ -100,6 +100,9 @@ def main(cl_file, pd):
     # Get cluster's area.
     clp = cluster_area.main(clp, **cld)
 
+    # Get contamination index.
+    clp = contamination_index.main(clp)
+
     # Get King profiles based on the density profiles.
     clp = king_profile.main(clp, **pd)
 
@@ -109,19 +112,16 @@ def main(cl_file, pd):
     # Accept and reject stars based on their errors.
     clp = err_accpt_rejct.main(cld, clp, **pd)
 
-    # Obtain exponential fit for the errors.
-    clp = err_range_avrg.main(clp)
-
     # Get stars in and out of cluster's radius.
     clp = stars_in_out_cl_reg.main(clp)
 
     # Field regions around the cluster's center.
     clp = field_regions.main(clp, **pd)
 
-    # Get contamination index.
-    clp = contamination_index.main(clp)
-
     make_A2_plot.main(npd, cld, pd, **clp)
+
+    # Obtain exponential fit for the errors.
+    clp = err_range_avrg.main(clp)
 
     # Get approximate number of cluster's members.
     clp = members_number.main(clp)
@@ -141,7 +141,7 @@ def main(cl_file, pd):
     clp = decont_algors.main(clp, npd, **pd)
 
     # Obtain members parameter.
-    clp = members_N_compare.main(clp)
+    clp = members_N_compare.main(clp)  # <-- DEPRECATE? TODO
 
     # Remove stars from the observed cluster according to a selected method.
     clp = cl_region_clean.main(clp, **pd)

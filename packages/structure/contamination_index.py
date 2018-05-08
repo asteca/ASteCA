@@ -13,22 +13,19 @@ def main(clp):
     1 means there are no expected cluster members inside the cluster region
     (which isn't a good sign).
     '''
-    n_clust, cl_area, field_dens, clust_rad, rdp_length = [
-        clp[_] for _ in ['n_clust', 'cl_area', 'field_dens', 'clust_rad',
-                         'rdp_length']]
 
     # If the cluster radius exceeds the length of the area where the field
     # density value was obtained (ie: the extension of the RDP), then do not
     # obtain the 'cont_index' parameter since the field density does not
     # represent the density of the field but rather the density of the
     # outermost regions of the cluster.
-    if clust_rad < rdp_length / 2.:
+    if clp['clust_rad'] < clp['rdp_length'] / 2.:
 
         # Star density in the cluster region.
-        cl_dens = n_clust / cl_area
+        cl_dens = clp['n_clust'] / clp['cl_area']
 
         # Final contamination index.
-        cont_index = field_dens / cl_dens
+        cont_index = clp['field_dens'] / cl_dens
 
         if cont_index >= 1.:
             print("  WARNING: contamination index value is very large: "

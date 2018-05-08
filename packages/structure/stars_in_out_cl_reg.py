@@ -51,12 +51,8 @@ def main(clp):
     else:
         print("Stars separated in/out of cluster's boundaries.")
 
-    # Number of stars inside the cluster region (including stars with rejected
-    # photometric errors)
-    n_clust = len(cl_region) + len(cl_region_rjct)
-
     # Add parameters to dictionary.
     clp['cl_region'], clp['stars_out'], clp['cl_region_rjct'],\
-        clp['stars_out_rjct'], clp['n_clust'] = cl_region, stars_out,\
-        cl_region_rjct, stars_out_rjct, n_clust
+        clp['stars_out_rjct'] = cl_region, stars_out, cl_region_rjct,\
+        stars_out_rjct
     return clp
