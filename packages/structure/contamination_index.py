@@ -19,9 +19,9 @@ def main(clp):
 
     # If the cluster radius exceeds the length of the area where the field
     # density value was obtained (ie: the extension of the RDP), then do not
-    # obtain the n_memb parameter since the field density does not represent
-    # the density of the field but rather the density of the outermost regions
-    # of the cluster.
+    # obtain the 'cont_index' parameter since the field density does not
+    # represent the density of the field but rather the density of the
+    # outermost regions of the cluster.
     if clust_rad < rdp_length / 2.:
 
         # Star density in the cluster region.
