@@ -72,8 +72,9 @@ def main(cl_file, pd):
     # Get cluster's data from file, as dictionary.
     cld = get_data.main(npd, **pd)
 
+    # DEPRECATED (at least for now, 08/05/18)
     # If Manual mode is set, display frame and ask if it should be trimmed.
-    cld = trim_frame.main(cld, **pd)
+    # cld = trim_frame.main(cld, **pd)
 
     # Obtain 2D coordinates histogram for the observed frame.
     # Return cluster's parameters dictionary 'clp'.
