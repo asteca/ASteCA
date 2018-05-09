@@ -72,7 +72,7 @@ def main(clp, npd, da_algor, bayesda_runs, fixedda_port, readda_idcol,
         memb_probs_cl_region = read_da.main(
             clp['cl_region'], npd['memb_file'], readda_idcol, readda_mpcol)
 
-    # Average and sort probabilities.
+    # Append MPs and sort by probabilities.
     memb_prob_avrg_sort = mpas(clp['cl_region'], memb_probs_cl_region)
 
     clp['memb_prob_avrg_sort'], clp['flag_decont_skip'] =\
