@@ -3,6 +3,7 @@ import numpy as np
 from astropy.io import ascii
 from collections import defaultdict
 import operator
+import copy
 
 
 def list_duplicates(seq):
@@ -105,8 +106,12 @@ def main(npd, id_indx, x_indx, y_indx, mag_indx, e_mag_indx, col_indx,
             converters={id_colname: [ascii.convert_numpy(np.str)]})
 
         # Remove all rows with at least one masked element.
-        data_compl = data[reduce(
-            operator.and_, [~data[col].mask for col in data.columns])]
+        try:
+            data_compl = data[reduce(
+                operator.and_, [~data[col].mask for col in data.columns])]
+        except AttributeError:
+            # If there where no elements to mask, there were no bad values.
+            data_compl = copy.deepcopy(data)
 
         # Change masked elements with 'nan' values, in place.
         fill_cols(data)
