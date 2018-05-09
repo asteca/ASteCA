@@ -95,9 +95,8 @@ def main(npd):
 #    a possible variable background.\n\
 # f5 The process to fit a 3-P King profile to the density points did not\n\
 #    converge or did so to a tidal radius beyond the ranges of the frame.\n\
-# f6 No error rejection was possible.\n\
-# f7 The number of approximate structural cluster members ('n_memb') is <10.\n\
-# f8 The number of approximate structural and photometric cluster members\n\
+# f6 The number of approximate structural cluster members ('n_memb') is <10.\n\
+# f7 The number of approximate structural and photometric cluster members\n\
 #    differ greatly --> abs(n_memb_par) > 0.33.\n\
 #\n\
 # FC (flags count): Sum of all the flags values. The bigger this value the\n\

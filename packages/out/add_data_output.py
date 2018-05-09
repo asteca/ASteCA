@@ -15,13 +15,12 @@ def flatten(l):
             yield el
 
 
-def main(npd, pd, flag_center_std, flag_center_manual,
-         flag_delta_total, flag_not_stable, flag_delta, flag_radius_manual,
-         flag_2pk_conver, flag_3pk_conver, flag_memb_par, flag_num_memb_low,
-         err_all_fallback, K_memb_num, K_conct_par, cont_index, n_memb,
-         memb_par, n_memb_da, frac_cl_area, pval_test_params, integ_mag,
-         kde_cent, clust_rad, e_rad, core_rad, e_core, tidal_rad, e_tidal,
-         fit_params_r, fit_errors_r, **kwargs):
+def main(npd, pd, flag_center_std, flag_center_manual, flag_delta_total,
+         flag_not_stable, flag_delta, flag_radius_manual, flag_2pk_conver,
+         flag_3pk_conver, flag_memb_par, flag_num_memb_low, K_memb_num,
+         K_conct_par, cont_index, n_memb, memb_par, n_memb_da, frac_cl_area,
+         pval_test_params, integ_mag, kde_cent, clust_rad, e_rad, core_rad,
+         e_core, tidal_rad, e_tidal, fit_params_r, fit_errors_r, **kwargs):
     '''
     Add data obtained to the 'data_output.dat' file.
     '''
@@ -32,10 +31,10 @@ def main(npd, pd, flag_center_std, flag_center_manual,
     flag_3pk_no_conver = not flag_3pk_conver
 
     # Create list containing all the flags.
-    flags_list = [flag_center_manual, flag_radius_manual,
-                  flag_center_std, flag_delta_total, flag_not_stable,
-                  flag_delta, flag_3pk_no_conver, err_all_fallback,
-                  flag_num_memb_low, flag_memb_par]
+    flags_list = [
+        flag_center_manual, flag_radius_manual, flag_center_std,
+        flag_delta_total, flag_not_stable, flag_delta, flag_3pk_no_conver,
+        flag_num_memb_low, flag_memb_par]
 
     # Convert True & False flag values to 1 and 0 respectively.
     int_flags = [1 if flg else 0 for flg in flags_list]
@@ -70,7 +69,7 @@ def main(npd, pd, flag_center_std, flag_center_manual,
 {:>8} {:>8} {:>8} {:>8}'''.format(*line_f))
         # Flags.
         f_out.write('''{:>8} {:>2} {:>3} {:>2} {:>2} {:>2} {:>2} {:>2} \
-{:>2} {:>2} {:>3}'''.format(*int_flags))
+{:>2} {:>3}'''.format(*int_flags))
         f_out.write('\n')
 
     print("Analysis results added to output file.")

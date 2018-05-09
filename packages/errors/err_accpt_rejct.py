@@ -9,30 +9,44 @@ def err_sel_stars(acpt_indx, rjct_indx, cld):
     '''
     Select accepted/rejected stars.
     '''
-    mags_z, em_z = np.array(zip(*cld['mags'])), np.array(zip(*cld['em']))
-    cols_z, ec_z = np.array(zip(*cld['cols'])), np.array(zip(*cld['ec']))
+    # mags_z, em_z = np.array(zip(*cld['mags'])), np.array(zip(*cld['em']))
+    # cols_z, ec_z = np.array(zip(*cld['cols'])), np.array(zip(*cld['ec']))
 
-    idx_a = np.array(cld['ids'])[acpt_indx].tolist()
-    x_a = np.array(cld['x'])[acpt_indx].tolist()
-    y_a = np.array(cld['y'])[acpt_indx].tolist()
-    mags_a = mags_z[acpt_indx].tolist()
-    em_a = em_z[acpt_indx].tolist()
-    cols_a = cols_z[acpt_indx].tolist()
-    ec_a = ec_z[acpt_indx].tolist()
+    # idx_a = np.array(cld['ids'])[acpt_indx].tolist()
+    # x_a = np.array(cld['x'])[acpt_indx].tolist()
+    # y_a = np.array(cld['y'])[acpt_indx].tolist()
+    # mags_a = mags_z[acpt_indx].tolist()
+    # em_a = em_z[acpt_indx].tolist()
+    # cols_a = cols_z[acpt_indx].tolist()
+    # ec_a = ec_z[acpt_indx].tolist()
 
-    idx_r = np.array(cld['ids'])[rjct_indx].tolist()
-    x_r = np.array(cld['x'])[rjct_indx].tolist()
-    y_r = np.array(cld['y'])[rjct_indx].tolist()
-    mags_r = mags_z[rjct_indx].tolist()
-    em_r = em_z[rjct_indx].tolist()
-    cols_r = cols_z[rjct_indx].tolist()
-    ec_r = ec_z[rjct_indx].tolist()
+    # idx_r = np.array(cld['ids'])[rjct_indx].tolist()
+    # x_r = np.array(cld['x'])[rjct_indx].tolist()
+    # y_r = np.array(cld['y'])[rjct_indx].tolist()
+    # mags_r = mags_z[rjct_indx].tolist()
+    # em_r = em_z[rjct_indx].tolist()
+    # cols_r = cols_z[rjct_indx].tolist()
+    # ec_r = ec_z[rjct_indx].tolist()
 
-    # Store everything as lists.
+    # # Store everything as lists.
+    # acpt_stars = [
+    #     list(_) for _ in zip(*[idx_a, x_a, y_a, mags_a, em_a, cols_a, ec_a])]
+    # rjct_stars = [
+    #     list(_) for _ in zip(*[idx_r, x_r, y_r, mags_r, em_r, cols_r, ec_r])]
+
+    # Filter elements.
+    acpt = {k: v[..., acpt_indx] for k, v in cld.iteritems()}
+    rjct = {k: v[..., rjct_indx] for k, v in cld.iteritems()}
+
+    # Store each star separately.
     acpt_stars = [
-        list(_) for _ in zip(*[idx_a, x_a, y_a, mags_a, em_a, cols_a, ec_a])]
+        list(_) for _ in zip(*[
+            acpt['ids'], acpt['x'], acpt['y'], acpt['mags'].T, acpt['em'].T,
+            acpt['cols'].T, acpt['ec'].T])]
     rjct_stars = [
-        list(_) for _ in zip(*[idx_r, x_r, y_r, mags_r, em_r, cols_r, ec_r])]
+        list(_) for _ in zip(*[
+            rjct['ids'], rjct['x'], rjct['y'], rjct['mags'].T, rjct['em'].T,
+            rjct['cols'].T, rjct['ec'].T])]
 
     return acpt_stars, rjct_stars
 
@@ -51,24 +65,20 @@ def err_sel_stars(acpt_indx, rjct_indx, cld):
 #     return e_max_all
 
 
-def main(cld, clp, err_max, **kwargs):
+def main(i_c, cld, clp, err_max, **kwargs):
     """
     Accept and reject stars in and out of the cluster's boundaries according to
     a given `err_max` photometric error value.
     """
-
-    # Flag indicates that no error rejection was possible.
-    err_all_fallback = False
 
     # if pd['run_mode'] in ('auto', 'semi'):
     # e_max_val = pd['err_max']
     # Call function to reject stars with errors > e_max.
     acpt_indx, rjct_indx = e_a_r_mx.main(cld, err_max)
     if not acpt_indx:
-        print("  WARNING: No stars accepted based on their errors.\n"
-              "  Using all stars.")
-        # Store all indexes.
-        acpt_indx, err_all_fallback = range(len(cld['ids'])), True
+        raise ValueError(
+            "ERROR: No stars left after error rejection.\n"
+            "Try increasing the maximum accepted error value.")
 
     # Call function to store stars according to the returned indexes.
     acpt_stars, rjct_stars = err_sel_stars(acpt_indx, rjct_indx, cld)
@@ -133,9 +143,9 @@ def main(cld, clp, err_max, **kwargs):
     #         else:
     #             move_on = True
 
-    print("Stars rejected based on their errors ({}).".format(len(rjct_stars)))
+    print("  Stars rejected based on their errors ({}).".format(
+        len(rjct_stars)))
 
-    clp['err_all_fallback'], clp['acpt_stars'], clp['rjct_stars'] =\
-        err_all_fallback, acpt_stars, rjct_stars
+    clp['acpt_stars'], clp['rjct_stars'] = acpt_stars, rjct_stars
 
     return clp
