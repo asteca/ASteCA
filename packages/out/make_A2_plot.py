@@ -23,7 +23,7 @@ import prep_plots
 
 def main(
         npd, cld, pd, kde_cent, kde_plot, K_cent_dens, clust_rad,
-        e_rad, poisson_error, stars_out_rjct, field_regions, bin_cent,
+        e_rad, poisson_error, field_regions, bin_cent,
         bin_width, hist_2d_g, core_rad, e_core, tidal_rad, e_tidal,
         K_conct_par, flag_2pk_conver, flag_3pk_conver, radii, rdp_points,
         field_dens, cont_index, cl_region, flag_no_fl_regs, **kwargs):
