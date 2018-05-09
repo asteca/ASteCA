@@ -63,9 +63,9 @@ def pl_mp_histo(
 
 
 def pl_chart_mps(gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
-                 y_zmax, kde_cent, clust_rad, field_dens, flag_decont_skip,
-                 v_min_mp, v_max_mp, chart_fit_inv, chart_no_fit_inv,
-                 out_clust_rad, mode_fld_clean, local_bin):
+                 y_zmax, kde_cent, clust_rad, flag_decont_skip, v_min_mp,
+                 v_max_mp, chart_fit_inv, chart_no_fit_inv, out_clust_rad,
+                 mode_fld_clean, local_bin):
     '''
     Finding chart of cluster region with decontamination algorithm
     applied and colors assigned according to the probabilities obtained.
@@ -102,23 +102,21 @@ def pl_chart_mps(gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
             chart_no_fit_inv[2]
     else:
         col_select_fit, col_select_no_fit = '#4682b4', '#4682b4'
-    # Star sizes for dense and not dense regions.
-    st_size = 20 if field_dens > 0.005 else 35
     # Plot stars *not* used in the best fit process.
     plt.scatter(
         chart_no_fit_inv[0], chart_no_fit_inv[1], marker='o',
-        c=col_select_no_fit, s=st_size, edgecolors='black', cmap=cm,
+        c=col_select_no_fit, s=30, edgecolors='black', cmap=cm,
         alpha=0.5, lw=0.5, vmin=v_min_mp, vmax=v_max_mp)
     # Add line to stars not used in the best bit process.
     plt.scatter(chart_no_fit_inv[0], chart_no_fit_inv[1], marker='_',
                 c='k', lw=0.5, alpha=0.5)
     # Plot stars selected to be used in the best bit process.
     plt.scatter(chart_fit_inv[0], chart_fit_inv[1], marker='o',
-                c=col_select_fit, s=st_size, edgecolors='black', cmap=cm,
+                c=col_select_fit, s=30, edgecolors='black', cmap=cm,
                 lw=0.5, vmin=v_min_mp, vmax=v_max_mp, zorder=4)
     # Plot stars outside the cluster's radius as empty circles.
     plt.scatter(out_clust_rad[0], out_clust_rad[1], marker='o',
-                s=st_size, edgecolors='black', facecolors='none', lw=0.5)
+                s=30, edgecolors='black', facecolors='none', lw=0.5)
 
 
 def pl_mps_phot_diag(gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,

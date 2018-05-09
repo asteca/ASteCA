@@ -66,7 +66,7 @@ def plot_observed_cluster(
 def main(
         npd, cld, pd, cl_reg_clean_plot, flag_decont_skip, n_memb_da,
         memb_prob_avrg_sort, cl_reg_fit, cl_reg_no_fit, kde_cent,
-        clust_rad, field_dens, stars_out, err_lst, **kwargs):
+        clust_rad, stars_out, err_lst, **kwargs):
     '''
     Make C block plots.
     '''
@@ -97,7 +97,7 @@ def main(
              cl_reg_fit, min_prob, pd['fld_clean_mode'], pd['fld_clean_bin']],
             # pl_chart_mps
             [gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
-             y_zmax, kde_cent, clust_rad, field_dens, flag_decont_skip,
+             y_zmax, kde_cent, clust_rad, flag_decont_skip,
              v_min_mp, v_max_mp, chart_fit_inv, chart_no_fit_inv,
              out_clust_rad, pd['fld_clean_mode'], pd['fld_clean_bin']]]
         for n, args in enumerate(arglist):
