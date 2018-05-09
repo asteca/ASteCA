@@ -73,18 +73,8 @@ def main(clp, x, y, **kwargs):
     # Normalization of frame to cluster area, used by LF plotting.
     frame_norm = frame_area / cl_area
 
-    # Count the total number of stars within the defined cluster region
-    # (including stars with rejected photometric errors)
-    n_clust = 0
-    for xy in zip(*[x, y]):
-        # Separate in and out of cluster's boundaries.
-        dist = np.sqrt((clp['kde_cent'][0] - xy[0]) ** 2 +
-                       (clp['kde_cent'][1] - xy[1]) ** 2)
-        if dist <= clp['clust_rad']:
-            n_clust += 1
-
-    clp['cl_area'], clp['frac_cl_area'], clp['frame_norm'], clp['n_clust'] =\
-        cl_area, frac_cl_area, frame_norm, n_clust
+    clp['cl_area'], clp['frac_cl_area'], clp['frame_norm'] =\
+        cl_area, frac_cl_area, frame_norm
     print("Area of cluster obtained.")
 
     return clp

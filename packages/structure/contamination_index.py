@@ -1,6 +1,8 @@
 
+import numpy as np
 
-def main(clp):
+
+def main(clp, x, y, **kwargs):
     '''
     Calculate the contamination index value. This parameter is defined as the
     ratio of field stars density over the density of stars in the cluster
@@ -21,8 +23,18 @@ def main(clp):
     # outermost regions of the cluster.
     if clp['clust_rad'] < clp['rdp_length'] / 2.:
 
+        # Count the total number of stars within the defined cluster region
+        # (including stars with rejected photometric errors)
+        n_clust = 0
+        for xy in zip(*[x, y]):
+            # Separate in and out of cluster's boundaries.
+            dist = np.sqrt((clp['kde_cent'][0] - xy[0]) ** 2 +
+                           (clp['kde_cent'][1] - xy[1]) ** 2)
+            if dist <= clp['clust_rad']:
+                n_clust += 1
+
         # Star density in the cluster region.
-        cl_dens = clp['n_clust'] / clp['cl_area']
+        cl_dens = n_clust / clp['cl_area']
 
         # Final contamination index.
         cont_index = clp['field_dens'] / cl_dens
