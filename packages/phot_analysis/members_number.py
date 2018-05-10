@@ -1,23 +1,27 @@
 
+import numpy as np
+
 
 def main(clp):
     """
     Calculate the approximate number of cluster's members inside the cluster's
     radius as follows:
 
-    n_c = n_clust - [field_dens * cluster_area]
+    n_c = N_cluster_region - mean(N_field_regions)
     """
 
-    # If the cluster radius exceeds the length of the area where the field
-    # density value was obtained (ie: the extension of the RDP), then do not
-    # obtain the n_memb parameter since the field density does not represent
-    # the density of the field but rather the density of the outermost regions
-    # of the cluster.
-    if clp['clust_rad'] < clp['rdp_length'] / 2.:
+    # If no field regions were defined, this parameter can not be obtained.
+    if clp['flag_no_fl_regs_c']:
 
+        print("  WARNING: no field regions defined, can not estimate\n"
+              "  the approximate number of cluster members.")
+        n_memb, flag_num_memb_low = -1., True
+
+    else:
         # Approx number of members.
         n_memb = max(int(round(
-            clp['n_clust'] - (clp['field_dens'] * clp['cl_area']))), 0)
+            len(clp['cl_region_c']) -
+            np.mean([len(_) for _ in clp['field_regions_c']]))), 0)
 
         # Raise a flag if the number of members is < 10
         flag_num_memb_low = False if n_memb >= 10 else True
@@ -28,10 +32,6 @@ def main(clp):
         else:
             print("Approximate number of members in cluster obtained "
                   "({:.0f}).".format(n_memb))
-    else:
-        print("  WARNING: cluster radius is too large to obtain\n"
-              "  the approximate number of members.")
-        n_memb, flag_num_memb_low = -1., True
 
     clp['n_memb'], clp['flag_num_memb_low'] = n_memb, flag_num_memb_low
     return clp
