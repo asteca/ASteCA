@@ -12,25 +12,30 @@ from structure import center
 from structure import radial_dens_prof
 from structure import field_density
 from structure import radius
+from structure import cluster_area
+from structure import numb_stars_clust
+from structure import contamination_index
 from structure import king_profile
 from errors import err_accpt_rejct
-from errors import err_range_avrg
-from errors import error_round
 from structure import stars_in_out_cl_reg
-from structure import cluster_area
 from structure import field_regions
-from structure import contamination_index
-from phot_analysis import members_number
+from errors import err_range_avrg
+#
 from phot_analysis import luminosity
 from phot_analysis import integrated_mag
 from phot_analysis import kde_pvalue
+from phot_analysis import members_number
+#
 from decont_algors import decont_algors
 from decont_algors import members_N_compare
 from decont_algors import cl_region_clean
+#
 from out import cluster_members_file
 from best_fit import best_fit_synth_cl
 from out import synth_cl_file
 from out import create_out_data_file
+from errors import error_round
+#
 from out import add_data_output
 from out import make_A1_plot
 from out import make_A2_plot
@@ -63,14 +68,15 @@ def main(cl_file, pd):
     # Start timing this loop.
     start = time.time()
 
-    # Get file names (n) and paths (p) dictionary (d).
+    # File names (n) and paths (p) dictionary (d).
     npd = names_paths.main(cl_file, **pd)
 
     # Get data from semi-data input file. Add to dictionary.
     pd = get_data_semi.main(pd, **npd)
 
-    # Get cluster's data from file, as dictionary.
-    cld = get_data.main(npd, **pd)
+    # Cluster's data from file, as dictionary. Obtain both incomplete (ie: with
+    # nan values) and complete (all rows contain valid data) dictionaries.
+    cld_i, cld_c = get_data.main(npd, **pd)
 
     # DEPRECATED (at least for now, 08/05/18)
     # If Manual mode is set, display frame and ask if it should be trimmed.
@@ -78,62 +84,75 @@ def main(cl_file, pd):
 
     # Obtain 2D coordinates histogram for the observed frame.
     # Return cluster's parameters dictionary 'clp'.
-    clp = histo_2d.main(**cld)
+    clp = histo_2d.main(**cld_i)
 
     # Gaussian filtered 2D x,y histograms.
     clp = xy_density.main(clp, **pd)
 
-    make_A1_plot.main(npd, cld, pd, **clp)
+    make_A1_plot.main(npd, cld_i, pd, **clp)
 
-    # Get cluster's center coordinates and errors.
-    clp = center.main(cld, clp, **pd)
+    # Cluster's center coordinates and errors.
+    clp = center.main(cld_i, clp, **pd)
 
-    # Get density profile
+    # Density profile
     clp = radial_dens_prof.main(clp)
 
-    # Get field density value in stars/<area unit>.
+    # Field density value in stars/<area unit>.
     clp = field_density.main(clp, **pd)
 
-    # Get cluster radius
-    clp = radius.main(cld, clp, **pd)
+    # Cluster radius
+    clp = radius.main(cld_i, clp, **pd)
 
-    # Get cluster's area.
-    clp = cluster_area.main(clp, **cld)
+    # Cluster's area and total number of stars within the cluster region.
+    clp = cluster_area.main(clp, **cld_i)
 
-    # Get contamination index.
-    clp = contamination_index.main(clp)
+    # Contamination index.
+    clp = contamination_index.main(clp, **cld_i)
 
-    # Get King profiles based on the density profiles.
+    # King profiles based on the density profiles.
     clp = king_profile.main(clp, **pd)
 
-    # ^ All the functions above use the dataset containing 'nan' values.
+    # ^ All the functions above use the *incomplete* dataset 'cld_i'
+    #   (ie: the one that contains 'nan' values).
+
+    # These three functions are applied for both datasets since we need the
+    # 'cl_region' and 'field_regions' parameters with *incomplete* data to be
+    # used by the Bayesian DA, and the parameters obtained with the *complete*
+    # dataset for the rest of the functions.
+    # The incomplete 'cl_region' and 'field_regions' parameters are also used
+    # by the A2 plot (for the cluster+field regions plot)
+    for i_c, cld_x in (('incomp', cld_i), ('comp', cld_c)):
+        print("Processing {}lete dataset:".format(i_c))
+
+        # Accept and reject stars based on their errors.
+        clp = err_accpt_rejct.main(i_c, cld_x, clp, **pd)
+
+        # Stars in and out of cluster's radius.
+        clp = stars_in_out_cl_reg.main(i_c, clp)
+
+        # Field regions around the cluster's center.
+        clp = field_regions.main(i_c, clp, **pd)
+
+    make_A2_plot.main(npd, cld_i, pd, **clp)
+    import pdb; pdb.set_trace()  # breakpoint 5e3a2f53 //
+
+
     # v Those below use the *complete* dataset, ie: no 'nan' values.
-
-    # Accept and reject stars based on their errors.
-    clp = err_accpt_rejct.main(cld, clp, **pd)
-
-    # Get stars in and out of cluster's radius.
-    clp = stars_in_out_cl_reg.main(clp)
-
-    # Field regions around the cluster's center.
-    clp = field_regions.main(clp, **pd)
-
-    make_A2_plot.main(npd, cld, pd, **clp)
 
     # Obtain exponential fit for the errors.
     clp = err_range_avrg.main(clp)
 
-    # Get approximate number of cluster's members.
-    clp = members_number.main(clp)
-
-    # Get luminosity function and completeness level for each magnitude bin.
+    # Luminosity function and completeness level for each magnitude bin.
     clp = luminosity.main(clp, **cld)
 
     # Calculate integrated magnitude.
     clp = integrated_mag.main(clp, **pd)
 
-    # Get physical cluster probability based on p_values distribution.
+    # Physical cluster probability based on p_values distribution.
     clp = kde_pvalue.main(clp, **pd)
+
+    # Approximate number of cluster's members.
+    clp = members_number.main(clp)  # Uses *not complete* dataset TODO
 
     make_B_plot.main(npd, cld, pd, **clp)
 

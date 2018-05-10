@@ -7,8 +7,6 @@ def main(i_c, clp):
     Separate stars between those inside the cluster's radius and those outside.
     """
 
-    # Create new empty lists to store items inside and outside of the cluster's
-    # radius limit.
     # cl_region will contain those stars within the radius value and
     # with accepted photometric errors.
     cl_region, stars_out, cl_region_rjct, stars_out_rjct = [], [], [], []
@@ -21,7 +19,7 @@ def main(i_c, clp):
                        (clp['kde_cent'][1] - star[2]) ** 2)
 
         if dist > clp['clust_rad']:
-            # Star is out of the cluster's radius limit.
+            # Star is outside of the cluster's radius limit.
             stars_out.append(star)
         else:
             # Star is inside the cluster's radius limit.

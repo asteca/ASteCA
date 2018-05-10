@@ -105,7 +105,8 @@ def fieldRegs(hist_2d, bin_width, cl_area):
     return num_bins_sqarea, f_regs_max
 
 
-def main(clp, run_mode, fr_number, cl_f_regs_semi, freg_flag_semi, **kwargs):
+def main(i_c, clp, run_mode, fr_number, cl_f_regs_semi, freg_flag_semi,
+         **kwargs):
     '''
     Define empty region around the cluster via a spiral centered on it
     and of area a bit larger than that defined by the cluster's radius.
@@ -129,29 +130,29 @@ def main(clp, run_mode, fr_number, cl_f_regs_semi, freg_flag_semi, **kwargs):
     # means that the cluster is either too large or the frame too small.
     flag_no_fl_regs = False
     if f_regs_max < 1:
-        print ("  WARNING: cluster region is too large or frame\n"
-               "  is too small. No field regions available.")
+        print ("    WARNING: cluster region is too large.\n"
+               "    No field regions available.")
         flag_no_fl_regs = True
     else:
         # If the number of field regions defined is larger than the maximum
         # allowed, use the maximum.
         if f_regs_num == 'max':
             f_regions = f_regs_max
-            print('Using maximum number of field regions ({}).'.format(
+            print('  Using maximum number of field regions ({}).'.format(
                 f_regions))
         elif f_regs_num > f_regs_max:
             f_regions = f_regs_max
-            print("  WARNING: Number of FR defined ({}) is larger than\n"
-                  "  the maximum allowed ({}). "
-                  "Using max number.").format(f_regs_num, f_regs_max)
+            print("    WARNING: Number of FR defined ({}) is larger than\n"
+                  "    the maximum allowed ({}). Using max number.").format(
+                      f_regs_num, f_regs_max)
         elif f_regs_num <= 0:
             f_regions = f_regs_max
-            print("  WARNING: Number of FR ({}) is less than or equal\n"
-                  "  to zero. No field region will be defined.").format(
+            print("    WARNING: Number of FR ({}) is less than or equal\n"
+                  "    to zero. No field region will be defined.").format(
                 f_regs_num)
             flag_no_fl_regs = True
         else:
-            print("Using defined number of field regions ({}).".format(
+            print("  Using defined number of field regions ({}).".format(
                 f_regs_num))
             f_regions = f_regs_num
 
@@ -171,7 +172,7 @@ def main(clp, run_mode, fr_number, cl_f_regs_semi, freg_flag_semi, **kwargs):
         # Obtain filled 2D histogram for the field with star's values attached
         # to each bin.
         h_manual = field_manual_histo.main(
-            clp['stars_out'], clp['xedges'], clp['yedges'])
+            clp['stars_out_' + i_c[0]], clp['xedges'], clp['yedges'])
 
         # This ensures that the areas of the field regions are equal
         # to the cluster area.
@@ -199,16 +200,21 @@ def main(clp, run_mode, fr_number, cl_f_regs_semi, freg_flag_semi, **kwargs):
         for index in sorted(field_regs_del, reverse=True):
             del field_regions[index]
         if field_regs_del:
-            print('  {} field regions with less than 4 stars each were'
+            print('    {} field regions with less than 4 stars each were'
                   ' removed.').format(len(field_regs_del))
 
         # If after removing the empty regions no regions are left, raise the
         # flag.
         if f_regions > 0 and not(field_regions):
-            print('  WARNING: no field regions left after the removal of\n' +
-                  '  those containing less than 4 stars.')
+            print('    WARNING: no field regions left after the removal of\n' +
+                  '    those containing less than 4 stars.')
             flag_no_fl_regs = True
 
-    clp['flag_no_fl_regs'], clp['field_regions'] = flag_no_fl_regs,\
-        field_regions
+    if i_c == 'incomp':
+        clp['flag_no_fl_regs_i'], clp['field_regions_i'] = flag_no_fl_regs,\
+            field_regions
+    elif i_c == 'comp':
+        clp['flag_no_fl_regs_c'], clp['field_regions_c'] = flag_no_fl_regs,\
+            field_regions
+
     return clp
