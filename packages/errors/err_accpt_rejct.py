@@ -1,54 +1,40 @@
 
-import numpy as np
+# import numpy as np
 # import matplotlib.pyplot as plt
 # import display_errors  # DEPRECATED
 import err_accpt_rejct_max as e_a_r_mx
 
 
-def err_sel_stars(acpt_indx, rjct_indx, cld):
-    '''
-    Select accepted/rejected stars.
-    '''
-    # mags_z, em_z = np.array(zip(*cld['mags'])), np.array(zip(*cld['em']))
-    # cols_z, ec_z = np.array(zip(*cld['cols'])), np.array(zip(*cld['ec']))
+# def err_sel_stars(acpt_indx, rjct_indx, cld):
+#     '''
+#     Select accepted/rejected stars.
+#     '''
+#     mags_z, em_z = np.array(zip(*cld['mags'])), np.array(zip(*cld['em']))
+#     cols_z, ec_z = np.array(zip(*cld['cols'])), np.array(zip(*cld['ec']))
 
-    # idx_a = np.array(cld['ids'])[acpt_indx].tolist()
-    # x_a = np.array(cld['x'])[acpt_indx].tolist()
-    # y_a = np.array(cld['y'])[acpt_indx].tolist()
-    # mags_a = mags_z[acpt_indx].tolist()
-    # em_a = em_z[acpt_indx].tolist()
-    # cols_a = cols_z[acpt_indx].tolist()
-    # ec_a = ec_z[acpt_indx].tolist()
+#     idx_a = np.array(cld['ids'])[acpt_indx].tolist()
+#     x_a = np.array(cld['x'])[acpt_indx].tolist()
+#     y_a = np.array(cld['y'])[acpt_indx].tolist()
+#     mags_a = mags_z[acpt_indx].tolist()
+#     em_a = em_z[acpt_indx].tolist()
+#     cols_a = cols_z[acpt_indx].tolist()
+#     ec_a = ec_z[acpt_indx].tolist()
 
-    # idx_r = np.array(cld['ids'])[rjct_indx].tolist()
-    # x_r = np.array(cld['x'])[rjct_indx].tolist()
-    # y_r = np.array(cld['y'])[rjct_indx].tolist()
-    # mags_r = mags_z[rjct_indx].tolist()
-    # em_r = em_z[rjct_indx].tolist()
-    # cols_r = cols_z[rjct_indx].tolist()
-    # ec_r = ec_z[rjct_indx].tolist()
+#     idx_r = np.array(cld['ids'])[rjct_indx].tolist()
+#     x_r = np.array(cld['x'])[rjct_indx].tolist()
+#     y_r = np.array(cld['y'])[rjct_indx].tolist()
+#     mags_r = mags_z[rjct_indx].tolist()
+#     em_r = em_z[rjct_indx].tolist()
+#     cols_r = cols_z[rjct_indx].tolist()
+#     ec_r = ec_z[rjct_indx].tolist()
 
-    # # Store everything as lists.
-    # acpt_stars = [
-    #     list(_) for _ in zip(*[idx_a, x_a, y_a, mags_a, em_a, cols_a, ec_a])]
-    # rjct_stars = [
-    #     list(_) for _ in zip(*[idx_r, x_r, y_r, mags_r, em_r, cols_r, ec_r])]
+#     # Store everything as lists.
+#     acpt_stars = [
+#         list(_) for _ in zip(*[idx_a, x_a, y_a, mags_a, em_a, cols_a, ec_a])]
+#     rjct_stars = [
+#         list(_) for _ in zip(*[idx_r, x_r, y_r, mags_r, em_r, cols_r, ec_r])]
 
-    # Filter elements.
-    acpt = {k: v[..., acpt_indx] for k, v in cld.iteritems()}
-    rjct = {k: v[..., rjct_indx] for k, v in cld.iteritems()}
-
-    # Store each star separately.
-    acpt_stars = [
-        list(_) for _ in zip(*[
-            acpt['ids'], acpt['x'], acpt['y'], acpt['mags'].T, acpt['em'].T,
-            acpt['cols'].T, acpt['ec'].T])]
-    rjct_stars = [
-        list(_) for _ in zip(*[
-            rjct['ids'], rjct['x'], rjct['y'], rjct['mags'].T, rjct['em'].T,
-            rjct['cols'].T, rjct['ec'].T])]
-
-    return acpt_stars, rjct_stars
+#     return acpt_stars, rjct_stars
 
 
 # DEPRECATED
@@ -81,7 +67,21 @@ def main(i_c, cld, clp, err_max, **kwargs):
             "Try increasing the maximum accepted error value.")
 
     # Call function to store stars according to the returned indexes.
-    acpt_stars, rjct_stars = err_sel_stars(acpt_indx, rjct_indx, cld)
+    # acpt_stars, rjct_stars = err_sel_stars(acpt_indx, rjct_indx, cld)
+
+    # Filter elements.
+    acpt = {k: v[..., acpt_indx] for k, v in cld.iteritems()}
+    rjct = {k: v[..., rjct_indx] for k, v in cld.iteritems()}
+
+    # Store each star separately.
+    acpt_stars = [
+        list(_) for _ in zip(*[
+            acpt['ids'], acpt['x'], acpt['y'], acpt['mags'].T, acpt['em'].T,
+            acpt['cols'].T, acpt['ec'].T])]
+    rjct_stars = [
+        list(_) for _ in zip(*[
+            rjct['ids'], rjct['x'], rjct['y'], rjct['mags'].T, rjct['em'].T,
+            rjct['cols'].T, rjct['ec'].T])]
 
     # DEPRECATED (at least for now, 08/05/18)
     # # If 'manual' mode is set, display errors distributions and ask the user
@@ -146,6 +146,9 @@ def main(i_c, cld, clp, err_max, **kwargs):
     print("  Stars rejected based on their errors ({}).".format(
         len(rjct_stars)))
 
-    clp['acpt_stars'], clp['rjct_stars'] = acpt_stars, rjct_stars
+    if i_c == 'incomp':
+        clp['acpt_stars_i'], clp['rjct_stars_i'] = acpt_stars, rjct_stars
+    elif i_c == 'comp':
+        clp['acpt_stars_c'], clp['rjct_stars_c'] = acpt_stars, rjct_stars
 
     return clp
