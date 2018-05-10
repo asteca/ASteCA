@@ -61,20 +61,18 @@ def main(clp, im_flag, **kwargs):
     Obtain integrated magnitude using all stars inside the cluster's radius for
     several limits in magnitude.
     '''
-    cl_region, field_regions, flag_no_fl_regs = [
-        clp[_] for _ in ['cl_region', 'field_regions', 'flag_no_fl_regs']]
     if im_flag:
         # Only use stars inside cluster's radius.
         # For each magnitude defined.
         cl_reg_imag = []
-        for mag in zip(*zip(*cl_region)[3]):
+        for mag in zip(*zip(*clp['cl_region_c'])[3]):
             cl_reg_imag.append(calc_integ_mag(mag))
 
-        if flag_no_fl_regs is False:
+        if clp['flag_no_fl_regs_c'] is False:
 
             # Run for every field region defined.
             fl_regs_int_m = []
-            for f_reg in field_regions:
+            for f_reg in clp['field_regions_c']:
                 fl_reg_m = []
                 for mag in zip(*zip(*f_reg)[3]):
                     fl_reg_m.append(calc_integ_mag(mag))

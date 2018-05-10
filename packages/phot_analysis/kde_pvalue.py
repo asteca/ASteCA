@@ -62,7 +62,7 @@ def KDE_test(clp, pvalue_runs):
     flag_pval_test = True if pvalue_runs > 0 else False
 
     # Skip test if < 10 members are found within the cluster's radius.
-    flag_few_members = False if len(clp['cl_region']) > 10 else True
+    flag_few_members = False if len(clp['cl_region_c']) > 10 else True
 
     # Check if test is to be applied or skipped. Check if field regions
     # where found.
@@ -71,7 +71,7 @@ def KDE_test(clp, pvalue_runs):
         # Pass empty lists and re-write flag.
         flag_pval_test, pval_test_params = False, [-1.]
 
-    elif flag_pval_test and clp['flag_no_fl_regs']:
+    elif flag_pval_test and clp['flag_no_fl_regs_c']:
         print('No field regions. Skipping KDE p-value test for cluster.')
         # Pass empty lists and re-write flag.
         flag_pval_test, pval_test_params = False, [-1.]
@@ -94,7 +94,7 @@ def KDE_test(clp, pvalue_runs):
 
         print('Obtaining KDE p-value for cluster vs field regions.')
 
-        if len(clp['field_regions']) == 1 and pvalue_runs == 1:
+        if len(clp['field_regions_c']) == 1 and pvalue_runs == 1:
             pvalue_runs = 2
             print("  WARNING: only 1 field region defined. Function\n"
                   "  will run 2 times.")
@@ -104,13 +104,13 @@ def KDE_test(clp, pvalue_runs):
         # field vs field comparisons.
         p_vals_cl, p_vals_f = [], []
         # Iterate a given number of times.
-        run_total, runs = int(pvalue_runs * len(clp['field_regions'])), 0
+        run_total, runs = int(pvalue_runs * len(clp['field_regions_c'])), 0
         for run_num in range(pvalue_runs):
             # Loop through all the field regions.
-            for indx, f_region in enumerate(clp['field_regions']):
+            for indx, f_region in enumerate(clp['field_regions_c']):
 
                 # CMD for cluster region.
-                matrix_cl = get_CMD(clp['cl_region'])
+                matrix_cl = get_CMD(clp['cl_region_c'])
                 rows_cl = int(len(matrix_cl) / 2)
                 # CMD for 1st field region.
                 matrix_f1 = get_CMD(f_region)
@@ -135,7 +135,7 @@ def KDE_test(clp, pvalue_runs):
                 # Compare the field region used above with all the remaining
                 # field regions. This results in [N*(N+1)/2] combinations of
                 # field vs field comparisons.
-                for f_region2 in clp['field_regions'][(indx + 1):]:
+                for f_region2 in clp['field_regions_c'][(indx + 1):]:
 
                     # CMD for 2nd field region.
                     matrix_f2 = get_CMD(f_region2)

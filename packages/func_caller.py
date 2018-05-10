@@ -134,16 +134,15 @@ def main(cl_file, pd):
         clp = field_regions.main(i_c, clp, **pd)
 
     make_A2_plot.main(npd, cld_i, pd, **clp)
-    import pdb; pdb.set_trace()  # breakpoint 5e3a2f53 //
 
-
-    # v Those below use the *complete* dataset, ie: no 'nan' values.
+    # v The functions below use the *complete* dataset, ie: no 'nan' values,
+    # with the exception of the Bayesian DA.
 
     # Obtain exponential fit for the errors.
     clp = err_range_avrg.main(clp)
 
     # Luminosity function and completeness level for each magnitude bin.
-    clp = luminosity.main(clp, **cld)
+    clp = luminosity.main(clp, **cld_c)
 
     # Calculate integrated magnitude.
     clp = integrated_mag.main(clp, **pd)

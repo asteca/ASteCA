@@ -52,7 +52,7 @@ def main(clp, mags, **kwargs):
         (np.array([0.]), lf_all / clp['frame_norm'], np.array([0.])))
 
     # Obtain histogram for cluster region.
-    mag_cl = zip(*zip(*clp['cl_region'])[3])[0]
+    mag_cl = zip(*zip(*clp['cl_region_c'])[3])[0]
     lf_clust, lf_edg_c = np.histogram(
         mag_cl, bins=completeness[1],
         range=(np.nanmin(mag_cl), np.nanmax(mag_cl)))
@@ -64,10 +64,10 @@ def main(clp, mags, **kwargs):
 
     # Now for field regions.
     mag_fl = []
-    if clp['flag_no_fl_regs'] is False:
+    if clp['flag_no_fl_regs_c'] is False:
 
         # Extract main magnitudes for all stars in all field regions defined.
-        for freg in clp['field_regions']:
+        for freg in clp['field_regions_c']:
             for star in freg:
                 mag_fl.append(star[3][0])
 
@@ -80,7 +80,7 @@ def main(clp, mags, **kwargs):
         # last vertical bars.
         x_fl = np.concatenate((np.array([0.]), lf_edg_f))
         y_fl = np.concatenate((np.array([0.]),
-                              (lf_field / float(len(clp['field_regions']))),
+                              (lf_field / float(len(clp['field_regions_c']))),
                               np.array([0.])))
     else:
         print("  WARNING: no field regions defined. Luminosity function\n"
