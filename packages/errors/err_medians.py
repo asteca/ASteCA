@@ -45,12 +45,7 @@ def main(mmag, e_mc, be_m, interv_mag, n_interv):
     for interv in mc_interv:
         # Check that list is not empty.
         if interv:
-            if np.isnan(interv).all():
-                # If slice contains all 'nan' values, use previous median
-                pass
-            else:
-                median = np.nanmedian(interv)
-
+            median = np.median(interv)
         e_mc_value.append(median)
 
     return e_mc_value
