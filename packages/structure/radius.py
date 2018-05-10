@@ -126,8 +126,8 @@ def radius_algor(clp, coord, radius_method):
     return clust_rad, e_rad, flag_delta_total, flag_not_stable, flag_delta
 
 
-def main(cld, clp, run_mode, radius_method, coords, cl_rad_semi, rad_flag_semi,
-         **kwargs):
+def main(cld_i, clp, run_mode, radius_method, coords, cl_rad_semi,
+         rad_flag_semi, **kwargs):
     """
     Obtain the value for the cluster's radius by counting the number of points
     that fall within a given interval of the field density or lower. If this
@@ -162,8 +162,9 @@ def main(cld, clp, run_mode, radius_method, coords, cl_rad_semi, rad_flag_semi,
     elif run_mode == 'manual':
 
         print('Radius found: {:g} {}.'.format(clust_rad, coord))
-        display_rad.main(cld['x'], cld['y'], cld['mags'][0], coords, clust_rad,
-                         e_rad, **clp)
+        display_rad.main(
+            cld_i['x'], cld_i['y'], cld_i['mags'][0], coords, clust_rad,
+            e_rad, **clp)
         plt.show()
 
         # Ask if the radius is accepted, or a if a another one should be used.

@@ -8,7 +8,7 @@ import prep_plots
 
 
 def main(
-        npd, cld, pd, xy_mag_ranges, hist_2d_g, cents_bin_2d, st_dev_lst,
+        npd, cld_i, pd, xy_mag_ranges, hist_2d_g, cents_bin_2d, st_dev_lst,
         **kwargs):
     '''
     Make A1 block plots.
@@ -22,14 +22,14 @@ def main(
 
         # Obtain plotting parameters and data.
         x_min, x_max, y_min, y_max = prep_plots.frame_max_min(
-            cld['x'], cld['y'])
+            cld_i['x'], cld_i['y'])
         asp_ratio = prep_plots.aspect_ratio(x_min, x_max, y_min, y_max)
         coord, x_name, y_name = prep_plots.coord_syst(pd['coords'])
         # Use first magnitude and color
         x_ax, y_ax = prep_plots.ax_names(
             pd['colors'][0], pd['filters'][0], 'mag')
 
-        N_all, min_mag_all = len(cld['mags'][0]), min(cld['mags'][0])
+        N_all, min_mag_all = len(cld_i['mags'][0]), min(cld_i['mags'][0])
         # Structure plots.
         arglist = []
         for mag_rng in xy_mag_ranges:
