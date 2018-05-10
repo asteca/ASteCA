@@ -151,9 +151,11 @@ def main(cl_file, pd):
     clp = kde_pvalue.main(clp, **pd)
 
     # Approximate number of cluster's members.
-    clp = members_number.main(clp)  # Uses *not complete* dataset TODO
+    clp = members_number.main(clp)
 
-    make_B_plot.main(npd, cld, pd, **clp)
+    make_B_plot.main(npd, cld_c, pd, **clp)
+    import pdb; pdb.set_trace()  # breakpoint fb8ef20b //
+    
 
     # Apply decontamination algorithm.
     clp = decont_algors.main(clp, npd, **pd)

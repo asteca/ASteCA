@@ -57,7 +57,7 @@ def main(i_c, clp):
             cl_region_rjct.append(star)
 
     # Add parameters to dictionary.
-    clp['cl_region_c'], clp['stars_out_c'], clp['cl_region_rjct'],\
-        clp['stars_out_rjct'] = cl_region, stars_out, cl_region_rjct,\
+    clp['cl_region_c'], clp['stars_out_c'], clp['cl_region_rjct_c'],\
+        clp['stars_out_rjct_c'] = cl_region, stars_out, cl_region_rjct,\
         stars_out_rjct
     return clp

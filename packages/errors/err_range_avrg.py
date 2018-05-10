@@ -89,8 +89,8 @@ def main(clp):
 
     # Obtain the median points for photometric errors. Append magnitude
     # values first, and colors after.
-    e_mags = np.array(zip(*(zip(*clp['acpt_stars_c'])[4])))
-    e_cols = np.array(zip(*(zip(*clp['acpt_stars_c'])[6])))
+    e_mags = list(zip(*(zip(*clp['acpt_stars_c'])[4])))
+    e_cols = list(zip(*(zip(*clp['acpt_stars_c'])[6])))
     e_mc_medians = []
     for e_mc in e_mags + e_cols:
         e_mc_medians.append(err_medians.main(
