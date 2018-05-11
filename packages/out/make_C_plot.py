@@ -64,9 +64,9 @@ def plot_observed_cluster(
 
 
 def main(
-        npd, cld, pd, cl_reg_clean_plot, flag_decont_skip, n_memb_da,
-        memb_prob_avrg_sort, cl_reg_fit, cl_reg_no_fit, kde_cent,
-        clust_rad, stars_out, err_lst, **kwargs):
+        npd, cld_c, pd, kde_cent, clust_rad, stars_out_c, err_lst,
+        flag_decont_skip, memb_prob_avrg_sort, n_memb_da, cl_reg_fit,
+        cl_reg_no_fit, cl_reg_clean_plot, **kwargs):
     '''
     Make C block plots.
     '''
@@ -77,7 +77,7 @@ def main(
 
         # Obtain plotting parameters and data.
         x_min, x_max, y_min, y_max = prep_plots.frame_max_min(
-            cld['x'], cld['y'])
+            cld_c['x'], cld_c['y'])
         x_zmin, x_zmax, y_zmin, y_zmax = prep_plots.frame_zoomed(
             x_min, x_max, y_min, y_max, kde_cent, clust_rad)
         coord, x_name, y_name = prep_plots.coord_syst(pd['coords'])
@@ -85,7 +85,7 @@ def main(
             cl_reg_fit, cl_reg_no_fit)
         chart_fit_inv, chart_no_fit_inv, out_clust_rad =\
             prep_plots.da_find_chart(
-                kde_cent, clust_rad, stars_out, x_zmin, x_zmax, y_zmin,
+                kde_cent, clust_rad, stars_out_c, x_zmin, x_zmax, y_zmin,
                 y_zmax, cl_reg_fit, cl_reg_no_fit)
 
         # Decontamination algorithm plots.
@@ -106,7 +106,7 @@ def main(
         plot_colorbar, diag_fit_inv, diag_no_fit_inv = prep_plots.da_phot_diag(
             cl_reg_fit, cl_reg_no_fit, v_min_mp, v_max_mp)
         plot_observed_cluster(
-            cld, pd, fig, gs, cl_reg_fit, cl_reg_no_fit, err_lst, v_min_mp,
+            cld_c, pd, fig, gs, cl_reg_fit, cl_reg_no_fit, err_lst, v_min_mp,
             v_max_mp, plot_colorbar, diag_fit_inv, diag_no_fit_inv,
             pd['fld_clean_mode'], bin_edges)
 
