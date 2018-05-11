@@ -129,18 +129,30 @@ def main(npd, id_indx, x_indx, y_indx, mag_indx, e_mag_indx, col_indx,
             id_indx, x_indx, y_indx, mag_indx, e_mag_indx, col_indx,
             e_col_indx])
         col_names_keep = list(flatten(col_names))
-        # Remove not wanted columns.
+        # Remove not wanted columns *before* removing rows with 'nan' values
+        # (otherwise columns that should not be read will influence the row
+        # removal).
         for col in data.columns:
             if col not in col_names_keep:
                 data.remove_column(col)
 
+        # Check if there are any masked elements in the data table. Don't
+        # use the 'AttributeError' approach since the 'Masked' attribute is set
+        # when the input data file is read with *all* the columns in the file,
+        # even those that the user does not want.
+        masked_elems = 0
+        for col in data.columns:
+            masked_elems += data[col].mask.nonzero()[0].sum()
+
         # Remove all rows with at least one masked element.
-        try:
+        flag_data_eq = False
+        if masked_elems > 0:
             data_compl = data[reduce(
                 operator.and_, [~data[col].mask for col in data.columns])]
-        except AttributeError:
+        else:
             # If there where no elements to mask, there were no bad values.
             data_compl = copy.deepcopy(data)
+            flag_data_eq = True
 
         # Change masked elements with 'nan' values, in place.
         fill_cols(data)
@@ -172,4 +184,6 @@ def main(npd, id_indx, x_indx, y_indx, mag_indx, e_mag_indx, col_indx,
     cld_c = {'ids': ids, 'x': x, 'y': y, 'mags': mags, 'em': em,
              'cols': cols, 'ec': ec}
 
-    return cld_i, cld_c
+    clp = {'flag_data_eq': flag_data_eq}
+
+    return cld_i, cld_c, clp
