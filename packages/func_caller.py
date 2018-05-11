@@ -13,7 +13,6 @@ from structure import radial_dens_prof
 from structure import field_density
 from structure import radius
 from structure import cluster_area
-from structure import numb_stars_clust
 from structure import contamination_index
 from structure import king_profile
 from errors import err_accpt_rejct
@@ -136,7 +135,9 @@ def main(cl_file, pd):
     make_A2_plot.main(npd, cld_i, pd, **clp)
 
     # v The functions below use the *complete* dataset, ie: no 'nan' values,
-    # with the exception of the Bayesian DA.
+    # with the exception of the Bayesian DA (uses the *incomplete* dataset to
+    # assign MPs, and later only those stars in the *complete* dataset are
+    # kept and passed forward).
 
     # Obtain exponential fit for the errors.
     clp = err_range_avrg.main(clp)
@@ -154,19 +155,17 @@ def main(cl_file, pd):
     clp = members_number.main(clp)
 
     make_B_plot.main(npd, cld_c, pd, **clp)
-    import pdb; pdb.set_trace()  # breakpoint fb8ef20b //
-    
 
     # Apply decontamination algorithm.
     clp = decont_algors.main(clp, npd, **pd)
 
     # Obtain members parameter.
-    clp = members_N_compare.main(clp)  # <-- DEPRECATE? TODO
+    clp = members_N_compare.main(clp)
 
     # Remove stars from the observed cluster according to a selected method.
     clp = cl_region_clean.main(clp, **pd)
 
-    make_C_plot.main(npd, cld, pd, **clp)
+    make_C_plot.main(npd, cld_c, pd, **clp)
 
     # Create data file with membership probabilities.
     cluster_members_file.main(clp, **npd)
@@ -190,10 +189,10 @@ def main(cl_file, pd):
     make_D1_plot.main(npd, pd, **clp)
 
     # Plot final best match found.
-    make_D2_plot.main(npd, cld, pd, **clp)
+    make_D2_plot.main(npd, cld_c, pd, **clp)
 
     # Plot top tiers models and save to file.
-    top_tiers.main(npd, cld, pd, **clp)
+    top_tiers.main(npd, cld_c, pd, **clp)
 
     # Move file to 'done' dir (if flag is set).
     done_move.main(pd, **npd)

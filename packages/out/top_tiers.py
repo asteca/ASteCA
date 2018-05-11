@@ -94,7 +94,7 @@ def plot_top_tiers(pd, top_tiers_flo, output_subdir, clust_name, mags,
     plt.close("all")
 
 
-def main(npd, cld, pd, err_lst, ext_coefs, N_fc, cmpl_rnd, err_rnd,
+def main(npd, cld_c, pd, err_lst, ext_coefs, N_fc, cmpl_rnd, err_rnd,
          completeness, max_mag_syn, st_dist_mass, isoch_fit_params, **kwargs):
     '''
     Obtain top tier models, produce data file and output image. Don't run
@@ -154,9 +154,9 @@ def main(npd, cld, pd, err_lst, ext_coefs, N_fc, cmpl_rnd, err_rnd,
                 try:
                     plot_top_tiers(
                         pd, top_tiers_flo, output_subdir, clust_name,
-                        cld['mags'], cld['cols'], isoch_fit_params, ext_coefs,
-                        N_fc, cmpl_rnd, err_rnd, err_lst, completeness,
-                        max_mag_syn, st_dist_mass)
+                        cld_c['mags'], cld_c['cols'], isoch_fit_params,
+                        ext_coefs, N_fc, cmpl_rnd, err_rnd, err_lst,
+                        completeness, max_mag_syn, st_dist_mass)
                     print("<<Plots for D3 block created>>")
                 except Exception:
                     import traceback

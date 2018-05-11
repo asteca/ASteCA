@@ -399,7 +399,7 @@ def likl_y_range(opt_method, lkl_old):
 
 
 def packData(lkl_method, lkl_binning, cl_max_mag, synth_clst, shift_isoch,
-             colors, filters, cld):
+             colors, filters, cld_c):
     """
     Properly select and pack data for CMD/CCD of observed and synthetic
     clusters, and their Hess diagram.
@@ -413,7 +413,7 @@ def packData(lkl_method, lkl_binning, cl_max_mag, synth_clst, shift_isoch,
 
     # CMD of main magnitude and first color defined.
     # Used to defined limits.
-    x_phot_all, y_phot_all = cld['cols'][0], cld['mags'][0]
+    x_phot_all, y_phot_all = cld_c['cols'][0], cld_c['mags'][0]
     frst_obs_mag, frst_obs_col = list(zip(*zip(*cl_max_mag)[3])[0]),\
         list(zip(*zip(*cl_max_mag)[5])[0])
     frst_synth_col, frst_synth_mag = synth_clst[0][0][1],\
@@ -443,7 +443,7 @@ def packData(lkl_method, lkl_binning, cl_max_mag, synth_clst, shift_isoch,
         scnd_col_edgs = bin_edges[2]
         scnd_col_isoch = shift_isoch[N_mags + 1]
         # CMD of main magnitude and second color defined.
-        x_phot_all, y_phot_all = cld['cols'][1], cld['mags'][0]
+        x_phot_all, y_phot_all = cld_c['cols'][1], cld_c['mags'][0]
         gs_y1, gs_y2 = 2, 4
         i_obs_x, i_obs_y = 1, 0
         hr_diags.append(
@@ -452,7 +452,7 @@ def packData(lkl_method, lkl_binning, cl_max_mag, synth_clst, shift_isoch,
              frst_mag_edgs, shift_isoch[2], frst_mag_isoch, colors[1],
              filters[0], 'mag', i_obs_x, i_obs_y, gs_y1, gs_y2])
         # CCD of first and second color defined.
-        x_phot_all, y_phot_all = cld['cols'][0], cld['cols'][1]
+        x_phot_all, y_phot_all = cld_c['cols'][0], cld_c['cols'][1]
         gs_y1, gs_y2 = 4, 6
         i_obs_x, i_obs_y = 0, 1
         hr_diags.append(

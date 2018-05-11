@@ -58,7 +58,7 @@ def plot_observed_cluster(
               "photometric diagram.")
 
 
-def main(npd, cld, pd, synth_clst, shift_isoch, fit_params_r, fit_errors_r,
+def main(npd, cld_c, pd, synth_clst, shift_isoch, fit_params_r, fit_errors_r,
          cl_max_mag, err_lst, **kwargs):
     '''
     Make D2 block plots.
@@ -71,7 +71,7 @@ def main(npd, cld, pd, synth_clst, shift_isoch, fit_params_r, fit_errors_r,
         # Plot one ore more rows of CMDs/CCDs.
         hr_diags = prep_plots.packData(
             pd['lkl_method'], pd['lkl_binning'], cl_max_mag, synth_clst,
-            shift_isoch, pd['colors'], pd['filters'], cld)
+            shift_isoch, pd['colors'], pd['filters'], cld_c)
         for (x_phot_all, y_phot_all, x_phot_obs, y_phot_obs, x_synth_phot,
              y_synth_phot, binar_idx, hess_xedges, hess_yedges, x_isoch,
              y_isoch, x_name, y_name, yaxis, i_obs_x, i_obs_y, gs_y1,
