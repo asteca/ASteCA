@@ -47,8 +47,11 @@ def likelihood(region, w_r, cl_reg_prep, w_c):
     sigma_sum = np.array(cl_reg_prep)[:, None, :, 1] +\
         np.array(region)[None, :, :, 1]
 
+    # Handle 'nan' values.
     phot_dif[np.isnan(phot_dif)] = 0.
     sigma_sum[np.isnan(sigma_sum)] = 1.
+    # Avoid divide by zero.
+    sigma_sum[sigma_sum == 0.] = 1.
 
     # Sum for all photometric dimensions.
     Dsum = (np.square(phot_dif) / sigma_sum).sum(axis=-1)
@@ -89,9 +92,9 @@ def reg_data(region):
         d_info += ~np.isnan(m)
     for c in cols:
         d_info += ~np.isnan(c)
-    # Final "dimensional information" weight. Equals 1. if the star
-    # contains valid data in ell the defined information dimensions. Otherwise
-    # it is a smaller float, up to zero when the star has no valid data.
+    # Final "dimensional information" weight. Equals '1.' if the star
+    # contains valid data in all the defined information dimensions. Otherwise
+    # it is a smaller float, down to zero when the star has no valid data.
     wi = d_info / d_T
 
     return phot_err, wi
