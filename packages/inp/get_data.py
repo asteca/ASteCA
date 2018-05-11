@@ -1,7 +1,7 @@
 
 import numpy as np
 from astropy.io import ascii
-from collections import defaultdict
+from collections import defaultdict, Iterable
 import operator
 import copy
 
@@ -90,6 +90,18 @@ def dataCols(data_file, data, id_indx, x_indx, y_indx, mag_indx, e_mag_indx,
     return ids, x, y, mags, cols, em, ec
 
 
+def flatten(l):
+    """
+    Source: https://stackoverflow.com/a/2158532/1391441
+    """
+    for el in l:
+        if isinstance(el, Iterable) and not isinstance(el, basestring):
+            for sub in flatten(el):
+                yield sub
+        else:
+            yield el
+
+
 def main(npd, id_indx, x_indx, y_indx, mag_indx, e_mag_indx, col_indx,
          e_col_indx, **kwargs):
     '''
@@ -103,7 +115,17 @@ def main(npd, id_indx, x_indx, y_indx, mag_indx, e_mag_indx, col_indx,
         id_colname = 'col' + str(id_indx + 1)
         data = ascii.read(
             data_file, fill_values=[('INDEF', '0'), ('9999.99', '0')],
-            converters={id_colname: [ascii.convert_numpy(np.str)]})
+            converters={id_colname: [ascii.convert_numpy(np.str)]},
+            format='no_header')
+
+        # Remove not wanted columns.
+        col_ids = flatten([
+            id_indx, x_indx, y_indx, mag_indx, e_mag_indx, col_indx,
+            e_col_indx])
+        col_names_keep = ['col' + str(_ + 1) for _ in col_ids]
+        for col in data.columns:
+            if col not in col_names_keep:
+                data.remove_column(col)
 
         # Remove all rows with at least one masked element.
         try:
