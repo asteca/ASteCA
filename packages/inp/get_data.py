@@ -36,28 +36,28 @@ def fill_cols(tbl, fill=np.nan, kind='f'):
             pass
 
 
-def dataCols(data_file, data, id_indx, x_indx, y_indx, mag_indx, e_mag_indx,
-             col_indx, e_col_indx):
+def dataCols(data_file, data, col_names):
     """
     Separate data into appropriate columns.
     """
     try:
         # Read coordinates data.
-        x, y = np.array(data.columns[x_indx]), np.array(data.columns[y_indx])
+        x, y = np.array(data[col_names[1]]), np.array(data[col_names[2]])
         # Read magnitudes.
         mags, em = [], []
-        for mi, emi in zip(*[mag_indx, e_mag_indx]):
-            mags.append(np.array(data.columns[mi]))
-            em.append(np.array(data.columns[emi]))
+
+        for mi, emi in zip(*[col_names[3], col_names[4]]):
+            mags.append(np.array(data[mi]))
+            em.append(np.array(data[emi]))
         # Read colors.
         cols, ec = [], []
-        for ci, eci in zip(*[col_indx, e_col_indx]):
-            cols.append(np.array(data.columns[ci]))
-            ec.append(np.array(data.columns[eci]))
+        for ci, eci in zip(*[col_names[5], col_names[6]]):
+            cols.append(np.array(data[ci]))
+            ec.append(np.array(data[eci]))
         mags, cols, em, ec = np.array(mags), np.array(cols), np.array(em),\
             np.array(ec)
 
-        ids = np.array(data.columns[id_indx])
+        ids = np.array(data[col_names[0]])
         dups = list(list_duplicates(ids))
         if dups:
             print("ERROR: duplicated IDs found in data file:")
@@ -90,6 +90,11 @@ def dataCols(data_file, data, id_indx, x_indx, y_indx, mag_indx, e_mag_indx,
     return ids, x, y, mags, cols, em, ec
 
 
+def f(data):
+    return [
+        f(i) if isinstance(i, list) else 'col{}'.format(i + 1) for i in data]
+
+
 def flatten(l):
     """
     Source: https://stackoverflow.com/a/2158532/1391441
@@ -114,15 +119,17 @@ def main(npd, id_indx, x_indx, y_indx, mag_indx, e_mag_indx, col_indx,
         # is named 'col1', not 'col0'). Store IDs as strings.
         id_colname = 'col' + str(id_indx + 1)
         data = ascii.read(
-            data_file, fill_values=[('INDEF', '0'), ('9999.99', '0')],
+            data_file, fill_values=[
+                ('INDEF', '0'), ('9999.99', '0'), ('99.999', '0')],
             converters={id_colname: [ascii.convert_numpy(np.str)]},
             format='no_header')
 
-        # Remove not wanted columns.
-        col_ids = flatten([
+        # Generate column names in the proper order, while keeping the shape.
+        col_names = f([
             id_indx, x_indx, y_indx, mag_indx, e_mag_indx, col_indx,
             e_col_indx])
-        col_names_keep = ['col' + str(_ + 1) for _ in col_ids]
+        col_names_keep = list(flatten(col_names))
+        # Remove not wanted columns.
         for col in data.columns:
             if col not in col_names_keep:
                 data.remove_column(col)
@@ -144,9 +151,7 @@ def main(npd, id_indx, x_indx, y_indx, mag_indx, e_mag_indx, col_indx,
                          " spaces)\n  for all columns.\n".format(data_file))
 
     # Create cluster's dictionary with the *incomplete* data.
-    ids, x, y, mags, cols, em, ec = dataCols(
-        data_file, data, id_indx, x_indx, y_indx, mag_indx, e_mag_indx,
-        col_indx, e_col_indx)
+    ids, x, y, mags, cols, em, ec = dataCols(data_file, data, col_names)
     # Check percentage of complete data.
     N_ids, m_size, c_size = ids.size, [], []
     for m in mags:
@@ -163,9 +168,7 @@ def main(npd, id_indx, x_indx, y_indx, mag_indx, e_mag_indx, col_indx,
              'cols': cols, 'ec': ec}
 
     # Create cluster's dictionary with the *complete* data.
-    ids, x, y, mags, cols, em, ec = dataCols(
-        data_file, data_compl, id_indx, x_indx, y_indx, mag_indx, e_mag_indx,
-        col_indx, e_col_indx)
+    ids, x, y, mags, cols, em, ec = dataCols(data_file, data_compl, col_names)
     cld_c = {'ids': ids, 'x': x, 'y': y, 'mags': mags, 'em': em,
              'cols': cols, 'ec': ec}
 
