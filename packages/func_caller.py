@@ -75,15 +75,15 @@ def main(cl_file, pd):
 
     # Cluster's data from file, as dictionary. Obtain both incomplete (ie: with
     # nan values) and complete (all rows contain valid data) dictionaries.
-    cld_i, cld_c = get_data.main(npd, **pd)
+    # Return cluster's parameters dictionary 'clp'.
+    cld_i, cld_c, clp = get_data.main(npd, **pd)
 
     # DEPRECATED (at least for now, 08/05/18)
     # If Manual mode is set, display frame and ask if it should be trimmed.
     # cld = trim_frame.main(cld, **pd)
 
     # Obtain 2D coordinates histogram for the observed frame.
-    # Return cluster's parameters dictionary 'clp'.
-    clp = histo_2d.main(**cld_i)
+    clp = histo_2d.main(clp, **cld_i)
 
     # Gaussian filtered 2D x,y histograms.
     clp = xy_density.main(clp, **pd)
@@ -120,17 +120,27 @@ def main(cl_file, pd):
     # dataset for the rest of the functions.
     # The incomplete 'cl_region' and 'field_regions' parameters are also used
     # by the A2 plot (for the cluster+field regions plot)
-    for i_c, cld_x in (('incomp', cld_i), ('comp', cld_c)):
-        print("Processing {}lete dataset:".format(i_c))
+    print("Processing complete dataset:")
+    # Accept and reject stars based on their errors.
+    clp = err_accpt_rejct.main('comp', cld_c, clp, **pd)
 
-        # Accept and reject stars based on their errors.
-        clp = err_accpt_rejct.main(i_c, cld_x, clp, **pd)
+    # Stars in and out of cluster's radius.
+    clp = stars_in_out_cl_reg.main('comp', clp)
 
-        # Stars in and out of cluster's radius.
-        clp = stars_in_out_cl_reg.main(i_c, clp)
+    # Field regions around the cluster's center.
+    clp = field_regions.main('comp', clp, **pd)
 
-        # Field regions around the cluster's center.
-        clp = field_regions.main(i_c, clp, **pd)
+    # Only process incomplete data if the the input data is not equal. Else
+    # just use the complete dataset.
+    if clp['flag_data_eq']:
+        clp['cl_region_i'], clp['flag_no_fl_regs_i'], clp['field_regions_i'] =\
+            clp['cl_region_c'], clp['flag_no_fl_regs_c'],\
+            clp['field_regions_c']
+    else:
+        print("Processing incomplete dataset:")
+        clp = err_accpt_rejct.main('incomp', cld_i, clp, **pd)
+        clp = stars_in_out_cl_reg.main('incomp', clp)
+        clp = field_regions.main('incomp', clp, **pd)
 
     make_A2_plot.main(npd, cld_i, pd, **clp)
 
