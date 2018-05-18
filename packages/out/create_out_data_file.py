@@ -110,4 +110,4 @@ n_memb_da  memb_par     a_f  prob_cl  int_col      met      e_m      age      \
 e_a   E(B-V)      e_E     dist      e_d      M_i      e_M   bin_fr     \
 e_bf      \
 M1 M2  f1 f2 f3 f4 f5 f6 f7 f8  FC\n".format(__version__, now_time))
-            print 'Output data file created.'
+            print('Output data file created.')
