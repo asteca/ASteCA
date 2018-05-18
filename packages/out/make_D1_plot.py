@@ -88,21 +88,20 @@ def main(
 
             # pl_param_pf: Parameters probability functions.
             for p in ['metal', 'age', 'ext', 'dist', 'mass', 'binar']:
-                args = [p, gs, min_max_p2, fit_params_r, fit_errors_r,
+                args = [p, gs, min_max_p, fit_params_r, fit_errors_r,
                         varIdxs, model_done]
                 mp_best_fit1_emcee.plot(1, *args)
 
             # pl_pdf_half: Parameters half of pdfs.
             for p in ['metal', 'age', 'ext', 'dist', 'mass', 'binar']:
-                args = [p, gs, min_max_p, varIdxs, model_done]
+                args = [p, gs, varIdxs, model_done]
                 mp_best_fit1_emcee.plot(2, *args)
 
             # pl_param_chain: Parameters sampler chains.
             for p in ['metal', 'age', 'ext', 'dist', 'mass', 'binar']:
                 args = [
-                    p, gs, min_max_p, fit_params_r, pd['nwalkers'],
-                    pd['nsteps'], pd['nburn'], m_accpt_fr, varIdxs,
-                    pars_chains]
+                    p, gs, fit_params_r, pd['nwalkers'], pd['nsteps'],
+                    pd['nburn'], m_accpt_fr, varIdxs, pars_chains]
                 mp_best_fit1_emcee.plot(3, *args)
 
         # Generate output file.

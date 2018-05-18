@@ -119,7 +119,7 @@ def main(clp, fld_clean_mode, fld_clean_bin, fld_clean_prob, **kwargs):
                   fld_clean_mode))
 
     # If no field regions were defined, this mode won't work.
-    elif clp['flag_no_fl_regs'] and fld_clean_mode == 'local':
+    elif clp['flag_no_fl_regs_c'] and fld_clean_mode == 'local':
         print("  WARNING: no field regions were defined. Can't apply\n"
               "  '{}' field stars removal method.".format(fld_clean_mode))
 
@@ -129,7 +129,7 @@ def main(clp, fld_clean_mode, fld_clean_bin, fld_clean_prob, **kwargs):
         if fld_clean_mode == 'local':
             cl_reg_fit, cl_reg_no_fit, min_prob, bin_edges =\
                 local_cell_clean.main(
-                    clp['field_regions'], clp['memb_prob_avrg_sort'],
+                    clp['field_regions_c'], clp['memb_prob_avrg_sort'],
                     clp['flag_decont_skip'], fld_clean_bin)
 
         if fld_clean_mode == 'n_memb':

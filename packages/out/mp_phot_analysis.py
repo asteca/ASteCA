@@ -57,7 +57,8 @@ def pl_phot_err(gs, fig, up_low, x_ax, y_ax, mags, err_max, cl_region,
                  zorder=4)
     ax.hlines(y=err_max, xmin=x_min, xmax=x_max, color='k',
               linestyles='dashed', zorder=2)
-    plt.ylim(-0.005, plt.ylim()[1])
+    # Maximum error limit of 1.
+    plt.ylim(-0.005, min(plt.ylim()[1], 1.))
 
 
 def pl_fl_diag(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,

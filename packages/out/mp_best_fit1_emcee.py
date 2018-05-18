@@ -7,7 +7,8 @@ from matplotlib.patches import Ellipse
 from matplotlib.pyplot import cm
 
 
-def pl_2_param_dens(_2_params, gs, min_max_p2, cp_r, cp_e, varIdxs, model_done):
+def pl_2_param_dens(
+        _2_params, gs, min_max_p2, cp_r, cp_e, varIdxs, model_done):
     '''
     Parameter vs parameters density map.
     '''
@@ -40,8 +41,7 @@ def pl_2_param_dens(_2_params, gs, min_max_p2, cp_r, cp_e, varIdxs, model_done):
     xp, e_xp = map(float, [cp_r[mx], cp_e[mx]])
     yp, e_yp = map(float, [cp_r[my], cp_e[my]])
     # # Axis limits.
-    xp_min, xp_max = min_max_p2[mx]
-    yp_min, yp_max = min_max_p2[my]
+    # yp_min, yp_max = min_max_p[my]
 
     # To specify the number of ticks on both or any single axes
     ax.locator_params(nbins=5)
@@ -63,10 +63,14 @@ def pl_2_param_dens(_2_params, gs, min_max_p2, cp_r, cp_e, varIdxs, model_done):
 
         mx_model, my_model = varIdxs.index(mx), varIdxs.index(my)
 
+        # if xp_min < xp_max and yp_min < yp_max:
+        #     rng = [[xp_min, xp_max], [yp_min, yp_max]]
+        # else:
+        #     rng = None
         h2d, xbins, ybins = plt.hist2d(
             model_done[mx_model], model_done[my_model], bins=20,
             cmap=plt.get_cmap(d_map),
-            range=[[xp_min, xp_max], [yp_min, yp_max]], zorder=2)[:-1]
+            range=None, zorder=2)[:-1]
         plt.contour(
             h2d.transpose(), 5,
             extent=[xbins.min(), xbins.max(), ybins.min(), ybins.max()],
@@ -78,12 +82,13 @@ def pl_2_param_dens(_2_params, gs, min_max_p2, cp_r, cp_e, varIdxs, model_done):
                           edgecolor=cp, fc='None', lw=1., zorder=4)
         ax.add_patch(ellipse)
 
-    ax.set_xlim(xp_min, xp_max)
-    ax.set_ylim(yp_min, yp_max)
+    if gs_y2 == 12:
+        xp_min, xp_max = min_max_p2[mx]
+        ax.set_xlim([xp_min, xp_max])
     ax.set_aspect('auto')
 
 
-def pl_param_pf(par_name, gs, min_max_p2, cp_r, cp_e, varIdxs, model_done):
+def pl_param_pf(par_name, gs, min_max_p, cp_r, cp_e, varIdxs, model_done):
     '''
     Parameter posterior plot.
     '''
@@ -103,11 +108,12 @@ def pl_param_pf(par_name, gs, min_max_p2, cp_r, cp_e, varIdxs, model_done):
     p = frm[cp]
 
     ax = plt.subplot(gs[gs_y1:gs_y2, gs_x1:gs_x2])
+    plt.title(ld_p, fontsize=10)
     # Parameter values and errors.
     xp, e_xp = map(float, [cp_r[cp], cp_e[cp]])
     # Set x axis limit.
-    xp_min, xp_max = min_max_p2[cp]
-    ax.set_xlim(xp_min, xp_max)
+    xp_min, xp_max = min_max_p[cp]
+    # ax.set_xlim(xp_min, xp_max)
     ax.locator_params(nbins=5)
     # Set minor ticks
     ax.minorticks_on()
@@ -117,10 +123,6 @@ def pl_param_pf(par_name, gs, min_max_p2, cp_r, cp_e, varIdxs, model_done):
     # else:
     #     ax.tick_params(labelbottom=False)
     ax.tick_params(axis='y', which='major', labelleft=False)
-    # Add textbox.
-    ob = offsetbox.AnchoredText(ld_p, pad=0.1, loc=9, prop=dict(size=10))
-    ob.patch.set(alpha=0.8)
-    ax.add_artist(ob)
 
     if cp in varIdxs:
         c_model = varIdxs.index(cp)
@@ -128,10 +130,15 @@ def pl_param_pf(par_name, gs, min_max_p2, cp_r, cp_e, varIdxs, model_done):
         # Define KDE limits.
         x_rang = .1 * (xp_max - xp_min)
         x_kde = np.mgrid[xp_min - x_rang:xp_max + x_rang:100j]
-        kernel_cl = stats.gaussian_kde(model_done[c_model])
+        # Use a larger Scott bandwidth
+        bw = 1.5 * len(model_done[c_model]) ** (-1. / (len(varIdxs) + 4))
+        kernel_cl = stats.gaussian_kde(model_done[c_model], bw_method=bw)
         # KDE for plotting.
         kde = np.reshape(kernel_cl(x_kde).T, x_kde.shape)
-        plt.plot(x_kde, kde / max(kde), color='k', lw=1.5)
+        try:
+            plt.plot(x_kde, kde / max(kde), color='k', lw=1.5)
+        except RuntimeWarning:
+            pass
 
         # Obtain the bin values and edges using numpy
         hist, bin_edges = np.histogram(model_done[c_model], bins=25)
@@ -188,7 +195,7 @@ def return_intersection(hist_1, hist_2):
     return intersection
 
 
-def pl_pdf_half(par_name, gs, min_max_p, varIdxs, model_done):
+def pl_pdf_half(par_name, gs, varIdxs, model_done):
     '''
     Parameter posterior plot for 1st and 2nd halfs.
     '''
@@ -205,8 +212,6 @@ def pl_pdf_half(par_name, gs, min_max_p, varIdxs, model_done):
 
     ld_p = labels[cp]
 
-    # Set x axis limit.
-    xp_min, xp_max = min_max_p[cp]
     ax.locator_params(nbins=5)
     # Set minor ticks
     ax.minorticks_on()
@@ -244,8 +249,8 @@ def pl_pdf_half(par_name, gs, min_max_p, varIdxs, model_done):
 
 
 def pl_param_chain(
-        par_name, gs, min_max_p, cp_r, nwalkers, nsteps, nburn, m_accpt_fr,
-        varIdxs, pars_chains):
+        par_name, gs, cp_r, nwalkers, nsteps, nburn, m_accpt_fr, varIdxs,
+        pars_chains):
     '''
     Parameter sampler chain.
     '''

@@ -8,10 +8,10 @@ import prep_plots
 
 
 def main(
-        npd, cld, pd, err_max, cl_region, cl_region_rjct,
-        stars_out, stars_out_rjct, err_lst, field_regions, n_memb,
-        flag_no_fl_regs, lum_func, completeness, cl_reg_imag, fl_reg_imag,
-        integ_mag, flag_pval_test, pval_test_params, **kwargs):
+        npd, cld_c, pd, err_lst, cl_region_c, cl_region_rjct_c, stars_out_c,
+        stars_out_rjct_c, field_regions_c, flag_no_fl_regs_c, n_memb, lum_func,
+        completeness, cl_reg_imag, fl_reg_imag, integ_mag, flag_pval_test,
+        pval_test_params, **kwargs):
     '''
     Make B block plots.
     '''
@@ -25,33 +25,35 @@ def main(
             pd['colors'][0], pd['filters'][0], 'mag')
         # TODO using first magnitude and color defined
         x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd = prep_plots.diag_limits(
-            'mag', cld['cols'][0], cld['mags'][0])
+            'mag', cld_c['cols'][0], cld_c['mags'][0])
         stars_f_rjct, stars_f_acpt = prep_plots.field_region_stars(
-            stars_out_rjct, field_regions)
+            stars_out_rjct_c, field_regions_c)
         f_sz_pt = prep_plots.phot_diag_st_size(len(stars_f_acpt[0]))
-        cl_sz_pt = prep_plots.phot_diag_st_size(len(cl_region))
-        err_bar_fl = prep_plots.error_bars(stars_out, x_min_cmd, err_lst)
-        err_bar_cl = prep_plots.error_bars(cl_region, x_min_cmd, err_lst)
+        cl_sz_pt = prep_plots.phot_diag_st_size(len(cl_region_c))
+        err_bar_fl = prep_plots.error_bars(stars_out_c, x_min_cmd, err_lst)
+        err_bar_cl = prep_plots.error_bars(cl_region_c, x_min_cmd, err_lst)
         err_bar_all = prep_plots.error_bars(
-            cld['mags'][0], x_min_cmd, err_lst, 'all')
+            cld_c['mags'][0], x_min_cmd, err_lst, 'all')
 
         # Photometric analysis plots.
         arglist = [
             # pl_phot_err: Photometric error rejection.
-            [gs, fig, 'up', x_ax, y_ax, cld['mags'], err_max, cl_region,
-             cl_region_rjct, stars_out, stars_out_rjct, err_bar_all],
-            [gs, fig, 'low', x_ax, y_ax, cld['mags'], err_max, cl_region,
-             cl_region_rjct, stars_out, stars_out_rjct, err_bar_all],
+            [gs, fig, 'up', x_ax, y_ax, cld_c['mags'], pd['err_max'],
+             cl_region_c,
+             cl_region_rjct_c, stars_out_c, stars_out_rjct_c, err_bar_all],
+            [gs, fig, 'low', x_ax, y_ax, cld_c['mags'], pd['err_max'],
+             cl_region_c,
+             cl_region_rjct_c, stars_out_c, stars_out_rjct_c, err_bar_all],
             # pl_fl_diag: Field stars CMD/CCD diagram.
             [gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
                 stars_f_rjct, stars_f_acpt, f_sz_pt, err_bar_fl],
             # pl_cl_diag: Cluster's stars diagram (stars inside cluster's rad)
             [gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
-                cl_region_rjct, cl_region, n_memb, cl_sz_pt, err_bar_cl],
+                cl_region_rjct_c, cl_region_c, n_memb, cl_sz_pt, err_bar_cl],
             # pl_lum_func: LF of stars in cluster region and outside.
-            [gs, y_ax, flag_no_fl_regs, lum_func, completeness],
+            [gs, y_ax, flag_no_fl_regs_c, lum_func, completeness],
             # pl_integ_mag: Integrated magnitudes.
-            [gs, cl_reg_imag, fl_reg_imag, integ_mag, y_ax, flag_no_fl_regs],
+            [gs, cl_reg_imag, fl_reg_imag, integ_mag, y_ax, flag_no_fl_regs_c],
             # pl_p_vals: Distribution of KDE p_values.
             [gs, flag_pval_test, pval_test_params]
         ]

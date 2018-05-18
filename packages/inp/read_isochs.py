@@ -7,10 +7,10 @@ import re
 import isochs_format
 
 
-def read_met_file(met_f, age_values, line_start, age_format, column_ids):
+def readCMDFile(met_f, age_values, line_start, age_format, column_ids):
     '''
-    Read a given metallicity file and return the isochrones for the ages
-    within the age range.
+    Read a given metallicity file from the CMD service, and return the
+    isochrones for the ages within the age range.
     '''
     metal_isoch = []
 
@@ -85,7 +85,7 @@ def filters_and_extra_pars(
         ids = isochs_format.cmd_common_ids(evol_track, l_s)
 
     try:
-        met_f_ages = read_met_file(
+        met_f_ages = readCMDFile(
             met_f, age_values, line_start, age_format, ids)
     except Exception:
         print(traceback.format_exc())

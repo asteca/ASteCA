@@ -53,8 +53,8 @@ def kde_center(x_data, y_data, cents_xy, radius):
     return kde_cent, kde_plot
 
 
-def main(cld, clp, run_mode, center_stddev, coords, cl_cent_semi, cl_rad_semi,
-         cent_flag_semi, **kwargs):
+def main(cld_i, clp, run_mode, center_stddev, coords, cl_cent_semi,
+         cl_rad_semi, cent_flag_semi, **kwargs):
     """
     Obtains the center of the putative cluster. Returns the center values
     along with its errors and several arrays related to histograms, mainly for
@@ -67,13 +67,13 @@ def main(cld, clp, run_mode, center_stddev, coords, cl_cent_semi, cl_rad_semi,
     if run_mode == 'auto' or run_mode == 'semi' and cent_flag_semi == 0:
 
         # Restrict the KDE to a smaller area (to improve performance).
-        radius = 0.25 * min(np.ptp(cld['x']), np.ptp(cld['y']))
+        radius = 0.25 * min(np.ptp(cld_i['x']), np.ptp(cld_i['y']))
 
         # Obtain center coordinates as the maximum KDE value. Use the
         # approximate center obtained with the full frame and the given
         # standard deviation (hence the [1]).
         cent = clp['cents_xy'][1]
-        kde_cent, kde_plot = kde_center(cld['x'], cld['y'], cent, radius)
+        kde_cent, kde_plot = kde_center(cld_i['x'], cld_i['y'], cent, radius)
 
         # Find bin where the center xy coordinates are located.
         bin_cent = center_bin(clp['xedges'], clp['yedges'], kde_cent)
@@ -87,7 +87,7 @@ def main(cld, clp, run_mode, center_stddev, coords, cl_cent_semi, cl_rad_semi,
 
         # Obtain KDE center using the 'semi' values.
         kde_cent, kde_plot = kde_center(
-            cld['x'], cld['y'], cl_cent_semi, cl_rad_semi)
+            cld_i['x'], cld_i['y'], cl_cent_semi, cl_rad_semi)
 
         # Re-write center values if fixed in semi input file.
         if cent_flag_semi == 1:
@@ -106,14 +106,14 @@ def main(cld, clp, run_mode, center_stddev, coords, cl_cent_semi, cl_rad_semi,
     elif run_mode == 'manual':
 
         # Restrict the KDE to a smaller area (to improve performance).
-        radius = 0.25 * min(np.ptp(cld['x']), np.ptp(cld['y']))
+        radius = 0.25 * min(np.ptp(cld_i['x']), np.ptp(cld_i['y']))
         kde_cent, kde_plot = kde_center(
-            cld['x'], cld['y'], clp['cents_xy'][1], radius)
+            cld_i['x'], cld_i['y'], clp['cents_xy'][1], radius)
         bin_cent = center_bin(clp['xedges'], clp['yedges'], kde_cent)
 
         # Show plot with center obtained. Use main magnitude.
         display_cent.main(
-            cld['x'], cld['y'], cld['mags'][0], kde_cent, bin_cent,
+            cld_i['x'], cld_i['y'], cld_i['mags'][0], kde_cent, bin_cent,
             clp['hist_2d_g'][1], coords)
         plt.show()
         # No KDE plot is 'manual' mode is used.

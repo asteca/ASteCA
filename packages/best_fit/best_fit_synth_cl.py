@@ -36,14 +36,11 @@ def params_errors(best_fit_algor, args):
         isoch_fit_errors = []
         # TODO hard-coded for 6 parameters
         j = 0
-        print("Median (16, 84) perc")
         for i in range(6):
             if i in varIdxs:
-                pm = np.percentile(emcee_trace[i - j], 50)  # Median
                 #  16th and 84th percentiles (1 sigma)
                 ph = np.percentile(emcee_trace[i - j], 84)
                 pl = np.percentile(emcee_trace[i - j], 16)
-                # print("  {:.4f} ({:.4f}, {:.4f})".format(pm, pl, ph))
                 # TODO fix this
                 err = .5 * (ph - pl)
                 isoch_fit_errors.append(err)
@@ -54,9 +51,9 @@ def params_errors(best_fit_algor, args):
     return isoch_fit_errors
 
 
-def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning, lkl_weight,
-         N_bootstrap, max_mag, IMF_name, m_high, m_sample_flag, R_V,
-         fundam_params, N_pop, N_gen, fit_diff, cross_prob, cross_sel,
+def main(clp, err_max, bf_flag, best_fit_algor, lkl_method, lkl_binning,
+         lkl_weight, N_bootstrap, max_mag, IMF_name, m_high, m_sample_flag,
+         R_V, fundam_params, N_pop, N_gen, fit_diff, cross_prob, cross_sel,
          mut_prob, N_el, N_ei, N_es, cmd_systs, filters, colors, theor_tracks,
          nwalkers=0, nsteps=0., nburn=0., **kwargs):
     '''
@@ -65,8 +62,8 @@ def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning, lkl_weight,
     '''
     # Check if algorithm should run.
     if bf_flag:
-        err_lst, cl_reg_fit, completeness, e_max = clp['err_lst'],\
-            clp['cl_reg_fit'], clp['completeness'], clp['err_max']
+        err_lst, cl_reg_fit, completeness = clp['err_lst'],\
+            clp['cl_reg_fit'], clp['completeness']
 
         # Remove stars beyond the maximum magnitude limit, if it was set.
         cl_max_mag, max_mag_syn = max_mag_cut.main(cl_reg_fit, max_mag)
@@ -120,7 +117,7 @@ def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning, lkl_weight,
                 else lkl_method))
             # Brute force algorithm.
             isoch_fit_params = brute_force_algor.main(
-                lkl_method, e_max, err_lst, completeness, max_mag_syn,
+                lkl_method, err_max, err_lst, completeness, max_mag_syn,
                 fundam_params, obs_clust, theor_tracks, R_V, ext_coefs,
                 st_dist_mass, N_fc, cmpl_rnd, err_rnd)
             # Assign uncertainties for each parameter.
@@ -136,7 +133,7 @@ def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning, lkl_weight,
             # so it will print percentages to screen.
             flag_print_perc = True
             isoch_fit_params = genetic_algorithm.main(
-                lkl_method, e_max, err_lst, completeness, max_mag_syn,
+                lkl_method, err_max, err_lst, completeness, max_mag_syn,
                 fundam_params, obs_clust, theor_tracks, R_V, ext_coefs,
                 st_dist_mass, N_fc, cmpl_rnd, err_rnd, N_pop, N_gen, fit_diff,
                 cross_prob, cross_sel, mut_prob, N_el, N_ei, N_es,
@@ -144,7 +141,7 @@ def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning, lkl_weight,
             # Assign uncertainties.
             isoch_fit_errors = params_errors(
                 best_fit_algor,
-                [lkl_method, e_max, err_lst, completeness, fundam_params,
+                [lkl_method, err_max, err_lst, completeness, fundam_params,
                  cl_max_mag, max_mag_syn, theor_tracks, R_V, ext_coefs,
                  st_dist_mass, N_fc, cmpl_rnd, err_rnd, N_pop, N_gen, fit_diff,
                  cross_prob, cross_sel, mut_prob, N_el, N_ei, N_es,
@@ -156,7 +153,7 @@ def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning, lkl_weight,
                 lkl_method + '; ' + lkl_binning if lkl_method == 'dolphin'
                 else lkl_method))
             isoch_fit_params = emcee_algor.main(
-                lkl_method, e_max, err_lst, completeness, max_mag_syn,
+                lkl_method, err_max, err_lst, completeness, max_mag_syn,
                 fundam_params, obs_clust, theor_tracks, R_V, ext_coefs,
                 st_dist_mass, N_fc, cmpl_rnd, err_rnd, nwalkers, nsteps, nburn)
             # Assign uncertainties.

@@ -51,7 +51,7 @@ differing\n# >{}% with the best value assigned for said parameter(s).\n\
 
 def plot_top_tiers(pd, top_tiers_flo, output_subdir, clust_name, mags,
                    cols, isoch_fit_params, ext_coefs, N_fc, cmpl_rnd, err_rnd,
-                   err_max, err_lst, completeness, max_mag_syn, st_dist_mass):
+                   err_lst, completeness, max_mag_syn, st_dist_mass):
     '''
     Plot all top tiers.
     '''
@@ -67,7 +67,7 @@ def plot_top_tiers(pd, top_tiers_flo, output_subdir, clust_name, mags,
     for mod in top_tiers_flo:
         # Call function to generate synthetic cluster.
         shift_isoch, synth_clst = synth_cl_plot.main(
-            err_max, pd['fundam_params'], pd['theor_tracks'],
+            pd['err_max'], pd['fundam_params'], pd['theor_tracks'],
             pd['plot_isoch_data'], isoch_fit_params, err_lst, completeness,
             max_mag_syn, st_dist_mass, pd['R_V'], ext_coefs, N_fc, cmpl_rnd,
             err_rnd)
@@ -94,7 +94,7 @@ def plot_top_tiers(pd, top_tiers_flo, output_subdir, clust_name, mags,
     plt.close("all")
 
 
-def main(npd, cld, pd, err_max, err_lst, ext_coefs, N_fc, cmpl_rnd, err_rnd,
+def main(npd, cld_c, pd, err_lst, ext_coefs, N_fc, cmpl_rnd, err_rnd,
          completeness, max_mag_syn, st_dist_mass, isoch_fit_params, **kwargs):
     '''
     Obtain top tier models, produce data file and output image. Don't run
@@ -154,8 +154,8 @@ def main(npd, cld, pd, err_max, err_lst, ext_coefs, N_fc, cmpl_rnd, err_rnd,
                 try:
                     plot_top_tiers(
                         pd, top_tiers_flo, output_subdir, clust_name,
-                        cld['mags'], cld['cols'], isoch_fit_params, ext_coefs,
-                        N_fc, cmpl_rnd, err_rnd, err_max, err_lst,
+                        cld_c['mags'], cld_c['cols'], isoch_fit_params,
+                        ext_coefs, N_fc, cmpl_rnd, err_rnd, err_lst,
                         completeness, max_mag_syn, st_dist_mass)
                     print("<<Plots for D3 block created>>")
                 except Exception:

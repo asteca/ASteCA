@@ -80,9 +80,9 @@ def kde_limits(phot_x, phot_y):
     '''
     Return photometric diagram limits taken from a 2D KDE.
     '''
-
-    xmin, xmax = min(phot_x), max(phot_x)
-    ymin, ymax = min(phot_y), max(phot_y)
+    # Mask nan values.
+    mask = ~(np.isnan(phot_x) | np.isnan(phot_y))
+    phot_x, phot_y = phot_x[mask], phot_y[mask]
     # Stack photometric data.
     values = np.vstack([phot_x, phot_y])
     # Obtain Gaussian KDE.
@@ -91,6 +91,8 @@ def kde_limits(phot_x, phot_y):
     gd = 25
     gd_c = complex(0, gd)
     # Define x,y grid.
+    xmin, xmax = min(phot_x), max(phot_x)
+    ymin, ymax = min(phot_y), max(phot_y)
     x, y = np.mgrid[xmin:xmax:gd_c, ymin:ymax:gd_c]
     positions = np.vstack([x.ravel(), y.ravel()])
     # Evaluate kernel in grid positions.
@@ -325,10 +327,10 @@ def p2_ranges(min_max_p, varIdxs, model_done, nwalkers, nsteps):
     for vi in range(6):  # TODO hard-coded to 6 parameters
         if vi in varIdxs:
             model = varIdxs.index(vi)
-            hx, edge = np.histogram(
-                model_done[model], range=min_max_p[vi], bins=25)
-            non_z = np.nonzero(hx > 0)
-            min_max_p2.append([edge[non_z[0][0]], edge[non_z[0][-1]]])
+            hx, edge = np.histogram(model_done[model], bins=20)
+            # non_z = np.nonzero(hx > 0)
+            # min_max_p2.append([edge[non_z[0][0]], edge[non_z[0][-1]]])
+            min_max_p2.append([edge[0], edge[-1]])
         else:
             min_max_p2.append(min_max_p[vi])
 
@@ -397,7 +399,7 @@ def likl_y_range(opt_method, lkl_old):
 
 
 def packData(lkl_method, lkl_binning, cl_max_mag, synth_clst, shift_isoch,
-             colors, filters, cld):
+             colors, filters, cld_c):
     """
     Properly select and pack data for CMD/CCD of observed and synthetic
     clusters, and their Hess diagram.
@@ -411,7 +413,7 @@ def packData(lkl_method, lkl_binning, cl_max_mag, synth_clst, shift_isoch,
 
     # CMD of main magnitude and first color defined.
     # Used to defined limits.
-    x_phot_all, y_phot_all = cld['cols'][0], cld['mags'][0]
+    x_phot_all, y_phot_all = cld_c['cols'][0], cld_c['mags'][0]
     frst_obs_mag, frst_obs_col = list(zip(*zip(*cl_max_mag)[3])[0]),\
         list(zip(*zip(*cl_max_mag)[5])[0])
     frst_synth_col, frst_synth_mag = synth_clst[0][0][1],\
@@ -441,7 +443,7 @@ def packData(lkl_method, lkl_binning, cl_max_mag, synth_clst, shift_isoch,
         scnd_col_edgs = bin_edges[2]
         scnd_col_isoch = shift_isoch[N_mags + 1]
         # CMD of main magnitude and second color defined.
-        x_phot_all, y_phot_all = cld['cols'][1], cld['mags'][0]
+        x_phot_all, y_phot_all = cld_c['cols'][1], cld_c['mags'][0]
         gs_y1, gs_y2 = 2, 4
         i_obs_x, i_obs_y = 1, 0
         hr_diags.append(
@@ -450,7 +452,7 @@ def packData(lkl_method, lkl_binning, cl_max_mag, synth_clst, shift_isoch,
              frst_mag_edgs, shift_isoch[2], frst_mag_isoch, colors[1],
              filters[0], 'mag', i_obs_x, i_obs_y, gs_y1, gs_y2])
         # CCD of first and second color defined.
-        x_phot_all, y_phot_all = cld['cols'][0], cld['cols'][1]
+        x_phot_all, y_phot_all = cld_c['cols'][0], cld_c['cols'][1]
         gs_y1, gs_y2 = 4, 6
         i_obs_x, i_obs_y = 0, 1
         hr_diags.append(

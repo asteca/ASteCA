@@ -10,7 +10,7 @@ def mag_ranges(x, y, mags):
     """
     main_mag = mags[0]
     m0, m4 = min(main_mag), max(main_mag)
-    mag_step = np.ptp(main_mag) / 4.
+    mag_step = (m4 - m0) / 4.
     m1, m2, m3 = m0 + mag_step, m0 + 2. * mag_step, m0 + 3. * mag_step
 
     xy_mag_ranges = [
@@ -35,7 +35,7 @@ def mag_ranges(x, y, mags):
     return xy_mag_ranges
 
 
-def main(x, y, mags, **kwargs):
+def main(clp, x, y, mags, **kwargs):
     """
     Return 2D histograms for the x,y positional data.
     """
@@ -67,9 +67,9 @@ def main(x, y, mags, **kwargs):
             print traceback.format_exc()
             sys.exit("ERROR: Could not generate the positional 2D histogram.")
 
-    # Create cluster's parameters dictionary.
-    clp = {'xy_mag_ranges': xy_mag_ranges, 'bin_width': bin_width,
-           'hist_2d': hist_2d, 'xedges': xedges, 'yedges': yedges}
+    # Add to cluster's parameters dictionary.
+    clp['xy_mag_ranges'], clp['bin_width'], clp['hist_2d'], clp['xedges'],\
+        clp['yedges'] = xy_mag_ranges, bin_width, hist_2d, xedges, yedges
 
     print("Frame's 2D histograms obtained.")
 

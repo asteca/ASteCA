@@ -69,9 +69,9 @@ def get_ranges(par_ranges):
     return param_ranges
 
 
-def get_ages(met_file):
+def CMDAges(met_file):
     '''
-    Read all available ages in metallicity file.
+    Read all available ages in a CMD service metallicity file.
     '''
 
     age_format = isochs_format.cmd_age_format()
@@ -134,7 +134,7 @@ def main(iso_paths, par_ranges):
     #
     # I.e: all metallicity files should contain the same amount and values for
     # the ages, otherwise something *will* fail down the line.
-    age_vals_all = get_ages(met_files[0][0])
+    age_vals_all = CMDAges(met_files[0][0])
 
     # Get parameters ranges stored in params_input.dat file.
     param_ranges = get_ranges(par_ranges)

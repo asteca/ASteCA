@@ -1,6 +1,8 @@
 
+import numpy as np
 
-def main(clp):
+
+def main(clp, x, y, **kwargs):
     '''
     Calculate the contamination index value. This parameter is defined as the
     ratio of field stars density over the density of stars in the cluster
@@ -13,22 +15,29 @@ def main(clp):
     1 means there are no expected cluster members inside the cluster region
     (which isn't a good sign).
     '''
-    n_clust, cl_area, field_dens, clust_rad, rdp_length = [
-        clp[_] for _ in ['n_clust', 'cl_area', 'field_dens', 'clust_rad',
-                         'rdp_length']]
 
     # If the cluster radius exceeds the length of the area where the field
     # density value was obtained (ie: the extension of the RDP), then do not
-    # obtain the n_memb parameter since the field density does not represent
-    # the density of the field but rather the density of the outermost regions
-    # of the cluster.
-    if clust_rad < rdp_length / 2.:
+    # obtain the 'cont_index' parameter since the field density does not
+    # represent the density of the field but rather the density of the
+    # outermost regions of the cluster.
+    if clp['clust_rad'] < clp['rdp_length'] / 2.:
+
+        # Count the total number of stars within the defined cluster region
+        # (including stars with rejected photometric errors)
+        n_clust = 0
+        for xy in zip(*[x, y]):
+            # Separate in and out of cluster's boundaries.
+            dist = np.sqrt((clp['kde_cent'][0] - xy[0]) ** 2 +
+                           (clp['kde_cent'][1] - xy[1]) ** 2)
+            if dist <= clp['clust_rad']:
+                n_clust += 1
 
         # Star density in the cluster region.
-        cl_dens = n_clust / cl_area
+        cl_dens = n_clust / clp['cl_area']
 
         # Final contamination index.
-        cont_index = field_dens / cl_dens
+        cont_index = clp['field_dens'] / cl_dens
 
         if cont_index >= 1.:
             print("  WARNING: contamination index value is very large: "
