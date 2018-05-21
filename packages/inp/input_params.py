@@ -67,6 +67,8 @@ def main(mypath, pars_f_path):
                     id_mags = reader[1:]
                 elif reader[0] == 'PC':
                     id_cols = reader[1:]
+                elif reader[0] == 'PK':
+                    id_kinem = reader[1:]
 
                 # Output parameters.
                 elif reader[0] == 'MP':
@@ -215,6 +217,7 @@ def main(mypath, pars_f_path):
         'up_flag': up_flag, 'flag_back_force': flag_back_force,
         'run_mode': run_mode,
         'id_coords': id_coords, 'id_mags': id_mags, 'id_cols': id_cols,
+        'id_kinem': id_kinem,
         'flag_make_plot': flag_make_plot, 'plot_frmt': plot_frmt,
         'plot_dpi': plot_dpi,
         'flag_move_file': flag_move_file,

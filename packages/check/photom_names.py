@@ -130,4 +130,21 @@ def check(mypath, pd):
         e_mag_indx, filters, col_indx, e_col_indx, colors,\
         all_syst_filters, iso_paths
 
+    # Read PMs, parallax, and RV data.
+    n = ('plx', 'e_plx', 'pmx', 'e_pmx', 'pmy', 'e_pmy', 'rv', 'e_rv')
+    for i, ci in enumerate(pd['id_kinem']):
+        if ci not in ('n', 'N'):
+            try:
+                pd[n[i] + '_indx'] = int(ci)
+            except ValueError:
+                sys.exit("ERROR: bad index ('{}') for '{}' column"
+                         " in 'params_input dat'.".format(ci, n[i]))
+        else:
+            pd[n[i] + '_indx'] = False
+    # Check that error columns are present
+    for col in ('plx_indx', 'pmx_indx', 'pmy_indx', 'rv_indx'):
+        if pd[col] is not False and pd['e_' + col] is False:
+            sys.exit("ERROR: missing error column for '{}' in"
+                     "'params_input dat'.".format(col))
+
     return pd

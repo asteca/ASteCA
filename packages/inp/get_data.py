@@ -41,11 +41,20 @@ def dataCols(data_file, data, col_names):
     Separate data into appropriate columns.
     """
     try:
+        ids = np.array(data[col_names[0]])
+        dups = list(list_duplicates(ids))
+        if dups:
+            print("ERROR: duplicated IDs found in data file:")
+            for dup in dups:
+                print("  ID '{}' found in lines: {}".format(dup[0],
+                      ", ".join(dup[1])))
+            raise ValueError("Duplicated IDs found.")
+
         # Read coordinates data.
         x, y = np.array(data[col_names[1]]), np.array(data[col_names[2]])
-        # Read magnitudes.
-        mags, em = [], []
 
+        # Read magnitudes
+        mags, em = [], []
         for mi, emi in zip(*[col_names[3], col_names[4]]):
             mags.append(np.array(data[mi]))
             em.append(np.array(data[emi]))
@@ -57,14 +66,16 @@ def dataCols(data_file, data, col_names):
         mags, cols, em, ec = np.array(mags), np.array(cols), np.array(em),\
             np.array(ec)
 
-        ids = np.array(data[col_names[0]])
-        dups = list(list_duplicates(ids))
-        if dups:
-            print("ERROR: duplicated IDs found in data file:")
-            for dup in dups:
-                print("  ID '{}' found in lines: {}".format(dup[0],
-                      ", ".join(dup[1])))
-            raise ValueError("Duplicated IDs found.")
+        # Read PMs, parallax, RV.
+        kine, ek = [], []
+        for ki, eki in zip(*[col_names[7], col_names[8]]):
+            if ki is not False:
+                kine.append(np.array(data[ki]))
+                ek.append(np.array(data[eki]))
+            else:
+                kine.append(np.full(ids.size, np.nan))   # NOPE
+                ek.append(np.full(ids.size, np.nan))
+        kine, ek = np.array(kine), np.array(ek)
 
     except IndexError:
         raise IndexError("ERROR: data input file:\n  {}\n  contains "
@@ -87,12 +98,22 @@ def dataCols(data_file, data, col_names):
                     "ERROR: the range for {} column {} is\nzero."
                     " Check the input data format.".format(data_names[i], i))
 
-    return ids, x, y, mags, cols, em, ec
+    return ids, x, y, mags, cols, kine, em, ec, ek
 
 
 def f(data):
-    return [
-        f(i) if isinstance(i, list) else 'col{}'.format(i + 1) for i in data]
+    """
+    Source: https://stackoverflow.com/a/50297301/1391441
+    """
+    col_names = []
+    for i in data:
+        if isinstance(i, list):
+            col_names.append(f(i))
+        elif i is not False:
+            col_names.append('col{}'.format(i + 1))
+        else:
+            col_names.append(i)
+    return col_names
 
 
 def flatten(l):
@@ -107,8 +128,26 @@ def flatten(l):
             yield el
 
 
+def perc_compl_check(ids, mags, cols):
+    """
+    Check percentage of complete data.
+    """
+    N_ids, m_size, c_size = ids.size, [], []
+    for m in mags:
+        m_size.append(np.count_nonzero(~np.isnan(m)))
+    for c in cols:
+        c_size.append(np.count_nonzero(~np.isnan(c)))
+    N_min = min(m_size + c_size)
+    print('Data lines in input file (N_stars: {}).'.format(N_ids))
+    frac_reject = (N_ids - N_min) / float(N_ids)
+    if frac_reject > 0.05:
+        print("  WARNING: {:.0f}% of stars in input file contain\n"
+              "  invalid photometric data.".format(100. * frac_reject))
+
+
 def main(npd, id_indx, x_indx, y_indx, mag_indx, e_mag_indx, col_indx,
-         e_col_indx, **kwargs):
+         e_col_indx, plx_indx, e_plx_indx, pmx_indx, e_pmx_indx, pmy_indx,
+         e_pmy_indx, rv_indx, e_rv_indx, **kwargs):
     '''
     Read all data from the cluster's data file.
     '''
@@ -120,14 +159,16 @@ def main(npd, id_indx, x_indx, y_indx, mag_indx, e_mag_indx, col_indx,
         id_colname = 'col' + str(id_indx + 1)
         data = ascii.read(
             data_file, fill_values=[
-                ('INDEF', '0'), ('9999.99', '0'), ('99.999', '0')],
+                ('', '0'), ('INDEF', '0'), ('9999.99', '0'), ('99.999', '0')],
             converters={id_colname: [ascii.convert_numpy(np.str)]},
             format='no_header')
 
         # Generate column names in the proper order, while keeping the shape.
         col_names = f([
             id_indx, x_indx, y_indx, mag_indx, e_mag_indx, col_indx,
-            e_col_indx])
+            e_col_indx, [plx_indx, pmx_indx, pmy_indx, rv_indx],
+            [e_plx_indx, e_pmx_indx, e_pmy_indx, e_rv_indx]])
+
         col_names_keep = list(flatten(col_names))
         # Remove not wanted columns *before* removing rows with 'nan' values
         # (otherwise columns that should not be read will influence the row
@@ -136,13 +177,13 @@ def main(npd, id_indx, x_indx, y_indx, mag_indx, e_mag_indx, col_indx,
             if col not in col_names_keep:
                 data.remove_column(col)
 
-        # Check if there are any masked elements in the data table. Don't
-        # use the 'AttributeError' approach since the 'Masked' attribute is set
-        # when the input data file is read with *all* the columns in the file,
-        # even those that the user does not want.
+        # Check if there are any masked elements in the data table.
         masked_elems = 0
         for col in data.columns:
-            masked_elems += data[col].mask.nonzero()[0].sum()
+            try:
+                masked_elems += data[col].mask.nonzero()[0].sum()
+            except AttributeError:
+                pass
 
         # Remove all rows with at least one masked element.
         flag_data_eq = False
@@ -163,27 +204,20 @@ def main(npd, id_indx, x_indx, y_indx, mag_indx, e_mag_indx, col_indx,
                          " spaces)\n  for all columns.\n".format(data_file))
 
     # Create cluster's dictionary with the *incomplete* data.
-    ids, x, y, mags, cols, em, ec = dataCols(data_file, data, col_names)
-    # Check percentage of complete data.
-    N_ids, m_size, c_size = ids.size, [], []
-    for m in mags:
-        m_size.append(np.count_nonzero(~np.isnan(m)))
-    for c in cols:
-        c_size.append(np.count_nonzero(~np.isnan(c)))
-    N_min = min(m_size + c_size)
-    print('Data lines in input file (N_stars: {}).'.format(N_ids))
-    frac_reject = (N_ids - N_min) / float(N_ids)
-    if frac_reject > 0.05:
-        print("  WARNING: {:.0f}% of stars in input file contain\n"
-              "  invalid photometric data.".format(100. * frac_reject))
+    ids, x, y, mags, cols, kine, em, ec, ek = dataCols(
+        data_file, data, col_names)
+    perc_compl_check(ids, mags, cols)
     cld_i = {'ids': ids, 'x': x, 'y': y, 'mags': mags, 'em': em,
-             'cols': cols, 'ec': ec}
+             'cols': cols, 'ec': ec, 'kine': kine, 'ek': ek}
 
     # Create cluster's dictionary with the *complete* data.
-    ids, x, y, mags, cols, em, ec = dataCols(data_file, data_compl, col_names)
+    ids, x, y, mags, cols, kine, em, ec, ek = dataCols(
+        data_file, data_compl, col_names)
     cld_c = {'ids': ids, 'x': x, 'y': y, 'mags': mags, 'em': em,
-             'cols': cols, 'ec': ec}
+             'cols': cols, 'ec': ec, 'kine': kine, 'ek': ek}
 
     clp = {'flag_data_eq': flag_data_eq}
+
+    import pdb; pdb.set_trace()  # breakpoint a6e951c5 //
 
     return cld_i, cld_c, clp

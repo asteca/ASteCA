@@ -75,6 +75,13 @@ PM     3,5,V        4
 # Color and error.
 #         col    e_col
 PC    5,5,B,V        6
+
+# Columns for the proper motions, parallax, and radial velocity. If no data is
+# present, indicate it with a 'n'.
+#
+#        Parallax                 Proper motions           Radial velocity
+#        plx    e_plx     pmx    e_pmx    pmy    e_pmy     rv    e_rv
+PK         n        n       n        n      n        n      n       n
 ###############################################################################
 
 
