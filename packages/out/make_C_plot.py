@@ -65,11 +65,13 @@ def plot_observed_cluster(
 
 def main(
         npd, cld_c, pd, kde_cent, clust_rad, stars_out_c, err_lst,
-        flag_decont_skip, memb_prob_avrg_sort, n_memb_da, cl_reg_fit,
-        cl_reg_no_fit, cl_reg_clean_plot, **kwargs):
+        flag_no_fl_regs_i, field_regions_i, flag_decont_skip,
+        memb_prob_avrg_sort, n_memb_da, cl_reg_fit, cl_reg_no_fit,
+        cl_reg_clean_plot, **kwargs):
     '''
     Make C block plots.
     '''
+
     if 'C' in pd['flag_make_plot']:
         fig = plt.figure(figsize=(30, 25))
         gs = gridspec.GridSpec(10, 12)
@@ -99,7 +101,10 @@ def main(
             [gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
              y_zmax, kde_cent, clust_rad, flag_decont_skip,
              v_min_mp, v_max_mp, chart_fit_inv, chart_no_fit_inv,
-             out_clust_rad, pd['fld_clean_mode'], pd['fld_clean_bin']]]
+             out_clust_rad, pd['fld_clean_mode'], pd['fld_clean_bin']],
+            # pl_plx_histo
+            [gs, cl_reg_fit, flag_no_fl_regs_i, field_regions_i]
+        ]
         for n, args in enumerate(arglist):
             mp_decont_algor.plot(n, *args)
 

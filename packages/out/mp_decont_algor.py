@@ -2,6 +2,8 @@
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
 import matplotlib.offsetbox as offsetbox
+import numpy as np
+from scipy import stats
 
 
 def pl_mp_histo(
@@ -183,6 +185,63 @@ def pl_mps_phot_diag(gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
     return sca, trans
 
 
+def pl_plx_histo(gs, cl_reg_fit, flag_no_fl_regs_i, field_regions_i):
+    '''
+    Histogram for the distribution of parallaxes within the cluster region.
+    '''
+    plx = np.array(zip(*zip(*cl_reg_fit)[7])[0])
+    if not np.isnan(plx).all():
+        ax = plt.subplot(gs[2:4, 0:2])
+        xp_min, xp_max = 0., min(4., np.max(plx))  # 250 pc max limit
+        plt.xlim(xp_min, xp_max)
+        plt.xlabel('Plx [mas]', fontsize=12)
+        plt.ylabel('N', fontsize=12)
+        ax.minorticks_on()
+        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1,
+                zorder=1)
+        # Normalized histogram for cluster region.
+        plt.hist(
+            plx, 100, density=True, zorder=4, color='#9aafd1',
+            label="Cluster region")
+        # Plot histogram for the parallaxes of the field regions.
+        if not flag_no_fl_regs_i:
+            # Extract parallax data.
+            plx_flrg = []
+            for fl_rg in field_regions_i:
+                plx_flrg += list(zip(*(zip(*fl_rg))[7]))[0]
+            plx_flrg = np.asarray(plx_flrg)
+            # Mask 'nan' and set range.
+            plx_all = plx_flrg[~np.isnan(plx_flrg)]
+            msk = (plx_all > -5.) & (plx_all < 10.)
+            plt.hist(
+                plx_all[msk], 120, density=True, zorder=4, color='#ef703e',
+                label="Field regions", alpha=0.5)
+        # Define KDE limits.
+        x_rang = .1 * (xp_max - xp_min)
+        x_kde = np.mgrid[xp_min - x_rang:xp_max + x_rang:1000j]
+        # Use a larger Scott bandwidth
+        # bw = 1.5 * len(model_done[c_model]) ** (-1. / (len(varIdxs) + 4))
+        kernel_cl = stats.gaussian_kde(plx)  # , bw_method=bw)
+        # KDE for plotting.
+        kde = np.reshape(kernel_cl(x_kde).T, x_kde.shape)
+        plt.plot(x_kde, kde / max(kde), color='g', lw=1., zorder=4)
+        # Maximum KDE value.
+        p_max_mas = x_kde[np.argmax(kde)]
+        plt.axvline(x=p_max_mas, linestyle='--', color='r', lw=.7, zorder=5)
+        d_max_pc = 1000. / p_max_mas
+        plx_lt_zero = 100. * plx[plx < 0.].size / plx.size
+        ob = offsetbox.AnchoredText(
+            r"$Plx_{{max}}$={:.3f} [mas]".format(p_max_mas) +
+            "\n({:.0f} [pc])\n".format(d_max_pc) +
+            r"$Plx<0 \rightarrow$ {:.1f}%".format(plx_lt_zero),
+            pad=0.2, loc=1, prop=dict(size=9))
+        ob.patch.set(alpha=0.85)
+        ax.add_artist(ob)
+        # Avoid showing the value 0.0 in the y axis.
+        plt.ylim(0.001, plt.ylim()[1])
+        ax.legend(fontsize='small', loc=7)
+
+
 def plot(N, *args):
     '''
     Handle each plot separately.
@@ -190,7 +249,8 @@ def plot(N, *args):
 
     plt_map = {
         0: [pl_mp_histo, 'MPs histogram'],
-        1: [pl_chart_mps, 'frame with MPs coloring']
+        1: [pl_chart_mps, 'frame with MPs coloring'],
+        2: [pl_plx_histo, 'Plx histogram']
     }
 
     fxn = plt_map.get(N, None)[0]
