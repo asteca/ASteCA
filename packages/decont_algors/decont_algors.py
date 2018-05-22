@@ -25,7 +25,7 @@ def sort_members(memb_lst):
     value (1) to min (0) and then by its main magnitude.
     '''
     membership_prob_avrg_sort = sorted(
-        memb_lst, key=lambda item: (-item[7], item[3][0]))
+        memb_lst, key=lambda item: (-item[9], item[3][0]))
 
     return membership_prob_avrg_sort
 
@@ -37,7 +37,7 @@ def mpas(cl_region, memb_probs_cl_region):
     """
 
     # cl_region = [star1, star2, star3, ...]
-    # starX = [id, x, y, mags, em, cols, ec]
+    # starX = [id, x, y, mags, em, cols, ec, kine, ek]
     # mags = [mag1, mag2, mag3, ...]
 
     # Create new list appending the membership probability to each star inside
@@ -49,7 +49,7 @@ def mpas(cl_region, memb_probs_cl_region):
 
     # Stars inside the cluster's radius are now saved in the list
     # 'temp_prob_members' where each item contains the data for each star:
-    # starX = [id, x, y, mags, em, cols, ec, memb_prob].
+    # starX = [id, x, y, mags, em, cols, ec, kine, ek, memb_prob].
 
     # Sort members list.
     membership_prob_sort = sort_members(temp_prob_members)

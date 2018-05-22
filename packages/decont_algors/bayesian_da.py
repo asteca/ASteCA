@@ -41,11 +41,9 @@ def likelihood(region, w_r, cl_reg_prep, w_c):
     changes made since the old version.
     """
     # Photometric difference (cluster_region - region), for all dimensions.
-    phot_dif = np.array(cl_reg_prep)[:, None, :, 0] -\
-        np.array(region)[None, :, :, 0]
+    phot_dif = cl_reg_prep[:, None, :, 0] - region[None, :, :, 0]
     # Sum of squared photometric errors, for all dimensions.
-    sigma_sum = np.array(cl_reg_prep)[:, None, :, 1] +\
-        np.array(region)[None, :, :, 1]
+    sigma_sum = cl_reg_prep[:, None, :, 1] + region[None, :, :, 1]
 
     # Handle 'nan' values.
     phot_dif[np.isnan(phot_dif)] = 0.
@@ -55,13 +53,15 @@ def likelihood(region, w_r, cl_reg_prep, w_c):
 
     # Sum for all photometric dimensions.
     Dsum = (np.square(phot_dif) / sigma_sum).sum(axis=-1)
+    # This makes the code substantially faster.
+    np.clip(Dsum, a_min=None, a_max=50., out=Dsum)
     # Product of summed squared sigmas.
     sigma_prod = np.prod(sigma_sum, axis=-1)
     # All elements inside summatory.
     sum_M_j = w_r * np.exp(-0.5 * Dsum) / np.sqrt(sigma_prod)
     # Sum for all stars in this 'region'.
     sum_M = np.sum(sum_M_j, axis=-1)
-    sum_M[sum_M <= 1e-7] = 1e-7
+    np.clip(sum_M, a_min=1e-7, a_max=None, out=sum_M)
     sum_M = sum_M * w_c
 
     return sum_M
@@ -73,31 +73,42 @@ def reg_data(region):
     "dimensional" weights used by the likelihood.
     """
     region_z = list(zip(*region))
-    # Square errors.
-    sq_em, sq_ec = np.square(region_z[4]), np.square(region_z[6])
-    # Put each magnitude and color into a separate list.
-    mags, cols = list(zip(*region_z[3])), list(zip(*region_z[5]))
-    e_mags, e_cols = list(zip(*sq_em)), list(zip(*sq_ec))
+
+    # Square errors (mags, colors, kinematics).
+    sq_em, sq_ec, sq_k = np.square(region_z[4]), np.square(region_z[6]),\
+        np.square(region_z[8])
+    # Put each magnitude, color, and kinematic parameter into a separate list.
+    mags, cols, kinem = list(zip(*region_z[3])), list(zip(*region_z[5])),\
+        list(zip(*region_z[7]))
+    e_mags, e_cols, e_kinem = list(zip(*sq_em)), list(zip(*sq_ec)),\
+        list(zip(*sq_k))
+
+    # Remove kinematic dimensions where *all* the elements are 'nan'.
+    e_kinem = [
+        e_kinem[i] for i, _ in enumerate(kinem) if not np.isnan(_).all()]
+    kinem = [_ for _ in kinem if not np.isnan(_).all()]
 
     # Combine photometry and errors.
-    phot = np.array(mags + cols)
-    ephot = np.array(e_mags + e_cols)
+    data = np.array(mags + cols + kinem)
+    e_data = np.array(e_mags + e_cols + e_kinem)
     # Generate array with the appropriate format.
-    phot_err = np.stack((phot, ephot)).T
+    data_err = np.stack((data, e_data)).T
 
     # Total number of information dimensions.
-    d_T = len(mags) + len(cols)
+    d_T = len(mags) + len(cols) + len(kinem)
     d_info = np.zeros(len(region))
     for m in mags:
         d_info += ~np.isnan(m)
     for c in cols:
         d_info += ~np.isnan(c)
+    for k in kinem:
+        d_info += ~np.isnan(k)
     # Final "dimensional information" weight. Equals '1.' if the star
     # contains valid data in all the defined information dimensions. Otherwise
     # it is a smaller float, down to zero when the star has no valid data.
     wi = d_info / d_T
 
-    return phot_err, wi
+    return data_err, wi
 
 
 def main(cl_region, field_regions, bayesda_runs):
@@ -106,7 +117,7 @@ def main(cl_region, field_regions, bayesda_runs):
     '''
     print('Applying Bayesian DA ({} runs).'.format(bayesda_runs))
 
-    # cl_region = [[id, x, y, mags, e_mags, cols, e_cols], [], [], ...]
+    # cl_region = [[id, x, y, mags, e_mags, cols, e_cols, kine, ek], [], ...]
     # len(cl_region) = number of stars inside the cluster's radius.
     # len(cl_region[_][3]) = number of magnitudes defined.
     # len(field_regions) = number of field regions.
@@ -164,7 +175,7 @@ def main(cl_region, field_regions, bayesda_runs):
                 # stars within the cluster region (highly contaminated
                 # cluster), assign zero likelihood of being a true member to
                 # all stars within the cluster region.
-                cl_lkl = np.array([1e-7] * len(cl_region))
+                cl_lkl = np.fill(1e-7, len(cl_region))
 
             # Bayesian probability for each star within the cluster region.
             bayes_prob = 1. / (1. + (fl_lkl / cl_lkl))

@@ -216,7 +216,7 @@ def da_find_chart(
     cl_reg_fit = zip(*cl_reg_fit)
     # Finding chart data. Invert values so higher prob stars are on top.
     chart_fit_inv = [i[::-1] for i in
-                     [cl_reg_fit[1], cl_reg_fit[2], cl_reg_fit[7]]]
+                     [cl_reg_fit[1], cl_reg_fit[2], cl_reg_fit[9]]]
 
     # Arrange stars *not* used in the best fit process.
     if cl_reg_no_fit:
@@ -224,7 +224,7 @@ def da_find_chart(
         # Finding chart data.
         chart_no_fit_inv = [
             i[::-1] for i in [cl_reg_no_fit[1], cl_reg_no_fit[2],
-                              cl_reg_no_fit[7]]]
+                              cl_reg_no_fit[9]]]
     else:
         chart_no_fit_inv = [[], [], []]
 
@@ -258,7 +258,7 @@ def da_phot_diag(cl_reg_fit, cl_reg_no_fit, v_min_mp, v_max_mp):
     # Colors.
     diag_fit_inv += [[i[::-1] for i in zip(*cl_reg_fit[5])]]
     # membership probabilities.
-    diag_fit_inv += [cl_reg_fit[7][::-1]]
+    diag_fit_inv += [cl_reg_fit[9][::-1]]
 
     # Arrange stars *not* used in the best fit process.
     if cl_reg_no_fit:
@@ -268,7 +268,7 @@ def da_phot_diag(cl_reg_fit, cl_reg_no_fit, v_min_mp, v_max_mp):
         # Colors.
         diag_no_fit_inv += [[i[::-1] for i in zip(*cl_reg_no_fit[5])]]
         # membership probabilities.
-        diag_no_fit_inv += [cl_reg_no_fit[7][::-1]]
+        diag_no_fit_inv += [cl_reg_no_fit[9][::-1]]
     else:
         diag_no_fit_inv = [[[]], [[]], []]
 

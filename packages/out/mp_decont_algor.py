@@ -21,7 +21,7 @@ def pl_mp_histo(
         ax.minorticks_on()
         ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1,
                 zorder=1)
-        prob_data = [star[7] for star in memb_prob_avrg_sort]
+        prob_data = [star[9] for star in memb_prob_avrg_sort]
         # Histogram of the data.
         n_bins = int((max(prob_data) - min(prob_data)) / 0.025)
         if n_bins > 0:

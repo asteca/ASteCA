@@ -19,15 +19,16 @@ def main(i_c, cld, clp, err_max, **kwargs):
     acpt = {k: v[..., acpt_indx] for k, v in cld.iteritems()}
     rjct = {k: v[..., rjct_indx] for k, v in cld.iteritems()}
 
-    # Store each star separately.
+    # Store each star separately. This part is important since it is here
+    # where we define the position of the data.
     acpt_stars = [
         list(_) for _ in zip(*[
             acpt['ids'], acpt['x'], acpt['y'], acpt['mags'].T, acpt['em'].T,
-            acpt['cols'].T, acpt['ec'].T])]
+            acpt['cols'].T, acpt['ec'].T, acpt['kine'].T, acpt['ek'].T])]
     rjct_stars = [
         list(_) for _ in zip(*[
             rjct['ids'], rjct['x'], rjct['y'], rjct['mags'].T, rjct['em'].T,
-            rjct['cols'].T, rjct['ec'].T])]
+            rjct['cols'].T, rjct['ec'].T, rjct['kine'].T, rjct['ek'].T])]
 
     print("  Stars rejected based on their errors ({}).".format(
         len(rjct_stars)))
