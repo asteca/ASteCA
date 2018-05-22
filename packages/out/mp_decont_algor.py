@@ -266,7 +266,7 @@ def pl_plx_chart(gs, plx_flag, x_name, y_name, coord, cl_reg_fit, plx_x_kde,
         x, y, mp, plx_d = x[plx_i], y[plx_i], mp[plx_i], plx_d[plx_i]
 
         # Color map, higher prob stars look redder.
-        cm = plt.cm.get_cmap('RdYlBu_r')
+        cm = plt.cm.get_cmap('viridis')  # RdYlBu_r
         # Plot stars selected to be used in the best bit process.
         plt.scatter(
             x, y, marker='o', c=mp, s=plx_d, edgecolors='black',
