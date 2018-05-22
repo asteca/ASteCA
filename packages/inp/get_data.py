@@ -6,18 +6,107 @@ import operator
 import copy
 
 
-def list_duplicates(seq):
-    """
-    Find and report duplicates in list.
+def main(npd, id_indx, x_indx, y_indx, mag_indx, e_mag_indx, col_indx,
+         e_col_indx, plx_indx, e_plx_indx, pmx_indx, e_pmx_indx, pmy_indx,
+         e_pmy_indx, rv_indx, e_rv_indx, **kwargs):
+    '''
+    Read all data from the cluster's data file.
+    '''
 
-    Source: https://stackoverflow.com/a/5419576/1391441
+    data_file = npd['data_file']
+    try:
+        # Name of IDs column (the '+ 1' is because astropy Tables' first column
+        # is named 'col1', not 'col0'). Store IDs as strings.
+        id_colname = 'col' + str(id_indx + 1)
+        data = ascii.read(
+            data_file, fill_values=[
+                ('', '0'), ('INDEF', '0'), ('9999.99', '0'), ('99.999', '0')],
+            converters={id_colname: [ascii.convert_numpy(np.str)]},
+            format='no_header')
+
+        # Generate column names in the proper order, while keeping the shape.
+        col_names = getColNames([
+            id_indx, x_indx, y_indx, mag_indx, e_mag_indx, col_indx,
+            e_col_indx, [plx_indx, pmx_indx, pmy_indx, rv_indx],
+            [e_plx_indx, e_pmx_indx, e_pmy_indx, e_rv_indx]])
+
+        col_names_keep = list(flatten(col_names))
+        # Remove not wanted columns *before* removing rows with 'nan' values
+        # (otherwise columns that should not be read will influence the row
+        # removal).
+        for col in data.columns:
+            if col not in col_names_keep:
+                data.remove_column(col)
+
+        # Check if there are any masked elements in the data table.
+        masked_elems = 0
+        for col in data.columns:
+            try:
+                masked_elems += data[col].mask.nonzero()[0].sum()
+            except AttributeError:
+                pass
+
+        # Remove all rows with at least one masked element.
+        flag_data_eq = False
+        if masked_elems > 0:
+            data_compl = data[reduce(
+                operator.and_, [~data[col].mask for col in data.columns])]
+        else:
+            # If there where no elements to mask, there were no bad values.
+            data_compl = copy.deepcopy(data)
+            flag_data_eq = True
+
+        # Change masked elements with 'nan' values, in place.
+        fill_cols(data)
+
+    except ascii.InconsistentTableError:
+        raise ValueError("ERROR: could not read data input file:\n  {}\n"
+                         "  Check that all rows are filled (i.e., no blank"
+                         " spaces)\n  for all columns.\n".format(data_file))
+
+    # Create cluster's dictionary with the *incomplete* data.
+    ids, x, y, mags, cols, kine, em, ec, ek = dataCols(
+        data_file, data, col_names)
+    perc_compl_check(ids, mags, cols)
+    cld_i = {'ids': ids, 'x': x, 'y': y, 'mags': mags, 'em': em,
+             'cols': cols, 'ec': ec, 'kine': kine, 'ek': ek}
+
+    # Create cluster's dictionary with the *complete* data.
+    ids, x, y, mags, cols, kine, em, ec, ek = dataCols(
+        data_file, data_compl, col_names)
+    cld_c = {'ids': ids, 'x': x, 'y': y, 'mags': mags, 'em': em,
+             'cols': cols, 'ec': ec, 'kine': kine, 'ek': ek}
+
+    clp = {'flag_data_eq': flag_data_eq}
+
+    return cld_i, cld_c, clp
+
+
+def getColNames(data):
     """
-    tally = defaultdict(list)
-    for i, item in enumerate(seq):
-        tally[item].append(i)
-    dups = ((key, map(str, locs)) for key, locs in tally.items()
-            if len(locs) > 1)
-    return dups
+    Source: https://stackoverflow.com/a/50297301/1391441
+    """
+    col_names = []
+    for i in data:
+        if isinstance(i, list):
+            col_names.append(getColNames(i))
+        elif i is not False:
+            col_names.append('col{}'.format(i + 1))
+        else:
+            col_names.append(i)
+    return col_names
+
+
+def flatten(l):
+    """
+    Source: https://stackoverflow.com/a/2158532/1391441
+    """
+    for el in l:
+        if isinstance(el, Iterable) and not isinstance(el, basestring):
+            for sub in flatten(el):
+                yield sub
+        else:
+            yield el
 
 
 def fill_cols(tbl, fill=np.nan, kind='f'):
@@ -101,31 +190,18 @@ def dataCols(data_file, data, col_names):
     return ids, x, y, mags, cols, kine, em, ec, ek
 
 
-def f(data):
+def list_duplicates(seq):
     """
-    Source: https://stackoverflow.com/a/50297301/1391441
-    """
-    col_names = []
-    for i in data:
-        if isinstance(i, list):
-            col_names.append(f(i))
-        elif i is not False:
-            col_names.append('col{}'.format(i + 1))
-        else:
-            col_names.append(i)
-    return col_names
+    Find and report duplicates in list.
 
-
-def flatten(l):
+    Source: https://stackoverflow.com/a/5419576/1391441
     """
-    Source: https://stackoverflow.com/a/2158532/1391441
-    """
-    for el in l:
-        if isinstance(el, Iterable) and not isinstance(el, basestring):
-            for sub in flatten(el):
-                yield sub
-        else:
-            yield el
+    tally = defaultdict(list)
+    for i, item in enumerate(seq):
+        tally[item].append(i)
+    dups = ((key, map(str, locs)) for key, locs in tally.items()
+            if len(locs) > 1)
+    return dups
 
 
 def perc_compl_check(ids, mags, cols):
@@ -145,79 +221,5 @@ def perc_compl_check(ids, mags, cols):
               "  invalid photometric data.".format(100. * frac_reject))
 
 
-def main(npd, id_indx, x_indx, y_indx, mag_indx, e_mag_indx, col_indx,
-         e_col_indx, plx_indx, e_plx_indx, pmx_indx, e_pmx_indx, pmy_indx,
-         e_pmy_indx, rv_indx, e_rv_indx, **kwargs):
-    '''
-    Read all data from the cluster's data file.
-    '''
-
-    data_file = npd['data_file']
-    try:
-        # Name of IDs column (the '+ 1' is because astropy Tables' first column
-        # is named 'col1', not 'col0'). Store IDs as strings.
-        id_colname = 'col' + str(id_indx + 1)
-        data = ascii.read(
-            data_file, fill_values=[
-                ('', '0'), ('INDEF', '0'), ('9999.99', '0'), ('99.999', '0')],
-            converters={id_colname: [ascii.convert_numpy(np.str)]},
-            format='no_header')
-
-        # Generate column names in the proper order, while keeping the shape.
-        col_names = f([
-            id_indx, x_indx, y_indx, mag_indx, e_mag_indx, col_indx,
-            e_col_indx, [plx_indx, pmx_indx, pmy_indx, rv_indx],
-            [e_plx_indx, e_pmx_indx, e_pmy_indx, e_rv_indx]])
-
-        col_names_keep = list(flatten(col_names))
-        # Remove not wanted columns *before* removing rows with 'nan' values
-        # (otherwise columns that should not be read will influence the row
-        # removal).
-        for col in data.columns:
-            if col not in col_names_keep:
-                data.remove_column(col)
-
-        # Check if there are any masked elements in the data table.
-        masked_elems = 0
-        for col in data.columns:
-            try:
-                masked_elems += data[col].mask.nonzero()[0].sum()
-            except AttributeError:
-                pass
-
-        # Remove all rows with at least one masked element.
-        flag_data_eq = False
-        if masked_elems > 0:
-            data_compl = data[reduce(
-                operator.and_, [~data[col].mask for col in data.columns])]
-        else:
-            # If there where no elements to mask, there were no bad values.
-            data_compl = copy.deepcopy(data)
-            flag_data_eq = True
-
-        # Change masked elements with 'nan' values, in place.
-        fill_cols(data)
-
-    except ascii.InconsistentTableError:
-        raise ValueError("ERROR: could not read data input file:\n  {}\n"
-                         "  Check that all rows are filled (i.e., no blank"
-                         " spaces)\n  for all columns.\n".format(data_file))
-
-    # Create cluster's dictionary with the *incomplete* data.
-    ids, x, y, mags, cols, kine, em, ec, ek = dataCols(
-        data_file, data, col_names)
-    perc_compl_check(ids, mags, cols)
-    cld_i = {'ids': ids, 'x': x, 'y': y, 'mags': mags, 'em': em,
-             'cols': cols, 'ec': ec, 'kine': kine, 'ek': ek}
-
-    # Create cluster's dictionary with the *complete* data.
-    ids, x, y, mags, cols, kine, em, ec, ek = dataCols(
-        data_file, data_compl, col_names)
-    cld_c = {'ids': ids, 'x': x, 'y': y, 'mags': mags, 'em': em,
-             'cols': cols, 'ec': ec, 'kine': kine, 'ek': ek}
-
-    clp = {'flag_data_eq': flag_data_eq}
-
-    import pdb; pdb.set_trace()  # breakpoint a6e951c5 //
-
-    return cld_i, cld_c, clp
+if __name__ == '__main__':
+    main()
