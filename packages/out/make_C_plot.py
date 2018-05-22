@@ -93,8 +93,8 @@ def main(
         # Decontamination algorithm plots.
         min_prob, bin_edges = cl_reg_clean_plot
         # Parallax data
-        plx_flag, plx, plx_xmin, plx_xmax, plx_x_kde, kde_pl =\
-            prep_plots.plxPlot(cl_reg_fit)
+        plx_flag, plx_clrg, plx_xmin, plx_xmax, plx_x_kde, kde_pl, plx_flrg =\
+            prep_plots.plxPlot(flag_no_fl_regs_i, field_regions_i, cl_reg_fit)
 
         arglist = [
             # pl_mp_histo
@@ -106,8 +106,11 @@ def main(
              v_min_mp, v_max_mp, chart_fit_inv, chart_no_fit_inv,
              out_clust_rad, pd['fld_clean_mode'], pd['fld_clean_bin']],
             # pl_plx_histo
-            [gs, plx_flag, plx, plx_xmin, plx_xmax, plx_x_kde, kde_pl,
-             flag_no_fl_regs_i, field_regions_i]
+            [gs, plx_flag, plx_clrg, plx_xmin, plx_xmax, plx_x_kde, kde_pl,
+             plx_flrg, flag_no_fl_regs_i],
+            # pl_plx_chart
+            [gs, plx_flag, x_name, y_name, coord, cl_reg_fit, plx_x_kde,
+             kde_pl]
         ]
         for n, args in enumerate(arglist):
             mp_decont_algor.plot(n, *args)

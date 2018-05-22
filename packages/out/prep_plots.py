@@ -493,22 +493,37 @@ def get_hess(obs_mags_cols, synth_phot, hess_xedges, hess_yedges):
     return hess_x, hess_y, HD
 
 
-def plxPlot(cl_reg_fit):
+def plxPlot(flag_no_fl_regs_i, field_regions_i, cl_reg_fit):
     """
     """
-    plx_flag, plx_xmin, plx_xmax, plx_x_kde, kde_pl = False, 0., 0., [], []
+    plx_flag, plx_clrg, plx_xmin, plx_xmax, plx_x_kde, kde_pl, plx_flrg =\
+        False, [], 0., 0., [], [], []
+
     plx = np.array(zip(*zip(*cl_reg_fit)[7])[0])
+    plx_clrg = plx[~np.isnan(plx)]
     # Check that a range of parallaxes is possible.
-    if not np.isnan(plx).all() and np.nanmin(plx) < np.nanmax(plx):
-        # 250 pc max limit
-        plx_xmin, plx_xmax = 0., min(4., np.max(plx))
-        # Define KDE limits.
-        x_rang = .1 * (plx_xmax - plx_xmin)
-        plx_x_kde = np.mgrid[plx_xmin - x_rang:plx_xmax + x_rang:1000j]
-        kernel_cl = stats.gaussian_kde(plx)
-        # KDE for plotting.
-        kde_pl = np.reshape(kernel_cl(plx_x_kde).T, plx_x_kde.shape)
+    if plx_clrg.any():
+        if np.min(plx_clrg) < np.max(plx_clrg):
+            # 250 pc max limit
+            plx_xmin, plx_xmax = 0., min(4., np.max(plx_clrg))
+            # Define KDE limits.
+            x_rang = .1 * (plx_xmax - plx_xmin)
+            plx_x_kde = np.mgrid[plx_xmin - x_rang:plx_xmax + x_rang:1000j]
+            kernel_cl = stats.gaussian_kde(plx_clrg)
+            # KDE for plotting.
+            kde_pl = np.reshape(kernel_cl(plx_x_kde).T, plx_x_kde.shape)
 
-        plx_flag = True
+            plx_flag = True
 
-    return plx_flag, plx, plx_xmin, plx_xmax, plx_x_kde, kde_pl
+    if not flag_no_fl_regs_i:
+        # Extract parallax data.
+        plx_flrg = []
+        for fl_rg in field_regions_i:
+            plx_flrg += list(zip(*(zip(*fl_rg))[7]))[0]
+        plx_flrg = np.asarray(plx_flrg)
+        # Mask 'nan' and set range.
+        plx_all = plx_flrg[~np.isnan(plx_flrg)]
+        msk = (plx_all > -5.) & (plx_all < 10.)
+        plx_flrg = plx_all[msk]
+
+    return plx_flag, plx_clrg, plx_xmin, plx_xmax, plx_x_kde, kde_pl, plx_flrg

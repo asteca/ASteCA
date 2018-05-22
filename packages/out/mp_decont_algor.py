@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
 import matplotlib.offsetbox as offsetbox
 import numpy as np
-from scipy import stats
 
 
 def pl_mp_histo(
@@ -185,8 +184,8 @@ def pl_mps_phot_diag(gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
     return sca, trans
 
 
-def pl_plx_histo(gs, plx_flag, plx, plx_xmin, plx_xmax, plx_x_kde, kde_pl,
-                 flag_no_fl_regs_i, field_regions_i):
+def pl_plx_histo(gs, plx_flag, plx_clrg, plx_xmin, plx_xmax, plx_x_kde, kde_pl,
+                 plx_flrg, flag_no_fl_regs_i):
     '''
     Histogram for the distribution of parallaxes within the cluster region.
     '''
@@ -200,20 +199,12 @@ def pl_plx_histo(gs, plx_flag, plx, plx_xmin, plx_xmax, plx_x_kde, kde_pl,
                 zorder=1)
         # Normalized histogram for cluster region.
         plt.hist(
-            plx, 100, density=True, zorder=4, color='#9aafd1',
+            plx_clrg, 100, density=True, zorder=4, color='#9aafd1',
             label="Cluster region")
         # Plot histogram for the parallaxes of the field regions.
         if not flag_no_fl_regs_i:
-            # Extract parallax data.
-            plx_flrg = []
-            for fl_rg in field_regions_i:
-                plx_flrg += list(zip(*(zip(*fl_rg))[7]))[0]
-            plx_flrg = np.asarray(plx_flrg)
-            # Mask 'nan' and set range.
-            plx_all = plx_flrg[~np.isnan(plx_flrg)]
-            msk = (plx_all > -5.) & (plx_all < 10.)
             plt.hist(
-                plx_all[msk], 120, density=True, zorder=4, color='#ef703e',
+                plx_flrg, 120, density=True, zorder=4, color='#ef703e',
                 label="Field regions", alpha=0.5)
 
         plt.plot(plx_x_kde, kde_pl / max(kde_pl), color='g', lw=1., zorder=4)
@@ -221,7 +212,7 @@ def pl_plx_histo(gs, plx_flag, plx, plx_xmin, plx_xmax, plx_x_kde, kde_pl,
         p_max_mas = plx_x_kde[np.argmax(kde_pl)]
         plt.axvline(x=p_max_mas, linestyle='--', color='r', lw=.7, zorder=5)
         d_max_pc = 1000. / p_max_mas
-        plx_lt_zero = 100. * plx[plx < 0.].size / plx.size
+        plx_lt_zero = 100. * plx_clrg[plx_clrg < 0.].size / plx_clrg.size
         ob = offsetbox.AnchoredText(
             r"$Plx_{{max}}$={:.3f} [mas]".format(p_max_mas) +
             "\n({:.0f} [pc])\n".format(d_max_pc) +
@@ -234,6 +225,54 @@ def pl_plx_histo(gs, plx_flag, plx, plx_xmin, plx_xmax, plx_x_kde, kde_pl,
         ax.legend(fontsize='small', loc=7)
 
 
+def pl_plx_chart(gs, plx_flag, x_name, y_name, coord, cl_reg_fit, plx_x_kde,
+                 kde_pl):
+    '''
+    Finding chart of cluster region with colors assigned according to the
+    probabilities obtained and sizes according to parallaxes.
+    '''
+    if plx_flag:
+        ax = plt.subplot(gs[2:4, 2:4])
+        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1,
+                zorder=1)
+
+        # If RA is used, invert axis.
+        if coord == 'deg':
+            ax.invert_xaxis()
+        # Set axis labels
+        plt.xlabel('{} ({})'.format(x_name, coord), fontsize=12)
+        plt.ylabel('{} ({})'.format(y_name, coord), fontsize=12)
+        # Set minor ticks
+        ax.minorticks_on()
+
+        # Prepare data.
+        x = np.array(zip(*cl_reg_fit)[1])
+        y = np.array(zip(*cl_reg_fit)[2])
+        mp = np.array(zip(*cl_reg_fit)[9])
+        plx = np.array(zip(*zip(*cl_reg_fit)[7])[0])
+        msk = (~np.isnan(x)) & (~np.isnan(y)) & (~np.isnan(mp)) &\
+            (~np.isnan(plx))
+        x, y, mp, plx = x[msk], y[msk], mp[msk], plx[msk]
+        # Clip parallax values.
+        np.clip(plx, a_min=0., a_max=10., out=plx)
+
+        # Maximum KDE parallax value.
+        p_max_mas = plx_x_kde[np.argmax(kde_pl)]
+        # Distance to max value. Stars closer to the max value are larger.
+        plx_d = 2. + 1. / (abs(plx - p_max_mas) + .1) ** 2
+
+        # Re-arrange so stars closer to the max Plx value are on top
+        plx_i = plx_d.argsort()
+        x, y, mp, plx_d = x[plx_i], y[plx_i], mp[plx_i], plx_d[plx_i]
+
+        # Color map, higher prob stars look redder.
+        cm = plt.cm.get_cmap('RdYlBu_r')
+        # Plot stars selected to be used in the best bit process.
+        plt.scatter(
+            x, y, marker='o', c=mp, s=plx_d, edgecolors='black',
+            cmap=cm, lw=0.35, zorder=4)
+
+
 def plot(N, *args):
     '''
     Handle each plot separately.
@@ -242,7 +281,8 @@ def plot(N, *args):
     plt_map = {
         0: [pl_mp_histo, 'MPs histogram'],
         1: [pl_chart_mps, 'frame with MPs coloring'],
-        2: [pl_plx_histo, 'Plx histogram']
+        2: [pl_plx_histo, 'Plx histogram'],
+        3: [pl_plx_chart, 'Plx chart']
     }
 
     fxn = plt_map.get(N, None)[0]
