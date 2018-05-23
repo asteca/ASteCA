@@ -90,9 +90,9 @@ PC    5,5,B,V        6
 # Columns for the proper motions [mas/yr], parallax [mas], and radial
 # velocity [km/s]. If a data column is not present, indicate it with a 'n'.
 #
-#        Parallax                 Proper motions           Radial velocity
-#        plx    e_plx     pmx    e_pmx    pmy    e_pmy     rv    e_rv
-PK         n        n       n        n      n        n      n       n
+#        Parallax                 Proper motions               Radial velocity
+#        plx    e_plx     pmRA    e_pmRA    pmDE    e_pmDE     rv    e_rv
+PK         n        n        n         n       n         n      n       n
 ###############################################################################
 
 
