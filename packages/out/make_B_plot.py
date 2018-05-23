@@ -20,7 +20,7 @@ def main(
         gs = gridspec.GridSpec(10, 12)
         add_version_plot.main(y_fix=.999)
 
-        # # Obtain plotting parameters and data.
+        # Obtain plotting parameters and data.
         x_ax, y_ax = prep_plots.ax_names(
             pd['colors'][0], pd['filters'][0], 'mag')
         # TODO using first magnitude and color defined
@@ -38,12 +38,9 @@ def main(
         # Photometric analysis plots.
         arglist = [
             # pl_phot_err: Photometric error rejection.
-            [gs, fig, 'up', x_ax, y_ax, cld_c['mags'], pd['err_max'],
-             cl_region_c,
-             cl_region_rjct_c, stars_out_c, stars_out_rjct_c, err_bar_all],
-            [gs, fig, 'low', x_ax, y_ax, cld_c['mags'], pd['err_max'],
-             cl_region_c,
-             cl_region_rjct_c, stars_out_c, stars_out_rjct_c, err_bar_all],
+            [gs, fig, pd['colors'], pd['filters'], cld_c['mags'],
+             pd['err_max'], cl_region_c, cl_region_rjct_c, stars_out_c,
+             stars_out_rjct_c, err_bar_all],
             # pl_fl_diag: Field stars CMD/CCD diagram.
             [gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
                 stars_f_rjct, stars_f_acpt, f_sz_pt, err_bar_fl],

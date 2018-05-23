@@ -1,64 +1,80 @@
 
 import numpy as np
+import prep_plots
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
 import matplotlib.offsetbox as offsetbox
 
 
-def pl_phot_err(gs, fig, up_low, x_ax, y_ax, mags, err_max, cl_region,
+def pl_phot_err(gs, fig, colors, filters, mags, err_max, cl_region,
                 stars_in_rjct, stars_out, stars_out_rjct, err_bar_all):
     '''
     Photometric error rejection.
     '''
-    # Define parameters for upper and lower plots.
-    if up_low == 'up':
-        ax, ax_y, j = plt.subplot(gs[0, 0:2]), y_ax, 4
-    else:
-        ax, ax_y, j = plt.subplot(gs[1, 0:2]), x_ax, 6
+
+    # Define parameters for main magnitude error plot.
+    err_plot = [[gs[0, 0:2], 4, 0]]
+    # For up to three defined colors.
+    for i, _ in enumerate(colors[:3]):
+        err_plot.append([gs[(i + 1), 0:2], 6, i + 1])
 
     # Set plot limits
     x_min, x_max = min(mags[0]) - 0.5, max(mags[0]) + 0.5
-    plt.xlim(x_min, x_max)
-    # Set axis labels
-    plt.ylabel('$\sigma_{' + ax_y + '}$', fontsize=18)
-    plt.xlabel('$' + y_ax + '$', fontsize=18)
-    ax.set_facecolor('#EFF0F1')
-    # Set minor ticks
-    ax.minorticks_on()
-    # Plot rejected stars.
-    if len(stars_out_rjct) > 0:
-        # Only attempt to pot if any star is stored in the list.
+    for pl in err_plot:
+        gs_pos, j, k = pl
+
+        if k == 0:
+            x_ax, y_ax = prep_plots.ax_names(filters[0], filters[0], 'mag')
+        else:
+            x_ax, y_ax = prep_plots.ax_names(colors[k - 1], filters[0], 'mag')
+
+        ax = plt.subplot(gs_pos)
+        plt.xlim(x_min, x_max)
+        # Set axis labels
+        plt.ylabel('$\sigma_{' + x_ax + '}$', fontsize=18)
+        plt.xlabel('$' + y_ax + '$', fontsize=18)
+        ax.set_facecolor('#EFF0F1')
+        # Set minor ticks
+        ax.minorticks_on()
+
+        # Plot rejected stars.
+        if len(stars_out_rjct) > 0:
+            # Only attempt to plot if any star is stored in the list.
+            plt.scatter(
+                zip(*zip(*stars_out_rjct)[3])[0],
+                zip(*zip(*stars_out_rjct)[j])[k - 1],
+                marker='x', c='teal', s=15, zorder=1)
+        if len(stars_in_rjct) > 0:
+            plt.scatter(
+                zip(*zip(*stars_in_rjct)[3])[0],
+                zip(*zip(*stars_in_rjct)[j])[k - 1],
+                marker='x', c='teal', s=15, zorder=1)
+
+        # Plot accepted stars.
         plt.scatter(
-            zip(*zip(*stars_out_rjct)[3])[0], zip(*zip(*stars_out_rjct)[j])[0],
-            marker='x', c='teal', s=15, zorder=1)
-    if len(stars_in_rjct) > 0:
+            zip(*zip(*stars_out)[3])[0], zip(*zip(*stars_out)[j])[k - 1],
+            marker='o', c='b', s=5, zorder=2, lw=0.1, edgecolor='k',
+            label='$r > r_{cl}$')
         plt.scatter(
-            zip(*zip(*stars_in_rjct)[3])[0], zip(*zip(*stars_in_rjct)[j])[0],
-            marker='x', c='teal', s=15, zorder=1)
-    # Plot accepted stars.
-    plt.scatter(
-        zip(*zip(*stars_out)[3])[0], zip(*zip(*stars_out)[j])[0], marker='o',
-        c='b', s=5, zorder=2, lw=0.1, edgecolor='k', label='$r > r_{cl}$')
-    plt.scatter(
-        zip(*zip(*cl_region)[3])[0], zip(*zip(*cl_region)[j])[0], marker='o',
-        c='r', s=10, zorder=2, lw=0.3, edgecolor='k', label='$r \leq r_{cl}}$')
-    if up_low == 'up':
-        # Legends.
-        leg = plt.legend(fancybox=True, loc='upper left', scatterpoints=1,
-                         fontsize=16, markerscale=2.5, prop={'size': 13})
-        # Set the alpha value of the legend.
-        leg.get_frame().set_alpha(0.7)
-    # Plot error curve
-    if up_low == 'up':
-        plt.plot(err_bar_all[1], err_bar_all[3], color='#ffff00', ls='--',
+            zip(*zip(*cl_region)[3])[0], zip(*zip(*cl_region)[j])[k - 1],
+            marker='o', c='r', s=10, zorder=2, lw=0.3, edgecolor='k',
+            label='$r \leq r_{cl}}$')
+
+        # Plot legend on the upper mmag plot.
+        if k == 0:
+            # Legends.
+            leg = plt.legend(fancybox=True, loc='upper left', scatterpoints=1,
+                             fontsize=16, markerscale=2.5, prop={'size': 13})
+            # Set the alpha value of the legend.
+            leg.get_frame().set_alpha(0.7)
+
+        # Plot error curve
+        plt.plot(err_bar_all[1], err_bar_all[2][k], color='#ffff00', ls='--',
                  zorder=4)
-    else:
-        plt.plot(err_bar_all[1], err_bar_all[2], color='#ffff00', ls='--',
-                 zorder=4)
-    ax.hlines(y=err_max, xmin=x_min, xmax=x_max, color='k',
-              linestyles='dashed', zorder=2)
-    # Maximum error limit of 1.
-    plt.ylim(-0.005, min(plt.ylim()[1], 1.))
+        ax.hlines(y=err_max, xmin=x_min, xmax=x_max, color='k',
+                  linestyles='dashed', zorder=2)
+        # Maximum error limit of 1.
+        plt.ylim(-0.005, min(plt.ylim()[1], 1.))
 
 
 def pl_fl_diag(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
@@ -94,10 +110,11 @@ def pl_fl_diag(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
         plt.scatter(stars_f_acpt[0], stars_f_acpt[1], marker='o', c='b',
                     s=f_sz_pt, lw=0.3, edgecolor='k', zorder=3)
     # If list is not empty, plot error bars at several values.
-    x_val, mag_y, x_err, y_err = err_bar
+    x_val, mag_y, xy_err = err_bar
     if x_val:
-        plt.errorbar(x_val, mag_y, yerr=y_err, xerr=x_err, fmt='k.', lw=0.8,
-                     ms=0., zorder=4)
+        plt.errorbar(
+            x_val, mag_y, yerr=xy_err[0], xerr=xy_err[1], fmt='k.', lw=0.8,
+            ms=0., zorder=4)
 
 
 def pl_cl_diag(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
@@ -136,10 +153,11 @@ def pl_cl_diag(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
         zip(*zip(*cl_region)[5])[0], zip(*zip(*cl_region)[3])[0], marker='o',
         c='r', s=cl_sz_pt, lw=0.3, edgecolor='k', zorder=3)
     # If list is not empty, plot error bars at several values.
-    x_val, mag_y, x_err, y_err = err_bar
+    x_val, mag_y, xy_err = err_bar
     if x_val:
-        plt.errorbar(x_val, mag_y, yerr=y_err, xerr=x_err, fmt='k.', lw=0.8,
-                     ms=0., zorder=4)
+        plt.errorbar(
+            x_val, mag_y, yerr=xy_err[0], xerr=xy_err[1], fmt='k.', lw=0.8,
+            ms=0., zorder=4)
 
 
 def pl_lum_func(gs, y_ax, flag_no_fl_regs, lum_func, completeness):
@@ -147,7 +165,7 @@ def pl_lum_func(gs, y_ax, flag_no_fl_regs, lum_func, completeness):
     LF of stars in cluster region and outside.
     '''
     x_cl, y_cl, x_fl, y_fl, x_all, y_all = lum_func
-    ax = plt.subplot(gs[2:4, 0:2])
+    ax = plt.subplot(gs[2:4, 2:4])
     ax.minorticks_on()
     # Only draw units on axis (ie: 1, 2, 3)
     ax.xaxis.set_major_locator(MultipleLocator(2.0))
@@ -200,7 +218,7 @@ def pl_integ_mag(gs, cl_reg_imag, fl_reg_imag, integ_mag, y_ax,
     '''
     if cl_reg_imag:
         # Make plot
-        ax = plt.subplot(gs[2:4, 2:4])
+        ax = plt.subplot(gs[2:4, 4:6])
         # If field lists are not empty.
         if fl_reg_imag:
             x_min = min(min(cl_reg_imag[0][0]), min(fl_reg_imag[0][0])) - 0.2
@@ -247,7 +265,7 @@ def pl_p_vals(gs, flag_pval_test, pval_test_params):
     if flag_pval_test:
         # Extract parameters from list.
         prob_cl_kde, kde_cl_1d, kde_f_1d, x_kde, y_over = pval_test_params
-        ax = plt.subplot(gs[2:4, 4:6])
+        ax = plt.subplot(gs[4:6, 0:2])
         plt.xlim(-0.15, 1.15)
         plt.ylim(0, 1.02)
         plt.xlabel('p-values', fontsize=12)
@@ -287,13 +305,12 @@ def plot(N, *args):
     '''
 
     plt_map = {
-        0: [pl_phot_err, 'upper error rejection function'],
-        1: [pl_phot_err, 'lower error rejection function'],
-        2: [pl_fl_diag, 'field regions photometric diagram'],
-        3: [pl_cl_diag, 'cluster region photometric diagram'],
-        4: [pl_lum_func, 'luminosity function'],
-        5: [pl_integ_mag, 'integrated magnitudes'],
-        6: [pl_p_vals, 'KDE p-values distribution']
+        0: [pl_phot_err, 'error rejection function'],
+        1: [pl_fl_diag, 'field regions photometric diagram'],
+        2: [pl_cl_diag, 'cluster region photometric diagram'],
+        3: [pl_lum_func, 'luminosity function'],
+        4: [pl_integ_mag, 'integrated magnitudes'],
+        5: [pl_p_vals, 'KDE p-values distribution']
     }
 
     fxn = plt_map.get(N, None)[0]

@@ -13,7 +13,6 @@ def pl_mps_phot_diag(
     '''
     Star's membership probabilities on cluster's photometric diagram.
     '''
-    x_val, mag_y, x_err, y_err = err_bar
     ax = plt.subplot(gs[gs_y1:gs_y2, 0:2])
     # Set plot limits
     plt.xlim(x_min_cmd, x_max_cmd)
@@ -41,7 +40,7 @@ def pl_mps_phot_diag(
             ax.axhline(y_ed, linestyle=':', lw=.8, color='k', zorder=1)
     # This reversed colormap means higher prob stars will look redder.
     cm = plt.cm.get_cmap('RdYlBu_r')
-    # If the 'tolstoy method was used AND the stars have a range of colors.
+    # If the 'tolstoy' method was used AND the stars have a range of colors.
     # Currently the 'dolphin' likelihood does not use MPs in the fit, so it's
     # confusing to color stars is if it did.
     if v_min_mp != v_max_mp:
@@ -54,10 +53,17 @@ def pl_mps_phot_diag(
                       vmin=v_min_mp, vmax=v_max_mp, zorder=4)
     # Plot isochrone.
     plt.plot(x_isoch, y_isoch, isoch_col, lw=1., zorder=6)
-    # If list is not empty, plot error bars at several values.
+    # If list is not empty, plot error bars at several values. The
+    # prep_plots.error_bars() is not able to handle the color-color diagram.
+    x_val, mag_y, xy_err = err_bar
     if x_val:
-        plt.errorbar(x_val, mag_y, yerr=y_err, xerr=x_err, fmt='k.', lw=0.8,
-                     ms=0., zorder=4)
+        xye_i = {
+            '0': (mag_y, 0, 1), '2': (mag_y, 0, 2),
+            '4': (np.linspace(min(obs_y), max(obs_y), len(x_val)), 1, 2)}
+        plt.errorbar(
+            x_val, xye_i[str(gs_y1)][0], yerr=xy_err[xye_i[str(gs_y1)][1]],
+            xerr=xy_err[xye_i[str(gs_y1)][2]],
+            fmt='k.', lw=0.8, ms=0., zorder=4)
     # For plotting the colorbar (see bottom of make_D_plot file).
     trans = ax.transAxes + fig.transFigure.inverted()
 

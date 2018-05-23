@@ -281,11 +281,12 @@ def error_bars(stars_phot, x_min_cmd, err_lst, all_flag=None):
     """
     # Use main magnitude.
     if all_flag == 'all':
-        mmag = stars_phot.tolist()
+        mmag = np.array(stars_phot)
     else:
-        mmag = zip(*zip(*stars_phot)[3])[0]
-    x_val, mag_y, x_err, y_err = [], [], [], []
-    if mmag:
+        mmag = np.array(zip(*zip(*stars_phot)[3])[0])
+
+    x_val, mag_y, xy_err = [], [], []
+    if mmag.any():
         # List of y values where error bars are plotted.
         mag_y = np.arange(
             int(min(mmag) + 0.5), int(max(mmag) + 0.5) + 0.1)
@@ -294,13 +295,11 @@ def error_bars(stars_phot, x_min_cmd, err_lst, all_flag=None):
         # Read average fitted values for exponential error fit.
         # Magnitude values are positioned first and colors after in the list
         # 'err_lst'.
-        # TODO generalize to N dimensions
-        popt_mag, popt_col1 = err_lst[0], err_lst[1]
-        x_err = exp_function.exp_3p(mag_y, *popt_col1)
-        y_err = exp_function.exp_3p(mag_y, *popt_mag)
-    err_bar = [x_val, mag_y, x_err, y_err]
+        # popt_mag = err_lst[0]
+        for popt in err_lst:
+            xy_err.append(exp_function.exp_3p(mag_y, *popt))
 
-    return err_bar
+    return [x_val, mag_y, xy_err]
 
 
 def param_ranges(fundam_params):

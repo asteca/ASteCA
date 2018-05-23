@@ -126,7 +126,7 @@ def pl_mps_phot_diag(gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
     '''
     Star's membership probabilities on cluster's photometric diagram.
     '''
-    x_val, mag_y, x_err, y_err = err_bar
+    x_val, mag_y, xy_err = err_bar
     ax = plt.subplot(gs[0:2, 4:6])
     # Set plot limits
     plt.xlim(x_min_cmd, x_max_cmd)
@@ -176,8 +176,9 @@ def pl_mps_phot_diag(gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
                       vmin=v_min_mp, vmax=v_max_mp, zorder=4)
     # If list is not empty, plot error bars at several values.
     if x_val:
-        plt.errorbar(x_val, mag_y, yerr=y_err, xerr=x_err, fmt='k.', lw=0.8,
-                     ms=0., zorder=4)
+        plt.errorbar(
+            x_val, mag_y, yerr=xy_err[0], xerr=xy_err[1], fmt='k.', lw=0.8,
+            ms=0., zorder=4)
     # For plotting the colorbar (see bottom of make_plots file).
     trans = ax.transAxes + fig.transFigure.inverted()
 
