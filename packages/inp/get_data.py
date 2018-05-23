@@ -6,34 +6,38 @@ import operator
 import copy
 
 
-def main(npd, id_indx, x_indx, y_indx, mag_indx, e_mag_indx, col_indx,
-         e_col_indx, plx_indx, e_plx_indx, pmx_indx, e_pmx_indx, pmy_indx,
-         e_pmy_indx, rv_indx, e_rv_indx, **kwargs):
+def main(npd, read_mode, id_col, x_col, y_col, mag_col, e_mag_col,
+         col_col, e_col_col, plx_col, e_plx_col, pmx_col, e_pmx_col,
+         pmy_col, e_pmy_col, rv_col, e_rv_col, **kwargs):
     '''
     Read all data from the cluster's data file.
     '''
 
     data_file = npd['data_file']
     try:
-        # Name of IDs column (the '+ 1' is because astropy Tables' first column
-        # is named 'col1', not 'col0'). Store IDs as strings.
-        id_colname = 'col' + str(id_indx + 1)
-        data = ascii.read(
-            data_file, fill_values=[
-                ('', '0'), ('INDEF', '0'), ('9999.99', '0'), ('99.999', '0')],
-            converters={id_colname: [ascii.convert_numpy(np.str)]},
-            format='no_header')
+        fill_msk = [
+            ('', '0'), ('INDEF', '0'), ('9999.99', '0'), ('99.999', '0')]
+        # Store IDs as strings.
+        if read_mode == 'num':
+            data = ascii.read(
+                data_file, fill_values=fill_msk,
+                converters={id_col: [ascii.convert_numpy(np.str)]},
+                format='no_header')
+        else:
+            data = ascii.read(
+                data_file, fill_values=fill_msk,
+                converters={id_col: [ascii.convert_numpy(np.str)]})
 
-        # Generate column names in the proper order, while keeping the shape.
-        col_names = getColNames([
-            id_indx, x_indx, y_indx, mag_indx, e_mag_indx, col_indx,
-            e_col_indx, [plx_indx, pmx_indx, pmy_indx, rv_indx],
-            [e_plx_indx, e_pmx_indx, e_pmy_indx, e_rv_indx]])
+        # Arrange column names in the proper order and shape.
+        col_names = [
+            id_col, x_col, y_col, mag_col, e_mag_col, col_col, e_col_col,
+            [plx_col, pmx_col, pmy_col, rv_col],
+            [e_plx_col, e_pmx_col, e_pmy_col, e_rv_col]]
 
-        col_names_keep = list(flatten(col_names))
         # Remove not wanted columns *before* removing rows with 'nan' values
         # (otherwise columns that should not be read will influence the row
         # removal).
+        col_names_keep = list(flatten(col_names))
         for col in data.columns:
             if col not in col_names_keep:
                 data.remove_column(col)
@@ -80,21 +84,6 @@ def main(npd, id_indx, x_indx, y_indx, mag_indx, e_mag_indx, col_indx,
     clp = {'flag_data_eq': flag_data_eq}
 
     return cld_i, cld_c, clp
-
-
-def getColNames(data):
-    """
-    Source: https://stackoverflow.com/a/50297301/1391441
-    """
-    col_names = []
-    for i in data:
-        if isinstance(i, list):
-            col_names.append(getColNames(i))
-        elif i is not False:
-            col_names.append('col{}'.format(i + 1))
-        else:
-            col_names.append(i)
-    return col_names
 
 
 def flatten(l):

@@ -5,7 +5,7 @@ from check import update
 from check import clusters
 from check import params_file
 from check import params_mode
-from check import photom_names
+from check import params_data
 from check import params_out
 from check import params_struct
 from check import params_pval
@@ -41,13 +41,14 @@ def check_all(mypath, file_end):
     # Check if a new version is available.
     update.check(**pd)
 
-    # Check running mode. # If mode is 'semi', check that all cluster
+    # Check running mode. If mode is 'semi', check that all cluster
     # in '/input' folder are listed.
     params_mode.check(mypath, cl_files, **pd)
 
-    # Check that the magnitude and color names were properly given.
+    # Check that the data column indexes/names were properly given, and that
+    # the magnitude and color names were properly defined.
     # If they are, store also the name of the proper isochrones folders.
-    pd = photom_names.check(mypath, pd)
+    pd = params_data.check(mypath, pd)
 
     # Check output parameters.
     params_out.check(**pd)

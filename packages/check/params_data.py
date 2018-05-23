@@ -24,33 +24,39 @@ def check(mypath, pd):
     set to run).
     """
 
-    # Read column indexes for the IDs and the coordinates, and the coordinate
-    # format used (pixels or degrees)
-    try:
-        id_indx, x_indx, y_indx, coords = pd['id_coords']
-        id_indx, x_indx, y_indx = map(int, [id_indx, x_indx, y_indx])
-        coords = str(coords)
-    except ValueError:
-        sys.exit("ERROR: bad format for the IDs and coordinates\n"
-                 "column indexes in 'params_input.dat'.")
+    # Check read mode.
+    if pd['read_mode'] not in pd['read_mode_accpt']:
+        sys.exit("ERROR: read mode '{}' given in the input parameters\n"
+                 "file is incorrect.".format(pd['read_mode']))
 
     # Check px/deg.
-    if coords not in ('px', 'deg'):
+    if pd['id_coords'][-1] not in pd['coord_accpt']:
         sys.exit("ERROR: coordinate units '{}' given in the input parameters\n"
-                 "file are incorrect.".format(coords))
+                 "file are incorrect.".format(pd['id_coords'][-1]))
+
+    # Read column indexes for the IDs and the coordinates.
+    if pd['read_mode'] == 'num':
+        # Name of columns when no header is present. The '+ 1' is because
+        # astropy Tables' first column is named 'col1', not 'col0'.
+        id_col, x_col, y_col = [
+            'col' + str(int(i) + 1) for i in pd['id_coords'][0:3]]
+    else:
+        id_col, x_col, y_col = pd['id_coords'][0:3]
 
     # Dictionary of photometric systems defined in the CMD service.
     all_systs = pd['cmd_systs']
 
     # Extract magnitudes (filters) data.
-    mag_indx, e_mag_indx, filters = [], [], []
+    mag_col, e_mag_col, filters = [], [], []
     for mag in pd['id_mags'][0::2]:
         try:
-            colum_indx, phot_syst, filter_name = mag.split(',')
+            column_id, phot_syst, filter_name = mag.split(',')
         except ValueError:
             sys.exit("ERROR: bad formatting for filter '{}'".format(mag))
         # Used to read data from cluster file in 'get_data.
-        mag_indx.append(int(colum_indx))
+        mag_col += [
+            'col' + str(int(column_id) + 1) if pd['read_mode'] == 'num' else
+            column_id]
         if pd['bf_flag']:
             # Check.
             phot_syst_filt_check(all_systs, mag, phot_syst, filter_name)
@@ -59,20 +65,24 @@ def check(mypath, pd):
         filters.append((phot_syst, filter_name))
     # Extract magnitude error columns.
     if len(pd['id_mags'][1::2]) == len(pd['id_mags'][0::2]):
-        for colum_indx in pd['id_mags'][1::2]:
-            e_mag_indx.append(int(colum_indx))
+        for column_id in pd['id_mags'][1::2]:
+            e_mag_col += [
+                'col' + str(int(column_id) + 1) if pd['read_mode'] == 'num'
+                else column_id]
     elif len(pd['id_mags'][1::2]) < len(pd['id_mags'][0::2]):
-        sys.exit("ERROR: missing error column index for filter"
+        sys.exit("ERROR: missing error column name/index for filter"
                  " in 'params_input dat'.")
 
     # Extract colors data.
-    col_indx, e_col_indx, c_filters, colors = [], [], [], []
+    col_col, e_col_col, c_filters, colors = [], [], [], []
     for col in pd['id_cols'][0::2]:
         try:
-            colum_indx, phot_syst, filter_name1, filter_name2 = col.split(',')
+            column_id, phot_syst, filter_name1, filter_name2 = col.split(',')
         except ValueError:
             sys.exit("ERROR: bad formatting for color '{}'".format(col))
-        col_indx.append(int(colum_indx))
+        col_col += [
+            'col' + str(int(column_id) + 1) if pd['read_mode'] == 'num'
+            else column_id]
         if pd['bf_flag']:
             # Check.
             phot_syst_filt_check(all_systs, col, phot_syst, filter_name1)
@@ -82,10 +92,12 @@ def check(mypath, pd):
         colors.append((phot_syst, filter_name1 + ',' + filter_name2))
     # Extract colors error columns.
     if len(pd['id_cols'][1::2]) == len(pd['id_cols'][0::2]):
-        for colum_indx in pd['id_cols'][1::2]:
-            e_col_indx.append(int(colum_indx))
+        for column_id in pd['id_cols'][1::2]:
+            e_col_col += [
+                'col' + str(int(column_id) + 1) if pd['read_mode'] == 'num'
+                else column_id]
     elif len(pd['id_cols'][1::2]) < len(pd['id_cols'][0::2]):
-        sys.exit("ERROR: missing error column index for color"
+        sys.exit("ERROR: missing error column name/index for color"
                  " in 'params_input dat'.")
 
     all_syst_filters, iso_paths = [], []
@@ -123,11 +135,11 @@ def check(mypath, pd):
             sys.exit("ERROR: more than two colors defined.")
 
     # Add data to parameters dictionary.
-    pd['id_indx'], pd['x_indx'], pd['y_indx'], pd['coords'],\
-        pd['mag_indx'], pd['e_mag_indx'], pd['filters'], pd['col_indx'],\
-        pd['e_col_indx'], pd['colors'], pd['all_syst_filters'],\
-        pd['iso_paths'] = id_indx, x_indx, y_indx, coords, mag_indx,\
-        e_mag_indx, filters, col_indx, e_col_indx, colors,\
+    pd['id_col'], pd['x_col'], pd['y_col'], pd['coords'],\
+        pd['mag_col'], pd['e_mag_col'], pd['filters'], pd['col_col'],\
+        pd['e_col_col'], pd['colors'], pd['all_syst_filters'],\
+        pd['iso_paths'] = id_col, x_col, y_col, pd['id_coords'][-1], mag_col,\
+        e_mag_col, filters, col_col, e_col_col, colors,\
         all_syst_filters, iso_paths
 
     # Read PMs, parallax, and RV data.
@@ -135,14 +147,15 @@ def check(mypath, pd):
     for i, ci in enumerate(pd['id_kinem']):
         if ci not in ('n', 'N'):
             try:
-                pd[n[i] + '_indx'] = int(ci)
+                pd[n[i] + '_col'] = 'col' + str(int(ci) + 1) if\
+                    pd['read_mode'] == 'num' else ci
             except ValueError:
                 sys.exit("ERROR: bad index ('{}') for '{}' column"
                          " in 'params_input dat'.".format(ci, n[i]))
         else:
-            pd[n[i] + '_indx'] = False
+            pd[n[i] + '_col'] = False
     # Check that error columns are present
-    for col in ('plx_indx', 'pmx_indx', 'pmy_indx', 'rv_indx'):
+    for col in ('plx_col', 'pmx_col', 'pmy_col', 'rv_col'):
         if pd[col] is not False and pd['e_' + col] is False:
             sys.exit("ERROR: missing error column for '{}' in"
                      "'params_input dat'.".format(col))

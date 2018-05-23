@@ -61,6 +61,8 @@ def main(mypath, pars_f_path):
                     run_mode = str(reader[1])
 
                 # Input data parameters.
+                elif reader[0] == 'MR':
+                    read_mode = str(reader[1])
                 elif reader[0] == 'PI':
                     id_coords = reader[1:]
                 elif reader[0] == 'PM':
@@ -179,6 +181,10 @@ def main(mypath, pars_f_path):
                           "  of '{}' file.\n").format(
                         reader[0], l + 1, pars_f_name)
 
+    # Accepted coordinate units
+    coord_accpt = ('px', 'deg')
+    # Accepted read modes
+    read_mode_accpt = ('nam', 'num')
     # Accepted decontamination algorithms.
     da_algors_accpt = ('bayes', 'fixed', 'read', 'skip')
     # Accepted field stars removal methods.
@@ -215,7 +221,7 @@ def main(mypath, pars_f_path):
 
     pd = {
         'up_flag': up_flag, 'flag_back_force': flag_back_force,
-        'run_mode': run_mode,
+        'run_mode': run_mode, 'read_mode': read_mode,
         'id_coords': id_coords, 'id_mags': id_mags, 'id_cols': id_cols,
         'id_kinem': id_kinem,
         'flag_make_plot': flag_make_plot, 'plot_frmt': plot_frmt,
@@ -247,11 +253,12 @@ def main(mypath, pars_f_path):
         'cross_prob': cross_prob, 'cross_sel': cross_sel, 'mut_prob': mut_prob,
         'N_el': N_el, 'N_ei': N_ei, 'N_es': N_es,
         # Fixed accepted parameter values and photometric systems.
+        'read_mode_accpt': read_mode_accpt, 'coord_accpt': coord_accpt,
         'da_algors_accpt': da_algors_accpt, 'fld_rem_methods': fld_rem_methods,
         'bin_methods': bin_methods, 'bin_weights': bin_weights,
         'imf_funcs': imf_funcs, 'lkl_methods': lkl_methods,
-        'optimz_algors': optimz_algors,
-        'cmd_evol_tracks': cmd_evol_tracks, 'cmd_systs': cmd_systs,
+        'optimz_algors': optimz_algors, 'cmd_evol_tracks': cmd_evol_tracks,
+        'cmd_systs': cmd_systs,
         # v These lists need to be re-formatted
         'par_ranges': par_ranges}
 

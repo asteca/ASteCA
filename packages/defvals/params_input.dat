@@ -57,6 +57,17 @@ MO   auto
 
 ######################### Input data parameters ################################
 
+# Read mode for the cluster's input data.
+#
+# * mode: num / nam
+#
+#   - num: indexes of the data columns (starting with zero). The header must be
+#          commented out entirely.
+#   - nam: names of the data columns. A proper header must be in place.
+#
+#    mode
+MR    num
+
 # Columns for the ID's and x,y coordinates in the data file.
 #
 # * coords: px / deg
