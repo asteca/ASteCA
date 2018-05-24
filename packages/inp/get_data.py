@@ -151,7 +151,7 @@ def dataCols(data_file, data, col_names):
                 kine.append(np.array(data[ki]))
                 ek.append(np.array(data[eki]))
             else:
-                kine.append(np.full(ids.size, np.nan))   # NOPE
+                kine.append(np.full(ids.size, np.nan))
                 ek.append(np.full(ids.size, np.nan))
         kine, ek = np.array(kine), np.array(ek)
 
