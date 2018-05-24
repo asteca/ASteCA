@@ -142,6 +142,22 @@ def main(cl_file, pd):
         clp = stars_in_out_cl_reg.main('incomp', clp)
         clp = field_regions.main('incomp', clp, **pd)
 
+    # This is what these three functions generate. The 'x' separates incomplete
+    # (i) and complete (c) data.
+    #
+    # err_accpt_rejct -------> acpt_stars_x
+    #       |        '-------> rjct_stars_x
+    #       |
+    #       v
+    # stars_in_out_cl_reg ---> acpt_stars_x --> cl_region_x
+    #       |            |                 '--> stars_out_x
+    #       |            |
+    #       |            '---> rjct_stars_x --> cl_region_rjct_x
+    #       |                              '--> stars_out_rjct_x
+    #       v
+    # field_regions --> stars_out_x ----------> field_regions_x
+    #              '--> stars_out_rjct x -----> field_regions_rjct_x
+
     make_A2_plot.main(npd, cld_i, pd, **clp)
 
     # v The functions below use the *complete* dataset, ie: no 'nan' values,

@@ -188,7 +188,7 @@ def pl_lum_func(gs, y_ax, flag_no_fl_regs, lum_func, completeness):
 
     # All frame.
     plt.step(x_all, y_all, where='post', color='k', lw=1.5, linestyle=':',
-             label='Frame', zorder=2)
+             label='Frame (compl)', zorder=2)
     # Cluster region LF (contaminated).
     plt.step(x_cl, y_cl, where='post', color='r', lw=1.,
              label='$LF_{cl+fl} \,(r \leq r_{cl})$', zorder=2)
@@ -216,7 +216,7 @@ def pl_lum_func(gs, y_ax, flag_no_fl_regs, lum_func, completeness):
               lw=1.5, linestyles='dashed', label=text, zorder=1)
     # Legends.
     leg = plt.legend(fancybox=True, loc='upper right', numpoints=1,
-                     fontsize=12)
+                     fontsize=11)
     # Set the alpha value of the legend.
     leg.get_frame().set_alpha(0.7)
 
