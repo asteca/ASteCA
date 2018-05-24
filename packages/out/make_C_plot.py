@@ -110,7 +110,9 @@ def main(
              plx_flrg, flag_no_fl_regs_i],
             # pl_plx_chart
             [gs, plx_flag, x_name, y_name, coord, cl_reg_fit, plx_x_kde,
-             kde_pl]
+             kde_pl],
+            # pl_pms_plot
+            [gs, coord, plx_flag, cl_reg_fit]
         ]
         for n, args in enumerate(arglist):
             mp_decont_algor.plot(n, *args)

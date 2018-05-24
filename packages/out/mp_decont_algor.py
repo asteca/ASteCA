@@ -260,18 +260,82 @@ def pl_plx_chart(gs, plx_flag, x_name, y_name, coord, cl_reg_fit, plx_x_kde,
         # Maximum KDE parallax value.
         p_max_mas = plx_x_kde[np.argmax(kde_pl)]
         # Distance to max value. Stars closer to the max value are larger.
-        plx_d = 2. + 1. / (abs(plx - p_max_mas) + .1) ** 2
+        plx_d = 2. + 1. / (abs(plx - p_max_mas) + .1) ** 2.3
 
         # Re-arrange so stars closer to the max Plx value are on top
         plx_i = plx_d.argsort()
         x, y, mp, plx_d = x[plx_i], y[plx_i], mp[plx_i], plx_d[plx_i]
 
         # Color map, higher prob stars look redder.
-        cm = plt.cm.get_cmap('viridis')  # RdYlBu_r
+        cm = plt.cm.get_cmap('RdYlBu_r')
         # Plot stars selected to be used in the best bit process.
         plt.scatter(
             x, y, marker='o', c=mp, s=plx_d, edgecolors='black',
             cmap=cm, lw=0.35, zorder=4)
+
+
+def pl_pms_plot(gs, coord, plx_flag, cl_reg_fit):
+    '''
+    Finding chart of cluster region with colors assigned according to the
+    probabilities obtained and sizes according to parallaxes.
+    '''
+
+    pmRA = np.array(zip(*zip(*cl_reg_fit)[7])[1])
+    if pmRA.any():
+        if plx_flag:
+            ax = plt.subplot(gs[4:6, 0:2])
+        else:
+            ax = plt.subplot(gs[2:4, 0:2])
+        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1,
+                zorder=1)
+
+        # Set minor ticks
+        ax.minorticks_on()
+
+        # Prepare data.
+        mp = np.array(zip(*cl_reg_fit)[9])
+        e_pmRA, pmDE, e_pmDE = \
+            np.array(zip(*zip(*cl_reg_fit)[8])[1]),\
+            np.array(zip(*zip(*cl_reg_fit)[7])[2]),\
+            np.array(zip(*zip(*cl_reg_fit)[8])[2])
+
+        if coord == 'deg':
+            plt.xlabel(
+                r"$\mu_{{\alpha}} \, cos \delta \, [mas/yr]$", fontsize=12)
+            DE = np.array(zip(*zip(*cl_reg_fit)[7])[2])
+        else:
+            plt.xlabel(r"$\mu_{{\alpha}} \, [mas/yr]$", fontsize=12)
+            DE = np.zeros(pmRA.size)
+        plt.ylabel(r"$\mu_{{\delta}} \, [mas/yr]$", fontsize=12)
+
+        # msk = (~np.isnan(x)) & (~np.isnan(y)) & (~np.isnan(mp)) &\
+        #     (~np.isnan(plx))
+        # x, y, mp, plx = x[msk], y[msk], mp[msk], plx[msk]
+        # # Clip parallax values.
+        # np.clip(plx, a_min=0., a_max=10., out=plx)
+
+        # Re-arrange so stars closer to the max Plx value are on top
+        mp_i = mp.argsort()
+        pmRA, e_pmRA, pmDE, e_pmDE, DE, mp = pmRA[mp_i], e_pmRA[mp_i],\
+            pmDE[mp_i], e_pmDE[mp_i], DE[mp_i], mp[mp_i]
+
+        # Color map, higher prob stars look redder.
+        # cm = plt.cm.get_cmap('RdYlBu_r')
+
+        import matplotlib.cm as cm
+        from matplotlib.colors import Normalize
+        cmap = cm.viridis
+        norm = Normalize(vmin=mp.min(), vmax=mp.max())
+
+        # Plot stars selected to be used in the best bit process.
+        # plt.scatter(
+        #     pmRA * np.cos(np.deg2rad(DE)), pmDE, marker='o', c=mp, s=plx_d,
+        #     edgecolors='black',
+        #     cmap=cm, lw=0.35, zorder=4)
+
+        ax.errorbar(
+            pmRA * np.cos(np.deg2rad(DE)), pmDE, yerr=e_pmDE, xerr=e_pmRA,
+            fmt='none', elinewidth=.35, ecolor=cmap(norm(mp)))
 
 
 def plot(N, *args):
@@ -283,7 +347,8 @@ def plot(N, *args):
         0: [pl_mp_histo, 'MPs histogram'],
         1: [pl_chart_mps, 'frame with MPs coloring'],
         2: [pl_plx_histo, 'Plx histogram'],
-        3: [pl_plx_chart, 'Plx chart']
+        3: [pl_plx_chart, 'Plx chart'],
+        4: [pl_pms_plot, 'PMs plot']
     }
 
     fxn = plt_map.get(N, None)[0]
