@@ -6,8 +6,8 @@ from matplotlib.ticker import MultipleLocator
 import matplotlib.offsetbox as offsetbox
 
 
-def pl_phot_err(gs, fig, colors, filters, mags, err_max, cl_region,
-                stars_in_rjct, stars_out, stars_out_rjct, err_bar_all):
+def pl_phot_err(gs, fig, colors, filters, mags, err_max, cl_region_c,
+                cl_region_rjct_c, stars_out_c, stars_out_rjct_c, err_bar_all):
     '''
     Photometric error rejection.
     '''
@@ -29,6 +29,11 @@ def pl_phot_err(gs, fig, colors, filters, mags, err_max, cl_region,
             x_ax, y_ax = prep_plots.ax_names(colors[k - 1], filters[0], 'mag')
 
         ax = plt.subplot(gs_pos)
+        if k == 0:
+            ax.set_title(
+                r"$N_{{accpt}}={}$ , $N_{{rjct}}={}$ (compl frame)".format(
+                    len(cl_region_c) + len(stars_out_c),
+                    len(stars_out_rjct_c) + len(cl_region_rjct_c)), fontsize=9)
         plt.xlim(x_min, x_max)
         # Set axis labels
         plt.ylabel('$\sigma_{' + x_ax + '}$', fontsize=18)
@@ -37,26 +42,26 @@ def pl_phot_err(gs, fig, colors, filters, mags, err_max, cl_region,
         # Set minor ticks
         ax.minorticks_on()
 
-        # Plot rejected stars.
-        if len(stars_out_rjct) > 0:
+        # Plot rejected stars outside/inside the cluster region.
+        if len(stars_out_rjct_c) > 0:
             # Only attempt to plot if any star is stored in the list.
             plt.scatter(
-                zip(*zip(*stars_out_rjct)[3])[0],
-                zip(*zip(*stars_out_rjct)[j])[k - 1],
+                zip(*zip(*stars_out_rjct_c)[3])[0],
+                zip(*zip(*stars_out_rjct_c)[j])[k - 1],
                 marker='x', c='teal', s=15, zorder=1)
-        if len(stars_in_rjct) > 0:
+        if len(cl_region_rjct_c) > 0:
             plt.scatter(
-                zip(*zip(*stars_in_rjct)[3])[0],
-                zip(*zip(*stars_in_rjct)[j])[k - 1],
+                zip(*zip(*cl_region_rjct_c)[3])[0],
+                zip(*zip(*cl_region_rjct_c)[j])[k - 1],
                 marker='x', c='teal', s=15, zorder=1)
 
-        # Plot accepted stars.
+        # Plot accepted stars outside/inside the cluster region.
         plt.scatter(
-            zip(*zip(*stars_out)[3])[0], zip(*zip(*stars_out)[j])[k - 1],
+            zip(*zip(*stars_out_c)[3])[0], zip(*zip(*stars_out_c)[j])[k - 1],
             marker='o', c='b', s=5, zorder=2, lw=0.1, edgecolor='k',
             label='$r > r_{cl}$')
         plt.scatter(
-            zip(*zip(*cl_region)[3])[0], zip(*zip(*cl_region)[j])[k - 1],
+            zip(*zip(*cl_region_c)[3])[0], zip(*zip(*cl_region_c)[j])[k - 1],
             marker='o', c='r', s=10, zorder=2, lw=0.3, edgecolor='k',
             label='$r \leq r_{cl}}$')
 
@@ -78,11 +83,13 @@ def pl_phot_err(gs, fig, colors, filters, mags, err_max, cl_region,
 
 
 def pl_fl_diag(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
-               stars_f_rjct, stars_f_acpt, f_sz_pt, err_bar):
+               field_regions_c, stars_f_rjct, stars_f_acpt, f_sz_pt, err_bar):
     '''
     Field stars CMD/CCD diagram.
     '''
     ax = plt.subplot(gs[0:2, 2:4])
+    ax.set_title(r"$N_{{accpt}}={}$ , $N_{{rjct}}={}$ (fields compl)".format(
+        len(stars_f_acpt[0]), len(stars_f_rjct[0])), fontsize=9)
     # Set plot limits
     plt.xlim(x_min_cmd, x_max_cmd)
     plt.ylim(y_min_cmd, y_max_cmd)
@@ -96,19 +103,19 @@ def pl_fl_diag(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
     # Set grid
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1,
             zorder=1)
-    # Plot *all* rejected stars outside of the cluster region.
-    plt.scatter(stars_f_rjct[0], stars_f_rjct[1], marker='x',
-                c='teal', s=15, zorder=2)
-    # Add text box.
-    text = '$N_{{accpt}}={}\,(\star_{{field}})$'.format(len(stars_f_acpt[0]))
-    ob = offsetbox.AnchoredText(text, pad=0.2, loc=1, prop=dict(size=12))
-    ob.patch.set(alpha=0.7)
-    ax.add_artist(ob)
-    # Plot accepted stars within the field regions defined, if at least one
-    # exists.
+    # Plot accepted/rejected stars within the field regions defined.
+    if stars_f_rjct[0]:
+        plt.scatter(stars_f_rjct[0], stars_f_rjct[1], marker='x',
+                    c='teal', s=15, zorder=2)
     if stars_f_acpt[0]:
         plt.scatter(stars_f_acpt[0], stars_f_acpt[1], marker='o', c='b',
                     s=f_sz_pt, lw=0.3, edgecolor='k', zorder=3)
+        n_field = int(len(stars_f_acpt[0]) / float(len(field_regions_c)))
+        # Add text box.
+        text = r'$n_{{field}} \approx {}$'.format(n_field)
+        ob = offsetbox.AnchoredText(text, pad=0.2, loc=1, prop=dict(size=12))
+        ob.patch.set(alpha=0.7)
+        ax.add_artist(ob)
     # If list is not empty, plot error bars at several values.
     x_val, mag_y, xy_err = err_bar
     if x_val:
@@ -118,11 +125,15 @@ def pl_fl_diag(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
 
 
 def pl_cl_diag(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
-               cl_region_rjct, cl_region, n_memb, cl_sz_pt, err_bar):
+               cl_region_rjct_c, cl_region_c, n_memb, cl_sz_pt, err_bar):
     '''
     Cluster's stars diagram (stars inside cluster's radius)
     '''
     ax = plt.subplot(gs[0:2, 4:6])
+    ax.set_title(
+        r"$N_{{accpt}}={}$ , $N_{{rjct}}={}$"
+        r" ($r \leq r_{{cl}}$ compl)".format(
+            len(cl_region_c), len(cl_region_rjct_c)), fontsize=9)
     # Set plot limits
     plt.xlim(x_min_cmd, x_max_cmd)
     plt.ylim(y_min_cmd, y_max_cmd)
@@ -137,21 +148,20 @@ def pl_cl_diag(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1,
             zorder=1)
     # Add text box.
-    text1 = '$N_{{accpt}}={}\,(r \leq r_{{cl}})$'.format(len(cl_region))
-    text2 = r'$n_{{memb}} \approx {}$'.format(n_memb)
-    text = text1 + '\n' + text2
+    text = r'$n_{{memb}} \approx {}$'.format(n_memb)
     ob = offsetbox.AnchoredText(text, pad=0.2, loc=1, prop=dict(size=12))
     ob.patch.set(alpha=0.7)
     ax.add_artist(ob)
     # Plot stars in CMD.
-    if len(cl_region_rjct) > 0:
+    if len(cl_region_rjct_c) > 0:
         # Only attempt to plot if any star is stored in the list.
         plt.scatter(
-            zip(*zip(*cl_region_rjct)[5])[0], zip(*zip(*cl_region_rjct)[3])[0],
+            zip(*zip(*cl_region_rjct_c)[5])[0],
+            zip(*zip(*cl_region_rjct_c)[3])[0],
             marker='x', c='teal', s=12, zorder=2)
     plt.scatter(
-        zip(*zip(*cl_region)[5])[0], zip(*zip(*cl_region)[3])[0], marker='o',
-        c='r', s=cl_sz_pt, lw=0.3, edgecolor='k', zorder=3)
+        zip(*zip(*cl_region_c)[5])[0], zip(*zip(*cl_region_c)[3])[0],
+        marker='o', c='r', s=cl_sz_pt, lw=0.3, edgecolor='k', zorder=3)
     # If list is not empty, plot error bars at several values.
     x_val, mag_y, xy_err = err_bar
     if x_val:

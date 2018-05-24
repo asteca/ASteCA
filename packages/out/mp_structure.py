@@ -63,7 +63,7 @@ def pl_rad_dens(gs, mode, radii, rdp_points, field_dens, coord, clust_name,
     # Set grid
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
     # Cluster's name and mode used to process it.
-    plt.title(str(clust_name) + ' (' + mode + ')', fontsize=14)
+    plt.title(str(clust_name) + ' (' + mode + ')', fontsize=9)
     # Legend texts
     kp_text = '3P' if flag_3pk_conver else '2P'
     texts = [
@@ -136,6 +136,8 @@ def pl_full_frame(
     '''
     ax = plt.subplot(gs[2:4, 0:2])
     ax.set_aspect(aspect=asp_ratio)
+    ax.set_title(
+        r"$N_{{stars}}$={} (incomp frame)".format(len(x)), fontsize=9)
     # Set plot limits
     plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
@@ -238,8 +240,9 @@ def pl_zoom_frame(gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
 
 
 def pl_cl_fl_regions(gs, fig, x_name, y_name, coord, x_min, x_max, y_min,
-                     y_max, asp_ratio, kde_cent, clust_rad, field_regions,
-                     cl_region, flag_no_fl_regs):
+                     y_max, asp_ratio, kde_cent, clust_rad, field_regions_i,
+                     field_regions_rjct_i, cl_region_i, cl_region_rjct_i,
+                     flag_no_fl_regs_i):
     '''
     Cluster and field regions defined.
     '''
@@ -262,24 +265,36 @@ def pl_cl_fl_regions(gs, fig, x_name, y_name, coord, x_min, x_max, y_min,
                         color='k', fill=False)
     fig.gca().add_artist(circle)
     # Add text box.
-    text = 'Cluster + %d Field regions' % (len(field_regions))
+    text = 'Cluster + %d Field regions' % (len(field_regions_i))
     ob = offsetbox.AnchoredText(text, pad=0.2, loc=1, prop=dict(size=12))
     ob.patch.set(alpha=0.85)
     ax.add_artist(ob)
     # Plot cluster region.
-    plt.scatter(zip(*cl_region)[1], zip(*cl_region)[2], marker='o', c='red',
-                s=8, edgecolors='none')
-    if not flag_no_fl_regs:
-        # Plot field stars regions.
+    if len(cl_region_rjct_i) > 0:
+        plt.scatter(
+            zip(*cl_region_rjct_i)[1], zip(*cl_region_rjct_i)[2], marker='x',
+            c='orange', s=5, lw=.5, edgecolors='none')
+    plt.scatter(zip(*cl_region_i)[1], zip(*cl_region_i)[2], marker='o',
+                c='red', s=8, edgecolors='none')
+
+    N_flrg = 0
+    if not flag_no_fl_regs_i:
         col = cycle(['DimGray', 'ForestGreen', 'maroon', 'RoyalBlue'])
-        for i, reg in enumerate(field_regions):
-            stars_reg_temp = [[], []]
-            for star in reg:
-                # star[1] is the x coordinate and star[2] the y coordinate
-                stars_reg_temp[0].append(star[1])
-                stars_reg_temp[1].append(star[2])
-            plt.scatter(stars_reg_temp[0], stars_reg_temp[1], marker='o',
+        # Stars inside the field regions with accepted errors.
+        for i, reg in enumerate(field_regions_i):
+            fl_reg = list(zip(*reg))
+            N_flrg += len(fl_reg[0])
+            plt.scatter(fl_reg[1], fl_reg[2], marker='o',
                         c=next(col), s=8, edgecolors='none')
+        # Stars inside the field regions with rejected errors.
+        for i, reg in enumerate(field_regions_rjct_i):
+            fl_reg = list(zip(*reg))
+            N_flrg += len(fl_reg[0])
+            plt.scatter(fl_reg[1], fl_reg[2], marker='x',
+                        c=next(col), s=5, lw=.5, edgecolors='none')
+
+    ax.set_title(r"$N_{{stars}}$={} (incomp frame)".format(
+        len(cl_region_i) + len(cl_region_rjct_i) + N_flrg), fontsize=9)
 
 
 def plot(N, *args):

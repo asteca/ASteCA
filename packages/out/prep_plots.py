@@ -175,22 +175,26 @@ def zoomed_frame(x, y, mags, x_zmin, x_zmax, y_zmin, y_zmax):
     return x_data_z, y_data_z, mag_data_z
 
 
-def field_region_stars(stars_out_rjct, field_regions):
+def field_region_stars(field_regions, field_regions_rjct):
     """
-    Generate list with *all* rejected stars outside of the cluster region, and
-    all stars within a defined field region.
+    Generate list with accepted/rejected stars within all the defined field
+    regions.
     """
-    stars_f_rjct = [[], []]
-    for star in stars_out_rjct:
-        stars_f_rjct[0].append(star[5][0])
-        stars_f_rjct[1].append(star[3][0])
-
     stars_f_acpt = [[], []]
     if field_regions:
-        for fr in field_regions:
-            for star in fr:
-                stars_f_acpt[0].append(star[5][0])
-                stars_f_acpt[1].append(star[3][0])
+        # Extract first color and magnitude defined.
+        stars_f_acpt[0] = [
+            star[5][0] for flrg in field_regions for star in flrg]
+        stars_f_acpt[1] = [
+            star[3][0] for flrg in field_regions for star in flrg]
+
+    stars_f_rjct = [[], []]
+    if field_regions_rjct:
+        # Extract first color and magnitude defined.
+        stars_f_rjct[0] = [
+            star[5][0] for flrg in field_regions_rjct for star in flrg]
+        stars_f_rjct[1] = [
+            star[3][0] for flrg in field_regions_rjct for star in flrg]
 
     return stars_f_rjct, stars_f_acpt
 

@@ -26,7 +26,8 @@ def main(
         e_rad, poisson_error, bin_cent, bin_width, hist_2d_g, core_rad, e_core,
         tidal_rad, e_tidal, K_conct_par, flag_2pk_conver, flag_3pk_conver,
         radii, rdp_points, field_dens, cont_index, cl_region_i,
-        field_regions_i, flag_no_fl_regs_i, **kwargs):
+        cl_region_rjct_i, field_regions_rjct_i, field_regions_i,
+        flag_no_fl_regs_i, **kwargs):
     '''
     Make A2 block plots.
     '''
@@ -70,7 +71,8 @@ def main(
                 st_sizes_arr_z, kde_cent, clust_rad],
             # pl_cl_fl_regions: Cluster and field regions defined.
             [gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max,
-                asp_ratio, kde_cent, clust_rad, field_regions_i, cl_region_i,
+                asp_ratio, kde_cent, clust_rad, field_regions_rjct_i,
+                field_regions_i, cl_region_i, cl_region_rjct_i,
                 flag_no_fl_regs_i]
         ]
         for n, args in enumerate(arglist):

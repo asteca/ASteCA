@@ -35,13 +35,6 @@ def main(i_c, clp):
     else:
         print("  Stars separated in/out of cluster's boundaries.")
 
-    # Only these two parameters are required by the 'field_regions' function,
-    # to generate the 'field_regions' parameter with the *incomplete* dataset
-    # (to be used by the Bayesian DA)
-    if i_c == 'incomp':
-        clp['cl_region_i'], clp['stars_out_i'] = cl_region, stars_out
-        return clp
-
     # Iterate through all stars with rejected photometric errors.
     for star in clp['rjct_stars_' + i_c[0]]:
 
@@ -57,7 +50,7 @@ def main(i_c, clp):
             cl_region_rjct.append(star)
 
     # Add parameters to dictionary.
-    clp['cl_region_c'], clp['stars_out_c'], clp['cl_region_rjct_c'],\
-        clp['stars_out_rjct_c'] = cl_region, stars_out, cl_region_rjct,\
-        stars_out_rjct
+    clp['cl_region_' + i_c[0]], clp['stars_out_' + i_c[0]],\
+        clp['cl_region_rjct_' + i_c[0]], clp['stars_out_rjct_' + i_c[0]] =\
+        cl_region, stars_out, cl_region_rjct, stars_out_rjct
     return clp

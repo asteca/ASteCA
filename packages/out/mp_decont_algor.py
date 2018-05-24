@@ -75,7 +75,7 @@ def pl_chart_mps(gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
     # Set plot limits, Use 'zoom' x,y ranges.
     plt.xlim(x_zmin, x_zmax)
     plt.ylim(y_zmin, y_zmax)
-    ax.set_title('Cluster region', fontsize=12)
+    ax.set_title('Cluster region', fontsize=9)
     # If RA is used, invert axis.
     if coord == 'deg':
         ax.invert_xaxis()
