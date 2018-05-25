@@ -94,11 +94,9 @@ def main(mypath, pars_f_path):
                     except ValueError:
                         fr_number = str(reader[1])
 
-                # Photometric functions parameters.
+                # Data analysis functions parameters.
                 elif reader[0] == 'ER':
                     err_max = float(reader[1])
-                elif reader[0] == 'IM':
-                    im_flag = True if reader[1] in true_lst else False
                 elif reader[0] == 'PV':
                     pvalue_runs = int(reader[1])
 
@@ -229,7 +227,7 @@ def main(mypath, pars_f_path):
         'flag_move_file': flag_move_file,
         'center_stddev': center_stddev, 'radius_method': radius_method,
         'kp_flag': kp_flag, 'fr_number': fr_number, 'err_max': err_max,
-        'im_flag': im_flag, 'pvalue_runs': pvalue_runs,
+        'pvalue_runs': pvalue_runs,
         # Decontamination algorithm parameters.
         'da_algor': da_algor, 'bayesda_runs': bayesda_runs,
         'fixedda_port': fixedda_port,

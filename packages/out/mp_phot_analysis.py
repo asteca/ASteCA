@@ -221,53 +221,6 @@ def pl_lum_func(gs, y_ax, flag_no_fl_regs, lum_func, completeness):
     leg.get_frame().set_alpha(0.7)
 
 
-def pl_integ_mag(gs, cl_reg_imag, fl_reg_imag, integ_mag, y_ax,
-                 flag_no_fl_regs):
-    '''
-    Integrated magnitudes.
-    '''
-    if cl_reg_imag:
-        # Make plot
-        ax = plt.subplot(gs[2:4, 4:6])
-        # If field lists are not empty.
-        if fl_reg_imag:
-            x_min = min(min(cl_reg_imag[0][0]), min(fl_reg_imag[0][0])) - 0.2
-            x_max = max(max(cl_reg_imag[0][0]), max(fl_reg_imag[0][0])) + 0.2
-            y_min = max(max(cl_reg_imag[0][1]), max(fl_reg_imag[0][1])) + 0.2
-            y_max = min(min(cl_reg_imag[0][1]), min(fl_reg_imag[0][1])) - 0.2
-        else:
-            x_min, x_max = min(cl_reg_imag[0][0]) - 0.2,\
-                max(cl_reg_imag[0][0]) + 0.2
-            y_min, y_max = max(cl_reg_imag[0][1]) + 0.2,\
-                min(cl_reg_imag[0][1]) - 0.2
-        plt.xlim(x_min, x_max)
-        plt.ylim(y_min, y_max)
-        ax.set_xlabel('$mag$', fontsize=18)
-        ax.set_ylabel('$mag^*$', fontsize=18)
-        ax.minorticks_on()
-        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1,
-                zorder=1)
-        text1 = '$' + y_ax + '^{*}_{cl+fl}$'
-        # Cluster + field integrated magnitude curve.
-        plt.plot(cl_reg_imag[0][0], cl_reg_imag[0][1], 'r-', lw=1.,
-                 label=text1, zorder=2)
-        # Check if field regions were defined.
-        if not flag_no_fl_regs:
-            text3 = '$' + y_ax + '^{*}_{fl}$'
-            # Field average integrated magnitude curve.
-            plt.plot(fl_reg_imag[0][0], fl_reg_imag[0][1], 'b-', lw=1.,
-                     label=text3, zorder=2)
-        text = r'$' + y_ax + '^{{*}}_{{cl}} = {:.2f}$'.format(integ_mag[0])
-        ob = offsetbox.AnchoredText(text, pad=0.2, loc=7, prop=dict(size=12))
-        ob.patch.set(alpha=0.75)
-        ax.add_artist(ob)
-
-        lines, labels = ax.get_legend_handles_labels()
-        leg = ax.legend(lines, labels, loc='lower right', numpoints=1,
-                        fontsize=12)
-        leg.get_frame().set_alpha(0.7)
-
-
 def pl_p_vals(gs, flag_pval_test, pval_test_params):
     '''
     Distribution of KDE p_values.
@@ -319,8 +272,7 @@ def plot(N, *args):
         1: [pl_fl_diag, 'field regions photometric diagram'],
         2: [pl_cl_diag, 'cluster region photometric diagram'],
         3: [pl_lum_func, 'luminosity function'],
-        4: [pl_integ_mag, 'integrated magnitudes'],
-        5: [pl_p_vals, 'KDE p-values distribution']
+        4: [pl_p_vals, 'KDE p-values distribution']
     }
 
     fxn = plt_map.get(N, None)[0]

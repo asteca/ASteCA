@@ -197,15 +197,6 @@ GR       10
 #   e_max
 ER    0.3
 
-# Integrated magnitude.
-#
-# * flag: y / n
-#   Estimate the integrated magnitude for the cluster region, cleaned from
-#   field stars contamination when possible.
-#
-#   flag
-IM     y
-
 # KDE p-value test.
 #
 # Probability of the cluster region of being a physical entity, as opposed

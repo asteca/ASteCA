@@ -21,7 +21,6 @@ from structure import field_regions
 from errors import err_range_avrg
 #
 from phot_analysis import luminosity
-from phot_analysis import integrated_mag
 from phot_analysis import kde_pvalue
 from phot_analysis import members_number
 #
@@ -170,9 +169,6 @@ def main(cl_file, pd):
 
     # Luminosity function and completeness level for each magnitude bin.
     clp = luminosity.main(clp, **cld_c)
-
-    # Calculate integrated magnitude.
-    clp = integrated_mag.main(clp, **pd)
 
     # Physical cluster probability based on p_values distribution.
     clp = kde_pvalue.main(clp, **pd)
