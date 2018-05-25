@@ -18,10 +18,10 @@ def phot_syst_filt_check(all_systs, entry, phot_syst, filter_name):
 
 def check(mypath, pd):
     """
-    Check that the magnitudes and colors are properly defined. Store data to
-    read from cluster's file, to load the correct set of isochrones, and to
-    properly generate the synthetic clusters (if the best match function is
-    set to run).
+    Check that the magnitudes, colors and kinematic data are properly defined.
+    Store data to read from cluster's file, to load the correct set of
+    isochrones, and to properly generate the synthetic clusters (if the best
+    match function is set to run).
     """
 
     # Check read mode.
@@ -159,5 +159,14 @@ def check(mypath, pd):
         if pd[col] is not False and pd['e_' + col] is False:
             sys.exit("ERROR: missing error column for '{}' in"
                      "'params_input dat'.".format(col))
+
+    # Check max error values.
+    for i, e in enumerate(pd['err_max']):
+        try:
+            float(e)
+        except ValueError:
+            if e != 'n':
+                sys.exit("ERROR: bad value ('{}') for '{}' max error"
+                         " in 'params_input dat'.".format(e, i))
 
     return pd

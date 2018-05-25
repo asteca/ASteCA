@@ -186,16 +186,20 @@ GR       10
 
 
 
-################## Photometric functions parameters ############################
+################## Data functions parameters ############################
 
 # Error rejection.
 #
-# * e_max: [float]
+# * e_ph_max: [float] or [str]
 #   Maximum error value a star can have in either its magnitude or color
-#   without being rejected. 
+#   without being rejected. Use 'n' for no maximum limit.
 #
-#   e_max
-ER    0.3
+# * e_plx_max / e_pm_max / e_rv_max: [float] or [str]
+#   Idem for parallax / proper motions / radial velocity values. If these data
+#   columns are not present (or no maximum limit is desired) use 'n'.
+#
+#   e_ph_max    e_plx_max     e_pm_max     e_rv_max
+ER       0.2            n            n            n
 
 # KDE p-value test.
 #

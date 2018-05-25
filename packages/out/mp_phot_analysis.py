@@ -6,38 +6,33 @@ from matplotlib.ticker import MultipleLocator
 import matplotlib.offsetbox as offsetbox
 
 
-def pl_phot_err(gs, fig, colors, filters, mags, err_max, cl_region_c,
+def pl_phot_err(gs, fig, colors, filters, mags, em_float, cl_region_c,
                 cl_region_rjct_c, stars_out_c, stars_out_rjct_c, err_bar_all):
     '''
-    Photometric error rejection.
+    Photometric + kinematic error rejection.
     '''
 
     # Define parameters for main magnitude error plot.
-    err_plot = [[gs[0, 0:2], 4, 0]]
-    # For up to three defined colors.
-    for i, _ in enumerate(colors[:3]):
-        err_plot.append([gs[(i + 1), 0:2], 6, i + 1])
+    y_ax, x_ax = prep_plots.ax_names(filters[0], filters[0], 'mag')
+    err_plot = [[gs[0, 0:2], x_ax, y_ax, 4, 0]]
+    # For up to two defined colors.
+    for i, _ in enumerate(colors[:2]):
+        y_ax, _ = prep_plots.ax_names(colors[i], filters[0], 'mag')
+        err_plot.append([gs[0, (2 * i + 2):(2 * i + 4)], x_ax, y_ax, 6, i])
+    # For the kinematic data
+    for i, y_ax in enumerate(["Plx", "PM", "RV"]):
+        err_plot.append([gs[1, (2 * i):(2 * i + 2)], x_ax, y_ax, 8, i])
 
     # Set plot limits
     x_min, x_max = min(mags[0]) - 0.5, max(mags[0]) + 0.5
     for pl in err_plot:
-        gs_pos, j, k = pl
-
-        if k == 0:
-            x_ax, y_ax = prep_plots.ax_names(filters[0], filters[0], 'mag')
-        else:
-            x_ax, y_ax = prep_plots.ax_names(colors[k - 1], filters[0], 'mag')
+        gs_pos, x_ax, y_ax, j, k = pl
 
         ax = plt.subplot(gs_pos)
-        if k == 0:
-            ax.set_title(
-                r"$N_{{accpt}}={}$ , $N_{{rjct}}={}$ (compl frame)".format(
-                    len(cl_region_c) + len(stars_out_c),
-                    len(stars_out_rjct_c) + len(cl_region_rjct_c)), fontsize=9)
         plt.xlim(x_min, x_max)
         # Set axis labels
-        plt.ylabel('$\sigma_{' + x_ax + '}$', fontsize=18)
-        plt.xlabel('$' + y_ax + '$', fontsize=18)
+        plt.xlabel('$' + x_ax + '$', fontsize=18)
+        plt.ylabel('$\sigma_{' + y_ax + '}$', fontsize=18)
         ax.set_facecolor('#EFF0F1')
         # Set minor ticks
         ax.minorticks_on()
@@ -47,37 +42,51 @@ def pl_phot_err(gs, fig, colors, filters, mags, err_max, cl_region_c,
             # Only attempt to plot if any star is stored in the list.
             plt.scatter(
                 zip(*zip(*stars_out_rjct_c)[3])[0],
-                zip(*zip(*stars_out_rjct_c)[j])[k - 1],
+                zip(*zip(*stars_out_rjct_c)[j])[k],
                 marker='x', c='teal', s=15, zorder=1)
         if len(cl_region_rjct_c) > 0:
             plt.scatter(
                 zip(*zip(*cl_region_rjct_c)[3])[0],
-                zip(*zip(*cl_region_rjct_c)[j])[k - 1],
+                zip(*zip(*cl_region_rjct_c)[j])[k],
                 marker='x', c='teal', s=15, zorder=1)
 
         # Plot accepted stars outside/inside the cluster region.
         plt.scatter(
-            zip(*zip(*stars_out_c)[3])[0], zip(*zip(*stars_out_c)[j])[k - 1],
+            zip(*zip(*stars_out_c)[3])[0], zip(*zip(*stars_out_c)[j])[k],
             marker='o', c='b', s=5, zorder=2, lw=0.1, edgecolor='k',
             label='$r > r_{cl}$')
         plt.scatter(
-            zip(*zip(*cl_region_c)[3])[0], zip(*zip(*cl_region_c)[j])[k - 1],
+            zip(*zip(*cl_region_c)[3])[0], zip(*zip(*cl_region_c)[j])[k],
             marker='o', c='r', s=10, zorder=2, lw=0.3, edgecolor='k',
             label='$r \leq r_{cl}}$')
 
-        # Plot legend on the upper mmag plot.
-        if k == 0:
+        # Plot legend on the mmag plot.
+        if j == 4:
             # Legends.
             leg = plt.legend(fancybox=True, loc='upper left', scatterpoints=1,
                              fontsize=16, markerscale=2.5, prop={'size': 13})
             # Set the alpha value of the legend.
             leg.get_frame().set_alpha(0.7)
 
-        # Plot error curve
-        plt.plot(err_bar_all[1], err_bar_all[2][k], color='#ffff00', ls='--',
-                 zorder=4)
-        ax.hlines(y=err_max, xmin=x_min, xmax=x_max, color='k',
-                  linestyles='dashed', zorder=2)
+        if j in [4, 6]:
+            ax.hlines(y=em_float[0], xmin=x_min, xmax=x_max, color='k',
+                      linestyles='dashed', zorder=2)
+        if j == 4:
+            # Plot error curve
+            plt.plot(err_bar_all[1], err_bar_all[2][0], color='#ffff00',
+                     ls='--', zorder=4)
+        elif j == 6:
+            plt.plot(err_bar_all[1], err_bar_all[2][k + 1], color='#ffff00',
+                     ls='--', zorder=4)
+            if k == 0:
+                ax.set_title(
+                    r"$N_{{accpt}}={}$ , $N_{{rjct}}={}$ (compl frame)".format(
+                        len(cl_region_c) + len(stars_out_c),
+                        len(stars_out_rjct_c) + len(cl_region_rjct_c)),
+                    fontsize=9)
+        else:
+            ax.hlines(y=em_float[k + 1], xmin=x_min, xmax=x_max, color='k',
+                      linestyles='dashed', zorder=2)
         # Maximum error limit of 1.
         plt.ylim(-0.005, min(plt.ylim()[1], 1.))
 
@@ -87,7 +96,7 @@ def pl_fl_diag(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
     '''
     Field stars CMD/CCD diagram.
     '''
-    ax = plt.subplot(gs[0:2, 2:4])
+    ax = plt.subplot(gs[2:4, 2:4])
     ax.set_title(r"$N_{{accpt}}={}$ , $N_{{rjct}}={}$ (fields compl)".format(
         len(stars_f_acpt[0]), len(stars_f_rjct[0])), fontsize=9)
     # Set plot limits
@@ -129,7 +138,7 @@ def pl_cl_diag(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
     '''
     Cluster's stars diagram (stars inside cluster's radius)
     '''
-    ax = plt.subplot(gs[0:2, 4:6])
+    ax = plt.subplot(gs[2:4, 4:6])
     ax.set_title(
         r"$N_{{accpt}}={}$ , $N_{{rjct}}={}$"
         r" ($r \leq r_{{cl}}$ compl)".format(
@@ -175,7 +184,7 @@ def pl_lum_func(gs, y_ax, flag_no_fl_regs, lum_func, completeness):
     LF of stars in cluster region and outside.
     '''
     x_cl, y_cl, x_fl, y_fl, x_all, y_all = lum_func
-    ax = plt.subplot(gs[2:4, 2:4])
+    ax = plt.subplot(gs[4:6, 0:2])
     ax.minorticks_on()
     # Only draw units on axis (ie: 1, 2, 3)
     ax.xaxis.set_major_locator(MultipleLocator(2.0))
@@ -228,7 +237,7 @@ def pl_p_vals(gs, flag_pval_test, pval_test_params):
     if flag_pval_test:
         # Extract parameters from list.
         prob_cl_kde, kde_cl_1d, kde_f_1d, x_kde, y_over = pval_test_params
-        ax = plt.subplot(gs[4:6, 0:2])
+        ax = plt.subplot(gs[4:6, 2:4])
         plt.xlim(-0.15, 1.15)
         plt.ylim(0, 1.02)
         plt.xlabel('p-values', fontsize=12)

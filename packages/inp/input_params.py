@@ -96,7 +96,7 @@ def main(mypath, pars_f_path):
 
                 # Data analysis functions parameters.
                 elif reader[0] == 'ER':
-                    err_max = float(reader[1])
+                    err_max = reader[1:]
                 elif reader[0] == 'PV':
                     pvalue_runs = int(reader[1])
 
