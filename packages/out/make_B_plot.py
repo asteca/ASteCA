@@ -1,4 +1,5 @@
 
+import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from os.path import join
@@ -18,7 +19,13 @@ def main(
     if 'B' in pd['flag_make_plot']:
         fig = plt.figure(figsize=(30, 25))
         gs = gridspec.GridSpec(10, 12)
-        add_version_plot.main(y_fix=.999)
+        y_ver = .999
+        # If no kinematic data was used.
+        if np.array([_ == 'n' for _ in (
+                pd['id_kinem'][0], pd['id_kinem'][2],
+                pd['id_kinem'][6])]).all():
+            y_ver = .905
+        add_version_plot.main(y_fix=y_ver)
 
         # Obtain plotting parameters and data.
         x_ax, y_ax = prep_plots.ax_names(
@@ -38,7 +45,7 @@ def main(
         # Photometric analysis plots.
         arglist = [
             # pl_phot_err: Photometric error rejection.
-            [gs, fig, pd['colors'], pd['filters'], cld_c['mags'],
+            [gs, pd['colors'], pd['filters'], pd['id_kinem'], cld_c['mags'],
              em_float, cl_region_c, cl_region_rjct_c, stars_out_c,
              stars_out_rjct_c, err_bar_all],
             # pl_fl_diag: Field stars CMD/CCD diagram.

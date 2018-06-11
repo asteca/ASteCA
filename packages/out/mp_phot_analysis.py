@@ -6,22 +6,60 @@ from matplotlib.ticker import MultipleLocator
 import matplotlib.offsetbox as offsetbox
 
 
-def pl_phot_err(gs, fig, colors, filters, mags, em_float, cl_region_c,
+def starsPlot(boundary, x_data, y_data):
+    """
+    Plot accepted/rejected stars outside/inside the cluster region.
+    """
+    if boundary == 'rjct':
+        if len(y_data) > 0:
+            # Only attempt to plot if any star is stored in the list.
+            plt.scatter(
+                x_data, y_data, marker='x', c='teal', s=15, zorder=1)
+    if boundary == 'accpt_in':
+        if len(y_data) > 0:
+            plt.scatter(
+                x_data, y_data, marker='o', c='r', s=10, zorder=3,
+                lw=0.3, edgecolor='k', label='$r \leq r_{cl}}$')
+    if boundary == 'accpt_out':
+        if len(y_data) > 0:
+            plt.scatter(
+                x_data, y_data, marker='o', c='b', s=5, zorder=2,
+                lw=0.1, edgecolor='k', label='$r > r_{cl}$')
+
+
+def pl_phot_err(gs, colors, filters, id_kinem, mags, em_float, cl_region_c,
                 cl_region_rjct_c, stars_out_c, stars_out_rjct_c, err_bar_all):
     '''
     Photometric + kinematic error rejection.
     '''
 
+    # Main magnitude (x) data for accepted/rejected stars.
+    mmag_out_acpt = np.array(zip(*zip(*stars_out_c)[3])[0])
+    mmag_out_rjct = np.array(zip(*zip(*stars_out_rjct_c)[3])[0])
+    mmag_in_acpt = np.array(zip(*zip(*cl_region_c)[3])[0])
+    mmag_in_rjct = np.array(zip(*zip(*cl_region_rjct_c)[3])[0])
+
+    pd_Plx, pd_PMRA, pd_RV = id_kinem[0], id_kinem[2], id_kinem[6]
+    # Define first row depending on whether kinematic data was defined.
+    gs0 = 0
+    if np.array([_ == 'n' for _ in (pd_Plx, pd_PMRA, pd_RV)]).all():
+        gs0 = 1
+
     # Define parameters for main magnitude error plot.
     y_ax, x_ax = prep_plots.ax_names(filters[0], filters[0], 'mag')
-    err_plot = [[gs[0, 0:2], x_ax, y_ax, 4, 0]]
+    err_plot = [[gs[gs0, 0:2], x_ax, y_ax, 4, 0]]
     # For up to two defined colors.
     for i, _ in enumerate(colors[:2]):
         y_ax, _ = prep_plots.ax_names(colors[i], filters[0], 'mag')
-        err_plot.append([gs[0, (2 * i + 2):(2 * i + 4)], x_ax, y_ax, 6, i])
+        err_plot.append([gs[gs0, (2 * i + 2):(2 * i + 4)], x_ax, y_ax, 6, i])
+
     # For the kinematic data
-    for i, y_ax in enumerate(["Plx", "PM", "RV"]):
-        err_plot.append([gs[1, (2 * i):(2 * i + 2)], x_ax, y_ax, 8, i])
+    if pd_Plx != 'n':
+        err_plot.append([gs[1, 0:2], x_ax, "Plx", 8, 0])
+    if pd_PMRA != 'n':
+        err_plot.append([gs[1, 2:4], x_ax, "PMxy", 8, 1])
+    if pd_RV != 'n':
+        err_plot.append([gs[1, 4:6], x_ax, "RV", 8, 3])
 
     # Set plot limits
     x_min, x_max = min(mags[0]) - 0.5, max(mags[0]) + 0.5
@@ -37,30 +75,26 @@ def pl_phot_err(gs, fig, colors, filters, mags, em_float, cl_region_c,
         # Set minor ticks
         ax.minorticks_on()
 
-        # Plot rejected stars outside/inside the cluster region.
-        if len(stars_out_rjct_c) > 0:
-            # Only attempt to plot if any star is stored in the list.
-            plt.scatter(
-                zip(*zip(*stars_out_rjct_c)[3])[0],
-                zip(*zip(*stars_out_rjct_c)[j])[k],
-                marker='x', c='teal', s=15, zorder=1)
-        if len(cl_region_rjct_c) > 0:
-            plt.scatter(
-                zip(*zip(*cl_region_rjct_c)[3])[0],
-                zip(*zip(*cl_region_rjct_c)[j])[k],
-                marker='x', c='teal', s=15, zorder=1)
+        # Rejected stars outside the cluster region
+        starsPlot('rjct', mmag_out_rjct, zip(*zip(*stars_out_rjct_c)[j])[k])
+        # Rejected stars inside the cluster region
+        starsPlot('rjct', mmag_in_rjct, zip(*zip(*cl_region_rjct_c)[j])[k])
+        # Accepted stars inside the cluster region.
+        starsPlot('accpt_in', mmag_in_acpt, zip(*zip(*cl_region_c)[j])[k])
+        # Accepted stars outside the cluster region.
+        starsPlot('accpt_out', mmag_out_acpt, zip(*zip(*stars_out_c)[j])[k])
+        # For the PM data, add y coordinates to the same plot.
+        if j == 8 and k == 1:
+            starsPlot(
+                'rjct', mmag_out_rjct, zip(*zip(*stars_out_rjct_c)[j])[k + 1])
+            starsPlot(
+                'rjct', mmag_in_rjct, zip(*zip(*cl_region_rjct_c)[j])[k + 1])
+            starsPlot(
+                'accpt_in', mmag_in_acpt, zip(*zip(*cl_region_c)[j])[k + 1])
+            starsPlot(
+                'accpt_out', mmag_out_acpt, zip(*zip(*stars_out_c)[j])[k + 1])
 
-        # Plot accepted stars outside/inside the cluster region.
-        plt.scatter(
-            zip(*zip(*stars_out_c)[3])[0], zip(*zip(*stars_out_c)[j])[k],
-            marker='o', c='b', s=5, zorder=2, lw=0.1, edgecolor='k',
-            label='$r > r_{cl}$')
-        plt.scatter(
-            zip(*zip(*cl_region_c)[3])[0], zip(*zip(*cl_region_c)[j])[k],
-            marker='o', c='r', s=10, zorder=2, lw=0.3, edgecolor='k',
-            label='$r \leq r_{cl}}$')
-
-        # Plot legend on the mmag plot.
+        # Plot legend in the main magnitude plot.
         if j == 4:
             # Legends.
             leg = plt.legend(fancybox=True, loc='upper left', scatterpoints=1,
@@ -70,14 +104,14 @@ def pl_phot_err(gs, fig, colors, filters, mags, em_float, cl_region_c,
 
         if j in [4, 6]:
             ax.hlines(y=em_float[0], xmin=x_min, xmax=x_max, color='k',
-                      linestyles='dashed', zorder=2)
+                      linestyles='dashed', zorder=4)
         if j == 4:
             # Plot error curve
             plt.plot(err_bar_all[1], err_bar_all[2][0], color='#ffff00',
-                     ls='--', zorder=4)
+                     ls='--', zorder=5)
         elif j == 6:
             plt.plot(err_bar_all[1], err_bar_all[2][k + 1], color='#ffff00',
-                     ls='--', zorder=4)
+                     ls='--', zorder=5)
             if k == 0:
                 ax.set_title(
                     r"$N_{{accpt}}={}$ , $N_{{rjct}}={}$ (compl frame)".format(
@@ -85,8 +119,9 @@ def pl_phot_err(gs, fig, colors, filters, mags, em_float, cl_region_c,
                         len(stars_out_rjct_c) + len(cl_region_rjct_c)),
                     fontsize=9)
         else:
-            ax.hlines(y=em_float[k + 1], xmin=x_min, xmax=x_max, color='k',
-                      linestyles='dashed', zorder=2)
+            idx = k + 1 if k in (0, 1) else k
+            ax.hlines(y=em_float[idx], xmin=x_min, xmax=x_max, color='k',
+                      linestyles='dashed', zorder=4)
         # Maximum error limit of 1.
         plt.ylim(-0.005, min(plt.ylim()[1], 1.))
 
