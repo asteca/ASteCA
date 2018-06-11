@@ -66,8 +66,7 @@ def main(npd):
 #          as 1 minus the overlap area between the KDEs. If the KDEs are\n\
 #          very similar this value will be low indicating the overdensity is\n\
 #          probably not a true cluster.\n\
-# int_col: Integrated color magnitude for all stars inside the cluster\n\
-#          radius, except those that were rejected due to large errors.\n\
+#\n\
 # met: Metallicity value (z).\n\
 # e_m: Metallicity error.\n\
 # age: log(age).\n\
@@ -106,7 +105,7 @@ def main(npd):
 #\n\
 #NAME                 c_x      c_y     r_cl    e_rcl      \
 r_c     e_rc      r_t     e_rt      kcp      CI   n_memb_k     n_memb  \
-n_memb_da  memb_par     a_f  prob_cl  int_col      met      e_m      age      \
+n_memb_da  memb_par     a_f  prob_cl      met      e_m      age      \
 e_a   E(B-V)      e_E     dist      e_d      M_i      e_M   bin_fr     \
 e_bf      \
 M1 M2  f1 f2 f3 f4 f5 f6 f7 f8  FC\n".format(__version__, now_time))
