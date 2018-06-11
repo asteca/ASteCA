@@ -76,61 +76,71 @@ def ax_names(x, y, yaxis):
     return x_ax, y_ax
 
 
-def kde_limits(phot_x, phot_y):
-    '''
-    Return photometric diagram limits taken from a 2D KDE.
-    '''
-    # Mask nan values.
-    mask = ~(np.isnan(phot_x) | np.isnan(phot_y))
-    phot_x, phot_y = phot_x[mask], phot_y[mask]
-    # Stack photometric data.
-    values = np.vstack([phot_x, phot_y])
-    # Obtain Gaussian KDE.
-    kernel = stats.gaussian_kde(values)
-    # Grid density (number of points).
-    gd = 25
-    gd_c = complex(0, gd)
-    # Define x,y grid.
-    xmin, xmax = min(phot_x), max(phot_x)
-    ymin, ymax = min(phot_y), max(phot_y)
-    x, y = np.mgrid[xmin:xmax:gd_c, ymin:ymax:gd_c]
-    positions = np.vstack([x.ravel(), y.ravel()])
-    # Evaluate kernel in grid positions.
-    k_pos = kernel(positions)
+# TODO deprecated
+# def kde_limits(phot_x, phot_y):
+#     '''
+#     Return photometric diagram limits taken from a 2D KDE.
+#     '''
+#     # Mask nan values.
+#     mask = ~(np.isnan(phot_x) | np.isnan(phot_y))
+#     phot_x, phot_y = phot_x[mask], phot_y[mask]
+#     # Stack photometric data.
+#     values = np.vstack([phot_x, phot_y])
+#     # Obtain Gaussian KDE.
+#     kernel = stats.gaussian_kde(values)
+#     # Grid density (number of points).
+#     gd = 10
+#     gd_c = complex(0, gd)
+#     # Define x,y grid.
+#     xmin, xmax = min(phot_x), max(phot_x)
+#     ymin, ymax = min(phot_y), max(phot_y)
+#     x, y = np.mgrid[xmin:xmax:gd_c, ymin:ymax:gd_c]
+#     positions = np.vstack([x.ravel(), y.ravel()])
+#     # Evaluate kernel in grid positions.
+#     k_pos = kernel(positions)
 
-    # Generate 30 contour lines.
-    plt.figure()
-    cs = plt.contour(x, y, np.reshape(k_pos, x.shape), 30)
-    plt.close()
-    # Extract (x,y) points delimiting each line.
-    x_v, y_v = np.asarray([]), np.asarray([])
-    # Only use the outer curve.
-    col = cs.collections[0]
-    # If more than one region is defined by this curve (ie: the main sequence
-    # region plus a RC region or some other detached region), obtain x,y from
-    # all of them.
-    for lin in col.get_paths():
-        x_v = np.append(x_v, lin.vertices[:, 0])
-        y_v = np.append(y_v, lin.vertices[:, 1])
+#     # Generate 30 contour lines.
+#     plt.figure()
+#     cs = plt.contour(x, y, np.reshape(k_pos, x.shape), 5)
+#     plt.close()
+#     # Extract (x,y) points delimiting each line.
+#     x_v, y_v = np.asarray([]), np.asarray([])
+#     # Only use the outer curve.
+#     col = cs.collections[0]
+#     # If more than one region is defined by this curve (ie: the main sequence
+#     # region plus a RC region or some other detached region), obtain x,y from
+#     # all of them.
+#     for lin in col.get_paths():
+#         x_v = np.append(x_v, lin.vertices[:, 0])
+#         y_v = np.append(y_v, lin.vertices[:, 1])
 
-    return x_v, y_v
+#     min_x, max_x = min(x_v), max(x_v)
+#     min_y, max_y = min(y_v), max(y_v)
+
+#     return min_x, max_x, min_y, max_y
 
 
 def diag_limits(yaxis, phot_x, phot_y):
     '''
     Define plot limits for *all* photometric diagrams.
     '''
-    x_v, y_v = kde_limits(phot_x, phot_y)
+    # TODO deprecated
+    # min_x, max_x, min_y, max_y = kde_limits(phot_x, phot_y)
+
+    x_median, x_std = np.median(phot_x), 1.5 * np.std(phot_x)
+    min_x, max_x = x_median - x_std, x_median + x_std
+    y_median, y_std = np.median(phot_y), np.std(phot_y)
+    min_y, max_y = y_median - y_std, y_median + y_std
 
     # Define diagram limits.
-    x_min_cmd, x_max_cmd = min(x_v) - 1.25, max(x_v) + 1.25
-    y_min_cmd = max(y_v) + 1.25
+    x_min_cmd, x_max_cmd = min_x - 1.25, max_x + 1.25
+    y_min_cmd = max_y + 1.25
     # If photometric axis y is a magnitude, make sure the brightest star
     # is always plotted.
     if yaxis == 'mag':
         y_max_cmd = min(phot_y) - 1.
     else:
-        y_max_cmd = min(y_v) - 1.
+        y_max_cmd = min_y - 1.
 
     return x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd
 
