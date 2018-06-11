@@ -143,17 +143,17 @@ def check(mypath, pd):
         all_syst_filters, iso_paths
 
     # Read PMs, parallax, and RV data.
-    n = ('plx', 'e_plx', 'pmx', 'e_pmx', 'pmy', 'e_pmy', 'rv', 'e_rv')
+    k_cols = ('plx', 'e_plx', 'pmx', 'e_pmx', 'pmy', 'e_pmy', 'rv', 'e_rv')
     for i, ci in enumerate(pd['id_kinem']):
         if ci not in ('n', 'N'):
             try:
-                pd[n[i] + '_col'] = 'col' + str(int(ci) + 1) if\
+                pd[k_cols[i] + '_col'] = 'col' + str(int(ci) + 1) if\
                     pd['read_mode'] == 'num' else ci
             except ValueError:
                 sys.exit("ERROR: bad index ('{}') for '{}' column"
-                         " in 'params_input dat'.".format(ci, n[i]))
+                         " in 'params_input dat'.".format(ci, k_cols[i]))
         else:
-            pd[n[i] + '_col'] = False
+            pd[k_cols[i] + '_col'] = False
     # Check that error columns are present
     for col in ('plx_col', 'pmx_col', 'pmy_col', 'rv_col'):
         if pd[col] is not False and pd['e_' + col] is False:
@@ -165,7 +165,7 @@ def check(mypath, pd):
         try:
             float(e)
         except ValueError:
-            if e != 'n':
+            if e not in ('n', 'N'):
                 sys.exit("ERROR: bad value ('{}') for '{}' max error"
                          " in 'params_input dat'.".format(e, i))
 
