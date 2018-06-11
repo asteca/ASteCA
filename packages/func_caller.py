@@ -132,9 +132,11 @@ def main(cl_file, pd):
     # Only process incomplete data if the the input data is not equal. Else
     # just use the complete dataset.
     if clp['flag_data_eq']:
-        clp['cl_region_i'], clp['flag_no_fl_regs_i'], clp['field_regions_i'] =\
+        clp['cl_region_i'], clp['flag_no_fl_regs_i'], clp['field_regions_i'], \
+            clp['cl_region_rjct_i'], clp['field_regions_rjct_i'] =\
             clp['cl_region_c'], clp['flag_no_fl_regs_c'],\
-            clp['field_regions_c']
+            clp['field_regions_c'], clp['cl_region_rjct_c'],\
+            clp['field_regions_rjct_c']
     else:
         print("Processing incomplete dataset:")
         clp = err_accpt_rejct.main('incomp', cld_i, clp, **pd)
