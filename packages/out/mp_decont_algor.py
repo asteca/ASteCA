@@ -58,7 +58,7 @@ def pl_mp_histo(
         text3 = r'$N_{{fit}}={} \, ({} {} {}_{{min}})$'.format(
             len(cl_reg_fit), str_pm[0], str_pm[1], str_pm[2])
         text = text0 + '\n' + text1 + '\n' + text2 + '\n' + text3
-        ob = offsetbox.AnchoredText(text, loc=2, prop=dict(size=10))
+        ob = offsetbox.AnchoredText(text, loc=6, prop=dict(size=10))
         ob.patch.set(boxstyle='square,pad=0.05', alpha=0.85)
         ax.add_artist(ob)
         # Avoid showing the value 0.0 in the y axis.
