@@ -7,8 +7,7 @@ from packages.inp import names_paths
 
 def check(cl_files, da_algor, da_algors_accpt, bayesda_runs, fixedda_port,
           bayesda_weights, fld_rem_methods, bin_methods, fld_clean_mode,
-          fld_clean_bin, filters, colors, plx_col, pmx_col, pmy_col, rv_col,
-          **kwargs):
+          fld_clean_bin, colors, **kwargs):
     """
     Check parameters related to the decontamination algorithm functions.
     """
@@ -27,15 +26,14 @@ def check(cl_files, da_algor, da_algors_accpt, bayesda_runs, fixedda_port,
                 (np.array(bayesda_weights) > 1.).any():
             sys.exit("ERROR: 'bayes' DA weights must be in the range [0., 1.]")
 
-        N_dk = 0
-        for k in (plx_col, pmx_col, pmy_col, rv_col):
-            N_dk += 0 if k is False else 1
-        N_d = len(filters) + len(colors) + N_dk
-        if len(bayesda_weights) < N_d:
-            sys.exit(
-                "ERROR: there are fewer weights defined in 'bayes' DA ({})\n"
-                "than the number of data dimensions present ({}).".format(
-                    len(bayesda_weights), N_d))
+        # This assumes that the maximum number of colors that can be defined
+        # is 2.
+        if len(colors) == 1 and len(bayesda_weights) != 6:
+            sys.exit("ERROR: there are {} 'bayes' DA weights defined,"
+                     " there should be 6.".format(len(bayesda_weights)))
+        elif len(colors) == 2 and len(bayesda_weights) != 7:
+            sys.exit("ERROR: there are {} 'bayes' DA weights defined,"
+                     " there should be 7.".format(len(bayesda_weights)))
 
     if da_algor == 'fixed':
         # Check Bayesian decontamination algorithm parameters.

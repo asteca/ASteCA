@@ -132,7 +132,28 @@ def reg_data(region):
     return data_err, wi
 
 
-def main(bayesda_runs, bayesda_weights, cl_region, field_regions):
+def weightsSelect(bayesda_weights, colors, plx_col, pmx_col, pmy_col, rv_col):
+    """
+    Select the appropriate weights according to the dimensions of data defined.
+    """
+    w_mag = [bayesda_weights[0]]
+    if len(colors) == 1:
+        w_cols = [bayesda_weights[1]]
+        i0 = 2
+    elif len(colors) == 2:
+        w_cols = bayesda_weights[1:3]
+        i0 = 3
+
+    w_kin = []
+    for i, k_d in enumerate((plx_col, pmx_col, pmy_col, rv_col)):
+        if k_d is not False:
+            w_kin.append(bayesda_weights[i0 + i])
+
+    return w_mag + w_cols + w_kin
+
+
+def main(colors, plx_col, pmx_col, pmy_col, rv_col, bayesda_runs,
+         bayesda_weights, cl_region, field_regions):
     '''
     Bayesian field decontamination algorithm.
     '''
@@ -156,6 +177,10 @@ def main(bayesda_runs, bayesda_weights, cl_region, field_regions):
 
     # Initial null probabilities for all stars in the cluster region.
     prob_avrg_old = np.zeros(len(cl_region))
+
+    # Select the correct values for the dimension weights.
+    bayesda_weights = weightsSelect(
+        bayesda_weights, colors, plx_col, pmx_col, pmy_col, rv_col)
 
     # Magnitudes and colors (and their errors) for all stars in the cluster
     # region, stored with the appropriate format.
