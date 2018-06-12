@@ -57,8 +57,8 @@ def mpas(cl_region, memb_probs_cl_region):
     return membership_prob_sort
 
 
-def main(clp, npd, da_algor, bayesda_runs, fixedda_port, readda_idcol,
-         readda_mpcol, **kwargs):
+def main(clp, npd, da_algor, bayesda_runs, bayesda_weights, fixedda_port,
+         readda_idcol, readda_mpcol, **kwargs):
     """
     Apply selected decontamination algorithm.
     """
@@ -77,7 +77,8 @@ def main(clp, npd, da_algor, bayesda_runs, fixedda_port, readda_idcol,
 
     elif da_algor == 'bayes':
         memb_probs_cl_region = bayesian_da.main(
-            clp['cl_region_i'], clp['field_regions_i'], bayesda_runs)
+            bayesda_runs, bayesda_weights, clp['cl_region_i'],
+            clp['field_regions_i'])
         # Pass only values for the stars in the *complete* dataset.
         memb_probs_cl_region = filterMPs(
             memb_probs_cl_region, clp['cl_region_i'], clp['cl_region_c'])

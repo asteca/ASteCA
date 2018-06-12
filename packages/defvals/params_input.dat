@@ -251,6 +251,16 @@ PV     2
 #   algor   runs   fport   id_col   mp_col
 DA  bayes   1000      .4        0        7
 
+#   If the 'bayes' algorithm is selected, these weights are assigned to each
+#   data dimension (photometric and kinematic). If more than one color is
+#   defined, add a second value after 'w_col'.
+#
+#  * w_xxx: 0<=[float]<=1
+# 
+#   w_mag    w_col    w_Plx    w_PMx    w_PMy    w_RV
+DW     1.       1.       1.       1.       1.      1.
+
+
 # Cluster region field stars removal.
 #
 # Performs a selection of stars within the cluster region, to be used by the

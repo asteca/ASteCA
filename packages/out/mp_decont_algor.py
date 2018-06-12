@@ -323,7 +323,7 @@ def pl_plx_vs_MP(gs, plx_flag, cl_reg_fit, plx_x_kde, kde_pl):
         plt.axvline(x=p_max_mas, linestyle='--', color='r', lw=.85, zorder=5)
 
         plt.xlim(0., np.median(plx) + 2. * np.std(plx))
-        plt.ylim(np.min(mp), 1.01)
+        plt.ylim(np.min(mp), np.max(mp) + .01)
 
 
 def pl_pms_plot(gs, coord, plx_flag, cl_reg_fit):
@@ -379,7 +379,7 @@ def pl_pms_plot(gs, coord, plx_flag, cl_reg_fit):
         cmap = cm.viridis
         norm = Normalize(vmin=mp.min(), vmax=mp.max())
 
-        # Plot stars selected to be used in the best bit process.
+        # Plot stars selected to be used in the best fit process.
         # plt.scatter(
         #     pmRA * np.cos(np.deg2rad(DE)), pmDE, marker='o', c=mp, s=plx_d,
         #     edgecolors='black',

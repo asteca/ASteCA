@@ -108,6 +108,9 @@ def main(mypath, pars_f_path):
                     readda_idcol = int(reader[4])
                     readda_mpcol = int(reader[5])
 
+                elif reader[0] == 'DW':
+                    bayesda_weights = map(float, reader[1:])
+
                 # Cluster region field stars removal.
                 elif reader[0] == 'RM':
                     fld_clean_mode = str(reader[1])
@@ -230,8 +233,8 @@ def main(mypath, pars_f_path):
         'pvalue_runs': pvalue_runs,
         # Decontamination algorithm parameters.
         'da_algor': da_algor, 'bayesda_runs': bayesda_runs,
-        'fixedda_port': fixedda_port,
-        'readda_idcol': readda_idcol, 'readda_mpcol': readda_mpcol,
+        'fixedda_port': fixedda_port, 'readda_idcol': readda_idcol,
+        'readda_mpcol': readda_mpcol, 'bayesda_weights': bayesda_weights,
         # Cluster region field stars removal parameters.
         'fld_clean_mode': fld_clean_mode, 'fld_clean_bin': fld_clean_bin,
         'fld_clean_prob': fld_clean_prob,

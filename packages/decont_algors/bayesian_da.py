@@ -30,29 +30,50 @@ def break_check(prob_avrg_old, runs_fields_probs, runs, run_num):
     return prob_avrg_old, break_flag
 
 
-def likelihood(region, w_r, cl_reg_prep, w_c):
+def likelihood(bayesda_weights, region, w_r, cl_reg_prep, w_c):
     """
     Obtain the likelihood, for each star in the cluster region, of being a
     member of the region passed.
 
     This is basically the core of the 'tolstoy' likelihood.
 
-    See https://github.com/asteca/ASteCA/issues/352 for an explanation of the
-    changes made since the old version.
+    L_i = w_i \sum_{j=1}^{N_r}
+             \frac{w_j}{\sqrt{\prod_{k=1}^d (w_k\, \sigma_{ijk}^2)}}\;\;
+                exp \left[-\frac{1}{2} \sum_{k=1}^d w_k\,
+                   \frac{(q_{ik}-q{jk})^2}{\sigma_{ijk}^2} \right ]
+
+    where
+    i: cluster region star
+    j: field region star
+    k: data dimension
+    L_i: likelihood for star i in the cluster region
+    N_r: number of stars in field region
+    d: number of data dimensions
+    \sigma_{ijk}^2: sum of squared uncertainties for stars i,j in dimension k
+    q_{ik}: data for star i in dimension k
+    q_{jk}: data for star j in dimension k
+    w_i: data dimensions weight for star i
+    w_j: data dimensions weight for star j
+    w_k: weight for dimension k
+
     """
-    # Photometric difference (cluster_region - region), for all dimensions.
-    phot_dif = cl_reg_prep[:, None, :, 0] - region[None, :, :, 0]
-    # Sum of squared photometric errors, for all dimensions.
+    # Data difference (cluster_region - region), for all dimensions.
+    data_dif = cl_reg_prep[:, None, :, 0] - region[None, :, :, 0]
+    # Sum of squared errors, for all dimensions.
     sigma_sum = cl_reg_prep[:, None, :, 1] + region[None, :, :, 1]
 
+    # Apply dimension weights.
+    data_dif = data_dif * bayesda_weights
+    sigma_sum = sigma_sum * bayesda_weights
+
     # Handle 'nan' values.
-    phot_dif[np.isnan(phot_dif)] = 0.
+    data_dif[np.isnan(data_dif)] = 0.
     sigma_sum[np.isnan(sigma_sum)] = 1.
     # Avoid divide by zero.
     sigma_sum[sigma_sum == 0.] = 1.
 
     # Sum for all photometric dimensions.
-    Dsum = (np.square(phot_dif) / sigma_sum).sum(axis=-1)
+    Dsum = (np.square(data_dif) / sigma_sum).sum(axis=-1)
     # This makes the code substantially faster.
     np.clip(Dsum, a_min=None, a_max=50., out=Dsum)
     # Product of summed squared sigmas.
@@ -111,7 +132,7 @@ def reg_data(region):
     return data_err, wi
 
 
-def main(cl_region, field_regions, bayesda_runs):
+def main(bayesda_runs, bayesda_weights, cl_region, field_regions):
     '''
     Bayesian field decontamination algorithm.
     '''
@@ -148,7 +169,7 @@ def main(cl_region, field_regions, bayesda_runs):
         # Number of stars in field region.
         n_fl = len(fl_region)
         fl_likelihoods.append([n_fl, likelihood(
-            fl_reg_prep, w_fl, cl_reg_prep, w_cl)])
+            bayesda_weights, fl_reg_prep, w_fl, cl_reg_prep, w_cl)])
 
     # Create copy of the cluster region to be shuffled below.
     clust_reg_shuffle, w_cl_shuffle = cl_reg_prep[:], w_cl[:]
@@ -168,8 +189,8 @@ def main(cl_region, field_regions, bayesda_runs):
                 # obtain the likelihoods for each star in this "cleaned"
                 # cluster region.
                 cl_lkl = likelihood(
-                    clust_reg_shuffle[n_fl:], w_cl_shuffle[n_fl:],
-                    cl_reg_prep, w_cl)
+                    bayesda_weights, clust_reg_shuffle[n_fl:],
+                    w_cl_shuffle[n_fl:], cl_reg_prep, w_cl)
             else:
                 # If there are *more* field region stars than the total of
                 # stars within the cluster region (highly contaminated
