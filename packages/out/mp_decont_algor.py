@@ -41,21 +41,23 @@ def pl_mp_histo(
         else:
             print("  WARNING: all MPs are equal valued. "
                   "Can not plot MPs histogram.")
+        # Plot minimum probability line.
+        plt.axvline(x=min_prob, linestyle='--', color='green', lw=2.5,
+                    zorder=3)
+
         # Add text box.
         str_pm = ['MP', '\geq', 'prob']
         if mode_fld_clean == 'local':
             str_pm.append(mode_fld_clean + ';\,' + local_bin)
         else:
             str_pm.append(mode_fld_clean.replace('_', '\_'))
+        text0 = r'$N_{{total}}={}$'.format(len(prob_data))
         text1 = r'$n_{{memb-DA}}={}\,(MP \geq 0.5)$'.format(n_memb_da)
         text2 = r'${}_{{min}}={:.2f}\,({})$'.format(str_pm[2], min_prob,
                                                     str_pm[3])
         text3 = r'$N_{{fit}}={} \, ({} {} {}_{{min}})$'.format(
             len(cl_reg_fit), str_pm[0], str_pm[1], str_pm[2])
-        text = text1 + '\n' + text2 + '\n' + text3
-        # Plot minimum probability line.
-        plt.axvline(x=min_prob, linestyle='--', color='green', lw=2.5,
-                    zorder=3)
+        text = text0 + '\n' + text1 + '\n' + text2 + '\n' + text3
         ob = offsetbox.AnchoredText(text, loc=2, prop=dict(size=10))
         ob.patch.set(boxstyle='square,pad=0.05', alpha=0.85)
         ax.add_artist(ob)
@@ -75,7 +77,7 @@ def pl_chart_mps(gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
     # Set plot limits, Use 'zoom' x,y ranges.
     plt.xlim(x_zmin, x_zmax)
     plt.ylim(y_zmin, y_zmax)
-    ax.set_title('Cluster region', fontsize=9)
+    ax.set_title('Cluster region'.format(), fontsize=9)
     # If RA is used, invert axis.
     if coord == 'deg':
         ax.invert_xaxis()
@@ -200,18 +202,18 @@ def pl_plx_histo(gs, plx_flag, plx_clrg, plx_xmin, plx_xmax, plx_x_kde, kde_pl,
                 zorder=1)
         # Normalized histogram for cluster region.
         plt.hist(
-            plx_clrg, 100, density=True, zorder=4, color='#9aafd1',
-            label="Cluster region")
+            plx_clrg, 120, density=True, zorder=4, color='#9aafd1',
+            label="Cluster region (fit)")
         # Plot histogram for the parallaxes of the field regions.
         if not flag_no_fl_regs_i:
             plt.hist(
                 plx_flrg, 120, density=True, zorder=4, color='#ef703e',
                 label="Field regions", alpha=0.5)
 
-        plt.plot(plx_x_kde, kde_pl / max(kde_pl), color='g', lw=1., zorder=4)
+        plt.plot(plx_x_kde, kde_pl / max(kde_pl), color='b', lw=1., zorder=4)
         # Maximum KDE value.
         p_max_mas = plx_x_kde[np.argmax(kde_pl)]
-        plt.axvline(x=p_max_mas, linestyle='--', color='r', lw=.7, zorder=5)
+        plt.axvline(x=p_max_mas, linestyle='--', color='b', lw=.7, zorder=5)
         d_max_pc = 1000. / p_max_mas
         plx_lt_zero = 100. * plx_clrg[plx_clrg < 0.].size / plx_clrg.size
         ob = offsetbox.AnchoredText(
@@ -236,6 +238,7 @@ def pl_plx_chart(gs, plx_flag, x_name, y_name, coord, cl_reg_fit, plx_x_kde,
         ax = plt.subplot(gs[2:4, 2:4])
         ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1,
                 zorder=1)
+        ax.set_title('Cluster region (fit)'.format(), fontsize=9)
 
         # If RA is used, invert axis.
         if coord == 'deg':
@@ -267,11 +270,60 @@ def pl_plx_chart(gs, plx_flag, x_name, y_name, coord, cl_reg_fit, plx_x_kde,
         x, y, mp, plx_d = x[plx_i], y[plx_i], mp[plx_i], plx_d[plx_i]
 
         # Color map, higher prob stars look redder.
-        cm = plt.cm.get_cmap('RdYlBu_r')
-        # Plot stars selected to be used in the best bit process.
+        cm = plt.cm.get_cmap('viridis')  # RdYlBu_r
+        # Plot stars selected to be used in the best fit process.
         plt.scatter(
             x, y, marker='o', c=mp, s=plx_d, edgecolors='black',
             cmap=cm, lw=0.35, zorder=4)
+
+        ob = offsetbox.AnchoredText(
+            "MP: ({:.2f}, {:.2f})".format(np.min(mp), np.max(mp)),
+            pad=0.2, loc=1, prop=dict(size=9))
+        ob.patch.set(alpha=0.85)
+        ax.add_artist(ob)
+
+
+def pl_plx_vs_MP(gs, plx_flag, cl_reg_fit, plx_x_kde, kde_pl):
+    '''
+    Finding chart of cluster region with colors assigned according to the
+    probabilities obtained and sizes according to parallaxes.
+    '''
+    if plx_flag:
+        ax = plt.subplot(gs[2:4, 4:6])
+        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1,
+                zorder=1)
+
+        # Set axis labels
+        plt.xlabel('Plx [mas]', fontsize=12)
+        plt.ylabel('MP', fontsize=12)
+        # Set minor ticks
+        ax.minorticks_on()
+
+        # Prepare data.
+        mp = np.array(zip(*cl_reg_fit)[9])
+        plx = np.array(zip(*zip(*cl_reg_fit)[7])[0])
+        e_plx = np.array(zip(*zip(*cl_reg_fit)[8])[0])
+
+        # Re-arrange so stars closer to the max Plx value are on top
+        plx_i = plx.argsort()
+        mp, plx, e_plx = mp[plx_i], plx[plx_i], e_plx[plx_i]
+
+        # Color map, higher prob stars look redder.
+        cm = plt.cm.get_cmap('viridis')
+        # Plot stars selected to be used in the best fit process.
+        plt.scatter(
+            plx, mp, marker='o', c=mp, s=30, edgecolors='black',
+            cmap=cm, lw=0.35, zorder=4)
+        ax.errorbar(
+            plx, mp, xerr=e_plx, fmt='none', elinewidth=.35, ecolor='grey')
+
+        plt.plot(plx_x_kde, kde_pl / max(kde_pl), color='k', lw=1., zorder=4)
+        # Maximum KDE value.
+        p_max_mas = plx_x_kde[np.argmax(kde_pl)]
+        plt.axvline(x=p_max_mas, linestyle='--', color='r', lw=.85, zorder=5)
+
+        plt.xlim(0., np.median(plx) + 2. * np.std(plx))
+        plt.ylim(np.min(mp), 1.01)
 
 
 def pl_pms_plot(gs, coord, plx_flag, cl_reg_fit):
@@ -348,7 +400,8 @@ def plot(N, *args):
         1: [pl_chart_mps, 'frame with MPs coloring'],
         2: [pl_plx_histo, 'Plx histogram'],
         3: [pl_plx_chart, 'Plx chart'],
-        4: [pl_pms_plot, 'PMs plot']
+        4: [pl_plx_vs_MP, 'Plx vs MP'],
+        5: [pl_pms_plot, 'PMs plot']
     }
 
     fxn = plt_map.get(N, None)[0]

@@ -111,6 +111,8 @@ def main(
             # pl_plx_chart
             [gs, plx_flag, x_name, y_name, coord, cl_reg_fit, plx_x_kde,
              kde_pl],
+            # pl_plx_vs_MP
+            [gs, plx_flag, cl_reg_fit, plx_x_kde, kde_pl],
             # pl_pms_plot
             [gs, coord, plx_flag, cl_reg_fit]
         ]

@@ -4,7 +4,6 @@ from ..best_fit.obs_clust_prepare import dataProcess
 from ..decont_algors.local_cell_clean import bin_edges_f
 import numpy as np
 from scipy import stats
-import matplotlib.pyplot as plt
 
 
 def frame_max_min(x_data, y_data):
@@ -508,6 +507,7 @@ def get_hess(obs_mags_cols, synth_phot, hess_xedges, hess_yedges):
 
 def plxPlot(flag_no_fl_regs_i, field_regions_i, cl_reg_fit):
     """
+    Parameters for the parallax plot.
     """
     plx_flag, plx_clrg, plx_xmin, plx_xmax, plx_x_kde, kde_pl, plx_flrg =\
         False, [], 0., 0., [], [], []
