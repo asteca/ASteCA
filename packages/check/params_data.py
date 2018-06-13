@@ -156,7 +156,8 @@ def check(mypath, pd):
             pd[k_cols[i] + '_col'] = False
 
     # Check that PMs are either both or none defined.
-    if pd['pmx_col'] != pd['pmy_col']:
+    if (pd['pmx_col'] is False and pd['pmy_col'] is not False) or\
+            (pd['pmy_col'] is False and pd['pmx_col'] is not False):
         sys.exit("ERROR: both (or none) PM dimensions must be defined"
                  " in 'params_input dat'.")
 
