@@ -154,6 +154,12 @@ def check(mypath, pd):
                          " in 'params_input dat'.".format(ci, k_cols[i]))
         else:
             pd[k_cols[i] + '_col'] = False
+
+    # Check that PMs are either both or none defined.
+    if pd['pmx_col'] != pd['pmy_col']:
+        sys.exit("ERROR: both (or none) PM dimensions must be defined"
+                 " in 'params_input dat'.")
+
     # Check that error columns are present
     for col in ('plx_col', 'pmx_col', 'pmy_col', 'rv_col'):
         if pd[col] is not False and pd['e_' + col] is False:
