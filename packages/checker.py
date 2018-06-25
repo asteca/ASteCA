@@ -37,6 +37,8 @@ def check_all(mypath, file_end):
     # Read parameters from 'params_input.dat' file. Return a dictionary
     # containing all the parameter values.
     pd = params_file.check(mypath, file_end)
+    # Add to parameters dictionary.
+    pd['inst_packgs_lst'] = inst_packgs_lst
 
     # Check if a new version is available.
     update.check(**pd)
@@ -57,7 +59,7 @@ def check_all(mypath, file_end):
     params_struct.check(**pd)
 
     # Check that R and rpy2 are installed, if necessary.
-    pd = params_pval.check(inst_packgs_lst, pd)
+    pd = params_pval.check(pd)
 
     # Check decontamination algorithm parameters.
     params_decont.check(cl_files, **pd)

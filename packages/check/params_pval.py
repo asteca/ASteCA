@@ -66,7 +66,7 @@ def R_check(inst_packgs_lst):
     return R_in_place
 
 
-def check(inst_packgs_lst, pd):
+def check(pd):
     """
     Check that the R statistical software and the rpy2 package are installed,
     if necessary.
@@ -75,7 +75,7 @@ def check(inst_packgs_lst, pd):
     # Check KDE p-value cluster probability function.
     if pd['pvalue_runs'] > 0:
         # Check if R and rpy2 are installed.
-        R_in_place = R_check(inst_packgs_lst)
+        R_in_place = R_check(pd['inst_packgs_lst'])
     else:
         # Function was told not to run so we don't care if R and/or rpy2 are
         # installed since it will be skipped anyway.
