@@ -4,11 +4,13 @@ import numpy as np
 from os.path import isdir
 
 
-def check(bf_flag, best_fit_algor, lkl_method, lkl_methods, lkl_binning,
-          optimz_algors, N_bootstrap, evol_track, max_mag, IMF_name, R_V,
-          bin_mr, bin_methods, lkl_weight, bin_weights, cmd_evol_tracks,
-          iso_paths, imf_funcs, par_ranges, N_pop, N_gen, fit_diff,
-          cross_prob, cross_sel, mut_prob, N_el, N_ei, N_es, **kwargs):
+def check(
+    bf_flag, best_fit_algor, lkl_method, lkl_methods, lkl_binning,
+        optimz_algors, N_bootstrap, evol_track, max_mag, IMF_name, R_V,
+        bin_mr, bin_methods, lkl_weight, bin_weights, cmd_evol_tracks,
+        iso_paths, imf_funcs, par_ranges, N_pop, N_gen, fit_diff,
+        cross_prob, cross_sel, mut_prob, N_el, N_ei, N_es, inst_packgs_lst,
+        priors, emcee_priors, **kwargs):
     """
     Check all parameters related to the search for the best synthetic cluster
     match.
@@ -48,6 +50,14 @@ def check(bf_flag, best_fit_algor, lkl_method, lkl_methods, lkl_binning,
                 sys.exit("ERROR: GA 'n_el' must be smaller than 'n_pop';\n"
                          "'{}' and '{}' are set respectively.".format(
                              N_el, N_pop))
+
+        if best_fit_algor == 'emcee':
+            if 'emcee' not in inst_packgs_lst:
+                sys.exit("ERROR: the 'emcee' package is not installed.")
+
+            if priors not in emcee_priors:
+                sys.exit("ERROR: the selected prior ({}) is not"
+                         " allowed.".format(priors))
 
         # Check likelihood method selected.
         if lkl_method not in lkl_methods:
