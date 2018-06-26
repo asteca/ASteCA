@@ -252,7 +252,7 @@ def main(mypath, pars_f_path):
         'R_V': R_V, 'bin_mr': bin_mr,
         # emcee algorithm parameters.
         'nwalkers': nwalkers, 'nsteps': nsteps, 'nburn': nburn,
-        priors: 'priors',
+        'priors': priors,
         # Genetic algorithm parameters.
         'N_pop': N_pop, 'N_gen': N_gen, 'fit_diff': fit_diff,
         'cross_prob': cross_prob, 'cross_sel': cross_sel, 'mut_prob': mut_prob,
@@ -262,7 +262,7 @@ def main(mypath, pars_f_path):
         'da_algors_accpt': da_algors_accpt, 'fld_rem_methods': fld_rem_methods,
         'bin_methods': bin_methods, 'bin_weights': bin_weights,
         'imf_funcs': imf_funcs, 'lkl_methods': lkl_methods,
-        'optimz_algors': optimz_algors, emcee_priors: 'emcee_priors',
+        'optimz_algors': optimz_algors, 'emcee_priors': emcee_priors,
         'cmd_evol_tracks': cmd_evol_tracks, 'cmd_systs': cmd_systs,
         # v These lists need to be re-formatted
         'par_ranges': par_ranges}
