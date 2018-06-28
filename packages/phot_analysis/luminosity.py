@@ -3,7 +3,7 @@ import numpy as np
 import warnings
 
 
-def mag_completeness(mags):
+def mag_completeness(mmag):
     """
     Calculate the completeness level in each magnitude bin beyond the one
     with the maximum count (ie: the assumed 100% completeness limit)
@@ -13,7 +13,7 @@ def mag_completeness(mags):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         mag_hist, bin_edges = np.histogram(
-            mags, 50, range=(np.nanmin(mags), np.nanmax(mags)))
+            mmag, 50, range=(np.nanmin(mmag), np.nanmax(mmag)))
     # Index of the bin with the maximum number of stars.
     max_indx = mag_hist.argmax(axis=0)
 
@@ -27,7 +27,7 @@ def mag_completeness(mags):
     return completeness
 
 
-def main(clp, mags, **kwargs):
+def main(clp, **kwargs):
     """
     Obtain the Luminosity Function for the field regions and the cluster
     region normalized to their area. Subtract the field curve from the
@@ -36,23 +36,25 @@ def main(clp, mags, **kwargs):
     The completeness will be used by the isochrone/synthetic cluster
     fitting algorithm.
 
-    Uses the main magnitude.
+    Uses the main magnitude **after** error rejection.
     """
 
+    # (Main) Magnitudes of *all*, after error rejection.
+    mmag = np.array(zip(*(zip(*clp['acpt_stars_c'])[3])))[0]
+
     # Get the completeness level for each magnitude bin.
-    completeness = mag_completeness(mags[0])
+    completeness = mag_completeness(mmag)
 
     # This is the curve for the entire observed frame, normalized to the area
     # of the cluster.
     lf_all, lf_edg_all = np.histogram(
-        mags[0], bins=completeness[1],
-        range=(np.nanmin(mags[0]), np.nanmax(mags[0])))
+        mmag, bins=completeness[1], range=(np.nanmin(mmag), np.nanmax(mmag)))
     x_all = np.concatenate((np.array([0.]), lf_edg_all))
     y_all = np.concatenate(
         (np.array([0.]), lf_all / clp['frame_norm'], np.array([0.])))
 
     # Obtain histogram for cluster region.
-    mag_cl = zip(*zip(*clp['cl_region_c'])[3])[0]
+    mag_cl = list(zip(*zip(*clp['cl_region_c'])[3])[0])
     lf_clust, lf_edg_c = np.histogram(
         mag_cl, bins=completeness[1],
         range=(np.nanmin(mag_cl), np.nanmax(mag_cl)))
