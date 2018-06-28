@@ -61,12 +61,16 @@ def main(mypath, pars_f_path):
                     run_mode = str(reader[1])
 
                 # Input data parameters.
+                elif reader[0] == 'MR':
+                    read_mode = str(reader[1])
                 elif reader[0] == 'PI':
                     id_coords = reader[1:]
                 elif reader[0] == 'PM':
                     id_mags = reader[1:]
                 elif reader[0] == 'PC':
                     id_cols = reader[1:]
+                elif reader[0] == 'PK':
+                    id_kinem = reader[1:]
 
                 # Output parameters.
                 elif reader[0] == 'MP':
@@ -90,11 +94,9 @@ def main(mypath, pars_f_path):
                     except ValueError:
                         fr_number = str(reader[1])
 
-                # Photometric functions parameters.
+                # Data analysis functions parameters.
                 elif reader[0] == 'ER':
-                    err_max = float(reader[1])
-                elif reader[0] == 'IM':
-                    im_flag = True if reader[1] in true_lst else False
+                    err_max = reader[1:]
                 elif reader[0] == 'PV':
                     pvalue_runs = int(reader[1])
 
@@ -105,6 +107,9 @@ def main(mypath, pars_f_path):
                     fixedda_port = float(reader[3])
                     readda_idcol = int(reader[4])
                     readda_mpcol = int(reader[5])
+
+                elif reader[0] == 'DW':
+                    bayesda_weights = map(float, reader[1:])
 
                 # Cluster region field stars removal.
                 elif reader[0] == 'RM':
@@ -150,13 +155,13 @@ def main(mypath, pars_f_path):
 
                 elif reader[0] == 'AB':
                     best_fit_algor = str(reader[1])
-                    N_bootstrap = int(reader[2])
 
                 # emcee algorithm parameters.
                 elif reader[0] == 'EM':
                     nwalkers = int(float(reader[1]))
                     nsteps = int(float(reader[2]))
                     nburn = int(float(reader[3]))
+                    priors = reader[4]
 
                 # Genetic algorithm parameters.
                 elif reader[0] == 'GA':
@@ -169,6 +174,7 @@ def main(mypath, pars_f_path):
                     N_el = int(reader[7])
                     N_ei = int(reader[8])
                     N_es = int(reader[9])
+                    N_bootstrap = int(reader[10])
 
                 else:
                     # Get parameters file name from path.
@@ -177,6 +183,10 @@ def main(mypath, pars_f_path):
                           "  of '{}' file.\n").format(
                         reader[0], l + 1, pars_f_name)
 
+    # Accepted coordinate units
+    coord_accpt = ('px', 'deg')
+    # Accepted read modes
+    read_mode_accpt = ('nam', 'num')
     # Accepted decontamination algorithms.
     da_algors_accpt = ('bayes', 'fixed', 'read', 'skip')
     # Accepted field stars removal methods.
@@ -192,6 +202,8 @@ def main(mypath, pars_f_path):
                  'kroupa_2002')
     # Optimizing algorithm
     optimz_algors = ('brute', 'genet', 'emcee')
+    # Accepted forms of priors.
+    emcee_priors = ('unif', 'gauss')
 
     # Map evolutionary tracks selection to proper names, and name of the folder
     # where they should be stored.
@@ -213,18 +225,19 @@ def main(mypath, pars_f_path):
 
     pd = {
         'up_flag': up_flag, 'flag_back_force': flag_back_force,
-        'run_mode': run_mode,
+        'run_mode': run_mode, 'read_mode': read_mode,
         'id_coords': id_coords, 'id_mags': id_mags, 'id_cols': id_cols,
+        'id_kinem': id_kinem,
         'flag_make_plot': flag_make_plot, 'plot_frmt': plot_frmt,
         'plot_dpi': plot_dpi,
         'flag_move_file': flag_move_file,
         'center_stddev': center_stddev, 'radius_method': radius_method,
         'kp_flag': kp_flag, 'fr_number': fr_number, 'err_max': err_max,
-        'im_flag': im_flag, 'pvalue_runs': pvalue_runs,
+        'pvalue_runs': pvalue_runs,
         # Decontamination algorithm parameters.
         'da_algor': da_algor, 'bayesda_runs': bayesda_runs,
-        'fixedda_port': fixedda_port,
-        'readda_idcol': readda_idcol, 'readda_mpcol': readda_mpcol,
+        'fixedda_port': fixedda_port, 'readda_idcol': readda_idcol,
+        'readda_mpcol': readda_mpcol, 'bayesda_weights': bayesda_weights,
         # Cluster region field stars removal parameters.
         'fld_clean_mode': fld_clean_mode, 'fld_clean_bin': fld_clean_bin,
         'fld_clean_prob': fld_clean_prob,
@@ -239,15 +252,17 @@ def main(mypath, pars_f_path):
         'R_V': R_V, 'bin_mr': bin_mr,
         # emcee algorithm parameters.
         'nwalkers': nwalkers, 'nsteps': nsteps, 'nburn': nburn,
+        'priors': priors,
         # Genetic algorithm parameters.
         'N_pop': N_pop, 'N_gen': N_gen, 'fit_diff': fit_diff,
         'cross_prob': cross_prob, 'cross_sel': cross_sel, 'mut_prob': mut_prob,
         'N_el': N_el, 'N_ei': N_ei, 'N_es': N_es,
         # Fixed accepted parameter values and photometric systems.
+        'read_mode_accpt': read_mode_accpt, 'coord_accpt': coord_accpt,
         'da_algors_accpt': da_algors_accpt, 'fld_rem_methods': fld_rem_methods,
         'bin_methods': bin_methods, 'bin_weights': bin_weights,
         'imf_funcs': imf_funcs, 'lkl_methods': lkl_methods,
-        'optimz_algors': optimz_algors,
+        'optimz_algors': optimz_algors, 'emcee_priors': emcee_priors,
         'cmd_evol_tracks': cmd_evol_tracks, 'cmd_systs': cmd_systs,
         # v These lists need to be re-formatted
         'par_ranges': par_ranges}

@@ -11,7 +11,10 @@ def errorData(mmag):
     used in the synthetic cluster generation.
     """
     # Define 'bright end' leaving out the brightest stars.
-    be_m = min(mmag) + 1.
+    m_s = np.sort(mmag)
+    # Magnitude of the .5% brightest star
+    m_i = int(m_s.size * 0.005)
+    be_m = max(min(mmag) + 1., m_s[m_i])
     # Magnitude range.
     delta_mag = max(mmag) - be_m
     # Width of the intervals in magnitude.

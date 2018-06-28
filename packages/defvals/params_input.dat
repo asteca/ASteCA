@@ -57,6 +57,17 @@ MO   auto
 
 ######################### Input data parameters ################################
 
+# Read mode for the cluster's input data.
+#
+# * mode: num / nam
+#
+#   - num: indexes of the data columns (starting with zero). The header must be
+#          commented out entirely.
+#   - nam: names of the data columns. A proper header must be in place.
+#
+#    mode
+MR    num
+
 # Columns for the ID's and x,y coordinates in the data file.
 #
 # * coords: px / deg
@@ -75,6 +86,13 @@ PM     3,5,V        4
 # Color and error.
 #         col    e_col
 PC    5,5,B,V        6
+
+# Columns for the proper motions [mas/yr], parallax [mas], and radial
+# velocity [km/s]. If a data column is not present, indicate it with a 'n'.
+#
+#        Parallax                 Proper motions               Radial velocity
+#        plx    e_plx     pmRA    e_pmRA    pmDE    e_pmDE     rv    e_rv
+PK         n        n        n         n       n         n      n       n
 ###############################################################################
 
 
@@ -168,25 +186,20 @@ GR       10
 
 
 
-################## Photometric functions parameters ############################
+################## Data functions parameters ############################
 
 # Error rejection.
 #
-# * e_max: [float]
+# * e_ph_max: [float] or [str]
 #   Maximum error value a star can have in either its magnitude or color
-#   without being rejected. 
+#   without being rejected. Use 'n' for no maximum limit.
 #
-#   e_max
-ER    0.3
-
-# Integrated magnitude.
+# * e_plx_max / e_pm_max / e_rv_max: [float] or [str]
+#   Idem for parallax / proper motions / radial velocity values. If these data
+#   columns are not present (or no maximum limit is desired) use 'n'.
 #
-# * flag: y / n
-#   Estimate the integrated magnitude for the cluster region, cleaned from
-#   field stars contamination when possible.
-#
-#   flag
-IM     y
+#   e_ph_max    e_plx_max     e_pm_max     e_rv_max
+ER       0.2            n            n            n
 
 # KDE p-value test.
 #
@@ -238,6 +251,16 @@ PV     2
 #   algor   runs   fport   id_col   mp_col
 DA  bayes   1000      .4        0        7
 
+#   If the 'bayes' algorithm is selected, these weights are assigned to each
+#   data dimension (photometric and kinematic). If more than one color is
+#   defined, add a second value after 'w_col'.
+#
+#  * w_xxx: 0<=[float]<=1
+# 
+#   w_mag    w_col    w_Plx    w_PMx    w_PMy    w_RV
+DW     1.       1.       1.       1.       1.      1.
+
+
 # Cluster region field stars removal.
 #
 # Performs a selection of stars within the cluster region, to be used by the
@@ -274,7 +297,7 @@ RM  local      fixed          0.5
 
 
 
-#################### Cluster parameters assignation ############################
+#################### Cluster parameters estimation #############################
 
 # Best synthetic cluster fit.
 #
@@ -283,29 +306,7 @@ RM  local      fixed          0.5
 #   observed cluster and all the values below are ignored.
 #
 #   flag
-BF     y 
-
-# Likelihood method.
-#
-# * likelihood: tolstoy / dolphin
-#
-#   - tolstoy: uses a weighted bin-free statistic as that defined in
-#     Tolstoy & Saha (1996), Monteiro et al (2010) and Hernández & Valls-Gabaud
-#     (2008). If this method is selected, 'binning' is ignored.
-#   - dolphin: uses the 'Poisson likelihood ratio' (Eq. 10) defined in
-#     Dolphin (2002). This requires the selection of a binning method.
-#
-# * binning: fixed / auto / fd / doane / scott / rice / sqrt
-#            sturges / knuth / blocks
-#   Binning method to be used if the likelihood equation by 'dolphin' is
-#   selected. Otherwise this parameter is ignored.
-#
-# * weight: mean / median / max
-#   Weight applied to each bin defined by the 'binning' parameter, if 'dolphin'
-#   is selected. Otherwise this parameter is ignored.
-#
-#   likelihood  binning    weight
-LK     dolphin     auto      mean
+BF     y
 
 # Set of evolutionary tracks.
 #
@@ -387,49 +388,72 @@ DM                         8       15      0.2
 #   max_mag
 MM      max
 
+# Likelihood equation.
+#
+# * likelihood: dolphin / tolstoy
+#
+#   - dolphin: uses the 'Poisson likelihood ratio' (Eq. 10) defined in
+#     Dolphin (2002). This requires the selection of a binning method.
+#   - tolstoy: uses a weighted bin-free statistic as that defined in
+#     Tolstoy & Saha (1996), Monteiro et al (2010) and Hernández & Valls-Gabaud
+#     (2008). If this method is selected, 'binning' is ignored.
+#
+# * binning: fixed / auto / fd / doane / scott / rice / sqrt
+#            sturges / knuth / blocks
+#   Binning method to be used if the likelihood equation by 'dolphin' is
+#   selected. Otherwise this parameter is ignored.
+#
+# * weight: mean / median / max
+#   Weight applied to each bin defined by the 'binning' parameter, if 'dolphin'
+#   is selected. Otherwise this parameter is ignored.
+#
+#   likelihood  binning    weight
+LK     dolphin     auto      mean
+
 # Algorithm used to maximize the likelihood.
 #
-# * algorithm: genet / brute
+# * algorithm: emcee / genet / brute
 #
+#   - emcee: Bayesian MCMC algorithm.
 #   - genet: Genetic Algorithm (GA).
-#   - brute: Brute Force algorithm, ie: all possible solutions are processed
-#     If 'brute' is selected, 'bootstrap' is ignored.
+#   - brute: Brute Force algorithm, ie: all possible solutions are processed.
 #
-# * bootstrap: [integer]
-#   Number of times the bootstrap with replacement process will run
-#   in the GA algorithm. Minimum value is 2, anything less will skip the
-#   bootstrap process and no errors will be assigned to the parameters.
+#   algorithm
+AB      genet
+
+# emcee parameters.
 #
-#   algorithm   bootstrap
-AB      genet          10
+#   - nwalkers: [integer], Number of walkers/chains used.
+#   - nsteps: [integer], Number of steps to process.
+#   - nburn: [integer], Number of burn-in samples to discard.
+#   - priors: unif / gauss, uniform or Gaussian prior distributions for all the
+#     fitted parameters.
+#
+#    nwalkers     nsteps   nburn   priors
+EM         20       5000     500     unif
 
 # Genetic Algorithm parameters.
 #
-# General:
-# n_pop: number of chromosomes in the population.
-# n_gen: number of generations to process.
-# fdif: Fitness differential. Establishes the 'selection pressure'
-# for the algorithm.
+#   - n_pop: [integer], Number of chromosomes in the population.
+#   - n_gen: [integer], Number of generations to process.
+#   - fdif: 0<[float]<=1, Fitness differential. Establishes the 'selection
+#     pressure' for the algorithm.
+#   - p_cross: 0<[float]<=1, crossover probability.
+#   - cr_sel: 1P / 2P, 1-point (1P) or 2-point (2P) crossover.
+#   - p_mut: 0<[float]<=1, mutation probability.
+#   - n_el: [integer], (elitism operator) Number of best solutions to pass
+#     unchanged to the next generation.
+#   - n_ei: [integer], (extinction/immigration operator) Number of generations
+#     allowed to run with the same best solution before calling for a new
+#     generation of random solutions.
+#   - n_es: [integer], (exit switch) number of times the Extinction/Immigration
+#     operator is allowed to run returning the same best solution before
+#     exiting the GA.
+#   - bootstrap: [integer], Number of times the bootstrap with replacement
+#     process will run in the GA algorithm. Minimum value is 2, anything less
+#     will skip the bootstrap process and no uncertainties will be assigned to
+#     the parameters.
 #
-# Crossover operator:
-# p_cross: crossover probability.
-# cr_sel: select 1-point (1P) or 2-point (2P) crossover.
-#
-# Mutation operator:
-# p_mut: mutation probability.
-#
-# Elitism operator:
-# n_el: number of best solutions to pass unchanged to the next
-# generation.
-#
-# Extinction/Immigration operator:
-# n_ei: number of generations allowed to run with the same best solution
-# before calling for a new generation of random solutions.
-#
-# Exit switch:
-# n_es:number of times the Extinction/Immigration operator is allowed to run
-# returning the same best solution before exiting the GA.
-#
-#   n_pop  n_gen fdif p_cross cr_sel p_mut n_el n_ei n_es
-GA    100   1000   1.    0.85     2P  0.05    1   50   10
+#   n_pop  n_gen  fdif  p_cross  cr_sel  p_mut  n_el  n_ei  n_es  bootstrap
+GA    100   1000    1.     0.85      2P   0.05     1    50    10         10
 ################################################################################

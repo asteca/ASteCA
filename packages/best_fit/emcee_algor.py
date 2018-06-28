@@ -1,7 +1,7 @@
 
 import numpy as np
 import random
-# import emcee  # TODO not in place yet
+import emcee
 from ..synth_clust import synth_cluster
 import likelihood
 from .. import update_progress
@@ -277,22 +277,24 @@ def main(lkl_method, e_max, err_lst, completeness, max_mag_syn,
     # This number should be between approximately 0.25 and 0.5 if everything
     # went as planned.
     m_accpt_fr = np.mean(sampler.acceptance_fraction)
-    print("Mean acceptance fraction: {:.3f}".format(m_accpt_fr))
+    print("  Mean acceptance fraction: {:.3f}".format(m_accpt_fr))
     if m_accpt_fr > .5 or m_accpt_fr < .25:
         print("  WARNING: mean acceptance fraction is outside of the\n"
               "  recommended range.")
 
+    # Re-shape trace for all parameters.
+    emcee_trace = sampler.chain.reshape(-1, ndim).T
+
     # Estimate the integrated autocorrelation time for the time series in each
     # parameter.
     try:
-        print("Autocorrelation time: {:.2f}".format(
-            sampler.get_autocorr_time()))
+        # print("  Autocorrelation time: {:.2f}".format(
+        #     sampler.get_autocorr_time()))
+        print("  Autocorrelation time: ", emcee.autocorr.integrated_time(
+            emcee_trace))
     except Exception:
         print("  WARNING: the chain is too short to reliably estimate\n"
               "  the autocorrelation time.")
-
-    # Re-shape trace for all parameters.
-    emcee_trace = sampler.chain.reshape(-1, ndim).T
 
     # Chains for all parameters, post burn-in.
     pars_chains = sampler.chain.T

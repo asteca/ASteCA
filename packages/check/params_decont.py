@@ -1,12 +1,13 @@
 
 import sys
 from os.path import isfile
+import numpy as np
 from packages.inp import names_paths
 
 
 def check(cl_files, da_algor, da_algors_accpt, bayesda_runs, fixedda_port,
-          fld_rem_methods, bin_methods, fld_clean_mode, fld_clean_bin,
-          **kwargs):
+          bayesda_weights, fld_rem_methods, bin_methods, fld_clean_mode,
+          fld_clean_bin, colors, **kwargs):
     """
     Check parameters related to the decontamination algorithm functions.
     """
@@ -20,6 +21,19 @@ def check(cl_files, da_algor, da_algors_accpt, bayesda_runs, fixedda_port,
         # Check Bayesian decontamination algorithm parameters.
         if bayesda_runs < 2:
             sys.exit("ERROR: must input 'runs'>=2 for the Bayesian DA.")
+
+        if (np.array(bayesda_weights) < 0.).any() or\
+                (np.array(bayesda_weights) > 1.).any():
+            sys.exit("ERROR: 'bayes' DA weights must be in the range [0., 1.]")
+
+        # This assumes that the maximum number of colors that can be defined
+        # is 2.
+        if len(colors) == 1 and len(bayesda_weights) != 6:
+            sys.exit("ERROR: there are {} 'bayes' DA weights defined,"
+                     " there should be 6.".format(len(bayesda_weights)))
+        elif len(colors) == 2 and len(bayesda_weights) != 7:
+            sys.exit("ERROR: there are {} 'bayes' DA weights defined,"
+                     " there should be 7.".format(len(bayesda_weights)))
 
     if da_algor == 'fixed':
         # Check Bayesian decontamination algorithm parameters.

@@ -16,7 +16,7 @@ def dataProcess(cl_max_mag):
         mags_cols_cl[1].append(col)
 
     # Store membership probabilities here.
-    memb_probs = np.array(zip(*cl_max_mag)[1:][6])
+    memb_probs = np.array(zip(*cl_max_mag)[1:][8])
 
     return mags_cols_cl, memb_probs
 

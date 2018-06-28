@@ -15,7 +15,7 @@ def main(clp):
         n_memb_da = 0
         # Number of stars assigned a MP>=0.5.
         for star in clp['memb_prob_avrg_sort']:
-            if star[7] >= 0.5:
+            if star[9] >= 0.5:
                 n_memb_da += 1
 
         # Obtain parameter.

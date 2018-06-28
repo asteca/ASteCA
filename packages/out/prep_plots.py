@@ -4,7 +4,8 @@ from ..best_fit.obs_clust_prepare import dataProcess
 from ..decont_algors.local_cell_clean import bin_edges_f
 import numpy as np
 from scipy import stats
-import matplotlib.pyplot as plt
+from scipy import optimize
+from scipy.spatial.distance import cdist
 
 
 def frame_max_min(x_data, y_data):
@@ -76,61 +77,71 @@ def ax_names(x, y, yaxis):
     return x_ax, y_ax
 
 
-def kde_limits(phot_x, phot_y):
-    '''
-    Return photometric diagram limits taken from a 2D KDE.
-    '''
-    # Mask nan values.
-    mask = ~(np.isnan(phot_x) | np.isnan(phot_y))
-    phot_x, phot_y = phot_x[mask], phot_y[mask]
-    # Stack photometric data.
-    values = np.vstack([phot_x, phot_y])
-    # Obtain Gaussian KDE.
-    kernel = stats.gaussian_kde(values)
-    # Grid density (number of points).
-    gd = 25
-    gd_c = complex(0, gd)
-    # Define x,y grid.
-    xmin, xmax = min(phot_x), max(phot_x)
-    ymin, ymax = min(phot_y), max(phot_y)
-    x, y = np.mgrid[xmin:xmax:gd_c, ymin:ymax:gd_c]
-    positions = np.vstack([x.ravel(), y.ravel()])
-    # Evaluate kernel in grid positions.
-    k_pos = kernel(positions)
+# TODO deprecated
+# def kde_limits(phot_x, phot_y):
+#     '''
+#     Return photometric diagram limits taken from a 2D KDE.
+#     '''
+#     # Mask nan values.
+#     mask = ~(np.isnan(phot_x) | np.isnan(phot_y))
+#     phot_x, phot_y = phot_x[mask], phot_y[mask]
+#     # Stack photometric data.
+#     values = np.vstack([phot_x, phot_y])
+#     # Obtain Gaussian KDE.
+#     kernel = stats.gaussian_kde(values)
+#     # Grid density (number of points).
+#     gd = 10
+#     gd_c = complex(0, gd)
+#     # Define x,y grid.
+#     xmin, xmax = min(phot_x), max(phot_x)
+#     ymin, ymax = min(phot_y), max(phot_y)
+#     x, y = np.mgrid[xmin:xmax:gd_c, ymin:ymax:gd_c]
+#     positions = np.vstack([x.ravel(), y.ravel()])
+#     # Evaluate kernel in grid positions.
+#     k_pos = kernel(positions)
 
-    # Generate 30 contour lines.
-    plt.figure()
-    cs = plt.contour(x, y, np.reshape(k_pos, x.shape), 30)
-    plt.close()
-    # Extract (x,y) points delimiting each line.
-    x_v, y_v = np.asarray([]), np.asarray([])
-    # Only use the outer curve.
-    col = cs.collections[0]
-    # If more than one region is defined by this curve (ie: the main sequence
-    # region plus a RC region or some other detached region), obtain x,y from
-    # all of them.
-    for lin in col.get_paths():
-        x_v = np.append(x_v, lin.vertices[:, 0])
-        y_v = np.append(y_v, lin.vertices[:, 1])
+#     # Generate 30 contour lines.
+#     plt.figure()
+#     cs = plt.contour(x, y, np.reshape(k_pos, x.shape), 5)
+#     plt.close()
+#     # Extract (x,y) points delimiting each line.
+#     x_v, y_v = np.asarray([]), np.asarray([])
+#     # Only use the outer curve.
+#     col = cs.collections[0]
+#     # If more than one region is defined by this curve (ie: the main sequence
+#     # region plus a RC region or some other detached region), obtain x,y from
+#     # all of them.
+#     for lin in col.get_paths():
+#         x_v = np.append(x_v, lin.vertices[:, 0])
+#         y_v = np.append(y_v, lin.vertices[:, 1])
 
-    return x_v, y_v
+#     min_x, max_x = min(x_v), max(x_v)
+#     min_y, max_y = min(y_v), max(y_v)
+
+#     return min_x, max_x, min_y, max_y
 
 
 def diag_limits(yaxis, phot_x, phot_y):
     '''
     Define plot limits for *all* photometric diagrams.
     '''
-    x_v, y_v = kde_limits(phot_x, phot_y)
+    # TODO deprecated
+    # min_x, max_x, min_y, max_y = kde_limits(phot_x, phot_y)
+
+    x_median, x_std = np.median(phot_x), 1.5 * np.std(phot_x)
+    min_x, max_x = x_median - x_std, x_median + x_std
+    y_median, y_std = np.median(phot_y), np.std(phot_y)
+    min_y, max_y = y_median - y_std, y_median + y_std
 
     # Define diagram limits.
-    x_min_cmd, x_max_cmd = min(x_v) - 1.25, max(x_v) + 1.25
-    y_min_cmd = max(y_v) + 1.25
+    x_min_cmd, x_max_cmd = min_x - 1.25, max_x + 1.25
+    y_min_cmd = max_y + 1.25
     # If photometric axis y is a magnitude, make sure the brightest star
     # is always plotted.
     if yaxis == 'mag':
         y_max_cmd = min(phot_y) - 1.
     else:
-        y_max_cmd = min(y_v) - 1.
+        y_max_cmd = min_y - 1.
 
     return x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd
 
@@ -175,22 +186,26 @@ def zoomed_frame(x, y, mags, x_zmin, x_zmax, y_zmin, y_zmax):
     return x_data_z, y_data_z, mag_data_z
 
 
-def field_region_stars(stars_out_rjct, field_regions):
+def field_region_stars(field_regions, field_regions_rjct):
     """
-    Generate list with *all* rejected stars outside of the cluster region, and
-    all stars within a defined field region.
+    Generate list with accepted/rejected stars within all the defined field
+    regions.
     """
-    stars_f_rjct = [[], []]
-    for star in stars_out_rjct:
-        stars_f_rjct[0].append(star[5][0])
-        stars_f_rjct[1].append(star[3][0])
-
     stars_f_acpt = [[], []]
     if field_regions:
-        for fr in field_regions:
-            for star in fr:
-                stars_f_acpt[0].append(star[5][0])
-                stars_f_acpt[1].append(star[3][0])
+        # Extract first color and magnitude defined.
+        stars_f_acpt[0] = [
+            star[5][0] for flrg in field_regions for star in flrg]
+        stars_f_acpt[1] = [
+            star[3][0] for flrg in field_regions for star in flrg]
+
+    stars_f_rjct = [[], []]
+    if field_regions_rjct:
+        # Extract first color and magnitude defined.
+        stars_f_rjct[0] = [
+            star[5][0] for flrg in field_regions_rjct for star in flrg]
+        stars_f_rjct[1] = [
+            star[3][0] for flrg in field_regions_rjct for star in flrg]
 
     return stars_f_rjct, stars_f_acpt
 
@@ -216,7 +231,7 @@ def da_find_chart(
     cl_reg_fit = zip(*cl_reg_fit)
     # Finding chart data. Invert values so higher prob stars are on top.
     chart_fit_inv = [i[::-1] for i in
-                     [cl_reg_fit[1], cl_reg_fit[2], cl_reg_fit[7]]]
+                     [cl_reg_fit[1], cl_reg_fit[2], cl_reg_fit[9]]]
 
     # Arrange stars *not* used in the best fit process.
     if cl_reg_no_fit:
@@ -224,7 +239,7 @@ def da_find_chart(
         # Finding chart data.
         chart_no_fit_inv = [
             i[::-1] for i in [cl_reg_no_fit[1], cl_reg_no_fit[2],
-                              cl_reg_no_fit[7]]]
+                              cl_reg_no_fit[9]]]
     else:
         chart_no_fit_inv = [[], [], []]
 
@@ -258,7 +273,7 @@ def da_phot_diag(cl_reg_fit, cl_reg_no_fit, v_min_mp, v_max_mp):
     # Colors.
     diag_fit_inv += [[i[::-1] for i in zip(*cl_reg_fit[5])]]
     # membership probabilities.
-    diag_fit_inv += [cl_reg_fit[7][::-1]]
+    diag_fit_inv += [cl_reg_fit[9][::-1]]
 
     # Arrange stars *not* used in the best fit process.
     if cl_reg_no_fit:
@@ -268,7 +283,7 @@ def da_phot_diag(cl_reg_fit, cl_reg_no_fit, v_min_mp, v_max_mp):
         # Colors.
         diag_no_fit_inv += [[i[::-1] for i in zip(*cl_reg_no_fit[5])]]
         # membership probabilities.
-        diag_no_fit_inv += [cl_reg_no_fit[7][::-1]]
+        diag_no_fit_inv += [cl_reg_no_fit[9][::-1]]
     else:
         diag_no_fit_inv = [[[]], [[]], []]
 
@@ -281,11 +296,12 @@ def error_bars(stars_phot, x_min_cmd, err_lst, all_flag=None):
     """
     # Use main magnitude.
     if all_flag == 'all':
-        mmag = stars_phot.tolist()
+        mmag = np.array(stars_phot)
     else:
-        mmag = zip(*zip(*stars_phot)[3])[0]
-    x_val, mag_y, x_err, y_err = [], [], [], []
-    if mmag:
+        mmag = np.array(zip(*zip(*stars_phot)[3])[0])
+
+    x_val, mag_y, xy_err = [], [], []
+    if mmag.any():
         # List of y values where error bars are plotted.
         mag_y = np.arange(
             int(min(mmag) + 0.5), int(max(mmag) + 0.5) + 0.1)
@@ -294,13 +310,11 @@ def error_bars(stars_phot, x_min_cmd, err_lst, all_flag=None):
         # Read average fitted values for exponential error fit.
         # Magnitude values are positioned first and colors after in the list
         # 'err_lst'.
-        # TODO generalize to N dimensions
-        popt_mag, popt_col1 = err_lst[0], err_lst[1]
-        x_err = exp_function.exp_3p(mag_y, *popt_col1)
-        y_err = exp_function.exp_3p(mag_y, *popt_mag)
-    err_bar = [x_val, mag_y, x_err, y_err]
+        # popt_mag = err_lst[0]
+        for popt in err_lst:
+            xy_err.append(exp_function.exp_3p(mag_y, *popt))
 
-    return err_bar
+    return [x_val, mag_y, xy_err]
 
 
 def param_ranges(fundam_params):
@@ -491,3 +505,237 @@ def get_hess(obs_mags_cols, synth_phot, hess_xedges, hess_yedges):
         print("  WARNING: the Hess diagram could no be obtained.")
 
     return hess_x, hess_y, HD
+
+
+def plxPlot(inst_packgs_lst, flag_no_fl_regs_i, field_regions_i, cl_reg_fit):
+    """
+    Parameters for the parallax plot.
+    """
+    plx_flag, plx_clrg, plx_xmin, plx_xmax, plx_x_kde, kde_pl, plx_flrg =\
+        False, [], 0., 0., [], [], []
+
+    plx = np.array(zip(*zip(*cl_reg_fit)[7])[0])
+    plx_clrg = plx[~np.isnan(plx)]
+    # Check that a range of parallaxes is possible.
+    if plx_clrg.any():
+        if np.min(plx_clrg) < np.max(plx_clrg):
+            # 250 pc max limit
+            plx_xmin, plx_xmax = 0., min(4., np.max(plx_clrg))
+            # Define KDE limits.
+            x_rang = .1 * (plx_xmax - plx_xmin)
+            plx_x_kde = np.mgrid[plx_xmin - x_rang:plx_xmax + x_rang:1000j]
+            kernel_cl = stats.gaussian_kde(plx_clrg)
+            # KDE for plotting.
+            kde_pl = np.reshape(kernel_cl(plx_x_kde).T, plx_x_kde.shape)
+
+            plx_flag = True
+
+    if not flag_no_fl_regs_i:
+        # Extract parallax data.
+        plx_flrg = []
+        for fl_rg in field_regions_i:
+            plx_flrg += list(zip(*(zip(*fl_rg))[7]))[0]
+        plx_flrg = np.asarray(plx_flrg)
+        # Mask 'nan' and set range.
+        plx_all = plx_flrg[~np.isnan(plx_flrg)]
+        msk = (plx_all > -5.) & (plx_all < 10.)
+        plx_flrg = plx_all[msk]
+
+    # Reject 2\sigma outliers.
+    max_plx, min_plx = np.median(plx) + 2. * np.std(plx),\
+        np.median(plx) - 2. * np.std(plx)
+    msk = (plx < max_plx) & (plx > min_plx)
+    # Prepare masked data.
+    plx = plx[msk]
+    mmag = np.array(zip(*zip(*cl_reg_fit)[3])[0])[msk]
+    mp = np.array(zip(*cl_reg_fit)[9])[msk]
+    e_plx = np.array(zip(*zip(*cl_reg_fit)[8])[0])[msk]
+    # Put large MP stars on top
+    mp_i = mp.argsort()
+    mmag_plx, mp_plx, plx, e_plx = mmag[mp_i], mp[mp_i], plx[mp_i], e_plx[mp_i]
+
+    def lnlike(w_t, w_i, s_i, mp, sign=1.):
+        """
+        Log likelihood, product of Gaussian functions.
+        """
+        return sign * -0.5 * (np.sum(mp * (w_i - w_t)**2 / s_i**2))
+
+    def lnprior(w_t, w_p, s_p):
+        """
+        Log prior, Gaussian > 0.
+        """
+        if w_t < 0.:
+            return -np.inf
+        return -0.5 * ((w_p - w_t)**2 / s_p**2)
+
+    def lnprob(w_t, w_i, s_i, mp, w_p, s_p):
+        lp = lnprior(w_t, w_p, s_p)
+        return lp + lnlike(w_t, w_i, s_i, mp)
+
+    # Use optimum likelihood value as mean of the prior.
+    plx_lkl = optimize.minimize_scalar(lnlike, args=(plx, e_plx, -1.))
+
+    if 'emcee' in inst_packgs_lst:
+        import emcee
+        # Prior parameters.
+        w_p, s_p = plx_lkl.x, .5
+        ndim, nwalkers, nruns = 1, 10, 5000
+        sampler = emcee.EnsembleSampler(
+            nwalkers, ndim, lnprob, args=(plx, e_plx, mp, w_p, s_p))
+        # Random initial guesses.
+        pos = [np.random.uniform(0., 1., ndim) for i in range(nwalkers)]
+        sampler.run_mcmc(pos, nruns)
+        # Remove burn-in
+        samples = sampler.chain[:, 500:, :].reshape((-1, ndim))
+
+        # Median estimator of samples.
+        plx_bay = np.median(samples.flatten())
+        # 16th, 84th percentiles
+        ph_plx, pl_plx = np.percentile(samples, 84), np.percentile(samples, 16)
+
+        # m_accpt_fr = np.mean(sampler.acceptance_fraction)
+        # print("Mean acceptance fraction: {:.3f}".format(m_accpt_fr))
+        # if m_accpt_fr > .5 or m_accpt_fr < .25:
+        #     print("  WARNING: mean acceptance fraction is outside of the\n"
+        #           "  recommended range.")
+        # try:
+        #     print("Autocorrelation time: {:.2f}".format(
+        #         sampler.get_autocorr_time()[0]))
+        # except Exception:
+        #     print("  WARNING: the chain is too short to reliably estimate\n"
+        #           "  the autocorrelation time.")
+    else:
+        plx_bay, ph_plx, pl_plx = np.nan, np.nan, np.nan
+
+    return plx_flag, plx_clrg, plx_xmin, plx_xmax, plx_x_kde, kde_pl,\
+        plx_flrg, mmag_plx, mp_plx, plx, e_plx, plx_bay, ph_plx, pl_plx,\
+        min_plx, max_plx
+
+
+def kde_2d(xarr, xsigma, yarr, ysigma, grid_dens=50):
+    '''
+    Take an array of x,y data with their errors, create a grid of points in x,y
+    and return the 2D KDE density map.
+    '''
+
+    # Replace 0 error with very small value.
+    np.place(xsigma, xsigma <= 0., .0001)
+    np.place(ysigma, ysigma <= 0., .0001)
+
+    # Grid density (number of points).
+    xmean, xstd = np.nanmedian(xarr), np.nanstd(xarr)
+    ymean, ystd = np.nanmedian(yarr), np.nanstd(yarr)
+    xmax, xmin = xmean + 3. * xstd, xmean - 3. * xstd
+    ymax, ymin = ymean + 3. * ystd, ymean - 3. * ystd
+    # grid_dens_x = int((xmax - xmin) / grid_step)
+    # grid_dens_y = int((ymax - ymin) / grid_step)
+    # gd_c = [complex(0, grid_dens), complex(0, grid_dens)]
+    gd_c = complex(0, grid_dens)
+
+    # Define grid of points in x,y where the KDE will be evaluated.
+    ext = [xmin, xmax, ymin, ymax]
+    x, y = np.mgrid[ext[0]:ext[1]:gd_c, ext[2]:ext[3]:gd_c]
+    pos = np.vstack([x.ravel(), y.ravel()])
+
+    # Evaluate KDE in x,y grid.
+    vals = []
+    for p in zip(*pos):
+        valxy = np.exp(-0.5 * (
+            ((p[0] - xarr) / xsigma)**2 + ((p[1] - yarr) / ysigma)**2)) /\
+            (xsigma * ysigma)
+        vals.append(np.sum(valxy))
+    vals = np.array(vals) / (2 * np.pi * xarr.size)
+
+    # # Evaluate KDE in x,y grid.
+    # # Source: https://stackoverflow.com/a/51068256/1391441
+    # ps = pos.shape[1]
+    # print(ps)
+    # xa_tiled, ya_tiled = np.tile(xarr, (ps, 1)), np.tile(yarr, (ps, 1))
+    # xb_tiled, yb_tiled = np.tile(xsigma, (ps, 1)), np.tile(ysigma, (ps, 1))
+    # vals = np.exp(-0.5 * (
+    #     ((pos[0].reshape(ps, 1) - xa_tiled) / xb_tiled)**2 +
+    #     ((pos[1].reshape(ps, 1) - ya_tiled) / yb_tiled)**2)) /\
+    #     (xb_tiled * yb_tiled)
+    # vals = vals.sum(axis=1) / (2 * np.pi * xarr.size)
+
+    # Re-shape values for plotting.
+    z = np.reshape(vals.T, x.shape)
+
+    return x, y, z
+
+
+def PMsPlot(coord, flag_no_fl_regs_i, field_regions_i, cl_reg_fit):
+    """
+    Parameters for the proper motions plot.
+    """
+    PM_flag, pmMP, e_pmRA, pmDE, e_pmDE, DE_pm, pmRA_fl, e_pmRA_fl, pmDE_fl,\
+        e_pmDE_fl, DE_fl_pm, x_clpm, y_clpm, z_clpm, x_flpm, y_flpm,\
+        z_flpm, mmag_pm, pm_dist_max = False, [], [], [], [], [], [], [], [],\
+        [], [], [], [], [], [], [], [], [], []
+
+    pmRA = np.array(zip(*zip(*cl_reg_fit)[7])[1])
+    # Check that PMs were defined within the cluster region.
+    if pmRA[~np.isnan(pmRA)].any():
+        PM_flag = True
+
+        # Cluster region data.
+        pmMP, pmRA, e_pmRA, pmDE, e_pmDE = np.array(zip(*cl_reg_fit)[9]),\
+            np.array(zip(*zip(*cl_reg_fit)[7])[1]),\
+            np.array(zip(*zip(*cl_reg_fit)[8])[1]),\
+            np.array(zip(*zip(*cl_reg_fit)[7])[2]),\
+            np.array(zip(*zip(*cl_reg_fit)[8])[2])
+        DE_pm = np.array(zip(*cl_reg_fit)[2]) if coord == 'deg' else\
+            np.zeros(pmRA.size)
+        mmag_pm = np.array(zip(*zip(*cl_reg_fit)[3])[0])
+
+        # Remove nan values from cluster region
+        msk = ~np.isnan(pmRA) & ~np.isnan(e_pmRA) & ~np.isnan(pmDE) &\
+            ~np.isnan(e_pmDE)
+        pmMP, pmRA, e_pmRA, pmDE, e_pmDE, DE_pm, mmag_pm = pmMP[msk],\
+            pmRA[msk], e_pmRA[msk], pmDE[msk], e_pmDE[msk], DE_pm[msk],\
+            mmag_pm[msk]
+
+        # Re-arrange so stars with larger MPs are on top.
+        mp_i = pmMP.argsort()
+        pmMP, pmRA, e_pmRA, pmDE, e_pmDE, DE_pm, mmag_pm = pmMP[mp_i],\
+            pmRA[mp_i], e_pmRA[mp_i], pmDE[mp_i], e_pmDE[mp_i], DE_pm[mp_i],\
+            mmag_pm[mp_i]
+
+        # 2D KDE for cluster region
+        pmRA_DE = pmRA * np.cos(np.deg2rad(DE_pm))
+        x_clpm, y_clpm, z_clpm = kde_2d(
+            pmRA_DE, e_pmRA, pmDE, e_pmDE)
+
+        # Max value for cluster fit region
+        max_i, max_j = np.unravel_index(z_clpm.argmax(), z_clpm.shape)
+        max_v = np.array([[x_clpm[max_i][max_j], y_clpm[max_i][max_j]]])
+
+        pm_dist_max = cdist(max_v, np.array([pmRA_DE, pmDE]).T)
+
+        if not flag_no_fl_regs_i:
+            # Field region(s) data.
+            for fl_rg in field_regions_i:
+                pmRA_fl += list(zip(*zip(*fl_rg)[7])[1])
+                e_pmRA_fl += list(zip(*zip(*fl_rg)[8])[1])
+                pmDE_fl += list(zip(*zip(*fl_rg)[7])[2])
+                e_pmDE_fl += list(zip(*zip(*fl_rg)[8])[2])
+                DE_fl_pm += list(zip(*fl_rg)[2])
+
+            pmRA_fl, e_pmRA_fl, pmDE_fl, e_pmDE_fl, DE_fl_pm = [
+                np.asarray(_) for _ in (
+                    pmRA_fl, e_pmRA_fl, pmDE_fl, e_pmDE_fl, DE_fl_pm)]
+
+            # Remove nan values from field region(s)
+            msk = ~np.isnan(pmRA_fl) & ~np.isnan(e_pmRA_fl) &\
+                ~np.isnan(pmDE_fl) & ~np.isnan(e_pmDE_fl)
+            pmRA_fl, e_pmRA_fl, pmDE_fl, e_pmDE_fl, DE_fl_pm = \
+                pmRA_fl[msk], e_pmRA_fl[msk], pmDE_fl[msk], e_pmDE_fl[msk],\
+                DE_fl_pm[msk]
+
+            pmRA_fl_DE = pmRA_fl * np.cos(np.deg2rad(DE_fl_pm))
+            x_flpm, y_flpm, z_flpm = kde_2d(
+                pmRA_fl_DE, e_pmRA_fl, pmDE_fl, e_pmDE_fl)
+
+    return PM_flag, pmMP, pmRA, e_pmRA, pmDE, e_pmDE, DE_pm, pmRA_fl,\
+        e_pmRA_fl, pmDE_fl, e_pmDE_fl, DE_fl_pm, x_clpm, y_clpm, z_clpm,\
+        x_flpm, y_flpm, z_flpm, mmag_pm, pm_dist_max

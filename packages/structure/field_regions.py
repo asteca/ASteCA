@@ -105,6 +105,59 @@ def fieldRegs(hist_2d, bin_width, cl_area):
     return num_bins_sqarea, f_regs_max
 
 
+def fregsDef(clp, stars_group, f_regions, spiral, sp_indx, num_bins_area):
+    """
+    """
+    # Obtain filled 2D histogram for the field with star's values attached
+    # to each bin.
+    h_manual = field_manual_histo.main(
+        stars_group, clp['xedges'], clp['yedges'])
+
+    field_regions = []
+    for _ in range(f_regions):
+        # Retrieve spiral index where this field region should end and
+        # coordinates of its bins.
+        sp_indx, sp_coords = spiral_index(
+            spiral, sp_indx, clp['hist_2d'][0], clp['bin_cent'],
+            num_bins_area)
+        # Fill spiral section for this field region with all the stars
+        # that fall inside of it.
+        f_region = spiral_region(h_manual, sp_coords)
+        field_regions.append(f_region)
+
+    return field_regions
+
+
+def fregsDel(field_regions, flag_no_fl_regs):
+    """
+    If any of the field regions has less than 4 stars then we remove it
+    from the list otherwise the decontamination or the p-value algorithms
+    will fail.
+
+    TODO (May 24th 2018) --> not sure about this anymore
+    """
+    # This list stores the indexes of the empty regions.
+    field_regs_del = []
+    for indx, s_lst in enumerate(field_regions):
+        if len(s_lst) < 4:
+            field_regs_del.append(indx)
+    # Delete empty regions this way to avoid messing with the indexes.
+    for index in sorted(field_regs_del, reverse=True):
+        del field_regions[index]
+    if field_regs_del:
+        print('    {} field regions with less than 4 stars each were'
+              ' removed.').format(len(field_regs_del))
+
+    # If after removing the empty regions no regions are left, raise the
+    # flag.
+    if not field_regions:
+        print('    WARNING: no field regions left after the removal of\n' +
+              '    those containing less than 4 stars.')
+        flag_no_fl_regs = True
+
+    return field_regions, flag_no_fl_regs
+
+
 def main(i_c, clp, run_mode, fr_number, cl_f_regs_semi, freg_flag_semi,
          **kwargs):
     '''
@@ -113,15 +166,15 @@ def main(i_c, clp, run_mode, fr_number, cl_f_regs_semi, freg_flag_semi,
 
     Define as many field regions as requested (or permitted) around this empty
     region.
+
+    Uses stars *already cleaned by the error rejection function*.
     '''
-    # Number of field regions defined in 'params_input.dat' file.
-    f_regs_num = fr_number
 
     # Check if semi is set.
     if run_mode == 'semi':
         if freg_flag_semi == 1:
             # Update value.
-            f_regs_num = cl_f_regs_semi
+            fr_number = cl_f_regs_semi
 
     num_bins_sqarea, f_regs_max = fieldRegs(
         clp['hist_2d'], clp['bin_width'], clp['cl_area'])
@@ -136,28 +189,28 @@ def main(i_c, clp, run_mode, fr_number, cl_f_regs_semi, freg_flag_semi,
     else:
         # If the number of field regions defined is larger than the maximum
         # allowed, use the maximum.
-        if f_regs_num == 'max':
+        if fr_number == 'max':
             f_regions = f_regs_max
             print('  Using maximum number of field regions ({}).'.format(
                 f_regions))
-        elif f_regs_num > f_regs_max:
+        elif fr_number > f_regs_max:
             f_regions = f_regs_max
             print("    WARNING: Number of FR defined ({}) is larger than\n"
                   "    the maximum allowed ({}). Using max number.").format(
-                      f_regs_num, f_regs_max)
-        elif f_regs_num <= 0:
+                      fr_number, f_regs_max)
+        elif fr_number <= 0:
             f_regions = f_regs_max
             print("    WARNING: Number of FR ({}) is less than or equal\n"
                   "    to zero. No field region will be defined.").format(
-                f_regs_num)
+                fr_number)
             flag_no_fl_regs = True
         else:
             print("  Using defined number of field regions ({}).".format(
-                f_regs_num))
-            f_regions = f_regs_num
+                fr_number))
+            f_regions = fr_number
 
     # Obtain field regions only if it is possible.
-    field_regions = []
+    field_regions, field_regions_rjct = [], []
     if flag_no_fl_regs is False:
 
         # List that contains the spiral as a list of x,y coordinates (also
@@ -169,52 +222,24 @@ def main(i_c, clp, run_mode, fr_number, cl_f_regs_semi, freg_flag_semi,
         sp_indx, dummy = spiral_index(
             spiral, 0, clp['hist_2d'][0], clp['bin_cent'], num_bins_sqarea)
 
-        # Obtain filled 2D histogram for the field with star's values attached
-        # to each bin.
-        h_manual = field_manual_histo.main(
-            clp['stars_out_' + i_c[0]], clp['xedges'], clp['yedges'])
-
         # This ensures that the areas of the field regions are equal
         # to the cluster area.
         num_bins_area = int(clp['cl_area'] / (clp['bin_width'] ** 2))
 
-        for _ in range(f_regions):
-            # Retrieve spiral index where this field region should end and
-            # coordinates of its bins.
-            sp_indx, sp_coords = spiral_index(
-                spiral, sp_indx, clp['hist_2d'][0], clp['bin_cent'],
-                num_bins_area)
-            # Fill spiral section for this field region with all the stars
-            # that fall inside of it.
-            f_region = spiral_region(h_manual, sp_coords)
-            field_regions.append(f_region)
+        # Process *accepted* stars by the errors function.
+        field_regions = fregsDef(
+            clp, clp['stars_out_' + i_c[0]], f_regions, spiral, sp_indx,
+            num_bins_area)
+        field_regions, flag_no_fl_regs = fregsDel(
+            field_regions, flag_no_fl_regs)
 
-        # If any of the field regions has less than 4 stars then we remove it
-        # from the list otherwise the decontamination or the p-value algorithms
-        # will fail. This list stores the indexes of the empty regions.
-        field_regs_del = []
-        for indx, s_lst in enumerate(field_regions):
-            if len(s_lst) < 4:
-                field_regs_del.append(indx)
-        # Delete empty regions this way to avoid messing with the indexes.
-        for index in sorted(field_regs_del, reverse=True):
-            del field_regions[index]
-        if field_regs_del:
-            print('    {} field regions with less than 4 stars each were'
-                  ' removed.').format(len(field_regs_del))
+        # Process *rejected* stars by the errors function.
+        field_regions_rjct = fregsDef(
+            clp, clp['stars_out_rjct_' + i_c[0]], f_regions, spiral, sp_indx,
+            num_bins_area)
 
-        # If after removing the empty regions no regions are left, raise the
-        # flag.
-        if f_regions > 0 and not(field_regions):
-            print('    WARNING: no field regions left after the removal of\n' +
-                  '    those containing less than 4 stars.')
-            flag_no_fl_regs = True
-
-    if i_c == 'incomp':
-        clp['flag_no_fl_regs_i'], clp['field_regions_i'] = flag_no_fl_regs,\
-            field_regions
-    elif i_c == 'comp':
-        clp['flag_no_fl_regs_c'], clp['field_regions_c'] = flag_no_fl_regs,\
-            field_regions
+    clp['flag_no_fl_regs_' + i_c[0]], clp['field_regions_' + i_c[0]],\
+        clp['field_regions_rjct_' + i_c[0]] = flag_no_fl_regs, field_regions,\
+        field_regions_rjct
 
     return clp

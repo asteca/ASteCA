@@ -19,8 +19,8 @@ def main(npd, pd, flag_center_std, flag_center_manual, flag_delta_total,
          flag_not_stable, flag_delta, flag_radius_manual, flag_2pk_conver,
          flag_3pk_conver, flag_memb_par, flag_num_memb_low, K_memb_num,
          K_conct_par, cont_index, n_memb, memb_par, n_memb_da, frac_cl_area,
-         pval_test_params, integ_mag, kde_cent, clust_rad, e_rad, core_rad,
-         e_core, tidal_rad, e_tidal, fit_params_r, fit_errors_r, **kwargs):
+         pval_test_params, kde_cent, clust_rad, e_rad, core_rad, e_core,
+         tidal_rad, e_tidal, fit_params_r, fit_errors_r, **kwargs):
     '''
     Add data obtained to the 'data_output.dat' file.
     '''
@@ -56,17 +56,16 @@ def main(npd, pd, flag_center_std, flag_center_manual, flag_delta_total,
     # TODO using main magnitude only
     line = [write_name, cre_r, K_conct_par, cont_index, K_memb_num,
             n_memb, n_memb_da, memb_par, frac_cl_area, pval_test_params[0],
-            integ_mag[0], cpe_r]
+            cpe_r]
     # Flatten list.
     line_f = list(flatten(line))
 
     # Write values to file.
     with open(out_file_name, "a") as f_out:
-        f_out.write('''{:<16} {:>8} {:>8} {:>8} \
-{:>8} {:>8} {:>8} {:>8} {:>8} {:>8.2f} {:>7.2f} {:>10.0f} \
-{:>10.0f} {:>10.0f} {:>9.2f} {:>7.2f} {:>8.2f} {:>8.2f} \
-{:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} \
-{:>8} {:>8} {:>8} {:>8}'''.format(*line_f))
+        f_out.write('''{:<16} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} \
+{:>8.2f} {:>7.2f} {:>10.0f} {:>10.0f} {:>10.0f} {:>9.2f} {:>7.2f} {:>8.2f} \
+{:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} \
+{:>8}'''.format(*line_f))
         # Flags.
         f_out.write('''{:>8} {:>2} {:>3} {:>2} {:>2} {:>2} {:>2} {:>2} \
 {:>2} {:>3}'''.format(*int_flags))

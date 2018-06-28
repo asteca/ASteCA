@@ -145,7 +145,7 @@ if __name__ == "__main__":
     bin_mr = .7
     with open(mpath + 'theor_tracks.pickle', 'rb') as f:
         theor_tracks = pickle.load(f)
-    err_max = .3
+    err_max = [.3]
     err_lst = [
         np.array([4.82905373e-17, 1.60540044e+00, 3.04244535e-02]),
         np.array([2.91192261e-10, 8.99472478e-01, 4.53498125e-02]),

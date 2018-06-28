@@ -19,8 +19,8 @@ def check(mypath, file_end):
             sys.exit("ERROR: '{}' file does not exist.".format(pars_f_name))
     else:
         if not isfile(pars_f_path):
-            print ("  WARNING: {} file does not exist.\n  Falling back to"
-                   " 'params_input.dat' file.\n".format(pars_f_name))
+            print("  WARNING: {} file does not exist.\n  Falling back to"
+                  " 'params_input.dat' file.\n".format(pars_f_name))
 
             # Fall back to default file.
             pars_f_name = 'params_input.dat'
@@ -34,7 +34,7 @@ def check(mypath, file_end):
         pd = input_params.main(mypath, pars_f_path)
     except Exception:
         # Halt code.
-        print traceback.format_exc()
+        print(traceback.format_exc())
         sys.exit("ERROR: '{}' is badly formatted.".format(pars_f_name))
 
     # Return 'check for available update', and 'force backend' flags.

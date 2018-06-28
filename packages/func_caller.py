@@ -21,7 +21,6 @@ from structure import field_regions
 from errors import err_range_avrg
 #
 from phot_analysis import luminosity
-from phot_analysis import integrated_mag
 from phot_analysis import kde_pvalue
 from phot_analysis import members_number
 #
@@ -133,14 +132,32 @@ def main(cl_file, pd):
     # Only process incomplete data if the the input data is not equal. Else
     # just use the complete dataset.
     if clp['flag_data_eq']:
-        clp['cl_region_i'], clp['flag_no_fl_regs_i'], clp['field_regions_i'] =\
+        clp['cl_region_i'], clp['flag_no_fl_regs_i'], clp['field_regions_i'], \
+            clp['cl_region_rjct_i'], clp['field_regions_rjct_i'] =\
             clp['cl_region_c'], clp['flag_no_fl_regs_c'],\
-            clp['field_regions_c']
+            clp['field_regions_c'], clp['cl_region_rjct_c'],\
+            clp['field_regions_rjct_c']
     else:
         print("Processing incomplete dataset:")
         clp = err_accpt_rejct.main('incomp', cld_i, clp, **pd)
         clp = stars_in_out_cl_reg.main('incomp', clp)
         clp = field_regions.main('incomp', clp, **pd)
+
+    # This is what these three functions generate. The 'x' separates incomplete
+    # (i) and complete (c) data.
+    #
+    # err_accpt_rejct -------> acpt_stars_x
+    #       |        '-------> rjct_stars_x
+    #       |
+    #       v
+    # stars_in_out_cl_reg ---> acpt_stars_x --> cl_region_x
+    #       |            |                 '--> stars_out_x
+    #       |            |
+    #       |            '---> rjct_stars_x --> cl_region_rjct_x
+    #       |                              '--> stars_out_rjct_x
+    #       v
+    # field_regions --> stars_out_x ----------> field_regions_x
+    #              '--> stars_out_rjct x -----> field_regions_rjct_x
 
     make_A2_plot.main(npd, cld_i, pd, **clp)
 
@@ -154,9 +171,6 @@ def main(cl_file, pd):
 
     # Luminosity function and completeness level for each magnitude bin.
     clp = luminosity.main(clp, **cld_c)
-
-    # Calculate integrated magnitude.
-    clp = integrated_mag.main(clp, **pd)
 
     # Physical cluster probability based on p_values distribution.
     clp = kde_pvalue.main(clp, **pd)

@@ -25,8 +25,8 @@ def plot_observed_cluster(
             x_ax, y_ax, v_min_mp, v_max_mp, obs_x, obs_y, obs_MPs,
             err_bar, hess_xedges, hess_yedges, x_isoch, y_isoch)
     except Exception:
-        # import traceback
-        # print traceback.format_exc()
+        import traceback
+        print traceback.format_exc()
         print("  WARNING: error when plotting MPs on cluster's "
               "photometric diagram.")
 
@@ -107,8 +107,8 @@ def main(npd, cld_c, pd, synth_clst, shift_isoch, fit_params_r, fit_errors_r,
             plot_colorbar = False if gs_y1 != 0 else plot_colorbar
             # Main photometric diagram of observed cluster.
             i_y = 0 if yaxis == 'mag' else 1
-            # x axis is always a color this the index is fixed to '1'. y axis
-            # is not, so the 'i_y' index determines what goes there.
+            # x axis is always a color so this the index is fixed to '1'.
+            # y axis is not, so the 'i_y' index determines what goes there.
             obs_x, obs_y, obs_MPs = diag_fit_inv[1][i_obs_x],\
                 diag_fit_inv[i_y][i_obs_y], diag_fit_inv[2]
             # tight_layout is called here
