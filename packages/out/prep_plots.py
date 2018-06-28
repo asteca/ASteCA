@@ -4,6 +4,7 @@ from ..best_fit.obs_clust_prepare import dataProcess
 from ..decont_algors.local_cell_clean import bin_edges_f
 import numpy as np
 from scipy import stats
+from scipy import optimize
 
 
 def frame_max_min(x_data, y_data):
@@ -505,7 +506,7 @@ def get_hess(obs_mags_cols, synth_phot, hess_xedges, hess_yedges):
     return hess_x, hess_y, HD
 
 
-def plxPlot(flag_no_fl_regs_i, field_regions_i, cl_reg_fit):
+def plxPlot(inst_packgs_lst, flag_no_fl_regs_i, field_regions_i, cl_reg_fit):
     """
     Parameters for the parallax plot.
     """
@@ -539,4 +540,192 @@ def plxPlot(flag_no_fl_regs_i, field_regions_i, cl_reg_fit):
         msk = (plx_all > -5.) & (plx_all < 10.)
         plx_flrg = plx_all[msk]
 
-    return plx_flag, plx_clrg, plx_xmin, plx_xmax, plx_x_kde, kde_pl, plx_flrg
+    # Reject 2\sigma outliers.
+    max_plx, min_plx = np.median(plx) + 2. * np.std(plx),\
+        np.median(plx) - 2. * np.std(plx)
+    msk = (plx < max_plx) & (plx > min_plx)
+    # Prepare masked data.
+    plx = plx[msk]
+    mmag = np.array(zip(*zip(*cl_reg_fit)[3])[0])[msk]
+    mp = np.array(zip(*cl_reg_fit)[9])[msk]
+    e_plx = np.array(zip(*zip(*cl_reg_fit)[8])[0])[msk]
+    # Put large MP stars on top
+    mp_i = mp.argsort()
+    mmag_plx, mp_plx, plx, e_plx = mmag[mp_i], mp[mp_i], plx[mp_i], e_plx[mp_i]
+
+    def lnlike(w_t, w_i, s_i, mp, sign=1.):
+        """
+        Log likelihood, product of Gaussian functions.
+        """
+        return sign * -0.5 * (np.sum(mp * (w_i - w_t)**2 / s_i**2))
+
+    def lnprior(w_t, w_p, s_p):
+        """
+        Log prior, Gaussian > 0.
+        """
+        if w_t < 0.:
+            return -np.inf
+        return -0.5 * ((w_p - w_t)**2 / s_p**2)
+
+    def lnprob(w_t, w_i, s_i, mp, w_p, s_p):
+        lp = lnprior(w_t, w_p, s_p)
+        return lp + lnlike(w_t, w_i, s_i, mp)
+
+    # Use optimum likelihood value as mean of the prior.
+    plx_lkl = optimize.minimize_scalar(lnlike, args=(plx, e_plx, -1.))
+
+    if 'emcee' in inst_packgs_lst:
+        import emcee
+        # Prior parameters.
+        w_p, s_p = plx_lkl.x, .5
+        ndim, nwalkers, nruns = 1, 10, 5000
+        sampler = emcee.EnsembleSampler(
+            nwalkers, ndim, lnprob, args=(plx, e_plx, mp, w_p, s_p))
+        # Random initial guesses.
+        pos = [np.random.uniform(0., 1., ndim) for i in range(nwalkers)]
+        sampler.run_mcmc(pos, nruns)
+        # Remove burn-in
+        samples = sampler.chain[:, 500:, :].reshape((-1, ndim))
+
+        # Median estimator of samples.
+        plx_bay = np.median(samples.flatten())
+        # 16th, 84th percentiles
+        ph_plx, pl_plx = np.percentile(samples, 84), np.percentile(samples, 16)
+
+        # m_accpt_fr = np.mean(sampler.acceptance_fraction)
+        # print("Mean acceptance fraction: {:.3f}".format(m_accpt_fr))
+        # if m_accpt_fr > .5 or m_accpt_fr < .25:
+        #     print("  WARNING: mean acceptance fraction is outside of the\n"
+        #           "  recommended range.")
+        # try:
+        #     print("Autocorrelation time: {:.2f}".format(
+        #         sampler.get_autocorr_time()[0]))
+        # except Exception:
+        #     print("  WARNING: the chain is too short to reliably estimate\n"
+        #           "  the autocorrelation time.")
+    else:
+        plx_bay, ph_plx, pl_plx = np.nan, np.nan, np.nan
+
+    return plx_flag, plx_clrg, plx_xmin, plx_xmax, plx_x_kde, kde_pl,\
+        plx_flrg, mmag_plx, mp_plx, plx, e_plx, plx_bay, ph_plx, pl_plx,\
+        min_plx, max_plx
+
+
+def kde_2d(xarr, xsigma, yarr, ysigma, grid_dens=50):
+    '''
+    Take an array of x,y data with their errors, create a grid of points in x,y
+    and return the 2D KDE density map.
+    '''
+
+    # Replace 0 error with very small value.
+    np.place(xsigma, xsigma <= 0., .0001)
+    np.place(ysigma, ysigma <= 0., .0001)
+
+    # Grid density (number of points).
+    xmean, xstd = np.nanmedian(xarr), np.nanstd(xarr)
+    ymean, ystd = np.nanmedian(yarr), np.nanstd(yarr)
+    xmax, xmin = xmean + 3. * xstd, xmean - 3. * xstd
+    ymax, ymin = ymean + 3. * ystd, ymean - 3. * ystd
+    # grid_dens_x = int((xmax - xmin) / grid_step)
+    # grid_dens_y = int((ymax - ymin) / grid_step)
+    # gd_c = [complex(0, grid_dens), complex(0, grid_dens)]
+    gd_c = complex(0, grid_dens)
+
+    # Define grid of points in x,y where the KDE will be evaluated.
+    ext = [xmin, xmax, ymin, ymax]
+    x, y = np.mgrid[ext[0]:ext[1]:gd_c, ext[2]:ext[3]:gd_c]
+    pos = np.vstack([x.ravel(), y.ravel()])
+
+    # Evaluate KDE in x,y grid.
+    vals = []
+    for p in zip(*pos):
+        valxy = np.exp(-0.5 * (
+            ((p[0] - xarr) / xsigma)**2 + ((p[1] - yarr) / ysigma)**2)) /\
+            (xsigma * ysigma)
+        vals.append(np.sum(valxy))
+    vals = np.array(vals) / (2 * np.pi * xarr.size)
+
+    # # Evaluate KDE in x,y grid.
+    # # Source: https://stackoverflow.com/a/51068256/1391441
+    # ps = pos.shape[1]
+    # print(ps)
+    # xa_tiled, ya_tiled = np.tile(xarr, (ps, 1)), np.tile(yarr, (ps, 1))
+    # xb_tiled, yb_tiled = np.tile(xsigma, (ps, 1)), np.tile(ysigma, (ps, 1))
+    # vals = np.exp(-0.5 * (
+    #     ((pos[0].reshape(ps, 1) - xa_tiled) / xb_tiled)**2 +
+    #     ((pos[1].reshape(ps, 1) - ya_tiled) / yb_tiled)**2)) /\
+    #     (xb_tiled * yb_tiled)
+    # vals = vals.sum(axis=1) / (2 * np.pi * xarr.size)
+
+    # Re-shape values for plotting.
+    z = np.reshape(vals.T, x.shape)
+
+    return x, y, z
+
+
+def PMsPlot(coord, flag_no_fl_regs_i, field_regions_i, cl_reg_fit):
+    """
+    Parameters for the proper motions plot.
+    """
+    PM_flag, pmMP, e_pmRA, pmDE, e_pmDE, DE_pm, pmRA_fl, e_pmRA_fl, pmDE_fl,\
+        e_pmDE_fl, DE_fl_pm, x_clpm, y_clpm, z_clpm, x_flpm, y_flpm,\
+        z_flpm = False, [], [], [], [], [], [], [], [], [], [], [], [], [],\
+        [], [], []
+
+    pmRA = np.array(zip(*zip(*cl_reg_fit)[7])[1])
+    # Check that PMs were defined within the cluster region.
+    if pmRA[~np.isnan(pmRA)].any():
+        PM_flag = True
+
+        # Cluster region data.
+        pmMP, pmRA, e_pmRA, pmDE, e_pmDE = np.array(zip(*cl_reg_fit)[9]),\
+            np.array(zip(*zip(*cl_reg_fit)[7])[1]),\
+            np.array(zip(*zip(*cl_reg_fit)[8])[1]),\
+            np.array(zip(*zip(*cl_reg_fit)[7])[2]),\
+            np.array(zip(*zip(*cl_reg_fit)[8])[2])
+        DE_pm = np.array(zip(*cl_reg_fit)[2]) if coord == 'deg' else\
+            np.zeros(pmRA.size)
+
+        # Remove nan values from cluster region
+        msk = ~np.isnan(pmRA) & ~np.isnan(e_pmRA) & ~np.isnan(pmDE) &\
+            ~np.isnan(e_pmDE)
+        pmMP, pmRA, e_pmRA, pmDE, e_pmDE, DE_pm = pmMP[msk], pmRA[msk],\
+            e_pmRA[msk], pmDE[msk], e_pmDE[msk], DE_pm[msk]
+
+        # Re-arrange so stars with larger MPs are on top.
+        mp_i = pmMP.argsort()
+        pmMP, pmRA, e_pmRA, pmDE, e_pmDE, DE_pm = pmMP[mp_i], pmRA[mp_i],\
+            e_pmRA[mp_i], pmDE[mp_i], e_pmDE[mp_i], DE_pm[mp_i]
+
+        # 2D KDE for cluster region
+        pmRA_DE = pmRA * np.cos(np.deg2rad(DE_pm))
+        x_clpm, y_clpm, z_clpm = kde_2d(
+            pmRA_DE, e_pmRA, pmDE, e_pmDE)
+
+        if not flag_no_fl_regs_i:
+            # Field region(s) data.
+            for fl_rg in field_regions_i:
+                pmRA_fl += list(zip(*zip(*fl_rg)[7])[1])
+                e_pmRA_fl += list(zip(*zip(*fl_rg)[8])[1])
+                pmDE_fl += list(zip(*zip(*fl_rg)[7])[2])
+                e_pmDE_fl += list(zip(*zip(*fl_rg)[8])[2])
+                DE_fl_pm += list(zip(*fl_rg)[2])
+
+            pmRA_fl, e_pmRA_fl, pmDE_fl, e_pmDE_fl, DE_fl_pm = [
+                np.asarray(_) for _ in (
+                    pmRA_fl, e_pmRA_fl, pmDE_fl, e_pmDE_fl, DE_fl_pm)]
+
+            # Remove nan values from field region(s)
+            msk = ~np.isnan(pmRA_fl) & ~np.isnan(e_pmRA_fl) &\
+                ~np.isnan(pmDE_fl) & ~np.isnan(e_pmDE_fl)
+            pmRA_fl, e_pmRA_fl, pmDE_fl, e_pmDE_fl, DE_fl_pm = \
+                pmRA_fl[msk], e_pmRA_fl[msk], pmDE_fl[msk], e_pmDE_fl[msk],\
+                DE_fl_pm[msk]
+
+            pmRA_fl_DE = pmRA_fl * np.cos(np.deg2rad(DE_fl_pm))
+            x_flpm, y_flpm, z_flpm = kde_2d(
+                pmRA_fl_DE, e_pmRA_fl, pmDE_fl, e_pmDE_fl)
+
+    return PM_flag, pmMP, pmRA, e_pmRA, pmDE, e_pmDE, DE_pm, pmRA_fl,\
+        e_pmRA_fl, pmDE_fl, e_pmDE_fl, DE_fl_pm, x_clpm, y_clpm, z_clpm,\
+        x_flpm, y_flpm, z_flpm

@@ -9,17 +9,13 @@ import prep_plots
 
 
 def plot_observed_cluster(
-    cld, pd, fig, gs, cl_reg_fit, cl_reg_no_fit, err_lst, v_min_mp, v_max_mp,
-        plot_colorbar, diag_fit_inv, diag_no_fit_inv, mode_fld_clean,
-        bin_edges):
+    fig, gs, x_ax, y_ax, x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd,
+    cl_reg_fit, cl_reg_no_fit, err_lst, v_min_mp, v_max_mp, plot_colorbar,
+        diag_fit_inv, diag_no_fit_inv, mode_fld_clean, bin_edges):
     """
     This function is called separately since we need to retrieve some
     information from it to plot that #$%&! colorbar.
     """
-    x_ax, y_ax = prep_plots.ax_names(pd['colors'][0], pd['filters'][0], 'mag')
-    # Uses first magnitude and color defined
-    x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd = prep_plots.diag_limits(
-        'mag', cld['cols'][0], cld['mags'][0])
     err_bar = prep_plots.error_bars(
         cl_reg_fit + cl_reg_no_fit, x_min_cmd, err_lst)
 
@@ -89,12 +85,25 @@ def main(
             prep_plots.da_find_chart(
                 kde_cent, clust_rad, stars_out_c, x_zmin, x_zmax, y_zmin,
                 y_zmax, cl_reg_fit, cl_reg_no_fit)
+        # Uses first magnitude and color defined
+        x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd = prep_plots.diag_limits(
+            'mag', cld_c['cols'][0], cld_c['mags'][0])
+        x_ax, y_ax = prep_plots.ax_names(
+            pd['colors'][0], pd['filters'][0], 'mag')
 
         # Decontamination algorithm plots.
         min_prob, bin_edges = cl_reg_clean_plot
-        # Parallax data
-        plx_flag, plx_clrg, plx_xmin, plx_xmax, plx_x_kde, kde_pl, plx_flrg =\
-            prep_plots.plxPlot(flag_no_fl_regs_i, field_regions_i, cl_reg_fit)
+        # Parallax data.
+        plx_flag, plx_clrg, plx_xmin, plx_xmax, plx_x_kde, kde_pl, plx_flrg,\
+            mmag_plx, mp_plx, plx, e_plx, plx_bay, ph_plx, pl_plx,\
+            min_plx, max_plx = prep_plots.plxPlot(
+                pd['inst_packgs_lst'], flag_no_fl_regs_i, field_regions_i,
+                cl_reg_fit)
+        # PMs data.
+        PM_flag, pmMP, pmRA, e_pmRA, pmDE, e_pmDE, DE_pm, pmRA_fl, e_pmRA_fl,\
+            pmDE_fl, e_pmDE_fl, DE_fl_pm, x_clpm, y_clpm, z_clpm, x_flpm,\
+            y_flpm, z_flpm = prep_plots.PMsPlot(
+                coord, flag_no_fl_regs_i, field_regions_i, cl_reg_fit)
 
         arglist = [
             # pl_mp_histo
@@ -112,9 +121,12 @@ def main(
             [gs, plx_flag, x_name, y_name, coord, cl_reg_fit, plx_x_kde,
              kde_pl],
             # pl_plx_vs_MP
-            [gs, plx_flag, cl_reg_fit, plx_x_kde, kde_pl],
+            [gs, y_min_cmd, y_max_cmd, y_ax, plx_flag, mmag_plx, mp_plx, plx,
+             e_plx, plx_bay, ph_plx, pl_plx, min_plx, max_plx],
             # pl_pms_plot
-            [gs, coord, plx_flag, cl_reg_fit]
+            [gs, coord, plx_flag, PM_flag, pmMP, pmRA, e_pmRA, pmDE, e_pmDE,
+             DE_pm, pmRA_fl, e_pmRA_fl, pmDE_fl, e_pmDE_fl, DE_fl_pm, x_clpm,
+             y_clpm, z_clpm, x_flpm, y_flpm, z_flpm]
         ]
         for n, args in enumerate(arglist):
             mp_decont_algor.plot(n, *args)
@@ -122,7 +134,8 @@ def main(
         plot_colorbar, diag_fit_inv, diag_no_fit_inv = prep_plots.da_phot_diag(
             cl_reg_fit, cl_reg_no_fit, v_min_mp, v_max_mp)
         plot_observed_cluster(
-            cld_c, pd, fig, gs, cl_reg_fit, cl_reg_no_fit, err_lst, v_min_mp,
+            fig, gs, x_ax, y_ax, x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd,
+            cl_reg_fit, cl_reg_no_fit, err_lst, v_min_mp,
             v_max_mp, plot_colorbar, diag_fit_inv, diag_no_fit_inv,
             pd['fld_clean_mode'], bin_edges)
 

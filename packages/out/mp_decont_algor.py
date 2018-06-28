@@ -2,11 +2,12 @@
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
 import matplotlib.offsetbox as offsetbox
+from matplotlib.colors import Normalize
 import numpy as np
 
 
 def pl_mp_histo(
-        gs, n_memb_da, memb_prob_avrg_sort, flag_decont_skip, cl_reg_fit,
+    gs, n_memb_da, memb_prob_avrg_sort, flag_decont_skip, cl_reg_fit,
         min_prob, mode_fld_clean, local_bin):
     '''
     Histogram for the distribution of membership probabilities from the
@@ -65,10 +66,10 @@ def pl_mp_histo(
         plt.ylim(0.001, plt.ylim()[1])
 
 
-def pl_chart_mps(gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
-                 y_zmax, kde_cent, clust_rad, flag_decont_skip, v_min_mp,
-                 v_max_mp, chart_fit_inv, chart_no_fit_inv, out_clust_rad,
-                 mode_fld_clean, local_bin):
+def pl_chart_mps(
+    gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin, y_zmax, kde_cent,
+    clust_rad, flag_decont_skip, v_min_mp, v_max_mp, chart_fit_inv,
+        chart_no_fit_inv, out_clust_rad, mode_fld_clean, local_bin):
     '''
     Finding chart of cluster region with decontamination algorithm
     applied and colors assigned according to the probabilities obtained.
@@ -122,9 +123,10 @@ def pl_chart_mps(gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
                 s=30, edgecolors='black', facecolors='none', lw=0.5)
 
 
-def pl_mps_phot_diag(gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
-                     x_ax, y_ax, v_min_mp, v_max_mp, diag_fit_inv,
-                     diag_no_fit_inv, err_bar, mode_fld_clean, bin_edges):
+def pl_mps_phot_diag(
+    gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax, v_min_mp,
+    v_max_mp, diag_fit_inv, diag_no_fit_inv, err_bar, mode_fld_clean,
+        bin_edges):
     '''
     Star's membership probabilities on cluster's photometric diagram.
     '''
@@ -187,8 +189,9 @@ def pl_mps_phot_diag(gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
     return sca, trans
 
 
-def pl_plx_histo(gs, plx_flag, plx_clrg, plx_xmin, plx_xmax, plx_x_kde, kde_pl,
-                 plx_flrg, flag_no_fl_regs_i):
+def pl_plx_histo(
+    gs, plx_flag, plx_clrg, plx_xmin, plx_xmax, plx_x_kde, kde_pl, plx_flrg,
+        flag_no_fl_regs_i):
     '''
     Histogram for the distribution of parallaxes within the cluster region.
     '''
@@ -228,14 +231,90 @@ def pl_plx_histo(gs, plx_flag, plx_clrg, plx_xmin, plx_xmax, plx_x_kde, kde_pl,
         ax.legend(fontsize='small', loc=7)
 
 
-def pl_plx_chart(gs, plx_flag, x_name, y_name, coord, cl_reg_fit, plx_x_kde,
-                 kde_pl):
+def pl_plx_vs_MP(
+    gs, y_min_cmd, y_max_cmd, y_ax, plx_flag, mmag_plx, mp_plx, plx,
+        e_plx, plx_bay, ph_plx, pl_plx, min_plx, max_plx):
     '''
     Finding chart of cluster region with colors assigned according to the
     probabilities obtained and sizes according to parallaxes.
     '''
     if plx_flag:
         ax = plt.subplot(gs[2:4, 2:4])
+        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1,
+                zorder=1)
+
+        ax.set_title("Plx clip " + r"$2\sigma\;({:.3f})$".format(np.std(plx)),
+                     fontsize=9)
+        plt.xlabel('Plx [mas]', fontsize=12)
+        plt.ylabel(y_ax, fontsize=12)
+        # Set minor ticks
+        ax.minorticks_on()
+        ax.axvspan(-100., 0., alpha=0.25, color='grey', zorder=1)
+
+        # Weighted average and its error.
+        # Source: https://physics.stackexchange.com/a/329412/8514
+        plx_w = mp_plx / np.square(e_plx)
+        # e_plx_w = np.sqrt(np.sum(np.square(e_plx * plx_w))) / np.sum(plx_w)
+        plx_wa = np.average(plx, weights=plx_w)
+
+        cm = plt.cm.get_cmap('viridis')
+        # Plot stars selected to be used in the best fit process.
+        plt.scatter(
+            plx, mmag_plx, marker='o', c=mp_plx, s=30, edgecolors='black',
+            cmap=cm, lw=0.35, zorder=4)
+        ax.errorbar(
+            plx, mmag_plx, xerr=e_plx, fmt='none', elinewidth=.35,
+            ecolor='grey')
+
+        # plt.show()
+        # from statsmodels.graphics.tsaplots import plot_acf
+        # plot_acf(samples.flatten(), lags=150)
+        # plt.show()
+
+        # Bayesian
+        t0 = r"$Plx_{{Bay}} ={:.3f}_{{{:.3f}}}^{{{:.3f}}}$".format(
+            plx_bay, pl_plx, ph_plx)
+        plt.axvline(
+            x=plx_bay, linestyle='--', color='b', lw=1.2, zorder=5, label=t0)
+        # MLE
+        # plt.axvline(
+        #     x=plx_lkl.x, linestyle='--', color='cyan', lw=.85, zorder=5,
+        #     label=r"$Plx_{{MLE}} = {:.3f}$".format(plx_lkl.x))
+        # Weighted average
+        plt.axvline(
+            x=plx_wa, linestyle='--', color='r', lw=.85, zorder=5,
+            label=r"$Plx_{{wa}} = {:.3f}$".format(plx_wa))
+        # Median
+        plt.axvline(
+            x=np.median(plx), linestyle='--', color='k', lw=.85, zorder=5,
+            label=r"$Plx_{{med}} = {:.3f}$".format(np.median(plx)))
+        # Maximum KDE value.
+        # p_max_mas = plx_x_kde[np.argmax(kde_pl)]
+        # plt.axvline(
+        #     x=p_max_mas, linestyle='--', color='k', lw=.85, zorder=5,
+        #     label=r"$Plx_{{KDE}} = {:.3f}$".format(p_max_mas))
+
+        # print(np.median(plx), np.std(plx))
+        ax.legend(fontsize='small', loc=0)
+
+        cbar = plt.colorbar(pad=.01, fraction=.02, aspect=50)
+        cbar.ax.tick_params(labelsize=7)
+        # cbar.set_label('MP', size=8)
+
+        plt.xlim(min_plx, max_plx)
+        # ax.set_ylim(ax.get_ylim()[::-1])
+        plt.gca().invert_yaxis()
+
+
+def pl_plx_chart(
+    gs, plx_flag, x_name, y_name, coord, cl_reg_fit, plx_x_kde,
+        kde_pl):
+    '''
+    Finding chart of cluster region with colors assigned according to the
+    probabilities obtained and sizes according to parallaxes.
+    '''
+    if plx_flag:
+        ax = plt.subplot(gs[2:4, 4:6])
         ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1,
                 zorder=1)
         ax.set_title('Cluster region (fit)'.format(), fontsize=9)
@@ -276,118 +355,59 @@ def pl_plx_chart(gs, plx_flag, x_name, y_name, coord, cl_reg_fit, plx_x_kde,
             x, y, marker='o', c=mp, s=plx_d, edgecolors='black',
             cmap=cm, lw=0.35, zorder=4)
 
-        ob = offsetbox.AnchoredText(
-            "MP: ({:.2f}, {:.2f})".format(np.min(mp), np.max(mp)),
-            pad=0.2, loc=1, prop=dict(size=9))
-        ob.patch.set(alpha=0.85)
-        ax.add_artist(ob)
 
-
-def pl_plx_vs_MP(gs, plx_flag, cl_reg_fit, plx_x_kde, kde_pl):
+def pl_pms_plot(
+    gs, coord, plx_flag, PM_flag, pmMP, pmRA, e_pmRA, pmDE, e_pmDE, DE_pm,
+        pmRA_fl, e_pmRA_fl, pmDE_fl, e_pmDE_fl, DE_fl_pm, x_clpm, y_clpm,
+        z_clpm, x_flpm, y_flpm, z_flpm):
     '''
-    Finding chart of cluster region with colors assigned according to the
-    probabilities obtained and sizes according to parallaxes.
     '''
-    if plx_flag:
-        ax = plt.subplot(gs[2:4, 4:6])
-        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1,
-                zorder=1)
-
-        # Set axis labels
-        plt.xlabel('Plx [mas]', fontsize=12)
-        plt.ylabel('MP', fontsize=12)
-        # Set minor ticks
-        ax.minorticks_on()
-
-        # Prepare data.
-        mp = np.array(zip(*cl_reg_fit)[9])
-        plx = np.array(zip(*zip(*cl_reg_fit)[7])[0])
-        e_plx = np.array(zip(*zip(*cl_reg_fit)[8])[0])
-
-        # Re-arrange so stars closer to the max Plx value are on top
-        plx_i = plx.argsort()
-        mp, plx, e_plx = mp[plx_i], plx[plx_i], e_plx[plx_i]
-
-        # Color map, higher prob stars look redder.
-        cm = plt.cm.get_cmap('viridis')
-        # Plot stars selected to be used in the best fit process.
-        plt.scatter(
-            plx, mp, marker='o', c=mp, s=30, edgecolors='black',
-            cmap=cm, lw=0.35, zorder=4)
-        ax.errorbar(
-            plx, mp, xerr=e_plx, fmt='none', elinewidth=.35, ecolor='grey')
-
-        plt.plot(plx_x_kde, kde_pl / max(kde_pl), color='k', lw=1., zorder=4)
-        # Maximum KDE value.
-        p_max_mas = plx_x_kde[np.argmax(kde_pl)]
-        plt.axvline(x=p_max_mas, linestyle='--', color='r', lw=.85, zorder=5)
-
-        plt.xlim(0., np.median(plx) + 2. * np.std(plx))
-        plt.ylim(np.min(mp), np.max(mp) + .01)
-
-
-def pl_pms_plot(gs, coord, plx_flag, cl_reg_fit):
-    '''
-    Finding chart of cluster region with colors assigned according to the
-    probabilities obtained and sizes according to parallaxes.
-    '''
-
-    pmRA = np.array(zip(*zip(*cl_reg_fit)[7])[1])
-    if pmRA.any():
+    if PM_flag:
         if plx_flag:
             ax = plt.subplot(gs[4:6, 0:2])
         else:
             ax = plt.subplot(gs[2:4, 0:2])
-        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1,
-                zorder=1)
-
-        # Set minor ticks
         ax.minorticks_on()
-
-        # Prepare data.
-        mp = np.array(zip(*cl_reg_fit)[9])
-        e_pmRA, pmDE, e_pmDE = \
-            np.array(zip(*zip(*cl_reg_fit)[8])[1]),\
-            np.array(zip(*zip(*cl_reg_fit)[7])[2]),\
-            np.array(zip(*zip(*cl_reg_fit)[8])[2])
 
         if coord == 'deg':
             plt.xlabel(
-                r"$\mu_{{\alpha}} \, cos \delta \, [mas/yr]$", fontsize=12)
-            DE = np.array(zip(*zip(*cl_reg_fit)[7])[2])
+                r"$\mu_{{\alpha}} \, cos \delta \, \mathrm{[mas/yr]}$",
+                fontsize=12)
         else:
-            plt.xlabel(r"$\mu_{{\alpha}} \, [mas/yr]$", fontsize=12)
-            DE = np.zeros(pmRA.size)
-        plt.ylabel(r"$\mu_{{\delta}} \, [mas/yr]$", fontsize=12)
+            plt.xlabel(r"$\mu_{{\alpha}} \, \mathrm{[mas/yr]}$", fontsize=12)
+        plt.ylabel(r"$\mu_{{\delta}} \, \mathrm{[mas/yr]}$", fontsize=12)
 
-        # msk = (~np.isnan(x)) & (~np.isnan(y)) & (~np.isnan(mp)) &\
-        #     (~np.isnan(plx))
-        # x, y, mp, plx = x[msk], y[msk], mp[msk], plx[msk]
-        # # Clip parallax values.
-        # np.clip(plx, a_min=0., a_max=10., out=plx)
+        cmap = plt.cm.get_cmap('viridis')
+        norm = Normalize(vmin=pmMP.min(), vmax=pmMP.max())
 
-        # Re-arrange so stars closer to the max Plx value are on top
-        mp_i = mp.argsort()
-        pmRA, e_pmRA, pmDE, e_pmDE, DE, mp = pmRA[mp_i], e_pmRA[mp_i],\
-            pmDE[mp_i], e_pmDE[mp_i], DE[mp_i], mp[mp_i]
-
-        # Color map, higher prob stars look redder.
-        # cm = plt.cm.get_cmap('RdYlBu_r')
-
-        import matplotlib.cm as cm
-        from matplotlib.colors import Normalize
-        cmap = cm.viridis
-        norm = Normalize(vmin=mp.min(), vmax=mp.max())
-
-        # Plot stars selected to be used in the best fit process.
-        # plt.scatter(
-        #     pmRA * np.cos(np.deg2rad(DE)), pmDE, marker='o', c=mp, s=plx_d,
-        #     edgecolors='black',
-        #     cmap=cm, lw=0.35, zorder=4)
-
+        pmRA_DE = pmRA * np.cos(np.deg2rad(DE_pm))
         ax.errorbar(
-            pmRA * np.cos(np.deg2rad(DE)), pmDE, yerr=e_pmDE, xerr=e_pmRA,
-            fmt='none', elinewidth=.35, ecolor=cmap(norm(mp)))
+            pmRA_DE, pmDE, yerr=e_pmDE, xerr=e_pmRA, fmt='none',
+            elinewidth=.65, ecolor=cmap(norm(pmMP)), zorder=4)
+
+        max_i, max_j = np.unravel_index(z_clpm.argmax(), z_clpm.shape)
+        CS = plt.contour(
+            x_clpm, y_clpm, z_clpm, 5, colors='r', linewidths=.6, zorder=6)
+        CS.collections[0].set_label("Clust: ({:.2f}, {:.2f}) [mas/yr]".format(
+            x_clpm[max_i][max_j], y_clpm[max_i][max_j]))
+
+        pmRA_fl_DE = pmRA_fl * np.cos(np.deg2rad(DE_fl_pm))
+        ax.errorbar(
+            pmRA_fl_DE, pmDE_fl, yerr=e_pmDE_fl,
+            xerr=e_pmRA_fl, fmt='none', elinewidth=.35, ecolor='grey',
+            zorder=1)
+
+        max_i, max_j = np.unravel_index(z_flpm.argmax(), z_flpm.shape)
+        CS = plt.contour(
+            x_flpm, y_flpm, z_flpm, 10, colors='k', linewidths=.3, zorder=5)
+        CS.collections[0].set_label("Field: ({:.2f}, {:.2f}) [mas/yr]".format(
+            x_flpm[max_i][max_j], y_flpm[max_i][max_j]))
+
+        RA_med, RA_std = np.median(pmRA_DE), np.std(pmRA_DE)
+        DE_med, DE_std = np.median(pmDE), np.std(pmDE)
+        plt.xlim(RA_med - 3. * RA_std, RA_med + 3. * RA_std)
+        plt.ylim(DE_med - 3. * DE_std, DE_med + 3. * DE_std)
+        plt.legend(fontsize='small')
 
 
 def plot(N, *args):
@@ -401,7 +421,7 @@ def plot(N, *args):
         2: [pl_plx_histo, 'Plx histogram'],
         3: [pl_plx_chart, 'Plx chart'],
         4: [pl_plx_vs_MP, 'Plx vs MP'],
-        5: [pl_pms_plot, 'PMs plot']
+        5: [pl_pms_plot, 'PMs']
     }
 
     fxn = plt_map.get(N, None)[0]
