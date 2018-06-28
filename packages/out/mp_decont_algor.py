@@ -189,7 +189,7 @@ def pl_mps_phot_diag(
     return sca, trans
 
 
-def pl_plx_histo(
+def plx_histo(
     gs, plx_flag, plx_clrg, plx_xmin, plx_xmax, plx_x_kde, kde_pl, plx_flrg,
         flag_no_fl_regs_i):
     '''
@@ -231,7 +231,7 @@ def pl_plx_histo(
         ax.legend(fontsize='small', loc=7)
 
 
-def pl_plx_vs_MP(
+def plx_vs_MP(
     gs, y_min_cmd, y_max_cmd, y_ax, plx_flag, mmag_plx, mp_plx, plx,
         e_plx, plx_bay, ph_plx, pl_plx, min_plx, max_plx):
     '''
@@ -265,11 +265,6 @@ def pl_plx_vs_MP(
         ax.errorbar(
             plx, mmag_plx, xerr=e_plx, fmt='none', elinewidth=.35,
             ecolor='grey')
-
-        # plt.show()
-        # from statsmodels.graphics.tsaplots import plot_acf
-        # plot_acf(samples.flatten(), lags=150)
-        # plt.show()
 
         # Bayesian
         t0 = r"$Plx_{{Bay}} ={:.3f}_{{{:.3f}}}^{{{:.3f}}}$".format(
@@ -306,7 +301,7 @@ def pl_plx_vs_MP(
         plt.gca().invert_yaxis()
 
 
-def pl_plx_chart(
+def plx_chart(
     gs, plx_flag, x_name, y_name, coord, cl_reg_fit, plx_x_kde,
         kde_pl):
     '''
@@ -356,7 +351,7 @@ def pl_plx_chart(
             cmap=cm, lw=0.35, zorder=4)
 
 
-def pl_pms_plot(
+def pms_vpd(
     gs, coord, plx_flag, PM_flag, pmMP, pmRA, e_pmRA, pmDE, e_pmDE, DE_pm,
         pmRA_fl, e_pmRA_fl, pmDE_fl, e_pmDE_fl, DE_fl_pm, x_clpm, y_clpm,
         z_clpm, x_flpm, y_flpm, z_flpm):
@@ -410,6 +405,36 @@ def pl_pms_plot(
         plt.legend(fontsize='small')
 
 
+def pms_vs_MP(gs, y_ax, plx_flag, PM_flag, pmMP, pm_dist_max, mmag_pm):
+    '''
+    '''
+    if PM_flag:
+        if plx_flag:
+            ax = plt.subplot(gs[4:6, 2:4])
+        else:
+            ax = plt.subplot(gs[2:4, 2:4])
+        ax.minorticks_on()
+        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1,
+                zorder=1)
+
+        ax.set_title("Distance to 2D KDE max value", fontsize=9)
+        plt.xlabel("PM dist [mas/yr]", fontsize=12)
+        plt.ylabel(y_ax, fontsize=12)
+
+        cmap = plt.cm.get_cmap('viridis')
+
+        plt.scatter(
+            pm_dist_max, mmag_pm, marker='o', c=pmMP, s=30, edgecolors='black',
+            cmap=cmap, lw=0.35, zorder=4)
+
+        cbar = plt.colorbar(pad=.01, fraction=.02, aspect=50)
+        cbar.ax.tick_params(labelsize=7)
+
+        median_dst, std_dst = np.median(pm_dist_max), np.std(pm_dist_max)
+        plt.xlim(-.05, median_dst * 2. * std_dst)
+        plt.gca().invert_yaxis()
+
+
 def plot(N, *args):
     '''
     Handle each plot separately.
@@ -418,10 +443,11 @@ def plot(N, *args):
     plt_map = {
         0: [pl_mp_histo, 'MPs histogram'],
         1: [pl_chart_mps, 'frame with MPs coloring'],
-        2: [pl_plx_histo, 'Plx histogram'],
-        3: [pl_plx_chart, 'Plx chart'],
-        4: [pl_plx_vs_MP, 'Plx vs MP'],
-        5: [pl_pms_plot, 'PMs']
+        2: [plx_histo, 'Plx histogram'],
+        3: [plx_chart, 'Plx chart'],
+        4: [plx_vs_MP, 'Plx vs MP'],
+        5: [pms_vpd, 'PMs vector point diagram'],
+        6: [pms_vs_MP, 'PMs vs MP']
     }
 
     fxn = plt_map.get(N, None)[0]

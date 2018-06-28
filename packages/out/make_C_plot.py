@@ -102,7 +102,7 @@ def main(
         # PMs data.
         PM_flag, pmMP, pmRA, e_pmRA, pmDE, e_pmDE, DE_pm, pmRA_fl, e_pmRA_fl,\
             pmDE_fl, e_pmDE_fl, DE_fl_pm, x_clpm, y_clpm, z_clpm, x_flpm,\
-            y_flpm, z_flpm = prep_plots.PMsPlot(
+            y_flpm, z_flpm, mmag_pm, pm_dist_max = prep_plots.PMsPlot(
                 coord, flag_no_fl_regs_i, field_regions_i, cl_reg_fit)
 
         arglist = [
@@ -114,19 +114,21 @@ def main(
              y_zmax, kde_cent, clust_rad, flag_decont_skip,
              v_min_mp, v_max_mp, chart_fit_inv, chart_no_fit_inv,
              out_clust_rad, pd['fld_clean_mode'], pd['fld_clean_bin']],
-            # pl_plx_histo
+            # plx_histo
             [gs, plx_flag, plx_clrg, plx_xmin, plx_xmax, plx_x_kde, kde_pl,
              plx_flrg, flag_no_fl_regs_i],
-            # pl_plx_chart
+            # plx_chart
             [gs, plx_flag, x_name, y_name, coord, cl_reg_fit, plx_x_kde,
              kde_pl],
-            # pl_plx_vs_MP
+            # plx_vs_MP
             [gs, y_min_cmd, y_max_cmd, y_ax, plx_flag, mmag_plx, mp_plx, plx,
              e_plx, plx_bay, ph_plx, pl_plx, min_plx, max_plx],
-            # pl_pms_plot
+            # pms_vpd
             [gs, coord, plx_flag, PM_flag, pmMP, pmRA, e_pmRA, pmDE, e_pmDE,
              DE_pm, pmRA_fl, e_pmRA_fl, pmDE_fl, e_pmDE_fl, DE_fl_pm, x_clpm,
-             y_clpm, z_clpm, x_flpm, y_flpm, z_flpm]
+             y_clpm, z_clpm, x_flpm, y_flpm, z_flpm],
+            # pms_vs_MP
+            [gs, y_ax, plx_flag, PM_flag, pmMP, pm_dist_max, mmag_pm]
         ]
         for n, args in enumerate(arglist):
             mp_decont_algor.plot(n, *args)

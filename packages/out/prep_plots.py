@@ -5,6 +5,7 @@ from ..decont_algors.local_cell_clean import bin_edges_f
 import numpy as np
 from scipy import stats
 from scipy import optimize
+from scipy.spatial.distance import cdist
 
 
 def frame_max_min(x_data, y_data):
@@ -669,8 +670,8 @@ def PMsPlot(coord, flag_no_fl_regs_i, field_regions_i, cl_reg_fit):
     """
     PM_flag, pmMP, e_pmRA, pmDE, e_pmDE, DE_pm, pmRA_fl, e_pmRA_fl, pmDE_fl,\
         e_pmDE_fl, DE_fl_pm, x_clpm, y_clpm, z_clpm, x_flpm, y_flpm,\
-        z_flpm = False, [], [], [], [], [], [], [], [], [], [], [], [], [],\
-        [], [], []
+        z_flpm, mmag_pm, pm_dist_max = False, [], [], [], [], [], [], [], [],\
+        [], [], [], [], [], [], [], [], [], []
 
     pmRA = np.array(zip(*zip(*cl_reg_fit)[7])[1])
     # Check that PMs were defined within the cluster region.
@@ -685,22 +686,31 @@ def PMsPlot(coord, flag_no_fl_regs_i, field_regions_i, cl_reg_fit):
             np.array(zip(*zip(*cl_reg_fit)[8])[2])
         DE_pm = np.array(zip(*cl_reg_fit)[2]) if coord == 'deg' else\
             np.zeros(pmRA.size)
+        mmag_pm = np.array(zip(*zip(*cl_reg_fit)[3])[0])
 
         # Remove nan values from cluster region
         msk = ~np.isnan(pmRA) & ~np.isnan(e_pmRA) & ~np.isnan(pmDE) &\
             ~np.isnan(e_pmDE)
-        pmMP, pmRA, e_pmRA, pmDE, e_pmDE, DE_pm = pmMP[msk], pmRA[msk],\
-            e_pmRA[msk], pmDE[msk], e_pmDE[msk], DE_pm[msk]
+        pmMP, pmRA, e_pmRA, pmDE, e_pmDE, DE_pm, mmag_pm = pmMP[msk],\
+            pmRA[msk], e_pmRA[msk], pmDE[msk], e_pmDE[msk], DE_pm[msk],\
+            mmag_pm[msk]
 
         # Re-arrange so stars with larger MPs are on top.
         mp_i = pmMP.argsort()
-        pmMP, pmRA, e_pmRA, pmDE, e_pmDE, DE_pm = pmMP[mp_i], pmRA[mp_i],\
-            e_pmRA[mp_i], pmDE[mp_i], e_pmDE[mp_i], DE_pm[mp_i]
+        pmMP, pmRA, e_pmRA, pmDE, e_pmDE, DE_pm, mmag_pm = pmMP[mp_i],\
+            pmRA[mp_i], e_pmRA[mp_i], pmDE[mp_i], e_pmDE[mp_i], DE_pm[mp_i],\
+            mmag_pm[mp_i]
 
         # 2D KDE for cluster region
         pmRA_DE = pmRA * np.cos(np.deg2rad(DE_pm))
         x_clpm, y_clpm, z_clpm = kde_2d(
             pmRA_DE, e_pmRA, pmDE, e_pmDE)
+
+        # Max value for cluster fit region
+        max_i, max_j = np.unravel_index(z_clpm.argmax(), z_clpm.shape)
+        max_v = np.array([[x_clpm[max_i][max_j], y_clpm[max_i][max_j]]])
+
+        pm_dist_max = cdist(max_v, np.array([pmRA_DE, pmDE]).T)
 
         if not flag_no_fl_regs_i:
             # Field region(s) data.
@@ -728,4 +738,4 @@ def PMsPlot(coord, flag_no_fl_regs_i, field_regions_i, cl_reg_fit):
 
     return PM_flag, pmMP, pmRA, e_pmRA, pmDE, e_pmDE, DE_pm, pmRA_fl,\
         e_pmRA_fl, pmDE_fl, e_pmDE_fl, DE_fl_pm, x_clpm, y_clpm, z_clpm,\
-        x_flpm, y_flpm, z_flpm
+        x_flpm, y_flpm, z_flpm, mmag_pm, pm_dist_max
