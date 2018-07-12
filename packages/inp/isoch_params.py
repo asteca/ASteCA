@@ -108,9 +108,9 @@ def main(met_f_filter, age_values, cmd_evol_tracks, evol_track, bin_mr,
     # Print info about tracks.
     nt = '' if len(all_syst_filters) == 0 else 's'
     print("Processing {} theoretical isochrones in the\n"
-          "photometric system{}:".format(nt, cmd_evol_tracks[evol_track][1]))
+          "photometric system{}:".format(cmd_evol_tracks[evol_track][1], nt))
     for syst in all_syst_filters:
-        print(" * '{}'".format(cmd_systs[syst[0]][0]))
+        print(" * {}".format(cmd_systs[syst[0]][0]))
 
     # Get isochrones and their extra parameters (mass, etc.).
     isoch_list, extra_pars = read_isochs.main(
