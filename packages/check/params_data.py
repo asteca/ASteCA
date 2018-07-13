@@ -125,10 +125,7 @@ def check(mypath, pd):
             iso_paths.append(
                 join(mypath + 'isochrones/' + text1 + '_' + text2))
 
-        # REMOVE when support for multiple photometric systems is in place.
-        if len(all_syst_filters) > 1:
-            sys.exit("ERROR: more than one photometric system defined.")
-        # REMOVE when support for multiple mags/colors is in place.
+        # TODO REMOVE when (if) support for multiple mags/colors is in place.
         if len(filters) > 1:
             sys.exit("ERROR: more than one filter defined.")
         if len(colors) > 2:

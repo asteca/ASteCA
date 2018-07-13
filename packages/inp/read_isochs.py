@@ -124,6 +124,8 @@ def main(met_f_filter, age_values, evol_track, all_syst_filters):
     # Depends on the evolutionary track set.
     line_start = isochs_format.cmd_line_start_format(evol_track)
 
+    # Store here the number of age values defined in each file, for checking.
+    numb_age_values = []
     # For each group of metallicity files (representing a single metallicity
     # value) in all photometric systems defined.
     for met_fls in zip(*met_f_filter):
@@ -138,6 +140,7 @@ def main(met_f_filter, age_values, evol_track, all_syst_filters):
             # Store list holding all the isochrones with the same metallicity
             # in the final isochrone list.
             all_systs.append(metal_isoch)
+            numb_age_values.append([met_f, len(metal_isoch)])
 
         # Store data for this metallicity value. Re-arrange first.
         all_systs_r = [list(itertools.chain(*_)) for _ in zip(*all_systs)]
@@ -145,9 +148,9 @@ def main(met_f_filter, age_values, evol_track, all_syst_filters):
 
         # The extra isochrone parameters are equal across photometric
         # systems, for a given metallicity and age. Thus, we read their
-        # values from the first system defined, for this metallicity value and
-        # all the ages defined, and store it in a separate list with the same
-        # order as the 'isoch_list' array.
+        # values from the *first system defined*, for this metallicity value
+        # and all the ages defined, and store it in a separate list with the
+        # same order as the 'isoch_list' array.
         e_pars = filters_and_extra_pars(
             evol_track, age_values, all_syst_filters, age_format, line_start,
             met_fls[0], -1)
@@ -156,10 +159,9 @@ def main(met_f_filter, age_values, evol_track, all_syst_filters):
 
     # Check that all metallicity files contain the same number of ages.
     if not checkEqual([len(_) for _ in isoch_list]):
-        for i, met_fls in enumerate(zip(*met_f_filter)):
-            print("Metallicity file:")
-            print(met_fls[0])
-            print("contains {} ages".format(len(isoch_list[i])))
+        print("")
+        for met_f, N in numb_age_values:
+            print(" {} ages in: {}".format(N, met_f.split('isochrones/')[1]))
         sys.exit("ERROR: not all metallicity files contain the same number\n"
                  "of defined ages.")
 

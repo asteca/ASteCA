@@ -12,20 +12,19 @@ def find_missing(arr_large, arr_small):
     elements in the smaller one.
     '''
     # Convert to strings before comparing.
-    s1 = [str(_) for _ in arr_small]
-    s2 = [str(_) for _ in arr_large]
+    s1 = [str(_) for _ in np.round(arr_small, 5)]
+    s2 = [str(_) for _ in np.round(arr_large, 5)]
     # Find missing elements. Convert to float and store.
     missing = [float(_) for _ in s2 if _ not in set(s1)]
 
     return missing
 
 
-def ranges_files_check(iso_paths, par_ranges, **kwargs):
+def ranges_files_check(
+        iso_paths, par_ranges, cmd_systs, all_syst_filters, **kwargs):
     """
     Obtain allowed metallicities and ages. Use the first photometric
     system defined.
-    *WE ASUME ALL PHOTOMETRIC SYSTEMS CONTAIN THE SAME NUMBER OF
-    METALLICITY FILES*
     """
     try:
         # Get parameters values defined.
@@ -49,19 +48,20 @@ def ranges_files_check(iso_paths, par_ranges, **kwargs):
     # Match values in metallicity and age ranges with those available.
     z_range, a_range = param_ranges[:2]
 
-    err_mssg = "ERROR: one or more metallicity files\n" +\
+    err_mssg = "ERROR: one or more metallicity files in the '{}' system\n" +\
                "could not be matched to the range given.\n\n" +\
                "The defined values are:\n\n" +\
                "{}\n\nand the values read are:\n\n" +\
                "{}\n\nThe missing elements are:\n\n{}"
     # Go through the values extracted from the metallicity files present
     # in each photometric system used.
-    for met_vs in met_values:
-        if len(z_range) > len(met_vs):
+    for i, met_vs in enumerate(met_values):
+        if z_range.size > len(met_vs):
             # Find missing elements.
             missing = find_missing(z_range, met_vs)
-            sys.exit(err_mssg.format(z_range, np.asarray(met_vs),
-                     np.asarray(missing)))
+            sys.exit(err_mssg.format(
+                cmd_systs[all_syst_filters[i][0]][0], z_range,
+                np.asarray(met_vs), np.asarray(missing)))
     err_mssg = "ERROR: one or more isochrones could not be matched\n" +\
                "to the age range given.\n\nThe defined values are:\n\n" +\
                "{}\n\nand the values read are:\n\n" +\

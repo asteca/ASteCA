@@ -106,16 +106,15 @@ def main(met_f_filter, age_values, cmd_evol_tracks, evol_track, bin_mr,
     Read isochrones and parameters if best fit function is set to run.
     '''
     # Print info about tracks.
-    print("Processing {} theoretical isochrones".format(
-        cmd_evol_tracks[evol_track][1]))
-
+    nt = '' if len(all_syst_filters) == 0 else 's'
+    print("Processing {} theoretical isochrones in the\n"
+          "photometric system{}:".format(cmd_evol_tracks[evol_track][1], nt))
     for syst in all_syst_filters:
-        print("in the '{}' photometric system.\n".format(
-            cmd_systs[syst[0]][0]))
+        print(" * {}".format(cmd_systs[syst[0]][0]))
 
     # Get isochrones and their extra parameters (mass, etc.).
-    isoch_list, extra_pars = read_isochs.main(met_f_filter, age_values,
-                                              evol_track, all_syst_filters)
+    isoch_list, extra_pars = read_isochs.main(
+        met_f_filter, age_values, evol_track, all_syst_filters)
 
     # Take the synthetic data from the unique filters read, create the
     # necessary colors, and position the magnitudes and colors in the
@@ -162,7 +161,6 @@ def main(met_f_filter, age_values, cmd_evol_tracks, evol_track, bin_mr,
     # Sort all isochrones according to the main magnitude (min to max).
     # This is necessary so that the cut_max_mag() function does not need
     # to do this every time a new synthetic cluster is generated.
-
     theor_tracks = [[[] for _ in a[0]] for _ in a]
     for i, mx in enumerate(comb_data):
         for j, ax in enumerate(mx):

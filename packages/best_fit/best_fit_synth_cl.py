@@ -1,7 +1,7 @@
 
 import numpy as np
 import max_mag_cut
-import emcee_algor  # TODO add to needed packages
+import emcee_algor
 import obs_clust_prepare
 import genetic_algorithm
 import brute_force_algor

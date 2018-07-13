@@ -126,14 +126,10 @@ def main(iso_paths, par_ranges):
     # Also read full paths to metallicity files.
     met_vals_all, met_files = get_metals(iso_paths)
 
-    # Read all ages from the *first* metallicity file defined.
-    #
-    # *WE ASUME ALL METALLICITY FILES HAVE THE SAME NUMBER OF AGE VALUES*
-    # (that's why we use the first metallicity file stored to obtain all
-    # the age values)
-    #
-    # I.e: all metallicity files should contain the same amount and values for
-    # the ages, otherwise something *will* fail down the line.
+    # Read all ages from the *first* metallicity file defined, assuming all
+    # files contain the same number of ages.
+    # This check (that all metallicity files contain the same number of ages)
+    # happens in 'read_isochs'.
     age_vals_all = CMDAges(met_files[0][0])
 
     # Get parameters ranges stored in params_input.dat file.
