@@ -7,7 +7,7 @@
         |--> check/params_file
         |--> check/update
         |--> check/params_mode
-        |--> check/photom_names
+        |--> check/params_data
         |--> check/params_out
         |--> check/params_struct
         |--> check/params_pval
@@ -16,10 +16,10 @@
         |--> check/params_match
         |--> check/read_met_files
             |--> inp/met_ages_values
-                  |--> inp/isochs_format (1)
+                |--> inp/isochs_format (1)
             |--> inp/isoch_params
                 |--> inp/read_isochs
-                  |--> inp/isochs_format (2)
+                    |--> inp/isochs_format (2)
     |--> func_caller
         |--> inp/names_paths (2)
         |--> inp/get_data_semi
@@ -27,7 +27,7 @@
         |--> structure/trim_frame
             |--> structure/display_frame
                 |--> out/prep_plots (1)
-                  |--> math_f/exp_function (1)
+                    |--> math_f/exp_function (1)
         |--> structure/histo_2d
         |--> structure/center
             |--> out/prep_plots (2)
