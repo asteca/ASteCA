@@ -1,6 +1,6 @@
 
 import numpy as np
-import read_isochs
+from . import read_isochs
 from ..synth_clust import binarity
 
 

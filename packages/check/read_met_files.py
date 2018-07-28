@@ -31,7 +31,7 @@ def ranges_files_check(
         param_ranges, met_f_filter, met_values, age_values = \
             met_ages_values.main(iso_paths, par_ranges)
     except Exception:
-        print traceback.format_exc()
+        print(traceback.format_exc())
         sys.exit("\nERROR: error storing metallicity files.")
 
     # Check that ranges are properly defined.

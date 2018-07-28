@@ -3,7 +3,7 @@ import numpy as np
 import os
 import re
 from os.path import join
-import isochs_format
+from . import isochs_format
 
 
 def match_ranges(met_vals_all, met_files, age_vals_all, z_range, a_range):
@@ -80,7 +80,7 @@ def CMDAges(met_file):
     with open(met_file, mode="r") as f_iso:
         regex = age_format  # Define regular expression.
         ages0 = re.findall(regex, f_iso.read())  # Find all instances.
-        ages1 = np.asarray(map(float, ages0))  # Map to floats.
+        ages1 = np.asarray(list(map(float, ages0)))  # Map to floats.
         ages2 = np.log10(ages1)  # Take log10
         isoch_a = np.around(ages2, 2)  # Round to 2 decimals.
 

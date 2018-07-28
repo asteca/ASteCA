@@ -1,15 +1,15 @@
 
-from check import pack
-from check import first_run
-from check import update
-from check import clusters
-from check import params_file
-from check import params_mode
-from check import params_data
-from check import params_out
-from check import params_struct
-from check import params_pval
-from check import params_decont
+from .check import pack
+from .check import first_run
+from .check import update
+from .check import clusters
+from .check import params_file
+from .check import params_mode
+from .check import params_data
+from .check import params_out
+from .check import params_struct
+from .check import params_pval
+from .check import params_decont
 
 
 def check_all(mypath, file_end):
@@ -28,8 +28,8 @@ def check_all(mypath, file_end):
     first_run_flag = first_run.main(mypath)
 
     # Import here after the needed packages were checked to be present.
-    from check import params_match
-    from check import read_met_files
+    from .check import params_match
+    from .check import read_met_files
 
     # Check if input cluster files exist.
     cl_files = clusters.check(mypath, file_end)

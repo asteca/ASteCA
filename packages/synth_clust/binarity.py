@@ -1,6 +1,6 @@
 
 import numpy as np
-from mass_interp import find_closest
+from .mass_interp import find_closest
 
 
 def mag_combine(m1, m2):

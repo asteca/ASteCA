@@ -4,7 +4,7 @@ import traceback
 import numpy as np
 import itertools
 import re
-import isochs_format
+from . import isochs_format
 
 
 def readCMDFile(met_f, age_values, line_start, age_format, column_ids):

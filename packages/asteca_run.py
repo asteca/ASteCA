@@ -4,8 +4,8 @@ from os.path import join, realpath, dirname
 from os import getcwd
 import argparse
 import traceback
-from _version import __version__
-from packages.checker import check_all
+from ._version import __version__
+from .checker import check_all
 
 
 def num_exec():
