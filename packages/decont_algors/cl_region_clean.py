@@ -1,5 +1,5 @@
 
-import local_cell_clean
+from . import local_cell_clean
 
 
 def nmemb_sel(n_memb, memb_prob_avrg_sort):

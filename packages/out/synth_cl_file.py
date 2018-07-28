@@ -2,7 +2,7 @@
 from ..synth_clust import synth_cl_plot
 
 
-def main(clp, npd, err_max, bf_flag, fundam_params, filters, colors,
+def main(clp, npd, bf_flag, fundam_params, filters, colors,
          theor_tracks, plot_isoch_data, R_V, **kwargs):
     '''
     Create output data file with stars in the best fit synthetic cluster found
@@ -11,7 +11,7 @@ def main(clp, npd, err_max, bf_flag, fundam_params, filters, colors,
     clp['synth_clst'], clp['shift_isoch'] = [], []
     if bf_flag:
         shift_isoch, synth_clst = synth_cl_plot.main(
-            err_max, fundam_params, theor_tracks, plot_isoch_data,
+            clp['em_float'], fundam_params, theor_tracks, plot_isoch_data,
             clp['isoch_fit_params'], clp['err_lst'], clp['completeness'],
             clp['max_mag_syn'], clp['st_dist_mass'], R_V, clp['ext_coefs'],
             clp['N_fc'], clp['cmpl_rnd'], clp['err_rnd'])
@@ -19,10 +19,10 @@ def main(clp, npd, err_max, bf_flag, fundam_params, filters, colors,
         # If cluster is not empty.
         if synth_clst:
             # Prepare data.
-            mags_cols, e_mags_cols = zip(*synth_clst[0][0]),\
-                zip(*synth_clst[0][1])
+            mags_cols, e_mags_cols = list(zip(*synth_clst[0][0])),\
+                list(zip(*synth_clst[0][1]))
             binar_idx = synth_clst[1][0]
-            extra_pars = zip(*synth_clst[1][2:])
+            extra_pars = list(zip(*synth_clst[1][2:]))
             # Prepare header.
             hdr = ['#ID           ']
             hdr += [f[1] + '   ' for f in filters]

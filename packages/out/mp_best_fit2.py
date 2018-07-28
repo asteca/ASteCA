@@ -216,5 +216,5 @@ def plot(N, *args):
         fxn(*args)
     except Exception:
         import traceback
-        print traceback.format_exc()
+        print(traceback.format_exc())
         print("  WARNING: error when plotting {}.".format(plt_map.get(N)[1]))

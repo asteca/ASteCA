@@ -4,6 +4,10 @@ from astropy.io import ascii
 from collections import defaultdict, Iterable
 import operator
 import copy
+# In place for #243
+import sys
+if sys.version_info[0] == 3:
+    from functools import reduce
 
 
 def main(npd, read_mode, id_col, x_col, y_col, mag_col, e_mag_col,
@@ -37,10 +41,8 @@ def main(npd, read_mode, id_col, x_col, y_col, mag_col, e_mag_col,
         # Remove not wanted columns *before* removing rows with 'nan' values
         # (otherwise columns that should not be read will influence the row
         # removal).
-        col_names_keep = list(flatten(col_names))
-        for col in data.columns:
-            if col not in col_names_keep:
-                data.remove_column(col)
+        col_names_keep = list(filter(bool, list(flatten(col_names))))
+        data.keep_columns(col_names_keep)
 
         # Check if there are any masked elements in the data table.
         masked_elems = 0
@@ -91,11 +93,22 @@ def flatten(l):
     Source: https://stackoverflow.com/a/2158532/1391441
     """
     for el in l:
-        if isinstance(el, Iterable) and not isinstance(el, basestring):
-            for sub in flatten(el):
-                yield sub
+        # In place for #243
+        import sys
+        if sys.version_info[0] == 2:
+            if isinstance(el, Iterable) and not isinstance(el, basestring):
+                for sub in flatten(el):
+                    yield sub
+            else:
+                yield el
         else:
-            yield el
+            import collections
+            if isinstance(el, collections.Iterable) and not\
+                    isinstance(el, (str, bytes)):
+                for sub in flatten(el):
+                    yield sub
+            else:
+                yield el
 
 
 def fill_cols(tbl, fill=np.nan, kind='f'):

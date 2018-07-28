@@ -3,9 +3,9 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from os.path import join
 import warnings
-import add_version_plot
-import mp_decont_algor
-import prep_plots
+from . import add_version_plot
+from . import mp_decont_algor
+from . import prep_plots
 
 
 def plot_observed_cluster(

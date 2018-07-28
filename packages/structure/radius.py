@@ -3,7 +3,7 @@ import numpy as np
 from scipy import stats
 import matplotlib.pyplot as plt
 import warnings
-import display_rad
+from . import display_rad
 from ..out import prep_plots
 
 

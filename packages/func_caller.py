@@ -2,47 +2,47 @@
 import time
 import gc  # Garbage collector.
 #
-from inp import names_paths
-from inp import get_data_semi
-from inp import get_data
-# from structure import trim_frame  # DEPRECATED
-from structure import histo_2d
-from structure import xy_density
-from structure import center
-from structure import radial_dens_prof
-from structure import field_density
-from structure import radius
-from structure import cluster_area
-from structure import contamination_index
-from structure import king_profile
-from errors import err_accpt_rejct
-from structure import stars_in_out_cl_reg
-from structure import field_regions
-from errors import err_range_avrg
+from .inp import names_paths
+from .inp import get_data_semi
+from .inp import get_data
+# from .structure import trim_frame  # DEPRECATED
+from .structure import histo_2d
+from .structure import xy_density
+from .structure import center
+from .structure import radial_dens_prof
+from .structure import field_density
+from .structure import radius
+from .structure import cluster_area
+from .structure import contamination_index
+from .structure import king_profile
+from .errors import err_accpt_rejct
+from .structure import stars_in_out_cl_reg
+from .structure import field_regions
+from .errors import err_range_avrg
 #
-from phot_analysis import luminosity
-from phot_analysis import kde_pvalue
-from phot_analysis import members_number
+from .phot_analysis import luminosity
+from .phot_analysis import kde_pvalue
+from .phot_analysis import members_number
 #
-from decont_algors import decont_algors
-from decont_algors import members_N_compare
-from decont_algors import cl_region_clean
+from .decont_algors import decont_algors
+from .decont_algors import members_N_compare
+from .decont_algors import cl_region_clean
 #
-from out import cluster_members_file
-from best_fit import best_fit_synth_cl
-from out import synth_cl_file
-from out import create_out_data_file
-from errors import error_round
+from .out import cluster_members_file
+from .best_fit import best_fit_synth_cl
+from .out import synth_cl_file
+from .out import create_out_data_file
+from .errors import error_round
 #
-from out import add_data_output
-from out import make_A1_plot
-from out import make_A2_plot
-from out import make_B_plot
-from out import make_C_plot
-from out import make_D1_plot
-from out import make_D2_plot
-from out import top_tiers
-from out import done_move
+from .out import add_data_output
+from .out import make_A1_plot
+from .out import make_A2_plot
+from .out import make_B_plot
+from .out import make_C_plot
+from .out import make_D1_plot
+from .out import make_D2_plot
+from .out import top_tiers
+from .out import done_move
 
 
 def main(cl_file, pd):

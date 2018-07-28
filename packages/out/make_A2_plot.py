@@ -2,9 +2,9 @@
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from os.path import join
-import mp_structure
-import add_version_plot
-import prep_plots
+from . import mp_structure
+from . import add_version_plot
+from . import prep_plots
 
 
 #############################################################

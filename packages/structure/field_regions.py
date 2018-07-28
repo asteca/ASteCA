@@ -1,7 +1,7 @@
 
 import numpy as np
-import spiral as sp
-import field_manual_histo
+from . import spiral as sp
+from . import field_manual_histo
 
 
 def spiral_index(spiral, sp_indx, histo, cent_bin, num_bins_area):

@@ -1,11 +1,11 @@
 
 import numpy as np
-import max_mag_cut
-import emcee_algor
-import obs_clust_prepare
-import genetic_algorithm
-import brute_force_algor
-import bootstrap
+from . import max_mag_cut
+from . import emcee_algor
+from . import obs_clust_prepare
+from . import genetic_algorithm
+from . import brute_force_algor
+from . import bootstrap
 from ..synth_clust import extin_coefs
 from ..synth_clust import imf
 
@@ -32,17 +32,15 @@ def params_errors(best_fit_algor, args):
         isoch_fit_errors = bootstrap.main(*args)
 
     elif best_fit_algor == 'emcee':
-        varIdxs, emcee_trace = args
-        isoch_fit_errors = []
-        # TODO hard-coded for 6 parameters
-        j = 0
-        for i in range(6):
-            if i in varIdxs:
+        isoch_fit_params, isoch_fit_errors, j = args, [], 0
+        for i, _ in enumerate(isoch_fit_params['best_sol']):
+            if i in isoch_fit_params['varIdxs']:
                 #  16th and 84th percentiles (1 sigma)
-                ph = np.percentile(emcee_trace[i - j], 84)
-                pl = np.percentile(emcee_trace[i - j], 16)
-                # TODO fix this
-                err = .5 * (ph - pl)
+                ph = np.percentile(isoch_fit_params['emcee_trace'][i - j], 84)
+                pl = np.percentile(isoch_fit_params['emcee_trace'][i - j], 16)
+                std = np.std(isoch_fit_params['emcee_trace'][i - j])
+                # Use maximum error value. TODO is this a sensible approach?
+                err = max(.5 * (ph - pl), std)
                 isoch_fit_errors.append(err)
             else:
                 isoch_fit_errors.append(np.nan)
@@ -55,7 +53,7 @@ def main(clp, err_max, bf_flag, best_fit_algor, lkl_method, lkl_binning,
          lkl_weight, N_bootstrap, max_mag, IMF_name, m_high, m_sample_flag,
          R_V, fundam_params, N_pop, N_gen, fit_diff, cross_prob, cross_sel,
          mut_prob, N_el, N_ei, N_es, cmd_systs, filters, colors, theor_tracks,
-         nwalkers=0, nsteps=0., nburn=0., **kwargs):
+         nwalkers, nsteps, N_burn, nburn, emcee_a, **kwargs):
     '''
     Perform a best fitting process to find the cluster's fundamental
     parameters.
@@ -155,19 +153,21 @@ def main(clp, err_max, bf_flag, best_fit_algor, lkl_method, lkl_binning,
             isoch_fit_params = emcee_algor.main(
                 lkl_method, err_max, err_lst, completeness, max_mag_syn,
                 fundam_params, obs_clust, theor_tracks, R_V, ext_coefs,
-                st_dist_mass, N_fc, cmpl_rnd, err_rnd, nwalkers, nsteps, nburn)
+                st_dist_mass, N_fc, cmpl_rnd, err_rnd, nwalkers, nsteps,
+                nburn, N_burn, emcee_a)
             # Assign uncertainties.
             isoch_fit_errors = params_errors(
-                best_fit_algor, isoch_fit_params[3:])
+                best_fit_algor, isoch_fit_params)
 
         print("Best fit parameters obtained.")
 
     else:
-        # Pass empty lists to make_plots.
+        # Pass dummy data to make_plots.
         print('Skip parameters fitting process.')
         cl_max_mag, max_mag_syn, ext_coefs, st_dist_mass, N_fc, cmpl_rnd,\
             err_rnd, isoch_fit_params, isoch_fit_errors = [], -1., [], {}, [],\
-            [], [], [[np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]],\
+            [], [],\
+            {'best_sol': [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]},\
             [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]
 
     clp['cl_max_mag'], clp['max_mag_syn'], clp['ext_coefs'],\

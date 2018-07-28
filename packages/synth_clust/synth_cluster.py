@@ -1,11 +1,11 @@
 
-import move_isochrone
-import cut_max_mag
-import mass_distribution
-import mass_interp
-import binarity
-import completeness_rm
-import add_errors
+from . import move_isochrone
+from . import cut_max_mag
+from . import mass_distribution
+from . import mass_interp
+from . import binarity
+from . import completeness_rm
+from . import add_errors
 
 
 def main(err_max, err_lst, completeness, max_mag_syn, st_dist_mass,

@@ -177,7 +177,7 @@ def main(met_f_filter, age_values, cmd_evol_tracks, evol_track, bin_mr,
 
     # Obtain number of models in the solutions space.
     lens = [len(_) for _ in fundam_params]
-    total = reduce(lambda x, y: x * y, lens, 1)
+    total = np.prod(lens)
     print(
         "Number of values per parameter:\n"
         "  {} metallicity values (z),\n"

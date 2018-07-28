@@ -40,7 +40,7 @@ def main(clp, **kwargs):
     """
 
     # (Main) Magnitudes of *all*, after error rejection.
-    mmag = np.array(zip(*(zip(*clp['acpt_stars_c'])[3])))[0]
+    mmag = np.array(list(zip(*(list(zip(*clp['acpt_stars_c']))[3])))[0])
 
     # Get the completeness level for each magnitude bin.
     completeness = mag_completeness(mmag)
@@ -54,7 +54,7 @@ def main(clp, **kwargs):
         (np.array([0.]), lf_all / clp['frame_norm'], np.array([0.])))
 
     # Obtain histogram for cluster region.
-    mag_cl = list(zip(*zip(*clp['cl_region_c'])[3])[0])
+    mag_cl = list(zip(*list(zip(*clp['cl_region_c']))[3]))[0]
     lf_clust, lf_edg_c = np.histogram(
         mag_cl, bins=completeness[1],
         range=(np.nanmin(mag_cl), np.nanmax(mag_cl)))
@@ -81,9 +81,9 @@ def main(clp, **kwargs):
         # Create arrays adding elements so plt.step will plot the first and
         # last vertical bars.
         x_fl = np.concatenate((np.array([0.]), lf_edg_f))
-        y_fl = np.concatenate((np.array([0.]),
-                              (lf_field / float(len(clp['field_regions_c']))),
-                              np.array([0.])))
+        y_fl = np.concatenate(
+            (np.array([0.]), (lf_field / float(len(clp['field_regions_c']))),
+             np.array([0.])))
     else:
         print("  WARNING: no field regions defined. Luminosity function\n"
               "  is not cleaned from field star contamination.")

@@ -68,8 +68,8 @@ def get_m_c_errors(mags, e_mc_v, mmag_interv_pts):
             print("  2P exponential error function fit failed."
                   " Perform min-max magnitude fit.")
             # Fit simple 2-params exponential curve.
-            mmag_interv_pts = [min(mags), max(mags) - (max(mags) -
-                               min(mags)) / 20.]
+            mmag_interv_pts = [
+                min(mags), max(mags) - (max(mags) - min(mags)) / 20.]
             e_mc_r = [min(e_mc_v), max(e_mc_v)]
             popt_mc, dummy = curve_fit(exp_function.exp_2p, mmag_interv_pts,
                                        e_mc_r)
@@ -87,13 +87,13 @@ def main(clp):
     generate the synthetic clusters in the best match module.
     '''
     # Use the main magnitude after max error rejection.
-    mmag = np.array(zip(*(zip(*clp['acpt_stars_c'])[3])))[0]
+    mmag = np.array(list(zip(*(list(zip(*clp['acpt_stars_c']))[3])))[0])
     be_m, interv_mag, n_interv, mmag_interv_pts = errorData(mmag)
 
     # Obtain the median points for photometric errors. Append magnitude
     # values first, and colors after.
-    e_mags = list(zip(*(zip(*clp['acpt_stars_c'])[4])))
-    e_cols = list(zip(*(zip(*clp['acpt_stars_c'])[6])))
+    e_mags = list(zip(*(list(zip(*clp['acpt_stars_c']))[4])))
+    e_cols = list(zip(*(list(zip(*clp['acpt_stars_c']))[6])))
     e_mc_medians = []
     for e_mc in e_mags + e_cols:
         e_mc_medians.append(err_medians.main(

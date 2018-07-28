@@ -177,7 +177,7 @@ def zoomed_frame(x, y, mags, x_zmin, x_zmax, y_zmin, y_zmax):
     Separate stars for zoomed frame. Use main magnitude.
     '''
     x_data_z, y_data_z, mag_data_z = [], [], []
-    for st_x, st_y, st_mag in zip(x, y, mags[0]):
+    for st_x, st_y, st_mag in list(zip(x, y, mags[0])):
         if x_zmin <= st_x <= x_zmax and y_zmin <= st_y <= y_zmax:
             x_data_z.append(st_x)
             y_data_z.append(st_y)
@@ -215,8 +215,8 @@ def da_colorbar_range(cl_reg_fit, cl_reg_no_fit):
     Extreme values for colorbar.
     """
     lst_comb = cl_reg_fit + cl_reg_no_fit
-    v_min_mp, v_max_mp = round(min(zip(*lst_comb)[-1]), 2), \
-        round(max(zip(*lst_comb)[-1]), 2)
+    v_min_mp, v_max_mp = round(min(list(zip(*lst_comb))[-1]), 2), \
+        round(max(list(zip(*lst_comb))[-1]), 2)
 
     return v_min_mp, v_max_mp
 
@@ -228,14 +228,14 @@ def da_find_chart(
     Finding chart with MPs assigned by the DA.
     '''
     # Arrange stars used in the best fit process.
-    cl_reg_fit = zip(*cl_reg_fit)
+    cl_reg_fit = list(zip(*cl_reg_fit))
     # Finding chart data. Invert values so higher prob stars are on top.
     chart_fit_inv = [i[::-1] for i in
                      [cl_reg_fit[1], cl_reg_fit[2], cl_reg_fit[9]]]
 
     # Arrange stars *not* used in the best fit process.
     if cl_reg_no_fit:
-        cl_reg_no_fit = zip(*cl_reg_no_fit)
+        cl_reg_no_fit = list(zip(*cl_reg_no_fit))
         # Finding chart data.
         chart_no_fit_inv = [
             i[::-1] for i in [cl_reg_no_fit[1], cl_reg_no_fit[2],
@@ -267,21 +267,21 @@ def da_phot_diag(cl_reg_fit, cl_reg_no_fit, v_min_mp, v_max_mp):
     plot_colorbar = True if v_min_mp != v_max_mp else False
 
     # Arrange stars used in the best fit process.
-    cl_reg_fit = zip(*cl_reg_fit)
+    cl_reg_fit = list(zip(*cl_reg_fit))
     # Magnitudes.
-    diag_fit_inv = [[i[::-1] for i in zip(*cl_reg_fit[3])]]
+    diag_fit_inv = [[i[::-1] for i in list(zip(*cl_reg_fit[3]))]]
     # Colors.
-    diag_fit_inv += [[i[::-1] for i in zip(*cl_reg_fit[5])]]
+    diag_fit_inv += [[i[::-1] for i in list(zip(*cl_reg_fit[5]))]]
     # membership probabilities.
     diag_fit_inv += [cl_reg_fit[9][::-1]]
 
     # Arrange stars *not* used in the best fit process.
     if cl_reg_no_fit:
-        cl_reg_no_fit = zip(*cl_reg_no_fit)
+        cl_reg_no_fit = list(zip(*cl_reg_no_fit))
         # Magnitudes.
-        diag_no_fit_inv = [[i[::-1] for i in zip(*cl_reg_no_fit[3])]]
+        diag_no_fit_inv = [[i[::-1] for i in list(zip(*cl_reg_no_fit))[3]]]
         # Colors.
-        diag_no_fit_inv += [[i[::-1] for i in zip(*cl_reg_no_fit[5])]]
+        diag_no_fit_inv += [[i[::-1] for i in list(zip(*cl_reg_no_fit))[5]]]
         # membership probabilities.
         diag_no_fit_inv += [cl_reg_no_fit[9][::-1]]
     else:
@@ -298,7 +298,7 @@ def error_bars(stars_phot, x_min_cmd, err_lst, all_flag=None):
     if all_flag == 'all':
         mmag = np.array(stars_phot)
     else:
-        mmag = np.array(zip(*zip(*stars_phot)[3])[0])
+        mmag = np.array(list(zip(*list(zip(*stars_phot))[3]))[0])
 
     x_val, mag_y, xy_err = [], [], []
     if mmag.any():
@@ -333,20 +333,27 @@ def param_ranges(fundam_params):
     return min_max_p
 
 
-def p2_ranges(min_max_p, varIdxs, model_done, nwalkers, nsteps):
+def p2_ranges(p2, min_max_p, varIdxs, model_done):
     '''
     Parameter ranges used by 'emcee' 2-param density plots.
     '''
-    min_max_p2 = []
-    for vi in range(6):  # TODO hard-coded to 6 parameters
-        if vi in varIdxs:
-            model = varIdxs.index(vi)
-            hx, edge = np.histogram(model_done[model], bins=20)
-            # non_z = np.nonzero(hx > 0)
-            # min_max_p2.append([edge[non_z[0][0]], edge[non_z[0][-1]]])
-            min_max_p2.append([edge[0], edge[-1]])
-        else:
-            min_max_p2.append(min_max_p[vi])
+    par_idx = {
+        'metal': 0, 'age': 1, 'ext': 2, 'dist': 3, 'mass': 4, 'binar': 5}
+    par = p2.split('-')
+
+    min_max_p2 = min_max_p[par_idx[par[0]]] + min_max_p[par_idx[par[1]]]
+
+    # min_max_p2 = []
+    # for vi in range(6):  # TODO hard-coded to 6 parameters
+    #     min_max_p2.append(min_max_p[vi])
+    #     # if vi in varIdxs:
+    #     #     model = varIdxs.index(vi)
+    #     #     hx, edge = np.histogram(model_done[model], bins=20)
+    #     #     # non_z = np.nonzero(hx > 0)
+    #     #     # min_max_p2.append([edge[non_z[0][0]], edge[non_z[0][-1]]])
+    #     #     min_max_p2.append([edge[0], edge[-1]])
+    #     # else:
+    #     #     min_max_p2.append(min_max_p[vi])
 
     return min_max_p2
 
@@ -428,8 +435,8 @@ def packData(lkl_method, lkl_binning, cl_max_mag, synth_clst, shift_isoch,
     # CMD of main magnitude and first color defined.
     # Used to defined limits.
     x_phot_all, y_phot_all = cld_c['cols'][0], cld_c['mags'][0]
-    frst_obs_mag, frst_obs_col = list(zip(*zip(*cl_max_mag)[3])[0]),\
-        list(zip(*zip(*cl_max_mag)[5])[0])
+    frst_obs_mag, frst_obs_col = list(zip(*list(zip(*cl_max_mag))[3]))[0],\
+        list(zip(*list(zip(*cl_max_mag))[5]))[0]
     frst_synth_col, frst_synth_mag = synth_clst[0][0][1],\
         synth_clst[0][0][0]
     # Indexes of binary systems.
@@ -452,7 +459,7 @@ def packData(lkl_method, lkl_binning, cl_max_mag, synth_clst, shift_isoch,
     # If more than one color was defined, plot an extra CMD (main magnitude
     # versus first color), and an extra CCD (first color versus second color)
     if N_cols > 1:
-        scnd_obs_col = list(zip(*zip(*cl_max_mag)[5])[1])
+        scnd_obs_col = list(zip(*list(zip(*cl_max_mag))[5]))[1]
         scnd_synth_col = synth_clst[0][0][2]
         scnd_col_edgs = bin_edges[2]
         scnd_col_isoch = shift_isoch[N_mags + 1]
@@ -514,7 +521,7 @@ def plxPlot(inst_packgs_lst, flag_no_fl_regs_i, field_regions_i, cl_reg_fit):
     plx_flag, plx_clrg, plx_xmin, plx_xmax, plx_x_kde, kde_pl, plx_flrg =\
         False, [], 0., 0., [], [], []
 
-    plx = np.array(zip(*zip(*cl_reg_fit)[7])[0])
+    plx = np.array(list(zip(*list(zip(*cl_reg_fit))[7]))[0])
     plx_clrg = plx[~np.isnan(plx)]
     # Check that a range of parallaxes is possible.
     if plx_clrg.any():
@@ -534,7 +541,7 @@ def plxPlot(inst_packgs_lst, flag_no_fl_regs_i, field_regions_i, cl_reg_fit):
         # Extract parallax data.
         plx_flrg = []
         for fl_rg in field_regions_i:
-            plx_flrg += list(zip(*(zip(*fl_rg))[7]))[0]
+            plx_flrg += list(zip(*list(zip(*fl_rg))[7]))[0]
         plx_flrg = np.asarray(plx_flrg)
         # Mask 'nan' and set range.
         plx_all = plx_flrg[~np.isnan(plx_flrg)]
@@ -547,9 +554,9 @@ def plxPlot(inst_packgs_lst, flag_no_fl_regs_i, field_regions_i, cl_reg_fit):
     msk = (plx < max_plx) & (plx > min_plx)
     # Prepare masked data.
     plx = plx[msk]
-    mmag = np.array(zip(*zip(*cl_reg_fit)[3])[0])[msk]
-    mp = np.array(zip(*cl_reg_fit)[9])[msk]
-    e_plx = np.array(zip(*zip(*cl_reg_fit)[8])[0])[msk]
+    mmag = np.array(list(zip(*list(zip(*cl_reg_fit))[3]))[0])[msk]
+    mp = np.array(list(zip(*cl_reg_fit))[9])[msk]
+    e_plx = np.array(list(zip(*list(zip(*cl_reg_fit))[8]))[0])[msk]
     # Put large MP stars on top
     mp_i = mp.argsort()
     mmag_plx, mp_plx, plx, e_plx = mmag[mp_i], mp[mp_i], plx[mp_i], e_plx[mp_i]
@@ -639,7 +646,7 @@ def kde_2d(xarr, xsigma, yarr, ysigma, grid_dens=50):
 
     # Evaluate KDE in x,y grid.
     vals = []
-    for p in zip(*pos):
+    for p in list(zip(*pos)):
         valxy = np.exp(-0.5 * (
             ((p[0] - xarr) / xsigma)**2 + ((p[1] - yarr) / ysigma)**2)) /\
             (xsigma * ysigma)
@@ -673,20 +680,21 @@ def PMsPlot(coord, flag_no_fl_regs_i, field_regions_i, cl_reg_fit):
         z_flpm, mmag_pm, pm_dist_max = False, [], [], [], [], [], [], [], [],\
         [], [], [], [], [], [], [], [], [], []
 
-    pmRA = np.array(zip(*zip(*cl_reg_fit)[7])[1])
+    pmRA = np.array(list(zip(*list(zip(*cl_reg_fit))[7]))[1])
     # Check that PMs were defined within the cluster region.
     if pmRA[~np.isnan(pmRA)].any():
         PM_flag = True
 
         # Cluster region data.
-        pmMP, pmRA, e_pmRA, pmDE, e_pmDE = np.array(zip(*cl_reg_fit)[9]),\
-            np.array(zip(*zip(*cl_reg_fit)[7])[1]),\
-            np.array(zip(*zip(*cl_reg_fit)[8])[1]),\
-            np.array(zip(*zip(*cl_reg_fit)[7])[2]),\
-            np.array(zip(*zip(*cl_reg_fit)[8])[2])
-        DE_pm = np.array(zip(*cl_reg_fit)[2]) if coord == 'deg' else\
+        pmMP, pmRA, e_pmRA, pmDE, e_pmDE =\
+            np.array(list(zip(*cl_reg_fit))[9]),\
+            np.array(list(zip(*list(zip(*cl_reg_fit))[7]))[1]),\
+            np.array(list(zip(*list(zip(*cl_reg_fit))[8]))[1]),\
+            np.array(list(zip(*list(zip(*cl_reg_fit))[7]))[2]),\
+            np.array(list(zip(*list(zip(*cl_reg_fit))[8]))[2])
+        DE_pm = np.array(list(zip(*cl_reg_fit))[2]) if coord == 'deg' else\
             np.zeros(pmRA.size)
-        mmag_pm = np.array(zip(*zip(*cl_reg_fit)[3])[0])
+        mmag_pm = np.array(list(zip(*list(zip(*cl_reg_fit))[3]))[0])
 
         # Remove nan values from cluster region
         msk = ~np.isnan(pmRA) & ~np.isnan(e_pmRA) & ~np.isnan(pmDE) &\
@@ -715,11 +723,11 @@ def PMsPlot(coord, flag_no_fl_regs_i, field_regions_i, cl_reg_fit):
         if not flag_no_fl_regs_i:
             # Field region(s) data.
             for fl_rg in field_regions_i:
-                pmRA_fl += list(zip(*zip(*fl_rg)[7])[1])
-                e_pmRA_fl += list(zip(*zip(*fl_rg)[8])[1])
-                pmDE_fl += list(zip(*zip(*fl_rg)[7])[2])
-                e_pmDE_fl += list(zip(*zip(*fl_rg)[8])[2])
-                DE_fl_pm += list(zip(*fl_rg)[2])
+                pmRA_fl += list(zip(*list(zip(*fl_rg))[7]))[1]
+                e_pmRA_fl += list(zip(*list(zip(*fl_rg))[8]))[1]
+                pmDE_fl += list(zip(*list(zip(*fl_rg))[7]))[2]
+                e_pmDE_fl += list(zip(*list(zip(*fl_rg))[8]))[2]
+                DE_fl_pm += list(list(zip(*fl_rg)))[2]
 
             pmRA_fl, e_pmRA_fl, pmDE_fl, e_pmDE_fl, DE_fl_pm = [
                 np.asarray(_) for _ in (

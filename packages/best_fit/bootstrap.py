@@ -1,8 +1,8 @@
 
 import numpy as np
 import random
-import genetic_algorithm
-import obs_clust_prepare
+from . import genetic_algorithm
+from . import obs_clust_prepare
 from .. import update_progress
 
 
@@ -22,9 +22,9 @@ def main(lkl_method, e_max, err_lst, completeness, fundam_params,
          cross_sel, mut_prob, N_el, N_ei, N_es, lkl_binning, lkl_weight,
          N_b, flag_print_perc, isoch_fit_params):
     '''
-    Bootstrap process, runs the selected algorithm a number of times each
-    time generating a new observed cluster representation through resampling
-    with replacement.
+    Non-parametric bootstrap process, runs the selected algorithm a number of
+    times each time generating a new observed cluster representation through
+    resampling with replacement.
     '''
     if N_b >= 2:
         print('Begin bootstrap process ({}).'.format(N_b))
@@ -47,7 +47,7 @@ def main(lkl_method, e_max, err_lst, completeness, fundam_params,
                 fundam_params, obs_cl, theor_tracks, R_V, ext_coefs,
                 st_dist_mass, N_fc, cmpl_rnd, err_rnd, N_pop, N_gen, fit_diff,
                 cross_prob, cross_sel, mut_prob, N_el, N_ei, N_es,
-                flag_print_perc)[0])
+                flag_print_perc)['best_sol'])
 
             update_progress.updt(N_b, i + 1)
 
@@ -66,6 +66,6 @@ def main(lkl_method, e_max, err_lst, completeness, fundam_params,
     else:
         print('Skip bootstrap process.')
         # No error assignment.
-        isoch_fit_errors = [np.nan] * len(isoch_fit_params[0])
+        isoch_fit_errors = [np.nan] * len(isoch_fit_params['best_sol'])
 
     return isoch_fit_errors

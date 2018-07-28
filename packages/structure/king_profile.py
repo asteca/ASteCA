@@ -3,7 +3,7 @@ import numpy as np
 from scipy.optimize import curve_fit
 import warnings
 from scipy.optimize import OptimizeWarning
-import king_prof_funcs as kpf
+from . import king_prof_funcs as kpf
 from ..out import prep_plots
 
 
@@ -221,13 +221,13 @@ def main(clp, kp_flag, coords, **kwargs):
             # Set precision of printed values.
             text2 = '{:.1f}, {:.1f}' if coord == 'px' else '{:g}, {:g}'
             text = 'Core & tidal radii obtained: ' + text2 + ' {}.'
-            print text.format(rc, rt, coord)
+            print(text.format(rc, rt, coord))
 
         elif flag_2pk_conver:
             # Set precision of printed values.
             text2 = '{:.1f}' if coord == 'px' else '{:g}'
             text = 'Only core radius obtained: ' + text2 + ' {}.'
-            print text.format(rc, coord)
+            print(text.format(rc, coord))
 
         else:
             print("Core & tidal radii not found.")

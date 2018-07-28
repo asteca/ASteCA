@@ -63,7 +63,7 @@ def main(clp, center_stddev, **kwargs):
     # than 10% of that axis range. Use the full x,y positions list to
     # calculate the STDDEV.
     flag_center_std = False
-    stddev = np.std(zip(*cents_xy[:3]), 1)
+    stddev = np.std(list(zip(*cents_xy[:3])), axis=1)
     if stddev[0] > 0.1 * np.ptp(clp['xedges']) or \
             stddev[1] > 0.1 * np.ptp(clp['yedges']):
         flag_center_std = True

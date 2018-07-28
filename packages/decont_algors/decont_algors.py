@@ -1,8 +1,8 @@
 
 import numpy as np
-import bayesian_da
-import fixed_da
-import read_da
+from . import bayesian_da
+from . import fixed_da
+from . import read_da
 
 
 def filterMPs(memb_probs_cl_region, cl_region_i, cl_region_c):

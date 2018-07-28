@@ -3,8 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy import stats
 from ..out import prep_plots
-from xy_density import cent_bin as center_bin
-import display_cent
+from .xy_density import cent_bin as center_bin
+from . import display_cent
 
 
 def kde_center(x_data, y_data, cents_xy, radius):
@@ -78,8 +78,8 @@ def main(cld_i, clp, run_mode, center_stddev, coords, cl_cent_semi,
         # Find bin where the center xy coordinates are located.
         bin_cent = center_bin(clp['xedges'], clp['yedges'], kde_cent)
 
-        print 'Auto center found (sd={:g}): ({:g}, {:g}) {c}.'.format(
-            center_stddev, kde_cent[0], kde_cent[1], c=coord)
+        print('Auto center found (sd={:g}): ({:g}, {:g}) {c}.'.format(
+            center_stddev, kde_cent[0], kde_cent[1], c=coord))
 
     elif run_mode == 'semi' and cent_flag_semi in [1, 2]:
         # Search for new center values using the center coordinates
@@ -91,12 +91,12 @@ def main(cld_i, clp, run_mode, center_stddev, coords, cl_cent_semi,
 
         # Re-write center values if fixed in semi input file.
         if cent_flag_semi == 1:
-            print 'Semi center found: ({:g}, {:g}) {c}.'.format(
-                *kde_cent, c=coord)
+            print('Semi center found: ({:g}, {:g}) {c}.'.format(
+                *kde_cent, c=coord))
         else:
             kde_cent = cl_cent_semi
-            print 'Semi center fixed: ({:g}, {:g}) {c}.'.format(
-                *kde_cent, c=coord)
+            print('Semi center fixed: ({:g}, {:g}) {c}.'.format(
+                *kde_cent, c=coord))
 
         # Find bin where the center xy coordinates are located.
         bin_cent = center_bin(clp['xedges'], clp['yedges'], kde_cent)
@@ -124,7 +124,7 @@ def main(cld_i, clp, run_mode, center_stddev, coords, cl_cent_semi,
         while True:
             answer_cen = raw_input('Input new center values? (y/n) ')
             if answer_cen == 'n':
-                print 'Value accepted.'
+                print('Value accepted.')
                 break
             elif answer_cen == 'y':
                 kde_cent = []

@@ -36,7 +36,7 @@ def pl_mp_histo(
             col /= max(col)
             cm = plt.cm.get_cmap('RdYlBu_r')
             # Plot histo colored according to colormap.
-            for c, p in zip(col, patches):
+            for c, p in list(zip(col, patches)):
                 plt.setp(p, 'facecolor', cm(c), zorder=3)
                 plt.setp(p, 'edgecolor', 'k')
         else:
@@ -324,10 +324,10 @@ def plx_chart(
         ax.minorticks_on()
 
         # Prepare data.
-        x = np.array(zip(*cl_reg_fit)[1])
-        y = np.array(zip(*cl_reg_fit)[2])
-        mp = np.array(zip(*cl_reg_fit)[9])
-        plx = np.array(zip(*zip(*cl_reg_fit)[7])[0])
+        x = np.array(list(zip(*cl_reg_fit))[1])
+        y = np.array(list(zip(*cl_reg_fit))[2])
+        mp = np.array(list(zip(*cl_reg_fit))[9])
+        plx = np.array(list(zip(*list(zip(*cl_reg_fit))[7]))[0])
         msk = (~np.isnan(x)) & (~np.isnan(y)) & (~np.isnan(mp)) &\
             (~np.isnan(plx))
         x, y, mp, plx = x[msk], y[msk], mp[msk], plx[msk]

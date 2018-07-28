@@ -10,13 +10,13 @@ def dataProcess(cl_max_mag):
     make entire array of floats.
     """
     mags_cols_cl = [[], []]
-    for mag in zip(*zip(*cl_max_mag)[1:][2]):
+    for mag in list(zip(*list(zip(*cl_max_mag))[1:][2])):
         mags_cols_cl[0].append(mag)
-    for col in zip(*zip(*cl_max_mag)[1:][4]):
+    for col in list(zip(*list(zip(*cl_max_mag))[1:][4])):
         mags_cols_cl[1].append(col)
 
     # Store membership probabilities here.
-    memb_probs = np.array(zip(*cl_max_mag)[1:][8])
+    memb_probs = np.array(list(zip(*cl_max_mag))[1:][8])
 
     return mags_cols_cl, memb_probs
 
@@ -34,9 +34,9 @@ def main(cl_max_mag, lkl_method, bin_method, lkl_weight):
         # Square errors here to not repeat the same calculations each time a
         # new synthetic cluster is matched.
         e_mags_cols = []
-        for e_m in zip(*zip(*cl_max_mag)[1:][3]):
+        for e_m in list(zip(*list(zip(*cl_max_mag))[1:][3])):
             e_mags_cols.append(np.square(e_m))
-        for e_c in zip(*zip(*cl_max_mag)[1:][5]):
+        for e_c in list(zip(*list(zip(*cl_max_mag))[1:][5])):
             e_mags_cols.append(np.square(e_c))
 
         # Store and pass to use in likelihood function. The 'obs_st' list is
@@ -48,8 +48,9 @@ def main(cl_max_mag, lkl_method, bin_method, lkl_weight):
         # 'phot_val', 'error' the associated value and error for 'star_i'.
         obs_st = []
         mags_cols = mags_cols_cl[0] + mags_cols_cl[1]
-        for st_phot, st_e_phot in zip(zip(*mags_cols), zip(*e_mags_cols)):
-            obs_st.append(zip(*[st_phot, st_e_phot]))
+        for st_phot, st_e_phot in list(
+                zip(list(zip(*mags_cols)), list(zip(*e_mags_cols)))):
+            obs_st.append(list(zip(*[st_phot, st_e_phot])))
         obs_clust = [obs_st, memb_probs]
 
     elif lkl_method == 'duong':

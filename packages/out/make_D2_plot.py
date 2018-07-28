@@ -3,9 +3,9 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from os.path import join
 import warnings
-import add_version_plot
-import mp_best_fit2
-import prep_plots
+from . import add_version_plot
+from . import mp_best_fit2
+from . import prep_plots
 
 
 def plot_observed_cluster(
@@ -26,7 +26,7 @@ def plot_observed_cluster(
             err_bar, hess_xedges, hess_yedges, x_isoch, y_isoch)
     except Exception:
         import traceback
-        print traceback.format_exc()
+        print(traceback.format_exc())
         print("  WARNING: error when plotting MPs on cluster's "
               "photometric diagram.")
 

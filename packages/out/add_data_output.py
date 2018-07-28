@@ -1,18 +1,5 @@
 
-import collections
-
-
-def flatten(l):
-    '''
-    Flatten list.
-    '''
-    for el in l:
-        if isinstance(el, collections.Iterable) and not \
-                isinstance(el, basestring):
-            for sub in flatten(el):
-                yield sub
-        else:
-            yield el
+from ..inp.get_data import flatten
 
 
 def main(npd, pd, flag_center_std, flag_center_manual, flag_delta_total,

@@ -2,7 +2,7 @@
 import random
 import numpy as np
 from ..synth_clust import synth_cluster
-import likelihood
+from . import likelihood
 
 #############################################################
 # # Timer function: http://stackoverflow.com/a/21860100/1391441
@@ -435,6 +435,8 @@ def main(lkl_method, e_max, err_lst, completeness, max_mag_syn, fundam_params,
 
         # print i, generation[0], lkl[0], len(model_done[0])
 
-    isoch_fit_params = [generation[0], lkl_old, new_bs_indx, model_done]
+    isoch_fit_params = {
+        'best_sol': generation[0], 'lkl_old': lkl_old,
+        'new_bs_indx': new_bs_indx, 'model_done': model_done}
 
     return isoch_fit_params

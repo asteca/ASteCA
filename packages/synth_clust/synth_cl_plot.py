@@ -1,6 +1,6 @@
 
-import move_isochrone
-import synth_cluster
+from . import move_isochrone
+from . import synth_cluster
 
 
 def main(e_max, fundam_params, theor_tracks, plot_isoch_data, isoch_fit_params,
@@ -10,7 +10,7 @@ def main(e_max, fundam_params, theor_tracks, plot_isoch_data, isoch_fit_params,
     # Generate shifted isochrone and synthetic cluster for plotting.
     '''
     # Read best fit values for all parameters.
-    synth_cl_params = isoch_fit_params[0]
+    synth_cl_params = isoch_fit_params['best_sol']
     m, a, e, d, mass, binar_f = synth_cl_params
     # Find indexes for metallicity and age. If indexes are not found due
     # to some difference in the significant figures, use the indexes
