@@ -10,18 +10,14 @@ def check(
         bin_mr, bin_methods, lkl_weight, bin_weights, cmd_evol_tracks,
         iso_paths, imf_funcs, par_ranges, N_pop, N_gen, fit_diff,
         cross_prob, cross_sel, mut_prob, N_el, N_ei, N_es, inst_packgs_lst,
-        priors, emcee_priors, **kwargs):
+        nwalkers, nburn, N_burn, nsteps, emcee_a, priors, emcee_priors,
+        **kwargs):
     """
     Check all parameters related to the search for the best synthetic cluster
     match.
     """
     # If best fit method is set to run.
     if bf_flag:
-
-        # Check best fit method selected.
-        if best_fit_algor not in optimz_algors:
-            sys.exit("ERROR: the selected best fit method '{}' does not match"
-                     " a valid input.".format(best_fit_algor))
 
         if best_fit_algor == 'genet':
             # Check GA input params.
@@ -58,6 +54,21 @@ def check(
             if priors not in emcee_priors:
                 sys.exit("ERROR: the selected prior ({}) is not"
                          " allowed.".format(priors))
+
+            if nwalkers % 2 != 0:
+                # Number is even
+                sys.exit("ERROR: the number of walkers must be even.")
+            if nwalkers < 12:
+                sys.exit("ERROR: the minimum number of walkers is 12.")
+            if nburn < 1:
+                sys.exit("ERROR: the minimum number of burn-in samples is 1.")
+            if N_burn < 1:
+                sys.exit("ERROR: the minimum number of burn-in runs is 1.")
+            try:
+                int(float(nsteps))
+            except ValueError:
+                if nsteps[-1] != 'h':
+                    sys.exit("ERROR: the format for 'nsteps' is unknown.")
 
         # Check likelihood method selected.
         if lkl_method not in lkl_methods:

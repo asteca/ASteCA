@@ -18,8 +18,7 @@ def main(
         gs = gridspec.GridSpec(12, 12)
         add_version_plot.main(y_fix=.999)
 
-        min_max_p = prep_plots.param_ranges(pd['fundam_params'])
-        # DEPRECATED (DELETE)
+        # TODO DEPRECATED (DELETE)
         # # Get special axis ticks for metallicity.
         # xp_min, xp_max = min_max_p[0]
         # # The max number of characters in the axis '30', is HARD-CODED.
@@ -28,8 +27,11 @@ def main(
 
         # Best fitting process plots.
         if pd['best_fit_algor'] == 'genet':
+            min_max_p = prep_plots.param_ranges(
+                pd['best_fit_algor'], pd['fundam_params'])
             l_min_max = prep_plots.likl_y_range(
                 pd['best_fit_algor'], isoch_fit_params['lkl_old'])
+
             args = [
                 # pl_lkl: Likelihood evolution for the GA.
                 gs, l_min_max, isoch_fit_params['lkl_old'],
@@ -70,6 +72,10 @@ def main(
                 mp_best_fit1_GA.plot(n, *args)
 
         if pd['best_fit_algor'] == 'emcee':
+            min_max_p = prep_plots.param_ranges(
+                pd['best_fit_algor'], pd['fundam_params'],
+                isoch_fit_params['varIdxs'], isoch_fit_params['pars_chains'])
+
             # pl_2_param_dens: Param vs param density map.
             for p2 in [
                     'metal-age', 'metal-ext', 'metal-dist', 'metal-mass',
@@ -80,10 +86,10 @@ def main(
                 # Limits for the 2-dens plots.
                 min_max_p2 = prep_plots.p2_ranges(
                     p2, min_max_p, isoch_fit_params['varIdxs'],
-                    isoch_fit_params['emcee_trace'])
+                    isoch_fit_params['mcmc_trace'])
 
                 args = [p2, gs, min_max_p2, isoch_fit_params['varIdxs'],
-                        isoch_fit_params['emcee_trace']]
+                        isoch_fit_params['mcmc_trace']]
                 mp_best_fit1_emcee.plot(0, *args)
 
             # pl_param_pf: Parameters probability functions.
@@ -91,13 +97,13 @@ def main(
                 args = [p, gs, min_max_p, fit_params_r, fit_errors_r,
                         isoch_fit_params['varIdxs'],
                         isoch_fit_params['map_sol'],
-                        isoch_fit_params['emcee_trace']]
+                        isoch_fit_params['mcmc_trace']]
                 mp_best_fit1_emcee.plot(1, *args)
 
             # pl_pdf_half: Parameters half of pdfs.
             for p in ['metal', 'age', 'ext', 'dist', 'mass', 'binar']:
                 args = [p, gs, isoch_fit_params['varIdxs'],
-                        isoch_fit_params['emcee_trace']]
+                        isoch_fit_params['mcmc_trace']]
                 mp_best_fit1_emcee.plot(2, *args)
 
             # pl_param_chain: Parameters sampler chains.

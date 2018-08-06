@@ -1,6 +1,6 @@
 
 import re
-import CMD_phot_systs
+from . import CMD_phot_systs
 
 
 def char_remove(in_lst):
@@ -13,17 +13,17 @@ def char_remove(in_lst):
         l0 = []
         if in_lst[1][0] in {'[', '(', '{'}:
             # Remove non-numeric characters and append numbers as floats.
-            l0.append([float(i) for i in re.findall('[0-9.]+',
-                      str(in_lst[1:]))])
+            l0.append([
+                float(i) for i in re.findall('[0-9.]+', str(in_lst[1:]))])
             # Store indicating that this is a list of values.
-            lst = ['l', map(float, l0[0])]
+            lst = ['l', list(map(float, l0[0]))]
         else:
             if len(in_lst[1:4]) < 3:
                 # Not enough values to define a range. Store as list of values.
-                lst = ['l', map(float, in_lst[1:4])]
+                lst = ['l', list(map(float, in_lst[1:4]))]
             else:
                 # Store indicating that this is a range of values.
-                lst = ['r', map(float, in_lst[1:4])]
+                lst = ['r', list(map(float, in_lst[1:4]))]
 
     return lst
 
@@ -36,9 +36,6 @@ def main(mypath, pars_f_path):
 
     # Accept these variations of the 'true' flag.
     true_lst = ('y', 'yes', 'Yes', 'YES')
-
-    # TODO remove once 'emcee' is in place in the params_input file
-    nwalkers, nsteps, nburn = 0, 0, 0
 
     # Read data from file.
     with open(pars_f_path, "r") as f_dat:
@@ -118,8 +115,8 @@ def main(mypath, pars_f_path):
                     fld_clean_prob = float(reader[3])
 
                 # Cluster parameters assignation.
-                elif reader[0] == 'BF':
-                    bf_flag = True if reader[1] in true_lst else False
+                elif reader[0] == 'AB':
+                    best_fit_algor = str(reader[1])
                 elif reader[0] == 'LK':
                     lkl_method = str(reader[1])
                     lkl_binning = str(reader[2])
@@ -153,15 +150,14 @@ def main(mypath, pars_f_path):
                 elif reader[0] == 'DM':
                     d_rs = char_remove(reader)
 
-                elif reader[0] == 'AB':
-                    best_fit_algor = str(reader[1])
-
                 # emcee algorithm parameters.
                 elif reader[0] == 'EM':
                     nwalkers = int(float(reader[1]))
-                    nsteps = int(float(reader[2]))
-                    nburn = int(float(reader[3]))
-                    priors = reader[4]
+                    nburn = int(float(reader[2]))
+                    N_burn = int(float(reader[3]))
+                    nsteps = reader[4]
+                    emcee_a = float(reader[5])
+                    priors = reader[6]
 
                 # Genetic algorithm parameters.
                 elif reader[0] == 'GA':
@@ -201,7 +197,7 @@ def main(mypath, pars_f_path):
     imf_funcs = ('chabrier_2001_exp', 'chabrier_2001_log', 'kroupa_1993',
                  'kroupa_2002')
     # Optimizing algorithm
-    optimz_algors = ('brute', 'genet', 'emcee')
+    optimz_algors = ('brute', 'genet', 'emcee', 'n')
     # Accepted forms of priors.
     emcee_priors = ('unif', 'gauss')
 
@@ -242,7 +238,7 @@ def main(mypath, pars_f_path):
         'fld_clean_mode': fld_clean_mode, 'fld_clean_bin': fld_clean_bin,
         'fld_clean_prob': fld_clean_prob,
         # Best fit parameters.
-        'bf_flag': bf_flag, 'best_fit_algor': best_fit_algor,
+        'best_fit_algor': best_fit_algor,
         'lkl_method': lkl_method, 'lkl_binning': lkl_binning,
         'lkl_weight': lkl_weight, 'N_bootstrap': N_bootstrap,
         'evol_track': evol_track,
@@ -251,8 +247,8 @@ def main(mypath, pars_f_path):
         'm_sample_flag': m_sample_flag,
         'R_V': R_V, 'bin_mr': bin_mr,
         # emcee algorithm parameters.
-        'nwalkers': nwalkers, 'nsteps': nsteps, 'nburn': nburn,
-        'priors': priors,
+        'nwalkers': nwalkers, 'nburn': nburn, "N_burn": N_burn,
+        'nsteps': nsteps, "emcee_a": emcee_a, 'priors': priors,
         # Genetic algorithm parameters.
         'N_pop': N_pop, 'N_gen': N_gen, 'fit_diff': fit_diff,
         'cross_prob': cross_prob, 'cross_sel': cross_sel, 'mut_prob': mut_prob,

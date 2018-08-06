@@ -1,11 +1,7 @@
 
 import numpy as np
-from . import max_mag_cut
-from . import emcee_algor
-from . import obs_clust_prepare
-from . import genetic_algorithm
-from . import brute_force_algor
-from . import bootstrap
+from . import max_mag_cut, obs_clust_prepare, brute_force_algor,\
+    genetic_algorithm, bootstrap, emcee_algor, sampyl_algor
 from ..synth_clust import extin_coefs
 from ..synth_clust import imf
 
@@ -36,9 +32,9 @@ def params_errors(best_fit_algor, args):
         for i, _ in enumerate(isoch_fit_params['best_sol']):
             if i in isoch_fit_params['varIdxs']:
                 #  16th and 84th percentiles (1 sigma)
-                ph = np.percentile(isoch_fit_params['emcee_trace'][i - j], 84)
-                pl = np.percentile(isoch_fit_params['emcee_trace'][i - j], 16)
-                std = np.std(isoch_fit_params['emcee_trace'][i - j])
+                ph = np.percentile(isoch_fit_params['mcmc_trace'][i - j], 84)
+                pl = np.percentile(isoch_fit_params['mcmc_trace'][i - j], 16)
+                std = np.std(isoch_fit_params['mcmc_trace'][i - j])
                 # Use maximum error value. TODO is this a sensible approach?
                 err = max(.5 * (ph - pl), std)
                 isoch_fit_errors.append(err)
@@ -49,11 +45,11 @@ def params_errors(best_fit_algor, args):
     return isoch_fit_errors
 
 
-def main(clp, err_max, bf_flag, best_fit_algor, lkl_method, lkl_binning,
+def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning,
          lkl_weight, N_bootstrap, max_mag, IMF_name, m_high, m_sample_flag,
          R_V, fundam_params, N_pop, N_gen, fit_diff, cross_prob, cross_sel,
          mut_prob, N_el, N_ei, N_es, cmd_systs, filters, colors, theor_tracks,
-         nwalkers, nsteps, N_burn, nburn, emcee_a, **kwargs):
+         nwalkers, nsteps, N_burn, nburn, emcee_a, priors, **kwargs):
     '''
     Perform a best fitting process to find the cluster's fundamental
     parameters.
@@ -115,9 +111,9 @@ def main(clp, err_max, bf_flag, best_fit_algor, lkl_method, lkl_binning,
                 else lkl_method))
             # Brute force algorithm.
             isoch_fit_params = brute_force_algor.main(
-                lkl_method, err_max, err_lst, completeness, max_mag_syn,
-                fundam_params, obs_clust, theor_tracks, R_V, ext_coefs,
-                st_dist_mass, N_fc, cmpl_rnd, err_rnd)
+                lkl_method, clp['em_float'], err_lst, completeness,
+                max_mag_syn, fundam_params, obs_clust, theor_tracks, R_V,
+                ext_coefs, st_dist_mass, N_fc, cmpl_rnd, err_rnd)
             # Assign uncertainties for each parameter.
             isoch_fit_errors = params_errors(best_fit_algor, fundam_params)
 
@@ -131,30 +127,41 @@ def main(clp, err_max, bf_flag, best_fit_algor, lkl_method, lkl_binning,
             # so it will print percentages to screen.
             flag_print_perc = True
             isoch_fit_params = genetic_algorithm.main(
-                lkl_method, err_max, err_lst, completeness, max_mag_syn,
-                fundam_params, obs_clust, theor_tracks, R_V, ext_coefs,
-                st_dist_mass, N_fc, cmpl_rnd, err_rnd, N_pop, N_gen, fit_diff,
-                cross_prob, cross_sel, mut_prob, N_el, N_ei, N_es,
+                lkl_method, clp['em_float'], err_lst, completeness,
+                max_mag_syn, fundam_params, obs_clust, theor_tracks, R_V,
+                ext_coefs, st_dist_mass, N_fc, cmpl_rnd, err_rnd, N_pop, N_gen,
+                fit_diff, cross_prob, cross_sel, mut_prob, N_el, N_ei, N_es,
                 flag_print_perc)
             # Assign uncertainties.
             isoch_fit_errors = params_errors(
                 best_fit_algor,
-                [lkl_method, err_max, err_lst, completeness, fundam_params,
-                 cl_max_mag, max_mag_syn, theor_tracks, R_V, ext_coefs,
-                 st_dist_mass, N_fc, cmpl_rnd, err_rnd, N_pop, N_gen, fit_diff,
-                 cross_prob, cross_sel, mut_prob, N_el, N_ei, N_es,
-                 lkl_binning, lkl_weight, N_bootstrap, False,
+                [lkl_method, clp['em_float'], err_lst, completeness,
+                 fundam_params, cl_max_mag, max_mag_syn, theor_tracks, R_V,
+                 ext_coefs, st_dist_mass, N_fc, cmpl_rnd, err_rnd, N_pop,
+                 N_gen, fit_diff, cross_prob, cross_sel, mut_prob, N_el, N_ei,
+                 N_es, lkl_binning, lkl_weight, N_bootstrap, False,
                  isoch_fit_params])
 
         elif best_fit_algor == 'emcee':
+
+            # # TODO testing
+            # print('Using sampyl algorithm ({}).'.format(
+            #     lkl_method + '; ' + lkl_binning if lkl_method == 'dolphin'
+            #     else lkl_method))
+            # isoch_fit_params = sampyl_algor.main(
+            #     lkl_method, clp['em_float'], err_lst, completeness,
+            #     max_mag_syn, fundam_params, obs_clust, theor_tracks, R_V,
+            #     ext_coefs, st_dist_mass, N_fc, cmpl_rnd, err_rnd, nsteps,
+            #     nburn)
+
             print('Using emcee algorithm ({}).'.format(
                 lkl_method + '; ' + lkl_binning if lkl_method == 'dolphin'
                 else lkl_method))
             isoch_fit_params = emcee_algor.main(
-                lkl_method, err_max, err_lst, completeness, max_mag_syn,
-                fundam_params, obs_clust, theor_tracks, R_V, ext_coefs,
-                st_dist_mass, N_fc, cmpl_rnd, err_rnd, nwalkers, nsteps,
-                nburn, N_burn, emcee_a)
+                lkl_method, clp['em_float'], err_lst, completeness,
+                max_mag_syn, fundam_params, obs_clust, theor_tracks, R_V,
+                ext_coefs, st_dist_mass, N_fc, cmpl_rnd, err_rnd, nwalkers,
+                nsteps, nburn, N_burn, emcee_a, priors)
             # Assign uncertainties.
             isoch_fit_errors = params_errors(
                 best_fit_algor, isoch_fit_params)

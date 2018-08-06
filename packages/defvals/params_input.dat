@@ -299,14 +299,41 @@ RM  local      fixed          0.5
 
 #################### Cluster parameters estimation #############################
 
-# Best synthetic cluster fit.
+# Best synthetic cluster fit. Select the algorithm used to maximize/explore the
+# likelihood.
 #
-# * flag: y / n
-#   If 'n', no fundamental parameters estimation will be attempted on the
-#   observed cluster and all the values below are ignored.
+# * algorithm: emcee / genet / brute / n
 #
-#   flag
-BF     y
+#   - emcee: Bayesian MCMC algorithm.
+#   - genet: Genetic Algorithm.
+#   - brute: Brute Force algorithm, ie: all possible solutions are processed.
+#   - n    : No fundamental parameters estimation will be attempted on the
+#            observed cluster. All the parameters below are ignored.
+#
+#   algorithm
+AB      emcee
+
+# Likelihood equation.
+#
+# * likelihood: dolphin / tolstoy
+#
+#   - dolphin: uses the 'Poisson likelihood ratio' (Eq. 10) defined in
+#     Dolphin (2002). This requires the selection of a binning method.
+#   - tolstoy: uses a weighted bin-free statistic as that defined in
+#     Tolstoy & Saha (1996), Monteiro et al (2010) and Hernández & Valls-Gabaud
+#     (2008). If this method is selected, 'binning' is ignored.
+#
+# * binning: fixed / auto / fd / doane / scott / rice / sqrt
+#            sturges / knuth / blocks
+#   Binning method to be used if the likelihood equation by 'dolphin' is
+#   selected. Otherwise this parameter is ignored.
+#
+# * weight: mean / median / max
+#   Weight applied to each bin defined by the 'binning' parameter, if 'dolphin'
+#   is selected. Otherwise this parameter is ignored.
+#
+#   likelihood  binning    weight
+LK     dolphin     auto      mean
 
 # Set of evolutionary tracks.
 #
@@ -387,39 +414,6 @@ DM                         8       15      0.2
 #
 #   max_mag
 MM      max
-
-# Likelihood equation.
-#
-# * likelihood: dolphin / tolstoy
-#
-#   - dolphin: uses the 'Poisson likelihood ratio' (Eq. 10) defined in
-#     Dolphin (2002). This requires the selection of a binning method.
-#   - tolstoy: uses a weighted bin-free statistic as that defined in
-#     Tolstoy & Saha (1996), Monteiro et al (2010) and Hernández & Valls-Gabaud
-#     (2008). If this method is selected, 'binning' is ignored.
-#
-# * binning: fixed / auto / fd / doane / scott / rice / sqrt
-#            sturges / knuth / blocks
-#   Binning method to be used if the likelihood equation by 'dolphin' is
-#   selected. Otherwise this parameter is ignored.
-#
-# * weight: mean / median / max
-#   Weight applied to each bin defined by the 'binning' parameter, if 'dolphin'
-#   is selected. Otherwise this parameter is ignored.
-#
-#   likelihood  binning    weight
-LK     dolphin     auto      mean
-
-# Algorithm used to maximize the likelihood.
-#
-# * algorithm: emcee / genet / brute
-#
-#   - emcee: Bayesian MCMC algorithm.
-#   - genet: Genetic Algorithm (GA).
-#   - brute: Brute Force algorithm, ie: all possible solutions are processed.
-#
-#   algorithm
-AB      genet
 
 # emcee parameters.
 #

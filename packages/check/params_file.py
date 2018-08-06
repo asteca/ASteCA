@@ -5,7 +5,7 @@ import traceback
 from packages.inp import input_params
 
 
-def check(mypath, file_end):
+def check(mypath, file_end, inst_packgs_lst):
     """
     Check the existence of the 'params_input.dat' file, and check that
     the parameters are properly written.
@@ -37,5 +37,13 @@ def check(mypath, file_end):
         print(traceback.format_exc())
         sys.exit("ERROR: '{}' is badly formatted.".format(pars_f_name))
 
-    # Return 'check for available update', and 'force backend' flags.
+    # Add to parameters dictionary.
+    pd['inst_packgs_lst'] = inst_packgs_lst
+
+    # Create here the 'bf_flag' flag.
+    if pd['best_fit_algor'] not in pd['optimz_algors']:
+        sys.exit("ERROR: the selected best fit method '{}' does not match"
+                 " a valid input.".format(pd['best_fit_algor']))
+    pd['bf_flag'] = True if pd['best_fit_algor'] != 'n' else False
+
     return pd

@@ -7,8 +7,43 @@ from matplotlib.patches import Ellipse
 from matplotlib.pyplot import cm
 
 
-def pl_2_param_dens(
-        _2_params, gs, min_max_p2, cp_r, cp_e, varIdxs, model_done):
+def cov_ellipse(points, nstd=2):
+    """
+    Generate an `nstd` sigma ellipse based on the mean and covariance of a
+    point "cloud".
+
+    source: http://stackoverflow.com/a/12321306/1391441
+
+    Parameters
+    ----------
+        points : An Nx2 array of the data points.
+        nstd : The radius of the ellipse in numbers of standard deviations.
+               Defaults to 1 standard deviations.
+    """
+    def eigsorted(cov):
+        '''
+        Eigenvalues and eigenvectors of the covariance matrix.
+        '''
+        vals, vecs = np.linalg.eigh(cov)
+        order = vals.argsort()[::-1]
+        return vals[order], vecs[:, order]
+
+    # Location of the center of the ellipse.
+    mean_pos = points.mean(axis=0)
+
+    # The 2x2 covariance matrix to base the ellipse on.
+    cov = np.cov(points, rowvar=False)
+
+    vals, vecs = eigsorted(cov)
+    theta = np.degrees(np.arctan2(*vecs[:, 0][::-1]))
+
+    # Width and height are "full" widths, not radius
+    width, height = 2 * nstd * np.sqrt(vals)
+
+    return mean_pos, width, height, theta
+
+
+def pl_2_param_dens(_2_params, gs, min_max_p2, varIdxs, mcmc_trace):
     '''
     Parameter vs parameters density map.
     '''
@@ -37,11 +72,6 @@ def pl_2_param_dens(
     x_label, y_label = labels[mx], labels[my]
 
     ax = plt.subplot(gs[gs_y1:gs_y2, gs_x1:gs_x2])
-    # Parameter values and errors.
-    xp, e_xp = map(float, [cp_r[mx], cp_e[mx]])
-    yp, e_yp = map(float, [cp_r[my], cp_e[my]])
-    # # Axis limits.
-    # yp_min, yp_max = min_max_p[my]
 
     # To specify the number of ticks on both or any single axes
     ax.locator_params(nbins=5)
@@ -58,17 +88,10 @@ def pl_2_param_dens(
     plt.minorticks_on()
 
     if mx in varIdxs and my in varIdxs:
-        # Plot best fit point (MAP, mean, median?). # TODO
-        plt.scatter(xp, yp, marker='x', c=cp, s=30, linewidth=2, zorder=4)
-
         mx_model, my_model = varIdxs.index(mx), varIdxs.index(my)
 
-        # if xp_min < xp_max and yp_min < yp_max:
-        #     rng = [[xp_min, xp_max], [yp_min, yp_max]]
-        # else:
-        #     rng = None
         h2d, xbins, ybins = plt.hist2d(
-            model_done[mx_model], model_done[my_model], bins=20,
+            mcmc_trace[mx_model], mcmc_trace[my_model], bins=30,
             cmap=plt.get_cmap(d_map),
             range=None, zorder=2)[:-1]
         plt.contour(
@@ -77,18 +100,28 @@ def pl_2_param_dens(
             colors='#551a8b', linewidths=0.5, zorder=3)
 
         # Assume uncertainties in both dimensions are defined.
-        plt.gca()
-        ellipse = Ellipse(xy=(xp, yp), width=2 * e_xp, height=2 * e_yp,
+        # plt.gca()
+
+        mean_pos, width, height, theta = cov_ellipse(np.array([
+            mcmc_trace[mx_model], mcmc_trace[my_model]]).T)
+        # Plot 2 sigma ellipse.
+        plt.scatter(
+            mean_pos[0], mean_pos[1], marker='x', c=cp, s=30, linewidth=2,
+            zorder=4)
+        ellipse = Ellipse(xy=mean_pos, width=width, height=height, angle=theta,
                           edgecolor=cp, fc='None', lw=1., zorder=4)
         ax.add_patch(ellipse)
 
-    if gs_y2 == 12:
-        xp_min, xp_max = min_max_p2[mx]
-        ax.set_xlim([xp_min, xp_max])
+    # if gs_y2 == 12:
+    xp_min, xp_max, yp_min, yp_max = min_max_p2
+    ax.set_xlim([xp_min, xp_max])
+    ax.set_ylim([yp_min, yp_max])
     ax.set_aspect('auto')
 
 
-def pl_param_pf(par_name, gs, min_max_p, cp_r, cp_e, varIdxs, model_done):
+def pl_param_pf(
+    par_name, gs, min_max_p, cp_r, cp_e, varIdxs, map_sol,
+        model_done):
     '''
     Parameter posterior plot.
     '''
@@ -113,7 +146,7 @@ def pl_param_pf(par_name, gs, min_max_p, cp_r, cp_e, varIdxs, model_done):
     xp, e_xp = map(float, [cp_r[cp], cp_e[cp]])
     # Set x axis limit.
     xp_min, xp_max = min_max_p[cp]
-    # ax.set_xlim(xp_min, xp_max)
+    ax.set_xlim(xp_min, xp_max)
     ax.locator_params(nbins=5)
     # Set minor ticks
     ax.minorticks_on()
@@ -134,10 +167,15 @@ def pl_param_pf(par_name, gs, min_max_p, cp_r, cp_e, varIdxs, model_done):
         bw = 1.5 * len(model_done[c_model]) ** (-1. / (len(varIdxs) + 4))
         kernel_cl = stats.gaussian_kde(model_done[c_model], bw_method=bw)
         # KDE for plotting.
-        kde = np.reshape(kernel_cl(x_kde).T, x_kde.shape)
         try:
+            kde = np.reshape(kernel_cl(x_kde).T, x_kde.shape)
             plt.plot(x_kde, kde / max(kde), color='k', lw=1.5)
-        except RuntimeWarning:
+            # Mode (using KDE)
+            x_mode = x_kde[np.argmax(kde)]
+            plt.axvline(
+                x=x_mode, linestyle='--', color='cyan', zorder=4,
+                label=("Mode (" + p + ")").format(x_mode))
+        except (FloatingPointError, UnboundLocalError):
             pass
 
         # Obtain the bin values and edges using numpy
@@ -147,20 +185,15 @@ def pl_param_pf(par_name, gs, min_max_p, cp_r, cp_e, varIdxs, model_done):
             (bin_edges[1:] + bin_edges[:-1]) * .5, hist / float(hist.max()),
             width=(bin_edges[1] - bin_edges[0]), color='grey', alpha=0.3)
 
+        # Mean
+        # x_mean = np.mean(model_done[c_model])
+        plt.axvline(
+            x=xp, linestyle='--', color='blue', zorder=4,
+            label=("Mean (" + p + ")").format(xp))
         # MAP
         plt.axvline(
-            x=xp, linestyle='--', color='red', zorder=4,
-            label=("MAP (" + p + ")").format(xp))
-        # Mode (using KDE)
-        x_mode = x_kde[np.argmax(kde)]
-        plt.axvline(
-            x=x_mode, linestyle='--', color='cyan', zorder=4,
-            label=("Mode (" + p + ")").format(x_mode))
-        # Mean
-        x_mean = np.mean(model_done[c_model])
-        plt.axvline(
-            x=x_mean, linestyle='--', color='blue', zorder=4,
-            label=("Mean (" + p + ")").format(x_mean))
+            x=map_sol[cp], linestyle='--', color='red', zorder=4,
+            label=("MAP (" + p + ")").format(map_sol[cp]))
         # Median
         pm = np.percentile(model_done[c_model], 50)
         plt.axvline(
@@ -249,8 +282,8 @@ def pl_pdf_half(par_name, gs, varIdxs, model_done):
 
 
 def pl_param_chain(
-        par_name, gs, cp_r, nwalkers, nsteps, nburn, m_accpt_fr, varIdxs,
-        pars_chains):
+    par_name, gs, cp_r, nwalkers, nburn, nsteps, m_accpt_fr, varIdxs,
+        pre_bi, post_bi, autocorr_time, max_at_10c, pymc3_ess):
     '''
     Parameter sampler chain.
     '''
@@ -266,8 +299,8 @@ def pl_param_chain(
     gs_x1, gs_x2, gs_y1, gs_y2, cp = plot_dict[par_name]
     ax = plt.subplot(gs[gs_y1:gs_y2, gs_x1:gs_x2])
     if cp == 0:
-        plt.title("Chains (walkers): {} ;  MAF: {:.3f}".format(
-            nwalkers, m_accpt_fr))
+        plt.title("N (flat)={:.0f}, chains={:.0f}, MAF={:.2f}".format(
+            nsteps * nwalkers, nwalkers, m_accpt_fr), fontsize=10)
     if cp == 5:
         plt.xlabel("Steps")
     else:
@@ -277,18 +310,91 @@ def pl_param_chain(
 
     if cp in varIdxs:
         c_model = varIdxs.index(cp)
-        pre_bi, post_bi = pars_chains
-        color = iter(cm.rainbow(np.linspace(0, 1, nwalkers)))
-        for w1, w2 in zip(*[pre_bi[c_model].T, post_bi[c_model].T]):
+        # Only 10 chains will be plotted for visibility.
+        color = iter(cm.rainbow(np.linspace(0, 1, len(max_at_10c[0]))))
+
+        pre_bi_max_at = pre_bi[c_model].T[max_at_10c[c_model]]
+        post_bi_max_at = post_bi[c_model].T[max_at_10c[c_model]]
+
+        for w1, w2 in zip(*[pre_bi_max_at, post_bi_max_at]):
             # Burn-in stage
             plt.plot(range(nburn), w1, c='grey', lw=.5, alpha=0.5)
             # Post burn-in.
             c = next(color)
-            plt.plot(np.arange(nburn, nburn + nsteps), w2, c=c, lw=.5,
+            plt.plot(np.arange(nburn, nburn + nsteps), w2, c=c, lw=.8,
                      alpha=0.5)
-        plt.axhline(y=float(cp_r[cp]), color='k', lw=1.5, zorder=4)
-        ymin, ymax = np.min(post_bi[c_model]), np.max(post_bi[c_model])
-        ax.set_ylim(ymin, ymax)
+        plt.axhline(
+            y=float(cp_r[cp]), color='k', ls='--', lw=1.2, zorder=4,
+            label=r"$\tau={:.0f}\;(ESS={:.0f})$".format(
+                autocorr_time[c_model], pymc3_ess[c_model]))
+        std = np.std(post_bi[c_model])
+        ax.set_ylim(
+            np.min(post_bi[c_model]) - std, np.max(post_bi[c_model]) + std)
+        ax.legend(fontsize='small', loc=0, handlelength=0.)
+
+
+def pl_mESS(dummy, gs, mESS, minESS, minESS_epsilon):
+    '''
+    mESS plot.
+    '''
+    ax = plt.subplot(gs[6:8, 8:10])
+    plt.xlabel(r"$CI\;(=1-\alpha)$", fontsize=14)
+    plt.ylabel(r"$\epsilon$", fontsize=16)
+    ax.set_xlim(.01, 1.01)
+
+    plt.plot(
+        1. - np.array(minESS_epsilon[0]), minESS_epsilon[1],
+        label="minESS ({:.0f})".format(minESS))
+    plt.plot(
+        1. - np.array(minESS_epsilon[0]), minESS_epsilon[2],
+        label="mESS ({:.0f})".format(mESS))
+    ax.legend(fontsize='small', loc=0)
+
+
+def pl_lags(dummy, gs, varIdxs, emcee_acorf):
+    '''
+    lags plot.
+    '''
+    ax = plt.subplot(gs[6:8, 10:12])
+    plt.xlabel("Lag", fontsize=14)
+    plt.ylabel("Autocorrelation", fontsize=14)
+
+    plot_dict = ['metal', 'age', 'ext', 'dist', 'mass', 'binar']
+    for cp, p in enumerate(emcee_acorf):
+        if cp in varIdxs:
+            c_model = varIdxs.index(cp)
+            plt.plot(
+                range(len(p)), p, lw=.8, alpha=0.5,
+                label="{}".format(plot_dict[c_model]))
+    ax.legend(fontsize='small', loc=0)
+
+
+def pl_GW(dummy, gs, varIdxs, geweke_z):
+    '''
+    Geweke plot.
+    '''
+    ax = plt.subplot(gs[8:10, 10:12])
+    ax.set_title("Geweke", fontsize=10)
+    plt.xlabel("First iteration in segment", fontsize=14)
+    plt.ylabel("z-score", fontsize=14)
+    plt.axhline(y=2., color='grey', ls=':', lw=1.2, zorder=4)
+    plt.axhline(y=-2., color='grey', ls=':', lw=1.2, zorder=4)
+
+    plot_dict = ['metal', 'age', 'ext', 'dist', 'mass', 'binar']
+    ymin, ymax = [], []
+    for cp, p in enumerate(geweke_z):
+        if cp in varIdxs:
+            c_model = varIdxs.index(cp)
+            idx, zscore = list(zip(*p))
+            plt.plot(
+                idx, zscore, ls="-.", linewidth=.7,
+                label="{}".format(plot_dict[c_model]))
+            ymin.append(np.nanmin(zscore))
+            ymax.append(np.nanmax(zscore))
+
+    if ymin and ymax:
+        ax.set_ylim(max(-2.1, min(ymin)), min(2.1, max(ymax)))
+    ax.legend(fontsize='small', loc=0)
 
 
 def plot(N, *args):
@@ -300,7 +406,10 @@ def plot(N, *args):
         0: [pl_2_param_dens, args[0] + ' density map'],
         1: [pl_param_pf, args[0] + ' probability function'],
         2: [pl_pdf_half, args[0] + ' 1st and 2nd halfs of pdf'],
-        3: [pl_param_chain, args[0] + ' sampler chain']
+        3: [pl_param_chain, args[0] + ' sampler chain'],
+        4: [pl_mESS, args[0]],
+        5: [pl_lags, args[0]],
+        6: [pl_GW, args[0]]
     }
 
     fxn = plt_map.get(N, None)[0]

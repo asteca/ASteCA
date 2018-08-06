@@ -279,9 +279,9 @@ def da_phot_diag(cl_reg_fit, cl_reg_no_fit, v_min_mp, v_max_mp):
     if cl_reg_no_fit:
         cl_reg_no_fit = list(zip(*cl_reg_no_fit))
         # Magnitudes.
-        diag_no_fit_inv = [[i[::-1] for i in list(zip(*cl_reg_no_fit))[3]]]
+        diag_no_fit_inv = [[i[::-1] for i in list(zip(*cl_reg_no_fit[3]))]]
         # Colors.
-        diag_no_fit_inv += [[i[::-1] for i in list(zip(*cl_reg_no_fit))[5]]]
+        diag_no_fit_inv += [[i[::-1] for i in list(zip(*cl_reg_no_fit[5]))]]
         # membership probabilities.
         diag_no_fit_inv += [cl_reg_no_fit[9][::-1]]
     else:
@@ -317,18 +317,31 @@ def error_bars(stars_phot, x_min_cmd, err_lst, all_flag=None):
     return [x_val, mag_y, xy_err]
 
 
-def param_ranges(fundam_params):
+def param_ranges(best_fit_algor, fundam_params, varIdxs=None, post_bi=None):
     '''
     Parameter ranges used by several plots.
     '''
     min_max_p = []
-    for param in fundam_params:
-        # Set the delta for the parameter range. If only one value was
-        # used, set a very small delta value.
-        delta_p = (max(param) - min(param)) * 0.05 \
-            if max(param) != min(param) else 0.001
-        # Store parameter range.
-        min_max_p.append([min(param) - delta_p, max(param) + delta_p])
+    if best_fit_algor in ['brute', 'genet']:
+        for param in fundam_params:
+
+            # Set the delta for the parameter range. If only one value was
+            # used, set a very small delta value.
+            delta_p = (max(param) - min(param)) * 0.05 \
+                if max(param) != min(param) else 0.001
+            # Store parameter range.
+            min_max_p.append([min(param) - delta_p, max(param) + delta_p])
+
+    elif best_fit_algor == 'emcee':
+        for cp, param in enumerate(fundam_params):
+            if cp in varIdxs:
+                c_model = varIdxs.index(cp)
+                std = np.std(post_bi[c_model])
+                min_max_p.append([
+                    np.min(post_bi[c_model]) - std,
+                    np.max(post_bi[c_model]) + std])
+            else:
+                min_max_p.append([min(param), max(param)])
 
     return min_max_p
 
@@ -419,8 +432,9 @@ def likl_y_range(opt_method, lkl_old):
 #     return xmin, st[st_indx]
 
 
-def packData(lkl_method, lkl_binning, cl_max_mag, synth_clst, shift_isoch,
-             colors, filters, cld_c):
+def packData(
+    lkl_method, lkl_binning, cl_max_mag, synth_clst, shift_isoch,
+        colors, filters, cld_c):
     """
     Properly select and pack data for CMD/CCD of observed and synthetic
     clusters, and their Hess diagram.

@@ -36,9 +36,7 @@ def check_all(mypath, file_end):
 
     # Read parameters from 'params_input.dat' file. Return a dictionary
     # containing all the parameter values.
-    pd = params_file.check(mypath, file_end)
-    # Add to parameters dictionary.
-    pd['inst_packgs_lst'] = inst_packgs_lst
+    pd = params_file.check(mypath, file_end, inst_packgs_lst)
 
     # Check if a new version is available.
     update.check(**pd)
