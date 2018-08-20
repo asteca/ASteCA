@@ -1,5 +1,5 @@
 
-import numpy as np
+from ..core_imp import np
 if __name__ in ['add_errors', '__main__']:
     import sys, os
     sys.path.append(os.path.abspath(os.path.join('..', '')))
