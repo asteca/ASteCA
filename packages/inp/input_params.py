@@ -155,7 +155,7 @@ def main(mypath, pars_f_path):
                     nwalkers = int(float(reader[1]))
                     nburn = int(float(reader[2]))
                     N_burn = int(float(reader[3]))
-                    nsteps = reader[4]
+                    nsteps = int(float(reader[4]))
                     emcee_a = float(reader[5])
                     priors = reader[6]
 

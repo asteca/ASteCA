@@ -12,5 +12,5 @@ Currently being used by:
 
 """
 
-# import numpy as np
-from sampyl import np
+import numpy as np
+# from .best_fit.sampyl.core import np

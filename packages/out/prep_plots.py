@@ -333,6 +333,8 @@ def param_ranges(best_fit_algor, fundam_params, varIdxs=None, post_bi=None):
             min_max_p.append([min(param) - delta_p, max(param) + delta_p])
 
     elif best_fit_algor == 'emcee':
+        # Select the ranges given by the limits of the space explored by all
+        # the chains, for each parameter.
         for cp, param in enumerate(fundam_params):
             if cp in varIdxs:
                 c_model = varIdxs.index(cp)
@@ -348,25 +350,13 @@ def param_ranges(best_fit_algor, fundam_params, varIdxs=None, post_bi=None):
 
 def p2_ranges(p2, min_max_p, varIdxs, model_done):
     '''
-    Parameter ranges used by 'emcee' 2-param density plots.
+    Parameter ranges used by the MCMC 2-param density plots.
     '''
     par_idx = {
         'metal': 0, 'age': 1, 'ext': 2, 'dist': 3, 'mass': 4, 'binar': 5}
     par = p2.split('-')
 
     min_max_p2 = min_max_p[par_idx[par[0]]] + min_max_p[par_idx[par[1]]]
-
-    # min_max_p2 = []
-    # for vi in range(6):  # TODO hard-coded to 6 parameters
-    #     min_max_p2.append(min_max_p[vi])
-    #     # if vi in varIdxs:
-    #     #     model = varIdxs.index(vi)
-    #     #     hx, edge = np.histogram(model_done[model], bins=20)
-    #     #     # non_z = np.nonzero(hx > 0)
-    #     #     # min_max_p2.append([edge[non_z[0][0]], edge[non_z[0][-1]]])
-    #     #     min_max_p2.append([edge[0], edge[-1]])
-    #     # else:
-    #     #     min_max_p2.append(min_max_p[vi])
 
     return min_max_p2
 
@@ -761,3 +751,39 @@ def PMsPlot(coord, flag_no_fl_regs_i, field_regions_i, cl_reg_fit):
     return PM_flag, pmMP, pmRA, e_pmRA, pmDE, e_pmDE, DE_pm, pmRA_fl,\
         e_pmRA_fl, pmDE_fl, e_pmDE_fl, DE_fl_pm, x_clpm, y_clpm, z_clpm,\
         x_flpm, y_flpm, z_flpm, mmag_pm, pm_dist_max
+
+
+def CIEllipse(points, prob=.95):
+    """
+    Generate a 'prob' confidence interval ellipse based on the mean and
+    covariance of a point "cloud".
+
+    source: http://stackoverflow.com/a/12321306/1391441
+
+    Parameters
+    ----------
+        points : An Nx2 array of the data points.
+        prob : probability value for the CI region.
+    """
+    def eigsorted(cov):
+        '''
+        Eigenvalues and eigenvectors of the covariance matrix.
+        '''
+        vals, vecs = np.linalg.eigh(cov)
+        order = vals.argsort()[::-1]
+        return vals[order], vecs[:, order]
+
+    # Location of the center of the ellipse.
+    mean_pos = points.mean(axis=0)
+
+    # The 2x2 covariance matrix to base the ellipse on.
+    cov = np.cov(points, rowvar=False)
+
+    vals, vecs = eigsorted(cov)
+    theta = np.degrees(np.arctan2(*vecs[:, 0][::-1]))
+
+    k = np.sqrt(stats.chi2.ppf(prob, 2))
+    # Width and height are "full" widths, not radius
+    width, height = 2 * np.sqrt(vals) * k
+
+    return mean_pos, width, height, theta

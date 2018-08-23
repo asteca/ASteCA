@@ -22,7 +22,7 @@ def main(clp, memb_file_out, **kwargs):
                 [line[6][0]] + [line[9]] + [idx[i]])
 
     ascii.write(
-        list(zip(*data)), memb_file_out, format='csv', overwrite=True,
+        list(zip(*data)), memb_file_out, overwrite=True,  # format='csv',
         names=['ID', 'x', 'y', 'mag1', 'e_mag', 'col1', 'e_col1', 'MP', 'sel'])
 
     print('Cluster region saved to file.')

@@ -2,45 +2,9 @@
 import numpy as np
 from scipy import stats
 import matplotlib.pyplot as plt
-import matplotlib.offsetbox as offsetbox
 from matplotlib.patches import Ellipse
 from matplotlib.pyplot import cm
-
-
-def cov_ellipse(points, nstd=2):
-    """
-    Generate an `nstd` sigma ellipse based on the mean and covariance of a
-    point "cloud".
-
-    source: http://stackoverflow.com/a/12321306/1391441
-
-    Parameters
-    ----------
-        points : An Nx2 array of the data points.
-        nstd : The radius of the ellipse in numbers of standard deviations.
-               Defaults to 1 standard deviations.
-    """
-    def eigsorted(cov):
-        '''
-        Eigenvalues and eigenvectors of the covariance matrix.
-        '''
-        vals, vecs = np.linalg.eigh(cov)
-        order = vals.argsort()[::-1]
-        return vals[order], vecs[:, order]
-
-    # Location of the center of the ellipse.
-    mean_pos = points.mean(axis=0)
-
-    # The 2x2 covariance matrix to base the ellipse on.
-    cov = np.cov(points, rowvar=False)
-
-    vals, vecs = eigsorted(cov)
-    theta = np.degrees(np.arctan2(*vecs[:, 0][::-1]))
-
-    # Width and height are "full" widths, not radius
-    width, height = 2 * nstd * np.sqrt(vals)
-
-    return mean_pos, width, height, theta
+from .prep_plots import CIEllipse
 
 
 def pl_2_param_dens(_2_params, gs, min_max_p2, varIdxs, mcmc_trace):
@@ -99,10 +63,7 @@ def pl_2_param_dens(_2_params, gs, min_max_p2, varIdxs, mcmc_trace):
             extent=[xbins.min(), xbins.max(), ybins.min(), ybins.max()],
             colors='#551a8b', linewidths=0.5, zorder=3)
 
-        # Assume uncertainties in both dimensions are defined.
-        # plt.gca()
-
-        mean_pos, width, height, theta = cov_ellipse(np.array([
+        mean_pos, width, height, theta = CIEllipse(np.array([
             mcmc_trace[mx_model], mcmc_trace[my_model]]).T)
         # Plot 2 sigma ellipse.
         plt.scatter(
@@ -112,7 +73,6 @@ def pl_2_param_dens(_2_params, gs, min_max_p2, varIdxs, mcmc_trace):
                           edgecolor=cp, fc='None', lw=1., zorder=4)
         ax.add_patch(ellipse)
 
-    # if gs_y2 == 12:
     xp_min, xp_max, yp_min, yp_max = min_max_p2
     ax.set_xlim([xp_min, xp_max])
     ax.set_ylim([yp_min, yp_max])
@@ -216,74 +176,48 @@ def pl_param_pf(
         plt.legend(fontsize='small')
 
 
-def return_intersection(hist_1, hist_2):
-    """
-    The ranges of both histograms must coincide for this function to work.
-
-    Source: https://mpatacchiola.github.io/blog/2016/11/12/
-            the-simplest-classifier-histogram-intersection.html
-    """
-    minima = np.minimum(hist_1, hist_2)
-    intersection = np.true_divide(np.sum(minima), np.sum(hist_2))
-    return intersection
-
-
-def pl_pdf_half(par_name, gs, varIdxs, model_done):
+def pl_pdf_half(dummy, gs, mcmc_halves):
     '''
-    Parameter posterior plot for 1st and 2nd halfs.
+    1st and 2nd halves intersection.
     '''
-    plot_dict = {
-        'metal': [2, 4, 0, 2, 0], 'age': [4, 6, 0, 2, 1],
-        'ext': [6, 8, 0, 2, 2], 'dist': [4, 6, 2, 4, 3],
-        'mass': [6, 8, 2, 4, 4], 'binar': [6, 8, 4, 6, 5]
-    }
-    labels = [r'$z$', r'$\log(age)$', r'$E_{{(B-V)}}$', r'$(m-M)_o$',
-              r'$M\,(M_{{\odot}})$', r'$b_{{frac}}$']
+    p_names = ['metal', 'age', 'ext', 'dist', 'mass', 'binar']
+    ax = plt.subplot(gs[0:2, 2:4])
+    ax.set_title("1 - (1st vs 2nd halves intersection)")
+    ax.bar(p_names, 1. - np.array(mcmc_halves))
+    # ax.set_ylim(0, 1.01)
 
-    gs_x1, gs_x2, gs_y1, gs_y2, cp = plot_dict[par_name]
-    ax = plt.subplot(gs[gs_y1:gs_y2, gs_x1:gs_x2])
 
-    ld_p = labels[cp]
+def pl_MAP_lkl(dummy, gs, map_lkl, map_lkl_final):
+    '''
+    Evolution of MAP likelihood values.
+    '''
+    ax = plt.subplot(gs[0:2, 4:6])
+    x, y = list(zip(*map_lkl))
+    ax.plot(x, y, label=r"$L_{{min}}={:.1f}$".format(map_lkl_final))
+    plt.xlabel("steps", fontsize=14)
+    plt.ylabel("Lkl (MAP)", fontsize=14)
+    ax.legend(fontsize='small', loc=0, handlelength=0.)
 
-    ax.locator_params(nbins=5)
-    # Set minor ticks
-    ax.minorticks_on()
-    ax.tick_params(axis='y', which='major', labelleft=False, labelbottom=False)
 
-    if cp in varIdxs:
-        c_model = varIdxs.index(cp)
-        h_min, h_max = min(model_done[c_model]), max(model_done[c_model])
-        half = int(.5 * len(model_done[c_model]))
-        # 1st half
-        hist_1 = plt.hist(
-            model_done[c_model][:half], bins=20, edgecolor='k',
-            facecolor='b', linewidth=.5, alpha=0.3, range=[h_min, h_max],
-            label="1st half")[0]
-        # 2nd half
-        hist_2 = plt.hist(
-            model_done[c_model][half:], bins=20, edgecolor='k',
-            facecolor='g', linewidth=.5, alpha=0.3, range=[h_min, h_max],
-            label="2nd half")[0]
-
-        # Add textbox.
-        itsct = return_intersection(hist_1, hist_2)
-        ob = offsetbox.AnchoredText(
-            ld_p + "\n" + r"$H_{{1}} \cap H_{{2}}={:.2f}$".format(itsct),
-            pad=0.1, loc=2, prop=dict(size=10))
-        ob.patch.set(alpha=0.8)
-        ax.add_artist(ob)
-        # Legend.
-        handles, labels = ax.get_legend_handles_labels()
-        leg = ax.legend(handles, labels, loc='upper right', numpoints=1,
-                        fontsize=10)
-        leg.get_frame().set_alpha(0.7)
-        cur_ylim = ax.get_ylim()
-        ax.set_ylim([0, cur_ylim[1]])
+def pl_MAF(dummy, gs, maf_steps):
+    '''
+    Evolution of MAF values.
+    '''
+    ax = plt.subplot(gs[2:4, 4:6])
+    # ax.set_title("1 - (1st vs 2nd halves intersection)")
+    x, y = list(zip(*maf_steps))
+    ax.plot(x, y, label=r"$MAF={:.3f}$".format(maf_steps[-1][1]))
+    plt.xlabel("steps", fontsize=14)
+    plt.ylabel("MAF", fontsize=14)
+    plt.axhline(y=.25, color='grey', ls=':', lw=1.2, zorder=4)
+    plt.axhline(y=.5, color='grey', ls=':', lw=1.2, zorder=4)
+    ax.legend(fontsize='small', loc=0, handlelength=0.)
 
 
 def pl_param_chain(
-    par_name, gs, cp_r, nwalkers, nburn, nsteps, m_accpt_fr, varIdxs,
-        pre_bi, post_bi, autocorr_time, max_at_10c, pymc3_ess):
+    par_name, gs, cp_r, min_max_p, nwalkers, nburn, nsteps, emcee_a,
+        mcmc_elapsed, varIdxs, pre_bi, post_bi, autocorr_time,
+        max_at_5c, min_at_5c, pymc3_ess):
     '''
     Parameter sampler chain.
     '''
@@ -299,8 +233,11 @@ def pl_param_chain(
     gs_x1, gs_x2, gs_y1, gs_y2, cp = plot_dict[par_name]
     ax = plt.subplot(gs[gs_y1:gs_y2, gs_x1:gs_x2])
     if cp == 0:
-        plt.title("N (flat)={:.0f}, chains={:.0f}, MAF={:.2f}".format(
-            nsteps * nwalkers, nwalkers, m_accpt_fr), fontsize=10)
+        m, s = divmod(mcmc_elapsed, 60)
+        h, m = divmod(m, 60)
+        plt.title(
+            "steps={:.0f}, chains={:.0f}, a={:.2f} | {:.0f}h{:.0f}m".format(
+                nsteps, nwalkers, emcee_a, h, m), fontsize=10)
     if cp == 5:
         plt.xlabel("Steps")
     else:
@@ -310,26 +247,35 @@ def pl_param_chain(
 
     if cp in varIdxs:
         c_model = varIdxs.index(cp)
-        # Only 10 chains will be plotted for visibility.
-        color = iter(cm.rainbow(np.linspace(0, 1, len(max_at_10c[0]))))
 
-        pre_bi_max_at = pre_bi[c_model].T[max_at_10c[c_model]]
-        post_bi_max_at = post_bi[c_model].T[max_at_10c[c_model]]
-
+        # Worst chains
+        color = iter(cm.rainbow(np.linspace(0, 1, len(max_at_5c[0]))))
+        pre_bi_max_at = pre_bi[c_model][max_at_5c[c_model]]
+        post_bi_max_at = post_bi[c_model][max_at_5c[c_model]]
         for w1, w2 in zip(*[pre_bi_max_at, post_bi_max_at]):
             # Burn-in stage
             plt.plot(range(nburn), w1, c='grey', lw=.5, alpha=0.5)
             # Post burn-in.
             c = next(color)
             plt.plot(np.arange(nburn, nburn + nsteps), w2, c=c, lw=.8,
+                     ls='--', alpha=0.5)
+        # Best chains
+        color = iter(cm.rainbow(np.linspace(0, 1, len(min_at_5c[0]))))
+        pre_bi_min_at = pre_bi[c_model][min_at_5c[c_model]]
+        post_bi_min_at = post_bi[c_model][min_at_5c[c_model]]
+        for w1, w2 in zip(*[pre_bi_min_at, post_bi_min_at]):
+            # Burn-in stage
+            plt.plot(range(nburn), w1, c='grey', lw=.5, alpha=0.5)
+            # Post burn-in.
+            c = next(color)
+            plt.plot(np.arange(nburn, nburn + nsteps), w2, c=c, lw=.8,
                      alpha=0.5)
+
         plt.axhline(
             y=float(cp_r[cp]), color='k', ls='--', lw=1.2, zorder=4,
-            label=r"$\tau={:.0f}\;(ESS={:.0f})$".format(
+            label=r"$\tau={:.0f}\;(\hat{{n}}_{{eff}}={:.0f})$".format(
                 autocorr_time[c_model], pymc3_ess[c_model]))
-        std = np.std(post_bi[c_model])
-        ax.set_ylim(
-            np.min(post_bi[c_model]) - std, np.max(post_bi[c_model]) + std)
+        ax.set_ylim(min_max_p[c_model][0], min_max_p[c_model][1])
         ax.legend(fontsize='small', loc=0, handlelength=0.)
 
 
@@ -337,7 +283,7 @@ def pl_mESS(dummy, gs, mESS, minESS, minESS_epsilon):
     '''
     mESS plot.
     '''
-    ax = plt.subplot(gs[6:8, 8:10])
+    ax = plt.subplot(gs[4:6, 6:8])
     plt.xlabel(r"$CI\;(=1-\alpha)$", fontsize=14)
     plt.ylabel(r"$\epsilon$", fontsize=16)
     ax.set_xlim(.01, 1.01)
@@ -348,6 +294,30 @@ def pl_mESS(dummy, gs, mESS, minESS, minESS_epsilon):
     plt.plot(
         1. - np.array(minESS_epsilon[0]), minESS_epsilon[2],
         label="mESS ({:.0f})".format(mESS))
+    ax.legend(fontsize='small', loc=0)
+
+
+def pl_tau(dummy, gs, N_steps_conv, N_conv, tol_conv, tau_index, tau_autocorr):
+    '''
+    Tau vs steps plot.
+    '''
+    ax = plt.subplot(gs[6:8, 8:10])
+    plt.title(r"$N_{{conv}}={:.0f}, tol_{{conv}}={:.2f}$".format(
+        N_conv, tol_conv))
+    plt.xlabel("steps", fontsize=14)
+    plt.ylabel(r"mean $\hat{\tau}$", fontsize=14)
+
+    n = N_steps_conv * np.arange(1, tau_index + 1)
+    plt.plot(n, n / 50, "--b", label="N/50")
+    plt.plot(n, n / 100, "--g", label="N/100")
+    plt.plot(n, tau_autocorr)
+    plt.xlim(0, n.max())
+    try:
+        plt.ylim(
+            0, np.nanmax(tau_autocorr) + 0.1 *
+            (np.nanmax(tau_autocorr) - np.nanmin(tau_autocorr)))
+    except ValueError:
+        print("  WARNING: no mean autocorrelation values to plot.")
     ax.legend(fontsize='small', loc=0)
 
 
@@ -405,11 +375,14 @@ def plot(N, *args):
     plt_map = {
         0: [pl_2_param_dens, args[0] + ' density map'],
         1: [pl_param_pf, args[0] + ' probability function'],
-        2: [pl_pdf_half, args[0] + ' 1st and 2nd halfs of pdf'],
-        3: [pl_param_chain, args[0] + ' sampler chain'],
-        4: [pl_mESS, args[0]],
-        5: [pl_lags, args[0]],
-        6: [pl_GW, args[0]]
+        2: [pl_pdf_half, ' 1st and 2nd halfs of pdf'],
+        3: [pl_MAP_lkl, ' MAP likelihood values'],
+        4: [pl_MAF, ' MAF vs steps'],
+        5: [pl_param_chain, args[0] + ' sampler chain'],
+        6: [pl_tau, args[0]],
+        7: [pl_mESS, args[0]],
+        8: [pl_lags, args[0]],
+        9: [pl_GW, args[0]]
     }
 
     fxn = plt_map.get(N, None)[0]

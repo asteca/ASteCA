@@ -252,7 +252,10 @@ def geweke(x, first=.1, last=.5, intervals=20):
 
 
 def effective_n(mtrace, varnames=None, include_transformed=False):
-    R"""Returns estimate of the effective sample size of a set of traces.
+    R"""
+    https://docs.pymc.io/api/diagnostics.html#pymc3.diagnostics.effective_n
+
+    Returns estimate of the effective sample size of a set of traces.
     Parameters
     ----------
     mtrace : MultiTrace or trace object
@@ -408,3 +411,40 @@ def effective_n(mtrace, varnames=None, include_transformed=False):
     n_eff = generate_neff(mtrace)
 
     return n_eff
+
+
+def return_intersection(hist_1, hist_2):
+    """
+    The ranges of both histograms must coincide for this function to work.
+
+    Source: https://mpatacchiola.github.io/blog/2016/11/12/
+            the-simplest-classifier-histogram-intersection.html
+    """
+    minima = np.minimum(hist_1, hist_2)
+    intersection = np.true_divide(np.sum(minima), np.sum(hist_2))
+    return intersection
+
+
+def pdfHalfves(varIdxs, mcmc_trace):
+    """
+    Estimate the difference between the first and second halves of a 20 bins
+    histogram of the flat trace, for each parameter.
+    """
+    mcmc_halves = []
+    for cp in [0, 1, 2, 3, 4, 5]:
+        if cp in varIdxs:
+            c_model = varIdxs.index(cp)
+            h_min, h_max = min(mcmc_trace[c_model]), max(mcmc_trace[c_model])
+            half = int(.5 * len(mcmc_trace[c_model]))
+            # 1st half
+            hist_1 = np.histogram(
+                mcmc_trace[c_model][:half], bins=20, range=[h_min, h_max])[0]
+            # 2nd half
+            hist_2 = np.histogram(
+                mcmc_trace[c_model][half:], bins=20, range=[h_min, h_max])[0]
+
+            mcmc_halves.append(return_intersection(hist_1, hist_2))
+        else:
+            mcmc_halves.append(0.)
+
+    return mcmc_halves

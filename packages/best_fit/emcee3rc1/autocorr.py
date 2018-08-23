@@ -1,6 +1,12 @@
+# -*- coding: utf-8 -*-
+
+from __future__ import division, print_function
+
+import logging
 
 import numpy as np
-import logging
+
+__all__ = ["function_1d", "integrated_time", "AutocorrError"]
 
 
 def next_pow_two(n):
@@ -13,10 +19,13 @@ def next_pow_two(n):
 
 def function_1d(x):
     """Estimate the normalized autocorrelation function of a 1-D series
+
     Args:
         x: The series as a 1-D numpy array.
+
     Returns:
         array: The autocorrelation function of the time series.
+
     """
     x = np.atleast_1d(x)
     if len(x.shape) != 1:
@@ -38,13 +47,12 @@ def auto_window(taus, c):
 
 
 def integrated_time(x, c=5, tol=50, quiet=False):
-    """
-    TODO: changed to work with emcee v2.2.1
+    """Estimate the integrated autocorrelation time of a time series.
 
-    Estimate the integrated autocorrelation time of a time series.
     This estimate uses the iterative procedure described on page 16 of
     `Sokal's notes <http://www.stat.unc.edu/faculty/cji/Sokal.pdf>`_ to
     determine a reasonable window size.
+
     Args:
         x: The time series. If multidimensional, set the time axis using the
             ``axis`` keyword argument and the function will be computed for
@@ -56,22 +64,28 @@ def integrated_time(x, c=5, tol=50, quiet=False):
         quiet (Optional[bool]): This argument controls the behavior when the
             chain is too short. If ``True``, give a warning instead of raising
             an :class:`AutocorrError`. (default: ``False``)
+
     Returns:
         float or array: An estimate of the integrated autocorrelation time of
             the time series ``x`` computed along the axis ``axis``.
         Optional[int]: The final window size that was used. Only returned if
             ``full_output`` is ``True``.
+
     Raises
         AutocorrError: If the autocorrelation time can't be reliably estimated
             from the chain and ``quiet`` is ``False``. This normally means
             that the chain is too short.
-    """
-    if len(x.shape) == 1:
-        x = x[np.newaxis, :, np.newaxis]
-    if len(x.shape) == 2:
-        x = x[np.newaxis, :, :]
 
-    n_w, n_t, n_d = x.shape
+    """
+    x = np.atleast_1d(x)
+    if len(x.shape) == 1:
+        x = x[:, np.newaxis, np.newaxis]
+    if len(x.shape) == 2:
+        x = x[:, :, np.newaxis]
+    if len(x.shape) != 3:
+        raise ValueError("invalid dimensions")
+
+    n_t, n_w, n_d = x.shape
     tau_est = np.empty(n_d)
     windows = np.empty(n_d, dtype=int)
 
@@ -79,9 +93,9 @@ def integrated_time(x, c=5, tol=50, quiet=False):
     for d in range(n_d):
         f = np.zeros(n_t)
         for k in range(n_w):
-            f += function_1d(x[k, :, d])
+            f += function_1d(x[:, k, d])
         f /= n_w
-        taus = 2. * np.cumsum(f) - 1.
+        taus = 2.0*np.cumsum(f)-1.0
         windows[d] = auto_window(taus, c)
         tau_est[d] = taus[windows[d]]
 
@@ -89,12 +103,27 @@ def integrated_time(x, c=5, tol=50, quiet=False):
     flag = tol * tau_est > n_t
 
     # Warn or raise in the case of non-convergence
-    if np.any(flag) and quiet is False:
+    if np.any(flag):
         msg = (
-            " the chain is shorter than {0} times the integrated\n"
-            "  autocorrelation time for {1} parameter(s). Use this estimate\n"
-            "  with caution and run a longer chain!"
+            "The chain is shorter than {0} times the integrated "
+            "autocorrelation time for {1} parameter(s). Use this estimate "
+            "with caution and run a longer chain!\n"
         ).format(tol, np.sum(flag))
+        msg += "N/{0} = {1:.0f};\ntau: {2}".format(tol, n_t/tol, tau_est)
+        if not quiet:
+            raise AutocorrError(tau_est, msg)
         logging.warning(msg)
 
     return tau_est
+
+
+class AutocorrError(Exception):
+    """Raised if the chain is too short to estimate an autocorrelation time.
+
+    The current estimate of the autocorrelation time can be accessed via the
+    ``tau`` attribute of this exception.
+
+    """
+    def __init__(self, tau, *args, **kwargs):
+        self.tau = tau
+        super(AutocorrError, self).__init__(*args, **kwargs)

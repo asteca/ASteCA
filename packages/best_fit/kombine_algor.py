@@ -1,9 +1,9 @@
 
 import time as t
-# from .sampyl.samplers import NUTS as smpNUTS
-from .sampyl.samplers.slice import Slice
+from .kombine.sampler import Sampler
 from ..core_imp import np
-from .emcee_algor import varPars, log_posterior, convergenceVals, closeSol
+from .emcee_algor import varPars, log_posterior, convergenceVals, closeSol,\
+    random_population, discreteParams
 
 
 class Target():
@@ -44,52 +44,28 @@ def main(
         theor_tracks, e_max, err_lst, completeness, max_mag_syn, st_dist_mass,
         R_V, ext_coefs, N_fc, cmpl_rnd, err_rnd]
 
-    # Thinly-wrapped numpy
-    # import autograd.numpy as np
-    # The only autograd function you may ever need
-    # from autograd import grad
-    # #
-    # grad_logp = grad(logp)       # Obtain its gradient function
-    # grad_logp(.03, 9.7, 0.3, 12.7, 5000., .3)
-
-    # bounds = {
-    #     'met': ranges[0], 'age': ranges[1], 'ext': ranges[2],
-    #     'dist': ranges[3], 'mass': ranges[4], 'binar': ranges[5]}
-    # start = smp.find_MAP(logp, {
-    #     'met': .015, 'age': 9., 'ext': 0., 'dist': 13., 'mass': 5000.,
-    #     'binar': .3}, verbose=True, bounds=bounds)
-
-    start = {
-        'met': .03, 'age': 9.7, 'ext': 0.3, 'dist': 12.7, 'mass': 5000.,
-        'binar': .3}
-    # start = {'ext': 0.3, 'dist': 12.7, 'mass': 5000., 'binar': .3}
-
     s = t.time()
-    # sampler = NUTS(logp, start)
-    # sampler = Slice(logp, start)
     logp = Target(priors, varIdxs, ranges, fundam_params, synthcl_args,
                   lkl_method, obs_clust)
-    sampler = Slice(logp, start)
+    sampler = Sampler(nwalkers, ndim, logp)
 
-    # TODO SLICE SAMPLER DOES NOT ACCEPT MORE THAN 1 CHAIN
-    burn_in = sampler.sample(nburn, n_chains=nburn)
-    pars_chains_bi = np.array([
-        burn_in.met, burn_in.age, burn_in.ext, burn_in.dist, burn_in.mass,
-        burn_in.binar])
-    # pars_chains_bi = pars_chains_bi[:, np.newaxis, :]
+    p0 = random_population(fundam_params, varIdxs, nwalkers)
+    p, _, _ = sampler.burnin(p0, max_steps=nburn, verbose=True)
+    pars_chains_bi = discreteParams(fundam_params, varIdxs, sampler.chain).T
+    print("  Burn-in done.")
 
-    start = {
-        'met': burn_in.met[-1], 'age': burn_in.age[-1], 'ext': burn_in.ext[-1],
-        'dist': burn_in.dist[-1], 'mass': burn_in.mass[-1],
-        'binar': burn_in.binar[-1]}
-    sampler = Slice(logp, start)
-    chain = sampler.sample(nsteps, n_chains=nwalkers)
+    p, post, q = sampler.run_mcmc(nsteps)
+    print(sampler.chain.shape)
 
     # (nsteps, nwalkers, ndim)
-    chains_nruns = np.array([
-        chain.met, chain.age, chain.ext, chain.dist, chain.mass,
-        chain.binar]).T
-    # chains_nruns = chains_nruns[:, np.newaxis, :]
+    chains_nruns = sampler.chain[nburn:, :, :]
+    chains_nruns = discreteParams(fundam_params, varIdxs, chains_nruns)
+
+    # import matplotlib.pyplot as plt
+    # import corner
+    # flat_chain = chains_nruns.reshape(chains_nruns[:, :, 0].size, ndim)
+    # corner.corner(flat_chain)
+    # plt.show()
 
     # (ndim, nsteps * nwalkers)
     mcmc_trace = chains_nruns.reshape(-1, ndim).T

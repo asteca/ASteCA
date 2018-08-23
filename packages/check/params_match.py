@@ -10,8 +10,7 @@ def check(
         bin_mr, bin_methods, lkl_weight, bin_weights, cmd_evol_tracks,
         iso_paths, imf_funcs, par_ranges, N_pop, N_gen, fit_diff,
         cross_prob, cross_sel, mut_prob, N_el, N_ei, N_es, inst_packgs_lst,
-        nwalkers, nburn, N_burn, nsteps, emcee_a, priors, emcee_priors,
-        **kwargs):
+        nwalkers, nburn, N_burn, emcee_a, priors, emcee_priors, **kwargs):
     """
     Check all parameters related to the search for the best synthetic cluster
     match.
@@ -64,11 +63,6 @@ def check(
                 sys.exit("ERROR: the minimum number of burn-in samples is 1.")
             if N_burn < 1:
                 sys.exit("ERROR: the minimum number of burn-in runs is 1.")
-            try:
-                int(float(nsteps))
-            except ValueError:
-                if nsteps[-1] != 'h':
-                    sys.exit("ERROR: the format for 'nsteps' is unknown.")
 
         # Check likelihood method selected.
         if lkl_method not in lkl_methods:

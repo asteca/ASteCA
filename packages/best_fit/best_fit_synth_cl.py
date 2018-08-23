@@ -1,7 +1,7 @@
 
 import numpy as np
 from . import max_mag_cut, obs_clust_prepare, brute_force_algor,\
-    genetic_algorithm, bootstrap, emcee_algor, sampyl_algor
+    genetic_algorithm, bootstrap, emcee_algor, sampyl_algor, kombine_algor
 from ..synth_clust import extin_coefs
 from ..synth_clust import imf
 
@@ -144,15 +144,24 @@ def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning,
 
         elif best_fit_algor == 'emcee':
 
-            # # TODO testing
+            # TODO testing
             # print('Using sampyl algorithm ({}).'.format(
             #     lkl_method + '; ' + lkl_binning if lkl_method == 'dolphin'
             #     else lkl_method))
             # isoch_fit_params = sampyl_algor.main(
             #     lkl_method, clp['em_float'], err_lst, completeness,
             #     max_mag_syn, fundam_params, obs_clust, theor_tracks, R_V,
-            #     ext_coefs, st_dist_mass, N_fc, cmpl_rnd, err_rnd, nsteps,
-            #     nburn)
+            #     ext_coefs, st_dist_mass, N_fc, cmpl_rnd, err_rnd, nwalkers,
+            #     nsteps, nburn, N_burn, emcee_a, priors)
+
+            # print('Using kombine algorithm ({}).'.format(
+            #     lkl_method + '; ' + lkl_binning if lkl_method == 'dolphin'
+            #     else lkl_method))
+            # isoch_fit_params = kombine_algor.main(
+            #     lkl_method, clp['em_float'], err_lst, completeness,
+            #     max_mag_syn, fundam_params, obs_clust, theor_tracks, R_V,
+            #     ext_coefs, st_dist_mass, N_fc, cmpl_rnd, err_rnd, nwalkers,
+            #     nsteps, nburn, N_burn, emcee_a, priors)
 
             print('Using emcee algorithm ({}).'.format(
                 lkl_method + '; ' + lkl_binning if lkl_method == 'dolphin'
