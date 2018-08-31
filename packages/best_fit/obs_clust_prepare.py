@@ -51,7 +51,7 @@ def main(cl_max_mag, lkl_method, bin_method, lkl_weight):
         for st_phot, st_e_phot in list(
                 zip(list(zip(*mags_cols)), list(zip(*e_mags_cols)))):
             obs_st.append(list(zip(*[st_phot, st_e_phot])))
-        obs_clust = [obs_st, memb_probs]
+        obs_clust = [np.array(obs_st), len(obs_st), np.log(memb_probs)]
 
     elif lkl_method == 'duong':
         # Define variables to communicate with package 'R'.

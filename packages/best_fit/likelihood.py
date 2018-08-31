@@ -1,5 +1,6 @@
 
 import numpy as np
+from scipy.misc import logsumexp
 
 # ############################################################
 # # Timer function: http://stackoverflow.com/a/21860100/1391441
@@ -50,39 +51,42 @@ def tolstoy(synth_clust, obs_clust):
         # synthetic cluster's photometry and errors.
         synth_phot, synth_errors = synth_clust[0]
         # Observed cluster's photometry and membership probabilities.
-        obs_st, mem_probs = obs_clust
+        obs_st, N, log_mem_probs = obs_clust
 
         # Square synthetic photometric errors.
         synth_errors = np.square(synth_errors)
-        # Create list with the proper format for the synthetic cluster.
-        syn_st = []
-        for st_phot, st_e_phot in zip(zip(*synth_phot), zip(*synth_errors)):
-            syn_st.append(zip(*[st_phot, st_e_phot]))
+        # Array with the proper format for the synthetic cluster.
+        syn_st = np.dstack([np.array(synth_phot).T, synth_errors.T])
 
         # Photometric difference (observed - synthetic), for all dimensions.
-        phot_dif = np.array(obs_st)[:, None, :, 0] -\
-            np.array(syn_st)[None, :, :, 0]
-        # Sum of squared photometric errors, for all dimensions.
-        sigma_sum = np.array(obs_st)[:, None, :, 1] +\
-            np.array(syn_st)[None, :, :, 1]
+        phot_dif = obs_st[:, None, :, 0] - syn_st[None, :, :, 0]
+        # Sum of squared photometric errors, for all dimensions. Clip at a
+        # minimum of 0.005 to avoid numeric issues below.
+        sigma_sum = np.clip(
+            obs_st[:, None, :, 1] + syn_st[None, :, :, 1], 0.005, None)
 
         # Sum for all photometric dimensions.
         Dsum = (np.square(phot_dif) / sigma_sum).sum(axis=-1)
         # Product of summed squared sigmas.
         sigma_prod = np.prod(sigma_sum, axis=-1)
-        # All elements inside synthetic stars summatory.
-        sum_M_j = np.exp(-0.5 * Dsum) / np.sqrt(sigma_prod)
-        # Sum for all synthetic stars.
-        sum_M = np.sum(sum_M_j, axis=-1)
 
-        # Multiply by membership probabilities.
-        sum_M_MP = mem_probs * sum_M
-        # Replace 0. elements before applying the logarithm below.
-        sum_M_MP[sum_M_MP == 0.] = 1e-7
-        sum_N = sum(np.log(sum_M_MP))
+        # The block below can be replaced by this line using 'logsumexp'. It
+        # is marginally faster.
+        sum_N = (logsumexp(-0.5 * Dsum, b=1. / np.sqrt(sigma_prod), axis=1) +
+                 log_mem_probs).sum()
+
+        # # All elements inside synthetic stars summatory.
+        # sum_M_j = np.exp(-0.5 * Dsum) / np.sqrt(sigma_prod)
+        # # Sum for all synthetic stars.
+        # sum_M = np.sum(sum_M_j, axis=-1)
+        # # Multiply by membership probabilities.
+        # sum_M_MP = mem_probs * sum_M
+        # # Replace 0. elements before applying the logarithm below.
+        # sum_M_MP[sum_M_MP == 0.] = 1e-7
+        # sum_N = np.sum(np.log(sum_M_MP))
 
         # Final negative logarithmic likelihood
-        tlst_lkl = len(obs_st) * np.log(len(syn_st)) - sum_N
+        tlst_lkl = N * np.log(len(syn_st)) - sum_N
 
     return tlst_lkl
 
