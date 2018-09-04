@@ -445,6 +445,6 @@ def pdfHalfves(varIdxs, mcmc_trace):
 
             mcmc_halves.append(return_intersection(hist_1, hist_2))
         else:
-            mcmc_halves.append(0.)
+            mcmc_halves.append(1.)
 
     return mcmc_halves

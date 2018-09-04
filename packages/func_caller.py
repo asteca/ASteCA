@@ -30,6 +30,7 @@ from .decont_algors import cl_region_clean
 #
 from .out import cluster_members_file
 from .best_fit import best_fit_synth_cl
+from .out import mcmc_samples
 from .out import synth_cl_file
 from .out import create_out_data_file
 from .errors import error_round
@@ -196,6 +197,9 @@ def main(cl_file, pd):
 
     # Obtain best fitting parameters for cluster.
     clp = best_fit_synth_cl.main(clp, **pd)
+
+    # Save MCMC samples to file (if MCMC sampler was used)
+    mcmc_samples.main(clp, pd, **npd)
 
     # Create output synthetic cluster file if one was found
     clp = synth_cl_file.main(clp, npd, **pd)
