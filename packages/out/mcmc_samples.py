@@ -16,6 +16,7 @@ def main(clp, pd, mcmc_file_out, **kwargs):
 
         tt = Table()
         params = ['metal', 'log(age)', 'E_BV', 'dm', 'mass', 'bf']
+        # TODO better column names
         for i, par in enumerate(params):
             if i in varIdxs:
                 c_model = varIdxs.index(i)
