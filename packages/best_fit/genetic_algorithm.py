@@ -46,7 +46,7 @@ def chunker(seq, size):
     Helper function for 'crossover'. Returns elements in list in "chunks"
     rather than one at a time.
     '''
-    return (seq[pos:pos + size] for pos in xrange(0, len(seq), size))
+    return (seq[pos:pos + size] for pos in range(0, len(seq), size))
 
 
 def crossover(chromosomes, cross_prob, cross_sel):
@@ -108,7 +108,7 @@ def decode(fundam_params, n_bin, p_delta, p_mins, mut_chrom):
 
     for chrom in mut_chrom:
         # Split chromosome string.
-        chrom_split = [chrom[i:i + n_bin] for i in xrange(0, len(chrom),
+        chrom_split = [chrom[i:i + n_bin] for i in range(0, len(chrom),
                        n_bin)]
 
         # Convert each binary into an integer for all parameters.
@@ -134,8 +134,9 @@ def elitism(best_sol, p_lst):
     # Append the N_el best solutions to the beginning of the list, pushing
     # out N_el solutions located on the end (right) of the list.
     p_lst_r = []
+    best_sol_zip = list(zip(*best_sol))
     for i, pars in enumerate(p_lst):
-        p_lst_r.append(list(zip(*best_sol)[i]) + pars[:-len(best_sol)])
+        p_lst_r.append(list(best_sol_zip[i]) + pars[:-len(best_sol)])
 
     return p_lst_r
 
@@ -150,7 +151,7 @@ def selection(generation, breed_prob):
     ran_lst = np.random.uniform(0, sum(breed_prob), len(generation))
     # For each of these numbers, obtain the corresponding likelihood from the
     # breed_prob CDF.
-    gen_breed = zip(*[generation, breed_prob])
+    gen_breed = list(zip(*[generation, breed_prob]))
     for r in ran_lst:
         s = 0.
         for sol, num in gen_breed:
@@ -207,13 +208,13 @@ def evaluation(lkl_method, e_max, err_lst, completeness, max_mag_syn,
 
         # Append data to the lists that will be erased with each call
         # to this function.
-        generation_list.append(model)
+        generation_list.append(list(model))
         lkl_lst.append(lkl)
 
     # Sort according to the likelihood list. This puts the best model (ie:
     # the one with the minimum likelihood value) first.
     # with timeblock(" sort"):
-    generation = [x for y, x in sorted(zip(lkl_lst, generation_list))]
+    generation = [x for y, x in sorted(list(zip(lkl_lst, generation_list)))]
     # Sort list in place putting the likelihood minimum value first.
     lkl_lst.sort()
 
@@ -249,7 +250,7 @@ def ext_imm(best_sol, fundam_params, N_pop):
     p_lst_r = random_population(fundam_params, n_ran)
 
     # Append immigrant random population to the best solution.
-    generation_ei = best_sol + zip(*p_lst_r)
+    generation_ei = best_sol + list(zip(*p_lst_r))
 
     return generation_ei
 
@@ -414,7 +415,7 @@ def main(lkl_method, e_max, err_lst, completeness, max_mag_syn, fundam_params,
         else:
             # For plotting purposes. Save index where a new best solution
             # was found.
-            new_bs_indx.append([i])
+            new_bs_indx.append(i)
             # Update best solution for passing along in the 'Elitism' block.
             best_sol = generation[:N_el]
             # Reset counter.

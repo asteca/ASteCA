@@ -142,7 +142,7 @@ def main(npd, cld_c, pd, err_lst, ext_coefs, N_fc, cmpl_rnd, err_rnd,
         if top_tiers_str:
 
             # Store best model values as strings.
-            best_model = ['{:.3f}'.format(best_lik)] + map(str, best_mod)
+            best_model = ['{:.3f}'.format(best_lik)] + list(map(str, best_mod))
 
             # Create output .dat file.
             top_tiers_file(output_subdir, clust_name, best_model,
