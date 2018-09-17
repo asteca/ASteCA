@@ -88,10 +88,8 @@ def main(cl_max_mag, lkl_method, bin_method, lkl_weight):
         # Obtain histogram for observed cluster.
         cl_histo = np.histogramdd(obs_mags_cols, bins=bin_edges)[0]
 
-        w_stat = {'mean': np.mean, 'max': np.max, 'median': np.median}
-        # Weights that will be applied to each bin.
         bin_w = np.nan_to_num(binned_statistic_dd(
-            obs_mags_cols, memb_probs, statistic=w_stat[lkl_weight],
+            np.array(obs_mags_cols).T, memb_probs, statistic=lkl_weight,
             bins=bin_edges)[0])
 
         # Flatten N-dimensional histograms.
@@ -100,7 +98,7 @@ def main(cl_max_mag, lkl_method, bin_method, lkl_weight):
 
         # Index of bins where n_i = 0 (no observed stars). Used by the
         # 'Dolphin' and 'Mighell' likelihoods.
-        cl_z_idx = [cl_histo_f != 0]
+        cl_z_idx = (cl_histo_f != 0)
 
         # Remove all bins where n_i = 0 (no observed stars). Used by the
         # 'Dolphin' likelihood.
