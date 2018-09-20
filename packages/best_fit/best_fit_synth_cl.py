@@ -1,8 +1,8 @@
 
 from ..core_imp import np
 from . import max_mag_cut, obs_clust_prepare, brute_force_algor,\
-    genetic_algorithm, bootstrap, emcee_algor, sampyl_algor, kombine_algor,\
-    abcpmc_algor, ptemcee_algor
+    genetic_algorithm, bootstrap, emcee_algor, abcpmc_algor, ptemcee_algor
+# sampyl_algor, kombine_algor
 from ..synth_clust import extin_coefs
 from ..synth_clust import imf
 
