@@ -332,23 +332,41 @@ def param_ranges(best_fit_algor, fundam_params, varIdxs=None, post_bi=None):
             # Store parameter range.
             min_max_p.append([min(param) - delta_p, max(param) + delta_p])
 
-    elif best_fit_algor == 'emcee':
+    elif best_fit_algor in ('ptemcee', 'emcee'):
         # Select the ranges given by the limits of the space explored by all
         # the chains, for each parameter.
         for cp, param in enumerate(fundam_params):
             if cp in varIdxs:
                 c_model = varIdxs.index(cp)
-                std = np.std(post_bi[c_model])
+                # Use the last 10% of the chains.
+                N = int(post_bi[c_model].shape[-1] * .1)
+                std = np.std(post_bi[c_model][:, -N:])
+                pmin, pmax = np.min(post_bi[c_model][:, -N:]),\
+                    np.max(post_bi[c_model][:, -N:])
                 min_max_p.append([
-                    np.min(post_bi[c_model]) - std,
-                    np.max(post_bi[c_model]) + std])
+                    max(param[0], pmin - std),
+                    min(param[-1], pmax + std)])
             else:
-                min_max_p.append([min(param), max(param)])
+                min_max_p.append([min(param) - .001, max(param) + .001])
+
+    elif best_fit_algor == 'abc':
+        # Select the ranges given by the limits of the space explored by all
+        # the chains, for each parameter.
+        for cp, param in enumerate(fundam_params):
+            if cp in varIdxs:
+                c_model = varIdxs.index(cp)
+                mean = np.mean(post_bi[c_model])
+                std3 = 3 * np.std(post_bi[c_model])
+                min_max_p.append([
+                    max(param[0], mean - std3),
+                    min(param[-1], mean + std3)])
+            else:
+                min_max_p.append([min(param) - .001, max(param) + .001])
 
     return min_max_p
 
 
-def p2_ranges(p2, min_max_p, varIdxs, model_done):
+def p2_ranges(p2, min_max_p):
     '''
     Parameter ranges used by the MCMC 2-param density plots.
     '''

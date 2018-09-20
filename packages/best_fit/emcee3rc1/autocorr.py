@@ -33,9 +33,10 @@ def function_1d(x):
     n = next_pow_two(len(x))
 
     # Compute the FFT and then (from that) the auto-correlation function
-    f = np.fft.fft(x - np.mean(x), n=2*n)
-    acf = np.fft.ifft(f * np.conjugate(f))[:len(x)].real
+    f1 = np.fft.fft(x - np.mean(x), n=2 * n)
+    acf = np.fft.ifft(f1 * np.conjugate(f1))[:len(x)].real
     acf /= acf[0]
+
     return acf
 
 
@@ -95,11 +96,13 @@ def integrated_time(x, c=5, tol=50, quiet=False):
         for k in range(n_w):
             f += function_1d(x[:, k, d])
         f /= n_w
-        taus = 2.0*np.cumsum(f)-1.0
+        taus = 2.0 * np.cumsum(f) - 1.0
         windows[d] = auto_window(taus, c)
         tau_est[d] = taus[windows[d]]
 
     # Check convergence
+    # if tol > 0:
+    #     tau_est[np.isnan(tau_est)] = np.inf
     flag = tol * tau_est > n_t
 
     # Warn or raise in the case of non-convergence

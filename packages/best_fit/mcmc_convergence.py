@@ -425,26 +425,26 @@ def return_intersection(hist_1, hist_2):
     return intersection
 
 
-def pdfHalfves(varIdxs, mcmc_trace):
-    """
-    Estimate the difference between the first and second halves of a 20 bins
-    histogram of the flat trace, for each parameter.
-    """
-    mcmc_halves = []
-    for cp in [0, 1, 2, 3, 4, 5]:
-        if cp in varIdxs:
-            c_model = varIdxs.index(cp)
-            h_min, h_max = min(mcmc_trace[c_model]), max(mcmc_trace[c_model])
-            half = int(.5 * len(mcmc_trace[c_model]))
-            # 1st half
-            hist_1 = np.histogram(
-                mcmc_trace[c_model][:half], bins=20, range=[h_min, h_max])[0]
-            # 2nd half
-            hist_2 = np.histogram(
-                mcmc_trace[c_model][half:], bins=20, range=[h_min, h_max])[0]
+# def pdfHalfves(varIdxs, mcmc_trace):
+#     """
+#     Estimate the difference between the first and second halves of a 20 bins
+#     histogram of the flat trace, for each parameter.
+#     """
+#     mcmc_halves = []
+#     for cp in [0, 1, 2, 3, 4, 5]:
+#         if cp in varIdxs:
+#             c_model = varIdxs.index(cp)
+#             h_min, h_max = min(mcmc_trace[c_model]), max(mcmc_trace[c_model])
+#             half = int(.5 * len(mcmc_trace[c_model]))
+#             # 1st half
+#             hist_1 = np.histogram(
+#                 mcmc_trace[c_model][:half], bins=20, range=[h_min, h_max])[0]
+#             # 2nd half
+#             hist_2 = np.histogram(
+#                 mcmc_trace[c_model][half:], bins=20, range=[h_min, h_max])[0]
 
-            mcmc_halves.append(return_intersection(hist_1, hist_2))
-        else:
-            mcmc_halves.append(1.)
+#             mcmc_halves.append(return_intersection(hist_1, hist_2))
+#         else:
+#             mcmc_halves.append(1.)
 
-    return mcmc_halves
+#     return mcmc_halves
