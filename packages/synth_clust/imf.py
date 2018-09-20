@@ -1,5 +1,5 @@
 
-from ..core_imp import np
+import numpy as np
 from scipy.integrate import quad
 
 

@@ -6,13 +6,11 @@ from os.path import isdir
 
 def check(
     bf_flag, best_fit_algor, lkl_method, lkl_methods, lkl_binning,
-        N_bootstrap, evol_track, max_mag, IMF_name, R_V,
+        optimz_algors, N_bootstrap, evol_track, max_mag, IMF_name, R_V,
         bin_mr, bin_methods, lkl_weight, bin_weights, cmd_evol_tracks,
         iso_paths, imf_funcs, par_ranges, N_pop, N_gen, fit_diff,
         cross_prob, cross_sel, mut_prob, N_el, N_ei, N_es, inst_packgs_lst,
-        nwalkers_emc, nburn_emc, N_burn_emc, emcee_a, priors_emc,
-        ntemps, nwalkers_ptm, nburn_ptm, ptemcee_a, priors_ptm,
-        emcee_priors, **kwargs):
+        nwalkers, nburn, N_burn, emcee_a, priors, emcee_priors, **kwargs):
     """
     Check all parameters related to the search for the best synthetic cluster
     match.
@@ -52,35 +50,19 @@ def check(
             if 'emcee' not in inst_packgs_lst:
                 sys.exit("ERROR: the 'emcee' package is not installed.")
 
-            if priors_emc not in emcee_priors:
+            if priors not in emcee_priors:
                 sys.exit("ERROR: the selected prior ({}) is not"
-                         " allowed.".format(priors_emc))
+                         " allowed.".format(priors))
 
-            if nwalkers_emc % 2 != 0:
+            if nwalkers % 2 != 0:
                 # Number is even
                 sys.exit("ERROR: the number of walkers must be even.")
-            if nwalkers_emc < 12:
+            if nwalkers < 12:
                 sys.exit("ERROR: the minimum number of walkers is 12.")
-            if nburn_emc < 1:
+            if nburn < 1:
                 sys.exit("ERROR: the minimum number of burn-in samples is 1.")
-            if N_burn_emc < 1:
+            if N_burn < 1:
                 sys.exit("ERROR: the minimum number of burn-in runs is 1.")
-
-        if best_fit_algor == 'ptemcee':
-
-            if priors_ptm not in emcee_priors:
-                sys.exit("ERROR: the selected prior ({}) is not"
-                         " allowed.".format(priors_ptm))
-
-            if nwalkers_ptm % 2 != 0:
-                # Number is even
-                sys.exit("ERROR: the number of walkers must be even.")
-            if nwalkers_ptm < 12:
-                sys.exit("ERROR: the minimum number of walkers is 12.")
-            if nburn_ptm < 1:
-                sys.exit("ERROR: the minimum number of burn-in samples is 1.")
-            if ntemps < 1:
-                sys.exit("ERROR: the minimum number of temperatures is 1.")
 
         # Check likelihood method selected.
         if lkl_method not in lkl_methods:

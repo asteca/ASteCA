@@ -59,7 +59,7 @@ def pl_2_param_dens(_2_params, gs, min_max_p2, varIdxs, mcmc_trace):
             cmap=plt.get_cmap(d_map),
             range=None, zorder=2)[:-1]
         plt.contour(
-            h2d.transpose(), 4,
+            h2d.transpose(), 5,
             extent=[xbins.min(), xbins.max(), ybins.min(), ybins.max()],
             colors='#551a8b', linewidths=0.5, zorder=3)
 
@@ -95,7 +95,7 @@ def pl_param_pf(
 
     labels = [r'$z$', r'$\log(age)$', r'$E_{{(B-V)}}$', r'$(m-M)_o$',
               r'$M\,(M_{{\odot}})$', r'$b_{{frac}}$']
-    frm = ["{:.4f}", "{:.2f}", "{:.3f}", "{:.2f}", "{:.0f}", "{:.2f}"]
+    frm = ["{:.4f}", "{:.2f}", "{:.2f}", "{:.2f}", "{:.0f}", "{:.2f}"]
 
     ld_p = labels[cp]
     p = frm[cp]
@@ -176,45 +176,48 @@ def pl_param_pf(
         plt.legend(fontsize='small')
 
 
-def xxx():
-    """
-    """
-    ax = plt.subplot(gs[0:2, 2:8])
+def pl_pdf_half(dummy, gs, mcmc_halves):
+    '''
+    1st and 2nd halves intersection.
+    '''
+    p_names = ['metal', 'age', 'ext', 'dist', 'mass', 'binar']
+    ax = plt.subplot(gs[0:2, 2:4])
+    ax.set_title("1 - (1st vs 2nd halves intersection)")
+    ax.bar(p_names, 1. - np.array(mcmc_halves))
+    # ax.set_ylim(0, 1.01)
 
 
-def pl_MAP_lkl(dummy, gs, prob_mean, map_lkl, map_lkl_final):
+def pl_MAP_lkl(dummy, gs, map_lkl, map_lkl_final):
     '''
     Evolution of MAP likelihood values.
     '''
-    ax = plt.subplot(gs[2:4, 4:6])
+    ax = plt.subplot(gs[0:2, 4:6])
     x, y = list(zip(*map_lkl))
     ax.plot(x, y, label=r"$L_{{min}}={:.1f}$".format(map_lkl_final))
-    x, y = list(zip(*prob_mean))
-    ax.plot(x, y, label="Mean LP")
     plt.xlabel("steps", fontsize=14)
     plt.ylabel("Lkl (MAP)", fontsize=14)
-    ax.legend(fontsize='small', loc=0)  # , handlelength=0.)
+    ax.legend(fontsize='small', loc=0, handlelength=0.)
 
 
-def pl_MAF(dummy, gs, best_fit_algor, maf_steps):
+def pl_MAF(dummy, gs, maf_steps):
     '''
     Evolution of MAF values.
     '''
-    ax = plt.subplot(gs[2:4, 6:8])
+    ax = plt.subplot(gs[2:4, 4:6])
+    # ax.set_title("1 - (1st vs 2nd halves intersection)")
     x, y = list(zip(*maf_steps))
     ax.plot(x, y, label=r"$MAF={:.3f}$".format(maf_steps[-1][1]))
     plt.xlabel("steps", fontsize=14)
     plt.ylabel("MAF", fontsize=14)
-    if best_fit_algor in ('ptemcee', 'emcee'):
-        plt.axhline(y=.25, color='grey', ls=':', lw=1.2, zorder=4)
-        plt.axhline(y=.5, color='grey', ls=':', lw=1.2, zorder=4)
+    plt.axhline(y=.25, color='grey', ls=':', lw=1.2, zorder=4)
+    plt.axhline(y=.5, color='grey', ls=':', lw=1.2, zorder=4)
     ax.legend(fontsize='small', loc=0, handlelength=0.)
 
 
 def pl_param_chain(
-    par_name, gs, best_fit_algor, cp_r, min_max_p, nwalkers, nburn, nsteps,
-        emcee_a, model_done, mcmc_elapsed, varIdxs, pre_bi, post_bi,
-        autocorr_time, max_at_5c, min_at_5c, pymc3_ess):
+    par_name, gs, cp_r, min_max_p, nwalkers, nburn, nsteps, emcee_a,
+        mcmc_elapsed, varIdxs, pre_bi, post_bi, autocorr_time,
+        max_at_5c, min_at_5c, pymc3_ess):
     '''
     Parameter sampler chain.
     '''
@@ -240,11 +243,7 @@ def pl_param_chain(
     else:
         ax.tick_params(labelbottom=False)
     plt.ylabel(labels[cp])
-    if best_fit_algor in ('ptemcee', 'emcee'):
-        N_bi, N_tot = nburn, nburn + nsteps
-    elif best_fit_algor == 'abc':
-        N_bi, N_tot = nburn, nsteps
-    ax.set_xlim(0, N_tot)
+    ax.set_xlim(0, nburn + nsteps)
 
     if cp in varIdxs:
         c_model = varIdxs.index(cp)
@@ -255,10 +254,10 @@ def pl_param_chain(
         post_bi_max_at = post_bi[c_model][max_at_5c[c_model]]
         for w1, w2 in zip(*[pre_bi_max_at, post_bi_max_at]):
             # Burn-in stage
-            plt.plot(range(N_bi), w1, c='grey', lw=.5, alpha=0.5)
+            plt.plot(range(nburn), w1, c='grey', lw=.5, alpha=0.5)
             # Post burn-in.
             c = next(color)
-            plt.plot(np.arange(N_bi, N_tot), w2, c=c, lw=.8,
+            plt.plot(np.arange(nburn, nburn + nsteps), w2, c=c, lw=.8,
                      ls='--', alpha=0.5)
         # Best chains
         color = iter(cm.rainbow(np.linspace(0, 1, len(min_at_5c[0]))))
@@ -266,27 +265,17 @@ def pl_param_chain(
         post_bi_min_at = post_bi[c_model][min_at_5c[c_model]]
         for w1, w2 in zip(*[pre_bi_min_at, post_bi_min_at]):
             # Burn-in stage
-            plt.plot(range(N_bi), w1, c='grey', lw=.5, alpha=0.5)
+            plt.plot(range(nburn), w1, c='grey', lw=.5, alpha=0.5)
             # Post burn-in.
             c = next(color)
-            plt.plot(np.arange(N_bi, N_tot), w2, c=c, lw=.8, alpha=0.5)
+            plt.plot(np.arange(nburn, nburn + nsteps), w2, c=c, lw=.8,
+                     alpha=0.5)
 
-        # Mean
         plt.axhline(
-            y=float(cp_r[cp]), linestyle='--', color='blue', zorder=4,
+            y=float(cp_r[cp]), color='k', ls='--', lw=1.2, zorder=4,
             label=r"$\tau={:.0f}\;(\hat{{n}}_{{eff}}={:.0f})$".format(
                 autocorr_time[c_model], pymc3_ess[c_model]))
-        #  16th and 84th percentiles (1 sigma) around median.
-        ph = np.percentile(model_done[c_model], 84)
-        pl = np.percentile(model_done[c_model], 16)
-        plt.axhline(y=ph, linestyle=':', color='orange', zorder=4)
-        plt.axhline(y=pl, linestyle=':', color='orange', zorder=4)
-        # plt.axhline(
-        #     y=float(cp_r[cp]), color='k', ls='--', lw=1.2, zorder=4,
-        #     label=r"$\tau={:.0f}\;(\hat{{n}}_{{eff}}={:.0f})$".format(
-        #         autocorr_time[c_model], pymc3_ess[c_model]))
-
-        ax.set_ylim(min_max_p[cp][0], min_max_p[cp][1])
+        ax.set_ylim(min_max_p[c_model][0], min_max_p[c_model][1])
         ax.legend(fontsize='small', loc=0, handlelength=0.)
 
 
@@ -312,7 +301,7 @@ def pl_tau(dummy, gs, N_steps_conv, N_conv, tol_conv, tau_index, tau_autocorr):
     '''
     Tau vs steps plot.
     '''
-    ax = plt.subplot(gs[6:8, 10:12])
+    ax = plt.subplot(gs[6:8, 8:10])
     plt.title(r"$N_{{conv}}={:.0f}, tol_{{conv}}={:.2f}$".format(
         N_conv, tol_conv))
     plt.xlabel("steps", fontsize=14)
@@ -336,18 +325,17 @@ def pl_lags(dummy, gs, varIdxs, emcee_acorf):
     '''
     lags plot.
     '''
-    ax = plt.subplot(gs[6:8, 8:10])
+    ax = plt.subplot(gs[6:8, 10:12])
     plt.xlabel("Lag", fontsize=14)
     plt.ylabel("Autocorrelation", fontsize=14)
 
     plot_dict = ['metal', 'age', 'ext', 'dist', 'mass', 'binar']
-    for i, par_name in enumerate(plot_dict):
-        if i in varIdxs:
-            c_model = varIdxs.index(i)
-            p = emcee_acorf[c_model]
+    for cp, p in enumerate(emcee_acorf):
+        if cp in varIdxs:
+            c_model = varIdxs.index(cp)
             plt.plot(
                 range(len(p)), p, lw=.8, alpha=0.5,
-                label="{}".format(par_name))
+                label="{}".format(plot_dict[c_model]))
     ax.legend(fontsize='small', loc=0)
 
 
@@ -364,14 +352,13 @@ def pl_GW(dummy, gs, varIdxs, geweke_z):
 
     plot_dict = ['metal', 'age', 'ext', 'dist', 'mass', 'binar']
     ymin, ymax = [], []
-    for i, par_name in enumerate(plot_dict):
-        if i in varIdxs:
-            c_model = varIdxs.index(i)
-            p = geweke_z[c_model]
+    for cp, p in enumerate(geweke_z):
+        if cp in varIdxs:
+            c_model = varIdxs.index(cp)
             idx, zscore = list(zip(*p))
             plt.plot(
                 idx, zscore, ls="-.", linewidth=.7,
-                label="{}".format(par_name))
+                label="{}".format(plot_dict[c_model]))
             ymin.append(np.nanmin(zscore))
             ymax.append(np.nanmax(zscore))
 
@@ -388,7 +375,7 @@ def plot(N, *args):
     plt_map = {
         0: [pl_2_param_dens, args[0] + ' density map'],
         1: [pl_param_pf, args[0] + ' probability function'],
-        # 2: [pl_pdf_half, ' 1st and 2nd halfs of pdf'],
+        2: [pl_pdf_half, ' 1st and 2nd halfs of pdf'],
         3: [pl_MAP_lkl, ' MAP likelihood values'],
         4: [pl_MAF, ' MAF vs steps'],
         5: [pl_param_chain, args[0] + ' sampler chain'],

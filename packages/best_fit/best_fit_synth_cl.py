@@ -1,8 +1,7 @@
 
-from ..core_imp import np
+import numpy as np
 from . import max_mag_cut, obs_clust_prepare, brute_force_algor,\
-    genetic_algorithm, bootstrap, emcee_algor, sampyl_algor, kombine_algor,\
-    abcpmc_algor, ptemcee_algor
+    genetic_algorithm, bootstrap, emcee_algor, sampyl_algor, kombine_algor
 from ..synth_clust import extin_coefs
 from ..synth_clust import imf
 
@@ -28,7 +27,7 @@ def params_errors(best_fit_algor, args):
     elif best_fit_algor == 'genet':
         isoch_fit_errors = bootstrap.main(*args)
 
-    elif best_fit_algor in ['ptemcee', 'emcee', 'abc']:
+    elif best_fit_algor == 'emcee':
         isoch_fit_params, isoch_fit_errors, j = args, [], 0
         for i, _ in enumerate(isoch_fit_params['best_sol']):
             if i in isoch_fit_params['varIdxs']:
@@ -50,10 +49,7 @@ def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning,
          lkl_weight, N_bootstrap, max_mag, IMF_name, m_high, m_sample_flag,
          R_V, fundam_params, N_pop, N_gen, fit_diff, cross_prob, cross_sel,
          mut_prob, N_el, N_ei, N_es, cmd_systs, filters, colors, theor_tracks,
-         nwalkers_emc, nsteps_emc, N_burn_emc, nburn_emc, emcee_a, priors_emc,
-         ntemps, nwalkers_ptm, nsteps_ptm, nburn_ptm, ptemcee_a,
-         priors_ptm, nwalkers_abc, nsteps_abc, nburn_abc, priors_abc,
-         **kwargs):
+         nwalkers, nsteps, N_burn, nburn, emcee_a, priors, **kwargs):
     '''
     Perform a best fitting process to find the cluster's fundamental
     parameters.
@@ -173,35 +169,8 @@ def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning,
             isoch_fit_params = emcee_algor.main(
                 lkl_method, clp['em_float'], err_lst, completeness,
                 max_mag_syn, fundam_params, obs_clust, theor_tracks, R_V,
-                ext_coefs, st_dist_mass, N_fc, cmpl_rnd, err_rnd, nwalkers_emc,
-                nsteps_emc, nburn_emc, N_burn_emc, emcee_a, priors_emc)
-            # Assign uncertainties.
-            isoch_fit_errors = params_errors(
-                best_fit_algor, isoch_fit_params)
-
-        elif best_fit_algor == 'abc':
-
-            print('Using abcpmc algorithm ({}).'.format(
-                lkl_method + '; ' + lkl_binning if lkl_method == 'dolphin'
-                else lkl_method))
-            isoch_fit_params = abcpmc_algor.main(
-                lkl_method, clp['em_float'], err_lst, completeness,
-                max_mag_syn, fundam_params, obs_clust, theor_tracks, R_V,
-                ext_coefs, st_dist_mass, N_fc, cmpl_rnd, err_rnd, nwalkers_abc,
-                nsteps_abc, nburn_abc, priors_abc)
-            # Assign uncertainties.
-            isoch_fit_errors = params_errors(
-                best_fit_algor, isoch_fit_params)
-
-        elif best_fit_algor == 'ptemcee':
-            print('Using ptemcee algorithm ({}).'.format(
-                lkl_method + '; ' + lkl_binning if lkl_method == 'dolphin'
-                else lkl_method))
-            isoch_fit_params = ptemcee_algor.main(
-                lkl_method, clp['em_float'], err_lst, completeness,
-                max_mag_syn, fundam_params, obs_clust, theor_tracks, R_V,
-                ext_coefs, st_dist_mass, N_fc, cmpl_rnd, err_rnd, ntemps,
-                nwalkers_ptm, nsteps_ptm, nburn_ptm, ptemcee_a, priors_ptm)
+                ext_coefs, st_dist_mass, N_fc, cmpl_rnd, err_rnd, nwalkers,
+                nsteps, nburn, N_burn, emcee_a, priors)
             # Assign uncertainties.
             isoch_fit_errors = params_errors(
                 best_fit_algor, isoch_fit_params)

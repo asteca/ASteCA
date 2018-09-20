@@ -1,6 +1,5 @@
 
 import numpy as np
-# from scipy.optimize import differential_evolution as DE
 import random
 import logging
 import time as t
@@ -14,7 +13,8 @@ from .emcee3rc1 import autocorr
 
 from ..synth_clust import synth_cluster
 from . import likelihood
-from .mcmc_convergence import multiESS, fminESS, geweke, effective_n
+from .mcmc_convergence import multiESS, fminESS, geweke, effective_n,\
+    pdfHalfves
 from .. import update_progress
 
 
@@ -31,108 +31,53 @@ def main(
     """
 
     varIdxs, ndim, ranges = varPars(fundam_params)
-    # Pack synthetic cluster arguments.
+
     synthcl_args = [
         theor_tracks, e_max, err_lst, completeness, max_mag_syn, st_dist_mass,
         R_V, ext_coefs, N_fc, cmpl_rnd, err_rnd]
 
-    # # TODO DELETE
-    # model_proper = [
-    #     fundam_params[0][0], fundam_params[1][0], fundam_params[2][0],
-    #     fundam_params[3][0], fundam_params[4][0], fundam_params[5][0]]
-    # m_i = fundam_params[0].index(model_proper[0])
-    # a_i = fundam_params[1].index(model_proper[1])
-    # isochrone = theor_tracks[m_i][a_i]
-    # ext = [[], []]
-    # for e in np.linspace(fundam_params[2][0], fundam_params[2][-1], 1000):
-    #     model_proper[2] = e
-    #     synth_clust = synth_cluster.main(
-    #         e_max, err_lst, completeness, max_mag_syn, st_dist_mass,
-    #         isochrone, R_V, ext_coefs, N_fc, cmpl_rnd, err_rnd, model_proper)
-    #     lkl = likelihood.main(lkl_method, synth_clust, obs_clust)
-    #     ext[0].append(e)
-    #     lp = 0.  # -np.square((e - .34) / .001)
-    #     ext[1].append(-lkl + lp)
-
-    # # Transformation
-    # y_tr = -np.exp(np.array(ext[1]) / np.max(ext[1]))
-    # y_tr += abs(np.min(y_tr))
-
-    # # y_tr = ext[1]
-
-    # from scipy.interpolate import interp1d
-    # ext_interp = interp1d(ext[0], y_tr)
-
-    # import matplotlib.pyplot as plt
-    # fig = plt.figure(figsize=(7, 5))
-    # ax = plt.subplot(211)
-    # ax.set_title("Original likelihood")
-    # plt.plot(ext[0], ext[1], color='r', lw=.8)
-    # ax = plt.subplot(212)
-    # ax.set_title("Normalized likelihood")
-    # plt.plot(ext[0], ext_interp(ext[0]), lw=.8)
-    # plt.xlabel("param")
-    # fig.tight_layout()
-    # plt.savefig("ext_lkl.png", dpi=150)
-    # # TODO DELETE
-
     # TODO make this a proper parameter
     if emcee_a <= 0.:
-        print("KDE")
         mv = moves.KDEMove()
-    elif 0 < emcee_a <= 1.:
-        print("StretchMove")
-        mv = moves.StretchMove()
-    elif 1 < emcee_a <= 2.:
-        sigma = .1
-        print("DE", sigma)
-        mv = moves.DEMove(sigma)  # , gamma0=emcee_a)
-    elif 2 < emcee_a <= 3.:
-        gammas = 1.7
-        print("DESnooker", gammas)
-        mv = moves.DESnookerMove(gammas=gammas)
-    elif 3 < emcee_a <= 4.:
-        cov = .1
-        print("Metropolis-Hastings", cov)
-        mv = moves.GaussianMove(cov)
-    elif 4 < emcee_a <= 5.:
-        print("KDE + DESnooker")
-        mv = [(moves.KDEMove(), 0.5), (moves.DESnookerMove(), 0.5)]
-    elif 5 < emcee_a <= 6.:
-        sigma = .05
-        print("KDE + DE", sigma)
-        mv = [(moves.KDEMove(), 0.5), (moves.DEMove(sigma), 0.5)]
-
-    # TODO add this parameter to the input params file
-    max_secs = 22. * 60. * 60.
+    elif 0 <= emcee_a <= 2.:
+        mv = moves.DEMove(.1, nsplits=2)  # , gamma0=emcee_a)
+    else:
+        mv = moves.DESnookerMove()
 
     # Define sampler.
+    model_done = {}  # TODO remove?
+    # TODO emcee3: pass selected moves and its parameters
     sampler = ensemble.EnsembleSampler(
         nwalkers, ndim, log_posterior,
         args=[priors, varIdxs, ranges, fundam_params, synthcl_args, lkl_method,
-              obs_clust], moves=mv)
+              obs_clust, model_done], moves=mv)
 
     # Burn-in period.
     t0 = t.time()
     pos, best_sol_old, pars_chains_bi = burnIn(
         nwalkers, nburn, N_burn, fundam_params, varIdxs, sampler,
         ranges, priors, synthcl_args, lkl_method, obs_clust)
+    # Reset the chain to remove the burn-in samples.
+    sampler.reset()
 
+    # TODO add this parameter to the input params file
+    max_secs = 22. * 60. * 60.
     elapsed = t.time() - t0
     available_secs = max(30, max_secs - elapsed)
 
-    start_t = t.time()
-    # We'll track how the average autocorrelation time estimate changes.
-    # This will be useful to testing convergence.
-    tau_index, autocorr_vals, old_tau = 0, np.empty(nsteps), np.inf
+    s = t.time()
+    # We'll track how the average autocorrelation time estimate changes
+    tau_index, autocorr_vals = 0, np.empty(nsteps)
+    # This will be useful to testing convergence
+    old_tau = np.inf
 
     # Check for convergence every 10% of steps or 100, whichever value
     # is lower.
     N_steps_conv = min(int(nsteps / 10.), 100)
     # TODO emcee3 input as params
-    N_conv, tol_conv = 150., 0.01
+    N_conv, tol_conv = 100., 0.01
 
-    maf_steps, prob_mean, map_lkl = [], [], []
+    maf_steps, map_lkl = [], []
     milestones = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
     for i, result in enumerate(sampler.sample(pos, iterations=nsteps)):
 
@@ -157,18 +102,29 @@ def main(
         except FloatingPointError:
             pass
 
+        elapsed += t.time() - s
+        if elapsed >= available_secs:
+            print("  Time consumed.")
+            break
+
         pos, prob, state = result
+
         maf = np.mean(sampler.acceptance_fraction)
         maf_steps.append([i, maf])
 
+        # Discard -np.inf posterior values.
+        idx_keep = prob > -np.inf
         # Store MAP solution in this iteration.
-        prob_mean.append([i, np.mean(prob)])
-        idx_best = np.argmax(prob)
+        try:
+            idx_best = np.argmin(-prob[idx_keep])
+        except ValueError:
+            idx_best = 0
+
         # Update if a new optimal solution was found.
-        if prob[idx_best] > best_sol_old[1]:
+        if -prob[idx_best] < best_sol_old[1]:
             best_sol_old = [
                 closeSol(fundam_params, varIdxs, pos[idx_best]),
-                prob[idx_best]]
+                -prob[idx_best]]
         map_lkl.append([i, best_sol_old[1]])
 
         # Print progress.
@@ -177,25 +133,30 @@ def main(
             map_sol, logprob = best_sol_old
             m, s = divmod(nsteps / (i / elapsed) - elapsed, 60)
             h, m = divmod(m, 60)
-            print("{:>3}% ({:.3f}) LP={:.1f} ({:g}, {:g}, {:.3f}, {:.2f}"
+            print(" {:>3}% ({:.3f}) LP={:.1f} ({:g}, {:g}, {:.3f}, {:.2f}"
                   ", {:g}, {:.2f})".format(
                       milestones[0], maf, logprob, *map_sol) +
                   " [{:.0f} m/s | {:.0f}h{:.0f}m]".format(
                       (nwalkers * i) / elapsed, h, m))
             milestones = milestones[1:]
 
-        elapsed += t.time() - start_t
-        if elapsed >= available_secs:
-            print("  Time consumed.")
-            break
-        start_t = t.time()
+        s = t.time()
     runs = i + 1
 
     # Evolution of the mean autocorrelation time.
     tau_autocorr = autocorr_vals[:tau_index]
 
     # Final MAP fit.
-    map_sol, map_lkl_final = best_sol_old
+    idx_keep = prob > -np.inf
+    try:
+        idx_best = np.argmin(-prob[idx_keep])
+    except ValueError:
+        idx_best = 0
+        logging.warning(
+            " No valid solution could be found. Run a longer chain\n"
+            "or modify the sampler parameters.")
+    map_sol = closeSol(fundam_params, varIdxs, pos[idx_best])
+    map_lkl_final = -prob[idx_best]
 
     # This number should be between approximately 0.25 and 0.5 if everything
     # went as planned.
@@ -215,23 +176,22 @@ def main(
 
     # Convergence parameters.
     acorr_t, max_at_5c, min_at_5c, geweke_z, emcee_acorf, pymc3_ess, minESS,\
-        mESS, mESS_epsilon = convergenceVals(
+        mESS, mESS_epsilon, mcmc_halves = convergenceVals(
             ndim, varIdxs, N_conv, chains_nruns, emcee_trace)
 
     # Pass the mean as the best model fit found.
     best_sol = closeSol(fundam_params, varIdxs, np.mean(emcee_trace, axis=1))
 
     isoch_fit_params = {
-        'varIdxs': varIdxs, 'nsteps_emc': runs, 'best_sol': best_sol,
+        'varIdxs': varIdxs, 'nsteps': runs, 'best_sol': best_sol,
         'map_sol': map_sol, 'map_lkl': map_lkl, 'map_lkl_final': map_lkl_final,
-        'prob_mean': prob_mean, 'mcmc_elapsed': elapsed,
-        'mcmc_trace': emcee_trace,
+        'mcmc_elapsed': elapsed, 'mcmc_trace': emcee_trace,
         'pars_chains_bi': pars_chains_bi, 'pars_chains': chains_nruns.T,
         'maf_steps': maf_steps, 'autocorr_time': acorr_t,
         'max_at_5c': max_at_5c, 'min_at_5c': min_at_5c,
         'minESS': minESS, 'mESS': mESS, 'mESS_epsilon': mESS_epsilon,
         'emcee_acorf': emcee_acorf, 'geweke_z': geweke_z,
-        'pymc3_ess': pymc3_ess,
+        'pymc3_ess': pymc3_ess, 'mcmc_halves': mcmc_halves,
         'N_steps_conv': N_steps_conv, 'N_conv': N_conv, 'tol_conv': tol_conv,
         'tau_index': tau_index, 'tau_autocorr': tau_autocorr
     }
@@ -244,7 +204,7 @@ def varPars(fundam_params):
     Check which parameters are fixed and which have a dynamic range. This also
     dictates the number of free parameters.
     """
-    ranges = [np.array([min(_), max(_)]) for _ in fundam_params]
+    ranges = [[min(_), max(_)] for _ in fundam_params]
 
     varIdxs = []
     for i, r in enumerate(ranges):
@@ -272,44 +232,66 @@ def burnIn(
 
     # starting_guesses[0] = [0.0535, 9.85, .27, 12.6, 5000., .5]
 
-    N_total, N_done, maf = nburn * N_burn, 0, np.nan
+    N_total, N_done = nburn * N_burn, 0
     print("     Burn-in stage")
     for _ in range(N_burn):
 
-        while True:
-            try:
-                for i, result in enumerate(
-                        sampler.sample(starting_guesses, iterations=nburn)):
-
-                    if (i + 1) % int(nburn * .1):
-                        maf = np.mean(sampler.acceptance_fraction)
-                    update_progress.updt(
-                        N_total, N_done + i + 1, "MAF={:.3f}".format(maf))
-                pos, prob, state = result
-                break
-            except ValueError:
-                print("  NaN/inf value found. Trying again.")
-                pass
-
+        for i, result in enumerate(
+                sampler.sample(starting_guesses, iterations=nburn)):
+            update_progress.updt(N_total, N_done + i + 1)
         N_done += nburn
 
+        pos, prob, state = result
+
+        # Discard -np.inf posterior values.
+        idx_keep = prob > -np.inf
         # Best solution (MAP) in this iteration.
-        idx_best = np.argmax(prob)
+        try:
+            idx_best = np.argmin(-prob[idx_keep])
+        except ValueError:
+            # All values were -inf, so there are no left in prob[idx_keep].
+            idx_best = 0
+
         # TODO change when emcee3 is properly imported
         starting_guesses = utils.sample_ball(
             pos[idx_best], pos.std(axis=0), size=nwalkers)
+
+        # best_sol = [pos[idx_best], -prob[idx_best]]
+        # # Small ball (N sigma) around the best solution.
+        # mean_p, std_p = pos.mean(axis=0), pos.std(axis=0)
+        # low, high = mean_p - 1. * std_p, mean_p + 1. * std_p
+        # starting_guesses = []
+        # for p in pos:
+        #     # Check that all elements in 'p' are between the (low,high)
+        #     # values.
+        #     flag = True
+        #     for i, v in enumerate(p):
+        #         # If any element is not inside its range, break out.
+        #         if v <= low[i] or v >= high[i]:
+        #             flag = False
+        #             break
+
+        #     if flag is True:
+        #         starting_guesses.append(p)
+        #     else:
+        #         # If at least one element was not inside its range, store the
+        #         # fill_value
+        #         starting_guesses.append(best_sol[0])
+        # starting_guesses = np.asarray(starting_guesses)
 
     # Store burn-in chain phase.
     chains_nruns = sampler.get_chain()[-nburn:, :, :]
     pars_chains_bi = discreteParams(fundam_params, varIdxs, chains_nruns).T
 
+    # Discard -np.inf posterior values.
+    idx_keep = prob > -np.inf
     # Store MAP solution.
-    idx_best = np.argmax(prob)
-    best_sol = [
-        closeSol(fundam_params, varIdxs, pos[idx_best]), prob[idx_best]]
-
-    # Reset the chain to remove the burn-in samples.
-    sampler.reset()
+    try:
+        idx_best = np.argmin(-prob[idx_keep])
+    except ValueError:
+        # All values were -inf, so there are no left in prob[idx_keep].
+        idx_best = 0
+    best_sol = [pos[idx_best], -prob[idx_best]]
 
     return pos, best_sol, pars_chains_bi
 
@@ -330,15 +312,16 @@ def random_population(fundam_params, varIdxs, n_ran):
 
 def log_posterior(
     model, priors, varIdxs, ranges, fundam_params, synthcl_args, lkl_method,
-        obs_clust):
+        obs_clust, model_done):
     """
     Log posterior function.
     """
     lp, model_proper = log_prior(model, priors, fundam_params, varIdxs, ranges)
     if not np.isfinite(lp):
         return -np.inf
-    lkl = log_likelihood(
-        model_proper, fundam_params, synthcl_args, lkl_method, obs_clust)
+    lkl, model_done = log_likelihood(
+        model_proper, fundam_params, synthcl_args, lkl_method, obs_clust,
+        model_done)
     return lp + lkl
 
 
@@ -354,6 +337,7 @@ def log_prior(model, priors, fundam_params, varIdxs, ranges):
     # the proper model and just pass -inf
     if all(check_ranges):
         model_proper = closeSol(fundam_params, varIdxs, model)
+        # if model_proper:
 
         if priors == 'unif':
             # Flat prior
@@ -365,9 +349,11 @@ def log_prior(model, priors, fundam_params, varIdxs, ranges):
                 fundam_params, varIdxs,
                 [np.mean(fundam_params[_]) for _ in varIdxs])
             # Gaussian prior.
-            model_std = np.array([0.005, .3, .001, .2, 500., 0.3])
+            model_std = np.array([0.005, .3, .1, .2, 500., 0.3])
             lp = np.sum(-np.square(
                 (np.asarray(model_proper) - model_mean) / model_std))
+        # else:
+        #     return lp, model_proper
 
     return lp, model_proper
 
@@ -384,8 +370,13 @@ def closeSol(fundam_params, varIdxs, model):
             # If it is the parameter metallicity, age or mass.
             if i in [0, 1, 4]:
                 # Select the closest value in the array of allowed values.
+                # pp = min(par, key=lambda x: abs(x - model[i - j]))
+                # if abs(pp - model[i - j]) < model[i - j] * .01:
+                #     model_proper.append(pp)
                 model_proper.append(min(
                     par, key=lambda x: abs(x - model[i - j])))
+                # else:
+                #     return []
 
             else:
                 model_proper.append(model[i - j])
@@ -393,17 +384,30 @@ def closeSol(fundam_params, varIdxs, model):
             model_proper.append(par[0])
             j += 1
 
+    # Store rounded parameter values to make the 'model_done'
+    # key assignment more stable (else there could be a large
+    # number of decimals)
+
+    # return np.round(model_proper, 5)
+    # TODO required for Autograd to work when using sampyl
+    # return np.array([np.round(_, 5) for _ in model_proper])
     return model_proper
 
 
 def log_likelihood(
-        model_proper, fundam_params, synthcl_args, lkl_method, obs_clust):
+    model_proper, fundam_params, synthcl_args, lkl_method, obs_clust,
+        model_done):
     """
     The Dolphin likelihood needs to be *minimized*. Be careful with the priors.
     """
 
     # TODO if 'm_sample' is True, always process the synthetic cluster and
     # the likelihood
+
+    # # If the model was already processed, use the generated likelihood value.
+    # try:
+    #     lkl = model_done[''.join(map(str, model_proper))]
+    # except KeyError:
 
     theor_tracks, e_max, err_lst, completeness, max_mag_syn, st_dist_mass,\
         R_V, ext_coefs, N_fc, cmpl_rnd, err_rnd = synthcl_args
@@ -418,13 +422,18 @@ def log_likelihood(
         e_max, err_lst, completeness, max_mag_syn, st_dist_mass, isochrone,
         R_V, ext_coefs, N_fc, cmpl_rnd, err_rnd, model_proper)
 
-    # Call likelihood function for this model. RETURNS THE INVERSE lkl.
-    lkl = -likelihood.main(lkl_method, synth_clust, obs_clust)
+    # import matplotlib.pyplot as plt
+
+    # Call likelihood function for this model.
+    lkl = likelihood.main(lkl_method, synth_clust, obs_clust)
+
+        # # Store processed model and its likelihood value.
+        # model_done[''.join(map(str, model_proper))] = lkl
 
     # TODO, is this a general approach?
     # The negative likelihood is returned since Dolphin requires a minimization
     # of the PLR, and here we are maximizing
-    return lkl
+    return -lkl, model_done
 
 
 def discreteParams(fundam_params, varIdxs, chains_nruns):
@@ -434,22 +443,21 @@ def discreteParams(fundam_params, varIdxs, chains_nruns):
 
     chains_nruns.shape: (runs, nwalkers, ndim)
     """
-    params, j = [], 0
+    params = []
     for i, par in enumerate(fundam_params):
         p = np.array(par)
         # If this parameter is one of the 'free' parameters.
         if i in varIdxs:
             # If it is the parameter metallicity, age or mass.
             if i in [0, 1, 4]:
-                pc = chains_nruns.T[j]
+                pc = chains_nruns.T[i]
                 chains = []
                 for c in pc:
                     chains.append(
                         p[abs(c[None, :] - p[:, None]).argmin(axis=0)])
                 params.append(chains)
             else:
-                params.append(chains_nruns.T[j])
-            j += 1
+                params.append(chains_nruns.T[i])
 
     return np.array(params).T
 
@@ -490,7 +498,7 @@ def convergenceVals(ndim, varIdxs, N_conv, chains_nruns, emcee_trace):
     for i, p in enumerate(chains_nruns.T):
         for c in p:
             try:
-                geweke_z[i].append(geweke(c))
+                geweke_z[i].append(geweke(c))  # p[max_at_c[i]]
             except ZeroDivisionError:
                 geweke_z[i].append([np.nan, np.nan])
             try:
@@ -516,5 +524,7 @@ def convergenceVals(ndim, varIdxs, N_conv, chains_nruns, emcee_trace):
         mESS_epsilon[1].append(fminESS(ndim, alpha=alpha, ess=minESS))
         mESS_epsilon[2].append(fminESS(ndim, alpha=alpha, ess=mESS))
 
+    mcmc_halves = pdfHalfves(varIdxs, emcee_trace)
+
     return acorr_t, max_at_5c, min_at_5c, geweke_z, emcee_acorf, pymc3_ess,\
-        minESS, mESS, mESS_epsilon
+        minESS, mESS, mESS_epsilon, mcmc_halves

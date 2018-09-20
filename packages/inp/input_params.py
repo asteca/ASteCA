@@ -115,33 +115,49 @@ def main(mypath, pars_f_path):
                     fld_clean_prob = float(reader[3])
 
                 # Cluster parameters assignation.
-                elif reader[0] == 'CF':
-                    best_fit_algor = str(reader[1])
-
-                # ptemcee algorithm parameters.
-                elif reader[0] == 'PT':
-                    ntemps = int(float(reader[1]))
-                    nwalkers_ptm = int(float(reader[2]))
-                    nburn_ptm = int(float(reader[3]))
-                    nsteps_ptm = int(float(reader[4]))
-                    ptemcee_a = float(reader[5])
-                    priors_ptm = reader[6]
-
-                # ABC algorithm parameters.
                 elif reader[0] == 'AB':
-                    nwalkers_abc = int(float(reader[1]))
-                    nburn_abc = float(reader[2])
-                    nsteps_abc = int(float(reader[3]))
-                    priors_abc = reader[4]
+                    best_fit_algor = str(reader[1])
+                elif reader[0] == 'LK':
+                    lkl_method = str(reader[1])
+                    lkl_binning = str(reader[2])
+                    lkl_weight = str(reader[3])
+                elif reader[0] == 'PS':
+                    evol_track = str(reader[1])
+                elif reader[0] == 'RV':
+                    R_V = float(reader[1])
+                elif reader[0] == 'MF':
+                    IMF_name = str(reader[1])
+                    m_high = float(reader[2])
+                    m_sample_flag = True if reader[3] in true_lst else False
+                elif reader[0] == 'MM':
+                    try:
+                        max_mag = float(reader[1])
+                    except ValueError:
+                        max_mag = str(reader[1])
+
+                elif reader[0] == 'MZ':
+                    m_rs = char_remove(reader)
+                elif reader[0] == 'LA':
+                    a_rs = char_remove(reader)
+                elif reader[0] == 'TM':
+                    mass_rs = char_remove(reader)
+                elif reader[0] == 'BI':
+                    bin_rs = char_remove(reader)
+                elif reader[0] == 'BI_m':
+                    bin_mr = float(reader[1])
+                elif reader[0] == 'BV':
+                    e_rs = char_remove(reader)
+                elif reader[0] == 'DM':
+                    d_rs = char_remove(reader)
 
                 # emcee algorithm parameters.
                 elif reader[0] == 'EM':
-                    nwalkers_emc = int(float(reader[1]))
-                    nburn_emc = int(float(reader[2]))
-                    N_burn_emc = int(float(reader[3]))
-                    nsteps_emc = int(float(reader[4]))
+                    nwalkers = int(float(reader[1]))
+                    nburn = int(float(reader[2]))
+                    N_burn = int(float(reader[3]))
+                    nsteps = int(float(reader[4]))
                     emcee_a = float(reader[5])
-                    priors_emc = reader[6]
+                    priors = reader[6]
 
                 # Genetic algorithm parameters.
                 elif reader[0] == 'GA':
@@ -155,41 +171,6 @@ def main(mypath, pars_f_path):
                     N_ei = int(reader[8])
                     N_es = int(reader[9])
                     N_bootstrap = int(reader[10])
-
-                # Likelihood function
-                elif reader[0] == 'LK':
-                    lkl_method = str(reader[1])
-                    lkl_binning = str(reader[2])
-                    lkl_weight = str(reader[3])
-
-                # Synthetic clusters parameters
-                elif reader[0] == 'PS':
-                    evol_track = str(reader[1])
-                elif reader[0] == 'MF':
-                    IMF_name = str(reader[1])
-                    m_high = float(reader[2])
-                    m_sample_flag = True if reader[3] in true_lst else False
-                elif reader[0] == 'MZ':
-                    m_rs = char_remove(reader)
-                elif reader[0] == 'LA':
-                    a_rs = char_remove(reader)
-                elif reader[0] == 'TM':
-                    mass_rs = char_remove(reader)
-                elif reader[0] == 'BI':
-                    bin_rs = char_remove(reader)
-                elif reader[0] == 'BI_m':
-                    bin_mr = float(reader[1])
-                elif reader[0] == 'BV':
-                    e_rs = char_remove(reader)
-                elif reader[0] == 'RV':
-                    R_V = float(reader[1])
-                elif reader[0] == 'DM':
-                    d_rs = char_remove(reader)
-                elif reader[0] == 'MM':
-                    try:
-                        max_mag = float(reader[1])
-                    except ValueError:
-                        max_mag = str(reader[1])
 
                 else:
                     # Get parameters file name from path.
@@ -216,7 +197,7 @@ def main(mypath, pars_f_path):
     imf_funcs = ('chabrier_2001_exp', 'chabrier_2001_log', 'kroupa_1993',
                  'kroupa_2002')
     # Optimizing algorithm
-    optimz_algors = ('brute', 'genet', 'ptemcee', 'emcee', 'abc', 'n')
+    optimz_algors = ('brute', 'genet', 'emcee', 'n')
     # Accepted forms of priors.
     emcee_priors = ('unif', 'gauss')
 
@@ -265,17 +246,9 @@ def main(mypath, pars_f_path):
         'max_mag': max_mag, 'IMF_name': IMF_name, 'm_high': m_high,
         'm_sample_flag': m_sample_flag,
         'R_V': R_V, 'bin_mr': bin_mr,
-        # ptemcee algorithm parameters.
-        'ntemps': ntemps, 'nwalkers_ptm': nwalkers_ptm, 'nburn_ptm': nburn_ptm,
-        'nsteps_ptm': nsteps_ptm, "ptemcee_a": ptemcee_a,
-        'priors_ptm': priors_ptm,
-        # ABC algorithm parameters.
-        'nwalkers_abc': nwalkers_abc, 'nburn_abc': nburn_abc,
-        'nsteps_abc': nsteps_abc, 'priors_abc': priors_abc,
         # emcee algorithm parameters.
-        'nwalkers_emc': nwalkers_emc, 'nburn_emc': nburn_emc,
-        "N_burn_emc": N_burn_emc, 'nsteps_emc': nsteps_emc,
-        "emcee_a": emcee_a, 'priors_emc': priors_emc,
+        'nwalkers': nwalkers, 'nburn': nburn, "N_burn": N_burn,
+        'nsteps': nsteps, "emcee_a": emcee_a, 'priors': priors,
         # Genetic algorithm parameters.
         'N_pop': N_pop, 'N_gen': N_gen, 'fit_diff': fit_diff,
         'cross_prob': cross_prob, 'cross_sel': cross_sel, 'mut_prob': mut_prob,

@@ -45,7 +45,7 @@ class BasePosterior(object):
 
 class SinglePosterior(BasePosterior):
     """ A posterior model for a logp function that returns both the cost function
-        and the gradient. Caches values to improve performance.
+        and the gradient. Caches values to improve performance. 
 
         :param logp_func: Function that returns log P(X) and its gradient.
     """
