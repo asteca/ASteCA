@@ -65,7 +65,7 @@ def pl_2_param_dens(_2_params, gs, min_max_p2, varIdxs, mcmc_trace):
 
         mean_pos, width, height, theta = CIEllipse(np.array([
             mcmc_trace[mx_model], mcmc_trace[my_model]]).T)
-        # Plot 2 sigma ellipse.
+        # Plot 95% confidence ellipse.
         plt.scatter(
             mean_pos[0], mean_pos[1], marker='x', c=cp, s=30, linewidth=2,
             zorder=4)

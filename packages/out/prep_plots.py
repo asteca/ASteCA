@@ -776,7 +776,8 @@ def CIEllipse(points, prob=.95):
     Generate a 'prob' confidence interval ellipse based on the mean and
     covariance of a point "cloud".
 
-    source: http://stackoverflow.com/a/12321306/1391441
+    Source: http://stackoverflow.com/a/12321306/1391441
+    Definition: https://stats.stackexchange.com/a/217377/10416
 
     Parameters
     ----------
