@@ -6,29 +6,29 @@ from ..core_imp import np
 from .emcee_algor import varPars, log_posterior, convergenceVals, closeSol
 
 
-class Target():
-    def __init__(self, priors, varIdxs, ranges, fundam_params, synthcl_args,
-                 lkl_method, obs_clust):
-        self.priors = priors
-        self.varIdxs = varIdxs
-        self.ranges = ranges
-        self.fundam_params = fundam_params
-        self.synthcl_args = synthcl_args
-        self.lkl_method = lkl_method
-        self.obs_clust = obs_clust
+# class Target():
+#     def __init__(self, priors, varIdxs, ranges, fundam_params, synthcl_args,
+#                  lkl_method, obs_clust):
+#         self.priors = priors
+#         self.varIdxs = varIdxs
+#         self.ranges = ranges
+#         self.fundam_params = fundam_params
+#         self.synthcl_args = synthcl_args
+#         self.lkl_method = lkl_method
+#         self.obs_clust = obs_clust
 
-    def logpdf(self, x):
-        model_done = {}
-        # model = [met, age, ext, dist, mass, binar]
-        lp = log_posterior(
-            x, self.priors, self.varIdxs, self.ranges, self.fundam_params,
-            self.synthcl_args, self.lkl_method, self.obs_clust, model_done)
-        # The log_posterior returns a value (log_prior+log_posterior) that
-        # needs to be maximized.
-        return lp
+#     def logpdf(self, x):
+#         model_done = {}
+#         # model = [met, age, ext, dist, mass, binar]
+#         lp = log_posterior(
+#             x, self.priors, self.varIdxs, self.ranges, self.fundam_params,
+#             self.synthcl_args, self.lkl_method, self.obs_clust, model_done)
+#         # The log_posterior returns a value (log_prior+log_posterior) that
+#         # needs to be maximized.
+#         return lp
 
-    def __call__(self, x):
-        return self.logpdf(x)
+#     def __call__(self, x):
+#         return self.logpdf(x)
 
 
 def main(
@@ -59,6 +59,15 @@ def main(
     #     'met': .015, 'age': 9., 'ext': 0., 'dist': 13., 'mass': 5000.,
     #     'binar': .3}, verbose=True, bounds=bounds)
 
+    def logp(met, age, ext, dist, mass, binar):
+        model = [met, age, ext, dist, mass, binar]
+        lp = log_posterior(
+            model, priors, varIdxs, ranges, fundam_params,
+            synthcl_args, lkl_method, obs_clust)
+        # The log_posterior returns a value (log_prior+log_posterior) that
+        # needs to be maximized.
+        return lp
+
     start = {
         'met': .03, 'age': 9.7, 'ext': 0.3, 'dist': 12.7, 'mass': 5000.,
         'binar': .3}
@@ -66,9 +75,8 @@ def main(
 
     s = t.time()
     # sampler = NUTS(logp, start)
-    # sampler = Slice(logp, start)
-    logp = Target(priors, varIdxs, ranges, fundam_params, synthcl_args,
-                  lkl_method, obs_clust)
+    # logp = Target(priors, varIdxs, ranges, fundam_params, synthcl_args,
+    #               lkl_method, obs_clust)
     sampler = Slice(logp, start)
 
     # TODO SLICE SAMPLER DOES NOT ACCEPT MORE THAN 1 CHAIN
