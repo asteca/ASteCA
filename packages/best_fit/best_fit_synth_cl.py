@@ -148,7 +148,7 @@ def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning,
 
         elif best_fit_algor == 'emcee':
 
-            # TODO testing
+            # TODO DEPRECATED
             # print('Using sampyl algorithm ({}).'.format(
             #     lkl_method + '; ' + lkl_binning if lkl_method == 'dolphin'
             #     else lkl_method))
