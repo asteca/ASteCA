@@ -99,10 +99,12 @@ def main(
         # Compute the autocorrelation time so far. Using tol=0 means that
         # we'll always get an estimate even if it isn't trustworthy.
         try:
-            # tau = ptsampler.get_autocorr_time()[0]
+            tau0 = ptsampler.get_autocorr_time()[0]
             tau = autocorr.integrated_time(
                 ptsampler.chain[0, :, :i + 1, :].reshape(
                     i + 1, nwalkers_ptm, ndim), tol=0)
+            print(tau0)
+            print(tau)
             autocorr_vals[tau_index] = np.nanmean(tau)
             tau_index += 1
 
@@ -165,7 +167,7 @@ def main(
               "  recommended range.")
 
     # Shape: (runs, nwalkers, ndim)
-    chains_nruns = ptsampler.chain[0].reshape(nsteps_ptm, nwalkers_ptm, ndim)
+    chains_nruns = ptsampler.chain[0].reshape(runs, nwalkers_ptm, ndim)
     chains_nruns = discreteParams(fundam_params, varIdxs, chains_nruns)
     # Re-shape trace for all parameters (flat chain).
     # Shape: (ndim, runs * nwalkers)
