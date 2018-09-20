@@ -101,7 +101,7 @@ def main(npd, cld_c, pd, err_lst, ext_coefs, N_fc, cmpl_rnd, err_rnd,
     if the 'emcee' method was used.
     '''
 
-    if pd['bf_flag'] and pd['best_fit_algor'] != 'emcee':
+    if pd['bf_flag'] and pd['best_fit_algor'] == 'genet':
         clust_name, output_subdir = npd['clust_name'], npd['output_subdir']
         all_models = isoch_fit_params['model_done']
 
