@@ -2,6 +2,7 @@
 import numpy as np
 from . import read_isochs
 from ..synth_clust import binarity
+from .. import update_progress
 
 
 def arrange_filters(isoch_list, all_syst_filters, filters, colors):
@@ -128,10 +129,14 @@ def main(met_f_filter, age_values, cmd_evol_tracks, evol_track, bin_mr,
     # Interpolate extra points into all the filters, colors, filters of colors,
     # and extra parameters (masses, etc)
     N_interp = 2000
-    a = interp_isoch_data(mags_theor, N_interp)
-    b = interp_isoch_data(cols_theor, N_interp)
-    c = interp_isoch_data(mags_cols_theor, N_interp)
-    d = interp_isoch_data(extra_pars, N_interp)
+    print("Interpolating extra points ({}) into the isochrones.".format(
+        N_interp))
+    interp_data = []
+    for i, data in enumerate([
+            mags_theor, cols_theor, mags_cols_theor, extra_pars]):
+        interp_data.append(interp_isoch_data(data, N_interp))
+        update_progress.updt(4, i + 1)
+    a, b, c, d = interp_data
 
     # The magnitudes for each defined color ('c') are used here and
     # discarded after the colors (and magnitudes) with binarity assignment
@@ -179,7 +184,7 @@ def main(met_f_filter, age_values, cmd_evol_tracks, evol_track, bin_mr,
     lens = [len(_) for _ in fundam_params]
     total = np.prod(lens)
     print(
-        "Number of values per parameter:\n"
+        "\nNumber of values per parameter:\n"
         "  {} metallicity values (z),\n"
         "  {} age values (per z),\n"
         "  {} reddening values,\n"

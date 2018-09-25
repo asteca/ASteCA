@@ -1,6 +1,7 @@
 
 from ..core_imp import np
 from .mass_interp import find_closest
+from .. import update_progress
 
 
 def mag_combine(m1, m2):
@@ -44,13 +45,14 @@ def binarGen(
     # colors, etc.
     if binar_fracs.any():
 
-        print("Generating binary data (b_mr={:.2f})\n".format(bin_mass_ratio))
+        print("Generating binary data (b_mr={:.2f})".format(bin_mass_ratio))
         # All theoretical isochrones are interpolated with the same length,
         # assign unique binarity probabilities to each star randomly.
         unq_b_probs = np.arange(N_interp) / float(N_interp)
 
         mags_binar, cols_binar, probs_binar, mass_binar = [], [], [], []
         # For each metallicity defined.
+        N_mags_theor = len(mags_theor)
         for mx, _ in enumerate(mags_theor):
 
             mag_bin, col_bin, prob_bin, mass_bin = [], [], [], []
@@ -117,6 +119,8 @@ def binarGen(
             cols_binar.append(col_bin)
             probs_binar.append(prob_bin)
             mass_binar.append(mass_bin)
+
+            update_progress.updt(N_mags_theor, mx + 1)
     else:
         mags_binar, cols_binar, mass_binar =\
             np.zeros(np.shape(mags_theor)),\

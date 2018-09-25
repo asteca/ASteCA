@@ -5,6 +5,7 @@ import numpy as np
 import itertools
 import re
 from . import isochs_format
+from .. import update_progress
 
 
 def readCMDFile(met_f, age_values, line_start, age_format, column_ids):
@@ -128,7 +129,9 @@ def main(met_f_filter, age_values, evol_track, all_syst_filters):
     numb_age_values = []
     # For each group of metallicity files (representing a single metallicity
     # value) in all photometric systems defined.
-    for met_fls in zip(*met_f_filter):
+    met_fls_photsysts = list(zip(*met_f_filter))
+    N_met_files = len(met_fls_photsysts)
+    for i_met, met_fls in enumerate(met_fls_photsysts):
 
         # Iterate through the metallicity files stored, one per system.
         all_systs = []
@@ -156,6 +159,8 @@ def main(met_f_filter, age_values, evol_track, all_syst_filters):
             met_fls[0], -1)
         # Store in list.
         extra_pars.append(e_pars)
+
+        update_progress.updt(N_met_files, i_met + 1)
 
     # Check that all metallicity files contain the same number of ages.
     if not checkEqual([len(_) for _ in isoch_list]):
