@@ -12,6 +12,17 @@ from .check import params_pval
 from .check import params_decont
 
 
+def X_is_running():
+    """
+    Detect if X11 is available. Source:
+    https://stackoverflow.com/a/1027942/1391441
+    """
+    from subprocess import Popen, PIPE
+    p = Popen(["xset", "-q"], stdout=PIPE, stderr=PIPE)
+    p.communicate()
+    return p.returncode == 0
+
+
 def check_all(mypath, file_end):
     """
     Checks that the necessary files are in place, the parameters stored
@@ -77,7 +88,7 @@ def check_all(mypath, file_end):
     # Force matplotlib to not use any Xwindows backend. This call prevents
     # the code from crashing when used in a computer cluster. See:
     # http://stackoverflow.com/a/3054314/1391441
-    if pd['flag_back_force']:
+    if not X_is_running():
         import matplotlib
         matplotlib.use('Agg')
         print("(Force matplotlib to not use any Xwindows backend)\n")

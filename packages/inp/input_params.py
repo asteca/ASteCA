@@ -49,9 +49,6 @@ def main(mypath, pars_f_path):
                 # Updater.
                 if reader[0] == 'UP':
                     up_flag = True if reader[1] in true_lst else False
-                # Matplotlib backend
-                elif reader[0] == 'FB':
-                    flag_back_force = True if reader[1] in true_lst else False
 
                 # Set global mode (i.e, for all clusters processed).
                 elif reader[0] == 'MO':
@@ -124,7 +121,7 @@ def main(mypath, pars_f_path):
                     nwalkers_ptm = int(float(reader[2]))
                     nburn_ptm = int(float(reader[3]))
                     nsteps_ptm = int(float(reader[4]))
-                    ptemcee_a = float(reader[5])
+                    pt_adapt = True if reader[5] in true_lst else False
                     priors_ptm = reader[6]
 
                 # ABC algorithm parameters.
@@ -239,8 +236,7 @@ def main(mypath, pars_f_path):
     par_ranges = [m_rs, a_rs, e_rs, d_rs, mass_rs, bin_rs]
 
     pd = {
-        'up_flag': up_flag, 'flag_back_force': flag_back_force,
-        'run_mode': run_mode, 'read_mode': read_mode,
+        'up_flag': up_flag, 'run_mode': run_mode, 'read_mode': read_mode,
         'id_coords': id_coords, 'id_mags': id_mags, 'id_cols': id_cols,
         'id_kinem': id_kinem,
         'flag_make_plot': flag_make_plot, 'plot_frmt': plot_frmt,
@@ -267,7 +263,7 @@ def main(mypath, pars_f_path):
         'R_V': R_V, 'bin_mr': bin_mr,
         # ptemcee algorithm parameters.
         'ntemps': ntemps, 'nwalkers_ptm': nwalkers_ptm, 'nburn_ptm': nburn_ptm,
-        'nsteps_ptm': nsteps_ptm, "ptemcee_a": ptemcee_a,
+        'nsteps_ptm': nsteps_ptm, "pt_adapt": pt_adapt,
         'priors_ptm': priors_ptm,
         # ABC algorithm parameters.
         'nwalkers_abc': nwalkers_abc, 'nburn_abc': nburn_abc,

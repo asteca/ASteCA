@@ -25,15 +25,6 @@
 #
 #   flag
 UP     y
-
-# Force matplotlib's backend to 'Agg'.
-#
-# * flag: y / n
-#   Set to 'y' to prevent the error 'TclError: no display name and no
-#   $DISPLAY environment variable' when running the code in a server.
-#
-#   flag
-FB     n
 ################################################################################
 
 
