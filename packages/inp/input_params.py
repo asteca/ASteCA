@@ -192,8 +192,8 @@ def main(mypath, pars_f_path):
                     # Get parameters file name from path.
                     pars_f_name = pars_f_path.split('/')[-1]
                     print("  WARNING: Unknown '{}' ID found in line {}\n"
-                          "  of '{}' file.\n").format(
-                        reader[0], l + 1, pars_f_name)
+                          "  of '{}' file.\n".format(
+                              reader[0], l + 1, pars_f_name))
 
     # Accepted coordinate units
     coord_accpt = ('px', 'deg')
