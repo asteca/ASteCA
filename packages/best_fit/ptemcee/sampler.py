@@ -10,6 +10,7 @@ import numpy as np
 import multiprocessing as multi
 from . import util
 
+
 def default_beta_ladder(ndim, ntemps=None, Tmax=None):
     """
     Returns a ladder of :math:`\beta \equiv 1/T` under a geometric spacing that
@@ -87,9 +88,9 @@ def default_beta_ladder(ndim, ntemps=None, Tmax=None):
     if ndim > tstep.shape[0]:
         # An approximation to the temperature step at large
         # dimension
-        tstep = 1.0 + 2.0*np.sqrt(np.log(4.0))/np.sqrt(ndim)
+        tstep = 1.0 + 2.0 * np.sqrt(np.log(4.0)) / np.sqrt(ndim)
     else:
-        tstep = tstep[ndim-1]
+        tstep = tstep[ndim - 1]
 
     appendInf = False
     if Tmax == np.inf:
@@ -116,6 +117,7 @@ def default_beta_ladder(ndim, ntemps=None, Tmax=None):
         betas = np.concatenate((betas, [0]))
 
     return betas
+
 
 class LikePriorEvaluator(object):
     """
@@ -147,6 +149,7 @@ class LikePriorEvaluator(object):
                 raise ValueError('Log likelihood function returned NaN.')
 
         return ll, lp
+
 
 class Sampler(object):
     """
@@ -422,24 +425,24 @@ class Sampler(object):
             zs = np.exp(self._random.uniform(low=-np.log(self.a),
                                              high=np.log(self.a),
                                              size=(self.ntemps,
-                                                   self.nwalkers//2)))
+                                                   self.nwalkers // 2)))
 
-            qs = np.zeros((self.ntemps, self.nwalkers//2, self.dim))
+            qs = np.zeros((self.ntemps, self.nwalkers // 2, self.dim))
             for k in range(self.ntemps):
                 js = self._random.randint(0, high=self.nwalkers // 2,
                                           size=self.nwalkers // 2)
                 qs[k, :, :] = psample[k, js, :] + zs[k, :].reshape(
                     (self.nwalkers // 2, 1)) * (pupdate[k, :, :] -
-                                               psample[k, js, :])
+                                                psample[k, js, :])
 
             qslogl, qslogp = self._evaluate(qs)
             qslogpost = self._tempered_likelihood(qslogl) + qslogp
 
-            logpaccept = self.dim*np.log(zs) + qslogpost \
+            logpaccept = self.dim * np.log(zs) + qslogpost \
                 - logpost[:, jupdate::2]
             logr = np.log(self._random.uniform(low=0.0, high=1.0,
                                                size=(self.ntemps,
-                                                     self.nwalkers//2)))
+                                                     self.nwalkers // 2)))
 
             accepts = logr < logpaccept
             accepts = accepts.flatten()
@@ -451,7 +454,7 @@ class Sampler(object):
             logl[:, jupdate::2].reshape((-1,))[accepts] = \
                 qslogl.reshape((-1,))[accepts]
 
-            accepts = accepts.reshape((self.ntemps, self.nwalkers//2))
+            accepts = accepts.reshape((self.ntemps, self.nwalkers // 2))
 
             self.nprop[:, jupdate::2] += 1.0
             self.nprop_accepted[:, jupdate::2] += accepts

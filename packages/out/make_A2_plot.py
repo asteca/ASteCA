@@ -34,7 +34,7 @@ def main(
     if 'A2' in pd['flag_make_plot']:
         # figsize(x1, y1), GridSpec(y2, x2) --> To have square plots: x1/x2 =
         # y1/y2 = 2.5
-        fig = plt.figure(figsize=(30, 25))
+        fig = plt.figure()  #figsize=(30, 25))
         gs = gridspec.GridSpec(10, 12)
         add_version_plot.main()
 

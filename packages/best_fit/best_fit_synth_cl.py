@@ -50,7 +50,7 @@ def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning,
          R_V, fundam_params, N_pop, N_gen, fit_diff, cross_prob, cross_sel,
          mut_prob, N_el, N_ei, N_es, cmd_systs, filters, colors, theor_tracks,
          nwalkers_emc, nsteps_emc, N_burn_emc, nburn_emc, emcee_a, priors_emc,
-         ntemps, nwalkers_ptm, nsteps_ptm, nburn_ptm, ptemcee_a,
+         ntemps, nwalkers_ptm, nsteps_ptm, nburn_ptm, pt_adapt, tmax_ptm,
          priors_ptm, nwalkers_abc, nsteps_abc, nburn_abc, priors_abc,
          **kwargs):
     '''
@@ -181,7 +181,8 @@ def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning,
                 lkl_method, clp['em_float'], err_lst, completeness,
                 max_mag_syn, fundam_params, obs_clust, theor_tracks, R_V,
                 ext_coefs, st_dist_mass, N_fc, cmpl_rnd, err_rnd, ntemps,
-                nwalkers_ptm, nsteps_ptm, nburn_ptm, ptemcee_a, priors_ptm)
+                nwalkers_ptm, nsteps_ptm, nburn_ptm, pt_adapt, tmax_ptm,
+                priors_ptm)
             # Assign uncertainties.
             isoch_fit_errors = params_errors(
                 best_fit_algor, isoch_fit_params)

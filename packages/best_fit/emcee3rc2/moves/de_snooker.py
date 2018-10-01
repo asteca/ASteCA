@@ -24,7 +24,7 @@ class DESnookerMove(RedBlueMove):
 
     """
     def __init__(self, gammas=1.7, **kwargs):
-        self.gammas = gammas  # np.random.uniform(1.2, 2.2)
+        self.gammas = gammas
         kwargs["nsplits"] = 4
         super(DESnookerMove, self).__init__(**kwargs)
 

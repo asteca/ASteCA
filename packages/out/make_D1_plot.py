@@ -8,8 +8,7 @@ from . import mp_best_fit1_mcmc
 from . import prep_plots
 
 
-def main(
-        npd, pd, isoch_fit_params, fit_params_r, fit_errors_r, **kwargs):
+def main(npd, pd, isoch_fit_params, fit_params_r, fit_errors_r, **kwargs):
     '''
     Make D1 block plots.
     '''
@@ -72,17 +71,17 @@ def main(
                 mp_best_fit1_GA.plot(n, *args)
 
         if pd['best_fit_algor'] == 'emcee':
-            nwalkers, nburn, nsteps, aparam = pd['nwalkers_emc'],\
+            nwalkers, nburn, nsteps, mcmc_param = pd['nwalkers_emc'],\
                 pd['nburn_emc'], isoch_fit_params['nsteps_emc'],\
                 pd['emcee_a']
         elif pd['best_fit_algor'] == 'ptemcee':
-            nwalkers, nburn, nsteps, aparam = pd['nwalkers_ptm'],\
+            nwalkers, nburn, nsteps, mcmc_param = pd['nwalkers_ptm'],\
                 pd['nburn_ptm'], isoch_fit_params['nsteps_ptm'],\
-                pd['ptemcee_a']
+                pd['pt_adapt']
         elif pd['best_fit_algor'] == 'abc':
-            nwalkers, nburn, nsteps, aparam = pd['nwalkers_abc'],\
+            nwalkers, nburn, nsteps, mcmc_param = pd['nwalkers_abc'],\
                 isoch_fit_params['nburn_abc'],\
-                isoch_fit_params['nsteps_abc'], -1.
+                isoch_fit_params['nsteps_abc'], None
 
         if pd['best_fit_algor'] in ('abc', 'ptemcee', 'emcee'):
             min_max_p = prep_plots.param_ranges(
@@ -131,7 +130,7 @@ def main(
             for p in ['metal', 'age', 'ext', 'dist', 'mass', 'binar']:
                 args = [
                     p, gs, pd['best_fit_algor'], fit_params_r, min_max_p,
-                    nwalkers, nburn, nsteps, aparam,
+                    nwalkers, nburn, nsteps, mcmc_param,
                     isoch_fit_params['mcmc_trace'],
                     isoch_fit_params['mcmc_elapsed'],
                     isoch_fit_params['varIdxs'],

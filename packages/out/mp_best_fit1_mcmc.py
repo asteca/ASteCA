@@ -54,8 +54,14 @@ def pl_2_param_dens(_2_params, gs, min_max_p2, varIdxs, mcmc_trace):
     if mx in varIdxs and my in varIdxs:
         mx_model, my_model = varIdxs.index(mx), varIdxs.index(my)
 
+        # Bin edges to use.
+        edg_x = np.histogram_bin_edges(mcmc_trace[mx_model], bins='auto')
+        edg_y = np.histogram_bin_edges(mcmc_trace[my_model], bins='auto')
+        if len(edg_x) < 10 or len(edg_x) > 25 or len(edg_y) < 10 or\
+                len(edg_y) > 25:
+            edg_x, edg_y = 20, 20
         h2d, xbins, ybins = plt.hist2d(
-            mcmc_trace[mx_model], mcmc_trace[my_model], bins=30,
+            mcmc_trace[mx_model], mcmc_trace[my_model], bins=[edg_x, edg_y],
             cmap=plt.get_cmap(d_map),
             range=None, zorder=2)[:-1]
         plt.contour(
@@ -139,7 +145,9 @@ def pl_param_pf(
             pass
 
         # Obtain the bin values and edges using numpy
-        hist, bin_edges = np.histogram(model_done[c_model], bins=25)
+        hist, bin_edges = np.histogram(model_done[c_model], bins='auto')
+        if len(bin_edges) > 25:
+            hist, bin_edges = np.histogram(model_done[c_model], bins=20)
         # Plot bars with the proper positioning, height, and width.
         plt.bar(
             (bin_edges[1:] + bin_edges[:-1]) * .5, hist / float(hist.max()),
@@ -213,7 +221,7 @@ def pl_MAF(dummy, gs, best_fit_algor, maf_steps):
 
 def pl_param_chain(
     par_name, gs, best_fit_algor, cp_r, min_max_p, nwalkers, nburn, nsteps,
-        emcee_a, model_done, mcmc_elapsed, varIdxs, pre_bi, post_bi,
+        mcmc_param, model_done, mcmc_elapsed, varIdxs, pre_bi, post_bi,
         autocorr_time, max_at_5c, min_at_5c, pymc3_ess):
     '''
     Parameter sampler chain.
@@ -232,9 +240,15 @@ def pl_param_chain(
     if cp == 0:
         m, s = divmod(mcmc_elapsed, 60)
         h, m = divmod(m, 60)
+        if best_fit_algor == 'emcee':
+            mcmc_p_str = ", a={}".format(mcmc_param)
+        elif best_fit_algor == 'abc':
+            mcmc_p_str = ""
+        elif best_fit_algor == 'ptemcee':
+            mcmc_p_str = ", adapt={}".format(mcmc_param)
         plt.title(
-            "steps={:.0f}, chains={:.0f}, a={:.2f} | {:.0f}h{:.0f}m".format(
-                nsteps, nwalkers, emcee_a, h, m), fontsize=10)
+            "steps={:.0f}, chains={:.0f}{} | {:.0f}h{:.0f}m".format(
+                nsteps, nwalkers, mcmc_p_str, h, m), fontsize=10)
     if cp == 5:
         plt.xlabel("Steps")
     else:

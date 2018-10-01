@@ -11,8 +11,7 @@ def check(
         iso_paths, imf_funcs, par_ranges, N_pop, N_gen, fit_diff,
         cross_prob, cross_sel, mut_prob, N_el, N_ei, N_es, inst_packgs_lst,
         nwalkers_emc, nburn_emc, N_burn_emc, emcee_a, priors_emc,
-        ntemps, nwalkers_ptm, nburn_ptm, ptemcee_a, priors_ptm,
-        emcee_priors, **kwargs):
+        ntemps, nwalkers_ptm, nburn_ptm, priors_ptm, emcee_priors, **kwargs):
     """
     Check all parameters related to the search for the best synthetic cluster
     match.

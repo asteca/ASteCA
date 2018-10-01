@@ -1,20 +1,15 @@
 
 import numpy as np
-# from scipy.optimize import differential_evolution as DE
 import random
-import logging
 import time as t
 
-# TODO emcee3
-# import emcee
-from .emcee3rc1 import ensemble
-from .emcee3rc1 import moves
-from .emcee3rc1 import utils
-from .emcee3rc1 import autocorr
+from .emcee3rc2 import ensemble
+from .emcee3rc2 import moves
+from .emcee3rc2 import utils
 
 from ..synth_clust import synth_cluster
 from . import likelihood
-from .mcmc_convergence import multiESS, fminESS, geweke, effective_n
+from .mcmc_convergence import convergenceVals
 from .. import update_progress
 
 
@@ -35,46 +30,6 @@ def main(
     synthcl_args = [
         theor_tracks, e_max, err_lst, completeness, max_mag_syn, st_dist_mass,
         R_V, ext_coefs, N_fc, cmpl_rnd, err_rnd]
-
-    # # TODO DELETE
-    # model_proper = [
-    #     fundam_params[0][0], fundam_params[1][0], fundam_params[2][0],
-    #     fundam_params[3][0], fundam_params[4][0], fundam_params[5][0]]
-    # m_i = fundam_params[0].index(model_proper[0])
-    # a_i = fundam_params[1].index(model_proper[1])
-    # isochrone = theor_tracks[m_i][a_i]
-    # ext = [[], []]
-    # for e in np.linspace(fundam_params[2][0], fundam_params[2][-1], 1000):
-    #     model_proper[2] = e
-    #     synth_clust = synth_cluster.main(
-    #         e_max, err_lst, completeness, max_mag_syn, st_dist_mass,
-    #         isochrone, R_V, ext_coefs, N_fc, cmpl_rnd, err_rnd, model_proper)
-    #     lkl = likelihood.main(lkl_method, synth_clust, obs_clust)
-    #     ext[0].append(e)
-    #     lp = 0.  # -np.square((e - .34) / .001)
-    #     ext[1].append(-lkl + lp)
-
-    # # Transformation
-    # y_tr = -np.exp(np.array(ext[1]) / np.max(ext[1]))
-    # y_tr += abs(np.min(y_tr))
-
-    # # y_tr = ext[1]
-
-    # from scipy.interpolate import interp1d
-    # ext_interp = interp1d(ext[0], y_tr)
-
-    # import matplotlib.pyplot as plt
-    # fig = plt.figure(figsize=(7, 5))
-    # ax = plt.subplot(211)
-    # ax.set_title("Original likelihood")
-    # plt.plot(ext[0], ext[1], color='r', lw=.8)
-    # ax = plt.subplot(212)
-    # ax.set_title("Normalized likelihood")
-    # plt.plot(ext[0], ext_interp(ext[0]), lw=.8)
-    # plt.xlabel("param")
-    # fig.tight_layout()
-    # plt.savefig("ext_lkl.png", dpi=150)
-    # # TODO DELETE
 
     # TODO make this a proper parameter
     if emcee_a <= 0.:
@@ -216,7 +171,7 @@ def main(
     # Convergence parameters.
     acorr_t, max_at_5c, min_at_5c, geweke_z, emcee_acorf, pymc3_ess, minESS,\
         mESS, mESS_epsilon = convergenceVals(
-            ndim, varIdxs, N_conv, chains_nruns, emcee_trace)
+            'emcee', ndim, varIdxs, N_conv, chains_nruns, emcee_trace)
 
     # Pass the mean as the best model fit found.
     best_sol = closeSol(fundam_params, varIdxs, np.mean(emcee_trace, axis=1))
@@ -452,69 +407,3 @@ def discreteParams(fundam_params, varIdxs, chains_nruns):
             j += 1
 
     return np.array(params).T
-
-
-def convergenceVals(ndim, varIdxs, N_conv, chains_nruns, emcee_trace):
-    """
-    Convergence statistics.
-    """
-
-    # Autocorrelation time for each parameter.
-    acorr_t = autocorr.integrated_time(chains_nruns, tol=N_conv, quiet=True)
-
-    # Autocorrelation time for each chain for each parameter.
-    logger = logging.getLogger()
-    logger.disabled = True
-    at = []
-    for p in chains_nruns.T:
-        at_p = []
-        for c in p:
-            at_p.append(autocorr.integrated_time(c, quiet=True)[0])
-        at.append(at_p)
-    logger.disabled = False
-
-    # Select the indexes of the 5 chains with the largest acorr times, and
-    # the 5 chains with the smallest acorr times, for each parameter.
-    if len(at[0]) >= 5:
-        max_at_5c = [np.argpartition(a, -5)[-5:] for a in at]
-        min_at_5c = [np.argpartition(a, 5)[:5] for a in at]
-    else:
-        max_at_5c, min_at_5c = [np.array([0])] * ndim, [np.array([0])] * ndim
-
-    # Worst chain: chain with the largest acorr time.
-    # max_at_c = [np.argmax(a) for a in at]
-
-    # Mean Geweke z-scores and autocorrelation functions for all chains.
-    geweke_z, emcee_acorf = [[] for _ in range(ndim)],\
-        [[] for _ in range(ndim)]
-    for i, p in enumerate(chains_nruns.T):
-        for c in p:
-            try:
-                geweke_z[i].append(geweke(c))
-            except ZeroDivisionError:
-                geweke_z[i].append([np.nan, np.nan])
-            try:
-                emcee_acorf[i].append(autocorr.function_1d(c))
-            except FloatingPointError:
-                emcee_acorf[i].append([np.nan])
-    geweke_z = np.nanmean(geweke_z, axis=1)
-    emcee_acorf = np.nanmean(emcee_acorf, axis=1)
-
-    # PyMC3 effective sample size.
-    try:
-        # Change shape to (nchains, nstesp, ndim)
-        pymc3_ess = effective_n(chains_nruns.transpose(1, 0, 2))
-    except FloatingPointError:
-        pymc3_ess = np.array([np.nan] * ndim)
-
-    # TODO fix this function
-    # Minimum effective sample size (ESS), and multi-variable ESS.
-    minESS, mESS = fminESS(ndim), multiESS(emcee_trace.T)
-    mESS_epsilon = [[], [], []]
-    for alpha in [.01, .05, .1, .2, .3, .4, .5, .6, .7, .8, .9, .95]:
-        mESS_epsilon[0].append(alpha)
-        mESS_epsilon[1].append(fminESS(ndim, alpha=alpha, ess=minESS))
-        mESS_epsilon[2].append(fminESS(ndim, alpha=alpha, ess=mESS))
-
-    return acorr_t, max_at_5c, min_at_5c, geweke_z, emcee_acorf, pymc3_ess,\
-        minESS, mESS, mESS_epsilon

@@ -121,8 +121,9 @@ def main(mypath, pars_f_path):
                     nwalkers_ptm = int(float(reader[2]))
                     nburn_ptm = int(float(reader[3]))
                     nsteps_ptm = int(float(reader[4]))
-                    pt_adapt = True if reader[5] in true_lst else False
-                    priors_ptm = reader[6]
+                    tmax_ptm = reader[5]
+                    pt_adapt = True if reader[6] in true_lst else False
+                    priors_ptm = reader[7]
 
                 # ABC algorithm parameters.
                 elif reader[0] == 'AB':
@@ -263,7 +264,7 @@ def main(mypath, pars_f_path):
         'R_V': R_V, 'bin_mr': bin_mr,
         # ptemcee algorithm parameters.
         'ntemps': ntemps, 'nwalkers_ptm': nwalkers_ptm, 'nburn_ptm': nburn_ptm,
-        'nsteps_ptm': nsteps_ptm, "pt_adapt": pt_adapt,
+        'nsteps_ptm': nsteps_ptm, "pt_adapt": pt_adapt, 'tmax_ptm': tmax_ptm,
         'priors_ptm': priors_ptm,
         # ABC algorithm parameters.
         'nwalkers_abc': nwalkers_abc, 'nburn_abc': nburn_abc,

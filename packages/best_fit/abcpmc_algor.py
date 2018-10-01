@@ -6,7 +6,7 @@ from .abcpmc import sampler, threshold
 from ..synth_clust import synth_cluster
 from . import likelihood
 from .emcee_algor import varPars, closeSol, discreteParams, convergenceVals
-from .emcee3rc1 import autocorr
+from .emcee3rc2 import autocorr
 
 
 def main(
@@ -51,12 +51,12 @@ def main(
         return synth_clust
 
     # TODO add these parameters to the input params file
-    alpha, init_eps = 90, None
+    alpha, init_eps = 95, None
     N_conv, tol_conv = 50., 0.01
     max_secs = 22. * 60. * 60.
     # Break out when AF is low.
     af_low = 0.001
-    eps_stuck_perc, N_eps_stuck_max = .005, 10
+    eps_stuck_perc, N_eps_stuck_max = .005, 100
 
     # Start timing.
     elapsed = 0.
@@ -78,7 +78,7 @@ def main(
             ranges[4] / 1000., ranges[5]]
         result = DE(lnprob, bounds, maxiter=20)
         init_eps = 2. * result.fun
-        print("  Initial threshold value: {:.2f}".format(init_eps))
+        print(" Initial threshold value: {:.2f}".format(init_eps))
 
     old_eps = init_eps
     # TODO pass type of threshold from params file
@@ -101,9 +101,9 @@ def main(
     # is lower.
     N_steps_conv = min(int(nsteps_abc * 0.02), 100)
 
-    best_sol_old, N_models, N_eps_stuck = [[], np.inf], 0, 0
+    best_sol_old, N_models, prob_mean, N_eps_stuck = [[], np.inf], 0, [], 0
     chains_nruns, maf_steps, map_lkl = [], [], []
-    milestones = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+    milestones = list(range(10, 100, 5))
     for pool in abcsampler.sample(prior, eps):
 
         # print(pool.t, pool.eps, pool.ratio, np.mean(pool.dists))
@@ -114,6 +114,7 @@ def main(
         N_models += nwalkers_abc / maf
 
         # reduce eps value
+        # print(N_eps_stuck, old_eps, eps.eps, np.percentile(pool.dists, alpha))
         old_eps = eps.eps
         eps.eps = np.percentile(pool.dists, alpha)
         if abs(eps.eps - old_eps) < eps_stuck_perc * eps.eps:
@@ -121,11 +122,11 @@ def main(
         else:
             N_eps_stuck = 0
         if N_eps_stuck > N_eps_stuck_max:
-            print("  Threshold is stuck. Break out.")
+            print("  Threshold is stuck (runs={}).".format(pool.t + 1))
             break
 
         if maf < af_low:
-            print("  AF<{}. Break out".format(af_low))
+            print("  AF<{} (runs={}).".format(af_low, pool.t + 1))
             break
 
         # Only check convergence every 'N_steps_conv' steps
@@ -143,13 +144,14 @@ def main(
             converged = np.all(tau * N_conv < (pool.t + 1))
             converged &= np.all(np.abs(old_tau - tau) / tau < tol_conv)
             if converged:
-                print("  Convergence achieved.")
+                print("  Convergence achieved (runs={}).".format(pool.t + 1))
                 break
             old_tau = tau
         except FloatingPointError:
             pass
 
         # Store MAP solution in this iteration.
+        prob_mean.append([pool.t, np.mean(pool.dists)])
         idx_best = np.argmin(pool.dists)
         # Update if a new optimal solution was found.
         if pool.dists[idx_best] < best_sol_old[1]:
@@ -177,7 +179,7 @@ def main(
 
         elapsed += t.time() - start_t
         if elapsed >= available_secs:
-            print("  Time consumed.")
+            print("  Time consumed (runs={}).".format(pool.t + 1))
             break
         start_t = t.time()
 
@@ -228,15 +230,15 @@ def main(
     # Convergence parameters.
     acorr_t, max_at_5c, min_at_5c, geweke_z, emcee_acorf, pymc3_ess, minESS,\
         mESS, mESS_epsilon = convergenceVals(
-            ndim, varIdxs, N_conv, chains_nruns, mcmc_trace)
+            'abc', ndim, varIdxs, N_conv, chains_nruns, mcmc_trace)
 
     # Pass the mean as the best model fit found.
     best_sol = closeSol(fundam_params, varIdxs, np.mean(mcmc_trace, axis=1))
 
     isoch_fit_params = {
         'varIdxs': varIdxs, 'nsteps_abc': runs, 'best_sol': best_sol,
-        'nburn_abc': Nb,
-        'map_sol': map_sol, 'map_lkl': map_lkl, 'map_lkl_final': map_lkl_final,
+        'nburn_abc': Nb, 'map_sol': map_sol, 'map_lkl': map_lkl,
+        'map_lkl_final': map_lkl_final, 'prob_mean': prob_mean,
         'mcmc_elapsed': elapsed, 'mcmc_trace': mcmc_trace,
         'pars_chains_bi': pars_chains_bi, 'pars_chains': chains_nruns.T,
         'maf_steps': maf_steps, 'autocorr_time': acorr_t,
