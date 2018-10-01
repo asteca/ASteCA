@@ -104,20 +104,30 @@ def main(met_f_filter, age_values, evol_track, all_syst_filters):
     '''
     Stores the available isochrones of different metallicities and
     ages, according to the ranges given to these parameters.
+
+    Returns: isoch_list, extra_pars
+    where:
+    isoch_list[i][j] --> i: metallicity index ; j: age index
+    extra_pars[i][j] --> i: metallicity index ; j: age index
+
+    These lists store the magnitudes and extra data for each isochrone and
+    each metallicity value:
+
+    isoch_list = [metal_1, ..., metal_M]
+    metal_i = [isoch_i1, ..., isoch_iN]
+    isoch_ij = [filter1, filter2, filter3, ...]
+
+    extra_pars = [metal_1, ..., metal_M]
+    metal_i = [isoch_i1, ..., isoch_iN]
+    isoch_ij = [M_ini, M_act, logL/Lo, logTe, logG, mbol]
+
+    Where 'filterX' runs through all filters defined, for all the photometric
+    systems in use. The order in which they are stored follows the order
+    of the 'all_syst_filters' tuple, with its first elements removed (since
+    they indicate the photometric system), and flattened.
+
     '''
 
-    # Lists that store the magnitudes, colors, and other data from the
-    # isochrones.
-    # isoch_list = [metal_1, ..., metal_M]
-    # metal_i = [isoch_i1, ..., isoch_iN]
-    # isoch_ij = [filter1, filter2, filter3, ...]
-    # Where 'filterX' indicates all filters defined, for all the photometric
-    # systems in use. The order in which they are stored follows the order
-    # of the 'all_syst_filters' tuple, with its first elements removed (since
-    # they indicate the photometric system), and flattened.
-
-    # isoch_list[i][j] --> i: metallicity index ; j: age index
-    # extra_pars[i][j] --> i: metallicity index ; j: age index
     isoch_list, extra_pars = [], []
 
     # Equal for all photometric systems in all sets of evolutionary tracks.
