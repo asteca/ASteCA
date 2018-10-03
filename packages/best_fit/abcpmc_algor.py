@@ -51,7 +51,7 @@ def main(
         return synth_clust
 
     # TODO add these parameters to the input params file
-    alpha, init_eps = 95, None
+    alpha, init_eps = 99, None
     N_conv, tol_conv = 50., 0.01
     max_secs = 22. * 60. * 60.
     # Break out when AF is low.
@@ -103,7 +103,7 @@ def main(
 
     best_sol_old, N_models, prob_mean, N_eps_stuck = [[], np.inf], 0, [], 0
     chains_nruns, maf_steps, map_lkl = [], [], []
-    milestones = list(range(10, 100, 5))
+    milestones = list(range(10, 101, 5))
     for pool in abcsampler.sample(prior, eps):
 
         # print(pool.t, pool.eps, pool.ratio, np.mean(pool.dists))
@@ -126,8 +126,14 @@ def main(
             break
 
         if maf < af_low:
-            print("  AF<{} (runs={}).".format(af_low, pool.t + 1))
+            print("  AF<{} (runs={})".format(af_low, pool.t + 1))
             break
+
+        elapsed += t.time() - start_t
+        if elapsed >= available_secs:
+            print("  Time consumed (runs={})".format(pool.t + 1))
+            break
+        start_t = t.time()
 
         # Only check convergence every 'N_steps_conv' steps
         if (pool.t + 1) % N_steps_conv:
@@ -168,20 +174,11 @@ def main(
         percentage_complete = (100. * (pool.t + 1) / nsteps_abc)
         if len(milestones) > 0 and percentage_complete >= milestones[0]:
             map_sol, logprob = best_sol_old
-            m, s = divmod(nsteps_abc / (pool.t / elapsed) - elapsed, 60)
-            h, m = divmod(m, 60)
             print("{:>3}% ({:.3f}) LP={:.1f} ({:g}, {:g}, {:.3f}, {:.2f}"
                   ", {:g}, {:.2f})".format(
                       milestones[0], maf, logprob, *map_sol) +
-                  " [{:.0f} m/s | {:.0f}h{:.0f}m]".format(
-                      N_models / elapsed, h, m))
+                  " [{:.0f} m/s]".format(N_models / elapsed))
             milestones = milestones[1:]
-
-        elapsed += t.time() - start_t
-        if elapsed >= available_secs:
-            print("  Time consumed (runs={}).".format(pool.t + 1))
-            break
-        start_t = t.time()
 
     runs = pool.t + 1
 
@@ -225,10 +222,8 @@ def main(
         # levels=(1 - np.exp(-0.5),))
     plt.savefig("corner.png", dpi=300)
 
-    elapsed = t.time() - start_t
-
     # Convergence parameters.
-    acorr_t, max_at_5c, min_at_5c, geweke_z, emcee_acorf, pymc3_ess, minESS,\
+    acorr_t, max_at_5c, min_at_5c, geweke_z, emcee_acorf, mcmc_ess, minESS,\
         mESS, mESS_epsilon = convergenceVals(
             'abc', ndim, varIdxs, N_conv, chains_nruns, mcmc_trace)
 
@@ -245,7 +240,7 @@ def main(
         'max_at_5c': max_at_5c, 'min_at_5c': min_at_5c,
         'minESS': minESS, 'mESS': mESS, 'mESS_epsilon': mESS_epsilon,
         'emcee_acorf': emcee_acorf, 'geweke_z': geweke_z,
-        'pymc3_ess': pymc3_ess,
+        'mcmc_ess': mcmc_ess,
         'N_steps_conv': N_steps_conv, 'N_conv': N_conv, 'tol_conv': tol_conv,
         'tau_index': tau_index, 'tau_autocorr': tau_autocorr
     }

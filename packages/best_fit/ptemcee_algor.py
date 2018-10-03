@@ -86,12 +86,13 @@ def main(
     # TODO input as params
     N_conv, tol_conv = 100., 0.01
 
-    afs, tswaps, betas, actimes = [], [], [], []
+    afs, tswaps, betas = [], [], []
+    # actimes = []
 
-    tau_emcee = np.empty(nsteps_ptm)
+    # tau_emcee = np.empty(nsteps_ptm)
 
     maf_steps, prob_mean, map_lkl = [], [], []
-    milestones = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+    milestones = list(range(10, 101, 10))
     for i, result in enumerate(ptsampler.sample(
             pos0, iterations=nsteps_ptm, adapt=pt_adapt)):
 
@@ -101,29 +102,30 @@ def main(
 
         # Compute the autocorrelation time so far. Using tol=0 means that
         # we'll always get an estimate even if it isn't trustworthy.
-        tau_emcee[tau_index] = np.mean(autocorr.integrated_time(
-            ptsampler.chain[0, :, :i + 1, :].transpose(1, 0, 2), tol=0))
+        tau = autocorr.integrated_time(
+            ptsampler.chain[0, :, :i + 1, :].transpose(1, 0, 2), tol=0)
 
-        # ptsampler.chain.shape: (ntemps, nwalkers, nsteps, ndim)
-        x = np.mean(ptsampler.chain[0, :, :i + 1, :], axis=0)
-        tau = util.autocorr_integrated_time(x)
-        autocorr_vals[tau_index] = np.mean(tau)
-        tau_index += 1
+        # # ptsampler.chain.shape: (ntemps, nwalkers, nsteps, ndim)
+        # x = np.mean(ptsampler.chain[0, :, :i + 1, :], axis=0)
+        # tau = util.autocorr_integrated_time(x)
 
         tswaps.append(ptsampler.tswap_acceptance_fraction)
         betas.append(ptsampler.betas)
         afs.append(np.mean(ptsampler.acceptance_fraction, axis=1))
-        acors = np.zeros(ntemps)
-        for temp in range(ntemps):
-            x = np.mean(ptsampler.chain[temp, :, :i + 1, :], axis=0)
-            acors[temp] = np.mean(util.autocorr_integrated_time(x))
-        actimes.append(acors)
+        # acors = np.zeros(ntemps)
+        # for temp in range(ntemps):
+        #     x = np.mean(ptsampler.chain[temp, :, :i + 1, :], axis=0)
+        #     acors[temp] = np.mean(util.autocorr_integrated_time(x))
+        # actimes.append(acors)
+
+        autocorr_vals[tau_index] = np.mean(tau)
+        tau_index += 1
 
         # Check convergence
         converged = np.all(tau * N_conv < (i + 1))
         converged &= np.all(np.abs(old_tau - tau) / tau < tol_conv)
         if converged:
-            print("  Convergence achieved (runs={}).".format(i + 1))
+            print("  Convergence achieved (runs={})".format(i + 1))
             break
         old_tau = tau
 
@@ -157,7 +159,7 @@ def main(
 
         elapsed += t.time() - start_t
         if elapsed >= available_secs:
-            print("  Time consumed (runs={}).".format(i + 1))
+            print("  Time consumed (runs={})".format(i + 1))
             break
         start_t = t.time()
     runs = i + 1
@@ -187,49 +189,50 @@ def main(
     # ptsampler.chain.shape: (ntemps, nwalkers, nsteps, ndim)
     import matplotlib.pyplot as plt
     import matplotlib.gridspec as gridspec
-    fig = plt.figure(figsize=(15, 15))
-    gs = gridspec.GridSpec(12, 12)
+    fig = plt.figure(figsize=(20, 20))
+    gs = gridspec.GridSpec(10, 10)
+    n = N_steps_conv * np.arange(1, tau_index + 1)
 
     ax = plt.subplot(gs[0:2, 0:6])
     ax.set_title(
         "ntemps: {}, Tmax: {}, adapt: {}".format(ntemps, Tmax, pt_adapt))
     for tsw in np.asarray(tswaps).T:
-        plt.plot(range(tau_index), tsw)
+        plt.plot(n, tsw)
     plt.ylabel("Tswap AF")
 
     ax = plt.subplot(gs[2:4, 0:6])
-    ax.set_title("Cool chain MAF: {:.5f}".format(
+    ax.set_title("Cold chain MAF: {:.5f}".format(
         np.mean(ptsampler.acceptance_fraction[0])))
     for af in np.asarray(afs).T:
-        plt.plot(range(tau_index), af)
+        plt.plot(n, af)
     plt.ylabel("Mean AFs")
 
     ax = plt.subplot(gs[4:6, 0:6])
     ax.set_title("Beta_min: {:.5f}".format(ptsampler.betas[-1]))
     for bet in np.asarray(betas).T:
-        plt.plot(range(tau_index), bet)
+        plt.plot(n, bet)
     plt.ylabel("Betas")
 
+    # plt.subplot(gs[6:8, 0:6])
+    # for act in np.asarray(actimes).T:
+    #     plt.plot(n, act)
+    # plt.ylabel("ACTs")
+
+    # plt.subplot(gs[8:10, 0:6])
+    # y_min, y_max = np.inf, -np.inf
+    # for i in range(nwalkers_ptm):
+    #     chain = chains_nruns[:, i, 2]
+    #     plt.plot(range(runs), chain)
+    #     y_min, y_max = min(min(chain[-int(runs * .5):]), y_min),\
+    #         max(max(chain[-int(runs * .5):]), y_max)
+    # plt.ylim(y_min, y_max)
+
     plt.subplot(gs[6:8, 0:6])
-    for act in np.asarray(actimes).T:
-        plt.plot(range(tau_index), act)
-    plt.ylabel("ACTs")
-
-    plt.subplot(gs[8:10, 0:6])
-    y_min, y_max = np.inf, -np.inf
-    for i in range(nwalkers_ptm):
-        chain = chains_nruns[:, i, 2]
-        plt.plot(range(runs), chain)
-        y_min, y_max = min(min(chain[-int(runs * .5):]), y_min),\
-            max(max(chain[-int(runs * .5):]), y_max)
-    plt.ylim(y_min, y_max)
-
-    plt.subplot(gs[10:12, 0:4])
-    n = N_steps_conv * np.arange(1, tau_index + 1)
-    plt.plot(n, tau_emcee[:tau_index], label="emcee")
-    plt.plot(n, tau_autocorr, ls=':', label="ptemcee")
+    # plt.plot(n, tau_emcee[:tau_index], label="emcee")
+    plt.plot(n, tau_autocorr)  # , ls=':', label="ptemcee")
     plt.plot(n, n / 100.0, "--k")
-    plt.legend()
+    plt.ylabel("ACT, cold chain")
+    # plt.legend()
 
     plt.xlabel("steps")
     fig.tight_layout()
@@ -240,7 +243,7 @@ def main(
     # TODO delete
 
     # Convergence parameters.
-    acorr_t, max_at_5c, min_at_5c, geweke_z, emcee_acorf, pymc3_ess, minESS,\
+    acorr_t, max_at_5c, min_at_5c, geweke_z, emcee_acorf, mcmc_ess, minESS,\
         mESS, mESS_epsilon = convergenceVals(
             'ptemcee', ndim, varIdxs, N_conv, chains_nruns, mcmc_trace)
 
@@ -257,10 +260,9 @@ def main(
         'max_at_5c': max_at_5c, 'min_at_5c': min_at_5c,
         'minESS': minESS, 'mESS': mESS, 'mESS_epsilon': mESS_epsilon,
         'emcee_acorf': emcee_acorf, 'geweke_z': geweke_z,
-        'pymc3_ess': pymc3_ess,
+        'mcmc_ess': mcmc_ess,
         'N_steps_conv': N_steps_conv, 'N_conv': N_conv, 'tol_conv': tol_conv,
-        'tau_index': tau_index, 'tau_autocorr': tau_autocorr,
-        'tau_emcee': tau_emcee
+        'tau_index': tau_index, 'tau_autocorr': tau_autocorr
     }
 
     return isoch_fit_params

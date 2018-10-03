@@ -139,7 +139,7 @@ def main(npd, pd, isoch_fit_params, fit_params_r, fit_errors_r, **kwargs):
                     isoch_fit_params['autocorr_time'],
                     isoch_fit_params['max_at_5c'],
                     isoch_fit_params['min_at_5c'],
-                    isoch_fit_params['pymc3_ess']]
+                    isoch_fit_params['mcmc_ess']]
                 mp_best_fit1_mcmc.plot(5, *args)
 
             # pl_tau
@@ -165,88 +165,6 @@ def main(npd, pd, isoch_fit_params, fit_params_r, fit_errors_r, **kwargs):
                 'Geweke', gs, isoch_fit_params['varIdxs'],
                 isoch_fit_params['geweke_z']]
             mp_best_fit1_mcmc.plot(9, *args)
-
-        # if pd['best_fit_algor'] == 'abc':
-        #     min_max_p = prep_plots.param_ranges(
-        #         pd['best_fit_algor'], pd['fundam_params'],
-        #         isoch_fit_params['varIdxs'], isoch_fit_params['pars_chains'])
-
-        #     # pl_2_param_dens: Param vs param density map.
-        #     for p2 in [
-        #             'metal-age', 'metal-ext', 'metal-dist', 'metal-mass',
-        #             'metal-binar', 'age-ext', 'age-dist', 'age-mass',
-        #             'age-binar', 'ext-dist', 'ext-mass', 'ext-binar',
-        #             'dist-mass', 'dist-binar', 'mass-binar']:
-
-        #         # Limits for the 2-dens plots.
-        #         min_max_p2 = prep_plots.p2_ranges(p2, min_max_p)
-
-        #         args = [p2, gs, min_max_p2, isoch_fit_params['varIdxs'],
-        #                 isoch_fit_params['mcmc_trace']]
-        #         mp_best_fit1_mcmc.plot(0, *args)
-
-        #     # pl_param_pf: Parameters probability functions.
-        #     for p in ['metal', 'age', 'ext', 'dist', 'mass', 'binar']:
-        #         args = [p, gs, min_max_p, fit_params_r, fit_errors_r,
-        #                 isoch_fit_params['varIdxs'],
-        #                 isoch_fit_params['map_sol'],
-        #                 isoch_fit_params['mcmc_trace']]
-        #         mp_best_fit1_mcmc.plot(1, *args)
-
-        #     # # pl_pdf_half: Parameters half of pdfs.
-        #     # args = ['Halves', gs, isoch_fit_params['mcmc_halves']]
-        #     # mp_best_fit1_mcmc.plot(2, *args)
-
-        #     # pl_MAP_lkl: Parameters half of pdfs.
-        #     args = ['MAP lkl', gs, isoch_fit_params['map_lkl'],
-        #             isoch_fit_params['map_lkl_final']]
-        #     mp_best_fit1_mcmc.plot(3, *args)
-
-        #     # pl_MAF: Parameters evolution of MAF.
-        #     args = [
-        #         'MAF', gs, pd['best_fit_algor'],
-        #         isoch_fit_params['maf_steps']]
-        #     mp_best_fit1_mcmc.plot(4, *args)
-
-        #     # pl_param_chain: Parameters sampler chains.
-        #     for p in ['metal', 'age', 'ext', 'dist', 'mass', 'binar']:
-        #         args = [
-        #             p, gs, pd['best_fit_algor'], fit_params_r, min_max_p,
-        #             nwalkers, nburn, nsteps, aparam,
-        #             isoch_fit_params['mcmc_trace'],
-        #             isoch_fit_params['mcmc_elapsed'],
-        #             isoch_fit_params['varIdxs'],
-        #             isoch_fit_params['pars_chains_bi'],
-        #             isoch_fit_params['pars_chains'],
-        #             isoch_fit_params['autocorr_time'],
-        #             isoch_fit_params['max_at_5c'],
-        #             isoch_fit_params['min_at_5c'],
-        #             isoch_fit_params['pymc3_ess']]
-        #         mp_best_fit1_mcmc.plot(5, *args)
-
-        #     # pl_tau
-        #     args = [
-        #         'Tau', gs, isoch_fit_params['N_steps_conv'],
-        #         isoch_fit_params['N_conv'], isoch_fit_params['tol_conv'],
-        #         isoch_fit_params['tau_index'],
-        #         isoch_fit_params['tau_autocorr']]
-        #     mp_best_fit1_mcmc.plot(6, *args)
-        #     # pl_mESS
-        #     args = [
-        #         'mESS', gs, isoch_fit_params['mESS'],
-        #         isoch_fit_params['minESS'],
-        #         isoch_fit_params['mESS_epsilon']]
-        #     mp_best_fit1_mcmc.plot(7, *args)
-        #     # pl_lags
-        #     args = [
-        #         'lags', gs, isoch_fit_params['varIdxs'],
-        #         isoch_fit_params['emcee_acorf']]
-        #     mp_best_fit1_mcmc.plot(8, *args)
-        #     # pl_GW
-        #     args = [
-        #         'Geweke', gs, isoch_fit_params['varIdxs'],
-        #         isoch_fit_params['geweke_z']]
-        #     mp_best_fit1_mcmc.plot(9, *args)
 
         # Generate output file.
         fig.tight_layout()

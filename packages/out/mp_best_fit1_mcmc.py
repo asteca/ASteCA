@@ -67,7 +67,7 @@ def pl_2_param_dens(_2_params, gs, min_max_p2, varIdxs, mcmc_trace):
         plt.contour(
             h2d.transpose(), 4,
             extent=[xbins.min(), xbins.max(), ybins.min(), ybins.max()],
-            colors='#551a8b', linewidths=0.5, zorder=3)
+            colors='#551a8b', linewidths=1.2, zorder=3)
 
         mean_pos, width, height, theta = CIEllipse(np.array([
             mcmc_trace[mx_model], mcmc_trace[my_model]]).T)
@@ -76,7 +76,7 @@ def pl_2_param_dens(_2_params, gs, min_max_p2, varIdxs, mcmc_trace):
             mean_pos[0], mean_pos[1], marker='x', c=cp, s=30, linewidth=2,
             zorder=4)
         ellipse = Ellipse(xy=mean_pos, width=width, height=height, angle=theta,
-                          edgecolor=cp, fc='None', lw=1., zorder=4)
+                          edgecolor=cp, fc='None', lw=.7, zorder=4)
         ax.add_patch(ellipse)
 
     xp_min, xp_max, yp_min, yp_max = min_max_p2
@@ -222,7 +222,7 @@ def pl_MAF(dummy, gs, best_fit_algor, maf_steps):
 def pl_param_chain(
     par_name, gs, best_fit_algor, cp_r, min_max_p, nwalkers, nburn, nsteps,
         mcmc_param, model_done, mcmc_elapsed, varIdxs, pre_bi, post_bi,
-        autocorr_time, max_at_5c, min_at_5c, pymc3_ess):
+        autocorr_time, max_at_5c, min_at_5c, mcmc_ess):
     '''
     Parameter sampler chain.
     '''
@@ -289,7 +289,7 @@ def pl_param_chain(
         plt.axhline(
             y=float(cp_r[cp]), linestyle='--', color='blue', zorder=4,
             label=r"$\tau={:.0f}\;(\hat{{n}}_{{eff}}={:.0f})$".format(
-                autocorr_time[c_model], pymc3_ess[c_model]))
+                autocorr_time[c_model], mcmc_ess[c_model]))
         #  16th and 84th percentiles (1 sigma) around median.
         ph = np.percentile(model_done[c_model], 84)
         pl = np.percentile(model_done[c_model], 16)
@@ -298,7 +298,7 @@ def pl_param_chain(
         # plt.axhline(
         #     y=float(cp_r[cp]), color='k', ls='--', lw=1.2, zorder=4,
         #     label=r"$\tau={:.0f}\;(\hat{{n}}_{{eff}}={:.0f})$".format(
-        #         autocorr_time[c_model], pymc3_ess[c_model]))
+        #         autocorr_time[c_model], mcmc_ess[c_model]))
 
         ax.set_ylim(min_max_p[cp][0], min_max_p[cp][1])
         ax.legend(fontsize='small', loc=0, handlelength=0.)

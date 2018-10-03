@@ -88,7 +88,7 @@ def main(
     N_conv, tol_conv = 150., 0.01
 
     maf_steps, prob_mean, map_lkl = [], [], []
-    milestones = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+    milestones = list(range(10, 101, 10))
     for i, result in enumerate(sampler.sample(pos, iterations=nsteps)):
 
         # Only check convergence every 'N_steps_conv' steps
@@ -169,7 +169,7 @@ def main(
     emcee_trace = chains_nruns.reshape(-1, ndim).T
 
     # Convergence parameters.
-    acorr_t, max_at_5c, min_at_5c, geweke_z, emcee_acorf, pymc3_ess, minESS,\
+    acorr_t, max_at_5c, min_at_5c, geweke_z, emcee_acorf, mcmc_ess, minESS,\
         mESS, mESS_epsilon = convergenceVals(
             'emcee', ndim, varIdxs, N_conv, chains_nruns, emcee_trace)
 
@@ -186,7 +186,7 @@ def main(
         'max_at_5c': max_at_5c, 'min_at_5c': min_at_5c,
         'minESS': minESS, 'mESS': mESS, 'mESS_epsilon': mESS_epsilon,
         'emcee_acorf': emcee_acorf, 'geweke_z': geweke_z,
-        'pymc3_ess': pymc3_ess,
+        'mcmc_ess': mcmc_ess,
         'N_steps_conv': N_steps_conv, 'N_conv': N_conv, 'tol_conv': tol_conv,
         'tau_index': tau_index, 'tau_autocorr': tau_autocorr
     }

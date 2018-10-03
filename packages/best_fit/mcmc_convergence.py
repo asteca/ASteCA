@@ -455,15 +455,15 @@ def convergenceVals(algor, ndim, varIdxs, N_conv, chains_nruns, mcmc_trace):
     """
     Convergence statistics.
     """
+    # Autocorrelation time for each parameter.
     if algor == 'emcee':
-        # Autocorrelation time for each parameter.
         acorr_t = autocorr.integrated_time(
             chains_nruns, tol=N_conv, quiet=True)
     elif algor == 'ptemcee':
         x = np.mean(chains_nruns.transpose(1, 0, 2), axis=0)
         acorr_t = util.autocorr_integrated_time(x)
     elif algor == 'abc':
-        acorr_t = [np.nan] * ndim
+        acorr_t = np.array([np.nan] * ndim)
 
     # Autocorrelation time for each chain for each parameter.
     logger = logging.getLogger()
@@ -503,12 +503,14 @@ def convergenceVals(algor, ndim, varIdxs, N_conv, chains_nruns, mcmc_trace):
     geweke_z = np.nanmean(geweke_z, axis=1)
     emcee_acorf = np.nanmean(emcee_acorf, axis=1)
 
-    # PyMC3 effective sample size.
-    try:
-        # Change shape to (nchains, nstesp, ndim)
-        pymc3_ess = effective_n(chains_nruns.transpose(1, 0, 2))
-    except FloatingPointError:
-        pymc3_ess = np.array([np.nan] * ndim)
+    # # PyMC3 effective sample size.
+    # try:
+    #     # Change shape to (nchains, nstesp, ndim)
+    #     pymc3_ess = effective_n(chains_nruns.transpose(1, 0, 2))
+    # except FloatingPointError:
+    #     pymc3_ess = np.array([np.nan] * ndim)
+    # N_steps / tau effective sample size
+    mcmc_ess = mcmc_trace.shape[-1] / acorr_t
 
     # TODO fix this function
     # Minimum effective sample size (ESS), and multi-variable ESS.
@@ -519,5 +521,5 @@ def convergenceVals(algor, ndim, varIdxs, N_conv, chains_nruns, mcmc_trace):
         mESS_epsilon[1].append(fminESS(ndim, alpha=alpha, ess=minESS))
         mESS_epsilon[2].append(fminESS(ndim, alpha=alpha, ess=mESS))
 
-    return acorr_t, max_at_5c, min_at_5c, geweke_z, emcee_acorf, pymc3_ess,\
+    return acorr_t, max_at_5c, min_at_5c, geweke_z, emcee_acorf, mcmc_ess,\
         minESS, mESS, mESS_epsilon
