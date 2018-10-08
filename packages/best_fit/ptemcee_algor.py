@@ -89,7 +89,7 @@ def main(
     afs, tswaps, betas = [], [], []
     # actimes = []
 
-    # tau_emcee = np.empty(nsteps_ptm)
+    tau_ptemcee = np.empty(nsteps_ptm)
 
     maf_steps, prob_mean, map_lkl = [], [], []
     milestones = list(range(10, 101, 10))
@@ -105,9 +105,10 @@ def main(
         tau = autocorr.integrated_time(
             ptsampler.chain[0, :, :i + 1, :].transpose(1, 0, 2), tol=0)
 
-        # # ptsampler.chain.shape: (ntemps, nwalkers, nsteps, ndim)
-        # x = np.mean(ptsampler.chain[0, :, :i + 1, :], axis=0)
-        # tau = util.autocorr_integrated_time(x)
+        # ptsampler.chain.shape: (ntemps, nwalkers, nsteps, ndim)
+        x = np.mean(ptsampler.chain[0, :, :i + 1, :], axis=0)
+        tau_pt = util.autocorr_integrated_time(x)
+        tau_ptemcee[tau_index] = np.mean(tau_pt)
 
         tswaps.append(ptsampler.tswap_acceptance_fraction)
         betas.append(ptsampler.betas)
@@ -228,11 +229,11 @@ def main(
     # plt.ylim(y_min, y_max)
 
     plt.subplot(gs[6:8, 0:6])
-    # plt.plot(n, tau_emcee[:tau_index], label="emcee")
-    plt.plot(n, tau_autocorr)  # , ls=':', label="ptemcee")
+    plt.plot(n, tau_ptemcee[:tau_index], label="ptemcee")
+    plt.plot(n, tau_autocorr, ls=':', label="emcee")
     plt.plot(n, n / 100.0, "--k")
     plt.ylabel("ACT, cold chain")
-    # plt.legend()
+    plt.legend()
 
     plt.xlabel("steps")
     fig.tight_layout()

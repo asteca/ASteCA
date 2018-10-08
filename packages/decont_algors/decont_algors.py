@@ -10,7 +10,7 @@ def filterMPs(memb_probs_cl_region, cl_region_i, cl_region_c):
     Pass along MPs only for stars in the *complete* dataset.
     """
     memb_probs_cl_region_c = []
-    ids_c = list(zip(*cl_region_c)[0])
+    ids_c = list(zip(*cl_region_c))[0]
     for i, star in enumerate(cl_region_i):
         id_i = star[0]
         if id_i in ids_c:

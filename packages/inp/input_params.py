@@ -103,7 +103,7 @@ def main(mypath, pars_f_path):
                     readda_mpcol = int(reader[5])
 
                 elif reader[0] == 'DW':
-                    bayesda_weights = map(float, reader[1:])
+                    bayesda_weights = list(map(float, reader[1:]))
 
                 # Cluster region field stars removal.
                 elif reader[0] == 'RM':
