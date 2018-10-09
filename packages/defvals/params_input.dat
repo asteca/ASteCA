@@ -402,7 +402,6 @@ PS       PAR12
 #   IMF                 m_high           m_sample      N_interp
 MF  kroupa_2002            150                  n          2000
 
-
 # Ranges and steps for the intrinsic fundamental parameters.
 #
 #                        min      max     step
