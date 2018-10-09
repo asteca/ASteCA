@@ -26,7 +26,7 @@ def check():
         sys.exit("Missing packages")
 
     # Non-essential packages
-    for pckg in ['rpy2', 'emcee']:
+    for pckg in ['rpy2']:
         try:
             imp.find_module(pckg)
             inst_packgs_lst.append(pckg)

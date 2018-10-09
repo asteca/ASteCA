@@ -48,9 +48,6 @@ def check(
                              N_el, N_pop))
 
         if best_fit_algor == 'emcee':
-            if 'emcee' not in inst_packgs_lst:
-                sys.exit("ERROR: the 'emcee' package is not installed.")
-
             if priors_emc not in emcee_priors:
                 sys.exit("ERROR: the selected prior ({}) is not"
                          " allowed.".format(priors_emc))
