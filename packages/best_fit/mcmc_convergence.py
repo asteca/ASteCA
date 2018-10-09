@@ -4,6 +4,7 @@ from scipy.stats import chi2
 from scipy.special import gammaln
 from scipy.signal import fftconvolve
 import logging
+import warnings
 from .emcee3rc2 import autocorr
 from .ptemcee import util
 
@@ -455,71 +456,76 @@ def convergenceVals(algor, ndim, varIdxs, N_conv, chains_nruns, mcmc_trace):
     """
     Convergence statistics.
     """
-    # Autocorrelation time for each parameter.
-    if algor == 'emcee':
-        acorr_t = autocorr.integrated_time(
-            chains_nruns, tol=N_conv, quiet=True)
-    elif algor == 'ptemcee':
-        x = np.mean(chains_nruns.transpose(1, 0, 2), axis=0)
-        acorr_t = util.autocorr_integrated_time(x)
-    elif algor == 'abc':
-        acorr_t = np.array([np.nan] * ndim)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
 
-    # Autocorrelation time for each chain for each parameter.
-    logger = logging.getLogger()
-    logger.disabled = True
-    at = []
-    for p in chains_nruns.T:
-        at_p = []
-        for c in p:
-            at_p.append(autocorr.integrated_time(c, quiet=True)[0])
-        at.append(at_p)
-    logger.disabled = False
+        # Autocorrelation time for each parameter.
+        if algor == 'emcee':
+            acorr_t = autocorr.integrated_time(
+                chains_nruns, tol=N_conv, quiet=True)
+        elif algor == 'ptemcee':
+            x = np.mean(chains_nruns.transpose(1, 0, 2), axis=0)
+            acorr_t = util.autocorr_integrated_time(x)
+        elif algor == 'abc':
+            acorr_t = np.array([np.nan] * ndim)
 
-    # Select the indexes of the 5 chains with the largest acorr times, and
-    # the 5 chains with the smallest acorr times, for each parameter.
-    if len(at[0]) >= 5:
-        max_at_5c = [np.argpartition(a, -5)[-5:] for a in at]
-        min_at_5c = [np.argpartition(a, 5)[:5] for a in at]
-    else:
-        max_at_5c, min_at_5c = [np.array([0])] * ndim, [np.array([0])] * ndim
+        # Autocorrelation time for each chain for each parameter.
+        logger = logging.getLogger()
+        logger.disabled = True
+        at = []
+        for p in chains_nruns.T:
+            at_p = []
+            for c in p:
+                at_p.append(autocorr.integrated_time(c, quiet=True)[0])
+            at.append(at_p)
+        logger.disabled = False
 
-    # Worst chain: chain with the largest acorr time.
-    # max_at_c = [np.argmax(a) for a in at]
+        # Select the indexes of the 5 chains with the largest acorr times, and
+        # the 5 chains with the smallest acorr times, for each parameter.
+        if len(at[0]) >= 5:
+            max_at_5c = [np.argpartition(a, -5)[-5:] for a in at]
+            min_at_5c = [np.argpartition(a, 5)[:5] for a in at]
+        else:
+            max_at_5c = [np.array([0])] * ndim
+            min_at_5c = [np.array([0])] * ndim
 
-    # Mean Geweke z-scores and autocorrelation functions for all chains.
-    geweke_z, emcee_acorf = [[] for _ in range(ndim)],\
-        [[] for _ in range(ndim)]
-    for i, p in enumerate(chains_nruns.T):
-        for c in p:
-            try:
-                geweke_z[i].append(geweke(c))
-            except ZeroDivisionError:
-                geweke_z[i].append([np.nan, np.nan])
-            try:
-                emcee_acorf[i].append(autocorr.function_1d(c))
-            except FloatingPointError:
-                emcee_acorf[i].append([np.nan])
-    geweke_z = np.nanmean(geweke_z, axis=1)
-    emcee_acorf = np.nanmean(emcee_acorf, axis=1)
+        # Worst chain: chain with the largest acorr time.
+        # max_at_c = [np.argmax(a) for a in at]
 
-    # # PyMC3 effective sample size.
-    # try:
-    #     # Change shape to (nchains, nstesp, ndim)
-    #     pymc3_ess = effective_n(chains_nruns.transpose(1, 0, 2))
-    # except FloatingPointError:
-    #     pymc3_ess = np.array([np.nan] * ndim)
-    # N_steps / tau effective sample size
-    mcmc_ess = mcmc_trace.shape[-1] / acorr_t
+        # Mean Geweke z-scores and autocorrelation functions for all chains.
+        geweke_z, emcee_acorf = [[] for _ in range(ndim)],\
+            [[] for _ in range(ndim)]
+        for i, p in enumerate(chains_nruns.T):
+            for c in p:
+                try:
+                    geweke_z[i].append(geweke(c))
+                except ZeroDivisionError:
+                    geweke_z[i].append([np.nan, np.nan])
+                try:
+                    emcee_acorf[i].append(autocorr.function_1d(c))
+                except FloatingPointError:
+                    emcee_acorf[i].append([np.nan])
+        geweke_z = np.nanmean(geweke_z, axis=1)
+        emcee_acorf = np.nanmean(emcee_acorf, axis=1)
 
-    # TODO fix this function
-    # Minimum effective sample size (ESS), and multi-variable ESS.
-    minESS, mESS = fminESS(ndim), multiESS(mcmc_trace.T)
-    mESS_epsilon = [[], [], []]
-    for alpha in [.01, .05, .1, .2, .3, .4, .5, .6, .7, .8, .9, .95]:
-        mESS_epsilon[0].append(alpha)
-        mESS_epsilon[1].append(fminESS(ndim, alpha=alpha, ess=minESS))
-        mESS_epsilon[2].append(fminESS(ndim, alpha=alpha, ess=mESS))
+        # # PyMC3 effective sample size.
+        # try:
+        #     # Change shape to (nchains, nstesp, ndim)
+        #     pymc3_ess = effective_n(chains_nruns.transpose(1, 0, 2))
+        # except FloatingPointError:
+        #     pymc3_ess = np.array([np.nan] * ndim)
+
+        # N_steps / tau effective sample size
+        mcmc_ess = mcmc_trace.shape[-1] / acorr_t
+
+        # TODO fix this function
+        # Minimum effective sample size (ESS), and multi-variable ESS.
+        minESS, mESS = fminESS(ndim), multiESS(mcmc_trace.T)
+        mESS_epsilon = [[], [], []]
+        for alpha in [.01, .05, .1, .2, .3, .4, .5, .6, .7, .8, .9, .95]:
+            mESS_epsilon[0].append(alpha)
+            mESS_epsilon[1].append(fminESS(ndim, alpha=alpha, ess=minESS))
+            mESS_epsilon[2].append(fminESS(ndim, alpha=alpha, ess=mESS))
 
     return acorr_t, max_at_5c, min_at_5c, geweke_z, emcee_acorf, mcmc_ess,\
         minESS, mESS, mESS_epsilon

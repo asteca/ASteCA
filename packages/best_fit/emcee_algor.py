@@ -2,6 +2,7 @@
 import numpy as np
 import random
 import time as t
+import warnings
 
 from .emcee3rc2 import ensemble
 from .emcee3rc2 import moves
@@ -91,6 +92,12 @@ def main(
     milestones = list(range(10, 101, 10))
     for i, result in enumerate(sampler.sample(pos, iterations=nsteps)):
 
+        elapsed += t.time() - start_t
+        if elapsed >= available_secs:
+            print("  Time consumed.")
+            break
+        start_t = t.time()
+
         # Only check convergence every 'N_steps_conv' steps
         if (i + 1) % N_steps_conv:
             continue
@@ -98,13 +105,14 @@ def main(
         # Compute the autocorrelation time so far. Using tol=0 means that
         # we'll always get an estimate even if it isn't trustworthy.
         try:
-            tau = sampler.get_autocorr_time(tol=0)
-            autocorr_vals[tau_index] = np.nanmean(tau)
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                tau = sampler.get_autocorr_time(tol=0)
+                # Check convergence
+                converged = np.all(tau * N_conv < (i + 1))
+                converged &= np.all(np.abs(old_tau - tau) / tau < tol_conv)
+                autocorr_vals[tau_index] = np.nanmean(tau)
             tau_index += 1
-
-            # Check convergence
-            converged = np.all(tau * N_conv < (i + 1))
-            converged &= np.all(np.abs(old_tau - tau) / tau < tol_conv)
             if converged:
                 print("  Convergence achieved.")
                 break
@@ -139,11 +147,6 @@ def main(
                       (nwalkers * i) / elapsed, h, m))
             milestones = milestones[1:]
 
-        elapsed += t.time() - start_t
-        if elapsed >= available_secs:
-            print("  Time consumed.")
-            break
-        start_t = t.time()
     runs = i + 1
 
     # Evolution of the mean autocorrelation time.
@@ -374,12 +377,12 @@ def log_likelihood(
         R_V, ext_coefs, N_fc, cmpl_rnd, err_rnd, model_proper)
 
     # Call likelihood function for this model. RETURNS THE INVERSE lkl.
-    lkl = -likelihood.main(lkl_method, synth_clust, obs_clust)
+    lkl = likelihood.main(lkl_method, synth_clust, obs_clust)
 
     # TODO, is this a general approach?
     # The negative likelihood is returned since Dolphin requires a minimization
     # of the PLR, and here we are maximizing
-    return lkl
+    return -lkl
 
 
 def discreteParams(fundam_params, varIdxs, chains_nruns):
