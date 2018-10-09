@@ -39,7 +39,8 @@ def readCMDFile(met_f, age_values, line_start, age_format, column_ids):
 
                 # Read age value for this isochrone.
                 age0 = re.findall(age_format, line)  # Find age in line.
-                age = np.around(np.log10(float(age0[0])), 2)
+                # TODO hardcoded 3 decimal places round
+                age = np.around(np.log10(float(age0[0])), 3)
 
             # If age value falls inside the given range, store the
             # isochrone's data.
