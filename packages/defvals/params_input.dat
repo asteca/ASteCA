@@ -396,8 +396,12 @@ PS       PAR12
 # * m_sample: y / n
 #   Unique random sample of masses for each synthetic cluster.
 #
-#   IMF                 m_high           m_sample
-MF  kroupa_2002            150                  n
+# * N_interp: [int]
+#   Number of extra values to interpolate into the isochrones.
+#
+#   IMF                 m_high           m_sample      N_interp
+MF  kroupa_2002            150                  n          2000
+
 
 # Ranges and steps for the intrinsic fundamental parameters.
 #

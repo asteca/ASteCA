@@ -167,6 +167,7 @@ def main(mypath, pars_f_path):
                     IMF_name = str(reader[1])
                     m_high = float(reader[2])
                     m_sample_flag = True if reader[3] in true_lst else False
+                    N_IMF_interp = int(reader[4])
                 elif reader[0] == 'MZ':
                     m_rs = char_remove(reader)
                 elif reader[0] == 'LA':
@@ -260,7 +261,7 @@ def main(mypath, pars_f_path):
         'evol_track': evol_track,
         # Synthetic cluster parameters
         'max_mag': max_mag, 'IMF_name': IMF_name, 'm_high': m_high,
-        'm_sample_flag': m_sample_flag,
+        'm_sample_flag': m_sample_flag, 'N_IMF_interp': N_IMF_interp,
         'R_V': R_V, 'bin_mr': bin_mr,
         # ptemcee algorithm parameters.
         'ntemps': ntemps, 'nwalkers_ptm': nwalkers_ptm, 'nburn_ptm': nburn_ptm,

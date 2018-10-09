@@ -102,14 +102,15 @@ def interp_isoch_data(data, N):
 
 def main(met_f_filter, age_values, cmd_evol_tracks, evol_track, bin_mr,
          all_syst_filters, cmd_systs, filters, colors, fundam_params,
-         **kwargs):
+         N_IMF_interp, **kwargs):
     '''
     Read isochrones and parameters if best fit function is set to run.
     '''
     # Print info about tracks.
-    nt = '' if len(all_syst_filters) == 0 else 's'
-    print("Processing {} theoretical isochrones in the\n"
-          "photometric system{}:".format(cmd_evol_tracks[evol_track][1], nt))
+    nt = '' if len(all_syst_filters) == 1 else 's'
+    print("Processing {} theoretical isochrones\n"
+          "in the photometric system{}:".format(
+              cmd_evol_tracks[evol_track][1], nt))
     for syst in all_syst_filters:
         print(" * {}".format(cmd_systs[syst[0]][0]))
 
@@ -127,14 +128,15 @@ def main(met_f_filter, age_values, cmd_evol_tracks, evol_track, bin_mr,
         isoch_list, all_syst_filters, filters, colors)
 
     # Interpolate extra points into all the filters, colors, filters of colors,
-    # and extra parameters (masses, etc)
-    N_interp = 2000
+    # and extra parameters (masses, etc). This allows the later IMF sampled
+    # masses to be more accurately interpolated into the theoretical
+    # isochrones.
     print("Interpolating extra points ({}) into the isochrones.".format(
-        N_interp))
+        N_IMF_interp))
     interp_data = []
     for i, data in enumerate([
             mags_theor, cols_theor, mags_cols_theor, extra_pars]):
-        interp_data.append(interp_isoch_data(data, N_interp))
+        interp_data.append(interp_isoch_data(data, N_IMF_interp))
         update_progress.updt(4, i + 1)
     a, b, c, d = interp_data
 
@@ -142,7 +144,7 @@ def main(met_f_filter, age_values, cmd_evol_tracks, evol_track, bin_mr,
     # discarded after the colors (and magnitudes) with binarity assignment
     # are obtained.
     mags_binar, cols_binar, probs_binar, mass_binar = binarity.binarGen(
-        fundam_params[5], N_interp, a, b, c, d, bin_mr)
+        fundam_params[5], N_IMF_interp, a, b, c, d, bin_mr)
 
     # Create list structured as:
     # theor_tracks = [m1, m2, .., mN]
@@ -158,7 +160,7 @@ def main(met_f_filter, age_values, cmd_evol_tracks, evol_track, bin_mr,
     # m_ini,..., m_bol: six extra parameters.
 
     # Combine all data into a single array of shape:
-    # (N_z, N_age, N_data, N_interp), where 'N_data' is the number of
+    # (N_z, N_age, N_data, N_IMF_interp), where 'N_data' is the number of
     # sub-arrays in each array.
     comb_data = np.concatenate(
         (a, b, mags_binar, cols_binar, probs_binar, mass_binar, d), axis=2)
