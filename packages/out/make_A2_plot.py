@@ -33,7 +33,7 @@ def main(
     '''
     if 'A2' in pd['flag_make_plot']:
         # figsize(x1, y1), GridSpec(y2, x2)
-        fig = plt.figure()
+        fig = plt.figure(figsize=(30, 25))
         gs = gridspec.GridSpec(10, 12)
         add_version_plot.main()
 

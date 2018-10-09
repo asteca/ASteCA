@@ -15,7 +15,7 @@ def main(
     '''
     if 'A1' in pd['flag_make_plot']:
         # figsize(x1, y1), GridSpec(y2, x2)
-        fig = plt.figure()
+        fig = plt.figure(figsize=(30, 25))
         gs = gridspec.GridSpec(10, 12)
         add_version_plot.main()
 
@@ -32,8 +32,8 @@ def main(
         # Structure plots.
         arglist = []
         for mag_rng in xy_mag_ranges:
-            x, y, m = zip(*mag_rng.values()[0])
-            mag_range = mag_rng.keys()[0]
+            x, y, m = list(zip(*list(mag_rng.values())[0]))
+            mag_range = list(mag_rng.keys())[0]
             st_sizes_arr = prep_plots.star_size(m, N=N_all, min_m=min_mag_all)
             arglist.append(
                 # pl_full_frame: x,y finding chart of full frame.

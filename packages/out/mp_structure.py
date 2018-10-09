@@ -272,10 +272,10 @@ def pl_cl_fl_regions(gs, fig, x_name, y_name, coord, x_min, x_max, y_min,
     # Plot cluster region.
     if len(cl_region_rjct_i) > 0:
         plt.scatter(
-            zip(*cl_region_rjct_i)[1], zip(*cl_region_rjct_i)[2], marker='x',
-            c='orange', s=5, lw=.5, edgecolors='none')
-    plt.scatter(zip(*cl_region_i)[1], zip(*cl_region_i)[2], marker='o',
-                c='red', s=8, edgecolors='none')
+            list(zip(*cl_region_rjct_i))[1], list(zip(*cl_region_rjct_i))[2],
+            marker='x', c='orange', s=5, lw=.5, edgecolors='none')
+    plt.scatter(list(zip(*cl_region_i))[1], list(zip(*cl_region_i))[2],
+                marker='o', c='red', s=8, edgecolors='none')
 
     N_flrg = 0
     if not flag_no_fl_regs_i:

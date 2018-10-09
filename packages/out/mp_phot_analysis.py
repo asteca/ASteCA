@@ -34,10 +34,10 @@ def pl_phot_err(gs, colors, filters, id_kinem, mags, em_float, cl_region_c,
     '''
 
     # Main magnitude (x) data for accepted/rejected stars.
-    mmag_out_acpt = np.array(zip(*zip(*stars_out_c)[3])[0])
-    mmag_out_rjct = np.array(zip(*zip(*stars_out_rjct_c)[3])[0])
-    mmag_in_acpt = np.array(zip(*zip(*cl_region_c)[3])[0])
-    mmag_in_rjct = np.array(zip(*zip(*cl_region_rjct_c)[3])[0])
+    mmag_out_acpt = np.array(list(zip(*list(zip(*stars_out_c))[3]))[0])
+    mmag_out_rjct = np.array(list(zip(*list(zip(*stars_out_rjct_c))[3]))[0])
+    mmag_in_acpt = np.array(list(zip(*list(zip(*cl_region_c))[3]))[0])
+    mmag_in_rjct = np.array(list(zip(*list(zip(*cl_region_rjct_c))[3]))[0])
 
     pd_Plx, pd_PMRA, pd_RV = id_kinem[0], id_kinem[2], id_kinem[6]
     # Define first row depending on whether kinematic data was defined.
@@ -76,23 +76,27 @@ def pl_phot_err(gs, colors, filters, id_kinem, mags, em_float, cl_region_c,
         ax.minorticks_on()
 
         # Rejected stars outside the cluster region
-        starsPlot('rjct', mmag_out_rjct, zip(*zip(*stars_out_rjct_c)[j])[k])
+        starsPlot('rjct', mmag_out_rjct,
+                  list(zip(*list(zip(*stars_out_rjct_c))[j]))[k])
         # Rejected stars inside the cluster region
-        starsPlot('rjct', mmag_in_rjct, zip(*zip(*cl_region_rjct_c)[j])[k])
+        starsPlot('rjct', mmag_in_rjct,
+                  list(zip(*list(zip(*cl_region_rjct_c))[j]))[k])
         # Accepted stars inside the cluster region.
-        starsPlot('accpt_in', mmag_in_acpt, zip(*zip(*cl_region_c)[j])[k])
+        starsPlot('accpt_in', mmag_in_acpt,
+                  list(zip(*list(zip(*cl_region_c))[j]))[k])
         # Accepted stars outside the cluster region.
-        starsPlot('accpt_out', mmag_out_acpt, zip(*zip(*stars_out_c)[j])[k])
+        starsPlot('accpt_out', mmag_out_acpt,
+                  list(zip(*list(zip(*stars_out_c))[j]))[k])
         # For the PM data, add y coordinates to the same plot.
         if j == 8 and k == 1:
-            starsPlot(
-                'rjct', mmag_out_rjct, zip(*zip(*stars_out_rjct_c)[j])[k + 1])
-            starsPlot(
-                'rjct', mmag_in_rjct, zip(*zip(*cl_region_rjct_c)[j])[k + 1])
-            starsPlot(
-                'accpt_in', mmag_in_acpt, zip(*zip(*cl_region_c)[j])[k + 1])
-            starsPlot(
-                'accpt_out', mmag_out_acpt, zip(*zip(*stars_out_c)[j])[k + 1])
+            starsPlot('rjct', mmag_out_rjct,
+                      list(zip(*list(zip(*stars_out_rjct_c))[j]))[k + 1])
+            starsPlot('rjct', mmag_in_rjct,
+                      list(zip(*list(zip(*cl_region_rjct_c))[j]))[k + 1])
+            starsPlot('accpt_in', mmag_in_acpt,
+                      list(zip(*list(zip(*cl_region_c))[j]))[k + 1])
+            starsPlot('accpt_out', mmag_out_acpt,
+                      list(zip(*list(zip(*stars_out_c))[j]))[k + 1])
 
         # Plot legend in the main magnitude plot.
         if j == 4:
@@ -200,11 +204,12 @@ def pl_cl_diag(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
     if len(cl_region_rjct_c) > 0:
         # Only attempt to plot if any star is stored in the list.
         plt.scatter(
-            zip(*zip(*cl_region_rjct_c)[5])[0],
-            zip(*zip(*cl_region_rjct_c)[3])[0],
+            list(zip(*list(zip(*cl_region_rjct_c))[5]))[0],
+            list(zip(*list(zip(*cl_region_rjct_c))[3]))[0],
             marker='x', c='teal', s=12, zorder=2)
     plt.scatter(
-        zip(*zip(*cl_region_c)[5])[0], zip(*zip(*cl_region_c)[3])[0],
+        list(zip(*list(zip(*cl_region_c))[5]))[0],
+        list(zip(*list(zip(*cl_region_c))[3]))[0],
         marker='o', c='r', s=cl_sz_pt, lw=0.3, edgecolor='k', zorder=3)
     # If list is not empty, plot error bars at several values.
     x_val, mag_y, xy_err = err_bar

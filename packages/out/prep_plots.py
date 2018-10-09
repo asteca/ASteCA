@@ -2,6 +2,7 @@
 from ..math_f import exp_function
 from ..best_fit.obs_clust_prepare import dataProcess
 from ..decont_algors.local_cell_clean import bin_edges_f
+from ..best_fit.emcee3rc2 import ensemble
 import numpy as np
 from scipy import stats
 from scipy import optimize
@@ -540,11 +541,14 @@ def plxPlot(inst_packgs_lst, flag_no_fl_regs_i, field_regions_i, cl_reg_fit):
     """
     Parameters for the parallax plot.
     """
-    plx_flag, plx_clrg, plx_xmin, plx_xmax, plx_x_kde, kde_pl, plx_flrg =\
-        False, [], 0., 0., [], [], []
+    plx_flag, plx_clrg, plx_xmin, plx_xmax, plx_x_kde, kde_pl, plx_flrg,\
+        mmag_plx, mp_plx, plx, e_plx, plx_bay, ph_plx, pl_plx, min_plx,\
+        max_plx = False, [], 0., 0., [], [], [], [], [], [], [], np.nan,\
+        np.nan, np.nan, np.nan, np.nan
 
     plx = np.array(list(zip(*list(zip(*cl_reg_fit))[7]))[0])
     plx_clrg = plx[~np.isnan(plx)]
+
     # Check that a range of parallaxes is possible.
     if plx_clrg.any():
         if np.min(plx_clrg) < np.max(plx_clrg):
@@ -559,57 +563,47 @@ def plxPlot(inst_packgs_lst, flag_no_fl_regs_i, field_regions_i, cl_reg_fit):
 
             plx_flag = True
 
-    if not flag_no_fl_regs_i:
-        # Extract parallax data.
-        plx_flrg = []
-        for fl_rg in field_regions_i:
-            plx_flrg += list(zip(*list(zip(*fl_rg))[7]))[0]
-        plx_flrg = np.asarray(plx_flrg)
-        # Mask 'nan' and set range.
-        plx_all = plx_flrg[~np.isnan(plx_flrg)]
-        msk = (plx_all > -5.) & (plx_all < 10.)
-        plx_flrg = plx_all[msk]
+        # Reject 2\sigma outliers.
+        max_plx, min_plx = np.median(plx) + 2. * np.std(plx),\
+            np.median(plx) - 2. * np.std(plx)
+        msk = (plx < max_plx) & (plx > min_plx)
+        # Prepare masked data.
+        plx = plx[msk]
+        mmag = np.array(list(zip(*list(zip(*cl_reg_fit))[3]))[0])[msk]
+        mp = np.array(list(zip(*cl_reg_fit))[9])[msk]
+        e_plx = np.array(list(zip(*list(zip(*cl_reg_fit))[8]))[0])[msk]
+        # Put large MP stars on top
+        mp_i = mp.argsort()
+        mmag_plx, mp_plx, plx, e_plx = mmag[mp_i], mp[mp_i], plx[mp_i],\
+            e_plx[mp_i]
 
-    # Reject 2\sigma outliers.
-    max_plx, min_plx = np.median(plx) + 2. * np.std(plx),\
-        np.median(plx) - 2. * np.std(plx)
-    msk = (plx < max_plx) & (plx > min_plx)
-    # Prepare masked data.
-    plx = plx[msk]
-    mmag = np.array(list(zip(*list(zip(*cl_reg_fit))[3]))[0])[msk]
-    mp = np.array(list(zip(*cl_reg_fit))[9])[msk]
-    e_plx = np.array(list(zip(*list(zip(*cl_reg_fit))[8]))[0])[msk]
-    # Put large MP stars on top
-    mp_i = mp.argsort()
-    mmag_plx, mp_plx, plx, e_plx = mmag[mp_i], mp[mp_i], plx[mp_i], e_plx[mp_i]
+        def lnlike(w_t, w_i, s_i, mp, sign=1.):
+            """
+            Log likelihood, product of Gaussian functions.
+            """
+            return sign * -0.5 * (np.sum(mp * (w_i - w_t)**2 / s_i**2))
 
-    def lnlike(w_t, w_i, s_i, mp, sign=1.):
-        """
-        Log likelihood, product of Gaussian functions.
-        """
-        return sign * -0.5 * (np.sum(mp * (w_i - w_t)**2 / s_i**2))
+        def lnprior(w_t, w_p, s_p):
+            """
+            Log prior, Gaussian > 0.
+            """
+            if w_t < 0.:
+                return -np.inf
+            return -0.5 * ((w_p - w_t)**2 / s_p**2)
 
-    def lnprior(w_t, w_p, s_p):
-        """
-        Log prior, Gaussian > 0.
-        """
-        if w_t < 0.:
-            return -np.inf
-        return -0.5 * ((w_p - w_t)**2 / s_p**2)
+        def lnprob(w_t, w_i, s_i, mp, w_p, s_p):
+            lp = lnprior(w_t, w_p, s_p)
+            return lp + lnlike(w_t, w_i, s_i, mp)
 
-    def lnprob(w_t, w_i, s_i, mp, w_p, s_p):
-        lp = lnprior(w_t, w_p, s_p)
-        return lp + lnlike(w_t, w_i, s_i, mp)
+        # Use optimum likelihood value as mean of the prior.
+        plx_lkl = optimize.minimize_scalar(lnlike, args=(plx, e_plx, -1.))
 
-    # Use optimum likelihood value as mean of the prior.
-    plx_lkl = optimize.minimize_scalar(lnlike, args=(plx, e_plx, -1.))
-
-    if 'emcee' in inst_packgs_lst:
-        import emcee
+        # if 'emcee' in inst_packgs_lst:
+        #     import emcee
         # Prior parameters.
         w_p, s_p = plx_lkl.x, .5
         ndim, nwalkers, nruns = 1, 10, 5000
-        sampler = emcee.EnsembleSampler(
+        sampler = ensemble.EnsembleSampler(
             nwalkers, ndim, lnprob, args=(plx, e_plx, mp, w_p, s_p))
         # Random initial guesses.
         pos = [np.random.uniform(0., 1., ndim) for i in range(nwalkers)]
@@ -622,19 +616,16 @@ def plxPlot(inst_packgs_lst, flag_no_fl_regs_i, field_regions_i, cl_reg_fit):
         # 16th, 84th percentiles
         ph_plx, pl_plx = np.percentile(samples, 84), np.percentile(samples, 16)
 
-        # m_accpt_fr = np.mean(sampler.acceptance_fraction)
-        # print("Mean acceptance fraction: {:.3f}".format(m_accpt_fr))
-        # if m_accpt_fr > .5 or m_accpt_fr < .25:
-        #     print("  WARNING: mean acceptance fraction is outside of the\n"
-        #           "  recommended range.")
-        # try:
-        #     print("Autocorrelation time: {:.2f}".format(
-        #         sampler.get_autocorr_time()[0]))
-        # except Exception:
-        #     print("  WARNING: the chain is too short to reliably estimate\n"
-        #           "  the autocorrelation time.")
-    else:
-        plx_bay, ph_plx, pl_plx = np.nan, np.nan, np.nan
+        if not flag_no_fl_regs_i:
+            # Extract parallax data.
+            plx_flrg = []
+            for fl_rg in field_regions_i:
+                plx_flrg += list(zip(*list(zip(*fl_rg))[7]))[0]
+            plx_flrg = np.asarray(plx_flrg)
+            # Mask 'nan' and set range.
+            plx_all = plx_flrg[~np.isnan(plx_flrg)]
+            msk = (plx_all > -5.) & (plx_all < 10.)
+            plx_flrg = plx_all[msk]
 
     return plx_flag, plx_clrg, plx_xmin, plx_xmax, plx_x_kde, kde_pl,\
         plx_flrg, mmag_plx, mp_plx, plx, e_plx, plx_bay, ph_plx, pl_plx,\
