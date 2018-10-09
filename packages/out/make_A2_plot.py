@@ -71,8 +71,8 @@ def main(
                 st_sizes_arr_z, kde_cent, clust_rad],
             # pl_cl_fl_regions: Cluster and field regions defined.
             [gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max,
-                asp_ratio, kde_cent, clust_rad, field_regions_rjct_i,
-                field_regions_i, cl_region_i, cl_region_rjct_i,
+                asp_ratio, kde_cent, clust_rad, field_regions_i,
+                field_regions_rjct_i, cl_region_i, cl_region_rjct_i,
                 flag_no_fl_regs_i]
         ]
         for n, args in enumerate(arglist):

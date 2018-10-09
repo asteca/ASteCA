@@ -128,7 +128,7 @@ def fregsDef(clp, stars_group, f_regions, spiral, sp_indx, num_bins_area):
     return field_regions
 
 
-def fregsDel(field_regions, flag_no_fl_regs):
+def fregsDel(field_regions, prt=True):
     """
     If any of the field regions has less than 4 stars then we remove it
     from the list otherwise the decontamination or the p-value algorithms
@@ -144,18 +144,12 @@ def fregsDel(field_regions, flag_no_fl_regs):
     # Delete empty regions this way to avoid messing with the indexes.
     for index in sorted(field_regs_del, reverse=True):
         del field_regions[index]
-    if field_regs_del:
-        print('    {} field regions with less than 4 stars each were'
-              ' removed.').format(len(field_regs_del))
 
-    # If after removing the empty regions no regions are left, raise the
-    # flag.
-    if not field_regions:
-        print('    WARNING: no field regions left after the removal of\n' +
-              '    those containing less than 4 stars.')
-        flag_no_fl_regs = True
+    if prt and field_regs_del:
+        txt = '    {} field regions with less than 4 stars each were removed.'
+        print(txt.format(len(field_regs_del)))
 
-    return field_regions, flag_no_fl_regs
+    return field_regions
 
 
 def main(i_c, clp, run_mode, fr_number, cl_f_regs_semi, freg_flag_semi,
@@ -230,13 +224,20 @@ def main(i_c, clp, run_mode, fr_number, cl_f_regs_semi, freg_flag_semi,
         field_regions = fregsDef(
             clp, clp['stars_out_' + i_c[0]], f_regions, spiral, sp_indx,
             num_bins_area)
-        field_regions, flag_no_fl_regs = fregsDel(
-            field_regions, flag_no_fl_regs)
+        field_regions = fregsDel(field_regions)
+
+        # If after removing the empty regions no regions are left, raise the
+        # flag.
+        if not field_regions:
+            flag_no_fl_regs = True
+            print('    WARNING: no field regions left after the removal of\n' +
+                  '    those containing less than 4 stars.')
 
         # Process *rejected* stars by the errors function.
         field_regions_rjct = fregsDef(
             clp, clp['stars_out_rjct_' + i_c[0]], f_regions, spiral, sp_indx,
             num_bins_area)
+        field_regions_rjct = fregsDel(field_regions_rjct, prt=False)
 
     clp['flag_no_fl_regs_' + i_c[0]], clp['field_regions_' + i_c[0]],\
         clp['field_regions_rjct_' + i_c[0]] = flag_no_fl_regs, field_regions,\
