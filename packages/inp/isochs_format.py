@@ -2,7 +2,8 @@
 
 def cmd_age_format():
     """
-    Define reg expression to isolate the age of an isochrone.
+    Define reg expression to isolate the age of a CMD isochrone from its
+    commented title line.
     """
     age_format = r"Age = \t(.+?) yr"
     return age_format
