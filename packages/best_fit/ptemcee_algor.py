@@ -31,7 +31,7 @@ def main(
         Tmax = int(float(tmax_ptm))
 
     # TODO add these parameters to the input params file
-    h_max = 22
+    h_max = 2.5
     max_secs = h_max * 60. * 60.
 
     ptsampler = sampler.Sampler(
@@ -82,14 +82,14 @@ def main(
 
     # Check for convergence every 5% of steps or 100, whichever value
     # is lower.
-    N_steps_conv = min(int(nsteps_ptm * .05), 100)
+    N_steps_conv = min(int(nsteps_ptm * .1), 100)
     # TODO input as params
     N_conv, tol_conv = 100., 0.01
 
     afs, tswaps, betas = [], [], []
     # actimes = []
 
-    tau_ptemcee = np.empty(nsteps_ptm)
+    tau_emcee = np.empty(nsteps_ptm)
 
     maf_steps, prob_mean, map_lkl = [], [], []
     milestones = list(range(10, 101, 10))
@@ -102,13 +102,13 @@ def main(
 
         # Compute the autocorrelation time so far. Using tol=0 means that
         # we'll always get an estimate even if it isn't trustworthy.
-        tau = autocorr.integrated_time(
+        tau0 = autocorr.integrated_time(
             ptsampler.chain[0, :, :i + 1, :].transpose(1, 0, 2), tol=0)
+        tau_emcee[tau_index] = np.mean(tau0)
 
         # ptsampler.chain.shape: (ntemps, nwalkers, nsteps, ndim)
         x = np.mean(ptsampler.chain[0, :, :i + 1, :], axis=0)
-        tau_pt = util.autocorr_integrated_time(x)
-        tau_ptemcee[tau_index] = np.mean(tau_pt)
+        tau = util.autocorr_integrated_time(x)
 
         tswaps.append(ptsampler.tswap_acceptance_fraction)
         betas.append(ptsampler.betas)
@@ -229,8 +229,8 @@ def main(
     # plt.ylim(y_min, y_max)
 
     plt.subplot(gs[6:8, 0:6])
-    plt.plot(n, tau_ptemcee[:tau_index], label="ptemcee")
-    plt.plot(n, tau_autocorr, ls=':', label="emcee")
+    plt.plot(n, tau_emcee[:tau_index], ls=':', label="emcee")
+    plt.plot(n, tau_autocorr, label="ptemcee")
     plt.plot(n, n / 100.0, "--k")
     plt.ylabel("ACT, cold chain")
     plt.legend()
@@ -278,7 +278,7 @@ def logl(
     check_ranges = [
         r[0] <= p <= r[1] for p, r in zip(*[model, ranges[varIdxs]])]
 
-    lkl = -6000
+    lkl = 10000
     if all(check_ranges):
         model_proper = closeSol(fundam_params, varIdxs, model)
 
@@ -298,14 +298,9 @@ def logl(
         # Call likelihood function for this model.
         lkl = likelihood.main(lkl_method, synth_clust, obs_clust)
 
-        # Normalization  # TODO
-        norm_lkl = 1.
-        lkl = -lkl * norm_lkl
-
-    # TODO, is this a general approach?
     # The negative likelihood is returned since Dolphin requires a minimization
     # of the PLR, and here we are maximizing
-    return lkl
+    return -lkl
 
 
 def logp(model, priors_emc, fundam_params, varIdxs, ranges):
