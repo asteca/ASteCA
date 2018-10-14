@@ -10,6 +10,20 @@ if sys.version_info[0] == 3:
     from functools import reduce
 
 
+def slpitArr(data, step=3.):
+    """
+    Insert extra elements into array so that the maximum spacing between
+    elements is 'step'.
+    Source: https://stackoverflow.com/q/52769257/1391441
+    """
+    d = data.copy()
+    d[1:] -= data[:-1]
+    m = -(d // -step).astype(int)
+    m[0] = 1
+    d /= m
+    return np.cumsum(d.repeat(m))
+
+
 def bin_edges_f(bin_method, mags_cols_cl):
     '''
     Obtain bin edges for each photometric dimension using the cluster region
@@ -48,6 +62,12 @@ def bin_edges_f(bin_method, mags_cols_cl):
             bin_edges.append(bayesian_blocks(mag))
         for col in mags_cols_cl[1]:
             bin_edges.append(bayesian_blocks(col))
+
+    elif bin_method == 'blocks_max':
+        for mag in mags_cols_cl[0]:
+            bin_edges.append(slpitArr(bayesian_blocks(mag)))
+        for col in mags_cols_cl[1]:
+            bin_edges.append(slpitArr(bayesian_blocks(col), 1.))
 
     # TODO this method is currently hidden from the params file.
     # To be used when #325 is implemented. Currently used to test

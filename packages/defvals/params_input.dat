@@ -275,7 +275,7 @@ DW     1.       1.       1.       1.       1.      1.
 #   - all: use all stars in the cluster region.
 #
 # * binning: fixed / auto / fd / doane / scott / rice / sqrt
-#            sturges / knuth / blocks
+#            sturges / knuth / blocks / blocks_max
 #   Binning method to be used if the 'local' method is selected. Otherwise
 #   this parameter is ignored.
 #
@@ -350,7 +350,7 @@ GA    100   1000    1.     0.85      2P   0.05     1    50    10         10
 #     this method is selected, 'binning' is ignored.
 #
 # * binning: fixed / auto / fd / doane / scott / rice / sqrt
-#            sturges / knuth / blocks
+#            sturges / knuth / blocks / blocks_max
 #   Binning method to be used if the likelihood equation by 'dolphin' is
 #   selected. Otherwise this parameter is ignored.
 #
