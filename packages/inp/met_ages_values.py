@@ -1,5 +1,6 @@
 
 import numpy as np
+import sys
 import os
 import re
 from os.path import join
@@ -31,6 +32,11 @@ def match_ranges(met_vals_all, met_files, age_vals_all, z_range, a_range):
         # TODO hardcoded 0.001 tolerance, could break something sometime?
         if np.isclose(a_range, age, atol=0.001).any():
             age_values.append(age)
+
+    if not age_values:
+        txt = "No age value read:\n\n{}\n\ncould be matched to the ages" +\
+            " given as input:\n\n{}"
+        sys.exit(txt.format(age_vals_all, a_range))
 
     return met_f_filter, met_values, age_values
 
