@@ -6,7 +6,6 @@ from .abcpmc import sampler, threshold
 from ..synth_clust import synth_cluster
 from . import likelihood
 from .emcee_algor import varPars, closeSol, discreteParams, convergenceVals
-from .emcee3rc2 import autocorr
 
 
 def main(
@@ -26,7 +25,7 @@ def main(
     def postfn(model):
         # Re-scale z and M
         model_scale = [
-            model[0] / 100., model[1], model[2], model[3],
+            model[0] / 100., model[1], model[2], model[3] * 10.,
             model[4] * 1000., model[5]]
 
         check_ranges = [
@@ -51,12 +50,13 @@ def main(
         return synth_clust
 
     # TODO add these parameters to the input params file
-    alpha, init_eps = 99, None
+    alpha, init_eps = 95, None
     N_conv, tol_conv = 50., 0.01
     max_secs = 22. * 60. * 60.
     # Break out when AF is low.
-    af_low = 0.001
-    eps_stuck_perc, N_eps_stuck_max = .005, 100
+    # af_low, af_min_steps = 0.001, .1
+    max_t_walker = 30.
+    # eps_stuck_perc, N_eps_stuck_max = .005, 100
 
     # Start timing.
     elapsed = 0.
@@ -73,40 +73,50 @@ def main(
         def lnprob(model):
             synth_clust = postfn(model)
             return dist(synth_clust, obs_clust)
+        # Scale parameters bounds.
         bounds = [
-            ranges[0] * 100., ranges[1], ranges[2], ranges[3],
+            ranges[0] * 100., ranges[1], ranges[2], ranges[3] / 10.,
             ranges[4] / 1000., ranges[5]]
         result = DE(lnprob, bounds, maxiter=20)
-        init_eps = 2. * result.fun
-        print(" Initial threshold value: {:.2f}".format(init_eps))
+        init_eps = 4. * result.fun
+    print(" Initial threshold value: {:.2f}".format(init_eps))
 
-    old_eps = init_eps
+    # old_eps = init_eps
     # TODO pass type of threshold from params file
     # eps = threshold.LinearEps(T, 5000, init_eps)
-    eps = threshold.ConstEps(nsteps_abc, init_eps * 2.)
+    eps = threshold.ConstEps(nsteps_abc, init_eps)
 
-    # Gaussian prior
+    # Stddev values as full range.
     std = np.eye(ndim) * (ranges.max(axis=1) - ranges.min(axis=1))
+    # Means as middle points in ranges.
     means = (ranges.max(axis=1) + ranges.min(axis=1)) / 2.
+    # Scale values.
     std[0], means[0] = std[0] * 100, means[0] * 100
-    std[4], means[4] = std[4] / 1000, means[0] / 1000
+    std[3], means[3] = std[3] / 10, means[3] / 10
+    std[4], means[4] = std[4] / 1000., means[4] / 1000.
+    # Gaussian prior.
+    print(means)
+    print(std)
     prior = sampler.GaussianPrior(mu=means, sigma=std)
 
-    # We'll track how the average autocorrelation time estimate changes
-    tau_index, autocorr_vals = 0, np.empty(nsteps_abc)
-    # This will be useful to testing convergence
-    old_tau = np.inf
+    # # We'll track how the average autocorrelation time estimate changes
+    # tau_index, autocorr_vals = 0, np.empty(nsteps_abc)
+    # # This will be useful to testing convergence
+    # old_tau = np.inf
 
     # Check for convergence every 2% of steps or 100, whichever value
     # is lower.
-    N_steps_conv = min(int(nsteps_abc * 0.02), 100)
+    # N_steps_conv = min(int(nsteps_abc * 0.02), 100)
 
-    best_sol_old, N_models, prob_mean, N_eps_stuck = [[], np.inf], 0, [], 0
+    best_sol_old, N_models, prob_mean = [[], np.inf], 0, []
+    # N_eps_stuck = 0
     chains_nruns, maf_steps, map_lkl = [], [], []
-    milestones = list(range(10, 101, 5))
+    milestones = list(range(5, 101, 5))
     for pool in abcsampler.sample(prior, eps):
 
-        # print(pool.t, pool.eps, pool.ratio, np.mean(pool.dists))
+        print(
+            pool.t, pool.eps, pool.ratio, np.min(pool.dists),
+            np.mean(pool.dists))
 
         chains_nruns.append(pool.thetas)
         maf = pool.ratio
@@ -114,19 +124,24 @@ def main(
         N_models += nwalkers_abc / maf
 
         # reduce eps value
-        # print(N_eps_stuck, old_eps, eps.eps, np.percentile(pool.dists, alpha))
-        old_eps = eps.eps
+        # old_eps = eps.eps
         eps.eps = np.percentile(pool.dists, alpha)
-        if abs(eps.eps - old_eps) < eps_stuck_perc * eps.eps:
-            N_eps_stuck += 1
-        else:
-            N_eps_stuck = 0
-        if N_eps_stuck > N_eps_stuck_max:
-            print("  Threshold is stuck (runs={}).".format(pool.t + 1))
-            break
 
-        if maf < af_low:
-            print("  AF<{} (runs={})".format(af_low, pool.t + 1))
+        # # Check if threshold is stuck.
+        # if abs(eps.eps - old_eps) < eps_stuck_perc * eps.eps:
+        #     N_eps_stuck += 1
+        # else:
+        #     N_eps_stuck = 0
+        # if N_eps_stuck > N_eps_stuck_max:
+        #     print("  Threshold is stuck (runs={}).".format(pool.t + 1))
+        #     break
+
+        # if maf < af_low and pool.t > int(af_min_steps * nsteps_abc):
+        #     print("  AF<{} (runs={})".format(af_low, pool.t + 1))
+        #     break
+
+        if t.time() - start_t > (max_t_walker * nwalkers_abc):
+            print("  Sampler is stuck (runs={})".format(pool.t + 1))
             break
 
         elapsed += t.time() - start_t
@@ -135,26 +150,26 @@ def main(
             break
         start_t = t.time()
 
-        # Only check convergence every 'N_steps_conv' steps
-        if (pool.t + 1) % N_steps_conv:
-            continue
+        # # Only check convergence every 'N_steps_conv' steps
+        # if (pool.t + 1) % N_steps_conv:
+        #     continue
 
-        # Compute the autocorrelation time so far. Using tol=0 means that
-        # we'll always get an estimate even if it isn't trustworthy.
-        try:
-            tau = autocorr.integrated_time(np.array(chains_nruns), tol=0)
-            autocorr_vals[tau_index] = np.nanmean(tau)
-            tau_index += 1
+        # # Compute the autocorrelation time so far. Using tol=0 means that
+        # # we'll always get an estimate even if it isn't trustworthy.
+        # try:
+        #     tau = autocorr.integrated_time(np.array(chains_nruns), tol=0)
+        #     autocorr_vals[tau_index] = np.nanmean(tau)
+        #     tau_index += 1
 
-            # Check convergence
-            converged = np.all(tau * N_conv < (pool.t + 1))
-            converged &= np.all(np.abs(old_tau - tau) / tau < tol_conv)
-            if converged:
-                print("  Convergence achieved (runs={}).".format(pool.t + 1))
-                break
-            old_tau = tau
-        except FloatingPointError:
-            pass
+        #     # Check convergence
+        #     converged = np.all(tau * N_conv < (pool.t + 1))
+        #     converged &= np.all(np.abs(old_tau - tau) / tau < tol_conv)
+        #     if converged:
+        #         print("  Convergence achieved (runs={}).".format(pool.t + 1))
+        #         break
+        #     old_tau = tau
+        # except FloatingPointError:
+        #     pass
 
         # Store MAP solution in this iteration.
         prob_mean.append([pool.t, np.mean(pool.dists)])
@@ -163,8 +178,8 @@ def main(
         if pool.dists[idx_best] < best_sol_old[1]:
             pars = pool.thetas[idx_best]
             # pars = scaleParams(model)
-            pars = [pars[0] / 100., pars[1], pars[2], pars[3], pars[4] * 1000.,
-                    pars[5]]
+            pars = [pars[0] / 100., pars[1], pars[2], pars[3] * 10.,
+                    pars[4] * 1000., pars[5]]
             best_sol_old = [
                 closeSol(fundam_params, varIdxs, pars),
                 pool.dists[idx_best]]
@@ -183,14 +198,17 @@ def main(
     runs = pool.t + 1
 
     # Evolution of the mean autocorrelation time.
-    tau_autocorr = autocorr_vals[:tau_index]
+    tau_autocorr = np.array([np.nan] * 10)  # autocorr_vals[:tau_index]
+    tau_index = np.nan
+    N_steps_conv = runs
 
     # Final MAP fit.
     idx_best = np.argmin(pool.dists)
     pars = pool.thetas[idx_best]
     # pars = scaleParams(model)
     pars = [
-        pars[0] / 100., pars[1], pars[2], pars[3], pars[4] * 1000., pars[5]]
+        pars[0] / 100., pars[1], pars[2], pars[3] * 10., pars[4] * 1000.,
+        pars[5]]
     map_sol = closeSol(fundam_params, varIdxs, pars)
     map_lkl_final = pool.dists[idx_best]
 
@@ -200,6 +218,7 @@ def main(
     chains_nruns = np.array(chains_nruns)
     # De-scale parameters.
     chains_nruns[:, :, 0] = chains_nruns[:, :, 0] / 100.
+    chains_nruns[:, :, 3] = chains_nruns[:, :, 3] * 10.
     chains_nruns[:, :, 4] = chains_nruns[:, :, 4] * 1000.
 
     # Burn-in range.
@@ -215,15 +234,15 @@ def main(
 
     mcmc_trace = chains_nruns.reshape(-1, ndim).T
 
-    import matplotlib.pyplot as plt
-    import corner
-    corner.corner(
-        mcmc_trace.T, quantiles=[0.16, 0.5, 0.84], show_titles=True)
-        # levels=(1 - np.exp(-0.5),))
-    plt.savefig("corner.png", dpi=300)
+    # import matplotlib.pyplot as plt
+    # import corner
+    # corner.corner(
+    #     mcmc_trace.T, quantiles=[0.16, 0.5, 0.84], show_titles=True)
+    #     # levels=(1 - np.exp(-0.5),))
+    # plt.savefig("corner.png", dpi=300)
 
     # Convergence parameters.
-    acorr_t, max_at_5c, min_at_5c, geweke_z, emcee_acorf, mcmc_ess, minESS,\
+    acorr_t, max_at_c, min_at_c, geweke_z, emcee_acorf, mcmc_ess, minESS,\
         mESS, mESS_epsilon = convergenceVals(
             'abc', ndim, varIdxs, N_conv, chains_nruns, mcmc_trace)
 
@@ -237,7 +256,7 @@ def main(
         'mcmc_elapsed': elapsed, 'mcmc_trace': mcmc_trace,
         'pars_chains_bi': pars_chains_bi, 'pars_chains': chains_nruns.T,
         'maf_steps': maf_steps, 'autocorr_time': acorr_t,
-        'max_at_5c': max_at_5c, 'min_at_5c': min_at_5c,
+        'max_at_c': max_at_c, 'min_at_c': min_at_c,
         'minESS': minESS, 'mESS': mESS, 'mESS_epsilon': mESS_epsilon,
         'emcee_acorf': emcee_acorf, 'geweke_z': geweke_z,
         'mcmc_ess': mcmc_ess,
