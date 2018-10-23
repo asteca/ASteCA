@@ -61,6 +61,7 @@ def main(
 
     # TODO add this parameter to the input params file
     max_secs = 22. * 60. * 60.
+    N_conv, tol_conv = 50., 0.01
 
     # Define sampler.
     sampler = ensemble.EnsembleSampler(
@@ -85,8 +86,6 @@ def main(
     # Check for convergence every 10% of steps or 100, whichever value
     # is lower.
     N_steps_conv = min(int(nsteps / 10.), 100)
-    # TODO emcee3 input as params
-    N_conv, tol_conv = 150., 0.01
 
     maf_steps, prob_mean, map_lkl = [], [], []
     milestones = list(range(10, 101, 10))
@@ -172,7 +171,7 @@ def main(
     emcee_trace = chains_nruns.reshape(-1, ndim).T
 
     # Convergence parameters.
-    acorr_t, max_at_5c, min_at_5c, geweke_z, emcee_acorf, mcmc_ess, minESS,\
+    acorr_t, max_at_c, min_at_c, geweke_z, emcee_acorf, mcmc_ess, minESS,\
         mESS, mESS_epsilon = convergenceVals(
             'emcee', ndim, varIdxs, N_conv, chains_nruns, emcee_trace)
 
@@ -186,7 +185,7 @@ def main(
         'mcmc_trace': emcee_trace,
         'pars_chains_bi': pars_chains_bi, 'pars_chains': chains_nruns.T,
         'maf_steps': maf_steps, 'autocorr_time': acorr_t,
-        'max_at_5c': max_at_5c, 'min_at_5c': min_at_5c,
+        'max_at_c': max_at_c, 'min_at_c': min_at_c,
         'minESS': minESS, 'mESS': mESS, 'mESS_epsilon': mESS_epsilon,
         'emcee_acorf': emcee_acorf, 'geweke_z': geweke_z,
         'mcmc_ess': mcmc_ess,

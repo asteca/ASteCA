@@ -480,14 +480,14 @@ def convergenceVals(algor, ndim, varIdxs, N_conv, chains_nruns, mcmc_trace):
             at.append(at_p)
         logger.disabled = False
 
-        # Select the indexes of the 5 chains with the largest acorr times, and
-        # the 5 chains with the smallest acorr times, for each parameter.
-        if len(at[0]) >= 5:
-            max_at_5c = [np.argpartition(a, -5)[-5:] for a in at]
-            min_at_5c = [np.argpartition(a, 5)[:5] for a in at]
+        # Select the indexes of the chain with the largest acorr times, and
+        # the chain with the smallest acorr time, for each parameter.
+        if len(at[0]) >= 2:
+            max_at_c = [np.argpartition(a, -2)[-2:] for a in at]
+            min_at_c = [np.argpartition(a, 2)[:2] for a in at]
         else:
-            max_at_5c = [np.array([0])] * ndim
-            min_at_5c = [np.array([0])] * ndim
+            max_at_c = [np.array([0])] * ndim
+            min_at_c = [np.array([0])] * ndim
 
         # Worst chain: chain with the largest acorr time.
         # max_at_c = [np.argmax(a) for a in at]
@@ -508,12 +508,13 @@ def convergenceVals(algor, ndim, varIdxs, N_conv, chains_nruns, mcmc_trace):
         geweke_z = np.nanmean(geweke_z, axis=1)
         emcee_acorf = np.nanmean(emcee_acorf, axis=1)
 
-        # # PyMC3 effective sample size.
-        # try:
-        #     # Change shape to (nchains, nstesp, ndim)
-        #     pymc3_ess = effective_n(chains_nruns.transpose(1, 0, 2))
-        # except FloatingPointError:
-        #     pymc3_ess = np.array([np.nan] * ndim)
+        # PyMC3 effective sample size.
+        try:
+            # Change shape to (nchains, nstesp, ndim)
+            pymc3_ess = effective_n(chains_nruns.transpose(1, 0, 2))
+        except FloatingPointError:
+            pymc3_ess = np.array([np.nan] * ndim)
+        print("PyMC3 ESS:", pymc3_ess)
 
         # N_steps / tau effective sample size
         mcmc_ess = mcmc_trace.shape[-1] / acorr_t
@@ -527,5 +528,5 @@ def convergenceVals(algor, ndim, varIdxs, N_conv, chains_nruns, mcmc_trace):
             mESS_epsilon[1].append(fminESS(ndim, alpha=alpha, ess=minESS))
             mESS_epsilon[2].append(fminESS(ndim, alpha=alpha, ess=mESS))
 
-    return acorr_t, max_at_5c, min_at_5c, geweke_z, emcee_acorf, mcmc_ess,\
+    return acorr_t, max_at_c, min_at_c, geweke_z, emcee_acorf, mcmc_ess,\
         minESS, mESS, mESS_epsilon

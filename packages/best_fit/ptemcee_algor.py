@@ -96,6 +96,12 @@ def main(
     for i, result in enumerate(ptsampler.sample(
             pos0, iterations=nsteps_ptm, adapt=pt_adapt)):
 
+        elapsed += t.time() - start_t
+        if elapsed >= available_secs:
+            print("  Time consumed (runs={})".format(i + 1))
+            break
+        start_t = t.time()
+
         # Only check convergence every 'N_steps_conv' steps
         if (i + 1) % N_steps_conv:
             continue
@@ -158,11 +164,6 @@ def main(
                       (ntemps * nwalkers_ptm * i) / elapsed, h, m))
             milestones = milestones[1:]
 
-        elapsed += t.time() - start_t
-        if elapsed >= available_secs:
-            print("  Time consumed (runs={})".format(i + 1))
-            break
-        start_t = t.time()
     runs = i + 1
 
     # Evolution of the mean autocorrelation time.
@@ -244,7 +245,7 @@ def main(
     # TODO delete
 
     # Convergence parameters.
-    acorr_t, max_at_5c, min_at_5c, geweke_z, emcee_acorf, mcmc_ess, minESS,\
+    acorr_t, max_at_c, min_at_c, geweke_z, emcee_acorf, mcmc_ess, minESS,\
         mESS, mESS_epsilon = convergenceVals(
             'ptemcee', ndim, varIdxs, N_conv, chains_nruns, mcmc_trace)
 
@@ -258,7 +259,7 @@ def main(
         'mcmc_elapsed': elapsed, 'mcmc_trace': mcmc_trace,
         'pars_chains_bi': pars_chains_bi, 'pars_chains': chains_nruns.T,
         'maf_steps': maf_steps, 'autocorr_time': acorr_t,
-        'max_at_5c': max_at_5c, 'min_at_5c': min_at_5c,
+        'max_at_c': max_at_c, 'min_at_c': min_at_c,
         'minESS': minESS, 'mESS': mESS, 'mESS_epsilon': mESS_epsilon,
         'emcee_acorf': emcee_acorf, 'geweke_z': geweke_z,
         'mcmc_ess': mcmc_ess,

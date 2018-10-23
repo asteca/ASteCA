@@ -222,7 +222,7 @@ def pl_MAF(dummy, gs, best_fit_algor, maf_steps):
 def pl_param_chain(
     par_name, gs, best_fit_algor, cp_r, min_max_p, nwalkers, nburn, nsteps,
         mcmc_param, model_done, mcmc_elapsed, varIdxs, pre_bi, post_bi,
-        autocorr_time, max_at_5c, min_at_5c, mcmc_ess):
+        autocorr_time, max_at_c, min_at_c, mcmc_ess):
     '''
     Parameter sampler chain.
     '''
@@ -263,27 +263,27 @@ def pl_param_chain(
     if cp in varIdxs:
         c_model = varIdxs.index(cp)
 
-        # Worst chains
-        color = iter(cm.rainbow(np.linspace(0, 1, len(max_at_5c[0]))))
-        pre_bi_max_at = pre_bi[c_model][max_at_5c[c_model]]
-        post_bi_max_at = post_bi[c_model][max_at_5c[c_model]]
+        # Worst chain
+        # color = iter(cm.rainbow(np.linspace(0, 1, len(max_at_c[0]))))
+        pre_bi_max_at = pre_bi[c_model][max_at_c[c_model]]
+        post_bi_max_at = post_bi[c_model][max_at_c[c_model]]
         for w1, w2 in zip(*[pre_bi_max_at, post_bi_max_at]):
             # Burn-in stage
             plt.plot(range(N_bi), w1, c='grey', lw=.5, alpha=0.5)
             # Post burn-in.
-            c = next(color)
-            plt.plot(np.arange(N_bi, N_tot), w2, c=c, lw=.8,
+            # c = next(color)
+            plt.plot(np.arange(N_bi, N_tot), w2, c='r', lw=.8,
                      ls='--', alpha=0.5)
-        # Best chains
-        color = iter(cm.rainbow(np.linspace(0, 1, len(min_at_5c[0]))))
-        pre_bi_min_at = pre_bi[c_model][min_at_5c[c_model]]
-        post_bi_min_at = post_bi[c_model][min_at_5c[c_model]]
+        # Best chain
+        # color = iter(cm.rainbow(np.linspace(0, 1, len(min_at_c[0]))))
+        pre_bi_min_at = pre_bi[c_model][min_at_c[c_model]]
+        post_bi_min_at = post_bi[c_model][min_at_c[c_model]]
         for w1, w2 in zip(*[pre_bi_min_at, post_bi_min_at]):
             # Burn-in stage
             plt.plot(range(N_bi), w1, c='grey', lw=.5, alpha=0.5)
             # Post burn-in.
-            c = next(color)
-            plt.plot(np.arange(N_bi, N_tot), w2, c=c, lw=.8, alpha=0.5)
+            # c = next(color)
+            plt.plot(np.arange(N_bi, N_tot), w2, c='g', lw=.8, alpha=0.5)
 
         # Mean
         plt.axhline(

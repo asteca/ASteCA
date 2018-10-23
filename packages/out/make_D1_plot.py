@@ -137,8 +137,8 @@ def main(npd, pd, isoch_fit_params, fit_params_r, fit_errors_r, **kwargs):
                     isoch_fit_params['pars_chains_bi'],
                     isoch_fit_params['pars_chains'],
                     isoch_fit_params['autocorr_time'],
-                    isoch_fit_params['max_at_5c'],
-                    isoch_fit_params['min_at_5c'],
+                    isoch_fit_params['max_at_c'],
+                    isoch_fit_params['min_at_c'],
                     isoch_fit_params['mcmc_ess']]
                 mp_best_fit1_mcmc.plot(5, *args)
 
