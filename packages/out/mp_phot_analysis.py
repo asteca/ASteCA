@@ -34,10 +34,17 @@ def pl_phot_err(gs, colors, filters, id_kinem, mags, em_float, cl_region_c,
     '''
 
     # Main magnitude (x) data for accepted/rejected stars.
-    mmag_out_acpt = np.array(list(zip(*list(zip(*stars_out_c))[3]))[0])
-    mmag_out_rjct = np.array(list(zip(*list(zip(*stars_out_rjct_c))[3]))[0])
-    mmag_in_acpt = np.array(list(zip(*list(zip(*cl_region_c))[3]))[0])
-    mmag_in_rjct = np.array(list(zip(*list(zip(*cl_region_rjct_c))[3]))[0])
+    mmag_out_acpt, mmag_out_rjct, mmag_in_acpt, mmag_in_rjct =\
+        np.array([]), np.array([]), np.array([]), np.array([])
+    if stars_out_c:
+        mmag_out_acpt = np.array(list(zip(*list(zip(*stars_out_c))[3]))[0])
+    if stars_out_rjct_c:
+        mmag_out_rjct = np.array(list(zip(*list(zip(
+            *stars_out_rjct_c))[3]))[0])
+    if cl_region_c:
+        mmag_in_acpt = np.array(list(zip(*list(zip(*cl_region_c))[3]))[0])
+    if cl_region_rjct_c:
+        mmag_in_rjct = np.array(list(zip(*list(zip(*cl_region_rjct_c))[3]))[0])
 
     pd_Plx, pd_PMRA, pd_RV = id_kinem[0], id_kinem[2], id_kinem[6]
     # Define first row depending on whether kinematic data was defined.
@@ -76,27 +83,35 @@ def pl_phot_err(gs, colors, filters, id_kinem, mags, em_float, cl_region_c,
         ax.minorticks_on()
 
         # Rejected stars outside the cluster region
-        starsPlot('rjct', mmag_out_rjct,
-                  list(zip(*list(zip(*stars_out_rjct_c))[j]))[k])
-        # Rejected stars inside the cluster region
-        starsPlot('rjct', mmag_in_rjct,
-                  list(zip(*list(zip(*cl_region_rjct_c))[j]))[k])
-        # Accepted stars inside the cluster region.
-        starsPlot('accpt_in', mmag_in_acpt,
-                  list(zip(*list(zip(*cl_region_c))[j]))[k])
-        # Accepted stars outside the cluster region.
-        starsPlot('accpt_out', mmag_out_acpt,
-                  list(zip(*list(zip(*stars_out_c))[j]))[k])
+        if any(mmag_out_rjct) and any(stars_out_rjct_c):
+            starsPlot('rjct', mmag_out_rjct,
+                      list(zip(*list(zip(*stars_out_rjct_c))[j]))[k])
+        if any(mmag_in_rjct) and any(cl_region_rjct_c):
+            # Rejected stars inside the cluster region
+            starsPlot('rjct', mmag_in_rjct,
+                      list(zip(*list(zip(*cl_region_rjct_c))[j]))[k])
+        if any(mmag_in_acpt) and any(cl_region_c):
+            # Accepted stars inside the cluster region.
+            starsPlot('accpt_in', mmag_in_acpt,
+                      list(zip(*list(zip(*cl_region_c))[j]))[k])
+        if any(mmag_out_acpt) and any(stars_out_c):
+            # Accepted stars outside the cluster region.
+            starsPlot('accpt_out', mmag_out_acpt,
+                      list(zip(*list(zip(*stars_out_c))[j]))[k])
         # For the PM data, add y coordinates to the same plot.
         if j == 8 and k == 1:
-            starsPlot('rjct', mmag_out_rjct,
-                      list(zip(*list(zip(*stars_out_rjct_c))[j]))[k + 1])
-            starsPlot('rjct', mmag_in_rjct,
-                      list(zip(*list(zip(*cl_region_rjct_c))[j]))[k + 1])
-            starsPlot('accpt_in', mmag_in_acpt,
-                      list(zip(*list(zip(*cl_region_c))[j]))[k + 1])
-            starsPlot('accpt_out', mmag_out_acpt,
-                      list(zip(*list(zip(*stars_out_c))[j]))[k + 1])
+            if any(mmag_out_rjct) and any(stars_out_rjct_c):
+                starsPlot('rjct', mmag_out_rjct,
+                          list(zip(*list(zip(*stars_out_rjct_c))[j]))[k + 1])
+            if any(mmag_in_rjct) and any(cl_region_rjct_c):
+                starsPlot('rjct', mmag_in_rjct,
+                          list(zip(*list(zip(*cl_region_rjct_c))[j]))[k + 1])
+            if any(mmag_in_acpt) and any(cl_region_c):
+                starsPlot('accpt_in', mmag_in_acpt,
+                          list(zip(*list(zip(*cl_region_c))[j]))[k + 1])
+            if any(mmag_out_acpt) and any(stars_out_c):
+                starsPlot('accpt_out', mmag_out_acpt,
+                          list(zip(*list(zip(*stars_out_c))[j]))[k + 1])
 
         # Plot legend in the main magnitude plot.
         if j == 4:
