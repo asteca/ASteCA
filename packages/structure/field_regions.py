@@ -189,13 +189,13 @@ def main(i_c, clp, run_mode, fr_number, cl_f_regs_semi, freg_flag_semi,
                 f_regions))
         elif fr_number > f_regs_max:
             f_regions = f_regs_max
-            print("    WARNING: Number of FR defined ({}) is larger than\n" +\
-                  "    the maximum allowed ({}). Using max number.".format(
+            print(("    WARNING: Number of FR defined ({}) is larger than\n"
+                   "    the maximum allowed ({}). Using max number.").format(
                       fr_number, f_regs_max))
         elif fr_number <= 0:
             f_regions = f_regs_max
-            print("    WARNING: Number of FR ({}) is less than or equal\n" +\
-                  "    to zero. No field region will be defined.".format(
+            print(("    WARNING: Number of FR ({}) is less than or equal\n"
+                   "    to zero. No field region will be defined.").format(
                 fr_number))
             flag_no_fl_regs = True
         else:
