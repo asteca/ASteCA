@@ -392,11 +392,14 @@ def pms_vpd(
             xerr=e_pmRA_fl, fmt='none', elinewidth=.35, ecolor='grey',
             zorder=1)
 
-        max_i, max_j = np.unravel_index(z_flpm.argmax(), z_flpm.shape)
-        CS = plt.contour(
-            x_flpm, y_flpm, z_flpm, 10, colors='k', linewidths=.3, zorder=5)
-        CS.collections[0].set_label("Field: ({:.2f}, {:.2f}) [mas/yr]".format(
-            x_flpm[max_i][max_j], y_flpm[max_i][max_j]))
+        if any(z_flpm):
+            max_i, max_j = np.unravel_index(z_flpm.argmax(), z_flpm.shape)
+            CS = plt.contour(
+                x_flpm, y_flpm, z_flpm, 10, colors='k', linewidths=.3,
+                zorder=5)
+            CS.collections[0].set_label(
+                "Field: ({:.2f}, {:.2f}) [mas/yr]".format(
+                    x_flpm[max_i][max_j], y_flpm[max_i][max_j]))
 
         RA_med, RA_std = np.median(pmRA_DE), np.std(pmRA_DE)
         DE_med, DE_std = np.median(pmDE), np.std(pmDE)
