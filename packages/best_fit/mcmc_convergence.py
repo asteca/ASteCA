@@ -480,17 +480,10 @@ def convergenceVals(algor, ndim, varIdxs, N_conv, chains_nruns, mcmc_trace):
             at.append(at_p)
         logger.disabled = False
 
-        # Select the indexes of the chain with the largest acorr times, and
-        # the chain with the smallest acorr time, for each parameter.
-        if len(at[0]) >= 2:
-            max_at_c = [np.argpartition(a, -2)[-2:] for a in at]
-            min_at_c = [np.argpartition(a, 2)[:2] for a in at]
-        else:
-            max_at_c = [np.array([0])] * ndim
-            min_at_c = [np.array([0])] * ndim
-
         # Worst chain: chain with the largest acorr time.
-        # max_at_c = [np.argmax(a) for a in at]
+        max_at_c = [np.argmax(a) for a in at]
+        # Best chain: chain with the smallest acorr time.
+        min_at_c = [np.argmin(a) for a in at]
 
         # Mean Geweke z-scores and autocorrelation functions for all chains.
         geweke_z, emcee_acorf = [[] for _ in range(ndim)],\
