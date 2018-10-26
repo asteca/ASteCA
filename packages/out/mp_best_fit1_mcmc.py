@@ -3,7 +3,7 @@ import numpy as np
 from scipy import stats
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
-from matplotlib.pyplot import cm
+# from matplotlib.pyplot import cm
 from .prep_plots import CIEllipse
 
 
@@ -53,6 +53,9 @@ def pl_2_param_dens(_2_params, gs, min_max_p2, varIdxs, mcmc_trace):
 
     if mx in varIdxs and my in varIdxs:
         mx_model, my_model = varIdxs.index(mx), varIdxs.index(my)
+
+        ax.set_title(r"$\rho={:.2f}$".format(
+            np.corrcoef([mcmc_trace[mx_model], mcmc_trace[my_model]])[0][1]))
 
         # Bin edges to use.
         edg_x = np.histogram_bin_edges(mcmc_trace[mx_model], bins='auto')
