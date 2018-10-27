@@ -170,17 +170,14 @@ def pl_param_pf(
         plt.axvline(
             x=pm, linestyle=':', color='green', zorder=4,
             label=("Median (" + p + ")").format(pm))
-        #  16th and 84th percentiles (1 sigma) around median.
-        ph = np.percentile(model_done[c_model], 84) - pm
-        pl = pm - np.percentile(model_done[c_model], 16)
-        if ph > 0. and pm > 0.:
-            # Plot error bars only if errors where assigned.
-            plt.axvline(
-                x=pm + ph, linestyle=':', color='orange', zorder=4,
-                label=("16-84th perc\n(" + p + ", " + p + ")").format(
-                    pm - pl, pm + ph))
-            plt.axvline(
-                x=pm - pl, linestyle=':', color='orange', zorder=4)
+
+        # 16th and 84th percentiles (1 sigma) around median.
+        ph = np.percentile(model_done[c_model], 84)
+        pl = np.percentile(model_done[c_model], 16)
+        plt.axvline(
+            x=ph, linestyle=':', color='orange', zorder=4,
+            label=("16-84th perc\n(" + p + ", " + p + ")").format(pl, ph))
+        plt.axvline(x=pl, linestyle=':', color='orange', zorder=4)
 
         cur_ylim = ax.get_ylim()
         ax.set_ylim([0, cur_ylim[1]])
