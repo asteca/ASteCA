@@ -1,31 +1,28 @@
 
-from astropy.table import Table, vstack
+from astropy.table import Table
 from astropy.io import ascii
 
 
 def main(clp, pd, mcmc_file_out, **kwargs):
     '''
-    Create output data file with the 5 best chains of the MCMC sampler, for
-    each parameter.
+    Create output data file with the "best" chain of the MCMC sampler (smallest
+    acorr time), for each parameter.
     Store only the latest 1000 steps or less.
     '''
-    if pd['best_fit_algor'] == 'emcee':
+    if pd['best_fit_algor'] in ('emcee', 'ptemcee'):
         varIdxs = clp['isoch_fit_params']['varIdxs']
         chains_nruns = clp['isoch_fit_params']['pars_chains']
-        min_at_5c = clp['isoch_fit_params']['min_at_5c']
+        min_at_c = clp['isoch_fit_params']['min_at_c']
 
-        tt = Table()
+        tt, fmt = Table(), {}
         params = ['metal', 'log(age)', 'E_BV', 'dm', 'mass', 'bf']
         # TODO better column names
         for i, par in enumerate(params):
             if i in varIdxs:
                 c_model = varIdxs.index(i)
-                bc = chains_nruns[c_model][min_at_5c[c_model]][:, -1000:]
-                tt = vstack([tt, Table(bc.T)])
+                bc = chains_nruns[c_model][min_at_c[c_model]][-1000:]
+                tt[par], fmt[par] = bc, '%.5f'
 
-        ascii.write(
-            tt, mcmc_file_out, overwrite=True,
-            formats={'col0': '%.5f', 'col1': '%.5f', 'col2': '%.5f',
-                     'col3': '%.5f', 'col4': '%.5f'})
+        ascii.write(tt, mcmc_file_out, overwrite=True, formats=fmt)
 
         print('MCMC samples saved to file.')
