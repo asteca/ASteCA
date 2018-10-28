@@ -501,7 +501,7 @@ def convergenceVals(algor, ndim, varIdxs, N_conv, chains_nruns, mcmc_trace):
         geweke_z = np.nanmean(geweke_z, axis=1)
         emcee_acorf = np.nanmean(emcee_acorf, axis=1)
 
-        # TODO remove?
+        # # TODO remove?
         # # PyMC3 effective sample size.
         # try:
         #     # Change shape to (nchains, nstesp, ndim)
@@ -510,8 +510,8 @@ def convergenceVals(algor, ndim, varIdxs, N_conv, chains_nruns, mcmc_trace):
         #     pymc3_ess = np.array([np.nan] * ndim)
         # print("PyMC3 ESS:", pymc3_ess)
 
-        # N_steps / tau effective sample size
-        mcmc_ess = chains_nruns.shape[0] / acorr_t
+        # effective sample size = (nsteps * nchains) / tau
+        mcmc_ess = mcmc_trace.shape[-1] / acorr_t
 
         # TODO fix this function
         # Minimum effective sample size (ESS), and multi-variable ESS.
