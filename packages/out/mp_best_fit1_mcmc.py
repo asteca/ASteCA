@@ -7,32 +7,91 @@ from matplotlib.patches import Ellipse
 from .prep_plots import CIEllipse
 
 
+def contourPlot(ax, H, X, Y, _2_params):
+    """
+    Plot 2D contours for 1 and 2 sigma levels.
+
+    Source: https://github.com/dfm/corner.py by Daniel Foreman-Mackey
+    """
+    levels = 1.0 - np.exp(-0.5 * np.arange(1., 2.1, 1.) ** 2)
+
+    # Compute the density levels.
+    Hflat = H.flatten()
+    inds = np.argsort(Hflat)[::-1]
+    Hflat = Hflat[inds]
+    sm = np.cumsum(Hflat)
+    sm /= sm[-1]
+    V = np.empty(len(levels))
+    for i, v0 in enumerate(levels):
+        try:
+            V[i] = Hflat[sm <= v0][-1]
+        except Exception:
+            V[i] = Hflat[0]
+    V.sort()
+    m = np.diff(V) == 0
+    if np.any(m):
+        raise ValueError(
+            "  WARNING: could not produce sigma contours for {}".format(
+                _2_params))
+    while np.any(m):
+        V[np.where(m)[0][0]] *= 1.0 - 1e-4
+        m = np.diff(V) == 0
+    V.sort()
+
+    # Compute the bin centers.
+    X1, Y1 = 0.5 * (X[1:] + X[:-1]), 0.5 * (Y[1:] + Y[:-1])
+    # Extend the array for the sake of the contours at the plot edges.
+    H2 = H.min() + np.zeros((H.shape[0] + 4, H.shape[1] + 4))
+    H2[2:-2, 2:-2] = H
+    H2[2:-2, 1] = H[:, 0]
+    H2[2:-2, -2] = H[:, -1]
+    H2[1, 2:-2] = H[0]
+    H2[-2, 2:-2] = H[-1]
+    H2[1, 1] = H[0, 0]
+    H2[1, -2] = H[0, -1]
+    H2[-2, 1] = H[-1, 0]
+    H2[-2, -2] = H[-1, -1]
+    X2 = np.concatenate([
+        X1[0] + np.array([-2, -1]) * np.diff(X1[:2]),
+        X1,
+        X1[-1] + np.array([1, 2]) * np.diff(X1[-2:]),
+    ])
+    Y2 = np.concatenate([
+        Y1[0] + np.array([-2, -1]) * np.diff(Y1[:2]),
+        Y1,
+        Y1[-1] + np.array([1, 2]) * np.diff(Y1[-2:]),
+    ])
+    CS = ax.contour(
+        X2, Y2, H2.T, V, linewidths=1.2, zorder=3, colors=['g', 'orange'])
+    # return list(reversed(CS.collections))
+
+
 def pl_2_param_dens(_2_params, gs, min_max_p2, varIdxs, mcmc_trace):
     '''
     Parameter vs parameters density map.
     '''
     plot_dict = {
-        'metal-age': [0, 2, 2, 4, 'r', 'GnBu', 0, 1],
-        'metal-ext': [0, 2, 4, 6, 'b', 'YlOrBr', 0, 2],
-        'metal-dist': [0, 2, 6, 8, 'r', 'GnBu', 0, 3],
-        'metal-mass': [0, 2, 8, 10, 'b', 'YlOrBr', 0, 4],
-        'metal-binar': [0, 2, 10, 12, 'r', 'GnBu', 0, 5],
-        'age-ext': [2, 4, 4, 6, 'b', 'YlOrBr', 1, 2],
-        'age-dist': [2, 4, 6, 8, 'r', 'GnBu', 1, 3],
-        'age-mass': [2, 4, 8, 10, 'b', 'YlOrBr', 1, 4],
-        'age-binar': [2, 4, 10, 12, 'r', 'GnBu', 1, 5],
-        'ext-dist': [4, 6, 6, 8, 'r', 'GnBu', 2, 3],
-        'ext-mass': [4, 6, 8, 10, 'b', 'YlOrBr', 2, 4],
-        'ext-binar': [4, 6, 10, 12, 'r', 'GnBu', 2, 5],
-        'dist-mass': [6, 8, 8, 10, 'b', 'YlOrBr', 3, 4],
-        'dist-binar': [6, 8, 10, 12, 'r', 'GnBu', 3, 5],
-        'mass-binar': [8, 10, 10, 12, 'r', 'GnBu', 4, 5]
+        'metal-age': [0, 2, 2, 4, 0, 1],
+        'metal-ext': [0, 2, 4, 6, 0, 2],
+        'metal-dist': [0, 2, 6, 8, 0, 3],
+        'metal-mass': [0, 2, 8, 10, 0, 4],
+        'metal-binar': [0, 2, 10, 12, 0, 5],
+        'age-ext': [2, 4, 4, 6, 1, 2],
+        'age-dist': [2, 4, 6, 8, 1, 3],
+        'age-mass': [2, 4, 8, 10, 1, 4],
+        'age-binar': [2, 4, 10, 12, 1, 5],
+        'ext-dist': [4, 6, 6, 8, 2, 3],
+        'ext-mass': [4, 6, 8, 10, 2, 4],
+        'ext-binar': [4, 6, 10, 12, 2, 5],
+        'dist-mass': [6, 8, 8, 10, 3, 4],
+        'dist-binar': [6, 8, 10, 12, 3, 5],
+        'mass-binar': [8, 10, 10, 12, 4, 5]
     }
 
     labels = ['$z$', '$log(age)$', '$E_{(B-V)}$', '$(m-M)_o$',
               '$M\,(M_{{\odot}})$', '$b_{frac}$']
 
-    gs_x1, gs_x2, gs_y1, gs_y2, cp, d_map, mx, my = plot_dict[_2_params]
+    gs_x1, gs_x2, gs_y1, gs_y2, mx, my = plot_dict[_2_params]
     x_label, y_label = labels[mx], labels[my]
 
     ax = plt.subplot(gs[gs_y1:gs_y2, gs_x1:gs_x2])
@@ -60,32 +119,46 @@ def pl_2_param_dens(_2_params, gs, min_max_p2, varIdxs, mcmc_trace):
         # Bin edges to use.
         edg_x = np.histogram_bin_edges(mcmc_trace[mx_model], bins='auto')
         edg_y = np.histogram_bin_edges(mcmc_trace[my_model], bins='auto')
-        if len(edg_x) < 10 or len(edg_x) > 25 or len(edg_y) < 10 or\
-                len(edg_y) > 25:
+        if len(edg_x) < 10 or len(edg_x) > 20 or len(edg_y) < 10 or\
+                len(edg_y) > 20:
             edg_x, edg_y = 20, 20
         h2d, xbins, ybins = plt.hist2d(
             mcmc_trace[mx_model], mcmc_trace[my_model], bins=[edg_x, edg_y],
-            cmap=plt.get_cmap(d_map),
-            range=None, zorder=2)[:-1]
-        plt.contour(
-            h2d.transpose(), 4,
-            extent=[xbins.min(), xbins.max(), ybins.min(), ybins.max()],
-            colors='#551a8b', linewidths=1.2, zorder=3)
+            cmap=plt.get_cmap('Greys'), range=None, zorder=2)[:-1]
 
         mean_pos, width, height, theta = CIEllipse(np.array([
             mcmc_trace[mx_model], mcmc_trace[my_model]]).T)
         # Plot 95% confidence ellipse.
         plt.scatter(
-            mean_pos[0], mean_pos[1], marker='x', c=cp, s=30, linewidth=2,
+            mean_pos[0], mean_pos[1], marker='x', c='b', s=30, linewidth=2,
             zorder=4)
         ellipse = Ellipse(xy=mean_pos, width=width, height=height, angle=theta,
-                          edgecolor=cp, fc='None', lw=.7, zorder=4)
+                          edgecolor='r', fc='None', lw=.7, zorder=4)
         ax.add_patch(ellipse)
+
+        try:
+            contourPlot(ax, h2d, xbins, ybins, _2_params)
+            # if not sigmalbls[0].get_paths():
+            #     # print("  WARNING: could not produce 1 sigma contour "
+            #     #       "for {}".format(_2_params))
+            #     plt.legend(
+            #         [sigmalbls[1], plt.plot([], ls="-", color='r')[0]],
+            #         [r'$2\sigma$', r'$95\%\,CI$'], fontsize='small')
+            # else:
+            #     plt.legend(
+            #         sigmalbls + [plt.plot([], ls="-", color='r')[0]],
+            #         [r'$1\sigma$', r'$2\sigma$', r'$95\%\,CI$'],
+            #         fontsize='small')
+        except ValueError as err:
+            print(err)
+        plt.legend([plt.plot([], ls="-", color='r')[0]], [r'$95\%\,CI$'],
+                   fontsize='small')
 
     xp_min, xp_max, yp_min, yp_max = min_max_p2
     ax.set_xlim([xp_min, xp_max])
     ax.set_ylim([yp_min, yp_max])
     ax.set_aspect('auto')
+    ax.set_facecolor('#eeeefa')
 
 
 def pl_param_pf(
@@ -246,9 +319,9 @@ def pl_param_chain(
             mcmc_p_str = ""
         elif best_fit_algor == 'ptemcee':
             mcmc_p_str = ", adapt={}".format(mcmc_param)
-        plt.title(
+        plt.suptitle(
             "steps={:.0f}, chains={:.0f}{} | {:.0f}h{:.0f}m".format(
-                nsteps, nwalkers, mcmc_p_str, h, m), fontsize=10)
+                nsteps, nwalkers, mcmc_p_str, h, m), y=1.005, fontsize=14)
     if cp == 5:
         plt.xlabel("Steps")
     else:
@@ -282,9 +355,7 @@ def pl_param_chain(
 
         # Mean
         plt.axhline(
-            y=float(cp_r[cp]), linestyle='--', color='blue', zorder=4,
-            label=r"$\tau={:.0f}\;(\hat{{n}}_{{eff}}={:.0f})$".format(
-                autocorr_time[c_model], mcmc_ess[c_model]))
+            y=float(cp_r[cp]), linestyle='--', color='blue', zorder=4)
         #  16th and 84th percentiles (1 sigma) around median.
         ph = np.percentile(model_done[c_model], 84)
         pl = np.percentile(model_done[c_model], 16)
@@ -295,8 +366,10 @@ def pl_param_chain(
         #     label=r"$\tau={:.0f}\;(\hat{{n}}_{{eff}}={:.0f})$".format(
         #         autocorr_time[c_model], mcmc_ess[c_model]))
 
+        ax.set_title(r"$\tau={:.0f}\;(\hat{{n}}_{{eff}}={:.0f})$".format(
+            autocorr_time[c_model], mcmc_ess[c_model]))
         ax.set_ylim(min_max_p[cp][0], min_max_p[cp][1])
-        ax.legend(fontsize='small', loc=0, handlelength=0.)
+        # ax.legend(fontsize='small', loc=0, handlelength=0.)
 
 
 def pl_mESS(dummy, gs, mESS, minESS, minESS_epsilon):
