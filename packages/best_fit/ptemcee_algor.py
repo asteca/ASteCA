@@ -31,7 +31,7 @@ def main(
         Tmax = int(float(tmax_ptm))
 
     # TODO add these parameters to the input params file
-    h_max = 2.5
+    h_max = 3.
     max_secs = h_max * 60. * 60.
 
     ptsampler = sampler.Sampler(
@@ -84,7 +84,7 @@ def main(
     # is lower.
     N_steps_conv = min(int(nsteps_ptm * .1), 100)
     # TODO input as params
-    N_conv, tol_conv = 100., 0.01
+    N_conv, tol_conv = 500., 0.01
 
     afs, tswaps, betas = [], [], []
     # actimes = []
