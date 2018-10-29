@@ -108,7 +108,7 @@ def main(
     # is lower.
     # N_steps_conv = min(int(nsteps_abc * 0.02), 100)
 
-    best_sol_old, N_models, prob_mean = [[], np.inf], 0, []
+    map_sol_old, N_models, prob_mean = [[], np.inf], 0, []
     # N_eps_stuck = 0
     chains_nruns, maf_steps, map_lkl = [], [], []
     milestones = list(range(5, 101, 5))
@@ -175,20 +175,20 @@ def main(
         prob_mean.append([pool.t, np.mean(pool.dists)])
         idx_best = np.argmin(pool.dists)
         # Update if a new optimal solution was found.
-        if pool.dists[idx_best] < best_sol_old[1]:
+        if pool.dists[idx_best] < map_sol_old[1]:
             pars = pool.thetas[idx_best]
             # pars = scaleParams(model)
             pars = [pars[0] / 100., pars[1], pars[2], pars[3] * 10.,
                     pars[4] * 1000., pars[5]]
-            best_sol_old = [
+            map_sol_old = [
                 closeSol(fundam_params, varIdxs, pars),
                 pool.dists[idx_best]]
-        map_lkl.append([pool.t, best_sol_old[1]])
+        map_lkl.append([pool.t, map_sol_old[1]])
 
         # Print progress.
         percentage_complete = (100. * (pool.t + 1) / nsteps_abc)
         if len(milestones) > 0 and percentage_complete >= milestones[0]:
-            map_sol, logprob = best_sol_old
+            map_sol, logprob = map_sol_old
             print("{:>3}% ({:.3f}) LP={:.1f} ({:g}, {:g}, {:.3f}, {:.2f}"
                   ", {:g}, {:.2f})".format(
                       milestones[0], maf, logprob, *map_sol) +
@@ -246,11 +246,11 @@ def main(
         mESS, mESS_epsilon = convergenceVals(
             'abc', ndim, varIdxs, N_conv, chains_nruns, mcmc_trace)
 
-    # Pass the mean as the best model fit found.
-    best_sol = closeSol(fundam_params, varIdxs, np.mean(mcmc_trace, axis=1))
+    # Store mean solution.
+    mean_sol = closeSol(fundam_params, varIdxs, np.mean(mcmc_trace, axis=1))
 
     isoch_fit_params = {
-        'varIdxs': varIdxs, 'nsteps_abc': runs, 'best_sol': best_sol,
+        'varIdxs': varIdxs, 'nsteps_abc': runs, 'mean_sol': mean_sol,
         'nburn_abc': Nb, 'map_sol': map_sol, 'map_lkl': map_lkl,
         'map_lkl_final': map_lkl_final, 'prob_mean': prob_mean,
         'mcmc_elapsed': elapsed, 'mcmc_trace': mcmc_trace,

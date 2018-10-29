@@ -65,7 +65,7 @@ def main(
 
     # Store MAP solution.
     idx_best = np.argmax(lnprob[0])
-    best_sol_old = [
+    map_sol_old = [
         closeSol(fundam_params, varIdxs, pos0[0][idx_best]),
         lnprob[0][idx_best]]
 
@@ -145,16 +145,16 @@ def main(
         prob_mean.append([i, np.mean(lnprob[0])])
         idx_best = np.argmax(lnprob[0])
         # Update if a new optimal solution was found.
-        if lnprob[0][idx_best] > best_sol_old[1]:
-            best_sol_old = [
+        if lnprob[0][idx_best] > map_sol_old[1]:
+            map_sol_old = [
                 closeSol(fundam_params, varIdxs, pos[0][idx_best]),
                 lnprob[0][idx_best]]
-        map_lkl.append([i, best_sol_old[1]])
+        map_lkl.append([i, map_sol_old[1]])
 
         # Print progress.
         percentage_complete = (100. * (i + 1) / nsteps_ptm)
         if len(milestones) > 0 and percentage_complete >= milestones[0]:
-            map_sol, logprob = best_sol_old
+            map_sol, logprob = map_sol_old
             m, s = divmod(nsteps_ptm / (i / elapsed) - elapsed, 60)
             h, m = divmod(m, 60)
             print("{:>3}% ({:.3f}) LP={:.1f} ({:g}, {:g}, {:.3f}, {:.2f}"
@@ -170,7 +170,7 @@ def main(
     tau_autocorr = autocorr_vals[:tau_index]
 
     # Final MAP fit.
-    map_sol, map_lkl_final = best_sol_old
+    map_sol, map_lkl_final = map_sol_old
 
     # This number should be between approximately 0.25 and 0.5 if everything
     # went as planned.
@@ -250,10 +250,10 @@ def main(
             'ptemcee', ndim, varIdxs, N_conv, chains_nruns, mcmc_trace)
 
     # Pass the mean as the best model fit found.
-    best_sol = closeSol(fundam_params, varIdxs, np.mean(mcmc_trace, axis=1))
+    mean_sol = closeSol(fundam_params, varIdxs, np.mean(mcmc_trace, axis=1))
 
     isoch_fit_params = {
-        'varIdxs': varIdxs, 'nsteps_ptm': runs, 'best_sol': best_sol,
+        'varIdxs': varIdxs, 'nsteps_ptm': runs, 'mean_sol': mean_sol,
         'map_sol': map_sol, 'map_lkl': map_lkl, 'map_lkl_final': map_lkl_final,
         'prob_mean': prob_mean,
         'mcmc_elapsed': elapsed, 'mcmc_trace': mcmc_trace,

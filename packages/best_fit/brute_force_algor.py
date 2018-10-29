@@ -86,7 +86,11 @@ def main(lkl_method, e_max, err_lst, completeness, max_mag_syn, fundam_params,
     # This index points to the model that best fits the observed cluster.
     best_fit_indx = np.argmin(model_done[1])
 
+    # Store solution as 'mean_sol' and repeated as 'map_sol' for consistency.
+    # It is actually the ML solution.
     isoch_fit_params = {
-        'best_sol': model_done[0][best_fit_indx], 'model_done': model_done}
+        'mean_sol': model_done[0][best_fit_indx],
+        'map_sol': model_done[0][best_fit_indx],
+        'model_done': model_done}
 
     return isoch_fit_params

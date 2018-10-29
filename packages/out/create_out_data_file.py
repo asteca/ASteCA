@@ -67,6 +67,7 @@ def main(npd):
 #          very similar this value will be low indicating the overdensity is\n\
 #          probably not a true cluster.\n\
 #\n\
+# Parameters values are in the sense: mean  MAP/ML.\n\
 # met: Metallicity value (z).\n\
 # e_m: Metallicity error.\n\
 # age: log(age).\n\
@@ -103,10 +104,10 @@ def main(npd):
 #    cluster, more than one cluster present in the frame, variable or too\n\
 #    crowded field, etc.\n\
 #\n\
-#NAME                 c_x      c_y     r_cl    e_rcl      \
-r_c     e_rc      r_t     e_rt      kcp      CI   n_memb_k     n_memb  \
-n_memb_da  memb_par     a_f  prob_cl      met      e_m      age      \
-e_a   E(B-V)      e_E     dist      e_d      M_i      e_M   bin_fr     \
-e_bf      \
-M1 M2  f1 f2 f3 f4 f5 f6 f7 f8  FC\n".format(__version__, now_time))
+#NAME                 c_x      c_y     r_cl    e_rcl      r_c     e_rc      \
+r_t     e_rt      kcp      CI   n_memb_k     n_memb  n_memb_da  memb_par     \
+a_f  prob_cl      met      met      e_m      age      age      e_a   E(B-V)   \
+E(B-V)      e_E     dist     dist      e_d      M_i      M_i      e_M   \
+bin_fr   bin_fr     e_bf      M1 M2  f1 f2 f3 f4 f5 f6 f7  \
+FC\n".format(__version__, now_time))
             print('Output data file created.')

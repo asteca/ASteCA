@@ -436,8 +436,9 @@ def main(lkl_method, e_max, err_lst, completeness, max_mag_syn, fundam_params,
 
         # print i, generation[0], lkl[0], len(model_done[0])
 
+    # Store the ML solution as 'map_sol' for consistency.
     isoch_fit_params = {
-        'best_sol': generation[0], 'lkl_old': lkl_old,
+        'map_sol': generation[0], 'lkl_old': lkl_old,
         'new_bs_indx': new_bs_indx, 'model_done': model_done}
 
     return isoch_fit_params

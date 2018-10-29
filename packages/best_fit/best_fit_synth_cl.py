@@ -10,6 +10,7 @@ def params_errors(best_fit_algor, args):
     '''
     Obtain uncertainties for the fitted parameters.
     '''
+    mean_boot_sol = .0
     if best_fit_algor == 'brute':
         fundam_params = args
         isoch_fit_errors = []
@@ -25,11 +26,12 @@ def params_errors(best_fit_algor, args):
                 isoch_fit_errors.append(np.nan)
 
     elif best_fit_algor == 'genet':
-        isoch_fit_errors = bootstrap.main(*args)
+        # TODO fix this with #64
+        isoch_fit_errors, mean_boot_sol = bootstrap.main(*args)
 
     elif best_fit_algor in ['ptemcee', 'emcee', 'abc']:
         isoch_fit_params, isoch_fit_errors, j = args, [], 0
-        for i, _ in enumerate(isoch_fit_params['best_sol']):
+        for i, _ in enumerate(isoch_fit_params['mean_sol']):
             if i in isoch_fit_params['varIdxs']:
                 #  16th and 84th percentiles (1 sigma)
                 ph = np.percentile(isoch_fit_params['mcmc_trace'][i - j], 84)
@@ -42,7 +44,7 @@ def params_errors(best_fit_algor, args):
                 isoch_fit_errors.append(np.nan)
                 j += 1
 
-    return isoch_fit_errors
+    return isoch_fit_errors, mean_boot_sol
 
 
 def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning,
@@ -118,7 +120,7 @@ def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning,
                 max_mag_syn, fundam_params, obs_clust, theor_tracks, R_V,
                 ext_coefs, st_dist_mass, N_fc, cmpl_rnd, err_rnd)
             # Assign uncertainties for each parameter.
-            isoch_fit_errors = params_errors(best_fit_algor, fundam_params)
+            isoch_fit_errors, _ = params_errors(best_fit_algor, fundam_params)
 
         elif best_fit_algor == 'genet':
 
@@ -136,7 +138,7 @@ def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning,
                 fit_diff, cross_prob, cross_sel, mut_prob, N_el, N_ei, N_es,
                 flag_print_perc)
             # Assign uncertainties.
-            isoch_fit_errors = params_errors(
+            isoch_fit_errors, mean_boot_sol = params_errors(
                 best_fit_algor,
                 [lkl_method, clp['em_float'], err_lst, completeness,
                  fundam_params, cl_max_mag, max_mag_syn, theor_tracks, R_V,
@@ -144,6 +146,8 @@ def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning,
                  N_gen, fit_diff, cross_prob, cross_sel, mut_prob, N_el, N_ei,
                  N_es, lkl_binning, lkl_weight, N_bootstrap, False,
                  isoch_fit_params])
+            # TODO fix this with #64
+            isoch_fit_params['mean_sol'] = mean_boot_sol
 
         elif best_fit_algor == 'emcee':
 
@@ -156,7 +160,7 @@ def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning,
                 ext_coefs, st_dist_mass, N_fc, cmpl_rnd, err_rnd, nwalkers_emc,
                 nsteps_emc, nburn_emc, N_burn_emc, emcee_a, priors_emc)
             # Assign uncertainties.
-            isoch_fit_errors = params_errors(
+            isoch_fit_errors, _ = params_errors(
                 best_fit_algor, isoch_fit_params)
 
         elif best_fit_algor == 'abc':
@@ -170,7 +174,7 @@ def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning,
                 ext_coefs, st_dist_mass, N_fc, cmpl_rnd, err_rnd, nwalkers_abc,
                 nsteps_abc, nburn_abc, priors_abc)
             # Assign uncertainties.
-            isoch_fit_errors = params_errors(
+            isoch_fit_errors, _ = params_errors(
                 best_fit_algor, isoch_fit_params)
 
         elif best_fit_algor == 'ptemcee':
@@ -184,7 +188,7 @@ def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning,
                 nwalkers_ptm, nsteps_ptm, nburn_ptm, pt_adapt, tmax_ptm,
                 priors_ptm)
             # Assign uncertainties.
-            isoch_fit_errors = params_errors(
+            isoch_fit_errors, _ = params_errors(
                 best_fit_algor, isoch_fit_params)
 
         print("Best fit parameters obtained.")
@@ -195,7 +199,7 @@ def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning,
         cl_max_mag, max_mag_syn, ext_coefs, st_dist_mass, N_fc, cmpl_rnd,\
             err_rnd, isoch_fit_params, isoch_fit_errors = [], -1., [], {}, [],\
             [], [],\
-            {'best_sol': [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]},\
+            {'mean_sol': [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]},\
             [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]
 
     clp['cl_max_mag'], clp['max_mag_syn'], clp['ext_coefs'],\

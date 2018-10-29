@@ -71,7 +71,7 @@ def main(
 
     # Burn-in period.
     t0 = t.time()
-    pos, best_sol_old, pars_chains_bi = burnIn(
+    pos, map_sol_old, pars_chains_bi = burnIn(
         nwalkers, nburn, N_burn, fundam_params, varIdxs, sampler,
         ranges, priors, synthcl_args, lkl_method, obs_clust)
 
@@ -127,16 +127,16 @@ def main(
         prob_mean.append([i, np.mean(prob)])
         idx_best = np.argmax(prob)
         # Update if a new optimal solution was found.
-        if prob[idx_best] > best_sol_old[1]:
-            best_sol_old = [
+        if prob[idx_best] > map_sol_old[1]:
+            map_sol_old = [
                 closeSol(fundam_params, varIdxs, pos[idx_best]),
                 prob[idx_best]]
-        map_lkl.append([i, best_sol_old[1]])
+        map_lkl.append([i, map_sol_old[1]])
 
         # Print progress.
         percentage_complete = (100. * (i + 1) / nsteps)
         if len(milestones) > 0 and percentage_complete >= milestones[0]:
-            map_sol, logprob = best_sol_old
+            map_sol, logprob = map_sol_old
             m, s = divmod(nsteps / (i / elapsed) - elapsed, 60)
             h, m = divmod(m, 60)
             print("{:>3}% ({:.3f}) LP={:.1f} ({:g}, {:g}, {:.3f}, {:.2f}"
@@ -152,7 +152,7 @@ def main(
     tau_autocorr = autocorr_vals[:tau_index]
 
     # Final MAP fit.
-    map_sol, map_lkl_final = best_sol_old
+    map_sol, map_lkl_final = map_sol_old
 
     # This number should be between approximately 0.25 and 0.5 if everything
     # went as planned.
@@ -176,10 +176,10 @@ def main(
             'emcee', ndim, varIdxs, N_conv, chains_nruns, emcee_trace)
 
     # Pass the mean as the best model fit found.
-    best_sol = closeSol(fundam_params, varIdxs, np.mean(emcee_trace, axis=1))
+    mean_sol = closeSol(fundam_params, varIdxs, np.mean(emcee_trace, axis=1))
 
     isoch_fit_params = {
-        'varIdxs': varIdxs, 'nsteps_emc': runs, 'best_sol': best_sol,
+        'varIdxs': varIdxs, 'nsteps_emc': runs, 'mean_sol': mean_sol,
         'map_sol': map_sol, 'map_lkl': map_lkl, 'map_lkl_final': map_lkl_final,
         'prob_mean': prob_mean, 'mcmc_elapsed': elapsed,
         'mcmc_trace': emcee_trace,
@@ -262,13 +262,13 @@ def burnIn(
 
     # Store MAP solution.
     idx_best = np.argmax(prob)
-    best_sol = [
+    map_sol = [
         closeSol(fundam_params, varIdxs, pos[idx_best]), prob[idx_best]]
 
     # Reset the chain to remove the burn-in samples.
     sampler.reset()
 
-    return pos, best_sol, pars_chains_bi
+    return pos, map_sol, pars_chains_bi
 
 
 def random_population(fundam_params, varIdxs, n_ran):
