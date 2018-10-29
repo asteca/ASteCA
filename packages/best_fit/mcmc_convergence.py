@@ -67,8 +67,16 @@ def multiESS(X, b='sqroot', Noffsets=10, Nb=None):
 
     """
 
+    # Trying to implement the changes mentioned in
+    # https://stats.stackexchange.com/a/359474/10416
+    # to work with non-independent chains. I'm getting an ESS that is
+    # significantly larger than both PyMC3's and (nsteps*nwalkers)/acorr_t
+
     # MCMC samples and parameters
-    n, p = X.shape
+    w = X.shape[1]
+    X_w_avrg = np.mean(X, axis=1)
+    n, p = X_w_avrg.shape
+    X_concat = X.reshape(-1, p)
 
     if p > n:
         raise ValueError(
@@ -91,15 +99,24 @@ def multiESS(X, b='sqroot', Noffsets=10, Nb=None):
                 "The batch size B needs to be between 1 and N/2.")
 
     # Compute multiESS for the chain
-    mESS = multiESS_chain(X, n, p, b, Noffsets, Nb)
+    mESS = multiESS_chain(X_w_avrg, X_concat, n, w, p, b, Noffsets, Nb)
 
     return mESS
 
 
-def multiESS_chain(Xi, n, p, b, Noffsets, Nb):
+def multiESS_chain(X_w_avrg, X_concat, n, w, p, b, Noffsets, Nb):
     """
     Compute multiESS for a MCMC chain.
     """
+
+    # Determinant of sample covariance matrix
+    if p == 1:
+        detLambda = np.cov(X_concat.T)
+    else:
+        detLambda = np.linalg.det(np.cov(X_concat.T))
+
+    # Parameters sample mean
+    theta = np.mean(X_w_avrg, axis=0)
 
     if b == 'sqroot':
         b = [int(np.floor(n ** (1. / 2)))]
@@ -114,18 +131,12 @@ def multiESS_chain(Xi, n, p, b, Noffsets, Nb):
         b = set(map(int, np.round(np.exp(
             np.linspace(np.log(b_min), np.log(b_max), Nb)))))
 
-    # Sample mean
-    theta = np.mean(Xi, axis=0)
-    # Determinant of sample covariance matrix
-    if p == 1:
-        detLambda = np.cov(Xi.T)
-    else:
-        detLambda = np.linalg.det(np.cov(Xi.T))
-
     # Compute mESS
     mESS_i = []
     for bi in b:
-        mESS_i.append(multiESS_batch(Xi, n, p, theta, detLambda, bi, Noffsets))
+        mESS_i.append(multiESS_batch(
+            X_w_avrg, n, w, p, theta, detLambda, bi, Noffsets))
+
     # Return lowest mESS
     if np.isnan(np.array(mESS_i)).all():
         mESS = np.nan
@@ -135,20 +146,20 @@ def multiESS_chain(Xi, n, p, b, Noffsets, Nb):
     return mESS
 
 
-def multiESS_batch(Xi, n, p, theta, detLambda, b, Noffsets):
+def multiESS_batch(X_w_avrg, n, w, p, theta, detLambda, bi, Noffsets):
     """
     Compute multiESS for a given batch size B.
     """
 
     # Compute batch estimator for SIGMA
-    a = int(np.floor(n / b))
+    a = int(np.floor(n / bi))
     Sigma = np.zeros((p, p))
     offsets = np.sort(list(set(map(int, np.round(
-        np.linspace(0, n - np.dot(a, b), Noffsets))))))
+        np.linspace(0, n - np.dot(a, bi), Noffsets))))))
 
     for j in offsets:
-        # Swapped a, b in reshape compared to the original code.
-        Y = Xi[j + np.arange(a * b), :].reshape((a, b, p))
+        # Swapped a, bi in reshape compared to the original code.
+        Y = X_w_avrg[j + np.arange(a * bi), :].reshape((a, bi, p))
         Ybar = np.squeeze(np.mean(Y, axis=1))
         Z = Ybar - theta
         for i in range(a):
@@ -157,12 +168,11 @@ def multiESS_batch(Xi, n, p, theta, detLambda, b, Noffsets):
             else:
                 Sigma += Z[i][np.newaxis, :].T * Z[i]
 
-    Sigma = (Sigma * b) / (a - 1) / len(offsets)
+    Sigma = (Sigma * bi) / (a - 1) / len(offsets)
 
-    detSigma = np.linalg.det(Sigma)
-    # print(detLambda, detSigma)
+    detSigma = np.linalg.det(w * Sigma)
     if detLambda > 1e-10 and detSigma > 1.e-10:
-        mESS = n * (detLambda / detSigma) ** (1. / p)
+        mESS = n * w * (detLambda / detSigma) ** (1. / p)
     else:
         mESS = np.nan
 
@@ -515,7 +525,8 @@ def convergenceVals(algor, ndim, varIdxs, N_conv, chains_nruns, mcmc_trace):
 
         # TODO fix this function
         # Minimum effective sample size (ESS), and multi-variable ESS.
-        minESS, mESS = fminESS(ndim), multiESS(mcmc_trace.T)
+        minESS, mESS = fminESS(ndim), multiESS(chains_nruns)
+        # print("mESS: {}".format(mESS))
         mESS_epsilon = [[], [], []]
         for alpha in [.01, .05, .1, .2, .3, .4, .5, .6, .7, .8, .9, .95]:
             mESS_epsilon[0].append(alpha)
