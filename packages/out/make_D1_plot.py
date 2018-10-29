@@ -149,12 +149,13 @@ def main(npd, pd, isoch_fit_params, fit_params_r, fit_errors_r, **kwargs):
                 isoch_fit_params['tau_index'],
                 isoch_fit_params['tau_autocorr']]
             mp_best_fit1_mcmc.plot(6, *args)
-            # pl_mESS
-            args = [
-                'mESS', gs, isoch_fit_params['mESS'],
-                isoch_fit_params['minESS'],
-                isoch_fit_params['mESS_epsilon']]
-            mp_best_fit1_mcmc.plot(7, *args)
+            # TODO re-implement when/if code is fixed
+            # # pl_mESS
+            # args = [
+            #     'mESS', gs, isoch_fit_params['mESS'],
+            #     isoch_fit_params['minESS'],
+            #     isoch_fit_params['mESS_epsilon']]
+            # mp_best_fit1_mcmc.plot(7, *args)
             # pl_lags
             args = [
                 'lags', gs, isoch_fit_params['varIdxs'],

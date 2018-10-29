@@ -277,21 +277,6 @@ def pl_MAP_lkl(dummy, gs, prob_mean, map_lkl, map_lkl_final):
     ax.legend(fontsize='small', loc=0)  # , handlelength=0.)
 
 
-def pl_MAF(dummy, gs, best_fit_algor, maf_steps):
-    '''
-    Evolution of MAF values.
-    '''
-    ax = plt.subplot(gs[2:4, 6:8])
-    x, y = list(zip(*maf_steps))
-    ax.plot(x, y, label=r"$MAF={:.3f}$".format(maf_steps[-1][1]))
-    plt.xlabel("steps", fontsize=14)
-    plt.ylabel("MAF", fontsize=14)
-    if best_fit_algor in ('ptemcee', 'emcee'):
-        plt.axhline(y=.25, color='grey', ls=':', lw=1.2, zorder=4)
-        plt.axhline(y=.5, color='grey', ls=':', lw=1.2, zorder=4)
-    ax.legend(fontsize='small', loc=0, handlelength=0.)
-
-
 def pl_param_chain(
     par_name, gs, best_fit_algor, cp_r, min_max_p, nwalkers, nburn, nsteps,
         mcmc_param, model_done, mcmc_elapsed, varIdxs, pre_bi, post_bi,
@@ -370,6 +355,22 @@ def pl_param_chain(
             autocorr_time[c_model], mcmc_ess[c_model]))
         ax.set_ylim(min_max_p[cp][0], min_max_p[cp][1])
         # ax.legend(fontsize='small', loc=0, handlelength=0.)
+
+
+def pl_MAF(dummy, gs, best_fit_algor, maf_steps):
+    '''
+    Evolution of MAF values.
+    '''
+    # ax = plt.subplot(gs[2:4, 6:8])
+    ax = plt.subplot(gs[4:6, 6:8])
+    x, y = list(zip(*maf_steps))
+    ax.plot(x, y, label=r"$MAF={:.3f}$".format(maf_steps[-1][1]))
+    plt.xlabel("steps", fontsize=14)
+    plt.ylabel("MAF", fontsize=14)
+    if best_fit_algor in ('ptemcee', 'emcee'):
+        plt.axhline(y=.25, color='grey', ls=':', lw=1.2, zorder=4)
+        plt.axhline(y=.5, color='grey', ls=':', lw=1.2, zorder=4)
+    ax.legend(fontsize='small', loc=0, handlelength=0.)
 
 
 def pl_mESS(dummy, gs, mESS, minESS, minESS_epsilon):
@@ -470,7 +471,6 @@ def plot(N, *args):
     plt_map = {
         0: [pl_2_param_dens, args[0] + ' density map'],
         1: [pl_param_pf, args[0] + ' probability function'],
-        # 2: [pl_pdf_half, ' 1st and 2nd halfs of pdf'],
         3: [pl_MAP_lkl, ' MAP likelihood values'],
         4: [pl_MAF, ' MAF vs steps'],
         5: [pl_param_chain, args[0] + ' sampler chain'],
