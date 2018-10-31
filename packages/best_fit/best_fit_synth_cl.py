@@ -199,7 +199,8 @@ def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning,
         cl_max_mag, max_mag_syn, ext_coefs, st_dist_mass, N_fc, cmpl_rnd,\
             err_rnd, isoch_fit_params, isoch_fit_errors = [], -1., [], {}, [],\
             [], [],\
-            {'mean_sol': [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]},\
+            {'mean_sol': [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan],
+             'map_sol': [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]},\
             [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]
 
     clp['cl_max_mag'], clp['max_mag_syn'], clp['ext_coefs'],\

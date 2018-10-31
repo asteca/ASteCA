@@ -63,7 +63,8 @@ def main(
         npd, cld_c, pd, kde_cent, clust_rad, stars_out_c, err_lst,
         flag_no_fl_regs_i, field_regions_i, flag_decont_skip,
         memb_prob_avrg_sort, n_memb_da, cl_reg_fit, cl_reg_no_fit,
-        cl_reg_clean_plot, **kwargs):
+        cl_reg_clean_plot, plx_flag, plx_clrg, mmag_clp, mp_clp, plx_clp,
+        e_plx_clp, plx_bay, ph_plx, pl_plx, plx_wa, **kwargs):
     '''
     Make C block plots.
     '''
@@ -94,11 +95,10 @@ def main(
         # Decontamination algorithm plots.
         min_prob, bin_edges = cl_reg_clean_plot
         # Parallax data.
-        plx_flag, plx_clrg, plx_xmin, plx_xmax, plx_x_kde, kde_pl, plx_flrg,\
-            mmag_plx, mp_plx, plx, e_plx, plx_bay, ph_plx, pl_plx,\
-            min_plx, max_plx = prep_plots.plxPlot(
-                pd['inst_packgs_lst'], flag_no_fl_regs_i, field_regions_i,
-                cl_reg_fit)
+        plx_x_kde, kde_pl, plx_flrg, mmag_clp, mp_clp, plx_clp, e_plx_clp =\
+            prep_plots.plxPlot(
+                plx_flag, plx_clrg, mmag_clp, mp_clp, plx_clp, e_plx_clp,
+                flag_no_fl_regs_i, field_regions_i)
         # PMs data.
         PM_flag, pmMP, pmRA, e_pmRA, pmDE, e_pmDE, DE_pm, pmRA_fl, e_pmRA_fl,\
             pmDE_fl, e_pmDE_fl, DE_fl_pm, x_clpm, y_clpm, z_clpm, x_flpm,\
@@ -115,14 +115,14 @@ def main(
              v_min_mp, v_max_mp, chart_fit_inv, chart_no_fit_inv,
              out_clust_rad, pd['fld_clean_mode'], pd['fld_clean_bin']],
             # plx_histo
-            [gs, plx_flag, plx_clrg, plx_xmin, plx_xmax, plx_x_kde, kde_pl,
-             plx_flrg, flag_no_fl_regs_i],
+            [gs, plx_flag, plx_clrg, plx_x_kde, kde_pl, plx_flrg,
+             flag_no_fl_regs_i],
             # plx_chart
             [gs, plx_flag, x_name, y_name, coord, cl_reg_fit, plx_x_kde,
              kde_pl],
             # plx_vs_MP
-            [gs, y_min_cmd, y_max_cmd, y_ax, plx_flag, mmag_plx, mp_plx, plx,
-             e_plx, plx_bay, ph_plx, pl_plx, min_plx, max_plx],
+            [gs, y_min_cmd, y_max_cmd, y_ax, plx_flag, mmag_clp,
+             mp_clp, plx_clp, e_plx_clp, plx_bay, ph_plx, pl_plx, plx_wa],
             # pms_vpd
             [gs, coord, plx_flag, PM_flag, pmMP, pmRA, e_pmRA, pmDE, e_pmDE,
              DE_pm, pmRA_fl, e_pmRA_fl, pmDE_fl, e_pmDE_fl, DE_fl_pm, x_clpm,

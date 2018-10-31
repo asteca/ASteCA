@@ -54,14 +54,14 @@
 from packages.errors import err_accpt_rejct
 from packages.structure import stars_in_out_cl_reg
 from packages.structure import cluster_area
-from packages.phot_analysis import members_number
-from packages.phot_analysis import contamination_index
+from packages.data_analysis import members_number
+from packages.data_analysis import contamination_index
 from packages.structure import field_regions
-from packages.phot_analysis import luminosity_func
-from packages.phot_analysis import integrated_mag
-# from phot_analysis import kde_pvalue
+from packages.data_analysis import luminosity_func
+from packages.data_analysis import integrated_mag
+# from data_analysis import kde_pvalue
 from packages.decont_algors import bayesian_da
-from packages.phot_analysis import members_N_compare
+from packages.data_analysis import members_N_compare
 from packages.decont_algors import membership_removal
 from packages.out import cluster_members_file
 from packages.best_fit import synth_cl_err

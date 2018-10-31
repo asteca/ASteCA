@@ -2,10 +2,8 @@
 from ..math_f import exp_function
 from ..best_fit.obs_clust_prepare import dataProcess
 from ..decont_algors.local_cell_clean import bin_edges_f
-from ..best_fit.emcee3rc2 import ensemble
 import numpy as np
 from scipy import stats
-from scipy import optimize
 from scipy.spatial.distance import cdist
 
 
@@ -537,84 +535,29 @@ def get_hess(obs_mags_cols, synth_phot, hess_xedges, hess_yedges):
     return hess_x, hess_y, HD
 
 
-def plxPlot(inst_packgs_lst, flag_no_fl_regs_i, field_regions_i, cl_reg_fit):
+def plxPlot(
+    plx_flag, plx_clrg, mmag_clp, mp_clp, plx_clp, e_plx_clp,
+        flag_no_fl_regs_i, field_regions_i):
     """
     Parameters for the parallax plot.
     """
-    plx_flag, plx_clrg, plx_xmin, plx_xmax, plx_x_kde, kde_pl, plx_flrg,\
-        mmag_plx, mp_plx, plx, e_plx, plx_bay, ph_plx, pl_plx, min_plx,\
-        max_plx = False, [], 0., 0., [], [], [], [], [], [], [], np.nan,\
-        np.nan, np.nan, np.nan, np.nan
-
-    plx = np.array(list(zip(*list(zip(*cl_reg_fit))[7]))[0])
-    plx_clrg = plx[~np.isnan(plx)]
+    plx_x_kde, kde_pl, plx_flrg = [], [], []
 
     # Check that a range of parallaxes is possible.
-    if plx_clrg.any():
-        if np.min(plx_clrg) < np.max(plx_clrg):
-            # 250 pc max limit
-            plx_xmin, plx_xmax = 0., min(4., np.max(plx_clrg))
-            # Define KDE limits.
-            x_rang = .1 * (plx_xmax - plx_xmin)
-            plx_x_kde = np.mgrid[plx_xmin - x_rang:plx_xmax + x_rang:1000j]
-            kernel_cl = stats.gaussian_kde(plx_clrg)
-            # KDE for plotting.
-            kde_pl = np.reshape(kernel_cl(plx_x_kde).T, plx_x_kde.shape)
+    if plx_flag:
+        # Cluster region KDE curve.
+        plx_xmin, plx_xmax = np.min(plx_clrg), np.max(plx_clrg)
+        # Define KDE limits.
+        x_rang = .1 * (plx_xmax - plx_xmin)
+        plx_x_kde = np.mgrid[plx_xmin - x_rang:plx_xmax + x_rang:1000j]
+        kernel_cl = stats.gaussian_kde(plx_clrg)
+        # KDE for plotting.
+        kde_pl = np.reshape(kernel_cl(plx_x_kde).T, plx_x_kde.shape)
 
-            plx_flag = True
-
-        # Reject 2\sigma outliers.
-        max_plx, min_plx = np.median(plx) + 2. * np.std(plx),\
-            np.median(plx) - 2. * np.std(plx)
-        msk = (plx < max_plx) & (plx > min_plx)
-        # Prepare masked data.
-        plx = plx[msk]
-        mmag = np.array(list(zip(*list(zip(*cl_reg_fit))[3]))[0])[msk]
-        mp = np.array(list(zip(*cl_reg_fit))[9])[msk]
-        e_plx = np.array(list(zip(*list(zip(*cl_reg_fit))[8]))[0])[msk]
-        # Put large MP stars on top
-        mp_i = mp.argsort()
-        mmag_plx, mp_plx, plx, e_plx = mmag[mp_i], mp[mp_i], plx[mp_i],\
-            e_plx[mp_i]
-
-        def lnlike(w_t, w_i, s_i, mp, sign=1.):
-            """
-            Log likelihood, product of Gaussian functions.
-            """
-            return sign * -0.5 * (np.sum(mp * (w_i - w_t)**2 / s_i**2))
-
-        def lnprior(w_t, w_p, s_p):
-            """
-            Log prior, Gaussian > 0.
-            """
-            if w_t < 0.:
-                return -np.inf
-            return -0.5 * ((w_p - w_t)**2 / s_p**2)
-
-        def lnprob(w_t, w_i, s_i, mp, w_p, s_p):
-            lp = lnprior(w_t, w_p, s_p)
-            return lp + lnlike(w_t, w_i, s_i, mp)
-
-        # Use optimum likelihood value as mean of the prior.
-        plx_lkl = optimize.minimize_scalar(lnlike, args=(plx, e_plx, -1.))
-
-        # if 'emcee' in inst_packgs_lst:
-        #     import emcee
-        # Prior parameters.
-        w_p, s_p = plx_lkl.x, .5
-        ndim, nwalkers, nruns = 1, 10, 5000
-        sampler = ensemble.EnsembleSampler(
-            nwalkers, ndim, lnprob, args=(plx, e_plx, mp, w_p, s_p))
-        # Random initial guesses.
-        pos = [np.random.uniform(0., 1., ndim) for i in range(nwalkers)]
-        sampler.run_mcmc(pos, nruns)
-        # Remove burn-in
-        samples = sampler.chain[:, 500:, :].reshape((-1, ndim))
-
-        # Median estimator of samples.
-        plx_bay = np.median(samples.flatten())
-        # 16th, 84th percentiles
-        ph_plx, pl_plx = np.percentile(samples, 84), np.percentile(samples, 16)
+        # Put large MP stars in cluster region on top.
+        mp_i = mp_clp.argsort()
+        mmag_clp, mp_clp, plx_clp, e_plx_clp = mmag_clp[mp_i],\
+            mp_clp[mp_i], plx_clp[mp_i], e_plx_clp[mp_i]
 
         if not flag_no_fl_regs_i:
             # Extract parallax data.
@@ -627,9 +570,7 @@ def plxPlot(inst_packgs_lst, flag_no_fl_regs_i, field_regions_i, cl_reg_fit):
             msk = (plx_all > -5.) & (plx_all < 10.)
             plx_flrg = plx_all[msk]
 
-    return plx_flag, plx_clrg, plx_xmin, plx_xmax, plx_x_kde, kde_pl,\
-        plx_flrg, mmag_plx, mp_plx, plx, e_plx, plx_bay, ph_plx, pl_plx,\
-        min_plx, max_plx
+    return plx_x_kde, kde_pl, plx_flrg, mmag_clp, mp_clp, plx_clp, e_plx_clp
 
 
 def kde_2d(xarr, xsigma, yarr, ysigma, grid_dens=50):
@@ -691,7 +632,7 @@ def PMsPlot(coord, flag_no_fl_regs_i, field_regions_i, cl_reg_fit):
     PM_flag, pmMP, e_pmRA, pmDE, e_pmDE, DE_pm, pmRA_fl, e_pmRA_fl, pmDE_fl,\
         e_pmDE_fl, DE_fl_pm, x_clpm, y_clpm, z_clpm, x_flpm, y_flpm,\
         z_flpm, mmag_pm, pm_dist_max = False, [], [], [], [], [], [], [], [],\
-        [], [], [], [], [], [], [], [], [], []
+        [], [], [], [], [], [], [], np.array([]), [], []
 
     pmRA = np.array(list(zip(*list(zip(*cl_reg_fit))[7]))[1])
     # Check that PMs were defined within the cluster region.

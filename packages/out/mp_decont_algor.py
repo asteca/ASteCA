@@ -189,51 +189,52 @@ def pl_mps_phot_diag(
     return sca, trans
 
 
-def plx_histo(
-    gs, plx_flag, plx_clrg, plx_xmin, plx_xmax, plx_x_kde, kde_pl, plx_flrg,
-        flag_no_fl_regs_i):
+def plx_histo(gs, plx_flag, plx_clrg, plx_x_kde, kde_pl, plx_flrg,
+              flag_no_fl_regs_i):
     '''
     Histogram for the distribution of parallaxes within the cluster region.
     '''
     if plx_flag:
         ax = plt.subplot(gs[2:4, 0:2])
-        plt.xlim(plx_xmin, plx_xmax)
         plt.xlabel('Plx [mas]', fontsize=12)
         plt.ylabel('N', fontsize=12)
         ax.minorticks_on()
         ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1,
                 zorder=1)
         # Normalized histogram for cluster region.
-        plt.hist(
-            plx_clrg, 120, density=True, zorder=4, color='#9aafd1',
-            label="Cluster region (fit)")
+        h_cl, _, _ = plt.hist(
+            plx_clrg, 100, density=True, zorder=4, color='#9aafd1',
+            alpha=0.75, label=r"Cluster region ($N_{fit}$)")
         # Plot histogram for the parallaxes of the field regions.
         if not flag_no_fl_regs_i:
             plt.hist(
-                plx_flrg, 120, density=True, zorder=4, color='#ef703e',
-                label="Field regions", alpha=0.5)
+                plx_flrg, 100, density=True, zorder=1, color='#ef703e',
+                alpha=0.5, label="Field regions")
 
-        plt.plot(plx_x_kde, kde_pl / max(kde_pl), color='b', lw=1., zorder=4)
+        plt.plot(
+            plx_x_kde, kde_pl / (max(kde_pl) / max(h_cl)), color='b', lw=1.,
+            zorder=4)
         # Maximum KDE value.
         p_max_mas = plx_x_kde[np.argmax(kde_pl)]
         plt.axvline(x=p_max_mas, linestyle='--', color='b', lw=.7, zorder=5)
-        d_max_pc = 1000. / p_max_mas
         plx_lt_zero = 100. * plx_clrg[plx_clrg < 0.].size / plx_clrg.size
         ob = offsetbox.AnchoredText(
-            r"$Plx_{{max}}$={:.3f} [mas]".format(p_max_mas) +
-            "\n({:.0f} [pc])\n".format(d_max_pc) +
+            r"$Plx_{{max}}$={:.3f}".format(p_max_mas) + '\n' +
             r"$Plx<0 \rightarrow$ {:.1f}%".format(plx_lt_zero),
             pad=0.2, loc=1, prop=dict(size=9))
         ob.patch.set(alpha=0.85)
         ax.add_artist(ob)
+        plt.xlim(
+            np.mean(plx_clrg) - 3. * np.std(plx_clrg),
+            np.mean(plx_clrg) + 3. * np.std(plx_clrg))
         # Avoid showing the value 0.0 in the y axis.
         plt.ylim(0.01, plt.ylim()[1])
         ax.legend(fontsize='small', loc=7)
 
 
 def plx_vs_MP(
-    gs, y_min_cmd, y_max_cmd, y_ax, plx_flag, mmag_plx, mp_plx, plx,
-        e_plx, plx_bay, ph_plx, pl_plx, min_plx, max_plx):
+    gs, y_min_cmd, y_max_cmd, y_ax, plx_flag, mmag_plx_clp, mp_plx_clp,
+        plx_clp, e_plx_clp, plx_bay, ph_plx, pl_plx, plx_wa):
     '''
     Finding chart of cluster region with colors assigned according to the
     probabilities obtained and sizes according to parallaxes.
@@ -243,59 +244,44 @@ def plx_vs_MP(
         ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1,
                 zorder=1)
 
-        ax.set_title("Plx clip " + r"$2\sigma\;({:.3f})$".format(np.std(plx)),
-                     fontsize=9)
+        ax.set_title("Plx clip " + r"$(med\pm2\sigma), N={}$".format(
+            len(plx_clp)), fontsize=9)
         plt.xlabel('Plx [mas]', fontsize=12)
         plt.ylabel(y_ax, fontsize=12)
         # Set minor ticks
         ax.minorticks_on()
-        ax.axvspan(-100., 0., alpha=0.25, color='grey', zorder=1)
-
-        # Weighted average and its error.
-        # Source: https://physics.stackexchange.com/a/329412/8514
-        plx_w = mp_plx / np.square(e_plx)
-        # e_plx_w = np.sqrt(np.sum(np.square(e_plx * plx_w))) / np.sum(plx_w)
-        plx_wa = np.average(plx, weights=plx_w)
 
         cm = plt.cm.get_cmap('viridis')
         # Plot stars selected to be used in the best fit process.
         plt.scatter(
-            plx, mmag_plx, marker='o', c=mp_plx, s=30, edgecolors='black',
-            cmap=cm, lw=0.35, zorder=4)
+            plx_clp, mmag_plx_clp, marker='o', c=mp_plx_clp, s=30,
+            edgecolors='black', cmap=cm, lw=0.35, zorder=4)
         ax.errorbar(
-            plx, mmag_plx, xerr=e_plx, fmt='none', elinewidth=.35,
+            plx_clp, mmag_plx_clp, xerr=e_plx_clp, fmt='none', elinewidth=.35,
             ecolor='grey')
 
         # Bayesian
-        t0 = r"$Plx_{{Bay}} ={:.3f}_{{{:.3f}}}^{{{:.3f}}}$".format(
-            plx_bay, pl_plx, ph_plx)
+        t0 = r"$Plx_{{Bay}} ={:.3f}_{{-{:.3f}}}^{{+{:.3f}}}$".format(
+            plx_bay, plx_bay - pl_plx, ph_plx - plx_bay)
+        t0 += "\n   [{:.0f} pc]".format(1000. / plx_bay)
         plt.axvline(
             x=plx_bay, linestyle='--', color='b', lw=1.2, zorder=5, label=t0)
-        # MLE
-        # plt.axvline(
-        #     x=plx_lkl.x, linestyle='--', color='cyan', lw=.85, zorder=5,
-        #     label=r"$Plx_{{MLE}} = {:.3f}$".format(plx_lkl.x))
         # Weighted average
         plt.axvline(
             x=plx_wa, linestyle='--', color='r', lw=.85, zorder=5,
             label=r"$Plx_{{wa}} = {:.3f}$".format(plx_wa))
         # Median
         plt.axvline(
-            x=np.median(plx), linestyle='--', color='k', lw=.85, zorder=5,
-            label=r"$Plx_{{med}} = {:.3f}$".format(np.median(plx)))
-        # Maximum KDE value.
-        # p_max_mas = plx_x_kde[np.argmax(kde_pl)]
-        # plt.axvline(
-        #     x=p_max_mas, linestyle='--', color='k', lw=.85, zorder=5,
-        #     label=r"$Plx_{{KDE}} = {:.3f}$".format(p_max_mas))
-
-        # print(np.median(plx), np.std(plx))
-        ax.legend(fontsize='small', loc=0)
+            x=np.median(plx_clp), linestyle='--', color='k', lw=.85, zorder=5,
+            label=r"$Plx_{{med}} = {:.3f}$".format(np.median(plx_clp)))
 
         cbar = plt.colorbar(pad=.01, fraction=.02, aspect=50)
         cbar.ax.tick_params(labelsize=7)
         # cbar.set_label('MP', size=8)
 
+        ax.legend(fontsize='small', loc=0)
+        min_plx, max_plx = np.min(plx_clp) - .2, np.max(plx_clp) + .2
+        ax.axvspan(min_plx, 0., alpha=0.25, color='grey', zorder=1)
         plt.xlim(min_plx, max_plx)
         # ax.set_ylim(ax.get_ylim()[::-1])
         plt.gca().invert_yaxis()
@@ -392,7 +378,7 @@ def pms_vpd(
             xerr=e_pmRA_fl, fmt='none', elinewidth=.35, ecolor='grey',
             zorder=1)
 
-        if any(z_flpm):
+        if z_flpm.any():
             max_i, max_j = np.unravel_index(z_flpm.argmax(), z_flpm.shape)
             CS = plt.contour(
                 x_flpm, y_flpm, z_flpm, 10, colors='k', linewidths=.3,

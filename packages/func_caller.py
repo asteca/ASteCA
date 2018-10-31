@@ -20,19 +20,21 @@ from .structure import stars_in_out_cl_reg
 from .structure import field_regions
 from .errors import err_range_avrg
 #
-from .phot_analysis import luminosity
-from .phot_analysis import kde_pvalue
-from .phot_analysis import members_number
+from .data_analysis import luminosity
+from .data_analysis import kde_pvalue
+from .data_analysis import members_number
 #
 from .decont_algors import decont_algors
 from .decont_algors import members_N_compare
 from .decont_algors import cl_region_clean
 #
+from .data_analysis import plx_analysis
+#
 from .out import cluster_members_file
 from .best_fit import best_fit_synth_cl
 from .out import mcmc_samples
 from .out import synth_cl_file
-from .out import massFunction
+from .out import massFunction  # TODO
 from .out import create_out_data_file
 from .errors import error_round
 #
@@ -190,6 +192,9 @@ def main(cl_file, pd):
 
     # Remove stars from the observed cluster according to a selected method.
     clp = cl_region_clean.main(clp, **pd)
+
+    # Analyze parallax data if available.
+    clp = plx_analysis.main(clp)
 
     make_C_plot.main(npd, cld_c, pd, **clp)
 
