@@ -20,6 +20,7 @@ from .structure import stars_in_out_cl_reg
 from .structure import field_regions
 from .errors import err_range_avrg
 #
+from .data_analysis import compl_err_funcs
 from .data_analysis import luminosity
 # from .data_analysis import kde_pvalue  # DEPRECATED
 from .data_analysis import members_number
@@ -172,6 +173,9 @@ def main(cl_file, pd):
 
     # Obtain exponential fit for the errors.
     clp = err_range_avrg.main(clp)
+
+    # Combined error rejection & completeness function.
+    clp = compl_err_funcs.main(clp)
 
     # Luminosity function and completeness level for each magnitude bin.
     clp = luminosity.main(clp, **cld_c)
