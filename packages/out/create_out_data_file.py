@@ -62,10 +62,6 @@ def main(npd):
 #           members ('n_memb') with the approximate photometric number of\n\
 #           members ('n_memb_da').\n\
 # a_f: Fraction of cluster's area that is present in frame.\n\
-# prob_cl: Statistical comparison of cluster vs field KDEs. It is obtained\n\
-#          as 1 minus the overlap area between the KDEs. If the KDEs are\n\
-#          very similar this value will be low indicating the overdensity is\n\
-#          probably not a true cluster.\n\
 #\n\
 # Parameters values are in the sense: mean  MAP/ML.\n\
 # met: Metallicity value (z).\n\
@@ -106,7 +102,7 @@ def main(npd):
 #\n\
 #NAME                 c_x      c_y     r_cl    e_rcl      r_c     e_rc      \
 r_t     e_rt      kcp      CI   n_memb_k     n_memb  n_memb_da  memb_par     \
-a_f  prob_cl      met      met      e_m      age      age      e_a   E(B-V)   \
+a_f      met      met      e_m      age      age      e_a   E(B-V)   \
 E(B-V)      e_E     dist     dist      e_d      M_i      M_i      e_M   \
 bin_fr   bin_fr     e_bf      M1 M2  f1 f2 f3 f4 f5 f6 f7  \
 FC\n".format(__version__, now_time))

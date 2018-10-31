@@ -27,8 +27,9 @@ def starsPlot(boundary, x_data, y_data):
                 lw=0.1, edgecolor='k', label='$r > r_{cl}$')
 
 
-def pl_phot_err(gs, colors, filters, id_kinem, mags, em_float, cl_region_c,
-                cl_region_rjct_c, stars_out_c, stars_out_rjct_c, err_bar_all):
+def pl_phot_err(
+    gs, colors, filters, id_kinem, mags, em_float, cl_region_c,
+        cl_region_rjct_c, stars_out_c, stars_out_rjct_c, err_bar_all):
     '''
     Photometric + kinematic error rejection.
     '''
@@ -145,8 +146,9 @@ def pl_phot_err(gs, colors, filters, id_kinem, mags, em_float, cl_region_c,
         plt.ylim(-0.005, min(plt.ylim()[1], 1.))
 
 
-def pl_fl_diag(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
-               field_regions_c, stars_f_rjct, stars_f_acpt, f_sz_pt, err_bar):
+def pl_fl_diag(
+    gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
+        field_regions_c, stars_f_rjct, stars_f_acpt, f_sz_pt, err_bar):
     '''
     Field stars CMD/CCD diagram.
     '''
@@ -187,8 +189,9 @@ def pl_fl_diag(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
             ms=0., zorder=4)
 
 
-def pl_cl_diag(gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
-               cl_region_rjct_c, cl_region_c, n_memb, cl_sz_pt, err_bar):
+def pl_cl_diag(
+    gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
+        cl_region_rjct_c, cl_region_c, n_memb, cl_sz_pt, err_bar):
     '''
     Cluster's stars diagram (stars inside cluster's radius)
     '''
@@ -285,45 +288,46 @@ def pl_lum_func(gs, y_ax, flag_no_fl_regs, lum_func, completeness):
     leg.get_frame().set_alpha(0.7)
 
 
-def pl_p_vals(gs, flag_pval_test, pval_test_params):
-    '''
-    Distribution of KDE p_values.
-    '''
-    if flag_pval_test:
-        # Extract parameters from list.
-        prob_cl_kde, kde_cl_1d, kde_f_1d, x_kde, y_over = pval_test_params
-        ax = plt.subplot(gs[4:6, 2:4])
-        plt.xlim(-0.15, 1.15)
-        plt.ylim(0, 1.02)
-        plt.xlabel('p-values', fontsize=12)
-        plt.ylabel('Density (normalized)', fontsize=12)
-        ax.minorticks_on()
-        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1,
-                zorder=1)
-        # Grid to background.
-        ax.set_axisbelow(True)
-        # Plot field vs field KDE.
-        if kde_f_1d.any():
-            max_kde = max(max(kde_f_1d), max(kde_cl_1d))
-            plt.plot(x_kde, kde_f_1d / max_kde, color='b', ls='-', lw=1.,
-                     label='$KDE_{fl}$', zorder=2)
-        else:
-            max_kde = max(kde_cl_1d)
-        # Plot cluster vs field KDE.
-        plt.plot(x_kde, kde_cl_1d / max_kde, color='r', ls='-', lw=1.,
-                 label='$KDE_{cl}$', zorder=2)
-        # Fill overlap.
-        if y_over:
-            plt.fill_between(x_kde, np.asarray(y_over) / max_kde, 0,
-                             color='grey', alpha='0.5')
-        text = '$P_{cl}^{KDE} = %0.2f$' % round(prob_cl_kde, 2)
-        plt.text(0.05, 0.92, text, transform=ax.transAxes,
-                 bbox=dict(facecolor='white', alpha=0.6), fontsize=12)
-        # Legend.
-        handles, labels = ax.get_legend_handles_labels()
-        leg = ax.legend(handles, labels, loc='upper right', numpoints=1,
-                        fontsize=12)
-        leg.get_frame().set_alpha(0.6)
+# DEPRECATED 31/10/18
+# def pl_p_vals(gs, flag_pval_test, pval_test_params):
+#     '''
+#     Distribution of KDE p_values.
+#     '''
+#     if flag_pval_test:
+#         # Extract parameters from list.
+#         prob_cl_kde, kde_cl_1d, kde_f_1d, x_kde, y_over = pval_test_params
+#         ax = plt.subplot(gs[4:6, 2:4])
+#         plt.xlim(-0.15, 1.15)
+#         plt.ylim(0, 1.02)
+#         plt.xlabel('p-values', fontsize=12)
+#         plt.ylabel('Density (normalized)', fontsize=12)
+#         ax.minorticks_on()
+#         ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1,
+#                 zorder=1)
+#         # Grid to background.
+#         ax.set_axisbelow(True)
+#         # Plot field vs field KDE.
+#         if kde_f_1d.any():
+#             max_kde = max(max(kde_f_1d), max(kde_cl_1d))
+#             plt.plot(x_kde, kde_f_1d / max_kde, color='b', ls='-', lw=1.,
+#                      label='$KDE_{fl}$', zorder=2)
+#         else:
+#             max_kde = max(kde_cl_1d)
+#         # Plot cluster vs field KDE.
+#         plt.plot(x_kde, kde_cl_1d / max_kde, color='r', ls='-', lw=1.,
+#                  label='$KDE_{cl}$', zorder=2)
+#         # Fill overlap.
+#         if y_over:
+#             plt.fill_between(x_kde, np.asarray(y_over) / max_kde, 0,
+#                              color='grey', alpha='0.5')
+#         text = '$P_{cl}^{KDE} = %0.2f$' % round(prob_cl_kde, 2)
+#         plt.text(0.05, 0.92, text, transform=ax.transAxes,
+#                  bbox=dict(facecolor='white', alpha=0.6), fontsize=12)
+#         # Legend.
+#         handles, labels = ax.get_legend_handles_labels()
+#         leg = ax.legend(handles, labels, loc='upper right', numpoints=1,
+#                         fontsize=12)
+#         leg.get_frame().set_alpha(0.6)
 
 
 def plot(N, *args):
@@ -335,8 +339,7 @@ def plot(N, *args):
         0: [pl_phot_err, 'error rejection function'],
         1: [pl_fl_diag, 'field regions photometric diagram'],
         2: [pl_cl_diag, 'cluster region photometric diagram'],
-        3: [pl_lum_func, 'luminosity function'],
-        4: [pl_p_vals, 'KDE p-values distribution']
+        3: [pl_lum_func, 'luminosity function']
     }
 
     fxn = plt_map.get(N, None)[0]

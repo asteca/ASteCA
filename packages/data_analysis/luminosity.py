@@ -39,7 +39,7 @@ def main(clp, **kwargs):
     Uses the main magnitude **after** error rejection.
     """
 
-    # (Main) Magnitudes of *all*, after error rejection.
+    # (Main) Magnitudes of all stars AFTER error rejection.
     mmag = np.array(list(zip(*(list(zip(*clp['acpt_stars_c']))[3])))[0])
 
     # Get the completeness level for each magnitude bin.

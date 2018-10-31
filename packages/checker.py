@@ -8,7 +8,6 @@ from .check import params_mode
 from .check import params_data
 from .check import params_out
 from .check import params_struct
-from .check import params_pval
 from .check import params_decont
 
 
@@ -67,8 +66,9 @@ def check_all(mypath, file_end):
     # Check structural parameters.
     params_struct.check(**pd)
 
-    # Check that R and rpy2 are installed, if necessary.
-    pd = params_pval.check(pd)
+    # DEPRECATED 31/10/18
+    # # Check that R and rpy2 are installed, if necessary.
+    # pd = params_pval.check(pd)
 
     # Check decontamination algorithm parameters.
     params_decont.check(cl_files, **pd)

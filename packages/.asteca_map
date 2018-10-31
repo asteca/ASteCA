@@ -59,7 +59,6 @@ from packages.data_analysis import contamination_index
 from packages.structure import field_regions
 from packages.data_analysis import luminosity_func
 from packages.data_analysis import integrated_mag
-# from data_analysis import kde_pvalue
 from packages.decont_algors import bayesian_da
 from packages.data_analysis import members_N_compare
 from packages.decont_algors import membership_removal

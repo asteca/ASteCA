@@ -5,7 +5,10 @@ import numpy as np
 def main(clp, x, y, **kwargs):
     """
     Obtain the cluster's area. If the cluster is cropped, calculate the
-    correct area by counting the bins that compose it's region.'
+    correct area by counting the bins that compose it's region.
+
+    x, y are coordinates form the incomplete data set, i.e.: all stars prior to
+    photometric removal.
     """
     x_max, x_min = max(x), min(x)
     y_max, y_min = max(y), min(y)

@@ -21,7 +21,7 @@ from .structure import field_regions
 from .errors import err_range_avrg
 #
 from .data_analysis import luminosity
-from .data_analysis import kde_pvalue
+# from .data_analysis import kde_pvalue  # DEPRECATED
 from .data_analysis import members_number
 #
 from .decont_algors import decont_algors
@@ -176,8 +176,9 @@ def main(cl_file, pd):
     # Luminosity function and completeness level for each magnitude bin.
     clp = luminosity.main(clp, **cld_c)
 
-    # Physical cluster probability based on p_values distribution.
-    clp = kde_pvalue.main(clp, **pd)
+    # DEPRECATED 31/10/18
+    # # Physical cluster probability based on p_values distribution.
+    # clp = kde_pvalue.main(clp, **pd)
 
     # Approximate number of cluster's members.
     clp = members_number.main(clp)

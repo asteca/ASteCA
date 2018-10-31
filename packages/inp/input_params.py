@@ -91,8 +91,6 @@ def main(mypath, pars_f_path):
                 # Data analysis functions parameters.
                 elif reader[0] == 'ER':
                     err_max = reader[1:]
-                elif reader[0] == 'PV':
-                    pvalue_runs = int(reader[1])
 
                 # Decontamination algorithm parameters
                 elif reader[0] == 'DA':
@@ -246,7 +244,6 @@ def main(mypath, pars_f_path):
         'flag_move_file': flag_move_file,
         'center_stddev': center_stddev, 'radius_method': radius_method,
         'kp_flag': kp_flag, 'fr_number': fr_number, 'err_max': err_max,
-        'pvalue_runs': pvalue_runs,
         # Decontamination algorithm parameters.
         'da_algor': da_algor, 'bayesda_runs': bayesda_runs,
         'fixedda_port': fixedda_port, 'readda_idcol': readda_idcol,
