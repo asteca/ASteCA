@@ -31,6 +31,9 @@ def main(clp):
         plx_clp = plx[plx_2s_msk]
         e_plx_clp = np.array(
             list(zip(*list(zip(*clp['cl_reg_fit']))[8]))[0])[plx_2s_msk]
+        # Take care of possible zero values that can produce issues since
+        # errors are in the denominator.
+        e_plx_clp[e_plx_clp == 0.] = 10.
 
         # Use optimum likelihood value as mean of the prior.
         def pstv_lnlike(w_t, w_i, s_i, mp):
