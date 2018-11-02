@@ -41,6 +41,10 @@ def main(
         err_bar_cl = prep_plots.error_bars(cl_region_c, x_min_cmd, err_lst)
         err_bar_all = prep_plots.error_bars(
             cld_c['mags'][0], x_min_cmd, err_lst, 'all')
+        x_min, x_max, y_min, y_max = prep_plots.frame_max_min(
+            cld_c['x'], cld_c['y'])
+        asp_ratio = prep_plots.aspect_ratio(x_min, x_max, y_min, y_max)
+        coord, x_name, y_name = prep_plots.coord_syst(pd['coords'])
 
         # Photometric analysis plots.
         arglist = [
@@ -48,8 +52,9 @@ def main(
             [gs, pd['colors'], pd['filters'], pd['id_kinem'], cld_c['mags'],
              em_float, cl_region_c, cl_region_rjct_c, stars_out_c,
              stars_out_rjct_c, err_bar_all],
-            # pl_err_rm_perc
-            [gs, y_ax, err_rm_perc],
+            # pl_cl_fl_regions
+            [gs, x_name, y_name, coord, x_min, x_max, y_min, y_max, asp_ratio,
+             field_regions_rjct_c, cl_region_rjct_c, flag_no_fl_regs_c],
             # pl_fl_diag: Field stars CMD/CCD diagram.
             [gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
                 field_regions_c, stars_f_rjct, stars_f_acpt, f_sz_pt,
@@ -58,7 +63,9 @@ def main(
             [gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
                 cl_region_rjct_c, cl_region_c, n_memb, cl_sz_pt, err_bar_cl],
             # pl_lum_func: LF of stars in cluster region and outside.
-            [gs, y_ax, flag_no_fl_regs_c, lum_func, completeness]
+            [gs, y_ax, flag_no_fl_regs_c, lum_func, completeness],
+            # pl_err_rm_perc
+            [gs, y_ax, err_rm_perc]
         ]
         for n, args in enumerate(arglist):
             mp_phot_analysis.plot(n, *args)

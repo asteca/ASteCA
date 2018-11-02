@@ -14,7 +14,7 @@ def starsPlot(boundary, x_data, y_data):
         if len(y_data) > 0:
             # Only attempt to plot if any star is stored in the list.
             plt.scatter(
-                x_data, y_data, marker='x', c='teal', s=15, zorder=1)
+                x_data, y_data, marker='x', c='teal', s=15, lw=.5, zorder=1)
     if boundary == 'accpt_in':
         if len(y_data) > 0:
             plt.scatter(
@@ -146,34 +146,44 @@ def pl_phot_err(
         plt.ylim(-0.005, min(plt.ylim()[1], 1.))
 
 
-def pl_err_rm_perc(gs, y_ax, err_rm_perc):
-    """
-    """
+def pl_cl_fl_regions(
+    gs, x_name, y_name, coord, x_min, x_max, y_min, y_max, asp_ratio,
+        field_regions_rjct_c, cl_region_rjct_c, flag_no_fl_regs_c):
+    '''
+    Cluster and field regions defined.
+    '''
     ax = plt.subplot(gs[2:4, 0:2])
-    ax.set_title("All frame (compl)", fontsize=9)
-    ax.minorticks_on()
-    # Only draw units on axis (ie: 1, 2, 3)
-    # ax.xaxis.set_major_locator(MultipleLocator(2.0))
-    # Set grid
-    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1,
-            zorder=1)
+    ax.set_aspect(aspect=asp_ratio)
+    # Set plot limits
+    plt.xlim(x_min, x_max)
+    plt.ylim(y_min, y_max)
+    # If RA is used, invert axis.
+    if coord == 'deg':
+        ax.invert_xaxis()
     # Set axis labels
-    plt.xlabel('$' + y_ax + '$', fontsize=18)
-    plt.ylabel('perc', fontsize=18)
+    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=12)
+    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=12)
+    # Set minor ticks
+    ax.minorticks_on()
+    ax.grid(b=True, which='both', color='gray', linestyle='--', lw=0.5)
 
-    perc_vals, edges, perc_rmvd = err_rm_perc
-    txt = "Percentage of stars that\nremain after error removal\n" +\
-        "({:.1f}% of stars removed)".format(perc_rmvd)
-    plt.step(edges[:-1], perc_vals, where='post', lw=3.5, label=txt)
+    # Plot cluster region.
+    if len(cl_region_rjct_c) > 0:
+        plt.scatter(
+            list(zip(*cl_region_rjct_c))[1], list(zip(*cl_region_rjct_c))[2],
+            marker='x', c='teal', s=15, lw=.5, edgecolors='none')
 
-    # Legends.
-    leg = plt.legend(
-        fancybox=True, numpoints=1, loc='center right', fontsize=9)
-    # Set the alpha value of the legend.
-    leg.get_frame().set_alpha(0.7)
+    N_flrg = 0
+    if not flag_no_fl_regs_c:
+        # Stars inside the field regions with rejected errors.
+        for i, reg in enumerate(field_regions_rjct_c):
+            fl_reg = list(zip(*reg))
+            N_flrg += len(fl_reg[0])
+            plt.scatter(fl_reg[1], fl_reg[2], marker='x',
+                        c='teal', s=15, lw=.5, edgecolors='none')
 
-    plt.gca().invert_xaxis()
-    plt.ylim(min(.9, min(perc_vals)), 1.)
+    ax.set_title(r"$N_{{rjct}}$={} (phot compl)".format(
+        len(cl_region_rjct_c) + N_flrg), fontsize=9)
 
 
 def pl_fl_diag(
@@ -201,7 +211,7 @@ def pl_fl_diag(
     # Plot accepted/rejected stars within the field regions defined.
     if stars_f_rjct[0]:
         plt.scatter(stars_f_rjct[0], stars_f_rjct[1], marker='x',
-                    c='teal', s=15, zorder=2)
+                    c='teal', s=15, lw=.5, zorder=2)
     if stars_f_acpt[0]:
         plt.scatter(stars_f_acpt[0], stars_f_acpt[1], marker='o', c='b',
                     s=f_sz_pt, lw=0.3, edgecolor='k', zorder=3)
@@ -254,7 +264,7 @@ def pl_cl_diag(
         plt.scatter(
             list(zip(*list(zip(*cl_region_rjct_c))[5]))[0],
             list(zip(*list(zip(*cl_region_rjct_c))[3]))[0],
-            marker='x', c='teal', s=12, zorder=2)
+            marker='x', c='teal', s=12, lw=.5, zorder=2)
     plt.scatter(
         list(zip(*list(zip(*cl_region_c))[5]))[0],
         list(zip(*list(zip(*cl_region_c))[3]))[0],
@@ -319,6 +329,36 @@ def pl_lum_func(gs, y_ax, flag_no_fl_regs, lum_func, completeness):
     leg.get_frame().set_alpha(0.7)
 
 
+def pl_err_rm_perc(gs, y_ax, err_rm_perc):
+    """
+    """
+    ax = plt.subplot(gs[4:6, 2:4])
+    ax.set_title("All frame (compl)", fontsize=9)
+    ax.minorticks_on()
+    # Only draw units on axis (ie: 1, 2, 3)
+    # ax.xaxis.set_major_locator(MultipleLocator(2.0))
+    # Set grid
+    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1,
+            zorder=1)
+    # Set axis labels
+    plt.xlabel('$' + y_ax + '$', fontsize=18)
+    plt.ylabel('perc', fontsize=18)
+
+    perc_vals, edges, perc_rmvd = err_rm_perc
+    txt = "Percentage of stars that\nremain after error removal\n" +\
+        "({:.1f}% of stars removed)".format(perc_rmvd)
+    plt.step(edges[:-1], perc_vals, where='post', lw=3.5, label=txt)
+
+    # Legends.
+    leg = plt.legend(
+        fancybox=True, numpoints=1, loc='center right', fontsize=9)
+    # Set the alpha value of the legend.
+    leg.get_frame().set_alpha(0.7)
+
+    plt.gca().invert_xaxis()
+    plt.ylim(min(.9, min(perc_vals)), 1.)
+
+
 # DEPRECATED 31/10/18
 # def pl_p_vals(gs, flag_pval_test, pval_test_params):
 #     '''
@@ -368,10 +408,11 @@ def plot(N, *args):
 
     plt_map = {
         0: [pl_phot_err, 'error rejection function'],
-        1: [pl_err_rm_perc, 'error removal percentage'],
+        1: [pl_cl_fl_regions, 'cluster + field regions rejected stars'],
         2: [pl_fl_diag, 'field regions photometric diagram'],
         3: [pl_cl_diag, 'cluster region photometric diagram'],
-        4: [pl_lum_func, 'luminosity function']
+        4: [pl_lum_func, 'luminosity function'],
+        5: [pl_err_rm_perc, 'error removal percentage']
     }
 
     fxn = plt_map.get(N, None)[0]
