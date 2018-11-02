@@ -74,6 +74,7 @@ def main(npd, read_mode, id_col, x_col, y_col, mag_col, e_mag_col,
 
         # Change masked elements with 'nan' values, in place.
         fill_cols(data)
+        fill_cols(data_compl)
 
     except ascii.InconsistentTableError:
         raise ValueError("ERROR: could not read data input file:\n  {}\n"
