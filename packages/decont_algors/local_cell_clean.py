@@ -130,7 +130,7 @@ def get_clust_histo(memb_prob_avrg_sort, mags_cols_cl, bin_edges):
     return cl_hist_p, cl_hist
 
 
-def get_fl_reg_hist(field_regions, bin_edges, cl_hist):
+def get_fl_reg_hist(field_regions_c, bin_edges, cl_hist):
     '''
     Obtain the average number of field region stars in each cell defined for
     the N-dimensional cluster region photometric diagram.
@@ -139,7 +139,7 @@ def get_fl_reg_hist(field_regions, bin_edges, cl_hist):
     # Empty field region array shaped like the cluster region array.
     f_hist = np.zeros(shape=np.shape(cl_hist))
     # Add stars in all the defined field regions.
-    for freg in field_regions:
+    for freg in field_regions_c:
         # Create list with all magnitudes and colors defined.
         mags_cols_fl = []
         for mag in list(zip(*list(zip(*freg))[1:][2])):
@@ -151,7 +151,7 @@ def get_fl_reg_hist(field_regions, bin_edges, cl_hist):
             np.array(list(zip(*mags_cols_fl))), bins=bin_edges)[0]
 
     # Average number of stars in each cell/bin and round to integer.
-    f_hist = np.around(f_hist / len(field_regions), 0)
+    f_hist = np.around(f_hist / len(field_regions_c), 0)
 
     return f_hist
 
@@ -219,7 +219,9 @@ def get_fit_stars(cl_hist_p, f_hist, flag_decont_skip):
     return cl_reg_fit, cl_reg_no_fit, min_prob
 
 
-def main(field_regions, memb_prob_avrg_sort, flag_decont_skip, fld_clean_bin):
+def main(
+    field_regions_c,
+        memb_prob_avrg_sort, flag_decont_skip, fld_clean_bin):
     '''
     Takes the photometric diagram of the cluster region with assigned MPs,
     divides it into sub-regions (cells) according to the
@@ -244,7 +246,7 @@ def main(field_regions, memb_prob_avrg_sort, flag_decont_skip, fld_clean_bin):
                                          bin_edges)
 
     # Obtain field regions histogram (only number of stars in each cell).
-    f_hist = get_fl_reg_hist(field_regions, bin_edges, cl_hist)
+    f_hist = get_fl_reg_hist(field_regions_c, bin_edges, cl_hist)
 
     # Obtain stars separated in list to be used by the BF func and list of
     # those discarded stars.
