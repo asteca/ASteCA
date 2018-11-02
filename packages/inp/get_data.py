@@ -84,7 +84,6 @@ def main(npd, read_mode, id_col, x_col, y_col, mag_col, e_mag_col,
     # Create cluster's dictionary with the *photometrically incomplete* data.
     ids, x, y, mags, cols, kine, em, ec, ek = dataCols(
         data_file, data, col_names)
-    perc_compl_check(ids, mags, cols)
     cld_i = {'ids': ids, 'x': x, 'y': y, 'mags': mags, 'em': em,
              'cols': cols, 'ec': ec, 'kine': kine, 'ek': ek}
 
@@ -93,6 +92,15 @@ def main(npd, read_mode, id_col, x_col, y_col, mag_col, e_mag_col,
         data_file, data_compl, col_names)
     cld_c = {'ids': ids, 'x': x, 'y': y, 'mags': mags, 'em': em,
              'cols': cols, 'ec': ec, 'kine': kine, 'ek': ek}
+
+    print('Data lines in input file (N_stars: {}).'.format(cld_i['ids'].size))
+    frac_reject = 1. - (float(cld_c['ids'].size) / cld_i['ids'].size)
+    if frac_reject > 0.05:
+        print("  WARNING: {:.0f}% of stars in input file contain\n"
+              "  invalid photometric data.".format(100. * frac_reject))
+    else:
+        print("  {:.0f}% of stars contain invalid photometric data.".format(
+            100. * frac_reject))
 
     clp = {'flag_data_eq': flag_data_eq}
 
@@ -215,23 +223,6 @@ def list_duplicates(seq):
     dups = ((key, map(str, locs)) for key, locs in tally.items()
             if len(locs) > 1)
     return dups
-
-
-def perc_compl_check(ids, mags, cols):
-    """
-    Check percentage of complete data.
-    """
-    N_ids, m_size, c_size = ids.size, [], []
-    for m in mags:
-        m_size.append(np.count_nonzero(~np.isnan(m)))
-    for c in cols:
-        c_size.append(np.count_nonzero(~np.isnan(c)))
-    N_min = min(m_size + c_size)
-    print('Data lines in input file (N_stars: {}).'.format(N_ids))
-    frac_reject = (N_ids - N_min) / float(N_ids)
-    if frac_reject > 0.05:
-        print("  WARNING: {:.0f}% of stars in input file contain\n"
-              "  invalid photometric data.".format(100. * frac_reject))
 
 
 if __name__ == '__main__':
