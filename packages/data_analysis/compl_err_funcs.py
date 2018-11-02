@@ -34,7 +34,8 @@ def main(clp):
         # Histograms for accepted and all stars.
         h_mag_all_c, _ = mmagHist(all_mags, eqN_edges)
 
-        perc_rmvd = 100. * (mmag_rjct_c.size / all_mags.size)
+        # TODO I think Python3 does not need this 'float'
+        perc_rmvd = 100. * (mmag_rjct_c.size / float(all_mags.size))
 
     else:
         eqN_edges = histedges_equalN(mmag_acpt_c, Nbins)
@@ -48,7 +49,7 @@ def main(clp):
 
     # Estimate error removal function: percentage of stars that remain after
     # error rejection.
-    err_rm_perc = h_mag_acpt_c / h_mag_all_c
+    err_rm_perc = h_mag_acpt_c / h_mag_all_c.astype(float)
 
     if complt_flag:
 
