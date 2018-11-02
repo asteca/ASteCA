@@ -277,13 +277,13 @@ def pl_cl_diag(
             ms=0., zorder=4)
 
 
-def pl_lum_func(gs, y_ax, flag_no_fl_regs, lum_func, completeness):
+def pl_lum_func(gs, y_ax, flag_no_fl_regs, lum_func):
     '''
     LF of stars in cluster region and outside.
     '''
     x_cl, y_cl, x_fl, y_fl, x_all, y_all = lum_func
     ax = plt.subplot(gs[4:6, 0:2])
-    ax.set_title("After error removal", fontsize=9)
+    ax.set_title("After error removal (compl)", fontsize=9)
     ax.minorticks_on()
     # Only draw units on axis (ie: 1, 2, 3)
     ax.xaxis.set_major_locator(MultipleLocator(2.0))
@@ -295,7 +295,7 @@ def pl_lum_func(gs, y_ax, flag_no_fl_regs, lum_func, completeness):
     plt.ylabel('$N^{\star}/A_{cl}$', fontsize=18)
 
     # All frame.
-    plt.step(x_all, y_all, where='post', color='k', lw=1.5, linestyle=':',
+    plt.step(x_all, y_all, where='post', color='k', lw=2.5, linestyle=':',
              label='Frame (compl)', zorder=6)
     # Cluster region LF (contaminated).
     plt.step(x_cl, y_cl, where='post', color='r', lw=1.,
@@ -315,13 +315,7 @@ def pl_lum_func(gs, y_ax, flag_no_fl_regs, lum_func, completeness):
     x_min, x_max = x_cl[-1] + .3, x_cl[1] - .3
     plt.xlim(x_min, x_max)
     plt.ylim(0., max_y + 0.05 * max_y)
-    # Completeness maximum value.
-    # completeness = [bin_edges, max_indx, comp_perc]
-    bin_edges, max_indx = completeness[0], completeness[1]
-    mag_peak = bin_edges[max_indx]
-    text = '$' + y_ax + r',_{compl}\,\approx\,%0.1f$' % mag_peak
-    ax.vlines(x=mag_peak, ymin=0., ymax=plt.ylim()[1], color='k',
-              lw=2.5, linestyles='dashed', label=text, zorder=5)
+
     # Legends.
     leg = plt.legend(fancybox=True, loc='upper right', numpoints=1,
                      fontsize=11)

@@ -11,8 +11,7 @@ from . import prep_plots
 def main(
         npd, cld_c, pd, em_float, err_lst, cl_region_c, cl_region_rjct_c,
         stars_out_c, stars_out_rjct_c, field_regions_c, flag_no_fl_regs_c,
-        field_regions_rjct_c, n_memb, lum_func, completeness, err_rm_perc,
-        **kwargs):
+        field_regions_rjct_c, n_memb, lum_func, err_rm_perc, **kwargs):
     '''
     Make B block plots.
     '''
@@ -63,7 +62,7 @@ def main(
             [gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
                 cl_region_rjct_c, cl_region_c, n_memb, cl_sz_pt, err_bar_cl],
             # pl_lum_func: LF of stars in cluster region and outside.
-            [gs, y_ax, flag_no_fl_regs_c, lum_func, completeness],
+            [gs, y_ax, flag_no_fl_regs_c, lum_func],
             # pl_err_rm_perc
             [gs, y_ax, err_rm_perc]
         ]
