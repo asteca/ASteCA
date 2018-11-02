@@ -21,9 +21,14 @@ def main(clp):
         plx_flag = True
 
         # Reject 2\sigma outliers.
-        max_plx, min_plx = np.median(plx) + 2. * np.std(plx),\
-            np.median(plx) - 2. * np.std(plx)
-        plx_2s_msk = (plx < max_plx) & (plx > min_plx)
+        max_plx, min_plx = np.nanmedian(plx) + 2. * np.nanstd(plx),\
+            np.nanmedian(plx) - 2. * np.nanstd(plx)
+
+        # Suppress Runtimewarning issued when 'plx' contains 'nan' values.
+        with np.warnings.catch_warnings():
+            np.warnings.filterwarnings('ignore')
+            plx_2s_msk = (plx < max_plx) & (plx > min_plx)
+
         # Prepare masked data.
         mmag_clp = np.array(
             list(zip(*list(zip(*clp['cl_reg_fit']))[3]))[0])[plx_2s_msk]
