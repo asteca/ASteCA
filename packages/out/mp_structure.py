@@ -211,12 +211,11 @@ def pl_zoom_frame(
     # Plot radius.
     circle = plt.Circle((kde_cent[0], kde_cent[1]), clust_rad, color='r',
                         fill=False, lw=1.5, zorder=5)
+    N_r = [1 for pt in list(zip(x_data, y_data)) if circle.contains_point(pt)]
+    ax.set_title(r"$N_{{r<r_{{cl}}}}$={} [$CI = {:.2f}$] (phot incomp)".format(
+        sum(N_r), cont_index), fontsize=9)
     fig.gca().add_artist(circle)
-    # Add text box.
-    text = "CI = {:.2f}".format(cont_index)
-    ob = offsetbox.AnchoredText(text, pad=0.2, loc=1, prop=dict(size=12))
-    ob.patch.set(alpha=0.85)
-    ax.add_artist(ob)
+
     # Plot contour levels if it was obtained.
     if kde_plot:
         ext_range, x, y, k_pos = kde_plot
@@ -278,7 +277,7 @@ def pl_cl_fl_regions(
     if len(cl_region_rjct_i) > 0:
         plt.scatter(
             list(zip(*cl_region_rjct_i))[1], list(zip(*cl_region_rjct_i))[2],
-            marker='x', c='orange', s=5, lw=.3, edgecolors='none')
+            marker='o', c='red', s=8, edgecolors='w', lw=.2)
     plt.scatter(list(zip(*cl_region_i))[1], list(zip(*cl_region_i))[2],
                 marker='o', c='red', s=8, edgecolors='w', lw=.2)
 
@@ -295,8 +294,8 @@ def pl_cl_fl_regions(
         for i, reg in enumerate(field_regions_rjct_i):
             fl_reg = list(zip(*reg))
             N_flrg += len(fl_reg[0])
-            plt.scatter(fl_reg[1], fl_reg[2], marker='x',
-                        c=next(col), s=5, lw=.5, edgecolors='none')
+            plt.scatter(fl_reg[1], fl_reg[2], marker='o',
+                        c=next(col), s=8, edgecolors='w', lw=.2)
 
     ax.set_title(r"$N_{{stars}}$={} (phot incomp)".format(
         len(cl_region_i) + len(cl_region_rjct_i) + N_flrg), fontsize=9)
