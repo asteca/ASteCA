@@ -13,14 +13,21 @@ if sys.version_info[0] == 3:
 def main(npd, read_mode, id_col, x_col, y_col, mag_col, e_mag_col,
          col_col, e_col_col, plx_col, e_plx_col, pmx_col, e_pmx_col,
          pmy_col, e_pmy_col, rv_col, e_rv_col, **kwargs):
-    '''
+    """
     Read all data from the cluster's data file.
-    '''
+
+    Separate data into "incomplete" and "complete", where the latter means
+    all stars in the  input file, and the former only those with all the
+    photometric data available.
+    """
 
     data_file = npd['data_file']
     try:
+        # TODO this should be provided by the user.
+        # Identify all these strings as invalid entries.
         fill_msk = [
-            ('', '0'), ('INDEF', '0'), ('9999.99', '0'), ('99.999', '0')]
+            ('', '0'), ('INDEF', '0'), ('NAN', '0'), ('9999.99', '0'),
+            ('999.99', '0'), ('99.999', '0')]
         # Store IDs as strings.
         if read_mode == 'num':
             data = ascii.read(
@@ -38,27 +45,30 @@ def main(npd, read_mode, id_col, x_col, y_col, mag_col, e_mag_col,
             [plx_col, pmx_col, pmy_col, rv_col],
             [e_plx_col, e_pmx_col, e_pmy_col, e_rv_col]]
 
-        # Remove not wanted columns *before* removing rows with 'nan' values
-        # (otherwise columns that should not be read will influence the row
-        # removal).
+        # Remove not wanted columns.
         col_names_keep = list(filter(bool, list(flatten(col_names))))
         data.keep_columns(col_names_keep)
 
-        # Check if there are any masked elements in the data table.
+        # Define PHOTOMETRIC data columns.
+        data_phot = list(flatten([mag_col, e_mag_col, col_col, e_col_col]))
+        # Check if there are any masked elements in the photometric data.
         masked_elems = 0
-        for col in data.columns:
+        for col in data_phot:
+            # Catch "AttributeError: 'Column' object has no attribute 'mask'"
+            # if column is not masked.
             try:
-                masked_elems += data[col].mask.nonzero()[0].sum()
+                masked_elems += data[col].mask.sum()
             except AttributeError:
                 pass
 
-        # Remove all rows with at least one masked element.
+        # Remove rows with at least one masked *photometric* element.
         flag_data_eq = False
         if masked_elems > 0:
             data_compl = data[reduce(
-                operator.and_, [~data[col].mask for col in data.columns])]
+                operator.and_, [~data[col].mask for col in data_phot])]
         else:
-            # If there where no elements to mask, there were no bad values.
+            # If there where no elements to mask, there were no bad photometric
+            # values.
             data_compl = copy.deepcopy(data)
             flag_data_eq = True
 
@@ -70,14 +80,14 @@ def main(npd, read_mode, id_col, x_col, y_col, mag_col, e_mag_col,
                          "  Check that all rows are filled (i.e., no blank"
                          " spaces)\n  for all columns.\n".format(data_file))
 
-    # Create cluster's dictionary with the *incomplete* data.
+    # Create cluster's dictionary with the *photometrically incomplete* data.
     ids, x, y, mags, cols, kine, em, ec, ek = dataCols(
         data_file, data, col_names)
     perc_compl_check(ids, mags, cols)
     cld_i = {'ids': ids, 'x': x, 'y': y, 'mags': mags, 'em': em,
              'cols': cols, 'ec': ec, 'kine': kine, 'ek': ek}
 
-    # Create cluster's dictionary with the *complete* data.
+    # Create cluster's dictionary with the *photometrically complete* data.
     ids, x, y, mags, cols, kine, em, ec, ek = dataCols(
         data_file, data_compl, col_names)
     cld_c = {'ids': ids, 'x': x, 'y': y, 'mags': mags, 'em': em,
@@ -176,7 +186,7 @@ def dataCols(data_file, data, col_names):
     # Check if the range of any coordinate column is zero.
     data_names = ['x_coords', 'y_coords']
     for i, dat_lst in enumerate([x, y]):
-        if np.min(dat_lst) == np.max(dat_lst):
+        if np.nanmin(dat_lst) == np.nanmax(dat_lst):
             raise ValueError("ERROR: the range for the '{}' column\n"
                              "is zero. Check the input data format.".format(
                                  data_names[i]))
@@ -184,7 +194,7 @@ def dataCols(data_file, data, col_names):
     data_names = ['magnitude', 'color']
     for i, dat_lst in enumerate([mags, cols]):
         for mc in dat_lst:
-            if np.min(mc) == np.max(mc):
+            if np.nanmin(mc) == np.nanmax(mc):
                 raise ValueError(
                     "ERROR: the range for {} column {} is\nzero."
                     " Check the input data format.".format(data_names[i], i))

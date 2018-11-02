@@ -77,9 +77,10 @@ def main(cl_file, pd):
     # Get data from semi-data input file. Add to dictionary.
     pd = get_data_semi.main(pd, **npd)
 
-    # Cluster's data from file, as dictionary. Obtain both incomplete (ie: with
-    # nan values) and complete (all rows contain valid data) dictionaries.
-    # Return cluster's parameters dictionary 'clp'.
+    # Cluster's data from file, as dictionary. Obtain both incomplete (ie: all
+    # stars in data file) and complete (only those with full photometric data)
+    # dictionaries.
+    # Initiates cluster's parameters dictionary 'clp'.
     cld_i, cld_c, clp = get_data.main(npd, **pd)
 
     # DEPRECATED (at least for now, 08/05/18)
@@ -115,15 +116,12 @@ def main(cl_file, pd):
     # King profiles based on the density profiles.
     clp = king_profile.main(clp, **pd)
 
-    # ^ All the functions above use the *incomplete* dataset 'cld_i'
-    #   (ie: the one that contains 'nan' values).
+    # ^ All the functions above use the *photo incomplete* dataset 'cld_i'
 
     # These three functions are applied for both datasets since we need the
-    # 'cl_region' and 'field_regions' parameters with *incomplete* data to be
-    # used by the Bayesian DA, and the parameters obtained with the *complete*
-    # dataset for the rest of the functions.
-    # The incomplete 'cl_region' and 'field_regions' parameters are also used
-    # by the A2 plot (for the cluster+field regions plot)
+    # 'cl_region' and 'field_regions' parameters with *photo incomplete* data
+    # to be used by the DA, and the parameters obtained with the
+    # *photo complete* dataset for the rest of the functions.
     print("Processing complete dataset:")
     # Accept and reject stars based on their errors.
     clp = err_accpt_rejct.main('comp', cld_c, clp, **pd)
@@ -164,12 +162,14 @@ def main(cl_file, pd):
     # field_regions --> stars_out_x ----------> field_regions_x
     #              '--> stars_out_rjct x -----> field_regions_rjct_x
 
+    # Uses the incomplete 'cl_region' and 'field_regions' data.
     make_A2_plot.main(npd, cld_i, pd, **clp)
 
-    # v The functions below use the *complete* dataset, ie: no 'nan' values,
-    # with the exception of the Bayesian DA (uses the *incomplete* dataset to
-    # assign MPs, and later only those stars in the *complete* dataset are
-    # kept and passed forward).
+    # v The functions below use the *photom complete* dataset with the
+    # exception of the Bayesian DA, which uses the *photo incomplete* dataset
+    # to assign MPs. After this, only those stars in the *photo complete*
+    # dataset are kept and passed forward to the fundamental parameters
+    # estimation process.
 
     # Obtain exponential fit for the errors.
     clp = err_range_avrg.main(clp)
