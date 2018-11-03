@@ -359,6 +359,8 @@ def pl_data_rm_perc(
         linestyle='--', label=txt)
 
     edges, perc_vals, perc_rmvd = combined_compl
+    # Reverse.
+    perc_vals = 1. - perc_vals
     perc_vals_min.append(min(perc_vals))
     txt = "Combined function\n({:.1f}% of stars removed)".format(perc_rmvd)
     plt.step(

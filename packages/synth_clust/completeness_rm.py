@@ -72,9 +72,12 @@ def main(isoch_binar, completeness, cmpl_rnd):
     observation.
     """
 
+    # Remember that 'comp_perc' here means the percentage of stars that should
+    # be *REMOVED* from each mag range|bin.
+    bin_edges, comp_perc = completeness[:2]
+
     # If stars exist in the isochrone beyond the completeness magnitude
     # level, then apply the removal of stars. Otherwise, skip it.
-    bin_edges, comp_perc = completeness[:2]
     if np.max(isoch_binar[0]) > bin_edges[0]:
 
         # Indexes of stars in 'isoch_binar[0]' whose main magnitude
@@ -88,7 +91,7 @@ def main(isoch_binar, completeness, cmpl_rnd):
         # Equivalent to np.histogram(isoch_binar[0], bin_edges)[0]
         count = np.bincount(c_indx, minlength=len(comp_perc) + 1)[1:]
         # Clip at '0' so there are no negative values.
-        di = np.rint(count - count * comp_perc).astype(int).clip(0)
+        di = np.rint(count * comp_perc).astype(int).clip(0)
 
         # Actual indexes of stars, stored in each edge range.
         rang_indx = idxFind(len(bin_edges), c_indx)
