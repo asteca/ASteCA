@@ -283,7 +283,7 @@ def pl_lum_func(gs, y_ax, flag_no_fl_regs, lum_func):
     '''
     x_cl, y_cl, x_fl, y_fl, x_all, y_all = lum_func
     ax = plt.subplot(gs[4:6, 0:2])
-    ax.set_title("After error removal (compl)", fontsize=9)
+    ax.set_title("LF after error removal (compl)", fontsize=9)
     ax.minorticks_on()
     # Only draw units on axis (ie: 1, 2, 3)
     ax.xaxis.set_major_locator(MultipleLocator(2.0))
@@ -323,14 +323,14 @@ def pl_lum_func(gs, y_ax, flag_no_fl_regs, lum_func):
     leg.get_frame().set_alpha(0.7)
 
 
-def pl_err_rm_perc(gs, y_ax, err_rm_perc):
+def pl_data_rm_perc(
+    gs, y_ax, phot_analy_compl, phot_data_compl, err_rm_data,
+        combined_compl):
     """
     """
     ax = plt.subplot(gs[4:6, 2:4])
-    ax.set_title("All frame (compl)", fontsize=9)
+    ax.set_title("Percentage of stars kept after each process", fontsize=9)
     ax.minorticks_on()
-    # Only draw units on axis (ie: 1, 2, 3)
-    # ax.xaxis.set_major_locator(MultipleLocator(2.0))
     # Set grid
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1,
             zorder=1)
@@ -338,19 +338,41 @@ def pl_err_rm_perc(gs, y_ax, err_rm_perc):
     plt.xlabel('$' + y_ax + '$', fontsize=18)
     plt.ylabel('perc', fontsize=18)
 
-    perc_vals, edges, perc_rmvd = err_rm_perc
-    txt = "Percentage of stars that\nremain after error removal\n" +\
+    edges, perc_vals = phot_analy_compl
+    perc_vals_min = [min(perc_vals)]
+    txt = "Photometric analysis completeness"
+    plt.step(edges[:-1], perc_vals, where='post', lw=2., linestyle='--',
+             label=txt)
+
+    edges, perc_vals, perc_rmvd = phot_data_compl
+    perc_vals_min.append(min(perc_vals))
+    txt = "Photometric data completeness\n" +\
         "({:.1f}% of stars removed)".format(perc_rmvd)
-    plt.step(edges[:-1], perc_vals, where='post', lw=3.5, label=txt)
+    plt.step(
+        edges[:-1], perc_vals, where='post', lw=2., linestyle='--', label=txt)
+
+    edges, perc_vals, perc_rmvd = err_rm_data
+    perc_vals_min.append(min(perc_vals))
+    txt = "Error removal\n({:.1f}% of stars removed)".format(perc_rmvd)
+    plt.step(
+        edges[:-1], perc_vals, where='post', lw=2., color='teal',
+        linestyle='--', label=txt)
+
+    edges, perc_vals, perc_rmvd = combined_compl
+    perc_vals_min.append(min(perc_vals))
+    txt = "Combined function\n({:.1f}% of stars removed)".format(perc_rmvd)
+    plt.step(
+        edges[:-1], perc_vals, where='post', lw=2., color='r', linestyle='--',
+        label=txt)
 
     # Legends.
     leg = plt.legend(
-        fancybox=True, numpoints=1, loc='center right', fontsize=9)
+        fancybox=True, numpoints=1, loc='lower right', fontsize=9)
     # Set the alpha value of the legend.
     leg.get_frame().set_alpha(0.7)
 
     plt.gca().invert_xaxis()
-    plt.ylim(min(.9, min(perc_vals)), 1.)
+    plt.ylim(min(.9, min(perc_vals_min)) - .05, 1.05)
 
 
 # DEPRECATED 31/10/18
@@ -406,7 +428,7 @@ def plot(N, *args):
         2: [pl_fl_diag, 'field regions photometric diagram'],
         3: [pl_cl_diag, 'cluster region photometric diagram'],
         4: [pl_lum_func, 'luminosity function'],
-        5: [pl_err_rm_perc, 'error removal percentage']
+        5: [pl_data_rm_perc, 'error removal percentage']
     }
 
     fxn = plt_map.get(N, None)[0]

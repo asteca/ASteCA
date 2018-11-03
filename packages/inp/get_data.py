@@ -98,9 +98,6 @@ def main(npd, read_mode, id_col, x_col, y_col, mag_col, e_mag_col,
     if frac_reject > 0.05:
         print("  WARNING: {:.0f}% of stars in input file contain\n"
               "  invalid photometric data.".format(100. * frac_reject))
-    else:
-        print("  {:.0f}% of stars contain invalid photometric data.".format(
-            100. * frac_reject))
 
     clp = {'flag_data_eq': flag_data_eq}
 

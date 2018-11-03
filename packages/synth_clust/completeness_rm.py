@@ -74,26 +74,24 @@ def main(isoch_binar, completeness, cmpl_rnd):
 
     # If stars exist in the isochrone beyond the completeness magnitude
     # level, then apply the removal of stars. Otherwise, skip it.
-    bin_edges, max_indx, comp_perc = completeness
-    if np.max(isoch_binar[0]) > bin_edges[max_indx]:
+    bin_edges, comp_perc = completeness[:2]
+    if np.max(isoch_binar[0]) > bin_edges[0]:
 
-        # Indexes of stars in 'isoch_binar' whose main magnitude
-        # value falls between the ranges given.
-        c_indx = np.searchsorted(bin_edges[max_indx:],
-                                 isoch_binar[0], side='left')
+        # Indexes of stars in 'isoch_binar[0]' whose main magnitude
+        # value falls between the ranges given by 'bin_edges'.
+        c_indx = np.searchsorted(bin_edges, isoch_binar[0], side='left')
 
-        # Number of elements to keep in each range.
         # Reject elements in the '0' range, ie: below the smallest edge.
         # The minimum length is that of the 'comp_perc' list plus one,
         # so after removing the '0' element both lists will have the same
         # length.
-        # Equivalent to np.histogram(isoch_binar[0], bin_edges)[0][max_indx:]
+        # Equivalent to np.histogram(isoch_binar[0], bin_edges)[0]
         count = np.bincount(c_indx, minlength=len(comp_perc) + 1)[1:]
         # Clip at '0' so there are no negative values.
-        di = np.rint(count - count[0] * comp_perc).astype(int).clip(0)
+        di = np.rint(count - count * comp_perc).astype(int).clip(0)
 
         # Actual indexes of stars, stored in each edge range.
-        rang_indx = idxFind(len(bin_edges[max_indx:]), c_indx)
+        rang_indx = idxFind(len(bin_edges), c_indx)
 
         # Pick a number (given by the list 'di') of random elements in
         # each range. Those are the indexes of the elements that
@@ -103,6 +101,16 @@ def main(isoch_binar, completeness, cmpl_rnd):
         # Remove stars pointed to by 'd_i' from *all* the sub-arrays in
         # 'isoch_binar'.
         isoch_compl = np.delete(isoch_binar, d_i, axis=1)
+
+        # import matplotlib.pyplot as plt
+        # plt.title("% removed: {:.1f}".format(
+        #     100. * (1. - isoch_compl[0].size / isoch_binar[0].size)))
+        # plt.hist(
+        #     isoch_binar[0], bins=bin_edges, histtype='step', label='prev rm')
+        # plt.hist(
+        #     isoch_compl[0], bins=bin_edges, histtype='step', label='post rm')
+        # plt.legend()
+        # plt.show()
 
     else:
         isoch_compl = isoch_binar

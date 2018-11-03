@@ -166,16 +166,16 @@ def main(cl_file, pd):
     make_A2_plot.main(npd, cld_i, pd, **clp)
 
     # v The functions below use the *photom complete* dataset with the
-    # exception of the Bayesian DA, which uses the *photo incomplete* dataset
-    # to assign MPs. After this, only those stars in the *photo complete*
-    # dataset are kept and passed forward to the fundamental parameters
-    # estimation process.
+    # exception of the 'compl_err_funcs()' function and the Bayesian DA. The
+    # DA uses the *photo incomplete* dataset to assign MPs. After this, only
+    # those stars in the *photo complete* dataset are kept and passed forward
+    # to the fundamental parameters estimation process.
 
     # Obtain exponential fit for the errors.
     clp = err_range_avrg.main(clp)
 
     # Combined error rejection & completeness function.
-    clp = compl_err_funcs.main(clp)
+    clp = compl_err_funcs.main(clp, cld_i, cld_c)
 
     # Luminosity function and completeness level for each magnitude bin.
     clp = luminosity.main(clp, **cld_c)

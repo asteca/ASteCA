@@ -11,7 +11,8 @@ from . import prep_plots
 def main(
         npd, cld_c, pd, em_float, err_lst, cl_region_c, cl_region_rjct_c,
         stars_out_c, stars_out_rjct_c, field_regions_c, flag_no_fl_regs_c,
-        field_regions_rjct_c, n_memb, lum_func, err_rm_perc, **kwargs):
+        field_regions_rjct_c, n_memb, lum_func, phot_analy_compl,
+        phot_data_compl, err_rm_data, completeness, **kwargs):
     '''
     Make B block plots.
     '''
@@ -63,8 +64,9 @@ def main(
                 cl_region_rjct_c, cl_region_c, n_memb, cl_sz_pt, err_bar_cl],
             # pl_lum_func: LF of stars in cluster region and outside.
             [gs, y_ax, flag_no_fl_regs_c, lum_func],
-            # pl_err_rm_perc
-            [gs, y_ax, err_rm_perc]
+            # pl_data_rm_perc
+            [gs, y_ax, phot_analy_compl, phot_data_compl, err_rm_data,
+             completeness]
         ]
         for n, args in enumerate(arglist):
             mp_phot_analysis.plot(n, *args)
