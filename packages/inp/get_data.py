@@ -96,8 +96,8 @@ def main(npd, read_mode, id_col, x_col, y_col, mag_col, e_mag_col,
     print('Data lines in input file (N_stars: {}).'.format(cld_i['ids'].size))
     frac_reject = 1. - (float(cld_c['ids'].size) / cld_i['ids'].size)
     if frac_reject > 0.05:
-        print("  WARNING: {:.0f}% of stars in input file contain\n"
-              "  invalid photometric data.".format(100. * frac_reject))
+        print("  WARNING: {:.0f}% of stars in the input file contain\n"
+              "  incomplete photometric data.".format(100. * frac_reject))
 
     clp = {'flag_data_eq': flag_data_eq}
 
@@ -156,6 +156,33 @@ def dataCols(data_file, data, col_names):
                 print("  ID '{}' found in lines: {}".format(dup[0],
                       ", ".join(dup[1])))
             raise ValueError("Duplicated IDs found.")
+
+        # Check that all data columns are in the proper 'float64' format.
+        # This catches values like '0.343a' which make the entire column
+        # be processed with a string format.
+        # TODO since columns are masked astropy displays a cryptic message, see
+        # https://github.com/astropy/astropy/issues/8071
+        for i in (1, 2):
+            try:
+                data[col_names[i]].dtype = 'float64'
+            except ValueError:
+                raise ValueError("Bad data value in column '{}'".format(
+                    col_names[i]))
+        for i in (3, 4, 5, 6):
+            for mc in col_names[i]:
+                try:
+                    data[mc].dtype = 'float64'
+                except ValueError:
+                    raise ValueError("Bad data value in column '{}'".format(
+                        mc))
+        for i in (7, 8):
+            for k in col_names[i]:
+                if k is not False:
+                    try:
+                        data[k].dtype = 'float64'
+                    except ValueError:
+                        raise ValueError(
+                            "Bad data value in column '{}'".format(k))
 
         # Read coordinates data.
         x, y = np.array(data[col_names[1]]), np.array(data[col_names[2]])
