@@ -151,15 +151,16 @@ def star_size(mag, N=None, zmin=None, zmax=None):
     Convert magnitudes into intensities and define sizes of stars in
     finding chart.
     '''
+    mag = np.array(mag)
     if N is None:
         N = mag.size
     if zmin is None and zmax is None:
         interval = ZScaleInterval()
         zmin, zmax = interval.get_limits(mag)
 
-    mag = np.array(mag).clip(zmin, zmax)
+    mag = mag.clip(zmin, zmax)
     factor = 500. * (1 - 1 / (1 + 150 / N ** 0.85))
-    sizes = .1 + factor * (10 ** ((np.array(mag) - zmin) / -2.5))
+    sizes = .1 + factor * (10 ** ((mag - zmin) / -2.5))
     return sizes
 
 
