@@ -1,6 +1,7 @@
 
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+from astropy.visualization import ZScaleInterval
 from os.path import join
 from . import mp_centers
 from . import add_version_plot
@@ -28,13 +29,15 @@ def main(
         x_ax, y_ax = prep_plots.ax_names(
             pd['colors'][0], pd['filters'][0], 'mag')
 
-        N_all, min_mag_all = len(cld_i['mags'][0]), min(cld_i['mags'][0])
         # Structure plots.
+        interval = ZScaleInterval()
+        zmin, zmax = interval.get_limits(cld_i['mags'][0])
+        N_all = len(cld_i['mags'][0])
         arglist = []
         for mag_rng in xy_mag_ranges:
             x, y, m = list(zip(*list(mag_rng.values())[0]))
             mag_range = list(mag_rng.keys())[0]
-            st_sizes_arr = prep_plots.star_size(m, N=N_all, min_m=min_mag_all)
+            st_sizes_arr = prep_plots.star_size(m, N_all, zmin, zmax)
             arglist.append(
                 # pl_full_frame: x,y finding chart of full frame.
                 [gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max,

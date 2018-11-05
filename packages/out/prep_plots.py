@@ -5,6 +5,7 @@ from ..decont_algors.local_cell_clean import bin_edges_f
 import numpy as np
 from scipy import stats
 from scipy.spatial.distance import cdist
+from astropy.visualization import ZScaleInterval
 
 
 def frame_max_min(x_data, y_data):
@@ -145,18 +146,21 @@ def diag_limits(yaxis, phot_x, phot_y):
     return x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd
 
 
-def star_size(mag, N=None, min_m=None):
+def star_size(mag, N=None, zmin=None, zmax=None):
     '''
     Convert magnitudes into intensities and define sizes of stars in
     finding chart.
     '''
-    # Scale factor.
     if N is None:
-        N = len(mag)
-    if min_m is None:
-        min_m = min(mag)
+        N = mag.size
+    if zmin is None and zmax is None:
+        interval = ZScaleInterval()
+        zmin, zmax = interval.get_limits(mag)
+
+    mag = np.array(mag).clip(zmin, zmax)
     factor = 500. * (1 - 1 / (1 + 150 / N ** 0.85))
-    return 0.1 + factor * 10 ** ((np.array(mag) - min_m) / -2.5)
+    sizes = .1 + factor * (10 ** ((np.array(mag) - zmin) / -2.5))
+    return sizes
 
 
 def phot_diag_st_size(x):
