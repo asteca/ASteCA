@@ -23,6 +23,7 @@ from .errors import err_range_avrg
 from .data_analysis import compl_err_funcs
 from .data_analysis import luminosity
 # from .data_analysis import kde_pvalue  # DEPRECATED
+from .data_analysis import kde_field_vs_clust
 from .data_analysis import members_number
 #
 from .decont_algors import decont_algors
@@ -183,6 +184,9 @@ def main(cl_file, pd):
     # DEPRECATED 31/10/18
     # # Physical cluster probability based on p_values distribution.
     # clp = kde_pvalue.main(clp, **pd)
+
+    # TODO not ready yet. Results are all over the place.
+    # clp = kde_field_vs_clust.main(pd, clp, cld_c)
 
     # Approximate number of cluster's members.
     clp = members_number.main(clp)
