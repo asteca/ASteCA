@@ -221,7 +221,7 @@ def main(colors, plx_col, pmx_col, pmy_col, rv_col, bayesda_runs,
                 # stars within the cluster region (highly contaminated
                 # cluster), assign zero likelihood of being a true member to
                 # all stars within the cluster region.
-                cl_lkl = np.fill(1e-7, len(cl_region))
+                cl_lkl = np.ones(len(cl_region)) * 1e-7
 
             # Bayesian probability for each star within the cluster region.
             bayes_prob = 1. / (1. + (fl_lkl / cl_lkl))
