@@ -149,4 +149,5 @@ def main(iso_paths, par_ranges):
     met_f_filter, met_values, age_values = match_ranges(
         met_vals_all, met_files, age_vals_all, z_range, a_range)
 
-    return param_ranges, met_f_filter, met_values, age_values
+    return param_ranges, met_f_filter, met_values, age_values, met_vals_all,\
+        age_vals_all

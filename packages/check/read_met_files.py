@@ -28,8 +28,8 @@ def ranges_files_check(
     """
     try:
         # Get parameters values defined.
-        param_ranges, met_f_filter, met_values, age_values = \
-            met_ages_values.main(iso_paths, par_ranges)
+        param_ranges, met_f_filter, met_values, age_values, met_vals_all,\
+            age_vals_all = met_ages_values.main(iso_paths, par_ranges)
     except Exception:
         print(traceback.format_exc())
         sys.exit("\nERROR: error storing metallicity files.")
@@ -51,7 +51,8 @@ def ranges_files_check(
     err_mssg = "ERROR: one or more metallicity files in the '{}' system\n" +\
                "could not be matched to the range given.\n\n" +\
                "The defined values are:\n\n" +\
-               "{}\n\nand the values read are:\n\n" +\
+               "{}\n\nthe read values are:\n\n" +\
+               "{}\n\nand the closest values found are:\n\n" +\
                "{}\n\nThe missing elements are:\n\n{}"
     # Go through the values extracted from the metallicity files present
     # in each photometric system used.
@@ -60,16 +61,17 @@ def ranges_files_check(
             # Find missing elements.
             missing = find_missing(z_range, met_vs)
             sys.exit(err_mssg.format(
-                cmd_systs[all_syst_filters[i][0]][0], z_range,
-                np.asarray(met_vs), np.asarray(missing)))
+                cmd_systs[all_syst_filters[i][0]][0], np.array(met_vals_all),
+                z_range, np.asarray(met_vs), np.asarray(missing)))
     err_mssg = "ERROR: one or more isochrones could not be matched\n" +\
                "to the age range given.\n\nThe defined values are:\n\n" +\
-               "{}\n\nand the values read are:\n\n" +\
+               "{}\n\nthe read values are:\n\n" +\
+               "{}\n\nand the closest values found are:\n\n" +\
                "{}\n\nThe missing elements are:\n\n{}"
     if len(a_range) > len(age_values):
         # Find missing elements.
         missing = find_missing(a_range, age_values)
-        sys.exit(err_mssg.format(a_range, np.asarray(age_values),
+        sys.exit(err_mssg.format(a_range, age_vals_all, np.asarray(age_values),
                  np.asarray(missing)))
 
     return param_ranges, met_f_filter, met_values, age_values
