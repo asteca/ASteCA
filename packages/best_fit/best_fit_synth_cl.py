@@ -72,7 +72,7 @@ def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning,
         obs_clust = obs_clust_prepare.main(
             cl_max_mag, lkl_method, lkl_binning, lkl_weight)
 
-        # DELETE
+        # TODO DELETE
         # print(filters)
         # print(colors)
         # cl_histo_f = obs_clust[2]
