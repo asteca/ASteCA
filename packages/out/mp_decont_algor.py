@@ -135,8 +135,8 @@ def pl_mps_phot_diag(
     plt.xlim(x_min_cmd, x_max_cmd)
     plt.ylim(y_min_cmd, y_max_cmd)
     # Set axis labels
-    plt.xlabel('$' + x_ax + '$', fontsize=18)
-    plt.ylabel('$' + y_ax + '$', fontsize=18)
+    plt.xlabel('$' + x_ax + '$', fontsize=12)
+    plt.ylabel('$' + y_ax + '$', fontsize=12)
     # Add text box.
     text = '$N_{{fit}}={}$'.format(len(diag_fit_inv[2]))
     ob = offsetbox.AnchoredText(text, loc=2, prop=dict(size=14))
@@ -338,8 +338,7 @@ def plx_chart(
 
 def pms_vpd(
     gs, coord, plx_flag, PM_flag, pmMP, pmRA, e_pmRA, pmDE, e_pmDE, DE_pm,
-        pmRA_fl, e_pmRA_fl, pmDE_fl, e_pmDE_fl, DE_fl_pm, x_clpm, y_clpm,
-        z_clpm, x_flpm, y_flpm, z_flpm):
+        pmRA_fl, e_pmRA_fl, pmDE_fl, e_pmDE_fl, DE_fl_pm):
     '''
     '''
     if PM_flag:
@@ -365,31 +364,75 @@ def pms_vpd(
             pmRA_DE, pmDE, yerr=e_pmDE, xerr=e_pmRA, fmt='none',
             elinewidth=.65, ecolor=cmap(norm(pmMP)), zorder=4)
 
-        max_i, max_j = np.unravel_index(z_clpm.argmax(), z_clpm.shape)
-        CS = plt.contour(
-            x_clpm, y_clpm, z_clpm, 5, colors='r', linewidths=.6, zorder=6)
-        CS.collections[0].set_label("Clust: ({:.2f}, {:.2f}) [mas/yr]".format(
-            x_clpm[max_i][max_j], y_clpm[max_i][max_j]))
-
         pmRA_fl_DE = pmRA_fl * np.cos(np.deg2rad(DE_fl_pm))
         ax.errorbar(
             pmRA_fl_DE, pmDE_fl, yerr=e_pmDE_fl,
             xerr=e_pmRA_fl, fmt='none', elinewidth=.35, ecolor='grey',
             zorder=1)
 
+        RA_med, RA_std = np.median(pmRA_DE), np.std(pmRA_DE)
+        DE_med, DE_std = np.median(pmDE), np.std(pmDE)
+        plt.xlim(RA_med - 2. * RA_std, RA_med + 2. * RA_std)
+        plt.ylim(DE_med - 2. * DE_std, DE_med + 2. * DE_std)
+
+
+def pms_hess_diag(
+    gs, coord, plx_flag, PM_flag, pmRA, pmDE, DE_pm, x_clpm, y_clpm,
+        z_clpm, x_flpm, y_flpm, z_flpm):
+    """
+    Hess diagram of observed minus best match synthetic cluster.
+    """
+    if PM_flag:
+        if plx_flag:
+            ax = plt.subplot(gs[4:6, 2:4])
+        else:
+            ax = plt.subplot(gs[2:4, 2:4])
+        ax.set_title('Hess diagram + error-weighted KDE'.format(), fontsize=9)
+        ax.minorticks_on()
+        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1,
+                zorder=1)
+
+        if coord == 'deg':
+            plt.xlabel(
+                r"$\mu_{{\alpha}} \, cos \delta \, \mathrm{[mas/yr]}$",
+                fontsize=12)
+        else:
+            plt.xlabel(r"$\mu_{{\alpha}} \, \mathrm{[mas/yr]}$", fontsize=12)
+        plt.ylabel(r"$\mu_{{\delta}} \, \mathrm{[mas/yr]}$", fontsize=12)
+
+        # Cluster region data
+        pmRA_DE = pmRA * np.cos(np.deg2rad(DE_pm))
+        RA_med, RA_std = np.median(pmRA_DE), np.std(pmRA_DE)
+        DE_med, DE_std = np.median(pmDE), np.std(pmDE)
+        ra_rang = (RA_med - 2. * RA_std, RA_med + 2. * RA_std)
+        dec_rang = (DE_med - 2. * DE_std, DE_med + 2. * DE_std)
+
+        ax.hist2d(
+            pmRA_DE, pmDE, range=(ra_rang, dec_rang), bins=30,
+            normed=True, cmap=plt.cm.Greys)
+
+        # Cluster region contour
+        max_i, max_j = np.unravel_index(z_clpm.argmax(), z_clpm.shape)
+        CS = plt.contour(
+            x_clpm, y_clpm, z_clpm, 5, colors='g', linewidths=1.,
+            extent=(ra_rang[0], ra_rang[1], dec_rang[0], dec_rang[1]),
+            zorder=6)
+        CS.collections[0].set_label("Clust: ({:.2f}, {:.2f}) [mas/yr]".format(
+            x_clpm[max_i][max_j], y_clpm[max_i][max_j]))
+
+        # Filed regions contours
         if z_flpm.any():
             max_i, max_j = np.unravel_index(z_flpm.argmax(), z_flpm.shape)
             CS = plt.contour(
-                x_flpm, y_flpm, z_flpm, 10, colors='k', linewidths=.3,
+                x_flpm, y_flpm, z_flpm, 10, colors='r', linewidths=.5,
+                extent=(ra_rang[0], ra_rang[1], dec_rang[0], dec_rang[1]),
                 zorder=5)
             CS.collections[0].set_label(
                 "Field: ({:.2f}, {:.2f}) [mas/yr]".format(
                     x_flpm[max_i][max_j], y_flpm[max_i][max_j]))
 
-        RA_med, RA_std = np.median(pmRA_DE), np.std(pmRA_DE)
-        DE_med, DE_std = np.median(pmDE), np.std(pmDE)
-        plt.xlim(RA_med - 3. * RA_std, RA_med + 3. * RA_std)
-        plt.ylim(DE_med - 3. * DE_std, DE_med + 3. * DE_std)
+        plt.xlim(*ra_rang)
+        plt.ylim(*dec_rang)
         plt.legend(fontsize='small')
 
 
@@ -398,9 +441,9 @@ def pms_vs_MP(gs, y_ax, plx_flag, PM_flag, pmMP, pm_dist_max, mmag_pm):
     '''
     if PM_flag:
         if plx_flag:
-            ax = plt.subplot(gs[4:6, 2:4])
+            ax = plt.subplot(gs[4:6, 4:6])
         else:
-            ax = plt.subplot(gs[2:4, 2:4])
+            ax = plt.subplot(gs[2:4, 4:6])
         ax.minorticks_on()
         ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1,
                 zorder=1)
@@ -435,7 +478,8 @@ def plot(N, *args):
         3: [plx_chart, 'Plx chart'],
         4: [plx_vs_MP, 'Plx vs MP'],
         5: [pms_vpd, 'PMs vector point diagram'],
-        6: [pms_vs_MP, 'PMs vs MP']
+        6: [pms_hess_diag, 'PMs Hess diagram'],
+        7: [pms_vs_MP, 'PMs vs MP']
     }
 
     fxn = plt_map.get(N, None)[0]

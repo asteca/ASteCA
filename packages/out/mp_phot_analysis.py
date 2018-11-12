@@ -77,8 +77,8 @@ def pl_phot_err(
         ax = plt.subplot(gs_pos)
         plt.xlim(x_min, x_max)
         # Set axis labels
-        plt.xlabel('$' + x_ax + '$', fontsize=18)
-        plt.ylabel('$\sigma_{' + y_ax + '}$', fontsize=18)
+        plt.xlabel('$' + x_ax + '$', fontsize=12)
+        plt.ylabel('$\sigma_{' + y_ax + '}$', fontsize=12)
         ax.set_facecolor('#EFF0F1')
         # Set minor ticks
         ax.minorticks_on()
@@ -199,8 +199,8 @@ def pl_fl_diag(
     plt.xlim(x_min_cmd, x_max_cmd)
     plt.ylim(y_min_cmd, y_max_cmd)
     # Set axis labels
-    plt.xlabel('$' + x_ax + '$', fontsize=18)
-    plt.ylabel('$' + y_ax + '$', fontsize=18)
+    plt.xlabel('$' + x_ax + '$', fontsize=12)
+    plt.ylabel('$' + y_ax + '$', fontsize=12)
     # Set minor ticks
     ax.minorticks_on()
     # Only draw units on axis (ie: 1, 2, 3)
@@ -244,8 +244,8 @@ def pl_cl_diag(
     plt.xlim(x_min_cmd, x_max_cmd)
     plt.ylim(y_min_cmd, y_max_cmd)
     # Set axis labels
-    plt.xlabel('$' + x_ax + '$', fontsize=18)
-    plt.ylabel('$' + y_ax + '$', fontsize=18)
+    plt.xlabel('$' + x_ax + '$', fontsize=12)
+    plt.ylabel('$' + y_ax + '$', fontsize=12)
     # Set minor ticks
     ax.minorticks_on()
     # Only draw units on axis (ie: 1, 2, 3)
@@ -291,8 +291,8 @@ def pl_lum_func(gs, y_ax, flag_no_fl_regs, lum_func):
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1,
             zorder=1)
     # Set axis labels
-    plt.xlabel('$' + y_ax + '$', fontsize=18)
-    plt.ylabel('$N^{\star}/A_{cl}$', fontsize=18)
+    plt.xlabel('$' + y_ax + '$', fontsize=12)
+    plt.ylabel('$N^{\star}/A_{cl}$', fontsize=12)
 
     # All frame.
     plt.step(x_all, y_all, where='post', color='k', lw=2.5, linestyle=':',
@@ -308,7 +308,7 @@ def pl_lum_func(gs, y_ax, flag_no_fl_regs, lum_func):
         # Cluster region LF - average field regions LF.
         plt.step(x_cl, y_cl - y_fl, where='post', color='g', lw=1.7,
                  label='$LF_{cl}$', zorder=4)
-        max_y = max(max(y_cl), max(y_fl))
+        max_y = max(max(y_cl), max(y_fl), max(y_all))
     else:
         max_y = max(y_cl)
     # Set plot limits
@@ -335,25 +335,25 @@ def pl_data_rm_perc(
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1,
             zorder=1)
     # Set axis labels
-    plt.xlabel('$' + y_ax + '$', fontsize=18)
-    plt.ylabel('perc', fontsize=18)
+    plt.xlabel('$' + y_ax + '$', fontsize=12)
+    plt.ylabel('perc', fontsize=12)
 
     edges, perc_vals = phot_analy_compl
     perc_vals_min = [min(perc_vals)]
-    txt = "Photometric analysis completeness"
+    txt = "Photometric analysis\ncompleteness"
     plt.step(edges[:-1], perc_vals, where='post', lw=2., linestyle='--',
              label=txt)
 
     edges, perc_vals, perc_rmvd = phot_data_compl
     perc_vals_min.append(min(perc_vals))
-    txt = "Photometric data completeness\n" +\
-        "({:.1f}% of stars removed)".format(perc_rmvd)
+    txt = "Photometric data\ncompleteness\n" +\
+        "({:.1f}% rmvd)".format(perc_rmvd)
     plt.step(
         edges[:-1], perc_vals, where='post', lw=2., linestyle='--', label=txt)
 
     edges, perc_vals, perc_rmvd = err_rm_data
     perc_vals_min.append(min(perc_vals))
-    txt = "Error removal\n({:.1f}% of stars removed)".format(perc_rmvd)
+    txt = "Error removal\n({:.1f}% rmvd)".format(perc_rmvd)
     plt.step(
         edges[:-1], perc_vals, where='post', lw=2., color='teal',
         linestyle='--', label=txt)
@@ -362,14 +362,14 @@ def pl_data_rm_perc(
     # Reverse.
     perc_vals = 1. - perc_vals
     perc_vals_min.append(min(perc_vals))
-    txt = "Combined function\n({:.1f}% of stars removed)".format(perc_rmvd)
+    txt = "Combined function\n({:.1f}% rmvd)".format(perc_rmvd)
     plt.step(
         edges[:-1], perc_vals, where='post', lw=2., color='r', linestyle='--',
         label=txt)
 
     # Legends.
     leg = plt.legend(
-        fancybox=True, numpoints=1, loc='lower right', fontsize=9)
+        fancybox=True, numpoints=1, loc='lower center', fontsize=9)
     # Set the alpha value of the legend.
     leg.get_frame().set_alpha(0.7)
 

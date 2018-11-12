@@ -74,6 +74,14 @@ def ax_names(x, y, yaxis):
         y_ax = y[1]
     else:
         y_ax = '(' + y[1].replace(',', '-') + ')'
+
+    if '_' in x_ax:
+        x = x_ax.split('_')
+        x_ax = x[0] + '_{' + x[1] + '}'
+    if '_' in y_ax:
+        y = y_ax.split('_')
+        y_ax = y[0] + '_{' + y[1] + '}'
+
     return x_ax, y_ax
 
 
@@ -584,48 +592,57 @@ def kde_2d(xarr, xsigma, yarr, ysigma, grid_dens=50):
     and return the 2D KDE density map.
     '''
 
-    # Replace 0 error with very small value.
-    np.place(xsigma, xsigma <= 0., .0001)
-    np.place(ysigma, ysigma <= 0., .0001)
+    # Replace 0 error with very LARGE value.
+    np.place(xsigma, xsigma <= 0., 1000.)
+    np.place(ysigma, ysigma <= 0., 1000.)
 
     # Grid density (number of points).
     xmean, xstd = np.nanmedian(xarr), np.nanstd(xarr)
     ymean, ystd = np.nanmedian(yarr), np.nanstd(yarr)
     xmax, xmin = xmean + 3. * xstd, xmean - 3. * xstd
     ymax, ymin = ymean + 3. * ystd, ymean - 3. * ystd
-    # grid_dens_x = int((xmax - xmin) / grid_step)
-    # grid_dens_y = int((ymax - ymin) / grid_step)
-    # gd_c = [complex(0, grid_dens), complex(0, grid_dens)]
     gd_c = complex(0, grid_dens)
-
     # Define grid of points in x,y where the KDE will be evaluated.
     ext = [xmin, xmax, ymin, ymax]
     x, y = np.mgrid[ext[0]:ext[1]:gd_c, ext[2]:ext[3]:gd_c]
     pos = np.vstack([x.ravel(), y.ravel()])
+    values = np.vstack([xarr, yarr])
+
+    # Scipy's norm factor
+    # https://github.com/scipy/scipy/blob/v1.1.0/scipy/stats/kde.py
+    d, n = values.shape
+    data_covariance = np.cov(values)
+    data_inv_cov = np.linalg.inv(data_covariance)
+    scotts_factor = np.power(n, -1. / (d + 4))
+    inv_cov = data_inv_cov / scotts_factor**2
+    covariance = data_covariance * scotts_factor**2
+    norm_factor = np.sqrt(np.linalg.det(2 * np.pi * covariance)) * n
+    m = grid_dens**2
 
     # Evaluate KDE in x,y grid.
-    vals = []
-    for p in list(zip(*pos)):
-        valxy = np.exp(-0.5 * (
-            ((p[0] - xarr) / xsigma)**2 + ((p[1] - yarr) / ysigma)**2)) /\
-            (xsigma * ysigma)
-        vals.append(np.sum(valxy))
-    vals = np.array(vals) / (2 * np.pi * xarr.size)
-
-    # # Evaluate KDE in x,y grid.
-    # # Source: https://stackoverflow.com/a/51068256/1391441
-    # ps = pos.shape[1]
-    # print(ps)
-    # xa_tiled, ya_tiled = np.tile(xarr, (ps, 1)), np.tile(yarr, (ps, 1))
-    # xb_tiled, yb_tiled = np.tile(xsigma, (ps, 1)), np.tile(ysigma, (ps, 1))
-    # vals = np.exp(-0.5 * (
-    #     ((pos[0].reshape(ps, 1) - xa_tiled) / xb_tiled)**2 +
-    #     ((pos[1].reshape(ps, 1) - ya_tiled) / yb_tiled)**2)) /\
-    #     (xb_tiled * yb_tiled)
-    # vals = vals.sum(axis=1) / (2 * np.pi * xarr.size)
+    vals = np.zeros((m,), dtype=np.float)
+    if m >= n:
+        # print("loop over data")
+        e_values = np.vstack([xsigma, ysigma]).T
+        for i, p in enumerate(values.T):
+            valxy = (
+                inv_cov[0][0] * ((p[0] - pos[0]) / e_values[i][0])**2 +
+                inv_cov[1][1] * ((p[1] - pos[1]) / e_values[i][1])**2) /\
+                (e_values[i][0] * e_values[i][1])
+            vals += np.exp(-.5 * valxy)
+        result = np.array(vals)
+    else:
+        # print("loop over points")
+        for i, p in enumerate(zip(*pos)):
+            valxy = (
+                inv_cov[0][0] * ((p[0] - xarr) / xsigma)**2 +
+                inv_cov[1][1] * ((p[1] - yarr) / ysigma)**2) /\
+                (xsigma * ysigma)
+            vals[i] = np.sum(np.exp(-.5 * valxy))
+    result = vals / norm_factor
 
     # Re-shape values for plotting.
-    z = np.reshape(vals.T, x.shape)
+    z = np.reshape(result.T, x.shape)
 
     return x, y, z
 

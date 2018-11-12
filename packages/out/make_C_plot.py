@@ -125,8 +125,10 @@ def main(
              mp_clp, plx_clp, e_plx_clp, plx_bay, ph_plx, pl_plx, plx_wa],
             # pms_vpd
             [gs, coord, plx_flag, PM_flag, pmMP, pmRA, e_pmRA, pmDE, e_pmDE,
-             DE_pm, pmRA_fl, e_pmRA_fl, pmDE_fl, e_pmDE_fl, DE_fl_pm, x_clpm,
-             y_clpm, z_clpm, x_flpm, y_flpm, z_flpm],
+             DE_pm, pmRA_fl, e_pmRA_fl, pmDE_fl, e_pmDE_fl, DE_fl_pm],
+            # pms_hess_diag
+            [gs, coord, plx_flag, PM_flag, pmRA, pmDE, DE_pm, x_clpm, y_clpm,
+             z_clpm, x_flpm, y_flpm, z_flpm],
             # pms_vs_MP
             [gs, y_ax, plx_flag, PM_flag, pmMP, pm_dist_max, mmag_pm]
         ]
