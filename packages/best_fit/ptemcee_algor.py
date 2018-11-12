@@ -1,5 +1,6 @@
 
 import numpy as np
+from scipy.optimize import differential_evolution as DE
 import time as t
 from .. import update_progress
 from ..synth_clust import synth_cluster
@@ -35,17 +36,15 @@ def main(
     max_secs = h_max * 60. * 60.
 
     ptsampler = sampler.Sampler(
-        nwalkers_ptm, ndim, logl, logp,
+        nwalkers_ptm, ndim, loglkl, logp,
         loglargs=[fundam_params, synthcl_args, lkl_method, obs_clust, ranges,
-                  varIdxs],
-        logpargs=[priors_ptm, fundam_params, varIdxs, ranges], Tmax=Tmax,
-        ntemps=ntemps)
+                  varIdxs, priors_ptm], Tmax=Tmax, ntemps=ntemps)
 
-    # Initial parameter values
-    p0 = []
-    for _ in range(ntemps):
-        p0.append(random_population(fundam_params, varIdxs, nwalkers_ptm))
-    # Shape p0: (ntemps, nwalkers_ptm, ndim)
+    # Initial population.
+    p0 = initPop(
+        ranges, varIdxs, lkl_method, obs_clust, fundam_params, synthcl_args,
+        ntemps, nwalkers_ptm)
+
     print("     Burn-in stage")
     t0 = t.time()
     N_steps_check = max(1, int(nburn_ptm * .1))
@@ -270,51 +269,111 @@ def main(
     return isoch_fit_params
 
 
-def logl(
+def loglkl(
         model, fundam_params, synthcl_args, lkl_method, obs_clust, ranges,
-        varIdxs):
+        varIdxs, priors_ptm):
     """
     """
+    rangeFlag = rangeCheck(model, ranges, varIdxs)
 
-    check_ranges = [
-        r[0] <= p <= r[1] for p, r in zip(*[model, ranges[varIdxs]])]
-
-    lkl = 10000
-    if all(check_ranges):
-        model_proper = closeSol(fundam_params, varIdxs, model)
-
-        theor_tracks, e_max, err_lst, completeness, max_mag_syn, st_dist_mass,\
-            R_V, ext_coefs, N_fc, cmpl_rnd, err_rnd = synthcl_args
-
-        # Metallicity and age indexes to identify isochrone.
-        m_i = fundam_params[0].index(model_proper[0])
-        a_i = fundam_params[1].index(model_proper[1])
-        isochrone = theor_tracks[m_i][a_i]
-
+    logpost = -10000
+    if rangeFlag:
         # Generate synthetic cluster.
-        synth_clust = synth_cluster.main(
-            e_max, err_lst, completeness, max_mag_syn, st_dist_mass, isochrone,
-            R_V, ext_coefs, N_fc, cmpl_rnd, err_rnd, model_proper)
-
+        synth_clust = synthClust(fundam_params, varIdxs, model, synthcl_args)
         # Call likelihood function for this model.
         lkl = likelihood.main(lkl_method, synth_clust, obs_clust)
 
-    # The negative likelihood is returned since Dolphin requires a minimization
-    # of the PLR, and here we are maximizing
-    return -lkl
+        logp = 0.
+        # Logarithm of the prior.
+        if priors_ptm == 'unif':
+            # Flat prior
+            logp = 0.
+
+        # The negative likelihood is returned since Dolphin requires a
+        # minimization of the PLR, and here we are maximizing
+        logpost = logp + (-lkl)
+
+    return logpost
 
 
-def logp(model, priors_emc, fundam_params, varIdxs, ranges):
+def logp(_):
+    # Just here as a place holder for 'ptemcee', the prior is inside the
+    # log-likelihood.
+    return 0.
+
+
+def initPop(
+    ranges, varIdxs, lkl_method, obs_clust, fundam_params, synthcl_args,
+        ntemps, nwalkers_ptm, init_mode='diffevol', popsize=5, maxiter=10):
     """
+    Obtain initial parameter values using either a random distribution, or
+    the Differential Evolution algorithm to approximate reasonable solutions.
+    """
+
+    p0 = []
+    if init_mode == 'random':
+        print("     Rnd init pop")
+        for _ in range(ntemps):
+            p0.append(random_population(fundam_params, varIdxs, nwalkers_ptm))
+
+    elif init_mode == 'diffevol':
+        print("     DE init pop")
+
+        # Estimate initial threshold value using DE.
+        def dist(synth_clust, obs_clust):
+            if synth_clust:
+                return likelihood.main(lkl_method, synth_clust, obs_clust)
+            return np.inf
+
+        def postfn(model):
+            if rangeCheck(model, ranges, varIdxs):
+                return synthClust(
+                    fundam_params, varIdxs, model, synthcl_args)
+            return []
+
+        def DEdist(model):
+            synth_clust = postfn(model)
+            return dist(synth_clust, obs_clust)
+
+        runs = 1
+        for _ in range(ntemps):
+            walkers_sols = []
+            for _ in range(nwalkers_ptm):
+                result = DE(DEdist, ranges, popsize=popsize, maxiter=maxiter)
+                walkers_sols.append(result.x)
+                update_progress.updt(ntemps * nwalkers_ptm, runs)
+                runs += 1
+            p0.append(walkers_sols)
+
+    return p0
+
+
+def rangeCheck(model, ranges, varIdxs):
+    """
+    Check that all the model values are within the given ranges.
     """
     check_ranges = [
         r[0] <= p <= r[1] for p, r in zip(*[model, ranges[varIdxs]])]
-
-    lp = -1e6
-    # If some parameter is outside of the given ranges, don't bother obtaining
-    # the proper model and just pass -inf
     if all(check_ranges):
-        if priors_emc == 'unif':
-            # Flat prior
-            lp = 0.
-    return lp
+        return True
+    return False
+
+
+def synthClust(fundam_params, varIdxs, model, synthcl_args):
+    """
+    Generate synthetic cluster.
+    """
+    model_proper = closeSol(fundam_params, varIdxs, model)
+
+    theor_tracks, e_max, err_lst, completeness, max_mag_syn, st_dist_mass,\
+        R_V, ext_coefs, N_fc, cmpl_rnd, err_rnd = synthcl_args
+
+    # Metallicity and age indexes to identify isochrone.
+    m_i = fundam_params[0].index(model_proper[0])
+    a_i = fundam_params[1].index(model_proper[1])
+    isochrone = theor_tracks[m_i][a_i]
+
+    # Generate synthetic cluster.
+    return synth_cluster.main(
+        e_max, err_lst, completeness, max_mag_syn, st_dist_mass, isochrone,
+        R_V, ext_coefs, N_fc, cmpl_rnd, err_rnd, model_proper)
