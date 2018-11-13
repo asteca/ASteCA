@@ -204,7 +204,7 @@ def pl_fl_diag(
     # Set minor ticks
     ax.minorticks_on()
     # Only draw units on axis (ie: 1, 2, 3)
-    ax.xaxis.set_major_locator(MultipleLocator(1.0))
+    # ax.xaxis.set_major_locator(MultipleLocator(1.0))
     # Set grid
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1,
             zorder=1)
@@ -249,7 +249,7 @@ def pl_cl_diag(
     # Set minor ticks
     ax.minorticks_on()
     # Only draw units on axis (ie: 1, 2, 3)
-    ax.xaxis.set_major_locator(MultipleLocator(1.0))
+    # ax.xaxis.set_major_locator(MultipleLocator(1.0))
     # Set grid
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1,
             zorder=1)

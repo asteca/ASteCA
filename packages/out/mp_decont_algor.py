@@ -1,8 +1,9 @@
 
 import matplotlib.pyplot as plt
-from matplotlib.ticker import MultipleLocator
+# from matplotlib.ticker import MultipleLocator
 import matplotlib.offsetbox as offsetbox
 from matplotlib.colors import Normalize
+from matplotlib.patches import Ellipse
 import numpy as np
 
 
@@ -144,7 +145,7 @@ def pl_mps_phot_diag(
     ax.add_artist(ob)
     # Set minor ticks
     ax.minorticks_on()
-    ax.xaxis.set_major_locator(MultipleLocator(1.0))
+    # ax.xaxis.set_major_locator(MultipleLocator(1.0))
     # Plot grid. If bin_edges == 0., it means the 'local' method was not used.
     if mode_fld_clean == 'local' and bin_edges != 0.:
         # TODO using first magnitude and color. Generalize to N-dimensions.
@@ -337,8 +338,8 @@ def plx_chart(
 
 
 def pms_vpd(
-    gs, coord, plx_flag, PM_flag, pmMP, pmRA, e_pmRA, pmDE, e_pmDE, DE_pm,
-        pmRA_fl, e_pmRA_fl, pmDE_fl, e_pmDE_fl, DE_fl_pm):
+    gs, coord, plx_flag, PM_flag, pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE,
+        pmRA_fl_DE, e_pmRA_fl_DE, pmDE_fl, e_pmDE_fl):
     '''
     '''
     if PM_flag:
@@ -359,35 +360,33 @@ def pms_vpd(
         cmap = plt.cm.get_cmap('viridis')
         norm = Normalize(vmin=pmMP.min(), vmax=pmMP.max())
 
-        pmRA_DE = pmRA * np.cos(np.deg2rad(DE_pm))
         ax.errorbar(
-            pmRA_DE, pmDE, yerr=e_pmDE, xerr=e_pmRA, fmt='none',
+            pmRA_DE, pmDE, yerr=e_pmDE, xerr=e_pmRA_DE, fmt='none',
             elinewidth=.65, ecolor=cmap(norm(pmMP)), zorder=4)
 
-        pmRA_fl_DE = pmRA_fl * np.cos(np.deg2rad(DE_fl_pm))
         ax.errorbar(
             pmRA_fl_DE, pmDE_fl, yerr=e_pmDE_fl,
-            xerr=e_pmRA_fl, fmt='none', elinewidth=.35, ecolor='grey',
+            xerr=e_pmRA_fl_DE, fmt='none', elinewidth=.35, ecolor='grey',
             zorder=1)
 
         RA_med, RA_std = np.median(pmRA_DE), np.std(pmRA_DE)
         DE_med, DE_std = np.median(pmDE), np.std(pmDE)
-        plt.xlim(RA_med - 2. * RA_std, RA_med + 2. * RA_std)
-        plt.ylim(DE_med - 2. * DE_std, DE_med + 2. * DE_std)
+        plt.xlim(RA_med - 3. * RA_std, RA_med + 3. * RA_std)
+        plt.ylim(DE_med - 3. * DE_std, DE_med + 3. * DE_std)
 
 
-def pms_hess_diag(
-    gs, coord, plx_flag, PM_flag, pmRA, pmDE, DE_pm, x_clpm, y_clpm,
-        z_clpm, x_flpm, y_flpm, z_flpm):
+def pms_KDE_diag(
+    gs, coord, plx_flag, PM_flag, pmRA_DE, pmDE, DE_pm, x_clpm, y_clpm,
+        z_clpm, x_flpm, y_flpm, z_flpm, pmRA_Bys, pmDE_Bys):
     """
-    Hess diagram of observed minus best match synthetic cluster.
+    KDE of PMs for cluster and field regions.
     """
     if PM_flag:
         if plx_flag:
             ax = plt.subplot(gs[4:6, 2:4])
         else:
             ax = plt.subplot(gs[2:4, 2:4])
-        ax.set_title('Hess diagram + error-weighted KDE'.format(), fontsize=9)
+        ax.set_title('Error-weighted KDE + Bayesian center', fontsize=9)
         ax.minorticks_on()
         ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1,
                 zorder=1)
@@ -401,35 +400,44 @@ def pms_hess_diag(
         plt.ylabel(r"$\mu_{{\delta}} \, \mathrm{[mas/yr]}$", fontsize=12)
 
         # Cluster region data
-        pmRA_DE = pmRA * np.cos(np.deg2rad(DE_pm))
         RA_med, RA_std = np.median(pmRA_DE), np.std(pmRA_DE)
         DE_med, DE_std = np.median(pmDE), np.std(pmDE)
         ra_rang = (RA_med - 2. * RA_std, RA_med + 2. * RA_std)
         dec_rang = (DE_med - 2. * DE_std, DE_med + 2. * DE_std)
 
         ax.hist2d(
-            pmRA_DE, pmDE, range=(ra_rang, dec_rang), bins=30,
-            normed=True, cmap=plt.cm.Greys)
+            pmRA_DE, pmDE, range=(ra_rang, dec_rang), bins=25,
+            normed=True, cmap=plt.cm.Greens)
 
         # Cluster region contour
         max_i, max_j = np.unravel_index(z_clpm.argmax(), z_clpm.shape)
         CS = plt.contour(
             x_clpm, y_clpm, z_clpm, 5, colors='g', linewidths=1.,
             extent=(ra_rang[0], ra_rang[1], dec_rang[0], dec_rang[1]),
-            zorder=6)
-        CS.collections[0].set_label("Clust: ({:.2f}, {:.2f}) [mas/yr]".format(
+            zorder=3)
+        CS.collections[0].set_label("Clust ({:.2f}, {:.2f})".format(
             x_clpm[max_i][max_j], y_clpm[max_i][max_j]))
 
         # Filed regions contours
         if z_flpm.any():
             max_i, max_j = np.unravel_index(z_flpm.argmax(), z_flpm.shape)
             CS = plt.contour(
-                x_flpm, y_flpm, z_flpm, 10, colors='r', linewidths=.5,
+                x_flpm, y_flpm, z_flpm, 10, colors='k', linewidths=.5,
                 extent=(ra_rang[0], ra_rang[1], dec_rang[0], dec_rang[1]),
-                zorder=5)
+                zorder=2)
             CS.collections[0].set_label(
-                "Field: ({:.2f}, {:.2f}) [mas/yr]".format(
+                "Field: ({:.2f}, {:.2f})".format(
                     x_flpm[max_i][max_j], y_flpm[max_i][max_j]))
+
+        ellipse = Ellipse(
+            xy=(pmRA_Bys[0], pmDE_Bys[0]), width=2 * pmRA_Bys[1],
+            height=2. * pmDE_Bys[1], edgecolor='r', fc='None', lw=1.5,
+            zorder=4)
+        ax.add_patch(ellipse)
+        plt.scatter(
+            pmRA_Bys[0], pmDE_Bys[0], c='r', marker='x', s=25, zorder=4,
+            label=r"$[{:.3f}\pm{:.3f}, {:.3f}\pm{:.3f}]$".format(
+                pmRA_Bys[0], pmRA_Bys[1], pmDE_Bys[0], pmDE_Bys[1]))
 
         plt.xlim(*ra_rang)
         plt.ylim(*dec_rang)
@@ -448,7 +456,7 @@ def pms_vs_MP(gs, y_ax, plx_flag, PM_flag, pmMP, pm_dist_max, mmag_pm):
         ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1,
                 zorder=1)
 
-        ax.set_title("Distance to 2D KDE max value", fontsize=9)
+        ax.set_title("Distance to Bayesian median", fontsize=9)
         plt.xlabel("PM dist [mas/yr]", fontsize=12)
         plt.ylabel(y_ax, fontsize=12)
 
@@ -478,7 +486,7 @@ def plot(N, *args):
         3: [plx_chart, 'Plx chart'],
         4: [plx_vs_MP, 'Plx vs MP'],
         5: [pms_vpd, 'PMs vector point diagram'],
-        6: [pms_hess_diag, 'PMs Hess diagram'],
+        6: [pms_KDE_diag, 'PMs KDE diagram'],
         7: [pms_vs_MP, 'PMs vs MP']
     }
 

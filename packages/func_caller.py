@@ -31,6 +31,7 @@ from .decont_algors import members_N_compare
 from .decont_algors import cl_region_clean
 #
 from .data_analysis import plx_analysis
+from .data_analysis import pms_analysis
 #
 from .out import cluster_members_file
 from .best_fit import best_fit_synth_cl
@@ -204,6 +205,9 @@ def main(cl_file, pd):
 
     # Analyze parallax data if available.
     clp = plx_analysis.main(clp)
+
+    # Analyze PMs data if available.
+    clp = pms_analysis.main(clp, **pd)
 
     make_C_plot.main(npd, cld_c, pd, **clp)
 

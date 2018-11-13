@@ -19,6 +19,7 @@ def main(clp):
     # Check that a range of parallaxes is possible.
     if plx_clrg.any() and np.min(plx_clrg) < np.max(plx_clrg):
         plx_flag = True
+        print("  Bayesian Plx model")
 
         # Reject 2\sigma outliers.
         max_plx, min_plx = np.nanmedian(plx) + 2. * np.nanstd(plx),\

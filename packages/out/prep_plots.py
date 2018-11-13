@@ -616,9 +616,9 @@ def kde_2d(xarr, xsigma, yarr, ysigma, grid_dens=50):
     inv_cov = data_inv_cov / scotts_factor**2
     covariance = data_covariance * scotts_factor**2
     norm_factor = np.sqrt(np.linalg.det(2 * np.pi * covariance)) * n
-    m = grid_dens**2
 
     # Evaluate KDE in x,y grid.
+    m = grid_dens**2
     vals = np.zeros((m,), dtype=np.float)
     if m >= n:
         # print("loop over data")
@@ -646,56 +646,35 @@ def kde_2d(xarr, xsigma, yarr, ysigma, grid_dens=50):
     return x, y, z
 
 
-def PMsPlot(coord, flag_no_fl_regs_i, field_regions_i, cl_reg_fit):
+def PMsPlot(
+    PM_flag, pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, DE_pm, mmag_pm,
+        pmRA_Bys, pmDE_Bys, coord, flag_no_fl_regs_i, field_regions_i):
     """
     Parameters for the proper motions plot.
     """
-    PM_flag, pmMP, e_pmRA, pmDE, e_pmDE, DE_pm, pmRA_fl, e_pmRA_fl, pmDE_fl,\
-        e_pmDE_fl, DE_fl_pm, x_clpm, y_clpm, z_clpm, x_flpm, y_flpm,\
-        z_flpm, mmag_pm, pm_dist_max = False, [], [], [], [], [], [], [], [],\
-        [], [], [], [], [], [], [], np.array([]), [], []
+    pmDE_fl, e_pmDE_fl, pmRA_fl_DE, e_pmRA_fl_DE = [], [], [], []
+    x_clpm, y_clpm, z_clpm, pm_dist_max = [], [], [], []
+    x_flpm, y_flpm, z_flpm = [], [], np.array([])
 
-    pmRA = np.array(list(zip(*list(zip(*cl_reg_fit))[7]))[1])
     # Check that PMs were defined within the cluster region.
-    if pmRA[~np.isnan(pmRA)].any():
-        PM_flag = True
-
-        # Cluster region data.
-        pmMP, pmRA, e_pmRA, pmDE, e_pmDE =\
-            np.array(list(zip(*cl_reg_fit))[9]),\
-            np.array(list(zip(*list(zip(*cl_reg_fit))[7]))[1]),\
-            np.array(list(zip(*list(zip(*cl_reg_fit))[8]))[1]),\
-            np.array(list(zip(*list(zip(*cl_reg_fit))[7]))[2]),\
-            np.array(list(zip(*list(zip(*cl_reg_fit))[8]))[2])
-        DE_pm = np.array(list(zip(*cl_reg_fit))[2]) if coord == 'deg' else\
-            np.zeros(pmRA.size)
-        mmag_pm = np.array(list(zip(*list(zip(*cl_reg_fit))[3]))[0])
-
-        # Remove nan values from cluster region
-        msk = ~np.isnan(pmRA) & ~np.isnan(e_pmRA) & ~np.isnan(pmDE) &\
-            ~np.isnan(e_pmDE)
-        pmMP, pmRA, e_pmRA, pmDE, e_pmDE, DE_pm, mmag_pm = pmMP[msk],\
-            pmRA[msk], e_pmRA[msk], pmDE[msk], e_pmDE[msk], DE_pm[msk],\
-            mmag_pm[msk]
+    if PM_flag:
 
         # Re-arrange so stars with larger MPs are on top.
         mp_i = pmMP.argsort()
-        pmMP, pmRA, e_pmRA, pmDE, e_pmDE, DE_pm, mmag_pm = pmMP[mp_i],\
-            pmRA[mp_i], e_pmRA[mp_i], pmDE[mp_i], e_pmDE[mp_i], DE_pm[mp_i],\
-            mmag_pm[mp_i]
+        pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, DE_pm, mmag_pm = pmMP[mp_i],\
+            pmRA_DE[mp_i], e_pmRA_DE[mp_i], pmDE[mp_i], e_pmDE[mp_i],\
+            DE_pm[mp_i], mmag_pm[mp_i]
 
         # 2D KDE for cluster region
-        pmRA_DE = pmRA * np.cos(np.deg2rad(DE_pm))
-        x_clpm, y_clpm, z_clpm = kde_2d(
-            pmRA_DE, e_pmRA, pmDE, e_pmDE)
+        x_clpm, y_clpm, z_clpm = kde_2d(pmRA_DE, e_pmRA_DE, pmDE, e_pmDE)
 
-        # Max value for cluster fit region
-        max_i, max_j = np.unravel_index(z_clpm.argmax(), z_clpm.shape)
-        max_v = np.array([[x_clpm[max_i][max_j], y_clpm[max_i][max_j]]])
-
-        pm_dist_max = cdist(max_v, np.array([pmRA_DE, pmDE]).T)
+        # PM distances to the Bayesian maximum.
+        pm_dist_max = cdist(
+            np.array([[pmRA_Bys[0], pmDE_Bys[0]]]),
+            np.array([pmRA_DE, pmDE]).T)
 
         if not flag_no_fl_regs_i:
+            pmRA_fl, e_pmRA_fl, DE_fl_pm = [], [], []
             # Field region(s) data.
             for fl_rg in field_regions_i:
                 pmRA_fl += list(zip(*list(zip(*fl_rg))[7]))[1]
@@ -716,12 +695,17 @@ def PMsPlot(coord, flag_no_fl_regs_i, field_regions_i, cl_reg_fit):
                 DE_fl_pm[msk]
 
             pmRA_fl_DE = pmRA_fl * np.cos(np.deg2rad(DE_fl_pm))
-            x_flpm, y_flpm, z_flpm = kde_2d(
-                pmRA_fl_DE, e_pmRA_fl, pmDE_fl, e_pmDE_fl)
+            # Propagate error in RA*cos(delta)
+            e_pmRA_fl_DE = np.sqrt(
+                (e_pmRA_fl * pmRA_fl * np.sin(np.deg2rad(DE_fl_pm)))**2 +
+                (e_pmDE_fl * np.cos(np.deg2rad(DE_fl_pm)))**2)
 
-    return PM_flag, pmMP, pmRA, e_pmRA, pmDE, e_pmDE, DE_pm, pmRA_fl,\
-        e_pmRA_fl, pmDE_fl, e_pmDE_fl, DE_fl_pm, x_clpm, y_clpm, z_clpm,\
-        x_flpm, y_flpm, z_flpm, mmag_pm, pm_dist_max
+            x_flpm, y_flpm, z_flpm = kde_2d(
+                pmRA_fl_DE, e_pmRA_fl_DE, pmDE_fl, e_pmDE_fl)
+
+    return pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, DE_pm, mmag_pm, pmRA_fl_DE,\
+        e_pmRA_fl_DE, pmDE_fl, e_pmDE_fl, x_clpm, y_clpm, z_clpm, pm_dist_max,\
+        x_flpm, y_flpm, z_flpm
 
 
 def CIEllipse(points, prob=.95):
