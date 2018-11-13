@@ -49,7 +49,7 @@ def main(clp):
         # Prior parameters.
         w_p, s_p = plx_lkl.x, .5
         # Sampler parameters.
-        ndim, nwalkers, nruns, nburn = 1, 10, 5000, 1000
+        ndim, nwalkers, nruns, nburn = 1, 100, 2000, 1000
         sampler = ensemble.EnsembleSampler(
             nwalkers, ndim, lnprob,
             args=(plx_clp, e_plx_clp, mp_clp, w_p, s_p))
@@ -60,8 +60,8 @@ def main(clp):
         samples = sampler.chain[:, nburn:, :].reshape((-1, ndim))
         # 16th, median, 84th percentiles
         pl_plx, plx_bay, ph_plx = np.percentile(samples, [16, 50, 84])
-        print("Bayesian plx estimated: {:.3f} (tau={:.0f})".format(
-            plx_bay, sampler.get_autocorr_time()[0]))
+        print("Bayesian plx estimated: {:.3f} (ESS={:.0f})".format(
+            plx_bay, samples.size / sampler.get_autocorr_time()[0]))
 
         # Weighted average and its error.
         # Source: https://physics.stackexchange.com/a/329412/8514
