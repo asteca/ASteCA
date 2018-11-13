@@ -137,12 +137,11 @@ def diag_limits(yaxis, phot_x, phot_y):
     # min_x, max_x, min_y, max_y = kde_limits(phot_x, phot_y)
 
     x_median, x_std = np.median(phot_x), 1.5 * np.std(phot_x)
-    min_x, max_x = x_median - x_std, x_median + x_std
+    x_min_cmd, x_max_cmd = x_median - 3. * x_std, x_median + 3. * x_std
     y_median, y_std = np.median(phot_y), np.std(phot_y)
     min_y, max_y = y_median - y_std, y_median + y_std
 
     # Define diagram limits.
-    x_min_cmd, x_max_cmd = min_x - 1.25, max_x + 1.25
     y_min_cmd = max_y + 1.25
     # If photometric axis y is a magnitude, make sure the brightest star
     # is always plotted.
