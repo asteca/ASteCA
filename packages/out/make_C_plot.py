@@ -64,7 +64,7 @@ def main(
         flag_no_fl_regs_i, field_regions_i, flag_decont_skip,
         memb_prob_avrg_sort, n_memb_da, cl_reg_fit, cl_reg_no_fit,
         cl_reg_clean_plot, plx_flag, plx_clrg, mmag_clp, mp_clp, plx_clp,
-        e_plx_clp, plx_bay, ph_plx, pl_plx, plx_wa, PM_flag, pmMP, pmRA_DE,
+        e_plx_clp, plx_Bys, plx_wa, PM_flag, pmMP, pmRA_DE,
         e_pmRA_DE, pmDE, e_pmDE, DE_pm, mmag_pm, pmRA_Bys,
         pmDE_Bys, **kwargs):
     '''
@@ -126,7 +126,7 @@ def main(
              kde_pl],
             # plx_vs_MP
             [gs, y_min_cmd, y_max_cmd, y_ax, plx_flag, mmag_clp,
-             mp_clp, plx_clp, e_plx_clp, plx_bay, ph_plx, pl_plx, plx_wa],
+             mp_clp, plx_clp, e_plx_clp, plx_Bys, plx_wa],
             # pms_vpd
             [gs, coord, plx_flag, PM_flag, pmMP, pmRA_DE, e_pmRA_DE, pmDE,
              e_pmDE, pmRA_fl_DE, e_pmRA_fl_DE, pmDE_fl, e_pmDE_fl],

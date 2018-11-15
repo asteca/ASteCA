@@ -4,7 +4,6 @@ from scipy.stats import pearsonr
 from scipy.optimize import differential_evolution as DE
 from ..best_fit.emcee3rc2 import ensemble
 import warnings
-
 from .. import update_progress
 
 

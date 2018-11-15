@@ -234,17 +234,17 @@ def plx_histo(gs, plx_flag, plx_clrg, plx_x_kde, kde_pl, plx_flrg,
 
 def plx_vs_MP(
     gs, y_min_cmd, y_max_cmd, y_ax, plx_flag, mmag_plx_clp, mp_plx_clp,
-        plx_clp, e_plx_clp, plx_bay, ph_plx, pl_plx, plx_wa):
+        plx_clp, e_plx_clp, plx_Bys, plx_wa):
     '''
     Finding chart of cluster region with colors assigned according to the
     probabilities obtained and sizes according to parallaxes.
     '''
     if plx_flag:
         ax = plt.subplot(gs[2:4, 2:4])
-        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1,
+        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
                 zorder=1)
 
-        ax.set_title("Plx clip " + r"$(med\pm2\sigma), N={}$".format(
+        ax.set_title("Plx clip " + r"$(med\pm2\sigma),\;N={}$".format(
             len(plx_clp)), fontsize=9)
         plt.xlabel('Plx [mas]', fontsize=12)
         plt.ylabel(y_ax, fontsize=12)
@@ -260,15 +260,20 @@ def plx_vs_MP(
             plx_clp, mmag_plx_clp, xerr=e_plx_clp, fmt='none', elinewidth=.35,
             ecolor='grey')
 
-        # Bayesian
-        t0 = r"$Plx_{{Bay}} ={:.3f}_{{-{:.3f}}}^{{+{:.3f}}}$".format(
-            plx_bay, plx_bay - pl_plx, ph_plx - plx_bay)
-        t0 += "\n   [{:.0f} pc]".format(1000. / plx_bay)
+        # Bayesian parallaxes in Kpc
+        plx_16, plx_50, plx_84 = 1. / plx_Bys
+        t0 = r"$Plx_{{Bay}} ={:.3f}_{{{:.3f}}}^{{{:.3f}}}$".format(
+            plx_50, plx_84, plx_16)
+        pc_h, pc_m, pc_l = 1000. / plx_84, 1000. / plx_50, 1000. / plx_16
+        t0 += "\n" + r"$[{:.0f}_{{{:.0f}}}^{{{:.0f}}}\;pc]$".format(
+            pc_m, pc_l, pc_h)
         plt.axvline(
-            x=plx_bay, linestyle='--', color='b', lw=1.2, zorder=5, label=t0)
+            x=plx_50, linestyle='--', color='g', lw=1.2, zorder=5, label=t0)
+        # plt.axvline(x=plx_16, ls=':', color='r', zorder=5)
+        # plt.axvline(x=plx_84, ls=':', color='r', zorder=5)
         # Weighted average
         plt.axvline(
-            x=plx_wa, linestyle='--', color='r', lw=.85, zorder=5,
+            x=plx_wa, linestyle='--', color='b', lw=.85, zorder=5,
             label=r"$Plx_{{wa}} = {:.3f}$".format(plx_wa))
         # Median
         plt.axvline(
@@ -432,10 +437,10 @@ def pms_KDE_diag(
         ellipse = Ellipse(
             xy=(pmRA_Bys[0], pmDE_Bys[0]), width=2 * pmRA_Bys[1],
             height=2. * pmDE_Bys[1], edgecolor='r', fc='None', lw=1.5,
-            zorder=4)
+            ls='--', zorder=4)
         ax.add_patch(ellipse)
         plt.scatter(
-            pmRA_Bys[0], pmDE_Bys[0], c='r', marker='x', s=25, zorder=4,
+            pmRA_Bys[0], pmDE_Bys[0], c='g', marker='x', s=25, zorder=4,
             label=r"$[{:.3f}\pm{:.3f}, {:.3f}\pm{:.3f}]$".format(
                 pmRA_Bys[0], pmRA_Bys[1], pmDE_Bys[0], pmDE_Bys[1]))
 

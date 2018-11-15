@@ -1,15 +1,19 @@
 
 import numpy as np
-from scipy import optimize
+# from scipy import optimize
+from scipy.optimize import differential_evolution as DE
+from scipy.special import exp1
 from ..best_fit.emcee3rc2 import ensemble
+import warnings
+from .. import update_progress
 
 
 def main(clp):
     """
     """
     plx_flag = False
-    mmag_clp, mp_clp, plx_clp, e_plx_clp, pl_plx, plx_bay, ph_plx, plx_wa =\
-        [], [], [], [], np.nan, np.nan, np.nan, np.nan
+    mmag_clp, mp_clp, plx_clp, e_plx_clp, plx_Bys, plx_std_Bys, plx_wa =\
+        [], [], [], [], np.nan, np.nan, np.nan
 
     # Extract parallax data.
     plx = np.array(list(zip(*list(zip(*clp['cl_reg_fit']))[7]))[0])
@@ -41,28 +45,65 @@ def main(clp):
         # errors are in the denominator.
         e_plx_clp[e_plx_clp == 0.] = 10.
 
-        # Use optimum likelihood value as mean of the prior.
-        def pstv_lnlike(w_t, w_i, s_i, mp):
-            return -lnlike(w_t, w_i, s_i, mp)
-        plx_lkl = optimize.minimize_scalar(pstv_lnlike, args=(
-            plx_clp, e_plx_clp, 1.))
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+
+            # Use DE to estimate the ML
+            def DEdist(model):
+                return -lnlike(model, plx_clp, e_plx_clp, mp_clp)
+            # bounds = [[0., plx_clp.max()], [0., 1.]]
+            bounds = [[0., 20.]]
+            result = DE(DEdist, bounds, popsize=20, maxiter=50)
+            # print(result)
 
         # Prior parameters.
-        w_p, s_p = plx_lkl.x, .5
+        mu_p = result.x
         # Sampler parameters.
-        ndim, nwalkers, nruns, nburn = 1, 100, 2000, 1000
+        ndim, nwalkers, nruns = 1, 50, 1000
         sampler = ensemble.EnsembleSampler(
-            nwalkers, ndim, lnprob,
-            args=(plx_clp, e_plx_clp, mp_clp, w_p, s_p))
+            nwalkers, ndim, lnprob, args=(plx_clp, e_plx_clp, mp_clp, mu_p))
+
         # Random initial guesses.
-        pos = [np.random.uniform(0., 1., ndim) for i in range(nwalkers)]
-        sampler.run_mcmc(pos, nruns)
-        # Remove burn-in
-        samples = sampler.chain[:, nburn:, :].reshape((-1, ndim))
-        # 16th, median, 84th percentiles
-        pl_plx, plx_bay, ph_plx = np.percentile(samples, [16, 50, 84])
-        print("Bayesian plx estimated: {:.3f} (ESS={:.0f})".format(
-            plx_bay, samples.size / sampler.get_autocorr_time()[0]))
+        # pos0 = [np.random.uniform(0., 1., ndim) for i in range(nwalkers)]
+        # Ball of initial guesses around 'mu_p'
+        pos0 = [mu_p + .5 * np.random.normal() for i in range(nwalkers)]
+
+        old_tau = np.inf
+        for i, _ in enumerate(sampler.sample(pos0, iterations=nruns)):
+            # Only check convergence every X steps
+            if i % 50 and i < (nruns - 1):
+                continue
+
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                tau = sampler.get_autocorr_time(tol=0)
+                # Check convergence
+                converged = np.all(tau * 100 < i)
+                converged &= np.all(np.abs(old_tau - tau) / tau < 0.01)
+                if converged:
+                    print("")
+                    break
+                old_tau = tau
+                tau_mean = np.nanmean(sampler.get_autocorr_time(tol=0))
+            update_progress.updt(nruns, i + 1, "tau={:.0f}".format(tau_mean))
+
+        # Remove burn-in (half of chain)
+        nburn = int(i / 2.)
+        samples = sampler.get_chain(discard=nburn, flat=True)
+
+        # import matplotlib.pyplot as plt
+        # import corner
+        # corner.corner(samples)
+        # plt.show()
+
+        # plt.plot(samples.T[0])
+        # plt.show()
+
+        # 16th, median, 84th
+        plx_Bys = np.percentile(samples, (16, 50, 84))
+        tau_mean = np.mean(sampler.get_autocorr_time(tol=0))
+        print("Bayesian plx estimated: {:.3f} (ESS={:.0f}, tau={:.0f})".format(
+            1. / plx_Bys[1], samples.size / tau_mean, tau_mean))
 
         # Weighted average and its error.
         # Source: https://physics.stackexchange.com/a/329412/8514
@@ -73,27 +114,118 @@ def main(clp):
     clp.update({
         'plx_flag': plx_flag, 'plx_clrg': plx_clrg, 'mmag_clp': mmag_clp,
         'mp_clp': mp_clp, 'plx_clp': plx_clp, 'e_plx_clp': e_plx_clp,
-        'pl_plx': pl_plx, 'plx_bay': plx_bay, 'ph_plx': ph_plx,
-        'plx_wa': plx_wa})
+        'plx_Bys': plx_Bys, 'plx_wa': plx_wa})
     return clp
 
 
-def lnprob(w_t, w_i, s_i, mp, w_p, s_p):
-    lp = lnprior(w_t, w_p, s_p)
-    return lp + lnlike(w_t, w_i, s_i, mp)
+def lnprob(mu_std, plx, plx_std, mp, mu_std_p):
+    lp = lnprior(mu_std, mu_std_p)
+    if np.isinf(lp):
+        return lp
+    return lp + lnlike(mu_std, plx, plx_std, mp)
 
 
-def lnprior(w_t, w_p, s_p):
+def lnprior(mu_std, mu_std_p, std_p=(1., .1)):
     """
     Log prior, Gaussian > 0.
     """
-    if w_t < 0.:
+    # if mu_std[0] < 0. or mu_std[1] < 0.:
+    #     return -np.inf
+    # return -0.5 * np.sum(
+    #     ((mu_std[0] - mu_std_p[0]) / std_p)**2 +
+    #     ((mu_std[1] - mu_std_p[1]) / std_p)**2)
+
+    if mu_std < 0.: #[0] < 0. or mu_std[1] < 0.:
         return -np.inf
-    return -0.5 * ((w_p - w_t)**2 / s_p**2)
+    return -0.5 * np.sum(
+        ((mu_std - mu_std_p) / std_p[0])**2)# +
+        # ((mu_std[1] - mu_std_p[1]) / std_p[1])**2)
 
 
-def lnlike(w_t, w_i, s_i, mp):
-    """
-    Log likelihood, product of Gaussian functions.
-    """
-    return -0.5 * (np.sum(mp * (w_i - w_t)**2 / s_i**2))
+# def lnlike(mu_std, plx, plx_std, mp):
+#     """
+#     Log likelihood, product of Gaussian functions.
+#     """
+#     # sigma = np.sqrt(plx_std**2 + mu_std[1]**2)
+#     # A = -np.sum(np.log(np.sqrt(2. * np.pi) * sigma))
+#     # B = -0.5 * (np.sum(mp * (plx - mu_std[0])**2 / sigma**2))
+
+#     from scipy.integrate import quad
+
+#     # Bailer-jones
+#     A = -np.sum(np.log(2. * np.pi * plx_std * mu_std[1]))
+
+#     int_exp = np.zeros(plx.size)
+#     for i in range(plx.size):
+#         int_exp[i] = quad(
+#             distFunc, 0.1, 20., args=(plx[i], plx_std[i], mp[i], mu_std))[0]
+#     B = np.sum(np.log(int_exp))
+
+#     return A + B
+
+
+# def distFunc(r_i, plx, plx_std, mp, mu_std):
+#     B1 = ((plx - (1. / r_i)) / plx_std)**2
+#     B2 = ((r_i - mu_std[0]) / mu_std[1])**2
+#     C = np.exp(-.5 * 1. * (B1 + B2))
+#     return C
+
+# def lnlike(mu_std, plx, plx_std, mp):
+#     """
+#     Log likelihood, product of Gaussian functions.
+#     """
+#     # Bailer-jones
+#     A = -np.sum(np.log(2. * np.pi * plx_std * mu_std[1]))
+
+#     int_max = mu_std[0] + 3 * mu_std[1]
+#     N = int(int_max / 0.01)
+
+#     x = np.linspace(.1, int_max, N).reshape(-1, 1)
+#     B1 = ((plx - (1. / x)) / plx_std)**2
+
+#     def distFunc0(r_i):
+#         B2 = ((r_i - mu_std[0]) / mu_std[1])**2
+#         C = np.exp(-.5 * 1. * (B1 + B2))
+#         return C
+
+#     int_exp = np.trapz(distFunc0(x), x, axis=0)
+#     B = np.sum(np.log(int_exp))
+
+#     return A + B
+
+
+def lnlike(mu, plx, plx_std, mp):
+
+    # Define the 'r_i' values used to evaluate the integral.
+    int_max = mu + 5.
+    N = int(int_max / 0.01)
+    x = np.linspace(.1, int_max, N).reshape(-1, 1)
+
+    # Marginalization of the scale parameter 's_c'. We integrate over it
+    # using the incomplete gamma function as per Wolfram:
+    #
+    # https://www.wolframalpha.com/input/
+    # ?i=integral+exp(-.5*(a%5E2%2Fx%5E2))+%2F+x,+x%3D0+to+x%3Db
+    #
+    # This function is equivalent to scipy's 'exp1()', as stated in:
+    #
+    # https://stackoverflow.com/a/53148269/1391441
+    #
+    # so we use this function to marginalize the 's_c' parameter up to a
+    # 5 kpc limit.
+    lim_u = 5.
+
+    # This is the first term in Eq (20) of Bailer-Jones (2015). We calculate
+    # it outside of the integral as it only depends on the 'r_i' values (ie:
+    # the 'x' array)
+
+    def distFunc(r_i):
+        sc_int = .5 * exp1(.5 * ((r_i - mu) / lim_u)**2)
+        B1 = ((plx - (1. / r_i)) / plx_std)**2
+        C = (np.exp(-.5 * B1) / plx_std) * sc_int
+        return C
+
+    # Double integral
+    int_exp = np.trapz(distFunc(x), x, axis=0)
+
+    return np.sum(np.log(mp * int_exp))
