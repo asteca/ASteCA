@@ -22,7 +22,7 @@ def pl_mp_histo(
         plt.xlabel('MP (membership probability)', fontsize=12)
         plt.ylabel('N (normalized)', fontsize=12)
         ax.minorticks_on()
-        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1,
+        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
                 zorder=1)
         prob_data = [star[9] for star in memb_prob_avrg_sort]
         # Histogram of the data.
@@ -156,7 +156,7 @@ def pl_mps_phot_diag(
             # horizontal lines
             ax.axhline(y_ed, linestyle=':', lw=.8, color='k', zorder=1)
     else:
-        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1,
+        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
                 zorder=1)
     # This reversed colormap means higher prob stars will look redder.
     cm = plt.cm.get_cmap('RdYlBu_r')
@@ -199,7 +199,7 @@ def plx_histo(gs, plx_flag, plx_clrg, plx_x_kde, kde_pl, plx_flrg,
         plt.xlabel('Plx [mas]', fontsize=12)
         plt.ylabel('N', fontsize=12)
         ax.minorticks_on()
-        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1,
+        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
                 zorder=1)
         # Normalized histogram for cluster region.
         h_cl, _, _ = plt.hist(
@@ -301,7 +301,7 @@ def plx_chart(
     '''
     if plx_flag:
         ax = plt.subplot(gs[2:4, 4:6])
-        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1,
+        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
                 zorder=1)
         ax.set_title('Cluster region (fit)'.format(), fontsize=9)
 
@@ -393,7 +393,7 @@ def pms_KDE_diag(
             ax = plt.subplot(gs[2:4, 2:4])
         ax.set_title('Error-weighted KDE + Bayesian center', fontsize=9)
         ax.minorticks_on()
-        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1,
+        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
                 zorder=1)
 
         if coord == 'deg':
@@ -458,7 +458,7 @@ def pms_vs_MP(gs, y_ax, plx_flag, PM_flag, pmMP, pm_dist_max, mmag_pm):
         else:
             ax = plt.subplot(gs[2:4, 4:6])
         ax.minorticks_on()
-        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1,
+        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
                 zorder=1)
 
         ax.set_title("Distance to Bayesian median", fontsize=9)

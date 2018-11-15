@@ -61,8 +61,7 @@ def pl_rad_dens(
     # Set axes labels
     plt.xlabel('radius ({})'.format(coord), fontsize=12)
     plt.ylabel("stars/{}$^{{2}}$".format(coord), fontsize=12)
-    # Set grid
-    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
+    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5)
     # Cluster's name and mode used to process it.
     plt.title(str(clust_name) + ' (' + mode + ')', fontsize=9)
     # Legend texts
@@ -263,7 +262,7 @@ def pl_cl_fl_regions(
     plt.ylabel('{} ({})'.format(y_name, coord), fontsize=12)
     # Set minor ticks
     ax.minorticks_on()
-    ax.grid(b=True, which='both', color='gray', linestyle='--', lw=0.5)
+    ax.grid(b=True, which='both', color='gray', linestyle='--', lw=.5)
     # Radius
     circle = plt.Circle((kde_cent[0], kde_cent[1]), clust_rad,
                         color='k', fill=False)

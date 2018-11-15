@@ -165,7 +165,7 @@ def pl_cl_fl_regions(
     plt.ylabel('{} ({})'.format(y_name, coord), fontsize=12)
     # Set minor ticks
     ax.minorticks_on()
-    ax.grid(b=True, which='both', color='gray', linestyle='--', lw=0.5)
+    ax.grid(b=True, which='both', color='gray', linestyle='--', lw=.5)
 
     # Plot cluster region.
     if len(cl_region_rjct_c) > 0:
@@ -203,10 +203,7 @@ def pl_fl_diag(
     plt.ylabel('$' + y_ax + '$', fontsize=12)
     # Set minor ticks
     ax.minorticks_on()
-    # Only draw units on axis (ie: 1, 2, 3)
-    # ax.xaxis.set_major_locator(MultipleLocator(1.0))
-    # Set grid
-    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1,
+    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
             zorder=1)
     # Plot accepted/rejected stars within the field regions defined.
     if stars_f_rjct[0]:
@@ -248,10 +245,7 @@ def pl_cl_diag(
     plt.ylabel('$' + y_ax + '$', fontsize=12)
     # Set minor ticks
     ax.minorticks_on()
-    # Only draw units on axis (ie: 1, 2, 3)
-    # ax.xaxis.set_major_locator(MultipleLocator(1.0))
-    # Set grid
-    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1,
+    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
             zorder=1)
     # Add text box.
     text = r'$n_{{memb}} \approx {}$'.format(n_memb)
@@ -287,8 +281,7 @@ def pl_lum_func(gs, y_ax, flag_no_fl_regs, lum_func):
     ax.minorticks_on()
     # Only draw units on axis (ie: 1, 2, 3)
     ax.xaxis.set_major_locator(MultipleLocator(2.0))
-    # Set grid
-    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1,
+    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
             zorder=1)
     # Set axis labels
     plt.xlabel('$' + y_ax + '$', fontsize=12)
@@ -331,8 +324,7 @@ def pl_data_rm_perc(
     ax = plt.subplot(gs[4:6, 2:4])
     ax.set_title("Percentage of stars kept after each process", fontsize=9)
     ax.minorticks_on()
-    # Set grid
-    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1,
+    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
             zorder=1)
     # Set axis labels
     plt.xlabel('$' + y_ax + '$', fontsize=12)

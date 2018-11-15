@@ -19,7 +19,7 @@ def pl_GA_lkl(gs, l_min_max, lkl_old, model_done, new_bs_indx, N_pop, N_gen,
     # Set minor ticks
     ax.minorticks_on()
     ax.tick_params(axis='y', which='major', labelsize=9)
-    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=0.6)
+    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5)
     plt.xlabel('Generation', fontsize=12)
     plt.ylabel('Likelihood', fontsize=12)
 
