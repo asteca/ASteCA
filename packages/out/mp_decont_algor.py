@@ -232,12 +232,11 @@ def plx_histo(gs, plx_flag, plx_clrg, plx_x_kde, kde_pl, plx_flrg,
         ax.legend(fontsize='small', loc=7)
 
 
-def plx_vs_MP(
+def plx_vs_mag(
     gs, y_min_cmd, y_max_cmd, y_ax, plx_flag, mmag_plx_clp, mp_plx_clp,
         plx_clp, e_plx_clp, plx_Bys, plx_wa):
     '''
-    Finding chart of cluster region with colors assigned according to the
-    probabilities obtained and sizes according to parallaxes.
+    Parallaxes versus main magnitude.
     '''
     if plx_flag:
         ax = plt.subplot(gs[2:4, 2:4])
@@ -260,17 +259,18 @@ def plx_vs_MP(
             plx_clp, mmag_plx_clp, xerr=e_plx_clp, fmt='none', elinewidth=.35,
             ecolor='grey')
 
-        # Bayesian parallaxes in Kpc
+        # Bayesian parallaxes in mas
         plx_16, plx_50, plx_84 = 1. / plx_Bys
-        t0 = r"$Plx_{{Bay}} ={:.3f}_{{{:.3f}}}^{{{:.3f}}}$".format(
-            plx_50, plx_84, plx_16)
+        # Bayesian parallaxes in pc
         pc_h, pc_m, pc_l = 1000. / plx_84, 1000. / plx_50, 1000. / plx_16
-        t0 += "\n" + r"$[{:.0f}_{{{:.0f}}}^{{{:.0f}}}\;pc]$".format(
+        t0 = r"$Plx_{{Bay}} ={:.0f}_{{{:.0f}}}^{{{:.0f}}}\;pc$".format(
             pc_m, pc_l, pc_h)
+        dm_50, dm_l, dm_h = 5. * np.log10(pc_m) - 5.,\
+            5. * np.log10(pc_l) - 5., 5. * np.log10(pc_h) - 5.
+        t0 += "\n" + r"$ {:.3f}\;[{:.2f}_{{{:.2f}}}^{{{:.2f}}}\;mag]$".format(
+            plx_50, dm_50, dm_l, dm_h)
         plt.axvline(
             x=plx_50, linestyle='--', color='g', lw=1.2, zorder=5, label=t0)
-        # plt.axvline(x=plx_16, ls=':', color='r', zorder=5)
-        # plt.axvline(x=plx_84, ls=':', color='r', zorder=5)
         # Weighted average
         plt.axvline(
             x=plx_wa, linestyle='--', color='b', lw=.85, zorder=5,
@@ -489,7 +489,7 @@ def plot(N, *args):
         1: [pl_chart_mps, 'frame with MPs coloring'],
         2: [plx_histo, 'Plx histogram'],
         3: [plx_chart, 'Plx chart'],
-        4: [plx_vs_MP, 'Plx vs MP'],
+        4: [plx_vs_mag, 'Plx vs mag'],
         5: [pms_vpd, 'PMs vector point diagram'],
         6: [pms_KDE_diag, 'PMs KDE diagram'],
         7: [pms_vs_MP, 'PMs vs MP']

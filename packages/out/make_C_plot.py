@@ -124,7 +124,7 @@ def main(
             # plx_chart
             [gs, plx_flag, x_name, y_name, coord, cl_reg_fit, plx_x_kde,
              kde_pl],
-            # plx_vs_MP
+            # plx_vs_mag
             [gs, y_min_cmd, y_max_cmd, y_ax, plx_flag, mmag_clp,
              mp_clp, plx_clp, e_plx_clp, plx_Bys, plx_wa],
             # pms_vpd

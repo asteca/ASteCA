@@ -25,7 +25,7 @@ def main(clp):
         plx_flag = True
 
         # Sampler parameters.
-        ndim, nwalkers, nruns = 1, 50, 1000
+        ndim, nwalkers, nruns = 1, 10, 2000
         print("  Bayesian Plx model ({} runs)".format(nruns))
 
         # Reject 2\sigma outliers.
@@ -51,17 +51,32 @@ def main(clp):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
 
+            # Define the 'r_i' values used to evaluate the integral.
+            int_max = 20.
+            N = int(int_max / 0.01)
+            x = np.linspace(.1, int_max, N).reshape(-1, 1)
+            B1 = ((plx_clp - (1. / x)) / e_plx_clp)**2
+            B2 = (np.exp(-.5 * B1) / e_plx_clp)
+
             # Use DE to estimate the ML
             def DEdist(model):
-                return -lnlike(model, plx_clp, e_plx_clp, mp_clp)
+                return -lnlike(model, x, B2, mp_clp)
             bounds = [[0., 20.]]
-            result = DE(DEdist, bounds, popsize=20, maxiter=50)
+            result = DE(DEdist, bounds, popsize=20, maxiter=100)
+            print(result)
 
         # Prior parameters.
         mu_p = result.x
+        # Define the 'r_i' values used to evaluate the integral.
+        int_max = mu_p + 5.
+        N = int(int_max / 0.01)
+        x = np.linspace(.1, int_max, N).reshape(-1, 1)
+        B1 = ((plx_clp - (1. / x)) / e_plx_clp)**2
+        B2 = (np.exp(-.5 * B1) / e_plx_clp)
+
         # emcee sampler
         sampler = ensemble.EnsembleSampler(
-            nwalkers, ndim, lnprob, args=(plx_clp, e_plx_clp, mp_clp, mu_p))
+            nwalkers, ndim, lnprob, args=(x, B2, mp_clp, mu_p))
 
         # Random initial guesses.
         # pos0 = [np.random.uniform(0., 1., ndim) for i in range(nwalkers)]
@@ -99,7 +114,7 @@ def main(clp):
         # plt.plot(samples.T[0])
         # plt.show()
 
-        # 16th, median, 84th
+        # 16th, median, 84th in Kpc
         plx_Bys = np.percentile(samples, (16, 50, 84))
         tau_mean = np.mean(sampler.get_autocorr_time(tol=0))
         print("Bayesian plx estimated: {:.3f} (ESS={:.0f}, tau={:.0f})".format(
@@ -118,32 +133,35 @@ def main(clp):
     return clp
 
 
-def lnprob(mu, plx, plx_std, mp, mu_p):
+def lnprob(mu, x, B2, mp, mu_p):
     lp = lnprior(mu, mu_p)
     if np.isinf(lp):
         return lp
-    return lp + lnlike(mu, plx, plx_std, mp)
+    return lp + lnlike(mu, x, B2, mp)
 
 
 def lnprior(mu, mu_p, std_p=1.):
     """
-    Log prior, Gaussian > 0.
+    Log prior.
     """
     if mu < 0.:
         return -np.inf
+
+    # Gaussian > 0
     return -0.5 * ((mu - mu_p) / std_p)**2
 
+    # Exponential prior proposed by Bailer-Jones.
+    # return (.5 / (.5 * mu_p)**3) * mu**2 * np.exp(-mu / (.5 * mu_p))
 
-def lnlike(mu, plx, plx_std, mp):
+    # # Uniform prior
+    # return 0.
+
+
+def lnlike(mu, x, B2, mp):
     """
     Model defined in Bailer-Jones (2015), Eq (20), The shape parameter s_c
     is marginalized.
     """
-
-    # Define the 'r_i' values used to evaluate the integral.
-    int_max = mu + 5.
-    N = int(int_max / 0.01)
-    x = np.linspace(.1, int_max, N).reshape(-1, 1)
 
     # Marginalization of the scale parameter 's_c'. We integrate over it
     # using the incomplete gamma function as per Wolfram:
@@ -159,15 +177,14 @@ def lnlike(mu, plx, plx_std, mp):
     # 5 kpc limit.
     lim_u = 5.
 
-    # This is the first term in Eq (20) of Bailer-Jones (2015). We calculate
-    # it outside of the integral as it only depends on the 'r_i' values (ie:
-    # the 'x' array)
-
     def distFunc(r_i):
+        """
+        Eq (20) of Bailer-Jones (2015) with everything that can be calculated
+        outside, moved outside.
+        """
         sc_int = .5 * exp1(.5 * ((r_i - mu) / lim_u)**2)
-        B1 = ((plx - (1. / r_i)) / plx_std)**2
-        C = (np.exp(-.5 * B1) / plx_std) * sc_int
-        return C
+        sc_int.T[np.isinf(sc_int.T)] = 0.
+        return B2 * sc_int
 
     # Double integral
     int_exp = np.trapz(distFunc(x), x, axis=0)
