@@ -67,20 +67,24 @@ def ax_names(x, y, yaxis):
     '''
     Define names for photometric diagram axes.
     '''
-    # Create photometric axis names.
-    x_ax = '(' + x[1].replace(',', '-') + ')'
+    col_n = []
+    c_filts = x[1].split(',')
+    for f in c_filts:
+        if '_' in f:
+            xs = f.split('_')
+            col_n.append(xs[0] + '_{' + xs[1] + '}')
+        else:
+            col_n.append(f)
+    x_ax = '(' + '-'.join(col_n) + ')'
+
     # yaxis indicates if the y axis is a magnitude or a color.
     if yaxis == 'mag':
         y_ax = y[1]
     else:
         y_ax = '(' + y[1].replace(',', '-') + ')'
-
-    if '_' in x_ax:
-        x = x_ax.split('_')
-        x_ax = x[0] + '_{' + x[1] + '}'
     if '_' in y_ax:
-        y = y_ax.split('_')
-        y_ax = y[0] + '_{' + y[1] + '}'
+        ys = y_ax.split('_')
+        y_ax = ys[0] + '_{' + ys[1] + '}'
 
     return x_ax, y_ax
 
