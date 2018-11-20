@@ -1,6 +1,7 @@
 
 import numpy as np
 from scipy.optimize import differential_evolution as DE
+import warnings
 import time as t
 from .. import update_progress
 from ..synth_clust import synth_cluster
@@ -319,31 +320,42 @@ def initPop(
     elif init_mode == 'diffevol':
         print("     DE init pop")
 
-        # Estimate initial threshold value using DE.
-        def dist(synth_clust, obs_clust):
-            if synth_clust:
-                return likelihood.main(lkl_method, synth_clust, obs_clust)
-            return np.inf
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
 
-        def postfn(model):
-            if rangeCheck(model, ranges, varIdxs):
-                return synthClust(
-                    fundam_params, varIdxs, model, synthcl_args)
-            return []
+            # Estimate initial threshold value using DE.
+            def dist(synth_clust, obs_clust):
+                if synth_clust:
+                    return likelihood.main(lkl_method, synth_clust, obs_clust)
+                return np.inf
 
-        def DEdist(model):
-            synth_clust = postfn(model)
-            return dist(synth_clust, obs_clust)
+            def postfn(model):
+                if rangeCheck(model, ranges, varIdxs):
+                    return synthClust(
+                        fundam_params, varIdxs, model, synthcl_args)
+                return []
 
-        runs = 1
-        for _ in range(ntemps):
-            walkers_sols = []
-            for _ in range(nwalkers_ptm):
-                result = DE(DEdist, ranges, popsize=popsize, maxiter=maxiter)
-                walkers_sols.append(result.x)
-                update_progress.updt(ntemps * nwalkers_ptm, runs)
-                runs += 1
-            p0.append(walkers_sols)
+            def DEdist(model):
+                synth_clust = postfn(model)
+                return dist(synth_clust, obs_clust)
+
+            runs = 1
+            for _ in range(ntemps):
+                walkers_sols = []
+                for _ in range(nwalkers_ptm):
+                    result = DE(
+                        DEdist, ranges, popsize=popsize, maxiter=maxiter)
+                    walkers_sols.append(result.x)
+                    update_progress.updt(ntemps * nwalkers_ptm, runs)
+                    runs += 1
+                p0.append(walkers_sols)
+
+        # Remove fixed parameters.
+        p0arr = np.array(p0)
+        p0 = []
+        for ip in varIdxs:
+            p0.append(p0arr[:, :, ip])
+        p0 = np.array(p0).transpose(1, 2, 0)
 
     return p0
 

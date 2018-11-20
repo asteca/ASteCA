@@ -63,7 +63,7 @@ def main(clp):
                 return -lnlike(model, x, B2, mp_clp)
             bounds = [[0., 20.]]
             result = DE(DEdist, bounds, popsize=20, maxiter=100)
-            print(result)
+            # print(result)
 
         # Prior parameters.
         mu_p = result.x
