@@ -1,7 +1,7 @@
 
 import numpy as np
-from astropy.stats import bayesian_blocks
-from scipy import stats
+# from astropy.stats import bayesian_blocks
+from scipy.stats import anderson_ksamp, gaussian_kde
 # from scipy.stats.mstats import mquantiles
 
 
@@ -27,7 +27,7 @@ def main(pd, clp, cld_c):
     """
 
     # TODO incorporate to params_input.dat
-    pd['flag_kde_test'] = True
+    pd['flag_kde_test'] = False
 
     # Skip test if < 10 members are found within the cluster's radius.
     flag_few_members = False if len(clp['cl_region_c']) > 10 else True
@@ -61,7 +61,6 @@ def main(pd, clp, cld_c):
 
             # fr_kde_vals = multiKDE(data_fl, grid_vals)
 
-            # ad_vals_cl.append(stats.anderson_ksamp([cl_kde_vals, fr_kde_vals]))
             ad_vals_cl.append(ADtest(data_cl, data_fl))
 
             # import matplotlib.pyplot as plt
@@ -95,17 +94,15 @@ def main(pd, clp, cld_c):
         plt.legend()
         plt.show()
 
-        plt.hist(pvals_cl, bins=25, alpha=.5, density=True, label='cl')
-        plt.hist(pvals_f, bins=25, alpha=.5, density=True, label='fr')
-        plt.legend()
-        plt.show()
+        # plt.hist(pvals_cl, bins=25, alpha=.5, density=True, label='cl')
+        # plt.hist(pvals_f, bins=25, alpha=.5, density=True, label='fr')
+        # plt.legend()
+        # plt.show()
 
-        # p_vals_cl = pvalFix(ad_vals_cl)
-        # p_vals_f = pvalFix(ad_vals_f)
-        # print(p_vals_cl)
-        # print(p_vals_f)
+        # print("Cluster: {:.3f}".format(combine_pvalues(pvals_cl)[1]))
+        # print("Field: {:.3f}".format(combine_pvalues(pvals_f)[1]))
 
-        # kdeplot(p_vals_cl, p_vals_f)
+        kdeplot(pvals_cl, pvals_f)
 
         import pdb; pdb.set_trace()  # breakpoint f79d6346 //
 
@@ -119,14 +116,14 @@ def dataExtract(region):
     """
     """
     # Main magnitude. Must have shape (1, N)
-    mags = np.array(zip(*(zip(*region))[3]))
+    mags = np.array(list(zip(*list(zip(*region))[3])))
     # One or two colors
-    cols = np.array(zip(*(zip(*region))[5]))
+    cols = np.array(list(zip(*list(zip(*region))[5])))
     # Plx + pm_ra + pm_dec
-    kins = np.array(zip(*(zip(*region))[7]))[:3]
+    kins = np.array(list(zip(*list(zip(*region))[7])))[:3]
 
-    # data_all = np.concatenate([mags, cols, kins])
-    data_all = np.concatenate([mags, cols])
+    data_all = np.concatenate([mags, cols, kins])
+    # data_all = np.concatenate([mags, cols])
     # data_all = np.concatenate([kins])
 
     return data_all
@@ -138,60 +135,31 @@ def ADtest(data_cl, data_fl):
     ad_vals = []
     # For each dimension
     for i, dd in enumerate(data_cl):
-        ad_stts = list(stats.anderson_ksamp([dd, data_fl[i]]))
+        ad_stts = list(anderson_ksamp([dd, data_fl[i]]))
         ad_vals.append([ad_stts[0], ad_stts[2]])
 
     return np.array(ad_vals)
 
 
-def gridVals(data_all):
-    """
-    """
-    edges0 = [bayesian_blocks(A) for A in data_all]
-    edges = []
-    for edg in edges0:
-        lr = 'l'
-        while edg.size > 6:
-            if lr == 'r':
-                edg, lr = edg[:-1], 'l'
-            else:
-                edg, lr = edg[1:], 'r'
-        edges.append(edg)
-
-    Nd_grid = np.array(np.meshgrid(*edges))
-
-    return np.vstack([A.ravel() for A in Nd_grid])
-
-
-def multiKDE(data_all, positions):
-    """
-    """
-    data_all[np.isnan(data_all)] = 0.
-
-    # KDE for data
-    kde = stats.gaussian_kde(data_all)
-    # Evaluate grid in KDE.
-    values = kde.evaluate(positions)
-
-    return values
-
-
 def pvalFix(ad_vals):
     """
-    Fix taken from Scipy v1.2.0:
+    TODO Fix taken from Scipy v1.2.0:
     https://github.com/scipy/scipy/blob/
     dfc9a9c73ced00e2588dd8d3ee03f9e106e139bf/scipy/stats/morestats.py#L2032
     """
+
+    critical = np.array([0.325, 1.226, 1.961, 2.718, 3.752, 4.592, 6.546])
+    sig = np.array([0.25, 0.1, 0.05, 0.025, 0.01, 0.005, 0.001])
+
     p_vals = []
-    critical = np.array([0.325, 1.226, 1.961, 2.718, 3.752])
     for A2, pval in ad_vals:
 
         if A2 < critical.min():
             # p-value capped
-            p = 0.25
+            p = sig.max()
         elif A2 > critical.max():
             # p-value floored
-            p = 0.001
+            p = sig.min()
         else:
             p = pval
         p_vals.append(p)
@@ -208,14 +176,14 @@ def kdeplot(p_vals_cl, p_vals_f):
 
     # Obtain the 1D KDE for the cluster region (stars inside cluster's
     # radius) vs field regions.
-    kernel_cl = stats.gaussian_kde(p_vals_cl)
+    kernel_cl = gaussian_kde(p_vals_cl)
     # KDE for plotting.
     kde_cl_1d = np.reshape(kernel_cl(x_kde).T, x_kde.shape)
 
     # Check if field regions were compared among each other.
     if p_vals_f.any():
         # Obtain the 1D KDE for the field regions vs field regions.
-        kernel_f = stats.gaussian_kde(p_vals_f)
+        kernel_f = gaussian_kde(p_vals_f)
 
         # KDE for plotting.
         kde_f_1d = np.reshape(kernel_f(x_kde).T, x_kde.shape)
@@ -238,22 +206,22 @@ def kdeplot(p_vals_cl, p_vals_f):
         # Pass empty lists for plotting.
         kde_f_1d, y_over = np.asarray([]), []
 
-    # Store all parameters in a single list.
-    pval_test_params = [prob_cl_kde, kde_cl_1d, kde_f_1d, x_kde, y_over]
+    pl_p_vals(
+        True, p_vals_cl, p_vals_f, prob_cl_kde, kde_cl_1d, kde_f_1d, x_kde,
+        y_over)
 
-    pl_p_vals(True, pval_test_params)
 
-
-def pl_p_vals(flag_kde_test, pval_test_params):
+def pl_p_vals(
+    flag_kde_test, p_vals_cl, p_vals_f, prob_cl_kde, kde_cl_1d, kde_f_1d,
+        x_kde, y_over):
     '''
     Distribution of KDE p_values.
     '''
     import matplotlib.pyplot as plt
     if flag_kde_test:
-        # Extract parameters from list.
-        prob_cl_kde, kde_cl_1d, kde_f_1d, x_kde, y_over = pval_test_params
         ax = plt.subplot(111)  # gs[4:6, 2:4])
-        plt.xlim(-0.15, 1.15)
+        # plt.xlim(-0.1, 1.05)
+        plt.xlim(-0.09, .4)
         plt.ylim(0, 1.02)
         plt.xlabel('p-values', fontsize=12)
         plt.ylabel('Density (normalized)', fontsize=12)
@@ -266,12 +234,13 @@ def pl_p_vals(flag_kde_test, pval_test_params):
         if kde_f_1d.any():
             max_kde = max(max(kde_f_1d), max(kde_cl_1d))
             plt.plot(x_kde, kde_f_1d / max_kde, color='b', ls='-', lw=1.,
-                     label='$KDE_{fl}$', zorder=2)
+                     label=r'$KDE_{{fl}}\,({})$'.format(len(p_vals_f)),
+                     zorder=2)
         else:
             max_kde = max(kde_cl_1d)
         # Plot cluster vs field KDE.
         plt.plot(x_kde, kde_cl_1d / max_kde, color='r', ls='-', lw=1.,
-                 label='$KDE_{cl}$', zorder=2)
+                 label=r'$KDE_{{cl}}\,({})$'.format(len(p_vals_cl)), zorder=2)
         # Fill overlap.
         if y_over:
             plt.fill_between(x_kde, np.asarray(y_over) / max_kde, 0,
@@ -286,6 +255,38 @@ def pl_p_vals(flag_kde_test, pval_test_params):
         leg.get_frame().set_alpha(0.6)
 
         plt.show()
+
+
+# def gridVals(data_all):
+#     """
+#     """
+#     edges0 = [bayesian_blocks(A) for A in data_all]
+#     edges = []
+#     for edg in edges0:
+#         lr = 'l'
+#         while edg.size > 6:
+#             if lr == 'r':
+#                 edg, lr = edg[:-1], 'l'
+#             else:
+#                 edg, lr = edg[1:], 'r'
+#         edges.append(edg)
+
+#     Nd_grid = np.array(np.meshgrid(*edges))
+
+#     return np.vstack([A.ravel() for A in Nd_grid])
+
+
+# def multiKDE(data_all, positions):
+#     """
+#     """
+#     data_all[np.isnan(data_all)] = 0.
+
+#     # KDE for data
+#     kde = stats.gaussian_kde(data_all)
+#     # Evaluate grid in KDE.
+#     values = kde.evaluate(positions)
+
+#     return values
 
 
 # def qqplot(cl_vals, fl_vals):

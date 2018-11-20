@@ -187,7 +187,7 @@ def main(cl_file, pd):
     # clp = kde_pvalue.main(clp, **pd)
 
     # TODO not ready yet. Results are all over the place.
-    # clp = kde_field_vs_clust.main(pd, clp, cld_c)
+    clp = kde_field_vs_clust.main(pd, clp, cld_c)
 
     # Approximate number of cluster's members.
     clp = members_number.main(clp)
