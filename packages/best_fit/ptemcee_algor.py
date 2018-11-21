@@ -41,13 +41,16 @@ def main(
         loglargs=[fundam_params, synthcl_args, lkl_method, obs_clust, ranges,
                   varIdxs, priors_ptm], Tmax=Tmax, ntemps=ntemps)
 
+    # Start timing.
+    available_secs = max(30, max_secs)
+    elapsed, start_t = 0., t.time()
+
     # Initial population.
     p0 = initPop(
         ranges, varIdxs, lkl_method, obs_clust, fundam_params, synthcl_args,
         ntemps, nwalkers_ptm)
 
     print("     Burn-in stage")
-    t0 = t.time()
     N_steps_check = max(1, int(nburn_ptm * .1))
     for i, (pos0, lnprob, lnlike) in enumerate(ptsampler.sample(
             p0, iterations=nburn_ptm, adapt=pt_adapt)):
@@ -71,11 +74,6 @@ def main(
 
     ptsampler.reset()
 
-    # Start timing.
-    available_secs = max(30, max_secs)
-    elapsed = t.time() - t0
-    start_t = t.time()
-
     # We'll track how the average autocorrelation time estimate changes.
     # This will be useful to testing convergence.
     tau_index, autocorr_vals, old_tau = 0, np.empty(nsteps_ptm), np.inf
@@ -91,7 +89,16 @@ def main(
 
     tau_emcee = np.empty(nsteps_ptm)
 
+    # Check for dodgy inputs.
+    if np.any(np.isinf(pos0)):
+        print('At least one parameter value was infinite.')
+        print(pos0)
+    if np.any(np.isnan(pos0)):
+        print('At least one parameter value was NaN.')
+        print(pos0)
+
     maf_steps, prob_mean, map_lkl = [], [], []
+    elapsed_in, start_in = 0., t.time()
     milestones = list(range(10, 101, 10))
     for i, result in enumerate(ptsampler.sample(
             pos0, iterations=nsteps_ptm, adapt=pt_adapt)):
@@ -151,17 +158,20 @@ def main(
                 lnprob[0][idx_best]]
         map_lkl.append([i, map_sol_old[1]])
 
+        # Time used to check how fast the sampler is advancing.
+        elapsed_in += t.time() - start_in
+        start_in = t.time()
         # Print progress.
         percentage_complete = (100. * (i + 1) / nsteps_ptm)
         if len(milestones) > 0 and percentage_complete >= milestones[0]:
             map_sol, logprob = map_sol_old
-            m, s = divmod(nsteps_ptm / (i / elapsed) - elapsed, 60)
+            m, s = divmod(nsteps_ptm / (i / elapsed_in) - elapsed_in, 60)
             h, m = divmod(m, 60)
             print("{:>3}% ({:.3f}) LP={:.1f} ({:g}, {:g}, {:.3f}, {:.2f}"
                   ", {:g}, {:.2f})".format(
                       milestones[0], maf, logprob, *map_sol) +
                   " [{:.0f} m/s | {:.0f}h{:.0f}m]".format(
-                      (ntemps * nwalkers_ptm * i) / elapsed, h, m))
+                      (ntemps * nwalkers_ptm * i) / elapsed_in, h, m))
             milestones = milestones[1:]
 
     runs = i + 1

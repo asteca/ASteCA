@@ -1,8 +1,6 @@
 
 import numpy as np
-# from astropy.stats import bayesian_blocks
 from scipy.stats import anderson_ksamp, gaussian_kde
-# from scipy.stats.mstats import mquantiles
 
 
 def main(pd, clp, cld_c):
@@ -53,54 +51,30 @@ def main(pd, clp, cld_c):
         for fr in clp['field_regions_c']:
             data_fr.append(dataExtract(fr))
 
-        # grid_vals = gridVals(data_cl)
-        # cl_kde_vals = multiKDE(data_cl, grid_vals)
-
         ad_vals_cl, ad_vals_f = [], []
         for f_idx, data_fl in enumerate(data_fr):
 
-            # fr_kde_vals = multiKDE(data_fl, grid_vals)
-
             ad_vals_cl.append(ADtest(data_cl, data_fl))
-
-            # import matplotlib.pyplot as plt
-            # stats.probplot(cl_kde_vals, dist="norm", plot=plt)
-            # stats.probplot(fr_kde_vals, dist="norm", plot=plt)
-            # plt.legend()
-            # plt.show()
-            # plt.scatter(qq_params[1][0], qq_params[1][1])
-            # plt.show()
 
             # Compare the field region used above with all the remaining
             # field regions. This results in [N*(N+1)/2] combinations of
             # field vs field comparisons.
             # grid_vals = gridVals(data_fl)
             for data_fl2 in data_fr[(f_idx + 1):]:
-
-                # fr_kde_vals2 = multiKDE(data_fl2, grid_vals)
-                # ad_vals_f.append(
-                #     stats.anderson_ksamp([fr_kde_vals, fr_kde_vals2]))
                 ad_vals_f.append(ADtest(data_fl, data_fl2))
 
         # Extract AD values and capped pvalues
         a2vals_cl = np.array(ad_vals_cl)[:, :, 0].ravel()
         a2vals_f = np.array(ad_vals_f)[:, :, 0].ravel()
+        # Cap p_values
         pvals_cl = pvalFix(np.array(ad_vals_cl).reshape(a2vals_cl.shape[0], 2))
         pvals_f = pvalFix(np.array(ad_vals_f).reshape(a2vals_f.shape[0], 2))
 
-        import matplotlib.pyplot as plt
-        plt.hist(a2vals_cl, bins=25, alpha=.5, density=True, label='cl')
-        plt.hist(a2vals_f, bins=25, alpha=.5, density=True, label='fr')
-        plt.legend()
-        plt.show()
-
-        # plt.hist(pvals_cl, bins=25, alpha=.5, density=True, label='cl')
-        # plt.hist(pvals_f, bins=25, alpha=.5, density=True, label='fr')
+        # import matplotlib.pyplot as plt
+        # plt.hist(a2vals_cl, bins=25, alpha=.5, density=True, label='cl')
+        # plt.hist(a2vals_f, bins=25, alpha=.5, density=True, label='fr')
         # plt.legend()
         # plt.show()
-
-        # print("Cluster: {:.3f}".format(combine_pvalues(pvals_cl)[1]))
-        # print("Field: {:.3f}".format(combine_pvalues(pvals_f)[1]))
 
         kdeplot(pvals_cl, pvals_f)
 
@@ -119,23 +93,25 @@ def dataExtract(region):
     mags = np.array(list(zip(*list(zip(*region))[3])))
     # One or two colors
     cols = np.array(list(zip(*list(zip(*region))[5])))
+
+    # Check if Plx and/or PM data exist. TODO
     # Plx + pm_ra + pm_dec
     kins = np.array(list(zip(*list(zip(*region))[7])))[:3]
 
     data_all = np.concatenate([mags, cols, kins])
-    # data_all = np.concatenate([mags, cols])
-    # data_all = np.concatenate([kins])
 
     return data_all
 
 
-def ADtest(data_cl, data_fl):
+def ADtest(data_x, data_y):
     """
+    Obtain Anderson-Darling test for each data dimension.
     """
     ad_vals = []
     # For each dimension
-    for i, dd in enumerate(data_cl):
-        ad_stts = list(anderson_ksamp([dd, data_fl[i]]))
+    for i, dd in enumerate(data_x):
+        ad_stts = list(anderson_ksamp([dd, data_y[i]]))
+        # Store A-D value and p-value.
         ad_vals.append([ad_stts[0], ad_stts[2]])
 
     return np.array(ad_vals)
@@ -255,85 +231,3 @@ def pl_p_vals(
         leg.get_frame().set_alpha(0.6)
 
         plt.show()
-
-
-# def gridVals(data_all):
-#     """
-#     """
-#     edges0 = [bayesian_blocks(A) for A in data_all]
-#     edges = []
-#     for edg in edges0:
-#         lr = 'l'
-#         while edg.size > 6:
-#             if lr == 'r':
-#                 edg, lr = edg[:-1], 'l'
-#             else:
-#                 edg, lr = edg[1:], 'r'
-#         edges.append(edg)
-
-#     Nd_grid = np.array(np.meshgrid(*edges))
-
-#     return np.vstack([A.ravel() for A in Nd_grid])
-
-
-# def multiKDE(data_all, positions):
-#     """
-#     """
-#     data_all[np.isnan(data_all)] = 0.
-
-#     # KDE for data
-#     kde = stats.gaussian_kde(data_all)
-#     # Evaluate grid in KDE.
-#     values = kde.evaluate(positions)
-
-#     return values
-
-
-# def qqplot(cl_vals, fl_vals):
-#     """
-#     Calculate the QQ-plot for the distribution of KDE values obtained comparing
-#     the cluster's KDE with the field region's KDEs.
-#     """
-#     # Interpolate the larger list.
-#     if len(fl_vals) >= len(cl_vals):
-#         A, B = fl_vals, cl_vals
-#     else:
-#         B, A = fl_vals, cl_vals
-
-#     # Calculate the quantiles, using R's defaults for 'alphap' and 'betap'
-#     # (ie: R's type 7) See:
-#     # http://docs.scipy.org/doc/scipy/reference/generated/
-#     # scipy.stats.mstats.mquantiles.html
-#     quant = mquantiles(A, prob=ppoints(B), alphap=1., betap=1.)
-
-#     # Set order so the names of the axis when plotting are unchanged.
-#     if len(fl_vals) >= len(cl_vals):
-#         quantiles = [sorted(B), sorted(quant.tolist())]
-#     else:
-#         quantiles = [sorted(quant.tolist()), sorted(B)]
-
-#     # Calculate CCC (Concordance correlation coefficient) for the quantiles.
-#     # https://en.wikipedia.org/wiki/Concordance_correlation_coefficient
-#     a = quantiles[0]
-#     b = quantiles[1]
-#     ccc = 2 * (np.std(a) * np.std(b)) / (
-#         np.std(a)**2 + np.std(b)**2 + (np.mean(a) - np.mean(b))**2)
-
-#     qq_params = [ccc, quantiles]
-
-#     return qq_params
-
-
-# def ppoints(vector):
-#     '''
-#     Analogue to R's `ppoints` function
-#     see details at 'http://stat.ethz.ch/R-manual/R-patched/library/stats/html/
-#     ppoints.html'
-#     '''
-#     try:
-#         n = np.float(len(vector))
-#     except TypeError:
-#         n = np.float(vector)
-#     a = 3. / 8. if n <= 10 else .5
-
-#     return (np.arange(n) + 1. - a) / (n + 1 - 2. * a)
