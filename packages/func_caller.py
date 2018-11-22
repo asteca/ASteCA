@@ -22,7 +22,6 @@ from .errors import err_range_avrg
 #
 from .data_analysis import compl_err_funcs
 from .data_analysis import luminosity
-# from .data_analysis import kde_pvalue  # DEPRECATED
 from .data_analysis import ad_field_vs_clust
 from .data_analysis import members_number
 #

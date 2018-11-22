@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from os.path import join
-from . import mp_phot_analysis
+from . import mp_data_analysis
 from . import add_version_plot
 from . import prep_plots
 
@@ -12,7 +12,8 @@ def main(
         npd, cld_c, pd, em_float, err_lst, cl_region_c, cl_region_rjct_c,
         stars_out_c, stars_out_rjct_c, field_regions_c, flag_no_fl_regs_c,
         field_regions_rjct_c, n_memb, lum_func, phot_analy_compl,
-        phot_data_compl, err_rm_data, completeness, **kwargs):
+        phot_data_compl, err_rm_data, completeness, flag_kde_test, ad_cl,
+        ad_fr, ad_cl_fr_p, ad_cl_fr_pk, **kwargs):
     '''
     Make B block plots.
     '''
@@ -62,14 +63,22 @@ def main(
             # pl_cl_diag: Cluster's stars diagram (stars inside cluster's rad)
             [gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
                 cl_region_rjct_c, cl_region_c, n_memb, cl_sz_pt, err_bar_cl],
+            # pl_hess_cmd
+            [gs],
             # pl_lum_func: LF of stars in cluster region and outside.
             [gs, y_ax, flag_no_fl_regs_c, lum_func],
             # pl_data_rm_perc
             [gs, y_ax, phot_analy_compl, phot_data_compl, err_rm_data,
-             completeness]
+             completeness],
+            # pl_ad_test
+            [gs, flag_kde_test, ad_cl, ad_fr],
+            # pl_ad_pvals_phot
+            [gs, flag_kde_test, ad_cl_fr_p],
+            # pl_ad_pvals_pk
+            [gs, flag_kde_test, ad_cl_fr_pk]
         ]
         for n, args in enumerate(arglist):
-            mp_phot_analysis.plot(n, *args)
+            mp_data_analysis.plot(n, *args)
 
         # Generate output file.
         fig.tight_layout()

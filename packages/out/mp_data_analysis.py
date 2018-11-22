@@ -271,12 +271,55 @@ def pl_cl_diag(
             ms=0., zorder=4)
 
 
+def pl_hess_cmd(gs, stars_f_acpt, cl_region_c):
+    '''
+    Hess diagram for CMD of field vs cluster region..
+    '''
+    x_cl, y_cl, x_fl, y_fl, x_all, y_all = lum_func
+    ax = plt.subplot(gs[4:6, 0:2])
+
+    hess_xedges, hess_yedges = []
+
+    for x_ed in hess_xedges:
+        # vertical lines
+        ax.axvline(x_ed, linestyle=':', lw=.8, color='k', zorder=1)
+    for y_ed in hess_yedges:
+        # horizontal lines
+        ax.axhline(y_ed, linestyle=':', lw=.8, color='k', zorder=1)
+
+    # 2D histogram of the field region.
+    fl_histo = np.histogram2d(
+        stars_f_acpt[0], stars_f_acpt[1], bins=[hess_xedges, hess_yedges],
+        density=True)[0]
+    # 2D histogram of the cluster.
+    cl_histo = np.histogram2d(
+        list(zip(*list(zip(*cl_region_c))[5]))[0],
+        list(zip(*list(zip(*cl_region_c))[3]))[0],
+        bins=[hess_xedges, hess_yedges], density=True)[0]
+
+    # Grid for pcolormesh.
+    hess_x, hess_y = np.meshgrid(hess_xedges, hess_yedges)
+
+    # Hess diagram: observed minus synthetic.
+    hess_diag = np.array([])
+    if syn_histo.size:
+        hess_diag = cl_histo - syn_histo
+        if hess_diag.size:
+            HD = np.rot90(hess_diag)
+            HD = np.flipud(HD)
+        else:
+            HD = np.array([])
+
+    ax.pcolormesh(hess_x, hess_y, HD, cmap=cmap, vmin=HD.min(),
+                  vmax=HD.max(), zorder=1)
+
+
 def pl_lum_func(gs, y_ax, flag_no_fl_regs, lum_func):
     '''
     LF of stars in cluster region and outside.
     '''
     x_cl, y_cl, x_fl, y_fl, x_all, y_all = lum_func
-    ax = plt.subplot(gs[4:6, 0:2])
+    ax = plt.subplot(gs[4:6, 2:4])
     ax.set_title("LF after error removal (compl)", fontsize=9)
     ax.minorticks_on()
     # Only draw units on axis (ie: 1, 2, 3)
@@ -321,7 +364,7 @@ def pl_data_rm_perc(
         combined_compl):
     """
     """
-    ax = plt.subplot(gs[4:6, 2:4])
+    ax = plt.subplot(gs[4:6, 4:6])
     ax.set_title("Percentage of stars kept after each process", fontsize=9)
     ax.minorticks_on()
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
@@ -369,46 +412,88 @@ def pl_data_rm_perc(
     plt.ylim(min(.9, min(perc_vals_min)) - .05, 1.05)
 
 
-# DEPRECATED 31/10/18
-# def pl_p_vals(gs, flag_pval_test, pval_test_params):
-#     '''
-#     Distribution of KDE p_values.
-#     '''
-#     if flag_pval_test:
-#         # Extract parameters from list.
-#         prob_cl_kde, kde_cl_1d, kde_f_1d, x_kde, y_over = pval_test_params
-#         ax = plt.subplot(gs[4:6, 2:4])
-#         plt.xlim(-0.15, 1.15)
-#         plt.ylim(0, 1.02)
-#         plt.xlabel('p-values', fontsize=12)
-#         plt.ylabel('Density (normalized)', fontsize=12)
-#         ax.minorticks_on()
-#         ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1,
-#                 zorder=1)
-#         # Grid to background.
-#         ax.set_axisbelow(True)
-#         # Plot field vs field KDE.
-#         if kde_f_1d.any():
-#             max_kde = max(max(kde_f_1d), max(kde_cl_1d))
-#             plt.plot(x_kde, kde_f_1d / max_kde, color='b', ls='-', lw=1.,
-#                      label='$KDE_{fl}$', zorder=2)
-#         else:
-#             max_kde = max(kde_cl_1d)
-#         # Plot cluster vs field KDE.
-#         plt.plot(x_kde, kde_cl_1d / max_kde, color='r', ls='-', lw=1.,
-#                  label='$KDE_{cl}$', zorder=2)
-#         # Fill overlap.
-#         if y_over:
-#             plt.fill_between(x_kde, np.asarray(y_over) / max_kde, 0,
-#                              color='grey', alpha='0.5')
-#         text = '$P_{cl}^{KDE} = %0.2f$' % round(prob_cl_kde, 2)
-#         plt.text(0.05, 0.92, text, transform=ax.transAxes,
-#                  bbox=dict(facecolor='white', alpha=0.6), fontsize=12)
-#         # Legend.
-#         handles, labels = ax.get_legend_handles_labels()
-#         leg = ax.legend(handles, labels, loc='upper right', numpoints=1,
-#                         fontsize=12)
-#         leg.get_frame().set_alpha(0.6)
+def pl_ad_test(gs, flag_kde_test, ad_cl, ad_fr):
+    """
+    """
+    if flag_kde_test:
+        ax1 = plt.subplot(gs[6:7, 0:2])
+        plt.xlabel("A-D test")
+        plt.ylabel("N")
+        ax1.hist(
+            ad_cl[0], bins=25, density=True, label=r'$Cl_{p}$',
+            histtype='step')
+        ax1.hist(
+            ad_fr[0], bins=25, density=True, label=r'$Fr_{p}$',
+            histtype='step')
+        plt.xlim(0., 5.)
+        ax1.legend()
+
+        ax2 = plt.subplot(gs[7:8, 0:2])
+        plt.xlabel("A-D test")
+        plt.ylabel("N")
+        ax2.hist(
+            ad_cl[1], bins=25, density=True, label=r'$Cl_{p+k}$',
+            histtype='step')
+        ax2.hist(
+            ad_fr[1], bins=25, density=True, label=r'$Fr_{p+k}$',
+            histtype='step')
+        plt.xlim(0., 5.)
+        ax2.legend()
+
+
+def pl_p_vals(
+    ax, p_vals_cl, p_vals_f, prob_cl_kde, kde_cl_1d, kde_f_1d, x_kde,
+        y_over):
+    plt.title(r'$P_{{cl}}={:.2f}$'.format(prob_cl_kde), fontsize=9)
+    plt.xlim(-0.04, .34)
+    # plt.xlim(-0.09, 1.04)
+    plt.ylim(0, 1.02)
+    plt.xlabel('p-values', fontsize=12)
+    plt.ylabel('Density (normalized)', fontsize=12)
+    ax.minorticks_on()
+    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
+            zorder=1)
+    # Grid to background.
+    ax.set_axisbelow(True)
+    # Plot field vs field KDE.
+    if kde_f_1d.any():
+        max_kde = max(max(kde_f_1d), max(kde_cl_1d))
+        plt.plot(x_kde, kde_f_1d / max_kde, color='b', ls='-', lw=1.,
+                 label=r'$Field\,({})$'.format(len(p_vals_f)),
+                 zorder=2)
+    else:
+        max_kde = max(kde_cl_1d)
+    # Plot cluster vs field KDE.
+    plt.plot(x_kde, kde_cl_1d / max_kde, color='r', ls='-', lw=1.,
+             label=r'$Cluster\,({})$'.format(len(p_vals_cl)), zorder=2)
+    # Fill overlap.
+    if y_over:
+        plt.fill_between(x_kde, np.asarray(y_over) / max_kde, 0,
+                         color='grey', alpha='0.5')
+    # Legend.
+    handles, labels = ax.get_legend_handles_labels()
+    leg = ax.legend(handles, labels, numpoints=1, fontsize=9)
+    leg.get_frame().set_alpha(0.6)
+
+
+def pl_ad_pvals_phot(gs, flag_kde_test, ad_cl_fr_p):
+    if flag_kde_test:
+        p_vals_cl, p_vals_f, prob_cl_kde, kde_cl_1d, kde_f_1d, x_kde,\
+            y_over = ad_cl_fr_p
+        ax = plt.subplot(gs[6:8, 2:4])
+        pl_p_vals(
+            ax, p_vals_cl, p_vals_f, prob_cl_kde, kde_cl_1d, kde_f_1d, x_kde,
+            y_over)
+
+
+def pl_ad_pvals_pk(gs, flag_kde_test, ad_cl_fr_pk):
+    if flag_kde_test:
+        p_vals_cl, p_vals_f, prob_cl_kde, kde_cl_1d, kde_f_1d, x_kde,\
+            y_over = ad_cl_fr_pk
+        ax = plt.subplot(gs[6:8, 4:6])
+        pl_p_vals(
+            ax, p_vals_cl, p_vals_f, prob_cl_kde, kde_cl_1d, kde_f_1d, x_kde,
+            y_over)
 
 
 def plot(N, *args):
@@ -421,8 +506,12 @@ def plot(N, *args):
         1: [pl_cl_fl_regions, 'cluster + field regions rejected stars'],
         2: [pl_fl_diag, 'field regions photometric diagram'],
         3: [pl_cl_diag, 'cluster region photometric diagram'],
-        4: [pl_lum_func, 'luminosity function'],
-        5: [pl_data_rm_perc, 'error removal percentage']
+        4: [pl_hess_cmd, 'Hess CMD'],
+        5: [pl_lum_func, 'luminosity function'],
+        6: [pl_data_rm_perc, 'error removal percentage'],
+        7: [pl_ad_test, 'A-D test values'],
+        8: [pl_ad_pvals_phot, 'photometric A-D pvalues'],
+        9: [pl_ad_pvals_pk, 'photometric + kinem A-D pvalues']
     }
 
     fxn = plt_map.get(N, None)[0]
