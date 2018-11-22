@@ -29,8 +29,10 @@ def main(
 
     if tmax_ptm in ('n', 'none', 'None'):
         Tmax = None
+    elif tmax_ptm == 'inf':
+        Tmax = np.inf
     else:
-        Tmax = int(float(tmax_ptm))
+        Tmax = float(tmax_ptm)
 
     # TODO add these parameters to the input params file
     h_max = 20.
