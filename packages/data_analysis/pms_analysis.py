@@ -7,111 +7,104 @@ import warnings
 from .. import update_progress
 
 
-def main(clp, coords, **kwargs):
+def main(clp, coords, pms_flag, pms_chains, pms_runs, **kwargs):
     """
     """
     PM_flag = False
     pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, DE_pm, mmag_pm, pmRA_Bys,\
         pmDE_Bys, pmRA_std_Bys, pmDE_std_Bys = [[]] * 11
 
-    # Extract RA PMs data.
-    pmRA = np.array(list(zip(*list(zip(*clp['cl_reg_fit']))[7]))[1])
-    # Array with no nan values
-    pmRA_clrg = pmRA[~np.isnan(pmRA)]
+    if pms_flag:
 
-    # Check that PMs were defined within the cluster region.
-    if pmRA_clrg.any():
-        PM_flag = True
-        print("  Bayesian PMs model")
+        # Extract RA PMs data.
+        pmRA = np.array(list(zip(*list(zip(*clp['cl_reg_fit']))[7]))[1])
+        # Array with no nan values
+        pmRA_clrg = pmRA[~np.isnan(pmRA)]
 
-        # Cluster region data.
-        pmMP, pmRA, e_pmRA, pmDE, e_pmDE =\
-            np.array(list(zip(*clp['cl_reg_fit']))[9]),\
-            np.array(list(zip(*list(zip(*clp['cl_reg_fit']))[7]))[1]),\
-            np.array(list(zip(*list(zip(*clp['cl_reg_fit']))[8]))[1]),\
-            np.array(list(zip(*list(zip(*clp['cl_reg_fit']))[7]))[2]),\
-            np.array(list(zip(*list(zip(*clp['cl_reg_fit']))[8]))[2])
-        DE_pm = np.array(list(zip(*clp['cl_reg_fit']))[2]) if coords == 'deg'\
-            else np.zeros(pmRA.size)
-        mmag_pm = np.array(list(zip(*list(zip(*clp['cl_reg_fit']))[3]))[0])
+        # Check that PMs were defined within the cluster region.
+        if pmRA_clrg.any():
+            PM_flag = True
+            print("  Bayesian PMs model")
 
-        # Remove nan values from cluster region
-        msk = ~np.isnan(pmRA) & ~np.isnan(e_pmRA) & ~np.isnan(pmDE) &\
-            ~np.isnan(e_pmDE)
-        pmMP, pmRA, e_pmRA, pmDE, e_pmDE, DE_pm, mmag_pm = pmMP[msk],\
-            pmRA[msk], e_pmRA[msk], pmDE[msk], e_pmDE[msk], DE_pm[msk],\
-            mmag_pm[msk]
+            # Cluster region data.
+            pmMP, pmRA, e_pmRA, pmDE, e_pmDE =\
+                np.array(list(zip(*clp['cl_reg_fit']))[9]),\
+                np.array(list(zip(*list(zip(*clp['cl_reg_fit']))[7]))[1]),\
+                np.array(list(zip(*list(zip(*clp['cl_reg_fit']))[8]))[1]),\
+                np.array(list(zip(*list(zip(*clp['cl_reg_fit']))[7]))[2]),\
+                np.array(list(zip(*list(zip(*clp['cl_reg_fit']))[8]))[2])
+            DE_pm = np.array(list(zip(
+                *clp['cl_reg_fit']))[2]) if coords == 'deg'\
+                else np.zeros(pmRA.size)
+            mmag_pm = np.array(list(zip(*list(zip(*clp['cl_reg_fit']))[3]))[0])
 
-        pmRA_DE = pmRA * np.cos(np.deg2rad(DE_pm))
-        # Propagate error in RA*cos(delta)
-        e_pmRA_DE = np.sqrt(
-            (e_pmRA * pmRA * np.sin(np.deg2rad(DE_pm)))**2 +
-            (e_pmDE * np.cos(np.deg2rad(DE_pm)))**2)
-        # Pearson corr coeff
-        rho = pearsonr(pmRA_DE, pmDE)[0]
+            # Remove nan values from cluster region
+            msk = ~np.isnan(pmRA) & ~np.isnan(e_pmRA) & ~np.isnan(pmDE) &\
+                ~np.isnan(e_pmDE)
+            pmMP, pmRA, e_pmRA, pmDE, e_pmDE, DE_pm, mmag_pm = pmMP[msk],\
+                pmRA[msk], e_pmRA[msk], pmDE[msk], e_pmDE[msk], DE_pm[msk],\
+                mmag_pm[msk]
 
-        # Use DE to estimate the ML
-        def DEdist(model):
-            return -lnlike(
-                model, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, pmMP, rho)
-        bounds = [
-            [pmRA_DE.min(), pmRA_DE.max()], [pmDE.min(), pmDE.max()],
-            [0., 5.], [0., 5.]]
-        result = DE(DEdist, bounds, popsize=10, maxiter=1000)
-        # print(result)
+            pmRA_DE = pmRA * np.cos(np.deg2rad(DE_pm))
+            # Propagate error in RA*cos(delta)
+            e_pmRA_DE = np.sqrt(
+                (e_pmRA * pmRA * np.sin(np.deg2rad(DE_pm)))**2 +
+                (e_pmDE * np.cos(np.deg2rad(DE_pm)))**2)
+            # Pearson corr coeff
+            rho = pearsonr(pmRA_DE, pmDE)[0]
 
-        # Prior parameters.
-        mu_std_p = result.x
-        # Sampler parameters.
-        ndim, nwalkers, nruns, nburn = 4, 100, 5000, 2500
-        sampler = ensemble.EnsembleSampler(
-            nwalkers, ndim, lnprob,
-            args=(pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, pmMP, rho, mu_std_p))
-        # Random initial guesses.
-        pos0 = [np.random.uniform(0., 1., ndim) for i in range(nwalkers)]
-        old_tau = np.inf
-        for i, _ in enumerate(sampler.sample(pos0, iterations=nruns)):
+            # Use DE to estimate the ML
+            def DEdist(model):
+                return -lnlike(
+                    model, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, pmMP, rho)
+            bounds = [
+                [pmRA_DE.min(), pmRA_DE.max()], [pmDE.min(), pmDE.max()],
+                [0., 5.], [0., 5.]]
+            result = DE(DEdist, bounds, popsize=10, maxiter=1000)
+            # print(result)
 
-            # Only check convergence every 100 steps
-            if i % 50:
-                continue
+            # Prior parameters.
+            mu_std_p = result.x
+            # Sampler parameters.
+            ndim, nwalkers, nruns = 4, pms_chains, pms_runs
+            sampler = ensemble.EnsembleSampler(
+                nwalkers, ndim, lnprob,
+                args=(pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, pmMP, rho, mu_std_p))
+            # Random initial guesses.
+            pos0 = [np.random.uniform(0., 1., ndim) for i in range(nwalkers)]
+            old_tau = np.inf
+            for i, _ in enumerate(sampler.sample(pos0, iterations=nruns)):
 
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                tau = sampler.get_autocorr_time(tol=0)
-                # Check convergence
-                converged = np.all(tau * 100 < i)
-                converged &= np.all(np.abs(old_tau - tau) / tau < 0.01)
-                if converged:
-                    print("")
-                    break
-                old_tau = tau
+                # Only check convergence every 100 steps
+                if i % 50:
+                    continue
 
-            update_progress.updt(nruns, i + 1)
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    tau = sampler.get_autocorr_time(tol=0)
+                    # Check convergence
+                    converged = np.all(tau * 100 < i)
+                    converged &= np.all(np.abs(old_tau - tau) / tau < 0.01)
+                    if converged:
+                        print("")
+                        break
+                    old_tau = tau
 
-        # Remove burn-in
-        samples = sampler.get_chain(discard=nburn, flat=True)
-        # Medians
-        pmRA_Bys, pmDE_Bys, pmRA_std_Bys, pmDE_std_Bys = np.percentile(
-            samples, 50, axis=0).T
-        tau_mean = np.mean(sampler.get_autocorr_time(tol=0))
-        print(("Bayesian PMs estimated: ({:.3f}, {:.3f})"
-               " (ESS={:.0f}, tau={:.0f})").format(
-            pmRA_Bys, pmDE_Bys, samples.size / tau_mean, tau_mean))
+                update_progress.updt(nruns, i + 1)
 
-        # import matplotlib.pyplot as plt
-        # import corner
-        # corner.corner(samples)
-        # plt.show()
-        # plt.subplot(411)
-        # plt.plot(samples.T[0])
-        # plt.subplot(412)
-        # plt.plot(samples.T[1])
-        # plt.subplot(413)
-        # plt.plot(samples.T[2])
-        # plt.subplot(414)
-        # plt.plot(samples.T[3])
-        # plt.show()
+            # Remove burn-in (half of chain)
+            nburn = int(i / 2.)
+            samples = sampler.get_chain(discard=nburn, flat=True)
+            # Medians
+            pmRA_Bys, pmDE_Bys, pmRA_std_Bys, pmDE_std_Bys = np.percentile(
+                samples, 50, axis=0).T
+            tau_mean = np.mean(sampler.get_autocorr_time(tol=0))
+            print(("Bayesian PMs estimated: ({:.3f}, {:.3f})"
+                   " (ESS={:.0f}, tau={:.0f})").format(
+                pmRA_Bys, pmDE_Bys, samples.size / tau_mean, tau_mean))
+
+        else:
+            print("  WARNING: no valid Proper Motion data found.")
 
     clp.update({
         'PM_flag': PM_flag, 'pmMP': pmMP, 'pmRA_DE': pmRA_DE,

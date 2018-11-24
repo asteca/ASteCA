@@ -35,7 +35,7 @@ def main(mypath, pars_f_path):
     '''
 
     # Accept these variations of the 'true' flag.
-    true_lst = ('y', 'yes', 'Yes', 'YES')
+    true_lst = ('y', 'Y', 'yes', 'Yes', 'YES')
 
     # Read data from file.
     with open(pars_f_path, "r") as f_dat:
@@ -91,6 +91,16 @@ def main(mypath, pars_f_path):
                 # Data analysis functions parameters.
                 elif reader[0] == 'ER':
                     err_max = reader[1:]
+                elif reader[0] == 'AD':
+                    ad_runs = int(reader[1])
+                    ad_k_comb = True if reader[2] in true_lst else False
+                elif reader[0] == 'PP':
+                    plx_flag = True if reader[1] in true_lst else False
+                    plx_chains = int(reader[2])
+                    plx_runs = int(reader[3])
+                    pms_flag = True if reader[4] in true_lst else False
+                    pms_chains = int(reader[5])
+                    pms_runs = int(reader[6])
 
                 # Decontamination algorithm parameters
                 elif reader[0] == 'DA':
@@ -244,6 +254,9 @@ def main(mypath, pars_f_path):
         'flag_move_file': flag_move_file,
         'center_stddev': center_stddev, 'radius_method': radius_method,
         'kp_flag': kp_flag, 'fr_number': fr_number, 'err_max': err_max,
+        'ad_runs': ad_runs, 'ad_k_comb': ad_k_comb, 'plx_flag': plx_flag,
+        'plx_chains': plx_chains, 'plx_runs': plx_runs, 'pms_flag': pms_flag,
+        'pms_chains': pms_chains, 'pms_runs': pms_runs,
         # Decontamination algorithm parameters.
         'da_algor': da_algor, 'bayesda_runs': bayesda_runs,
         'fixedda_port': fixedda_port, 'readda_idcol': readda_idcol,

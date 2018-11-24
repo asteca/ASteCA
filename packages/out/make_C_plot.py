@@ -66,7 +66,7 @@ def main(
         cl_reg_clean_plot, plx_flag, plx_clrg, mmag_clp, mp_clp, plx_clp,
         e_plx_clp, plx_Bys, plx_wa, PM_flag, pmMP, pmRA_DE,
         e_pmRA_DE, pmDE, e_pmDE, DE_pm, mmag_pm, pmRA_Bys,
-        pmDE_Bys, **kwargs):
+        pmDE_Bys, col_0_comb, mag_0_comb, **kwargs):
     '''
     Make C block plots.
     '''
@@ -90,7 +90,7 @@ def main(
                 y_zmax, cl_reg_fit, cl_reg_no_fit)
         # Uses first magnitude and color defined
         x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd = prep_plots.diag_limits(
-            'mag', cld_c['cols'][0], cld_c['mags'][0])
+            'mag', col_0_comb, mag_0_comb)
         x_ax, y_ax = prep_plots.ax_names(
             pd['colors'][0], pd['filters'][0], 'mag')
 

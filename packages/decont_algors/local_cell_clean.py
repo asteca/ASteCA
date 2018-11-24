@@ -4,6 +4,7 @@ import random
 from astropy.stats import bayesian_blocks, knuth_bin_width
 import operator
 from .decont_algors import sort_members
+import warnings
 # In place for #243
 import sys
 if sys.version_info[0] == 3:
@@ -58,16 +59,20 @@ def bin_edges_f(bin_method, mags_cols_cl):
                 col, return_bins=True, quiet=True)[1])
 
     elif bin_method == 'blocks':
-        for mag in mags_cols_cl[0]:
-            bin_edges.append(bayesian_blocks(mag))
-        for col in mags_cols_cl[1]:
-            bin_edges.append(bayesian_blocks(col))
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            for mag in mags_cols_cl[0]:
+                bin_edges.append(bayesian_blocks(mag))
+            for col in mags_cols_cl[1]:
+                bin_edges.append(bayesian_blocks(col))
 
     elif bin_method == 'blocks_max':
-        for mag in mags_cols_cl[0]:
-            bin_edges.append(slpitArr(bayesian_blocks(mag)))
-        for col in mags_cols_cl[1]:
-            bin_edges.append(slpitArr(bayesian_blocks(col), 1.))
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            for mag in mags_cols_cl[0]:
+                bin_edges.append(slpitArr(bayesian_blocks(mag)))
+            for col in mags_cols_cl[1]:
+                bin_edges.append(slpitArr(bayesian_blocks(col), 1.))
 
     # TODO this method is currently hidden from the params file.
     # To be used when #325 is implemented. Currently used to test

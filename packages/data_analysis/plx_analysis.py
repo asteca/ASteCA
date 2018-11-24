@@ -8,126 +8,130 @@ import warnings
 from .. import update_progress
 
 
-def main(clp):
+def main(clp, plx_flag, plx_chains, plx_runs, **kwargs):
     """
     """
-    plx_flag = False
-    mmag_clp, mp_clp, plx_clp, e_plx_clp, plx_Bys, plx_wa =\
-        [], [], [], [], [], np.nan
+    plx_flag_clp = False
+    plx_clrg, mmag_clp, mp_clp, plx_clp, e_plx_clp, plx_Bys, plx_wa =\
+        [], [], [], [], [], [], np.nan
 
-    # Extract parallax data.
-    plx = np.array(list(zip(*list(zip(*clp['cl_reg_fit']))[7]))[0])
-    # Array with no nan values
-    plx_clrg = plx[~np.isnan(plx)]
+    if plx_flag:
 
-    # Check that a range of parallaxes is possible.
-    if plx_clrg.any() and np.min(plx_clrg) < np.max(plx_clrg):
-        plx_flag = True
+        # Extract parallax data.
+        plx = np.array(list(zip(*list(zip(*clp['cl_reg_fit']))[7]))[0])
+        # Array with no nan values
+        plx_clrg = plx[~np.isnan(plx)]
 
-        # Sampler parameters.
-        ndim, nwalkers, nruns = 1, 10, 2000
-        print("  Bayesian Plx model ({} runs)".format(nruns))
+        # Check that a range of parallaxes is possible.
+        if plx_clrg.any() and np.min(plx_clrg) < np.max(plx_clrg):
+            plx_flag_clp = True
 
-        # Reject 2\sigma outliers.
-        max_plx, min_plx = np.nanmedian(plx) + 2. * np.nanstd(plx),\
-            np.nanmedian(plx) - 2. * np.nanstd(plx)
+            # Sampler parameters.
+            ndim, nwalkers, nruns = 1, plx_chains, plx_runs
+            print("  Bayesian Plx model ({} runs)".format(nruns))
 
-        # Suppress Runtimewarning issued when 'plx' contains 'nan' values.
-        with np.warnings.catch_warnings():
-            np.warnings.filterwarnings('ignore')
-            plx_2s_msk = (plx < max_plx) & (plx > min_plx)
+            # Reject 2\sigma outliers.
+            max_plx, min_plx = np.nanmedian(plx) + 2. * np.nanstd(plx),\
+                np.nanmedian(plx) - 2. * np.nanstd(plx)
 
-        # Prepare masked data.
-        mmag_clp = np.array(
-            list(zip(*list(zip(*clp['cl_reg_fit']))[3]))[0])[plx_2s_msk]
-        mp_clp = np.array(list(zip(*clp['cl_reg_fit']))[9])[plx_2s_msk]
-        plx_clp = plx[plx_2s_msk]
-        e_plx_clp = np.array(
-            list(zip(*list(zip(*clp['cl_reg_fit']))[8]))[0])[plx_2s_msk]
-        # Take care of possible zero values that can produce issues since
-        # errors are in the denominator.
-        e_plx_clp[e_plx_clp == 0.] = 10.
+            # Suppress Runtimewarning issued when 'plx' contains 'nan' values.
+            with np.warnings.catch_warnings():
+                np.warnings.filterwarnings('ignore')
+                plx_2s_msk = (plx < max_plx) & (plx > min_plx)
 
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+            # Prepare masked data.
+            mmag_clp = np.array(
+                list(zip(*list(zip(*clp['cl_reg_fit']))[3]))[0])[plx_2s_msk]
+            mp_clp = np.array(list(zip(*clp['cl_reg_fit']))[9])[plx_2s_msk]
+            plx_clp = plx[plx_2s_msk]
+            e_plx_clp = np.array(
+                list(zip(*list(zip(*clp['cl_reg_fit']))[8]))[0])[plx_2s_msk]
+            # Take care of possible zero values that can produce issues since
+            # errors are in the denominator.
+            e_plx_clp[e_plx_clp == 0.] = 10.
 
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+
+                # Define the 'r_i' values used to evaluate the integral.
+                int_max = 20.
+                N = int(int_max / 0.01)
+                x = np.linspace(.1, int_max, N).reshape(-1, 1)
+                B1 = ((plx_clp - (1. / x)) / e_plx_clp)**2
+                B2 = (np.exp(-.5 * B1) / e_plx_clp)
+
+                # Use DE to estimate the ML
+                def DEdist(model):
+                    return -lnlike(model, x, B2, mp_clp)
+                bounds = [[0., 20.]]
+                result = DE(DEdist, bounds, popsize=20, maxiter=100)
+                # print(result)
+
+            # Prior parameters.
+            mu_p = result.x
             # Define the 'r_i' values used to evaluate the integral.
-            int_max = 20.
+            int_max = mu_p + 5.
             N = int(int_max / 0.01)
             x = np.linspace(.1, int_max, N).reshape(-1, 1)
             B1 = ((plx_clp - (1. / x)) / e_plx_clp)**2
             B2 = (np.exp(-.5 * B1) / e_plx_clp)
 
-            # Use DE to estimate the ML
-            def DEdist(model):
-                return -lnlike(model, x, B2, mp_clp)
-            bounds = [[0., 20.]]
-            result = DE(DEdist, bounds, popsize=20, maxiter=100)
-            # print(result)
+            # emcee sampler
+            sampler = ensemble.EnsembleSampler(
+                nwalkers, ndim, lnprob, args=(x, B2, mp_clp, mu_p))
 
-        # Prior parameters.
-        mu_p = result.x
-        # Define the 'r_i' values used to evaluate the integral.
-        int_max = mu_p + 5.
-        N = int(int_max / 0.01)
-        x = np.linspace(.1, int_max, N).reshape(-1, 1)
-        B1 = ((plx_clp - (1. / x)) / e_plx_clp)**2
-        B2 = (np.exp(-.5 * B1) / e_plx_clp)
+            # Random initial guesses.
+            # pos0 = [np.random.uniform(0., 1., ndim) for i in range(nwalkers)]
+            # Ball of initial guesses around 'mu_p'
+            pos0 = [mu_p + .5 * np.random.normal() for i in range(nwalkers)]
 
-        # emcee sampler
-        sampler = ensemble.EnsembleSampler(
-            nwalkers, ndim, lnprob, args=(x, B2, mp_clp, mu_p))
+            old_tau = np.inf
+            for i, _ in enumerate(sampler.sample(pos0, iterations=nruns)):
+                # Only check convergence every X steps
+                if i % 50 and i < (nruns - 1):
+                    continue
 
-        # Random initial guesses.
-        # pos0 = [np.random.uniform(0., 1., ndim) for i in range(nwalkers)]
-        # Ball of initial guesses around 'mu_p'
-        pos0 = [mu_p + .5 * np.random.normal() for i in range(nwalkers)]
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    tau = sampler.get_autocorr_time(tol=0)
+                    # Check convergence
+                    converged = np.all(tau * 100 < i)
+                    converged &= np.all(np.abs(old_tau - tau) / tau < 0.01)
+                    if converged:
+                        print("")
+                        break
+                    old_tau = tau
+                    tau_mean = np.nanmean(sampler.get_autocorr_time(tol=0))
+                update_progress.updt(nruns, i + 1)
 
-        old_tau = np.inf
-        for i, _ in enumerate(sampler.sample(pos0, iterations=nruns)):
-            # Only check convergence every X steps
-            if i % 50 and i < (nruns - 1):
-                continue
+            # Remove burn-in (half of chain)
+            nburn = int(i / 2.)
+            samples = sampler.get_chain(discard=nburn, flat=True)
 
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                tau = sampler.get_autocorr_time(tol=0)
-                # Check convergence
-                converged = np.all(tau * 100 < i)
-                converged &= np.all(np.abs(old_tau - tau) / tau < 0.01)
-                if converged:
-                    print("")
-                    break
-                old_tau = tau
-                tau_mean = np.nanmean(sampler.get_autocorr_time(tol=0))
-            update_progress.updt(nruns, i + 1)
+            # import matplotlib.pyplot as plt
+            # import corner
+            # corner.corner(samples)
+            # plt.show()
 
-        # Remove burn-in (half of chain)
-        nburn = int(i / 2.)
-        samples = sampler.get_chain(discard=nburn, flat=True)
+            # plt.plot(samples.T[0])
+            # plt.show()
 
-        # import matplotlib.pyplot as plt
-        # import corner
-        # corner.corner(samples)
-        # plt.show()
+            # 16th, median, 84th in Kpc
+            plx_Bys = np.percentile(samples, (16, 50, 84))
+            tau_mean = np.mean(sampler.get_autocorr_time(tol=0))
+            print("Bayesian plx estimated: " +
+                  "{:.3f} (ESS={:.0f}, tau={:.0f})".format(
+                      1. / plx_Bys[1], samples.size / tau_mean, tau_mean))
 
-        # plt.plot(samples.T[0])
-        # plt.show()
-
-        # 16th, median, 84th in Kpc
-        plx_Bys = np.percentile(samples, (16, 50, 84))
-        tau_mean = np.mean(sampler.get_autocorr_time(tol=0))
-        print("Bayesian plx estimated: {:.3f} (ESS={:.0f}, tau={:.0f})".format(
-            1. / plx_Bys[1], samples.size / tau_mean, tau_mean))
-
-        # Weighted average and its error.
-        # Source: https://physics.stackexchange.com/a/329412/8514
-        plx_w = mp_clp / np.square(e_plx_clp)
-        # e_plx_w = np.sqrt(np.sum(np.square(e_plx * plx_w))) / np.sum(plx_w)
-        plx_wa = np.average(plx_clp, weights=plx_w)
+            # Weighted average.
+            # Source: https://physics.stackexchange.com/a/329412/8514
+            plx_w = mp_clp / np.square(e_plx_clp)
+            plx_wa = np.average(plx_clp, weights=plx_w)
+        else:
+            print("  WARNING: no valid Plx data found.")
 
     clp.update({
-        'plx_flag': plx_flag, 'plx_clrg': plx_clrg, 'mmag_clp': mmag_clp,
+        'plx_flag': plx_flag_clp, 'plx_clrg': plx_clrg, 'mmag_clp': mmag_clp,
         'mp_clp': mp_clp, 'plx_clp': plx_clp, 'e_plx_clp': e_plx_clp,
         'plx_Bys': plx_Bys, 'plx_wa': plx_wa})
     return clp

@@ -89,70 +89,28 @@ def ax_names(x, y, yaxis):
     return x_ax, y_ax
 
 
-# TODO deprecated
-# def kde_limits(phot_x, phot_y):
-#     '''
-#     Return photometric diagram limits taken from a 2D KDE.
-#     '''
-#     # Mask nan values.
-#     mask = ~(np.isnan(phot_x) | np.isnan(phot_y))
-#     phot_x, phot_y = phot_x[mask], phot_y[mask]
-#     # Stack photometric data.
-#     values = np.vstack([phot_x, phot_y])
-#     # Obtain Gaussian KDE.
-#     kernel = stats.gaussian_kde(values)
-#     # Grid density (number of points).
-#     gd = 10
-#     gd_c = complex(0, gd)
-#     # Define x,y grid.
-#     xmin, xmax = min(phot_x), max(phot_x)
-#     ymin, ymax = min(phot_y), max(phot_y)
-#     x, y = np.mgrid[xmin:xmax:gd_c, ymin:ymax:gd_c]
-#     positions = np.vstack([x.ravel(), y.ravel()])
-#     # Evaluate kernel in grid positions.
-#     k_pos = kernel(positions)
-
-#     # Generate 30 contour lines.
-#     plt.figure()
-#     cs = plt.contour(x, y, np.reshape(k_pos, x.shape), 5)
-#     plt.close()
-#     # Extract (x,y) points delimiting each line.
-#     x_v, y_v = np.asarray([]), np.asarray([])
-#     # Only use the outer curve.
-#     col = cs.collections[0]
-#     # If more than one region is defined by this curve (ie: the main sequence
-#     # region plus a RC region or some other detached region), obtain x,y from
-#     # all of them.
-#     for lin in col.get_paths():
-#         x_v = np.append(x_v, lin.vertices[:, 0])
-#         y_v = np.append(y_v, lin.vertices[:, 1])
-
-#     min_x, max_x = min(x_v), max(x_v)
-#     min_y, max_y = min(y_v), max(y_v)
-
-#     return min_x, max_x, min_y, max_y
-
-
 def diag_limits(yaxis, phot_x, phot_y):
     '''
     Define plot limits for *all* photometric diagrams.
     '''
-    # TODO deprecated
-    # min_x, max_x, min_y, max_y = kde_limits(phot_x, phot_y)
-
     x_median, x_std = np.median(phot_x), 1.5 * np.std(phot_x)
-    x_min_cmd, x_max_cmd = x_median - 3. * x_std, x_median + 3. * x_std
-    y_median, y_std = np.median(phot_y), np.std(phot_y)
-    min_y, max_y = y_median - y_std, y_median + y_std
+    x_min_cmd, x_max_cmd = x_median - 3 * x_std, x_median + 3. * x_std
 
-    # Define diagram limits.
-    y_min_cmd = max_y + 1.25
+    # Use stars within the x limits defined. This prevents stars far away
+    # from the x median from affecting the limit in y.
+    xmsk = (phot_x > x_min_cmd) & (phot_x < x_max_cmd)
+
+    phot_y_msk = np.array(phot_y)[xmsk]
+    y_median, y_std = np.median(phot_y_msk), np.std(phot_y_msk)
+
+    # y limits.
+    y_min_cmd = y_median + 1.25 * y_std + .75
     # If photometric axis y is a magnitude, make sure the brightest star
     # is always plotted.
     if yaxis == 'mag':
-        y_max_cmd = min(phot_y) - 1.
+        y_max_cmd = min(phot_y_msk) - 1.
     else:
-        y_max_cmd = min_y - 1.
+        y_max_cmd = y_median - 1.25 * y_std - 1.
 
     return x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd
 
@@ -199,30 +157,6 @@ def zoomed_frame(x, y, mags, x_zmin, x_zmax, y_zmin, y_zmax):
             mag_data_z.append(st_mag)
 
     return x_data_z, y_data_z, mag_data_z
-
-
-def field_region_stars(field_regions, field_regions_rjct):
-    """
-    Generate list with accepted/rejected stars within all the defined field
-    regions.
-    """
-    stars_f_acpt = [[], []]
-    if field_regions:
-        # Extract first color and magnitude defined.
-        stars_f_acpt[0] = [
-            star[5][0] for flrg in field_regions for star in flrg]
-        stars_f_acpt[1] = [
-            star[3][0] for flrg in field_regions for star in flrg]
-
-    stars_f_rjct = [[], []]
-    if field_regions_rjct:
-        # Extract first color and magnitude defined.
-        stars_f_rjct[0] = [
-            star[5][0] for flrg in field_regions_rjct for star in flrg]
-        stars_f_rjct[1] = [
-            star[3][0] for flrg in field_regions_rjct for star in flrg]
-
-    return stars_f_rjct, stars_f_acpt
 
 
 def da_colorbar_range(cl_reg_fit, cl_reg_no_fit):
@@ -321,7 +255,7 @@ def error_bars(stars_phot, x_min_cmd, err_lst, all_flag=None):
         mag_y = np.arange(
             int(min(mmag) + 0.5), int(max(mmag) + 0.5) + 0.1)
         # List of x values where error bars are plotted.
-        x_val = [x_min_cmd + 0.4] * len(mag_y)
+        x_val = [x_min_cmd + 0.15] * len(mag_y)
         # Read average fitted values for exponential error fit.
         # Magnitude values are positioned first and colors after in the list
         # 'err_lst'.
@@ -411,53 +345,9 @@ def likl_y_range(opt_method, lkl_old):
     return l_min_max
 
 
-# def BestTick(minv, maxv, max_char):
-#     '''
-#     Find optimal number and length of ticks for a given fixed maximum
-#     number of characters in the axis.
-#     '''
-
-#     st, diff_chars, st_indx = [], 1000, 0
-#     # Check these 4 possible sizes for the ticks and keep the best one.
-#     for i in range(4):
-#         mostticks = i + 4
-
-#         minimum = (maxv - minv) / mostticks
-#         magnitude = 10 ** math.floor(math.log(minimum) / math.log(10))
-#         residual = minimum / magnitude
-#         if residual > 5:
-#             tick = 10 * magnitude
-#         elif residual > 2:
-#             tick = 5 * magnitude
-#         elif residual > 1:
-#             tick = 2 * magnitude
-#         else:
-#             tick = magnitude
-
-#         st.append(tick)
-#         # Count the number of chars used by this step.
-#         ms = (i + 4) * (len(str(tick)) - 1)
-#         # Only use if it is less than the fixed max value of chars.
-#         if ms <= max_char:
-#             if (max_char - ms) < diff_chars:
-#                 # Store the closest value to max_chars.
-#                 diff_chars = (max_char - ms)
-#                 st_indx = i
-
-#     # Set min tick value according to the best step length selected above.
-#     if minv <= 0.:
-#         xmin = 0.
-#     elif minv <= st[st_indx]:
-#         xmin = st[st_indx]
-#     else:
-#         xmin = int(round(minv / st[st_indx])) * st[st_indx]
-
-#     return xmin, st[st_indx]
-
-
 def packData(
     lkl_method, lkl_binning, cl_max_mag, synth_clst, shift_isoch,
-        colors, filters, cld_c):
+        colors, filters, col_0_comb, mag_0_comb, col_1_comb):
     """
     Properly select and pack data for CMD/CCD of observed and synthetic
     clusters, and their Hess diagram.
@@ -471,7 +361,7 @@ def packData(
 
     # CMD of main magnitude and first color defined.
     # Used to defined limits.
-    x_phot_all, y_phot_all = cld_c['cols'][0], cld_c['mags'][0]
+    x_phot_all, y_phot_all = col_0_comb, mag_0_comb
     frst_obs_mag, frst_obs_col = list(zip(*list(zip(*cl_max_mag))[3]))[0],\
         list(zip(*list(zip(*cl_max_mag))[5]))[0]
     frst_synth_col, frst_synth_mag = synth_clst[0][0][1],\
@@ -501,7 +391,7 @@ def packData(
         scnd_col_edgs = bin_edges[2]
         scnd_col_isoch = shift_isoch[N_mags + 1]
         # CMD of main magnitude and second color defined.
-        x_phot_all, y_phot_all = cld_c['cols'][1], cld_c['mags'][0]
+        x_phot_all, y_phot_all = col_1_comb, mag_0_comb
         gs_y1, gs_y2 = 2, 4
         i_obs_x, i_obs_y = 1, 0
         hr_diags.append(
@@ -510,7 +400,7 @@ def packData(
              frst_mag_edgs, shift_isoch[2], frst_mag_isoch, colors[1],
              filters[0], 'mag', i_obs_x, i_obs_y, gs_y1, gs_y2])
         # CCD of first and second color defined.
-        x_phot_all, y_phot_all = cld_c['cols'][0], cld_c['cols'][1]
+        x_phot_all, y_phot_all = col_0_comb, col_1_comb
         gs_y1, gs_y2 = 4, 6
         i_obs_x, i_obs_y = 0, 1
         hr_diags.append(

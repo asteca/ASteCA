@@ -1,6 +1,5 @@
 
 import matplotlib.pyplot as plt
-# from matplotlib.ticker import MultipleLocator
 import matplotlib.offsetbox as offsetbox
 from matplotlib.colors import Normalize
 from matplotlib.patches import Ellipse
@@ -145,7 +144,6 @@ def pl_mps_phot_diag(
     ax.add_artist(ob)
     # Set minor ticks
     ax.minorticks_on()
-    # ax.xaxis.set_major_locator(MultipleLocator(1.0))
     # Plot grid. If bin_edges == 0., it means the 'local' method was not used.
     if mode_fld_clean == 'local' and bin_edges != 0.:
         # TODO using first magnitude and color. Generalize to N-dimensions.

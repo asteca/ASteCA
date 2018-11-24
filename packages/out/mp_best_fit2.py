@@ -2,7 +2,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.offsetbox as offsetbox
-from matplotlib.ticker import MultipleLocator
 from matplotlib.colors import LinearSegmentedColormap
 
 
@@ -28,7 +27,6 @@ def pl_mps_phot_diag(
         ax.add_artist(ob)
     # Set minor ticks
     ax.minorticks_on()
-    ax.xaxis.set_major_locator(MultipleLocator(1.0))
     if gs_y1 == 0:
         ax.set_title("Observed", fontsize=10)
     # Plot grid.
@@ -84,7 +82,6 @@ def pl_hess_diag(
     plt.xlabel('$' + x_ax + '$', fontsize=12)
     # Set minor ticks
     ax.minorticks_on()
-    ax.xaxis.set_major_locator(MultipleLocator(1.0))
     if gs_y1 == 0:
         ax.set_title("Hess diagram (observed - synthetic)", fontsize=10)
     for x_ed in hess_xedges:
@@ -140,7 +137,6 @@ def pl_bf_synth_cl(
     plt.xlabel('$' + x_ax + '$', fontsize=12)
     # Set minor ticks
     ax.minorticks_on()
-    ax.xaxis.set_major_locator(MultipleLocator(1.0))
     if gs_y1 == 0:
         ax.set_title("Synthetic (best match)", fontsize=10)
         # Add text box

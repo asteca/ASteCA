@@ -336,7 +336,7 @@ def pl_param_chain(
         # Post burn-in.
         post_bi_min_at = post_bi[c_model][min_at_c[c_model]]
         plt.plot(
-            np.arange(N_bi, N_tot), post_bi_min_at, c='g', lw=.8, alpha=0.5)
+            np.arange(N_bi, N_tot), post_bi_min_at, c='k', lw=.8, alpha=0.5)
 
         # Mean
         plt.axhline(

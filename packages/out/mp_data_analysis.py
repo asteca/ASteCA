@@ -1,7 +1,11 @@
 
 import numpy as np
+# from scipy.ndimage.filters import gaussian_filter
+from scipy.stats import gaussian_kde
+# from scipy.stats import gaussian_kde
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
+# from matplotlib.colors import LinearSegmentedColormap
 import matplotlib.offsetbox as offsetbox
 from . import prep_plots
 
@@ -271,47 +275,49 @@ def pl_cl_diag(
             ms=0., zorder=4)
 
 
-def pl_hess_cmd(gs, stars_f_acpt, cl_region_c):
+def pl_hess_cmd(
+    gs, x_ax, y_ax, stars_f_acpt, cl_region_c, x_max_cmd, x_min_cmd,
+        y_min_cmd, y_max_cmd):
     '''
     Hess diagram for CMD of field vs cluster region..
     '''
-    x_cl, y_cl, x_fl, y_fl, x_all, y_all = lum_func
-    ax = plt.subplot(gs[4:6, 0:2])
+    if stars_f_acpt[0]:
+        ax = plt.subplot(gs[4:6, 4:6])
+        ax.set_title("Cluster - Field (normalized)", fontsize=9)
+        plt.xlabel('$' + x_ax + '$', fontsize=12)
+        plt.ylabel('$' + y_ax + '$', fontsize=12)
 
-    hess_xedges, hess_yedges = []
+        cl_col = list(zip(*list(zip(*cl_region_c))[5]))[0]
+        cl_mag = list(zip(*list(zip(*cl_region_c))[3]))[0]
 
-    for x_ed in hess_xedges:
-        # vertical lines
-        ax.axvline(x_ed, linestyle=':', lw=.8, color='k', zorder=1)
-    for y_ed in hess_yedges:
-        # horizontal lines
-        ax.axhline(y_ed, linestyle=':', lw=.8, color='k', zorder=1)
+        # This bandwidth seems to produce nice results.
+        bw = .2
 
-    # 2D histogram of the field region.
-    fl_histo = np.histogram2d(
-        stars_f_acpt[0], stars_f_acpt[1], bins=[hess_xedges, hess_yedges],
-        density=True)[0]
-    # 2D histogram of the cluster.
-    cl_histo = np.histogram2d(
-        list(zip(*list(zip(*cl_region_c))[5]))[0],
-        list(zip(*list(zip(*cl_region_c))[3]))[0],
-        bins=[hess_xedges, hess_yedges], density=True)[0]
+        xx, yy = np.mgrid[x_min_cmd:x_max_cmd:100j, y_max_cmd:y_min_cmd:100j]
+        positions = np.vstack([xx.ravel(), yy.ravel()])
 
-    # Grid for pcolormesh.
-    hess_x, hess_y = np.meshgrid(hess_xedges, hess_yedges)
+        # Cluster data
+        values1 = np.vstack([cl_col, cl_mag])
+        kernel1 = gaussian_kde(values1, bw_method=bw)
+        f1 = np.reshape(kernel1(positions).T, xx.shape)
 
-    # Hess diagram: observed minus synthetic.
-    hess_diag = np.array([])
-    if syn_histo.size:
-        hess_diag = cl_histo - syn_histo
-        if hess_diag.size:
-            HD = np.rot90(hess_diag)
-            HD = np.flipud(HD)
-        else:
-            HD = np.array([])
+        # Field regions data
+        values2 = np.vstack([stars_f_acpt[0], stars_f_acpt[1]])
+        kernel2 = gaussian_kde(values2, bw_method=bw)
+        f2 = np.reshape(kernel2(positions).T, xx.shape)
 
-    ax.pcolormesh(hess_x, hess_y, HD, cmap=cmap, vmin=HD.min(),
-                  vmax=HD.max(), zorder=1)
+        # Cluster - field regions
+        diff = f1 - f2
+        # Clip negative values.
+        diff = np.clip(diff, 1e-9, np.inf)
+
+        ax.contourf(xx, yy, diff, cmap='Blues')
+        ax.contour(xx, yy, diff, colors='k', linewidths=.5)
+        # ax.clabel(CS, inline=1, fontsize=10)
+
+        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
+                zorder=3)
+        plt.gca().invert_yaxis()
 
 
 def pl_lum_func(gs, y_ax, flag_no_fl_regs, lum_func):
@@ -319,7 +325,7 @@ def pl_lum_func(gs, y_ax, flag_no_fl_regs, lum_func):
     LF of stars in cluster region and outside.
     '''
     x_cl, y_cl, x_fl, y_fl, x_all, y_all = lum_func
-    ax = plt.subplot(gs[4:6, 2:4])
+    ax = plt.subplot(gs[4:6, 0:2])
     ax.set_title("LF after error removal (compl)", fontsize=9)
     ax.minorticks_on()
     # Only draw units on axis (ie: 1, 2, 3)
@@ -346,7 +352,7 @@ def pl_lum_func(gs, y_ax, flag_no_fl_regs, lum_func):
                  label='$LF_{cl}$', zorder=4)
         max_y = max(max(y_cl), max(y_fl), max(y_all))
     else:
-        max_y = max(y_cl)
+        max_y = max(max(y_cl), max(y_all))
     # Set plot limits
     x_min, x_max = x_cl[-1] + .3, x_cl[1] - .3
     plt.xlim(x_min, x_max)
@@ -354,7 +360,7 @@ def pl_lum_func(gs, y_ax, flag_no_fl_regs, lum_func):
 
     # Legends.
     leg = plt.legend(fancybox=True, loc='upper right', numpoints=1,
-                     fontsize=11)
+                     fontsize='small')
     # Set the alpha value of the legend.
     leg.get_frame().set_alpha(0.7)
 
@@ -364,7 +370,7 @@ def pl_data_rm_perc(
         combined_compl):
     """
     """
-    ax = plt.subplot(gs[4:6, 4:6])
+    ax = plt.subplot(gs[4:6, 2:4])
     ax.set_title("Percentage of stars kept after each process", fontsize=9)
     ax.minorticks_on()
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
@@ -375,20 +381,19 @@ def pl_data_rm_perc(
 
     edges, perc_vals = phot_analy_compl
     perc_vals_min = [min(perc_vals)]
-    txt = "Photometric analysis\ncompleteness"
+    txt = "Photometric analysis completeness"
     plt.step(edges[:-1], perc_vals, where='post', lw=2., linestyle='--',
              label=txt)
 
     edges, perc_vals, perc_rmvd = phot_data_compl
     perc_vals_min.append(min(perc_vals))
-    txt = "Photometric data\ncompleteness\n" +\
-        "({:.1f}% rmvd)".format(perc_rmvd)
+    txt = "Photometric data completeness ({:.1f}% rm)".format(perc_rmvd)
     plt.step(
         edges[:-1], perc_vals, where='post', lw=2., linestyle='--', label=txt)
 
     edges, perc_vals, perc_rmvd = err_rm_data
     perc_vals_min.append(min(perc_vals))
-    txt = "Error removal\n({:.1f}% rmvd)".format(perc_rmvd)
+    txt = "Error removal ({:.1f}% rm)".format(perc_rmvd)
     plt.step(
         edges[:-1], perc_vals, where='post', lw=2., color='teal',
         linestyle='--', label=txt)
@@ -397,14 +402,14 @@ def pl_data_rm_perc(
     # Reverse.
     perc_vals = 1. - perc_vals
     perc_vals_min.append(min(perc_vals))
-    txt = "Combined function\n({:.1f}% rmvd)".format(perc_rmvd)
+    txt = "Combined function ({:.1f}% rm)".format(perc_rmvd)
     plt.step(
         edges[:-1], perc_vals, where='post', lw=2., color='r', linestyle='--',
         label=txt)
 
     # Legends.
     leg = plt.legend(
-        fancybox=True, numpoints=1, loc='lower center', fontsize=9)
+        fancybox=True, numpoints=1, loc='lower right', fontsize='small')
     # Set the alpha value of the legend.
     leg.get_frame().set_alpha(0.7)
 
@@ -412,44 +417,45 @@ def pl_data_rm_perc(
     plt.ylim(min(.9, min(perc_vals_min)) - .05, 1.05)
 
 
-def pl_ad_test(gs, flag_kde_test, ad_cl, ad_fr):
+def pl_ad_test(gs, flag_kde_test, ad_cl, ad_fr, ad_k_comb):
     """
     """
     if flag_kde_test:
-        ax1 = plt.subplot(gs[6:7, 0:2])
-        plt.xlabel("A-D test")
-        plt.ylabel("N")
-        ax1.hist(
-            ad_cl[0], bins=25, density=True, label=r'$Cl_{p}$',
-            histtype='step')
-        ax1.hist(
-            ad_fr[0], bins=25, density=True, label=r'$Fr_{p}$',
-            histtype='step')
-        plt.xlim(0., 5.)
-        ax1.legend()
 
-        ax2 = plt.subplot(gs[7:8, 0:2])
-        plt.xlabel("A-D test")
-        plt.ylabel("N")
-        ax2.hist(
-            ad_cl[1], bins=25, density=True, label=r'$Cl_{p+k}$',
-            histtype='step')
-        ax2.hist(
-            ad_fr[1], bins=25, density=True, label=r'$Fr_{p+k}$',
-            histtype='step')
-        plt.xlim(0., 5.)
-        ax2.legend()
+        def adPlot(ax, d1, d2, s):
+            ax.set_title('(' + s + ')', fontsize=9)
+            ax.axes.yaxis.set_ticklabels([])
+            plt.xlabel("A-D test")
+            plt.ylabel("N (norm)")
+            ax.grid(
+                b=True, which='major', color='gray', linestyle='--', lw=.5,
+                zorder=1)
+            ax.hist(d1, bins=25, density=True, color='r', histtype='step')
+            plt.plot([0, 0], label=r'$Cl$', color='r')
+            ax.hist(d2, bins=25, density=True, color='b', histtype='step')
+            plt.plot([0, 0], label=r'$Fr$', color='b')
+            ax.axvline(
+                x=0.325, ls=':', lw=2.5, c='orange', label=r"$p_{v}=0.25$")
+            ax.axvline(x=3.752, ls=':', lw=2.5, c='g', label=r"$p_{v}=0.01$")
+            # plt.xlim(0., min(10., max(d1), max(d2)))
+            ax.set_xscale('log')
+            ax.legend(fontsize='small')
+
+        ax = plt.subplot(gs[6:7, 0:2])
+        adPlot(ax, ad_cl[0], ad_fr[0], 'phot')
+        s = 'all' if ad_k_comb else 'plx+pm'
+        ax = plt.subplot(gs[7:8, 0:2])
+        adPlot(ax, ad_cl[1], ad_fr[1], s)
 
 
 def pl_p_vals(
     ax, p_vals_cl, p_vals_f, prob_cl_kde, kde_cl_1d, kde_f_1d, x_kde,
-        y_over):
-    plt.title(r'$P_{{cl}}={:.2f}$'.format(prob_cl_kde), fontsize=9)
-    plt.xlim(-0.04, .34)
-    # plt.xlim(-0.09, 1.04)
-    plt.ylim(0, 1.02)
+        y_over, reg_id):
+    ax.set_title(
+        r'$P_{{cl}}={:.2f}\;({})$'.format(prob_cl_kde, reg_id), fontsize=9)
+    ax.axes.yaxis.set_ticklabels([])
     plt.xlabel('p-values', fontsize=12)
-    plt.ylabel('Density (normalized)', fontsize=12)
+    plt.ylabel('Density (norm)', fontsize=12)
     ax.minorticks_on()
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
             zorder=1)
@@ -457,43 +463,47 @@ def pl_p_vals(
     ax.set_axisbelow(True)
     # Plot field vs field KDE.
     if kde_f_1d.any():
-        max_kde = max(max(kde_f_1d), max(kde_cl_1d))
-        plt.plot(x_kde, kde_f_1d / max_kde, color='b', ls='-', lw=1.,
-                 label=r'$Field\,({})$'.format(len(p_vals_f)),
+        plt.plot(x_kde, kde_f_1d, color='b', ls='-', lw=1.,
+                 label=r'$Fr\,({})$'.format(len(p_vals_f)),
                  zorder=2)
-    else:
-        max_kde = max(kde_cl_1d)
     # Plot cluster vs field KDE.
-    plt.plot(x_kde, kde_cl_1d / max_kde, color='r', ls='-', lw=1.,
-             label=r'$Cluster\,({})$'.format(len(p_vals_cl)), zorder=2)
+    if max(kde_cl_1d) - min(kde_cl_1d) < .001:
+        ax.axvline(x=kde_cl_1d[0], c='r', ls='-', lw=1.,
+                   label=r'$Cl\,({})$'.format(len(p_vals_cl)))
+    else:
+        plt.plot(x_kde, kde_cl_1d, color='r', ls='-', lw=1.,
+                 label=r'$Cl\,({})$'.format(len(p_vals_cl)),
+                 zorder=2)
     # Fill overlap.
     if y_over:
-        plt.fill_between(x_kde, np.asarray(y_over) / max_kde, 0,
+        plt.fill_between(x_kde, np.asarray(y_over), 0,
                          color='grey', alpha='0.5')
     # Legend.
     handles, labels = ax.get_legend_handles_labels()
     leg = ax.legend(handles, labels, numpoints=1, fontsize=9)
     leg.get_frame().set_alpha(0.6)
+    plt.gca().set_ylim(bottom=0)
 
 
-def pl_ad_pvals_phot(gs, flag_kde_test, ad_cl_fr_p):
-    if flag_kde_test:
+def pl_ad_pvals_phot(gs, flag_ad_test, ad_cl_fr_p):
+    if flag_ad_test:
         p_vals_cl, p_vals_f, prob_cl_kde, kde_cl_1d, kde_f_1d, x_kde,\
             y_over = ad_cl_fr_p
         ax = plt.subplot(gs[6:8, 2:4])
         pl_p_vals(
             ax, p_vals_cl, p_vals_f, prob_cl_kde, kde_cl_1d, kde_f_1d, x_kde,
-            y_over)
+            y_over, 'phot')
 
 
-def pl_ad_pvals_pk(gs, flag_kde_test, ad_cl_fr_pk):
-    if flag_kde_test:
+def pl_ad_pvals_pk(gs, flag_ad_test, ad_cl_fr_pk, ad_k_comb):
+    if flag_ad_test:
         p_vals_cl, p_vals_f, prob_cl_kde, kde_cl_1d, kde_f_1d, x_kde,\
             y_over = ad_cl_fr_pk
         ax = plt.subplot(gs[6:8, 4:6])
+        s = 'all' if ad_k_comb else 'plx+pm'
         pl_p_vals(
             ax, p_vals_cl, p_vals_f, prob_cl_kde, kde_cl_1d, kde_f_1d, x_kde,
-            y_over)
+            y_over, s)
 
 
 def plot(N, *args):

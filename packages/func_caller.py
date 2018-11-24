@@ -43,11 +43,13 @@ from .errors import error_round
 from .out import add_data_output
 from .out import make_A1_plot
 from .out import make_A2_plot
+from .out import photComb
 from .out import make_B_plot
 from .out import make_C_plot
 from .out import make_D1_plot
 from .out import make_D2_plot
-from .out import top_tiers
+# DEPRECATED 22/11
+# from .out import top_tiers
 from .out import done_move
 
 
@@ -190,6 +192,9 @@ def main(cl_file, pd):
     # Approximate number of cluster's members.
     clp = members_number.main(clp)
 
+    # Helper function for plotting.
+    clp = photComb.main(pd, clp)
+
     make_B_plot.main(npd, cld_c, pd, **clp)
 
     # Apply decontamination algorithm.
@@ -202,7 +207,7 @@ def main(cl_file, pd):
     clp = cl_region_clean.main(clp, **pd)
 
     # Analyze parallax data if available.
-    clp = plx_analysis.main(clp)
+    clp = plx_analysis.main(clp, **pd)
 
     # Analyze PMs data if available.
     clp = pms_analysis.main(clp, **pd)
@@ -239,8 +244,9 @@ def main(cl_file, pd):
     # Plot final best match found.
     make_D2_plot.main(npd, cld_c, pd, **clp)
 
-    # Plot top tiers models and save to file.
-    top_tiers.main(npd, cld_c, pd, **clp)
+    # DEPRECATED 22/11
+    # # Plot top tiers models and save to file.
+    # top_tiers.main(npd, cld_c, pd, **clp)
 
     # Move file to 'done' dir (if flag is set).
     done_move.main(pd, **npd)
