@@ -293,7 +293,9 @@ def pl_hess_cmd(
         # This bandwidth seems to produce nice results.
         bw = .2
 
-        xx, yy = np.mgrid[x_min_cmd:x_max_cmd:100j, y_max_cmd:y_min_cmd:100j]
+        Nb = 100
+        xx, yy = np.mgrid[x_min_cmd:x_max_cmd:complex(Nb),
+                          y_max_cmd:y_min_cmd:complex(Nb)]
         positions = np.vstack([xx.ravel(), yy.ravel()])
 
         # Cluster data
@@ -310,6 +312,18 @@ def pl_hess_cmd(
         diff = f1 - f2
         # Clip negative values.
         diff = np.clip(diff, 1e-9, np.inf)
+
+        # Area of the 2D cell.
+        cell = ((x_max_cmd - x_min_cmd) * (y_min_cmd - y_max_cmd)) / Nb**2
+        # Integral of the cluster-field KDE. This value strongly depends on
+        # the selected 'bw' value, so it is not really a stable indicator of
+        # field contamination in the cluster region.
+        integ = np.sum(diff * cell)
+        # Add text box.
+        text = r'$\int \Delta KDE_{{[cl-fr]}} \approx {:.2f}$'.format(integ)
+        ob = offsetbox.AnchoredText(text, pad=0.2, loc=1, prop=dict(size=9))
+        ob.patch.set(alpha=0.7)
+        ax.add_artist(ob)
 
         ax.contourf(xx, yy, diff, cmap='Blues')
         ax.contour(xx, yy, diff, colors='k', linewidths=.5)
