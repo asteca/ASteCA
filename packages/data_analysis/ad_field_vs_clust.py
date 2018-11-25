@@ -85,8 +85,9 @@ def main(pd, clp, cld_c):
         pvals_cl = [pvalFix(ad_cl[0], pv_cl[0]), pvalFix(ad_cl[1], pv_cl[1])]
         pvals_fr = [pvalFix(ad_fr[0], pv_fr[0]), pvalFix(ad_fr[1], pv_fr[1])]
 
-        ad_cl_fr_p = kdeplot(pvals_cl[0], pvals_fr[0])
-        ad_cl_fr_pk = kdeplot(pvals_cl[1], pvals_fr[1])
+        ad_cl_fr_p = kdeplot(pvals_cl[0], pvals_fr[0], 'phot')
+        data_id = 'phot+Plx+PM' if pd['ad_k_comb'] else 'Plx+PM'
+        ad_cl_fr_pk = kdeplot(pvals_cl[1], pvals_fr[1], data_id)
 
     clp.update({
         'flag_ad_test': flag_ad_test, 'ad_cl': ad_cl, 'ad_fr': ad_fr,
@@ -203,49 +204,56 @@ def pvalFix(ad_vals, p_vals):
     return np.array(p_vals_c)
 
 
-def kdeplot(p_vals_cl, p_vals_f):
+def kdeplot(p_vals_cl, p_vals_f, data_id):
     # Define KDE limits.
     pmin = np.min(np.concatenate([p_vals_cl, p_vals_f]))
     pmax = np.max(np.concatenate([p_vals_cl, p_vals_f]))
-    xmin = max(-1., pmin)
-    xmax = min(2., pmax)
-    xrng = (xmax - xmin) * .3
-    xmin = xmin - xrng
-    xmax = xmax + xrng
-    x_kde = np.mgrid[xmin:xmax:1000j]
 
-    # Obtain the 1D KDE for the cluster region (stars inside cluster's
-    # radius) vs field regions.
-    kernel_cl = gaussian_kde(p_vals_cl)
-    # KDE for plotting.
-    kde_cl_1d = np.reshape(kernel_cl(x_kde).T, x_kde.shape)
+    if pmin < pmax:
+        xmin = max(-1., pmin)
+        xmax = min(2., pmax)
+        xrng = (xmax - xmin) * .3
+        xmin = xmin - xrng
+        xmax = xmax + xrng
+        x_kde = np.mgrid[xmin:xmax:1000j]
 
-    # Check if field regions were compared among each other.
-    if p_vals_f.any():
-        # Obtain the 1D KDE for the field regions vs field regions.
-        kernel_f = gaussian_kde(p_vals_f)
+        # Obtain the 1D KDE for the cluster region (stars inside cluster's
+        # radius) vs field regions.
+        kernel_cl = gaussian_kde(p_vals_cl)
         # KDE for plotting.
-        kde_f_1d = np.reshape(kernel_f(x_kde).T, x_kde.shape)
+        kde_cl_1d = np.reshape(kernel_cl(x_kde).T, x_kde.shape)
 
-        # Calculate overlap between the two KDEs.
-        def y_pts(pt):
-            y_pt = min(kernel_cl(pt), kernel_f(pt))
-            return y_pt
+        # Check if field regions were compared among each other.
+        if p_vals_f.any():
+            # Obtain the 1D KDE for the field regions vs field regions.
+            kernel_f = gaussian_kde(p_vals_f)
+            # KDE for plotting.
+            kde_f_1d = np.reshape(kernel_f(x_kde).T, x_kde.shape)
 
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            overlap = quad(y_pts, xmin, xmax)
-        # Store y values for plotting the overlap filled.
-        y_over = [float(y_pts(x_pt)) for x_pt in x_kde]
+            # Calculate overlap between the two KDEs.
+            def y_pts(pt):
+                y_pt = min(kernel_cl(pt), kernel_f(pt))
+                return y_pt
 
-        # Probability value for the cluster.
-        prob_cl_kde = 1 - overlap[0]
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                overlap = quad(y_pts, xmin, xmax)
+            # Store y values for plotting the overlap filled.
+            y_over = [float(y_pts(x_pt)) for x_pt in x_kde]
+
+            # Probability value for the cluster.
+            prob_cl_kde = 1 - overlap[0]
+        else:
+            # If not, assign probability as 1 minus the average of the cluster
+            # vs the single field region used.
+            prob_cl_kde = 1. - np.mean(p_vals_cl)
+            # Pass empty lists for plotting.
+            kde_f_1d, y_over = np.array([]), []
     else:
-        # If not, assign probability as 1 minus the average of the cluster
-        # vs the single field region used.
-        prob_cl_kde = 1. - np.mean(p_vals_cl)
-        # Pass empty lists for plotting.
-        kde_f_1d, y_over = np.asarray([]), []
+        print("  WARNING could not obtain p-value distribution" +
+              " for '{}' data".format(data_id))
+        prob_cl_kde, kde_cl_1d, kde_f_1d, x_kde, y_over =\
+            np.nan, np.array([]), np.array([]), [], []
 
     return p_vals_cl, p_vals_f, prob_cl_kde, kde_cl_1d, kde_f_1d, x_kde,\
         y_over

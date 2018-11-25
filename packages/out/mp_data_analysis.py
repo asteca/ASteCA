@@ -481,8 +481,8 @@ def pl_p_vals(
                  label=r'$Fr\,({})$'.format(len(p_vals_f)),
                  zorder=2)
     # Plot cluster vs field KDE.
-    if max(kde_cl_1d) - min(kde_cl_1d) < .001:
-        ax.axvline(x=kde_cl_1d[0], c='r', ls='-', lw=1.,
+    if max(kde_cl_1d) - min(kde_cl_1d) < .01:
+        ax.axvline(x=x_kde[np.argmax(kde_cl_1d)], c='r', ls='-', lw=1.,
                    label=r'$Cl\,({})$'.format(len(p_vals_cl)))
     else:
         plt.plot(x_kde, kde_cl_1d, color='r', ls='-', lw=1.,
@@ -503,21 +503,23 @@ def pl_ad_pvals_phot(gs, flag_ad_test, ad_cl_fr_p):
     if flag_ad_test:
         p_vals_cl, p_vals_f, prob_cl_kde, kde_cl_1d, kde_f_1d, x_kde,\
             y_over = ad_cl_fr_p
-        ax = plt.subplot(gs[6:8, 2:4])
-        pl_p_vals(
-            ax, p_vals_cl, p_vals_f, prob_cl_kde, kde_cl_1d, kde_f_1d, x_kde,
-            y_over, 'phot')
+        if kde_cl_1d.any() or kde_f_1d.any():
+            ax = plt.subplot(gs[6:8, 2:4])
+            pl_p_vals(
+                ax, p_vals_cl, p_vals_f, prob_cl_kde, kde_cl_1d, kde_f_1d,
+                x_kde, y_over, 'phot')
 
 
 def pl_ad_pvals_pk(gs, flag_ad_test, ad_cl_fr_pk, ad_k_comb):
     if flag_ad_test:
         p_vals_cl, p_vals_f, prob_cl_kde, kde_cl_1d, kde_f_1d, x_kde,\
             y_over = ad_cl_fr_pk
-        ax = plt.subplot(gs[6:8, 4:6])
-        s = 'all' if ad_k_comb else 'plx+pm'
-        pl_p_vals(
-            ax, p_vals_cl, p_vals_f, prob_cl_kde, kde_cl_1d, kde_f_1d, x_kde,
-            y_over, s)
+        if kde_cl_1d.any() or kde_f_1d.any():
+            ax = plt.subplot(gs[6:8, 4:6])
+            s = 'all' if ad_k_comb else 'plx+pm'
+            pl_p_vals(
+                ax, p_vals_cl, p_vals_f, prob_cl_kde, kde_cl_1d, kde_f_1d,
+                x_kde, y_over, s)
 
 
 def plot(N, *args):
