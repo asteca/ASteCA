@@ -89,8 +89,8 @@ def CMDAges(met_file):
         ages0 = re.findall(regex, f_iso.read())  # Find all instances.
         ages1 = np.asarray(list(map(float, ages0)))
         ages2 = np.log10(ages1)
-        # TODO hardcoded, could have unintended consequences
-        isoch_a = np.around(ages2, 3)  # Round to 3 decimals.
+        # TODO hardcoded rounding, could have unintended consequences
+        isoch_a = np.around(ages2, 4)
 
     return isoch_a
 
