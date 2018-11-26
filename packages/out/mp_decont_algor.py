@@ -187,8 +187,9 @@ def pl_mps_phot_diag(
     return sca, trans
 
 
-def plx_histo(gs, plx_flag, plx_clrg, plx_x_kde, kde_pl, plx_flrg,
-              flag_no_fl_regs_i):
+def plx_histo(
+    gs, plx_flag, plx_clrg, plx_x_kde, kde_pl, plx_flrg,
+        flag_no_fl_regs_i):
     '''
     Histogram for the distribution of parallaxes within the cluster region.
     '''
@@ -200,8 +201,14 @@ def plx_histo(gs, plx_flag, plx_clrg, plx_x_kde, kde_pl, plx_flrg,
         ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
                 zorder=1)
         # Normalized histogram for cluster region.
+        if len(plx_clrg) > 100:
+            Nb = 100
+        elif 50 < len(plx_clrg) <= 100:
+            Nb = 50
+        else:
+            Nb = 25
         h_cl, _, _ = plt.hist(
-            plx_clrg, 100, density=True, zorder=4, color='#9aafd1',
+            plx_clrg, Nb, density=True, zorder=4, color='#9aafd1',
             alpha=0.75, label=r"Cluster region ($N_{fit}$)")
         # Plot histogram for the parallaxes of the field regions.
         if not flag_no_fl_regs_i:
