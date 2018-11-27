@@ -133,21 +133,22 @@ def main(mypath, pars_f_path):
                     pt_adapt = True if reader[6] in true_lst else False
                     priors_ptm = reader[7]
 
-                # ABC algorithm parameters.
-                elif reader[0] == 'AB':
-                    nwalkers_abc = int(float(reader[1]))
-                    nburn_abc = float(reader[2])
-                    nsteps_abc = int(float(reader[3]))
-                    priors_abc = reader[4]
+                # TODO not finished yet
+                # # ABC algorithm parameters.
+                # elif reader[0] == 'AB':
+                #     nwalkers_abc = int(float(reader[1]))
+                #     nburn_abc = float(reader[2])
+                #     nsteps_abc = int(float(reader[3]))
+                #     priors_abc = reader[4]
 
-                # emcee algorithm parameters.
-                elif reader[0] == 'EM':
-                    nwalkers_emc = int(float(reader[1]))
-                    nburn_emc = int(float(reader[2]))
-                    N_burn_emc = int(float(reader[3]))
-                    nsteps_emc = int(float(reader[4]))
-                    emcee_a = float(reader[5])
-                    priors_emc = reader[6]
+                # # emcee algorithm parameters.
+                # elif reader[0] == 'EM':
+                #     nwalkers_emc = int(float(reader[1]))
+                #     nburn_emc = int(float(reader[2]))
+                #     N_burn_emc = int(float(reader[3]))
+                #     nsteps_emc = int(float(reader[4]))
+                #     emcee_a = float(reader[5])
+                #     priors_emc = reader[6]
 
                 # Genetic algorithm parameters.
                 elif reader[0] == 'GA':
@@ -277,13 +278,13 @@ def main(mypath, pars_f_path):
         'ntemps': ntemps, 'nwalkers_ptm': nwalkers_ptm, 'nburn_ptm': nburn_ptm,
         'nsteps_ptm': nsteps_ptm, "pt_adapt": pt_adapt, 'tmax_ptm': tmax_ptm,
         'priors_ptm': priors_ptm,
-        # ABC algorithm parameters.
-        'nwalkers_abc': nwalkers_abc, 'nburn_abc': nburn_abc,
-        'nsteps_abc': nsteps_abc, 'priors_abc': priors_abc,
-        # emcee algorithm parameters.
-        'nwalkers_emc': nwalkers_emc, 'nburn_emc': nburn_emc,
-        "N_burn_emc": N_burn_emc, 'nsteps_emc': nsteps_emc,
-        "emcee_a": emcee_a, 'priors_emc': priors_emc,
+        # # ABC algorithm parameters.
+        # 'nwalkers_abc': nwalkers_abc, 'nburn_abc': nburn_abc,
+        # 'nsteps_abc': nsteps_abc, 'priors_abc': priors_abc,
+        # # emcee algorithm parameters.
+        # 'nwalkers_emc': nwalkers_emc, 'nburn_emc': nburn_emc,
+        # "N_burn_emc": N_burn_emc, 'nsteps_emc': nsteps_emc,
+        # "emcee_a": emcee_a, 'priors_emc': priors_emc,
         # Genetic algorithm parameters.
         'N_pop': N_pop, 'N_gen': N_gen, 'fit_diff': fit_diff,
         'cross_prob': cross_prob, 'cross_sel': cross_sel, 'mut_prob': mut_prob,

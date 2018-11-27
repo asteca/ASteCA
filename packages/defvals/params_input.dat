@@ -318,7 +318,7 @@ RM  local      fixed          0.5
 #            observed cluster. All the parameters below are ignored.
 #
 #   algorithm
-AB    ptemcee
+CF    ptemcee
 
 # ptemcee parameters.
 #
