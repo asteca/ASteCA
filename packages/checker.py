@@ -29,13 +29,14 @@ def check_all(mypath, file_end):
     parameters are consistent with the isochrones available before moving
     on with the code.
     """
+
+    # Check .first_run file.
+    first_run.main(mypath)
+
     print('Checking input parameters...\n')
 
     # Check that all the essential packages are installed.
     inst_packgs_lst = pack.check()
-
-    # Check .first_run file.
-    first_run_flag = first_run.main(mypath)
 
     # Import here after the needed packages were checked to be present.
     from .check import params_match
@@ -95,10 +96,5 @@ def check_all(mypath, file_end):
 
     print("Full check done.\n\nNumber of clusters to analyze: {}\n".format(
         len(cl_files)))
-
-    # Change these values if this is the first run, for quick processing.
-    if first_run_flag:
-        pd['pvalue_runs'], pd['bayesda_runs'], pd['N_bootstrap'],\
-            pd['N_pop'], pd['N_gen'] = 1, 2, 2, 50, 10
 
     return cl_files, pd
