@@ -51,10 +51,10 @@ def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning,
          lkl_weight, N_bootstrap, max_mag, IMF_name, m_high, m_sample_flag,
          R_V, fundam_params, N_pop, N_gen, fit_diff, cross_prob, cross_sel,
          mut_prob, N_el, N_ei, N_es, cmd_systs, filters, colors, theor_tracks,
-         nwalkers_emc, nsteps_emc, N_burn_emc, nburn_emc, emcee_a, priors_emc,
+         # nwalkers_emc, nsteps_emc, N_burn_emc, nburn_emc, emcee_a,
+         # priors_emc, nwalkers_abc, nsteps_abc, nburn_abc, priors_abc,
          ntemps, nwalkers_ptm, nsteps_ptm, nburn_ptm, pt_adapt, tmax_ptm,
-         priors_ptm, nwalkers_abc, nsteps_abc, nburn_abc, priors_abc,
-         **kwargs):
+         priors_ptm, **kwargs):
     '''
     Perform a best fitting process to find the cluster's fundamental
     parameters.

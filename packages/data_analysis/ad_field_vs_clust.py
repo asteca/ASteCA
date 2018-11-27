@@ -61,7 +61,8 @@ def main(pd, clp, cld_c):
                 # Field regions
                 data_fr = []
                 for fr in clp['field_regions_c']:
-                    data_fr.append(dataExtract(fr, pd['ad_k_comb'], i))
+                    data_fr.append(
+                        dataExtract(fr, pd['ad_k_comb'], i))
 
                 # Compare to each defined field region.
                 for f_idx, data_fl in enumerate(data_fr):
@@ -137,15 +138,15 @@ def dataExtract(region, kin_flag, idx):
             if k_err:
                 data_all = np.concatenate([phot_data, np.array(k_err)])
             else:
+                # No valid Plx and/or PM data found
                 data_all = phot_data
-                print("  WARNING: no valid Plx and/or PM data found.")
 
         elif kin_flag is False:
             if k_err:
                 data_all = np.array(k_err)
             else:
+                # No valid Plx and/or PM data found
                 data_all = np.array([np.nan])
-                print("  WARNING: no valid Plx and/or PM data found.")
 
     return data_all
 
