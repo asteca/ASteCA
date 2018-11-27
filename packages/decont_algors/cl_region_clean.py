@@ -176,7 +176,6 @@ def rmColorOutliers(cl_reg_fit, cl_reg_no_fit):
             # Color of star is outside of range.
             if np.any(st[5] < col_lims[0]) or np.any(st[5] > col_lims[1]):
                 cl_reg_no_fit2.append(st)
-                print(st)
             else:
                 cl_reg_fit2.append(st)
         else:

@@ -36,7 +36,7 @@ def main(
 
     # TODO add these parameters to the input params file
     h_max = 20.
-    max_secs = h_max * 60. * 60.
+    init_mode, popsize, maxiter = 'diffevol', 5, 10
 
     ptsampler = sampler.Sampler(
         nwalkers_ptm, ndim, loglkl, logp,
@@ -44,13 +44,14 @@ def main(
                   varIdxs, priors_ptm], Tmax=Tmax, ntemps=ntemps)
 
     # Start timing.
+    max_secs = h_max * 60. * 60.
     available_secs = max(30, max_secs)
     elapsed, start_t = 0., t.time()
 
     # Initial population.
     p0 = initPop(
         ranges, varIdxs, lkl_method, obs_clust, fundam_params, synthcl_args,
-        ntemps, nwalkers_ptm)
+        ntemps, nwalkers_ptm, init_mode, popsize, maxiter)
 
     print("     Burn-in stage")
     N_steps_check = max(1, int(nburn_ptm * .1))
@@ -297,6 +298,7 @@ def loglkl(
         lkl = likelihood.main(lkl_method, synth_clust, obs_clust)
 
         logp = 0.
+        # TODO add Gaussian prior
         # Logarithm of the prior.
         if priors_ptm == 'unif':
             # Flat prior
@@ -317,7 +319,7 @@ def logp(_):
 
 def initPop(
     ranges, varIdxs, lkl_method, obs_clust, fundam_params, synthcl_args,
-        ntemps, nwalkers_ptm, init_mode='diffevol', popsize=5, maxiter=10):
+        ntemps, nwalkers_ptm, init_mode, popsize, maxiter):
     """
     Obtain initial parameter values using either a random distribution, or
     the Differential Evolution algorithm to approximate reasonable solutions.

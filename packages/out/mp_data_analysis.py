@@ -448,10 +448,13 @@ def pl_ad_test(gs, flag_kde_test, ad_cl, ad_fr, ad_k_comb):
             plt.plot([0, 0], label=r'$Cl$', color='r')
             ax.hist(d2, bins=25, density=True, color='b', histtype='step')
             plt.plot([0, 0], label=r'$Fr$', color='b')
-            ax.axvline(
-                x=0.325, ls=':', lw=2.5, c='orange', label=r"$p_{v}=0.25$")
+            if min(min(d1), min(d2)) < 0.325:
+                ax.axvline(
+                    x=0.325, ls=':', lw=2.5, c='orange', label=r"$p_{v}=0.25$")
             ax.axvline(x=3.752, ls=':', lw=2.5, c='g', label=r"$p_{v}=0.01$")
-            # plt.xlim(0., min(10., max(d1), max(d2)))
+            if max(max(d1), max(d2)) > 6.546:
+                ax.axvline(
+                    x=6.546, ls=':', lw=2.5, c='k', label=r"$p_{v}=0.001$")
             ax.set_xscale('log')
             ax.legend(fontsize='small')
 
