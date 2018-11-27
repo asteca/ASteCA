@@ -29,7 +29,7 @@ def match_ranges(met_vals_all, met_files, age_vals_all, z_range, a_range):
     age_values = []
     for age in age_vals_all:
         # If age value falls inside the given range, store the value.
-        # TODO hardcoded 0.001 tolerance, could break something sometime?
+        # TODO hardcoded tolerance, could break something sometime?
         if np.isclose(a_range, age, atol=0.001).any():
             age_values.append(age)
 
@@ -88,9 +88,9 @@ def CMDAges(met_file):
         regex = age_format  # Define regular expression.
         ages0 = re.findall(regex, f_iso.read())  # Find all instances.
         ages1 = np.asarray(list(map(float, ages0)))
-        ages2 = np.log10(ages1)
-        # TODO hardcoded rounding, could have unintended consequences
-        isoch_a = np.around(ages2, 4)
+        # TODO hardcoded rounding. Must be modified in accordance with
+        # 'read_isochs.readCMDFile()'.
+        isoch_a = np.around(np.log10(ages1), 4)
 
     return isoch_a
 
