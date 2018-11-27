@@ -87,7 +87,7 @@ def main(mypath):
         print("ERROR: Could not check/copy input data files and folders.\n")
         print(traceback.format_exc())
 
-    if not first_run_flag:
+    if first_run_flag:
         sys.exit("First run processes completed.\n")
 
     return first_run_flag

@@ -309,46 +309,49 @@ RM  local      fixed          0.5
 
 # Algorithm used to maximize/explore the parameter space given a likelihood.
 #
-# * algorithm: emcee / genet / brute / n
+# * algorithm: ptemcee / emcee / genet / brute / n
 #
-#   - emcee: Bayesian MCMC algorithm.
+#   - ptemcee: Parallel tempering Bayesian MCMC algorithm.
 #   - genet: Genetic Algorithm (MLE).
 #   - brute: Brute Force algorithm, ie: all possible solutions are processed.
 #   - n    : No fundamental parameters estimation will be attempted on the
 #            observed cluster. All the parameters below are ignored.
 #
 #   algorithm
-AB      emcee
+AB    ptemcee
 
-# emcee parameters.
+# ptemcee parameters.
 #
-#   - nwalkers: [integer], Number of walkers/chains used.
-#   - nsteps: [integer], Number of steps to process.
-#   - nburn: [integer], Number of burn-in samples to discard.
+#   - ntemps: [int], Number of parallel temperatures.
+#   - nwalkers: [int], Number of walkers/chains used.
+#   - nburn: [int], Number of burn-in samples to discard.
+#   - nsteps: [int], Number of steps to process.
+#   - Tmax: ...
+#   - adapt: ...
 #   - priors: unif / gauss, uniform or Gaussian prior distributions for all the
 #     fitted parameters.
 #
-#    nwalkers     nsteps   nburn   priors
-EM         20       5000     500     unif
+#    ntemps    nwalkers   nburn    nsteps     Tmax   adapt    priors
+PT       10         100     100      2500       inf     y      unif
 
 # Genetic Algorithm parameters.
 #
-#   - n_pop: [integer], Number of chromosomes in the population.
-#   - n_gen: [integer], Number of generations to process.
+#   - n_pop: [int], Number of chromosomes in the population.
+#   - n_gen: [int], Number of generations to process.
 #   - fdif: 0<[float]<=1, Fitness differential. Establishes the 'selection
 #     pressure' for the algorithm.
 #   - p_cross: 0<[float]<=1, crossover probability.
 #   - cr_sel: 1P / 2P, 1-point (1P) or 2-point (2P) crossover.
 #   - p_mut: 0<[float]<=1, mutation probability.
-#   - n_el: [integer], (elitism operator) Number of best solutions to pass
+#   - n_el: [int], (elitism operator) Number of best solutions to pass
 #     unchanged to the next generation.
-#   - n_ei: [integer], (extinction/immigration operator) Number of generations
+#   - n_ei: [int], (extinction/immigration operator) Number of generations
 #     allowed to run with the same best solution before calling for a new
 #     generation of random solutions.
-#   - n_es: [integer], (exit switch) number of times the Extinction/Immigration
+#   - n_es: [int], (exit switch) number of times the Extinction/Immigration
 #     operator is allowed to run returning the same best solution before
 #     exiting the GA.
-#   - bootstrap: [integer], Number of times the bootstrap with replacement
+#   - bootstrap: [int], Number of times the bootstrap with replacement
 #     process will run in the GA algorithm. Minimum value is 2, anything less
 #     will skip the bootstrap process and no uncertainties will be assigned to
 #     the parameters.
@@ -376,7 +379,7 @@ GA    100   1000    1.     0.85      2P   0.05     1    50    10         10
 #   is selected. Otherwise this parameter is ignored.
 #
 #   likelihood  binning    weight
-LK     dolphin     auto      mean
+LK     dolphin    knuth      mean
 ################################################################################
 
 
