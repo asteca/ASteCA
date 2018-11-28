@@ -167,8 +167,12 @@ def rmColorOutliers(cl_reg_fit, cl_reg_no_fit):
     """
     # Limits for the colors.
     col_lims = np.percentile(list(zip(*cl_reg_fit))[5], (.5, 99.5), axis=0)
-    # Median magnitude.
+    # Median, std for colors
+    col_med = np.median(list(zip(*cl_reg_fit))[5])
+    col_std = np.std(list(zip(*cl_reg_fit))[5])
+    # Median, std for magnitude.
     mag_med = np.median(list(zip(*cl_reg_fit))[3])
+    mag_std = np.std(list(zip(*cl_reg_fit))[3])
 
     cl_reg_fit2, cl_reg_no_fit2 = [], []
     for i, st in enumerate(cl_reg_fit):
@@ -179,9 +183,21 @@ def rmColorOutliers(cl_reg_fit, cl_reg_no_fit):
             else:
                 cl_reg_fit2.append(st)
         else:
-            cl_reg_fit2.append(st)
+            # For bright star, relax the condition a bit.
+            if np.any(st[5] < col_med - 4 * col_std) and\
+                    st[3] < mag_med - 4 * mag_std:
+                cl_reg_no_fit2.append(st)
+            elif np.any(st[5] > col_med - 4 * col_std) and\
+                    st[3] < mag_med - 4 * mag_std:
+                cl_reg_no_fit2.append(st)
+            else:
+                cl_reg_fit2.append(st)
 
     # Add rejected stars to the old list.
     cl_reg_no_fit2 = cl_reg_no_fit + cl_reg_no_fit2
+
+    if len(cl_reg_fit) > len(cl_reg_fit2):
+        print("Removed {} CMD outlier stars.".format(
+            len(cl_reg_fit) - len(cl_reg_fit2)))
 
     return cl_reg_fit2, cl_reg_no_fit2
