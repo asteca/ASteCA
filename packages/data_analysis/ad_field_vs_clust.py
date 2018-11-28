@@ -82,13 +82,16 @@ def main(pd, clp, cld_c):
                     runs += 1
                 update_progress.updt(run_total, runs)
 
-        # Cap p_values
+        # Cap p-values
         pvals_cl = [pvalFix(ad_cl[0], pv_cl[0]), pvalFix(ad_cl[1], pv_cl[1])]
         pvals_fr = [pvalFix(ad_fr[0], pv_fr[0]), pvalFix(ad_fr[1], pv_fr[1])]
 
         ad_cl_fr_p = kdeplot(pvals_cl[0], pvals_fr[0], 'phot')
+        ad_cl_fr_p = [len(pv_cl[0]), len(pv_fr[0])] + ad_cl_fr_p
+
         data_id = 'phot+Plx+PM' if pd['ad_k_comb'] else 'Plx+PM'
         ad_cl_fr_pk = kdeplot(pvals_cl[1], pvals_fr[1], data_id)
+        ad_cl_fr_pk = [len(pv_cl[1]), len(pv_fr[1])] + ad_cl_fr_pk
 
     clp.update({
         'flag_ad_test': flag_ad_test, 'ad_cl': ad_cl, 'ad_fr': ad_fr,
@@ -206,58 +209,62 @@ def pvalFix(ad_vals, p_vals):
 
 
 def kdeplot(p_vals_cl, p_vals_f, data_id):
-    # Define KDE limits.
-    pmin = np.min(np.concatenate([p_vals_cl, p_vals_f]))
-    pmax = np.max(np.concatenate([p_vals_cl, p_vals_f]))
-
-    if pmin < pmax:
-        xmin = max(-1., pmin)
-        xmax = min(2., pmax)
+    """
+    """
+    def kdeLims(xvals):
+        xmin, xmax = max(-1., min(xvals)), min(2., max(xvals))
         xrng = (xmax - xmin) * .3
-        xmin = xmin - xrng
-        xmax = xmax + xrng
+        return xmin - xrng, xmax + xrng
+
+    def regKDE(p_vals):
+        xmin, xmax = kdeLims(p_vals)
         x_kde = np.mgrid[xmin:xmax:1000j]
-
-        # Obtain the 1D KDE for the cluster region (stars inside cluster's
-        # radius) vs field regions.
-        kernel_cl = gaussian_kde(p_vals_cl)
+        # Obtain the 1D KDE for this distribution of p-values.
+        kernel = gaussian_kde(p_vals)
         # KDE for plotting.
-        kde_cl_1d = np.reshape(kernel_cl(x_kde).T, x_kde.shape)
+        kde_plot = np.reshape(kernel(x_kde).T, x_kde.shape)
+        return x_kde, kde_plot
 
-        # Check if field regions were compared among each other.
-        if p_vals_f.any():
-            # Obtain the 1D KDE for the field regions vs field regions.
-            kernel_f = gaussian_kde(p_vals_f)
-            # KDE for plotting.
-            kde_f_1d = np.reshape(kernel_f(x_kde).T, x_kde.shape)
+    def KDEoverlap(x_kde, p_vals_cl, p_vals_fr):
+        """Calculate overlap between the two KDEs."""
+        kcl, kfr = gaussian_kde(p_vals_cl), gaussian_kde(p_vals_fr)
 
-            # Calculate overlap between the two KDEs.
-            def y_pts(pt):
-                y_pt = min(kernel_cl(pt), kernel_f(pt))
-                return y_pt
+        def y_pts(pt):
+            y_pt = min(kcl(pt), kfr(pt))
+            return y_pt
 
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                overlap = quad(y_pts, xmin, xmax)
-            # Store y values for plotting the overlap filled.
-            y_over = [float(y_pts(x_pt)) for x_pt in x_kde]
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            overlap = quad(y_pts, min(x_kde), max(x_kde))
+        # Store y values for plotting the overlap filled.
+        y_over = np.array([float(y_pts(x_pt)) for x_pt in x_kde])
 
-            # Probability value for the cluster.
-            prob_cl_kde = 1 - overlap[0]
-        else:
-            # If not, assign probability as 1 minus the average of the cluster
-            # vs the single field region used.
-            prob_cl_kde = 1. - np.mean(p_vals_cl)
-            # Pass empty lists for plotting.
-            kde_f_1d, y_over = np.array([]), []
+        return overlap[0], y_over
+
+    # Ranges for the p-values
+    cl_fr_range = np.ptp(p_vals_cl)
+    fr_fr_range = np.ptp(p_vals_f) if np.any(p_vals_f) else 0.
+
+    if cl_fr_range > 0.001:
+        x_cl, kde_cl = regKDE(p_vals_cl)
     else:
-        print("  WARNING could not obtain p-value distribution" +
-              " for '{}' data".format(data_id))
-        prob_cl_kde, kde_cl_1d, kde_f_1d, x_kde, y_over =\
-            np.nan, np.array([]), np.array([]), [], []
+        x_cl, kde_cl = p_vals_cl[0], np.array([])
 
-    return p_vals_cl, p_vals_f, prob_cl_kde, kde_cl_1d, kde_f_1d, x_kde,\
-        y_over
+    if fr_fr_range > 0.001:
+        x_fr, kde_fr = regKDE(p_vals_f)
+    else:
+        x_fr, kde_fr = [], np.array([])
+
+    if kde_cl.any() and kde_fr.any():
+        pmin, pmax = kdeLims(np.concatenate([p_vals_cl, p_vals_f]))
+        x_over = np.linspace(pmin, pmax, 1000)
+        overlap, y_over = KDEoverlap(x_over, p_vals_cl, p_vals_f)
+        # Probability value for the cluster.
+        prob_cl = 1 - overlap
+    else:
+        prob_cl, x_over, y_over = np.nan, [], np.array([])
+
+    return [prob_cl, kde_cl, kde_fr, x_cl, x_fr, x_over, y_over]
 
 
 def anderson_darling_k(samples):
