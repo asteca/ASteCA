@@ -1,4 +1,6 @@
 
+from random import shuffle
+
 
 def main(pd, clp):
     """
@@ -25,10 +27,17 @@ def main(pd, clp):
             cl_rj_col_1 = list(list(zip(*list(zip(
                 *clp['cl_region_rjct_c']))[5]))[1])
 
+    # Only use 25$ of the rejected stars. This way they have a lesser impact
+    # on the CMD limits.
+    Nh = int(len(cl_rj_mag_0) / 4.)
+    shuffle(cl_rj_mag_0)
+    shuffle(cl_rj_col_0)
+    shuffle(cl_rj_col_1)
+
     # Combine all data into a single list for each dimension.
-    mag_0_comb = cl_ac_mag_0 + cl_rj_mag_0
-    col_0_comb = cl_ac_col_0 + cl_rj_col_0
-    col_1_comb = cl_ac_col_1 + cl_rj_col_1
+    mag_0_comb = cl_ac_mag_0 + cl_rj_mag_0[:Nh]
+    col_0_comb = cl_ac_col_0 + cl_rj_col_0[:Nh]
+    col_1_comb = cl_ac_col_1 + cl_rj_col_1[:Nh]
 
     stars_f_rjct, stars_f_acpt = field_region_stars(
         clp['field_regions_c'], clp['field_regions_rjct_c'], pd['colors'])
