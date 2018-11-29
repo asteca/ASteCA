@@ -53,9 +53,8 @@ def pl_phot_err(
 
     pd_Plx, pd_PMRA, pd_RV = id_kinem[0], id_kinem[2], id_kinem[6]
     # Define first row depending on whether kinematic data was defined.
-    gs0 = 0
-    if np.array([_ == 'n' for _ in (pd_Plx, pd_PMRA, pd_RV)]).all():
-        gs0 = 1
+    k_flag = np.array([_ == 'n' for _ in (pd_Plx, pd_PMRA, pd_RV)]).all()
+    gs0 = 1 if k_flag else 0
 
     # Define parameters for main magnitude error plot.
     y_ax, x_ax = prep_plots.ax_names(filters[0], filters[0], 'mag')
@@ -190,156 +189,12 @@ def pl_cl_fl_regions(
         len(cl_region_rjct_c) + N_flrg), fontsize=9)
 
 
-def pl_fl_diag(
-    gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
-        field_regions_c, stars_f_rjct, stars_f_acpt, f_sz_pt, err_bar):
-    '''
-    Field stars CMD/CCD diagram.
-    '''
-    ax = plt.subplot(gs[2:4, 2:4])
-    ax.set_title(r"$N_{{accpt}}={}$ , $N_{{rjct}}={}$ (fields compl)".format(
-        len(stars_f_acpt[0]), len(stars_f_rjct[0])), fontsize=9)
-    # Set plot limits
-    plt.xlim(x_min_cmd, x_max_cmd)
-    plt.ylim(y_min_cmd, y_max_cmd)
-    # Set axis labels
-    plt.xlabel('$' + x_ax + '$', fontsize=12)
-    plt.ylabel('$' + y_ax + '$', fontsize=12)
-    # Set minor ticks
-    ax.minorticks_on()
-    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
-            zorder=1)
-    # Plot accepted/rejected stars within the field regions defined.
-    if stars_f_rjct[0]:
-        plt.scatter(stars_f_rjct[0], stars_f_rjct[1], marker='x',
-                    c='teal', s=15, lw=.5, zorder=2)
-    if stars_f_acpt[0]:
-        plt.scatter(stars_f_acpt[0], stars_f_acpt[1], marker='o', c='b',
-                    s=f_sz_pt, lw=0.3, edgecolor='k', zorder=3)
-        n_field = int(len(stars_f_acpt[0]) / float(len(field_regions_c)))
-        # Add text box.
-        text = r'$n_{{field}} \approx {}$'.format(n_field)
-        ob = offsetbox.AnchoredText(text, pad=0.2, loc=1, prop=dict(size=12))
-        ob.patch.set(alpha=0.7)
-        ax.add_artist(ob)
-    # If list is not empty, plot error bars at several values.
-    x_val, mag_y, xy_err = err_bar
-    if x_val:
-        plt.errorbar(
-            x_val, mag_y, yerr=xy_err[0], xerr=xy_err[1], fmt='k.', lw=0.8,
-            ms=0., zorder=4)
-
-
-def pl_cl_diag(
-    gs, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
-        cl_region_rjct_c, cl_region_c, n_memb, cl_sz_pt, err_bar):
-    '''
-    Cluster's stars diagram (stars inside cluster's radius)
-    '''
-    ax = plt.subplot(gs[2:4, 4:6])
-    ax.set_title(
-        r"$N_{{accpt}}={}$ , $N_{{rjct}}={}$"
-        r" ($r \leq r_{{cl}}$ compl)".format(
-            len(cl_region_c), len(cl_region_rjct_c)), fontsize=9)
-    # Set plot limits
-    plt.xlim(x_min_cmd, x_max_cmd)
-    plt.ylim(y_min_cmd, y_max_cmd)
-    # Set axis labels
-    plt.xlabel('$' + x_ax + '$', fontsize=12)
-    plt.ylabel('$' + y_ax + '$', fontsize=12)
-    # Set minor ticks
-    ax.minorticks_on()
-    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
-            zorder=1)
-    # Add text box.
-    text = r'$n_{{memb}} \approx {}$'.format(n_memb)
-    ob = offsetbox.AnchoredText(text, pad=0.2, loc=1, prop=dict(size=12))
-    ob.patch.set(alpha=0.7)
-    ax.add_artist(ob)
-    # Plot stars in CMD.
-    if len(cl_region_rjct_c) > 0:
-        # Only attempt to plot if any star is stored in the list.
-        plt.scatter(
-            list(zip(*list(zip(*cl_region_rjct_c))[5]))[0],
-            list(zip(*list(zip(*cl_region_rjct_c))[3]))[0],
-            marker='x', c='teal', s=12, lw=.5, zorder=2)
-    plt.scatter(
-        list(zip(*list(zip(*cl_region_c))[5]))[0],
-        list(zip(*list(zip(*cl_region_c))[3]))[0],
-        marker='o', c='r', s=cl_sz_pt, lw=0.3, edgecolor='k', zorder=3)
-    # If list is not empty, plot error bars at several values.
-    x_val, mag_y, xy_err = err_bar
-    if x_val:
-        plt.errorbar(
-            x_val, mag_y, yerr=xy_err[0], xerr=xy_err[1], fmt='k.', lw=0.8,
-            ms=0., zorder=4)
-
-
-def pl_hess_cmd(
-    gs, x_ax, y_ax, stars_f_acpt, cl_region_c, x_max_cmd, x_min_cmd,
-        y_min_cmd, y_max_cmd):
-    '''
-    Hess diagram for CMD of field vs cluster region..
-    '''
-    if stars_f_acpt[0]:
-        ax = plt.subplot(gs[4:6, 4:6])
-        ax.set_title("Cluster - Field (normalized)", fontsize=9)
-        plt.xlabel('$' + x_ax + '$', fontsize=12)
-        plt.ylabel('$' + y_ax + '$', fontsize=12)
-
-        cl_col = list(zip(*list(zip(*cl_region_c))[5]))[0]
-        cl_mag = list(zip(*list(zip(*cl_region_c))[3]))[0]
-
-        # This bandwidth seems to produce nice results.
-        bw = .2
-
-        Nb = 100
-        xx, yy = np.mgrid[x_min_cmd:x_max_cmd:complex(Nb),
-                          y_max_cmd:y_min_cmd:complex(Nb)]
-        positions = np.vstack([xx.ravel(), yy.ravel()])
-
-        # Cluster data
-        values1 = np.vstack([cl_col, cl_mag])
-        kernel1 = gaussian_kde(values1, bw_method=bw)
-        f1 = np.reshape(kernel1(positions).T, xx.shape)
-
-        # Field regions data
-        values2 = np.vstack([stars_f_acpt[0], stars_f_acpt[1]])
-        kernel2 = gaussian_kde(values2, bw_method=bw)
-        f2 = np.reshape(kernel2(positions).T, xx.shape)
-
-        # Cluster - field regions
-        diff = f1 - f2
-        # Clip negative values.
-        diff = np.clip(diff, 1e-9, np.inf)
-
-        # Area of the 2D cell.
-        cell = ((x_max_cmd - x_min_cmd) * (y_min_cmd - y_max_cmd)) / Nb**2
-        # Integral of the cluster-field KDE. This value strongly depends on
-        # the selected 'bw' value, so it is not really a stable indicator of
-        # field contamination in the cluster region.
-        integ = np.sum(diff * cell)
-        # Add text box.
-        text = r'$\int \Delta KDE_{{[cl-fr]}} \approx {:.2f}$'.format(integ)
-        ob = offsetbox.AnchoredText(text, pad=0.2, loc=1, prop=dict(size=9))
-        ob.patch.set(alpha=0.7)
-        ax.add_artist(ob)
-
-        ax.contourf(xx, yy, diff, cmap='Blues')
-        ax.contour(xx, yy, diff, colors='k', linewidths=.5)
-        # ax.clabel(CS, inline=1, fontsize=10)
-
-        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
-                zorder=3)
-        plt.gca().invert_yaxis()
-
-
 def pl_lum_func(gs, y_ax, flag_no_fl_regs, lum_func):
     '''
     LF of stars in cluster region and outside.
     '''
     x_cl, y_cl, x_fl, y_fl, x_all, y_all = lum_func
-    ax = plt.subplot(gs[4:6, 0:2])
+    ax = plt.subplot(gs[2:4, 2:4])
     ax.set_title("LF after error removal (compl)", fontsize=9)
     ax.minorticks_on()
     # Only draw units on axis (ie: 1, 2, 3)
@@ -384,7 +239,7 @@ def pl_data_rm_perc(
         combined_compl):
     """
     """
-    ax = plt.subplot(gs[4:6, 2:4])
+    ax = plt.subplot(gs[2:4, 4:6])
     ax.set_title("Percentage of stars kept after each process", fontsize=9)
     ax.minorticks_on()
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
@@ -431,7 +286,217 @@ def pl_data_rm_perc(
     plt.ylim(min(.9, min(perc_vals_min)) - .05, 1.05)
 
 
-def pl_ad_test(gs, flag_ad_test, ad_cl, ad_fr, ad_k_comb):
+def flCMD(
+    ax, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
+        N_fr, x_fr_rject, y_fr_rject, x_fr_accpt, y_fr_accpt, f_sz_pt,
+        err_bar):
+    '''
+    Field stars CMD/CCD diagram.
+    '''
+    # Set plot limits
+    plt.xlim(x_min_cmd, x_max_cmd)
+    plt.ylim(y_min_cmd, y_max_cmd)
+    # Set axis labels
+    plt.xlabel('$' + x_ax + '$', fontsize=12)
+    plt.ylabel('$' + y_ax + '$', fontsize=12)
+    # Set minor ticks
+    ax.minorticks_on()
+    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
+            zorder=1)
+    # Plot accepted/rejected stars within the field regions defined.
+    if x_fr_rject:
+        plt.scatter(x_fr_rject, y_fr_rject, marker='x',
+                    c='teal', s=15, lw=.5, zorder=2)
+    if x_fr_accpt:
+        plt.scatter(x_fr_accpt, y_fr_accpt, marker='o', c='b',
+                    s=f_sz_pt, lw=0.3, edgecolor='k', zorder=3)
+        n_field = int(len(x_fr_accpt) / float(N_fr))
+        # Add text box.
+        text = r'$n_{{field}} \approx {}$'.format(n_field)
+        ob = offsetbox.AnchoredText(text, pad=0.2, loc=1, prop=dict(size=12))
+        ob.patch.set(alpha=0.7)
+        ax.add_artist(ob)
+    # If list is not empty, plot error bars at several values.
+    x_val, mag_y, xy_err = err_bar
+    if x_val:
+        plt.errorbar(
+            x_val, mag_y, yerr=xy_err[0], xerr=xy_err[1], fmt='k.', lw=0.8,
+            ms=0., zorder=4)
+
+
+def pl_fl_diag(
+    gs, x_ax0, y_ax, x_min_cmd0, x_max_cmd0, y_min_cmd0, y_max_cmd0, x_ax1,
+        x_min_cmd1, x_max_cmd1, y_min_cmd1, y_max_cmd1, field_regions_c,
+        stars_f_rjct, stars_f_acpt, f_sz_pt, err_bar_fl0, err_bar_fl1):
+    '''
+    Field stars CMD/CCD diagram.
+    '''
+    ax = plt.subplot(gs[4:6, 4:6])
+
+    N_fr = len(field_regions_c)
+    x_fr_rject, y_fr_rject = stars_f_rjct[1], stars_f_rjct[0]
+    x_fr_accpt, y_fr_accpt = stars_f_acpt[1], stars_f_acpt[0]
+
+    ax.set_title(r"$N_{{accpt}}={}$ , $N_{{rjct}}={}$ (fields compl)".format(
+        len(x_fr_accpt), len(x_fr_rject)), fontsize=9)
+
+    flCMD(
+        ax, x_min_cmd0, x_max_cmd0, y_min_cmd0, y_max_cmd0, x_ax0, y_ax,
+        N_fr, x_fr_rject, y_fr_rject, x_fr_accpt, y_fr_accpt, f_sz_pt,
+        err_bar_fl0)
+
+    if x_ax1 != '':
+        ax = plt.subplot(gs[6:8, 4:6])
+        x_fr_rject, x_fr_accpt = stars_f_rjct[2], stars_f_acpt[2]
+        flCMD(
+            ax, x_min_cmd1, x_max_cmd1, y_min_cmd1, y_max_cmd1, x_ax1, y_ax,
+            N_fr, x_fr_rject, y_fr_rject, x_fr_accpt, y_fr_accpt, f_sz_pt,
+            err_bar_fl1)
+
+
+def clCMD(
+    ax, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
+        xr, yr, xa, ya, n_memb, cl_sz_pt, err_bar):
+    # Set plot limits
+    plt.xlim(x_min_cmd, x_max_cmd)
+    plt.ylim(y_min_cmd, y_max_cmd)
+    # Set axis labels
+    plt.xlabel('$' + x_ax + '$', fontsize=12)
+    plt.ylabel('$' + y_ax + '$', fontsize=12)
+    # Set minor ticks
+    ax.minorticks_on()
+    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
+            zorder=1)
+    # Add text box.
+    text = r'$n_{{memb}} \approx {}$'.format(n_memb)
+    ob = offsetbox.AnchoredText(text, pad=0.2, loc=1, prop=dict(size=12))
+    ob.patch.set(alpha=0.7)
+    ax.add_artist(ob)
+    # Plot stars in CMD.
+    if yr:
+        # Only attempt to plot if any star is stored in the list.
+        plt.scatter(xr, yr, marker='x', c='teal', s=12, lw=.5, zorder=2)
+    plt.scatter(
+        xa, ya, marker='o', c='r', s=cl_sz_pt, lw=0.3, edgecolor='k', zorder=3)
+    # If list is not empty, plot error bars at several values.
+    x_val, mag_y, xy_err = err_bar
+    if x_val:
+        plt.errorbar(
+            x_val, mag_y, yerr=xy_err[0], xerr=xy_err[1], fmt='k.', lw=0.8,
+            ms=0., zorder=4)
+
+
+def pl_cl_diag(
+    gs, x_ax0, y_ax, x_min_cmd0, x_max_cmd0, y_min_cmd0, y_max_cmd0, x_ax1,
+        x_min_cmd1, x_max_cmd1, y_min_cmd1, y_max_cmd1, err_bar_cl0,
+        err_bar_cl1, cl_region_rjct_c, cl_region_c, n_memb, cl_sz_pt):
+    '''
+    Cluster's stars diagram (stars inside cluster's radius)
+    '''
+    ax = plt.subplot(gs[4:6, 0:2])
+    ax.set_title(
+        r"$N_{{accpt}}={}$ , $N_{{rjct}}={}$"
+        r" ($r \leq r_{{cl}}$ compl)".format(
+            len(cl_region_c), len(cl_region_rjct_c)), fontsize=9)
+    xr, yr = [], []
+    if len(cl_region_rjct_c) > 0:
+        xr = list(zip(*list(zip(*cl_region_rjct_c))[5]))[0]
+        yr = list(zip(*list(zip(*cl_region_rjct_c))[3]))[0]
+    xa = list(zip(*list(zip(*cl_region_c))[5]))[0]
+    ya = list(zip(*list(zip(*cl_region_c))[3]))[0]
+    clCMD(
+        ax, x_min_cmd0, x_max_cmd0, y_min_cmd0, y_max_cmd0, x_ax0, y_ax,
+        xr, yr, xa, ya, n_memb, cl_sz_pt, err_bar_cl0)
+
+    if x_ax1 != '':
+        ax = plt.subplot(gs[6:8, 0:2])
+        xr = []
+        if len(cl_region_rjct_c) > 0:
+            xr = list(zip(*list(zip(*cl_region_rjct_c))[5]))[1]
+        xa = list(zip(*list(zip(*cl_region_c))[5]))[1]
+        clCMD(
+            ax, x_min_cmd1, x_max_cmd1, y_min_cmd1, y_max_cmd1, x_ax1, y_ax,
+            xr, yr, xa, ya, n_memb, cl_sz_pt, err_bar_cl1)
+
+
+def hessKDE(
+    ax, bw, Nb, x_ax, y_ax, x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd,
+        cl_col, cl_mag, fr_col, fr_mag):
+
+    ax.set_title("Cluster - Field (normalized)", fontsize=9)
+    plt.xlabel('$' + x_ax + '$', fontsize=12)
+    plt.ylabel('$' + y_ax + '$', fontsize=12)
+
+    xx, yy = np.mgrid[x_min_cmd:x_max_cmd:complex(Nb),
+                      y_max_cmd:y_min_cmd:complex(Nb)]
+    positions = np.vstack([xx.ravel(), yy.ravel()])
+
+    # Cluster data
+    values1 = np.vstack([cl_col, cl_mag])
+    kernel1 = gaussian_kde(values1, bw_method=bw)
+    f1 = np.reshape(kernel1(positions).T, xx.shape)
+
+    # Field regions data
+    values2 = np.vstack([fr_col, fr_mag])
+    kernel2 = gaussian_kde(values2, bw_method=bw)
+    f2 = np.reshape(kernel2(positions).T, xx.shape)
+
+    # Cluster - field regions
+    diff = f1 - f2
+    # Clip negative values.
+    diff = np.clip(diff, 1e-9, np.inf)
+
+    # Area of the 2D cell.
+    cell = ((x_max_cmd - x_min_cmd) * (y_min_cmd - y_max_cmd)) / Nb**2
+    # Integral of the cluster-field KDE. This value strongly depends on
+    # the selected 'bw' value, so it is not really a stable indicator of
+    # field contamination in the cluster region.
+    integ = np.sum(diff * cell)
+    # Add text box.
+    text = r'$\int \Delta KDE_{{[cl-fr]}} \approx {:.2f}$'.format(integ)
+    ob = offsetbox.AnchoredText(text, pad=0.2, loc=1, prop=dict(size=9))
+    ob.patch.set(alpha=0.7)
+    ax.add_artist(ob)
+
+    ax.contourf(xx, yy, diff, cmap='Blues')
+    ax.contour(xx, yy, diff, colors='k', linewidths=.5)
+    # ax.clabel(CS, inline=1, fontsize=10)
+
+    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
+            zorder=3)
+    plt.gca().invert_yaxis()
+
+
+def pl_hess_cmd(
+    gs, x_ax0, x_ax1, y_ax, x_max_cmd0, x_min_cmd0, y_min_cmd0, y_max_cmd0,
+        x_max_cmd1, x_min_cmd1, y_min_cmd1, y_max_cmd1, stars_f_acpt,
+        cl_region_c):
+    '''
+    Hess diagram for CMD of field vs cluster region.
+    '''
+    if stars_f_acpt[0]:
+        # This bandwidth seems to produce nice results.
+        bw, Nb = .2, 100
+
+        ax = plt.subplot(gs[4:6, 2:4])
+        cl_col = list(zip(*list(zip(*cl_region_c))[5]))[0]
+        cl_mag = list(zip(*list(zip(*cl_region_c))[3]))[0]
+        fr_col, fr_mag = stars_f_acpt[1], stars_f_acpt[0]
+
+        hessKDE(
+            ax, bw, Nb, x_ax0, y_ax, x_max_cmd0, x_min_cmd0, y_min_cmd0,
+            y_max_cmd0, cl_col, cl_mag, fr_col, fr_mag)
+
+        if stars_f_acpt[2]:
+            cl_col = list(zip(*list(zip(*cl_region_c))[5]))[1]
+            fr_col = stars_f_acpt[2]
+            ax = plt.subplot(gs[6:8, 2:4])
+            hessKDE(
+                ax, bw, Nb, x_ax1, y_ax, x_max_cmd1, x_min_cmd1, y_min_cmd1,
+                y_max_cmd1, cl_col, cl_mag, fr_col, fr_mag)
+
+
+def pl_ad_test(gs, b, flag_ad_test, ad_cl, ad_fr, ad_k_comb):
     """
     """
     if flag_ad_test:
@@ -462,10 +527,10 @@ def pl_ad_test(gs, flag_ad_test, ad_cl, ad_fr, ad_k_comb):
             ax.set_xscale('log')
             ax.legend(fontsize='small')
 
-        ax = plt.subplot(gs[6:7, 0:2])
+        ax = plt.subplot(gs[6 + b:7 + b, 0:2])
         adPlot(ax, ad_cl[0], ad_fr[0], 'phot')
         s = 'all' if ad_k_comb else 'plx+pm'
-        ax = plt.subplot(gs[7:8, 0:2])
+        ax = plt.subplot(gs[7 + b:8 + b, 0:2])
         adPlot(ax, ad_cl[1], ad_fr[1], s)
 
 
@@ -503,21 +568,21 @@ def pl_p_vals(
     plt.gca().set_ylim(bottom=0)
 
 
-def pl_ad_pvals_phot(gs, flag_ad_test, ad_cl_fr_p):
+def pl_ad_pvals_phot(gs, b, flag_ad_test, ad_cl_fr_p):
     if flag_ad_test:
         Ncl, Nf, prob_cl, kde_cl, kde_fr, x_cl, x_fr, x_over, y_over =\
             ad_cl_fr_p
-        ax = plt.subplot(gs[6:8, 2:4])
+        ax = plt.subplot(gs[6 + b:8 + b, 2:4])
         pl_p_vals(
             ax, Ncl, Nf, prob_cl, kde_cl, kde_fr, x_cl, x_fr, x_over, y_over,
             'phot')
 
 
-def pl_ad_pvals_pk(gs, flag_ad_test, ad_cl_fr_pk, ad_k_comb):
+def pl_ad_pvals_pk(gs, b, flag_ad_test, ad_cl_fr_pk, ad_k_comb):
     if flag_ad_test:
         Ncl, Nf, prob_cl, kde_cl, kde_fr, x_cl, x_fr, x_over, y_over =\
             ad_cl_fr_pk
-        ax = plt.subplot(gs[6:8, 4:6])
+        ax = plt.subplot(gs[6 + b:8 + b, 4:6])
         s = 'all' if ad_k_comb else 'plx+pm'
         pl_p_vals(
             ax, Ncl, Nf, prob_cl, kde_cl, kde_fr, x_cl, x_fr, x_over, y_over,
