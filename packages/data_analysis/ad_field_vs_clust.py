@@ -149,7 +149,7 @@ def dataExtract(region, kin_flag, idx):
                 data_all = np.array(k_err)
             else:
                 # No valid Plx and/or PM data found
-                data_all = np.array([np.nan])
+                data_all = np.array([[np.nan] * 2, [np.nan] * 2])
 
     return data_all
 
