@@ -322,6 +322,10 @@ CF    ptemcee
 
 # ptemcee parameters.
 #
+#   - init_mode:
+#   - popsize:
+#   - maxiter:
+#
 #   - ntemps: [int], Number of parallel temperatures.
 #   - nwalkers: [int], Number of walkers/chains used.
 #   - nburn: [int], Number of burn-in samples to discard.
@@ -330,9 +334,13 @@ CF    ptemcee
 #   - adapt: ...
 #   - priors: unif / gauss, uniform or Gaussian prior distributions for all the
 #     fitted parameters.
+#   - hmax: [float] maximum number of hours the method should run.
 #
-#    ntemps    nwalkers   nburn    nsteps     Tmax   adapt    priors
-PT       10         100     100      2500       inf     y      unif
+#     init_mode   popsize   maxiter
+PT0      random         5        10
+#
+#     ntemps    nwalkers   nburn    nsteps     Tmax   adapt    priors   hmax
+PT1       10         100     100      2500       inf     y      unif      10
 
 # Genetic Algorithm parameters.
 #

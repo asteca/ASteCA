@@ -53,8 +53,9 @@ def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning,
          mut_prob, N_el, N_ei, N_es, cmd_systs, filters, colors, theor_tracks,
          # nwalkers_emc, nsteps_emc, N_burn_emc, nburn_emc, emcee_a,
          # priors_emc, nwalkers_abc, nsteps_abc, nburn_abc, priors_abc,
+         init_mode_ptm, popsize_ptm, maxiter_ptm,
          ntemps, nwalkers_ptm, nsteps_ptm, nburn_ptm, pt_adapt, tmax_ptm,
-         priors_ptm, **kwargs):
+         priors_ptm, hmax_ptm, **kwargs):
     '''
     Perform a best fitting process to find the cluster's fundamental
     parameters.
@@ -184,9 +185,10 @@ def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning,
             isoch_fit_params = ptemcee_algor.main(
                 lkl_method, clp['em_float'], err_lst, completeness,
                 max_mag_syn, fundam_params, obs_clust, theor_tracks, R_V,
-                ext_coefs, st_dist_mass, N_fc, cmpl_rnd, err_rnd, ntemps,
+                ext_coefs, st_dist_mass, N_fc, cmpl_rnd, err_rnd,
+                init_mode_ptm, popsize_ptm, maxiter_ptm, ntemps,
                 nwalkers_ptm, nsteps_ptm, nburn_ptm, pt_adapt, tmax_ptm,
-                priors_ptm)
+                priors_ptm, hmax_ptm)
             # Assign uncertainties.
             isoch_fit_errors, _ = params_errors(
                 best_fit_algor, isoch_fit_params)

@@ -168,11 +168,15 @@ def main(npd, pd, isoch_fit_params, fit_params_r, fit_errors_r, **kwargs):
             mp_best_fit1_mcmc.plot(9, *args)
 
         # Generate output file.
-        fig.tight_layout()
-        plt.savefig(join(
-            npd['output_subdir'], str(npd['clust_name']) + '_D1_' +
-            pd['best_fit_algor'] + '.' + pd['plot_frmt']),
-            dpi=pd['plot_dpi'], bbox_inches='tight')
+        try:
+            fig.tight_layout()
+            plt.savefig(join(
+                npd['output_subdir'], str(npd['clust_name']) + '_D1_' +
+                pd['best_fit_algor'] + '.' + pd['plot_frmt']),
+                dpi=pd['plot_dpi'], bbox_inches='tight')
+        except Exception as exc:
+            print(exc)
+            print("\n\n  ERROR: could not plot 'D1' block.\n")
         # Close to release memory.
         plt.clf()
         plt.close("all")

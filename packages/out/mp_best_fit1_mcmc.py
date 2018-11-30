@@ -6,64 +6,181 @@ from matplotlib.patches import Ellipse
 # from matplotlib.pyplot import cm
 from .prep_plots import CIEllipse
 
+from matplotlib.colors import LinearSegmentedColormap, colorConverter
+from scipy.ndimage import gaussian_filter
 
-def contourPlot(ax, H, X, Y, _2_params):
+
+def hist2d(
+    ax, x, y, bins=20, range=None, weights=None, levels=None, smooth=None,
+        color=None, quiet=True, plot_datapoints=True, plot_density=True,
+        plot_contours=True, no_fill_contours=False, fill_contours=False,
+        contour_kwargs=None, contourf_kwargs=None, data_kwargs=None, **kwargs):
     """
-    Plot 2D contours for 1 and 2 sigma levels.
+    Plot a 2-D histogram of samples.
 
-    Source: https://github.com/dfm/corner.py by Daniel Foreman-Mackey
+    Source: https://corner.readthedocs.io
+
+    Copyright (c) 2013-2016 Daniel Foreman-Mackey
+
+    Parameters
+    ----------
+    x : array_like[nsamples,]
+       The samples.
+    y : array_like[nsamples,]
+       The samples.
+    quiet : bool
+        If true, suppress warnings for small datasets.
+    levels : array_like
+        The contour levels to draw.
+    ax : matplotlib.Axes
+        A axes instance on which to add the 2-D histogram.
+    plot_datapoints : bool
+        Draw the individual data points.
+    plot_density : bool
+        Draw the density colormap.
+    plot_contours : bool
+        Draw the contours.
+    no_fill_contours : bool
+        Add no filling at all to the contours (unlike setting
+        ``fill_contours=False``, which still adds a white fill at the densest
+        points).
+    fill_contours : bool
+        Fill the contours.
+    contour_kwargs : dict
+        Any additional keyword arguments to pass to the `contour` method.
+    contourf_kwargs : dict
+        Any additional keyword arguments to pass to the `contourf` method.
+    data_kwargs : dict
+        Any additional keyword arguments to pass to the `plot` method when
+        adding the individual data points.
     """
-    levels = 1.0 - np.exp(-0.5 * np.arange(1., 2.1, 1.) ** 2)
+    # Set the default range based on the data range if not provided.
+    if range is None:
+        range = [[x.min(), x.max()], [y.min(), y.max()]]
 
-    # Compute the density levels.
-    Hflat = H.flatten()
-    inds = np.argsort(Hflat)[::-1]
-    Hflat = Hflat[inds]
-    sm = np.cumsum(Hflat)
-    sm /= sm[-1]
-    V = np.empty(len(levels))
-    for i, v0 in enumerate(levels):
-        try:
-            V[i] = Hflat[sm <= v0][-1]
-        except Exception:
-            V[i] = Hflat[0]
-    V.sort()
-    m = np.diff(V) == 0
-    if np.any(m):
-        raise ValueError(
-            "  WARNING: could not produce sigma contours for {}".format(
-                _2_params))
-    while np.any(m):
-        V[np.where(m)[0][0]] *= 1.0 - 1e-4
+    # Set up the default plotting arguments.
+    if color is None:
+        color = "k"
+
+    # Choose the default "sigma" contour levels.
+    if levels is None:
+        levels = 1.0 - np.exp(-0.5 * np.arange(0.5, 2.1, 0.5) ** 2)
+
+    # This is the color map for the density plot, over-plotted to indicate the
+    # density of the points near the center.
+    density_cmap = LinearSegmentedColormap.from_list(
+        "density_cmap", [color, (1, 1, 1, 0)])
+
+    # This color map is used to hide the points at the high density areas.
+    white_cmap = LinearSegmentedColormap.from_list(
+        "white_cmap", [(1, 1, 1), (1, 1, 1)], N=2)
+
+    # This "color map" is the list of colors for the contour levels if the
+    # contours are filled.
+    rgba_color = colorConverter.to_rgba(color)
+    contour_cmap = [list(rgba_color) for l in levels] + [rgba_color]
+    for i, l in enumerate(levels):
+        contour_cmap[i][-1] *= float(i) / (len(levels) + 1)
+
+    # We'll make the 2D histogram to directly estimate the density.
+    try:
+        H, X, Y = np.histogram2d(x.flatten(), y.flatten(), bins=bins,
+                                 range=list(map(np.sort, range)),
+                                 weights=weights)
+    except ValueError:
+        print("  It looks like at least one of your sample columns "
+              "  have no dynamic range. You could try using the "
+              "  'range' argument.")
+        return
+
+    if smooth is not None:
+        H = gaussian_filter(H, smooth)
+
+    if plot_contours or plot_density:
+        # Compute the density levels.
+        Hflat = H.flatten()
+        inds = np.argsort(Hflat)[::-1]
+        Hflat = Hflat[inds]
+        sm = np.cumsum(Hflat)
+        sm /= sm[-1]
+        V = np.empty(len(levels))
+        for i, v0 in enumerate(levels):
+            try:
+                V[i] = Hflat[sm <= v0][-1]
+            except:
+                V[i] = Hflat[0]
+        V.sort()
         m = np.diff(V) == 0
-    V.sort()
+        if np.any(m) and not quiet:
+            print("  Too few points to create valid contours")
+        while np.any(m):
+            V[np.where(m)[0][0]] *= 1.0 - 1e-4
+            m = np.diff(V) == 0
+        V.sort()
 
-    # Compute the bin centers.
-    X1, Y1 = 0.5 * (X[1:] + X[:-1]), 0.5 * (Y[1:] + Y[:-1])
-    # Extend the array for the sake of the contours at the plot edges.
-    H2 = H.min() + np.zeros((H.shape[0] + 4, H.shape[1] + 4))
-    H2[2:-2, 2:-2] = H
-    H2[2:-2, 1] = H[:, 0]
-    H2[2:-2, -2] = H[:, -1]
-    H2[1, 2:-2] = H[0]
-    H2[-2, 2:-2] = H[-1]
-    H2[1, 1] = H[0, 0]
-    H2[1, -2] = H[0, -1]
-    H2[-2, 1] = H[-1, 0]
-    H2[-2, -2] = H[-1, -1]
-    X2 = np.concatenate([
-        X1[0] + np.array([-2, -1]) * np.diff(X1[:2]),
-        X1,
-        X1[-1] + np.array([1, 2]) * np.diff(X1[-2:]),
-    ])
-    Y2 = np.concatenate([
-        Y1[0] + np.array([-2, -1]) * np.diff(Y1[:2]),
-        Y1,
-        Y1[-1] + np.array([1, 2]) * np.diff(Y1[-2:]),
-    ])
-    CS = ax.contour(
-        X2, Y2, H2.T, V, linewidths=1.2, zorder=3, colors=['g', 'orange'])
-    # return list(reversed(CS.collections))
+        # Compute the bin centers.
+        X1, Y1 = 0.5 * (X[1:] + X[:-1]), 0.5 * (Y[1:] + Y[:-1])
+
+        # Extend the array for the sake of the contours at the plot edges.
+        H2 = H.min() + np.zeros((H.shape[0] + 4, H.shape[1] + 4))
+        H2[2:-2, 2:-2] = H
+        H2[2:-2, 1] = H[:, 0]
+        H2[2:-2, -2] = H[:, -1]
+        H2[1, 2:-2] = H[0]
+        H2[-2, 2:-2] = H[-1]
+        H2[1, 1] = H[0, 0]
+        H2[1, -2] = H[0, -1]
+        H2[-2, 1] = H[-1, 0]
+        H2[-2, -2] = H[-1, -1]
+        X2 = np.concatenate([
+            X1[0] + np.array([-2, -1]) * np.diff(X1[:2]),
+            X1,
+            X1[-1] + np.array([1, 2]) * np.diff(X1[-2:]),
+        ])
+        Y2 = np.concatenate([
+            Y1[0] + np.array([-2, -1]) * np.diff(Y1[:2]),
+            Y1,
+            Y1[-1] + np.array([1, 2]) * np.diff(Y1[-2:]),
+        ])
+
+    if plot_datapoints:
+        if data_kwargs is None:
+            data_kwargs = dict()
+        data_kwargs["color"] = data_kwargs.get("color", color)
+        data_kwargs["ms"] = data_kwargs.get("ms", 2.0)
+        data_kwargs["mec"] = data_kwargs.get("mec", "none")
+        data_kwargs["alpha"] = data_kwargs.get("alpha", 0.1)
+        ax.plot(x, y, "o", zorder=-1, rasterized=True, **data_kwargs)
+
+    # Plot the base fill to hide the densest data points.
+    if (plot_contours or plot_density) and not no_fill_contours:
+        ax.contourf(X2, Y2, H2.T, [V.min(), H.max()],
+                    cmap=white_cmap, antialiased=False)
+
+    if plot_contours and fill_contours:
+        if contourf_kwargs is None:
+            contourf_kwargs = dict()
+        contourf_kwargs["colors"] = contourf_kwargs.get("colors", contour_cmap)
+        contourf_kwargs["antialiased"] = contourf_kwargs.get("antialiased",
+                                                             False)
+        ax.contourf(
+            X2, Y2, H2.T, np.concatenate([[0], V, [H.max() * (1 + 1e-4)]]),
+            **contourf_kwargs)
+
+    # Plot the density map. This can't be plotted at the same time as the
+    # contour fills.
+    elif plot_density:
+        ax.pcolor(X, Y, H.max() - H.T, cmap=density_cmap)
+
+    # Plot the contour edge colors.
+    if plot_contours:
+        if contour_kwargs is None:
+            contour_kwargs = dict()
+        contour_kwargs["colors"] = contour_kwargs.get("colors", color)
+        ax.contour(X2, Y2, H2.T, V, **contour_kwargs)
+
+    # ax.set_xlim(range[0])
+    # ax.set_ylim(range[1])
 
 
 def pl_2_param_dens(_2_params, gs, min_max_p2, varIdxs, mcmc_trace):
@@ -116,15 +233,7 @@ def pl_2_param_dens(_2_params, gs, min_max_p2, varIdxs, mcmc_trace):
         ax.set_title(r"$\rho={:.2f}$".format(
             np.corrcoef([mcmc_trace[mx_model], mcmc_trace[my_model]])[0][1]))
 
-        # Bin edges to use.
-        edg_x = np.histogram_bin_edges(mcmc_trace[mx_model], bins='auto')
-        edg_y = np.histogram_bin_edges(mcmc_trace[my_model], bins='auto')
-        if len(edg_x) < 10 or len(edg_x) > 20 or len(edg_y) < 10 or\
-                len(edg_y) > 20:
-            edg_x, edg_y = 20, 20
-        h2d, xbins, ybins = plt.hist2d(
-            mcmc_trace[mx_model], mcmc_trace[my_model], bins=[edg_x, edg_y],
-            cmap=plt.get_cmap('Greys'), range=None, zorder=2)[:-1]
+        hist2d(ax, mcmc_trace[mx_model], mcmc_trace[my_model])
 
         mean_pos, width, height, theta = CIEllipse(np.array([
             mcmc_trace[mx_model], mcmc_trace[my_model]]).T)
@@ -136,29 +245,10 @@ def pl_2_param_dens(_2_params, gs, min_max_p2, varIdxs, mcmc_trace):
                           edgecolor='r', fc='None', lw=.7, zorder=4)
         ax.add_patch(ellipse)
 
-        try:
-            contourPlot(ax, h2d, xbins, ybins, _2_params)
-            # if not sigmalbls[0].get_paths():
-            #     # print("  WARNING: could not produce 1 sigma contour "
-            #     #       "for {}".format(_2_params))
-            #     plt.legend(
-            #         [sigmalbls[1], plt.plot([], ls="-", color='r')[0]],
-            #         [r'$2\sigma$', r'$95\%\,CI$'], fontsize='small')
-            # else:
-            #     plt.legend(
-            #         sigmalbls + [plt.plot([], ls="-", color='r')[0]],
-            #         [r'$1\sigma$', r'$2\sigma$', r'$95\%\,CI$'],
-            #         fontsize='small')
-        except ValueError as err:
-            print(err)
-        plt.legend([plt.plot([], ls="-", color='r')[0]], [r'$95\%\,CI$'],
-                   fontsize='small')
-
+    ax.grid(which='major', color='w', linestyle='-', lw=1)
     xp_min, xp_max, yp_min, yp_max = min_max_p2
     ax.set_xlim([xp_min, xp_max])
     ax.set_ylim([yp_min, yp_max])
-    ax.set_aspect('auto')
-    ax.set_facecolor('#eeeefa')
 
 
 def pl_param_pf(

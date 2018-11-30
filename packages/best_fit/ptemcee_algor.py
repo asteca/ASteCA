@@ -16,8 +16,9 @@ from .ptemcee import util
 def main(
     lkl_method, e_max, err_lst, completeness, max_mag_syn,
     fundam_params, obs_clust, theor_tracks, R_V,
-    ext_coefs, st_dist_mass, N_fc, cmpl_rnd, err_rnd, ntemps, nwalkers_ptm,
-        nsteps_ptm, nburn_ptm, pt_adapt, tmax_ptm, priors_ptm):
+    ext_coefs, st_dist_mass, N_fc, cmpl_rnd, err_rnd, init_mode_ptm,
+    popsize_ptm, maxiter_ptm, ntemps, nwalkers_ptm, nsteps_ptm, nburn_ptm,
+        pt_adapt, tmax_ptm, priors_ptm, hmax_ptm):
     """
     """
 
@@ -34,24 +35,20 @@ def main(
     else:
         Tmax = float(tmax_ptm)
 
-    # TODO add these parameters to the input params file
-    h_max = 20.
-    init_mode, popsize, maxiter = 'diffevol', 5, 10
-
     ptsampler = sampler.Sampler(
         nwalkers_ptm, ndim, loglkl, logp,
         loglargs=[fundam_params, synthcl_args, lkl_method, obs_clust, ranges,
                   varIdxs, priors_ptm], Tmax=Tmax, ntemps=ntemps)
 
     # Start timing.
-    max_secs = h_max * 60. * 60.
+    max_secs = hmax_ptm * 60. * 60.
     available_secs = max(30, max_secs)
     elapsed, start_t = 0., t.time()
 
     # Initial population.
     p0 = initPop(
         ranges, varIdxs, lkl_method, obs_clust, fundam_params, synthcl_args,
-        ntemps, nwalkers_ptm, init_mode, popsize, maxiter)
+        ntemps, nwalkers_ptm, init_mode_ptm, popsize_ptm, maxiter_ptm)
 
     print("     Burn-in stage")
     N_steps_check = max(1, int(nburn_ptm * .1))
@@ -116,31 +113,34 @@ def main(
         if (i + 1) % N_steps_conv:
             continue
 
-        # Compute the autocorrelation time so far. Using tol=0 means that
-        # we'll always get an estimate even if it isn't trustworthy.
-        tau0 = autocorr.integrated_time(
-            ptsampler.chain[0, :, :i + 1, :].transpose(1, 0, 2), tol=0)
-        tau_emcee[tau_index] = np.mean(tau0)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            # Compute the autocorrelation time so far. Using tol=0 means that
+            # we'll always get an estimate even if it isn't trustworthy.
+            tau0 = autocorr.integrated_time(
+                ptsampler.chain[0, :, :i + 1, :].transpose(1, 0, 2), tol=0)
+            tau_emcee[tau_index] = np.mean(tau0)
 
-        # ptsampler.chain.shape: (ntemps, nwalkers, nsteps, ndim)
-        x = np.mean(ptsampler.chain[0, :, :i + 1, :], axis=0)
-        tau = util.autocorr_integrated_time(x)
+            # ptsampler.chain.shape: (ntemps, nwalkers, nsteps, ndim)
+            x = np.mean(ptsampler.chain[0, :, :i + 1, :], axis=0)
+            tau = util.autocorr_integrated_time(x)
 
-        tswaps.append(ptsampler.tswap_acceptance_fraction)
-        betas.append(ptsampler.betas)
-        afs.append(np.mean(ptsampler.acceptance_fraction, axis=1))
-        # acors = np.zeros(ntemps)
-        # for temp in range(ntemps):
-        #     x = np.mean(ptsampler.chain[temp, :, :i + 1, :], axis=0)
-        #     acors[temp] = np.mean(util.autocorr_integrated_time(x))
-        # actimes.append(acors)
+            tswaps.append(ptsampler.tswap_acceptance_fraction)
+            betas.append(ptsampler.betas)
+            afs.append(np.mean(ptsampler.acceptance_fraction, axis=1))
+            # acors = np.zeros(ntemps)
+            # for temp in range(ntemps):
+            #     x = np.mean(ptsampler.chain[temp, :, :i + 1, :], axis=0)
+            #     acors[temp] = np.mean(util.autocorr_integrated_time(x))
+            # actimes.append(acors)
 
-        autocorr_vals[tau_index] = np.mean(tau)
-        tau_index += 1
+            autocorr_vals[tau_index] = np.mean(tau)
+            tau_index += 1
 
-        # Check convergence
-        converged = np.all(tau * N_conv < (i + 1))
-        converged &= np.all(np.abs(old_tau - tau) / tau < tol_conv)
+            # Check convergence
+            converged = np.all(tau * N_conv < (i + 1))
+            converged &= np.all(np.abs(old_tau - tau) / tau < tol_conv)
+
         if converged:
             print("  Convergence achieved (runs={})".format(i + 1))
             break
@@ -200,62 +200,62 @@ def main(
     # Shape: (ndim, runs * nwalkers)
     mcmc_trace = chains_nruns.reshape(-1, ndim).T
 
-    # TODO delete
-    # ptsampler.chain.shape: (ntemps, nwalkers, nsteps, ndim)
-    import matplotlib.pyplot as plt
-    import matplotlib.gridspec as gridspec
-    fig = plt.figure(figsize=(20, 20))
-    gs = gridspec.GridSpec(10, 10)
-    n = N_steps_conv * np.arange(1, tau_index + 1)
+    # # TODO delete
+    # # ptsampler.chain.shape: (ntemps, nwalkers, nsteps, ndim)
+    # import matplotlib.pyplot as plt
+    # import matplotlib.gridspec as gridspec
+    # fig = plt.figure(figsize=(20, 20))
+    # gs = gridspec.GridSpec(10, 10)
+    # n = N_steps_conv * np.arange(1, tau_index + 1)
 
-    ax = plt.subplot(gs[0:2, 0:6])
-    ax.set_title(
-        "ntemps: {}, Tmax: {}, adapt: {}".format(ntemps, Tmax, pt_adapt))
-    for tsw in np.asarray(tswaps).T:
-        plt.plot(n, tsw)
-    plt.ylabel("Tswap AF")
+    # ax = plt.subplot(gs[0:2, 0:6])
+    # ax.set_title(
+    #     "ntemps: {}, Tmax: {}, adapt: {}".format(ntemps, Tmax, pt_adapt))
+    # for tsw in np.asarray(tswaps).T:
+    #     plt.plot(n, tsw)
+    # plt.ylabel("Tswap AF")
 
-    ax = plt.subplot(gs[2:4, 0:6])
-    ax.set_title("Cold chain MAF: {:.5f}".format(
-        np.mean(ptsampler.acceptance_fraction[0])))
-    for af in np.asarray(afs).T:
-        plt.plot(n, af)
-    plt.ylabel("Mean AFs")
+    # ax = plt.subplot(gs[2:4, 0:6])
+    # ax.set_title("Cold chain MAF: {:.5f}".format(
+    #     np.mean(ptsampler.acceptance_fraction[0])))
+    # for af in np.asarray(afs).T:
+    #     plt.plot(n, af)
+    # plt.ylabel("Mean AFs")
 
-    ax = plt.subplot(gs[4:6, 0:6])
-    ax.set_title("Beta_min: {:.5f}".format(ptsampler.betas[-1]))
-    for bet in np.asarray(betas).T:
-        plt.plot(n, bet)
-    plt.ylabel("Betas")
+    # ax = plt.subplot(gs[4:6, 0:6])
+    # ax.set_title("Beta_min: {:.5f}".format(ptsampler.betas[-1]))
+    # for bet in np.asarray(betas).T:
+    #     plt.plot(n, bet)
+    # plt.ylabel("Betas")
+
+    # # plt.subplot(gs[6:8, 0:6])
+    # # for act in np.asarray(actimes).T:
+    # #     plt.plot(n, act)
+    # # plt.ylabel("ACTs")
+
+    # # plt.subplot(gs[8:10, 0:6])
+    # # y_min, y_max = np.inf, -np.inf
+    # # for i in range(nwalkers_ptm):
+    # #     chain = chains_nruns[:, i, 2]
+    # #     plt.plot(range(runs), chain)
+    # #     y_min, y_max = min(min(chain[-int(runs * .5):]), y_min),\
+    # #         max(max(chain[-int(runs * .5):]), y_max)
+    # # plt.ylim(y_min, y_max)
 
     # plt.subplot(gs[6:8, 0:6])
-    # for act in np.asarray(actimes).T:
-    #     plt.plot(n, act)
-    # plt.ylabel("ACTs")
+    # plt.plot(n, tau_emcee[:tau_index], ls=':', label="emcee")
+    # plt.plot(n, tau_autocorr, label="ptemcee")
+    # plt.plot(n, n / 100.0, "--k")
+    # plt.ylabel("ACT, cold chain")
+    # plt.legend()
 
-    # plt.subplot(gs[8:10, 0:6])
-    # y_min, y_max = np.inf, -np.inf
-    # for i in range(nwalkers_ptm):
-    #     chain = chains_nruns[:, i, 2]
-    #     plt.plot(range(runs), chain)
-    #     y_min, y_max = min(min(chain[-int(runs * .5):]), y_min),\
-    #         max(max(chain[-int(runs * .5):]), y_max)
-    # plt.ylim(y_min, y_max)
-
-    plt.subplot(gs[6:8, 0:6])
-    plt.plot(n, tau_emcee[:tau_index], ls=':', label="emcee")
-    plt.plot(n, tau_autocorr, label="ptemcee")
-    plt.plot(n, n / 100.0, "--k")
-    plt.ylabel("ACT, cold chain")
-    plt.legend()
-
-    plt.xlabel("steps")
-    fig.tight_layout()
-    plt.savefig("ptemcee_{}b_{}s_{}w_{}t_{}_{}.png".format(
-        nburn_ptm, runs, nwalkers_ptm, ntemps, Tmax, pt_adapt), dpi=300,
-        bbox_inches='tight')
-    plt.close()
-    # TODO delete
+    # plt.xlabel("steps")
+    # fig.tight_layout()
+    # plt.savefig("ptemcee_{}b_{}s_{}w_{}t_{}_{}.png".format(
+    #     nburn_ptm, runs, nwalkers_ptm, ntemps, Tmax, pt_adapt), dpi=300,
+    #     bbox_inches='tight')
+    # plt.close()
+    # # TODO delete
 
     # Convergence parameters.
     acorr_t, max_at_c, min_at_c, geweke_z, emcee_acorf, mcmc_ess, minESS,\
@@ -327,7 +327,7 @@ def initPop(
 
     p0 = []
     if init_mode == 'random':
-        print("     Rnd init pop")
+        print("Random initial population")
         for _ in range(ntemps):
             p0.append(random_population(fundam_params, varIdxs, nwalkers_ptm))
 
@@ -353,17 +353,14 @@ def initPop(
                 synth_clust = postfn(model)
                 return dist(synth_clust, obs_clust)
 
-            runs = 1
-            for _ in range(ntemps):
-                walkers_sols = []
-                for _ in range(nwalkers_ptm):
-                    result = DE(
-                        DEdist, ranges, popsize=popsize, maxiter=maxiter)
-                    walkers_sols.append(result.x)
-                    update_progress.updt(ntemps * nwalkers_ptm, runs)
-                    runs += 1
-                p0.append(walkers_sols)
+            walkers_sols = []
+            for _ in range(nwalkers_ptm):
+                result = DE(
+                    DEdist, ranges, popsize=popsize, maxiter=maxiter)
+                walkers_sols.append(result.x)
+                update_progress.updt(nwalkers_ptm, _ + 1)
 
+        p0 = [walkers_sols for _ in range(ntemps)]
         # Remove fixed parameters.
         p0arr = np.array(p0)
         p0 = []

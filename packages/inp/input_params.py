@@ -124,7 +124,11 @@ def main(mypath, pars_f_path):
                     best_fit_algor = str(reader[1])
 
                 # ptemcee algorithm parameters.
-                elif reader[0] == 'PT':
+                elif reader[0] == 'PT0':
+                    init_mode_ptm = reader[1]
+                    popsize_ptm = int(float(reader[2]))
+                    maxiter_ptm = int(float(reader[3]))
+                elif reader[0] == 'PT1':
                     ntemps = int(float(reader[1]))
                     nwalkers_ptm = int(float(reader[2]))
                     nburn_ptm = int(float(reader[3]))
@@ -132,6 +136,7 @@ def main(mypath, pars_f_path):
                     tmax_ptm = reader[5]
                     pt_adapt = True if reader[6] in true_lst else False
                     priors_ptm = reader[7]
+                    hmax_ptm = float(reader[8])
 
                 # TODO not finished yet
                 # # ABC algorithm parameters.
@@ -275,9 +280,11 @@ def main(mypath, pars_f_path):
         'm_sample_flag': m_sample_flag, 'N_IMF_interp': N_IMF_interp,
         'R_V': R_V, 'bin_mr': bin_mr,
         # ptemcee algorithm parameters.
+        'init_mode_ptm': init_mode_ptm, 'popsize_ptm': popsize_ptm,
+        'maxiter_ptm': maxiter_ptm,
         'ntemps': ntemps, 'nwalkers_ptm': nwalkers_ptm, 'nburn_ptm': nburn_ptm,
         'nsteps_ptm': nsteps_ptm, "pt_adapt": pt_adapt, 'tmax_ptm': tmax_ptm,
-        'priors_ptm': priors_ptm,
+        'priors_ptm': priors_ptm, 'hmax_ptm': hmax_ptm,
         # # ABC algorithm parameters.
         # 'nwalkers_abc': nwalkers_abc, 'nburn_abc': nburn_abc,
         # 'nsteps_abc': nsteps_abc, 'priors_abc': priors_abc,
