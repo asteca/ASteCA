@@ -1,6 +1,6 @@
 
 import numpy as np
-from scipy.stats import binned_statistic_dd
+from scipy.stats import binned_statistic_dd, gaussian_kde
 from ..decont_algors.local_cell_clean import bin_edges_f
 
 
@@ -116,5 +116,21 @@ def main(cl_max_mag, lkl_method, bin_method, lkl_weight):
 
         obs_clust = [bin_edges, cl_histo, cl_histo_f, cl_z_idx, cl_histo_f_z,
                      dolphin_cst, bin_weight_f_z]
+
+    elif lkl_method == 'kdeKL':
+
+        vals = np.array(mags_cols_cl[0] + mags_cols_cl[1])
+        # vals.shape = (# of dims, # of data)
+        kernel = gaussian_kde(vals)
+
+        # TODO still terribly slow. Also: is this a likelihood? Is
+        # this a log-likelihood? Can I just plug in whatever I want here?
+        # Being a KDE and thus normalized, does this fit masses? <--!!?
+        Nb = 10
+        pts = np.mgrid[[slice(A.min(), A.max(), complex(Nb)) for A in vals]]
+        kde_pts = np.vstack([_.ravel() for _ in pts])
+        obs_kde = kernel(kde_pts)
+
+        obs_clust = [obs_kde, kde_pts]
 
     return obs_clust

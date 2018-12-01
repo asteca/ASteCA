@@ -224,7 +224,7 @@ def main(mypath, pars_f_path):
                    'sturges', 'knuth', 'blocks', 'blocks_max')
     bin_weights = ('mean', 'median', 'max')
     # Likelihood methods.
-    lkl_methods = ('tolstoy', 'duong', 'dolphin', 'mighell')
+    lkl_methods = ('tolstoy', 'duong', 'dolphin', 'mighell', 'kdeKL')
     # Accepted IMF functions.
     imf_funcs = ('chabrier_2001_exp', 'chabrier_2001_log', 'kroupa_1993',
                  'kroupa_2002')

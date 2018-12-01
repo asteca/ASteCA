@@ -1,6 +1,7 @@
 
 import numpy as np
 from scipy.misc import logsumexp
+from scipy.stats import gaussian_kde, entropy
 
 # ############################################################
 # # Timer function: http://stackoverflow.com/a/21860100/1391441
@@ -17,6 +18,27 @@ from scipy.misc import logsumexp
 #         end = time.clock()
 #         print ('{} elapsed: {}'.format(label, end - start))
 # ############################################################
+
+
+def main(lkl_method, synth_clust, obs_clust):
+    '''
+    Generate synthetic cluster with an isochrone of given values for
+    metallicity and age. Match the synthetic cluster to the observed cluster.
+    '''
+
+    # Obtain the likelihood matching the synthetic and observed clusters.
+    if lkl_method == 'tolstoy':
+        likelihood = tolstoy(synth_clust, obs_clust)
+    elif lkl_method == 'duong':
+        likelihood = duong(synth_clust, obs_clust)
+    elif lkl_method == 'dolphin':
+        likelihood = dolphin(synth_clust, obs_clust)
+    elif lkl_method == 'mighell':
+        likelihood = mighell(synth_clust, obs_clust)
+    elif lkl_method == 'kdeKL':
+        likelihood = kdeKL(synth_clust, obs_clust)
+
+    return likelihood
 
 
 def tolstoy(synth_clust, obs_clust):
@@ -217,20 +239,70 @@ def mighell(synth_clust, obs_clust):
     return mig_chi
 
 
-def main(lkl_method, synth_clust, obs_clust):
-    '''
-    Generate synthetic cluster with an isochrone of given values for
-    metallicity and age. Match the synthetic cluster to the observed cluster.
-    '''
+def kdeKL(synth_clust, obs_clust):
+    """
+    Kullback-Leibler divergence between the N-dimensional KDE of the observed
+    cluster versus the synthetic cluster.
+    """
+    # TODO seems to work, but it is terribly slow.
+    if not synth_clust:
+        kl = 1000.
+    else:
+        obs_kde, kde_pts = obs_clust
 
-    # Obtain the likelihood matching the synthetic and observed clusters.
-    if lkl_method == 'tolstoy':
-        likelihood = tolstoy(synth_clust, obs_clust)
-    elif lkl_method == 'duong':
-        likelihood = duong(synth_clust, obs_clust)
-    elif lkl_method == 'dolphin':
-        likelihood = dolphin(synth_clust, obs_clust)
-    elif lkl_method == 'mighell':
-        likelihood = mighell(synth_clust, obs_clust)
+        try:
+            # synth_clust.shape = (# of dims, # of data)
+            kernel = gaussian_kde(synth_clust[0][0])
+            synth_kde = kernel(kde_pts)
+            # if (synth_kde == 0.).all():
+            #     print('zero')
+            # if np.isnan(synth_kde).all():
+            #     print('nan')
+            # if np.isinf(synth_kde).all():
+            #     print("inf")
+            kl = min(entropy(obs_kde, synth_kde), 1000.)
+            kl = kl if not np.isnan(kl) else 1000.
+        except:
+            kl = 1000.
 
-    return likelihood
+    print(kl)
+    return kl
+
+
+# def entropy(pk, qk=None, base=None):
+#     """Calculate the entropy of a distribution for given probability values.
+#     If only probabilities `pk` are given, the entropy is calculated as
+#     ``S = -sum(pk * log(pk), axis=0)``.
+#     If `qk` is not None, then compute the Kullback-Leibler divergence
+#     ``S = sum(pk * log(pk / qk), axis=0)``.
+#     This routine will normalize `pk` and `qk` if they don't sum to 1.
+#     Parameters
+#     ----------
+#     pk : sequence
+#         Defines the (discrete) distribution. ``pk[i]`` is the (possibly
+#         unnormalized) probability of event ``i``.
+#     qk : sequence, optional
+#         Sequence against which the relative entropy is computed. Should be in
+#         the same format as `pk`.
+#     base : float, optional
+#         The logarithmic base to use, defaults to ``e`` (natural logarithm).
+#     Returns
+#     -------
+#     S : float
+#         The calculated entropy.
+#     """
+#     from scipy.special import rel_entr
+#     # pk = np.asarray(pk)
+#     pk = 1. * pk / np.sum(pk, axis=0)
+#     # if qk is None:
+#     #     vec = entr(pk)
+#     # else:
+#     # qk = np.asarray(qk)
+#     # if len(qk) != len(pk):
+#     #     raise ValueError("qk and pk must have same length.")
+#     qk0 = 1. * qk / np.sum(qk, axis=0)
+#     vec = rel_entr(pk, qk0)
+#     S = np.sum(vec, axis=0)
+#     # if base is not None:
+#     #     S /= log(base)
+#     return S
