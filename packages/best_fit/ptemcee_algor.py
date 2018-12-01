@@ -35,11 +35,6 @@ def main(
     else:
         Tmax = float(tmax_ptm)
 
-    ptsampler = sampler.Sampler(
-        nwalkers_ptm, ndim, loglkl, logp,
-        loglargs=[fundam_params, synthcl_args, lkl_method, obs_clust, ranges,
-                  varIdxs, priors_ptm], Tmax=Tmax, ntemps=ntemps)
-
     # Start timing.
     max_secs = hmax_ptm * 60. * 60.
     available_secs = max(30, max_secs)
@@ -49,6 +44,11 @@ def main(
     p0 = initPop(
         ranges, varIdxs, lkl_method, obs_clust, fundam_params, synthcl_args,
         ntemps, nwalkers_ptm, init_mode_ptm, popsize_ptm, maxiter_ptm)
+
+    ptsampler = sampler.Sampler(
+        nwalkers_ptm, ndim, loglkl, logp,
+        loglargs=[fundam_params, synthcl_args, lkl_method, obs_clust, ranges,
+                  varIdxs, priors_ptm], Tmax=Tmax, ntemps=ntemps)
 
     print("     Burn-in stage")
     N_steps_check = max(1, int(nburn_ptm * .1))
@@ -284,13 +284,13 @@ def main(
 
 
 def loglkl(
-        model, fundam_params, synthcl_args, lkl_method, obs_clust, ranges,
+    model, fundam_params, synthcl_args, lkl_method, obs_clust, ranges,
         varIdxs, priors_ptm):
     """
     """
     rangeFlag = rangeCheck(model, ranges, varIdxs)
 
-    logpost = -10000
+    logpost = -1e9
     if rangeFlag:
         # Generate synthetic cluster.
         synth_clust = synthClust(fundam_params, varIdxs, model, synthcl_args)
@@ -318,8 +318,8 @@ def logp(_):
 
 
 def initPop(
-    ranges, varIdxs, lkl_method, obs_clust, fundam_params, synthcl_args,
-        ntemps, nwalkers_ptm, init_mode, popsize, maxiter):
+    ranges, varIdxs, lkl_method, obs_clust, fundam_params,
+        synthcl_args, ntemps, nwalkers_ptm, init_mode, popsize, maxiter):
     """
     Obtain initial parameter values using either a random distribution, or
     the Differential Evolution algorithm to approximate reasonable solutions.
@@ -338,35 +338,23 @@ def initPop(
             warnings.simplefilter("ignore")
 
             # Estimate initial threshold value using DE.
-            def dist(synth_clust, obs_clust):
-                if synth_clust:
-                    return likelihood.main(lkl_method, synth_clust, obs_clust)
-                return np.inf
-
-            def postfn(model):
-                if rangeCheck(model, ranges, varIdxs):
-                    return synthClust(
-                        fundam_params, varIdxs, model, synthcl_args)
-                return []
-
             def DEdist(model):
-                synth_clust = postfn(model)
-                return dist(synth_clust, obs_clust)
+                synth_clust = synthClust(
+                    fundam_params, varIdxs, model, synthcl_args)
+                if synth_clust:
+                    lkl = likelihood.main(lkl_method, synth_clust, obs_clust)
+                    return lkl
+                return np.inf
 
             walkers_sols = []
             for _ in range(nwalkers_ptm):
                 result = DE(
-                    DEdist, ranges, popsize=popsize, maxiter=maxiter)
+                    DEdist, ranges[varIdxs], popsize=popsize, maxiter=maxiter)
                 walkers_sols.append(result.x)
+                print(result)
                 update_progress.updt(nwalkers_ptm, _ + 1)
 
         p0 = [walkers_sols for _ in range(ntemps)]
-        # Remove fixed parameters.
-        p0arr = np.array(p0)
-        p0 = []
-        for ip in varIdxs:
-            p0.append(p0arr[:, :, ip])
-        p0 = np.array(p0).transpose(1, 2, 0)
 
     return p0
 
