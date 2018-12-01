@@ -351,7 +351,6 @@ def initPop(
                 result = DE(
                     DEdist, ranges[varIdxs], popsize=popsize, maxiter=maxiter)
                 walkers_sols.append(result.x)
-                print(result)
                 update_progress.updt(nwalkers_ptm, _ + 1)
 
         p0 = [walkers_sols for _ in range(ntemps)]

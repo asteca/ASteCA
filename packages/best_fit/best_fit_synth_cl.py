@@ -1,7 +1,8 @@
 
 from ..core_imp import np
 from . import max_mag_cut, obs_clust_prepare, brute_force_algor,\
-    genetic_algorithm, bootstrap, emcee_algor, abcpmc_algor, ptemcee_algor
+    genetic_algorithm, bootstrap, ptemcee_algor
+# emcee_algor, abcpmc_algor, hopp_algor
 from ..synth_clust import extin_coefs
 from ..synth_clust import imf
 
@@ -150,33 +151,33 @@ def main(clp, bf_flag, best_fit_algor, lkl_method, lkl_binning,
             # TODO fix this with #64
             isoch_fit_params['mean_sol'] = mean_boot_sol
 
-        elif best_fit_algor == 'emcee':
+        # elif best_fit_algor == 'emcee':
 
-            print('Using emcee algorithm ({}).'.format(
-                lkl_method + '; ' + lkl_binning if lkl_method == 'dolphin'
-                else lkl_method))
-            isoch_fit_params = emcee_algor.main(
-                lkl_method, clp['em_float'], err_lst, completeness,
-                max_mag_syn, fundam_params, obs_clust, theor_tracks, R_V,
-                ext_coefs, st_dist_mass, N_fc, cmpl_rnd, err_rnd, nwalkers_emc,
-                nsteps_emc, nburn_emc, N_burn_emc, emcee_a, priors_emc)
-            # Assign uncertainties.
-            isoch_fit_errors, _ = params_errors(
-                best_fit_algor, isoch_fit_params)
+        #     print('Using emcee algorithm ({}).'.format(
+        #         lkl_method + '; ' + lkl_binning if lkl_method == 'dolphin'
+        #         else lkl_method))
+        #     isoch_fit_params = emcee_algor.main(
+        #         lkl_method, clp['em_float'], err_lst, completeness,
+        #         max_mag_syn, fundam_params, obs_clust, theor_tracks, R_V,
+        #         ext_coefs, st_dist_mass, N_fc, cmpl_rnd, err_rnd, nwalkers_emc,
+        #         nsteps_emc, nburn_emc, N_burn_emc, emcee_a, priors_emc)
+        #     # Assign uncertainties.
+        #     isoch_fit_errors, _ = params_errors(
+        #         best_fit_algor, isoch_fit_params)
 
-        elif best_fit_algor == 'abc':
+        # elif best_fit_algor == 'abc':
 
-            print('Using abcpmc algorithm ({}).'.format(
-                lkl_method + '; ' + lkl_binning if lkl_method == 'dolphin'
-                else lkl_method))
-            isoch_fit_params = abcpmc_algor.main(
-                lkl_method, clp['em_float'], err_lst, completeness,
-                max_mag_syn, fundam_params, obs_clust, theor_tracks, R_V,
-                ext_coefs, st_dist_mass, N_fc, cmpl_rnd, err_rnd, nwalkers_abc,
-                nsteps_abc, nburn_abc, priors_abc)
-            # Assign uncertainties.
-            isoch_fit_errors, _ = params_errors(
-                best_fit_algor, isoch_fit_params)
+        #     print('Using abcpmc algorithm ({}).'.format(
+        #         lkl_method + '; ' + lkl_binning if lkl_method == 'dolphin'
+        #         else lkl_method))
+        #     isoch_fit_params = abcpmc_algor.main(
+        #         lkl_method, clp['em_float'], err_lst, completeness,
+        #         max_mag_syn, fundam_params, obs_clust, theor_tracks, R_V,
+        #         ext_coefs, st_dist_mass, N_fc, cmpl_rnd, err_rnd, nwalkers_abc,
+        #         nsteps_abc, nburn_abc, priors_abc)
+        #     # Assign uncertainties.
+        #     isoch_fit_errors, _ = params_errors(
+        #         best_fit_algor, isoch_fit_params)
 
         elif best_fit_algor == 'ptemcee':
             print('Using ptemcee algorithm ({}).'.format(
