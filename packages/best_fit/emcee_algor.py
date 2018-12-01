@@ -334,6 +334,7 @@ def closeSol(fundam_params, varIdxs, model):
     Find the closest value in the parameters list for the discrete parameters
     metallicity, age, and mass.
     """
+    # TODO check if this can be made more efficient/succint
     model_proper, j = [], 0
     for i, par in enumerate(fundam_params):
         # If this parameter is one of the 'free' parameters.
