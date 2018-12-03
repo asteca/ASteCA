@@ -26,6 +26,11 @@ def main(lkl_method, synth_clust, obs_clust):
     metallicity and age. Match the synthetic cluster to the observed cluster.
     '''
 
+    # If synthetic cluster is empty, assign a large likelihood value. This
+    # assumes *all* likelihoods here need minimizing.
+    if not synth_clust:
+        return 1.e09
+
     # Obtain the likelihood matching the synthetic and observed clusters.
     if lkl_method == 'tolstoy':
         likelihood = tolstoy(synth_clust, obs_clust)
@@ -66,49 +71,45 @@ def tolstoy(synth_clust, obs_clust):
     \end{equation}
     '''
 
-    # If synthetic cluster is empty, assign large likelihood value.
-    if not synth_clust:
-        tlst_lkl = 1.e09
-    else:
-        # synthetic cluster's photometry and errors.
-        synth_phot, synth_errors = synth_clust[0]
-        # Observed cluster's photometry and membership probabilities.
-        obs_st, N, log_mem_probs = obs_clust
+    # synthetic cluster's photometry and errors.
+    synth_phot, synth_errors = synth_clust[0]
+    # Observed cluster's photometry and membership probabilities.
+    obs_st, N, log_mem_probs = obs_clust
 
-        # Square synthetic photometric errors.
-        synth_errors = np.square(synth_errors)
-        # Array with the proper format for the synthetic cluster.
-        syn_st = np.dstack([np.array(synth_phot).T, synth_errors.T])
+    # Square synthetic photometric errors.
+    synth_errors = np.square(synth_errors)
+    # Array with the proper format for the synthetic cluster.
+    syn_st = np.dstack([np.array(synth_phot).T, synth_errors.T])
 
-        # Photometric difference (observed - synthetic), for all dimensions.
-        phot_dif = obs_st[:, None, :, 0] - syn_st[None, :, :, 0]
-        # Sum of squared photometric errors, for all dimensions. Clip at a
-        # minimum of 0.005 to avoid numeric issues below.
-        sigma_sum = np.clip(
-            obs_st[:, None, :, 1] + syn_st[None, :, :, 1], 0.005, None)
+    # Photometric difference (observed - synthetic), for all dimensions.
+    phot_dif = obs_st[:, None, :, 0] - syn_st[None, :, :, 0]
+    # Sum of squared photometric errors, for all dimensions. Clip at a
+    # minimum of 0.005 to avoid numeric issues below.
+    sigma_sum = np.clip(
+        obs_st[:, None, :, 1] + syn_st[None, :, :, 1], 0.005, None)
 
-        # Sum for all photometric dimensions.
-        Dsum = (np.square(phot_dif) / sigma_sum).sum(axis=-1)
-        # Product of summed squared sigmas.
-        sigma_prod = np.prod(sigma_sum, axis=-1)
+    # Sum for all photometric dimensions.
+    Dsum = (np.square(phot_dif) / sigma_sum).sum(axis=-1)
+    # Product of summed squared sigmas.
+    sigma_prod = np.prod(sigma_sum, axis=-1)
 
-        # The block below can be replaced by this line using 'logsumexp'. It
-        # is marginally faster.
-        sum_N = (logsumexp(-0.5 * Dsum, b=1. / np.sqrt(sigma_prod), axis=1) +
-                 log_mem_probs).sum()
+    # The block below can be replaced by this line using 'logsumexp'. It
+    # is marginally faster.
+    sum_N = (logsumexp(-0.5 * Dsum, b=1. / np.sqrt(sigma_prod), axis=1) +
+             log_mem_probs).sum()
 
-        # # All elements inside synthetic stars summatory.
-        # sum_M_j = np.exp(-0.5 * Dsum) / np.sqrt(sigma_prod)
-        # # Sum for all synthetic stars.
-        # sum_M = np.sum(sum_M_j, axis=-1)
-        # # Multiply by membership probabilities.
-        # sum_M_MP = mem_probs * sum_M
-        # # Replace 0. elements before applying the logarithm below.
-        # sum_M_MP[sum_M_MP == 0.] = 1e-7
-        # sum_N = np.sum(np.log(sum_M_MP))
+    # # All elements inside synthetic stars summatory.
+    # sum_M_j = np.exp(-0.5 * Dsum) / np.sqrt(sigma_prod)
+    # # Sum for all synthetic stars.
+    # sum_M = np.sum(sum_M_j, axis=-1)
+    # # Multiply by membership probabilities.
+    # sum_M_MP = mem_probs * sum_M
+    # # Replace 0. elements before applying the logarithm below.
+    # sum_M_MP[sum_M_MP == 0.] = 1e-7
+    # sum_N = np.sum(np.log(sum_M_MP))
 
-        # Final negative logarithmic likelihood
-        tlst_lkl = N * np.log(len(syn_st)) - sum_N
+    # Final negative logarithmic likelihood
+    tlst_lkl = N * np.log(len(syn_st)) - sum_N
 
     return tlst_lkl
 
@@ -118,41 +119,39 @@ def duong(synth_clust, obs_clust):
     """
     import rpy2.robjects as robjects
     from rpy2.rinterface import RRuntimeError
-    if not synth_clust:
-        duong_pval = 1.e09
-    else:
-        # synthetic cluster's photometry and errors.
-        synth_phot, synth_errors = synth_clust[0]
-        # Observed cluster's photometry and membership probabilities.
-        kde_test, hpi_kfe, m_cl, hpic = obs_clust
 
-        # CMD for synthetic cluster.
-        matrix_f1 = np.ravel(np.column_stack((synth_phot)))
-        rows_f1 = int(len(matrix_f1) / 2)
+    # synthetic cluster's photometry and errors.
+    synth_phot, synth_errors = synth_clust[0]
+    # Observed cluster's photometry and membership probabilities.
+    kde_test, hpi_kfe, m_cl, hpic = obs_clust
 
-        m_f1 = robjects.r.matrix(robjects.FloatVector(matrix_f1),
-                                 nrow=rows_f1, byrow=True)
+    # CMD for synthetic cluster.
+    matrix_f1 = np.ravel(np.column_stack((synth_phot)))
+    rows_f1 = int(len(matrix_f1) / 2)
 
-        try:
-            # TODO this is the second line that takes the most time.
-            # hpif1 = hpi_kfe(x=m_f1, binned=True)
+    m_f1 = robjects.r.matrix(robjects.FloatVector(matrix_f1),
+                             nrow=rows_f1, byrow=True)
 
-            # Call 'ks' function to obtain p_value.
-            # TODO: this line takes forever
-            # TODO: this statistic seems to select lower masses
+    try:
+        # TODO this is the second line that takes the most time.
+        # hpif1 = hpi_kfe(x=m_f1, binned=True)
 
-            # Should I:
-            # 1. explicit different bandwidths with H1,H2?
-            # res_cl = kde_test(x1=m_cl, x2=m_f1, H1=hpic, H2=hpif1)
-            # 2. use the same bandwidth defined for the cluster (hpic)?
-            # res_cl = kde_test(x1=m_cl, x2=m_f1, H1=hpic, H2=hpic)
-            # 3. not explicit any bandwidth?
-            res_cl = kde_test(x1=m_cl, x2=m_f1)
-            p_val_cl = res_cl.rx2('pvalue')
-            # Store cluster vs field p-value.
-            duong_pval = 1. - p_val_cl[0]
-        except RRuntimeError:
-            duong_pval = 1.
+        # Call 'ks' function to obtain p_value.
+        # TODO: this line takes forever
+        # TODO: this statistic seems to select lower masses
+
+        # Should I:
+        # 1. explicit different bandwidths with H1,H2?
+        # res_cl = kde_test(x1=m_cl, x2=m_f1, H1=hpic, H2=hpif1)
+        # 2. use the same bandwidth defined for the cluster (hpic)?
+        # res_cl = kde_test(x1=m_cl, x2=m_f1, H1=hpic, H2=hpic)
+        # 3. not explicit any bandwidth?
+        res_cl = kde_test(x1=m_cl, x2=m_f1)
+        p_val_cl = res_cl.rx2('pvalue')
+        # Store cluster vs field p-value.
+        duong_pval = 1. - p_val_cl[0]
+    except RRuntimeError:
+        duong_pval = 1.
 
     return duong_pval
 
@@ -160,48 +159,55 @@ def duong(synth_clust, obs_clust):
 def dolphin(synth_clust, obs_clust):
     '''
     Poisson likelihood ratio as defined in Dolphin (2002).
+
+    -2\ln PLR = 2 \sum_i m_i - n_i + n_i \ln \frac{n_i}{m_i}
+              = 2 (M- N) + 2\sum_i n_i\ln n_i - 2\sum_i n_i\ln m_i
+
+    If the binning is made too small then  n_i, m_i --> 1 (one star per bin)
+    and thus:
+
+    -2\ln PLR --> 2*(M-N)
+
+    In this case the likelihood will try to minimize M.
+
     '''
 
-    # If synthetic cluster is empty, assign large likelihood value.
-    if not synth_clust:
-        dolph_lkl = 1.e09
-    else:
-        synth_phot = synth_clust[0][0]
-        # Observed cluster's histogram and bin edges for each dimension.
-        bin_edges = obs_clust[0]
-        # Indexes of n_i=0 elements in flattened observed cluster array,
-        # and the array with no n_i=0 elements.
-        cl_z_idx, cl_histo_f_z, dolphin_cst, bin_weight_f_z = obs_clust[-4:]
+    synth_phot = synth_clust[0][0]
+    # Observed cluster's histogram and bin edges for each dimension.
+    bin_edges = obs_clust[0]
+    # Indexes of n_i=0 elements in flattened observed cluster array,
+    # and the array with no n_i=0 elements.
+    cl_z_idx, cl_histo_f_z, dolphin_cst, bin_weight_f_z = obs_clust[-4:]
 
-        # Histogram of the synthetic cluster, using the bin edges calculated
-        # with the observed cluster.
-        syn_histo = np.histogramdd(synth_phot, bins=bin_edges)[0]
-        # Flatten N-dimensional histogram.
-        syn_histo_f = np.array(syn_histo).ravel()
-        # Remove all bins where n_i = 0 (no observed stars).
-        syn_histo_f_z = syn_histo_f[cl_z_idx]
+    # Histogram of the synthetic cluster, using the bin edges calculated
+    # with the observed cluster.
+    syn_histo = np.histogramdd(synth_phot, bins=bin_edges)[0]
+    # Flatten N-dimensional histogram.
+    syn_histo_f = np.array(syn_histo).ravel()
+    # Remove all bins where n_i = 0 (no observed stars).
+    syn_histo_f_z = syn_histo_f[cl_z_idx]
 
-        # Assign small value to the m_i = 0 elements in 'syn_histo_f_z'.
-        # The value equals 1 star divided among all empty bins.
-        syn_histo_f_z[syn_histo_f_z == 0] =\
-            1. / max(np.count_nonzero(syn_histo_f_z == 0), 1.)
+    # Assign small value to the m_i = 0 elements in 'syn_histo_f_z'.
+    # The value equals 1 star divided among all empty bins.
+    syn_histo_f_z[syn_histo_f_z == 0] =\
+        1. / max(np.count_nonzero(syn_histo_f_z == 0), 1.)
 
-        # M = synth_phot[0].size
-        # Cash's C statistic: 2 * sum(m_i - n_i * ln(m_i))
-        # weighted: 2 * sum(w_i * (m_i - n_i * ln(m_i)))
-        C_cash = 2. * np.sum(
-            bin_weight_f_z * (
-                syn_histo_f_z - cl_histo_f_z * np.log(syn_histo_f_z)))
+    # M = synth_phot[0].size
+    # Cash's C statistic: 2 * sum(m_i - n_i * ln(m_i))
+    # weighted: 2 * sum(w_i * (m_i - n_i * ln(m_i)))
+    C_cash = 2. * np.sum(
+        bin_weight_f_z * (
+            syn_histo_f_z - cl_histo_f_z * np.log(syn_histo_f_z)))
 
-        # Obtain (weighted) inverse logarithmic 'Poisson likelihood ratio'.
-        dolph_lkl = C_cash + dolphin_cst
+    # Obtain (weighted) inverse logarithmic 'Poisson likelihood ratio'.
+    dolph_lkl = C_cash + dolphin_cst
 
-        # print(dolph_lkl)
-        # from scipy.stats import chisquare
-        # from scipy.stats import chi2
-        # chsqr = chisquare(cl_histo_f_z, f_exp=syn_histo_f_z, ddof=7)
-        # print(chsqr)
-        # print(chi2.sf(chsqr[0], len(cl_histo_f_z) - 1 - 7))
+    # print(dolph_lkl)
+    # from scipy.stats import chisquare
+    # from scipy.stats import chi2
+    # chsqr = chisquare(cl_histo_f_z, f_exp=syn_histo_f_z, ddof=7)
+    # print(chsqr)
+    # print(chi2.sf(chsqr[0], len(cl_histo_f_z) - 1 - 7))
 
     return dolph_lkl
 
@@ -210,31 +216,29 @@ def mighell(synth_clust, obs_clust):
     '''
     Chi gamma squared distribution defined in Mighell (1999)
     '''
-    if not synth_clust:
-        mig_chi = 1.e09
-    else:
-        # Observed cluster's histogram and bin edges for each dimension.
-        bin_edges = obs_clust[0]
-        # Observed cluster's flattened histogram and indexes of n_i=0 elements.
-        cl_histo_f, cl_z_idx = obs_clust[2:4]
 
-        # Synthetic cluster.
-        synth_phot = synth_clust[0][0]
-        # Histogram of the synthetic cluster, using the bin edges calculated
-        # with the observed cluster.
-        syn_histo = np.histogramdd(synth_phot, bins=bin_edges)[0]
+    # Observed cluster's histogram and bin edges for each dimension.
+    bin_edges = obs_clust[0]
+    # Observed cluster's flattened histogram and indexes of n_i=0 elements.
+    cl_histo_f, cl_z_idx = obs_clust[2:4]
 
-        # Flatten N-dimensional histogram.
-        syn_histo_f = np.array(syn_histo).ravel()
-        # Indexes of bins that are empty in both arrays.
-        z = cl_z_idx[0] | (syn_histo_f != 0)
-        # Remove those bins.
-        cl_histo_f_z, syn_histo_f_z = cl_histo_f[z], syn_histo_f[z]
+    # Synthetic cluster.
+    synth_phot = synth_clust[0][0]
+    # Histogram of the synthetic cluster, using the bin edges calculated
+    # with the observed cluster.
+    syn_histo = np.histogramdd(synth_phot, bins=bin_edges)[0]
 
-        # Final chi.
-        mig_chi = np.sum(np.square(
-            cl_histo_f_z + np.clip(cl_histo_f_z, 0, 1) - syn_histo_f_z) /
-            (cl_histo_f_z + 1.))
+    # Flatten N-dimensional histogram.
+    syn_histo_f = np.array(syn_histo).ravel()
+    # Indexes of bins that are empty in both arrays.
+    z = cl_z_idx[0] | (syn_histo_f != 0)
+    # Remove those bins.
+    cl_histo_f_z, syn_histo_f_z = cl_histo_f[z], syn_histo_f[z]
+
+    # Final chi.
+    mig_chi = np.sum(np.square(
+        cl_histo_f_z + np.clip(cl_histo_f_z, 0, 1) - syn_histo_f_z) /
+        (cl_histo_f_z + 1.))
 
     return mig_chi
 
@@ -245,25 +249,22 @@ def kdeKL(synth_clust, obs_clust):
     cluster versus the synthetic cluster.
     """
     # TODO seems to work, but it is terribly slow.
-    if not synth_clust:
-        kl = 1000.
-    else:
-        obs_kde, kde_pts = obs_clust
+    obs_kde, kde_pts = obs_clust
 
-        try:
-            # synth_clust.shape = (# of dims, # of data)
-            kernel = gaussian_kde(synth_clust[0][0])
-            synth_kde = kernel(kde_pts)
-            # if (synth_kde == 0.).all():
-            #     print('zero')
-            # if np.isnan(synth_kde).all():
-            #     print('nan')
-            # if np.isinf(synth_kde).all():
-            #     print("inf")
-            kl = min(entropy(obs_kde, synth_kde), 1000.)
-            kl = kl if not np.isnan(kl) else 1000.
-        except:
-            kl = 1000.
+    try:
+        # synth_clust.shape = (# of dims, # of data)
+        kernel = gaussian_kde(synth_clust[0][0])
+        synth_kde = kernel(kde_pts)
+        # if (synth_kde == 0.).all():
+        #     print('zero')
+        # if np.isnan(synth_kde).all():
+        #     print('nan')
+        # if np.isinf(synth_kde).all():
+        #     print("inf")
+        kl = min(entropy(obs_kde, synth_kde), 1000.)
+        kl = kl if not np.isnan(kl) else 1000.
+    except:
+        kl = 1e09
 
     print(kl)
     return kl
