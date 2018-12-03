@@ -122,8 +122,7 @@ def main(
             [gs, plx_flag, plx_clrg, plx_x_kde, kde_pl, plx_flrg,
              flag_no_fl_regs_i],
             # plx_chart
-            [gs, plx_flag, x_name, y_name, coord, cl_reg_fit, plx_x_kde,
-             kde_pl],
+            [gs, plx_flag, x_name, y_name, coord, cl_reg_fit, plx_Bys],
             # plx_vs_mag
             [gs, y_min_cmd, y_max_cmd, y_ax, plx_flag, mmag_clp,
              mp_clp, plx_clp, e_plx_clp, plx_Bys, plx_wa],

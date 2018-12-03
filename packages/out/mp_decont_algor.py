@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import matplotlib.offsetbox as offsetbox
 from matplotlib.colors import Normalize
 from matplotlib.patches import Ellipse
+from matplotlib.colors import ListedColormap
 import numpy as np
 
 
@@ -297,9 +298,7 @@ def plx_vs_mag(
         plt.gca().invert_yaxis()
 
 
-def plx_chart(
-    gs, plx_flag, x_name, y_name, coord, cl_reg_fit, plx_x_kde,
-        kde_pl):
+def plx_chart(gs, plx_flag, x_name, y_name, coord, cl_reg_fit, plx_Bys):
     '''
     Finding chart of cluster region with colors assigned according to the
     probabilities obtained and sizes according to parallaxes.
@@ -327,11 +326,9 @@ def plx_chart(
         msk = (~np.isnan(x)) & (~np.isnan(y)) & (~np.isnan(mp)) &\
             (~np.isnan(plx))
         x, y, mp, plx = x[msk], y[msk], mp[msk], plx[msk]
-        # Clip parallax values.
-        np.clip(plx, a_min=0., a_max=10., out=plx)
 
-        # Maximum KDE parallax value.
-        p_max_mas = plx_x_kde[np.argmax(kde_pl)]
+        # Bayesian parallax value.
+        p_max_mas = 1. / plx_Bys[1]
         # Distance to max value. Stars closer to the max value are larger.
         plx_d = 2. + 1. / (abs(plx - p_max_mas) + .1) ** 2.3
 
@@ -339,12 +336,20 @@ def plx_chart(
         plx_i = plx_d.argsort()
         x, y, mp, plx_d = x[plx_i], y[plx_i], mp[plx_i], plx_d[plx_i]
 
-        # Color map, higher prob stars look redder.
-        cm = plt.cm.get_cmap('viridis')  # RdYlBu_r
+        # Color map
+        cm = plt.cm.get_cmap('viridis')
+        # Get the colormap colors for my data
+        my_cmap = cm(plt.Normalize(mp.min(), mp.max())(mp))
+        # Set alpha
+        alphas = (plx_d - plx_d.min()) / (plx_d.max() - plx_d.min())
+        my_cmap[:, -1] = np.clip(alphas, a_min=.5, a_max=1.)
+        # New colormap
+        alpha_cmap = ListedColormap(my_cmap)
+
         # Plot stars selected to be used in the best fit process.
         plt.scatter(
             x, y, marker='o', c=mp, s=plx_d, edgecolors='black',
-            cmap=cm, lw=0.35, zorder=4)
+            cmap=alpha_cmap, lw=0.35, zorder=4)
 
 
 def pms_vpd(
