@@ -245,10 +245,19 @@ def pl_2_param_dens(_2_params, gs, min_max_p2, varIdxs, mcmc_trace):
                           edgecolor='r', fc='None', lw=.7, zorder=4)
         ax.add_patch(ellipse)
 
-    ax.grid(which='major', color='w', linestyle='-', lw=1)
     xp_min, xp_max, yp_min, yp_max = min_max_p2
     ax.set_xlim([xp_min, xp_max])
     ax.set_ylim([yp_min, yp_max])
+
+    # Grid won't respect 'zorder':
+    # https://github.com/matplotlib/matplotlib/issues/5045
+    # So we plot the grid behind everything else manually.
+    xlocs, xlabels = plt.xticks()
+    ylocs, ylabels = plt.yticks()
+    for xt in xlocs:
+        plt.axvline(x=xt, linestyle='-', color='w', zorder=-4)
+    for yt in ylocs:
+        plt.axhline(y=yt, linestyle='-', color='w', zorder=-4)
 
 
 def pl_param_pf(
