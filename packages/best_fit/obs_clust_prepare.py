@@ -96,11 +96,11 @@ def main(cl_max_mag, lkl_method, bin_method, lkl_weight):
         cl_histo_f = np.array(cl_histo).ravel()
         bin_weight_f = np.array(bin_w).ravel()
 
-        # Index of bins where n_i = 0 (no observed stars). Used by the
+        # Index of bins where stars were observed. Used by the
         # 'Dolphin' and 'Mighell' likelihoods.
         cl_z_idx = (cl_histo_f != 0)
 
-        # Remove all bins where n_i = 0 (no observed stars). Used by the
+        # Remove all bins where n_i=0 (no observed stars). Used by the
         # 'Dolphin' likelihood.
         cl_histo_f_z = cl_histo_f[cl_z_idx]
         bin_weight_f_z = bin_weight_f[cl_z_idx]

@@ -303,6 +303,13 @@ def loglkl(
         if priors_ptm == 'unif':
             # Flat prior
             logp = 0.
+        elif priors_ptm == 'gauss':
+            # TODO finish this
+            model_mean = np.array([9.5, .4, 13.5])
+            # Gaussian prior.
+            model_std = np.array([.2, .2, .5])
+            logp = np.sum(np.log(1 / model_std) - .5 * np.square(
+                (model[[1, 2, 3]] - model_mean) / model_std))
 
         # The negative likelihood is returned since Dolphin requires a
         # minimization of the PLR, and here we are maximizing
