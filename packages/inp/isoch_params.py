@@ -92,7 +92,7 @@ def interp_isoch_data(data, N):
             a = []
             # For each filter/color/extra parameter in list.
             for fce in age:
-                t, xp = np.linspace(0, 1, N), np.linspace(0, 1, len(fce))
+                t, xp = np.linspace(0., 1., N), np.linspace(0, 1, len(fce))
                 a.append(np.interp(t, xp, fce))
             m.append(a)
         interp_data.append(m)
@@ -171,7 +171,16 @@ def main(met_f_filter, age_values, cmd_evol_tracks, evol_track, bin_mr,
     theor_tracks = [[[] for _ in a[0]] for _ in a]
     for i, mx in enumerate(comb_data):
         for j, ax in enumerate(mx):
-            theor_tracks[i][j] = ax[:, ax[0].argsort(kind='mergesort')]
+            # TODO ordering the data according to magnitude is necessary
+            # if the cut_max_mag() function expects the data to be sorted
+            # this way. This however, prevents us from being able to
+            # interpolate new (z, a) values when the MCMC samples them
+            # because the mass order is not preserved anymore. So, in order
+            # to be able to generate that interpolation of values (which
+            # greatly improves the ptemcee performance), we're back to the
+            # 'old' cut_max_mag() function and no magnitude ordering.
+            # theor_tracks[i][j] = ax[:, ax[0].argsort(kind='mergesort')]
+            theor_tracks[i][j] = ax
 
     # The above sorting destroys the original order of the isochrones. This
     # results in messy plots for the "best fit isochrone" at the end.
