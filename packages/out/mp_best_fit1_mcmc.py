@@ -8,6 +8,7 @@ from .prep_plots import CIEllipse
 
 from matplotlib.colors import LinearSegmentedColormap, colorConverter
 from scipy.ndimage import gaussian_filter
+from scipy.ndimage.filters import uniform_filter1d
 
 
 def hist2d(
@@ -426,16 +427,22 @@ def pl_param_chain(
         plt.plot(range(N_bi), pre_bi_max_at, c='grey', lw=.5, alpha=0.5)
         # Post burn-in.
         post_bi_max_at = post_bi[c_model][max_at_c[c_model]]
-        plt.plot(np.arange(N_bi, N_tot), post_bi_max_at, c='r', lw=.8,
-                 ls='--', alpha=0.5)
-        # Best chain
-        # Burn-in stage
-        pre_bi_min_at = pre_bi[c_model][min_at_c[c_model]]
-        plt.plot(range(N_bi), pre_bi_min_at, c='grey', lw=.5, alpha=0.5)
-        # Post burn-in.
-        post_bi_min_at = post_bi[c_model][min_at_c[c_model]]
-        plt.plot(
-            np.arange(N_bi, N_tot), post_bi_min_at, c='k', lw=.8, alpha=0.5)
+        plt.plot(np.arange(N_bi, N_tot), post_bi_max_at, c='k', lw=.8,
+                 ls='-', alpha=0.5)
+        # # Best chain
+        # # Burn-in stage
+        # pre_bi_min_at = pre_bi[c_model][min_at_c[c_model]]
+        # plt.plot(range(N_bi), pre_bi_min_at, c='grey', lw=.5, alpha=0.5)
+        # # Post burn-in.
+        # post_bi_min_at = post_bi[c_model][min_at_c[c_model]]
+        # plt.plot(
+        #     np.arange(N_bi, N_tot), post_bi_min_at, c='k', lw=.8, alpha=0.5)
+
+        # Running mean.
+        N = post_bi_max_at.size
+        xavr0 = uniform_filter1d(post_bi_max_at, int(.05 * N))
+        xavr = uniform_filter1d(xavr0, int(.05 * N))
+        plt.plot(np.arange(N_bi, N_tot), xavr, c='g')
 
         # Mean
         plt.axhline(
