@@ -7,7 +7,7 @@ def main(clp, pd, mcmc_file_out, **kwargs):
     '''
     Create output data file with the "best" chain of the MCMC sampler (smallest
     acorr time), for each parameter.
-    Store only the latest 1000 steps or less.
+    Store only the latest 10000 steps or less.
     '''
     if pd['best_fit_algor'] in ('emcee', 'ptemcee'):
         varIdxs = clp['isoch_fit_params']['varIdxs']
@@ -20,7 +20,7 @@ def main(clp, pd, mcmc_file_out, **kwargs):
         for i, par in enumerate(params):
             if i in varIdxs:
                 c_model = varIdxs.index(i)
-                bc = chains_nruns[c_model][min_at_c[c_model]][-1000:]
+                bc = chains_nruns[c_model][min_at_c[c_model]][-10000:]
                 tt[par], fmt[par] = bc, '%.5f'
 
         ascii.write(tt, mcmc_file_out, overwrite=True, formats=fmt)
