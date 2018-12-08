@@ -122,6 +122,8 @@ def main(mypath, pars_f_path):
                 # Cluster parameters assignation.
                 elif reader[0] == 'CF':
                     best_fit_algor = str(reader[1])
+                    # TODO extend this param to 'brute force' and 'GA'
+                    hmax = float(reader[2])
 
                 # ptemcee algorithm parameters.
                 elif reader[0] == 'PT0':
@@ -136,7 +138,6 @@ def main(mypath, pars_f_path):
                     tmax_ptm = reader[5]
                     pt_adapt = True if reader[6] in true_lst else False
                     priors_ptm = reader[7]
-                    hmax_ptm = float(reader[8])
 
                 # TODO not finished yet
                 # # ABC algorithm parameters.
@@ -146,14 +147,14 @@ def main(mypath, pars_f_path):
                 #     nsteps_abc = int(float(reader[3]))
                 #     priors_abc = reader[4]
 
-                # # emcee algorithm parameters.
-                # elif reader[0] == 'EM':
-                #     nwalkers_emc = int(float(reader[1]))
-                #     nburn_emc = int(float(reader[2]))
-                #     N_burn_emc = int(float(reader[3]))
-                #     nsteps_emc = int(float(reader[4]))
-                #     emcee_a = float(reader[5])
-                #     priors_emc = reader[6]
+                # emcee algorithm parameters.
+                elif reader[0] == 'EM':
+                    nwalkers_emc = int(float(reader[1]))
+                    nburn_emc = int(float(reader[2]))
+                    N_burn_emc = int(float(reader[3]))
+                    nsteps_emc = int(float(reader[4]))
+                    emcee_a = float(reader[5])
+                    priors_emc = reader[6]
 
                 # Genetic algorithm parameters.
                 elif reader[0] == 'GA':
@@ -271,7 +272,7 @@ def main(mypath, pars_f_path):
         'fld_clean_mode': fld_clean_mode, 'fld_clean_bin': fld_clean_bin,
         'fld_clean_prob': fld_clean_prob,
         # Best fit parameters.
-        'best_fit_algor': best_fit_algor,
+        'best_fit_algor': best_fit_algor, 'hmax': hmax,
         'lkl_method': lkl_method, 'lkl_binning': lkl_binning,
         'lkl_weight': lkl_weight, 'N_bootstrap': N_bootstrap,
         'evol_track': evol_track,
@@ -284,14 +285,14 @@ def main(mypath, pars_f_path):
         'maxiter_ptm': maxiter_ptm,
         'ntemps': ntemps, 'nwalkers_ptm': nwalkers_ptm, 'nburn_ptm': nburn_ptm,
         'nsteps_ptm': nsteps_ptm, "pt_adapt": pt_adapt, 'tmax_ptm': tmax_ptm,
-        'priors_ptm': priors_ptm, 'hmax_ptm': hmax_ptm,
+        'priors_ptm': priors_ptm,
         # # ABC algorithm parameters.
         # 'nwalkers_abc': nwalkers_abc, 'nburn_abc': nburn_abc,
         # 'nsteps_abc': nsteps_abc, 'priors_abc': priors_abc,
-        # # emcee algorithm parameters.
-        # 'nwalkers_emc': nwalkers_emc, 'nburn_emc': nburn_emc,
-        # "N_burn_emc": N_burn_emc, 'nsteps_emc': nsteps_emc,
-        # "emcee_a": emcee_a, 'priors_emc': priors_emc,
+        # emcee algorithm parameters.
+        'nwalkers_emc': nwalkers_emc, 'nburn_emc': nburn_emc,
+        "N_burn_emc": N_burn_emc, 'nsteps_emc': nsteps_emc,
+        "emcee_a": emcee_a, 'priors_emc': priors_emc,
         # Genetic algorithm parameters.
         'N_pop': N_pop, 'N_gen': N_gen, 'fit_diff': fit_diff,
         'cross_prob': cross_prob, 'cross_sel': cross_sel, 'mut_prob': mut_prob,

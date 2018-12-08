@@ -1,23 +1,25 @@
 
 import numpy as np
-import random
 import time as t
 import warnings
 
 from .emcee3rc2 import ensemble
 from .emcee3rc2 import moves
 from .emcee3rc2 import utils
+from .mcmc_common import interpSol
 
 from ..synth_clust import synth_cluster
 from . import likelihood
 from .mcmc_convergence import convergenceVals
+from .mcmc_common import random_population, varPars, closeSol, rangeCheck
 from .. import update_progress
 
 
 def main(
     lkl_method, e_max, err_lst, completeness, max_mag_syn, fundam_params,
         obs_clust, theor_tracks, R_V, ext_coefs, st_dist_mass, N_fc, cmpl_rnd,
-        err_rnd, nwalkers, nsteps, nburn, N_burn, emcee_a, priors, *args):
+        err_rnd, nwalkers, nsteps, nburn, N_burn, emcee_a, priors, hmax,
+        *args):
     """
 
     nwalkers: number of MCMC walkers
@@ -60,8 +62,7 @@ def main(
         mv = [(moves.KDEMove(), 0.5), (moves.DEMove(sigma), 0.5)]
 
     # TODO add this parameter to the input params file
-    max_secs = 22. * 60. * 60.
-    N_conv, tol_conv = 50., 0.01
+    N_conv, tol_conv = 500., 0.01
 
     # Define sampler.
     sampler = ensemble.EnsembleSampler(
@@ -76,6 +77,7 @@ def main(
         ranges, priors, synthcl_args, lkl_method, obs_clust)
 
     elapsed = t.time() - t0
+    max_secs = hmax * 60. * 60.
     available_secs = max(30, max_secs - elapsed)
 
     start_t = t.time()
@@ -165,7 +167,7 @@ def main(
     # Shape: (runs, nwalkers, ndim)
     chains_nruns = sampler.get_chain()[:runs, :, :]
     # Change values for the discrete parameters with the closest valid values.
-    chains_nruns = discreteParams(fundam_params, varIdxs, chains_nruns)
+    # chains_nruns = discreteParams(fundam_params, varIdxs, chains_nruns)
     # Re-shape trace for all parameters (flat chain).
     # Shape: (ndim, runs * nwalkers)
     emcee_trace = chains_nruns.reshape(-1, ndim).T
@@ -196,24 +198,6 @@ def main(
     return isoch_fit_params
 
 
-def varPars(fundam_params):
-    """
-    Check which parameters are fixed and which have a dynamic range. This also
-    dictates the number of free parameters.
-    """
-    ranges = [np.array([min(_), max(_)]) for _ in fundam_params]
-
-    varIdxs = []
-    for i, r in enumerate(ranges):
-        if r[0] != r[1]:
-            varIdxs.append(i)
-
-    # Number of free parameters.
-    ndim = len(varIdxs)
-
-    return varIdxs, ndim, np.array(ranges)
-
-
 def burnIn(
     nwalkers, nburn, N_burn, fundam_params, varIdxs, sampler,
         ranges, priors, synthcl_args, lkl_method, obs_clust):
@@ -222,12 +206,13 @@ def burnIn(
     small ball around the MAP.
     """
     # Random initial models.
-    starting_guesses = random_population(fundam_params, varIdxs, nwalkers)
+    p0 = random_population(fundam_params, varIdxs, nwalkers)
 
-    # starting_guesses = np.asarray(
-    #     isoch_fit_params[-1][0][:nwalkers]).T[varIdxs].T
-
-    # starting_guesses[0] = [0.0535, 9.85, .27, 12.6, 5000., .5]
+    # # Initial population.
+    # ntemps = 1
+    # p0 = initPop(
+    #     ranges, varIdxs, lkl_method, obs_clust, fundam_params, synthcl_args,
+    #     ntemps, nwalkers, init_mode_ptm, popsize_ptm, maxiter_ptm)
 
     N_total, N_done, maf = nburn * N_burn, 0, np.nan
     print("     Burn-in stage")
@@ -236,7 +221,7 @@ def burnIn(
         while True:
             try:
                 for i, result in enumerate(
-                        sampler.sample(starting_guesses, iterations=nburn)):
+                        sampler.sample(p0, iterations=nburn)):
 
                     if (i + 1) % int(nburn * .1):
                         maf = np.mean(sampler.acceptance_fraction)
@@ -253,12 +238,13 @@ def burnIn(
         # Best solution (MAP) in this iteration.
         idx_best = np.argmax(prob)
         # TODO change when emcee3 is properly imported
-        starting_guesses = utils.sample_ball(
+        p0 = utils.sample_ball(
             pos[idx_best], pos.std(axis=0), size=nwalkers)
 
     # Store burn-in chain phase.
     chains_nruns = sampler.get_chain()[-nburn:, :, :]
-    pars_chains_bi = discreteParams(fundam_params, varIdxs, chains_nruns).T
+    # pars_chains_bi = discreteParams(fundam_params, varIdxs, chains_nruns).T
+    pars_chains_bi = chains_nruns.T
 
     # Store MAP solution.
     idx_best = np.argmax(prob)
@@ -271,46 +257,35 @@ def burnIn(
     return pos, map_sol, pars_chains_bi
 
 
-def random_population(fundam_params, varIdxs, n_ran):
-    """
-    Generate a random set of parameter values to use as a random population.
-
-    Pick n_ran initial random solutions from each list storing all the
-    possible parameters values.
-    """
-    p_lst = []
-    for i in varIdxs:
-        p_lst.append([random.choice(fundam_params[i]) for _ in range(n_ran)])
-
-    return np.array(p_lst).T
-
-
 def log_posterior(
     model, priors, varIdxs, ranges, fundam_params, synthcl_args, lkl_method,
         obs_clust):
     """
     Log posterior function.
     """
-    lp, model_proper = log_prior(model, priors, fundam_params, varIdxs, ranges)
+    lp, isochrone, model_proper = log_prior(
+        model, priors, fundam_params, varIdxs, ranges, synthcl_args[0])
     if not np.isfinite(lp):
         return -np.inf
     lkl = log_likelihood(
-        model_proper, fundam_params, synthcl_args, lkl_method, obs_clust)
+        isochrone, model_proper, fundam_params, synthcl_args, lkl_method,
+        obs_clust)
     return lp + lkl
 
 
-def log_prior(model, priors, fundam_params, varIdxs, ranges):
+def log_prior(model, priors, fundam_params, varIdxs, ranges, theor_tracks):
     """
     met, age, ext, dm, mass, bf = model
     """
-    check_ranges = [
-        r[0] <= p <= r[1] for p, r in zip(*[model, ranges[varIdxs]])]
+    rangeFlag = rangeCheck(model, ranges, varIdxs)
 
-    lp, model_proper = -np.inf, []
+    lp, isochrone, model_proper = -np.inf, [], []
     # If some parameter is outside of the given ranges, don't bother obtaining
     # the proper model and just pass -inf
-    if all(check_ranges):
-        model_proper = closeSol(fundam_params, varIdxs, model)
+    if rangeFlag:
+        # model_proper = closeSol(fundam_params, varIdxs, model)
+        isochrone, model_proper = interpSol(
+            theor_tracks, fundam_params, varIdxs, model)
 
         if priors == 'unif':
             # Flat prior
@@ -326,36 +301,12 @@ def log_prior(model, priors, fundam_params, varIdxs, ranges):
             lp = np.sum(-np.square(
                 (np.asarray(model_proper) - model_mean) / model_std))
 
-    return lp, model_proper
-
-
-def closeSol(fundam_params, varIdxs, model):
-    """
-    Find the closest value in the parameters list for the discrete parameters
-    metallicity, age, and mass.
-    """
-    # TODO check if this can be made more efficient/succinct
-    model_proper, j = [], 0
-    for i, par in enumerate(fundam_params):
-        # If this parameter is one of the 'free' parameters.
-        if i in varIdxs:
-            # If it is the parameter metallicity, age or mass.
-            if i in [0, 1, 4]:
-                # Select the closest value in the array of allowed values.
-                model_proper.append(min(
-                    par, key=lambda x: abs(x - model[i - j])))
-
-            else:
-                model_proper.append(model[i - j])
-        else:
-            model_proper.append(par[0])
-            j += 1
-
-    return model_proper
+    return lp, isochrone, model_proper
 
 
 def log_likelihood(
-        model_proper, fundam_params, synthcl_args, lkl_method, obs_clust):
+        isochrone, model_proper, fundam_params, synthcl_args, lkl_method,
+        obs_clust):
     """
     The Dolphin likelihood needs to be *minimized*. Be careful with the priors.
     """
@@ -366,10 +317,10 @@ def log_likelihood(
     theor_tracks, e_max, err_lst, completeness, max_mag_syn, st_dist_mass,\
         R_V, ext_coefs, N_fc, cmpl_rnd, err_rnd = synthcl_args
 
-    # Metallicity and age indexes to identify isochrone.
-    m_i = fundam_params[0].index(model_proper[0])
-    a_i = fundam_params[1].index(model_proper[1])
-    isochrone = theor_tracks[m_i][a_i]
+    # # Metallicity and age indexes to identify isochrone.
+    # m_i = fundam_params[0].index(model_proper[0])
+    # a_i = fundam_params[1].index(model_proper[1])
+    # isochrone = theor_tracks[m_i][a_i]
 
     # Generate synthetic cluster.
     synth_clust = synth_cluster.main(
@@ -383,30 +334,3 @@ def log_likelihood(
     # The negative likelihood is returned since Dolphin requires a minimization
     # of the PLR, and here we are maximizing
     return -lkl
-
-
-def discreteParams(fundam_params, varIdxs, chains_nruns):
-    """
-    Push values in each chain for each discrete parameter to the closest
-    accepted value.
-
-    chains_nruns.shape: (runs, nwalkers, ndim)
-    """
-    params, j = [], 0
-    for i, par in enumerate(fundam_params):
-        p = np.array(par)
-        # If this parameter is one of the 'free' parameters.
-        if i in varIdxs:
-            # If it is the parameter metallicity, age or mass.
-            if i in [0, 1, 4]:
-                pc = chains_nruns.T[j]
-                chains = []
-                for c in pc:
-                    chains.append(
-                        p[abs(c[None, :] - p[:, None]).argmin(axis=0)])
-                params.append(chains)
-            else:
-                params.append(chains_nruns.T[j])
-            j += 1
-
-    return np.array(params).T

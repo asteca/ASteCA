@@ -1,14 +1,12 @@
 
 import numpy as np
-from scipy.optimize import differential_evolution as DE
 import warnings
 import time as t
 from .. import update_progress
-from ..synth_clust import synth_cluster
 from . import likelihood
-from .emcee_algor import varPars, random_population, closeSol, discreteParams
 from .emcee3rc2 import autocorr
 from .mcmc_convergence import convergenceVals
+from .mcmc_common import initPop, varPars, closeSol, synthClust, rangeCheck
 from .ptemcee import sampler
 from .ptemcee import util
 
@@ -18,7 +16,7 @@ def main(
     fundam_params, obs_clust, theor_tracks, R_V,
     ext_coefs, st_dist_mass, N_fc, cmpl_rnd, err_rnd, init_mode_ptm,
     popsize_ptm, maxiter_ptm, ntemps, nwalkers_ptm, nsteps_ptm, nburn_ptm,
-        pt_adapt, tmax_ptm, priors_ptm, hmax_ptm):
+        pt_adapt, tmax_ptm, priors_ptm, hmax):
     """
     """
 
@@ -36,7 +34,7 @@ def main(
         Tmax = float(tmax_ptm)
 
     # Start timing.
-    max_secs = hmax_ptm * 60. * 60.
+    max_secs = hmax * 60. * 60.
     available_secs = max(30, max_secs)
     elapsed, start_t = 0., t.time()
 
@@ -64,7 +62,8 @@ def main(
     # Store burn-in chain phase.
     # Shape: (runs, nwalkers, ndim)
     chains_nruns = ptsampler.chain[0].transpose(1, 0, 2)
-    pars_chains_bi = discreteParams(fundam_params, varIdxs, chains_nruns).T
+    # print(chains_nruns.shape, pars_chains_bi.shape)
+    pars_chains_bi = chains_nruns.T
 
     # Store MAP solution.
     idx_best = np.argmax(lnprob[0])
@@ -195,7 +194,6 @@ def main(
     # ptsampler.chain.shape: (ntemps, nwalkers, nsteps, ndim)
     # chains_nruns.shape: (runs, nwalkers, ndim)
     chains_nruns = ptsampler.chain[0, :, :runs, :].transpose(1, 0, 2)
-    chains_nruns = discreteParams(fundam_params, varIdxs, chains_nruns)
     # Re-shape trace for all parameters (flat chain).
     # Shape: (ndim, runs * nwalkers)
     mcmc_trace = chains_nruns.reshape(-1, ndim).T
@@ -297,8 +295,6 @@ def loglkl(
         # Call likelihood function for this model.
         lkl = likelihood.main(lkl_method, synth_clust, obs_clust)
 
-        logp = 0.
-        # TODO add Gaussian prior
         # Logarithm of the prior.
         if priors_ptm == 'unif':
             # Flat prior
@@ -319,78 +315,14 @@ def loglkl(
 
 
 def logp(_):
-    # Just here as a place holder for 'ptemcee', the prior is inside the
-    # log-likelihood.
+    """
+    Just here as a place holder for 'ptemcee'.
+
+    The prior is moved inside the log-likelihood to save computation time
+    because 'ptemcee' calls both functions and then adds the result. But if
+    the model is outside of the permitted range, there is no point in checking
+    twice (ie: calling rangeCheck() twice). As I can not "send" information
+    from here to the likelihood (as can be done in 'emcee'), it's better to
+    just put everything inside the loglkl() function.
+    """
     return 0.
-
-
-def initPop(
-    ranges, varIdxs, lkl_method, obs_clust, fundam_params,
-        synthcl_args, ntemps, nwalkers_ptm, init_mode, popsize, maxiter):
-    """
-    Obtain initial parameter values using either a random distribution, or
-    the Differential Evolution algorithm to approximate reasonable solutions.
-    """
-
-    p0 = []
-    if init_mode == 'random':
-        print("Random initial population")
-        for _ in range(ntemps):
-            p0.append(random_population(fundam_params, varIdxs, nwalkers_ptm))
-
-    elif init_mode == 'diffevol':
-        print("     DE init pop")
-
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-
-            # Estimate initial threshold value using DE.
-            def DEdist(model):
-                synth_clust = synthClust(
-                    fundam_params, varIdxs, model, synthcl_args)
-                if synth_clust:
-                    lkl = likelihood.main(lkl_method, synth_clust, obs_clust)
-                    return lkl
-                return np.inf
-
-            walkers_sols = []
-            for _ in range(nwalkers_ptm):
-                result = DE(
-                    DEdist, ranges[varIdxs], popsize=popsize, maxiter=maxiter)
-                walkers_sols.append(result.x)
-                update_progress.updt(nwalkers_ptm, _ + 1)
-
-        p0 = [walkers_sols for _ in range(ntemps)]
-
-    return p0
-
-
-def rangeCheck(model, ranges, varIdxs):
-    """
-    Check that all the model values are within the given ranges.
-    """
-    check_ranges = [
-        r[0] <= p <= r[1] for p, r in zip(*[model, ranges[varIdxs]])]
-    if all(check_ranges):
-        return True
-    return False
-
-
-def synthClust(fundam_params, varIdxs, model, synthcl_args):
-    """
-    Generate synthetic cluster.
-    """
-    model_proper = closeSol(fundam_params, varIdxs, model)
-
-    theor_tracks, e_max, err_lst, completeness, max_mag_syn, st_dist_mass,\
-        R_V, ext_coefs, N_fc, cmpl_rnd, err_rnd = synthcl_args
-
-    # Metallicity and age indexes to identify isochrone.
-    m_i = fundam_params[0].index(model_proper[0])
-    a_i = fundam_params[1].index(model_proper[1])
-    isochrone = theor_tracks[m_i][a_i]
-
-    # Generate synthetic cluster.
-    return synth_cluster.main(
-        e_max, err_lst, completeness, max_mag_syn, st_dist_mass, isochrone,
-        R_V, ext_coefs, N_fc, cmpl_rnd, err_rnd, model_proper)
