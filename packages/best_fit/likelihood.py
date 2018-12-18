@@ -38,6 +38,8 @@ def main(lkl_method, synth_clust, obs_clust):
         likelihood = duong(synth_clust, obs_clust)
     elif lkl_method == 'dolphin':
         likelihood = dolphin(synth_clust, obs_clust)
+    elif lkl_method == 'dolphin_kde':
+        likelihood = dolphin_kde(synth_clust, obs_clust)
     elif lkl_method == 'mighell':
         likelihood = mighell(synth_clust, obs_clust)
     elif lkl_method == 'kdeKL':
@@ -208,6 +210,49 @@ def dolphin(synth_clust, obs_clust):
     # chsqr = chisquare(cl_histo_f_z, f_exp=syn_histo_f_z, ddof=7)
     # print(chsqr)
     # print(chi2.sf(chsqr[0], len(cl_histo_f_z) - 1 - 7))
+
+    return dolph_lkl
+
+
+def dolphin_kde(synth_clust, obs_clust):
+    '''
+    Poisson likelihood ratio as defined in Dolphin (2002).
+
+    -2\ln PLR = 2 \sum_i m_i - n_i + n_i \ln \frac{n_i}{m_i}
+              = 2 (M- N) + 2\sum_i n_i\ln n_i - 2\sum_i n_i\ln m_i
+
+    If the binning is made too small then  n_i, m_i --> 1 (one star per bin)
+    and thus:
+
+    -2\ln PLR --> 2*(M-N)
+
+    In this case the likelihood will try to minimize M.
+
+    '''
+
+    obs_kde, kde_pts = obs_clust
+
+    try:
+        # synth_clust.shape = (# of dims, # of data)
+        kernel = gaussian_kde(synth_clust[0][0])
+        synth_kde = kernel(kde_pts)
+
+        # Assign small value to the m_i = 0 elements in 'syn_histo_f_z'.
+        # The value equals 1 star divided among all empty bins.
+        synth_kde[synth_kde == 0] = 1. / max(
+            np.count_nonzero(synth_kde == 0), 1.)
+
+        # Cash's C statistic.
+        # M = synth_clust[0][0][0].size
+        # C_cash = M - np.sum(N * obs_kde * np.log(M * synth_kde))
+        C_cash = np.sum(synth_kde - obs_kde * np.log(synth_kde))
+
+        # Obtain (weighted) inverse logarithmic 'Poisson likelihood ratio'.
+        # dolph_lkl = min(C_cash, 1e09)  # + dolphin_cst
+        dolph_lkl = C_cash\
+            if not np.isnan(C_cash) and not np.isinf(C_cash) else 1e09
+    except:
+        dolph_lkl = 1e09
 
     return dolph_lkl
 
