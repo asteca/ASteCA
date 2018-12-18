@@ -112,7 +112,8 @@ def main(npd, pd, isoch_fit_params, fit_params_r, fit_errors_r, **kwargs):
 
             # Parallel Coordinates plot
             # http://benalexkeen.com/parallel-coordinates-in-matplotlib/
-            # https://stackoverflow.com/questions/8230638/parallel-coordinates-plot-in-matplotlib
+            # https://stackoverflow.com/questions/8230638/
+            # parallel-coordinates-plot-in-matplotlib
             # mp_best_fit1_mcmc.plot(2, *args)
 
             # pl_MAP_lkl: Parameters half of pdfs.
@@ -125,6 +126,18 @@ def main(npd, pd, isoch_fit_params, fit_params_r, fit_errors_r, **kwargs):
             args = [
                 'MAF', gs, pd['best_fit_algor'], isoch_fit_params['maf_steps']]
             mp_best_fit1_mcmc.plot(4, *args)
+
+            # pl_betas: Betas vs steps.
+            args = [
+                'Betas', gs, pd['best_fit_algor'],
+                isoch_fit_params['betas_pt']]
+            mp_best_fit1_mcmc.plot(5, *args)
+
+            # pl_Tswaps: Tswaps AFs vs steps.
+            args = [
+                'TSWAP', gs, pd['best_fit_algor'],
+                isoch_fit_params['tswaps_afs']]
+            mp_best_fit1_mcmc.plot(6, *args)
 
             # pl_param_chain: Parameters sampler chains.
             for p in ['metal', 'age', 'ext', 'dist', 'mass', 'binar']:
@@ -140,7 +153,7 @@ def main(npd, pd, isoch_fit_params, fit_params_r, fit_errors_r, **kwargs):
                     isoch_fit_params['max_at_c'],
                     isoch_fit_params['min_at_c'],
                     isoch_fit_params['mcmc_ess']]
-                mp_best_fit1_mcmc.plot(5, *args)
+                mp_best_fit1_mcmc.plot(7, *args)
 
             # pl_tau
             args = [
@@ -148,7 +161,7 @@ def main(npd, pd, isoch_fit_params, fit_params_r, fit_errors_r, **kwargs):
                 isoch_fit_params['N_conv'], isoch_fit_params['tol_conv'],
                 isoch_fit_params['tau_index'],
                 isoch_fit_params['tau_autocorr']]
-            mp_best_fit1_mcmc.plot(6, *args)
+            mp_best_fit1_mcmc.plot(8, *args)
             # TODO re-implement when/if code is fixed
             # # pl_mESS
             # args = [
@@ -160,12 +173,12 @@ def main(npd, pd, isoch_fit_params, fit_params_r, fit_errors_r, **kwargs):
             args = [
                 'lags', gs, isoch_fit_params['varIdxs'],
                 isoch_fit_params['emcee_acorf']]
-            mp_best_fit1_mcmc.plot(8, *args)
+            mp_best_fit1_mcmc.plot(10, *args)
             # pl_GW
             args = [
                 'Geweke', gs, isoch_fit_params['varIdxs'],
                 isoch_fit_params['geweke_z']]
-            mp_best_fit1_mcmc.plot(9, *args)
+            mp_best_fit1_mcmc.plot(11, *args)
 
         # Generate output file.
         try:
@@ -174,13 +187,12 @@ def main(npd, pd, isoch_fit_params, fit_params_r, fit_errors_r, **kwargs):
                 npd['output_subdir'], str(npd['clust_name']) + '_D1_' +
                 pd['best_fit_algor'] + '.' + pd['plot_frmt']),
                 dpi=pd['plot_dpi'], bbox_inches='tight')
+            print("<<Plots for D1 block created>>")
         except Exception as exc:
             print(exc)
             print("\n\n  ERROR: could not plot 'D1' block.\n")
         # Close to release memory.
         plt.clf()
         plt.close("all")
-
-        print("<<Plots for D1 block created>>")
     else:
         print("<<Skip D1 block plot>>")

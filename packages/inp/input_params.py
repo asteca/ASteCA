@@ -131,7 +131,7 @@ def main(mypath, pars_f_path):
                     popsize_ptm = int(float(reader[2]))
                     maxiter_ptm = int(float(reader[3]))
                 elif reader[0] == 'PT1':
-                    ntemps = int(float(reader[1]))
+                    ntemps = reader[1]
                     nwalkers_ptm = int(float(reader[2]))
                     nburn_ptm = int(float(reader[3]))
                     nsteps_ptm = int(float(reader[4]))
@@ -225,7 +225,8 @@ def main(mypath, pars_f_path):
                    'sturges', 'knuth', 'blocks', 'blocks_max')
     bin_weights = ('mean', 'median', 'max')
     # Likelihood methods.
-    lkl_methods = ('tolstoy', 'duong', 'dolphin', 'mighell', 'kdeKL')
+    lkl_methods = (
+        'tolstoy', 'duong', 'dolphin', 'mighell', 'kdeKL', 'dolphin_kde')
     # Accepted IMF functions.
     imf_funcs = ('chabrier_2001_exp', 'chabrier_2001_log', 'kroupa_1993',
                  'kroupa_2002')

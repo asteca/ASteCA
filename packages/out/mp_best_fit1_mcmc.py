@@ -232,7 +232,8 @@ def pl_2_param_dens(_2_params, gs, min_max_p2, varIdxs, mcmc_trace):
         mx_model, my_model = varIdxs.index(mx), varIdxs.index(my)
 
         ax.set_title(r"$\rho={:.2f}$".format(
-            np.corrcoef([mcmc_trace[mx_model], mcmc_trace[my_model]])[0][1]))
+            np.corrcoef([mcmc_trace[mx_model], mcmc_trace[my_model]])[0][1]),
+            fontsize=10)
 
         hist2d(ax, mcmc_trace[mx_model], mcmc_trace[my_model])
 
@@ -463,20 +464,79 @@ def pl_param_chain(
         # ax.legend(fontsize='small', loc=0, handlelength=0.)
 
 
+def pl_betas(dummy, gs, best_fit_algor, betas_pt):
+    '''
+    Evolution of Temp swaps AFs.
+    '''
+    ax = plt.subplot(gs[0:2, 6:8])
+    ax.set_title(r"$N_{{temps}}={}$".format(len(betas_pt)), fontsize=10)
+    x, betas = betas_pt
+    Nt = len(betas) - 1
+    for i, y in enumerate(betas):
+        if i == 0:
+            lbl_ls = ("Cold", '--', 1.5, 4)
+        elif i == Nt:
+            lbl_ls = ("Hot", ':', 1.5, 4)
+        else:
+            lbl_ls = (None, '-', .5, 1)
+        ax.plot(
+            x, y[:len(x)], label=lbl_ls[0], ls=lbl_ls[1], lw=lbl_ls[2],
+            zorder=lbl_ls[3])
+    plt.xlabel("steps", fontsize=14)
+    plt.ylabel(r"$\beta$", fontsize=14)
+    ax.legend(fontsize='small', loc=0)
+
+
+def pl_Tswaps(dummy, gs, best_fit_algor, tswaps_afs):
+    '''
+    Evolution of Temp swaps AFs.
+    '''
+    ax = plt.subplot(gs[2:4, 6:8])
+    # ax.set_title(
+    #     r"$MAF_{{[T=1]}}={:.3f}$".format(maf_steps[1][0][-1]), fontsize=10)
+    x, y_replicas = tswaps_afs
+    Nt = len(y_replicas) - 1
+    for i, y in enumerate(y_replicas):
+        if i == 0:
+            lbl_ls = ("Cold", '--', 1.5, 4)
+        elif i == Nt:
+            lbl_ls = ("Hot", ':', 1.5, 4)
+        else:
+            lbl_ls = (None, '-', .5, 1)
+        ax.plot(
+            x, y, label=lbl_ls[0], ls=lbl_ls[1], lw=lbl_ls[2],
+            zorder=lbl_ls[3])
+    plt.xlabel("steps", fontsize=14)
+    plt.ylabel("Tswaps AF", fontsize=14)
+    ax.legend(fontsize='small', loc=0)
+
+
 def pl_MAF(dummy, gs, best_fit_algor, maf_steps):
     '''
     Evolution of MAF values.
     '''
-    # ax = plt.subplot(gs[2:4, 6:8])
     ax = plt.subplot(gs[4:6, 6:8])
-    x, y = list(zip(*maf_steps))
-    ax.plot(x, y, label=r"$MAF={:.3f}$".format(maf_steps[-1][1]))
+    ax.set_title(
+        r"$MAF_{{[T=1]}}={:.3f}$".format(maf_steps[1][0][-1]), fontsize=10)
+    # x, y = list(zip(*maf_steps))
+    x, y_replicas = maf_steps
+    Nt = len(y_replicas) - 1
+    for i, y in enumerate(y_replicas):
+        if i == 0:
+            lbl_ls = ("Cold", '--', 1.5, 4)
+        elif i == Nt:
+            lbl_ls = ("Hot", ':', 1.5, 4)
+        else:
+            lbl_ls = (None, '-', .5, 1)
+        ax.plot(
+            x, y, label=lbl_ls[0], ls=lbl_ls[1], lw=lbl_ls[2],
+            zorder=lbl_ls[3])
     plt.xlabel("steps", fontsize=14)
     plt.ylabel("MAF", fontsize=14)
     if best_fit_algor in ('ptemcee', 'emcee'):
         plt.axhline(y=.25, color='grey', ls=':', lw=1.2, zorder=4)
         plt.axhline(y=.5, color='grey', ls=':', lw=1.2, zorder=4)
-    ax.legend(fontsize='small', loc=0, handlelength=0.)
+    ax.legend(fontsize='small', loc=0)  # , handlelength=0.)
 
 
 def pl_mESS(dummy, gs, mESS, minESS, minESS_epsilon):
@@ -503,7 +563,7 @@ def pl_tau(dummy, gs, N_steps_conv, N_conv, tol_conv, tau_index, tau_autocorr):
     '''
     ax = plt.subplot(gs[6:8, 10:12])
     plt.title(r"$N_{{conv}}={:.0f}, tol_{{conv}}={:.2f}$".format(
-        N_conv, tol_conv))
+        N_conv, tol_conv), fontsize=10)
     plt.xlabel("steps", fontsize=14)
     plt.ylabel(r"mean $\hat{\tau}$", fontsize=14)
 
@@ -579,11 +639,13 @@ def plot(N, *args):
         1: [pl_param_pf, args[0] + ' probability function'],
         3: [pl_MAP_lkl, ' MAP likelihood values'],
         4: [pl_MAF, ' MAF vs steps'],
-        5: [pl_param_chain, args[0] + ' sampler chain'],
-        6: [pl_tau, args[0]],
-        7: [pl_mESS, args[0]],
-        8: [pl_lags, args[0]],
-        9: [pl_GW, args[0]]
+        5: [pl_betas, ' Betas vs steps'],
+        6: [pl_Tswaps, ' Tswaps AFs vs steps'],
+        7: [pl_param_chain, args[0] + ' sampler chain'],
+        8: [pl_tau, args[0]],
+        9: [pl_mESS, args[0]],
+        10: [pl_lags, args[0]],
+        11: [pl_GW, args[0]]
     }
 
     fxn = plt_map.get(N, None)[0]

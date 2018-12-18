@@ -76,8 +76,9 @@ def check(
                 sys.exit("ERROR: the minimum number of walkers is 12.")
             if nburn_ptm < 1:
                 sys.exit("ERROR: the minimum number of burn-in samples is 1.")
-            if ntemps < 1:
-                sys.exit("ERROR: the minimum number of temperatures is 1.")
+            if ntemps not in ('n', 'none', 'None'):
+                if int(float(ntemps)) < 1:
+                    sys.exit("ERROR: the minimum number of temperatures is 1.")
 
         # Check likelihood method selected.
         if lkl_method not in lkl_methods:

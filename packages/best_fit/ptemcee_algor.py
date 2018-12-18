@@ -32,21 +32,26 @@ def main(
         Tmax = np.inf
     else:
         Tmax = float(tmax_ptm)
+    if ntemps in ('n', 'none', 'None'):
+        ntemps = None
+    else:
+        ntemps = int(float(ntemps))
 
     # Start timing.
     max_secs = hmax * 60. * 60.
     available_secs = max(30, max_secs)
     elapsed, start_t = 0., t.time()
 
-    # Initial population.
-    p0 = initPop(
-        ranges, varIdxs, lkl_method, obs_clust, fundam_params, synthcl_args,
-        ntemps, nwalkers_ptm, init_mode_ptm, popsize_ptm, maxiter_ptm)
-
     ptsampler = sampler.Sampler(
         nwalkers_ptm, ndim, loglkl, logp,
         loglargs=[fundam_params, synthcl_args, lkl_method, obs_clust, ranges,
                   varIdxs, priors_ptm], Tmax=Tmax, ntemps=ntemps)
+
+    ntemps = ptsampler.ntemps
+    # Initial population.
+    p0 = initPop(
+        ranges, varIdxs, lkl_method, obs_clust, fundam_params, synthcl_args,
+        ntemps, nwalkers_ptm, init_mode_ptm, popsize_ptm, maxiter_ptm)
 
     print("     Burn-in stage")
     N_steps_check = max(1, int(nburn_ptm * .1))
@@ -83,7 +88,7 @@ def main(
     # TODO input as params
     N_conv, tol_conv = 1000., 0.01
 
-    afs, tswaps, betas = [], [], []
+    afs, tswaps = [], []
     # actimes = []
 
     tau_emcee = np.empty(nsteps_ptm)
@@ -125,7 +130,6 @@ def main(
             tau = util.autocorr_integrated_time(x)
 
             tswaps.append(ptsampler.tswap_acceptance_fraction)
-            betas.append(ptsampler.betas)
             afs.append(np.mean(ptsampler.acceptance_fraction, axis=1))
             # acors = np.zeros(ntemps)
             # for temp in range(ntemps):
@@ -140,15 +144,16 @@ def main(
             converged = np.all(tau * N_conv < (i + 1))
             converged &= np.all(np.abs(old_tau - tau) / tau < tol_conv)
 
-        if converged:
-            print("  Convergence achieved (runs={})".format(i + 1))
-            break
+        # TODO disabled for now
+        # if converged:
+        #     print("  Convergence achieved (runs={})".format(i + 1))
+        #     break
         old_tau = tau
 
         pos, lnprob, lnlike = result
 
         maf = np.mean(ptsampler.acceptance_fraction[0])
-        maf_steps.append([i, maf])
+        # maf_steps.append([i, maf])
 
         # Store MAP solution in this iteration.
         prob_mean.append([i, np.mean(lnprob[0])])
@@ -180,6 +185,14 @@ def main(
 
     # Evolution of the mean autocorrelation time.
     tau_autocorr = autocorr_vals[:tau_index]
+    # Mean acceptance fractions for all replicas.
+    maf_steps = (
+        N_steps_conv * np.arange(1, tau_index + 1), np.asarray(afs).T)
+    # Temprature swaps acceptance fractions.
+    tswaps_afs = (
+        N_steps_conv * np.arange(1, tau_index + 1), np.asarray(tswaps).T)
+    # Betas history
+    betas_pt = (np.arange(runs), ptsampler.beta_history)
 
     # Final MAP fit.
     map_sol, map_lkl_final = map_sol_old
@@ -198,63 +211,6 @@ def main(
     # Shape: (ndim, runs * nwalkers)
     mcmc_trace = chains_nruns.reshape(-1, ndim).T
 
-    # # TODO delete
-    # # ptsampler.chain.shape: (ntemps, nwalkers, nsteps, ndim)
-    # import matplotlib.pyplot as plt
-    # import matplotlib.gridspec as gridspec
-    # fig = plt.figure(figsize=(20, 20))
-    # gs = gridspec.GridSpec(10, 10)
-    # n = N_steps_conv * np.arange(1, tau_index + 1)
-
-    # ax = plt.subplot(gs[0:2, 0:6])
-    # ax.set_title(
-    #     "ntemps: {}, Tmax: {}, adapt: {}".format(ntemps, Tmax, pt_adapt))
-    # for tsw in np.asarray(tswaps).T:
-    #     plt.plot(n, tsw)
-    # plt.ylabel("Tswap AF")
-
-    # ax = plt.subplot(gs[2:4, 0:6])
-    # ax.set_title("Cold chain MAF: {:.5f}".format(
-    #     np.mean(ptsampler.acceptance_fraction[0])))
-    # for af in np.asarray(afs).T:
-    #     plt.plot(n, af)
-    # plt.ylabel("Mean AFs")
-
-    # ax = plt.subplot(gs[4:6, 0:6])
-    # ax.set_title("Beta_min: {:.5f}".format(ptsampler.betas[-1]))
-    # for bet in np.asarray(betas).T:
-    #     plt.plot(n, bet)
-    # plt.ylabel("Betas")
-
-    # # plt.subplot(gs[6:8, 0:6])
-    # # for act in np.asarray(actimes).T:
-    # #     plt.plot(n, act)
-    # # plt.ylabel("ACTs")
-
-    # # plt.subplot(gs[8:10, 0:6])
-    # # y_min, y_max = np.inf, -np.inf
-    # # for i in range(nwalkers_ptm):
-    # #     chain = chains_nruns[:, i, 2]
-    # #     plt.plot(range(runs), chain)
-    # #     y_min, y_max = min(min(chain[-int(runs * .5):]), y_min),\
-    # #         max(max(chain[-int(runs * .5):]), y_max)
-    # # plt.ylim(y_min, y_max)
-
-    # plt.subplot(gs[6:8, 0:6])
-    # plt.plot(n, tau_emcee[:tau_index], ls=':', label="emcee")
-    # plt.plot(n, tau_autocorr, label="ptemcee")
-    # plt.plot(n, n / 100.0, "--k")
-    # plt.ylabel("ACT, cold chain")
-    # plt.legend()
-
-    # plt.xlabel("steps")
-    # fig.tight_layout()
-    # plt.savefig("ptemcee_{}b_{}s_{}w_{}t_{}_{}.png".format(
-    #     nburn_ptm, runs, nwalkers_ptm, ntemps, Tmax, pt_adapt), dpi=300,
-    #     bbox_inches='tight')
-    # plt.close()
-    # # TODO delete
-
     # Convergence parameters.
     acorr_t, max_at_c, min_at_c, geweke_z, emcee_acorf, mcmc_ess, minESS,\
         mESS, mESS_epsilon = convergenceVals(
@@ -269,7 +225,8 @@ def main(
         'prob_mean': prob_mean,
         'mcmc_elapsed': elapsed, 'mcmc_trace': mcmc_trace,
         'pars_chains_bi': pars_chains_bi, 'pars_chains': chains_nruns.T,
-        'maf_steps': maf_steps, 'autocorr_time': acorr_t,
+        'maf_steps': maf_steps, 'tswaps_afs': tswaps_afs, 'betas_pt': betas_pt,
+        'autocorr_time': acorr_t,
         'max_at_c': max_at_c, 'min_at_c': min_at_c,
         'minESS': minESS, 'mESS': mESS, 'mESS_epsilon': mESS_epsilon,
         'emcee_acorf': emcee_acorf, 'geweke_z': geweke_z,
