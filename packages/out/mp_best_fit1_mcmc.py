@@ -469,9 +469,9 @@ def pl_betas(dummy, gs, best_fit_algor, betas_pt):
     Evolution of Temp swaps AFs.
     '''
     ax = plt.subplot(gs[0:2, 6:8])
-    ax.set_title(r"$N_{{temps}}={}$".format(len(betas_pt)), fontsize=10)
     x, betas = betas_pt
     Nt = len(betas) - 1
+    ax.set_title(r"$N_{{temps}}={}$".format(Nt + 1), fontsize=10)
     for i, y in enumerate(betas):
         if i == 0:
             lbl_ls = ("Cold", '--', 1.5, 4)
