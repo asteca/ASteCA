@@ -215,11 +215,18 @@ def interpSol(theor_tracks, fundam_params, varIdxs, model):
         for x in (x2, x3, x4):
             # Maximum mass difference allowed
             msk = abs(x1[-6] - x[-6]) > .01
-            x[:, msk] = x1[:, msk]
+            # If the distance in this array is larger than the maximum allowed,
+            # mask with the values taken from 'x1'.
+            # x[:, msk] = x1[:, msk]
+            np.copyto(x, x1, where=msk)
 
-        # Weighted average with mass "alignment".
-        isochrone = np.average(
-            np.array([x1, x2, x3, x4]), weights=inv_d[isoch_idx], axis=0)
+        # # Weighted average with mass "alignment".
+        # isochrone = np.average(
+        #     np.array([x1, x2, x3, x4]), weights=inv_d[isoch_idx], axis=0)
+        # Scale weights so they add up to 1, then add based on them
+        weights = inv_d[isoch_idx] / np.sum(inv_d[isoch_idx])
+        isochrone = x1 * weights[0] + x2 * weights[1] + x3 * weights[2] +\
+            x4 * weights[3]
 
     # This way is *marginally* faster
     # wgts = D * inv_d[isoch_idx]
