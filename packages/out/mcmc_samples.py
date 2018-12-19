@@ -5,23 +5,29 @@ from astropy.io import ascii
 
 def main(clp, pd, mcmc_file_out, **kwargs):
     '''
-    Create output data file with the "best" chain of the MCMC sampler (smallest
-    acorr time), for each parameter.
-    Store only the latest 50000 steps or less.
+    Create output data file with the MCMC sampler values for each parameter,
+    for all chains/walkers. Maximum size of the output file is 10 Mbs.
     '''
     if pd['best_fit_algor'] in ('emcee', 'ptemcee'):
         varIdxs = clp['isoch_fit_params']['varIdxs']
         chains_nruns = clp['isoch_fit_params']['pars_chains']
-        min_at_c = clp['isoch_fit_params']['min_at_c']
+
+        # Assume that each value stored occupies 10 bytes. Use a maximum file
+        # size of 10 Mbs.
+        max_sz = 10. * 1024. * 1024.
+        ndim, nwalkers, nsteps = chains_nruns.shape
+        # Maximum number of steps to store.
+        max_n = int(max_sz / (ndim * nwalkers))
 
         tt, fmt = Table(), {}
-        params = ['metal', 'log(age)', 'E_BV', 'dm', 'mass', 'bf']
-        # TODO better column names
+        params = ['metal', 'log(age)', 'E_BV', 'dm', 'mass', 'binar_f']
         for i, par in enumerate(params):
             if i in varIdxs:
                 c_model = varIdxs.index(i)
-                bc = chains_nruns[c_model][min_at_c[c_model]][-50000:]
-                tt[par], fmt[par] = bc, '%.5f'
+                for w in range(nwalkers):
+                    bc = chains_nruns[c_model][w][-max_n:]
+                    col_n = par + '_' + str(w)
+                    tt[col_n], fmt[col_n] = bc, '%.5f'
 
         ascii.write(tt, mcmc_file_out, overwrite=True, formats=fmt)
 
