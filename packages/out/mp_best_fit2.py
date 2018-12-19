@@ -6,9 +6,9 @@ from matplotlib.colors import LinearSegmentedColormap
 
 
 def pl_mps_phot_diag(
-        gs, gs_y1, gs_y2, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
-        x_ax, y_ax, v_min_mp, v_max_mp, obs_x, obs_y, obs_MPs,
-        err_bar, hess_xedges, hess_yedges, x_isoch, y_isoch):
+    gs, gs_y1, gs_y2, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
+    x_ax, y_ax, v_min_mp, v_max_mp, obs_x, obs_y, obs_MPs, err_bar,
+        hess_xedges, hess_yedges, x_isoch, y_isoch):
     '''
     Star's membership probabilities on cluster's photometric diagram.
     '''
@@ -123,8 +123,8 @@ def pl_hess_diag(
 
 def pl_bf_synth_cl(
     gs, gs_y1, gs_y2, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
-        hess_xedges, hess_yedges, x_synth, y_synth, binar_idx, IMF_name, R_V,
-        cp_r, cp_e, x_isoch, y_isoch, lkl_method, bin_method, cmd_evol_tracks,
+    hess_xedges, hess_yedges, x_synth, y_synth, binar_idx, IMF_name, R_V,
+    cp_r, cp_e, x_isoch, y_isoch, lkl_method, bin_method, cmd_evol_tracks,
         evol_track):
     '''
     Best fit synthetic cluster obtained.

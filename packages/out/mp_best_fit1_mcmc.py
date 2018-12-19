@@ -278,7 +278,7 @@ def pl_param_pf(
 
     labels = [r'$z$', r'$\log(age)$', r'$E_{{(B-V)}}$', r'$(m-M)_o$',
               r'$M\,(M_{{\odot}})$', r'$b_{{frac}}$']
-    frm = ["{:.4f}", "{:.2f}", "{:.3f}", "{:.2f}", "{:.0f}", "{:.2f}"]
+    frm = ["{:.4f}", "{:.3f}", "{:.3f}", "{:.2f}", "{:.0f}", "{:.2f}"]
 
     ld_p = labels[cp]
     p = frm[cp]
