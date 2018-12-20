@@ -380,8 +380,8 @@ def pl_MAP_lkl(dummy, gs, prob_mean, map_lkl, map_lkl_final):
 
 def pl_param_chain(
     par_name, gs, best_fit_algor, cp_r, min_max_p, nwalkers, nburn, nsteps,
-        mcmc_param, model_done, mcmc_elapsed, varIdxs, pre_bi, post_bi,
-        autocorr_time, max_at_c, min_at_c, mcmc_ess):
+    model_done, varIdxs, pre_bi, post_bi, autocorr_time, max_at_c, min_at_c,
+        mcmc_ess):
     '''
     Parameter sampler chain.
     '''
@@ -396,18 +396,6 @@ def pl_param_chain(
 
     gs_x1, gs_x2, gs_y1, gs_y2, cp = plot_dict[par_name]
     ax = plt.subplot(gs[gs_y1:gs_y2, gs_x1:gs_x2])
-    if cp == 0:
-        m, s = divmod(mcmc_elapsed, 60)
-        h, m = divmod(m, 60)
-        if best_fit_algor == 'emcee':
-            mcmc_p_str = ", a={}".format(mcmc_param)
-        elif best_fit_algor == 'abc':
-            mcmc_p_str = ""
-        elif best_fit_algor == 'ptemcee':
-            mcmc_p_str = ", adapt={}".format(mcmc_param)
-        plt.suptitle(
-            "steps={:.0f}, chains={:.0f}{} | {:.0f}h{:.0f}m".format(
-                nsteps, nwalkers, mcmc_p_str, h, m), y=1.005, fontsize=14)
     if cp == 5:
         plt.xlabel("Steps")
     else:

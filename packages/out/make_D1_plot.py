@@ -83,6 +83,21 @@ def main(npd, pd, isoch_fit_params, fit_params_r, fit_errors_r, **kwargs):
                 isoch_fit_params['nburn_abc'],\
                 isoch_fit_params['nsteps_abc'], None
 
+        # Title for the plot.
+        m, s = divmod(isoch_fit_params['mcmc_elapsed'], 60)
+        h, m = divmod(m, 60)
+        if pd['best_fit_algor'] == 'emcee':
+            mcmc_p_str = ", a={}".format(mcmc_param)
+        elif pd['best_fit_algor'] == 'abc':
+            mcmc_p_str = ""
+        elif pd['best_fit_algor'] == 'ptemcee':
+            mcmc_p_str = ", adapt={}".format(mcmc_param)
+        plt.suptitle(
+            ("chains={:.0f}, burn={:.0f}, steps={:.0f}{} |"
+             " {:.0f}h{:.0f}m").format(
+                nwalkers, nburn, nsteps, mcmc_p_str, h, m), y=1.005,
+            fontsize=14)
+
         if pd['best_fit_algor'] in ('abc', 'ptemcee', 'emcee'):
             min_max_p = prep_plots.param_ranges(
                 pd['best_fit_algor'], pd['fundam_params'],
@@ -143,9 +158,8 @@ def main(npd, pd, isoch_fit_params, fit_params_r, fit_errors_r, **kwargs):
             for p in ['metal', 'age', 'ext', 'dist', 'mass', 'binar']:
                 args = [
                     p, gs, pd['best_fit_algor'], fit_params_r, min_max_p,
-                    nwalkers, nburn, nsteps, mcmc_param,
+                    nwalkers, nburn, nsteps,
                     isoch_fit_params['mcmc_trace'],
-                    isoch_fit_params['mcmc_elapsed'],
                     isoch_fit_params['varIdxs'],
                     isoch_fit_params['pars_chains_bi'],
                     isoch_fit_params['pars_chains'],
