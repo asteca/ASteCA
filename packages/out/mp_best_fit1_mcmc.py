@@ -427,10 +427,10 @@ def pl_param_chain(
         # plt.plot(
         #     np.arange(N_bi, N_tot), post_bi_min_at, c='k', lw=.8, alpha=0.5)
 
-        # Running mean.
-        N = post_bi_max_at.size
-        xavr0 = uniform_filter1d(post_bi_max_at, int(.05 * N))
-        xavr = uniform_filter1d(xavr0, int(.05 * N))
+        # Filtered mean of all chains.
+        N = post_bi.shape[-1]
+        xavr = uniform_filter1d(
+            np.mean(post_bi[c_model], axis=0), int(.02 * N))
         plt.plot(np.arange(N_bi, N_tot), xavr, c='g')
 
         # Mean
