@@ -556,8 +556,9 @@ def pl_tau(dummy, gs, N_steps_conv, N_conv, tol_conv, tau_index, tau_autocorr):
     plt.ylabel(r"mean $\hat{\tau}$", fontsize=14)
 
     n = N_steps_conv * np.arange(1, tau_index + 1)
-    plt.plot(n, n / 50, "--b", label="N/50")
-    plt.plot(n, n / 100, "--g", label="N/100")
+    plt.plot(n, n / 100, "--r", label="N/100")
+    plt.plot(n, n / 1000, "--b", label="N/1000")
+    plt.plot(n, n / 10000, "--g", label="N/10000")
     plt.plot(n, tau_autocorr)
     plt.xlim(0, n.max())
     try:
