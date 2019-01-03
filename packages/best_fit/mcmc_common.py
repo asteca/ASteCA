@@ -26,27 +26,39 @@ def varPars(fundam_params):
     return varIdxs, ndim, np.array(ranges)
 
 
-def closeSol(fundam_params, varIdxs, model):
+def fillParams(fundam_params, varIdxs, model):
+    """
+    Fills the places in 'model' of the parameters that were not fitted, with
+    their fixed values.
+    """
+
+    model_filled, j = [], 0
+    for i, par in enumerate(fundam_params):
+        # If this parameter is one of the 'free' parameters, use its own value.
+        if i in varIdxs:
+            model_filled.append(model[i - j])
+        else:
+            # Fill with the fixed value for this parameter.
+            model_filled.append(par[0])
+            j += 1
+
+    return model_filled
+
+
+def closeSol(fundam_params, model):
     """
     Find the closest value in the parameters list for the discrete parameters
     metallicity, age, and mass.
     """
-    # TODO check if this can be made more efficient/succinct
-    model_proper, j = [], 0
+    model_proper = []
     for i, par in enumerate(fundam_params):
-        # If this parameter is one of the 'free' parameters.
-        if i in varIdxs:
-            # If it is the parameter metallicity, age or mass.
-            if i in [0, 1, 4]:
-                # Select the closest value in the array of allowed values.
-                model_proper.append(min(
-                    par, key=lambda x: abs(x - model[i - j])))
-
-            else:
-                model_proper.append(model[i - j])
+        # If it is the parameter metallicity, age or mass.
+        if i in [0, 1, 4]:
+            # Select the closest value in the array of allowed values.
+            model_proper.append(min(
+                par, key=lambda x: abs(x - model[i])))
         else:
-            model_proper.append(par[0])
-            j += 1
+            model_proper.append(model[i])
 
     return model_proper
 
@@ -108,19 +120,12 @@ def random_population(fundam_params, varIdxs, n_ran):
 
 def synthClust(fundam_params, varIdxs, model, synthcl_args):
     """
-    Generate synthetic cluster.
+    Generate a synthetic cluster.
     """
     theor_tracks, e_max, err_lst, completeness, max_mag_syn, st_dist_mass,\
         R_V, ext_coefs, N_fc, cmpl_rnd, err_rnd = synthcl_args
 
-    # model_proper = closeSol(fundam_params, varIdxs, model)
-
-    # # Metallicity and age indexes to identify isochrone.
-    # m_i = fundam_params[0].index(model_proper[0])
-    # a_i = fundam_params[1].index(model_proper[1])
-    # isochrone = theor_tracks[m_i][a_i]
-
-    # TODO testing interpolation of (z, a) data
+    # Interpolate (z, a) data
     isochrone, model_proper = interpSol(
         theor_tracks, fundam_params, varIdxs, model)
 
@@ -132,6 +137,9 @@ def synthClust(fundam_params, varIdxs, model, synthcl_args):
 
 def interpSol(theor_tracks, fundam_params, varIdxs, model):
     """
+    Interpolate a new isochron from the four closest points in the (z, a) grid.
+
+    The mass value is not interpolated.
 
     theor_tracks = [m1, m2, .., mN]
     mX = [age1, age2, ..., ageM]
@@ -276,13 +284,10 @@ def interpSol(theor_tracks, fundam_params, varIdxs, model):
     return isochrone, model_proper
 
 
-def discreteParams(fundam_params, varIdxs, chains_nruns):
+def discreteParams(fundam_params, varIdxs, chains_nruns, pushidxs):
     """
-    TODO this is deprecated since now the (z, a) points are interpolated from
-    the grid and no longer 'pushed' to the nearest grid value.
-
-    Push values in each chain for each discrete parameter to the closest
-    accepted value.
+    Push values in each chain for each discrete parameter in the 'pushidxs'
+    list to the closest grid value.
 
     chains_nruns.shape: (runs, nwalkers, ndim)
     """
@@ -292,7 +297,7 @@ def discreteParams(fundam_params, varIdxs, chains_nruns):
         # If this parameter is one of the 'free' parameters.
         if i in varIdxs:
             # If it is the parameter metallicity, age or mass.
-            if i in [0, 1, 4]:
+            if i in pushidxs:
                 pc = chains_nruns.T[j]
                 chains = []
                 for c in pc:

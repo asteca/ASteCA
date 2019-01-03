@@ -37,12 +37,12 @@ def params_errors(best_fit_algor, args):
                 #  16th and 84th percentiles (1 sigma)
                 ph = np.percentile(isoch_fit_params['mcmc_trace'][i - j], 84)
                 pl = np.percentile(isoch_fit_params['mcmc_trace'][i - j], 16)
-                std = np.std(isoch_fit_params['mcmc_trace'][i - j])
-                # Use maximum error value. TODO is this a sensible approach?
-                err = max(.5 * (ph - pl), std)
-                isoch_fit_errors.append(err)
+                # std = np.std(isoch_fit_params['mcmc_trace'][i - j])
+                # # Use maximum error value. TODO is this a sensible approach?
+                # err = max(.5 * (ph - pl), std)
+                isoch_fit_errors.append((pl, ph))
             else:
-                isoch_fit_errors.append(np.nan)
+                isoch_fit_errors.append((np.nan, np.nan))
                 j += 1
 
     return isoch_fit_errors, mean_boot_sol
@@ -60,7 +60,15 @@ def main(
     '''
     Perform a best fitting process to find the cluster's fundamental
     parameters.
+
+    TODO
+
+    1. Added 'median' solutions in ptemcee, but nowhere else
+    2. ptemcee is using 16th,84th errors , but nowhere else
+    3. Finish #64
+
     '''
+
     # Check if algorithm should run.
     if bf_flag:
         err_lst, cl_reg_fit, completeness = clp['err_lst'],\
@@ -196,19 +204,22 @@ def main(
 
         print("Best fit parameters obtained.")
 
+        clp['cl_max_mag'], clp['max_mag_syn'], clp['ext_coefs'],\
+            clp['st_dist_mass'], clp['N_fc'], clp['cmpl_rnd'], clp['err_rnd'],\
+            clp['isoch_fit_params'], clp['isoch_fit_errors'] =\
+            cl_max_mag, max_mag_syn, ext_coefs, st_dist_mass, N_fc, cmpl_rnd,\
+            err_rnd, isoch_fit_params, isoch_fit_errors
+
     else:
         # Pass dummy data to make_plots.
         print('Skip parameters fitting process.')
-        cl_max_mag, max_mag_syn, ext_coefs, st_dist_mass, N_fc, cmpl_rnd,\
-            err_rnd, isoch_fit_params, isoch_fit_errors = [], -1., [], {}, [],\
-            [], [],\
-            {'mean_sol': [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan],
-             'map_sol': [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]},\
-            [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]
 
-    clp['cl_max_mag'], clp['max_mag_syn'], clp['ext_coefs'],\
-        clp['st_dist_mass'], clp['N_fc'], clp['cmpl_rnd'], clp['err_rnd'],\
-        clp['isoch_fit_params'], clp['isoch_fit_errors'] =\
-        cl_max_mag, max_mag_syn, ext_coefs, st_dist_mass, N_fc, cmpl_rnd,\
-        err_rnd, isoch_fit_params, isoch_fit_errors
+        # 31/12/18 this is not needed I believe
+        # cl_max_mag, max_mag_syn, ext_coefs, st_dist_mass, N_fc, cmpl_rnd,\
+        #     err_rnd, isoch_fit_params, isoch_fit_errors = [], -1., [], {}, [],\
+        #     [], [],\
+        #     {'mean_sol': [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan],
+        #      'map_sol': [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]},\
+        #     [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]
+
     return clp

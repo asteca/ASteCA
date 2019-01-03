@@ -6,7 +6,8 @@ from .. import update_progress
 from . import likelihood
 from .emcee3rc2 import autocorr
 from .mcmc_convergence import convergenceVals
-from .mcmc_common import initPop, varPars, closeSol, synthClust, rangeCheck
+from .mcmc_common import initPop, varPars, synthClust, rangeCheck, fillParams,\
+    discreteParams
 from .ptemcee import sampler
 from .ptemcee import util
 
@@ -67,13 +68,15 @@ def main(
     # Store burn-in chain phase.
     # Shape: (runs, nwalkers, ndim)
     chains_nruns = ptsampler.chain[0].transpose(1, 0, 2)
+    # The Mass parameter is not interpolated, use its grid values.
+    chains_nruns = discreteParams(fundam_params, varIdxs, chains_nruns, [4])
     # print(chains_nruns.shape, pars_chains_bi.shape)
     pars_chains_bi = chains_nruns.T
 
     # Store MAP solution.
     idx_best = np.argmax(lnprob[0])
     map_sol_old = [
-        closeSol(fundam_params, varIdxs, pos0[0][idx_best]),
+        fillParams(fundam_params, varIdxs, pos0[0][idx_best]),
         lnprob[0][idx_best]]
 
     ptsampler.reset()
@@ -161,7 +164,7 @@ def main(
         # Update if a new optimal solution was found.
         if lnprob[0][idx_best] > map_sol_old[1]:
             map_sol_old = [
-                closeSol(fundam_params, varIdxs, pos[0][idx_best]),
+                fillParams(fundam_params, varIdxs, pos[0][idx_best]),
                 lnprob[0][idx_best]]
         map_lkl.append([i, map_sol_old[1]])
 
@@ -207,6 +210,7 @@ def main(
     # ptsampler.chain.shape: (ntemps, nwalkers, nsteps, ndim)
     # chains_nruns.shape: (runs, nwalkers, ndim)
     chains_nruns = ptsampler.chain[0, :, :runs, :].transpose(1, 0, 2)
+    chains_nruns = discreteParams(fundam_params, varIdxs, chains_nruns, [4])
     # Re-shape trace for all parameters (flat chain).
     # Shape: (ndim, runs * nwalkers)
     mcmc_trace = chains_nruns.reshape(-1, ndim).T
@@ -216,13 +220,15 @@ def main(
         mESS, mESS_epsilon = convergenceVals(
             'ptemcee', ndim, varIdxs, N_conv, chains_nruns, mcmc_trace)
 
-    # Pass the mean as the best model fit found.
-    mean_sol = closeSol(fundam_params, varIdxs, np.mean(mcmc_trace, axis=1))
+    # Fill the spaces of the parameters not fitted with their fixed values.
+    mean_sol = fillParams(fundam_params, varIdxs, np.mean(mcmc_trace, axis=1))
+    median_sol = fillParams(
+        fundam_params, varIdxs, np.median(mcmc_trace, axis=1))
 
     isoch_fit_params = {
         'varIdxs': varIdxs, 'nsteps_ptm': runs, 'mean_sol': mean_sol,
-        'map_sol': map_sol, 'map_lkl': map_lkl, 'map_lkl_final': map_lkl_final,
-        'prob_mean': prob_mean,
+        'median_sol': median_sol, 'map_sol': map_sol, 'map_lkl': map_lkl,
+        'map_lkl_final': map_lkl_final, 'prob_mean': prob_mean,
         'mcmc_elapsed': elapsed, 'mcmc_trace': mcmc_trace,
         'pars_chains_bi': pars_chains_bi, 'pars_chains': chains_nruns.T,
         'maf_steps': maf_steps, 'tswaps_afs': tswaps_afs, 'betas_pt': betas_pt,

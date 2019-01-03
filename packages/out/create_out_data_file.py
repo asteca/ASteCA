@@ -63,19 +63,14 @@ def main(npd):
 #           members ('n_memb_da').\n\
 # a_f: Fraction of cluster's area that is present in frame.\n\
 #\n\
-# Parameters values are in the sense: mean  MAP/ML.\n\
-# met: Metallicity value (z).\n\
-# e_m: Metallicity error.\n\
-# age: log(age).\n\
-# e_a: log(age) error.\n\
-# E(B-V): extinction.\n\
-# e_E: Extinction error.\n\
-# dist: Distance modulus.\n\
-# e_d: Distance error.\n\
-# M_i: Total initial mass.\n\
-# e_M: Mass error.\n\
-# bin_fr: Binary fraction.\n\
-# e_bf: Binary fraction error.\n\
+# Parameters values are in the sense: mean, MAP/ML, median.\n\
+# Parameters uncertainties are: 16th, 84th percentiles.\n\
+# z: Metallicity value.\n\
+# a: log(age).\n\
+# e: extinction E(B-V).\n\
+# d: Distance modulus.\n\
+# M: Total initial mass.\n\
+# b: Binary fraction.\n\
 #\n\
 # M1 Indicates that the center was set manually.\n\
 # M2 Indicates that the radius was set manually.\n\
@@ -102,8 +97,12 @@ def main(npd):
 #\n\
 #NAME                 c_x      c_y     r_cl    e_rcl      r_c     e_rc      \
 r_t     e_rt      kcp      CI   n_memb_k     n_memb  n_memb_da  memb_par     \
-a_f      met      met      e_m      age      age      e_a   E(B-V)   \
-E(B-V)      e_E     dist     dist      e_d      M_i      M_i      e_M   \
-bin_fr   bin_fr     e_bf      M1 M2  f1 f2 f3 f4 f5 f6 f7  \
-FC\n".format(__version__, now_time))
+a_f      \
+z_mean   z_MAP   z_median   16th     84th    \
+a_mean   a_MAP   a_median   16th     84th    \
+e_mean   e_MAP   e_median   16th     84th    \
+d_mean   d_MAP   d_median   16th     84th    \
+M_mean   M_MAP   M_median   16th     84th    \
+b_mean   b_MAP   b_median   16th     84th    \
+M1 M2  f1 f2 f3 f4 f5 f6 f7  FC\n".format(__version__, now_time))
             print('Output data file created.')

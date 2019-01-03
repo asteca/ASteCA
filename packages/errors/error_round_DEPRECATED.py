@@ -1,4 +1,6 @@
 
+# DEPRECATED 31/12/18
+
 
 def fundParams(clp):
     '''
@@ -8,8 +10,14 @@ def fundParams(clp):
     for i, e in enumerate(clp['isoch_fit_errors']):
         cp_e.append(round(e, lenght[i]))
     clp['fit_errors_r'] = ['{:g}'.format(_) for _ in cp_e]
-    clp['fit_params_r'] = [
+
+    # Round mean solutions.
+    clp['fit_params_mean_r'] = [
         '{:g}'.format(_) for _ in clp['isoch_fit_params']['mean_sol']]
+
+    # Round median solutions.
+    clp['fit_params_median_r'] = [
+        '{:g}'.format(_) for _ in clp['isoch_fit_params']['median_sol']]
 
     # Round MAP/ML solutions.
     clp['fit_params_map_r'] = [

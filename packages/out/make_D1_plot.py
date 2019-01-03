@@ -8,7 +8,7 @@ from . import mp_best_fit1_mcmc
 from . import prep_plots
 
 
-def main(npd, pd, isoch_fit_params, fit_params_r, fit_errors_r, **kwargs):
+def main(npd, pd, isoch_fit_params, **kwargs):
     '''
     Make D1 block plots.
     '''
@@ -43,6 +43,8 @@ def main(npd, pd, isoch_fit_params, fit_params_r, fit_errors_r, **kwargs):
             mp_best_fit1_GA.plot(0, *args)
 
         if pd['best_fit_algor'] in ('brute', 'genet'):
+            # TODO use the isoch_fit_params 'data', the 'fit_params_r' and
+            # 'fit_errors_r' values were deprecated.
             arglist = [
                 # pl_2_param_dens: Param vs param solutions scatter map.
                 [gs, 'age-metal', min_max_p, fit_params_r, fit_errors_r,
@@ -119,9 +121,10 @@ def main(npd, pd, isoch_fit_params, fit_params_r, fit_errors_r, **kwargs):
 
             # pl_param_pf: Parameters probability functions.
             for p in ['metal', 'age', 'ext', 'dist', 'mass', 'binar']:
-                args = [p, gs, min_max_p, fit_params_r, fit_errors_r,
-                        isoch_fit_params['varIdxs'],
+                args = [p, gs, min_max_p, isoch_fit_params['varIdxs'],
+                        isoch_fit_params['mean_sol'],
                         isoch_fit_params['map_sol'],
+                        isoch_fit_params['median_sol'],
                         isoch_fit_params['mcmc_trace']]
                 mp_best_fit1_mcmc.plot(1, *args)
 
@@ -157,8 +160,8 @@ def main(npd, pd, isoch_fit_params, fit_params_r, fit_errors_r, **kwargs):
             # pl_param_chain: Parameters sampler chains.
             for p in ['metal', 'age', 'ext', 'dist', 'mass', 'binar']:
                 args = [
-                    p, gs, pd['best_fit_algor'], fit_params_r, min_max_p,
-                    nwalkers, nburn, nsteps,
+                    p, gs, pd['best_fit_algor'], isoch_fit_params['mean_sol'],
+                    min_max_p, nwalkers, nburn, nsteps,
                     isoch_fit_params['mcmc_trace'],
                     isoch_fit_params['varIdxs'],
                     isoch_fit_params['pars_chains_bi'],

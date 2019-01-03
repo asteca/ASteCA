@@ -2,13 +2,13 @@
 from ..inp.get_data import flatten
 
 
-def main(npd, pd, flag_center_std, flag_center_manual, flag_delta_total,
-         flag_not_stable, flag_delta, flag_radius_manual, flag_2pk_conver,
-         flag_3pk_conver, flag_memb_par, flag_num_memb_low, K_memb_num,
-         K_conct_par, cont_index, n_memb, memb_par, n_memb_da, frac_cl_area,
-         kde_cent, clust_rad, e_rad, core_rad, e_core,
-         tidal_rad, e_tidal, fit_params_r, fit_errors_r, fit_params_map_r,
-         **kwargs):
+def main(
+    npd, pd, flag_center_std, flag_center_manual, flag_delta_total,
+    flag_not_stable, flag_delta, flag_radius_manual, flag_2pk_conver,
+    flag_3pk_conver, flag_memb_par, flag_num_memb_low, K_memb_num,
+    K_conct_par, cont_index, n_memb, memb_par, n_memb_da, frac_cl_area,
+    kde_cent, clust_rad, e_rad, core_rad, e_core, tidal_rad, e_tidal,
+        isoch_fit_params, isoch_fit_errors, **kwargs):
     '''
     Add data obtained to the 'data_output.dat' file.
     '''
@@ -37,9 +37,12 @@ def main(npd, pd, flag_center_std, flag_center_manual, flag_delta_total,
     cr_e = ["{:.0f}".format(_) for _ in [e_rad, e_core, e_tidal]]
     # Interwine these lists.
     cre_r = cr_r[:2] + [item for t in zip(cr_r[2:], cr_e) for item in t]
-    # Rounded cluster parameters and errors.
+    # Cluster parameters and errors.
     cpe_r = [
-        item for t in zip(fit_params_r, fit_params_map_r, fit_errors_r)
+        item for t in zip(
+            isoch_fit_params['mean_sol'], isoch_fit_params['map_sol'],
+            isoch_fit_params['median_sol'], list(zip(*isoch_fit_errors))[0],
+            list(zip(*isoch_fit_errors))[1])
         for item in t]
 
     # Store all parameter values in list.
@@ -61,9 +64,12 @@ def main(npd, pd, flag_center_std, flag_center_manual, flag_delta_total,
     with open(out_file_name, "a") as f_out:
         f_out.write('''{:<16} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} \
 {:>8.2f} {:>7.2f} {:>10.0f} {:>10.0f} {:>10.0f} {:>9.2f} {:>7.2f} \
-{:>8} {:>8} {:>8} {:>8} {:>8} {:>8} \
-{:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} \
-{:>8}'''.format(*line_f))
+{:>8.5} {:>8.5} {:>8.5} {:>8.5} {:>8.5} \
+{:>8.4} {:>8.4} {:>8.4} {:>8.4} {:>8.4} \
+{:>8.3} {:>8.3} {:>8.3} {:>8.3} {:>8.3} \
+{:>8.3} {:>8.3} {:>8.3} {:>8.3} {:>8.3} \
+{:>10.1} {:>10.1} {:>10.1} {:>10.1} {:>10.1} \
+{:>8.2} {:>8.2} {:>8.2} {:>8.2} {:>8.2}'''.format(*line_f))
         # Flags.
         f_out.write('''{:>8} {:>2} {:>3} {:>2} {:>2} {:>2} {:>2} {:>2} \
 {:>2} {:>3}'''.format(*int_flags))

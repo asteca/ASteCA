@@ -263,7 +263,7 @@ def pl_2_param_dens(_2_params, gs, min_max_p2, varIdxs, mcmc_trace):
 
 
 def pl_param_pf(
-    par_name, gs, min_max_p, cp_r, cp_e, varIdxs, map_sol,
+    par_name, gs, min_max_p, varIdxs, mean_sol, map_sol, median_sol,
         model_done):
     '''
     Parameter posterior plot.
@@ -278,15 +278,14 @@ def pl_param_pf(
 
     labels = [r'$z$', r'$\log(age)$', r'$E_{{(B-V)}}$', r'$(m-M)_o$',
               r'$M\,(M_{{\odot}})$', r'$b_{{frac}}$']
-    frm = ["{:.4f}", "{:.3f}", "{:.3f}", "{:.2f}", "{:.0f}", "{:.2f}"]
+    frm = ["{:.4f}", "{:.3f}", "{:.3f}", "{:.3f}", "{:.0f}", "{:.2f}"]
 
     ld_p = labels[cp]
     p = frm[cp]
 
     ax = plt.subplot(gs[gs_y1:gs_y2, gs_x1:gs_x2])
     plt.title(ld_p, fontsize=10)
-    # Parameter values and errors.
-    xp, e_xp = map(float, [cp_r[cp], cp_e[cp]])
+
     # Set x axis limit.
     xp_min, xp_max = min_max_p[cp]
     ax.set_xlim(xp_min, xp_max)
@@ -331,19 +330,17 @@ def pl_param_pf(
             width=(bin_edges[1] - bin_edges[0]), color='grey', alpha=0.3)
 
         # Mean
-        # x_mean = np.mean(model_done[c_model])
         plt.axvline(
-            x=xp, linestyle='--', color='blue', zorder=4,
-            label=("Mean (" + p + ")").format(xp))
+            x=mean_sol[cp], linestyle='--', color='blue', zorder=4,
+            label=("Mean (" + p + ")").format(mean_sol[cp]))
         # MAP
         plt.axvline(
             x=map_sol[cp], linestyle='--', color='red', zorder=4,
             label=("MAP (" + p + ")").format(map_sol[cp]))
         # Median
-        pm = np.percentile(model_done[c_model], 50)
         plt.axvline(
-            x=pm, linestyle=':', color='green', zorder=4,
-            label=("Median (" + p + ")").format(pm))
+            x=median_sol[cp], linestyle=':', color='green', zorder=4,
+            label=("Median (" + p + ")").format(median_sol[cp]))
 
         # 16th and 84th percentiles (1 sigma) around median.
         ph = np.percentile(model_done[c_model], 84)
@@ -379,7 +376,7 @@ def pl_MAP_lkl(dummy, gs, prob_mean, map_lkl, map_lkl_final):
 
 
 def pl_param_chain(
-    par_name, gs, best_fit_algor, cp_r, min_max_p, nwalkers, nburn, nsteps,
+    par_name, gs, best_fit_algor, mean_sol, min_max_p, nwalkers, nburn, nsteps,
     model_done, varIdxs, pre_bi, post_bi, autocorr_time, max_at_c, min_at_c,
         mcmc_ess):
     '''
@@ -435,7 +432,7 @@ def pl_param_chain(
 
         # Mean
         plt.axhline(
-            y=float(cp_r[cp]), linestyle='--', color='blue', zorder=4)
+            y=float(mean_sol[cp]), linestyle='--', color='blue', zorder=4)
         #  16th and 84th percentiles (1 sigma) around median.
         ph = np.percentile(model_done[c_model], 84)
         pl = np.percentile(model_done[c_model], 16)

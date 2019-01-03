@@ -38,7 +38,8 @@ from .out import mcmc_samples
 from .out import synth_cl_file
 from .out import massFunction  # TODO
 from .out import create_out_data_file
-from .errors import error_round
+# DEPRECATED 31/12/18
+# from .errors import error_round
 #
 from .out import add_data_output
 from .out import make_A1_plot
@@ -48,7 +49,7 @@ from .out import make_B_plot
 from .out import make_C_plot
 from .out import make_D1_plot
 from .out import make_D2_plot
-# DEPRECATED 22/11
+# DEPRECATED 22/11/18
 # from .out import top_tiers
 from .out import done_move
 
@@ -232,8 +233,9 @@ def main(cl_file, pd):
     # Create template output data file in /output dir.
     create_out_data_file.main(npd)
 
-    # Round fundamental parameters fitted and their errors
-    clp = error_round.fundParams(clp)
+    # DEPRECATED 31/12/18
+    # # Round fundamental parameters fitted and their errors
+    # clp = error_round.fundParams(clp)
 
     # Add cluster data and flags to output file
     add_data_output.main(npd, pd, **clp)
