@@ -97,12 +97,12 @@ def main(npd):
 #\n\
 #NAME                 c_x      c_y     r_cl    e_rcl      r_c     e_rc      \
 r_t     e_rt      kcp      CI   n_memb_k     n_memb  n_memb_da  memb_par     \
-a_f      \
-z_mean   z_MAP   z_median   16th     84th    \
-a_mean   a_MAP   a_median   16th     84th    \
-e_mean   e_MAP   e_median   16th     84th    \
-d_mean   d_MAP   d_median   16th     84th    \
-M_mean   M_MAP   M_median   16th     84th    \
-b_mean   b_MAP   b_median   16th     84th    \
+a_f     \
+z_mean      z_MAP   z_median       16th       84th     \
+a_mean      a_MAP   a_median       16th       84th     \
+e_mean      e_MAP   e_median       16th       84th     \
+d_mean      d_MAP   d_median       16th       84th     \
+M_mean      M_MAP   M_median       16th       84th     \
+b_mean      b_MAP   b_median       16th       84th      \
 M1 M2  f1 f2 f3 f4 f5 f6 f7  FC\n".format(__version__, now_time))
             print('Output data file created.')

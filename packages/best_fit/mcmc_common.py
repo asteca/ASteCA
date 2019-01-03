@@ -45,7 +45,7 @@ def fillParams(fundam_params, varIdxs, model):
     return model_filled
 
 
-def closeSol(fundam_params, model):
+def closeSol(fundam_params, model, pushidxs):
     """
     Find the closest value in the parameters list for the discrete parameters
     metallicity, age, and mass.
@@ -53,7 +53,7 @@ def closeSol(fundam_params, model):
     model_proper = []
     for i, par in enumerate(fundam_params):
         # If it is the parameter metallicity, age or mass.
-        if i in [0, 1, 4]:
+        if i in pushidxs:
             # Select the closest value in the array of allowed values.
             model_proper.append(min(
                 par, key=lambda x: abs(x - model[i])))

@@ -204,22 +204,21 @@ def main(
 
         print("Best fit parameters obtained.")
 
-        clp['cl_max_mag'], clp['max_mag_syn'], clp['ext_coefs'],\
-            clp['st_dist_mass'], clp['N_fc'], clp['cmpl_rnd'], clp['err_rnd'],\
-            clp['isoch_fit_params'], clp['isoch_fit_errors'] =\
-            cl_max_mag, max_mag_syn, ext_coefs, st_dist_mass, N_fc, cmpl_rnd,\
-            err_rnd, isoch_fit_params, isoch_fit_errors
+        clp['max_mag_syn'], clp['ext_coefs'], clp['st_dist_mass'], \
+            clp['N_fc'], clp['cmpl_rnd'], clp['err_rnd'], =\
+            max_mag_syn, ext_coefs, st_dist_mass, N_fc, cmpl_rnd, err_rnd
 
     else:
-        # Pass dummy data to make_plots.
         print('Skip parameters fitting process.')
+        # Pass dummy data used by data output and some plot functions.
+        cl_max_mag = []
+        isoch_fit_params = {
+            'mean_sol': [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan],
+            'median_sol': [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan],
+            'map_sol': [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]}
+        isoch_fit_errors = [[np.nan, np.nan]] * 6
 
-        # 31/12/18 this is not needed I believe
-        # cl_max_mag, max_mag_syn, ext_coefs, st_dist_mass, N_fc, cmpl_rnd,\
-        #     err_rnd, isoch_fit_params, isoch_fit_errors = [], -1., [], {}, [],\
-        #     [], [],\
-        #     {'mean_sol': [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan],
-        #      'map_sol': [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]},\
-        #     [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]
+    clp['cl_max_mag'], clp['isoch_fit_params'], clp['isoch_fit_errors'] = \
+        cl_max_mag, isoch_fit_params, isoch_fit_errors
 
     return clp

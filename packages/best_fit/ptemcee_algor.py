@@ -7,7 +7,7 @@ from . import likelihood
 from .emcee3rc2 import autocorr
 from .mcmc_convergence import convergenceVals
 from .mcmc_common import initPop, varPars, synthClust, rangeCheck, fillParams,\
-    discreteParams
+    closeSol, discreteParams
 from .ptemcee import sampler
 from .ptemcee import util
 
@@ -222,6 +222,9 @@ def main(
 
     # Fill the spaces of the parameters not fitted with their fixed values.
     mean_sol = fillParams(fundam_params, varIdxs, np.mean(mcmc_trace, axis=1))
+    # Push Mass value to grid value for mean and map solutions.
+    mean_sol = closeSol(fundam_params, mean_sol, [4])
+    map_sol = closeSol(fundam_params, map_sol, [4])
     median_sol = fillParams(
         fundam_params, varIdxs, np.median(mcmc_trace, axis=1))
 
