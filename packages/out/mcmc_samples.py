@@ -12,12 +12,13 @@ def main(clp, pd, mcmc_file_out, **kwargs):
         varIdxs = clp['isoch_fit_params']['varIdxs']
         chains_nruns = clp['isoch_fit_params']['pars_chains']
 
-        # Assume that each value stored occupies 10 bytes. Use a maximum file
+        # Assume that each value stored occupies 8.5 bytes. Use a maximum file
         # size of 20 Mbs.
-        max_sz = 20. * 1024. * 1024.
+        max_mbs = 20.
+        max_sz = max_mbs * 1024. * 1024.
         ndim, nwalkers, nsteps = chains_nruns.shape
         # Maximum number of steps to store.
-        max_n = int(max_sz / (ndim * nwalkers * 10.))
+        max_n = int(max_sz / (ndim * nwalkers * 8.5))
 
         tt, fmt = Table(), {}
         params = ['metal', 'log(age)', 'E_BV', 'dm', 'mass', 'binar_f']
