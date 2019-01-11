@@ -179,17 +179,17 @@ def pl_bf_synth_cl(
             IMF_name.replace('_', '\;').title())
         t3 = r'$R_{{V}} \hspace{{3.2}}=\;{}$'.format(R_V)
         t4 = r'$z \hspace{{3.9}}=\;{:.5f}\pm {:.5f}$'.format(
-            mean_sol[0], .5 * (p_err[0][1] - p_err[0][0]))
+            mean_sol[0], p_err[0][2])
         t5 = r'$\log(age) \hspace{{0.17}}=\;{:.3f}\pm {:.3f}$'.format(
-            mean_sol[1], .5 * (p_err[1][1] - p_err[1][0]))
+            mean_sol[1], p_err[1][2])
         t6 = r'$E_{{(B-V)}} \hspace{{1.35}}=\;{:.3f}\pm {:.3f}$'.format(
-            mean_sol[2], .5 * (p_err[2][1] - p_err[2][0]))
+            mean_sol[2], p_err[2][2])
         t7 = r'$(m-M)_{{0}}=\;{:.3f} \pm {:.3f}$'.format(
-            mean_sol[3], .5 * (p_err[3][1] - p_err[3][0]))
+            mean_sol[3], p_err[3][2])
         t8 = r'$M\,(M_{{\odot}}) \hspace{{1.07}} =\;{:.0f}\pm {:.0f}$'.format(
-            mean_sol[4], .5 * (p_err[4][1] - p_err[4][0]))
+            mean_sol[4], p_err[4][2])
         t9 = r'$b_{{frac}} \hspace{{2.37}}=\;{:.2f}\pm {:.2f}$'.format(
-            mean_sol[5], .5 * (p_err[5][1] - p_err[5][0]))
+            mean_sol[5], p_err[5][2])
         text = t1 + '\n\n' + t2 + '\n' + t3 + '\n' + t4 + '\n' + t5 + '\n' +\
             t6 + '\n' + t7 + '\n' + t8 + '\n' + t9
         ob = offsetbox.AnchoredText(

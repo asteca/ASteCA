@@ -37,12 +37,12 @@ def params_errors(best_fit_algor, args):
                 #  16th and 84th percentiles (1 sigma)
                 ph = np.percentile(isoch_fit_params['mcmc_trace'][i - j], 84)
                 pl = np.percentile(isoch_fit_params['mcmc_trace'][i - j], 16)
-                # std = np.std(isoch_fit_params['mcmc_trace'][i - j])
+                std = np.std(isoch_fit_params['mcmc_trace'][i - j])
                 # # Use maximum error value. TODO is this a sensible approach?
                 # err = max(.5 * (ph - pl), std)
-                isoch_fit_errors.append((pl, ph))
+                isoch_fit_errors.append((pl, ph, std))
             else:
-                isoch_fit_errors.append((np.nan, np.nan))
+                isoch_fit_errors.append((np.nan, np.nan, np.nan))
                 j += 1
 
     return isoch_fit_errors, mean_boot_sol
@@ -216,7 +216,7 @@ def main(
             'mean_sol': [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan],
             'median_sol': [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan],
             'map_sol': [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]}
-        isoch_fit_errors = [[np.nan, np.nan]] * 6
+        isoch_fit_errors = [[np.nan, np.nan, np.nan]] * 6
 
     clp['cl_max_mag'], clp['isoch_fit_params'], clp['isoch_fit_errors'] = \
         cl_max_mag, isoch_fit_params, isoch_fit_errors
