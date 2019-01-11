@@ -1,12 +1,12 @@
 
 import numpy as np
-from scipy import stats
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
 # from matplotlib.pyplot import cm
 from .prep_plots import CIEllipse
 
 from matplotlib.colors import LinearSegmentedColormap, colorConverter
+from scipy import stats
 from scipy.ndimage import gaussian_filter
 from scipy.ndimage.filters import uniform_filter1d
 
@@ -310,6 +310,20 @@ def pl_param_pf(
         kernel_cl = stats.gaussian_kde(model_done[c_model], bw_method=bw)
         # KDE for plotting.
         try:
+            # # Issue #401 normality test
+            # anderson_results = stats.anderson(model_done[c_model])
+            # A2, cv_ad, pvals = anderson_results[0], anderson_results[1],\
+            #     anderson_results[2] / 100.
+            # arr = A2 - cv_ad
+            # arr[arr < 0.] = np.inf
+            # pv_ad = pvals[np.argmin(arr)]
+
+            # k2, pv_nt = stats.normaltest(model_done[c_model])
+            # # S-W: p-value may not be accurate for N > 5000.
+            # W, pv_shw = stats.shapiro(model_done[c_model])
+            # ks, pv_ks = stats.kstest(model_done[c_model], cdf='norm')
+            # print(pv_ad, pv_nt, pv_shw, pv_ks)
+
             kde = np.reshape(kernel_cl(x_kde).T, x_kde.shape)
             plt.plot(x_kde, kde / max(kde), color='k', lw=1.5)
             # Mode (using KDE)
