@@ -24,7 +24,7 @@ def main(npd):
 
         # Modify these two lines
         data[1] = '# [ASteCA {}]\n'.format(__version__)
-        data[3] = '# Modified: [{}]\n'.format(now_time)
+        data[4] = '# Modified: [{}]\n'.format(now_time)
 
         # Write everything back.
         with open(out_file_name, 'w') as f:
@@ -36,6 +36,7 @@ def main(npd):
             out_data_file.write("#\n\
 # [ASteCA {}]\n\
 #\n\
+# Created:  [{}]\n\
 # Modified: [{}]\n\
 #\n\
 # NAME: Cluster's name.\n\
@@ -104,5 +105,5 @@ e_mean      e_MAP   e_median       16th       84th     \
 d_mean      d_MAP   d_median       16th       84th     \
 M_mean      M_MAP   M_median       16th       84th     \
 b_mean      b_MAP   b_median       16th       84th      \
-M1 M2  f1 f2 f3 f4 f5 f6 f7  FC\n".format(__version__, now_time))
+M1 M2  f1 f2 f3 f4 f5 f6 f7  FC\n".format(__version__, now_time, now_time))
             print('Output data file created.')
