@@ -87,7 +87,7 @@ def main(
 
     # Check for convergence every 5% of steps or 100, whichever value
     # is lower.
-    N_steps_conv = min(int(nsteps_ptm * .1), 100)
+    N_steps_conv = max(min(int(nsteps_ptm * .1), 100), 10)
     # TODO input as params
     N_conv, tol_conv = 1000., 0.01
 
