@@ -6,7 +6,6 @@ from matplotlib.patches import Ellipse
 from .prep_plots import CIEllipse
 
 from matplotlib.colors import LinearSegmentedColormap, colorConverter
-from scipy import stats
 from scipy.ndimage import gaussian_filter
 from scipy.ndimage.filters import uniform_filter1d
 
@@ -263,8 +262,8 @@ def pl_2_param_dens(_2_params, gs, min_max_p2, varIdxs, mcmc_trace):
 
 
 def pl_param_pf(
-    par_name, gs, min_max_p, varIdxs, mean_sol, map_sol, median_sol,
-        model_done):
+    par_name, gs, min_max_p, varIdxs, mean_sol, map_sol, median_sol, mode_sol,
+        param_r2, mcmc_kde, model_done):
     '''
     Parameter posterior plot.
     '''
@@ -284,7 +283,9 @@ def pl_param_pf(
     p = frm[cp]
 
     ax = plt.subplot(gs[gs_y1:gs_y2, gs_x1:gs_x2])
-    plt.title(ld_p, fontsize=10)
+    plt.title(
+        ld_p + r"$\;[R^2\approx$" + "{:.2f}]".format(param_r2[cp]),
+        fontsize=10)
 
     # Set x axis limit.
     xp_min, xp_max = min_max_p[cp]
@@ -302,37 +303,10 @@ def pl_param_pf(
     if cp in varIdxs:
         c_model = varIdxs.index(cp)
 
-        # Define KDE limits.
-        x_rang = .1 * (xp_max - xp_min)
-        x_kde = np.mgrid[xp_min - x_rang:xp_max + x_rang:100j]
-        # Use a larger Scott bandwidth
-        bw = 1.5 * len(model_done[c_model]) ** (-1. / (len(varIdxs) + 4))
-        kernel_cl = stats.gaussian_kde(model_done[c_model], bw_method=bw)
-        # KDE for plotting.
-        try:
-            # # Issue #401 normality test
-            # anderson_results = stats.anderson(model_done[c_model])
-            # A2, cv_ad, pvals = anderson_results[0], anderson_results[1],\
-            #     anderson_results[2] / 100.
-            # arr = A2 - cv_ad
-            # arr[arr < 0.] = np.inf
-            # pv_ad = pvals[np.argmin(arr)]
-
-            # k2, pv_nt = stats.normaltest(model_done[c_model])
-            # # S-W: p-value may not be accurate for N > 5000.
-            # W, pv_shw = stats.shapiro(model_done[c_model])
-            # ks, pv_ks = stats.kstest(model_done[c_model], cdf='norm')
-            # print(pv_ad, pv_nt, pv_shw, pv_ks)
-
-            kde = np.reshape(kernel_cl(x_kde).T, x_kde.shape)
-            plt.plot(x_kde, kde / max(kde), color='k', lw=1.5)
-            # Mode (using KDE)
-            x_mode = x_kde[np.argmax(kde)]
-            plt.axvline(
-                x=x_mode, linestyle='--', color='cyan', zorder=4,
-                label=("Mode (" + p + ")").format(x_mode))
-        except (FloatingPointError, UnboundLocalError):
-            pass
+        # Plot KDE.
+        if mcmc_kde[c_model]:
+            x_kde, par_kde = mcmc_kde[c_model]
+            plt.plot(x_kde, par_kde / max(par_kde), color='k', lw=1.5)
 
         # Obtain the bin values and edges using numpy
         hist, bin_edges = np.histogram(model_done[c_model], bins='auto')
@@ -355,6 +329,10 @@ def pl_param_pf(
         plt.axvline(
             x=median_sol[cp], linestyle=':', color='green', zorder=4,
             label=("Median (" + p + ")").format(median_sol[cp]))
+        # Mode
+        plt.axvline(
+            x=mode_sol[cp], linestyle='--', color='cyan', zorder=4,
+            label=("Mode (" + p + ")").format(mode_sol[cp]))
 
         # 16th and 84th percentiles (1 sigma) around median.
         ph = np.percentile(model_done[c_model], 84)

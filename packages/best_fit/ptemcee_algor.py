@@ -1,5 +1,6 @@
 
 import numpy as np
+from scipy import stats
 import warnings
 import time as t
 from .. import update_progress
@@ -222,17 +223,66 @@ def main(
         mESS, mESS_epsilon = convergenceVals(
             'ptemcee', ndim, varIdxs, N_conv, chains_nruns, mcmc_trace)
 
+    # R^2 for normal distribution.
+    param_r2 = []
+    for i, _ in enumerate(fundam_params):
+        if i in varIdxs:
+            c_model = varIdxs.index(i)
+            mcmc_par = mcmc_trace[c_model]
+            param_r2.append(stats.probplot(mcmc_par)[1][-1] ** 2)
+        else:
+            param_r2.append(np.nan)
+
+    # Estimate the mode for each fitted parameter from a KDE. Store the KDE
+    # for plotting.
+    mcmc_kde, mode_sol = [], []
+    for i, mcmc_par in enumerate(mcmc_trace):
+
+        # Length of the last 10% of the chain.
+        N = int(mcmc_par.shape[0] * .1)
+
+        # Define KDE limits using only the last 10% of the chains.
+        std = np.std(mcmc_par[-N:])
+        pmin, pmax = np.min(mcmc_par[-N:]), np.max(mcmc_par[-N:])
+        xp_min, xp_max = max(fundam_params[varIdxs[i]][0], pmin - std),\
+            min(fundam_params[varIdxs[i]][-1], pmax + std)
+
+        x_rang = .1 * (xp_max - xp_min)
+        x_kde = np.mgrid[xp_min - x_rang:xp_max + x_rang:100j]
+        # Use a slightly larger Scott bandwidth (looks better when plotted)
+        bw = 1.25 * len(mcmc_par) ** (-1. / (len(varIdxs) + 4))
+        kernel_cl = stats.gaussian_kde(mcmc_par, bw_method=bw)
+        # KDE for plotting.
+        try:
+            # Parameter's KDE evaluated and reshaped.
+            par_kde = np.reshape(kernel_cl(x_kde).T, x_kde.shape)
+
+            # For plotting
+            mcmc_kde.append([x_kde, par_kde])
+            # Mode (using KDE)
+            mode_sol.append(x_kde[np.argmax(par_kde)])
+        except (FloatingPointError, UnboundLocalError):
+            mcmc_kde.append([])
+            mode_sol.append(np.nan)
+
+    # Mean and median.
+    mean_sol = np.mean(mcmc_trace, axis=1)
+    median_sol = np.median(mcmc_trace, axis=1)
+
     # Fill the spaces of the parameters not fitted with their fixed values.
-    mean_sol = fillParams(fundam_params, varIdxs, np.mean(mcmc_trace, axis=1))
-    # Push Mass value to grid value for mean and map solutions.
+    mean_sol = fillParams(fundam_params, varIdxs, mean_sol)
+    mode_sol = fillParams(fundam_params, varIdxs, mode_sol)
+    median_sol = fillParams(fundam_params, varIdxs, median_sol)
+
+    # Push Mass value to grid value for mean, map, and mode solutions.
     mean_sol = closeSol(fundam_params, mean_sol, [4])
+    mode_sol = closeSol(fundam_params, mode_sol, [4])
     map_sol = closeSol(fundam_params, map_sol, [4])
-    median_sol = fillParams(
-        fundam_params, varIdxs, np.median(mcmc_trace, axis=1))
 
     isoch_fit_params = {
         'varIdxs': varIdxs, 'nsteps_ptm': runs, 'mean_sol': mean_sol,
         'median_sol': median_sol, 'map_sol': map_sol, 'map_lkl': map_lkl,
+        'mode_sol': mode_sol, 'mcmc_kde': mcmc_kde, 'param_r2': param_r2,
         'map_lkl_final': map_lkl_final, 'prob_mean': prob_mean,
         'mcmc_elapsed': elapsed, 'mcmc_trace': mcmc_trace,
         'pars_chains_bi': pars_chains_bi, 'pars_chains': chains_nruns.T,

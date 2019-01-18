@@ -125,6 +125,9 @@ def main(npd, pd, isoch_fit_params, **kwargs):
                         isoch_fit_params['mean_sol'],
                         isoch_fit_params['map_sol'],
                         isoch_fit_params['median_sol'],
+                        isoch_fit_params['mode_sol'],
+                        isoch_fit_params['param_r2'],
+                        isoch_fit_params['mcmc_kde'],
                         isoch_fit_params['mcmc_trace']]
                 mp_best_fit1_mcmc.plot(1, *args)
 

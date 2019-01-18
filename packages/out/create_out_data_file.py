@@ -64,11 +64,11 @@ def main(npd):
 #           members ('n_memb_da').\n\
 # a_f: Fraction of cluster's area that is present in frame.\n\
 #\n\
-# Parameters values are in the sense: mean, MAP/ML, median.\n\
-# Parameters uncertainties are: 16th, 84th percentiles.\n\
+# Parameters values are in the sense: mean, MAP/ML, median, mode.\n\
+# Parameters uncertainties are: 16th, 84th percentiles, and STDDEV.\n\
 # z: Metallicity value.\n\
 # a: log(age).\n\
-# e: extinction E(B-V).\n\
+# E: extinction E(B-V).\n\
 # d: Distance modulus.\n\
 # M: Total initial mass.\n\
 # b: Binary fraction.\n\
@@ -99,11 +99,11 @@ def main(npd):
 #NAME                 c_x      c_y     r_cl    e_rcl      r_c     e_rc      \
 r_t     e_rt      kcp      CI   n_memb_k     n_memb  n_memb_da  memb_par     \
 a_f     \
-z_mean      z_MAP   z_median       16th       84th        std     \
-a_mean      a_MAP   a_median       16th       84th        std     \
-e_mean      e_MAP   e_median       16th       84th        std     \
-d_mean      d_MAP   d_median       16th       84th        std     \
-M_mean      M_MAP   M_median       16th       84th        std     \
-b_mean      b_MAP   b_median       16th       84th        std      \
+z_mean      z_MAP   z_median     z_mode       16th       84th        std    R^2     \
+a_mean      a_MAP   a_median     a_mode       16th       84th        std    R^2     \
+E_mean      E_MAP   E_median     E_mode       16th       84th        std    R^2     \
+d_mean      d_MAP   d_median     d_mode       16th       84th        std    R^2     \
+M_mean      M_MAP   M_median     M_mode       16th       84th        std    R^2     \
+b_mean      b_MAP   b_median     b_mode       16th       84th        std    R^2      \
 M1 M2  f1 f2 f3 f4 f5 f6 f7  FC\n".format(__version__, now_time, now_time))
             print('Output data file created.')
