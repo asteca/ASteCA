@@ -110,21 +110,23 @@ def main(
     maf_steps, prob_mean, map_lkl = [], [], []
     elapsed_in, start_in = 0., t.time()
     milestones = list(range(10, 101, 10))
-    for i, result in enumerate(ptsampler.sample(
-            pos0, iterations=nsteps_ptm, adapt=pt_adapt)):
 
-        elapsed += t.time() - start_t
-        if elapsed >= available_secs:
-            print("  Time consumed (runs={})".format(i + 1))
-            break
-        start_t = t.time()
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
 
-        # Only check convergence every 'N_steps_conv' steps
-        if (i + 1) % N_steps_conv:
-            continue
+        for i, result in enumerate(ptsampler.sample(
+                pos0, iterations=nsteps_ptm, adapt=pt_adapt)):
 
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+            elapsed += t.time() - start_t
+            if elapsed >= available_secs:
+                print("  Time consumed (runs={})".format(i + 1))
+                break
+            start_t = t.time()
+
+            # Only check convergence every 'N_steps_conv' steps
+            if (i + 1) % N_steps_conv:
+                continue
+
             # Compute the autocorrelation time so far. Using tol=0 means that
             # we'll always get an estimate even if it isn't trustworthy.
             tau0 = autocorr.integrated_time(
@@ -150,42 +152,42 @@ def main(
             converged = np.all(tau * N_conv < (i + 1))
             converged &= np.all(np.abs(old_tau - tau) / tau < tol_conv)
 
-        # TODO disabled for now
-        # if converged:
-        #     print("  Convergence achieved (runs={})".format(i + 1))
-        #     break
-        old_tau = tau
+            # TODO disabled for now
+            # if converged:
+            #     print("  Convergence achieved (runs={})".format(i + 1))
+            #     break
+            old_tau = tau
 
-        pos, lnprob, lnlike = result
+            pos, lnprob, lnlike = result
 
-        maf = np.mean(ptsampler.acceptance_fraction[0])
-        # maf_steps.append([i, maf])
+            maf = np.mean(ptsampler.acceptance_fraction[0])
+            # maf_steps.append([i, maf])
 
-        # Store MAP solution in this iteration.
-        prob_mean.append([i, np.mean(lnprob[0])])
-        idx_best = np.argmax(lnprob[0])
-        # Update if a new optimal solution was found.
-        if lnprob[0][idx_best] > map_sol_old[1]:
-            map_sol_old = [
-                fillParams(fundam_params, varIdxs, pos[0][idx_best]),
-                lnprob[0][idx_best]]
-        map_lkl.append([i, map_sol_old[1]])
+            # Store MAP solution in this iteration.
+            prob_mean.append([i, np.mean(lnprob[0])])
+            idx_best = np.argmax(lnprob[0])
+            # Update if a new optimal solution was found.
+            if lnprob[0][idx_best] > map_sol_old[1]:
+                map_sol_old = [
+                    fillParams(fundam_params, varIdxs, pos[0][idx_best]),
+                    lnprob[0][idx_best]]
+            map_lkl.append([i, map_sol_old[1]])
 
-        # Time used to check how fast the sampler is advancing.
-        elapsed_in += t.time() - start_in
-        start_in = t.time()
-        # Print progress.
-        percentage_complete = (100. * (i + 1) / nsteps_ptm)
-        if len(milestones) > 0 and percentage_complete >= milestones[0]:
-            map_sol, logprob = map_sol_old
-            m, s = divmod(nsteps_ptm / (i / elapsed_in) - elapsed_in, 60)
-            h, m = divmod(m, 60)
-            print("{:>3}% ({:.3f}) LP={:.1f} ({:g}, {:g}, {:.3f}, {:.2f}"
-                  ", {:g}, {:.2f})".format(
-                      milestones[0], maf, logprob, *map_sol) +
-                  " [{:.0f} m/s | {:.0f}h{:.0f}m]".format(
-                      (ntemps * nwalkers_ptm * i) / elapsed_in, h, m))
-            milestones = milestones[1:]
+            # Time used to check how fast the sampler is advancing.
+            elapsed_in += t.time() - start_in
+            start_in = t.time()
+            # Print progress.
+            percentage_complete = (100. * (i + 1) / nsteps_ptm)
+            if len(milestones) > 0 and percentage_complete >= milestones[0]:
+                map_sol, logprob = map_sol_old
+                m, s = divmod(nsteps_ptm / (i / elapsed_in) - elapsed_in, 60)
+                h, m = divmod(m, 60)
+                print("{:>3}% ({:.3f}) LP={:.1f} ({:.5f}, {:.3f}, {:.3f}, "
+                      "{:.2f}, {:g}, {:.2f})".format(
+                          milestones[0], maf, logprob, *map_sol) +
+                      " [{:.0f} m/s | {:.0f}h{:.0f}m]".format(
+                          (ntemps * nwalkers_ptm * i) / elapsed_in, h, m))
+                milestones = milestones[1:]
 
     runs = i + 1
 
@@ -257,7 +259,7 @@ def main(
             # Parameter's KDE evaluated and reshaped.
             par_kde = np.reshape(kernel_cl(x_kde).T, x_kde.shape)
 
-            # For plotting
+            # Store for plotting
             mcmc_kde.append([x_kde, par_kde])
             # Mode (using KDE)
             mode_sol.append(x_kde[np.argmax(par_kde)])
