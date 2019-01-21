@@ -72,6 +72,7 @@ def main(npd):
 # d: Distance modulus.\n\
 # M: Total initial mass.\n\
 # b: Binary fraction.\n\
+# Nt: Number of estimates used to the parameters values.\n\
 #\n\
 # M1 Indicates that the center was set manually.\n\
 # M2 Indicates that the radius was set manually.\n\
@@ -104,6 +105,7 @@ a_mean      a_MAP   a_median     a_mode       16th       84th        std    R^2 
 E_mean      E_MAP   E_median     E_mode       16th       84th        std    R^2     \
 d_mean      d_MAP   d_median     d_mode       16th       84th        std    R^2     \
 M_mean      M_MAP   M_median     M_mode       16th       84th        std    R^2     \
-b_mean      b_MAP   b_median     b_mode       16th       84th        std    R^2      \
-M1 M2  f1 f2 f3 f4 f5 f6 f7  FC\n".format(__version__, now_time, now_time))
+b_mean      b_MAP   b_median     b_mode       16th       84th        std    R^2     \
+    Nt      M1 M2  f1 f2 f3 f4 f5 f6 f7  FC\n".format(
+                __version__, now_time, now_time))
             print('Output data file created.')

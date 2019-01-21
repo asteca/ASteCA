@@ -281,6 +281,9 @@ def main(
     mode_sol = closeSol(fundam_params, mode_sol, [4])
     map_sol = closeSol(fundam_params, map_sol, [4])
 
+    # Total number of values used to estimate the parameter's distributions.
+    N_total = mcmc_trace.shape[-1]
+
     isoch_fit_params = {
         'varIdxs': varIdxs, 'nsteps_ptm': runs, 'mean_sol': mean_sol,
         'median_sol': median_sol, 'map_sol': map_sol, 'map_lkl': map_lkl,
@@ -293,7 +296,7 @@ def main(
         'max_at_c': max_at_c, 'min_at_c': min_at_c,
         'minESS': minESS, 'mESS': mESS, 'mESS_epsilon': mESS_epsilon,
         'emcee_acorf': emcee_acorf, 'geweke_z': geweke_z,
-        'mcmc_ess': mcmc_ess,
+        'mcmc_ess': mcmc_ess, 'N_total': N_total,
         'N_steps_conv': N_steps_conv, 'N_conv': N_conv, 'tol_conv': tol_conv,
         'tau_index': tau_index, 'tau_autocorr': tau_autocorr
     }
