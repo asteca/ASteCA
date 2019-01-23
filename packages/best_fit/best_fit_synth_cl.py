@@ -215,7 +215,10 @@ def main(
         isoch_fit_params = {
             'mean_sol': [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan],
             'median_sol': [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan],
-            'map_sol': [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]}
+            'map_sol': [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan],
+            'mode_sol': [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan],
+            'param_r2': [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan],
+            'N_total': np.nan}
         isoch_fit_errors = [[np.nan, np.nan, np.nan]] * 6
 
     clp['cl_max_mag'], clp['isoch_fit_params'], clp['isoch_fit_errors'] = \

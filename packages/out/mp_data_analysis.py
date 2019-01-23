@@ -2,7 +2,6 @@
 import numpy as np
 # from scipy.ndimage.filters import gaussian_filter
 from scipy.stats import gaussian_kde
-# from scipy.stats import gaussian_kde
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
 # from matplotlib.colors import LinearSegmentedColormap
@@ -420,8 +419,11 @@ def pl_cl_diag(
 
 
 def hessKDE(
-    ax, bw, Nb, x_ax, y_ax, x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd,
+    ax, x_ax, y_ax, x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd,
         cl_col, cl_mag, fr_col, fr_mag):
+
+    # This bandwidth seems to produce nice results.
+    bw, Nb = .2, 100
 
     ax.set_title("Cluster - Field (normalized)", fontsize=9)
     plt.xlabel('$' + x_ax + '$', fontsize=12)
@@ -430,6 +432,18 @@ def hessKDE(
     xx, yy = np.mgrid[x_min_cmd:x_max_cmd:complex(Nb),
                       y_max_cmd:y_min_cmd:complex(Nb)]
     positions = np.vstack([xx.ravel(), yy.ravel()])
+
+    # # Test the impact of the bw value in the final estimate.
+    # scott_f = len(cl_col)**(-1. / (2 + 4))
+    # for bws in (scott_f / 2., scott_f, scott_f * 2.):
+    #     kernel1 = gaussian_kde(np.vstack([cl_col, cl_mag]), bw_method=bws)
+    #     kernel2 = gaussian_kde(np.vstack([fr_col, fr_mag]), bw_method=bws)
+    #     f1 = np.reshape(kernel1(positions).T, xx.shape)
+    #     f2 = np.reshape(kernel2(positions).T, xx.shape)
+    #     diff = f1 - f2
+    #     diff = np.clip(diff, 1e-9, np.inf)
+    #     cell = ((x_max_cmd - x_min_cmd) * (y_min_cmd - y_max_cmd)) / Nb**2
+    #     print(np.sum(diff * cell))
 
     # Cluster data
     values1 = np.vstack([cl_col, cl_mag])
@@ -475,16 +489,13 @@ def pl_hess_cmd(
     Hess diagram for CMD of field vs cluster region.
     '''
     if stars_f_acpt[0]:
-        # This bandwidth seems to produce nice results.
-        bw, Nb = .2, 100
-
         ax = plt.subplot(gs[4:6, 2:4])
         cl_col = list(zip(*list(zip(*cl_region_c))[5]))[0]
         cl_mag = list(zip(*list(zip(*cl_region_c))[3]))[0]
         fr_col, fr_mag = stars_f_acpt[1], stars_f_acpt[0]
 
         hessKDE(
-            ax, bw, Nb, x_ax0, y_ax, x_max_cmd0, x_min_cmd0, y_min_cmd0,
+            ax, x_ax0, y_ax, x_max_cmd0, x_min_cmd0, y_min_cmd0,
             y_max_cmd0, cl_col, cl_mag, fr_col, fr_mag)
 
         if stars_f_acpt[2]:
@@ -492,7 +503,7 @@ def pl_hess_cmd(
             fr_col = stars_f_acpt[2]
             ax = plt.subplot(gs[6:8, 2:4])
             hessKDE(
-                ax, bw, Nb, x_ax1, y_ax, x_max_cmd1, x_min_cmd1, y_min_cmd1,
+                ax, x_ax1, y_ax, x_max_cmd1, x_min_cmd1, y_min_cmd1,
                 y_max_cmd1, cl_col, cl_mag, fr_col, fr_mag)
 
 
