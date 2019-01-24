@@ -124,6 +124,8 @@ def main(mypath, pars_f_path):
                     best_fit_algor = str(reader[1])
                     # TODO extend this param to 'brute force' and 'GA'
                     hmax = float(reader[2])
+                    N_conv = float(reader[3])
+                    tol_conv = float(reader[4])
 
                 # ptemcee algorithm parameters.
                 elif reader[0] == 'PT0':
@@ -273,11 +275,12 @@ def main(mypath, pars_f_path):
         'fld_clean_mode': fld_clean_mode, 'fld_clean_bin': fld_clean_bin,
         'fld_clean_prob': fld_clean_prob,
         # Best fit parameters.
-        'best_fit_algor': best_fit_algor, 'hmax': hmax,
-        'lkl_method': lkl_method, 'lkl_binning': lkl_binning,
-        'lkl_weight': lkl_weight, 'N_bootstrap': N_bootstrap,
-        'evol_track': evol_track,
+        'best_fit_algor': best_fit_algor, 'hmax': hmax, 'N_conv': N_conv,
+        'tol_conv': tol_conv, 'lkl_method': lkl_method,
+        'lkl_binning': lkl_binning, 'lkl_weight': lkl_weight,
+        'N_bootstrap': N_bootstrap,
         # Synthetic cluster parameters
+        'evol_track': evol_track,
         'max_mag': max_mag, 'IMF_name': IMF_name, 'm_high': m_high,
         'm_sample_flag': m_sample_flag, 'N_IMF_interp': N_IMF_interp,
         'R_V': R_V, 'bin_mr': bin_mr,

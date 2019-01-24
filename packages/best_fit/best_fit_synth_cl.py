@@ -49,11 +49,12 @@ def params_errors(best_fit_algor, args):
 
 
 def main(
-    clp, bf_flag, best_fit_algor, hmax, lkl_method, lkl_binning, lkl_weight,
-    N_bootstrap, max_mag, IMF_name, m_high, m_sample_flag, R_V, fundam_params,
-    N_pop, N_gen, fit_diff, cross_prob, cross_sel, mut_prob, N_el, N_ei, N_es,
-    cmd_systs, filters, colors, theor_tracks,
-    nwalkers_emc, nsteps_emc, N_burn_emc, nburn_emc, emcee_a, priors_emc,
+    clp, bf_flag, best_fit_algor, hmax, N_conv, tol_conv, lkl_method,
+    lkl_binning, lkl_weight, N_bootstrap, max_mag, IMF_name, m_high,
+    m_sample_flag, R_V, fundam_params, N_pop, N_gen, fit_diff, cross_prob,
+    cross_sel, mut_prob, N_el, N_ei, N_es, cmd_systs, filters, colors,
+    theor_tracks, nwalkers_emc, nsteps_emc, N_burn_emc, nburn_emc, emcee_a,
+    priors_emc,
     # nwalkers_abc, nsteps_abc, nburn_abc, priors_abc,
     init_mode_ptm, popsize_ptm, maxiter_ptm, ntemps, nwalkers_ptm, nsteps_ptm,
         nburn_ptm, pt_adapt, tmax_ptm, priors_ptm, **kwargs):
@@ -197,7 +198,7 @@ def main(
                 ext_coefs, st_dist_mass, N_fc, cmpl_rnd, err_rnd,
                 init_mode_ptm, popsize_ptm, maxiter_ptm, ntemps,
                 nwalkers_ptm, nsteps_ptm, nburn_ptm, pt_adapt, tmax_ptm,
-                priors_ptm, hmax)
+                priors_ptm, hmax, N_conv, tol_conv)
             # Assign uncertainties.
             isoch_fit_errors, _ = params_errors(
                 best_fit_algor, isoch_fit_params)

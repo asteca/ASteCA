@@ -18,7 +18,7 @@ def main(
     fundam_params, obs_clust, theor_tracks, R_V,
     ext_coefs, st_dist_mass, N_fc, cmpl_rnd, err_rnd, init_mode_ptm,
     popsize_ptm, maxiter_ptm, ntemps, nwalkers_ptm, nsteps_ptm, nburn_ptm,
-        pt_adapt, tmax_ptm, priors_ptm, hmax):
+        pt_adapt, tmax_ptm, priors_ptm, hmax, N_conv, tol_conv):
     """
     """
 
@@ -89,8 +89,6 @@ def main(
     # Check for convergence every 5% of steps or 100, whichever value
     # is lower.
     N_steps_conv = max(min(int(nsteps_ptm * .1), 100), 10)
-    # TODO input as params
-    N_conv, tol_conv = 1000., 0.01
 
     afs, tswaps = [], []
     # actimes = []
@@ -151,18 +149,14 @@ def main(
             # Check convergence
             converged = np.all(tau * N_conv < (i + 1))
             converged &= np.all(np.abs(old_tau - tau) / tau < tol_conv)
-
-            # TODO disabled for now
-            # if converged:
-            #     print("  Convergence achieved (runs={})".format(i + 1))
-            #     break
+            if converged:
+                print("  Convergence achieved (runs={})".format(i + 1))
+                break
             old_tau = tau
 
             pos, lnprob, lnlike = result
 
             maf = np.mean(ptsampler.acceptance_fraction[0])
-            # maf_steps.append([i, maf])
-
             # Store MAP solution in this iteration.
             prob_mean.append([i, np.mean(lnprob[0])])
             idx_best = np.argmax(lnprob[0])
