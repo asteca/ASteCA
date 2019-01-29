@@ -132,9 +132,6 @@ def main(npd, pd, isoch_fit_params, **kwargs):
                 mp_best_fit1_mcmc.plot(1, *args)
 
             # Parallel Coordinates plot
-            # http://benalexkeen.com/parallel-coordinates-in-matplotlib/
-            # https://stackoverflow.com/questions/8230638/
-            # parallel-coordinates-plot-in-matplotlib
             # mp_best_fit1_mcmc.plot(2, *args)
 
             # pl_MAP_lkl: Parameters half of pdfs.
