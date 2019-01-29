@@ -72,18 +72,17 @@ def main(clp, coords, pms_flag, pms_chains, pms_runs, **kwargs):
                 args=(pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, pmMP, rho, mu_std_p))
             # Random initial guesses.
             pos0 = [np.random.uniform(0., 1., ndim) for i in range(nwalkers)]
-            old_tau = np.inf
+            old_tau, N_conv = np.inf, 100
             for i, _ in enumerate(sampler.sample(pos0, iterations=nruns)):
-
                 # Only check convergence every 100 steps
-                if i % 50:
+                if i % 50 and i < (nruns - 1):
                     continue
 
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore")
                     tau = sampler.get_autocorr_time(tol=0)
                     # Check convergence
-                    converged = np.all(tau * 100 < i)
+                    converged = np.all(tau * N_conv < i)
                     converged &= np.all(np.abs(old_tau - tau) / tau < 0.01)
                     if converged:
                         print("")

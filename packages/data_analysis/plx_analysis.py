@@ -85,7 +85,7 @@ def main(clp, plx_flag, plx_chains, plx_runs, **kwargs):
             # Ball of initial guesses around 'mu_p'
             pos0 = [mu_p + .5 * np.random.normal() for i in range(nwalkers)]
 
-            old_tau = np.inf
+            old_tau, N_conv = np.inf, 1000
             for i, _ in enumerate(sampler.sample(pos0, iterations=nruns)):
                 # Only check convergence every X steps
                 if i % 50 and i < (nruns - 1):
@@ -95,7 +95,7 @@ def main(clp, plx_flag, plx_chains, plx_runs, **kwargs):
                     warnings.simplefilter("ignore")
                     tau = sampler.get_autocorr_time(tol=0)
                     # Check convergence
-                    converged = np.all(tau * 100 < i)
+                    converged = np.all(tau * N_conv < i)
                     converged &= np.all(np.abs(old_tau - tau) / tau < 0.01)
                     if converged:
                         print("")
