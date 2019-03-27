@@ -67,7 +67,9 @@ def main(cld_i, clp, run_mode, center_stddev, coords, cl_cent_semi,
     if run_mode == 'auto' or run_mode == 'semi' and cent_flag_semi == 0:
 
         # Restrict the KDE to a smaller area (to improve performance).
-        radius = 0.25 * min(np.ptp(cld_i['x']), np.ptp(cld_i['y']))
+        radius = 0.25 * min(
+            np.nanmax(cld_i['x']) - np.nanmin(cld_i['x']),
+            np.nanmax(cld_i['y']) - np.nanmin(cld_i['x']))
 
         # Obtain center coordinates as the maximum KDE value. Use the
         # approximate center obtained with the full frame and the given
