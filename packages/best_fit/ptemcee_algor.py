@@ -254,9 +254,9 @@ def main(
         x_kde = np.mgrid[xp_min - x_rang:xp_max + x_rang:100j]
         # Use a slightly larger Scott bandwidth (looks better when plotted)
         bw = 1.25 * len(mcmc_par) ** (-1. / (len(varIdxs) + 4))
-        kernel_cl = stats.gaussian_kde(mcmc_par, bw_method=bw)
         # KDE for plotting.
         try:
+            kernel_cl = stats.gaussian_kde(mcmc_par, bw_method=bw)
             # Parameter's KDE evaluated and reshaped.
             par_kde = np.reshape(kernel_cl(x_kde).T, x_kde.shape)
 
@@ -264,7 +264,7 @@ def main(
             mcmc_kde.append([x_kde, par_kde])
             # Mode (using KDE)
             mode_sol.append(x_kde[np.argmax(par_kde)])
-        except (FloatingPointError, UnboundLocalError):
+        except (np.linalg.LinAlgError, FloatingPointError, UnboundLocalError):
             mcmc_kde.append([])
             mode_sol.append(np.nan)
 
