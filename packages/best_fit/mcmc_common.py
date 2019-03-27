@@ -156,18 +156,23 @@ def interpSol(theor_tracks, fundam_params, varIdxs, model):
 
     """
 
-    # This means 'model_proper' is returned with indexes instead of values
-    # in the (0, 1) indexes for metallicity and age. It does not matter though
-    # because 'model_proper' is passed to synth_cluster.main() which only
-    # uses the other parameter values.
+    # Select the proper values for the model (ie: that exist in the grid), and
+    # choose the (z, a) grid indexes to interpolate the isochrone.
     model_proper, j = [], 0
     for i, par in enumerate(fundam_params):
         # If this parameter is one of the 'free' parameters.
         if i in varIdxs:
-            # If it is the parameter metallicity or age.
-            if i in [0, 1]:
+            # If it is the parameter metallicity.
+            if i == 0:
                 # Select the closest value in the array of allowed values.
-                model_proper.append(np.searchsorted(par, model[i - j]))
+                mh = min(len(par) - 1, np.searchsorted(par, model[i - j]))
+                ml = mh - 1
+                model_proper.append(par[mh])
+            elif i == 1:
+                # Select the closest value in the array of allowed values.
+                ah = min(len(par) - 1, np.searchsorted(par, model[i - j]))
+                al = ah - 1
+                model_proper.append(par[ah])
             elif i == 4:
                 # Select the closest value in the array of allowed values for
                 # the masses.
@@ -176,20 +181,12 @@ def interpSol(theor_tracks, fundam_params, varIdxs, model):
             else:
                 model_proper.append(model[i - j])
         else:
+            if i == 0:
+                ml = mh = 0
+            elif i == 1:
+                al = ah = 0
             model_proper.append(par[0])
             j += 1
-
-    # Metallicity and age indexes to identify the four isochrones in the grid.
-    if 0 in varIdxs:
-        mh = model_proper[0]
-        ml = mh - 1
-    else:
-        ml = mh = fundam_params[0].index(model_proper[0])
-    if 1 in varIdxs:
-        ah = model_proper[1]
-        al = ah - 1
-    else:
-        al = ah = fundam_params[1].index(model_proper[1])
 
     # # Minimum and maximum initial mass for each of the four isochrones.
     # mmin = np.min(isochs[:, -6, :], axis=1)
@@ -265,6 +262,7 @@ def interpSol(theor_tracks, fundam_params, varIdxs, model):
     #     plt.scatter(*pts[isoch_idx][0], c='r')
     #     plt.scatter(*pts[isoch_idx][1:].T, c='g')
     #     plt.scatter(model[0], model[1], marker='x')
+    #     # First color
     #     plt.subplot(132)
     #     plt.plot(theor_tracks[ml][al][1], theor_tracks[ml][al][0], c='b')
     #     plt.plot(theor_tracks[ml][ah][1], theor_tracks[ml][ah][0], c='r')
@@ -272,6 +270,7 @@ def interpSol(theor_tracks, fundam_params, varIdxs, model):
     #     plt.plot(theor_tracks[mh][ah][1], theor_tracks[mh][ah][0], c='orange')
     #     plt.plot(isochrone[1], isochrone[0], c='g', ls='--')
     #     plt.gca().invert_yaxis()
+    #     # Second color
     #     plt.subplot(133)
     #     plt.plot(theor_tracks[ml][al][2], theor_tracks[ml][al][0], c='b')
     #     plt.plot(theor_tracks[ml][ah][2], theor_tracks[ml][ah][0], c='r')
