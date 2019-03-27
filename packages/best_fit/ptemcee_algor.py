@@ -5,7 +5,7 @@ import warnings
 import time as t
 from .. import update_progress
 from . import likelihood
-from .emcee3rc2 import autocorr
+# from .emcee3rc2 import autocorr
 from .mcmc_convergence import convergenceVals
 from .mcmc_common import initPop, varPars, synthClust, rangeCheck, fillParams,\
     closeSol, discreteParams
@@ -92,8 +92,7 @@ def main(
 
     afs, tswaps = [], []
     # actimes = []
-
-    tau_emcee = np.empty(nsteps_ptm)
+    # tau_emcee = np.empty(nsteps_ptm)
 
     # Check for dodgy inputs.
     if np.any(np.isinf(pos0)):
@@ -125,24 +124,32 @@ def main(
             if (i + 1) % N_steps_conv:
                 continue
 
-            # Compute the autocorrelation time so far. Using tol=0 means that
-            # we'll always get an estimate even if it isn't trustworthy.
-            tau0 = autocorr.integrated_time(
-                ptsampler.chain[0, :, :i + 1, :].transpose(1, 0, 2), tol=0)
-            tau_emcee[tau_index] = np.mean(tau0)
+            # Temperature swap acceptance fractions.
+            tswaps.append(ptsampler.tswap_acceptance_fraction)
+            # Mean acceptance fractions for all temperatures.
+            afs.append(np.mean(ptsampler.acceptance_fraction, axis=1))
 
+            # Compute the autocorrelation time using 'emcee'. tol=0 means that
+            # we'll always get an estimate even if it isn't trustworthy.
+            # tau0 = autocorr.integrated_time(
+            #     ptsampler.chain[0, :, :i + 1, :].transpose(1, 0, 2), tol=0)
+            # tau_emcee[tau_index] = np.mean(tau0)
+
+            # Autocorrelation time for the non-tempered chain. Mean across
+            # chains.
             # ptsampler.chain.shape: (ntemps, nwalkers, nsteps, ndim)
+            # x.shape: (nsteps, ndim)
             x = np.mean(ptsampler.chain[0, :, :i + 1, :], axis=0)
+            # tau.shape: ndim
             tau = util.autocorr_integrated_time(x)
 
-            tswaps.append(ptsampler.tswap_acceptance_fraction)
-            afs.append(np.mean(ptsampler.acceptance_fraction, axis=1))
             # acors = np.zeros(ntemps)
             # for temp in range(ntemps):
             #     x = np.mean(ptsampler.chain[temp, :, :i + 1, :], axis=0)
             #     acors[temp] = np.mean(util.autocorr_integrated_time(x))
             # actimes.append(acors)
 
+            # Autocorrelation time. Mean across dimensions.
             autocorr_vals[tau_index] = np.mean(tau)
             tau_index += 1
 
@@ -190,7 +197,7 @@ def main(
     # Mean acceptance fractions for all replicas.
     maf_steps = (
         N_steps_conv * np.arange(1, tau_index + 1), np.asarray(afs).T)
-    # Temprature swaps acceptance fractions.
+    # Temperature swaps acceptance fractions.
     tswaps_afs = (
         N_steps_conv * np.arange(1, tau_index + 1), np.asarray(tswaps).T)
     # Betas history
