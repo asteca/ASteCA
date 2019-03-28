@@ -77,6 +77,8 @@ def pl_phot_err(
         gs_pos, x_ax, y_ax, j, k = pl
 
         ax = plt.subplot(gs_pos)
+        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
+                zorder=1)
         plt.xlim(x_min, x_max)
         # Set axis labels
         plt.xlabel('$' + x_ax + '$', fontsize=12)
