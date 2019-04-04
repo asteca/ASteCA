@@ -10,7 +10,7 @@ if sys.version_info[0] == 3:
     from functools import reduce
 
 
-def main(npd, read_mode, id_col, x_col, y_col, mag_col, e_mag_col,
+def main(npd, read_mode, nanvals, id_col, x_col, y_col, mag_col, e_mag_col,
          col_col, e_col_col, plx_col, e_plx_col, pmx_col, e_pmx_col,
          pmy_col, e_pmy_col, rv_col, e_rv_col, **kwargs):
     """
@@ -23,11 +23,8 @@ def main(npd, read_mode, id_col, x_col, y_col, mag_col, e_mag_col,
 
     data_file = npd['data_file']
     try:
-        # TODO this should be provided by the user.
         # Identify all these strings as invalid entries.
-        fill_msk = [
-            ('', '0'), ('INDEF', '0'), ('NAN', '0'), ('9999.99', '0'),
-            ('999.99', '0'), ('99.999', '0')]
+        fill_msk = [('', '0')] + [(_, '0') for _ in nanvals]
         # Store IDs as strings.
         if read_mode == 'num':
             data = ascii.read(

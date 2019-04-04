@@ -53,6 +53,8 @@ def main(mypath, pars_f_path):
                 # Set global mode (i.e, for all clusters processed).
                 elif reader[0] == 'MO':
                     run_mode = str(reader[1])
+                elif reader[0] == 'NV':
+                    nanvals = [_.replace(',', '') for _ in reader[1:]]
 
                 # Input data parameters.
                 elif reader[0] == 'MR':
@@ -256,7 +258,8 @@ def main(mypath, pars_f_path):
     par_ranges = [m_rs, a_rs, e_rs, d_rs, mass_rs, bin_rs]
 
     pd = {
-        'up_flag': up_flag, 'run_mode': run_mode, 'read_mode': read_mode,
+        'up_flag': up_flag, 'run_mode': run_mode, 'nanvals': nanvals,
+        'read_mode': read_mode,
         'id_coords': id_coords, 'id_mags': id_mags, 'id_cols': id_cols,
         'id_kinem': id_kinem,
         'flag_make_plot': flag_make_plot, 'plot_frmt': plot_frmt,

@@ -40,8 +40,15 @@ UP     y
 #   - manual: asks the user for some values (center, radius) but will also
 #     give you the chance to have them automatically calculated.
 #
+# * nanvals: [strings]
+#   List of strings indicating which entries in the data file should be
+#   treated as bad values.
+#
 #    mode
 MO   auto
+
+#    nanvals
+NV   INDEF, NAN, NaN, 99.999, 999.99, 99.999
 ################################################################################
 
 
