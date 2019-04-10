@@ -42,7 +42,7 @@ UP     y
 #
 # * nanvals: [strings]
 #   List of strings indicating which entries in the data file should be
-#   treated as bad values.
+#   treated as bad/missing values.
 #
 #    mode
 MO   auto
