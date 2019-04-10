@@ -10,7 +10,16 @@ from .. import update_progress
 
 def main(clp, plx_flag, plx_chains, plx_runs, **kwargs):
     """
+    Bayesian parallax distance using the Bailer-Jones (2015) model with the
+    'shape parameter' marginalized.
+
+    Hardcoded choices:
+
+    * 2 sigma outliers are rejected
+    * MPs are used
+    * Bayesian prior is a Gaussian with a fixed standard deviation
     """
+
     plx_flag_clp = False
     plx_clrg, mmag_clp, mp_clp, plx_clp, e_plx_clp, plx_Bys, plx_wa =\
         [], [], [], [], [], [], np.nan
