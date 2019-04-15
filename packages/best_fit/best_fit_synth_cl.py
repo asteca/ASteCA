@@ -2,7 +2,8 @@
 from ..core_imp import np
 from . import max_mag_cut, obs_clust_prepare, brute_force_algor,\
     genetic_algorithm, bootstrap, ptemcee_algor, emcee_algor
-# emcee_algor, abcpmc_algor, hopp_algor
+# emcee_algor, abcpmc_algor,
+# TODO in place for #397: hopp_algor
 from ..synth_clust import extin_coefs
 from ..synth_clust import imf
 
@@ -174,6 +175,7 @@ def main(
             isoch_fit_errors, _ = params_errors(
                 best_fit_algor, isoch_fit_params)
 
+        # TODO not working yet
         # elif best_fit_algor == 'abc':
 
         #     print('Using abcpmc algorithm ({}).'.format(
