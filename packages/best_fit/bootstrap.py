@@ -52,7 +52,11 @@ def main(lkl_method, e_max, err_lst, completeness, fundam_params,
             update_progress.updt(N_b, i + 1)
 
         mean_boot_sol = closeSol(fundam_params, np.mean(params_boot, 0))
+        median_boot_sol = closeSol(fundam_params, np.median(params_boot, 0))
+        mode_boot_sol = [np.nan] * 6
         # Calculate errors for each fundamental parameter.
+        import pdb; pdb.set_trace()  # breakpoint 52584b7a //
+        
         isoch_fit_errors = np.std(params_boot, 0)
         for i, p_er in enumerate(isoch_fit_errors):
             # If any parameter has a single valued range, assign 'nan'
@@ -67,10 +71,12 @@ def main(lkl_method, e_max, err_lst, completeness, fundam_params,
     else:
         print('Skip bootstrap process.')
         mean_boot_sol = isoch_fit_params['map_sol']
+        median_boot_sol = isoch_fit_params['map_sol']
+        mode_boot_sol = [np.nan] * 6
         # No error assignment.
         isoch_fit_errors = [np.nan] * len(isoch_fit_params['map_sol'])
 
-    return isoch_fit_errors, mean_boot_sol
+    return isoch_fit_errors, mean_boot_sol, median_boot_sol, mode_boot_sol
 
 
 def closeSol(fundam_params, model):

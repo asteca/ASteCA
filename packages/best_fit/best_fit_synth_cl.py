@@ -1,7 +1,7 @@
 
 from ..core_imp import np
 from . import max_mag_cut, obs_clust_prepare, brute_force_algor,\
-    genetic_algorithm, bootstrap, ptemcee_algor, emcee_algor
+    genetic_algorithm, bootstrap, ptemcee_algor
 # emcee_algor, abcpmc_algor,
 # TODO in place for #397: hopp_algor
 from ..synth_clust import extin_coefs
@@ -12,26 +12,26 @@ def params_errors(best_fit_algor, args):
     '''
     Obtain uncertainties for the fitted parameters.
     '''
-    mean_boot_sol = .0
-    if best_fit_algor == 'brute':
-        fundam_params = args
-        isoch_fit_errors = []
-        # Assign errors as the largest step in each parameter.
-        for pv in fundam_params:
-            # If any parameter has a single valued range, assign 'nan'.
-            if len(pv) > 1:
-                # Find largest delta in this parameter used values.
-                largest_delta = np.diff(pv).max()
-                # Store the maximum value.
-                isoch_fit_errors.append(largest_delta)
-            else:
-                isoch_fit_errors.append(np.nan)
+    # # TODO fix this with #64
+    # if best_fit_algor == 'brute':
+    #     fundam_params = args
+    #     isoch_fit_errors = []
+    #     # Assign errors as the largest step in each parameter.
+    #     for pv in fundam_params:
+    #         # If any parameter has a single valued range, assign 'nan'.
+    #         if len(pv) > 1:
+    #             # Find largest delta in this parameter used values.
+    #             largest_delta = np.diff(pv).max()
+    #             # Store the maximum value.
+    #             isoch_fit_errors.append(largest_delta)
+    #         else:
+    #             isoch_fit_errors.append(np.nan)
 
-    elif best_fit_algor == 'genet':
-        # TODO fix this with #64
-        isoch_fit_errors, mean_boot_sol = bootstrap.main(*args)
+    # elif best_fit_algor == 'genet':
+    #     isoch_fit_errors, mean_boot_sol, median_boot_sol, mode_boot_sol =\
+    #         bootstrap.main(*args)
 
-    elif best_fit_algor in ['ptemcee', 'emcee', 'abc']:
+    if best_fit_algor in ['ptemcee']:  # , 'emcee', 'abc'
         isoch_fit_params, isoch_fit_errors, j = args, [], 0
         for i, _ in enumerate(isoch_fit_params['mean_sol']):
             if i in isoch_fit_params['varIdxs']:
@@ -39,14 +39,12 @@ def params_errors(best_fit_algor, args):
                 ph = np.percentile(isoch_fit_params['mcmc_trace'][i - j], 84)
                 pl = np.percentile(isoch_fit_params['mcmc_trace'][i - j], 16)
                 std = np.std(isoch_fit_params['mcmc_trace'][i - j])
-                # # Use maximum error value. TODO is this a sensible approach?
-                # err = max(.5 * (ph - pl), std)
                 isoch_fit_errors.append((pl, ph, std))
             else:
                 isoch_fit_errors.append((np.nan, np.nan, np.nan))
                 j += 1
 
-    return isoch_fit_errors, mean_boot_sol
+    return isoch_fit_errors
 
 
 def main(
@@ -54,8 +52,8 @@ def main(
     lkl_binning, lkl_weight, N_bootstrap, max_mag, IMF_name, m_high,
     m_sample_flag, R_V, fundam_params, N_pop, N_gen, fit_diff, cross_prob,
     cross_sel, mut_prob, N_el, N_ei, N_es, cmd_systs, filters, colors,
-    theor_tracks, nwalkers_emc, nsteps_emc, N_burn_emc, nburn_emc, emcee_a,
-    priors_emc,
+    theor_tracks,
+    # nwalkers_emc, nsteps_emc, N_burn_emc, nburn_emc, emcee_a, priors_emc,
     # nwalkers_abc, nsteps_abc, nburn_abc, priors_abc,
     init_mode_ptm, popsize_ptm, maxiter_ptm, ntemps, nwalkers_ptm, nsteps_ptm,
         nburn_ptm, pt_adapt, tmax_ptm, priors_ptm, **kwargs):
@@ -134,46 +132,51 @@ def main(
             # Assign uncertainties for each parameter.
             isoch_fit_errors, _ = params_errors(best_fit_algor, fundam_params)
 
-        elif best_fit_algor == 'genet':
+        # TODO retire Bootstrap+GA until #64 is implemented
+        # elif best_fit_algor == 'genet':
 
-            print('Using Genetic Algorithm ({}).'.format(
-                lkl_method + '; ' + lkl_binning if lkl_method == 'dolphin'
-                else lkl_method))
-            # Genetic algorithm.
-            # Let the GA know this call comes from the main function
-            # so it will print percentages to screen.
-            flag_print_perc = True
-            isoch_fit_params = genetic_algorithm.main(
-                lkl_method, clp['em_float'], err_lst, completeness,
-                max_mag_syn, fundam_params, obs_clust, theor_tracks, R_V,
-                ext_coefs, st_dist_mass, N_fc, cmpl_rnd, err_rnd, N_pop, N_gen,
-                fit_diff, cross_prob, cross_sel, mut_prob, N_el, N_ei, N_es,
-                flag_print_perc)
-            # Assign uncertainties.
-            isoch_fit_errors, mean_boot_sol = params_errors(
-                best_fit_algor,
-                [lkl_method, clp['em_float'], err_lst, completeness,
-                 fundam_params, cl_max_mag, max_mag_syn, theor_tracks, R_V,
-                 ext_coefs, st_dist_mass, N_fc, cmpl_rnd, err_rnd, N_pop,
-                 N_gen, fit_diff, cross_prob, cross_sel, mut_prob, N_el, N_ei,
-                 N_es, lkl_binning, lkl_weight, N_bootstrap, False,
-                 isoch_fit_params])
-            # TODO fix this with #64
-            isoch_fit_params['mean_sol'] = mean_boot_sol
+        #     print('Using Genetic Algorithm ({}).'.format(
+        #         lkl_method + '; ' + lkl_binning if lkl_method == 'dolphin'
+        #         else lkl_method))
+        #     # Genetic algorithm.
+        #     # Let the GA know this call comes from the main function
+        #     # so it will print percentages to screen.
+        #     flag_print_perc = True
+        #     isoch_fit_params = genetic_algorithm.main(
+        #         lkl_method, clp['em_float'], err_lst, completeness,
+        #         max_mag_syn, fundam_params, obs_clust, theor_tracks, R_V,
+        #         ext_coefs, st_dist_mass, N_fc, cmpl_rnd, err_rnd, N_pop, N_gen,
+        #         fit_diff, cross_prob, cross_sel, mut_prob, N_el, N_ei, N_es,
+        #         flag_print_perc)
+        #     # Assign uncertainties.
+        #     isoch_fit_errors, mean_boot_sol, median_boot_sol, mode_boot_sol =\
+        #         params_errors(
+        #             best_fit_algor,
+        #             [lkl_method, clp['em_float'], err_lst, completeness,
+        #              fundam_params, cl_max_mag, max_mag_syn, theor_tracks, R_V,
+        #              ext_coefs, st_dist_mass, N_fc, cmpl_rnd, err_rnd, N_pop,
+        #              N_gen, fit_diff, cross_prob, cross_sel, mut_prob, N_el,
+        #              N_ei, N_es, lkl_binning, lkl_weight, N_bootstrap, False,
+        #              isoch_fit_params])
+        #     # TODO fix this with #64
+        #     isoch_fit_params['mean_sol'] = mean_boot_sol
+        #     isoch_fit_params['median_sol'] = median_boot_sol
+        #     isoch_fit_params['mode_sol'] = mode_boot_sol
 
-        elif best_fit_algor == 'emcee':
+        # TODO not working yet
+        # elif best_fit_algor == 'emcee':
 
-            print('Using emcee algorithm ({}).'.format(
-                lkl_method + '; ' + lkl_binning if lkl_method == 'dolphin'
-                else lkl_method))
-            isoch_fit_params = emcee_algor.main(
-                lkl_method, clp['em_float'], err_lst, completeness,
-                max_mag_syn, fundam_params, obs_clust, theor_tracks, R_V,
-                ext_coefs, st_dist_mass, N_fc, cmpl_rnd, err_rnd, nwalkers_emc,
-                nsteps_emc, nburn_emc, N_burn_emc, emcee_a, priors_emc, hmax)
-            # Assign uncertainties.
-            isoch_fit_errors, _ = params_errors(
-                best_fit_algor, isoch_fit_params)
+        #     print('Using emcee algorithm ({}).'.format(
+        #         lkl_method + '; ' + lkl_binning if lkl_method == 'dolphin'
+        #         else lkl_method))
+        #     isoch_fit_params = emcee_algor.main(
+        #         lkl_method, clp['em_float'], err_lst, completeness,
+        #         max_mag_syn, fundam_params, obs_clust, theor_tracks, R_V,
+        #         ext_coefs, st_dist_mass, N_fc, cmpl_rnd, err_rnd, nwalkers_emc,
+        #         nsteps_emc, nburn_emc, N_burn_emc, emcee_a, priors_emc, hmax)
+        #     # Assign uncertainties.
+        #     isoch_fit_errors, _ = params_errors(
+        #         best_fit_algor, isoch_fit_params)
 
         # TODO not working yet
         # elif best_fit_algor == 'abc':
@@ -202,8 +205,7 @@ def main(
                 nwalkers_ptm, nsteps_ptm, nburn_ptm, pt_adapt, tmax_ptm,
                 priors_ptm, hmax, N_conv, tol_conv)
             # Assign uncertainties.
-            isoch_fit_errors, _ = params_errors(
-                best_fit_algor, isoch_fit_params)
+            isoch_fit_errors = params_errors(best_fit_algor, isoch_fit_params)
 
         print("Best fit parameters obtained.")
 
