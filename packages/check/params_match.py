@@ -1,17 +1,15 @@
 
 import sys
-import numpy as np
 from os.path import isdir
 
 
 def check(
-    bf_flag, best_fit_algor, lkl_method, lkl_methods, lkl_binning,
-        N_bootstrap, evol_track, max_mag, IMF_name, R_V,
+    bf_flag, best_fit_algor, par_ranges, lkl_method, lkl_methods, lkl_binning,
+        N_bootstrap, evol_track, max_mag, IMF_name, R_V, m_step,
         bin_mr, bin_methods, lkl_weight, bin_weights, cmd_evol_tracks,
-        iso_paths, imf_funcs, par_ranges, N_pop, N_gen, fit_diff,
-        cross_prob, cross_sel, mut_prob, N_el, N_ei, N_es, inst_packgs_lst,
-        # nwalkers_emc, nburn_emc, N_burn_emc, emcee_a, priors_emc,
-        ntemps, nwalkers_ptm, nburn_ptm, priors_ptm, emcee_priors, **kwargs):
+        iso_paths, imf_funcs, N_pop, N_gen, fit_diff, cross_prob, cross_sel,
+        mut_prob, N_el, N_ei, N_es, ga_steps, inst_packgs_lst,
+        ntemps, nwalkers_ptm, nburn_ptm, priors_ptm, bayes_priors, **kwargs):
     """
     Check all parameters related to the search for the best synthetic cluster
     match.
@@ -20,7 +18,6 @@ def check(
     if bf_flag:
 
         if best_fit_algor == 'genet':
-            # Check GA input params.
             # First set of params.
             oper_dict0 = {'n_pop': N_pop, 'n_gen': N_gen, 'n_el': N_el,
                           'n_ei': N_ei, 'n_es': N_es}
@@ -47,6 +44,9 @@ def check(
                          "'{}' and '{}' are set respectively.".format(
                              N_el, N_pop))
 
+            if not ga_steps:
+                sys.exit("ERROR: parameter steps for the GA are empty.")
+
         # TODO not finished yet
         # if best_fit_algor == 'emcee':
         #     if priors_emc not in emcee_priors:
@@ -65,9 +65,10 @@ def check(
 
         if best_fit_algor == 'ptemcee':
 
-            if priors_ptm not in emcee_priors:
-                sys.exit("ERROR: the selected prior ({}) is not"
-                         " allowed.".format(priors_ptm))
+            for pr in priors_ptm:
+                if pr[0] not in bayes_priors:
+                    sys.exit("ERROR: one of the selected priors ({}) is not"
+                             " allowed.".format(pr))
 
             if nwalkers_ptm % 2 != 0:
                 # Number is even
@@ -98,8 +99,9 @@ def check(
                      .format(lkl_weight))
 
         # Check mass range selected.
+        m_range = par_ranges[4]
         if lkl_method == 'tolstoy':
-            if len(par_ranges[-2][1]) > 1:
+            if len(m_range) > 1:
                 sys.exit("ERROR: 'tolstoy' method was selected but more than"
                          "\none initial mass value is set.")
 
@@ -132,55 +134,35 @@ def check(
                      "R_V ({}) must be positive defined.".format(R_V))
 
         # Check that no parameter range is empty.
-        m_rs, a_rs, e_rs, d_rs, mass_rs, bin_rs = par_ranges
-        p_names = [['metallicity', m_rs], ['age', a_rs], ['extinction', e_rs],
-                   ['distance', d_rs], ['mass', mass_rs], ['binary', bin_rs]]
-        if min(mass_rs[1]) == 0.:
-            print("  WARNING: minimum total mass is zero in params_input"
-                  " file.\n  Changed minimum mass to 10.\n")
-            mass_rs[1][mass_rs[1].index(min(mass_rs[1]))] = 10.
-
+        p_names = [
+            'metallicity', 'age', 'extinction', 'distance', 'mass', 'binarity']
         for i, p in enumerate(par_ranges):
-            # Catch empty list.
             if not p:
                 sys.exit("ERROR: Range defined for '{}' parameter is"
-                         " empty.".format(p_names[i][0]))
-            # Catch *almost* empty list since inp/input_params perhaps added
-            # an identifier 'l' or 'r'. This prevents ranges given as
-            # empty lists (ie: [] or () or {}) from passing as valid ranges.
-            elif not p[1]:
-                sys.exit("ERROR: Range defined for '{}' parameter is"
-                         " empty.".format(p_names[i][0]))
+                         " empty.".format(p_names[i]))
 
+        if m_range[0] == 0.:
+            print("  WARNING: minimum total mass is zero in params_input"
+                  " file.\n  Changed minimum mass to 10.\n")
+            m_range[0] = 10.
         # Check mass range.
-        if mass_rs[0] == 'r':
-            if len(np.arange(mass_rs[1][0], mass_rs[1][1],
-                   mass_rs[1][2])) > 100 and mass_rs[1][1] > 1e5:
+        try:
+            if m_step > 100 and m_range[-1] > 1e5:
                 print("  WARNING: the number of masses defined is > 100 and\n"
                       "  the max mass is large ({:.0f}). This could cause\n"
                       "  memory issues when sampling the IMF.\n".format(
-                          mass_rs[1][1]))
+                          m_range[-1]))
+        except IndexError:
+            # Single value
+            pass
 
-        # Check binarity parameters.
-        # See if it is a list of values or a range.
-        if par_ranges[-1][0] == 'r':
-            # Range: min, max, step. Store min and max in array.
-            if len(par_ranges[-1][-1]) > 1:
-                # More than one value
-                bin_fr = np.array([par_ranges[-1][-1][0],
-                                  par_ranges[-1][-1][1]])
-            else:
-                # Single value stored.
-                bin_fr = np.array([par_ranges[-1][-1][0]])
-        else:
-            # List: store all values in array.
-            bin_fr = np.array(par_ranges[-1][-1])
-        # Check all values in array.
-        for bin_fr_val in bin_fr:
-            if bin_fr_val > 1.:
-                sys.exit("ERROR: Binarity fraction value '{}' is out of\n"
-                         "boundaries. Please select a value in the range "
-                         "[0., 1.]".format(bin_fr_val))
+        # # Check binarity parameters.
+        # for bin_fr_val in bin_fr:
+        #     if bin_fr_val > 1.:
+        #         sys.exit("ERROR: Binarity fraction value '{}' is out of\n"
+        #                  "boundaries. Please select a value in the range "
+        #                  "[0., 1.]".format(bin_fr_val))
+
         if not 0. <= bin_mr <= 1.:
             sys.exit("ERROR: Binary mass ratio set ('{}') is out of\n"
                      "boundaries. Please select a value in the range [0., 1.]".

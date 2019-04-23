@@ -29,30 +29,6 @@ UP     y
 
 
 
-################################### Mode #######################################
-
-# Mode used to run the code.
-#
-# * mode: auto / semi / manual
-#
-#   - auto: does not require user intervention of any kind.
-#   - semi: takes input values from the 'semi_input.dat' file.
-#   - manual: asks the user for some values (center, radius) but will also
-#     give you the chance to have them automatically calculated.
-#
-# * nanvals: [strings]
-#   List of strings indicating which entries in the data file should be
-#   treated as bad/missing values.
-#
-#    mode
-MO   auto
-
-#    nanvals
-NV   INDEF, NAN, NaN, 99.999, 999.99, 99.999
-################################################################################
-
-
-
 ######################### Input data parameters ################################
 
 # Read mode for the cluster's input data.
@@ -63,8 +39,8 @@ NV   INDEF, NAN, NaN, 99.999, 999.99, 99.999
 #          commented out entirely.
 #   - nam: names of the data columns. A proper header must be in place.
 #
-#    mode
-MR    num
+#   mode
+MR   num
 
 # Columns for the ID's and x,y coordinates in the data file.
 #
@@ -77,25 +53,46 @@ PI        0      1      2      px
 # Columns for the photometric data in the data file. The IDs for the supported
 # photometric systems are stored in the 'phot_systs.dat' file.
 #
-# Magnitude and error.
+#  * mag, e_mag: Magnitude and uncertainty.
+#
 #        mag    e_mag
 PM     3,5,V        4
 #
-# Color and error.
+#  * col, e_col: Color and uncertainty.
+#
 #         col    e_col
 PC    5,5,B,V        6
 
 # Columns for the proper motions [mas/yr], parallax [mas], and radial
 # velocity [km/s]. If a data column is not present, indicate it with a 'n'.
 #
-#        Parallax                 Proper motions               Radial velocity
-#        plx    e_plx     pmRA    e_pmRA    pmDE    e_pmDE     rv    e_rv
-PK         n        n        n         n       n         n      n       n
-###############################################################################
+#   Parallax                 Proper motions               Radial velocity
+#   plx    e_plx     pmRA    e_pmRA    pmDE    e_pmDE     rv    e_rv
+PK    n        n        n         n       n         n      n       n
+
+# * nanvals: [strings]
+#   List of strings indicating which entries in the data file should be
+#   treated as bad/missing values.
+#
+#   nanvals
+NV    INDEF, NAN, NaN, 99.999, 999.99, 99.999
+################################################################################
 
 
 
-########################## Output parameters ###################################
+############################ Mode/Output #######################################
+
+# Mode used to run the code.
+#
+# * mode: auto / semi / manual
+#
+#   - auto: does not require user intervention of any kind.
+#   - semi: takes input values from the 'semi_input.dat' file.
+#   - manual: asks the user for some values (center, radius) but will also
+#     give you the chance to have them automatically calculated.
+#
+#    mode
+MO   auto
 
 # Create output figures?
 #
@@ -172,7 +169,7 @@ KP     y
 
 # Field stars regions.
 #
-# * regions: [integer] / max
+# * regions: [int] / max
 #   Number of field regions around the cluster that the code will try to define.
 #
 #   - [integer]: manually set a number of field regions.
@@ -188,7 +185,7 @@ GR       10
 
 # Error rejection.
 #
-# * e_ph_max: [float] or [str]
+# * e_ph_max: [float / str]
 #   Maximum error value a star can have in either its magnitude or color
 #   without being rejected. Use 'n' for no maximum limit.
 #
@@ -316,63 +313,62 @@ RM  local      fixed          0.5
 
 # Algorithm used to maximize/explore the parameter space given a likelihood.
 #
-# * algorithm: ptemcee / emcee / genet / brute / n
+# * algorithm: ptemcee / genet / brute / n
 #
 #   - ptemcee: Parallel tempering Bayesian MCMC algorithm.
-#   - genet: Genetic Algorithm (MLE).
-#   - brute: Brute Force algorithm, ie: all possible solutions are processed.
 #   - n    : No fundamental parameters estimation will be attempted on the
 #            observed cluster. All the parameters below are ignored.
+# * hmax: [float] maximum number of hours the method should run.
+# * N_conv: [int], minimum number for the the effective sample size to apply
+#           the convergence break.
+# * tol_conv: [float], minimum tolerance for the stability of the
+#             autocorrelation time to apply the convergence break.
 #
-#   algorithm
-CF    ptemcee
+#   algorithm   h_max    N_conv   tol_conv
+CF    ptemcee       1       100       0.01
+
+# Minimum / maximum values that define the range of the parameters to fit for
+# the metallicity, log(age), E(B-V), distance modulus, initial mass, and binary
+# fraction, respectively. A single value indicates a fixed parameter.
+#
+#        min      max
+RZ     0.001     0.03
+RA         7       10
+RE         0        1
+RD         8       15
+RM       100    10000
+RB         0        1
 
 # ptemcee parameters.
 #
-#   - init_mode:
-#   - popsize:
-#   - maxiter:
+#   - init_mode: random / diffevol
+#   - popsize: [int], population size for the 'diffevol' method.
+#   - maxiter:[int], maximum number of iterations for the 'diffevol' method.
 #
 #   - ntemps: [int], Number of parallel temperatures.
 #   - nwalkers: [int], Number of walkers/chains used.
 #   - nburn: [int], Number of burn-in samples to discard.
 #   - nsteps: [int], Number of steps to process.
-#   - Tmax: ...
-#   - adapt: ...
-#   - priors: unif / gauss, uniform or Gaussian prior distributions for all the
-#     fitted parameters.
-#   - hmax: [float] maximum number of hours the method should run.
+#   - Tmax: [float] / inf / n, maximum temperature value.
+#   - adapt: y / n, turn on-off the adaptive (dynamic) temperature selection.
 #
 #     init_mode   popsize   maxiter
 PT0      random         5        10
 #
-#     ntemps    nwalkers   nburn    nsteps     Tmax   adapt    priors   hmax
-PT1       10         100     100      2500       inf     y      unif      10
-
-# Genetic Algorithm parameters.
+#     ntemps    nwalkers   nburn    nsteps     Tmax   adapt
+PT1       10         100     100      2500      inf       y
 #
-#   - n_pop: [int], Number of chromosomes in the population.
-#   - n_gen: [int], Number of generations to process.
-#   - fdif: 0<[float]<=1, Fitness differential. Establishes the 'selection
-#     pressure' for the algorithm.
-#   - p_cross: 0<[float]<=1, crossover probability.
-#   - cr_sel: 1P / 2P, 1-point (1P) or 2-point (2P) crossover.
-#   - p_mut: 0<[float]<=1, mutation probability.
-#   - n_el: [int], (elitism operator) Number of best solutions to pass
-#     unchanged to the next generation.
-#   - n_ei: [int], (extinction/immigration operator) Number of generations
-#     allowed to run with the same best solution before calling for a new
-#     generation of random solutions.
-#   - n_es: [int], (exit switch) number of times the Extinction/Immigration
-#     operator is allowed to run returning the same best solution before
-#     exiting the GA.
-#   - bootstrap: [int], Number of times the bootstrap with replacement
-#     process will run in the GA algorithm. Minimum value is 2, anything less
-#     will skip the bootstrap process and no uncertainties will be assigned to
-#     the parameters.
+#   - prior: u / g, uniform (u) or Gaussian (g) prior distributions for the
+#     fitted parameters. 'mean/stddev' are only required if the 'g' prior is
+#     used.
 #
-#   n_pop  n_gen  fdif  p_cross  cr_sel  p_mut  n_el  n_ei  n_es  bootstrap
-GA    100   1000    1.     0.85      2P   0.05     1    50    10         10
+#     prior      mean      stddev
+PTZ       u    0.0152       0.005
+PTA       u         8         0.5
+PTE       u       0.5        0.02
+PTD       u        14         0.5
+PTM       u      1000         500
+PTB       u       0.5         0.2
 
 # Likelihood equation.
 #
@@ -393,13 +389,13 @@ GA    100   1000    1.     0.85      2P   0.05     1    50    10         10
 #   Weight applied to each bin defined by the 'binning' parameter, if 'dolphin'
 #   is selected. Otherwise this parameter is ignored.
 #
-#   likelihood  binning    weight
-LK     dolphin    knuth      mean
+#   likelihood    binning    weight
+LK     dolphin      knuth      mean
 ################################################################################
 
 
 
-#################### Synthetic clusters generation #############################
+#################### Synthetic clusters parameters #############################
 
 # Set of evolutionary tracks.
 #
@@ -415,6 +411,11 @@ LK     dolphin    knuth      mean
 #
 #   evol_track
 PS       PAR12
+#
+# Input [z, log(age)] steps to read the stored isochrones.
+#
+#        z    log(age)
+PS    0.01         0.1
 
 # IMF used to populate the synthetic clusters.
 #
@@ -434,43 +435,24 @@ PS       PAR12
 # * N_interp: [int]
 #   Number of extra values to interpolate into the isochrones.
 #
-#   IMF                 m_high           m_sample      N_interp
-MF  kroupa_2002            150                  n          2000
+# * m_step: [int]
+#   Mass step that defines the mass values to sample within the mass range.
+#
+#   IMF                 m_high      m_sample     N_interp     m_step
+MF  kroupa_2002            150             n         2000        100
 
-# Ranges and steps for the intrinsic fundamental parameters.
-#
-#                        min      max     step
-#   Metallicity (z)
-MZ                    0.0005     0.03    0.005
-#
-#   log(age)
-LA                         6       10      0.5
-#
-#   Total initial mass (solar masses)
-TM                        10    10000      100
-#
-#   Binary fraction
-BI                         0        1      0.2
+# Binaries mass ratio.
 #
 # - min_mass_ratio: 0<[float]<=1
-#   Minimum mass ratio for the generation of binaries. Ignored if
-#   'Binary fraction' is fixed to '0.'
+#   Minimum mass ratio for the generation of binaries. Ignored if the
+#   'Binary fraction' parameter is fixed to '0.'
 #
 #     min_mass_ratio
 BI_m              .7
 
-# Ranges and steps for the extrinsic fundamental parameters.
-#
-#                        min      max     step
-#   E(B-V)
-BV                         0        1     0.02
-#
 # Ratio of total to selective absorption (R_V).
 #
 RV                         3.1
-#
-#   Distance modulus
-DM                         8       15      0.2
 
 # Maximum magnitude cut.
 #

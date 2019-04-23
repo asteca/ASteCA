@@ -9,8 +9,7 @@ from . import likelihood
 from .mcmc_convergence import convergenceVals
 from .mcmc_common import initPop, varPars, synthClust, rangeCheck, fillParams,\
     closeSol, discreteParams
-from .ptemcee import sampler
-from .ptemcee import util
+from .ptemcee import sampler, util
 
 
 def main(
@@ -318,22 +317,16 @@ def loglkl(
         synth_clust = synthClust(fundam_params, varIdxs, model, synthcl_args)
         # Call likelihood function for this model.
         lkl = likelihood.main(lkl_method, synth_clust, obs_clust)
-
-        # Logarithm of the prior.
-        if priors_ptm == 'unif':
-            # Flat prior
-            logp = 0.
-        elif priors_ptm == 'gauss':
-            # TODO finish this
-            model_mean = np.array([9.5, .4, 13.5])
-            # Gaussian prior.
-            model_std = np.array([.2, .2, .5])
-            logp = np.sum(np.log(1 / model_std) - .5 * np.square(
-                (model[[1, 2, 3]] - model_mean) / model_std))
+        log_p = 0.
+        for i, pr in enumerate(priors_ptm):
+            # Gaussian prior. If the prior is uniform, simply pass.
+            if pr[0] == 'g':
+                log_p += np.log(1 / pr[2]) - .5 * np.square(
+                    (model[i] - pr[1]) / pr[2])
 
         # The negative likelihood is returned since Dolphin requires a
-        # minimization of the PLR, and here we are maximizing
-        logpost = logp + (-lkl)
+        # minimization of the PLR. Here we are maximizing, hence the minus.
+        logpost = log_p + (-lkl)
 
     return logpost
 
@@ -344,7 +337,7 @@ def logp(_):
 
     The prior is moved inside the log-likelihood to save computation time
     because 'ptemcee' calls both functions and then adds the result. But if
-    the model is outside of the permitted range, there is no point in checking
+    the model is outside of the allowed range, there is no point in checking
     twice (ie: calling rangeCheck() twice). As I can not "send" information
     from here to the likelihood (as can be done in 'emcee'), it's better to
     just put everything inside the loglkl() function.
