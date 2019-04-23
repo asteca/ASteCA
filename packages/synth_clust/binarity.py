@@ -27,6 +27,7 @@ def binarGen(
         binar_fracs, N_interp, mags_theor, cols_theor, mags_cols_theor,
         extra_pars, bin_mass_ratio):
     '''
+    Called by isoch_params().
 
     0. Assign N unique indexes by dividing the range of stars by their total
        number.
@@ -42,7 +43,7 @@ def binarGen(
 
     '''
 
-    # If binary_fraction = 0. don't bother obtaining the binary magnitudes,
+    # If binary_fraction=0 don't bother obtaining the binary magnitudes,
     # colors, etc.
     if binar_fracs.any():
 
