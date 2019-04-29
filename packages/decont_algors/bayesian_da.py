@@ -135,19 +135,15 @@ def reg_data(region):
 def weightsSelect(bayesda_weights, colors, plx_col, pmx_col, pmy_col, rv_col):
     """
     Select the appropriate weights according to the dimensions of data defined.
+    No limit in the number of colors defined is imposed.
     """
     w_mag = [bayesda_weights[0]]
-    if len(colors) == 1:
-        w_cols = [bayesda_weights[1]]
-        i0 = 2
-    elif len(colors) == 2:
-        w_cols = bayesda_weights[1:3]
-        i0 = 3
+    w_cols = bayesda_weights[1:len(colors) + 1]
 
     w_kin = []
     for i, k_d in enumerate((plx_col, pmx_col, pmy_col, rv_col)):
         if k_d is not False:
-            w_kin.append(bayesda_weights[i0 + i])
+            w_kin.append(bayesda_weights[1 + len(colors) + i])
 
     return w_mag + w_cols + w_kin
 

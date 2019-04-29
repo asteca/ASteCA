@@ -26,14 +26,12 @@ def check(cl_files, da_algor, da_algors_accpt, bayesda_runs, fixedda_port,
                 (np.array(bayesda_weights) > 1.).any():
             sys.exit("ERROR: 'bayes' DA weights must be in the range [0., 1.]")
 
-        # This assumes that the maximum number of colors that can be defined
-        # is 2.
-        if len(colors) == 1 and len(bayesda_weights) != 6:
+        # This assumes that there is no maximum number of colors that can be
+        # defined
+        if len(bayesda_weights) - 5 != len(colors):
             sys.exit("ERROR: there are {} 'bayes' DA weights defined,"
-                     " there should be 6.".format(len(bayesda_weights)))
-        elif len(colors) == 2 and len(bayesda_weights) != 7:
-            sys.exit("ERROR: there are {} 'bayes' DA weights defined,"
-                     " there should be 7.".format(len(bayesda_weights)))
+                     " there should be {}.".format(
+                         len(bayesda_weights), 5 + len(colors)))
 
     if da_algor == 'fixed':
         # Check Bayesian decontamination algorithm parameters.
