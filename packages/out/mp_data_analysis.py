@@ -181,10 +181,11 @@ def pl_cl_fl_regions(
     if not flag_no_fl_regs_c:
         # Stars inside the field regions with rejected errors.
         for i, reg in enumerate(field_regions_rjct_c):
-            fl_reg = list(zip(*reg))
-            N_flrg += len(fl_reg[0])
-            plt.scatter(fl_reg[1], fl_reg[2], marker='x',
-                        c='teal', s=15, lw=.5, edgecolors='none')
+            if reg:
+                fl_reg = list(zip(*reg))
+                N_flrg += len(fl_reg[0])
+                plt.scatter(fl_reg[1], fl_reg[2], marker='x',
+                            c='teal', s=15, lw=.5, edgecolors='none')
 
     ax.set_title(r"$N_{{rjct}}$={} (phot compl)".format(
         len(cl_region_rjct_c) + N_flrg), fontsize=9)
