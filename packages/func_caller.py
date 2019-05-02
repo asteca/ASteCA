@@ -164,7 +164,7 @@ def main(cl_file, pd):
     #       |                              '--> stars_out_rjct_x
     #       v
     # field_regions --> stars_out_x ----------> field_regions_x
-    #              '--> stars_out_rjct x -----> field_regions_rjct_x
+    #              '--> stars_out_rjct_x -----> field_regions_rjct_x
 
     # Uses the incomplete 'cl_region' and 'field_regions' data.
     make_A2_plot.main(npd, cld_i, pd, **clp)
