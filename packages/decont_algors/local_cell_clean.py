@@ -92,6 +92,11 @@ def bin_edges_f(bin_method, mags_cols_cl):
         for col in mags_cols_cl[1]:
             bin_edges.append(np.histogram(col, bins=int(b_num))[1])
 
+    # Impose a minimum of two cells per dimension.
+    for i, be in enumerate(bin_edges):
+        if len(be) == 2:
+            bin_edges[i] = np.array([be[0], (be[0] + be[1]) / 2., be[1]])
+
     return bin_edges
 
 
@@ -168,13 +173,16 @@ def get_fit_stars(cl_hist_p, f_hist, flag_decont_skip):
     lowest assigned MPs if the DA was applied. Otherwise select random stars.
     '''
 
+    # DEPRECATED by the minimum of two cells per dimension imposed in
+    # bin_edges_f()
     # Only flatten list if more than 1 cell was defined.
-    if len(cl_hist_p) > 1:
-        cl_hist_p_flat = np.asarray(cl_hist_p).flatten()
-    else:
-        cl_hist_p_flat = cl_hist_p[0]
+    # if len(cl_hist_p) > 1:
+    #     cl_hist_p_flat = np.asarray(cl_hist_p).flatten()
+    # else:
+    #     cl_hist_p_flat = cl_hist_p[0]
 
     # Flatten arrays to access all of its elements.
+    cl_hist_p_flat = np.asarray(cl_hist_p).flatten()
     f_hist_flat = f_hist.flatten()
 
     cl_reg_fit, cl_reg_no_fit = [], []
@@ -197,26 +205,25 @@ def get_fit_stars(cl_hist_p, f_hist, flag_decont_skip):
                         range(len(cl_cell)), len(cl_cell))
 
                     # Store len(cl_cell) - N_fl_reg stars
-                    cl_reg_fit.append(
-                        [cl_cell[i] for i in ran_indx[:-int(N_fl_reg)]])
+                    cl_reg_fit +=\
+                        [cl_cell[i] for i in ran_indx[:-int(N_fl_reg)]]
                     # Discard N_fl_reg stars.
-                    cl_reg_no_fit.append(
-                        [cl_cell[i] for i in ran_indx[-int(N_fl_reg):]])
+                    cl_reg_no_fit +=\
+                        [cl_cell[i] for i in ran_indx[-int(N_fl_reg):]]
                 else:
                     # Discard *all* stars in the cell.
-                    cl_reg_no_fit.append(cl_cell)
+                    cl_reg_no_fit += cl_cell
             else:
                 # Discard those N_fl_reg with the smallest MPs, keep the rest.
-                cl_reg_fit.append(cl_cell[:-int(N_fl_reg)])
-                cl_reg_no_fit.append(cl_cell[-int(N_fl_reg):])
+                cl_reg_fit += cl_cell[:-int(N_fl_reg)]
+                cl_reg_no_fit += cl_cell[-int(N_fl_reg):]
         else:
             # No field region stars in this cell, keep all stars.
-            cl_reg_fit.append(cl_cell)
+            cl_reg_fit += cl_cell
 
-    # Flatten lists of stars and re-sort according to highest MPs.
-    cl_reg_fit = sort_members([i for sublst in cl_reg_fit for i in sublst])
-    cl_reg_no_fit = sort_members(
-        [i for sublst in cl_reg_no_fit for i in sublst])
+    # Re-sort according to highest MPs.
+    cl_reg_fit = sort_members(cl_reg_fit)
+    cl_reg_no_fit = sort_members(cl_reg_no_fit)
 
     # Minimum probability of selected stars.
     min_prob = cl_reg_fit[-1][-1]
