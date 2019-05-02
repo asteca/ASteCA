@@ -205,8 +205,8 @@ ER       0.2            n            n            n
 # * Plx_PM_comb: y / n
 #   Combine the parallax and proper motion data (if available) with the
 #   photometric data in the second AD test. If 'y', all the data will be
-#   analyzed combined. If 'n', the parallax+proper motion data will be analyzed
-#   separately in the second AD test.
+#   combined and analyzed. If 'n', the parallax+proper motion data will be
+#   analyzed separately in the second AD test.
 #
 #   runs   Plx_PM_comb
 AD   100             y
@@ -304,7 +304,7 @@ DW     1.       1.       1.       1.       1.      1.
 #   selected. Otherwise this parameter is ignored.
 #
 #    mode    binning     prob_min
-RM  local      fixed          0.5
+RM  local      knuth          0.5
 ################################################################################
 
 
