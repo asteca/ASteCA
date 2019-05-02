@@ -23,6 +23,8 @@ def sort_members(memb_lst):
     '''
     Sort this list first by the membership probability from max
     value (1) to min (0) and then by its main magnitude.
+
+    shape(memb_lst) = (N_stars, 10)
     '''
     membership_prob_avrg_sort = sorted(
         memb_lst, key=lambda item: (-item[9], item[3][0]))
