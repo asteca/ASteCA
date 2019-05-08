@@ -89,8 +89,6 @@ def main(cl_file, pd):
         pd2.pop('cmd_systs')
         json.dump(pd2, jsonFile)
 
-    import pdb; pdb.set_trace()  # breakpoint 729ff4a9 //
-
     # Cluster's data from file, as dictionary. Obtain both incomplete (ie: all
     # stars in data file) and complete (only those with full photometric data)
     # dictionaries.
