@@ -1,16 +1,17 @@
 
 / asteca_run
     |--> checker
-        |--> check/pack
         |--> check/first_run
+        |--> check/pack
         |--> check/clusters
         |--> check/params_file
+            |--> inp/input_params
         |--> check/update
         |--> check/params_mode
         |--> check/params_data
         |--> check/params_out
         |--> check/params_struct
-        |--> check/params_pval
+        |--> check/params_pval  DEPRECATED
         |--> check/params_decont
             |--> inp/names_paths (1)
         |--> check/params_match

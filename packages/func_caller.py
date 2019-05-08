@@ -1,5 +1,6 @@
 
 import time
+import json
 import gc  # Garbage collector.
 #
 from .inp import names_paths
@@ -80,6 +81,13 @@ def main(cl_file, pd):
 
     # Get data from semi-data input file. Add to dictionary.
     pd = get_data_semi.main(pd, **npd)
+
+    # Save 'pd' dictionary to .json file.
+    with open(npd['json_out'], "w") as jsonFile:
+        pd2 = dict(pd)
+        # Don't store this entry, it's large and unnecessary.
+        pd2.pop('cmd_systs')
+        json.dump(pd2, jsonFile)
 
     # Cluster's data from file, as dictionary. Obtain both incomplete (ie: all
     # stars in data file) and complete (only those with full photometric data)
