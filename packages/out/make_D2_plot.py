@@ -3,9 +3,9 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from os.path import join
 import warnings
-import add_version_plot
-import mp_best_fit2
-import prep_plots
+from . import add_version_plot
+from . import mp_best_fit2
+from . import prep_plots
 
 
 def plot_observed_cluster(
@@ -26,7 +26,7 @@ def plot_observed_cluster(
             err_bar, hess_xedges, hess_yedges, x_isoch, y_isoch)
     except Exception:
         import traceback
-        print traceback.format_exc()
+        print(traceback.format_exc())
         print("  WARNING: error when plotting MPs on cluster's "
               "photometric diagram.")
 
@@ -58,8 +58,9 @@ def plot_observed_cluster(
               "photometric diagram.")
 
 
-def main(npd, cld_c, pd, synth_clst, shift_isoch, fit_params_r, fit_errors_r,
-         cl_max_mag, err_lst, **kwargs):
+def main(
+    npd, cld_c, pd, synth_clst, shift_isoch, cl_max_mag, err_lst, col_0_comb,
+        mag_0_comb, col_1_comb, isoch_fit_params, isoch_fit_errors, **kwargs):
     '''
     Make D2 block plots.
     '''
@@ -71,7 +72,8 @@ def main(npd, cld_c, pd, synth_clst, shift_isoch, fit_params_r, fit_errors_r,
         # Plot one ore more rows of CMDs/CCDs.
         hr_diags = prep_plots.packData(
             pd['lkl_method'], pd['lkl_binning'], cl_max_mag, synth_clst,
-            shift_isoch, pd['colors'], pd['filters'], cld_c)
+            shift_isoch, pd['colors'], pd['filters'], col_0_comb, mag_0_comb,
+            col_1_comb)
         for (x_phot_all, y_phot_all, x_phot_obs, y_phot_obs, x_synth_phot,
              y_synth_phot, binar_idx, hess_xedges, hess_yedges, x_isoch,
              y_isoch, x_name, y_name, yaxis, i_obs_x, i_obs_y, gs_y1,
@@ -93,9 +95,9 @@ def main(npd, cld_c, pd, synth_clst, shift_isoch, fit_params_r, fit_errors_r,
                 [gs, gs_y1, gs_y2, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
                  x_ax, y_ax, hess_xedges, hess_yedges, x_synth_phot,
                  y_synth_phot, binar_idx, pd['IMF_name'], pd['R_V'],
-                 fit_params_r, fit_errors_r, x_isoch, y_isoch,
-                 pd['lkl_method'], pd['lkl_binning'], pd['cmd_evol_tracks'],
-                 pd['evol_track']]
+                 isoch_fit_params['mean_sol'], isoch_fit_errors, x_isoch,
+                 y_isoch, pd['lkl_method'], pd['lkl_binning'],
+                 pd['cmd_evol_tracks'], pd['evol_track']]
             ]
             for n, args in enumerate(arglist):
                 mp_best_fit2.plot(n, *args)

@@ -2,14 +2,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.offsetbox as offsetbox
-from matplotlib.ticker import MultipleLocator
 from matplotlib.colors import LinearSegmentedColormap
 
 
 def pl_mps_phot_diag(
-        gs, gs_y1, gs_y2, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
-        x_ax, y_ax, v_min_mp, v_max_mp, obs_x, obs_y, obs_MPs,
-        err_bar, hess_xedges, hess_yedges, x_isoch, y_isoch):
+    gs, gs_y1, gs_y2, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
+    x_ax, y_ax, v_min_mp, v_max_mp, obs_x, obs_y, obs_MPs, err_bar,
+        hess_xedges, hess_yedges, x_isoch, y_isoch):
     '''
     Star's membership probabilities on cluster's photometric diagram.
     '''
@@ -18,8 +17,8 @@ def pl_mps_phot_diag(
     plt.xlim(x_min_cmd, x_max_cmd)
     plt.ylim(y_min_cmd, y_max_cmd)
     # Set axis labels
-    plt.xlabel('$' + x_ax + '$', fontsize=18)
-    plt.ylabel('$' + y_ax + '$', fontsize=18)
+    plt.xlabel('$' + x_ax + '$', fontsize=12)
+    plt.ylabel('$' + y_ax + '$', fontsize=12)
     # Add text box.
     if gs_y1 == 0:
         text = '$N_{{fit}}={}$'.format(len(obs_MPs))
@@ -28,7 +27,6 @@ def pl_mps_phot_diag(
         ax.add_artist(ob)
     # Set minor ticks
     ax.minorticks_on()
-    ax.xaxis.set_major_locator(MultipleLocator(1.0))
     if gs_y1 == 0:
         ax.set_title("Observed", fontsize=10)
     # Plot grid.
@@ -81,10 +79,9 @@ def pl_hess_diag(
     plt.xlim(x_min_cmd, x_max_cmd)
     plt.ylim(y_min_cmd, y_max_cmd)
     # Set axis labels
-    plt.xlabel('$' + x_ax + '$', fontsize=18)
+    plt.xlabel('$' + x_ax + '$', fontsize=12)
     # Set minor ticks
     ax.minorticks_on()
-    ax.xaxis.set_major_locator(MultipleLocator(1.0))
     if gs_y1 == 0:
         ax.set_title("Hess diagram (observed - synthetic)", fontsize=10)
     for x_ed in hess_xedges:
@@ -126,9 +123,9 @@ def pl_hess_diag(
 
 def pl_bf_synth_cl(
     gs, gs_y1, gs_y2, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
-        hess_xedges, hess_yedges, x_synth, y_synth, binar_idx, IMF_name, R_V,
-        cp_r, cp_e, x_isoch, y_isoch, lkl_method, bin_method, cmd_evol_tracks,
-        evol_track):
+    hess_xedges, hess_yedges, x_synth, y_synth, binar_idx, IMF_name, R_V,
+    mean_sol, p_err, x_isoch, y_isoch, lkl_method, bin_method,
+        cmd_evol_tracks, evol_track):
     '''
     Best fit synthetic cluster obtained.
     '''
@@ -137,10 +134,9 @@ def pl_bf_synth_cl(
     plt.xlim(x_min_cmd, x_max_cmd)
     plt.ylim(y_min_cmd, y_max_cmd)
     # Set axis labels
-    plt.xlabel('$' + x_ax + '$', fontsize=18)
+    plt.xlabel('$' + x_ax + '$', fontsize=12)
     # Set minor ticks
     ax.minorticks_on()
-    ax.xaxis.set_major_locator(MultipleLocator(1.0))
     if gs_y1 == 0:
         ax.set_title("Synthetic (best match)", fontsize=10)
         # Add text box
@@ -182,15 +178,18 @@ def pl_bf_synth_cl(
         t2 = r'$IMF \hspace{{3.}}:\;{}$'.format(
             IMF_name.replace('_', '\;').title())
         t3 = r'$R_{{V}} \hspace{{3.2}}=\;{}$'.format(R_V)
-        t4 = r'$z \hspace{{3.9}}=\;{}\pm {}$'.format(cp_r[0], cp_e[0])
-        t5 = r'$\log(age) \hspace{{0.17}}=\;{}\pm {}$'.format(cp_r[1], cp_e[1])
-        t6 = r'$E_{{(B-V)}} \hspace{{1.35}}=\;{}\pm {}$'.format(
-            cp_r[2], cp_e[2])
-        t7 = r'$(m-M)_o=\;{} \pm {}$'.format(cp_r[3], cp_e[3])
-        t8 = r'$M\,(M_{{\odot}}) \hspace{{1.07}} =\;{}\pm {}$'.format(
-            cp_r[4], cp_e[4])
-        t9 = r'$b_{{frac}} \hspace{{2.37}}=\;{}\pm {}$'.format(
-            cp_r[5], cp_e[5])
+        t4 = r'$z \hspace{{3.9}}=\;{:.5f}\pm {:.5f}$'.format(
+            mean_sol[0], p_err[0][2])
+        t5 = r'$\log(age) \hspace{{0.17}}=\;{:.3f}\pm {:.3f}$'.format(
+            mean_sol[1], p_err[1][2])
+        t6 = r'$E_{{(B-V)}} \hspace{{1.35}}=\;{:.3f}\pm {:.3f}$'.format(
+            mean_sol[2], p_err[2][2])
+        t7 = r'$(m-M)_{{0}}=\;{:.3f} \pm {:.3f}$'.format(
+            mean_sol[3], p_err[3][2])
+        t8 = r'$M\,(M_{{\odot}}) \hspace{{1.07}} =\;{:.0f}\pm {:.0f}$'.format(
+            mean_sol[4], p_err[4][2])
+        t9 = r'$b_{{frac}} \hspace{{2.37}}=\;{:.2f}\pm {:.2f}$'.format(
+            mean_sol[5], p_err[5][2])
         text = t1 + '\n\n' + t2 + '\n' + t3 + '\n' + t4 + '\n' + t5 + '\n' +\
             t6 + '\n' + t7 + '\n' + t8 + '\n' + t9
         ob = offsetbox.AnchoredText(
@@ -216,5 +215,5 @@ def plot(N, *args):
         fxn(*args)
     except Exception:
         import traceback
-        print traceback.format_exc()
+        print(traceback.format_exc())
         print("  WARNING: error when plotting {}.".format(plt_map.get(N)[1]))

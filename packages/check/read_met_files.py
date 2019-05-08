@@ -21,23 +21,27 @@ def find_missing(arr_large, arr_small):
 
 
 def ranges_files_check(
-        iso_paths, par_ranges, cmd_systs, all_syst_filters, **kwargs):
+    best_fit_algor, iso_paths, par_ranges, za_steps, ga_steps, m_step,
+        cmd_systs, all_syst_filters, **kwargs):
     """
     Obtain allowed metallicities and ages. Use the first photometric
     system defined.
     """
     try:
         # Get parameters values defined.
-        param_ranges, met_f_filter, met_values, age_values = \
-            met_ages_values.main(iso_paths, par_ranges)
+        param_ranges, met_f_filter, met_values, age_values, met_vals_all,\
+            age_vals_all = met_ages_values.main(
+                iso_paths, best_fit_algor, par_ranges, za_steps, ga_steps,
+                m_step)
     except Exception:
-        print traceback.format_exc()
+        print(traceback.format_exc())
         sys.exit("\nERROR: error storing metallicity files.")
 
     # Check that ranges are properly defined.
-    m_rs, a_rs, e_rs, d_rs, mass_rs, bin_rs = par_ranges
-    p_names = [['metallicity', m_rs], ['age', a_rs], ['extinction', e_rs],
-               ['distance', d_rs], ['mass', mass_rs], ['binary', bin_rs]]
+    p_names = [
+        ['metallicity', par_ranges[0]], ['age', par_ranges[1]],
+        ['extinction', par_ranges[2]], ['distance', par_ranges[3]],
+        ['mass', par_ranges[4]], ['binary', par_ranges[5]]]
     for i, p in enumerate(param_ranges):
         if not p.size:
             sys.exit("ERROR: No values exist for '{}' range defined:\n"
@@ -51,7 +55,8 @@ def ranges_files_check(
     err_mssg = "ERROR: one or more metallicity files in the '{}' system\n" +\
                "could not be matched to the range given.\n\n" +\
                "The defined values are:\n\n" +\
-               "{}\n\nand the values read are:\n\n" +\
+               "{}\n\nThe read values are:\n\n" +\
+               "{}\n\nThe closest values found are:\n\n" +\
                "{}\n\nThe missing elements are:\n\n{}"
     # Go through the values extracted from the metallicity files present
     # in each photometric system used.
@@ -61,15 +66,17 @@ def ranges_files_check(
             missing = find_missing(z_range, met_vs)
             sys.exit(err_mssg.format(
                 cmd_systs[all_syst_filters[i][0]][0], z_range,
-                np.asarray(met_vs), np.asarray(missing)))
+                np.array(met_vals_all), np.asarray(met_vs),
+                np.asarray(missing)))
     err_mssg = "ERROR: one or more isochrones could not be matched\n" +\
                "to the age range given.\n\nThe defined values are:\n\n" +\
-               "{}\n\nand the values read are:\n\n" +\
+               "{}\n\nThe read values are:\n\n" +\
+               "{}\n\nThe closest values found are:\n\n" +\
                "{}\n\nThe missing elements are:\n\n{}"
     if len(a_range) > len(age_values):
         # Find missing elements.
         missing = find_missing(a_range, age_values)
-        sys.exit(err_mssg.format(a_range, np.asarray(age_values),
+        sys.exit(err_mssg.format(a_range, age_vals_all, np.asarray(age_values),
                  np.asarray(missing)))
 
     return param_ranges, met_f_filter, met_values, age_values
@@ -89,7 +96,7 @@ def check_get(pd):
             ranges_files_check(**pd)
         # Store all the accepted values for the metallicity and age, and the
         # ranges of accepted values for the rest of the fundamental parameters.
-        # The 'metal_values' list contains duplicated sub-lists for each
+        # The 'met_values' list contains duplicated sub-lists for each
         # photometric system defined. We store only one.
         pd['fundam_params'] = [met_values[0], age_values] + param_ranges[2:]
 

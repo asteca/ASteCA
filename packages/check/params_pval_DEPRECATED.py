@@ -47,10 +47,10 @@ def R_check(inst_packgs_lst):
             R_in_place = True
         else:
             # A package is missing in R.
-            print ("  WARNING: the following packages are missing in R:\n")
+            print("  WARNING: the following packages are missing in R:\n")
             for p in missing_pckg:
-                print " - {}".format(p)
-            print ("\n  The 'KDE p-value test' function will be skipped.\n")
+                print(" - {}".format(p))
+            print("\n  The 'KDE p-value test' function will be skipped.\n")
     else:
         if R_inst and not rpy2_inst:
             R_pack = "'rpy2' is"
@@ -59,9 +59,9 @@ def R_check(inst_packgs_lst):
         if not R_inst and not rpy2_inst:
             R_pack = "'R' and 'rpy2' are"
         # Something is not installed and function was told to run.
-        print ("  WARNING: {} not installed and the\n  'KDE p-value test'"
-               "  was set to run.\n  The function will be skipped.\n".format(
-                   R_pack))
+        print("  WARNING: {} not installed and the\n  'KDE p-value test'"
+              "  was set to run.\n  The function will be skipped.\n".format(
+                  R_pack))
 
     return R_in_place
 

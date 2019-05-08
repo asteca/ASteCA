@@ -3,9 +3,9 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from os.path import join
 import warnings
-import add_version_plot
-import mp_decont_algor
-import prep_plots
+from . import add_version_plot
+from . import mp_decont_algor
+from . import prep_plots
 
 
 def plot_observed_cluster(
@@ -63,7 +63,10 @@ def main(
         npd, cld_c, pd, kde_cent, clust_rad, stars_out_c, err_lst,
         flag_no_fl_regs_i, field_regions_i, flag_decont_skip,
         memb_prob_avrg_sort, n_memb_da, cl_reg_fit, cl_reg_no_fit,
-        cl_reg_clean_plot, **kwargs):
+        cl_reg_clean_plot, plx_flag, plx_clrg, mmag_clp, mp_clp, plx_clp,
+        e_plx_clp, plx_Bys, plx_wa, PM_flag, pmMP, pmRA_DE,
+        e_pmRA_DE, pmDE, e_pmDE, DE_pm, mmag_pm, pmRA_Bys,
+        pmDE_Bys, col_0_comb, mag_0_comb, **kwargs):
     '''
     Make C block plots.
     '''
@@ -87,23 +90,24 @@ def main(
                 y_zmax, cl_reg_fit, cl_reg_no_fit)
         # Uses first magnitude and color defined
         x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd = prep_plots.diag_limits(
-            'mag', cld_c['cols'][0], cld_c['mags'][0])
+            'mag', col_0_comb, mag_0_comb)
         x_ax, y_ax = prep_plots.ax_names(
             pd['colors'][0], pd['filters'][0], 'mag')
 
         # Decontamination algorithm plots.
         min_prob, bin_edges = cl_reg_clean_plot
         # Parallax data.
-        plx_flag, plx_clrg, plx_xmin, plx_xmax, plx_x_kde, kde_pl, plx_flrg,\
-            mmag_plx, mp_plx, plx, e_plx, plx_bay, ph_plx, pl_plx,\
-            min_plx, max_plx = prep_plots.plxPlot(
-                pd['inst_packgs_lst'], flag_no_fl_regs_i, field_regions_i,
-                cl_reg_fit)
+        plx_x_kde, kde_pl, plx_flrg, mmag_clp, mp_clp, plx_clp, e_plx_clp =\
+            prep_plots.plxPlot(
+                plx_flag, plx_clrg, mmag_clp, mp_clp, plx_clp, e_plx_clp,
+                flag_no_fl_regs_i, field_regions_i)
         # PMs data.
-        PM_flag, pmMP, pmRA, e_pmRA, pmDE, e_pmDE, DE_pm, pmRA_fl, e_pmRA_fl,\
-            pmDE_fl, e_pmDE_fl, DE_fl_pm, x_clpm, y_clpm, z_clpm, x_flpm,\
-            y_flpm, z_flpm, mmag_pm, pm_dist_max = prep_plots.PMsPlot(
-                coord, flag_no_fl_regs_i, field_regions_i, cl_reg_fit)
+        pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, DE_pm, mmag_pm, pmRA_fl_DE,\
+            e_pmRA_fl_DE, pmDE_fl, e_pmDE_fl, x_clpm, y_clpm, z_clpm,\
+            pm_dist_max, x_flpm, y_flpm, z_flpm = prep_plots.PMsPlot(
+                PM_flag, pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, DE_pm,
+                mmag_pm, pmRA_Bys, pmDE_Bys, coord, flag_no_fl_regs_i,
+                field_regions_i)
 
         arglist = [
             # pl_mp_histo
@@ -115,18 +119,19 @@ def main(
              v_min_mp, v_max_mp, chart_fit_inv, chart_no_fit_inv,
              out_clust_rad, pd['fld_clean_mode'], pd['fld_clean_bin']],
             # plx_histo
-            [gs, plx_flag, plx_clrg, plx_xmin, plx_xmax, plx_x_kde, kde_pl,
-             plx_flrg, flag_no_fl_regs_i],
+            [gs, plx_flag, plx_clrg, plx_x_kde, kde_pl, plx_flrg,
+             flag_no_fl_regs_i],
             # plx_chart
-            [gs, plx_flag, x_name, y_name, coord, cl_reg_fit, plx_x_kde,
-             kde_pl],
-            # plx_vs_MP
-            [gs, y_min_cmd, y_max_cmd, y_ax, plx_flag, mmag_plx, mp_plx, plx,
-             e_plx, plx_bay, ph_plx, pl_plx, min_plx, max_plx],
+            [gs, plx_flag, x_name, y_name, coord, cl_reg_fit, plx_Bys],
+            # plx_vs_mag
+            [gs, y_min_cmd, y_max_cmd, y_ax, plx_flag, mmag_clp,
+             mp_clp, plx_clp, e_plx_clp, plx_Bys, plx_wa],
             # pms_vpd
-            [gs, coord, plx_flag, PM_flag, pmMP, pmRA, e_pmRA, pmDE, e_pmDE,
-             DE_pm, pmRA_fl, e_pmRA_fl, pmDE_fl, e_pmDE_fl, DE_fl_pm, x_clpm,
-             y_clpm, z_clpm, x_flpm, y_flpm, z_flpm],
+            [gs, coord, plx_flag, PM_flag, pmMP, pmRA_DE, e_pmRA_DE, pmDE,
+             e_pmDE, pmRA_fl_DE, e_pmRA_fl_DE, pmDE_fl, e_pmDE_fl],
+            # pms_KDE_diag
+            [gs, coord, plx_flag, PM_flag, pmRA_DE, pmDE, DE_pm, x_clpm,
+             y_clpm, z_clpm, x_flpm, y_flpm, z_flpm, pmRA_Bys, pmDE_Bys],
             # pms_vs_MP
             [gs, y_ax, plx_flag, PM_flag, pmMP, pm_dist_max, mmag_pm]
         ]

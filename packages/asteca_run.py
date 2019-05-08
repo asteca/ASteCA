@@ -4,8 +4,8 @@ from os.path import join, realpath, dirname
 from os import getcwd
 import argparse
 import traceback
-from _version import __version__
-from packages.checker import check_all
+from ._version import __version__
+from .checker import check_all
 
 
 def num_exec():
@@ -23,8 +23,8 @@ def num_exec():
     file_end = ''
     if args.N:
         if args.N < 99:
-            file_end = "{:0>2}".format(args.N)
-            print("Will load parameters from 'params_input_{}.dat'"
+            file_end = "_{:0>2}".format(args.N)
+            print("Will load parameters from 'params_input{}.dat'"
                   " file.\n".format(file_end))
         else:
             print("Integer must be smaller than 99. Fall back to\ndefault"

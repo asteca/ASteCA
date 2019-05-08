@@ -4,7 +4,8 @@ import traceback
 import numpy as np
 import itertools
 import re
-import isochs_format
+from . import isochs_format
+from .. import update_progress
 
 
 def readCMDFile(met_f, age_values, line_start, age_format, column_ids):
@@ -38,7 +39,9 @@ def readCMDFile(met_f, age_values, line_start, age_format, column_ids):
 
                 # Read age value for this isochrone.
                 age0 = re.findall(age_format, line)  # Find age in line.
-                age = np.around(np.log10(float(age0[0])), 2)
+                # TODO hardcoded rounding. Must be modified in accordance with
+                # 'met_ages_values.CMDAges()'.
+                age = np.around(np.log10(float(age0[0])), 4)
 
             # If age value falls inside the given range, store the
             # isochrone's data.
@@ -103,20 +106,30 @@ def main(met_f_filter, age_values, evol_track, all_syst_filters):
     '''
     Stores the available isochrones of different metallicities and
     ages, according to the ranges given to these parameters.
+
+    Returns: isoch_list, extra_pars
+    where:
+    isoch_list[i][j] --> i: metallicity index ; j: age index
+    extra_pars[i][j] --> i: metallicity index ; j: age index
+
+    These lists store the magnitudes and extra data for each isochrone and
+    each metallicity value:
+
+    isoch_list = [metal_1, ..., metal_M]
+    metal_i = [isoch_i1, ..., isoch_iN]
+    isoch_ij = [filter1, filter2, filter3, ...]
+
+    extra_pars = [metal_1, ..., metal_M]
+    metal_i = [isoch_i1, ..., isoch_iN]
+    isoch_ij = [M_ini, M_act, logL/Lo, logTe, logG, mbol]
+
+    Where 'filterX' runs through all filters defined, for all the photometric
+    systems in use. The order in which they are stored follows the order
+    of the 'all_syst_filters' tuple, with its first elements removed (since
+    they indicate the photometric system), and flattened.
+
     '''
 
-    # Lists that store the magnitudes, colors, and other data from the
-    # isochrones.
-    # isoch_list = [metal_1, ..., metal_M]
-    # metal_i = [isoch_i1, ..., isoch_iN]
-    # isoch_ij = [filter1, filter2, filter3, ...]
-    # Where 'filterX' indicates all filters defined, for all the photometric
-    # systems in use. The order in which they are stored follows the order
-    # of the 'all_syst_filters' tuple, with its first elements removed (since
-    # they indicate the photometric system), and flattened.
-
-    # isoch_list[i][j] --> i: metallicity index ; j: age index
-    # extra_pars[i][j] --> i: metallicity index ; j: age index
     isoch_list, extra_pars = [], []
 
     # Equal for all photometric systems in all sets of evolutionary tracks.
@@ -128,7 +141,9 @@ def main(met_f_filter, age_values, evol_track, all_syst_filters):
     numb_age_values = []
     # For each group of metallicity files (representing a single metallicity
     # value) in all photometric systems defined.
-    for met_fls in zip(*met_f_filter):
+    met_fls_photsysts = list(zip(*met_f_filter))
+    N_met_files = len(met_fls_photsysts)
+    for i_met, met_fls in enumerate(met_fls_photsysts):
 
         # Iterate through the metallicity files stored, one per system.
         all_systs = []
@@ -156,6 +171,8 @@ def main(met_f_filter, age_values, evol_track, all_syst_filters):
             met_fls[0], -1)
         # Store in list.
         extra_pars.append(e_pars)
+
+        update_progress.updt(N_met_files, i_met + 1)
 
     # Check that all metallicity files contain the same number of ages.
     if not checkEqual([len(_) for _ in isoch_list]):

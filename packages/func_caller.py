@@ -2,47 +2,56 @@
 import time
 import gc  # Garbage collector.
 #
-from inp import names_paths
-from inp import get_data_semi
-from inp import get_data
-# from structure import trim_frame  # DEPRECATED
-from structure import histo_2d
-from structure import xy_density
-from structure import center
-from structure import radial_dens_prof
-from structure import field_density
-from structure import radius
-from structure import cluster_area
-from structure import contamination_index
-from structure import king_profile
-from errors import err_accpt_rejct
-from structure import stars_in_out_cl_reg
-from structure import field_regions
-from errors import err_range_avrg
+from .inp import names_paths
+from .inp import get_data_semi
+from .inp import get_data
+# from .structure import trim_frame  # DEPRECATED
+from .structure import histo_2d
+from .structure import xy_density
+from .structure import center
+from .structure import radial_dens_prof
+from .structure import field_density
+from .structure import radius
+from .structure import cluster_area
+from .structure import contamination_index
+from .structure import king_profile
+from .errors import err_accpt_rejct
+from .structure import stars_in_out_cl_reg
+from .structure import field_regions
+from .errors import err_range_avrg
 #
-from phot_analysis import luminosity
-from phot_analysis import kde_pvalue
-from phot_analysis import members_number
+from .data_analysis import compl_err_funcs
+from .data_analysis import luminosity
+from .data_analysis import ad_field_vs_clust
+from .data_analysis import members_number
 #
-from decont_algors import decont_algors
-from decont_algors import members_N_compare
-from decont_algors import cl_region_clean
+from .decont_algors import decont_algors
+from .decont_algors import members_N_compare
+from .decont_algors import cl_region_clean
 #
-from out import cluster_members_file
-from best_fit import best_fit_synth_cl
-from out import synth_cl_file
-from out import create_out_data_file
-from errors import error_round
+from .data_analysis import plx_analysis
+from .data_analysis import pms_analysis
 #
-from out import add_data_output
-from out import make_A1_plot
-from out import make_A2_plot
-from out import make_B_plot
-from out import make_C_plot
-from out import make_D1_plot
-from out import make_D2_plot
-from out import top_tiers
-from out import done_move
+from .out import cluster_members_file
+from .best_fit import best_fit_synth_cl
+from .out import mcmc_samples
+from .out import synth_cl_file
+from .out import massFunction  # TODO
+from .out import create_out_data_file
+# DEPRECATED 31/12/18
+# from .errors import error_round
+#
+from .out import add_data_output
+from .out import make_A1_plot
+from .out import make_A2_plot
+from .out import photComb
+from .out import make_B_plot
+from .out import make_C_plot
+from .out import make_D1_plot
+from .out import make_D2_plot
+# DEPRECATED 22/11/18
+# from .out import top_tiers
+from .out import done_move
 
 
 def main(cl_file, pd):
@@ -72,9 +81,10 @@ def main(cl_file, pd):
     # Get data from semi-data input file. Add to dictionary.
     pd = get_data_semi.main(pd, **npd)
 
-    # Cluster's data from file, as dictionary. Obtain both incomplete (ie: with
-    # nan values) and complete (all rows contain valid data) dictionaries.
-    # Return cluster's parameters dictionary 'clp'.
+    # Cluster's data from file, as dictionary. Obtain both incomplete (ie: all
+    # stars in data file) and complete (only those with full photometric data)
+    # dictionaries.
+    # Initiates cluster's parameters dictionary 'clp'.
     cld_i, cld_c, clp = get_data.main(npd, **pd)
 
     # DEPRECATED (at least for now, 08/05/18)
@@ -110,15 +120,12 @@ def main(cl_file, pd):
     # King profiles based on the density profiles.
     clp = king_profile.main(clp, **pd)
 
-    # ^ All the functions above use the *incomplete* dataset 'cld_i'
-    #   (ie: the one that contains 'nan' values).
+    # ^ All the functions above use the *photo incomplete* dataset 'cld_i'
 
     # These three functions are applied for both datasets since we need the
-    # 'cl_region' and 'field_regions' parameters with *incomplete* data to be
-    # used by the Bayesian DA, and the parameters obtained with the *complete*
-    # dataset for the rest of the functions.
-    # The incomplete 'cl_region' and 'field_regions' parameters are also used
-    # by the A2 plot (for the cluster+field regions plot)
+    # 'cl_region' and 'field_regions' parameters with *photo incomplete* data
+    # to be used by the DA, and the parameters obtained with the
+    # *photo complete* dataset for the rest of the functions.
     print("Processing complete dataset:")
     # Accept and reject stars based on their errors.
     clp = err_accpt_rejct.main('comp', cld_c, clp, **pd)
@@ -157,26 +164,37 @@ def main(cl_file, pd):
     #       |                              '--> stars_out_rjct_x
     #       v
     # field_regions --> stars_out_x ----------> field_regions_x
-    #              '--> stars_out_rjct x -----> field_regions_rjct_x
+    #              '--> stars_out_rjct_x -----> field_regions_rjct_x
 
+    # Uses the incomplete 'cl_region' and 'field_regions' data.
     make_A2_plot.main(npd, cld_i, pd, **clp)
 
-    # v The functions below use the *complete* dataset, ie: no 'nan' values,
-    # with the exception of the Bayesian DA (uses the *incomplete* dataset to
-    # assign MPs, and later only those stars in the *complete* dataset are
-    # kept and passed forward).
+    # v The functions below use the *photom complete* dataset with the
+    # exception of the 'compl_err_funcs()' function and the Bayesian DA. The
+    # DA uses the *photo incomplete* dataset to assign MPs. After this, only
+    # those stars in the *photo complete* dataset are kept and passed forward
+    # to the fundamental parameters estimation process.
 
     # Obtain exponential fit for the errors.
     clp = err_range_avrg.main(clp)
 
+    # Combined error rejection & completeness function.
+    clp = compl_err_funcs.main(clp, cld_i, cld_c)
+
     # Luminosity function and completeness level for each magnitude bin.
     clp = luminosity.main(clp, **cld_c)
 
-    # Physical cluster probability based on p_values distribution.
-    clp = kde_pvalue.main(clp, **pd)
+    # DEPRECATED 31/10/18
+    # # Physical cluster probability based on p_values distribution.
+    # clp = kde_pvalue.main(clp, **pd)
+
+    clp = ad_field_vs_clust.main(pd, clp, cld_c)
 
     # Approximate number of cluster's members.
     clp = members_number.main(clp)
+
+    # Helper function for plotting.
+    clp = photComb.main(pd, clp)
 
     make_B_plot.main(npd, cld_c, pd, **clp)
 
@@ -189,6 +207,12 @@ def main(cl_file, pd):
     # Remove stars from the observed cluster according to a selected method.
     clp = cl_region_clean.main(clp, **pd)
 
+    # Analyze parallax data if available.
+    clp = plx_analysis.main(clp, **pd)
+
+    # Analyze PMs data if available.
+    clp = pms_analysis.main(clp, **pd)
+
     make_C_plot.main(npd, cld_c, pd, **clp)
 
     # Create data file with membership probabilities.
@@ -197,14 +221,21 @@ def main(cl_file, pd):
     # Obtain best fitting parameters for cluster.
     clp = best_fit_synth_cl.main(clp, **pd)
 
+    # Save MCMC samples to file (if MCMC sampler was used)
+    mcmc_samples.main(clp, pd, **npd)
+
     # Create output synthetic cluster file if one was found
     clp = synth_cl_file.main(clp, npd, **pd)
+
+    # TODO #96
+    # clp = massFunction.main(clp)
 
     # Create template output data file in /output dir.
     create_out_data_file.main(npd)
 
-    # Round fundamental parameters fitted and their errors
-    clp = error_round.fundParams(clp)
+    # DEPRECATED 31/12/18
+    # # Round fundamental parameters fitted and their errors
+    # clp = error_round.fundParams(clp)
 
     # Add cluster data and flags to output file
     add_data_output.main(npd, pd, **clp)
@@ -215,8 +246,9 @@ def main(cl_file, pd):
     # Plot final best match found.
     make_D2_plot.main(npd, cld_c, pd, **clp)
 
-    # Plot top tiers models and save to file.
-    top_tiers.main(npd, cld_c, pd, **clp)
+    # DEPRECATED 22/11
+    # # Plot top tiers models and save to file.
+    # top_tiers.main(npd, cld_c, pd, **clp)
 
     # Move file to 'done' dir (if flag is set).
     done_move.main(pd, **npd)

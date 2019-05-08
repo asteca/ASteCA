@@ -58,6 +58,7 @@ def main(cl_file, run_mode, **kwargs):
         makedirs(output_subdir)
 
     memb_file_out = join(output_subdir, clust_name + '_memb.dat')
+    mcmc_file_out = join(output_subdir, clust_name + '_mcmc.dat')
     synth_file_out = join(output_subdir, clust_name + '_synth.dat')
     write_name = join(cl_file[2], clust_name)
     out_file_name = join(output_dir, 'asteca_output.dat')
@@ -69,5 +70,6 @@ def main(cl_file, run_mode, **kwargs):
         'memb_file': memb_file, 'output_dir': output_dir,
         'out_file_name': out_file_name, 'output_subdir': output_subdir,
         'dst_dir': dst_dir, 'memb_file_out': memb_file_out,
-        'synth_file_out': synth_file_out, 'write_name': write_name}
+        'synth_file_out': synth_file_out, 'write_name': write_name,
+        'mcmc_file_out': mcmc_file_out}
     return npd

@@ -2,9 +2,9 @@
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from os.path import join
-import mp_structure
-import add_version_plot
-import prep_plots
+from . import mp_structure
+from . import add_version_plot
+from . import prep_plots
 
 
 #############################################################
@@ -32,8 +32,7 @@ def main(
     Make A2 block plots.
     '''
     if 'A2' in pd['flag_make_plot']:
-        # figsize(x1, y1), GridSpec(y2, x2) --> To have square plots: x1/x2 =
-        # y1/y2 = 2.5
+        # figsize(x1, y1), GridSpec(y2, x2)
         fig = plt.figure(figsize=(30, 25))
         gs = gridspec.GridSpec(10, 12)
         add_version_plot.main()
@@ -72,8 +71,8 @@ def main(
                 st_sizes_arr_z, kde_cent, clust_rad],
             # pl_cl_fl_regions: Cluster and field regions defined.
             [gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max,
-                asp_ratio, kde_cent, clust_rad, field_regions_rjct_i,
-                field_regions_i, cl_region_i, cl_region_rjct_i,
+                asp_ratio, kde_cent, clust_rad, field_regions_i,
+                field_regions_rjct_i, cl_region_i, cl_region_rjct_i,
                 flag_no_fl_regs_i]
         ]
         for n, args in enumerate(arglist):

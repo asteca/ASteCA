@@ -2,7 +2,8 @@
 
 def cmd_age_format():
     """
-    Define reg expression to isolate the age of an isochrone.
+    Define reg expression to isolate the age of a CMD isochrone from its
+    commented title line.
     """
     age_format = r"Age = \t(.+?) yr"
     return age_format
@@ -36,7 +37,14 @@ def read_line_start(met_f, line_start):
             # following line.
             if line.startswith(line_start):
                 # Line found, split into column names.
-                ls = f_iso.next().split()
+
+                # In place for #243
+                import sys
+                if sys.version_info[0] == 2:
+                    ls = f_iso.next().split()
+                else:
+                    ls = f_iso.readline().split()
+
                 # Remove first element from list, the comment character.
                 if ls[0] == '#':
                     del ls[0]

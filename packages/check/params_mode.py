@@ -23,7 +23,8 @@ def check(mypath, cl_files, run_mode, **kwargs):
                      " not exist.")
 
         for clust_path in cl_files:
-            clust_name = clust_path[-1].split(extsep)[0]
+            cl_split = clust_path[-1].split(extsep)
+            clust_name = '.'.join(cl_split[:-1])
             # Flag to indicate if cluster was found in file.
             flag_clust_found = False
             with open(semi_file, "r") as f_cl_dt:

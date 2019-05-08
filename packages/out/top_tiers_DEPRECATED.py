@@ -5,9 +5,9 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from .._version import __version__
 from ..synth_clust import synth_cl_plot
-import add_version_plot
-import top_tiers_plot
-import prep_plots
+from . import add_version_plot
+from . import top_tiers_plot
+from . import prep_plots
 
 
 def top_tiers_file(output_subdir, clust_name, best_model, top_tiers, X_lkl,
@@ -101,9 +101,9 @@ def main(npd, cld_c, pd, err_lst, ext_coefs, N_fc, cmpl_rnd, err_rnd,
     if the 'emcee' method was used.
     '''
 
-    if pd['bf_flag'] and pd['best_fit_algor'] != 'emcee':
+    if pd['bf_flag'] and pd['best_fit_algor'] == 'genet':
         clust_name, output_subdir = npd['clust_name'], npd['output_subdir']
-        all_models = isoch_fit_params[-1]
+        all_models = isoch_fit_params['model_done']
 
         # Sort all models/solutions by their (minimum) likelihood values.
         all_m_sort = sorted(zip(*all_models), key=lambda x: x[1])
@@ -142,7 +142,7 @@ def main(npd, cld_c, pd, err_lst, ext_coefs, N_fc, cmpl_rnd, err_rnd,
         if top_tiers_str:
 
             # Store best model values as strings.
-            best_model = ['{:.3f}'.format(best_lik)] + map(str, best_mod)
+            best_model = ['{:.3f}'.format(best_lik)] + list(map(str, best_mod))
 
             # Create output .dat file.
             top_tiers_file(output_subdir, clust_name, best_model,

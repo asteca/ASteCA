@@ -162,7 +162,7 @@ def check(mypath, pd):
     for col in ('plx_col', 'pmx_col', 'pmy_col', 'rv_col'):
         if pd[col] is not False and pd['e_' + col] is False:
             sys.exit("ERROR: missing error column for '{}' in"
-                     "'params_input dat'.".format(col))
+                     "'params_input dat'.".format('e_' + col[:-4]))
 
     # Check max error values.
     for i, e in enumerate(pd['err_max']):

@@ -1,10 +1,11 @@
 
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+from astropy.visualization import ZScaleInterval
 from os.path import join
-import mp_centers
-import add_version_plot
-import prep_plots
+from . import mp_centers
+from . import add_version_plot
+from . import prep_plots
 
 
 def main(
@@ -14,8 +15,7 @@ def main(
     Make A1 block plots.
     '''
     if 'A1' in pd['flag_make_plot']:
-        # figsize(x1, y1), GridSpec(y2, x2) --> To have square plots: x1/x2 =
-        # y1/y2 = 2.5
+        # figsize(x1, y1), GridSpec(y2, x2)
         fig = plt.figure(figsize=(30, 25))
         gs = gridspec.GridSpec(10, 12)
         add_version_plot.main()
@@ -29,13 +29,15 @@ def main(
         x_ax, y_ax = prep_plots.ax_names(
             pd['colors'][0], pd['filters'][0], 'mag')
 
-        N_all, min_mag_all = len(cld_i['mags'][0]), min(cld_i['mags'][0])
         # Structure plots.
+        interval = ZScaleInterval()
+        zmin, zmax = interval.get_limits(cld_i['mags'][0])
+        N_all = len(cld_i['mags'][0])
         arglist = []
         for mag_rng in xy_mag_ranges:
-            x, y, m = zip(*mag_rng.values()[0])
-            mag_range = mag_rng.keys()[0]
-            st_sizes_arr = prep_plots.star_size(m, N=N_all, min_m=min_mag_all)
+            x, y, m = list(zip(*list(mag_rng.values())[0]))
+            mag_range = list(mag_rng.keys())[0]
+            st_sizes_arr = prep_plots.star_size(m, N_all, zmin, zmax)
             arglist.append(
                 # pl_full_frame: x,y finding chart of full frame.
                 [gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max,

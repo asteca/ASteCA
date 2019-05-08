@@ -1,8 +1,8 @@
 
 import numpy as np
-import bayesian_da
-import fixed_da
-import read_da
+from . import bayesian_da
+from . import fixed_da
+from . import read_da
 
 
 def filterMPs(memb_probs_cl_region, cl_region_i, cl_region_c):
@@ -10,7 +10,7 @@ def filterMPs(memb_probs_cl_region, cl_region_i, cl_region_c):
     Pass along MPs only for stars in the *complete* dataset.
     """
     memb_probs_cl_region_c = []
-    ids_c = list(zip(*cl_region_c)[0])
+    ids_c = list(zip(*cl_region_c))[0]
     for i, star in enumerate(cl_region_i):
         id_i = star[0]
         if id_i in ids_c:
@@ -23,6 +23,8 @@ def sort_members(memb_lst):
     '''
     Sort this list first by the membership probability from max
     value (1) to min (0) and then by its main magnitude.
+
+    shape(memb_lst) = (N_stars, 10)
     '''
     membership_prob_avrg_sort = sorted(
         memb_lst, key=lambda item: (-item[9], item[3][0]))

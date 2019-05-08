@@ -4,29 +4,50 @@ from astropy.io import ascii
 from collections import defaultdict, Iterable
 import operator
 import copy
+# In place for #243
+import sys
+if sys.version_info[0] == 3:
+    from functools import reduce
 
 
-def main(npd, read_mode, id_col, x_col, y_col, mag_col, e_mag_col,
+def main(npd, read_mode, nanvals, id_col, x_col, y_col, mag_col, e_mag_col,
          col_col, e_col_col, plx_col, e_plx_col, pmx_col, e_pmx_col,
          pmy_col, e_pmy_col, rv_col, e_rv_col, **kwargs):
-    '''
+    """
     Read all data from the cluster's data file.
-    '''
+
+    Separate data into "incomplete" and "complete", where the latter means
+    all stars in the  input file, and the former only those with all the
+    photometric data available.
+    """
 
     data_file = npd['data_file']
     try:
-        fill_msk = [
-            ('', '0'), ('INDEF', '0'), ('9999.99', '0'), ('99.999', '0')]
+        # Identify all these strings as invalid entries.
+        fill_msk = [('', '0')] + [(_, '0') for _ in nanvals]
         # Store IDs as strings.
         if read_mode == 'num':
+            # Read IDs as strings, not applying the 'fill_msk'
             data = ascii.read(
-                data_file, fill_values=fill_msk,
-                converters={id_col: [ascii.convert_numpy(np.str)]},
+                data_file, converters={id_col: [ascii.convert_numpy(np.str)]},
                 format='no_header')
-        else:
+            # Store IDs
+            id_data = data[id_col]
+            # Read rest of the data applying the mask
             data = ascii.read(
-                data_file, fill_values=fill_msk,
-                converters={id_col: [ascii.convert_numpy(np.str)]})
+                data_file, fill_values=fill_msk, format='no_header')
+            # Replace IDs column
+            data[id_col] = id_data
+        else:
+            # Read IDs as strings, not applying the 'fill_msk'
+            data = ascii.read(
+                data_file, converters={id_col: [ascii.convert_numpy(np.str)]})
+            # Store IDs
+            id_data = data[id_col]
+            # Read rest of the data applying the mask
+            data = ascii.read(data_file, fill_values=fill_msk)
+            # Replace IDs column
+            data[id_col] = id_data
 
         # Arrange column names in the proper order and shape.
         col_names = [
@@ -34,52 +55,59 @@ def main(npd, read_mode, id_col, x_col, y_col, mag_col, e_mag_col,
             [plx_col, pmx_col, pmy_col, rv_col],
             [e_plx_col, e_pmx_col, e_pmy_col, e_rv_col]]
 
-        # Remove not wanted columns *before* removing rows with 'nan' values
-        # (otherwise columns that should not be read will influence the row
-        # removal).
-        col_names_keep = list(flatten(col_names))
-        for col in data.columns:
-            if col not in col_names_keep:
-                data.remove_column(col)
+        # Remove not wanted columns.
+        col_names_keep = list(filter(bool, list(flatten(col_names))))
+        data.keep_columns(col_names_keep)
 
-        # Check if there are any masked elements in the data table.
+        # Define PHOTOMETRIC data columns.
+        data_phot = list(flatten([mag_col, e_mag_col, col_col, e_col_col]))
+        # Check if there are any masked elements in the photometric data.
         masked_elems = 0
-        for col in data.columns:
+        for col in data_phot:
+            # Catch "AttributeError: 'Column' object has no attribute 'mask'"
+            # if column is not masked.
             try:
-                masked_elems += data[col].mask.nonzero()[0].sum()
+                masked_elems += data[col].mask.sum()
             except AttributeError:
                 pass
 
-        # Remove all rows with at least one masked element.
+        # Remove rows with at least one masked *photometric* element.
         flag_data_eq = False
         if masked_elems > 0:
             data_compl = data[reduce(
-                operator.and_, [~data[col].mask for col in data.columns])]
+                operator.and_, [~data[col].mask for col in data_phot])]
         else:
-            # If there where no elements to mask, there were no bad values.
+            # If there where no elements to mask, there were no bad photometric
+            # values.
             data_compl = copy.deepcopy(data)
             flag_data_eq = True
 
         # Change masked elements with 'nan' values, in place.
         fill_cols(data)
+        fill_cols(data_compl)
 
     except ascii.InconsistentTableError:
         raise ValueError("ERROR: could not read data input file:\n  {}\n"
                          "  Check that all rows are filled (i.e., no blank"
                          " spaces)\n  for all columns.\n".format(data_file))
 
-    # Create cluster's dictionary with the *incomplete* data.
+    # Create cluster's dictionary with the *photometrically incomplete* data.
     ids, x, y, mags, cols, kine, em, ec, ek = dataCols(
         data_file, data, col_names)
-    perc_compl_check(ids, mags, cols)
     cld_i = {'ids': ids, 'x': x, 'y': y, 'mags': mags, 'em': em,
              'cols': cols, 'ec': ec, 'kine': kine, 'ek': ek}
 
-    # Create cluster's dictionary with the *complete* data.
+    # Create cluster's dictionary with the *photometrically complete* data.
     ids, x, y, mags, cols, kine, em, ec, ek = dataCols(
         data_file, data_compl, col_names)
     cld_c = {'ids': ids, 'x': x, 'y': y, 'mags': mags, 'em': em,
              'cols': cols, 'ec': ec, 'kine': kine, 'ek': ek}
+
+    print('Data lines in input file (N_stars: {}).'.format(cld_i['ids'].size))
+    frac_reject = 1. - (float(cld_c['ids'].size) / cld_i['ids'].size)
+    if frac_reject > 0.05:
+        print("  WARNING: {:.0f}% of stars in the input file contain\n"
+              "  incomplete photometric data.".format(100. * frac_reject))
 
     clp = {'flag_data_eq': flag_data_eq}
 
@@ -91,11 +119,22 @@ def flatten(l):
     Source: https://stackoverflow.com/a/2158532/1391441
     """
     for el in l:
-        if isinstance(el, Iterable) and not isinstance(el, basestring):
-            for sub in flatten(el):
-                yield sub
+        # In place for #243
+        import sys
+        if sys.version_info[0] == 2:
+            if isinstance(el, Iterable) and not isinstance(el, basestring):
+                for sub in flatten(el):
+                    yield sub
+            else:
+                yield el
         else:
-            yield el
+            import collections
+            if isinstance(el, collections.Iterable) and not\
+                    isinstance(el, (str, bytes)):
+                for sub in flatten(el):
+                    yield sub
+            else:
+                yield el
 
 
 def fill_cols(tbl, fill=np.nan, kind='f'):
@@ -127,6 +166,33 @@ def dataCols(data_file, data, col_names):
                 print("  ID '{}' found in lines: {}".format(dup[0],
                       ", ".join(dup[1])))
             raise ValueError("Duplicated IDs found.")
+
+        # Check that all data columns are in the proper 'float64' format.
+        # This catches values like '0.343a' which make the entire column
+        # be processed with a string format.
+        # TODO since columns are masked astropy displays a cryptic message, see
+        # https://github.com/astropy/astropy/issues/8071
+        for i in (1, 2):
+            try:
+                data[col_names[i]].dtype = 'float64'
+            except ValueError:
+                raise ValueError("Bad data value in column '{}'".format(
+                    col_names[i]))
+        for i in (3, 4, 5, 6):
+            for mc in col_names[i]:
+                try:
+                    data[mc].dtype = 'float64'
+                except ValueError:
+                    raise ValueError("Bad data value in column '{}'".format(
+                        mc))
+        for i in (7, 8):
+            for k in col_names[i]:
+                if k is not False:
+                    try:
+                        data[k].dtype = 'float64'
+                    except ValueError:
+                        raise ValueError(
+                            "Bad data value in column '{}'".format(k))
 
         # Read coordinates data.
         x, y = np.array(data[col_names[1]]), np.array(data[col_names[2]])
@@ -163,7 +229,7 @@ def dataCols(data_file, data, col_names):
     # Check if the range of any coordinate column is zero.
     data_names = ['x_coords', 'y_coords']
     for i, dat_lst in enumerate([x, y]):
-        if np.min(dat_lst) == np.max(dat_lst):
+        if np.nanmin(dat_lst) == np.nanmax(dat_lst):
             raise ValueError("ERROR: the range for the '{}' column\n"
                              "is zero. Check the input data format.".format(
                                  data_names[i]))
@@ -171,7 +237,7 @@ def dataCols(data_file, data, col_names):
     data_names = ['magnitude', 'color']
     for i, dat_lst in enumerate([mags, cols]):
         for mc in dat_lst:
-            if np.min(mc) == np.max(mc):
+            if np.nanmin(mc) == np.nanmax(mc):
                 raise ValueError(
                     "ERROR: the range for {} column {} is\nzero."
                     " Check the input data format.".format(data_names[i], i))
@@ -191,23 +257,6 @@ def list_duplicates(seq):
     dups = ((key, map(str, locs)) for key, locs in tally.items()
             if len(locs) > 1)
     return dups
-
-
-def perc_compl_check(ids, mags, cols):
-    """
-    Check percentage of complete data.
-    """
-    N_ids, m_size, c_size = ids.size, [], []
-    for m in mags:
-        m_size.append(np.count_nonzero(~np.isnan(m)))
-    for c in cols:
-        c_size.append(np.count_nonzero(~np.isnan(c)))
-    N_min = min(m_size + c_size)
-    print('Data lines in input file (N_stars: {}).'.format(N_ids))
-    frac_reject = (N_ids - N_min) / float(N_ids)
-    if frac_reject > 0.05:
-        print("  WARNING: {:.0f}% of stars in input file contain\n"
-              "  invalid photometric data.".format(100. * frac_reject))
 
 
 if __name__ == '__main__':

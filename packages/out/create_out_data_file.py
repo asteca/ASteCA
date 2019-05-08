@@ -24,7 +24,7 @@ def main(npd):
 
         # Modify these two lines
         data[1] = '# [ASteCA {}]\n'.format(__version__)
-        data[3] = '# Modified: [{}]\n'.format(now_time)
+        data[4] = '# Modified: [{}]\n'.format(now_time)
 
         # Write everything back.
         with open(out_file_name, 'w') as f:
@@ -36,6 +36,7 @@ def main(npd):
             out_data_file.write("#\n\
 # [ASteCA {}]\n\
 #\n\
+# Created:  [{}]\n\
 # Modified: [{}]\n\
 #\n\
 # NAME: Cluster's name.\n\
@@ -62,23 +63,16 @@ def main(npd):
 #           members ('n_memb') with the approximate photometric number of\n\
 #           members ('n_memb_da').\n\
 # a_f: Fraction of cluster's area that is present in frame.\n\
-# prob_cl: Statistical comparison of cluster vs field KDEs. It is obtained\n\
-#          as 1 minus the overlap area between the KDEs. If the KDEs are\n\
-#          very similar this value will be low indicating the overdensity is\n\
-#          probably not a true cluster.\n\
 #\n\
-# met: Metallicity value (z).\n\
-# e_m: Metallicity error.\n\
-# age: log(age).\n\
-# e_a: log(age) error.\n\
-# E(B-V): extinction.\n\
-# e_E: Extinction error.\n\
-# dist: Distance modulus.\n\
-# e_d: Distance error.\n\
-# M_i: Total initial mass.\n\
-# e_M: Mass error.\n\
-# bin_fr: Binary fraction.\n\
-# e_bf: Binary fraction error.\n\
+# Parameters values are in the sense: mean, MAP/ML, median, mode.\n\
+# Parameters uncertainties are: 16th, 84th percentiles, and STDDEV.\n\
+# z: Metallicity value.\n\
+# a: log(age).\n\
+# E: extinction E(B-V).\n\
+# d: Distance modulus.\n\
+# M: Total initial mass.\n\
+# b: Binary fraction.\n\
+# Nt: Number of estimates used to the parameters values.\n\
 #\n\
 # M1 Indicates that the center was set manually.\n\
 # M2 Indicates that the radius was set manually.\n\
@@ -103,10 +97,15 @@ def main(npd):
 #    cluster, more than one cluster present in the frame, variable or too\n\
 #    crowded field, etc.\n\
 #\n\
-#NAME                 c_x      c_y     r_cl    e_rcl      \
-r_c     e_rc      r_t     e_rt      kcp      CI   n_memb_k     n_memb  \
-n_memb_da  memb_par     a_f  prob_cl      met      e_m      age      \
-e_a   E(B-V)      e_E     dist      e_d      M_i      e_M   bin_fr     \
-e_bf      \
-M1 M2  f1 f2 f3 f4 f5 f6 f7 f8  FC\n".format(__version__, now_time))
+#NAME                 c_x      c_y     r_cl    e_rcl      r_c     e_rc      \
+r_t     e_rt      kcp      CI   n_memb_k     n_memb  n_memb_da  memb_par     \
+a_f     \
+z_mean      z_MAP   z_median     z_mode       16th       84th        std    R^2     \
+a_mean      a_MAP   a_median     a_mode       16th       84th        std    R^2     \
+E_mean      E_MAP   E_median     E_mode       16th       84th        std    R^2     \
+d_mean      d_MAP   d_median     d_mode       16th       84th        std    R^2     \
+M_mean      M_MAP   M_median     M_mode       16th       84th        std    R^2     \
+b_mean      b_MAP   b_median     b_mode       16th       84th        std    R^2     \
+    Nt      M1 M2  f1 f2 f3 f4 f5 f6 f7  FC\n".format(
+                __version__, now_time, now_time))
             print('Output data file created.')

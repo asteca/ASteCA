@@ -1,9 +1,10 @@
 
 import numpy as np
+import sys
 import os
 import re
 from os.path import join
-import isochs_format
+from . import isochs_format
 
 
 def match_ranges(met_vals_all, met_files, age_vals_all, z_range, a_range):
@@ -28,43 +29,52 @@ def match_ranges(met_vals_all, met_files, age_vals_all, z_range, a_range):
     age_values = []
     for age in age_vals_all:
         # If age value falls inside the given range, store the value.
-        if np.isclose(a_range, age, atol=0.01).any():
-            age_values.append(round(age, 2))
+        # TODO hardcoded tolerance, could break something sometime?
+        if np.isclose(a_range, age, atol=0.001).any():
+            age_values.append(age)
+
+    if not age_values:
+        txt = "No age value read:\n\n{}\n\ncould be matched to the ages" +\
+            " given as input:\n\n{}"
+        sys.exit(txt.format(age_vals_all, a_range))
 
     return met_f_filter, met_values, age_values
 
 
-def get_ranges(par_ranges):
+def get_ranges(best_fit_algor, par_ranges, za_steps, ga_steps, m_step):
     '''
-    Calculate parameter ranges to be used by the selected best fit method.
+    Obtain parameter ranges to be used by the selected best fit method.
     '''
-    param_ranges = []
-    for param in par_ranges:
-        # List of values.
-        if param[0] == 'l':
-            # Store ordered values.
-            param[1].sort()
-            param_ranges.append(np.asarray(param[1]))
 
-        # Range of values.
+    # Define steps for the parameter ranges according to the best fit algorithm
+    # selected.
+    if best_fit_algor == 'genet':
+        steps = za_steps + ga_steps[:2] + [m_step, ga_steps[2]]
+    else:
+        steps = za_steps + [None, None] + [m_step, None]
+
+    param_ranges = []
+    for i, param in enumerate(par_ranges):
+        # If only one value is defined.
+        if len(param) == 1:
+            param_ranges.append(np.asarray([param[0]]))
+        # If min == max store single value in array.
+        elif param[0] == param[1]:
+            param_ranges.append(np.asarray([param[0]]))
         else:
-            # If only one value is defined.
-            if len(param[1]) == 1:
-                param_ranges.append(np.asarray([param[1][0]]))
-            # If min == max store single value in array.
-            elif param[1][0] == param[1][1]:
-                param_ranges.append(np.asarray([param[1][0]]))
+            # Store range values in array.
+            if steps[i] is None:
+                p_rang = np.asarray(param)
             else:
-                # Store range values in array.
-                p_rang = np.arange(*param[1])
-                # Skip if array is empty. Checker will catch this.
-                if p_rang.size:
-                    # Add max value if not present. Check this way to avoid
-                    # floating point errors.
-                    if abs(p_rang[-1] - param[1][1]) > 0.0000001:
-                        p_rang = np.append(p_rang, param[1][1])
-                # Store full range for this parameter.
-                param_ranges.append(p_rang)
+                p_rang = np.arange(param[0], param[1], steps[i])
+            # Skip if array is empty. Checker will catch this.
+            if p_rang.size:
+                # Add max value if not present. Check this way to avoid
+                # floating point errors.
+                if abs(p_rang[-1] - param[1]) > 0.0000001:
+                    p_rang = np.append(p_rang, param[1])
+            # Store full range for this parameter.
+            param_ranges.append(p_rang)
 
     return param_ranges
 
@@ -80,9 +90,10 @@ def CMDAges(met_file):
     with open(met_file, mode="r") as f_iso:
         regex = age_format  # Define regular expression.
         ages0 = re.findall(regex, f_iso.read())  # Find all instances.
-        ages1 = np.asarray(map(float, ages0))  # Map to floats.
-        ages2 = np.log10(ages1)  # Take log10
-        isoch_a = np.around(ages2, 2)  # Round to 2 decimals.
+        ages1 = np.asarray(list(map(float, ages0)))
+        # TODO hardcoded rounding. Must be modified in accordance with
+        # 'read_isochs.readCMDFile()'.
+        isoch_a = np.around(np.log10(ages1), 4)
 
     return isoch_a
 
@@ -116,7 +127,7 @@ def get_metals(iso_paths):
     return met_vals_all, met_files
 
 
-def main(iso_paths, par_ranges):
+def main(iso_paths, best_fit_algor, par_ranges, za_steps, ga_steps, m_step):
     '''
     Obtain the correct metallicities and ages used by the code.
     '''
@@ -133,7 +144,8 @@ def main(iso_paths, par_ranges):
     age_vals_all = CMDAges(met_files[0][0])
 
     # Get parameters ranges stored in params_input.dat file.
-    param_ranges = get_ranges(par_ranges)
+    param_ranges = get_ranges(
+        best_fit_algor, par_ranges, za_steps, ga_steps, m_step)
 
     # Match values in metallicity and age ranges given by the user, with
     # those available in the theoretical isochrones.
@@ -141,4 +153,5 @@ def main(iso_paths, par_ranges):
     met_f_filter, met_values, age_values = match_ranges(
         met_vals_all, met_files, age_vals_all, z_range, a_range)
 
-    return param_ranges, met_f_filter, met_values, age_values
+    return param_ranges, met_f_filter, met_values, age_values, met_vals_all,\
+        age_vals_all

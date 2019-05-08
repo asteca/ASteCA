@@ -24,8 +24,9 @@ def pl_center(gs, fig, asp_ratio, x_name, y_name, coord, bin_cent, clust_rad,
         fill=False)
     fig.gca().add_artist(circle)
     # Add text box.
-    text = 'Bin $\simeq$ {0:g} {1}'.format(round(bin_width, 1), coord)
-    ob = offsetbox.AnchoredText(text, pad=0.2, loc=1, prop=dict(size=10))
+    r_frmt = '{:.1f}' if coord == 'px' else '{:.3f}'
+    txt = ('Bin $\simeq$' + r_frmt + ' {}').format(bin_width, coord)
+    ob = offsetbox.AnchoredText(txt, pad=0.2, loc=1, prop=dict(size=10))
     ob.patch.set(alpha=0.85)
     ax.add_artist(ob)
     plt.imshow(hist_2d_g.transpose(), origin='lower',
@@ -37,10 +38,10 @@ def pl_center(gs, fig, asp_ratio, x_name, y_name, coord, bin_cent, clust_rad,
     ax.set_aspect(aspect=asp_ratio)
 
 
-def pl_rad_dens(gs, mode, radii, rdp_points, field_dens, coord, clust_name,
-                clust_rad, e_rad, poisson_error, bin_width, core_rad,
-                e_core, tidal_rad, e_tidal, K_cent_dens, flag_2pk_conver,
-                flag_3pk_conver):
+def pl_rad_dens(
+    gs, mode, radii, rdp_points, field_dens, coord, clust_name, clust_rad,
+        e_rad, poisson_error, bin_width, core_rad, e_core, tidal_rad, e_tidal,
+        K_cent_dens, flag_2pk_conver, flag_3pk_conver):
     '''
     Radial density plot.
     '''
@@ -60,19 +61,19 @@ def pl_rad_dens(gs, mode, radii, rdp_points, field_dens, coord, clust_name,
     # Set axes labels
     plt.xlabel('radius ({})'.format(coord), fontsize=12)
     plt.ylabel("stars/{}$^{{2}}$".format(coord), fontsize=12)
-    # Set grid
-    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=1)
+    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5)
     # Cluster's name and mode used to process it.
     plt.title(str(clust_name) + ' (' + mode + ')', fontsize=9)
     # Legend texts
     kp_text = '3P' if flag_3pk_conver else '2P'
+    r_frmt = '{:.0f}' if coord == 'px' else '{:.3f}'
     texts = [
-        'RDP ($\sim${:.0f} {})'.format(bin_width, coord),
+        ('RDP ($\sim$' + r_frmt + ' {})').format(bin_width, coord),
         '$d_{{field}}$ = {:.1E} $st/{}^{{2}}$'.format(field_dens, coord),
         '{} King profile'.format(kp_text),
-        'r$_c$ = {0:.0f} $\pm$ {1:.0f} {2}'.format(core_rad, e_core, coord),
-        'r$_t$ = {0:.0f} $\pm$ {1:.0f} {2}'.format(tidal_rad, e_tidal, coord),
-        'r$_{{cl}}$ = {0:.0f} $\pm$ {1:.0f} {2}'.format(
+        r'$r_c$ = {0:.0f} $\pm$ {1:.0f} {2}'.format(core_rad, e_core, coord),
+        r'$r_t$ = {0:.0f} $\pm$ {1:.0f} {2}'.format(tidal_rad, e_tidal, coord),
+        (r"$r_{{cl}} =$" + r_frmt + r"$\pm$" + r_frmt + ' {}').format(
             clust_rad, e_rad, coord)
     ]
     # Plot density profile with the smallest bin size
@@ -128,16 +129,16 @@ def pl_rad_dens(gs, mode, radii, rdp_points, field_dens, coord, clust_name,
 
 
 def pl_full_frame(
-        gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max, asp_ratio,
-        kde_cent, clust_rad, x, y, st_sizes_arr, core_rad, e_core,
-        tidal_rad, e_tidal, K_conct_par, flag_2pk_conver, flag_3pk_conver):
+    gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max, asp_ratio,
+        kde_cent, clust_rad, x, y, st_sizes_arr, core_rad, e_core, tidal_rad,
+        e_tidal, K_conct_par, flag_2pk_conver, flag_3pk_conver):
     '''
     x,y finding chart of full frame
     '''
     ax = plt.subplot(gs[2:4, 0:2])
     ax.set_aspect(aspect=asp_ratio)
     ax.set_title(
-        r"$N_{{stars}}$={} (incomp frame)".format(len(x)), fontsize=9)
+        r"$N_{{stars}}$={} (phot incomp)".format(len(x)), fontsize=9)
     # Set plot limits
     plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
@@ -173,9 +174,12 @@ def pl_full_frame(
                 fill=False, ls='dashed', lw=1.)
             fig.gca().add_artist(circle)
     # Add text box
-    text1 = '${0}_{{cent}} = {1:.0f}\,{2}$'.format(x_name, kde_cent[0], coord)
-    text2 = '${0}_{{cent}} = {1:.0f}\,{2}$'.format(y_name, kde_cent[1], coord)
-    text = text1 + '\n' + text2
+    r_frmt = '{:.0f}' if coord == 'px' else '{:.3f}'
+    t1 = ('${}_{{cent}} =$' + r_frmt + '$\,{}$').format(
+        x_name, kde_cent[0], coord)
+    t2 = ('${}_{{cent}} =$' + r_frmt + '$\,{}$').format(
+        y_name, kde_cent[1], coord)
+    text = t1 + '\n' + t2
     ob = offsetbox.AnchoredText(text, pad=0.2, loc=2, prop=dict(size=11))
     ob.patch.set(alpha=0.85)
     ax.add_artist(ob)
@@ -183,9 +187,9 @@ def pl_full_frame(
     plt.scatter(x, y, marker='o', c='black', s=st_sizes_arr)
 
 
-def pl_zoom_frame(gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
-                  y_zmax, cont_index, kde_plot, x_data, y_data, st_sizes_arr,
-                  kde_cent, clust_rad):
+def pl_zoom_frame(
+    gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin, y_zmax, cont_index,
+        kde_plot, x_data, y_data, st_sizes_arr, kde_cent, clust_rad):
     '''
     Zoom on x,y finding chart.
     '''
@@ -206,12 +210,11 @@ def pl_zoom_frame(gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
     # Plot radius.
     circle = plt.Circle((kde_cent[0], kde_cent[1]), clust_rad, color='r',
                         fill=False, lw=1.5, zorder=5)
+    N_r = [1 for pt in list(zip(x_data, y_data)) if circle.contains_point(pt)]
+    ax.set_title(r"$N_{{r<r_{{cl}}}}$={} [$CI = {:.2f}$] (phot incomp)".format(
+        sum(N_r), cont_index), fontsize=9)
     fig.gca().add_artist(circle)
-    # Add text box.
-    text = "CI = {:.2f}".format(cont_index)
-    ob = offsetbox.AnchoredText(text, pad=0.2, loc=1, prop=dict(size=12))
-    ob.patch.set(alpha=0.85)
-    ax.add_artist(ob)
+
     # Plot contour levels if it was obtained.
     if kde_plot:
         ext_range, x, y, k_pos = kde_plot
@@ -239,10 +242,10 @@ def pl_zoom_frame(gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
                 marker='x', zorder=5)
 
 
-def pl_cl_fl_regions(gs, fig, x_name, y_name, coord, x_min, x_max, y_min,
-                     y_max, asp_ratio, kde_cent, clust_rad, field_regions_i,
-                     field_regions_rjct_i, cl_region_i, cl_region_rjct_i,
-                     flag_no_fl_regs_i):
+def pl_cl_fl_regions(
+    gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max, asp_ratio,
+        kde_cent, clust_rad, field_regions_i, field_regions_rjct_i,
+        cl_region_i, cl_region_rjct_i, flag_no_fl_regs_i):
     '''
     Cluster and field regions defined.
     '''
@@ -259,7 +262,7 @@ def pl_cl_fl_regions(gs, fig, x_name, y_name, coord, x_min, x_max, y_min,
     plt.ylabel('{} ({})'.format(y_name, coord), fontsize=12)
     # Set minor ticks
     ax.minorticks_on()
-    ax.grid(b=True, which='both', color='gray', linestyle='--', lw=0.5)
+    ax.grid(b=True, which='both', color='gray', linestyle='--', lw=.5)
     # Radius
     circle = plt.Circle((kde_cent[0], kde_cent[1]), clust_rad,
                         color='k', fill=False)
@@ -272,28 +275,30 @@ def pl_cl_fl_regions(gs, fig, x_name, y_name, coord, x_min, x_max, y_min,
     # Plot cluster region.
     if len(cl_region_rjct_i) > 0:
         plt.scatter(
-            zip(*cl_region_rjct_i)[1], zip(*cl_region_rjct_i)[2], marker='x',
-            c='orange', s=5, lw=.5, edgecolors='none')
-    plt.scatter(zip(*cl_region_i)[1], zip(*cl_region_i)[2], marker='o',
-                c='red', s=8, edgecolors='none')
+            list(zip(*cl_region_rjct_i))[1], list(zip(*cl_region_rjct_i))[2],
+            marker='o', c='red', s=8, edgecolors='w', lw=.2)
+    plt.scatter(list(zip(*cl_region_i))[1], list(zip(*cl_region_i))[2],
+                marker='o', c='red', s=8, edgecolors='w', lw=.2)
 
     N_flrg = 0
     if not flag_no_fl_regs_i:
-        col = cycle(['DimGray', 'ForestGreen', 'maroon', 'RoyalBlue'])
+        col0 = cycle(['DimGray', 'ForestGreen', 'maroon', 'RoyalBlue'])
+        col1 = cycle(['DimGray', 'ForestGreen', 'maroon', 'RoyalBlue'])
         # Stars inside the field regions with accepted errors.
         for i, reg in enumerate(field_regions_i):
             fl_reg = list(zip(*reg))
             N_flrg += len(fl_reg[0])
             plt.scatter(fl_reg[1], fl_reg[2], marker='o',
-                        c=next(col), s=8, edgecolors='none')
+                        c=next(col0), s=8, edgecolors='w', lw=.2)
         # Stars inside the field regions with rejected errors.
         for i, reg in enumerate(field_regions_rjct_i):
-            fl_reg = list(zip(*reg))
-            N_flrg += len(fl_reg[0])
-            plt.scatter(fl_reg[1], fl_reg[2], marker='x',
-                        c=next(col), s=5, lw=.5, edgecolors='none')
+            if reg:
+                fl_reg = list(zip(*reg))
+                N_flrg += len(fl_reg[0])
+                plt.scatter(fl_reg[1], fl_reg[2], marker='o',
+                            c=next(col1), s=8, edgecolors='w', lw=.2)
 
-    ax.set_title(r"$N_{{stars}}$={} (incomp frame)".format(
+    ax.set_title(r"$N_{{stars}}$={} (phot incomp)".format(
         len(cl_region_i) + len(cl_region_rjct_i) + N_flrg), fontsize=9)
 
 

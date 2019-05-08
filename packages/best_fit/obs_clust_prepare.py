@@ -1,6 +1,6 @@
 
 import numpy as np
-from scipy.stats import binned_statistic_dd
+from scipy.stats import binned_statistic_dd, gaussian_kde
 from ..decont_algors.local_cell_clean import bin_edges_f
 
 
@@ -10,13 +10,13 @@ def dataProcess(cl_max_mag):
     make entire array of floats.
     """
     mags_cols_cl = [[], []]
-    for mag in zip(*zip(*cl_max_mag)[1:][2]):
+    for mag in list(zip(*list(zip(*cl_max_mag))[1:][2])):
         mags_cols_cl[0].append(mag)
-    for col in zip(*zip(*cl_max_mag)[1:][4]):
+    for col in list(zip(*list(zip(*cl_max_mag))[1:][4])):
         mags_cols_cl[1].append(col)
 
     # Store membership probabilities here.
-    memb_probs = np.array(zip(*cl_max_mag)[1:][8])
+    memb_probs = np.array(list(zip(*cl_max_mag))[1:][8])
 
     return mags_cols_cl, memb_probs
 
@@ -34,9 +34,9 @@ def main(cl_max_mag, lkl_method, bin_method, lkl_weight):
         # Square errors here to not repeat the same calculations each time a
         # new synthetic cluster is matched.
         e_mags_cols = []
-        for e_m in zip(*zip(*cl_max_mag)[1:][3]):
+        for e_m in list(zip(*list(zip(*cl_max_mag))[1:][3])):
             e_mags_cols.append(np.square(e_m))
-        for e_c in zip(*zip(*cl_max_mag)[1:][5]):
+        for e_c in list(zip(*list(zip(*cl_max_mag))[1:][5])):
             e_mags_cols.append(np.square(e_c))
 
         # Store and pass to use in likelihood function. The 'obs_st' list is
@@ -48,9 +48,10 @@ def main(cl_max_mag, lkl_method, bin_method, lkl_weight):
         # 'phot_val', 'error' the associated value and error for 'star_i'.
         obs_st = []
         mags_cols = mags_cols_cl[0] + mags_cols_cl[1]
-        for st_phot, st_e_phot in zip(zip(*mags_cols), zip(*e_mags_cols)):
-            obs_st.append(zip(*[st_phot, st_e_phot]))
-        obs_clust = [obs_st, memb_probs]
+        for st_phot, st_e_phot in list(
+                zip(list(zip(*mags_cols)), list(zip(*e_mags_cols)))):
+            obs_st.append(list(zip(*[st_phot, st_e_phot])))
+        obs_clust = [np.array(obs_st), len(obs_st), np.log(memb_probs)]
 
     elif lkl_method == 'duong':
         # Define variables to communicate with package 'R'.
@@ -87,21 +88,19 @@ def main(cl_max_mag, lkl_method, bin_method, lkl_weight):
         # Obtain histogram for observed cluster.
         cl_histo = np.histogramdd(obs_mags_cols, bins=bin_edges)[0]
 
-        w_stat = {'mean': np.mean, 'max': np.max, 'median': np.median}
-        # Weights that will be applied to each bin.
         bin_w = np.nan_to_num(binned_statistic_dd(
-            obs_mags_cols, memb_probs, statistic=w_stat[lkl_weight],
+            np.array(obs_mags_cols).T, memb_probs, statistic=lkl_weight,
             bins=bin_edges)[0])
 
         # Flatten N-dimensional histograms.
         cl_histo_f = np.array(cl_histo).ravel()
         bin_weight_f = np.array(bin_w).ravel()
 
-        # Index of bins where n_i = 0 (no observed stars). Used by the
+        # Index of bins where stars were observed. Used by the
         # 'Dolphin' and 'Mighell' likelihoods.
-        cl_z_idx = [cl_histo_f != 0]
+        cl_z_idx = (cl_histo_f != 0)
 
-        # Remove all bins where n_i = 0 (no observed stars). Used by the
+        # Remove all bins where n_i=0 (no observed stars). Used by the
         # 'Dolphin' likelihood.
         cl_histo_f_z = cl_histo_f[cl_z_idx]
         bin_weight_f_z = bin_weight_f[cl_z_idx]
@@ -117,5 +116,23 @@ def main(cl_max_mag, lkl_method, bin_method, lkl_weight):
 
         obs_clust = [bin_edges, cl_histo, cl_histo_f, cl_z_idx, cl_histo_f_z,
                      dolphin_cst, bin_weight_f_z]
+
+    elif lkl_method in ['dolphin_kde', 'kdeKL']:
+
+        vals = np.array(mags_cols_cl[0] + mags_cols_cl[1])
+        # vals.shape = (# of dims, # of data)
+        kernel = gaussian_kde(vals)
+
+        # TODO 'kdeKL' is still terribly slow. Also: is this a likelihood? Is
+        # this a log-likelihood? Can I just plug in whatever I want here?
+        # Being a KDE and thus normalized, does it fit masses? <--!!?
+
+        # How should the number that defines the grid density be selected?
+        Nb = 10
+        pts = np.mgrid[[slice(A.min(), A.max(), complex(Nb)) for A in vals]]
+        kde_pts = np.vstack([_.ravel() for _ in pts])
+        obs_kde = kernel(kde_pts)
+
+        obs_clust = [obs_kde, kde_pts]
 
     return obs_clust

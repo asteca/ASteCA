@@ -1,26 +1,14 @@
 
-import collections
+from ..inp.get_data import flatten
 
 
-def flatten(l):
-    '''
-    Flatten list.
-    '''
-    for el in l:
-        if isinstance(el, collections.Iterable) and not \
-                isinstance(el, basestring):
-            for sub in flatten(el):
-                yield sub
-        else:
-            yield el
-
-
-def main(npd, pd, flag_center_std, flag_center_manual, flag_delta_total,
-         flag_not_stable, flag_delta, flag_radius_manual, flag_2pk_conver,
-         flag_3pk_conver, flag_memb_par, flag_num_memb_low, K_memb_num,
-         K_conct_par, cont_index, n_memb, memb_par, n_memb_da, frac_cl_area,
-         pval_test_params, kde_cent, clust_rad, e_rad, core_rad, e_core,
-         tidal_rad, e_tidal, fit_params_r, fit_errors_r, **kwargs):
+def main(
+    npd, pd, flag_center_std, flag_center_manual, flag_delta_total,
+    flag_not_stable, flag_delta, flag_radius_manual, flag_2pk_conver,
+    flag_3pk_conver, flag_memb_par, flag_num_memb_low, K_memb_num,
+    K_conct_par, cont_index, n_memb, memb_par, n_memb_da, frac_cl_area,
+    kde_cent, clust_rad, e_rad, core_rad, e_core, tidal_rad, e_tidal,
+        isoch_fit_params, isoch_fit_errors, **kwargs):
     '''
     Add data obtained to the 'data_output.dat' file.
     '''
@@ -49,23 +37,43 @@ def main(npd, pd, flag_center_std, flag_center_manual, flag_delta_total,
     cr_e = ["{:.0f}".format(_) for _ in [e_rad, e_core, e_tidal]]
     # Interwine these lists.
     cre_r = cr_r[:2] + [item for t in zip(cr_r[2:], cr_e) for item in t]
-    # Rounded cluster parameters and errors.
-    cpe_r = [item for t in zip(fit_params_r, fit_errors_r) for item in t]
+    # Cluster parameters and errors.
+    cpe_r = [
+        item for t in zip(
+            isoch_fit_params['mean_sol'], isoch_fit_params['map_sol'],
+            isoch_fit_params['median_sol'], isoch_fit_params['mode_sol'],
+            list(zip(*isoch_fit_errors))[0], list(zip(*isoch_fit_errors))[1],
+            list(zip(*isoch_fit_errors))[2], isoch_fit_params['param_r2'])
+        for item in t]
 
     # Store all parameter values in list.
     # TODO using main magnitude only
     line = [write_name, cre_r, K_conct_par, cont_index, K_memb_num,
-            n_memb, n_memb_da, memb_par, frac_cl_area, pval_test_params[0],
-            cpe_r]
+            n_memb, n_memb_da, memb_par, frac_cl_area, cpe_r,
+            isoch_fit_params['N_total']]
     # Flatten list.
     line_f = list(flatten(line))
+
+    # TDOD not sure if this is really an improvement
+    # with open(out_file_name, mode='a') as f:
+    #     # Some platforms don't automatically seek to end when files opened
+    #     # in append mode
+    #     f.seek(0, os.SEEK_END)
+    #     t2 = Table(zip(*[line_f + int_flags]))
+    #     t2.write(f, format='ascii.no_header', formats={'col0': '%-16s'})
 
     # Write values to file.
     with open(out_file_name, "a") as f_out:
         f_out.write('''{:<16} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} \
-{:>8.2f} {:>7.2f} {:>10.0f} {:>10.0f} {:>10.0f} {:>9.2f} {:>7.2f} {:>8.2f} \
-{:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8} \
-{:>8}'''.format(*line_f))
+{:>8.2f} {:>7.2f} {:>10.0f} {:>10.0f} {:>10.0f} {:>9.2f} {:>7.2f} \
+{:>10.5} {:>10.5} {:>10.5} {:>10.5} {:>10.5} {:>10.5} {:>10.5} {:>6.2} \
+{:>10.4} {:>10.4} {:>10.4} {:>10.4} {:>10.4} {:>10.4} {:>10.4} {:>6.2} \
+{:>10.3} {:>10.3} {:>10.3} {:>10.3} {:>10.3} {:>10.3} {:>10.3} {:>6.2} \
+{:>10.5} {:>10.5} {:>10.5} {:>10.5} {:>10.5} {:>10.5} {:>10.5} {:>6.2} \
+{:>10.5} {:>10.5} {:>10.5} {:>10.5} {:>10.5} {:>10.5} {:>10.5} {:>6.2} \
+{:>10.2} {:>10.2} {:>10.2} {:>10.2} {:>10.2} {:>10.2} {:>10.2} {:>6.2} \
+{:>10.2E}\
+'''.format(*line_f))
         # Flags.
         f_out.write('''{:>8} {:>2} {:>3} {:>2} {:>2} {:>2} {:>2} {:>2} \
 {:>2} {:>3}'''.format(*int_flags))

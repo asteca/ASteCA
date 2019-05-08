@@ -2,14 +2,13 @@
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from os.path import join
-import add_version_plot
-import mp_best_fit1_GA
-import mp_best_fit1_emcee
-import prep_plots
+from . import add_version_plot
+from . import mp_best_fit1_GA
+from . import mp_best_fit1_mcmc
+from . import prep_plots
 
 
-def main(
-        npd, pd, isoch_fit_params, fit_params_r, fit_errors_r, **kwargs):
+def main(npd, pd, isoch_fit_params, **kwargs):
     '''
     Make D1 block plots.
     '''
@@ -18,63 +17,93 @@ def main(
         gs = gridspec.GridSpec(12, 12)
         add_version_plot.main(y_fix=.999)
 
-        min_max_p = prep_plots.param_ranges(pd['fundam_params'])
-        # DEPRECATED (DELETE)
+        # TODO DEPRECATED (DELETE)
         # # Get special axis ticks for metallicity.
         # xp_min, xp_max = min_max_p[0]
         # # The max number of characters in the axis '30', is HARD-CODED.
         # # Add values to the end of this list.
         # min_max_p.append(prep_plots.BestTick(xp_min, xp_max, 30))
 
-        # Extract outside of 'if' block so it works when the 'brute force'
-        # algorithm was used
-        model_done = isoch_fit_params[-1]
-
         # Best fitting process plots.
         if pd['best_fit_algor'] == 'genet':
-            lkl_old, new_bs_indx = isoch_fit_params[1:3]
-            l_min_max = prep_plots.likl_y_range(pd['best_fit_algor'], lkl_old)
+            min_max_p = prep_plots.param_ranges(
+                pd['best_fit_algor'], pd['fundam_params'])
+            l_min_max = prep_plots.likl_y_range(
+                pd['best_fit_algor'], isoch_fit_params['lkl_old'])
+
             args = [
                 # pl_lkl: Likelihood evolution for the GA.
-                gs, l_min_max, lkl_old, model_done, new_bs_indx,
-                pd['N_pop'], pd['N_gen'], pd['fit_diff'], pd['cross_prob'],
-                pd['cross_sel'], pd['mut_prob'], pd['N_el'], pd['N_ei'],
-                pd['N_es'], pd['N_bootstrap']
+                gs, l_min_max, isoch_fit_params['lkl_old'],
+                isoch_fit_params['model_done'],
+                isoch_fit_params['new_bs_indx'], pd['N_pop'], pd['N_gen'],
+                pd['fit_diff'], pd['cross_prob'], pd['cross_sel'],
+                pd['mut_prob'], pd['N_el'], pd['N_ei'], pd['N_es'],
+                pd['N_bootstrap']
             ]
             mp_best_fit1_GA.plot(0, *args)
 
-        if pd['best_fit_algor'] in ['brute', 'genet']:
+        if pd['best_fit_algor'] in ('brute', 'genet'):
+            # TODO use the isoch_fit_params 'data', the 'fit_params_r' and
+            # 'fit_errors_r' values were deprecated.
             arglist = [
                 # pl_2_param_dens: Param vs param solutions scatter map.
                 [gs, 'age-metal', min_max_p, fit_params_r, fit_errors_r,
-                 model_done],
+                 isoch_fit_params['model_done']],
                 [gs, 'dist-ext', min_max_p, fit_params_r, fit_errors_r,
-                 model_done],
+                 isoch_fit_params['model_done']],
                 [gs, 'ext-age', min_max_p, fit_params_r, fit_errors_r,
-                 model_done],
+                 isoch_fit_params['model_done']],
                 [gs, 'mass-binar', min_max_p, fit_params_r, fit_errors_r,
-                 model_done],
+                 isoch_fit_params['model_done']],
                 # pl_lkl_scatt: Parameter likelihood density plot.
-                [gs, '$z$', min_max_p, fit_params_r, fit_errors_r, model_done],
+                [gs, '$z$', min_max_p, fit_params_r, fit_errors_r,
+                 isoch_fit_params['model_done']],
                 [gs, '$log(age)$', min_max_p, fit_params_r, fit_errors_r,
-                 model_done],
+                 isoch_fit_params['model_done']],
                 [gs, '$E_{{(B-V)}}$', min_max_p, fit_params_r, fit_errors_r,
-                 model_done],
+                 isoch_fit_params['model_done']],
                 [gs, '$(m-M)_o$', min_max_p, fit_params_r, fit_errors_r,
-                 model_done],
+                 isoch_fit_params['model_done']],
                 [gs, '$M\,(M_{{\odot}})$', min_max_p, fit_params_r,
-                 fit_errors_r, model_done],
+                 fit_errors_r, isoch_fit_params['model_done']],
                 [gs, '$b_{{frac}}$', min_max_p, fit_params_r, fit_errors_r,
-                 model_done]
+                 isoch_fit_params['model_done']]
             ]
             for n, args in enumerate(arglist, 1):
                 mp_best_fit1_GA.plot(n, *args)
 
         if pd['best_fit_algor'] == 'emcee':
-            pars_chains, m_accpt_fr, varIdxs = isoch_fit_params[1:4]
-            # Limits for the 2-dens plots.
-            min_max_p2 = prep_plots.p2_ranges(
-                min_max_p, varIdxs, model_done, pd['nwalkers'], pd['nsteps'])
+            nwalkers, nburn, nsteps, mcmc_param = pd['nwalkers_emc'],\
+                pd['nburn_emc'], isoch_fit_params['nsteps_emc'],\
+                pd['emcee_a']
+        elif pd['best_fit_algor'] == 'ptemcee':
+            nwalkers, nburn, nsteps, mcmc_param = pd['nwalkers_ptm'],\
+                pd['nburn_ptm'], isoch_fit_params['nsteps_ptm'],\
+                pd['pt_adapt']
+        elif pd['best_fit_algor'] == 'abc':
+            nwalkers, nburn, nsteps, mcmc_param = pd['nwalkers_abc'],\
+                isoch_fit_params['nburn_abc'],\
+                isoch_fit_params['nsteps_abc'], None
+
+        # Title for the plot.
+        m, s = divmod(isoch_fit_params['mcmc_elapsed'], 60)
+        h, m = divmod(m, 60)
+        if pd['best_fit_algor'] == 'emcee':
+            mcmc_p_str = ", a={}".format(mcmc_param)
+        elif pd['best_fit_algor'] == 'abc':
+            mcmc_p_str = ""
+        elif pd['best_fit_algor'] == 'ptemcee':
+            mcmc_p_str = ", adapt={}".format(mcmc_param)
+        plt.suptitle(
+            ("chains={:.0f}, burn={:.0f}, steps={:.0f}{} |"
+             " {:.0f}h{:.0f}m").format(
+                nwalkers, nburn, nsteps, mcmc_p_str, h, m), y=1.005,
+            fontsize=14)
+
+        if pd['best_fit_algor'] in ('abc', 'ptemcee', 'emcee'):
+            min_max_p = prep_plots.param_ranges(
+                pd['best_fit_algor'], pd['fundam_params'],
+                isoch_fit_params['varIdxs'], isoch_fit_params['pars_chains'])
 
             # pl_2_param_dens: Param vs param density map.
             for p2 in [
@@ -82,38 +111,109 @@ def main(
                     'metal-binar', 'age-ext', 'age-dist', 'age-mass',
                     'age-binar', 'ext-dist', 'ext-mass', 'ext-binar',
                     'dist-mass', 'dist-binar', 'mass-binar']:
-                args = [p2, gs, min_max_p2, fit_params_r, fit_errors_r,
-                        varIdxs, model_done]
-                mp_best_fit1_emcee.plot(0, *args)
+
+                # Limits for the 2-dens plots.
+                min_max_p2 = prep_plots.p2_ranges(p2, min_max_p)
+
+                args = [p2, gs, min_max_p2, isoch_fit_params['varIdxs'],
+                        isoch_fit_params['mcmc_trace']]
+                mp_best_fit1_mcmc.plot(0, *args)
 
             # pl_param_pf: Parameters probability functions.
             for p in ['metal', 'age', 'ext', 'dist', 'mass', 'binar']:
-                args = [p, gs, min_max_p, fit_params_r, fit_errors_r,
-                        varIdxs, model_done]
-                mp_best_fit1_emcee.plot(1, *args)
+                args = [p, gs, min_max_p, isoch_fit_params['varIdxs'],
+                        isoch_fit_params['mean_sol'],
+                        isoch_fit_params['map_sol'],
+                        isoch_fit_params['median_sol'],
+                        isoch_fit_params['mode_sol'],
+                        isoch_fit_params['param_r2'],
+                        isoch_fit_params['mcmc_kde'],
+                        isoch_fit_params['mcmc_trace']]
+                mp_best_fit1_mcmc.plot(1, *args)
 
-            # pl_pdf_half: Parameters half of pdfs.
-            for p in ['metal', 'age', 'ext', 'dist', 'mass', 'binar']:
-                args = [p, gs, varIdxs, model_done]
-                mp_best_fit1_emcee.plot(2, *args)
+            # Parallel Coordinates plot
+            # mp_best_fit1_mcmc.plot(2, *args)
+
+            # pl_MAP_lkl: Parameters half of pdfs.
+            args = [
+                'MAP lkl', gs, isoch_fit_params['prob_mean'],
+                isoch_fit_params['map_lkl'], isoch_fit_params['map_lkl_final']]
+            mp_best_fit1_mcmc.plot(3, *args)
+
+            # pl_MAF: Parameters evolution of MAF.
+            args = [
+                'MAF', gs, pd['best_fit_algor'], isoch_fit_params['maf_steps']]
+            mp_best_fit1_mcmc.plot(4, *args)
+
+            # pl_betas: Betas vs steps.
+            args = [
+                'Betas', gs, pd['best_fit_algor'],
+                isoch_fit_params['betas_pt']]
+            mp_best_fit1_mcmc.plot(5, *args)
+
+            # pl_Tswaps: Tswaps AFs vs steps.
+            args = [
+                'TSWAP', gs, pd['best_fit_algor'],
+                isoch_fit_params['tswaps_afs']]
+            mp_best_fit1_mcmc.plot(6, *args)
 
             # pl_param_chain: Parameters sampler chains.
             for p in ['metal', 'age', 'ext', 'dist', 'mass', 'binar']:
                 args = [
-                    p, gs, fit_params_r, pd['nwalkers'], pd['nsteps'],
-                    pd['nburn'], m_accpt_fr, varIdxs, pars_chains]
-                mp_best_fit1_emcee.plot(3, *args)
+                    p, gs, pd['best_fit_algor'], isoch_fit_params['mean_sol'],
+                    min_max_p, nwalkers, nburn, nsteps,
+                    isoch_fit_params['mcmc_trace'],
+                    isoch_fit_params['varIdxs'],
+                    isoch_fit_params['pars_chains_bi'],
+                    isoch_fit_params['pars_chains'],
+                    isoch_fit_params['acorr_t'],
+                    isoch_fit_params['med_at_c'],
+                    isoch_fit_params['mcmc_ess']]
+                mp_best_fit1_mcmc.plot(7, *args)
+
+            # pl_tau
+            args = [
+                'Tau', gs, isoch_fit_params['N_steps_conv'],
+                isoch_fit_params['N_conv'], isoch_fit_params['tol_conv'],
+                isoch_fit_params['tau_index'],
+                isoch_fit_params['tau_autocorr']]
+            mp_best_fit1_mcmc.plot(8, *args)
+            # TODO re-implement when/if code is fixed
+            # # pl_mESS
+            # args = [
+            #     'mESS', gs, isoch_fit_params['mESS'],
+            #     isoch_fit_params['minESS'],
+            #     isoch_fit_params['mESS_epsilon']]
+            # mp_best_fit1_mcmc.plot(7, *args)
+            # pl_lags
+            args = [
+                'lags', gs, isoch_fit_params['varIdxs'],
+                isoch_fit_params['lag_zero'],
+                isoch_fit_params['acorr_function']]
+            mp_best_fit1_mcmc.plot(10, *args)
+            # pl_GW
+            args = [
+                'Geweke', gs, isoch_fit_params['varIdxs'],
+                isoch_fit_params['geweke_z']]
+            mp_best_fit1_mcmc.plot(11, *args)
+            # pl_tau_histo
+            args = [
+                'Tau histo', gs, isoch_fit_params['all_taus']]
+            mp_best_fit1_mcmc.plot(12, *args)
 
         # Generate output file.
-        fig.tight_layout()
-        plt.savefig(
-            join(npd['output_subdir'], str(npd['clust_name']) +
-                 '_D1.' + pd['plot_frmt']), dpi=pd['plot_dpi'],
-            bbox_inches='tight')
+        try:
+            fig.tight_layout()
+            plt.savefig(join(
+                npd['output_subdir'], str(npd['clust_name']) + '_D1_' +
+                pd['best_fit_algor'] + '.' + pd['plot_frmt']),
+                dpi=pd['plot_dpi'], bbox_inches='tight')
+            print("<<Plots for D1 block created>>")
+        except Exception as exc:
+            print(exc)
+            print("\n\n  ERROR: could not plot 'D1' block.\n")
         # Close to release memory.
         plt.clf()
         plt.close("all")
-
-        print("<<Plots for D1 block created>>")
     else:
         print("<<Skip D1 block plot>>")

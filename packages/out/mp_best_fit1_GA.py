@@ -19,7 +19,7 @@ def pl_GA_lkl(gs, l_min_max, lkl_old, model_done, new_bs_indx, N_pop, N_gen,
     # Set minor ticks
     ax.minorticks_on()
     ax.tick_params(axis='y', which='major', labelsize=9)
-    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=0.6)
+    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5)
     plt.xlabel('Generation', fontsize=12)
     plt.ylabel('Likelihood', fontsize=12)
 
@@ -131,7 +131,8 @@ def pl_2_param_dens(gs, _2_params, min_max_p, cp_r, cp_e, model_done):
     # Minimum likelihood for each (x,y) pair in the density plot.
     z_lkl = np.log(np.asarray(model_done[1]) + 1.)
     x, y, z = selectMinLkl(
-        np.array(zip(*model_done[0])[mx]), np.array(zip(*model_done[0])[my]),
+        np.array(list(zip(*model_done[0]))[mx]),
+        np.array(list(zip(*model_done[0]))[my]),
         z_lkl)
 
     # Plot density map.
@@ -208,8 +209,8 @@ def pl_lkl_scatt(gs, ld_p, min_max_p, cp_r, cp_e, model_done):
     ax.add_artist(ob)
     # Plot scatter points over likelihood density map.
     cm = plt.cm.get_cmap('viridis')
-    col_arr = [float(_) for _ in zip(*model_done[0])[ci]]
-    SC = plt.scatter(zip(*model_done[0])[cp], model_done[1], marker='o',
+    col_arr = [float(_) for _ in list(zip(*model_done[0]))[ci]]
+    SC = plt.scatter(list(zip(*model_done[0]))[cp], model_done[1], marker='o',
                      c=col_arr, s=25, edgecolors='k',
                      lw=0.2, edgecolor='w', cmap=cm, zorder=2)
     # Best fit and errors.
