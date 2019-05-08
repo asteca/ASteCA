@@ -166,9 +166,8 @@ def main(npd, pd, isoch_fit_params, **kwargs):
                     isoch_fit_params['varIdxs'],
                     isoch_fit_params['pars_chains_bi'],
                     isoch_fit_params['pars_chains'],
-                    isoch_fit_params['autocorr_time'],
-                    isoch_fit_params['max_at_c'],
-                    isoch_fit_params['min_at_c'],
+                    isoch_fit_params['acorr_t'],
+                    isoch_fit_params['med_at_c'],
                     isoch_fit_params['mcmc_ess']]
                 mp_best_fit1_mcmc.plot(7, *args)
 
@@ -189,13 +188,18 @@ def main(npd, pd, isoch_fit_params, **kwargs):
             # pl_lags
             args = [
                 'lags', gs, isoch_fit_params['varIdxs'],
-                isoch_fit_params['emcee_acorf']]
+                isoch_fit_params['lag_zero'],
+                isoch_fit_params['acorr_function']]
             mp_best_fit1_mcmc.plot(10, *args)
             # pl_GW
             args = [
                 'Geweke', gs, isoch_fit_params['varIdxs'],
                 isoch_fit_params['geweke_z']]
             mp_best_fit1_mcmc.plot(11, *args)
+            # pl_tau_histo
+            args = [
+                'Tau histo', gs, isoch_fit_params['all_taus']]
+            mp_best_fit1_mcmc.plot(12, *args)
 
         # Generate output file.
         try:
