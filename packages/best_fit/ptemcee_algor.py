@@ -1,6 +1,5 @@
 
 import numpy as np
-from scipy import stats
 import warnings
 import time as t
 from .. import update_progress
@@ -8,7 +7,7 @@ from . import likelihood
 # from .emcee3rc2 import autocorr
 from .mcmc_convergence import convergenceVals
 from .mcmc_common import initPop, varPars, synthClust, rangeCheck, fillParams,\
-    closeSol, discreteParams
+    closeSol, discreteParams, r2Dist, modeKDE, thinChain
 from .ptemcee import sampler, util
 
 
@@ -212,60 +211,25 @@ def main(
         print("  WARNING: mean acceptance fraction is outside of the\n"
               "  recommended range.")
 
-    # ptsampler.chain.shape: (ntemps, nwalkers, nsteps, ndim)
-    # chains_nruns.shape: (runs, nwalkers, ndim)
+    # ptsampler.chain.shape: (ntemps, nchains, nsteps, ndim)
+    # chains_nruns.shape: (runs, nchains, ndim)
     chains_nruns = ptsampler.chain[0, :, :runs, :].transpose(1, 0, 2)
     chains_nruns = discreteParams(fundam_params, varIdxs, chains_nruns, [4])
-    # Re-shape trace for all parameters (flat chain).
-    # Shape: (ndim, runs * nwalkers)
-    mcmc_trace = chains_nruns.reshape(-1, ndim).T
 
     # Convergence parameters.
-    acorr_t, max_at_c, min_at_c, geweke_z, emcee_acorf, mcmc_ess, minESS,\
-        mESS, mESS_epsilon = convergenceVals(
-            'ptemcee', ndim, varIdxs, N_conv, chains_nruns, mcmc_trace)
+    acorr_t, med_at_c, all_taus, geweke_z, lag_zero, acorr_function,\
+        mcmc_ess = convergenceVals(
+            'ptemcee', ndim, varIdxs, N_conv, chains_nruns)
 
-    # R^2 for normal distribution.
-    param_r2 = []
-    for i, _ in enumerate(fundam_params):
-        if i in varIdxs:
-            c_model = varIdxs.index(i)
-            mcmc_par = mcmc_trace[c_model]
-            param_r2.append(stats.probplot(mcmc_par)[1][-1] ** 2)
-        else:
-            param_r2.append(np.nan)
+    # Re-shape trace for all parameters (flat chain).
+    # Shape: (ndim, runs * nchains)
+    mcmc_trace = chains_nruns.reshape(-1, ndim).T
 
-    # Estimate the mode for each fitted parameter from a KDE. Store the KDE
-    # for plotting.
-    mcmc_kde, mode_sol = [], []
-    for i, mcmc_par in enumerate(mcmc_trace):
+    # # Thin chains
+    # mcmc_trace = thinChain(mcmc_trace, acorr_t)
 
-        # Length of the last 10% of the chain.
-        N = int(mcmc_par.shape[0] * .1)
-
-        # Define KDE limits using only the last 10% of the chains.
-        std = np.std(mcmc_par[-N:])
-        pmin, pmax = np.min(mcmc_par[-N:]), np.max(mcmc_par[-N:])
-        xp_min, xp_max = max(fundam_params[varIdxs[i]][0], pmin - std),\
-            min(fundam_params[varIdxs[i]][-1], pmax + std)
-
-        x_rang = .1 * (xp_max - xp_min)
-        x_kde = np.mgrid[xp_min - x_rang:xp_max + x_rang:100j]
-        # Use a slightly larger Scott bandwidth (looks better when plotted)
-        bw = 1.25 * len(mcmc_par) ** (-1. / (len(varIdxs) + 4))
-        # KDE for plotting.
-        try:
-            kernel_cl = stats.gaussian_kde(mcmc_par, bw_method=bw)
-            # Parameter's KDE evaluated and reshaped.
-            par_kde = np.reshape(kernel_cl(x_kde).T, x_kde.shape)
-
-            # Store for plotting
-            mcmc_kde.append([x_kde, par_kde])
-            # Mode (using KDE)
-            mode_sol.append(x_kde[np.argmax(par_kde)])
-        except (np.linalg.LinAlgError, FloatingPointError, UnboundLocalError):
-            mcmc_kde.append([])
-            mode_sol.append(np.nan)
+    param_r2 = r2Dist(fundam_params, varIdxs, mcmc_trace)
+    mode_sol, mcmc_kde = modeKDE(fundam_params, varIdxs, mcmc_trace)
 
     # Mean and median.
     mean_sol = np.mean(mcmc_trace, axis=1)
@@ -292,11 +256,12 @@ def main(
         'mcmc_elapsed': elapsed, 'mcmc_trace': mcmc_trace,
         'pars_chains_bi': pars_chains_bi, 'pars_chains': chains_nruns.T,
         'maf_steps': maf_steps, 'tswaps_afs': tswaps_afs, 'betas_pt': betas_pt,
-        'autocorr_time': acorr_t,
-        'max_at_c': max_at_c, 'min_at_c': min_at_c,
-        'minESS': minESS, 'mESS': mESS, 'mESS_epsilon': mESS_epsilon,
-        'emcee_acorf': emcee_acorf, 'geweke_z': geweke_z,
-        'mcmc_ess': mcmc_ess, 'N_total': N_total,
+        'acorr_t': acorr_t, 'med_at_c': med_at_c,
+        'all_taus': all_taus,
+        # 'max_at_c': max_at_c, 'min_at_c': min_at_c,
+        # 'minESS': minESS, 'mESS': mESS, 'mESS_epsilon': mESS_epsilon,
+        'lag_zero': lag_zero, 'acorr_function': acorr_function,
+        'geweke_z': geweke_z, 'mcmc_ess': mcmc_ess, 'N_total': N_total,
         'N_steps_conv': N_steps_conv, 'N_conv': N_conv, 'tol_conv': tol_conv,
         'tau_index': tau_index, 'tau_autocorr': tau_autocorr
     }
