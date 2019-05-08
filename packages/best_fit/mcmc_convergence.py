@@ -2,10 +2,10 @@
 import numpy as np
 from scipy.stats import chi2
 from scipy.special import gammaln
-from scipy.signal import fftconvolve
+# from scipy.signal import fftconvolve
 import logging
 import warnings
-from .emcee3rc2 import autocorr
+# from .emcee3rc2 import autocorr
 from .ptemcee import util
 
 
@@ -301,14 +301,14 @@ def geweke(x, first=.1, last=.5, intervals=20):
 
 #     return mcmc_halves
 
-def convergenceVals(algor, ndim, varIdxs, N_conv, chains_nruns, mcmc_trace):
+def convergenceVals(algor, ndim, varIdxs, N_conv, chains_nruns):
     """
     Convergence statistics.
     """
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
 
-        # Autocorrelation time for each parameter.
+        # Autocorrelation time for each parameter, mean across chains.
         if algor == 'emcee':
             acorr_t = autocorr.integrated_time(
                 chains_nruns, tol=N_conv, quiet=True)
@@ -322,20 +322,28 @@ def convergenceVals(algor, ndim, varIdxs, N_conv, chains_nruns, mcmc_trace):
         logger = logging.getLogger()
         logger.disabled = True
         at = []
+        # For each parameter/dimension
         for p in chains_nruns.T:
             at_p = []
+            # For each chain for this parameter/dimension
             for c in p:
-                at_p.append(autocorr.integrated_time(c, quiet=True)[0])
+                # at_p.append(autocorr.integrated_time(c, quiet=True)[0])
+                at_p.append(util.autocorr_integrated_time(c))
             at.append(at_p)
         logger.disabled = False
 
-        # Worst chain: chain with the largest acorr time.
-        max_at_c = [np.argmax(a) for a in at]
-        # Best chain: chain with the smallest acorr time.
-        min_at_c = [np.argmin(a) for a in at]
+        # IAT for all chains and all parameters.
+        all_taus = [item for subl in at for item in subl]
+
+        # # Worst chain: chain with the largest acorr time.
+        # max_at_c = [np.argmax(a) for a in at]
+        # # Best chain: chain with the smallest acorr time.
+        # min_at_c = [np.argmin(a) for a in at]
+        # Chain with the closest to the median IAT
+        med_at_c = [np.argmin(np.abs(np.median(a) - a)) for a in at]
 
         # Mean Geweke z-scores and autocorrelation functions for all chains.
-        geweke_z, emcee_acorf = [[] for _ in range(ndim)],\
+        geweke_z, acorr_function = [[] for _ in range(ndim)],\
             [[] for _ in range(ndim)]
         for i, p in enumerate(chains_nruns.T):
             for c in p:
@@ -344,24 +352,33 @@ def convergenceVals(algor, ndim, varIdxs, N_conv, chains_nruns, mcmc_trace):
                 except ZeroDivisionError:
                     geweke_z[i].append([np.nan, np.nan])
                 try:
-                    emcee_acorf[i].append(autocorr.function_1d(c))
+                    # acorr_function[i].append(autocorr.function_1d(c))
+                    acorr_function[i].append(util.autocorr_function(c))
                 except FloatingPointError:
-                    emcee_acorf[i].append([np.nan])
+                    acorr_function[i].append([np.nan])
+        # Mean across chains
         geweke_z = np.nanmean(geweke_z, axis=1)
-        emcee_acorf = np.nanmean(emcee_acorf, axis=1)
+        acorr_function = np.nanmean(acorr_function, axis=1)
+        # Cut the autocorrelation function a bit after *all* the parameters
+        # have crossed the zero line.
+        lag_zero = max([np.where(_ < 0)[0][0] for _ in acorr_function])
+        acorr_function = acorr_function[:, :int(lag_zero + .2 * lag_zero)]
+        # # Approx IAT
+        # lag_iat = 1. + 2. * np.sum(acorr_function, axis=1)
+        # print("  Approx (zero lag) IAT: ", lag_iat)
 
-        # Effective Sample Size (per param) = (nsteps * nchains) / tau
-        mcmc_ess = mcmc_trace.shape[-1] / acorr_t
+        # Effective Sample Size (per param) = (nsteps / tau) * nchains
+        mcmc_ess = (chains_nruns.shape[0] / acorr_t) * chains_nruns.shape[1]
 
         # TODO fix this function
-        # Minimum effective sample size (ESS), and multi-variable ESS.
-        minESS, mESS = fminESS(ndim), multiESS(chains_nruns)
-        # print("mESS: {}".format(mESS))
-        mESS_epsilon = [[], [], []]
-        for alpha in [.01, .05, .1, .2, .3, .4, .5, .6, .7, .8, .9, .95]:
-            mESS_epsilon[0].append(alpha)
-            mESS_epsilon[1].append(fminESS(ndim, alpha=alpha, ess=minESS))
-            mESS_epsilon[2].append(fminESS(ndim, alpha=alpha, ess=mESS))
+        # # Minimum effective sample size (ESS), and multi-variable ESS.
+        # minESS, mESS = fminESS(ndim), multiESS(chains_nruns)
+        # # print("mESS: {}".format(mESS))
+        # mESS_epsilon = [[], [], []]
+        # for alpha in [.01, .05, .1, .2, .3, .4, .5, .6, .7, .8, .9, .95]:
+        #     mESS_epsilon[0].append(alpha)
+        #     mESS_epsilon[1].append(fminESS(ndim, alpha=alpha, ess=minESS))
+        #     mESS_epsilon[2].append(fminESS(ndim, alpha=alpha, ess=mESS))
 
-    return acorr_t, max_at_c, min_at_c, geweke_z, emcee_acorf, mcmc_ess,\
-        minESS, mESS, mESS_epsilon
+    return acorr_t, med_at_c, all_taus, geweke_z, lag_zero, acorr_function,\
+        mcmc_ess
