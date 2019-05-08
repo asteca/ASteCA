@@ -2,6 +2,7 @@
 import numpy as np
 import random
 from scipy.optimize import differential_evolution as DE
+from scipy import stats
 import warnings
 from ..synth_clust import synth_cluster
 from . import likelihood
@@ -319,3 +320,63 @@ def rangeCheck(model, ranges, varIdxs):
     if all(check_ranges):
         return True
     return False
+
+
+def r2Dist(fundam_params, varIdxs, mcmc_trace):
+    """
+    R^2 for normal distribution.
+    """
+    param_r2 = []
+    for i, _ in enumerate(fundam_params):
+        if i in varIdxs:
+            c_model = varIdxs.index(i)
+            mcmc_par = mcmc_trace[c_model]
+            param_r2.append(stats.probplot(mcmc_par)[1][-1] ** 2)
+        else:
+            param_r2.append(np.nan)
+
+    return param_r2
+
+
+def modeKDE(fundam_params, varIdxs, mcmc_trace):
+    """
+    Estimate the mode for each fitted parameter from a KDE. Store the KDE
+    for plotting.
+    """
+    mcmc_kde, mode_sol = [], []
+    for i, mcmc_par in enumerate(mcmc_trace):
+
+        # Length of the last 10% of the chain.
+        N = int(mcmc_par.shape[0] * .1)
+
+        # Define KDE limits using only the last 10% of the chains.
+        std = np.std(mcmc_par[-N:])
+        pmin, pmax = np.min(mcmc_par[-N:]), np.max(mcmc_par[-N:])
+        xp_min, xp_max = max(fundam_params[varIdxs[i]][0], pmin - std),\
+            min(fundam_params[varIdxs[i]][-1], pmax + std)
+
+        x_rang = .1 * (xp_max - xp_min)
+        x_kde = np.mgrid[xp_min - x_rang:xp_max + x_rang:100j]
+        # Use a slightly larger Scott bandwidth (looks better when plotted)
+        bw = 1.25 * len(mcmc_par) ** (-1. / (len(varIdxs) + 4))
+        # KDE for plotting.
+        try:
+            kernel_cl = stats.gaussian_kde(mcmc_par, bw_method=bw)
+            # Parameter's KDE evaluated and reshaped.
+            par_kde = np.reshape(kernel_cl(x_kde).T, x_kde.shape)
+
+            # Store for plotting
+            mcmc_kde.append([x_kde, par_kde])
+            # Mode (using KDE)
+            mode_sol.append(x_kde[np.argmax(par_kde)])
+        except (np.linalg.LinAlgError, FloatingPointError, UnboundLocalError):
+            mcmc_kde.append([])
+            mode_sol.append(np.nan)
+
+    return mode_sol, mcmc_kde
+
+
+def thinChain(mcmc_trace, acorr_t):
+    """
+    """
+    return mcmc_trace[:, ::int(np.mean(acorr_t))]
