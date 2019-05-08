@@ -27,14 +27,27 @@ def main(npd, read_mode, nanvals, id_col, x_col, y_col, mag_col, e_mag_col,
         fill_msk = [('', '0')] + [(_, '0') for _ in nanvals]
         # Store IDs as strings.
         if read_mode == 'num':
+            # Read IDs as strings, not applying the 'fill_msk'
             data = ascii.read(
-                data_file, fill_values=fill_msk,
-                converters={id_col: [ascii.convert_numpy(np.str)]},
+                data_file, converters={id_col: [ascii.convert_numpy(np.str)]},
                 format='no_header')
-        else:
+            # Store IDs
+            id_data = data[id_col]
+            # Read rest of the data applying the mask
             data = ascii.read(
-                data_file, fill_values=fill_msk,
-                converters={id_col: [ascii.convert_numpy(np.str)]})
+                data_file, fill_values=fill_msk, format='no_header')
+            # Replace IDs column
+            data[id_col] = id_data
+        else:
+            # Read IDs as strings, not applying the 'fill_msk'
+            data = ascii.read(
+                data_file, converters={id_col: [ascii.convert_numpy(np.str)]})
+            # Store IDs
+            id_data = data[id_col]
+            # Read rest of the data applying the mask
+            data = ascii.read(data_file, fill_values=fill_msk)
+            # Replace IDs column
+            data[id_col] = id_data
 
         # Arrange column names in the proper order and shape.
         col_names = [
