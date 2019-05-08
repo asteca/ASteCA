@@ -66,6 +66,10 @@ def main(mypath):
     into root folder. If these files/folders already exist, halt.
     """
 
+    # Generate output dir (if it doesn't exist).
+    if not os.path.exists('output/'):
+        os.mkdir('output/')
+
     first_run_flag = False
     try:
         fr_file = mypath + 'packages/.first_run'
