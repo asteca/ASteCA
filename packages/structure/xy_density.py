@@ -1,7 +1,78 @@
 
 import numpy as np
-from scipy.ndimage.filters import gaussian_filter
+# from scipy.ndimage.filters import gaussian_filter
+from scipy import stats
 import bisect
+from ..update_progress import updt
+
+
+def main(clp, cld_i, center_kf, flag_make_plot, **kwargs):
+    """
+    Obtain Gaussian filtered 2D x,y histograms and the maximum values in them
+    as centers.
+    """
+    print("Obtaining KDEs for the frame's coordinates.")
+
+    if center_kf == 0.:
+        # Scotts factor (scipy's default).
+        values = np.vstack([cld_i['x'], cld_i['y']])
+        kernel = stats.gaussian_kde(values)
+        kf = kernel.covariance_factor()
+    else:
+        kf = center_kf
+
+    # KDE factor values for the KDE filter.
+    kf_list = (kf * .5, kf, kf * 2.)
+
+    cents_xy, frame_kdes = [], []
+    if 'A1' in flag_make_plot:
+        N = 1.
+        for xym_rang in clp['xy_mag_ranges']:
+            xr, yr, dummy = list(zip(*list(xym_rang.values())[0]))
+            for k_f in kf_list:
+                a, b = kde_center(xr, yr, k_f)
+                cents_xy.append(a)
+                frame_kdes.append(b)
+                updt(15., N)
+                N += 1.
+        kde_approx_cent, frame_kde_cent = cents_xy[1], frame_kdes[1]
+    else:
+        # Only obtain the KDE for the full magnitude range.
+        kde_approx_cent, frame_kde_cent = kde_center(
+            cld_i['x'], cld_i['y'], kf_list[1])
+
+    clp['cents_xy'], clp['kde_approx_cent'], clp['kf_list'],\
+        clp['frame_kdes'], clp['frame_kde_cent'] = cents_xy, kde_approx_cent,\
+        kf_list, frame_kdes, frame_kde_cent
+
+    return clp
+
+
+def kde_center(x_data, y_data, k_f):
+    '''
+    Find the KDE maximum value pointing to the center coordinates.
+    '''
+    values = np.vstack([x_data, y_data])
+    # Obtain Gaussian KDE.
+    kernel = stats.gaussian_kde(values, bw_method=k_f)
+    # Grid density (number of points).
+    gd = 50
+    gd_c = complex(0, gd)
+    # Define x,y grid.
+    xmin, xmax = np.min(x_data), np.max(x_data)
+    ymin, ymax = np.min(y_data), np.max(y_data)
+    x_grid, y_grid = np.mgrid[xmin:xmax:gd_c, ymin:ymax:gd_c]
+    positions = np.vstack([x_grid.ravel(), y_grid.ravel()])
+    # Evaluate kernel in grid positions.
+    k_pos = kernel(positions)
+    # Coordinates of max value in x,y grid (ie: center position).
+    kde_cent = positions.T[np.argmax(k_pos)]
+
+    # Pass for plotting.
+    ext_range = [xmin, xmax, ymin, ymax]
+    kde_plot = [ext_range, x_grid, y_grid, k_pos]
+
+    return kde_cent, kde_plot
 
 
 def cent_bin(xedges, yedges, xy_cent):
@@ -14,62 +85,3 @@ def cent_bin(xedges, yedges, xy_cent):
     cent_bin = [(x_cent_bin - 1), (y_cent_bin - 1)]
 
     return cent_bin
-
-
-def center_xy(hist, xedges, yedges, st_dev_lst):
-    '''
-    Function that returns a filtered 2D histogram and approximate center
-    coordinates obtained using different standard deviations.
-    '''
-
-    cents_xy, hist_2d_g, cents_bin = [], [], []
-    for h2d in hist:
-        for st_dev in st_dev_lst:
-            # 2D histogram with a Gaussian filter applied.
-            h_g = gaussian_filter(h2d, st_dev, mode='constant')
-
-            # x,y coordinates of the bin with the maximum value in the 2D
-            # filtered histogram.
-            x_cent_bin, y_cent_bin = np.unravel_index(h_g.argmax(), h_g.shape)
-            # x,y coords of the center of the above bin.
-            x_cent_pix = np.average(xedges[x_cent_bin:x_cent_bin + 2])
-            y_cent_pix = np.average(yedges[y_cent_bin:y_cent_bin + 2])
-
-            # Store for plotting.
-            hist_2d_g.append(h_g)
-
-            cents_xy.append([x_cent_pix, y_cent_pix])
-            cents_bin.append(
-                cent_bin(xedges, yedges, [x_cent_pix, y_cent_pix]))
-
-    return cents_xy, hist_2d_g, cents_bin
-
-
-def main(clp, center_stddev, **kwargs):
-    """
-    Obtain Gaussian filtered 2D x,y histograms and the maximum values in them
-    as centers.
-    """
-
-    # Standard deviation values for the Gaussian filter.
-    st_dev_lst = (center_stddev * .5, center_stddev, center_stddev * 2.)
-
-    # Obtain center coordinates using Gaussian filters with different
-    # standard deviation values, applied on the 2D (x,y) histogram.
-    cents_xy, hist_2d_g, cents_bin_2d = center_xy(
-        clp['hist_2d'], clp['xedges'], clp['yedges'], st_dev_lst)
-
-    # Raise a flag if the standard deviation for either coordinate is larger
-    # than 10% of that axis range. Use the full x,y positions list to
-    # calculate the STDDEV.
-    flag_center_std = False
-    stddev = np.std(list(zip(*cents_xy[:3])), axis=1)
-    if stddev[0] > 0.1 * np.ptp(clp['xedges']) or \
-            stddev[1] > 0.1 * np.ptp(clp['yedges']):
-        flag_center_std = True
-
-    clp['flag_center_std'], clp['cents_xy'], clp['hist_2d_g'],\
-        clp['cents_bin_2d'], clp['st_dev_lst'] = flag_center_std, cents_xy,\
-        hist_2d_g, cents_bin_2d, st_dev_lst
-
-    return clp

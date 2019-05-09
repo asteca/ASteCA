@@ -80,9 +80,10 @@ def main(mypath, pars_f_path):
 
                 # Structure functions parameters.
                 elif reader[0] == 'CH':
-                    center_stddev = float(reader[1])
+                    center_kf = float(reader[1])
                 elif reader[0] == 'CR':
                     radius_method = str(reader[1])
+                    fdens_method = str(reader[2])
                 elif reader[0] == 'KP':
                     kp_flag = True if reader[1] in true_lst else False
                 elif reader[0] == 'GR':
@@ -294,7 +295,8 @@ def main(mypath, pars_f_path):
         'flag_make_plot': flag_make_plot, 'plot_frmt': plot_frmt,
         'plot_dpi': plot_dpi,
         'flag_move_file': flag_move_file,
-        'center_stddev': center_stddev, 'radius_method': radius_method,
+        'center_kf': center_kf, 'radius_method': radius_method,
+        'fdens_method': fdens_method,
         'kp_flag': kp_flag, 'fr_number': fr_number, 'err_max': err_max,
         'ad_runs': ad_runs, 'ad_k_comb': ad_k_comb, 'plx_flag': plx_flag,
         'plx_chains': plx_chains, 'plx_runs': plx_runs, 'pms_flag': pms_flag,

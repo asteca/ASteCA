@@ -19,7 +19,7 @@ def main(clp):
 
     square_rings, radii, rdp_points, poisson_error = [], [], [], []
     # Use max x,y length defined in the 2D histogram.
-    rdp_length = max(len(clp['hist_2d'][0]), len(clp['hist_2d'][0][0]))
+    rdp_length = max(len(clp['hist_2d']), len(clp['hist_2d'][0]))
     # Iterate through all the bins in the largest dimension.
     for i in range(rdp_length):
         # Store here the coordinates of the bins.
@@ -29,7 +29,7 @@ def main(clp):
         ring_count, bin_count = 0, 0
 
         # Iterate through bins in the x dimension for the 2D hist.
-        for xindex, xitem in enumerate(clp['hist_2d'][0]):
+        for xindex, xitem in enumerate(clp['hist_2d']):
             # Iterate through bins in the y dimension for the 2D hist.
             for yindex, st_in_bin in enumerate(xitem):
 

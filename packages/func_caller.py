@@ -103,7 +103,7 @@ def main(cl_file, pd):
     clp = histo_2d.main(clp, **cld_i)
 
     # Gaussian filtered 2D x,y histograms.
-    clp = xy_density.main(clp, **pd)
+    clp = xy_density.main(clp, cld_i, **pd)
 
     make_A1_plot.main(npd, cld_i, pd, **clp)
 
