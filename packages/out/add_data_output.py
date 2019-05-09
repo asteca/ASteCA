@@ -3,7 +3,7 @@ from ..inp.get_data import flatten
 
 
 def main(
-    npd, pd, flag_center_std, flag_center_manual, flag_delta_total,
+    npd, pd, flag_center_manual, flag_delta_total,
     flag_not_stable, flag_delta, flag_radius_manual, flag_2pk_conver,
     flag_3pk_conver, flag_memb_par, flag_num_memb_low, K_memb_num,
     K_conct_par, cont_index, n_memb, memb_par, n_memb_da, frac_cl_area,
@@ -20,8 +20,8 @@ def main(
 
     # Create list containing all the flags.
     flags_list = [
-        flag_center_manual, flag_radius_manual, flag_center_std,
-        flag_delta_total, flag_not_stable, flag_delta, flag_3pk_no_conver,
+        flag_center_manual, flag_radius_manual, flag_delta_total,
+        flag_not_stable, flag_delta, flag_3pk_no_conver,
         flag_num_memb_low, flag_memb_par]
 
     # Convert True & False flag values to 1 and 0 respectively.
@@ -75,7 +75,7 @@ def main(
 {:>10.2E}\
 '''.format(*line_f))
         # Flags.
-        f_out.write('''{:>8} {:>2} {:>3} {:>2} {:>2} {:>2} {:>2} {:>2} \
+        f_out.write('''{:>8} {:>2} {:>2} {:>2} {:>2} {:>2} {:>2} \
 {:>2} {:>3}'''.format(*int_flags))
         f_out.write('\n')
 

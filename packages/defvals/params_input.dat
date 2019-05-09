@@ -136,12 +136,13 @@ MD     n
 
 # Center assignment function.
 #
-# * stddev: [float]
-#   The standard deviation of the Gaussian filter applied to the 2-dimensional
-#   histogram of the (x,y) stars coordinates.
+# *  kde_factor: [float]
+#   The factor used by the Gaussian KDE applied to the 2-dimensional (x,y)
+#   stars coordinates. If 'kde_factor=0' then the default Scott's rule is
+#   employed.
 #
-#   stddev
-CH       3
+#   kde_factor
+CH         .1
 
 # Radius assignment function.
 #
@@ -155,8 +156,12 @@ CH       3
 #   - high: will favor larger radii. Useful when all possible members
 #     must be present.
 #
-#   mode
-CR   mid
+# * field_dens: auto / [float>0.]
+#   If 'auto' is selected, the code will automatically estimate the density of
+#   field stars. Else, a float needs to be given.
+#
+#   mode    field_dens
+CR   mid          auto
 
 # King profile function.
 #

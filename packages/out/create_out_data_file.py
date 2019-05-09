@@ -77,19 +77,17 @@ def main(npd):
 # M1 Indicates that the center was set manually.\n\
 # M2 Indicates that the radius was set manually.\n\
 #\n\
-# f1 The standard deviation for either center coordinate is larger than 10%\n\
-#    of that coordinate's range.\n\
-# f2 The background value is smaller than a third of the maximum radial\n\
+# f1 The background value is smaller than a third of the maximum radial\n\
 #    density value.\n\
-# f3 Not enough points found stabilized around the background value -->\n\
+# f2 Not enough points found stabilized around the background value -->\n\
 #    clust_rad was set to the middle value in the density profile.\n\
-# f4 The delta range around the background used to attain the stable\n\
+# f3 The delta range around the background used to attain the stable\n\
 #    condition to determine the radius is greater than 10%%. This indicates\n\
 #    a possible variable background.\n\
-# f5 The process to fit a 3-P King profile to the density points did not\n\
+# f4 The process to fit a 3-P King profile to the density points did not\n\
 #    converge or did so to a tidal radius beyond the ranges of the frame.\n\
-# f6 The number of approximate structural cluster members ('n_memb') is <10.\n\
-# f7 The number of approximate structural and photometric cluster members\n\
+# f5 The number of approximate structural cluster members ('n_memb') is <10.\n\
+# f6 The number of approximate structural and photometric cluster members\n\
 #    differ greatly --> abs(n_memb_par) > 0.33.\n\
 #\n\
 # FC (flags count): Sum of all the flags values. The bigger this value the\n\
@@ -106,6 +104,6 @@ E_mean      E_MAP   E_median     E_mode       16th       84th        std    R^2 
 d_mean      d_MAP   d_median     d_mode       16th       84th        std    R^2     \
 M_mean      M_MAP   M_median     M_mode       16th       84th        std    R^2     \
 b_mean      b_MAP   b_median     b_mode       16th       84th        std    R^2     \
-    Nt      M1 M2  f1 f2 f3 f4 f5 f6 f7  FC\n".format(
+    Nt      M1 M2 f1 f2 f3 f4 f5 f6  FC\n".format(
                 __version__, now_time, now_time))
             print('Output data file created.')

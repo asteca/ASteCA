@@ -7,6 +7,74 @@ from . import display_rad
 from ..out import prep_plots
 
 
+def main(cld_i, clp, run_mode, radius_method, coords, cl_rad_semi,
+         rad_flag_semi, **kwargs):
+    """
+    Obtain the value for the cluster's radius by counting the number of points
+    that fall within a given interval of the field density or lower. If this
+    number is equal to a minimum fixed number of points 'n_left', then assign
+    the radius as the point closest to the field density value among those
+    first n_left points counting from the first one that fell below the
+    (field dens + delta limit) range.
+    Iterate increasing the interval around the field density and finally
+    average all the radius values found for each interval.
+    """
+
+    coord = prep_plots.coord_syst(coords)[0]
+    # Call function that holds the radius finding algorithm.
+    clust_rad, e_rad, flag_delta_total, flag_not_stable, flag_delta = \
+        radius_algor(clp, coord, radius_method)
+
+    # Check if semi or manual mode are set.
+    flag_radius_manual = False
+    if run_mode == 'auto':
+        print('Auto radius found: {:g} {}.'.format(clust_rad, coord))
+
+    elif run_mode == 'semi':
+        if rad_flag_semi == 1:
+            # Update values.
+            clust_rad, e_rad = cl_rad_semi, 0.
+            print('Semi radius set: {:g} {}.'.format(clust_rad, coord))
+        else:
+            print('Auto radius found: {:g} {}.'.format(clust_rad, coord))
+
+    # If Manual mode is set, display radius and ask the user to accept it or
+    # input new one.
+    elif run_mode == 'manual':
+
+        print('Radius found: {:g} {}.'.format(clust_rad, coord))
+        display_rad.main(
+            cld_i['x'], cld_i['y'], cld_i['mags'][0], coords, clust_rad,
+            e_rad, **clp)
+        plt.show()
+
+        # Ask if the radius is accepted, or a if a another one should be used.
+        while True:
+            answer_rad = raw_input('Input new radius value? (y/n) ')
+            if answer_rad == 'n':
+                print('Value accepted.')
+                break
+            elif answer_rad == 'y':
+                try:
+                    clust_rad_m = float(raw_input('cluster_rad: '))
+                    # Update radius value.
+                    clust_rad = clust_rad_m
+                    flag_radius_manual = True
+                    break
+                except Exception:
+                    print("Sorry, input is not valid. Try again.")
+            else:
+                print("Sorry, input is not valid. Try again.")
+
+    # Add data to dictionary.
+    clp['clust_rad'], clp['e_rad'], clp['flag_delta_total'],\
+        clp['flag_not_stable'], clp['flag_delta'],\
+        clp['flag_radius_manual'] = clust_rad, e_rad, flag_delta_total,\
+        flag_not_stable, flag_delta, flag_radius_manual
+
+    return clp
+
+
 def radius_algor(clp, coord, radius_method):
     '''
     This function holds the main algorithm that returns a radius value.
@@ -124,71 +192,3 @@ def radius_algor(clp, coord, radius_method):
             clust_rad, coord))
 
     return clust_rad, e_rad, flag_delta_total, flag_not_stable, flag_delta
-
-
-def main(cld_i, clp, run_mode, radius_method, coords, cl_rad_semi,
-         rad_flag_semi, **kwargs):
-    """
-    Obtain the value for the cluster's radius by counting the number of points
-    that fall within a given interval of the field density or lower. If this
-    number is equal to a minimum fixed number of points 'n_left', then assign
-    the radius as the point closest to the field density value among those
-    first n_left points counting from the first one that fell below the
-    (field dens + delta limit) range.
-    Iterate increasing the interval around the field density and finally
-    average all the radius values found for each interval.
-    """
-
-    coord = prep_plots.coord_syst(coords)[0]
-    # Call function that holds the radius finding algorithm.
-    clust_rad, e_rad, flag_delta_total, flag_not_stable, flag_delta = \
-        radius_algor(clp, coord, radius_method)
-
-    # Check if semi or manual mode are set.
-    flag_radius_manual = False
-    if run_mode == 'auto':
-        print('Auto radius found: {:g} {}.'.format(clust_rad, coord))
-
-    elif run_mode == 'semi':
-        if rad_flag_semi == 1:
-            # Update values.
-            clust_rad, e_rad = cl_rad_semi, 0.
-            print('Semi radius set: {:g} {}.'.format(clust_rad, coord))
-        else:
-            print('Auto radius found: {:g} {}.'.format(clust_rad, coord))
-
-    # If Manual mode is set, display radius and ask the user to accept it or
-    # input new one.
-    elif run_mode == 'manual':
-
-        print('Radius found: {:g} {}.'.format(clust_rad, coord))
-        display_rad.main(
-            cld_i['x'], cld_i['y'], cld_i['mags'][0], coords, clust_rad,
-            e_rad, **clp)
-        plt.show()
-
-        # Ask if the radius is accepted, or a if a another one should be used.
-        while True:
-            answer_rad = raw_input('Input new radius value? (y/n) ')
-            if answer_rad == 'n':
-                print('Value accepted.')
-                break
-            elif answer_rad == 'y':
-                try:
-                    clust_rad_m = float(raw_input('cluster_rad: '))
-                    # Update radius value.
-                    clust_rad = clust_rad_m
-                    flag_radius_manual = True
-                    break
-                except Exception:
-                    print("Sorry, input is not valid. Try again.")
-            else:
-                print("Sorry, input is not valid. Try again.")
-
-    # Add data to dictionary.
-    clp['clust_rad'], clp['e_rad'], clp['flag_delta_total'],\
-        clp['flag_not_stable'], clp['flag_delta'],\
-        clp['flag_radius_manual'] = clust_rad, e_rad, flag_delta_total,\
-        flag_not_stable, flag_delta, flag_radius_manual
-
-    return clp

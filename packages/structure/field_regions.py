@@ -66,7 +66,7 @@ def main(i_c, clp, run_mode, fr_number, cl_f_regs_semi, freg_flag_semi,
         # Index of spiral bin where field regions should begin to be
         # formed. 'dummy' list is not important here.
         sp_indx, dummy = spiral_index(
-            spiral, 0, clp['hist_2d'][0], clp['bin_cent'], num_bins_sqarea)
+            spiral, 0, clp['hist_2d'], clp['bin_cent'], num_bins_sqarea)
 
         # This ensures that the areas of the field regions are equal
         # to the cluster area.
@@ -105,7 +105,7 @@ def fieldRegs(hist_2d, bin_width, cl_area):
     plus the empty region around it.
     """
     # Number of bins in x and y.
-    x_bins, y_bins = len(hist_2d[0][0]), len(hist_2d[0])
+    x_bins, y_bins = len(hist_2d[0]), len(hist_2d)
     # Total area: total number of bins in 2D hist times the area of each bin.
     total_area = x_bins * y_bins * (bin_width ** 2)
 
@@ -187,7 +187,7 @@ def fregsDef(clp, stars_group, f_regions, spiral, sp_indx, num_bins_area):
         # Retrieve spiral index where this field region should end and
         # coordinates of its bins.
         sp_indx, sp_coords = spiral_index(
-            spiral, sp_indx, clp['hist_2d'][0], clp['bin_cent'],
+            spiral, sp_indx, clp['hist_2d'], clp['bin_cent'],
             num_bins_area)
         # Fill spiral section for this field region with all the stars
         # that fall inside of it.
