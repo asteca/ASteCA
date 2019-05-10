@@ -29,7 +29,8 @@ def main(cld_i, clp, run_mode, center_kf, coords, cl_cent_semi,
         # approximate center obtained with the full frame and the given
         # bandwidth.
         cent = clp['kde_approx_cent']
-        kde_cent, kde_plot = kde_center(cld_i['x'], cld_i['y'], cent, radius)
+        kde_cent, kde_plot = kde_center_zoom(
+            cld_i['x'], cld_i['y'], cent, radius)
 
         # Find bin where the center xy coordinates are located.
         bin_cent = center_bin(clp['xedges'], clp['yedges'], kde_cent)
@@ -42,7 +43,7 @@ def main(cld_i, clp, run_mode, center_kf, coords, cl_cent_semi,
         # and radius given as initial values.
 
         # Obtain KDE center using the 'semi' values.
-        kde_cent, kde_plot = kde_center(
+        kde_cent, kde_plot = kde_center_zoom(
             cld_i['x'], cld_i['y'], cl_cent_semi, cl_rad_semi)
 
         # Re-write center values if fixed in semi input file.
@@ -63,7 +64,7 @@ def main(cld_i, clp, run_mode, center_kf, coords, cl_cent_semi,
 
         # Restrict the KDE to a smaller area (to improve performance).
         radius = 0.25 * min(np.ptp(cld_i['x']), np.ptp(cld_i['y']))
-        kde_cent, kde_plot = kde_center(
+        kde_cent, kde_plot = kde_center_zoom(
             cld_i['x'], cld_i['y'], clp['kde_approx_cent'], radius)
         bin_cent = center_bin(clp['xedges'], clp['yedges'], kde_cent)
 
@@ -106,7 +107,7 @@ def main(cld_i, clp, run_mode, center_kf, coords, cl_cent_semi,
     return clp
 
 
-def kde_center(x_data, y_data, kde_approx_cent, radius):
+def kde_center_zoom(x_data, y_data, kde_approx_cent, radius):
     '''
     Find the KDE maximum value pointing to the center coordinates.
     '''

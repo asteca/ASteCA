@@ -41,14 +41,21 @@ def main(clp, cld_i, center_kf, flag_make_plot, **kwargs):
         kde_approx_cent, frame_kde_cent = kde_center(
             cld_i['x'], cld_i['y'], kf_list[1])
 
+    # Run once more for plotting.
+    kernel, x_grid, y_grid, positions, k_pos = kde_center(
+        cld_i['x'], cld_i['y'], kf_list[1], True)
+    kde_dens_max, kde_dens_min = coordsDens(
+        len(cld_i['x']), x_grid, y_grid, kernel, positions, k_pos)
+
     clp['cents_xy'], clp['kde_approx_cent'], clp['kf_list'],\
-        clp['frame_kdes'], clp['frame_kde_cent'] = cents_xy, kde_approx_cent,\
-        kf_list, frame_kdes, frame_kde_cent
+        clp['frame_kdes'], clp['frame_kde_cent'], clp['kde_dens_max'],\
+        clp['kde_dens_min'] = cents_xy, kde_approx_cent, kf_list, frame_kdes,\
+        frame_kde_cent, kde_dens_max, kde_dens_min
 
     return clp
 
 
-def kde_center(x_data, y_data, k_f):
+def kde_center(x_data, y_data, k_f, plotFlag=False):
     '''
     Find the KDE maximum value pointing to the center coordinates.
     '''
@@ -65,6 +72,9 @@ def kde_center(x_data, y_data, k_f):
     positions = np.vstack([x_grid.ravel(), y_grid.ravel()])
     # Evaluate kernel in grid positions.
     k_pos = kernel(positions)
+    if plotFlag:
+        return kernel, x_grid, y_grid, positions, k_pos
+
     # Coordinates of max value in x,y grid (ie: center position).
     kde_cent = positions.T[np.argmax(k_pos)]
 
@@ -85,3 +95,27 @@ def cent_bin(xedges, yedges, xy_cent):
     cent_bin = [(x_cent_bin - 1), (y_cent_bin - 1)]
 
     return cent_bin
+
+
+def coordsDens(N_stars, x_grid, y_grid, kernel, positions, k_pos):
+    """
+    Values used fort plotting the colorbar in the coordinates density map
+    of the A2 block.
+    """
+    # Use a "bin width" (an area) that is dependent on the coordinates used
+    # (pixels or celestials), but that it is small enough to converge to the
+    # actual density value.
+    bw = np.mean([
+        x_grid[:, 0][1] - x_grid[:, 0][0], y_grid[0, :][1] - y_grid[0, :][0]])
+    bw = bw / 10.
+
+    # Coordinates for maximum KDE value
+    kde_cent = positions.T[np.argmax(k_pos)]
+    intg = kernel.integrate_box((kde_cent - bw), (kde_cent + bw))
+    kde_dens_max = intg * N_stars / bw**2
+    # Coordinates for minimum KDE value
+    kde_min = positions.T[np.argmin(k_pos)]
+    intg = kernel.integrate_box((kde_min - bw), (kde_min + bw))
+    kde_dens_min = intg * N_stars / bw**2
+
+    return kde_dens_max, kde_dens_min

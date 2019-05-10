@@ -8,7 +8,7 @@ from ..structure import king_prof_funcs as kpf
 
 
 def pl_center(gs, fig, asp_ratio, x_name, y_name, coord, kf_list, kde_cent,
-              frame_kde_cent, clust_rad, rdp_points):
+              frame_kde_cent, kde_dens_max, kde_dens_min, clust_rad):
     '''
     2D Gaussian convolved histogram.
     '''
@@ -25,11 +25,11 @@ def pl_center(gs, fig, asp_ratio, x_name, y_name, coord, kf_list, kde_cent,
         (kde_cent[0], kde_cent[1]), clust_rad, color='green', fill=False)
     fig.gca().add_artist(circle)
 
-    ext_range, x, y, k_pos = frame_kde_cent
-    kde = np.reshape(k_pos.T, x.shape)
+    ext_range, x_grid, y_grid, k_pos = frame_kde_cent
+    kde = np.reshape(k_pos.T, x_grid.shape)
     im = plt.imshow(
         np.rot90(kde), cmap=plt.get_cmap('RdYlBu_r'), extent=ext_range)
-    plt.contour(x, y, kde, colors='#551a8b', linewidths=0.5)
+    plt.contour(x_grid, y_grid, kde, colors='#551a8b', linewidths=0.5)
     # If RA is used, invert axis.
     if coord == 'deg':
         ax.invert_xaxis()
@@ -40,14 +40,15 @@ def pl_center(gs, fig, asp_ratio, x_name, y_name, coord, kf_list, kde_cent,
     cbar = plt.colorbar(im, cax=cax)
     cbar.set_ticks([np.min(kde), np.ptp(kde) * .5, np.max(kde)])
     scale = 3600. if coord == 'deg' else 1.
-    midpt = (np.ptp(rdp_points) * .5) / scale
+
+    midpt = ((kde_dens_max + kde_dens_min) * .5) / scale
     frmt = '{:.2E}' if midpt > 100. or midpt < .1 else '{:.0f}'
     cbar.ax.set_yticklabels([
-        frmt.format(min(rdp_points) / scale),
+        frmt.format(kde_dens_min / scale),
         frmt.format(midpt),
-        frmt.format(max(rdp_points) / scale)], rotation=90)
+        frmt.format(kde_dens_max / scale)], rotation=90)
     cbar.ax.tick_params(labelsize=9)
-    # Align bottom and middle labeles. Don't include last label (one at the
+    # Align bottom and middle labels. Don't include last label (one at the
     # top) as we don't want to change its alignment.
     for i, label in enumerate(cbar.ax.get_yticklabels()[:-1]):
         if i == 0:
