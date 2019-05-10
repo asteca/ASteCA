@@ -9,7 +9,7 @@ from . import prep_plots
 
 
 def main(
-    npd, cld_i, pd, xy_mag_ranges, kf_list, frame_kdes, cents_xy,
+    npd, cld_i, pd, xy_mag_ranges, bw_list, frame_kdes, cents_xy,
         **kwargs):
     '''
     Make A1 block plots.
@@ -52,7 +52,7 @@ def main(
         for kdepl, cent_xy in zip(*[frame_kdes, cents_xy]):
             arglist.append(
                 # pl_center: 2D Gaussian convolved histogram.
-                [gs, fig, asp_ratio, x_name, y_name, coord, kf_list, kdepl,
+                [gs, fig, asp_ratio, x_name, y_name, coord, bw_list, kdepl,
                  cent_xy],
             )
         for n, args in enumerate(arglist, 5):

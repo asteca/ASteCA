@@ -136,13 +136,13 @@ MD     n
 
 # Center assignment function.
 #
-# *  kde_factor: [float]
-#   The factor used by the Gaussian KDE applied to the 2-dimensional (x,y)
-#   stars coordinates. If 'kde_factor=0' then the default Scott's rule is
+# *  bandwidth: [float]
+#   The bandwidth used by the Gaussian KDE applied to the 2-dimensional (x,y)
+#   stars coordinates. If 'bandwidth=0' then the default Scott's rule is
 #   employed.
 #
-#   kde_factor
-CH         .1
+#   bandwidth
+CH         .0
 
 # Radius assignment function.
 #

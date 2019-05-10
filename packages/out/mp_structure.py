@@ -7,14 +7,16 @@ from itertools import cycle
 from ..structure import king_prof_funcs as kpf
 
 
-def pl_center(gs, fig, asp_ratio, x_name, y_name, coord, kf_list, kde_cent,
+def pl_center(gs, fig, asp_ratio, x_name, y_name, coord, bw_list, kde_cent,
               frame_kde_cent, kde_dens_max, kde_dens_min, clust_rad):
     '''
     2D Gaussian convolved histogram.
     '''
 
     ax = plt.subplot(gs[0:2, 0:2])
-    ax.set_title(r'$KDE_{{bw}}$={:.2f}'.format(kf_list[1]), fontsize=9)
+    frmt = '{:.4f}' if coord == 'deg' else '{:.0f}'
+    ax.set_title((r'$KDE_{{bw}}$=' + frmt + ' [{}]').format(
+        bw_list[1], coord), fontsize=9)
     plt.xlabel('{} ({})'.format(x_name, coord), fontsize=12)
     plt.ylabel('{} ({})'.format(y_name, coord), fontsize=12)
     ax.minorticks_on()

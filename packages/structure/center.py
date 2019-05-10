@@ -7,7 +7,7 @@ from .xy_density import cent_bin as center_bin
 from . import display_cent
 
 
-def main(cld_i, clp, run_mode, center_kf, coords, cl_cent_semi,
+def main(cld_i, clp, run_mode, center_bw, coords, cl_cent_semi,
          cl_rad_semi, cent_flag_semi, **kwargs):
     """
     Obtains the center of the putative cluster. Returns the center values
@@ -36,7 +36,7 @@ def main(cld_i, clp, run_mode, center_kf, coords, cl_cent_semi,
         bin_cent = center_bin(clp['xedges'], clp['yedges'], kde_cent)
 
         print('Auto center found (bw={:g}): ({:g}, {:g}) {c}.'.format(
-            center_kf, kde_cent[0], kde_cent[1], c=coord))
+            center_bw, kde_cent[0], kde_cent[1], c=coord))
 
     elif run_mode == 'semi' and cent_flag_semi in [1, 2]:
         # Search for new center values using the center coordinates

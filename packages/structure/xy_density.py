@@ -6,31 +6,31 @@ import bisect
 from ..update_progress import updt
 
 
-def main(clp, cld_i, center_kf, flag_make_plot, **kwargs):
+def main(clp, cld_i, center_bw, flag_make_plot, **kwargs):
     """
     Obtain Gaussian filtered 2D x,y histograms and the maximum values in them
     as centers.
     """
     print("Obtaining KDEs for the frame's coordinates.")
 
-    if center_kf == 0.:
-        # Scotts factor (scipy's default).
+    if center_bw == 0.:
+        # Use Scotts factor (scipy's default).
         values = np.vstack([cld_i['x'], cld_i['y']])
         kernel = stats.gaussian_kde(values)
-        kf = kernel.covariance_factor()
+        c_bw = kernel.covariance_factor() * np.max(values.std(axis=1))
     else:
-        kf = center_kf
+        c_bw = center_bw
 
     # KDE factor values for the KDE filter.
-    kf_list = (kf * .5, kf, kf * 2.)
+    bw_list = (c_bw * .5, c_bw, c_bw * 2.)
 
     cents_xy, frame_kdes = [], []
     if 'A1' in flag_make_plot:
         N = 1.
         for xym_rang in clp['xy_mag_ranges']:
             xr, yr, dummy = list(zip(*list(xym_rang.values())[0]))
-            for k_f in kf_list:
-                a, b = kde_center(xr, yr, k_f)
+            for bdw in bw_list:
+                a, b = kde_center(xr, yr, bdw)
                 cents_xy.append(a)
                 frame_kdes.append(b)
                 updt(15., N)
@@ -39,29 +39,30 @@ def main(clp, cld_i, center_kf, flag_make_plot, **kwargs):
     else:
         # Only obtain the KDE for the full magnitude range.
         kde_approx_cent, frame_kde_cent = kde_center(
-            cld_i['x'], cld_i['y'], kf_list[1])
+            cld_i['x'], cld_i['y'], bw_list[1])
 
     # Run once more for plotting.
     kernel, x_grid, y_grid, positions, k_pos = kde_center(
-        cld_i['x'], cld_i['y'], kf_list[1], True)
+        cld_i['x'], cld_i['y'], bw_list[1], True)
     kde_dens_max, kde_dens_min = coordsDens(
         len(cld_i['x']), x_grid, y_grid, kernel, positions, k_pos)
 
-    clp['cents_xy'], clp['kde_approx_cent'], clp['kf_list'],\
+    clp['cents_xy'], clp['kde_approx_cent'], clp['bw_list'],\
         clp['frame_kdes'], clp['frame_kde_cent'], clp['kde_dens_max'],\
-        clp['kde_dens_min'] = cents_xy, kde_approx_cent, kf_list, frame_kdes,\
+        clp['kde_dens_min'] = cents_xy, kde_approx_cent, bw_list, frame_kdes,\
         frame_kde_cent, kde_dens_max, kde_dens_min
 
     return clp
 
 
-def kde_center(x_data, y_data, k_f, plotFlag=False):
+def kde_center(x_data, y_data, bdw, plotFlag=False):
     '''
     Find the KDE maximum value pointing to the center coordinates.
     '''
     values = np.vstack([x_data, y_data])
     # Obtain Gaussian KDE.
-    kernel = stats.gaussian_kde(values, bw_method=k_f)
+    kernel = stats.gaussian_kde(
+        values, bw_method=bdw / np.max(values.std(axis=1)))
     # Grid density (number of points).
     gd = 50
     gd_c = complex(0, gd)

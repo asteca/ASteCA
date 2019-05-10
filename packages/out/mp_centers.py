@@ -32,7 +32,7 @@ def pl_full_frame(
     plt.scatter(x, y, marker='o', c='black', s=st_sizes_arr)
 
 
-def pl_densxy(N, gs, fig, asp_ratio, x_name, y_name, coord, kf_list,
+def pl_densxy(N, gs, fig, asp_ratio, x_name, y_name, coord, bw_list,
               kde_pl, cent_xy):
     '''
     2D Gaussian convolved histogram.
@@ -47,9 +47,9 @@ def pl_densxy(N, gs, fig, asp_ratio, x_name, y_name, coord, kf_list,
     ax = plt.subplot(gs_map.get(N))
 
     if N in [5, 6, 7]:
-        r_frmt = '{:.2f}' if coord == 'px' else '{:.5f}'
-        plt.title("Bandwidth: " + r_frmt.format(kf_list[N - 5]),
-                  fontsize=12)
+        r_frmt = '{:.0f}' if coord == 'px' else '{:.4f}'
+        plt.title(("Bandwidth: " + r_frmt + ' [{}]').format(
+            bw_list[N - 5], coord), fontsize=10)
     plt.xlabel('{} ({})'.format(x_name, coord), fontsize=12)
     plt.ylabel('{} ({})'.format(y_name, coord), fontsize=12)
 

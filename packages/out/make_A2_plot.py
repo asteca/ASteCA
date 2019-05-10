@@ -22,7 +22,7 @@ from . import prep_plots
 #############################################################
 
 def main(
-    npd, cld_i, pd, kf_list, kde_cent, kde_plot, K_cent_dens, clust_rad,
+    npd, cld_i, pd, bw_list, kde_cent, kde_plot, K_cent_dens, clust_rad,
     e_rad, poisson_error, bin_cent, bin_width, kde_approx_cent, frame_kde_cent,
     kde_dens_max, kde_dens_min, core_rad, e_core, tidal_rad, e_tidal,
     K_conct_par, flag_2pk_conver, flag_3pk_conver, radii, rdp_points,
@@ -53,7 +53,7 @@ def main(
         # Structure plots.
         arglist = [
             # pl_center: 2D Gaussian convolved histogram.
-            [gs, fig, asp_ratio, x_name, y_name, coord, kf_list, kde_cent,
+            [gs, fig, asp_ratio, x_name, y_name, coord, bw_list, kde_cent,
              frame_kde_cent, kde_dens_max, kde_dens_min, clust_rad],
             # pl_full_frame: x,y finding chart of full frame.
             [gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max,
