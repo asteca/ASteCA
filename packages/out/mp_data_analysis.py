@@ -125,7 +125,8 @@ def pl_phot_err(
             # Set the alpha value of the legend.
             leg.get_frame().set_alpha(0.7)
             # Max error cut
-            ax.hlines(y=em_float[0], xmin=x_min, xmax=x_max, color='k',
+            max_cut_y = em_float[0]
+            ax.hlines(y=max_cut_y, xmin=x_min, xmax=x_max, color='k',
                       linestyles='dashed', zorder=4)
             ob = offsetbox.AnchoredText(
                 r"$max={}$ mag".format(em_float[0]), loc=1, prop=dict(size=9))
@@ -136,7 +137,8 @@ def pl_phot_err(
                      ls='--', zorder=5)
 
         elif j == 6:
-            ax.hlines(y=em_float[1 + k], xmin=x_min, xmax=x_max, color='k',
+            max_cut_y = em_float[1 + k]
+            ax.hlines(y=max_cut_y, xmin=x_min, xmax=x_max, color='k',
                       linestyles='dashed', zorder=4)
             ob = offsetbox.AnchoredText(
                 r"$max={}$ mag".format(em_float[1 + k]), loc=2,
@@ -152,8 +154,9 @@ def pl_phot_err(
                         len(stars_out_rjct_c) + len(cl_region_rjct_c)),
                     fontsize=9)
         else:
+            max_cut_y = em_float[-(3 - k)]
             unit = {0: '[mas]', 1: '[mas/yr]'}
-            ax.hlines(y=em_float[-(3 - k)], xmin=x_min, xmax=x_max, color='k',
+            ax.hlines(y=max_cut_y, xmin=x_min, xmax=x_max, color='k',
                       linestyles='dashed', zorder=4)
             ob = offsetbox.AnchoredText(
                 r"$max={}$ {}".format(em_float[-(3 - k)], unit[k]), loc=2,
@@ -161,7 +164,7 @@ def pl_phot_err(
             ob.patch.set(alpha=0.7)
             ax.add_artist(ob)
         # Maximum error limit of 1.
-        plt.ylim(-0.005, min(plt.ylim()[1], 1.))
+        plt.ylim(-0.0025, min(plt.ylim()[1], 2. * max_cut_y, 1.))
 
 
 def pl_cl_fl_regions(
