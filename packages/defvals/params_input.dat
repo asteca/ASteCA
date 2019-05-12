@@ -190,16 +190,20 @@ GR       10
 
 # Error rejection.
 #
-# * e_ph_max: [float / str]
-#   Maximum error value a star can have in either its magnitude or color
-#   without being rejected. Use 'n' for no maximum limit.
+# * e_mag_max: [float] or [str]
+#   Maximum error value a star can have in its magnitude without being
+#   rejected. Use 'n' for no maximum limit.
+#
+# * e_col_max: [float] or [str]
+#   Maximum error value a star can have in its color(s) without being rejected.
+#   Use 'n' for no maximum limit.
 #
 # * e_plx_max / e_pm_max / e_rv_max: [float] or [str]
 #   Idem for parallax / proper motions / radial velocity values. If these data
 #   columns are not present (or no maximum limit is desired) use 'n'.
 #
-#   e_ph_max    e_plx_max     e_pm_max     e_rv_max
-ER       0.2            n            n            n
+#   e_mag_max   e_col_max    e_plx_max     e_pm_max     e_rv_max
+ER       0.2            n            n            n            n
 
 # Anderson-Darling test (cluster vs field regions).
 #

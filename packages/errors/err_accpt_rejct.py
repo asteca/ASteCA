@@ -16,6 +16,7 @@ def max_err_cut(cld, err_max):
     """
 
     # Prepare values.
+    N_colors = cld['cols'].shape[0]
     em_float = []
     for err in err_max:
         if err == 'n':
@@ -28,20 +29,24 @@ def max_err_cut(cld, err_max):
 
         # Photometric data.
         m_msk = np.logical_or(cld['em'] < em_float[0], np.isnan(cld['em']))
-        c_msk = np.logical_or(cld['ec'] < em_float[0], np.isnan(cld['ec']))
+        c_msk = []
+        for i in range(N_colors):
+            c_msk.append(
+                np.logical_or(cld['ec'][i] < em_float[1 + i],
+                              np.isnan(cld['ec'][i])))
 
         # Kinematic data.
         plx_msk = np.logical_or(
-            cld['ek'][0] < em_float[1], np.isnan(cld['ek'][0]))
+            cld['ek'][0] < em_float[1 + N_colors], np.isnan(cld['ek'][0]))
         pmx_msk = np.logical_or(
-            cld['ek'][1] < em_float[2], np.isnan(cld['ek'][1]))
+            cld['ek'][1] < em_float[2 + N_colors], np.isnan(cld['ek'][1]))
         pmy_msk = np.logical_or(
-            cld['ek'][2] < em_float[2], np.isnan(cld['ek'][2]))
+            cld['ek'][2] < em_float[2 + N_colors], np.isnan(cld['ek'][2]))
         rv_msk = np.logical_or(
-            cld['ek'][3] < em_float[3], np.isnan(cld['ek'][3]))
+            cld['ek'][3] < em_float[3 + N_colors], np.isnan(cld['ek'][3]))
 
     acpt_indx = np.flatnonzero(
-        (m_msk.all(0) & c_msk.all(0) & plx_msk & pmx_msk & pmy_msk &
+        (m_msk.all(0) & np.array(c_msk).all(0) & plx_msk & pmx_msk & pmy_msk &
          rv_msk)).tolist()
     rjct_indx = np.setdiff1d(
         np.arange(len(cld['em'][0])), acpt_indx).tolist()

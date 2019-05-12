@@ -43,6 +43,20 @@ def check(mypath, pd):
     else:
         id_col, x_col, y_col = pd['id_coords'][0:3]
 
+    # Check error values
+    for err in pd['err_max']:
+        try:
+            if float(err) < 0.:
+                sys.exit("ERROR: max error value must be in the range >0.")
+        except ValueError:
+            # This assumes that there is no maximum number of colors that can
+            # be defined
+            N_colors = int(len(pd['id_cols']) / 2.)
+            if len(pd['err_max']) - 4 != N_colors:
+                sys.exit("ERROR: there are {} 'e_*_max' values defined,"
+                         " there should be {}.".format(
+                             len(pd['err_max']), 4 + N_colors))
+
     # Dictionary of photometric systems defined in the CMD service.
     all_systs = pd['cmd_systs']
 
