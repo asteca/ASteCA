@@ -19,10 +19,10 @@ def main(clp, cld_i, center_bw, flag_make_plot, **kwargs):
     x_data, y_data = cld_i['x'][msk], cld_i['y'][msk]
 
     if center_bw == 0.:
-        # Use Scotts factor (scipy's default).
+        # Use half of Scotts factor (scipy's default).
         values = np.vstack([x_data, y_data])
         kernel = stats.gaussian_kde(values)
-        c_bw = kernel.covariance_factor() * np.max(values.std(axis=1))
+        c_bw = kernel.covariance_factor() * np.max(values.std(axis=1)) * .5
     else:
         c_bw = center_bw
 
