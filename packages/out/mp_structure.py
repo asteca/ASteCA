@@ -15,7 +15,7 @@ def pl_center(gs, fig, asp_ratio, x_name, y_name, coord, bw_list, kde_cent,
 
     ax = plt.subplot(gs[0:2, 0:2])
     frmt = '{:.4f}' if coord == 'deg' else '{:.0f}'
-    ax.set_title((r'$KDE_{{bw}}$=' + frmt + ' [{}]').format(
+    ax.set_title((r'$KDE_{{bdw}}$ =' + frmt + ' [{}]').format(
         bw_list[1], coord), fontsize=9)
     plt.xlabel('{} ({})'.format(x_name, coord), fontsize=12)
     plt.ylabel('{} ({})'.format(y_name, coord), fontsize=12)
