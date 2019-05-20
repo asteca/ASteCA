@@ -124,7 +124,7 @@ def pl_hess_diag(
 def pl_bf_synth_cl(
     gs, gs_y1, gs_y2, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
     hess_xedges, hess_yedges, x_synth, y_synth, binar_idx, IMF_name, R_V,
-    mean_sol, p_err, x_isoch, y_isoch, lkl_method, bin_method,
+    best_sol, p_err, x_isoch, y_isoch, lkl_method, bin_method,
         cmd_evol_tracks, evol_track):
     '''
     Best fit synthetic cluster obtained.
@@ -179,17 +179,17 @@ def pl_bf_synth_cl(
             IMF_name.replace('_', '\;').title())
         t3 = r'$R_{{V}} \hspace{{3.2}}=\;{}$'.format(R_V)
         t4 = r'$z \hspace{{3.9}}=\;{:.5f}\pm {:.5f}$'.format(
-            mean_sol[0], p_err[0][2])
+            best_sol[0], p_err[0][2])
         t5 = r'$\log(age) \hspace{{0.17}}=\;{:.3f}\pm {:.3f}$'.format(
-            mean_sol[1], p_err[1][2])
+            best_sol[1], p_err[1][2])
         t6 = r'$E_{{(B-V)}} \hspace{{1.35}}=\;{:.3f}\pm {:.3f}$'.format(
-            mean_sol[2], p_err[2][2])
+            best_sol[2], p_err[2][2])
         t7 = r'$(m-M)_{{0}}=\;{:.3f} \pm {:.3f}$'.format(
-            mean_sol[3], p_err[3][2])
+            best_sol[3], p_err[3][2])
         t8 = r'$M\,(M_{{\odot}}) \hspace{{1.07}} =\;{:.0f}\pm {:.0f}$'.format(
-            mean_sol[4], p_err[4][2])
+            best_sol[4], p_err[4][2])
         t9 = r'$b_{{frac}} \hspace{{2.37}}=\;{:.2f}\pm {:.2f}$'.format(
-            mean_sol[5], p_err[5][2])
+            best_sol[5], p_err[5][2])
         text = t1 + '\n\n' + t2 + '\n' + t3 + '\n' + t4 + '\n' + t5 + '\n' +\
             t6 + '\n' + t7 + '\n' + t8 + '\n' + t9
         ob = offsetbox.AnchoredText(

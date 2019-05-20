@@ -223,7 +223,7 @@ def main(cl_file, pd):
     cluster_members_file.main(clp, **npd)
 
     # Obtain best fitting parameters for cluster.
-    clp = best_fit_synth_cl.main(clp, **pd)
+    clp = best_fit_synth_cl.main(clp, pd)
 
     # Save MCMC samples to file (if MCMC sampler was used)
     mcmc_samples.main(clp, pd, **npd)

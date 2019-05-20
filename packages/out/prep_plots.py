@@ -266,20 +266,35 @@ def error_bars(stars_phot, x_min_cmd, err_lst, all_flag=None):
     return [x_val, mag_y, xy_err]
 
 
-def param_ranges(best_fit_algor, fundam_params, varIdxs=None, post_bi=None):
+def param_ranges(best_fit_algor, fundam_params, varIdxs=None, trace=None):
     '''
     Parameter ranges used by several plots.
     '''
     min_max_p = []
-    if best_fit_algor in ['brute', 'genet']:
-        for param in fundam_params:
+    if best_fit_algor in ['brute', 'boot+GA']:
 
-            # Set the delta for the parameter range. If only one value was
-            # used, set a very small delta value.
-            delta_p = (max(param) - min(param)) * 0.05 \
-                if max(param) != min(param) else 0.001
-            # Store parameter range.
-            min_max_p.append([min(param) - delta_p, max(param) + delta_p])
+        if varIdxs is not None and trace is not None:
+            for cp, param in enumerate(fundam_params):
+                if cp in varIdxs:
+                    c_model = varIdxs.index(cp)
+                    # Use the last 10% of the trace.
+                    N = int(trace[c_model].shape[-1] * .1)
+                    std = np.std(trace[c_model][-N:])
+                    pmin, pmax = np.min(trace[c_model][-N:]),\
+                        np.max(trace[c_model][-N:])
+                    min_max_p.append([
+                        max(param[0], pmin - std),
+                        min(param[-1], pmax + std)])
+                else:
+                    min_max_p.append([min(param) - .001, max(param) + .001])
+        else:
+            for param in fundam_params:
+                # Set the delta for the parameter range. If only one value was
+                # used, set a very small delta value.
+                delta_p = (max(param) - min(param)) * 0.05 \
+                    if max(param) != min(param) else 0.001
+                # Store parameter range.
+                min_max_p.append([min(param) - delta_p, max(param) + delta_p])
 
     elif best_fit_algor in ('ptemcee', 'emcee'):
         # Select the ranges given by the limits of the space explored by all
@@ -288,10 +303,10 @@ def param_ranges(best_fit_algor, fundam_params, varIdxs=None, post_bi=None):
             if cp in varIdxs:
                 c_model = varIdxs.index(cp)
                 # Use the last 10% of the chains.
-                N = int(post_bi[c_model].shape[-1] * .1)
-                std = np.std(post_bi[c_model][:, -N:])
-                pmin, pmax = np.min(post_bi[c_model][:, -N:]),\
-                    np.max(post_bi[c_model][:, -N:])
+                N = int(trace[c_model].shape[-1] * .1)
+                std = np.std(trace[c_model][:, -N:])
+                pmin, pmax = np.min(trace[c_model][:, -N:]),\
+                    np.max(trace[c_model][:, -N:])
                 min_max_p.append([
                     max(param[0], pmin - std),
                     min(param[-1], pmax + std)])
@@ -328,19 +343,19 @@ def p2_ranges(p2, min_max_p):
     return min_max_p2
 
 
-def likl_y_range(opt_method, lkl_old):
+def likl_y_range(opt_method, lkl_best, lkl_mean):
     '''
     Obtain y axis range for the likelihood axis.
     '''
-    if opt_method == 'emcee':
-        l_min_max = [
-            max(0., min(lkl_old) - .2 * min(lkl_old)),
-            np.median(lkl_old[:int(.1 * len(lkl_old))]) * 1.5]
-    elif opt_method == 'genet':
-        # Take limits from L_min curve.
-        lkl_range = max(lkl_old[1]) - min(lkl_old[0])
-        l_min_max = [max(0., min(lkl_old[0]) - 0.1 * lkl_range),
-                     max(lkl_old[1]) + 0.1 * lkl_range]
+    # if opt_method == 'emcee':
+    #     l_min_max = [
+    #         max(0., min(lkl_old) - .2 * min(lkl_old)),
+    #         np.median(lkl_old[:int(.1 * len(lkl_old))]) * 1.5]
+    # elif opt_method == 'boot+GA':
+    # Take limits from L_min curve.
+    lkl_range = max(lkl_mean) - min(lkl_best)
+    l_min_max = [max(0., min(lkl_best) - 0.1 * lkl_range),
+                 max(lkl_mean) + 0.1 * lkl_range]
 
     return l_min_max
 

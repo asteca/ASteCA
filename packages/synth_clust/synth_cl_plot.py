@@ -4,14 +4,19 @@ from . import synth_cluster
 from ..best_fit.mcmc_common import closeSol
 
 
-def main(e_max, fundam_params, theor_tracks, plot_isoch_data, isoch_fit_params,
-         err_lst, completeness, max_mag_syn, st_dist_mass, R_V, ext_coefs,
-         N_fc, cmpl_rnd, err_rnd):
+def main(
+    best_fit_algor, fundam_params, theor_tracks, plot_isoch_data, R_V,
+    e_max, isoch_fit_params, err_lst, completeness, max_mag_syn, st_dist_mass,
+        ext_coefs, N_fc, cmpl_rnd, err_rnd):
     '''
     # Generate shifted isochrone and synthetic cluster for plotting.
     '''
-    # Use mean fit values for all parameters.
-    synth_cl_params = isoch_fit_params['mean_sol']
+    if best_fit_algor == 'boot+GA':
+        # Use ML fit values for all parameters.
+        synth_cl_params = isoch_fit_params['map_sol']
+    elif best_fit_algor == 'ptemcee':
+        # Use mean fit values for all parameters.
+        synth_cl_params = isoch_fit_params['mean_sol']
     # Grid values for (z, a, M)
     synth_cl_params_grid = closeSol(fundam_params, synth_cl_params, [0, 1, 4])
 

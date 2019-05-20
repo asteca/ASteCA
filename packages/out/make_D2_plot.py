@@ -69,6 +69,11 @@ def main(
         gs = gridspec.GridSpec(10, 12)
         add_version_plot.main()
 
+        if pd['best_fit_algor'] == 'boot+GA':
+            best_sol = isoch_fit_params['map_sol']
+        elif pd['best_fit_algor'] == 'ptemcee':
+            best_sol = isoch_fit_params['mean_sol']
+
         # Plot one ore more rows of CMDs/CCDs.
         hr_diags = prep_plots.packData(
             pd['lkl_method'], pd['lkl_binning'], cl_max_mag, synth_clst,
@@ -95,7 +100,7 @@ def main(
                 [gs, gs_y1, gs_y2, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
                  x_ax, y_ax, hess_xedges, hess_yedges, x_synth_phot,
                  y_synth_phot, binar_idx, pd['IMF_name'], pd['R_V'],
-                 isoch_fit_params['mean_sol'], isoch_fit_errors, x_isoch,
+                 best_sol, isoch_fit_errors, x_isoch,
                  y_isoch, pd['lkl_method'], pd['lkl_binning'],
                  pd['cmd_evol_tracks'], pd['evol_track']]
             ]

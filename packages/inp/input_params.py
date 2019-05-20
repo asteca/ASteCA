@@ -126,10 +126,8 @@ def main(mypath, pars_f_path):
                 # Cluster parameters assignation.
                 elif reader[0] == 'CF':
                     best_fit_algor = str(reader[1])
-                    # TODO extend this param to 'brute force' and 'GA'
+                    # TODO extend this param to 'brute force'
                     hmax = float(reader[2])
-                    N_conv = float(reader[3])
-                    tol_conv = float(reader[4])
 
                 # Ranges for the fundamental parameters
                 elif reader[0] == 'RZ':
@@ -157,6 +155,9 @@ def main(mypath, pars_f_path):
                     nsteps_ptm = int(float(reader[4]))
                     tmax_ptm = reader[5]
                     pt_adapt = True if reader[6] in true_lst else False
+                elif reader[0] == 'PT2':
+                    N_conv = float(reader[1])
+                    tol_conv = float(reader[2])
                 elif reader[0] == 'PTZ':
                     pt_z_prior = [reader[1]] + list(map(float, reader[2:]))
                 elif reader[0] == 'PTA':
@@ -188,21 +189,25 @@ def main(mypath, pars_f_path):
                 #     emcee_a = float(reader[5])
                 #     priors_emc = reader[6]
 
-                # TODO retire Bootstrap+GA until #64 is implemented
-                # # Genetic algorithm parameters.
-                # elif reader[0] == 'GA':
-                #     N_pop = int(reader[1])
-                #     N_gen = int(reader[2])
-                #     fit_diff = float(reader[3])
-                #     cross_prob = float(reader[4])
-                #     cross_sel = str(reader[5])
-                #     mut_prob = float(reader[6])
-                #     N_el = int(reader[7])
-                #     N_ei = int(reader[8])
-                #     N_es = int(reader[9])
-                #     N_bootstrap = int(reader[10])
-                # elif reader[0] == 'GS':
-                #     ga_steps = list(map(float, reader[1:]))
+                # Bootstrap parameters.
+                elif reader[0] == 'BT':
+                    hperc_btstrp = float(reader[1])
+                    N_pop_btstrp = int(reader[2])
+                    N_step_btstrp = int(reader[3])
+
+                # Genetic algorithm parameters.
+                elif reader[0] == 'GA':
+                    N_pop = int(reader[1])
+                    N_gen = int(reader[2])
+                    fit_diff = float(reader[3])
+                    cross_prob = float(reader[4])
+                    cross_sel = str(reader[5])
+                    mut_prob = float(reader[6])
+                    N_el = int(reader[7])
+                    N_ei = int(reader[8])
+                    N_es = int(reader[9])
+                elif reader[0] == 'GS':
+                    ga_steps = list(map(float, reader[1:]))
 
                 # Likelihood function
                 elif reader[0] == 'LK':
@@ -238,10 +243,6 @@ def main(mypath, pars_f_path):
                           "  of '{}' file.\n".format(
                               reader[0], l + 1, pars_f_name))
 
-    # TODO retire Bootstrap+GA until #64 is implemented
-    N_pop, N_gen, fit_diff, cross_prob, cross_sel, mut_prob, N_el,\
-        N_ei, N_es, N_bootstrap, ga_steps = [0.] * 11
-
     # Accepted coordinate units
     coord_accpt = ('px', 'deg')
     # Accepted read modes
@@ -261,9 +262,8 @@ def main(mypath, pars_f_path):
     imf_funcs = ('chabrier_2001_exp', 'chabrier_2001_log', 'kroupa_1993',
                  'kroupa_2002')
     # Optimizing algorithm
-    # TODO retire Bootstrap+GA until #64 is implemented
-    # 'brute', 'genet', 'emcee', 'abc'
-    optimz_algors = ('ptemcee', 'n')
+    # TODO 'brute', 'emcee', 'abc'
+    optimz_algors = ('ptemcee', 'boot+GA', 'n')
     # Accepted forms of priors.
     bayes_priors = ('u', 'g')
 
@@ -332,11 +332,13 @@ def main(mypath, pars_f_path):
         # 'nwalkers_emc': nwalkers_emc, 'nburn_emc': nburn_emc,
         # "N_burn_emc": N_burn_emc, 'nsteps_emc': nsteps_emc,
         # "emcee_a": emcee_a, 'priors_emc': priors_emc,
+        # Bootstrap parameters
+        'hperc_btstrp': hperc_btstrp, 'N_pop_btstrp': N_pop_btstrp,
+        'N_step_btstrp': N_step_btstrp,
         # Genetic algorithm parameters.
         'N_pop': N_pop, 'N_gen': N_gen, 'fit_diff': fit_diff,
         'cross_prob': cross_prob, 'cross_sel': cross_sel, 'mut_prob': mut_prob,
-        'N_el': N_el, 'N_ei': N_ei, 'N_es': N_es, 'N_bootstrap': N_bootstrap,
-        'ga_steps': ga_steps,
+        'N_el': N_el, 'N_ei': N_ei, 'N_es': N_es, 'ga_steps': ga_steps,
         # Fixed accepted parameter values and photometric systems.
         'read_mode_accpt': read_mode_accpt, 'coord_accpt': coord_accpt,
         'da_algors_accpt': da_algors_accpt, 'fld_rem_methods': fld_rem_methods,

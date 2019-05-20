@@ -72,7 +72,7 @@ def main(npd):
 # d: Distance modulus.\n\
 # M: Total initial mass.\n\
 # b: Binary fraction.\n\
-# Nt: Number of estimates used to the parameters values.\n\
+# Nt: Number of samples used to estimate the parameters values.\n\
 #\n\
 # M1 Indicates that the center was set manually.\n\
 # M2 Indicates that the radius was set manually.\n\

@@ -6,17 +6,17 @@ from .. import update_progress
 from . import likelihood
 # from .emcee3rc2 import autocorr
 from .mcmc_convergence import convergenceVals
-from .mcmc_common import initPop, varPars, synthClust, rangeCheck, fillParams,\
+from .bf_common import initPop, varPars, synthClust, rangeCheck, fillParams,\
     closeSol, discreteParams, r2Dist, modeKDE, thinChain
 from .ptemcee import sampler, util
 
 
 def main(
-    lkl_method, e_max, err_lst, completeness, max_mag_syn,
-    fundam_params, obs_clust, theor_tracks, R_V,
-    ext_coefs, st_dist_mass, N_fc, cmpl_rnd, err_rnd, init_mode_ptm,
-    popsize_ptm, maxiter_ptm, ntemps, nwalkers_ptm, nsteps_ptm, nburn_ptm,
-        pt_adapt, tmax_ptm, priors_ptm, hmax, N_conv, tol_conv):
+    err_lst, completeness, e_max, max_mag_syn, obs_clust, ext_coefs,
+    st_dist_mass, N_fc, cmpl_rnd, err_rnd, lkl_method, fundam_params,
+    theor_tracks, R_V, init_mode_ptm, popsize_ptm, maxiter_ptm, ntemps,
+    nwalkers_ptm, nsteps_ptm, nburn_ptm, pt_adapt, tmax_ptm, priors_ptm, hmax,
+        N_conv, tol_conv, **kwargs):
     """
     """
 
@@ -229,7 +229,7 @@ def main(
     # mcmc_trace = thinChain(mcmc_trace, acorr_t)
 
     param_r2 = r2Dist(fundam_params, varIdxs, mcmc_trace)
-    mode_sol, mcmc_kde = modeKDE(fundam_params, varIdxs, mcmc_trace)
+    mode_sol, pardist_kde = modeKDE(fundam_params, varIdxs, mcmc_trace)
 
     # Mean and median.
     mean_sol = np.mean(mcmc_trace, axis=1)
@@ -251,9 +251,9 @@ def main(
     isoch_fit_params = {
         'varIdxs': varIdxs, 'nsteps_ptm': runs, 'mean_sol': mean_sol,
         'median_sol': median_sol, 'map_sol': map_sol, 'map_lkl': map_lkl,
-        'mode_sol': mode_sol, 'mcmc_kde': mcmc_kde, 'param_r2': param_r2,
+        'mode_sol': mode_sol, 'pardist_kde': pardist_kde, 'param_r2': param_r2,
         'map_lkl_final': map_lkl_final, 'prob_mean': prob_mean,
-        'mcmc_elapsed': elapsed, 'mcmc_trace': mcmc_trace,
+        'bf_elapsed': elapsed, 'mcmc_trace': mcmc_trace,
         'pars_chains_bi': pars_chains_bi, 'pars_chains': chains_nruns.T,
         'maf_steps': maf_steps, 'tswaps_afs': tswaps_afs, 'betas_pt': betas_pt,
         'acorr_t': acorr_t, 'med_at_c': med_at_c,

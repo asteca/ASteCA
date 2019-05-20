@@ -1,4 +1,5 @@
 
+import time as t
 import random
 import numpy as np
 from ..synth_clust import synth_cluster
@@ -19,6 +20,212 @@ from . import likelihood
 #         end = time.clock()
 #         print ('{} elapsed: {}'.format(label, end - start))
 #############################################################
+
+
+def main(
+    available_secs, ran_pop, flag_print_perc, N_popl, N_gener, max_mag_syn,
+    obs_clust, ext_coefs, st_dist_mass, N_fc, cmpl_rnd, err_rnd, e_max,
+    err_lst, completeness, lkl_method, fundam_params, theor_tracks, R_V,
+        fit_diff, cross_prob, cross_sel, mut_prob, N_el, N_ei, N_es, **kwargs):
+    '''
+    Genetic algorithm. Finds the best fit model-observation.
+    '''
+    # Start timing.
+    elapsed, start_t = 0., t.time()
+
+    # Check if N_popl is odd. If it is sum 1 to avoid conflict if cross_sel
+    # '2P' was selected.
+    N_popl += N_popl % 2
+
+    # Get number of binary digits to use.
+    n_bin, p_delta, p_mins = num_binary_digits(fundam_params)
+
+    # Fitness.
+    # Rank-based breeding probability. Independent of the fitness values,
+    # only depends on the total number of chromosomes N_popl and the fitness
+    # differential fit_diff.
+    fitness = [1. / N_popl + fit_diff * (N_popl + 1. - 2. * (i + 1.)) /
+               (N_popl * (N_popl + 1.)) for i in range(N_popl)]
+
+    if not ran_pop:
+        # Initial random population.
+        p_lst_r = random_population(fundam_params, N_popl)
+    else:
+        # Use final population after the initial GA run.
+        p_lst_r = np.array(ran_pop).T
+
+    # For plotting purposes.
+    # Stores parameters of the solutions already processed and the likelihoods
+    # obtained.
+    models_GA = np.zeros((N_gener * N_popl, 6))
+    lkls_GA = np.zeros(N_gener * N_popl)
+    lkl_best = np.zeros(N_gener)
+    lkl_mean = np.zeros(N_gener)
+
+    # Evaluate initial random solutions in the objective function.
+    generation, lkl = evaluation(
+        lkl_method, e_max, err_lst, completeness, max_mag_syn, fundam_params,
+        obs_clust, theor_tracks, R_V, ext_coefs, st_dist_mass, N_fc, cmpl_rnd,
+        err_rnd, p_lst_r)
+
+    # Store best solution for passing along in the 'Elitism' block.
+    best_sol = generation[:N_el]
+
+    # Stores indexes where a new best solution was found.
+    new_bs_indx = []
+
+    # Initiate counters.
+    best_sol_count, ext_imm_count = 0, 0
+    # Initiate empty list. Stores the best solution found after each
+    # application of the Extinction/Immigration operator.
+    best_sol_ei = []
+
+    # Print percentage done.
+    elapsed_in, start_in = 0., t.time()
+    milestones = list(range(10, 101, 10))
+    # Begin processing the populations up to N_gen generations.
+    for step in range(N_gener):
+
+        # *** Selection/Reproduction ***
+        # with timeblock("Selec/Repo"):
+        # Select chromosomes for breeding from the current generation of
+        # solutions according to breed_prob to generate the intermediate
+        # population.
+        int_popul = selection(generation, fitness)
+
+        # Encode intermediate population's solutions into binary
+        # chromosomes.
+        chromosomes = encode(n_bin, p_delta, p_mins, int_popul)
+
+        # *** Breeding ***
+        # with timeblock("Breeding"):
+        # Pair chromosomes by randomly shuffling them.
+        random.shuffle(chromosomes)
+
+        # Apply crossover operation on each subsequent pair of chromosomes
+        # with a cross_prob probability (crossover probability)
+        cross_chrom = crossover(chromosomes, cross_prob, cross_sel)
+
+        # Apply mutation operation on random genes for every chromosome.
+        mut_chrom = mutation(cross_chrom, mut_prob)
+
+        # *** Evaluation ***
+        # Decode the chromosomes into solutions to form the new generation.
+        # with timeblock("Decode"):
+        p_lst_d = decode(fundam_params, n_bin, p_delta, p_mins, mut_chrom)
+
+        # Elitism: make sure that the best N_el solutions from the previous
+        # generation are passed unchanged into this next generation.
+        # with timeblock("Elitism"):
+        p_lst_e = elitism(best_sol, p_lst_d)
+
+        # Evaluate each new solution in the objective function and sort
+        # according to the best solutions found.
+        # with timeblock("Evaluation"):
+        generation, lkl = evaluation(
+            lkl_method, e_max, err_lst, completeness, max_mag_syn,
+            fundam_params, obs_clust, theor_tracks, R_V, ext_coefs,
+            st_dist_mass, N_fc, cmpl_rnd, err_rnd, p_lst_e)
+
+        # *** Extinction/Immigration ***
+        # If the best solution has remained unchanged for N_ei
+        # generations, remove all chromosomes but the best ones (extinction)
+        # and fill with random new solutions (immigration).
+
+        # Check if new best solution is equal to the previous one.
+        if generation[0] == best_sol[0]:
+            # Increase counter.
+            best_sol_count += 1
+
+            # Check how many times the best_sol has remained unchanged.
+            # If the number equals N_ei, apply Extinction/Immigration operator.
+            if best_sol_count == N_ei:
+
+                # *** Exit switch ***
+                # If N_es runs of the Ext/Imm operator have been applied with
+                # no changes to the best solution, apply the exit switch,
+                # ie: exit the GA.
+                if best_sol[0] == best_sol_ei:
+                    # Increase Ext/Imm operator counter.
+                    ext_imm_count += 1
+                    if ext_imm_count == N_es:
+                        # Exit generations loop.
+                        if flag_print_perc:
+                            print("  GA exit switch applied.")
+                        break
+                else:
+                    # Update best solution.
+                    best_sol_ei = best_sol[0]
+                    # Reset counter.
+                    ext_imm_count = 0
+
+                # Apply Extinction/Immigration operator.
+                generation = ext_imm(best_sol, fundam_params, N_popl)
+
+                # Reset best solution counter.
+                best_sol_count = 0
+
+        else:
+            # For plotting purposes. Save index where a new best solution
+            # was found.
+            new_bs_indx.append(step)
+            # Update best solution for passing along in the 'Elitism' block.
+            best_sol = generation[:N_el]
+            # Reset counter.
+            best_sol_count = 0
+
+        if flag_print_perc:
+
+            # For plotting purposes.
+            # Sort list in place putting the likelihood minimum value first.
+            lkl.sort()
+            models_GA[N_popl * step:N_popl * (step + 1)] = generation
+            lkls_GA[N_popl * step:N_popl * (step + 1)] = lkl
+            lkl_best[step] = lkl[0]
+            # Discard large values associated with empty arrays from mean.
+            lkl_mean[step] = np.mean(
+                np.asarray(lkl)[np.asarray(lkl) < 9.9e08])
+
+            # Time used to check how fast the sampler is advancing.
+            elapsed_in += t.time() - start_in
+            start_in = t.time()
+            percentage_complete = (100. * (step + 1) / N_gener)
+            if len(milestones) > 0 and percentage_complete >= milestones[0]:
+                m, s = divmod(((N_gener / float(step)) - 1.) * elapsed_in, 60)
+                h, m = divmod(m, 60)
+                # m += s / 60.
+                print("{:>3}% LP={:.1f} ({:.5f}, {:.3f}, {:.3f}, "
+                      "{:.2f}, {:g}, {:.2f})".format(
+                          milestones[0], lkl[0], *generation[0]) +
+                      " [{:.0f} m/s | {:.0f}h{:.0f}m]".format(
+                          (N_popl * step) / elapsed_in, h, m))
+                # Remove that milestone from the list.
+                milestones = milestones[1:]
+
+            elapsed += t.time() - start_t
+            if elapsed >= available_secs:
+                print("  Time consumed (steps={})".format(step + 1))
+                break
+            start_t = t.time()
+
+    # If this is a bootstrap run, return the best model found only.
+    if not flag_print_perc:
+        return generation[0]
+
+    # In case not all the generations were processed.
+    models_GA = models_GA[:(step + 1) * N_popl]
+    lkls_GA = lkls_GA[:(step + 1) * N_popl]
+    lkl_best = lkl_best[:(step + 1)]
+    lkl_mean = lkl_mean[:(step + 1)]
+
+    # Store the ML solution as 'map_sol' for consistency.
+    isoch_fit_params = {
+        'OF_final_generation': generation, 'OF_elapsed': elapsed,
+        'map_sol': generation[0], 'lkl_best': lkl_best, 'lkl_mean': lkl_mean,
+        'OF_steps': step + 1, 'OF_models': (step + 1) * N_popl,
+        'new_bs_indx': new_bs_indx, 'models_GA': models_GA, 'lkls_GA': lkls_GA}
+
+    return isoch_fit_params
 
 
 def encode(n_bin, p_delta, p_mins, int_popul):
@@ -165,7 +372,7 @@ def selection(generation, breed_prob):
 
 def evaluation(lkl_method, e_max, err_lst, completeness, max_mag_syn,
                fundam_params, obs_clust, theor_tracks, R_V, ext_coefs,
-               st_dist_mass, N_fc, cmpl_rnd, err_rnd, p_lst, model_done):
+               st_dist_mass, N_fc, cmpl_rnd, err_rnd, p_lst):
     '''
     Evaluate each model in the objective function to obtain the fitness of
     each one.
@@ -189,22 +396,22 @@ def evaluation(lkl_method, e_max, err_lst, completeness, max_mag_syn,
         # with timeblock(" Likelihood"):
         lkl = likelihood.main(lkl_method, synth_clust, obs_clust)
 
-        # Check if this model was already processed. Without this check here,
-        # the extinction/immigration operator becomes useless, since the best
-        # solution's likelihood value can vary slightly due to the re-sampling
-        # of the mass distribution.
-        # if model in model_done[0]:
-        # with timeblock(" Compare"):
-        try:
-            # Get old likelihood value for this model.
-            lkl_old = model_done[1][model_done[0].index(model)]
-            # Compare with new value. If old one is smaller, pass old one.
-            # This keeps the likelihood always trending downwards.
-            if lkl_old < lkl:
-                lkl = lkl_old
-        except ValueError:
-            # Model was not processed before.
-            pass
+        # DEPRECATED May 2019, there's no need now that the IMF is
+        # sampled once outside of the best fir process.
+        # # Check if this model was already processed. Without this check here,
+        # # the extinction/immigration operator becomes useless, since the best
+        # # solution's likelihood value can vary slightly due to the re-sampling
+        # # of the mass distribution.
+        # try:
+        #     # Get old likelihood value for this model.
+        #     lkl_old = model_done[1][model_done[0].index(model)]
+        #     # Compare with new value. If old one is smaller, pass old one.
+        #     # This keeps the likelihood always trending downwards.
+        #     if lkl_old < lkl:
+        #         lkl = lkl_old
+        # except ValueError:
+        #     # Model was not processed before.
+        #     pass
 
         # Append data to the lists that will be erased with each call
         # to this function.
@@ -215,16 +422,8 @@ def evaluation(lkl_method, e_max, err_lst, completeness, max_mag_syn,
     # the one with the minimum likelihood value) first.
     # with timeblock(" sort"):
     generation = [x for y, x in sorted(list(zip(lkl_lst, generation_list)))]
-    # Sort list in place putting the likelihood minimum value first.
-    lkl_lst.sort()
 
-    # Append data identifying the isochrone and the obtained
-    # likelihood value to this *persistent* list.
-    # with timeblock(" Append"):
-    model_done[0] = generation + model_done[0]
-    model_done[1] = lkl_lst + model_done[1]
-
-    return generation, lkl_lst, model_done
+    return generation, lkl_lst
 
 
 def random_population(fundam_params, n_ran):
@@ -240,13 +439,13 @@ def random_population(fundam_params, n_ran):
     return p_lst
 
 
-def ext_imm(best_sol, fundam_params, N_pop):
+def ext_imm(best_sol, fundam_params, N_popl):
     '''
     Append a new random population to the best solution so far.
     '''
 
-    # Generate (N_pop-N_el) random solutions.
-    n_ran = N_pop - len(best_sol)
+    # Generate (N_popl-N_el) random solutions.
+    n_ran = N_popl - len(best_sol)
     p_lst_r = random_population(fundam_params, n_ran)
 
     # Append immigrant random population to the best solution.
@@ -277,168 +476,3 @@ def num_binary_digits(fundam_params):
     n_bin = max(int(np.log(max(p_interv)) / np.log(2)) + 1, 1) + 10
 
     return n_bin, p_delta, p_mins
-
-
-def main(lkl_method, e_max, err_lst, completeness, max_mag_syn, fundam_params,
-         obs_clust, theor_tracks, R_V, ext_coefs, st_dist_mass, N_fc, cmpl_rnd,
-         err_rnd, N_pop, N_gen, fit_diff, cross_prob, cross_sel, mut_prob,
-         N_el, N_ei, N_es, flag_print_perc):
-    '''
-    Genetic algorithm. Finds the best fit model-observation.
-    '''
-
-    # Check if N_pop is odd. If it is sum 1 to avoid conflict if cross_sel
-    # '2P' was selected.
-    N_pop += N_pop % 2
-
-    # Get number of binary digits to use.
-    n_bin, p_delta, p_mins = num_binary_digits(fundam_params)
-
-    # Fitness.
-    # Rank-based breeding probability. Independent of the fitness values,
-    # only depends on the total number of chromosomes N_pop and the fitness
-    # differential fit_diff.
-    fitness = [1. / N_pop + fit_diff * (N_pop + 1. - 2. * (i + 1.)) /
-               (N_pop * (N_pop + 1.)) for i in range(N_pop)]
-
-    # *** Initial random population evaluation ***
-    p_lst_r = random_population(fundam_params, N_pop)
-
-    # Stores parameters of the solutions already processed and the likelihoods
-    # obtained.
-    model_done = [[], []]
-
-    # Evaluate initial random solutions in the objective function.
-    generation, lkl, model_done = evaluation(
-        lkl_method, e_max, err_lst, completeness, max_mag_syn, fundam_params,
-        obs_clust, theor_tracks, R_V, ext_coefs, st_dist_mass, N_fc, cmpl_rnd,
-        err_rnd, p_lst_r, model_done)
-
-    # Store best solution for passing along in the 'Elitism' block.
-    best_sol = generation[:N_el]
-
-    # For plotting purposes.
-    lkl_old = [[], []]
-    # Stores indexes where a new best solution was found.
-    new_bs_indx = []
-
-    # Initiate counters.
-    best_sol_count, ext_imm_count = 0, 0
-    # Initiate empty list. Stores the best solution found after each
-    # application of the Extinction/Immigration operator.
-    best_sol_ei = []
-
-    # Print percentage done.
-    milestones = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
-    # Begin processing the populations up to N_gen generations.
-    for i in range(N_gen):
-
-        # *** Selection/Reproduction ***
-        # with timeblock("Selec/Repo"):
-        # Select chromosomes for breeding from the current generation of
-        # solutions according to breed_prob to generate the intermediate
-        # population.
-        int_popul = selection(generation, fitness)
-
-        # Encode intermediate population's solutions into binary
-        # chromosomes.
-        chromosomes = encode(n_bin, p_delta, p_mins, int_popul)
-
-        # *** Breeding ***
-        # with timeblock("Breeding"):
-        # Pair chromosomes by randomly shuffling them.
-        random.shuffle(chromosomes)
-
-        # Apply crossover operation on each subsequent pair of chromosomes
-        # with a cross_prob probability (crossover probability)
-        cross_chrom = crossover(chromosomes, cross_prob, cross_sel)
-
-        # Apply mutation operation on random genes for every chromosome.
-        mut_chrom = mutation(cross_chrom, mut_prob)
-
-        # *** Evaluation ***
-        # Decode the chromosomes into solutions to form the new generation.
-        # with timeblock("Decode"):
-        p_lst_d = decode(fundam_params, n_bin, p_delta, p_mins, mut_chrom)
-
-        # Elitism: make sure that the best N_el solutions from the previous
-        # generation are passed unchanged into this next generation.
-        # with timeblock("Elitism"):
-        p_lst_e = elitism(best_sol, p_lst_d)
-
-        # Evaluate each new solution in the objective function and sort
-        # according to the best solutions found.
-        # with timeblock("Evaluation"):
-        generation, lkl, model_done = evaluation(
-            lkl_method, e_max, err_lst, completeness, max_mag_syn,
-            fundam_params, obs_clust, theor_tracks, R_V, ext_coefs,
-            st_dist_mass, N_fc, cmpl_rnd, err_rnd, p_lst_e, model_done)
-
-        # *** Extinction/Immigration ***
-        # If the best solution has remained unchanged for N_ei
-        # generations, remove all chromosomes but the best ones (extinction)
-        # and fill with random new solutions (immigration).
-
-        # Check if new best solution is equal to the previous one.
-        if generation[0] == best_sol[0]:
-            # Increase counter.
-            best_sol_count += 1
-
-            # Check how many times the best_sol has remained unchanged.
-            # If the number equals N_ei, apply Extinction/Immigration operator.
-            if best_sol_count == N_ei:
-
-                # *** Exit switch ***
-                # If N_es runs of the Ext/Imm operator have been applied with
-                # no changes to the best solution, apply the exit switch,
-                # ie: exit the GA.
-                if best_sol[0] == best_sol_ei:
-                    # Increase Ext/Imm operator counter.
-                    ext_imm_count += 1
-                    if ext_imm_count == N_es:
-                        # Exit generations loop.
-                        if flag_print_perc:
-                            print("  GA exit switch applied.")
-                        break
-                else:
-                    # Update best solution.
-                    best_sol_ei = best_sol[0]
-                    # Reset counter.
-                    ext_imm_count = 0
-
-                # Apply Extinction/Immigration operator.
-                generation = ext_imm(best_sol, fundam_params, N_pop)
-
-                # Reset best solution counter.
-                best_sol_count = 0
-
-        else:
-            # For plotting purposes. Save index where a new best solution
-            # was found.
-            new_bs_indx.append(i)
-            # Update best solution for passing along in the 'Elitism' block.
-            best_sol = generation[:N_el]
-            # Reset counter.
-            best_sol_count = 0
-
-        # For plotting purposes.
-        lkl_old[0].append(lkl[0])
-        # Discard large values associated with empty arrays from mean.
-        lkl_old[1].append(np.mean(np.asarray(lkl)[np.asarray(lkl) < 9.9e08]))
-
-        if flag_print_perc:
-            percentage_complete = (100.0 * (i + 1) / N_gen)
-            while len(milestones) > 0 and percentage_complete >= milestones[0]:
-                print (" {:>3}%  L={:.1f} ({:g}, {:g}, {:g}, {:g}, {:g},"
-                       " {:g})".format(milestones[0], lkl[0], *generation[0]))
-                # Remove that milestone from the list.
-                milestones = milestones[1:]
-
-        # print i, generation[0], lkl[0], len(model_done[0])
-
-    # Store the ML solution as 'map_sol' for consistency.
-    isoch_fit_params = {
-        'map_sol': generation[0], 'lkl_old': lkl_old,
-        'new_bs_indx': new_bs_indx, 'model_done': model_done}
-
-    return isoch_fit_params
