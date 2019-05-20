@@ -1,10 +1,8 @@
 
 import numpy as np
-import matplotlib.pyplot as plt
 from scipy import stats
 from ..out import prep_plots
 from .xy_density import cent_bin as center_bin
-from . import display_cent
 
 
 def main(cld_i, clp, run_mode, center_bw, coords, cl_cent_semi,
@@ -16,7 +14,6 @@ def main(cld_i, clp, run_mode, center_bw, coords, cl_cent_semi,
     """
 
     coord = prep_plots.coord_syst(coords)[0]
-    flag_center_manual = False
 
     if run_mode == 'auto' or run_mode == 'semi' and cent_flag_semi == 0:
 
@@ -58,50 +55,50 @@ def main(cld_i, clp, run_mode, center_bw, coords, cl_cent_semi,
         # Find bin where the center xy coordinates are located.
         bin_cent = center_bin(clp['xedges'], clp['yedges'], kde_cent)
 
-    # If Manual mode is set, display center and ask the user to accept it or
-    # input new one.
-    elif run_mode == 'manual':
+    # DEPRECATED May 2019
+    # # If Manual mode is set, display center and ask the user to accept it or
+    # # input new one.
+    # elif run_mode == 'manual':
 
-        # Restrict the KDE to a smaller area (to improve performance).
-        radius = 0.25 * min(np.ptp(cld_i['x']), np.ptp(cld_i['y']))
-        kde_cent, kde_plot = kde_center_zoom(
-            cld_i['x'], cld_i['y'], clp['kde_approx_cent'], radius)
-        bin_cent = center_bin(clp['xedges'], clp['yedges'], kde_cent)
+    #     # Restrict the KDE to a smaller area (to improve performance).
+    #     radius = 0.25 * min(np.ptp(cld_i['x']), np.ptp(cld_i['y']))
+    #     kde_cent, kde_plot = kde_center_zoom(
+    #         cld_i['x'], cld_i['y'], clp['kde_approx_cent'], radius)
+    #     bin_cent = center_bin(clp['xedges'], clp['yedges'], kde_cent)
 
-        # Show plot with center obtained. Use main magnitude.
-        display_cent.main(
-            cld_i['x'], cld_i['y'], cld_i['mags'][0], kde_cent, bin_cent,
-            clp['hist_2d_g'][1], coords)
-        plt.show()
-        # No KDE plot is 'manual' mode is used.
-        kde_plot = []
+    #     # Show plot with center obtained. Use main magnitude.
+    #     display_cent.main(
+    #         cld_i['x'], cld_i['y'], cld_i['mags'][0], kde_cent, bin_cent,
+    #         clp['hist_2d_g'][1], coords)
+    #     plt.show()
+    #     # No KDE plot is 'manual' mode is used.
+    #     kde_plot = []
 
-        # Ask if the user accepts the center coordinates found, or if new ones
-        # should be used.
-        while True:
-            answer_cen = raw_input('Input new center values? (y/n) ')
-            if answer_cen == 'n':
-                print('Value accepted.')
-                break
-            elif answer_cen == 'y':
-                kde_cent = []
-                try:
-                    kde_cent.append(float(raw_input('x_center: ')))
-                    kde_cent.append(float(raw_input('y_center: ')))
-                    # Store center bin coords for the filtered hist.
-                    bin_cent = center_bin(
-                        clp['xedges'], clp['yedges'], kde_cent)
-                    flag_center_manual = True  # <-- ??
-                    break
-                except Exception:
-                    print("Sorry, input is not valid. Try again.")
-            else:
-                print("Sorry, input is not valid. Try again.")
+    #     # Ask if the user accepts the center coordinates found, or if new ones
+    #     # should be used.
+    #     while True:
+    #         answer_cen = raw_input('Input new center values? (y/n) ')
+    #         if answer_cen == 'n':
+    #             print('Value accepted.')
+    #             break
+    #         elif answer_cen == 'y':
+    #             kde_cent = []
+    #             try:
+    #                 kde_cent.append(float(raw_input('x_center: ')))
+    #                 kde_cent.append(float(raw_input('y_center: ')))
+    #                 # Store center bin coords for the filtered hist.
+    #                 bin_cent = center_bin(
+    #                     clp['xedges'], clp['yedges'], kde_cent)
+    #                 flag_center_manual = True  # <-- ??
+    #                 break
+    #             except Exception:
+    #                 print("Sorry, input is not valid. Try again.")
+    #         else:
+    #             print("Sorry, input is not valid. Try again.")
 
     # Add data to dictionary.
     center_params = {
-        'kde_cent': kde_cent, 'kde_plot': kde_plot, 'bin_cent': bin_cent,
-        'flag_center_manual': flag_center_manual}
+        'kde_cent': kde_cent, 'kde_plot': kde_plot, 'bin_cent': bin_cent}
     clp.update(center_params)
 
     return clp

@@ -84,12 +84,10 @@ NV    INDEF, NAN, NaN, 99.999, 999.99, 99.999
 
 # Mode used to run the code.
 #
-# * mode: auto / semi / manual
+# * mode: auto / semi
 #
 #   - auto: does not require user intervention of any kind.
 #   - semi: takes input values from the 'semi_input.dat' file.
-#   - manual: asks the user for some values (center, radius) but will also
-#     give you the chance to have them automatically calculated.
 #
 #    mode
 MO   auto

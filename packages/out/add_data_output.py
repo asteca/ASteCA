@@ -3,8 +3,7 @@ from ..inp.get_data import flatten
 
 
 def main(
-    npd, pd, flag_center_manual, flag_delta_total,
-    flag_not_stable, flag_delta, flag_radius_manual, flag_2pk_conver,
+    npd, pd, flag_delta_total, flag_not_stable, flag_delta, flag_2pk_conver,
     flag_3pk_conver, flag_memb_par, flag_num_memb_low, K_memb_num,
     K_conct_par, cont_index, n_memb, memb_par, n_memb_da, frac_cl_area,
     kde_cent, clust_rad, e_rad, core_rad, e_core, tidal_rad, e_tidal,
@@ -20,7 +19,7 @@ def main(
 
     # Create list containing all the flags.
     flags_list = [
-        flag_center_manual, flag_radius_manual, flag_delta_total,
+        flag_delta_total,
         flag_not_stable, flag_delta, flag_3pk_no_conver,
         flag_num_memb_low, flag_memb_par]
 
@@ -29,7 +28,7 @@ def main(
 
     # Sum all flags to obtain the FC value (flags count) and append to the
     # end of the list. Do not count the manual flags, hence the [2:].
-    int_flags.append(sum(int_flags[2:]))
+    int_flags.append(sum(int_flags))
 
     # Round structure parameters.
     cr_r = ["{:.0f}".format(_) for _ in
@@ -75,8 +74,8 @@ def main(
 {:>10.2E}\
 '''.format(*line_f))
         # Flags.
-        f_out.write('''{:>8} {:>2} {:>2} {:>2} {:>2} {:>2} {:>2} \
-{:>2} {:>3}'''.format(*int_flags))
+        f_out.write('''{:>8} {:>2} {:>2} {:>2} {:>2} {:>2} {:>3}'''.format(
+            *int_flags))
         f_out.write('\n')
 
     print("Analysis results added to output file.")

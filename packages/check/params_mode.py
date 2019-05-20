@@ -10,7 +10,7 @@ def check(mypath, cl_files, run_mode, **kwargs):
     """
 
     # Check mode.
-    if run_mode not in ('auto', 'semi', 'manual'):
+    if run_mode not in ('auto', 'semi'):
         sys.exit("ERROR: 'mode' value selected ('{}') is not valid.".format(
             run_mode))
 

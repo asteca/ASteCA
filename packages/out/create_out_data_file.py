@@ -74,9 +74,6 @@ def main(npd):
 # b: Binary fraction.\n\
 # Nt: Number of samples used to estimate the parameters values.\n\
 #\n\
-# M1 Indicates that the center was set manually.\n\
-# M2 Indicates that the radius was set manually.\n\
-#\n\
 # f1 The background value is smaller than a third of the maximum radial\n\
 #    density value.\n\
 # f2 Not enough points found stabilized around the background value -->\n\
@@ -104,6 +101,6 @@ E_mean      E_MAP   E_median     E_mode       16th       84th        std    R^2 
 d_mean      d_MAP   d_median     d_mode       16th       84th        std    R^2     \
 M_mean      M_MAP   M_median     M_mode       16th       84th        std    R^2     \
 b_mean      b_MAP   b_median     b_mode       16th       84th        std    R^2     \
-    Nt      M1 M2 f1 f2 f3 f4 f5 f6  FC\n".format(
+    Nt      f1 f2 f3 f4 f5 f6  FC\n".format(
                 __version__, now_time, now_time))
             print('Output data file created.')
