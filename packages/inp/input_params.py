@@ -223,7 +223,6 @@ def main(mypath, pars_f_path):
                 elif reader[0] == 'MF':
                     IMF_name = str(reader[1])
                     m_high = float(reader[2])
-                    m_sample_flag = True if reader[3] in true_lst else False
                     N_IMF_interp = int(reader[4])
                     m_step = float(reader[5])
                 elif reader[0] == 'BI_m':
@@ -315,8 +314,8 @@ def main(mypath, pars_f_path):
         # Synthetic cluster parameters
         'evol_track': evol_track, 'za_steps': za_steps,
         'max_mag': max_mag, 'IMF_name': IMF_name, 'm_high': m_high,
-        'm_sample_flag': m_sample_flag, 'N_IMF_interp': N_IMF_interp,
-        'm_step': m_step, 'R_V': R_V, 'bin_mr': bin_mr,
+        'N_IMF_interp': N_IMF_interp, 'm_step': m_step, 'R_V': R_V,
+        'bin_mr': bin_mr,
         # parameters ranges
         'par_ranges': par_ranges,
         # ptemcee algorithm parameters.

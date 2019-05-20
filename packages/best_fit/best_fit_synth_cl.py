@@ -35,8 +35,7 @@ def main(clp, pd):
         # Obtain mass distribution using the selected IMF. We run it once
         # because the array only depends on the IMF selected.
         st_dist_mass = imf.main(
-            pd['IMF_name'], pd['m_high'], pd['m_sample_flag'],
-            pd['fundam_params'][4])
+            pd['IMF_name'], pd['m_high'], pd['fundam_params'][4])
 
         # Store the number of defined filters and colors.
         N_fc = [len(pd['filters']), len(pd['colors'])]
