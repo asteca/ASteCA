@@ -247,7 +247,10 @@ def error_bars(stars_phot, x_min_cmd, err_lst, all_flag=None):
     if all_flag == 'all':
         mmag = np.array(stars_phot)
     else:
-        mmag = np.array(list(zip(*list(zip(*stars_phot))[3]))[0])
+        if stars_phot:
+            mmag = np.array(list(zip(*list(zip(*stars_phot))[3]))[0])
+        else:
+            mmag = np.array([])
 
     x_val, mag_y, xy_err = [], [], []
     if mmag.any():
