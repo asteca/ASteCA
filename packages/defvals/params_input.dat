@@ -47,8 +47,12 @@ MR   num
 # * coords: px / deg
 #   Indicates if the coordinates of the observed frame are in pixels or degrees.
 #
-#   id_star   x/ra  y/dec  coords 
-PI        0      1      2      px
+# * project: y / n
+#   If 'coords=deg', indicate whether to use a sinusoidal projection on the
+#   data.
+#
+#   id_star   x/ra   y/dec   coords   project
+PI        0      1       2       px         y
 
 # Columns for the photometric data in the data file. The IDs for the supported
 # photometric systems are stored in the 'phot_systs.dat' file.

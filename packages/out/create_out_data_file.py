@@ -92,9 +92,9 @@ def main(npd):
 #    cluster, more than one cluster present in the frame, variable or too\n\
 #    crowded field, etc.\n\
 #\n\
-#NAME                 c_x      c_y     r_cl    e_rcl      r_c     e_rc      \
-r_t     e_rt      kcp      CI   n_memb_k     n_memb  n_memb_da  memb_par     \
-a_f     \
+#NAME                   c_x        c_y       r_cl      e_rcl        r_c       \
+e_rc        r_t       e_rt      kcp      CI   n_memb_k     n_memb  \
+n_memb_da  memb_par     a_f     \
 z_mean      z_MAP   z_median     z_mode       16th       84th        std    R^2     \
 a_mean      a_MAP   a_median     a_mode       16th       84th        std    R^2     \
 E_mean      E_MAP   E_median     E_mode       16th       84th        std    R^2     \

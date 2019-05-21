@@ -61,7 +61,11 @@ def main(mypath, pars_f_path):
                 elif reader[0] == 'MR':
                     read_mode = str(reader[1])
                 elif reader[0] == 'PI':
-                    id_coords = reader[1:]
+                    id_ids = reader[1]
+                    id_xdata = reader[2]
+                    id_ydata = reader[3]
+                    coords = reader[4]
+                    project = True if reader[5] in true_lst else False
                 elif reader[0] == 'PM':
                     id_mags = reader[1:]
                 elif reader[0] == 'PC':
@@ -289,7 +293,9 @@ def main(mypath, pars_f_path):
     pd = {
         'up_flag': up_flag, 'run_mode': run_mode, 'nanvals': nanvals,
         'read_mode': read_mode,
-        'id_coords': id_coords, 'id_mags': id_mags, 'id_cols': id_cols,
+        'id_ids': id_ids, 'id_xdata': id_xdata, 'id_ydata': id_ydata,
+        'coords': coords, 'project': project, 'id_mags': id_mags,
+        'id_cols': id_cols,
         'id_kinem': id_kinem,
         'flag_make_plot': flag_make_plot, 'plot_frmt': plot_frmt,
         'plot_dpi': plot_dpi,
