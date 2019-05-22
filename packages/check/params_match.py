@@ -153,7 +153,7 @@ def check(
             m_range[0] = 10.
         # Check mass range.
         try:
-            if m_step > 100 and m_range[-1] > 1e5:
+            if (m_range[1] - m_range[0]) / m_step > 100 and m_range[1] > 1e5:
                 print("  WARNING: the number of masses defined is > 100 and\n"
                       "  the max mass is large ({:.0f}). This could cause\n"
                       "  memory issues when sampling the IMF.\n".format(

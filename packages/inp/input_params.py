@@ -227,8 +227,8 @@ def main(mypath, pars_f_path):
                 elif reader[0] == 'MF':
                     IMF_name = str(reader[1])
                     m_high = float(reader[2])
-                    N_IMF_interp = int(reader[4])
-                    m_step = float(reader[5])
+                    N_IMF_interp = int(reader[3])
+                    m_step = float(reader[4])
                 elif reader[0] == 'BI_m':
                     bin_mr = float(reader[1])
                 elif reader[0] == 'RV':

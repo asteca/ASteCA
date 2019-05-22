@@ -18,19 +18,19 @@ def main(npd, pd, isoch_fit_params, isoch_fit_errors, **kwargs):
         gs = gridspec.GridSpec(12, 12)
 
         # Title and version for the plot.
-        m, s = divmod(isoch_fit_params['bf_elapsed'], 60)
-        h, m = divmod(m, 60)
+        m_bf, s_bf = divmod(isoch_fit_params['bf_elapsed'], 60)
+        h_bf, m_bf = divmod(m_bf, 60)
 
         xf, yf = .02, .999
         xt, yt = .5, 1.005
         if pd['best_fit_algor'] == 'boot+GA':
-            m, s = divmod(isoch_fit_params['btstrp_t'], 60)
-            h, m = divmod(m, 60)
+            m_btsr, s_btsr = divmod(isoch_fit_params['btstrp_t'], 60)
+            h_btsr, m_btsr = divmod(m_btsr, 60)
             p_str = (
                 r"$N_{{pop}}={},\,N_{{gen}}={},\,N_{{btstrp}}={}$ "
                 "({:.0f}h{:.0f}m)").format(
                     pd['N_pop'], pd['N_gen'], isoch_fit_params['N_bootstrap'],
-                    h, m)
+                    h_btsr, m_btsr)
             if isoch_fit_params['N_bootstrap'] == 0:
                 xt = 0.83
                 xf, yf = .67, 1.01
@@ -43,7 +43,7 @@ def main(npd, pd, isoch_fit_params, isoch_fit_errors, **kwargs):
                 " adapt={}").format(nwalkers, nburn, nsteps, mcmc_param)
         add_version_plot.main(x_fix=xf, y_fix=yf)
         plt.suptitle(
-            ("{} | {:.0f}h{:.0f}m").format(p_str, h, m), x=xt, y=yt,
+            ("{} | {:.0f}h{:.0f}m").format(p_str, h_bf, m_bf), x=xt, y=yt,
             fontsize=14)
 
         # Best fitting process plots.
