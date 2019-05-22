@@ -5,7 +5,7 @@ from os.path import join
 from . import add_version_plot
 from . import mp_best_fit1_GA
 from . import mp_best_fit1_mcmc
-from . import cornerPlot
+from . import cornerPlot, tracePlot
 from . import prep_plots
 
 
@@ -35,12 +35,12 @@ def main(npd, pd, isoch_fit_params, isoch_fit_errors, **kwargs):
                 xt = 0.83
                 xf, yf = .67, 1.01
         elif pd['best_fit_algor'] == 'ptemcee':
-            nwalkers, nburn, nsteps, mcmc_param = pd['nwalkers_ptm'],\
+            nwalkers, nburn, nsteps, pt_adapt = pd['nwalkers_ptm'],\
                 pd['nburn_ptm'], isoch_fit_params['nsteps_ptm'],\
                 pd['pt_adapt']
             p_str = (
                 "chains={:.0f}, burn={:.0f}, steps={:.0f},"
-                " adapt={}").format(nwalkers, nburn, nsteps, mcmc_param)
+                " adapt={}").format(nwalkers, nburn, nsteps, pt_adapt)
         add_version_plot.main(x_fix=xf, y_fix=yf)
         plt.suptitle(
             ("{} | {:.0f}h{:.0f}m").format(p_str, h_bf, m_bf), x=xt, y=yt,
@@ -48,12 +48,22 @@ def main(npd, pd, isoch_fit_params, isoch_fit_errors, **kwargs):
 
         # Best fitting process plots.
         if pd['best_fit_algor'] == 'boot+GA':
-            min_max_p = prep_plots.param_ranges(
-                pd['best_fit_algor'], pd['fundam_params'],
-                isoch_fit_params['varIdxs'], isoch_fit_params['params_boot'])
 
-            if isoch_fit_params['N_bootstrap'] > 0:
-                makeCornerPlot(pd, npd, isoch_fit_params, gs, min_max_p)
+            if isoch_fit_params['N_bootstrap'] > 2:
+                pos0 = (0, 2, 4, 8)
+                pos1 = (
+                    (0, 2, 2, 4), (2, 4, 4, 6), (4, 6, 6, 8),
+                    (6, 8, 8, 10), (8, 10, 10, 12), (6, 8, 10, 12))
+                min_max_p = prep_plots.param_ranges(
+                    pd['best_fit_algor'], pd['fundam_params'],
+                    isoch_fit_params['varIdxs'],
+                    isoch_fit_params['params_boot'])
+                sharedPlots(pd, npd, isoch_fit_params, gs, min_max_p)
+            else:
+                pos0 = (0, 2, 8, 12)
+                pos1 = (
+                    (2, 4, 8, 10), (2, 4, 10, 12), (4, 6, 8, 10),
+                    (4, 6, 10, 12), (6, 8, 8, 10), (6, 8, 10, 12))
 
             min_max_p = prep_plots.param_ranges(
                 pd['best_fit_algor'], pd['fundam_params'])
@@ -62,7 +72,7 @@ def main(npd, pd, isoch_fit_params, isoch_fit_errors, **kwargs):
                 isoch_fit_params['lkl_mean'])
             args = [
                 # pl_GA_lkl: Likelihood evolution for the GA.
-                gs, l_min_max, isoch_fit_params['lkl_best'],
+                gs, pos0, l_min_max, isoch_fit_params['lkl_best'],
                 isoch_fit_params['lkl_mean'], isoch_fit_params['OF_models'],
                 isoch_fit_params['new_bs_indx'], pd['N_pop'], pd['N_gen'],
                 pd['fit_diff'], pd['cross_prob'], pd['cross_sel'],
@@ -73,24 +83,24 @@ def main(npd, pd, isoch_fit_params, isoch_fit_errors, **kwargs):
 
             arglist = [
                 # pl_lkl_scatt: Parameter likelihood density plot.
-                [gs, '$z$', min_max_p, isoch_fit_params['map_sol'],
+                [gs, pos1, r'$z$', min_max_p, isoch_fit_params['map_sol'],
                  isoch_fit_errors, isoch_fit_params['models_GA'],
                  isoch_fit_params['lkls_GA']],
-                [gs, '$log(age)$', min_max_p, isoch_fit_params['map_sol'],
-                 isoch_fit_errors, isoch_fit_params['models_GA'],
-                 isoch_fit_params['lkls_GA']],
-                [gs, '$E_{{(B-V)}}$', min_max_p, isoch_fit_params['map_sol'],
-                 isoch_fit_errors, isoch_fit_params['models_GA'],
-                 isoch_fit_params['lkls_GA']],
-                [gs, '$(m-M)_o$', min_max_p, isoch_fit_params['map_sol'],
-                 isoch_fit_errors, isoch_fit_params['models_GA'],
-                 isoch_fit_params['lkls_GA']],
-                [gs, '$M\,(M_{{\odot}})$', min_max_p,
+                [gs, pos1, r'$log(age)$', min_max_p,
                  isoch_fit_params['map_sol'], isoch_fit_errors,
                  isoch_fit_params['models_GA'], isoch_fit_params['lkls_GA']],
-                [gs, '$b_{{frac}}$', min_max_p, isoch_fit_params['map_sol'],
-                 isoch_fit_errors, isoch_fit_params['models_GA'],
-                 isoch_fit_params['lkls_GA']]
+                [gs, pos1, r'$E_{{(B-V)}}$', min_max_p,
+                 isoch_fit_params['map_sol'], isoch_fit_errors,
+                 isoch_fit_params['models_GA'], isoch_fit_params['lkls_GA']],
+                [gs, pos1, r'$(m-M)_o$', min_max_p,
+                 isoch_fit_params['map_sol'], isoch_fit_errors,
+                 isoch_fit_params['models_GA'], isoch_fit_params['lkls_GA']],
+                [gs, pos1, r'$M\,(M_{{\odot}})$', min_max_p,
+                 isoch_fit_params['map_sol'], isoch_fit_errors,
+                 isoch_fit_params['models_GA'], isoch_fit_params['lkls_GA']],
+                [gs, pos1, r'$b_{{frac}}$', min_max_p,
+                 isoch_fit_params['map_sol'], isoch_fit_errors,
+                 isoch_fit_params['models_GA'], isoch_fit_params['lkls_GA']]
             ]
             for n, args in enumerate(arglist, 1):
                 mp_best_fit1_GA.plot(n, *args)
@@ -101,7 +111,7 @@ def main(npd, pd, isoch_fit_params, isoch_fit_errors, **kwargs):
                 pd['best_fit_algor'], pd['fundam_params'],
                 isoch_fit_params['varIdxs'], isoch_fit_params['pars_chains'])
 
-            makeCornerPlot(pd, npd, isoch_fit_params, gs, min_max_p)
+            sharedPlots(pd, npd, isoch_fit_params, gs, min_max_p)
 
             # Parallel Coordinates plot
             # mp_best_fit1_mcmc.plot(2, *args)
@@ -129,27 +139,13 @@ def main(npd, pd, isoch_fit_params, isoch_fit_errors, **kwargs):
                 isoch_fit_params['tswaps_afs']]
             mp_best_fit1_mcmc.plot(3, *args)
 
-            # pl_param_chain: Parameters sampler chains.
-            for p in ['metal', 'age', 'ext', 'dist', 'mass', 'binar']:
-                args = [
-                    p, gs, pd['best_fit_algor'], isoch_fit_params['mean_sol'],
-                    min_max_p, nwalkers, nburn, nsteps,
-                    isoch_fit_params['mcmc_trace'],
-                    isoch_fit_params['varIdxs'],
-                    isoch_fit_params['pars_chains_bi'],
-                    isoch_fit_params['pars_chains'],
-                    isoch_fit_params['acorr_t'],
-                    isoch_fit_params['med_at_c'],
-                    isoch_fit_params['mcmc_ess']]
-                mp_best_fit1_mcmc.plot(4, *args)
-
             # pl_tau
             args = [
                 'Tau', gs, isoch_fit_params['N_steps_conv'],
                 isoch_fit_params['N_conv'], isoch_fit_params['tol_conv'],
                 isoch_fit_params['tau_index'],
                 isoch_fit_params['tau_autocorr']]
-            mp_best_fit1_mcmc.plot(5, *args)
+            mp_best_fit1_mcmc.plot(4, *args)
             # TODO re-implement when/if code is fixed
             # # pl_mESS
             # args = [
@@ -162,16 +158,16 @@ def main(npd, pd, isoch_fit_params, isoch_fit_errors, **kwargs):
                 'lags', gs, isoch_fit_params['varIdxs'],
                 isoch_fit_params['lag_zero'],
                 isoch_fit_params['acorr_function']]
-            mp_best_fit1_mcmc.plot(7, *args)
+            mp_best_fit1_mcmc.plot(5, *args)
             # pl_GW
             args = [
                 'Geweke', gs, isoch_fit_params['varIdxs'],
                 isoch_fit_params['geweke_z']]
-            mp_best_fit1_mcmc.plot(8, *args)
+            mp_best_fit1_mcmc.plot(6, *args)
             # pl_tau_histo
             args = [
                 'Tau histo', gs, isoch_fit_params['all_taus']]
-            mp_best_fit1_mcmc.plot(9, *args)
+            mp_best_fit1_mcmc.plot(7, *args)
 
         # Generate output file.
         try:
@@ -191,7 +187,7 @@ def main(npd, pd, isoch_fit_params, isoch_fit_errors, **kwargs):
         print("<<Skip D1 block plot>>")
 
 
-def makeCornerPlot(pd, npd, isoch_fit_params, gs, min_max_p):
+def sharedPlots(pd, npd, isoch_fit_params, gs, min_max_p):
     """
     """
     # fig = plt.figure(figsize=(30, 30))
@@ -201,9 +197,20 @@ def makeCornerPlot(pd, npd, isoch_fit_params, gs, min_max_p):
     if pd['best_fit_algor'] == 'boot+GA':
         trace = isoch_fit_params['params_boot']
         msol = 'ML'
+        best_sol = isoch_fit_params['map_sol']
+        traceplot_args = []
+        post_trace, pre_trace = isoch_fit_params['params_boot'], None
+
     elif pd['best_fit_algor'] == 'ptemcee':
         trace = isoch_fit_params['mcmc_trace']
         msol = 'MAP'
+        best_sol = isoch_fit_params['mean_sol']
+        traceplot_args = (
+            pd['nwalkers_ptm'], pd['nburn_ptm'],
+            isoch_fit_params['nsteps_ptm'], isoch_fit_params['acorr_t'],
+            isoch_fit_params['med_at_c'], isoch_fit_params['mcmc_ess'])
+        post_trace, pre_trace = isoch_fit_params['pars_chains'],\
+            isoch_fit_params['pars_chains_bi']
 
     # pl_2_param_dens: Param vs param density map.
     for p2 in [
@@ -218,14 +225,24 @@ def makeCornerPlot(pd, npd, isoch_fit_params, gs, min_max_p):
         args = [p2, gs, min_max_p2, isoch_fit_params['varIdxs'], trace]
         cornerPlot.plot(0, *args)
 
+    par_list = ['metal', 'age', 'ext', 'dist', 'mass', 'binar']
+
     # pl_param_pf: Parameters probability functions.
-    for p in ['metal', 'age', 'ext', 'dist', 'mass', 'binar']:
+    for p in par_list:
         args = [p, gs, min_max_p, isoch_fit_params['varIdxs'],
                 isoch_fit_params['mean_sol'], isoch_fit_params['map_sol'],
                 isoch_fit_params['median_sol'], isoch_fit_params['mode_sol'],
                 isoch_fit_params['param_r2'], isoch_fit_params['pardist_kde'],
                 trace, msol]
         cornerPlot.plot(1, *args)
+
+    # pl_param_chain: Parameters sampler chains.
+    for p in par_list:
+        args = [
+            p, gs, pd['best_fit_algor'], best_sol,
+            min_max_p, traceplot_args, trace,
+            isoch_fit_params['varIdxs'], post_trace, pre_trace]
+        tracePlot.plot(0, *args)
 
     # # Generate output file.
     # try:

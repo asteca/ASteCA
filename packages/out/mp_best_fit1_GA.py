@@ -8,12 +8,13 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 
 def pl_GA_lkl(
-    gs, l_min_max, lkl_best, lkl_mean, OF_models, new_bs_indx, N_pop, N_gen,
-        fit_diff, cross_prob, cross_sel, mut_prob, N_el, N_ei, N_es, N_b):
+    gs, pos, l_min_max, lkl_best, lkl_mean, OF_models, new_bs_indx, N_pop,
+    N_gen, fit_diff, cross_prob, cross_sel, mut_prob, N_el, N_ei, N_es,
+        N_b):
     '''
     Likelihood evolution for the GA.
     '''
-    ax = plt.subplot(gs[0:2, 8:12])
+    ax = plt.subplot(gs[pos[0]:pos[1], pos[2]:pos[3]])
     plt.xlim(-0.5, len(lkl_best) + int(0.01 * len(lkl_best)))
     plt.ylim(l_min_max[0], l_min_max[1])
     # Set minor ticks
@@ -54,25 +55,33 @@ def pl_GA_lkl(
     leg.get_frame().set_alpha(0.7)
 
 
-def pl_lkl_scatt(gs, ld_p, min_max_p, cp_r, cp_e, models_GA, lkls_GA):
+def pl_lkl_scatt(gs, pos, ld_p, min_max_p, cp_r, cp_e, models_GA, lkls_GA):
     '''
     Parameter likelihood scatter plot.
     '''
     # Define parameters for upper and lower plots.
-    if ld_p == '$z$':
-        ax, cp, ci, zlab = plt.subplot(gs[2:4, 8:10]), 0, 1, '$log(age)$'
+    if ld_p == r'$z$':
+        ax, cp, ci, zlab = plt.subplot(
+            gs[pos[0][0]:pos[0][1], pos[0][2]:pos[0][3]]), 0, 1, r'$log(age)$'
         plt.ylabel('Likelihood', fontsize=12)
-    elif ld_p == '$log(age)$':
-        ax, cp, ci, zlab = plt.subplot(gs[2:4, 10:12]), 1, 2, '$E_{{(B-V)}}$'
-    elif ld_p == '$E_{{(B-V)}}$':
-        ax, cp, ci, zlab = plt.subplot(gs[4:6, 8:10]), 2, 3, '$(m-M)_o$'
-    elif ld_p == '$(m-M)_o$':
-        ax, cp, ci, zlab = plt.subplot(gs[4:6, 10:12]), 3, 1, '$log(age)$'
-    elif ld_p == '$M\,(M_{{\odot}})$':
-        ax, cp, ci, zlab = plt.subplot(gs[6:8, 8:10]), 4, 5, '$b_{{frac}}$'
-    elif ld_p == '$b_{{frac}}$':
-        ax, cp, ci, zlab = plt.subplot(gs[6:8, 10:12]), 5, 4,\
-            '$M\,(M_{{\odot}})$'
+    elif ld_p == r'$log(age)$':
+        ax, cp, ci, zlab = plt.subplot(
+            gs[pos[1][0]:pos[1][1], pos[1][2]:pos[1][3]]), 1, 2,\
+            r'$E_{{(B-V)}}$'
+    elif ld_p == r'$E_{{(B-V)}}$':
+        ax, cp, ci, zlab = plt.subplot(
+            gs[pos[2][0]:pos[2][1], pos[2][2]:pos[2][3]]), 2, 3, r'$(m-M)_o$'
+    elif ld_p == r'$(m-M)_o$':
+        ax, cp, ci, zlab = plt.subplot(
+            gs[pos[3][0]:pos[3][1], pos[3][2]:pos[3][3]]), 3, 1, r'$log(age)$'
+    elif ld_p == r'$M\,(M_{{\odot}})$':
+        ax, cp, ci, zlab = plt.subplot(
+            gs[pos[4][0]:pos[4][1], pos[4][2]:pos[4][3]]), 4, 5,\
+            r'$b_{{frac}}$'
+    elif ld_p == r'$b_{{frac}}$':
+        ax, cp, ci, zlab = plt.subplot(
+            gs[pos[5][0]:pos[5][1], pos[5][2]:pos[5][3]]), 5, 4,\
+            r'$M\,(M_{{\odot}})$'
 
     # Parameter values and errors.
     xp, e_xp = cp_r[cp], cp_e[cp][2]

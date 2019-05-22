@@ -1,7 +1,6 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.ndimage.filters import uniform_filter1d
 
 
 def xxx():
@@ -22,81 +21,6 @@ def pl_MAP_lkl(dummy, gs, prob_mean, map_lkl, map_lkl_final):
     plt.xlabel("steps", fontsize=14)
     plt.ylabel("Lkl (MAP)", fontsize=14)
     ax.legend(fontsize='small', loc=0)  # , handlelength=0.)
-
-
-def pl_param_chain(
-    par_name, gs, best_fit_algor, mean_sol, min_max_p, nwalkers, nburn, nsteps,
-        model_done, varIdxs, pre_bi, post_bi, acorr_t, med_at_c,
-        mcmc_ess):
-    '''
-    Parameter sampler chain.
-    '''
-    plot_dict = {
-        'metal': [8, 12, 0, 1, 0], 'age': [8, 12, 1, 2, 1],
-        'ext': [8, 12, 2, 3, 2], 'dist': [8, 12, 3, 4, 3],
-        'mass': [8, 12, 4, 5, 4], 'binar': [8, 12, 5, 6, 5]
-    }
-
-    labels = [r'$z$', r'$\log(age)$', r'$E_{{(B-V)}}$', r'$(m-M)_o$',
-              r'$M\,(M_{{\odot}})$', r'$b_{{frac}}$']
-
-    gs_x1, gs_x2, gs_y1, gs_y2, cp = plot_dict[par_name]
-    ax = plt.subplot(gs[gs_y1:gs_y2, gs_x1:gs_x2])
-    if cp == 5:
-        plt.xlabel("Steps")
-    else:
-        ax.tick_params(labelbottom=False)
-    plt.ylabel(labels[cp])
-    if best_fit_algor in ('ptemcee', 'emcee'):
-        N_bi, N_tot = nburn, nburn + nsteps
-    elif best_fit_algor == 'abc':
-        N_bi, N_tot = nburn, nsteps
-    ax.set_xlim(0, N_tot)
-
-    if cp in varIdxs:
-        c_model = varIdxs.index(cp)
-
-        # Chain with median Tau
-        # Burn-in stage
-        pre_bi_max_at = pre_bi[c_model][med_at_c[c_model]]
-        plt.plot(range(N_bi), pre_bi_max_at, c='grey', lw=.5, alpha=0.5)
-        # Post burn-in.
-        post_bi_max_at = post_bi[c_model][med_at_c[c_model]]
-        plt.plot(np.arange(N_bi, N_tot), post_bi_max_at, c='k', lw=.8,
-                 ls='-', alpha=0.5)
-        # # Best chain
-        # # Burn-in stage
-        # pre_bi_min_at = pre_bi[c_model][min_at_c[c_model]]
-        # plt.plot(range(N_bi), pre_bi_min_at, c='grey', lw=.5, alpha=0.5)
-        # # Post burn-in.
-        # post_bi_min_at = post_bi[c_model][min_at_c[c_model]]
-        # plt.plot(
-        #     np.arange(N_bi, N_tot), post_bi_min_at, c='k', lw=.8, alpha=0.5)
-
-        # Filtered mean of all chains.
-        N = post_bi.shape[-1]
-        xavr = uniform_filter1d(
-            np.mean(post_bi[c_model], axis=0), int(.02 * N))
-        plt.plot(np.arange(N_bi, N_tot), xavr, c='g')
-
-        # Mean
-        plt.axhline(
-            y=float(mean_sol[cp]), linestyle='--', color='blue', zorder=4)
-        #  16th and 84th percentiles (1 sigma) around median.
-        ph = np.percentile(model_done[c_model], 84)
-        pl = np.percentile(model_done[c_model], 16)
-        plt.axhline(y=ph, linestyle=':', color='orange', zorder=4)
-        plt.axhline(y=pl, linestyle=':', color='orange', zorder=4)
-        # plt.axhline(
-        #     y=float(cp_r[cp]), color='k', ls='--', lw=1.2, zorder=4,
-        #     label=r"$\tau={:.0f}\;(\hat{{n}}_{{eff}}={:.0f})$".format(
-        #         acorr_t[c_model], mcmc_ess[c_model]))
-
-        ax.set_title(
-            r"$\hat{{\tau}}_{{c}}={:.0f}\;(\hat{{n}}_{{eff}}={:.0f})$".format(
-                acorr_t[c_model], mcmc_ess[c_model]))
-        ax.set_ylim(min_max_p[cp][0], min_max_p[cp][1])
-        # ax.legend(fontsize='small', loc=0, handlelength=0.)
 
 
 def pl_betas(dummy, gs, best_fit_algor, betas_pt):
@@ -293,12 +217,11 @@ def plot(N, *args):
         1: [pl_MAF, ' MAF vs steps'],
         2: [pl_betas, ' Betas vs steps'],
         3: [pl_Tswaps, ' Tswaps AFs vs steps'],
-        4: [pl_param_chain, args[0] + ' sampler chain'],
-        5: [pl_tau, args[0]],
-        6: [pl_mESS, args[0]],
-        7: [pl_lags, args[0]],
-        8: [pl_GW, args[0]],
-        9: [pl_tau_histo, args[0]]
+        4: [pl_tau, args[0]],
+        # 5: [pl_mESS, args[0]],
+        5: [pl_lags, args[0]],
+        6: [pl_GW, args[0]],
+        7: [pl_tau_histo, args[0]]
     }
 
     fxn = plt_map.get(N, None)[0]
