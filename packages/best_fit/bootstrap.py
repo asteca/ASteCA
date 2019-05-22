@@ -54,10 +54,9 @@ def main(
     available_secs = max_secs - isoch_fit_params['OF_elapsed']
 
     # Holds the parameter values obtained by the bootstrap process.
-    params_boot, N_steps_availb = [], 0
+    params_boot, N_steps_availb, btstrp_start_t = [], 0, t.time()
     if pd['hperc_btstrp'] > 0.:
 
-        btstrp_start_t = t.time()
         print('Begin bootstrap process ({} | {}).'.format(
             pd['N_pop_btstrp'], pd['N_step_btstrp']))
 
