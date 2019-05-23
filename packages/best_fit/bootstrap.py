@@ -5,7 +5,7 @@ import random
 from . import genetic_algorithm, de_algorithm
 from . import obs_clust_prepare
 from .. import update_progress
-from .bf_common import varPars, modeKDE, fillParams, r2Dist
+from .bf_common import random_population, varPars, modeKDE, fillParams, r2Dist
 
 
 def main(
@@ -30,11 +30,13 @@ def main(
     # pd['best_fit_algor'] = 'boot+DE'
 
     if pd['best_fit_algor'] == 'boot+GA':
-        # Use random initial population
-        init_pop, flag_print_perc = [], True
         # Initial number of steps for the numerical optimizer applied over
         # the observed data.
         N_pop_init, N_gen_init = pd['N_pop'], pd['N_gen']
+        # Use random initial population
+        init_pop = random_population(
+            pd['fundam_params'], (0, 1, 2, 3, 4, 5), N_pop_init).tolist()
+        flag_print_perc = True
         argsOF = [
             pd, clp, max_mag_syn, obs_clust, ext_coefs, st_dist_mass, N_fc,
             cmpl_rnd, err_rnd, available_secs, init_pop, N_pop_init,
