@@ -118,22 +118,33 @@ def pl_phot_err(
                 starsPlot('accpt_out', mmag_out_acpt,
                           list(zip(*list(zip(*stars_out_c))[j]))[k + 1])
 
-        # Plot legend in the main magnitude plot.
         if j == 4:
-            # Legends.
+            # Plot legend in the main magnitude plot.
             leg = plt.legend(fancybox=True, loc='upper left', scatterpoints=1,
                              fontsize=16, markerscale=2.5, prop={'size': 13})
             # Set the alpha value of the legend.
             leg.get_frame().set_alpha(0.7)
-
-        if j in [4, 6]:
-            ax.hlines(y=em_float[0], xmin=x_min, xmax=x_max, color='k',
+            # Max error cut
+            max_cut_y = em_float[0]
+            ax.hlines(y=max_cut_y, xmin=x_min, xmax=x_max, color='k',
                       linestyles='dashed', zorder=4)
-        if j == 4:
+            ob = offsetbox.AnchoredText(
+                r"$max={}$ mag".format(em_float[0]), loc=1, prop=dict(size=9))
+            ob.patch.set(alpha=0.7)
+            ax.add_artist(ob)
             # Plot error curve
             plt.plot(err_bar_all[1], err_bar_all[2][0], color='#ffff00',
                      ls='--', zorder=5)
+
         elif j == 6:
+            max_cut_y = em_float[1 + k]
+            ax.hlines(y=max_cut_y, xmin=x_min, xmax=x_max, color='k',
+                      linestyles='dashed', zorder=4)
+            ob = offsetbox.AnchoredText(
+                r"$max={}$ mag".format(em_float[1 + k]), loc=2,
+                prop=dict(size=9))
+            ob.patch.set(alpha=0.7)
+            ax.add_artist(ob)
             plt.plot(err_bar_all[1], err_bar_all[2][k + 1], color='#ffff00',
                      ls='--', zorder=5)
             if k == 0:
@@ -143,11 +154,17 @@ def pl_phot_err(
                         len(stars_out_rjct_c) + len(cl_region_rjct_c)),
                     fontsize=9)
         else:
-            idx = k + 1 if k in (0, 1) else k
-            ax.hlines(y=em_float[idx], xmin=x_min, xmax=x_max, color='k',
+            max_cut_y = em_float[-(3 - k)]
+            unit = {0: '[mas]', 1: '[mas/yr]'}
+            ax.hlines(y=max_cut_y, xmin=x_min, xmax=x_max, color='k',
                       linestyles='dashed', zorder=4)
+            ob = offsetbox.AnchoredText(
+                r"$max={}$ {}".format(em_float[-(3 - k)], unit[k]), loc=2,
+                prop=dict(size=9))
+            ob.patch.set(alpha=0.7)
+            ax.add_artist(ob)
         # Maximum error limit of 1.
-        plt.ylim(-0.005, min(plt.ylim()[1], 1.))
+        plt.ylim(-0.0025, min(plt.ylim()[1], 2. * max_cut_y, 1.))
 
 
 def pl_cl_fl_regions(

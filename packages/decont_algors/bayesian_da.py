@@ -3,13 +3,13 @@ import numpy as np
 from .. import update_progress
 
 
-def break_check(prob_avrg_old, runs_fields_probs, runs, run_num):
+def break_check(prob_avrg_old, runs_fields_probs, runs, run_num, N_total):
     """
     Check if DA converged to MPs within a 0.1% tolerance, for all stars inside
     the cluster region.
     """
     # Average all probabilities.
-    prob_avrg = np.asarray(runs_fields_probs).mean(1).mean(0)
+    prob_avrg = runs_fields_probs / N_total
 
     # Set flag.
     break_flag = False
@@ -161,19 +161,6 @@ def main(colors, plx_col, pmx_col, pmy_col, rv_col, bayesda_runs,
     # len(field_regions) = number of field regions.
     # len(field_regions[i]) = number of stars inside field region 'i'.
 
-    # This list holds one sub-list per run. Each of those sub-lists holds N
-    # sub-sub-lists (where N = len(field_region)) with the membership
-    # probabilities assigned to each star in the 'cluster_region'.
-    #
-    # runs_fields_probs = [A_1, A_2, ..., A_runs]
-    # A_i = [B_1, B_2, ..., B_N] ; N = len(field_regions)
-    # B_j = [p_1, p_2, ..., p_n] ; n = len(cl_region)
-    # A,B --> arrays ; p --> floats (Bayesian probabilities)
-    runs_fields_probs = []
-
-    # Initial null probabilities for all stars in the cluster region.
-    prob_avrg_old = np.zeros(len(cl_region))
-
     # Select the correct values for the dimension weights.
     bayesda_weights = weightsSelect(
         bayesda_weights, colors, plx_col, pmx_col, pmy_col, rv_col)
@@ -195,9 +182,14 @@ def main(colors, plx_col, pmx_col, pmy_col, rv_col, bayesda_runs,
     # Create copy of the cluster region to be shuffled below.
     clust_reg_shuffle, w_cl_shuffle = cl_reg_prep[:], w_cl[:]
 
-    # Run 'bayesda_runs' times.
+    # Initial null probabilities for all stars in the cluster region.
+    prob_avrg_old = np.zeros(len(cl_region))
+    # Probabilities for all stars in the cluster region.
+    runs_fields_probs = np.zeros(len(cl_region))
+
+    # Run 'bayesda_runs*fl_likelihoods' times.
+    N_total = 0
     for run_num in range(bayesda_runs):
-        field_reg_probs = []
         # Iterate through all the 'field stars' regions that were populated.
         for n_fl, fl_lkl in fl_likelihoods:
 
@@ -221,17 +213,12 @@ def main(colors, plx_col, pmx_col, pmy_col, rv_col, bayesda_runs,
 
             # Bayesian probability for each star within the cluster region.
             bayes_prob = 1. / (1. + (fl_lkl / cl_lkl))
-            # Now we have 'bayesda_runs' probabilities for each star in
-            # 'cl_region' of being an true cluster member (MPs) stored in
-            # 'field_reg_probs', for this field region.
-            field_reg_probs.append(bayes_prob)
-
-        # Append this list to the list that holds all the runs.
-        runs_fields_probs.append(field_reg_probs)
+            N_total += 1
+            runs_fields_probs += bayes_prob
 
         # Check if probabilities converged. If so, break out.
         prob_avrg_old, break_flag = break_check(
-            prob_avrg_old, runs_fields_probs, bayesda_runs, run_num)
+            prob_avrg_old, runs_fields_probs, bayesda_runs, run_num, N_total)
         if break_flag:
             print('| MPs converged (run {}).'.format(run_num))
             break
@@ -239,6 +226,6 @@ def main(colors, plx_col, pmx_col, pmy_col, rv_col, bayesda_runs,
 
     # Average all Bayesian membership probabilities into a single value for
     # each star inside 'cl_region'.
-    memb_probs_cl_region = np.asarray(runs_fields_probs).mean(1).mean(0)
+    memb_probs_cl_region = runs_fields_probs / N_total
 
     return memb_probs_cl_region

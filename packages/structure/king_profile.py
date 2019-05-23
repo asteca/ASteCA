@@ -150,7 +150,8 @@ def main(clp, kp_flag, coords, **kwargs):
     flag_2pk_conver, flag_3pk_conver = False, False
 
     # Initial dummy values, used if function is skipped.
-    rc, e_rc, rt, e_rt, n_c_k, kcp, cd = -1., -1., -1., -1., -1., -1., -1.
+    rc, e_rc, rt, e_rt, n_c_k, kcp, cd = np.nan, np.nan, np.nan, np.nan,\
+        np.nan, np.nan, np.nan
 
     # Check flag to run or skip.
     if kp_flag:

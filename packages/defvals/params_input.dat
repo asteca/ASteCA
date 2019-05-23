@@ -47,8 +47,12 @@ MR   num
 # * coords: px / deg
 #   Indicates if the coordinates of the observed frame are in pixels or degrees.
 #
-#   id_star   x/ra  y/dec  coords 
-PI        0      1      2      px
+# * project: y / n
+#   If 'coords=deg', indicate whether to use a sinusoidal projection on the
+#   data.
+#
+#   id_star   x/ra   y/dec   coords   project
+PI        0      1       2       px         y
 
 # Columns for the photometric data in the data file. The IDs for the supported
 # photometric systems are stored in the 'phot_systs.dat' file.
@@ -84,12 +88,10 @@ NV    INDEF, NAN, NaN, 99.999, 999.99, 99.999
 
 # Mode used to run the code.
 #
-# * mode: auto / semi / manual
+# * mode: auto / semi
 #
 #   - auto: does not require user intervention of any kind.
 #   - semi: takes input values from the 'semi_input.dat' file.
-#   - manual: asks the user for some values (center, radius) but will also
-#     give you the chance to have them automatically calculated.
 #
 #    mode
 MO   auto
@@ -138,8 +140,8 @@ MD     n
 #
 # *  bandwidth: [float]
 #   The bandwidth used by the Gaussian KDE applied to the 2-dimensional (x,y)
-#   stars coordinates. If 'bandwidth=0' then the default Scott's rule is
-#   employed.
+#   stars coordinates. If 'bandwidth=0' then half of Scott's rule is employed
+#   (this generally gives good results).
 #
 #   bandwidth
 CH         .0
@@ -190,16 +192,20 @@ GR       10
 
 # Error rejection.
 #
-# * e_ph_max: [float / str]
-#   Maximum error value a star can have in either its magnitude or color
-#   without being rejected. Use 'n' for no maximum limit.
+# * e_mag_max: [float] or [str]
+#   Maximum error value a star can have in its magnitude without being
+#   rejected. Use 'n' for no maximum limit.
+#
+# * e_col_max: [float] or [str]
+#   Maximum error value a star can have in its color(s) without being rejected.
+#   Use 'n' for no maximum limit.
 #
 # * e_plx_max / e_pm_max / e_rv_max: [float] or [str]
 #   Idem for parallax / proper motions / radial velocity values. If these data
 #   columns are not present (or no maximum limit is desired) use 'n'.
 #
-#   e_ph_max    e_plx_max     e_pm_max     e_rv_max
-ER       0.2            n            n            n
+#   e_mag_max   e_col_max    e_plx_max     e_pm_max     e_rv_max
+ER       0.2            n            n            n            n
 
 # Anderson-Darling test (cluster vs field regions).
 #
@@ -318,19 +324,17 @@ RM  local      knuth          0.5
 
 # Algorithm used to maximize/explore the parameter space given a likelihood.
 #
-# * algorithm: ptemcee / genet / brute / n
+# * algorithm: ptemcee / boot+GA / n
 #
 #   - ptemcee: Parallel tempering Bayesian MCMC algorithm.
-#   - n    : No fundamental parameters estimation will be attempted on the
-#            observed cluster. All the parameters below are ignored.
-# * hmax: [float] maximum number of hours the method should run.
-# * N_conv: [int], minimum number for the the effective sample size to apply
-#           the convergence break.
-# * tol_conv: [float], minimum tolerance for the stability of the
-#             autocorrelation time to apply the convergence break.
+#   - boot+GA: Bootstrap process using a genetic algorithm to obtain the MLE.
+#   - n      : No fundamental parameters estimation will be attempted on the
+#              observed cluster. All the parameters below are ignored.
 #
-#   algorithm   h_max    N_conv   tol_conv
-CF    ptemcee       1       100       0.01
+# * hmax: [float] maximum number of hours the entire process should run.
+#
+#   algorithm   h_max
+CF    ptemcee       1
 
 # Minimum / maximum values that define the range of the parameters to fit for
 # the metallicity, log(age), E(B-V), distance modulus, initial mass, and binary
@@ -357,11 +361,19 @@ RB         0        1
 #   - Tmax: [float] / inf / n, maximum temperature value.
 #   - adapt: y / n, turn on-off the adaptive (dynamic) temperature selection.
 #
+#   - N_conv: [int], minimum number for the the effective sample size to apply
+#             the convergence break.
+#   - tol_conv: [float], minimum tolerance for the stability of the
+#               autocorrelation time to apply the convergence break.
+#
 #     init_mode   popsize   maxiter
 PT0      random         5        10
 #
 #     ntemps    nwalkers   nburn    nsteps     Tmax   adapt
 PT1       10         100     100      2500      inf       y
+#
+#     N_conv   tol_conv
+PT2      100       0.01
 #
 #   - prior: u / g, uniform (u) or Gaussian (g) prior distributions for the
 #     fitted parameters. 'mean/stddev' are only required if the 'g' prior is
@@ -374,6 +386,44 @@ PTE       u       0.5        0.02
 PTD       u        14         0.5
 PTM       u      1000         500
 PTB       u       0.5         0.2
+
+# Bootstrap parameters
+#
+#   - hperc: [0<=float<0.9], time allocated for the bootstrap process
+#     as a percentage of the 'hmax' parameter. If 'hperc=0' the bootstrap
+#     process is skipped and no uncertainties are assigned to the parameters.
+#   - N_pop: [int], population number used in the bootstrap process.
+#   - N_step: [int], number of steps  used in the bootstrap process.
+#
+#    hperc    N_pop    N_step
+BT      .5        10       100
+
+# Genetic Algorithm parameters.
+#
+#   - n_pop: [integer], Number of chromosomes in the population.
+#   - n_gen: [integer], Number of generations to process.
+#   - fdif: 0<[float]<=1, Fitness differential. Establishes the 'selection
+#     pressure' for the algorithm.
+#   - p_cross: 0<[float]<=1, crossover probability.
+#   - cr_sel: 1P / 2P, 1-point (1P) or 2-point (2P) crossover.
+#   - p_mut: 0<[float]<=1, mutation probability.
+#   - n_el: [integer], (elitism operator) Number of best solutions to pass
+#     unchanged to the next generation.
+#   - n_ei: [integer], (extinction/immigration operator) Number of generations
+#     allowed to run with the same best solution before calling for a new
+#     generation of random solutions.
+#   - n_es: [integer], (exit switch) number of times the Extinction/Immigration
+#     operator is allowed to run returning the same best solution before
+#     exiting the GA.
+#
+#   n_pop  n_gen  fdif  p_cross  cr_sel  p_mut  n_el  n_ei  n_es
+GA     50   1000    1.     0.85      2P    0.1     1   100    50  
+#
+#    - E_BV / dm / b_fr, steps used in the extinction, distance modulus, and
+#      binary fraction parameters, to define the GA grid.
+#
+#     E_BV     dm     b_fr
+GS    0.01   0.05      0.1
 
 # Likelihood equation.
 #
@@ -434,17 +484,14 @@ PS    0.01         0.1
 # * m_high: [float]
 #   Upper mass value for the IMF (in solar masses).
 #
-# * m_sample: y / n
-#   Unique random sample of masses for each synthetic cluster.
-#
 # * N_interp: [int]
 #   Number of extra values to interpolate into the isochrones.
 #
 # * m_step: [int]
 #   Mass step that defines the mass values to sample within the mass range.
 #
-#   IMF                 m_high      m_sample     N_interp     m_step
-MF  kroupa_2002            150             n         2000        100
+#   IMF                 m_high      N_interp     m_step
+MF  kroupa_2002            150          2000        100
 
 # Binaries mass ratio.
 #

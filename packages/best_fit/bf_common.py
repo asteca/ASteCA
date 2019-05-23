@@ -322,7 +322,7 @@ def rangeCheck(model, ranges, varIdxs):
     return False
 
 
-def r2Dist(fundam_params, varIdxs, mcmc_trace):
+def r2Dist(fundam_params, varIdxs, params_trace):
     """
     R^2 for normal distribution.
     """
@@ -330,8 +330,8 @@ def r2Dist(fundam_params, varIdxs, mcmc_trace):
     for i, _ in enumerate(fundam_params):
         if i in varIdxs:
             c_model = varIdxs.index(i)
-            mcmc_par = mcmc_trace[c_model]
-            param_r2.append(stats.probplot(mcmc_par)[1][-1] ** 2)
+            par = params_trace[c_model]
+            param_r2.append(stats.probplot(par)[1][-1] ** 2)
         else:
             param_r2.append(np.nan)
 

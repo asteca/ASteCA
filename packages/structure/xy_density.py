@@ -13,11 +13,16 @@ def main(clp, cld_i, center_bw, flag_make_plot, **kwargs):
     """
     print("Obtaining KDEs for the frame's coordinates.")
 
+    # Filter possible nan values in (x, y)
+    mskx, msky = np.isnan(cld_i['x']), np.isnan(cld_i['y'])
+    msk = ~mskx & ~msky
+    x_data, y_data = cld_i['x'][msk], cld_i['y'][msk]
+
     if center_bw == 0.:
-        # Use Scotts factor (scipy's default).
-        values = np.vstack([cld_i['x'], cld_i['y']])
+        # Use half of Scotts factor (scipy's default).
+        values = np.vstack([x_data, y_data])
         kernel = stats.gaussian_kde(values)
-        c_bw = kernel.covariance_factor() * np.max(values.std(axis=1))
+        c_bw = kernel.covariance_factor() * np.max(values.std(axis=1)) * .5
     else:
         c_bw = center_bw
 
@@ -39,13 +44,13 @@ def main(clp, cld_i, center_bw, flag_make_plot, **kwargs):
     else:
         # Only obtain the KDE for the full magnitude range.
         kde_approx_cent, frame_kde_cent = kde_center(
-            cld_i['x'], cld_i['y'], bw_list[1])
+            x_data, y_data, bw_list[1])
 
     # Run once more for plotting.
     kernel, x_grid, y_grid, positions, k_pos = kde_center(
-        cld_i['x'], cld_i['y'], bw_list[1], True)
+        x_data, y_data, bw_list[1], True)
     kde_dens_max, kde_dens_min = coordsDens(
-        len(cld_i['x']), x_grid, y_grid, kernel, positions, k_pos)
+        len(x_data), x_grid, y_grid, kernel, positions, k_pos)
 
     clp['cents_xy'], clp['kde_approx_cent'], clp['bw_list'],\
         clp['frame_kdes'], clp['frame_kde_cent'], clp['kde_dens_max'],\

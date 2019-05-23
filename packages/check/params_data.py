@@ -30,18 +30,33 @@ def check(mypath, pd):
                  "file is incorrect.".format(pd['read_mode']))
 
     # Check px/deg.
-    if pd['id_coords'][-1] not in pd['coord_accpt']:
+    if pd['coords'] not in pd['coord_accpt']:
         sys.exit("ERROR: coordinate units '{}' given in the input parameters\n"
-                 "file are incorrect.".format(pd['id_coords'][-1]))
+                 "file are incorrect.".format(pd['coords']))
 
     # Read column indexes for the IDs and the coordinates.
     if pd['read_mode'] == 'num':
         # Name of columns when no header is present. The '+ 1' is because
         # astropy Tables' first column is named 'col1', not 'col0'.
         id_col, x_col, y_col = [
-            'col' + str(int(i) + 1) for i in pd['id_coords'][0:3]]
+            'col' + str(int(i) + 1) for i in [
+                pd['id_ids'], pd['id_xdata'], pd['id_ydata']]]
     else:
-        id_col, x_col, y_col = pd['id_coords'][0:3]
+        id_col, x_col, y_col = pd['id_ids'], pd['id_xdata'], pd['id_ydata']
+
+    # Check error values
+    for err in pd['err_max']:
+        try:
+            if float(err) < 0.:
+                sys.exit("ERROR: max error value must be in the range >0.")
+        except ValueError:
+            # This assumes that there is no maximum number of colors that can
+            # be defined
+            N_colors = int(len(pd['id_cols']) / 2.)
+            if len(pd['err_max']) - 4 != N_colors:
+                sys.exit("ERROR: there are {} 'e_*_max' values defined,"
+                         " there should be {}.".format(
+                             len(pd['err_max']), 4 + N_colors))
 
     # Dictionary of photometric systems defined in the CMD service.
     all_systs = pd['cmd_systs']
@@ -132,10 +147,10 @@ def check(mypath, pd):
             sys.exit("ERROR: more than two colors defined.")
 
     # Add data to parameters dictionary.
-    pd['id_col'], pd['x_col'], pd['y_col'], pd['coords'],\
+    pd['id_col'], pd['x_col'], pd['y_col'],\
         pd['mag_col'], pd['e_mag_col'], pd['filters'], pd['col_col'],\
         pd['e_col_col'], pd['colors'], pd['all_syst_filters'],\
-        pd['iso_paths'] = id_col, x_col, y_col, pd['id_coords'][-1], mag_col,\
+        pd['iso_paths'] = id_col, x_col, y_col, mag_col,\
         e_mag_col, filters, col_col, e_col_col, colors,\
         all_syst_filters, iso_paths
 

@@ -1,9 +1,7 @@
 
 import numpy as np
 from scipy import stats
-import matplotlib.pyplot as plt
 import warnings
-from . import display_rad
 from ..out import prep_plots
 
 
@@ -25,8 +23,6 @@ def main(cld_i, clp, run_mode, radius_method, coords, cl_rad_semi,
     clust_rad, e_rad, flag_delta_total, flag_not_stable, flag_delta = \
         radius_algor(clp, coord, radius_method)
 
-    # Check if semi or manual mode are set.
-    flag_radius_manual = False
     if run_mode == 'auto':
         print('Auto radius found: {:g} {}.'.format(clust_rad, coord))
 
@@ -38,39 +34,39 @@ def main(cld_i, clp, run_mode, radius_method, coords, cl_rad_semi,
         else:
             print('Auto radius found: {:g} {}.'.format(clust_rad, coord))
 
-    # If Manual mode is set, display radius and ask the user to accept it or
-    # input new one.
-    elif run_mode == 'manual':
+    # DEPRECATED May 2019
+    # # If Manual mode is set, display radius and ask the user to accept it or
+    # # input new one.
+    # elif run_mode == 'manual':
 
-        print('Radius found: {:g} {}.'.format(clust_rad, coord))
-        display_rad.main(
-            cld_i['x'], cld_i['y'], cld_i['mags'][0], coords, clust_rad,
-            e_rad, **clp)
-        plt.show()
+    #     print('Radius found: {:g} {}.'.format(clust_rad, coord))
+    #     display_rad.main(
+    #         cld_i['x'], cld_i['y'], cld_i['mags'][0], coords, clust_rad,
+    #         e_rad, **clp)
+    #     plt.show()
 
-        # Ask if the radius is accepted, or a if a another one should be used.
-        while True:
-            answer_rad = raw_input('Input new radius value? (y/n) ')
-            if answer_rad == 'n':
-                print('Value accepted.')
-                break
-            elif answer_rad == 'y':
-                try:
-                    clust_rad_m = float(raw_input('cluster_rad: '))
-                    # Update radius value.
-                    clust_rad = clust_rad_m
-                    flag_radius_manual = True
-                    break
-                except Exception:
-                    print("Sorry, input is not valid. Try again.")
-            else:
-                print("Sorry, input is not valid. Try again.")
+    #     # Ask if the radius is accepted, or a if a another one should be used.
+    #     while True:
+    #         answer_rad = raw_input('Input new radius value? (y/n) ')
+    #         if answer_rad == 'n':
+    #             print('Value accepted.')
+    #             break
+    #         elif answer_rad == 'y':
+    #             try:
+    #                 clust_rad_m = float(raw_input('cluster_rad: '))
+    #                 # Update radius value.
+    #                 clust_rad = clust_rad_m
+    #                 flag_radius_manual = True
+    #                 break
+    #             except Exception:
+    #                 print("Sorry, input is not valid. Try again.")
+    #         else:
+    #             print("Sorry, input is not valid. Try again.")
 
     # Add data to dictionary.
     clp['clust_rad'], clp['e_rad'], clp['flag_delta_total'],\
-        clp['flag_not_stable'], clp['flag_delta'],\
-        clp['flag_radius_manual'] = clust_rad, e_rad, flag_delta_total,\
-        flag_not_stable, flag_delta, flag_radius_manual
+        clp['flag_not_stable'], clp['flag_delta'] = clust_rad, e_rad,\
+        flag_delta_total, flag_not_stable, flag_delta
 
     return clp
 

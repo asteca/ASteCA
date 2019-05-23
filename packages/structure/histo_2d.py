@@ -14,7 +14,7 @@ def main(clp, x, y, mags, **kwargs):
     xmin, xmax = min(x), max(x)
     ymin, ymax = min(y), max(y)
     # Calculate the number of bins used.
-    x_rang, y_rang = np.ptp(x), np.ptp(y)
+    x_rang, y_rang = xmax - xmin, ymax - ymin
     # Bin width to create the 2D histogram.
     bin_width = min(x_rang, y_rang) / 100.
     # Number of bins in x,y given the bin width.

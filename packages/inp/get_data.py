@@ -12,7 +12,7 @@ if sys.version_info[0] == 3:
 
 def main(npd, read_mode, nanvals, id_col, x_col, y_col, mag_col, e_mag_col,
          col_col, e_col_col, plx_col, e_plx_col, pmx_col, e_pmx_col,
-         pmy_col, e_pmy_col, rv_col, e_rv_col, **kwargs):
+         pmy_col, e_pmy_col, rv_col, e_rv_col, coords, project, **kwargs):
     """
     Read all data from the cluster's data file.
 
@@ -94,12 +94,14 @@ def main(npd, read_mode, nanvals, id_col, x_col, y_col, mag_col, e_mag_col,
     # Create cluster's dictionary with the *photometrically incomplete* data.
     ids, x, y, mags, cols, kine, em, ec, ek = dataCols(
         data_file, data, col_names)
+    x, y, x_offset, y_offset = coordsProject(x, y, coords, project)
     cld_i = {'ids': ids, 'x': x, 'y': y, 'mags': mags, 'em': em,
              'cols': cols, 'ec': ec, 'kine': kine, 'ek': ek}
 
     # Create cluster's dictionary with the *photometrically complete* data.
     ids, x, y, mags, cols, kine, em, ec, ek = dataCols(
         data_file, data_compl, col_names)
+    x, y, _, _ = coordsProject(x, y, coords, project)
     cld_c = {'ids': ids, 'x': x, 'y': y, 'mags': mags, 'em': em,
              'cols': cols, 'ec': ec, 'kine': kine, 'ek': ek}
 
@@ -109,7 +111,9 @@ def main(npd, read_mode, nanvals, id_col, x_col, y_col, mag_col, e_mag_col,
         print("  WARNING: {:.0f}% of stars in the input file contain\n"
               "  incomplete photometric data.".format(100. * frac_reject))
 
-    clp = {'flag_data_eq': flag_data_eq}
+    clp = {
+        'flag_data_eq': flag_data_eq, 'x_offset': x_offset,
+        'y_offset': y_offset}
 
     return cld_i, cld_c, clp
 
@@ -257,6 +261,22 @@ def list_duplicates(seq):
     dups = ((key, map(str, locs)) for key, locs in tally.items()
             if len(locs) > 1)
     return dups
+
+
+def coordsProject(x, y, coords, project):
+    """
+    Sinusoidal projection.
+    """
+    if coords == 'deg' and project:
+        ra_cent = (max(x) + min(x)) / 2.
+        dec_cent = (max(y) + min(y)) / 2.
+        x = (x - ra_cent) * np.cos(np.deg2rad(y))
+        y = (y - dec_cent)
+        x_offset, y_offset = ra_cent, dec_cent
+    else:
+        x_offset, y_offset = 0., 0.
+
+    return x, y, x_offset, y_offset
 
 
 if __name__ == '__main__':

@@ -185,8 +185,7 @@ if __name__ == "__main__":
         M_step = M_max / 100.
         M_min = 50.
         masses = np.arange(M_min, M_max, M_step)
-        m_sample_flag = False
-        st_dist_mass = imf.main('kroupa_2002', 150., m_sample_flag, masses)
+        st_dist_mass = imf.main('kroupa_2002', 150., masses)
 
         cmpl_rnd = np.random.uniform(0., 1., 1000000)
         err_rnd = np.random.normal(0, 1, 1000000)

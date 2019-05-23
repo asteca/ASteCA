@@ -61,7 +61,11 @@ def main(mypath, pars_f_path):
                 elif reader[0] == 'MR':
                     read_mode = str(reader[1])
                 elif reader[0] == 'PI':
-                    id_coords = reader[1:]
+                    id_ids = reader[1]
+                    id_xdata = reader[2]
+                    id_ydata = reader[3]
+                    coords = reader[4]
+                    project = True if reader[5] in true_lst else False
                 elif reader[0] == 'PM':
                     id_mags = reader[1:]
                 elif reader[0] == 'PC':
@@ -126,10 +130,8 @@ def main(mypath, pars_f_path):
                 # Cluster parameters assignation.
                 elif reader[0] == 'CF':
                     best_fit_algor = str(reader[1])
-                    # TODO extend this param to 'brute force' and 'GA'
+                    # TODO extend this param to 'brute force'
                     hmax = float(reader[2])
-                    N_conv = float(reader[3])
-                    tol_conv = float(reader[4])
 
                 # Ranges for the fundamental parameters
                 elif reader[0] == 'RZ':
@@ -157,6 +159,9 @@ def main(mypath, pars_f_path):
                     nsteps_ptm = int(float(reader[4]))
                     tmax_ptm = reader[5]
                     pt_adapt = True if reader[6] in true_lst else False
+                elif reader[0] == 'PT2':
+                    N_conv = float(reader[1])
+                    tol_conv = float(reader[2])
                 elif reader[0] == 'PTZ':
                     pt_z_prior = [reader[1]] + list(map(float, reader[2:]))
                 elif reader[0] == 'PTA':
@@ -188,21 +193,25 @@ def main(mypath, pars_f_path):
                 #     emcee_a = float(reader[5])
                 #     priors_emc = reader[6]
 
-                # TODO retire Bootstrap+GA until #64 is implemented
-                # # Genetic algorithm parameters.
-                # elif reader[0] == 'GA':
-                #     N_pop = int(reader[1])
-                #     N_gen = int(reader[2])
-                #     fit_diff = float(reader[3])
-                #     cross_prob = float(reader[4])
-                #     cross_sel = str(reader[5])
-                #     mut_prob = float(reader[6])
-                #     N_el = int(reader[7])
-                #     N_ei = int(reader[8])
-                #     N_es = int(reader[9])
-                #     N_bootstrap = int(reader[10])
-                # elif reader[0] == 'GS':
-                #     ga_steps = list(map(float, reader[1:]))
+                # Bootstrap parameters.
+                elif reader[0] == 'BT':
+                    hperc_btstrp = float(reader[1])
+                    N_pop_btstrp = int(reader[2])
+                    N_step_btstrp = int(reader[3])
+
+                # Genetic algorithm parameters.
+                elif reader[0] == 'GA':
+                    N_pop = int(reader[1])
+                    N_gen = int(reader[2])
+                    fit_diff = float(reader[3])
+                    cross_prob = float(reader[4])
+                    cross_sel = str(reader[5])
+                    mut_prob = float(reader[6])
+                    N_el = int(reader[7])
+                    N_ei = int(reader[8])
+                    N_es = int(reader[9])
+                elif reader[0] == 'GS':
+                    ga_steps = list(map(float, reader[1:]))
 
                 # Likelihood function
                 elif reader[0] == 'LK':
@@ -218,9 +227,8 @@ def main(mypath, pars_f_path):
                 elif reader[0] == 'MF':
                     IMF_name = str(reader[1])
                     m_high = float(reader[2])
-                    m_sample_flag = True if reader[3] in true_lst else False
-                    N_IMF_interp = int(reader[4])
-                    m_step = float(reader[5])
+                    N_IMF_interp = int(reader[3])
+                    m_step = float(reader[4])
                 elif reader[0] == 'BI_m':
                     bin_mr = float(reader[1])
                 elif reader[0] == 'RV':
@@ -237,10 +245,6 @@ def main(mypath, pars_f_path):
                     print("  WARNING: Unknown '{}' ID found in line {}\n"
                           "  of '{}' file.\n".format(
                               reader[0], l + 1, pars_f_name))
-
-    # TODO retire Bootstrap+GA until #64 is implemented
-    N_pop, N_gen, fit_diff, cross_prob, cross_sel, mut_prob, N_el,\
-        N_ei, N_es, N_bootstrap, ga_steps = [0.] * 11
 
     # Accepted coordinate units
     coord_accpt = ('px', 'deg')
@@ -261,9 +265,8 @@ def main(mypath, pars_f_path):
     imf_funcs = ('chabrier_2001_exp', 'chabrier_2001_log', 'kroupa_1993',
                  'kroupa_2002')
     # Optimizing algorithm
-    # TODO retire Bootstrap+GA until #64 is implemented
-    # 'brute', 'genet', 'emcee', 'abc'
-    optimz_algors = ('ptemcee', 'n')
+    # TODO 'brute', 'emcee', 'abc'
+    optimz_algors = ('ptemcee', 'boot+GA', 'n')
     # Accepted forms of priors.
     bayes_priors = ('u', 'g')
 
@@ -290,7 +293,9 @@ def main(mypath, pars_f_path):
     pd = {
         'up_flag': up_flag, 'run_mode': run_mode, 'nanvals': nanvals,
         'read_mode': read_mode,
-        'id_coords': id_coords, 'id_mags': id_mags, 'id_cols': id_cols,
+        'id_ids': id_ids, 'id_xdata': id_xdata, 'id_ydata': id_ydata,
+        'coords': coords, 'project': project, 'id_mags': id_mags,
+        'id_cols': id_cols,
         'id_kinem': id_kinem,
         'flag_make_plot': flag_make_plot, 'plot_frmt': plot_frmt,
         'plot_dpi': plot_dpi,
@@ -315,8 +320,8 @@ def main(mypath, pars_f_path):
         # Synthetic cluster parameters
         'evol_track': evol_track, 'za_steps': za_steps,
         'max_mag': max_mag, 'IMF_name': IMF_name, 'm_high': m_high,
-        'm_sample_flag': m_sample_flag, 'N_IMF_interp': N_IMF_interp,
-        'm_step': m_step, 'R_V': R_V, 'bin_mr': bin_mr,
+        'N_IMF_interp': N_IMF_interp, 'm_step': m_step, 'R_V': R_V,
+        'bin_mr': bin_mr,
         # parameters ranges
         'par_ranges': par_ranges,
         # ptemcee algorithm parameters.
@@ -332,11 +337,13 @@ def main(mypath, pars_f_path):
         # 'nwalkers_emc': nwalkers_emc, 'nburn_emc': nburn_emc,
         # "N_burn_emc": N_burn_emc, 'nsteps_emc': nsteps_emc,
         # "emcee_a": emcee_a, 'priors_emc': priors_emc,
+        # Bootstrap parameters
+        'hperc_btstrp': hperc_btstrp, 'N_pop_btstrp': N_pop_btstrp,
+        'N_step_btstrp': N_step_btstrp,
         # Genetic algorithm parameters.
         'N_pop': N_pop, 'N_gen': N_gen, 'fit_diff': fit_diff,
         'cross_prob': cross_prob, 'cross_sel': cross_sel, 'mut_prob': mut_prob,
-        'N_el': N_el, 'N_ei': N_ei, 'N_es': N_es, 'N_bootstrap': N_bootstrap,
-        'ga_steps': ga_steps,
+        'N_el': N_el, 'N_ei': N_ei, 'N_es': N_es, 'ga_steps': ga_steps,
         # Fixed accepted parameter values and photometric systems.
         'read_mode_accpt': read_mode_accpt, 'coord_accpt': coord_accpt,
         'da_algors_accpt': da_algors_accpt, 'fld_rem_methods': fld_rem_methods,

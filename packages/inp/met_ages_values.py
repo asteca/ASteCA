@@ -96,7 +96,7 @@ def getParamVals(best_fit_algor, par_ranges, za_steps, ga_steps, m_step):
 
     # Define steps for the parameter ranges according to the best fit algorithm
     # selected.
-    if best_fit_algor == 'genet':
+    if best_fit_algor == 'boot+GA':
         steps = za_steps + ga_steps[:2] + [m_step, ga_steps[2]]
     else:
         steps = za_steps + [None, None] + [m_step, None]
