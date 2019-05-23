@@ -231,6 +231,10 @@ def interpSol(theor_tracks, fundam_params, varIdxs, model):
         #     np.array([x1, x2, x3, x4]), weights=inv_d[isoch_idx], axis=0)
         # Scale weights so they add up to 1, then add based on them
         weights = inv_d[isoch_idx] / np.sum(inv_d[isoch_idx])
+        # If the model has a 0.distance in (z,a) to the closest isochrone, then
+        # 'inv_d' will be 'inf', and 'weights' will be 'nan' (all other values
+        # will be zero) Replace that weight with 1.
+        weights[np.isnan(weights)] = 1.
         isochrone = x1 * weights[0] + x2 * weights[1] + x3 * weights[2] +\
             x4 * weights[3]
 
