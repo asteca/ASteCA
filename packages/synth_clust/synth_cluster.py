@@ -16,7 +16,7 @@ def main(err_max, err_lst, completeness, max_mag_syn, st_dist_mass,
 
     The synthetic cluster returned has the shape:
 
-    synth_clust = [photometry, binary_idxs, extra_pars]
+    synth_clust = [photometry, binary_idxs + extra_pars]
 
     photometry = [photom, errors]
     photom = [f1, f2, ..., fF, c1, c2, ..., cC]

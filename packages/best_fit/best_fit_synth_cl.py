@@ -143,41 +143,32 @@ def params_errors(pd, isoch_fit_params):
     #         else:
     #             isoch_fit_errors.append(np.nan)
 
-    if pd['best_fit_algor'] == 'boot+GA':
-
-        isoch_fit_errors = []
-        pb = isoch_fit_params['params_boot']
-        if pb.any():
-            j = 0
-            for i, par in enumerate(pd['fundam_params']):
-                if i in isoch_fit_params['varIdxs']:
-                    # 16th and 84th percentiles (1 sigma), and STDDEV
-                    ph = np.percentile(pb[i - j], 84)
-                    pl = np.percentile(pb[i - j], 16)
-                    std = np.std(pb[i - j])
-                    # Find largest delta in this parameter used values.
-                    largest_delta = np.diff(par).max()
-                    # Errors can not be smaller than the largest step in each
-                    # parameter
-                    isoch_fit_errors.append((pl, ph, max(largest_delta, std)))
-                else:
-                    isoch_fit_errors.append((np.nan, np.nan, np.nan))
-                    j += 1
-        else:
-            # No error assignment.
-            isoch_fit_errors = [[np.nan] * 3] * 6
-
-    elif pd['best_fit_algor'] in ['ptemcee']:  # , 'emcee', 'abc'
+    def assignUncertns(varIdxs, trace):
         isoch_fit_errors, j = [], 0
-        for i, _ in enumerate(isoch_fit_params['mean_sol']):
-            if i in isoch_fit_params['varIdxs']:
+        for i in range(6):
+            if i in varIdxs:
                 # 16th and 84th percentiles (1 sigma), and STDDEV
-                ph = np.percentile(isoch_fit_params['mcmc_trace'][i - j], 84)
-                pl = np.percentile(isoch_fit_params['mcmc_trace'][i - j], 16)
-                std = np.std(isoch_fit_params['mcmc_trace'][i - j])
+                ph = np.percentile(trace[i - j], 84)
+                pl = np.percentile(trace[i - j], 16)
+                std = np.std(trace[i - j])
                 isoch_fit_errors.append((pl, ph, std))
             else:
                 isoch_fit_errors.append((np.nan, np.nan, np.nan))
                 j += 1
+
+        return isoch_fit_errors
+
+    if pd['best_fit_algor'] in ('boot+GA'):
+
+        pb = isoch_fit_params['params_boot']
+        if pb.any():
+            isoch_fit_errors = assignUncertns(isoch_fit_params['varIdxs'], pb)
+        else:
+            # No error assignment.
+            isoch_fit_errors = [[np.nan] * 3] * 6
+
+    elif pd['best_fit_algor'] in ('ptemcee'):  # , 'emcee', 'abc'
+        isoch_fit_errors = assignUncertns(
+            isoch_fit_params['varIdxs'], isoch_fit_params['mcmc_trace'])
 
     return isoch_fit_errors

@@ -8,7 +8,7 @@ def check(
     evol_track, max_mag, IMF_name, R_V, m_step, bin_mr, bin_methods,
     lkl_weight, bin_weights, cmd_evol_tracks, iso_paths, imf_funcs, hmax,
     hperc_btstrp, N_pop, N_gen, fit_diff, cross_prob, cross_sel,
-    mut_prob, N_el, N_ei, N_es, ga_steps, inst_packgs_lst, ntemps,
+    mut_prob, N_el, N_ei, N_es, inst_packgs_lst, ntemps,
         nwalkers_ptm, nburn_ptm, priors_ptm, bayes_priors, **kwargs):
     """
     Check all parameters related to the search for the best synthetic cluster
@@ -49,9 +49,6 @@ def check(
                 sys.exit("ERROR: GA 'n_el' must be smaller than 'n_pop';\n"
                          "'{}' and '{}' are set respectively.".format(
                              N_el, N_pop))
-
-            if not ga_steps:
-                sys.exit("ERROR: parameter steps for the GA are empty.")
 
         # TODO not finished yet
         # if best_fit_algor == 'emcee':

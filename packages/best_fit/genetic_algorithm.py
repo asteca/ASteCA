@@ -1,8 +1,10 @@
 
 import time as t
+import textwrap
 import random
 import numpy as np
-from ..synth_clust import synth_cluster
+from .bf_common import varPars, rangeCheck, synthClust, random_population
+# from ..synth_clust import synth_cluster
 from . import likelihood
 
 #############################################################
@@ -28,7 +30,8 @@ def main(
     err_lst, completeness, lkl_method, fundam_params, theor_tracks, R_V,
         fit_diff, cross_prob, cross_sel, mut_prob, N_el, N_ei, N_es, **kwargs):
     '''
-    Genetic algorithm. Finds the best fit model-observation.
+    Genetic algorithm. Finds the best fit model-observation by minimizing the
+    likelihood function.
     '''
     # Start timing.
     elapsed, start_t = 0., t.time()
@@ -47,38 +50,32 @@ def main(
     fitness = [1. / N_popl + fit_diff * (N_popl + 1. - 2. * (i + 1.)) /
                (N_popl * (N_popl + 1.)) for i in range(N_popl)]
 
-    if not ran_pop:
-        # Initial random population.
-        p_lst_r = random_population(fundam_params, N_popl)
-    else:
-        # Use final population after the initial GA run.
-        p_lst_r = np.array(ran_pop).T
-
     # For plotting purposes.
     # Stores parameters of the solutions already processed and the likelihoods
     # obtained.
     models_GA = np.zeros((N_gener * N_popl, 6))
     lkls_GA = np.zeros(N_gener * N_popl)
-    lkl_best = np.zeros(N_gener)
+    lkl_best = np.full(N_gener, np.inf)
     lkl_mean = np.zeros(N_gener)
+
+    varIdxs, ndim, ranges = varPars(fundam_params)
 
     # Evaluate initial random solutions in the objective function.
     generation, lkl = evaluation(
         lkl_method, e_max, err_lst, completeness, max_mag_syn, fundam_params,
         obs_clust, theor_tracks, R_V, ext_coefs, st_dist_mass, N_fc, cmpl_rnd,
-        err_rnd, p_lst_r)
+        err_rnd, varIdxs, ranges, ran_pop)
 
-    # Store best solution for passing along in the 'Elitism' block.
+    # Store best solution(s) for passing along in the 'Elitism' block.
     best_sol = generation[:N_el]
 
     # Stores indexes where a new best solution was found.
     new_bs_indx = []
-
     # Initiate counters.
     best_sol_count, ext_imm_count = 0, 0
-    # Initiate empty list. Stores the best solution found after each
-    # application of the Extinction/Immigration operator.
-    best_sol_ei = []
+    # Minimum likelihood found after each application of the
+    # Extinction/Immigration operator.
+    lkl_best_old, lkl_ei = lkl[0], np.inf
 
     # Print percentage done.
     elapsed_in, start_in = 0., t.time()
@@ -125,15 +122,15 @@ def main(
         generation, lkl = evaluation(
             lkl_method, e_max, err_lst, completeness, max_mag_syn,
             fundam_params, obs_clust, theor_tracks, R_V, ext_coefs,
-            st_dist_mass, N_fc, cmpl_rnd, err_rnd, p_lst_e)
+            st_dist_mass, N_fc, cmpl_rnd, err_rnd, varIdxs, ranges, p_lst_e)
 
         # *** Extinction/Immigration ***
         # If the best solution has remained unchanged for N_ei
         # generations, remove all chromosomes but the best ones (extinction)
         # and fill with random new solutions (immigration).
 
-        # Check if new best solution is equal to the previous one.
-        if generation[0] == best_sol[0]:
+        # Check if new best solution is better than the previous one.
+        if lkl_best_old <= lkl[0]:
             # Increase counter.
             best_sol_count += 1
 
@@ -143,29 +140,29 @@ def main(
 
                 # *** Exit switch ***
                 # If N_es runs of the Ext/Imm operator have been applied with
-                # no changes to the best solution, apply the exit switch,
-                # ie: exit the GA.
-                if best_sol[0] == best_sol_ei:
+                # no changes to the best solution, apply the exit switch.
+                if np.allclose(lkl_ei, lkl_best_old, .01):
+                    # if np.allclose(best_sol[0], best_sol_ei, .001):
                     # Increase Ext/Imm operator counter.
                     ext_imm_count += 1
                     if ext_imm_count == N_es:
-                        # Exit generations loop.
                         if flag_print_perc:
                             print("  GA exit switch applied.")
+                        step = step - 1
                         break
                 else:
                     # Update best solution.
-                    best_sol_ei = best_sol[0]
+                    lkl_ei = lkl_best_old
                     # Reset counter.
                     ext_imm_count = 0
 
                 # Apply Extinction/Immigration operator.
                 generation = ext_imm(best_sol, fundam_params, N_popl)
-
                 # Reset best solution counter.
                 best_sol_count = 0
 
         else:
+            lkl_best_old = lkl[0]
             # For plotting purposes. Save index where a new best solution
             # was found.
             new_bs_indx.append(step)
@@ -177,8 +174,6 @@ def main(
         if flag_print_perc:
 
             # For plotting purposes.
-            # Sort list in place putting the likelihood minimum value first.
-            lkl.sort()
             models_GA[N_popl * step:N_popl * (step + 1)] = generation
             lkls_GA[N_popl * step:N_popl * (step + 1)] = lkl
             lkl_best[step] = lkl[0]
@@ -212,20 +207,55 @@ def main(
     if not flag_print_perc:
         return generation[0]
 
+    # For plotting
     # In case not all the generations were processed.
     models_GA = models_GA[:(step + 1) * N_popl]
     lkls_GA = lkls_GA[:(step + 1) * N_popl]
     lkl_best = lkl_best[:(step + 1)]
     lkl_mean = lkl_mean[:(step + 1)]
+    # Sort and trim to N_max models to plot
+    idx_sort = np.argsort(lkls_GA)
+    N_max = 10000
+    models_GA = models_GA[idx_sort][:N_max].T
+    lkls_GA = lkls_GA[idx_sort][:N_max]
+
+    # Prevent very small 'binary fraction' values from disrupting the synthetic
+    # cluster plotting.
+    map_sol = generation[0]
+    map_sol[5] = 0. if map_sol[5] < 0.01 else map_sol[5]
 
     # Store the ML solution as 'map_sol' for consistency.
     isoch_fit_params = {
         'OF_final_generation': generation, 'OF_elapsed': elapsed,
-        'map_sol': generation[0], 'lkl_best': lkl_best, 'lkl_mean': lkl_mean,
+        'map_sol': map_sol, 'lkl_best': lkl_best, 'lkl_mean': lkl_mean,
         'OF_steps': step + 1, 'OF_models': (step + 1) * N_popl,
         'new_bs_indx': new_bs_indx, 'models_GA': models_GA, 'lkls_GA': lkls_GA}
 
     return isoch_fit_params
+
+
+def num_binary_digits(fundam_params):
+    '''
+    Store parameters ranges and calculate the minimum number of binary digits
+    needed to encode the solutions.
+    '''
+
+    p_mins, p_delta = [], []
+    for param in fundam_params:
+        p_mins.append(min(param))  # Used by the encode operator.
+        # If delta is zero it means a single value is being used. Set delta
+        # to a small value to avoid issues with Elitism operator.
+        p_delta.append(max(max(param) - min(param), 1e-10))
+
+    p_interv = np.array([len(_) for _ in fundam_params])
+
+    # Number of binary digits used to create the chromosomes.
+    # The max function prevents an error when all parameter ranges are set to
+    # a unique value in which case the np.log is a negative float.
+    # We add 10 since it's very cheap and adds a lot of accuracy.
+    n_bin = max(int(np.log(max(p_interv)) / np.log(2)) + 1, 1) + 10
+
+    return n_bin, p_delta, p_mins
 
 
 def encode(n_bin, p_delta, p_mins, int_popul):
@@ -241,11 +271,112 @@ def encode(n_bin, p_delta, p_mins, int_popul):
             p_binar.append(str(bin(int(((sol[i] - p_mins[i]) / p_del) *
                            (2 ** n_bin - 1))))[2:].zfill(n_bin))
 
-        # Combine binary strings to generate chromosome.
-        chrom = ''.join(p_binar)
-        chromosomes.append(chrom)
+        # Combine binary strings to generate a single chromosome.
+        chromosomes.append(''.join(p_binar))
 
     return chromosomes
+
+
+def decode(fundam_params, n_bin, p_delta, p_mins, mut_chrom):
+    '''
+    Decode the chromosomes into its real values to be evaluated by the
+    objective function.
+    '''
+
+    p_lst = []
+    for chrom in mut_chrom:
+        # Split chromosome string.
+        chrom_split = textwrap.wrap(chrom, n_bin)
+
+        # Map integers to the real parameter values.
+        sol = []
+        for i, p_del in enumerate(p_delta):
+            # Convert binary into an integer.
+            b2i = int(chrom_split[i], 2)
+            # Map integer to the real parameter value.
+            sol.append(p_mins[i] + (b2i * p_del / (2 ** n_bin - 1)))
+        p_lst.append(sol)
+
+    return p_lst
+
+
+def evaluation(
+    lkl_method, e_max, err_lst, completeness, max_mag_syn, fundam_params,
+    obs_clust, theor_tracks, R_V, ext_coefs, st_dist_mass, N_fc, cmpl_rnd,
+        err_rnd, varIdxs, ranges, p_lst):
+    '''
+    Evaluate each model in the objective function to obtain the fitness of
+    each one.
+    '''
+
+    # lkl_lst, generation_list = [], []
+    lkl_arr = np.full(len(p_lst), np.inf)
+    # Process each model selected.
+    for i, model in enumerate(p_lst):
+
+        rangeFlag = rangeCheck(model, ranges, varIdxs)
+        if rangeFlag:
+
+            # Generate synthetic cluster.
+            synth_clust = synthClust(
+                fundam_params, varIdxs, model, (
+                    theor_tracks, e_max, err_lst, completeness, max_mag_syn,
+                    st_dist_mass, R_V, ext_coefs, N_fc, cmpl_rnd, err_rnd))
+
+            # Call likelihood function for this model.
+            # with timeblock(" Likelihood"):
+            lkl = likelihood.main(lkl_method, synth_clust, obs_clust)
+
+            # DEPRECATED May 2019, there's no need now that the IMF is
+            # sampled once outside of the best fit process.
+            # # Check if this model was already processed. Without this check here,
+            # # the extinction/immigration operator becomes useless, since the best
+            # # solution's likelihood value can vary slightly due to the re-sampling
+            # # of the mass distribution.
+            # try:
+            #     # Get old likelihood value for this model.
+            #     lkl_old = model_done[1][model_done[0].index(model)]
+            #     # Compare with new value. If old one is smaller, pass old one.
+            #     # This keeps the likelihood always trending downwards.
+            #     if lkl_old < lkl:
+            #         lkl = lkl_old
+            # except ValueError:
+            #     # Model was not processed before.
+            #     pass
+
+            lkl_arr[i] = lkl
+
+    # Sort according to the likelihood list. This puts the best model (ie:
+    # the one with the minimum likelihood value) first.
+    # with timeblock(" sort"):
+    generation = [x for y, x in sorted(list(zip(lkl_arr, p_lst)))]
+
+    # Sort list in place putting the likelihood minimum value first.
+    lkl_arr.sort()
+
+    return generation, lkl_arr
+
+
+def selection(generation, breed_prob):
+    '''
+    Select random chromosomes from the chromosome list passed according to
+    the breeding probability given by their fitness.
+    '''
+    select_chrom = []
+    # Draw len(generation) random numbers uniformly distributed between [0,1)
+    ran_lst = np.random.uniform(0, sum(breed_prob), len(generation))
+    # For each of these numbers, obtain the corresponding likelihood from the
+    # breed_prob CDF.
+    gen_breed = list(zip(*[generation, breed_prob]))
+    for r in ran_lst:
+        s = 0.
+        for sol, num in gen_breed:
+            s += num
+            if s >= r:
+                select_chrom.append(sol)
+                break
+
+    return select_chrom
 
 
 def chunker(seq, size):
@@ -304,139 +435,16 @@ def mutation(cross_chrom, mut_prob):
     return cross_chrom
 
 
-def decode(fundam_params, n_bin, p_delta, p_mins, mut_chrom):
-    '''
-    Decode the chromosomes into its real values to be evaluated by the
-    objective function.
-    '''
-
-    # Initialize empty list with as many sub-lists as parameters.
-    p_lst = [[] for _ in range(len(fundam_params))]
-
-    for chrom in mut_chrom:
-        # Split chromosome string.
-        chrom_split = [chrom[i:i + n_bin] for i in range(0, len(chrom),
-                       n_bin)]
-
-        # Convert each binary into an integer for all parameters.
-        b2i = [int(i, 2) for i in chrom_split]
-
-        # Map integers to the real parameter values.
-        for i, p_del in enumerate(p_delta):
-            # Map integer to the real parameter value.
-            p_r = p_mins[i] + (b2i[i] * p_del / (2 ** n_bin - 1))
-            # Find the closest value in the parameters list.
-            p = min(fundam_params[i], key=lambda x: abs(x - p_r))
-            # Store this last value.
-            p_lst[i].append(p)
-
-    return p_lst
-
-
 def elitism(best_sol, p_lst):
     '''
     Pass the best N_el solutions unchanged to the next generation.
     '''
 
     # Append the N_el best solutions to the beginning of the list, pushing
-    # out N_el solutions located on the end (right) of the list.
-    p_lst_r = []
-    best_sol_zip = list(zip(*best_sol))
-    for i, pars in enumerate(p_lst):
-        p_lst_r.append(list(best_sol_zip[i]) + pars[:-len(best_sol)])
+    # out N_el solutions located on the end of the list.
+    p_lst_r = best_sol + p_lst[:-len(best_sol)]
 
     return p_lst_r
-
-
-def selection(generation, breed_prob):
-    '''
-    Select random chromosomes from the chromosome list passed according to
-    the breeding probability given by their fitness.
-    '''
-    select_chrom = []
-    # Draw len(generation) random numbers uniformly distributed between [0,1)
-    ran_lst = np.random.uniform(0, sum(breed_prob), len(generation))
-    # For each of these numbers, obtain the corresponding likelihood from the
-    # breed_prob CDF.
-    gen_breed = list(zip(*[generation, breed_prob]))
-    for r in ran_lst:
-        s = 0.
-        for sol, num in gen_breed:
-            s += num
-            if s >= r:
-                select_chrom.append(sol)
-                break
-
-    return select_chrom
-
-
-def evaluation(lkl_method, e_max, err_lst, completeness, max_mag_syn,
-               fundam_params, obs_clust, theor_tracks, R_V, ext_coefs,
-               st_dist_mass, N_fc, cmpl_rnd, err_rnd, p_lst):
-    '''
-    Evaluate each model in the objective function to obtain the fitness of
-    each one.
-    '''
-
-    lkl_lst, generation_list = [], []
-    # Process each model selected.
-    for model in zip(*p_lst):
-
-        # Metallicity and age indexes to identify isochrone.
-        m_i = fundam_params[0].index(model[0])
-        a_i = fundam_params[1].index(model[1])
-        isochrone = theor_tracks[m_i][a_i]
-
-        # Generate synthetic cluster.
-        synth_clust = synth_cluster.main(
-            e_max, err_lst, completeness, max_mag_syn, st_dist_mass, isochrone,
-            R_V, ext_coefs, N_fc, cmpl_rnd, err_rnd, model)
-
-        # Call likelihood function for this model.
-        # with timeblock(" Likelihood"):
-        lkl = likelihood.main(lkl_method, synth_clust, obs_clust)
-
-        # DEPRECATED May 2019, there's no need now that the IMF is
-        # sampled once outside of the best fir process.
-        # # Check if this model was already processed. Without this check here,
-        # # the extinction/immigration operator becomes useless, since the best
-        # # solution's likelihood value can vary slightly due to the re-sampling
-        # # of the mass distribution.
-        # try:
-        #     # Get old likelihood value for this model.
-        #     lkl_old = model_done[1][model_done[0].index(model)]
-        #     # Compare with new value. If old one is smaller, pass old one.
-        #     # This keeps the likelihood always trending downwards.
-        #     if lkl_old < lkl:
-        #         lkl = lkl_old
-        # except ValueError:
-        #     # Model was not processed before.
-        #     pass
-
-        # Append data to the lists that will be erased with each call
-        # to this function.
-        generation_list.append(list(model))
-        lkl_lst.append(lkl)
-
-    # Sort according to the likelihood list. This puts the best model (ie:
-    # the one with the minimum likelihood value) first.
-    # with timeblock(" sort"):
-    generation = [x for y, x in sorted(list(zip(lkl_lst, generation_list)))]
-
-    return generation, lkl_lst
-
-
-def random_population(fundam_params, n_ran):
-    '''
-    Generate a random set of parameter values to use as a random population.
-    '''
-    # Pick n_ran initial random solutions from each list storing all the
-    # possible parameters values. These lists store real values.
-    p_lst = []
-    for param in fundam_params:
-        p_lst.append([random.choice(param) for _ in range(n_ran)])
-
-    return p_lst
 
 
 def ext_imm(best_sol, fundam_params, N_popl):
@@ -446,33 +454,9 @@ def ext_imm(best_sol, fundam_params, N_popl):
 
     # Generate (N_popl-N_el) random solutions.
     n_ran = N_popl - len(best_sol)
-    p_lst_r = random_population(fundam_params, n_ran)
+    p_lst_r = random_population(fundam_params, (0, 1, 2, 3, 4, 5), n_ran)
 
     # Append immigrant random population to the best solution.
-    generation_ei = best_sol + list(zip(*p_lst_r))
+    generation_ei = best_sol + p_lst_r.tolist()
 
     return generation_ei
-
-
-def num_binary_digits(fundam_params):
-    '''
-    Store parameters ranges and calculate the minimum number of binary digits
-    needed to encode the solutions.
-    '''
-
-    p_mins, p_delta = [], []
-    for param in fundam_params:
-        p_mins.append(min(param))  # Used by the encode operator.
-        # If delta is zero it means a single value is being used. Set delta
-        # to a small value to avoid issues with Elitism operator.
-        p_delta.append(max(max(param) - min(param), 1e-10))
-
-    p_interv = np.array([len(_) for _ in fundam_params])
-
-    # Number of binary digits used to create the chromosomes.
-    # The max function prevents an error when all parameter ranges are set to
-    # a unique value in which case the np.log is a negative float.
-    # We add 10 since it's very cheap and adds a lot of accuracy.
-    n_bin = max(int(np.log(max(p_interv)) / np.log(2)) + 1, 1) + 10
-
-    return n_bin, p_delta, p_mins
