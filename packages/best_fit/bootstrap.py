@@ -5,7 +5,8 @@ import random
 from . import genetic_algorithm, de_algorithm
 from . import obs_clust_prepare
 from .. import update_progress
-from .bf_common import random_population, varPars, modeKDE, fillParams, r2Dist
+from .bf_common import random_population, varPars, modeKDE, fillParams,\
+    r2Dist, closeSol
 
 
 def main(
@@ -106,10 +107,8 @@ def main(
             pd['fundam_params'], isoch_fit_params['varIdxs'],
             isoch_fit_params['params_boot'])
 
-        # Point estimates (mean, median, mode).
-        isoch_fit_params = getSols(
-            pd, isoch_fit_params['params_boot'], isoch_fit_params,
-            isoch_fit_params['varIdxs'])
+        # Proper point estimates (mean, median, mode).
+        isoch_fit_params = getSols(pd, isoch_fit_params)
 
         print("Total bootstrap runs: {}".format(btstrp_runs))
         isoch_fit_params['N_bootstrap'] = btstrp_runs
@@ -123,6 +122,8 @@ def main(
         isoch_fit_params['mode_sol'] = [np.nan] * 6
         isoch_fit_params['param_r2'] = [np.nan] * 6
 
+    isoch_fit_params['map_sol'] = closeSol(
+        pd['fundam_params'], isoch_fit_params['map_sol'], [4])
     isoch_fit_params['btstrp_t'] = t.time() - btstrp_start_t
     isoch_fit_params['bf_elapsed'] = t.time() - start_t
     isoch_fit_params['N_total'] = float(
@@ -186,32 +187,39 @@ def resample_replacement(cl_max_mag):
     return cl_max_mag_ran
 
 
-def getSols(pd, params_boot, isoch_fit_params, varIdxs):
+def getSols(pd, isoch_fit_params):
     """
     Save mean, median, and mode solutions for the bootstrap.
     """
     # 'pardist_kde' is used for cornerPlot()
     mode_sol, isoch_fit_params['pardist_kde'] = modeKDE(
-        pd['fundam_params'], varIdxs, params_boot)
+        pd['fundam_params'], isoch_fit_params['varIdxs'],
+        isoch_fit_params['params_boot'])
     # 'mode_sol' comes back with the free parameters only.
-    mode_sol = fillParams(pd['fundam_params'], varIdxs, mode_sol)
+    mode_sol = fillParams(
+        pd['fundam_params'], isoch_fit_params['varIdxs'], mode_sol)
 
     # Push values to the closest values in the grid.
     mean_boot_sol, median_boot_sol, mode_boot_sol = [], [], []
     j = 0
     for i, par in enumerate(pd['fundam_params']):
         if i in isoch_fit_params['varIdxs']:
-            mean_boot_sol.append(min(
-                par, key=lambda x: abs(x - np.mean(params_boot[i - j]))))
-            median_boot_sol.append(min(
-                par, key=lambda x: abs(x - np.median(params_boot[i - j]))))
-            mode_boot_sol.append(min(
-                par, key=lambda x: abs(x - mode_sol[i - j])))
+            mean_boot_sol.append(
+                np.mean(isoch_fit_params['params_boot'][i - j]))
+            median_boot_sol.append(
+                np.median(isoch_fit_params['params_boot'][i - j]))
+            mode_boot_sol.append(mode_sol[i - j])
+
         else:
             mean_boot_sol.append(par[0])
             median_boot_sol.append(par[0])
             mode_boot_sol.append(par[0])
             j += 1
+
+    # Push Mass to grid values.
+    mean_boot_sol = closeSol(pd['fundam_params'], mean_boot_sol, [4])
+    median_boot_sol = closeSol(pd['fundam_params'], median_boot_sol, [4])
+    mode_boot_sol = closeSol(pd['fundam_params'], mode_boot_sol, [4])
 
     isoch_fit_params['mean_sol'] = mean_boot_sol
     isoch_fit_params['median_sol'] = median_boot_sol

@@ -7,7 +7,7 @@ from os.path import join
 from . import isochs_format
 
 
-def main(iso_paths, best_fit_algor, par_ranges, za_steps, ga_steps, m_step):
+def main(iso_paths, best_fit_algor, par_ranges, za_steps, m_step):
     '''
     Obtain the correct metallicities and ages used by the code.
     '''
@@ -23,9 +23,8 @@ def main(iso_paths, best_fit_algor, par_ranges, za_steps, ga_steps, m_step):
     # ages) happens in 'read_isochs'.
     age_vals_all = CMDAges(met_files[0][0])
 
-    # Get parameters ranges stored in params_input.dat file.
-    params_values = getParamVals(
-        best_fit_algor, par_ranges, za_steps, ga_steps, m_step)
+    # Get parameters ranges.
+    params_values = getParamVals(best_fit_algor, par_ranges, za_steps, m_step)
 
     # Match values in metallicity and age ranges given by the user, with
     # those available in the theoretical isochrones.
@@ -89,17 +88,13 @@ def CMDAges(met_file):
     return isoch_a
 
 
-def getParamVals(best_fit_algor, par_ranges, za_steps, ga_steps, m_step):
+def getParamVals(best_fit_algor, par_ranges, za_steps, m_step):
     '''
     Obtain parameter ranges to be used by the selected best fit method.
     '''
 
-    # Define steps for the parameter ranges according to the best fit algorithm
-    # selected.
-    if best_fit_algor == 'boot+GA':
-        steps = za_steps + ga_steps[:2] + [m_step, ga_steps[2]]
-    else:
-        steps = za_steps + [None, None] + [m_step, None]
+    # Define steps for the parameters defined in grids.
+    steps = za_steps + [None, None, m_step, None]
 
     params_values = []
     for i, param in enumerate(par_ranges):

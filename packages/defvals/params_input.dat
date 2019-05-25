@@ -418,12 +418,6 @@ BT      .5        10       100
 #
 #   n_pop  n_gen  fdif  p_cross  cr_sel  p_mut  n_el  n_ei  n_es
 GA     50   1000    1.     0.85      2P    0.1     1   100    50  
-#
-#    - E_BV / dm / b_fr, steps used in the extinction, distance modulus, and
-#      binary fraction parameters, to define the GA grid.
-#
-#     E_BV     dm     b_fr
-GS    0.01   0.05      0.1
 
 # Likelihood equation.
 #

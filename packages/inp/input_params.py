@@ -210,8 +210,6 @@ def main(mypath, pars_f_path):
                     N_el = int(reader[7])
                     N_ei = int(reader[8])
                     N_es = int(reader[9])
-                elif reader[0] == 'GS':
-                    ga_steps = list(map(float, reader[1:]))
 
                 # Likelihood function
                 elif reader[0] == 'LK':
@@ -343,7 +341,7 @@ def main(mypath, pars_f_path):
         # Genetic algorithm parameters.
         'N_pop': N_pop, 'N_gen': N_gen, 'fit_diff': fit_diff,
         'cross_prob': cross_prob, 'cross_sel': cross_sel, 'mut_prob': mut_prob,
-        'N_el': N_el, 'N_ei': N_ei, 'N_es': N_es, 'ga_steps': ga_steps,
+        'N_el': N_el, 'N_ei': N_ei, 'N_es': N_es,
         # Fixed accepted parameter values and photometric systems.
         'read_mode_accpt': read_mode_accpt, 'coord_accpt': coord_accpt,
         'da_algors_accpt': da_algors_accpt, 'fld_rem_methods': fld_rem_methods,

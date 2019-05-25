@@ -100,20 +100,15 @@ def pl_lkl_scatt(gs, pos, ld_p, min_max_p, cp_r, cp_e, models_GA, lkls_GA):
     ax.add_artist(ob)
     # Plot scatter points over likelihood density map.
     cm = plt.cm.get_cmap('viridis')
-    col_arr = [float(_) for _ in list(zip(*models_GA))[ci]]
-    SC = plt.scatter(list(zip(*models_GA))[cp], lkls_GA, marker='o',
-                     c=col_arr, s=25, edgecolors='k',
-                     lw=0.2, edgecolor='w', cmap=cm, zorder=2)
+    SC = plt.scatter(
+        models_GA[cp], lkls_GA, marker='o', c=models_GA[ci], s=25,
+        edgecolors='k', lw=0.2, edgecolor='w', cmap=cm, zorder=2)
     # Best fit and errors.
     plt.axvline(x=xp, linestyle='--', color='red', zorder=4)
     if e_xp > 0.:
         # Plot error bars only if errors where assigned.
         plt.axvline(x=xp + e_xp, linestyle='--', color='blue', zorder=4)
         plt.axvline(x=xp - e_xp, linestyle='--', color='blue', zorder=4)
-    # Set y axis limit.
-    min_lik, med_lik = min(lkls_GA), np.median(lkls_GA)
-    min_y, max_y = min_lik - min_lik * 0.1, min(2.5 * min_lik, 1.2 * med_lik)
-    plt.ylim(min_y, max_y)
     ax.locator_params(nbins=5)
 
     # Position colorbar.
