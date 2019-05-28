@@ -47,7 +47,8 @@ from .out import make_A1_plot
 from .out import make_A2_plot
 from .out import photComb
 from .out import make_B_plot
-from .out import make_C_plot
+from .out import make_C1_plot
+from .out import make_C2_plot
 from .out import make_D1_plot
 from .out import make_D2_plot
 # DEPRECATED 22/11/18
@@ -211,16 +212,18 @@ def main(cl_file, pd):
     # Remove stars from the observed cluster according to a selected method.
     clp = cl_region_clean.main(clp, **pd)
 
+    make_C1_plot.main(npd, cld_c, pd, **clp)
+
     # Analyze parallax data if available.
     clp = plx_analysis.main(clp, **pd)
 
     # Analyze PMs data if available.
     clp = pms_analysis.main(clp, **pd)
 
-    make_C_plot.main(npd, cld_c, pd, **clp)
+    make_C2_plot.main(npd, pd, **clp)
 
     # Create data file with membership probabilities.
-    cluster_members_file.main(clp, **npd)
+    cluster_members_file.main(clp, npd, **pd)
 
     # Obtain best fitting parameters for cluster.
     clp = best_fit_synth_cl.main(clp, pd)
