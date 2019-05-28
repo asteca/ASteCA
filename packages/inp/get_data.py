@@ -113,7 +113,7 @@ def main(npd, read_mode, nanvals, id_col, x_col, y_col, mag_col, e_mag_col,
 
     clp = {
         'flag_data_eq': flag_data_eq, 'x_offset': x_offset,
-        'y_offset': y_offset}
+        'y_offset': y_offset, 'col_names_keep': col_names_keep}
 
     return cld_i, cld_c, clp
 

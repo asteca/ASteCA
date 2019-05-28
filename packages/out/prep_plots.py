@@ -3,6 +3,7 @@ from ..math_f import exp_function
 from ..best_fit.obs_clust_prepare import dataProcess
 from ..decont_algors.local_cell_clean import bin_edges_f
 import numpy as np
+import warnings
 from scipy import stats
 from scipy.spatial.distance import cdist
 from astropy.visualization import ZScaleInterval
@@ -93,22 +94,24 @@ def diag_limits(yaxis, phot_x, phot_y):
     '''
     Define plot limits for *all* photometric diagrams.
     '''
-    x_median, x_std = np.median(phot_x), np.std(phot_x)
+    x_median, x_std = np.nanmedian(phot_x), np.nanstd(phot_x)
     x_min_cmd, x_max_cmd = x_median - 4.5 * x_std, x_median + 4.5 * x_std
 
     # Use stars within the x limits defined. This prevents stars far away
     # from the x median from affecting the limit in y.
-    xmsk = (phot_x > x_min_cmd) & (phot_x < x_max_cmd)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        xmsk = (phot_x > x_min_cmd) & (phot_x < x_max_cmd)
 
     phot_y_msk = np.array(phot_y)[xmsk]
-    y_median, y_std = np.median(phot_y_msk), np.std(phot_y_msk)
+    y_median, y_std = np.nanmedian(phot_y_msk), np.nanstd(phot_y_msk)
 
     # y limits.
     if yaxis == 'mag':
         y_min_cmd = y_median + 1.25 * y_std + .75
         # If photometric axis y is a magnitude, make sure the brightest star
         # is always plotted.
-        y_max_cmd = min(phot_y_msk) - 1.
+        y_max_cmd = np.nanmin(phot_y_msk) - 1.
     else:
         y_max_cmd, y_min_cmd = y_median - 4.5 * y_std, y_median + 4.5 * y_std
 
@@ -661,3 +664,39 @@ def CIEllipse(points, prob=.95):
     width, height = 2 * np.sqrt(vals) * k
 
     return mean_pos, width, height, theta
+
+
+def complSeparate(cl_region_i, membs_i, memb_prob_avrg_sort):
+    """
+    Separate stars into complete and incomplete arrays.
+    """
+    mags_c, mags_i, cols_c, cols_i, colors_c, colors_i = [[] for _ in range(6)]
+    ids_c = list(zip(*memb_prob_avrg_sort))[0]
+    for i, star in enumerate(cl_region_i):
+        id_i = star[0]
+        if id_i in ids_c:
+            j = ids_c.index(id_i)
+            mags_c.append(memb_prob_avrg_sort[j][3][0])
+            cols_c.append(memb_prob_avrg_sort[j][5])
+            colors_c.append(memb_prob_avrg_sort[j][9])
+        else:
+            mags_i.append(star[3][0])
+            cols_i.append(star[5])
+            colors_i.append(membs_i[i])
+
+    cols_c = np.array(cols_c).T
+    if cols_i:
+        cols_i = np.array(cols_i).T
+        idx_i = np.argsort(colors_i)
+        mags_i = np.array(mags_i)[idx_i].tolist()
+        cols_i = np.array([_[idx_i] for _ in cols_i]).tolist()
+        colors_i = np.array(colors_i)[idx_i].tolist()
+    else:
+        cols_i = [[] for _ in range(cols_c.shape[0])]
+
+    idx_c = np.argsort(colors_c)
+    mags_c = np.array(mags_c)[idx_c].tolist()
+    cols_c = np.array([_[idx_c] for _ in cols_c]).tolist()
+    colors_c = np.array(colors_c)[idx_c].tolist()
+
+    return mags_c, mags_i, cols_c, cols_i, colors_c, colors_i

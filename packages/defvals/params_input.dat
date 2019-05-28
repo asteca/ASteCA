@@ -105,7 +105,8 @@ MO   auto
 #   - A1: (x,y) density maps
 #   - A2: structural analysis
 #   - B:  photometric analysis
-#   - C:  decontamination algorithm
+#   - C1: decontamination algorithm photometric diagrams
+#   - C2: decontamination algorithm parallax and PMs analysis
 #   - D1: likelihood minimization
 #   - D2: best fit synthetic cluster match
 #   - D3: top tier matches (if any were found)
@@ -269,7 +270,9 @@ PP           n           10       2000          n          100       5000
 #
 # * mp_col: [integer]
 #   Column number for the stars' MPs in the membership file, if the 'read'
-#   algorithm is selected. Otherwise this parameter is ignored.
+#   algorithm is selected. Use Python indexing (i.e.: Start counting from
+#   zero and negative values are accepted). Otherwise this parameter is
+#   ignored.
 #
 #   algor   runs   fport   id_col   mp_col
 DA  bayes   1000      .4        0        7
