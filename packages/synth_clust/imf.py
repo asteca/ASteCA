@@ -152,9 +152,9 @@ def main(IMF_name, m_high, masses):
     # Set IMF low mass limit.
     m_low = imfs_dict[IMF_name]
     # Set IMF mass interpolation step.
-    # The step (m_step) should not be too small since it will have an impact
+    # The step (mass_step) should not be too small since it will have an impact
     # on the performance of the 'mass_distribution' function.
-    m_step = 0.1
+    mass_step = 0.1
 
     # Obtain normalization constant. This is equivalent to 'k' in Eq. (7)
     # of Popescu & Hanson 2009 (138:1724-1740; PH09)
@@ -169,7 +169,7 @@ def main(IMF_name, m_high, masses):
     m_upper = m_low
     while m_upper < m_high:
         m_lower = m_upper
-        m_upper = m_upper + m_step
+        m_upper = m_upper + mass_step
         # Number of stars in the (m_lower, m_upper) interval.
         N_stars = quad(integral_IMF_N, m_lower, m_upper, args=(IMF_name))[0]
         mass_up.append(m_upper)

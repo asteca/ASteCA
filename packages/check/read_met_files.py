@@ -22,7 +22,7 @@ def check_get(pd):
             params_values, met_f_filter, met_values, age_values, met_vals_all,\
                 age_vals_all = met_ages_values.main(
                     pd['iso_paths'], pd['best_fit_algor'], pd['par_ranges'],
-                    pd['za_steps'], pd['m_step'])
+                    pd['za_steps'], pd['N_mass'])
         except Exception:
             print(traceback.format_exc())
             sys.exit("\nERROR: error storing metallicity files.")
@@ -80,7 +80,7 @@ def ranges_files_check(
             missing = find_missing(z_range, met_vs)
             sys.exit(err_mssg.format(
                 cmd_systs[all_syst_filters[i][0]][0], z_range,
-                np.array(met_vals_all), np.asarray(met_vs),
+                np.array(met_vals_all[i]), np.asarray(met_vs),
                 np.asarray(missing)))
     err_mssg = "ERROR: one or more isochrones could not be matched\n" +\
                "to the age range given.\n\nThe defined values are:\n\n" +\

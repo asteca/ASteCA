@@ -7,7 +7,7 @@ from os.path import join
 from . import isochs_format
 
 
-def main(iso_paths, best_fit_algor, par_ranges, za_steps, m_step):
+def main(iso_paths, best_fit_algor, par_ranges, za_steps, N_mass):
     '''
     Obtain the correct metallicities and ages used by the code.
     '''
@@ -24,7 +24,7 @@ def main(iso_paths, best_fit_algor, par_ranges, za_steps, m_step):
     age_vals_all = CMDAges(met_files[0][0])
 
     # Get parameters ranges.
-    params_values = getParamVals(best_fit_algor, par_ranges, za_steps, m_step)
+    params_values = getParamVals(best_fit_algor, par_ranges, za_steps, N_mass)
 
     # Match values in metallicity and age ranges given by the user, with
     # those available in the theoretical isochrones.
@@ -88,13 +88,10 @@ def CMDAges(met_file):
     return isoch_a
 
 
-def getParamVals(best_fit_algor, par_ranges, za_steps, m_step):
+def getParamVals(best_fit_algor, par_ranges, za_steps, N_mass):
     '''
     Obtain parameter ranges to be used by the selected best fit method.
     '''
-
-    # Define steps for the parameters defined in grids.
-    steps = za_steps + [None, None, m_step, None]
 
     params_values = []
     for i, param in enumerate(par_ranges):
@@ -106,10 +103,15 @@ def getParamVals(best_fit_algor, par_ranges, za_steps, m_step):
             params_values.append(np.asarray([param[0]]))
         else:
             # Store range values in array.
-            if steps[i] is None:
+            if i in (0, 1):  # (z, a)
+                p_rang = np.arange(param[0], param[1], za_steps[i])
+            elif i in (2, 3, 5):  # (E_BV, dm, b_fr)
                 p_rang = np.asarray(param)
-            else:
-                p_rang = np.arange(param[0], param[1], steps[i])
+            elif i == 4:  # Mass
+                p_rang = np.linspace(param[0], param[1], N_mass)
+                # Round to integer and remove possible duplicated elements
+                p_rang = np.array(list(set(np.round(p_rang, 0))))
+                p_rang.sort()
             # Skip if array is empty. Checker will catch this.
             if p_rang.size:
                 # Add max value if not present. Check this way to avoid

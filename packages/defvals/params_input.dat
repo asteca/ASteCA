@@ -484,10 +484,10 @@ PS    0.01         0.1
 # * N_interp: [int]
 #   Number of extra values to interpolate into the isochrones.
 #
-# * m_step: [int]
-#   Mass step that defines the mass values to sample within the mass range.
+# * N_mass: [int]
+#   Number of masses defined within the mass range.
 #
-#   IMF                 m_high      N_interp     m_step
+#   IMF                 m_high      N_interp     N_mass
 MF  kroupa_2002            150          2000        100
 
 # Binaries mass ratio.
