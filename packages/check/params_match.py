@@ -5,7 +5,7 @@ from os.path import isdir
 
 def check(
     bf_flag, best_fit_algor, par_ranges, lkl_method, lkl_methods, lkl_binning,
-    evol_track, max_mag, IMF_name, R_V, m_step, bin_mr, bin_methods,
+    evol_track, max_mag, IMF_name, R_V, N_mass, bin_mr, bin_methods,
     lkl_weight, bin_weights, cmd_evol_tracks, iso_paths, imf_funcs, hmax,
     hperc_btstrp, N_pop, N_gen, fit_diff, cross_prob, cross_sel,
     mut_prob, N_el, N_ei, N_es, inst_packgs_lst, ntemps,
@@ -150,7 +150,7 @@ def check(
             m_range[0] = 10.
         # Check mass range.
         try:
-            if (m_range[1] - m_range[0]) / m_step > 100 and m_range[1] > 1e5:
+            if N_mass > 100 and m_range[1] > 1e5:
                 print("  WARNING: the number of masses defined is > 100 and\n"
                       "  the max mass is large ({:.0f}). This could cause\n"
                       "  memory issues when sampling the IMF.\n".format(

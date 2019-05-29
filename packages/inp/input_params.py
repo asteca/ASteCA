@@ -226,7 +226,7 @@ def main(mypath, pars_f_path):
                     IMF_name = str(reader[1])
                     m_high = float(reader[2])
                     N_IMF_interp = int(reader[3])
-                    m_step = float(reader[4])
+                    N_mass = float(reader[4])
                 elif reader[0] == 'BI_m':
                     bin_mr = float(reader[1])
                 elif reader[0] == 'RV':
@@ -318,7 +318,7 @@ def main(mypath, pars_f_path):
         # Synthetic cluster parameters
         'evol_track': evol_track, 'za_steps': za_steps,
         'max_mag': max_mag, 'IMF_name': IMF_name, 'm_high': m_high,
-        'N_IMF_interp': N_IMF_interp, 'm_step': m_step, 'R_V': R_V,
+        'N_IMF_interp': N_IMF_interp, 'N_mass': N_mass, 'R_V': R_V,
         'bin_mr': bin_mr,
         # parameters ranges
         'par_ranges': par_ranges,
