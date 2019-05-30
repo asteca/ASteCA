@@ -49,7 +49,7 @@ def main(met_f_filter, age_values, cmd_evol_tracks, evol_track, bin_mr,
     # discarded after the colors (and magnitudes) with binarity assignment
     # are obtained.
     mags_binar, cols_binar, probs_binar, mass_binar = binarity.binarGen(
-        fundam_params[5], N_IMF_interp, a, b, c, d, bin_mr)
+        fundam_params[5], N_mass_interp, a, b, c, d, bin_mr)
 
     # Create list structured as:
     # theor_tracks = [m1, m2, .., mN]
@@ -62,7 +62,7 @@ def main(met_f_filter, age_values, cmd_evol_tracks, evol_track, bin_mr,
     # cXb: colors with the binary data
     # bp:  binary probabilities
     # mb:  binary masses
-    # m_ini,..., m_bol: six extra parameters.
+    # Mini,...: extra parameters.
 
     # Combine all data into a single array of shape:
     # (N_z, N_age, N_data, N_IMF_interp), where 'N_data' is the number of
