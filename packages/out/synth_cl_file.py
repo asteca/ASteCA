@@ -30,7 +30,7 @@ def main(clp, npd, bf_flag, best_fit_algor, fundam_params, filters, colors,
             hdr += ['e_' + f[1] + '   ' for f in filters]
             hdr += ['e_(' + c[1].replace(',', '-') + ')   ' for c in colors]
             hdr = ''.join(hdr) +\
-                'M_ini   M_act  logL/Lo  logTe  logG  mbol\n'
+                'Mini  int_IMF  Mass  logL  logTe  logg  label  mbolmag\n'
             # Save best fit synthetic cluster found to file.
             with open(npd['synth_file_out'], "w") as f_out:
                 f_out.write(hdr)
@@ -44,8 +44,10 @@ def main(clp, npd, bf_flag, best_fit_algor, fundam_params, filters, colors,
                         f_out.write("{:<8.4f}".format(_))
                     for _ in e_mags_cols[i]:
                         f_out.write("{:<8.4f}".format(_))
-                    f_out.write("{:<8.4f} {:<8.4f} {:<8.4f} {:<8.4f}"
-                                " {:<8.4f} {:<8.4f}\n".format(*extra_pars[i]))
+                    f_out.write(
+                        "{:<8.4f} {:<8.4f} {:<8.4f} {:<8.4f}"
+                        " {:<8.4f} {:<8.4f} {:<8.4f} {:<8.4f}\n".format(
+                            *extra_pars[i]))
 
             print('Best fit synthetic cluster saved to file.')
             # Save for plotting.

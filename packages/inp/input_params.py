@@ -225,7 +225,7 @@ def main(mypath, pars_f_path):
                 elif reader[0] == 'MF':
                     IMF_name = str(reader[1])
                     m_high = float(reader[2])
-                    N_IMF_interp = int(reader[3])
+                    N_mass_interp = int(reader[3])
                     N_mass = float(reader[4])
                 elif reader[0] == 'BI_m':
                     bin_mr = float(reader[1])
@@ -274,14 +274,9 @@ def main(mypath, pars_f_path):
     # Map evolutionary tracks selection to proper names, and name of the folder
     # where they should be stored.
     cmd_evol_tracks = {
-        # 'PAR12C': ('parsec12C', 'COLIBRI PR16'),
         'PAR12': ('parsec12', 'PARSEC v1.2S'),
         'PAR10': ('parsec10', 'PARSEC v1.0'),
-        'PAR11': ('parsec11', 'PARSEC v1.1'),
-        'MAR08A': ('marigo08A', 'Marigo (2008, Case A)'),
-        'MAR08B': ('marigo08B', 'Marigo (2008, Case B)'),
-        'MAR08': ('marigo08', 'Marigo (2008)'),
-        'GIR02': ('girardi02', 'Girardi (2002)')}
+        'PAR11': ('parsec11', 'PARSEC v1.1')}
 
     # Dictionary with data on the CMD service photometric systems.
     cmd_systs = CMD_phot_systs.main()
@@ -318,7 +313,7 @@ def main(mypath, pars_f_path):
         # Synthetic cluster parameters
         'evol_track': evol_track, 'za_steps': za_steps,
         'max_mag': max_mag, 'IMF_name': IMF_name, 'm_high': m_high,
-        'N_IMF_interp': N_IMF_interp, 'N_mass': N_mass, 'R_V': R_V,
+        'N_mass_interp': N_mass_interp, 'N_mass': N_mass, 'R_V': R_V,
         'bin_mr': bin_mr,
         # parameters ranges
         'par_ranges': par_ranges,

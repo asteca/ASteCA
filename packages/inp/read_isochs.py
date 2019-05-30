@@ -8,100 +8,6 @@ from . import isochs_format
 from .. import update_progress
 
 
-def readCMDFile(met_f, age_values, line_start, age_format, column_ids):
-    '''
-    Read a given metallicity file from the CMD service, and return the
-    isochrones for the ages within the age range.
-    '''
-    metal_isoch = []
-
-    # Open the metallicity file.
-    with open(met_f, mode="r") as f_iso:
-        # Initialize list with one list per filter defined in this system.
-        isoch_data = [[] for _ in column_ids]
-
-        # Initial value for age to avoid 'not defined' error.
-        age = -99.
-
-        # Iterate through each line in the file.
-        for line in f_iso:
-
-            # Identify beginning of a defined isochrone.
-            if line.startswith(line_start):
-
-                # Save stored values if these exist.
-                # Skip first age for which the lists will be empty.
-                if isoch_data[0]:
-                    # Store data for this isochrone.
-                    metal_isoch.append(isoch_data)
-                    # Reset list for next age value.
-                    isoch_data = [[] for _ in column_ids]
-
-                # Read age value for this isochrone.
-                age0 = re.findall(age_format, line)  # Find age in line.
-                # TODO hardcoded rounding. Must be modified in accordance with
-                # 'met_ages_values.CMDAges()'.
-                age = np.around(np.log10(float(age0[0])), 4)
-
-            # If age value falls inside the given range, store the
-            # isochrone's data.
-            if age in age_values:
-
-                # Save data for each isochrone.
-                if not line.startswith("#"):
-                    reader = line.split()
-
-                    # # Don't read PMS stars.
-                    # if reader[-1] != '0':
-                    for i, id_num in enumerate(column_ids):
-                        # Store data in column.
-                        isoch_data[i].append(float(reader[id_num]))
-
-        # Save the last isochrone when EOF is reached.
-        else:
-            # If list is not empty.
-            if isoch_data[0]:
-                metal_isoch.append(isoch_data)
-
-    return metal_isoch
-
-
-def filters_and_extra_pars(
-        evol_track, age_values, all_syst_filters, age_format, line_start,
-        met_f, j):
-    """
-    Read the data from all the filters in all the photometric systems defined,
-    and also the extra parameters for each metallicity and age value (masses,
-    effective temperatures, etc.)
-    """
-    # Depends on the photometric system analyzed.
-    l_s = isochs_format.read_line_start(met_f, line_start)
-    if j >= 0:
-        identif = 'filters data'
-        # Column indexes for all the filters defined in this system.
-        uniq_fltrs = all_syst_filters[j][1:]
-        # Column numbers for the filters defined in this system.
-        ids = isochs_format.girardi_filters_ids(l_s, uniq_fltrs)
-    else:
-        identif = 'extra parameters'
-        # Column numbers for the extra parameters for this metallicity.
-        ids = isochs_format.cmd_common_ids(evol_track, l_s)
-
-    try:
-        met_f_ages = readCMDFile(
-            met_f, age_values, line_start, age_format, ids)
-    except Exception:
-        print(traceback.format_exc())
-        sys.exit("Error reading {} from \n'{}'\n"
-                 "metallicity file.".format(identif, met_f))
-
-    return met_f_ages
-
-
-def checkEqual(lst):
-    return lst[1:] == lst[:-1]
-
-
 def main(met_f_filter, age_values, evol_track, all_syst_filters):
     '''
     Stores the available isochrones of different metallicities and
@@ -183,3 +89,81 @@ def main(met_f_filter, age_values, evol_track, all_syst_filters):
                  "of defined ages.")
 
     return isoch_list, extra_pars
+
+
+def filters_and_extra_pars(
+    evol_track, age_values, all_syst_filters, age_format, line_start,
+        met_f, j):
+    """
+    Read the data from all the filters in all the photometric systems defined,
+    and also the extra parameters for each metallicity and age value (masses,
+    effective temperatures, etc.)
+    """
+    # Depends on the photometric system analyzed.
+    l_s = isochs_format.read_line_start(met_f, line_start)
+    if j >= 0:
+        identif = 'filters data'
+        # Column indexes for all the filters defined in this system.
+        uniq_fltrs = all_syst_filters[j][1:]
+        # Column numbers for the filters defined in this system.
+        ids = isochs_format.girardi_filters_ids(l_s, uniq_fltrs)
+    else:
+        identif = 'extra parameters'
+        # Column numbers for the extra parameters for this metallicity.
+        ids = isochs_format.cmd_common_ids(evol_track, l_s)
+
+    try:
+        met_f_ages = readCMDFile(
+            met_f, age_values, line_start, age_format, ids)
+    except Exception:
+        print(traceback.format_exc())
+        sys.exit("Error reading {} from \n'{}'\n"
+                 "metallicity file.".format(identif, met_f))
+
+    return met_f_ages
+
+
+def readCMDFile(met_f, age_values, line_start, age_format, column_ids):
+    '''
+    Read a given metallicity file from the CMD service, and return the
+    isochrones for the ages within the age range.
+    '''
+    metal_isoch = []
+
+    # Open the metallicity file.
+    with open(met_f, mode="r") as f_iso:
+        content = f_iso.readlines()
+
+        # identify positions of all isochrone starting lines.
+        idx = [
+            i for i, line in enumerate(content) if line.startswith(line_start)]
+
+        # Age value for all isochrones in file.
+        all_ages = [
+            float(re.findall(age_format, content[i - 1])[0]) for i in idx]
+        # TODO hardcoded rounding. Must be modified in accordance with
+        # 'met_ages_values.CMDAges()'.
+        ages = np.around(np.log10(all_ages), 4)
+
+        def appendIsoch(a, b):
+            """Extract and format isochrone data."""
+            block = content[a:b]
+            block = np.array([map(float, _.split()) for _ in block]).T
+            return block[column_ids].tolist()
+
+        N = len(idx)
+        for k, i in enumerate(idx):
+            age = ages[k]
+            # If age value falls inside the given range..
+            if age in age_values:
+                if k < N - 1:
+                    metal_isoch.append(appendIsoch(i + 1, idx[k + 1] - 1))
+                else:
+                    # Save the last isochrone.
+                    metal_isoch.append(appendIsoch(idx[-1] + 1, -1))
+
+    return metal_isoch
+
+
+def checkEqual(lst):
+    return lst[1:] == lst[:-1]
