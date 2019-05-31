@@ -457,8 +457,15 @@ LK     dolphin      knuth      mean
 #   - PAR11:  PARSEC v1.1
 #   - PAR10:  PARSEC v1.0
 #
-#   evol_track
-PS       PAR12
+# * colibri: [selection]
+#
+#   - CS_35:  COLIBRI S_35
+#   - CS_07:  COLIBRI S_07
+#   - CPR16:  COLIBRI PR16
+#   - No   :  No limitation in Z
+#
+#   evol_track    colibri
+PS       PAR12         No
 #
 # Input [z, log(age)] steps to read the stored isochrones.
 #

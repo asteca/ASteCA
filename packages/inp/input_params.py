@@ -220,6 +220,7 @@ def main(mypath, pars_f_path):
                 # Synthetic clusters parameters
                 elif reader[0] == 'ET':
                     evol_track = str(reader[1])
+                    colibri = str(reader[2])
                 elif reader[0] == 'PS':
                     za_steps = list(map(float, reader[1:]))
                 elif reader[0] == 'MF':
@@ -274,12 +275,23 @@ def main(mypath, pars_f_path):
     # Map evolutionary tracks selection to proper names, and name of the folder
     # where they should be stored.
     cmd_evol_tracks = {
-        'PAR12': ('parsec12', 'PARSEC v1.2S'),
-        'PAR10': ('parsec10', 'PARSEC v1.0'),
-        'PAR11': ('parsec11', 'PARSEC v1.1')}
+        'PAR12+CS_35': ('parsec12', 'PARSEC v1.2S', 'COLIBRI S_35'),
+        'PAR11+CS_35': ('parsec11', 'PARSEC v1.1', 'COLIBRI S_35'),
+        'PAR10+CS_35': ('parsec10', 'PARSEC v1.0', 'COLIBRI S_35'),
+        'PAR12+CS_07': ('parsec12', 'PARSEC v1.2S', 'COLIBRI S_07'),
+        'PAR11+CS_07': ('parsec11', 'PARSEC v1.1', 'COLIBRI S_07'),
+        'PAR10+CS_07': ('parsec10', 'PARSEC v1.0', 'COLIBRI S_07'),
+        'PAR12+CPR16': ('parsec12', 'PARSEC v1.2S', 'COLIBRI PR16'),
+        'PAR11+CPR16': ('parsec11', 'PARSEC v1.1', 'COLIBRI PR16'),
+        'PAR10+CPR16': ('parsec10', 'PARSEC v1.0', 'COLIBRI PR16'),
+        'PAR12+No': ('parsec12', 'PARSEC v1.2S', 'No'),
+        'PAR11+No': ('parsec11', 'PARSEC v1.1', 'No'),
+        'PAR10+No': ('parsec10', 'PARSEC v1.0', 'No'),
+    }
 
     # Dictionary with data on the CMD service photometric systems.
     cmd_systs = CMD_phot_systs.main()
+    evol_track = evol_track + '+' + colibri
 
     par_ranges = [z_range, a_range, e_range, d_range, m_range, b_range]
 

@@ -9,14 +9,16 @@ def cmd_age_format():
     return age_format
 
 
-def cmd_line_start_format(evol_track):
+def cmd_line_start_format(cmd_evol_tracks, evol_track):
     """
     Return the format of the line where column names are read from, for each
     set of evolutionary tracks.
     """
-    if evol_track in ['PAR10', 'PAR11', 'PAR12']:
+    if evol_track in cmd_evol_tracks.keys():
         # String that identifies the beginning of a new isochrone.
         line_start = "# Zini"
+    else:
+        print("ERROR: evolutionary track not recognized.")
 
     return line_start
 

@@ -172,9 +172,9 @@ def pl_bf_synth_cl(
         ax_t = plt.subplot(gs[gs_y1:gs_y2, 6:7])
         ax_t.axis('off')  # Remove axis from frame.
         # Map isochrones set selection to proper name.
-        iso_print = cmd_evol_tracks[evol_track][1]
-        t1 = r'$Synthetic\;cluster\;parameters$' + '\n' + \
-            r'$[Tracks:\;{}]$'.format(iso_print.replace(' ', '\;'))
+        iso_print = cmd_evol_tracks[evol_track][1] + ' + ' +\
+            cmd_evol_tracks[evol_track][2]
+        t1 = r'$Synthetic\;cluster\;parameters$' + '\n[{}]'.format(iso_print)
         t2 = r'$IMF \hspace{{3.}}:\;{}$'.format(
             IMF_name.replace('_', '\;').title())
         t3 = r'$R_{{V}} \hspace{{3.2}}=\;{}$'.format(R_V)

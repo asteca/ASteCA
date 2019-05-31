@@ -21,7 +21,8 @@ def main(met_f_filter, age_values, cmd_evol_tracks, evol_track, bin_mr,
 
     # Get isochrones and their extra parameters (mass, etc.).
     isoch_list, extra_pars = read_isochs.main(
-        met_f_filter, age_values, evol_track, all_syst_filters)
+        met_f_filter, age_values, cmd_evol_tracks, evol_track,
+        all_syst_filters)
 
     # Take the synthetic data from the unique filters read, create the
     # necessary colors, and position the magnitudes and colors in the

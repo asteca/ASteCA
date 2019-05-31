@@ -8,7 +8,9 @@ from . import isochs_format
 from .. import update_progress
 
 
-def main(met_f_filter, age_values, evol_track, all_syst_filters):
+def main(
+    met_f_filter, age_values, cmd_evol_tracks, evol_track,
+        all_syst_filters):
     '''
     Stores the available isochrones of different metallicities and
     ages, according to the ranges given to these parameters.
@@ -41,7 +43,8 @@ def main(met_f_filter, age_values, evol_track, all_syst_filters):
     # Equal for all photometric systems in all sets of evolutionary tracks.
     age_format = isochs_format.cmd_age_format()
     # Depends on the evolutionary track set.
-    line_start = isochs_format.cmd_line_start_format(evol_track)
+    line_start = isochs_format.cmd_line_start_format(
+        cmd_evol_tracks, evol_track)
 
     # Store here the number of age values defined in each file, for checking.
     numb_age_values = []
