@@ -59,6 +59,17 @@ def main(npd, read_mode, nanvals, id_col, x_col, y_col, mag_col, e_mag_col,
         col_names_keep = list(filter(bool, list(flatten(col_names))))
         data.keep_columns(col_names_keep)
 
+        # Mask photometric values outside the (-50., 50.) range.
+        msk = {}
+        for idx in [mag_col, e_mag_col, col_col, e_col_col]:
+            for c_idx in idx:
+                d = data[c_idx]
+                msk[c_idx] = np.array([-50. < _ < 50. for _ in d])
+        # Apply masks to each photometric column.
+        for idx in [mag_col, e_mag_col, col_col, e_col_col]:
+            for c_idx in idx:
+                data[c_idx].mask = [~msk[c_idx]]
+
         # Define PHOTOMETRIC data columns.
         data_phot = list(flatten([mag_col, e_mag_col, col_col, e_col_col]))
         # Check if there are any masked elements in the photometric data.
