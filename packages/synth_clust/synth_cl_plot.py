@@ -1,7 +1,7 @@
 
 from . import move_isochrone
 from . import synth_cluster
-from ..best_fit.mcmc_common import closeSol
+from ..best_fit.bf_common import closeSol
 
 
 def main(

@@ -66,7 +66,7 @@ def main(
                 st[:3] + mag + emag + cols + ecols + kinem + ekinem +
                 [round(clp['memb_probs_cl_region_i'][i], 2), '-1'])
 
-    t = Table(zip(*data), names=clp['col_names_keep'] + ['MP', 'sel'])
+    t = Table(list(zip(*data)), names=clp['col_names_keep'] + ['MP', 'sel'])
     ascii.write(
         t, npd['memb_file_out'], overwrite=True, format='csv',
         fast_writer=False  # <-- TODO remove when the bug is fixed

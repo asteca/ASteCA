@@ -3,7 +3,7 @@ import time as t
 import numpy as np
 from scipy.optimize import differential_evolution as DE
 import warnings
-from mcmc_common import synthClust, varPars, fillParams
+from .bf_common import synthClust, varPars, fillParams
 from . import likelihood
 from .. import update_progress
 

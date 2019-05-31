@@ -151,7 +151,7 @@ def readCMDFile(met_f, age_values, line_start, age_format, column_ids):
         def appendIsoch(a, b):
             """Extract and format isochrone data."""
             block = content[a:b]
-            block = np.array([map(float, _.split()) for _ in block]).T
+            block = np.array([list(map(float, _.split())) for _ in block]).T
             return block[column_ids].tolist()
 
         N = len(idx)

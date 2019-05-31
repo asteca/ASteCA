@@ -130,7 +130,7 @@ def plot_observed_cluster(
             err_bar, mode_fld_clean, bin_edges)
     except Exception:
         import traceback
-        print traceback.format_exc()
+        print(traceback.format_exc())
         print("  WARNING: error when plotting MPs on cluster's "
               "photometric diagram.")
 
@@ -157,6 +157,6 @@ def plot_observed_cluster(
             cbar.ax.tick_params(labelsize=9)
     except Exception:
         import traceback
-        print traceback.format_exc()
+        print(traceback.format_exc())
         print("  WARNING: error when plotting colorbar on cluster's "
               "photometric diagram.")
