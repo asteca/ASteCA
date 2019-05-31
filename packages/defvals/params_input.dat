@@ -98,7 +98,7 @@ MO   auto
 
 # Create output figures?
 #
-# * blocks: A1 A2 B C D1 D2 D3
+# * blocks: [A1, A2, B, C1, C2, D1, D2]
 #   Select one or more identifier to decide which plots will be produced. Leave
 #   empty for no output plots.
 #
@@ -109,10 +109,9 @@ MO   auto
 #   - C2: decontamination algorithm parallax and PMs analysis
 #   - D1: likelihood minimization
 #   - D2: best fit synthetic cluster match
-#   - D3: top tier matches (if any were found)
 #
 #   blocks
-MP   A1 A2 B C D1 D2 D3
+MP   A1 A2 B C1 C2 D1 D2
 
 # * format: png / pdf
 #   Format of the final image file.
@@ -206,7 +205,7 @@ GR       10
 #   columns are not present (or no maximum limit is desired) use 'n'.
 #
 #   e_mag_max   e_col_max    e_plx_max     e_pm_max     e_rv_max
-ER       0.2            n            n            n            n
+ER        0.1           n            n            n            n
 
 # Anderson-Darling test (cluster vs field regions).
 #
@@ -235,7 +234,7 @@ AD   100             y
 #   Number of MCMC steps used in the Bayesian analysis. 
 #
 #     plx_flag   plx_chains   plx_runs   pms_flag   pms_chains   pms_runs
-PP           n           10       2000          n          100       5000
+PP           n          100       2000          n          100       5000
 ################################################################################
 
 
@@ -318,7 +317,7 @@ DW     1.       1.       1.       1.       1.      1.
 #   selected. Otherwise this parameter is ignored.
 #
 #    mode    binning     prob_min
-RM  local      knuth          0.5
+FR  local      knuth          0.5
 ################################################################################
 
 
@@ -465,7 +464,7 @@ LK     dolphin      knuth      mean
 #   - No   :  No limitation in Z
 #
 #   evol_track    colibri
-PS       PAR12         No
+ET       PAR12         No
 #
 # Input [z, log(age)] steps to read the stored isochrones.
 #
