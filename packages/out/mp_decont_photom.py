@@ -208,7 +208,7 @@ def pl_mps_incomp_diags(
     text = r'$N_{{cmpl}}={},\, N_{{incmpl}}={}$'.format(
         sum(~np.isnan(xdata_c) & ~np.isnan(ydata_c)),
         sum(~np.isnan(xdata_i) & ~np.isnan(ydata_i)))
-    ax.set_title(text, fontsize=12)
+    ax.set_title(text, fontsize=10)
     # Set minor ticks
     ax.minorticks_on()
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
