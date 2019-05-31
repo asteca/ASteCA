@@ -2,17 +2,6 @@
 import os
 
 
-def effWavel(line):
-    """
-    Properly read effective wavelengths from line.
-    """
-    effW = []
-    for l0 in line.split():
-        effW.append(float(l0.split("(")[0]))
-
-    return tuple(effW)
-
-
 def main():
     '''
     Dictionary that stores the names and column names for each
@@ -23,31 +12,27 @@ def main():
 
     Capitalization of the filter names matters!
 
-    cmd_systs = {photSyst0, photSyst1, ..., photSystN}
-    photSyst['X'] = ('nameX', filtersX, effWavelengthsX)
+    cmd_systs = {0, 1, ..., N}
+    X = ('nameX', filtersX, effWavelengthsX)
     filtersX = (filter1, filter2, ..., filterQ)
     effWavelengthsX = (float1, float2, ..., floatQ)
 
     Returns
     -------
     cmd_systs : dictionary
-
     '''
     fn = os.path.join(os.path.dirname(__file__), 'CMD_systs.dat')
     cmd_systs = {}
     with open(fn) as f:
-        j = 0
         f_lines = f.readlines()
         for i, li in enumerate(f_lines):
             if not li.startswith("#"):
-                # Read odd lines
-                if i % 2 != 0:
-                    # Photometric system's name, and filters' names.
-                    ls = li.split()
-                    # Filters' effective wavelengths.
-                    effW = effWavel(f_lines[i + 1])
-                    cmd_systs[str(j)] = (ls[0], tuple(ls[1:]), effW)
-                    j += 1
+                # Photometric system's name, and filters' names.
+                ls = li.split()
+                Nf = int((len(ls) - 1) / 3.)
+                cmd_systs[str(ls[0])] = (
+                    ls[1], tuple(ls[2:Nf + 2]),
+                    tuple(map(float, ls[Nf + 2:2 * Nf + 2])))
 
     return cmd_systs
 

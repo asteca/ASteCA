@@ -67,15 +67,11 @@ def check_all(mypath, file_end):
     # Check structural parameters.
     params_struct.check(**pd)
 
-    # DEPRECATED 31/10/18
-    # # Check that R and rpy2 are installed, if necessary.
-    # pd = params_pval.check(pd)
-
     # Check decontamination algorithm parameters.
     params_decont.check(cl_files, **pd)
 
     # Check the best synthetic cluster match parameters.
-    params_match.check(**pd)
+    pd = params_match.check(mypath, pd)
 
     # Filters and colors names.
     fs = ', '.join(_[1] for _ in pd['filters'])

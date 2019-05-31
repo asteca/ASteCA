@@ -1,6 +1,5 @@
 
 import sys
-from os.path import join
 
 
 def phot_syst_filt_check(all_systs, entry, phot_syst, filter_name):
@@ -115,44 +114,11 @@ def check(mypath, pd):
         sys.exit("ERROR: missing error column name/index for color"
                  " in 'params_input dat'.")
 
-    all_syst_filters, iso_paths = [], []
-    if pd['bf_flag']:
-        # Remove duplicate filters (if they exist), and combine them into one
-        # tuple per photometric system.
-        # The resulting list looks like this:
-        # [('2', 'T1', 'C'), ('4', 'B', 'V'), ('65', 'J')]
-        # where the first element of each tuple points to the photometric
-        # system, and the remaining elements are the unique filters in that
-        # system.
-        all_syst_filters = list(set(filters + c_filters))
-        d = {}
-        for k, v in all_syst_filters:
-            d.setdefault(k, [k]).append(v)
-        all_syst_filters = sorted(map(tuple, d.values()))
-
-        # Fix isochrones location according to the CMD and set selected.
-        text1 = pd['cmd_evol_tracks'][pd['evol_track']][0]
-        # Generate correct name for the isochrones path.
-        iso_paths = []
-        for p_syst in all_syst_filters:
-            text2 = all_systs[p_syst[0]][0]
-            # Set iso_path according to the above values.
-            iso_paths.append(
-                join(mypath + 'isochrones/' + text1 + '_' + text2))
-
-        # TODO REMOVE when (if) support for multiple mags/colors is in place.
-        if len(filters) > 1:
-            sys.exit("ERROR: more than one filter defined.")
-        if len(colors) > 2:
-            sys.exit("ERROR: more than two colors defined.")
-
     # Add data to parameters dictionary.
     pd['id_col'], pd['x_col'], pd['y_col'],\
         pd['mag_col'], pd['e_mag_col'], pd['filters'], pd['col_col'],\
-        pd['e_col_col'], pd['colors'], pd['all_syst_filters'],\
-        pd['iso_paths'] = id_col, x_col, y_col, mag_col,\
-        e_mag_col, filters, col_col, e_col_col, colors,\
-        all_syst_filters, iso_paths
+        pd['e_col_col'], pd['colors'], pd['c_filters'] = id_col, x_col, y_col,\
+        mag_col, e_mag_col, filters, col_col, e_col_col, colors, c_filters
 
     # Read PMs, parallax, and RV data.
     k_cols = ('plx', 'e_plx', 'pmx', 'e_pmx', 'pmy', 'e_pmy', 'rv', 'e_rv')
