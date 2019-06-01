@@ -5,8 +5,8 @@ import matplotlib.offsetbox as offsetbox
 
 
 def pl_full_frame(
-        N, gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max,
-        asp_ratio, x, y, st_sizes_arr, mag_range, main_mag):
+    N, gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max, asp_ratio,
+        x, y, st_sizes_arr, mag_range, main_mag):
     '''
     x,y finding chart of stars in frame within 'mag_range'
     '''
@@ -32,8 +32,9 @@ def pl_full_frame(
     plt.scatter(x, y, marker='o', c='black', s=st_sizes_arr)
 
 
-def pl_densxy(N, gs, fig, asp_ratio, x_name, y_name, coord, bw_list,
-              kde_pl, cent_xy):
+def pl_densxy(
+    N, gs, fig, asp_ratio, x_name, y_name, coord, bw_list, kde_pl,
+        cent_xy):
     '''
     2D Gaussian convolved histogram.
     '''
@@ -58,21 +59,23 @@ def pl_densxy(N, gs, fig, asp_ratio, x_name, y_name, coord, bw_list,
     plt.axhline(y=cent_xy[1], linestyle='--', lw=.85, color='green')
     plt.scatter(*cent_xy, marker='x', color='w', s=20)
 
-    ext_range, x, y, k_pos = kde_pl
-    kde = np.reshape(k_pos.T, x.shape)
-    plt.imshow(np.rot90(kde), cmap=plt.get_cmap('RdYlBu_r'), extent=ext_range)
-    plt.contour(x, y, kde, colors='#551a8b', linewidths=0.5)
+    if kde_pl:
+        ext_range, x, y, k_pos = kde_pl
+        kde = np.reshape(k_pos.T, x.shape)
+        plt.imshow(
+            np.rot90(kde), cmap=plt.get_cmap('RdYlBu_r'), extent=ext_range)
+        plt.contour(x, y, kde, colors='#551a8b', linewidths=0.5)
 
-    # Add text box
-    r_frmt = '{:.0f}' if coord == 'px' else '{:.3f}'
-    t1 = ('${}_{{c}} =$' + r_frmt + '$\,{}$').format(
-        x_name, cent_xy[0], coord)
-    t2 = ('${}_{{c}} =$' + r_frmt + '$\,{}$').format(
-        y_name, cent_xy[1], coord)
-    text = t1 + '\n' + t2
-    ob = offsetbox.AnchoredText(text, pad=0.2, loc=2, prop=dict(size=10))
-    ob.patch.set(alpha=0.85)
-    ax.add_artist(ob)
+        # Add text box
+        r_frmt = '{:.0f}' if coord == 'px' else '{:.3f}'
+        t1 = ('${}_{{c}} =$' + r_frmt + '$\,{}$').format(
+            x_name, cent_xy[0], coord)
+        t2 = ('${}_{{c}} =$' + r_frmt + '$\,{}$').format(
+            y_name, cent_xy[1], coord)
+        text = t1 + '\n' + t2
+        ob = offsetbox.AnchoredText(text, pad=0.2, loc=2, prop=dict(size=10))
+        ob.patch.set(alpha=0.85)
+        ax.add_artist(ob)
 
     # If RA is used, invert axis.
     if coord == 'deg':

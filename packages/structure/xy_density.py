@@ -77,7 +77,13 @@ def kde_center(x_data, y_data, bdw, plotFlag=False):
     x_grid, y_grid = np.mgrid[xmin:xmax:gd_c, ymin:ymax:gd_c]
     positions = np.vstack([x_grid.ravel(), y_grid.ravel()])
     # Evaluate kernel in grid positions.
-    k_pos = kernel(positions)
+
+    try:
+        k_pos = kernel(positions)
+    except np.linalg.LinAlgError:
+        print("  WARNING: could not generate coordinates KDE.")
+        return [np.nan, np.nan], []
+
     if plotFlag:
         return kernel, x_grid, y_grid, positions, k_pos
 
