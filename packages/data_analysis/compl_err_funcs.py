@@ -167,7 +167,9 @@ def combineCompl(cld_i, phot_analy_compl, mmag_acpt_c):
 
     # Correct the initial LF using the completeness loss function.
     h_mag_i, _ = mmagHist(cld_i['mags'][0], comp_b_edges)
-    h_mag_i_full = h_mag_i / comp_perc
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        h_mag_i_full = h_mag_i / comp_perc
     # Rebin corrected full LF according to 'eqN_edges' array.
     h_mag_i_full = rebin(comp_b_edges, h_mag_i_full, eqN_edges)
 
