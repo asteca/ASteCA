@@ -120,6 +120,10 @@ def check(mypath, pd):
         pd['e_col_col'], pd['colors'], pd['c_filters'] = id_col, x_col, y_col,\
         mag_col, e_mag_col, filters, col_col, e_col_col, colors, c_filters
 
+    if len(pd['id_kinem']) != 8:
+        sys.exit("ERROR: there should be 8 entries in 'PK' line ({})".format(
+            len(pd['id_kinem'])))
+
     # Read PMs, parallax, and RV data.
     k_cols = ('plx', 'e_plx', 'pmx', 'e_pmx', 'pmy', 'e_pmy', 'rv', 'e_rv')
     for i, ci in enumerate(pd['id_kinem']):

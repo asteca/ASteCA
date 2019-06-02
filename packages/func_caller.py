@@ -46,7 +46,8 @@ from .out import add_data_output
 from .out import make_A1_plot
 from .out import make_A2_plot
 from .out import photComb
-from .out import make_B_plot
+from .out import make_B1_plot
+from .out import make_B2_plot
 from .out import make_C1_plot
 from .out import make_C2_plot
 from .out import make_D1_plot
@@ -186,6 +187,11 @@ def main(cl_file, pd):
     # Combined error rejection & completeness function.
     clp = compl_err_funcs.main(clp, cld_i, cld_c)
 
+    # Helper function for plotting.
+    clp = photComb.main(pd, clp)
+
+    make_B1_plot.main(npd, cld_c, pd, **clp)
+
     # Luminosity function and completeness level for each magnitude bin.
     clp = luminosity.main(clp, **cld_c)
 
@@ -198,10 +204,10 @@ def main(cl_file, pd):
     # Approximate number of cluster's members.
     clp = members_number.main(clp)
 
-    # Helper function for plotting.
-    clp = photComb.main(pd, clp)
+    # # Helper function for plotting.
+    # clp = photComb.main(pd, clp)
 
-    make_B_plot.main(npd, cld_c, pd, **clp)
+    make_B2_plot.main(npd, cld_c, pd, **clp)
 
     # Apply decontamination algorithm.
     clp = decont_algors.main(clp, npd, **pd)

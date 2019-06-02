@@ -104,14 +104,15 @@ MO   auto
 #
 #   - A1: (x,y) density maps
 #   - A2: structural analysis
-#   - B:  photometric analysis
+#   - B1: uncertainties analysis
+#   - B2: photometric analysis
 #   - C1: decontamination algorithm photometric diagrams
 #   - C2: decontamination algorithm parallax and PMs analysis
 #   - D1: likelihood minimization
 #   - D2: best fit synthetic cluster match
 #
 #   blocks
-MP   A1 A2 B C1 C2 D1 D2
+MP   A1 A2 B1 B2 C1 C2 D1 D2
 
 # * format: png / pdf
 #   Format of the final image file.
