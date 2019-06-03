@@ -20,7 +20,7 @@ def main(
     if 'B2' in pd['flag_make_plot']:
         fig = plt.figure(figsize=(30, 25))
         gs = gridspec.GridSpec(10, 12)
-        add_version_plot.main()
+        add_version_plot.main(y_fix=.999)
 
         # Obtain plotting parameters and data.
         x_ax0, y_ax = prep_plots.ax_names(
