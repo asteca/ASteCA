@@ -14,7 +14,7 @@ def main(npd, read_mode, nanvals, id_col, x_col, y_col, mag_col, e_mag_col,
          col_col, e_col_col, plx_col, e_plx_col, pmx_col, e_pmx_col,
          pmy_col, e_pmy_col, rv_col, e_rv_col, coords, project, **kwargs):
     """
-    Read all data from the cluster's data file.
+    Read data from the cluster's input file.
 
     Separate data into "incomplete" and "complete", where the latter means
     all stars in the  input file, and the former only those with all the
@@ -23,52 +23,22 @@ def main(npd, read_mode, nanvals, id_col, x_col, y_col, mag_col, e_mag_col,
 
     data_file = npd['data_file']
     try:
-        # Identify all these strings as invalid entries.
-        fill_msk = [('', '0')] + [(_, '0') for _ in nanvals]
-        # Store IDs as strings.
-        if read_mode == 'num':
-            # Read IDs as strings, not applying the 'fill_msk'
-            data = ascii.read(
-                data_file, converters={id_col: [ascii.convert_numpy(np.str)]},
-                format='no_header')
-            # Store IDs
-            id_data = data[id_col]
-            # Read rest of the data applying the mask
-            data = ascii.read(
-                data_file, fill_values=fill_msk, format='no_header')
-            # Replace IDs column
-            data[id_col] = id_data
-        else:
-            # Read IDs as strings, not applying the 'fill_msk'
-            data = ascii.read(
-                data_file, converters={id_col: [ascii.convert_numpy(np.str)]})
-            # Store IDs
-            id_data = data[id_col]
-            # Read rest of the data applying the mask
-            data = ascii.read(data_file, fill_values=fill_msk)
-            # Replace IDs column
-            data[id_col] = id_data
+        data = readDataFile(nanvals, read_mode, id_col, data_file)
 
         # Arrange column names in the proper order and shape.
         col_names = [
             id_col, x_col, y_col, mag_col, e_mag_col, col_col, e_col_col,
             [plx_col, pmx_col, pmy_col, rv_col],
             [e_plx_col, e_pmx_col, e_pmy_col, e_rv_col]]
-
         # Remove not wanted columns.
         col_names_keep = list(filter(bool, list(flatten(col_names))))
         data.keep_columns(col_names_keep)
 
-        # Mask photometric values outside the (-50., 50.) range.
-        msk = {}
-        for idx in [mag_col, e_mag_col, col_col, e_col_col]:
-            for c_idx in idx:
-                d = data[c_idx]
-                msk[c_idx] = np.array([-50. < _ < 50. for _ in d])
-        # Apply masks to each photometric column.
-        for idx in [mag_col, e_mag_col, col_col, e_col_col]:
-            for c_idx in idx:
-                data[c_idx].mask = [~msk[c_idx]]
+        # Change masked elements with 'nan' values, in place.
+        fill_cols(data)
+
+        # Mask bad photometry.
+        data = maskBadPhot(data, mag_col, e_mag_col, col_col, e_col_col)
 
         # Define PHOTOMETRIC data columns.
         data_phot = list(flatten([mag_col, e_mag_col, col_col, e_col_col]))
@@ -92,10 +62,6 @@ def main(npd, read_mode, nanvals, id_col, x_col, y_col, mag_col, e_mag_col,
             # values.
             data_compl = copy.deepcopy(data)
             flag_data_eq = True
-
-        # Change masked elements with 'nan' values, in place.
-        fill_cols(data)
-        fill_cols(data_compl)
 
     except ascii.InconsistentTableError:
         raise ValueError("ERROR: could not read data input file:\n  {}\n"
@@ -129,6 +95,69 @@ def main(npd, read_mode, nanvals, id_col, x_col, y_col, mag_col, e_mag_col,
     return cld_i, cld_c, clp
 
 
+def readDataFile(nanvals, read_mode, id_col, data_file):
+    """
+    Read input data file.
+    """
+    # Identify all these strings as invalid entries.
+    fill_msk = [('', '0')] + [(_, '0') for _ in nanvals]
+    # Store IDs as strings.
+    if read_mode == 'num':
+        # Read IDs as strings, not applying the 'fill_msk'
+        data = ascii.read(
+            data_file, converters={id_col: [ascii.convert_numpy(np.str)]},
+            format='no_header')
+        # Store IDs
+        id_data = data[id_col]
+        # Read rest of the data applying the mask
+        data = ascii.read(
+            data_file, fill_values=fill_msk, format='no_header')
+        # Replace IDs column
+        data[id_col] = id_data
+    else:
+        # Read IDs as strings, not applying the 'fill_msk'
+        data = ascii.read(
+            data_file, converters={id_col: [ascii.convert_numpy(np.str)]})
+        # Store IDs
+        id_data = data[id_col]
+        # Read rest of the data applying the mask
+        data = ascii.read(data_file, fill_values=fill_msk)
+        # Replace IDs column
+        data[id_col] = id_data
+
+    return data
+
+
+def fill_cols(tbl, fill=np.nan, kind='f'):
+    """
+    In-place fill of 'tbl' columns which have dtype 'kind' with 'fill' value.
+
+    Source: https://stackoverflow.com/a/50164954/1391441
+    """
+    for col in tbl.itercols():
+        try:
+            if col.dtype.kind == kind:
+                col[...] = col.filled(fill)
+        except AttributeError:
+            # If there where no elements to mask, the type is 'Column' and
+            # not 'MaskedColumn', so .filled() is not a valid attribute.
+            pass
+
+
+def maskBadPhot(data, mag_col, e_mag_col, col_col, e_col_col):
+    """
+    Mask photometric values outside the (-50., 50.) range.
+    """
+    for idx in [mag_col, e_mag_col, col_col, e_col_col]:
+        for c_idx in idx:
+            # Reject bad photometric values.
+            msk = np.array([-50. < _ < 50. for _ in data[c_idx]])
+            # Apply masks to each photometric column.
+            data[c_idx].mask = [~msk]
+
+    return data
+
+
 def flatten(l):
     """
     Source: https://stackoverflow.com/a/2158532/1391441
@@ -152,22 +181,6 @@ def flatten(l):
                 yield el
 
 
-def fill_cols(tbl, fill=np.nan, kind='f'):
-    """
-    In-place fill of 'tbl' columns which have dtype 'kind' with 'fill' value.
-
-    Source: https://stackoverflow.com/a/50164954/1391441
-    """
-    for col in tbl.itercols():
-        try:
-            if col.dtype.kind == kind:
-                col[...] = col.filled(fill)
-        except AttributeError:
-            # If there where no elements to mask, the type is 'Column' and
-            # not 'MaskedColumn', so .filled() is not a valid attribute.
-            pass
-
-
 def dataCols(data_file, data, col_names):
     """
     Separate data into appropriate columns.
@@ -178,8 +191,8 @@ def dataCols(data_file, data, col_names):
         if dups:
             print("ERROR: duplicated IDs found in data file:")
             for dup in dups:
-                print("  ID '{}' found in lines: {}".format(dup[0],
-                      ", ".join(dup[1])))
+                print("  ID '{}' found in lines: {}".format(
+                    dup[0], ", ".join(dup[1])))
             raise ValueError("Duplicated IDs found.")
 
         # Check that all data columns are in the proper 'float64' format.
