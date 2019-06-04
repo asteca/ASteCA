@@ -30,9 +30,10 @@ def main(isoch_compl, err_lst, err_max, m_ini, err_rnd):
     for i, popt_mc in enumerate(err_lst):
         # isoch_compl[0] is the main magnitude.
         sigma_mc = np.array(exp_function.exp_3p(isoch_compl[0], *popt_mc))
+
         # Replace all photometric error values greater than err_max with
         # err_max.
-        sigma_mc[sigma_mc > err_max[0]] = err_max[0]
+        sigma_mc[sigma_mc > err_max[i]] = err_max[i]
 
         ###################################################################
         # # Generate errors that depend only on the theoretical isochrone.
