@@ -59,6 +59,11 @@ def main(clp, plx_flag, plx_chains, plx_runs, **kwargs):
             # errors are in the denominator.
             e_plx_clp[e_plx_clp == 0.] = 10.
 
+            # Weighted average.
+            # Source: https://physics.stackexchange.com/a/329412/8514
+            plx_w = mp_clp / np.square(e_plx_clp)
+            plx_wa = np.average(plx_clp, weights=plx_w)
+
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
 
@@ -94,48 +99,40 @@ def main(clp, plx_flag, plx_chains, plx_runs, **kwargs):
             # Ball of initial guesses around 'mu_p'
             pos0 = [mu_p + .5 * np.random.normal() for i in range(nwalkers)]
 
-            old_tau, N_conv = np.inf, 1000
-            for i, _ in enumerate(sampler.sample(pos0, iterations=nruns)):
-                # Only check convergence every X steps
-                if i % 50 and i < (nruns - 1):
-                    continue
+            try:
+                old_tau, N_conv = np.inf, 1000
+                for i, _ in enumerate(sampler.sample(pos0, iterations=nruns)):
+                    # Only check convergence every X steps
+                    if i % 50 and i < (nruns - 1):
+                        continue
 
-                with warnings.catch_warnings():
-                    warnings.simplefilter("ignore")
-                    tau = sampler.get_autocorr_time(tol=0)
-                    # Check convergence
-                    converged = np.all(tau * N_conv < i)
-                    converged &= np.all(np.abs(old_tau - tau) / tau < 0.01)
-                    if converged:
-                        print("")
-                        break
-                    old_tau = tau
-                    tau_mean = np.nanmean(sampler.get_autocorr_time(tol=0))
-                update_progress.updt(nruns, i + 1)
+                    with warnings.catch_warnings():
+                        warnings.simplefilter("ignore")
+                        tau = sampler.get_autocorr_time(tol=0)
+                        # Check convergence
+                        converged = np.all(tau * N_conv < i)
+                        converged &= np.all(np.abs(old_tau - tau) / tau < 0.01)
+                        if converged:
+                            print("")
+                            break
+                        old_tau = tau
+                        tau_mean = np.nanmean(sampler.get_autocorr_time(tol=0))
+                    update_progress.updt(nruns, i + 1)
 
-            # Remove burn-in (half of chain)
-            nburn = int(i / 2.)
-            samples = sampler.get_chain(discard=nburn, flat=True)
+                # Remove burn-in (half of chain)
+                nburn = int(i / 2.)
+                samples = sampler.get_chain(discard=nburn, flat=True)
 
-            # import matplotlib.pyplot as plt
-            # import corner
-            # corner.corner(samples)
-            # plt.show()
-
-            # plt.plot(samples.T[0])
-            # plt.show()
-
-            # 16th, median, 84th in Kpc
-            plx_Bys = np.percentile(samples, (16, 50, 84))
-            tau_mean = np.mean(sampler.get_autocorr_time(tol=0))
-            print("Bayesian plx estimated: " +
-                  "{:.3f} (ESS={:.0f}, tau={:.0f})".format(
-                      1. / plx_Bys[1], samples.size / tau_mean, tau_mean))
-
-            # Weighted average.
-            # Source: https://physics.stackexchange.com/a/329412/8514
-            plx_w = mp_clp / np.square(e_plx_clp)
-            plx_wa = np.average(plx_clp, weights=plx_w)
+                # 16th, median, 84th in Kpc
+                plx_Bys = np.percentile(samples, (16, 50, 84))
+                tau_mean = np.mean(sampler.get_autocorr_time(tol=0))
+                print("Bayesian plx estimated: " +
+                      "{:.3f} (ESS={:.0f}, tau={:.0f})".format(
+                          1. / plx_Bys[1], samples.size / tau_mean, tau_mean))
+            except Exception as e:
+                print(e)
+                print("\n  ERROR: could not process Plx data with emcee")
+                plx_Bys = np.array([np.nan, np.nan, np.nan])
         else:
             print("  WARNING: no valid Plx data found.")
 
