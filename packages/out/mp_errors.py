@@ -130,14 +130,14 @@ def pl_phot_err(
             plt.plot(err_bar_all[1], err_bar_all[2][k + 1], color='yellow',
                      ls='--', lw=2, zorder=5)
         else:
-            # Use single PM error defined, for PMde
+            unit = '[mas]' if k == 0 else '[mas/yr]'
+            # Use single PM max error value defined, for PMde
             k = 1 if k == 2 else 1
             max_cut_y = em_float[-(3 - k)]
-            unit = {0: '[mas]', 1: '[mas/yr]'}
             ax.hlines(y=max_cut_y, xmin=x_min, xmax=x_max, color='k',
                       linestyles='dashed', zorder=4)
             ob = offsetbox.AnchoredText(
-                r"$max={}$ {}".format(em_float[-(3 - k)], unit[k]), loc=2,
+                r"$max={}$ {}".format(em_float[-(3 - k)], unit), loc=2,
                 prop=dict(size=11))
             ob.patch.set(alpha=0.7)
             ax.add_artist(ob)
