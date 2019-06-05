@@ -1,5 +1,6 @@
 
 import numpy as np
+import warnings
 from astropy.io import ascii
 from collections import defaultdict, Iterable
 import operator
@@ -34,34 +35,16 @@ def main(npd, read_mode, nanvals, id_col, x_col, y_col, mag_col, e_mag_col,
         col_names_keep = list(filter(bool, list(flatten(col_names))))
         data.keep_columns(col_names_keep)
 
-        # Change masked elements with 'nan' values, in place.
-        fill_cols(data)
-
         # Mask bad photometry.
         data = maskBadPhot(data, mag_col, e_mag_col, col_col, e_col_col)
 
-        # Define PHOTOMETRIC data columns.
-        data_phot = list(flatten([mag_col, e_mag_col, col_col, e_col_col]))
-        # Check if there are any masked elements in the photometric data.
-        masked_elems = 0
-        for col in data_phot:
-            # Catch "AttributeError: 'Column' object has no attribute 'mask'"
-            # if column is not masked.
-            try:
-                masked_elems += data[col].mask.sum()
-            except AttributeError:
-                pass
+        # Split into incomplete and complete data.
+        data_compl, flag_data_eq = dataSplit(
+            mag_col, e_mag_col, col_col, e_col_col, data)
 
-        # Remove rows with at least one masked *photometric* element.
-        flag_data_eq = False
-        if masked_elems > 0:
-            data_compl = data[reduce(
-                operator.and_, [~data[col].mask for col in data_phot])]
-        else:
-            # If there where no elements to mask, there were no bad photometric
-            # values.
-            data_compl = copy.deepcopy(data)
-            flag_data_eq = True
+        # Change masked elements with 'nan' values, in place.
+        fill_cols(data)
+        fill_cols(data_compl)
 
     except ascii.InconsistentTableError:
         raise ValueError("ERROR: could not read data input file:\n  {}\n"
@@ -148,14 +131,45 @@ def maskBadPhot(data, mag_col, e_mag_col, col_col, e_col_col):
     """
     Mask photometric values outside the (-50., 50.) range.
     """
-    for idx in [mag_col, e_mag_col, col_col, e_col_col]:
-        for c_idx in idx:
-            # Reject bad photometric values.
-            msk = np.array([-50. < _ < 50. for _ in data[c_idx]])
-            # Apply masks to each photometric column.
-            data[c_idx].mask = [~msk]
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        for idx in [mag_col, e_mag_col, col_col, e_col_col]:
+            for c_idx in idx:
+                # Reject bad photometric values.
+                msk = np.array([-50. < float(_) < 50. for _ in data[c_idx]])
+                # Apply masks to each photometric column.
+                data[c_idx].mask = [~msk]
 
     return data
+
+
+def dataSplit(mag_col, e_mag_col, col_col, e_col_col, data):
+    """
+    """
+    # Define PHOTOMETRIC data columns.
+    data_phot = list(flatten([mag_col, e_mag_col, col_col, e_col_col]))
+    # Check if there are any masked elements in the photometric data.
+    masked_elems = 0
+    for col in data_phot:
+        # Catch "AttributeError: 'Column' object has no attribute 'mask'"
+        # if column is not masked.
+        try:
+            masked_elems += data[col].mask.sum()
+        except AttributeError:
+            pass
+
+    # Remove rows with at least one masked *photometric* element.
+    flag_data_eq = False
+    if masked_elems > 0:
+        data_compl = data[reduce(
+            operator.and_, [~data[col].mask for col in data_phot])]
+    else:
+        # If there where no elements to mask, there were no bad photometric
+        # values.
+        data_compl = copy.deepcopy(data)
+        flag_data_eq = True
+
+    return data_compl, flag_data_eq
 
 
 def flatten(l):
