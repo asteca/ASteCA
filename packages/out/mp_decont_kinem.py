@@ -146,24 +146,27 @@ def plx_chart(gs, plx_flag, x_name, y_name, coord, cl_reg_fit, plx_Bys):
             (~np.isnan(plx))
         x, y, mp, plx = x[msk], y[msk], mp[msk], plx[msk]
 
-        # Bayesian parallax value.
-        p_max_mas = 1. / plx_Bys[1]
-        # Distance to max value. Stars closer to the max value are larger.
-        plx_d = 2. + 1. / (abs(plx - p_max_mas) + .1) ** 2.3
+        if not np.isnan(plx_Bys[1]):
+            # Bayesian parallax value.
+            p_max_mas = 1. / plx_Bys[1]
+            # Distance to max value. Stars closer to the max value are larger.
+            plx_d = 2. + 1. / (abs(plx - p_max_mas) + .1) ** 2.3
 
-        # Re-arrange so stars closer to the max Plx value are on top
-        plx_i = plx_d.argsort()
-        x, y, mp, plx_d = x[plx_i], y[plx_i], mp[plx_i], plx_d[plx_i]
+            # Re-arrange so stars closer to the max Plx value are on top
+            plx_i = plx_d.argsort()
+            x, y, mp, plx_d = x[plx_i], y[plx_i], mp[plx_i], plx_d[plx_i]
 
-        # Color map
-        cm = plt.cm.get_cmap('viridis')
-        # Get the colormap colors for my data
-        my_cmap = cm(plt.Normalize(mp.min(), mp.max())(mp))
-        # Set alpha
-        alphas = (plx_d - plx_d.min()) / (plx_d.max() - plx_d.min())
-        my_cmap[:, -1] = np.clip(alphas, a_min=.5, a_max=1.)
-        # New colormap
-        alpha_cmap = ListedColormap(my_cmap)
+            # Color map
+            cm = plt.cm.get_cmap('viridis')
+            # Get the colormap colors for my data
+            my_cmap = cm(plt.Normalize(mp.min(), mp.max())(mp))
+            # Set alpha
+            alphas = (plx_d - plx_d.min()) / (plx_d.max() - plx_d.min())
+            my_cmap[:, -1] = np.clip(alphas, a_min=.5, a_max=1.)
+            # New colormap
+            alpha_cmap = ListedColormap(my_cmap)
+        else:
+            alpha_cmap, plx_d = plt.cm.get_cmap('viridis'), 20.
 
         # Plot stars selected to be used in the best fit process.
         plt.scatter(
