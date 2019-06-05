@@ -239,9 +239,16 @@ def pms_KDE_diag(
         ra_rang = (RA_med - 2. * RA_std, RA_med + 2. * RA_std)
         dec_rang = (DE_med - 2. * DE_std, DE_med + 2. * DE_std)
 
-        ax.hist2d(
-            pmRA_DE, pmDE, range=(ra_rang, dec_rang), bins=25,
-            normed=True, cmap=plt.cm.Greens)
+        # In place for #243
+        import sys
+        if sys.version_info[0] == 2:
+            ax.hist2d(
+                pmRA_DE, pmDE, range=(ra_rang, dec_rang), bins=25,
+                normed=True, cmap=plt.cm.Greens)
+        else:
+            ax.hist2d(
+                pmRA_DE, pmDE, range=(ra_rang, dec_rang), bins=25,
+                density=True, cmap=plt.cm.Greens)
 
         # Cluster region contour
         max_i, max_j = np.unravel_index(z_clpm.argmax(), z_clpm.shape)
