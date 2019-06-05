@@ -218,6 +218,9 @@ def main(cl_file, pd):
     # Remove stars from the observed cluster according to a selected method.
     clp = cl_region_clean.main(clp, **pd)
 
+    # Create data file with membership probabilities.
+    cluster_members_file.main(clp, npd, **pd)
+
     make_C1_plot.main(npd, cld_c, pd, **clp)
 
     # Analyze parallax data if available.
@@ -227,9 +230,6 @@ def main(cl_file, pd):
     clp = pms_analysis.main(clp, **pd)
 
     make_C2_plot.main(npd, pd, **clp)
-
-    # Create data file with membership probabilities.
-    cluster_members_file.main(clp, npd, **pd)
 
     # Obtain best fitting parameters for cluster.
     clp = best_fit_synth_cl.main(clp, pd)
