@@ -61,6 +61,12 @@ def main(met_f_filter, age_values, cmd_evol_tracks, evol_track, bin_mr,
              "number of points in any isochrone read: {}").format(
                 N_mass_interp, N_pts_max))
 
+    # # Size of arrays in memory
+    # sz = 0.
+    # for arr in [a, b, c, d]:
+    #     sz += np.array(arr).size * np.array(arr).itemsize
+    # print("{:.3f} Mbs".format(sz / (1024.**2)))
+
     # The magnitudes for each defined color ('c') are used here and
     # discarded after the colors (and magnitudes) with binarity assignment
     # are obtained.
