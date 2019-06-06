@@ -66,7 +66,10 @@ def cmd_common_ids(evol_track, l):
             print("  WARNING: extra parameters in isochrones are not\n"
                   "  positioned as expected!\n")
 
-    return [Mini, int_IMF, Mass, logL, logTe, logg, label, mbolmag]
+    # TODO these extra params consume a lot of memory and are not used for
+    # now. Don't read until they are used or I find a more efficient method
+    # of storing them.
+    return [Mini]  #, int_IMF, Mass, logL, logTe, logg, label, mbolmag]
 
 
 def girardi_filters_ids(l, uniq_fltrs):

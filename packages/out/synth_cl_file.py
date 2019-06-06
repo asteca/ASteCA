@@ -24,13 +24,12 @@ def main(clp, npd, bf_flag, best_fit_algor, fundam_params, filters, colors,
             binar_idx = synth_clst[1][0]
             extra_pars = list(zip(*synth_clst[1][2:]))
             # Prepare header.
-            hdr = ['#ID           ']
-            hdr += [f[1] + '   ' for f in filters]
+            hdr = ['#ID  '] + [f[1] + '   ' for f in filters]
             hdr += ['(' + c[1].replace(',', '-') + ')   ' for c in colors]
             hdr += ['e_' + f[1] + '   ' for f in filters]
             hdr += ['e_(' + c[1].replace(',', '-') + ')   ' for c in colors]
-            hdr = ''.join(hdr) +\
-                'Mini  int_IMF  Mass  logL  logTe  logg  label  mbolmag\n'
+            hdr = ''.join(hdr) + 'Mini\n'
+            # int_IMF  Mass  logL  logTe  logg  label  mbolmag\n
             # Save best fit synthetic cluster found to file.
             with open(npd['synth_file_out'], "w") as f_out:
                 f_out.write(hdr)
@@ -44,10 +43,10 @@ def main(clp, npd, bf_flag, best_fit_algor, fundam_params, filters, colors,
                         f_out.write("{:<8.4f}".format(_))
                     for _ in e_mags_cols[i]:
                         f_out.write("{:<8.4f}".format(_))
-                    f_out.write(
-                        "{:<8.4f} {:<8.4f} {:<8.4f} {:<8.4f}"
-                        " {:<8.4f} {:<8.4f} {:<8.4f} {:<8.4f}\n".format(
-                            *extra_pars[i]))
+                    f_out.write("{:<8.4f}\n".format(*extra_pars[i]))
+                        # "{:<8.4f} {:<8.4f} {:<8.4f} {:<8.4f}"
+                        # " {:<8.4f} {:<8.4f} {:<8.4f} {:<8.4f}\n".format(
+                        #     *extra_pars[i]))
 
             print('Best fit synthetic cluster saved to file.')
             # Save for plotting.
