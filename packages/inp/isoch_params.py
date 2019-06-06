@@ -1,4 +1,5 @@
 
+import sys
 import numpy as np
 from . import read_isochs
 from ..synth_clust import binarity
@@ -37,14 +38,28 @@ def main(met_f_filter, age_values, cmd_evol_tracks, evol_track, bin_mr,
     # and extra parameters (masses, etc). This allows the later IMF sampled
     # masses to be more accurately interpolated into the theoretical
     # isochrones.
-    print("Interpolating extra points ({}) into the isochrones.".format(
-        N_mass_interp))
-    interp_data = []
-    for i, data in enumerate([
-            mags_theor, cols_theor, mags_cols_theor, extra_pars]):
-        interp_data.append(interp_isoch_data(data, N_mass_interp))
-        update_progress.updt(4, i + 1)
-    a, b, c, d = interp_data
+
+    # Find the maximum number of points in all the read ages for all the
+    # metallicites.
+    N_pts_max = 0
+    for z in mags_theor:
+        for a in z:
+            N_pts_max = max(N_pts_max, len(a[0]))
+
+    if N_mass_interp > N_pts_max:
+        print("Interpolating extra points ({}) into the isochrones.".format(
+            N_mass_interp))
+        interp_data = []
+        for i, data in enumerate([
+                mags_theor, cols_theor, mags_cols_theor, extra_pars]):
+            interp_data.append(interp_isoch_data(data, N_mass_interp))
+            update_progress.updt(4, i + 1)
+        a, b, c, d = interp_data
+    else:
+        sys.exit(
+            ("ERROR: N_interp={} must be larger than the maximum\n" +
+             "number of points in any isochrone read: {}").format(
+                N_mass_interp, N_pts_max))
 
     # The magnitudes for each defined color ('c') are used here and
     # discarded after the colors (and magnitudes) with binarity assignment
