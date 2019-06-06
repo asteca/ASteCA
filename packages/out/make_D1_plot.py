@@ -29,8 +29,8 @@ def main(npd, pd, isoch_fit_params, isoch_fit_errors, **kwargs):
             p_str = (
                 r"$N_{{pop}}={},\,N_{{gen}}={},\,N_{{btstrp}}={}$ "
                 "({:.0f}h{:.0f}m)").format(
-                    pd['N_pop'], pd['N_gen'], isoch_fit_params['N_bootstrap'],
-                    h_btsr, m_btsr)
+                    pd['N_pop'], isoch_fit_params['OF_steps'],
+                    isoch_fit_params['N_bootstrap'], h_btsr, m_btsr)
             if isoch_fit_params['N_bootstrap'] == 0:
                 xt = 0.83
                 xf, yf = .67, 1.01
@@ -74,10 +74,9 @@ def main(npd, pd, isoch_fit_params, isoch_fit_errors, **kwargs):
                 # pl_GA_lkl: Likelihood evolution for the GA.
                 gs, pos0, l_min_max, isoch_fit_params['lkl_best'],
                 isoch_fit_params['lkl_mean'], isoch_fit_params['OF_models'],
-                isoch_fit_params['new_bs_indx'], pd['N_pop'], pd['N_gen'],
-                pd['fit_diff'], pd['cross_prob'], pd['cross_sel'],
-                pd['mut_prob'], pd['N_el'], pd['N_ei'], pd['N_es'],
-                isoch_fit_params['N_bootstrap']
+                isoch_fit_params['new_bs_indx'], pd['fit_diff'],
+                pd['cross_prob'], pd['cross_sel'], pd['mut_prob'],
+                pd['N_el'], pd['N_ei'], pd['N_es']
             ]
             mp_best_fit1_GA.plot(0, *args)
 

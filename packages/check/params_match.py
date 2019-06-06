@@ -65,7 +65,7 @@ def checkGA(pd):
 
     # First set of params.
     oper_dict0 = {
-        'n_pop': pd['N_pop'], 'n_gen': pd['N_gen'], 'n_el': pd['N_el'],
+        'n_pop': pd['N_pop'], 'n_el': pd['N_el'],
         'n_ei': pd['N_ei'], 'n_es': pd['N_es']}
     for oper in oper_dict0:
         if oper_dict0[oper] < 1:

@@ -404,7 +404,6 @@ BT      .5        10       100
 # Genetic Algorithm parameters.
 #
 #   - n_pop: [integer], Number of chromosomes in the population.
-#   - n_gen: [integer], Number of generations to process.
 #   - fdif: 0<[float]<=1, Fitness differential. Establishes the 'selection
 #     pressure' for the algorithm.
 #   - p_cross: 0<[float]<=1, crossover probability.
@@ -419,8 +418,8 @@ BT      .5        10       100
 #     operator is allowed to run returning the same best solution before
 #     exiting the GA.
 #
-#   n_pop  n_gen  fdif  p_cross  cr_sel  p_mut  n_el  n_ei  n_es
-GA     50   1000    1.     0.85      2P    0.1     1   100    50  
+#   n_pop  fdif  p_cross  cr_sel  p_mut  n_el  n_ei  n_es
+GA     50    1.     0.85      2P    0.1     1   100    50  
 
 # Likelihood equation.
 #

@@ -31,9 +31,9 @@ def main(
     # pd['best_fit_algor'] = 'boot+DE'
 
     if pd['best_fit_algor'] == 'boot+GA':
-        # Initial number of steps for the numerical optimizer applied over
-        # the observed data.
-        N_pop_init, N_gen_init = pd['N_pop'], pd['N_gen']
+        # Initial population number for the numerical optimizer applied over
+        # the observed data. Use a large number for 'N_gen'
+        N_pop_init, N_gen = pd['N_pop'], int(5e5)
         # Use random initial population
         init_pop = random_population(
             pd['fundam_params'], (0, 1, 2, 3, 4, 5), N_pop_init).tolist()
@@ -41,7 +41,7 @@ def main(
         argsOF = [
             pd, clp, max_mag_syn, obs_clust, ext_coefs, st_dist_mass, N_fc,
             cmpl_rnd, err_rnd, available_secs, init_pop, N_pop_init,
-            N_gen_init, flag_print_perc]
+            N_gen, flag_print_perc]
 
     elif pd['best_fit_algor'] == 'boot+DE':
         popsize, maxiter = pd['N_pop'], pd['N_gen']
@@ -92,8 +92,6 @@ def main(
             btstrp_runs += 1
             btstrp_t = t.time() - btstrp_init
             update_progress.updt(available_secs, btstrp_t)
-            if btstrp_t > available_secs:
-                break
 
         # As array with (params, btstrp_runs) shape
         isoch_fit_params['params_boot'] = np.array(params_boot).T
@@ -151,10 +149,9 @@ def optimizerFunc(best_fit_algor, args):
         else:
             isoch_fit_params = genetic_algorithm.main(
                 available_secs, init_pop, flag_print_perc, N_pop, N_gen,
-                max_mag_syn,
-                obs_clust, ext_coefs, st_dist_mass, N_fc, cmpl_rnd, err_rnd,
-                clp['em_float'], clp['err_lst'], clp['completeness'],
-                **pd)
+                max_mag_syn, obs_clust, ext_coefs, st_dist_mass, N_fc,
+                cmpl_rnd, err_rnd, clp['em_float'], clp['err_lst'],
+                clp['completeness'], **pd)
 
     elif best_fit_algor == 'boot+DE':
         pd, clp, max_mag_syn, st_dist_mass, ext_coefs, N_fc, cmpl_rnd,\

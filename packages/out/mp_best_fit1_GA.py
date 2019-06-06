@@ -1,16 +1,12 @@
 
-import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.offsetbox as offsetbox
-# from matplotlib.patches import Ellipse
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-# import scipy.interpolate
 
 
 def pl_GA_lkl(
-    gs, pos, l_min_max, lkl_best, lkl_mean, OF_models, new_bs_indx, N_pop,
-    N_gen, fit_diff, cross_prob, cross_sel, mut_prob, N_el, N_ei, N_es,
-        N_b):
+    gs, pos, l_min_max, lkl_best, lkl_mean, OF_models, new_bs_indx, fit_diff,
+        cross_prob, cross_sel, mut_prob, N_el, N_ei, N_es):
     '''
     Likelihood evolution for the GA.
     '''
@@ -34,17 +30,14 @@ def pl_GA_lkl(
         lw_lin = 1.5 if lin > 0.05 * len(lkl_best) else 0.5
         plt.axvline(x=lin, linestyle='--', lw=lw_lin, color='blue')
     # Add text box.
-    text1 = '$N_{{total}}={:.1E}\,;\,N_{{btst}}={}$'.format(
-        OF_models, N_b)
-    text2 = '$n_{{gen}}={}\,;\,n_{{pop}}={}$'.format(N_gen, N_pop)
-    text3 = '$f_{{dif}}={:.2f}\,;\,cr_{{sel}}={}$'.format(
+    text1 = '$N_{{total}}={:.2E}$'.format(OF_models)
+    text2 = '$f_{{dif}}={:.2f}\,;\,cr_{{sel}}={}$'.format(
         fit_diff, cross_sel)
-    text4 = '$p_{{cross}}={:.2f}\,;\,p_{{mut}}={:.2f}$'.format(
+    text3 = '$p_{{cross}}={:.2f}\,;\,p_{{mut}}={:.2f}$'.format(
         cross_prob, mut_prob)
-    text5 = '$n_{{el}}={}\,;\,n_{{ei}}={}\,;\,n_{{es}}={}$'.format(
+    text4 = '$n_{{el}}={}\,;\,n_{{ei}}={}\,;\,n_{{es}}={}$'.format(
         N_el, N_ei, N_es)
-    text = text1 + '\n' + text2 + '\n' + text3 + '\n' + text4 + '\n' +\
-        text5
+    text = text1 + '\n' + text2 + '\n' + text3 + '\n' + text4
     ob = offsetbox.AnchoredText(text, loc=1, prop=dict(size=12))
     ob.patch.set(boxstyle='square,pad=0.', alpha=0.85)
     ax.add_artist(ob)

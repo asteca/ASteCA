@@ -33,8 +33,6 @@ def main(
     Genetic algorithm. Finds the best fit model-observation by minimizing the
     likelihood function.
     '''
-    # Start timing.
-    elapsed, start_t = 0., t.time()
 
     # Check if N_popl is odd. If it is sum 1 to avoid conflict if cross_sel
     # '2P' was selected.
@@ -78,10 +76,10 @@ def main(
     lkl_best_old, lkl_ei = lkl[0], np.inf
 
     # Print percentage done.
-    elapsed_in, start_in = 0., t.time()
+    step, elapsed_in, start_in = 0, 0., t.time()
     milestones = list(range(10, 101, 10))
     # Begin processing the populations up to N_gen generations.
-    for step in range(N_gener):
+    while elapsed_in < available_secs:
 
         # *** Selection/Reproduction ***
         # with timeblock("Selec/Repo"):
@@ -171,6 +169,7 @@ def main(
             # Reset counter.
             best_sol_count = 0
 
+        step += 1
         if flag_print_perc:
 
             # For plotting purposes.
@@ -182,9 +181,8 @@ def main(
                 np.asarray(lkl)[np.asarray(lkl) < 9.9e08])
 
             # Time used to check how fast the sampler is advancing.
-            elapsed_in += t.time() - start_in
-            start_in = t.time()
-            percentage_complete = (100. * (step + 1) / N_gener)
+            elapsed_in = t.time() - start_in
+            percentage_complete = (100. * elapsed_in / available_secs)
             if len(milestones) > 0 and percentage_complete >= milestones[0]:
                 m, s = divmod(((N_gener / float(step)) - 1.) * elapsed_in, 60)
                 h, m = divmod(m, 60)
@@ -197,11 +195,15 @@ def main(
                 # Remove that milestone from the list.
                 milestones = milestones[1:]
 
-            elapsed += t.time() - start_t
-            if elapsed >= available_secs:
-                print("  Time consumed (steps={})".format(step + 1))
+            # If the hardcoded maximum number of generations is reached.
+            if step == N_gener:
+                print(" WARNING: maximum allowed number of " +
+                      "generations ({}) reached.".format(N_gener))
                 break
-            start_t = t.time()
+
+        else:
+            if step == N_gener:
+                break
 
     # If this is a bootstrap run, return the best model found only.
     if not flag_print_perc:
@@ -226,7 +228,7 @@ def main(
 
     # Store the ML solution as 'map_sol' for consistency.
     isoch_fit_params = {
-        'OF_final_generation': generation, 'OF_elapsed': elapsed,
+        'OF_final_generation': generation, 'OF_elapsed': available_secs,
         'map_sol': map_sol, 'lkl_best': lkl_best, 'lkl_mean': lkl_mean,
         'OF_steps': step + 1, 'OF_models': (step + 1) * N_popl,
         'new_bs_indx': new_bs_indx, 'models_GA': models_GA, 'lkls_GA': lkls_GA}
@@ -268,8 +270,9 @@ def encode(n_bin, p_delta, p_mins, int_popul):
         # Convert floats to binary strings.
         p_binar = []
         for i, p_del in enumerate(p_delta):
-            p_binar.append(str(bin(int(((sol[i] - p_mins[i]) / p_del) *
-                           (2 ** n_bin - 1))))[2:].zfill(n_bin))
+            p_binar.append(str(bin(int(
+                ((sol[i] - p_mins[i]) / p_del) * (2 ** n_bin - 1))))[2:].zfill(
+                    n_bin))
 
         # Combine binary strings to generate a single chromosome.
         chromosomes.append(''.join(p_binar))

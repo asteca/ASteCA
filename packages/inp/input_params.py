@@ -202,14 +202,13 @@ def main(mypath, pars_f_path):
                 # Genetic algorithm parameters.
                 elif reader[0] == 'GA':
                     N_pop = int(reader[1])
-                    N_gen = int(reader[2])
-                    fit_diff = float(reader[3])
-                    cross_prob = float(reader[4])
-                    cross_sel = str(reader[5])
-                    mut_prob = float(reader[6])
-                    N_el = int(reader[7])
-                    N_ei = int(reader[8])
-                    N_es = int(reader[9])
+                    fit_diff = float(reader[2])
+                    cross_prob = float(reader[3])
+                    cross_sel = str(reader[4])
+                    mut_prob = float(reader[5])
+                    N_el = int(reader[6])
+                    N_ei = int(reader[7])
+                    N_es = int(reader[8])
 
                 # Likelihood function
                 elif reader[0] == 'LK':
@@ -346,7 +345,7 @@ def main(mypath, pars_f_path):
         'hperc_btstrp': hperc_btstrp, 'N_pop_btstrp': N_pop_btstrp,
         'N_step_btstrp': N_step_btstrp,
         # Genetic algorithm parameters.
-        'N_pop': N_pop, 'N_gen': N_gen, 'fit_diff': fit_diff,
+        'N_pop': N_pop, 'fit_diff': fit_diff,
         'cross_prob': cross_prob, 'cross_sel': cross_sel, 'mut_prob': mut_prob,
         'N_el': N_el, 'N_ei': N_ei, 'N_es': N_es,
         # Fixed accepted parameter values and photometric systems.
