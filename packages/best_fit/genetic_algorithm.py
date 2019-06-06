@@ -184,7 +184,7 @@ def main(
             elapsed_in = t.time() - start_in
             percentage_complete = (100. * elapsed_in / available_secs)
             if len(milestones) > 0 and percentage_complete >= milestones[0]:
-                m, s = divmod(((N_gener / float(step)) - 1.) * elapsed_in, 60)
+                m, s = divmod(max(1., available_secs - elapsed_in), 60)
                 h, m = divmod(m, 60)
                 # m += s / 60.
                 print("{:>3}% LP={:.1f} ({:.5f}, {:.3f}, {:.3f}, "
