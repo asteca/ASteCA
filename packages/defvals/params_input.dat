@@ -264,18 +264,8 @@ PP           n          100       2000          n          100       5000
 #   is assigned an MP of 1, if 'fixed' algorithm is selected. Otherwise this
 #   parameter is ignored.
 #
-# * id_col: [integer]
-#   Column number for the stars' IDs in the membership file, if the 'read'
-#   algorithm is selected. Otherwise this parameter is ignored.
-#
-# * mp_col: [integer]
-#   Column number for the stars' MPs in the membership file, if the 'read'
-#   algorithm is selected. Use Python indexing (i.e.: Start counting from
-#   zero and negative values are accepted). Otherwise this parameter is
-#   ignored.
-#
-#   algor   runs   fport   id_col   mp_col
-DA  bayes   1000      .4        0        7
+#   algor   runs   fport
+DA  bayes   1000      .4
 
 #   If the 'bayes' algorithm is selected, these weights are assigned to each
 #   data dimension (photometric and kinematic). If more than one color is

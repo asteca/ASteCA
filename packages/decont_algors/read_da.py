@@ -2,10 +2,12 @@
 from astropy.io import ascii
 
 
-def main(cl_region, memb_file, readda_idcol, readda_mpcol):
+def main(cl_region, memb_file, readda_idcol=0, readda_mpcol=-2):
     """
     Read MP values from file. Any star whose ID is not in the defined cluster
     region (cl_region) will be assigned an MP of 0.01.
+
+    The indexes for the ID and MPs columns are hardcoded.
     """
     print('Reading membership probabilities from file.')
     # Read IDs and MPs from file.

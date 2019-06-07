@@ -5,9 +5,9 @@ from . import fixed_da
 from . import read_da
 
 
-def main(clp, npd, colors, plx_col, pmx_col, pmy_col, rv_col, da_algor,
-         bayesda_runs, bayesda_weights, fixedda_port, readda_idcol,
-         readda_mpcol, **kwargs):
+def main(
+    clp, npd, colors, plx_col, pmx_col, pmy_col, rv_col, da_algor,
+        bayesda_runs, bayesda_weights, fixedda_port, **kwargs):
     """
     Apply selected decontamination algorithm.
     """
@@ -34,7 +34,7 @@ def main(clp, npd, colors, plx_col, pmx_col, pmy_col, rv_col, da_algor,
 
     elif da_algor == 'read':
         memb_probs_cl_region = read_da.main(
-            clp['cl_region_i'], npd['memb_file'], readda_idcol, readda_mpcol)
+            clp['cl_region_i'], npd['memb_file'])
 
     # Store for plotting in 'C1' block and adding to the members output file.
     clp['memb_probs_cl_region_i'] = memb_probs_cl_region
