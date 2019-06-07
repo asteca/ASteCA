@@ -88,6 +88,8 @@ def main(cl_max_mag, lkl_method, bin_method, lkl_weight):
         # Obtain histogram for observed cluster.
         cl_histo = np.histogramdd(obs_mags_cols, bins=bin_edges)[0]
 
+        # Weight each bin by the 'lkl_weight' statistic (mean by default) of
+        # the MPs of each star within that bin.
         bin_w = np.nan_to_num(binned_statistic_dd(
             np.array(obs_mags_cols).T, memb_probs, statistic=lkl_weight,
             bins=bin_edges)[0])
