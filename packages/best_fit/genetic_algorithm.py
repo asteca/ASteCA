@@ -317,7 +317,7 @@ def evaluation(
     # Process each model selected.
     for i, model in enumerate(p_lst):
 
-        rangeFlag = rangeCheck(model, ranges, varIdxs)
+        rangeFlag = rangeCheck(np.array(model)[varIdxs], ranges, varIdxs)
         if rangeFlag:
 
             # Generate synthetic cluster.
