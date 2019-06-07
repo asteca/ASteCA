@@ -140,13 +140,12 @@ def main(
                 # If N_es runs of the Ext/Imm operator have been applied with
                 # no changes to the best solution, apply the exit switch.
                 if np.allclose(lkl_ei, lkl_best_old, .01):
-                    # if np.allclose(best_sol[0], best_sol_ei, .001):
                     # Increase Ext/Imm operator counter.
                     ext_imm_count += 1
                     if ext_imm_count == N_es:
                         if flag_print_perc:
                             print("  GA exit switch applied.")
-                        step = step - 1
+                        elapsed_in = t.time() - start_in
                         break
                 else:
                     # Update best solution.
@@ -169,7 +168,6 @@ def main(
             # Reset counter.
             best_sol_count = 0
 
-        step += 1
         if flag_print_perc:
 
             # For plotting purposes.
@@ -204,6 +202,7 @@ def main(
         else:
             if step == N_gener:
                 break
+        step += 1
 
     # If this is a bootstrap run, return the best model found only.
     if not flag_print_perc:
@@ -211,10 +210,14 @@ def main(
 
     # For plotting
     # In case not all the generations were processed.
-    models_GA = models_GA[:(step + 1) * N_popl]
-    lkls_GA = lkls_GA[:(step + 1) * N_popl]
-    lkl_best = lkl_best[:(step + 1)]
-    lkl_mean = lkl_mean[:(step + 1)]
+    models_GA = models_GA[:(step - 1) * N_popl]
+    lkls_GA = lkls_GA[:(step - 1) * N_popl]
+    lkl_best = lkl_best[:(step - 1)]
+    lkl_mean = lkl_mean[:(step - 1)]
+
+    # Remove possible large Lkl values.
+    msk = lkls_GA < 9.9e08
+    models_GA, lkls_GA = models_GA[msk], lkls_GA[msk]
     # Sort and trim to N_max models to plot
     idx_sort = np.argsort(lkls_GA)
     N_max = 10000
@@ -228,7 +231,7 @@ def main(
 
     # Store the ML solution as 'map_sol' for consistency.
     isoch_fit_params = {
-        'OF_final_generation': generation, 'OF_elapsed': available_secs,
+        'OF_final_generation': generation, 'OF_elapsed': elapsed_in,
         'map_sol': map_sol, 'lkl_best': lkl_best, 'lkl_mean': lkl_mean,
         'OF_steps': step + 1, 'OF_models': (step + 1) * N_popl,
         'new_bs_indx': new_bs_indx, 'models_GA': models_GA, 'lkls_GA': lkls_GA}
