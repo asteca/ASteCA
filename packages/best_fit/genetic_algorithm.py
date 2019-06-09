@@ -318,9 +318,10 @@ def evaluation(
     # lkl_lst, generation_list = [], []
     lkl_arr = np.full(len(p_lst), np.inf)
     # Process each model selected.
-    for i, model in enumerate(p_lst):
+    models_varidx = [np.array(_)[varIdxs] for _ in p_lst]
+    for i, model in enumerate(models_varidx):
 
-        rangeFlag = rangeCheck(np.array(model)[varIdxs], ranges, varIdxs)
+        rangeFlag = rangeCheck(model, ranges, varIdxs)
         if rangeFlag:
 
             # Generate synthetic cluster.
