@@ -122,11 +122,8 @@ def main(met_f_filter, age_values, cmd_evol_tracks, evol_track, bin_mr,
     print("\nGrid values: {} [z], {} [log(age)], {} [Mass]".format(
         lens[0], lens[1], lens[4]))
 
-    # import pickle
-    # with open('theor_tracks.pickle', 'wb') as f:
-    #         pickle.dump((theor_tracks), f)
-
-    # filename = 'temp.pickle'
+    # # In place for #415
+    # filename = 'temp.memmap'
     # sp = np.array(theor_tracks).shape
     # theor_tracks_mp = np.memmap(filename, dtype='float64', mode='w+', shape=sp)
     # theor_tracks_mp[:] = theor_tracks[:]
