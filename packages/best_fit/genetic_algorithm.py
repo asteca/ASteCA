@@ -218,9 +218,9 @@ def main(
     # Remove possible large Lkl values.
     msk = lkls_GA < 9.9e08
     models_GA, lkls_GA = models_GA[msk], lkls_GA[msk]
-    # Sort and trim to N_max models to plot
+    # Sort arrays with minimum Lkl at the beginning.
     idx_sort = np.argsort(lkls_GA)
-    N_max = 10000
+    N_max = max(100, int(.1 * len(lkls_GA)))
     models_GA = models_GA[idx_sort][:N_max].T
     lkls_GA = lkls_GA[idx_sort][:N_max]
 
