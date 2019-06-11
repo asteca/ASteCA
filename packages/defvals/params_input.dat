@@ -59,13 +59,13 @@ PI        0      1       2       px         y
 #
 #  * mag, e_mag: Magnitude and uncertainty.
 #
-#        mag    e_mag
-PM     3,5,V        4
+#           mag    e_mag
+PM     3,5,Vmag        4
 #
 #  * col, e_col: Color and uncertainty.
 #
-#         col    e_col
-PC    5,5,B,V        6
+#               col    e_col
+PC    5,5,Bmag,Vmag        6
 
 # Columns for the proper motions [mas/yr], parallax [mas], and radial
 # velocity [km/s]. If a data column is not present, indicate it with a 'n'.
@@ -327,14 +327,14 @@ FR  local      knuth          0.5
 # * hmax: [float] maximum number of hours the entire process should run.
 #
 #   algorithm   h_max
-CF    ptemcee       1
+CF    ptemcee      .1
 
 # Minimum / maximum values that define the range of the parameters to fit for
 # the metallicity, log(age), E(B-V), distance modulus, initial mass, and binary
 # fraction, respectively. A single value indicates a fixed parameter.
 #
 #        min      max
-RZ     0.001     0.03
+RZ    0.0005     0.03
 RA         7       10
 RE         0        1
 RD         8       15
@@ -363,7 +363,7 @@ RB         0        1
 PT0      random         5        10
 #
 #     ntemps    nwalkers   nburn    nsteps     Tmax   adapt
-PT1       10         100     100      2500      inf       y
+PT1       10          50      50       500      inf       y
 #
 #     N_conv   tol_conv
 PT2      100       0.01
@@ -459,7 +459,7 @@ ET       PAR12         No
 # Input [z, log(age)] steps to read the stored isochrones.
 #
 #        z    log(age)
-PS    0.01         0.1
+PS   0.005         0.5
 
 # IMF used to populate the synthetic clusters.
 #
