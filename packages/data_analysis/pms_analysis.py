@@ -33,10 +33,14 @@ def main(clp, coords, pms_flag, pms_chains, pms_runs, **kwargs):
                 np.array(list(zip(*list(zip(*clp['cl_reg_fit']))[8]))[1]),\
                 np.array(list(zip(*list(zip(*clp['cl_reg_fit']))[7]))[2]),\
                 np.array(list(zip(*list(zip(*clp['cl_reg_fit']))[8]))[2])
-            DE_pm = np.array(list(zip(
-                *clp['cl_reg_fit']))[2]) if coords == 'deg'\
-                else np.zeros(pmRA.size)
             mmag_pm = np.array(list(zip(*list(zip(*clp['cl_reg_fit']))[3]))[0])
+
+            # Apply cos(delta) correction to pmRA if possible.
+            if coords == 'deg':
+                DE_pm = np.array(list(zip(*clp['cl_reg_fit']))[2])
+            else:
+                print("  WARNING: can not apply cos(dec) factor to pmRA.")
+                DE_pm = np.zeros(pmRA.size)
 
             # Remove nan values from cluster region
             msk = ~np.isnan(pmRA) & ~np.isnan(e_pmRA) & ~np.isnan(pmDE) &\
@@ -107,7 +111,7 @@ def main(clp, coords, pms_flag, pms_chains, pms_runs, **kwargs):
 
     clp.update({
         'PM_flag': PM_flag, 'pmMP': pmMP, 'pmRA_DE': pmRA_DE,
-        'e_pmRA_DE': e_pmRA_DE, 'pmDE': pmDE, 'e_pmDE': e_pmDE, 'DE_pm': DE_pm,
+        'e_pmRA_DE': e_pmRA_DE, 'pmDE': pmDE, 'e_pmDE': e_pmDE,
         'mmag_pm': mmag_pm, 'pmRA_Bys': (pmRA_Bys, pmRA_std_Bys),
         'pmDE_Bys': (pmDE_Bys, pmDE_std_Bys)})
     return clp

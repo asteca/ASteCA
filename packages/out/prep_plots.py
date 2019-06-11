@@ -562,7 +562,7 @@ def kde_2d(xarr, xsigma, yarr, ysigma, grid_dens=50):
 
 
 def PMsPlot(
-    PM_flag, pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, DE_pm, mmag_pm,
+    PM_flag, pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, mmag_pm,
         pmRA_Bys, pmDE_Bys, coord, flag_no_fl_regs_i, field_regions_i):
     """
     Parameters for the proper motions plot.
@@ -576,9 +576,9 @@ def PMsPlot(
 
         # Re-arrange so stars with larger MPs are on top.
         mp_i = pmMP.argsort()
-        pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, DE_pm, mmag_pm = pmMP[mp_i],\
+        pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, mmag_pm = pmMP[mp_i],\
             pmRA_DE[mp_i], e_pmRA_DE[mp_i], pmDE[mp_i], e_pmDE[mp_i],\
-            DE_pm[mp_i], mmag_pm[mp_i]
+            mmag_pm[mp_i]
 
         # 2D KDE for cluster region
         x_clpm, y_clpm, z_clpm = kde_2d(pmRA_DE, e_pmRA_DE, pmDE, e_pmDE)
@@ -618,7 +618,7 @@ def PMsPlot(
             x_flpm, y_flpm, z_flpm = kde_2d(
                 pmRA_fl_DE, e_pmRA_fl_DE, pmDE_fl, e_pmDE_fl)
 
-    return pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, DE_pm, mmag_pm, pmRA_fl_DE,\
+    return pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, mmag_pm, pmRA_fl_DE,\
         e_pmRA_fl_DE, pmDE_fl, e_pmDE_fl, x_clpm, y_clpm, z_clpm, pm_dist_max,\
         x_flpm, y_flpm, z_flpm
 

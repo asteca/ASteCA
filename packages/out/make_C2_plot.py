@@ -10,7 +10,7 @@ from . import prep_plots
 def main(
     npd, pd, col_0_comb, mag_0_comb, cl_reg_clean_plot, plx_flag, plx_clrg,
     mmag_clp, mp_clp, plx_clp, e_plx_clp, flag_no_fl_regs_i, field_regions_i,
-    PM_flag, pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, DE_pm, mmag_pm, pmRA_Bys,
+    PM_flag, pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, mmag_pm, pmRA_Bys,
         pmDE_Bys, plx_Bys, plx_wa, cl_reg_fit, **kwargs):
     '''
     Make C2 block plots.
@@ -41,10 +41,10 @@ def main(
                 plx_flag, plx_clrg, mmag_clp, mp_clp, plx_clp, e_plx_clp,
                 flag_no_fl_regs_i, field_regions_i)
         # PMs data.
-        pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, DE_pm, mmag_pm, pmRA_fl_DE,\
+        pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, mmag_pm, pmRA_fl_DE,\
             e_pmRA_fl_DE, pmDE_fl, e_pmDE_fl, x_clpm, y_clpm, z_clpm,\
             pm_dist_max, x_flpm, y_flpm, z_flpm = prep_plots.PMsPlot(
-                PM_flag, pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, DE_pm,
+                PM_flag, pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE,
                 mmag_pm, pmRA_Bys, pmDE_Bys, coord, flag_no_fl_regs_i,
                 field_regions_i)
 
@@ -61,7 +61,7 @@ def main(
             [gs, coord, plx_flag, PM_flag, pmMP, pmRA_DE, e_pmRA_DE, pmDE,
              e_pmDE, pmRA_fl_DE, e_pmRA_fl_DE, pmDE_fl, e_pmDE_fl],
             # pms_KDE_diag
-            [gs, coord, plx_flag, PM_flag, pmRA_DE, pmDE, DE_pm, x_clpm,
+            [gs, coord, plx_flag, PM_flag, pmRA_DE, pmDE, x_clpm,
              y_clpm, z_clpm, x_flpm, y_flpm, z_flpm, pmRA_Bys, pmDE_Bys],
             # pms_vs_MP
             [gs, y_ax, plx_flag, PM_flag, pmMP, pm_dist_max, mmag_pm]

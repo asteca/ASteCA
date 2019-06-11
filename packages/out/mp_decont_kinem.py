@@ -5,6 +5,7 @@ from matplotlib.colors import Normalize
 from matplotlib.patches import Ellipse
 from matplotlib.colors import ListedColormap
 import numpy as np
+from astropy.stats import sigma_clipped_stats
 
 
 def plx_histo(
@@ -206,14 +207,17 @@ def pms_vpd(
             xerr=e_pmRA_fl_DE, fmt='none', elinewidth=.35, ecolor='grey',
             zorder=1)
 
-        RA_med, RA_std = np.median(pmRA_DE), np.std(pmRA_DE)
-        DE_med, DE_std = np.median(pmDE), np.std(pmDE)
-        plt.xlim(RA_med - 3. * RA_std, RA_med + 3. * RA_std)
-        plt.ylim(DE_med - 3. * DE_std, DE_med + 3. * DE_std)
+        ra_mean, ra_median, ra_std = sigma_clipped_stats(pmRA_DE)
+        de_mean, de_median, de_std = sigma_clipped_stats(pmDE)
+        x_range = abs(ra_median + 4. * ra_std - (ra_median - 4. * ra_std))
+        y_range = abs(de_median + 4. * de_std - (de_median - 4. * de_std))
+        xyrange = max(x_range, y_range)
+        plt.xlim(ra_median - .5 * xyrange, ra_median + .5 * xyrange)
+        plt.ylim(de_median - .5 * xyrange, de_median + .5 * xyrange)
 
 
 def pms_KDE_diag(
-    gs, coord, plx_flag, PM_flag, pmRA_DE, pmDE, DE_pm, x_clpm, y_clpm,
+    gs, coord, plx_flag, PM_flag, pmRA_DE, pmDE, x_clpm, y_clpm,
         z_clpm, x_flpm, y_flpm, z_flpm, pmRA_Bys, pmDE_Bys):
     """
     KDE of PMs for cluster and field regions.
