@@ -7,7 +7,7 @@ from . import likelihood
 # from .emcee3rc2 import autocorr
 from .mcmc_convergence import convergenceVals
 from .bf_common import initPop, varPars, synthClust, rangeCheck, fillParams,\
-    closeSol, discreteParams, r2Dist, modeKDE, thinChain
+    closeSol, discreteParams, r2Dist, modeKDE  # , thinChain
 from .ptemcee import sampler, util
 
 
@@ -57,6 +57,12 @@ def main(
     N_steps_check = max(1, int(nburn_ptm * .1))
     for i, (pos0, lnprob, lnlike) in enumerate(ptsampler.sample(
             p0, iterations=nburn_ptm, adapt=pt_adapt)):
+
+        elapsed += t.time() - start_t
+        if elapsed >= available_secs:
+            print("  Time consumed during burn-in (runs={})".format(i + 1))
+            break
+        start_t = t.time()
 
         if (i + 1) % N_steps_check:
             continue
@@ -113,7 +119,7 @@ def main(
                 pos0, iterations=nsteps_ptm, adapt=pt_adapt)):
 
             elapsed += t.time() - start_t
-            if elapsed >= available_secs:
+            if elapsed >= available_secs and i > 2:
                 print("  Time consumed (runs={})".format(i + 1))
                 break
             start_t = t.time()
