@@ -2,6 +2,7 @@
 import numpy as np
 import warnings
 from astropy.io import ascii
+from astropy.table import Table
 from collections import defaultdict, Iterable
 import operator
 import copy
@@ -131,6 +132,8 @@ def maskBadPhot(data, mag_col, e_mag_col, col_col, e_col_col):
     """
     Mask photometric values outside the (-50., 50.) range.
     """
+    # Convert to masked table in case it is not.
+    data = Table(data, masked=True)
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         for idx in [mag_col, e_mag_col, col_col, e_col_col]:
