@@ -18,12 +18,12 @@ def starsPlot(boundary, x_data, y_data):
         if len(y_data) > 0:
             plt.scatter(
                 x_data, y_data, marker='o', c='r', s=20, zorder=3,
-                lw=0.3, edgecolor='k', label='$r \leq r_{cl}}$')
+                lw=0.3, edgecolor='k', label=r'$r \leq r_{cl}}$')
     if boundary == 'accpt_out':
         if len(y_data) > 0:
             plt.scatter(
                 x_data, y_data, marker='o', c='b', s=15, zorder=2,
-                lw=0.1, edgecolor='k', label='$r > r_{cl}$')
+                lw=0.1, edgecolor='k', label=r'$field$')
 
 
 def pl_phot_err(

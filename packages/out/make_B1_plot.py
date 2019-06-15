@@ -9,7 +9,7 @@ from . import prep_plots
 
 
 def main(
-        npd, cld_c, pd, em_float, err_lst, cl_region_c, cl_region_rjct_c,
+    npd, cld_c, pd, em_float, err_lst, cl_region_c, cl_region_rjct_c,
         stars_out_c, stars_out_rjct_c, col_0_comb, mag_0_comb, **kwargs):
     '''
     Make B1 block plots.
@@ -43,10 +43,11 @@ def main(
             mp_errors.plot(n, *args)
 
         plt.suptitle(
-            r"$N_{{accpt}}={}$ , $N_{{rjct}}={}$ (compl frame)".format(
+            (r"$N_{{accpt}}={}$ , $N_{{rjct}}={}$ (cluster + "
+             "field regions, compl frame)").format(
                 len(cl_region_c) + len(stars_out_c),
                 len(stars_out_rjct_c) + len(cl_region_rjct_c)),
-            fontsize=12, x=.265, y=1.005)
+            fontsize=12, x=.26, y=1.005)
 
         # Generate output file.
         fig.tight_layout()
