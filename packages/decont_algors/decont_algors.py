@@ -55,14 +55,15 @@ def filterMPs(memb_probs_cl_region, cl_region_i, cl_region_c):
     """
     Pass along MPs only for stars in the *complete* dataset.
     """
-    memb_probs_cl_region_c = []
-    ids_c = list(zip(*cl_region_c))[0]
-    for i, star in enumerate(cl_region_i):
-        id_i = star[0]
-        if id_i in ids_c:
-            memb_probs_cl_region_c.append(memb_probs_cl_region[i])
 
-    return np.array(memb_probs_cl_region_c)
+    ids_c, ids_i = list(zip(*cl_region_c))[0], list(zip(*cl_region_i))[0]
+    memb_probs_cl_region_c = np.zeros(len(ids_c))
+    for i, id_i in enumerate(ids_i):
+        if id_i in ids_c:
+            j = ids_c.index(id_i)
+            memb_probs_cl_region_c[j] = memb_probs_cl_region[i]
+
+    return memb_probs_cl_region_c
 
 
 def mpas(cl_region, memb_probs_cl_region):
