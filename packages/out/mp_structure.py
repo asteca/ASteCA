@@ -252,9 +252,13 @@ def pl_zoom_frame(
     # Plot radius.
     circle = plt.Circle((kde_cent[0], kde_cent[1]), clust_rad, color='r',
                         fill=False, lw=1.5, zorder=5)
-    N_r = [1 for pt in list(zip(x_data, y_data)) if circle.contains_point(pt)]
+    # Stars inside the cluster
+    N_in = 0
+    for x, y in zip(*[x_data, y_data]):
+        if np.sqrt((x - kde_cent[0])**2 + (y - kde_cent[1])**2) <= clust_rad:
+            N_in += 1
     ax.set_title(r"$N_{{r<r_{{cl}}}}$={} [$CI = {:.2f}$] (phot incomp)".format(
-        sum(N_r), cont_index), fontsize=9)
+        N_in, cont_index), fontsize=9)
     fig.gca().add_artist(circle)
 
     # Plot contour levels if it was obtained.
