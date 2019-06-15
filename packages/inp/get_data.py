@@ -62,7 +62,7 @@ def main(npd, read_mode, nanvals, id_col, x_col, y_col, mag_col, e_mag_col,
     # Create cluster's dictionary with the *photometrically complete* data.
     ids, x, y, mags, cols, kine, em, ec, ek = dataCols(
         data_file, data_compl, col_names)
-    x, y, _, _ = coordsProject(x, y, coords, project)
+    x, y, _, _ = coordsProject(x, y, coords, project, x_offset, y_offset)
     cld_c = {'ids': ids, 'x': x, 'y': y, 'mags': mags, 'em': em,
              'cols': cols, 'ec': ec, 'kine': kine, 'ek': ek}
 
@@ -304,13 +304,14 @@ def list_duplicates(seq):
     return dups
 
 
-def coordsProject(x, y, coords, project):
+def coordsProject(x, y, coords, project, ra_cent=None, dec_cent=None):
     """
     Sinusoidal projection.
     """
     if coords == 'deg' and project:
-        ra_cent = (max(x) + min(x)) / 2.
-        dec_cent = (max(y) + min(y)) / 2.
+        if ra_cent is None:
+            ra_cent = (max(x) + min(x)) / 2.
+            dec_cent = (max(y) + min(y)) / 2.
         x = (x - ra_cent) * np.cos(np.deg2rad(y))
         y = (y - dec_cent)
         x_offset, y_offset = ra_cent, dec_cent
