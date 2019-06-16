@@ -139,7 +139,7 @@ def main(
                 # *** Exit switch ***
                 # If N_es runs of the Ext/Imm operator have been applied with
                 # no changes to the best solution, apply the exit switch.
-                if np.allclose(lkl_ei, lkl_best_old, .01):
+                if lkl_ei <= lkl_best_old:
                     # Increase Ext/Imm operator counter.
                     ext_imm_count += 1
                     if ext_imm_count == N_es:
@@ -186,7 +186,7 @@ def main(
                 h, m = divmod(m, 60)
                 # m += s / 60.
                 print("{:>3}% LP={:.1f} ({:.5f}, {:.3f}, {:.3f}, "
-                      "{:.2f}, {:g}, {:.2f})".format(
+                      "{:.2f}, {:.0f}, {:.2f})".format(
                           milestones[0], lkl[0], *generation[0]) +
                       " [{:.0f} m/s | {:.0f}h{:.0f}m]".format(
                           (N_popl * step) / elapsed_in, h, m))
