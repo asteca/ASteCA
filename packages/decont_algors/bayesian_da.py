@@ -3,31 +3,178 @@ import numpy as np
 from .. import update_progress
 
 
-def break_check(prob_avrg_old, runs_fields_probs, runs, run_num, N_total):
+def main(
+    colors, plx_col, pmx_col, pmy_col, rv_col, bayesda_runs, bayesda_weights,
+        cl_region, field_regions):
+    '''
+    Bayesian field decontamination algorithm.
+    '''
+    print('Applying Bayesian DA ({} runs)'.format(bayesda_runs))
+
+    # cl_region = [[id, x, y, mags, e_mags, cols, e_cols, kine, ek], [], ...]
+    # len(cl_region) = number of stars inside the cluster's radius.
+    # len(cl_region[_][3]) = number of magnitudes defined.
+    # len(field_regions) = number of field regions.
+    # len(field_regions[i]) = number of stars inside field region 'i'.
+
+    # Select the correct values for the dimension weights.
+    bayesda_weights = weightsSelect(
+        bayesda_weights, colors, plx_col, pmx_col, pmy_col, rv_col)
+
+    # Magnitudes and colors (and their errors) for all stars in the cluster
+    # region, stored with the appropriate format.
+    cl_reg_prep, w_cl = reg_data(cl_region)
+    # Normalize data.
+    cl_reg_prep = dataNorm(cl_reg_prep)
+
+    # Likelihoods between all field regions and the cluster region.
+    fl_likelihoods = []
+    for fl_region in field_regions:
+        # Obtain likelihood, for each star in the cluster region, of
+        # being a field star.
+        fl_reg_prep, w_fl = reg_data(fl_region)
+        # Normalize data.
+        fl_reg_prep = dataNorm(fl_reg_prep)
+        # Number of stars in field region.
+        n_fl = len(fl_region)
+        fl_likelihoods.append([n_fl, likelihood(
+            bayesda_weights, fl_reg_prep, w_fl, cl_reg_prep, w_cl)])
+
+    # Create copy of the cluster region to be shuffled below.
+    clust_reg_shuffle, w_cl_shuffle = cl_reg_prep[:], w_cl[:]
+
+    # Initial null probabilities for all stars in the cluster region.
+    prob_avrg_old = np.zeros(len(cl_region))
+    # Probabilities for all stars in the cluster region.
+    runs_fields_probs = np.zeros(len(cl_region))
+
+    # Run 'bayesda_runs*fl_likelihoods' times.
+    N_total = 0
+    for run_num in range(bayesda_runs):
+        # Iterate through all the 'field stars' regions that were populated.
+        for n_fl, fl_lkl in fl_likelihoods:
+
+            if n_fl < len(cl_region):
+                # Randomly shuffle the stars within the cluster region.
+                p = np.random.permutation(len(clust_reg_shuffle))
+                clust_reg_shuffle, w_cl_shuffle = clust_reg_shuffle[p],\
+                    w_cl_shuffle[p]
+                # Remove n_fl random stars from the cluster region and
+                # obtain the likelihoods for each star in this "cleaned"
+                # cluster region.
+                cl_lkl = likelihood(
+                    bayesda_weights, clust_reg_shuffle[n_fl:],
+                    w_cl_shuffle[n_fl:], cl_reg_prep, w_cl)
+            else:
+                # If there are *more* field region stars than the total of
+                # stars within the cluster region (highly contaminated
+                # cluster), assign zero likelihood of being a true member to
+                # all stars within the cluster region.
+                cl_lkl = np.ones(len(cl_region)) * 1e-7
+
+            # Bayesian probability for each star within the cluster region.
+            bayes_prob = 1. / (1. + (fl_lkl / cl_lkl))
+            N_total += 1
+            runs_fields_probs += bayes_prob
+
+        # Check if probabilities converged. If so, break out.
+        prob_avrg_old, break_flag = break_check(
+            prob_avrg_old, runs_fields_probs, bayesda_runs, run_num, N_total)
+        if break_flag:
+            print('| MPs converged (run {}).'.format(run_num))
+            break
+        update_progress.updt(bayesda_runs, run_num + 1)
+
+    # Average all Bayesian membership probabilities into a single value for
+    # each star inside 'cl_region'.
+    memb_probs_cl_region = runs_fields_probs / N_total
+
+    return memb_probs_cl_region
+
+
+def weightsSelect(bayesda_weights, colors, plx_col, pmx_col, pmy_col, rv_col):
     """
-    Check if DA converged to MPs within a 0.1% tolerance, for all stars inside
-    the cluster region.
+    Select the appropriate weights according to the dimensions of data defined.
+    No limit in the number of colors defined is imposed.
     """
-    # Average all probabilities.
-    prob_avrg = runs_fields_probs / N_total
+    w_mag = [bayesda_weights[0]]
+    w_cols = bayesda_weights[1:len(colors) + 1]
 
-    # Set flag.
-    break_flag = False
+    w_kin = []
+    for i, k_d in enumerate((plx_col, pmx_col, pmy_col, rv_col)):
+        if k_d is not False:
+            w_kin.append(bayesda_weights[1 + len(colors) + i])
 
-    # Check if probabilities changed less than 0.1% with respect to the
-    # previous iteration.
-    if np.allclose(prob_avrg_old, prob_avrg, 0.001):
-        # Check that at least 10% of iterations have passed.
-        if run_num >= max(1, int(0.1 * runs)):
-            # Arrays are equal within tolerance and enough iterations have
-            # passed. Break out.
-            break_flag = True
+    return w_mag + w_cols + w_kin
 
-    if break_flag is False:
-        # Store new array in old one and proceed to new iteration.
-        prob_avrg_old = prob_avrg
 
-    return prob_avrg_old, break_flag
+def dataNorm(data_arr):
+    """
+    Normalize arrays.
+    """
+
+    # Minimum values for all arrays
+    dmin = np.nanmin(data_arr[:, :, 0], 0)
+    data_norm = data_arr[:, :, 0] - dmin
+    dmax = np.nanmax(data_norm, 0)
+    data_norm /= dmax
+
+    # Scale errors
+    e_scaled = data_arr[:, :, 1] / dmax
+    # Square errors
+    e_scaled = np.square(e_scaled)
+
+    # Combine into proper shape
+    data_norm = np.array([data_norm.T, e_scaled.T]).T
+
+    return data_norm
+
+
+def reg_data(region):
+    """
+    Generate list with photometric data in the correct format, and obtain the
+    "dimensional" weights used by the likelihood.
+    """
+    region_z = list(zip(*region))
+
+    # Square errors (mags, colors, kinematics).
+    # sq_em, sq_ec, sq_k = np.square(region_z[4]), np.square(region_z[6]),\
+    #     np.square(region_z[8])
+    # Put each magnitude, color, and kinematic parameter into a separate list.
+    mags, cols, kinem = list(zip(*region_z[3])), list(zip(*region_z[5])),\
+        list(zip(*region_z[7]))
+    # e_mags, e_cols, e_kinem = list(zip(*sq_em)), list(zip(*sq_ec)),\
+    #     list(zip(*sq_k))
+    e_mags, e_cols, e_kinem = list(zip(*region_z[4])),\
+        list(zip(*region_z[6])), list(zip(*region_z[8]))
+
+    # Remove kinematic dimensions where *all* the elements are 'nan'.
+    e_kinem = [
+        e_kinem[i] for i, _ in enumerate(kinem) if not np.isnan(_).all()]
+    kinem = [_ for _ in kinem if not np.isnan(_).all()]
+
+    # Combine photometry and errors.
+    data = np.array(mags + cols + kinem)
+    e_data = np.array(e_mags + e_cols + e_kinem)
+    # Generate array with the appropriate format.
+    data_err = np.stack((data, e_data)).T
+
+    # Total number of information dimensions.
+    d_T = len(mags) + len(cols) + len(kinem)
+    d_info = np.zeros(len(region))
+    for m in mags:
+        d_info += ~np.isnan(m)
+    for c in cols:
+        d_info += ~np.isnan(c)
+    for k in kinem:
+        d_info += ~np.isnan(k)
+    # Final "dimensional information" weight. Equals '1.' if the star
+    # contains valid data in all the defined information dimensions. Otherwise
+    # it is a smaller float, down to zero when the star has no valid data.
+    wi = d_info / d_T
+    # wi = np.ones(len(region))
+
+    return data_err, wi
 
 
 def likelihood(bayesda_weights, region, w_r, cl_reg_prep, w_c):
@@ -88,144 +235,28 @@ def likelihood(bayesda_weights, region, w_r, cl_reg_prep, w_c):
     return sum_M
 
 
-def reg_data(region):
+def break_check(prob_avrg_old, runs_fields_probs, runs, run_num, N_total):
     """
-    Generate list with photometric data in the correct format, and obtain the
-    "dimensional" weights used by the likelihood.
+    Check if DA converged to MPs within a 0.1% tolerance, for all stars inside
+    the cluster region.
     """
-    region_z = list(zip(*region))
+    # Average all probabilities.
+    prob_avrg = runs_fields_probs / N_total
 
-    # Square errors (mags, colors, kinematics).
-    sq_em, sq_ec, sq_k = np.square(region_z[4]), np.square(region_z[6]),\
-        np.square(region_z[8])
-    # Put each magnitude, color, and kinematic parameter into a separate list.
-    mags, cols, kinem = list(zip(*region_z[3])), list(zip(*region_z[5])),\
-        list(zip(*region_z[7]))
-    e_mags, e_cols, e_kinem = list(zip(*sq_em)), list(zip(*sq_ec)),\
-        list(zip(*sq_k))
+    # Set flag.
+    break_flag = False
 
-    # Remove kinematic dimensions where *all* the elements are 'nan'.
-    e_kinem = [
-        e_kinem[i] for i, _ in enumerate(kinem) if not np.isnan(_).all()]
-    kinem = [_ for _ in kinem if not np.isnan(_).all()]
+    # Check if probabilities changed less than 0.1% with respect to the
+    # previous iteration.
+    if np.allclose(prob_avrg_old, prob_avrg, 0.001):
+        # Check that at least 10% of iterations have passed.
+        if run_num >= max(1, int(0.1 * runs)):
+            # Arrays are equal within tolerance and enough iterations have
+            # passed. Break out.
+            break_flag = True
 
-    # Combine photometry and errors.
-    data = np.array(mags + cols + kinem)
-    e_data = np.array(e_mags + e_cols + e_kinem)
-    # Generate array with the appropriate format.
-    data_err = np.stack((data, e_data)).T
+    if break_flag is False:
+        # Store new array in old one and proceed to new iteration.
+        prob_avrg_old = prob_avrg
 
-    # Total number of information dimensions.
-    d_T = len(mags) + len(cols) + len(kinem)
-    d_info = np.zeros(len(region))
-    for m in mags:
-        d_info += ~np.isnan(m)
-    for c in cols:
-        d_info += ~np.isnan(c)
-    for k in kinem:
-        d_info += ~np.isnan(k)
-    # Final "dimensional information" weight. Equals '1.' if the star
-    # contains valid data in all the defined information dimensions. Otherwise
-    # it is a smaller float, down to zero when the star has no valid data.
-    wi = d_info / d_T
-
-    return data_err, wi
-
-
-def weightsSelect(bayesda_weights, colors, plx_col, pmx_col, pmy_col, rv_col):
-    """
-    Select the appropriate weights according to the dimensions of data defined.
-    No limit in the number of colors defined is imposed.
-    """
-    w_mag = [bayesda_weights[0]]
-    w_cols = bayesda_weights[1:len(colors) + 1]
-
-    w_kin = []
-    for i, k_d in enumerate((plx_col, pmx_col, pmy_col, rv_col)):
-        if k_d is not False:
-            w_kin.append(bayesda_weights[1 + len(colors) + i])
-
-    return w_mag + w_cols + w_kin
-
-
-def main(colors, plx_col, pmx_col, pmy_col, rv_col, bayesda_runs,
-         bayesda_weights, cl_region, field_regions):
-    '''
-    Bayesian field decontamination algorithm.
-    '''
-    print('Applying Bayesian DA ({} runs)'.format(bayesda_runs))
-
-    # cl_region = [[id, x, y, mags, e_mags, cols, e_cols, kine, ek], [], ...]
-    # len(cl_region) = number of stars inside the cluster's radius.
-    # len(cl_region[_][3]) = number of magnitudes defined.
-    # len(field_regions) = number of field regions.
-    # len(field_regions[i]) = number of stars inside field region 'i'.
-
-    # Select the correct values for the dimension weights.
-    bayesda_weights = weightsSelect(
-        bayesda_weights, colors, plx_col, pmx_col, pmy_col, rv_col)
-
-    # Magnitudes and colors (and their errors) for all stars in the cluster
-    # region, stored with the appropriate format.
-    cl_reg_prep, w_cl = reg_data(cl_region)
-    # Likelihoods between all field regions and the cluster region.
-    fl_likelihoods = []
-    for fl_region in field_regions:
-        # Obtain likelihood, for each star in the cluster region, of
-        # being a field star.
-        fl_reg_prep, w_fl = reg_data(fl_region)
-        # Number of stars in field region.
-        n_fl = len(fl_region)
-        fl_likelihoods.append([n_fl, likelihood(
-            bayesda_weights, fl_reg_prep, w_fl, cl_reg_prep, w_cl)])
-
-    # Create copy of the cluster region to be shuffled below.
-    clust_reg_shuffle, w_cl_shuffle = cl_reg_prep[:], w_cl[:]
-
-    # Initial null probabilities for all stars in the cluster region.
-    prob_avrg_old = np.zeros(len(cl_region))
-    # Probabilities for all stars in the cluster region.
-    runs_fields_probs = np.zeros(len(cl_region))
-
-    # Run 'bayesda_runs*fl_likelihoods' times.
-    N_total = 0
-    for run_num in range(bayesda_runs):
-        # Iterate through all the 'field stars' regions that were populated.
-        for n_fl, fl_lkl in fl_likelihoods:
-
-            if n_fl < len(cl_region):
-                # Randomly shuffle the stars within the cluster region.
-                p = np.random.permutation(len(clust_reg_shuffle))
-                clust_reg_shuffle, w_cl_shuffle = clust_reg_shuffle[p],\
-                    w_cl_shuffle[p]
-                # Remove n_fl random stars from the cluster region and
-                # obtain the likelihoods for each star in this "cleaned"
-                # cluster region.
-                cl_lkl = likelihood(
-                    bayesda_weights, clust_reg_shuffle[n_fl:],
-                    w_cl_shuffle[n_fl:], cl_reg_prep, w_cl)
-            else:
-                # If there are *more* field region stars than the total of
-                # stars within the cluster region (highly contaminated
-                # cluster), assign zero likelihood of being a true member to
-                # all stars within the cluster region.
-                cl_lkl = np.ones(len(cl_region)) * 1e-7
-
-            # Bayesian probability for each star within the cluster region.
-            bayes_prob = 1. / (1. + (fl_lkl / cl_lkl))
-            N_total += 1
-            runs_fields_probs += bayes_prob
-
-        # Check if probabilities converged. If so, break out.
-        prob_avrg_old, break_flag = break_check(
-            prob_avrg_old, runs_fields_probs, bayesda_runs, run_num, N_total)
-        if break_flag:
-            print('| MPs converged (run {}).'.format(run_num))
-            break
-        update_progress.updt(bayesda_runs, run_num + 1)
-
-    # Average all Bayesian membership probabilities into a single value for
-    # each star inside 'cl_region'.
-    memb_probs_cl_region = runs_fields_probs / N_total
-
-    return memb_probs_cl_region
+    return prob_avrg_old, break_flag
