@@ -106,9 +106,6 @@ def main(mypath, pars_f_path):
                     plx_flag = True if reader[1] in true_lst else False
                     plx_chains = int(reader[2])
                     plx_runs = int(reader[3])
-                    pms_flag = True if reader[4] in true_lst else False
-                    pms_chains = int(reader[5])
-                    pms_runs = int(reader[6])
 
                 # Decontamination algorithm parameters
                 elif reader[0] == 'DA':
@@ -306,8 +303,7 @@ def main(mypath, pars_f_path):
         'fdens_method': fdens_method,
         'kp_flag': kp_flag, 'fr_number': fr_number, 'err_max': err_max,
         'ad_runs': ad_runs, 'ad_k_comb': ad_k_comb, 'plx_flag': plx_flag,
-        'plx_chains': plx_chains, 'plx_runs': plx_runs, 'pms_flag': pms_flag,
-        'pms_chains': pms_chains, 'pms_runs': pms_runs,
+        'plx_chains': plx_chains, 'plx_runs': plx_runs,
         # Decontamination algorithm parameters.
         'da_algor': da_algor, 'bayesda_runs': bayesda_runs,
         'fixedda_port': fixedda_port, 'bayesda_weights': bayesda_weights,

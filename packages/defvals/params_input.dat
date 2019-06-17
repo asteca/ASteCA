@@ -223,19 +223,19 @@ ER        0.1           n            n            n            n
 #   runs   Plx_PM_comb
 AD   100             y
 
-# Parallax and/or Proper Motions analysis
+# Parallax Bayesian analysis
 #
-# * plx_flag | pms_flag: y / n
-#   Perform Bayesian analysis of (parallax | proper motions) data.
+# * plx_flag: y / n
+#   Perform Bayesian analysis of parallax data.
 #
-# * plx_chains | pms_chains: [int]
+# * plx_chains: [int]
 #   Number of MCMC chains used in the Bayesian analysis.
 #
-# * plx_runs | pms_runs: [int]
+# * plx_runs: [int]
 #   Number of MCMC steps used in the Bayesian analysis. 
 #
-#     plx_flag   plx_chains   plx_runs   pms_flag   pms_chains   pms_runs
-PP           n          100       2000          n          100       5000
+#     plx_flag   plx_chains   plx_runs
+PP           n          100       2000
 ################################################################################
 
 

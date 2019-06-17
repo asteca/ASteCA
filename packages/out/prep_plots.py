@@ -5,8 +5,8 @@ from ..decont_algors.local_cell_clean import bin_edges_f
 import numpy as np
 import warnings
 from scipy import stats
-from scipy.spatial.distance import cdist
 from astropy.visualization import ZScaleInterval
+from astropy.stats import sigma_clipped_stats
 
 
 def frame_max_min(x_data, y_data):
@@ -27,8 +27,8 @@ def aspect_ratio(x_min, x_max, y_min, y_max):
 
     # If the aspect ratio is smaller than 1:3.
     if asp_ratio < 0.33:
-        print ("  WARNING: frame's aspect ratio ({:.2f}) is < 1:3.\n"
-               "  Cluster's plot will be stretched to 1:1.".format(asp_ratio))
+        print("  WARNING: frame's aspect ratio ({:.2f}) is < 1:3.\n"
+              "  Cluster's plot will be stretched to 1:1.".format(asp_ratio))
         asp_ratio = 'auto'
     else:
         asp_ratio = 'equal'
@@ -497,127 +497,20 @@ def plxPlot(
     return plx_x_kde, kde_pl, plx_flrg, mmag_clp, mp_clp, plx_clp, e_plx_clp
 
 
-def kde_2d(xarr, xsigma, yarr, ysigma, grid_dens=50):
-    '''
-    Take an array of x,y data with their errors, create a grid of points in x,y
-    and return the 2D KDE density map.
-    '''
-
-    # Replace 0 error with very LARGE value.
-    np.place(xsigma, xsigma <= 0., 1000.)
-    np.place(ysigma, ysigma <= 0., 1000.)
-
-    # Grid density (number of points).
-    xmean, xstd = np.nanmedian(xarr), np.nanstd(xarr)
-    ymean, ystd = np.nanmedian(yarr), np.nanstd(yarr)
-    xmax, xmin = xmean + 3. * xstd, xmean - 3. * xstd
-    ymax, ymin = ymean + 3. * ystd, ymean - 3. * ystd
-    gd_c = complex(0, grid_dens)
-    # Define grid of points in x,y where the KDE will be evaluated.
-    ext = [xmin, xmax, ymin, ymax]
-    x, y = np.mgrid[ext[0]:ext[1]:gd_c, ext[2]:ext[3]:gd_c]
-    pos = np.vstack([x.ravel(), y.ravel()])
-    values = np.vstack([xarr, yarr])
-
-    # Scipy's norm factor
-    # https://github.com/scipy/scipy/blob/v1.1.0/scipy/stats/kde.py
-    d, n = values.shape
-    data_covariance = np.cov(values)
-    data_inv_cov = np.linalg.inv(data_covariance)
-    scotts_factor = np.power(n, -1. / (d + 4))
-    inv_cov = data_inv_cov / scotts_factor**2
-    covariance = data_covariance * scotts_factor**2
-    norm_factor = np.sqrt(np.linalg.det(2 * np.pi * covariance)) * n
-
-    # Evaluate KDE in x,y grid.
-    m = grid_dens**2
-    vals = np.zeros((m,), dtype=np.float)
-    if m >= n:
-        # print("loop over data")
-        e_values = np.vstack([xsigma, ysigma]).T
-        for i, p in enumerate(values.T):
-            valxy = (
-                inv_cov[0][0] * ((p[0] - pos[0]) / e_values[i][0])**2 +
-                inv_cov[1][1] * ((p[1] - pos[1]) / e_values[i][1])**2) /\
-                (e_values[i][0] * e_values[i][1])
-            vals += np.exp(-.5 * valxy)
-        result = np.array(vals)
-    else:
-        # print("loop over points")
-        for i, p in enumerate(zip(*pos)):
-            valxy = (
-                inv_cov[0][0] * ((p[0] - xarr) / xsigma)**2 +
-                inv_cov[1][1] * ((p[1] - yarr) / ysigma)**2) /\
-                (xsigma * ysigma)
-            vals[i] = np.sum(np.exp(-.5 * valxy))
-    result = vals / norm_factor
-
-    # Re-shape values for plotting.
-    z = np.reshape(result.T, x.shape)
-
-    return x, y, z
-
-
-def PMsPlot(
-    PM_flag, pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, mmag_pm,
-        pmRA_Bys, pmDE_Bys, coord, flag_no_fl_regs_i, field_regions_i):
+def PMsPlot(pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, mmag_pm):
     """
     Parameters for the proper motions plot.
     """
-    pmDE_fl, e_pmDE_fl, pmRA_fl_DE, e_pmRA_fl_DE = [], [], [], []
-    x_clpm, y_clpm, z_clpm, pm_dist_max = [], [], [], []
-    x_flpm, y_flpm, z_flpm = [], [], np.array([])
+    mean_pos, width, height, theta = CIEllipse(np.array([pmRA_DE, pmDE]).T)
 
-    # Check that PMs were defined within the cluster region.
-    if PM_flag:
+    # Re-arrange so stars with larger MPs are on top.
+    mp_i = pmMP.argsort()
+    pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, mmag_pm = pmMP[mp_i],\
+        pmRA_DE[mp_i], e_pmRA_DE[mp_i], pmDE[mp_i], e_pmDE[mp_i],\
+        mmag_pm[mp_i]
 
-        # Re-arrange so stars with larger MPs are on top.
-        mp_i = pmMP.argsort()
-        pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, mmag_pm = pmMP[mp_i],\
-            pmRA_DE[mp_i], e_pmRA_DE[mp_i], pmDE[mp_i], e_pmDE[mp_i],\
-            mmag_pm[mp_i]
-
-        # 2D KDE for cluster region
-        x_clpm, y_clpm, z_clpm = kde_2d(pmRA_DE, e_pmRA_DE, pmDE, e_pmDE)
-
-        # PM distances to the Bayesian maximum.
-        pm_dist_max = cdist(
-            np.array([[pmRA_Bys[0], pmDE_Bys[0]]]),
-            np.array([pmRA_DE, pmDE]).T)
-
-        if not flag_no_fl_regs_i:
-            pmRA_fl, e_pmRA_fl, DE_fl_pm = [], [], []
-            # Field region(s) data.
-            for fl_rg in field_regions_i:
-                pmRA_fl += list(zip(*list(zip(*fl_rg))[7]))[1]
-                e_pmRA_fl += list(zip(*list(zip(*fl_rg))[8]))[1]
-                pmDE_fl += list(zip(*list(zip(*fl_rg))[7]))[2]
-                e_pmDE_fl += list(zip(*list(zip(*fl_rg))[8]))[2]
-                DE_fl_pm += list(list(zip(*fl_rg)))[2]
-
-            pmRA_fl, e_pmRA_fl, pmDE_fl, e_pmDE_fl, DE_fl_pm = [
-                np.asarray(_) for _ in (
-                    pmRA_fl, e_pmRA_fl, pmDE_fl, e_pmDE_fl, DE_fl_pm)]
-
-            # Remove nan values from field region(s)
-            msk = ~np.isnan(pmRA_fl) & ~np.isnan(e_pmRA_fl) &\
-                ~np.isnan(pmDE_fl) & ~np.isnan(e_pmDE_fl)
-            pmRA_fl, e_pmRA_fl, pmDE_fl, e_pmDE_fl, DE_fl_pm = \
-                pmRA_fl[msk], e_pmRA_fl[msk], pmDE_fl[msk], e_pmDE_fl[msk],\
-                DE_fl_pm[msk]
-
-            pmRA_fl_DE = pmRA_fl * np.cos(np.deg2rad(DE_fl_pm))
-            # Propagate error in RA*cos(delta)
-            e_pmRA_fl_DE = np.sqrt(
-                (e_pmRA_fl * pmRA_fl * np.sin(np.deg2rad(DE_fl_pm)))**2 +
-                (e_pmDE_fl * np.cos(np.deg2rad(DE_fl_pm)))**2)
-
-            x_flpm, y_flpm, z_flpm = kde_2d(
-                pmRA_fl_DE, e_pmRA_fl_DE, pmDE_fl, e_pmDE_fl)
-
-    return pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, mmag_pm, pmRA_fl_DE,\
-        e_pmRA_fl_DE, pmDE_fl, e_pmDE_fl, x_clpm, y_clpm, z_clpm, pm_dist_max,\
-        x_flpm, y_flpm, z_flpm
+    return pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, mmag_pm,\
+        mean_pos, width, height, theta
 
 
 def CIEllipse(points, prob=.95):
@@ -697,3 +590,18 @@ def complSeparate(cl_region_i, membs_i, memb_prob_avrg_sort):
     colors_c = np.array(colors_c)[idx_c].tolist()
 
     return mags_c, mags_i, cols_c, cols_i, colors_c, colors_i
+
+
+def PMsrange(pmRA_DE, pmDE):
+    """
+    """
+    ra_mean, ra_median, ra_std = sigma_clipped_stats(pmRA_DE)
+    de_mean, de_median, de_std = sigma_clipped_stats(pmDE)
+    x_range = abs(ra_median + 4. * ra_std - (ra_median - 4. * ra_std))
+    y_range = abs(de_median + 4. * de_std - (de_median - 4. * de_std))
+    xyrange = max(x_range, y_range)
+
+    raPMrng = ra_median - .5 * xyrange, ra_median + .5 * xyrange
+    dePMrng = de_median - .5 * xyrange, de_median + .5 * xyrange
+
+    return raPMrng, dePMrng
