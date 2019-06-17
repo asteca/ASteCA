@@ -8,56 +8,6 @@ from . import mp_best_fit2
 from . import prep_plots
 
 
-def plot_observed_cluster(
-    fig, gs, gs_y1, gs_y2, x_ax, y_ax, cl_max_mag, x_min_cmd, x_max_cmd,
-    y_min_cmd, y_max_cmd, err_lst, v_min_mp, v_max_mp, plot_colorbar,
-        obs_x, obs_y, obs_MPs, hess_xedges, hess_yedges, x_isoch, y_isoch):
-    """
-    This function is called separately since we need to retrieve some
-    information from it to plot that #$%&! colorbar.
-    """
-    err_bar = prep_plots.error_bars(cl_max_mag, x_min_cmd, err_lst)
-
-    try:
-        # pl_mps_phot_diag
-        sca, trans = mp_best_fit2.pl_mps_phot_diag(
-            gs, gs_y1, gs_y2, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
-            x_ax, y_ax, v_min_mp, v_max_mp, obs_x, obs_y, obs_MPs,
-            err_bar, hess_xedges, hess_yedges, x_isoch, y_isoch)
-    except Exception:
-        import traceback
-        print(traceback.format_exc())
-        print("  WARNING: error when plotting MPs on cluster's "
-              "photometric diagram.")
-
-    # Ignore warning issued by colorbar plotted in photometric diagram with
-    # membership probabilities.
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        fig.tight_layout()
-
-    # Plot colorbar down here so tight_layout won't move it around.
-    try:
-        if plot_colorbar is True:
-            import matplotlib.transforms as mts
-            # Position and dimensions relative to the axes.
-            x0, y0, width, height = [0.74, 0.93, 0.2, 0.04]
-            # Transform them to get the ABSOLUTE POSITION AND DIMENSIONS
-            Bbox = mts.Bbox.from_bounds(x0, y0, width, height)
-            l, b, w, h = mts.TransformedBbox(Bbox, trans).bounds
-            # Create the axes and the colorbar.
-            cbaxes = fig.add_axes([l, b, w, h])
-            cbar = plt.colorbar(
-                sca, cax=cbaxes, ticks=[v_min_mp, v_max_mp],
-                orientation='horizontal')
-            cbar.ax.tick_params(labelsize=9)
-    except Exception:
-        # import traceback
-        # print traceback.format_exc()
-        print("  WARNING: error when plotting colorbar on cluster's "
-              "photometric diagram.")
-
-
 def main(
     npd, cld_c, pd, synth_clst, shift_isoch, cl_max_mag, err_lst, col_0_comb,
         mag_0_comb, col_1_comb, isoch_fit_params, isoch_fit_errors, **kwargs):
@@ -108,10 +58,7 @@ def main(
                 mp_best_fit2.plot(n, *args)
 
             v_min_mp, v_max_mp = prep_plots.da_colorbar_range(cl_max_mag, [])
-            plot_colorbar, diag_fit_inv, dummy = prep_plots.da_phot_diag(
-                cl_max_mag, [], v_min_mp, v_max_mp)
-            # Force to not plot colorbar after the first row.
-            plot_colorbar = False if gs_y1 != 0 else plot_colorbar
+            diag_fit_inv, dummy = prep_plots.da_phot_diag(cl_max_mag, [])
             # Main photometric diagram of observed cluster.
             i_y = 0 if yaxis == 'mag' else 1
             # x axis is always a color so this the index is fixed to '1'.
@@ -122,7 +69,7 @@ def main(
             plot_observed_cluster(
                 fig, gs, gs_y1, gs_y2, x_ax, y_ax, cl_max_mag, x_min_cmd,
                 x_max_cmd, y_min_cmd, y_max_cmd, err_lst, v_min_mp, v_max_mp,
-                plot_colorbar, obs_x, obs_y, obs_MPs, hess_xedges, hess_yedges,
+                obs_x, obs_y, obs_MPs, hess_xedges, hess_yedges,
                 x_isoch, y_isoch)
 
         # Generate output file.
@@ -137,3 +84,44 @@ def main(
         print("<<Plots for D2 block created>>")
     else:
         print("<<Skip D2 block plot>>")
+
+
+def plot_observed_cluster(
+    fig, gs, gs_y1, gs_y2, x_ax, y_ax, cl_max_mag, x_min_cmd, x_max_cmd,
+    y_min_cmd, y_max_cmd, err_lst, v_min_mp, v_max_mp, obs_x, obs_y, obs_MPs,
+        hess_xedges, hess_yedges, x_isoch, y_isoch):
+    """
+    This function is called separately since we need to retrieve some
+    information from it to plot that #$%&! colorbar.
+    """
+    err_bar = prep_plots.error_bars(cl_max_mag, x_min_cmd, err_lst)
+
+    # pl_mps_phot_diag
+    plot_colorbar, sca, trans = mp_best_fit2.pl_mps_phot_diag(
+        gs, gs_y1, gs_y2, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
+        x_ax, y_ax, v_min_mp, v_max_mp, obs_x, obs_y, obs_MPs,
+        err_bar, hess_xedges, hess_yedges, x_isoch, y_isoch)
+
+    # Ignore warning issued by colorbar plotted in photometric diagram with
+    # membership probabilities.
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        fig.tight_layout()
+
+    # Force to not plot colorbar after the first row.
+    plot_colorbar = False if gs_y1 != 0 else plot_colorbar
+
+    # Plot colorbar down here so tight_layout won't move it around.
+    if plot_colorbar is True:
+        import matplotlib.transforms as mts
+        # Position and dimensions relative to the axes.
+        x0, y0, width, height = [0.74, 0.93, 0.2, 0.04]
+        # Transform them to get the ABSOLUTE POSITION AND DIMENSIONS
+        Bbox = mts.Bbox.from_bounds(x0, y0, width, height)
+        l, b, w, h = mts.TransformedBbox(Bbox, trans).bounds
+        # Create the axes and the colorbar.
+        cbaxes = fig.add_axes([l, b, w, h])
+        cbar = plt.colorbar(
+            sca, cax=cbaxes, ticks=[v_min_mp, v_max_mp],
+            orientation='horizontal')
+        cbar.ax.tick_params(labelsize=9)

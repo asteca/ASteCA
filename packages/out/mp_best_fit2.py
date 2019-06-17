@@ -43,8 +43,10 @@ def pl_mps_phot_diag(
     # confusing to color stars is if it did.
     if v_min_mp != v_max_mp:
         col_select_fit, isoch_col = obs_MPs, 'g'
+        plot_colorbar = True
     else:
         col_select_fit, isoch_col = '#4682b4', 'r'
+        plot_colorbar = False
     # Plot stars used in the best fit process.
     sca = plt.scatter(obs_x, obs_y, marker='o',
                       c=col_select_fit, s=30, cmap=cm, lw=0.5, edgecolor='k',
@@ -65,7 +67,7 @@ def pl_mps_phot_diag(
     # For plotting the colorbar (see bottom of make_D_plot file).
     trans = ax.transAxes + fig.transFigure.inverted()
 
-    return sca, trans
+    return plot_colorbar, sca, trans
 
 
 def pl_hess_diag(
@@ -109,8 +111,8 @@ def pl_hess_diag(
             zero_pt0 = np.floor(zero_pt * (N - 1)) / (N - 1)
             zero_pt1 = np.ceil(zero_pt * (N - 1)) / (N - 1)
             cmap = LinearSegmentedColormap.from_list(
-                'mycmap', [(0, 'blue'), (zero_pt0, 'white'), (zero_pt1,
-                           'white'), (1, 'red')], N=N)
+                'mycmap', [(0, 'blue'), (zero_pt0, 'white'),
+                           (zero_pt1, 'white'), (1, 'red')], N=N)
         ax.pcolormesh(hess_x, hess_y, HD, cmap=cmap, vmin=HD.min(),
                       vmax=HD.max(), zorder=1)
         # Legend.

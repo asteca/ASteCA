@@ -27,7 +27,7 @@ def main(
         x_zmin, x_zmax, y_zmin, y_zmax = prep_plots.frame_zoomed(
             x_min, x_max, y_min, y_max, kde_cent, clust_rad)
         coord, x_name, y_name = prep_plots.coord_syst(pd['coords'])
-        v_min_mp, v_max_mp = prep_plots.da_colorbar_range(
+        v_min_mp_comp, v_max_mp_comp = prep_plots.da_colorbar_range(
             cl_reg_fit, cl_reg_no_fit)
         chart_fit_inv, chart_no_fit_inv, out_clust_rad =\
             prep_plots.da_find_chart(
@@ -44,7 +44,7 @@ def main(
             # pl_chart_mps
             [gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
              y_zmax, kde_cent, clust_rad, flag_decont_skip,
-             v_min_mp, v_max_mp, chart_fit_inv, chart_no_fit_inv,
+             v_min_mp_comp, v_max_mp_comp, chart_fit_inv, chart_no_fit_inv,
              out_clust_rad, pd['fld_clean_mode'], pd['fld_clean_bin']],
         ]
         for n, args in enumerate(arglist):
@@ -56,6 +56,7 @@ def main(
                 cl_region_i, memb_probs_cl_region_i, memb_prob_avrg_sort)
         mags_all = mags_c + mags_i
         j_gs = 0
+        all_colorbars = []
         for i, col_c in enumerate(cols_c):
             col_i = cols_i[i]
             cols_all = list(col_c) + list(col_i)
@@ -64,10 +65,13 @@ def main(
                 pd['colors'][i], pd['filters'][0], 'mag')
             x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd =\
                 prep_plots.diag_limits('mag', cols_all, mags_all)
-            mp_decont_photom.pl_mps_incomp_diags(
-                gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax,
-                y_ax, v_min_mp, v_max_mp, col_c, mags_c, colors_c,
-                col_i, mags_i, colors_i, j_gs)
+            plot_colorbar, sca, trans, v_min_mp, v_max_mp =\
+                mp_decont_photom.pl_mps_incomp_diags(
+                    gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax,
+                    y_ax, col_c, mags_c, colors_c, col_i, mags_i, colors_i,
+                    j_gs)
+            all_colorbars.append((
+                plot_colorbar, sca, trans, v_min_mp, v_max_mp))
             j_gs += 1
 
         c_combs = list(itertools.combinations(range(len(cols_c)), 2))
@@ -78,24 +82,33 @@ def main(
                 prep_plots.diag_limits('col', cols0_all, cols1_all)
             x_ax, y_ax = prep_plots.ax_names(
                 pd['colors'][i], pd['colors'][j], 'col')
-            mp_decont_photom.pl_mps_incomp_diags(
-                gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax,
-                y_ax, v_min_mp, v_max_mp, cols_c[i], cols_c[j], colors_c,
-                cols_i[i], cols_i[j], colors_i, j_gs)
+            plot_colorbar, sca, trans, v_min_mp, v_max_mp =\
+                mp_decont_photom.pl_mps_incomp_diags(
+                    gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax,
+                    y_ax, cols_c[i], cols_c[j], colors_c,
+                    cols_i[i], cols_i[j], colors_i, j_gs)
+            all_colorbars.append((
+                plot_colorbar, sca, trans, v_min_mp, v_max_mp))
             j_gs += 1
 
-        plot_colorbar, diag_fit_inv, diag_no_fit_inv = prep_plots.da_phot_diag(
-            cl_reg_fit, cl_reg_no_fit, v_min_mp, v_max_mp)
+        diag_fit_inv, diag_no_fit_inv = prep_plots.da_phot_diag(
+            cl_reg_fit, cl_reg_no_fit)
         # Uses first magnitude and color defined
         x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd = prep_plots.diag_limits(
             'mag', col_0_comb, mag_0_comb)
         x_ax, y_ax = prep_plots.ax_names(
             pd['colors'][0], pd['filters'][0], 'mag')
-        plot_observed_cluster(
-            fig, gs, x_ax, y_ax, x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd,
-            cl_reg_fit, cl_reg_no_fit, err_lst, v_min_mp,
-            v_max_mp, plot_colorbar, diag_fit_inv, diag_no_fit_inv,
-            pd['fld_clean_mode'], bin_edges)
+        err_bar = prep_plots.error_bars(
+            cl_reg_fit + cl_reg_no_fit, x_min_cmd, err_lst)
+        # pl_mps_phot_diag
+        plot_colorbar, sca, trans = mp_decont_photom.pl_mps_phot_diag(
+            gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax,
+            y_ax, v_min_mp_comp, v_max_mp_comp, diag_fit_inv, diag_no_fit_inv,
+            err_bar, pd['fld_clean_mode'], bin_edges)
+        all_colorbars.append((
+            plot_colorbar, sca, trans, v_min_mp_comp, v_max_mp_comp))
+
+        plot_colorbars(fig, all_colorbars)
 
         # Generate output file.
         plt.savefig(
@@ -111,37 +124,18 @@ def main(
         print("<<Skip C1 block plot>>")
 
 
-def plot_observed_cluster(
-    fig, gs, x_ax, y_ax, x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd,
-    cl_reg_fit, cl_reg_no_fit, err_lst, v_min_mp, v_max_mp, plot_colorbar,
-        diag_fit_inv, diag_no_fit_inv, mode_fld_clean, bin_edges):
+def plot_colorbars(fig, all_colorbars):
     """
-    This function is called separately since we need to retrieve some
-    information from it to plot that #$%&! colorbar.
+    Plot colorbars *after* tight_layout(), otherwise it will move them around.
     """
-    err_bar = prep_plots.error_bars(
-        cl_reg_fit + cl_reg_no_fit, x_min_cmd, err_lst)
 
-    try:
-        # pl_mps_phot_diag
-        sca, trans = mp_decont_photom.pl_mps_phot_diag(
-            gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax,
-            y_ax, v_min_mp, v_max_mp, diag_fit_inv, diag_no_fit_inv,
-            err_bar, mode_fld_clean, bin_edges)
-    except Exception:
-        import traceback
-        print(traceback.format_exc())
-        print("  WARNING: error when plotting MPs on cluster's "
-              "photometric diagram.")
-
-    # Ignore warning issued by colorbar plotted in photometric diagram with
-    # membership probabilities.
+    # Ignore warning issued by colorbar.
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         fig.tight_layout()
 
     # Plot colorbar down here so tight_layout won't move it around.
-    try:
+    for (plot_colorbar, sca, trans, v_min_mp, v_max_mp) in all_colorbars:
         if plot_colorbar is True:
             import matplotlib.transforms as mts
             # Position and dimensions relative to the axes.
@@ -155,8 +149,3 @@ def plot_observed_cluster(
                 sca, cax=cbaxes, ticks=[v_min_mp, v_max_mp],
                 orientation='horizontal')
             cbar.ax.tick_params(labelsize=9)
-    except Exception:
-        import traceback
-        print(traceback.format_exc())
-        print("  WARNING: error when plotting colorbar on cluster's "
-              "photometric diagram.")

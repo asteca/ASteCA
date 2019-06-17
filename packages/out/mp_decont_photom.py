@@ -161,8 +161,11 @@ def pl_mps_phot_diag(
     if v_min_mp != v_max_mp:
         col_select_fit, col_select_no_fit = diag_fit_inv[2], \
             diag_no_fit_inv[2]
+        # Decide if colorbar should be plotted.
+        plot_colorbar = True
     else:
         col_select_fit, col_select_no_fit = '#4682b4', '#4682b4'
+        plot_colorbar = False
     # Plot stars *not* used in the best fit process.
     plt.scatter(diag_no_fit_inv[1][0], diag_no_fit_inv[0][0], marker='o',
                 c=col_select_no_fit, s=25, cmap=cm, lw=0.5, edgecolor='k',
@@ -179,15 +182,15 @@ def pl_mps_phot_diag(
         plt.errorbar(
             x_val, mag_y, yerr=xy_err[0], xerr=xy_err[1], fmt='k.', lw=0.8,
             ms=0., zorder=4)
-    # For plotting the colorbar (see bottom of make_plots file).
+    # For plotting the colorbar
     trans = ax.transAxes + fig.transFigure.inverted()
 
-    return sca, trans
+    return plot_colorbar, sca, trans
 
 
 def pl_mps_incomp_diags(
-    gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax, v_min_mp,
-    v_max_mp, xdata_c, ydata_c, coldata_c, xdata_i, ydata_i, coldata_i,
+    gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
+    xdata_c, ydata_c, coldata_c, xdata_i, ydata_i, coldata_i,
         gspos_idx):
     '''
     Star's membership probabilities on cluster's photometric diagram.
@@ -215,13 +218,25 @@ def pl_mps_incomp_diags(
             zorder=1)
     # This reversed colormap means higher prob stars will look redder.
     cm = plt.cm.get_cmap('RdYlBu_r')
-    plt.scatter(
-        xdata_i, ydata_i, marker='^', c=coldata_i, s=30, cmap=cm, lw=0.5,
-        edgecolor='k', vmin=v_min_mp, vmax=v_max_mp, alpha=1., zorder=4)
+    if sum(~np.isnan(xdata_i) & ~np.isnan(ydata_i)) > 0:
+        v_min_mp = round(min(np.nanmin(coldata_i), np.nanmin(coldata_c)), 2)
+        v_max_mp = round(max(np.nanmax(coldata_i), np.nanmax(coldata_c)), 2)
+    else:
+        v_min_mp = round(np.nanmin(coldata_c), 2)
+        v_max_mp = round(np.nanmax(coldata_c), 2)
+    plot_colorbar = True if v_min_mp != v_max_mp else False
     # Plot stars used in the best fit process.
-    plt.scatter(
+    sca = plt.scatter(
         xdata_c, ydata_c, marker='o', c=coldata_c, s=30, cmap=cm, lw=0.5,
-        edgecolor='k', vmin=v_min_mp, vmax=v_max_mp, zorder=6)
+        edgecolor='k', vmin=v_min_mp, vmax=v_max_mp, zorder=4)
+    if sum(~np.isnan(xdata_i) & ~np.isnan(ydata_i)) > 0:
+        plt.scatter(
+            xdata_i, ydata_i, marker='^', c=coldata_i, s=30, cmap=cm, lw=0.5,
+            edgecolor='k', zorder=6)
+    # For plotting the colorbar
+    trans = ax.transAxes + fig.transFigure.inverted()
+
+    return plot_colorbar, sca, trans, v_min_mp, v_max_mp
 
 
 def plot(N, *args):

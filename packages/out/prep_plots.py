@@ -209,15 +209,12 @@ def da_find_chart(
     return chart_fit_inv, chart_no_fit_inv, out_clust_rad
 
 
-def da_phot_diag(cl_reg_fit, cl_reg_no_fit, v_min_mp, v_max_mp):
+def da_phot_diag(cl_reg_fit, cl_reg_no_fit):
     '''
     Generate parameters for the photometric diagram plotted with the MPs
     assigned by the DA. The stars are inverted according to their MPs, so that
     those with larger probabilities are plotted last.
     '''
-    # Decide if colorbar should be plotted.
-    plot_colorbar = True if v_min_mp != v_max_mp else False
-
     # Arrange stars used in the best fit process.
     cl_reg_fit = list(zip(*cl_reg_fit))
     # Magnitudes.
@@ -239,7 +236,7 @@ def da_phot_diag(cl_reg_fit, cl_reg_no_fit, v_min_mp, v_max_mp):
     else:
         diag_no_fit_inv = [[[]], [[]], []]
 
-    return plot_colorbar, diag_fit_inv, diag_no_fit_inv
+    return diag_fit_inv, diag_no_fit_inv
 
 
 def error_bars(stars_phot, x_min_cmd, err_lst, all_flag=None):
