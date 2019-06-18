@@ -108,13 +108,12 @@ def main(cl_max_mag, lkl_method, bin_method, lkl_weight):
         bin_weight_f_z = bin_weight_f[cl_z_idx]
 
         # (Weighted) Dolphin n_i dependent constant.
+        # N = cl_histo.sum()
         # n_i constant: 2 * [sum(n_i * ln(n_i)) - N] =
-        # 2 * [sum(n_i * ln(n_i)) - sum(n_i)] =
-        # 2 * sum(n_i * ln(n_i) - n_i) =
-        # 2 * sum(n_i * (ln(n_i) - 1)) =
-        # Weighted: 2 * sum(w_i * n_i * (ln(n_i) - 1))
-        dolphin_cst = 2. * np.sum(
-            bin_weight_f_z * cl_histo_f_z * (np.log(cl_histo_f_z) - 1.))
+        # Weighted:     2 * [sum(w_i * n_i * ln(n_i)) - N]
+        dolphin_cst = 2. * (
+            np.sum(bin_weight_f_z * cl_histo_f_z * np.log(cl_histo_f_z)) -
+            cl_histo.sum())
 
         obs_clust = [bin_edges, cl_histo, cl_histo_f, cl_z_idx, cl_histo_f_z,
                      dolphin_cst, bin_weight_f_z]

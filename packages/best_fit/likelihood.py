@@ -197,9 +197,8 @@ def dolphin(synth_clust, obs_clust):
     # M = synth_phot[0].size
     # Cash's C statistic: 2 * sum(m_i - n_i * ln(m_i))
     # weighted: 2 * sum(w_i * (m_i - n_i * ln(m_i)))
-    C_cash = 2. * np.sum(
-        bin_weight_f_z * (
-            syn_histo_f_z - cl_histo_f_z * np.log(syn_histo_f_z)))
+    C_cash = 2. * (synth_phot[0].size - np.sum(
+        bin_weight_f_z * (cl_histo_f_z * np.log(syn_histo_f_z))))
 
     # Obtain (weighted) inverse logarithmic 'Poisson likelihood ratio'.
     dolph_lkl = C_cash + dolphin_cst
