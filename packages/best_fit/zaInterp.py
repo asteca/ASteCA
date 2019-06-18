@@ -29,7 +29,7 @@ def main(theor_tracks, fundam_params, varIdxs, model):
     # choose the (z, a) grid indexes to interpolate the isochrone.
     model_proper, j = [], 0
     for i, par in enumerate(fundam_params):
-        # If this parameter is one of the 'free' parameters.
+        # Check if this parameter is one of the 'free' parameters.
         if i in varIdxs:
             # If it is the parameter metallicity.
             if i == 0:
@@ -37,11 +37,14 @@ def main(theor_tracks, fundam_params, varIdxs, model):
                 mh = min(len(par) - 1, np.searchsorted(par, model[i - j]))
                 ml = mh - 1
                 model_proper.append(par[mh])
+                # Define model's z value
+                z_model = model[i - j]
             elif i == 1:
                 # Select the closest value in the array of allowed values.
                 ah = min(len(par) - 1, np.searchsorted(par, model[i - j]))
                 al = ah - 1
                 model_proper.append(par[ah])
+                a_model = model[i - j]
             elif i == 4:
                 # Select the closest value in the array of allowed values for
                 # the masses.
@@ -52,8 +55,10 @@ def main(theor_tracks, fundam_params, varIdxs, model):
         else:
             if i == 0:
                 ml = mh = 0
+                z_model = fundam_params[0][0]
             elif i == 1:
                 al = ah = 0
+                a_model = fundam_params[1][0]
             model_proper.append(par[0])
             j += 1
 
@@ -62,7 +67,7 @@ def main(theor_tracks, fundam_params, varIdxs, model):
     # mmax = np.max(isochs[:, -6, :], axis=1)
 
     # Values of the four points in the (z, age) grid that contain the model
-    # value (model[0], model[1])
+    # value (z_model, a_model)
     z1, z2 = fundam_params[0][ml], fundam_params[0][mh]
     a1, a2 = fundam_params[1][al], fundam_params[1][ah]
     pts = np.array([(z1, a1), (z1, a2), (z2, a1), (z2, a2)])
@@ -71,8 +76,10 @@ def main(theor_tracks, fundam_params, varIdxs, model):
     # to the grid (z, age) points.
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
+        # Inverse distances between the (z, a) points in the 'model', and the
+        # four points in the (z, a) grid that contain the model point.
         # Fast euclidean distance: https://stackoverflow.com/a/47775357/1391441
-        a_min_b = np.array([(model[0], model[1])]) - pts
+        a_min_b = np.array([(z_model, a_model)]) - pts
         inv_d = 1. / np.sqrt(np.einsum('ij,ij->i', a_min_b, a_min_b))
 
         # Order: (z1, a1), (z1, a2), (z2, a1), (z2, a2)
@@ -80,7 +87,7 @@ def main(theor_tracks, fundam_params, varIdxs, model):
             theor_tracks[ml][al], theor_tracks[ml][ah], theor_tracks[mh][al],
             theor_tracks[mh][ah]])
 
-        # Sort according to smaller distance to the (model[0], model[1]) point.
+        # Sort according to smaller distance to the (z_model, a_model) point.
         isoch_idx = np.argsort(inv_d)[::-1]
 
         # Masked weighted average. Source:
@@ -99,9 +106,9 @@ def main(theor_tracks, fundam_params, varIdxs, model):
         #     np.array([x1, x2, x3, x4]), weights=inv_d[isoch_idx], axis=0)
         # Scale weights so they add up to 1, then add based on them
         weights = inv_d[isoch_idx] / np.sum(inv_d[isoch_idx])
-        # If the model has a 0.distance in (z,a) to the closest isochrone, then
-        # 'inv_d' will be 'inf', and 'weights' will be 'nan' (all other values
-        # will be zero) Replace that weight with 1.
+        # If the model has a 0. distance in (z,a) to the closest isochrone,
+        # then 'inv_d' will be 'inf', and 'weights' will be 'nan' (all other
+        # values will be zero) Replace that weight with 1.
         weights[np.isnan(weights)] = 1.
         isochrone = x1 * weights[0] + x2 * weights[1] + x3 * weights[2] +\
             x4 * weights[3]
