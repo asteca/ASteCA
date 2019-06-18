@@ -276,7 +276,7 @@ def pms_vs_MP(gs, y_ax, plx_flag, pmMP, pm_dist_max, mmag_pm):
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
             zorder=1)
 
-    ax.set_title("Distance to CI ellipse's center", fontsize=9)
+    ax.set_title("Distance to KDE's cluster max", fontsize=9)
     plt.xlabel("PM dist [mas/yr]", fontsize=12)
     plt.ylabel(y_ax, fontsize=12)
 
