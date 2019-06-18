@@ -107,7 +107,7 @@ MO   auto
 #   - B1: uncertainties analysis
 #   - B2: photometric analysis
 #   - C1: decontamination algorithm photometric diagrams
-#   - C2: decontamination algorithm parallax and PMs analysis
+#   - C2:parallax and PMs analysis
 #   - D1: likelihood minimization
 #   - D2: best fit synthetic cluster match
 #
@@ -189,7 +189,7 @@ GR       10
 
 
 
-################## Data analysis functions parameters ##########################
+##################### Uncertainties & A-D analysis  ############################
 
 # Error rejection.
 #
@@ -222,20 +222,6 @@ ER        0.1           n            n            n            n
 #
 #   runs   Plx_PM_comb
 AD   100             y
-
-# Parallax Bayesian analysis
-#
-# * plx_flag: y / n
-#   Perform Bayesian analysis of parallax data.
-#
-# * plx_chains: [int]
-#   Number of MCMC chains used in the Bayesian analysis.
-#
-# * plx_runs: [int]
-#   Number of MCMC steps used in the Bayesian analysis. 
-#
-#     plx_flag   plx_chains   plx_runs
-PP           n          100       2000
 ################################################################################
 
 
@@ -309,6 +295,25 @@ DW     1.       1.       1.       1.       1.      1.
 #
 #    mode    binning     prob_min
 FR  local      knuth          0.5
+################################################################################
+
+
+
+###################### Parallax and PMs analysis ###############################
+
+# Parallax Bayesian analysis
+#
+# * plx_flag: y / n
+#   Perform Bayesian analysis of parallax data.
+#
+# * plx_chains: [int]
+#   Number of MCMC chains used in the Bayesian analysis.
+#
+# * plx_runs: [int]
+#   Number of MCMC steps used in the Bayesian analysis. 
+#
+#     plx_flag   plx_chains   plx_runs
+PP           n          100       2000
 ################################################################################
 
 
