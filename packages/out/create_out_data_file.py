@@ -1,5 +1,6 @@
 
-from time import strftime
+import numpy as np
+from time import strftime, sleep
 from os.path import isfile
 from .._version import __version__
 
@@ -18,13 +19,21 @@ def main(npd):
     if isfile(out_file_name):
 
         # File already exists -> don't create a new one and replace old lines.
-        with open(out_file_name, 'r') as f:
-            # Read file into data var.
-            data = f.readlines()
+        while True:
+            with open(out_file_name, 'r') as f:
+                # Read file into data var.
+                data = f.readlines()
 
-        # Modify these two lines
-        data[1] = '# [ASteCA {}]\n'.format(__version__)
-        data[4] = '# Modified: [{}]\n'.format(now_time)
+            try:
+                # Modify these two lines
+                data[1] = '# [ASteCA {}]\n'.format(__version__)
+                data[4] = '# Modified: [{}]\n'.format(now_time)
+                break
+            except IndexError:
+                # Wait a random number of seconds (max 10) before reading the
+                # file again. This is here to avoid several parallel runs from
+                # finishing all at once and overlapping each other.
+                sleep(np.random.uniform(10))
 
         # Write everything back.
         with open(out_file_name, 'w') as f:
