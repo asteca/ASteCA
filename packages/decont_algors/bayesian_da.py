@@ -55,16 +55,39 @@ def main(
         for n_fl, fl_lkl in fl_likelihoods:
 
             if n_fl < len(cl_region):
-                # Randomly shuffle the stars within the cluster region.
-                p = np.random.permutation(len(clust_reg_shuffle))
-                clust_reg_shuffle, w_cl_shuffle = clust_reg_shuffle[p],\
-                    w_cl_shuffle[p]
-                # Remove n_fl random stars from the cluster region and
-                # obtain the likelihoods for each star in this "cleaned"
+                # TODO DEPRECATED June 2019
+                # # Randomly shuffle the stars within the cluster region.
+                # p = np.random.permutation(len(clust_reg_shuffle))
+                # clust_reg_shuffle, w_cl_shuffle = clust_reg_shuffle[p],\
+                #     w_cl_shuffle[p]
+                # # Remove n_fl random stars from the cluster region and
+                # # obtain the likelihoods for each star in this "cleaned"
+                # # cluster region.
+                # cl_lkl = likelihood(
+                #     bayesda_weights, clust_reg_shuffle[n_fl:],
+                #     w_cl_shuffle[n_fl:], cl_reg_prep, w_cl)
+
+                # Select stars from the cluster region according to their
+                # associated probabilities.
+                n_memb = len(clust_reg_shuffle) - n_fl
+                if n_memb > 0:
+                    # Identify first run.
+                    if N_total > 0:
+                        # Select stars according to their probabilities so far.
+                        p = np.random.choice(
+                            len(clust_reg_shuffle), n_memb, replace=False,
+                            p=runs_fields_probs / runs_fields_probs.sum())
+                    else:
+                        p = np.random.choice(
+                            len(clust_reg_shuffle), n_memb, replace=False)
+                else:
+                    p = np.arange(len(clust_reg_shuffle))
+                clust_reg_shuffle_nmemb, w_cl_shuffle_nmemb =\
+                    clust_reg_shuffle[p], w_cl_shuffle[p]
                 # cluster region.
                 cl_lkl = likelihood(
-                    bayesda_weights, clust_reg_shuffle[n_fl:],
-                    w_cl_shuffle[n_fl:], cl_reg_prep, w_cl)
+                    bayesda_weights, clust_reg_shuffle_nmemb,
+                    w_cl_shuffle_nmemb, cl_reg_prep, w_cl)
             else:
                 # If there are *more* field region stars than the total of
                 # stars within the cluster region (highly contaminated
