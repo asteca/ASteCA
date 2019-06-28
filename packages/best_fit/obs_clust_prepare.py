@@ -81,7 +81,8 @@ def main(cl_max_mag, lkl_method, bin_method, lkl_weight):
 
     elif lkl_method in ['dolphin', 'mighell']:
         # Obtain bin edges for each dimension, defining a grid.
-        bin_edges = bin_edges_f(bin_method, mags_cols_cl)
+        bin_edges = bin_edges_f(
+            bin_method, mags_cols_cl, min_bins=4, max_bins=20)
 
         # Put all magnitudes and colors into a single list.
         obs_mags_cols = mags_cols_cl[0] + mags_cols_cl[1]
@@ -115,8 +116,14 @@ def main(cl_max_mag, lkl_method, bin_method, lkl_weight):
             np.sum(bin_weight_f_z * cl_histo_f_z * np.log(cl_histo_f_z)) -
             cl_histo.sum())
 
-        obs_clust = [bin_edges, cl_histo, cl_histo_f, cl_z_idx, cl_histo_f_z,
-                     dolphin_cst, bin_weight_f_z]
+        # Value to use when filling bins where n_i!=0 & m_i=0. This is an
+        # empirical value that seems to work reasonably well. Low mass clusters
+        # will have their masses underestimated, and I don't know how to
+        # prevent this.
+        fill_factor = min(.9, cl_histo_f.sum() / 1e4)
+
+        obs_clust = [bin_edges, fill_factor, cl_histo_f_z, dolphin_cst,
+                     bin_weight_f_z, cl_z_idx, cl_histo_f]
 
     elif lkl_method in ['dolphin_kde', 'kdeKL']:
 
