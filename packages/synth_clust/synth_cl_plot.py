@@ -25,10 +25,15 @@ def main(
     # [0, 0] to prevent the code from halting.
     try:
         m_i = fundam_params[0].index(synth_cl_params_grid[0])
+    except Exception:
+        m_i = 0
+        print("  WARNING: metallicity for the best match synthetic\n"
+              "  cluster not found.")
+    try:
         a_i = fundam_params[1].index(synth_cl_params_grid[1])
     except Exception:
-        m_i, a_i = [0, 0]
-        print("  WARNING: metallicity and age for best match synthetic\n"
+        a_i = 0
+        print("  WARNING: age for the best match synthetic\n"
               "  cluster not found.")
 
     # Generate shifted best fit isochrone.
