@@ -87,7 +87,7 @@ def main(
                 # cluster region.
                 cl_lkl = likelihood(
                     bayesda_weights, clust_reg_shuffle_nmemb,
-                    w_cl_shuffle_nmemb, cl_reg_prep, w_cl)
+                    w_cl_shuffle_nmemb, cl_reg_prep, w_cl, True)
             else:
                 # If there are *more* field region stars than the total of
                 # stars within the cluster region (highly contaminated
@@ -160,14 +160,10 @@ def reg_data(region):
     """
     region_z = list(zip(*region))
 
-    # Square errors (mags, colors, kinematics).
-    # sq_em, sq_ec, sq_k = np.square(region_z[4]), np.square(region_z[6]),\
-    #     np.square(region_z[8])
     # Put each magnitude, color, and kinematic parameter into a separate list.
     mags, cols, kinem = list(zip(*region_z[3])), list(zip(*region_z[5])),\
         list(zip(*region_z[7]))
-    # e_mags, e_cols, e_kinem = list(zip(*sq_em)), list(zip(*sq_ec)),\
-    #     list(zip(*sq_k))
+    # Uncertainties.
     e_mags, e_cols, e_kinem = list(zip(*region_z[4])),\
         list(zip(*region_z[6])), list(zip(*region_z[8]))
 
@@ -176,8 +172,9 @@ def reg_data(region):
         e_kinem[i] for i, _ in enumerate(kinem) if not np.isnan(_).all()]
     kinem = [_ for _ in kinem if not np.isnan(_).all()]
 
-    # Combine photometry and errors.
+    # Combine photometry and uncertainties.
     data = np.array(mags + cols + kinem)
+    # Uncertainties are squared in dataNorm()
     e_data = np.array(e_mags + e_cols + e_kinem)
     # Generate array with the appropriate format.
     data_err = np.stack((data, e_data)).T
@@ -200,17 +197,18 @@ def reg_data(region):
     return data_err, wi
 
 
-def likelihood(bayesda_weights, region, w_r, cl_reg_prep, w_c):
+def likelihood(bayesda_weights, region, w_r, cl_reg_prep, w_c, stop=False):
     """
-    Obtain the likelihood, for each star in the cluster region, of being a
-    member of the region passed.
+    Obtain the likelihood, for each star in the cluster region ('cl_reg_prep'),
+    of being a member of the region passed ('region').
 
-    This is basically the core of the 'tolstoy' likelihood.
+    This is basically the core of the 'tolstoy' likelihood with some added
+    weights.
 
     L_i = w_i \sum_{j=1}^{N_r}
              \frac{w_j}{\sqrt{\prod_{k=1}^d (w_k\, \sigma_{ijk}^2)}}\;\;
                 exp \left[-\frac{1}{2} \sum_{k=1}^d w_k\,
-                   \frac{(q_{ik}-q{jk})^2}{\sigma_{ijk}^2} \right ]
+                   \frac{(q_{ik}-q_{jk})^2}{\sigma_{ijk}^2} \right ]
 
     where
     i: cluster region star
@@ -242,7 +240,7 @@ def likelihood(bayesda_weights, region, w_r, cl_reg_prep, w_c):
     # Avoid divide by zero.
     sigma_sum[sigma_sum == 0.] = 1.
 
-    # Sum for all photometric dimensions.
+    # Sum for all dimensions.
     Dsum = (np.square(data_dif) / sigma_sum).sum(axis=-1)
     # This makes the code substantially faster.
     np.clip(Dsum, a_min=None, a_max=50., out=Dsum)
@@ -253,7 +251,7 @@ def likelihood(bayesda_weights, region, w_r, cl_reg_prep, w_c):
     # Sum for all stars in this 'region'.
     sum_M = np.sum(sum_M_j, axis=-1)
     np.clip(sum_M, a_min=1e-7, a_max=None, out=sum_M)
-    sum_M = sum_M * w_c
+    sum_M = w_c * sum_M
 
     return sum_M
 
