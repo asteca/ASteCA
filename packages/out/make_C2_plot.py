@@ -11,9 +11,10 @@ def main(
     npd, pd, col_0_comb, mag_0_comb, cl_reg_clean_plot, plx_flag, plx_clrg,
     mmag_clp, mp_clp, plx_clp, e_plx_clp, flag_no_fl_regs_i, field_regions_i,
     PM_flag, pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, mmag_pm, pmRA_fl_DE,
-    e_pmRA_fl_DE, pmDE_fl, e_pmDE_fl, PM_cl_x, PM_cl_y, PM_cl_z, PM_fl_x,
-    PM_fl_y, PM_fl_z, PMs_cl_cx, PMs_cl_cy, PMs_fl_cx, PMs_fl_cy, pm_dist_max,
-        plx_Bys, plx_wa, cl_reg_fit, **kwargs):
+    e_pmRA_fl_DE, pmDE_fl, e_pmDE_fl, pm_mag_fl, PM_cl_x, PM_cl_y, PM_cl_z,
+    PM_fl_x, PM_fl_y, PM_fl_z, PMs_cl_cx, PMs_cl_cy, PMs_fl_cx, PMs_fl_cy,
+    pm_dist_max, pm_Plx_cl, pm_Plx_fr, plx_Bys, plx_wa, cl_reg_fit,
+        plx_pm_flag, **kwargs):
     '''
     Make C2 block plots.
     '''
@@ -59,7 +60,7 @@ def main(
         if PM_flag:
             # PMs data.
             pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, mmag_pm,\
-                PMs_cent, PMs_width, PMs_height, PMs_theta =\
+                PMs_cent, PMs_width, PMs_height, PMs_theta, CI_prob =\
                 prep_plots.PMsPlot(
                     pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, mmag_pm)
             raPMrng, dePMrng = prep_plots.PMsrange(pmRA_DE, pmDE)
@@ -72,12 +73,27 @@ def main(
                 # pms_KDE_diag
                 [gs, coord, plx_flag, PM_cl_x, PM_cl_y, PM_cl_z, PM_fl_x,
                  PM_fl_y, PM_fl_z, PMs_cl_cx, PMs_cl_cy, PMs_fl_cx, PMs_fl_cy,
-                 raPMrng, dePMrng, PMs_cent, PMs_width, PMs_height, PMs_theta],
+                 raPMrng, dePMrng, PMs_cent, PMs_width, PMs_height, PMs_theta,
+                 CI_prob],
                 # pms_vs_MP
-                [gs, y_ax, plx_flag, pmMP, pm_dist_max, mmag_pm]
+                [gs, y_ax, plx_flag, pmMP, pm_dist_max, mmag_pm],
+                # pms_vpd_mag
+                [gs, coord, y_ax, plx_flag, pmRA_DE, pmDE, mmag_pm, pmRA_fl_DE,
+                 pmDE_fl, pm_mag_fl, raPMrng, dePMrng],
+                # pms_vs_mag
+                [gs, coord, y_ax, plx_flag, pmMP, pmRA_DE, pmDE, mmag_pm,
+                 pmRA_fl_DE, pmDE_fl, pm_mag_fl, raPMrng, dePMrng]
             ]
             for n, args in enumerate(arglist):
                 mp_decont_kinem.plot(n + 3, *args)
+
+        if plx_pm_flag:
+            arglist = [
+                # pms_vs_plx
+                gs, coord, y_ax, plx_flag, pmMP, pmRA_DE, pmDE, mmag_pm,
+                pmRA_fl_DE, pmDE_fl, pm_Plx_cl, pm_Plx_fr, pm_mag_fl,
+                raPMrng, dePMrng]
+            mp_decont_kinem.plot(8, *arglist)
 
         # Generate output file.
         fig.tight_layout()

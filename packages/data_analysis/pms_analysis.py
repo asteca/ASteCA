@@ -1,6 +1,7 @@
 
 import numpy as np
 from scipy.spatial.distance import cdist
+from scipy import stats
 
 
 def main(clp, coords, project, **kwargs):
@@ -8,8 +9,9 @@ def main(clp, coords, project, **kwargs):
     """
     PM_flag = False
     pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, mmag_pm, PM_cl_x, PM_cl_y,\
-        PM_cl_z, PM_fl_x, PM_fl_y, pmDE_fl, e_pmDE_fl, pmRA_fl_DE,\
-        e_pmRA_fl_DE, pm_dist_max = [[] for _ in range(16)]
+        PM_cl_z, PM_fl_x, PM_fl_y, pm_mag_fl, pmDE_fl, e_pmDE_fl, pmRA_fl_DE,\
+        e_pmRA_fl_DE, pm_dist_max, pm_Plx_cl, pm_ePlx_cl, pm_Plx_fr,\
+        pm_ePlx_fr = [[] for _ in range(21)]
     PM_fl_z = np.array([])
     PMs_cl_cx, PMs_cl_cy, PMs_fl_cx, PMs_fl_cy = [np.nan] * 4
 
@@ -31,6 +33,21 @@ def main(clp, coords, project, **kwargs):
             np.array(list(zip(*list(zip(*clp['cl_reg_fit']))[8]))[2])
         mmag_pm = np.array(list(zip(*list(zip(*clp['cl_reg_fit']))[3]))[0])
 
+        # Extract parallax data.
+        plx = np.array(list(zip(*list(zip(*clp['cl_reg_fit']))[7]))[0])
+        # Array with no nan values
+        plx_clrg = plx[~np.isnan(plx)]
+        # Check that a range of parallaxes is possible.
+        plx_pm_flag = False
+        if plx_clrg.any() and np.min(plx_clrg) < np.max(plx_clrg):
+            plx_pm_flag = True
+
+        if plx_pm_flag:
+            pm_Plx_cl = np.array(
+                list(zip(*list(zip(*clp['cl_reg_fit']))[7]))[0])
+            pm_ePlx_cl = np.array(
+                list(zip(*list(zip(*clp['cl_reg_fit']))[8]))[0])
+
         # Apply cos(delta) correction to pmRA if possible.
         if coords == 'deg':
             if project:
@@ -42,12 +59,14 @@ def main(clp, coords, project, **kwargs):
             print("  WARNING: can not apply cos(dec) factor to pmRA.")
             DE_pm = np.zeros(pmRA.size)
 
-        # Remove nan values from cluster region
+        # Remove nan PM values from cluster region
         msk = ~np.isnan(pmRA) & ~np.isnan(e_pmRA) & ~np.isnan(pmDE) &\
             ~np.isnan(e_pmDE)
-        pmMP, pmRA, e_pmRA, pmDE, e_pmDE, DE_pm, mmag_pm = pmMP[msk],\
-            pmRA[msk], e_pmRA[msk], pmDE[msk], e_pmDE[msk], DE_pm[msk],\
-            mmag_pm[msk]
+        pmMP, pmRA, e_pmRA, pmDE, e_pmDE, DE_pm, mmag_pm =\
+            pmMP[msk], pmRA[msk], e_pmRA[msk], pmDE[msk], e_pmDE[msk],\
+            DE_pm[msk], mmag_pm[msk]
+        if plx_pm_flag:
+            pm_Plx_cl, pm_ePlx_cl = pm_Plx_cl[msk], pm_ePlx_cl[msk]
 
         pmRA_DE = pmRA * np.cos(np.deg2rad(DE_pm))
         # Propagate error in RA*cos(delta)
@@ -72,22 +91,29 @@ def main(clp, coords, project, **kwargs):
             pmRA_fl, e_pmRA_fl, DE_fl_pm = [], [], []
             # Field region(s) data.
             for fl_rg in clp['field_regions_i']:
+                pm_mag_fl += list(zip(*list(zip(*fl_rg))[3]))[0]
                 pmRA_fl += list(zip(*list(zip(*fl_rg))[7]))[1]
                 e_pmRA_fl += list(zip(*list(zip(*fl_rg))[8]))[1]
                 pmDE_fl += list(zip(*list(zip(*fl_rg))[7]))[2]
                 e_pmDE_fl += list(zip(*list(zip(*fl_rg))[8]))[2]
                 DE_fl_pm += list(list(zip(*fl_rg)))[2]
+                if plx_pm_flag:
+                    pm_Plx_fr += list(zip(*list(zip(*fl_rg))[7]))[0]
+                    pm_ePlx_fr += list(zip(*list(zip(*fl_rg))[8]))[0]
 
-            pmRA_fl, e_pmRA_fl, pmDE_fl, e_pmDE_fl, DE_fl_pm = [
-                np.asarray(_) for _ in (
-                    pmRA_fl, e_pmRA_fl, pmDE_fl, e_pmDE_fl, DE_fl_pm)]
+            pm_mag_fl, pmRA_fl, e_pmRA_fl, pmDE_fl, e_pmDE_fl, DE_fl_pm,\
+                pm_Plx_fr, pm_ePlx_fr = [np.asarray(_) for _ in (
+                    pm_mag_fl, pmRA_fl, e_pmRA_fl, pmDE_fl, e_pmDE_fl,
+                    DE_fl_pm, pm_Plx_fr, pm_ePlx_fr)]
 
             # Remove nan values from field region(s)
             msk = ~np.isnan(pmRA_fl) & ~np.isnan(e_pmRA_fl) &\
                 ~np.isnan(pmDE_fl) & ~np.isnan(e_pmDE_fl)
-            pmRA_fl, e_pmRA_fl, pmDE_fl, e_pmDE_fl, DE_fl_pm = \
-                pmRA_fl[msk], e_pmRA_fl[msk], pmDE_fl[msk], e_pmDE_fl[msk],\
-                DE_fl_pm[msk]
+            pm_mag_fl, pmRA_fl, e_pmRA_fl, pmDE_fl, e_pmDE_fl, DE_fl_pm = \
+                pm_mag_fl[msk], pmRA_fl[msk], e_pmRA_fl[msk], pmDE_fl[msk],\
+                e_pmDE_fl[msk], DE_fl_pm[msk]
+            if plx_pm_flag:
+                pm_Plx_fr, pm_ePlx_fr = pm_Plx_fr[msk], pm_ePlx_fr[msk]
 
             pmRA_fl_DE = pmRA_fl * np.cos(np.deg2rad(DE_fl_pm))
             # Propagate error in RA*cos(delta)
@@ -107,10 +133,12 @@ def main(clp, coords, project, **kwargs):
         'mmag_pm': mmag_pm, 'PM_cl_x': PM_cl_x, 'PM_cl_y': PM_cl_y,
         'PM_cl_z': PM_cl_z, 'PMs_cl_cx': PMs_cl_cx, 'PMs_cl_cy': PMs_cl_cy,
         'pmRA_fl_DE': pmRA_fl_DE, 'e_pmRA_fl_DE': e_pmRA_fl_DE,
-        'pmDE_fl': pmDE_fl, 'e_pmDE_fl': e_pmDE_fl,
+        'pmDE_fl': pmDE_fl, 'e_pmDE_fl': e_pmDE_fl, 'pm_mag_fl': pm_mag_fl,
         'PM_fl_x': PM_fl_x, 'PM_fl_y': PM_fl_y, 'PM_fl_z': PM_fl_z,
         'PMs_fl_cx': PMs_fl_cx, 'PMs_fl_cy': PMs_fl_cy,
-        'pm_dist_max': pm_dist_max})
+        'pm_dist_max': pm_dist_max, 'pm_Plx_cl': pm_Plx_cl,
+        'pm_ePlx_cl': pm_ePlx_cl, 'pm_Plx_fr': pm_Plx_fr,
+        'pm_ePlx_fr': pm_ePlx_fr, 'plx_pm_flag': plx_pm_flag})
     return clp
 
 
@@ -119,10 +147,6 @@ def kde_2d(xarr, xsigma, yarr, ysigma, grid_dens=50):
     Take an array of x,y data with their errors, create a grid of points in x,y
     and return the 2D KDE density map.
     '''
-
-    # Replace 0 error with very LARGE value.
-    np.place(xsigma, xsigma <= 0., 1000.)
-    np.place(ysigma, ysigma <= 0., 1000.)
 
     # Grid density (number of points).
     xmean, xstd = np.nanmedian(xarr), np.nanstd(xarr)
@@ -136,40 +160,15 @@ def kde_2d(xarr, xsigma, yarr, ysigma, grid_dens=50):
     pos = np.vstack([x.ravel(), y.ravel()])
     values = np.vstack([xarr, yarr])
 
-    # Scipy's norm factor
-    # https://github.com/scipy/scipy/blob/v1.1.0/scipy/stats/kde.py
+    # Replace 0 error with very LARGE value.
+    np.place(xsigma, xsigma <= 0., 1000.)
+    np.place(ysigma, ysigma <= 0., 1000.)
+    # Inverse errors as weights
+    w = 1. / (xsigma * ysigma)
+
     d, n = values.shape
-    data_covariance = np.cov(values)
-    data_inv_cov = np.linalg.inv(data_covariance)
-    scotts_factor = np.power(n, -1. / (d + 4))
-    inv_cov = data_inv_cov / scotts_factor**2
-    covariance = data_covariance * scotts_factor**2
-    norm_factor = np.sqrt(np.linalg.det(2 * np.pi * covariance)) * n
-
-    # Evaluate KDE in x,y grid.
-    m = grid_dens**2
-    vals = np.zeros((m,), dtype=np.float)
-    if m >= n:
-        # print("loop over data")
-        e_values = np.vstack([xsigma, ysigma]).T
-        for i, p in enumerate(values.T):
-            valxy = (
-                inv_cov[0][0] * ((p[0] - pos[0]) / e_values[i][0])**2 +
-                inv_cov[1][1] * ((p[1] - pos[1]) / e_values[i][1])**2) /\
-                (e_values[i][0] * e_values[i][1])
-            vals += np.exp(-.5 * valxy)
-        result = np.array(vals)
-    else:
-        # print("loop over points")
-        for i, p in enumerate(zip(*pos)):
-            valxy = (
-                inv_cov[0][0] * ((p[0] - xarr) / xsigma)**2 +
-                inv_cov[1][1] * ((p[1] - yarr) / ysigma)**2) /\
-                (xsigma * ysigma)
-            vals[i] = np.sum(np.exp(-.5 * valxy))
-    result = vals / norm_factor
-
-    # Re-shape values for plotting.
-    z = np.reshape(result.T, x.shape)
+    sf = .5 * n**(-1. / (d + 4))
+    kernel = stats.gaussian_kde(values, bw_method=sf, weights=w)
+    z = np.reshape(kernel(pos).T, x.shape)
 
     return x, y, z

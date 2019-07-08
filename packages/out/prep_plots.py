@@ -501,7 +501,9 @@ def PMsPlot(pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, mmag_pm):
     """
     Parameters for the proper motions plot.
     """
-    mean_pos, width, height, theta = CIEllipse(np.array([pmRA_DE, pmDE]).T)
+    CI_prob = .95
+    mean_pos, width, height, theta = CIEllipse(
+        np.array([pmRA_DE, pmDE]).T, prob=CI_prob)
 
     # Re-arrange so stars with larger MPs are on top.
     mp_i = pmMP.argsort()
@@ -510,7 +512,7 @@ def PMsPlot(pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, mmag_pm):
         mmag_pm[mp_i]
 
     return pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, mmag_pm,\
-        mean_pos, width, height, theta
+        mean_pos, width, height, theta, CI_prob
 
 
 def CIEllipse(points, prob=.95):
@@ -597,8 +599,8 @@ def PMsrange(pmRA_DE, pmDE):
     """
     ra_mean, ra_median, ra_std = sigma_clipped_stats(pmRA_DE)
     de_mean, de_median, de_std = sigma_clipped_stats(pmDE)
-    x_range = abs(ra_median + 4. * ra_std - (ra_median - 4. * ra_std))
-    y_range = abs(de_median + 4. * de_std - (de_median - 4. * de_std))
+    x_range = min(6. * ra_std, np.ptp(pmRA_DE))
+    y_range = min(6. * de_std, np.ptp(pmDE))
     xyrange = max(x_range, y_range)
 
     raPMrng = ra_median - .5 * xyrange, ra_median + .5 * xyrange

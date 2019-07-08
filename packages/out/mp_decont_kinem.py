@@ -176,9 +176,9 @@ def pms_vpd(
     '''
     '''
     if plx_flag:
-        ax = plt.subplot(gs[2:4, 0:2])
+        ax = plt.subplot(gs[2:4, 4:6])
     else:
-        ax = plt.subplot(gs[0:2, 0:2])
+        ax = plt.subplot(gs[0:2, 4:6])
     ax.minorticks_on()
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
             zorder=1)
@@ -197,6 +197,10 @@ def pms_vpd(
     ax.errorbar(
         pmRA_DE, pmDE, yerr=e_pmDE, xerr=e_pmRA_DE, fmt='none',
         elinewidth=.65, ecolor=cmap(norm(pmMP)), zorder=4)
+    plt.scatter(pmRA_DE, pmDE, c=pmMP, s=0.)
+    cbar = plt.colorbar(pad=.01, fraction=.02, aspect=50)
+    cbar.ax.tick_params(labelsize=7)
+    cbar.set_label("MPs", size=8)
 
     ax.errorbar(
         pmRA_fl_DE, pmDE_fl, yerr=e_pmDE_fl, xerr=e_pmRA_fl_DE, fmt='none',
@@ -209,7 +213,7 @@ def pms_vpd(
 def pms_KDE_diag(
     gs, coord, plx_flag, PM_cl_x, PM_cl_y, PM_cl_z, PM_fl_x, PM_fl_y, PM_fl_z,
     PMs_cl_cx, PMs_cl_cy, PMs_fl_cx, PMs_fl_cy, raPMrng, dePMrng, PMs_cent,
-        PMs_width, PMs_height, PMs_theta):
+        PMs_width, PMs_height, PMs_theta, CI_prob):
     """
     KDE of PMs for cluster and field regions.
     """
@@ -217,7 +221,9 @@ def pms_KDE_diag(
         ax = plt.subplot(gs[2:4, 2:4])
     else:
         ax = plt.subplot(gs[0:2, 2:4])
-    ax.set_title('Error-weighted KDE + CI ellipse', fontsize=9)
+    ax.set_title(
+        'Error-weighted KDE + {:.0f}% CI ellipse'.format(CI_prob * 100.),
+        fontsize=9)
     ax.minorticks_on()
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
             zorder=1)
@@ -265,13 +271,54 @@ def pms_KDE_diag(
     plt.legend(fontsize='small')
 
 
+def pms_vs_mag(
+    gs, coord, y_ax, plx_flag, pmMP, pmRA_DE, pmDE, mmag_pm, pmRA_fl_DE,
+        pmDE_fl, pm_mag_fl, raPMrng, dePMrng):
+    '''
+    '''
+    def axplot(ax, x_range, xlabel, cl_x, cl_y, fr_x, fr_y, ymax, ymin):
+        ax.minorticks_on()
+        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
+                zorder=1)
+
+        ax.set_xlabel(xlabel, fontsize=12)
+        ax.set_ylabel(y_ax, fontsize=12)
+        cmap = plt.cm.get_cmap('viridis')
+
+        ax.scatter(
+            cl_x, cl_y, marker='o', c=pmMP, s=30, edgecolors='black',
+            cmap=cmap, lw=0.35, zorder=5)
+        ax.scatter(fr_x, fr_y, c='grey', s=15, marker='^', zorder=2)
+        ax.set_xlim(x_range)
+        ax.set_ylim(ax.get_ylim()[::-1])
+        ax.set_ylim(ymin, ymax)
+
+    if plx_flag:
+        ax1 = plt.subplot(gs[4:6, 0:2])
+        ax2 = plt.subplot(gs[4:6, 2:4])
+    else:
+        ax1 = plt.subplot(gs[2:4, 0:2])
+        ax2 = plt.subplot(gs[2:4, 2:4])
+
+    if coord == 'deg':
+        xlabel = r"$\mu_{{\alpha}} \, cos \delta \, \mathrm{[mas/yr]}$"
+    else:
+        xlabel = r"$\mu_{{\alpha}} \, \mathrm{[mas/yr]}$"
+    ymax, ymin = min(mmag_pm) - .5, max(mmag_pm) + .5
+    axplot(
+        ax1, raPMrng, xlabel, pmRA_DE, mmag_pm, pmRA_fl_DE, pm_mag_fl, ymax,
+        ymin)
+    xlabel = r"$\mu_{{\delta}} \, \mathrm{[mas/yr]}$"
+    axplot(ax2, dePMrng, xlabel, pmDE, mmag_pm, pmDE_fl, pm_mag_fl, ymax, ymin)
+
+
 def pms_vs_MP(gs, y_ax, plx_flag, pmMP, pm_dist_max, mmag_pm):
     '''
     '''
     if plx_flag:
-        ax = plt.subplot(gs[2:4, 4:6])
+        ax = plt.subplot(gs[4:6, 4:6])
     else:
-        ax = plt.subplot(gs[0:2, 4:6])
+        ax = plt.subplot(gs[2:4, 4:6])
     ax.minorticks_on()
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
             zorder=1)
@@ -286,12 +333,112 @@ def pms_vs_MP(gs, y_ax, plx_flag, pmMP, pm_dist_max, mmag_pm):
         pm_dist_max, mmag_pm, marker='o', c=pmMP, s=30, edgecolors='black',
         cmap=cmap, lw=0.35, zorder=4)
 
-    cbar = plt.colorbar(pad=.01, fraction=.02, aspect=50)
-    cbar.ax.tick_params(labelsize=7)
-
     plx_mean, plx_median, plx_std = sigma_clipped_stats(pm_dist_max)
     plt.xlim(-.05, plx_median + 2. * plx_std)
     plt.gca().invert_yaxis()
+
+
+def pms_vpd_mag(
+    gs, coord, y_ax, plx_flag, pmRA_DE, pmDE, mmag_pm, pmRA_fl_DE, pmDE_fl,
+        pm_mag_fl, raPMrng, dePMrng):
+    '''
+    '''
+    if plx_flag:
+        ax = plt.subplot(gs[2:4, 0:2])
+    else:
+        ax = plt.subplot(gs[0:2, 0:2])
+    ax.minorticks_on()
+    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
+            zorder=1)
+
+    if coord == 'deg':
+        plt.xlabel(
+            r"$\mu_{{\alpha}} \, cos \delta \, \mathrm{[mas/yr]}$",
+            fontsize=12)
+    else:
+        plt.xlabel(r"$\mu_{{\alpha}} \, \mathrm{[mas/yr]}$", fontsize=12)
+    plt.ylabel(r"$\mu_{{\delta}} \, \mathrm{[mas/yr]}$", fontsize=12)
+
+    msk = np.argsort(mmag_pm)[::-1]
+    pmRA_DE, pmDE, mmag_pm = pmRA_DE[msk], pmDE[msk], mmag_pm[msk]
+    cmap = plt.cm.get_cmap('RdBu_r')
+    plt.scatter(
+        pmRA_DE, pmDE, marker='o', c=mmag_pm, s=25, cmap=cmap, edgecolor='k',
+        lw=.5, zorder=4)
+    cbar = plt.colorbar(pad=.01, fraction=.02, aspect=50)
+    cbar.ax.tick_params(labelsize=7)
+    cbar.ax.invert_yaxis()
+    cbar.set_label(y_ax, size=8)
+
+    msk = np.argsort(pm_mag_fl)[::-1]
+    pmRA_fl_DE, pmDE_fl, pm_mag_fl = pmRA_fl_DE[msk], pmDE_fl[msk],\
+        pm_mag_fl[msk]
+    plt.scatter(
+        pmRA_fl_DE, pmDE_fl, marker='^', s=20, c='grey', linewidth=0.,
+        cmap=cmap, alpha=.85, zorder=1)
+
+    plt.xlim(raPMrng)
+    plt.ylim(dePMrng)
+
+
+def pms_vs_plx(
+    gs, coord, y_ax, plx_flag, pmMP, pmRA_DE, pmDE, mmag_pm, pmRA_fl_DE,
+        pmDE_fl, pm_Plx_cl, pm_Plx_fr, pm_mag_fl, raPMrng, dePMrng):
+    '''
+    '''
+    def axplot(
+            gsi, j1, j2, yrang, xlabel, ylabel, cl_xdata, cl_ydata, cl_col,
+            fr_xdata, fr_ydata, fl_col, cmap):
+        ax = plt.subplot(gs[gsi[0] + j1:gsi[1] + j1, gsi[2] + j2:gsi[3] + j2])
+        ax.minorticks_on()
+        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
+                zorder=1)
+        ax.set_ylabel(ylabel, fontsize=12)
+        ax.set_xlabel(xlabel, fontsize=12)
+
+        ax.scatter(
+            cl_xdata, cl_ydata, marker='o', c=cl_col, s=40, edgecolor='k',
+            lw=.5, cmap=cmap, zorder=4)
+        ax.scatter(
+            fr_xdata, fr_ydata, marker='^', s=20, c=fl_col, linewidth=0.,
+            alpha=.65, cmap=cmap, zorder=1)
+
+        plx_mean, plx_median, plx_std = sigma_clipped_stats(cl_xdata)
+        ax.set_xlim(
+            max(-.05, plx_median - 2. * plx_std), plx_median + 4. * plx_std)
+        ax.set_ylim(yrang)
+
+    if plx_flag:
+        gsi = (6, 8, 0, 3)
+    else:
+        gsi = (4, 6, 0, 3)
+
+    # Colored according to main mag
+    if coord == 'deg':
+        ylabel = r"$\mu_{{\alpha}} \, cos \delta \, \mathrm{[mas/yr]}$"
+    else:
+        ylabel = r"$\mu_{{\alpha}} \, \mathrm{[mas/yr]}$"
+    xlabel = ""
+    cmap = plt.cm.get_cmap('RdBu_r')
+    axplot(
+        gsi, 0, 0, raPMrng, xlabel, ylabel, pm_Plx_cl, pmRA_DE, mmag_pm,
+        pm_Plx_fr, pmRA_fl_DE, pm_mag_fl, cmap)
+    xlabel = r"$Plx \, \mathrm{[mas]}$"
+    ylabel = r"$\mu_{{\delta}} \, \mathrm{[mas/yr]}$"
+    axplot(
+        gsi, 2, 0, dePMrng, xlabel, ylabel, pm_Plx_cl, pmDE, mmag_pm,
+        pm_Plx_fr, pmDE_fl, pm_mag_fl, cmap)
+
+    # Colored according to MPs
+    ylabel, xlabel = "", ""
+    cmap = plt.cm.get_cmap('viridis')
+    axplot(
+        gsi, 0, 3, raPMrng, xlabel, ylabel, pm_Plx_cl, pmRA_DE, pmMP,
+        pm_Plx_fr, pmRA_fl_DE, 'grey', cmap)
+    xlabel = r"$Plx \, \mathrm{[mas]}$"
+    axplot(
+        gsi, 2, 3, dePMrng, xlabel, ylabel, pm_Plx_cl, pmDE, pmMP, pm_Plx_fr,
+        pmDE_fl, 'grey', cmap)
 
 
 def plot(N, *args):
@@ -305,7 +452,10 @@ def plot(N, *args):
         2: [plx_vs_mag, 'Plx vs mag'],
         3: [pms_vpd, 'PMs vector point diagram'],
         4: [pms_KDE_diag, 'PMs KDE diagram'],
-        5: [pms_vs_MP, 'PMs vs MP']
+        5: [pms_vs_MP, 'PMs vs MP'],
+        6: [pms_vpd_mag, 'PMs VPD mag colored'],
+        7: [pms_vs_mag, 'PMs vs mag'],
+        8: [pms_vs_plx, 'PMs vs Plx']
     }
 
     fxn = plt_map.get(N, None)[0]
