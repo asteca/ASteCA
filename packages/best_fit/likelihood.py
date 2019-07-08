@@ -159,7 +159,7 @@ def duong(synth_clust, obs_clust):
 
 
 def dolphin(synth_clust, obs_clust):
-    '''
+    """
     Poisson likelihood ratio as defined in Dolphin (2002).
 
     -2\ln PLR = 2 \sum_i m_i - n_i + n_i \ln \frac{n_i}{m_i}
@@ -172,14 +172,14 @@ def dolphin(synth_clust, obs_clust):
 
     In this case the likelihood will try to minimize M.
 
-    '''
+    When the number of observed stars is too small (~ N<100), this likelihood
+    will tend to underestimate the total mass.
+    """
 
     synth_phot = synth_clust[0][0]
-    # Observed cluster's histogram and bin edges for each dimension.
-    bin_edges = obs_clust[0]
-    # Indexes of n_i=0 elements in flattened observed cluster array,
-    # and the array with no n_i=0 elements.
-    cl_z_idx, cl_histo_f_z, dolphin_cst, bin_weight_f_z = obs_clust[-4:]
+    # Observed cluster's data.
+    bin_edges, fill_factor, cl_histo_f_z, dolphin_cst, bin_weight_f_z,\
+        cl_z_idx = obs_clust[:-1]
 
     # Histogram of the synthetic cluster, using the bin edges calculated
     # with the observed cluster.
@@ -191,8 +191,10 @@ def dolphin(synth_clust, obs_clust):
 
     # Assign small value to the m_i = 0 elements in 'syn_histo_f_z'.
     # The value equals 1 star divided among all empty bins.
-    syn_histo_f_z[syn_histo_f_z == 0] =\
-        1. / max(np.count_nonzero(syn_histo_f_z == 0), 1.)
+    # If this factor --> 0, then the likelihood will try to minimize empty
+    # bins, ie: M --> inf. If the factor --> 1, the likelihood has no penalty
+    # for empty bins, and M --> 0.
+    syn_histo_f_z[syn_histo_f_z == 0] = fill_factor
 
     # M = synth_phot[0].size
     # Cash's C statistic: 2 * sum(m_i - n_i * ln(m_i))
@@ -273,7 +275,7 @@ def mighell(synth_clust, obs_clust):
     # Observed cluster's histogram and bin edges for each dimension.
     bin_edges = obs_clust[0]
     # Observed cluster's flattened histogram and indexes of n_i=0 elements.
-    cl_histo_f, cl_z_idx = obs_clust[2:4]
+    cl_z_idx, cl_histo_f = obs_clust[-2:]
 
     # Synthetic cluster.
     synth_phot = synth_clust[0][0]
