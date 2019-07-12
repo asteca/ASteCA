@@ -87,7 +87,7 @@ def main(
                 # cluster region.
                 cl_lkl = likelihood(
                     bayesda_weights, clust_reg_shuffle_nmemb,
-                    w_cl_shuffle_nmemb, cl_reg_prep, w_cl, True)
+                    w_cl_shuffle_nmemb, cl_reg_prep, w_cl)
             else:
                 # If there are *more* field region stars than the total of
                 # stars within the cluster region (highly contaminated
@@ -197,7 +197,7 @@ def reg_data(region):
     return data_err, wi
 
 
-def likelihood(bayesda_weights, region, w_r, cl_reg_prep, w_c, stop=False):
+def likelihood(bayesda_weights, region, w_r, cl_reg_prep, w_c):
     """
     Obtain the likelihood, for each star in the cluster region ('cl_reg_prep'),
     of being a member of the region passed ('region').
