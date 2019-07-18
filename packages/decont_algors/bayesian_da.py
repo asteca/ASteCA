@@ -1,5 +1,6 @@
 
 import numpy as np
+import warnings
 from .. import update_progress
 
 
@@ -95,8 +96,12 @@ def main(
                 # all stars within the cluster region.
                 cl_lkl = np.ones(len(cl_region)) * 1e-7
 
-            # Bayesian probability for each star within the cluster region.
-            bayes_prob = 1. / (1. + (fl_lkl / cl_lkl))
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                # Bayesian probability for each star within the cluster region.
+                bayes_prob = 1. / (1. + (fl_lkl / cl_lkl))
+            # Replace possible nan values with 0.
+            bayes_prob[np.isnan(bayes_prob)] = 0.
             N_total += 1
             runs_fields_probs += bayes_prob
 
@@ -249,9 +254,8 @@ def likelihood(bayesda_weights, region, w_r, cl_reg_prep, w_c):
     # All elements inside summatory.
     sum_M_j = w_r * np.exp(-0.5 * Dsum) / np.sqrt(sigma_prod)
     # Sum for all stars in this 'region'.
-    sum_M = np.sum(sum_M_j, axis=-1)
-    np.clip(sum_M, a_min=1e-7, a_max=None, out=sum_M)
-    sum_M = w_c * sum_M
+    sum_M = w_c * np.sum(sum_M_j, axis=-1)
+    # np.clip(sum_M, a_min=1e-7, a_max=None, out=sum_M)
 
     return sum_M
 
