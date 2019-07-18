@@ -114,7 +114,9 @@ def photDataCompl(cld_i, cld_c):
     h_mag_c, _ = mmagHist(cld_c['mags'][0], eqN_edges)
 
     # Percentage of stars that remain after photom completeness.
-    err_rm_perc = h_mag_c / h_mag_i.astype(float)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        err_rm_perc = h_mag_c / h_mag_i.astype(float)
 
     # TODO I think Python3 does not need this 'float'
     perc_rmvd = 100. *\
@@ -179,7 +181,9 @@ def combineCompl(cld_i, phot_analy_compl, mmag_acpt_c):
     # Percentage of stars that should be *removed* from the synthetic cluster.
     # This is reversed with respect to the other percentages so that
     # the completeness_rm() function is simpler.
-    err_rm_perc = 1. - (h_mag_acpt_c / h_mag_i_full)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        err_rm_perc = 1. - (h_mag_acpt_c / h_mag_i_full)
 
     # TODO I think Python3 does not need this 'float'
     perc_rmvd = 100. * (1. - mmag_acpt_c.size / float(cld_i['mags'][0].size))
