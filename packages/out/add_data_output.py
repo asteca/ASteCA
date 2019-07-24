@@ -1,4 +1,5 @@
 
+import numpy as np
 from ..inp.get_data import flatten
 
 
@@ -32,9 +33,13 @@ def main(
 
     # Round structure parameters.
     frmt = "{:.6f}" if pd['coords'] == 'deg' else "{:.0f}"
+    if pd['coords'] == 'deg' and pd['project']:
+        x_cent = (kde_cent[0] / np.cos(np.deg2rad(kde_cent[1] + y_offset))) +\
+            x_offset
+    else:
+        x_cent = kde_cent[0]
     cr_r = [frmt.format(_) for _ in
-            [kde_cent[0] + x_offset, kde_cent[1] + y_offset, clust_rad,
-             core_rad, tidal_rad]]
+            [x_cent, kde_cent[1] + y_offset, clust_rad, core_rad, tidal_rad]]
     cr_e = [frmt.format(_) for _ in [e_rad, e_core, e_tidal]]
     # Interwine these lists.
     cre_r = cr_r[:2] + [item for t in zip(cr_r[2:], cr_e) for item in t]

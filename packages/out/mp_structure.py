@@ -170,8 +170,8 @@ def pl_rad_dens(
 
 
 def pl_full_frame(
-    gs, fig, x_offset, y_offset, x_name, y_name, coord, x_min, x_max, y_min,
-    y_max, asp_ratio, kde_cent, clust_rad, x, y, st_sizes_arr, core_rad,
+    gs, fig, project, x_offset, y_offset, x_name, y_name, coord, x_min, x_max,
+    y_min, y_max, asp_ratio, kde_cent, clust_rad, x, y, st_sizes_arr, core_rad,
     e_core, tidal_rad, e_tidal, K_conct_par, flag_2pk_conver,
         flag_3pk_conver):
     '''
@@ -216,13 +216,17 @@ def pl_full_frame(
                 fill=False, ls='dashed', lw=1.)
             fig.gca().add_artist(circle)
     # Add text box
-    r_frmt = '{:.0f}' if coord == 'px' else '{:.3f}'
-    t1 = (r'${}_{{cent}} =$' + r_frmt + '$\,{}$').format(
-        x_name, kde_cent[0] + x_offset, coord)
-    t2 = (r'${}_{{cent}} =$' + r_frmt + '$\,{}$').format(
+    r_frmt = '{:.0f}' if coord == 'px' else '{:.5f}'
+    if coord == 'deg' and project:
+        x_cent = (kde_cent[0] / np.cos(np.deg2rad(kde_cent[1] + y_offset))) +\
+            x_offset
+    else:
+        x_cent = kde_cent[0]
+    t1 = (r'${}_{{c}} =$' + r_frmt + r'$\,{}$').format(x_name, x_cent, coord)
+    t2 = (r'${}_{{c}} =$' + r_frmt + r'$\,{}$').format(
         y_name, kde_cent[1] + y_offset, coord)
     text = t1 + '\n' + t2
-    ob = offsetbox.AnchoredText(text, pad=0.2, loc=2, prop=dict(size=11))
+    ob = offsetbox.AnchoredText(text, pad=0.2, loc=2, prop=dict(size=10))
     ob.patch.set(alpha=0.85)
     ax.add_artist(ob)
     # Plot stars.

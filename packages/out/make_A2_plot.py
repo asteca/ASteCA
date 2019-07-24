@@ -56,10 +56,11 @@ def main(
             [gs, fig, asp_ratio, x_name, y_name, coord, bw_list, kde_cent,
              frame_kde_cent, kde_dens_max, kde_dens_min, clust_rad],
             # pl_full_frame: x,y finding chart of full frame.
-            [gs, fig, x_offset, y_offset, x_name, y_name, coord, x_min, x_max,
-             y_min, y_max, asp_ratio, kde_cent, clust_rad, cld_i['x'],
-             cld_i['y'], st_sizes_arr, core_rad, e_core, tidal_rad, e_tidal,
-             K_conct_par, flag_2pk_conver, flag_3pk_conver],
+            [gs, fig, pd['project'], x_offset, y_offset, x_name, y_name,
+             coord, x_min, x_max, y_min, y_max, asp_ratio, kde_cent, clust_rad,
+             cld_i['x'], cld_i['y'], st_sizes_arr, core_rad, e_core,
+             tidal_rad, e_tidal, K_conct_par, flag_2pk_conver,
+             flag_3pk_conver],
             # pl_rad_dens: Radial density plot.
             [gs, pd['run_mode'], radii, rdp_points, field_dens, coord,
              npd['clust_name'], clust_rad, e_rad, poisson_error, bin_width,
