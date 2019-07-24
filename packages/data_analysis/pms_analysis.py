@@ -200,6 +200,7 @@ def PMsKDEAll(coords, project, cld_i, clp, PM_KDE_std):
 
 def PMsNNAll(PM_flag_all, xRA_all, yDE_all, pmRA_all, pmDE_all, nnmax):
     """
+    Nearest-neighbor analysis that combines coordinates and PMs data.
     """
     if PM_flag_all:
 
@@ -218,7 +219,7 @@ def PMsNNAll(PM_flag_all, xRA_all, yDE_all, pmRA_all, pmDE_all, nnmax):
 
         # Create the tree
         tree = spatial.cKDTree(data)
-        # Find the closest nnmax-1 neighbors (the first is the point itself)
+        # Find the closest nnmax-1 neighbors (first entry is the point itself)
         dists = tree.query(data, nnmax)
         # Extract distances
         nn_dist = dists[0][:, 1:]
