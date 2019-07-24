@@ -10,7 +10,9 @@ def check(flag_make_plot, plot_frmt, **kwargs):
     # Output figure.
     if flag_make_plot:
         for _ in flag_make_plot:
-            if _ not in ['A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'D1', 'D2', 'D3']:
+            if _ not in [
+                    'A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'C3', 'D1', 'D2',
+                    'D3']:
                 sys.exit("ERROR: unrecognized block ('{}') selected for"
                          " plotting.".format(_))
 

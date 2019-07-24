@@ -107,12 +107,13 @@ MO   auto
 #   - B1: uncertainties analysis
 #   - B2: photometric analysis
 #   - C1: decontamination algorithm photometric diagrams
-#   - C2:parallax and PMs analysis
+#   - C2: parallax analysis
+#   - C3: proper motions analysis
 #   - D1: likelihood minimization
 #   - D2: best fit synthetic cluster match
 #
 #   blocks
-MP   A1 A2 B1 B2 C1 C2 D1 D2
+MP   A1 A2 B1 B2 C1 C2 C3 D1 D2
 
 # * format: png / pdf
 #   Format of the final image file.
@@ -293,8 +294,8 @@ DW     1.       1.       1.       1.       1.      1.
 # * prob_min: minimum accepted probability value if the 'man' mode was
 #   selected. Otherwise this parameter is ignored.
 #
-#    mode    binning     prob_min
-FR  local      knuth          0.5
+#   mode    binning     prob_min
+FR  local     knuth          0.5
 ################################################################################
 
 
@@ -303,7 +304,7 @@ FR  local      knuth          0.5
 
 # Parallax Bayesian analysis
 #
-# * plx_flag: y / n
+# * plx_bayes_flag: y / n
 #   Perform Bayesian analysis of parallax data.
 #
 # * plx_chains: [int]
@@ -312,8 +313,22 @@ FR  local      knuth          0.5
 # * plx_runs: [int]
 #   Number of MCMC steps used in the Bayesian analysis. 
 #
-#     plx_flag   plx_chains   plx_runs
-PP           n          100       2000
+#   plx_flag   plx_chains   plx_runs
+PP         n           10       1000
+
+# Proper motions analysis
+#
+# * KDE_stds: [0.<float]
+#   Standard deviations for the zoomed all-star VPD.
+#
+# * N-N_max: [0<int]
+#   Number of neighbors to use in the Near-Neighbor algorithm.
+#
+# * N-N_prcntl: [0.<float<=100.]
+#   Percentile to filter the PMs N-N distance.
+#
+#   KDE_stds   N-N_max   N-N_prcntl
+PO        3.        10            5
 ################################################################################
 
 

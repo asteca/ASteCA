@@ -1,6 +1,5 @@
 
 import numpy as np
-# from scipy import optimize
 from scipy.optimize import differential_evolution as DE
 from scipy.special import exp1
 from ..best_fit.emcee3rc2 import ensemble
@@ -8,7 +7,7 @@ import warnings
 from .. import update_progress
 
 
-def main(clp, plx_flag, plx_chains, plx_runs, **kwargs):
+def main(clp, plx_bayes_flag, plx_chains, plx_runs, flag_make_plot, **kwargs):
     """
     Bayesian parallax distance using the Bailer-Jones (2015) model with the
     'shape parameter' marginalized.
@@ -20,24 +19,22 @@ def main(clp, plx_flag, plx_chains, plx_runs, **kwargs):
     * Bayesian prior is a Gaussian with a fixed standard deviation
     """
 
-    plx_flag_clp = False
-    plx_clrg, mmag_clp, mp_clp, plx_clp, e_plx_clp, plx_Bys, plx_wa =\
-        [], [], [], [], [], [], np.nan
+    plx_clrg, mmag_clp, mp_clp, plx_clp, e_plx_clp, plx_samples,\
+        plx_tau_autocorr, mean_afs = [[] for _ in range(8)]
+    plx_flag_clp, plx_bayes_flag_clp, plx_wa, plx_Bys = False, False,\
+        np.nan, np.array([])
 
-    if plx_flag:
+    if ('C2' in flag_make_plot) or plx_bayes_flag:
 
         # Extract parallax data.
         plx = np.array(list(zip(*list(zip(*clp['cl_reg_fit']))[7]))[0])
         # Array with no nan values
         plx_clrg = plx[~np.isnan(plx)]
 
-        # Check that a range of parallaxes is possible.
-        if plx_clrg.any() and np.min(plx_clrg) < np.max(plx_clrg):
-            plx_flag_clp = True
+        plx_flag_clp = checkPlx(plx_clrg)
 
-            # Sampler parameters.
-            ndim, nwalkers, nruns = 1, plx_chains, plx_runs
-            print("  Bayesian Plx model ({} runs)".format(nruns))
+        if plx_flag_clp:
+            print("Processing parallaxes.")
 
             # Reject 2\sigma outliers.
             max_plx, min_plx = np.nanmedian(plx) + 2. * np.nanstd(plx),\
@@ -64,83 +61,125 @@ def main(clp, plx_flag, plx_chains, plx_runs, **kwargs):
             plx_w = mp_clp / np.square(e_plx_clp)
             plx_wa = np.average(plx_clp, weights=plx_w)
 
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
+            if plx_bayes_flag:
+                plx_samples, plx_Bys, plx_bayes_flag_clp, plx_tau_autocorr,\
+                    mean_afs = plxBayes(
+                        plx_chains, plx_runs, plx_clp, e_plx_clp, mp_clp)
 
-                # Define the 'r_i' values used to evaluate the integral.
-                int_max = 20.
-                N = int(int_max / 0.01)
-                x = np.linspace(.1, int_max, N).reshape(-1, 1)
-                B1 = ((plx_clp - (1. / x)) / e_plx_clp)**2
-                B2 = (np.exp(-.5 * B1) / e_plx_clp)
-
-                # Use DE to estimate the ML
-                def DEdist(model):
-                    return -lnlike(model, x, B2, mp_clp)
-                bounds = [[0., 20.]]
-                result = DE(DEdist, bounds, popsize=20, maxiter=100)
-                # print(result)
-
-            # Prior parameters.
-            mu_p = result.x
-            # Define the 'r_i' values used to evaluate the integral.
-            int_max = mu_p + 5.
-            N = int(int_max / 0.01)
-            x = np.linspace(.1, int_max, N).reshape(-1, 1)
-            B1 = ((plx_clp - (1. / x)) / e_plx_clp)**2
-            B2 = (np.exp(-.5 * B1) / e_plx_clp)
-
-            # emcee sampler
-            sampler = ensemble.EnsembleSampler(
-                nwalkers, ndim, lnprob, args=(x, B2, mp_clp, mu_p))
-
-            # Random initial guesses.
-            # pos0 = [np.random.uniform(0., 1., ndim) for i in range(nwalkers)]
-            # Ball of initial guesses around 'mu_p'
-            pos0 = [mu_p + .5 * np.random.normal() for i in range(nwalkers)]
-
-            try:
-                old_tau, N_conv = np.inf, 1000
-                for i, _ in enumerate(sampler.sample(pos0, iterations=nruns)):
-                    # Only check convergence every X steps
-                    if i % 50 and i < (nruns - 1):
-                        continue
-
-                    with warnings.catch_warnings():
-                        warnings.simplefilter("ignore")
-                        tau = sampler.get_autocorr_time(tol=0)
-                        # Check convergence
-                        converged = np.all(tau * N_conv < i)
-                        converged &= np.all(np.abs(old_tau - tau) / tau < 0.01)
-                        if converged:
-                            print("")
-                            break
-                        old_tau = tau
-                        tau_mean = np.nanmean(sampler.get_autocorr_time(tol=0))
-                    update_progress.updt(nruns, i + 1)
-
-                # Remove burn-in (half of chain)
-                nburn = int(i / 2.)
-                samples = sampler.get_chain(discard=nburn, flat=True)
-
-                # 16th, median, 84th in Kpc
-                plx_Bys = np.percentile(samples, (16, 50, 84))
-                tau_mean = np.mean(sampler.get_autocorr_time(tol=0))
-                print("Bayesian plx estimated: " +
-                      "{:.3f} (ESS={:.0f}, tau={:.0f})".format(
-                          1. / plx_Bys[1], samples.size / tau_mean, tau_mean))
-            except Exception as e:
-                print(e)
-                print("\n  ERROR: could not process Plx data with emcee")
-                plx_Bys = np.array([np.nan, np.nan, np.nan])
         else:
             print("  WARNING: no valid Plx data found.")
 
     clp.update({
-        'plx_flag': plx_flag_clp, 'plx_clrg': plx_clrg, 'mmag_clp': mmag_clp,
-        'mp_clp': mp_clp, 'plx_clp': plx_clp, 'e_plx_clp': e_plx_clp,
-        'plx_Bys': plx_Bys, 'plx_wa': plx_wa})
+        'plx_flag_clp': plx_flag_clp, 'plx_clrg': plx_clrg,
+        'mmag_clp': mmag_clp, 'mp_clp': mp_clp, 'plx_clp': plx_clp,
+        'e_plx_clp': e_plx_clp, 'plx_Bys': plx_Bys, 'plx_wa': plx_wa,
+        'plx_bayes_flag_clp': plx_bayes_flag_clp, 'plx_samples': plx_samples,
+        'plx_tau_autocorr': plx_tau_autocorr, 'mean_afs': mean_afs})
     return clp
+
+
+def checkPlx(plx_clrg):
+    """
+    Check that a range of parallaxes is possible.
+    """
+    if plx_clrg.any() and np.min(plx_clrg) < np.max(plx_clrg):
+        return True
+    else:
+        return False
+
+
+def plxBayes(plx_chains, plx_runs, plx_clp, e_plx_clp, mp_clp):
+    """
+    """
+    plx_bayes_flag_clp = True
+
+    # Sampler parameters.
+    ndim, nwalkers, nruns = 1, plx_chains, plx_runs
+    print("  Bayesian Plx model ({} runs)".format(nruns))
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+
+        # Define the 'r_i' values used to evaluate the integral.
+        int_max = 20.
+        N = int(int_max / 0.01)
+        x = np.linspace(.1, int_max, N).reshape(-1, 1)
+        B1 = ((plx_clp - (1. / x)) / e_plx_clp)**2
+        B2 = (np.exp(-.5 * B1) / e_plx_clp)
+
+        # Use DE to estimate the ML
+        def DEdist(model):
+            return -lnlike(model, x, B2, mp_clp)
+        bounds = [[0., 20.]]
+        result = DE(DEdist, bounds, popsize=20, maxiter=100)
+        # print(result)
+
+    # Prior parameters.
+    mu_p = result.x
+    # Define the 'r_i' values used to evaluate the integral.
+    int_max = mu_p + 5.
+    N = int(int_max / 0.01)
+    x = np.linspace(.1, int_max, N).reshape(-1, 1)
+    B1 = ((plx_clp - (1. / x)) / e_plx_clp)**2
+    B2 = (np.exp(-.5 * B1) / e_plx_clp)
+
+    # emcee sampler
+    sampler = ensemble.EnsembleSampler(
+        nwalkers, ndim, lnprob, args=(x, B2, mp_clp, mu_p))
+
+    # Random initial guesses.
+    # pos0 = [np.random.uniform(0., 1., ndim) for i in range(nwalkers)]
+    # Ball of initial guesses around 'mu_p'
+    pos0 = [mu_p + .5 * np.random.normal() for i in range(nwalkers)]
+
+    tau_index, autocorr_vals, afs = 0, np.empty(nruns), np.empty(nruns)
+
+    try:
+        old_tau, N_conv = np.inf, 1000
+        for i, _ in enumerate(sampler.sample(pos0, iterations=nruns)):
+            # Only check convergence every X steps
+            if i % 10 and i < (nruns - 1):
+                continue
+
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+
+                afs[tau_index] = np.mean(sampler.acceptance_fraction)
+
+                tau = sampler.get_autocorr_time(tol=0)
+                autocorr_vals[tau_index] = np.mean(tau)
+                tau_index += 1
+
+                # Check convergence
+                converged = np.all(tau * N_conv < i)
+                converged &= np.all(np.abs(old_tau - tau) / tau < 0.01)
+                if converged:
+                    print("")
+                    break
+                old_tau = tau
+                # tau_mean = np.nanmean(sampler.get_autocorr_time(tol=0))
+            update_progress.updt(nruns, i + 1)
+
+        mean_afs = afs[:tau_index]
+        tau_autocorr = autocorr_vals[:tau_index]
+        # Remove burn-in (half of chain)
+        nburn = int(i / 2.)
+        samples = sampler.get_chain(discard=nburn, flat=True)
+
+        # 16th, 84th in Kpc
+        p16, p84 = np.percentile(samples, (16, 84))
+        plx_Bys = np.array([p16, np.mean(samples), p84])
+        tau_mean = np.mean(sampler.get_autocorr_time(tol=0))
+        print("Bayesian plx estimated: " +
+              "{:.3f} (ESS={:.0f}, tau={:.0f})".format(
+                  1. / plx_Bys[1], samples.size / tau_mean, tau_mean))
+    except Exception as e:
+        print(e)
+        print("\n  ERROR: could not process Plx data with emcee")
+        samples, plx_Bys, plx_bayes_flag_clp = [], np.array([]), False
+
+    return 1. / samples.T[0], plx_Bys, plx_bayes_flag_clp, tau_autocorr,\
+        mean_afs
 
 
 def lnprob(mu, x, B2, mp, mu_p):

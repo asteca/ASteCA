@@ -50,6 +50,7 @@ from .out import make_B1_plot
 from .out import make_B2_plot
 from .out import make_C1_plot
 from .out import make_C2_plot
+from .out import make_C3_plot
 from .out import make_D1_plot
 from .out import make_D2_plot
 # DEPRECATED 22/11/18
@@ -227,9 +228,10 @@ def main(cl_file, pd):
     clp = plx_analysis.main(clp, **pd)
 
     # Analyze PMs data if available.
-    clp = pms_analysis.main(clp, **pd)
+    clp = pms_analysis.main(clp, cld_i, **pd)
 
     make_C2_plot.main(npd, pd, **clp)
+    make_C3_plot.main(npd, pd, cld_i, **clp)
 
     # Obtain best fitting parameters for cluster.
     clp = best_fit_synth_cl.main(clp, pd)

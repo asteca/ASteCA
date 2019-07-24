@@ -102,10 +102,6 @@ def main(mypath, pars_f_path):
                 elif reader[0] == 'AD':
                     ad_runs = int(reader[1])
                     ad_k_comb = True if reader[2] in true_lst else False
-                elif reader[0] == 'PP':
-                    plx_flag = True if reader[1] in true_lst else False
-                    plx_chains = int(reader[2])
-                    plx_runs = int(reader[3])
 
                 # Decontamination algorithm parameters
                 elif reader[0] == 'DA':
@@ -121,6 +117,16 @@ def main(mypath, pars_f_path):
                     fld_clean_mode = str(reader[1])
                     fld_clean_bin = str(reader[2])
                     fld_clean_prob = float(reader[3])
+
+                # Parallax & PMS analysis
+                elif reader[0] == 'PP':
+                    plx_bayes_flag = True if reader[1] in true_lst else False
+                    plx_chains = int(reader[2])
+                    plx_runs = int(reader[3])
+                elif reader[0] == 'PO':
+                    PM_KDE_std = float(reader[1])
+                    PM_nnmax = int(reader[2])
+                    PM_nnperc = float(reader[3])
 
                 # Cluster parameters assignation.
                 elif reader[0] == 'CF':
@@ -302,11 +308,14 @@ def main(mypath, pars_f_path):
         'center_bw': center_bw, 'radius_method': radius_method,
         'fdens_method': fdens_method,
         'kp_flag': kp_flag, 'fr_number': fr_number, 'err_max': err_max,
-        'ad_runs': ad_runs, 'ad_k_comb': ad_k_comb, 'plx_flag': plx_flag,
-        'plx_chains': plx_chains, 'plx_runs': plx_runs,
+        'ad_runs': ad_runs, 'ad_k_comb': ad_k_comb,
         # Decontamination algorithm parameters.
         'da_algor': da_algor, 'bayesda_runs': bayesda_runs,
         'fixedda_port': fixedda_port, 'bayesda_weights': bayesda_weights,
+        # Plx & PMs parameters.
+        'plx_bayes_flag': plx_bayes_flag, 'plx_chains': plx_chains,
+        'plx_runs': plx_runs, 'PM_KDE_std': PM_KDE_std, 'PM_nnmax': PM_nnmax,
+        'PM_nnperc': PM_nnperc,
         # Cluster region field stars removal parameters.
         'fld_clean_mode': fld_clean_mode, 'fld_clean_bin': fld_clean_bin,
         'fld_clean_prob': fld_clean_prob,

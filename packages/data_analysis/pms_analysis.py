@@ -2,27 +2,35 @@
 import numpy as np
 from scipy.spatial.distance import cdist
 from scipy import stats
+from scipy import spatial
+from astropy.stats import sigma_clipped_stats
 
 
-def main(clp, coords, project, **kwargs):
+def main(
+    clp, cld_i, coords, project, flag_make_plot, PM_nnmax, PM_KDE_std,
+        **kwargs):
     """
     """
-    PM_flag = False
+    PM_flag, PM_flag_all, plx_pm_flag = False, False, False
     pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, mmag_pm, PM_cl_x, PM_cl_y,\
         PM_cl_z, PM_fl_x, PM_fl_y, pm_mag_fl, pmDE_fl, e_pmDE_fl, pmRA_fl_DE,\
         e_pmRA_fl_DE, pm_dist_max, pm_Plx_cl, pm_ePlx_cl, pm_Plx_fr,\
-        pm_ePlx_fr = [[] for _ in range(21)]
+        pm_ePlx_fr, pmRA_all, pmDE_all, pmMag_all, xRA_all, yDE_all,\
+        PM_kde_all, PMs_d_median = [[] for _ in range(28)]
     PM_fl_z = np.array([])
     PMs_cl_cx, PMs_cl_cy, PMs_fl_cx, PMs_fl_cy = [np.nan] * 4
 
-    # Extract RA PMs data.
-    pmRA = np.array(list(zip(*list(zip(*clp['cl_reg_fit']))[7]))[1])
-    # Array with no nan values
-    pmRA_clrg = pmRA[~np.isnan(pmRA)]
+    # Check PMs data.
+    PM_flag = checkPMs(clp, 1)
+    if PM_flag:
 
-    # Check that PMs were defined within the cluster region.
-    if pmRA_clrg.any():
-        PM_flag = True
+        print("Processing proper motions.")
+
+        if 'C3' in flag_make_plot:
+            PM_flag_all, pmRA_all, pmDE_all, pmMag_all, xRA_all, yDE_all,\
+                PM_kde_all = PMsKDEAll(coords, project, cld_i, clp, PM_KDE_std)
+            PMs_d_median = PMsNNAll(
+                PM_flag_all, xRA_all, yDE_all, pmRA_all, pmDE_all, PM_nnmax)
 
         # Cluster region data.
         pmMP, pmRA, e_pmRA, pmDE, e_pmDE =\
@@ -33,14 +41,8 @@ def main(clp, coords, project, **kwargs):
             np.array(list(zip(*list(zip(*clp['cl_reg_fit']))[8]))[2])
         mmag_pm = np.array(list(zip(*list(zip(*clp['cl_reg_fit']))[3]))[0])
 
-        # Extract parallax data.
-        plx = np.array(list(zip(*list(zip(*clp['cl_reg_fit']))[7]))[0])
-        # Array with no nan values
-        plx_clrg = plx[~np.isnan(plx)]
-        # Check that a range of parallaxes is possible.
-        plx_pm_flag = False
-        if plx_clrg.any() and np.min(plx_clrg) < np.max(plx_clrg):
-            plx_pm_flag = True
+        # Check Plx data.
+        plx_pm_flag = checkPMs(clp, 0)
 
         if plx_pm_flag:
             pm_Plx_cl = np.array(
@@ -75,10 +77,8 @@ def main(clp, coords, project, **kwargs):
             (e_pmDE * np.cos(np.deg2rad(DE_pm)))**2)
 
         # Error weighted 2D KDE for cluster region
-        PM_cl_x, PM_cl_y, PM_cl_z = kde_2d(pmRA_DE, e_pmRA_DE, pmDE, e_pmDE)
-        # Max value
-        PMs_cl_cx, PMs_cl_cy = np.unravel_index(
-            PM_cl_z.argmax(), PM_cl_z.shape)
+        PM_cl_x, PM_cl_y, PM_cl_z, PMs_cl_cx, PMs_cl_cy, _ = kde_2d(
+            pmRA_DE, e_pmRA_DE, pmDE, e_pmDE)
 
         # PM distances to the KDE's center.
         pm_dist_max = cdist(
@@ -121,11 +121,9 @@ def main(clp, coords, project, **kwargs):
                 (e_pmRA_fl * pmRA_fl * np.sin(np.deg2rad(DE_fl_pm)))**2 +
                 (e_pmDE_fl * np.cos(np.deg2rad(DE_fl_pm)))**2)
 
-            PM_fl_x, PM_fl_y, PM_fl_z = kde_2d(
+            # Error weighted 2D KDE for field region
+            PM_fl_x, PM_fl_y, PM_fl_z, PMs_fl_cx, PMs_fl_cy, _ = kde_2d(
                 pmRA_fl_DE, e_pmRA_fl_DE, pmDE_fl, e_pmDE_fl)
-            # Max value
-            PMs_fl_cx, PMs_fl_cy = np.unravel_index(
-                PM_fl_z.argmax(), PM_fl_z.shape)
 
     clp.update({
         'PM_flag': PM_flag, 'pmMP': pmMP, 'pmRA_DE': pmRA_DE,
@@ -138,21 +136,115 @@ def main(clp, coords, project, **kwargs):
         'PMs_fl_cx': PMs_fl_cx, 'PMs_fl_cy': PMs_fl_cy,
         'pm_dist_max': pm_dist_max, 'pm_Plx_cl': pm_Plx_cl,
         'pm_ePlx_cl': pm_ePlx_cl, 'pm_Plx_fr': pm_Plx_fr,
-        'pm_ePlx_fr': pm_ePlx_fr, 'plx_pm_flag': plx_pm_flag})
+        'pm_ePlx_fr': pm_ePlx_fr, 'plx_pm_flag': plx_pm_flag,
+        'PM_flag_all': PM_flag_all, 'PM_kde_all': PM_kde_all,
+        'pmRA_all': pmRA_all, 'pmDE_all': pmDE_all,
+        'PMs_d_median': PMs_d_median, 'pmMag_all': pmMag_all,
+        'xRA_all': xRA_all, 'yDE_all': yDE_all})
     return clp
 
 
-def kde_2d(xarr, xsigma, yarr, ysigma, grid_dens=50):
+def checkPMs(clp, _id):
+    """
+    Check that Plx/PMs were defined within the cluster region.
+
+    id=0 --> plx
+    id=1 --> PMs (RA)
+    """
+    # Extract cluster region Plx / RA PMs data.
+    data = np.array(list(zip(*list(zip(*clp['cl_reg_fit']))[7]))[_id])
+    # Array with no nan values
+    clrg = data[~np.isnan(data)]
+    if clrg.any() and np.min(clrg) < np.max(clrg):
+        return True
+    else:
+        return False
+
+
+def PMsKDEAll(coords, project, cld_i, clp, PM_KDE_std):
+    """
+    Process *all* the PMs in the frame.
+    """
+    # Extract and mask nan values
+    pmRA_all, e_pmRA_all = cld_i['kine'][1], cld_i['ek'][1]
+    pmDE_all, e_pmDE_all = cld_i['kine'][2], cld_i['ek'][2]
+    msk = (~np.isnan(pmRA_all)) & (~np.isnan(pmDE_all))
+    pmRA_all, e_pmRA_all = pmRA_all[msk], e_pmRA_all[msk]
+    pmDE_all, e_pmDE_all = pmDE_all[msk], e_pmDE_all[msk]
+    xRA_all, yDE_all, pmMag_all = cld_i['x'][msk], cld_i['y'][msk],\
+        cld_i['mags'][0][msk]
+
+    # If there are values left, process.
+    if pmRA_all.any():
+        PM_flag_all = True
+        # Apply cos(delta) correction to pmRA if possible.
+        if coords == 'deg':
+            if project:
+                DE_pm = cld_i['y'][msk] + clp['y_offset']
+            else:
+                DE_pm = cld_i['y'][msk]
+        else:
+            DE_pm = np.zeros(pmRA_all.size)
+        pmRA_all = pmRA_all * np.cos(np.deg2rad(DE_pm))
+
+        # Error weighted 2D KDE for cluster+field region.
+        PMx_kdeall, PMy_kdeall, PMz_kdeall, _, _, extent =\
+            kde_2d(pmRA_all, e_pmRA_all, pmDE_all, e_pmDE_all, PM_KDE_std, 100)
+        PM_kde_all = [PMx_kdeall, PMy_kdeall, PMz_kdeall, extent]
+    else:
+        PM_flag_all, PM_kde_all = True, []
+
+    return PM_flag_all, pmRA_all, pmDE_all, pmMag_all, xRA_all, yDE_all,\
+        PM_kde_all
+
+
+def PMsNNAll(PM_flag_all, xRA_all, yDE_all, pmRA_all, pmDE_all, nnmax):
+    """
+    """
+    if PM_flag_all:
+
+        # Normalize data
+        def norm(data):
+            data_norm = []
+            for arr in data:
+                dmin = np.min(arr)
+                arr_n = arr - dmin
+                dmax = np.max(arr_n)
+                arr_n /= dmax
+                data_norm.append(arr_n)
+            return np.array(data_norm)
+
+        data = norm([xRA_all, yDE_all, pmRA_all, pmDE_all]).T
+
+        # Create the tree
+        tree = spatial.cKDTree(data)
+        # Find the closest nnmax-1 neighbors (the first is the point itself)
+        dists = tree.query(data, nnmax)
+        # Extract distances
+        nn_dist = dists[0][:, 1:]
+        # Median values
+        PMs_d_median = np.median(nn_dist, 1)
+
+        return PMs_d_median
+
+
+def kde_2d(xarr, xsigma, yarr, ysigma, Nstd=3, grid_dens=50):
     '''
     Take an array of x,y data with their errors, create a grid of points in x,y
     and return the 2D KDE density map.
     '''
+    _, x_median, x_std = sigma_clipped_stats(xarr)
+    _, y_median, y_std = sigma_clipped_stats(yarr)
 
-    # Grid density (number of points).
-    xmean, xstd = np.nanmedian(xarr), np.nanstd(xarr)
-    ymean, ystd = np.nanmedian(yarr), np.nanstd(yarr)
-    xmax, xmin = xmean + 3. * xstd, xmean - 3. * xstd
-    ymax, ymin = ymean + 3. * ystd, ymean - 3. * ystd
+    # Mask zoomed region
+    x_range, y_range = 2. * x_std * Nstd, 2. * y_std * Nstd
+    xyrange = .5 * max(x_range, y_range)
+    xmin, xmax = x_median - xyrange, x_median + xyrange
+    ymin, ymax = y_median - xyrange, y_median + xyrange
+    msk = (xarr > xmin) & (xarr < xmax) & (yarr > ymin) & (yarr < ymax)
+    xarr, xsigma, yarr, ysigma = xarr[msk], xsigma[msk], yarr[msk],\
+        ysigma[msk]
+
     gd_c = complex(0, grid_dens)
     # Define grid of points in x,y where the KDE will be evaluated.
     ext = [xmin, xmax, ymin, ymax]
@@ -171,4 +263,7 @@ def kde_2d(xarr, xsigma, yarr, ysigma, grid_dens=50):
     kernel = stats.gaussian_kde(values, bw_method=sf, weights=w)
     z = np.reshape(kernel(pos).T, x.shape)
 
-    return x, y, z
+    # Max value
+    zmax_x, zmax_y = np.unravel_index(z.argmax(), z.shape)
+
+    return x, y, z, zmax_x, zmax_y, [xmin, xmax, ymin, ymax]

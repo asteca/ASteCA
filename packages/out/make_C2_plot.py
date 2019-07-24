@@ -3,25 +3,24 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from os.path import join
 from . import add_version_plot
-from . import mp_decont_kinem
+from . import mp_kinem_plx
 from . import prep_plots
 
 
 def main(
-    npd, pd, col_0_comb, mag_0_comb, cl_reg_clean_plot, plx_flag, plx_clrg,
-    mmag_clp, mp_clp, plx_clp, e_plx_clp, flag_no_fl_regs_i, field_regions_i,
-    PM_flag, pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, mmag_pm, pmRA_fl_DE,
-    e_pmRA_fl_DE, pmDE_fl, e_pmDE_fl, pm_mag_fl, PM_cl_x, PM_cl_y, PM_cl_z,
-    PM_fl_x, PM_fl_y, PM_fl_z, PMs_cl_cx, PMs_cl_cy, PMs_fl_cx, PMs_fl_cy,
-    pm_dist_max, pm_Plx_cl, pm_Plx_fr, plx_Bys, plx_wa, cl_reg_fit,
-        plx_pm_flag, **kwargs):
+    npd, pd, col_0_comb, mag_0_comb, plx_flag_clp, plx_clrg, mmag_clp, mp_clp,
+    plx_clp, e_plx_clp, flag_no_fl_regs_i, field_regions_i, cl_reg_fit,
+    plx_bayes_flag_clp, plx_samples, plx_Bys, plx_tau_autocorr,
+    mean_afs, plx_wa, plx_pm_flag, pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE,
+    mmag_pm, pmRA_fl_DE, pmDE_fl, pm_Plx_cl, pm_Plx_fr, pm_mag_fl,
+        **kwargs):
     '''
     Make C2 block plots.
     '''
 
     if 'C2' in pd['flag_make_plot']:
 
-        if plx_flag is False and PM_flag is False:
+        if plx_flag_clp is False:
             print("<<WARNING: nothing to plot in 'C2' block>>")
             return
 
@@ -30,34 +29,38 @@ def main(
         add_version_plot.main()
 
         coord, x_name, y_name = prep_plots.coord_syst(pd['coords'])
-        # # Uses first magnitude and color defined
         x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd = prep_plots.diag_limits(
             'mag', col_0_comb, mag_0_comb)
         x_ax, y_ax = prep_plots.ax_names(
             pd['colors'][0], pd['filters'][0], 'mag')
 
-        if plx_flag:
-            # Decontamination algorithm plots.
-            min_prob, bin_edges = cl_reg_clean_plot
-            # Parallax data.
-            plx_x_kde, kde_pl, plx_flrg, mmag_clp, mp_clp, plx_clp,\
-                e_plx_clp = prep_plots.plxPlot(
-                    plx_flag, plx_clrg, mmag_clp, mp_clp, plx_clp, e_plx_clp,
-                    flag_no_fl_regs_i, field_regions_i)
+        # Parallax data.
+        plx_flrg, mmag_clp, mp_clp, plx_clp, e_plx_clp = prep_plots.plxPlot(
+            mmag_clp, mp_clp, plx_clp, e_plx_clp, flag_no_fl_regs_i,
+            field_regions_i)
+        plx_cl_kde_x, plx_cl_kde = prep_plots.kde1D(plx_clrg)
+        if plx_bayes_flag_clp:
+            plx_mu_kde_x, plx_mu_kde = prep_plots.kde1D(plx_samples)
+        else:
+            plx_mu_kde_x, plx_mu_kde = [], []
 
-            arglist = [
-                # plx_histo
-                [gs, plx_clrg, plx_x_kde, kde_pl, plx_flrg, flag_no_fl_regs_i],
-                # plx_chart
-                [gs, x_name, y_name, coord, cl_reg_fit, plx_Bys],
-                # plx_vs_mag
-                [gs, y_min_cmd, y_max_cmd, y_ax, mmag_clp,
-                 mp_clp, plx_clp, e_plx_clp, plx_Bys, plx_wa]
-            ]
-            for n, args in enumerate(arglist):
-                mp_decont_kinem.plot(n, *args)
+        arglist = [
+            # plx_histo
+            [gs, plx_clrg, plx_cl_kde_x, plx_cl_kde, plx_flrg,
+             flag_no_fl_regs_i],
+            # plx_chart
+            [gs, x_name, y_name, coord, cl_reg_fit, plx_Bys],
+            # plx_vs_mag
+            [gs, y_min_cmd, y_max_cmd, y_ax, mmag_clp, mp_clp, plx_clp,
+             e_plx_clp, plx_Bys, plx_wa],
+            # plx_bys_params
+            [gs, plx_bayes_flag_clp, plx_samples, plx_Bys, plx_mu_kde_x,
+             plx_mu_kde, plx_tau_autocorr, mean_afs]
+        ]
+        for n, args in enumerate(arglist):
+            mp_kinem_plx.plot(n, *args)
 
-        if PM_flag:
+        if plx_pm_flag:
             # PMs data.
             pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, mmag_pm,\
                 PMs_cent, PMs_width, PMs_height, PMs_theta, CI_prob =\
@@ -66,34 +69,12 @@ def main(
             raPMrng, dePMrng = prep_plots.PMsrange(pmRA_DE, pmDE)
 
             arglist = [
-                # pms_vpd
-                [gs, coord, plx_flag, pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE,
-                 pmRA_fl_DE, e_pmRA_fl_DE, pmDE_fl, e_pmDE_fl, raPMrng,
-                 dePMrng],
-                # pms_KDE_diag
-                [gs, coord, plx_flag, PM_cl_x, PM_cl_y, PM_cl_z, PM_fl_x,
-                 PM_fl_y, PM_fl_z, PMs_cl_cx, PMs_cl_cy, PMs_fl_cx, PMs_fl_cy,
-                 raPMrng, dePMrng, PMs_cent, PMs_width, PMs_height, PMs_theta,
-                 CI_prob],
-                # pms_vs_MP
-                [gs, y_ax, plx_flag, pmMP, pm_dist_max, mmag_pm],
-                # pms_vpd_mag
-                [gs, coord, y_ax, plx_flag, pmRA_DE, pmDE, mmag_pm, pmRA_fl_DE,
-                 pmDE_fl, pm_mag_fl, raPMrng, dePMrng],
-                # pms_vs_mag
-                [gs, coord, y_ax, plx_flag, pmMP, pmRA_DE, pmDE, mmag_pm,
-                 pmRA_fl_DE, pmDE_fl, pm_mag_fl, raPMrng, dePMrng]
+                # pms_vs_plx_mp_mag
+                gs, coord, y_ax, plx_bayes_flag_clp, pmMP, pmRA_DE, pmDE,
+                mmag_pm, pmRA_fl_DE, pmDE_fl, pm_Plx_cl, pm_Plx_fr, pm_mag_fl,
+                raPMrng, dePMrng
             ]
-            for n, args in enumerate(arglist):
-                mp_decont_kinem.plot(n + 3, *args)
-
-        if plx_pm_flag:
-            arglist = [
-                # pms_vs_plx
-                gs, coord, y_ax, plx_flag, pmMP, pmRA_DE, pmDE, mmag_pm,
-                pmRA_fl_DE, pmDE_fl, pm_Plx_cl, pm_Plx_fr, pm_mag_fl,
-                raPMrng, dePMrng]
-            mp_decont_kinem.plot(8, *arglist)
+            mp_kinem_plx.plot(4, *arglist)
 
         # Generate output file.
         fig.tight_layout()
