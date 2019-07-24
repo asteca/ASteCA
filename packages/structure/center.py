@@ -3,10 +3,12 @@ import numpy as np
 from scipy import stats
 from ..out import prep_plots
 from .xy_density import cent_bin as center_bin
+from ..inp.get_data import coordsProject
 
 
-def main(cld_i, clp, run_mode, center_bw, coords, cl_cent_semi,
-         cl_rad_semi, cent_flag_semi, **kwargs):
+def main(
+    cld_i, clp, coords, project, run_mode, center_bw, cl_cent_semi,
+        cl_rad_semi, cent_flag_semi, **kwargs):
     """
     Obtains the center of the putative cluster. Returns the center values
     along with its errors and several arrays related to histograms, mainly for
@@ -39,18 +41,30 @@ def main(cld_i, clp, run_mode, center_bw, coords, cl_cent_semi,
         # Search for new center values using the center coordinates
         # and radius given as initial values.
 
+        # De-project center coordinates if needed.
+        x0, y0, _, _ = coordsProject(
+            cl_cent_semi[0], cl_cent_semi[1], coords, project,
+            clp['x_offset'], clp['y_offset'])
+
         # Obtain KDE center using the 'semi' values.
         kde_cent, kde_plot = kde_center_zoom(
-            cld_i['x'], cld_i['y'], cl_cent_semi, cl_rad_semi)
+            cld_i['x'], cld_i['y'], (x0, y0), cl_rad_semi)
 
         # Re-write center values if fixed in semi input file.
         if cent_flag_semi == 1:
-            print('Semi center found: ({:g}, {:g}) {c}.'.format(
-                *kde_cent, c=coord))
+            if coords == 'deg' and project:
+                x_cent = (kde_cent[0] / np.cos(
+                    np.deg2rad(kde_cent[1] + clp['y_offset']))) +\
+                    clp['x_offset']
+            else:
+                x_cent = kde_cent[0]
+
+            print('Semi center found: ({:g}, {:g}) {}.'.format(
+                x_cent, kde_cent[1] + clp['y_offset'], coord))
         else:
-            kde_cent = cl_cent_semi
-            print('Semi center fixed: ({:g}, {:g}) {c}.'.format(
-                *kde_cent, c=coord))
+            kde_cent = (x0, y0)
+            print('Semi center fixed: ({:g}, {:g}) {}.'.format(
+                *cl_cent_semi, coord))
 
         # Find bin where the center xy coordinates are located.
         bin_cent = center_bin(clp['xedges'], clp['yedges'], kde_cent)
