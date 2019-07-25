@@ -314,7 +314,7 @@ FR  local     knuth          0.5
 #   Number of MCMC steps used in the Bayesian analysis. 
 #
 #   plx_flag   plx_chains   plx_runs
-PP         n           10       1000
+PP         n           10       5000
 
 # Proper motions analysis
 #
