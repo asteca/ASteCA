@@ -66,8 +66,13 @@ def kde_center(x_data, y_data, bdw, plotFlag=False):
     '''
     values = np.vstack([x_data, y_data])
     # Obtain Gaussian KDE.
-    kernel = stats.gaussian_kde(
-        values, bw_method=bdw / np.max(values.std(axis=1)))
+    try:
+        kernel = stats.gaussian_kde(
+            values, bw_method=bdw / np.max(values.std(axis=1)))
+    except ValueError:
+        print("  WARNING: could not generate coordinates KDE.")
+        return [np.nan, np.nan], []
+
     # Grid density (number of points).
     gd = 50
     gd_c = complex(0, gd)
