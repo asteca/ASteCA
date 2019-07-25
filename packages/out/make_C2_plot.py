@@ -10,8 +10,8 @@ from . import prep_plots
 def main(
     npd, pd, col_0_comb, mag_0_comb, plx_flag_clp, plx_clrg, mmag_clp, mp_clp,
     plx_clp, e_plx_clp, flag_no_fl_regs_i, field_regions_i, cl_reg_fit,
-    plx_bayes_flag_clp, plx_samples, plx_Bys, plx_tau_autocorr,
-    mean_afs, plx_wa, plx_pm_flag, pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE,
+    plx_bayes_flag_clp, plx_samples, plx_Bys, plx_tau_autocorr, mean_afs,
+    plx_ess, plx_wa, plx_pm_flag, pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE,
     mmag_pm, pmRA_fl_DE, pmDE_fl, pm_Plx_cl, pm_Plx_fr, pm_mag_fl,
         **kwargs):
     '''
@@ -40,7 +40,8 @@ def main(
             field_regions_i)
         plx_cl_kde_x, plx_cl_kde = prep_plots.kde1D(plx_clrg)
         if plx_bayes_flag_clp:
-            plx_mu_kde_x, plx_mu_kde = prep_plots.kde1D(plx_samples)
+            plx_mu_kde_x, plx_mu_kde = prep_plots.kde1D(
+                1. / plx_samples.flatten())
         else:
             plx_mu_kde_x, plx_mu_kde = [], []
 
@@ -55,7 +56,7 @@ def main(
              e_plx_clp, plx_Bys, plx_wa],
             # plx_bys_params
             [gs, plx_bayes_flag_clp, plx_samples, plx_Bys, plx_mu_kde_x,
-             plx_mu_kde, plx_tau_autocorr, mean_afs]
+             plx_mu_kde, plx_tau_autocorr, mean_afs, plx_ess]
         ]
         for n, args in enumerate(arglist):
             mp_kinem_plx.plot(n, *args)

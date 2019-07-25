@@ -4,7 +4,7 @@ import matplotlib.offsetbox as offsetbox
 from matplotlib.colors import ListedColormap
 import numpy as np
 from astropy.stats import sigma_clipped_stats
-from scipy.ndimage.filters import uniform_filter1d
+# from scipy.ndimage.filters import uniform_filter1d
 
 
 def plx_histo(gs, plx_clrg, plx_x_kde, kde_pl, plx_flrg, flag_no_fl_regs_i):
@@ -177,7 +177,7 @@ def plx_vs_mag(
 
 def pms_bys_params(
     gs, plx_bayes_flag_clp, plx_samples, plx_Bys, plx_mu_kde_x, plx_mu_kde,
-        plx_tau_autocorr, mean_afs):
+        plx_tau_autocorr, mean_afs, plx_ess):
     """
     """
     if plx_bayes_flag_clp:
@@ -185,9 +185,9 @@ def pms_bys_params(
         ax1 = plt.subplot(gs[2:4, 0:2])
         plt.xlabel(r"$Plx_{Bay}$")
         # Obtain the bin values and edges using numpy
-        hist, bin_edges = np.histogram(plx_samples, bins='auto')
+        hist, bin_edges = np.histogram(1. / plx_samples.flatten(), bins='auto')
         if len(bin_edges) > 25:
-            hist, bin_edges = np.histogram(plx_samples, bins=20)
+            hist, bin_edges = np.histogram(1. / plx_samples.flatten(), bins=20)
         # Plot bars with the proper positioning, height, and width.
         plt.bar(
             (bin_edges[1:] + bin_edges[:-1]) * .5, hist / float(hist.max()),
@@ -214,11 +214,12 @@ def pms_bys_params(
 
         # Traceplot
         ax = plt.subplot(gs[2:3, 2:6])
-        N_tot = plx_samples.size
-        xavr = uniform_filter1d(plx_samples, int(.02 * N_tot))
-        plt.plot(np.arange(N_tot), xavr, c='g')
-        plt.plot(np.arange(N_tot), plx_samples, c='k', lw=.8,
-                 ls='-', alpha=0.5)
+        N_tot = plx_samples.shape[0]
+        # xavr = uniform_filter1d(plx_samples, int(.02 * N_tot))
+        # plt.plot(np.arange(N_tot), xavr, c='g')
+        plt.plot(1. / plx_samples, c='k', lw=.8, ls='-', alpha=0.5)
+        # HARDCODED: 25% of trace is burned
+        plt.axvline(x=.25 * N_tot, linestyle=':', color='r', zorder=4)
         # 16th and 84th percentiles + median.
         plt.axhline(y=1. / plx_Bys[0], linestyle=':', color='orange', zorder=4)
         plt.axhline(y=1. / plx_Bys[1], linestyle=':', color='blue', zorder=4)
@@ -229,17 +230,17 @@ def pms_bys_params(
 
         # Tau
         plt.subplot(gs[3:4, 2:4])
+        # HARDCODED: store samples every 10 steps
         plt.plot(
-            np.arange(plx_tau_autocorr.size), plx_tau_autocorr,
-            label=r"$N_{{ESS}}\approx${:.0f}".format(
-                N_tot / plx_tau_autocorr[-1]))
+            10 * np.arange(plx_tau_autocorr.size), plx_tau_autocorr,
+            label=r"$N_{{ESS}}\approx${:.0f}".format(plx_ess))
         plt.xlabel("steps")
         plt.ylabel(r"$\hat{\tau}$")
         plt.legend(fontsize='small')
 
         # MAF
         plt.subplot(gs[3:4, 4:6])
-        plt.plot(np.arange(mean_afs.size), mean_afs)
+        plt.plot(10 * np.arange(mean_afs.size), mean_afs)
         plt.xlabel("steps")
         plt.ylabel(r"$MAF$")
 

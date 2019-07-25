@@ -21,8 +21,8 @@ def main(clp, plx_bayes_flag, plx_chains, plx_runs, flag_make_plot, **kwargs):
 
     plx_clrg, mmag_clp, mp_clp, plx_clp, e_plx_clp, plx_samples,\
         plx_tau_autocorr, mean_afs = [[] for _ in range(8)]
-    plx_flag_clp, plx_bayes_flag_clp, plx_wa, plx_Bys = False, False,\
-        np.nan, np.array([])
+    plx_flag_clp, plx_bayes_flag_clp, plx_wa, plx_Bys, plx_ess = False, False,\
+        np.nan, np.array([]), np.nan
 
     if ('C2' in flag_make_plot) or plx_bayes_flag:
 
@@ -63,7 +63,7 @@ def main(clp, plx_bayes_flag, plx_chains, plx_runs, flag_make_plot, **kwargs):
 
             if plx_bayes_flag:
                 plx_samples, plx_Bys, plx_bayes_flag_clp, plx_tau_autocorr,\
-                    mean_afs = plxBayes(
+                    mean_afs, plx_ess = plxBayes(
                         plx_chains, plx_runs, plx_clp, e_plx_clp, mp_clp)
 
         else:
@@ -74,7 +74,8 @@ def main(clp, plx_bayes_flag, plx_chains, plx_runs, flag_make_plot, **kwargs):
         'mmag_clp': mmag_clp, 'mp_clp': mp_clp, 'plx_clp': plx_clp,
         'e_plx_clp': e_plx_clp, 'plx_Bys': plx_Bys, 'plx_wa': plx_wa,
         'plx_bayes_flag_clp': plx_bayes_flag_clp, 'plx_samples': plx_samples,
-        'plx_tau_autocorr': plx_tau_autocorr, 'mean_afs': mean_afs})
+        'plx_tau_autocorr': plx_tau_autocorr, 'mean_afs': mean_afs,
+        'plx_ess': plx_ess})
     return clp
 
 
@@ -162,24 +163,29 @@ def plxBayes(plx_chains, plx_runs, plx_clp, e_plx_clp, mp_clp):
 
         mean_afs = afs[:tau_index]
         tau_autocorr = autocorr_vals[:tau_index]
-        # Remove burn-in (half of chain)
-        nburn = int(i / 2.)
+        # Remove burn-in (25% of chain)
+        nburn = int(i * .25)
         samples = sampler.get_chain(discard=nburn, flat=True)
-
         # 16th, 84th in Kpc
         p16, p84 = np.percentile(samples, (16, 84))
         plx_Bys = np.array([p16, np.mean(samples), p84])
         tau_mean = np.mean(sampler.get_autocorr_time(tol=0))
+        plx_ess = samples.size / tau_mean
+
+        # For plotting
+        plx_samples = sampler.get_chain()[:, :, 0]
+
         print("Bayesian plx estimated: " +
               "{:.3f} (ESS={:.0f}, tau={:.0f})".format(
-                  1. / plx_Bys[1], samples.size / tau_mean, tau_mean))
+                  1. / plx_Bys[1], plx_ess, tau_mean))
     except Exception as e:
         print(e)
         print("\n  ERROR: could not process Plx data with emcee")
-        samples, plx_Bys, plx_bayes_flag_clp = [], np.array([]), False
+        plx_samples, plx_Bys, plx_bayes_flag_clp, plx_ess = [], np.array([]),\
+            False, np.nan
 
-    return 1. / samples.T[0], plx_Bys, plx_bayes_flag_clp, tau_autocorr,\
-        mean_afs
+    return plx_samples, plx_Bys, plx_bayes_flag_clp, tau_autocorr,\
+        mean_afs, plx_ess
 
 
 def lnprob(mu, x, B2, mp, mu_p):
