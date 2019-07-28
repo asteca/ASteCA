@@ -171,7 +171,7 @@ def flCMD(
                     s=f_sz_pt, lw=0.3, edgecolor='k', zorder=3)
         n_field = int(len(x_fr_accpt) / float(N_fr))
         # Add text box.
-        text = r'$n_{{field}} \approx {}$'.format(n_field)
+        text = r'$N_{{field}} \approx {}$'.format(n_field)
         ob = offsetbox.AnchoredText(text, pad=0.2, loc=1, prop=dict(size=12))
         ob.patch.set(alpha=0.7)
         ax.add_artist(ob)
@@ -227,7 +227,7 @@ def clCMD(
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
             zorder=1)
     # Add text box.
-    text = r'$n_{{memb}} \approx {}$'.format(n_memb)
+    text = r'$N_{{memb}} \approx {}$'.format(n_memb)
     ob = offsetbox.AnchoredText(text, pad=0.2, loc=1, prop=dict(size=12))
     ob.patch.set(alpha=0.7)
     ax.add_artist(ob)
