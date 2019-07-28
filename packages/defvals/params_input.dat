@@ -132,6 +132,17 @@ PF     png     150
 #
 #   flag
 MD     n
+
+# Trim frame?
+#
+# * tf_flag: y / n
+#   Flag if the frame should be trimmed.
+#
+# * tf_range: [float] * 4
+#   Input the x,y ranges in the order: xmin, xmax, ymin, ymax
+#
+#    tf_flag   tf_range
+TF         n   0. 0. 0. 0.
 ################################################################################
 
 
