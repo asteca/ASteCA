@@ -459,47 +459,33 @@ def get_hess(obs_mags_cols, synth_phot, hess_xedges, hess_yedges):
     return hess_x, hess_y, HD
 
 
-def kde1D(data):
-    """
-    Simple 1D KDE.
-    """
-    # Cluster region KDE curve.
-    xmin, xmax = np.min(data), np.max(data)
-    # Define KDE limits.
-    x_rang = .1 * (xmax - xmin)
-    kde_x = np.mgrid[xmin - x_rang:xmax + x_rang:1000j]
-    kernel_cl = stats.gaussian_kde(data)
-    # KDE for plotting.
-    kde = np.reshape(kernel_cl(kde_x).T, kde_x.shape)
-
-    return kde_x, kde
-
-
 def plxPlot(
     mmag_clp, mp_clp, plx_clp, e_plx_clp, flag_no_fl_regs_i,
         field_regions_i):
     """
     Parameters for the parallax plot.
     """
-    plx_flrg = []
-
     # Put large MP stars in cluster region on top.
     mp_i = mp_clp.argsort()
     mmag_clp, mp_clp, plx_clp, e_plx_clp = mmag_clp[mp_i],\
         mp_clp[mp_i], plx_clp[mp_i], e_plx_clp[mp_i]
 
-    plx_flrg = []
     if not flag_no_fl_regs_i:
+        plx_flrg, mag_flrg = [], []
         # Extract parallax data.
         for fl_rg in field_regions_i:
             plx_flrg += list(zip(*list(zip(*fl_rg))[7]))[0]
-        plx_flrg = np.asarray(plx_flrg)
+            mag_flrg += list(zip(*list(zip(*fl_rg))[3]))[0]
+        plx_flrg, mag_flrg = np.asarray(plx_flrg), np.asarray(mag_flrg)
         # Mask 'nan' and set range.
-        plx_all = plx_flrg[~np.isnan(plx_flrg)]
-        msk = (plx_all > -5.) & (plx_all < 10.)
-        plx_flrg = plx_all[msk]
+        msk0 = ~np.isnan(plx_flrg)
+        plx_flrg, mag_flrg = plx_flrg[msk0], mag_flrg[msk0]
+        msk = (plx_flrg > -5.) & (plx_flrg < 10.)
+        plx_flrg, mag_flrg = plx_flrg[msk], mag_flrg[msk]
+    else:
+        plx_flrg, mag_flrg = np.array([]), []
 
-    return plx_flrg, mmag_clp, mp_clp, plx_clp, e_plx_clp
+    return plx_flrg, mag_flrg, mmag_clp, mp_clp, plx_clp, e_plx_clp
 
 
 def PMsPlot(pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, mmag_pm):

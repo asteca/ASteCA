@@ -5,6 +5,7 @@ from os.path import join
 from . import add_version_plot
 from . import mp_kinem_plx
 from . import prep_plots
+from .. import aux_funcs
 
 
 def main(
@@ -12,8 +13,7 @@ def main(
     plx_clp, e_plx_clp, flag_no_fl_regs_i, field_regions_i, cl_reg_fit,
     plx_bayes_flag_clp, plx_samples, plx_Bys, plx_tau_autocorr, mean_afs,
     plx_ess, plx_wa, plx_pm_flag, pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE,
-    mmag_pm, pmRA_fl_DE, pmDE_fl, pm_Plx_cl, pm_Plx_fr, pm_mag_fl,
-        **kwargs):
+        mmag_pm, pmRA_fl_DE, pmDE_fl, pm_Plx_cl, pm_Plx_fr, **kwargs):
     '''
     Make C2 block plots.
     '''
@@ -35,12 +35,13 @@ def main(
             pd['colors'][0], pd['filters'][0], 'mag')
 
         # Parallax data.
-        plx_flrg, mmag_clp, mp_clp, plx_clp, e_plx_clp = prep_plots.plxPlot(
-            mmag_clp, mp_clp, plx_clp, e_plx_clp, flag_no_fl_regs_i,
-            field_regions_i)
-        plx_cl_kde_x, plx_cl_kde = prep_plots.kde1D(plx_clrg)
+        plx_flrg, mag_flrg, mmag_clp, mp_clp, plx_clp, e_plx_clp =\
+            prep_plots.plxPlot(
+                mmag_clp, mp_clp, plx_clp, e_plx_clp, flag_no_fl_regs_i,
+                field_regions_i)
+        plx_cl_kde_x, plx_cl_kde = aux_funcs.kde1D(plx_clrg)
         if plx_bayes_flag_clp:
-            plx_mu_kde_x, plx_mu_kde = prep_plots.kde1D(
+            plx_mu_kde_x, plx_mu_kde = aux_funcs.kde1D(
                 1. / plx_samples.flatten())
         else:
             plx_mu_kde_x, plx_mu_kde = [], []
@@ -53,7 +54,7 @@ def main(
             [gs, x_name, y_name, coord, cl_reg_fit, plx_Bys],
             # plx_vs_mag
             [gs, y_min_cmd, y_max_cmd, y_ax, mmag_clp, mp_clp, plx_clp,
-             e_plx_clp, plx_Bys, plx_wa],
+             e_plx_clp, plx_flrg, mag_flrg, plx_Bys, plx_wa],
             # plx_bys_params
             [gs, plx_bayes_flag_clp, plx_samples, plx_Bys, plx_mu_kde_x,
              plx_mu_kde, plx_tau_autocorr, mean_afs, plx_ess]
@@ -71,10 +72,9 @@ def main(
 
             arglist = [
                 # pms_vs_plx_mp_mag
-                gs, coord, y_ax, plx_bayes_flag_clp, pmMP, pmRA_DE, pmDE,
-                mmag_pm, pmRA_fl_DE, pmDE_fl, pm_Plx_cl, pm_Plx_fr, pm_mag_fl,
-                raPMrng, dePMrng
-            ]
+                gs, coord, y_ax, plx_bayes_flag_clp, plx_clp, plx_Bys,
+                pmMP, pmRA_DE, pmDE, mmag_pm, pmRA_fl_DE, pmDE_fl, pm_Plx_cl,
+                pm_Plx_fr, raPMrng, dePMrng]
             mp_kinem_plx.plot(4, *arglist)
 
         # Generate output file.

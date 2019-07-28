@@ -32,7 +32,7 @@ def pms_KDE_all(
 
     # plt.imshow(np.rot90(PMz), cmap='Blues', zorder=1, extent=extent)
 
-    cmap = plt.cm.get_cmap('RdBu_r')
+    cmap = plt.cm.get_cmap('viridis')
     msk = np.argsort(pmMag_all)[::-1]
     pmRA_all, pmDE_all, mag = pmRA_all[msk], pmDE_all[msk], pmMag_all[msk]
     plt.scatter(
@@ -76,7 +76,7 @@ def pms_NN_all(
     msk = PMs_d_median < dmax
     pmRA, pmDE, mag = pmRA_all[msk], pmDE_all[msk], pmMag_all[msk]
 
-    cmap = plt.cm.get_cmap('RdBu_r')
+    cmap = plt.cm.get_cmap('viridis')
     msk = np.argsort(mag)[::-1]
     pmRA, pmDE, mag = pmRA[msk], pmDE[msk], mag[msk]
     plt.scatter(
@@ -161,7 +161,7 @@ def pms_vpd_mag(
 
     msk = np.argsort(mmag_pm)[::-1]
     pmRA_DE, pmDE, mmag_pm = pmRA_DE[msk], pmDE[msk], mmag_pm[msk]
-    cmap = plt.cm.get_cmap('RdBu_r')
+    cmap = plt.cm.get_cmap('viridis')
     plt.scatter(
         pmRA_DE, pmDE, marker='o', c=mmag_pm, s=25, cmap=cmap, edgecolor='k',
         lw=.5, zorder=4, label="Cluster reg")
@@ -259,13 +259,13 @@ def pms_vpd_mp(
         plt.xlabel(r"$\mu_{{\alpha}} \, \mathrm{[mas/yr]}$", fontsize=12)
     plt.ylabel(r"$\mu_{{\delta}} \, \mathrm{[mas/yr]}$", fontsize=12)
 
-    cmap = plt.cm.get_cmap('viridis')
+    cmap = plt.cm.get_cmap('RdYlBu_r')
     norm = Normalize(vmin=pmMP.min(), vmax=pmMP.max())
 
     ax.errorbar(
         pmRA_DE, pmDE, yerr=e_pmDE, xerr=e_pmRA_DE, fmt='none',
         elinewidth=.65, ecolor=cmap(norm(pmMP)), zorder=4)
-    plt.scatter(pmRA_DE, pmDE, c=pmMP, s=0.)
+    plt.scatter(pmRA_DE, pmDE, c=pmMP, cmap=cmap, s=0.)
     cbar = plt.colorbar(pad=.01, fraction=.02, aspect=50)
     cbar.ax.tick_params(labelsize=7)
     cbar.set_label("MPs", size=8)
@@ -290,7 +290,7 @@ def pms_vs_mag(
 
         ax.set_xlabel(xlabel, fontsize=12)
         ax.set_ylabel(y_ax, fontsize=12)
-        cmap = plt.cm.get_cmap('viridis')
+        cmap = plt.cm.get_cmap('RdYlBu_r')
 
         ax.scatter(
             cl_x, cl_y, marker='o', c=pmMP, s=30, edgecolors='black',
@@ -327,8 +327,7 @@ def pms_dist(gs, y_ax, pmMP, pm_dist_max, mmag_pm):
     plt.xlabel("PM dist [mas/yr]", fontsize=12)
     plt.ylabel(y_ax, fontsize=12)
 
-    cmap = plt.cm.get_cmap('viridis')
-
+    cmap = plt.cm.get_cmap('RdYlBu_r')
     plt.scatter(
         pm_dist_max, mmag_pm, marker='o', c=pmMP, s=30, edgecolors='black',
         cmap=cmap, lw=0.35, zorder=4)
