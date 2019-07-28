@@ -55,7 +55,8 @@ from .out import make_D1_plot
 from .out import make_D2_plot
 # DEPRECATED 22/11/18
 # from .out import top_tiers
-from .out import done_move
+# DEPRECATED 28/07/19
+# from .out import done_move
 
 
 def main(cl_file, pd):
@@ -261,12 +262,13 @@ def main(cl_file, pd):
     # Plot final best match found.
     make_D2_plot.main(npd, cld_c, pd, **clp)
 
-    # DEPRECATED 22/11
+    # DEPRECATED 22/11/18
     # # Plot top tiers models and save to file.
     # top_tiers.main(npd, cld_c, pd, **clp)
 
-    # Move file to 'done' dir (if flag is set).
-    done_move.main(pd, **npd)
+    # DEPRECATED 28/07/19
+    # # Move file to 'done' dir (if flag is set).
+    # done_move.main(pd, **npd)
 
     elapsed = time.time() - start
     m, s = divmod(elapsed, 60)

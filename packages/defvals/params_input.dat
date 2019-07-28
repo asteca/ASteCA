@@ -124,15 +124,6 @@ MP   A1 A2 B1 B2 C1 C2 C3 D1 D2
 #   format     DPI
 PF     png     150
 
-# Move data file once it is processed?
-#
-# * flag: y / n
-#   The cluster's photometric file will be moved to the '/output/done/' folder
-#   if this flag is set to 'y'.
-#
-#   flag
-MD     n
-
 # Trim frame?
 #
 # * tf_flag: y / n

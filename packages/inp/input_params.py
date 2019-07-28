@@ -79,9 +79,6 @@ def main(mypath, pars_f_path):
                 elif reader[0] == 'PF':
                     plot_frmt = str(reader[1])
                     plot_dpi = int(reader[2])
-                elif reader[0] == 'MD':
-                    flag_move_file = True if reader[1] in true_lst else False
-
                 elif reader[0] == 'TF':
                     flag_tf = True if reader[1] in true_lst else False
                     tf_range = list(map(float, reader[2:]))
@@ -307,9 +304,7 @@ def main(mypath, pars_f_path):
         'id_cols': id_cols,
         'id_kinem': id_kinem,
         'flag_make_plot': flag_make_plot, 'plot_frmt': plot_frmt,
-        'plot_dpi': plot_dpi,
-        'flag_move_file': flag_move_file,
-        'flag_tf': flag_tf, 'tf_range': tf_range,
+        'plot_dpi': plot_dpi, 'flag_tf': flag_tf, 'tf_range': tf_range,
         'center_bw': center_bw, 'radius_method': radius_method,
         'fdens_method': fdens_method,
         'kp_flag': kp_flag, 'fr_number': fr_number, 'err_max': err_max,
