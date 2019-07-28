@@ -235,7 +235,7 @@ def pl_full_frame(
 
 def pl_zoom_frame(
     gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin, y_zmax, cont_index,
-        kde_plot, x_data, y_data, st_sizes_arr, kde_cent, clust_rad):
+        n_memb_i, kde_plot, x_data, y_data, st_sizes_arr, kde_cent, clust_rad):
     '''
     Zoom on x,y finding chart.
     '''
@@ -261,8 +261,9 @@ def pl_zoom_frame(
     for x, y in zip(*[x_data, y_data]):
         if np.sqrt((x - kde_cent[0])**2 + (y - kde_cent[1])**2) <= clust_rad:
             N_in += 1
-    ax.set_title(r"$N_{{r<r_{{cl}}}}$={} [$CI = {:.2f}$] (phot incomp)".format(
-        N_in, cont_index), fontsize=9)
+    ax.set_title(
+        (r"$N_{{r<r_{{cl}}}}$={}, $N_{{memb}}\approx${} [$CI = {:.2f}$] " +
+         "(phot incomp)").format(N_in, n_memb_i, cont_index), fontsize=9)
     fig.gca().add_artist(circle)
 
     # Plot contour levels if it was obtained.

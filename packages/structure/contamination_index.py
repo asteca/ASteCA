@@ -1,12 +1,13 @@
 
 import numpy as np
+from scipy.spatial.distance import cdist
 
 
 def main(clp, x, y, **kwargs):
     '''
     Calculate the contamination index value. This parameter is defined as the
     ratio of field stars density over the density of stars in the cluster
-    region.
+    region. Uses the 'incomplete' data.
 
     A small number (close to zero) means the field contamination in the
     cluster region is very small.
@@ -25,19 +26,17 @@ def main(clp, x, y, **kwargs):
 
         # Count the total number of stars within the defined cluster region
         # (including stars with rejected photometric errors)
-        n_clust = 0
-        for xy in zip(*[x, y]):
-            # Separate in and out of cluster's boundaries.
-            dist = np.sqrt((clp['kde_cent'][0] - xy[0]) ** 2 +
-                           (clp['kde_cent'][1] - xy[1]) ** 2)
-            if dist <= clp['clust_rad']:
-                n_clust += 1
+        dist = cdist(np.array([x, y]).T, np.atleast_2d(clp['kde_cent']))
+        n_in_cl_reg = (dist < clp['clust_rad']).sum()
 
         # Star density in the cluster region.
-        cl_dens = n_clust / clp['cl_area']
+        cl_dens = n_in_cl_reg / clp['cl_area']
 
         # Final contamination index.
         cont_index = clp['field_dens'] / cl_dens
+
+        # Estimated number of members
+        n_memb_i = int(n_in_cl_reg - (clp['field_dens'] * clp['cl_area']))
 
         if cont_index >= 1.:
             print("  WARNING: contamination index value is very large: "
@@ -47,7 +46,7 @@ def main(clp, x, y, **kwargs):
     else:
         print("  WARNING: cluster radius is too large to obtain\n"
               "  a reliable contamination index value.")
-        cont_index = -1.
+        cont_index, n_memb_i = np.nan, np.nan
 
-    clp['cont_index'] = cont_index
+    clp['cont_index'], clp['n_memb_i'] = cont_index, n_memb_i
     return clp

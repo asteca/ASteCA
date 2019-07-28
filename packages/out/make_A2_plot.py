@@ -26,7 +26,7 @@ def main(
     K_cent_dens, clust_rad, e_rad, poisson_error, bin_cent, bin_width,
     kde_approx_cent, frame_kde_cent, kde_dens_max, kde_dens_min, core_rad,
     e_core, tidal_rad, e_tidal, K_conct_par, flag_2pk_conver, flag_3pk_conver,
-    radii, rdp_points, field_dens, cont_index, cl_region_i, cl_region_rjct_i,
+    radii, rdp_points, field_dens, cont_index, n_memb_i, cl_region_i, cl_region_rjct_i,
         field_regions_rjct_i, field_regions_i, flag_no_fl_regs_i, **kwargs):
     '''
     Make A2 block plots.
@@ -68,7 +68,7 @@ def main(
              flag_2pk_conver, flag_3pk_conver],
             # pl_zoom_frame: Zoom on x,y finding chart.
             [gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin, y_zmax,
-                cont_index, kde_plot, x_data_z, y_data_z,
+                cont_index, n_memb_i, kde_plot, x_data_z, y_data_z,
                 st_sizes_arr_z, kde_cent, clust_rad],
             # pl_cl_fl_regions: Cluster and field regions defined.
             [gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max,
