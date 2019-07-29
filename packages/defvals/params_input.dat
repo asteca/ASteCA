@@ -329,8 +329,11 @@ PP         n           10       5000
 # * N-N_prcntl: [0.<float<=100.]
 #   Percentile to filter the PMs N-N distance.
 #
-#   KDE_stds   N-N_max   N-N_prcntl
-PO        3.        10            5
+# * coord_flag: y / n
+#   Whether to use coordinates data in the N-N analysis.
+#
+#   KDE_stds   N-N_max   N-N_prcntl    coord_flag
+PO        3.        10            5             y
 ################################################################################
 
 

@@ -128,6 +128,7 @@ def main(mypath, pars_f_path):
                     PM_KDE_std = float(reader[1])
                     PM_nnmax = int(reader[2])
                     PM_nnperc = float(reader[3])
+                    flag_PM_coord = True if reader[4] in true_lst else False
 
                 # Cluster parameters assignation.
                 elif reader[0] == 'CF':
@@ -315,7 +316,7 @@ def main(mypath, pars_f_path):
         # Plx & PMs parameters.
         'plx_bayes_flag': plx_bayes_flag, 'plx_chains': plx_chains,
         'plx_runs': plx_runs, 'PM_KDE_std': PM_KDE_std, 'PM_nnmax': PM_nnmax,
-        'PM_nnperc': PM_nnperc,
+        'PM_nnperc': PM_nnperc, 'flag_PM_coord': flag_PM_coord,
         # Cluster region field stars removal parameters.
         'fld_clean_mode': fld_clean_mode, 'fld_clean_bin': fld_clean_bin,
         'fld_clean_prob': fld_clean_prob,

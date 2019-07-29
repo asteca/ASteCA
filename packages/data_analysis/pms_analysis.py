@@ -7,8 +7,8 @@ from astropy.stats import sigma_clipped_stats
 
 
 def main(
-    clp, cld_i, coords, project, flag_make_plot, PM_nnmax, PM_KDE_std,
-        **kwargs):
+    clp, cld_i, coords, project, flag_make_plot, flag_PM_coord, PM_nnmax,
+        PM_KDE_std, **kwargs):
     """
     """
     PM_flag, PM_flag_all, plx_pm_flag = False, False, False
@@ -30,7 +30,8 @@ def main(
             PM_flag_all, pmRA_all, pmDE_all, pmMag_all, xRA_all, yDE_all,\
                 PM_kde_all = PMsKDEAll(coords, project, cld_i, clp, PM_KDE_std)
             PMs_d_median = PMsNNAll(
-                PM_flag_all, xRA_all, yDE_all, pmRA_all, pmDE_all, PM_nnmax)
+                PM_flag_all, flag_PM_coord, xRA_all, yDE_all, pmRA_all,
+                pmDE_all, PM_nnmax)
 
         # Cluster region data.
         pmMP, pmRA, e_pmRA, pmDE, e_pmDE =\
@@ -198,7 +199,9 @@ def PMsKDEAll(coords, project, cld_i, clp, PM_KDE_std):
         PM_kde_all
 
 
-def PMsNNAll(PM_flag_all, xRA_all, yDE_all, pmRA_all, pmDE_all, nnmax):
+def PMsNNAll(
+    PM_flag_all, flag_PM_coord, xRA_all, yDE_all, pmRA_all, pmDE_all,
+        nnmax):
     """
     Nearest-neighbor analysis that combines coordinates and PMs data.
     """
@@ -215,7 +218,10 @@ def PMsNNAll(PM_flag_all, xRA_all, yDE_all, pmRA_all, pmDE_all, nnmax):
                 data_norm.append(arr_n)
             return np.array(data_norm)
 
-        data = norm([xRA_all, yDE_all, pmRA_all, pmDE_all]).T
+        if flag_PM_coord is True:
+            data = norm([xRA_all, yDE_all, pmRA_all, pmDE_all]).T
+        else:
+            data = norm([pmRA_all, pmDE_all]).T
 
         # Create the tree
         tree = spatial.cKDTree(data)
