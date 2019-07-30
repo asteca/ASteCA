@@ -6,7 +6,7 @@ from scipy.integrate import quad
 import warnings
 
 
-def main(pd, clp, cld_c):
+def main(clp, cld_c, ad_runs, ad_k_comb, flag_make_plot, **kwargs):
     """
 
     AD test for k-samples: "tests the null hypothesis that k-samples are drawn
@@ -36,7 +36,7 @@ def main(pd, clp, cld_c):
 
     # Check if test is to be applied or skipped. Check if field regions
     # where found.
-    if pd['ad_runs'] <= 0:
+    if ad_runs <= 0 or 'B2' not in flag_make_plot:
         print('Skipping field vs cluster A-D test.')
 
     elif clp['flag_no_fl_regs_c']:
@@ -47,22 +47,22 @@ def main(pd, clp, cld_c):
               '  Skipping field vs cluster A-D test.')
 
     else:
-        print("    A-D test ({})".format(pd['ad_runs']))
+        print("    A-D test ({})".format(ad_runs))
         flag_ad_test = True
 
-        run_total = 2. * int(pd['ad_runs'] * len(clp['field_regions_c']))
+        run_total = 2. * int(ad_runs * len(clp['field_regions_c']))
         runs = 0
         # Run first only for photometric data, and then for all data (if more
         # data exists)
         for i in range(2):
-            for run_num in range(pd['ad_runs']):
+            for run_num in range(ad_runs):
 
-                data_cl = dataExtract(clp['cl_region_c'], pd['ad_k_comb'], i)
+                data_cl = dataExtract(clp['cl_region_c'], ad_k_comb, i)
                 # Field regions
                 data_fr = []
                 for fr in clp['field_regions_c']:
                     data_fr.append(
-                        dataExtract(fr, pd['ad_k_comb'], i))
+                        dataExtract(fr, ad_k_comb, i))
 
                 # Compare to each defined field region.
                 for f_idx, data_fl in enumerate(data_fr):
@@ -89,7 +89,7 @@ def main(pd, clp, cld_c):
         ad_cl_fr_p = kdeplot(pvals_cl[0], pvals_fr[0], 'phot')
         ad_cl_fr_p = [len(pv_cl[0]), len(pv_fr[0])] + ad_cl_fr_p
 
-        data_id = 'phot+Plx+PM' if pd['ad_k_comb'] else 'Plx+PM'
+        data_id = 'phot+Plx+PM' if ad_k_comb else 'Plx+PM'
         ad_cl_fr_pk = kdeplot(pvals_cl[1], pvals_fr[1], data_id)
         ad_cl_fr_pk = [len(pv_cl[1]), len(pv_fr[1])] + ad_cl_fr_pk
 

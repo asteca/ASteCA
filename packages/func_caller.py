@@ -201,7 +201,7 @@ def main(cl_file, pd):
     # # Physical cluster probability based on p_values distribution.
     # clp = kde_pvalue.main(clp, **pd)
 
-    clp = ad_field_vs_clust.main(pd, clp, cld_c)
+    clp = ad_field_vs_clust.main(clp, cld_c, **pd)
 
     # Approximate number of cluster's members.
     clp = members_number.main(clp)
