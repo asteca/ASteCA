@@ -315,8 +315,11 @@ FR  local     knuth          0.5
 # * plx_runs: [int]
 #   Number of MCMC steps used in the Bayesian analysis. 
 #
-#   plx_flag   plx_chains   plx_runs
-PP         n           10       5000
+# * mp_flag: y / n
+#   Use MPs in the parallax analysis?
+#
+#   plx_flag   plx_chains   plx_runs   mp_flag
+PP         n           10       5000         y
 
 # Proper motions analysis
 #

@@ -7,7 +7,9 @@ import warnings
 from .. import update_progress
 
 
-def main(clp, plx_bayes_flag, plx_chains, plx_runs, flag_make_plot, **kwargs):
+def main(
+    clp, plx_bayes_flag, plx_chains, plx_runs, flag_plx_mp, flag_make_plot,
+        **kwargs):
     """
     Bayesian parallax distance using the Bailer-Jones (2015) model with the
     'shape parameter' marginalized.
@@ -64,7 +66,8 @@ def main(clp, plx_bayes_flag, plx_chains, plx_runs, flag_make_plot, **kwargs):
             if plx_bayes_flag:
                 plx_samples, plx_Bys, plx_bayes_flag_clp, plx_tau_autocorr,\
                     mean_afs, plx_ess = plxBayes(
-                        plx_chains, plx_runs, plx_clp, e_plx_clp, mp_clp)
+                        plx_chains, plx_runs, flag_plx_mp, plx_clp, e_plx_clp,
+                        mp_clp)
 
         else:
             print("  WARNING: no valid Plx data found.")
@@ -89,10 +92,14 @@ def checkPlx(plx_clrg):
         return False
 
 
-def plxBayes(plx_chains, plx_runs, plx_clp, e_plx_clp, mp_clp):
+def plxBayes(plx_chains, plx_runs, flag_plx_mp, plx_clp, e_plx_clp, mp_clp):
     """
     """
     plx_bayes_flag_clp = True
+
+    # If MPs are not to be used, use all 1.
+    if flag_plx_mp is False:
+        mp_clp = np.ones(mp_clp.shape)
 
     # Sampler parameters.
     ndim, nwalkers, nruns = 1, plx_chains, plx_runs
@@ -188,11 +195,11 @@ def plxBayes(plx_chains, plx_runs, plx_clp, e_plx_clp, mp_clp):
         mean_afs, plx_ess
 
 
-def lnprob(mu, x, B2, mp, mu_p):
+def lnprob(mu, x, B2, MPs, mu_p):
     lp = lnprior(mu, mu_p)
     if np.isinf(lp):
         return lp
-    return lp + lnlike(mu, x, B2, mp)
+    return lp + lnlike(mu, x, B2, MPs)
 
 
 def lnprior(mu, mu_p, std_p=1.):
@@ -212,7 +219,7 @@ def lnprior(mu, mu_p, std_p=1.):
     # return 0.
 
 
-def lnlike(mu, x, B2, mp):
+def lnlike(mu, x, B2, MPs):
     """
     Model defined in Bailer-Jones (2015), Eq (20), The shape parameter s_c
     is marginalized.
@@ -244,4 +251,4 @@ def lnlike(mu, x, B2, mp):
     # Double integral
     int_exp = np.trapz(distFunc(x), x, axis=0)
 
-    return np.sum(np.log(mp * int_exp))
+    return np.sum(np.log(MPs * int_exp))
