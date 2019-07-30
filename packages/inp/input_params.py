@@ -122,9 +122,10 @@ def main(mypath, pars_f_path):
                 # Parallax & PMS analysis
                 elif reader[0] == 'PP':
                     plx_bayes_flag = True if reader[1] in true_lst else False
-                    plx_chains = int(reader[2])
-                    plx_runs = int(reader[3])
-                    flag_plx_mp = True if reader[4] in true_lst else False
+                    plx_offset = float(reader[2])
+                    plx_chains = int(reader[3])
+                    plx_runs = int(reader[4])
+                    flag_plx_mp = True if reader[5] in true_lst else False
                 elif reader[0] == 'PO':
                     PM_KDE_std = float(reader[1])
                     PM_nnmax = int(reader[2])
@@ -315,8 +316,9 @@ def main(mypath, pars_f_path):
         'da_algor': da_algor, 'bayesda_runs': bayesda_runs,
         'fixedda_port': fixedda_port, 'bayesda_weights': bayesda_weights,
         # Plx & PMs parameters.
-        'plx_bayes_flag': plx_bayes_flag, 'plx_chains': plx_chains,
-        'plx_runs': plx_runs, 'flag_plx_mp': flag_plx_mp,
+        'plx_bayes_flag': plx_bayes_flag, 'plx_offset': plx_offset,
+        'plx_chains': plx_chains, 'plx_runs': plx_runs,
+        'flag_plx_mp': flag_plx_mp,
         'PM_KDE_std': PM_KDE_std, 'PM_nnmax': PM_nnmax,
         'PM_nnperc': PM_nnperc, 'flag_PM_coord': flag_PM_coord,
         # Cluster region field stars removal parameters.

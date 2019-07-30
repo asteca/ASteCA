@@ -8,8 +8,8 @@ from .. import update_progress
 
 
 def main(
-    clp, plx_bayes_flag, plx_chains, plx_runs, flag_plx_mp, flag_make_plot,
-        **kwargs):
+    clp, plx_bayes_flag, plx_offset, plx_chains, plx_runs, flag_plx_mp,
+        flag_make_plot, **kwargs):
     """
     Bayesian parallax distance using the Bailer-Jones (2015) model with the
     'shape parameter' marginalized.
@@ -66,8 +66,8 @@ def main(
             if plx_bayes_flag:
                 plx_samples, plx_Bys, plx_bayes_flag_clp, plx_tau_autocorr,\
                     mean_afs, plx_ess = plxBayes(
-                        plx_chains, plx_runs, flag_plx_mp, plx_clp, e_plx_clp,
-                        mp_clp)
+                        plx_offset, plx_chains, plx_runs, flag_plx_mp, plx_clp,
+                        e_plx_clp, mp_clp)
 
         else:
             print("  WARNING: no valid Plx data found.")
@@ -92,10 +92,15 @@ def checkPlx(plx_clrg):
         return False
 
 
-def plxBayes(plx_chains, plx_runs, flag_plx_mp, plx_clp, e_plx_clp, mp_clp):
+def plxBayes(
+    plx_offset, plx_chains, plx_runs, flag_plx_mp, plx_clp, e_plx_clp,
+        mp_clp):
     """
     """
     plx_bayes_flag_clp = True
+
+    # Add offset to parallax data.
+    plx_clp += plx_offset
 
     # If MPs are not to be used, use all 1.
     if flag_plx_mp is False:

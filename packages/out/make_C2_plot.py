@@ -9,11 +9,11 @@ from .. import aux_funcs
 
 
 def main(
-    npd, pd, col_0_comb, mag_0_comb, plx_flag_clp, plx_clrg, mmag_clp, mp_clp,
-    plx_clp, e_plx_clp, flag_no_fl_regs_i, field_regions_i, cl_reg_fit,
-    plx_bayes_flag_clp, plx_samples, plx_Bys, plx_tau_autocorr, mean_afs,
-    plx_ess, plx_wa, plx_pm_flag, pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE,
-        mmag_pm, pmRA_fl_DE, pmDE_fl, pm_Plx_cl, pm_Plx_fr, **kwargs):
+    npd, pd, col_0_comb, mag_0_comb, plx_flag_clp, plx_clrg,
+    mmag_clp, mp_clp, plx_clp, e_plx_clp, flag_no_fl_regs_i, field_regions_i,
+    cl_reg_fit, plx_bayes_flag_clp, plx_samples, plx_Bys, plx_tau_autocorr,
+    mean_afs, plx_ess, plx_wa, plx_pm_flag, pmMP, pmRA_DE, e_pmRA_DE, pmDE,
+        e_pmDE, mmag_pm, pmRA_fl_DE, pmDE_fl, pm_Plx_cl, pm_Plx_fr, **kwargs):
     '''
     Make C2 block plots.
     '''
@@ -48,8 +48,8 @@ def main(
 
         arglist = [
             # plx_histo
-            [gs, plx_clrg, plx_cl_kde_x, plx_cl_kde, plx_flrg,
-             flag_no_fl_regs_i],
+            [gs, pd['plx_offset'], plx_clrg, plx_cl_kde_x, plx_cl_kde,
+             plx_flrg, flag_no_fl_regs_i],
             # plx_chart
             [gs, x_name, y_name, coord, cl_reg_fit, plx_Bys],
             # plx_vs_mag

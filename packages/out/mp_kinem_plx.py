@@ -7,11 +7,14 @@ from astropy.stats import sigma_clipped_stats
 from ..aux_funcs import reject_outliers
 
 
-def plx_histo(gs, plx_clrg, plx_x_kde, kde_pl, plx_flrg, flag_no_fl_regs_i):
+def plx_histo(
+    gs, plx_offset, plx_clrg, plx_x_kde, kde_pl, plx_flrg,
+        flag_no_fl_regs_i):
     '''
     Histogram for the distribution of parallaxes within the cluster region.
     '''
     ax = plt.subplot(gs[0:2, 0:2])
+    ax.set_title('Offset applied: +{}'.format(plx_offset), fontsize=9)
     plt.xlabel('Plx [mas]', fontsize=12)
     plt.ylabel('N', fontsize=12)
     ax.minorticks_on()
@@ -62,8 +65,6 @@ def plx_chart(gs, x_name, y_name, coord, cl_reg_fit, plx_Bys):
     ax = plt.subplot(gs[0:2, 4:6])
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
             zorder=1)
-    ax.set_title('Cluster region (fit)'.format(), fontsize=9)
-
     # If RA is used, invert axis.
     if coord == 'deg':
         ax.invert_xaxis()
@@ -81,6 +82,7 @@ def plx_chart(gs, x_name, y_name, coord, cl_reg_fit, plx_Bys):
     msk = (~np.isnan(x)) & (~np.isnan(y)) & (~np.isnan(mp)) &\
         (~np.isnan(plx))
     x, y, mp, plx = x[msk], y[msk], mp[msk], plx[msk]
+    ax.set_title('Cluster region (fit, N={})'.format(len(x)), fontsize=9)
 
     if plx_Bys.any():
         # Bayesian parallax value.

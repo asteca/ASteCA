@@ -309,17 +309,20 @@ FR  local     knuth          0.5
 # * plx_bayes_flag: y / n
 #   Perform Bayesian analysis of parallax data.
 #
-# * plx_chains: [int]
+# * offset: [float]
+#   Offset added to the parallax data.
+#
+# * n_chains: [int]
 #   Number of MCMC chains used in the Bayesian analysis.
 #
-# * plx_runs: [int]
+# * n_runs: [int]
 #   Number of MCMC steps used in the Bayesian analysis. 
 #
 # * mp_flag: y / n
 #   Use MPs in the parallax analysis?
 #
-#   plx_flag   plx_chains   plx_runs   mp_flag
-PP         n           10       5000         y
+#   plx_flag   offset   n_chains   n_runs   mp_flag
+PP         n    0.029         10     5000         y
 
 # Proper motions analysis
 #
