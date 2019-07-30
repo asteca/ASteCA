@@ -3,14 +3,14 @@ import numpy as np
 from scipy import stats
 
 
-def reject_outliers(data, m=3.):
+def reject_outliers(data, m=4.):
     """
     Outlier rejection.
     Source: https://stackoverflow.com/a/16562028/1391441
     """
     d = np.abs(data - np.median(data))
     mdev = np.median(d)
-    s = d / mdev
+    s = d / (mdev if mdev else 1.)
     return data[s < m]
 
 

@@ -44,7 +44,7 @@ def plx_histo(
     plt.axvline(x=p_max_mas, linestyle='--', color='b', lw=.7, zorder=5)
     plx_lt_zero = 100. * plx_clrg[plx_clrg < 0.].size / plx_clrg.size
     ob = offsetbox.AnchoredText(
-        r"$Plx_{{max}}$={:.3f}".format(p_max_mas) + '\n' +
+        r"$Plx_{{max}}$={:.3f} [mas]".format(p_max_mas) + '\n' +
         r"$Plx<0 \rightarrow$ {:.1f}%".format(plx_lt_zero),
         pad=0.2, loc=1, prop=dict(size=9))
     ob.patch.set(alpha=0.85)
@@ -82,7 +82,7 @@ def plx_chart(gs, x_name, y_name, coord, cl_reg_fit, plx_Bys):
     msk = (~np.isnan(x)) & (~np.isnan(y)) & (~np.isnan(mp)) &\
         (~np.isnan(plx))
     x, y, mp, plx = x[msk], y[msk], mp[msk], plx[msk]
-    ax.set_title('Cluster region (fit, N={})'.format(len(x)), fontsize=9)
+    ax.set_title(r'Cluster region ($N_{{fit}}$={})'.format(len(x)), fontsize=9)
 
     if plx_Bys.any():
         # Bayesian parallax value.
@@ -122,7 +122,7 @@ def plx_vs_mag(
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
             zorder=1)
 
-    ax.set_title("Plx clip " + r"$(med\pm2\sigma),\;N={}$".format(
+    ax.set_title("Plx clip " + r"$(med\pm2\sigma,\;N={})$".format(
         len(plx_clp)), fontsize=9)
     plt.xlabel('Plx [mas]', fontsize=12)
     plt.ylabel(y_ax, fontsize=12)
@@ -181,7 +181,7 @@ def plx_vs_mag(
     ax.legend(fontsize='small', loc=0)
     min_plx, max_plx = np.min(plx_clp) - .2, np.max(plx_clp) + .2
     ax.axvspan(min_plx, 0., alpha=0.25, color='grey', zorder=1)
-    plt.xlim(min_plx, max_plx)
+    plt.xlim(max(-1., min_plx), max_plx)
     plt.ylim(max(mmag_plx_clp) + .5, min(mmag_plx_clp) - 1.)
     # ax.set_ylim(ax.get_ylim()[::-1])
     # plt.gca().invert_yaxis()
