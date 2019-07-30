@@ -188,7 +188,7 @@ def main(
                 m, s = divmod(nsteps_ptm / (i / elapsed_in) - elapsed_in, 60)
                 h, m = divmod(m, 60)
                 print("{:>3}% ({:.3f}) LP={:.1f} ({:.5f}, {:.3f}, {:.3f}, "
-                      "{:.2f}, {:g}, {:.2f})".format(
+                      "{:.2f}, {:.0f}, {:.2f})".format(
                           milestones[0], maf, logprob, *map_sol) +
                       " [{:.0f} m/s | {:.0f}h{:.0f}m]".format(
                           (ntemps * nwalkers_ptm * i) / elapsed_in, h, m))
