@@ -11,6 +11,10 @@ else:
 def gauss_error(rnd, mc, e_mc):
     '''
     Randomly move mag and color through a Gaussian function.
+
+    mc  : magnitude or color dimension
+    rnd : random array of floats (0., 1.)
+    e_mc: fitted observational uncertainty value
     '''
     mc_gauss = mc + rnd[:len(mc)] * e_mc
 
