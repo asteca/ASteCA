@@ -1,5 +1,37 @@
 # Change Log
 
+
+## [[v0.2.5]][225] - 2019-10-07
+
+### Changed
+
+* Added the `ptemcee` method, and deprecated (for now) the BF ([367][224])
+* Accept a CMD/CCD from mixed photometric systems ([228][222], [229][223])
+* Add support for the new set of isochrones PARSEC+COLIBRI ([322][221])
+* Mask stars with photometry outside of reasonable range ([414][220])
+* Add proper motions, parallax, and radial velocity support to Bayesian DA ([220][219])
+* Use stars with no complete data in the Bayesian equation ([377][218]).
+* Add dimensional [weights to Bayesian DA][217].
+* Use all positions for structural functions ([107][216]).
+* Make the bootstrap the actual method (instead of GA) ([64][215])
+* Make the GA work with floats instead of a grid ([412][214])
+* Plot the incomplete dataset with MPs information ([411][213])
+* Use a total number of masses, not a step value ([410][212])
+* Use stars after error rejection for LF & completeness ([390][211])
+* Switch to astropy's read module ([327][209]) and allow [reading columns by name][210].
+* Update check for [installed packages][208] (newer `pip` threw an error).
+* Added a 2D cluster vs field KDE comparison, and the A-D test ([255][206], [356][207])
+* Added MAP, median and mode to output parameters.
+* Added R2 normality estimator to distributions ([401][205])
+* Deprecated [KDE p-value function][204].
+* Deprecated `trim_frame`, and `manual` [mode in photometric error rejection][203].
+* Deprecated [integrated magnitude function][202].
+* Store input parameters as .json for each cluster ([126][201])
+* Don't read hidden files from the 'isochrones' folder ([403][200])
+* Use KDE instead of Gaussian filters ([379][199])
+* Split C2 plot into C2 and C3
+
+
 ## [[v0.2.4]][198] - 2018-03-16
 
 ### Changed
@@ -629,3 +661,30 @@ ________________________________________________________________________________
 [196]: https://github.com/asteca/ASteCA/issues/373
 [197]: https://github.com/asteca/ASteCA/issues/357
 [198]: https://github.com/asteca/asteca/releases/tag/v0.2.4
+[199]: https://github.com/asteca/ASteCA/issues/379
+[200]: https://github.com/asteca/ASteCA/issues/403
+[201]: https://github.com/asteca/ASteCA/issues/126
+[202]: https://github.com/asteca/ASteCA/commit/1130c905e82048053267d3fcba41a967a88f77a2
+[203]: https://github.com/asteca/ASteCA/commit/783975b22b8773c4ab08b3f1588e616cd3c858b2
+[204]: https://github.com/asteca/ASteCA/commit/f218148e1f2a7abff591816c2271a7c6e2dc61ac
+[205]: https://github.com/asteca/ASteCA/issues/401
+[206]: https://github.com/asteca/ASteCA/issues/255
+[207]: https://github.com/asteca/ASteCA/issues/356
+[208]: https://github.com/asteca/ASteCA/commit/bb885f9cc9acc311d57e312ac6c4623ec7ff235b
+[209]: https://github.com/asteca/ASteCA/issues/327
+[210]: https://github.com/asteca/ASteCA/commit/08d2c04ab5a5307aba3d19762bbb7f64df4f1aae
+[211]: https://github.com/asteca/ASteCA/issues/390
+[212]: https://github.com/asteca/ASteCA/issues/410
+[213]: https://github.com/asteca/ASteCA/issues/411
+[214]: https://github.com/asteca/ASteCA/issues/412
+[215]: https://github.com/asteca/ASteCA/issues/64
+[216]: https://github.com/asteca/ASteCA/issues/107
+[217]: https://github.com/asteca/ASteCA/commit/d8a2ba99f6d36cbfb9e09efe08e1f590eb156743
+[218]: https://github.com/asteca/ASteCA/issues/377
+[219]: https://github.com/asteca/ASteCA/issues/220
+[220]: https://github.com/asteca/ASteCA/issues/414
+[221]: https://github.com/asteca/ASteCA/issues/322
+[222]: https://github.com/asteca/ASteCA/issues/228
+[223]: https://github.com/asteca/ASteCA/issues/229
+[224]: https://github.com/asteca/ASteCA/issues/367
+[225]: https://github.com/asteca/asteca/releases/tag/v0.2.5
