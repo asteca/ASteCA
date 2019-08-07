@@ -1,5 +1,5 @@
 [![AA](https://goo.gl/YT7as5)][12]
-[![License](http://goo.gl/38AkxE)][13]
+[![License](https://img.shields.io/badge/license-GPLv3-red.svg)][13]
 ________________________________________________________________________________
 
 
