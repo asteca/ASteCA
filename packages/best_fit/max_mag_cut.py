@@ -1,4 +1,5 @@
 
+import numpy as np
 import copy
 
 
@@ -7,7 +8,7 @@ def main(cl_reg_fit, max_mag):
     Reject stars beyond the given magnitude limit.
     '''
     # Maximum observed (main) magnitude.
-    max_mag_obs = max(list(zip(*zip(*cl_reg_fit)[1:][2])[0]))
+    max_mag_obs = np.max(list(zip(*list(zip(*cl_reg_fit))[1:][2]))[0])
 
     if max_mag == 'max':
         # No magnitude cut applied.

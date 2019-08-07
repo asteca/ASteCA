@@ -1,7 +1,134 @@
 
+import sys
 import numpy as np
-import read_isochs
+from . import read_isochs
 from ..synth_clust import binarity
+from .. import update_progress
+
+
+def main(met_f_filter, age_values, cmd_evol_tracks, evol_track, bin_mr,
+         all_syst_filters, cmd_systs, filters, colors, fundam_params,
+         N_mass_interp, **kwargs):
+    '''
+    Read isochrones and parameters if best fit function is set to run.
+    '''
+    # Print info about tracks.
+    nt = '' if len(all_syst_filters) == 1 else 's'
+    print("Processing {} theoretical isochrones\n"
+          "in the photometric system{}:".format(
+              cmd_evol_tracks[evol_track][1], nt))
+    for syst in all_syst_filters:
+        print(" * {}".format(cmd_systs[syst[0]][0]))
+
+    # Get isochrones and their extra parameters (mass, etc.).
+    isoch_list, extra_pars = read_isochs.main(
+        met_f_filter, age_values, cmd_evol_tracks, evol_track,
+        all_syst_filters)
+
+    # Take the synthetic data from the unique filters read, create the
+    # necessary colors, and position the magnitudes and colors in the
+    # same sense they are read from the cluster's data file.
+    # The mags_cols_theor list contains the magnitudes used to create the
+    # defined colors. This is necessary to properly add binarity to the
+    # synthetic clusters below.
+    mags_theor, cols_theor, mags_cols_theor = arrange_filters(
+        isoch_list, all_syst_filters, filters, colors)
+
+    # Interpolate extra points into all the filters, colors, filters of colors,
+    # and extra parameters (masses, etc). This allows the later IMF sampled
+    # masses to be more accurately interpolated into the theoretical
+    # isochrones.
+
+    # Find the maximum number of points in all the read ages for all the
+    # metallicites.
+    N_pts_max = 0
+    for z in mags_theor:
+        for a in z:
+            N_pts_max = max(N_pts_max, len(a[0]))
+
+    if N_mass_interp > N_pts_max:
+        print("Interpolating extra points ({}) into the isochrones.".format(
+            N_mass_interp))
+        interp_data = []
+        for i, data in enumerate([
+                mags_theor, cols_theor, mags_cols_theor, extra_pars]):
+            interp_data.append(interp_isoch_data(data, N_mass_interp))
+            update_progress.updt(4, i + 1)
+        a, b, c, d = interp_data
+    else:
+        sys.exit(
+            ("ERROR: N_interp={} must be larger than the maximum\n" +
+             "number of points in any isochrone read: {}").format(
+                N_mass_interp, N_pts_max))
+
+    # # Size of arrays in memory
+    # sz = 0.
+    # for arr in [a, b, c, d]:
+    #     sz += np.array(arr).size * np.array(arr).itemsize
+    # print("{:.3f} Mbs".format(sz / (1024.**2)))
+
+    # The magnitudes for each defined color ('c') are used here and
+    # discarded after the colors (and magnitudes) with binarity assignment
+    # are obtained.
+    mags_binar, cols_binar, probs_binar, mass_binar = binarity.binarGen(
+        fundam_params[5], N_mass_interp, a, b, c, d, bin_mr)
+
+    # Create list structured as:
+    # theor_tracks = [m1, m2, .., mN]
+    # mX = [age1, age2, ..., ageM]
+    # ageX = [f1,.., c1, c2,.., f1b,.., c1b, c2b,.., bp, mb, m_ini,.., m_bol]
+    # where:
+    # fX:  individual filters (mags)
+    # cX:  colors
+    # fXb: filters with binary data
+    # cXb: colors with the binary data
+    # bp:  binary probabilities
+    # mb:  binary masses
+    # Mini,...: extra parameters.
+
+    # Combine all data into a single array of shape:
+    # (N_z, N_age, N_data, N_IMF_interp), where 'N_data' is the number of
+    # sub-arrays in each array.
+    comb_data = np.concatenate(
+        (a, b, mags_binar, cols_binar, probs_binar, mass_binar, d), axis=2)
+
+    # Sort all isochrones according to the main magnitude (min to max).
+    # This is necessary so that the cut_max_mag() function does not need
+    # to do this every time a new synthetic cluster is generated.
+    theor_tracks = [[[] for _ in a[0]] for _ in a]
+    for i, mx in enumerate(comb_data):
+        for j, ax in enumerate(mx):
+            # TODO ordering the data according to magnitude is necessary
+            # if the cut_max_mag() function expects the data to be sorted
+            # this way. This however, prevents us from being able to
+            # interpolate new (z, a) values when the MCMC samples them
+            # because the mass order is not preserved anymore. So, in order
+            # to be able to generate that interpolation of values (which
+            # greatly improves the ptemcee performance), we're back to the
+            # 'old' cut_max_mag() function and no magnitude ordering.
+            # theor_tracks[i][j] = ax[:, ax[0].argsort(kind='mergesort')]
+            theor_tracks[i][j] = ax
+
+    # The above sorting destroys the original order of the isochrones. This
+    # results in messy plots for the "best fit isochrone" at the end.
+    # (see: https://stackoverflow.com/q/35606712/1391441,
+    #       https://stackoverflow.com/q/37742358/1391441)
+    # To avoid this, we also store the not-interpolated, not sorted original
+    # values for the magnitudes and colors; just for the purpose of plotting
+    # the final isochrones.
+    plot_isoch_data = np.concatenate((mags_theor, cols_theor), axis=2)
+
+    lens = [len(_) for _ in fundam_params]
+    print("\nGrid values: {} [z], {} [log(age)], {} [Mass]".format(
+        lens[0], lens[1], lens[4]))
+
+    # # In place for #415
+    # filename = 'temp.memmap'
+    # sp = np.array(theor_tracks).shape
+    # theor_tracks_mp = np.memmap(filename, dtype='float64', mode='w+', shape=sp)
+    # theor_tracks_mp[:] = theor_tracks[:]
+
+    return theor_tracks, plot_isoch_data
 
 
 def arrange_filters(isoch_list, all_syst_filters, filters, colors):
@@ -91,107 +218,9 @@ def interp_isoch_data(data, N):
             a = []
             # For each filter/color/extra parameter in list.
             for fce in age:
-                t, xp = np.linspace(0, 1, N), np.linspace(0, 1, len(fce))
+                t, xp = np.linspace(0., 1., N), np.linspace(0, 1, len(fce))
                 a.append(np.interp(t, xp, fce))
             m.append(a)
         interp_data.append(m)
 
     return interp_data
-
-
-def main(met_f_filter, age_values, cmd_evol_tracks, evol_track, bin_mr,
-         all_syst_filters, cmd_systs, filters, colors, fundam_params,
-         **kwargs):
-    '''
-    Read isochrones and parameters if best fit function is set to run.
-    '''
-    # Print info about tracks.
-    print("Processing {} theoretical isochrones".format(
-        cmd_evol_tracks[evol_track][1]))
-
-    for syst in all_syst_filters:
-        print("in the '{}' photometric system.\n".format(
-            cmd_systs[syst[0]][0]))
-
-    # Get isochrones and their extra parameters (mass, etc.).
-    isoch_list, extra_pars = read_isochs.main(met_f_filter, age_values,
-                                              evol_track, all_syst_filters)
-
-    # Take the synthetic data from the unique filters read, create the
-    # necessary colors, and position the magnitudes and colors in the
-    # same sense they are read from the cluster's data file.
-    # The mags_cols_theor list contains the magnitudes used to create the
-    # defined colors. This is necessary to properly add binarity to the
-    # synthetic clusters below.
-    mags_theor, cols_theor, mags_cols_theor = arrange_filters(
-        isoch_list, all_syst_filters, filters, colors)
-
-    # Interpolate extra points into all the filters, colors, filters of colors,
-    # and extra parameters (masses, etc)
-    N_interp = 2000
-    a = interp_isoch_data(mags_theor, N_interp)
-    b = interp_isoch_data(cols_theor, N_interp)
-    c = interp_isoch_data(mags_cols_theor, N_interp)
-    d = interp_isoch_data(extra_pars, N_interp)
-
-    # The magnitudes for each defined color ('c') are used here and
-    # discarded after the colors (and magnitudes) with binarity assignment
-    # are obtained.
-    mags_binar, cols_binar, probs_binar, mass_binar = binarity.binarGen(
-        fundam_params[5], N_interp, a, b, c, d, bin_mr)
-
-    # Create list structured as:
-    # theor_tracks = [m1, m2, .., mN]
-    # mX = [age1, age2, ..., ageM]
-    # ageX = [f1,.., c1, c2,.., f1b,.., c1b, c2b,.., bp, mb, m_ini,.., m_bol]
-    # where:
-    # fX:  individual filters (mags)
-    # cX:  colors
-    # fXb: filters with binary data
-    # cXb: colors with the binary data
-    # bp:  binary probabilities
-    # mb:  binary masses
-    # m_ini,..., m_bol: six extra parameters.
-
-    # Combine all data into a single array of shape:
-    # (N_z, N_age, N_data, N_interp), where 'N_data' is the number of
-    # sub-arrays in each array.
-    comb_data = np.concatenate(
-        (a, b, mags_binar, cols_binar, probs_binar, mass_binar, d), axis=2)
-
-    # Sort all isochrones according to the main magnitude (min to max).
-    # This is necessary so that the cut_max_mag() function does not need
-    # to do this every time a new synthetic cluster is generated.
-
-    theor_tracks = [[[] for _ in a[0]] for _ in a]
-    for i, mx in enumerate(comb_data):
-        for j, ax in enumerate(mx):
-            theor_tracks[i][j] = ax[:, ax[0].argsort(kind='mergesort')]
-
-    # The above sorting destroys the original order of the isochrones. This
-    # results in messy plots for the "best fit isochrone" at the end.
-    # (see: https://stackoverflow.com/q/35606712/1391441,
-    #       https://stackoverflow.com/q/37742358/1391441)
-    # To avoid this, we also store the not-interpolated, not sorted original
-    # values for the magnitudes and colors; just for the purpose of plotting
-    # the final isochrones.
-    plot_isoch_data = np.concatenate((mags_theor, cols_theor), axis=2)
-
-    # Obtain number of models in the solutions space.
-    lens = [len(_) for _ in fundam_params]
-    total = reduce(lambda x, y: x * y, lens, 1)
-    print(
-        "Number of values per parameter:\n"
-        "  {} metallicity values (z),\n"
-        "  {} age values (per z),\n"
-        "  {} reddening values,\n"
-        "  {} distance values,\n"
-        "  {} mass values,\n"
-        "  {} binary fraction values.".format(*lens))
-    print("  = {:.1e} approx total models.\n".format(total))
-
-    # import pickle
-    # with open('theor_tracks.pickle', 'wb') as f:
-    #         pickle.dump((theor_tracks), f)
-
-    return theor_tracks, plot_isoch_data

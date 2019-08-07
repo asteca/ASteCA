@@ -12,7 +12,7 @@ def main(stars_out, xedges, yedges):
     # [star 2 data], [star 3 data], ...], [], [], ..., [] ]
     H_manual = []
     for i in range(len(xedges) - 1):
-        H_manual.append([[0] for _ in xrange(len(yedges) - 1)])
+        H_manual.append([[0] for _ in range(len(yedges) - 1)])
 
     # Iterate through all the stars in the frame, located outside of the
     # cluster region.

@@ -25,78 +25,95 @@
 #
 #   flag
 UP     y
-
-# Force matplotlib's backend to 'Agg'.
-#
-# * flag: y / n
-#   Set to 'y' to prevent the error 'TclError: no display name and no
-#   $DISPLAY environment variable' when running the code in a server.
-#
-#   flag
-FB     n
-################################################################################
-
-
-
-################################### Mode #######################################
-
-# Mode used to run the code.
-#
-# * mode: auto / semi / manual
-#
-#   - auto: does not require user intervention of any kind.
-#   - semi: takes input values from the 'semi_input.dat' file.
-#   - manual: asks the user for some values (center, radius) but will also
-#     give you the chance to have them automatically calculated.
-#
-#    mode
-MO   auto
 ################################################################################
 
 
 
 ######################### Input data parameters ################################
 
+# Read mode for the cluster's input data.
+#
+# * mode: num / nam
+#
+#   - num: indexes of the data columns (starting with zero). The header must be
+#          commented out entirely.
+#   - nam: names of the data columns. A proper header must be in place.
+#
+#   mode
+MR   num
+
 # Columns for the ID's and x,y coordinates in the data file.
 #
 # * coords: px / deg
 #   Indicates if the coordinates of the observed frame are in pixels or degrees.
 #
-#   id_star   x/ra  y/dec  coords 
-PI        0      1      2      px
+# * project: y / n
+#   If 'coords=deg', indicate whether to use a sinusoidal projection on the
+#   data.
+#
+#   id_star   x/ra   y/dec   coords   project
+PI        0      1       2       px         y
 
 # Columns for the photometric data in the data file. The IDs for the supported
 # photometric systems are stored in the 'phot_systs.dat' file.
 #
-# Magnitude and error.
-#        mag    e_mag
-PM     3,5,V        4
+#  * mag, e_mag: Magnitude and uncertainty.
 #
-# Color and error.
-#         col    e_col
-PC    5,5,B,V        6
-###############################################################################
+#           mag    e_mag
+PM     3,4,Vmag        4
+#
+#  * col, e_col: Color and uncertainty.
+#
+#               col    e_col
+PC    5,4,Bmag,Vmag        6
+
+# Columns for the proper motions [mas/yr], parallax [mas], and radial
+# velocity [km/s]. If a data column is not present, indicate it with a 'n'.
+#
+#    Parallax                 Proper motions               Radial velocity
+#    plx    e_plx     pmRA    e_pmRA    pmDE    e_pmDE     rv    e_rv
+PK     n        n        n         n       n         n      n       n
+
+# * nanvals: [strings]
+#   List of strings indicating which entries in the data file should be
+#   treated as bad/missing values.
+#
+#   nanvals
+NV    INDEF, NAN, NaN, 99.999, 999.99, 99.999
+################################################################################
 
 
 
-########################## Output parameters ###################################
+############################ Mode/Output #######################################
+
+# Mode used to run the code.
+#
+# * mode: auto / semi
+#
+#   - auto: does not require user intervention of any kind.
+#   - semi: takes input values from the 'semi_input.dat' file.
+#
+#    mode
+MO   auto
 
 # Create output figures?
 #
-# * blocks: A1 A2 B C D1 D2 D3
+# * blocks: [A1, A2, B, C1, C2, D1, D2]
 #   Select one or more identifier to decide which plots will be produced. Leave
 #   empty for no output plots.
 #
 #   - A1: (x,y) density maps
 #   - A2: structural analysis
-#   - B:  photometric analysis
-#   - C:  decontamination algorithm
+#   - B1: uncertainties analysis
+#   - B2: photometric analysis
+#   - C1: decontamination algorithm photometric diagrams
+#   - C2: parallax analysis
+#   - C3: proper motions analysis
 #   - D1: likelihood minimization
 #   - D2: best fit synthetic cluster match
-#   - D3: top tier matches (if any were found)
 #
 #   blocks
-MP   A1 A2 B C D1 D2 D3
+MP   A1 A2 B1 B2 C1 C2 C3 D1 D2
 
 # * format: png / pdf
 #   Format of the final image file.
@@ -107,14 +124,16 @@ MP   A1 A2 B C D1 D2 D3
 #   format     DPI
 PF     png     150
 
-# Move data file once it is processed?
+# Trim frame?
 #
-# * flag: y / n
-#   The cluster's photometric file will be moved to the '/output/done/' folder
-#   if this flag is set to 'y'.
+# * tf_flag: y / n
+#   Flag if the frame should be trimmed.
 #
-#   flag
-MD     n
+# * tf_range: [float] * 4
+#   Input the x,y ranges in the order: xmin, xmax, ymin, ymax
+#
+#    tf_flag   tf_range
+TF         n   0. 0. 0. 0.
 ################################################################################
 
 
@@ -123,12 +142,13 @@ MD     n
 
 # Center assignment function.
 #
-# * stddev: [float]
-#   The standard deviation of the Gaussian filter applied to the 2-dimensional
-#   histogram of the (x,y) stars coordinates.
+# *  bandwidth: [float]
+#   The bandwidth used by the Gaussian KDE applied to the 2-dimensional (x,y)
+#   stars coordinates. If 'bandwidth=0' then half of Scott's rule is employed
+#   (this generally gives good results).
 #
-#   stddev
-CH       3
+#   bandwidth
+CH         .0
 
 # Radius assignment function.
 #
@@ -142,8 +162,12 @@ CH       3
 #   - high: will favor larger radii. Useful when all possible members
 #     must be present.
 #
-#   mode
-CR   mid
+# * field_dens: auto / [float>0.]
+#   If 'auto' is selected, the code will automatically estimate the density of
+#   field stars. Else, a float needs to be given.
+#
+#   mode    field_dens
+CR   mid          auto
 
 # King profile function.
 #
@@ -156,7 +180,7 @@ KP     y
 
 # Field stars regions.
 #
-# * regions: [integer] / max
+# * regions: [int] / max
 #   Number of field regions around the cluster that the code will try to define.
 #
 #   - [integer]: manually set a number of field regions.
@@ -168,37 +192,39 @@ GR       10
 
 
 
-################## Photometric functions parameters ############################
+##################### Uncertainties & A-D analysis  ############################
 
 # Error rejection.
 #
-# * e_max: [float]
-#   Maximum error value a star can have in either its magnitude or color
-#   without being rejected. 
+# * e_mag_max: [float] or [str]
+#   Maximum error value a star can have in its magnitude without being
+#   rejected. Use 'n' for no maximum limit.
 #
-#   e_max
-ER    0.3
+# * e_col_max: [float] or [str]
+#   Maximum error value a star can have in its color(s) without being rejected.
+#   Use 'n' for no maximum limit.
+#
+# * e_plx_max / e_pm_max / e_rv_max: [float] or [str]
+#   Idem for parallax / proper motions / radial velocity values. If these data
+#   columns are not present (or no maximum limit is desired) use 'n'.
+#
+#   e_mag_max   e_col_max    e_plx_max     e_pm_max     e_rv_max
+ER        0.1           n            n            n            n
 
-# Integrated magnitude.
+# Anderson-Darling test (cluster vs field regions).
 #
-# * flag: y / n
-#   Estimate the integrated magnitude for the cluster region, cleaned from
-#   field stars contamination when possible.
+# * runs: [int]
+#   Number of times the A-D test will run, perturbing through a normal
+#   distribution where the associated uncertainties are the standard deviations.
 #
-#   flag
-IM     y
-
-# KDE p-value test.
+# * Plx_PM_comb: y / n
+#   Combine the parallax and proper motion data (if available) with the
+#   photometric data in the second AD test. If 'y', all the data will be
+#   combined and analyzed. If 'n', the parallax+proper motion data will be
+#   analyzed separately in the second AD test.
 #
-# Probability of the cluster region of being a physical entity, as opposed
-# to a random over-density of field stars.
-#
-# * runs: [integer]
-#   Number of times the CMDs of the cluster and field regions are compared.
-#   If '0', the function will be skipped.
-#
-#   runs
-PV     2
+#   runs   Plx_PM_comb
+AD   100             y
 ################################################################################
 
 
@@ -227,16 +253,18 @@ PV     2
 #   is assigned an MP of 1, if 'fixed' algorithm is selected. Otherwise this
 #   parameter is ignored.
 #
-# * id_col: [integer]
-#   Column number for the stars' IDs in the membership file, if the 'read'
-#   algorithm is selected. Otherwise this parameter is ignored.
+#   algor   runs   fport
+DA  bayes   1000      .4
+
+#   If the 'bayes' algorithm is selected, these weights are assigned to each
+#   data dimension (photometric and kinematic). If more than one color is
+#   defined, add a second value after 'w_col'.
 #
-# * mp_col: [integer]
-#   Column number for the stars' MPs in the membership file, if the 'read'
-#   algorithm is selected. Otherwise this parameter is ignored.
-#
-#   algor   runs   fport   id_col   mp_col
-DA  bayes   1000      .4        0        7
+#  * w_xxx: 0<=[float]<=1
+# 
+#   w_mag    w_col    w_Plx    w_PMx    w_PMy    w_RV
+DW     1.       1.       1.       1.       1.      1.
+
 
 # Cluster region field stars removal.
 #
@@ -261,42 +289,171 @@ DA  bayes   1000      .4        0        7
 #   - all: use all stars in the cluster region.
 #
 # * binning: fixed / auto / fd / doane / scott / rice / sqrt
-#            sturges / knuth / blocks
+#            sturges / knuth / blocks / blocks_max
 #   Binning method to be used if the 'local' method is selected. Otherwise
 #   this parameter is ignored.
 #
 # * prob_min: minimum accepted probability value if the 'man' mode was
 #   selected. Otherwise this parameter is ignored.
 #
-#    mode    binning     prob_min
-RM  local      fixed          0.5
+#   mode    binning     prob_min
+FR  local     knuth          0.5
 ################################################################################
 
 
 
-#################### Cluster parameters assignation ############################
+###################### Parallax and PMs analysis ###############################
 
-# Best synthetic cluster fit.
+# Parallax Bayesian analysis
 #
-# * flag: y / n
-#   If 'n', no fundamental parameters estimation will be attempted on the
-#   observed cluster and all the values below are ignored.
+# * plx_bayes_flag: y / n
+#   Perform Bayesian analysis of parallax data.
 #
-#   flag
-BF     y 
+# * offset: [float]
+#   Offset added to the parallax data.
+#
+# * n_chains: [int]
+#   Number of MCMC chains used in the Bayesian analysis.
+#
+# * n_runs: [int]
+#   Number of MCMC steps used in the Bayesian analysis. 
+#
+# * mp_flag: y / n
+#   Use MPs in the parallax analysis?
+#
+#   plx_flag   offset   n_chains   n_runs   mp_flag
+PP         n    0.029         10     5000         y
 
-# Likelihood method.
+# Proper motions analysis
 #
-# * likelihood: tolstoy / dolphin
+# * KDE_stds: [0.<float]
+#   Standard deviations for the zoomed all-star VPD.
 #
-#   - tolstoy: uses a weighted bin-free statistic as that defined in
-#     Tolstoy & Saha (1996), Monteiro et al (2010) and Hernández & Valls-Gabaud
-#     (2008). If this method is selected, 'binning' is ignored.
-#   - dolphin: uses the 'Poisson likelihood ratio' (Eq. 10) defined in
-#     Dolphin (2002). This requires the selection of a binning method.
+# * N-N_max: [0<int]
+#   Number of neighbors to use in the Near-Neighbor algorithm.
+#
+# * N-N_prcntl: [0.<float<=100.]
+#   Percentile to filter the PMs N-N distance.
+#
+# * coord_flag: y / n
+#   Whether to use coordinates data in the N-N analysis.
+#
+#   KDE_stds   N-N_max   N-N_prcntl    coord_flag
+PO        3.        10            5             y
+################################################################################
+
+
+
+#################### Best fit algorithm parameters #############################
+
+# Algorithm used to maximize/explore the parameter space given a likelihood.
+#
+# * algorithm: ptemcee / boot+GA / n
+#
+#   - ptemcee: Parallel tempering Bayesian MCMC algorithm.
+#   - boot+GA: Bootstrap process using a genetic algorithm to obtain the MLE.
+#   - n      : No fundamental parameters estimation will be attempted on the
+#              observed cluster. All the parameters below are ignored.
+#
+# * hmax: [float] maximum number of hours the entire process should run.
+#
+#   algorithm   h_max
+CF    ptemcee      .1
+
+# Minimum / maximum values that define the range of the parameters to fit for
+# the metallicity, log(age), E(B-V), distance modulus, initial mass, and binary
+# fraction, respectively. A single value indicates a fixed parameter.
+#
+#        min      max
+RZ    0.0005     0.03
+RA         7       10
+RE         0        1
+RD         8       15
+RM       100    10000
+RB         0        1
+
+# ptemcee parameters.
+#
+#   - init_mode: random / diffevol
+#   - popsize: [int], population size for the 'diffevol' method.
+#   - maxiter:[int], maximum number of iterations for the 'diffevol' method.
+#
+#   - ntemps: [int], Number of parallel temperatures.
+#   - nwalkers: [int], Number of walkers/chains used.
+#   - nburn: [int], Number of burn-in samples to discard.
+#   - nsteps: [int], Number of steps to process.
+#   - Tmax: [float] / inf / n, maximum temperature value.
+#   - adapt: y / n, turn on-off the adaptive (dynamic) temperature selection.
+#
+#   - N_conv: [int], minimum number for the the effective sample size to apply
+#             the convergence break.
+#   - tol_conv: [float], minimum tolerance for the stability of the
+#               autocorrelation time to apply the convergence break.
+#
+#     init_mode   popsize   maxiter
+PT0      random         5        10
+#
+#     ntemps    nwalkers   nburn    nsteps     Tmax   adapt
+PT1       10          50      50       500      inf       y
+#
+#     N_conv   tol_conv
+PT2      100       0.01
+#
+#   - prior: u / g, uniform (u) or Gaussian (g) prior distributions for the
+#     fitted parameters. 'mean/stddev' are only required if the 'g' prior is
+#     used.
+#
+#     prior      mean      stddev
+PTZ       u    0.0152       0.005
+PTA       u         8         0.5
+PTE       u       0.5        0.02
+PTD       u        14         0.5
+PTM       u      1000         500
+PTB       u       0.5         0.2
+
+# Bootstrap parameters
+#
+#   - hperc: [0<=float<0.9], time allocated for the bootstrap process
+#     as a percentage of the 'hmax' parameter. If 'hperc=0' the bootstrap
+#     process is skipped and no uncertainties are assigned to the parameters.
+#   - N_pop: [int], population number used in the bootstrap process.
+#   - N_step: [int], number of steps  used in the bootstrap process.
+#
+#    hperc    N_pop    N_step
+BT      .5        10       100
+
+# Genetic Algorithm parameters.
+#
+#   - n_pop: [integer], Number of chromosomes in the population.
+#   - fdif: 0<[float]<=1, Fitness differential. Establishes the 'selection
+#     pressure' for the algorithm.
+#   - p_cross: 0<[float]<=1, crossover probability.
+#   - cr_sel: 1P / 2P, 1-point (1P) or 2-point (2P) crossover.
+#   - p_mut: 0<[float]<=1, mutation probability.
+#   - n_el: [integer], (elitism operator) Number of best solutions to pass
+#     unchanged to the next generation.
+#   - n_ei: [integer], (extinction/immigration operator) Number of generations
+#     allowed to run with the same best solution before calling for a new
+#     generation of random solutions.
+#   - n_es: [integer], (exit switch) number of times the Extinction/Immigration
+#     operator is allowed to run returning the same best solution before
+#     exiting the GA.
+#
+#   n_pop  fdif  p_cross  cr_sel  p_mut  n_el  n_ei  n_es
+GA     50    1.     0.85      2P    0.1     1   100    50  
+
+# Likelihood equation.
+#
+# * likelihood: dolphin / tolstoy
+#
+#   - dolphin: uses the 'Poisson likelihood ratio' (Dolphin (2002); Eq. 10)
+#     Requires the selection of a binning method.
+#   - tolstoy: weighted bin-free statistic as that defined in Tolstoy & Saha
+#     (1996), Monteiro et al (2010) and Hernández & Valls-Gabaud (2008). If
+#     this method is selected, 'binning' is ignored.
 #
 # * binning: fixed / auto / fd / doane / scott / rice / sqrt
-#            sturges / knuth / blocks
+#            sturges / knuth / blocks / blocks_max
 #   Binning method to be used if the likelihood equation by 'dolphin' is
 #   selected. Otherwise this parameter is ignored.
 #
@@ -304,8 +461,13 @@ BF     y
 #   Weight applied to each bin defined by the 'binning' parameter, if 'dolphin'
 #   is selected. Otherwise this parameter is ignored.
 #
-#   likelihood  binning    weight
-LK     dolphin     auto      mean
+#   likelihood    binning    weight
+LK     dolphin      knuth      mean
+################################################################################
+
+
+
+#################### Synthetic clusters parameters #############################
 
 # Set of evolutionary tracks.
 #
@@ -314,13 +476,21 @@ LK     dolphin     auto      mean
 #   - PAR12:  PARSEC v1.2S
 #   - PAR11:  PARSEC v1.1
 #   - PAR10:  PARSEC v1.0
-#   - MAR08A: Marigo 2008, Case A
-#   - MAR08B: Marigo 2008, Case B
-#   - MAR08:  Marigo 2008
-#   - GIR02:  Girardi 2002
 #
-#   evol_track
-PS       PAR12
+# * colibri: [selection]
+#
+#   - CS_35:  COLIBRI S_35
+#   - CS_07:  COLIBRI S_07
+#   - CPR16:  COLIBRI PR16
+#   - No   :  No limitation in Z
+#
+#   evol_track    colibri
+ET       PAR12         No
+#
+# Input [z, log(age)] steps to read the stored isochrones.
+#
+#        z    log(age)
+PS   0.005         0.5
 
 # IMF used to populate the synthetic clusters.
 #
@@ -334,46 +504,27 @@ PS       PAR12
 # * m_high: [float]
 #   Upper mass value for the IMF (in solar masses).
 #
-# * m_sample: y / n
-#   Unique random sample of masses for each synthetic cluster.
+# * N_interp: [int]
+#   Number of extra values to interpolate into the isochrones.
 #
-#   IMF                 m_high           m_sample
-MF  kroupa_2002            150                  n
+# * N_mass: [int]
+#   Number of masses defined within the mass range.
+#
+#   IMF                 m_high      N_interp     N_mass
+MF  kroupa_2002            150          2000        100
 
-# Ranges and steps for the intrinsic fundamental parameters.
-#
-#                        min      max     step
-#   Metallicity (z)
-MZ                    0.0005     0.03    0.005
-#
-#   log(age)
-LA                         6       10      0.5
-#
-#   Total initial mass (solar masses)
-TM                        10    10000      100
-#
-#   Binary fraction
-BI                         0        1      0.2
+# Binaries mass ratio.
 #
 # - min_mass_ratio: 0<[float]<=1
-#   Minimum mass ratio for the generation of binaries. Ignored if
-#   'Binary fraction' is fixed to '0.'
+#   Minimum mass ratio for the generation of binaries. Ignored if the
+#   'Binary fraction' parameter is fixed to '0.'
 #
 #     min_mass_ratio
 BI_m              .7
 
-# Ranges and steps for the extrinsic fundamental parameters.
-#
-#                        min      max     step
-#   E(B-V)
-BV                         0        1     0.02
-#
 # Ratio of total to selective absorption (R_V).
 #
 RV                         3.1
-#
-#   Distance modulus
-DM                         8       15      0.2
 
 # Maximum magnitude cut.
 #
@@ -386,50 +537,4 @@ DM                         8       15      0.2
 #
 #   max_mag
 MM      max
-
-# Algorithm used to maximize the likelihood.
-#
-# * algorithm: genet / brute
-#
-#   - genet: Genetic Algorithm (GA).
-#   - brute: Brute Force algorithm, ie: all possible solutions are processed
-#     If 'brute' is selected, 'bootstrap' is ignored.
-#
-# * bootstrap: [integer]
-#   Number of times the bootstrap with replacement process will run
-#   in the GA algorithm. Minimum value is 2, anything less will skip the
-#   bootstrap process and no errors will be assigned to the parameters.
-#
-#   algorithm   bootstrap
-AB      genet          10
-
-# Genetic Algorithm parameters.
-#
-# General:
-# n_pop: number of chromosomes in the population.
-# n_gen: number of generations to process.
-# fdif: Fitness differential. Establishes the 'selection pressure'
-# for the algorithm.
-#
-# Crossover operator:
-# p_cross: crossover probability.
-# cr_sel: select 1-point (1P) or 2-point (2P) crossover.
-#
-# Mutation operator:
-# p_mut: mutation probability.
-#
-# Elitism operator:
-# n_el: number of best solutions to pass unchanged to the next
-# generation.
-#
-# Extinction/Immigration operator:
-# n_ei: number of generations allowed to run with the same best solution
-# before calling for a new generation of random solutions.
-#
-# Exit switch:
-# n_es:number of times the Extinction/Immigration operator is allowed to run
-# returning the same best solution before exiting the GA.
-#
-#   n_pop  n_gen fdif p_cross cr_sel p_mut n_el n_ei n_es
-GA    100   1000   1.    0.85     2P  0.05    1   50   10
 ################################################################################

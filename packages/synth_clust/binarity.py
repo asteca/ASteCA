@@ -1,6 +1,7 @@
 
-import numpy as np
-from mass_interp import find_closest
+from ..core_imp import np
+from .mass_interp import find_closest
+from .. import update_progress
 
 
 def mag_combine(m1, m2):
@@ -12,6 +13,7 @@ def mag_combine(m1, m2):
 
     """
     c = 10 ** -.4
+    # TODO
     # This catches an overflow warning issued because some Marigo isochrones
     # contain huge values in the U filter. Not sure if this happens with
     # other systems/filters. See issue #375
@@ -25,8 +27,9 @@ def binarGen(
         binar_fracs, N_interp, mags_theor, cols_theor, mags_cols_theor,
         extra_pars, bin_mass_ratio):
     '''
+    Called by isoch_params().
 
-    0. Assign N unique indexes by dividing range of stars by their total
+    0. Assign N unique indexes by dividing the range of stars by their total
        number.
 
     For each theoretical isochrone defined.
@@ -40,17 +43,19 @@ def binarGen(
 
     '''
 
-    # If binary_fraction = 0. don't bother obtaining the binary magnitudes,
+    # If binary_fraction=0 don't bother obtaining the binary magnitudes,
     # colors, etc.
     if binar_fracs.any():
 
-        print("Generating binary data (b_mr={:.2f})\n".format(bin_mass_ratio))
+        print("Generating binary data (b_mr={:.2f})".format(bin_mass_ratio))
+
         # All theoretical isochrones are interpolated with the same length,
         # assign unique binarity probabilities to each star randomly.
         unq_b_probs = np.arange(N_interp) / float(N_interp)
 
         mags_binar, cols_binar, probs_binar, mass_binar = [], [], [], []
         # For each metallicity defined.
+        N_mags_theor = len(mags_theor)
         for mx, _ in enumerate(mags_theor):
 
             mag_bin, col_bin, prob_bin, mass_bin = [], [], [], []
@@ -117,6 +122,8 @@ def binarGen(
             cols_binar.append(col_bin)
             probs_binar.append(prob_bin)
             mass_binar.append(mass_bin)
+
+            update_progress.updt(N_mags_theor, mx + 1)
     else:
         mags_binar, cols_binar, mass_binar =\
             np.zeros(np.shape(mags_theor)),\
@@ -140,7 +147,7 @@ def main(isoch_mass, bin_frac, m_ini, N_fc):
         bin_indxs = isoch_mass[m_ini - 2] <= bin_frac
 
         # Index of the first binary magnitude, stored in the theoretical
-        # isochrones list. The 5 is for the remaining 5 extra parameters.
+        # isochrones list.
         mag_ini = N_fc[0] + N_fc[1]
 
         # Update array with new values of magnitudes, colors, and masses.

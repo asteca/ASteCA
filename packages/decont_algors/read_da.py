@@ -2,10 +2,12 @@
 from astropy.io import ascii
 
 
-def main(cl_region, memb_file, readda_idcol, readda_mpcol):
+def main(cl_region, memb_file, readda_idcol=0, readda_mpcol=-2):
     """
-    Read MP values from file. Any star whose ID is not in the defined cluster
-    region (cl_region) will be assigned an MP of 0.01.
+    Read MP values from file. Any star in the defined cluster whose ID is not
+    found in the membership file will be assigned MP=0.5.
+
+    The indexes for the ID and MPs columns are hardcoded.
     """
     print('Reading membership probabilities from file.')
     # Read IDs and MPs from file.
@@ -14,16 +16,21 @@ def main(cl_region, memb_file, readda_idcol, readda_mpcol):
     id_list, memb_probs = [str(_) for _ in data.columns[readda_idcol]],\
         data.columns[readda_mpcol]
 
-    memb_probs_cl_region = []
+    N_not, memb_probs_cl_region = 0, []
     # Assign probabilities read from file according to the star's IDs.
-    # Those stars not present in the list are assigned a very low value.
-    for indx, star in enumerate(cl_region):
+    for star in cl_region:
         if star[0] in id_list:
             # Index of star in file.
             i = id_list.index(star[0])
             # Assign the probability stored in file for this star.
             memb_probs_cl_region.append(memb_probs[i])
         else:
-            memb_probs_cl_region.append(0.01)
+            # Stars not present in the list are assigned a fixed value.
+            memb_probs_cl_region.append(0.5)
+            N_not += 1
+
+    if N_not > 0:
+        print(("  WARNING: {} stars where not present in the membership\n" +
+               "  file and were assigned MP=0.5").format(N_not))
 
     return memb_probs_cl_region

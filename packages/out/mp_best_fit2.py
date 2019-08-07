@@ -2,25 +2,23 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.offsetbox as offsetbox
-from matplotlib.ticker import MultipleLocator
 from matplotlib.colors import LinearSegmentedColormap
 
 
 def pl_mps_phot_diag(
-        gs, gs_y1, gs_y2, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
-        x_ax, y_ax, v_min_mp, v_max_mp, obs_x, obs_y, obs_MPs,
-        err_bar, hess_xedges, hess_yedges, x_isoch, y_isoch):
+    gs, gs_y1, gs_y2, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
+    x_ax, y_ax, v_min_mp, v_max_mp, obs_x, obs_y, obs_MPs, err_bar,
+        hess_xedges, hess_yedges, x_isoch, y_isoch):
     '''
     Star's membership probabilities on cluster's photometric diagram.
     '''
-    x_val, mag_y, x_err, y_err = err_bar
     ax = plt.subplot(gs[gs_y1:gs_y2, 0:2])
     # Set plot limits
     plt.xlim(x_min_cmd, x_max_cmd)
     plt.ylim(y_min_cmd, y_max_cmd)
     # Set axis labels
-    plt.xlabel('$' + x_ax + '$', fontsize=18)
-    plt.ylabel('$' + y_ax + '$', fontsize=18)
+    plt.xlabel('$' + x_ax + '$', fontsize=12)
+    plt.ylabel('$' + y_ax + '$', fontsize=12)
     # Add text box.
     if gs_y1 == 0:
         text = '$N_{{fit}}={}$'.format(len(obs_MPs))
@@ -29,7 +27,6 @@ def pl_mps_phot_diag(
         ax.add_artist(ob)
     # Set minor ticks
     ax.minorticks_on()
-    ax.xaxis.set_major_locator(MultipleLocator(1.0))
     if gs_y1 == 0:
         ax.set_title("Observed", fontsize=10)
     # Plot grid.
@@ -41,27 +38,36 @@ def pl_mps_phot_diag(
             ax.axhline(y_ed, linestyle=':', lw=.8, color='k', zorder=1)
     # This reversed colormap means higher prob stars will look redder.
     cm = plt.cm.get_cmap('RdYlBu_r')
-    # If the 'tolstoy method was used AND the stars have a range of colors.
+    # If the 'tolstoy' method was used AND the stars have a range of colors.
     # Currently the 'dolphin' likelihood does not use MPs in the fit, so it's
     # confusing to color stars is if it did.
     if v_min_mp != v_max_mp:
         col_select_fit, isoch_col = obs_MPs, 'g'
+        plot_colorbar = True
     else:
         col_select_fit, isoch_col = '#4682b4', 'r'
+        plot_colorbar = False
     # Plot stars used in the best fit process.
     sca = plt.scatter(obs_x, obs_y, marker='o',
-                      c=col_select_fit, s=40, cmap=cm, lw=0.5, edgecolor='k',
+                      c=col_select_fit, s=30, cmap=cm, lw=0.5, edgecolor='k',
                       vmin=v_min_mp, vmax=v_max_mp, zorder=4)
     # Plot isochrone.
     plt.plot(x_isoch, y_isoch, isoch_col, lw=1., zorder=6)
-    # If list is not empty, plot error bars at several values.
+    # If list is not empty, plot error bars at several values. The
+    # prep_plots.error_bars() is not able to handle the color-color diagram.
+    x_val, mag_y, xy_err = err_bar
     if x_val:
-        plt.errorbar(x_val, mag_y, yerr=y_err, xerr=x_err, fmt='k.', lw=0.8,
-                     ms=0., zorder=4)
+        xye_i = {
+            '0': (mag_y, 0, 1), '2': (mag_y, 0, 2),
+            '4': (np.linspace(min(obs_y), max(obs_y), len(x_val)), 1, 2)}
+        plt.errorbar(
+            x_val, xye_i[str(gs_y1)][0], yerr=xy_err[xye_i[str(gs_y1)][1]],
+            xerr=xy_err[xye_i[str(gs_y1)][2]],
+            fmt='k.', lw=0.8, ms=0., zorder=4)
     # For plotting the colorbar (see bottom of make_D_plot file).
     trans = ax.transAxes + fig.transFigure.inverted()
 
-    return sca, trans
+    return plot_colorbar, sca, trans
 
 
 def pl_hess_diag(
@@ -75,10 +81,9 @@ def pl_hess_diag(
     plt.xlim(x_min_cmd, x_max_cmd)
     plt.ylim(y_min_cmd, y_max_cmd)
     # Set axis labels
-    plt.xlabel('$' + x_ax + '$', fontsize=18)
+    plt.xlabel('$' + x_ax + '$', fontsize=12)
     # Set minor ticks
     ax.minorticks_on()
-    ax.xaxis.set_major_locator(MultipleLocator(1.0))
     if gs_y1 == 0:
         ax.set_title("Hess diagram (observed - synthetic)", fontsize=10)
     for x_ed in hess_xedges:
@@ -106,8 +111,8 @@ def pl_hess_diag(
             zero_pt0 = np.floor(zero_pt * (N - 1)) / (N - 1)
             zero_pt1 = np.ceil(zero_pt * (N - 1)) / (N - 1)
             cmap = LinearSegmentedColormap.from_list(
-                'mycmap', [(0, 'blue'), (zero_pt0, 'white'), (zero_pt1,
-                           'white'), (1, 'red')], N=N)
+                'mycmap', [(0, 'blue'), (zero_pt0, 'white'),
+                           (zero_pt1, 'white'), (1, 'red')], N=N)
         ax.pcolormesh(hess_x, hess_y, HD, cmap=cmap, vmin=HD.min(),
                       vmax=HD.max(), zorder=1)
         # Legend.
@@ -120,9 +125,9 @@ def pl_hess_diag(
 
 def pl_bf_synth_cl(
     gs, gs_y1, gs_y2, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
-        hess_xedges, hess_yedges, x_synth, y_synth, binar_idx, IMF_name, R_V,
-        cp_r, cp_e, x_isoch, y_isoch, lkl_method, bin_method, cmd_evol_tracks,
-        evol_track):
+    hess_xedges, hess_yedges, x_synth, y_synth, binar_idx, IMF_name, R_V,
+    best_sol, p_err, x_isoch, y_isoch, lkl_method, bin_method,
+        cmd_evol_tracks, evol_track):
     '''
     Best fit synthetic cluster obtained.
     '''
@@ -131,10 +136,9 @@ def pl_bf_synth_cl(
     plt.xlim(x_min_cmd, x_max_cmd)
     plt.ylim(y_min_cmd, y_max_cmd)
     # Set axis labels
-    plt.xlabel('$' + x_ax + '$', fontsize=18)
+    plt.xlabel('$' + x_ax + '$', fontsize=12)
     # Set minor ticks
     ax.minorticks_on()
-    ax.xaxis.set_major_locator(MultipleLocator(1.0))
     if gs_y1 == 0:
         ax.set_title("Synthetic (best match)", fontsize=10)
         # Add text box
@@ -152,7 +156,7 @@ def pl_bf_synth_cl(
     # Plot synthetic cluster.
     single_idx, bin_idx = binar_idx <= 1., binar_idx > 1.
     # Single systems
-    plt.scatter(x_synth[single_idx], y_synth[single_idx], marker='o', s=40,
+    plt.scatter(x_synth[single_idx], y_synth[single_idx], marker='o', s=30,
                 c='#4682b4', lw=0.5, edgecolor='k', zorder=2)
     # Binary systems
     plt.scatter(x_synth[bin_idx], y_synth[bin_idx], marker='o', s=30,
@@ -170,21 +174,24 @@ def pl_bf_synth_cl(
         ax_t = plt.subplot(gs[gs_y1:gs_y2, 6:7])
         ax_t.axis('off')  # Remove axis from frame.
         # Map isochrones set selection to proper name.
-        iso_print = cmd_evol_tracks[evol_track][1]
-        t1 = r'$Synthetic\;cluster\;parameters$' + '\n' + \
-            r'$[Tracks:\;{}]$'.format(iso_print.replace(' ', '\;'))
+        iso_print = cmd_evol_tracks[evol_track][1] + ' + ' +\
+            cmd_evol_tracks[evol_track][2]
+        t1 = r'$Synthetic\;cluster\;parameters$' + '\n[{}]'.format(iso_print)
         t2 = r'$IMF \hspace{{3.}}:\;{}$'.format(
             IMF_name.replace('_', '\;').title())
         t3 = r'$R_{{V}} \hspace{{3.2}}=\;{}$'.format(R_V)
-        t4 = r'$z \hspace{{3.9}}=\;{}\pm {}$'.format(cp_r[0], cp_e[0])
-        t5 = r'$\log(age) \hspace{{0.17}}=\;{}\pm {}$'.format(cp_r[1], cp_e[1])
-        t6 = r'$E_{{(B-V)}} \hspace{{1.35}}=\;{}\pm {}$'.format(
-            cp_r[2], cp_e[2])
-        t7 = r'$(m-M)_o=\;{} \pm {}$'.format(cp_r[3], cp_e[3])
-        t8 = r'$M\,(M_{{\odot}}) \hspace{{1.07}} =\;{}\pm {}$'.format(
-            cp_r[4], cp_e[4])
-        t9 = r'$b_{{frac}} \hspace{{2.37}}=\;{}\pm {}$'.format(
-            cp_r[5], cp_e[5])
+        t4 = r'$z \hspace{{3.9}}=\;{:.5f}\pm {:.5f}$'.format(
+            best_sol[0], p_err[0][2])
+        t5 = r'$\log(age) \hspace{{0.17}}=\;{:.3f}\pm {:.3f}$'.format(
+            best_sol[1], p_err[1][2])
+        t6 = r'$E_{{(B-V)}} \hspace{{1.35}}=\;{:.3f}\pm {:.3f}$'.format(
+            best_sol[2], p_err[2][2])
+        t7 = r'$(m-M)_{{0}}=\;{:.3f} \pm {:.3f}$'.format(
+            best_sol[3], p_err[3][2])
+        t8 = r'$M\,(M_{{\odot}}) \hspace{{1.07}} =\;{:.0f}\pm {:.0f}$'.format(
+            best_sol[4], p_err[4][2])
+        t9 = r'$b_{{frac}} \hspace{{2.37}}=\;{:.2f}\pm {:.2f}$'.format(
+            best_sol[5], p_err[5][2])
         text = t1 + '\n\n' + t2 + '\n' + t3 + '\n' + t4 + '\n' + t5 + '\n' +\
             t6 + '\n' + t7 + '\n' + t8 + '\n' + t9
         ob = offsetbox.AnchoredText(
@@ -210,5 +217,5 @@ def plot(N, *args):
         fxn(*args)
     except Exception:
         import traceback
-        print traceback.format_exc()
+        print(traceback.format_exc())
         print("  WARNING: error when plotting {}.".format(plt_map.get(N)[1]))

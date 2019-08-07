@@ -1,41 +1,43 @@
 
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+from astropy.visualization import ZScaleInterval
 from os.path import join
-import mp_centers
-import add_version_plot
-import prep_plots
+from . import mp_centers
+from . import add_version_plot
+from . import prep_plots
 
 
 def main(
-        npd, cld, pd, xy_mag_ranges, hist_2d_g, cents_bin_2d, st_dev_lst,
+    npd, cld_i, pd, xy_mag_ranges, bw_list, frame_kdes, cents_xy,
         **kwargs):
     '''
     Make A1 block plots.
     '''
     if 'A1' in pd['flag_make_plot']:
-        # figsize(x1, y1), GridSpec(y2, x2) --> To have square plots: x1/x2 =
-        # y1/y2 = 2.5
+        # figsize(x1, y1), GridSpec(y2, x2)
         fig = plt.figure(figsize=(30, 25))
         gs = gridspec.GridSpec(10, 12)
         add_version_plot.main()
 
         # Obtain plotting parameters and data.
         x_min, x_max, y_min, y_max = prep_plots.frame_max_min(
-            cld['x'], cld['y'])
+            cld_i['x'], cld_i['y'])
         asp_ratio = prep_plots.aspect_ratio(x_min, x_max, y_min, y_max)
         coord, x_name, y_name = prep_plots.coord_syst(pd['coords'])
         # Use first magnitude and color
         x_ax, y_ax = prep_plots.ax_names(
             pd['colors'][0], pd['filters'][0], 'mag')
 
-        N_all, min_mag_all = len(cld['mags'][0]), min(cld['mags'][0])
         # Structure plots.
+        interval = ZScaleInterval()
+        zmin, zmax = interval.get_limits(cld_i['mags'][0])
+        N_all = len(cld_i['mags'][0])
         arglist = []
         for mag_rng in xy_mag_ranges:
-            x, y, m = zip(*mag_rng.values()[0])
-            mag_range = mag_rng.keys()[0]
-            st_sizes_arr = prep_plots.star_size(m, N=N_all, min_m=min_mag_all)
+            x, y, m = list(zip(*list(mag_rng.values())[0]))
+            mag_range = list(mag_rng.keys())[0]
+            st_sizes_arr = prep_plots.star_size(m, N_all, zmin, zmax)
             arglist.append(
                 # pl_full_frame: x,y finding chart of full frame.
                 [gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max,
@@ -47,11 +49,11 @@ def main(
 
         # 2D Gaussian convolved histogram.
         arglist = []
-        for h2d, cb2d in zip(*[hist_2d_g, cents_bin_2d]):
+        for kdepl, cent_xy in zip(*[frame_kdes, cents_xy]):
             arglist.append(
                 # pl_center: 2D Gaussian convolved histogram.
-                [gs, fig, asp_ratio, x_name, y_name, coord, st_dev_lst, h2d,
-                 cb2d],
+                [gs, fig, asp_ratio, x_name, y_name, coord, bw_list, kdepl,
+                 cent_xy],
             )
         for n, args in enumerate(arglist, 5):
             # with timeblock("{}".format(n)):

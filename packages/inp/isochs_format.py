@@ -2,23 +2,23 @@
 
 def cmd_age_format():
     """
-    Define reg expression to isolate the age of an isochrone.
+    Define reg expression to isolate the age of a CMD isochrone from its
+    commented title line.
     """
-    age_format = r"Age = \t(.+?) yr"
+    age_format = r"Age = (.+?) yr"
     return age_format
 
 
-def cmd_line_start_format(evol_track):
+def cmd_line_start_format(cmd_evol_tracks, evol_track):
     """
     Return the format of the line where column names are read from, for each
     set of evolutionary tracks.
     """
-    if evol_track in ['PAR10', 'PAR11', 'PAR12', 'PAR12C']:
+    if evol_track in cmd_evol_tracks.keys():
         # String that identifies the beginning of a new isochrone.
-        line_start = "#\tIsochrone  Z = "
-    elif evol_track in ['GIR02', 'MAR08', 'MAR08B', 'MAR08A']:
-        # String that identifies the beginning of a new isochrone.
-        line_start = "#\tIsochrone\tZ = "
+        line_start = "# Zini"
+    else:
+        print("ERROR: evolutionary track not recognized.")
 
     return line_start
 
@@ -35,9 +35,9 @@ def read_line_start(met_f, line_start):
             # When this line is found, extract columns names from the
             # following line.
             if line.startswith(line_start):
-                # Line found, split into column names.
-                ls = f_iso.next().split()
-                # Remove first element from list, the comment character.
+                # Split into column names.
+                ls = line.split()
+                # Remove comment character.
                 if ls[0] == '#':
                     del ls[0]
                 else:
@@ -52,24 +52,24 @@ def cmd_common_ids(evol_track, l):
     """
     These parameters are equivalent across photometric systems in a given
     set of CMD evolutionary tracks.
-    The new PARSEC sets have an extra Z column at the position zero, that
-    Marigo sets do not have.
     """
     # Get indexes of initial mass, magnitudes, etc.
-    M_ini, M_act, logLLo, logTe, logG, mbol = l.index('M_ini'),\
-        l.index('M_act'), l.index('logL/Lo'), l.index('logTe'),\
-        l.index('logG'), l.index('mbol')
+    Mini, int_IMF, Mass, logL, logTe, logg, label, mbolmag = l.index('Mini'),\
+        l.index('int_IMF'), l.index('Mass'), l.index('logL'),\
+        l.index('logTe'), l.index('logg'), l.index('label'),\
+        l.index('mbolmag')
 
-    if evol_track in ['PAR10', 'PAR11', 'PAR12', 'PAR12C']:
-        if [M_ini, M_act, logLLo, logTe, logG, mbol] != [2, 3, 4, 5, 6, 7]:
+    # Simple check
+    if evol_track in ['PAR10', 'PAR11', 'PAR12']:
+        if [Mini, int_IMF, Mass, logL, logTe, logg, label, mbolmag] !=\
+                [2, 3, 4, 5, 6, 7, 8, 9]:
             print("  WARNING: extra parameters in isochrones are not\n"
                   "  positioned as expected!\n")
-    elif evol_track in ['GIR02', 'MAR08', 'MAR08B', 'MAR08A']:
-        if [M_ini, M_act, logLLo, logTe, logG, mbol] != [1, 2, 3, 4, 5, 6]:
-            print("  WARNING: extra parameters in isochrones are not\n"
-                  "  positioned as expected!\n")
 
-    return [M_ini, M_act, logLLo, logTe, logG, mbol]
+    # TODO these extra params consume a lot of memory and are not used for
+    # now. Don't read until they are used or I find a more efficient method
+    # of storing them.
+    return [Mini]  # , int_IMF, Mass, logL, logTe, logg, label, mbolmag]
 
 
 def girardi_filters_ids(l, uniq_fltrs):

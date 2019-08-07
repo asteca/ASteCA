@@ -3,7 +3,7 @@ import numpy as np
 from ..out import prep_plots
 
 
-def main(clp, coords, **kwargs):
+def main(clp, coords, fdens_method, **kwargs):
     """
     Get field density level of stars through an iterative process. Start with
     the complete set of radial density points and obtain its median and
@@ -15,38 +15,42 @@ def main(clp, coords, **kwargs):
     # Copy list.
     reduced_rd = list(clp['rdp_points'])
 
-    stable_cond = False
-    while stable_cond is False:
+    if fdens_method == 'auto':
 
-        # Obtain median and standard deviation.
-        median, sigma = np.median(reduced_rd), np.std(reduced_rd)
+        stable_cond = False
+        while stable_cond is False:
 
-        # Check if at least one element in the list is beyond the 1 sigma
-        # level.
-        rm_elem = False
-        dist_r = -1.
-        for indx, elem in enumerate(reduced_rd):
-            dist = abs(elem - median)
+            # Obtain median and standard deviation.
+            median, sigma = np.median(reduced_rd), np.std(reduced_rd)
 
-            if dist > sigma and dist > dist_r:
-                # Update distance removal value.
-                dist_r = dist
-                # Store index of element.
-                rm_index = indx
-                # Raise flag.
-                rm_elem = True
+            # Check if at least one element in the list is beyond the 1 sigma
+            # level.
+            rm_elem = False
+            dist_r = -1.
+            for indx, elem in enumerate(reduced_rd):
+                dist = abs(elem - median)
 
-        if rm_elem is True:
-            # Remove element from list and iterate again.
-            del reduced_rd[rm_index]
-        else:
-            stable_cond = True
+                if dist > sigma and dist > dist_r:
+                    # Update distance removal value.
+                    dist_r = dist
+                    # Store index of element.
+                    rm_index = indx
+                    # Raise flag.
+                    rm_elem = True
 
-        field_dens = median
+            if rm_elem is True:
+                # Remove element from list and iterate again.
+                del reduced_rd[rm_index]
+            else:
+                stable_cond = True
 
-    clp['field_dens'] = field_dens
+            field_dens = median
+
+    else:
+        field_dens = float(fdens_method)
+
     coord = prep_plots.coord_syst(coords)[0]
-    print("Field density calculated ({:.1E} stars/{c}^2).".format(
-          field_dens, c=coord))
+    print("Field density ({:.1E} stars/{c}^2).".format(field_dens, c=coord))
+    clp['field_dens'] = field_dens
 
     return clp

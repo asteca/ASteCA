@@ -19,7 +19,7 @@ def main(mmag, e_mc, be_m, interv_mag, n_interv):
 
         # Use only stars above the bright end. All stars are already below
         # the err_max limit.
-        if be_m < st_mag:
+        if be_m <= st_mag:
             # Store each star in its corresponding interval in the segmented
             # mag list. Will be used to calculate the curve fit.
 
@@ -40,7 +40,7 @@ def main(mmag, e_mc, be_m, interv_mag, n_interv):
     # of the main magnitude.
     e_mc_value = []
     # Initial value for the median.
-    median = 0.01
+    median = 0.0001
     # Iterate through all intervals (lists) in the main magnitude range.
     for interv in mc_interv:
         # Check that list is not empty.

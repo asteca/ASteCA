@@ -1,25 +1,25 @@
 
-
 / asteca_run
-    |--> check_1strun
-    |--> inp/input_clusters
     |--> checker
+        |--> check/first_run
         |--> check/pack
         |--> check/clusters
         |--> check/params_file
+            |--> inp/input_params
         |--> check/update
-        |--> check/photom_names
+        |--> check/params_mode
+        |--> check/params_data
+        |--> check/params_out
         |--> check/params_struct
-        |--> check/params_pval
         |--> check/params_decont
             |--> inp/names_paths (1)
         |--> check/params_match
         |--> check/read_met_files
             |--> inp/met_ages_values
-                  |--> inp/isochs_format (1)
+                |--> inp/isochs_format (1)
             |--> inp/isoch_params
                 |--> inp/read_isochs
-                  |--> inp/isochs_format (2)
+                    |--> inp/isochs_format (2)
     |--> func_caller
         |--> inp/names_paths (2)
         |--> inp/get_data_semi
@@ -27,7 +27,7 @@
         |--> structure/trim_frame
             |--> structure/display_frame
                 |--> out/prep_plots (1)
-                  |--> math_f/exp_function (1)
+                    |--> math_f/exp_function (1)
         |--> structure/histo_2d
         |--> structure/center
             |--> out/prep_plots (2)
@@ -54,14 +54,13 @@
 from packages.errors import err_accpt_rejct
 from packages.structure import stars_in_out_cl_reg
 from packages.structure import cluster_area
-from packages.phot_analysis import members_number
-from packages.phot_analysis import contamination_index
+from packages.data_analysis import members_number
+from packages.data_analysis import contamination_index
 from packages.structure import field_regions
-from packages.phot_analysis import luminosity_func
-from packages.phot_analysis import integrated_mag
-# from phot_analysis import kde_pvalue
+from packages.data_analysis import luminosity_func
+from packages.data_analysis import integrated_mag
 from packages.decont_algors import bayesian_da
-from packages.phot_analysis import members_N_compare
+from packages.data_analysis import members_N_compare
 from packages.decont_algors import membership_removal
 from packages.out import cluster_members_file
 from packages.best_fit import synth_cl_err

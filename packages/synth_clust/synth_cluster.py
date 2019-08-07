@@ -1,11 +1,11 @@
 
-import move_isochrone
-import cut_max_mag
-import mass_distribution
-import mass_interp
-import binarity
-import completeness_rm
-import add_errors
+from . import move_isochrone
+from . import cut_max_mag
+from . import mass_distribution
+from . import mass_interp
+from . import binarity
+from . import completeness_rm
+from . import add_errors
 
 
 def main(err_max, err_lst, completeness, max_mag_syn, st_dist_mass,
@@ -16,7 +16,7 @@ def main(err_max, err_lst, completeness, max_mag_syn, st_dist_mass,
 
     The synthetic cluster returned has the shape:
 
-    synth_clust = [photometry, binary_idxs, extra_pars]
+    synth_clust = [photometry, binary_idxs + extra_pars]
 
     photometry = [photom, errors]
     photom = [f1, f2, ..., fF, c1, c2, ..., cC]
@@ -145,7 +145,7 @@ if __name__ == "__main__":
     bin_mr = .7
     with open(mpath + 'theor_tracks.pickle', 'rb') as f:
         theor_tracks = pickle.load(f)
-    err_max = .3
+    err_max = [.3]
     err_lst = [
         np.array([4.82905373e-17, 1.60540044e+00, 3.04244535e-02]),
         np.array([2.91192261e-10, 8.99472478e-01, 4.53498125e-02]),
@@ -185,8 +185,7 @@ if __name__ == "__main__":
         M_step = M_max / 100.
         M_min = 50.
         masses = np.arange(M_min, M_max, M_step)
-        m_sample_flag = False
-        st_dist_mass = imf.main('kroupa_2002', 150., m_sample_flag, masses)
+        st_dist_mass = imf.main('kroupa_2002', 150., masses)
 
         cmpl_rnd = np.random.uniform(0., 1., 1000000)
         err_rnd = np.random.normal(0, 1, 1000000)

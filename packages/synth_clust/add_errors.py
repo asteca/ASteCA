@@ -1,5 +1,5 @@
 
-import numpy as np
+from ..core_imp import np
 if __name__ in ['add_errors', '__main__']:
     import sys, os
     sys.path.append(os.path.abspath(os.path.join('..', '')))
@@ -11,6 +11,10 @@ else:
 def gauss_error(rnd, mc, e_mc):
     '''
     Randomly move mag and color through a Gaussian function.
+
+    mc  : magnitude or color dimension
+    rnd : random array of floats (0., 1.)
+    e_mc: fitted observational uncertainty value
     '''
     mc_gauss = mc + rnd[:len(mc)] * e_mc
 
@@ -30,8 +34,10 @@ def main(isoch_compl, err_lst, err_max, m_ini, err_rnd):
     for i, popt_mc in enumerate(err_lst):
         # isoch_compl[0] is the main magnitude.
         sigma_mc = np.array(exp_function.exp_3p(isoch_compl[0], *popt_mc))
-        # Replace all error values greater than err_max with err_max.
-        sigma_mc[sigma_mc > err_max] = err_max
+
+        # Replace all photometric error values greater than err_max with
+        # err_max.
+        sigma_mc[sigma_mc > err_max[i]] = err_max[i]
 
         ###################################################################
         # # Generate errors that depend only on the theoretical isochrone.
