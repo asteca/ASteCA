@@ -103,12 +103,18 @@ def readDataFile(nanvals, read_mode, id_col, data_file):
             data_file, fill_values=fill_msk, format='no_header')
         # Replace IDs column
         data[id_col] = id_data
-    else:
+    elif read_mode == 'nam':
         # Read IDs as strings, not applying the 'fill_msk'
         data = ascii.read(
             data_file, converters={id_col: [ascii.convert_numpy(np.str)]})
         # Store IDs
-        id_data = data[id_col]
+        try:
+            id_data = data[id_col]
+        except KeyError:
+            raise ValueError(
+                "ERROR: the '{}' key could not be found. Check that \n"
+                "the 'id' name is properly written, and that all columns \n"
+                "have *unique* names.\n".format(id_col))
         # Read rest of the data applying the mask
         data = ascii.read(data_file, fill_values=fill_msk)
         # Replace IDs column
