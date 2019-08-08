@@ -82,7 +82,10 @@ def main(clp):
     # Transform from bin units to coordinate units before passing.
     rdp_length = rdp_length * clp['bin_width']
 
-    print('Radial density profile (RDP) calculated.')
+    if rdp_points:
+        print('Radial density profile (RDP) calculated.')
+    else:
+        raise ValueError("ERROR: RDP is empty. Check the center coordinates.")
 
     # Add data to dictionary.
     clp['radii'], clp['rdp_points'], clp['poisson_error'],\
