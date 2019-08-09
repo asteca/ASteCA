@@ -5,7 +5,8 @@ import numpy as np
 def ccm_model(mw):
     '''
     Cardelli, Clayton, and Mathis (1989 ApJ. 345, 245) model for extinction
-    coefficients with updated coefficients for near-UV from O'Donnell (1994).
+    coefficients with updated coefficients for near-UV from O'Donnell
+    (1994, ApJ, 422, 158).
 
     ccm_coef = a + b / Rv
 
