@@ -1,13 +1,14 @@
 # Change Log
 
 
-## [[v0.2.5]][225] - 2019-10-07
+## [[v0.2.5]][226] - 2019-08-07
 
 ### Changed
 
-* Added the `ptemcee` method, and deprecated (for now) the BF ([367][224])
-* Accept a CMD/CCD from mixed photometric systems ([228][222], [229][223])
-* Add support for the new set of isochrones PARSEC+COLIBRI ([322][221])
+* Added the `ptemcee` method, and deprecated (for now) the BF ([367][225])
+* Accept a CMD/CCD from mixed photometric systems ([228][223], [229][224])
+* Add support for the new set of isochrones PARSEC+COLIBRI ([322][222])
+* Output all information obtained from the bootstrap ([279][221])
 * Mask stars with photometry outside of reasonable range ([414][220])
 * Add proper motions, parallax, and radial velocity support to Bayesian DA ([220][219])
 * Use stars with no complete data in the Bayesian equation ([377][218]).
@@ -683,8 +684,9 @@ ________________________________________________________________________________
 [218]: https://github.com/asteca/ASteCA/issues/377
 [219]: https://github.com/asteca/ASteCA/issues/220
 [220]: https://github.com/asteca/ASteCA/issues/414
-[221]: https://github.com/asteca/ASteCA/issues/322
-[222]: https://github.com/asteca/ASteCA/issues/228
-[223]: https://github.com/asteca/ASteCA/issues/229
-[224]: https://github.com/asteca/ASteCA/issues/367
-[225]: https://github.com/asteca/asteca/releases/tag/v0.2.5
+[221]: https://github.com/asteca/ASteCA/issues/279
+[222]: https://github.com/asteca/ASteCA/issues/322
+[223]: https://github.com/asteca/ASteCA/issues/228
+[224]: https://github.com/asteca/ASteCA/issues/229
+[225]: https://github.com/asteca/ASteCA/issues/367
+[226]: https://github.com/asteca/asteca/releases/tag/v0.2.5
