@@ -148,14 +148,14 @@ def plxBayes(
     tau_index, autocorr_vals, afs = 0, np.empty(nruns), np.empty(nruns)
 
     try:
-        old_tau, N_conv = np.inf, 1000
-        for i, _ in enumerate(sampler.sample(pos0, iterations=nruns)):
-            # Only check convergence every X steps
-            if i % 10 and i < (nruns - 1):
-                continue
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
 
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
+            old_tau, N_conv = np.inf, 1000
+            for i, _ in enumerate(sampler.sample(pos0, iterations=nruns)):
+                # Only check convergence every X steps
+                if i % 10 and i < (nruns - 1):
+                    continue
 
                 afs[tau_index] = np.mean(sampler.acceptance_fraction)
 
@@ -171,7 +171,7 @@ def plxBayes(
                     break
                 old_tau = tau
                 # tau_mean = np.nanmean(sampler.get_autocorr_time(tol=0))
-            update_progress.updt(nruns, i + 1)
+                update_progress.updt(nruns, i + 1)
 
         mean_afs = afs[:tau_index]
         tau_autocorr = autocorr_vals[:tau_index]
@@ -256,4 +256,11 @@ def lnlike(mu, x, B2, MPs):
     # Double integral
     int_exp = np.trapz(distFunc(x), x, axis=0)
 
-    return np.sum(np.log(MPs * int_exp))
+    # Apply MPs
+    MP_intexp = MPs * int_exp
+    # Mask 'bad' values
+    msk = np.logical_or(
+        MP_intexp <= 0., MP_intexp >= np.inf, MP_intexp <= -np.inf)
+    MP_intexp[msk] = np.nan
+
+    return np.nansum(np.log(MP_intexp))
