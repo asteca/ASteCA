@@ -28,6 +28,7 @@ def main(
     data_file = npd['data_file']
     try:
         data = readDataFile(nanvals, read_mode, id_col, data_file)
+        N_all = len(data)
 
         # Arrange column names in the proper order and shape.
         col_names = [
@@ -38,11 +39,16 @@ def main(
         col_names_keep = list(filter(bool, list(flatten(col_names))))
         data.keep_columns(col_names_keep)
 
+        # Remove stars with no valid coordinates data
+        data = data[(~data[x_col].mask) & (~data[y_col].mask)]
+        N_coords = len(data)
+
         # Mask bad photometry.
         data = maskBadPhot(data, mag_col, e_mag_col, col_col, e_col_col)
 
         # Trim frame according to coordinates limits.
         data = trim_frame.main(flag_tf, tf_range, data, x_col, y_col)
+        N_trim = len(data)
 
         # Split into incomplete and complete data.
         data_compl, flag_data_eq = dataSplit(
@@ -71,11 +77,23 @@ def main(
     cld_c = {'ids': ids, 'x': x, 'y': y, 'mags': mags, 'em': em,
              'cols': cols, 'ec': ec, 'kine': kine, 'ek': ek}
 
-    print('Stars read from input file, N={}.'.format(cld_i['ids'].size))
+    print('Stars read from input file: N={}.'.format(N_all))
+    if N_coords != N_all:
+        frac_reject = 1. - (float(N_coords) / N_all)
+        print(
+            "  WARNING: N={} ({:.1f}%) stars with no valid\n"
+            "  coordinates data were removed.".format(
+                N_all - N_coords, 100. * frac_reject))
+
+    if N_trim != N_coords:
+        print("Stars removed by trimming the frame: N={}".format(
+            N_coords - N_trim))
+
     frac_reject = 1. - (float(cld_c['ids'].size) / cld_i['ids'].size)
     if frac_reject > 0.05:
-        print("  WARNING: {:.0f}% of stars in the input file contain\n"
-              "  incomplete photometric data.".format(100. * frac_reject))
+        print("  WARNING: N={} ({:.0f}%) of stars contain\n"
+              "  incomplete photometric data.".format(
+                  cld_i['ids'].size - cld_c['ids'].size, 100. * frac_reject))
 
     clp = {
         'flag_data_eq': flag_data_eq, 'x_offset': x_offset,
