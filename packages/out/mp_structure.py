@@ -104,7 +104,7 @@ def pl_rad_dens(
     plt.title(str(clust_name) + ' (' + mode + ')', fontsize=12)
     # Legend texts
     kp_text = '3P' if flag_3pk_conver else '2P'
-    r_frmt = '{:.0f}' if coord2 == 'px' else '{:.1f}'
+    r_frmt = '{:.0f}' if coord2 == 'px' else '{:.2f}'
     texts = [
         (r'RDP ($bin_{{w}}\approx$' + r_frmt + r' $[{}]$)').format(
             bin_width, coord2),
