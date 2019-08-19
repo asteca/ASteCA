@@ -361,7 +361,11 @@ def convergenceVals(algor, ndim, varIdxs, N_conv, chains_nruns):
         acorr_function = np.nanmean(acorr_function, axis=1)
         # Cut the autocorrelation function a bit after *all* the parameters
         # have crossed the zero line.
-        lag_zero = max([np.where(_ < 0)[0][0] for _ in acorr_function])
+        try:
+            lag_zero = max([np.where(_ < 0)[0][0] for _ in acorr_function])
+        except IndexError:
+            # Could not obtain zero lag
+            lag_zero = acorr_function.shape[-1]
         acorr_function = acorr_function[:, :int(lag_zero + .2 * lag_zero)]
         # # Approx IAT
         # lag_iat = 1. + 2. * np.sum(acorr_function, axis=1)
