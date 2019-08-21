@@ -84,6 +84,7 @@ def pl_lkl_scatt(gs, pos, ld_p, min_max_p, cp_r, cp_e, models_GA, lkls_GA):
     ax.locator_params(nbins=5)
     # Set minor ticks
     ax.minorticks_on()
+    ax.grid(b=True, which='major', color='gray', linestyle=':', lw=.5)
     ax.tick_params(axis='y', which='major', labelsize=9)
     plt.xlabel(ld_p, fontsize=16)
     # Add textbox.

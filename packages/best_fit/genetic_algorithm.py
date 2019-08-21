@@ -122,6 +122,40 @@ def main(
             fundam_params, obs_clust, theor_tracks, R_V, ext_coefs,
             st_dist_mass, N_fc, cmpl_rnd, err_rnd, varIdxs, ranges, p_lst_e)
 
+        if flag_print_perc:
+
+            # For plotting purposes.
+            models_GA[N_popl * step:N_popl * (step + 1)] = generation
+            lkls_GA[N_popl * step:N_popl * (step + 1)] = lkl
+            lkl_best[step] = lkl[0]
+            # Discard large values associated with empty arrays from mean.
+            lkl_mean[step] = np.mean(
+                np.asarray(lkl)[np.asarray(lkl) < 9.9e08])
+
+            # Time used to check how fast the sampler is advancing.
+            elapsed_in = t.time() - start_in
+            percentage_complete = (100. * elapsed_in / available_secs)
+            if len(milestones) > 0 and percentage_complete >= milestones[0]:
+                m, s = divmod(max(1., available_secs - elapsed_in), 60)
+                h, m = divmod(m, 60)
+                # m += s / 60.
+                print("{:>3}% LP={:.1f} ({:.5f}, {:.3f}, {:.3f}, "
+                      "{:.2f}, {:.0f}, {:.2f})".format(
+                          milestones[0], lkl[0], *generation[0]) +
+                      " [{:.0f} m/s | {:.0f}h{:.0f}m]".format(
+                          (N_popl * step) / elapsed_in, h, m))
+                # Remove that milestone from the list.
+                milestones = milestones[1:]
+
+            # If the hardcoded maximum number of generations is reached.
+            if step == N_gener:
+                print(" WARNING: maximum allowed number of " +
+                      "generations ({}) reached.".format(N_gener))
+                break
+        else:
+            if step == N_gener:
+                break
+
         # *** Extinction/Immigration ***
         # If the best solution has remained unchanged for N_ei
         # generations, remove all chromosomes but the best ones (extinction)
@@ -157,7 +191,6 @@ def main(
                 generation = ext_imm(best_sol, fundam_params, N_popl)
                 # Reset best solution counter.
                 best_sol_count = 0
-
         else:
             lkl_best_old = lkl[0]
             # For plotting purposes. Save index where a new best solution
@@ -168,40 +201,6 @@ def main(
             # Reset counter.
             best_sol_count = 0
 
-        if flag_print_perc:
-
-            # For plotting purposes.
-            models_GA[N_popl * step:N_popl * (step + 1)] = generation
-            lkls_GA[N_popl * step:N_popl * (step + 1)] = lkl
-            lkl_best[step] = lkl[0]
-            # Discard large values associated with empty arrays from mean.
-            lkl_mean[step] = np.mean(
-                np.asarray(lkl)[np.asarray(lkl) < 9.9e08])
-
-            # Time used to check how fast the sampler is advancing.
-            elapsed_in = t.time() - start_in
-            percentage_complete = (100. * elapsed_in / available_secs)
-            if len(milestones) > 0 and percentage_complete >= milestones[0]:
-                m, s = divmod(max(1., available_secs - elapsed_in), 60)
-                h, m = divmod(m, 60)
-                # m += s / 60.
-                print("{:>3}% LP={:.1f} ({:.5f}, {:.3f}, {:.3f}, "
-                      "{:.2f}, {:.0f}, {:.2f})".format(
-                          milestones[0], lkl[0], *generation[0]) +
-                      " [{:.0f} m/s | {:.0f}h{:.0f}m]".format(
-                          (N_popl * step) / elapsed_in, h, m))
-                # Remove that milestone from the list.
-                milestones = milestones[1:]
-
-            # If the hardcoded maximum number of generations is reached.
-            if step == N_gener:
-                print(" WARNING: maximum allowed number of " +
-                      "generations ({}) reached.".format(N_gener))
-                break
-
-        else:
-            if step == N_gener:
-                break
         step += 1
 
     # If this is a bootstrap run, return the best model found only.
