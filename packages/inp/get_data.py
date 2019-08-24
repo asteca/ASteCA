@@ -40,7 +40,11 @@ def main(
         data.keep_columns(col_names_keep)
 
         # Remove stars with no valid coordinates data
-        data = data[(~data[x_col].mask) & (~data[y_col].mask)]
+        try:
+            data = data[(~data[x_col].mask) & (~data[y_col].mask)]
+        except AttributeError:
+            # Not masked columns
+            pass
         N_coords = len(data)
 
         # Mask bad photometry.
