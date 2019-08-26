@@ -289,7 +289,7 @@ DW     1.       1.       1.       1.       1.      1.
 #   - all: use all stars in the cluster region.
 #
 # * binning: fixed / auto / fd / doane / scott / rice / sqrt
-#            sturges / knuth / blocks / blocks_max
+#            sturges / knuth / blocks / blocks-max
 #   Binning method to be used if the 'local' method is selected. Otherwise
 #   this parameter is ignored.
 #

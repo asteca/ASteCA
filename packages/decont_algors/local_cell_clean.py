@@ -66,7 +66,7 @@ def bin_edges_f(bin_method, mags_cols_cl, min_bins=2, max_bins=50):
             for col in mags_cols_cl[1]:
                 bin_edges.append(bayesian_blocks(col))
 
-    elif bin_method == 'blocks_max':
+    elif bin_method == 'blocks-max':
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             for mag in mags_cols_cl[0]:
