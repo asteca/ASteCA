@@ -40,7 +40,7 @@ def main(met_f_filter, age_values, cmd_evol_tracks, evol_track, bin_mr,
     # isochrones.
 
     # Find the maximum number of points in all the read ages for all the
-    # metallicites.
+    # metallicities.
     N_pts_max = 0
     for z in mags_theor:
         for a in z:

@@ -103,15 +103,26 @@ def getParamVals(best_fit_algor, par_ranges, za_steps, N_mass):
             params_values.append(np.asarray([param[0]]))
         else:
             # Store range values in array.
-            if i in (0, 1):  # (z, a)
+
+            # If processing either (z, a) parameter, define a grid since these
+            # are *discrete* variables.
+            if i in (0, 1):
                 p_rang = np.arange(param[0], param[1], za_steps[i])
-            elif i in (2, 3, 5):  # (E_BV, dm, b_fr)
+
+            # If processing either (E_BV, dm, b_fr) parameter, just store the
+            # limits since these are *continuous* variables.
+            elif i in (2, 3, 5):
                 p_rang = np.asarray(param)
-            elif i == 4:  # Mass
+
+            # If processing the Mass, use `np.linspace()` instead of
+            # `np.arange()` since this *discrete* variable does not use steps
+            # but a total number of allowed values.
+            elif i == 4:
                 p_rang = np.linspace(param[0], param[1], N_mass)
                 # Round to integer and remove possible duplicated elements
                 p_rang = np.array(list(set(np.round(p_rang, 0))))
                 p_rang.sort()
+
             # Skip if array is empty. Checker will catch this.
             if p_rang.size:
                 # Add max value if not present. Check this way to avoid

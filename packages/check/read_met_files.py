@@ -90,8 +90,9 @@ def ranges_files_check(
     if len(a_range) > len(age_values):
         # Find missing elements.
         missing = find_missing(a_range, age_values)
-        sys.exit(err_mssg.format(a_range, age_vals_all, np.asarray(age_values),
-                 np.asarray(missing)))
+        sys.exit(err_mssg.format(
+            a_range, age_vals_all, np.asarray(age_values),
+            np.asarray(missing)))
 
 
 def find_missing(arr_large, arr_small):
