@@ -176,7 +176,7 @@ def plx_vs_mag(
 
     cbar = plt.colorbar(pad=.01, fraction=.02, aspect=50)
     cbar.ax.tick_params(labelsize=7)
-    cbar.set_label('MPs', size=8, labelpad=-20, y=1.07, rotation=0)
+    cbar.set_label('MPs', size=8, labelpad=-15, y=1.07, rotation=0)
 
     ax.legend(fontsize='small', loc=0)
     min_plx, max_plx = np.min(plx_clp) - .2, np.max(plx_clp) + .2
