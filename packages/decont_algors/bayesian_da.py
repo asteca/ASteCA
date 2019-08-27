@@ -26,20 +26,24 @@ def main(
     # region, stored with the appropriate format.
     cl_reg_prep, w_cl = reg_data(cl_region)
     # Normalize data.
-    cl_reg_prep = dataNorm(cl_reg_prep)
+    cl_reg_prep, N_msk_cl = dataNorm(cl_reg_prep)
 
     # Likelihoods between all field regions and the cluster region.
-    fl_likelihoods = []
+    fl_likelihoods, N_msk_fr = [], 0
     for fl_region in field_regions:
         # Obtain likelihood, for each star in the cluster region, of
         # being a field star.
         fl_reg_prep, w_fl = reg_data(fl_region)
         # Normalize data.
-        fl_reg_prep = dataNorm(fl_reg_prep)
+        fl_reg_prep, N_msk = dataNorm(fl_reg_prep)
+        N_msk_fr += N_msk
         # Number of stars in field region.
         n_fl = len(fl_region)
         fl_likelihoods.append([n_fl, likelihood(
             bayesda_weights, fl_reg_prep, w_fl, cl_reg_prep, w_cl)])
+
+    if N_msk_cl != 0 or N_msk_fr != 0:
+        print("Masked data: N_cl={}, N_frs={}".format(N_msk_cl, N_msk_fr))
 
     # Create copy of the cluster region to be shuffled below.
     clust_reg_shuffle, w_cl_shuffle = cl_reg_prep[:], w_cl[:]
@@ -138,8 +142,26 @@ def weightsSelect(bayesda_weights, colors, plx_col, pmx_col, pmy_col, rv_col):
 
 def dataNorm(data_arr):
     """
-    Normalize arrays.
+    Mask 4 sigma outliers (particularly important when PMs are used), and
+    normalize arrays.
     """
+
+    # Mask outliers (np.nan).
+    N_msk = 0
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        # Number of dimensions
+        _, d, _ = data_arr.shape
+        for i in range(d):
+            # For both data and uncertainties
+            for j in range(2):
+                med, std = np.nanmedian(data_arr[:, i, j]),\
+                    np.nanstd(data_arr[:, i, j])
+                msk = np.logical_or(
+                    data_arr[:, i, j] < med - 4. * std,
+                    data_arr[:, i, j] > med + 4. * std)
+                data_arr[:, i, j][msk] = np.nan
+                N_msk += sum(msk)
 
     # Minimum values for all arrays
     dmin = np.nanmin(data_arr[:, :, 0], 0)
@@ -155,7 +177,7 @@ def dataNorm(data_arr):
     # Combine into proper shape
     data_norm = np.array([data_norm.T, e_scaled.T]).T
 
-    return data_norm
+    return data_norm, N_msk
 
 
 def reg_data(region):
