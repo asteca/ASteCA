@@ -333,7 +333,7 @@ def pms_dist(gs, y_ax, pmMP, pm_dist_max, mmag_pm):
         cmap=cmap, lw=0.35, zorder=4)
 
     plx_mean, plx_median, plx_std = sigma_clipped_stats(pm_dist_max)
-    plt.xlim(-.05, plx_median + 2. * plx_std)
+    plt.xlim(-.05, min(max(pm_dist_max), plx_median + 4. * plx_std))
     plt.gca().invert_yaxis()
 
 

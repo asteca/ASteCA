@@ -83,9 +83,10 @@ def main(
 
         # PM distances to the KDE's center.
         pm_dist_max = cdist(
-            np.array([
-                [PM_cl_x[PMs_cl_cx][PMs_cl_cy],
-                 PM_cl_y[PMs_cl_cx][PMs_cl_cy]]]), np.array([pmRA_DE, pmDE]).T)
+            np.array([[
+                PM_cl_x[PMs_cl_cx][PMs_cl_cy],
+                PM_cl_y[PMs_cl_cx][PMs_cl_cy]]]),
+            np.array([pmRA_DE, pmDE]).T)[0]
 
         # Process field regions
         if not clp['flag_no_fl_regs_i']:
