@@ -27,7 +27,7 @@ def errorData(mmag):
     # err_medians function defines ranges around these values and they get
     # positioned in the middle of the magnitude interval.
     if n_interv < 2:
-        print("  WARNING: main magnitude range is very small.")
+        print("  WARNING: main magnitude range is very small")
     mmag_interv_pts = [
         be_m + interv_mag * (q + interv_mag) for q in range(n_interv)]
 
@@ -51,7 +51,7 @@ def get_m_c_errors(mags, e_mc_v, mmag_interv_pts):
 
     # If the 3-param exponential fitting process fails.
     except RuntimeError:
-        print("  3P exponential error function fit failed. Attempt 2P fit.")
+        print("  3P exponential error function fit failed. Attempt 2P fit")
         try:
             # Fit simple 2-params exponential curve.
             popt_mc, dummy = curve_fit(
@@ -65,7 +65,7 @@ def get_m_c_errors(mags, e_mc_v, mmag_interv_pts):
         # If the 2-param exponential fitting process also fails, try with a
         # 2P exp but using only min and max error values.
         except RuntimeError:
-            print("  2P exponential error function fit failed."
+            print("  2P exponential error function fit failed"
                   " Perform min-max magnitude fit.")
             # Fit simple 2-params exponential curve.
             mmag_interv_pts = [

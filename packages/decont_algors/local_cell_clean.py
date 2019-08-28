@@ -97,14 +97,14 @@ def bin_edges_f(bin_method, mags_cols_cl, min_bins=2, max_bins=50):
     for i, be in enumerate(bin_edges):
         N_bins = len(be) - 1
         if N_bins < min_bins:
-            # print("  WARNING too few bins in histogram, use 'min_bins'.")
+            # print("  WARNING too few bins in histogram, use 'min_bins'")
             bin_edges[i] = np.linspace(be[0], be[-1], min_bins + 1)
 
     # Impose a maximum of 'max_bins' cells per dimension.
     for i, be in enumerate(bin_edges):
         N_bins = len(be) - 1
         if N_bins > max_bins:
-            # print("  WARNING too many bins in histogram, use 'max_bins'.")
+            # print("  WARNING too many bins in histogram, use 'max_bins'")
             bin_edges[i] = np.linspace(be[0], be[-1], max_bins)
 
     return bin_edges

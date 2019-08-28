@@ -24,15 +24,15 @@ def main(cld_i, clp, run_mode, radius_method, coords, cl_rad_semi,
         radius_algor(clp, coord, radius_method)
 
     if run_mode == 'auto':
-        print('Auto radius found: {:g} {}.'.format(clust_rad, coord))
+        print("Auto radius found: {:g} {}".format(clust_rad, coord))
 
     elif run_mode == 'semi':
         if rad_flag_semi == 1:
             # Update values.
             clust_rad, e_rad = cl_rad_semi, 0.
-            print('Semi radius set: {:g} {}.'.format(clust_rad, coord))
+            print("Semi radius set: {:g} {}".format(clust_rad, coord))
         else:
-            print('Auto radius found: {:g} {}.'.format(clust_rad, coord))
+            print("Auto radius found: {:g} {}".format(clust_rad, coord))
 
     # DEPRECATED May 2019
     # # If Manual mode is set, display radius and ask the user to accept it or
@@ -59,9 +59,9 @@ def main(cld_i, clp, run_mode, radius_method, coords, cl_rad_semi,
     #                 flag_radius_manual = True
     #                 break
     #             except Exception:
-    #                 print("Sorry, input is not valid. Try again.")
+    #                 print("Sorry, input is not valid. Try again")
     #         else:
-    #             print("Sorry, input is not valid. Try again.")
+    #             print("Sorry, input is not valid. Try again")
 
     # Add data to dictionary.
     clp['clust_rad'], clp['e_rad'], clp['flag_delta_total'],\

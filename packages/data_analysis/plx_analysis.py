@@ -36,7 +36,7 @@ def main(
         plx_flag_clp = checkPlx(plx_clrg)
 
         if plx_flag_clp:
-            print("Processing parallaxes.")
+            print("Processing parallaxes")
 
             # Reject 2\sigma outliers.
             max_plx, min_plx = np.nanmedian(plx) + 2. * np.nanstd(plx),\
@@ -70,7 +70,7 @@ def main(
                         e_plx_clp, mp_clp)
 
         else:
-            print("  WARNING: no valid Plx data found.")
+            print("  WARNING: no valid Plx data found")
 
     clp.update({
         'plx_flag_clp': plx_flag_clp, 'plx_clrg': plx_clrg,

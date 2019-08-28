@@ -50,7 +50,7 @@ def main(clp, coords, fdens_method, **kwargs):
         field_dens = float(fdens_method)
 
     coord = prep_plots.coord_syst(coords)[0]
-    print("Field density ({:.1E} stars/{c}^2).".format(field_dens, c=coord))
+    print("Field density ({:.1E} stars/{c}^2)".format(field_dens, c=coord))
     clp['field_dens'] = field_dens
 
     return clp

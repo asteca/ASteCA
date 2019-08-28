@@ -100,11 +100,11 @@ def main(
 
     # Check for dodgy inputs.
     if np.any(np.isinf(pos0)):
-        print('  WARNING: At least one parameter value was infinite.')
+        print("  WARNING: At least one parameter value was infinite")
         # print(pos0)
         pos0[np.isinf(pos0)] = 0.
     if np.any(np.isnan(pos0)):
-        print('  WARNING: At least one parameter value was NaN.')
+        print("  WARNING: At least one parameter value was NaN")
         pos0[np.isnan(pos0)] = 0.
         # print(pos0)
 

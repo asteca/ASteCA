@@ -260,4 +260,4 @@ def plot(N, *args):
     except Exception:
         import traceback
         print(traceback.format_exc())
-        print("  WARNING: error when plotting {}.".format(plt_map.get(N)[1]))
+        print("  WARNING: error when plotting {}".format(plt_map.get(N)[1]))

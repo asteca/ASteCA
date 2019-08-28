@@ -37,14 +37,14 @@ def main(clp, cld_c, ad_runs, ad_k_comb, flag_make_plot, **kwargs):
     # Check if test is to be applied or skipped. Check if field regions
     # where found.
     if ad_runs <= 0 or 'B2' not in flag_make_plot:
-        print('Skipping field vs cluster A-D test.')
+        print("Skipping field vs cluster A-D test")
 
     elif clp['flag_no_fl_regs_c']:
-        print('No field regions. Skipping field vs cluster A-D test.')
+        print("No field regions. Skipping field vs cluster A-D test")
 
     elif flag_few_members:
-        print('  WARNING: < 10 stars in cluster region.'
-              '  Skipping field vs cluster A-D test.')
+        print("  WARNING: < 10 stars in cluster region"
+              "  Skipping field vs cluster A-D test")
 
     else:
         print("    A-D test ({})".format(ad_runs))

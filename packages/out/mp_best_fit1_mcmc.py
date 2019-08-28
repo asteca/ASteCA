@@ -153,7 +153,7 @@ def pl_tau(dummy, gs, N_steps_conv, N_conv, tol_conv, tau_index, tau_autocorr):
             0, np.nanmax(tau_autocorr) + 0.1 *
             (np.nanmax(tau_autocorr) - np.nanmin(tau_autocorr)))
     except ValueError:
-        print("  WARNING: no mean autocorrelation values to plot.")
+        print("  WARNING: no mean autocorrelation values to plot")
     ax.legend(fontsize='small', loc=0)
 
 
@@ -233,5 +233,5 @@ def plot(N, *args):
     except Exception:
         import traceback
         print(traceback.format_exc())
-        print("  WARNING: error when plotting {}.".format(plt_map.get(N)[1]))
+        print("  WARNING: error when plotting {}".format(plt_map.get(N)[1]))
     plt.style.use('default')

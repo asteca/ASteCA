@@ -47,7 +47,7 @@ def main(met_f_filter, age_values, cmd_evol_tracks, evol_track, bin_mr,
             N_pts_max = max(N_pts_max, len(a[0]))
 
     if N_mass_interp > N_pts_max:
-        print("Interpolating extra points ({}) into the isochrones.".format(
+        print("Interpolating extra points ({}) into the isochrones".format(
             N_mass_interp))
         interp_data = []
         for i, data in enumerate([

@@ -178,7 +178,7 @@ def main(
                     ext_imm_count += 1
                     if ext_imm_count == N_es:
                         if flag_print_perc:
-                            print("  GA exit switch applied.")
+                            print("  GA exit switch applied")
                         elapsed_in = t.time() - start_in
                         break
                 else:

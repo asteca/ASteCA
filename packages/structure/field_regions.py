@@ -29,29 +29,29 @@ def main(i_c, clp, run_mode, fr_number, cl_f_regs_semi, freg_flag_semi,
     # means that the cluster is either too large or the frame too small.
     flag_no_fl_regs = False
     if f_regs_max < 1:
-        print("    WARNING: cluster region is too large.\n"
-              "    No field regions available.")
+        print("    WARNING: cluster region is too large\n"
+              "    No field regions available")
         flag_no_fl_regs = True
     else:
         # If the number of field regions defined is larger than the maximum
         # allowed, use the maximum.
         if fr_number == 'max':
             f_regions = f_regs_max
-            print('  Using maximum number of field regions ({}).'.format(
+            print("  Using maximum number of field regions ({})".format(
                 f_regions))
         elif fr_number > f_regs_max:
             f_regions = f_regs_max
             print(("    WARNING: Number of FR defined ({}) is larger than\n"
-                   "    the maximum allowed ({}). Using max number.").format(
+                   "    the maximum allowed ({}). Using max number").format(
                 fr_number, f_regs_max))
         elif fr_number <= 0:
             f_regions = f_regs_max
             print(("    WARNING: Number of FR ({}) is less than or equal\n"
-                   "    to zero. No field region will be defined.").format(
+                   "    to zero. No field region will be defined").format(
                 fr_number))
             flag_no_fl_regs = True
         else:
-            print("  Using defined number of field regions ({}).".format(
+            print("  Using defined number of field regions ({})".format(
                 fr_number))
             f_regions = fr_number
 

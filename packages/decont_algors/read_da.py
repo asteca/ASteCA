@@ -9,7 +9,7 @@ def main(cl_region, memb_file, readda_idcol=0, readda_mpcol=-2):
 
     The indexes for the ID and MPs columns are hardcoded.
     """
-    print('Reading membership probabilities from file.')
+    print("Reading membership probabilities from file")
     # Read IDs and MPs from file.
     data = ascii.read(memb_file)
     # Read IDs as strings since that is how they are stored in 'cl_region'

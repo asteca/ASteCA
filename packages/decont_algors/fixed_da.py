@@ -5,7 +5,7 @@ def main(cl_region, fixedda_port):
     Assign MP values to stars within the cluster region, divided into
     4 sections from brightest to dimmest.
     """
-    print("Applying 'fixed' DA (fport={:.2f}).".format(fixedda_port))
+    print("Applying 'fixed' DA (fport={:.2f})".format(fixedda_port))
 
     # Cluster's sequence using the main magnitude.
     main_mag = list(zip(*zip(*cl_region)[3])[0])

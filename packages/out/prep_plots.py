@@ -454,7 +454,7 @@ def get_hess(obs_mags_cols, synth_phot, hess_xedges, hess_yedges):
             HD = np.array([])
 
     if not HD.size:
-        print("  WARNING: the Hess diagram could no be obtained.")
+        print("  WARNING: the Hess diagram could no be obtained")
 
     return hess_x, hess_y, HD
 

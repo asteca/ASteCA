@@ -42,10 +42,10 @@ def main(clp, x, y, **kwargs):
             print("  WARNING: contamination index value is very large: "
                   "{:.2f}".format(cont_index))
         else:
-            print('Contamination index obtained ({:.2f}).'.format(cont_index))
+            print("Contamination index obtained ({:.2f})".format(cont_index))
     else:
         print("  WARNING: cluster radius is too large to obtain\n"
-              "  a reliable contamination index value.")
+              "  a reliable contamination index value")
         cont_index, n_memb_i = np.nan, np.nan
 
     clp['cont_index'], clp['n_memb_i'] = cont_index, n_memb_i

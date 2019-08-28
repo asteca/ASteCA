@@ -64,7 +64,7 @@ def main(cl_file, run_mode, **kwargs):
     out_file_name = join(output_dir, 'asteca_output.dat')
     json_out = join(output_subdir, clust_name + '_inparams.json')
 
-    print("Analyzing cluster {} ({} mode).".format(clust_name, run_mode))
+    print("Analyzing cluster {} ({} mode)".format(clust_name, run_mode))
 
     npd = {
         'clust_name': clust_name, 'data_file': data_file,

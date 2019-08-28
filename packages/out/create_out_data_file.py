@@ -112,4 +112,4 @@ M_mean      M_MAP   M_median     M_mode       16th       84th        std    R^2 
 b_mean      b_MAP   b_median     b_mode       16th       84th        std    R^2     \
     Nt      f1 f2 f3 f4 f5 f6  FC\n".format(
                 __version__, now_time, now_time))
-            print('Output data file created.')
+            print("Output data file created")

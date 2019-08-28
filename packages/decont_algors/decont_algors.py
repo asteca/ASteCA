@@ -15,12 +15,12 @@ def main(
     # Check if at least one equal-sized field region was obtained for the
     # *incomplete* dataset (used by the Bayesian DA).
     if da_algor == 'bayes' and clp['flag_no_fl_regs_i']:
-        print("  WARNING: no field regions found. Can not apply Bayesian DA.")
+        print("  WARNING: no field regions found. Can not apply Bayesian DA")
         da_algor = 'skip'
 
     flag_decont_skip = False
     if da_algor == 'skip':
-        print('Assign equal probabilities to all stars in cluster region.')
+        print("Assign equal probabilities to all stars in cluster region")
         memb_probs_cl_region = [1.] * len(clp['cl_region_i'])
         flag_decont_skip = True
 

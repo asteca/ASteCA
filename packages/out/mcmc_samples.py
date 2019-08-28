@@ -6,14 +6,14 @@ from astropy.io import ascii
 def main(clp, pd, mcmc_file_out, **kwargs):
     '''
     Create output data file with the MCMC sampler values for each parameter,
-    for all chains/walkers. Maximum size of the output file is 10 Mbs.
+    for all chains/walkers. Maximum size of the output file is 'max_mbs' Mbs.
     '''
     if pd['best_fit_algor'] in ('emcee', 'ptemcee'):
         varIdxs = clp['isoch_fit_params']['varIdxs']
         chains_nruns = clp['isoch_fit_params']['pars_chains']
 
         # Assume that each value stored occupies 8.5 bytes. Use a maximum file
-        # size of 20 Mbs.
+        # size of 'max_mbs' Mbs.
         max_mbs = 20.
         max_sz = max_mbs * 1024. * 1024.
         ndim, nwalkers, nsteps = chains_nruns.shape
@@ -32,4 +32,4 @@ def main(clp, pd, mcmc_file_out, **kwargs):
 
         ascii.write(tt, mcmc_file_out, overwrite=True, formats=fmt)
 
-        print('MCMC samples saved to file.')
+        print("MCMC samples saved to file")

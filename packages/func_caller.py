@@ -277,7 +277,7 @@ def main(cl_file, pd):
         t = "{:.0f}h {:.0f}m {:.0f}s".format(h, m, s)
     else:
         t = "{:.0f}m {:.0f}s".format(m, s)
-    print('End of analysis for {} in {}.\n'.format(npd['clust_name'], t))
+    print("End of analysis for {} in {}\n".format(npd['clust_name'], t))
 
     # Force the Garbage Collector to release unreferenced memory.
     gc.collect()

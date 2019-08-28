@@ -72,4 +72,4 @@ def main(
         fast_writer=False  # <-- TODO remove when the bug is fixed
     )
 
-    print('Cluster region and MPs saved to file.')
+    print("Cluster region and MPs saved to file")

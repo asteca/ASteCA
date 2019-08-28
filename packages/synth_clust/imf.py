@@ -143,7 +143,7 @@ def main(IMF_name, m_high, masses):
     '''
     Returns the number of stars per interval of mass for the selected IMF.
     '''
-    print("Sampling selected IMF ({}).".format(IMF_name))
+    print("Sampling selected IMF ({})".format(IMF_name))
     # Low mass limits are defined for each IMF to avoid numerical
     # issues when integrating.
     imfs_dict = {'chabrier_2001_exp': (0.01), 'chabrier_2001_log': (0.01),

@@ -48,14 +48,14 @@ def files_folders_check(mypath):
             i_f_path = mypath + i_f
             n_f_path = mypath + 'packages/defvals/' + i_f
             copyfile(n_f_path, i_f_path)
-            print("File {} copied into root folder.".format(i_f))
+            print("File {} copied into root folder".format(i_f))
         # Copy folders into root folder.
         for i_fo in ['isochrones', 'input']:
             i_fo_path = mypath + i_fo + '/'
             n_fo_path = mypath + 'packages/defvals/' + i_fo + '/'
             # Copy folders into root folder.
             copytree(n_fo_path, i_fo_path)
-            print("Folder {}/ copied into root folder.".format(i_fo))
+            print("Folder {}/ copied into root folder".format(i_fo))
         print("")
 
 

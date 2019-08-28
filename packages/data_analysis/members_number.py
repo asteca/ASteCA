@@ -14,7 +14,7 @@ def main(clp):
     if clp['flag_no_fl_regs_c']:
 
         print("  WARNING: no field regions defined, can not estimate\n"
-              "  the approximate number of cluster members.")
+              "  the approximate number of cluster members")
         n_memb, flag_num_memb_low = -1., True
 
     else:
@@ -28,10 +28,10 @@ def main(clp):
 
         if flag_num_memb_low:
             print("  WARNING: only {:.0f} true members estimated in cluster"
-                  " region.".format(n_memb))
+                  "  region".format(n_memb))
         else:
             print("Approximate number of members in cluster obtained "
-                  "({:.0f}).".format(n_memb))
+                  "({:.0f})".format(n_memb))
 
     clp['n_memb'], clp['flag_num_memb_low'] = n_memb, flag_num_memb_low
     return clp

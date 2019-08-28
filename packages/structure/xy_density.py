@@ -11,7 +11,7 @@ def main(clp, cld_i, center_bw, flag_make_plot, **kwargs):
     Obtain Gaussian filtered 2D x,y histograms and the maximum values in them
     as centers.
     """
-    print("Obtaining KDEs for the frame's coordinates.")
+    print("Obtaining KDEs for the frame's coordinates")
 
     # Filter possible nan values in (x, y)
     mskx, msky = np.isnan(cld_i['x']), np.isnan(cld_i['y'])
@@ -70,7 +70,7 @@ def kde_center(x_data, y_data, bdw, plotFlag=False):
         kernel = stats.gaussian_kde(
             values, bw_method=bdw / np.max(values.std(axis=1)))
     except ValueError:
-        print("  WARNING: could not generate coordinates KDE.")
+        print("  WARNING: could not generate coordinates KDE")
         return [np.nan, np.nan], []
 
     # Grid density (number of points).
@@ -86,7 +86,7 @@ def kde_center(x_data, y_data, bdw, plotFlag=False):
     try:
         k_pos = kernel(positions)
     except np.linalg.LinAlgError:
-        print("  WARNING: could not generate coordinates KDE.")
+        print("  WARNING: could not generate coordinates KDE")
         return [np.nan, np.nan], []
 
     if plotFlag:

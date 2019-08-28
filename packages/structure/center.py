@@ -34,7 +34,7 @@ def main(
         # Find bin where the center xy coordinates are located.
         bin_cent = center_bin(clp['xedges'], clp['yedges'], kde_cent)
 
-        print('Auto center found (bw={:g}): ({:g}, {:g}) {c}.'.format(
+        print("Auto center found (bw={:g}): ({:g}, {:g}) {c}".format(
             center_bw, kde_cent[0], kde_cent[1], c=coord))
 
     elif run_mode == 'semi' and cent_flag_semi in [1, 2]:
@@ -59,11 +59,11 @@ def main(
             else:
                 x_cent = kde_cent[0]
 
-            print('Semi center found: ({:g}, {:g}) {}.'.format(
+            print("Semi center found: ({:g}, {:g}) {}".format(
                 x_cent, kde_cent[1] + clp['y_offset'], coord))
         else:
             kde_cent = (x0, y0)
-            print('Semi center fixed: ({:g}, {:g}) {}.'.format(
+            print("Semi center fixed: ({:g}, {:g}) {}".format(
                 *cl_cent_semi, coord))
 
         # Find bin where the center xy coordinates are located.
@@ -106,9 +106,9 @@ def main(
     #                 flag_center_manual = True  # <-- ??
     #                 break
     #             except Exception:
-    #                 print("Sorry, input is not valid. Try again.")
+    #                 print("Sorry, input is not valid. Try again")
     #         else:
-    #             print("Sorry, input is not valid. Try again.")
+    #             print("Sorry, input is not valid. Try again")
 
     # Add data to dictionary.
     center_params = {
