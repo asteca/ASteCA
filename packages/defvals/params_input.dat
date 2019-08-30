@@ -14,17 +14,58 @@
 
 
 
-############################ ASteCA's inner flags ##############################
+############################ Mode/Output #######################################
 
-# Update checker.
+# Mode used to run the code.
 #
-# * flag: y / n
-#   Check if a new version of ASteCA is available for download, and notify the
-#   user when one is found. Downloads less than 25 bytes of data and is thus
-#   very quick.
+# * mode: auto / semi
 #
-#   flag
-UP     y
+#   - auto: does not use data from the 'Semi input parameters' block below.
+#   - semi: uses data in the ' Semi input parameters' block below.
+#
+#    mode
+MO   auto
+################################################################################
+
+
+
+######################### Semi input parameters ################################
+
+# * name: [str]
+#   Cluster's name.
+#
+# * c_x / c_y: [float]
+#   Cluster's (x, y) center coordinate in pixels or in degrees.
+#
+# * rad: [flaot]
+#   Cluster's radius in pixels or in degrees.
+#
+# * f_regs: [int]
+#   Number of field regions to obtain around the cluster.
+#
+# * MC: 0 / 1 / 2
+#   Manual center flag.
+#
+#   - 0: Disabled, center will be searched automatically.
+#   - 1: The coordinates given will be used as initial approximate values
+#        for the cluster's true central coordinates. The latter will be
+#        searched inside the radius given in the 'rad' parameter.
+#   - 2: Value is fixed to what is given here.
+#
+# * MR: 0 / 1
+#   Radius value flag.
+#
+#   - 0: Disabled, radius will be searched automatically.
+#   - 1: The radius for the cluster will be taken from the 'rad' value.
+#
+# * MF: 0 / 1
+#   Manual field regions flag.
+#
+#   - 0: Disabled, field regions number will be obtained from the 'GR' line.
+#   - 1: The number of field regions will be taken from the 'f_regs' value.      
+#
+#   name         c_x      c_y      rad     f_regs    MC   MR   MF
+SD  CLUSTER    1000.    1000.     250.          7     0    0    0
 ################################################################################
 
 
@@ -73,6 +114,11 @@ PC    5,4,Bmag,Vmag        6
 #    Parallax                 Proper motions               Radial velocity
 #    plx    e_plx     pmRA    e_pmRA    pmDE    e_pmDE     rv    e_rv
 PK     n        n        n         n       n         n      n       n
+################################################################################
+
+
+
+######################### Input data processing ################################
 
 # * nanvals: [strings]
 #   List of strings indicating which entries in the data file should be
@@ -80,21 +126,22 @@ PK     n        n        n         n       n         n      n       n
 #
 #   nanvals
 NV    INDEF, NAN, NaN, 99.999, 999.99, 99.999
+
+# Trim frame?
+#
+# * tf_flag: y / n
+#   Flag if the frame should be trimmed.
+#
+# * tf_range: [float] * 4
+#   Input the x,y ranges in the order: xmin, xmax, ymin, ymax
+#
+#    tf_flag   tf_range
+TF         n   0. 0. 0. 0.
 ################################################################################
 
 
 
-############################ Mode/Output #######################################
-
-# Mode used to run the code.
-#
-# * mode: auto / semi
-#
-#   - auto: does not require user intervention of any kind.
-#   - semi: takes input values from the 'semi_input.dat' file.
-#
-#    mode
-MO   auto
+############################## Output ##########################################
 
 # Create output figures?
 #
@@ -123,17 +170,6 @@ MP   A1 A2 B1 B2 C1 C2 C3 D1 D2
 #
 #   format     DPI
 PF     png     150
-
-# Trim frame?
-#
-# * tf_flag: y / n
-#   Flag if the frame should be trimmed.
-#
-# * tf_range: [float] * 4
-#   Input the x,y ranges in the order: xmin, xmax, ymin, ymax
-#
-#    tf_flag   tf_range
-TF         n   0. 0. 0. 0.
 ################################################################################
 
 

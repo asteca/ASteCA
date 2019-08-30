@@ -4,26 +4,16 @@ def main(pd, clust_name, **kwargs):
     '''
     Get center, radius and flags for semi automatic mode.
     '''
-    semi_file = 'semi_input.dat'  # HARDCODED
     if pd['run_mode'] == 'semi':
-        with open(semi_file, "r") as f_cl_dt:
-            for line in f_cl_dt:
-                li = line.strip()
-                # Skip comments.
-                if not li.startswith("#"):
-                    reader = li.split()
-                    # Prevent empty lines with spaces detected as a cluster
-                    # line from crashing the code.
-                    if reader:
-                        # Cluster name found in file.
-                        if reader[0] == clust_name:
-                            pd['cl_cent_semi'] = [float(reader[1]),
-                                                  float(reader[2])]
-                            pd['cl_rad_semi'] = float(reader[3])
-                            pd['cl_f_regs_semi'] = int(reader[4])
-                            pd['cent_flag_semi'] = int(reader[5])
-                            pd['rad_flag_semi'] = int(reader[6])
-                            pd['freg_flag_semi'] = int(reader[7])
+        for line in pd['semi_input']:
+            # Cluster name found in file.
+            if line[0] == clust_name:
+                pd['cl_cent_semi'] = [float(line[1]), float(line[2])]
+                pd['cl_rad_semi'] = float(line[3])
+                pd['cl_f_regs_semi'] = int(line[4])
+                pd['cent_flag_semi'] = int(line[5])
+                pd['rad_flag_semi'] = int(line[6])
+                pd['freg_flag_semi'] = int(line[7])
     else:
         # Fill with dummy values since these variables are required later on.
         pd['cl_cent_semi'], pd['cl_rad_semi'], pd['cl_f_regs_semi'],\

@@ -1,4 +1,5 @@
 
+import random
 from packages._version import __version__
 # In place for #243
 import sys
@@ -10,12 +11,12 @@ else:
     from urllib.error import URLError as URLError
 
 
-def check(up_flag, **kwargs):
+def check():
     '''
     Checks if a new version of the code is available for download.
     '''
-    if up_flag:
-        print("Checking for updates...")
+    # Check every fourth run approximately.
+    if random.choice([True] + [False] * 3):
         t_out = 3.
         try:
             # Get latest version number. Wait 3 seconds and break out if
@@ -28,15 +29,14 @@ def check(up_flag, **kwargs):
             else:
                 s = f.read().decode('utf-8').split('"')
 
-            if s[1] != __version__:
+            if s[1][1:] != __version__.strip('-dev'):
                 print("*******************************************")
                 print("              IMPORTANT\n")
                 print("There is a new version of ASteCA available!")
                 print("  Get the latest version '{}' from:\n".format(s[1][1:]))
                 print("       http://asteca.github.io/")
                 print("*******************************************\n")
-            else:
-                print("You are running the latest version of ASteCA.\n")
+
         except URLError:
             print("  WARNING: could not check for code updates.\n"
                   "  Connection timed out after {} sec.\n".format(t_out))

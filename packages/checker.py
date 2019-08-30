@@ -56,7 +56,7 @@ def check_all(mypath, file_end):
     pd = params_file.check(mypath, file_end, inst_packgs_lst)
 
     # Check if a new version is available.
-    update.check(**pd)
+    update.check()
 
     # Check running mode. If mode is 'semi', check that all cluster
     # in '/input' folder are listed.

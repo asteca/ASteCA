@@ -62,7 +62,7 @@ def main(cl_file, run_mode, **kwargs):
     synth_file_out = join(output_subdir, clust_name + '_synth.dat')
     write_name = join(cl_file[2], clust_name)
     out_file_name = join(output_dir, 'asteca_output.dat')
-    json_out = join(output_subdir, clust_name + '_inparams.json')
+    params_out = join(output_subdir, clust_name + '_params_input.dat')
 
     print("Analyzing cluster {} ({} mode)".format(clust_name, run_mode))
 
@@ -72,5 +72,5 @@ def main(cl_file, run_mode, **kwargs):
         'out_file_name': out_file_name, 'output_subdir': output_subdir,
         'dst_dir': dst_dir, 'memb_file_out': memb_file_out,
         'synth_file_out': synth_file_out, 'write_name': write_name,
-        'mcmc_file_out': mcmc_file_out, 'json_out': json_out}
+        'mcmc_file_out': mcmc_file_out, 'params_out': params_out}
     return npd
