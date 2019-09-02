@@ -5,27 +5,10 @@ from .check import first_run
 from .check import update
 from .check import clusters
 from .check import params_file
-from .check import params_mode
 from .check import params_data
 from .check import params_out
 from .check import params_struct
 from .check import params_decont
-
-
-def X_is_running():
-    """
-    Detect if X11 is available. Source:
-    https://stackoverflow.com/a/1027942/1391441
-    """
-    if platform.system() == 'Linux':
-        from subprocess import Popen, PIPE
-        p = Popen(["xset", "-q"], stdout=PIPE, stderr=PIPE)
-        p.communicate()
-        return p.returncode == 0
-    else:
-        # If this is not a Linux system, assume that it is either Mac OS or
-        # Windows, and thus assume that a windows system is present.
-        return True
 
 
 def check_all(mypath, file_end):
@@ -57,10 +40,6 @@ def check_all(mypath, file_end):
 
     # Check if a new version is available.
     update.check()
-
-    # Check running mode. If mode is 'semi', check that all cluster
-    # in '/input' folder are listed.
-    params_mode.check(mypath, cl_files, **pd)
 
     # Check that the data column indexes/names were properly given, and that
     # the magnitude and color names were properly defined.
@@ -100,3 +79,19 @@ def check_all(mypath, file_end):
         len(cl_files)))
 
     return cl_files, pd
+
+
+def X_is_running():
+    """
+    Detect if X11 is available. Source:
+    https://stackoverflow.com/a/1027942/1391441
+    """
+    if platform.system() == 'Linux':
+        from subprocess import Popen, PIPE
+        p = Popen(["xset", "-q"], stdout=PIPE, stderr=PIPE)
+        p.communicate()
+        return p.returncode == 0
+    else:
+        # If this is not a Linux system, assume that it is either Mac OS or
+        # Windows, and thus assume that a windows system is present.
+        return True

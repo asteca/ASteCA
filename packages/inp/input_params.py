@@ -41,23 +41,15 @@ def main(mypath, pars_f_path):
     # Read data from file.
     with open(pars_f_path, "r") as f_dat:
 
-        semi_input = []
+        manual_struct = []
         # Iterate through each line in the file.
         for l, line in enumerate(f_dat):
 
             if not line.startswith("#") and line.strip() != '':
                 reader = line.split()
 
-                # Set global mode (i.e, for all clusters processed).
-                if reader[0] == 'MO':
-                    run_mode = str(reader[1])
-
-                # Semi input parameters.
-                elif reader[0] == 'SD':
-                    semi_input.append(reader[1:])
-
                 # Input data parameters.
-                elif reader[0] == 'MR':
+                if reader[0] == 'MR':
                     read_mode = str(reader[1])
                 elif reader[0] == 'PI':
                     id_ids = reader[1]
@@ -72,6 +64,13 @@ def main(mypath, pars_f_path):
                 elif reader[0] == 'PK':
                     id_kinem = reader[1:]
 
+                # Input data processing
+                elif reader[0] == 'NV':
+                    nanvals = [_.replace(',', '') for _ in reader[1:]]
+                elif reader[0] == 'TF':
+                    flag_tf = True if reader[1] in true_lst else False
+                    tf_range = list(map(float, reader[2:]))
+
                 # Output parameters.
                 elif reader[0] == 'MP':
                     flag_make_plot = reader[1:]
@@ -79,13 +78,9 @@ def main(mypath, pars_f_path):
                     plot_frmt = str(reader[1])
                     plot_dpi = int(reader[2])
 
-                elif reader[0] == 'NV':
-                    nanvals = [_.replace(',', '') for _ in reader[1:]]
-                elif reader[0] == 'TF':
-                    flag_tf = True if reader[1] in true_lst else False
-                    tf_range = list(map(float, reader[2:]))
-
                 # Structure functions parameters.
+                elif reader[0] == 'MD':
+                    manual_struct.append(reader[1:])
                 elif reader[0] == 'CH':
                     center_bw = float(reader[1])
                 elif reader[0] == 'CR':
@@ -302,18 +297,21 @@ def main(mypath, pars_f_path):
     par_ranges = [z_range, a_range, e_range, d_range, m_range, b_range]
 
     pd = {
-        'run_mode': run_mode, 'nanvals': nanvals, 'read_mode': read_mode,
-        'semi_input': semi_input,
-        'id_ids': id_ids, 'id_xdata': id_xdata, 'id_ydata': id_ydata,
-        'coords': coords, 'project': project, 'id_mags': id_mags,
-        'id_cols': id_cols,
-        'id_kinem': id_kinem,
+        # Input data parameters
+        'read_mode': read_mode, 'id_ids': id_ids, 'id_xdata': id_xdata,
+        'id_ydata': id_ydata, 'coords': coords, 'project': project,
+        'id_mags': id_mags, 'id_cols': id_cols, 'id_kinem': id_kinem,
+        # Input data processing
+        'nanvals': nanvals, 'flag_tf': flag_tf, 'tf_range': tf_range,
+        # Output
         'flag_make_plot': flag_make_plot, 'plot_frmt': plot_frmt,
-        'plot_dpi': plot_dpi, 'flag_tf': flag_tf, 'tf_range': tf_range,
-        'center_bw': center_bw, 'radius_method': radius_method,
-        'fdens_method': fdens_method,
-        'kp_flag': kp_flag, 'fr_number': fr_number, 'err_max': err_max,
-        'ad_runs': ad_runs, 'ad_k_comb': ad_k_comb,
+        'plot_dpi': plot_dpi,
+        # Structure functions parameters
+        'manual_struct': manual_struct, 'center_bw': center_bw,
+        'radius_method': radius_method, 'fdens_method': fdens_method,
+        'kp_flag': kp_flag, 'fr_number': fr_number,
+        #
+        'err_max': err_max, 'ad_runs': ad_runs, 'ad_k_comb': ad_k_comb,
         # Decontamination algorithm parameters.
         'da_algor': da_algor, 'bayesda_runs': bayesda_runs,
         'fixedda_port': fixedda_port, 'bayesda_weights': bayesda_weights,

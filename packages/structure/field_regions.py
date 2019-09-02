@@ -4,9 +4,8 @@ from . import spiral as sp
 from . import field_manual_histo
 
 
-def main(i_c, clp, run_mode, fr_number, cl_f_regs_semi, freg_flag_semi,
-         **kwargs):
-    '''
+def main(i_c, clp, fr_number, f_regs_manual, **kwargs):
+    """
     Define empty region around the cluster via a spiral centered on it
     and of area a bit larger than that defined by the cluster's radius.
 
@@ -14,13 +13,11 @@ def main(i_c, clp, run_mode, fr_number, cl_f_regs_semi, freg_flag_semi,
     region.
 
     Uses stars *already cleaned by the error rejection function*.
-    '''
+    """
 
-    # Check if semi is set.
-    if run_mode == 'semi':
-        if freg_flag_semi == 1:
-            # Update value.
-            fr_number = cl_f_regs_semi
+    # Check if manual value is set.
+    if f_regs_manual != 'n':
+        fr_number = f_regs_manual
 
     num_bins_sqarea, f_regs_max = fieldRegs(
         clp['hist_2d'], clp['bin_width'], clp['cl_area'])

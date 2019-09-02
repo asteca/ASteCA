@@ -14,62 +14,6 @@
 
 
 
-################################### Mode #######################################
-
-# Mode used to run the code.
-#
-# * mode: auto / semi
-#
-#   - auto: does not use data from the 'Semi input parameters' block below.
-#   - semi: uses data in the ' Semi input parameters' block below.
-#
-#    mode
-MO   auto
-################################################################################
-
-
-
-######################### Semi input parameters ################################
-
-# * name: [str]
-#   Cluster's name.
-#
-# * c_x / c_y: [float]
-#   Cluster's (x, y) center coordinate in pixels or in degrees.
-#
-# * rad: [float]
-#   Cluster's radius in pixels or in degrees.
-#
-# * f_regs: [int]
-#   Number of field regions to obtain around the cluster.
-#
-# * MC: 0 / 1 / 2
-#   Manual center flag.
-#
-#   - 0: Disabled, center will be searched automatically.
-#   - 1: The coordinates given will be used as initial approximate values
-#        for the cluster's true central coordinates. The latter will be
-#        searched inside the radius given in the 'rad' parameter.
-#   - 2: Value is fixed to what is given here.
-#
-# * MR: 0 / 1
-#   Radius value flag.
-#
-#   - 0: Disabled, radius will be searched automatically.
-#   - 1: The radius for the cluster will be taken from the 'rad' value.
-#
-# * MF: 0 / 1
-#   Manual field regions flag.
-#
-#   - 0: Disabled, field regions number will be obtained from the 'GR' line.
-#   - 1: The number of field regions will be taken from the 'f_regs' value.      
-#
-#   name       c_x      c_y      rad     f_regs    MC   MR   MF
-SD  CLUSTER    1000.    1000.    250.    7          0    0    0
-################################################################################
-
-
-
 ######################### Input data parameters ################################
 
 # Read mode for the cluster's input data.
@@ -175,6 +119,24 @@ PF     png     150
 
 
 ################### Structure functions parameters #############################
+
+# Set here manual values for the center, radius, and/or the number of field
+# regions for each cluster being processed.
+#
+# * name: [str] / n
+#   Cluster's name.
+#
+# * c_x / c_y: [float] / n
+#   Cluster's (x, y) center coordinate in pixels or in degrees.
+#
+# * rad: [float] / n
+#   Cluster's radius in pixels or in degrees.
+#
+# * f_regs: [int] / n
+#   Number of field regions to obtain around the cluster.
+#
+#   name       c_x      c_y      rad     f_regs
+MD  CLUSTER    1000.    1000.    250.    n
 
 # Center assignment function.
 #

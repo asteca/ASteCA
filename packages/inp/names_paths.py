@@ -28,7 +28,7 @@ def memb_file_name(cl_file):
     return memb_file
 
 
-def main(cl_file, run_mode, **kwargs):
+def main(cl_file, **kwargs):
     '''
     Generate names and paths to be used by several functions.
     '''
@@ -64,7 +64,7 @@ def main(cl_file, run_mode, **kwargs):
     out_file_name = join(output_dir, 'asteca_output.dat')
     params_out = join(output_subdir, clust_name + '_params_input.dat')
 
-    print("Analyzing cluster {} ({} mode)".format(clust_name, run_mode))
+    print("Analyzing cluster {}".format(clust_name))
 
     npd = {
         'clust_name': clust_name, 'data_file': data_file,
