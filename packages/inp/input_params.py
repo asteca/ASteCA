@@ -41,21 +41,20 @@ def main(mypath, pars_f_path):
     # Read data from file.
     with open(pars_f_path, "r") as f_dat:
 
+        semi_input = []
         # Iterate through each line in the file.
         for l, line in enumerate(f_dat):
 
             if not line.startswith("#") and line.strip() != '':
                 reader = line.split()
 
-                # Updater.
-                if reader[0] == 'UP':
-                    up_flag = True if reader[1] in true_lst else False
-
                 # Set global mode (i.e, for all clusters processed).
-                elif reader[0] == 'MO':
+                if reader[0] == 'MO':
                     run_mode = str(reader[1])
-                elif reader[0] == 'NV':
-                    nanvals = [_.replace(',', '') for _ in reader[1:]]
+
+                # Semi input parameters.
+                elif reader[0] == 'SD':
+                    semi_input.append(reader[1:])
 
                 # Input data parameters.
                 elif reader[0] == 'MR':
@@ -79,6 +78,9 @@ def main(mypath, pars_f_path):
                 elif reader[0] == 'PF':
                     plot_frmt = str(reader[1])
                     plot_dpi = int(reader[2])
+
+                elif reader[0] == 'NV':
+                    nanvals = [_.replace(',', '') for _ in reader[1:]]
                 elif reader[0] == 'TF':
                     flag_tf = True if reader[1] in true_lst else False
                     tf_range = list(map(float, reader[2:]))
@@ -300,8 +302,8 @@ def main(mypath, pars_f_path):
     par_ranges = [z_range, a_range, e_range, d_range, m_range, b_range]
 
     pd = {
-        'up_flag': up_flag, 'run_mode': run_mode, 'nanvals': nanvals,
-        'read_mode': read_mode,
+        'run_mode': run_mode, 'nanvals': nanvals, 'read_mode': read_mode,
+        'semi_input': semi_input,
         'id_ids': id_ids, 'id_xdata': id_xdata, 'id_ydata': id_ydata,
         'coords': coords, 'project': project, 'id_mags': id_mags,
         'id_cols': id_cols,
