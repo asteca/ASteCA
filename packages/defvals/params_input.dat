@@ -14,7 +14,7 @@
 
 
 
-############################ Mode/Output #######################################
+################################### Mode #######################################
 
 # Mode used to run the code.
 #
@@ -37,7 +37,7 @@ MO   auto
 # * c_x / c_y: [float]
 #   Cluster's (x, y) center coordinate in pixels or in degrees.
 #
-# * rad: [flaot]
+# * rad: [float]
 #   Cluster's radius in pixels or in degrees.
 #
 # * f_regs: [int]
@@ -64,8 +64,8 @@ MO   auto
 #   - 0: Disabled, field regions number will be obtained from the 'GR' line.
 #   - 1: The number of field regions will be taken from the 'f_regs' value.      
 #
-#   name         c_x      c_y      rad     f_regs    MC   MR   MF
-SD  CLUSTER    1000.    1000.     250.          7     0    0    0
+#   name       c_x      c_y      rad     f_regs    MC   MR   MF
+SD  CLUSTER    1000.    1000.    250.    7          0    0    0
 ################################################################################
 
 
