@@ -136,7 +136,7 @@ PF     png     150
 #   Number of field regions to obtain around the cluster.
 #
 #   name       c_x      c_y      rad     f_regs
-MD  CLUSTER    1000.    1000.    250.    n
+MD  CLUSTER    n        n        n       n
 
 # Center assignment function.
 #
