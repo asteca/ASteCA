@@ -21,18 +21,25 @@ def main():
     -------
     cmd_systs : dictionary
     '''
-    fn = os.path.join(os.path.dirname(__file__), 'CMD_systs.dat')
+    fn = os.path.join(
+        os.path.dirname(__file__), 'CMD_systs.dat').replace(
+        '/inp/', '/defvals/')
     cmd_systs = {}
     with open(fn) as f:
         f_lines = f.readlines()
         for i, li in enumerate(f_lines):
             if not li.startswith("#"):
                 # Photometric system's name, and filters' names.
-                ls = li.split()
+                _id = li.split()[0]
+                ls = li[105:].split()
+                phot_syst = ls[0]
+                # Number of filters/lambdas/omegas
                 Nf = int((len(ls) - 1) / 3.)
-                cmd_systs[str(ls[0])] = (
-                    ls[1], tuple(ls[2:Nf + 2]),
-                    tuple(map(float, ls[Nf + 2:2 * Nf + 2])))
+                # Filters
+                filters = tuple(ls[1:Nf + 1])
+                # Lambdas
+                lambdas = tuple(map(float, ls[Nf + 1:2 * Nf + 1]))
+                cmd_systs[_id] = (phot_syst, filters, lambdas)
 
     return cmd_systs
 
