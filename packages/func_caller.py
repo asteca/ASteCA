@@ -3,7 +3,7 @@ import time
 import gc  # Garbage collector.
 #
 from .inp import names_paths
-from .inp import get_data_semi
+from .inp import get_manual_strct
 from .inp import get_data
 # from .structure import trim_frame  # DEPRECATED
 from .structure import histo_2d
@@ -85,8 +85,8 @@ def main(cl_file, pd):
     # Save params_input.dat file used.
     inparams_out.main(npd)
 
-    # Get semi-data and add to dictionary.
-    pd = get_data_semi.main(pd, **npd)
+    # Get manual structural data and add to dictionary.
+    pd = get_manual_strct.main(pd, **npd)
 
     # Cluster's data from file, as dictionary. Obtain both incomplete (ie: all
     # stars in data file) and complete (only those with full photometric data)
