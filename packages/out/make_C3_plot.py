@@ -50,10 +50,10 @@ def main(
             mp_kinem_pms.plot(n, *args)
 
         # PMs data.
-        pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, mmag_pm,\
+        pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, mmag_pm, pm_dist_max,\
             PMs_cent, PMs_width, PMs_height, PMs_theta, CI_prob =\
             prep_plots.PMsPlot(
-                pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, mmag_pm)
+                pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, mmag_pm, pm_dist_max)
         raPMrng, dePMrng = prep_plots.PMsrange(pmRA_DE, pmDE)
 
         arglist = [

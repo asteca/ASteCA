@@ -488,7 +488,7 @@ def plxPlot(
     return plx_flrg, mag_flrg, mmag_clp, mp_clp, plx_clp, e_plx_clp
 
 
-def PMsPlot(pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, mmag_pm):
+def PMsPlot(pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, mmag_pm, pm_dist_max):
     """
     Parameters for the proper motions plot.
     """
@@ -498,11 +498,11 @@ def PMsPlot(pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, mmag_pm):
 
     # Re-arrange so stars with larger MPs are on top.
     mp_i = pmMP.argsort()
-    pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, mmag_pm = pmMP[mp_i],\
+    pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, mmag_pm, pm_dist_max = pmMP[mp_i],\
         pmRA_DE[mp_i], e_pmRA_DE[mp_i], pmDE[mp_i], e_pmDE[mp_i],\
-        mmag_pm[mp_i]
+        mmag_pm[mp_i], pm_dist_max[mp_i]
 
-    return pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, mmag_pm,\
+    return pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, mmag_pm, pm_dist_max,\
         mean_pos, width, height, theta, CI_prob
 
 
