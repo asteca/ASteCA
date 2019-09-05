@@ -43,7 +43,8 @@ def main(
             bayesda_weights, fl_reg_prep, w_fl, cl_reg_prep, w_cl)])
 
     if N_msk_cl != 0 or N_msk_fr != 0:
-        print("Masked data: N_cl={}, N_frs={}".format(N_msk_cl, N_msk_fr))
+        print("Masked data (outliers): N_cl={}, N_frs={}".format(
+            N_msk_cl, N_msk_fr))
 
     # Create copy of the cluster region to be shuffled below.
     clust_reg_shuffle, w_cl_shuffle = cl_reg_prep[:], w_cl[:]

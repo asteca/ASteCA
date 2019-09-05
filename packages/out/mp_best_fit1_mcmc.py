@@ -46,16 +46,13 @@ def pl_betas(dummy, gs, best_fit_algor, betas_pt):
     ax.legend(fontsize='small', loc=0)
 
 
-def pl_Tswaps(dummy, gs, best_fit_algor, tswaps_afs):
+def pl_Tswaps(dummy, gs, best_fit_algor, N_steps, tswaps_afs):
     '''
     Evolution of Temp swaps AFs.
     '''
     ax = plt.subplot(gs[0:2, 4:6])
-    # ax.set_title(
-    #     r"$MAF_{{[T=1]}}={:.3f}$".format(maf_steps[1][0][-1]), fontsize=10)
-    x, y_replicas = tswaps_afs
-    Nt = len(y_replicas) - 1
-    for i, y in enumerate(y_replicas):
+    Nt = len(tswaps_afs) - 1
+    for i, y in enumerate(tswaps_afs):
         if i == 0:
             lbl_ls = ("Cold", '--', 1.5, 4)
         elif i == Nt:
@@ -63,24 +60,24 @@ def pl_Tswaps(dummy, gs, best_fit_algor, tswaps_afs):
         else:
             lbl_ls = (None, '-', .5, 1)
         ax.plot(
-            x, y, label=lbl_ls[0], ls=lbl_ls[1], lw=lbl_ls[2],
+            N_steps, y, label=lbl_ls[0], ls=lbl_ls[1], lw=lbl_ls[2],
             zorder=lbl_ls[3])
     plt.xlabel("steps", fontsize=14)
     plt.ylabel("Tswaps AF", fontsize=14)
     ax.legend(fontsize='small', loc=0)
 
 
-def pl_MAF(dummy, gs, best_fit_algor, maf_steps):
+def pl_MAF(dummy, gs, best_fit_algor, N_steps, maf_allT):
     '''
     Evolution of MAF values.
     '''
     ax = plt.subplot(gs[0:2, 6:8])
     ax.set_title(
-        r"$MAF_{{[T=1]}}={:.3f}$".format(maf_steps[1][0][-1]), fontsize=10)
+        r"$MAF_{{[T=1]}}={:.3f}$".format(maf_allT[0][-1]), fontsize=10)
     # x, y = list(zip(*maf_steps))
-    x, y_replicas = maf_steps
-    Nt = len(y_replicas) - 1
-    for i, y in enumerate(y_replicas):
+    # x, y_replicas = maf_steps
+    Nt = len(maf_allT) - 1
+    for i, y in enumerate(maf_allT):
         if i == 0:
             lbl_ls = ("Cold", '--', 1.5, 4)
         elif i == Nt:
@@ -88,7 +85,7 @@ def pl_MAF(dummy, gs, best_fit_algor, maf_steps):
         else:
             lbl_ls = (None, '-', .5, 1)
         ax.plot(
-            x, y, label=lbl_ls[0], ls=lbl_ls[1], lw=lbl_ls[2],
+            N_steps, y, label=lbl_ls[0], ls=lbl_ls[1], lw=lbl_ls[2],
             zorder=lbl_ls[3])
     plt.xlabel("steps", fontsize=14)
     plt.ylabel("MAF", fontsize=14)
@@ -132,22 +129,20 @@ def pl_tau_histo(dummy, gs, all_taus):
     ax.legend(fontsize='small', loc=0)
 
 
-def pl_tau(dummy, gs, N_steps_conv, N_conv, tol_conv, tau_index, tau_autocorr):
+def pl_tau(dummy, gs, N_steps, tau_autocorr):
     '''
     Tau vs steps plot.
     '''
     ax = plt.subplot(gs[6:8, 10:12])
-    plt.title(r"$N_{{conv}}={:.0f}, tol_{{conv}}={:.2f}$".format(
-        N_conv, tol_conv), fontsize=10)
+    plt.title("Mean across chains and parameters", fontsize=10)
     plt.xlabel("steps", fontsize=14)
     plt.ylabel(r"$\hat{\tau}_{{c\,|\,p}}$", fontsize=14)
 
-    n = N_steps_conv * np.arange(1, tau_index + 1)
-    plt.plot(n, n / 50., "--g", label="N/50")
-    plt.plot(n, n / 100., "--b", label="N/100")
-    plt.plot(n, n / 500., "--r", label="N/500")
-    plt.plot(n, tau_autocorr)
-    plt.xlim(0, n.max())
+    plt.plot(N_steps, N_steps / 50., "--g", label="N/50")
+    plt.plot(N_steps, N_steps / 100., "--b", label="N/100")
+    plt.plot(N_steps, N_steps / 500., "--r", label="N/500")
+    plt.plot(N_steps, tau_autocorr)
+    plt.xlim(0, N_steps.max())
     try:
         plt.ylim(
             0, np.nanmax(tau_autocorr) + 0.1 *
@@ -162,6 +157,7 @@ def pl_lags(dummy, gs, varIdxs, lag_zero, acorr_function):
     lags plot.
     '''
     ax = plt.subplot(gs[6:8, 8:10])
+    plt.title("Autocorrelation function", fontsize=10)
     plt.xlabel("Lag", fontsize=14)
     plt.ylabel("ACF", fontsize=14)
 

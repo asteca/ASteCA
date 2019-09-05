@@ -2,7 +2,6 @@
 import numpy as np
 import warnings
 import time as t
-from .. import update_progress
 from . import likelihood
 # from .emcee3rc2 import autocorr
 from .mcmc_convergence import convergenceVals
@@ -14,9 +13,9 @@ from .ptemcee import sampler, util
 def main(
     err_lst, completeness, e_max, max_mag_syn, obs_clust, ext_coefs,
     st_dist_mass, N_fc, cmpl_rnd, err_rnd, lkl_method, fundam_params,
-    theor_tracks, R_V, init_mode_ptm, popsize_ptm, maxiter_ptm, ntemps,
-    nwalkers_ptm, nsteps_ptm, nburn_ptm, pt_adapt, tmax_ptm, priors_ptm, hmax,
-        N_conv, tol_conv, **kwargs):
+    theor_tracks, R_V, ntemps,
+    nwalkers_ptm, nburn_ptm, pt_adapt, tmax_ptm, priors_ptm, hmax,
+        **kwargs):
     """
     """
 
@@ -42,6 +41,7 @@ def main(
     available_secs = max(30, max_secs)
     elapsed, start_t = 0., t.time()
 
+    # Define Parallel tempered sampler
     ptsampler = sampler.Sampler(
         nwalkers_ptm, ndim, loglkl, logp,
         loglargs=[fundam_params, synthcl_args, lkl_method, obs_clust, ranges,
@@ -49,84 +49,33 @@ def main(
 
     ntemps = ptsampler.ntemps
     # Initial population.
-    p0 = initPop(
+    pos0 = initPop(
         ranges, varIdxs, lkl_method, obs_clust, fundam_params, synthcl_args,
-        ntemps, nwalkers_ptm, init_mode_ptm, popsize_ptm, maxiter_ptm)
+        ntemps, nwalkers_ptm, 'random', None, None)
 
-    print("     Burn-in stage")
-    N_steps_check = max(1, int(nburn_ptm * .1))
-    for i, (pos0, lnprob, lnlike) in enumerate(ptsampler.sample(
-            p0, iterations=nburn_ptm, adapt=pt_adapt)):
-
-        elapsed += t.time() - start_t
-        if elapsed >= available_secs:
-            print("  Time consumed during burn-in (runs={})".format(i + 1))
-            break
-        start_t = t.time()
-
-        if (i + 1) % N_steps_check:
-            continue
-        maf = np.mean(ptsampler.acceptance_fraction[0])
-        update_progress.updt(nburn_ptm, i + 1, "MAF={:.3f}".format(maf))
-
-    # ptsampler.chain.shape: (ntemps, nwalkers, nsteps, ndim)
-    # Store burn-in chain phase.
-    # Shape: (runs, nwalkers, ndim)
-    chains_nruns = ptsampler.chain[0].transpose(1, 0, 2)
-    # The Mass parameter is not interpolated, use its grid values.
-    chains_nruns = discreteParams(fundam_params, varIdxs, chains_nruns, [4])
-    # print(chains_nruns.shape, pars_chains_bi.shape)
-    pars_chains_bi = chains_nruns.T
-
-    # Store MAP solution.
-    idx_best = np.argmax(lnprob[0])
-    map_sol_old = [
-        fillParams(fundam_params, varIdxs, pos0[0][idx_best]),
-        lnprob[0][idx_best]]
-
-    ptsampler.reset()
-
-    # We'll track how the average autocorrelation time estimate changes.
+    # We'll track how the average autocorrelation time estimate changes,
+    # acceptance fractions, and temperature swaps acceptance fractions.
     # This will be useful to testing convergence.
-    tau_index, autocorr_vals, old_tau = 0, np.empty(nsteps_ptm), np.inf
+    tau_autocorr, afs, tswaps = [], [], []
 
-    # Check for convergence every 5% of steps or 100, whichever value
-    # is lower.
-    N_steps_conv = max(min(int(nsteps_ptm * .1), 100), 10)
-
-    afs, tswaps = [], []
-    # actimes = []
-    # tau_emcee = np.empty(nsteps_ptm)
-
-    # Check for dodgy inputs.
-    if np.any(np.isinf(pos0)):
-        print("  WARNING: At least one parameter value was infinite")
-        # print(pos0)
-        pos0[np.isinf(pos0)] = 0.
-    if np.any(np.isnan(pos0)):
-        print("  WARNING: At least one parameter value was NaN")
-        pos0[np.isnan(pos0)] = 0.
-        # print(pos0)
-
-    maf_steps, prob_mean, map_lkl = [], [], []
-    elapsed_in, start_in = 0., t.time()
-    milestones = list(range(10, 101, 10))
+    # Store for plotting
+    prob_mean, map_lkl, map_sol_old = [], [], [[], -np.inf]
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
 
-        for i, result in enumerate(ptsampler.sample(
-                pos0, iterations=nsteps_ptm, adapt=pt_adapt)):
+        # Fixed number of steps per run
+        steps, runs = 50, 0
 
-            elapsed += t.time() - start_t
-            if elapsed >= available_secs and i > 2:
-                print("  Time consumed (runs={})".format(i + 1))
-                break
-            start_t = t.time()
+        milestones = list(range(10, 101, 10))
+        while True:
 
-            # Only check convergence every 'N_steps_conv' steps
-            if (i + 1) % N_steps_conv:
-                continue
+            runs += 1
+            for (pos, lnprob, lnlike) in ptsampler.sample(
+                    pos0, iterations=steps, adapt=pt_adapt):
+                pass
+            # Update position
+            pos0 = ptsampler._p0
 
             # Temperature swap acceptance fractions.
             tswaps.append(ptsampler.tswap_acceptance_fraction)
@@ -143,69 +92,55 @@ def main(
             # chains.
             # ptsampler.chain.shape: (ntemps, nwalkers, nsteps, ndim)
             # x.shape: (nsteps, ndim)
-            x = np.mean(ptsampler.chain[0, :, :i + 1, :], axis=0)
+            x = np.mean(ptsampler.chain[0, :, :runs * steps, :], axis=0)
             # tau.shape: ndim
             tau = util.autocorr_integrated_time(x)
-
-            # acors = np.zeros(ntemps)
-            # for temp in range(ntemps):
-            #     x = np.mean(ptsampler.chain[temp, :, :i + 1, :], axis=0)
-            #     acors[temp] = np.mean(util.autocorr_integrated_time(x))
-            # actimes.append(acors)
-
             # Autocorrelation time. Mean across dimensions.
-            autocorr_vals[tau_index] = np.mean(tau)
-            tau_index += 1
-
-            # Check convergence
-            converged = np.all(tau * N_conv < (i + 1))
-            converged &= np.all(np.abs(old_tau - tau) / tau < tol_conv)
-            if converged:
-                print("  Convergence achieved (runs={})".format(i + 1))
-                break
-            old_tau = tau
-
-            pos, lnprob, lnlike = result
+            tau_autocorr.append(np.mean(tau))
 
             maf = np.mean(ptsampler.acceptance_fraction[0])
             # Store MAP solution in this iteration.
-            prob_mean.append([i, np.mean(lnprob[0])])
+            prob_mean.append([runs * steps, np.mean(lnprob[0])])
             idx_best = np.argmax(lnprob[0])
             # Update if a new optimal solution was found.
             if lnprob[0][idx_best] > map_sol_old[1]:
                 map_sol_old = [
                     fillParams(fundam_params, varIdxs, pos[0][idx_best]),
                     lnprob[0][idx_best]]
-            map_lkl.append([i, map_sol_old[1]])
+            map_lkl.append([runs * steps, map_sol_old[1]])
+
+            elapsed += t.time() - start_t
 
             # Time used to check how fast the sampler is advancing.
-            elapsed_in += t.time() - start_in
-            start_in = t.time()
-            # Print progress.
-            percentage_complete = (100. * (i + 1) / nsteps_ptm)
+            percentage_complete = (100. * elapsed / available_secs)
             if len(milestones) > 0 and percentage_complete >= milestones[0]:
                 map_sol, logprob = map_sol_old
-                m, s = divmod(nsteps_ptm / (i / elapsed_in) - elapsed_in, 60)
+                m, s = divmod(max(1., available_secs - elapsed), 60)
                 h, m = divmod(m, 60)
                 print("{:>3}% ({:.3f}) LP={:.1f} ({:.5f}, {:.3f}, {:.3f}, "
                       "{:.2f}, {:.0f}, {:.2f})".format(
                           milestones[0], maf, logprob, *map_sol) +
                       " [{:.0f} m/s | {:.0f}h{:.0f}m]".format(
-                          (ntemps * nwalkers_ptm * i) / elapsed_in, h, m))
+                          (ntemps * nwalkers_ptm * runs * steps) /
+                          elapsed, h, m))
                 milestones = milestones[1:]
 
-    runs = i + 1
+            # Stop when available time is consumed.
+            if elapsed >= available_secs:
+                break
+            start_t = t.time()
+
+    # Total number of steps
+    N_steps = steps * np.arange(runs)
 
     # Evolution of the mean autocorrelation time.
-    tau_autocorr = autocorr_vals[:tau_index]
+    # tau_autocorr = autocorr_vals[:tau_index]
     # Mean acceptance fractions for all replicas.
-    maf_steps = (
-        N_steps_conv * np.arange(1, tau_index + 1), np.asarray(afs).T)
+    maf_allT = np.asarray(afs).T
     # Temperature swaps acceptance fractions.
-    tswaps_afs = (
-        N_steps_conv * np.arange(1, tau_index + 1), np.asarray(tswaps).T)
+    tswaps_afs = np.asarray(tswaps).T
     # Betas history
-    betas_pt = (np.arange(runs), ptsampler.beta_history)
+    betas_pt = (np.arange(runs), ptsampler.beta_history[:runs:])
 
     # Final MAP fit.
     map_sol, map_lkl_final = map_sol_old
@@ -217,15 +152,25 @@ def main(
         print("  WARNING: mean acceptance fraction is outside of the\n"
               "  recommended range.")
 
-    # ptsampler.chain.shape: (ntemps, nchains, nsteps, ndim)
-    # chains_nruns.shape: (runs, nchains, ndim)
-    chains_nruns = ptsampler.chain[0, :, :runs, :].transpose(1, 0, 2)
+    # ptsampler.chain.shape: (ntemps, nwalkers, nsteps, ndim)
+    # Store burn-in chain phase.
+    bi_steps = int(nburn_ptm * ptsampler.chain.shape[2])
+    # chains_nruns.shape: (runs, nchains, ndim), after transpose
+    chains_nruns = ptsampler.chain[0, :, :bi_steps, :].transpose(1, 0, 2)
+    # The Mass parameter is not interpolated, use its grid values.
     chains_nruns = discreteParams(fundam_params, varIdxs, chains_nruns, [4])
+    # pars_chains_bi.shape: (ndim, nchains, runs)
+    pars_chains_bi = chains_nruns.T
+
+    # After burn-in
+    chains_nruns = ptsampler.chain[0, :, bi_steps:, :].transpose(1, 0, 2)
+    chains_nruns = discreteParams(fundam_params, varIdxs, chains_nruns, [4])
+    pars_chains = chains_nruns.T
 
     # Convergence parameters.
     acorr_t, med_at_c, all_taus, geweke_z, lag_zero, acorr_function,\
         mcmc_ess = convergenceVals(
-            'ptemcee', ndim, varIdxs, N_conv, chains_nruns)
+            'ptemcee', ndim, varIdxs, None, chains_nruns)
 
     # Re-shape trace for all parameters (flat chain).
     # Shape: (ndim, runs * nchains)
@@ -255,21 +200,20 @@ def main(
     N_total = mcmc_trace.shape[-1]
 
     isoch_fit_params = {
-        'varIdxs': varIdxs, 'nsteps_ptm': runs, 'mean_sol': mean_sol,
+        'varIdxs': varIdxs, 'mean_sol': mean_sol,
         'median_sol': median_sol, 'map_sol': map_sol, 'map_lkl': map_lkl,
         'mode_sol': mode_sol, 'pardist_kde': pardist_kde, 'param_r2': param_r2,
         'map_lkl_final': map_lkl_final, 'prob_mean': prob_mean,
         'bf_elapsed': elapsed, 'mcmc_trace': mcmc_trace,
-        'pars_chains_bi': pars_chains_bi, 'pars_chains': chains_nruns.T,
-        'maf_steps': maf_steps, 'tswaps_afs': tswaps_afs, 'betas_pt': betas_pt,
+        'pars_chains_bi': pars_chains_bi, 'pars_chains': pars_chains,
+        'maf_allT': maf_allT, 'tswaps_afs': tswaps_afs, 'betas_pt': betas_pt,
         'acorr_t': acorr_t, 'med_at_c': med_at_c,
         'all_taus': all_taus,
         # 'max_at_c': max_at_c, 'min_at_c': min_at_c,
         # 'minESS': minESS, 'mESS': mESS, 'mESS_epsilon': mESS_epsilon,
         'lag_zero': lag_zero, 'acorr_function': acorr_function,
         'geweke_z': geweke_z, 'mcmc_ess': mcmc_ess, 'N_total': N_total,
-        'N_steps_conv': N_steps_conv, 'N_conv': N_conv, 'tol_conv': tol_conv,
-        'tau_index': tau_index, 'tau_autocorr': tau_autocorr
+        'N_steps': N_steps, 'tau_autocorr': tau_autocorr
     }
 
     return isoch_fit_params
