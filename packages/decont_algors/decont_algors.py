@@ -7,7 +7,7 @@ from . import read_da
 
 def main(
     clp, npd, colors, plx_col, pmx_col, pmy_col, rv_col, da_algor,
-        bayesda_runs, bayesda_weights, fixedda_port, **kwargs):
+        bayesda_runs, bayesda_dflag, fixedda_port, **kwargs):
     """
     Apply selected decontamination algorithm.
     """
@@ -27,7 +27,7 @@ def main(
     elif da_algor == 'bayes':
         memb_probs_cl_region = bayesian_da.main(
             colors, plx_col, pmx_col, pmy_col, rv_col, bayesda_runs,
-            bayesda_weights, clp['cl_region_i'], clp['field_regions_i'])
+            bayesda_dflag, clp['cl_region_i'], clp['field_regions_i'])
 
     elif da_algor == 'fixed':
         memb_probs_cl_region = fixed_da.main(clp['cl_region_i'], fixedda_port)

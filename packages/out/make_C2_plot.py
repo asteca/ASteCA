@@ -12,8 +12,8 @@ def main(
     npd, pd, col_0_comb, mag_0_comb, plx_flag_clp, plx_clrg,
     mmag_clp, mp_clp, plx_clp, e_plx_clp, flag_no_fl_regs_i, field_regions_i,
     cl_reg_fit, plx_bayes_flag_clp, plx_samples, plx_Bys, plx_tau_autocorr,
-    mean_afs, plx_ess, plx_wa, plx_pm_flag, pmMP, pmRA_DE, e_pmRA_DE, pmDE,
-        e_pmDE, mmag_pm, pmRA_fl_DE, pmDE_fl, pm_Plx_cl, pm_Plx_fr, **kwargs):
+    mean_afs, plx_ess, plx_wa, plx_pm_flag, pmMP, pmRA_DE, pmDE, mmag_pm,
+        pmRA_fl_DE, pmDE_fl, pm_Plx_cl, pm_Plx_fr, **kwargs):
     '''
     Make C2 block plots.
     '''
@@ -64,10 +64,9 @@ def main(
 
         if plx_pm_flag:
             # PMs data.
-            pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, mmag_pm,\
-                PMs_cent, PMs_width, PMs_height, PMs_theta, CI_prob =\
+            pmMP, pmRA_DE, _, pmDE, _, mmag_pm, _ =\
                 prep_plots.PMsPlot(
-                    pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, mmag_pm)
+                    pmMP, pmRA_DE, None, pmDE, None, mmag_pm, None)
             raPMrng, dePMrng = prep_plots.PMsrange(pmRA_DE, pmDE)
 
             arglist = [
