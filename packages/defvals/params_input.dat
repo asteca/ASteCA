@@ -254,14 +254,14 @@ AD   100             y
 #   algor   runs   fport
 DA  bayes   1000      .4
 
-#   If the 'bayes' algorithm is selected, these weights are assigned to each
-#   data dimension (photometric and kinematic). If more than one color is
-#   defined, add a second value after 'w_col'.
+#   If the 'bayes' algorithm is selected, these flags turn data dimensions
+#   (photometric and kinematic) on/off (y/n). If more than one color is
+#   defined, add more values after 'w_col'.
 #
-#  * w_xxx: 0<=[float]<=1
+#  * w_xxx: y / n
 # 
 #   w_mag    w_col    w_Plx    w_PMx    w_PMy    w_RV
-DW     1.       1.       1.       1.       1.      1.
+DW      y        y        y        y        y       n
 
 
 # Cluster region field stars removal.

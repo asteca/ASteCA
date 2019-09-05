@@ -108,7 +108,7 @@ def main(mypath, pars_f_path):
                     fixedda_port = float(reader[3])
 
                 elif reader[0] == 'DW':
-                    bayesda_weights = list(map(float, reader[1:]))
+                    bayesda_dflag = reader[1:]
 
                 # Cluster region field stars removal.
                 elif reader[0] == 'FR':
@@ -306,7 +306,7 @@ def main(mypath, pars_f_path):
         'err_max': err_max, 'ad_runs': ad_runs, 'ad_k_comb': ad_k_comb,
         # Decontamination algorithm parameters.
         'da_algor': da_algor, 'bayesda_runs': bayesda_runs,
-        'fixedda_port': fixedda_port, 'bayesda_weights': bayesda_weights,
+        'fixedda_port': fixedda_port, 'bayesda_dflag': bayesda_dflag,
         # Plx & PMs parameters.
         'plx_bayes_flag': plx_bayes_flag, 'plx_offset': plx_offset,
         'plx_chains': plx_chains, 'plx_runs': plx_runs,
