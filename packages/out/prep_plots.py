@@ -492,18 +492,17 @@ def PMsPlot(pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, mmag_pm, pm_dist_max):
     """
     Parameters for the proper motions plot.
     """
-    CI_prob = .95
-    mean_pos, width, height, theta = CIEllipse(
-        np.array([pmRA_DE, pmDE]).T, prob=CI_prob)
 
     # Re-arrange so stars with larger MPs are on top.
     mp_i = pmMP.argsort()
-    pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, mmag_pm, pm_dist_max = pmMP[mp_i],\
-        pmRA_DE[mp_i], e_pmRA_DE[mp_i], pmDE[mp_i], e_pmDE[mp_i],\
-        mmag_pm[mp_i], pm_dist_max[mp_i]
+    arr_lst = []
+    for arr in (pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, mmag_pm, pm_dist_max):
+        if arr is not None:
+            arr_lst.append(arr[mp_i])
+        else:
+            arr_lst.append([])
 
-    return pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, mmag_pm, pm_dist_max,\
-        mean_pos, width, height, theta, CI_prob
+    return arr_lst
 
 
 def CIEllipse(points, prob=.95):
