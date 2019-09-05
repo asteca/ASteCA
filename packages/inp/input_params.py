@@ -150,20 +150,12 @@ def main(mypath, pars_f_path):
                     b_range = list(map(float, reader[1:]))
 
                 # ptemcee algorithm parameters.
-                elif reader[0] == 'PT0':
-                    init_mode_ptm = reader[1]
-                    popsize_ptm = int(float(reader[2]))
-                    maxiter_ptm = int(float(reader[3]))
-                elif reader[0] == 'PT1':
+                elif reader[0] == 'PT':
                     ntemps = reader[1]
                     nwalkers_ptm = int(float(reader[2]))
-                    nburn_ptm = int(float(reader[3]))
-                    nsteps_ptm = int(float(reader[4]))
-                    tmax_ptm = reader[5]
-                    pt_adapt = True if reader[6] in true_lst else False
-                elif reader[0] == 'PT2':
-                    N_conv = float(reader[1])
-                    tol_conv = float(reader[2])
+                    nburn_ptm = float(reader[3])
+                    tmax_ptm = reader[4]
+                    pt_adapt = True if reader[5] in true_lst else False
                 elif reader[0] == 'PTZ':
                     pt_z_prior = [reader[1]] + list(map(float, reader[2:]))
                 elif reader[0] == 'PTA':
@@ -325,9 +317,9 @@ def main(mypath, pars_f_path):
         'fld_clean_mode': fld_clean_mode, 'fld_clean_bin': fld_clean_bin,
         'fld_clean_prob': fld_clean_prob,
         # Best fit parameters.
-        'best_fit_algor': best_fit_algor, 'hmax': hmax, 'N_conv': N_conv,
-        'tol_conv': tol_conv, 'lkl_method': lkl_method,
-        'lkl_binning': lkl_binning, 'lkl_weight': lkl_weight,
+        'best_fit_algor': best_fit_algor, 'hmax': hmax,
+        'lkl_method': lkl_method, 'lkl_binning': lkl_binning,
+        'lkl_weight': lkl_weight,
         # Synthetic cluster parameters
         'evol_track': evol_track, 'za_steps': za_steps,
         'max_mag': max_mag, 'IMF_name': IMF_name, 'm_high': m_high,
@@ -336,11 +328,8 @@ def main(mypath, pars_f_path):
         # parameters ranges
         'par_ranges': par_ranges,
         # ptemcee algorithm parameters.
-        'init_mode_ptm': init_mode_ptm, 'popsize_ptm': popsize_ptm,
-        'maxiter_ptm': maxiter_ptm,
         'ntemps': ntemps, 'nwalkers_ptm': nwalkers_ptm, 'nburn_ptm': nburn_ptm,
-        'nsteps_ptm': nsteps_ptm, "pt_adapt": pt_adapt, 'tmax_ptm': tmax_ptm,
-        'priors_ptm': priors_ptm,
+        "pt_adapt": pt_adapt, 'tmax_ptm': tmax_ptm, 'priors_ptm': priors_ptm,
         # # ABC algorithm parameters.
         # 'nwalkers_abc': nwalkers_abc, 'nburn_abc': nburn_abc,
         # 'nsteps_abc': nsteps_abc, 'priors_abc': priors_abc,

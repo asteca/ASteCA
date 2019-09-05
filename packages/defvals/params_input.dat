@@ -372,14 +372,9 @@ RB         0        1
 
 # ptemcee parameters.
 #
-#   - init_mode: random / diffevol
-#   - popsize: [int], population size for the 'diffevol' method.
-#   - maxiter:[int], maximum number of iterations for the 'diffevol' method.
-#
 #   - ntemps: [int], Number of parallel temperatures.
 #   - nwalkers: [int], Number of walkers/chains used.
-#   - nburn: [int], Number of burn-in samples to discard.
-#   - nsteps: [int], Number of steps to process.
+#   - nburn: [0<float<1], percentage of the chain discarded as burn-in.
 #   - Tmax: [float] / inf / n, maximum temperature value.
 #   - adapt: y / n, turn on-off the adaptive (dynamic) temperature selection.
 #
@@ -388,14 +383,8 @@ RB         0        1
 #   - tol_conv: [float], minimum tolerance for the stability of the
 #               autocorrelation time to apply the convergence break.
 #
-#     init_mode   popsize   maxiter
-PT0      random         5        10
-#
-#     ntemps    nwalkers   nburn    nsteps     Tmax   adapt
-PT1       10          50      50       500      inf       y
-#
-#     N_conv   tol_conv
-PT2      100       0.01
+#     ntemps    nwalkers   nburn    Tmax   adapt
+PT       10           25     .25     inf       y
 #
 #   - prior: u / g, uniform (u) or Gaussian (g) prior distributions for the
 #     fitted parameters. 'mean/stddev' are only required if the 'g' prior is
@@ -418,7 +407,7 @@ PTB       u       0.5         0.2
 #   - N_step: [int], number of steps  used in the bootstrap process.
 #
 #    hperc    N_pop    N_step
-BT      .5        10       100
+BT      .5       10       100
 
 # Genetic Algorithm parameters.
 #

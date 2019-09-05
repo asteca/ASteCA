@@ -36,11 +36,11 @@ def main(npd, pd, isoch_fit_params, isoch_fit_errors, **kwargs):
                 xf, yf = .67, 1.01
         elif pd['best_fit_algor'] == 'ptemcee':
             nwalkers, nburn, nsteps, pt_adapt = pd['nwalkers_ptm'],\
-                pd['nburn_ptm'], isoch_fit_params['nsteps_ptm'],\
+                pd['nburn_ptm'], isoch_fit_params['N_steps'],\
                 pd['pt_adapt']
             p_str = (
-                "chains={:.0f}, burn={:.0f}, steps={:.0f},"
-                " adapt={}").format(nwalkers, nburn, nsteps, pt_adapt)
+                "chains={:.0f}, burn={:.2f}, steps={:.0f},"
+                " adapt={}").format(nwalkers, nburn, nsteps[-1], pt_adapt)
         add_version_plot.main(x_fix=xf, y_fix=yf)
         plt.suptitle(
             ("{} | {:.0f}h{:.0f}m").format(p_str, h_bf, m_bf), x=xt, y=yt,
@@ -123,7 +123,8 @@ def main(npd, pd, isoch_fit_params, isoch_fit_errors, **kwargs):
 
             # pl_MAF: Parameters evolution of MAF.
             args = [
-                'MAF', gs, pd['best_fit_algor'], isoch_fit_params['maf_steps']]
+                'MAF', gs, pd['best_fit_algor'], isoch_fit_params['N_steps'],
+                isoch_fit_params['maf_allT']]
             mp_best_fit1_mcmc.plot(1, *args)
 
             # pl_betas: Betas vs steps.
@@ -135,14 +136,13 @@ def main(npd, pd, isoch_fit_params, isoch_fit_errors, **kwargs):
             # pl_Tswaps: Tswaps AFs vs steps.
             args = [
                 'TSWAP', gs, pd['best_fit_algor'],
+                isoch_fit_params['N_steps'],
                 isoch_fit_params['tswaps_afs']]
             mp_best_fit1_mcmc.plot(3, *args)
 
             # pl_tau
             args = [
-                'Tau', gs, isoch_fit_params['N_steps_conv'],
-                isoch_fit_params['N_conv'], isoch_fit_params['tol_conv'],
-                isoch_fit_params['tau_index'],
+                'Tau', gs, isoch_fit_params['N_steps'],
                 isoch_fit_params['tau_autocorr']]
             mp_best_fit1_mcmc.plot(4, *args)
             # TODO re-implement when/if code is fixed
@@ -205,8 +205,7 @@ def sharedPlots(pd, npd, isoch_fit_params, gs, min_max_p):
         msol = 'MAP'
         best_sol = isoch_fit_params['mean_sol']
         traceplot_args = (
-            pd['nwalkers_ptm'], pd['nburn_ptm'],
-            isoch_fit_params['nsteps_ptm'], isoch_fit_params['acorr_t'],
+            isoch_fit_params['acorr_t'],
             isoch_fit_params['med_at_c'], isoch_fit_params['mcmc_ess'])
         post_trace, pre_trace = isoch_fit_params['pars_chains'],\
             isoch_fit_params['pars_chains_bi']
