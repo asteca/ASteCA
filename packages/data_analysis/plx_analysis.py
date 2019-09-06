@@ -61,6 +61,7 @@ def main(
             # Weighted average.
             # Source: https://physics.stackexchange.com/a/329412/8514
             plx_w = mp_clp / np.square(e_plx_clp)
+            plx_w = plx_w if plx_w > 0. else None
             plx_wa = np.average(plx_clp, weights=plx_w)
 
             if plx_bayes_flag:
