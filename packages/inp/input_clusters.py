@@ -5,10 +5,10 @@ import re
 
 
 def main(mypath, file_end):
-    '''
+    """
     Store the paths and names of all the input clusters stored in the
-    input_dir folder.
-    '''
+    'input/' folder.
+    """
 
     # Path where cluster data files are stored.
     input_dir = 'input' + file_end
