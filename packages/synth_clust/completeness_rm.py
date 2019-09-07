@@ -2,69 +2,6 @@
 from ..core_imp import np
 
 
-def idxFind(N, c_indx):
-    """
-    Store the actual indexes of stars in the accepted edge ranges, stored in
-    each corresponding range.
-    """
-    # Reject stars in the 0th position. These are stars below the value
-    # where the completeness loss starts.
-    mask = (c_indx > 0)
-    # Keep those stars with indexes in the accepted magnitude range.
-    c_mask = c_indx[mask]
-    # Ordered indexes for the masked stars.
-    indices = np.arange(c_indx.size)[mask]
-    # Indexes that would sort 'c_mask'.
-    sorting_idx = np.argsort(c_mask, kind='mergesort')
-    # Keep only the ordered indexes that are associated with 'c_mask'.
-    ind_sorted = indices[sorting_idx]
-    # Indexes of ordered indexes (N) positioned into 'c_mask'.
-    x = np.searchsorted(
-        c_mask, range(N), side='right', sorter=sorting_idx)
-
-    # Store star indices into each edge range.
-    rang_indx = [ind_sorted[x[i]:x[i + 1]] for i in range(N - 1)]
-
-    return rang_indx
-
-
-def indxRem(di, rang_indx, cmpl_rnd):
-    """
-    Select a fixed number (given by 'di') of random indexes in 'rang_indx'.
-    These correspond to the stars that will be removed in each magnitude
-    range.
-
-    Source: https://stackoverflow.com/a/46079837/1391441
-    """
-    lens = np.array([len(_) for _ in rang_indx])
-    di0 = np.minimum(lens, di)
-    invalid_mask = lens[:, None] <= np.arange(lens.max())
-
-    # Create a 2D random array in interval [0,1) to cover the max length of
-    # subarrays.
-    rand_nums = np.copy(cmpl_rnd[:len(lens) * lens.max()].reshape(
-        len(lens), lens.max()))
-
-    # For each subarray, set the invalid places to 1.0. Get argsort for each
-    # row. Those 1s corresponding to the invalid places would stay at the back
-    # because there were no 1s in the original random array. Thus, we have the
-    # indices array.
-    rand_nums[invalid_mask] = 1
-    # Slice each row of those indices array to the extent of the lengths
-    # listed in di.
-    shuffled_indx = np.argpartition(rand_nums, lens - 1, axis=1)
-
-    # Start a loop and slice each subarray from 'rang_indx' using those sliced
-    # indices.
-    out = []
-    for i, all_idx in enumerate(shuffled_indx):
-        if lens[i] > 0:
-            slice_idx = all_idx[:di0[i]]
-            out += rang_indx[i][slice_idx].tolist()
-
-    return np.asarray(out)
-
-
 def main(isoch_binar, completeness, cmpl_rnd):
     """
     Remove a number of stars according to the percentages of star loss found in
@@ -119,3 +56,66 @@ def main(isoch_binar, completeness, cmpl_rnd):
         isoch_compl = isoch_binar
 
     return isoch_compl
+
+
+def indxRem(di, rang_indx, cmpl_rnd):
+    """
+    Select a fixed number (given by 'di') of random indexes in 'rang_indx'.
+    These correspond to the stars that will be removed in each magnitude
+    range.
+
+    Source: https://stackoverflow.com/a/46079837/1391441
+    """
+    lens = np.array([len(_) for _ in rang_indx])
+    di0 = np.minimum(lens, di)
+    invalid_mask = lens[:, None] <= np.arange(lens.max())
+
+    # Create a 2D random array in interval [0,1) to cover the max length of
+    # subarrays.
+    rand_nums = np.copy(cmpl_rnd[:len(lens) * lens.max()].reshape(
+        len(lens), lens.max()))
+
+    # For each subarray, set the invalid places to 1.0. Get argsort for each
+    # row. Those 1s corresponding to the invalid places would stay at the back
+    # because there were no 1s in the original random array. Thus, we have the
+    # indices array.
+    rand_nums[invalid_mask] = 1
+    # Slice each row of those indices array to the extent of the lengths
+    # listed in di.
+    shuffled_indx = np.argpartition(rand_nums, lens - 1, axis=1)
+
+    # Start a loop and slice each subarray from 'rang_indx' using those sliced
+    # indices.
+    out = []
+    for i, all_idx in enumerate(shuffled_indx):
+        if lens[i] > 0:
+            slice_idx = all_idx[:di0[i]]
+            out += rang_indx[i][slice_idx].tolist()
+
+    return np.asarray(out)
+
+
+def idxFind(N, c_indx):
+    """
+    Store the actual indexes of stars in the accepted edge ranges, stored in
+    each corresponding range.
+    """
+    # Reject stars in the 0th position. These are stars below the value
+    # where the completeness loss starts.
+    mask = (c_indx > 0)
+    # Keep those stars with indexes in the accepted magnitude range.
+    c_mask = c_indx[mask]
+    # Ordered indexes for the masked stars.
+    indices = np.arange(c_indx.size)[mask]
+    # Indexes that would sort 'c_mask'.
+    sorting_idx = np.argsort(c_mask, kind='mergesort')
+    # Keep only the ordered indexes that are associated with 'c_mask'.
+    ind_sorted = indices[sorting_idx]
+    # Indexes of ordered indexes (N) positioned into 'c_mask'.
+    x = np.searchsorted(
+        c_mask, range(N), side='right', sorter=sorting_idx)
+
+    # Store star indices into each edge range.
+    rang_indx = [ind_sorted[x[i]:x[i + 1]] for i in range(N - 1)]
+
+    return rang_indx
