@@ -2,12 +2,12 @@
 from time import strftime
 
 
-def main(npd):
+def main(npd, file_end, **kwargs):
     """
     Save input 'params_input.dat' file as output file.
     """
     # Read
-    with open('./params_input.dat', 'r') as f:
+    with open('./params_input' + file_end + '.dat', 'r') as f:
         # Read file into data var.
         data = f.readlines()
 

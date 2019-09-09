@@ -83,7 +83,7 @@ def main(cl_file, pd):
     npd = names_paths.main(cl_file, **pd)
 
     # Save params_input.dat file used.
-    inparams_out.main(npd)
+    inparams_out.main(npd, **pd)
 
     # Get manual structural data and add to dictionary.
     pd = get_manual_strct.main(pd, **npd)
