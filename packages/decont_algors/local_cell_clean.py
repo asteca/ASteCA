@@ -11,18 +11,61 @@ if sys.version_info[0] == 3:
     from functools import reduce
 
 
-def slpitArr(data, step=3.):
+def main(
+    field_regions_c,
+        memb_prob_avrg_sort, flag_decont_skip, fld_clean_bin):
     """
-    Insert extra elements into array so that the maximum spacing between
-    elements is 'step'.
-    Source: https://stackoverflow.com/q/52769257/1391441
+    Takes the photometric diagram of the cluster region with assigned MPs,
+    divides it into sub-regions (cells) according to the
+    density within it, and removes from each sub-region a number of stars
+    equal to the average excess due to field star contamination.
     """
-    d = data.copy()
-    d[1:] -= data[:-1]
-    m = -(d // -step).astype(int)
-    m[0] = 1
-    d /= m
-    return np.cumsum(d.repeat(m))
+
+    # Remove ID's (hence the [1:]).
+    mags_cols_cl = [[], []]
+    for mag in list(zip(*list(zip(*memb_prob_avrg_sort))[1:][2])):
+        mags_cols_cl[0].append(mag)
+    for col in list(zip(*list(zip(*memb_prob_avrg_sort))[1:][4])):
+        mags_cols_cl[1].append(col)
+
+    # Obtain bin edges.
+    bin_edges = bin_edges_f(fld_clean_bin, mags_cols_cl)
+
+    # Convert into single N dimensional array.
+    mags_cols_cl_arr = np.array(mags_cols_cl[0] + mags_cols_cl[1])
+    # Obtain N-dimensional cluster region histogram.
+    cl_hist_p, cl_hist = get_clust_histo(
+        memb_prob_avrg_sort, mags_cols_cl_arr, bin_edges)
+
+    # Obtain field regions histogram (only number of stars in each cell).
+    f_hist = get_fl_reg_hist(field_regions_c, bin_edges, cl_hist)
+
+    # Obtain stars separated in list to be used by the BF func and list of
+    # those discarded stars.
+    cl_reg_fit, cl_reg_no_fit, min_prob = get_fit_stars(
+        cl_hist_p, f_hist, flag_decont_skip)
+
+    # DELETE
+    # import matplotlib.pyplot as plt
+    # for i, y_phot in enumerate(mags_cols_cl_arr):
+    #     for j, x_phot in enumerate(mags_cols_cl_arr[(i + 1):]):
+    #         fig, ax = plt.subplots()
+    #         plt.scatter(x_phot, y_phot)
+    #         ax.set_yticks(bin_edges[i], minor=False)
+    #         ax.set_xticks(bin_edges[len(mags_cols_cl[0]) + j], minor=False)
+    #         ax.xaxis.grid(True, which='major')
+    #         ax.yaxis.grid(True, which='major')
+    #         ax.invert_yaxis()
+    #         plt.show()
+
+    # Check the number of stars selected.
+    if len(cl_reg_fit) < 10:
+        print("  WARNING: less than 10 stars left after reducing\n"
+              "  by 'local' method. Using full list.")
+        cl_reg_fit, cl_reg_no_fit, min_prob, bin_edges = memb_prob_avrg_sort,\
+            [], 0., 0.
+
+    return cl_reg_fit, cl_reg_no_fit, min_prob, bin_edges
 
 
 def bin_edges_f(bin_method, mags_cols_cl, min_bins=2, max_bins=50):
@@ -108,6 +151,20 @@ def bin_edges_f(bin_method, mags_cols_cl, min_bins=2, max_bins=50):
             bin_edges[i] = np.linspace(be[0], be[-1], max_bins)
 
     return bin_edges
+
+
+def slpitArr(data, step=3.):
+    """
+    Insert extra elements into array so that the maximum spacing between
+    elements is 'step'.
+    Source: https://stackoverflow.com/q/52769257/1391441
+    """
+    d = data.copy()
+    d[1:] -= data[:-1]
+    m = -(d // -step).astype(int)
+    m[0] = 1
+    d /= m
+    return np.cumsum(d.repeat(m))
 
 
 def get_clust_histo(memb_prob_avrg_sort, mags_cols_cl, bin_edges):
@@ -239,60 +296,3 @@ def get_fit_stars(cl_hist_p, f_hist, flag_decont_skip):
     min_prob = cl_reg_fit[-1][-1]
 
     return cl_reg_fit, cl_reg_no_fit, min_prob
-
-
-def main(
-    field_regions_c,
-        memb_prob_avrg_sort, flag_decont_skip, fld_clean_bin):
-    '''
-    Takes the photometric diagram of the cluster region with assigned MPs,
-    divides it into sub-regions (cells) according to the
-    density within it, and removes from each sub-region a number of stars
-    equal to the average excess due to field star contamination.
-    '''
-
-    # Remove ID's (hence the [1:]).
-    mags_cols_cl = [[], []]
-    for mag in list(zip(*list(zip(*memb_prob_avrg_sort))[1:][2])):
-        mags_cols_cl[0].append(mag)
-    for col in list(zip(*list(zip(*memb_prob_avrg_sort))[1:][4])):
-        mags_cols_cl[1].append(col)
-
-    # Obtain bin edges.
-    bin_edges = bin_edges_f(fld_clean_bin, mags_cols_cl)
-
-    # Convert into single N dimensional array.
-    mags_cols_cl_arr = np.array(mags_cols_cl[0] + mags_cols_cl[1])
-    # Obtain N-dimensional cluster region histogram.
-    cl_hist_p, cl_hist = get_clust_histo(memb_prob_avrg_sort, mags_cols_cl_arr,
-                                         bin_edges)
-
-    # Obtain field regions histogram (only number of stars in each cell).
-    f_hist = get_fl_reg_hist(field_regions_c, bin_edges, cl_hist)
-
-    # Obtain stars separated in list to be used by the BF func and list of
-    # those discarded stars.
-    cl_reg_fit, cl_reg_no_fit, min_prob = get_fit_stars(
-        cl_hist_p, f_hist, flag_decont_skip)
-
-    # DELETE
-    # import matplotlib.pyplot as plt
-    # for i, y_phot in enumerate(mags_cols_cl_arr):
-    #     for j, x_phot in enumerate(mags_cols_cl_arr[(i + 1):]):
-    #         fig, ax = plt.subplots()
-    #         plt.scatter(x_phot, y_phot)
-    #         ax.set_yticks(bin_edges[i], minor=False)
-    #         ax.set_xticks(bin_edges[len(mags_cols_cl[0]) + j], minor=False)
-    #         ax.xaxis.grid(True, which='major')
-    #         ax.yaxis.grid(True, which='major')
-    #         ax.invert_yaxis()
-    #         plt.show()
-
-    # Check the number of stars selected.
-    if len(cl_reg_fit) < 10:
-        print("  WARNING: less than 10 stars left after reducing\n"
-              "  by 'local' method. Using full list.")
-        cl_reg_fit, cl_reg_no_fit, min_prob, bin_edges = memb_prob_avrg_sort,\
-            [], 0., 0.
-
-    return cl_reg_fit, cl_reg_no_fit, min_prob, bin_edges
