@@ -14,8 +14,8 @@ def main(x_fix=0.02, y_fix=.996):
     if __version__[-3:] == 'dev':
         try:
             logs = str(check_output(['git', 'log', '-1']).decode("UTF-8"))
-            Nc = 12
-            commit = ' (' + logs[7:Nc] + ')'
+            Nc = 7
+            commit = ' (' + logs[7:7 + Nc] + ')'
         except Exception:
             # No git repository or some error
             pass
