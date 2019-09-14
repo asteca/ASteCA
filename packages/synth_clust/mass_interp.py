@@ -2,41 +2,6 @@
 import numpy as np
 
 
-def find_closest(key, target):
-    '''
-    See: http://stackoverflow.com/a/8929827/1391441
-    Helper function for locating the mass values in the IMF distribution onto
-    the isochrone.
-    General: find closest target element for elements in key.
-
-    Returns an array of indexes of the same length as 'target'.
-    '''
-
-    # Find indexes where the masses in 'target' should be located in 'key' such
-    # that if the masses in 'target' were inserted *before* these indices, the
-    # order of 'key' would be preserved. I.e.: pair masses in 'target' with the
-    # closest masses in 'key'.
-    # key must be sorted in ascending order.
-    idx = key.searchsorted(target)
-
-    # Convert indexes in the limits (both left and right) smaller than 1 and
-    # larger than 'len(key) - 1' to 1 and 'len(key) - 1', respectively.
-    idx = np.clip(idx, 1, len(key) - 1)
-
-    # left < target <= right for each element in 'target'.
-    left = key[idx - 1]
-    right = key[idx]
-
-    # target - left < right - target is True (or 1) when target is closer to
-    # left and False (or 0) when target is closer to right.
-    # The indexes stored in 'idx' point, for every element (IMF mass) in
-    # 'target' to the closest element (isochrone mass) in 'key'. Thus:
-    # target[XX] <closest> key[idx[XX]]
-    idx -= target - left < right - target
-
-    return idx
-
-
 def main(isoch_cut, mass_dist, m_ini):
     '''
     For each mass in the IMF mass distribution, find the star in the isochrone
@@ -96,3 +61,38 @@ def main(isoch_cut, mass_dist, m_ini):
     isoch_interp = isoch_cut[:, order[closest]]
 
     return isoch_interp
+
+
+def find_closest(key, target):
+    '''
+    See: http://stackoverflow.com/a/8929827/1391441
+    Helper function for locating the mass values in the IMF distribution onto
+    the isochrone.
+    General: find closest target element for elements in key.
+
+    Returns an array of indexes of the same length as 'target'.
+    '''
+
+    # Find indexes where the masses in 'target' should be located in 'key' such
+    # that if the masses in 'target' were inserted *before* these indices, the
+    # order of 'key' would be preserved. I.e.: pair masses in 'target' with the
+    # closest masses in 'key'.
+    # key must be sorted in ascending order.
+    idx = key.searchsorted(target)
+
+    # Convert indexes in the limits (both left and right) smaller than 1 and
+    # larger than 'len(key) - 1' to 1 and 'len(key) - 1', respectively.
+    idx = np.clip(idx, 1, len(key) - 1)
+
+    # left < target <= right for each element in 'target'.
+    left = key[idx - 1]
+    right = key[idx]
+
+    # target - left < right - target is True (or 1) when target is closer to
+    # left and False (or 0) when target is closer to right.
+    # The indexes stored in 'idx' point, for every element (IMF mass) in
+    # 'target' to the closest element (isochrone mass) in 'key'. Thus:
+    # target[XX] <closest> key[idx[XX]]
+    idx -= target - left < right - target
+
+    return idx

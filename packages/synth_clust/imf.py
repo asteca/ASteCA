@@ -3,6 +3,88 @@ from ..core_imp import np
 from scipy.integrate import quad
 
 
+def main(IMF_name, m_high, masses):
+    """
+    Returns the number of stars per interval of mass for the selected IMF.
+
+    Parameters
+    ----------
+    IMF_name : str
+      Name of the IMF to be used.
+    m_high : float
+      Maximum mass value to be sampled.
+    masses: array
+      Array of floats containing the masses defined within the limiting
+      values and with the given mass step.
+
+    Returns
+    -------
+    st_dist_mass : dict
+      Dictionary that contains the N defined masses, one array per mass value.
+      Each array contains a given number of stars sampled from the selected
+      IMF, that (approximately) sum to the associated total mass.
+
+    """
+
+    print("Sampling selected IMF ({})".format(IMF_name))
+    # Low mass limits are defined for each IMF to avoid numerical
+    # issues when integrating.
+    imfs_dict = {'chabrier_2001_exp': (0.01), 'chabrier_2001_log': (0.01),
+                 'kroupa_1993': (0.081), 'kroupa_2002': (0.011)}
+
+    # Set IMF low mass limit.
+    m_low = imfs_dict[IMF_name]
+
+    # Set IMF mass interpolation step.
+    # The step (mass_step) should not be too small as it will have an impact
+    # on the performance of the 'mass_distribution' function later on.
+    mass_step = 0.1
+
+    # Obtain normalization constant. This is equivalent to 'k' in Eq. (7)
+    # of Popescu & Hanson 2009 (138:1724-1740; PH09)
+    # For m_high > 100 Mo the differences in the resulting normalization
+    # constant are negligible. This is because th IMF drops very rapidly for
+    # high masses.
+    norm_const = 1. / quad(integral_IMF_M, m_low, m_high, args=(IMF_name))[0]
+
+    # Obtain number of stars in each mass interval. Equivalent to the upper
+    # fraction of Eq. (8) in PH09, without the total mass.
+    mass_up, N_dist = [], []
+    m_upper = m_low
+    while m_upper < m_high:
+        m_lower = m_upper
+        m_upper = m_upper + mass_step
+        # Number of stars in the (m_lower, m_upper) interval.
+        N_stars = quad(integral_IMF_N, m_lower, m_upper, args=(IMF_name))[0]
+        mass_up.append(m_upper)
+        N_dist.append(N_stars)
+
+    # Normalize number of stars by constant.
+    N_dist = np.asarray(N_dist) * norm_const
+
+    st_dist_mass = massDist(m_low, mass_up, N_dist, masses)
+
+    return st_dist_mass
+
+
+def integral_IMF_M(m_star, IMF_name):
+    '''
+    Return the properly normalized function to perform the integration of the
+    selected IMF. Returns mass values.
+    '''
+    imf_val = m_star * imfs(IMF_name, m_star)
+    return imf_val
+
+
+def integral_IMF_N(m_star, IMF_name):
+    '''
+    Return the properly normalized function to perform the integration of the
+    selected IMF. Returns number of stars.
+    '''
+    imf_val = imfs(IMF_name, m_star)
+    return imf_val
+
+
 def imfs(IMF_name, m_star):
     '''
     Define any number of IMFs.
@@ -56,22 +138,41 @@ def imfs(IMF_name, m_star):
     return imf_val
 
 
-def integral_IMF_M(m_star, IMF_name):
-    '''
-    Return the properly normalized function to perform the integration of the
-    selected IMF. Returns mass values.
-    '''
-    imf_val = m_star * imfs(IMF_name, m_star)
-    return imf_val
+def massDist(m_low, mass_up, N_dist, masses):
+    """
+    Given the mass distribution from the sampled IMF, obtain for each mass
+    defined: the total number of stars, and the scale and base factors
+    that will distribute them properly later on.
+    """
+    st_dist_mass = {}
 
+    for M_total in masses:
+        # Normalize number of stars per interval of mass according to total
+        # mass.
+        N_stars = N_dist * M_total
+        # Distribute the N_stars for this total mass.
+        m_low_i, m_up_i, N_stars_i = starsInterv(m_low, mass_up, N_stars)
 
-def integral_IMF_N(m_star, IMF_name):
-    '''
-    Return the properly normalized function to perform the integration of the
-    selected IMF. Returns number of stars.
-    '''
-    imf_val = imfs(IMF_name, m_star)
-    return imf_val
+        # Store mass distribution parameters.
+        N_stars_total = np.sum(N_stars_i)
+        base = np.repeat(m_low_i, N_stars_i)
+        scale = np.repeat(m_up_i, N_stars_i) - base
+
+        # DEPRECATED May 2019, all models need to be identical for the same
+        # input parameters. This mode could be useful for the 'synth_mode'
+        # mode to generate synthetic clusters (#239).
+        #
+        # # Either pass the values so that each synthetic cluster can generate
+        # # its own mass distribution, or generate it once here.
+        # if m_sample_flag is True:
+        #     # Add flag to the list to avoid having to pass 'm_sample_flag'
+        #     # across the code.
+        #     st_dist_mass[M_total] = [base, scale, N_stars_total, True]
+        # else:
+        st_dist_mass[M_total] =\
+            np.random.random(N_stars_total) * scale + base
+
+    return st_dist_mass
 
 
 def starsInterv(m_low, mass_up, N_stars):
@@ -100,84 +201,3 @@ def starsInterv(m_low, mass_up, N_stars):
             N_st_add, m_low = 0., m_up
 
     return m_low_i, m_up_i, N_stars_i
-
-
-def massDist(m_low, mass_up, N_dist, masses):
-    """
-    Given the mass distribution from the sampled IMF, obtain for each mass
-    defined: the total number of stars, and the scale and base factors
-    that will distribute them properly later on.
-    """
-    st_dist_mass = {}
-
-    for M_total in masses:
-        # Normalize number of stars per interval of mass according to total
-        # mass.
-        N_stars = N_dist * M_total
-        # Distribute the N_stars for this total mass.
-        m_low_i, m_up_i, N_stars_i = starsInterv(m_low, mass_up, N_stars)
-
-        # Store mass distribution parameters.
-        N_stars_total = np.sum(N_stars_i)
-        base = np.repeat(m_low_i, N_stars_i)
-        scale = np.repeat(m_up_i, N_stars_i) - base
-
-        # DEPRECATED May 2019, all models need to be identical for the same
-        # input parameters. This mode could be useful for the 'synth_mode'
-        # mode (when it is implemented) to generate synthetic clusters.
-        #
-        # # Either pass the values so that each synthetic cluster can generate
-        # # its own mass distribution, or generate it once here.
-        # if m_sample_flag is True:
-        #     # Add flag to the list to avoid having to pass 'm_sample_flag'
-        #     # across the code.
-        #     st_dist_mass[M_total] = [base, scale, N_stars_total, True]
-        # else:
-        st_dist_mass[M_total] =\
-            np.random.random(N_stars_total) * scale + base
-
-    return st_dist_mass
-
-
-def main(IMF_name, m_high, masses):
-    '''
-    Returns the number of stars per interval of mass for the selected IMF.
-    '''
-    print("Sampling selected IMF ({})".format(IMF_name))
-    # Low mass limits are defined for each IMF to avoid numerical
-    # issues when integrating.
-    imfs_dict = {'chabrier_2001_exp': (0.01), 'chabrier_2001_log': (0.01),
-                 'kroupa_1993': (0.081), 'kroupa_2002': (0.011)}
-
-    # Set IMF low mass limit.
-    m_low = imfs_dict[IMF_name]
-    # Set IMF mass interpolation step.
-    # The step (mass_step) should not be too small since it will have an impact
-    # on the performance of the 'mass_distribution' function.
-    mass_step = 0.1
-
-    # Obtain normalization constant. This is equivalent to 'k' in Eq. (7)
-    # of Popescu & Hanson 2009 (138:1724-1740; PH09)
-    # For m_high > 100 Mo the differences in the resulting normalization
-    # constant are negligible. This is because th IMF drops very rapidly for
-    # high masses.
-    norm_const = 1. / quad(integral_IMF_M, m_low, m_high, args=(IMF_name))[0]
-
-    # Obtain number of stars in each mass interval. Equivalent to the upper
-    # fraction of Eq. (8) in PH09, without the total mass.
-    mass_up, N_dist = [], []
-    m_upper = m_low
-    while m_upper < m_high:
-        m_lower = m_upper
-        m_upper = m_upper + mass_step
-        # Number of stars in the (m_lower, m_upper) interval.
-        N_stars = quad(integral_IMF_N, m_lower, m_upper, args=(IMF_name))[0]
-        mass_up.append(m_upper)
-        N_dist.append(N_stars)
-
-    # Normalize number of stars by constant.
-    N_dist = np.asarray(N_dist) * norm_const
-
-    st_dist_mass = massDist(m_low, mass_up, N_dist, masses)
-
-    return st_dist_mass
