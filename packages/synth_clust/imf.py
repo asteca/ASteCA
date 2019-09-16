@@ -40,8 +40,8 @@ def main(IMF_name, m_high, masses):
     # on the performance of the 'mass_distribution' function later on.
     mass_step = 0.1
 
-    # Obtain normalization constant. This is equivalent to 'k' in Eq. (7)
-    # of Popescu & Hanson 2009 (138:1724-1740; PH09)
+    # Obtain normalization constant. This is equivalent to 'k/M_total' in
+    # Eq. (7) of Popescu & Hanson 2009 (138:1724-1740; PH09).
     # For m_high > 100 Mo the differences in the resulting normalization
     # constant are negligible. This is because th IMF drops very rapidly for
     # high masses.
@@ -53,7 +53,7 @@ def main(IMF_name, m_high, masses):
     m_upper = m_low
     while m_upper < m_high:
         m_lower = m_upper
-        m_upper = m_upper + mass_step
+        m_upper += mass_step
         # Number of stars in the (m_lower, m_upper) interval.
         N_stars = quad(integral_IMF_N, m_lower, m_upper, args=(IMF_name))[0]
         mass_up.append(m_upper)
@@ -142,13 +142,13 @@ def massDist(m_low, mass_up, N_dist, masses):
     """
     Given the mass distribution from the sampled IMF, obtain for each mass
     defined: the total number of stars, and the scale and base factors
-    that will distribute them properly later on.
+    that will distribute them properly.
     """
     st_dist_mass = {}
 
     for M_total in masses:
         # Normalize number of stars per interval of mass according to total
-        # mass.
+        # mass. This is equivalent to Eq. (8) in PH09.
         N_stars = N_dist * M_total
         # Distribute the N_stars for this total mass.
         m_low_i, m_up_i, N_stars_i = starsInterv(m_low, mass_up, N_stars)
