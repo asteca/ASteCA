@@ -5,8 +5,7 @@ import warnings
 from ..out import prep_plots
 
 
-def main(cld_i, clp, run_mode, radius_method, coords, cl_rad_semi,
-         rad_flag_semi, **kwargs):
+def main(cld_i, clp, radius_method, coords, rad_manual, **kwargs):
     """
     Obtain the value for the cluster's radius by counting the number of points
     that fall within a given interval of the field density or lower. If this
@@ -23,16 +22,13 @@ def main(cld_i, clp, run_mode, radius_method, coords, cl_rad_semi,
     clust_rad, e_rad, flag_delta_total, flag_not_stable, flag_delta = \
         radius_algor(clp, coord, radius_method)
 
-    if run_mode == 'auto':
-        print('Auto radius found: {:g} {}.'.format(clust_rad, coord))
+    if rad_manual == 'n':
+        print("Auto radius found: {:g} {}".format(clust_rad, coord))
 
-    elif run_mode == 'semi':
-        if rad_flag_semi == 1:
-            # Update values.
-            clust_rad, e_rad = cl_rad_semi, 0.
-            print('Semi radius set: {:g} {}.'.format(clust_rad, coord))
-        else:
-            print('Auto radius found: {:g} {}.'.format(clust_rad, coord))
+    elif rad_manual != 'n':
+        # Update values.
+        clust_rad, e_rad = rad_manual, 0.
+        print("Manual radius set: {:g} {}".format(clust_rad, coord))
 
     # DEPRECATED May 2019
     # # If Manual mode is set, display radius and ask the user to accept it or
@@ -59,9 +55,9 @@ def main(cld_i, clp, run_mode, radius_method, coords, cl_rad_semi,
     #                 flag_radius_manual = True
     #                 break
     #             except Exception:
-    #                 print("Sorry, input is not valid. Try again.")
+    #                 print("Sorry, input is not valid. Try again")
     #         else:
-    #             print("Sorry, input is not valid. Try again.")
+    #             print("Sorry, input is not valid. Try again")
 
     # Add data to dictionary.
     clp['clust_rad'], clp['e_rad'], clp['flag_delta_total'],\

@@ -88,7 +88,7 @@ def main(i_c, cld, clp, err_max, **kwargs):
             rjct['ids'], rjct['x'], rjct['y'], rjct['mags'].T, rjct['em'].T,
             rjct['cols'].T, rjct['ec'].T, rjct['kine'].T, rjct['ek'].T])]
 
-    print("  Stars rejected based on their errors ({}).".format(
+    print("  Stars rejected based on their errors ({})".format(
         len(rjct_stars)))
 
     if i_c == 'comp':

@@ -172,7 +172,7 @@ if __name__ == "__main__":
          (0.9999253931841896, 0.94553192328962365)]]
     N_fc = [1, 2]
     R_V = 3.1
-    print("Data read.")
+    print("Data read")
 
     Nm, Na = np.shape(theor_tracks)[0], np.shape(theor_tracks)[1]
 

@@ -28,12 +28,12 @@ def main(i_c, clp):
     # Catch empty cluster region.
     if len(cl_region) <= 1:
         print("\n  ERROR: <=1 stars left in cluster region after the\n"
-              "  removal of stars with large photometric errors.")
-        raise ValueError('Empty cluster region.')
+              "  removal of stars with large photometric errors")
+        raise ValueError("Empty cluster region")
     elif 1 < len(cl_region) < 10:
-        print("    WARNING: less than 10 stars present in cluster region.")
+        print("    WARNING: less than 10 stars present in cluster region")
     else:
-        print("  Stars separated in/out of cluster's boundaries.")
+        print("  Stars separated in/out of cluster's boundaries")
 
     # Iterate through all stars with rejected photometric errors.
     for star in clp['rjct_stars_' + i_c[0]]:

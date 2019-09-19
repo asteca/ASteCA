@@ -86,4 +86,4 @@ def main(
             *int_flags))
         f_out.write('\n')
 
-    print("Analysis results added to output file.")
+    print("Analysis results added to output file")

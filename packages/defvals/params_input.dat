@@ -14,21 +14,6 @@
 
 
 
-############################ ASteCA's inner flags ##############################
-
-# Update checker.
-#
-# * flag: y / n
-#   Check if a new version of ASteCA is available for download, and notify the
-#   user when one is found. Downloads less than 25 bytes of data and is thus
-#   very quick.
-#
-#   flag
-UP     y
-################################################################################
-
-
-
 ######################### Input data parameters ################################
 
 # Read mode for the cluster's input data.
@@ -73,6 +58,11 @@ PC    5,4,Bmag,Vmag        6
 #    Parallax                 Proper motions               Radial velocity
 #    plx    e_plx     pmRA    e_pmRA    pmDE    e_pmDE     rv    e_rv
 PK     n        n        n         n       n         n      n       n
+################################################################################
+
+
+
+######################### Input data processing ################################
 
 # * nanvals: [strings]
 #   List of strings indicating which entries in the data file should be
@@ -80,21 +70,22 @@ PK     n        n        n         n       n         n      n       n
 #
 #   nanvals
 NV    INDEF, NAN, NaN, 99.999, 999.99, 99.999
+
+# Trim frame?
+#
+# * tf_flag: y / n
+#   Flag if the frame should be trimmed.
+#
+# * tf_range: [float] * 4
+#   Input the x,y ranges in the order: xmin, xmax, ymin, ymax
+#
+#    tf_flag   tf_range
+TF         n   0. 0. 0. 0.
 ################################################################################
 
 
 
-############################ Mode/Output #######################################
-
-# Mode used to run the code.
-#
-# * mode: auto / semi
-#
-#   - auto: does not require user intervention of any kind.
-#   - semi: takes input values from the 'semi_input.dat' file.
-#
-#    mode
-MO   auto
+############################## Output ##########################################
 
 # Create output figures?
 #
@@ -123,22 +114,29 @@ MP   A1 A2 B1 B2 C1 C2 C3 D1 D2
 #
 #   format     DPI
 PF     png     150
-
-# Trim frame?
-#
-# * tf_flag: y / n
-#   Flag if the frame should be trimmed.
-#
-# * tf_range: [float] * 4
-#   Input the x,y ranges in the order: xmin, xmax, ymin, ymax
-#
-#    tf_flag   tf_range
-TF         n   0. 0. 0. 0.
 ################################################################################
 
 
 
 ################### Structure functions parameters #############################
+
+# Set here manual values for the center, radius, and/or the number of field
+# regions for each cluster being processed.
+#
+# * name: [str] / n
+#   Cluster's name.
+#
+# * c_x / c_y: [float] / n
+#   Cluster's (x, y) center coordinate in pixels or in degrees.
+#
+# * rad: [float] / n
+#   Cluster's radius in pixels or in degrees.
+#
+# * f_regs: [int] / n
+#   Number of field regions to obtain around the cluster.
+#
+#   name       c_x      c_y      rad     f_regs
+MD  CLUSTER    n        n        n       n
 
 # Center assignment function.
 #
@@ -256,14 +254,14 @@ AD   100             y
 #   algor   runs   fport
 DA  bayes   1000      .4
 
-#   If the 'bayes' algorithm is selected, these weights are assigned to each
-#   data dimension (photometric and kinematic). If more than one color is
-#   defined, add a second value after 'w_col'.
+#   If the 'bayes' algorithm is selected, these flags turn data dimensions
+#   (photometric and kinematic) on/off (y/n). If more than one color is
+#   defined, add more values after 'w_col'.
 #
-#  * w_xxx: 0<=[float]<=1
+#  * w_xxx: y / n
 # 
 #   w_mag    w_col    w_Plx    w_PMx    w_PMy    w_RV
-DW     1.       1.       1.       1.       1.      1.
+DW      y        y        y        y        y       n
 
 
 # Cluster region field stars removal.
@@ -289,7 +287,7 @@ DW     1.       1.       1.       1.       1.      1.
 #   - all: use all stars in the cluster region.
 #
 # * binning: fixed / auto / fd / doane / scott / rice / sqrt
-#            sturges / knuth / blocks / blocks_max
+#            sturges / knuth / blocks / blocks-max
 #   Binning method to be used if the 'local' method is selected. Otherwise
 #   this parameter is ignored.
 #
@@ -374,14 +372,10 @@ RB         0        1
 
 # ptemcee parameters.
 #
-#   - init_mode: random / diffevol
-#   - popsize: [int], population size for the 'diffevol' method.
-#   - maxiter:[int], maximum number of iterations for the 'diffevol' method.
-#
 #   - ntemps: [int], Number of parallel temperatures.
+#   - nsteps: [int], Number of steps used.
 #   - nwalkers: [int], Number of walkers/chains used.
-#   - nburn: [int], Number of burn-in samples to discard.
-#   - nsteps: [int], Number of steps to process.
+#   - nburn: [0<float<1], percentage of the chain discarded as burn-in.
 #   - Tmax: [float] / inf / n, maximum temperature value.
 #   - adapt: y / n, turn on-off the adaptive (dynamic) temperature selection.
 #
@@ -390,14 +384,8 @@ RB         0        1
 #   - tol_conv: [float], minimum tolerance for the stability of the
 #               autocorrelation time to apply the convergence break.
 #
-#     init_mode   popsize   maxiter
-PT0      random         5        10
-#
-#     ntemps    nwalkers   nburn    nsteps     Tmax   adapt
-PT1       10          50      50       500      inf       y
-#
-#     N_conv   tol_conv
-PT2      100       0.01
+#     ntemps    nsteps   nwalkers   nburn    Tmax   adapt
+PT       20       1000         20     .25      20       y
 #
 #   - prior: u / g, uniform (u) or Gaussian (g) prior distributions for the
 #     fitted parameters. 'mean/stddev' are only required if the 'g' prior is
@@ -420,7 +408,7 @@ PTB       u       0.5         0.2
 #   - N_step: [int], number of steps  used in the bootstrap process.
 #
 #    hperc    N_pop    N_step
-BT      .5        10       100
+BT      .5       10       100
 
 # Genetic Algorithm parameters.
 #

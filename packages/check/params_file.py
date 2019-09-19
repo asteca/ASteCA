@@ -38,7 +38,7 @@ def check(mypath, file_end, inst_packgs_lst):
         sys.exit("ERROR: '{}' is badly formatted.".format(pars_f_name))
 
     # Add to parameters dictionary.
-    pd['inst_packgs_lst'] = inst_packgs_lst
+    pd['inst_packgs_lst'], pd['file_end'] = inst_packgs_lst, file_end
 
     # Create here the 'bf_flag' flag.
     if pd['best_fit_algor'] not in pd['optimz_algors']:

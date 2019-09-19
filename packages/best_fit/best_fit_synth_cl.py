@@ -45,12 +45,12 @@ def main(clp, pd):
         cmpl_rnd = np.random.uniform(0., 1., 1000000)
         err_rnd = np.random.normal(0., 1., 1000000)
 
-        print('Searching for optimal parameters.')
+        print("Searching for optimal parameters")
 
         # Calculate the best fitting parameters.
         if pd['best_fit_algor'] == 'boot+GA':
 
-            print('Using bootstrap + Genetic Algorithm ({}).'.format(
+            print("Using bootstrap + Genetic Algorithm ({})".format(
                 pd['lkl_method'] + '; ' + pd['lkl_binning'] if
                 pd['lkl_method'] == 'dolphin' else pd['lkl_method']))
             isoch_fit_params = bootstrap.main(
@@ -60,7 +60,7 @@ def main(clp, pd):
             isoch_fit_errors = params_errors(pd, isoch_fit_params)
 
         elif pd['best_fit_algor'] == 'ptemcee':
-            print('Using ptemcee algorithm ({}).'.format(
+            print("Using ptemcee algorithm ({})".format(
                 pd['lkl_method'] + '; ' + pd['lkl_binning'] if
                 pd['lkl_method'] == 'dolphin' else pd['lkl_method']))
 
@@ -99,14 +99,14 @@ def main(clp, pd):
         #     isoch_fit_errors, _ = params_errors(
         #         best_fit_algor, isoch_fit_params)
 
-        print("Best fit parameters obtained.")
+        print("Best fit parameters obtained")
 
         clp['max_mag_syn'], clp['ext_coefs'], clp['st_dist_mass'], \
             clp['N_fc'], clp['cmpl_rnd'], clp['err_rnd'], =\
             max_mag_syn, ext_coefs, st_dist_mass, N_fc, cmpl_rnd, err_rnd
 
     else:
-        print('Skip parameters fitting process.')
+        print("Skip parameters fitting process")
         # Pass dummy data used by data output and some plot functions.
         cl_max_mag = []
         isoch_fit_params = {

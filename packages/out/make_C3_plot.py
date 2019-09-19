@@ -1,4 +1,5 @@
 
+import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from os.path import join
@@ -50,11 +51,13 @@ def main(
             mp_kinem_pms.plot(n, *args)
 
         # PMs data.
-        pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, mmag_pm,\
-            PMs_cent, PMs_width, PMs_height, PMs_theta, CI_prob =\
+        pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, mmag_pm, pm_dist_max =\
             prep_plots.PMsPlot(
-                pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, mmag_pm)
+                pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, mmag_pm, pm_dist_max)
         raPMrng, dePMrng = prep_plots.PMsrange(pmRA_DE, pmDE)
+        CI_prob = .95
+        PMs_cent, PMs_width, PMs_height, PMs_theta = prep_plots.CIEllipse(
+            np.array([pmRA_DE, pmDE]).T, prob=CI_prob)
 
         arglist = [
             # pms_vpd_mag

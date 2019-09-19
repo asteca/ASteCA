@@ -7,7 +7,7 @@ from . import read_da
 
 def main(
     clp, npd, colors, plx_col, pmx_col, pmy_col, rv_col, da_algor,
-        bayesda_runs, bayesda_weights, fixedda_port, **kwargs):
+        bayesda_runs, bayesda_dflag, fixedda_port, **kwargs):
     """
     Apply selected decontamination algorithm.
     """
@@ -15,19 +15,19 @@ def main(
     # Check if at least one equal-sized field region was obtained for the
     # *incomplete* dataset (used by the Bayesian DA).
     if da_algor == 'bayes' and clp['flag_no_fl_regs_i']:
-        print("  WARNING: no field regions found. Can not apply Bayesian DA.")
+        print("  WARNING: no field regions found. Can not apply Bayesian DA")
         da_algor = 'skip'
 
     flag_decont_skip = False
     if da_algor == 'skip':
-        print('Assign equal probabilities to all stars in cluster region.')
+        print("Assign equal probabilities to all stars in cluster region")
         memb_probs_cl_region = [1.] * len(clp['cl_region_i'])
         flag_decont_skip = True
 
     elif da_algor == 'bayes':
         memb_probs_cl_region = bayesian_da.main(
             colors, plx_col, pmx_col, pmy_col, rv_col, bayesda_runs,
-            bayesda_weights, clp['cl_region_i'], clp['field_regions_i'])
+            bayesda_dflag, clp['cl_region_i'], clp['field_regions_i'])
 
     elif da_algor == 'fixed':
         memb_probs_cl_region = fixed_da.main(clp['cl_region_i'], fixedda_port)

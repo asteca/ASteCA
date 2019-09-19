@@ -73,11 +73,12 @@ def initPop(
 
     p0 = []
     if init_mode == 'random':
-        print("Random initial population")
+        # print("Random initial population")
         for _ in range(ntemps):
             p0.append(random_population(fundam_params, varIdxs, nwalkers_ptm))
 
     elif init_mode == 'diffevol':
+        # DEPRECATED 05/09/19 when #425 was implemented
         print("     DE init pop")
 
         with warnings.catch_warnings():

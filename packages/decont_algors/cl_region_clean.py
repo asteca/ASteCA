@@ -16,19 +16,19 @@ def main(clp, fld_clean_mode, fld_clean_bin, fld_clean_prob, **kwargs):
 
     if fld_clean_mode == 'all':
         # Skip reduction process.
-        print('No field star removal applied on cluster region.')
+        print("No field star removal applied on cluster region")
 
     # If the DA was skipped and any method but 'local' or 'mag' is selected,
     # don't run.
     elif clp['flag_decont_skip'] and fld_clean_mode not in ('local', 'mag'):
-        print("  WARNING: decontamination algorithm was skipped.\n"
-              "  Can't apply '{}' field stars removal method.".format(
+        print("  WARNING: decontamination algorithm was skipped\n"
+              "  Can't apply '{}' field stars removal method".format(
                   fld_clean_mode))
 
     # If no field regions were defined, this mode won't work.
     elif clp['flag_no_fl_regs_c'] and fld_clean_mode == 'local':
         print("  WARNING: no field regions were defined. Can't apply\n"
-              "  '{}' field stars removal method.".format(fld_clean_mode))
+              "  '{}' field stars removal method".format(fld_clean_mode))
 
     else:
         # This mode works if the DA did not run but it needs field regions
@@ -58,7 +58,7 @@ def main(clp, fld_clean_mode, fld_clean_bin, fld_clean_prob, **kwargs):
         # Remove stars with a color far away from the x median.
         cl_reg_fit, cl_reg_no_fit = rmColorOutliers(cl_reg_fit, cl_reg_no_fit)
 
-        print("Stars selected in cluster region, '{}' method ({}).".format(
+        print("Stars selected in cluster region, '{}' method ({})".format(
             fld_clean_mode, len(cl_reg_fit)))
 
     clp['cl_reg_fit'], clp['cl_reg_no_fit'], clp['cl_reg_clean_plot'] =\
@@ -197,7 +197,7 @@ def rmColorOutliers(cl_reg_fit, cl_reg_no_fit):
     cl_reg_no_fit2 = cl_reg_no_fit + cl_reg_no_fit2
 
     if len(cl_reg_fit) > len(cl_reg_fit2):
-        print("Removed {} CMD outlier stars.".format(
+        print("Removed {} CMD outlier stars".format(
             len(cl_reg_fit) - len(cl_reg_fit2)))
 
     return cl_reg_fit2, cl_reg_no_fit2

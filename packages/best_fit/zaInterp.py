@@ -39,15 +39,16 @@ def main(theor_tracks, fundam_params, varIdxs, model):
                 model_proper.append(par[mh])
                 # Define model's z value
                 z_model = model[i - j]
+            # If it is the parameter log(age).
             elif i == 1:
                 # Select the closest value in the array of allowed values.
                 ah = min(len(par) - 1, np.searchsorted(par, model[i - j]))
                 al = ah - 1
                 model_proper.append(par[ah])
                 a_model = model[i - j]
+            # If it is the parameter mass.
             elif i == 4:
-                # Select the closest value in the array of allowed values for
-                # the masses.
+                # Select the closest value in the array of allowed values.
                 model_proper.append(min(
                     par, key=lambda x: abs(x - model[i - j])))
             else:

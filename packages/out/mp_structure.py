@@ -63,7 +63,7 @@ def pl_center(
 
 
 def pl_rad_dens(
-    gs, mode, radii, rdp_points, field_dens, coord, clust_name, clust_rad,
+    gs, radii, rdp_points, field_dens, coord, clust_name, clust_rad,
         e_rad, poisson_error, bin_width, core_rad, e_core, tidal_rad, e_tidal,
         K_cent_dens, flag_2pk_conver, flag_3pk_conver):
     '''
@@ -101,10 +101,10 @@ def pl_rad_dens(
     plt.ylabel(r"N $[st/{}^{{2}}]$".format(coord2), fontsize=12)
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5)
     # Cluster's name and mode used to process it.
-    plt.title(str(clust_name) + ' (' + mode + ')', fontsize=12)
+    plt.title(str(clust_name), fontsize=12)
     # Legend texts
     kp_text = '3P' if flag_3pk_conver else '2P'
-    r_frmt = '{:.0f}' if coord2 == 'px' else '{:.1f}'
+    r_frmt = '{:.0f}' if coord2 == 'px' else '{:.2f}'
     texts = [
         (r'RDP ($bin_{{w}}\approx$' + r_frmt + r' $[{}]$)').format(
             bin_width, coord2),
@@ -372,6 +372,6 @@ def plot(N, *args):
     try:
         fxn(*args)
     except Exception:
-        print("  WARNING: error when plotting {}.".format(plt_map.get(N)[1]))
+        print("  WARNING: error when plotting {}".format(plt_map.get(N)[1]))
         import traceback
         print(traceback.format_exc())

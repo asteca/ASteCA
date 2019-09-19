@@ -28,8 +28,9 @@ def traceplots(
     plt.ylabel(labels[cp])
 
     if best_fit_algor in ('ptemcee'):
-        nwalkers, nburn, nsteps, acorr_t, med_at_c, mcmc_ess = method_args
-        N_pre, N_tot = nburn, nburn + nsteps
+        acorr_t, med_at_c, mcmc_ess = method_args
+        N_pre = pre_trace.shape[-1]
+        N_tot = N_pre + post_trace.shape[-1]
         # elif best_fit_algor == 'abc':
         #     N_bi, N_tot = nburn, nsteps
     elif best_fit_algor == 'boot+GA':
@@ -44,7 +45,7 @@ def traceplots(
             # Chains with median Tau
             # Burn-in stage in MCMC
             plt.plot(
-                range(N_pre), pre_trace[c_model][med_at_c[c_model]], c='grey',
+                pre_trace[c_model][med_at_c[c_model]], c='grey',
                 lw=.5, alpha=0.5)
 
         if best_fit_algor in ('ptemcee'):
@@ -101,5 +102,5 @@ def plot(N, *args):
     except Exception:
         import traceback
         print(traceback.format_exc())
-        print("  WARNING: error when plotting {}.".format(plt_map.get(N)[1]))
+        print("  WARNING: error when plotting {}".format(plt_map.get(N)[1]))
     plt.style.use('default')

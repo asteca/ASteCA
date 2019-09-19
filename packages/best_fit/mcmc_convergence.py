@@ -301,12 +301,26 @@ def geweke(x, first=.1, last=.5, intervals=20):
 
 #     return mcmc_halves
 
-def convergenceVals(algor, ndim, varIdxs, N_conv, chains_nruns):
+def convergenceVals(algor, ndim, varIdxs, N_conv, chains_nruns, bi_steps):
     """
     Convergence statistics.
     """
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
+
+        # Mean Tau across chains, shape: (post-bi steps, ndims)
+        x = np.mean(chains_nruns.T, axis=1).T
+        tau_autocorr = []
+        for j in np.arange(50, x.shape[0], 50):
+            # tau.shape: ndim
+            tau = util.autocorr_integrated_time(x[:j])
+            # Autocorrelation time. Mean across dimensions.
+            tau_autocorr.append([bi_steps + j, np.mean(tau)])
+        # Add one last point with the entire chain.
+        if j < x.shape[0]:
+            tau = util.autocorr_integrated_time(x)
+            tau_autocorr.append([bi_steps + x.shape[0], np.mean(tau)])
+        tau_autocorr = np.array(tau_autocorr).T
 
         # Autocorrelation time for each parameter, mean across chains.
         if algor == 'emcee':
@@ -359,10 +373,16 @@ def convergenceVals(algor, ndim, varIdxs, N_conv, chains_nruns):
         # Mean across chains
         geweke_z = np.nanmean(geweke_z, axis=1)
         acorr_function = np.nanmean(acorr_function, axis=1)
-        # Cut the autocorrelation function a bit after *all* the parameters
-        # have crossed the zero line.
-        lag_zero = max([np.where(_ < 0)[0][0] for _ in acorr_function])
-        acorr_function = acorr_function[:, :int(lag_zero + .2 * lag_zero)]
+
+        # # Cut the autocorrelation function just after *all* the parameters
+        # # have crossed the zero line.
+        # try:
+        #     lag_zero = max([np.where(_ < 0)[0][0] for _ in acorr_function])
+        # except IndexError:
+        #     # Could not obtain zero lag
+        #     lag_zero = acorr_function.shape[-1]
+        # acorr_function = acorr_function[:, :int(lag_zero + .2 * lag_zero)]
+
         # # Approx IAT
         # lag_iat = 1. + 2. * np.sum(acorr_function, axis=1)
         # print("  Approx (zero lag) IAT: ", lag_iat)
@@ -380,5 +400,5 @@ def convergenceVals(algor, ndim, varIdxs, N_conv, chains_nruns):
         #     mESS_epsilon[1].append(fminESS(ndim, alpha=alpha, ess=minESS))
         #     mESS_epsilon[2].append(fminESS(ndim, alpha=alpha, ess=mESS))
 
-    return acorr_t, med_at_c, all_taus, geweke_z, lag_zero, acorr_function,\
-        mcmc_ess
+    return tau_autocorr, acorr_t, med_at_c, all_taus, geweke_z,\
+        acorr_function, mcmc_ess

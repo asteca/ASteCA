@@ -5,7 +5,7 @@ from .. import update_progress
 
 
 def main(
-    colors, plx_col, pmx_col, pmy_col, rv_col, bayesda_runs, bayesda_weights,
+    colors, plx_col, pmx_col, pmy_col, rv_col, bayesda_runs, bayesda_dflag,
         cl_region, field_regions):
     '''
     Bayesian field decontamination algorithm.
@@ -18,28 +18,37 @@ def main(
     # len(field_regions) = number of field regions.
     # len(field_regions[i]) = number of stars inside field region 'i'.
 
-    # Select the correct values for the dimension weights.
-    bayesda_weights = weightsSelect(
-        bayesda_weights, colors, plx_col, pmx_col, pmy_col, rv_col)
-
+    # Remove data dimensions.
+    mags, cols, kinem, e_mags, e_cols, e_kinem = rmDimensions(
+        cl_region, colors, plx_col, pmx_col, pmy_col, rv_col, bayesda_dflag)
     # Magnitudes and colors (and their errors) for all stars in the cluster
     # region, stored with the appropriate format.
-    cl_reg_prep, w_cl = reg_data(cl_region)
+    cl_reg_prep, w_cl = reg_data(
+        len(cl_region), mags, cols, kinem, e_mags, e_cols, e_kinem)
     # Normalize data.
-    cl_reg_prep = dataNorm(cl_reg_prep)
+    cl_reg_prep, N_msk_cl = dataNorm(cl_reg_prep)
 
     # Likelihoods between all field regions and the cluster region.
-    fl_likelihoods = []
+    fl_likelihoods, N_msk_fr = [], 0
     for fl_region in field_regions:
+        n_fl = len(fl_region)
+
         # Obtain likelihood, for each star in the cluster region, of
         # being a field star.
-        fl_reg_prep, w_fl = reg_data(fl_region)
-        # Normalize data.
-        fl_reg_prep = dataNorm(fl_reg_prep)
-        # Number of stars in field region.
-        n_fl = len(fl_region)
+        mags, cols, kinem, e_mags, e_cols, e_kinem = rmDimensions(
+            fl_region, colors, plx_col, pmx_col, pmy_col, rv_col,
+            bayesda_dflag)
+        fl_reg_prep, w_fl = reg_data(
+            n_fl, mags, cols, kinem, e_mags, e_cols, e_kinem)
+        fl_reg_prep, N_msk = dataNorm(fl_reg_prep)
+        N_msk_fr += N_msk
+
         fl_likelihoods.append([n_fl, likelihood(
-            bayesda_weights, fl_reg_prep, w_fl, cl_reg_prep, w_cl)])
+            fl_reg_prep, w_fl, cl_reg_prep, w_cl)])
+
+    if N_msk_cl != 0 or N_msk_fr != 0:
+        print("Masked data (outliers): N_cl={}, N_frs={}".format(
+            N_msk_cl, N_msk_fr))
 
     # Create copy of the cluster region to be shuffled below.
     clust_reg_shuffle, w_cl_shuffle = cl_reg_prep[:], w_cl[:]
@@ -87,8 +96,8 @@ def main(
                     clust_reg_shuffle[p], w_cl_shuffle[p]
                 # cluster region.
                 cl_lkl = likelihood(
-                    bayesda_weights, clust_reg_shuffle_nmemb,
-                    w_cl_shuffle_nmemb, cl_reg_prep, w_cl)
+                    clust_reg_shuffle_nmemb, w_cl_shuffle_nmemb, cl_reg_prep,
+                    w_cl)
             else:
                 # If there are *more* field region stars than the total of
                 # stars within the cluster region (highly contaminated
@@ -109,7 +118,7 @@ def main(
         prob_avrg_old, break_flag = break_check(
             prob_avrg_old, runs_fields_probs, bayesda_runs, run_num, N_total)
         if break_flag:
-            print('| MPs converged (run {}).'.format(run_num))
+            print("| MPs converged (run {})".format(run_num))
             break
         update_progress.updt(bayesda_runs, run_num + 1)
 
@@ -120,62 +129,50 @@ def main(
     return memb_probs_cl_region
 
 
-def weightsSelect(bayesda_weights, colors, plx_col, pmx_col, pmy_col, rv_col):
+def rmDimensions(
+    region, colors, plx_col, pmx_col, pmy_col, rv_col,
+        bayesda_dflag):
     """
-    Select the appropriate weights according to the dimensions of data defined.
-    No limit in the number of colors defined is imposed.
-    """
-    w_mag = [bayesda_weights[0]]
-    w_cols = bayesda_weights[1:len(colors) + 1]
-
-    w_kin = []
-    for i, k_d in enumerate((plx_col, pmx_col, pmy_col, rv_col)):
-        if k_d is not False:
-            w_kin.append(bayesda_weights[1 + len(colors) + i])
-
-    return w_mag + w_cols + w_kin
-
-
-def dataNorm(data_arr):
-    """
-    Normalize arrays.
-    """
-
-    # Minimum values for all arrays
-    dmin = np.nanmin(data_arr[:, :, 0], 0)
-    data_norm = data_arr[:, :, 0] - dmin
-    dmax = np.nanmax(data_norm, 0)
-    data_norm /= dmax
-
-    # Scale errors
-    e_scaled = data_arr[:, :, 1] / dmax
-    # Square errors
-    e_scaled = np.square(e_scaled)
-
-    # Combine into proper shape
-    data_norm = np.array([data_norm.T, e_scaled.T]).T
-
-    return data_norm
-
-
-def reg_data(region):
-    """
-    Generate list with photometric data in the correct format, and obtain the
-    "dimensional" weights used by the likelihood.
+    Remove data dimensions turned off by the user.
     """
     region_z = list(zip(*region))
 
     # Put each magnitude, color, and kinematic parameter into a separate list.
-    mags, cols, kinem = list(zip(*region_z[3])), list(zip(*region_z[5])),\
-        list(zip(*region_z[7]))
+    # Remove dimensions according to input flags.
+    mags, cols, kinem = [], [], []
+    if bayesda_dflag[0] == 'y':
+        mags = list(zip(*region_z[3]))
+    for i, flag in enumerate(bayesda_dflag[1:len(colors) + 1]):
+        if flag == 'y':
+            cols.append(list(zip(*region_z[5]))[i])
+    for i, k_d in enumerate((plx_col, pmx_col, pmy_col, rv_col)):
+        if k_d is not False and bayesda_dflag[1 + len(colors) + i] == 'y':
+            kinem.append(list(zip(*region_z[7]))[i])
+
     # Uncertainties.
-    e_mags, e_cols, e_kinem = list(zip(*region_z[4])),\
-        list(zip(*region_z[6])), list(zip(*region_z[8]))
+    e_mags, e_cols, e_kinem = [], [], []
+    if bayesda_dflag[0] == 'y':
+        e_mags = list(zip(*region_z[4]))
+    for i, flag in enumerate(bayesda_dflag[1:len(colors) + 1]):
+        if flag == 'y':
+            e_cols.append(list(zip(*region_z[6]))[i])
+    for i, k_d in enumerate((plx_col, pmx_col, pmy_col, rv_col)):
+        if k_d is not False and bayesda_dflag[1 + len(colors) + i] == 'y':
+            e_kinem.append(list(zip(*region_z[8]))[i])
 
     # Remove kinematic dimensions where *all* the elements are 'nan'.
     e_kinem = [
         e_kinem[i] for i, _ in enumerate(kinem) if not np.isnan(_).all()]
     kinem = [_ for _ in kinem if not np.isnan(_).all()]
+
+    return mags, cols, kinem, e_mags, e_cols, e_kinem
+
+
+def reg_data(N_reg, mags, cols, kinem, e_mags, e_cols, e_kinem):
+    """
+    Generate list with photometric data in the correct format, and obtain the
+    "dimensional" weights used by the likelihood.
+    """
 
     # Combine photometry and uncertainties.
     data = np.array(mags + cols + kinem)
@@ -186,7 +183,7 @@ def reg_data(region):
 
     # Total number of information dimensions.
     d_T = len(mags) + len(cols) + len(kinem)
-    d_info = np.zeros(len(region))
+    d_info = np.zeros(N_reg)
     for m in mags:
         d_info += ~np.isnan(m)
     for c in cols:
@@ -202,7 +199,49 @@ def reg_data(region):
     return data_err, wi
 
 
-def likelihood(bayesda_weights, region, w_r, cl_reg_prep, w_c):
+def dataNorm(data_arr):
+    """
+    Mask 4 sigma outliers (particularly important when PMs are used), and
+    normalize arrays.
+    """
+
+    # Mask outliers (np.nan).
+    N_msk = 0
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        # Number of dimensions
+        _, d, _ = data_arr.shape
+        for i in range(d):
+            # For both data and uncertainties
+            for j in range(2):
+                med, std = np.nanmedian(data_arr[:, i, j]),\
+                    np.nanstd(data_arr[:, i, j])
+                msk = np.logical_or(
+                    data_arr[:, i, j] < med - 4. * std,
+                    data_arr[:, i, j] > med + 4. * std)
+                data_arr[:, i, j][msk] = np.nan
+                N_msk += sum(msk)
+
+    # Minimum values for all arrays
+    dmin = np.nanmin(data_arr[:, :, 0], 0)
+    data_norm = data_arr[:, :, 0] - dmin
+    dmax = np.nanmax(data_norm, 0)
+    data_norm /= dmax
+
+    # Scale errors
+    e_scaled = data_arr[:, :, 1] / dmax
+    # Square errors
+    e_scaled = np.square(e_scaled)
+    # Avoid divide by zero in likelihood function.
+    e_scaled[e_scaled == 0.] = np.nan
+
+    # Combine into proper shape
+    data_norm = np.array([data_norm.T, e_scaled.T]).T
+
+    return data_norm, N_msk
+
+
+def likelihood(region, w_j, cl_reg_prep, w_i):
     """
     Obtain the likelihood, for each star in the cluster region ('cl_reg_prep'),
     of being a member of the region passed ('region').
@@ -211,8 +250,8 @@ def likelihood(bayesda_weights, region, w_r, cl_reg_prep, w_c):
     weights.
 
     L_i = w_i \sum_{j=1}^{N_r}
-             \frac{w_j}{\sqrt{\prod_{k=1}^d (w_k\, \sigma_{ijk}^2)}}\;\;
-                exp \left[-\frac{1}{2} \sum_{k=1}^d w_k\,
+             \frac{w_j}{\sqrt{\prod_{k=1}^d \sigma_{ijk}^2}}\;\;
+                exp \left[-\frac{1}{2} \sum_{k=1}^d
                    \frac{(q_{ik}-q_{jk})^2}{\sigma_{ijk}^2} \right ]
 
     where
@@ -227,7 +266,6 @@ def likelihood(bayesda_weights, region, w_r, cl_reg_prep, w_c):
     q_{jk}: data for star j in dimension k
     w_i: data dimensions weight for star i
     w_j: data dimensions weight for star j
-    w_k: weight for dimension k
 
     """
     # Data difference (cluster_region - region), for all dimensions.
@@ -235,26 +273,23 @@ def likelihood(bayesda_weights, region, w_r, cl_reg_prep, w_c):
     # Sum of squared errors, for all dimensions.
     sigma_sum = cl_reg_prep[:, None, :, 1] + region[None, :, :, 1]
 
-    # Apply dimension weights.
-    data_dif = data_dif * bayesda_weights
-    sigma_sum = sigma_sum * bayesda_weights
-
     # Handle 'nan' values.
     data_dif[np.isnan(data_dif)] = 0.
     sigma_sum[np.isnan(sigma_sum)] = 1.
-    # Avoid divide by zero.
-    sigma_sum[sigma_sum == 0.] = 1.
 
     # Sum for all dimensions.
     Dsum = (np.square(data_dif) / sigma_sum).sum(axis=-1)
     # This makes the code substantially faster.
     np.clip(Dsum, a_min=None, a_max=50., out=Dsum)
+
     # Product of summed squared sigmas.
     sigma_prod = np.prod(sigma_sum, axis=-1)
+
     # All elements inside summatory.
-    sum_M_j = w_r * np.exp(-0.5 * Dsum) / np.sqrt(sigma_prod)
+    sum_M_j = w_j * np.exp(-0.5 * Dsum) / np.sqrt(sigma_prod)
+
     # Sum for all stars in this 'region'.
-    sum_M = w_c * np.sum(sum_M_j, axis=-1)
+    sum_M = w_i * np.sum(sum_M_j, axis=-1)
     # np.clip(sum_M, a_min=1e-7, a_max=None, out=sum_M)
 
     return sum_M

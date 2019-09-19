@@ -1,6 +1,6 @@
 
 import numpy as np
-from scipy.misc import logsumexp
+from scipy.special import logsumexp
 from scipy.stats import gaussian_kde, entropy
 
 # ############################################################

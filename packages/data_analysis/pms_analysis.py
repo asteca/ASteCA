@@ -24,7 +24,7 @@ def main(
     PM_flag = checkPMs(clp, 1)
     if PM_flag:
 
-        print("Processing proper motions.")
+        print("Processing proper motions")
 
         if 'C3' in flag_make_plot:
             PM_flag_all, pmRA_all, pmDE_all, pmMag_all, xRA_all, yDE_all,\
@@ -59,7 +59,7 @@ def main(
             else:
                 DE_pm = np.array(list(zip(*clp['cl_reg_fit']))[2])
         else:
-            print("  WARNING: can not apply cos(dec) factor to pmRA.")
+            print("  WARNING: can not apply cos(dec) factor to pmRA")
             DE_pm = np.zeros(pmRA.size)
 
         # Remove nan PM values from cluster region
@@ -83,9 +83,10 @@ def main(
 
         # PM distances to the KDE's center.
         pm_dist_max = cdist(
-            np.array([
-                [PM_cl_x[PMs_cl_cx][PMs_cl_cy],
-                 PM_cl_y[PMs_cl_cx][PMs_cl_cy]]]), np.array([pmRA_DE, pmDE]).T)
+            np.array([[
+                PM_cl_x[PMs_cl_cx][PMs_cl_cy],
+                PM_cl_y[PMs_cl_cx][PMs_cl_cy]]]),
+            np.array([pmRA_DE, pmDE]).T)[0]
 
         # Process field regions
         if not clp['flag_no_fl_regs_i']:

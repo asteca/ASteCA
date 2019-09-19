@@ -102,6 +102,6 @@ def plot(N, *args):
     try:
         fxn(N, *args)
     except Exception:
-        print("  WARNING: error when plotting {}.".format(plt_map.get(N)[1]))
+        print("  WARNING: error when plotting {}".format(plt_map.get(N)[1]))
         import traceback
         print(traceback.format_exc())

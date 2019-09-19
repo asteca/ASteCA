@@ -60,7 +60,7 @@ def main(
     params_boot, N_steps_availb, btstrp_start_t = [], 0, t.time()
     if pd['hperc_btstrp'] > 0.:
 
-        print('Begin bootstrap process ({} | {}).'.format(
+        print("Begin bootstrap process ({} | {})".format(
             pd['N_pop_btstrp'], pd['N_step_btstrp']))
 
         btstrp_init, btstrp_t, btstrp_runs = t.time(), 0., 0
@@ -112,7 +112,7 @@ def main(
         isoch_fit_params['N_bootstrap'] = btstrp_runs
 
     else:
-        print('Skip bootstrap process.')
+        print("Skip bootstrap process")
         isoch_fit_params['N_bootstrap'] = 0
         isoch_fit_params['params_boot'] = np.array(params_boot).T
         isoch_fit_params['mean_sol'] = [np.nan] * 6

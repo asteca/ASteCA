@@ -231,7 +231,7 @@ def main(clp, kp_flag, coords, **kwargs):
             print(text.format(rc, coord))
 
         else:
-            print("Core & tidal radii not found.")
+            print("Core & tidal radii not found")
 
     clp['core_rad'], clp['e_core'], clp['tidal_rad'], clp['e_tidal'],\
         clp['K_memb_num'], clp['K_conct_par'], clp['K_cent_dens'],\

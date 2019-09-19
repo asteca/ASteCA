@@ -1,25 +1,14 @@
 
+import platform
 from .check import pack
 from .check import first_run
 from .check import update
 from .check import clusters
 from .check import params_file
-from .check import params_mode
 from .check import params_data
 from .check import params_out
 from .check import params_struct
 from .check import params_decont
-
-
-def X_is_running():
-    """
-    Detect if X11 is available. Source:
-    https://stackoverflow.com/a/1027942/1391441
-    """
-    from subprocess import Popen, PIPE
-    p = Popen(["xset", "-q"], stdout=PIPE, stderr=PIPE)
-    p.communicate()
-    return p.returncode == 0
 
 
 def check_all(mypath, file_end):
@@ -50,11 +39,7 @@ def check_all(mypath, file_end):
     pd = params_file.check(mypath, file_end, inst_packgs_lst)
 
     # Check if a new version is available.
-    update.check(**pd)
-
-    # Check running mode. If mode is 'semi', check that all cluster
-    # in '/input' folder are listed.
-    params_mode.check(mypath, cl_files, **pd)
+    update.check()
 
     # Check that the data column indexes/names were properly given, and that
     # the magnitude and color names were properly defined.
@@ -82,15 +67,31 @@ def check_all(mypath, file_end):
     # Check and store metallicity files.
     pd = read_met_files.check_get(pd)
 
-    # Force matplotlib to not use any Xwindows backend. This call prevents
+    # Force matplotlib to not use Xwindows backend. This call prevents
     # the code from crashing when used in a computer cluster. See:
     # http://stackoverflow.com/a/3054314/1391441
     if not X_is_running():
         import matplotlib
         matplotlib.use('Agg')
-        print("(Force matplotlib to not use any Xwindows backend)\n")
+        print("(Force matplotlib to not use Xwindows backend)\n")
 
     print("Full check done.\n\nNumber of clusters to analyze: {}\n".format(
         len(cl_files)))
 
     return cl_files, pd
+
+
+def X_is_running():
+    """
+    Detect if X11 is available. Source:
+    https://stackoverflow.com/a/1027942/1391441
+    """
+    if platform.system() == 'Linux':
+        from subprocess import Popen, PIPE
+        p = Popen(["xset", "-q"], stdout=PIPE, stderr=PIPE)
+        p.communicate()
+        return p.returncode == 0
+    else:
+        # If this is not a Linux system, assume that it is either Mac OS or
+        # Windows, and thus assume that a windows system is present.
+        return True

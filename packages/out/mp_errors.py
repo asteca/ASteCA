@@ -142,7 +142,7 @@ def pl_phot_err(
             ob.patch.set(alpha=0.7)
             ax.add_artist(ob)
         # Maximum error limit of 1.
-        plt.ylim(-0.0025, min(plt.ylim()[1], 2. * max_cut_y, 1.))
+        plt.ylim(-0.0024, min(plt.ylim()[1], 2. * max_cut_y, 1.))
 
 
 def plot(N, *args):
@@ -163,4 +163,4 @@ def plot(N, *args):
     except Exception:
         import traceback
         print(traceback.format_exc())
-        print("  WARNING: error when plotting {}.".format(plt_map.get(N)[1]))
+        print("  WARNING: error when plotting {}".format(plt_map.get(N)[1]))

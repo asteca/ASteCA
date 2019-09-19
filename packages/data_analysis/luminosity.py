@@ -59,7 +59,7 @@ def main(clp, **kwargs):
     # Pack values.
     lum_func = [x_cl, y_cl, x_fl, y_fl, x_all, y_all]
 
-    print('Luminosity function obtained.')
+    print("Luminosity function obtained")
 
     clp['lum_func'] = lum_func
     return clp

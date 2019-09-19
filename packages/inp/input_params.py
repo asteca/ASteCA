@@ -41,24 +41,15 @@ def main(mypath, pars_f_path):
     # Read data from file.
     with open(pars_f_path, "r") as f_dat:
 
+        manual_struct = []
         # Iterate through each line in the file.
         for l, line in enumerate(f_dat):
 
             if not line.startswith("#") and line.strip() != '':
                 reader = line.split()
 
-                # Updater.
-                if reader[0] == 'UP':
-                    up_flag = True if reader[1] in true_lst else False
-
-                # Set global mode (i.e, for all clusters processed).
-                elif reader[0] == 'MO':
-                    run_mode = str(reader[1])
-                elif reader[0] == 'NV':
-                    nanvals = [_.replace(',', '') for _ in reader[1:]]
-
                 # Input data parameters.
-                elif reader[0] == 'MR':
+                if reader[0] == 'MR':
                     read_mode = str(reader[1])
                 elif reader[0] == 'PI':
                     id_ids = reader[1]
@@ -73,17 +64,23 @@ def main(mypath, pars_f_path):
                 elif reader[0] == 'PK':
                     id_kinem = reader[1:]
 
+                # Input data processing
+                elif reader[0] == 'NV':
+                    nanvals = [_.replace(',', '') for _ in reader[1:]]
+                elif reader[0] == 'TF':
+                    flag_tf = True if reader[1] in true_lst else False
+                    tf_range = list(map(float, reader[2:]))
+
                 # Output parameters.
                 elif reader[0] == 'MP':
                     flag_make_plot = reader[1:]
                 elif reader[0] == 'PF':
                     plot_frmt = str(reader[1])
                     plot_dpi = int(reader[2])
-                elif reader[0] == 'TF':
-                    flag_tf = True if reader[1] in true_lst else False
-                    tf_range = list(map(float, reader[2:]))
 
                 # Structure functions parameters.
+                elif reader[0] == 'MD':
+                    manual_struct.append(reader[1:])
                 elif reader[0] == 'CH':
                     center_bw = float(reader[1])
                 elif reader[0] == 'CR':
@@ -111,7 +108,7 @@ def main(mypath, pars_f_path):
                     fixedda_port = float(reader[3])
 
                 elif reader[0] == 'DW':
-                    bayesda_weights = list(map(float, reader[1:]))
+                    bayesda_dflag = reader[1:]
 
                 # Cluster region field stars removal.
                 elif reader[0] == 'FR':
@@ -153,20 +150,13 @@ def main(mypath, pars_f_path):
                     b_range = list(map(float, reader[1:]))
 
                 # ptemcee algorithm parameters.
-                elif reader[0] == 'PT0':
-                    init_mode_ptm = reader[1]
-                    popsize_ptm = int(float(reader[2]))
-                    maxiter_ptm = int(float(reader[3]))
-                elif reader[0] == 'PT1':
+                elif reader[0] == 'PT':
                     ntemps = reader[1]
-                    nwalkers_ptm = int(float(reader[2]))
-                    nburn_ptm = int(float(reader[3]))
-                    nsteps_ptm = int(float(reader[4]))
-                    tmax_ptm = reader[5]
+                    nsteps_pt = int(float(reader[2]))
+                    nwalkers_pt = int(float(reader[3]))
+                    nburn_pt = float(reader[4])
+                    tmax_pt = reader[5]
                     pt_adapt = True if reader[6] in true_lst else False
-                elif reader[0] == 'PT2':
-                    N_conv = float(reader[1])
-                    tol_conv = float(reader[2])
                 elif reader[0] == 'PTZ':
                     pt_z_prior = [reader[1]] + list(map(float, reader[2:]))
                 elif reader[0] == 'PTA':
@@ -259,7 +249,7 @@ def main(mypath, pars_f_path):
     fld_rem_methods = ('local', 'n_memb', 'mp_05', 'top_h', 'man', 'all')
     # Accepted binning methods.
     bin_methods = ('fixed', 'auto', 'fd', 'doane', 'scott', 'rice', 'sqrt',
-                   'sturges', 'knuth', 'blocks', 'blocks_max')
+                   'sturges', 'knuth', 'blocks', 'blocks-max')
     bin_weights = ('mean', 'median', 'max')
     # Likelihood methods.
     lkl_methods = (
@@ -273,7 +263,7 @@ def main(mypath, pars_f_path):
     # Accepted forms of priors.
     bayes_priors = ('u', 'g')
 
-    priors_ptm = [
+    priors_pt = [
         pt_z_prior, pt_a_prior, pt_e_prior, pt_d_prior, pt_m_prior, pt_b_prior]
 
     # Map evolutionary tracks selection to proper names, and name of the folder
@@ -300,21 +290,24 @@ def main(mypath, pars_f_path):
     par_ranges = [z_range, a_range, e_range, d_range, m_range, b_range]
 
     pd = {
-        'up_flag': up_flag, 'run_mode': run_mode, 'nanvals': nanvals,
-        'read_mode': read_mode,
-        'id_ids': id_ids, 'id_xdata': id_xdata, 'id_ydata': id_ydata,
-        'coords': coords, 'project': project, 'id_mags': id_mags,
-        'id_cols': id_cols,
-        'id_kinem': id_kinem,
+        # Input data parameters
+        'read_mode': read_mode, 'id_ids': id_ids, 'id_xdata': id_xdata,
+        'id_ydata': id_ydata, 'coords': coords, 'project': project,
+        'id_mags': id_mags, 'id_cols': id_cols, 'id_kinem': id_kinem,
+        # Input data processing
+        'nanvals': nanvals, 'flag_tf': flag_tf, 'tf_range': tf_range,
+        # Output
         'flag_make_plot': flag_make_plot, 'plot_frmt': plot_frmt,
-        'plot_dpi': plot_dpi, 'flag_tf': flag_tf, 'tf_range': tf_range,
-        'center_bw': center_bw, 'radius_method': radius_method,
-        'fdens_method': fdens_method,
-        'kp_flag': kp_flag, 'fr_number': fr_number, 'err_max': err_max,
-        'ad_runs': ad_runs, 'ad_k_comb': ad_k_comb,
+        'plot_dpi': plot_dpi,
+        # Structure functions parameters
+        'manual_struct': manual_struct, 'center_bw': center_bw,
+        'radius_method': radius_method, 'fdens_method': fdens_method,
+        'kp_flag': kp_flag, 'fr_number': fr_number,
+        #
+        'err_max': err_max, 'ad_runs': ad_runs, 'ad_k_comb': ad_k_comb,
         # Decontamination algorithm parameters.
         'da_algor': da_algor, 'bayesda_runs': bayesda_runs,
-        'fixedda_port': fixedda_port, 'bayesda_weights': bayesda_weights,
+        'fixedda_port': fixedda_port, 'bayesda_dflag': bayesda_dflag,
         # Plx & PMs parameters.
         'plx_bayes_flag': plx_bayes_flag, 'plx_offset': plx_offset,
         'plx_chains': plx_chains, 'plx_runs': plx_runs,
@@ -325,9 +318,9 @@ def main(mypath, pars_f_path):
         'fld_clean_mode': fld_clean_mode, 'fld_clean_bin': fld_clean_bin,
         'fld_clean_prob': fld_clean_prob,
         # Best fit parameters.
-        'best_fit_algor': best_fit_algor, 'hmax': hmax, 'N_conv': N_conv,
-        'tol_conv': tol_conv, 'lkl_method': lkl_method,
-        'lkl_binning': lkl_binning, 'lkl_weight': lkl_weight,
+        'best_fit_algor': best_fit_algor, 'hmax': hmax,
+        'lkl_method': lkl_method, 'lkl_binning': lkl_binning,
+        'lkl_weight': lkl_weight,
         # Synthetic cluster parameters
         'evol_track': evol_track, 'za_steps': za_steps,
         'max_mag': max_mag, 'IMF_name': IMF_name, 'm_high': m_high,
@@ -336,11 +329,9 @@ def main(mypath, pars_f_path):
         # parameters ranges
         'par_ranges': par_ranges,
         # ptemcee algorithm parameters.
-        'init_mode_ptm': init_mode_ptm, 'popsize_ptm': popsize_ptm,
-        'maxiter_ptm': maxiter_ptm,
-        'ntemps': ntemps, 'nwalkers_ptm': nwalkers_ptm, 'nburn_ptm': nburn_ptm,
-        'nsteps_ptm': nsteps_ptm, "pt_adapt": pt_adapt, 'tmax_ptm': tmax_ptm,
-        'priors_ptm': priors_ptm,
+        'ntemps': ntemps, 'nsteps_pt': nsteps_pt,
+        'nwalkers_pt': nwalkers_pt, 'nburn_pt': nburn_pt,
+        "pt_adapt": pt_adapt, 'tmax_pt': tmax_pt, 'priors_pt': priors_pt,
         # # ABC algorithm parameters.
         # 'nwalkers_abc': nwalkers_abc, 'nburn_abc': nburn_abc,
         # 'nsteps_abc': nsteps_abc, 'priors_abc': priors_abc,

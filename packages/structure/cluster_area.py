@@ -71,13 +71,13 @@ def main(clp, x, y, **kwargs):
         frac_cl_area = cl_area / (np.pi * clp['clust_rad'] ** 2)
 
         print("  WARNING: only a portion of the cluster\n  is present "
-              "in the observed frame ({:.2f}).".format(frac_cl_area))
+              "in the observed frame ({:.2f})".format(frac_cl_area))
 
     # Normalization of frame to cluster area, used by LF plotting.
     frame_norm = frame_area / cl_area
 
     clp['cl_area'], clp['frac_cl_area'], clp['frame_norm'] =\
         cl_area, frac_cl_area, frame_norm
-    print("Area of cluster obtained.")
+    print("Area of cluster obtained")
 
     return clp

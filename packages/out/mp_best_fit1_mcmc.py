@@ -9,29 +9,31 @@ def xxx():
     ax = plt.subplot(gs[0:2, 2:8])
 
 
-def pl_MAP_lkl(dummy, gs, prob_mean, map_lkl, map_lkl_final):
+def pl_MAP_lkl(gs, N_steps, prob_mean, map_lkl, map_lkl_final):
     '''
     Evolution of MAP likelihood values.
     '''
     ax = plt.subplot(gs[2:4, 4:6])
-    x, y = list(zip(*map_lkl))
-    ax.plot(x, y, label=r"$L_{{min}}={:.1f}$".format(map_lkl_final))
-    x, y = list(zip(*prob_mean))
-    ax.plot(x, y, label="Mean LP")
+    ax.plot(N_steps, map_lkl, label=r"$L_{{min}}={:.1f}$".format(
+        map_lkl_final))
+    ymin, ymax = ax.get_ylim()
+
+    ax.plot(N_steps, prob_mean, label="Mean LP")
     plt.xlabel("steps", fontsize=14)
     plt.ylabel("Lkl (MAP)", fontsize=14)
     ax.legend(fontsize='small', loc=0)  # , handlelength=0.)
+    plt.ylim(ymin, ymax)
 
 
-def pl_betas(dummy, gs, best_fit_algor, betas_pt):
+def pl_betas(gs, Tmax, N_steps, betas_pt):
     '''
     Evolution of Temp swaps AFs.
     '''
     ax = plt.subplot(gs[0:2, 2:4])
-    x, betas = betas_pt
-    Nt = len(betas) - 1
-    ax.set_title(r"$N_{{temps}}={}$".format(Nt + 1), fontsize=10)
-    for i, y in enumerate(betas):
+    Nt = len(betas_pt) - 1
+    ax.set_title(r"$T_{{max}}={},\,N_{{temps}}={}$".format(
+        Tmax, Nt + 1), fontsize=10)
+    for i, y in enumerate(betas_pt):
         if i == 0:
             lbl_ls = ("Cold", '--', 1.5, 4)
         elif i == Nt:
@@ -39,23 +41,20 @@ def pl_betas(dummy, gs, best_fit_algor, betas_pt):
         else:
             lbl_ls = (None, '-', .5, 1)
         ax.plot(
-            x, y[:len(x)], label=lbl_ls[0], ls=lbl_ls[1], lw=lbl_ls[2],
-            zorder=lbl_ls[3])
+            N_steps, y[:len(N_steps)], label=lbl_ls[0], ls=lbl_ls[1],
+            lw=lbl_ls[2], zorder=lbl_ls[3])
     plt.xlabel("steps", fontsize=14)
-    plt.ylabel(r"$\beta$", fontsize=14)
+    plt.ylabel(r"$\beta\,(1/T)$", fontsize=14)
     ax.legend(fontsize='small', loc=0)
 
 
-def pl_Tswaps(dummy, gs, best_fit_algor, tswaps_afs):
+def pl_Tswaps(gs, N_steps, tswaps_afs):
     '''
     Evolution of Temp swaps AFs.
     '''
     ax = plt.subplot(gs[0:2, 4:6])
-    # ax.set_title(
-    #     r"$MAF_{{[T=1]}}={:.3f}$".format(maf_steps[1][0][-1]), fontsize=10)
-    x, y_replicas = tswaps_afs
-    Nt = len(y_replicas) - 1
-    for i, y in enumerate(y_replicas):
+    Nt = len(tswaps_afs) - 1
+    for i, y in enumerate(tswaps_afs):
         if i == 0:
             lbl_ls = ("Cold", '--', 1.5, 4)
         elif i == Nt:
@@ -63,24 +62,24 @@ def pl_Tswaps(dummy, gs, best_fit_algor, tswaps_afs):
         else:
             lbl_ls = (None, '-', .5, 1)
         ax.plot(
-            x, y, label=lbl_ls[0], ls=lbl_ls[1], lw=lbl_ls[2],
+            N_steps, y, label=lbl_ls[0], ls=lbl_ls[1], lw=lbl_ls[2],
             zorder=lbl_ls[3])
     plt.xlabel("steps", fontsize=14)
     plt.ylabel("Tswaps AF", fontsize=14)
     ax.legend(fontsize='small', loc=0)
 
 
-def pl_MAF(dummy, gs, best_fit_algor, maf_steps):
+def pl_MAF(gs, N_steps, maf_allT):
     '''
     Evolution of MAF values.
     '''
     ax = plt.subplot(gs[0:2, 6:8])
     ax.set_title(
-        r"$MAF_{{[T=1]}}={:.3f}$".format(maf_steps[1][0][-1]), fontsize=10)
+        r"$MAF_{{[T=1]}}={:.3f}$".format(maf_allT[0][-1]), fontsize=10)
     # x, y = list(zip(*maf_steps))
-    x, y_replicas = maf_steps
-    Nt = len(y_replicas) - 1
-    for i, y in enumerate(y_replicas):
+    # x, y_replicas = maf_steps
+    Nt = len(maf_allT) - 1
+    for i, y in enumerate(maf_allT):
         if i == 0:
             lbl_ls = ("Cold", '--', 1.5, 4)
         elif i == Nt:
@@ -88,13 +87,12 @@ def pl_MAF(dummy, gs, best_fit_algor, maf_steps):
         else:
             lbl_ls = (None, '-', .5, 1)
         ax.plot(
-            x, y, label=lbl_ls[0], ls=lbl_ls[1], lw=lbl_ls[2],
+            N_steps, y, label=lbl_ls[0], ls=lbl_ls[1], lw=lbl_ls[2],
             zorder=lbl_ls[3])
     plt.xlabel("steps", fontsize=14)
     plt.ylabel("MAF", fontsize=14)
-    if best_fit_algor in ('ptemcee', 'emcee'):
-        plt.axhline(y=.25, color='grey', ls=':', lw=1.2, zorder=4)
-        plt.axhline(y=.5, color='grey', ls=':', lw=1.2, zorder=4)
+    plt.axhline(y=.25, color='grey', ls=':', lw=1.2, zorder=4)
+    plt.axhline(y=.5, color='grey', ls=':', lw=1.2, zorder=4)
     ax.legend(fontsize='small', loc=0)  # , handlelength=0.)
 
 
@@ -116,7 +114,7 @@ def pl_mESS(dummy, gs, mESS, minESS, minESS_epsilon):
     ax.legend(fontsize='small', loc=0)
 
 
-def pl_tau_histo(dummy, gs, all_taus):
+def pl_tau_histo(gs, all_taus):
     """
     """
     ax = plt.subplot(gs[4:6, 6:8])
@@ -127,41 +125,40 @@ def pl_tau_histo(dummy, gs, all_taus):
         np.nanmean(all_taus), color="r",
         label=r"$\hat{{\tau}}_{{c\,,\,p}}$={:.0f}".format(
             np.nanmean(all_taus)))
-    plt.xlabel(r"$\tau$", fontsize=14)
+    plt.xlabel(r"$\tau$ (post burn-in)", fontsize=14)
     plt.ylabel(r"$N$", fontsize=14)
     ax.legend(fontsize='small', loc=0)
 
 
-def pl_tau(dummy, gs, N_steps_conv, N_conv, tol_conv, tau_index, tau_autocorr):
+def pl_tau(gs, N_steps, tau_autocorr):
     '''
     Tau vs steps plot.
     '''
     ax = plt.subplot(gs[6:8, 10:12])
-    plt.title(r"$N_{{conv}}={:.0f}, tol_{{conv}}={:.2f}$".format(
-        N_conv, tol_conv), fontsize=10)
+    plt.title("Mean across chains and parameters", fontsize=10)
     plt.xlabel("steps", fontsize=14)
     plt.ylabel(r"$\hat{\tau}_{{c\,|\,p}}$", fontsize=14)
 
-    n = N_steps_conv * np.arange(1, tau_index + 1)
-    plt.plot(n, n / 50., "--g", label="N/50")
-    plt.plot(n, n / 100., "--b", label="N/100")
-    plt.plot(n, n / 500., "--r", label="N/500")
-    plt.plot(n, tau_autocorr)
-    plt.xlim(0, n.max())
+    N_steps, taus = tau_autocorr
+    plt.plot(N_steps, N_steps / 50., "--g", label="N/50")
+    plt.plot(N_steps, N_steps / 100., "--b", label="N/100")
+    plt.plot(N_steps, N_steps / 500., "--r", label="N/500")
+    plt.plot(N_steps, taus)
+    # plt.xlim(0, max(N_steps))
     try:
         plt.ylim(
-            0, np.nanmax(tau_autocorr) + 0.1 *
-            (np.nanmax(tau_autocorr) - np.nanmin(tau_autocorr)))
+            0, np.nanmax(taus) + 0.1 * (np.nanmax(taus) - np.nanmin(taus)))
     except ValueError:
-        print("  WARNING: no mean autocorrelation values to plot.")
+        print("  WARNING: no mean autocorrelation values to plot")
     ax.legend(fontsize='small', loc=0)
 
 
-def pl_lags(dummy, gs, varIdxs, lag_zero, acorr_function):
+def pl_lags(gs, varIdxs, acorr_function):
     '''
     lags plot.
     '''
     ax = plt.subplot(gs[6:8, 8:10])
+    plt.title("Autocorrelation function", fontsize=10)
     plt.xlabel("Lag", fontsize=14)
     plt.ylabel("ACF", fontsize=14)
 
@@ -173,12 +170,14 @@ def pl_lags(dummy, gs, varIdxs, lag_zero, acorr_function):
             plt.plot(
                 range(len(p)), p, lw=.8, alpha=0.5,
                 label="{}".format(par_name))
+            xmax = int(.25 * len(p))
     ax.legend(fontsize='small', loc=0)
-    plt.plot((lag_zero, lag_zero), (0, .5), ls='--', c='k')
-    ax.text(lag_zero, .52, "{}".format(lag_zero))
+    plt.xlim(-1, xmax)
+    # plt.plot((lag_zero, lag_zero), (0, .5), ls='--', c='k')
+    # ax.text(lag_zero, .52, "{}".format(lag_zero))
 
 
-def pl_GW(dummy, gs, varIdxs, geweke_z):
+def pl_GW(gs, varIdxs, geweke_z):
     '''
     Geweke plot.
     '''
@@ -217,11 +216,11 @@ def plot(N, *args):
         1: [pl_MAF, ' MAF vs steps'],
         2: [pl_betas, ' Betas vs steps'],
         3: [pl_Tswaps, ' Tswaps AFs vs steps'],
-        4: [pl_tau, args[0]],
+        4: [pl_tau, ' Tau evolution'],
         # 5: [pl_mESS, args[0]],
-        5: [pl_lags, args[0]],
-        6: [pl_GW, args[0]],
-        7: [pl_tau_histo, args[0]]
+        5: [pl_lags, ' Lags plot'],
+        6: [pl_GW, ' Geweke plot'],
+        7: [pl_tau_histo, ' Tau histogram']
     }
 
     fxn = plt_map.get(N, None)[0]
@@ -233,5 +232,5 @@ def plot(N, *args):
     except Exception:
         import traceback
         print(traceback.format_exc())
-        print("  WARNING: error when plotting {}.".format(plt_map.get(N)[1]))
+        print("  WARNING: error when plotting {}".format(plt_map.get(N)[1]))
     plt.style.use('default')

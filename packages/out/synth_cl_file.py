@@ -44,16 +44,13 @@ def main(clp, npd, bf_flag, best_fit_algor, fundam_params, filters, colors,
                     for _ in e_mags_cols[i]:
                         f_out.write("{:<8.4f}".format(_))
                     f_out.write("{:<8.4f}\n".format(*extra_pars[i]))
-                        # "{:<8.4f} {:<8.4f} {:<8.4f} {:<8.4f}"
-                        # " {:<8.4f} {:<8.4f} {:<8.4f} {:<8.4f}\n".format(
-                        #     *extra_pars[i]))
 
-            print('Best fit synthetic cluster saved to file.')
+            print("Best fit synthetic cluster saved to file")
             # Save for plotting.
             clp['synth_clst'], clp['shift_isoch'] = synth_clst, shift_isoch
 
         else:
             print("  ERROR: empty synthetic cluster could not be saved\n"
-                  "  to file.")
+                  "  to file")
 
     return clp

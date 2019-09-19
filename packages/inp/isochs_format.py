@@ -18,7 +18,7 @@ def cmd_line_start_format(cmd_evol_tracks, evol_track):
         # String that identifies the beginning of a new isochrone.
         line_start = "# Zini"
     else:
-        print("ERROR: evolutionary track not recognized.")
+        print("ERROR: evolutionary track not recognized")
 
     return line_start
 

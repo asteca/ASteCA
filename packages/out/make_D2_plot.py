@@ -17,7 +17,7 @@ def main(
     if 'D2' in pd['flag_make_plot'] and pd['bf_flag']:
         fig = plt.figure(figsize=(30, 25))
         gs = gridspec.GridSpec(10, 12)
-        add_version_plot.main()
+        add_version_plot.main(y_fix=1.005)
 
         if pd['best_fit_algor'] == 'boot+GA':
             best_sol = isoch_fit_params['map_sol']

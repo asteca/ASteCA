@@ -28,6 +28,7 @@ def main(
     data_file = npd['data_file']
     try:
         data = readDataFile(nanvals, read_mode, id_col, data_file)
+        N_all = len(data)
 
         # Arrange column names in the proper order and shape.
         col_names = [
@@ -38,11 +39,20 @@ def main(
         col_names_keep = list(filter(bool, list(flatten(col_names))))
         data.keep_columns(col_names_keep)
 
+        # Remove stars with no valid coordinates data
+        try:
+            data = data[(~data[x_col].mask) & (~data[y_col].mask)]
+        except AttributeError:
+            # Not masked columns
+            pass
+        N_coords = len(data)
+
         # Mask bad photometry.
         data = maskBadPhot(data, mag_col, e_mag_col, col_col, e_col_col)
 
         # Trim frame according to coordinates limits.
         data = trim_frame.main(flag_tf, tf_range, data, x_col, y_col)
+        N_trim = len(data)
 
         # Split into incomplete and complete data.
         data_compl, flag_data_eq = dataSplit(
@@ -55,7 +65,7 @@ def main(
     except ascii.InconsistentTableError:
         raise ValueError("ERROR: could not read data input file:\n  {}\n"
                          "  Check that all rows are filled (i.e., no blank"
-                         " spaces)\n  for all columns.\n".format(data_file))
+                         " spaces)\n  for all columns\n".format(data_file))
 
     # Create cluster's dictionary with the *photometrically incomplete* data.
     ids, x, y, mags, cols, kine, em, ec, ek = dataCols(
@@ -71,11 +81,23 @@ def main(
     cld_c = {'ids': ids, 'x': x, 'y': y, 'mags': mags, 'em': em,
              'cols': cols, 'ec': ec, 'kine': kine, 'ek': ek}
 
-    print('Stars read from input file, N={}.'.format(cld_i['ids'].size))
+    print("Stars read from input file: N={}".format(N_all))
+    if N_coords != N_all:
+        frac_reject = 1. - (float(N_coords) / N_all)
+        print(
+            "  WARNING: N={} ({:.1f}%) stars with no valid\n"
+            "  coordinates data were removed".format(
+                N_all - N_coords, 100. * frac_reject))
+
+    if N_trim != N_coords:
+        print("Stars removed by trimming the frame: N={}".format(
+            N_coords - N_trim))
+
     frac_reject = 1. - (float(cld_c['ids'].size) / cld_i['ids'].size)
     if frac_reject > 0.05:
-        print("  WARNING: {:.0f}% of stars in the input file contain\n"
-              "  incomplete photometric data.".format(100. * frac_reject))
+        print("  WARNING: N={} ({:.0f}%) of stars contain\n"
+              "  incomplete photometric data".format(
+                  cld_i['ids'].size - cld_c['ids'].size, 100. * frac_reject))
 
     clp = {
         'flag_data_eq': flag_data_eq, 'x_offset': x_offset,
@@ -103,12 +125,18 @@ def readDataFile(nanvals, read_mode, id_col, data_file):
             data_file, fill_values=fill_msk, format='no_header')
         # Replace IDs column
         data[id_col] = id_data
-    else:
+    elif read_mode == 'nam':
         # Read IDs as strings, not applying the 'fill_msk'
         data = ascii.read(
             data_file, converters={id_col: [ascii.convert_numpy(np.str)]})
         # Store IDs
-        id_data = data[id_col]
+        try:
+            id_data = data[id_col]
+        except KeyError:
+            raise ValueError(
+                "ERROR: the '{}' key could not be found. Check that \n"
+                "the 'id' name is properly written, and that all columns \n"
+                "have *unique* names\n".format(id_col))
         # Read rest of the data applying the mask
         data = ascii.read(data_file, fill_values=fill_msk)
         # Replace IDs column
@@ -215,7 +243,7 @@ def dataCols(data_file, data, col_names):
             for dup in dups:
                 print("  ID '{}' found in lines: {}".format(
                     dup[0], ", ".join(dup[1])))
-            raise ValueError("Duplicated IDs found.")
+            raise ValueError("Duplicated IDs found")
 
         # Check that all data columns are in the proper 'float64' format.
         # This catches values like '0.343a' which make the entire column
@@ -274,14 +302,14 @@ def dataCols(data_file, data, col_names):
     except IndexError:
         raise IndexError("ERROR: data input file:\n  {}\n  contains "
                          "fewer columns than those given "
-                         "in 'params_input.dat'.".format(data_file))
+                         "in 'params_input.dat'".format(data_file))
 
     # Check if the range of any coordinate column is zero.
     data_names = ['x_coords', 'y_coords']
     for i, dat_lst in enumerate([x, y]):
         if np.nanmin(dat_lst) == np.nanmax(dat_lst):
             raise ValueError("ERROR: the range for the '{}' column\n"
-                             "is zero. Check the input data format.".format(
+                             "is zero. Check the input data format".format(
                                  data_names[i]))
     # Check if the range of any photometric column is zero.
     data_names = ['magnitude', 'color']
@@ -290,7 +318,7 @@ def dataCols(data_file, data, col_names):
             if np.nanmin(mc) == np.nanmax(mc):
                 raise ValueError(
                     "ERROR: the range for {} column {} is\nzero."
-                    " Check the input data format.".format(data_names[i], i))
+                    " Check the input data format".format(data_names[i], i))
 
     return ids, x, y, mags, cols, kine, em, ec, ek
 

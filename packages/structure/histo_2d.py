@@ -28,7 +28,7 @@ def main(clp, x, y, mags, **kwargs):
     clp['xy_mag_ranges'], clp['bin_width'], clp['hist_2d'], clp['xedges'],\
         clp['yedges'] = xy_mag_ranges, bin_width, hist_2d, xedges, yedges
 
-    print("Frame's 2D histogram obtained.")
+    print("Frame's 2D histogram obtained")
 
     return clp
 

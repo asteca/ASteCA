@@ -84,6 +84,7 @@ def pl_lkl_scatt(gs, pos, ld_p, min_max_p, cp_r, cp_e, models_GA, lkls_GA):
     ax.locator_params(nbins=5)
     # Set minor ticks
     ax.minorticks_on()
+    ax.grid(b=True, which='major', color='gray', linestyle=':', lw=.5)
     ax.tick_params(axis='y', which='major', labelsize=9)
     plt.xlabel(ld_p, fontsize=16)
     # Add textbox.
@@ -259,4 +260,4 @@ def plot(N, *args):
     except Exception:
         import traceback
         print(traceback.format_exc())
-        print("  WARNING: error when plotting {}.".format(plt_map.get(N)[1]))
+        print("  WARNING: error when plotting {}".format(plt_map.get(N)[1]))

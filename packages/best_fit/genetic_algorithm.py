@@ -122,52 +122,6 @@ def main(
             fundam_params, obs_clust, theor_tracks, R_V, ext_coefs,
             st_dist_mass, N_fc, cmpl_rnd, err_rnd, varIdxs, ranges, p_lst_e)
 
-        # *** Extinction/Immigration ***
-        # If the best solution has remained unchanged for N_ei
-        # generations, remove all chromosomes but the best ones (extinction)
-        # and fill with random new solutions (immigration).
-
-        # Check if new best solution is better than the previous one.
-        if lkl_best_old <= lkl[0]:
-            # Increase counter.
-            best_sol_count += 1
-
-            # Check how many times the best_sol has remained unchanged.
-            # If the number equals N_ei, apply Extinction/Immigration operator.
-            if best_sol_count == N_ei:
-
-                # *** Exit switch ***
-                # If N_es runs of the Ext/Imm operator have been applied with
-                # no changes to the best solution, apply the exit switch.
-                if lkl_ei <= lkl_best_old:
-                    # Increase Ext/Imm operator counter.
-                    ext_imm_count += 1
-                    if ext_imm_count == N_es:
-                        if flag_print_perc:
-                            print("  GA exit switch applied.")
-                        elapsed_in = t.time() - start_in
-                        break
-                else:
-                    # Update best solution.
-                    lkl_ei = lkl_best_old
-                    # Reset counter.
-                    ext_imm_count = 0
-
-                # Apply Extinction/Immigration operator.
-                generation = ext_imm(best_sol, fundam_params, N_popl)
-                # Reset best solution counter.
-                best_sol_count = 0
-
-        else:
-            lkl_best_old = lkl[0]
-            # For plotting purposes. Save index where a new best solution
-            # was found.
-            new_bs_indx.append(step)
-            # Update best solution for passing along in the 'Elitism' block.
-            best_sol = generation[:N_el]
-            # Reset counter.
-            best_sol_count = 0
-
         if flag_print_perc:
 
             # For plotting purposes.
@@ -198,10 +152,55 @@ def main(
                 print(" WARNING: maximum allowed number of " +
                       "generations ({}) reached.".format(N_gener))
                 break
-
         else:
             if step == N_gener:
                 break
+
+        # *** Extinction/Immigration ***
+        # If the best solution has remained unchanged for N_ei
+        # generations, remove all chromosomes but the best ones (extinction)
+        # and fill with random new solutions (immigration).
+
+        # Check if new best solution is better than the previous one.
+        if lkl_best_old <= lkl[0]:
+            # Increase counter.
+            best_sol_count += 1
+
+            # Check how many times the best_sol has remained unchanged.
+            # If the number equals N_ei, apply Extinction/Immigration operator.
+            if best_sol_count == N_ei:
+
+                # *** Exit switch ***
+                # If N_es runs of the Ext/Imm operator have been applied with
+                # no changes to the best solution, apply the exit switch.
+                if lkl_ei <= lkl_best_old:
+                    # Increase Ext/Imm operator counter.
+                    ext_imm_count += 1
+                    if ext_imm_count == N_es:
+                        if flag_print_perc:
+                            print("  GA exit switch applied")
+                        elapsed_in = t.time() - start_in
+                        break
+                else:
+                    # Update best solution.
+                    lkl_ei = lkl_best_old
+                    # Reset counter.
+                    ext_imm_count = 0
+
+                # Apply Extinction/Immigration operator.
+                generation = ext_imm(best_sol, fundam_params, N_popl)
+                # Reset best solution counter.
+                best_sol_count = 0
+        else:
+            lkl_best_old = lkl[0]
+            # For plotting purposes. Save index where a new best solution
+            # was found.
+            new_bs_indx.append(step)
+            # Update best solution for passing along in the 'Elitism' block.
+            best_sol = generation[:N_el]
+            # Reset counter.
+            best_sol_count = 0
+
         step += 1
 
     # If this is a bootstrap run, return the best model found only.

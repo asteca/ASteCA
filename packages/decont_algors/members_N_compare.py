@@ -28,10 +28,10 @@ def main(clp):
         if abs(memb_par) > 0.33:
             flag_memb_par = True
             print("  WARNING: structural vs. photometric true cluster\n"
-                  "  members estimated differ by a factor > 2.")
+                  "  members estimated differ by a factor > 2")
 
     else:
-        print("  WARNING: could not obtain 'memb_par' parameter.")
+        print("  WARNING: could not obtain 'memb_par' parameter")
 
     clp['memb_par'], clp['n_memb_da'], clp['flag_memb_par'] =\
         memb_par, n_memb_da, flag_memb_par

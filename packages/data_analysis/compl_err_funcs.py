@@ -54,8 +54,7 @@ def photoAnalysis(cld_i):
     if complt_flag:
         # comp_b_edges, comp_perc
         pass
-
-        print('Photometric analysis incompleteness function read.')
+        print("Photometric analysis incompleteness function read")
 
     else:
         # Main magnitudes histogram (full incomplete dataset).
@@ -93,9 +92,9 @@ def photoAnalysis(cld_i):
 
         except RuntimeError:
             # LF could not be fit.
-            print("  WARNING: complete LF could not be estimated.")
+            print("  WARNING: complete LF could not be estimated")
 
-        print('Photometric analysis incompleteness function estimated.')
+        print("Photometric analysis incompleteness function estimated")
 
     return [comp_b_edges, comp_perc]
 
@@ -122,7 +121,7 @@ def photDataCompl(cld_i, cld_c):
     perc_rmvd = 100. *\
         (1. - cld_c['mags'][0].size / float(cld_i['mags'][0].size))
 
-    print('Photometric completeness data function estimated.')
+    print("Photometric completeness data function estimated")
     return [eqN_edges, err_rm_perc, perc_rmvd]
 
 
@@ -155,7 +154,7 @@ def errRemv(clp, mmag_acpt_c):
         # TODO I think Python3 does not need this 'float'
         perc_rmvd = 100. * (mmag_rjct_c.size / float(all_mags.size))
 
-    print('Error removal function estimated.')
+    print("Error removal function estimated")
     return [eqN_edges, err_rm_perc, perc_rmvd]
 
 
@@ -188,7 +187,7 @@ def combineCompl(cld_i, phot_analy_compl, mmag_acpt_c):
     # TODO I think Python3 does not need this 'float'
     perc_rmvd = 100. * (1. - mmag_acpt_c.size / float(cld_i['mags'][0].size))
 
-    print('Combined completeness function estimated.')
+    print("Combined completeness function estimated")
     return [eqN_edges, err_rm_perc, perc_rmvd]
 
 
