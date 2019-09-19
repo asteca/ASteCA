@@ -1,5 +1,16 @@
 # Change Log
 
+## [[v0.2.6]][233] - 2019-09-19
+
+### Changed
+
+* Fix normalization in Bayesian DA ([426][232])
+* Fix function to detect X11 that fails in Mac OS (Windows too?) ([428][231])
+* Merge `semi_input.dat` file into `params_input.dat` and copy input file as output ([427][230])
+* Remove modes ([429][229])
+* Use one photometric systems file instead of two identical ones ([421][228])
+* Fix Ext/Imm operator causing spurious points in the GA ([424][227])
+
 
 ## [[v0.2.5]][226] - 2019-08-07
 
@@ -690,3 +701,10 @@ ________________________________________________________________________________
 [224]: https://github.com/asteca/ASteCA/issues/229
 [225]: https://github.com/asteca/ASteCA/issues/367
 [226]: https://github.com/asteca/asteca/releases/tag/v0.2.5
+[227]: https://github.com/asteca/ASteCA/issues/424
+[228]: https://github.com/asteca/ASteCA/issues/421
+[229]: https://github.com/asteca/ASteCA/issues/429
+[230]: https://github.com/asteca/ASteCA/issues/427
+[231]: https://github.com/asteca/ASteCA/issues/428
+[232]: https://github.com/asteca/ASteCA/issues/426
+[233]: https://github.com/asteca/asteca/releases/tag/v0.2.6
