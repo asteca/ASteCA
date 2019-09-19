@@ -373,6 +373,7 @@ RB         0        1
 # ptemcee parameters.
 #
 #   - ntemps: [int], Number of parallel temperatures.
+#   - nsteps: [int], Number of steps used.
 #   - nwalkers: [int], Number of walkers/chains used.
 #   - nburn: [0<float<1], percentage of the chain discarded as burn-in.
 #   - Tmax: [float] / inf / n, maximum temperature value.
@@ -383,8 +384,8 @@ RB         0        1
 #   - tol_conv: [float], minimum tolerance for the stability of the
 #               autocorrelation time to apply the convergence break.
 #
-#     ntemps    nwalkers   nburn    Tmax   adapt
-PT       10           25     .25     inf       y
+#     ntemps    nsteps   nwalkers   nburn    Tmax   adapt
+PT       20       1000         20     .25      20       y
 #
 #   - prior: u / g, uniform (u) or Gaussian (g) prior distributions for the
 #     fitted parameters. 'mean/stddev' are only required if the 'g' prior is

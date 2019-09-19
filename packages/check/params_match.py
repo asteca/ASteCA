@@ -95,17 +95,17 @@ def checkGA(pd):
 def checkPtemcee(pd):
     """
     """
-    for pr in pd['priors_ptm']:
+    for pr in pd['priors_pt']:
         if pr[0] not in pd['bayes_priors']:
             sys.exit("ERROR: one of the selected priors ({}) is not"
                      " allowed.".format(pr))
 
-    if pd['nwalkers_ptm'] % 2 != 0:
+    if pd['nwalkers_pt'] % 2 != 0:
         # Number is even
         sys.exit("ERROR: the number of walkers must be even.")
-    if pd['nwalkers_ptm'] < 12:
+    if pd['nwalkers_pt'] < 12:
         sys.exit("ERROR: the minimum number of walkers is 12.")
-    if pd['nburn_ptm'] <= 0. or pd['nburn_ptm'] >= 1:
+    if pd['nburn_pt'] <= 0. or pd['nburn_pt'] >= 1:
         sys.exit("ERROR: burn-in percentage must be in the range (0., 1.)")
     if pd['ntemps'] not in ('n', 'none', 'None'):
         if int(float(pd['ntemps'])) < 1:

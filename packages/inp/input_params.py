@@ -152,10 +152,11 @@ def main(mypath, pars_f_path):
                 # ptemcee algorithm parameters.
                 elif reader[0] == 'PT':
                     ntemps = reader[1]
-                    nwalkers_ptm = int(float(reader[2]))
-                    nburn_ptm = float(reader[3])
-                    tmax_ptm = reader[4]
-                    pt_adapt = True if reader[5] in true_lst else False
+                    nsteps_pt = int(float(reader[2]))
+                    nwalkers_pt = int(float(reader[3]))
+                    nburn_pt = float(reader[4])
+                    tmax_pt = reader[5]
+                    pt_adapt = True if reader[6] in true_lst else False
                 elif reader[0] == 'PTZ':
                     pt_z_prior = [reader[1]] + list(map(float, reader[2:]))
                 elif reader[0] == 'PTA':
@@ -262,7 +263,7 @@ def main(mypath, pars_f_path):
     # Accepted forms of priors.
     bayes_priors = ('u', 'g')
 
-    priors_ptm = [
+    priors_pt = [
         pt_z_prior, pt_a_prior, pt_e_prior, pt_d_prior, pt_m_prior, pt_b_prior]
 
     # Map evolutionary tracks selection to proper names, and name of the folder
@@ -328,8 +329,9 @@ def main(mypath, pars_f_path):
         # parameters ranges
         'par_ranges': par_ranges,
         # ptemcee algorithm parameters.
-        'ntemps': ntemps, 'nwalkers_ptm': nwalkers_ptm, 'nburn_ptm': nburn_ptm,
-        "pt_adapt": pt_adapt, 'tmax_ptm': tmax_ptm, 'priors_ptm': priors_ptm,
+        'ntemps': ntemps, 'nsteps_pt': nsteps_pt,
+        'nwalkers_pt': nwalkers_pt, 'nburn_pt': nburn_pt,
+        "pt_adapt": pt_adapt, 'tmax_pt': tmax_pt, 'priors_pt': priors_pt,
         # # ABC algorithm parameters.
         # 'nwalkers_abc': nwalkers_abc, 'nburn_abc': nburn_abc,
         # 'nsteps_abc': nsteps_abc, 'priors_abc': priors_abc,
