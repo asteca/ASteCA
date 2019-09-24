@@ -1,6 +1,7 @@
 
 from ..core_imp import np
 from scipy.integrate import quad
+from scipy.interpolate import interp1d
 
 
 def main(IMF_name, m_high, masses):
@@ -27,19 +28,19 @@ def main(IMF_name, m_high, masses):
     """
 
     print("Sampling selected IMF ({})".format(IMF_name))
+
     # Low mass limits are defined for each IMF to avoid numerical
     # issues when integrating.
-    imfs_dict = {'chabrier_2001_exp': (0.01), 'chabrier_2001_log': (0.01),
-                 'kroupa_1993': (0.081), 'kroupa_2002': (0.011)}
-
-    # Set IMF low mass limit.
+    imfs_dict = {
+        'chabrier_2001_exp': 0.01, 'chabrier_2001_log': 0.01,
+        'kroupa_1993': 0.081, 'kroupa_2002': 0.011, 'salpeter_1955': 0.3}
+    # IMF low mass limit.
     m_low = imfs_dict[IMF_name]
 
-    # Set IMF mass interpolation step.
-    # The step (mass_step) should not be too small as it will have an impact
-    # on the performance of the 'mass_distribution' function later on.
-    mass_step = 0.1
+    # IMF mass interpolation step.
+    mass_step = 0.05
 
+    ##################
     # Obtain normalization constant. This is equivalent to 'k/M_total' in
     # Eq. (7) of Popescu & Hanson 2009 (138:1724-1740; PH09).
     # For m_high > 100 Mo the differences in the resulting normalization
@@ -62,40 +63,93 @@ def main(IMF_name, m_high, masses):
     # Normalize number of stars by constant.
     N_dist = np.asarray(N_dist) * norm_const
 
-    st_dist_mass = massDist(m_low, mass_up, N_dist, masses)
+    # st_dist_mass = massDist(m_low, mass_up, N_dist, masses)
+    ##################
+
+    ##################
+    # Obtain normalization constant (k = \int_{m_low}^{m_up} \xi(m) dm). This
+    # makes the IMF behave like a PDF.
+    norm_const = quad(integral_IMF_N, m_low, m_high, args=(IMF_name))[0]
+
+    # The CDF is defined as: $F(m)= \int_{m_low}^{m} PDF(m) dm$
+    # Sample the CDF
+    mass_values = np.arange(m_low, m_high, mass_step)
+    CDF_samples = []
+    for m in mass_values:
+        CDF_samples.append(quad(integral_IMF_N, m_low, m, args=(IMF_name))[0])
+    CDF_samples = np.array(CDF_samples) / norm_const
+
+    inv_cdf = interp1d(CDF_samples, mass_values)
+    CDF_min, CDF_max = CDF_samples.min(), CDF_samples.max()
+
+    def sampled_inv_cdf(N):
+        mr = np.random.rand(N)
+        mr = mr[(mr >= CDF_min) & (mr <= CDF_max)]
+        return inv_cdf(mr)
+
+    # sampled_IMF = sampled_inv_cdf(10000)
+
+    # st_dist_mass2 = (sampled_IMF, np.cumsum(sampled_IMF))
+    ##################
+
+    def return_intersection(hist_1, hist_2):
+        minima = np.minimum(hist_1, hist_2)
+        intersection = np.true_divide(np.sum(minima), np.sum(hist_2))
+        return intersection
+
+    import matplotlib.pyplot as plt
+    dd = []
+    for mass in np.random.uniform(100., 1000., 1000):
+        data_1 = massDist(m_low, mass_up, N_dist, [mass])
+        data_1 = data_1[mass]
+        sampled_IMF = sampled_inv_cdf(10000)
+        data_2 = sampled_IMF[:np.searchsorted(np.cumsum(sampled_IMF), mass)]
+        hist_1, _ = np.histogram(data_1, bins=100, range=[0., 150])
+        hist_2, _ = np.histogram(data_2, bins=100, range=[0., 150])
+        rr = return_intersection(hist_1, hist_2)
+        dd.append([mass, rr])
+        if rr < .7:
+            print(mass, rr, len(data_1), len(data_2))
+            plt.hist(data_1, 100, alpha=.5, density=True, label='old')
+            plt.hist(data_2, 100, alpha=.5, density=True, label='new')
+            plt.xscale('log');plt.yscale('log')
+            plt.legend();plt.show()
+
+    dd = np.array(dd).T
+    plt.scatter(*dd)
+    plt.show()
 
     return st_dist_mass
 
 
 def integral_IMF_M(m_star, IMF_name):
     '''
-    Return the properly normalized function to perform the integration of the
-    selected IMF. Returns mass values.
+    Returns mass values: $$
     '''
-    imf_val = m_star * imfs(IMF_name, m_star)
-    return imf_val
+    return m_star * imfs(IMF_name, m_star)
 
 
 def integral_IMF_N(m_star, IMF_name):
     '''
-    Return the properly normalized function to perform the integration of the
-    selected IMF. Returns number of stars.
+    Returns number of stars: $$
     '''
-    imf_val = imfs(IMF_name, m_star)
-    return imf_val
+    return imfs(IMF_name, m_star)
 
 
 def imfs(IMF_name, m_star):
-    '''
+    """
     Define any number of IMFs.
-    '''
+
+    The package https://github.com/keflavich/imf has some more (I think,
+    24-09-2019).
+    """
+
     if IMF_name == 'kroupa_1993':
         # Kroupa, Tout & Gilmore. (1993) piecewise IMF.
         # http://adsabs.harvard.edu/abs/1993MNRAS.262..545K
         # Eq. (13), p. 572 (28)
         alpha = [-1.3, -2.2, -2.7]
-        m_i = [0.08, 0.5, 1.]
-        m0, m1, m2 = m_i
+        m0, m1, m2 = [0.08, 0.5, 1.]
         factor = [0.035, 0.019, 0.019]
         if m0 < m_star <= m1:
             i = 0
@@ -106,9 +160,8 @@ def imfs(IMF_name, m_star):
         imf_val = factor[i] * (m_star ** alpha[i])
 
     elif IMF_name == 'kroupa_2002':
-        # Kroupa (2002) piecewise IMF (taken from MASSCLEAN article).
-        # http://adsabs.harvard.edu/abs/2002Sci...295...82K
-        # Eq. (2) & (3), p. 1725
+        # Kroupa (2002) Salpeter (1995) piecewise IMF taken from MASSCLEAN
+        # article, Eq. (2) & (3), p. 1725
         alpha = [-0.3, -1.3, -2.3]
         m0, m1, m2 = [0.01, 0.08, 0.5]
         factor = [(1. / m1) ** alpha[0], (1. / m1) ** alpha[1],
@@ -134,6 +187,11 @@ def imfs(IMF_name, m_star):
         # http://adsabs.harvard.edu/abs/2001ApJ...554.1274C
         # Eq (8)
         imf_val = 3. * m_star ** (-3.3) * np.exp(-(716.4 / m_star) ** 0.25)
+
+    elif IMF_name == 'salpeter_1955':
+        # Salpeter (1955)  IMF.
+        # https://ui.adsabs.harvard.edu/abs/1955ApJ...121..161S/
+        imf_val = m_star ** -2.35
 
     return imf_val
 

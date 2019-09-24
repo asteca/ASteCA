@@ -256,7 +256,7 @@ def main(mypath, pars_f_path):
         'tolstoy', 'duong', 'dolphin', 'mighell', 'kdeKL', 'dolphin_kde')
     # Accepted IMF functions.
     imf_funcs = ('chabrier_2001_exp', 'chabrier_2001_log', 'kroupa_1993',
-                 'kroupa_2002')
+                 'kroupa_2002', 'salpeter_1955')
     # Optimizing algorithm
     # TODO 'brute', 'emcee', 'abc'
     optimz_algors = ('ptemcee', 'boot+GA', 'n')
