@@ -1,4 +1,5 @@
 
+import numpy as np
 from astropy.io import ascii
 
 
@@ -13,8 +14,12 @@ def main(cl_region, memb_file, readda_idcol=0, readda_mpcol=-2):
     # Read IDs and MPs from file.
     data = ascii.read(memb_file)
     # Read IDs as strings since that is how they are stored in 'cl_region'
-    id_list, memb_probs = [str(_) for _ in data.columns[readda_idcol]],\
-        data.columns[readda_mpcol]
+    id_list = [str(_) for _ in data.columns[readda_idcol]]
+    try:
+        memb_probs = data.columns[readda_mpcol]
+    except IndexError:
+        print("  WARNING: MPs column not found. Assigned MP=1. to all stars")
+        memb_probs = np.ones(len(data))
 
     N_not, memb_probs_cl_region = 0, []
     # Assign probabilities read from file according to the star's IDs.
