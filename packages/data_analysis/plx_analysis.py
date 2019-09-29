@@ -9,14 +9,14 @@ from .. import update_progress
 
 def main(
     clp, plx_bayes_flag, plx_offset, plx_chains, plx_runs, flag_plx_mp,
-        flag_make_plot, **kwargs):
+        flag_make_plot, outlr_std=3., **kwargs):
     """
     Bayesian parallax distance using the Bailer-Jones (2015) model with the
     'shape parameter' marginalized.
 
     Hardcoded choices:
 
-    * 2 sigma outliers are rejected
+    * outlr_std sigma outliers are rejected
     * MPs are used
     * Bayesian prior is a Gaussian with a fixed standard deviation
     """
@@ -38,9 +38,9 @@ def main(
         if plx_flag_clp:
             print("Processing parallaxes")
 
-            # Reject 2\sigma outliers.
-            max_plx, min_plx = np.nanmedian(plx) + 2. * np.nanstd(plx),\
-                np.nanmedian(plx) - 2. * np.nanstd(plx)
+            # Reject outlr_std*\sigma outliers.
+            max_plx, min_plx = np.nanmedian(plx) + outlr_std * np.nanstd(plx),\
+                np.nanmedian(plx) - outlr_std * np.nanstd(plx)
 
             # Suppress Runtimewarning issued when 'plx' contains 'nan' values.
             with np.warnings.catch_warnings():
@@ -111,43 +111,24 @@ def plxBayes(
     ndim, nwalkers, nruns = 1, plx_chains, plx_runs
     print("  Bayesian Plx model ({} runs)".format(nruns))
 
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
+    # DE initial mu position
+    mu_p = DE_mu_sol(plx_clp, e_plx_clp, mp_clp)
 
-        # Define the 'r_i' values used to evaluate the integral.
-        int_max = 20.
-        N = int(int_max / 0.01)
-        x = np.linspace(.1, int_max, N).reshape(-1, 1)
-        B1 = ((plx_clp - (1. / x)) / e_plx_clp)**2
-        B2 = (np.exp(-.5 * B1) / e_plx_clp)
-
-        # Use DE to estimate the ML
-        def DEdist(model):
-            return -lnlike(model, x, B2, mp_clp)
-        bounds = [[0., 20.]]
-        result = DE(DEdist, bounds, popsize=20, maxiter=100)
-        # print(result)
-
-    # Prior parameters.
-    mu_p = result.x
     # Define the 'r_i' values used to evaluate the integral.
     int_max = mu_p + 5.
-    N = int(int_max / 0.01)
-    x = np.linspace(.1, int_max, N).reshape(-1, 1)
-    B1 = ((plx_clp - (1. / x)) / e_plx_clp)**2
-    B2 = (np.exp(-.5 * B1) / e_plx_clp)
+    x, B2 = r_iVals(int_max, plx_clp, e_plx_clp)
 
     # emcee sampler
     sampler = ensemble.EnsembleSampler(
         nwalkers, ndim, lnprob, args=(x, B2, mp_clp, mu_p))
 
     # Random initial guesses.
-    # pos0 = [np.random.uniform(0., 1., ndim) for i in range(nwalkers)]
     # Ball of initial guesses around 'mu_p'
-    pos0 = [mu_p + .5 * np.random.normal() for i in range(nwalkers)]
+    pos0 = np.clip(
+        np.array([[mu_p + .05 * np.random.normal()] for i in range(nwalkers)]),
+        a_min=0., a_max=None)
 
     tau_index, autocorr_vals, afs = 0, np.empty(nruns), np.empty(nruns)
-
     try:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
@@ -185,7 +166,7 @@ def plxBayes(
         tau_mean = np.mean(sampler.get_autocorr_time(tol=0))
         plx_ess = samples.size / tau_mean
 
-        # For plotting
+        # For plotting, (nsteps, nchains, ndim)
         plx_samples = sampler.get_chain()[:, :, 0]
 
         print("Bayesian plx estimated: " +
@@ -194,17 +175,48 @@ def plxBayes(
     except Exception as e:
         print(e)
         print("\n  ERROR: could not process Plx data with emcee")
-        plx_samples, plx_Bys, plx_bayes_flag_clp, plx_ess = [], np.array([]),\
-            False, np.nan
+        plx_samples, plx_Bys, plx_bayes_flag_clp, plx_ess, tau_autocorr,\
+            mean_afs = [], np.array([]), False, np.nan, np.nan, np.nan
 
     return plx_samples, plx_Bys, plx_bayes_flag_clp, tau_autocorr,\
         mean_afs, plx_ess
 
 
+def DE_mu_sol(plx_clp, e_plx_clp, mp_clp, int_max=20., psize=20, maxi=100):
+    """
+    Use the Differential Evolution algorithm to approximate the best solution
+    used as the mean of the prior.
+    """
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+
+        # Define the 'r_i' values used to evaluate the integral.
+        x, B2 = r_iVals(int_max, plx_clp, e_plx_clp)
+
+        # Use DE to estimate the ML
+        def DEdist(model):
+            return -lnlike(model, x, B2, mp_clp)
+        bounds = [[0., 20.]]
+        result = DE(DEdist, bounds, popsize=psize, maxiter=maxi)
+
+    return result.x[0]
+
+
+def r_iVals(int_max, plx, e_plx):
+    """
+    The 'r_i' values used to evaluate the integral.
+    """
+    N = int(int_max / 0.01)
+    x = np.linspace(.1, int_max, N).reshape(-1, 1)
+    B1 = ((plx - (1. / x)) / e_plx)**2
+    B2 = (np.exp(-.5 * B1) / e_plx)
+    return x, B2
+
+
 def lnprob(mu, x, B2, MPs, mu_p):
     lp = lnprior(mu, mu_p)
     if np.isinf(lp):
-        return lp
+        return -np.inf
     return lp + lnlike(mu, x, B2, MPs)
 
 
