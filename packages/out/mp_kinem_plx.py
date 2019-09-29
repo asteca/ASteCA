@@ -122,7 +122,8 @@ def plx_vs_mag(
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
             zorder=1)
 
-    ax.set_title("Plx clip " + r"$(med\pm2\sigma,\;N={})$".format(
+    # HARDCODED in plx_analysis: 3 sigma outlier rejection
+    ax.set_title("Plx clip " + r"$(med\pm3\sigma,\;N={})$".format(
         len(plx_clp)), fontsize=9)
     plt.xlabel('Plx [mas]', fontsize=12)
     plt.ylabel(y_ax, fontsize=12)
@@ -197,11 +198,9 @@ def pms_bys_params(
         ax1 = plt.subplot(gs[2:4, 0:2])
         plt.xlabel(r"$Plx_{Bay}$")
 
-        plx_outlr = reject_outliers(plx_samples.flatten())
-        # Obtain the bin values and edges using numpy
-        hist, bin_edges = np.histogram(1. / plx_outlr, bins='auto')
-        if len(bin_edges) > 25:
-            hist, bin_edges = np.histogram(1. / plx_outlr, bins=20)
+        plx_no_outlr = reject_outliers(plx_samples.flatten())
+        # Obtain the bin edges using numpy
+        hist, bin_edges = np.histogram(1. / plx_no_outlr, bins=25)
         # Plot bars with the proper positioning, height, and width.
         plt.bar(
             (bin_edges[1:] + bin_edges[:-1]) * .5, hist / float(hist.max()),
@@ -230,20 +229,29 @@ def pms_bys_params(
         # Traceplot
         ax = plt.subplot(gs[2:3, 2:6])
         N_tot = plx_samples.shape[0]
-        plt.plot(1. / plx_samples, c='k', lw=.8, ls='-', alpha=0.5)
-        # HARDCODED: 25% of trace is burned
-        plt.axvline(x=.25 * N_tot, linestyle=':', color='r', zorder=4)
+        trace = 1. / plx_samples
+        plt.plot(trace, c='k', lw=.8, ls='-', alpha=0.5)
+        # HARDCODED in plx_analysis: 25% of trace is burned
+        Nburn = .25 * N_tot
+        plt.axvline(x=Nburn, linestyle=':', color='r', zorder=4)
         # 16th and 84th percentiles + median.
         plt.axhline(y=1. / plx_Bys[0], linestyle=':', color='orange', zorder=4)
         plt.axhline(y=1. / plx_Bys[1], linestyle=':', color='blue', zorder=4)
         plt.axhline(y=1. / plx_Bys[2], linestyle=':', color='orange', zorder=4)
         plt.xlabel("Steps")
         plt.ylabel(r"$Plx_{Bay}$")
+
+        # Use the last 10% of the chains.
+        N = int(trace.shape[0] * .1)
+        std = np.std(trace[-N:])
+        pmin, pmax = np.min(trace[-N:]), np.max(trace[-N:])
+        ymin, ymax = pmin - std, pmax + std
+        ax.set_ylim(ymin, ymax)
         ax.set_xlim(0, N_tot)
 
         # Tau
         plt.subplot(gs[3:4, 2:4])
-        # HARDCODED: store samples every 10 steps
+        # HARDCODED in plx_analysis: store samples every 10 steps
         plt.plot(
             10 * np.arange(plx_tau_autocorr.size), plx_tau_autocorr,
             label=r"$N_{{ESS}}\approx${:.0f}".format(plx_ess))
