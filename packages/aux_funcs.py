@@ -1,17 +1,16 @@
 
 import numpy as np
 from scipy import stats
+from astropy.stats import sigma_clipped_stats
 
 
 def reject_outliers(data, m=4.):
     """
     Outlier rejection.
-    Source: https://stackoverflow.com/a/16562028/1391441
     """
-    d = np.abs(data - np.median(data))
-    mdev = np.median(d)
-    s = d / (mdev if mdev else 1.)
-    return data[s < m]
+    mean, median, std = sigma_clipped_stats(data)
+    msk = (data > mean - m * std) & (data < mean + m * std)
+    return data[msk]
 
 
 def kde1D(data):
