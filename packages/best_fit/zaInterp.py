@@ -63,9 +63,10 @@ def main(theor_tracks, fundam_params, varIdxs, model):
             model_proper.append(par[0])
             j += 1
 
-    # # Minimum and maximum initial mass for each of the four isochrones.
-    # mmin = np.min(isochs[:, -6, :], axis=1)
-    # mmax = np.max(isochs[:, -6, :], axis=1)
+    # TODO: IN PLACE FOR #439
+    # # If (z, a) are both fixed, just return the single processed isochrone
+    # if ml == al == mh == ah == 0:
+    #     return theor_tracks[ml][al], model_proper
 
     # Values of the four points in the (z, age) grid that contain the model
     # value (z_model, a_model)
@@ -77,10 +78,24 @@ def main(theor_tracks, fundam_params, varIdxs, model):
     # to the grid (z, age) points.
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
+
         # Inverse distances between the (z, a) points in the 'model', and the
         # four points in the (z, a) grid that contain the model point.
         # Fast euclidean distance: https://stackoverflow.com/a/47775357/1391441
         a_min_b = np.array([(z_model, a_model)]) - pts
+
+        # TODO: IN PLACE FOR #439
+        # # If the model has a 0. distance in (z,a) to the closest isochrone,
+        # # then just return that isochrone.
+        # try:
+        #     # Which one is faster?
+        #     idx = np.nonzero(a_min_b == 0.)[0][0]
+        #     idx = np.where(a_min_b == 0.)[0][0]
+        #     return theor_tracks[pts[idx][0]][pts[idx][1]], model_proper
+        # except IndexError:
+        #     pass
+
+        # Inverse distance.
         inv_d = 1. / np.sqrt(np.einsum('ij,ij->i', a_min_b, a_min_b))
 
         # Order: (z1, a1), (z1, a2), (z2, a1), (z2, a2)
