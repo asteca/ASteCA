@@ -118,9 +118,8 @@ def main(met_f_filter, age_values, cmd_evol_tracks, evol_track, bin_mr,
     # the final isochrones.
     plot_isoch_data = np.concatenate((mags_theor, cols_theor), axis=2)
 
-    lens = [len(_) for _ in fundam_params]
-    print("\nGrid values: {} [z], {} [log(age)], {} [Mass]".format(
-        lens[0], lens[1], lens[4]))
+    print("\nGrid values: {} [z], {} [log(age)]".format(
+        len(fundam_params[0]), len(fundam_params[1])))
 
     # # In place for #415
     # filename = 'temp.memmap'

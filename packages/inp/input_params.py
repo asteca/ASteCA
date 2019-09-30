@@ -216,13 +216,11 @@ def main(mypath, pars_f_path):
                     evol_track = str(reader[1])
                     colibri = str(reader[2])
                 elif reader[0] == 'PS':
-                    za_steps = list(map(float, reader[1:]))
+                    za_steps = list(map(float, reader[1:3]))
+                    N_mass_interp = int(reader[3])
                 elif reader[0] == 'MF':
                     IMF_name = str(reader[1])
-                    m_high = float(reader[2])
-                    N_mass_interp = int(reader[3])
-                    N_mass = float(reader[4])
-                elif reader[0] == 'BI_m':
+                elif reader[0] == 'BR':
                     bin_mr = float(reader[1])
                 elif reader[0] == 'RV':
                     R_V = float(reader[1])
@@ -323,8 +321,8 @@ def main(mypath, pars_f_path):
         'lkl_weight': lkl_weight,
         # Synthetic cluster parameters
         'evol_track': evol_track, 'za_steps': za_steps,
-        'max_mag': max_mag, 'IMF_name': IMF_name, 'm_high': m_high,
-        'N_mass_interp': N_mass_interp, 'N_mass': N_mass, 'R_V': R_V,
+        'max_mag': max_mag, 'IMF_name': IMF_name,
+        'N_mass_interp': N_mass_interp, 'R_V': R_V,
         'bin_mr': bin_mr,
         # parameters ranges
         'par_ranges': par_ranges,

@@ -23,7 +23,7 @@ def main(st_dist_mass, M_total):
     #     base, scale, N_stars = st_dist_mass[M_total][:-1]
     #     mass_dist = np.random.random(N_stars) * scale + base
     # else:
-    # mass_dist = st_dist_mass[M_total]
+
     mass_dist = st_dist_mass[0][:np.searchsorted(st_dist_mass[1], M_total)]
 
     return mass_dist

@@ -46,11 +46,6 @@ def main(theor_tracks, fundam_params, varIdxs, model):
                 al = ah - 1
                 model_proper.append(par[ah])
                 a_model = model[i - j]
-            # # If it is the parameter mass.
-            # elif i == 4:
-            #     # Select the closest value in the array of allowed values.
-            #     model_proper.append(min(
-            #         par, key=lambda x: abs(x - model[i - j])))
             else:
                 model_proper.append(model[i - j])
         else:
