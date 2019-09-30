@@ -136,31 +136,32 @@ def synthClust(fundam_params, varIdxs, model, synthcl_args):
         R_V, ext_coefs, N_fc, cmpl_rnd, err_rnd, model_proper)
 
 
-def discreteParams(fundam_params, varIdxs, chains_nruns, pushidxs):
-    """
-    Push values in each chain for each discrete parameter in the 'pushidxs'
-    list to the closest grid value.
+#  DEPRECATED 24-09-2019
+# def discreteParams(fundam_params, varIdxs, chains_nruns, pushidxs):
+#     """
+#     Push values in each chain for each discrete parameter in the 'pushidxs'
+#     list to the closest grid value.
 
-    chains_nruns.shape: (runs, nwalkers, ndim)
-    """
-    params, j = [], 0
-    for i, par in enumerate(fundam_params):
-        p = np.array(par)
-        # If this parameter is one of the 'free' parameters.
-        if i in varIdxs:
-            # If it is the parameter metallicity, age or mass.
-            if i in pushidxs:
-                pc = chains_nruns.T[j]
-                chains = []
-                for c in pc:
-                    chains.append(
-                        p[abs(c[None, :] - p[:, None]).argmin(axis=0)])
-                params.append(chains)
-            else:
-                params.append(chains_nruns.T[j])
-            j += 1
+#     chains_nruns.shape: (runs, nwalkers, ndim)
+#     """
+#     params, j = [], 0
+#     for i, par in enumerate(fundam_params):
+#         p = np.array(par)
+#         # If this parameter is one of the 'free' parameters.
+#         if i in varIdxs:
+#             # If it is the parameter metallicity, age or mass.
+#             if i in pushidxs:
+#                 pc = chains_nruns.T[j]
+#                 chains = []
+#                 for c in pc:
+#                     chains.append(
+#                         p[abs(c[None, :] - p[:, None]).argmin(axis=0)])
+#                 params.append(chains)
+#             else:
+#                 params.append(chains_nruns.T[j])
+#             j += 1
 
-    return np.array(params).T
+#     return np.array(params).T
 
 
 def rangeCheck(model, ranges, varIdxs):

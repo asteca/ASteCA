@@ -241,6 +241,18 @@ def kde_2d(xarr, xsigma, yarr, ysigma, Nstd=3, grid_dens=50):
     Take an array of x,y data with their errors, create a grid of points in x,y
     and return the 2D KDE density map.
     '''
+    # For better performance, use max 10000 random stars when estimating
+    # the KDE.
+    N_max = 10000
+    if xarr.size > N_max:
+        print(("  WARNING: used {} stars to estimate the PMs KDE\n"
+               "  instead of the {} total").format(N_max, xarr.size))
+        xarr, xsigma, yarr, ysigma =\
+            np.random.choice(xarr, N_max, replace=False),\
+            np.random.choice(xsigma, N_max, replace=False),\
+            np.random.choice(yarr, N_max, replace=False),\
+            np.random.choice(ysigma, N_max, replace=False)
+
     _, x_median, x_std = sigma_clipped_stats(xarr)
     _, y_median, y_std = sigma_clipped_stats(yarr)
 

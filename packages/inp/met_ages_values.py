@@ -7,7 +7,7 @@ from os.path import join
 from . import isochs_format
 
 
-def main(iso_paths, best_fit_algor, par_ranges, za_steps, N_mass):
+def main(iso_paths, best_fit_algor, par_ranges, za_steps):
     '''
     Obtain the correct metallicities and ages used by the code.
     '''
@@ -24,7 +24,7 @@ def main(iso_paths, best_fit_algor, par_ranges, za_steps, N_mass):
     age_vals_all = CMDAges(met_files[0][0])
 
     # Get parameters ranges.
-    params_values = getParamVals(best_fit_algor, par_ranges, za_steps, N_mass)
+    params_values = getParamVals(best_fit_algor, par_ranges, za_steps)
 
     # Match values in metallicity and age ranges given by the user, with
     # those available in the theoretical isochrones.
@@ -88,7 +88,7 @@ def CMDAges(met_file):
     return isoch_a
 
 
-def getParamVals(best_fit_algor, par_ranges, za_steps, N_mass):
+def getParamVals(best_fit_algor, par_ranges, za_steps):
     '''
     Obtain parameter ranges to be used by the selected best fit method.
     '''
@@ -109,19 +109,10 @@ def getParamVals(best_fit_algor, par_ranges, za_steps, N_mass):
             if i in (0, 1):
                 p_rang = np.arange(param[0], param[1], za_steps[i])
 
-            # If processing either (E_BV, dm, b_fr) parameter, just store the
-            # limits since these are *continuous* variables.
-            elif i in (2, 3, 5):
+            # If processing either (E_BV, dm, Mass,b_fr) parameter, just store
+            # the limits since these are *continuous* variables.
+            elif i in (2, 3, 4, 5):
                 p_rang = np.asarray(param)
-
-            # If processing the Mass, use `np.linspace()` instead of
-            # `np.arange()` since this *discrete* variable does not use steps
-            # but a total number of allowed values.
-            elif i == 4:
-                p_rang = np.linspace(param[0], param[1], N_mass)
-                # Round to integer and remove possible duplicated elements
-                p_rang = np.array(list(set(np.round(p_rang, 0))))
-                p_rang.sort()
 
             # Skip if array is empty. Checker will catch this.
             if p_rang.size:
@@ -162,8 +153,8 @@ def match_ranges(met_vals_all, met_files, age_vals_all, z_range, a_range):
             age_values.append(age)
 
     if not age_values:
-        txt = "No age value read:\n\n{}\n\ncould be matched to the ages" +\
-            " given as input:\n\n{}"
+        txt = "None of the log(age) values read:\n\n{}\n\ncould be matched" +\
+            " to the ages given as input:\n\n{}"
         sys.exit(txt.format(age_vals_all, a_range))
 
     return met_f_filter, met_values, age_values

@@ -6,7 +6,7 @@ from . import likelihood
 # from .emcee3rc2 import autocorr
 from .mcmc_convergence import convergenceVals
 from .bf_common import initPop, varPars, synthClust, rangeCheck, fillParams,\
-    closeSol, discreteParams, r2Dist, modeKDE  # , thinChain
+    r2Dist, modeKDE  # , thinChain
 from .ptemcee import sampler
 
 
@@ -183,14 +183,11 @@ def main(
     bi_steps = int(nburn_pt * cold_chain.shape[0])
     # chains_nruns.shape: (bi_steps, nchains, ndim)
     chains_nruns = cold_chain[:bi_steps]
-    # The Mass parameter is not interpolated, use its grid values.
-    chains_nruns = discreteParams(fundam_params, varIdxs, chains_nruns, [4])
     # pars_chains_bi.shape: (ndim, nchains, bi_steps)
     pars_chains_bi = chains_nruns.T
 
     # After burn-in
     chains_nruns = cold_chain[bi_steps:]
-    chains_nruns = discreteParams(fundam_params, varIdxs, chains_nruns, [4])
     pars_chains = chains_nruns.T
 
     # Convergence parameters.
@@ -216,11 +213,6 @@ def main(
     mean_sol = fillParams(fundam_params, varIdxs, mean_sol)
     mode_sol = fillParams(fundam_params, varIdxs, mode_sol)
     median_sol = fillParams(fundam_params, varIdxs, median_sol)
-
-    # Push Mass value to grid value for mean, map, and mode solutions.
-    mean_sol = closeSol(fundam_params, mean_sol, [4])
-    mode_sol = closeSol(fundam_params, mode_sol, [4])
-    map_sol = closeSol(fundam_params, map_sol, [4])
 
     # Total number of values used to estimate the parameter's distributions.
     N_total = mcmc_trace.shape[-1]

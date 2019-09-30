@@ -17,8 +17,8 @@ def main(
     elif best_fit_algor == 'ptemcee':
         # Use mean fit values for all parameters.
         synth_cl_params = isoch_fit_params['mean_sol']
-    # Grid values for (z, a, M)
-    synth_cl_params_grid = closeSol(fundam_params, synth_cl_params, [0, 1, 4])
+    # Grid values for (z, a)
+    synth_cl_params_grid = closeSol(fundam_params, synth_cl_params, [0, 1])
 
     # Find indexes for metallicity and age. If indexes are not found due
     # to some difference in the significant figures, use the indexes

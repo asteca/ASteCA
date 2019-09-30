@@ -22,7 +22,7 @@ def check_get(pd):
             params_values, met_f_filter, met_values, age_values, met_vals_all,\
                 age_vals_all = met_ages_values.main(
                     pd['iso_paths'], pd['best_fit_algor'], pd['par_ranges'],
-                    pd['za_steps'], pd['N_mass'])
+                    pd['za_steps'])
         except Exception:
             print(traceback.format_exc())
             sys.exit("\nERROR: error storing metallicity files.")

@@ -475,31 +475,27 @@ LK     dolphin      knuth      mean
 #   evol_track    colibri
 ET       PAR12         No
 #
-# Input [z, log(age)] steps to read the stored isochrones.
+# * z, log(age): [floats]
+#   Input [z, log(age)] steps to read the stored isochrones.
 #
-#        z    log(age)
-PS   0.005         0.5
+# * N_interp: [int]
+#   Number of extra values to interpolate into the isochrones.
+#
+#        z    log(age)   N_interp
+PS   0.005         0.5       1000
 
 # IMF used to populate the synthetic clusters.
 #
 # * IMF: [selection]
 #
-#   - kroupa_2002:       Kroupa (2002) 295.82K, Eq. (2) & (3)
+#   - kroupa_2002      : Kroupa (2002) 295.82K, Eq. (2) & (3)
 #   - chabrier_2001_exp: Chabrier (2001) 554.1274C, Eq (8)
 #   - chabrier_2001_log: Chabrier (2001) 554.1274C, Eq (7)
-#   - kroupa_1993:       Kroupa et al. (1993) 262.545K, Eq. (13)
+#   - kroupa_1993      : Kroupa et al. (1993) 262.545K, Eq. (13)
+#   - salpeter_1955    : Salpeter (1955)
 #
-# * m_high: [float]
-#   Upper mass value for the IMF (in solar masses).
-#
-# * N_interp: [int]
-#   Number of extra values to interpolate into the isochrones.
-#
-# * N_mass: [int]
-#   Number of masses defined within the mass range.
-#
-#   IMF                 m_high      N_interp     N_mass
-MF  kroupa_2002            150          2000        100
+#   IMF
+MF  kroupa_2002
 
 # Binaries mass ratio.
 #
@@ -508,11 +504,11 @@ MF  kroupa_2002            150          2000        100
 #   'Binary fraction' parameter is fixed to '0.'
 #
 #     min_mass_ratio
-BI_m              .7
+BR                .7
 
 # Ratio of total to selective absorption (R_V).
 #
-RV                         3.1
+RV      3.1
 
 # Maximum magnitude cut.
 #
