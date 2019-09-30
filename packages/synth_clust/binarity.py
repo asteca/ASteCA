@@ -24,7 +24,7 @@ def mag_combine(m1, m2):
 
 
 def binarGen(
-        binar_fracs, N_interp, mags_theor, cols_theor, mags_cols_theor,
+        binar_fracs, N_mass_interp, mags_theor, cols_theor, mags_cols_theor,
         extra_pars, bin_mass_ratio):
     '''
     Called by isoch_params().
@@ -51,7 +51,7 @@ def binarGen(
 
         # All theoretical isochrones are interpolated with the same length,
         # assign unique binarity probabilities to each star randomly.
-        unq_b_probs = np.arange(N_interp) / float(N_interp)
+        unq_b_probs = np.arange(N_mass_interp) / float(N_mass_interp)
 
         mags_binar, cols_binar, probs_binar, mass_binar = [], [], [], []
         # For each metallicity defined.
