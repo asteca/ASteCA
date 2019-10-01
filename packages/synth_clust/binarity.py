@@ -13,11 +13,6 @@ def mag_combine(m1, m2):
 
     """
     c = 10 ** -.4
-    # TODO
-    # This catches an overflow warning issued because some Marigo isochrones
-    # contain huge values in the U filter. Not sure if this happens with
-    # other systems/filters. See issue #375
-    np.warnings.filterwarnings('ignore')
     mbin = -2.5 * (-.4 * m1 + np.log10(1. + c ** (m2 - m1)))
 
     return mbin

@@ -26,7 +26,7 @@ from . import likelihood
 
 def main(
     available_secs, ran_pop, flag_print_perc, N_popl, N_gener, max_mag_syn,
-    obs_clust, ext_coefs, st_dist_mass, N_fc, cmpl_rnd, err_rnd, e_max,
+    obs_clust, ext_coefs, st_dist_mass, N_fc, m_ini, cmpl_rnd, err_rnd, e_max,
     err_lst, completeness, lkl_method, fundam_params, theor_tracks, R_V,
         fit_diff, cross_prob, cross_sel, mut_prob, N_el, N_ei, N_es, **kwargs):
     '''
@@ -61,8 +61,8 @@ def main(
     # Evaluate initial random solutions in the objective function.
     generation, lkl = evaluation(
         lkl_method, e_max, err_lst, completeness, max_mag_syn, fundam_params,
-        obs_clust, theor_tracks, R_V, ext_coefs, st_dist_mass, N_fc, cmpl_rnd,
-        err_rnd, varIdxs, ranges, ran_pop)
+        obs_clust, theor_tracks, R_V, ext_coefs, st_dist_mass, N_fc, m_ini,
+        cmpl_rnd, err_rnd, varIdxs, ranges, ran_pop)
 
     # Store best solution(s) for passing along in the 'Elitism' block.
     best_sol = generation[:N_el]
@@ -120,7 +120,8 @@ def main(
         generation, lkl = evaluation(
             lkl_method, e_max, err_lst, completeness, max_mag_syn,
             fundam_params, obs_clust, theor_tracks, R_V, ext_coefs,
-            st_dist_mass, N_fc, cmpl_rnd, err_rnd, varIdxs, ranges, p_lst_e)
+            st_dist_mass, N_fc, m_ini, cmpl_rnd, err_rnd, varIdxs, ranges,
+            p_lst_e)
 
         if flag_print_perc:
 
@@ -307,8 +308,8 @@ def decode(fundam_params, n_bin, p_delta, p_mins, mut_chrom):
 
 def evaluation(
     lkl_method, e_max, err_lst, completeness, max_mag_syn, fundam_params,
-    obs_clust, theor_tracks, R_V, ext_coefs, st_dist_mass, N_fc, cmpl_rnd,
-        err_rnd, varIdxs, ranges, p_lst):
+    obs_clust, theor_tracks, R_V, ext_coefs, st_dist_mass, N_fc, m_ini,
+        cmpl_rnd, err_rnd, varIdxs, ranges, p_lst):
     '''
     Evaluate each model in the objective function to obtain the fitness of
     each one.
@@ -327,7 +328,8 @@ def evaluation(
             synth_clust = synthClust(
                 fundam_params, varIdxs, model, (
                     theor_tracks, e_max, err_lst, completeness, max_mag_syn,
-                    st_dist_mass, R_V, ext_coefs, N_fc, cmpl_rnd, err_rnd))
+                    st_dist_mass, R_V, ext_coefs, N_fc, m_ini, cmpl_rnd,
+                    err_rnd))
 
             # Call likelihood function for this model.
             # with timeblock(" Likelihood"):

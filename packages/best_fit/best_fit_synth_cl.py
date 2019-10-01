@@ -39,6 +39,10 @@ def main(clp, pd):
         # Store the number of defined filters and colors.
         N_fc = [len(pd['filters']), len(pd['colors'])]
 
+        # Index of m_ini (theoretical initial mass), stored in the theoretical
+        # isochrones.
+        m_ini = 2 * N_fc[0] + 2 * N_fc[1] + 2
+
         # HARDCODED: generate random floats to use in the synthetic cluster
         # completeness removal and error adding.
         cmpl_rnd = np.random.uniform(0., 1., 1000000)
@@ -54,7 +58,7 @@ def main(clp, pd):
                 pd['lkl_method'] == 'dolphin' else pd['lkl_method']))
             isoch_fit_params = bootstrap.main(
                 pd, clp, cl_max_mag, max_mag_syn, obs_clust, ext_coefs,
-                st_dist_mass, N_fc, cmpl_rnd, err_rnd)
+                st_dist_mass, N_fc, m_ini, cmpl_rnd, err_rnd)
             # Assign uncertainties.
             isoch_fit_errors = params_errors(pd, isoch_fit_params)
 
@@ -66,7 +70,7 @@ def main(clp, pd):
             isoch_fit_params = ptemcee_algor.main(
                 clp['err_lst'], clp['completeness'], clp['em_float'],
                 max_mag_syn, obs_clust, ext_coefs, st_dist_mass, N_fc,
-                cmpl_rnd, err_rnd, **pd)
+                m_ini, cmpl_rnd, err_rnd, **pd)
             # Assign uncertainties.
             isoch_fit_errors = params_errors(pd, isoch_fit_params)
 
