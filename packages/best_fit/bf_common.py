@@ -124,16 +124,16 @@ def synthClust(fundam_params, varIdxs, model, synthcl_args):
     Generate a synthetic cluster.
     """
     theor_tracks, e_max, err_lst, completeness, max_mag_syn, st_dist_mass,\
-        R_V, ext_coefs, N_fc, cmpl_rnd, err_rnd = synthcl_args
+        R_V, ext_coefs, N_fc, m_ini, cmpl_rnd, err_rnd = synthcl_args
 
     # Interpolate (z, a) data
     isochrone, model_proper = zaInterp.main(
-        theor_tracks, fundam_params, varIdxs, model)
+        theor_tracks, fundam_params, varIdxs, model, m_ini)
 
     # Generate synthetic cluster.
     return synth_cluster.main(
         e_max, err_lst, completeness, max_mag_syn, st_dist_mass, isochrone,
-        R_V, ext_coefs, N_fc, cmpl_rnd, err_rnd, model_proper)
+        R_V, ext_coefs, N_fc, m_ini, cmpl_rnd, err_rnd, model_proper)
 
 
 #  DEPRECATED 24-09-2019

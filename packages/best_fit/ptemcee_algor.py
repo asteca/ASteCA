@@ -12,7 +12,7 @@ from .ptemcee import sampler
 
 def main(
     err_lst, completeness, e_max, max_mag_syn, obs_clust, ext_coefs,
-    st_dist_mass, N_fc, cmpl_rnd, err_rnd, lkl_method, fundam_params,
+    st_dist_mass, N_fc, m_ini, cmpl_rnd, err_rnd, lkl_method, fundam_params,
     theor_tracks, R_V, ntemps, nsteps_pt, nwalkers_pt, nburn_pt, pt_adapt,
         tmax_pt, priors_pt, hmax, **kwargs):
     """
@@ -22,7 +22,7 @@ def main(
     # Pack synthetic cluster arguments.
     synthcl_args = [
         theor_tracks, e_max, err_lst, completeness, max_mag_syn, st_dist_mass,
-        R_V, ext_coefs, N_fc, cmpl_rnd, err_rnd]
+        R_V, ext_coefs, N_fc, m_ini, cmpl_rnd, err_rnd]
 
     if tmax_pt in ('n', 'none', 'None'):
         Tmax = None
