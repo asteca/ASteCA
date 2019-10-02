@@ -4,7 +4,6 @@ import textwrap
 import random
 import numpy as np
 from .bf_common import varPars, rangeCheck, synthClust, random_population
-# from ..synth_clust import synth_cluster
 from . import likelihood
 
 #############################################################
