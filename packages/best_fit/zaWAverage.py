@@ -4,10 +4,8 @@ import numpy as np
 
 def main(theor_tracks, fundam_params, varIdxs, model, m_ini):
     """
-    Average a new isochrone from the four closest points in the (z, a)
-    grid.
-
-    The mass value is not interpolated.
+    Average a new (weighted) isochrone from the four closest points in the
+    (z, a) grid.
 
     theor_tracks = [m1, m2, .., mN]
     mX = [age1, age2, ..., ageM]
@@ -20,6 +18,9 @@ def main(theor_tracks, fundam_params, varIdxs, model, m_ini):
     bp:  binary probabilities
     mb:  binary masses
     m_ini,..., m_bol: six extra parameters.
+
+    WARNING: currently only reading the 'm_ini' extra parameter in
+    'isochs_format()'
 
     """
 
@@ -39,9 +40,9 @@ def main(theor_tracks, fundam_params, varIdxs, model, m_ini):
     pts = np.array([(z1, a1), (z1, a2), (z2, a1), (z2, a2)])
 
     # Order: (z1, a1), (z1, a2), (z2, a1), (z2, a2)
-    isochs = np.array([
+    isochs = [
         theor_tracks[ml][al], theor_tracks[ml][ah], theor_tracks[mh][al],
-        theor_tracks[mh][ah]])
+        theor_tracks[mh][ah]]
 
     # Define weights for the average, based on the inverse of the distance
     # to the grid (z, age) points.
@@ -64,64 +65,69 @@ def main(theor_tracks, fundam_params, varIdxs, model, m_ini):
     inv_d = 1. / dist
 
     # Sort according to smaller distances to the (z_model, a_model) point.
-    isoch_idx = np.argsort(inv_d)[::-1]
+    # isoch_idx = np.argsort(inv_d)[::-1]
+
+    # Indexes that identify which of the four arrays in 'x-all' contain the
+    # the largest minimum and the smallest maximum in their '-1' sub-array
+    vmin = np.argmax([isochs[_][m_ini][0] for _ in range(4)])
+    vmax = np.argmin([isochs[_][m_ini][-1] for _ in range(4)])
+    # Identify lower and upper range limits for the '-1' sub-array for all
+    # arrays in 'isochs'
+    xmin, xmax = isochs[vmin][m_ini][0], isochs[vmax][m_ini][-1]
+
+    # Align from bottom and top
+    for i in [0, 1, 2, 3]:
+        imin = np.searchsorted(isochs[i][m_ini], xmin)
+        imax = np.searchsorted(isochs[i][m_ini], xmax)
+        isochs[i] = isochs[i][:, imin:imax]
 
     # This block "aligns" the masses such that if the 'mass distance' between a
     # star in the closest grid isochrone to the model (x1) and a star from any
     # of the remaining three isochrones (x2, x3, x4) is larger than a given
     # max value (.01, then we replace the star in the second isochrone with its
     # 'aligned' star taken from the closest isochrone (x1).
-    x1, x2, x3, x4 = isochs[isoch_idx]
-    for x in (x2, x3, x4):
-        # Mask according to the maximum mass difference allowed
-        msk = abs(x1[m_ini] - x[m_ini]) > .01
-        # Replace stars in 'x' with large mass differences, with stars in 'x1'
-        np.copyto(x, x1, where=msk)
+    # x1, x2, x3, x4 = isochs[isoch_idx]
+    # for x in (x2, x3, x4):
+    #     # Mask according to the maximum mass difference allowed
+    #     msk = abs(x1[m_ini] - x[m_ini]) > .01
+    #     # Replace stars in 'x' with large mass differences, with stars in 'x1'
+    #     np.copyto(x, x1, where=msk)
 
     # Weighted average with mass "alignment". This way is faster than using
     # 'np.average()'.
     # Scale weights so they add up to 1.
-    weights = inv_d[isoch_idx] / np.sum(inv_d)
-    isochrone = x1 * weights[0] + x2 * weights[1] + x3 * weights[2] +\
-        x4 * weights[3]
-
-    ########################
-    # This way is *marginally* faster
-    # wgts = D * inv_d[isoch_idx]
-    # x1, x2, x3, x4 = isochs[isoch_idx]
-    # for x in (x2, x3, x4):
-    #     # Maximum mass difference allowed
-    #     msk = abs(x1[-6] - x[-6]) > .01
-    #     x[:, msk] = x1[:, msk]
-    # isochrone = np.sum(np.array([
-    #     x1 * wgts[0], x2 * wgts[1], x3 * wgts[2], x4 * wgts[3]]), 0)
+    weights = inv_d / np.sum(inv_d)
+    isochrone = isochs[0] * weights[0] + isochs[1] * weights[1] +\
+        isochs[2] * weights[2] + isochs[3] * weights[3]
 
     # nn = np.random.randint(0, 100)
     #     if nn == 50:
-    #     print(model, model_proper)
-    #     print(model_proper[0] - model[0])
-    #     import matplotlib.pyplot as plt
-    #     plt.subplot(131)
-    #     plt.scatter(*pts[isoch_idx][0], c='r')
-    #     plt.scatter(*pts[isoch_idx][1:].T, c='g')
-    #     plt.scatter(model[0], model[1], marker='x', c='g')
-    #     # First color
-    #     plt.subplot(132)
-    #     plt.plot(theor_tracks[ml][al][1], theor_tracks[ml][al][0], c='b')
-    #     plt.plot(theor_tracks[ml][ah][1], theor_tracks[ml][ah][0], c='r')
-    #     plt.plot(theor_tracks[mh][al][1], theor_tracks[mh][al][0], c='cyan')
-    #     plt.plot(theor_tracks[mh][ah][1], theor_tracks[mh][ah][0], c='orange')
-    #     plt.plot(isochrone[1], isochrone[0], c='g', ls='--')
-    #     plt.gca().invert_yaxis()
-    #     # Second color
-    #     plt.subplot(133)
-    #     plt.plot(theor_tracks[ml][al][2], theor_tracks[ml][al][0], c='b')
-    #     plt.plot(theor_tracks[ml][ah][2], theor_tracks[ml][ah][0], c='r')
-    #     plt.plot(theor_tracks[mh][al][2], theor_tracks[mh][al][0], c='cyan')
-    #     plt.plot(theor_tracks[mh][ah][2], theor_tracks[mh][ah][0], c='orange')
-    #     plt.plot(isochrone[2], isochrone[0], c='g', ls='--')
-    #     plt.gca().invert_yaxis()
-    #     plt.show()
+    print(model)
+    print(model_proper)
+    import matplotlib.pyplot as plt
+    plt.subplot(131)
+    plt.scatter(*pts.T, c='r')
+    # plt.scatter(*pts[isoch_idx][1:].T, c='g')
+    plt.scatter(model[0], model[1], marker='x', c='g')
+    # First color
+    plt.subplot(132)
+    plt.plot(theor_tracks[ml][al][1], theor_tracks[ml][al][0], c='b')
+    plt.plot(theor_tracks[ml][ah][1], theor_tracks[ml][ah][0], c='r')
+    plt.plot(theor_tracks[mh][al][1], theor_tracks[mh][al][0], c='cyan')
+    plt.plot(theor_tracks[mh][ah][1], theor_tracks[mh][ah][0], c='orange')
+    plt.plot(isochrone[1], isochrone[0], c='g', ls='--')
+    plt.gca().invert_yaxis()
+    # Second color
+    plt.subplot(133)
+    plt.plot(theor_tracks[ml][al][-1], theor_tracks[ml][al][0], c='b')
+    plt.plot(theor_tracks[ml][ah][-1], theor_tracks[ml][ah][0], c='r')
+    plt.plot(theor_tracks[mh][al][-1], theor_tracks[mh][al][0], c='cyan')
+    plt.plot(theor_tracks[mh][ah][-1], theor_tracks[mh][ah][0], c='orange')
+    plt.plot(isochrone[-1], isochrone[0], c='g', ls='--')
+    plt.gca().invert_yaxis()
+    # plt.show()
+    import pdb; pdb.set_trace()  # breakpoint d9c1b180 //
+
 
     return isochrone, model_proper
 

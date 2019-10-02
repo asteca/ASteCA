@@ -5,7 +5,7 @@ from scipy.optimize import differential_evolution as DE
 from scipy import stats
 import warnings
 from ..synth_clust import synth_cluster
-from . import likelihood, zaInterp
+from . import likelihood, zaWAverage
 from .. import update_progress
 
 
@@ -127,7 +127,7 @@ def synthClust(fundam_params, varIdxs, model, synthcl_args):
         R_V, ext_coefs, N_fc, m_ini, cmpl_rnd, err_rnd = synthcl_args
 
     # Interpolate (z, a) data
-    isochrone, model_proper = zaInterp.main(
+    isochrone, model_proper = zaWAverage.main(
         theor_tracks, fundam_params, varIdxs, model, m_ini)
 
     # Generate synthetic cluster.

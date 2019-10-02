@@ -1,6 +1,7 @@
 
 import sys
 import numpy as np
+from scipy.interpolate import interp1d
 from . import read_isochs
 from ..synth_clust import binarity
 from .. import update_progress
@@ -39,27 +40,30 @@ def main(met_f_filter, age_values, cmd_evol_tracks, evol_track, bin_mr,
     # masses to be more accurately interpolated into the theoretical
     # isochrones.
 
-    # Find the maximum number of points in all the read ages for all the
-    # metallicities.
-    N_pts_max = 0
-    for z in mags_theor:
-        for a in z:
-            N_pts_max = max(N_pts_max, len(a[0]))
+    # # Find the maximum number of points in all the read ages for all the
+    # # metallicities.
+    # N_pts_max, m_range = 0, 0.
+    # for z in extra_pars:
+    #     for j, m_ini in enumerate(z):
+    #         m_min, m_max = m_ini[0][0], m_ini[0][-1]
+    #         N_pts_max = max(N_pts_max, len(m_ini[0]))
+    #         m_range = max(m_range, m_max - m_min)
+    #         # print("{:.3f} {}   {:.2f}   {:.3f} {:.3f}".format(
+    #         #     age_values[j], len(m_ini[0]), m_max-m_min, m_min, m_max))
+    # print(N_pts_max, m_range)
 
-    if N_mass_interp > N_pts_max:
-        print("Interpolating extra points ({}) into the isochrones".format(
-            N_mass_interp))
-        interp_data = []
-        for i, data in enumerate([
-                mags_theor, cols_theor, mags_cols_theor, extra_pars]):
-            interp_data.append(interp_isoch_data(data, N_mass_interp))
-            update_progress.updt(4, i + 1)
-        a, b, c, d = interp_data
-    else:
-        sys.exit(
-            ("ERROR: N_interp={} must be larger than the maximum\n" +
-             "number of points in any isochrone read: {}").format(
-                N_mass_interp, N_pts_max))
+    print("Interpolating masses into the isochrones")
+    interp_data = interp_isoch_data(
+        mags_theor, cols_theor, mags_cols_theor, extra_pars)
+
+    # interp_data = []
+    # for i, data in enumerate([
+    #         mags_theor, cols_theor, mags_cols_theor, extra_pars]):
+    #     interp_data.append(interp_isoch_data(data, N_mass_interp))
+    #     update_progress.updt(4, i + 1)
+
+    # a, b, c, d = mags_theor, cols_theor, mags_cols_theor, extra_pars
+    a, b, c, d = interp_data
 
     # # Size of arrays in memory
     # sz = 0.
@@ -71,7 +75,7 @@ def main(met_f_filter, age_values, cmd_evol_tracks, evol_track, bin_mr,
     # discarded after the colors (and magnitudes) with binarity assignment
     # are obtained.
     mags_binar, cols_binar, probs_binar, mass_binar = binarity.binarGen(
-        fundam_params[5], N_mass_interp, a, b, c, d, bin_mr)
+        fundam_params[5], a, b, c, d, bin_mr)
 
     # Create list structured as:
     # theor_tracks = [m1, m2, .., mN]
@@ -85,29 +89,46 @@ def main(met_f_filter, age_values, cmd_evol_tracks, evol_track, bin_mr,
     # bp:  binary probabilities
     # mb:  binary masses
     # Mini,...: extra parameters.
+    # theor_tracks = [[[] for _ in a[0]] for _ in a]
+    theor_tracks = []
+    for i, mx in enumerate(a):
+        m = []
+        for j, ax in enumerate(mx):
+            m.append([ax, b[i][j], mags_binar[i][j], cols_binar[i][j],
+                      probs_binar[i][j], mass_binar[i][j], d[i][j]])
+        theor_tracks.append(m)
+
+    dd = []
+    for m in theor_tracks:
+        m1 = []
+        for a in m:
+            m1.append(np.array(a)[:,0,:])
+        dd.append(m1)
+
+    theor_tracks = dd    
 
     # Combine all data into a single array of shape:
     # (N_z, N_age, N_data, N_IMF_interp), where 'N_data' is the number of
     # sub-arrays in each array.
-    comb_data = np.concatenate(
-        (a, b, mags_binar, cols_binar, probs_binar, mass_binar, d), axis=2)
+    # comb_data = np.concatenate(
+    #     (a, b, mags_binar, cols_binar, probs_binar, mass_binar, d), axis=2)
 
-    # Sort all isochrones according to the main magnitude (min to max).
-    # This is necessary so that the cut_max_mag() function does not need
-    # to do this every time a new synthetic cluster is generated.
-    theor_tracks = [[[] for _ in a[0]] for _ in a]
-    for i, mx in enumerate(comb_data):
-        for j, ax in enumerate(mx):
-            # TODO ordering the data according to magnitude is necessary
-            # if the cut_max_mag() function expects the data to be sorted
-            # this way. This however, prevents us from being able to
-            # interpolate new (z, a) values when the MCMC samples them
-            # because the mass order is not preserved anymore. So, in order
-            # to be able to generate that interpolation of values (which
-            # greatly improves the ptemcee performance), we're back to the
-            # 'old' cut_max_mag() function and no magnitude ordering.
-            # theor_tracks[i][j] = ax[:, ax[0].argsort(kind='mergesort')]
-            theor_tracks[i][j] = ax
+    # # Sort all isochrones according to the main magnitude (min to max).
+    # # This is necessary so that the cut_max_mag() function does not need
+    # # to do this every time a new synthetic cluster is generated.
+    # theor_tracks = [[[] for _ in a[0]] for _ in a]
+    # for i, mx in enumerate(comb_data):
+    #     for j, ax in enumerate(mx):
+    #         # TODO ordering the data according to magnitude is necessary
+    #         # if the cut_max_mag() function expects the data to be sorted
+    #         # this way. This however, prevents us from being able to
+    #         # interpolate new (z, a) values when the MCMC samples them
+    #         # because the mass order is not preserved anymore. So, in order
+    #         # to be able to generate that interpolation of values (which
+    #         # greatly improves the ptemcee performance), we're back to the
+    #         # 'old' cut_max_mag() function and no magnitude ordering.
+    #         # theor_tracks[i][j] = ax[:, ax[0].argsort(kind='mergesort')]
+    #         theor_tracks[i][j] = ax
 
     # The above sorting destroys the original order of the isochrones. This
     # results in messy plots for the "best fit isochrone" at the end.
@@ -203,23 +224,56 @@ def arrange_filters(isoch_list, all_syst_filters, filters, colors):
     return mags_theor, cols_theor, mags_cols_theor
 
 
-def interp_isoch_data(data, N):
-    '''
+def interp_isoch_data(mags_theor, cols_theor, mags_cols_theor, extra_pars):
+    """
     Interpolate extra values for all the parameters in the theoretic
     isochrones.
-    '''
-    interp_data = []
-    # For each metallicity value list.
-    for met in data:
-        m = []
-        # For each age value list.
-        for age in met:
-            a = []
-            # For each filter/color/extra parameter in list.
-            for fce in age:
-                t, xp = np.linspace(0., 1., N), np.linspace(0, 1, len(fce))
-                a.append(np.interp(t, xp, fce))
-            m.append(a)
-        interp_data.append(m)
+    """
+    # mags_theor, cols_theor, mags_cols, extra_pars --> list
+    # list = [m0, m1, .., mN] <-- N metallicities
+    # mx = [a0, a1, .., aM]   <-- M log(ages)
+    # ax = [[s1, s2, .., sQ]] <-- Q stars
+    # list[i][j][0] --> i metallicity, j age
 
-    return interp_data
+    mass_step = 0.01
+    mass_vals1 = np.arange(.01, 5., mass_step)
+    mass_step = 0.001
+    mass_vals2 = np.arange(5., 18., mass_step)
+    mass_step = 0.0005
+    mass_vals3 = np.arange(18., 150., mass_step)
+    mass_vals = np.array(
+        mass_vals1.tolist() + mass_vals2.tolist() + mass_vals3.tolist())
+
+    all_interp_data = []
+    for data in (mags_theor, cols_theor, mags_cols_theor, extra_pars):
+        interp_data = []
+        # For each metallicity value.
+        for i, met in enumerate(data):
+            m = []
+            # For each age value.
+            for j, age in enumerate(met):
+                a = []
+                # For each filter/color/extra parameter in list.
+                for fce in age:
+                    # Initial masses for this  isochrone.
+                    mass_ini = np.array(extra_pars[i][j][0])
+                    # mass values must be in the range of the initial masses
+                    mmin = np.searchsorted(mass_vals, mass_ini.min())
+                    mmax = np.searchsorted(mass_vals, mass_ini.max())
+                    mass_vals_cut = mass_vals[mmin:mmax]
+
+                    y = np.array(data[i][j][0])
+                    mfunc = interp1d(mass_ini, y)
+                    ynew = mfunc(mass_vals_cut)
+                    a.append(ynew)
+
+                m.append(a)
+            interp_data.append(m)
+        all_interp_data.append(interp_data)
+
+    # np.shape(all_interp_data): (4, Nz, Na)
+    # 4  : ((mags, cols, mags_cols, extra_pars))
+    # Nz : metallicity files (values)
+    # Na : log(age) values per metallicity file
+
+    return np.array(all_interp_data)
