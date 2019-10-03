@@ -478,11 +478,8 @@ ET       PAR12         No
 # * z, log(age): [floats]
 #   Input [z, log(age)] steps to read the stored isochrones.
 #
-# * N_interp: [int]
-#   Number of extra values to interpolate into the isochrones.
-#
-#        z    log(age)   N_interp
-PS   0.005         0.5       1000
+#        z    log(age)
+PS   0.005         0.5
 
 # IMF used to populate the synthetic clusters.
 #
