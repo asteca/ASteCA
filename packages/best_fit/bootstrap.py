@@ -27,6 +27,9 @@ def main(
     else:
         available_secs = max_secs * (1. - pd['hperc_btstrp'])
 
+    # Identify free parameters
+    varIdxs = varPars(pd['fundam_params'])[0]
+
     # # TODO not yet fully implemented
     # pd['best_fit_algor'] = 'boot+DE'
 
@@ -35,8 +38,12 @@ def main(
         # the observed data. Use a large number for 'N_gen'
         N_pop_init, N_gen = pd['N_pop'], int(5e5)
         # Use random initial population
-        init_pop = random_population(
-            pd['fundam_params'], (0, 1, 2, 3, 4, 5), N_pop_init).tolist()
+        init_pop_free = random_population(
+            pd['fundam_params'], varIdxs, N_pop_init)
+        init_pop = []
+        for model in init_pop_free:
+            init_pop.append(fillParams(pd['fundam_params'], varIdxs, model))
+
         flag_print_perc = True
         argsOF = [
             pd, clp, max_mag_syn, obs_clust, ext_coefs, st_dist_mass, N_fc,
@@ -53,6 +60,7 @@ def main(
 
     # First run of the numerical optimizer function with the observed data.
     isoch_fit_params = optimizerFunc(pd['best_fit_algor'], argsOF)
+    isoch_fit_params['varIdxs'] = varIdxs
 
     # Check time available for bootstrap after the previous run.
     available_secs = max_secs - isoch_fit_params['OF_elapsed']
@@ -96,7 +104,6 @@ def main(
 
         # As array with (params, btstrp_runs) shape
         isoch_fit_params['params_boot'] = np.array(params_boot).T
-        isoch_fit_params['varIdxs'] = varPars(pd['fundam_params'])[0]
         # Remove fixed parameters from array.
         isoch_fit_params['params_boot'] = isoch_fit_params['params_boot'][
             isoch_fit_params['varIdxs']]

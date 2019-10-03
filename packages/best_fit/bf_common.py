@@ -5,7 +5,7 @@ from scipy.optimize import differential_evolution as DE
 from scipy import stats
 import warnings
 from ..synth_clust import synth_cluster
-from . import likelihood, zaInterp
+from . import likelihood, zaWAverage
 from .. import update_progress
 
 
@@ -46,21 +46,22 @@ def fillParams(fundam_params, varIdxs, model):
     return model_filled
 
 
-def closeSol(fundam_params, model, pushidxs):
-    """
-    Find the closest value in the parameters list for the discrete parameters
-    metallicity, age, and mass.
-    """
-    model_proper = []
-    for i, par in enumerate(fundam_params):
-        # If it is the parameter metallicity, age or mass.
-        if i in pushidxs:
-            # Select the closest value in the array of allowed values.
-            model_proper.append(min(par, key=lambda x: abs(x - model[i])))
-        else:
-            model_proper.append(model[i])
+#  DEPRECATED 02-10-2019
+# def closeSol(fundam_params, model, pushidxs):
+#     """
+#     Find the closest value in the parameters list for the discrete parameters
+#     metallicity, age, and mass.
+#     """
+#     model_proper = []
+#     for i, par in enumerate(fundam_params):
+#         # If it is the parameter metallicity, age or mass.
+#         if i in pushidxs:
+#             # Select the closest value in the array of allowed values.
+#             model_proper.append(min(par, key=lambda x: abs(x - model[i])))
+#         else:
+#             model_proper.append(model[i])
 
-    return model_proper
+#     return model_proper
 
 
 def initPop(
@@ -109,32 +110,28 @@ def random_population(fundam_params, varIdxs, n_ran):
     """
     Generate a random set of parameter values to use as a random population.
 
-    Pick n_ran initial random solutions from each list storing all the
-    possible parameters values.
+    Pick n_ran initial random solutions from the valid ranges.
     """
     p_lst = []
     for i in varIdxs:
-        p_lst.append([random.choice(fundam_params[i]) for _ in range(n_ran)])
+            p_lst.append(
+                np.random.uniform(
+                    fundam_params[i][0], fundam_params[i][-1], n_ran))
 
     return np.array(p_lst).T
 
 
-def synthClust(fundam_params, varIdxs, model, synthcl_args):
+def synthClust(fundam_params, varIdxs, synthcl_args, model):
     """
     Generate a synthetic cluster.
     """
-    theor_tracks, e_max, err_lst, completeness, max_mag_syn, st_dist_mass,\
-        R_V, ext_coefs, N_fc, m_ini, cmpl_rnd, err_rnd = synthcl_args
-
-    # Interpolate (z, a) data
-    isochrone, model_proper = zaInterp.main(
-        theor_tracks, fundam_params, varIdxs, model, m_ini)
+    # Average a new isochrone
+    # theor_tracks = synthcl_args[0]
+    isochrone, model_proper = zaWAverage.main(
+        synthcl_args[0], fundam_params, varIdxs, model)
 
     # Generate synthetic cluster.
-    return synth_cluster.main(
-        e_max, err_lst, completeness, max_mag_syn, st_dist_mass, isochrone,
-        R_V, ext_coefs, N_fc, m_ini, cmpl_rnd, err_rnd, model_proper)
-
+    return synth_cluster.main(isochrone, model_proper, *synthcl_args[1:])
 
 #  DEPRECATED 24-09-2019
 # def discreteParams(fundam_params, varIdxs, chains_nruns, pushidxs):

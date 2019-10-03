@@ -3,18 +3,26 @@ from ..synth_clust import synth_cl_plot
 
 
 def main(clp, npd, bf_flag, best_fit_algor, fundam_params, filters, colors,
-         theor_tracks, plot_isoch_data, R_V, **kwargs):
+         theor_tracks, R_V, **kwargs):
     '''
     Create output data file with stars in the best fit synthetic cluster found
     by the 'Best Fit' function.
     '''
     clp['synth_clst'], clp['shift_isoch'] = [], []
     if bf_flag:
+
+        # Index of m_ini (theoretical initial mass), stored in the theoretical
+        # isochrones.
+        m_ini = 2 * clp['N_fc'][0] + 2 * clp['N_fc'][1] + 2
+        # Pack synthetic cluster arguments.
+        synthcl_args = [
+            theor_tracks, clp['em_float'], clp['err_lst'], clp['completeness'],
+            clp['max_mag_syn'], clp['st_dist_mass'], R_V, clp['ext_coefs'],
+            clp['N_fc'], m_ini, clp['cmpl_rnd'], clp['err_rnd']]
+
         shift_isoch, synth_clst = synth_cl_plot.main(
-            best_fit_algor, fundam_params, theor_tracks, plot_isoch_data, R_V,
-            clp['em_float'], clp['isoch_fit_params'], clp['err_lst'],
-            clp['completeness'], clp['max_mag_syn'], clp['st_dist_mass'],
-            clp['ext_coefs'], clp['N_fc'], clp['cmpl_rnd'], clp['err_rnd'])
+            best_fit_algor, fundam_params, clp['isoch_fit_params'],
+            synthcl_args)
 
         # If cluster is not empty.
         if synth_clst:

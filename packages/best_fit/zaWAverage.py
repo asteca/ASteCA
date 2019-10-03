@@ -2,12 +2,10 @@
 import numpy as np
 
 
-def main(theor_tracks, fundam_params, varIdxs, model, m_ini):
+def main(theor_tracks, fundam_params, varIdxs, model):
     """
-    Average a new isochrone from the four closest points in the (z, a)
-    grid.
-
-    The mass value is not interpolated.
+    Average a new (weighted) isochrone from the four closest points in the
+    (z, a) grid.
 
     theor_tracks = [m1, m2, .., mN]
     mX = [age1, age2, ..., ageM]
@@ -21,10 +19,11 @@ def main(theor_tracks, fundam_params, varIdxs, model, m_ini):
     mb:  binary masses
     m_ini,..., m_bol: six extra parameters.
 
+    WARNING: currently only reading the 'm_ini' extra parameter in
+    'isochs_format()'
+
     """
 
-    # Define the 'proper' model with values for (z, a) taken from its grid,
-    # and filled values for those parameters that are fixed.
     model_proper, z_model, a_model, ml, mh, al, ah = properModel(
         fundam_params, model, varIdxs)
 
@@ -43,11 +42,8 @@ def main(theor_tracks, fundam_params, varIdxs, model, m_ini):
         theor_tracks[ml][al], theor_tracks[ml][ah], theor_tracks[mh][al],
         theor_tracks[mh][ah]])
 
-    # Define weights for the average, based on the inverse of the distance
-    # to the grid (z, age) points.
-
-    # Inverse distances between the (z, a) points in the 'model', and the
-    # four points in the (z, a) grid that contain the model point.
+    # Distances between the (z, a) points in the 'model', and the four
+    # points in the (z, a) grid that contain the model point.
     # Fast euclidean distance: https://stackoverflow.com/a/47775357/1391441
     a_min_b = np.array([(z_model, a_model)]) - pts
     dist = np.sqrt(np.einsum('ij,ij->i', a_min_b, a_min_b))
@@ -63,47 +59,29 @@ def main(theor_tracks, fundam_params, varIdxs, model, m_ini):
     # Inverse of the distance.
     inv_d = 1. / dist
 
-    # Sort according to smaller distances to the (z_model, a_model) point.
-    isoch_idx = np.argsort(inv_d)[::-1]
-
-    # This block "aligns" the masses such that if the 'mass distance' between a
-    # star in the closest grid isochrone to the model (x1) and a star from any
-    # of the remaining three isochrones (x2, x3, x4) is larger than a given
-    # max value (.01, then we replace the star in the second isochrone with its
-    # 'aligned' star taken from the closest isochrone (x1).
-    x1, x2, x3, x4 = isochs[isoch_idx]
-    for x in (x2, x3, x4):
-        # Mask according to the maximum mass difference allowed
-        msk = abs(x1[m_ini] - x[m_ini]) > .01
-        # Replace stars in 'x' with large mass differences, with stars in 'x1'
-        np.copyto(x, x1, where=msk)
-
-    # Weighted average with mass "alignment". This way is faster than using
-    # 'np.average()'.
+    # Weighted average. This way is faster than using 'np.average()'.
     # Scale weights so they add up to 1.
-    weights = inv_d[isoch_idx] / np.sum(inv_d)
-    isochrone = x1 * weights[0] + x2 * weights[1] + x3 * weights[2] +\
-        x4 * weights[3]
+    weights = inv_d / np.sum(inv_d)
+    isochrone = isochs[0] * weights[0] + isochs[1] * weights[1] +\
+        isochs[2] * weights[2] + isochs[3] * weights[3]
 
-    ########################
-    # This way is *marginally* faster
-    # wgts = D * inv_d[isoch_idx]
-    # x1, x2, x3, x4 = isochs[isoch_idx]
-    # for x in (x2, x3, x4):
-    #     # Maximum mass difference allowed
-    #     msk = abs(x1[-6] - x[-6]) > .01
-    #     x[:, msk] = x1[:, msk]
-    # isochrone = np.sum(np.array([
-    #     x1 * wgts[0], x2 * wgts[1], x3 * wgts[2], x4 * wgts[3]]), 0)
+    # The above averaging assumes that the four isochrones are mass-aligned.
+    # This is strictly *not true*, but since the four isochrones have
+    # relatively similar values, it should be close enough to true.
+    # As more points are interpolated into the theoretical isochrones, this
+    # will work better.
+    #
+    # In my tests, attempting an alignment worsens the final averaged
+    # isochrone.
 
     # nn = np.random.randint(0, 100)
-    #     if nn == 50:
-    #     print(model, model_proper)
-    #     print(model_proper[0] - model[0])
+    # if nn == 50:
+    #     print(model)
+    #     print(model_proper)
     #     import matplotlib.pyplot as plt
     #     plt.subplot(131)
-    #     plt.scatter(*pts[isoch_idx][0], c='r')
-    #     plt.scatter(*pts[isoch_idx][1:].T, c='g')
+    #     plt.scatter(*pts.T, c='r')
+    #     # plt.scatter(*pts[isoch_idx][1:].T, c='g')
     #     plt.scatter(model[0], model[1], marker='x', c='g')
     #     # First color
     #     plt.subplot(132)
@@ -115,11 +93,11 @@ def main(theor_tracks, fundam_params, varIdxs, model, m_ini):
     #     plt.gca().invert_yaxis()
     #     # Second color
     #     plt.subplot(133)
-    #     plt.plot(theor_tracks[ml][al][2], theor_tracks[ml][al][0], c='b')
-    #     plt.plot(theor_tracks[ml][ah][2], theor_tracks[ml][ah][0], c='r')
-    #     plt.plot(theor_tracks[mh][al][2], theor_tracks[mh][al][0], c='cyan')
-    #     plt.plot(theor_tracks[mh][ah][2], theor_tracks[mh][ah][0], c='orange')
-    #     plt.plot(isochrone[2], isochrone[0], c='g', ls='--')
+    #     plt.plot(theor_tracks[ml][al][-1], theor_tracks[ml][al][0], c='b')
+    #     plt.plot(theor_tracks[ml][ah][-1], theor_tracks[ml][ah][0], c='r')
+    #     plt.plot(theor_tracks[mh][al][-1], theor_tracks[mh][al][0], c='cyan')
+    #     plt.plot(theor_tracks[mh][ah][-1], theor_tracks[mh][ah][0], c='orange')
+    #     plt.plot(isochrone[-1], isochrone[0], c='g', ls='--')
     #     plt.gca().invert_yaxis()
     #     plt.show()
 
@@ -128,12 +106,19 @@ def main(theor_tracks, fundam_params, varIdxs, model, m_ini):
 
 def properModel(fundam_params, model, varIdxs):
     """
+    Define the 'proper' model with values for (z, a) taken from its grid,
+    and filled values for those parameters that are fixed.
+
+    Parameters
+    ----------
+    model : array
+      Array of *free* fundamental parameters only (ie: not in varIdxs).
 
     Returns
     -------
     model_proper : list
-      Stores the closest (z, a) values in the grid for the parameters in
-      'model', and add the fixed parameters that are missing from 'model'.
+      Stores (E_BV, dm, Mass, b_fr) including the fixed parameters that are
+      missing from 'model'.
     z_model, a_model : floats
       The (z, a) values for this model's isochrone.
     ml, mh, al, ah : ints
@@ -151,15 +136,13 @@ def properModel(fundam_params, model, varIdxs):
                 # Select the closest value in the array of allowed values.
                 mh = min(len(par) - 1, np.searchsorted(par, model[i - j]))
                 ml = mh - 1
-                model_proper.append(par[mh])
-                # Define model's z value
+                # Define the model's z value
                 z_model = model[i - j]
             # If it is the parameter log(age).
             elif i == 1:
                 # Select the closest value in the array of allowed values.
                 ah = min(len(par) - 1, np.searchsorted(par, model[i - j]))
                 al = ah - 1
-                model_proper.append(par[ah])
                 a_model = model[i - j]
             else:
                 model_proper.append(model[i - j])
@@ -170,7 +153,8 @@ def properModel(fundam_params, model, varIdxs):
             elif i == 1:
                 al = ah = 0
                 a_model = fundam_params[1][0]
-            model_proper.append(par[0])
+            else:
+                model_proper.append(par[0])
             j += 1
 
     return model_proper, z_model, a_model, ml, mh, al, ah
