@@ -1,4 +1,5 @@
 
+from os.path import isfile
 from time import strftime
 
 
@@ -6,8 +7,12 @@ def main(npd, file_end, **kwargs):
     """
     Save input 'params_input.dat' file as output file.
     """
-    # Read
-    with open('./params_input' + file_end + '.dat', 'r') as f:
+
+    fname = './params_input.dat'
+    if isfile('./params_input' + file_end + '.dat'):
+        fname = './params_input' + file_end + '.dat'
+
+    with open(fname, 'r') as f:
         # Read file into data var.
         data = f.readlines()
 

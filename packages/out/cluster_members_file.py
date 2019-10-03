@@ -53,6 +53,7 @@ def main(
                 st[:3] + mag + emag + cols + ecols + kinem + ekinem +
                 [st[9], idx[i]])
 
+    # TODO: this block gets really slow for large clusters
     # Add "incomplete" data in cluster region to file.
     ids_data = list(zip(*data))[0]
     for i, st in enumerate(clp['cl_region_i']):

@@ -12,7 +12,7 @@ def check_get(pd):
     store the data and pass it.
     """
     # Only read files if best fit method is set to run. Else pass empty list.
-    pd['fundam_params'], pd['theor_tracks'], pd['plot_isoch_data'] = [], [], []
+    pd['fundam_params'], pd['theor_tracks'] = [], []
     if pd['bf_flag']:
 
         # Read metallicity files' names, store proper ranges for all
@@ -22,7 +22,7 @@ def check_get(pd):
             params_values, met_f_filter, met_values, age_values, met_vals_all,\
                 age_vals_all = met_ages_values.main(
                     pd['iso_paths'], pd['best_fit_algor'], pd['par_ranges'],
-                    pd['za_steps'], pd['N_mass'])
+                    pd['za_steps'])
         except Exception:
             print(traceback.format_exc())
             sys.exit("\nERROR: error storing metallicity files.")
@@ -39,8 +39,7 @@ def check_get(pd):
         pd['fundam_params'] = [met_values[0], age_values] + params_values[2:]
 
         # Store all isochrones in all the metallicity files.
-        pd['theor_tracks'], pd['plot_isoch_data'] = isoch_params.main(
-            met_f_filter, age_values, **pd)
+        pd['theor_tracks'] = isoch_params.main(met_f_filter, age_values, **pd)
 
     return pd
 

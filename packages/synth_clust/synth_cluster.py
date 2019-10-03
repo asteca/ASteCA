@@ -8,8 +8,9 @@ from . import completeness_rm
 from . import add_errors
 
 
-def main(err_max, err_lst, completeness, max_mag_syn, st_dist_mass,
-         isochrone, R_V, ext_coefs, N_fc, cmpl_rnd, err_rnd, synth_cl_params):
+def main(
+    isochrone, model_proper, err_max, err_lst, completeness, max_mag_syn,
+        st_dist_mass, R_V, ext_coefs, N_fc, m_ini, cmpl_rnd, err_rnd):
     """
     Takes an isochrone and returns a synthetic cluster created according to
     a certain mass distribution.
@@ -35,7 +36,7 @@ def main(err_max, err_lst, completeness, max_mag_syn, st_dist_mass,
     # Unpack synthetic cluster parameters. The first two elements are the
     # metallicity and the age, which are already incorporated in the selected
     # isochrone.
-    e, d, M_total, bin_frac = synth_cl_params[2:]
+    e, d, M_total, bin_frac = model_proper
 
     # import time
     # t1, t2, t3, t4, t5, t6, t7 = 0., 0., 0., 0., 0., 0., 0.
@@ -72,9 +73,6 @@ def main(err_max, err_lst, completeness, max_mag_syn, st_dist_mass,
         # t3 = time.clock() - s
 
         # s = time.clock()
-        # Index of m_ini (theoretical initial mass), stored in the theoretical
-        # isochrones.
-        m_ini = 2 * N_fc[0] + 2 * N_fc[1] + 2
         # Interpolate masses in mass_dist into the isochrone rejecting those
         # masses that fall outside of the isochrone's mass range.
         isoch_mass = mass_interp.main(isoch_cut, mass_dist, m_ini)

@@ -4,27 +4,42 @@ from .mass_interp import find_closest
 from .. import update_progress
 
 
-def mag_combine(m1, m2):
-    """
-    Combine two magnitudes. This is a faster re-ordering of the standard
-    formula:
+def main(isoch_mass, bin_frac, m_ini, N_fc):
+    '''
+    Update the randomly selected fraction of binary stars.
+    '''
 
-    -2.5 * np.log10(10 ** (-0.4 * m1) + 10 ** (-0.4 * m2))
+    # If the binary fraction is zero, skip the whole process.
+    if bin_frac > 0.:
 
-    """
-    c = 10 ** -.4
-    # TODO
-    # This catches an overflow warning issued because some Marigo isochrones
-    # contain huge values in the U filter. Not sure if this happens with
-    # other systems/filters. See issue #375
-    np.warnings.filterwarnings('ignore')
-    mbin = -2.5 * (-.4 * m1 + np.log10(1. + c ** (m2 - m1)))
+        # Select a fraction of stars to be binaries, according to the random
+        # probabilities assigned before.
+        bin_indxs = isoch_mass[m_ini - 2] <= bin_frac
 
-    return mbin
+        # Index of the first binary magnitude, stored in the theoretical
+        # isochrones list.
+        mag_ini = N_fc[0] + N_fc[1]
+
+        # Update array with new values of magnitudes, colors, and masses.
+        # New magnitudes.
+        for i in range(N_fc[0]):
+            isoch_mass[i][bin_indxs] = isoch_mass[mag_ini + i][bin_indxs]
+        # New colors.
+        for i in range(N_fc[1]):
+            isoch_mass[N_fc[0] + i][bin_indxs] =\
+                isoch_mass[mag_ini + N_fc[0] + i][bin_indxs]
+
+        # Update masses.
+        isoch_mass[m_ini][bin_indxs] = isoch_mass[m_ini - 1][bin_indxs]
+
+        # Update binary systems to a '2.'.
+        isoch_mass[m_ini - 2][bin_indxs] = 2.
+
+    return isoch_mass
 
 
 def binarGen(
-        binar_fracs, N_interp, mags_theor, cols_theor, mags_cols_theor,
+        binar_fracs, N_mass_interp, mags_theor, cols_theor, mags_cols_theor,
         extra_pars, bin_mass_ratio):
     '''
     Called by isoch_params().
@@ -51,7 +66,7 @@ def binarGen(
 
         # All theoretical isochrones are interpolated with the same length,
         # assign unique binarity probabilities to each star randomly.
-        unq_b_probs = np.arange(N_interp) / float(N_interp)
+        unq_b_probs = np.arange(N_mass_interp) / float(N_mass_interp)
 
         mags_binar, cols_binar, probs_binar, mass_binar = [], [], [], []
         # For each metallicity defined.
@@ -62,7 +77,8 @@ def binarGen(
             # For each age defined.
             for ax, isoch in enumerate(_):
 
-                # Extract initial masses for this isochrone.
+                # Extract initial masses for this isochrone. Assumes that
+                # the initial masses are in the '0' index.
                 mass_ini = extra_pars[mx][ax][0]
 
                 # Calculate random secondary masses of these binary stars
@@ -126,43 +142,23 @@ def binarGen(
             update_progress.updt(N_mags_theor, mx + 1)
     else:
         mags_binar, cols_binar, mass_binar =\
-            np.zeros(np.shape(mags_theor)),\
-            np.zeros(np.shape(cols_theor)),\
+            np.empty(np.shape(mags_theor)),\
+            np.empty(np.shape(cols_theor)),\
             np.array(extra_pars)[:, :, :1, :]
-        probs_binar = np.zeros(np.shape(mass_binar))
+        probs_binar = np.empty(np.shape(mass_binar))
 
     return mags_binar, cols_binar, probs_binar, mass_binar
 
 
-def main(isoch_mass, bin_frac, m_ini, N_fc):
-    '''
-    Update the randomly selected fraction of binary stars.
-    '''
+def mag_combine(m1, m2):
+    """
+    Combine two magnitudes. This is a faster re-ordering of the standard
+    formula:
 
-    # If the binary fraction is zero, skip the whole process.
-    if bin_frac > 0.:
+    -2.5 * np.log10(10 ** (-0.4 * m1) + 10 ** (-0.4 * m2))
 
-        # Select a fraction of stars to be binaries, according to the random
-        # probabilities assigned before.
-        bin_indxs = isoch_mass[m_ini - 2] <= bin_frac
+    """
+    c = 10 ** -.4
+    mbin = -2.5 * (-.4 * m1 + np.log10(1. + c ** (m2 - m1)))
 
-        # Index of the first binary magnitude, stored in the theoretical
-        # isochrones list.
-        mag_ini = N_fc[0] + N_fc[1]
-
-        # Update array with new values of magnitudes, colors, and masses.
-        # New magnitudes.
-        for i in range(N_fc[0]):
-            isoch_mass[i][bin_indxs] = isoch_mass[mag_ini + i][bin_indxs]
-        # New colors.
-        for i in range(N_fc[1]):
-            isoch_mass[N_fc[0] + i][bin_indxs] =\
-                isoch_mass[mag_ini + N_fc[0] + i][bin_indxs]
-
-        # Update masses.
-        isoch_mass[m_ini][bin_indxs] = isoch_mass[m_ini - 1][bin_indxs]
-
-        # Update binary systems to a '2.'.
-        isoch_mass[m_ini - 2][bin_indxs] = 2.
-
-    return isoch_mass
+    return mbin

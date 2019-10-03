@@ -554,14 +554,13 @@ def complSeparate(cl_region_i, membs_i, memb_prob_avrg_sort):
     """
     mags_c, mags_i, cols_c, cols_i, colors_c, colors_i = [[] for _ in range(6)]
     ids_c = list(zip(*memb_prob_avrg_sort))[0]
+    dict_ids_c = {_: i for i, _ in enumerate(ids_c)}
     for i, star in enumerate(cl_region_i):
-        id_i = star[0]
-        if id_i in ids_c:
-            j = ids_c.index(id_i)
-            mags_c.append(memb_prob_avrg_sort[j][3][0])
-            cols_c.append(memb_prob_avrg_sort[j][5])
-            colors_c.append(memb_prob_avrg_sort[j][9])
-        else:
+        try:
+            mags_c.append(memb_prob_avrg_sort[dict_ids_c[star[0]]][3][0])
+            cols_c.append(memb_prob_avrg_sort[dict_ids_c[star[0]]][5])
+            colors_c.append(memb_prob_avrg_sort[dict_ids_c[star[0]]][9])
+        except KeyError:
             mags_i.append(star[3][0])
             cols_i.append(star[5])
             colors_i.append(membs_i[i])

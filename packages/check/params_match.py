@@ -4,10 +4,6 @@ from os.path import isdir, join
 
 
 def check(mypath, pd):
-    # par_ranges, lkl_method, lkl_methods, lkl_binning,
-    # evol_track, max_mag, IMF_name, R_V, N_mass, bin_mr, bin_methods,
-    # lkl_weight, bin_weights, cmd_evol_tracks, iso_paths, imf_funcs, hmax,
-    #  inst_packgs_lst, ntemps,  nwalkers_ptm, nburn_ptm
     """
     Check all parameters related to the search for the best synthetic cluster
     match.
@@ -197,18 +193,6 @@ def checkSynthClustParams(pd):
     if pd['IMF_name'] not in pd['imf_funcs']:
         sys.exit("ERROR: Name of IMF ({}) is incorrect.".format(
             pd['IMF_name']))
-
-    m_range = pd['par_ranges'][4]
-    # Check mass range.
-    try:
-        if pd['N_mass'] > 100 and m_range[1] > 1e5:
-            print("  WARNING: the number of masses defined is > 100 and\n"
-                  "  the max mass is large ({:.0f}). This could cause\n"
-                  "  memory issues when sampling the IMF.\n".format(
-                      m_range[-1]))
-    except IndexError:
-        # Single value
-        pass
 
     if not 0. <= pd['bin_mr'] <= 1.:
         sys.exit("ERROR: Binary mass ratio set ('{}') is out of\n"

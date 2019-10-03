@@ -58,10 +58,12 @@ def filterMPs(memb_probs_cl_region, cl_region_i, cl_region_c):
 
     ids_c, ids_i = list(zip(*cl_region_c))[0], list(zip(*cl_region_i))[0]
     memb_probs_cl_region_c = np.zeros(len(ids_c))
+    dict_ids_c = {_: i for i, _ in enumerate(ids_c)}
     for i, id_i in enumerate(ids_i):
-        if id_i in ids_c:
-            j = ids_c.index(id_i)
-            memb_probs_cl_region_c[j] = memb_probs_cl_region[i]
+        try:
+            memb_probs_cl_region_c[dict_ids_c[id_i]] = memb_probs_cl_region[i]
+        except KeyError:
+            pass
 
     return memb_probs_cl_region_c
 

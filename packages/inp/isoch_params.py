@@ -6,9 +6,9 @@ from ..synth_clust import binarity
 from .. import update_progress
 
 
-def main(met_f_filter, age_values, cmd_evol_tracks, evol_track, bin_mr,
-         all_syst_filters, cmd_systs, filters, colors, fundam_params,
-         N_mass_interp, **kwargs):
+def main(
+    met_f_filter, age_values, cmd_evol_tracks, evol_track, bin_mr,
+        all_syst_filters, cmd_systs, filters, colors, fundam_params, **kwargs):
     '''
     Read isochrones and parameters if best fit function is set to run.
     '''
@@ -45,21 +45,20 @@ def main(met_f_filter, age_values, cmd_evol_tracks, evol_track, bin_mr,
     for z in mags_theor:
         for a in z:
             N_pts_max = max(N_pts_max, len(a[0]))
+    # Fixed value. Will only change if some isochrone contains more than
+    # this number of stars (not likely)
+    N_mass_interp = 1500
+    if N_mass_interp < N_pts_max:
+        N_mass_interp = N_pts_max + 100
 
-    if N_mass_interp > N_pts_max:
-        print("Interpolating extra points ({}) into the isochrones".format(
-            N_mass_interp))
-        interp_data = []
-        for i, data in enumerate([
-                mags_theor, cols_theor, mags_cols_theor, extra_pars]):
-            interp_data.append(interp_isoch_data(data, N_mass_interp))
-            update_progress.updt(4, i + 1)
-        a, b, c, d = interp_data
-    else:
-        sys.exit(
-            ("ERROR: N_interp={} must be larger than the maximum\n" +
-             "number of points in any isochrone read: {}").format(
-                N_mass_interp, N_pts_max))
+    print("Interpolating extra points ({}) into the isochrones".format(
+        N_mass_interp))
+    interp_data = []
+    for i, data in enumerate([
+            mags_theor, cols_theor, mags_cols_theor, extra_pars]):
+        interp_data.append(interp_isoch_data(data, N_mass_interp))
+        update_progress.updt(4, i + 1)
+    a, b, c, d = interp_data
 
     # # Size of arrays in memory
     # sz = 0.
@@ -109,18 +108,21 @@ def main(met_f_filter, age_values, cmd_evol_tracks, evol_track, bin_mr,
             # theor_tracks[i][j] = ax[:, ax[0].argsort(kind='mergesort')]
             theor_tracks[i][j] = ax
 
-    # The above sorting destroys the original order of the isochrones. This
-    # results in messy plots for the "best fit isochrone" at the end.
-    # (see: https://stackoverflow.com/q/35606712/1391441,
-    #       https://stackoverflow.com/q/37742358/1391441)
-    # To avoid this, we also store the not-interpolated, not sorted original
-    # values for the magnitudes and colors; just for the purpose of plotting
-    # the final isochrones.
-    plot_isoch_data = np.concatenate((mags_theor, cols_theor), axis=2)
+    # DEPRECATED 02-10-2019: not needed anymore since there is no sorting,
+    # as stated above, and the (z, a) final values can now be averaged from
+    # grid values.
+    #
+    # # The above sorting destroys the original order of the isochrones. This
+    # # results in messy plots for the "best fit isochrone" at the end.
+    # # (see: https://stackoverflow.com/q/35606712/1391441,
+    # #       https://stackoverflow.com/q/37742358/1391441)
+    # # To avoid this, we also store the not-interpolated, not sorted original
+    # # values for the magnitudes and colors; just for the purpose of plotting
+    # # the final isochrones.
+    # plot_isoch_data = np.concatenate((mags_theor, cols_theor), axis=2)
 
-    lens = [len(_) for _ in fundam_params]
-    print("\nGrid values: {} [z], {} [log(age)], {} [Mass]".format(
-        lens[0], lens[1], lens[4]))
+    print("\nGrid values: {} [z], {} [log(age)]".format(
+        len(fundam_params[0]), len(fundam_params[1])))
 
     # # In place for #415
     # filename = 'temp.memmap'
@@ -128,7 +130,7 @@ def main(met_f_filter, age_values, cmd_evol_tracks, evol_track, bin_mr,
     # theor_tracks_mp = np.memmap(filename, dtype='float64', mode='w+', shape=sp)
     # theor_tracks_mp[:] = theor_tracks[:]
 
-    return theor_tracks, plot_isoch_data
+    return theor_tracks
 
 
 def arrange_filters(isoch_list, all_syst_filters, filters, colors):
