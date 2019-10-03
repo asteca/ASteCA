@@ -1,5 +1,16 @@
 # Change Log
 
+## [[v0.2.7]][239] - 2019-10-03
+
+### Changed
+
+* Use inverse transform sampling to sample the IMF ([434][238])
+* Interpolation of (z,a) values uses wrong m_ini index ([440][237])
+* Interpolation of isochrone fails when (z,a) are both fixed ([439][236])
+* Mass 'alignment' in zaInterp() gives poor result ([441][235])
+* Select the N_mass_interp number automatically ([438][234])
+
+
 ## [[v0.2.6]][233] - 2019-09-19
 
 ### Changed
@@ -708,3 +719,9 @@ ________________________________________________________________________________
 [231]: https://github.com/asteca/ASteCA/issues/428
 [232]: https://github.com/asteca/ASteCA/issues/426
 [233]: https://github.com/asteca/asteca/releases/tag/v0.2.6
+[234]: https://github.com/asteca/ASteCA/issues/438
+[235]: https://github.com/asteca/ASteCA/issues/441
+[236]: https://github.com/asteca/ASteCA/issues/440
+[237]: https://github.com/asteca/ASteCA/issues/439
+[238]: https://github.com/asteca/ASteCA/issues/434
+[239]: https://github.com/asteca/asteca/releases/tag/v0.2.7
