@@ -9,8 +9,8 @@ from . import add_errors
 
 
 def main(
-    err_max, err_lst, completeness, max_mag_syn, st_dist_mass, isochrone,
-        R_V, ext_coefs, N_fc, m_ini, cmpl_rnd, err_rnd, synth_cl_params):
+    isochrone, model_proper, err_max, err_lst, completeness, max_mag_syn,
+        st_dist_mass, R_V, ext_coefs, N_fc, m_ini, cmpl_rnd, err_rnd):
     """
     Takes an isochrone and returns a synthetic cluster created according to
     a certain mass distribution.
@@ -36,7 +36,7 @@ def main(
     # Unpack synthetic cluster parameters. The first two elements are the
     # metallicity and the age, which are already incorporated in the selected
     # isochrone.
-    e, d, M_total, bin_frac = synth_cl_params[2:]
+    e, d, M_total, bin_frac = model_proper
 
     # import time
     # t1, t2, t3, t4, t5, t6, t7 = 0., 0., 0., 0., 0., 0., 0.

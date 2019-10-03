@@ -3,7 +3,8 @@ import time as t
 import textwrap
 import random
 import numpy as np
-from .bf_common import varPars, rangeCheck, synthClust, random_population
+from .bf_common import varPars, rangeCheck, synthClust, random_population,\
+    fillParams
 from . import likelihood
 
 #############################################################
@@ -57,11 +58,15 @@ def main(
 
     varIdxs, ndim, ranges = varPars(fundam_params)
 
+    # Pack synthetic cluster arguments.
+    synthcl_args = [
+        theor_tracks, e_max, err_lst, completeness, max_mag_syn, st_dist_mass,
+        R_V, ext_coefs, N_fc, m_ini, cmpl_rnd, err_rnd]
+
     # Evaluate initial random solutions in the objective function.
     generation, lkl = evaluation(
-        lkl_method, e_max, err_lst, completeness, max_mag_syn, fundam_params,
-        obs_clust, theor_tracks, R_V, ext_coefs, st_dist_mass, N_fc, m_ini,
-        cmpl_rnd, err_rnd, varIdxs, ranges, ran_pop)
+        lkl_method, fundam_params, obs_clust, varIdxs, ranges, synthcl_args,
+        ran_pop)
 
     # Store best solution(s) for passing along in the 'Elitism' block.
     best_sol = generation[:N_el]
@@ -117,10 +122,8 @@ def main(
         # according to the best solutions found.
         # with timeblock("Evaluation"):
         generation, lkl = evaluation(
-            lkl_method, e_max, err_lst, completeness, max_mag_syn,
-            fundam_params, obs_clust, theor_tracks, R_V, ext_coefs,
-            st_dist_mass, N_fc, m_ini, cmpl_rnd, err_rnd, varIdxs, ranges,
-            p_lst_e)
+            lkl_method, fundam_params, obs_clust, varIdxs, ranges,
+            synthcl_args, p_lst_e)
 
         if flag_print_perc:
 
@@ -188,7 +191,7 @@ def main(
                     ext_imm_count = 0
 
                 # Apply Extinction/Immigration operator.
-                generation = ext_imm(best_sol, fundam_params, N_popl)
+                generation = ext_imm(varIdxs, best_sol, fundam_params, N_popl)
                 # Reset best solution counter.
                 best_sol_count = 0
         else:
@@ -306,9 +309,8 @@ def decode(fundam_params, n_bin, p_delta, p_mins, mut_chrom):
 
 
 def evaluation(
-    lkl_method, e_max, err_lst, completeness, max_mag_syn, fundam_params,
-    obs_clust, theor_tracks, R_V, ext_coefs, st_dist_mass, N_fc, m_ini,
-        cmpl_rnd, err_rnd, varIdxs, ranges, p_lst):
+    lkl_method,
+        fundam_params, obs_clust, varIdxs, ranges, synthcl_args, p_lst):
     '''
     Evaluate each model in the objective function to obtain the fitness of
     each one.
@@ -325,10 +327,7 @@ def evaluation(
 
             # Generate synthetic cluster.
             synth_clust = synthClust(
-                fundam_params, varIdxs, model, (
-                    theor_tracks, e_max, err_lst, completeness, max_mag_syn,
-                    st_dist_mass, R_V, ext_coefs, N_fc, m_ini, cmpl_rnd,
-                    err_rnd))
+                fundam_params, varIdxs, synthcl_args, model)
 
             # Call likelihood function for this model.
             # with timeblock(" Likelihood"):
@@ -454,16 +453,20 @@ def elitism(best_sol, p_lst):
     return p_lst_r
 
 
-def ext_imm(best_sol, fundam_params, N_popl):
+def ext_imm(varIdxs, best_sol, fundam_params, N_popl):
     '''
     Append a new random population to the best solution so far.
     '''
 
     # Generate (N_popl-N_el) random solutions.
     n_ran = N_popl - len(best_sol)
-    p_lst_r = random_population(fundam_params, (0, 1, 2, 3, 4, 5), n_ran)
+
+    p_lst_r_free = random_population(fundam_params, varIdxs, n_ran)
+    p_lst_r = []
+    for model in p_lst_r_free:
+        p_lst_r.append(fillParams(fundam_params, varIdxs, model))
 
     # Append immigrant random population to the best solution.
-    generation_ei = best_sol + p_lst_r.tolist()
+    generation_ei = best_sol + p_lst_r
 
     return generation_ei

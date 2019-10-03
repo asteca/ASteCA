@@ -109,14 +109,18 @@ def main(met_f_filter, age_values, cmd_evol_tracks, evol_track, bin_mr,
             # theor_tracks[i][j] = ax[:, ax[0].argsort(kind='mergesort')]
             theor_tracks[i][j] = ax
 
-    # The above sorting destroys the original order of the isochrones. This
-    # results in messy plots for the "best fit isochrone" at the end.
-    # (see: https://stackoverflow.com/q/35606712/1391441,
-    #       https://stackoverflow.com/q/37742358/1391441)
-    # To avoid this, we also store the not-interpolated, not sorted original
-    # values for the magnitudes and colors; just for the purpose of plotting
-    # the final isochrones.
-    plot_isoch_data = np.concatenate((mags_theor, cols_theor), axis=2)
+    # DEPRECATED 02-10-2019: not needed anymore since there is no sorting,
+    # as stated above, and the (z, a) final values can now be averaged from
+    # grid values.
+    #
+    # # The above sorting destroys the original order of the isochrones. This
+    # # results in messy plots for the "best fit isochrone" at the end.
+    # # (see: https://stackoverflow.com/q/35606712/1391441,
+    # #       https://stackoverflow.com/q/37742358/1391441)
+    # # To avoid this, we also store the not-interpolated, not sorted original
+    # # values for the magnitudes and colors; just for the purpose of plotting
+    # # the final isochrones.
+    # plot_isoch_data = np.concatenate((mags_theor, cols_theor), axis=2)
 
     print("\nGrid values: {} [z], {} [log(age)]".format(
         len(fundam_params[0]), len(fundam_params[1])))
@@ -127,7 +131,7 @@ def main(met_f_filter, age_values, cmd_evol_tracks, evol_track, bin_mr,
     # theor_tracks_mp = np.memmap(filename, dtype='float64', mode='w+', shape=sp)
     # theor_tracks_mp[:] = theor_tracks[:]
 
-    return theor_tracks, plot_isoch_data
+    return theor_tracks
 
 
 def arrange_filters(isoch_list, all_syst_filters, filters, colors):
