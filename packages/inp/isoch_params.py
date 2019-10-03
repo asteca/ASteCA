@@ -6,9 +6,9 @@ from ..synth_clust import binarity
 from .. import update_progress
 
 
-def main(met_f_filter, age_values, cmd_evol_tracks, evol_track, bin_mr,
-         all_syst_filters, cmd_systs, filters, colors, fundam_params,
-         N_mass_interp, **kwargs):
+def main(
+    met_f_filter, age_values, cmd_evol_tracks, evol_track, bin_mr,
+        all_syst_filters, cmd_systs, filters, colors, fundam_params, **kwargs):
     '''
     Read isochrones and parameters if best fit function is set to run.
     '''
@@ -45,21 +45,20 @@ def main(met_f_filter, age_values, cmd_evol_tracks, evol_track, bin_mr,
     for z in mags_theor:
         for a in z:
             N_pts_max = max(N_pts_max, len(a[0]))
+    # Fixed value. Will only change if some isochrone contains more than
+    # this number of stars (not likely)
+    N_mass_interp = 1500
+    if N_mass_interp < N_pts_max:
+        N_mass_interp = N_pts_max + 100
 
-    if N_mass_interp > N_pts_max:
-        print("Interpolating extra points ({}) into the isochrones".format(
-            N_mass_interp))
-        interp_data = []
-        for i, data in enumerate([
-                mags_theor, cols_theor, mags_cols_theor, extra_pars]):
-            interp_data.append(interp_isoch_data(data, N_mass_interp))
-            update_progress.updt(4, i + 1)
-        a, b, c, d = interp_data
-    else:
-        sys.exit(
-            ("ERROR: N_interp={} must be larger than the maximum\n" +
-             "number of points in any isochrone read: {}").format(
-                N_mass_interp, N_pts_max))
+    print("Interpolating extra points ({}) into the isochrones".format(
+        N_mass_interp))
+    interp_data = []
+    for i, data in enumerate([
+            mags_theor, cols_theor, mags_cols_theor, extra_pars]):
+        interp_data.append(interp_isoch_data(data, N_mass_interp))
+        update_progress.updt(4, i + 1)
+    a, b, c, d = interp_data
 
     # # Size of arrays in memory
     # sz = 0.
