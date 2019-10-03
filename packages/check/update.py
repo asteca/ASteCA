@@ -32,8 +32,9 @@ def check():
             if s[1][1:] != __version__.strip('-dev'):
                 print("*******************************************")
                 print("              IMPORTANT\n")
-                print("There is a new version of ASteCA available!")
-                print("  Get the latest version '{}' from:\n".format(s[1][1:]))
+                print("There is a new version of ASteCA available")
+                print("    Upgrading is STRONGLY recommended!\n")
+                print("  Get the latest version '{}' from:".format(s[1][1:]))
                 print("       http://asteca.github.io/")
                 print("*******************************************\n")
 
