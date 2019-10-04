@@ -1,5 +1,4 @@
 
-import sys
 import numpy as np
 from . import read_isochs
 from ..synth_clust import binarity
