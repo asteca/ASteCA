@@ -1,11 +1,10 @@
 
 import numpy as np
-import random
 from scipy.optimize import differential_evolution as DE
 from scipy import stats
 import warnings
-from ..synth_clust import synth_cluster
-from . import likelihood, zaWAverage
+from ..synth_clust import synth_cluster, zaWAverage
+from . import likelihood
 from .. import update_progress
 
 

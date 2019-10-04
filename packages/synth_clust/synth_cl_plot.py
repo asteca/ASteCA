@@ -2,8 +2,7 @@
 import numpy as np
 from . import move_isochrone
 from . import synth_cluster
-# from ..best_fit.bf_common import closeSol
-from ..best_fit import zaWAverage
+from . import zaWAverage
 
 
 def main(best_fit_algor, fundam_params, isoch_fit_params, synthcl_args):
