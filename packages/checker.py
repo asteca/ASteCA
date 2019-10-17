@@ -55,7 +55,8 @@ def check_all(mypath, file_end):
     # Check decontamination algorithm parameters.
     params_decont.check(cl_files, **pd)
 
-    # Check the best synthetic cluster match parameters.
+    # Check the best synthetic cluster match parameters. Generate the
+    # 'fundam_params' variable.
     pd = params_match.check(mypath, pd)
 
     # Filters and colors names.
