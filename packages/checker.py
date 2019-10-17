@@ -1,10 +1,10 @@
 
 import platform
-from .check import pack
 from .check import first_run
-from .check import update
+from .check import pack
 from .check import clusters
 from .check import params_file
+from .check import update
 from .check import params_data
 from .check import params_out
 from .check import params_struct

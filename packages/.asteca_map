@@ -7,7 +7,6 @@
         |--> check/params_file
             |--> inp/input_params
         |--> check/update
-        |--> check/params_mode
         |--> check/params_data
         |--> check/params_out
         |--> check/params_struct
@@ -15,11 +14,17 @@
             |--> inp/names_paths (1)
         |--> check/params_match
         |--> check/read_met_files
-            |--> inp/met_ages_values
-                |--> inp/isochs_format (1)
-            |--> inp/isoch_params
-                |--> inp/read_isochs
-                    |--> inp/isochs_format (2)
+            |--> inp/readZA
+                |--> inp/isochs_format.age_format()
+            |--> inp/read_isochs
+                |--> inp/isochs_format.age_format()
+                |--> inp/isochs_format.line_start_format()
+                |--> inp/isochs_format.read_line_start()
+                |--> inp/isochs_format.common_ids()
+            |--> inp/interp_isochs
+                |--> synth_clust/binarity.binarGen()
+
+
     |--> func_caller
         |--> inp/names_paths (2)
         |--> inp/get_data_semi
@@ -50,24 +55,3 @@
             |--> out/prep_plots (7)
                 |--> math_f/exp_function (7)
 
-
-from packages.errors import err_accpt_rejct
-from packages.structure import stars_in_out_cl_reg
-from packages.structure import cluster_area
-from packages.data_analysis import members_number
-from packages.data_analysis import contamination_index
-from packages.structure import field_regions
-from packages.data_analysis import luminosity_func
-from packages.data_analysis import integrated_mag
-from packages.decont_algors import bayesian_da
-from packages.data_analysis import members_N_compare
-from packages.decont_algors import membership_removal
-from packages.out import cluster_members_file
-from packages.best_fit import synth_cl_err
-from packages.best_fit import best_fit_synth_cl
-from packages.out import synth_cl_file
-from packages.out import create_out_data_file
-from packages.out import add_data_output
-from packages.out import top_tiers
-from packages.out import make_plots
-from packages.out import done_move
