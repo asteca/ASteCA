@@ -335,9 +335,9 @@ def pl_param_pf(
         ph = np.percentile(model_done[c_model], 84)
         pl = np.percentile(model_done[c_model], 16)
         plt.axvline(
-            x=ph, linestyle=':', color='orange', zorder=4,
+            x=ph, linestyle=':', color='orange', lw=1.5, zorder=4,
             label=("16-84th perc\n(" + p + ", " + p + ")").format(pl, ph))
-        plt.axvline(x=pl, linestyle=':', color='orange', zorder=4)
+        plt.axvline(x=pl, linestyle=':', color='orange', lw=1.5, zorder=4)
 
         cur_ylim = ax.get_ylim()
         ax.set_ylim([0, cur_ylim[1]])

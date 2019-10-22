@@ -103,7 +103,6 @@ def pl_lkl_scatt(gs, pos, ld_p, min_max_p, cp_r, cp_e, models_GA, lkls_GA):
         # Plot error bars only if errors where assigned.
         plt.axvline(x=xp + e_xp, linestyle='--', color='blue', zorder=4)
         plt.axvline(x=xp - e_xp, linestyle='--', color='blue', zorder=4)
-    ax.locator_params(nbins=5)
 
     # Position colorbar.
     the_divider = make_axes_locatable(ax)
