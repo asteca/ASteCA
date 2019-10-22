@@ -194,27 +194,6 @@ def filterMetvals(z_range, met_vals_all, met_files):
                 for j, phot_syst in enumerate(met_files):
                     met_files_unq[j].append(phot_syst[i])
 
-        # for i, z in enumerate(met_vals_all):
-        #     if z_range[0] <= z and z <= z_range[1]:
-        #         met_vals_unq.append(z)
-        #         for j, phot_syst in enumerate(met_files):
-        #             met_files_unq[j].append(phot_syst[i])
-
-        # met_files_unq_mm = [_ for _ in met_files_unq]
-        # # Add the lower range limit if not present.
-        # if z_range[0] < met_vals_unq[0]:
-        #     i = np.searchsorted(met_vals_all, z_range[0])
-        #     met_vals_unq = [met_vals_all[i - 1]] + met_vals_unq
-        #     for j, phot_syst in enumerate(met_files_unq_mm):
-        #         met_files_unq_mm[j] = [met_files[j][i - 1]] + phot_syst
-
-        # # Add the upper range limit if not present.
-        # if z_range[1] > met_vals_unq[-1]:
-        #     i = np.searchsorted(met_vals_all, z_range[1])
-        #     met_vals_unq += [met_vals_all[i]]
-        #     for j, phot_syst in enumerate(met_files_unq_mm):
-        #         met_files_unq_mm[j] = phot_syst + [met_files[j][i]]
-
         return met_vals_unq, met_files_unq
 
 
@@ -333,23 +312,5 @@ def filterAgevals(a_range, age_vals_all, ages_strs):
             if idx_l <= i and i <= idx_h:
                 age_vals_unq.append(a)
                 ages_strs_unq.append(ages_strs[i])
-
-        # age_vals_unq, ages_strs_unq = [], []
-        # for i, a in enumerate(age_vals_all):
-        #     if a_range[0] <= a and a <= a_range[1]:
-        #         age_vals_unq.append(a)
-        #         ages_strs_unq.append(ages_strs[i])
-
-        # # Add the lower range limit if not present.
-        # if a_range[0] < age_vals_unq[0]:
-        #     i = np.searchsorted(age_vals_all, a_range[0])
-        #     age_vals_unq = [age_vals_all[i - 1]] + age_vals_unq
-        #     ages_strs_unq = [ages_strs[i - 1]] + ages_strs_unq
-
-        # # Add the upper range limit if not present.
-        # if a_range[1] > age_vals_unq[-1]:
-        #     i = np.searchsorted(age_vals_all, a_range[1])
-        #     age_vals_unq += [age_vals_all[i]]
-        #     ages_strs_unq += [ages_strs[i]]
 
         return age_vals_unq, ages_strs_unq
