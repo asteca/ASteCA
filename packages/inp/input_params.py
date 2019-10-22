@@ -215,8 +215,6 @@ def main(mypath, pars_f_path):
                 elif reader[0] == 'ET':
                     evol_track = str(reader[1])
                     colibri = str(reader[2])
-                elif reader[0] == 'PS':
-                    za_steps = list(map(float, reader[1:3]))
                 elif reader[0] == 'MF':
                     IMF_name = str(reader[1])
                 elif reader[0] == 'BR':
@@ -265,7 +263,7 @@ def main(mypath, pars_f_path):
 
     # Map evolutionary tracks selection to proper names, and name of the folder
     # where they should be stored.
-    cmd_evol_tracks = {
+    all_evol_tracks = {
         'PAR12+CS_35': ('parsec12', 'PARSEC v1.2S', 'COLIBRI S_35'),
         'PAR11+CS_35': ('parsec11', 'PARSEC v1.1', 'COLIBRI S_35'),
         'PAR10+CS_35': ('parsec10', 'PARSEC v1.0', 'COLIBRI S_35'),
@@ -279,6 +277,13 @@ def main(mypath, pars_f_path):
         'PAR11+No': ('parsec11', 'PARSEC v1.1', 'No'),
         'PAR10+No': ('parsec10', 'PARSEC v1.0', 'No'),
     }
+
+    # HARDCODED AND IMPORTANT
+    # If the CMD isochrones change, this needs to change too.
+    # Names of the "extra" columns in the CMD service isochrones.
+    CMD_extra_pars = (
+        'Mini', 'int_IMF', 'Mass', 'logL', 'logTe', 'logg', 'label',
+        'mbolmag')
 
     # Dictionary with data on the CMD service photometric systems.
     cmd_systs = CMD_phot_systs.main()
@@ -319,8 +324,8 @@ def main(mypath, pars_f_path):
         'lkl_method': lkl_method, 'lkl_binning': lkl_binning,
         'lkl_weight': lkl_weight,
         # Synthetic cluster parameters
-        'evol_track': evol_track, 'za_steps': za_steps,
-        'max_mag': max_mag, 'IMF_name': IMF_name, 'R_V': R_V, 'bin_mr': bin_mr,
+        'evol_track': evol_track, 'max_mag': max_mag, 'IMF_name': IMF_name,
+        'R_V': R_V, 'bin_mr': bin_mr,
         # parameters ranges
         'par_ranges': par_ranges,
         # ptemcee algorithm parameters.
@@ -347,7 +352,8 @@ def main(mypath, pars_f_path):
         'bin_methods': bin_methods, 'bin_weights': bin_weights,
         'imf_funcs': imf_funcs, 'lkl_methods': lkl_methods,
         'optimz_algors': optimz_algors, 'bayes_priors': bayes_priors,
-        'cmd_evol_tracks': cmd_evol_tracks, 'cmd_systs': cmd_systs}
+        'all_evol_tracks': all_evol_tracks, 'CMD_extra_pars': CMD_extra_pars,
+        'cmd_systs': cmd_systs}
 
     # Return parameters dictionary.
     return pd

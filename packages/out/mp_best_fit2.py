@@ -127,7 +127,7 @@ def pl_bf_synth_cl(
     gs, gs_y1, gs_y2, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
     hess_xedges, hess_yedges, x_synth, y_synth, binar_idx, IMF_name, R_V,
     best_sol, p_err, x_isoch, y_isoch, lkl_method, bin_method,
-        cmd_evol_tracks, evol_track):
+        all_evol_tracks, evol_track):
     '''
     Best fit synthetic cluster obtained.
     '''
@@ -174,8 +174,8 @@ def pl_bf_synth_cl(
         ax_t = plt.subplot(gs[gs_y1:gs_y2, 6:7])
         ax_t.axis('off')  # Remove axis from frame.
         # Map isochrones set selection to proper name.
-        iso_print = cmd_evol_tracks[evol_track][1] + ' + ' +\
-            cmd_evol_tracks[evol_track][2]
+        iso_print = all_evol_tracks[evol_track][1] + ' + ' +\
+            all_evol_tracks[evol_track][2]
         t1 = r'$Synthetic\;cluster\;parameters$' + '\n[{}]'.format(iso_print)
         t2 = r'$IMF \hspace{{3.}}:\;{}$'.format(
             IMF_name.replace('_', '\;').title())

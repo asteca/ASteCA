@@ -1,108 +1,129 @@
 
-import sys
-import traceback
 import numpy as np
-from packages.inp import met_ages_values
-from packages.inp import isoch_params
+from packages.inp import readZA
+from packages.inp import read_isochs
+from packages.inp import interp_isochs
 
 
 def check_get(pd):
     """
-    Check that all metallicity files needed are in place. To save time, we
-    store the data and pass it.
+    Process all the metallicity files and the ages stored in them. To save
+    time, we process and store all the theoretical isochrones data here.
     """
+
     # Only read files if best fit method is set to run. Else pass empty list.
-    pd['fundam_params'], pd['theor_tracks'] = [], []
+    pd['theor_tracks'] = []
+
     if pd['bf_flag']:
+        # Print info about tracks.
+        nt = '' if len(pd['all_syst_filters']) == 1 else 's'
+        print("Processing {} theoretical isochrones\n"
+              "in the photometric system{}:".format(
+                  pd['all_evol_tracks'][pd['evol_track']][1], nt))
+        for syst in pd['all_syst_filters']:
+            print(" * {}".format(pd['cmd_systs'][syst[0]][0]))
 
-        # Read metallicity files' names, store proper ranges for all
-        # parameters, and available metallicities and ages.
-        try:
-            # Get parameters values defined.
-            params_values, met_f_filter, met_values, age_values, met_vals_all,\
-                age_vals_all = met_ages_values.main(
-                    pd['iso_paths'], pd['best_fit_algor'], pd['par_ranges'],
-                    pd['za_steps'])
-        except Exception:
-            print(traceback.format_exc())
-            sys.exit("\nERROR: error storing metallicity files.")
+        # Get all metallicity files and their values, and the log(age) values.
+        met_files, met_vals_all, age_vals_all, ages_strs = readZA.main(**pd)
 
-        # Checks.
-        ranges_files_check(
-            params_values, met_values, age_values, met_vals_all, age_vals_all,
-            **pd)
+        # Store the common grid values for the metallicity and age.
+        pd['fundam_params'][:2] = met_vals_all, age_vals_all
 
-        # Store all the accepted values for the metallicity and age, and the
-        # ranges of accepted values for the rest of the fundamental parameters.
-        # The 'met_values' list contains duplicated sub-lists for each
-        # photometric system defined. We store only one.
-        pd['fundam_params'] = [met_values[0], age_values] + params_values[2:]
+        # Get isochrones and their extra parameters (mass, etc.).
+        isoch_list, extra_pars = read_isochs.main(
+            met_files, ages_strs, pd['evol_track'], pd['CMD_extra_pars'],
+            pd['all_syst_filters'])
 
-        # Store all isochrones in all the metallicity files.
-        pd['theor_tracks'] = isoch_params.main(met_f_filter, age_values, **pd)
+        # Take the synthetic data from the unique filters read, create the
+        # necessary colors, and position the magnitudes and colors in the
+        # same order as they are read from the cluster's data file.
+        # The mags_cols_theor list contains the magnitudes used to create the
+        # defined colors. This is necessary to properly add binarity to the
+        # synthetic clusters below.
+        mags_theor, cols_theor, mags_cols_theor = arrange_filters(
+            isoch_list, pd['all_syst_filters'], pd['filters'], pd['colors'])
+
+        # Interpolate all the data in the isochrones (including the binarity
+        # data)
+        pd['theor_tracks'] = interp_isochs.main(
+            mags_theor, cols_theor, mags_cols_theor, extra_pars,
+            pd['fundam_params'][5], pd['bin_mr'])
+
+        print("\nGrid values: {} [z], {} [log(age)]".format(
+            len(met_vals_all), len(age_vals_all)))
 
     return pd
 
 
-def ranges_files_check(
-    params_values, met_values, age_values, met_vals_all, age_vals_all,
-        par_ranges, cmd_systs, all_syst_filters, **kwargs):
+def arrange_filters(isoch_list, all_syst_filters, filters, colors):
     """
-    Various checks.
+    Take the list of filters stored, create the necessary colors, and arrange
+    all magnitudes and colors according to the order given to the photometric
+    data read from file.
     """
-    # Check that ranges are properly defined.
-    p_names = [
-        ['metallicity', par_ranges[0]], ['age', par_ranges[1]],
-        ['extinction', par_ranges[2]], ['distance', par_ranges[3]],
-        ['mass', par_ranges[4]], ['binary', par_ranges[5]]]
-    for i, p in enumerate(params_values):
-        if not p.size:
-            sys.exit("ERROR: No values exist for '{}' range defined:\n"
-                     "min={}, max={}, step={}".format(p_names[i][0],
-                                                      *p_names[i][1][1]))
 
-    # Check that metallicity and age min, max & steps values are correct.
-    # Match values in metallicity and age ranges with those available.
-    z_range, a_range = params_values[:2]
+    # Extract names of all read filters in the order in which they are stored
+    # in 'isoch_list'.
+    all_filts = []
+    for ps in all_syst_filters:
+        all_filts = all_filts + list(ps[1:])
 
-    err_mssg = "ERROR: one or more metallicity files in the '{}' system\n" +\
-               "could not be matched to the range given.\n\n" +\
-               "The defined values are:\n\n" +\
-               "{}\n\nThe read values are:\n\n" +\
-               "{}\n\nThe closest values found are:\n\n" +\
-               "{}\n\nThe missing elements are:\n\n{}"
-    # Go through the values extracted from the metallicity files present
-    # in each photometric system used.
-    for i, met_vs in enumerate(met_values):
-        if z_range.size > len(met_vs):
-            # Find missing elements.
-            missing = find_missing(z_range, met_vs)
-            sys.exit(err_mssg.format(
-                cmd_systs[all_syst_filters[i][0]][0], z_range,
-                np.array(met_vals_all[i]), np.asarray(met_vs),
-                np.asarray(missing)))
-    err_mssg = "ERROR: one or more isochrones could not be matched\n" +\
-               "to the age range given.\n\nThe defined values are:\n\n" +\
-               "{}\n\nThe read values are:\n\n" +\
-               "{}\n\nThe closest values found are:\n\n" +\
-               "{}\n\nThe missing elements are:\n\n{}"
-    if len(a_range) > len(age_values):
-        # Find missing elements.
-        missing = find_missing(a_range, age_values)
-        sys.exit(err_mssg.format(
-            a_range, age_vals_all, np.asarray(age_values),
-            np.asarray(missing)))
+    # Store the index of each filter read from data, as they are stored in
+    # 'isoch_list'.
+    fi = []
+    for f in filters:
+        fi.append(all_filts.index(f[1]))
+    # Create list of theoretical magnitudes, in the same orders as they are
+    # read from the cluster's data file.
+    mags_theor = []
+    for met in isoch_list:
+        m = []
+        for age in met:
+            a = []
+            for i in fi:
+                a.append(np.array(age[i]))
+            m.append(a)
+        mags_theor.append(m)
 
+    # Store the index of each filter for each color read from data, as they
+    # are stored in 'isoch_list'.
+    fci = []
+    for c in colors:
+        ci = []
+        for f in c[1].split(','):
+            ci.append(all_filts.index(f))
+        fci.append(ci)
+    # Create list of theoretical colors, in the same orders as they are
+    # read from the cluster's data file.
+    cols_theor = []
+    for met in isoch_list:
+        m = []
+        for age in met:
+            a = []
+            for ic in fci:
+                # Generate color in the sense it was given in
+                # 'params_input.dat'.
+                a.append(np.array(age[ic[0]]) - np.array(age[ic[1]]))
+            m.append(a)
+        cols_theor.append(m)
 
-def find_missing(arr_large, arr_small):
-    '''
-    Takes two arrays of floats, compares them and returns the missing
-    elements in the smaller one.
-    '''
-    # Convert to strings before comparing.
-    s1 = [str(_) for _ in np.round(arr_small, 5)]
-    s2 = [str(_) for _ in np.round(arr_large, 5)]
-    # Find missing elements. Convert to float and store.
-    missing = [float(_) for _ in s2 if _ not in set(s1)]
+    # Create list of theoretical colors, in the same orders as they are
+    # read from the cluster's data file.
+    # mags_cols_theor = [met1, met2, ..., metN]
+    # metX = [age1, age2, ..., age_M]
+    # ageX = [filter1, filter2, filter3, filter4, ..., filterQ]
+    # such that: color1 = filter1 - filter2, color1 = filter3 - filter4, ...
+    mags_cols_theor = []
+    for met in isoch_list:
+        m = []
+        for age in met:
+            a = []
+            # For each color defined.
+            for ic in fci:
+                # For each filter of this color.
+                a.append(age[ic[0]])
+                a.append(age[ic[1]])
+            m.append(a)
+        mags_cols_theor.append(m)
 
-    return missing
+    return mags_theor, cols_theor, mags_cols_theor

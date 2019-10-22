@@ -7,8 +7,13 @@ def check(mypath, pd):
     """
     Check all parameters related to the search for the best synthetic cluster
     match.
+
+    Check that all the required photometric systems evolutionary tracks
+    are present with checkEvolTracks()
     """
+
     # If best fit method is set to run.
+    pd['fundam_params'] = []
     if pd['bf_flag']:
 
         # TODO REMOVE when (if) support for multiple mags/colors is in place.
@@ -16,6 +21,8 @@ def check(mypath, pd):
             sys.exit("ERROR: more than one filter defined.")
         if len(pd['colors']) > 2:
             sys.exit("ERROR: more than two colors defined.")
+
+        pd = checkEvolTracks(mypath, pd)
 
         checkParamRanges(pd)
 
@@ -26,9 +33,9 @@ def check(mypath, pd):
 
         chechLkl(pd)
 
-        pd = checkEvolTracks(mypath, pd)
-
         checkSynthClustParams(pd)
+
+        pd = getParamVals(pd)
 
     return pd
 
@@ -140,9 +147,12 @@ def chechLkl(pd):
 
 def checkEvolTracks(mypath, pd):
     """
+    Check photometric systems for all the evolutionary tracks that will be
+    used. Store and return their IDs, filter names, and paths.
     """
+
     # Check selected isochrones set.
-    if pd['evol_track'] not in pd['cmd_evol_tracks'].keys():
+    if pd['evol_track'] not in pd['all_evol_tracks'].keys():
         sys.exit("ERROR: the selected isochrones set ('{}') does\n"
                  "not match a valid input.".format(pd['evol_track']))
 
@@ -164,7 +174,7 @@ def checkEvolTracks(mypath, pd):
     all_systs = pd['cmd_systs']
 
     # Fix isochrones location according to the CMD and set selected.
-    text1 = pd['cmd_evol_tracks'][pd['evol_track']][0]
+    text1 = pd['all_evol_tracks'][pd['evol_track']][0]
     # Generate correct name for the isochrones path.
     iso_paths = []
     for p_syst in all_syst_filters:
@@ -209,3 +219,25 @@ def checkSynthClustParams(pd):
         if pd['max_mag'] != 'max':
             sys.exit("ERROR: Maximum magnitude value selected ({}) is"
                      " not valid.".format(pd['max_mag']))
+
+
+def getParamVals(pd):
+    """
+    Properly format parameter ranges to be used by the selected best fit
+    method.
+    """
+
+    fundam_params = []
+    for i, param in enumerate(pd['par_ranges']):
+        # If only one value is defined.
+        if len(param) == 1:
+            fundam_params.append([param[0]])
+        # If min == max store single value in array.
+        elif param[0] == param[1]:
+            fundam_params.append([param[0]])
+        else:
+            # Store range of values.
+            fundam_params.append(param)
+
+    pd['fundam_params'] = fundam_params
+    return pd

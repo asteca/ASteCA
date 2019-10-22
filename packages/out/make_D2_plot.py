@@ -52,7 +52,7 @@ def main(
                  y_synth_phot, binar_idx, pd['IMF_name'], pd['R_V'],
                  best_sol, isoch_fit_errors, x_isoch,
                  y_isoch, pd['lkl_method'], pd['lkl_binning'],
-                 pd['cmd_evol_tracks'], pd['evol_track']]
+                 pd['all_evol_tracks'], pd['evol_track']]
             ]
             for n, args in enumerate(arglist):
                 mp_best_fit2.plot(n, *args)
