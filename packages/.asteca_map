@@ -15,13 +15,26 @@
         |--> check/params_match
         |--> check/read_met_files
             |--> inp/readZA
-                |--> inp/isochs_format.age_format()
+                 readMetvals()
+                 findMetSubset()
+                 checkMetrange()
+                 filterMetvals()
+                 readAgevals()
+                    |--> inp/isochs_format.age_format()
+                 findAgeSubset()
+                 logAges()
+                 checkAgerange()
+                 filterAgevals()
             |--> inp/read_isochs
                 |--> inp/isochs_format.age_format()
                 |--> inp/isochs_format.line_start_format()
                 |--> inp/isochs_format.read_line_start()
                 |--> inp/isochs_format.common_ids()
+                readMetFile()
+                   readCMDFile()
             |--> inp/interp_isochs
+                interpPoints()
+                interp_isoch_data()
                 |--> synth_clust/binarity.binarGen()
 
 
