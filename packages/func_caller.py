@@ -105,6 +105,9 @@ def main(cl_file, pd):
     clp = xy_density.main(clp, cld_i, **pd)
 
     make_A1_plot.main(npd, cld_i, pd, **clp)
+    if pd['stop_idx'] == 'A1':
+        retFunc(npd['clust_name'], start)
+        return
 
     # Cluster's center coordinates and errors.
     clp = center.main(cld_i, clp, **pd)
@@ -175,6 +178,9 @@ def main(cl_file, pd):
 
     # Uses the incomplete 'cl_region' and 'field_regions' data.
     make_A2_plot.main(npd, cld_i, pd, **clp)
+    if pd['stop_idx'] == 'A2':
+        retFunc(npd['clust_name'], start)
+        return
 
     # v The functions below use the *photom complete* dataset with the
     # exception of the 'compl_err_funcs()' function and the Bayesian DA. The
@@ -192,6 +198,9 @@ def main(cl_file, pd):
     clp = photComb.main(pd, clp)
 
     make_B1_plot.main(npd, cld_c, pd, **clp)
+    if pd['stop_idx'] == 'B1':
+        retFunc(npd['clust_name'], start)
+        return
 
     # Luminosity function and completeness level for each magnitude bin.
     clp = luminosity.main(clp, **cld_c)
@@ -209,6 +218,9 @@ def main(cl_file, pd):
     # clp = photComb.main(pd, clp)
 
     make_B2_plot.main(npd, cld_c, pd, **clp)
+    if pd['stop_idx'] == 'B2':
+        retFunc(npd['clust_name'], start)
+        return
 
     # Apply decontamination algorithm.
     clp = decont_algors.main(clp, npd, **pd)
@@ -223,6 +235,9 @@ def main(cl_file, pd):
     cluster_members_file.main(clp, npd, **pd)
 
     make_C1_plot.main(npd, cld_c, pd, **clp)
+    if pd['stop_idx'] == 'C1':
+        retFunc(npd['clust_name'], start)
+        return
 
     # Analyze parallax data if available.
     clp = plx_analysis.main(clp, **pd)
@@ -231,7 +246,13 @@ def main(cl_file, pd):
     clp = pms_analysis.main(clp, cld_i, **pd)
 
     make_C2_plot.main(npd, pd, **clp)
+    if pd['stop_idx'] == 'C2':
+        retFunc(npd['clust_name'], start)
+        return
     make_C3_plot.main(npd, pd, cld_i, **clp)
+    if pd['stop_idx'] == 'C3':
+        retFunc(npd['clust_name'], start)
+        return
 
     # Obtain best fitting parameters for cluster.
     clp = best_fit_synth_cl.main(clp, pd)
@@ -257,9 +278,13 @@ def main(cl_file, pd):
 
     # Plot result of best match algorithm.
     make_D1_plot.main(npd, pd, **clp)
+    if pd['stop_idx'] == 'D1':
+        retFunc(npd['clust_name'], start)
+        return
 
     # Plot final best match found.
     make_D2_plot.main(npd, cld_c, pd, **clp)
+    retFunc(npd['clust_name'], start)
 
     # DEPRECATED 22/11/18
     # # Plot top tiers models and save to file.
@@ -269,6 +294,8 @@ def main(cl_file, pd):
     # # Move file to 'done' dir (if flag is set).
     # done_move.main(pd, **npd)
 
+
+def retFunc(clname, start):
     elapsed = time.time() - start
     m, s = divmod(elapsed, 60)
     if m > 60:
@@ -276,7 +303,7 @@ def main(cl_file, pd):
         t = "{:.0f}h {:.0f}m {:.0f}s".format(h, m, s)
     else:
         t = "{:.0f}m {:.0f}s".format(m, s)
-    print("End of analysis for {} in {}\n".format(npd['clust_name'], t))
+    print("End of analysis for {} in {}\n".format(clname, t))
 
     # Force the Garbage Collector to release unreferenced memory.
     gc.collect()

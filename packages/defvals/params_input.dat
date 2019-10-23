@@ -91,7 +91,11 @@ TF         n   0. 0. 0. 0.
 #
 # * blocks: [A1, A2, B, C1, C2, D1, D2]
 #   Select one or more identifier to decide which plots will be produced. Leave
-#   empty for no output plots.
+#   empty for no output plots. An 's' character after an identifier will make
+#   the code stop and return right after creating that plot. I.e.: the line
+#   'A1 B1 s B2 C1' will make the code create the 'A1' and 'B1' plots and stop
+#   right after 'B1'. If we use 'A1 B1 B2 C1' then those four plots will be
+#   generated.
 #
 #   - A1: (x,y) density maps
 #   - A2: structural analysis
