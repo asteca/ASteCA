@@ -239,5 +239,35 @@ def getParamVals(pd):
             # Store range of values.
             fundam_params.append(param)
 
+    # Check for min/max presence in z,log(age) parameters
+    for idx in (0, 1):
+        p_rng = fundam_params[idx]
+        t = 'RZ' if idx == 0 else 'RA'
+        if len(p_rng) == 1:
+            try:
+                p = float(p_rng[0])
+            except ValueError:
+                p = p_rng[0]
+                if p not in ('min', 'max'):
+                    sys.exit("ERROR '{}': unrecognized string '{}'".format(
+                        t, p))
+            fundam_params[idx] = [p]
+        else:
+            try:
+                pmin = float(p_rng[0])
+            except ValueError:
+                pmin = p_rng[0]
+                if pmin != 'min':
+                    sys.exit("ERROR '{}': unrecognized string '{}'".format(
+                        t, pmin))
+            try:
+                pmax = float(p_rng[1])
+            except ValueError:
+                pmax = p_rng[1]
+                if pmax != 'max':
+                    sys.exit("ERROR '{}': unrecognized string '{}'".format(
+                        t, pmax))
+            fundam_params[idx] = [pmin, pmax]
+
     pd['fundam_params'] = fundam_params
     return pd

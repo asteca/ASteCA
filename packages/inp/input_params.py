@@ -137,9 +137,9 @@ def main(mypath, pars_f_path):
 
                 # Ranges for the fundamental parameters
                 elif reader[0] == 'RZ':
-                    z_range = list(map(float, reader[1:]))
+                    z_range = reader[1:]
                 elif reader[0] == 'RA':
-                    a_range = list(map(float, reader[1:]))
+                    a_range = reader[1:]
                 elif reader[0] == 'RE':
                     e_range = list(map(float, reader[1:]))
                 elif reader[0] == 'RD':

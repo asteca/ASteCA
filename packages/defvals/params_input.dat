@@ -358,9 +358,12 @@ PO        3.        10            5             y
 #   algorithm   h_max
 CF    ptemcee      .1
 
-# Minimum / maximum values that define the range of the parameters to fit for
-# the metallicity, log(age), E(B-V), distance modulus, initial mass, and binary
-# fraction, respectively. A single value indicates a fixed parameter.
+# * min / max: [float] / string
+#   Minimum / maximum values that define the range of the parameters to fit for
+#   the metallicity, log(age), E(B-V), distance modulus, initial mass, and
+#   binary fraction, respectively. A single value indicates a fixed parameter.
+#   You can use the strings 'min' and/or 'max' to let ASteCA decide the minimum
+#   and/or maximum range limits.
 #
 #        min      max
 RZ    0.0005     0.03

@@ -30,7 +30,7 @@ def main(fundam_params, iso_paths, evol_track, **kwargs):
     Return a list of filtered metallicity files and their values, and log ages
     and their associated identifying strings.
     """
-    z_range, a_range = fundam_params[:2]
+    z_rng, a_rng = fundam_params[:2]
 
     # Read names and values of all the metallicity files stored in the
     # isochrones paths given.
@@ -41,10 +41,10 @@ def main(fundam_params, iso_paths, evol_track, **kwargs):
     met_vals_all, met_files = findMetSubset(met_vals_all, met_files)
 
     # Check that the z range exists in the available metallicity values.
-    checkMetrange(z_range, met_vals_all)
+    z_rng = checkMetrange(z_rng, met_vals_all)
 
     # Filter the metallicity files by the defined z range.
-    met_vals_all, met_files = filterMetvals(z_range, met_vals_all, met_files)
+    met_vals_all, met_files = filterMetvals(z_rng, met_vals_all, met_files)
 
     # Read all ages in all the metallicity files defined.
     age_vals_all = readAgevals(met_files, evol_track)
@@ -58,9 +58,9 @@ def main(fundam_params, iso_paths, evol_track, **kwargs):
 
     # Check that the log(age) range exists in the available log(age)
     # values.
-    checkAgerange(a_range, age_vals_all)
+    a_rng = checkAgerange(a_rng, age_vals_all)
 
-    age_vals_all, ages_strs = filterAgevals(a_range, age_vals_all, ages_strs)
+    age_vals_all, ages_strs = filterAgevals(a_rng, age_vals_all, ages_strs)
 
     return met_files, met_vals_all, age_vals_all, ages_strs
 
@@ -140,31 +140,53 @@ def findMetSubset(met_vals_all, met_files):
         return common_z, met_files_c
 
 
-def checkMetrange(z_range, met_vals_all):
+def checkMetrange(z_rng, met_vals_all):
     """
     Given the z range in the 'params_input' file, check that this range or
     fixed value is contained by the available metallicity files in all the
     photometric systems being used.
     """
-    if z_range[0] < min(met_vals_all):
-        sys.exit(
-            ("\nERROR: metallicity defined '{}' is smaller than\n"
-             "the minimum value found '{:.5f}'").format(
-                z_range[0], min(met_vals_all)))
-    if max(met_vals_all) < z_range[-1]:
-        sys.exit(
-            ("\nERROR: metallicity defined '{}' is larger than\n"
-             "the maximum value found '{:.5f}'").format(
-                z_range[-1], max(met_vals_all)))
 
-    # A fixed value is used.
-    if len(z_range) == 1:
-        if not z_range[0] in met_vals_all:
-            idx_r = np.searchsorted(met_vals_all, z_range[0])
+    if len(z_rng) > 1:
+        z_rng[0] = min(met_vals_all) if z_rng[0] == 'min' else z_rng[0]
+        z_rng[1] = max(met_vals_all) if z_rng[-1] == 'max' else z_rng[1]
+        # Check that the values are different.
+        if z_rng[0] == z_rng[1]:
+            print("  WARNING: min & max z values are equal ({})".format(
+                z_rng[0]))
+            z_rng = [z_rng[0]]
+        elif z_rng[0] > z_rng[1]:
+            sys.exit(
+                ("\nERROR: minimum z value '{:.5f}' is larger than\n"
+                 "the maximum value '{:.5f}'").format(z_rng[0], z_rng[1]))
+    elif len(z_rng) == 1:
+        # A fixed value is used.
+        z = min(met_vals_all) if z_rng[0] == 'min' else max(met_vals_all)
+        z_rng = [z]
+
+    if len(z_rng) > 1:
+        if z_rng[0] < min(met_vals_all):
+            sys.exit(
+                ("\nERROR: metallicity defined '{}' is smaller than\n"
+                 "the minimum value found '{:.5f}'").format(
+                    z_rng[0], min(met_vals_all)))
+        if max(met_vals_all) < z_rng[1]:
+            sys.exit(
+                ("\nERROR: metallicity defined '{}' is larger than\n"
+                 "the maximum value found '{:.5f}'").format(
+                    z_rng[1], max(met_vals_all)))
+
+    elif len(z_rng) == 1:
+        # A fixed value is used.
+        z = z_rng[0]
+        if z not in met_vals_all:
+            idx_r = np.searchsorted(met_vals_all, z)
             sys.exit(
                 ("\nERROR: could not find metallicity value for the fixed\n" +
                  "value '{}'. Closest values found are: '{}, {}'").format(
-                    z_range[0], met_vals_all[idx_r - 1], met_vals_all[idx_r]))
+                    z, met_vals_all[idx_r - 1], met_vals_all[idx_r]))
+
+    return z_rng
 
 
 def filterMetvals(z_range, met_vals_all, met_files):
@@ -269,29 +291,52 @@ def logAges(ages_common, round_f=5):
     return age_vals_all, ages_strs
 
 
-def checkAgerange(a_range, age_vals_all, round_f=5):
+def checkAgerange(a_rng, age_vals_all, round_f=5):
     """
     Check that the age range is contained in the available subset of ages.
     """
-    if a_range[0] < min(age_vals_all):
-        sys.exit(
-            ("\nERROR: log(age) defined '{}' is smaller than the\n"
-             "minimum value found '{:.5f}'").format(
-                 a_range[0], min(age_vals_all)))
-    if max(age_vals_all) < a_range[-1]:
-        sys.exit(
-            ("\nERROR: log(age) defined '{}' is larger than the\n"
-             "maximum value found '{:.5f}'").format(
-                 a_range[-1], max(age_vals_all)))
 
-    if len(a_range) == 1:
+    if len(a_rng) > 1:
+        a_rng[0] = min(age_vals_all) if a_rng[0] == 'min' else float(a_rng[0])
+        a_rng[1] = max(age_vals_all) if a_rng[-1] == 'max' else float(a_rng[1])
+        # Check that the values are different.
+        if a_rng[0] == a_rng[1]:
+            a_rng = [a_rng[0]]
+            print("  WARNING: min & max log(age) values are equal ({})".format(
+                a_rng[0]))
+        elif a_rng[0] > a_rng[1]:
+            sys.exit(
+                ("\nERROR: minimum log(age) value '{:.5f}' is larger than\n"
+                 "the maximum value '{:.5f}'").format(a_rng[0], a_rng[1]))
+    elif len(a_rng) == 1:
+        # A fixed value is used.
+        a = min(age_vals_all) if a_rng[0] == 'min' else max(age_vals_all)
+        a_rng = [a]
+
+    if len(a_rng) > 1:
+        if a_rng[0] < min(age_vals_all):
+            sys.exit(
+                ("\nERROR: log(age) defined '{}' is smaller than the\n"
+                 "minimum value found '{:.5f}'").format(
+                     a_rng[0], min(age_vals_all)))
+        if max(age_vals_all) < a_rng[1]:
+            sys.exit(
+                ("\nERROR: log(age) defined '{}' is larger than the\n"
+                 "maximum value found '{:.5f}'").format(
+                     a_rng[1], max(age_vals_all)))
+
+    elif len(a_rng) == 1:
+        # A fixed value is used.
+        loga = a_rng[0]
         # Use same decimals as in 'logAges'
-        if not np.isclose(a_range[0], age_vals_all, atol=10**-round_f).any():
-            idx_r = np.searchsorted(age_vals_all, a_range[0])
+        if not np.isclose(loga, age_vals_all, atol=10**-round_f).any():
+            idx_r = np.searchsorted(age_vals_all, loga)
             sys.exit(
                 ("\nERROR: could not find log(age) value for the fixed\n" +
                  "value '{}'. Closest values found are: '{}, {}'").format(
-                    a_range[0], age_vals_all[idx_r - 1], age_vals_all[idx_r]))
+                    loga, age_vals_all[idx_r - 1], age_vals_all[idx_r]))
+
+    return a_rng
 
 
 def filterAgevals(a_range, age_vals_all, ages_strs):
