@@ -1,4 +1,5 @@
 
+import sys
 import numpy as np
 from packages.inp import readZA
 from packages.inp import read_isochs
@@ -34,6 +35,9 @@ def check_get(pd):
             met_files, ages_strs, pd['evol_track'], pd['CMD_extra_pars'],
             pd['all_syst_filters'])
 
+        # Check equality of the initial mass across photometric systems.
+        miniCheck(extra_pars, met_vals_all, age_vals_all)
+
         # Take the synthetic data from the unique filters read, create the
         # necessary colors, and position the magnitudes and colors in the
         # same order as they are read from the cluster's data file.
@@ -49,10 +53,43 @@ def check_get(pd):
             mags_theor, cols_theor, mags_cols_theor, extra_pars,
             pd['fundam_params'][5], pd['bin_mr'])
 
-        print("\nGrid values: {} [z], {} [log(age)]".format(
-            len(met_vals_all), len(age_vals_all)))
+        print("\nGrid values")
+        print("z        : {:<5} [{}, {}]".format(
+            len(met_vals_all), pd['fundam_params'][0][0],
+            pd['fundam_params'][0][-1]))
+        print("log(age) : {:<5} [{}, {}]\n".format(
+            len(age_vals_all), pd['fundam_params'][1][0],
+            pd['fundam_params'][1][-1]))
 
     return pd
+
+
+def miniCheck(extra_pars, met_vals_all, age_vals_all):
+    """
+    The extra isochrone parameter 'M_ini' is assumed to be equal across
+    photometric systems, for a given metallicity and age. We check here that
+    this is the case.
+
+    extra_pars.shape = (#met_vals, #log(ages), #phot_systs)
+    """
+    extra_pars = np.array(extra_pars)
+    # If a single z and log(age) are defined, this array will have a shape
+    # (#met_vals, #log(ages), #phot_systs, #stars). Hence the '[:3'.
+    Nz, Na, Ndim = extra_pars.shape[:3]
+    if Ndim == 1:
+        # Single photometric system defined. Nothing to check.
+        return
+    else:
+        txt = "\nERROR: initial mass values are not equal across the\n" +\
+            "photometric systems for the isochrone: z={}, log(age)={}"
+        for d in range(1, Ndim):
+            for z in range(Nz):
+                for a in range(Na):
+                    arr0, arrd = extra_pars[z, a, 0], extra_pars[z, a, d]
+                    if not np.array_equal(arr0, arrd):
+                        # Check across (z, log(age)) values for each
+                        # photometric system.
+                        sys.exit(txt.format(met_vals_all[z], age_vals_all[a]))
 
 
 def arrange_filters(isoch_list, all_syst_filters, filters, colors):
