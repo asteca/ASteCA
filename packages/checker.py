@@ -47,7 +47,7 @@ def check_all(mypath, file_end):
     pd = params_data.check(mypath, pd)
 
     # Check output parameters.
-    params_out.check(**pd)
+    pd = params_out.check(pd)
 
     # Check structural parameters.
     params_struct.check(**pd)
