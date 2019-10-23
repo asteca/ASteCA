@@ -1,7 +1,35 @@
 
+from collections import defaultdict, Iterable
 import numpy as np
 from scipy import stats
 from astropy.stats import sigma_clipped_stats
+
+
+def flatten(l):
+    """
+    Source: https://stackoverflow.com/a/2158532/1391441
+    """
+    for el in l:
+        if isinstance(el, Iterable) and not\
+                isinstance(el, (str, bytes)):
+            for sub in flatten(el):
+                yield sub
+        else:
+            yield el
+
+
+def list_duplicates(seq):
+    """
+    Find and report duplicates in list.
+
+    Source: https://stackoverflow.com/a/5419576/1391441
+    """
+    tally = defaultdict(list)
+    for i, item in enumerate(seq):
+        tally[item].append(i)
+    dups = ((key, map(str, locs)) for key, locs in tally.items()
+            if len(locs) > 1)
+    return dups
 
 
 def reject_outliers(data, m=4.):

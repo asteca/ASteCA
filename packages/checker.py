@@ -1,10 +1,10 @@
 
 import platform
-from .check import pack
 from .check import first_run
-from .check import update
+from .check import pack
 from .check import clusters
 from .check import params_file
+from .check import update
 from .check import params_data
 from .check import params_out
 from .check import params_struct
@@ -55,7 +55,8 @@ def check_all(mypath, file_end):
     # Check decontamination algorithm parameters.
     params_decont.check(cl_files, **pd)
 
-    # Check the best synthetic cluster match parameters.
+    # Check the best synthetic cluster match parameters. Generate the
+    # 'fundam_params' variable.
     pd = params_match.check(mypath, pd)
 
     # Filters and colors names.

@@ -60,7 +60,7 @@ def binarGen(
 
     # If binary_fraction=0 don't bother obtaining the binary magnitudes,
     # colors, etc.
-    if binar_fracs.any():
+    if len(binar_fracs) > 1 or binar_fracs[0] > 0.:
 
         print("Generating binary data (b_mr={:.2f})".format(bin_mass_ratio))
 
