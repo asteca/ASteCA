@@ -32,26 +32,28 @@ def main(
     N_mass_interp = interpPoints(mags_theor)
     print("Interpolating extra points ({}) into the isochrones".format(
         N_mass_interp))
-    a, b, c, d = interp_isoch_data(
+    mags_intp, cols_intp, mags_cols_intp, extra_pars_intp = interp_isoch_data(
         (mags_theor, cols_theor, mags_cols_theor, extra_pars), N_mass_interp)
 
     # # Size of arrays in memory
     # sz = 0.
-    # for arr in [a, b, c, d]:
+    # for arr in [mags_intp, cols_intp, mags_cols_intp, extra_pars_intp]:
     #     sz += np.array(arr).size * np.array(arr).itemsize
     # print("{:.3f} Mbs".format(sz / (1024.**2)))
 
-    # The magnitudes for each defined color ('c') are used here and
-    # discarded after the colors (and magnitudes) with binarity assignment
+    # The magnitudes for each defined color ('mags_cols_intp') are used here
+    # and discarded after the colors (and magnitudes) with binarity assignment
     # are obtained.
     mags_binar, cols_binar, probs_binar, mass_binar = binarity.binarGen(
-        binar_fracs, N_mass_interp, a, b, c, d, bin_mr)
+        binar_fracs, N_mass_interp, mags_intp, cols_intp, mags_cols_intp,
+        extra_pars_intp, bin_mr)
 
     # Combine all data into a single array of shape:
     # (N_z, N_age, N_data, N_IMF_interp), where 'N_data' is the number of
     # sub-arrays in each array.
     theor_tracks = np.concatenate(
-        (a, b, mags_binar, cols_binar, probs_binar, mass_binar, d), axis=2)
+        (mags_intp, cols_intp, mags_binar, cols_binar, probs_binar, mass_binar,
+            extra_pars_intp), axis=2)
 
     # DEPRECATED 02-10-2019
     #
