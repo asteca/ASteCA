@@ -5,7 +5,7 @@ from scipy.special import gammaln
 # from scipy.signal import fftconvolve
 import logging
 import warnings
-# from .emcee3rc2 import autocorr
+from emcee import autocorr
 from .ptemcee import util
 
 

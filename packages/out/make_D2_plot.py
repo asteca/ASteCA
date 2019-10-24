@@ -21,7 +21,7 @@ def main(
 
         if pd['best_fit_algor'] == 'boot+GA':
             best_sol = isoch_fit_params['map_sol']
-        elif pd['best_fit_algor'] == 'ptemcee':
+        elif pd['best_fit_algor'] in ('ptemcee', 'emcee'):
             best_sol = isoch_fit_params['mean_sol']
 
         # Plot one ore more rows of CMDs/CCDs.

@@ -1,8 +1,9 @@
 
 from ..core_imp import np
 from . import max_mag_cut, obs_clust_prepare, bootstrap, ptemcee_algor
+from . import emcee_algor
 # brute_force_algor
-# emcee_algor, abcpmc_algor,
+# , abcpmc_algor,
 # TODO in place for #397: hopp_algor
 from ..synth_clust import extin_coefs
 from ..synth_clust import imf
@@ -83,14 +84,16 @@ def main(clp, pd):
         #     isoch_fit_params = brute_force_algor.main()
 
         # TODO not working yet
-        # elif best_fit_algor == 'emcee':
-        #     print('Using emcee algorithm ({}).'.format(
-        #         lkl_method + '; ' + lkl_binning if lkl_method == 'dolphin'
-        #         else lkl_method))
-        #     isoch_fit_params = emcee_algor.main()
-        #     # Assign uncertainties.
-        #     isoch_fit_errors = params_errors(
-        #         best_fit_algor, isoch_fit_params)
+        elif pd['best_fit_algor'] == 'emcee':
+            print('Using emcee algorithm ({}).'.format(
+                pd['lkl_method'] + '; ' + pd['lkl_binning'] if
+                pd['lkl_method'] == 'dolphin' else pd['lkl_method']))
+            isoch_fit_params = emcee_algor.main(
+                clp['err_lst'], clp['completeness'], clp['em_float'],
+                max_mag_syn, obs_clust, ext_coefs, st_dist_mass, N_fc,
+                m_ini, cmpl_rnd, err_rnd, **pd)
+            # Assign uncertainties.
+            isoch_fit_errors = params_errors(pd, isoch_fit_params)
 
         # TODO not working yet
         # elif best_fit_algor == 'abc':
@@ -170,7 +173,7 @@ def params_errors(pd, isoch_fit_params):
             # No error assignment.
             isoch_fit_errors = [[np.nan] * 3] * 6
 
-    elif pd['best_fit_algor'] in ('ptemcee'):  # , 'emcee', 'abc'
+    elif pd['best_fit_algor'] in ('ptemcee', 'emcee'):  # , , 'abc'
         isoch_fit_errors = assignUncertns(
             isoch_fit_params['varIdxs'], isoch_fit_params['mcmc_trace'])
 
