@@ -3,7 +3,6 @@ import numpy as np
 import warnings
 import time as t
 from . import likelihood
-# from .emcee3rc2 import autocorr
 from .mcmc_convergence import convergenceVals
 from .bf_common import initPop, varPars, synthClust, rangeCheck, fillParams,\
     r2Dist, modeKDE  # , thinChain

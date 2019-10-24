@@ -12,7 +12,7 @@ def main(best_fit_algor, fundam_params, isoch_fit_params, synthcl_args):
     if best_fit_algor == 'boot+GA':
         # Use ML fit values for all parameters.
         model = isoch_fit_params['map_sol']
-    elif best_fit_algor == 'ptemcee':
+    elif best_fit_algor in ('ptemcee', 'emcee'):
         # Use mean fit values for all parameters.
         model = isoch_fit_params['mean_sol']
 

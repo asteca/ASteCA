@@ -2,14 +2,13 @@
 import numpy as np
 from scipy.optimize import differential_evolution as DE
 from scipy.special import exp1
-from ..best_fit.emcee3rc2 import ensemble
 import warnings
 from .. import update_progress
 
 
 def main(
     clp, plx_bayes_flag, plx_offset, plx_chains, plx_runs, flag_plx_mp,
-        flag_make_plot, outlr_std=3., **kwargs):
+        flag_make_plot, inst_packgs_lst, outlr_std=3., **kwargs):
     """
     Bayesian parallax distance using the Bailer-Jones (2015) model with the
     'shape parameter' marginalized.
@@ -26,52 +25,58 @@ def main(
     plx_flag_clp, plx_bayes_flag_clp, plx_wa, plx_Bys, plx_ess = False, False,\
         np.nan, np.array([]), np.nan
 
-    if ('C2' in flag_make_plot) or plx_bayes_flag:
+    if 'emcee' not in inst_packgs_lst:
+        print("  WARNING: 'emcee' is not installed. Can not process Plx data")
+    else:
+        if ('C2' in flag_make_plot) or plx_bayes_flag:
 
-        # Extract parallax data.
-        plx = np.array(list(zip(*list(zip(*clp['cl_reg_fit']))[7]))[0])
-        # Array with no nan values
-        plx_clrg = plx[~np.isnan(plx)]
+            # Extract parallax data.
+            plx = np.array(list(zip(*list(zip(*clp['cl_reg_fit']))[7]))[0])
+            # Array with no nan values
+            plx_clrg = plx[~np.isnan(plx)]
 
-        plx_flag_clp = checkPlx(plx_clrg)
+            plx_flag_clp = checkPlx(plx_clrg)
 
-        if plx_flag_clp:
-            print("Processing parallaxes")
+            if plx_flag_clp:
+                print("Processing parallaxes")
 
-            # Reject outlr_std*\sigma outliers.
-            max_plx, min_plx = np.nanmedian(plx) + outlr_std * np.nanstd(plx),\
-                np.nanmedian(plx) - outlr_std * np.nanstd(plx)
+                # Reject outlr_std*\sigma outliers.
+                max_plx = np.nanmedian(plx) + outlr_std * np.nanstd(plx)
+                min_plx = np.nanmedian(plx) - outlr_std * np.nanstd(plx)
 
-            # Suppress Runtimewarning issued when 'plx' contains 'nan' values.
-            with np.warnings.catch_warnings():
-                np.warnings.filterwarnings('ignore')
-                plx_2s_msk = (plx < max_plx) & (plx > min_plx)
+                # Suppress Runtimewarning issued when 'plx' contains 'nan'
+                # values.
+                with np.warnings.catch_warnings():
+                    np.warnings.filterwarnings('ignore')
+                    plx_2s_msk = (plx < max_plx) & (plx > min_plx)
 
-            # Prepare masked data.
-            mmag_clp = np.array(
-                list(zip(*list(zip(*clp['cl_reg_fit']))[3]))[0])[plx_2s_msk]
-            mp_clp = np.array(list(zip(*clp['cl_reg_fit']))[9])[plx_2s_msk]
-            plx_clp = plx[plx_2s_msk]
-            e_plx_clp = np.array(
-                list(zip(*list(zip(*clp['cl_reg_fit']))[8]))[0])[plx_2s_msk]
-            # Take care of possible zero values that can produce issues since
-            # errors are in the denominator.
-            e_plx_clp[e_plx_clp == 0.] = 10.
+                # Prepare masked data.
+                mmag_clp = np.array(
+                    list(zip(*list(zip(
+                        *clp['cl_reg_fit']))[3]))[0])[plx_2s_msk]
+                mp_clp = np.array(list(zip(*clp['cl_reg_fit']))[9])[plx_2s_msk]
+                plx_clp = plx[plx_2s_msk]
+                e_plx_clp = np.array(
+                    list(zip(*list(zip(
+                        *clp['cl_reg_fit']))[8]))[0])[plx_2s_msk]
+                # Take care of possible zero values that can produce issues
+                # since errors are in the denominator.
+                e_plx_clp[e_plx_clp == 0.] = 10.
 
-            # Weighted average.
-            # Source: https://physics.stackexchange.com/a/329412/8514
-            plx_w = mp_clp / np.square(e_plx_clp)
-            plx_w = plx_w if plx_w.sum() > 0. else None
-            plx_wa = np.average(plx_clp, weights=plx_w)
+                # Weighted average.
+                # Source: https://physics.stackexchange.com/a/329412/8514
+                plx_w = mp_clp / np.square(e_plx_clp)
+                plx_w = plx_w if plx_w.sum() > 0. else None
+                plx_wa = np.average(plx_clp, weights=plx_w)
 
-            if plx_bayes_flag:
-                plx_samples, plx_Bys, plx_bayes_flag_clp, plx_tau_autocorr,\
-                    mean_afs, plx_ess = plxBayes(
-                        plx_offset, plx_chains, plx_runs, flag_plx_mp, plx_clp,
-                        e_plx_clp, mp_clp)
+                if plx_bayes_flag:
+                    plx_samples, plx_Bys, plx_bayes_flag_clp,\
+                        plx_tau_autocorr, mean_afs, plx_ess = plxBayes(
+                            plx_offset, plx_chains, plx_runs, flag_plx_mp,
+                            plx_clp, e_plx_clp, mp_clp)
 
-        else:
-            print("  WARNING: no valid Plx data found")
+            else:
+                print("  WARNING: no valid Plx data found")
 
     clp.update({
         'plx_flag_clp': plx_flag_clp, 'plx_clrg': plx_clrg,
@@ -98,6 +103,7 @@ def plxBayes(
         mp_clp):
     """
     """
+    from emcee import ensemble
     plx_bayes_flag_clp = True
 
     # Add offset to parallax data.

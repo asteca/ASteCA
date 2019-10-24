@@ -69,31 +69,37 @@ def pl_Tswaps(gs, N_steps, tswaps_afs):
     ax.legend(fontsize='small', loc=0)
 
 
-def pl_MAF(gs, N_steps, maf_allT):
+def pl_MAF(gs, algor, N_steps, maf_steps):
     '''
     Evolution of MAF values.
     '''
     ax = plt.subplot(gs[0:2, 6:8])
-    ax.set_title(
-        r"$MAF_{{[T=1]}}={:.3f}$".format(maf_allT[0][-1]), fontsize=10)
-    # x, y = list(zip(*maf_steps))
-    # x, y_replicas = maf_steps
-    Nt = len(maf_allT) - 1
-    for i, y in enumerate(maf_allT):
-        if i == 0:
-            lbl_ls = ("Cold", '--', 1.5, 4)
-        elif i == Nt:
-            lbl_ls = ("Hot", ':', 1.5, 4)
-        else:
-            lbl_ls = (None, '-', .5, 1)
-        ax.plot(
-            N_steps, y, label=lbl_ls[0], ls=lbl_ls[1], lw=lbl_ls[2],
-            zorder=lbl_ls[3])
+    if algor == 'ptemcee':
+        ax.set_title(
+            r"$MAF_{{[T=1]}}={:.3f}$".format(maf_steps[0][-1]), fontsize=10)
+        # x, y = list(zip(*maf_steps))
+        # x, y_replicas = maf_steps
+        Nt = len(maf_steps) - 1
+        for i, y in enumerate(maf_steps):
+            if i == 0:
+                lbl_ls = ("Cold", '--', 1.5, 4)
+            elif i == Nt:
+                lbl_ls = ("Hot", ':', 1.5, 4)
+            else:
+                lbl_ls = (None, '-', .5, 1)
+            ax.plot(
+                N_steps, y, label=lbl_ls[0], ls=lbl_ls[1], lw=lbl_ls[2],
+                zorder=lbl_ls[3])
+        ax.legend(fontsize='small', loc=0)  # , handlelength=0.)
+
+    elif algor == 'emcee':
+        ax.set_title(r"$MAF={:.3f}$".format(maf_steps[-1]), fontsize=10)
+        ax.plot(N_steps, maf_steps, lw=1.5)
+
     plt.xlabel("steps", fontsize=14)
     plt.ylabel("MAF", fontsize=14)
     plt.axhline(y=.25, color='grey', ls=':', lw=1.2, zorder=4)
     plt.axhline(y=.5, color='grey', ls=':', lw=1.2, zorder=4)
-    ax.legend(fontsize='small', loc=0)  # , handlelength=0.)
 
 
 def pl_mESS(dummy, gs, mESS, minESS, minESS_epsilon):
@@ -140,9 +146,9 @@ def pl_tau(gs, N_steps, tau_autocorr):
     plt.ylabel(r"$\hat{\tau}_{{c\,|\,p}}$", fontsize=14)
 
     N_steps, taus = tau_autocorr
-    plt.plot(N_steps, N_steps / 50., "--g", label="N/50")
-    plt.plot(N_steps, N_steps / 100., "--b", label="N/100")
-    plt.plot(N_steps, N_steps / 500., "--r", label="N/500")
+    plt.plot(N_steps, N_steps / 100., "--g", label="N/100")
+    plt.plot(N_steps, N_steps / 500., "--b", label="N/500")
+    plt.plot(N_steps, N_steps / 1000., "--r", label="N/1000")
     plt.plot(N_steps, taus)
     # plt.xlim(0, max(N_steps))
     try:
