@@ -127,12 +127,13 @@ def coordsDens(N_stars, x_grid, y_grid, kernel, positions, k_pos):
     bw = bw / 10.
 
     # Coordinates for maximum KDE value
-    kde_cent = positions.T[np.argmax(k_pos)]
-    intg = kernel.integrate_box((kde_cent - bw), (kde_cent + bw))
-    kde_dens_max = intg * N_stars / bw**2
+    kde_max = positions.T[np.argmax(k_pos)]
+    intgrl_max = kernel.integrate_box((kde_max - bw), (kde_max + bw))
+    kde_dens_max = intgrl_max * N_stars / bw**2
+
     # Coordinates for minimum KDE value
     kde_min = positions.T[np.argmin(k_pos)]
-    intg = kernel.integrate_box((kde_min - bw), (kde_min + bw))
-    kde_dens_min = intg * N_stars / bw**2
+    intgrl_min = kernel.integrate_box((kde_min - bw), (kde_min + bw))
+    kde_dens_min = intgrl_min * N_stars / bw**2
 
     return kde_dens_max, kde_dens_min
