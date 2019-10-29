@@ -4,7 +4,7 @@ from scipy.spatial.distance import cdist
 
 
 def main(clp, x, y, **kwargs):
-    '''
+    """
     Calculate the contamination index value. This parameter is defined as the
     ratio of field stars density over the density of stars in the cluster
     region. Uses the 'incomplete' data.
@@ -15,14 +15,14 @@ def main(clp, x, y, **kwargs):
     and cluster members are expected inside the cluster region. A value of
     1 means there are no expected cluster members inside the cluster region
     (which isn't a good sign).
-    '''
+    """
 
     # If the cluster radius exceeds the length of the area where the field
     # density value was obtained (ie: the extension of the RDP), then do not
     # obtain the 'cont_index' parameter since the field density does not
     # represent the density of the field but rather the density of the
     # outermost regions of the cluster.
-    if clp['clust_rad'] < clp['rdp_length'] / 2.:
+    if clp['clust_rad'] < clp['rdp_radii'][-1]:
 
         # Count the total number of stars within the defined cluster region
         # (including stars with rejected photometric errors)

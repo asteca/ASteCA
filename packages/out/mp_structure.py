@@ -83,22 +83,25 @@ def pl_rad_dens(
     else:
         coord2 = 'px'
 
-    ax = plt.subplot(gs[0:2, 2:6])
+    ax = plt.subplot(gs[0:2, 2:4])
     # Get max and min values in x,y
-    x_min, x_max = max(min(radii) - (max(radii) / 20.), 0), \
-        min(max(radii) + (max(radii) / 20.), 3. * clust_rad)
+    x_min = max(min(radii) - (max(radii) / 20.), 0)
+    x_max = min(max(radii) + (max(radii) / 20.), 3. * clust_rad)
+
+    N_h = int(.5 * len(rdp_points))
     delta_total = (max(rdp_points) - field_dens)
-    delta_backg = 0.2 * delta_total
+    delta_backg = 0.1 * delta_total
     y_min = max((field_dens - delta_backg) -
-                (max(rdp_points) - min(rdp_points)) / 10, 0)
-    y_max = max(rdp_points) + (max(rdp_points) - min(rdp_points)) / 10
+                (max(rdp_points[:N_h]) - min(rdp_points[:N_h])) / 10., 0)
+    y_max = max(rdp_points[:N_h]) + (
+        max(rdp_points[:N_h]) - min(rdp_points[:N_h])) / 10.
     # Set plot limits
     plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
     ax.minorticks_on()
     # Set axes labels
     plt.xlabel(r'radius $[{}]$'.format(coord2), fontsize=12)
-    plt.ylabel(r"N $[st/{}^{{2}}]$".format(coord2), fontsize=12)
+    plt.ylabel(r"$\rho$ $[st/{}^{{2}}]$".format(coord2), fontsize=12)
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5)
     # Cluster's name and mode used to process it.
     plt.title(str(clust_name), fontsize=12)
@@ -117,20 +120,25 @@ def pl_rad_dens(
         (r"$r_{{cl}}=$" + r_frmt + r"$\pm$" + r_frmt + r' $[{}]$').format(
             clust_rad, e_rad, coord2)
     ]
-    # Plot density profile with the smallest bin size
-    ax.plot(radii, rdp_points, 'ko-', zorder=3, label=texts[0])
+    # Plot density profile
+    ax.plot(radii, rdp_points, marker='o', ms=5, lw=1.5, zorder=3,
+            label=texts[0])
     # Plot Poisson error bars
-    plt.errorbar(radii, rdp_points, yerr=poisson_error, fmt='ko',
-                 zorder=1)
+    plt.errorbar(
+        radii, rdp_points, yerr=poisson_error, fmt='none', ecolor='grey',
+        lw=.8, zorder=1)
     # Plot background level.
     ax.hlines(y=field_dens, xmin=0, xmax=max(radii), label=texts[1],
-              color='b', zorder=5)
-    # Approx middle of the graph.
-    arr_y_up = (y_max - y_min) / 2.3 + y_min
-    # Length and width of arrow head.
-    head_w, head_l = x_max * 0.023, (y_max - y_min) * 0.045
-    # Length of arrow.
-    arr_y_dwn = -1. * abs(arr_y_up - field_dens) * 0.76
+              color='k', ls='--', zorder=5)
+    # Plot radius.
+    y_mid_point = (y_max + y_min) * .5
+    ax.vlines(x=clust_rad, ymin=field_dens, ymax=y_mid_point, lw=1.5,
+              color='r', label=texts[5], zorder=5)
+    # Plot radius error zone.
+    if e_rad > 0.:
+        plt.axvspan((clust_rad - e_rad), (clust_rad + e_rad),
+                    facecolor='grey', alpha=0.5)
+
     # Plot 3-P King profile.
     if flag_3pk_conver:
         # Plot curve.
@@ -138,13 +146,14 @@ def pl_rad_dens(
             radii, tidal_rad, K_cent_dens, core_rad, field_dens),
             'g--', label=texts[2], lw=2., zorder=3)
         # Plot r_t radius as an arrow. vline is there to show the label.
-        ax.vlines(x=tidal_rad, ymin=0., ymax=0., label=texts[4], color='g')
-        ax.arrow(tidal_rad, arr_y_up, 0., arr_y_dwn, fc="g", ec="g",
-                 head_width=head_w, head_length=head_l, zorder=4)
+        ax.vlines(x=tidal_rad, ymin=field_dens, ymax=y_mid_point,
+                  label=texts[4], color='g')
+        # ax.arrow(tidal_rad, arr_y_up, 0., arr_y_dwn, fc="g", ec="g",
+        #          head_width=head_w, head_length=head_l, zorder=4)
         # Plot r_c as a dashed line.
-        ax.vlines(x=core_rad, ymin=0, ymax=kpf.three_params(
+        ax.vlines(x=core_rad, ymin=field_dens, ymax=kpf.three_params(
             core_rad, tidal_rad, K_cent_dens, core_rad, field_dens),
-            label=texts[3], color='g', linestyles=':', lw=4., zorder=5)
+            label=texts[3], color='g', linestyles=':', lw=2., zorder=5)
     # Plot 2-P King profile if 3-P was not found.
     elif flag_2pk_conver:
         # Plot curve.
@@ -152,35 +161,41 @@ def pl_rad_dens(
             radii, K_cent_dens, core_rad, field_dens), 'g--', label=texts[2],
             lw=2., zorder=3)
         # Plot r_c as a dashed line.
-        ax.vlines(x=core_rad, ymin=0, ymax=kpf.two_params(
+        ax.vlines(x=core_rad, ymin=field_dens, ymax=kpf.two_params(
             core_rad, K_cent_dens, core_rad, field_dens), label=texts[3],
-            color='g', linestyles=':', lw=4., zorder=4)
-    # Plot radius.
-    ax.vlines(x=clust_rad, ymin=0, ymax=0., label=texts[5], color='r')
-    ax.arrow(clust_rad, arr_y_up, 0., arr_y_dwn, fc="r", ec="r",
-             head_width=head_w, head_length=head_l, zorder=5)
-    # Plot radius error zone.
-    if e_rad > 0.:
-        plt.axvspan((clust_rad - e_rad), (clust_rad + e_rad),
-                    facecolor='grey', alpha=0.5)
+            color='g', linestyles=':', lw=2., zorder=4)
+
     # get handles
     handles, labels = ax.get_legend_handles_labels()
     # use them in the legend
     ax.legend(handles, labels, loc='upper right', numpoints=2, fontsize=10)
 
+    ax = plt.subplot(gs[0:2, 4:6])
+    ax.grid(b=True, which='both', color='gray', linestyle='--', lw=.5)
+    plt.xlabel(r'log(radius) $[{}]$'.format(coord2), fontsize=12)
+    plt.ylabel(r"log($\rho$) $[st/{}^{{2}}]$".format(coord2), fontsize=12)
+    ax.plot(radii, rdp_points, marker='o', ms=5, lw=1.5, zorder=5)
+    ax.hlines(y=field_dens, xmin=min(radii), xmax=max(radii), label=texts[1],
+              color='k', ls='--', zorder=5)
+    ax.vlines(
+        x=clust_rad, ymin=field_dens, ymax=y_mid_point, lw=1.5, color='r')
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+
 
 def pl_full_frame(
     gs, fig, project, x_offset, y_offset, x_name, y_name, coord, x_min, x_max,
-    y_min, y_max, asp_ratio, kde_cent, clust_rad, x, y, st_sizes_arr, core_rad,
-    e_core, tidal_rad, e_tidal, K_conct_par, flag_2pk_conver,
-        flag_3pk_conver):
+    y_min, y_max, asp_ratio, kde_cent, clust_rad, frac_cl_area, x, y,
+    st_sizes_arr, core_rad, e_core, tidal_rad, e_tidal, K_conct_par,
+        flag_2pk_conver, flag_3pk_conver):
     '''
     x,y finding chart of full frame
     '''
     ax = plt.subplot(gs[2:4, 0:2])
     ax.set_aspect(aspect=asp_ratio)
     ax.set_title(
-        r"$N_{{stars}}$={} (phot incomp)".format(len(x)), fontsize=9)
+        r"$N_{{stars}}$={}, $A_{{fr}}$={:.0f}% (phot incomp)".format(
+            len(x), 100. * frac_cl_area), fontsize=9)
     # Set plot limits
     plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)

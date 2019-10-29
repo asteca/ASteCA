@@ -7,6 +7,110 @@ from . import king_prof_funcs as kpf
 from ..out import prep_plots
 
 
+def main(clp, kp_flag, coords, **kwargs):
+    '''
+    Function to fit a King profile to a given radial density.
+    The field density value is fixed and the core radius, tidal radius and
+    maximum central density are fitted.
+    '''
+
+    # Flags that indicate either no convergence or that the fits were not
+    # attempted.
+    flag_2pk_conver, flag_3pk_conver = False, False
+
+    # Initial dummy values, used if function is skipped.
+    rc, e_rc, rt, e_rt, n_c_k, kcp, cd = np.nan, np.nan, np.nan, np.nan,\
+        np.nan, np.nan, np.nan
+
+    # Check flag to run or skip.
+    if kp_flag:
+
+        clust_rad, field_dens, radii, rdp_points = clp['clust_rad'],\
+            clp['field_dens'], clp['rdp_radii'], clp['rdp_points']
+
+        # Field density value is fixed.
+        fd = field_dens
+        # Initial guesses for fit: max_dens, rt, rc
+        max_dens, rt_guess, rc_guess = max(rdp_points), clust_rad, \
+            clust_rad / 2.
+
+        # Skip first radius value if it is smaller than the second value. This
+        # makes it easier for the KP to converge.
+        if rdp_points[0] > rdp_points[1]:
+            radii_k, ring_dens_k = radii, rdp_points
+        else:
+            radii_k, ring_dens_k = radii[1:], rdp_points[1:]
+
+        # USE AT SOME POINT?
+        # # Find maximum density value and assume this is the central density.
+        # # Do not use previous values.
+        # max_dens_ind = np.argmax(rdp_points)
+        # radii_k, ring_dens_k = radii[max_dens_ind:],rdp_points[max_dens_ind:]
+
+        # Attempt to fit a 3P-KP, fixing *only* the field density.
+        try:
+            guess3 = (max_dens, rc_guess, rt_guess)
+            cd, rc, e_rc, rt, e_rt = fit_3P_King_prof(
+                fd, radii_k, ring_dens_k, guess3)
+            # Fit converged.
+            flag_3pk_conver = True
+
+        except Exception as e:
+            print(e)
+            flag_3pk_conver = False
+
+            # Attempt to fit a 2P-KP to obtain the core radius.
+            try:
+                guess2 = (max_dens, rc_guess)
+                cd, rc, e_rc = fit_2P_King_prof(fd, radii_k, ring_dens_k,
+                                                guess2)
+                # Fit converged.
+                flag_2pk_conver = True
+
+                # Attempt to fit a 3P-KP, fixing the obtained r_core value, and
+                # the field density.
+                try:
+                    guess3 = (max_dens, rt_guess)
+                    rt, e_rt = fit_3P_2P_King_prof(fd, rc, radii_k,
+                                                   ring_dens_k, guess3)
+                    # Fit converged.
+                    flag_3pk_conver = True
+
+                except Exception as e:
+                    print(e)
+
+            except Exception as e:
+                print(e)
+                # 2P-KP did not converge.
+                flag_2pk_conver = False
+
+        # Obtain number of members and concentration parameter.
+        n_c_k, kcp = num_memb_conc_param(flag_3pk_conver, cd, rt, rc)
+
+        # Print results.
+        coord = prep_plots.coord_syst(coords)[0]
+        if flag_3pk_conver:
+            # Set precision of printed values.
+            text2 = '{:.1f}, {:.1f}' if coord == 'px' else '{:g}, {:g}'
+            text = 'Core & tidal radii obtained: ' + text2 + ' {}.'
+            print(text.format(rc, rt, coord))
+
+        elif flag_2pk_conver:
+            # Set precision of printed values.
+            text2 = '{:.1f}' if coord == 'px' else '{:g}'
+            text = 'Only core radius obtained: ' + text2 + ' {}.'
+            print(text.format(rc, coord))
+
+        else:
+            print("Core & tidal radii not found")
+
+    clp['core_rad'], clp['e_core'], clp['tidal_rad'], clp['e_tidal'],\
+        clp['K_memb_num'], clp['K_conct_par'], clp['K_cent_dens'],\
+        clp['flag_2pk_conver'], clp['flag_3pk_conver'] = rc, e_rc, rt, e_rt,\
+        n_c_k, kcp, cd, flag_2pk_conver, flag_3pk_conver
+    return clp
+
+
 def fit_3P_King_prof(fd, radii_k, ring_dens_k, guess3):
     '''
     Fit central density, core radius and tidal radius, using a fixed
@@ -134,107 +238,3 @@ def num_memb_conc_param(flag_3pk_conver, cd, rt, rc):
         kcp = np.log10(rt / rc)
 
     return n_c_k, kcp
-
-
-def main(clp, kp_flag, coords, **kwargs):
-    '''
-    Function to fit a King profile to a given radial density.
-    The field density value is fixed and the core radius, tidal radius and
-    maximum central density are fitted.
-    '''
-
-    clust_rad, field_dens, radii, rdp_points = clp['clust_rad'],\
-        clp['field_dens'], clp['radii'], clp['rdp_points']
-    # Flags that indicate either no convergence or that the fits were not
-    # attempted.
-    flag_2pk_conver, flag_3pk_conver = False, False
-
-    # Initial dummy values, used if function is skipped.
-    rc, e_rc, rt, e_rt, n_c_k, kcp, cd = np.nan, np.nan, np.nan, np.nan,\
-        np.nan, np.nan, np.nan
-
-    # Check flag to run or skip.
-    if kp_flag:
-
-        # Field density value is fixed.
-        fd = field_dens
-        # Initial guesses for fit: max_dens, rt, rc
-        max_dens, rt_guess, rc_guess = max(rdp_points), clust_rad, \
-            clust_rad / 2.
-
-        # Skip first radius value if it is smaller than the second value. This
-        # makes it easier for the KP to converge.
-        if rdp_points[0] > rdp_points[1]:
-            radii_k, ring_dens_k = radii, rdp_points
-        else:
-            radii_k, ring_dens_k = radii[1:], rdp_points[1:]
-
-        # USE AT SOME POINT?
-        # # Find maximum density value and assume this is the central density.
-        # # Do not use previous values.
-        # max_dens_ind = np.argmax(rdp_points)
-        # radii_k, ring_dens_k = radii[max_dens_ind:],rdp_points[max_dens_ind:]
-
-        # Attempt to fit a 3P-KP, fixing *only* the field density.
-        try:
-            guess3 = (max_dens, rc_guess, rt_guess)
-            cd, rc, e_rc, rt, e_rt = fit_3P_King_prof(fd, radii_k,
-                                                      ring_dens_k,
-                                                      guess3)
-            # Fit converged.
-            flag_3pk_conver = True
-
-        except Exception as e:
-            print(e)
-            flag_3pk_conver = False
-
-            # Attempt to fit a 2P-KP to obtain the core radius.
-            try:
-                guess2 = (max_dens, rc_guess)
-                cd, rc, e_rc = fit_2P_King_prof(fd, radii_k, ring_dens_k,
-                                                guess2)
-                # Fit converged.
-                flag_2pk_conver = True
-
-                # Attempt to fit a 3P-KP, fixing the obtained r_core value, and
-                # the field density.
-                try:
-                    guess3 = (max_dens, rt_guess)
-                    rt, e_rt = fit_3P_2P_King_prof(fd, rc, radii_k,
-                                                   ring_dens_k, guess3)
-                    # Fit converged.
-                    flag_3pk_conver = True
-
-                except Exception as e:
-                    print(e)
-
-            except Exception as e:
-                print(e)
-                # 2P-KP did not converge.
-                flag_2pk_conver = False
-
-        # Obtain number of members and concentration parameter.
-        n_c_k, kcp = num_memb_conc_param(flag_3pk_conver, cd, rt, rc)
-
-        # Print results.
-        coord = prep_plots.coord_syst(coords)[0]
-        if flag_3pk_conver:
-            # Set precision of printed values.
-            text2 = '{:.1f}, {:.1f}' if coord == 'px' else '{:g}, {:g}'
-            text = 'Core & tidal radii obtained: ' + text2 + ' {}.'
-            print(text.format(rc, rt, coord))
-
-        elif flag_2pk_conver:
-            # Set precision of printed values.
-            text2 = '{:.1f}' if coord == 'px' else '{:g}'
-            text = 'Only core radius obtained: ' + text2 + ' {}.'
-            print(text.format(rc, coord))
-
-        else:
-            print("Core & tidal radii not found")
-
-    clp['core_rad'], clp['e_core'], clp['tidal_rad'], clp['e_tidal'],\
-        clp['K_memb_num'], clp['K_conct_par'], clp['K_cent_dens'],\
-        clp['flag_2pk_conver'], clp['flag_3pk_conver'] = rc, e_rc, rt, e_rt,\
-        n_c_k, kcp, cd, flag_2pk_conver, flag_3pk_conver
-    return clp
