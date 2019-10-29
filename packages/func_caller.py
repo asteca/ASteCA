@@ -113,7 +113,7 @@ def main(cl_file, pd):
     clp = center.main(cld_i, clp, **pd)
 
     # Density profile
-    clp = radial_dens_prof.main(clp)
+    clp = radial_dens_prof.main(clp, **cld_i)
 
     # Field density value in stars/<area unit>.
     clp = field_density.main(clp, **pd)
