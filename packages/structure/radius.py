@@ -72,7 +72,7 @@ def radius_algor(clp, coord, radius_method):
     This function holds the main algorithm that returns a radius value.
     '''
 
-    radii, rdp_points, bin_width, field_dens = clp['radii'],\
+    radii, rdp_points, bin_width, field_dens = clp['rdp_radii'],\
         clp['rdp_points'], clp['bin_width'], clp['field_dens']
     # Find maximum density value and assume this is the central density.
     # Do not use previous values.
