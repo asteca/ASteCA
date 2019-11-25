@@ -21,13 +21,16 @@ def traceplots(
 
     gs_x1, gs_x2, gs_y1, gs_y2, cp = plot_dict[par_name]
     ax = plt.subplot(gs[gs_y1:gs_y2, gs_x1:gs_x2])
-    if cp == 5:
-        plt.xlabel("Steps")
+    if cp == 0:
+        plt.title("Mean chain")
+    elif cp == 5:
+        ax.set_title(
+            r"Chain with the closest $\tau$ to the median", fontsize=10)
     else:
         ax.tick_params(labelbottom=False)
     plt.ylabel(labels[cp])
 
-    if best_fit_algor in ('ptemcee'):
+    if best_fit_algor in ('ptemcee', 'emcee'):
         acorr_t, med_at_c, mcmc_ess = method_args
         N_pre = pre_trace.shape[-1]
         N_tot = N_pre + post_trace.shape[-1]
