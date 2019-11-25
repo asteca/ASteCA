@@ -144,7 +144,7 @@ MD  CLUSTER    n        n        n       n
 
 # Center assignment function.
 #
-# *  bandwidth: [float]
+# * bandwidth: [float]
 #   The bandwidth used by the Gaussian KDE applied to the 2-dimensional (x,y)
 #   stars coordinates. If 'bandwidth=0' then half of Scott's rule is employed
 #   (this generally gives good results).
@@ -152,24 +152,22 @@ MD  CLUSTER    n        n        n       n
 #   bandwidth
 CH         .0
 
-# Radius assignment function.
+# Field density and radius.
 #
-# * mode: low / mid / high
-#   Determines how aggressively the algorithm assigns the radius for the
-#   cluster.
+# * NN: [int]
+#   The number of neighbors used to estimate the per-star densities.
 #
-#   - low: will favor smaller radii. Useful when the cluster region is
-#     very contaminated, to prevent artificially large radii.
-#   - mid: (default) balanced option.
-#   - high: will favor larger radii. Useful when all possible members
-#     must be present.
+# * field_dens: [min, last] / [float>0.]
+#   If 'min' or 'last' are selected, the code will use the minimum value and
+#   last value in the field density array, respectively. Else, a float needs
+#   to be given.
 #
-# * field_dens: auto / [float>0.]
-#   If 'auto' is selected, the code will automatically estimate the density of
-#   field stars. Else, a float needs to be given.
+# * N_steps: [int]
+#   The number of bootstrap steps employed to estimate uncertainty associated
+#   to the radius.
 #
-#   mode    field_dens
-CR   mid          auto
+#   NN    field_dens   N_steps
+FD  10          auto      1000
 
 # King profile function.
 #
