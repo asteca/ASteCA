@@ -322,7 +322,7 @@ FR  local     knuth          0.5
 #   Use MPs in the parallax analysis?
 #
 #   plx_flag   offset   n_chains   n_runs   mp_flag
-PP         n    0.029         10     5000         y
+PX         n    0.029         10     5000         y
 
 # Proper motions analysis
 #
@@ -348,9 +348,10 @@ PO        3.        10            5             y
 
 # Algorithm used to maximize/explore the parameter space given a likelihood.
 #
-# * algorithm: ptemcee / boot+GA / n
+# * algorithm: ptemcee / emcee / boot+GA / n
 #
 #   - ptemcee: Parallel tempering Bayesian MCMC algorithm.
+#   - emcee  : The MCMC hammer.
 #   - boot+GA: Bootstrap process using a genetic algorithm to obtain the MLE.
 #   - n      : No fundamental parameters estimation will be attempted on the
 #              observed cluster. All the parameters below are ignored.
@@ -375,22 +376,16 @@ RD         8       15
 RM       100    10000
 RB         0        1
 
-# ptemcee parameters.
+# ptemcee/emcee parameters.
 #
-#   - ntemps: [int], Number of parallel temperatures.
+# Parameters shared by these two methods.
+#
 #   - nsteps: [int], Number of steps used.
 #   - nwalkers: [int], Number of walkers/chains used.
 #   - nburn: [0<float<1], percentage of the chain discarded as burn-in.
-#   - Tmax: [float] / inf / n, maximum temperature value.
-#   - adapt: y / n, turn on-off the adaptive (dynamic) temperature selection.
 #
-#   - N_conv: [int], minimum number for the the effective sample size to apply
-#             the convergence break.
-#   - tol_conv: [float], minimum tolerance for the stability of the
-#               autocorrelation time to apply the convergence break.
-#
-#     ntemps    nsteps   nwalkers   nburn    Tmax   adapt
-PT       20       1000         20     .25      20       y
+#     nsteps   nwalkers   nburn
+PS      1000         20     .25
 #
 #   - prior: u / g, uniform (u) or Gaussian (g) prior distributions for the
 #     fitted parameters. 'mean/stddev' are only required if the 'g' prior is
@@ -403,6 +398,26 @@ PTE       u       0.5        0.02
 PTD       u        14         0.5
 PTM       u      1000         500
 PTB       u       0.5         0.2
+
+# emcee parameters.
+#
+#   - moves: [str]
+#     Define a valid 'emcee' move. Valid options (and combinations):
+#     StretchMove(), WalkMove(), KDEMove(), DEMove(), DESnookerMove(),
+#     GaussianMove(), MHMove()
+#
+#     moves
+PE    StretchMove()
+
+# ptemcee parameters.
+#
+#   - ntemps: [int], Number of parallel temperatures (ptemcee only).
+#   - Tmax: [float] / inf / n, maximum temperature value (ptemcee only).
+#   - adapt: y / n, turn on-off the adaptive (dynamic) temperature selection
+#     (ptemcee only).
+#
+#     ntemps   Tmax   adapt
+PT        20     20       y
 
 # Bootstrap parameters
 #
@@ -437,25 +452,26 @@ GA     50    1.     0.85      2P    0.1     1   100    50
 
 # Likelihood equation.
 #
-# * likelihood: dolphin / tolstoy
+# * likelihood: tremmel / dolphin / tolstoy
 #
-#   - dolphin: uses the 'Poisson likelihood ratio' (Dolphin (2002); Eq. 10)
-#     Requires the selection of a binning method.
+#   - tremmel: uses the 'Poisson likelihood ratio' defined in Tremmel et al.
+#     (2013); Eq. 10 (with v_{i,j}=1)
+#   - dolphin: uses the 'Poisson likelihood ratio' defined in Dolphin (2002);
+#     Eq. 10. Requires the selection of a binning method.
 #   - tolstoy: weighted bin-free statistic as that defined in Tolstoy & Saha
-#     (1996), Monteiro et al (2010) and Hernández & Valls-Gabaud (2008). If
-#     this method is selected, 'binning' is ignored.
+#     (1996), Monteiro et al (2010) and Hernández & Valls-Gabaud (2008).
 #
 # * binning: fixed / auto / fd / doane / scott / rice / sqrt
 #            sturges / knuth / blocks / blocks_max
-#   Binning method to be used if the likelihood equation by 'dolphin' is
+#   Binning method used if the 'tremmel' or 'dolphin' likelihoods are
 #   selected. Otherwise this parameter is ignored.
 #
 # * weight: mean / median / max
-#   Weight applied to each bin defined by the 'binning' parameter, if 'dolphin'
-#   is selected. Otherwise this parameter is ignored.
+#   Weight applied to each bin defined by the 'binning' parameter. Otherwise
+#   this parameter is ignored.
 #
 #   likelihood    binning    weight
-LK     dolphin      knuth      mean
+LK     tremmel      knuth      mean
 ################################################################################
 
 

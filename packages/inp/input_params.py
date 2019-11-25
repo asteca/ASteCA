@@ -118,7 +118,7 @@ def main(mypath, pars_f_path):
                     fld_clean_prob = float(reader[3])
 
                 # Parallax & PMS analysis
-                elif reader[0] == 'PP':
+                elif reader[0] == 'PX':
                     plx_bayes_flag = True if reader[1] in true_lst else False
                     plx_offset = float(reader[2])
                     plx_chains = int(reader[3])
@@ -150,26 +150,33 @@ def main(mypath, pars_f_path):
                 elif reader[0] == 'RB':
                     b_range = list(map(float, reader[1:]))
 
+                # Shared ptemcee/emcee parameters.
+                elif reader[0] == 'PS':
+                    nsteps_mcee = int(float(reader[1]))
+                    nwalkers_mcee = int(float(reader[2]))
+                    nburn_mcee = float(reader[3])
+                elif reader[0] == 'PRZ':
+                    z_prior = [reader[1]] + list(map(float, reader[2:]))
+                elif reader[0] == 'PRA':
+                    a_prior = [reader[1]] + list(map(float, reader[2:]))
+                elif reader[0] == 'PRE':
+                    e_prior = [reader[1]] + list(map(float, reader[2:]))
+                elif reader[0] == 'PRD':
+                    d_prior = [reader[1]] + list(map(float, reader[2:]))
+                elif reader[0] == 'PRM':
+                    m_prior = [reader[1]] + list(map(float, reader[2:]))
+                elif reader[0] == 'PRB':
+                    b_prior = [reader[1]] + list(map(float, reader[2:]))
+
+                # emcee algorithm parameters.
+                elif reader[0] == 'PE':
+                    emcee_moves = reader[1:]
+
                 # ptemcee algorithm parameters.
                 elif reader[0] == 'PT':
-                    ntemps = reader[1]
-                    nsteps_pt = int(float(reader[2]))
-                    nwalkers_pt = int(float(reader[3]))
-                    nburn_pt = float(reader[4])
-                    tmax_pt = reader[5]
-                    pt_adapt = True if reader[6] in true_lst else False
-                elif reader[0] == 'PTZ':
-                    pt_z_prior = [reader[1]] + list(map(float, reader[2:]))
-                elif reader[0] == 'PTA':
-                    pt_a_prior = [reader[1]] + list(map(float, reader[2:]))
-                elif reader[0] == 'PTE':
-                    pt_e_prior = [reader[1]] + list(map(float, reader[2:]))
-                elif reader[0] == 'PTD':
-                    pt_d_prior = [reader[1]] + list(map(float, reader[2:]))
-                elif reader[0] == 'PTM':
-                    pt_m_prior = [reader[1]] + list(map(float, reader[2:]))
-                elif reader[0] == 'PTB':
-                    pt_b_prior = [reader[1]] + list(map(float, reader[2:]))
+                    pt_ntemps = reader[1]
+                    pt_tmax = reader[2]
+                    pt_adapt = True if reader[3] in true_lst else False
 
                 # TODO not finished yet
                 # # ABC algorithm parameters.
@@ -260,8 +267,7 @@ def main(mypath, pars_f_path):
     # Accepted forms of priors.
     bayes_priors = ('u', 'g')
 
-    priors_pt = [
-        pt_z_prior, pt_a_prior, pt_e_prior, pt_d_prior, pt_m_prior, pt_b_prior]
+    priors_mcee = [z_prior, a_prior, e_prior, d_prior, m_prior, b_prior]
 
     # Map evolutionary tracks selection to proper names, and name of the folder
     # where they should be stored.
@@ -331,9 +337,10 @@ def main(mypath, pars_f_path):
         # parameters ranges
         'par_ranges': par_ranges,
         # ptemcee algorithm parameters.
-        'ntemps': ntemps, 'nsteps_pt': nsteps_pt,
-        'nwalkers_pt': nwalkers_pt, 'nburn_pt': nburn_pt,
-        "pt_adapt": pt_adapt, 'tmax_pt': tmax_pt, 'priors_pt': priors_pt,
+        'nsteps_mcee': nsteps_mcee, 'nwalkers_mcee': nwalkers_mcee,
+        'nburn_mcee': nburn_mcee, 'priors_mcee': priors_mcee,
+        'emcee_moves': emcee_moves,
+        'pt_ntemps': pt_ntemps, "pt_adapt": pt_adapt, 'pt_tmax': pt_tmax,
         # # ABC algorithm parameters.
         # 'nwalkers_abc': nwalkers_abc, 'nburn_abc': nburn_abc,
         # 'nsteps_abc': nsteps_abc, 'priors_abc': priors_abc,
