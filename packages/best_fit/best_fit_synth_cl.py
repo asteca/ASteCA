@@ -56,7 +56,8 @@ def main(clp, pd):
 
             print("Using bootstrap + Genetic Algorithm ({})".format(
                 pd['lkl_method'] + '; ' + pd['lkl_binning'] if
-                pd['lkl_method'] == 'dolphin' else pd['lkl_method']))
+                pd['lkl_method'] in ('dolphin', 'tremmel') else
+                pd['lkl_method']))
             isoch_fit_params = bootstrap.main(
                 pd, clp, cl_max_mag, max_mag_syn, obs_clust, ext_coefs,
                 st_dist_mass, N_fc, m_ini, cmpl_rnd, err_rnd)
@@ -66,7 +67,8 @@ def main(clp, pd):
         elif pd['best_fit_algor'] == 'ptemcee':
             print("Using ptemcee algorithm ({})".format(
                 pd['lkl_method'] + '; ' + pd['lkl_binning'] if
-                pd['lkl_method'] == 'dolphin' else pd['lkl_method']))
+                pd['lkl_method'] in ('dolphin', 'tremmel') else
+                pd['lkl_method']))
 
             isoch_fit_params = ptemcee_algor.main(
                 clp['err_lst'], clp['completeness'], clp['em_float'],
@@ -83,11 +85,11 @@ def main(clp, pd):
         #     # Brute force algorithm.
         #     isoch_fit_params = brute_force_algor.main()
 
-        # TODO not working yet
         elif pd['best_fit_algor'] == 'emcee':
             print('Using emcee algorithm ({}).'.format(
                 pd['lkl_method'] + '; ' + pd['lkl_binning'] if
-                pd['lkl_method'] == 'dolphin' else pd['lkl_method']))
+                pd['lkl_method'] in ('dolphin', 'tremmel') else
+                pd['lkl_method']))
             isoch_fit_params = emcee_algor.main(
                 clp['err_lst'], clp['completeness'], clp['em_float'],
                 max_mag_syn, obs_clust, ext_coefs, st_dist_mass, N_fc,
