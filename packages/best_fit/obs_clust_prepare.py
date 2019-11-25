@@ -79,7 +79,7 @@ def main(cl_max_mag, lkl_method, bin_method, lkl_weight):
 
         obs_clust = [kde_test, hpi_kfe, m_cl, hpic]
 
-    elif lkl_method in ['dolphin', 'mighell']:
+    elif lkl_method in ['dolphin', 'mighell', 'tremmel']:
         # Obtain bin edges for each dimension, defining a grid.
         bin_edges = bin_edges_f(
             bin_method, mags_cols_cl, min_bins=4, max_bins=20)
@@ -122,8 +122,11 @@ def main(cl_max_mag, lkl_method, bin_method, lkl_weight):
         # prevent this.
         fill_factor = min(.9, cl_histo_f.sum() / 1e4)
 
-        obs_clust = [bin_edges, fill_factor, cl_histo_f_z, dolphin_cst,
-                     bin_weight_f_z, cl_z_idx, cl_histo_f]
+        if lkl_method == 'tremmel':
+            obs_clust = [bin_edges, cl_histo_f_z, cl_z_idx]
+        else:
+            obs_clust = [bin_edges, fill_factor, cl_histo_f_z, dolphin_cst,
+                         bin_weight_f_z, cl_z_idx, cl_histo_f]
 
     elif lkl_method in ['dolphin_kde', 'kdeKL']:
 

@@ -34,8 +34,8 @@ def main(
 
     # print("StretchMove")
     # mv = moves.StretchMove()
-    # print("Walk")
-    # mv = moves.WalkMove()
+    print("Walk")
+    mv = moves.WalkMove()
     # print("KDE")
     # mv = moves.KDEMove()
     # # sigma = .1
@@ -45,7 +45,7 @@ def main(
     # print("DESnooker")
     # mv = moves.DESnookerMove()
     # cov = .1
-    cov = np.eye(ndim)
+    # cov = np.eye(ndim)
     # Gauss1
     # cov[0][0], cov[1][1], cov[2][2], cov[3][3] = .1, .1, .01, 100
     # Gauss2
@@ -53,9 +53,9 @@ def main(
     # Gauss3
     # cov[0][0], cov[1][1], cov[2][2], cov[3][3] = .2, .05, .05, 50
     # Gauss4
-    cov[0][0], cov[1][1], cov[2][2], cov[3][3] = .05, .01, .05, 50
-    print("Gaussian", cov)
-    mv = moves.GaussianMove(cov)
+    # cov[0][0], cov[1][1], cov[2][2], cov[3][3] = .05, .01, .05, 50
+    # print("Gaussian", cov)
+    # mv = moves.GaussianMove(cov)
     # print("Metropolis-Hastings")
     # mv = moves.MHMove()
 
@@ -64,6 +64,12 @@ def main(
     # sigma = .05
     # print("KDE + DE", sigma)
     # mv = [(moves.KDEMove(), 0.5), (moves.DEMove(sigma), 0.5)]
+
+    # mv = [
+    #     (moves.DESnookerMove(), 0.1),
+    #     (moves.DEMove(), 0.9 * 0.9),
+    #     (moves.DEMove(gamma0=1.0), 0.9 * 0.1),
+    # ]
 
     # Start timing.
     max_secs = hmax * 60. * 60.

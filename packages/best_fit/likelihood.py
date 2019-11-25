@@ -1,6 +1,6 @@
 
 import numpy as np
-from scipy.special import logsumexp
+from scipy.special import logsumexp, loggamma
 from scipy.stats import gaussian_kde, entropy
 
 # ############################################################
@@ -32,12 +32,14 @@ def main(lkl_method, synth_clust, obs_clust):
         return 1.e09
 
     # Obtain the likelihood matching the synthetic and observed clusters.
-    if lkl_method == 'tolstoy':
+    if lkl_method == 'tremmel':
+        likelihood = tremmel(synth_clust, obs_clust)
+    elif lkl_method == 'dolphin':
+        likelihood = dolphin(synth_clust, obs_clust)
+    elif lkl_method == 'tolstoy':
         likelihood = tolstoy(synth_clust, obs_clust)
     elif lkl_method == 'duong':
         likelihood = duong(synth_clust, obs_clust)
-    elif lkl_method == 'dolphin':
-        likelihood = dolphin(synth_clust, obs_clust)
     elif lkl_method == 'dolphin_kde':
         likelihood = dolphin_kde(synth_clust, obs_clust)
     elif lkl_method == 'mighell':
@@ -323,6 +325,58 @@ def kdeKL(synth_clust, obs_clust):
 
     print(kl)
     return kl
+
+
+def tremmel(synth_clust, obs_clust):
+    """
+    Poisson likelihood ratio as defined in Tremmel et al (2013). This returns
+    the negative log likelihood.
+
+    p(d|\theta) = \prod_i^N \frac{\Gamma(n_i+m_i+\frac{1}{2})}
+        {2^{n_i+m_i+\frac{1}{2}} d_i!\Gamma(m_i+\frac{1}{2}))}
+
+    \log(p) = \sum_i^N \left[\log\Gamma(n_i+m_i+\frac{1}{2})
+        - (m_i+n_i+\frac{1}{2})\log2 -\log n_i!
+        - \log \Gamma(m_i+\frac{1}{2}) \right]
+
+    Minus logarithm:
+
+    -\log(p) = 0.693  (M+N+\frac{1}{2}) + \sum_i^N \log n_i! -
+        \sum_i^N \left[\log\Gamma(n_i+m_i+\frac{1}{2})-
+        \log \Gamma(m_i+\frac{1}{2}) \right]
+
+    -\log(p) = 0.693 (N+\frac{1}{2}) + \sum_i^N \log n_i! +
+        0.693\,M - SumLogGamma(n_i, m_i)
+
+    -\log(p) = f(n_i) + 0.693\,M - SumLogGamma(n_i, m_i)
+
+    -\log(p)\approx 0.693\,M - SumLogGamma(n_i, m_i)
+
+    """
+
+    synth_phot = synth_clust[0][0]
+    # Observed cluster's data.
+    bin_edges, cl_histo_f_z, cl_z_idx = obs_clust
+
+    # Histogram of the synthetic cluster, using the bin edges calculated
+    # with the observed cluster.
+    syn_histo = np.histogramdd(synth_phot, bins=bin_edges)[0]
+    # Flatten N-dimensional histogram.
+    syn_histo_f = syn_histo.ravel()
+    # Remove all bins where n_i = 0 (no observed stars).
+    syn_histo_f_z = syn_histo_f[cl_z_idx]
+
+    # M = synth_phot[0].size
+    # Cash's C statistic: 2 * sum(m_i - n_i * ln(m_i))
+    # weighted: 2 * sum(w_i * (m_i - n_i * ln(m_i)))
+    sum_loggamma = np.sum(
+        loggamma(cl_histo_f_z + syn_histo_f_z + .5) -
+        loggamma(syn_histo_f_z + .5))
+
+    # ln(2) ~ 0.693
+    tremmel_lkl = 0.693 * synth_phot[0].size - sum_loggamma
+
+    return tremmel_lkl
 
 
 # def entropy(pk, qk=None, base=None):
