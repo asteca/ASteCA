@@ -161,8 +161,10 @@ def checkMetrange(z_rng, met_vals_all):
                  "the maximum value '{:.5f}'").format(z_rng[0], z_rng[1]))
     elif len(z_rng) == 1:
         # A fixed value is used.
-        z = min(met_vals_all) if z_rng[0] == 'min' else max(met_vals_all)
-        z_rng = [z]
+        if z_rng[0] == 'min':
+            z_rng = [min(met_vals_all)]
+        elif z_rng[0] == 'max':
+            z_rng = [max(met_vals_all)]
 
     if len(z_rng) > 1:
         if z_rng[0] < min(met_vals_all):
@@ -310,8 +312,10 @@ def checkAgerange(a_rng, age_vals_all, round_f=5):
                  "the maximum value '{:.5f}'").format(a_rng[0], a_rng[1]))
     elif len(a_rng) == 1:
         # A fixed value is used.
-        a = min(age_vals_all) if a_rng[0] == 'min' else max(age_vals_all)
-        a_rng = [a]
+        if a_rng[0] == 'min':
+            a_rng = [min(age_vals_all)]
+        elif a_rng[0] == 'max':
+            a_rng = [max(age_vals_all)]
 
     if len(a_rng) > 1:
         if a_rng[0] < min(age_vals_all):
