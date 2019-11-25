@@ -28,8 +28,13 @@ def check(mypath, pd):
 
         if pd['best_fit_algor'] == 'boot+GA':
             checkGA(pd)
-        elif pd['best_fit_algor'] == 'ptemcee':
+
+        if pd['best_fit_algor'] in ('ptemcee', 'emcee'):
+            checkMcee(pd)
+        if pd['best_fit_algor'] == 'ptemcee':
             checkPtemcee(pd)
+        if pd['best_fit_algor'] == 'emcee':
+            checkemcee(pd)
 
         chechLkl(pd)
 
@@ -95,24 +100,43 @@ def checkGA(pd):
                      pd['N_el'], pd['N_pop']))
 
 
-def checkPtemcee(pd):
+def checkMcee(pd):
     """
     """
-    for pr in pd['priors_pt']:
+    if pd['nwalkers_mcee'] % 2 != 0:
+        # Number is even
+        sys.exit("ERROR: the number of walkers must be even.")
+    if pd['nwalkers_mcee'] < 12:
+        sys.exit("ERROR: the minimum number of walkers is 12.")
+    if pd['nburn_mcee'] <= 0. or pd['nburn_mcee'] >= 1:
+        sys.exit("ERROR: burn-in percentage must be in the range (0., 1.)")
+
+    for pr in pd['priors_mcee']:
         if pr[0] not in pd['bayes_priors']:
             sys.exit("ERROR: one of the selected priors ({}) is not"
                      " allowed.".format(pr))
 
-    if pd['nwalkers_pt'] % 2 != 0:
-        # Number is even
-        sys.exit("ERROR: the number of walkers must be even.")
-    if pd['nwalkers_pt'] < 12:
-        sys.exit("ERROR: the minimum number of walkers is 12.")
-    if pd['nburn_pt'] <= 0. or pd['nburn_pt'] >= 1:
-        sys.exit("ERROR: burn-in percentage must be in the range (0., 1.)")
-    if pd['ntemps'] not in ('n', 'none', 'None'):
-        if int(float(pd['ntemps'])) < 1:
+
+def checkPtemcee(pd):
+    """
+    """
+    if pd['pt_ntemps'] not in ('n', 'none', 'None'):
+        if int(float(pd['pt_ntemps'])) < 1:
             sys.exit("ERROR: the minimum number of temperatures is 1.")
+
+    try:
+        float(pd['pt_tmax'])
+    except ValueError:
+        if pd['pt_tmax'] not in ('n', 'none', 'None', 'inf'):
+            sys.exit("ERROR: 'Tmax' parameter is not a valid string.")
+
+
+def checkemcee(pd):
+    """
+    """
+    if 'emcee' not in pd['inst_packgs_lst']:
+        sys.exit("ERROR: 'emcee' method is selected, but the package is\n" +
+                 "not installed")
 
 
 def chechLkl(pd):
