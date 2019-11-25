@@ -3,6 +3,7 @@ import numpy as np
 import time as t
 import warnings
 from emcee import ensemble
+# This is used when the moves are defined below by eval()
 from emcee import moves
 
 from . import likelihood
@@ -14,14 +15,9 @@ from .bf_common import initPop, varPars, synthClust, rangeCheck, fillParams,\
 def main(
     err_lst, completeness, e_max, max_mag_syn, obs_clust, ext_coefs,
     st_dist_mass, N_fc, m_ini, cmpl_rnd, err_rnd, lkl_method, fundam_params,
-    theor_tracks, R_V, ntemps, nsteps_pt, nwalkers_pt, nburn_pt, pt_adapt,
-        tmax_pt, priors_pt, hmax, **kwargs):
+    theor_tracks, R_V, nsteps_mcee, nwalkers_mcee, nburn_mcee, priors_mcee,
+        emcee_moves, hmax, **kwargs):
     """
-
-    nwalkers: number of MCMC walkers
-    nwalkers: number of MCMC steps to take
-    nburn: "burn-in" period to let chains stabilize
-
     """
 
     varIdxs, ndim, ranges = varPars(fundam_params)
@@ -30,64 +26,25 @@ def main(
         theor_tracks, e_max, err_lst, completeness, max_mag_syn, st_dist_mass,
         R_V, ext_coefs, N_fc, m_ini, cmpl_rnd, err_rnd]
 
-    # TODO make this a proper parameter
-
-    # print("StretchMove")
-    # mv = moves.StretchMove()
-    print("Walk")
-    mv = moves.WalkMove()
-    # print("KDE")
-    # mv = moves.KDEMove()
-    # # sigma = .1
-    # print("DE")
-    # mv = moves.DEMove()
-    # # gammas = 1.7
-    # print("DESnooker")
-    # mv = moves.DESnookerMove()
-    # cov = .1
-    # cov = np.eye(ndim)
-    # Gauss1
-    # cov[0][0], cov[1][1], cov[2][2], cov[3][3] = .1, .1, .01, 100
-    # Gauss2
-    # cov[0][0], cov[1][1], cov[2][2], cov[3][3] = .01, .01, .01, 10
-    # Gauss3
-    # cov[0][0], cov[1][1], cov[2][2], cov[3][3] = .2, .05, .05, 50
-    # Gauss4
-    # cov[0][0], cov[1][1], cov[2][2], cov[3][3] = .05, .01, .05, 50
-    # print("Gaussian", cov)
-    # mv = moves.GaussianMove(cov)
-    # print("Metropolis-Hastings")
-    # mv = moves.MHMove()
-
-    # print("KDE + DESnooker")
-    # mv = [(moves.KDEMove(), 0.5), (moves.DESnookerMove(), 0.5)]
-    # sigma = .05
-    # print("KDE + DE", sigma)
-    # mv = [(moves.KDEMove(), 0.5), (moves.DEMove(sigma), 0.5)]
-
-    # mv = [
-    #     (moves.DESnookerMove(), 0.1),
-    #     (moves.DEMove(), 0.9 * 0.9),
-    #     (moves.DEMove(gamma0=1.0), 0.9 * 0.1),
-    # ]
-
     # Start timing.
     max_secs = hmax * 60. * 60.
     available_secs = max(30, max_secs)
 
+    # Define moves.
+    mv = [(eval("moves." + _)) for _ in emcee_moves]
     # Define sampler.
     sampler = ensemble.EnsembleSampler(
-        nwalkers_pt, ndim, log_posterior,
-        args=[priors_pt, varIdxs, ranges, fundam_params, synthcl_args,
+        nwalkers_mcee, ndim, log_posterior,
+        args=[priors_mcee, varIdxs, ranges, fundam_params, synthcl_args,
               lkl_method, obs_clust], moves=mv)
 
     ntemps = 1
     pos0 = initPop(
         ranges, varIdxs, lkl_method, obs_clust, fundam_params, synthcl_args,
-        ntemps, nwalkers_pt, 'random', None, None)
+        ntemps, nwalkers_mcee, 'random', None, None)
     pos0 = pos0[0]
 
-    maf_steps, prob_mean, tau_steps = [], [], []
+    maf_steps, prob_mean, tau_autocorr = [], [], []
     map_lkl, map_sol_old = [], [[], -np.inf]
 
     # We'll track how the average autocorrelation time estimate changes.
@@ -102,7 +59,7 @@ def main(
         elapsed, start = 0., t.time()
         milestones = list(range(10, 101, 10))
         for i, (pos, prob, stat) in enumerate(
-                sampler.sample(pos0, iterations=nsteps_pt)):
+                sampler.sample(pos0, iterations=nsteps_mcee)):
 
             # Only check convergence every 'N_steps_store' steps
             if (i + 1) % N_steps_store:
@@ -112,7 +69,8 @@ def main(
             # Compute the autocorrelation time so far. Using tol=0 means that
             # we'll always get an estimate even if it isn't trustworthy.
             tau = sampler.get_autocorr_time(tol=0)
-            tau_steps.append(tau)
+            tau_autocorr.append([i, np.mean(tau)])
+
             # # Check convergence
             # converged = np.all(tau * N_conv < (i + 1))
             # converged &= np.all(np.abs(old_tau - tau) / tau < tol_conv)
@@ -136,19 +94,18 @@ def main(
             elapsed += t.time() - start
             start = t.time()
             # Print progress.
-            percentage_complete = (100. * (i + 1) / nsteps_pt)
+            percentage_complete = (100. * (i + 1) / nsteps_mcee)
             if len(milestones) > 0 and percentage_complete >= milestones[0]:
                 map_sol, logprob = map_sol_old
-                m, s = divmod(nsteps_pt / (i / elapsed) - elapsed, 60)
+                m, s = divmod(nsteps_mcee / (i / elapsed) - elapsed, 60)
                 h, m = divmod(m, 60)
                 print("{:>3}% ({:.3f}) LP={:.1f} ({:.5f}, {:.3f}, {:.3f}, "
                       "{:.2f}, {:.0f}, {:.2f})".format(
                           milestones[0], maf, logprob, *map_sol) +
                       " [{:.0f} m/s | {:.0f}h{:.0f}m]".format(
-                          (ntemps * nwalkers_pt * i) / elapsed, h, m))
+                          (ntemps * nwalkers_mcee * i) / elapsed, h, m))
                 milestones = milestones[1:]
 
-            # elapsed += t.time() - start_t
             # Stop when available time is consumed.
             if elapsed >= available_secs:
                 print("  Time consumed")
@@ -170,7 +127,7 @@ def main(
     # all_chains.shape = (N_steps_store * runs, nchains, ndims)
     all_chains = sampler.get_chain()
     # Store burn-in chain phase.
-    bi_steps = int(nburn_pt * all_chains.shape[0])
+    bi_steps = int(nburn_mcee * all_chains.shape[0])
     # chains_nruns.shape: (bi_steps, nchains, ndim)
     chains_nruns = all_chains[:bi_steps]
     # pars_chains_bi.shape: (ndim, nchains, bi_steps)
@@ -181,10 +138,10 @@ def main(
     pars_chains = chains_nruns.T
 
     # Convergence parameters.
-    tol = 0
-    tau_autocorr, acorr_t, med_at_c, all_taus, geweke_z, acorr_function,\
+    tau_autocorr = np.array(tau_autocorr).T
+    _, acorr_t, med_at_c, all_taus, geweke_z, acorr_function,\
         mcmc_ess = convergenceVals(
-            'emcee', ndim, varIdxs, tol, chains_nruns, bi_steps)
+            'emcee', ndim, varIdxs, chains_nruns, bi_steps)
 
     # Re-shape trace for all parameters (flat chain).
     # Shape: (ndim, runs * nchains)
