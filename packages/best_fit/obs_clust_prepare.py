@@ -124,9 +124,11 @@ def main(cl_max_mag, lkl_method, bin_method, lkl_weight):
 
         if lkl_method == 'tremmel':
             obs_clust = [bin_edges, cl_histo_f_z, cl_z_idx]
-        else:
+        elif lkl_method == 'dolphin':
             obs_clust = [bin_edges, fill_factor, cl_histo_f_z, dolphin_cst,
-                         bin_weight_f_z, cl_z_idx, cl_histo_f]
+                         bin_weight_f_z, cl_z_idx]
+        elif lkl_method == 'mighell':
+            obs_clust = [bin_edges, cl_histo_f, cl_z_idx]
 
     elif lkl_method in ['dolphin_kde', 'kdeKL']:
 

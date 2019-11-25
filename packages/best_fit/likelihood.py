@@ -50,6 +50,113 @@ def main(lkl_method, synth_clust, obs_clust):
     return likelihood
 
 
+def tremmel(synth_clust, obs_clust):
+    """
+    Poisson likelihood ratio as defined in Tremmel et al (2013), E1 10 with
+    v_{i,j}=1. This returns the negative log likelihood.
+
+    p(d|\theta) = \prod_i^N \frac{\Gamma(n_i+m_i+\frac{1}{2})}
+        {2^{n_i+m_i+\frac{1}{2}} d_i!\Gamma(m_i+\frac{1}{2}))}
+
+    \log(p) = \sum_i^N \left[\log\Gamma(n_i+m_i+\frac{1}{2})
+        - (m_i+n_i+\frac{1}{2})\log2 -\log n_i!
+        - \log \Gamma(m_i+\frac{1}{2}) \right]
+
+    Minus logarithm:
+
+    -\log(p) = 0.693  (M+N+\frac{1}{2}) + \sum_i^N \log n_i! -
+        \sum_i^N \left[\log\Gamma(n_i+m_i+\frac{1}{2})-
+        \log \Gamma(m_i+\frac{1}{2}) \right]
+
+    -\log(p) = 0.693 (N+\frac{1}{2}) + \sum_i^N \log n_i! +
+        0.693\,M - SumLogGamma(n_i, m_i)
+
+    -\log(p) = f(n_i) + 0.693\,M - SumLogGamma(n_i, m_i)
+
+    -\log(p)\approx 0.693\,M - SumLogGamma(n_i, m_i)
+
+    """
+
+    synth_phot = synth_clust[0][0]
+    # Observed cluster's data.
+    bin_edges, cl_histo_f_z, cl_z_idx = obs_clust
+
+    # Histogram of the synthetic cluster, using the bin edges calculated
+    # with the observed cluster.
+    syn_histo = np.histogramdd(synth_phot, bins=bin_edges)[0]
+    # Flatten N-dimensional histogram.
+    syn_histo_f = syn_histo.ravel()
+    # Remove all bins where n_i = 0 (no observed stars).
+    syn_histo_f_z = syn_histo_f[cl_z_idx]
+
+    SumLogGamma = np.sum(
+        loggamma(cl_histo_f_z + syn_histo_f_z + .5) -
+        loggamma(syn_histo_f_z + .5))
+
+    # M = synth_phot[0].size
+    # ln(2) ~ 0.693
+    tremmel_lkl = 0.693 * synth_phot[0].size - SumLogGamma
+
+    return tremmel_lkl
+
+
+def dolphin(synth_clust, obs_clust):
+    """
+    Poisson likelihood ratio as defined in Dolphin (2002).
+
+    -2\ln PLR = 2 \sum_i m_i - n_i + n_i \ln \frac{n_i}{m_i}
+              = 2 (M- N) + 2\sum_i n_i\ln n_i - 2\sum_i n_i\ln m_i
+
+    If the binning is made too small then  n_i, m_i --> 1 (one star per bin)
+    and thus:
+
+    -2\ln PLR --> 2*(M-N)
+
+    In this case the likelihood will try to minimize M.
+
+    When the number of observed stars is too small (~ N<100), this likelihood
+    will tend to underestimate the total mass.
+    """
+
+    synth_phot = synth_clust[0][0]
+    # Observed cluster's data.
+    bin_edges, fill_factor, cl_histo_f_z, dolphin_cst, bin_weight_f_z,\
+        cl_z_idx = obs_clust
+
+    # Histogram of the synthetic cluster, using the bin edges calculated
+    # with the observed cluster.
+    syn_histo = np.histogramdd(synth_phot, bins=bin_edges)[0]
+    # Flatten N-dimensional histogram.
+    syn_histo_f = syn_histo.ravel()
+    # Remove all bins where n_i = 0 (no observed stars).
+    syn_histo_f_z = syn_histo_f[cl_z_idx]
+
+    # Assign small value to the m_i = 0 elements in 'syn_histo_f_z'.
+    # The value equals 1 star divided among all empty bins.
+    # If this factor --> 0, then the likelihood will try to minimize empty
+    # bins, ie: M --> inf. If the factor --> 1, the likelihood has no penalty
+    # for empty bins, and M --> 0.
+    syn_histo_f_z[syn_histo_f_z == 0] = fill_factor
+
+    # M = synth_phot[0].size
+    # Cash's C statistic: 2 * sum(m_i - n_i * ln(m_i))
+    # weighted: 2 * sum(w_i * (m_i - n_i * ln(m_i)))
+    C_cash = 2. * (synth_phot[0].size - np.sum(
+        bin_weight_f_z * (cl_histo_f_z * np.log(syn_histo_f_z))))
+
+    # Obtain (weighted) inverse logarithmic 'Poisson likelihood ratio'.
+    dolph_lkl = C_cash + dolphin_cst
+
+    # print(dolph_lkl)
+    # from scipy.stats import chisquare
+    # from scipy.stats import chi2
+    # chsqr = chisquare(cl_histo_f_z, f_exp=syn_histo_f_z, ddof=7)
+    # print(chsqr)
+    # print(chi2.sf(chsqr[0], len(cl_histo_f_z) - 1 - 7))
+
+    return dolph_lkl
+
+
 def tolstoy(synth_clust, obs_clust):
     '''
     Weighted (log) likelihood.
@@ -118,6 +225,45 @@ def tolstoy(synth_clust, obs_clust):
     return tlst_lkl
 
 
+def mighell(synth_clust, obs_clust):
+    '''
+    Chi gamma squared distribution defined in Mighell (1999)
+
+    This likelihood is more stable than Dolphin regarding the issue of empty
+    bins, but it also has less power to discriminate lower masses from the
+    actual mass.
+
+    If the number of bins is too large, it will attempt to minimize the
+    synthetic cluster mass M. This is because in the infinite bins limits,
+    each bin holds a single stat and the chances of n_i=m_i go to zero. In
+    this case, the chi-square is lowered simply lowering M.
+    '''
+
+    # Observed cluster's bin edges for each dimension, flattened histogram,
+    # and indexes of n_i=0 elements.
+    bin_edges, cl_histo_f, cl_z_idx = obs_clust
+
+    # Synthetic cluster.
+    synth_phot = synth_clust[0][0]
+    # Histogram of the synthetic cluster, using the bin edges calculated
+    # with the observed cluster.
+    syn_histo = np.histogramdd(synth_phot, bins=bin_edges)[0]
+
+    # Flatten N-dimensional histogram.
+    syn_histo_f = syn_histo.ravel()
+    # # Indexes of bins that are not empty in both arrays.
+    # z = cl_z_idx[0] | (syn_histo_f != 0)
+    # # Keep only those bins.
+    # cl_histo_f_z, syn_histo_f_z = cl_histo_f[z], syn_histo_f[z]
+
+    # Final chi.
+    mig_chi = np.sum(np.square(
+        cl_histo_f + np.clip(cl_histo_f, 0, 1) - syn_histo_f) /
+        (cl_histo_f + 1.))
+
+    return mig_chi
+
+
 def duong(synth_clust, obs_clust):
     """
     """
@@ -158,63 +304,6 @@ def duong(synth_clust, obs_clust):
         duong_pval = 1.
 
     return duong_pval
-
-
-def dolphin(synth_clust, obs_clust):
-    """
-    Poisson likelihood ratio as defined in Dolphin (2002).
-
-    -2\ln PLR = 2 \sum_i m_i - n_i + n_i \ln \frac{n_i}{m_i}
-              = 2 (M- N) + 2\sum_i n_i\ln n_i - 2\sum_i n_i\ln m_i
-
-    If the binning is made too small then  n_i, m_i --> 1 (one star per bin)
-    and thus:
-
-    -2\ln PLR --> 2*(M-N)
-
-    In this case the likelihood will try to minimize M.
-
-    When the number of observed stars is too small (~ N<100), this likelihood
-    will tend to underestimate the total mass.
-    """
-
-    synth_phot = synth_clust[0][0]
-    # Observed cluster's data.
-    bin_edges, fill_factor, cl_histo_f_z, dolphin_cst, bin_weight_f_z,\
-        cl_z_idx = obs_clust[:-1]
-
-    # Histogram of the synthetic cluster, using the bin edges calculated
-    # with the observed cluster.
-    syn_histo = np.histogramdd(synth_phot, bins=bin_edges)[0]
-    # Flatten N-dimensional histogram.
-    syn_histo_f = syn_histo.ravel()
-    # Remove all bins where n_i = 0 (no observed stars).
-    syn_histo_f_z = syn_histo_f[cl_z_idx]
-
-    # Assign small value to the m_i = 0 elements in 'syn_histo_f_z'.
-    # The value equals 1 star divided among all empty bins.
-    # If this factor --> 0, then the likelihood will try to minimize empty
-    # bins, ie: M --> inf. If the factor --> 1, the likelihood has no penalty
-    # for empty bins, and M --> 0.
-    syn_histo_f_z[syn_histo_f_z == 0] = fill_factor
-
-    # M = synth_phot[0].size
-    # Cash's C statistic: 2 * sum(m_i - n_i * ln(m_i))
-    # weighted: 2 * sum(w_i * (m_i - n_i * ln(m_i)))
-    C_cash = 2. * (synth_phot[0].size - np.sum(
-        bin_weight_f_z * (cl_histo_f_z * np.log(syn_histo_f_z))))
-
-    # Obtain (weighted) inverse logarithmic 'Poisson likelihood ratio'.
-    dolph_lkl = C_cash + dolphin_cst
-
-    # print(dolph_lkl)
-    # from scipy.stats import chisquare
-    # from scipy.stats import chi2
-    # chsqr = chisquare(cl_histo_f_z, f_exp=syn_histo_f_z, ddof=7)
-    # print(chsqr)
-    # print(chi2.sf(chsqr[0], len(cl_histo_f_z) - 1 - 7))
-
-    return dolph_lkl
 
 
 def dolphin_kde(synth_clust, obs_clust):
@@ -260,46 +349,6 @@ def dolphin_kde(synth_clust, obs_clust):
     return dolph_lkl
 
 
-def mighell(synth_clust, obs_clust):
-    '''
-    Chi gamma squared distribution defined in Mighell (1999)
-
-    This likelihood is more stable than Dolphin regarding the issue of empty
-    bins, but it also has less power to discriminate lower masses from the
-    actual mass.
-
-    If the number of bins is too large, it will attempt to minimize the
-    synthetic cluster mass M. This is because in the infinite bins limits,
-    each bin holds a single stat and the chances of n_i=m_i go to zero. In
-    this case, the chi-square is lowered simply lowering M.
-    '''
-
-    # Observed cluster's histogram and bin edges for each dimension.
-    bin_edges = obs_clust[0]
-    # Observed cluster's flattened histogram and indexes of n_i=0 elements.
-    cl_z_idx, cl_histo_f = obs_clust[-2:]
-
-    # Synthetic cluster.
-    synth_phot = synth_clust[0][0]
-    # Histogram of the synthetic cluster, using the bin edges calculated
-    # with the observed cluster.
-    syn_histo = np.histogramdd(synth_phot, bins=bin_edges)[0]
-
-    # Flatten N-dimensional histogram.
-    syn_histo_f = syn_histo.ravel()
-    # # Indexes of bins that are not empty in both arrays.
-    # z = cl_z_idx[0] | (syn_histo_f != 0)
-    # # Keep only those bins.
-    # cl_histo_f_z, syn_histo_f_z = cl_histo_f[z], syn_histo_f[z]
-
-    # Final chi.
-    mig_chi = np.sum(np.square(
-        cl_histo_f + np.clip(cl_histo_f, 0, 1) - syn_histo_f) /
-        (cl_histo_f + 1.))
-
-    return mig_chi
-
-
 def kdeKL(synth_clust, obs_clust):
     """
     Kullback-Leibler divergence between the N-dimensional KDE of the observed
@@ -325,58 +374,6 @@ def kdeKL(synth_clust, obs_clust):
 
     print(kl)
     return kl
-
-
-def tremmel(synth_clust, obs_clust):
-    """
-    Poisson likelihood ratio as defined in Tremmel et al (2013). This returns
-    the negative log likelihood.
-
-    p(d|\theta) = \prod_i^N \frac{\Gamma(n_i+m_i+\frac{1}{2})}
-        {2^{n_i+m_i+\frac{1}{2}} d_i!\Gamma(m_i+\frac{1}{2}))}
-
-    \log(p) = \sum_i^N \left[\log\Gamma(n_i+m_i+\frac{1}{2})
-        - (m_i+n_i+\frac{1}{2})\log2 -\log n_i!
-        - \log \Gamma(m_i+\frac{1}{2}) \right]
-
-    Minus logarithm:
-
-    -\log(p) = 0.693  (M+N+\frac{1}{2}) + \sum_i^N \log n_i! -
-        \sum_i^N \left[\log\Gamma(n_i+m_i+\frac{1}{2})-
-        \log \Gamma(m_i+\frac{1}{2}) \right]
-
-    -\log(p) = 0.693 (N+\frac{1}{2}) + \sum_i^N \log n_i! +
-        0.693\,M - SumLogGamma(n_i, m_i)
-
-    -\log(p) = f(n_i) + 0.693\,M - SumLogGamma(n_i, m_i)
-
-    -\log(p)\approx 0.693\,M - SumLogGamma(n_i, m_i)
-
-    """
-
-    synth_phot = synth_clust[0][0]
-    # Observed cluster's data.
-    bin_edges, cl_histo_f_z, cl_z_idx = obs_clust
-
-    # Histogram of the synthetic cluster, using the bin edges calculated
-    # with the observed cluster.
-    syn_histo = np.histogramdd(synth_phot, bins=bin_edges)[0]
-    # Flatten N-dimensional histogram.
-    syn_histo_f = syn_histo.ravel()
-    # Remove all bins where n_i = 0 (no observed stars).
-    syn_histo_f_z = syn_histo_f[cl_z_idx]
-
-    # M = synth_phot[0].size
-    # Cash's C statistic: 2 * sum(m_i - n_i * ln(m_i))
-    # weighted: 2 * sum(w_i * (m_i - n_i * ln(m_i)))
-    sum_loggamma = np.sum(
-        loggamma(cl_histo_f_z + syn_histo_f_z + .5) -
-        loggamma(syn_histo_f_z + .5))
-
-    # ln(2) ~ 0.693
-    tremmel_lkl = 0.693 * synth_phot[0].size - sum_loggamma
-
-    return tremmel_lkl
 
 
 # def entropy(pk, qk=None, base=None):
