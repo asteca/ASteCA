@@ -43,9 +43,6 @@
         |--> inp/get_data_semi
         |--> inp/get_data
         |--> structure/trim_frame
-            |--> structure/display_frame
-                |--> out/prep_plots (1)
-                    |--> math_f/exp_function (1)
         |--> structure/histo_2d
         |--> structure/center
             |--> out/prep_plots (2)
