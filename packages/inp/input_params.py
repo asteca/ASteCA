@@ -83,9 +83,10 @@ def main(mypath, pars_f_path):
                     manual_struct.append(reader[1:])
                 elif reader[0] == 'CH':
                     center_bw = float(reader[1])
-                elif reader[0] == 'CR':
-                    radius_method = str(reader[1])
+                elif reader[0] == 'FD':
+                    NN_dd = int(reader[1])
                     fdens_method = str(reader[2])
+                    nsteps_rad = int(reader[3])
                 elif reader[0] == 'KP':
                     kp_flag = True if reader[1] in true_lst else False
                 elif reader[0] == 'GR':
@@ -248,7 +249,8 @@ def main(mypath, pars_f_path):
     bin_weights = ('mean', 'median', 'max')
     # Likelihood methods.
     lkl_methods = (
-        'tolstoy', 'duong', 'dolphin', 'mighell', 'kdeKL', 'dolphin_kde')
+        'tremmel', 'tolstoy', 'duong', 'dolphin', 'mighell', 'kdeKL',
+        'dolphin_kde')
     # Accepted IMF functions.
     imf_funcs = ('chabrier_2001_exp', 'chabrier_2001_log', 'kroupa_1993',
                  'kroupa_2002', 'salpeter_1955')
@@ -303,7 +305,7 @@ def main(mypath, pars_f_path):
         'plot_dpi': plot_dpi,
         # Structure functions parameters
         'manual_struct': manual_struct, 'center_bw': center_bw,
-        'radius_method': radius_method, 'fdens_method': fdens_method,
+        'NN_dd': NN_dd, 'fdens_method': fdens_method, 'nsteps_rad': nsteps_rad,
         'kp_flag': kp_flag, 'fr_number': fr_number,
         #
         'err_max': err_max, 'ad_runs': ad_runs, 'ad_k_comb': ad_k_comb,

@@ -9,7 +9,6 @@ from .inp import get_data
 from .structure import histo_2d
 from .structure import xy_density
 from .structure import center
-from .structure import radial_dens_prof
 from .structure import field_density
 from .structure import radius
 from .structure import cluster_area
@@ -112,11 +111,8 @@ def main(cl_file, pd):
     # Cluster's center coordinates and errors.
     clp = center.main(cld_i, clp, **pd)
 
-    # Density profile
-    clp = radial_dens_prof.main(clp, **cld_i)
-
     # Field density value in stars/<area unit>.
-    clp = field_density.main(clp, **pd)
+    clp = field_density.main(clp, cld_i, **pd)
 
     # Cluster radius
     clp = radius.main(cld_i, clp, **pd)

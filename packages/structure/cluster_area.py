@@ -1,5 +1,6 @@
 
 import numpy as np
+from ..aux_funcs import circFrac
 
 
 def main(clp, x, y, **kwargs):
@@ -45,24 +46,3 @@ def main(clp, x, y, **kwargs):
     print("Area of cluster obtained")
 
     return clp
-
-
-def circFrac(cent, rad, x0, x1, y0, y1, N_tot=250000):
-    """
-    Use Monte Carlo to estimate the fraction of the area of a circle centered
-    in (cx, cy) with a radius of 'rad', that is located within the frame given
-    by the limits 'x0, x1, y0, y1'.
-    """
-    cx, cy = cent
-    # Source: https://stackoverflow.com/a/50746409/1391441
-    r = rad * np.sqrt(np.random.uniform(0., 1., N_tot))
-    theta = np.random.uniform(0., 1., N_tot) * 2 * np.pi
-    xr = cx + r * np.cos(theta)
-    yr = cy + r * np.sin(theta)
-
-    # Points within the circle that are within the frame.
-    msk_xy = (xr > x0) & (xr < x1) & (yr > y0) & (yr < y1)
-
-    # The area is the points within circle and frame over the points within
-    # circle.
-    return msk_xy.sum() / N_tot

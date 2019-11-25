@@ -49,13 +49,10 @@ def main(clp, cld_i, center_bw, flag_make_plot, **kwargs):
     # Run once more for plotting.
     kernel, x_grid, y_grid, positions, k_pos = kde_center(
         x_data, y_data, bw_list[1], True)
-    kde_dens_max, kde_dens_min = coordsDens(
-        len(x_data), x_grid, y_grid, kernel, positions, k_pos)
 
     clp['cents_xy'], clp['kde_approx_cent'], clp['bw_list'],\
-        clp['frame_kdes'], clp['frame_kde_cent'], clp['kde_dens_max'],\
-        clp['kde_dens_min'] = cents_xy, kde_approx_cent, bw_list, frame_kdes,\
-        frame_kde_cent, kde_dens_max, kde_dens_min
+        clp['frame_kdes'], clp['frame_kde_cent'] = cents_xy, kde_approx_cent,\
+        bw_list, frame_kdes, frame_kde_cent
 
     return clp
 
@@ -112,28 +109,3 @@ def cent_bin(xedges, yedges, xy_cent):
     cent_bin = [(x_cent_bin - 1), (y_cent_bin - 1)]
 
     return cent_bin
-
-
-def coordsDens(N_stars, x_grid, y_grid, kernel, positions, k_pos):
-    """
-    Values used fort plotting the colorbar in the coordinates density map
-    of the A2 block.
-    """
-    # Use a "bin width" (an area) that is dependent on the coordinates used
-    # (pixels or celestials), but that it is small enough to converge to the
-    # actual density value.
-    bw = np.mean([
-        x_grid[:, 0][1] - x_grid[:, 0][0], y_grid[0, :][1] - y_grid[0, :][0]])
-    bw = bw / 10.
-
-    # Coordinates for maximum KDE value
-    kde_max = positions.T[np.argmax(k_pos)]
-    intgrl_max = kernel.integrate_box((kde_max - bw), (kde_max + bw))
-    kde_dens_max = intgrl_max * N_stars / bw**2
-
-    # Coordinates for minimum KDE value
-    kde_min = positions.T[np.argmin(k_pos)]
-    intgrl_min = kernel.integrate_box((kde_min - bw), (kde_min + bw))
-    kde_dens_min = intgrl_min * N_stars / bw**2
-
-    return kde_dens_max, kde_dens_min

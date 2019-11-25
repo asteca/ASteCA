@@ -26,17 +26,14 @@ def main(clp, x, y, **kwargs):
 
         # Count the total number of stars within the defined cluster region
         # (including stars with rejected photometric errors)
-        dist = cdist(np.array([x, y]).T, np.atleast_2d(clp['kde_cent']))
+        dist = cdist([clp['kde_cent']], np.array([x, y]).T)[0]
+        # cdist(np.array([x, y]).T, np.atleast_2d(clp['kde_cent']))
         n_in_cl_reg = (dist < clp['clust_rad']).sum()
 
-        # Star density in the cluster region.
-        cl_dens = n_in_cl_reg / clp['cl_area']
-
         # Final contamination index.
-        cont_index = clp['field_dens'] / cl_dens
-
-        # Estimated number of members
-        n_memb_i = int(n_in_cl_reg - (clp['field_dens'] * clp['cl_area']))
+        cont_index, n_memb_i, _ = CIfunc(
+            n_in_cl_reg, clp['field_dens'], clp['cl_area'])
+        n_memb_i = int(n_memb_i)
 
         if cont_index >= 1.:
             print("  WARNING: contamination index value is very large: "
@@ -50,3 +47,19 @@ def main(clp, x, y, **kwargs):
 
     clp['cont_index'], clp['n_memb_i'] = cont_index, n_memb_i
     return clp
+
+
+def CIfunc(n_in_cl_reg, field_dens, area):
+    """
+    """
+    # Estimated number of field stars in the area.
+    n_fl = field_dens * area
+    # Estimated number of members in the area.
+    n_memb = n_in_cl_reg - n_fl
+
+    # Star density in the cluster region.
+    cl_dens = n_in_cl_reg / area
+    # Contamination index.
+    CI = field_dens / cl_dens
+
+    return CI, n_memb, n_fl
