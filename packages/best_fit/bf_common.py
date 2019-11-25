@@ -65,7 +65,7 @@ def fillParams(fundam_params, varIdxs, model):
 
 def initPop(
     ranges, varIdxs, lkl_method, obs_clust, fundam_params,
-        synthcl_args, ntemps, nwalkers_ptm, init_mode, popsize, maxiter):
+        synthcl_args, ntemps, nwalkers, init_mode, popsize, maxiter):
     """
     Obtain initial parameter values using either a random distribution, or
     the Differential Evolution algorithm to approximate reasonable solutions.
@@ -75,7 +75,7 @@ def initPop(
     if init_mode == 'random':
         # print("Random initial population")
         for _ in range(ntemps):
-            p0.append(random_population(fundam_params, varIdxs, nwalkers_ptm))
+            p0.append(random_population(fundam_params, varIdxs, nwalkers))
 
     elif init_mode == 'diffevol':
         # DEPRECATED 05/09/19 when #425 was implemented
@@ -94,11 +94,11 @@ def initPop(
                 return np.inf
 
             walkers_sols = []
-            for _ in range(nwalkers_ptm):
+            for _ in range(nwalkers):
                 result = DE(
                     DEdist, ranges[varIdxs], popsize=popsize, maxiter=maxiter)
                 walkers_sols.append(result.x)
-                update_progress.updt(nwalkers_ptm, _ + 1)
+                update_progress.updt(nwalkers, _ + 1)
 
         p0 = [walkers_sols for _ in range(ntemps)]
 
