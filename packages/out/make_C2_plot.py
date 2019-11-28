@@ -21,7 +21,8 @@ def main(
     if 'C2' in pd['flag_make_plot']:
 
         if plx_flag_clp is False:
-            print("<<WARNING: nothing to plot in 'C2' block>>")
+            print("  WARNING: nothing to plot in 'C2' block")
+            print("<<Skip C2 block plot>>")
             return
 
         fig = plt.figure(figsize=(30, 25))
