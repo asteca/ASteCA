@@ -18,14 +18,14 @@
 
 # Read mode for the cluster's input data.
 #
-# * mode: num / nam
+# * mode: nam / num
 #
+#   - nam: names of the data columns. A proper header must be in place.
 #   - num: indexes of the data columns (starting with zero). The header must be
 #          commented out entirely.
-#   - nam: names of the data columns. A proper header must be in place.
 #
 #   mode
-MR   num
+MR   nam
 
 # Columns for the ID's and x,y coordinates in the data file.
 #
@@ -37,7 +37,7 @@ MR   num
 #   data.
 #
 #   id_star   x/ra   y/dec   coords   project
-PI        0      1       2       px         y
+PI       id      x       y       px         n
 
 # Columns for the photometric data in the data file. The IDs for the supported
 # photometric systems are stored in the 'phot_systs.dat' file.
@@ -45,12 +45,12 @@ PI        0      1       2       px         y
 #  * mag, e_mag: Magnitude and uncertainty.
 #
 #           mag    e_mag
-PM     3,4,Vmag        4
+PM     V,4,Vmag       eV
 #
 #  * col, e_col: Color and uncertainty.
 #
 #               col    e_col
-PC    5,4,Bmag,Vmag        6
+PC   BV,4,Bmag,Vmag      eBV
 
 # Columns for the proper motions [mas/yr], parallax [mas], and radial
 # velocity [km/s]. If a data column is not present, indicate it with a 'n'.
@@ -155,7 +155,7 @@ CH         .0
 # Field density and radius.
 #
 # * NN: [int]
-#   The number of neighbors used to estimate the per-star densities.
+#   The number of closest neighbors used to estimate the per-star densities.
 #
 # * field_dens: [min, last] / [float>0.]
 #   If 'min' or 'last' are selected, the code will use the minimum value and
@@ -163,11 +163,11 @@ CH         .0
 #   to be given.
 #
 # * N_steps: [int]
-#   The number of bootstrap steps employed to estimate uncertainty associated
-#   to the radius.
+#   The number of bootstrap steps employed to estimate the uncertainty
+#   associated to the radius.
 #
 #   NN    field_dens   N_steps
-FD  10          auto      1000
+FD  10           min      1000
 
 # King profile function.
 #
@@ -217,14 +217,8 @@ ER        0.1           n            n            n            n
 #   Number of times the A-D test will run, perturbing through a normal
 #   distribution where the associated uncertainties are the standard deviations.
 #
-# * Plx_PM_comb: y / n
-#   Combine the parallax and proper motion data (if available) with the
-#   photometric data in the second AD test. If 'y', all the data will be
-#   combined and analyzed. If 'n', the parallax+proper motion data will be
-#   analyzed separately in the second AD test.
-#
-#   runs   Plx_PM_comb
-AD   100             y
+#   runs
+AD   100
 ################################################################################
 
 

@@ -6,7 +6,7 @@ from scipy.integrate import quad
 import warnings
 
 
-def main(clp, cld_c, ad_runs, ad_k_comb, flag_make_plot, **kwargs):
+def main(clp, cld_c, ad_runs, flag_make_plot, **kwargs):
     """
 
     AD test for k-samples: "tests the null hypothesis that k-samples are drawn
@@ -52,17 +52,16 @@ def main(clp, cld_c, ad_runs, ad_k_comb, flag_make_plot, **kwargs):
 
         run_total = 2. * int(ad_runs * len(clp['field_regions_c']))
         runs = 0
-        # Run first only for photometric data, and then for all data (if more
-        # data exists)
+        # Run first only for photometric data, and then for Plx+PM data (if it
+        # exists)
         for i in range(2):
             for run_num in range(ad_runs):
 
-                data_cl = dataExtract(clp['cl_region_c'], ad_k_comb, i)
+                data_cl = dataExtract(clp['cl_region_c'], i)
                 # Field regions
                 data_fr = []
                 for fr in clp['field_regions_c']:
-                    data_fr.append(
-                        dataExtract(fr, ad_k_comb, i))
+                    data_fr.append(dataExtract(fr, i))
 
                 # Compare to each defined field region.
                 for f_idx, data_fl in enumerate(data_fr):
@@ -89,8 +88,7 @@ def main(clp, cld_c, ad_runs, ad_k_comb, flag_make_plot, **kwargs):
         ad_cl_fr_p = kdeplot(pvals_cl[0], pvals_fr[0], 'phot')
         ad_cl_fr_p = [len(pv_cl[0]), len(pv_fr[0])] + ad_cl_fr_p
 
-        data_id = 'phot+Plx+PM' if ad_k_comb else 'Plx+PM'
-        ad_cl_fr_pk = kdeplot(pvals_cl[1], pvals_fr[1], data_id)
+        ad_cl_fr_pk = kdeplot(pvals_cl[1], pvals_fr[1], 'Plx+PM')
         ad_cl_fr_pk = [len(pv_cl[1]), len(pv_fr[1])] + ad_cl_fr_pk
 
     clp.update({
@@ -99,7 +97,7 @@ def main(clp, cld_c, ad_runs, ad_k_comb, flag_make_plot, **kwargs):
     return clp
 
 
-def dataExtract(region, kin_flag, idx):
+def dataExtract(region, idx):
     """
     """
     def photData():
@@ -134,22 +132,11 @@ def dataExtract(region, kin_flag, idx):
 
     elif idx == 1:
         k_err = kinData()
-
-        if kin_flag is True:
-            phot_data = photData()
-            # If any of the parallax+PMs dimensions was processed, add it.
-            if k_err:
-                data_all = np.concatenate([phot_data, np.array(k_err)])
-            else:
-                # No valid Plx and/or PM data found
-                data_all = phot_data
-
-        elif kin_flag is False:
-            if k_err:
-                data_all = np.array(k_err)
-            else:
-                # No valid Plx and/or PM data found
-                data_all = np.array([[np.nan] * 2, [np.nan] * 2])
+        if k_err:
+            data_all = np.array(k_err)
+        else:
+            # No valid Plx and/or PM data found
+            data_all = np.array([[np.nan] * 2, [np.nan] * 2])
 
     return data_all
 

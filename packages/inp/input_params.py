@@ -100,7 +100,6 @@ def main(mypath, pars_f_path):
                     err_max = reader[1:]
                 elif reader[0] == 'AD':
                     ad_runs = int(reader[1])
-                    ad_k_comb = True if reader[2] in true_lst else False
 
                 # Decontamination algorithm parameters
                 elif reader[0] == 'DA':
@@ -314,7 +313,7 @@ def main(mypath, pars_f_path):
         'NN_dd': NN_dd, 'fdens_method': fdens_method, 'nsteps_rad': nsteps_rad,
         'kp_flag': kp_flag, 'fr_number': fr_number,
         #
-        'err_max': err_max, 'ad_runs': ad_runs, 'ad_k_comb': ad_k_comb,
+        'err_max': err_max, 'ad_runs': ad_runs,
         # Decontamination algorithm parameters.
         'da_algor': da_algor, 'bayesda_runs': bayesda_runs,
         'fixedda_port': fixedda_port, 'bayesda_dflag': bayesda_dflag,
