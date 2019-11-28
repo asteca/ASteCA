@@ -5,10 +5,7 @@ from astropy.stats import bayesian_blocks, knuth_bin_width
 import operator
 from .decont_algors import sort_members
 import warnings
-# In place for #243
-import sys
-if sys.version_info[0] == 3:
-    from functools import reduce
+from functools import reduce
 
 
 def main(

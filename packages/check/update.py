@@ -1,20 +1,14 @@
 
 import random
 from packages._version import __version__
-# In place for #243
-import sys
-if sys.version_info[0] == 2:
-    from urllib2 import urlopen as urlopen
-    from urllib2 import URLError as URLError
-else:
-    from urllib.request import urlopen as urlopen
-    from urllib.error import URLError as URLError
+from urllib.request import urlopen as urlopen
+from urllib.error import URLError as URLError
 
 
 def check():
-    '''
+    """
     Checks if a new version of the code is available for download.
-    '''
+    """
     # Check every fourth run approximately.
     if random.choice([True] + [False] * 3):
         t_out = 3.
@@ -24,10 +18,7 @@ def check():
             f = urlopen("https://raw.githubusercontent.com/asteca/"
                         "AsteCA/master/packages/_version.py",
                         timeout=t_out)
-            if sys.version_info[0] == 2:
-                s = f.read().split('"')
-            else:
-                s = f.read().decode('utf-8').split('"')
+            s = f.read().decode('utf-8').split('"')
 
             if s[1][1:] != __version__.strip('-dev'):
                 print("*******************************************")

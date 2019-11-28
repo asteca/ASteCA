@@ -68,14 +68,8 @@ def main(i_c, cld, clp, err_max, **kwargs):
             "Try increasing the maximum accepted error value.")
 
     # Filter elements.
-    # In place for #243
-    import sys
-    if sys.version_info[0] == 2:
-        acpt = {k: v[..., acpt_indx] for k, v in cld.iteritems()}
-        rjct = {k: v[..., rjct_indx] for k, v in cld.iteritems()}
-    else:
-        acpt = {k: v[..., acpt_indx] for k, v in cld.items()}
-        rjct = {k: v[..., rjct_indx] for k, v in cld.items()}
+    acpt = {k: v[..., acpt_indx] for k, v in cld.items()}
+    rjct = {k: v[..., rjct_indx] for k, v in cld.items()}
 
     # Store each star separately. This part is important since it is here
     # where we define the position of the data.
