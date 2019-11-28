@@ -16,8 +16,8 @@ def main(
     Hardcoded choices:
 
     * outlr_std sigma outliers are rejected
-    * MPs are used
     * Bayesian prior is a Gaussian with a fixed standard deviation
+    * The default 'Stretch' move is used by emcee
     """
 
     plx_clrg, mmag_clp, mp_clp, plx_clp, e_plx_clp, plx_samples,\
