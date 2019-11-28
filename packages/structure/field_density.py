@@ -28,7 +28,7 @@ def main(clp, cld_i, coords, NN_dd, fdens_method, **kwargs):
     return clp
 
 
-def distDens(x, y, kde_cent, NN_dd, N_tot=100000):
+def distDens(x, y, kde_cent, NN_dd):
     """
     Filter stars in frame to reject those too close to the frame's borders.
     For the remaining stars, obtain their radius (distance to farthest
@@ -61,7 +61,7 @@ def distDens(x, y, kde_cent, NN_dd, N_tot=100000):
         # If the area of the star lies outside of the frame.
         if (x[i] - rad < x0) or (x[i] + rad > x1) or (y[i] - rad < y0) or\
                 (y[i] + rad > y1):
-            fr_area = circFrac((x[i], y[i]), rad, x0, x1, y0, y1, N_tot=N_tot)
+            fr_area = circFrac((x[i], y[i]), rad, x0, x1, y0, y1)
         areas[i] *= fr_area
 
     # Per star densities.

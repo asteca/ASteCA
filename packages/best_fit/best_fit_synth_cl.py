@@ -49,6 +49,20 @@ def main(clp, pd):
         cmpl_rnd = np.random.uniform(0., 1., 1000000)
         err_rnd = np.random.normal(0., 1., 1000000)
 
+        # TEMPORARY
+        # Use for saving the necessary input for the 'perf_test.py' file.
+        import pickle
+        with open('perf_test.pickle', 'wb') as f:
+            pickle.dump([
+                obs_clust, pd['fundam_params'], pd['theor_tracks'],
+                pd['lkl_method'], pd['R_V'], clp['em_float'], clp['err_lst'],
+                clp['completeness'], max_mag_syn, st_dist_mass, ext_coefs,
+                N_fc, m_ini, cmpl_rnd, err_rnd], f)
+        print("finished")
+        import sys
+        sys.exit()
+        # TEMPORARY
+
         print("Searching for optimal parameters")
 
         # Calculate the best fitting parameters.
@@ -56,7 +70,8 @@ def main(clp, pd):
 
             print("Using bootstrap + Genetic Algorithm ({})".format(
                 pd['lkl_method'] + '; ' + pd['lkl_binning'] if
-                pd['lkl_method'] == 'dolphin' else pd['lkl_method']))
+                pd['lkl_method'] in ('dolphin', 'tremmel') else
+                pd['lkl_method']))
             isoch_fit_params = bootstrap.main(
                 pd, clp, cl_max_mag, max_mag_syn, obs_clust, ext_coefs,
                 st_dist_mass, N_fc, m_ini, cmpl_rnd, err_rnd)
@@ -66,7 +81,8 @@ def main(clp, pd):
         elif pd['best_fit_algor'] == 'ptemcee':
             print("Using ptemcee algorithm ({})".format(
                 pd['lkl_method'] + '; ' + pd['lkl_binning'] if
-                pd['lkl_method'] == 'dolphin' else pd['lkl_method']))
+                pd['lkl_method'] in ('dolphin', 'tremmel') else
+                pd['lkl_method']))
 
             isoch_fit_params = ptemcee_algor.main(
                 clp['err_lst'], clp['completeness'], clp['em_float'],
@@ -83,11 +99,11 @@ def main(clp, pd):
         #     # Brute force algorithm.
         #     isoch_fit_params = brute_force_algor.main()
 
-        # TODO not working yet
         elif pd['best_fit_algor'] == 'emcee':
             print('Using emcee algorithm ({}).'.format(
                 pd['lkl_method'] + '; ' + pd['lkl_binning'] if
-                pd['lkl_method'] == 'dolphin' else pd['lkl_method']))
+                pd['lkl_method'] in ('dolphin', 'tremmel') else
+                pd['lkl_method']))
             isoch_fit_params = emcee_algor.main(
                 clp['err_lst'], clp['completeness'], clp['em_float'],
                 max_mag_syn, obs_clust, ext_coefs, st_dist_mass, N_fc,

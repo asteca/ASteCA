@@ -76,12 +76,11 @@ def main(
             [gs, y_ax, phot_analy_compl, phot_data_compl, err_rm_data,
              completeness],
             # pl_ad_test
-            [gs, b, flag_ad_test, ad_cl, ad_fr, pd['id_kinem'],
-             pd['ad_k_comb']],
+            [gs, b, flag_ad_test, ad_cl, ad_fr, pd['id_kinem']],
             # pl_ad_pvals_phot
             [gs, b, flag_ad_test, ad_cl_fr_p],
             # pl_ad_pvals_pk
-            [gs, b, flag_ad_test, ad_cl_fr_pk, pd['id_kinem'], pd['ad_k_comb']]
+            [gs, b, flag_ad_test, ad_cl_fr_pk, pd['id_kinem']]
         ]
         for n, args in enumerate(arglist):
             mp_data_analysis.plot(n, *args)

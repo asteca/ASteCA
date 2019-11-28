@@ -367,7 +367,7 @@ def pl_hess_cmd(
                 y_max_cmd1, cl_col, cl_mag, fr_col, fr_mag)
 
 
-def pl_ad_test(gs, b, flag_ad_test, ad_cl, ad_fr, id_kinem, ad_k_comb):
+def pl_ad_test(gs, b, flag_ad_test, ad_cl, ad_fr, id_kinem):
     """
     """
     if flag_ad_test:
@@ -406,9 +406,8 @@ def pl_ad_test(gs, b, flag_ad_test, ad_cl, ad_fr, id_kinem, ad_k_comb):
         # Define first row depending on whether kinematic data was defined.
         k_flag = np.array([_ != 'n' for _ in (pd_Plx, pd_PMRA, pd_RV)]).any()
         if k_flag:
-            s = 'all' if ad_k_comb else 'plx+pm+rv'
             ax = plt.subplot(gs[5 + b:6 + b, 0:2])
-            adPlot(ax, ad_cl[1], ad_fr[1], s)
+            adPlot(ax, ad_cl[1], ad_fr[1], 'plx+pm')
 
 
 def pl_p_vals(
@@ -455,7 +454,7 @@ def pl_ad_pvals_phot(gs, b, flag_ad_test, ad_cl_fr_p):
             'phot')
 
 
-def pl_ad_pvals_pk(gs, b, flag_ad_test, ad_cl_fr_pk, id_kinem, ad_k_comb):
+def pl_ad_pvals_pk(gs, b, flag_ad_test, ad_cl_fr_pk, id_kinem):
     # Only plot if either parallax or PMs or radial velocities are defined
     pd_Plx, pd_PMRA, pd_RV = id_kinem[0], id_kinem[2], id_kinem[6]
     # Define first row depending on whether kinematic data was defined.
@@ -464,10 +463,9 @@ def pl_ad_pvals_pk(gs, b, flag_ad_test, ad_cl_fr_pk, id_kinem, ad_k_comb):
         Ncl, Nf, prob_cl, kde_cl, kde_fr, x_cl, x_fr, x_over, y_over =\
             ad_cl_fr_pk
         ax = plt.subplot(gs[4 + b:6 + b, 4:6])
-        s = 'all' if ad_k_comb else 'plx+pm+rv'
         pl_p_vals(
             ax, Ncl, Nf, prob_cl, kde_cl, kde_fr, x_cl, x_fr, x_over, y_over,
-            s)
+            'Plx+PM')
 
 
 def plot(N, *args):
