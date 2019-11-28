@@ -282,15 +282,19 @@ def getParamVals(pd):
             except ValueError:
                 pmin = p_rng[0]
                 if pmin != 'min':
-                    sys.exit("ERROR '{}': unrecognized string '{}'".format(
-                        t, pmin))
+                    sys.exit(
+                        ("ERROR '{}': unrecognized string '{}'.\nOnly 'min' " +
+                         "string is accepted as the lower range.").format(
+                            t, pmin))
             try:
                 pmax = float(p_rng[1])
             except ValueError:
                 pmax = p_rng[1]
                 if pmax != 'max':
-                    sys.exit("ERROR '{}': unrecognized string '{}'".format(
-                        t, pmax))
+                    sys.exit(
+                        ("ERROR '{}': unrecognized string '{}'.\nOnly 'max' " +
+                         "string is accepted as the upper range.").format(
+                            t, pmax))
             fundam_params[idx] = [pmin, pmax]
 
     pd['fundam_params'] = fundam_params
