@@ -45,7 +45,7 @@ def main(cld_i, clp, coords, rad_manual, nsteps_rad, **kwargs):
     return clp
 
 
-def radsAreas(rdp_radii, x, y, kde_cent, N_tot=100000):
+def radsAreas(rdp_radii, x, y, kde_cent):
     """
     Helper function. Determine the radii values, and estimate the number of
     stars and areas for each value.
@@ -68,7 +68,7 @@ def radsAreas(rdp_radii, x, y, kde_cent, N_tot=100000):
     for i, rad in enumerate(radii):
         fr_area = 1.
         if rad > dxy:
-            fr_area = circFrac((kde_cent), rad, x0, x1, y0, y1, N_tot=N_tot)
+            fr_area = circFrac((kde_cent), rad, x0, x1, y0, y1)
         areas[i] *= fr_area
         # Stars within radius.
         n_in_cl_reg.append((dist < rad).sum())

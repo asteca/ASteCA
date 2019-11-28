@@ -57,7 +57,7 @@ def kde1D(data):
     return kde_x, kde
 
 
-def circFrac(cent, rad, x0, x1, y0, y1, N_tot=250000):
+def circFrac(cent, rad, x0, x1, y0, y1, N_tot=10000):
     """
     Use Monte Carlo to estimate the fraction of the area of a circle centered
     in (cx, cy) with a radius of 'rad', that is located within the frame given
