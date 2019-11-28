@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
 from scipy.ndimage import gaussian_filter
 from matplotlib.colors import LinearSegmentedColormap, colorConverter
-from .prep_plots import CIEllipse
+from .prep_plots import SigmaEllipse
 
 
 def hist2d(
@@ -233,7 +233,7 @@ def pl_2_param_dens(_2_params, gs, min_max_p2, varIdxs, params_trace):
 
         hist2d(ax, params_trace[mx_model], params_trace[my_model])
 
-        mean_pos, width, height, theta = CIEllipse(np.array([
+        mean_pos, width, height, theta = SigmaEllipse(np.array([
             params_trace[mx_model], params_trace[my_model]]).T)
         # Plot 95% confidence ellipse.
         plt.scatter(

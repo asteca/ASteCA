@@ -4,7 +4,6 @@ from ..best_fit.obs_clust_prepare import dataProcess
 from ..decont_algors.local_cell_clean import bin_edges_f
 import numpy as np
 import warnings
-from scipy import stats
 from astropy.visualization import ZScaleInterval
 from astropy.stats import sigma_clipped_stats
 
@@ -505,24 +504,17 @@ def PMsPlot(pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, mmag_pm, pm_dist_max):
     return arr_lst
 
 
-def CIEllipse(points, prob=.95):
+def SigmaEllipse(points, Nsigma=2.):
     """
-    Generate a 'prob' confidence interval ellipse based on the mean and
-    covariance of a point "cloud".
+    Generate a 'Nsigma' ellipse based on the mean and covariance of a point
+    "cloud".
 
-    Source: https://stackoverflow.com/q/12301071/1391441
-    Definition: https://stats.stackexchange.com/a/217377/10416
-
-    Definition (Wikipedia): "Were this procedure to be repeated on numerous
-    samples, the fraction of calculated confidence intervals (which would
-    differ for each sample) that encompass the true population parameter would
-    tend toward 90%."
-
+    Source: https://stackoverflow.com/a/12321306/1391441
 
     Parameters
     ----------
         points : An Nx2 array of the data points.
-        prob : probability value for the CI region.
+        Nsigma : probability value for the CI region.
     """
     def eigsorted(cov):
         '''
@@ -541,9 +533,8 @@ def CIEllipse(points, prob=.95):
     vals, vecs = eigsorted(cov)
     theta = np.degrees(np.arctan2(*vecs[:, 0][::-1]))
 
-    k = np.sqrt(stats.chi2.ppf(prob, 2))
     # Width and height are "full" widths, not radius
-    width, height = 2 * np.sqrt(vals) * k
+    width, height = 2 * np.sqrt(vals) * Nsigma
 
     return mean_pos, width, height, theta
 

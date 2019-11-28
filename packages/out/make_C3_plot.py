@@ -22,7 +22,8 @@ def main(
     if 'C3' in pd['flag_make_plot']:
 
         if PM_flag is False:
-            print("<<WARNING: nothing to plot in 'C3' block>>")
+            print("  WARNING: nothing to plot in 'C3' block")
+            print("<<Skip C3 block plot>>")
             return
 
         fig = plt.figure(figsize=(30, 25))
@@ -55,9 +56,9 @@ def main(
             prep_plots.PMsPlot(
                 pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, mmag_pm, pm_dist_max)
         raPMrng, dePMrng = prep_plots.PMsrange(pmRA_DE, pmDE)
-        CI_prob = .95
-        PMs_cent, PMs_width, PMs_height, PMs_theta = prep_plots.CIEllipse(
-            np.array([pmRA_DE, pmDE]).T, prob=CI_prob)
+        Nsigma = 2.
+        PMs_cent, PMs_width, PMs_height, PMs_theta = prep_plots.SigmaEllipse(
+            np.array([pmRA_DE, pmDE]).T, Nsigma)
 
         arglist = [
             # pms_vpd_mag
@@ -67,7 +68,7 @@ def main(
             [gs, coord, PM_cl_x, PM_cl_y, PM_cl_z, PM_fl_x,
              PM_fl_y, PM_fl_z, PMs_cl_cx, PMs_cl_cy, PMs_fl_cx, PMs_fl_cy,
              raPMrng, dePMrng, PMs_cent, PMs_width, PMs_height, PMs_theta,
-             CI_prob],
+             Nsigma],
             # pms_vpd_mp
             [gs, coord, pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE,
              pmRA_fl_DE, e_pmRA_fl_DE, pmDE_fl, e_pmDE_fl, raPMrng,

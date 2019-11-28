@@ -186,13 +186,13 @@ def pms_vpd_mag(
 def pms_KDE_diag(
     gs, coord, PM_cl_x, PM_cl_y, PM_cl_z, PM_fl_x, PM_fl_y, PM_fl_z,
     PMs_cl_cx, PMs_cl_cy, PMs_fl_cx, PMs_fl_cy, raPMrng, dePMrng, PMs_cent,
-        PMs_width, PMs_height, PMs_theta, CI_prob):
+        PMs_width, PMs_height, PMs_theta, Nsigma):
     """
     KDE of PMs for cluster and field regions.
     """
     ax = plt.subplot(gs[2:4, 2:4])
     ax.set_title(
-        'Error-weighted KDE + {:.0f}% CI ellipse'.format(CI_prob * 100.),
+        r'Error-weighted KDE + {:.0f}$\sigma$ ellipse'.format(Nsigma),
         fontsize=9)
     ax.minorticks_on()
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
