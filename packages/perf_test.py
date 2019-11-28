@@ -90,29 +90,34 @@ if __name__ == '__main__':
         theor_tracks, e_max, err_lst, completeness, max_mag_syn, st_dist_mass,
         R_V, ext_coefs, N_fc, m_ini, cmpl_rnd, err_rnd]
 
-    Nruns = 10000
     print("Running")
     times_all = []
 
-    s = t.time()
-    for i in range(Nruns):
-        if (i + 1) % 100:
-            continue
+    max_time, elapsed, s, i = 15., 0., t.time(), 0
+    while True:
 
-        print(i)
         model = []
         for p in fundam_params:
             model.append(np.random.uniform(min(p), max(p)))
 
+        if np.random.randint(1000) == 500:
+            print("{}. {:.4f}, {:.3f}, {:.2f}, {:.2f}, {:.0f}, {:.1f}".format(
+                i, *model))
+
         times_all.append(main(
             model, lkl_method, obs_clust, fundam_params, synthcl_args))
 
-    t_total = t.time() - s
-    times_norm = 100. * np.sum(times_all, 0) / t_total
+        elapsed += t.time() - s
+        s = t.time()
+        if elapsed >= max_time:
+            break
+        i += 1
+
+    times_norm = 100. * np.sum(times_all, 0) / max_time
     cols = [
         'zaWAvrg', 'move', 'cut', 'M_dst', 'M_intrp', 'binar',
         'complete', 'errors', lkl_method]
-    plt.title("N={}".format(Nruns))
+    plt.title("N={}, t={}".format(i, max_time))
     plt.grid(zorder=0)
     plt.bar(cols, times_norm, zorder=4)
     plt.ylabel("% of time used")
