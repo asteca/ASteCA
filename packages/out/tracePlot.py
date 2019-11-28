@@ -22,10 +22,10 @@ def traceplots(
     gs_x1, gs_x2, gs_y1, gs_y2, cp = plot_dict[par_name]
     ax = plt.subplot(gs[gs_y1:gs_y2, gs_x1:gs_x2])
     if cp == 0:
-        plt.title("Mean chain")
-    elif cp == 5:
         ax.set_title(
             r"Chain with the closest $\tau$ to the median", fontsize=10)
+    if cp == 5:
+        plt.xlabel("steps", fontsize=14)
     else:
         ax.tick_params(labelbottom=False)
     plt.ylabel(labels[cp])

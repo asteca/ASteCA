@@ -46,7 +46,7 @@ def main(npd, pd, isoch_fit_params, isoch_fit_errors, **kwargs):
                 pd['nburn_mcee'], isoch_fit_params['N_steps']
             p_str = (
                 "[{}] chains={:.0f}, burn={:.2f}, steps={:.0f} ").format(
-                pd['emcee_moves'], nwalkers, nburn, nsteps[-1])
+                ' '.join(pd['emcee_moves']), nwalkers, nburn, nsteps[-1])
 
         add_version_plot.main(x_fix=xf, y_fix=yf)
         plt.suptitle(
