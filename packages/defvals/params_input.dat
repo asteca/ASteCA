@@ -282,16 +282,26 @@ DW      y        y        y        y        y       n
 #    'prob_min' parameter (0, 1).
 #   - all: use all stars in the cluster region.
 #
-# * binning: fixed / auto / fd / doane / scott / rice / sqrt
-#            sturges / knuth / blocks / blocks-max
+# * binning: optm / fixed / blocks / blocks-max / auto / fd / doane / scott /
+#            rice / sqrt / sturges / knuth
 #   Binning method to be used if the 'local' method is selected. Otherwise
 #   this parameter is ignored.
+#
+# - optm: select the number of bins so that the number of stars left are
+#   the closest to the estimated number of members as possible. The number of
+#   bins in the magnitude is twice the number in the colors.
+# - fixed: Based on Bonatto & Bica (2007; 377, 3, 1301-1323) but using larger
+#   values: 0.5 mag for colors and 1. mag for the magnitude.
+# - blocks, knuth: astropy's implementation.
+# - blocks-max: same as 'blocks' but imposing a maximum width of 3. mag for
+#   colors and 1. mag for magnitude.
+# - rest: numpy's implementation.
 #
 # * prob_min: minimum accepted probability value if the 'man' mode was
 #   selected. Otherwise this parameter is ignored.
 #
 #   mode    binning     prob_min
-FR  local     knuth          0.5
+FR  local      optm          0.5
 ################################################################################
 
 
