@@ -12,7 +12,7 @@ from . import prep_plots
 def main(
     npd, cld_c, pd, kde_cent, clust_rad, stars_out_c, cl_region_i,
     memb_probs_cl_region_i, memb_prob_avrg_sort, flag_decont_skip, n_memb_da,
-    cl_reg_fit, cl_reg_no_fit, cl_reg_clean_plot, col_0_comb, mag_0_comb,
+    cl_reg_fit, cl_reg_no_fit, local_rm_edges, col_0_comb, mag_0_comb,
         err_lst, **kwargs):
     """
     """
@@ -35,12 +35,10 @@ def main(
                 y_zmax, cl_reg_fit, cl_reg_no_fit)
 
         # Decontamination algorithm plots.
-        min_prob, bin_edges = cl_reg_clean_plot
-
         arglist = [
             # pl_mp_histo
             [gs, n_memb_da, memb_prob_avrg_sort, flag_decont_skip,
-             cl_reg_fit, min_prob, pd['fld_clean_mode'], pd['fld_clean_bin']],
+             cl_reg_fit, pd['fld_clean_mode'], pd['fld_clean_bin']],
             # pl_chart_mps
             [gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
              y_zmax, kde_cent, clust_rad, flag_decont_skip,
@@ -65,11 +63,13 @@ def main(
                 pd['colors'][i], pd['filters'][0], 'mag')
             x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd =\
                 prep_plots.diag_limits('mag', cols_all, mags_all)
+            # Color indexes for the 'local_cell_clean' edges
+            c1, c2 = 0, i + 1
             plot_colorbar, sca, trans, v_min_mp, v_max_mp =\
                 mp_decont_photom.pl_mps_incomp_diags(
                     gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax,
                     y_ax, col_c, mags_c, colors_c, col_i, mags_i, colors_i,
-                    j_gs)
+                    pd['fld_clean_mode'], local_rm_edges, c1, c2, j_gs)
             all_colorbars.append((
                 plot_colorbar, sca, trans, v_min_mp, v_max_mp))
             j_gs += 1
@@ -82,11 +82,14 @@ def main(
                 prep_plots.diag_limits('col', cols0_all, cols1_all)
             x_ax, y_ax = prep_plots.ax_names(
                 pd['colors'][i], pd['colors'][j], 'col')
+            # Color indexes for the 'local_cell_clean' edges
+            c1, c2 = i + 1, j + 1
             plot_colorbar, sca, trans, v_min_mp, v_max_mp =\
                 mp_decont_photom.pl_mps_incomp_diags(
                     gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax,
                     y_ax, cols_c[i], cols_c[j], colors_c,
-                    cols_i[i], cols_i[j], colors_i, j_gs)
+                    cols_i[i], cols_i[j], colors_i, pd['fld_clean_mode'],
+                    local_rm_edges, c1, c2, j_gs)
             all_colorbars.append((
                 plot_colorbar, sca, trans, v_min_mp, v_max_mp))
             j_gs += 1
@@ -104,7 +107,7 @@ def main(
         plot_colorbar, sca, trans = mp_decont_photom.pl_mps_phot_diag(
             gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax,
             y_ax, v_min_mp_comp, v_max_mp_comp, diag_fit_inv, diag_no_fit_inv,
-            err_bar, pd['fld_clean_mode'], bin_edges)
+            err_bar, pd['fld_clean_mode'], local_rm_edges)
         all_colorbars.append((
             plot_colorbar, sca, trans, v_min_mp_comp, v_max_mp_comp))
 

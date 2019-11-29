@@ -3,13 +3,13 @@ import numpy as np
 
 
 def main(clp):
-    '''
+    """
     Compare the estimated number of true members obtained via the stars density
     analysis done in `members_number` with the number of stars in the
     cluster region that are assigned a MP of 0.5 or more. These stars are the
     ones with a greater probability of being cluster members than field region
     stars.
-    '''
+    """
     memb_par, n_memb_da, flag_memb_par = float("inf"), np.nan, False
     # Obtain parameter if the DA was applied.
     if not clp['flag_decont_skip'] and clp['n_memb'] > 0:
