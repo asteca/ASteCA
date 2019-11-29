@@ -465,8 +465,8 @@ GA     50    1.     0.85      2P    0.1     1   100    50
 #   - tolstoy: weighted bin-free statistic as that defined in Tolstoy & Saha
 #     (1996), Monteiro et al (2010) and Hernández & Valls-Gabaud (2008).
 #
-# * binning: fixed / auto / fd / doane / scott / rice / sqrt
-#            sturges / knuth / blocks / blocks_max
+# * binning: fixed / blocks / blocks-max / auto / fd / doane / scott /
+#            rice / sqrt / sturges / knuth
 #   Binning method used if the 'tremmel' or 'dolphin' likelihoods are
 #   selected. Otherwise this parameter is ignored.
 #

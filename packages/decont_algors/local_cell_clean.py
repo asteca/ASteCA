@@ -36,7 +36,7 @@ def main(
     mags_cols_cl, mags_cols_all_fl = dataComb(
         memb_prob_avrg_sort, field_regions_c)
 
-    def regSelect(nbins=None):
+    def regSelect(nbins):
         # Obtain bin edges.
         bin_edges = bin_edges_f(fld_clean_bin, mags_cols_cl, nbins)
 
@@ -68,7 +68,7 @@ def main(
         i = np.argmin(diff_memb)
         cl_reg_fit, cl_reg_no_fit, bin_edges = data[i]
     else:
-        cl_reg_fit, cl_reg_no_fit, bin_edges = regSelect()
+        cl_reg_fit, cl_reg_no_fit, bin_edges = regSelect(None)
 
     # Check the number of stars selected.
     if len(cl_reg_fit) < 10:
@@ -106,7 +106,7 @@ def dataComb(memb_prob_avrg_sort, field_regions_c):
     return mags_cols_cl, mags_cols_all_fl
 
 
-def bin_edges_f(bin_method, mags_cols_cl, nbins, min_bins=2, max_bins=50):
+def bin_edges_f(bin_method, mags_cols_cl, nbins=None, min_bins=2, max_bins=50):
     """
     Obtain bin edges for each photometric dimension using the cluster region
     diagram. The 'bin_edges' list will contain all magnitudes first, and then
