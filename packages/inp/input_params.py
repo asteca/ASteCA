@@ -250,8 +250,9 @@ def main(mypath, pars_f_path):
     # Accepted field stars removal methods.
     fld_rem_methods = ('local', 'n_memb', 'mp_05', 'top_h', 'man', 'all')
     # Accepted binning methods.
-    bin_methods = ('fixed', 'auto', 'fd', 'doane', 'scott', 'rice', 'sqrt',
-                   'sturges', 'knuth', 'blocks', 'blocks-max')
+    bin_methods = (
+        'optm', 'fixed', 'auto', 'fd', 'doane', 'scott', 'rice', 'sqrt',
+        'sturges', 'knuth', 'blocks', 'blocks-max')
     bin_weights = ('mean', 'median', 'max')
     # Likelihood methods.
     lkl_methods = (
