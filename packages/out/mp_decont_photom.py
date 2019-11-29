@@ -6,7 +6,7 @@ import matplotlib.offsetbox as offsetbox
 
 def pl_mp_histo(
     gs, n_memb_da, memb_prob_avrg_sort, flag_decont_skip, cl_reg_fit,
-        min_prob, mode_fld_clean, local_bin):
+        mode_fld_clean, local_bin):
     '''
     Histogram for the distribution of membership probabilities from the
     decontamination algorithm.
@@ -16,7 +16,7 @@ def pl_mp_histo(
         # Reduced membership.
         ax = plt.subplot(gs[0:2, 0:2])
         plt.xlim(0., 1.)
-        plt.xlabel('MP (membership probability)', fontsize=12)
+        plt.xlabel('MP', fontsize=12)
         plt.ylabel('N (normalized)', fontsize=12)
         ax.minorticks_on()
         ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
@@ -41,6 +41,7 @@ def pl_mp_histo(
             print("  WARNING: all MPs are equal valued. "
                   "Can not plot MPs histogram.")
         # Plot minimum probability line.
+        min_prob = cl_reg_fit[-1][-1]
         plt.axvline(x=min_prob, linestyle='--', color='green', lw=2.5,
                     zorder=3)
 
@@ -123,7 +124,7 @@ def pl_chart_mps(
 def pl_mps_phot_diag(
     gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax, v_min_mp,
     v_max_mp, diag_fit_inv, diag_no_fit_inv, err_bar, mode_fld_clean,
-        bin_edges):
+        local_rm_edges):
     '''
     Star's membership probabilities on cluster's photometric diagram.
     '''
@@ -142,13 +143,13 @@ def pl_mps_phot_diag(
     ax.add_artist(ob)
     # Set minor ticks
     ax.minorticks_on()
-    # Plot grid. If bin_edges == 0., it means the 'local' method was not used.
-    if mode_fld_clean == 'local' and bin_edges != 0.:
-        # TODO using first magnitude and color. Generalize to N-dimensions.
-        for x_ed in bin_edges[1]:
+    # Plot grid.
+    if mode_fld_clean == 'local' and local_rm_edges is not None:
+        # Use first magnitude and color.
+        for x_ed in local_rm_edges[1]:
             # vertical lines
             ax.axvline(x_ed, linestyle=':', lw=.8, color='k', zorder=1)
-        for y_ed in bin_edges[0]:
+        for y_ed in local_rm_edges[0]:
             # horizontal lines
             ax.axhline(y_ed, linestyle=':', lw=.8, color='k', zorder=1)
     else:
@@ -191,10 +192,10 @@ def pl_mps_phot_diag(
 def pl_mps_incomp_diags(
     gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
     xdata_c, ydata_c, coldata_c, xdata_i, ydata_i, coldata_i,
-        gspos_idx):
-    '''
+        mode_fld_clean, local_rm_edges, c1, c2, gspos_idx):
+    """
     Star's membership probabilities on cluster's photometric diagram.
-    '''
+    """
 
     pos = (
         2 * (gspos_idx // 3) + 2, 2 * (gspos_idx // 3) + 4,
@@ -214,8 +215,20 @@ def pl_mps_incomp_diags(
     ax.set_title(text, fontsize=10)
     # Set minor ticks
     ax.minorticks_on()
-    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
-            zorder=1)
+
+    # Plot grid.
+    if mode_fld_clean == 'local' and local_rm_edges is not None:
+        # Use first magnitude and color.
+        for x_ed in local_rm_edges[c2]:
+            # vertical lines
+            ax.axvline(x_ed, linestyle=':', lw=.8, color='k', zorder=1)
+        for y_ed in local_rm_edges[c1]:
+            # horizontal lines
+            ax.axhline(y_ed, linestyle=':', lw=.8, color='k', zorder=1)
+    else:
+        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
+                zorder=1)
+
     # This reversed colormap means higher prob stars will look redder.
     cm = plt.cm.get_cmap('RdYlBu_r')
     if sum(~np.isnan(xdata_i) & ~np.isnan(ydata_i)) > 0:
