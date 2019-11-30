@@ -2,11 +2,12 @@
 import numpy as np
 import warnings
 import time as t
+from ..synth_clust import synth_cluster
 from . import likelihood
 from .mcmc_convergence import convergenceVals
-from .bf_common import initPop, varPars, synthClust, rangeCheck, fillParams,\
+from .bf_common import initPop, varPars, rangeCheck, fillParams,\
     r2Dist, modeKDE  # , thinChain
-from .ptemcee import sampler, util
+from .ptemcee import sampler  # , util
 
 
 def main(
@@ -224,7 +225,8 @@ def loglkl(
     logpost = -1e9
     if rangeFlag:
         # Generate synthetic cluster.
-        synth_clust = synthClust(fundam_params, varIdxs, synthcl_args, model)
+        synth_clust = synth_cluster.main(
+            fundam_params, varIdxs, model, *synthcl_args)
         # Call likelihood function for this model.
         lkl = likelihood.main(lkl_method, synth_clust, obs_clust)
         log_p = 0.

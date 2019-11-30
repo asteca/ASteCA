@@ -6,9 +6,10 @@ from emcee import ensemble
 # This is used when the moves are defined below by eval()
 from emcee import moves
 
+from ..synth_clust import synth_cluster
 from . import likelihood
 from .mcmc_convergence import convergenceVals
-from .bf_common import initPop, varPars, synthClust, rangeCheck, fillParams,\
+from .bf_common import initPop, varPars, rangeCheck, fillParams,\
     r2Dist, modeKDE  # , thinChain
 
 
@@ -223,7 +224,8 @@ def log_likelihood(
     """
 
     # Generate synthetic cluster.
-    synth_clust = synthClust(fundam_params, varIdxs, synthcl_args, model)
+    synth_clust = synth_cluster.main(
+        fundam_params, varIdxs, model, *synthcl_args)
 
     # Call likelihood function for this model. RETURNS THE INVERSE lkl.
     lkl = likelihood.main(lkl_method, synth_clust, obs_clust)

@@ -3,8 +3,8 @@ import time as t
 import textwrap
 import random
 import numpy as np
-from .bf_common import varPars, rangeCheck, synthClust, random_population,\
-    fillParams
+from .bf_common import varPars, rangeCheck, random_population, fillParams
+from ..synth_clust import synth_cluster
 from . import likelihood
 
 #############################################################
@@ -326,8 +326,8 @@ def evaluation(
         if rangeFlag:
 
             # Generate synthetic cluster.
-            synth_clust = synthClust(
-                fundam_params, varIdxs, synthcl_args, model)
+            synth_clust = synth_cluster.main(
+                fundam_params, varIdxs, model, *synthcl_args)
 
             # Call likelihood function for this model.
             # with timeblock(" Likelihood"):
