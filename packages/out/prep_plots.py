@@ -345,23 +345,6 @@ def p2_ranges(p2, min_max_p):
     return min_max_p2
 
 
-def likl_y_range(opt_method, lkl_best, lkl_mean):
-    '''
-    Obtain y axis range for the likelihood axis.
-    '''
-    # if opt_method == 'emcee':
-    #     l_min_max = [
-    #         max(0., min(lkl_old) - .2 * min(lkl_old)),
-    #         np.median(lkl_old[:int(.1 * len(lkl_old))]) * 1.5]
-    # elif opt_method == 'boot+GA':
-    # Take limits from L_min curve.
-    lkl_range = max(lkl_mean) - min(lkl_best)
-    l_min_max = [max(0., min(lkl_best) - 0.1 * lkl_range),
-                 max(lkl_mean) + 0.1 * lkl_range]
-
-    return l_min_max
-
-
 def packData(
     lkl_method, lkl_binning, cl_max_mag, synth_clst, shift_isoch,
         colors, filters, col_0_comb, mag_0_comb, col_1_comb):

@@ -74,12 +74,9 @@ def main(npd, pd, isoch_fit_params, isoch_fit_errors, **kwargs):
 
             min_max_p = prep_plots.param_ranges(
                 pd['best_fit_algor'], pd['fundam_params'])
-            l_min_max = prep_plots.likl_y_range(
-                pd['best_fit_algor'], isoch_fit_params['lkl_best'],
-                isoch_fit_params['lkl_mean'])
             args = [
                 # pl_GA_lkl: Likelihood evolution for the GA.
-                gs, pos0, l_min_max, isoch_fit_params['lkl_best'],
+                gs, pos0, isoch_fit_params['lkl_best'],
                 isoch_fit_params['lkl_mean'], isoch_fit_params['OF_models'],
                 isoch_fit_params['new_bs_indx'], pd['fit_diff'],
                 pd['cross_prob'], pd['cross_sel'], pd['mut_prob'],
