@@ -2,7 +2,7 @@
 import numpy as np
 
 
-def main(theor_tracks, fundam_params, varIdxs, model):
+def main(theor_tracks, fundam_params, z_model, a_model, ml, mh, al, ah):
     """
     Average a new (weighted) isochrone from the four closest points in the
     (z, a) grid.
@@ -19,17 +19,14 @@ def main(theor_tracks, fundam_params, varIdxs, model):
     mb:  binary masses
     m_ini,..., m_bol: six extra parameters.
 
-    WARNING: currently only reading the 'm_ini' extra parameter in
+    WARNING: currently (12/19) only reading the 'm_ini' extra parameter in
     'isochs_format()'
 
     """
 
-    model_proper, z_model, a_model, ml, mh, al, ah = properModel(
-        fundam_params, model, varIdxs)
-
     # If (z, a) are both fixed, just return the single processed isochrone
     if ml == al == mh == ah == 0:
-        return theor_tracks[ml][al], model_proper
+        return theor_tracks[ml][al]
 
     # The four points in the (z, age) grid that define the box that contains
     # the model value (z_model, a_model)
@@ -52,7 +49,7 @@ def main(theor_tracks, fundam_params, varIdxs, model):
     # then just return that isochrone.
     try:
         idx = np.where(dist == 0.)[0][0]
-        return isochs[idx], model_proper
+        return isochs[idx]
     except IndexError:
         pass
 
@@ -76,8 +73,6 @@ def main(theor_tracks, fundam_params, varIdxs, model):
 
     # nn = np.random.randint(0, 100)
     # if nn == 50:
-    #     print(model)
-    #     print(model_proper)
     #     import matplotlib.pyplot as plt
     #     plt.subplot(131)
     #     plt.scatter(*pts.T, c='r')
@@ -101,60 +96,4 @@ def main(theor_tracks, fundam_params, varIdxs, model):
     #     plt.gca().invert_yaxis()
     #     plt.show()
 
-    return isochrone, model_proper
-
-
-def properModel(fundam_params, model, varIdxs):
-    """
-    Define the 'proper' model with values for (z, a) taken from its grid,
-    and filled values for those parameters that are fixed.
-
-    Parameters
-    ----------
-    model : array
-      Array of *free* fundamental parameters only (ie: not in varIdxs).
-
-    Returns
-    -------
-    model_proper : list
-      Stores (E_BV, dm, Mass, b_fr) including the fixed parameters that are
-      missing from 'model'.
-    z_model, a_model : floats
-      The (z, a) values for this model's isochrone.
-    ml, mh, al, ah : ints
-      Indexes of the (z, a) values in the grid that define the box that enclose
-      the (z_model, a_model) values.
-
-    """
-
-    model_proper, j = [], 0
-    for i, par in enumerate(fundam_params):
-        # Check if this parameter is one of the 'free' parameters.
-        if i in varIdxs:
-            # If it is the parameter metallicity.
-            if i == 0:
-                # Select the closest value in the array of allowed values.
-                mh = min(len(par) - 1, np.searchsorted(par, model[i - j]))
-                ml = mh - 1
-                # Define the model's z value
-                z_model = model[i - j]
-            # If it is the parameter log(age).
-            elif i == 1:
-                # Select the closest value in the array of allowed values.
-                ah = min(len(par) - 1, np.searchsorted(par, model[i - j]))
-                al = ah - 1
-                a_model = model[i - j]
-            else:
-                model_proper.append(model[i - j])
-        else:
-            if i == 0:
-                ml = mh = 0
-                z_model = fundam_params[0][0]
-            elif i == 1:
-                al = ah = 0
-                a_model = fundam_params[1][0]
-            else:
-                model_proper.append(par[0])
-            j += 1
-
-    return model_proper, z_model, a_model, ml, mh, al, ah
+    return isochrone

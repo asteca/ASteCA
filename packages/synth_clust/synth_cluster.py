@@ -1,4 +1,5 @@
 
+import numpy as np
 from . import zaWAverage
 from . import move_isochrone
 from . import cut_max_mag
@@ -35,10 +36,17 @@ def main(
     extra_pars = [l1, l2, ..., l6]
     """
 
+    # Return proper values for fixed parameters and parameters required
+    # for the (z, log(age)) isochrone averaging.
+    model_proper, z_model, a_model, ml, mh, al, ah = properModel(
+        fundam_params, model, varIdxs)
+
     # Generate a weighted average isochrone from the (z, log(age)) values in
-    # the 'model'. Return proper values for fixed parameters.
-    isochrone, model_proper = zaWAverage.main(
-        theor_tracks, fundam_params, varIdxs, model)
+    # the 'model'.
+    isochrone = zaWAverage.main(
+        theor_tracks, fundam_params, z_model, a_model, ml, mh, al, ah)
+
+    # Extract parameters
     e, d, M_total, bin_frac = model_proper
 
     # Move theoretical isochrone using the values 'e' and 'd'.
@@ -98,3 +106,59 @@ def main(
     ################################################################
 
     return synth_clust
+
+
+def properModel(fundam_params, model, varIdxs):
+    """
+    Define the 'proper' model with values for (z, a) taken from its grid,
+    and filled values for those parameters that are fixed.
+
+    Parameters
+    ----------
+    model : array
+      Array of *free* fundamental parameters only (ie: in varIdxs).
+
+    Returns
+    -------
+    model_proper : list
+      Stores (E_BV, dm, Mass, b_fr) including the fixed parameters that are
+      missing from 'model'.
+    z_model, a_model : floats
+      The (z, a) values for this model's isochrone.
+    ml, mh, al, ah : ints
+      Indexes of the (z, a) values in the grid that define the box that enclose
+      the (z_model, a_model) values.
+
+    """
+
+    model_proper, j = [], 0
+    for i, par in enumerate(fundam_params):
+        # Check if this parameter is one of the 'free' parameters.
+        if i in varIdxs:
+            # If it is the parameter metallicity.
+            if i == 0:
+                # Select the closest value in the array of allowed values.
+                mh = min(len(par) - 1, np.searchsorted(par, model[i - j]))
+                ml = mh - 1
+                # Define the model's z value
+                z_model = model[i - j]
+            # If it is the parameter log(age).
+            elif i == 1:
+                # Select the closest value in the array of allowed values.
+                ah = min(len(par) - 1, np.searchsorted(par, model[i - j]))
+                al = ah - 1
+                a_model = model[i - j]
+            else:
+                model_proper.append(model[i - j])
+        else:
+            if i == 0:
+                ml = mh = 0
+                z_model = fundam_params[0][0]
+            elif i == 1:
+                al = ah = 0
+                a_model = fundam_params[1][0]
+            else:
+                model_proper.append(par[0])
+            j += 1
+
+    return model_proper, z_model, a_model, ml, mh, al, ah
