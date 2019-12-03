@@ -226,7 +226,7 @@ def tolstoy(synth_clust, obs_clust):
 
 
 def mighell(synth_clust, obs_clust):
-    '''
+    """
     Chi gamma squared distribution defined in Mighell (1999)
 
     This likelihood is more stable than Dolphin regarding the issue of empty
@@ -235,31 +235,25 @@ def mighell(synth_clust, obs_clust):
 
     If the number of bins is too large, it will attempt to minimize the
     synthetic cluster mass M. This is because in the infinite bins limits,
-    each bin holds a single stat and the chances of n_i=m_i go to zero. In
+    each bin holds a single star and the chances of n_i=m_i go to zero. In
     this case, the chi-square is lowered simply lowering M.
-    '''
+    """
 
     # Observed cluster's bin edges for each dimension, flattened histogram,
-    # and indexes of n_i=0 elements.
-    bin_edges, cl_histo_f, cl_z_idx = obs_clust
+    # and n_i constant.
+    bin_edges, cl_histo_f, ni_cnst = obs_clust
 
     # Synthetic cluster.
     synth_phot = synth_clust[0][0]
     # Histogram of the synthetic cluster, using the bin edges calculated
     # with the observed cluster.
     syn_histo = np.histogramdd(synth_phot, bins=bin_edges)[0]
-
     # Flatten N-dimensional histogram.
     syn_histo_f = syn_histo.ravel()
-    # # Indexes of bins that are not empty in both arrays.
-    # z = cl_z_idx[0] | (syn_histo_f != 0)
-    # # Keep only those bins.
-    # cl_histo_f_z, syn_histo_f_z = cl_histo_f[z], syn_histo_f[z]
 
     # Final chi.
-    mig_chi = np.sum(np.square(
-        cl_histo_f + np.clip(cl_histo_f, 0, 1) - syn_histo_f) /
-        (cl_histo_f + 1.))
+    mig_chi = np.sum(
+        (np.square(syn_histo_f) + ni_cnst * syn_histo_f) / (cl_histo_f + 1.))
 
     return mig_chi
 
