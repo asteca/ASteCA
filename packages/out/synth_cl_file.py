@@ -18,7 +18,7 @@ def main(clp, npd, bf_flag, best_fit_algor, fundam_params, filters, colors,
         synthcl_args = [
             theor_tracks, clp['em_float'], clp['err_lst'], clp['completeness'],
             clp['max_mag_syn'], clp['st_dist_mass'], R_V, clp['ext_coefs'],
-            clp['N_fc'], m_ini, clp['cmpl_rnd'], clp['err_rnd']]
+            clp['N_fc'], m_ini, clp['err_rnd']]
 
         shift_isoch, synth_clst = synth_cl_plot.main(
             best_fit_algor, fundam_params, clp['isoch_fit_params'],

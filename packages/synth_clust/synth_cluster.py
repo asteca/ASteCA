@@ -13,7 +13,7 @@ from . import add_errors
 def main(
     fundam_params, varIdxs, model, theor_tracks, err_max, err_lst,
     completeness, max_mag_syn, st_dist_mass, R_V, ext_coefs, N_fc, m_ini,
-        cmpl_rnd, err_rnd):
+        err_rnd):
     """
     Takes an isochrone and returns a synthetic cluster created according to
     a certain mass distribution.
@@ -83,8 +83,7 @@ def main(
             isoch_binar = binarity.main(isoch_mass, bin_frac, m_ini, N_fc)
 
             # Completeness limit removal of stars.
-            isoch_compl = completeness_rm.main(
-                isoch_binar, completeness, cmpl_rnd)
+            isoch_compl = completeness_rm.main(isoch_binar, completeness)
 
             if isoch_compl.any():
                 # Get errors according to errors distribution.

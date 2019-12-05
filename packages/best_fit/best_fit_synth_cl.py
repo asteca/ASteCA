@@ -45,8 +45,7 @@ def main(clp, pd):
         m_ini = 2 * N_fc[0] + 2 * N_fc[1] + 2
 
         # HARDCODED: generate random floats to use in the synthetic cluster
-        # completeness removal and error adding.
-        cmpl_rnd = np.random.uniform(0., 1., 1000000)
+        # error adding.
         err_rnd = np.random.normal(0., 1., 1000000)
 
         # # TEMPORARY
@@ -57,7 +56,7 @@ def main(clp, pd):
         #         obs_clust, pd['fundam_params'], pd['theor_tracks'],
         #         pd['lkl_method'], pd['R_V'], clp['em_float'], clp['err_lst'],
         #         clp['completeness'], max_mag_syn, st_dist_mass, ext_coefs,
-        #         N_fc, m_ini, cmpl_rnd, err_rnd], f)
+        #         N_fc, m_ini, err_rnd], f)
         # print("finished")
         # import sys
         # sys.exit()
@@ -74,7 +73,7 @@ def main(clp, pd):
                 pd['lkl_method']))
             isoch_fit_params = bootstrap.main(
                 pd, clp, cl_max_mag, max_mag_syn, obs_clust, ext_coefs,
-                st_dist_mass, N_fc, m_ini, cmpl_rnd, err_rnd)
+                st_dist_mass, N_fc, m_ini, err_rnd)
             # Assign uncertainties.
             isoch_fit_errors = params_errors(pd, isoch_fit_params)
 
@@ -87,7 +86,7 @@ def main(clp, pd):
             isoch_fit_params = ptemcee_algor.main(
                 clp['err_lst'], clp['completeness'], clp['em_float'],
                 max_mag_syn, obs_clust, ext_coefs, st_dist_mass, N_fc,
-                m_ini, cmpl_rnd, err_rnd, **pd)
+                m_ini, err_rnd, **pd)
             # Assign uncertainties.
             isoch_fit_errors = params_errors(pd, isoch_fit_params)
 
@@ -107,7 +106,7 @@ def main(clp, pd):
             isoch_fit_params = emcee_algor.main(
                 clp['err_lst'], clp['completeness'], clp['em_float'],
                 max_mag_syn, obs_clust, ext_coefs, st_dist_mass, N_fc,
-                m_ini, cmpl_rnd, err_rnd, **pd)
+                m_ini, err_rnd, **pd)
             # Assign uncertainties.
             isoch_fit_errors = params_errors(pd, isoch_fit_params)
 
@@ -123,9 +122,9 @@ def main(clp, pd):
 
         print("Best fit parameters obtained")
 
-        clp['max_mag_syn'], clp['ext_coefs'], clp['st_dist_mass'], \
-            clp['N_fc'], clp['cmpl_rnd'], clp['err_rnd'], =\
-            max_mag_syn, ext_coefs, st_dist_mass, N_fc, cmpl_rnd, err_rnd
+        clp['max_mag_syn'], clp['ext_coefs'], clp['st_dist_mass'],\
+            clp['N_fc'], clp['err_rnd'], = max_mag_syn, ext_coefs,\
+            st_dist_mass, N_fc, err_rnd
 
     else:
         print("Skip parameters fitting process")

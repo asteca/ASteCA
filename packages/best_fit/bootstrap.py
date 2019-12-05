@@ -11,12 +11,12 @@ from .bf_common import random_population, varPars, modeKDE, fillParams,\
 
 def main(
     pd, clp, cl_max_mag, max_mag_syn, obs_clust, ext_coefs, st_dist_mass,
-        N_fc, m_ini, cmpl_rnd, err_rnd):
-    '''
+        N_fc, m_ini, err_rnd):
+    """
     Non-parametric bootstrap process, runs the selected algorithm a number of
     times each time generating a new observed cluster representation through
     resampling with replacement.
-    '''
+    """
 
     start_t = t.time()
     max_secs = pd['hmax'] * 60. * 60.
@@ -47,7 +47,7 @@ def main(
         flag_print_perc = True
         argsOF = [
             pd, clp, max_mag_syn, obs_clust, ext_coefs, st_dist_mass, N_fc,
-            m_ini, cmpl_rnd, err_rnd, available_secs, init_pop, N_pop_init,
+            m_ini, err_rnd, available_secs, init_pop, N_pop_init,
             N_gen, flag_print_perc]
 
     elif pd['best_fit_algor'] == 'boot+DE':
@@ -55,7 +55,7 @@ def main(
 
         argsOF = [
             pd, clp, max_mag_syn, st_dist_mass, ext_coefs, N_fc, m_ini,
-            cmpl_rnd, err_rnd, obs_clust, popsize, maxiter, available_secs,
+            err_rnd, obs_clust, popsize, maxiter, available_secs,
             True]
 
     # First run of the numerical optimizer function with the observed data.
@@ -86,14 +86,14 @@ def main(
             if pd['best_fit_algor'] == 'boot+GA':
                 argsOF = [
                     pd, clp, max_mag_syn, obs_cl, ext_coefs, st_dist_mass,
-                    N_fc, m_ini, cmpl_rnd, err_rnd, np.inf, isoch_fit_params[
+                    N_fc, m_ini, err_rnd, np.inf, isoch_fit_params[
                         'OF_final_generation'][:pd['N_pop_btstrp']],
                     pd['N_pop_btstrp'], pd['N_step_btstrp'], False]
 
             elif pd['best_fit_algor'] == 'boot+DE':
                 argsOF = [
                     pd, clp, max_mag_syn, st_dist_mass, ext_coefs, N_fc,
-                    m_ini, cmpl_rnd, err_rnd, obs_cl, pd['N_pop_btstrp'],
+                    m_ini, err_rnd, obs_cl, pd['N_pop_btstrp'],
                     pd['N_step_btstrp'], np.nan, False]
 
             params_boot.append(optimizerFunc(pd['best_fit_algor'], argsOF))
@@ -182,9 +182,9 @@ def optimizerFunc(best_fit_algor, args):
 
 
 def resample_replacement(cl_max_mag):
-    '''
+    """
     Resamples the observed cluster with replacement.
-    '''
+    """
     cl_max_mag_ran = [random.choice(cl_max_mag) for _ in cl_max_mag]
 
     return cl_max_mag_ran
