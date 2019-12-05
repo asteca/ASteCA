@@ -142,7 +142,7 @@ def optimizerFunc(best_fit_algor, args):
     """
     if best_fit_algor == 'boot+GA':
         pd, clp, max_mag_syn, obs_clust, ext_coefs, st_dist_mass, N_fc,\
-            m_ini, cmpl_rnd, err_rnd, available_secs, init_pop, N_pop, N_gen,\
+            m_ini, err_rnd, available_secs, init_pop, N_pop, N_gen,\
             flag_print_perc = args
 
         if flag_print_perc:
@@ -150,17 +150,17 @@ def optimizerFunc(best_fit_algor, args):
             isoch_fit_params = genetic_algorithm.main(
                 available_secs, init_pop, flag_print_perc, N_pop, N_gen,
                 max_mag_syn, obs_clust, ext_coefs, st_dist_mass, N_fc, m_ini,
-                cmpl_rnd, err_rnd, clp['em_float'], clp['err_lst'],
+                err_rnd, clp['em_float'], clp['err_lst'],
                 clp['completeness'], **pd)
         else:
             isoch_fit_params = genetic_algorithm.main(
                 available_secs, init_pop, flag_print_perc, N_pop, N_gen,
                 max_mag_syn, obs_clust, ext_coefs, st_dist_mass, N_fc, m_ini,
-                cmpl_rnd, err_rnd, clp['em_float'], clp['err_lst'],
+                err_rnd, clp['em_float'], clp['err_lst'],
                 clp['completeness'], **pd)
 
     elif best_fit_algor == 'boot+DE':
-        pd, clp, max_mag_syn, st_dist_mass, ext_coefs, N_fc, m_ini, cmpl_rnd,\
+        pd, clp, max_mag_syn, st_dist_mass, ext_coefs, N_fc, m_ini,\
             err_rnd, obs_clust, popsize, maxiter, available_secs,\
             flag_print_perc = args
 
@@ -168,13 +168,13 @@ def optimizerFunc(best_fit_algor, args):
             # Print advances.
             isoch_fit_params = de_algorithm.main(
                 clp['em_float'], clp['err_lst'], clp['completeness'],
-                max_mag_syn, st_dist_mass, ext_coefs, N_fc, m_ini, cmpl_rnd,
+                max_mag_syn, st_dist_mass, ext_coefs, N_fc, m_ini,
                 err_rnd, obs_clust, popsize, maxiter, available_secs,
                 flag_print_perc, **pd)
         else:
             isoch_fit_params = de_algorithm.main(
                 clp['em_float'], clp['err_lst'], clp['completeness'],
-                max_mag_syn, st_dist_mass, ext_coefs, N_fc, m_ini, cmpl_rnd,
+                max_mag_syn, st_dist_mass, ext_coefs, N_fc, m_ini,
                 err_rnd, obs_clust, popsize, maxiter, available_secs,
                 flag_print_perc, **pd)
 
