@@ -154,8 +154,7 @@ def errRemv(clp, mmag_acpt_c):
         # after error rejection.
         err_rm_perc = h_mag_acpt_c / h_mag_all_c.astype(float)
 
-        # TODO I think Python3 does not need this 'float'
-        perc_rmvd = 100. * (mmag_rjct_c.size / float(all_mags.size))
+        perc_rmvd = 100. * (mmag_rjct_c.size / all_mags.size)
 
     print("Error removal function estimated")
     return [eqN_edges, err_rm_perc, perc_rmvd]
@@ -182,14 +181,19 @@ def combineCompl(mags_i, phot_analy_compl, mmag_acpt_c):
 
     # Percentage of stars that should be *removed* from the synthetic cluster.
     # This is reversed with respect to the other percentages so that
-    # the completeness_rm() function is simpler.
+    # the 'completeness_rm()' function is simpler.
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         err_rm_perc = 1. - (h_mag_acpt_c / h_mag_i_full)
     err_rm_perc = np.clip(err_rm_perc, a_min=0., a_max=1.)
 
-    # TODO I think Python3 does not need this 'float'
-    perc_rmvd = 100. * (1. - mmag_acpt_c.size / float(mags_i.size))
+    # Add a '1.' at the beginning to indicate that all stars with smaller
+    # magnitudes than the brightest star observed should be removed by the
+    # 'completeness_rm()' process.
+    err_rm_perc = np.array([1.] + list(err_rm_perc))
+
+    # For plotting purposes
+    perc_rmvd = 100. * (1. - mmag_acpt_c.size / mags_i.size)
 
     print("Combined completeness function estimated")
     return [eqN_edges, err_rm_perc, perc_rmvd]
