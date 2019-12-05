@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 
 from packages.best_fit.bf_common import varPars
 from packages.synth_clust import zaWAverage
+from packages.synth_clust.synth_cluster import properModel
 from packages.synth_clust import move_isochrone
 from packages.synth_clust import cut_max_mag
 from packages.synth_clust import mass_distribution
@@ -17,7 +18,7 @@ from packages.synth_clust import add_errors
 from packages.best_fit import likelihood
 
 
-def main(model, lkl_method, obs_clust, fundam_params, synthcl_args):
+def main(model, lkl_method, obs_clust, fundam_params, synthcl_args, sel):
     """
     1. This file needs to be in the top folder
     2. The 'perf_test.pickle' is created by 'best_fit_synth_cl'
@@ -29,49 +30,52 @@ def main(model, lkl_method, obs_clust, fundam_params, synthcl_args):
     theor_tracks, e_max, err_lst, completeness, max_mag_syn, st_dist_mass,\
         R_V, ext_coefs, N_fc, m_ini, cmpl_rnd, err_rnd = synthcl_args
 
-    # Average a new isochrone
     s = t.time()
-    isochrone, model_proper = zaWAverage.main(
-        theor_tracks, fundam_params, varIdxs, model)
+    model_proper, z_model, a_model, ml, mh, al, ah = properModel(
+        fundam_params, model, varIdxs)
     t0 = t.time() - s
 
+    s = t.time()
+    isochrone = zaWAverage.main(
+        theor_tracks, fundam_params, z_model, a_model, ml, mh, al, ah)
+    t1 = t.time() - s
+
     # Generate synthetic cluster.
-    # synth_clust = synth_cluster.main(
-    #     isochrone, model_proper, *synthcl_args[1:])
     e, d, M_total, bin_frac = model_proper
     s = t.time()
     isoch_moved = move_isochrone.main(isochrone, e, d, R_V, ext_coefs, N_fc)
-    t1 = t.time() - s
+    t2 = t.time() - s
     s = t.time()
     isoch_cut = cut_max_mag.main(isoch_moved, max_mag_syn)
-    t2 = t.time() - s
+    t3 = t.time() - s
+
     synth_clust = []
     if isoch_cut.any():
         s = t.time()
         mass_dist = mass_distribution.main(st_dist_mass, M_total)
-        t3 = t.time() - s
+        t4 = t.time() - s
         s = t.time()
         isoch_mass = mass_interp.main(isoch_cut, mass_dist, m_ini)
-        t4 = t.time() - s
+        t5 = t.time() - s
         if isoch_mass.any():
             s = t.time()
             isoch_binar = binarity.main(isoch_mass, bin_frac, m_ini, N_fc)
-            t5 = t.time() - s
+            t6 = t.time() - s
             s = t.time()
             isoch_compl = completeness_rm.main(
                 isoch_binar, completeness, cmpl_rnd)
-            t6 = t.time() - s
+            t7 = t.time() - s
             if isoch_compl.any():
                 s = t.time()
                 synth_clust = add_errors.main(
                     isoch_compl, err_lst, e_max, m_ini, err_rnd)
-                t7 = t.time() - s
+                t8 = t.time() - s
 
     s = t.time()
     likelihood.main(lkl_method, synth_clust, obs_clust)
-    t8 = t.time() - s
+    t9 = t.time() - s
 
-    return t0, t1, t2, t3, t4, t5, t6, t7, t8
+    return t0, t1, t2, t3, t4, t5, t6, t7, t8, t9
 
 
 if __name__ == '__main__':
@@ -91,35 +95,81 @@ if __name__ == '__main__':
         R_V, ext_coefs, N_fc, m_ini, cmpl_rnd, err_rnd]
 
     print("Running")
-    times_all = []
+    np.random.seed(12345)
 
-    max_time, elapsed, s, i = 15., 0., t.time(), 0
-    while True:
+    t_new, t_old = 0., 0.
+    times_all_new, times_all_old = [], []
+
+    max_time, elapsed, start, N_tot = 600., 0., t.time(), 0
+    while elapsed < max_time:
 
         model = []
         for p in fundam_params:
             model.append(np.random.uniform(min(p), max(p)))
 
         if np.random.randint(1000) == 500:
-            print("{}. {:.4f}, {:.3f}, {:.2f}, {:.2f}, {:.0f}, {:.1f}".format(
-                i, *model))
+            print(("{}, {:.1f}| {:.4f}, {:.3f}, {:.2f}, {:.2f}, {:.0f}, "
+                   "{:.1f}").format(N_tot, elapsed, *model))
 
-        times_all.append(main(
-            model, lkl_method, obs_clust, fundam_params, synthcl_args))
-
-        elapsed += t.time() - s
         s = t.time()
+        sel = 'new'
+        times_all_new.append(main(
+            model, lkl_method, obs_clust, fundam_params, synthcl_args,
+            sel))
+        t_new += t.time() - s
+
+        s = t.time()
+        sel = 'old'
+        times_all_old.append(main(
+            model, lkl_method, obs_clust, fundam_params, synthcl_args,
+            sel))
+        t_old += t.time() - s
+
+        N_tot += 1
+        elapsed += t.time() - start
+        start = t.time()
         if elapsed >= max_time:
             break
-        i += 1
 
-    times_norm = 100. * np.sum(times_all, 0) / max_time
+    times_norm_old = 100. * np.sum(times_all_old, 0) / t_old
+    times_norm_new = 100. * np.sum(times_all_new, 0) / t_new
     cols = [
-        'zaWAvrg', 'move', 'cut', 'M_dst', 'M_intrp', 'binar',
+        'propModel', 'zaWAvrg', 'move', 'cut', 'M_dst', 'M_intrp', 'binar',
         'complete', 'errors', lkl_method]
-    plt.title("N={}, t={}".format(i, max_time))
+
+    for i, c in enumerate(cols):
+        print("{}: {}, {}".format(c, times_norm_old[i], times_norm_new[i]))
+
+    fig = plt.figure(figsize=(20, 10))
+    plt.title("N={}, t={:.2f}".format(N_tot, t_old), fontsize=18)
     plt.grid(zorder=0)
-    plt.bar(cols, times_norm, zorder=4)
-    plt.ylabel("% of time used")
-    plt.xticks(rotation=45)
-    plt.show()
+    plt.bar(cols, times_norm_old, zorder=4)
+    # Text annotations
+    x, y = np.arange(len(times_norm_old)), np.round(times_norm_old, 2)
+    up = max(y) * .03
+    plt.ylim(0, max(y) + 4 * up)
+    for xi, yi, l in zip(*[x, y, list(map(str, y))]):
+        plt.text(xi - len(l) * .02, yi + up, l, fontsize=18,
+                 bbox=dict(facecolor='w', edgecolor='w', alpha=.5))
+    plt.ylabel("% of time used", fontsize=18)
+    plt.xticks(rotation=45, fontsize=18)
+    plt.yticks(fontsize=18)
+    fig.tight_layout()
+    plt.savefig("perf_test_old.png", dpi=150)
+
+    fig = plt.figure(figsize=(20, 10))
+    plt.title("N={}, t={:.2f}".format(N_tot, t_new), fontsize=18)
+    plt.grid(zorder=0)
+    plt.bar(cols, times_norm_new, zorder=4)
+    # Text annotations
+    x, y = np.arange(len(times_norm_new)), np.round(times_norm_new, 1)
+    up = max(y) * .03
+    plt.ylim(0, max(y) + 4 * up)
+    for xi, yi, l in zip(*[x, y, list(map(str, y))]):
+        plt.text(xi - len(l) * .02, yi + up, l, fontsize=18,
+                 bbox=dict(facecolor='w', edgecolor='w', alpha=.5))
+    plt.ylabel("% of time used", fontsize=18)
+    plt.xticks(rotation=45, fontsize=18)
+    plt.yticks(fontsize=18)
+    fig.tight_layout()
+    plt.savefig("perf_test_new.png", dpi=150)
