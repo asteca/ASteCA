@@ -84,11 +84,14 @@ def main(
                 pd['lkl_weight'])
 
             if pd['best_fit_algor'] == 'boot+GA':
+                # If 'N_pop_btstrp' is odd, sum 1 to avoid conflicts.
+                N_btstrp = pd['N_pop_btstrp'] + pd['N_pop_btstrp'] % 2
+
                 argsOF = [
                     pd, clp, max_mag_syn, obs_cl, ext_coefs, st_dist_mass,
                     N_fc, m_ini, err_rnd, np.inf, isoch_fit_params[
-                        'OF_final_generation'][:pd['N_pop_btstrp']],
-                    pd['N_pop_btstrp'], pd['N_step_btstrp'], False]
+                        'OF_final_generation'][:N_btstrp], N_btstrp,
+                    pd['N_step_btstrp'], False]
 
             elif pd['best_fit_algor'] == 'boot+DE':
                 argsOF = [
