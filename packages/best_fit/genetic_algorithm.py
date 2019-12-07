@@ -29,10 +29,10 @@ def main(
     obs_clust, ext_coefs, st_dist_mass, N_fc, m_ini, err_rnd, e_max,
     err_lst, completeness, lkl_method, fundam_params, theor_tracks, R_V,
         fit_diff, cross_prob, cross_sel, mut_prob, N_el, N_ei, N_es, **kwargs):
-    '''
+    """
     Genetic algorithm. Finds the best fit model-observation by minimizing the
     likelihood function.
-    '''
+    """
 
     # Check if N_popl is odd. If it is sum 1 to avoid conflict if cross_sel
     # '2P' was selected.
@@ -242,10 +242,10 @@ def main(
 
 
 def num_binary_digits(fundam_params):
-    '''
+    """
     Store parameters ranges and calculate the minimum number of binary digits
     needed to encode the solutions.
-    '''
+    """
 
     p_mins, p_delta = [], []
     for param in fundam_params:
@@ -266,9 +266,9 @@ def num_binary_digits(fundam_params):
 
 
 def encode(n_bin, p_delta, p_mins, int_popul):
-    '''
+    """
     Encode the solutions into binary string chromosomes to be bred.
-    '''
+    """
 
     chromosomes = []
     for sol in int_popul:
@@ -286,10 +286,10 @@ def encode(n_bin, p_delta, p_mins, int_popul):
 
 
 def decode(fundam_params, n_bin, p_delta, p_mins, mut_chrom):
-    '''
+    """
     Decode the chromosomes into its real values to be evaluated by the
     objective function.
-    '''
+    """
 
     p_lst = []
     for chrom in mut_chrom:
@@ -311,10 +311,10 @@ def decode(fundam_params, n_bin, p_delta, p_mins, mut_chrom):
 def evaluation(
     lkl_method,
         fundam_params, obs_clust, varIdxs, ranges, synthcl_args, p_lst):
-    '''
+    """
     Evaluate each model in the objective function to obtain the fitness of
     each one.
-    '''
+    """
 
     # lkl_lst, generation_list = [], []
     lkl_arr = np.full(len(p_lst), np.inf)
@@ -364,10 +364,10 @@ def evaluation(
 
 
 def selection(generation, breed_prob):
-    '''
+    """
     Select random chromosomes from the chromosome list passed according to
     the breeding probability given by their fitness.
-    '''
+    """
     select_chrom = []
     # Draw len(generation) random numbers uniformly distributed between [0,1)
     ran_lst = np.random.uniform(0, sum(breed_prob), len(generation))
@@ -386,17 +386,17 @@ def selection(generation, breed_prob):
 
 
 def chunker(seq, size):
-    '''
+    """
     Helper function for 'crossover'. Returns elements in list in "chunks"
     rather than one at a time.
-    '''
+    """
     return (seq[pos:pos + size] for pos in range(0, len(seq), size))
 
 
 def crossover(chromosomes, cross_prob, cross_sel):
-    '''
+    """
     Applies the crossover operator over each chromosome.
-    '''
+    """
     cross_chrom = []
     # Take two chromosomes at a time.
     for chrom_pair in chunker(chromosomes, 2):
@@ -429,9 +429,9 @@ def crossover(chromosomes, cross_prob, cross_sel):
 
 
 def mutation(cross_chrom, mut_prob):
-    '''
+    """
     Applies the mutation operator over random genes in each chromosome.
-    '''
+    """
     # For each chromosome flip their genes according to the probability
     # mut_prob.
     for i, elem in enumerate(cross_chrom):
@@ -442,9 +442,9 @@ def mutation(cross_chrom, mut_prob):
 
 
 def elitism(best_sol, p_lst):
-    '''
+    """
     Pass the best N_el solutions unchanged to the next generation.
-    '''
+    """
 
     # Append the N_el best solutions to the beginning of the list, pushing
     # out N_el solutions located on the end of the list.
@@ -454,9 +454,9 @@ def elitism(best_sol, p_lst):
 
 
 def ext_imm(varIdxs, best_sol, fundam_params, N_popl):
-    '''
+    """
     Append a new random population to the best solution so far.
-    '''
+    """
 
     # Generate (N_popl-N_el) random solutions.
     n_ran = N_popl - len(best_sol)
