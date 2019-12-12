@@ -364,10 +364,9 @@ def packData(
     x_phot_all, y_phot_all = col_0_comb, mag_0_comb
     frst_obs_mag, frst_obs_col = list(zip(*list(zip(*cl_max_mag))[3]))[0],\
         list(zip(*list(zip(*cl_max_mag))[5]))[0]
-    frst_synth_col, frst_synth_mag = synth_clst[0][0][1],\
-        synth_clst[0][0][0]
+    frst_synth_col, frst_synth_mag = synth_clst[0][1], synth_clst[0][0]
     # Indexes of binary systems.
-    binar_idx = synth_clst[1][0]
+    binar_idx = synth_clst[2][0]
     frst_col_edgs, frst_mag_edgs = bin_edges[1], bin_edges[0]
     # Filters and colors are appended continuously in 'shift_isoch'. If
     # there are 3 defined filters, then the first color starts at the
@@ -387,7 +386,7 @@ def packData(
     # versus first color), and an extra CCD (first color versus second color)
     if N_cols > 1:
         scnd_obs_col = list(zip(*list(zip(*cl_max_mag))[5]))[1]
-        scnd_synth_col = synth_clst[0][0][2]
+        scnd_synth_col = synth_clst[0][2]
         scnd_col_edgs = bin_edges[2]
         scnd_col_isoch = shift_isoch[N_mags + 1]
         # CMD of main magnitude and second color defined.

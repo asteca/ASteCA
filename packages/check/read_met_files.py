@@ -49,17 +49,21 @@ def check_get(pd):
 
         # Interpolate all the data in the isochrones (including the binarity
         # data)
-        pd['theor_tracks'] = interp_isochs.main(
-            mags_theor, cols_theor, mags_cols_theor, extra_pars,
-            pd['fundam_params'][5], pd['bin_mr'])
+        pd['theor_tracks'], pd['m_ini_idx'], pd['binar_flag'] =\
+            interp_isochs.main(
+                mags_theor, cols_theor, mags_cols_theor, extra_pars,
+                pd['fundam_params'][5], pd['bin_mr'])
 
         print("\nGrid values")
         print("z        : {:<5} [{}, {}]".format(
             len(met_vals_all), pd['fundam_params'][0][0],
             pd['fundam_params'][0][-1]))
-        print("log(age) : {:<5} [{}, {}]\n".format(
+        print("log(age) : {:<5} [{}, {}]".format(
             len(age_vals_all), pd['fundam_params'][1][0],
             pd['fundam_params'][1][-1]))
+        # Size of array in memory
+        print("(Size of array: {:.0f} Mbs)\n".format(
+            pd['theor_tracks'].nbytes / 1024.**2))
 
     return pd
 

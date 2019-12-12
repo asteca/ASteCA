@@ -28,7 +28,7 @@ def main(lkl_method, synth_clust, obs_clust):
 
     # If synthetic cluster is empty, assign a large likelihood value. This
     # assumes *all* likelihoods here need minimizing.
-    if not synth_clust:
+    if not synth_clust.any():
         return 1.e09
 
     # Obtain the likelihood matching the synthetic and observed clusters.
@@ -76,14 +76,12 @@ def tremmel(synth_clust, obs_clust):
     -\log(p)\approx 0.693\,M - SumLogGamma(n_i, m_i)
 
     """
-
-    synth_phot = synth_clust[0][0]
     # Observed cluster's data.
     bin_edges, cl_histo_f_z, cl_z_idx = obs_clust
 
     # Histogram of the synthetic cluster, using the bin edges calculated
     # with the observed cluster.
-    syn_histo = np.histogramdd(synth_phot, bins=bin_edges)[0]
+    syn_histo = np.histogramdd(synth_clust, bins=bin_edges)[0]
     # Flatten N-dimensional histogram.
     syn_histo_f = syn_histo.ravel()
     # Remove all bins where n_i = 0 (no observed stars).
@@ -93,9 +91,9 @@ def tremmel(synth_clust, obs_clust):
         loggamma(cl_histo_f_z + syn_histo_f_z + .5) -
         loggamma(syn_histo_f_z + .5))
 
-    # M = synth_phot[0].size
+    # M = synth_clust.shape[0]
     # ln(2) ~ 0.693
-    tremmel_lkl = 0.693 * synth_phot[0].size - SumLogGamma
+    tremmel_lkl = 0.693 * synth_clust.shape[0] - SumLogGamma
 
     return tremmel_lkl
 

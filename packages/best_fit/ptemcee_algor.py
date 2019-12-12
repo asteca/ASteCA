@@ -11,9 +11,9 @@ from .ptemcee import sampler  # , util
 
 
 def main(
-    err_lst, completeness, e_max, max_mag_syn, obs_clust, ext_coefs,
-    st_dist_mass, N_fc, m_ini, err_rnd, lkl_method, fundam_params,
-    theor_tracks, R_V, pt_ntemps, pt_adapt, pt_tmax, priors_mcee, nsteps_mcee,
+    completeness, max_mag_syn, obs_clust, ext_coefs, st_dist_mass, N_fc,
+    err_pars, m_ini_idx, binar_flag, lkl_method, fundam_params, theor_tracks,
+    R_V, pt_ntemps, pt_adapt, pt_tmax, priors_mcee, nsteps_mcee,
         nwalkers_mcee, nburn_mcee, hmax, **kwargs):
     """
     """
@@ -21,8 +21,8 @@ def main(
     varIdxs, ndim, ranges = varPars(fundam_params)
     # Pack synthetic cluster arguments.
     synthcl_args = [
-        theor_tracks, e_max, err_lst, completeness, max_mag_syn, st_dist_mass,
-        R_V, ext_coefs, N_fc, m_ini, err_rnd]
+        theor_tracks, completeness, max_mag_syn, st_dist_mass, R_V, ext_coefs,
+        N_fc, err_pars, m_ini_idx, binar_flag]
 
     if pt_tmax in ('n', 'none', 'None'):
         Tmax = None
@@ -38,7 +38,6 @@ def main(
     # Start timing.
     max_secs = hmax * 60. * 60.
     available_secs = max(30, max_secs)
-    # elapsed, start_t = 0., t.time()
 
     # Define Parallel tempered sampler
     ptsampler = sampler.Sampler(
@@ -67,18 +66,6 @@ def main(
         milestones = list(range(10, 101, 10))
         for i, (pos, lnprob, lnlike) in enumerate(ptsampler.sample(
                 pos0, iterations=nsteps_mcee, adapt=pt_adapt)):
-
-            # # Update position
-            # pos0 = ptsampler._p0
-
-            # # Check for dodgy inputs.
-            # if np.any(np.isinf(pos0)):
-            #     print(runs, "infs")  # <-- REMOVE
-            #     pos0[np.isinf(pos0)] = 0.
-            # if np.any(np.isnan(pos0)):
-            #     print(runs, "nans")  # <-- REMOVE
-            #     pos0[np.isnan(pos0)] = 0.
-            # print("1", runs)
 
             # Only check convergence every 'N_steps_store' steps
             if (i + 1) % N_steps_store:
