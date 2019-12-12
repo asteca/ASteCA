@@ -100,7 +100,7 @@ def synth_cl_plot(
             isoch_compl = completeness_rm.main(isoch_binar, completeness)
             if isoch_compl.any():
                 # This is what makes this call different from 'synth_cluster'
-                synth_clust = add_errors.errPlot(
-                    isoch_compl, err_pars, binar_flag, m_ini_idx)
+                synth_clust = add_errors.main(
+                    isoch_compl, err_pars, binar_flag, m_ini_idx, True)
 
     return isoch_moved, synth_clust
