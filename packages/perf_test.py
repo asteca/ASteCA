@@ -27,8 +27,10 @@ def main(model, lkl_method, obs_clust, fundam_params, synthcl_args, sel):
 
     varIdxs, ndim, ranges = varPars(fundam_params)
 
-    theor_tracks, e_max, err_lst, completeness, max_mag_syn, st_dist_mass,\
-        R_V, ext_coefs, N_fc, m_ini, cmpl_rnd, err_rnd = synthcl_args
+    theor_tracks, completeness, max_mag_syn, st_dist_mass,\
+        R_V, ext_coefs, N_fc, err_pars, m_ini_idx, binar_flag = synthcl_args
+
+    # t0, t1, t2, t3, t4, t5, t6, t7, t8, t9 = [0.] * 10
 
     s = t.time()
     model_proper, z_model, a_model, ml, mh, al, ah = properModel(
@@ -43,36 +45,42 @@ def main(model, lkl_method, obs_clust, fundam_params, synthcl_args, sel):
     # Generate synthetic cluster.
     e, d, M_total, bin_frac = model_proper
     s = t.time()
-    isoch_moved = move_isochrone.main(isochrone, e, d, R_V, ext_coefs, N_fc)
+    isoch_moved = move_isochrone.main(
+        isochrone, e, d, R_V, ext_coefs, N_fc, binar_flag, m_ini_idx)
     t2 = t.time() - s
     s = t.time()
     isoch_cut = cut_max_mag.main(isoch_moved, max_mag_syn)
     t3 = t.time() - s
 
-    synth_clust = []
+    synth_clust = np.array([])
     if isoch_cut.any():
         s = t.time()
         mass_dist = mass_distribution.main(st_dist_mass, M_total)
         t4 = t.time() - s
         s = t.time()
-        isoch_mass = mass_interp.main(isoch_cut, mass_dist, m_ini)
+        isoch_mass = mass_interp.main(isoch_cut, mass_dist, m_ini_idx)
         t5 = t.time() - s
         if isoch_mass.any():
             s = t.time()
-            isoch_binar = binarity.main(isoch_mass, bin_frac, m_ini, N_fc)
+            isoch_binar = binarity.main(isoch_mass, bin_frac, m_ini_idx, N_fc)
             t6 = t.time() - s
             s = t.time()
-            isoch_compl = completeness_rm.main(
-                isoch_binar, completeness, cmpl_rnd)
+            isoch_compl = completeness_rm.main(isoch_binar, completeness)
             t7 = t.time() - s
             if isoch_compl.any():
-                s = t.time()
-                synth_clust = add_errors.main(
-                    isoch_compl, err_lst, e_max, m_ini, err_rnd)
-                t8 = t.time() - s
+                if sel == 'old':
+                    s = t.time()
+                    synth_clust = add_errors.old(
+                        isoch_compl, err_pars)
+                    t8 = t.time() - s
+                else:
+                    s = t.time()
+                    synth_clust = add_errors.main(
+                        isoch_compl, err_pars)
+                    t8 = t.time() - s
 
     s = t.time()
-    likelihood.main(lkl_method, synth_clust, obs_clust)
+    likelihood.main(lkl_method, synth_clust, obs_clust, sel)
     t9 = t.time() - s
 
     return t0, t1, t2, t3, t4, t5, t6, t7, t8, t9
@@ -85,14 +93,24 @@ if __name__ == '__main__':
 
     print("Reading data")
     with open(mpath + '/perf_test.pickle', 'rb') as f:
-        obs_clust, fundam_params, theor_tracks, lkl_method, R_V, e_max,\
-            err_lst, completeness, max_mag_syn, st_dist_mass, ext_coefs, N_fc,\
-            m_ini, cmpl_rnd, err_rnd = pickle.load(f)
+        obs_clust, cl_max_mag, fundam_params, theor_tracks, lkl_method, R_V,\
+            completeness, max_mag_syn, st_dist_mass, ext_coefs, N_fc,\
+            m_ini_idx, binar_flag, err_lst, em_float = pickle.load(f)
 
     # Pack synthetic cluster arguments.
     synthcl_args = [
-        theor_tracks, e_max, err_lst, completeness, max_mag_syn, st_dist_mass,
-        R_V, ext_coefs, N_fc, m_ini, cmpl_rnd, err_rnd]
+        theor_tracks, completeness, max_mag_syn, st_dist_mass,
+        R_V, ext_coefs, N_fc]
+
+    err_rand = np.random.normal(0., 1., 1000000)
+    err_pars_new = [err_lst, em_float, err_rand]
+    synthcl_args_new = synthcl_args + [err_pars_new]
+    # Old
+    err_pars_old = [err_lst, em_float, m_ini_idx, err_rand]
+    synthcl_args_old = synthcl_args + [err_pars_old]
+
+    synthcl_args_new += [m_ini_idx, binar_flag]
+    synthcl_args_old += [m_ini_idx, binar_flag]
 
     print("Running")
     np.random.seed(12345)
@@ -100,7 +118,7 @@ if __name__ == '__main__':
     t_new, t_old = 0., 0.
     times_all_new, times_all_old = [], []
 
-    max_time, elapsed, start, N_tot = 600., 0., t.time(), 0
+    max_time, elapsed, start, N_tot = 300., 0., t.time(), 0
     while elapsed < max_time:
 
         model = []
@@ -114,14 +132,14 @@ if __name__ == '__main__':
         s = t.time()
         sel = 'new'
         times_all_new.append(main(
-            model, lkl_method, obs_clust, fundam_params, synthcl_args,
+            model, lkl_method, obs_clust, fundam_params, synthcl_args_new,
             sel))
         t_new += t.time() - s
 
         s = t.time()
         sel = 'old'
         times_all_old.append(main(
-            model, lkl_method, obs_clust, fundam_params, synthcl_args,
+            model, lkl_method, obs_clust, fundam_params, synthcl_args_old,
             sel))
         t_old += t.time() - s
 
@@ -141,7 +159,8 @@ if __name__ == '__main__':
         print("{}: {}, {}".format(c, times_norm_old[i], times_norm_new[i]))
 
     fig = plt.figure(figsize=(20, 10))
-    plt.title("N={}, t={:.2f}".format(N_tot, t_old), fontsize=18)
+    plt.title("N={}, t={:.2f} -> [{:.0f} m/s]".format(
+        N_tot, t_old, N_tot / t_old), fontsize=18)
     plt.grid(zorder=0)
     plt.bar(cols, times_norm_old, zorder=4)
     # Text annotations
@@ -158,11 +177,12 @@ if __name__ == '__main__':
     plt.savefig("perf_test_old.png", dpi=150)
 
     fig = plt.figure(figsize=(20, 10))
-    plt.title("N={}, t={:.2f}".format(N_tot, t_new), fontsize=18)
+    plt.title("N={}, t={:.2f} -> [{:.0f} m/s]".format(
+        N_tot, t_new, N_tot / t_new), fontsize=18)
     plt.grid(zorder=0)
     plt.bar(cols, times_norm_new, zorder=4)
     # Text annotations
-    x, y = np.arange(len(times_norm_new)), np.round(times_norm_new, 1)
+    x, y = np.arange(len(times_norm_new)), np.round(times_norm_new, 2)
     up = max(y) * .03
     plt.ylim(0, max(y) + 4 * up)
     for xi, yi, l in zip(*[x, y, list(map(str, y))]):
