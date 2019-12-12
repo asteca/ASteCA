@@ -7,6 +7,8 @@ from . import zaWAverage
 
 def main(best_fit_algor, fundam_params, isoch_fit_params, synthcl_args):
     """
+    DEPRECATED moved into /out/synth_cl_file.py
+
     Generate shifted isochrone and synthetic cluster for plotting.
     """
     if best_fit_algor == 'boot+GA':
