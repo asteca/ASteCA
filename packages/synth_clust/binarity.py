@@ -4,17 +4,17 @@ from .mass_interp import find_closest
 from .. import update_progress
 
 
-def main(isoch_mass, bin_frac, m_ini, N_fc):
-    '''
+def main(isoch_mass, bin_frac, m_ini_idx, N_fc):
+    """
     Update the randomly selected fraction of binary stars.
-    '''
+    """
 
     # If the binary fraction is zero, skip the whole process.
     if bin_frac > 0.:
 
         # Select a fraction of stars to be binaries, according to the random
         # probabilities assigned before.
-        bin_indxs = isoch_mass[m_ini - 2] <= bin_frac
+        bin_indxs = isoch_mass[m_ini_idx - 2] <= bin_frac
 
         # Index of the first binary magnitude, stored in the theoretical
         # isochrones list.
@@ -30,10 +30,10 @@ def main(isoch_mass, bin_frac, m_ini, N_fc):
                 isoch_mass[mag_ini + N_fc[0] + i][bin_indxs]
 
         # Update masses.
-        isoch_mass[m_ini][bin_indxs] = isoch_mass[m_ini - 1][bin_indxs]
+        isoch_mass[m_ini_idx][bin_indxs] = isoch_mass[m_ini_idx - 1][bin_indxs]
 
         # Update binary systems to a '2.'.
-        isoch_mass[m_ini - 2][bin_indxs] = 2.
+        isoch_mass[m_ini_idx - 2][bin_indxs] = 2.
 
     return isoch_mass
 
@@ -41,7 +41,7 @@ def main(isoch_mass, bin_frac, m_ini, N_fc):
 def binarGen(
         binar_fracs, N_mass_interp, mags_theor, cols_theor, mags_cols_theor,
         extra_pars, bin_mass_ratio):
-    '''
+    """
     Called by isoch_params().
 
     0. Assign N unique indexes by dividing the range of stars by their total
@@ -56,7 +56,7 @@ def binarGen(
         5. Calculate the masses for the binary system.
         7. Assign unique probability values for each interpolated star.
 
-    '''
+    """
 
     # If binary_fraction=0 don't bother obtaining the binary magnitudes,
     # colors, etc.
@@ -141,11 +141,7 @@ def binarGen(
 
             update_progress.updt(N_mags_theor, mx + 1)
     else:
-        mags_binar, cols_binar, mass_binar =\
-            np.empty(np.shape(mags_theor)),\
-            np.empty(np.shape(cols_theor)),\
-            np.array(extra_pars)[:, :, :1, :]
-        probs_binar = np.empty(np.shape(mass_binar))
+        return None
 
     return mags_binar, cols_binar, probs_binar, mass_binar
 

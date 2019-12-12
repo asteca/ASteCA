@@ -2,8 +2,8 @@
 import numpy as np
 
 
-def main(isochrone, e, d, R_V, ext_coefs, N_fc):
-    '''
+def main(isochrone, e, d, R_V, ext_coefs, N_fc, binar_flag, m_ini_idx):
+    """
     Receives an isochrone of a given age and metallicity and modifies
     its color and magnitude values according to given values for the extinction
     E(B-V) (e) and distance modulus (d).
@@ -33,34 +33,44 @@ def main(isochrone, e, d, R_V, ext_coefs, N_fc):
                = (a12 + b12/Rv) * R_V * E(B-V)
     (m1 - m2)_obs = (m1 - m2)_int + E(m1 - m2)
     (m1 - m2)_obs = (m1 - m2)_int + (a12 + b12/Rv) * R_V * E(B-V)
+    """
 
-    '''
     Av = R_V * e
     Nf, Nc = N_fc
+
+    def magmove(fi, mag):
+        Ax = (ext_coefs[fi][0] + ext_coefs[fi][1] / R_V) * Av
+        return np.array(mag) + d + Ax
+
+    def colmove(ci, col):
+        Ex = ((ext_coefs[Nf + ci][0][0] + ext_coefs[Nf + ci][0][1] / R_V) -
+              (ext_coefs[Nf + ci][1][0] + ext_coefs[Nf + ci][1][1] / R_V)) * Av
+        return np.array(col) + Ex
+
     iso_moved = []
+
     # Move filters.
     for fi, mag in enumerate(isochrone[:Nf]):
-        Ax = (ext_coefs[fi][0] + ext_coefs[fi][1] / R_V) * Av
-        iso_moved.append(np.array(mag) + d + Ax)
+        iso_moved.append(magmove(fi, mag))
 
     # Move colors.
     for ci, col in enumerate(isochrone[Nf:(Nf + Nc)]):
-        Ex = ((ext_coefs[Nf + ci][0][0] + ext_coefs[Nf + ci][0][1] / R_V) -
-              (ext_coefs[Nf + ci][1][0] + ext_coefs[Nf + ci][1][1] / R_V)) * Av
-        iso_moved.append(np.array(col) + Ex)
+        iso_moved.append(colmove(ci, col))
 
-    # Move filters with binary data.
-    for fi, mag in enumerate(isochrone[(Nf + Nc):(Nf + Nc + Nf)]):
-        Ax = (ext_coefs[fi][0] + ext_coefs[fi][1] / R_V) * Av
-        iso_moved.append(np.array(mag) + d + Ax)
+    binar_idx = 0
+    if binar_flag:
+        # Move filters with binary data.
+        for fi, mag in enumerate(isochrone[(Nf + Nc):(Nf + Nc + Nf)]):
+            iso_moved.append(magmove(fi, mag))
 
-    # Move colors with binary data.
-    for ci, col in enumerate(isochrone[(Nf + Nc + Nf):(Nf + Nc + Nf + Nc)]):
-        Ex = ((ext_coefs[Nf + ci][0][0] + ext_coefs[Nf + ci][0][1] / R_V) -
-              (ext_coefs[Nf + ci][1][0] + ext_coefs[Nf + ci][1][1] / R_V)) * Av
-        iso_moved.append(np.array(col) + Ex)
+        # Move colors with binary data.
+        for ci, col in enumerate(
+                isochrone[(Nf + Nc + Nf):(Nf + Nc + Nf + Nc)]):
+            iso_moved.append(colmove(ci, col))
+
+        binar_idx = 2
 
     # Append the extra parameters, not affected by distance/reddening.
-    iso_moved = np.array(iso_moved + list(isochrone[(2 * Nf + 2 * Nc):]))
+    iso_moved = np.array(iso_moved + list(isochrone[m_ini_idx - binar_idx:]))
 
     return iso_moved
