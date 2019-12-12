@@ -41,8 +41,6 @@ def main(clp, pd):
         N_fc = [len(pd['filters']), len(pd['colors'])]
 
         # Generate required parameters to use in the error adding function.
-        # err_pars_new = add_errors.prep(
-        #     cl_max_mag, clp['em_float'], clp['err_lst'])
         err_rand = np.random.normal(0., 1., 1000000)
         err_pars = clp['err_lst'], clp['em_float'], err_rand
 
