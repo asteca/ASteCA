@@ -111,6 +111,11 @@ def kNNRDP(dist, dens, fdens_method):
         # Use the last value in the series.
         field_dens_d, field_dens, field_dens_std = fdens_min_d[-1],\
             fdens_lst[-1], fdens_std_lst[-1]
+    elif fdens_method[-1] == '%':
+        # Use the x% percentile.
+        idx = int(len(fdens_min_d) * float(fdens_method[:-1]) / 100.)
+        field_dens_d, field_dens, field_dens_std = fdens_min_d[idx],\
+            fdens_lst[idx], fdens_std_lst[idx]
     else:
         # The 'nan' value identifies this as a manual value.
         field_dens_d, field_dens, field_dens_std = np.nan,\
