@@ -13,7 +13,7 @@ def check_get(pd):
     """
 
     # Only read files if best fit method is set to run. Else pass empty list.
-    pd['theor_tracks'] = []
+    pd['theor_tracks'], pd['m_ini_idx'], pd['binar_flag'] = [], np.nan, False
 
     if pd['bf_flag']:
         # Print info about tracks.
