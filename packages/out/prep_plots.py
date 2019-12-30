@@ -86,6 +86,9 @@ def ax_names(x, y, yaxis):
         ys = y_ax.split('_')
         y_ax = ys[0] + '_{' + ys[1] + '}'
 
+    # Remove 'mag' introduced by the latest isochrones in the CMD service
+    x_ax, y_ax = x_ax.replace('mag', ''), y_ax.replace('mag', '')
+
     return x_ax, y_ax
 
 
