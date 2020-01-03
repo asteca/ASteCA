@@ -111,6 +111,10 @@ def kNNRDP(dist, dens, fdens_method):
         # Use the last value in the series.
         field_dens_d, field_dens, field_dens_std = fdens_min_d[-1],\
             fdens_lst[-1], fdens_std_lst[-1]
+    elif fdens_method == 'iter':
+        field_dens_d = iterativeRDP(fdens_lst)
+        idx = np.argmin(abs(field_dens_d - np.array(fdens_lst)))
+        field_dens, field_dens_std = fdens_lst[idx], fdens_std_lst[idx]
     elif fdens_method[-1] == '%':
         # Use the x% percentile.
         idx = int(len(fdens_min_d) * float(fdens_method[:-1]) / 100.)
@@ -125,46 +129,45 @@ def kNNRDP(dist, dens, fdens_method):
         field_dens_std
 
 
-# DEPRECATED 11/19
-# def iterativeRDP(reduced_rd):
-#     """
-#     Iterative process:
+def iterativeRDP(fdens_lst):
+    """
+    Iterative process:
 
-#     1. Start with the complete set of radial density points
-#     2. Obtain its median and standard deviation.
-#     3. Reject the point located the farthest away from the 1 sigma range around
-#        the median
-#     4. Obtain new median and standard deviation.
-#     5. Repeat the process until no points are left beyond the 1 sigma level.
-#     6. Return the field density as the median value.
-#     """
-#     stable_cond = False
-#     while stable_cond is False:
+    1. Start with the complete set of radial density points
+    2. Obtain its median and standard deviation.
+    3. Reject the point located the farthest away from the 1 sigma range around
+       the median
+    4. Obtain new median and standard deviation.
+    5. Repeat the process until no points are left beyond the 1 sigma level.
+    6. Return the field density as the median value.
+    """
+    stable_cond = False
+    while stable_cond is False:
 
-#         # Obtain median and standard deviation.
-#         median, sigma = np.median(reduced_rd), np.std(reduced_rd)
+        # Obtain median and standard deviation.
+        median, sigma = np.median(fdens_lst), np.std(fdens_lst)
 
-#         # Check if at least one element in the list is beyond the 1 sigma
-#         # level.
-#         rm_elem = False
-#         dist_r = -1.
-#         for indx, elem in enumerate(reduced_rd):
-#             dist = abs(elem - median)
+        # Check if at least one element in the list is beyond the 1 sigma
+        # level.
+        rm_elem = False
+        dist_r = -1.
+        for indx, elem in enumerate(fdens_lst):
+            dist = abs(elem - median)
 
-#             if dist > sigma and dist > dist_r:
-#                 # Update distance removal value.
-#                 dist_r = dist
-#                 # Store index of element.
-#                 rm_index = indx
-#                 # Raise flag.
-#                 rm_elem = True
+            if dist > sigma and dist > dist_r:
+                # Update distance removal value.
+                dist_r = dist
+                # Store index of element.
+                rm_index = indx
+                # Raise flag.
+                rm_elem = True
 
-#         if rm_elem is True:
-#             # Remove element from list and iterate again.
-#             del reduced_rd[rm_index]
-#         else:
-#             stable_cond = True
+        if rm_elem is True:
+            # Remove element from list and iterate again.
+            del fdens_lst[rm_index]
+        else:
+            stable_cond = True
 
-#         field_dens = median
+        field_dens = median
 
-#     return field_dens
+    return field_dens

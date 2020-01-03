@@ -157,12 +157,14 @@ CH         .0
 # * NN: [int]
 #   The number of closest neighbors used to estimate the per-star densities.
 #
-# * field_dens: [min, last, XX%] / [float>0.]
+# * field_dens: [min, last, iter, XX%] / [float>0.]
 #   If 'min' or 'last' are selected, the code will use the minimum value and
-#   last value in the field density array, respectively. The user can also
-#   supply a percentage value e.g '75%' (the '%' character is necessary) to
-#   select the density value at that percentile from the estimated center.
-#   Else, a float>0. needs to be given.
+#   last value in the field density array, respectively. If 'iter' is selected
+#   the density will be estimated rejecting values in the RDP through an
+#   iterative process. The user can also supply a percentage value e.g '75%'
+#   (the '%' character is necessary) to select the density value at that
+#   percentile from the estimated center.
+#   Else, a float>0 needs to be given.
 #
 # * N_steps: [int]
 #   The number of bootstrap steps employed to estimate the uncertainty
