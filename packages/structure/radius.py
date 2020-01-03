@@ -76,6 +76,27 @@ def radsAreas(rdp_radii, x, y, kde_cent):
     return radii, n_in_cl_reg, areas
 
 
+def optimalRadius(field_dens, radii, n_in_cl_reg, areas):
+    """
+    Estimate the optimal radius as the value that maximizes the (normalized)
+    number of members stars versus the number of field stars. The rationale
+    is that we want the maximum possible of member stars, ans the minimum
+    possible of field stars within the region.
+    """
+
+    rads, N_membs, N_field, CI = radiiParams(
+        radii, n_in_cl_reg, areas, field_dens)
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        # Normalizing separately is important.
+        N_membs = np.array(N_membs) / max(N_membs)
+        N_field = np.array(N_field) / max(N_field)
+        clust_rad = rads[np.argmax(N_membs - N_field)]
+
+    return clust_rad, rads, N_membs, N_field, CI
+
+
 def radiiParams(radii, n_in_cl_reg, areas, fd):
     """
     Given an array if radii, estimate the number of members, the number of
@@ -101,27 +122,6 @@ def radiiParams(radii, n_in_cl_reg, areas, fd):
         cont_index.append(max(0, CI))
 
     return rads, N_membs, N_field, cont_index
-
-
-def optimalRadius(field_dens, radii, n_in_cl_reg, areas):
-    """
-    Estimate the optimal radius as the value that maximizes the (normalized)
-    number of members stars versus the number of field stars. The rationale
-    is that we want the maximum possible of member stars, ans the minimum
-    possible of field stars within the region.
-    """
-
-    rads, N_membs, N_field, CI = radiiParams(
-        radii, n_in_cl_reg, areas, field_dens)
-
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        # Normalizing separately is important.
-        N_membs = np.array(N_membs) / max(N_membs)
-        N_field = np.array(N_field) / max(N_field)
-        clust_rad = rads[np.argmax(N_membs - N_field)]
-
-    return clust_rad, rads, N_membs, N_field, CI
 
 
 def radError(field_dens, field_dens_std, radii, n_in_cl_reg, areas, N_btstrp):
