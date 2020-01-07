@@ -30,10 +30,10 @@ from . import CMD_phot_systs
 
 
 def main(mypath, pars_f_path):
-    '''
+    """
     This function reads the input data parameters stored in the
     'params_input_XX.dat' file and returns a dictionary.
-    '''
+    """
 
     # Accept these variations of the 'true' flag.
     true_lst = ('y', 'Y', 'yes', 'Yes', 'YES', 'true', 'True', 'TRUE')
