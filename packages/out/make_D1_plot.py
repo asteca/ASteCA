@@ -10,9 +10,9 @@ from . import prep_plots
 
 
 def main(npd, pd, isoch_fit_params, isoch_fit_errors, **kwargs):
-    '''
+    """
     Make D1 block plots.
-    '''
+    """
     if 'D1' in pd['flag_make_plot'] and pd['bf_flag']:
         fig = plt.figure(figsize=(30, 30))
         gs = gridspec.GridSpec(12, 12)
