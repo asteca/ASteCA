@@ -21,7 +21,7 @@ def dataProcess(cl_max_mag):
     return mags_cols_cl, memb_probs
 
 
-def main(cl_max_mag, lkl_method, lkl_binning, lkl_weight):
+def main(cl_max_mag, lkl_method, lkl_binning, lkl_manual_bins):
     '''
     Prepare observed cluster array here to save time before the algorithm to
     find the best synthetic cluster fit is used.
@@ -32,22 +32,25 @@ def main(cl_max_mag, lkl_method, lkl_binning, lkl_weight):
     if lkl_method in ['dolphin', 'mighell', 'tremmel']:
         # Obtain bin edges for each dimension, defining a grid.
         bin_edges = bin_edges_f(
-            lkl_binning, mags_cols_cl, min_bins=4, max_bins=20)
+            lkl_binning, mags_cols_cl, lkl_manual_bins=lkl_manual_bins,
+            min_bins=4, max_bins=20)
 
         # Put all magnitudes and colors into a single list.
         obs_mags_cols = mags_cols_cl[0] + mags_cols_cl[1]
         # Obtain histogram for observed cluster.
         cl_histo = np.histogramdd(obs_mags_cols, bins=bin_edges)[0]
 
-        # Weight each bin by the 'lkl_weight' statistic (mean by default) of
-        # the MPs of each star within that bin.
-        bin_w = np.nan_to_num(binned_statistic_dd(
-            np.array(obs_mags_cols).T, memb_probs, statistic=lkl_weight,
-            bins=bin_edges)[0])
+        # DEPRECATED 10/01/20
+        # # Weight each bin by the 'lkl_weight' statistic (mean by default) of
+        # # the MPs of each star within that bin.
+        # bin_w = np.nan_to_num(binned_statistic_dd(
+        #     np.array(obs_mags_cols).T, memb_probs, statistic=lkl_weight,
+        #     bins=bin_edges)[0])
 
         # Flatten N-dimensional histograms.
         cl_histo_f = np.array(cl_histo).ravel()
-        bin_weight_f = np.array(bin_w).ravel()
+        # DEPRECATED 10/01/20
+        # bin_weight_f = np.array(bin_w).ravel()
 
         mighell_ni_cnst = -2. * (cl_histo_f + np.minimum(cl_histo_f, 1.))
 
@@ -58,15 +61,14 @@ def main(cl_max_mag, lkl_method, lkl_binning, lkl_weight):
         # Remove all bins where n_i=0 (no observed stars). Used by the
         # 'Dolphin' likelihood.
         cl_histo_f_z = cl_histo_f[cl_z_idx]
-        bin_weight_f_z = bin_weight_f[cl_z_idx]
+        # DEPRECATED 10/01/20
+        # bin_weight_f_z = bin_weight_f[cl_z_idx]
 
-        # (Weighted) Dolphin n_i dependent constant.
+        # Dolphin n_i dependent constant.
         # N = cl_histo.sum()
         # n_i constant: 2 * [sum(n_i * ln(n_i)) - N] =
-        # Weighted:     2 * [sum(w_i * n_i * ln(n_i)) - N]
         dolphin_cst = 2. * (
-            np.sum(bin_weight_f_z * cl_histo_f_z * np.log(cl_histo_f_z)) -
-            cl_histo.sum())
+            np.sum(cl_histo_f_z * np.log(cl_histo_f_z)) - cl_histo.sum())
 
         # Value to use when filling bins where n_i!=0 & m_i=0. This is an
         # empirical value that seems to work reasonably well. Low mass clusters
@@ -78,7 +80,7 @@ def main(cl_max_mag, lkl_method, lkl_binning, lkl_weight):
             obs_clust = [bin_edges, cl_histo_f_z, cl_z_idx]
         elif lkl_method == 'dolphin':
             obs_clust = [bin_edges, fill_factor, cl_histo_f_z, dolphin_cst,
-                         bin_weight_f_z, cl_z_idx]
+                         cl_z_idx]
         elif lkl_method == 'mighell':
             obs_clust = [bin_edges, cl_histo_f, mighell_ni_cnst]
 
