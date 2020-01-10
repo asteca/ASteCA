@@ -349,16 +349,19 @@ def p2_ranges(p2, min_max_p):
 
 
 def packData(
-    lkl_method, lkl_binning, cl_max_mag, synth_clst, shift_isoch,
+    lkl_method, cl_max_mag, bf_bin_edges, synth_clst, shift_isoch,
         colors, filters, col_0_comb, mag_0_comb, col_1_comb):
     """
     Properly select and pack data for CMD/CCD of observed and synthetic
     clusters, and their Hess diagram.
     """
-    bin_method = 'auto' if lkl_method == 'tolstoy' else lkl_binning
-    mags_cols_cl, dummy = dataProcess(cl_max_mag)
-    # Obtain bin edges for each dimension, defining a grid.
-    bin_edges = bin_edges_f(bin_method, mags_cols_cl)
+    if lkl_method == 'tolstoy':
+        bin_method = 'auto'
+        mags_cols_cl, dummy = dataProcess(cl_max_mag)
+        # Obtain bin edges for each dimension, defining a grid.
+        bin_edges = bin_edges_f(bin_method, mags_cols_cl)
+    else:
+        bin_edges = bf_bin_edges
 
     N_mags, N_cols = len(filters), len(colors)
 

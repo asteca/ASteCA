@@ -124,7 +124,7 @@ def main(clp, pd):
     else:
         print("Skip parameters fitting process")
         # Pass dummy data used by data output and some plot functions.
-        cl_max_mag = []
+        cl_max_mag, obs_clust = [], [[]]
         isoch_fit_params = {
             'mean_sol': [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan],
             'median_sol': [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan],
@@ -134,8 +134,9 @@ def main(clp, pd):
             'N_total': np.nan}
         isoch_fit_errors = [[np.nan, np.nan, np.nan]] * 6
 
-    clp['cl_max_mag'], clp['isoch_fit_params'], clp['isoch_fit_errors'] = \
-        cl_max_mag, isoch_fit_params, isoch_fit_errors
+    clp['cl_max_mag'], clp['bf_bin_edges'], clp['isoch_fit_params'],\
+        clp['isoch_fit_errors'] = cl_max_mag, obs_clust[0], isoch_fit_params,\
+        isoch_fit_errors
 
     return clp
 

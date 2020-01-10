@@ -21,7 +21,7 @@ def dataProcess(cl_max_mag):
     return mags_cols_cl, memb_probs
 
 
-def main(cl_max_mag, lkl_method, bin_method, lkl_weight):
+def main(cl_max_mag, lkl_method, lkl_binning, lkl_weight):
     '''
     Prepare observed cluster array here to save time before the algorithm to
     find the best synthetic cluster fit is used.
@@ -32,7 +32,7 @@ def main(cl_max_mag, lkl_method, bin_method, lkl_weight):
     if lkl_method in ['dolphin', 'mighell', 'tremmel']:
         # Obtain bin edges for each dimension, defining a grid.
         bin_edges = bin_edges_f(
-            bin_method, mags_cols_cl, min_bins=4, max_bins=20)
+            lkl_binning, mags_cols_cl, min_bins=4, max_bins=20)
 
         # Put all magnitudes and colors into a single list.
         obs_mags_cols = mags_cols_cl[0] + mags_cols_cl[1]

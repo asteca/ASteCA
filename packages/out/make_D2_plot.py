@@ -3,18 +3,34 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from os.path import join
 import warnings
+import pickle
 from . import add_version_plot
 from . import mp_best_fit2
 from . import prep_plots
 
 
 def main(
-    npd, cld_c, pd, synth_clst, shift_isoch, cl_max_mag, err_lst, col_0_comb,
-        mag_0_comb, col_1_comb, isoch_fit_params, isoch_fit_errors, **kwargs):
+    npd, pd, synth_clst, shift_isoch, cl_max_mag, bf_bin_edges, err_lst,
+    col_0_comb, mag_0_comb, col_1_comb, isoch_fit_params, isoch_fit_errors,
+        **kwargs):
     '''
     Make D2 block plots.
     '''
     if 'D2' in pd['flag_make_plot'] and pd['bf_flag']:
+
+        # for k, val in pd.items():
+        #     print(k, np.array(val).nbytes / 1024.**2)
+
+        # Dump for possible reuse
+        pname = join(
+            npd['output_subdir'], str(npd['clust_name']) + '_D2.pickle')
+        with open(pname, 'wb') as handle:
+            new_pd = {i: pd[i] for i in pd if i != 'theor_tracks'}
+            pickle.dump((
+                npd, new_pd, synth_clst, shift_isoch, cl_max_mag, err_lst,
+                col_0_comb, mag_0_comb, col_1_comb, isoch_fit_params,
+                isoch_fit_errors), handle)
+
         fig = plt.figure(figsize=(30, 25))
         gs = gridspec.GridSpec(10, 12)
         add_version_plot.main(y_fix=1.005)
@@ -26,7 +42,7 @@ def main(
 
         # Plot one ore more rows of CMDs/CCDs.
         hr_diags = prep_plots.packData(
-            pd['lkl_method'], pd['lkl_binning'], cl_max_mag, synth_clst,
+            pd['lkl_method'], cl_max_mag, bf_bin_edges, synth_clst,
             shift_isoch, pd['colors'], pd['filters'], col_0_comb, mag_0_comb,
             col_1_comb)
         for (x_phot_all, y_phot_all, x_phot_obs, y_phot_obs, x_synth_phot,
