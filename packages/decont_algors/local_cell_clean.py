@@ -38,7 +38,7 @@ def main(
 
     def regSelect(nbins):
         # Obtain bin edges.
-        bin_edges = bin_edges_f(fld_clean_bin, mags_cols_cl, nbins)
+        bin_edges = bin_edges_f(fld_clean_bin, mags_cols_cl, nbins=nbins)
 
         # Convert into single N dimensional array.
         mags_cols_cl_arr = np.array(mags_cols_cl[0] + mags_cols_cl[1])
