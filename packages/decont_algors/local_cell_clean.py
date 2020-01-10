@@ -106,7 +106,9 @@ def dataComb(memb_prob_avrg_sort, field_regions_c):
     return mags_cols_cl, mags_cols_all_fl
 
 
-def bin_edges_f(bin_method, mags_cols_cl, nbins=None, min_bins=2, max_bins=50):
+def bin_edges_f(
+    bin_method, mags_cols_cl, lkl_manual_bins=None, nbins=None, min_bins=2,
+        max_bins=50):
     """
     Obtain bin edges for each photometric dimension using the cluster region
     diagram. The 'bin_edges' list will contain all magnitudes first, and then
@@ -160,6 +162,14 @@ def bin_edges_f(bin_method, mags_cols_cl, nbins=None, min_bins=2, max_bins=50):
                 bin_edges.append(slpitArr(bayesian_blocks(mag)))
             for col in mags_cols_cl[1]:
                 bin_edges.append(slpitArr(bayesian_blocks(col), 1.))
+
+    elif bin_method == 'manual':
+        for mag in mags_cols_cl[0]:
+            bin_edges.append(
+                np.histogram(mag, bins=int(lkl_manual_bins[0]))[1])
+        for i, col in enumerate(mags_cols_cl[1]):
+            bin_edges.append(
+                np.histogram(col, bins=int(lkl_manual_bins[i + 1]))[1])
 
     # TODO this method is currently hidden from the params file.
     # To be used when #325 is implemented. Currently used to test

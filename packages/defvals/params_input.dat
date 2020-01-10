@@ -474,12 +474,13 @@ GA     50    1.     0.85      2P    0.1     1   100    50
 #   Binning method used if the 'tremmel' or 'dolphin' likelihoods are
 #   selected. Otherwise this parameter is ignored.
 #
-# * weight: mean / median / max
-#   Weight applied to each bin defined by the 'binning' parameter. Otherwise
-#   this parameter is ignored.
+# * N_bins: [int]
+#   Number of bins for each photometric dimension if the 'manual' mode is
+#   selected. The order is: 'N_bin_mag N_bin_color' (add another 'N_bin_color'
+#   if two colors are employed).
 #
-#   likelihood    binning    weight
-LK     tremmel      knuth      mean
+#   likelihood    binning    N_bins
+LK     tremmel      knuth      5 10
 ################################################################################
 
 

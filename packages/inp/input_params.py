@@ -216,7 +216,7 @@ def main(mypath, pars_f_path):
                 elif reader[0] == 'LK':
                     lkl_method = str(reader[1])
                     lkl_binning = str(reader[2])
-                    lkl_weight = str(reader[3])
+                    lkl_manual_bins = reader[3:]
 
                 # Synthetic clusters parameters
                 elif reader[0] == 'ET':
@@ -252,8 +252,7 @@ def main(mypath, pars_f_path):
     # Accepted binning methods.
     bin_methods = (
         'optm', 'fixed', 'auto', 'fd', 'doane', 'scott', 'rice', 'sqrt',
-        'sturges', 'knuth', 'blocks', 'blocks-max')
-    bin_weights = ('mean', 'median', 'max')
+        'sturges', 'knuth', 'blocks', 'blocks-max', 'manual')
     # Likelihood methods.
     lkl_methods = (
         'tremmel', 'tolstoy', 'duong', 'dolphin', 'mighell', 'kdeKL',
@@ -330,7 +329,7 @@ def main(mypath, pars_f_path):
         # Best fit parameters.
         'best_fit_algor': best_fit_algor, 'hmax': hmax,
         'lkl_method': lkl_method, 'lkl_binning': lkl_binning,
-        'lkl_weight': lkl_weight,
+        'lkl_manual_bins': lkl_manual_bins,
         # Synthetic cluster parameters
         'evol_track': evol_track, 'max_mag': max_mag, 'IMF_name': IMF_name,
         'R_V': R_V, 'bin_mr': bin_mr,
@@ -358,7 +357,7 @@ def main(mypath, pars_f_path):
         # Fixed accepted parameter values and photometric systems.
         'read_mode_accpt': read_mode_accpt, 'coord_accpt': coord_accpt,
         'da_algors_accpt': da_algors_accpt, 'fld_rem_methods': fld_rem_methods,
-        'bin_methods': bin_methods, 'bin_weights': bin_weights,
+        'bin_methods': bin_methods,
         'imf_funcs': imf_funcs, 'lkl_methods': lkl_methods,
         'optimz_algors': optimz_algors, 'bayes_priors': bayes_priors,
         'all_evol_tracks': all_evol_tracks, 'CMD_extra_pars': CMD_extra_pars,

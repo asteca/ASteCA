@@ -76,6 +76,7 @@ def tremmel(synth_clust, obs_clust):
     -\log(p)\approx 0.693\,M - SumLogGamma(n_i, m_i)
 
     """
+
     # Observed cluster's data.
     bin_edges, cl_histo_f_z, cl_z_idx = obs_clust
 
@@ -116,14 +117,12 @@ def dolphin(synth_clust, obs_clust):
     will tend to underestimate the total mass.
     """
 
-    synth_phot = synth_clust[0][0]
     # Observed cluster's data.
-    bin_edges, fill_factor, cl_histo_f_z, dolphin_cst, bin_weight_f_z,\
-        cl_z_idx = obs_clust
+    bin_edges, fill_factor, cl_histo_f_z, dolphin_cst, cl_z_idx = obs_clust
 
     # Histogram of the synthetic cluster, using the bin edges calculated
     # with the observed cluster.
-    syn_histo = np.histogramdd(synth_phot, bins=bin_edges)[0]
+    syn_histo = np.histogramdd(synth_clust, bins=bin_edges)[0]
     # Flatten N-dimensional histogram.
     syn_histo_f = syn_histo.ravel()
     # Remove all bins where n_i = 0 (no observed stars).
@@ -139,24 +138,17 @@ def dolphin(synth_clust, obs_clust):
     # M = synth_phot[0].size
     # Cash's C statistic: 2 * sum(m_i - n_i * ln(m_i))
     # weighted: 2 * sum(w_i * (m_i - n_i * ln(m_i)))
-    C_cash = 2. * (synth_phot[0].size - np.sum(
-        bin_weight_f_z * (cl_histo_f_z * np.log(syn_histo_f_z))))
+    C_cash = 2. * (synth_clust.shape[0] - np.sum(
+        (cl_histo_f_z * np.log(syn_histo_f_z))))
 
     # Obtain (weighted) inverse logarithmic 'Poisson likelihood ratio'.
     dolph_lkl = C_cash + dolphin_cst
-
-    # print(dolph_lkl)
-    # from scipy.stats import chisquare
-    # from scipy.stats import chi2
-    # chsqr = chisquare(cl_histo_f_z, f_exp=syn_histo_f_z, ddof=7)
-    # print(chsqr)
-    # print(chi2.sf(chsqr[0], len(cl_histo_f_z) - 1 - 7))
 
     return dolph_lkl
 
 
 def tolstoy(synth_clust, obs_clust):
-    '''
+    """
     Weighted (log) likelihood.
     This function follows the recipe given in Tolstoy & Saha (1996),
     Hernandez & Valls-Gabaud (2008) and Monteiro, Dias & Caetano (2010).

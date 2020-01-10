@@ -154,12 +154,27 @@ def chechLkl(pd):
                  "\nfit' function does not match a valid input."
                  .format(pd['lkl_binning']))
 
-    # Check binning weight method selected.
-    if pd['lkl_method'] != 'tolstoy' and pd['lkl_weight'] not in\
-            pd['bin_weights']:
-        sys.exit("ERROR: the selected weight method '{}' for the 'Best"
-                 "\nfit' function does not match a valid input."
-                 .format(pd['lkl_weight']))
+    # Check error values
+    for nbin in pd['lkl_manual_bins']:
+        try:
+            if int(nbin) < 2:
+                sys.exit("ERROR: the number of bins must be >2")
+        except ValueError:
+            sys.exit("ERROR: bin numbers must be integers")
+
+    N_colors = int(len(pd['id_cols']) / 2.)
+    if len(pd['lkl_manual_bins']) != N_colors + 1:
+        sys.exit("ERROR: there are {} bin values defined,"
+                 " there should be {}.".format(
+                     len(pd['lkl_manual_bins']), N_colors + 1))
+
+    # DEPRECATED 10/01/20
+    # # Check binning weight method selected.
+    # if pd['lkl_method'] != 'tolstoy' and pd['lkl_weight'] not in\
+    #         pd['bin_weights']:
+    #     sys.exit("ERROR: the selected weight method '{}' for the 'Best"
+    #              "\nfit' function does not match a valid input."
+    #              .format(pd['lkl_weight']))
 
     # Check mass range selected.
     m_range = pd['par_ranges'][4]
