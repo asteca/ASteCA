@@ -18,10 +18,12 @@ def main(cld_i, clp, coords, rad_manual, nsteps_rad, **kwargs):
     # RDP. For plotting purposes only, except the 'rdp_radii' values which are
     # used below.
     clp['rdp_radii'], clp['rdp_points'], clp['rdp_stddev'] = kNNRDP(
-        clp['fr_dist'], clp['fr_dens'])
+        clp['fr_dist'], cld_i['x'], cld_i['y'], clp['kde_cent'],
+        clp['N_MC'], clp['rr'], clp['cos_t'], clp['sin_t'])
 
     radii, n_in_cl_reg, areas = radsAreas(
-        clp['rdp_radii'], cld_i['x'], cld_i['y'], clp['kde_cent'])
+        clp['rdp_radii'], cld_i['x'], cld_i['y'], clp['kde_cent'],
+        clp['N_MC'], clp['rr'], clp['cos_t'], clp['sin_t'], clp['fr_dist'])
 
     # Obtain the optimal radius and arrays for plotting.
     clp['clust_rad'], clp['rad_rads'], clp['rad_N_membs'],\
@@ -68,7 +70,8 @@ def radsAreas(rdp_radii, x, y, kde_cent):
     for i, rad in enumerate(radii):
         fr_area = 1.
         if rad > dxy:
-            fr_area = circFrac((kde_cent), rad, x0, x1, y0, y1)
+            fr_area = circFrac(
+                (kde_cent), rad, x0, x1, y0, y1, N_tot, rr, cos_t, sin_t)
         areas[i] *= fr_area
         # Stars within radius.
         n_in_cl_reg.append((dist < rad).sum())

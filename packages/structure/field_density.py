@@ -15,7 +15,8 @@ def main(clp, cld_i, coords, NN_dd, fdens_method, **kwargs):
     # reduced_rd = list(clp['rdp_points'])
     # field_dens = iterativeRDP(reduced_rd)
 
-    clp['xy_dens'], clp['NN_dist'], clp['fr_dist'], clp['fr_dens'] = distDens(
+    clp['xy_dens'], clp['NN_dist'], clp['fr_dist'], clp['fr_dens'],\
+        clp['N_MC'], clp['rr'], clp['cos_t'], clp['sin_t'] = distDens(
         cld_i['x'], cld_i['y'], clp['kde_cent'], NN_dd)
 
     clp['fdens_min_d'], clp['fdens_lst'], clp['fdens_std_lst'],\
@@ -28,7 +29,7 @@ def main(clp, cld_i, coords, NN_dd, fdens_method, **kwargs):
     return clp
 
 
-def distDens(x, y, kde_cent, NN_dd):
+def distDens(x, y, kde_cent, NN_dd, N_MC=100000):
     """
     Filter stars in frame to reject those too close to the frame's borders.
     For the remaining stars, obtain their radius (distance to farthest
@@ -55,13 +56,20 @@ def distDens(x, y, kde_cent, NN_dd):
     # For stars close to the border frames, these areas will be overestimated.
     # That's why we filter some of them out above and use Monte Carlo here for
     # the rest of them.
+    # Obtain these values here so they are not estimated every time the MC
+    # in circFrac() is called.
+    rr = np.sqrt(np.random.uniform(0., 1., N_MC))
+    theta = np.random.uniform(0., 1., N_MC) * 2 * np.pi
+    cos_t, sin_t = np.cos(theta), np.sin(theta)
+
     areas = np.pi * NN_dist**2
     for i, rad in enumerate(NN_dist):
         fr_area = 1.
         # If the area of the star lies outside of the frame.
         if (x[i] - rad < x0) or (x[i] + rad > x1) or (y[i] - rad < y0) or\
                 (y[i] + rad > y1):
-            fr_area = circFrac((x[i], y[i]), rad, x0, x1, y0, y1)
+            fr_area = circFrac(
+                (x[i], y[i]), rad, x0, x1, y0, y1, N_MC, rr, cos_t, sin_t)
         areas[i] *= fr_area
 
     # Per star densities.
@@ -72,7 +80,7 @@ def distDens(x, y, kde_cent, NN_dd):
     ds = np.argsort(dist)
     xy_dens, NN_dist, dens, dist = xy_dens[ds], NN_dist[ds], dens[ds], dist[ds]
 
-    return xy_dens, NN_dist, dist, dens
+    return xy_dens, NN_dist, dist, dens, N_MC, rr, cos_t, sin_t
 
 
 def kNNRDP(dist, dens, fdens_method):
