@@ -71,29 +71,28 @@ def main(theor_tracks, fundam_params, z_model, a_model, ml, mh, al, ah):
     # In my tests, attempting an alignment worsens the final averaged
     # isochrone.
 
-    # nn = np.random.randint(0, 100)
-    # if nn == 50:
-    #     import matplotlib.pyplot as plt
-    #     plt.subplot(131)
-    #     plt.scatter(*pts.T, c='r')
-    #     # plt.scatter(*pts[isoch_idx][1:].T, c='g')
-    #     plt.scatter(model[0], model[1], marker='x', c='g')
-    #     # First color
-    #     plt.subplot(132)
-    #     plt.plot(theor_tracks[ml][al][1], theor_tracks[ml][al][0], c='b')
-    #     plt.plot(theor_tracks[ml][ah][1], theor_tracks[ml][ah][0], c='r')
-    #     plt.plot(theor_tracks[mh][al][1], theor_tracks[mh][al][0], c='cyan')
-    #     plt.plot(theor_tracks[mh][ah][1], theor_tracks[mh][ah][0], c='orange')
-    #     plt.plot(isochrone[1], isochrone[0], c='g', ls='--')
-    #     plt.gca().invert_yaxis()
-    #     # Second color
-    #     plt.subplot(133)
-    #     plt.plot(theor_tracks[ml][al][-1], theor_tracks[ml][al][0], c='b')
-    #     plt.plot(theor_tracks[ml][ah][-1], theor_tracks[ml][ah][0], c='r')
-    #     plt.plot(theor_tracks[mh][al][-1], theor_tracks[mh][al][0], c='cyan')
-    #     plt.plot(theor_tracks[mh][ah][-1], theor_tracks[mh][ah][0], c='orange')
-    #     plt.plot(isochrone[-1], isochrone[0], c='g', ls='--')
-    #     plt.gca().invert_yaxis()
-    #     plt.show()
+    # # nn = np.random.randint(0, 100)
+    # # if nn == 50:
+    # import matplotlib.pyplot as plt
+    # # plt.subplot(121)
+    # # plt.scatter(*pts.T, c='r')
+    # # plt.scatter(z_model, a_model, marker='x', c='g')
+    # # First color
+    # plt.subplot(111)
+    # plt.plot(theor_tracks[ml][al][1], theor_tracks[ml][al][0], c='b')
+    # plt.plot(theor_tracks[ml][ah][1], theor_tracks[ml][ah][0], c='r')
+    # plt.plot(theor_tracks[mh][al][1], theor_tracks[mh][al][0], c='cyan')
+    # plt.plot(theor_tracks[mh][ah][1], theor_tracks[mh][ah][0], c='orange')
+    # plt.plot(isochrone[1], isochrone[0], c='g', ls='--')
+    # plt.gca().invert_yaxis()
+    # # # Second color
+    # # plt.subplot(133)
+    # # plt.plot(theor_tracks[ml][al][-1], theor_tracks[ml][al][0], c='b')
+    # # plt.plot(theor_tracks[ml][ah][-1], theor_tracks[ml][ah][0], c='r')
+    # # plt.plot(theor_tracks[mh][al][-1], theor_tracks[mh][al][0], c='cyan')
+    # # plt.plot(theor_tracks[mh][ah][-1], theor_tracks[mh][ah][0], c='orange')
+    # # plt.plot(isochrone[-1], isochrone[0], c='g', ls='--')
+    # # plt.gca().invert_yaxis()
+    # plt.show()
 
     return isochrone
