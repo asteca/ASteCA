@@ -24,7 +24,8 @@ def main(clp, pd):
 
         # Processed observed cluster.
         obs_clust = obs_clust_prepare.main(
-            cl_max_mag, pd['lkl_method'], pd['lkl_binning'], pd['lkl_weight'])
+            cl_max_mag, pd['lkl_method'], pd['lkl_binning'],
+            pd['lkl_manual_bins'])
 
         # Obtain extinction coefficients.
         # This parameter determines the total number of sub-arrays for each
