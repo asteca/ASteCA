@@ -4,6 +4,9 @@ from ..math_f import exp_function
 
 
 def main(isoch_compl, err_pars, binar_flag=None, m_ini_idx=None, flag=False):
+    """
+    The 'flag' parameter is there to be used by the 'synt_cl_file.py' file.
+    """
 
     err_lst, err_max, err_rnd = err_pars
 
