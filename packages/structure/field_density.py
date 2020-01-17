@@ -120,9 +120,9 @@ def kNNRDP(dist, dens, fdens_method):
         field_dens_d, field_dens, field_dens_std = fdens_min_d[-1],\
             fdens_lst[-1], fdens_std_lst[-1]
     elif fdens_method == 'iter':
-        field_dens_d = iterativeRDP(fdens_lst)
-        idx = np.argmin(abs(field_dens_d - np.array(fdens_lst)))
-        field_dens, field_dens_std = fdens_lst[idx], fdens_std_lst[idx]
+        field_dens = iterativeRDP(fdens_lst)
+        idx = np.argmin(abs(field_dens - np.array(fdens_lst)))
+        field_dens_d, field_dens_std = fdens_min_d[idx], fdens_std_lst[idx]
     elif fdens_method[-1] == '%':
         # Use the x% percentile.
         idx = int(len(fdens_min_d) * float(fdens_method[:-1]) / 100.)
@@ -149,17 +149,19 @@ def iterativeRDP(fdens_lst):
     5. Repeat the process until no points are left beyond the 1 sigma level.
     6. Return the field density as the median value.
     """
+    fdens_copy = fdens_lst.copy()
+
     stable_cond = False
     while stable_cond is False:
 
         # Obtain median and standard deviation.
-        median, sigma = np.median(fdens_lst), np.std(fdens_lst)
+        median, sigma = np.median(fdens_copy), np.std(fdens_copy)
 
         # Check if at least one element in the list is beyond the 1 sigma
         # level.
         rm_elem = False
         dist_r = -1.
-        for indx, elem in enumerate(fdens_lst):
+        for indx, elem in enumerate(fdens_copy):
             dist = abs(elem - median)
 
             if dist > sigma and dist > dist_r:
@@ -172,7 +174,7 @@ def iterativeRDP(fdens_lst):
 
         if rm_elem is True:
             # Remove element from list and iterate again.
-            del fdens_lst[rm_index]
+            del fdens_copy[rm_index]
         else:
             stable_cond = True
 
