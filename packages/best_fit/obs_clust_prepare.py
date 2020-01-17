@@ -160,31 +160,32 @@ def main(cl_max_mag, lkl_method, lkl_binning, lkl_manual_bins):
 
         obs_clust = [cl_histo, bin_edges]
 
-    elif lkl_method == 'duong':
-        # Define variables to communicate with package 'R'.
-        import rpy2.robjects as robjects
-        from rpy2.robjects.packages import importr
-        ks = importr('ks')
-        kde_test = ks.kde_test
-        hpi_kfe = ks.Hpi_kfe
+    # DEPRECATED 17/01/20
+    # elif lkl_method == 'duong':
+    #     # Define variables to communicate with package 'R'.
+    #     import rpy2.robjects as robjects
+    #     from rpy2.robjects.packages import importr
+    #     ks = importr('ks')
+    #     kde_test = ks.kde_test
+    #     hpi_kfe = ks.Hpi_kfe
 
-        # CMD for cluster region.
-        mags_cols = mags_cols_cl[0] + mags_cols_cl[1]
-        matrix_cl = np.ravel(np.column_stack((mags_cols)))
-        # matrix_cl = []
-        # for st in obs_st:
-        #     matrix_cl.append(st[0][0])
-        #     matrix_cl.append(st[1][0])
-        rows_cl = int(len(matrix_cl) / 2)
+    #     # CMD for cluster region.
+    #     mags_cols = mags_cols_cl[0] + mags_cols_cl[1]
+    #     matrix_cl = np.ravel(np.column_stack((mags_cols)))
+    #     # matrix_cl = []
+    #     # for st in obs_st:
+    #     #     matrix_cl.append(st[0][0])
+    #     #     matrix_cl.append(st[1][0])
+    #     rows_cl = int(len(matrix_cl) / 2)
 
-        # Create matrices for these CMDs.
-        m_cl = robjects.r.matrix(robjects.FloatVector(matrix_cl),
-                                 nrow=rows_cl, byrow=True)
+    #     # Create matrices for these CMDs.
+    #     m_cl = robjects.r.matrix(robjects.FloatVector(matrix_cl),
+    #                              nrow=rows_cl, byrow=True)
 
-        # Bandwidth matrices.
-        hpic = hpi_kfe(x=m_cl, binned=True)
+    #     # Bandwidth matrices.
+    #     hpic = hpi_kfe(x=m_cl, binned=True)
 
-        obs_clust = [kde_test, hpi_kfe, m_cl, hpic]
+    #     obs_clust = [kde_test, hpi_kfe, m_cl, hpic]
 
     elif lkl_method in ['dolphin_kde', 'kdeKL']:
 
