@@ -32,19 +32,27 @@ def main(cl_max_mag, lkl_method, lkl_binning, lkl_manual_bins):
     if lkl_method in ['dolphin', 'mighell', 'tremmel']:
         # Obtain bin edges for each dimension, defining a grid.
         bin_edges = bin_edges_f(
-            lkl_binning, mags_cols_cl, lkl_manual_bins=lkl_manual_bins,
-            min_bins=4, max_bins=20)
+            lkl_binning, mags_cols_cl, lkl_manual_bins=lkl_manual_bins)
 
         # Put all magnitudes and colors into a single list.
         obs_mags_cols = mags_cols_cl[0] + mags_cols_cl[1]
         # Obtain histogram for observed cluster.
+
+        # Tried this (15/01/20) for RUP85 to see if I could get the fit
+        # to not give that much weight to the low mass section.
+        # idx = np.argsort(obs_mags_cols[0])
+        # ww = np.zeros(len(obs_mags_cols[0]))
+        # for i, w in enumerate(np.linspace(1., 0., len(obs_mags_cols[0]))):
+        #     ww[idx[i]] = w
+        # memb_probs = np.array(ww)
+
         cl_histo = np.histogramdd(obs_mags_cols, bins=bin_edges)[0]
 
         # DEPRECATED 10/01/20
-        # # Weight each bin by the 'lkl_weight' statistic (mean by default) of
-        # # the MPs of each star within that bin.
+        # Weight each bin by the 'lkl_weight' statistic (mean by default) of
+        # the MPs of each star within that bin.
         # bin_w = np.nan_to_num(binned_statistic_dd(
-        #     np.array(obs_mags_cols).T, memb_probs, statistic=lkl_weight,
+        #     np.array(obs_mags_cols).T, memb_probs, statistic='mean',
         #     bins=bin_edges)[0])
 
         # Flatten N-dimensional histograms.
@@ -106,7 +114,51 @@ def main(cl_max_mag, lkl_method, lkl_binning, lkl_manual_bins):
         for st_phot, st_e_phot in list(
                 zip(list(zip(*mags_cols)), list(zip(*e_mags_cols)))):
             obs_st.append(list(zip(*[st_phot, st_e_phot])))
-        obs_clust = [np.array(obs_st), len(obs_st), np.log(memb_probs)]
+
+        obs_clust = [[np.array(obs_st), len(obs_st), np.log(memb_probs)]]
+
+        # New
+        # shape: (Nstars, Ndims)
+        obs_photom = np.array(mags_cols_cl[0] + mags_cols_cl[1]).T
+
+        # Sum of squared photometric errors, for all dimensions. Clip at a
+        # minimum of 0.005 to avoid numeric issues below.
+        # sigma_sum = np.clip(
+        #     obs_st[:, None, :, 1] + syn_st[None, :, :, 1], 0.005, None)
+
+        sigma = np.clip(np.array(e_mags_cols).T, .005, None)
+
+        # Product of summed squared sigmas.
+        sigma_prod = np.prod(sigma, axis=-1)
+
+        N = obs_photom.shape[0]
+        obs_clust.append([
+            obs_photom, sigma, sigma_prod, N, np.log(memb_probs)])
+
+    elif lkl_method == 'isochfit':
+
+        bin_edges = bin_edges_f(
+            lkl_binning, mags_cols_cl, lkl_manual_bins=lkl_manual_bins)
+
+        # Put all magnitudes and colors into a single list.
+        obs_mags_cols = mags_cols_cl[0] + mags_cols_cl[1]
+        # Obtain histogram for observed cluster.
+        cl_histo = np.histogramdd(obs_mags_cols, bins=bin_edges)[0]
+        # Flatten
+        cl_histo = cl_histo.ravel()
+        # Downsample
+        # cl_histo[cl_histo > 5] = 5
+
+        # idxs = np.array(np.where(cl_histo > 0)).T
+        # coords = []
+        # for pt in idxs:
+        #     coord = []
+        #     for i, j in enumerate(pt):
+        #         coord.append(bin_edges[i][j])
+        #     coords.append(coord)
+        # coords = np.array(coords)
+
+        obs_clust = [cl_histo, bin_edges]
 
     elif lkl_method == 'duong':
         # Define variables to communicate with package 'R'.

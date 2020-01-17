@@ -149,6 +149,37 @@ def dolphin(synth_clust, obs_clust):
     return dolph_lkl
 
 
+def mighell(synth_clust, obs_clust):
+    """
+    Chi gamma squared distribution defined in Mighell (1999)
+
+    This likelihood is more stable than Dolphin regarding the issue of empty
+    bins, but it also has less power to discriminate lower masses from the
+    actual mass.
+
+    If the number of bins is too large, it will attempt to minimize the
+    synthetic cluster mass M. This is because in the infinite bins limits,
+    each bin holds a single star and the chances of n_i=m_i go to zero. In
+    this case, the chi-square is lowered simply lowering M.
+    """
+
+    # Observed cluster's bin edges for each dimension, flattened histogram,
+    # and n_i constant.
+    bin_edges, cl_histo_f, ni_cnst = obs_clust
+
+    # Histogram of the synthetic cluster, using the bin edges calculated
+    # with the observed cluster.
+    syn_histo = np.histogramdd(synth_clust, bins=bin_edges)[0]
+    # Flatten N-dimensional histogram.
+    syn_histo_f = syn_histo.ravel()
+
+    # Final chi.
+    mig_chi = np.sum(
+        (np.square(syn_histo_f) + ni_cnst * syn_histo_f) / (cl_histo_f + 1.))
+
+    return mig_chi
+
+
 def tolstoy(synth_clust, obs_clust):
     """
     Weighted (log) likelihood.
@@ -172,82 +203,160 @@ def tolstoy(synth_clust, obs_clust):
                 {\prod_{k=1}^D \sqrt{\sigma_{ik}^2 + \rho_{jk}^2}}
             \right\}
     \end{equation}
-    '''
+
+    New
+
+    -\ln L = N\ln M -
+             \sum\limits_{i=1}^{N} \ln
+             \left\{
+                P_i \sum\limits_{j=1}^M \frac{\exp
+                    \left[
+                        -\frac{1}{2}
+                                \sum_{k=1}^D \left(\frac{f_{ik}-g_{jk}}
+                                {\sigma_{ik}}
+                            \right)^2
+                    \right]}
+                {\prod_{k=1}^D \sigma_{ik}}
+            \right\}
+
+    """
+    def old(obs_st, N, log_mem_probs, synth_phot, synth_errors):
+        # Square synthetic photometric errors.
+        synth_errors = np.square(synth_errors)
+        # Array with the proper format for the synthetic cluster.
+        syn_st = np.dstack([np.array(synth_phot).T, synth_errors.T])
+
+        # Photometric difference (observed - synthetic), for all dimensions.
+        phot_dif = obs_st[:, None, :, 0] - syn_st[None, :, :, 0]
+        # Sum of squared photometric errors, for all dimensions. Clip at a
+        # minimum of 0.005 to avoid numeric issues below.
+        sigma_sum = np.clip(
+            obs_st[:, None, :, 1] + syn_st[None, :, :, 1], 0.005, None)
+
+        # Sum for all photometric dimensions.
+        Dsum = (np.square(phot_dif) / sigma_sum).sum(axis=-1)
+        # Product of summed squared sigmas.
+        sigma_prod = np.prod(sigma_sum, axis=-1)
+
+        # The block below can be replaced by this line using 'logsumexp'. It
+        # is marginally faster.
+        sum_N = (logsumexp(-0.5 * Dsum, b=1. / np.sqrt(sigma_prod), axis=1) +
+                 log_mem_probs).sum()
+
+        # # All elements inside synthetic stars summatory.
+        # sum_M_j = np.exp(-0.5 * Dsum) / np.sqrt(sigma_prod)
+        # # Sum for all synthetic stars.
+        # sum_M = np.sum(sum_M_j, axis=-1)
+        # # Multiply by membership probabilities.
+        # sum_M_MP = mem_probs * sum_M
+        # # Replace 0. elements before applying the logarithm below.
+        # sum_M_MP[sum_M_MP == 0.] = 1e-7
+        # sum_N = np.sum(np.log(sum_M_MP))
+
+        # Final negative logarithmic likelihood
+        tlst_lkl = N * np.log(len(syn_st)) - sum_N
+
+        return tlst_lkl
+
+    def new(obs_photom, sigma, sigma_prod, N, log_mem_probs, synth_clust):
+        # Square synthetic photometric errors.
+        # synth_errors = np.square(synth_errors)
+        # Array with the proper format for the synthetic cluster.
+        # syn_st = np.dstack([np.array(synth_phot).T, synth_errors.T])
+
+        # Photometric difference (observed - synthetic), for all dimensions.
+
+        # obs_st shape: (341, 2, 2)
+        # phot_dif = obs_st[:, None, :, 0] - synth_clust[None, :, :, 0]
+        phot_dif = obs_photom[:, None, :] - synth_clust[None, :, :]
+
+        # Sum for all photometric dimensions.
+        Dsum = (np.square(phot_dif / sigma[:, None, :])).sum(axis=-1)
+
+        # The block below can be replaced by this line using 'logsumexp'. It
+        # is marginally faster.
+        sum_N = (
+            logsumexp(-.5 * Dsum, b=1. / sigma_prod[:, None], axis=1) +
+            log_mem_probs).sum()
+
+        # Final negative logarithmic likelihood
+        tlst_lkl = N * np.log(synth_clust.shape[0]) - sum_N
+
+        return tlst_lkl
 
     # synthetic cluster's photometry and errors.
-    synth_phot, synth_errors = synth_clust[0]
+    # synth_phot = synth_clust.T
+    # synth_errors = np.zeros((synth_phot.shape))
+
+    # # Observed cluster's photometry and membership probabilities.
+    # obs_st, N, log_mem_probs = obs_clust[0]
+    # lkl_old = old(obs_st, N, log_mem_probs, synth_phot, synth_errors)
+
     # Observed cluster's photometry and membership probabilities.
-    obs_st, N, log_mem_probs = obs_clust
+    obs_photom, sigma, sigma_prod, N, log_mem_probs = obs_clust[1]
+    lkl_new = new(obs_photom, sigma, sigma_prod, N, log_mem_probs, synth_clust)
 
-    # Square synthetic photometric errors.
-    synth_errors = np.square(synth_errors)
-    # Array with the proper format for the synthetic cluster.
-    syn_st = np.dstack([np.array(synth_phot).T, synth_errors.T])
+    # print(lkl_old, lkl_new)
+    # if np.random.randint(100) == 50:
 
-    # Photometric difference (observed - synthetic), for all dimensions.
-    phot_dif = obs_st[:, None, :, 0] - syn_st[None, :, :, 0]
-    # Sum of squared photometric errors, for all dimensions. Clip at a
-    # minimum of 0.005 to avoid numeric issues below.
-    sigma_sum = np.clip(
-        obs_st[:, None, :, 1] + syn_st[None, :, :, 1], 0.005, None)
-
-    # Sum for all photometric dimensions.
-    Dsum = (np.square(phot_dif) / sigma_sum).sum(axis=-1)
-    # Product of summed squared sigmas.
-    sigma_prod = np.prod(sigma_sum, axis=-1)
-
-    # The block below can be replaced by this line using 'logsumexp'. It
-    # is marginally faster.
-    sum_N = (logsumexp(-0.5 * Dsum, b=1. / np.sqrt(sigma_prod), axis=1) +
-             log_mem_probs).sum()
-
-    # # All elements inside synthetic stars summatory.
-    # sum_M_j = np.exp(-0.5 * Dsum) / np.sqrt(sigma_prod)
-    # # Sum for all synthetic stars.
-    # sum_M = np.sum(sum_M_j, axis=-1)
-    # # Multiply by membership probabilities.
-    # sum_M_MP = mem_probs * sum_M
-    # # Replace 0. elements before applying the logarithm below.
-    # sum_M_MP[sum_M_MP == 0.] = 1e-7
-    # sum_N = np.sum(np.log(sum_M_MP))
-
-    # Final negative logarithmic likelihood
-    tlst_lkl = N * np.log(len(syn_st)) - sum_N
-
-    return tlst_lkl
+    return lkl_new
 
 
-def mighell(synth_clust, obs_clust):
+def isochfit(synth_clust, obs_clust):
     """
-    Chi gamma squared distribution defined in Mighell (1999)
+    In place for #358
 
-    This likelihood is more stable than Dolphin regarding the issue of empty
-    bins, but it also has less power to discriminate lower masses from the
-    actual mass.
-
-    If the number of bins is too large, it will attempt to minimize the
-    synthetic cluster mass M. This is because in the infinite bins limits,
-    each bin holds a single star and the chances of n_i=m_i go to zero. In
-    this case, the chi-square is lowered simply lowering M.
+    This is not trivial to implement.
     """
 
-    # Observed cluster's bin edges for each dimension, flattened histogram,
-    # and n_i constant.
-    bin_edges, cl_histo_f, ni_cnst = obs_clust
+    from scipy.stats import energy_distance, wasserstein_distance
+    # from scipy.spatial.distance import cdist
 
-    # Synthetic cluster.
-    synth_phot = synth_clust[0][0]
+    clst_histo, bin_edges = obs_clust
+
     # Histogram of the synthetic cluster, using the bin edges calculated
     # with the observed cluster.
-    syn_histo = np.histogramdd(synth_phot, bins=bin_edges)[0]
-    # Flatten N-dimensional histogram.
-    syn_histo_f = syn_histo.ravel()
+    syn_histo = np.histogramdd(synth_clust, bins=bin_edges)[0]
+    # Flatten
+    syn_histo = syn_histo.ravel()
+    # Downsample
+    # syn_histo[syn_histo > 5] = 5
+    # The above is faster?
+    # syn_histo = np.clip(syn_histo, a_min=None, a_max=1)
 
-    # Final chi.
-    mig_chi = np.sum(
-        (np.square(syn_histo_f) + ni_cnst * syn_histo_f) / (cl_histo_f + 1.))
+    lkl = energy_distance(clst_histo, syn_histo)
 
-    return mig_chi
+    # # Convert histogram into distribution of points
+    # lkl = 1.e09
+    # if syn_histo.sum() > 0.:
+    #     idxs = np.array(np.where(syn_histo > 0)).T
+    #     synth_dwnsmp = []
+    #     for pt in idxs:
+    #         coord = []
+    #         for i, j in enumerate(pt):
+    #             coord.append(bin_edges[i][j])
+    #         synth_dwnsmp.append(coord)
+    #     synth_dwnsmp = np.array(synth_dwnsmp)
+
+    #     # lkl = anderson_ksamp([syn_histo_f, cl_histo_f])[0]
+
+    #     # import matplotlib.pyplot as plt
+    #     # print(np.mean(cdist(clust_dwnsmp, synth_dwnsmp)))
+    #     # clust_dwnsmp = np.array(clust_dwnsmp).T
+    #     # synth_dwnsmp = np.array(synth_dwnsmp).T
+    #     # plt.scatter(clust_dwnsmp[1], clust_dwnsmp[0], c='g')
+    #     # plt.scatter(synth_dwnsmp[1], synth_dwnsmp[0], c='r')
+    #     # plt.gca().invert_yaxis()
+    #     # plt.show()
+
+    #     # Tried and none worked:
+    #     # np.mean((cdist(clust_dwnsmp, synth_dwnsmp))
+    #     # np.sum((cdist(clust_dwnsmp, synth_dwnsmp))
+    #     # np.sum(np.mean(cdist(clust_dwnsmp, synth_dwnsmp), 1))
+
+    #     lkl = np.sum(np.mean(cdist(clust_dwnsmp, synth_dwnsmp), 1))
+
+    return lkl
 
 
 def duong(synth_clust, obs_clust):
