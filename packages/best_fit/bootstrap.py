@@ -11,7 +11,7 @@ from .bf_common import random_population, varPars, modeKDE, fillParams,\
 
 def main(
     pd, clp, cl_max_mag, max_mag_syn, obs_clust, ext_coefs, st_dist_mass,
-        N_fc, m_ini, err_rnd):
+        N_fc, err_pars):
     """
     Non-parametric bootstrap process, runs the selected algorithm a number of
     times each time generating a new observed cluster representation through
@@ -47,16 +47,14 @@ def main(
         flag_print_perc = True
         argsOF = [
             pd, clp, max_mag_syn, obs_clust, ext_coefs, st_dist_mass, N_fc,
-            m_ini, err_rnd, available_secs, init_pop, N_pop_init,
-            N_gen, flag_print_perc]
+            available_secs, init_pop, N_pop_init, N_gen, flag_print_perc]
 
     elif pd['best_fit_algor'] == 'boot+DE':
         popsize, maxiter = pd['N_pop'], pd['N_gen']
 
         argsOF = [
-            pd, clp, max_mag_syn, st_dist_mass, ext_coefs, N_fc, m_ini,
-            err_rnd, obs_clust, popsize, maxiter, available_secs,
-            True]
+            pd, clp, max_mag_syn, st_dist_mass, ext_coefs, N_fc,
+            obs_clust, popsize, maxiter, available_secs, True]
 
     # First run of the numerical optimizer function with the observed data.
     isoch_fit_params = optimizerFunc(pd['best_fit_algor'], argsOF)
@@ -81,7 +79,7 @@ def main(
             # method selected.
             obs_cl = obs_clust_prepare.main(
                 cl_max_mag_ran, pd['lkl_method'], pd['lkl_binning'],
-                pd['lkl_weight'])
+                pd['lkl_manual_bins'])
 
             if pd['best_fit_algor'] == 'boot+GA':
                 # If 'N_pop_btstrp' is odd, sum 1 to avoid conflicts.
@@ -89,15 +87,15 @@ def main(
 
                 argsOF = [
                     pd, clp, max_mag_syn, obs_cl, ext_coefs, st_dist_mass,
-                    N_fc, m_ini, err_rnd, np.inf, isoch_fit_params[
+                    N_fc, np.inf, isoch_fit_params[
                         'OF_final_generation'][:N_btstrp], N_btstrp,
                     pd['N_step_btstrp'], False]
 
             elif pd['best_fit_algor'] == 'boot+DE':
                 argsOF = [
                     pd, clp, max_mag_syn, st_dist_mass, ext_coefs, N_fc,
-                    m_ini, err_rnd, obs_cl, pd['N_pop_btstrp'],
-                    pd['N_step_btstrp'], np.nan, False]
+                    obs_cl, pd['N_pop_btstrp'], pd['N_step_btstrp'],
+                    np.nan, False]
 
             params_boot.append(optimizerFunc(pd['best_fit_algor'], argsOF))
 
@@ -145,22 +143,19 @@ def optimizerFunc(best_fit_algor, args):
     """
     if best_fit_algor == 'boot+GA':
         pd, clp, max_mag_syn, obs_clust, ext_coefs, st_dist_mass, N_fc,\
-            m_ini, err_rnd, available_secs, init_pop, N_pop, N_gen,\
-            flag_print_perc = args
+            available_secs, init_pop, N_pop, N_gen, flag_print_perc = args
 
         if flag_print_perc:
             # Print advances.
             isoch_fit_params = genetic_algorithm.main(
                 available_secs, init_pop, flag_print_perc, N_pop, N_gen,
-                max_mag_syn, obs_clust, ext_coefs, st_dist_mass, N_fc, m_ini,
-                err_rnd, clp['em_float'], clp['err_lst'],
-                clp['completeness'], **pd)
+                max_mag_syn, obs_clust, ext_coefs, st_dist_mass, N_fc,
+                clp['err_pars'], clp['completeness'], **pd)
         else:
             isoch_fit_params = genetic_algorithm.main(
                 available_secs, init_pop, flag_print_perc, N_pop, N_gen,
-                max_mag_syn, obs_clust, ext_coefs, st_dist_mass, N_fc, m_ini,
-                err_rnd, clp['em_float'], clp['err_lst'],
-                clp['completeness'], **pd)
+                max_mag_syn, obs_clust, ext_coefs, st_dist_mass, N_fc,
+                clp['err_pars'], clp['completeness'], **pd)
 
     elif best_fit_algor == 'boot+DE':
         pd, clp, max_mag_syn, st_dist_mass, ext_coefs, N_fc, m_ini,\

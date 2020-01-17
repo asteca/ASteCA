@@ -4,7 +4,6 @@ from . import max_mag_cut, obs_clust_prepare, bootstrap, ptemcee_algor
 from . import emcee_algor
 # brute_force_algor , abcpmc_algor,
 # TODO in place for #397: hopp_algor
-from ..synth_clust import add_errors
 from ..synth_clust import extin_coefs
 from ..synth_clust import imf
 
@@ -42,7 +41,13 @@ def main(clp, pd):
         N_fc = [len(pd['filters']), len(pd['colors'])]
 
         # Generate required parameters to use in the error adding function.
-        err_rand = np.random.normal(0., 1., 1000000)
+        # HARDCODED this assumes that there will never be more than 1e6 stars
+        # in a synthetic cluster
+        N_errors = 1000000
+        if pd['lkl_method'] == 'tolstoy':
+            err_rand = np.zeros(N_errors)
+        else:
+            err_rand = np.random.normal(0., 1., N_errors)
         err_pars = clp['err_lst'], clp['em_float'], err_rand
 
         # # TEMPORARY

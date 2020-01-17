@@ -26,8 +26,8 @@ from . import likelihood
 
 def main(
     available_secs, ran_pop, flag_print_perc, N_popl, N_gener, max_mag_syn,
-    obs_clust, ext_coefs, st_dist_mass, N_fc, m_ini, err_rnd, e_max,
-    err_lst, completeness, lkl_method, fundam_params, theor_tracks, R_V,
+    obs_clust, ext_coefs, st_dist_mass, N_fc, err_pars, completeness,
+    m_ini_idx, binar_flag, lkl_method, fundam_params, theor_tracks, R_V,
         fit_diff, cross_prob, cross_sel, mut_prob, N_el, N_ei, N_es, **kwargs):
     """
     Genetic algorithm. Finds the best fit model-observation by minimizing the
@@ -60,8 +60,8 @@ def main(
 
     # Pack synthetic cluster arguments.
     synthcl_args = [
-        theor_tracks, e_max, err_lst, completeness, max_mag_syn, st_dist_mass,
-        R_V, ext_coefs, N_fc, m_ini, err_rnd]
+        theor_tracks, completeness, max_mag_syn, st_dist_mass,
+        R_V, ext_coefs, N_fc, err_pars, m_ini_idx, binar_flag]
 
     # Evaluate initial random solutions in the objective function.
     generation, lkl = evaluation(
