@@ -55,6 +55,9 @@ def main(
     # Get isochrone minus those stars beyond the magnitude cut.
     isoch_cut = cut_max_mag.main(isoch_moved, max_mag_syn)
 
+    # # In place for #358
+    # return isoch_cut.T[:, :3]
+
     # Empty list to pass if at some point no stars are left.
     synth_clust = np.array([])
     # Check for an empty array.

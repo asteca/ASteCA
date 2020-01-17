@@ -355,7 +355,7 @@ def packData(
     Properly select and pack data for CMD/CCD of observed and synthetic
     clusters, and their Hess diagram.
     """
-    if lkl_method == 'tolstoy':
+    if lkl_method in ('tolstoy', 'isochfit'):
         bin_method = 'auto'
         mags_cols_cl, dummy = dataProcess(cl_max_mag)
         # Obtain bin edges for each dimension, defining a grid.

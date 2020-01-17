@@ -19,6 +19,12 @@ def main(isoch_moved, max_mag_syn):
     # For some reason this search appears to be (very) marginally faster
     # than the np.searchsorted() implementation.
     max_indx = np.argmin(np.abs(isoch_sort[0] - max_mag_syn))
+
+    # # In place for #358?
+    # min_mag_syn = max_mag_syn - 7.  # for a 7 mag long sequence
+    # min_indx = np.argmin(np.abs(isoch_sort[0] - min_mag_syn))
+    # isoch_cut = np.array([d[min_indx:max_indx] for d in isoch_sort])
+
     # Discard elements beyond max_mag_syn limit.
     isoch_cut = np.array([d[0:max_indx] for d in isoch_sort])
 

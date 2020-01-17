@@ -254,9 +254,9 @@ def main(mypath, pars_f_path):
         'optm', 'fixed', 'auto', 'fd', 'doane', 'scott', 'rice', 'sqrt',
         'sturges', 'knuth', 'blocks', 'blocks-max', 'manual')
     # Likelihood methods.
+    # 'duong', 'kdeKL', 'dolphin_kde'
     lkl_methods = (
-        'tremmel', 'tolstoy', 'duong', 'dolphin', 'mighell', 'kdeKL',
-        'dolphin_kde')
+        'tremmel', 'dolphin', 'mighell', 'tolstoy', 'isochfit')
     # Accepted IMF functions.
     imf_funcs = ('chabrier_2001_exp', 'chabrier_2001_log', 'kroupa_1993',
                  'kroupa_2002', 'salpeter_1955')

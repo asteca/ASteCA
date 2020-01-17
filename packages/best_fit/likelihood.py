@@ -36,14 +36,16 @@ def main(lkl_method, synth_clust, obs_clust):
         likelihood = tremmel(synth_clust, obs_clust)
     elif lkl_method == 'dolphin':
         likelihood = dolphin(synth_clust, obs_clust)
+    elif lkl_method == 'mighell':
+        likelihood = mighell(synth_clust, obs_clust)
     elif lkl_method == 'tolstoy':
         likelihood = tolstoy(synth_clust, obs_clust)
+    elif lkl_method == 'isochfit':
+        likelihood = isochfit(synth_clust, obs_clust)
     elif lkl_method == 'duong':
         likelihood = duong(synth_clust, obs_clust)
     elif lkl_method == 'dolphin_kde':
         likelihood = dolphin_kde(synth_clust, obs_clust)
-    elif lkl_method == 'mighell':
-        likelihood = mighell(synth_clust, obs_clust)
     elif lkl_method == 'kdeKL':
         likelihood = kdeKL(synth_clust, obs_clust)
 
