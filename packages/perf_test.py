@@ -20,17 +20,18 @@ from packages.best_fit import likelihood
 
 def main(model, lkl_method, obs_clust, fundam_params, synthcl_args, sel):
     """
-    1. This file needs to be in the top folder
+    1. **This file needs to be in the top folder of the repo**
     2. The 'perf_test.pickle' is created by 'best_fit_synth_cl'
     3. The input 'perf_test.pickle' should also be present in the top folder
     """
 
     varIdxs, ndim, ranges = varPars(fundam_params)
+    model = np.array(model)[varIdxs]
 
     theor_tracks, completeness, max_mag_syn, st_dist_mass,\
         R_V, ext_coefs, N_fc, err_pars, m_ini_idx, binar_flag = synthcl_args
 
-    # t0, t1, t2, t3, t4, t5, t6, t7, t8, t9 = [0.] * 10
+    t0, t1, t2, t3, t4, t5, t6, t7, t8, t9 = [0.] * 10
 
     s = t.time()
     model_proper, z_model, a_model, ml, mh, al, ah = properModel(
@@ -68,22 +69,21 @@ def main(model, lkl_method, obs_clust, fundam_params, synthcl_args, sel):
             isoch_compl = completeness_rm.main(isoch_binar, completeness)
             t7 = t.time() - s
             if isoch_compl.any():
-                if sel == 'old':
-                    s = t.time()
-                    synth_clust = add_errors.old(
-                        isoch_compl, err_pars)
-                    t8 = t.time() - s
-                else:
-                    s = t.time()
-                    synth_clust = add_errors.main(
-                        isoch_compl, err_pars)
-                    t8 = t.time() - s
+                s = t.time()
+                synth_clust = add_errors.main(
+                    isoch_compl, err_pars)
+                t8 = t.time() - s
 
-    s = t.time()
-    likelihood.main(lkl_method, synth_clust, obs_clust, sel)
-    t9 = t.time() - s
+    if sel == 'old':
+        s = t.time()
+        lkl = likelihood.main(lkl_method, synth_clust, obs_clust, sel)
+        t9 = t.time() - s
+    else:
+        s = t.time()
+        lkl = likelihood.main(lkl_method, synth_clust, obs_clust, sel)
+        t9 = t.time() - s
 
-    return t0, t1, t2, t3, t4, t5, t6, t7, t8, t9
+    return t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, lkl
 
 
 if __name__ == '__main__':
@@ -95,28 +95,19 @@ if __name__ == '__main__':
     with open(mpath + '/perf_test.pickle', 'rb') as f:
         obs_clust, cl_max_mag, fundam_params, theor_tracks, lkl_method, R_V,\
             completeness, max_mag_syn, st_dist_mass, ext_coefs, N_fc,\
-            m_ini_idx, binar_flag, err_lst, em_float = pickle.load(f)
+            m_ini_idx, binar_flag, err_pars = pickle.load(f)
 
     # Pack synthetic cluster arguments.
     synthcl_args = [
         theor_tracks, completeness, max_mag_syn, st_dist_mass,
-        R_V, ext_coefs, N_fc]
-
-    err_rand = np.random.normal(0., 1., 1000000)
-    err_pars_new = [err_lst, em_float, err_rand]
-    synthcl_args_new = synthcl_args + [err_pars_new]
-    # Old
-    err_pars_old = [err_lst, em_float, m_ini_idx, err_rand]
-    synthcl_args_old = synthcl_args + [err_pars_old]
-
-    synthcl_args_new += [m_ini_idx, binar_flag]
-    synthcl_args_old += [m_ini_idx, binar_flag]
+        R_V, ext_coefs, N_fc, err_pars, m_ini_idx, binar_flag]
 
     print("Running")
     np.random.seed(12345)
 
     t_new, t_old = 0., 0.
     times_all_new, times_all_old = [], []
+    lkl_new, lkl_old = [], []
 
     max_time, elapsed, start, N_tot = 300., 0., t.time(), 0
     while elapsed < max_time:
@@ -130,17 +121,17 @@ if __name__ == '__main__':
                    "{:.1f}").format(N_tot, elapsed, *model))
 
         s = t.time()
-        sel = 'new'
-        times_all_new.append(main(
-            model, lkl_method, obs_clust, fundam_params, synthcl_args_new,
-            sel))
+        data = main(
+            model, lkl_method, obs_clust, fundam_params, synthcl_args, 'new')
+        times_all_new.append(data[:-1])
+        lkl_new.append(data[-1])
         t_new += t.time() - s
 
         s = t.time()
-        sel = 'old'
-        times_all_old.append(main(
-            model, lkl_method, obs_clust, fundam_params, synthcl_args_old,
-            sel))
+        data = main(
+            model, lkl_method, obs_clust, fundam_params, synthcl_args, 'old')
+        times_all_old.append(data[:-1])
+        lkl_old.append(data[-1])
         t_old += t.time() - s
 
         N_tot += 1
