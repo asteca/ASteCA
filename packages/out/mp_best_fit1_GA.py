@@ -5,14 +5,12 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 
 def pl_GA_lkl(
-    gs, pos, l_min_max, lkl_best, lkl_mean, OF_models, new_bs_indx, fit_diff,
+    gs, pos, lkl_best, lkl_mean, OF_models, new_bs_indx, fit_diff,
         cross_prob, cross_sel, mut_prob, N_el, N_ei, N_es):
     '''
     Likelihood evolution for the GA.
     '''
     ax = plt.subplot(gs[pos[0]:pos[1], pos[2]:pos[3]])
-    plt.xlim(-0.5, len(lkl_best) + int(0.01 * len(lkl_best)))
-    plt.ylim(l_min_max[0], l_min_max[1])
     # Set minor ticks
     ax.minorticks_on()
     ax.tick_params(axis='y', which='major', labelsize=9)
@@ -25,6 +23,8 @@ def pl_GA_lkl(
             label='$L_{{min}}={:.1f}$'.format(min(lkl_best)))
     ax.plot(range(len(lkl_best)), lkl_mean, lw=1., c='k',
             label='$L_{mean}$')
+    ymin, ymax = ax.get_ylim()
+
     # Plot line marking a new best solution found.
     for lin in new_bs_indx:
         lw_lin = 1.5 if lin > 0.05 * len(lkl_best) else 0.5
@@ -46,6 +46,9 @@ def pl_GA_lkl(
     leg = ax.legend(handles, labels, loc='upper left', numpoints=1,
                     fontsize=12)
     leg.get_frame().set_alpha(0.7)
+
+    plt.xlim(-0.5, len(lkl_best) + int(0.01 * len(lkl_best)))
+    plt.ylim(ymin, ymax)
 
 
 def pl_lkl_scatt(gs, pos, ld_p, min_max_p, cp_r, cp_e, models_GA, lkls_GA):

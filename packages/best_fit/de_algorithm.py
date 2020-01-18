@@ -3,7 +3,8 @@ import time as t
 import numpy as np
 from scipy.optimize import differential_evolution as DE
 import warnings
-from .bf_common import synthClust, varPars, fillParams
+from .bf_common import varPars, fillParams
+from ..synth_clust import synth_cluster
 from . import likelihood
 from .. import update_progress
 
@@ -44,8 +45,8 @@ def main(
                     popsize * (maxiter + 1) * len(model), info['Nfeval'] + 1)
                 info['Nfeval'] += 1
 
-            synth_clust = synthClust(
-                fundam_params, varIdxs, model, synthcl_args)
+            synth_clust = synth_cluster.main(
+                fundam_params, varIdxs, model, *synthcl_args)
             if synth_clust:
                 lkl = likelihood.main(lkl_method, synth_clust, obs_clust)
                 return lkl

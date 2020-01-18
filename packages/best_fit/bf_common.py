@@ -3,7 +3,7 @@ import numpy as np
 from scipy.optimize import differential_evolution as DE
 from scipy import stats
 import warnings
-from ..synth_clust import synth_cluster, zaWAverage
+from ..synth_clust import synth_cluster
 from . import likelihood
 from .. import update_progress
 
@@ -86,8 +86,8 @@ def initPop(
 
             # Estimate initial threshold value using DE.
             def DEdist(model):
-                synth_clust = synthClust(
-                    fundam_params, varIdxs, model, synthcl_args)
+                synth_clust = synth_cluster.main(
+                    fundam_params, varIdxs, model, *synthcl_args)
                 if synth_clust:
                     lkl = likelihood.main(lkl_method, synth_clust, obs_clust)
                     return lkl
@@ -119,18 +119,6 @@ def random_population(fundam_params, varIdxs, n_ran):
 
     return np.array(p_lst).T
 
-
-def synthClust(fundam_params, varIdxs, synthcl_args, model):
-    """
-    Generate a synthetic cluster.
-    """
-    # Average a new isochrone
-    # theor_tracks = synthcl_args[0]
-    isochrone, model_proper = zaWAverage.main(
-        synthcl_args[0], fundam_params, varIdxs, model)
-
-    # Generate synthetic cluster.
-    return synth_cluster.main(isochrone, model_proper, *synthcl_args[1:])
 
 #  DEPRECATED 24-09-2019
 # def discreteParams(fundam_params, varIdxs, chains_nruns, pushidxs):

@@ -128,6 +128,9 @@ def pl_data_rm_perc(
         linestyle='--', label=txt)
 
     edges, perc_vals, perc_rmvd = combined_compl
+    # Remove the extra '1.' value at the beginning (used by the completeness
+    # removal function)
+    perc_vals = perc_vals[1:]
     # Reverse.
     perc_vals = 1. - perc_vals
     perc_vals_min.append(min(perc_vals))

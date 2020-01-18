@@ -18,10 +18,12 @@ def main(cld_i, clp, coords, rad_manual, nsteps_rad, **kwargs):
     # RDP. For plotting purposes only, except the 'rdp_radii' values which are
     # used below.
     clp['rdp_radii'], clp['rdp_points'], clp['rdp_stddev'] = kNNRDP(
-        clp['fr_dist'], clp['fr_dens'])
+        clp['fr_dist'], cld_i['x'], cld_i['y'], clp['kde_cent'],
+        clp['N_MC'], clp['rr'], clp['cos_t'], clp['sin_t'])
 
     radii, n_in_cl_reg, areas = radsAreas(
-        clp['rdp_radii'], cld_i['x'], cld_i['y'], clp['kde_cent'])
+        clp['rdp_radii'], cld_i['x'], cld_i['y'], clp['kde_cent'],
+        clp['N_MC'], clp['rr'], clp['cos_t'], clp['sin_t'], clp['fr_dist'])
 
     # Obtain the optimal radius and arrays for plotting.
     clp['clust_rad'], clp['rad_rads'], clp['rad_N_membs'],\
@@ -45,7 +47,52 @@ def main(cld_i, clp, coords, rad_manual, nsteps_rad, **kwargs):
     return clp
 
 
-def radsAreas(rdp_radii, x, y, kde_cent):
+def kNNRDP(fr_dist, x, y, kde_cent, N_MC, rr, cos_t, sin_t):
+    """
+    Use the kNN's per-star densities. Average these values for several circular
+    rings to obtain the RDP.
+    """
+
+    # HARDCODED: remove the more conflicting last ~10% of radii values.
+    radii = np.linspace(0., fr_dist.max(), 55)[:-5]
+
+    rdp_radii, rdp_NN, rdp_stddev = [], [], []
+
+    # This is the method that uses the median of the 'fr_dens' values for
+    # stars within a ring. Not sure why (09/01/20) it is not working
+    # properly.
+    # for l, h in zip(*[radii[:-1], radii[1:]]):
+    #     # Stars within this ring.
+    #     msk_in = (fr_dist >= l) & (fr_dist < h)
+    #     if sum(msk_in) > 0:
+    #         rdp_radii.append(.5 * (l + h))
+    #         rdp_NN.append(np.median(fr_dens[msk_in]))
+    #         rdp_stddev.append(np.std(fr_dens[msk_in]))
+
+    # Areas and #stars for all rad values.
+    x0, x1, y0, y1 = min(x), max(x), min(y), max(y)
+    for l, h in zip(*[radii[:-1], radii[1:]]):
+        # Stars within this ring.
+        msk_in = (fr_dist >= l) & (fr_dist < h)
+
+        if msk_in.sum() > 0:
+            rdp_radii.append(.5 * (l + h))
+            fr_area_l = circFrac(
+                (kde_cent), l, x0, x1, y0, y1, N_MC, rr, cos_t, sin_t)
+            fr_area_h = circFrac(
+                (kde_cent), h, x0, x1, y0, y1, N_MC, rr, cos_t, sin_t)
+            ring_area = (np.pi * h**2 * fr_area_h) - (np.pi * l**2 * fr_area_l)
+            # Stars within radius.
+            rdp_NN.append(msk_in.sum() / ring_area)
+            rdp_stddev.append(np.sqrt(msk_in.sum()) / ring_area)
+
+    if not rdp_radii:
+        raise ValueError("ERROR: RDP is empty. Check the center coordinates")
+
+    return rdp_radii, rdp_NN, rdp_stddev
+
+
+def radsAreas(rdp_radii, x, y, kde_cent, N_tot, rr, cos_t, sin_t, fr_dist):
     """
     Helper function. Determine the radii values, and estimate the number of
     stars and areas for each value.
@@ -68,12 +115,34 @@ def radsAreas(rdp_radii, x, y, kde_cent):
     for i, rad in enumerate(radii):
         fr_area = 1.
         if rad > dxy:
-            fr_area = circFrac((kde_cent), rad, x0, x1, y0, y1)
+            fr_area = circFrac(
+                (kde_cent), rad, x0, x1, y0, y1, N_tot, rr, cos_t, sin_t)
         areas[i] *= fr_area
         # Stars within radius.
         n_in_cl_reg.append((dist < rad).sum())
 
     return radii, n_in_cl_reg, areas
+
+
+def optimalRadius(field_dens, radii, n_in_cl_reg, areas):
+    """
+    Estimate the optimal radius as the value that maximizes the (normalized)
+    number of members stars versus the number of field stars. The rationale
+    is that we want the maximum possible of member stars, ans the minimum
+    possible of field stars within the region.
+    """
+
+    rads, N_membs, N_field, CI = radiiParams(
+        radii, n_in_cl_reg, areas, field_dens)
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        # Normalizing separately is important.
+        N_membs = np.array(N_membs) / max(N_membs)
+        N_field = np.array(N_field) / max(N_field)
+        clust_rad = rads[np.argmax(N_membs - N_field)]
+
+    return clust_rad, rads, N_membs, N_field, CI
 
 
 def radiiParams(radii, n_in_cl_reg, areas, fd):
@@ -103,27 +172,6 @@ def radiiParams(radii, n_in_cl_reg, areas, fd):
     return rads, N_membs, N_field, cont_index
 
 
-def optimalRadius(field_dens, radii, n_in_cl_reg, areas):
-    """
-    Estimate the optimal radius as the value that maximizes the (normalized)
-    number of members stars versus the number of field stars. The rationale
-    is that we want the maximum possible of member stars, ans the minimum
-    possible of field stars within the region.
-    """
-
-    rads, N_membs, N_field, CI = radiiParams(
-        radii, n_in_cl_reg, areas, field_dens)
-
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        # Normalizing separately is important.
-        N_membs = np.array(N_membs) / max(N_membs)
-        N_field = np.array(N_field) / max(N_field)
-        clust_rad = rads[np.argmax(N_membs - N_field)]
-
-    return clust_rad, rads, N_membs, N_field, CI
-
-
 def radError(field_dens, field_dens_std, radii, n_in_cl_reg, areas, N_btstrp):
     """
     Bootstrap the field density to estimate the radius uncertainty.
@@ -143,30 +191,6 @@ def radError(field_dens, field_dens_std, radii, n_in_cl_reg, areas, N_btstrp):
 
     # From the bootstrap samples we estimate the mean standard error.
     return np.std(all_rads)
-
-
-def kNNRDP(fr_dist, fr_dens):
-    """
-    Use the kNN's per-star densities. Average these values for several circular
-    rings to obtain the RDP.
-    """
-
-    # HARDCODED: remove the more conflicting last ~10% of radii values.
-    radii = np.linspace(0., fr_dist.max(), 55)[:-5]
-
-    rdp_radii, rdp_NN, rdp_stddev = [], [], []
-    for l, h in zip(*[radii[:-1], radii[1:]]):
-        # Stars within this ring.
-        msk_in = (fr_dist >= l) & (fr_dist < h)
-        if sum(msk_in) > 0:
-            rdp_radii.append(.5 * (l + h))
-            rdp_NN.append(np.median(fr_dens[msk_in]))
-            rdp_stddev.append(np.std(fr_dens[msk_in]))
-
-    if not rdp_radii:
-        raise ValueError("ERROR: RDP is empty. Check the center coordinates")
-
-    return rdp_radii, rdp_NN, rdp_stddev
 
 
 # DEPRECATED 11/19

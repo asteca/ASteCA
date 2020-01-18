@@ -28,7 +28,7 @@ def main(lkl_method, synth_clust, obs_clust):
 
     # If synthetic cluster is empty, assign a large likelihood value. This
     # assumes *all* likelihoods here need minimizing.
-    if not synth_clust:
+    if not synth_clust.any():
         return 1.e09
 
     # Obtain the likelihood matching the synthetic and observed clusters.
@@ -36,14 +36,14 @@ def main(lkl_method, synth_clust, obs_clust):
         likelihood = tremmel(synth_clust, obs_clust)
     elif lkl_method == 'dolphin':
         likelihood = dolphin(synth_clust, obs_clust)
-    elif lkl_method == 'tolstoy':
-        likelihood = tolstoy(synth_clust, obs_clust)
-    elif lkl_method == 'duong':
-        likelihood = duong(synth_clust, obs_clust)
-    elif lkl_method == 'dolphin_kde':
-        likelihood = dolphin_kde(synth_clust, obs_clust)
     elif lkl_method == 'mighell':
         likelihood = mighell(synth_clust, obs_clust)
+    elif lkl_method == 'tolstoy':
+        likelihood = tolstoy(synth_clust, obs_clust)
+    elif lkl_method == 'isochfit':
+        likelihood = isochfit(synth_clust, obs_clust)
+    elif lkl_method == 'dolphin_kde':
+        likelihood = dolphin_kde(synth_clust, obs_clust)
     elif lkl_method == 'kdeKL':
         likelihood = kdeKL(synth_clust, obs_clust)
 
@@ -77,13 +77,12 @@ def tremmel(synth_clust, obs_clust):
 
     """
 
-    synth_phot = synth_clust[0][0]
     # Observed cluster's data.
     bin_edges, cl_histo_f_z, cl_z_idx = obs_clust
 
     # Histogram of the synthetic cluster, using the bin edges calculated
     # with the observed cluster.
-    syn_histo = np.histogramdd(synth_phot, bins=bin_edges)[0]
+    syn_histo = np.histogramdd(synth_clust, bins=bin_edges)[0]
     # Flatten N-dimensional histogram.
     syn_histo_f = syn_histo.ravel()
     # Remove all bins where n_i = 0 (no observed stars).
@@ -93,9 +92,9 @@ def tremmel(synth_clust, obs_clust):
         loggamma(cl_histo_f_z + syn_histo_f_z + .5) -
         loggamma(syn_histo_f_z + .5))
 
-    # M = synth_phot[0].size
+    # M = synth_clust.shape[0]
     # ln(2) ~ 0.693
-    tremmel_lkl = 0.693 * synth_phot[0].size - SumLogGamma
+    tremmel_lkl = 0.693 * synth_clust.shape[0] - SumLogGamma
 
     return tremmel_lkl
 
@@ -118,14 +117,12 @@ def dolphin(synth_clust, obs_clust):
     will tend to underestimate the total mass.
     """
 
-    synth_phot = synth_clust[0][0]
     # Observed cluster's data.
-    bin_edges, fill_factor, cl_histo_f_z, dolphin_cst, bin_weight_f_z,\
-        cl_z_idx = obs_clust
+    bin_edges, fill_factor, cl_histo_f_z, dolphin_cst, cl_z_idx = obs_clust
 
     # Histogram of the synthetic cluster, using the bin edges calculated
     # with the observed cluster.
-    syn_histo = np.histogramdd(synth_phot, bins=bin_edges)[0]
+    syn_histo = np.histogramdd(synth_clust, bins=bin_edges)[0]
     # Flatten N-dimensional histogram.
     syn_histo_f = syn_histo.ravel()
     # Remove all bins where n_i = 0 (no observed stars).
@@ -141,92 +138,17 @@ def dolphin(synth_clust, obs_clust):
     # M = synth_phot[0].size
     # Cash's C statistic: 2 * sum(m_i - n_i * ln(m_i))
     # weighted: 2 * sum(w_i * (m_i - n_i * ln(m_i)))
-    C_cash = 2. * (synth_phot[0].size - np.sum(
-        bin_weight_f_z * (cl_histo_f_z * np.log(syn_histo_f_z))))
+    C_cash = 2. * (synth_clust.shape[0] - np.sum(
+        (cl_histo_f_z * np.log(syn_histo_f_z))))
 
     # Obtain (weighted) inverse logarithmic 'Poisson likelihood ratio'.
     dolph_lkl = C_cash + dolphin_cst
 
-    # print(dolph_lkl)
-    # from scipy.stats import chisquare
-    # from scipy.stats import chi2
-    # chsqr = chisquare(cl_histo_f_z, f_exp=syn_histo_f_z, ddof=7)
-    # print(chsqr)
-    # print(chi2.sf(chsqr[0], len(cl_histo_f_z) - 1 - 7))
-
     return dolph_lkl
 
 
-def tolstoy(synth_clust, obs_clust):
-    '''
-    Weighted (log) likelihood.
-    This function follows the recipe given in Tolstoy & Saha (1996),
-    Hernandez & Valls-Gabaud (2008) and Monteiro, Dias & Caetano (2010).
-
-    Likelihood form:
-
-    \begin{equation}
-    -\ln L = N\ln M -
-             \sum\limits_{i=1}^{N} \ln
-             \left\{
-                P_i \sum\limits_{j=1}^M \frac{\exp
-                    \left[
-                        -\frac{1}{2}
-                            \left(
-                                \sum_{k=1}^D \frac{(f_{ik}-g_{jk})^2}
-                                {\sigma_{ik}^2 + \rho_{jk}^2}
-                            \right)
-                    \right]}
-                {\prod_{k=1}^D \sqrt{\sigma_{ik}^2 + \rho_{jk}^2}}
-            \right\}
-    \end{equation}
-    '''
-
-    # synthetic cluster's photometry and errors.
-    synth_phot, synth_errors = synth_clust[0]
-    # Observed cluster's photometry and membership probabilities.
-    obs_st, N, log_mem_probs = obs_clust
-
-    # Square synthetic photometric errors.
-    synth_errors = np.square(synth_errors)
-    # Array with the proper format for the synthetic cluster.
-    syn_st = np.dstack([np.array(synth_phot).T, synth_errors.T])
-
-    # Photometric difference (observed - synthetic), for all dimensions.
-    phot_dif = obs_st[:, None, :, 0] - syn_st[None, :, :, 0]
-    # Sum of squared photometric errors, for all dimensions. Clip at a
-    # minimum of 0.005 to avoid numeric issues below.
-    sigma_sum = np.clip(
-        obs_st[:, None, :, 1] + syn_st[None, :, :, 1], 0.005, None)
-
-    # Sum for all photometric dimensions.
-    Dsum = (np.square(phot_dif) / sigma_sum).sum(axis=-1)
-    # Product of summed squared sigmas.
-    sigma_prod = np.prod(sigma_sum, axis=-1)
-
-    # The block below can be replaced by this line using 'logsumexp'. It
-    # is marginally faster.
-    sum_N = (logsumexp(-0.5 * Dsum, b=1. / np.sqrt(sigma_prod), axis=1) +
-             log_mem_probs).sum()
-
-    # # All elements inside synthetic stars summatory.
-    # sum_M_j = np.exp(-0.5 * Dsum) / np.sqrt(sigma_prod)
-    # # Sum for all synthetic stars.
-    # sum_M = np.sum(sum_M_j, axis=-1)
-    # # Multiply by membership probabilities.
-    # sum_M_MP = mem_probs * sum_M
-    # # Replace 0. elements before applying the logarithm below.
-    # sum_M_MP[sum_M_MP == 0.] = 1e-7
-    # sum_N = np.sum(np.log(sum_M_MP))
-
-    # Final negative logarithmic likelihood
-    tlst_lkl = N * np.log(len(syn_st)) - sum_N
-
-    return tlst_lkl
-
-
 def mighell(synth_clust, obs_clust):
-    '''
+    """
     Chi gamma squared distribution defined in Mighell (1999)
 
     This likelihood is more stable than Dolphin regarding the issue of empty
@@ -235,75 +157,223 @@ def mighell(synth_clust, obs_clust):
 
     If the number of bins is too large, it will attempt to minimize the
     synthetic cluster mass M. This is because in the infinite bins limits,
-    each bin holds a single stat and the chances of n_i=m_i go to zero. In
+    each bin holds a single star and the chances of n_i=m_i go to zero. In
     this case, the chi-square is lowered simply lowering M.
-    '''
+    """
 
     # Observed cluster's bin edges for each dimension, flattened histogram,
-    # and indexes of n_i=0 elements.
-    bin_edges, cl_histo_f, cl_z_idx = obs_clust
+    # and n_i constant.
+    bin_edges, cl_histo_f, ni_cnst = obs_clust
 
-    # Synthetic cluster.
-    synth_phot = synth_clust[0][0]
     # Histogram of the synthetic cluster, using the bin edges calculated
     # with the observed cluster.
-    syn_histo = np.histogramdd(synth_phot, bins=bin_edges)[0]
-
+    syn_histo = np.histogramdd(synth_clust, bins=bin_edges)[0]
     # Flatten N-dimensional histogram.
     syn_histo_f = syn_histo.ravel()
-    # # Indexes of bins that are not empty in both arrays.
-    # z = cl_z_idx[0] | (syn_histo_f != 0)
-    # # Keep only those bins.
-    # cl_histo_f_z, syn_histo_f_z = cl_histo_f[z], syn_histo_f[z]
 
     # Final chi.
-    mig_chi = np.sum(np.square(
-        cl_histo_f + np.clip(cl_histo_f, 0, 1) - syn_histo_f) /
-        (cl_histo_f + 1.))
+    mig_chi = np.sum(
+        (np.square(syn_histo_f) + ni_cnst * syn_histo_f) / (cl_histo_f + 1.))
 
     return mig_chi
 
 
-def duong(synth_clust, obs_clust):
+def tolstoy(synth_clust, obs_clust):
     """
-    """
-    import rpy2.robjects as robjects
-    from rpy2.rinterface import RRuntimeError
+    Weighted (log) likelihood.
+    This function follows the recipe given in Tolstoy & Saha (1996).
 
-    # synthetic cluster's photometry and errors.
-    synth_phot, synth_errors = synth_clust[0]
+    Likelihood form:
+
+    -\ln L = N\ln M -
+             \sum\limits_{i=1}^{N} \ln
+             \left\{
+                P_i \sum\limits_{j=1}^M \frac{\exp
+                    \left[
+                        -\frac{1}{2}
+                                \sum_{k=1}^D \left(\frac{f_{ik}-g_{jk}}
+                                {\sigma_{ik}}
+                            \right)^2
+                    \right]}
+                {\prod_{k=1}^D \sigma_{ik}}
+            \right\}
+
+    """
+    # DEPRECATED 18/01/20
+    # def old(obs_st, N, log_mem_probs, synth_phot, synth_errors):
+    #     """
+    #     -\ln L = N\ln M -
+    #              \sum\limits_{i=1}^{N} \ln
+    #              \left\{
+    #                 P_i \sum\limits_{j=1}^M \frac{\exp
+    #                     \left[
+    #                         -\frac{1}{2}
+    #                             \left(
+    #                                 \sum_{k=1}^D \frac{(f_{ik}-g_{jk})^2}
+    #                                 {\sigma_{ik}^2 + \rho_{jk}^2}
+    #                             \right)
+    #                     \right]}
+    #                 {\prod_{k=1}^D \sqrt{\sigma_{ik}^2 + \rho_{jk}^2}}
+    #             \right\}
+    #     """
+    #     # Square synthetic photometric errors.
+    #     synth_errors = np.square(synth_errors)
+    #     # Array with the proper format for the synthetic cluster.
+    #     syn_st = np.dstack([np.array(synth_phot).T, synth_errors.T])
+
+    #     # Photometric difference (observed - synthetic), for all dimensions.
+    #     phot_dif = obs_st[:, None, :, 0] - syn_st[None, :, :, 0]
+    #     # Sum of squared photometric errors, for all dimensions. Clip at a
+    #     # minimum of 0.005 to avoid numeric issues below.
+    #     sigma_sum = np.clip(
+    #         obs_st[:, None, :, 1] + syn_st[None, :, :, 1], 0.005, None)
+
+    #     # Sum for all photometric dimensions.
+    #     Dsum = (np.square(phot_dif) / sigma_sum).sum(axis=-1)
+    #     # Product of summed squared sigmas.
+    #     sigma_prod = np.prod(sigma_sum, axis=-1)
+
+    #     # The block below can be replaced by this line using 'logsumexp'. It
+    #     # is marginally faster.
+    #     sum_N = (logsumexp(-0.5 * Dsum, b=1. / np.sqrt(sigma_prod), axis=1) +
+    #              log_mem_probs).sum()
+
+    #     # # All elements inside synthetic stars summatory.
+    #     # sum_M_j = np.exp(-0.5 * Dsum) / np.sqrt(sigma_prod)
+    #     # # Sum for all synthetic stars.
+    #     # sum_M = np.sum(sum_M_j, axis=-1)
+    #     # # Multiply by membership probabilities.
+    #     # sum_M_MP = np.exp(log_mem_probs) * sum_M
+    #     # # Replace 0. elements before applying the logarithm below.
+    #     # sum_M_MP[sum_M_MP == 0.] = 1e-7
+    #     # sum_N0 = np.sum(np.log(sum_M_MP))
+
+    #     # Final negative logarithmic likelihood
+    #     tlst_lkl = N * np.log(len(syn_st)) - sum_N
+
+    #     return tlst_lkl
+
+    # # synthetic cluster's photometry and errors.
+    # synth_phot = synth_clust.T
+    # synth_errors = np.zeros((synth_phot.shape))
+    # obs_st, N, log_mem_probs = obs_clust[0]
+    # lkl = old(obs_st, N, log_mem_probs, synth_phot, synth_errors)
+
     # Observed cluster's photometry and membership probabilities.
-    kde_test, hpi_kfe, m_cl, hpic = obs_clust
+    obs_photom, sigma, sigma_prod, N, log_mem_probs = obs_clust
 
-    # CMD for synthetic cluster.
-    matrix_f1 = np.ravel(np.column_stack((synth_phot)))
-    rows_f1 = int(len(matrix_f1) / 2)
+    # Sum for all photometric dimensions.
+    Dsum = (np.square(
+        obs_photom - synth_clust[None, :, :]) / sigma).sum(axis=-1)
 
-    m_f1 = robjects.r.matrix(robjects.FloatVector(matrix_f1),
-                             nrow=rows_f1, byrow=True)
+    sum_N = (
+        logsumexp(-.5 * Dsum, b=1. / sigma_prod, axis=1) +
+        log_mem_probs).sum()
 
-    try:
-        # TODO this is the second line that takes the most time.
-        # hpif1 = hpi_kfe(x=m_f1, binned=True)
+    # Final negative logarithmic likelihood
+    tlst_lkl = N * np.log(synth_clust.shape[0]) - sum_N
 
-        # Call 'ks' function to obtain p_value.
-        # TODO: this line takes forever
-        # TODO: this statistic seems to select lower masses
+    return tlst_lkl
 
-        # Should I:
-        # 1. explicit different bandwidths with H1,H2?
-        # res_cl = kde_test(x1=m_cl, x2=m_f1, H1=hpic, H2=hpif1)
-        # 2. use the same bandwidth defined for the cluster (hpic)?
-        # res_cl = kde_test(x1=m_cl, x2=m_f1, H1=hpic, H2=hpic)
-        # 3. not explicit any bandwidth?
-        res_cl = kde_test(x1=m_cl, x2=m_f1)
-        p_val_cl = res_cl.rx2('pvalue')
-        # Store cluster vs field p-value.
-        duong_pval = 1. - p_val_cl[0]
-    except RRuntimeError:
-        duong_pval = 1.
 
-    return duong_pval
+def isochfit(synth_clust, obs_clust):
+    """
+    In place for #358
+
+    This is not trivial to implement.
+    """
+
+    from scipy.stats import energy_distance, wasserstein_distance
+    # from scipy.spatial.distance import cdist
+
+    clst_histo, bin_edges = obs_clust
+
+    # Histogram of the synthetic cluster, using the bin edges calculated
+    # with the observed cluster.
+    syn_histo = np.histogramdd(synth_clust, bins=bin_edges)[0]
+    # Flatten
+    syn_histo = syn_histo.ravel()
+    # Downsample
+    # syn_histo[syn_histo > 5] = 5
+    # The above is faster?
+    # syn_histo = np.clip(syn_histo, a_min=None, a_max=1)
+
+    lkl = energy_distance(clst_histo, syn_histo)
+
+    # # Convert histogram into distribution of points
+    # lkl = 1.e09
+    # if syn_histo.sum() > 0.:
+    #     idxs = np.array(np.where(syn_histo > 0)).T
+    #     synth_dwnsmp = []
+    #     for pt in idxs:
+    #         coord = []
+    #         for i, j in enumerate(pt):
+    #             coord.append(bin_edges[i][j])
+    #         synth_dwnsmp.append(coord)
+    #     synth_dwnsmp = np.array(synth_dwnsmp)
+
+    #     # lkl = anderson_ksamp([syn_histo_f, cl_histo_f])[0]
+
+    #     # import matplotlib.pyplot as plt
+    #     # print(np.mean(cdist(clust_dwnsmp, synth_dwnsmp)))
+    #     # clust_dwnsmp = np.array(clust_dwnsmp).T
+    #     # synth_dwnsmp = np.array(synth_dwnsmp).T
+    #     # plt.scatter(clust_dwnsmp[1], clust_dwnsmp[0], c='g')
+    #     # plt.scatter(synth_dwnsmp[1], synth_dwnsmp[0], c='r')
+    #     # plt.gca().invert_yaxis()
+    #     # plt.show()
+
+    #     # Tried and none worked:
+    #     # np.mean((cdist(clust_dwnsmp, synth_dwnsmp))
+    #     # np.sum((cdist(clust_dwnsmp, synth_dwnsmp))
+    #     # np.sum(np.mean(cdist(clust_dwnsmp, synth_dwnsmp), 1))
+
+    #     lkl = np.sum(np.mean(cdist(clust_dwnsmp, synth_dwnsmp), 1))
+
+    return lkl
+
+
+# DEPRECATED 17/01/20
+# def duong(synth_clust, obs_clust):
+#     """
+#     """
+#     import rpy2.robjects as robjects
+#     from rpy2.rinterface import RRuntimeError
+
+#     # synthetic cluster's photometry and errors.
+#     synth_phot, synth_errors = synth_clust[0]
+#     # Observed cluster's photometry and membership probabilities.
+#     kde_test, hpi_kfe, m_cl, hpic = obs_clust
+
+#     # CMD for synthetic cluster.
+#     matrix_f1 = np.ravel(np.column_stack((synth_phot)))
+#     rows_f1 = int(len(matrix_f1) / 2)
+
+#     m_f1 = robjects.r.matrix(robjects.FloatVector(matrix_f1),
+#                              nrow=rows_f1, byrow=True)
+
+#     try:
+#         # TODO this is the second line that takes the most time.
+#         # hpif1 = hpi_kfe(x=m_f1, binned=True)
+
+#         # Call 'ks' function to obtain p_value.
+#         # TODO: this line takes forever
+#         # TODO: this statistic seems to select lower masses
+
+#         # Should I:
+#         # 1. explicit different bandwidths with H1,H2?
+#         # res_cl = kde_test(x1=m_cl, x2=m_f1, H1=hpic, H2=hpif1)
+#         # 2. use the same bandwidth defined for the cluster (hpic)?
+#         # res_cl = kde_test(x1=m_cl, x2=m_f1, H1=hpic, H2=hpic)
+#         # 3. not explicit any bandwidth?
+#         res_cl = kde_test(x1=m_cl, x2=m_f1)
+#         p_val_cl = res_cl.rx2('pvalue')
+#         # Store cluster vs field p-value.
+#         duong_pval = 1. - p_val_cl[0]
+#     except RRuntimeError:
+#         duong_pval = 1.
+
+#     return duong_pval
 
 
 def dolphin_kde(synth_clust, obs_clust):

@@ -86,6 +86,9 @@ def ax_names(x, y, yaxis):
         ys = y_ax.split('_')
         y_ax = ys[0] + '_{' + ys[1] + '}'
 
+    # Remove 'mag' introduced by the latest isochrones in the CMD service
+    x_ax, y_ax = x_ax.replace('mag', ''), y_ax.replace('mag', '')
+
     return x_ax, y_ax
 
 
@@ -345,34 +348,20 @@ def p2_ranges(p2, min_max_p):
     return min_max_p2
 
 
-def likl_y_range(opt_method, lkl_best, lkl_mean):
-    '''
-    Obtain y axis range for the likelihood axis.
-    '''
-    # if opt_method == 'emcee':
-    #     l_min_max = [
-    #         max(0., min(lkl_old) - .2 * min(lkl_old)),
-    #         np.median(lkl_old[:int(.1 * len(lkl_old))]) * 1.5]
-    # elif opt_method == 'boot+GA':
-    # Take limits from L_min curve.
-    lkl_range = max(lkl_mean) - min(lkl_best)
-    l_min_max = [max(0., min(lkl_best) - 0.1 * lkl_range),
-                 max(lkl_mean) + 0.1 * lkl_range]
-
-    return l_min_max
-
-
 def packData(
-    lkl_method, lkl_binning, cl_max_mag, synth_clst, shift_isoch,
+    lkl_method, cl_max_mag, bf_bin_edges, synth_clst, shift_isoch,
         colors, filters, col_0_comb, mag_0_comb, col_1_comb):
     """
     Properly select and pack data for CMD/CCD of observed and synthetic
     clusters, and their Hess diagram.
     """
-    bin_method = 'auto' if lkl_method == 'tolstoy' else lkl_binning
-    mags_cols_cl, dummy = dataProcess(cl_max_mag)
-    # Obtain bin edges for each dimension, defining a grid.
-    bin_edges = bin_edges_f(bin_method, mags_cols_cl)
+    if lkl_method in ('tolstoy', 'isochfit'):
+        bin_method = 'auto'
+        mags_cols_cl, dummy = dataProcess(cl_max_mag)
+        # Obtain bin edges for each dimension, defining a grid.
+        bin_edges = bin_edges_f(bin_method, mags_cols_cl)
+    else:
+        bin_edges = bf_bin_edges
 
     N_mags, N_cols = len(filters), len(colors)
 
@@ -381,10 +370,9 @@ def packData(
     x_phot_all, y_phot_all = col_0_comb, mag_0_comb
     frst_obs_mag, frst_obs_col = list(zip(*list(zip(*cl_max_mag))[3]))[0],\
         list(zip(*list(zip(*cl_max_mag))[5]))[0]
-    frst_synth_col, frst_synth_mag = synth_clst[0][0][1],\
-        synth_clst[0][0][0]
+    frst_synth_col, frst_synth_mag = synth_clst[0][1], synth_clst[0][0]
     # Indexes of binary systems.
-    binar_idx = synth_clst[1][0]
+    binar_idx = synth_clst[2][0]
     frst_col_edgs, frst_mag_edgs = bin_edges[1], bin_edges[0]
     # Filters and colors are appended continuously in 'shift_isoch'. If
     # there are 3 defined filters, then the first color starts at the
@@ -404,7 +392,7 @@ def packData(
     # versus first color), and an extra CCD (first color versus second color)
     if N_cols > 1:
         scnd_obs_col = list(zip(*list(zip(*cl_max_mag))[5]))[1]
-        scnd_synth_col = synth_clst[0][0][2]
+        scnd_synth_col = synth_clst[0][2]
         scnd_col_edgs = bin_edges[2]
         scnd_col_isoch = shift_isoch[N_mags + 1]
         # CMD of main magnitude and second color defined.

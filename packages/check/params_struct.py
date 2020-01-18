@@ -26,6 +26,11 @@ def check(manual_struct, center_bw, fdens_method, **kwargs):
             sys.exit("ERROR: field density ('{}') must be"
                      " greater than zero.".format(fd))
     except ValueError:
-        if fdens_method not in ('min', 'last'):
+        if fdens_method[-1] == '%':
+            fdens = float(fdens_method[:-1])
+            if fdens > 100. or fdens <= 0.:
+                sys.exit("ERROR: percentage value in field density must be\n" +
+                         "in the (0., 100] range")
+        elif fdens_method not in ('min', 'last', 'iter'):
             sys.exit("ERROR: field density mode ('{}') is not"
                      " recognized.".format(fdens_method))

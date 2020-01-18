@@ -208,7 +208,7 @@ def pl_rad_find(
 
 
 def pl_rad_dens(
-    gs, coord, radii, rdp_points, field_dens, field_dens_std, clust_rad,
+    gs, coord, rdp_radii, rdp_points, field_dens, field_dens_std, clust_rad,
     e_rad, rdp_stddev, core_rad, e_core, tidal_rad, e_tidal, K_cent_dens,
         flag_2pk_conver, flag_3pk_conver):
     """
@@ -217,7 +217,7 @@ def pl_rad_dens(
 
     # Convert from deg to arcmin if (ra,dec) were used.
     if coord == 'deg':
-        radii = np.array(radii) * 60.
+        rdp_radii = np.array(rdp_radii) * 60.
         clust_rad, e_rad = clust_rad * 60., e_rad * 60.
         core_rad, e_core, tidal_rad, e_tidal = core_rad * 60., e_core * 60.,\
             tidal_rad * 60., e_tidal * 60.
@@ -231,8 +231,8 @@ def pl_rad_dens(
 
     ax = plt.subplot(gs[2:4, 2:4])
     # Get max and min values in x,y
-    x_min = max(min(radii) - (max(radii) / 20.), 0)
-    x_max = min(max(radii) + (max(radii) / 20.), 3. * clust_rad)
+    x_min = max(min(rdp_radii) - (max(rdp_radii) / 20.), 0)
+    x_max = min(max(rdp_radii) + (max(rdp_radii) / 20.), 5. * clust_rad)
 
     N_h = int(.5 * len(rdp_points))
     delta_total = (max(rdp_points) - field_dens)
@@ -255,8 +255,13 @@ def pl_rad_dens(
     # Legend texts
     kp_text = '3P' if flag_3pk_conver else '2P'
     r_frmt = '{:.0f}' if coord2 == 'px' else '{:.2f}'
-    t1 = (r"$r_{{cl}}=$" + r_frmt + r"$\pm$" + r_frmt + r' $[{}]$').format(
-        clust_rad, e_rad, coord2)
+    if e_rad > 0.:
+        t_rad = (
+            r"$r_{{cl}}=$" + r_frmt + r"$\pm$" + r_frmt + r' $[{}]$').format(
+                clust_rad, e_rad, coord2)
+    else:
+        t_rad = (r"$r_{{cl}}=$" + r_frmt + r' $[{}]$').format(
+            clust_rad, coord2)
     texts = [
         '{} King profile'.format(kp_text),
         (r"$r_c=$" + r_frmt + r"$\pm$" + r_frmt + r" $[{}]$").format(
@@ -265,26 +270,30 @@ def pl_rad_dens(
             tidal_rad, e_tidal, coord2)
     ]
     # Plot density profile
-    ax.plot(radii, rdp_points, marker='o', ms=5, lw=1.5, zorder=3,
+    ax.plot(rdp_radii, rdp_points, marker='o', ms=5, lw=1.5, zorder=3,
             label="RDP")
-    # Plot Poisson error bars
+    # Plot error bars
     plt.errorbar(
-        radii, rdp_points, yerr=rdp_stddev, fmt='none', ecolor='grey',
-        lw=.8, zorder=1)
+        rdp_radii, rdp_points, yerr=rdp_stddev, fmt='none', ecolor='grey',
+        lw=.5, zorder=1)
+
+    frmt = "{:.1E}" if field_dens > 100. else "{:.1f}"
+    t1 = (r"$d_{{field}}=$" + frmt + r" $[st/{}^{{2}}]$").format(
+        field_dens, coord2)
     # Plot background level.
-    ax.hlines(y=field_dens, xmin=0, xmax=max(radii), color='k', ls='--',
-              zorder=5)
+    ax.hlines(y=field_dens, xmin=0, xmax=max(rdp_radii), color='k', ls='--',
+              label=t1, zorder=5)
     if not np.isnan(field_dens_std):
         ax.hlines(
-            y=field_dens - field_dens_std, xmin=0, xmax=max(radii),
+            y=field_dens - field_dens_std, xmin=0, xmax=max(rdp_radii),
             color='k', ls=':', zorder=5)
         ax.hlines(
-            y=field_dens + field_dens_std, xmin=0, xmax=max(radii),
+            y=field_dens + field_dens_std, xmin=0, xmax=max(rdp_radii),
             color='k', ls=':', zorder=5)
     # Plot radius.
     y_mid_point = (y_max + y_min) * .5
     ax.vlines(x=clust_rad, ymin=field_dens, ymax=y_mid_point, lw=1.5,
-              color='r', label=t1, zorder=5)
+              color='r', label=t_rad, zorder=5)
     # Plot radius error zone.
     if e_rad > 0.:
         plt.axvspan((clust_rad - e_rad), (clust_rad + e_rad),
@@ -293,8 +302,8 @@ def pl_rad_dens(
     # Plot 3-P King profile.
     if flag_3pk_conver:
         # Plot curve.
-        ax.plot(radii, kpf.three_params(
-            radii, tidal_rad, K_cent_dens, core_rad, field_dens),
+        ax.plot(rdp_radii, kpf.three_params(
+            rdp_radii, tidal_rad, K_cent_dens, core_rad, field_dens),
             'g--', label=texts[0], lw=2., zorder=3)
         # Plot r_t radius as an arrow. vline is there to show the label.
         ax.vlines(x=tidal_rad, ymin=field_dens, ymax=y_mid_point,
@@ -308,9 +317,9 @@ def pl_rad_dens(
     # Plot 2-P King profile if 3-P was not found.
     elif flag_2pk_conver:
         # Plot curve.
-        ax.plot(radii, kpf.two_params(
-            radii, K_cent_dens, core_rad, field_dens), 'g--', label=texts[0],
-            lw=2., zorder=3)
+        ax.plot(rdp_radii, kpf.two_params(
+            rdp_radii, K_cent_dens, core_rad, field_dens), 'g--',
+            label=texts[0], lw=2., zorder=3)
         # Plot r_c as a dashed line.
         ax.vlines(x=core_rad, ymin=field_dens, ymax=kpf.two_params(
             core_rad, K_cent_dens, core_rad, field_dens), label=texts[1],
@@ -330,16 +339,16 @@ def pl_rad_dens(
     plt.ylabel(r"log($\rho$) $[st/{}^{{2}}]$".format(coord2), fontsize=10)
     ax.tick_params(axis='both', which='both', labelsize=8)
 
-    ax.plot(radii, rdp_points, marker='o', ms=5, lw=1.5, zorder=5)
-    ax.hlines(y=field_dens, xmin=min(radii), xmax=max(radii),
+    ax.scatter(rdp_radii, rdp_points, marker='o', s=10, zorder=5)
+    ax.hlines(y=field_dens, xmin=min(rdp_radii), xmax=max(rdp_radii),
               color='k', ls='--', zorder=5)
     if not np.isnan(field_dens_std):
         ax.hlines(
-            y=field_dens - field_dens_std, xmin=min(radii), xmax=max(radii),
-            color='k', ls=':', zorder=5)
+            y=field_dens - field_dens_std, xmin=min(rdp_radii),
+            xmax=max(rdp_radii), color='k', ls=':', zorder=5)
         ax.hlines(
-            y=field_dens + field_dens_std, xmin=min(radii), xmax=max(radii),
-            color='k', ls=':', zorder=5)
+            y=field_dens + field_dens_std, xmin=min(rdp_radii),
+            xmax=max(rdp_radii), color='k', ls=':', zorder=5)
     ax.vlines(
         x=clust_rad, ymin=field_dens, ymax=y_mid_point, lw=1.5, color='r')
     if e_rad > 0.:
@@ -347,16 +356,17 @@ def pl_rad_dens(
                     facecolor='grey', alpha=0.25)
     # Plot 3-P King profile.
     if flag_3pk_conver:
-        ax.plot(radii, kpf.three_params(
-            radii, tidal_rad, K_cent_dens, core_rad, field_dens),
+        ax.plot(rdp_radii, kpf.three_params(
+            rdp_radii, tidal_rad, K_cent_dens, core_rad, field_dens),
             'g--', lw=2., zorder=3)
         ax.vlines(x=core_rad, ymin=field_dens, ymax=kpf.three_params(
             core_rad, tidal_rad, K_cent_dens, core_rad, field_dens),
             color='g', linestyles=':', lw=2., zorder=5)
     # Plot 2-P King profile if 3-P was not found.
     elif flag_2pk_conver:
-        ax.plot(radii, kpf.two_params(
-            radii, K_cent_dens, core_rad, field_dens), 'g--', lw=2., zorder=3)
+        ax.plot(rdp_radii, kpf.two_params(
+            rdp_radii, K_cent_dens, core_rad, field_dens), 'g--', lw=2.,
+            zorder=3)
         ax.vlines(x=core_rad, ymin=field_dens, ymax=kpf.two_params(
             core_rad, K_cent_dens, core_rad, field_dens), color='g',
             linestyles=':', lw=2., zorder=4)
@@ -556,9 +566,9 @@ def pl_cl_fl_regions(
 
 
 def plot(N, *args):
-    '''
+    """
     Handle each plot separately.
-    '''
+    """
 
     plt_map = {
         0: [pl_center, 'density positional chart'],

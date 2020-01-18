@@ -164,6 +164,10 @@ def maskBadPhot(data, mag_col, e_mag_col, col_col, e_col_col):
     """
     # Convert to masked table in case it is not.
     data = Table(data, masked=True)
+
+    # # TODO this is a temporary magnitude filter
+    # data = data[np.array([float(_) < 18. for _ in data[mag_col[0]]])]
+
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         for idx in [mag_col, e_mag_col, col_col, e_col_col]:

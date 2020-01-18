@@ -276,6 +276,7 @@ def convergenceVals(algor, ndim, varIdxs, chains_nruns, bi_steps):
             # Mean Tau across chains, shape: (post-bi steps, ndims)
             x = np.mean(chains_nruns.T, axis=1).T
             tau_autocorr = []
+            j = 10  # Here in case the line below is skipped
             for j in np.arange(50, x.shape[0], 50):
                 # tau.shape: ndim
                 tau = util.autocorr_integrated_time(x[:j])

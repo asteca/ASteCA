@@ -32,7 +32,8 @@ def main(clp, x, y, **kwargs):
 
     else:
         frac_cl_area = circFrac(
-            clp['kde_cent'], clp['clust_rad'], x_min, x_max, y_min, y_max)
+            clp['kde_cent'], clp['clust_rad'], x_min, x_max, y_min, y_max,
+            clp['N_MC'], clp['rr'], clp['cos_t'], clp['sin_t'])
         cl_area = cl_area * frac_cl_area
 
         print("  WARNING: only a portion of the cluster\n  is present "

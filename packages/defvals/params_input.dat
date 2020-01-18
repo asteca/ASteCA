@@ -157,10 +157,14 @@ CH         .0
 # * NN: [int]
 #   The number of closest neighbors used to estimate the per-star densities.
 #
-# * field_dens: [min, last] / [float>0.]
+# * field_dens: [min, last, iter, XX%] / [float>0.]
 #   If 'min' or 'last' are selected, the code will use the minimum value and
-#   last value in the field density array, respectively. Else, a float needs
-#   to be given.
+#   last value in the field density array, respectively. If 'iter' is selected
+#   the density will be estimated rejecting values in the RDP through an
+#   iterative process. The user can also supply a percentage value e.g '75%'
+#   (the '%' character is necessary) to select the density value at that
+#   percentile from the estimated center.
+#   Else, a float>0 needs to be given.
 #
 # * N_steps: [int]
 #   The number of bootstrap steps employed to estimate the uncertainty
@@ -470,12 +474,13 @@ GA     50    1.     0.85      2P    0.1     1   100    50
 #   Binning method used if the 'tremmel' or 'dolphin' likelihoods are
 #   selected. Otherwise this parameter is ignored.
 #
-# * weight: mean / median / max
-#   Weight applied to each bin defined by the 'binning' parameter. Otherwise
-#   this parameter is ignored.
+# * N_bins: [int]
+#   Number of bins for each photometric dimension if the 'manual' mode is
+#   selected. The order is: 'N_bin_mag N_bin_color' (add another 'N_bin_color'
+#   if two colors are employed).
 #
-#   likelihood    binning    weight
-LK     tremmel      knuth      mean
+#   likelihood    binning    N_bins
+LK     tremmel      knuth      5 10
 ################################################################################
 
 

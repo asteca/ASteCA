@@ -1,36 +1,37 @@
 
-from ..synth_clust import synth_cl_plot
+import numpy as np
+from ..synth_clust import synth_cluster
+from ..synth_clust import zaWAverage
+from ..synth_clust import move_isochrone
+from ..synth_clust import cut_max_mag
+from ..synth_clust import mass_distribution
+from ..synth_clust import mass_interp
+from ..synth_clust import binarity
+from ..synth_clust import completeness_rm
+from ..synth_clust import add_errors
 
 
 def main(clp, npd, bf_flag, best_fit_algor, fundam_params, filters, colors,
-         theor_tracks, R_V, **kwargs):
-    '''
+         theor_tracks, R_V, m_ini_idx, binar_flag, **kwargs):
+    """
     Create output data file with stars in the best fit synthetic cluster found
     by the 'Best Fit' function.
-    '''
+    """
+
     clp['synth_clst'], clp['shift_isoch'] = [], []
     if bf_flag:
 
-        # Index of m_ini (theoretical initial mass), stored in the theoretical
-        # isochrones.
-        m_ini = 2 * clp['N_fc'][0] + 2 * clp['N_fc'][1] + 2
-        # Pack synthetic cluster arguments.
-        synthcl_args = [
-            theor_tracks, clp['em_float'], clp['err_lst'], clp['completeness'],
-            clp['max_mag_syn'], clp['st_dist_mass'], R_V, clp['ext_coefs'],
-            clp['N_fc'], m_ini, clp['cmpl_rnd'], clp['err_rnd']]
-
-        shift_isoch, synth_clst = synth_cl_plot.main(
+        shift_isoch, synth_clst = synth_cl_plot(
             best_fit_algor, fundam_params, clp['isoch_fit_params'],
-            synthcl_args)
+            theor_tracks, clp['completeness'], clp['max_mag_syn'],
+            clp['st_dist_mass'], R_V, clp['ext_coefs'], clp['N_fc'],
+            clp['err_pars'], m_ini_idx, binar_flag)  # clp['err_pars_old']
 
         # If cluster is not empty.
-        if synth_clst:
+        if synth_clst[0].any():
             # Prepare data.
-            mags_cols, e_mags_cols = list(zip(*synth_clst[0][0])),\
-                list(zip(*synth_clst[0][1]))
-            binar_idx = synth_clst[1][0]
-            extra_pars = list(zip(*synth_clst[1][2:]))
+            mags_cols, e_mags_cols = synth_clst[0].T, synth_clst[1].T
+            binar_idx, extra_pars = synth_clst[2][0].T, synth_clst[2][2:].T
             # Prepare header.
             hdr = ['#ID  '] + [f[1] + '   ' for f in filters]
             hdr += ['(' + c[1].replace(',', '-') + ')   ' for c in colors]
@@ -53,7 +54,6 @@ def main(clp, npd, bf_flag, best_fit_algor, fundam_params, filters, colors,
                         f_out.write("{:<8.4f}".format(_))
                     f_out.write("{:<8.4f}\n".format(*extra_pars[i]))
 
-            print("Best fit synthetic cluster saved to file")
             # Save for plotting.
             clp['synth_clst'], clp['shift_isoch'] = synth_clst, shift_isoch
 
@@ -62,3 +62,45 @@ def main(clp, npd, bf_flag, best_fit_algor, fundam_params, filters, colors,
                   "  to file")
 
     return clp
+
+
+def synth_cl_plot(
+    best_fit_algor, fundam_params, isoch_fit_params, theor_tracks,
+    completeness, max_mag_syn, st_dist_mass, R_V, ext_coefs, N_fc, err_pars,
+        m_ini_idx, binar_flag):
+    """
+    Generate shifted isochrone and synthetic cluster for plotting.
+    """
+
+    if best_fit_algor == 'boot+GA':
+        # Use ML fit values for all parameters.
+        model = isoch_fit_params['map_sol']
+    elif best_fit_algor in ('ptemcee', 'emcee'):
+        # Use mean fit values for all parameters.
+        model = isoch_fit_params['mean_sol']
+
+    # Generate a model with the "best" fitted parameters.
+    model_var = np.array(model)[isoch_fit_params['varIdxs']]
+
+    # Generate best fit synthetic cluster.
+    model_proper, z_model, a_model, ml, mh, al, ah = synth_cluster.properModel(
+        fundam_params, model_var, isoch_fit_params['varIdxs'])
+    isochrone = zaWAverage.main(
+        theor_tracks, fundam_params, z_model, a_model, ml, mh, al, ah)
+    e, d, M_total, bin_frac = model_proper
+    isoch_moved = move_isochrone.main(
+        isochrone, e, d, R_V, ext_coefs, N_fc, binar_flag, m_ini_idx)
+    isoch_cut = cut_max_mag.main(isoch_moved, max_mag_syn)
+    synth_clust = np.array([])
+    if isoch_cut.any():
+        mass_dist = mass_distribution.main(st_dist_mass, M_total)
+        isoch_mass = mass_interp.main(isoch_cut, mass_dist, m_ini_idx)
+        if isoch_mass.any():
+            isoch_binar = binarity.main(isoch_mass, bin_frac, m_ini_idx, N_fc)
+            isoch_compl = completeness_rm.main(isoch_binar, completeness)
+            if isoch_compl.any():
+                # This is what makes this call different from 'synth_cluster'
+                synth_clust = add_errors.main(
+                    isoch_compl, err_pars, binar_flag, m_ini_idx, True)
+
+    return isoch_moved, synth_clust

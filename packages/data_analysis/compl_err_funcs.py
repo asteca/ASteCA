@@ -19,13 +19,17 @@ def main(clp, cld_i, cld_c):
     # (Main) Magnitudes of accepted stars after error rejection.
     mmag_acpt_c = np.array(list(zip(*(list(zip(*clp['acpt_stars_c']))[3])))[0])
 
-    phot_analy_compl = photoAnalysis(cld_i)
+    # Magnitudes in the incomplete set, without nans
+    msk = ~np.isnan(cld_i['mags'][0])
+    mags_i = cld_i['mags'][0][msk]
 
-    phot_data_compl = photDataCompl(cld_i, cld_c)
+    phot_analy_compl = photoAnalysis(mags_i)
+
+    phot_data_compl = photDataCompl(mags_i, cld_c)
 
     err_rm_data = errRemv(clp, mmag_acpt_c)
 
-    final_compl = combineCompl(cld_i, phot_analy_compl, mmag_acpt_c)
+    final_compl = combineCompl(mags_i, phot_analy_compl, mmag_acpt_c)
 
     clp['phot_analy_compl'], clp['phot_data_compl'], clp['err_rm_data'],\
         clp['completeness'] = phot_analy_compl, phot_data_compl, err_rm_data,\
@@ -33,7 +37,7 @@ def main(clp, cld_i, cld_c):
     return clp
 
 
-def photoAnalysis(cld_i):
+def photoAnalysis(mags_i):
     """
     Stars lost throughout the photometry process.
 
@@ -58,7 +62,7 @@ def photoAnalysis(cld_i):
 
     else:
         # Main magnitudes histogram (full incomplete dataset).
-        h_mag_acpt_c, comp_b_edges = mmagHist(cld_i['mags'][0])
+        h_mag_acpt_c, comp_b_edges = mmagHist(mags_i)
 
         # Index of the bin with the maximum number of stars.
         max_indx = h_mag_acpt_c.argmax(axis=0)
@@ -99,27 +103,26 @@ def photoAnalysis(cld_i):
     return [comp_b_edges, comp_perc]
 
 
-def photDataCompl(cld_i, cld_c):
+def photDataCompl(mags_i, cld_c):
     """
     """
     # Number of stars per bin: 10% of the total number of accepted stars,
     # between the limits [10, 50].
-    Nbins = max(10, min(int(cld_i['mags'][0].size * .1), 50))
-    eqN_edges = histedges_equalN(cld_i['mags'][0], Nbins)
+    Nbins = max(10, min(int(mags_i.size * .1), 50))
+    eqN_edges = histedges_equalN(mags_i, Nbins)
 
     # Histograms for accepted and all stars.
-    h_mag_i, _ = mmagHist(cld_i['mags'][0], eqN_edges)
+    h_mag_i, _ = mmagHist(mags_i, eqN_edges)
     # Accepted main magnitudes histogram (complete dataset).
-    h_mag_c, _ = mmagHist(cld_c['mags'][0], eqN_edges)
+    mags_c = cld_c['mags'][0]
+    h_mag_c, _ = mmagHist(mags_c, eqN_edges)
 
     # Percentage of stars that remain after photom completeness.
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         err_rm_perc = h_mag_c / h_mag_i.astype(float)
 
-    # TODO I think Python3 does not need this 'float'
-    perc_rmvd = 100. *\
-        (1. - cld_c['mags'][0].size / float(cld_i['mags'][0].size))
+    perc_rmvd = 100. * (1. - mags_c.size / mags_i.size)
 
     print("Photometric completeness data function estimated")
     return [eqN_edges, err_rm_perc, perc_rmvd]
@@ -151,23 +154,22 @@ def errRemv(clp, mmag_acpt_c):
         # after error rejection.
         err_rm_perc = h_mag_acpt_c / h_mag_all_c.astype(float)
 
-        # TODO I think Python3 does not need this 'float'
-        perc_rmvd = 100. * (mmag_rjct_c.size / float(all_mags.size))
+        perc_rmvd = 100. * (mmag_rjct_c.size / all_mags.size)
 
     print("Error removal function estimated")
     return [eqN_edges, err_rm_perc, perc_rmvd]
 
 
-def combineCompl(cld_i, phot_analy_compl, mmag_acpt_c):
+def combineCompl(mags_i, phot_analy_compl, mmag_acpt_c):
     """
     """
     comp_b_edges, comp_perc = phot_analy_compl
 
     # Generate edges of N bins with approx equal number of elements each.
-    eqN_edges = histedges_equalN(cld_i['mags'][0], 20)
+    eqN_edges = histedges_equalN(mags_i, 20)
 
     # Correct the initial LF using the completeness loss function.
-    h_mag_i, _ = mmagHist(cld_i['mags'][0], comp_b_edges)
+    h_mag_i, _ = mmagHist(mags_i, comp_b_edges)
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         h_mag_i_full = h_mag_i / comp_perc
@@ -179,13 +181,19 @@ def combineCompl(cld_i, phot_analy_compl, mmag_acpt_c):
 
     # Percentage of stars that should be *removed* from the synthetic cluster.
     # This is reversed with respect to the other percentages so that
-    # the completeness_rm() function is simpler.
+    # the 'completeness_rm()' function is simpler.
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         err_rm_perc = 1. - (h_mag_acpt_c / h_mag_i_full)
+    err_rm_perc = np.clip(err_rm_perc, a_min=0., a_max=1.)
 
-    # TODO I think Python3 does not need this 'float'
-    perc_rmvd = 100. * (1. - mmag_acpt_c.size / float(cld_i['mags'][0].size))
+    # Add a '1.' at the beginning to indicate that all stars with smaller
+    # magnitudes than the brightest star observed should be removed by the
+    # 'completeness_rm()' process.
+    err_rm_perc = np.array([1.] + list(err_rm_perc))
+
+    # For plotting purposes
+    perc_rmvd = 100. * (1. - mmag_acpt_c.size / mags_i.size)
 
     print("Combined completeness function estimated")
     return [eqN_edges, err_rm_perc, perc_rmvd]
@@ -209,9 +217,8 @@ def histedges_equalN(x, nbin):
     Source: https://stackoverflow.com/a/39419049/1391441
     """
     npt = len(x)
-    return np.interp(np.linspace(0, npt, nbin + 1),
-                     np.arange(npt),
-                     np.sort(x))
+    return np.interp(
+        np.linspace(0, npt, nbin + 1), np.arange(npt), np.sort(x))
 
 
 def rebin(x1, y1, x2):

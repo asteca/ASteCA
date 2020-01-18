@@ -279,7 +279,7 @@ def main(cl_file, pd):
         return
 
     # Plot final best match found.
-    make_D2_plot.main(npd, cld_c, pd, **clp)
+    make_D2_plot.main(npd, pd, **clp)
     retFunc(npd['clust_name'], start)
 
     # DEPRECATED 22/11/18

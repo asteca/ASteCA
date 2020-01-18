@@ -124,6 +124,13 @@ def plxBayes(
     int_max = mu_p + 5.
     x, B2 = r_iVals(int_max, plx_clp, e_plx_clp)
 
+    # from emcee import moves
+    # mv = [
+    #     (moves.DESnookerMove(), 0.1), (moves.DEMove(), 0.9 * 0.9),
+    #     (moves.DEMove(gamma0=1.0), 0.9 * 0.1),
+    # ]
+    # # moves.KDEMove()
+
     # emcee sampler
     sampler = ensemble.EnsembleSampler(
         nwalkers, ndim, lnprob, args=(x, B2, mp_clp, mu_p))
