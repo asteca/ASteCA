@@ -11,9 +11,9 @@ import matplotlib.offsetbox as offsetbox
 def pl_cl_fl_regions(
     gs, x_name, y_name, coord, x_min, x_max, y_min, y_max, asp_ratio,
         field_regions_rjct_c, cl_region_rjct_c, flag_no_fl_regs_c):
-    '''
+    """
     Cluster and field regions defined.
-    '''
+    """
     ax = plt.subplot(gs[0:2, 0:2])
     ax.set_aspect(aspect=asp_ratio)
     # Set plot limits
@@ -50,9 +50,9 @@ def pl_cl_fl_regions(
 
 
 def pl_lum_func(gs, y_ax, flag_no_fl_regs, lum_func):
-    '''
+    """
     LF of stars in cluster region and outside.
-    '''
+    """
     x_cl, y_cl, x_fl, y_fl, x_all, y_all = lum_func
     ax = plt.subplot(gs[0:2, 2:4])
     ax.set_title("LF after error removal (compl)", fontsize=9)
@@ -152,9 +152,9 @@ def pl_data_rm_perc(
 def flCMD(
     ax, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax, N_fr,
         x_fr_rject, y_fr_rject, x_fr_accpt, y_fr_accpt, f_sz_pt, err_bar):
-    '''
+    """
     Field stars CMD/CCD diagram.
-    '''
+    """
     # Set plot limits
     plt.xlim(x_min_cmd, x_max_cmd)
     plt.ylim(y_min_cmd, y_max_cmd)
@@ -190,9 +190,9 @@ def pl_fl_diag(
     gs, x_ax0, y_ax, x_min_cmd0, x_max_cmd0, y_min_cmd0, y_max_cmd0, x_ax1,
         x_min_cmd1, x_max_cmd1, y_min_cmd1, y_max_cmd1, field_regions_c,
         stars_f_rjct, stars_f_acpt, f_sz_pt, err_bar_fl0, err_bar_fl1):
-    '''
+    """
     Field stars CMD/CCD diagram.
-    '''
+    """
     ax = plt.subplot(gs[2:4, 4:6])
 
     N_fr = len(field_regions_c)
@@ -252,9 +252,9 @@ def pl_cl_diag(
     gs, x_ax0, y_ax, x_min_cmd0, x_max_cmd0, y_min_cmd0, y_max_cmd0, x_ax1,
     x_min_cmd1, x_max_cmd1, y_min_cmd1, y_max_cmd1, err_bar_cl0, err_bar_cl1,
         cl_region_rjct_c, cl_region_c, n_memb, cl_sz_pt):
-    '''
+    """
     Cluster's stars diagram (stars inside cluster's radius)
-    '''
+    """
     ax = plt.subplot(gs[2:4, 0:2])
     ax.set_title(
         r"$N_{{accpt}}={}$ , $N_{{rjct}}={}$"
@@ -348,9 +348,9 @@ def pl_hess_cmd(
     gs, x_ax0, x_ax1, y_ax, x_max_cmd0, x_min_cmd0, y_min_cmd0, y_max_cmd0,
     x_max_cmd1, x_min_cmd1, y_min_cmd1, y_max_cmd1, stars_f_acpt,
         cl_region_c):
-    '''
+    """
     Hess diagram for CMD of field vs cluster region.
-    '''
+    """
     if stars_f_acpt[0]:
         ax = plt.subplot(gs[2:4, 2:4])
         cl_col = list(zip(*list(zip(*cl_region_c))[5]))[0]
@@ -472,9 +472,9 @@ def pl_ad_pvals_pk(gs, b, flag_ad_test, ad_cl_fr_pk, id_kinem):
 
 
 def plot(N, *args):
-    '''
+    """
     Handle each plot separately.
-    '''
+    """
 
     plt_map = {
         0: [pl_cl_fl_regions, 'cluster + field regions rejected stars'],
