@@ -58,7 +58,7 @@ def main(clp, pd):
         #         obs_clust, cl_max_mag, pd['fundam_params'], pd['theor_tracks'],
         #         pd['lkl_method'], pd['R_V'], clp['completeness'],
         #         max_mag_syn, st_dist_mass, ext_coefs, N_fc, pd['m_ini_idx'],
-        #         pd['binar_flag'], clp['err_lst'], clp['em_float']], f)
+        #         pd['binar_flag'], err_pars], f)
         # print("finished")
         # import sys
         # sys.exit()
