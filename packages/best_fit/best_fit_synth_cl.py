@@ -45,6 +45,8 @@ def main(clp, pd):
         # in a synthetic cluster
         N_errors = 1000000
         if pd['lkl_method'] == 'tolstoy':
+            # Tolstoy likelihood considers uncertainties, there's no need to
+            # add it to the synthetic clusters.
             err_rand = np.zeros(N_errors)
         else:
             err_rand = np.random.normal(0., 1., N_errors)

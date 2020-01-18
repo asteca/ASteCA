@@ -102,38 +102,37 @@ def main(cl_max_mag, lkl_method, lkl_binning, lkl_manual_bins):
         for e_c in list(zip(*list(zip(*cl_max_mag))[1:][5])):
             e_mags_cols.append(np.square(e_c))
 
-        # Store and pass to use in likelihood function. The 'obs_st' list is
-        # made up of:
-        # obs_st = [star_1, star_2, ...]
-        # star_i = [phot_1, phot_2, phot_3, ...]
-        # phot_j = [phot_val, error]
-        # Where 'phot_j' is a photometric dimension (magnitude or color), and
-        # 'phot_val', 'error' the associated value and error for 'star_i'.
-        obs_st = []
-        mags_cols = mags_cols_cl[0] + mags_cols_cl[1]
-        for st_phot, st_e_phot in list(
-                zip(list(zip(*mags_cols)), list(zip(*e_mags_cols)))):
-            obs_st.append(list(zip(*[st_phot, st_e_phot])))
+        # DEPRECATED 18/01/20. The new method does not use errors in the
+        # synthetic clusters.
+        # # Store and pass to use in likelihood function. The 'obs_st' list is
+        # # made up of:
+        # # obs_st = [star_1, star_2, ...]
+        # # star_i = [phot_1, phot_2, phot_3, ...]
+        # # phot_j = [phot_val, error]
+        # # Where 'phot_j' is a photometric dimension (magnitude or color), and
+        # # 'phot_val', 'error' the associated value and error for 'star_i'.
+        # obs_st = []
+        # mags_cols = mags_cols_cl[0] + mags_cols_cl[1]
+        # for st_phot, st_e_phot in list(
+        #         zip(list(zip(*mags_cols)), list(zip(*e_mags_cols)))):
+        #     obs_st.append(list(zip(*[st_phot, st_e_phot])))
+        # obs_clust = [[np.array(obs_st), len(obs_st), np.log(memb_probs)]]
 
-        obs_clust = [[np.array(obs_st), len(obs_st), np.log(memb_probs)]]
-
-        # New
         # shape: (Nstars, Ndims)
         obs_photom = np.array(mags_cols_cl[0] + mags_cols_cl[1]).T
 
-        # Sum of squared photometric errors, for all dimensions. Clip at a
-        # minimum of 0.005 to avoid numeric issues below.
-        # sigma_sum = np.clip(
-        #     obs_st[:, None, :, 1] + syn_st[None, :, :, 1], 0.005, None)
-
+        # Clip at a minimum of 0.005 to avoid numeric issues below.
         sigma = np.clip(np.array(e_mags_cols).T, .005, None)
 
+        # Proper shape
+        sigma = sigma[:, None, :]
+        obs_photom = obs_photom[:, None, :]
+
         # Product of summed squared sigmas.
-        sigma_prod = np.prod(sigma, axis=-1)
+        sigma_prod = np.sqrt(np.prod(sigma, axis=-1))
 
         N = obs_photom.shape[0]
-        obs_clust.append([
-            obs_photom, sigma, sigma_prod, N, np.log(memb_probs)])
+        obs_clust = [obs_photom, sigma, sigma_prod, N, np.log(memb_probs)]
 
     elif lkl_method == 'isochfit':
 

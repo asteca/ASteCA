@@ -181,28 +181,9 @@ def mighell(synth_clust, obs_clust):
 def tolstoy(synth_clust, obs_clust):
     """
     Weighted (log) likelihood.
-    This function follows the recipe given in Tolstoy & Saha (1996),
-    Hernandez & Valls-Gabaud (2008) and Monteiro, Dias & Caetano (2010).
+    This function follows the recipe given in Tolstoy & Saha (1996).
 
     Likelihood form:
-
-    \begin{equation}
-    -\ln L = N\ln M -
-             \sum\limits_{i=1}^{N} \ln
-             \left\{
-                P_i \sum\limits_{j=1}^M \frac{\exp
-                    \left[
-                        -\frac{1}{2}
-                            \left(
-                                \sum_{k=1}^D \frac{(f_{ik}-g_{jk})^2}
-                                {\sigma_{ik}^2 + \rho_{jk}^2}
-                            \right)
-                    \right]}
-                {\prod_{k=1}^D \sqrt{\sigma_{ik}^2 + \rho_{jk}^2}}
-            \right\}
-    \end{equation}
-
-    New
 
     -\ln L = N\ln M -
              \sum\limits_{i=1}^{N} \ln
@@ -218,86 +199,81 @@ def tolstoy(synth_clust, obs_clust):
             \right\}
 
     """
-    def old(obs_st, N, log_mem_probs, synth_phot, synth_errors):
-        # Square synthetic photometric errors.
-        synth_errors = np.square(synth_errors)
-        # Array with the proper format for the synthetic cluster.
-        syn_st = np.dstack([np.array(synth_phot).T, synth_errors.T])
+    # DEPRECATED 18/01/20
+    # def old(obs_st, N, log_mem_probs, synth_phot, synth_errors):
+    #     """
+    #     -\ln L = N\ln M -
+    #              \sum\limits_{i=1}^{N} \ln
+    #              \left\{
+    #                 P_i \sum\limits_{j=1}^M \frac{\exp
+    #                     \left[
+    #                         -\frac{1}{2}
+    #                             \left(
+    #                                 \sum_{k=1}^D \frac{(f_{ik}-g_{jk})^2}
+    #                                 {\sigma_{ik}^2 + \rho_{jk}^2}
+    #                             \right)
+    #                     \right]}
+    #                 {\prod_{k=1}^D \sqrt{\sigma_{ik}^2 + \rho_{jk}^2}}
+    #             \right\}
+    #     """
+    #     # Square synthetic photometric errors.
+    #     synth_errors = np.square(synth_errors)
+    #     # Array with the proper format for the synthetic cluster.
+    #     syn_st = np.dstack([np.array(synth_phot).T, synth_errors.T])
 
-        # Photometric difference (observed - synthetic), for all dimensions.
-        phot_dif = obs_st[:, None, :, 0] - syn_st[None, :, :, 0]
-        # Sum of squared photometric errors, for all dimensions. Clip at a
-        # minimum of 0.005 to avoid numeric issues below.
-        sigma_sum = np.clip(
-            obs_st[:, None, :, 1] + syn_st[None, :, :, 1], 0.005, None)
+    #     # Photometric difference (observed - synthetic), for all dimensions.
+    #     phot_dif = obs_st[:, None, :, 0] - syn_st[None, :, :, 0]
+    #     # Sum of squared photometric errors, for all dimensions. Clip at a
+    #     # minimum of 0.005 to avoid numeric issues below.
+    #     sigma_sum = np.clip(
+    #         obs_st[:, None, :, 1] + syn_st[None, :, :, 1], 0.005, None)
 
-        # Sum for all photometric dimensions.
-        Dsum = (np.square(phot_dif) / sigma_sum).sum(axis=-1)
-        # Product of summed squared sigmas.
-        sigma_prod = np.prod(sigma_sum, axis=-1)
+    #     # Sum for all photometric dimensions.
+    #     Dsum = (np.square(phot_dif) / sigma_sum).sum(axis=-1)
+    #     # Product of summed squared sigmas.
+    #     sigma_prod = np.prod(sigma_sum, axis=-1)
 
-        # The block below can be replaced by this line using 'logsumexp'. It
-        # is marginally faster.
-        sum_N = (logsumexp(-0.5 * Dsum, b=1. / np.sqrt(sigma_prod), axis=1) +
-                 log_mem_probs).sum()
+    #     # The block below can be replaced by this line using 'logsumexp'. It
+    #     # is marginally faster.
+    #     sum_N = (logsumexp(-0.5 * Dsum, b=1. / np.sqrt(sigma_prod), axis=1) +
+    #              log_mem_probs).sum()
 
-        # # All elements inside synthetic stars summatory.
-        # sum_M_j = np.exp(-0.5 * Dsum) / np.sqrt(sigma_prod)
-        # # Sum for all synthetic stars.
-        # sum_M = np.sum(sum_M_j, axis=-1)
-        # # Multiply by membership probabilities.
-        # sum_M_MP = mem_probs * sum_M
-        # # Replace 0. elements before applying the logarithm below.
-        # sum_M_MP[sum_M_MP == 0.] = 1e-7
-        # sum_N = np.sum(np.log(sum_M_MP))
+    #     # # All elements inside synthetic stars summatory.
+    #     # sum_M_j = np.exp(-0.5 * Dsum) / np.sqrt(sigma_prod)
+    #     # # Sum for all synthetic stars.
+    #     # sum_M = np.sum(sum_M_j, axis=-1)
+    #     # # Multiply by membership probabilities.
+    #     # sum_M_MP = np.exp(log_mem_probs) * sum_M
+    #     # # Replace 0. elements before applying the logarithm below.
+    #     # sum_M_MP[sum_M_MP == 0.] = 1e-7
+    #     # sum_N0 = np.sum(np.log(sum_M_MP))
 
-        # Final negative logarithmic likelihood
-        tlst_lkl = N * np.log(len(syn_st)) - sum_N
+    #     # Final negative logarithmic likelihood
+    #     tlst_lkl = N * np.log(len(syn_st)) - sum_N
 
-        return tlst_lkl
+    #     return tlst_lkl
 
-    def new(obs_photom, sigma, sigma_prod, N, log_mem_probs, synth_clust):
-        # Square synthetic photometric errors.
-        # synth_errors = np.square(synth_errors)
-        # Array with the proper format for the synthetic cluster.
-        # syn_st = np.dstack([np.array(synth_phot).T, synth_errors.T])
-
-        # Photometric difference (observed - synthetic), for all dimensions.
-
-        # obs_st shape: (341, 2, 2)
-        # phot_dif = obs_st[:, None, :, 0] - synth_clust[None, :, :, 0]
-        phot_dif = obs_photom[:, None, :] - synth_clust[None, :, :]
-
-        # Sum for all photometric dimensions.
-        Dsum = (np.square(phot_dif / sigma[:, None, :])).sum(axis=-1)
-
-        # The block below can be replaced by this line using 'logsumexp'. It
-        # is marginally faster.
-        sum_N = (
-            logsumexp(-.5 * Dsum, b=1. / sigma_prod[:, None], axis=1) +
-            log_mem_probs).sum()
-
-        # Final negative logarithmic likelihood
-        tlst_lkl = N * np.log(synth_clust.shape[0]) - sum_N
-
-        return tlst_lkl
-
-    # synthetic cluster's photometry and errors.
+    # # synthetic cluster's photometry and errors.
     # synth_phot = synth_clust.T
     # synth_errors = np.zeros((synth_phot.shape))
-
-    # # Observed cluster's photometry and membership probabilities.
     # obs_st, N, log_mem_probs = obs_clust[0]
-    # lkl_old = old(obs_st, N, log_mem_probs, synth_phot, synth_errors)
+    # lkl = old(obs_st, N, log_mem_probs, synth_phot, synth_errors)
 
     # Observed cluster's photometry and membership probabilities.
-    obs_photom, sigma, sigma_prod, N, log_mem_probs = obs_clust[1]
-    lkl_new = new(obs_photom, sigma, sigma_prod, N, log_mem_probs, synth_clust)
+    obs_photom, sigma, sigma_prod, N, log_mem_probs = obs_clust
 
-    # print(lkl_old, lkl_new)
-    # if np.random.randint(100) == 50:
+    # Sum for all photometric dimensions.
+    Dsum = (np.square(
+        obs_photom - synth_clust[None, :, :]) / sigma).sum(axis=-1)
 
-    return lkl_new
+    sum_N = (
+        logsumexp(-.5 * Dsum, b=1. / sigma_prod, axis=1) +
+        log_mem_probs).sum()
+
+    # Final negative logarithmic likelihood
+    tlst_lkl = N * np.log(synth_clust.shape[0]) - sum_N
+
+    return tlst_lkl
 
 
 def isochfit(synth_clust, obs_clust):
