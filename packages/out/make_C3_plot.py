@@ -9,15 +9,12 @@ from . import prep_plots
 
 
 def main(
-    npd, pd, cld_i, PM_flag, pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, mmag_pm,
-    pmRA_fl_DE, e_pmRA_fl_DE, pmDE_fl, e_pmDE_fl, pm_mag_fl, PM_cl_x, PM_cl_y,
-    PM_cl_z, PM_fl_x, PM_fl_y, PM_fl_z, PMs_cl_cx, PMs_cl_cy, PMs_fl_cx,
-    PMs_fl_cy, pm_dist_max, PM_flag_all, PM_kde_all, pmRA_all, pmDE_all,
-    PMs_d_median, pmMag_all, xRA_all, yDE_all, kde_cent, clust_rad,
+    npd, pd, cld_i, PM_flag, clreg_PMs, fregs_PMs, allfr_PMs, cr_KDE_PMs,
+    fr_KDE_PMs, allr_KDE_PMs, pm_dist_max, kde_cent, clust_rad,
         flag_no_fl_regs_i, **kwargs):
-    '''
+    """
     Make C3 block plots.
-    '''
+    """
 
     if 'C3' in pd['flag_make_plot']:
 
@@ -34,53 +31,46 @@ def main(
         # Uses first magnitude and color defined
         x_ax, y_ax = prep_plots.ax_names(
             pd['colors'][0], pd['filters'][0], 'mag')
-
-        if PM_flag_all:
-            arglist = [
-                # pms_KDE_all
-                [gs, coord, y_ax, pmRA_all, pmDE_all, pmMag_all, PM_kde_all,
-                 pd['PM_KDE_std']],
-                # pms_NN_all
-                [gs, coord, y_ax, pmRA_all, pmDE_all, pmMag_all,
-                 PMs_d_median, pd['PM_nnmax'], pd['PM_nnperc']],
-                # pms_coords_all
-                [fig, gs, cld_i, y_ax, x_name, y_name, coord, PMs_d_median,
-                 pd['PM_nnperc'], xRA_all, yDE_all, pmMag_all, kde_cent,
-                 clust_rad]
-            ]
-        for n, args in enumerate(arglist):
-            mp_kinem_pms.plot(n, *args)
+        x_min, x_max, y_min, y_max = prep_plots.frame_max_min(
+            cld_i['x'], cld_i['y'])
+        asp_ratio = prep_plots.aspect_ratio(x_min, x_max, y_min, y_max)
 
         # PMs data.
-        pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, mmag_pm, pm_dist_max =\
-            prep_plots.PMsPlot(
-                pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, mmag_pm, pm_dist_max)
-        raPMrng, dePMrng = prep_plots.PMsrange(pmRA_DE, pmDE)
+        raPMrng, dePMrng = prep_plots.PMsrange(
+            clreg_PMs['pmRA'], clreg_PMs['pmDE'])
         Nsigma = 2.
         PMs_cent, PMs_width, PMs_height, PMs_theta = prep_plots.SigmaEllipse(
-            np.array([pmRA_DE, pmDE]).T, Nsigma)
+            np.array([clreg_PMs['pmRA'], clreg_PMs['pmDE']]).T, Nsigma)
+        xydelta, xyrang = prep_plots.pmRectangle(allfr_PMs)
+
+        if pd['cosDE_flag'] is False and coord == 'px':
+            xlabel = r"$\mu_{{\alpha}} \, \mathrm{[mas/yr]}$"
+        else:
+            xlabel = r"$\mu_{{\alpha}} \, cos \delta \, \mathrm{[mas/yr]}$"
 
         arglist = [
-            # pms_vpd_mag
-            [gs, coord, y_ax, pmRA_DE, pmDE, mmag_pm, pmRA_fl_DE,
-             pmDE_fl, pm_mag_fl, raPMrng, dePMrng, flag_no_fl_regs_i],
-            # pms_KDE_diag
-            [gs, coord, PM_cl_x, PM_cl_y, PM_cl_z, PM_fl_x,
-             PM_fl_y, PM_fl_z, PMs_cl_cx, PMs_cl_cy, PMs_fl_cx, PMs_fl_cy,
-             raPMrng, dePMrng, PMs_cent, PMs_width, PMs_height, PMs_theta,
-             Nsigma],
-            # pms_vpd_mp
-            [gs, coord, pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE,
-             pmRA_fl_DE, e_pmRA_fl_DE, pmDE_fl, e_pmDE_fl, raPMrng,
-             dePMrng],
+            # pms_VPD_all
+            [gs, xlabel, pd['PM_KDE_std'], coord, y_ax, allfr_PMs],
+            # pms_VPD_KDE_all
+            [gs, xlabel, coord, y_ax, allr_KDE_PMs, xydelta, xyrang],
+            # pms_coords_all
+            [fig, gs, coord, x_min, x_max, y_min, y_max, asp_ratio, x_name,
+             y_name, kde_cent, clust_rad, allfr_PMs, allr_KDE_PMs, xydelta],
+            # pms_VPD_zoom
+            [gs, xlabel, coord, y_ax, clreg_PMs, fregs_PMs, raPMrng,
+             dePMrng, flag_no_fl_regs_i],
+            # pms_VPD_zoom_KDE
+            [gs, xlabel, coord, cr_KDE_PMs, fr_KDE_PMs, raPMrng, dePMrng,
+             PMs_cent, PMs_width, PMs_height, PMs_theta, Nsigma],
+            # # pms_VPD_zoom_MP
+            [gs, xlabel, coord, clreg_PMs, fregs_PMs, raPMrng, dePMrng],
             # pms_vs_mag
-            [gs, coord, y_ax, pmMP, pmRA_DE, pmDE, mmag_pm,
-             pmRA_fl_DE, pmDE_fl, pm_mag_fl, raPMrng, dePMrng],
+            [gs, xlabel, coord, y_ax, clreg_PMs, fregs_PMs, raPMrng, dePMrng],
             # pms_dist
-            [gs, y_ax, pmMP, pm_dist_max, mmag_pm]
+            [gs, y_ax, clreg_PMs, pm_dist_max]
         ]
         for n, args in enumerate(arglist):
-            mp_kinem_pms.plot(n + 3, *args)
+            mp_kinem_pms.plot(n, *args)
 
         # Generate output file.
         fig.tight_layout()
