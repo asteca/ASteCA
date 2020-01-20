@@ -475,23 +475,6 @@ def plxPlot(
     return plx_flrg, mag_flrg, mmag_clp, mp_clp, plx_clp, e_plx_clp
 
 
-def PMsPlot(pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, mmag_pm, pm_dist_max):
-    """
-    Parameters for the proper motions plot.
-    """
-
-    # Re-arrange so stars with larger MPs are on top.
-    mp_i = pmMP.argsort()
-    arr_lst = []
-    for arr in (pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, mmag_pm, pm_dist_max):
-        if arr is not None:
-            arr_lst.append(arr[mp_i])
-        else:
-            arr_lst.append([])
-
-    return arr_lst
-
-
 def SigmaEllipse(points, Nsigma=2.):
     """
     Generate a 'Nsigma' ellipse based on the mean and covariance of a point
@@ -575,3 +558,17 @@ def PMsrange(pmRA_DE, pmDE):
     dePMrng = de_median - .5 * xyrange, de_median + .5 * xyrange
 
     return raPMrng, dePMrng
+
+
+def pmRectangle(allfr_PMs, frac=.1):
+    """
+    Define a rectangle around the center of the maximum value in the KDE of
+    all the (pmRA, pmDE) in the frame.
+    """
+    pmRA_all, pmDE_all = allfr_PMs['pmRA'], allfr_PMs['pmDE']
+    _, _, ra_std = sigma_clipped_stats(pmRA_all)
+    _, _, de_std = sigma_clipped_stats(pmDE_all)
+    xyrang = max(ra_std, de_std)
+    xydelta = frac * xyrang
+
+    return xydelta, xyrang

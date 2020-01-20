@@ -337,17 +337,11 @@ PX         n    0.029         10     5000         y
 # * KDE_stds: [0.<float]
 #   Standard deviations for the zoomed all-star VPD.
 #
-# * N-N_max: [0<int]
-#   Number of neighbors to use in the Near-Neighbor algorithm.
+# * cosDE_flag: y / n
+#   Is the pmRA data already multiplied by the 'cos(DE)' factor?
 #
-# * N-N_prcntl: [0.<float<=100.]
-#   Percentile to filter the PMs N-N distance.
-#
-# * coord_flag: y / n
-#   Whether to use coordinates data in the N-N analysis.
-#
-#   KDE_stds   N-N_max   N-N_prcntl    coord_flag
-PO        3.        10            5             y
+#   KDE_stds   cosDE_flag
+PO        3.            y
 ################################################################################
 
 

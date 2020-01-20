@@ -153,10 +153,6 @@ def check(mypath, pd):
         sys.exit("ERROR: set a minimum of 4 chains for Plx Bayesian analysis")
     if pd['PM_KDE_std'] <= 0.:
         sys.exit("ERROR: 'KDE_std' parameter must be greater than 0.")
-    if pd['PM_nnmax'] < 1:
-        sys.exit("ERROR: 'PM_nnmax' parameter must be greater or equal to 1")
-    if pd['PM_nnperc'] <= 0. or pd['PM_nnperc'] > 100.:
-        sys.exit("ERROR: 0. < 'PM_nnperc' <= 100.")
 
     # Check max error values.
     for i, e in enumerate(pd['err_max']):

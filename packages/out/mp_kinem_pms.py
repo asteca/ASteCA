@@ -1,18 +1,16 @@
 
 import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize
-from matplotlib.patches import Ellipse
+from matplotlib.patches import Ellipse, Rectangle
 import numpy as np
 from astropy.stats import sigma_clipped_stats
-from . import prep_plots
 
 
-def pms_KDE_all(
-    gs, coord, y_ax, pmRA_all, pmDE_all, pmMag_all, PM_kde_all,
-        PM_KDE_std):
+def pms_VPD_all(gs, xlabel, PM_KDE_std, coord, y_ax, allfr_PMs):
     """
-    KDE of PMs for all the frame.
+    PMs for all the frame.
     """
+
     ax = plt.subplot(gs[0:2, 0:2])
     ax.set_title(
         r'All stars in frame + KDE ($\mu\pm\sigma={:.2f}$)'.format(PM_KDE_std),
@@ -20,150 +18,228 @@ def pms_KDE_all(
     ax.minorticks_on()
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
             zorder=-1)
-    if coord == 'deg':
-        plt.xlabel(
-            r"$\mu_{{\alpha}} \, cos \delta \, \mathrm{[mas/yr]}$",
-            fontsize=12)
-    else:
-        plt.xlabel(r"$\mu_{{\alpha}} \, \mathrm{[mas/yr]}$", fontsize=12)
+    plt.xlabel(xlabel, fontsize=12)
     plt.ylabel(r"$\mu_{{\delta}} \, \mathrm{[mas/yr]}$", fontsize=12)
 
-    PMx, PMy, PMz, extent = PM_kde_all
-
-    # plt.imshow(np.rot90(PMz), cmap='Blues', zorder=1, extent=extent)
-
     cmap = plt.cm.get_cmap('viridis')
-    msk = np.argsort(pmMag_all)[::-1]
-    pmRA_all, pmDE_all, mag = pmRA_all[msk], pmDE_all[msk], pmMag_all[msk]
+    mmag = allfr_PMs['mmag']
+    msk = np.argsort(mmag)[::-1]
+    pmRA_all, pmDE_all, mag = allfr_PMs['pmRA'][msk], allfr_PMs['pmDE'][msk],\
+        mmag[msk]
     plt.scatter(
-        pmRA_all, pmDE_all, s=25, c=mag, cmap=cmap,
-        edgecolor='w', lw=.5, zorder=3)
+        pmRA_all, pmDE_all, s=8, c=mag, cmap=cmap,
+        edgecolor='k', lw=.2, zorder=3)
     cbar = plt.colorbar(pad=.01, fraction=.02, aspect=50)
     cbar.ax.tick_params(labelsize=7)
     cbar.ax.invert_yaxis()
     cbar.set_label(y_ax, size=8)
 
-    # Cluster region contour
-    plt.contour(
-        PMx, PMy, PMz, 10, colors='k', linewidths=.75, zorder=5,
-        extent=extent)
-
-    plt.xlim(extent[0], extent[1])
-    plt.ylim(extent[2], extent[3])
+    ra_mean, ra_median, ra_std = sigma_clipped_stats(pmRA_all)
+    de_mean, de_median, de_std = sigma_clipped_stats(pmDE_all)
+    plt.xlim(ra_median - PM_KDE_std * ra_std, ra_median + PM_KDE_std * ra_std)
+    plt.ylim(de_median - PM_KDE_std * de_std, de_median + PM_KDE_std * de_std)
 
 
-def pms_NN_all(
-    gs, coord, y_ax, pmRA_all, pmDE_all, pmMag_all, PMs_d_median, nnmax,
-        nnperc):
+def pms_VPD_KDE_all(gs, xlabel, coord, y_ax, allr_KDE_PMs, xydelta, xyrang):
     """
-    N-N of PMs for all the frame.
+    KDE for the PMS of all the stars in the frame.
     """
+    PMx, PMy, PMz = allr_KDE_PMs['x'], allr_KDE_PMs['y'], allr_KDE_PMs['z']
+
     ax = plt.subplot(gs[0:2, 2:4])
-    ax.set_title(
-        'All stars in frame, d<{:.1f}% prcntl'.format(nnperc), fontsize=9)
-    ax.minorticks_on()
-    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
-            zorder=-1)
-    if coord == 'deg':
-        plt.xlabel(
-            r"$\mu_{{\alpha}} \, cos \delta \, \mathrm{[mas/yr]}$",
-            fontsize=12)
-    else:
-        plt.xlabel(r"$\mu_{{\alpha}} \, \mathrm{[mas/yr]}$", fontsize=12)
+    ax.set_title("All stars KDE (zoomed)", fontsize=9)
+    plt.xlabel(xlabel, fontsize=12)
     plt.ylabel(r"$\mu_{{\delta}} \, \mathrm{[mas/yr]}$", fontsize=12)
 
-    dmax = np.percentile(PMs_d_median, nnperc)
-    msk = PMs_d_median < dmax
-    pmRA, pmDE, mag = pmRA_all[msk], pmDE_all[msk], pmMag_all[msk]
+    # Zoom +/-1 sigma around the max density value.
+    xmax, ymax = allr_KDE_PMs['zmax_x'], allr_KDE_PMs['zmax_y']
+    zmax_x, zmax_y = allr_KDE_PMs['x'][xmax][ymax],\
+        allr_KDE_PMs['y'][xmax][ymax]
 
-    cmap = plt.cm.get_cmap('viridis')
-    msk = np.argsort(mag)[::-1]
-    pmRA, pmDE, mag = pmRA[msk], pmDE[msk], mag[msk]
+    ax.contourf(PMx, PMy, PMz, cmap='Blues')
+    plt.contour(
+        PMx, PMy, PMz, 10, colors='k', linewidths=.5, zorder=5)
     plt.scatter(
-        pmRA, pmDE, s=25, c=mag, cmap=cmap, edgecolor='k', lw=.5,
-        label="N-N={}\nN={}".format(nnmax, pmRA.size), zorder=2)
-    cbar = plt.colorbar(pad=.01, fraction=.02, aspect=50)
-    cbar.ax.tick_params(labelsize=7)
-    cbar.ax.invert_yaxis()
-    cbar.set_label(y_ax, size=8)
+        zmax_x, zmax_y, marker='x', c='r', s=20,
+        label="[{:.2f}, {:.2f}]".format(zmax_x, zmax_y), zorder=10)
+
+    # (bottom, left)
+    xb, yl = zmax_x - xydelta, zmax_y - xydelta
+    width, height = 2. * xydelta, 2. * xydelta
+    rect = Rectangle(
+        (xb, yl), width, height, linewidth=1, edgecolor='r',
+        facecolor='none', zorder=10)
+    ax.add_patch(rect)
 
     plt.legend(fontsize='small')
+    plt.xlim(zmax_x - xyrang, zmax_x + xyrang)
+    plt.ylim(zmax_y - xyrang, zmax_y + xyrang)
 
 
 def pms_coords_all(
-    fig, gs, cld_i, y_ax, x_name, y_name, coord, PMs_d_median, nnperc,
-        xRA_all, yDE_all, pmMag_all, kde_cent, clust_rad):
+    fig, gs, coord, x_min, x_max, y_min, y_max, asp_ratio, x_name, y_name,
+        kde_cent, clust_rad, allfr_PMs, allr_KDE_PMs, xydelta):
     """
     """
     ax = plt.subplot(gs[0:2, 4:6])
-    ax.set_title('All stars in frame, filtered by N-N', fontsize=9)
+    ax.set_title(
+        "In square w,h: {:.3f} [mas/yr]".format(2. * xydelta), fontsize=9)
     ax.minorticks_on()
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
             zorder=-1)
     plt.xlabel('{} ({})'.format(x_name, coord), fontsize=12)
     plt.ylabel('{} ({})'.format(y_name, coord), fontsize=12)
 
-    dmax = np.percentile(PMs_d_median, nnperc)
-    msk = PMs_d_median < dmax
-    xRA, yDE = xRA_all[msk], yDE_all[msk]
+    # Mask for stars inside the rectangle in the above plot.
+    xmax, ymax = allr_KDE_PMs['zmax_x'], allr_KDE_PMs['zmax_y']
+    zmax_x, zmax_y = allr_KDE_PMs['x'][xmax][ymax],\
+        allr_KDE_PMs['y'][xmax][ymax]
+    msk_rect = (allfr_PMs['pmRA'] < (zmax_x + xydelta)) &\
+        (allfr_PMs['pmRA'] > (zmax_x - xydelta)) &\
+        (allfr_PMs['pmDE'] < (zmax_y + xydelta)) &\
+        (allfr_PMs['pmDE'] > (zmax_y - xydelta))
+
+    pmRA, pmDE, xRA, yDE = allfr_PMs['pmRA'][msk_rect],\
+        allfr_PMs['pmDE'][msk_rect], allfr_PMs['RA'][msk_rect],\
+        allfr_PMs['DE'][msk_rect]
+    PM_total = np.sqrt(pmRA**2 + pmDE**2)
+
+    msk = np.argsort(PM_total)
+    xRA, yDE, PM_total = xRA[msk], yDE[msk], PM_total[msk]
+
+    PMmed, PMstd = np.median(PM_total), np.std(PM_total)
+    vmin, vmax = PMmed - 3. * PMstd, PMmed + 3. * PMstd
+    vmin, vmax = max(vmin, min(PM_total)), min(vmax, max(PM_total))
+
+    cbar = plt.scatter(
+        xRA, yDE, c=PM_total, s=PM_total, lw=.2, vmin=vmin, vmax=vmax,
+        zorder=5)
+    cbar = plt.colorbar(pad=.01, fraction=.02, aspect=40)
+    cbar.ax.tick_params(labelsize=7)
+    cbar.set_label('Total PM', size=8)
 
     circle = plt.Circle(
-        (kde_cent[0], kde_cent[1]), clust_rad, color='green', fill=False)
+        (kde_cent[0], kde_cent[1]), clust_rad, color='red', fill=False,
+        zorder=10)
     fig.gca().add_artist(circle)
 
-    x_min, x_max, y_min, y_max = prep_plots.frame_max_min(
-        cld_i['x'], cld_i['y'])
-    asp_ratio = prep_plots.aspect_ratio(x_min, x_max, y_min, y_max)
-
-    N_in_r = sum(
-        np.sqrt((x - kde_cent[0])**2 + (y - kde_cent[1])**2) < clust_rad
-        for x, y in np.array([xRA, yDE]).T)
-
-    st_sizes_arr = prep_plots.star_size(pmMag_all)
-    # zmin, zmax = st_sizes_arr.min(), st_sizes_arr.max()
-    # st_sizes_arr = prep_plots.star_size(pmMag_all, zmin=zmin, zmax=zmax)
-
-    plt.scatter(
-        xRA, yDE, c='k', s=st_sizes_arr[msk],
-        label=r"$N_{{r<r_{{cl}}}}$={}".format(N_in_r), zorder=2)
-    # mag, cmap=cmap, edgecolor='k', lw=.5)
-    # cbar = plt.colorbar(pad=.01, fraction=.02, aspect=50)
-    # cbar.ax.tick_params(labelsize=7)
-    # cbar.ax.invert_yaxis()
-    # cbar.set_label(y_ax, size=8)
-    plt.legend(fontsize='small')
-
-    ax.set_aspect(aspect=asp_ratio)
     plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
-
     if coord == 'deg':
         ax.invert_xaxis()
 
+    ax.set_aspect(aspect=asp_ratio)
 
-def pms_vpd_mag(
-    gs, coord, y_ax, pmRA_DE, pmDE, mmag_pm, pmRA_fl_DE, pmDE_fl,
-        pm_mag_fl, raPMrng, dePMrng, flag_no_fl_regs_i):
-    '''
-    '''
+
+# DEPRECATED 18/01/20
+# def pms_NN_all(
+#     gs, coord, y_ax, pmRA_all, pmDE_all, pmMag_all, PMs_d_median, nnmax,
+#         nnperc):
+#     """
+#     N-N of PMs for all the frame.
+#     """
+#     ax = plt.subplot(gs[0:2, 2:4])
+#     ax.set_title(
+#         'All stars in frame, d<{:.1f}% prcntl'.format(nnperc), fontsize=9)
+#     ax.minorticks_on()
+#     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
+#             zorder=-1)
+#     if coord == 'deg':
+#         plt.xlabel(
+#             r"$\mu_{{\alpha}} \, cos \delta \, \mathrm{[mas/yr]}$",
+#             fontsize=12)
+#     else:
+#         plt.xlabel(r"$\mu_{{\alpha}} \, \mathrm{[mas/yr]}$", fontsize=12)
+#     plt.ylabel(r"$\mu_{{\delta}} \, \mathrm{[mas/yr]}$", fontsize=12)
+
+#     dmax = np.percentile(PMs_d_median, nnperc)
+#     msk = PMs_d_median < dmax
+#     pmRA, pmDE, mag = pmRA_all[msk], pmDE_all[msk], pmMag_all[msk]
+
+#     cmap = plt.cm.get_cmap('viridis')
+#     msk = np.argsort(mag)[::-1]
+#     pmRA, pmDE, mag = pmRA[msk], pmDE[msk], mag[msk]
+#     plt.scatter(
+#         pmRA, pmDE, s=25, c=mag, cmap=cmap, edgecolor='k', lw=.5,
+#         label="N-N={}\nN={}".format(nnmax, pmRA.size), zorder=2)
+#     cbar = plt.colorbar(pad=.01, fraction=.02, aspect=50)
+#     cbar.ax.tick_params(labelsize=7)
+#     cbar.ax.invert_yaxis()
+#     cbar.set_label(y_ax, size=8)
+
+#     plt.legend(fontsize='small')
+
+
+# DEPRECATED 18/01/20
+# def pms_coords_all(
+#     fig, gs, cld_i, y_ax, x_name, y_name, coord, PMs_d_median, nnperc,
+#         xRA_all, yDE_all, pmMag_all, kde_cent, clust_rad):
+#     """
+#     """
+#     ax = plt.subplot(gs[0:2, 4:6])
+#     ax.set_title('All stars in frame, filtered by N-N', fontsize=9)
+#     ax.minorticks_on()
+#     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
+#             zorder=-1)
+#     plt.xlabel('{} ({})'.format(x_name, coord), fontsize=12)
+#     plt.ylabel('{} ({})'.format(y_name, coord), fontsize=12)
+
+#     dmax = np.percentile(PMs_d_median, nnperc)
+#     msk = PMs_d_median < dmax
+#     xRA, yDE = xRA_all[msk], yDE_all[msk]
+
+#     circle = plt.Circle(
+#         (kde_cent[0], kde_cent[1]), clust_rad, color='green', fill=False)
+#     fig.gca().add_artist(circle)
+
+#     x_min, x_max, y_min, y_max = prep_plots.frame_max_min(
+#         cld_i['x'], cld_i['y'])
+#     asp_ratio = prep_plots.aspect_ratio(x_min, x_max, y_min, y_max)
+
+#     N_in_r = sum(
+#         np.sqrt((x - kde_cent[0])**2 + (y - kde_cent[1])**2) < clust_rad
+#         for x, y in np.array([xRA, yDE]).T)
+
+#     st_sizes_arr = prep_plots.star_size(pmMag_all)
+#     # zmin, zmax = st_sizes_arr.min(), st_sizes_arr.max()
+#     # st_sizes_arr = prep_plots.star_size(pmMag_all, zmin=zmin, zmax=zmax)
+
+#     plt.scatter(
+#         xRA, yDE, c='k', s=st_sizes_arr[msk],
+#         label=r"$N_{{r<r_{{cl}}}}$={}".format(N_in_r), zorder=2)
+#     # mag, cmap=cmap, edgecolor='k', lw=.5)
+#     # cbar = plt.colorbar(pad=.01, fraction=.02, aspect=50)
+#     # cbar.ax.tick_params(labelsize=7)
+#     # cbar.ax.invert_yaxis()
+#     # cbar.set_label(y_ax, size=8)
+#     plt.legend(fontsize='small')
+
+#     ax.set_aspect(aspect=asp_ratio)
+#     plt.xlim(x_min, x_max)
+#     plt.ylim(y_min, y_max)
+
+#     if coord == 'deg':
+#         ax.invert_xaxis()
+
+
+def pms_VPD_zoom(
+    gs, xlabel, coord, y_ax, clreg_PMs, fregs_PMs, raPMrng, dePMrng,
+        flag_no_fl_regs_i):
+    """
+    """
     ax = plt.subplot(gs[2:4, 0:2])
     ax.minorticks_on()
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
             zorder=1)
-
-    if coord == 'deg':
-        plt.xlabel(
-            r"$\mu_{{\alpha}} \, cos \delta \, \mathrm{[mas/yr]}$",
-            fontsize=12)
-    else:
-        plt.xlabel(r"$\mu_{{\alpha}} \, \mathrm{[mas/yr]}$", fontsize=12)
+    plt.xlabel(xlabel, fontsize=12)
     plt.ylabel(r"$\mu_{{\delta}} \, \mathrm{[mas/yr]}$", fontsize=12)
 
-    msk = np.argsort(mmag_pm)[::-1]
-    pmRA_DE, pmDE, mmag_pm = pmRA_DE[msk], pmDE[msk], mmag_pm[msk]
+    pmRA, pmDE, mmag = clreg_PMs['pmRA'], clreg_PMs['pmDE'], clreg_PMs['mmag']
+    msk = np.argsort(mmag)[::-1]
+    pmRA, pmDE, mmag = pmRA[msk], pmDE[msk], mmag[msk]
     cmap = plt.cm.get_cmap('viridis')
     plt.scatter(
-        pmRA_DE, pmDE, marker='o', c=mmag_pm, s=25, cmap=cmap, edgecolor='k',
+        pmRA, pmDE, marker='o', c=mmag, s=25, cmap=cmap, edgecolor='k',
         lw=.5, zorder=4, label="Cluster reg")
     cbar = plt.colorbar(pad=.01, fraction=.02, aspect=50)
     cbar.ax.tick_params(labelsize=7)
@@ -171,21 +247,18 @@ def pms_vpd_mag(
     cbar.set_label(y_ax, size=8)
 
     if not flag_no_fl_regs_i:
-        msk = np.argsort(pm_mag_fl)[::-1]
-        pmRA_fl_DE, pmDE_fl, pm_mag_fl = pmRA_fl_DE[msk], pmDE_fl[msk],\
-            pm_mag_fl[msk]
+        pmRA, pmDE = fregs_PMs['pmRA'], fregs_PMs['pmDE']
         plt.scatter(
-            pmRA_fl_DE, pmDE_fl, marker='^', s=20, c='grey', linewidth=0.,
-            cmap=cmap, alpha=.85, zorder=1, label="Field regs")
+            pmRA, pmDE, marker='^', s=20, c='grey', linewidth=0.,
+            alpha=.85, zorder=1, label="Field regs")
 
     plt.xlim(raPMrng)
     plt.ylim(dePMrng)
     plt.legend(fontsize='small')
 
 
-def pms_KDE_diag(
-    gs, coord, PM_cl_x, PM_cl_y, PM_cl_z, PM_fl_x, PM_fl_y, PM_fl_z,
-    PMs_cl_cx, PMs_cl_cy, PMs_fl_cx, PMs_fl_cy, raPMrng, dePMrng, PMs_cent,
+def pms_VPD_zoom_KDE(
+    gs, xlabel, coord, cr_KDE_PMs, fr_KDE_PMs, raPMrng, dePMrng, PMs_cent,
         PMs_width, PMs_height, PMs_theta, Nsigma):
     """
     KDE of PMs for cluster and field regions.
@@ -198,32 +271,32 @@ def pms_KDE_diag(
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
             zorder=1)
 
-    if coord == 'deg':
-        plt.xlabel(
-            r"$\mu_{{\alpha}} \, cos \delta \, \mathrm{[mas/yr]}$",
-            fontsize=12)
-    else:
-        plt.xlabel(r"$\mu_{{\alpha}} \, \mathrm{[mas/yr]}$", fontsize=12)
+    plt.xlabel(xlabel, fontsize=12)
     plt.ylabel(r"$\mu_{{\delta}} \, \mathrm{[mas/yr]}$", fontsize=12)
 
     # Cluster region contour
     CS = plt.contour(
-        PM_cl_x, PM_cl_y, PM_cl_z, 5, colors='g', linewidths=1.,
-        extent=(raPMrng[0], raPMrng[1], dePMrng[0], dePMrng[1]),
+        cr_KDE_PMs['x'], cr_KDE_PMs['y'], cr_KDE_PMs['z'], 5, colors='g',
+        linewidths=1., extent=(raPMrng[0], raPMrng[1], dePMrng[0], dePMrng[1]),
         zorder=3)
+    xmax, ymax = cr_KDE_PMs['zmax_x'], cr_KDE_PMs['zmax_y']
+    zmax_x, zmax_y = cr_KDE_PMs['x'][xmax][ymax],\
+        cr_KDE_PMs['y'][xmax][ymax]
     CS.collections[0].set_label(
-        r"$KDE_{{max}},\, clust: ({:.3f}, {:.3f})$".format(
-            PM_cl_x[PMs_cl_cx][PMs_cl_cy], PM_cl_y[PMs_cl_cx][PMs_cl_cy]))
+        r"$KDE_{{max}},\, clust: ({:.3f}, {:.3f})$".format(zmax_x, zmax_y))
 
     # Filed regions contours
-    if PM_fl_z.any():
+    if bool(fr_KDE_PMs):
         CS = plt.contour(
-            PM_fl_x, PM_fl_y, PM_fl_z, 10, colors='k', linewidths=.5,
-            extent=(raPMrng[0], raPMrng[1], dePMrng[0], dePMrng[1]),
-            zorder=2)
+            fr_KDE_PMs['x'], fr_KDE_PMs['y'], fr_KDE_PMs['z'], 10, colors='k',
+            linewidths=.5,
+            extent=(raPMrng[0], raPMrng[1], dePMrng[0], dePMrng[1]), zorder=2)
+        xmax, ymax = fr_KDE_PMs['zmax_x'], fr_KDE_PMs['zmax_y']
+        zmax_x, zmax_y = fr_KDE_PMs['x'][xmax][ymax],\
+            fr_KDE_PMs['y'][xmax][ymax]
         CS.collections[0].set_label(
             r"$KDE_{{max}},\, field: ({:.3f}, {:.3f})$".format(
-                PM_fl_x[PMs_fl_cx][PMs_fl_cy], PM_fl_y[PMs_fl_cx][PMs_fl_cy]))
+                zmax_x, zmax_y))
 
     ellipse = Ellipse(
         xy=(PMs_cent[0], PMs_cent[1]), width=PMs_width,
@@ -241,37 +314,33 @@ def pms_KDE_diag(
     plt.legend(fontsize='small')
 
 
-def pms_vpd_mp(
-    gs, coord, pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, pmRA_fl_DE,
-        e_pmRA_fl_DE, pmDE_fl, e_pmDE_fl, raPMrng, dePMrng):
-    '''
-    '''
+def pms_VPD_zoom_MP(gs, xlabel, coord, clreg_PMs, fregs_PMs, raPMrng, dePMrng):
+    """
+    """
     ax = plt.subplot(gs[2:4, 4:6])
     ax.minorticks_on()
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
             zorder=1)
 
-    if coord == 'deg':
-        plt.xlabel(
-            r"$\mu_{{\alpha}} \, cos \delta \, \mathrm{[mas/yr]}$",
-            fontsize=12)
-    else:
-        plt.xlabel(r"$\mu_{{\alpha}} \, \mathrm{[mas/yr]}$", fontsize=12)
+    plt.xlabel(xlabel, fontsize=12)
     plt.ylabel(r"$\mu_{{\delta}} \, \mathrm{[mas/yr]}$", fontsize=12)
 
     cmap = plt.cm.get_cmap('RdYlBu_r')
+    pmMP = clreg_PMs['MP']
     norm = Normalize(vmin=pmMP.min(), vmax=pmMP.max())
 
     ax.errorbar(
-        pmRA_DE, pmDE, yerr=e_pmDE, xerr=e_pmRA_DE, fmt='none',
+        clreg_PMs['pmRA'], clreg_PMs['pmDE'], yerr=clreg_PMs['epmDE'],
+        xerr=clreg_PMs['epmRA'], fmt='none',
         elinewidth=.65, ecolor=cmap(norm(pmMP)), zorder=4)
-    plt.scatter(pmRA_DE, pmDE, c=pmMP, cmap=cmap, s=0.)
+    plt.scatter(clreg_PMs['pmRA'], clreg_PMs['pmDE'], c=pmMP, cmap=cmap, s=0.)
     cbar = plt.colorbar(pad=.01, fraction=.02, aspect=50)
     cbar.ax.tick_params(labelsize=7)
     cbar.set_label("MPs", size=8)
 
     ax.errorbar(
-        pmRA_fl_DE, pmDE_fl, yerr=e_pmDE_fl, xerr=e_pmRA_fl_DE, fmt='none',
+        fregs_PMs['pmRA'], fregs_PMs['pmDE'], yerr=fregs_PMs['epmDE'],
+        xerr=fregs_PMs['epmRA'], fmt='none',
         elinewidth=.35, ecolor='grey', zorder=1)
 
     plt.xlim(raPMrng)
@@ -279,11 +348,13 @@ def pms_vpd_mp(
 
 
 def pms_vs_mag(
-    gs, coord, y_ax, pmMP, pmRA_DE, pmDE, mmag_pm, pmRA_fl_DE,
-        pmDE_fl, pm_mag_fl, raPMrng, dePMrng):
-    '''
-    '''
-    def axplot(ax, x_range, xlabel, cl_x, cl_y, fr_x, fr_y, ymax, ymin):
+        gs, xlabel, coord, y_ax, clreg_PMs, fregs_PMs, raPMrng, dePMrng):
+    """
+    """
+    pmMP = clreg_PMs['MP']
+    ymin, ymax = max(clreg_PMs['mmag']) + .5, min(clreg_PMs['mmag']) + .5
+
+    def axplot(ax, x_range, xlabel, cl_x, cl_y, fr_x, fr_y):
         ax.minorticks_on()
         ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
                 zorder=1)
@@ -297,25 +368,20 @@ def pms_vs_mag(
             cmap=cmap, lw=0.35, zorder=5)
         ax.scatter(fr_x, fr_y, c='grey', s=15, marker='^', zorder=2)
         ax.set_xlim(x_range)
-        ax.set_ylim(ax.get_ylim()[::-1])
         ax.set_ylim(ymin, ymax)
 
     ax1 = plt.subplot(gs[4:6, 0:2])
     ax2 = plt.subplot(gs[4:6, 2:4])
 
-    if coord == 'deg':
-        xlabel = r"$\mu_{{\alpha}} \, cos \delta \, \mathrm{[mas/yr]}$"
-    else:
-        xlabel = r"$\mu_{{\alpha}} \, \mathrm{[mas/yr]}$"
-    ymax, ymin = min(mmag_pm) - .5, max(mmag_pm) + .5
     axplot(
-        ax1, raPMrng, xlabel, pmRA_DE, mmag_pm, pmRA_fl_DE, pm_mag_fl, ymax,
-        ymin)
+        ax1, raPMrng, xlabel, clreg_PMs['pmRA'], clreg_PMs['mmag'],
+        fregs_PMs['pmRA'], fregs_PMs['mmag'])
     xlabel = r"$\mu_{{\delta}} \, \mathrm{[mas/yr]}$"
-    axplot(ax2, dePMrng, xlabel, pmDE, mmag_pm, pmDE_fl, pm_mag_fl, ymax, ymin)
+    axplot(ax2, dePMrng, xlabel, clreg_PMs['pmDE'], clreg_PMs['mmag'],
+           fregs_PMs['pmDE'], fregs_PMs['mmag'])
 
 
-def pms_dist(gs, y_ax, pmMP, pm_dist_max, mmag_pm):
+def pms_dist(gs, y_ax, clreg_PMs, pm_dist_max):
     '''
     '''
     ax = plt.subplot(gs[4:6, 4:6])
@@ -329,8 +395,8 @@ def pms_dist(gs, y_ax, pmMP, pm_dist_max, mmag_pm):
 
     cmap = plt.cm.get_cmap('RdYlBu_r')
     plt.scatter(
-        pm_dist_max, mmag_pm, marker='o', c=pmMP, s=30, edgecolors='black',
-        cmap=cmap, lw=0.35, zorder=4)
+        pm_dist_max, clreg_PMs['mmag'], marker='o', c=clreg_PMs['MP'],
+        s=30, edgecolors='black', cmap=cmap, lw=0.35, zorder=4)
 
     plx_mean, plx_median, plx_std = sigma_clipped_stats(pm_dist_max)
     plt.xlim(-.05, min(max(pm_dist_max), plx_median + 4. * plx_std))
@@ -343,12 +409,14 @@ def plot(N, *args):
     '''
 
     plt_map = {
-        0: [pms_KDE_all, 'PMs VPD KDE all'],
-        1: [pms_NN_all, 'PMs VPD NN all'],
-        2: [pms_coords_all, 'x/RA vs y/DEC NN all'],
-        3: [pms_vpd_mag, 'PMs VPD mag colored'],
-        4: [pms_KDE_diag, 'PMs KDE diagram'],
-        5: [pms_vpd_mp, 'PMs VPD MP colored'],
+        0: [pms_VPD_all, 'VPD for all stars'],
+        1: [pms_VPD_KDE_all, 'VPD KDE for all stars'],
+        2: [pms_coords_all, 'x/RA vs y/DEC PMs colored'],
+        #
+        3: [pms_VPD_zoom, 'VPD cluster region'],
+        4: [pms_VPD_zoom_KDE, 'PMs KDE diagram'],
+        5: [pms_VPD_zoom_MP, 'PMs VPD MP colored'],
+        #
         6: [pms_vs_mag, 'PMs mag MP colored'],
         7: [pms_dist, 'PMs distance to center']
     }
