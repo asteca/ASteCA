@@ -52,7 +52,8 @@ def main(npd):
 # c_x: Cluster's x center coordinate.\n\
 # c_y: Cluster's y center coordinate.\n\
 # r_cl: Cluster's radius.\n\
-# e_rcl: Cluster's radius error.\n\
+# r_cl_16: Cluster's radius 16th percentile.\n\
+# r_cl_84: Cluster's radius 84th percentile.\n\
 # r_c: Core radius (3-P King profile).\n\
 # e_rc: Core radius error.\n\
 # r_t: Tidal radius (3-P King profile).\n\
@@ -94,8 +95,9 @@ def main(npd):
 #    cluster, more than one cluster present in the frame, variable or too\n\
 #    crowded field, etc.\n\
 #\n\
-#NAME                   c_x        c_y       r_cl      e_rcl        r_c       \
-e_rc        r_t       e_rt      kcp      CI   n_memb_k     n_memb  \
+#NAME                                 c_x        c_y       r_cl    \
+r_cl_16    r_cl_84        \
+r_c       e_rc        r_t       e_rt      kcp      CI   n_memb_k     n_memb  \
 n_memb_da  memb_par     a_f     \
 z_mean      z_MAP   z_median     z_mode       16th       84th        std    R^2     \
 a_mean      a_MAP   a_median     a_mode       16th       84th        std    R^2     \

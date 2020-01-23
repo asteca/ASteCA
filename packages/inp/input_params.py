@@ -87,6 +87,7 @@ def main(mypath, pars_f_path):
                     NN_dd = int(reader[1])
                     fdens_method = str(reader[2])
                     nsteps_rad = int(reader[3])
+                    RDP_rings = int(reader[4])
                 elif reader[0] == 'KP':
                     kp_flag = True if reader[1] in true_lst else False
                 elif reader[0] == 'GR':
@@ -309,7 +310,7 @@ def main(mypath, pars_f_path):
         # Structure functions parameters
         'manual_struct': manual_struct, 'center_bw': center_bw,
         'NN_dd': NN_dd, 'fdens_method': fdens_method, 'nsteps_rad': nsteps_rad,
-        'kp_flag': kp_flag, 'fr_number': fr_number,
+        'RDP_rings': RDP_rings, 'kp_flag': kp_flag, 'fr_number': fr_number,
         #
         'err_max': err_max, 'ad_runs': ad_runs,
         # Decontamination algorithm parameters.

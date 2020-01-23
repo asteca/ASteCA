@@ -3,7 +3,7 @@ import sys
 from collections import Counter
 
 
-def check(manual_struct, center_bw, fdens_method, **kwargs):
+def check(manual_struct, center_bw, fdens_method, RDP_rings, **kwargs):
     """
     Check that the parameters are properly written.
     """
@@ -34,3 +34,6 @@ def check(manual_struct, center_bw, fdens_method, **kwargs):
         elif fdens_method not in ('min', 'last', 'iter'):
             sys.exit("ERROR: field density mode ('{}') is not"
                      " recognized.".format(fdens_method))
+
+    if RDP_rings < 5 or RDP_rings > 500:
+        sys.exit("ERROR: valid range is 5 < RDP_rings < 500")
