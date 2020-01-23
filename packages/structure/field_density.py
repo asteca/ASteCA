@@ -7,21 +7,19 @@ from ..out import prep_plots
 
 def main(clp, cld_i, coords, NN_dd, fdens_method, **kwargs):
     """
-    Get field density level of stars through.
+    Get field density level of frame.
     """
 
-    # DEPRECATED 11/19
-    # # Copy list.
-    # reduced_rd = list(clp['rdp_points'])
-    # field_dens = iterativeRDP(reduced_rd)
+    # Parameters that are obtained here and used in the functions below
+    # and other structural analysis functions later on.
+    clp['xy_filtered'], clp['xy_cent_dist'], clp['N_MC'], clp['rand_01_MC'],\
+        clp['cos_t'], clp['sin_t'] = fixedParams(cld_i['x'], cld_i['y'], **clp)
 
-    clp['xy_dens'], clp['NN_dist'], clp['fr_dist'], clp['fr_dens'],\
-        clp['N_MC'], clp['rr'], clp['cos_t'], clp['sin_t'] = distDens(
-        cld_i['x'], cld_i['y'], clp['kde_cent'], NN_dd)
+    clp['NN_dist'], clp['fr_dens'] = distDens(NN_dd, **clp)
 
     clp['fdens_min_d'], clp['fdens_lst'], clp['fdens_std_lst'],\
         clp['field_dens_d'], clp['field_dens'], clp['field_dens_std'] = kNNRDP(
-        clp['fr_dist'], clp['fr_dens'], fdens_method)
+        clp['xy_cent_dist'], clp['fr_dens'], fdens_method)
 
     print("Field density ({:.1E} stars/{c}^2)".format(
         clp['field_dens'], c=prep_plots.coord_syst(coords)[0]))
@@ -29,39 +27,53 @@ def main(clp, cld_i, coords, NN_dd, fdens_method, **kwargs):
     return clp
 
 
-def distDens(x, y, kde_cent, NN_dd, N_MC=100000):
+def fixedParams(x, y, kde_cent, lb=1., rt=99., N_MC=100000, **kwargs):
     """
-    Filter stars in frame to reject those too close to the frame's borders.
-    For the remaining stars, obtain their radius (distance to farthest
-    neighbor), distance to the given center, and density value.
+    Estimate here parameters that need to be obtained only once.
+
+    * HARDCODED:
+
+    lb, rt: lower bottom / right top
+       Frame limits in percentile values.
+    N_MC: number of Monte Carlo points to use when estimating circular areas.
     """
 
-    # HARDCODED outer frame limits
-    lb, rt = 1., 99.
-    # Filter out stars too close to the frame's borders.
+    # Filter out stars that are too close to the frame's borders.
     xl, xh = np.percentile(x, (lb, rt))
     yl, yh = np.percentile(y, (lb, rt))
     msk_in_frame = (x >= xl) & (x <= xh) & (y >= yl) & (y <= yh)
     x, y = x[msk_in_frame], y[msk_in_frame]
-    # Frame limits
-    x0, x1, y0, y1 = min(x), max(x), min(y), max(y)
+    xy_filtered = np.array((x, y)).T
 
-    # Find NN_dd nearest neighbors.
-    xy_dens = np.array((x, y)).T
-    tree = spatial.cKDTree(xy_dens)
-    inx = tree.query(xy_dens, k=NN_dd + 1)
-    # Keep the distance to the most distant neighbor, ie: the radius.
-    NN_dist = inx[0][:, NN_dd]
+    # Distances of (almost) all stars to the center of the cluster.
+    xy_cent_dist = spatial.distance.cdist([kde_cent], xy_filtered)[0]
 
-    # For stars close to the border frames, these areas will be overestimated.
+    # For stars close to the border frames, the areas will be overestimated.
     # That's why we filter some of them out above and use Monte Carlo here for
     # the rest of them.
     # Obtain these values here so they are not estimated every time the MC
     # in circFrac() is called.
-    rr = np.sqrt(np.random.uniform(0., 1., N_MC))
+    rand_01_MC = np.sqrt(np.random.uniform(0., 1., N_MC))
     theta = np.random.uniform(0., 1., N_MC) * 2 * np.pi
     cos_t, sin_t = np.cos(theta), np.sin(theta)
 
+    return xy_filtered, xy_cent_dist, N_MC, rand_01_MC, cos_t, sin_t
+
+
+def distDens(NN_dd, xy_filtered, N_MC, rand_01_MC, cos_t, sin_t, **kwargs):
+    """
+    """
+    # Frame limits
+    x0, x1 = min(xy_filtered.T[0]), max(xy_filtered.T[0])
+    y0, y1 = min(xy_filtered.T[1]), max(xy_filtered.T[1])
+
+    # Find NN_dd nearest neighbors.
+    tree = spatial.cKDTree(xy_filtered)
+    inx = tree.query(xy_filtered, k=NN_dd + 1)
+    # Keep the distance to the most distant neighbor, ie: the radius.
+    NN_dist = inx[0][:, NN_dd]
+
+    x, y = xy_filtered.T
     areas = np.pi * NN_dist**2
     for i, rad in enumerate(NN_dist):
         fr_area = 1.
@@ -69,25 +81,20 @@ def distDens(x, y, kde_cent, NN_dd, N_MC=100000):
         if (x[i] - rad < x0) or (x[i] + rad > x1) or (y[i] - rad < y0) or\
                 (y[i] + rad > y1):
             fr_area = circFrac(
-                (x[i], y[i]), rad, x0, x1, y0, y1, N_MC, rr, cos_t, sin_t)
+                (x[i], y[i]), rad, x0, x1, y0, y1, N_MC, rand_01_MC, cos_t,
+                sin_t)
         areas[i] *= fr_area
 
     # Per star densities.
-    dens = NN_dd / areas
+    fr_dens = NN_dd / areas
 
-    # Distances of (almost) all stars to the center of the cluster.
-    dist = spatial.distance.cdist([kde_cent], xy_dens)[0]
-    ds = np.argsort(dist)
-    xy_dens, NN_dist, dens, dist = xy_dens[ds], NN_dist[ds], dens[ds], dist[ds]
-
-    return xy_dens, NN_dist, dist, dens, N_MC, rr, cos_t, sin_t
+    return NN_dist, fr_dens
 
 
-def kNNRDP(dist, dens, fdens_method):
+def kNNRDP(xy_cent_dist, dens, fdens_method):
     """
     Use the previously obtained densities and distances to estimate the
-    field density, as the mean of the X percent of the stars with the largest
-    distances to the cluster's center.
+    field density.
     """
 
     fdens_min_d, fdens_lst, fdens_std_lst = [], [], []
@@ -95,8 +102,8 @@ def kNNRDP(dist, dens, fdens_method):
     # HARDCODED: distance to center range.
     # dens_in_p, N_in_p = [], 0
     for perc in range(10, 99, 5):
-        dist_min = np.percentile(dist, perc)
-        msk_dens = dist > dist_min
+        dist_min = np.percentile(xy_cent_dist, perc)
+        msk_dens = xy_cent_dist > dist_min
 
         # N_in_p += msk_dens.sum()
         # dens_in_p += list(dens[msk_dens])

@@ -170,8 +170,11 @@ CH         .0
 #   The number of bootstrap steps employed to estimate the uncertainty
 #   associated to the radius.
 #
-#   NN    field_dens   N_steps
-FD  10           min      1000
+# * RDP_rings: [int]
+#   Number of circular rings used for plotting the RDP.
+#
+#   NN    field_dens   N_steps    RDP_rings
+FD  10           min      1000           50
 
 # King profile function.
 #

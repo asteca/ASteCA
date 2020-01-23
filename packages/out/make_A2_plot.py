@@ -2,38 +2,25 @@
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from os.path import join
+import warnings
 from . import mp_structure
 from . import add_version_plot
 from . import prep_plots
 
-
-#############################################################
-# # Timer function: http://stackoverflow.com/a/21860100/1391441
-# from contextlib import contextmanager
-# import time
-# @contextmanager
-# def timeblock(label):
-#     start = time.clock()
-#     try:
-#         yield
-#     finally:
-#         end = time.clock()
-#         print ('{} elapsed: {}'.format(label, end - start))
-#############################################################
 
 def main(
     npd, cld_i, pd, x_offset, y_offset, bw_list, kde_cent, kde_plot,
     K_cent_dens, clust_rad, e_rad, rad_rads, rad_N_membs, rad_N_field, rad_CI,
     bin_cent, bin_width, kde_approx_cent, frame_kde_cent, core_rad, e_core,
     tidal_rad, e_tidal, K_conct_par, flag_2pk_conver, flag_3pk_conver,
-    rdp_radii, rdp_points, rdp_stddev, xy_dens, NN_dist, fr_dist, fr_dens,
-    fdens_min_d, fdens_lst, fdens_std_lst, field_dens_d, field_dens,
+    rdp_radii, rdp_points, rdp_stddev, xy_filtered, xy_cent_dist, NN_dist,
+    fr_dens, fdens_min_d, fdens_lst, fdens_std_lst, field_dens_d, field_dens,
     field_dens_std, cont_index, n_memb_i, cl_region_i, frac_cl_area,
     cl_region_rjct_i, field_regions_rjct_i, field_regions_i, flag_no_fl_regs_i,
         **kwargs):
-    '''
+    """
     Make A2 block plots.
-    '''
+    """
     if 'A2' in pd['flag_make_plot']:
         # figsize(x1, y1), GridSpec(y2, x2)
         fig = plt.figure(figsize=(30, 25))
@@ -60,17 +47,18 @@ def main(
              frame_kde_cent, fr_dens, clust_rad],
             # pl_knn_dens
             [gs, fig, asp_ratio, x_min, x_max, y_min, y_max, x_name, y_name,
-             coord, pd['NN_dd'], xy_dens, fr_dens, NN_dist, kde_cent],
+             coord, pd['NN_dd'], xy_filtered, fr_dens, NN_dist, kde_cent,
+             rdp_radii],
             # pl_field_dens
-            [gs, coord, pd['fdens_method'], fr_dist, fr_dens, fdens_min_d,
+            [gs, coord, pd['fdens_method'], xy_cent_dist, fr_dens, fdens_min_d,
              fdens_lst, fdens_std_lst, field_dens_d, field_dens,
              field_dens_std],
             # pl_rad_find
             [gs, coord, clust_rad, e_rad, rad_rads, rad_N_membs, rad_N_field,
              rad_CI],
             # pl_rad_dens: Radial density plot.
-            [gs, coord, rdp_radii, rdp_points, field_dens,
-             field_dens_std, clust_rad, e_rad, rdp_stddev, core_rad,
+            [gs, coord, rdp_radii, rdp_points, rdp_stddev, field_dens,
+             field_dens_std, clust_rad, e_rad, core_rad,
              e_core, tidal_rad, e_tidal, K_cent_dens, flag_2pk_conver,
              flag_3pk_conver],
             # pl_full_frame: x,y finding chart of full frame.
@@ -90,11 +78,13 @@ def main(
                 flag_no_fl_regs_i]
         ]
         for n, args in enumerate(arglist):
-            # with timeblock("{}".format(n)):
             mp_structure.plot(n, *args)
 
         # Generate output file.
-        fig.tight_layout()
+        # Ignore warning issued by log-log inset.
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            fig.tight_layout()
         plt.savefig(
             join(npd['output_subdir'], str(npd['clust_name']) +
                  '_A2.' + pd['plot_frmt']), dpi=pd['plot_dpi'],

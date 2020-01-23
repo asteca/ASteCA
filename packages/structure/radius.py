@@ -1,130 +1,92 @@
 
 import numpy as np
 from scipy import spatial
-import warnings
 from .contamination_index import CIfunc
 from ..aux_funcs import circFrac
 from ..out import prep_plots
 from .. import update_progress
 
 
-def main(cld_i, clp, coords, rad_manual, nsteps_rad, **kwargs):
+def main(cld_i, clp, coords, rad_manual, nsteps_rad, NN_dd, **kwargs):
     """
     Estimate the radius through the optimization of the #cluster-members vs
     #field-stars values. Assign the uncertainty through a bootstrap process
     based on the field density's uncertainty.
     """
 
-    # RDP. For plotting purposes only, except the 'rdp_radii' values which are
-    # used below.
-    clp['rdp_radii'], clp['rdp_points'], clp['rdp_stddev'] = kNNRDP(
-        clp['fr_dist'], cld_i['x'], cld_i['y'], clp['kde_cent'],
-        clp['N_MC'], clp['rr'], clp['cos_t'], clp['sin_t'])
-
-    radii, n_in_cl_reg, areas = radsAreas(
-        clp['rdp_radii'], cld_i['x'], cld_i['y'], clp['kde_cent'],
-        clp['N_MC'], clp['rr'], clp['cos_t'], clp['sin_t'], clp['fr_dist'])
+    # Parameters used internally only.
+    rad_radii, rad_areas, st_dists_cent = rdpAreasDists(cld_i, **clp)
 
     # Obtain the optimal radius and arrays for plotting.
-    clp['clust_rad'], clp['rad_rads'], clp['rad_N_membs'],\
-        clp['rad_N_field'], clp['rad_CI'] = optimalRadius(
-            clp['field_dens'], radii, n_in_cl_reg, areas)
+    clp['clust_rad'], clp['rad_rads'], clp['rad_N_membs'], clp['rad_N_field'],\
+        clp['rad_CI'] = optimalRadius(
+            rad_radii, rad_areas, st_dists_cent, **clp)
 
     coord = prep_plots.coord_syst(coords)[0]
     if rad_manual == 'n':
         print("Estimating radius")
-        # Use bootstrap to estimate the uncertainty.
-        clp['e_rad'] = radError(
-            clp['field_dens'], clp['field_dens_std'], radii, n_in_cl_reg,
-            areas, nsteps_rad)
-        print("Radius found: {:g} {}".format(clp['clust_rad'], coord))
+
+        if nsteps_rad > 2:
+            # Use bootstrap to estimate the uncertainty.
+            clp['e_rad'] = radError(
+                rad_radii, rad_areas, st_dists_cent, nsteps_rad, **clp)
+            print("Radius found: {:g} {}".format(clp['clust_rad'], coord))
+        else:
+            clp['e_rad'] = np.array([np.nan, np.nan])
+            print("Radius found (no bootstrap): {:g} {}".format(
+                clp['clust_rad'], coord))
 
     elif rad_manual != 'n':
         # Update radius, assign zero error.
-        clp['clust_rad'], clp['e_rad'] = rad_manual, 0.
+        clp['clust_rad'], clp['e_rad'] = rad_manual, np.array([np.nan, np.nan])
         print("Manual radius set: {:g} {}".format(clp['clust_rad'], coord))
 
     return clp
 
 
-def kNNRDP(fr_dist, x, y, kde_cent, N_MC, rr, cos_t, sin_t):
+def rdpAreasDists(
+        cld_i, kde_cent, rdp_radii, N_MC, rand_01_MC, cos_t, sin_t, **kwargs):
     """
-    Use the kNN's per-star densities. Average these values for several circular
-    rings to obtain the RDP.
+    The areas for each radius value in 'rdp_radii' are obtained here once.
+    We also calculate here the distance of each star to the defined center.
     """
 
-    # HARDCODED: remove the more conflicting last ~10% of radii values.
-    radii = np.linspace(0., fr_dist.max(), 55)[:-5]
-
-    rdp_radii, rdp_NN, rdp_stddev = [], [], []
-
-    # This is the method that uses the median of the 'fr_dens' values for
-    # stars within a ring. Not sure why (09/01/20) it is not working
-    # properly.
-    # for l, h in zip(*[radii[:-1], radii[1:]]):
-    #     # Stars within this ring.
-    #     msk_in = (fr_dist >= l) & (fr_dist < h)
-    #     if sum(msk_in) > 0:
-    #         rdp_radii.append(.5 * (l + h))
-    #         rdp_NN.append(np.median(fr_dens[msk_in]))
-    #         rdp_stddev.append(np.std(fr_dens[msk_in]))
-
-    # Areas and #stars for all rad values.
-    x0, x1, y0, y1 = min(x), max(x), min(y), max(y)
-    for l, h in zip(*[radii[:-1], radii[1:]]):
-        # Stars within this ring.
-        msk_in = (fr_dist >= l) & (fr_dist < h)
-
-        if msk_in.sum() > 0:
-            rdp_radii.append(.5 * (l + h))
-            fr_area_l = circFrac(
-                (kde_cent), l, x0, x1, y0, y1, N_MC, rr, cos_t, sin_t)
-            fr_area_h = circFrac(
-                (kde_cent), h, x0, x1, y0, y1, N_MC, rr, cos_t, sin_t)
-            ring_area = (np.pi * h**2 * fr_area_h) - (np.pi * l**2 * fr_area_l)
-            # Stars within radius.
-            rdp_NN.append(msk_in.sum() / ring_area)
-            rdp_stddev.append(np.sqrt(msk_in.sum()) / ring_area)
-
-    if not rdp_radii:
-        raise ValueError("ERROR: RDP is empty. Check the center coordinates")
-
-    return rdp_radii, rdp_NN, rdp_stddev
-
-
-def radsAreas(rdp_radii, x, y, kde_cent, N_tot, rr, cos_t, sin_t, fr_dist):
-    """
-    Helper function. Determine the radii values, and estimate the number of
-    stars and areas for each value.
-    """
+    # Proper array of coordinates.
+    xy = np.array([cld_i['x'], cld_i['y']]).T
 
     # Frame limits
-    x0, x1, y0, y1 = min(x), max(x), min(y), max(y)
+    x0, x1 = min(xy.T[0]), max(xy.T[0])
+    y0, y1 = min(xy.T[1]), max(xy.T[1])
+
     dx0, dx1 = abs(kde_cent[0] - x0), abs(kde_cent[0] - x1)
     dy0, dy1 = abs(kde_cent[1] - y0), abs(kde_cent[1] - y1)
     dxy = min(dx0, dx1, dy0, dy1)
-    # Distances to center
-    dist = spatial.distance.cdist([kde_cent], np.array([x, y]).T)[0]
 
-    # HARDCODED this '200' value gives reasonable results with reasonable
-    # performance
-    radii = np.linspace(rdp_radii[0], rdp_radii[-1], 200)
+    # We use the 'rdp_radii' here since it is already processed to contain
+    # reasonable starting and finishing values.
+    # Defining this array here gives the radius finding function more
+    # resolution,almost independently of the number of RDP rings used.
+    rad_radii = np.linspace(rdp_radii[0], rdp_radii[-1], 100)
 
-    # Areas and #stars for all rad values.
-    areas, n_in_cl_reg = np.pi * radii**2, []
-    for i, rad in enumerate(radii):
+    # Areas associated to the radii defined in 'rdp_radii'.
+    rad_areas = np.pi * np.array(rad_radii)**2
+    for i, rad in enumerate(rad_radii):
         fr_area = 1.
         if rad > dxy:
             fr_area = circFrac(
-                (kde_cent), rad, x0, x1, y0, y1, N_tot, rr, cos_t, sin_t)
-        areas[i] *= fr_area
-        # Stars within radius.
-        n_in_cl_reg.append((dist < rad).sum())
+                (kde_cent), rad, x0, x1, y0, y1, N_MC, rand_01_MC, cos_t,
+                sin_t)
+        rad_areas[i] *= fr_area
 
-    return radii, n_in_cl_reg, areas
+    # Distances of all stars to the center of the cluster.
+    st_dists_cent = spatial.distance.cdist([kde_cent], xy)[0]
+
+    return rad_radii, rad_areas, st_dists_cent
 
 
-def optimalRadius(field_dens, radii, n_in_cl_reg, areas):
+def optimalRadius(
+    rad_radii, rad_areas, st_dists_cent, field_dens, bttstrp_flag=False,
+        **kwargs):
     """
     Estimate the optimal radius as the value that maximizes the (normalized)
     number of members stars versus the number of field stars. The rationale
@@ -132,56 +94,67 @@ def optimalRadius(field_dens, radii, n_in_cl_reg, areas):
     possible of field stars within the region.
     """
 
-    rads, N_membs, N_field, CI = radiiParams(
-        radii, n_in_cl_reg, areas, field_dens)
+    data, break_counter = [], 0
+    for i, rad in enumerate(rad_radii):
 
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        # Normalizing separately is important.
-        N_membs = np.array(N_membs) / max(N_membs)
-        N_field = np.array(N_field) / max(N_field)
-        clust_rad = rads[np.argmax(N_membs - N_field)]
-
-    return clust_rad, rads, N_membs, N_field, CI
-
-
-def radiiParams(radii, n_in_cl_reg, areas, fd):
-    """
-    Given an array if radii, estimate the number of members, the number of
-    field stars, and the contamination index within it.
-    """
-    rads, N_membs, N_field, cont_index, break_counter = [], [], [], [], 0
-    for i, rad in enumerate(radii):
-
-        if n_in_cl_reg[i] == 0:
+        # Stars within radius.
+        n_in_cl_reg = (st_dists_cent <= rad).sum()
+        if n_in_cl_reg == 0:
             continue
 
-        CI, n_memb, n_fl = CIfunc(n_in_cl_reg[i], fd, areas[i])
+        # Tried (21/01/20) the variable field density method, but it failed.
+        # It is too fragile and ends up selecting very large radius values.
+        # Field density
+        # (dist > rad).sum(): #stars outside the cluster region
+        # (area_frame - rdp_areas[i]): are outside the cluster region.
+        # field_dens = (N_tot - n_in_cl_reg) / (area_tot - rad_areas[i])
+
+        if bttstrp_flag:
+            n_fl = field_dens * rad_areas[i]
+            n_memb = n_in_cl_reg - n_fl
+            CI = np.nan
+        else:
+            CI, n_memb, n_fl = CIfunc(n_in_cl_reg, field_dens, rad_areas[i])
 
         # Break check
-        if n_memb <= 0. and i > .5 * len(radii):
+        if (n_memb <= 0. or CI > 1.1) and i > .5 * len(rad_radii):
             break_counter += 1
             if break_counter > 3:
                 break
+        data.append([rad, n_memb, n_fl, CI])
 
-        rads.append(rad)
-        N_field.append(max(0., n_fl))
-        N_membs.append(max(0., n_memb))
-        cont_index.append(max(0, CI))
+    # rads, N_membs, N_field, CI
+    data = np.clip(data, a_min=0., a_max=None).T
 
-    return rads, N_membs, N_field, cont_index
+    # Normalizing separately is important. Otherwise it selects low radii
+    # values.
+    N_membs = data[1] / data[1].max()
+    N_field = data[2] / data[2].max()
+    idx = np.argmax(N_membs - N_field)
+    clust_rad = data[0][idx]
+
+    if bttstrp_flag:
+        return clust_rad
+
+    return clust_rad, data[0], N_membs, N_field, data[3]
 
 
-def radError(field_dens, field_dens_std, radii, n_in_cl_reg, areas, N_btstrp):
+def radError(
+        rad_radii, rad_areas, st_dists_cent, N_btstrp, field_dens, **kwargs):
     """
-    Bootstrap the field density to estimate the radius uncertainty.
+    Bootstrap the distances to estimate the radius uncertainty.
     """
 
     steps = int(.1 * N_btstrp)
     all_rads = np.empty(N_btstrp)
-    for i, fd in enumerate(
-            np.random.normal(field_dens, field_dens_std, N_btstrp)):
-        all_rads[i] = optimalRadius(fd, radii, n_in_cl_reg, areas)[0]
+    for i in range(N_btstrp):
+
+        # Sample distances with replacement.
+        st_dists_btstrp = np.random.choice(st_dists_cent, st_dists_cent.size)
+
+        # Obtain the optimal radius and arrays for plotting.
+        all_rads[i] = optimalRadius(
+            rad_radii, rad_areas, st_dists_btstrp, field_dens, True)
 
         if i + 1 == N_btstrp:
             pass
@@ -189,8 +162,7 @@ def radError(field_dens, field_dens_std, radii, n_in_cl_reg, areas, N_btstrp):
             continue
         update_progress.updt(N_btstrp, i + 1)
 
-    # From the bootstrap samples we estimate the mean standard error.
-    return np.std(all_rads)
+    return np.percentile(all_rads, (16, 84))
 
 
 # DEPRECATED 11/19

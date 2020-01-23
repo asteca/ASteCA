@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.offsetbox as offsetbox
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 from itertools import cycle
 from ..structure import king_prof_funcs as kpf
 
@@ -23,12 +24,12 @@ def pl_center(
     ax.tick_params(axis='both', which='major', labelsize=8)
 
     ax.minorticks_on()
-    plt.axvline(x=kde_cent[0], linestyle='--', color='green')
-    plt.axhline(y=kde_cent[1], linestyle='--', color='green')
+    # plt.axvline(x=kde_cent[0], linestyle='--', color='green')
+    # plt.axhline(y=kde_cent[1], linestyle='--', color='green')
     # Radius
     circle = plt.Circle(
         (kde_cent[0], kde_cent[1]), clust_rad, color='green', fill=False)
-    fig.gca().add_artist(circle)
+    ax.add_artist(circle)
 
     ext_range, x_grid, y_grid, k_pos = frame_kde_cent
     kde = np.reshape(k_pos.T, x_grid.shape)
@@ -67,7 +68,7 @@ def pl_center(
 
 def pl_knn_dens(
     gs, fig, asp_ratio, x_min, x_max, y_min, y_max, x_name, y_name, coord,
-        NN_dd, xy_dens, fr_dens, NN_dist, kde_cent):
+        NN_dd, xy_filtered, fr_dens, NN_dist, kde_cent, rdp_radii):
     """
     """
     ax = plt.subplot(gs[0:2, 2:4])
@@ -78,34 +79,42 @@ def pl_knn_dens(
     # If RA is used, invert axis.
     if coord == 'deg':
         ax.invert_xaxis()
-    ax.set_title((r'$kNN={}\;(d\leq d_{{p=25\%}})$').format(NN_dd), fontsize=9)
+    ax.set_title(
+        (r'$N_{{rings}}={}\;|\;kNN={}\;(d\leq d_{{p=25\%}})$').format(
+            len(rdp_radii), NN_dd), fontsize=9)
 
     plt.xlabel('{} ({})'.format(x_name, coord), fontsize=10)
     plt.ylabel('{} ({})'.format(y_name, coord), fontsize=10)
     ax.tick_params(axis='both', which='major', labelsize=8)
     ax.minorticks_on()
-    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5)
+    # ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5)
+
+    for rad in rdp_radii:
+        circle = plt.Circle(
+            (kde_cent[0], kde_cent[1]), rad, color='g', fill=False, ls=':',
+            zorder=5)
+        ax.add_artist(circle)
 
     perc = np.percentile(NN_dist, 25)
     msk = NN_dist < perc
-    xy, NN_d = xy_dens[msk], NN_dist[msk]
+    xy, NN_d = xy_filtered[msk], NN_dist[msk]
     for i, (x, y) in enumerate(xy):
         circle = plt.Circle(
             (x, y), NN_d[i], color='k', lw=.5, alpha=.5, fill=False)
-        fig.gca().add_artist(circle)
+        ax.add_artist(circle)
 
     # Star with the smallest associated density.
     idx = np.argmin(fr_dens)
     circle = plt.Circle(
-        (xy_dens[idx][0], xy_dens[idx][1]), NN_dist[idx], color='b', lw=1.5,
-        fill=False, zorder=4)
+        (xy_filtered[idx][0], xy_filtered[idx][1]), NN_dist[idx], color='b',
+        lw=1.5, fill=False, zorder=4)
     fig.gca().add_artist(circle)
     plt.plot([], [], color='b', lw=2., label=r"$dens_{min}$")
     # Star with the largest associated density.
     idx = np.argmax(fr_dens)
     circle = plt.Circle(
-        (xy_dens[idx][0], xy_dens[idx][1]), NN_dist[idx], color='r', lw=1.,
-        fill=False, zorder=5)
+        (xy_filtered[idx][0], xy_filtered[idx][1]), NN_dist[idx], color='r',
+        lw=1., fill=False, zorder=5)
     fig.gca().add_artist(circle)
     plt.plot([], [], color='r', lw=2., label=r"$dens_{max}$")
 
@@ -138,6 +147,7 @@ def pl_field_dens(
     ymax = max(fr_dens) + delta_y
 
     ax = plt.subplot(gs[0:2, 4:6])
+    ax.set_title(("Method: '{}'").format(fdens_method), fontsize=9)
     plt.ylim(ymin, ymax)
     ax.minorticks_on()
     plt.xlabel(
@@ -184,7 +194,6 @@ def pl_rad_find(
         coord2 = 'px'
 
     ax = plt.subplot(gs[2:4, 0:2])
-    plt.ylim(0., 1.02)
     ax.minorticks_on()
     plt.xlabel(r'radius $[{}]$'.format(coord2), fontsize=10)
     plt.ylabel(r"$N_{memb}\;|\;N_{field}\;|\;CI$", fontsize=10)
@@ -194,22 +203,25 @@ def pl_rad_find(
 
     plt.plot(rad_rads, rad_N_membs, c='g', label=r'$N_{memb}$')
     plt.plot(rad_rads, rad_N_field, c='b', ls='--', label=r'$N_{field}$')
+    # ymin, ymax = ax.get_ylim()
+
     plt.plot(rad_rads, rad_CI, ls=':', c='k', label='CI')
     plt.axvline(x=clust_rad, lw=1.5, color='r', label=r"$r_{cl}$")
-    if e_rad > 0.:
-        plt.axvspan((clust_rad - e_rad), (clust_rad + e_rad),
-                    facecolor='grey', alpha=0.25)
+    if not np.isnan(e_rad[0]):
+        plt.axvspan((e_rad[0]), (e_rad[1]), facecolor='grey', alpha=0.25)
     # Legends.
     leg = plt.legend(fancybox=True, fontsize=10)
     leg.get_frame().set_alpha(0.7)
 
     xmin, xmax = ax.get_xlim()
     plt.xlim(max(xmin, 0.), xmax)
+    plt.ylim(0., 1.02)
+    # plt.ylim(ymin, ymax)
 
 
 def pl_rad_dens(
-    gs, coord, rdp_radii, rdp_points, field_dens, field_dens_std, clust_rad,
-    e_rad, rdp_stddev, core_rad, e_core, tidal_rad, e_tidal, K_cent_dens,
+    gs, coord, rdp_radii, rdp_points, rdp_stddev, field_dens, e_fdens,
+    clust_rad, e_rad, core_rad, e_core, tidal_rad, e_tidal, K_cent_dens,
         flag_2pk_conver, flag_3pk_conver):
     """
     Radial density plot.
@@ -221,18 +233,23 @@ def pl_rad_dens(
         clust_rad, e_rad = clust_rad * 60., e_rad * 60.
         core_rad, e_core, tidal_rad, e_tidal = core_rad * 60., e_core * 60.,\
             tidal_rad * 60., e_tidal * 60.
-        field_dens, field_dens_std, K_cent_dens = field_dens / 3600.,\
-            field_dens_std / 3600., K_cent_dens / 3600.
+        field_dens, e_fdens, K_cent_dens = field_dens / 3600.,\
+            e_fdens / 3600., K_cent_dens / 3600.
         rdp_points = np.array(rdp_points) / 3600.
         rdp_stddev = np.array(rdp_stddev) / 3600.
         coord2 = 'arcmin'
     else:
         coord2 = 'px'
 
-    ax = plt.subplot(gs[2:4, 2:4])
+    # # Keep every Nth point, otherwise it's too noisy.
+    # Nth = 2
+    # rdp_radii, rdp_points, rdp_stddev = rdp_radii[0::Nth], rdp_points[0::Nth],\
+    #     rdp_stddev[0::Nth]
+
+    ax = plt.subplot(gs[2:4, 2:6])
     # Get max and min values in x,y
     x_min = max(min(rdp_radii) - (max(rdp_radii) / 20.), 0)
-    x_max = min(max(rdp_radii) + (max(rdp_radii) / 20.), 5. * clust_rad)
+    x_max = min(max(rdp_radii) + (max(rdp_radii) / 20.), 3. * clust_rad)
 
     N_h = int(.5 * len(rdp_points))
     delta_total = (max(rdp_points) - field_dens)
@@ -255,10 +272,11 @@ def pl_rad_dens(
     # Legend texts
     kp_text = '3P' if flag_3pk_conver else '2P'
     r_frmt = '{:.0f}' if coord2 == 'px' else '{:.2f}'
-    if e_rad > 0.:
+    if not np.isnan(e_rad[0]):
+        rad_std = np.ptp(e_rad) * .5
         t_rad = (
             r"$r_{{cl}}=$" + r_frmt + r"$\pm$" + r_frmt + r' $[{}]$').format(
-                clust_rad, e_rad, coord2)
+                clust_rad, rad_std, coord2)
     else:
         t_rad = (r"$r_{{cl}}=$" + r_frmt + r' $[{}]$').format(
             clust_rad, coord2)
@@ -270,34 +288,30 @@ def pl_rad_dens(
             tidal_rad, e_tidal, coord2)
     ]
     # Plot density profile
-    ax.plot(rdp_radii, rdp_points, marker='o', ms=5, lw=1.5, zorder=3,
+    ax.plot(rdp_radii, rdp_points, marker='o', ms=5, lw=1., zorder=3,
             label="RDP")
     # Plot error bars
     plt.errorbar(
         rdp_radii, rdp_points, yerr=rdp_stddev, fmt='none', ecolor='grey',
-        lw=.5, zorder=1)
+        lw=1., zorder=1)
 
-    frmt = "{:.1E}" if field_dens > 100. else "{:.1f}"
-    t1 = (r"$d_{{field}}=$" + frmt + r" $[st/{}^{{2}}]$").format(
-        field_dens, coord2)
     # Plot background level.
     ax.hlines(y=field_dens, xmin=0, xmax=max(rdp_radii), color='k', ls='--',
-              label=t1, zorder=5)
-    if not np.isnan(field_dens_std):
+              zorder=5)
+    if not np.isnan(e_fdens):
         ax.hlines(
-            y=field_dens - field_dens_std, xmin=0, xmax=max(rdp_radii),
+            y=field_dens - e_fdens, xmin=0, xmax=max(rdp_radii),
             color='k', ls=':', zorder=5)
         ax.hlines(
-            y=field_dens + field_dens_std, xmin=0, xmax=max(rdp_radii),
+            y=field_dens + e_fdens, xmin=0, xmax=max(rdp_radii),
             color='k', ls=':', zorder=5)
     # Plot radius.
     y_mid_point = (y_max + y_min) * .5
     ax.vlines(x=clust_rad, ymin=field_dens, ymax=y_mid_point, lw=1.5,
               color='r', label=t_rad, zorder=5)
     # Plot radius error zone.
-    if e_rad > 0.:
-        plt.axvspan((clust_rad - e_rad), (clust_rad + e_rad),
-                    facecolor='grey', alpha=0.25)
+    if not np.isnan(e_rad[0]):
+        plt.axvspan(e_rad[0], e_rad[1], facecolor='grey', alpha=0.25)
 
     # Plot 3-P King profile.
     if flag_3pk_conver:
@@ -328,51 +342,53 @@ def pl_rad_dens(
     # get handles
     handles, labels = ax.get_legend_handles_labels()
     # use them in the legend
-    ax.legend(handles, labels, loc='upper right', numpoints=2, fontsize=10)
+    ax.legend(handles, labels, loc='upper center', numpoints=2, fontsize=10)
 
     #
     # Log-log plot
-    ax = plt.subplot(gs[2:4, 4:6])
-    ax.minorticks_on()
-    ax.grid(b=True, which='both', color='gray', linestyle='--', lw=.5)
-    plt.xlabel(r'log(radius) $[{}]$'.format(coord2), fontsize=10)
-    plt.ylabel(r"log($\rho$) $[st/{}^{{2}}]$".format(coord2), fontsize=10)
-    ax.tick_params(axis='both', which='both', labelsize=8)
+    # ax = plt.subplot(gs[2:4, 4:6])
+    axins = inset_axes(ax, width=2.5, height=2.5)
+    axins.minorticks_on()
+    axins.grid(b=True, which='both', color='gray', linestyle='--', lw=.25)
+    # plt.xlabel(r'log(radius) $[{}]$'.format(coord2), fontsize=8)
+    # plt.ylabel(r"log($\rho$) $[st/{}^{{2}}]$".format(coord2), fontsize=8)
+    axins.tick_params(axis='both', which='both', labelsize=6)
 
-    ax.scatter(rdp_radii, rdp_points, marker='o', s=10, zorder=5)
-    ax.hlines(y=field_dens, xmin=min(rdp_radii), xmax=max(rdp_radii),
-              color='k', ls='--', zorder=5)
-    if not np.isnan(field_dens_std):
-        ax.hlines(
-            y=field_dens - field_dens_std, xmin=min(rdp_radii),
+    axins.plot(rdp_radii, rdp_points, marker='o', ms=2, lw=.8, zorder=5)
+    axins.hlines(y=field_dens, xmin=min(rdp_radii), xmax=max(rdp_radii),
+                 color='k', ls='--', zorder=5)
+    if not np.isnan(e_fdens):
+        axins.hlines(
+            y=field_dens - e_fdens, xmin=min(rdp_radii),
             xmax=max(rdp_radii), color='k', ls=':', zorder=5)
-        ax.hlines(
-            y=field_dens + field_dens_std, xmin=min(rdp_radii),
+        axins.hlines(
+            y=field_dens + e_fdens, xmin=min(rdp_radii),
             xmax=max(rdp_radii), color='k', ls=':', zorder=5)
-    ax.vlines(
-        x=clust_rad, ymin=field_dens, ymax=y_mid_point, lw=1.5, color='r')
-    if e_rad > 0.:
-        plt.axvspan((clust_rad - e_rad), (clust_rad + e_rad),
-                    facecolor='grey', alpha=0.25)
+    axins.vlines(
+        x=clust_rad, ymin=field_dens, ymax=y_mid_point, lw=1.5, color='r',
+        zorder=10)
+    # # Plot radius error zone.
+    # if not np.isnan(e_rad[0]):
+    #     plt.axvspan(e_rad[0], e_rad[1], facecolor='grey', alpha=0.25)
     # Plot 3-P King profile.
     if flag_3pk_conver:
-        ax.plot(rdp_radii, kpf.three_params(
+        axins.plot(rdp_radii, kpf.three_params(
             rdp_radii, tidal_rad, K_cent_dens, core_rad, field_dens),
             'g--', lw=2., zorder=3)
-        ax.vlines(x=core_rad, ymin=field_dens, ymax=kpf.three_params(
+        axins.vlines(x=core_rad, ymin=field_dens, ymax=kpf.three_params(
             core_rad, tidal_rad, K_cent_dens, core_rad, field_dens),
             color='g', linestyles=':', lw=2., zorder=5)
     # Plot 2-P King profile if 3-P was not found.
     elif flag_2pk_conver:
-        ax.plot(rdp_radii, kpf.two_params(
+        axins.plot(rdp_radii, kpf.two_params(
             rdp_radii, K_cent_dens, core_rad, field_dens), 'g--', lw=2.,
             zorder=3)
-        ax.vlines(x=core_rad, ymin=field_dens, ymax=kpf.two_params(
+        axins.vlines(x=core_rad, ymin=field_dens, ymax=kpf.two_params(
             core_rad, K_cent_dens, core_rad, field_dens), color='g',
             linestyles=':', lw=2., zorder=4)
 
-    ax.set_xscale('log')
-    ax.set_yscale('log')
+    axins.set_xscale('log')
+    axins.set_yscale('log')
 
 
 def pl_full_frame(
