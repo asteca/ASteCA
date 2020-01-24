@@ -52,7 +52,7 @@ def check_get(pd):
         pd['theor_tracks'], pd['m_ini_idx'], pd['binar_flag'] =\
             interp_isochs.main(
                 mags_theor, cols_theor, mags_cols_theor, extra_pars,
-                pd['fundam_params'][5], pd['bin_mr'])
+                pd['fundam_params'][5], pd['bin_mr'], pd['synth_rand_seed'])
 
         print("\nGrid values")
         print("z        : {:<5} [{}, {}]".format(

@@ -1,5 +1,5 @@
 
-from ..core_imp import np
+import numpy as np
 from scipy.integrate import quad
 from scipy.interpolate import interp1d
 
@@ -25,6 +25,7 @@ def main(IMF_name, masses, m_high=150.):
       IMF, that (approximately) sum to the associated total mass.
 
     """
+    from .set_rand_seed import np
 
     print("Sampling selected IMF ({})".format(IMF_name))
 

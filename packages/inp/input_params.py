@@ -128,12 +128,9 @@ def main(mypath, pars_f_path):
                     PM_KDE_std = float(reader[1])
                     cosDE_flag = True if reader[2] in true_lst else False
 
-                # Cluster parameters assignation.
-                elif reader[0] == 'CF':
-                    best_fit_algor = str(reader[1])
-                    # TODO extend this param to 'brute force'
-                    hmax = float(reader[2])
-
+                # Synthetic clusters parameters
+                elif reader[0] == 'RS':
+                    synth_rand_seed = str(reader[1])
                 # Ranges for the fundamental parameters
                 elif reader[0] == 'RZ':
                     z_range = reader[1:]
@@ -147,6 +144,27 @@ def main(mypath, pars_f_path):
                     m_range = list(map(float, reader[1:]))
                 elif reader[0] == 'RB':
                     b_range = list(map(float, reader[1:]))
+
+                elif reader[0] == 'ET':
+                    evol_track = str(reader[1])
+                    colibri = str(reader[2])
+                elif reader[0] == 'MF':
+                    IMF_name = str(reader[1])
+                elif reader[0] == 'BR':
+                    bin_mr = float(reader[1])
+                elif reader[0] == 'RV':
+                    R_V = float(reader[1])
+                elif reader[0] == 'MM':
+                    try:
+                        max_mag = float(reader[1])
+                    except ValueError:
+                        max_mag = str(reader[1])
+
+                # Cluster parameters assignation.
+                elif reader[0] == 'CF':
+                    best_fit_algor = str(reader[1])
+                    # TODO extend this param to 'brute force'
+                    hmax = float(reader[2])
 
                 # Shared ptemcee/emcee parameters.
                 elif reader[0] == 'PS':
@@ -216,22 +234,6 @@ def main(mypath, pars_f_path):
                     lkl_method = str(reader[1])
                     lkl_binning = str(reader[2])
                     lkl_manual_bins = reader[3:]
-
-                # Synthetic clusters parameters
-                elif reader[0] == 'ET':
-                    evol_track = str(reader[1])
-                    colibri = str(reader[2])
-                elif reader[0] == 'MF':
-                    IMF_name = str(reader[1])
-                elif reader[0] == 'BR':
-                    bin_mr = float(reader[1])
-                elif reader[0] == 'RV':
-                    R_V = float(reader[1])
-                elif reader[0] == 'MM':
-                    try:
-                        max_mag = float(reader[1])
-                    except ValueError:
-                        max_mag = str(reader[1])
 
                 else:
                     # Get parameters file name from path.
@@ -329,8 +331,8 @@ def main(mypath, pars_f_path):
         'lkl_method': lkl_method, 'lkl_binning': lkl_binning,
         'lkl_manual_bins': lkl_manual_bins,
         # Synthetic cluster parameters
-        'evol_track': evol_track, 'max_mag': max_mag, 'IMF_name': IMF_name,
-        'R_V': R_V, 'bin_mr': bin_mr,
+        'synth_rand_seed': synth_rand_seed, 'evol_track': evol_track,
+        'max_mag': max_mag, 'IMF_name': IMF_name, 'R_V': R_V, 'bin_mr': bin_mr,
         # parameters ranges
         'par_ranges': par_ranges,
         # ptemcee algorithm parameters.

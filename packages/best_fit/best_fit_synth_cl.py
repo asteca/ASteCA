@@ -1,11 +1,9 @@
 
-from ..core_imp import np
+import numpy as np
 from . import max_mag_cut, obs_clust_prepare, bootstrap, ptemcee_algor
 from . import emcee_algor
 # brute_force_algor , abcpmc_algor,
-# TODO in place for #397: hopp_algor
-from ..synth_clust import extin_coefs
-from ..synth_clust import imf
+from ..synth_clust import add_errors, imf, extin_coefs
 
 
 def main(clp, pd):
@@ -33,6 +31,10 @@ def main(clp, pd):
         ext_coefs = extin_coefs.main(
             pd['cmd_systs'], pd['filters'], pd['colors'], ext_shape)
 
+        if pd['synth_rand_seed'] is not None:
+            print("Random seed set for synthetic clusters: {}".format(
+                pd['synth_rand_seed']))
+
         # Obtain mass distribution using the selected IMF. We run it once
         # because the array only depends on the IMF selected.
         st_dist_mass = imf.main(pd['IMF_name'], pd['fundam_params'][4])
@@ -40,16 +42,7 @@ def main(clp, pd):
         # Store the number of defined filters and colors.
         N_fc = [len(pd['filters']), len(pd['colors'])]
 
-        # Generate required parameters to use in the error adding function.
-        # HARDCODED this assumes that there will never be more than 1e6 stars
-        # in a synthetic cluster
-        N_errors = 1000000
-        if pd['lkl_method'] == 'tolstoy':
-            # Tolstoy likelihood considers uncertainties, there's no need to
-            # add it to the synthetic clusters.
-            err_rand = np.zeros(N_errors)
-        else:
-            err_rand = np.random.normal(0., 1., N_errors)
+        err_rand = add_errors.randIdxs(pd['lkl_method'])
         err_pars = clp['err_lst'], clp['em_float'], err_rand
 
         # # TEMPORARY

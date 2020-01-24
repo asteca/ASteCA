@@ -1,5 +1,5 @@
 
-from ..core_imp import np
+import numpy as np
 
 
 def exp_3p(x, a, b, c):

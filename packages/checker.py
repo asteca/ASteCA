@@ -28,6 +28,7 @@ def check_all(mypath, file_end):
     inst_packgs_lst = pack.check()
 
     # Import here after the needed packages were checked to be present.
+    from .check import params_synthcl
     from .check import params_match
     from .check import read_met_files
 
@@ -55,9 +56,12 @@ def check_all(mypath, file_end):
     # Check decontamination algorithm parameters.
     params_decont.check(cl_files, **pd)
 
-    # Check the best synthetic cluster match parameters. Generate the
+    # Check synthetic clusters parameters. Generate the
     # 'fundam_params' variable.
-    pd = params_match.check(mypath, pd)
+    pd = params_synthcl.check(mypath, pd)
+
+    # Check the best match parameters.
+    pd = params_match.check(pd)
 
     # Filters and colors names.
     fs = ', '.join(_[1] for _ in pd['filters'])

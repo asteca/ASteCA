@@ -6,7 +6,7 @@ from .. import update_progress
 
 def main(
     mags_theor, cols_theor, mags_cols_theor, extra_pars, binar_fracs,
-        bin_mr):
+        bin_mr, synth_rand_seed):
     """
     Interpolate extra points into all the filters, colors, filters of colors,
     and extra parameters (masses, etc). This allows the later IMF sampled
@@ -46,7 +46,7 @@ def main(
     # are obtained.
     binar_data = binarity.binarGen(
         binar_fracs, N_mass_interp, mags_intp, cols_intp, mags_cols_intp,
-        extra_pars_intp, bin_mr)
+        extra_pars_intp, bin_mr, synth_rand_seed)
 
     # Combine all data into a single array of shape:
     # (N_z, N_age, N_data, N_IMF_interp), where 'N_data' is the number of

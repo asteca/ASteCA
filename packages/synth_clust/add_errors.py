@@ -1,5 +1,5 @@
 
-from ..core_imp import np
+import numpy as np
 from ..math_f import exp_function
 
 
@@ -55,3 +55,23 @@ def gauss_error(rnd, mc, e_mc):
     mc_gauss = mc + rnd[:len(mc)] * e_mc
 
     return mc_gauss
+
+
+def randIdxs(lkl_method, N_errors=1000000):
+    """
+    Generate random indexes to use in the error function when generating the
+    synthetic clusters.
+
+    HARDCODED 'N_errors': this assumes that there will never be more than 1e6
+    stars in a synthetic cluster
+    """
+    from .set_rand_seed import np
+
+    if lkl_method == 'tolstoy':
+        # Tolstoy likelihood considers uncertainties, there's no need to
+        # add it to the synthetic clusters.
+        err_rand = np.zeros(N_errors)
+    else:
+        err_rand = np.random.normal(0., 1., N_errors)
+
+    return err_rand

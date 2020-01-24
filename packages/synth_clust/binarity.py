@@ -1,5 +1,5 @@
 
-from ..core_imp import np
+import numpy as np
 from .mass_interp import find_closest
 from .. import update_progress
 
@@ -39,8 +39,8 @@ def main(isoch_mass, bin_frac, m_ini_idx, N_fc):
 
 
 def binarGen(
-        binar_fracs, N_mass_interp, mags_theor, cols_theor, mags_cols_theor,
-        extra_pars, bin_mass_ratio):
+    binar_fracs, N_mass_interp, mags_theor, cols_theor, mags_cols_theor,
+        extra_pars, bin_mass_ratio, synth_rand_seed):
     """
     Called by isoch_params().
 
@@ -57,6 +57,11 @@ def binarGen(
         7. Assign unique probability values for each interpolated star.
 
     """
+    # First set the random seed in numpy
+    from . import set_rand_seed
+    set_rand_seed.main(synth_rand_seed)
+    # Now import it
+    from .set_rand_seed import np
 
     # If binary_fraction=0 don't bother obtaining the binary magnitudes,
     # colors, etc.
@@ -154,6 +159,7 @@ def mag_combine(m1, m2):
     -2.5 * np.log10(10 ** (-0.4 * m1) + 10 ** (-0.4 * m2))
 
     """
+
     c = 10 ** -.4
     mbin = -2.5 * (-.4 * m1 + np.log10(1. + c ** (m2 - m1)))
 

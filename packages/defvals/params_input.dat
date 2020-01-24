@@ -14,9 +14,11 @@
 
 
 
-######################### Input data parameters ################################
 
-# Read mode for the cluster's input data.
+
+############################## Input data ######################################
+
+# Read mode
 #
 # * mode: nam / num
 #
@@ -27,7 +29,7 @@
 #   mode
 MR   nam
 
-# Columns for the ID's and x,y coordinates in the data file.
+# Columns for the ID's and x,y coordinates
 #
 # * coords: px / deg
 #   Indicates if the coordinates of the observed frame are in pixels or degrees.
@@ -39,8 +41,8 @@ MR   nam
 #   id_star   x/ra   y/dec   coords   project
 PI       id      x       y       px         n
 
-# Columns for the photometric data in the data file. The IDs for the supported
-# photometric systems are stored in the 'phot_systs.dat' file.
+# Columns for the photometric data. The IDs for the supported photometric
+# systems are stored in the 'phot_systs.dat' file
 #
 #  * mag, e_mag: Magnitude and uncertainty.
 #
@@ -55,10 +57,12 @@ PC   BV,4,Bmag,Vmag      eBV
 # Columns for the proper motions [mas/yr], parallax [mas], and radial
 # velocity [km/s]. If a data column is not present, indicate it with a 'n'.
 #
-#    Parallax                 Proper motions               Radial velocity
+#    Parallax         |------ Proper motions -------|    Radial velocity
 #    plx    e_plx     pmRA    e_pmRA    pmDE    e_pmDE     rv    e_rv
 PK     n        n        n         n       n         n      n       n
 ################################################################################
+
+
 
 
 
@@ -82,6 +86,8 @@ NV    INDEF, NAN, NaN, 99.999, 999.99, 99.999
 #    tf_flag   tf_range
 TF         n   0. 0. 0. 0.
 ################################################################################
+
+
 
 
 
@@ -122,10 +128,11 @@ PF     png     150
 
 
 
-################### Structure functions parameters #############################
 
-# Set here manual values for the center, radius, and/or the number of field
-# regions for each cluster being processed.
+
+####################### Structural functions ###################################
+
+# Fixed values for the center, radius, and/or the number of field regions.
 #
 # * name: [str] / n
 #   Cluster's name.
@@ -199,7 +206,9 @@ GR       10
 
 
 
-##################### Uncertainties & A-D analysis  ############################
+
+
+##################### Uncertainties & A-D analysis #############################
 
 # Error rejection.
 #
@@ -230,9 +239,11 @@ AD   100
 
 
 
-################ Decontamination algorithm parameters ##########################
 
-# Decontamination algorithm selection.
+
+####################### Decontamination algorithm ##############################
+
+# Algorithm selection.
 #
 # Assign membership probabilities (MPs) to stars within the cluster region via
 # a selected decontamination algorithm (DA).
@@ -265,7 +276,13 @@ DA  bayes   1000      .4
 # 
 #   w_mag    w_col    w_Plx    w_PMx    w_PMy    w_RV
 DW      y        y        y        y        y       n
+################################################################################
 
+
+
+
+
+########################## Field stars removal #################################
 
 # Cluster region field stars removal.
 #
@@ -313,7 +330,9 @@ FR  local      optm          0.5
 
 
 
-###################### Parallax and PMs analysis ###############################
+
+
+########################### Parallax and PMs ###################################
 
 # Parallax Bayesian analysis
 #
@@ -349,6 +368,98 @@ PO        3.            y
 
 
 
+
+
+######################## Synthetic clusters generation #########################
+
+# * ran_seed: [int] / n
+#   Random seed used in the generation of synthetic clusters. Set it to any
+#   integer for reproducibility.
+#
+#    ran_seed
+RS          n
+
+# Ranges for all the fundamental parameters
+#
+# * min / max: [float] / string
+#   Minimum / maximum values that define the range of the parameters to fit for
+#   the metallicity, log(age), E(B-V), distance modulus, initial mass, and
+#   binary fraction, respectively. A single value indicates a fixed parameter.
+#   For the [z, log(age)] parameters the strings 'min' and/or 'max' can be used
+#   to let ASteCA decide the minimum and/or maximum range limits.
+#
+#   z (RZ), log(age) (RA), E(B-V) (RE), distance modulus (RD), mass (RM),
+#   binary fraction (RB)
+#
+#        min      max
+RZ    0.0005     0.03
+RA         7       10
+RE         0        1
+RD         8       15
+RM       100    10000
+RB         0        1
+
+# Evolutionary tracks
+#
+# * evol_track: [selection]
+#
+#   - PAR12:  PARSEC v1.2S
+#   - PAR11:  PARSEC v1.1
+#   - PAR10:  PARSEC v1.0
+#
+# * colibri: [selection]
+#
+#   - CS_35:  COLIBRI S_35
+#   - CS_07:  COLIBRI S_07
+#   - CPR16:  COLIBRI PR16
+#   - No   :  No limitation in Z
+#
+#   evol_track    colibri
+ET       PAR12         No
+
+# IMF used to populate the synthetic clusters.
+#
+# * IMF: [selection]
+#
+#   - kroupa_2002      : Kroupa (2002) 295.82K, Eq. (2) & (3)
+#   - chabrier_2001_exp: Chabrier (2001) 554.1274C, Eq (8)
+#   - chabrier_2001_log: Chabrier (2001) 554.1274C, Eq (7)
+#   - kroupa_1993      : Kroupa et al. (1993) 262.545K, Eq. (13)
+#   - salpeter_1955    : Salpeter (1955)
+#
+#   IMF
+MF  kroupa_2002
+
+# Binaries mass ratio.
+#
+# - min_mass_ratio: 0<[float]<=1
+#   Minimum mass ratio for the generation of binaries. Ignored if the
+#   'Binary fraction' parameter is fixed to '0.'
+#
+#     min_mass_ratio
+BR                .7
+
+# Ratio of total to selective absorption (R_V).
+#
+RV      3.1
+
+# Maximum magnitude cut.
+#
+# * Maximum mag: max / [float]
+#   Select a maximum magnitude cut to be used in the best fit process. This
+#   limit affects both the observed and synthetic cluster.
+#
+#   - max: use the maximum observed magnitude (i.e.: no cut is applied).
+#   - [float]: manually select the maximum magnitude value to use.
+#
+#   max_mag
+MM      max
+################################################################################
+
+
+
+
+
 #################### Best fit algorithm parameters #############################
 
 # Algorithm used to maximize/explore the parameter space given a likelihood.
@@ -365,21 +476,6 @@ PO        3.            y
 #
 #   algorithm   h_max
 CF    ptemcee      .1
-
-# * min / max: [float] / string
-#   Minimum / maximum values that define the range of the parameters to fit for
-#   the metallicity, log(age), E(B-V), distance modulus, initial mass, and
-#   binary fraction, respectively. A single value indicates a fixed parameter.
-#   You can use the strings 'min' and/or 'max' to let ASteCA decide the minimum
-#   and/or maximum range limits.
-#
-#        min      max
-RZ    0.0005     0.03
-RA         7       10
-RE         0        1
-RD         8       15
-RM       100    10000
-RB         0        1
 
 # ptemcee/emcee parameters.
 #
@@ -437,6 +533,8 @@ BT      .5       10       100
 
 # Genetic Algorithm parameters.
 #
+# Used when the Bootstrap method above is selected.
+#
 #   - n_pop: [integer], Number of chromosomes in the population.
 #   - fdif: 0<[float]<=1, Fitness differential. Establishes the 'selection
 #     pressure' for the algorithm.
@@ -460,89 +558,22 @@ GA     50    1.     0.85      2P    0.1     1   100    50
 # * likelihood: tremmel / dolphin / tolstoy
 #
 #   - tremmel: uses the 'Poisson likelihood ratio' defined in Tremmel et al.
-#     (2013); Eq. 10 (with v_{i,j}=1)
+#     (2013); Eq. 10 (with v_{i,j}=1).
 #   - dolphin: uses the 'Poisson likelihood ratio' defined in Dolphin (2002);
-#     Eq. 10. Requires the selection of a binning method.
+#     Eq. 10.
 #   - tolstoy: weighted bin-free statistic as that defined in Tolstoy & Saha
 #     (1996), Monteiro et al (2010) and Hernández & Valls-Gabaud (2008).
 #
-# * binning: fixed / blocks / blocks-max / auto / fd / doane / scott /
+# * binning: fixed / manual / blocks / blocks-max / auto / fd / doane / scott /
 #            rice / sqrt / sturges / knuth
-#   Binning method used if the 'tremmel' or 'dolphin' likelihoods are
-#   selected. Otherwise this parameter is ignored.
+#   Binning method used for the 'tremmel' and 'dolphin' likelihoods.
+#   Otherwise this parameter is ignored.
 #
 # * N_bins: [int]
-#   Number of bins for each photometric dimension if the 'manual' mode is
-#   selected. The order is: 'N_bin_mag N_bin_color' (add another 'N_bin_color'
-#   if two colors are employed).
+#   Number of bins for each photometric dimension if the 'manual' binning mode
+#   is selected. The order is: 'N_bin_mag N_bin_color' (add another
+#   'N_bin_color' if two colors are employed).
 #
 #   likelihood    binning    N_bins
 LK     tremmel      knuth      5 10
-################################################################################
-
-
-
-#################### Synthetic clusters parameters #############################
-
-# Set of evolutionary tracks.
-#
-# * evol_track: [selection]
-#
-#   - PAR12:  PARSEC v1.2S
-#   - PAR11:  PARSEC v1.1
-#   - PAR10:  PARSEC v1.0
-#
-# * colibri: [selection]
-#
-#   - CS_35:  COLIBRI S_35
-#   - CS_07:  COLIBRI S_07
-#   - CPR16:  COLIBRI PR16
-#   - No   :  No limitation in Z
-#
-#   evol_track    colibri
-ET       PAR12         No
-#
-# * z, log(age): [floats]
-#   Input [z, log(age)] steps to read the stored isochrones.
-#
-#        z    log(age)
-PS   0.005         0.5
-
-# IMF used to populate the synthetic clusters.
-#
-# * IMF: [selection]
-#
-#   - kroupa_2002      : Kroupa (2002) 295.82K, Eq. (2) & (3)
-#   - chabrier_2001_exp: Chabrier (2001) 554.1274C, Eq (8)
-#   - chabrier_2001_log: Chabrier (2001) 554.1274C, Eq (7)
-#   - kroupa_1993      : Kroupa et al. (1993) 262.545K, Eq. (13)
-#   - salpeter_1955    : Salpeter (1955)
-#
-#   IMF
-MF  kroupa_2002
-
-# Binaries mass ratio.
-#
-# - min_mass_ratio: 0<[float]<=1
-#   Minimum mass ratio for the generation of binaries. Ignored if the
-#   'Binary fraction' parameter is fixed to '0.'
-#
-#     min_mass_ratio
-BR                .7
-
-# Ratio of total to selective absorption (R_V).
-#
-RV      3.1
-
-# Maximum magnitude cut.
-#
-# * Maximum mag: max / [float]
-#   Select a maximum magnitude cut to be used in the best fit process. This
-#   limit affects both the observed and synthetic cluster.
-#
-#   - max: use the maximum observed magnitude (i.e.: no cut is applied).
-#   - [float]: manually select the maximum magnitude value to use.
-#
-#   max_mag
-MM      max
 ################################################################################
