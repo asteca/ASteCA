@@ -193,6 +193,20 @@ def pl_rad_find(
     else:
         coord2 = 'px'
 
+    # Cut when N_nembs = 0
+    try:
+        icut = np.where(rad_N_membs == 0.)[0][0]
+        if icut == 0:
+            icut = len(rad_N_membs)
+        else:
+            # Use 30 points since the number of radii values in
+            # radius.rdpAreasDists() is hardcoded to 300.
+            icut = icut + 30
+    except IndexError:
+        icut = len(rad_N_membs)
+    rad_rads, rad_N_membs, rad_N_field, rad_CI = rad_rads[:icut],\
+        rad_N_membs[:icut], rad_N_field[:icut], rad_CI[:icut]
+
     ax = plt.subplot(gs[2:4, 0:2])
     ax.minorticks_on()
     plt.xlabel(r'radius $[{}]$'.format(coord2), fontsize=10)
@@ -273,10 +287,9 @@ def pl_rad_dens(
     kp_text = '3P' if flag_3pk_conver else '2P'
     r_frmt = '{:.0f}' if coord2 == 'px' else '{:.2f}'
     if not np.isnan(e_rad[0]):
-        rad_std = np.ptp(e_rad) * .5
-        t_rad = (
-            r"$r_{{cl}}=$" + r_frmt + r"$\pm$" + r_frmt + r' $[{}]$').format(
-                clust_rad, rad_std, coord2)
+        txt = r"$r_{{cl}}=" + r_frmt + r"_{{" + r_frmt + r"}}^{{" +\
+            r_frmt + r"}}\,[{}]$"
+        t_rad = txt.format(clust_rad, e_rad[0], e_rad[1], coord2)
     else:
         t_rad = (r"$r_{{cl}}=$" + r_frmt + r' $[{}]$').format(
             clust_rad, coord2)
