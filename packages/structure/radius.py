@@ -45,10 +45,15 @@ def main(cld_i, clp, coords, rad_manual, nsteps_rad, NN_dd, **kwargs):
 
 
 def rdpAreasDists(
-        cld_i, kde_cent, rdp_radii, N_MC, rand_01_MC, cos_t, sin_t, **kwargs):
+    cld_i, kde_cent, rdp_radii, N_MC, rand_01_MC, cos_t, sin_t, Nrads=300,
+        **kwargs):
     """
     The areas for each radius value in 'rdp_radii' are obtained here once.
     We also calculate here the distance of each star to the defined center.
+
+    HARDCODED
+
+    Nrads: number of values used to linearly partition the 'rdp_radii' array.
     """
 
     # Proper array of coordinates.
@@ -62,13 +67,15 @@ def rdpAreasDists(
     dy0, dy1 = abs(kde_cent[1] - y0), abs(kde_cent[1] - y1)
     dxy = min(dx0, dx1, dy0, dy1)
 
+    # N_tot, area_tot = len(xy), (x1 - x0) * (y1 - y0)
+
     # We use the 'rdp_radii' here since it is already processed to contain
     # reasonable starting and finishing values.
     # Defining this array here gives the radius finding function more
     # resolution,almost independently of the number of RDP rings used.
-    rad_radii = np.linspace(rdp_radii[0], rdp_radii[-1], 100)
+    rad_radii = np.linspace(rdp_radii[0], rdp_radii[-1], Nrads)
 
-    # Areas associated to the radii defined in 'rdp_radii'.
+    # Areas associated to the radii defined in 'rad_radii'.
     rad_areas = np.pi * np.array(rad_radii)**2
     for i, rad in enumerate(rad_radii):
         fr_area = 1.
@@ -94,7 +101,7 @@ def optimalRadius(
     possible of field stars within the region.
     """
 
-    data, break_counter = [], 0
+    data, break_counter, n_memb_old = [], 0, 0
     for i, rad in enumerate(rad_radii):
 
         # Stars within radius.
@@ -107,7 +114,9 @@ def optimalRadius(
         # Field density
         # (dist > rad).sum(): #stars outside the cluster region
         # (area_frame - rdp_areas[i]): are outside the cluster region.
-        # field_dens = (N_tot - n_in_cl_reg) / (area_tot - rad_areas[i])
+        # field_dens_i = (N_tot - n_in_cl_reg) / (area_tot - rad_areas[i])
+        # fd_list.append(field_dens_i)
+        # field_dens = np.median(fd_list)
 
         if bttstrp_flag:
             n_fl = field_dens * rad_areas[i]
@@ -115,6 +124,11 @@ def optimalRadius(
             CI = np.nan
         else:
             CI, n_memb, n_fl = CIfunc(n_in_cl_reg, field_dens, rad_areas[i])
+
+        # This keeps the N_memb trending always upwards. Nicer graphs but
+        # hides information.
+        # n_memb = max(n_memb_old, n_memb)
+        # n_memb_old = n_memb
 
         # Break check
         if (n_memb <= 0. or CI > 1.1) and i > .5 * len(rad_radii):
