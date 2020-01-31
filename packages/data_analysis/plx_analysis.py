@@ -176,7 +176,8 @@ def plxBayes(
         # 16th, 84th in Kpc
         p16, p84 = np.percentile(samples, (16, 84))
         plx_Bys = np.array([p16, np.mean(samples), p84])
-        tau_mean = np.mean(sampler.get_autocorr_time(tol=0))
+
+        tau_mean = sampler.get_autocorr_time(tol=0)[0]
         plx_ess = samples.size / tau_mean
 
         # For plotting, (nsteps, nchains, ndim)
