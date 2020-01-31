@@ -2,9 +2,6 @@
 import numpy as np
 import time as t
 import warnings
-from emcee import ensemble
-# This is used when the moves are defined below by eval()
-from emcee import moves
 
 from ..synth_clust import synth_cluster
 from . import likelihood
@@ -20,6 +17,9 @@ def main(
         emcee_moves, hmax, **kwargs):
     """
     """
+    from emcee import ensemble
+    # This is used when the moves are defined below by eval()
+    from emcee import moves
 
     varIdxs, ndim, ranges = varPars(fundam_params)
     # Pack synthetic cluster arguments.

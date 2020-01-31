@@ -5,7 +5,6 @@ from scipy.special import gammaln
 # from scipy.signal import fftconvolve
 import logging
 import warnings
-from emcee import autocorr
 from .ptemcee import util
 
 
@@ -269,6 +268,9 @@ def convergenceVals(algor, ndim, varIdxs, chains_nruns, bi_steps):
     """
     Convergence statistics.
     """
+    if algor == 'emcee':
+        from emcee import autocorr
+
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
 
