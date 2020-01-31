@@ -128,7 +128,7 @@ def main(cl_file, pd):
     clp = contamination_index.main(clp, **cld_i)
 
     # King profiles based on the density profiles.
-    clp = king_profile.main(clp, **pd)
+    clp = king_profile.main(clp, cld_i, **pd)
 
     # ^ All the functions above use the *photo incomplete* dataset 'cld_i'
 
@@ -273,7 +273,7 @@ def main(cl_file, pd):
     # # Round fundamental parameters fitted and their errors
     # clp = error_round.fundParams(clp)
 
-    # Add cluster data and flags to output file
+    # Add cluster data output file
     add_data_output.main(npd, pd, **clp)
 
     # Plot result of best match algorithm.

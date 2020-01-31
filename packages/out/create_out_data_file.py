@@ -52,30 +52,25 @@ def main(npd):
 # c_x: Cluster's x center coordinate.\n\
 # c_y: Cluster's y center coordinate.\n\
 # r_cl: Cluster's radius.\n\
-# r_cl_16: Cluster's radius 16th percentile.\n\
-# r_cl_84: Cluster's radius 84th percentile.\n\
 # r_c: Core radius (3-P King profile).\n\
-# e_rc: Core radius error.\n\
 # r_t: Tidal radius (3-P King profile).\n\
-# e_rt: Tidal radius error.\n\
-# kcp: King's profile concentration parameter.\n\
 #\n\
 # CI: 'Contamination index' is a  measure of the contamination of field\n\
 #      stars in the cluster region. The closer to 1, the more contaminated \n\
 #      the cluster region is.\n\
 # n_memb_k: Approximate number of cluster's members obtained integrating the\n\
-#         fitted 3-P King profile (if it converged).\n\
+#           fitted King profile (if it converged).\n\
 # n_memb: Approximate number of cluster's members assuming a uniform\n\
-#       background.\n\
+#         background.\n\
 # n_memb_da: Approximate number of cluster's members obtained via the DA\n\
-#          algorithm.\n\
+#            algorithm.\n\
 # memb_par: Members parameter comparing the approximate structural number of\n\
 #           members ('n_memb') with the approximate photometric number of\n\
 #           members ('n_memb_da').\n\
 # a_f: Fraction of cluster's area that is present in frame.\n\
 #\n\
 # Parameters values are in the sense: mean, MAP/ML, median, mode.\n\
-# Parameters uncertainties are: 16th, 84th percentiles, and STDDEV.\n\
+# Parameters uncertainties are 16th, 84th percentiles.\n\
 # z: Metallicity value.\n\
 # a: log(age).\n\
 # E: extinction E(B-V).\n\
@@ -84,27 +79,15 @@ def main(npd):
 # b: Binary fraction.\n\
 # Nt: Number of samples used to estimate the parameters values.\n\
 #\n\
-# f1 The process to fit a 3-P King profile to the density points did not\n\
-#    converge or did so to a tidal radius beyond the ranges of the frame.\n\
-# f2 The number of approximate structural cluster members ('n_memb') is <10.\n\
-# f3 The number of approximate structural and photometric cluster members\n\
-#    differ greatly --> abs(n_memb_par) > 0.33.\n\
-#\n\
-# FC (flags count): Sum of all the flags values. The bigger this value the\n\
-#    more likely it is that there's a problem with the frame, ie: no\n\
-#    cluster, more than one cluster present in the frame, variable or too\n\
-#    crowded field, etc.\n\
-#\n\
-#NAME                                 c_x        c_y       r_cl    \
-r_cl_16    r_cl_84        \
-r_c       e_rc        r_t       e_rt      kcp      CI   n_memb_k     n_memb  \
-n_memb_da  memb_par     a_f     \
+NAME                                  c_x        c_y       \
+r_cl         16         84        r_c         16         84        \
+r_t         16         84      CI   n_memb_k     n_memb  n_memb_da  \
+memb_par     a_f     \
 z_mean      z_MAP   z_median     z_mode       16th       84th        std    R^2     \
 a_mean      a_MAP   a_median     a_mode       16th       84th        std    R^2     \
 E_mean      E_MAP   E_median     E_mode       16th       84th        std    R^2     \
 d_mean      d_MAP   d_median     d_mode       16th       84th        std    R^2     \
 M_mean      M_MAP   M_median     M_mode       16th       84th        std    R^2     \
-b_mean      b_MAP   b_median     b_mode       16th       84th        std    R^2     \
-    Nt      f1 f2 f3  FC\n".format(
-                __version__, now_time, now_time))
+b_mean      b_MAP   b_median     b_mode       16th       84th        std    \
+R^2\n".format(__version__, now_time, now_time))
             print("Output data file created")

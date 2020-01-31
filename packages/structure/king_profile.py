@@ -1,240 +1,188 @@
 
 import numpy as np
-from scipy.optimize import curve_fit
+from scipy import spatial
 import warnings
-from scipy.optimize import OptimizeWarning
-from . import king_prof_funcs as kpf
+from .. import update_progress
 from ..out import prep_plots
 
 
-def main(clp, kp_flag, coords, **kwargs):
-    '''
-    Function to fit a King profile to a given radial density.
-    The field density value is fixed and the core radius, tidal radius and
-    maximum central density are fitted.
-    '''
-
-    # Flags that indicate either no convergence or that the fits were not
-    # attempted.
-    flag_2pk_conver, flag_3pk_conver = False, False
+def main(
+    clp, cld_i, inst_packgs_lst, kp_flag, kp_nchains, kp_nruns, rt_max_f,
+        coords, **kwargs):
+    """
+    Fit a King profile given an array of stars. The field density value is
+    fixed and the core radius, tidal radius and maximum central density are
+    fitted.
+    """
 
     # Initial dummy values, used if function is skipped.
-    rc, e_rc, rt, e_rt, n_c_k, kcp, cd = np.nan, np.nan, np.nan, np.nan,\
-        np.nan, np.nan, np.nan
+    cd, rc, e_rc, rt, e_rt, mean_afs_KP, tau_autocorr_KP, N_ess_KP, n_c_k,\
+        kcp = [np.nan] * 10
 
     # Check flag to run or skip.
     if kp_flag:
-
-        clust_rad, field_dens, radii, rdp_points = clp['clust_rad'],\
-            clp['field_dens'], clp['rdp_radii'], clp['rdp_points']
-
-        # Field density value is fixed.
-        fd = field_dens
-        # Initial guesses for fit: max_dens, rt, rc
-        max_dens, rt_guess, rc_guess = max(rdp_points), clust_rad, \
-            clust_rad / 2.
-
-        # Skip first radius value if it is smaller than the second value. This
-        # makes it easier for the KP to converge.
-        if rdp_points[0] > rdp_points[1]:
-            radii_k, ring_dens_k = radii, rdp_points
-        else:
-            radii_k, ring_dens_k = radii[1:], rdp_points[1:]
-
-        # USE AT SOME POINT?
-        # # Find maximum density value and assume this is the central density.
-        # # Do not use previous values.
-        # max_dens_ind = np.argmax(rdp_points)
-        # radii_k, ring_dens_k = radii[max_dens_ind:],rdp_points[max_dens_ind:]
-
-        # Attempt to fit a 3P-KP, fixing *only* the field density.
-        try:
-            guess3 = (max_dens, rc_guess, rt_guess)
-            cd, rc, e_rc, rt, e_rt = fit_3P_King_prof(
-                fd, radii_k, ring_dens_k, guess3)
-            # Fit converged.
-            flag_3pk_conver = True
-
-        except Exception as e:
-            print(e)
-            flag_3pk_conver = False
-
-            # Attempt to fit a 2P-KP to obtain the core radius.
-            try:
-                guess2 = (max_dens, rc_guess)
-                cd, rc, e_rc = fit_2P_King_prof(fd, radii_k, ring_dens_k,
-                                                guess2)
-                # Fit converged.
-                flag_2pk_conver = True
-
-                # Attempt to fit a 3P-KP, fixing the obtained r_core value, and
-                # the field density.
-                try:
-                    guess3 = (max_dens, rt_guess)
-                    rt, e_rt = fit_3P_2P_King_prof(fd, rc, radii_k,
-                                                   ring_dens_k, guess3)
-                    # Fit converged.
-                    flag_3pk_conver = True
-
-                except Exception as e:
-                    print(e)
-
-            except Exception as e:
-                print(e)
-                # 2P-KP did not converge.
-                flag_2pk_conver = False
-
-        # Obtain number of members and concentration parameter.
-        n_c_k, kcp = num_memb_conc_param(flag_3pk_conver, cd, rt, rc)
-
-        # Print results.
-        coord = prep_plots.coord_syst(coords)[0]
-        if flag_3pk_conver:
-            # Set precision of printed values.
-            text2 = '{:.1f}, {:.1f}' if coord == 'px' else '{:g}, {:g}'
-            text = 'Core & tidal radii obtained: ' + text2 + ' {}.'
-            print(text.format(rc, rt, coord))
-
-        elif flag_2pk_conver:
-            # Set precision of printed values.
-            text2 = '{:.1f}' if coord == 'px' else '{:g}'
-            text = 'Only core radius obtained: ' + text2 + ' {}.'
-            print(text.format(rc, coord))
+        if 'emcee' not in inst_packgs_lst:
+            print("  WARNING: 'emcee' is not installed. Can not fit" +
+                  " King's profile")
 
         else:
-            print("Core & tidal radii not found")
+            print("Estimating King profile")
+            cd, rc, e_rc, rt, e_rt, mean_afs_KP, tau_autocorr_KP, N_ess_KP =\
+                fit_3P_King_prof(
+                    cld_i['x'], cld_i['y'], clp['kde_cent'], clp['field_dens'],
+                    clp['clust_rad'], clp['n_memb_i'], kp_nchains, kp_nruns,
+                    rt_max_f)
 
-    clp['core_rad'], clp['e_core'], clp['tidal_rad'], clp['e_tidal'],\
-        clp['K_memb_num'], clp['K_conct_par'], clp['K_cent_dens'],\
-        clp['flag_2pk_conver'], clp['flag_3pk_conver'] = rc, e_rc, rt, e_rt,\
-        n_c_k, kcp, cd, flag_2pk_conver, flag_3pk_conver
+            if not np.isnan([cd, rt, rc]).any():
+                # Obtain number of members and concentration parameter.
+                n_c_k, kcp = num_memb_conc_param(cd, rt, rc)
+
+                # Print results.
+                coord = prep_plots.coord_syst(coords)[0]
+                # Set precision of printed values.
+                text2 = '{:.1f}, {:.1f}' if coord == 'px' else '{:g}, {:g}'
+                text = 'Core & tidal radii obtained: ' + text2 + ' {}'
+                print(text.format(rc, rt, coord))
+            else:
+                n_c_k, kcp = np.nan, np.nan
+
+    clp['KP_cent_dens'], clp['core_rad'], clp['e_core'], clp['tidal_rad'],\
+        clp['e_tidal'], clp['mean_afs_KP'], clp['tau_autocorr_KP'],\
+        clp['N_ess_KP'], clp['KP_memb_num'], clp['KP_conct_par'] =\
+        cd, rc, e_rc, rt, e_rt, mean_afs_KP, tau_autocorr_KP, N_ess_KP,\
+        n_c_k, kcp
     return clp
 
 
-def fit_3P_King_prof(fd, radii_k, ring_dens_k, guess3):
-    '''
+def fit_3P_King_prof(
+    x, y, cl_cent, fd, cl_rad, n_memb_i, nchains, nruns, rt_max_f,
+        N_integ=1000):
+    """
     Fit central density, core radius and tidal radius, using a fixed
-    value *only* for the field density (fd).
-    '''
+    value for the field density (fd).
+
+    rt_max_f: factor that caps the maximum tidal radius, given the previously
+    estimated cluster radius.
+
+    HARDCODED:
+
+    N_integ: number of values used in the tidal radius array.
+    """
+    from emcee import ensemble
+
+    # Distances to the center of the cluster.
+    xy_cent_dist = spatial.distance.cdist([cl_cent], np.array((x, y)).T)[0]
+
+    # This assumes that the tidal radius can not be larger than 'rt_max' times
+    # the estimated cluster radius.
+    rt_max = rt_max_f * cl_rad
+    msk = xy_cent_dist <= rt_max
+    r_in = xy_cent_dist[msk]
+    # Tidal radius array. Used for integrating
+    rt_rang = np.linspace(0., rt_max, int(rt_max_f * N_integ))
+
+    # Two dimensions: rt, rc
+    ndim = 2
+    # Initial guesses.
+    rc_pos0 = np.random.uniform(.05 * rt_max, rt_max, nchains)
+    rt_pos0 = np.random.uniform(rc_pos0, rt_max, nchains)
+    pos0 = np.array([rc_pos0, rt_pos0]).T
+
+    # emcee sampler
+    sampler = ensemble.EnsembleSampler(
+        nchains, ndim, lnprob, args=(rt_max, rt_rang, r_in, n_memb_i, fd))
 
     with warnings.catch_warnings():
-        warnings.simplefilter("error", OptimizeWarning)
+        warnings.simplefilter("ignore")
 
-        try:
-            popt, pcov = curve_fit(lambda x, cd, rc, rt: kpf.three_params(
-                                   x, rt, cd, rc, fd), radii_k, ring_dens_k,
-                                   guess3)
-        except:
-            raise ValueError("  WARNING: (1) no convergence, core & tidal"
-                             " radii not found.")
+        st_check = int(nruns * .1)
+        tau_index, autocorr_vals, afs = 0, np.empty(nruns), np.empty(nruns)
+        for i, (pos, prob, stat) in enumerate(
+                sampler.sample(pos0, iterations=nruns)):
 
-    # Unpack obtained core and tidal radius and calculate their errors.
-    cd, rc, rt = popt
-    # Obtain error in core and tidal radius.
-    if np.isfinite(pcov).all():
-        e_rc = np.sqrt(pcov[1][1]) if pcov[1][1] > 0 else -1.
-        e_rt = np.sqrt(pcov[2][2]) if pcov[2][2] > 0 else -1.
-    else:
-        e_rc, e_rt = -1., -1.
+            # Every X steps
+            if i % st_check and i < (nruns - 1):
+                continue
 
-    # If fit converged to tidal radius that extends beyond 500 times
-    # the core radius, or either radius is equal or less than zero;
-    # discard the fit.
-    if rt > rc * 500.:
-        raise ValueError("  WARNING: (1) tidal radius is too large.")
-    elif rt <= 0. or rc <= 0.:
-        raise ValueError("  WARNING: (1) core and/or tidal radius is <=0.")
-    elif e_rc > (5. * rc) or e_rt > (5. * rt):
-        raise ValueError("  WARNING: (1) core and/or tidal radius error is"
-                         " too large.")
+            afs[tau_index] = np.mean(sampler.acceptance_fraction)
+            tau = sampler.get_autocorr_time(tol=0)
+            autocorr_vals[tau_index] = np.mean(tau)
+            tau_index += 1
 
-    return cd, rc, e_rc, rt, e_rt
+            update_progress.updt(nruns, i + 1)
 
+        mean_afs = afs[:tau_index]
+        tau_autocorr = autocorr_vals[:tau_index]
+        # Remove burn-in (25% of chain)
+        nburn = int(i * .25)
+        samples = sampler.get_chain(discard=nburn, flat=True)
 
-def fit_2P_King_prof(fd, radii_k, ring_dens_k, guess2):
-    '''
-    Fit a 2P King profile. The maximum central density and core radius are
-    left as free parameters while the field density is fixed (fd).
-    '''
+        rc, rt = np.mean(samples, 0)
+        e_rc, e_rt = np.percentile(samples, (16, 84), 0)
+        tau_mean = np.mean(sampler.get_autocorr_time(tol=0))
+        # Effective sample size
+        N_ess = samples.shape[0] / tau_mean
 
-    with warnings.catch_warnings():
-        warnings.simplefilter("error", OptimizeWarning)
-        try:
-            popt, pcov = curve_fit(lambda x, cd, rc: kpf.two_params(
-                x, cd, rc, fd), radii_k, ring_dens_k, guess2)
-        except:
-            raise ValueError("  WARNING: (2) no convergence, core radius not"
-                             " found.")
+    cd = centDens(n_memb_i, (rc, rt), rt_rang)
 
-    # Unpack max density and core radius.
-    cd, rc = popt
-    # Obtain error in core radius.
-    if np.isfinite(pcov).all():
-        e_rc = np.sqrt(pcov[1][1]) if pcov[1][1] > 0 else -1.
-    else:
-        e_rc = -1.
-
-    # If fit converged, check values.
-    if rc <= 0.:
-        raise ValueError("  WARNING: (2) core radius is <=0.")
-    elif e_rc > (5. * rc):
-        raise ValueError("  WARNING: (2) core radius error is too large.")
-
-    return cd, rc, e_rc
+    return cd, rc, e_rc, rt, e_rt, mean_afs, tau_autocorr, N_ess
 
 
-def fit_3P_2P_King_prof(fd, rc, radii_k, ring_dens_k, guess3):
-    '''
-    Fit central density and tidal radius, using a fixed value for the field
-    density (fd) and the core radius (rc).
-    '''
+def lnprob(rct, rt_max, rt_rang, r_in, N_memb, fd):
+    """
+    Logarithmic posterior
+    """
+    # Prior.
+    if rct[1] <= rct[0] or rct[0] <= 0. or rct[1] > rt_max:
+        return -np.inf
 
-    with warnings.catch_warnings():
-        warnings.simplefilter("error", OptimizeWarning)
-        try:
-            popt, pcov = curve_fit(lambda x, cd, rt: kpf.three_params(
-                                   x, rt, cd, rc, fd), radii_k, ring_dens_k,
-                                   guess3)
-        except:
-            raise ValueError("  WARNING: (3) no convergence, tidal radius not"
-                             " found.")
-
-    # Unpack tidal radius and its error.
-    rt = popt[1]
-    # Obtain error in tidal radius.
-    if np.isfinite(pcov).all():
-        e_rt = np.sqrt(pcov[1][1]) if pcov[1][1] > 0 else -1.
-    else:
-        e_rt = -1.
-
-    # If the concentration parameter is larger than ~2.7 (too
-    # large even for a globular cluster) or either radius is
-    # equal or less than zero; discard the fit.
-    if (rt / rc) > 500.:
-        raise ValueError("  WARNING: (3) tidal radius is too large.")
-    elif rt <= 0.:
-        raise ValueError("  WARNING: (3) tidal radius is <=0.")
-    elif e_rt > (5. * rt):
-        raise ValueError("  WARNING: (3) tidal radius error is too large.")
-
-    return rt, e_rt
+    return lnlike(rct, rt_rang, r_in, N_memb, fd)
 
 
-def num_memb_conc_param(flag_3pk_conver, cd, rt, rc):
-    '''
+def lnlike(rct, rt_rang, r_in, N_memb, fd):
+    """
+    As defined in Pieres et al. (2016)
+    """
+
+    # Values outside the tidal radius contribute 'fd'.
+    r_in = np.clip(r_in, a_min=0., a_max=rct[1])
+
+    li = centDens(N_memb, rct, rt_rang) * KingProf(rct, r_in) + fd
+
+    return np.log(li).sum()
+
+
+def centDens(N_memb, rct, arr):
+    """
+    Central density constant. Integrate up to rt (=rct[1])
+    """
+    i = np.searchsorted(arr, rct[1])
+    return N_memb / np.trapz(
+        2. * np.pi * arr[:i] * KingProf(rct, arr[:i]), arr[:i])
+
+
+def KingProf(rct, r_in):
+    """
+    King (1962) profile.
+    """
+    return ((1. / np.sqrt(1. + (r_in / rct[0]) ** 2)) -
+            (1. / np.sqrt(1. + (rct[1] / rct[0]) ** 2))) ** 2
+
+
+def num_memb_conc_param(cd, rt, rc):
+    """
     If 3-P King profile converged, ie: the tidal radius was found,
     calculate approximate number of cluster members with Eq (3) from
     Froebrich et al. (2007); 374, 399-408 and the concentration
     parameter.
-    '''
+    """
 
-    n_c_k, kcp = -1., -1.
-    if flag_3pk_conver:
-        # Obtain approximate number of members.
-        x = 1 + (rt / rc) ** 2
-        n_c_k = int(round((np.pi * cd * rc ** 2) * (np.log(x) -
-                    4 + (4 * np.sqrt(x) + (x - 1)) / x)))
-        # Obtain concentration parameter.
-        kcp = np.log10(rt / rc)
+    # Approximate number of members.
+    x = 1 + (rt / rc) ** 2
+    n_c_k = int(round(
+        (np.pi * cd * rc ** 2) * (
+            np.log(x) - 4 + (4 * np.sqrt(x) + (x - 1)) / x)))
+    # Concentration parameter.
+    kcp = np.log10(rt / rc)
 
     return n_c_k, kcp

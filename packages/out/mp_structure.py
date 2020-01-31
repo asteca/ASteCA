@@ -5,7 +5,7 @@ import matplotlib.offsetbox as offsetbox
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 from itertools import cycle
-from ..structure import king_prof_funcs as kpf
+from ..structure.king_profile import KingProf as kpf
 
 
 def pl_center(
@@ -235,8 +235,8 @@ def pl_rad_find(
 
 def pl_rad_dens(
     gs, coord, rdp_radii, rdp_points, rdp_stddev, field_dens, e_fdens,
-    clust_rad, e_rad, core_rad, e_core, tidal_rad, e_tidal, K_cent_dens,
-        flag_2pk_conver, flag_3pk_conver):
+    clust_rad, e_rad, core_rad, e_core, tidal_rad, e_tidal, KP_cent_dens,
+        KP_conct_par):
     """
     Radial density plot.
     """
@@ -247,8 +247,8 @@ def pl_rad_dens(
         clust_rad, e_rad = clust_rad * 60., e_rad * 60.
         core_rad, e_core, tidal_rad, e_tidal = core_rad * 60., e_core * 60.,\
             tidal_rad * 60., e_tidal * 60.
-        field_dens, e_fdens, K_cent_dens = field_dens / 3600.,\
-            e_fdens / 3600., K_cent_dens / 3600.
+        field_dens, e_fdens, KP_cent_dens = field_dens / 3600.,\
+            e_fdens / 3600., KP_cent_dens / 3600.
         rdp_points = np.array(rdp_points) / 3600.
         rdp_stddev = np.array(rdp_stddev) / 3600.
         coord2 = 'arcmin'
@@ -281,28 +281,22 @@ def pl_rad_dens(
     plt.ylabel(r"$\rho$ $[st/{}^{{2}}]$".format(coord2), fontsize=10)
     ax.tick_params(axis='both', which='major', labelsize=8)
     ax.ticklabel_format(axis='y', style='sci', scilimits=(0, 0))
-
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5)
+
     # Legend texts
-    kp_text = '3P' if flag_3pk_conver else '2P'
     r_frmt = '{:.0f}' if coord2 == 'px' else '{:.2f}'
-    if not np.isnan(e_rad[0]):
-        txt = r"$r_{{cl}}=" + r_frmt + r"_{{" + r_frmt + r"}}^{{" +\
-            r_frmt + r"}}\,[{}]$"
-        t_rad = txt.format(clust_rad, e_rad[0], e_rad[1], coord2)
-    else:
-        t_rad = (r"$r_{{cl}}=$" + r_frmt + r' $[{}]$').format(
-            clust_rad, coord2)
-    texts = [
-        '{} King profile'.format(kp_text),
-        (r"$r_c=$" + r_frmt + r"$\pm$" + r_frmt + r" $[{}]$").format(
-            core_rad, e_core, coord2),
-        (r"$r_t=$" + r_frmt + r"$\pm$" + r_frmt + r" $[{}]$").format(
-            tidal_rad, e_tidal, coord2)
+    t_rad = r"$r_{{{}}}=" + r_frmt + r"_{{" + r_frmt + r"}}^{{" +\
+        r_frmt + r"}}\,[{}]$"
+    txts = [
+        "RDP", 'King profile ({:.2f})'.format(KP_conct_par),
+        t_rad.format("cl", clust_rad, e_rad[0], e_rad[1], coord2),
+        t_rad.format("c", core_rad, e_core[0], e_core[1], coord2),
+        t_rad.format("t", tidal_rad, e_tidal[0], e_tidal[1], coord2)
     ]
+
     # Plot density profile
     ax.plot(rdp_radii, rdp_points, marker='o', ms=5, lw=1., zorder=3,
-            label="RDP")
+            label=txts[0])
     # Plot error bars
     plt.errorbar(
         rdp_radii, rdp_points, yerr=rdp_stddev, fmt='none', ecolor='grey',
@@ -321,36 +315,27 @@ def pl_rad_dens(
     # Plot radius.
     y_mid_point = (y_max + y_min) * .5
     ax.vlines(x=clust_rad, ymin=field_dens, ymax=y_mid_point, lw=1.5,
-              color='r', label=t_rad, zorder=5)
+              color='r', label=txts[2], zorder=5)
     # Plot radius error zone.
     if not np.isnan(e_rad[0]):
         plt.axvspan(e_rad[0], e_rad[1], facecolor='grey', alpha=0.25)
 
-    # Plot 3-P King profile.
-    if flag_3pk_conver:
-        # Plot curve.
-        ax.plot(rdp_radii, kpf.three_params(
-            rdp_radii, tidal_rad, K_cent_dens, core_rad, field_dens),
-            'g--', label=texts[0], lw=2., zorder=3)
-        # Plot r_t radius as an arrow. vline is there to show the label.
+    # Plot King profile.
+    if not np.isnan(tidal_rad):
+        # Plot curve. Values outside of rt contribute 'fd'.
+        kpf_xvals = np.linspace(rdp_radii[0], tidal_rad, 100)
+        kpf_yvals = KP_cent_dens * kpf(
+            (core_rad, tidal_rad), kpf_xvals) + field_dens
+        ax.plot(kpf_xvals, kpf_yvals, 'g--', label=txts[1], lw=2., zorder=3)
+        # Core radius
+        rc_ymax = KP_cent_dens * kpf(
+            (core_rad, tidal_rad), core_rad) + field_dens
+        ax.vlines(
+            x=core_rad, ymin=field_dens, ymax=rc_ymax, label=txts[3],
+            color='g', linestyles=':', lw=2., zorder=5)
+        # Tidal radius
         ax.vlines(x=tidal_rad, ymin=field_dens, ymax=y_mid_point,
-                  label=texts[2], color='g')
-        # ax.arrow(tidal_rad, arr_y_up, 0., arr_y_dwn, fc="g", ec="g",
-        #          head_width=head_w, head_length=head_l, zorder=4)
-        # Plot r_c as a dashed line.
-        ax.vlines(x=core_rad, ymin=field_dens, ymax=kpf.three_params(
-            core_rad, tidal_rad, K_cent_dens, core_rad, field_dens),
-            label=texts[1], color='g', linestyles=':', lw=2., zorder=5)
-    # Plot 2-P King profile if 3-P was not found.
-    elif flag_2pk_conver:
-        # Plot curve.
-        ax.plot(rdp_radii, kpf.two_params(
-            rdp_radii, K_cent_dens, core_rad, field_dens), 'g--',
-            label=texts[0], lw=2., zorder=3)
-        # Plot r_c as a dashed line.
-        ax.vlines(x=core_rad, ymin=field_dens, ymax=kpf.two_params(
-            core_rad, K_cent_dens, core_rad, field_dens), label=texts[1],
-            color='g', linestyles=':', lw=2., zorder=4)
+                  label=txts[4], color='g')
 
     # get handles
     handles, labels = ax.get_legend_handles_labels()
@@ -367,7 +352,7 @@ def pl_rad_dens(
     # plt.ylabel(r"log($\rho$) $[st/{}^{{2}}]$".format(coord2), fontsize=8)
     axins.tick_params(axis='both', which='both', labelsize=6)
 
-    axins.plot(rdp_radii, rdp_points, marker='o', ms=2, lw=.8, zorder=5)
+    axins.scatter(rdp_radii, rdp_points, s=5, zorder=5)
     axins.hlines(y=field_dens, xmin=min(rdp_radii), xmax=max(rdp_radii),
                  color='k', ls='--', zorder=5)
     if not np.isnan(e_fdens):
@@ -380,25 +365,14 @@ def pl_rad_dens(
     axins.vlines(
         x=clust_rad, ymin=field_dens, ymax=y_mid_point, lw=1.5, color='r',
         zorder=10)
-    # # Plot radius error zone.
-    # if not np.isnan(e_rad[0]):
-    #     plt.axvspan(e_rad[0], e_rad[1], facecolor='grey', alpha=0.25)
-    # Plot 3-P King profile.
-    if flag_3pk_conver:
-        axins.plot(rdp_radii, kpf.three_params(
-            rdp_radii, tidal_rad, K_cent_dens, core_rad, field_dens),
-            'g--', lw=2., zorder=3)
-        axins.vlines(x=core_rad, ymin=field_dens, ymax=kpf.three_params(
-            core_rad, tidal_rad, K_cent_dens, core_rad, field_dens),
-            color='g', linestyles=':', lw=2., zorder=5)
-    # Plot 2-P King profile if 3-P was not found.
-    elif flag_2pk_conver:
-        axins.plot(rdp_radii, kpf.two_params(
-            rdp_radii, K_cent_dens, core_rad, field_dens), 'g--', lw=2.,
-            zorder=3)
-        axins.vlines(x=core_rad, ymin=field_dens, ymax=kpf.two_params(
-            core_rad, K_cent_dens, core_rad, field_dens), color='g',
-            linestyles=':', lw=2., zorder=4)
+    # Plot King profile.
+    if not np.isnan(tidal_rad):
+        axins.plot(kpf_xvals, kpf_yvals, 'g--', lw=1., zorder=3)
+        axins.vlines(
+            x=core_rad, ymin=field_dens, ymax=rc_ymax, color='g',
+            linestyles=':', lw=1.)
+        axins.vlines(
+            x=tidal_rad, ymin=field_dens, ymax=y_mid_point, color='g', lw=1)
 
     axins.set_xscale('log')
     axins.set_yscale('log')
@@ -407,11 +381,10 @@ def pl_rad_dens(
 def pl_full_frame(
     gs, fig, project, x_offset, y_offset, x_name, y_name, coord, x_min, x_max,
     y_min, y_max, asp_ratio, kde_cent, clust_rad, frac_cl_area, x, y,
-    st_sizes_arr, core_rad, e_core, tidal_rad, e_tidal, K_conct_par,
-        flag_2pk_conver, flag_3pk_conver):
-    '''
+        st_sizes_arr, core_rad, tidal_rad):
+    """
     x,y finding chart of full frame
-    '''
+    """
     ax = plt.subplot(gs[4:6, 0:2])
     ax.set_aspect(aspect=asp_ratio)
     ax.set_title(
@@ -434,19 +407,12 @@ def pl_full_frame(
     circle = plt.Circle((kde_cent[0], kde_cent[1]), clust_rad, color='r',
                         fill=False, lw=1.5)
     fig.gca().add_artist(circle)
-    if flag_3pk_conver is True:
+    if not np.isnan(tidal_rad):
         # Plot tidal radius.
         circle = plt.Circle(
             (kde_cent[0], kde_cent[1]), tidal_rad, color='g', fill=False,
             lw=1.5)
         fig.gca().add_artist(circle)
-        # Plot core radius.
-        if core_rad > 0:
-            circle = plt.Circle(
-                (kde_cent[0], kde_cent[1]), core_rad, color='g',
-                fill=False, ls='dashed', lw=1.)
-            fig.gca().add_artist(circle)
-    elif flag_2pk_conver is True:
         # Plot core radius.
         if core_rad > 0:
             circle = plt.Circle(

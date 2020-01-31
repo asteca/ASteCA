@@ -10,9 +10,9 @@ from . import prep_plots
 
 def main(
     npd, cld_i, pd, x_offset, y_offset, bw_list, kde_cent, kde_plot,
-    K_cent_dens, clust_rad, e_rad, rad_rads, rad_N_membs, rad_N_field, rad_CI,
+    clust_rad, e_rad, rad_rads, rad_N_membs, rad_N_field, rad_CI,
     bin_cent, bin_width, kde_approx_cent, frame_kde_cent, core_rad, e_core,
-    tidal_rad, e_tidal, K_conct_par, flag_2pk_conver, flag_3pk_conver,
+    tidal_rad, e_tidal, KP_cent_dens, KP_conct_par,
     rdp_radii, rdp_points, rdp_stddev, xy_filtered, xy_cent_dist, NN_dist,
     fr_dens, fdens_min_d, fdens_lst, fdens_std_lst, field_dens_d, field_dens,
     field_dens_std, cont_index, n_memb_i, cl_region_i, frac_cl_area,
@@ -59,14 +59,12 @@ def main(
             # pl_rad_dens: Radial density plot.
             [gs, coord, rdp_radii, rdp_points, rdp_stddev, field_dens,
              field_dens_std, clust_rad, e_rad, core_rad,
-             e_core, tidal_rad, e_tidal, K_cent_dens, flag_2pk_conver,
-             flag_3pk_conver],
+             e_core, tidal_rad, e_tidal, KP_cent_dens, KP_conct_par],
             # pl_full_frame: x,y finding chart of full frame.
             [gs, fig, pd['project'], x_offset, y_offset, x_name, y_name,
              coord, x_min, x_max, y_min, y_max, asp_ratio, kde_cent, clust_rad,
              frac_cl_area, cld_i['x'], cld_i['y'], st_sizes_arr, core_rad,
-             e_core, tidal_rad, e_tidal, K_conct_par, flag_2pk_conver,
-             flag_3pk_conver],
+             tidal_rad],
             # pl_zoom_frame: Zoom on x,y finding chart.
             [gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin, y_zmax,
                 cont_index, n_memb_i, kde_plot, x_data_z, y_data_z,
