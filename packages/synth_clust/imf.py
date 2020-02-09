@@ -37,7 +37,7 @@ def main(IMF_name, masses, m_high=150.):
     # IMF low mass limit.
     m_low = imfs_dict[IMF_name]
 
-    sampled_IMF = invTrnsfSmpl(m_low)
+    sampled_IMF = invTrnsfSmpl(masses, IMF_name, m_low, m_high)
 
     st_dist_mass = (sampled_IMF, np.cumsum(sampled_IMF))
 
