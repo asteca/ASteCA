@@ -266,7 +266,7 @@ def main(mypath, pars_f_path):
                  'kroupa_2002', 'salpeter_1955')
     # Optimizing algorithm
     # TODO 'brute', 'emcee', 'abc'
-    optimz_algors = ('ptemcee', 'boot+GA', 'emcee', 'n')
+    optimz_algors = ('ptemcee', 'boot+GA', 'emcee', 'n', 'synth_gen')
     # Accepted forms of priors.
     bayes_priors = ('u', 'g')
 

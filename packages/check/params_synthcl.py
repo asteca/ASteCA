@@ -13,7 +13,7 @@ def check(mypath, pd):
 
     # If best fit method is set to run.
     pd['fundam_params'] = []
-    if pd['bf_flag']:
+    if pd['bf_flag'] or pd['best_fit_algor'] == 'synth_gen':
 
         # Check the random seed
         if pd['synth_rand_seed'] in ('n', 'N', 'None', 'none', 'no'):

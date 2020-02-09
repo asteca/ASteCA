@@ -15,7 +15,7 @@ def check_get(pd):
     # Only read files if best fit method is set to run. Else pass empty list.
     pd['theor_tracks'], pd['m_ini_idx'], pd['binar_flag'] = [], np.nan, False
 
-    if pd['bf_flag']:
+    if pd['bf_flag'] or pd['best_fit_algor'] == 'synth_gen':
         # Print info about tracks.
         nt = '' if len(pd['all_syst_filters']) == 1 else 's'
         print("Processing {} theoretical isochrones\n"

@@ -44,6 +44,11 @@ def check(mypath, file_end, inst_packgs_lst):
     if pd['best_fit_algor'] not in pd['optimz_algors']:
         sys.exit("ERROR: the selected best fit method '{}' does not match"
                  " a valid input.".format(pd['best_fit_algor']))
-    pd['bf_flag'] = True if pd['best_fit_algor'] != 'n' else False
+
+    # In place for #239
+    if pd['best_fit_algor'] != 'n' and pd['best_fit_algor'] != 'synth_gen':
+        pd['bf_flag'] = True
+    else:
+        pd['bf_flag'] = False
 
     return pd

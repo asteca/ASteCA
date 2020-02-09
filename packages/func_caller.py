@@ -37,6 +37,7 @@ from .out import cluster_members_file
 from .best_fit import best_fit_synth_cl
 from .out import mcmc_samples
 from .out import synth_cl_file
+from .out import synth_gen_out  # In place for #239
 from .out import massFunction  # TODO
 from .out import create_out_data_file
 # DEPRECATED 31/12/18
@@ -51,6 +52,7 @@ from .out import make_B2_plot
 from .out import make_C1_plot
 from .out import make_C2_plot
 from .out import make_C3_plot
+from .out import make_D0_plot  # In place for #239
 from .out import make_D1_plot
 from .out import make_D2_plot
 # DEPRECATED 22/11/18
@@ -272,6 +274,15 @@ def main(cl_file, pd):
     # DEPRECATED 31/12/18
     # # Round fundamental parameters fitted and their errors
     # clp = error_round.fundParams(clp)
+
+    # Create output synthetic cluster file if one was generated
+    synth_gen_out.main(npd, clp, **pd)
+
+    # Plot generated synthetic clusters
+    make_D0_plot.main(npd, pd, **clp)
+    if pd['stop_idx'] == 'D0':
+        retFunc(npd['clust_name'], start)
+        return
 
     # Add cluster data output file
     add_data_output.main(npd, pd, **clp)
