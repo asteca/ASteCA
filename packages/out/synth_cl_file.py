@@ -33,7 +33,7 @@ def main(clp, npd, bf_flag, best_fit_algor, fundam_params, filters, colors,
             mags_cols, e_mags_cols = synth_clst[0].T, synth_clst[1].T
             binar_idx, extra_pars = synth_clst[2][0].T, synth_clst[2][2:].T
             # Prepare header.
-            hdr = ['#ID  '] + [f[1] + '   ' for f in filters]
+            hdr = ['ID  '] + [f[1] + '   ' for f in filters]
             hdr += ['(' + c[1].replace(',', '-') + ')   ' for c in colors]
             hdr += ['e_' + f[1] + '   ' for f in filters]
             hdr += ['e_(' + c[1].replace(',', '-') + ')   ' for c in colors]
@@ -101,6 +101,6 @@ def synth_cl_plot(
             if isoch_compl.any():
                 # This is what makes this call different from 'synth_cluster'
                 synth_clust = add_errors.main(
-                    isoch_compl, err_pars, binar_flag, m_ini_idx, True)
+                    isoch_compl, err_pars, binar_flag, m_ini_idx)
 
     return isoch_moved, synth_clust

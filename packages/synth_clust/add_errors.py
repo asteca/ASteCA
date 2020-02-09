@@ -3,7 +3,7 @@ import numpy as np
 from ..math_f import exp_function
 
 
-def main(isoch_compl, err_pars, binar_flag=None, m_ini_idx=None, flag=False):
+def main(isoch_compl, err_pars, binar_flag=None, m_ini_idx=None):
     """
     The 'flag' parameter is there to be used by the 'synt_cl_file.py' file.
     """
@@ -25,10 +25,13 @@ def main(isoch_compl, err_pars, binar_flag=None, m_ini_idx=None, flag=False):
         # Create list with photometric dimensions in first sub-list, and
         # associated errors in the second.
         photom.append(mc_gauss)
-        if flag:
+        # Called from 'synth_cl_file'
+        if binar_flag is not None:
             sigma.append(sigma_mc)
 
-    if flag is False:
+    # If this flag is not set, it means this is being called from the
+    # likelihood function and thus the 'extra_pars' are not required.
+    if binar_flag is None:
         # Transposing is necessary for np.histogramdd()
         return np.array(photom).T
     else:
