@@ -1,6 +1,4 @@
 
-
-import sys
 import imp
 
 
@@ -23,7 +21,7 @@ def check():
         print("ERROR: the following required packages are missing:\n")
         for p in missing_pckg:
             print(" - {}".format(p))
-        sys.exit("Missing packages")
+        raise ValueError("Missing packages")
 
     # Non-essential packages
     for pckg in ['emcee']:

@@ -1,5 +1,4 @@
 
-import sys
 import numpy as np
 from packages.inp import readZA
 from packages.inp import read_isochs
@@ -84,7 +83,7 @@ def miniCheck(extra_pars, met_vals_all, age_vals_all):
         # Single photometric system defined. Nothing to check.
         return
     else:
-        txt = "\nERROR: initial mass values are not equal across the\n" +\
+        txt = "initial mass values are not equal across the\n" +\
             "photometric systems for the isochrone: z={}, log(age)={}"
         for d in range(1, Ndim):
             for z in range(Nz):
@@ -93,7 +92,8 @@ def miniCheck(extra_pars, met_vals_all, age_vals_all):
                     if not np.array_equal(arr0, arrd):
                         # Check across (z, log(age)) values for each
                         # photometric system.
-                        sys.exit(txt.format(met_vals_all[z], age_vals_all[a]))
+                        raise ValueError(
+                            txt.format(met_vals_all[z], age_vals_all[a]))
 
 
 def arrange_filters(isoch_list, all_syst_filters, filters, colors):
