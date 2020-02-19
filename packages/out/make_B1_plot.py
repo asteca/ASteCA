@@ -10,7 +10,8 @@ from . import prep_plots
 
 def main(
     npd, cld_c, pd, em_float, err_lst, cl_region_c, cl_region_rjct_c,
-        stars_out_c, stars_out_rjct_c, col_0_comb, mag_0_comb, **kwargs):
+    stars_out_c, stars_out_rjct_c, N_st_err_rjct, col_0_comb, mag_0_comb,
+        **kwargs):
     """
     Make B1 block plots.
     """
@@ -23,12 +24,11 @@ def main(
         err_bar_all = prep_plots.error_bars(
             cld_c['mags'][0], np.nan, err_lst, 'all')
 
-        # Photometric analysis plots.
+        # Magnitude vs uncertainties diagrams.
         arglist = [
-            # pl_phot_err: Photometric error rejection.
             [gs, pd['colors'], pd['filters'], pd['id_kinem'], cld_c['mags'],
              em_float, cl_region_c, cl_region_rjct_c, stars_out_c,
-             stars_out_rjct_c, err_bar_all]
+             stars_out_rjct_c, N_st_err_rjct, err_bar_all]
         ]
         for n, args in enumerate(arglist):
             mp_errors.plot(n, *args)

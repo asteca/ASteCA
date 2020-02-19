@@ -28,10 +28,11 @@ def starsPlot(boundary, x_data, y_data):
 
 def pl_phot_err(
     gs, colors, filters, id_kinem, mags, em_float, cl_region_c,
-        cl_region_rjct_c, stars_out_c, stars_out_rjct_c, err_bar_all):
-    '''
+    cl_region_rjct_c, stars_out_c, stars_out_rjct_c, N_st_err_rjct,
+        err_bar_all):
+    """
     Photometric + kinematic error rejection.
-    '''
+    """
 
     # Main magnitude (x) data for accepted/rejected stars.
     mmag_out_acpt, mmag_out_rjct, mmag_in_acpt, mmag_in_rjct =\
@@ -110,8 +111,9 @@ def pl_phot_err(
             max_cut_y = em_float[0]
             ax.hlines(y=max_cut_y, xmin=x_min, xmax=x_max, color='k',
                       linestyles='dashed', zorder=4)
-            ob = offsetbox.AnchoredText(
-                r"$max={}$ mag".format(em_float[0]), loc=1, prop=dict(size=11))
+            txt = r"$max={}$ mag".format(em_float[0])
+            txt += "\n" + r"$N_{{rjct}}={}$".format(N_st_err_rjct[0])
+            ob = offsetbox.AnchoredText(txt, loc=1, prop=dict(size=11))
             ob.patch.set(alpha=0.7)
             ax.add_artist(ob)
             # Plot error curve
@@ -122,9 +124,9 @@ def pl_phot_err(
             max_cut_y = em_float[1 + k]
             ax.hlines(y=max_cut_y, xmin=x_min, xmax=x_max, color='k',
                       linestyles='dashed', zorder=4)
-            ob = offsetbox.AnchoredText(
-                r"$max={}$ mag".format(em_float[1 + k]), loc=2,
-                prop=dict(size=11))
+            txt = r"$max={}$ mag".format(em_float[1 + k])
+            txt += "\n" + r"$N_{{rjct}}={}$".format(N_st_err_rjct[1][k])
+            ob = offsetbox.AnchoredText(txt, loc=2, prop=dict(size=11))
             ob.patch.set(alpha=0.7)
             ax.add_artist(ob)
             plt.plot(err_bar_all[1], err_bar_all[2][k + 1], color='yellow',
@@ -136,9 +138,9 @@ def pl_phot_err(
             max_cut_y = em_float[-(3 - k)]
             ax.hlines(y=max_cut_y, xmin=x_min, xmax=x_max, color='k',
                       linestyles='dashed', zorder=4)
-            ob = offsetbox.AnchoredText(
-                r"$max={}$ {}".format(em_float[-(3 - k)], unit), loc=2,
-                prop=dict(size=11))
+            txt = r"$max={}$ {}".format(em_float[-(3 - k)], unit)
+            txt += "\n" + r"$N_{{rjct}}={}$".format(N_st_err_rjct[2][k])
+            ob = offsetbox.AnchoredText(txt, loc=2, prop=dict(size=11))
             ob.patch.set(alpha=0.7)
             ax.add_artist(ob)
         # Maximum error limit of 1.
