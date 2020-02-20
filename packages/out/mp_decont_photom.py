@@ -7,10 +7,10 @@ import matplotlib.offsetbox as offsetbox
 def pl_mp_histo(
     gs, n_memb_da, memb_prob_avrg_sort, flag_decont_skip, cl_reg_fit,
         mode_fld_clean, local_bin):
-    '''
+    """
     Histogram for the distribution of membership probabilities from the
     decontamination algorithm.
-    '''
+    """
     # Only attempt to plot if the DA was applied.
     if flag_decont_skip is False:
         # Reduced membership.
@@ -219,10 +219,10 @@ def pl_mps_incomp_diags(
     # Plot grid.
     if mode_fld_clean == 'local' and local_rm_edges is not None:
         # Use first magnitude and color.
-        for x_ed in local_rm_edges[c2]:
+        for x_ed in local_rm_edges[c1]:
             # vertical lines
             ax.axvline(x_ed, linestyle=':', lw=.8, color='k', zorder=1)
-        for y_ed in local_rm_edges[c1]:
+        for y_ed in local_rm_edges[c2]:
             # horizontal lines
             ax.axhline(y_ed, linestyle=':', lw=.8, color='k', zorder=1)
     else:
