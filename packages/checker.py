@@ -6,6 +6,7 @@ from .check import clusters
 from .check import params_file
 from .check import update
 from .check import params_data
+from .check import params_kinem
 from .check import params_out
 from .check import params_struct
 from .check import params_decont
@@ -46,6 +47,8 @@ def check_all(mypath, file_end):
     # the magnitude and color names were properly defined.
     # If they are, store also the name of the proper isochrones folders.
     pd = params_data.check(mypath, pd)
+
+    params_kinem.check(pd)
 
     # Check output parameters.
     pd = params_out.check(pd)

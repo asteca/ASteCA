@@ -2,7 +2,9 @@
 from collections import Counter
 
 
-def check(manual_struct, center_bw, fdens_method, RDP_rings, **kwargs):
+def check(
+    manual_struct, center_bw, fdens_method, RDP_rings, kp_flag,
+        inst_packgs_lst, **kwargs):
     """
     Check that the parameters are properly written.
     """
@@ -37,3 +39,8 @@ def check(manual_struct, center_bw, fdens_method, RDP_rings, **kwargs):
 
     if RDP_rings < 5 or RDP_rings > 500:
         raise ValueError("valid range is 5 < RDP_rings < 500")
+
+    if kp_flag:
+        if 'emcee' not in inst_packgs_lst:
+            raise ValueError("King profile is selected to run, but 'emcee' is"
+                             " not installed")

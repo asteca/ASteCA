@@ -1,21 +1,8 @@
 
 
-def phot_syst_filt_check(all_systs, entry, phot_syst, filter_name):
-    """
-    Check photometric system and filter names.
-    """
-    if phot_syst not in all_systs.keys():
-        raise ValueError("unknown photometric system '{}', given in"
-                         "'{}'.".format(phot_syst, entry))
-    if filter_name not in all_systs[phot_syst][1]:
-        raise ValueError("filter '{}' given in '{}' is not present\n"
-                         "in '{}' photometric system.".format(
-                             filter_name, entry, all_systs[phot_syst][0]))
-
-
 def check(mypath, pd):
     """
-    Check that the magnitudes, colors and kinematic data are properly defined.
+    Check that the magnitudes and colors are properly defined.
     Store data to read from cluster's file, to load the correct set of
     isochrones, and to properly generate the synthetic clusters (if the best
     match function is set to run).
@@ -120,41 +107,6 @@ def check(mypath, pd):
         pd['e_col_col'], pd['colors'], pd['c_filters'] = id_col, x_col, y_col,\
         mag_col, e_mag_col, filters, col_col, e_col_col, colors, c_filters
 
-    if len(pd['id_kinem']) != 8:
-        raise ValueError("there should be 8 entries in 'PK' line ({})".format(
-            len(pd['id_kinem'])))
-
-    # Read PMs, parallax, and RV data.
-    k_cols = ('plx', 'e_plx', 'pmx', 'e_pmx', 'pmy', 'e_pmy', 'rv', 'e_rv')
-    for i, ci in enumerate(pd['id_kinem']):
-        if ci not in ('n', 'N'):
-            try:
-                pd[k_cols[i] + '_col'] = 'col' + str(int(ci) + 1) if\
-                    pd['read_mode'] == 'num' else ci
-            except ValueError:
-                raise ValueError(
-                    "bad index ('{}') for '{}' column in "
-                    "'params_input.dat'".format(ci, k_cols[i]))
-        else:
-            pd[k_cols[i] + '_col'] = False
-
-    # Check that PMs are either both or none defined.
-    if (pd['pmx_col'] is False and pd['pmy_col'] is not False) or\
-            (pd['pmy_col'] is False and pd['pmx_col'] is not False):
-        raise ValueError("both (or none) PM dimensions must be defined"
-                         " in 'params_input.dat'")
-
-    # Check that error columns are present
-    for col in ('plx_col', 'pmx_col', 'pmy_col', 'rv_col'):
-        if pd[col] is not False and pd['e_' + col] is False:
-            raise ValueError("missing error column for '{}' in"
-                             "'params_input.dat'".format('e_' + col[:-4]))
-
-    if pd['plx_chains'] < 4:
-        raise ValueError("set a minimum of 4 chains for Plx Bayesian analysis")
-    if pd['PM_KDE_std'] <= 0.:
-        raise ValueError("'KDE_std' parameter must be greater than 0.")
-
     # Check max error values.
     for i, e in enumerate(pd['err_max']):
         try:
@@ -165,3 +117,16 @@ def check(mypath, pd):
                                  " in 'params_input.dat'".format(e, i))
 
     return pd
+
+
+def phot_syst_filt_check(all_systs, entry, phot_syst, filter_name):
+    """
+    Check photometric system and filter names.
+    """
+    if phot_syst not in all_systs.keys():
+        raise ValueError("unknown photometric system '{}', given in"
+                         "'{}'.".format(phot_syst, entry))
+    if filter_name not in all_systs[phot_syst][1]:
+        raise ValueError("filter '{}' given in '{}' is not present\n"
+                         "in '{}' photometric system.".format(
+                             filter_name, entry, all_systs[phot_syst][0]))
