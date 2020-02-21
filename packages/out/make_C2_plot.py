@@ -41,11 +41,6 @@ def main(
                 mmag_clp, mp_clp, plx_clp, e_plx_clp, flag_no_fl_regs_i,
                 field_regions_i)
         plx_cl_kde_x, plx_cl_kde = aux_funcs.kde1D(plx_clrg)
-        if plx_bayes_flag_clp:
-            plx_mu_kde_x, plx_mu_kde = aux_funcs.kde1D(
-                1. / plx_samples.flatten())
-        else:
-            plx_mu_kde_x, plx_mu_kde = [], []
 
         arglist = [
             # plx_histo
@@ -57,8 +52,8 @@ def main(
             [gs, y_min_cmd, y_max_cmd, y_ax, mmag_clp, mp_clp, plx_clp,
              e_plx_clp, plx_flrg, mag_flrg, plx_Bys, plx_wa],
             # plx_bys_params
-            [gs, plx_bayes_flag_clp, plx_samples, plx_Bys, plx_mu_kde_x,
-             plx_mu_kde, plx_tau_autocorr, mean_afs, plx_ess]
+            [gs, plx_bayes_flag_clp, plx_samples, plx_Bys,
+             plx_tau_autocorr, mean_afs, plx_ess]
         ]
         for n, args in enumerate(arglist):
             mp_kinem_plx.plot(n, *args)

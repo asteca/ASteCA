@@ -3,8 +3,9 @@ import matplotlib.pyplot as plt
 import matplotlib.offsetbox as offsetbox
 from matplotlib.colors import ListedColormap
 import numpy as np
-from astropy.stats import sigma_clipped_stats
-from ..aux_funcs import reject_outliers
+# from astropy.stats import sigma_clipped_stats
+from . import BayesPlots
+from .. import aux_funcs
 
 
 def plx_histo(
@@ -15,8 +16,8 @@ def plx_histo(
     """
     ax = plt.subplot(gs[0:2, 0:2])
     ax.set_title('Offset applied: +{}'.format(plx_offset), fontsize=9)
-    plt.xlabel('Plx [mas]', fontsize=12)
-    plt.ylabel('N', fontsize=12)
+    plt.xlabel('Plx [mas]', fontsize=10)
+    plt.ylabel('N', fontsize=10)
     ax.minorticks_on()
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
             zorder=1)
@@ -69,8 +70,8 @@ def plx_chart(gs, x_name, y_name, coord, cl_reg_fit, plx_Bys):
     if coord == 'deg':
         ax.invert_xaxis()
     # Set axis labels
-    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=12)
-    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=12)
+    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=10)
+    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=10)
     # Set minor ticks
     ax.minorticks_on()
 
@@ -125,8 +126,8 @@ def plx_vs_mag(
     # HARDCODED in plx_analysis: 3 sigma outlier rejection
     ax.set_title("Plx clip " + r"$(med\pm3\sigma,\;N={})$".format(
         len(plx_clp)), fontsize=9)
-    plt.xlabel('Plx [mas]', fontsize=12)
-    plt.ylabel(y_ax, fontsize=12)
+    plt.xlabel('Plx [mas]', fontsize=10)
+    plt.ylabel(y_ax, fontsize=10)
     # Set minor ticks
     ax.minorticks_on()
 
@@ -188,84 +189,28 @@ def plx_vs_mag(
     # plt.gca().invert_yaxis()
 
 
-def pms_bys_params(
-    gs, plx_bayes_flag_clp, plx_samples, plx_Bys, plx_mu_kde_x, plx_mu_kde,
-        plx_tau_autocorr, mean_afs, plx_ess):
+def plx_bys_params(
+    gs, plx_bayes_flag_clp, plx_samples, plx_Bys, plx_tau_autocorr, mean_afs,
+        plx_ess):
     """
     """
     if plx_bayes_flag_clp:
-        plt.style.use('seaborn-darkgrid')
-        ax1 = plt.subplot(gs[2:4, 0:2])
-        plt.xlabel(r"$Plx_{Bay}$")
+        gsx, gsy = (0, 2), (2, 4)
 
-        plx_no_outlr = reject_outliers(plx_samples.flatten())
-        # Obtain the bin edges using numpy
-        hist, bin_edges = np.histogram(1. / plx_no_outlr, bins=25)
-        # Plot bars with the proper positioning, height, and width.
-        plt.bar(
-            (bin_edges[1:] + bin_edges[:-1]) * .5, hist / float(hist.max()),
-            width=(bin_edges[1] - bin_edges[0]), color='grey', alpha=0.3)
-        # Plot KDE.
-        plt.plot(plx_mu_kde_x, plx_mu_kde / max(plx_mu_kde), color='k', lw=1.5)
-        # Mean
-        plt.axvline(
-            x=1. / plx_Bys[1], linestyle='--', color='blue', zorder=4,
-            label=("Mean={:.3f} [mas]").format(1. / plx_Bys[1]))
-        # 16th and 84th percentiles.
-        std = np.std(1. / plx_samples.flatten())
-        txt = "16-84th perc\n" + r"$\sigma={:.3f}$".format(std)
-        plt.axvline(
-            x=1. / plx_Bys[0], linestyle=':', color='orange', zorder=4,
-            label=txt)
-        plt.axvline(x=1. / plx_Bys[2], linestyle=':', color='orange', zorder=4)
+        mcmc_samples = 1. / plx_samples
 
-        plt.xlim(
-            max(-1., (1. / plx_Bys[1]) - 4. * std),
-            (1. / plx_Bys[1]) + 4. * std)
-        cur_ylim = ax1.get_ylim()
-        ax1.set_ylim([0, cur_ylim[1]])
-        plt.legend(fontsize='small')
+        plx_mu_kde_x, plx_mu_kde = aux_funcs.kde1D(mcmc_samples.flatten())
 
-        # Traceplot
-        ax = plt.subplot(gs[2:3, 2:6])
-        N_tot = plx_samples.shape[0]
-        trace = 1. / plx_samples
-        plt.plot(trace, c='k', lw=.8, ls='-', alpha=0.5)
-        # HARDCODED in plx_analysis: 25% of trace is burned
-        Nburn = .25 * N_tot
-        plt.axvline(x=Nburn, linestyle=':', color='r', zorder=4)
-        # 16th and 84th percentiles + median.
-        plt.axhline(y=1. / plx_Bys[0], linestyle=':', color='orange', zorder=4)
-        plt.axhline(y=1. / plx_Bys[1], linestyle=':', color='blue', zorder=4)
-        plt.axhline(y=1. / plx_Bys[2], linestyle=':', color='orange', zorder=4)
-        plt.xlabel("Steps")
-        plt.ylabel(r"$Plx_{Bay}$")
-
-        # Use the last 10% of the chains.
-        N = int(trace.shape[0] * .1)
-        std = np.std(trace[-N:])
-        pmin, pmax = np.min(trace[-N:]), np.max(trace[-N:])
-        ymin, ymax = pmin - std, pmax + std
-        ax.set_ylim(ymin, ymax)
-        ax.set_xlim(0, N_tot)
-
-        # Tau
-        plt.subplot(gs[3:4, 2:4])
+        _16_50_84 = 1. / plx_Bys
+        xylabel = "Plx"
         # HARDCODED in plx_analysis: store samples every 10 steps
-        plt.plot(
-            10 * np.arange(plx_tau_autocorr.size), plx_tau_autocorr,
-            label=r"$N_{{ESS}}\approx${:.0f}".format(plx_ess))
-        plt.xlabel("steps")
-        plt.ylabel(r"$\hat{\tau}$")
-        plt.legend(fontsize='small')
+        Nsteps = 10
+        # HARDCODED in plx_analysis: 25% of trace is burned
+        Brn_prcnt = .25
 
-        # MAF
-        plt.subplot(gs[3:4, 4:6])
-        plt.plot(10 * np.arange(mean_afs.size), mean_afs)
-        plt.xlabel("steps")
-        plt.ylabel(r"$MAF$")
-
-        plt.style.use('default')
+        BayesPlots.main(
+            gs, gsx, gsy, mcmc_samples, plx_mu_kde_x, plx_mu_kde, _16_50_84,
+            plx_tau_autocorr, plx_ess, mean_afs, xylabel, Nsteps, Brn_prcnt)
 
 
 def pms_vs_plx_mp_mag(
@@ -280,8 +225,8 @@ def pms_vs_plx_mp_mag(
         ax.minorticks_on()
         ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
                 zorder=1)
-        ax.set_ylabel(ylabel, fontsize=12)
-        ax.set_xlabel(xlabel, fontsize=12)
+        ax.set_ylabel(ylabel, fontsize=10)
+        ax.set_xlabel(xlabel, fontsize=10)
 
         plt.scatter(
             cl_xdata, cl_ydata, marker='o', c=cl_col, s=25, edgecolor='k',
@@ -374,7 +319,7 @@ def plot(N, *args):
         0: [plx_histo, 'Plx histogram'],
         1: [plx_chart, 'Plx chart'],
         2: [plx_vs_mag, 'Plx vs mag'],
-        3: [pms_bys_params, 'PMs Bayes parameter'],
+        3: [plx_bys_params, 'Plx Bayes parameter'],
         4: [pms_vs_plx_mp_mag, 'PMs vs Plx, mag & MP colored']
     }
 
