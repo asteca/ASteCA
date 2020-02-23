@@ -92,7 +92,8 @@ def main(mypath, pars_f_path):
                     kp_flag = True if reader[1] in true_lst else False
                     kp_nchains = int(reader[2])
                     kp_nruns = int(reader[3])
-                    rt_max_f = float(reader[4])
+                    kp_nburn = float(reader[4])
+                    rt_max_f = float(reader[5])
                 elif reader[0] == 'GR':
                     try:
                         fr_number = int(reader[1])
@@ -126,7 +127,8 @@ def main(mypath, pars_f_path):
                     plx_offset = float(reader[2])
                     plx_chains = int(reader[3])
                     plx_runs = int(reader[4])
-                    flag_plx_mp = True if reader[5] in true_lst else False
+                    plx_burn = float(reader[5])
+                    flag_plx_mp = True if reader[6] in true_lst else False
                 elif reader[0] == 'PO':
                     PM_KDE_std = float(reader[1])
                     cosDE_flag = True if reader[2] in true_lst else False
@@ -316,7 +318,8 @@ def main(mypath, pars_f_path):
         'manual_struct': manual_struct, 'center_bw': center_bw,
         'NN_dd': NN_dd, 'fdens_method': fdens_method, 'nsteps_rad': nsteps_rad,
         'RDP_rings': RDP_rings, 'kp_flag': kp_flag, 'kp_nchains': kp_nchains,
-        'kp_nruns': kp_nruns, 'rt_max_f': rt_max_f, 'fr_number': fr_number,
+        'kp_nruns': kp_nruns, 'kp_nburn': kp_nburn, 'rt_max_f': rt_max_f,
+        'fr_number': fr_number,
         #
         'err_max': err_max, 'ad_runs': ad_runs,
         # Decontamination algorithm parameters.
@@ -324,7 +327,7 @@ def main(mypath, pars_f_path):
         'fixedda_port': fixedda_port, 'bayesda_dflag': bayesda_dflag,
         # Plx & PMs parameters.
         'plx_bayes_flag': plx_bayes_flag, 'plx_offset': plx_offset,
-        'plx_chains': plx_chains, 'plx_runs': plx_runs,
+        'plx_chains': plx_chains, 'plx_runs': plx_runs, 'plx_burn': plx_burn,
         'flag_plx_mp': flag_plx_mp,
         'PM_KDE_std': PM_KDE_std, 'cosDE_flag': cosDE_flag,
         # Cluster region field stars removal parameters.
