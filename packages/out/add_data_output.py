@@ -5,9 +5,8 @@ from ..inp.get_data import flatten
 
 def main(
     npd, pd, cont_index, n_memb, memb_par, n_memb_da, frac_cl_area,
-    x_offset, y_offset, kde_cent, clust_rad, e_rad, core_rad, e_core,
-    tidal_rad, e_tidal, KP_memb_num, isoch_fit_params, isoch_fit_errors,
-        **kwargs):
+    x_offset, y_offset, kde_cent, clust_rad, e_rad, KP_Bys_rc, KP_Bys_rt,
+        KP_memb_num, isoch_fit_params, isoch_fit_errors, **kwargs):
     """
     Add data obtained to the 'asteca_output.dat' file.
     """
@@ -26,8 +25,8 @@ def main(
     cre_r = [
         frmt.format(_) for _ in [
             x_cent, kde_cent[1] + y_offset, clust_rad, e_rad[0], e_rad[1],
-            core_rad, e_core[0], e_core[1],
-            tidal_rad, e_tidal[0], e_tidal[1]]]
+            KP_Bys_rc[1], KP_Bys_rc[0], KP_Bys_rc[2],
+            KP_Bys_rt[1], KP_Bys_rt[0], KP_Bys_rt[2]]]
 
     # Cluster parameters and errors.
     cpe_r = [

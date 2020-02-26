@@ -195,22 +195,36 @@ def plx_bys_params(
     """
     """
     if plx_bayes_flag_clp:
-        gsx, gsy = (0, 2), (2, 4)
+        plt.style.use('seaborn-darkgrid')
 
+        # Prepare data
         mcmc_samples = 1. / plx_samples
-
         plx_mu_kde_x, plx_mu_kde = aux_funcs.kde1D(mcmc_samples.flatten())
-
         _16_50_84 = 1. / plx_Bys
         xylabel = "Plx"
+
         # HARDCODED in plx_analysis: store samples every 10 steps
         Nsteps = 10
         # HARDCODED in plx_analysis: 25% of trace is burned
         Brn_prcnt = .25
 
-        BayesPlots.main(
+        gsy, gsx = (2, 4), (0, 2)
+        BayesPlots.histogram(
             gs, gsx, gsy, mcmc_samples, plx_mu_kde_x, plx_mu_kde, _16_50_84,
-            plx_tau_autocorr, plx_ess, mean_afs, xylabel, Nsteps, Brn_prcnt)
+            xylabel)
+
+        gsy, gsx = (2, 3), (2, 6)
+        BayesPlots.traceplot(
+            gs, gsx, gsy, mcmc_samples, _16_50_84, Brn_prcnt, xylabel)
+
+        gsy, gsx = (3, 4), (2, 4)
+        BayesPlots.autocorr(
+            gs, gsx, gsy, Nsteps, plx_tau_autocorr, plx_ess)
+
+        gsy, gsx = (3, 4), (4, 6)
+        BayesPlots.meanAF(gs, gsx, gsy, Nsteps, mean_afs)
+
+        plt.style.use('default')
 
 
 def pms_vs_plx_mp_mag(

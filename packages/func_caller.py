@@ -12,6 +12,7 @@ from .structure import center
 from .structure import radius
 from .structure import field_density
 from .structure import radial_dens_prof
+from .structure import integMags
 from .structure import cluster_area
 from .structure import contamination_index
 from .structure import king_profile
@@ -119,6 +120,15 @@ def main(cl_file, pd):
     # RDP. For plotting purposes only.
     clp = radial_dens_prof.main(clp, **pd)
 
+    # Integrated magnitude. For plotting purposes only.
+    clp = integMags.main(clp, **cld_i)
+
+    # Uses the incomplete data.
+    make_A2_plot.main(npd, cld_i, pd, **clp)
+    if pd['stop_idx'] == 'A2':
+        retFunc(npd['clust_name'], start)
+        return
+
     # Cluster radius
     clp = radius.main(cld_i, clp, **pd)
 
@@ -178,8 +188,8 @@ def main(cl_file, pd):
     #              '--> stars_out_rjct_x -----> field_regions_rjct_x
 
     # Uses the incomplete 'cl_region' and 'field_regions' data.
-    make_A2_plot.main(npd, cld_i, pd, **clp)
-    if pd['stop_idx'] == 'A2':
+    make_A3_plot.main(npd, cld_i, pd, **clp)
+    if pd['stop_idx'] == 'A3':
         retFunc(npd['clust_name'], start)
         return
 

@@ -4,7 +4,7 @@ from collections import Counter
 
 def check(
     manual_struct, center_bw, fdens_method, RDP_rings, kp_flag,
-        inst_packgs_lst, **kwargs):
+        kp_nchains, kp_nburn, inst_packgs_lst, **kwargs):
     """
     Check that the parameters are properly written.
     """
@@ -44,3 +44,8 @@ def check(
         if 'emcee' not in inst_packgs_lst:
             raise ValueError("King profile is selected to run, but 'emcee' is"
                              " not installed")
+        if kp_nchains < 10:
+            raise ValueError(
+                "set a minimum of 10 chains for KP Bayesian analysis")
+        if kp_nburn <= 0. or kp_nburn >= 1.:
+            raise ValueError("KP 'nburn' should be in the range (0., 1.)")
