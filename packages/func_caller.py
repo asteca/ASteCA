@@ -12,6 +12,7 @@ from .structure import center
 from .structure import radius
 from .structure import field_density
 from .structure import radial_dens_prof
+from .structure import integMags
 from .structure import cluster_area
 from .structure import contamination_index
 from .structure import king_profile
@@ -45,6 +46,7 @@ from .out import create_out_data_file
 from .out import add_data_output
 from .out import make_A1_plot
 from .out import make_A2_plot
+from .out import make_A3_plot
 from .out import photComb
 from .out import make_B1_plot
 from .out import make_B2_plot
@@ -118,6 +120,15 @@ def main(cl_file, pd):
     # RDP. For plotting purposes only.
     clp = radial_dens_prof.main(clp, **pd)
 
+    # Integrated magnitude. For plotting purposes only.
+    clp = integMags.main(clp, **cld_i)
+
+    # Uses the incomplete data.
+    make_A2_plot.main(npd, cld_i, pd, **clp)
+    if pd['stop_idx'] == 'A2':
+        retFunc(npd['clust_name'], start)
+        return
+
     # Cluster radius
     clp = radius.main(cld_i, clp, **pd)
 
@@ -128,7 +139,7 @@ def main(cl_file, pd):
     clp = contamination_index.main(clp, **cld_i)
 
     # King profiles based on the density profiles.
-    clp = king_profile.main(clp, **pd)
+    clp = king_profile.main(clp, cld_i, **pd)
 
     # ^ All the functions above use the *photo incomplete* dataset 'cld_i'
 
@@ -177,8 +188,8 @@ def main(cl_file, pd):
     #              '--> stars_out_rjct_x -----> field_regions_rjct_x
 
     # Uses the incomplete 'cl_region' and 'field_regions' data.
-    make_A2_plot.main(npd, cld_i, pd, **clp)
-    if pd['stop_idx'] == 'A2':
+    make_A3_plot.main(npd, cld_i, pd, **clp)
+    if pd['stop_idx'] == 'A3':
         retFunc(npd['clust_name'], start)
         return
 
@@ -255,7 +266,12 @@ def main(cl_file, pd):
         return
 
     # Obtain best fitting parameters for cluster.
-    clp = best_fit_synth_cl.main(clp, pd)
+    clp = best_fit_synth_cl.main(npd, pd, clp)
+
+    # If this mode was used, break out here.
+    if pd['best_fit_algor'] == 'synth_gen':
+        retFunc(npd['clust_name'], start)
+        return
 
     # Save MCMC samples to file (if MCMC sampler was used)
     mcmc_samples.main(clp, pd, **npd)
@@ -273,7 +289,7 @@ def main(cl_file, pd):
     # # Round fundamental parameters fitted and their errors
     # clp = error_round.fundParams(clp)
 
-    # Add cluster data and flags to output file
+    # Add cluster data output file
     add_data_output.main(npd, pd, **clp)
 
     # Plot result of best match algorithm.

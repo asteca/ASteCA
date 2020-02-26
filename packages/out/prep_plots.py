@@ -9,18 +9,18 @@ from astropy.stats import sigma_clipped_stats
 
 
 def frame_max_min(x_data, y_data):
-    '''
+    """
     Get max and min values in x,y coordinates.
-    '''
+    """
     x_min, x_max = min(x_data), max(x_data)
     y_min, y_max = min(y_data), max(y_data)
     return x_min, x_max, y_min, y_max
 
 
 def aspect_ratio(x_min, x_max, y_min, y_max):
-    '''
+    """
     Define an optimal aspect ratio for full frame plots.
-    '''
+    """
     x_range, y_range = abs(x_max - x_min), abs(y_max - y_min)
     asp_ratio = float(min(x_range, y_range) / max(x_range, y_range))
 
@@ -36,21 +36,28 @@ def aspect_ratio(x_min, x_max, y_min, y_max):
 
 
 def coord_syst(coords):
-    '''
+    """
     Define system of coordinates used.
-    '''
+    """
     coord_lst = ['px', 'x', 'y'] if coords == 'px' else ['deg', 'ra', 'dec']
     return coord_lst
 
 
-def frame_zoomed(x_min, x_max, y_min, y_max, kde_cent, clust_rad):
-    '''
+def frame_zoomed(
+    x_min, x_max, y_min, y_max, kde_cent, clust_rad, kpflag=None,
+        tidal_rad=None):
+    """
     If possible, define zoomed frame.
-    '''
-    x_zmin, x_zmax = max(x_min, (kde_cent[0] - 1.5 * clust_rad)), \
-        min(x_max, (kde_cent[0] + 1.5 * clust_rad))
-    y_zmin, y_zmax = max(y_min, (kde_cent[1] - 1.5 * clust_rad)), \
-        min(y_max, (kde_cent[1] + 1.5 * clust_rad))
+    """
+    if kpflag:
+        rad = clust_rad if clust_rad > tidal_rad[1] else tidal_rad[1]
+    else:
+        rad = clust_rad
+
+    x_zmin, x_zmax = max(x_min, (kde_cent[0] - 1.2 * rad)), \
+        min(x_max, (kde_cent[0] + 1.2 * rad))
+    y_zmin, y_zmax = max(y_min, (kde_cent[1] - 1.2 * rad)), \
+        min(y_max, (kde_cent[1] + 1.2 * rad))
     # Prevent axis stretching.
     if (x_zmax - x_zmin) != (y_zmax - y_zmin):
         lst = [(x_zmax - x_zmin), (y_zmax - y_zmin)]
@@ -64,9 +71,9 @@ def frame_zoomed(x_min, x_max, y_min, y_max, kde_cent, clust_rad):
 
 
 def ax_names(x, y, yaxis):
-    '''
+    """
     Define names for photometric diagram axes.
-    '''
+    """
     col_n = []
     c_filts = x[1].split(',')
     for f in c_filts:
@@ -93,9 +100,9 @@ def ax_names(x, y, yaxis):
 
 
 def diag_limits(yaxis, phot_x, phot_y):
-    '''
+    """
     Define plot limits for *all* photometric diagrams.
-    '''
+    """
     x_median, x_std = np.nanmedian(phot_x), np.nanstd(phot_x)
     x_min_cmd, x_max_cmd = x_median - 4.5 * x_std, x_median + 4.5 * x_std
 
@@ -121,10 +128,10 @@ def diag_limits(yaxis, phot_x, phot_y):
 
 
 def star_size(mag, N=None, zmin=None, zmax=None):
-    '''
+    """
     Convert magnitudes into intensities and define sizes of stars in
     finding chart.
-    '''
+    """
     mag = np.array(mag)
     if N is None:
         N = mag.size
@@ -139,9 +146,9 @@ def star_size(mag, N=None, zmin=None, zmax=None):
 
 
 def phot_diag_st_size(x):
-    '''
+    """
     Calculate optimal size for stars in photometric diagram.
-    '''
+    """
     a, b, c, d = 2.99, -2.81, 563.36, 15.02
     if x != 0:
         return ((a - d) / (1 + ((x / c) ** b))) + d
@@ -151,9 +158,9 @@ def phot_diag_st_size(x):
 
 
 def zoomed_frame(x, y, mags, x_zmin, x_zmax, y_zmin, y_zmax):
-    '''
+    """
     Separate stars for zoomed frame. Use main magnitude.
-    '''
+    """
     x_data_z, y_data_z, mag_data_z = [], [], []
     for st_x, st_y, st_mag in list(zip(x, y, mags[0])):
         if x_zmin <= st_x <= x_zmax and y_zmin <= st_y <= y_zmax:
@@ -178,9 +185,9 @@ def da_colorbar_range(cl_reg_fit, cl_reg_no_fit):
 def da_find_chart(
     kde_cent, clust_rad, stars_out, x_zmin, x_zmax, y_zmin, y_zmax,
         cl_reg_fit, cl_reg_no_fit):
-    '''
+    """
     Finding chart with MPs assigned by the DA.
-    '''
+    """
     # Arrange stars used in the best fit process.
     cl_reg_fit = list(zip(*cl_reg_fit))
     # Finding chart data. Invert values so higher prob stars are on top.
@@ -212,11 +219,11 @@ def da_find_chart(
 
 
 def da_phot_diag(cl_reg_fit, cl_reg_no_fit):
-    '''
+    """
     Generate parameters for the photometric diagram plotted with the MPs
     assigned by the DA. The stars are inverted according to their MPs, so that
     those with larger probabilities are plotted last.
-    '''
+    """
     # Arrange stars used in the best fit process.
     cl_reg_fit = list(zip(*cl_reg_fit))
     # Magnitudes.
@@ -272,9 +279,9 @@ def error_bars(stars_phot, x_min_cmd, err_lst, all_flag=None):
 
 
 def param_ranges(best_fit_algor, fundam_params, varIdxs=None, trace=None):
-    '''
+    """
     Parameter ranges used by several plots.
-    '''
+    """
     min_max_p = []
     if best_fit_algor in ['brute', 'boot+GA']:
 
@@ -336,9 +343,9 @@ def param_ranges(best_fit_algor, fundam_params, varIdxs=None, trace=None):
 
 
 def p2_ranges(p2, min_max_p):
-    '''
+    """
     Parameter ranges used by the MCMC 2-param density plots.
-    '''
+    """
     par_idx = {
         'metal': 0, 'age': 1, 'ext': 2, 'dist': 3, 'mass': 4, 'binar': 5}
     par = p2.split('-')
@@ -488,9 +495,9 @@ def SigmaEllipse(points, Nsigma=2.):
         Nsigma : probability value for the CI region.
     """
     def eigsorted(cov):
-        '''
+        """
         Eigenvalues and eigenvectors of the covariance matrix.
-        '''
+        """
         vals, vecs = np.linalg.eigh(cov)
         order = vals.argsort()[::-1]
         return vals[order], vecs[:, order]

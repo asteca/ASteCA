@@ -16,7 +16,7 @@ def pl_full_frame(
     ax = plt.subplot(gs_map.get(N))
 
     ax.set_aspect(aspect=asp_ratio)
-    plt.title("{}: {}".format(main_mag, mag_range), fontsize=12)
+    plt.title("{}: {}".format(main_mag, mag_range), fontsize=10)
     # Set plot limits
     plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
@@ -24,8 +24,8 @@ def pl_full_frame(
     if coord == 'deg':
         ax.invert_xaxis()
     # Set axis labels
-    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=12)
-    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=12)
+    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=10)
+    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=10)
     # Set minor ticks
     ax.minorticks_on()
     # Plot stars.
@@ -51,8 +51,8 @@ def pl_densxy(
         r_frmt = '{:.0f}' if coord == 'px' else '{:.4f}'
         plt.title(("Bandwidth: " + r_frmt + ' [{}]').format(
             bw_list[N - 5], coord), fontsize=10)
-    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=12)
-    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=12)
+    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=10)
+    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=10)
 
     ax.minorticks_on()
     plt.axvline(x=cent_xy[0], linestyle='--', lw=.85, color='green')

@@ -3,10 +3,10 @@ import numpy as np
 from . import max_mag_cut, obs_clust_prepare, bootstrap, ptemcee_algor
 from . import emcee_algor
 # brute_force_algor , abcpmc_algor,
-from ..synth_clust import add_errors, imf, extin_coefs
+from ..synth_clust import add_errors, imf, extin_coefs, synth_clust_gen
 
 
-def main(clp, pd):
+def main(npd, pd, clp):
     """
     Perform a best fitting process to find the cluster's fundamental
     parameters.
@@ -14,118 +14,50 @@ def main(clp, pd):
 
     # Check if algorithm should run.
     if pd['bf_flag']:
-
-        # Remove stars beyond the maximum magnitude limit, if it was set.
-        cl_max_mag, max_mag_syn = max_mag_cut.main(
-            clp['cl_reg_fit'], pd['max_mag'])
-
-        # Processed observed cluster.
-        obs_clust = obs_clust_prepare.main(
-            cl_max_mag, pd['lkl_method'], pd['lkl_binning'],
-            pd['lkl_manual_bins'])
-
-        # Obtain extinction coefficients.
-        # This parameter determines the total number of sub-arrays for each
-        # isochrone stored.
-        ext_shape = len(pd['theor_tracks'][0][0])
-        ext_coefs = extin_coefs.main(
-            pd['cmd_systs'], pd['filters'], pd['colors'], ext_shape)
-
-        if pd['synth_rand_seed'] is not None:
-            print("Random seed set for synthetic clusters: {}".format(
-                pd['synth_rand_seed']))
-
-        # Obtain mass distribution using the selected IMF. We run it once
-        # because the array only depends on the IMF selected.
-        st_dist_mass = imf.main(pd['IMF_name'], pd['fundam_params'][4])
-
-        # Store the number of defined filters and colors.
-        N_fc = [len(pd['filters']), len(pd['colors'])]
-
-        err_rand = add_errors.randIdxs(pd['lkl_method'])
-        err_pars = clp['err_lst'], clp['em_float'], err_rand
-
-        # # TEMPORARY
-        # # Use for saving the necessary input for the 'perf_test.py' file.
-        # import pickle
-        # with open('perf_test.pickle', 'wb') as f:
-        #     pickle.dump([
-        #         obs_clust, cl_max_mag, pd['fundam_params'], pd['theor_tracks'],
-        #         pd['lkl_method'], pd['R_V'], clp['completeness'],
-        #         max_mag_syn, st_dist_mass, ext_coefs, N_fc, pd['m_ini_idx'],
-        #         pd['binar_flag'], err_pars], f)
-        # print("finished")
-        # import sys
-        # sys.exit()
-        # # TEMPORARY
-
-        clp['max_mag_syn'], clp['ext_coefs'], clp['st_dist_mass'],\
-            clp['N_fc'], clp['err_pars'], = max_mag_syn, ext_coefs,\
-            st_dist_mass, N_fc, err_pars
-
         print("Searching for optimal parameters")
+
+        cl_max_mag, max_mag_syn, obs_clust, ext_coefs, st_dist_mass, N_fc,\
+            err_pars = dataPrep(pd, clp)
+
+        lkl_bin = pd['lkl_method'] + '; ' + pd['lkl_binning'] if\
+            pd['lkl_method'] in ('dolphin', 'tremmel') else pd['lkl_method']
+        print("Using {} algorithm ({})".format(pd['best_fit_algor'], lkl_bin))
 
         # Calculate the best fitting parameters.
         if pd['best_fit_algor'] == 'ptemcee':
-            print("Using ptemcee algorithm ({})".format(
-                pd['lkl_method'] + '; ' + pd['lkl_binning'] if
-                pd['lkl_method'] in ('dolphin', 'tremmel') else
-                pd['lkl_method']))
-
             isoch_fit_params = ptemcee_algor.main(
                 clp['completeness'], max_mag_syn, obs_clust, ext_coefs,
                 st_dist_mass, N_fc, err_pars, **pd)
-            # Assign uncertainties.
-            isoch_fit_errors = params_errors(pd, isoch_fit_params)
 
         elif pd['best_fit_algor'] == 'boot+GA':
-
-            print("Using bootstrap + Genetic Algorithm ({})".format(
-                pd['lkl_method'] + '; ' + pd['lkl_binning'] if
-                pd['lkl_method'] in ('dolphin', 'tremmel') else
-                pd['lkl_method']))
             isoch_fit_params = bootstrap.main(
                 pd, clp, cl_max_mag, max_mag_syn, obs_clust, ext_coefs,
                 st_dist_mass, N_fc, err_pars)
-            # Assign uncertainties.
-            isoch_fit_errors = params_errors(pd, isoch_fit_params)
 
         elif pd['best_fit_algor'] == 'emcee':
-            print('Using emcee algorithm ({}).'.format(
-                pd['lkl_method'] + '; ' + pd['lkl_binning'] if
-                pd['lkl_method'] in ('dolphin', 'tremmel') else
-                pd['lkl_method']))
             isoch_fit_params = emcee_algor.main(
                 clp['err_lst'], clp['completeness'], clp['em_float'],
                 max_mag_syn, obs_clust, ext_coefs, st_dist_mass, N_fc,
                 err_pars, **pd)
-            # Assign uncertainties.
-            isoch_fit_errors = params_errors(pd, isoch_fit_params)
 
         # TODO DEPRECATED May 2019
         # if best_fit_algor == 'brute':
-        #     print('Using Brute Force algorithm ({}).'.format(
-        #         lkl_method + '; ' + lkl_binning if lkl_method == 'dolphin'
-        #         else lkl_method))
         #     # Brute force algorithm.
         #     isoch_fit_params = brute_force_algor.main()
-
         # TODO not working yet
         # elif best_fit_algor == 'abc':
-        #     print('Using abcpmc algorithm ({}).'.format(
-        #         lkl_method + '; ' + lkl_binning if lkl_method == 'dolphin'
-        #         else lkl_method))
         #     isoch_fit_params = abcpmc_algor.main()
-        #     # Assign uncertainties.
-        #     isoch_fit_errors, _ = params_errors(
-        #         best_fit_algor, isoch_fit_params)
 
+        # Assign uncertainties.
+        isoch_fit_errors = params_errors(pd, isoch_fit_params)
         print("Best fit parameters obtained")
 
     else:
         print("Skip parameters fitting process")
         # Pass dummy data used by data output and some plot functions.
-        cl_max_mag, obs_clust = [], [[]]
+        cl_max_mag, max_mag_syn, ext_coefs, st_dist_mass, N_fc, err_pars =\
+            [[]] * 6
+        obs_clust = [[]]
         isoch_fit_params = {
             'mean_sol': [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan],
             'median_sol': [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan],
@@ -135,11 +67,77 @@ def main(clp, pd):
             'N_total': np.nan}
         isoch_fit_errors = [[np.nan, np.nan, np.nan]] * 6
 
-    clp['cl_max_mag'], clp['bf_bin_edges'], clp['isoch_fit_params'],\
-        clp['isoch_fit_errors'] = cl_max_mag, obs_clust[0], isoch_fit_params,\
+    # In place for #239
+    if pd['best_fit_algor'] == 'synth_gen':
+        cl_max_mag, max_mag_syn, obs_clust, ext_coefs, st_dist_mass, N_fc,\
+            err_pars = dataPrep(pd, clp)
+        synth_clust_gen.main(
+            npd, clp, max_mag_syn, obs_clust, ext_coefs, st_dist_mass, N_fc,
+            err_pars, **pd)
+
+    #
+    clp['cl_max_mag'], clp['max_mag_syn'], clp['ext_coefs'],\
+        clp['st_dist_mass'], clp['N_fc'], clp['err_pars'],\
+        clp['bf_bin_edges'], clp['isoch_fit_params'],\
+        clp['isoch_fit_errors'] = cl_max_mag, max_mag_syn, ext_coefs,\
+        st_dist_mass, N_fc, err_pars, obs_clust[0], isoch_fit_params,\
         isoch_fit_errors
 
     return clp
+
+
+def dataPrep(pd, clp):
+    """
+    Obtain several parameters needed for the best fit process / synthetic
+    clusters generation.
+    """
+
+    # Remove stars beyond the maximum magnitude limit, if it was set.
+    cl_max_mag, max_mag_syn = max_mag_cut.main(
+        clp['cl_reg_fit'], pd['max_mag'])
+
+    # Processed observed cluster.
+    obs_clust = obs_clust_prepare.main(
+        cl_max_mag, pd['lkl_method'], pd['lkl_binning'],
+        pd['lkl_manual_bins'])
+
+    # Obtain extinction coefficients.
+    # This parameter determines the total number of sub-arrays for each
+    # isochrone stored.
+    ext_shape = len(pd['theor_tracks'][0][0])
+    ext_coefs = extin_coefs.main(
+        pd['cmd_systs'], pd['filters'], pd['colors'], ext_shape)
+
+    if pd['synth_rand_seed'] is not None:
+        print("Random seed set for synthetic clusters: {}".format(
+            pd['synth_rand_seed']))
+
+    # Obtain mass distribution using the selected IMF. We run it once
+    # because the array only depends on the IMF selected.
+    st_dist_mass = imf.main(pd['IMF_name'], pd['fundam_params'][4])
+
+    # Store the number of defined filters and colors.
+    N_fc = [len(pd['filters']), len(pd['colors'])]
+
+    err_rand = add_errors.randIdxs(pd['lkl_method'])
+    err_pars = clp['err_lst'], clp['em_float'], err_rand
+
+    # # TEMPORARY
+    # # Use for saving the necessary input for the 'perf_test.py' file.
+    # import pickle
+    # with open('perf_test.pickle', 'wb') as f:
+    #     pickle.dump([
+    #         obs_clust, cl_max_mag, pd['fundam_params'], pd['theor_tracks'],
+    #         pd['lkl_method'], pd['R_V'], clp['completeness'],
+    #         max_mag_syn, st_dist_mass, ext_coefs, N_fc, pd['m_ini_idx'],
+    #         pd['binar_flag'], err_pars], f)
+    # print("finished")
+    # import sys
+    # sys.exit()
+    # # TEMPORARY
+
+    return cl_max_mag, max_mag_syn, obs_clust, ext_coefs, st_dist_mass, N_fc,\
+        err_pars
 
 
 def params_errors(pd, isoch_fit_params):

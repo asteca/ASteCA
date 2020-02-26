@@ -37,37 +37,7 @@ def main(IMF_name, masses, m_high=150.):
     # IMF low mass limit.
     m_low = imfs_dict[IMF_name]
 
-    # Obtain normalization constant (k = \int_{m_low}^{m_up} \xi(m) dm). This
-    # makes the IMF behave like a PDF.
-    norm_const = quad(IMF_func, m_low, m_high, args=(IMF_name))[0]
-
-    # IMF mass interpolation step and grid values.
-    mass_step = 0.05
-    mass_values = np.arange(m_low, m_high, mass_step)
-
-    # The CDF is defined as: $F(m)= \int_{m_low}^{m} PDF(m) dm$
-    # Sample the CDF
-    CDF_samples = []
-    for m in mass_values:
-        CDF_samples.append(quad(IMF_func, m_low, m, args=(IMF_name))[0])
-
-    # Normalize values
-    CDF_samples = np.array(CDF_samples) / norm_const
-    CDF_min, CDF_max = CDF_samples.min(), CDF_samples.max()
-
-    # Inverse CDF
-    inv_cdf = interp1d(CDF_samples, mass_values)
-
-    def sampled_inv_cdf(N):
-        mr = np.random.rand(N)
-        mr = mr[(mr >= CDF_min) & (mr <= CDF_max)]
-        return inv_cdf(mr)
-
-    # Sample in chunks of 100 stars until the maximum defined mass is reached.
-    mass_samples = []
-    while np.sum(mass_samples) < masses[-1]:
-        mass_samples += sampled_inv_cdf(100).tolist()
-    sampled_IMF = np.array(mass_samples)
+    sampled_IMF = invTrnsfSmpl(masses, IMF_name, m_low, m_high)
 
     st_dist_mass = (sampled_IMF, np.cumsum(sampled_IMF))
 
@@ -136,3 +106,45 @@ def imfs(IMF_name, m_star):
         imf_val = m_star ** -2.35
 
     return imf_val
+
+
+def invTrnsfSmpl(masses, IMF_name, m_low, m_high):
+    """
+    IMF inverse transform sampling.
+
+    Asked here: https://stackoverflow.com/q/21100716/1391441
+    """
+
+    # Obtain normalization constant (k = \int_{m_low}^{m_up} \xi(m) dm). This
+    # makes the IMF behave like a PDF.
+    norm_const = quad(IMF_func, m_low, m_high, args=(IMF_name))[0]
+
+    # IMF mass interpolation step and grid values.
+    mass_step = 0.05
+    mass_values = np.arange(m_low, m_high, mass_step)
+
+    # The CDF is defined as: $F(m)= \int_{m_low}^{m} PDF(m) dm$
+    # Sample the CDF
+    CDF_samples = []
+    for m in mass_values:
+        CDF_samples.append(quad(IMF_func, m_low, m, args=(IMF_name))[0])
+
+    # Normalize values
+    CDF_samples = np.array(CDF_samples) / norm_const
+    CDF_min, CDF_max = CDF_samples.min(), CDF_samples.max()
+
+    # Inverse CDF
+    inv_cdf = interp1d(CDF_samples, mass_values)
+
+    def sampled_inv_cdf(N):
+        mr = np.random.rand(N)
+        mr = mr[(mr >= CDF_min) & (mr <= CDF_max)]
+        return inv_cdf(mr)
+
+    # Sample in chunks of 100 stars until the maximum defined mass is reached.
+    mass_samples = []
+    while np.sum(mass_samples) < masses[-1]:
+        mass_samples += sampled_inv_cdf(100).tolist()
+    sampled_IMF = np.array(mass_samples)
+
+    return sampled_IMF

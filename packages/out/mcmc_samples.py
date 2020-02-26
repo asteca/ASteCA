@@ -4,10 +4,12 @@ from astropy.io import ascii
 
 
 def main(clp, pd, mcmc_file_out, **kwargs):
-    '''
+    """
     Create output data file with the MCMC sampler values for each parameter,
     for all chains/walkers. Maximum size of the output file is 'max_mbs' Mbs.
-    '''
+
+    TODO use HDF5 format?
+    """
     if pd['best_fit_algor'] in ('emcee', 'ptemcee'):
         varIdxs = clp['isoch_fit_params']['varIdxs']
         chains_nruns = clp['isoch_fit_params']['pars_chains']

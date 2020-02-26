@@ -101,7 +101,7 @@ def optimalRadius(
     possible of field stars within the region.
     """
 
-    data, break_counter, n_memb_old = [], 0, 0
+    data, break_counter = [], 0
     for i, rad in enumerate(rad_radii):
 
         # Stars within radius.
@@ -118,12 +118,7 @@ def optimalRadius(
         # fd_list.append(field_dens_i)
         # field_dens = np.median(fd_list)
 
-        if bttstrp_flag:
-            n_fl = field_dens * rad_areas[i]
-            n_memb = n_in_cl_reg - n_fl
-            CI = np.nan
-        else:
-            CI, n_memb, n_fl = CIfunc(n_in_cl_reg, field_dens, rad_areas[i])
+        CI, n_memb, n_fl = CIfunc(n_in_cl_reg, field_dens, rad_areas[i])
 
         # This keeps the N_memb trending always upwards. Nicer graphs but
         # hides information.

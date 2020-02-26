@@ -133,11 +133,11 @@ def bin_edges_f(
         # Based on Bonatto & Bica (2007) 377, 3, 1301-1323 but using larger
         # values than those used there (0.25 for colors and 0.5 for magnitudes)
         for mag in mags_cols_cl[0]:
-            b_num = max(2, (max(mag) - min(mag)) / 1.)
-            bin_edges.append(np.histogram(mag, bins=int(b_num))[1])
+            b_num = int(round(max(2, (max(mag) - min(mag)) / 1.)))
+            bin_edges.append(np.histogram(mag, bins=b_num)[1])
         for col in mags_cols_cl[1]:
-            b_num = max(2, (max(col) - min(col)) / .5)
-            bin_edges.append(np.histogram(col, bins=int(b_num))[1])
+            b_num = int(round(max(2, (max(col) - min(col)) / .5)))
+            bin_edges.append(np.histogram(col, bins=b_num)[1])
 
     elif bin_method == 'knuth':
         for mag in mags_cols_cl[0]:

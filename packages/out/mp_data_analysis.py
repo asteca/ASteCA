@@ -23,8 +23,8 @@ def pl_cl_fl_regions(
     if coord == 'deg':
         ax.invert_xaxis()
     # Set axis labels
-    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=12)
-    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=12)
+    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=10)
+    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=10)
     # Set minor ticks
     ax.minorticks_on()
     ax.grid(b=True, which='both', color='gray', linestyle='--', lw=.5)
@@ -62,8 +62,8 @@ def pl_lum_func(gs, y_ax, flag_no_fl_regs, lum_func):
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
             zorder=1)
     # Set axis labels
-    plt.xlabel('$' + y_ax + '$', fontsize=12)
-    plt.ylabel('$N^{\star}/A_{cl}$', fontsize=12)
+    plt.xlabel('$' + y_ax + '$', fontsize=10)
+    plt.ylabel('$N^{\star}/A_{cl}$', fontsize=10)
 
     # All frame.
     plt.step(x_all, y_all, where='post', color='k', lw=2.5, linestyle=':',
@@ -105,8 +105,8 @@ def pl_data_rm_perc(
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
             zorder=1)
     # Set axis labels
-    plt.xlabel('$' + y_ax + '$', fontsize=12)
-    plt.ylabel('perc', fontsize=12)
+    plt.xlabel('$' + y_ax + '$', fontsize=10)
+    plt.ylabel('perc', fontsize=10)
 
     edges, perc_vals = phot_analy_compl
     perc_vals_min = [min(perc_vals)]
@@ -149,82 +149,15 @@ def pl_data_rm_perc(
     plt.ylim(min(.9, min(perc_vals_min)) - .05, 1.05)
 
 
-def flCMD(
-    ax, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax, N_fr,
-        x_fr_rject, y_fr_rject, x_fr_accpt, y_fr_accpt, f_sz_pt, err_bar):
-    """
-    Field stars CMD/CCD diagram.
-    """
-    # Set plot limits
-    plt.xlim(x_min_cmd, x_max_cmd)
-    plt.ylim(y_min_cmd, y_max_cmd)
-    # Set axis labels
-    plt.xlabel('$' + x_ax + '$', fontsize=12)
-    plt.ylabel('$' + y_ax + '$', fontsize=12)
-    # Set minor ticks
-    ax.minorticks_on()
-    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
-            zorder=1)
-    # Plot accepted/rejected stars within the field regions defined.
-    if x_fr_rject:
-        plt.scatter(x_fr_rject, y_fr_rject, marker='x',
-                    c='teal', s=15, lw=.5, zorder=2)
-    if x_fr_accpt:
-        plt.scatter(x_fr_accpt, y_fr_accpt, marker='o', c='b',
-                    s=f_sz_pt, lw=0.3, edgecolor='k', zorder=3)
-        n_field = int(len(x_fr_accpt) / float(N_fr))
-        # Add text box.
-        text = r'$N_{{field}} \approx {}$'.format(n_field)
-        ob = offsetbox.AnchoredText(text, pad=0.2, loc=1, prop=dict(size=12))
-        ob.patch.set(alpha=0.7)
-        ax.add_artist(ob)
-    # If list is not empty, plot error bars at several values.
-    x_val, mag_y, xy_err = err_bar
-    if x_val:
-        plt.errorbar(
-            x_val, mag_y, yerr=xy_err[0], xerr=xy_err[1], fmt='k.', lw=0.8,
-            ms=0., zorder=4)
-
-
-def pl_fl_diag(
-    gs, x_ax0, y_ax, x_min_cmd0, x_max_cmd0, y_min_cmd0, y_max_cmd0, x_ax1,
-        x_min_cmd1, x_max_cmd1, y_min_cmd1, y_max_cmd1, field_regions_c,
-        stars_f_rjct, stars_f_acpt, f_sz_pt, err_bar_fl0, err_bar_fl1):
-    """
-    Field stars CMD/CCD diagram.
-    """
-    ax = plt.subplot(gs[2:4, 4:6])
-
-    N_fr = len(field_regions_c)
-    x_fr_rject, y_fr_rject = stars_f_rjct[1], stars_f_rjct[0]
-    x_fr_accpt, y_fr_accpt = stars_f_acpt[1], stars_f_acpt[0]
-
-    ax.set_title(r"$N_{{accpt}}={}$ , $N_{{rjct}}={}$ (fields compl)".format(
-        len(x_fr_accpt), len(x_fr_rject)), fontsize=9)
-
-    flCMD(
-        ax, x_min_cmd0, x_max_cmd0, y_min_cmd0, y_max_cmd0, x_ax0, y_ax,
-        N_fr, x_fr_rject, y_fr_rject, x_fr_accpt, y_fr_accpt, f_sz_pt,
-        err_bar_fl0)
-
-    if x_ax1 != '':
-        ax = plt.subplot(gs[4:6, 4:6])
-        x_fr_rject, x_fr_accpt = stars_f_rjct[2], stars_f_acpt[2]
-        flCMD(
-            ax, x_min_cmd1, x_max_cmd1, y_min_cmd1, y_max_cmd1, x_ax1, y_ax,
-            N_fr, x_fr_rject, y_fr_rject, x_fr_accpt, y_fr_accpt, f_sz_pt,
-            err_bar_fl1)
-
-
 def clCMD(
     ax, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
-        xr, yr, xa, ya, n_memb, cl_sz_pt, err_bar):
+        xr, yr, xa, ya, n_memb, cl_sz_pt, err_bar, col_idx):
     # Set plot limits
     plt.xlim(x_min_cmd, x_max_cmd)
     plt.ylim(y_min_cmd, y_max_cmd)
     # Set axis labels
-    plt.xlabel('$' + x_ax + '$', fontsize=12)
-    plt.ylabel('$' + y_ax + '$', fontsize=12)
+    plt.xlabel('$' + x_ax + '$', fontsize=10)
+    plt.ylabel('$' + y_ax + '$', fontsize=10)
     # Set minor ticks
     ax.minorticks_on()
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
@@ -244,8 +177,8 @@ def clCMD(
     x_val, mag_y, xy_err = err_bar
     if x_val:
         plt.errorbar(
-            x_val, mag_y, yerr=xy_err[0], xerr=xy_err[1], fmt='k.', lw=0.8,
-            ms=0., zorder=4)
+            x_val, mag_y, yerr=xy_err[0], xerr=xy_err[col_idx], fmt='k.',
+            lw=0.8, ms=0., zorder=4)
 
 
 def pl_cl_diag(
@@ -253,7 +186,7 @@ def pl_cl_diag(
     x_min_cmd1, x_max_cmd1, y_min_cmd1, y_max_cmd1, err_bar_cl0, err_bar_cl1,
         cl_region_rjct_c, cl_region_c, n_memb, cl_sz_pt):
     """
-    Cluster's stars diagram (stars inside cluster's radius)
+    Cluster's stars CMD diagram (stars inside cluster's radius)
     """
     ax = plt.subplot(gs[2:4, 0:2])
     ax.set_title(
@@ -266,9 +199,11 @@ def pl_cl_diag(
         yr = list(zip(*list(zip(*cl_region_rjct_c))[3]))[0]
     xa = list(zip(*list(zip(*cl_region_c))[5]))[0]
     ya = list(zip(*list(zip(*cl_region_c))[3]))[0]
+    # CMD for first color
+    col_idx = 1
     clCMD(
         ax, x_min_cmd0, x_max_cmd0, y_min_cmd0, y_max_cmd0, x_ax0, y_ax,
-        xr, yr, xa, ya, n_memb, cl_sz_pt, err_bar_cl0)
+        xr, yr, xa, ya, n_memb, cl_sz_pt, err_bar_cl0, col_idx)
 
     if x_ax1 != '':
         ax = plt.subplot(gs[4:6, 0:2])
@@ -276,9 +211,11 @@ def pl_cl_diag(
         if len(cl_region_rjct_c) > 0:
             xr = list(zip(*list(zip(*cl_region_rjct_c))[5]))[1]
         xa = list(zip(*list(zip(*cl_region_c))[5]))[1]
+        # CMD for second color
+        col_idx = 2
         clCMD(
             ax, x_min_cmd1, x_max_cmd1, y_min_cmd1, y_max_cmd1, x_ax1, y_ax,
-            xr, yr, xa, ya, n_memb, cl_sz_pt, err_bar_cl1)
+            xr, yr, xa, ya, n_memb, cl_sz_pt, err_bar_cl1, col_idx)
 
 
 def hessKDE(
@@ -289,8 +226,8 @@ def hessKDE(
     bw, Nb = .2, 100
 
     ax.set_title("Cluster - Field (normalized)", fontsize=9)
-    plt.xlabel('$' + x_ax + '$', fontsize=12)
-    plt.ylabel('$' + y_ax + '$', fontsize=12)
+    plt.xlabel('$' + x_ax + '$', fontsize=10)
+    plt.ylabel('$' + y_ax + '$', fontsize=10)
 
     xx, yy = np.mgrid[x_min_cmd:x_max_cmd:complex(Nb),
                       y_max_cmd:y_min_cmd:complex(Nb)]
@@ -370,6 +307,77 @@ def pl_hess_cmd(
                 y_max_cmd1, cl_col, cl_mag, fr_col, fr_mag)
 
 
+def flCMD(
+    ax, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax, N_fr,
+    x_fr_rject, y_fr_rject, x_fr_accpt, y_fr_accpt, f_sz_pt, err_bar,
+        col_idx):
+    """
+    Field stars CMD diagram.
+    """
+    # Set plot limits
+    plt.xlim(x_min_cmd, x_max_cmd)
+    plt.ylim(y_min_cmd, y_max_cmd)
+    # Set axis labels
+    plt.xlabel('$' + x_ax + '$', fontsize=10)
+    plt.ylabel('$' + y_ax + '$', fontsize=10)
+    # Set minor ticks
+    ax.minorticks_on()
+    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
+            zorder=1)
+    # Plot accepted/rejected stars within the field regions defined.
+    if x_fr_rject:
+        plt.scatter(x_fr_rject, y_fr_rject, marker='x',
+                    c='teal', s=15, lw=.5, zorder=2)
+    if x_fr_accpt:
+        plt.scatter(x_fr_accpt, y_fr_accpt, marker='o', c='b',
+                    s=f_sz_pt, lw=0.3, edgecolor='k', zorder=3)
+        n_field = int(len(x_fr_accpt) / float(N_fr))
+        # Add text box.
+        text = r'$N_{{field}} \approx {}$'.format(n_field)
+        ob = offsetbox.AnchoredText(text, pad=0.2, loc=1, prop=dict(size=12))
+        ob.patch.set(alpha=0.7)
+        ax.add_artist(ob)
+    # If list is not empty, plot error bars at several values.
+    x_val, mag_y, xy_err = err_bar
+    if x_val:
+        plt.errorbar(
+            x_val, mag_y, yerr=xy_err[0], xerr=xy_err[col_idx], fmt='k.',
+            lw=0.8, ms=0., zorder=4)
+
+
+def pl_fl_diag(
+    gs, x_ax0, y_ax, x_min_cmd0, x_max_cmd0, y_min_cmd0, y_max_cmd0, x_ax1,
+    x_min_cmd1, x_max_cmd1, y_min_cmd1, y_max_cmd1, field_regions_c,
+        stars_f_rjct, stars_f_acpt, f_sz_pt, err_bar_fl0, err_bar_fl1):
+    """
+    Field stars CMD diagram.
+    """
+    ax = plt.subplot(gs[2:4, 4:6])
+
+    N_fr = len(field_regions_c)
+    x_fr_rject, y_fr_rject = stars_f_rjct[1], stars_f_rjct[0]
+    x_fr_accpt, y_fr_accpt = stars_f_acpt[1], stars_f_acpt[0]
+
+    ax.set_title(r"$N_{{accpt}}={}$ , $N_{{rjct}}={}$ (fields compl)".format(
+        len(x_fr_accpt), len(x_fr_rject)), fontsize=9)
+    # CMD for first color
+    col_idx = 1
+    flCMD(
+        ax, x_min_cmd0, x_max_cmd0, y_min_cmd0, y_max_cmd0, x_ax0, y_ax,
+        N_fr, x_fr_rject, y_fr_rject, x_fr_accpt, y_fr_accpt, f_sz_pt,
+        err_bar_fl0, col_idx)
+
+    if x_ax1 != '':
+        ax = plt.subplot(gs[4:6, 4:6])
+        x_fr_rject, x_fr_accpt = stars_f_rjct[2], stars_f_acpt[2]
+        # CMD for second color
+        col_idx = 2
+        flCMD(
+            ax, x_min_cmd1, x_max_cmd1, y_min_cmd1, y_max_cmd1, x_ax1, y_ax,
+            N_fr, x_fr_rject, y_fr_rject, x_fr_accpt, y_fr_accpt, f_sz_pt,
+            err_bar_fl1, col_idx)
+
+
 def pl_ad_test(gs, b, flag_ad_test, ad_cl, ad_fr, id_kinem):
     """
     """
@@ -419,8 +427,8 @@ def pl_p_vals(
     ax.set_title(
         r'$P_{{cl}}={:.2f}\;({})$'.format(prob_cl, reg_id), fontsize=9)
     ax.axes.yaxis.set_ticklabels([])
-    plt.xlabel('p-values', fontsize=12)
-    plt.ylabel('Density (norm)', fontsize=12)
+    plt.xlabel('p-values', fontsize=10)
+    plt.ylabel('Density (norm)', fontsize=10)
     ax.minorticks_on()
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
             zorder=1)
@@ -478,9 +486,9 @@ def plot(N, *args):
 
     plt_map = {
         0: [pl_cl_fl_regions, 'cluster + field regions rejected stars'],
-        1: [pl_fl_diag, 'field regions photometric diagram'],
-        2: [pl_cl_diag, 'cluster region photometric diagram'],
-        3: [pl_hess_cmd, 'Hess CMD'],
+        1: [pl_cl_diag, 'cluster region photometric diagram'],
+        2: [pl_hess_cmd, 'Hess CMD'],
+        3: [pl_fl_diag, 'field regions photometric diagram'],
         4: [pl_lum_func, 'luminosity function'],
         5: [pl_data_rm_perc, 'error removal percentage'],
         6: [pl_ad_test, 'A-D test values'],

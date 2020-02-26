@@ -18,8 +18,8 @@ def pms_VPD_all(gs, xlabel, PM_KDE_std, coord, y_ax, allfr_PMs):
     ax.minorticks_on()
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
             zorder=-1)
-    plt.xlabel(xlabel, fontsize=12)
-    plt.ylabel(r"$\mu_{{\delta}} \, \mathrm{[mas/yr]}$", fontsize=12)
+    plt.xlabel(xlabel, fontsize=10)
+    plt.ylabel(r"$\mu_{{\delta}} \, \mathrm{[mas/yr]}$", fontsize=10)
 
     cmap = plt.cm.get_cmap('viridis')
     mmag = allfr_PMs['mmag']
@@ -48,8 +48,8 @@ def pms_VPD_KDE_all(gs, xlabel, coord, y_ax, allr_KDE_PMs, xydelta, xyrang):
 
     ax = plt.subplot(gs[0:2, 2:4])
     ax.set_title("All stars KDE (zoomed)", fontsize=9)
-    plt.xlabel(xlabel, fontsize=12)
-    plt.ylabel(r"$\mu_{{\delta}} \, \mathrm{[mas/yr]}$", fontsize=12)
+    plt.xlabel(xlabel, fontsize=10)
+    plt.ylabel(r"$\mu_{{\delta}} \, \mathrm{[mas/yr]}$", fontsize=10)
 
     # Zoom +/-1 sigma around the max density value.
     xmax, ymax = allr_KDE_PMs['zmax_x'], allr_KDE_PMs['zmax_y']
@@ -87,8 +87,8 @@ def pms_coords_all(
     ax.minorticks_on()
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
             zorder=-1)
-    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=12)
-    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=12)
+    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=10)
+    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=10)
 
     # Mask for stars inside the rectangle in the above plot.
     xmax, ymax = allr_KDE_PMs['zmax_x'], allr_KDE_PMs['zmax_y']
@@ -231,8 +231,8 @@ def pms_VPD_zoom(
     ax.minorticks_on()
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
             zorder=1)
-    plt.xlabel(xlabel, fontsize=12)
-    plt.ylabel(r"$\mu_{{\delta}} \, \mathrm{[mas/yr]}$", fontsize=12)
+    plt.xlabel(xlabel, fontsize=10)
+    plt.ylabel(r"$\mu_{{\delta}} \, \mathrm{[mas/yr]}$", fontsize=10)
 
     pmRA, pmDE, mmag = clreg_PMs['pmRA'], clreg_PMs['pmDE'], clreg_PMs['mmag']
     msk = np.argsort(mmag)[::-1]
@@ -271,8 +271,8 @@ def pms_VPD_zoom_KDE(
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
             zorder=1)
 
-    plt.xlabel(xlabel, fontsize=12)
-    plt.ylabel(r"$\mu_{{\delta}} \, \mathrm{[mas/yr]}$", fontsize=12)
+    plt.xlabel(xlabel, fontsize=10)
+    plt.ylabel(r"$\mu_{{\delta}} \, \mathrm{[mas/yr]}$", fontsize=10)
 
     # Cluster region contour
     CS = plt.contour(
@@ -322,8 +322,8 @@ def pms_VPD_zoom_MP(gs, xlabel, coord, clreg_PMs, fregs_PMs, raPMrng, dePMrng):
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
             zorder=1)
 
-    plt.xlabel(xlabel, fontsize=12)
-    plt.ylabel(r"$\mu_{{\delta}} \, \mathrm{[mas/yr]}$", fontsize=12)
+    plt.xlabel(xlabel, fontsize=10)
+    plt.ylabel(r"$\mu_{{\delta}} \, \mathrm{[mas/yr]}$", fontsize=10)
 
     cmap = plt.cm.get_cmap('RdYlBu_r')
     pmMP = clreg_PMs['MP']
@@ -359,8 +359,8 @@ def pms_vs_mag(
         ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
                 zorder=1)
 
-        ax.set_xlabel(xlabel, fontsize=12)
-        ax.set_ylabel(y_ax, fontsize=12)
+        ax.set_xlabel(xlabel, fontsize=10)
+        ax.set_ylabel(y_ax, fontsize=10)
         cmap = plt.cm.get_cmap('RdYlBu_r')
 
         ax.scatter(
@@ -390,8 +390,8 @@ def pms_dist(gs, y_ax, clreg_PMs, pm_dist_max):
             zorder=1)
 
     ax.set_title("Distance to KDE's cluster max", fontsize=9)
-    plt.xlabel("PM dist [mas/yr]", fontsize=12)
-    plt.ylabel(y_ax, fontsize=12)
+    plt.xlabel("PM dist [mas/yr]", fontsize=10)
+    plt.ylabel(y_ax, fontsize=10)
 
     cmap = plt.cm.get_cmap('RdYlBu_r')
     plt.scatter(

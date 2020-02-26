@@ -12,24 +12,24 @@ from . import prep_plots
 def main(
     npd, pd, synth_clst, shift_isoch, cl_max_mag, bf_bin_edges, err_lst,
     col_0_comb, mag_0_comb, col_1_comb, isoch_fit_params, isoch_fit_errors,
-        **kwargs):
-    '''
+        pickledump=False, **kwargs):
+    """
     Make D2 block plots.
-    '''
+    """
     if 'D2' in pd['flag_make_plot'] and pd['bf_flag']:
 
         # for k, val in pd.items():
         #     print(k, np.array(val).nbytes / 1024.**2)
-
-        # Dump for possible reuse
-        pname = join(
-            npd['output_subdir'], str(npd['clust_name']) + '_D2.pickle')
-        with open(pname, 'wb') as handle:
-            new_pd = {i: pd[i] for i in pd if i != 'theor_tracks'}
-            pickle.dump((
-                npd, new_pd, synth_clst, shift_isoch, cl_max_mag, err_lst,
-                col_0_comb, mag_0_comb, col_1_comb, isoch_fit_params,
-                isoch_fit_errors), handle)
+        if pickledump:
+            # Dump for possible reuse
+            pname = join(
+                npd['output_subdir'], str(npd['clust_name']) + '_D2.pickle')
+            with open(pname, 'wb') as handle:
+                new_pd = {i: pd[i] for i in pd if i != 'theor_tracks'}
+                pickle.dump((
+                    npd, new_pd, synth_clst, shift_isoch, cl_max_mag, err_lst,
+                    col_0_comb, mag_0_comb, col_1_comb, isoch_fit_params,
+                    isoch_fit_errors), handle)
 
         fig = plt.figure(figsize=(30, 25))
         gs = gridspec.GridSpec(10, 12)

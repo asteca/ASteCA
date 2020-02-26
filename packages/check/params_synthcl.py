@@ -1,5 +1,4 @@
 
-import sys
 from os.path import isdir, join
 
 
@@ -13,7 +12,7 @@ def check(mypath, pd):
 
     # If best fit method is set to run.
     pd['fundam_params'] = []
-    if pd['bf_flag']:
+    if pd['bf_flag'] or pd['best_fit_algor'] == 'synth_gen':
 
         # Check the random seed
         if pd['synth_rand_seed'] in ('n', 'N', 'None', 'none', 'no'):
@@ -22,7 +21,7 @@ def check(mypath, pd):
             try:
                 pd['synth_rand_seed'] = int(pd['synth_rand_seed'])
             except ValueError:
-                sys.exit("ERROR: random seed is not a valid integer")
+                raise ValueError("random seed is not a valid integer")
 
         checkParamRanges(pd)
 
@@ -43,8 +42,8 @@ def checkParamRanges(pd):
         'metallicity', 'age', 'extinction', 'distance', 'mass', 'binarity']
     for i, p in enumerate(pd['par_ranges']):
         if not p:
-            sys.exit("ERROR: Range defined for '{}' parameter is"
-                     " empty.".format(p_names[i]))
+            raise ValueError("Range defined for '{}' parameter is"
+                             " empty.".format(p_names[i]))
     m_range = pd['par_ranges'][4]
     if m_range[0] == 0.:
         print("  WARNING: minimum total mass is zero in params_input"
@@ -60,8 +59,8 @@ def checkEvolTracks(mypath, pd):
 
     # Check selected isochrones set.
     if pd['evol_track'] not in pd['all_evol_tracks'].keys():
-        sys.exit("ERROR: the selected isochrones set ('{}') does\n"
-                 "not match a valid input.".format(pd['evol_track']))
+        raise ValueError("the selected isochrones set ('{}') does\n"
+                         "not match a valid input.".format(pd['evol_track']))
 
     all_syst_filters, iso_paths = [], []
     # Remove duplicate filters (if they exist), and combine them into one
@@ -93,8 +92,8 @@ def checkEvolTracks(mypath, pd):
     # Check if /isochrones folder exists.
     for iso_path in iso_paths:
         if not isdir(iso_path):
-            sys.exit(
-                "ERROR: 'Best synthetic cluster fit' function is set to"
+            raise ValueError(
+                "'Best synthetic cluster fit' function is set to"
                 " run but the folder:\n\n {}\n\ndoes not exists."
                 .format(iso_path))
 
@@ -108,24 +107,25 @@ def checkSynthClustParams(pd):
     """
     # Check IMF defined.
     if pd['IMF_name'] not in pd['imf_funcs']:
-        sys.exit("ERROR: Name of IMF ({}) is incorrect.".format(
+        raise ValueError("Name of IMF ({}) is incorrect.".format(
             pd['IMF_name']))
 
     if not 0. <= pd['bin_mr'] <= 1.:
-        sys.exit("ERROR: Binary mass ratio set ('{}') is out of\n"
-                 "boundaries. Please select a value in the range [0., 1.]".
-                 format(pd['bin_mr']))
+        raise ValueError(
+            "Binary mass ratio set ('{}') is out of\nboundaries. Please select"
+            " a value in the range [0., 1.]".format(pd['bin_mr']))
 
     # Check R_V defined.
     if pd['R_V'] <= 0.:
-        sys.exit("ERROR: Ratio of total to selective absorption\n"
-                 "R_V ({}) must be positive defined.".format(pd['R_V']))
+        raise ValueError(
+            "Ratio of total to selective absorption\nR_V ({}) must be positive"
+            " defined.".format(pd['R_V']))
 
     # Check maximum magnitude limit defined.
     if isinstance(pd['max_mag'], str):
         if pd['max_mag'] != 'max':
-            sys.exit("ERROR: Maximum magnitude value selected ({}) is"
-                     " not valid.".format(pd['max_mag']))
+            raise ValueError("Maximum magnitude value selected ({}) is"
+                             " not valid.".format(pd['max_mag']))
 
 
 def getParamVals(pd):
@@ -156,7 +156,7 @@ def getParamVals(pd):
             except ValueError:
                 p = p_rng[0]
                 if p not in ('min', 'max'):
-                    sys.exit("ERROR '{}': unrecognized string '{}'".format(
+                    raise ValueError("'{}': unrecognized string '{}'".format(
                         t, p))
             fundam_params[idx] = [p]
         else:
@@ -165,8 +165,8 @@ def getParamVals(pd):
             except ValueError:
                 pmin = p_rng[0]
                 if pmin != 'min':
-                    sys.exit(
-                        ("ERROR '{}': unrecognized string '{}'.\nOnly 'min' " +
+                    raise ValueError(
+                        ("'{}': unrecognized string '{}'.\nOnly 'min' " +
                          "string is accepted as the lower range.").format(
                             t, pmin))
             try:
@@ -174,8 +174,8 @@ def getParamVals(pd):
             except ValueError:
                 pmax = p_rng[1]
                 if pmax != 'max':
-                    sys.exit(
-                        ("ERROR '{}': unrecognized string '{}'.\nOnly 'max' " +
+                    raise ValueError(
+                        ("'{}': unrecognized string '{}'.\nOnly 'max' " +
                          "string is accepted as the upper range.").format(
                             t, pmax))
             fundam_params[idx] = [pmin, pmax]

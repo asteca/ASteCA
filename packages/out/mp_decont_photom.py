@@ -7,17 +7,17 @@ import matplotlib.offsetbox as offsetbox
 def pl_mp_histo(
     gs, n_memb_da, memb_prob_avrg_sort, flag_decont_skip, cl_reg_fit,
         mode_fld_clean, local_bin):
-    '''
+    """
     Histogram for the distribution of membership probabilities from the
     decontamination algorithm.
-    '''
+    """
     # Only attempt to plot if the DA was applied.
     if flag_decont_skip is False:
         # Reduced membership.
         ax = plt.subplot(gs[0:2, 0:2])
         plt.xlim(0., 1.)
-        plt.xlabel('MP', fontsize=12)
-        plt.ylabel('N (normalized)', fontsize=12)
+        plt.xlabel('MP', fontsize=10)
+        plt.ylabel('N (normalized)', fontsize=10)
         ax.minorticks_on()
         ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
                 zorder=1)
@@ -81,8 +81,8 @@ def pl_chart_mps(
     if coord == 'deg':
         ax.invert_xaxis()
     # Set axis labels
-    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=12)
-    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=12)
+    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=10)
+    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=10)
     # Set minor ticks
     ax.minorticks_on()
     # Radius
@@ -134,8 +134,8 @@ def pl_mps_phot_diag(
     plt.xlim(x_min_cmd, x_max_cmd)
     plt.ylim(y_min_cmd, y_max_cmd)
     # Set axis labels
-    plt.xlabel('$' + x_ax + '$', fontsize=12)
-    plt.ylabel('$' + y_ax + '$', fontsize=12)
+    plt.xlabel('$' + x_ax + '$', fontsize=10)
+    plt.ylabel('$' + y_ax + '$', fontsize=10)
     # Add text box.
     text = '$N_{{fit}}={}$'.format(len(diag_fit_inv[2]))
     ob = offsetbox.AnchoredText(text, loc=2, prop=dict(size=14))
@@ -206,23 +206,23 @@ def pl_mps_incomp_diags(
     plt.xlim(x_min_cmd, x_max_cmd)
     plt.ylim(y_min_cmd, y_max_cmd)
     # Set axis labels
-    plt.xlabel('$' + x_ax + '$', fontsize=12)
-    plt.ylabel('$' + y_ax + '$', fontsize=12)
+    plt.xlabel('$' + x_ax + '$', fontsize=10)
+    plt.ylabel('$' + y_ax + '$', fontsize=10)
     # Add text box.
     text = r'$N_{{cmpl}}={},\, N_{{incmpl}}={}$'.format(
         sum(~np.isnan(xdata_c) & ~np.isnan(ydata_c)),
         sum(~np.isnan(xdata_i) & ~np.isnan(ydata_i)))
-    ax.set_title(text, fontsize=10)
+    ax.set_title(text, fontsize=9)
     # Set minor ticks
     ax.minorticks_on()
 
     # Plot grid.
     if mode_fld_clean == 'local' and local_rm_edges is not None:
         # Use first magnitude and color.
-        for x_ed in local_rm_edges[c2]:
+        for x_ed in local_rm_edges[c1]:
             # vertical lines
             ax.axvline(x_ed, linestyle=':', lw=.8, color='k', zorder=1)
-        for y_ed in local_rm_edges[c1]:
+        for y_ed in local_rm_edges[c2]:
             # horizontal lines
             ax.axhline(y_ed, linestyle=':', lw=.8, color='k', zorder=1)
     else:

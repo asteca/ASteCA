@@ -64,7 +64,7 @@ def main(
             x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd =\
                 prep_plots.diag_limits('mag', cols_all, mags_all)
             # Color indexes for the 'local_cell_clean' edges
-            c1, c2 = 0, i + 1
+            c1, c2 = i + 1, 0
             plot_colorbar, sca, trans, v_min_mp, v_max_mp =\
                 mp_decont_photom.pl_mps_incomp_diags(
                     gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax,
