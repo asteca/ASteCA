@@ -1,11 +1,14 @@
 
+import os
+from os.path import join, exists
 import numpy as np
 from scipy.integrate import quad
 from scipy.interpolate import interp1d
 from scipy.stats import gaussian_kde
 
 from ..structure.king_profile import KingProf
-from ..best_fit.bf_common import varPars
+# from ..best_fit.bf_common import varPars
+from .. import update_progress
 from . synth_cluster import properModel
 from . import zaWAverage
 from . import move_isochrone
@@ -16,11 +19,15 @@ from . import binarity
 from . import completeness_rm
 from . import add_errors
 
+from ..out import synth_gen_out
+from ..out import make_D0_plot
+
 
 def main(
-    clp, max_mag_syn, obs_clust, ext_coefs, st_dist_mass, N_fc, err_pars,
-    fundam_params, theor_tracks, R_V, m_ini_idx, binar_flag,
-        xmax=2000, ymax=2000, synth_CI=False, rt=250., **kwargs):
+    npd, clp, max_mag_syn, obs_clust, ext_coefs, st_dist_mass, N_fc, err_pars,
+    fundam_params, theor_tracks, R_V, m_ini_idx, binar_flag, filters, colors,
+    plot_frmt, flag_make_plot, coords, plot_dpi, xmax=2000, ymax=2000,
+        synth_CI=False, rt=250., **kwargs):
     """
     In place for #239
     """
@@ -41,39 +48,76 @@ def main(
     # Position cluster in the center of the frame
     cx, cy = xmax * .5, ymax * .5
 
-    varIdxs, ndim, ranges = varPars(fundam_params)
+    # TODO handle cases where no field region is defined
+    mags_fl = []
+    for fl in clp['field_regions_c']:
+        mags_fl += np.ravel(list(zip(*fl))[3]).tolist()
+    mags_fl = np.array(mags_fl)
+    # Generate mags KDE
+    x_grid_fr = np.linspace(min(mags_fl), max(mags_fl), 1000)
+    kde = gaussian_kde(mags_fl)
+    kdepdf_fr = kde.evaluate(x_grid_fr)
 
-    model = np.array([np.random.uniform(*_) for _ in ranges])
-    model_var = model[varIdxs]
+    # TODO this should come from params_input.dat
+    z_vals = (0.005, 0.0152, 0.03)
+    a_vals = (7., 8., 9.)
+    e_vals = (1.,)
+    d_vals = (14.,)
+    m_vals = (500., 2000.)
+    b_vals = (0.3,)
+    # Take model values from the above list.
+    varIdxs = (0, 1, 2, 3, 4, 5)
 
-    isoch_moved, isoch_binar, isoch_compl, (synth_clust, sigma, extra_pars) =\
-        synth_cluster(
-        fundam_params, varIdxs, model_var, theor_tracks, clp['completeness'],
-        max_mag_syn, st_dist_mass, R_V, ext_coefs, N_fc, err_pars, m_ini_idx,
-        binar_flag)
+    models = []
+    for z in z_vals:
+        for a in a_vals:
+            for e in e_vals:
+                for d in d_vals:
+                    for m in m_vals:
+                        for b in b_vals:
+                            models.append([z, a, e, d, m, b])
 
-    if not synth_clust.any():
-        raise ValueError("Synthetic cluster is empty: {}".format(model))
+    # models = np.array([z_vals, a_vals, d_vals, e_vals, m_vals, b_vals]).T
+    for i, model in enumerate(models):
+        # model = np.array([np.random.uniform(*_) for _ in ranges])
+        # model_var = model[varIdxs]
 
-    # Generate positional data
-    field_dens, cl_dists, x_cl, y_cl, x_fl, y_fl = xyCoords(
-        synth_clust.shape[1], CI, rc, rt, xmax, ymax, cx, cy)
+        isoch_moved, mass_dist, isoch_binar, isoch_compl,\
+            (synth_clust, sigma, extra_pars) = synth_cluster(
+                fundam_params, varIdxs, model, theor_tracks,
+                clp['completeness'], max_mag_syn, st_dist_mass, R_V, ext_coefs,
+                N_fc, err_pars, m_ini_idx, binar_flag)
 
-    # Generate field stars' photometry
-    synth_field, sigma_field = fldStarsPhot(
-        max_mag_syn, synth_clust, sigma, len(x_fl))
+        # Generate positional data
+        field_dens, cl_dists, x_cl, y_cl, x_fl, y_fl = xyCoords(
+            synth_clust.shape[1], CI, rc, rt, xmax, ymax, cx, cy)
 
-    # Clip at 'max_mag_syn'
-    msk = synth_field[0] < max_mag_syn
-    synth_field, sigma_field = synth_field[:, msk], sigma_field[:, msk]
-    x_fl, y_fl = x_fl[msk], y_fl[msk]
+        # Generate field stars' photometry
+        synth_field, sigma_field = fldStarsPhot(
+            kdepdf_fr, x_grid_fr, max_mag_syn, synth_clust, sigma, len(x_fl))
 
-    # TODO this needs to be made cleaner
-    clp['synth_gen_pars'] = (
-        extra_pars, model, isoch_moved, isoch_binar, isoch_compl,
-        synth_clust, sigma, cl_dists, x_cl, y_cl, x_fl, y_fl, synth_field,
-        sigma_field, field_dens, CI, rc, rt, xmax, ymax, cx, cy)
-    return clp
+        # Clip at 'max_mag_syn'
+        msk = synth_field[0] < max_mag_syn
+        synth_field, sigma_field = synth_field[:, msk], sigma_field[:, msk]
+        x_fl, y_fl = x_fl[msk], y_fl[msk]
+
+        data_file, plot_file = fileName(npd, model, plot_frmt)
+
+        # Output data to file.
+        synth_gen_out.createFile(
+            filters, colors, extra_pars, model, synth_clust, sigma, x_cl,
+            y_cl, x_fl, y_fl, synth_field, sigma_field, CI, rc, rt, data_file)
+
+        make_D0_plot.main(
+            model, isoch_moved, mass_dist, isoch_binar, isoch_compl,
+            synth_clust, extra_pars, sigma, synth_field, sigma_field, cx, cy,
+            rc, rt, cl_dists, xmax, ymax, x_cl, y_cl, x_fl, y_fl, CI,
+            max_mag_syn, flag_make_plot, coords, colors, filters, plot_dpi,
+            plot_file)
+
+        update_progress.updt(len(models), i + 1)
+
+    return
 
 
 def synth_cluster(
@@ -104,8 +148,8 @@ def synth_cluster(
     # Get isochrone minus those stars beyond the magnitude cut.
     isoch_cut = cut_max_mag.main(isoch_moved, max_mag_syn)
 
-    # Empty list to pass if at some point no stars are left.
-    synth_clust = np.array([])
+    # # Empty list to pass if at some point no stars are left.
+    # synth_clust = np.array([])
     # Check for an empty array.
     if isoch_cut.any():
         # Mass distribution to produce a synthetic cluster based on
@@ -129,7 +173,10 @@ def synth_cluster(
                 synth_clust = add_errors.main(
                     isoch_compl, err_pars, binar_flag, m_ini_idx)
 
-    return isoch_moved, isoch_binar, isoch_compl, synth_clust
+    # if not synth_clust[0].any():
+    #     raise ValueError("Synthetic cluster is empty: {}".format(model))
+
+    return isoch_moved, mass_dist, isoch_binar, isoch_compl, synth_clust
 
 
 def xyCoords(N_clust, CI, rc, rt, xmax, ymax, cx, cy):
@@ -201,24 +248,33 @@ def estimateNfield(N_membs, CI, tot_area, cl_area):
     return N_field, field_dens
 
 
-def fldStarsPhot(max_mag_syn, synth_clust, sigma, N_fl, std_f=5.):
+def fldStarsPhot(
+        kdepdf_fr, x_grid_fr, max_mag_syn, synth_clust, sigma, N_fl, std_f=5.):
     """
 
     std_f : number of standard deviations used to perturb the uncertainties
     assigned to the field stars.
     """
     ndim, N_cl = synth_clust.shape
-    mags = np.sort(synth_clust[0])
 
-    # # This method does not use the synthetic luster to generate the field
+    # *Ordered* synthetic cluster's magnitude
+    mags_sort = np.argsort(synth_clust[0])
+    synth_clust = synth_clust[:, mags_sort]
+    sigma = sigma[:, mags_sort]
+    mags_cl = synth_clust[0]
+
+    # # This method does not use the synthetic cluster to generate the field
     # # photometry. The advantage is that it can be controlled with the
-    # # 'mac_CI' parameter.
+    # # 'mag_CI' parameter.
     # #
     # # Exponentiate magnitudes so that stars with larger values are assigned
     # # larger probabilities ans are thus more likely to be sampled below.
     # mag_CI = .5
     # probs = np.exp(mag_CI * synth_clust[0])
     # probs = probs / probs.sum()
+
+    def stretch(x, xmin, xmax):
+        return np.interp(x, (x.min(), x.max()), (xmin, xmax))
 
     def generate_rand_from_pdf(pdf, x_grid, N_fl):
         """
@@ -231,23 +287,18 @@ def fldStarsPhot(max_mag_syn, synth_clust, sigma, N_fl, std_f=5.):
         random_from_cdf = x_grid[value_bins]
         return random_from_cdf
 
-    # Sample LF's KDE
-    x_grid = np.linspace(min(mags), max(mags), 1000)
-    kde = gaussian_kde(mags)
-    kdepdf = kde.evaluate(x_grid)
-    sampled_kde = generate_rand_from_pdf(kdepdf, x_grid, N_fl)
+    # Generate N_fl samples from the KDE of the 'mags'.
+    mags_kde = generate_rand_from_pdf(kdepdf_fr, x_grid_fr, N_fl)
 
-    fl_ids = np.searchsorted(mags, sampled_kde)
+    # Stretch field regions magnitudes to the synthetic cluster's range.
+    mags_kde = stretch(mags_kde, mags_cl.min(), mags_cl.max())
+    mags_kde = np.sort(mags_kde)
 
-    # import matplotlib.pyplot as plt
-    # plt.subplot(121)
-    # plt.hist(mags, 50, normed=True, alpha=0.5, label='hist')
-    # plt.plot(x_grid, kdepdf, color='r', alpha=0.5, lw=3, label='kde')
-    # plt.legend()
-    # plt.subplot(122)
-    # plt.hist(sampled_kde, 50, alpha=0.5, label='from kde')
-    # plt.legend()
-    # # plt.show()
+    # For every mag value sampled from the KDE, find the closest synthetic
+    # magnitude value.
+    fl_ids = np.searchsorted(mags_cl, mags_kde)
+    # Pull elements at the end of the array back one position.
+    fl_ids[fl_ids >= len(sigma[0]) - 1] = len(sigma[0]) - 1
 
     # Generate uncertainties for field stars by randomly perturbing the
     # uncertainties from the (sampled) cluster members.
@@ -255,17 +306,40 @@ def fldStarsPhot(max_mag_syn, synth_clust, sigma, N_fl, std_f=5.):
     sigma_field = sigma_field + np.random.normal(0, .1, N_fl) * sigma_field
 
     # Perturb the magnitudes
-    mag_fl = synth_clust[0, fl_ids] +\
-        np.random.normal(0., std_f, N_fl) * sigma_field[0]
-    # Add an extra perturbation term.
-    mag_fl = mag_fl + np.random.normal(0., .5, N_fl)
+    mag_fl = mags_kde + np.random.normal(0., std_f, N_fl) * sigma_field[0]
 
     # Same for colors
     cols_fl = synth_clust[1:, fl_ids] +\
         np.random.normal(0., std_f, (ndim - 1, N_fl)) * sigma_field[1:]
-    cols_fl = cols_fl + np.random.normal(0., .2, (ndim - 1, N_fl))
+
+    # Add an extra perturbation term to the magnitude and colors.
+    mag_fl += np.random.normal(0., .5, N_fl)
+    cols_fl += np.random.normal(0., .2, (ndim - 1, N_fl))
 
     # Combine magnitude and color(s) to generate the final field photometry.
     synth_field = np.concatenate(([mag_fl], cols_fl))
 
     return synth_field, sigma_field
+
+
+def fileName(npd, model, plot_frmt):
+    """
+    """
+
+    # (z, a) subfolder name
+    subfolder = str("{:.4f}".format(model[0])).replace("0.", "") +\
+        "_" + str("{:.3f}".format(model[1])).replace(".", "")
+
+    synth_gen_fold = join(npd['output_subdir'], 'synth', subfolder)
+    if not exists(synth_gen_fold):
+        os.makedirs(synth_gen_fold)
+
+    clust_name = str("{:.3f}".format(model[2])).replace(".", "") +\
+        "_" + str("{:.2f}".format(model[3])).replace(".", "") +\
+        "_" + str("{:.0f}".format(model[4])).replace(".", "") +\
+        "_" + str("{:.2f}".format(model[5])).replace(".", "")
+
+    data_file = join(synth_gen_fold, clust_name + '.dat')
+    plot_file = join(synth_gen_fold, clust_name + '.' + plot_frmt)
+
+    return data_file, plot_file

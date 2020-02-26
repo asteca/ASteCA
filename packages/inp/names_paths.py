@@ -30,14 +30,6 @@ def main(cl_file, best_fit_algor, **kwargs):
     if not exists(output_subdir):
         makedirs(output_subdir)
 
-    # In place for #239
-    synth_gen_file, synth_gen_fold = [], []
-    if best_fit_algor == 'synth_gen':
-        synth_gen_fold = join(output_subdir, 'synth')
-        if not exists(synth_gen_fold):
-            makedirs(synth_gen_fold)
-        synth_gen_file = join(synth_gen_fold, clust_name + '_synth.dat')
-
     memb_file_out = join(output_subdir, clust_name + '_memb.dat')
     mcmc_file_out = join(output_subdir, clust_name + '_mcmc.dat')
     synth_file_out = join(output_subdir, clust_name + '_synth.dat')
@@ -51,10 +43,9 @@ def main(cl_file, best_fit_algor, **kwargs):
         'clust_name': clust_name, 'data_file': data_file,
         'memb_file': memb_file, 'output_dir': output_dir,
         'out_file_name': out_file_name, 'output_subdir': output_subdir,
-        'memb_file_out': memb_file_out, 'synth_gen_file': synth_gen_file,
-        'synth_gen_fold': synth_gen_fold,
-        'synth_file_out': synth_file_out, 'write_name': write_name,
-        'mcmc_file_out': mcmc_file_out, 'params_out': params_out}
+        'memb_file_out': memb_file_out, 'synth_file_out': synth_file_out,
+        'write_name': write_name, 'mcmc_file_out': mcmc_file_out,
+        'params_out': params_out}
     return npd
 
 

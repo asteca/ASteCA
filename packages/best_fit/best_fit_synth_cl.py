@@ -6,7 +6,7 @@ from . import emcee_algor
 from ..synth_clust import add_errors, imf, extin_coefs, synth_clust_gen
 
 
-def main(clp, pd):
+def main(npd, pd, clp):
     """
     Perform a best fitting process to find the cluster's fundamental
     parameters.
@@ -71,9 +71,9 @@ def main(clp, pd):
     if pd['best_fit_algor'] == 'synth_gen':
         cl_max_mag, max_mag_syn, obs_clust, ext_coefs, st_dist_mass, N_fc,\
             err_pars = dataPrep(pd, clp)
-        clp = synth_clust_gen.main(
-            clp, max_mag_syn, obs_clust,
-            ext_coefs, st_dist_mass, N_fc, err_pars, **pd)
+        synth_clust_gen.main(
+            npd, clp, max_mag_syn, obs_clust, ext_coefs, st_dist_mass, N_fc,
+            err_pars, **pd)
 
     #
     clp['cl_max_mag'], clp['max_mag_syn'], clp['ext_coefs'],\
