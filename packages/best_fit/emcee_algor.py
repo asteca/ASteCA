@@ -2,6 +2,13 @@
 import numpy as np
 import time as t
 import warnings
+try:
+    # If this import is not done outside main(), then eval() fails in the
+    # definition of the moves
+    from emcee import ensemble
+    from emcee import moves
+except ImportError:
+    pass
 
 from ..synth_clust import synth_cluster
 from . import likelihood
@@ -11,21 +18,17 @@ from .bf_common import initPop, varPars, rangeCheck, fillParams,\
 
 
 def main(
-    err_lst, completeness, e_max, max_mag_syn, obs_clust, ext_coefs,
-    st_dist_mass, N_fc, m_ini, err_rnd, lkl_method, fundam_params,
-    theor_tracks, R_V, nsteps_mcee, nwalkers_mcee, nburn_mcee, priors_mcee,
-        emcee_moves, hmax, **kwargs):
+    completeness, max_mag_syn, obs_clust, ext_coefs, st_dist_mass, N_fc,
+    err_pars, m_ini_idx, binar_flag, lkl_method, fundam_params, theor_tracks,
+    R_V, nsteps_mcee, nwalkers_mcee, nburn_mcee, priors_mcee, emcee_moves,
+        hmax, **kwargs):
     """
     """
-    from emcee import ensemble
-    # This is used when the moves are defined below by eval()
-    from emcee import moves
-
     varIdxs, ndim, ranges = varPars(fundam_params)
     # Pack synthetic cluster arguments.
     synthcl_args = [
-        theor_tracks, e_max, err_lst, completeness, max_mag_syn, st_dist_mass,
-        R_V, ext_coefs, N_fc, m_ini, err_rnd]
+        theor_tracks, completeness, max_mag_syn, st_dist_mass, R_V, ext_coefs,
+        N_fc, err_pars, m_ini_idx, binar_flag]
 
     # Start timing.
     max_secs = hmax * 60. * 60.
@@ -33,6 +36,7 @@ def main(
 
     # Define moves.
     mv = [(eval("moves." + _)) for _ in emcee_moves]
+
     # Define sampler.
     sampler = ensemble.EnsembleSampler(
         nwalkers_mcee, ndim, log_posterior,

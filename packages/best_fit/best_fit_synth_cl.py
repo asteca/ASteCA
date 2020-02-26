@@ -29,16 +29,15 @@ def main(npd, pd, clp):
                 clp['completeness'], max_mag_syn, obs_clust, ext_coefs,
                 st_dist_mass, N_fc, err_pars, **pd)
 
+        elif pd['best_fit_algor'] == 'emcee':
+            isoch_fit_params = emcee_algor.main(
+                clp['completeness'], max_mag_syn, obs_clust, ext_coefs,
+                st_dist_mass, N_fc, err_pars, **pd)
+
         elif pd['best_fit_algor'] == 'boot+GA':
             isoch_fit_params = bootstrap.main(
                 pd, clp, cl_max_mag, max_mag_syn, obs_clust, ext_coefs,
                 st_dist_mass, N_fc, err_pars)
-
-        elif pd['best_fit_algor'] == 'emcee':
-            isoch_fit_params = emcee_algor.main(
-                clp['err_lst'], clp['completeness'], clp['em_float'],
-                max_mag_syn, obs_clust, ext_coefs, st_dist_mass, N_fc,
-                err_pars, **pd)
 
         # TODO DEPRECATED May 2019
         # if best_fit_algor == 'brute':
