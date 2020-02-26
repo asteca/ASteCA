@@ -1,6 +1,5 @@
 
 import numpy as np
-from os.path import join
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from . import add_version_plot
@@ -8,26 +7,24 @@ from . import prep_plots
 from ..structure.king_profile import centDens, KingProf
 
 
-def main(npd, pd, max_mag_syn, synth_gen_pars, **kwargs):
+def main(
+    model, isoch_moved, mass_dist, isoch_binar, isoch_compl, synth_clust,
+    extra_pars, sigma, synth_field, sigma_field, cx, cy, rc, rt, cl_dists,
+    xmax, ymax, x_cl, y_cl, x_fl, y_fl, CI, max_mag_syn, flag_make_plot,
+        coords, colors, filters, plot_dpi, plot_file):
     """
     In place for #239
     Plot synthetic clusters.
     """
 
-    if 'D0' in pd['flag_make_plot'] and pd['best_fit_algor'] == 'synth_gen':
+    if 'D0' in flag_make_plot:
 
         fig = plt.figure(figsize=(30, 25))
         gs = gridspec.GridSpec(10, 12)
         add_version_plot.main(y_fix=1.005)
 
-        extra_pars, model, isoch_moved, isoch_binar, isoch_compl,\
-            synth_clust, sigma, cl_dists, x_cl, y_cl, x_fl, y_fl, synth_field,\
-            sigma_field, field_dens, CI, rc, rt, xmax, ymax, cx, cy =\
-            synth_gen_pars
-
-        coord, x_name, y_name = prep_plots.coord_syst(pd['coords'])
-        x_ax0, y_ax = prep_plots.ax_names(
-            pd['colors'][0], pd['filters'][0], 'mag')
+        coord, x_name, y_name = prep_plots.coord_syst(coords)
+        x_ax0, y_ax = prep_plots.ax_names(colors[0], filters[0], 'mag')
 
         # # Plot field + cluster.
         # # figsize(x1, y1), GridSpec(y2, x2) --> To have square plots: x1/x2 =
@@ -55,7 +52,7 @@ def main(npd, pd, max_mag_syn, synth_gen_pars, **kwargs):
         t2 = r'${}_{{min}} = ${:.1f}'.format(y_ax, max_mag_syn)
         t3 = r'$z = ${:.4f}'.format(model[0])
         t4 = r'$\log(age) = ${:.1f}'.format(model[1])
-        t5 = r'$A_{{V}} = ${:.1f} mag'.format(model[2] * 3.1)
+        t5 = r'$E_{{BV}} = ${:.1f} mag'.format(model[2])
         t6 = r'$\mu = ${:.2f} mag'.format(model[3])
         t7 = r'$M = ${:.0f} '.format(model[4]) + r'$M_{\odot}$'
         t8 = r'$b_{{fr}} = ${:.2f} '.format(model[5])
@@ -73,17 +70,24 @@ def main(npd, pd, max_mag_syn, synth_gen_pars, **kwargs):
         plt.axhline(y=max_mag_syn, linestyle='-', color='green', lw=1.5)
         ax.invert_yaxis()
 
+        # Mass distribution
+        ax = plt.subplot(gs[0:1, 2:4])
+        ax.minorticks_on()
+        ax.grid(b=True, which='major', color='grey', linestyle='-', lw=.5)
+        plt.hist(mass_dist, 50)
+        plt.xlabel(r"$\log \, m\;[M_{\odot}]$", fontsize=12)
+        plt.ylabel(r'$\log \, N$', fontsize=12)
+        ax.set_xscale('log')
+        ax.set_yscale('log')
+
         # Completeness
-        ax = plt.subplot(gs[0:2, 2:4])
-        # Set plot limits
-        # Set axis labels
+        ax = plt.subplot(gs[1:2, 2:4])
         plt.xlabel(r'${}$'.format(y_ax), fontsize=12)
         plt.ylabel(r'$N$', fontsize=12)
         # Set minor ticks
         ax.minorticks_on()
         # Backg color.
         ax.set_facecolor('#D8D8D8')
-        # Set grid
         ax.grid(b=True, which='major', color='w', linestyle='-', lw=.5)
         # Plot stars.
         _, edges, _ = plt.hist(
@@ -124,7 +128,7 @@ def main(npd, pd, max_mag_syn, synth_gen_pars, **kwargs):
         ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5)
         # Set plot limits
         plt.xlim(min(synth_clust[0]) - 0.5, max(synth_clust[0]) + 0.5)
-        plt.ylim(-0.001, max(sigma[1]) + .25 * max(sigma[1]))
+        plt.ylim(-0.01, max(sigma[1]) + .25 * max(sigma[1]))
         # Set axis labels
         plt.ylabel(r'$\sigma_{}$'.format(x_ax0), fontsize=12)
         plt.xlabel(r'${}$'.format(y_ax), fontsize=12)
@@ -199,14 +203,11 @@ def main(npd, pd, max_mag_syn, synth_gen_pars, **kwargs):
 
         fig.tight_layout()
         # Generate output file.
-        plt.savefig(
-            join(npd['synth_gen_fold'], str(npd['clust_name']) +
-                 '_D0.' + pd['plot_frmt']), dpi=pd['plot_dpi'],
-            bbox_inches='tight')
+        plt.savefig(plot_file, dpi=plot_dpi, bbox_inches='tight')
         # Close to release memory.
         plt.clf()
         plt.close("all")
 
-        print("<<Plots for D0 block created>>")
-    else:
-        print("<<Skip D0 block plot>>")
+    #     print("<<Plots for D0 block created>>")
+    # else:
+    #     print("<<Skip D0 block plot>>")
