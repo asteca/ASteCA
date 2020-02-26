@@ -23,8 +23,8 @@ def pl_cl_fl_regions(
     if coord == 'deg':
         ax.invert_xaxis()
     # Set axis labels
-    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=12)
-    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=12)
+    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=10)
+    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=10)
     # Set minor ticks
     ax.minorticks_on()
     ax.grid(b=True, which='both', color='gray', linestyle='--', lw=.5)
@@ -62,8 +62,8 @@ def pl_lum_func(gs, y_ax, flag_no_fl_regs, lum_func):
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
             zorder=1)
     # Set axis labels
-    plt.xlabel('$' + y_ax + '$', fontsize=12)
-    plt.ylabel('$N^{\star}/A_{cl}$', fontsize=12)
+    plt.xlabel('$' + y_ax + '$', fontsize=10)
+    plt.ylabel('$N^{\star}/A_{cl}$', fontsize=10)
 
     # All frame.
     plt.step(x_all, y_all, where='post', color='k', lw=2.5, linestyle=':',
@@ -105,8 +105,8 @@ def pl_data_rm_perc(
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
             zorder=1)
     # Set axis labels
-    plt.xlabel('$' + y_ax + '$', fontsize=12)
-    plt.ylabel('perc', fontsize=12)
+    plt.xlabel('$' + y_ax + '$', fontsize=10)
+    plt.ylabel('perc', fontsize=10)
 
     edges, perc_vals = phot_analy_compl
     perc_vals_min = [min(perc_vals)]
@@ -156,8 +156,8 @@ def clCMD(
     plt.xlim(x_min_cmd, x_max_cmd)
     plt.ylim(y_min_cmd, y_max_cmd)
     # Set axis labels
-    plt.xlabel('$' + x_ax + '$', fontsize=12)
-    plt.ylabel('$' + y_ax + '$', fontsize=12)
+    plt.xlabel('$' + x_ax + '$', fontsize=10)
+    plt.ylabel('$' + y_ax + '$', fontsize=10)
     # Set minor ticks
     ax.minorticks_on()
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
@@ -226,8 +226,8 @@ def hessKDE(
     bw, Nb = .2, 100
 
     ax.set_title("Cluster - Field (normalized)", fontsize=9)
-    plt.xlabel('$' + x_ax + '$', fontsize=12)
-    plt.ylabel('$' + y_ax + '$', fontsize=12)
+    plt.xlabel('$' + x_ax + '$', fontsize=10)
+    plt.ylabel('$' + y_ax + '$', fontsize=10)
 
     xx, yy = np.mgrid[x_min_cmd:x_max_cmd:complex(Nb),
                       y_max_cmd:y_min_cmd:complex(Nb)]
@@ -318,8 +318,8 @@ def flCMD(
     plt.xlim(x_min_cmd, x_max_cmd)
     plt.ylim(y_min_cmd, y_max_cmd)
     # Set axis labels
-    plt.xlabel('$' + x_ax + '$', fontsize=12)
-    plt.ylabel('$' + y_ax + '$', fontsize=12)
+    plt.xlabel('$' + x_ax + '$', fontsize=10)
+    plt.ylabel('$' + y_ax + '$', fontsize=10)
     # Set minor ticks
     ax.minorticks_on()
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
@@ -427,8 +427,8 @@ def pl_p_vals(
     ax.set_title(
         r'$P_{{cl}}={:.2f}\;({})$'.format(prob_cl, reg_id), fontsize=9)
     ax.axes.yaxis.set_ticklabels([])
-    plt.xlabel('p-values', fontsize=12)
-    plt.ylabel('Density (norm)', fontsize=12)
+    plt.xlabel('p-values', fontsize=10)
+    plt.ylabel('Density (norm)', fontsize=10)
     ax.minorticks_on()
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
             zorder=1)

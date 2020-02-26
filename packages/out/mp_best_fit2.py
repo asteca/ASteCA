@@ -17,8 +17,8 @@ def pl_mps_phot_diag(
     plt.xlim(x_min_cmd, x_max_cmd)
     plt.ylim(y_min_cmd, y_max_cmd)
     # Set axis labels
-    plt.xlabel('$' + x_ax + '$', fontsize=12)
-    plt.ylabel('$' + y_ax + '$', fontsize=12)
+    plt.xlabel('$' + x_ax + '$', fontsize=10)
+    plt.ylabel('$' + y_ax + '$', fontsize=10)
     # Add text box.
     if gs_y1 == 0:
         text = '$N_{{fit}}={}$'.format(len(obs_MPs))
@@ -28,7 +28,7 @@ def pl_mps_phot_diag(
     # Set minor ticks
     ax.minorticks_on()
     if gs_y1 == 0:
-        ax.set_title("Observed", fontsize=10)
+        ax.set_title("Observed", fontsize=9)
     # Plot grid.
     for x_ed in hess_xedges:
         # vertical lines
@@ -81,11 +81,11 @@ def pl_hess_diag(
     plt.xlim(x_min_cmd, x_max_cmd)
     plt.ylim(y_min_cmd, y_max_cmd)
     # Set axis labels
-    plt.xlabel('$' + x_ax + '$', fontsize=12)
+    plt.xlabel('$' + x_ax + '$', fontsize=10)
     # Set minor ticks
     ax.minorticks_on()
     if gs_y1 == 0:
-        ax.set_title("Hess diagram (observed - synthetic)", fontsize=10)
+        ax.set_title("Hess diagram (observed - synthetic)", fontsize=9)
     for x_ed in hess_xedges:
         # vertical lines
         ax.axvline(x_ed, linestyle=':', lw=.8, color='k', zorder=1)
@@ -136,11 +136,11 @@ def pl_bf_synth_cl(
     plt.xlim(x_min_cmd, x_max_cmd)
     plt.ylim(y_min_cmd, y_max_cmd)
     # Set axis labels
-    plt.xlabel('$' + x_ax + '$', fontsize=12)
+    plt.xlabel('$' + x_ax + '$', fontsize=10)
     # Set minor ticks
     ax.minorticks_on()
     if gs_y1 == 0:
-        ax.set_title("Synthetic (best match)", fontsize=10)
+        ax.set_title("Synthetic (best match)", fontsize=9)
         # Add text box
         text = '$({};\,{})$'.format(lkl_method, bin_method)
         ob = offsetbox.AnchoredText(text, pad=.2, loc=1, prop=dict(size=12))

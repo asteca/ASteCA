@@ -7,16 +7,16 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 def pl_GA_lkl(
     gs, pos, lkl_best, lkl_mean, OF_models, new_bs_indx, fit_diff,
         cross_prob, cross_sel, mut_prob, N_el, N_ei, N_es):
-    '''
+    """
     Likelihood evolution for the GA.
-    '''
+    """
     ax = plt.subplot(gs[pos[0]:pos[1], pos[2]:pos[3]])
     # Set minor ticks
     ax.minorticks_on()
     ax.tick_params(axis='y', which='major', labelsize=9)
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5)
-    plt.xlabel('Generation', fontsize=12)
-    plt.ylabel('Likelihood', fontsize=12)
+    plt.xlabel('Generation', fontsize=10)
+    plt.ylabel('Likelihood', fontsize=10)
 
     # Plot likelihood minimum and mean lines.
     ax.plot(range(len(lkl_best)), lkl_best, lw=1., c='green',
@@ -52,14 +52,14 @@ def pl_GA_lkl(
 
 
 def pl_lkl_scatt(gs, pos, ld_p, min_max_p, cp_r, cp_e, models_GA, lkls_GA):
-    '''
+    """
     Parameter likelihood scatter plot.
-    '''
+    """
     # Define parameters for upper and lower plots.
     if ld_p == r'$z$':
         ax, cp, ci, zlab = plt.subplot(
             gs[pos[0][0]:pos[0][1], pos[0][2]:pos[0][3]]), 0, 1, r'$log(age)$'
-        plt.ylabel('Likelihood', fontsize=12)
+        plt.ylabel('Likelihood', fontsize=10)
     elif ld_p == r'$log(age)$':
         ax, cp, ci, zlab = plt.subplot(
             gs[pos[1][0]:pos[1][1], pos[1][2]:pos[1][3]]), 1, 2,\
@@ -89,7 +89,7 @@ def pl_lkl_scatt(gs, pos, ld_p, min_max_p, cp_r, cp_e, models_GA, lkls_GA):
     ax.minorticks_on()
     ax.grid(b=True, which='major', color='gray', linestyle=':', lw=.5)
     ax.tick_params(axis='y', which='major', labelsize=9)
-    plt.xlabel(ld_p, fontsize=16)
+    plt.xlabel(ld_p, fontsize=10)
     # Add textbox.
     text = (ld_p + r'$={:.4f} \pm {:.4f}$').format(xp, e_xp)
     ob = offsetbox.AnchoredText(text, pad=0.1, loc=2, prop=dict(size=10))

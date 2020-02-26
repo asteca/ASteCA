@@ -78,11 +78,12 @@ def pl_phot_err(
                 zorder=1)
         plt.xlim(x_min, x_max)
         # Set axis labels
-        plt.xlabel(r'$' + x_ax + r'$', fontsize=14)
-        plt.ylabel(r'$\sigma_{{{}}}$'.format(y_ax), fontsize=14)
+        plt.xlabel(r'$' + x_ax + r'$', fontsize=12)
+        plt.ylabel(r'$\sigma_{{{}}}$'.format(y_ax), fontsize=12)
         ax.set_facecolor('#EFF0F1')
         # Set minor ticks
         ax.minorticks_on()
+        ax.tick_params(axis='both', which='major', labelsize=10)
 
         # Rejected stars outside the cluster region
         if any(mmag_out_rjct) and any(stars_out_rjct_c):
