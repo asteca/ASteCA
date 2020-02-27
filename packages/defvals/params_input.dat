@@ -73,7 +73,7 @@ PK     n        n        n         n       n         n      n       n
 #   treated as bad/missing values.
 #
 #   nanvals
-NV    INDEF, NAN, NaN, 99.999, 999.99, 99.999
+NV    INDEF, NAN, NaN, 99.999, 999.99
 
 # Trim frame?
 #
@@ -83,8 +83,8 @@ NV    INDEF, NAN, NaN, 99.999, 999.99, 99.999
 # * tf_range: [float] * 4
 #   Input the x,y ranges in the order: xmin, xmax, ymin, ymax
 #
-#    tf_flag   tf_range
-TF         n   0. 0. 0. 0.
+#    tf_flag    tf_range
+TF         n    0. 0. 0. 0.
 ################################################################################
 
 
@@ -95,26 +95,27 @@ TF         n   0. 0. 0. 0.
 
 # Create output figures?
 #
-# * blocks: [A1, A2, B, C1, C2, D1, D2]
+# * blocks: [A1, A2, A3, B1, B2, C1, C2, C3, D1, D2]
 #   Select one or more identifier to decide which plots will be produced. Leave
 #   empty for no output plots. An 's' character after an identifier will make
 #   the code stop and return right after creating that plot. I.e.: the line
 #   'A1 B1 s B2 C1' will make the code create the 'A1' and 'B1' plots and stop
 #   right after 'B1'. If we use 'A1 B1 B2 C1' then those four plots will be
-#   generated.
+#   generated and the code will keep running until the end.
 #
-#   - A1: (x,y) density maps
-#   - A2: structural analysis
+#   - A1: structural density maps
+#   - A2: center and field density analysis
+#   - A3: radius analysis
 #   - B1: uncertainties analysis
-#   - B2: photometric analysis
+#   - B2: photometric and kinematic data analysis
 #   - C1: decontamination algorithm photometric diagrams
 #   - C2: parallax analysis
 #   - C3: proper motions analysis
-#   - D1: likelihood minimization
-#   - D2: best fit synthetic cluster match
+#   - D1: convergence diagnostics
+#   - D2: best fit synthetic cluster found
 #
 #   blocks
-MP   A1 A2 B1 B2 C1 C2 C3 D1 D2
+MP   A1 A2 A3 B1 B2 C1 C2 C3 D1 D2
 
 # * format: png / pdf
 #   Format of the final image file.
@@ -132,7 +133,8 @@ PF     png     150
 
 ####################### Structural functions ###################################
 
-# Fixed values for the center, radius, and/or the number of field regions.
+# Fixed values for the center, radius, and/or the number of field regions. If
+# the parameter is not to be fixed, use 'n'.
 #
 # * name: [str] / n
 #   Cluster's name.
@@ -147,19 +149,14 @@ PF     png     150
 #   Number of field regions to obtain around the cluster.
 #
 #   name       c_x      c_y      rad     f_regs
-MD  CLUSTER    n        n        n       n
+MD  CLUSTER      n        n        n          n
 
-# Center assignment function.
+# Center assignment and field density.
 #
 # * bandwidth: [float]
 #   The bandwidth used by the Gaussian KDE applied to the 2-dimensional (x,y)
-#   stars coordinates. If 'bandwidth=0' then half of Scott's rule is employed
-#   (this generally gives good results).
-#
-#   bandwidth
-CH         .0
-
-# Field density and radius.
+#   stars coordinates to estimate the center coordinates. If 'bandwidth=0'
+#   then half of Scott's rule is employed (this generally gives good results).
 #
 # * NN: [int]
 #   The number of closest neighbors used to estimate the per-star densities.
@@ -173,6 +170,11 @@ CH         .0
 #   percentile from the estimated center.
 #   Else, a float>0 needs to be given.
 #
+#   bandwidth    NN    field_dens
+CD         .0    10          iter
+
+# Radius and radial density profile function.
+#
 # * N_steps: [int]
 #   The number of bootstrap steps employed to estimate the uncertainty
 #   associated to the radius.
@@ -180,17 +182,30 @@ CH         .0
 # * RDP_rings: [int]
 #   Number of circular rings used for plotting the RDP.
 #
-#   NN    field_dens   N_steps    RDP_rings
-FD  10           min      1000           50
+#   N_steps    RDP_rings
+RU     1000           50
 
-# King profile function.
+# King profile fitting parameters.
 #
 # * flag: y / n
 #   Attempt to fit a King profile to the radial density profile of the defined
 #   cluster region.
 #
-#   flag
-KP     y
+# * nchains: [int]
+#   Number of MCMC chains used in the Bayesian analysis.
+#
+# * nruns: [int]
+#   Number of MCMC steps used in the Bayesian analysis.
+#
+# * nburn: [0.<float<1.]
+#   Percentage of chains to throw away as burn-in.
+#
+# * rt_max: [0.<float]
+#   Factor that determines the maximum value of the tidal radius, compared to
+#   the radius obtained in the previous step.
+#
+#   flag   nchains   nruns  nburn    rt_max
+KP     y        20    5000    .25         2
 
 # Field stars regions.
 #
@@ -231,7 +246,8 @@ ER        0.1           n            n            n            n
 #
 # * runs: [int]
 #   Number of times the A-D test will run, perturbing through a normal
-#   distribution where the associated uncertainties are the standard deviations.
+#   distribution where the associated uncertainties are the standard
+#   deviations. Input a value of '0' to skip this test.
 #
 #   runs
 AD   100
@@ -316,7 +332,7 @@ DW      y        y        y        y        y       n
 #   bins in the magnitude is twice the number in the colors.
 # - fixed: Based on Bonatto & Bica (2007; 377, 3, 1301-1323) but using larger
 #   values: 0.5 mag for colors and 1. mag for the magnitude.
-# - blocks, knuth: astropy's implementation.
+# - blocks / knuth: astropy's implementation.
 # - blocks-max: same as 'blocks' but imposing a maximum width of 3. mag for
 #   colors and 1. mag for magnitude.
 # - rest: numpy's implementation.
@@ -342,17 +358,20 @@ FR  local      optm          0.5
 # * offset: [float]
 #   Offset added to the parallax data.
 #
-# * n_chains: [int]
+# * nchains: [int]
 #   Number of MCMC chains used in the Bayesian analysis.
 #
-# * n_runs: [int]
+# * nruns: [int]
 #   Number of MCMC steps used in the Bayesian analysis. 
+#
+# * nburn: [0.<float<1.]
+#   Percentage of chains to throw away as burn-in.
 #
 # * mp_flag: y / n
 #   Use MPs in the parallax analysis?
 #
-#   plx_flag   offset   n_chains   n_runs   mp_flag
-PX         n    0.029         10     5000         y
+#   plx_flag   offset   nchains   nruns   nburn   mp_flag
+PX         n    0.029        10    5000     .25         y
 
 # Proper motions analysis
 #
@@ -388,8 +407,8 @@ RS          n
 #   For the [z, log(age)] parameters the strings 'min' and/or 'max' can be used
 #   to let ASteCA decide the minimum and/or maximum range limits.
 #
-#   z (RZ), log(age) (RA), E(B-V) (RE), distance modulus (RD), mass (RM),
-#   binary fraction (RB)
+#   RZ: z, RA: log(age), RE: E(B-V), RD: distance modulus, RM: mass,
+#   RB: binary fraction
 #
 #        min      max
 RZ    0.0005     0.03

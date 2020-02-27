@@ -81,13 +81,13 @@ def main(mypath, pars_f_path):
                 # Structure functions parameters.
                 elif reader[0] == 'MD':
                     manual_struct.append(reader[1:])
-                elif reader[0] == 'CH':
+                elif reader[0] == 'CD':
                     center_bw = float(reader[1])
-                elif reader[0] == 'FD':
-                    NN_dd = int(reader[1])
-                    fdens_method = str(reader[2])
-                    nsteps_rad = int(reader[3])
-                    RDP_rings = int(reader[4])
+                    NN_dd = int(reader[2])
+                    fdens_method = str(reader[3])
+                elif reader[0] == 'RU':
+                    nsteps_rad = int(reader[1])
+                    RDP_rings = int(reader[2])
                 elif reader[0] == 'KP':
                     kp_flag = True if reader[1] in true_lst else False
                     kp_nchains = int(reader[2])
