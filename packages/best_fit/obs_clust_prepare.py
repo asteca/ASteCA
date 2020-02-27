@@ -131,6 +131,9 @@ def main(cl_max_mag, lkl_method, lkl_binning, lkl_manual_bins):
         # Product of summed squared sigmas.
         sigma_prod = np.sqrt(np.prod(sigma, axis=-1))
 
+        # Handle MP=0.
+        memb_probs = np.clip(memb_probs, a_min=.001, a_max=None)
+
         N = obs_photom.shape[0]
         obs_clust = [obs_photom, sigma, sigma_prod, N, np.log(memb_probs)]
 
