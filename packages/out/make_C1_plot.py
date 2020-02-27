@@ -7,6 +7,7 @@ from os.path import join
 from . import add_version_plot
 from . import mp_decont_photom
 from . import prep_plots
+from . prep_plots import figsize_x, figsize_y, grid_x, grid_y, cbartickssize
 
 
 def main(
@@ -15,10 +16,11 @@ def main(
     cl_reg_fit, cl_reg_no_fit, local_rm_edges, col_0_comb, mag_0_comb,
         err_lst, **kwargs):
     """
+    Make C1 block plots.
     """
     if 'C1' in pd['flag_make_plot']:
-        fig = plt.figure(figsize=(30, 25))
-        gs = gridspec.GridSpec(10, 12)
+        fig = plt.figure(figsize=(figsize_x, figsize_y))
+        gs = gridspec.GridSpec(grid_y, grid_x)
         add_version_plot.main(y_fix=.999)
 
         # Obtain plotting parameters and data.
@@ -151,4 +153,4 @@ def plot_colorbars(fig, all_colorbars):
             cbar = plt.colorbar(
                 sca, cax=cbaxes, ticks=[v_min_mp, v_max_mp],
                 orientation='horizontal')
-            cbar.ax.tick_params(labelsize=9)
+            cbar.ax.tick_params(labelsize=cbartickssize)

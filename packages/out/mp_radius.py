@@ -6,6 +6,7 @@ from itertools import cycle
 from ..structure.king_profile import KingProf as kpf
 from . import BayesPlots
 from .. import aux_funcs
+from . prep_plots import xylabelsize, xytickssize, legendsize, titlesize
 
 
 def pl_rad_find(
@@ -38,9 +39,9 @@ def pl_rad_find(
 
     ax = plt.subplot(gs[0:2, 0:2])
     ax.minorticks_on()
-    plt.xlabel(r'radius $[{}]$'.format(coord2), fontsize=10)
-    plt.ylabel(r"$N_{memb}\;|\;N_{field}\;|\;CI$", fontsize=10)
-    ax.tick_params(axis='both', which='major', labelsize=8)
+    plt.xlabel(r'radius $[{}]$'.format(coord2), fontsize=xylabelsize)
+    plt.ylabel(r"$N_{memb}\;|\;N_{field}\;|\;CI$", fontsize=xylabelsize)
+    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
 
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5)
 
@@ -53,7 +54,7 @@ def pl_rad_find(
     if not np.isnan(e_rad[0]):
         plt.axvspan((e_rad[0]), (e_rad[1]), facecolor='grey', alpha=0.25)
     # Legends.
-    leg = plt.legend(fancybox=True, fontsize=10)
+    leg = plt.legend(fancybox=True, fontsize=legendsize)
     leg.get_frame().set_alpha(0.7)
 
     xmin, xmax = ax.get_xlim()
@@ -100,9 +101,9 @@ def pl_rad_dens(
     plt.ylim(y_min, y_max)
     ax.minorticks_on()
     # Set axes labels
-    plt.xlabel(r'radius $[{}]$'.format(coord2), fontsize=10)
-    plt.ylabel(r"$\rho$ $[st/{}^{{2}}]$".format(coord2), fontsize=10)
-    ax.tick_params(axis='both', which='major', labelsize=8)
+    plt.xlabel(r'radius $[{}]$'.format(coord2), fontsize=xylabelsize)
+    plt.ylabel(r"$\rho$ $[st/{}^{{2}}]$".format(coord2), fontsize=xylabelsize)
+    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
     ax.ticklabel_format(axis='y', style='sci', scilimits=(0, 0))
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5)
 
@@ -164,7 +165,8 @@ def pl_rad_dens(
     # get handles
     handles, labels = ax.get_legend_handles_labels()
     # use them in the legend
-    ax.legend(handles, labels, loc='upper center', numpoints=2, fontsize=10)
+    ax.legend(handles, labels, loc='upper center', numpoints=2,
+              fontsize=legendsize)
 
     #
     # Log-log plot
@@ -281,9 +283,9 @@ def pl_zoom_frame(
         # If RA is used, invert axis.
         ax.invert_xaxis()
     # Set axis labels
-    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=10)
-    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=10)
-    ax.tick_params(axis='both', which='major', labelsize=8)
+    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=xylabelsize)
+    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=xylabelsize)
+    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
 
     # Set minor ticks
     ax.minorticks_on()
@@ -299,7 +301,7 @@ def pl_zoom_frame(
     ax.set_title(
         (r"$A_{{fr}}$={:.0f}%, $N_{{r<r_{{cl}}}}$={}, "
             "[$CI = {:.2f}$] (phot incomp)").format(
-            100. * frac_cl_area, N_in, cont_index), fontsize=9)
+            100. * frac_cl_area, N_in, cont_index), fontsize=titlesize)
     fig.gca().add_artist(circle)
 
     # Core and tidal radii
@@ -355,10 +357,11 @@ def pl_mag_membs(gs, y_ax, kp_flag, membvsmag):
     ax.minorticks_on()
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
             zorder=0)
-    ax.set_title(r"$N_{{memb}}$ vs magnitude cut (phot incomp)", fontsize=9)
-    plt.xlabel('$' + y_ax + '$', fontsize=10)
-    plt.ylabel(r'$N_{memb}$', fontsize=10)
-    ax.tick_params(axis='both', which='major', labelsize=8)
+    ax.set_title(
+        r"$N_{{memb}}$ vs magnitude cut (phot incomp)", fontsize=titlesize)
+    plt.xlabel('$' + y_ax + '$', fontsize=xylabelsize)
+    plt.ylabel(r'$N_{memb}$', fontsize=xylabelsize)
+    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
     plt.bar(*membvsmag, zorder=5)
 
 
@@ -382,9 +385,9 @@ def pl_cl_fl_regions(
     if coord == 'deg':
         ax.invert_xaxis()
     # Set axis labels
-    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=10)
-    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=10)
-    ax.tick_params(axis='both', which='major', labelsize=8)
+    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=xylabelsize)
+    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=xylabelsize)
+    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
 
     # Set minor ticks
     ax.minorticks_on()
@@ -422,7 +425,7 @@ def pl_cl_fl_regions(
 
     ax.set_title(r"$N_{{stars}}$={} (phot incomp); $N_{{fregs}}$={}".format(
         len(cl_region_i) + len(cl_region_rjct_i) + N_flrg,
-        len(field_regions_i)), fontsize=9)
+        len(field_regions_i)), fontsize=titlesize)
 
 
 def plot(N, *args):

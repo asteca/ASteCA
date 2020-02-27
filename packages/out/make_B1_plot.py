@@ -6,6 +6,7 @@ from os.path import join
 from . import mp_errors
 from . import add_version_plot
 from . import prep_plots
+from . prep_plots import figsize_x, figsize_y, grid_x, grid_y, titlesize
 
 
 def main(
@@ -16,8 +17,8 @@ def main(
     Make B1 block plots.
     """
     if 'B1' in pd['flag_make_plot']:
-        fig = plt.figure(figsize=(30, 25))
-        gs = gridspec.GridSpec(7, 12)
+        fig = plt.figure(figsize=(figsize_x, figsize_y))
+        gs = gridspec.GridSpec(grid_y, grid_x)
         add_version_plot.main(y_fix=1.)
 
         # Obtain plotting parameters and data.
@@ -38,7 +39,7 @@ def main(
              "field regions, compl frame)").format(
                 len(cl_region_c) + len(stars_out_c),
                 len(stars_out_rjct_c) + len(cl_region_rjct_c)),
-            fontsize=12, x=.26, y=1.005)
+            fontsize=titlesize, x=.26, y=1.005)
 
         # Generate output file.
         fig.tight_layout()

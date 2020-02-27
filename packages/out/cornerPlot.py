@@ -213,12 +213,12 @@ def pl_2_param_dens(_2_params, gs, min_max_p2, varIdxs, params_trace):
     # To specify the number of ticks on both or any single axes
     ax.locator_params(nbins=5)
     if gs_x1 == 0:
-        plt.ylabel(y_label, fontsize=16)
+        plt.ylabel(y_label, fontsize=11)
         plt.yticks(rotation=45)
     else:
         ax.tick_params(labelleft=False)
     if gs_y2 == 12:
-        plt.xlabel(x_label, fontsize=16)
+        plt.xlabel(x_label, fontsize=11)
         plt.xticks(rotation=45)
     else:
         ax.tick_params(labelbottom=False)
@@ -229,7 +229,7 @@ def pl_2_param_dens(_2_params, gs, min_max_p2, varIdxs, params_trace):
 
         ax.set_title(r"$\rho={:.2f}$".format(np.corrcoef(
             [params_trace[mx_model], params_trace[my_model]])[0][1]),
-            fontsize=10)
+            fontsize=11)
 
         hist2d(ax, params_trace[mx_model], params_trace[my_model])
 
@@ -282,7 +282,7 @@ def pl_param_pf(
     ax = plt.subplot(gs[gs_y1:gs_y2, gs_x1:gs_x2])
     plt.title(
         ld_p + r"$\;[R^2\approx$" + "{:.2f}]".format(param_r2[cp]),
-        fontsize=10)
+        fontsize=11)
 
     # Set x axis limit.
     xp_min, xp_max = min_max_p[cp]
@@ -291,7 +291,7 @@ def pl_param_pf(
     # Set minor ticks
     ax.minorticks_on()
     if cp == 5:
-        plt.xlabel(ld_p, fontsize=16)
+        plt.xlabel(ld_p, fontsize=11)
         plt.xticks(rotation=45)
     # else:
     #     ax.tick_params(labelbottom=False)

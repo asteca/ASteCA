@@ -2,6 +2,8 @@
 import matplotlib.pyplot as plt
 import matplotlib.offsetbox as offsetbox
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+from . prep_plots import xylabelsize, xytickssize, cbarlabelsize,\
+    cbartickssize, legendsize
 
 
 def pl_GA_lkl(
@@ -13,10 +15,10 @@ def pl_GA_lkl(
     ax = plt.subplot(gs[pos[0]:pos[1], pos[2]:pos[3]])
     # Set minor ticks
     ax.minorticks_on()
-    ax.tick_params(axis='y', which='major', labelsize=9)
+    ax.tick_params(axis='y', which='major', labelsize=xytickssize)
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5)
-    plt.xlabel('Generation', fontsize=10)
-    plt.ylabel('Likelihood', fontsize=10)
+    plt.xlabel('Generation', fontsize=xylabelsize)
+    plt.ylabel('Likelihood', fontsize=xylabelsize)
 
     # Plot likelihood minimum and mean lines.
     ax.plot(range(len(lkl_best)), lkl_best, lw=1., c='green',
@@ -38,13 +40,13 @@ def pl_GA_lkl(
     text4 = '$n_{{el}}={}\,;\,n_{{ei}}={}\,;\,n_{{es}}={}$'.format(
         N_el, N_ei, N_es)
     text = text1 + '\n' + text2 + '\n' + text3 + '\n' + text4
-    ob = offsetbox.AnchoredText(text, loc=1, prop=dict(size=12))
+    ob = offsetbox.AnchoredText(text, loc=1, prop=dict(size=legendsize))
     ob.patch.set(boxstyle='square,pad=0.', alpha=0.85)
     ax.add_artist(ob)
     # Legend.
     handles, labels = ax.get_legend_handles_labels()
     leg = ax.legend(handles, labels, loc='upper left', numpoints=1,
-                    fontsize=12)
+                    fontsize=legendsize)
     leg.get_frame().set_alpha(0.7)
 
     plt.xlim(-0.5, len(lkl_best) + int(0.01 * len(lkl_best)))
@@ -59,7 +61,7 @@ def pl_lkl_scatt(gs, pos, ld_p, min_max_p, cp_r, cp_e, models_GA, lkls_GA):
     if ld_p == r'$z$':
         ax, cp, ci, zlab = plt.subplot(
             gs[pos[0][0]:pos[0][1], pos[0][2]:pos[0][3]]), 0, 1, r'$log(age)$'
-        plt.ylabel('Likelihood', fontsize=10)
+        plt.ylabel('Likelihood', fontsize=xylabelsize)
     elif ld_p == r'$log(age)$':
         ax, cp, ci, zlab = plt.subplot(
             gs[pos[1][0]:pos[1][1], pos[1][2]:pos[1][3]]), 1, 2,\
@@ -88,11 +90,12 @@ def pl_lkl_scatt(gs, pos, ld_p, min_max_p, cp_r, cp_e, models_GA, lkls_GA):
     # Set minor ticks
     ax.minorticks_on()
     ax.grid(b=True, which='major', color='gray', linestyle=':', lw=.5)
-    ax.tick_params(axis='y', which='major', labelsize=9)
-    plt.xlabel(ld_p, fontsize=10)
+    ax.tick_params(axis='y', which='major', labelsize=xytickssize)
+    plt.xlabel(ld_p, fontsize=xylabelsize)
     # Add textbox.
     text = (ld_p + r'$={:.4f} \pm {:.4f}$').format(xp, e_xp)
-    ob = offsetbox.AnchoredText(text, pad=0.1, loc=2, prop=dict(size=10))
+    ob = offsetbox.AnchoredText(
+        text, pad=0.1, loc=2, prop=dict(size=legendsize))
     ob.patch.set(alpha=0.8)
     ax.add_artist(ob)
     # Plot scatter points over likelihood density map.
@@ -112,8 +115,34 @@ def pl_lkl_scatt(gs, pos, ld_p, min_max_p, cp_r, cp_e, models_GA, lkls_GA):
     color_axis = the_divider.append_axes("right", size="2%", pad=0.1)
     # Colorbar.
     cbar = plt.colorbar(SC, cax=color_axis)
-    cbar.set_label(zlab, fontsize=12, labelpad=4)
-    cbar.ax.tick_params(labelsize=8)
+    cbar.set_label(zlab, fontsize=cbarlabelsize, labelpad=4)
+    cbar.ax.tick_params(labelsize=cbartickssize)
+
+
+def plot(N, *args):
+    """
+    Handle each plot separately.
+    """
+    plt_map = {
+        0: [pl_GA_lkl, 'GA likelihood evolution'],
+        1: [pl_lkl_scatt, 'z likelihood scatter'],
+        2: [pl_lkl_scatt, 'age likelihood scatter'],
+        3: [pl_lkl_scatt, 'extinction likelihood scatter'],
+        4: [pl_lkl_scatt, 'distance likelihood scatter'],
+        5: [pl_lkl_scatt, 'mass likelihood scatter'],
+        6: [pl_lkl_scatt, 'binarity likelihood scatter']
+    }
+
+    fxn = plt_map.get(N, None)[0]
+    if fxn is None:
+        raise ValueError("  ERROR: there is no plot {}.".format(N))
+
+    try:
+        fxn(*args)
+    except Exception:
+        import traceback
+        print(traceback.format_exc())
+        print("  WARNING: error when plotting {}".format(plt_map.get(N)[1]))
 
 
 # def selectMinLkl(x, y, z):
@@ -233,33 +262,3 @@ def pl_lkl_scatt(gs, pos, ld_p, min_max_p, cp_r, cp_e, models_GA, lkls_GA):
 #             plt.pcolormesh(xi, yi, zi, cmap=plt.get_cmap(d_map), zorder=2)
 
 #         plt.contour(xi, yi, zi, 5, colors='#551a8b', linewidths=0.5, zorder=3)
-
-
-def plot(N, *args):
-    '''
-    Handle each plot separately.
-    '''
-    plt_map = {
-        0: [pl_GA_lkl, 'GA likelihood evolution'],
-        # 1: [pl_2_param_dens, 'age vs metallicity density map'],
-        # 2: [pl_2_param_dens, 'distance vs extinction density map'],
-        # 3: [pl_2_param_dens, 'age vs extinction density map'],
-        # 4: [pl_2_param_dens, 'mass vs binarity density map'],
-        1: [pl_lkl_scatt, 'z likelihood scatter'],
-        2: [pl_lkl_scatt, 'age likelihood scatter'],
-        3: [pl_lkl_scatt, 'extinction likelihood scatter'],
-        4: [pl_lkl_scatt, 'distance likelihood scatter'],
-        5: [pl_lkl_scatt, 'mass likelihood scatter'],
-        6: [pl_lkl_scatt, 'binarity likelihood scatter']
-    }
-
-    fxn = plt_map.get(N, None)[0]
-    if fxn is None:
-        raise ValueError("  ERROR: there is no plot {}.".format(N))
-
-    try:
-        fxn(*args)
-    except Exception:
-        import traceback
-        print(traceback.format_exc())
-        print("  WARNING: error when plotting {}".format(plt_map.get(N)[1]))

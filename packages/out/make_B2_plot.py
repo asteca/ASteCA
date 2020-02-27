@@ -5,6 +5,7 @@ from os.path import join
 from . import mp_data_analysis
 from . import add_version_plot
 from . import prep_plots
+from . prep_plots import figsize_x, figsize_y, grid_x, grid_y
 
 
 def main(
@@ -14,12 +15,12 @@ def main(
         phot_data_compl, err_rm_data, completeness, flag_ad_test, ad_cl,
         ad_fr, ad_cl_fr_p, ad_cl_fr_pk, stars_f_acpt, stars_f_rjct,
         col_0_comb, col_1_comb, mag_0_comb, **kwargs):
-    '''
+    """
     Make B2 block plots.
-    '''
+    """
     if 'B2' in pd['flag_make_plot']:
-        fig = plt.figure(figsize=(30, 25))
-        gs = gridspec.GridSpec(10, 12)
+        fig = plt.figure(figsize=(figsize_x, figsize_y))
+        gs = gridspec.GridSpec(grid_y, grid_x)
         add_version_plot.main(y_fix=.999)
 
         # Obtain plotting parameters and data.

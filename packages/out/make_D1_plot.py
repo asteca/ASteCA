@@ -7,6 +7,7 @@ from . import mp_best_fit1_GA
 from . import mp_best_fit1_mcmc
 from . import cornerPlot, tracePlot
 from . import prep_plots
+from . prep_plots import figsize_x, figsize_y, grid_x, grid_y
 
 
 def main(npd, pd, isoch_fit_params, isoch_fit_errors, **kwargs):
@@ -14,8 +15,8 @@ def main(npd, pd, isoch_fit_params, isoch_fit_errors, **kwargs):
     Make D1 block plots.
     """
     if 'D1' in pd['flag_make_plot'] and pd['bf_flag']:
-        fig = plt.figure(figsize=(30, 30))
-        gs = gridspec.GridSpec(12, 12)
+        fig = plt.figure(figsize=(figsize_x, figsize_y))
+        gs = gridspec.GridSpec(grid_y, grid_x)
 
         # Title and version for the plot.
         m_bf, s_bf = divmod(isoch_fit_params['bf_elapsed'], 60)
@@ -51,7 +52,7 @@ def main(npd, pd, isoch_fit_params, isoch_fit_errors, **kwargs):
         add_version_plot.main(x_fix=xf, y_fix=yf)
         plt.suptitle(
             ("{} | {:.0f}h{:.0f}m").format(p_str, h_bf, m_bf), x=xt, y=yt,
-            fontsize=14)
+            fontsize=11)
 
         # Best fitting process plots.
         if pd['best_fit_algor'] == 'boot+GA':

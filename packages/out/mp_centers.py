@@ -2,21 +2,23 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.offsetbox as offsetbox
+from . prep_plots import xylabelsize, xytickssize, titlesize
 
 
 def pl_full_frame(
     N, gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max, asp_ratio,
         x, y, st_sizes_arr, mag_range, main_mag):
-    '''
+    """
     x,y finding chart of stars in frame within 'mag_range'
-    '''
+    """
     gs_map = {
         0: gs[0:2, 0:2], 1: gs[2:4, 0:2], 2: gs[4:6, 0:2],
         3: gs[6:8, 0:2], 4: gs[8:10, 0:2]}
     ax = plt.subplot(gs_map.get(N))
+    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
 
     ax.set_aspect(aspect=asp_ratio)
-    plt.title("{}: {}".format(main_mag, mag_range), fontsize=10)
+    plt.title("{}: {}".format(main_mag, mag_range), fontsize=titlesize)
     # Set plot limits
     plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
@@ -24,8 +26,8 @@ def pl_full_frame(
     if coord == 'deg':
         ax.invert_xaxis()
     # Set axis labels
-    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=10)
-    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=10)
+    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=xylabelsize)
+    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=xylabelsize)
     # Set minor ticks
     ax.minorticks_on()
     # Plot stars.
@@ -35,9 +37,9 @@ def pl_full_frame(
 def pl_densxy(
     N, gs, fig, asp_ratio, x_name, y_name, coord, bw_list, kde_pl,
         cent_xy):
-    '''
+    """
     2D Gaussian convolved histogram.
-    '''
+    """
     gs_map = {
         5: gs[0:2, 2:4], 6: gs[0:2, 4:6], 7: gs[0:2, 6:8],
         8: gs[2:4, 2:4], 9: gs[2:4, 4:6], 10: gs[2:4, 6:8],
@@ -50,9 +52,9 @@ def pl_densxy(
     if N in [5, 6, 7]:
         r_frmt = '{:.0f}' if coord == 'px' else '{:.4f}'
         plt.title(("Bandwidth: " + r_frmt + ' [{}]').format(
-            bw_list[N - 5], coord), fontsize=10)
-    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=10)
-    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=10)
+            bw_list[N - 5], coord), fontsize=11)
+    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=11)
+    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=11)
 
     ax.minorticks_on()
     plt.axvline(x=cent_xy[0], linestyle='--', lw=.85, color='green')
@@ -84,9 +86,9 @@ def pl_densxy(
 
 
 def plot(N, *args):
-    '''
+    """
     Handle each plot separately.
-    '''
+    """
     if N < 5:
         plt_map = dict.fromkeys(
             [0, 1, 2, 3, 4], [pl_full_frame, 'full frame'])

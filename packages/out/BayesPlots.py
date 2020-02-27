@@ -3,16 +3,19 @@ import numpy as np
 import matplotlib.pyplot as plt
 from ..aux_funcs import reject_outliers
 from . cornerPlot import hist2d
+from . prep_plots import xylabelsize, xytickssize, legendsize
 
 
 def histogram(
-        gs, gsx, gsy, mcmc_samples, mu_kde_x, mu_kde, _16_50_84, xylabel):
+    gs, gsx, gsy, mcmc_samples, mu_kde_x, mu_kde, _16_50_84,
+        xylabel):
     """
     Parameter's distribution
     """
     # Histogram
-    ax1 = plt.subplot(gs[gsy[0]:gsy[1], gsx[0]:gsx[1]])
-    plt.xlabel(xylabel, fontsize=10)
+    ax = plt.subplot(gs[gsy[0]:gsy[1], gsx[0]:gsx[1]])
+    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
+    plt.xlabel(xylabel, fontsize=11)
     no_outlr = reject_outliers(mcmc_samples.flatten())
     # Obtain the bin edges.
     hist, bin_edges = np.histogram(no_outlr, bins=25)
@@ -35,9 +38,9 @@ def histogram(
     plt.axvline(x=_16_50_84[2], linestyle=':', color='orange', zorder=4)
 
     plt.xlim(max(-1., (_16_50_84[1]) - 4. * std), (_16_50_84[1]) + 4. * std)
-    cur_ylim = ax1.get_ylim()
-    ax1.set_ylim([0, cur_ylim[1]])
-    plt.legend(fontsize='small')
+    cur_ylim = ax.get_ylim()
+    ax.set_ylim([0, cur_ylim[1]])
+    plt.legend(fontsize=legendsize)
 
 
 def traceplot(
@@ -47,6 +50,7 @@ def traceplot(
     Chains traceplot.
     """
     ax = plt.subplot(gs[gsy[0]:gsy[1], gsx[0]:gsx[1]])
+    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
     N_tot = mcmc_samples.shape[0]
     plt.plot(mcmc_samples, c='k', lw=.8, ls='-', alpha=0.5)
     Nburn = Brn_prcnt * N_tot
@@ -56,10 +60,10 @@ def traceplot(
     plt.axhline(y=_16_50_84[1], linestyle=':', color='blue', zorder=4)
     plt.axhline(y=_16_50_84[2], linestyle=':', color='orange', zorder=4)
     if xticks is True:
-        plt.xlabel("Steps", fontsize=10)
+        plt.xlabel("Steps", fontsize=xylabelsize)
     else:
         plt.xticks([])
-    plt.ylabel(xylabel, fontsize=10)
+    plt.ylabel(xylabel, fontsize=xylabelsize)
     # Use the last 10% of the chains.
     N = int(mcmc_samples.shape[0] * .1)
     std = np.std(mcmc_samples[-N:])
@@ -73,33 +77,36 @@ def autocorr(gs, gsx, gsy, Nsteps, tau_autocorr, ESS):
     """
     Mean autocorrelation time.
     """
-    plt.subplot(gs[gsy[0]:gsy[1], gsx[0]:gsx[1]])
+    ax = plt.subplot(gs[gsy[0]:gsy[1], gsx[0]:gsx[1]])
+    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
     plt.plot(
         Nsteps * np.arange(tau_autocorr.size), tau_autocorr,
         label=r"$N_{{ESS}}\approx${:.0f}".format(ESS))
-    plt.xlabel("Steps", fontsize=10)
-    plt.ylabel(r"$\hat{\tau}$", fontsize=10)
-    plt.legend(fontsize='small')
+    plt.xlabel("Steps", fontsize=xylabelsize)
+    plt.ylabel(r"$\hat{\tau}$", fontsize=xylabelsize)
+    plt.legend(fontsize=legendsize)
 
 
 def meanAF(gs, gsx, gsy, Nsteps, mean_afs):
     """
     Mean acceptance fraction.
     """
-    plt.subplot(gs[gsy[0]:gsy[1], gsx[0]:gsx[1]])
+    ax = plt.subplot(gs[gsy[0]:gsy[1], gsx[0]:gsx[1]])
+    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
     plt.plot(Nsteps * np.arange(mean_afs.size), mean_afs)
-    plt.xlabel("Steps", fontsize=10)
-    plt.ylabel(r"$MAF$", fontsize=10)
+    plt.xlabel("Steps", fontsize=xylabelsize)
+    plt.ylabel(r"$MAF$", fontsize=xylabelsize)
 
 
 def twoParDens(gs, gsx, gsy, KP_samples, KP_Bys_rc, KP_Bys_rt, xylabel):
     """
     """
     ax = plt.subplot(gs[gsy[0]:gsy[1], gsx[0]:gsx[1]])
+    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
     hist2d(ax, KP_samples[:, :, 0], KP_samples[:, :, 1])
     plt.scatter(KP_Bys_rc[1], KP_Bys_rt[1], marker='x', c='r', s=50, zorder=5)
-    plt.xlabel(xylabel[0], fontsize=10)
-    plt.ylabel(xylabel[1], fontsize=10)
+    plt.xlabel(xylabel[0], fontsize=xylabelsize)
+    plt.ylabel(xylabel[1], fontsize=xylabelsize)
     # xmed, xstd = np.median(KP_samples[:, :, 0]), np.std(KP_samples[:, :, 0])
     # ymed, ystd = np.median(KP_samples[:, :, 1]), np.std(KP_samples[:, :, 1])
     # plt.xlim(max(0.01, xmed - xstd), xmed + 2. * xstd)

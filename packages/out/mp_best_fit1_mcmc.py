@@ -1,38 +1,35 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-
-
-def xxx():
-    """
-    """
-    ax = plt.subplot(gs[0:2, 2:8])
+from . prep_plots import xylabelsize, xytickssize, titlesize, legendsize
 
 
 def pl_MAP_lkl(gs, N_steps, prob_mean, map_lkl, map_lkl_final):
-    '''
+    """
     Evolution of MAP likelihood values.
-    '''
+    """
     ax = plt.subplot(gs[2:4, 4:6])
+    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
     ax.plot(N_steps, map_lkl, label=r"$L_{{min}}={:.1f}$".format(
         map_lkl_final))
     ymin, ymax = ax.get_ylim()
 
     ax.plot(N_steps, prob_mean, label="Mean LP")
-    plt.xlabel("steps", fontsize=10)
-    plt.ylabel("Lkl (MAP)", fontsize=10)
-    ax.legend(fontsize='small', loc=0)  # , handlelength=0.)
+    plt.xlabel("steps", fontsize=xylabelsize)
+    plt.ylabel("Lkl (MAP)", fontsize=xylabelsize)
+    ax.legend(fontsize=legendsize, loc=0)  # , handlelength=0.)
     plt.ylim(ymin, ymax)
 
 
 def pl_betas(gs, Tmax, N_steps, betas_pt):
-    '''
+    """
     Evolution of Temp swaps AFs.
-    '''
+    """
     ax = plt.subplot(gs[0:2, 2:4])
+    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
     Nt = len(betas_pt) - 1
     ax.set_title(r"$T_{{max}}={},\,N_{{temps}}={}$".format(
-        Tmax, Nt + 1), fontsize=9)
+        Tmax, Nt + 1), fontsize=titlesize)
     for i, y in enumerate(betas_pt):
         if i == 0:
             lbl_ls = ("Cold", '--', 1.5, 4)
@@ -43,16 +40,17 @@ def pl_betas(gs, Tmax, N_steps, betas_pt):
         ax.plot(
             N_steps, y[:len(N_steps)], label=lbl_ls[0], ls=lbl_ls[1],
             lw=lbl_ls[2], zorder=lbl_ls[3])
-    plt.xlabel("steps", fontsize=10)
-    plt.ylabel(r"$\beta\,(1/T)$", fontsize=10)
-    ax.legend(fontsize='small', loc=0)
+    plt.xlabel("steps", fontsize=xylabelsize)
+    plt.ylabel(r"$\beta\,(1/T)$", fontsize=xylabelsize)
+    ax.legend(fontsize=legendsize, loc=0)
 
 
 def pl_Tswaps(gs, N_steps, tswaps_afs):
-    '''
+    """
     Evolution of Temp swaps AFs.
-    '''
+    """
     ax = plt.subplot(gs[0:2, 4:6])
+    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
     Nt = len(tswaps_afs) - 1
     for i, y in enumerate(tswaps_afs):
         if i == 0:
@@ -64,19 +62,21 @@ def pl_Tswaps(gs, N_steps, tswaps_afs):
         ax.plot(
             N_steps, y, label=lbl_ls[0], ls=lbl_ls[1], lw=lbl_ls[2],
             zorder=lbl_ls[3])
-    plt.xlabel("steps", fontsize=10)
-    plt.ylabel("Tswaps AF", fontsize=10)
-    ax.legend(fontsize='small', loc=0)
+    plt.xlabel("steps", fontsize=xylabelsize)
+    plt.ylabel("Tswaps AF", fontsize=xylabelsize)
+    ax.legend(fontsize=legendsize, loc=0)
 
 
 def pl_MAF(gs, algor, N_steps, maf_steps):
-    '''
+    """
     Evolution of MAF values.
-    '''
+    """
     ax = plt.subplot(gs[0:2, 6:8])
+    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
     if algor == 'ptemcee':
         ax.set_title(
-            r"$MAF_{{[T=1]}}={:.3f}$".format(maf_steps[0][-1]), fontsize=9)
+            r"$MAF_{{[T=1]}}={:.3f}$".format(maf_steps[0][-1]),
+            fontsize=titlesize)
         # x, y = list(zip(*maf_steps))
         # x, y_replicas = maf_steps
         Nt = len(maf_steps) - 1
@@ -90,25 +90,26 @@ def pl_MAF(gs, algor, N_steps, maf_steps):
             ax.plot(
                 N_steps, y, label=lbl_ls[0], ls=lbl_ls[1], lw=lbl_ls[2],
                 zorder=lbl_ls[3])
-        ax.legend(fontsize='small', loc=0)  # , handlelength=0.)
+        ax.legend(fontsize=legendsize, loc=0)  # , handlelength=0.)
 
     elif algor == 'emcee':
-        ax.set_title(r"$MAF={:.3f}$".format(maf_steps[-1]), fontsize=9)
+        ax.set_title(r"$MAF={:.3f}$".format(maf_steps[-1]), fontsize=titlesize)
         ax.plot(N_steps, maf_steps, lw=1.5)
 
-    plt.xlabel("steps", fontsize=10)
-    plt.ylabel("MAF", fontsize=10)
+    plt.xlabel("steps", fontsize=xylabelsize)
+    plt.ylabel("MAF", fontsize=xylabelsize)
     plt.axhline(y=.25, color='grey', ls=':', lw=1.2, zorder=4)
     plt.axhline(y=.5, color='grey', ls=':', lw=1.2, zorder=4)
 
 
 def pl_mESS(dummy, gs, mESS, minESS, minESS_epsilon):
-    '''
+    """
     mESS plot.
-    '''
+    """
     ax = plt.subplot(gs[4:6, 6:8])
-    plt.xlabel(r"$CI\;(=1-\alpha)$", fontsize=10)
-    plt.ylabel(r"$\epsilon$", fontsize=14)
+    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
+    plt.xlabel(r"$CI\;(=1-\alpha)$", fontsize=xylabelsize)
+    plt.ylabel(r"$\epsilon$", fontsize=xylabelsize)
     ax.set_xlim(.01, 1.01)
 
     plt.plot(
@@ -117,33 +118,35 @@ def pl_mESS(dummy, gs, mESS, minESS, minESS_epsilon):
     plt.plot(
         1. - np.array(minESS_epsilon[0]), minESS_epsilon[2],
         label="mESS ({:.0f})".format(mESS))
-    ax.legend(fontsize='small', loc=0)
+    ax.legend(fontsize=legendsize, loc=0)
 
 
 def pl_tau_histo(gs, all_taus):
     """
     """
     ax = plt.subplot(gs[4:6, 6:8])
+    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
     plt.title(r"$\tau$ for all chains and parameters (N={})".format(
-        len(all_taus)), fontsize=9)
+        len(all_taus)), fontsize=titlesize)
     plt.hist(np.nan_to_num(all_taus), bins=20, color='#64B1D7')
     plt.axvline(
         np.nanmean(all_taus), color="r",
         label=r"$\hat{{\tau}}_{{c\,,\,p}}$={:.0f}".format(
             np.nanmean(all_taus)))
-    plt.xlabel(r"$\tau$ (post burn-in)", fontsize=10)
-    plt.ylabel(r"$N$", fontsize=10)
-    ax.legend(fontsize='small', loc=0)
+    plt.xlabel(r"$\tau$ (post burn-in)", fontsize=xylabelsize)
+    plt.ylabel(r"$N$", fontsize=xylabelsize)
+    ax.legend(fontsize=legendsize, loc=0)
 
 
 def pl_tau(gs, N_steps, tau_autocorr):
-    '''
+    """
     Tau vs steps plot.
-    '''
+    """
     ax = plt.subplot(gs[6:8, 10:12])
-    plt.title("Mean across chains and parameters", fontsize=9)
-    plt.xlabel("steps", fontsize=10)
-    plt.ylabel(r"$\hat{\tau}_{{c\,|\,p}}$", fontsize=10)
+    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
+    plt.title("Mean across chains and parameters", fontsize=titlesize)
+    plt.xlabel("steps", fontsize=xylabelsize)
+    plt.ylabel(r"$\hat{\tau}_{{c\,|\,p}}$", fontsize=xylabelsize)
 
     N_steps, taus = tau_autocorr
     plt.plot(N_steps, N_steps / 100., "--g", label="N/100")
@@ -156,17 +159,18 @@ def pl_tau(gs, N_steps, tau_autocorr):
             0, np.nanmax(taus) + 0.1 * (np.nanmax(taus) - np.nanmin(taus)))
     except ValueError:
         print("  WARNING: no mean autocorrelation values to plot")
-    ax.legend(fontsize='small', loc=0)
+    ax.legend(fontsize=legendsize, loc=0)
 
 
 def pl_lags(gs, varIdxs, acorr_function):
-    '''
+    """
     lags plot.
-    '''
+    """
     ax = plt.subplot(gs[6:8, 8:10])
-    plt.title("Autocorrelation function", fontsize=9)
-    plt.xlabel("Lag", fontsize=10)
-    plt.ylabel("ACF", fontsize=10)
+    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
+    plt.title("Autocorrelation function", fontsize=titlesize)
+    plt.xlabel("Lag", fontsize=xylabelsize)
+    plt.ylabel("ACF", fontsize=xylabelsize)
 
     plot_dict = ['metal', 'age', 'ext', 'dist', 'mass', 'binar']
     for i, par_name in enumerate(plot_dict):
@@ -177,20 +181,21 @@ def pl_lags(gs, varIdxs, acorr_function):
                 range(len(p)), p, lw=.8, alpha=0.5,
                 label="{}".format(par_name))
             xmax = int(.25 * len(p))
-    ax.legend(fontsize='small', loc=0)
+    ax.legend(fontsize=legendsize, loc=0)
     plt.xlim(-1, xmax)
     # plt.plot((lag_zero, lag_zero), (0, .5), ls='--', c='k')
     # ax.text(lag_zero, .52, "{}".format(lag_zero))
 
 
 def pl_GW(gs, varIdxs, geweke_z):
-    '''
+    """
     Geweke plot.
-    '''
+    """
     ax = plt.subplot(gs[8:10, 10:12])
-    ax.set_title("Geweke", fontsize=9)
-    plt.xlabel("First iteration in segment", fontsize=10)
-    plt.ylabel("z-score", fontsize=10)
+    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
+    ax.set_title("Geweke", fontsize=titlesize)
+    plt.xlabel("First iteration in segment", fontsize=xylabelsize)
+    plt.ylabel("z-score", fontsize=xylabelsize)
     plt.axhline(y=2., color='grey', ls=':', lw=1.2, zorder=4)
     plt.axhline(y=-2., color='grey', ls=':', lw=1.2, zorder=4)
 
@@ -209,13 +214,13 @@ def pl_GW(gs, varIdxs, geweke_z):
 
     if ymin and ymax:
         ax.set_ylim(max(-2.1, min(ymin)), min(2.1, max(ymax)))
-    ax.legend(fontsize='small', loc=0)
+    ax.legend(fontsize=legendsize, loc=0)
 
 
 def plot(N, *args):
-    '''
+    """
     Handle each plot separately.
-    '''
+    """
     plt.style.use('seaborn-darkgrid')
     plt_map = {
         0: [pl_MAP_lkl, ' MAP likelihood values'],

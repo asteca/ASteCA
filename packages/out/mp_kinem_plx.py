@@ -6,6 +6,8 @@ import numpy as np
 # from astropy.stats import sigma_clipped_stats
 from . import BayesPlots
 from .. import aux_funcs
+from . prep_plots import xylabelsize, xytickssize, titlesize, cbarlabelsize,\
+    cbartickssize, legendsize
 
 
 def plx_histo(
@@ -15,10 +17,11 @@ def plx_histo(
     Histogram for the distribution of parallaxes within the cluster region.
     """
     ax = plt.subplot(gs[0:2, 0:2])
-    ax.set_title('Offset applied: +{}'.format(plx_offset), fontsize=9)
-    plt.xlabel('Plx [mas]', fontsize=10)
-    plt.ylabel('N', fontsize=10)
+    ax.set_title('Offset applied: +{}'.format(plx_offset), fontsize=titlesize)
+    plt.xlabel('Plx [mas]', fontsize=xylabelsize)
+    plt.ylabel('N', fontsize=xylabelsize)
     ax.minorticks_on()
+    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
             zorder=1)
     # Normalized histogram for cluster region.
@@ -47,7 +50,7 @@ def plx_histo(
     ob = offsetbox.AnchoredText(
         r"$Plx_{{max}}$={:.3f} [mas]".format(p_max_mas) + '\n' +
         r"$Plx<0 \rightarrow$ {:.1f}%".format(plx_lt_zero),
-        pad=0.2, loc=1, prop=dict(size=9))
+        pad=0.2, loc=1, prop=dict(size=legendsize))
     ob.patch.set(alpha=0.85)
     ax.add_artist(ob)
     plt.xlim(
@@ -55,7 +58,7 @@ def plx_histo(
         min(3., np.mean(plx_clrg) + 3. * np.std(plx_clrg)))
     # Avoid showing the value 0.0 in the y axis.
     plt.ylim(0.01, plt.ylim()[1])
-    ax.legend(fontsize='small', loc=7)
+    ax.legend(fontsize=legendsize, loc=7)
 
 
 def plx_chart(gs, x_name, y_name, coord, cl_reg_fit, plx_Bys):
@@ -70,10 +73,11 @@ def plx_chart(gs, x_name, y_name, coord, cl_reg_fit, plx_Bys):
     if coord == 'deg':
         ax.invert_xaxis()
     # Set axis labels
-    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=10)
-    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=10)
+    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=xylabelsize)
+    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=xylabelsize)
     # Set minor ticks
     ax.minorticks_on()
+    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
 
     # Prepare data.
     x = np.array(list(zip(*cl_reg_fit))[1])
@@ -83,7 +87,8 @@ def plx_chart(gs, x_name, y_name, coord, cl_reg_fit, plx_Bys):
     msk = (~np.isnan(x)) & (~np.isnan(y)) & (~np.isnan(mp)) &\
         (~np.isnan(plx))
     x, y, mp, plx = x[msk], y[msk], mp[msk], plx[msk]
-    ax.set_title(r'Cluster region ($N_{{fit}}$={})'.format(len(x)), fontsize=9)
+    ax.set_title(
+        r'Cluster region ($N_{{fit}}$={})'.format(len(x)), fontsize=titlesize)
 
     if plx_Bys.any():
         # Bayesian parallax value.
@@ -125,11 +130,12 @@ def plx_vs_mag(
 
     # HARDCODED in plx_analysis: 3 sigma outlier rejection
     ax.set_title("Plx clip " + r"$(med\pm3\sigma,\;N={})$".format(
-        len(plx_clp)), fontsize=9)
-    plt.xlabel('Plx [mas]', fontsize=10)
-    plt.ylabel(y_ax, fontsize=10)
+        len(plx_clp)), fontsize=titlesize)
+    plt.xlabel('Plx [mas]', fontsize=xylabelsize)
+    plt.ylabel(y_ax, fontsize=xylabelsize)
     # Set minor ticks
     ax.minorticks_on()
+    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
 
     cm = plt.cm.get_cmap('RdYlBu_r')
     # Plot stars selected to be used in the best fit process.
@@ -177,10 +183,10 @@ def plx_vs_mag(
         label=r"$Plx_{{med}} = {:.3f}$".format(np.median(plx_clp)))
 
     cbar = plt.colorbar(pad=.01, fraction=.02, aspect=50)
-    cbar.ax.tick_params(labelsize=7)
-    cbar.set_label('MPs', size=8, labelpad=-15, y=1.07, rotation=0)
+    cbar.ax.tick_params(labelsize=cbartickssize)
+    cbar.set_label('MPs', size=cbarlabelsize, labelpad=-15, y=1.07, rotation=0)
 
-    ax.legend(fontsize='small', loc=0)
+    ax.legend(fontsize=legendsize, loc=0)
     min_plx, max_plx = np.min(plx_clp) - .2, np.max(plx_clp) + .2
     ax.axvspan(min_plx, 0., alpha=0.25, color='grey', zorder=1)
     plt.xlim(max(-1., min_plx), max_plx)
@@ -237,17 +243,18 @@ def pms_vs_plx_mp_mag(
             fr_xdata, fr_ydata, cmap, cbar_label, plx_dist):
         ax = plt.subplot(gs[gsi[0] + j1:gsi[1] + j1, gsi[2] + j2:gsi[3] + j2])
         ax.minorticks_on()
+        ax.tick_params(axis='both', which='major', labelsize=xytickssize)
         ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
                 zorder=1)
-        ax.set_ylabel(ylabel, fontsize=10)
-        ax.set_xlabel(xlabel, fontsize=10)
+        ax.set_ylabel(ylabel, fontsize=xylabelsize)
+        ax.set_xlabel(xlabel, fontsize=xylabelsize)
 
         plt.scatter(
             cl_xdata, cl_ydata, marker='o', c=cl_col, s=25, edgecolor='k',
             lw=.2, cmap=cmap, zorder=4, label="Cluster reg")
         cbar = plt.colorbar(pad=.01, fraction=.02, aspect=50)
-        cbar.ax.tick_params(labelsize=7)
-        cbar.set_label(cbar_label, size=8)
+        cbar.ax.tick_params(labelsize=cbartickssize)
+        cbar.set_label(cbar_label, size=cbarlabelsize)
         if j2 == 0:
             cbar.ax.invert_yaxis()
 

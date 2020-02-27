@@ -3,6 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.offsetbox as offsetbox
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+from . prep_plots import xylabelsize, xytickssize, titlesize, cbartickssize,\
+    legendsize
 
 
 def pl_densmap(
@@ -15,12 +17,13 @@ def pl_densmap(
     ax = plt.subplot(gs[0:2, 0:2])
     frmt = '{:.4f}' if coord == 'deg' else '{:.0f}'
     ax.set_title((r'$KDE_{{bdw}}$ =' + frmt + ' [{}]').format(
-        bw_list[1], coord), fontsize=9)
-    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=10)
-    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=10)
-    ax.tick_params(axis='both', which='major', labelsize=8)
+        bw_list[1], coord), fontsize=titlesize)
+    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=xylabelsize)
+    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=xylabelsize)
 
     ax.minorticks_on()
+    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
+
     plt.axvline(x=kde_cent[0], linestyle='--', color='green')
     plt.axhline(y=kde_cent[1], linestyle='--', color='green')
 
@@ -52,7 +55,7 @@ def pl_densmap(
         frmt.format(kde_dens_min / scale),
         frmt.format(midpt),
         frmt.format(kde_dens_max / scale)], rotation=90)
-    cbar.ax.tick_params(labelsize=7)
+    cbar.ax.tick_params(labelsize=cbartickssize)
     # Align bottom and middle labels. Don't include last label (one at the
     # top) as we don't want to change its alignment.
     for i, label in enumerate(cbar.ax.get_yticklabels()[:-1]):
@@ -71,17 +74,18 @@ def pl_knn_dens(
     """
     ax = plt.subplot(gs[0:2, 2:4])
     ax.set_aspect(aspect=asp_ratio)
+    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
     # Set plot limits
     plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
     # If RA is used, invert axis.
     if coord == 'deg':
         ax.invert_xaxis()
-    ax.set_title(r'$kNN={}\;(d\leq d_{{p=25\%}})$'.format(NN_dd), fontsize=9)
+    ax.set_title(
+        r'$kNN={}\;(d\leq d_{{p=25\%}})$'.format(NN_dd), fontsize=titlesize)
 
-    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=10)
-    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=10)
-    ax.tick_params(axis='both', which='major', labelsize=8)
+    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=xylabelsize)
+    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=xylabelsize)
     ax.minorticks_on()
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5)
 
@@ -111,7 +115,8 @@ def pl_knn_dens(
     # Assigned center.
     plt.scatter(kde_cent[0], kde_cent[1], color='g', s=40, lw=1.5,
                 marker='x', zorder=5)
-    leg = plt.legend(fancybox=True, fontsize=10, handlelength=1., loc='best')
+    leg = plt.legend(
+        fancybox=True, fontsize=legendsize, handlelength=1., loc='best')
     leg.get_frame().set_alpha(0.7)
 
 
@@ -124,7 +129,8 @@ def pl_full_frame(
     ax = plt.subplot(gs[0:2, 4:6])
     ax.minorticks_on()
     ax.set_aspect(aspect=asp_ratio)
-    ax.set_title(r"$N_{{stars}}$={}(phot incomp)".format(len(x)), fontsize=9)
+    ax.set_title(
+        r"$N_{{stars}}$={}(phot incomp)".format(len(x)), fontsize=titlesize)
     # Set plot limits
     plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
@@ -132,9 +138,9 @@ def pl_full_frame(
     if coord == 'deg':
         ax.invert_xaxis()
     # Set axis labels
-    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=10)
-    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=10)
-    ax.tick_params(axis='both', which='major', labelsize=8)
+    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=xylabelsize)
+    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=xylabelsize)
+    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
 
     # Plot stars.
     plt.scatter(x, y, marker='o', c='black', s=st_sizes_arr)
@@ -153,7 +159,8 @@ def pl_full_frame(
     t2 = (r'${}_{{c}} =$' + r_frmt + r'$\,{}$').format(
         y_name, kde_cent[1] + y_offset, coord)
     text = t1 + '\n' + t2
-    ob = offsetbox.AnchoredText(text, pad=0.2, loc=2, prop=dict(size=10))
+    ob = offsetbox.AnchoredText(
+        text, pad=0.2, loc=2, prop=dict(size=legendsize))
     ob.patch.set(alpha=0.85)
     ax.add_artist(ob)
 
@@ -180,13 +187,13 @@ def pl_field_dens(
     ymax = max(fr_dens) + delta_y
 
     ax = plt.subplot(gs[2:4, 0:2])
-    ax.set_title(("Method: '{}'").format(fdens_method), fontsize=9)
+    ax.set_title(("Method: '{}'").format(fdens_method), fontsize=titlesize)
     plt.ylim(ymin, ymax)
     ax.minorticks_on()
     plt.xlabel(
-        r'Distance to center $[{}]$'.format(coord2), fontsize=10)
-    plt.ylabel(r"$\rho$ $[st/{}^{{2}}]$".format(coord2), fontsize=10)
-    ax.tick_params(axis='both', which='major', labelsize=8)
+        r'Distance to center $[{}]$'.format(coord2), fontsize=xylabelsize)
+    plt.ylabel(r"$\rho$ $[st/{}^{{2}}]$".format(coord2), fontsize=xylabelsize)
+    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
     ax.ticklabel_format(axis='y', style='sci', scilimits=(0, 0))
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5)
 
@@ -208,7 +215,7 @@ def pl_field_dens(
             field_dens, xmin=fdens_min_d[0], xmax=fdens_min_d[-1], color='g',
             label=t1)
 
-    leg = plt.legend(fancybox=True, fontsize=10, loc='upper right')
+    leg = plt.legend(fancybox=True, fontsize=legendsize, loc='upper right')
     leg.get_frame().set_alpha(0.7)
 
 
@@ -224,9 +231,9 @@ def pl_mag_cent(gs, coord, y_ax, integ_dists, integ_mags):
 
     ax = plt.subplot(gs[2:4, 2:4])
     ax.minorticks_on()
-    ax.tick_params(axis='both', which='major', labelsize=8)
+    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5)
-    ax.set_title('Integrated magnitude vs distance', fontsize=9)
+    ax.set_title('Integrated magnitude vs distance', fontsize=titlesize)
 
     # Nstp = max(1, int(round(len(rdp_radii) / 10.)))
     # rdp_radii, rdp_mags = rdp_radii[::Nstp], rdp_mags[::Nstp]
@@ -243,8 +250,8 @@ def pl_mag_cent(gs, coord, y_ax, integ_dists, integ_mags):
 
     plt.plot(integ_dists, integ_mags)
 
-    plt.ylabel('$' + y_ax + '$' + r" $^{*}$", fontsize=10)
-    plt.xlabel("Distance to center [{}]".format(coord2), fontsize=10)
+    plt.ylabel('$' + y_ax + '$' + r" $^{*}$", fontsize=xylabelsize)
+    plt.xlabel("Distance to center [{}]".format(coord2), fontsize=xylabelsize)
     ax.invert_yaxis()
 
 
@@ -259,13 +266,14 @@ def pl_rdp_rings(
     # Set plot limits
     plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
-    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=10)
-    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=10)
-    ax.tick_params(axis='both', which='major', labelsize=8)
+    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=xylabelsize)
+    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=xylabelsize)
+    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
     # If RA is used, invert axis.
     if coord == 'deg':
         ax.invert_xaxis()
-    ax.set_title(r'$N_{{rings}}={}$'.format(len(rdp_radii)), fontsize=9)
+    ax.set_title(
+        r'$N_{{rings}}={}$'.format(len(rdp_radii)), fontsize=titlesize)
 
     for rad in rdp_radii:
         circle = plt.Circle(

@@ -2,14 +2,15 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.ndimage.filters import uniform_filter1d
+from . prep_plots import xylabelsize, xytickssize, titlesize
 
 
 def traceplots(
     par_name, gs, best_fit_algor, best_sol, min_max_p, method_args,
         trace, varIdxs, post_trace, pre_trace):
-    '''
+    """
     Parameter sampler chain.
-    '''
+    """
     plot_dict = {
         'metal': [8, 12, 0, 1, 0], 'age': [8, 12, 1, 2, 1],
         'ext': [8, 12, 2, 3, 2], 'dist': [8, 12, 3, 4, 3],
@@ -21,11 +22,12 @@ def traceplots(
 
     gs_x1, gs_x2, gs_y1, gs_y2, cp = plot_dict[par_name]
     ax = plt.subplot(gs[gs_y1:gs_y2, gs_x1:gs_x2])
+    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
     if cp == 0:
         ax.set_title(
-            r"Chain with the closest $\tau$ to the median", fontsize=10)
+            r"Chain with the closest $\tau$ to the median", fontsize=titlesize)
     if cp == 5:
-        plt.xlabel("steps", fontsize=14)
+        plt.xlabel("steps", fontsize=xylabelsize)
     else:
         ax.tick_params(labelbottom=False)
     plt.ylabel(labels[cp])
@@ -62,7 +64,8 @@ def traceplots(
 
             ax.set_title(
                 (r"$\hat{{\tau}}_{{c}}={:.0f}\;(\hat{{n}}_{{eff}}="
-                 "{:.0f})$").format(acorr_t[c_model], mcmc_ess[c_model]))
+                 "{:.0f})$").format(acorr_t[c_model], mcmc_ess[c_model]),
+                fontsize=titlesize)
 
         elif best_fit_algor == 'boot+GA':
             post_trace_plot = post_trace[c_model]
@@ -88,9 +91,9 @@ def traceplots(
 
 
 def plot(N, *args):
-    '''
+    """
     Handle each plot separately.
-    '''
+    """
     plt.style.use('seaborn-darkgrid')
     plt_map = {
         0: [traceplots, args[0] + ' sampler chain']

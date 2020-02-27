@@ -5,6 +5,7 @@ from os.path import join
 from . import mp_cent_dens
 from . import add_version_plot
 from . import prep_plots
+from . prep_plots import figsize_x, figsize_y, grid_x, grid_y
 
 
 def main(
@@ -16,9 +17,8 @@ def main(
     Make A2 block plots.
     """
     if 'A2' in pd['flag_make_plot']:
-        # figsize(x1, y1), GridSpec(y2, x2)
-        fig = plt.figure(figsize=(30, 25))
-        gs = gridspec.GridSpec(10, 12)
+        fig = plt.figure(figsize=(figsize_x, figsize_y))
+        gs = gridspec.GridSpec(grid_y, grid_x)
         add_version_plot.main()
 
         # Obtain plotting parameters and data.

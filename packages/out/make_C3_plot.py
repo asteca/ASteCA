@@ -6,6 +6,7 @@ from os.path import join
 from . import add_version_plot
 from . import mp_kinem_pms
 from . import prep_plots
+from . prep_plots import figsize_x, figsize_y, grid_x, grid_y
 
 
 def main(
@@ -23,8 +24,8 @@ def main(
             print("<<Skip C3 block plot>>")
             return
 
-        fig = plt.figure(figsize=(30, 25))
-        gs = gridspec.GridSpec(10, 12)
+        fig = plt.figure(figsize=(figsize_x, figsize_y))
+        gs = gridspec.GridSpec(grid_y, grid_x)
         add_version_plot.main(y_fix=.999)
 
         coord, x_name, y_name = prep_plots.coord_syst(pd['coords'])

@@ -7,6 +7,7 @@ import pickle
 from . import add_version_plot
 from . import mp_best_fit2
 from . import prep_plots
+from . prep_plots import figsize_x, figsize_y, grid_x, grid_y, cbartickssize
 
 
 def main(
@@ -18,9 +19,10 @@ def main(
     """
     if 'D2' in pd['flag_make_plot'] and pd['bf_flag']:
 
-        # for k, val in pd.items():
-        #     print(k, np.array(val).nbytes / 1024.**2)
+        # Internal flag, used for re-generating easily the D2 plot
         if pickledump:
+            # for k, val in pd.items():
+            #     print(k, np.array(val).nbytes / 1024.**2)
             # Dump for possible reuse
             pname = join(
                 npd['output_subdir'], str(npd['clust_name']) + '_D2.pickle')
@@ -31,8 +33,8 @@ def main(
                     col_0_comb, mag_0_comb, col_1_comb, isoch_fit_params,
                     isoch_fit_errors), handle)
 
-        fig = plt.figure(figsize=(30, 25))
-        gs = gridspec.GridSpec(10, 12)
+        fig = plt.figure(figsize=(figsize_x, figsize_y))
+        gs = gridspec.GridSpec(grid_y, grid_x)
         add_version_plot.main(y_fix=1.005)
 
         if pd['best_fit_algor'] == 'boot+GA':
@@ -140,4 +142,4 @@ def plot_observed_cluster(
         cbar = plt.colorbar(
             sca, cax=cbaxes, ticks=[v_min_mp, v_max_mp],
             orientation='horizontal')
-        cbar.ax.tick_params(labelsize=9)
+        cbar.ax.tick_params(labelsize=cbartickssize)

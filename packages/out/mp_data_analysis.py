@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
 # from matplotlib.colors import LinearSegmentedColormap
 import matplotlib.offsetbox as offsetbox
+from . prep_plots import xylabelsize, xytickssize, titlesize, cbartickssize,\
+    legendsize
 
 
 def pl_cl_fl_regions(
@@ -23,10 +25,11 @@ def pl_cl_fl_regions(
     if coord == 'deg':
         ax.invert_xaxis()
     # Set axis labels
-    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=10)
-    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=10)
+    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=xylabelsize)
+    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=xylabelsize)
     # Set minor ticks
     ax.minorticks_on()
+    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
     ax.grid(b=True, which='both', color='gray', linestyle='--', lw=.5)
 
     # Plot cluster region.
@@ -46,7 +49,7 @@ def pl_cl_fl_regions(
                             c='teal', s=15, lw=.5, edgecolors='none')
 
     ax.set_title(r"$N_{{rjct}}$={} (phot compl)".format(
-        len(cl_region_rjct_c) + N_flrg), fontsize=9)
+        len(cl_region_rjct_c) + N_flrg), fontsize=titlesize)
 
 
 def pl_lum_func(gs, y_ax, flag_no_fl_regs, lum_func):
@@ -55,15 +58,16 @@ def pl_lum_func(gs, y_ax, flag_no_fl_regs, lum_func):
     """
     x_cl, y_cl, x_fl, y_fl, x_all, y_all = lum_func
     ax = plt.subplot(gs[0:2, 2:4])
-    ax.set_title("LF after error removal (compl)", fontsize=9)
+    ax.set_title("LF after error removal (compl)", fontsize=titlesize)
     ax.minorticks_on()
     # Only draw units on axis (ie: 1, 2, 3)
     ax.xaxis.set_major_locator(MultipleLocator(2.0))
+    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
             zorder=1)
     # Set axis labels
-    plt.xlabel('$' + y_ax + '$', fontsize=10)
-    plt.ylabel('$N^{\star}/A_{cl}$', fontsize=10)
+    plt.xlabel('$' + y_ax + '$', fontsize=xylabelsize)
+    plt.ylabel('$N^{\star}/A_{cl}$', fontsize=xylabelsize)
 
     # All frame.
     plt.step(x_all, y_all, where='post', color='k', lw=2.5, linestyle=':',
@@ -89,7 +93,7 @@ def pl_lum_func(gs, y_ax, flag_no_fl_regs, lum_func):
 
     # Legends.
     leg = plt.legend(fancybox=True, loc='upper right', numpoints=1,
-                     fontsize='small')
+                     fontsize=legendsize)
     # Set the alpha value of the legend.
     leg.get_frame().set_alpha(0.7)
 
@@ -100,13 +104,15 @@ def pl_data_rm_perc(
     """
     """
     ax = plt.subplot(gs[0:2, 4:6])
-    ax.set_title("Percentage of stars kept after each process", fontsize=9)
+    ax.set_title("Percentage of stars kept after each process",
+                 fontsize=titlesize)
     ax.minorticks_on()
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
             zorder=1)
+    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
     # Set axis labels
-    plt.xlabel('$' + y_ax + '$', fontsize=10)
-    plt.ylabel('perc', fontsize=10)
+    plt.xlabel('$' + y_ax + '$', fontsize=xylabelsize)
+    plt.ylabel('perc', fontsize=xylabelsize)
 
     edges, perc_vals = phot_analy_compl
     perc_vals_min = [min(perc_vals)]
@@ -141,7 +147,7 @@ def pl_data_rm_perc(
 
     # Legends.
     leg = plt.legend(
-        fancybox=True, numpoints=1, loc='lower right', fontsize='small')
+        fancybox=True, numpoints=1, loc='lower right', fontsize=legendsize)
     # Set the alpha value of the legend.
     leg.get_frame().set_alpha(0.7)
 
@@ -156,15 +162,17 @@ def clCMD(
     plt.xlim(x_min_cmd, x_max_cmd)
     plt.ylim(y_min_cmd, y_max_cmd)
     # Set axis labels
-    plt.xlabel('$' + x_ax + '$', fontsize=10)
-    plt.ylabel('$' + y_ax + '$', fontsize=10)
+    plt.xlabel('$' + x_ax + '$', fontsize=xylabelsize)
+    plt.ylabel('$' + y_ax + '$', fontsize=xylabelsize)
     # Set minor ticks
     ax.minorticks_on()
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
             zorder=1)
+    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
     # Add text box.
     text = r'$N_{{memb}} \approx {}$'.format(n_memb)
-    ob = offsetbox.AnchoredText(text, pad=0.2, loc=1, prop=dict(size=12))
+    ob = offsetbox.AnchoredText(
+        text, pad=0.2, loc=1, prop=dict(size=legendsize))
     ob.patch.set(alpha=0.7)
     ax.add_artist(ob)
     # Plot stars in CMD.
@@ -192,7 +200,7 @@ def pl_cl_diag(
     ax.set_title(
         r"$N_{{accpt}}={}$ , $N_{{rjct}}={}$"
         r" ($r \leq r_{{cl}}$ compl)".format(
-            len(cl_region_c), len(cl_region_rjct_c)), fontsize=9)
+            len(cl_region_c), len(cl_region_rjct_c)), fontsize=titlesize)
     xr, yr = [], []
     if len(cl_region_rjct_c) > 0:
         xr = list(zip(*list(zip(*cl_region_rjct_c))[5]))[0]
@@ -225,9 +233,10 @@ def hessKDE(
     # This bandwidth seems to produce nice results.
     bw, Nb = .2, 100
 
-    ax.set_title("Cluster - Field (normalized)", fontsize=9)
-    plt.xlabel('$' + x_ax + '$', fontsize=10)
-    plt.ylabel('$' + y_ax + '$', fontsize=10)
+    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
+    ax.set_title("Cluster - Field (normalized)", fontsize=titlesize)
+    plt.xlabel('$' + x_ax + '$', fontsize=xylabelsize)
+    plt.ylabel('$' + y_ax + '$', fontsize=xylabelsize)
 
     xx, yy = np.mgrid[x_min_cmd:x_max_cmd:complex(Nb),
                       y_max_cmd:y_min_cmd:complex(Nb)]
@@ -268,7 +277,8 @@ def hessKDE(
     integ = np.sum(diff * cell)
     # Add text box.
     text = r'$\int \Delta KDE_{{[cl-fr]}} \approx {:.2f}$'.format(integ)
-    ob = offsetbox.AnchoredText(text, pad=0.2, loc=1, prop=dict(size=9))
+    ob = offsetbox.AnchoredText(
+        text, pad=0.2, loc=1, prop=dict(size=legendsize))
     ob.patch.set(alpha=0.7)
     ax.add_artist(ob)
 
@@ -318,10 +328,11 @@ def flCMD(
     plt.xlim(x_min_cmd, x_max_cmd)
     plt.ylim(y_min_cmd, y_max_cmd)
     # Set axis labels
-    plt.xlabel('$' + x_ax + '$', fontsize=10)
-    plt.ylabel('$' + y_ax + '$', fontsize=10)
+    plt.xlabel('$' + x_ax + '$', fontsize=xylabelsize)
+    plt.ylabel('$' + y_ax + '$', fontsize=xylabelsize)
     # Set minor ticks
     ax.minorticks_on()
+    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
             zorder=1)
     # Plot accepted/rejected stars within the field regions defined.
@@ -334,7 +345,8 @@ def flCMD(
         n_field = int(len(x_fr_accpt) / float(N_fr))
         # Add text box.
         text = r'$N_{{field}} \approx {}$'.format(n_field)
-        ob = offsetbox.AnchoredText(text, pad=0.2, loc=1, prop=dict(size=12))
+        ob = offsetbox.AnchoredText(
+            text, pad=0.2, loc=1, prop=dict(size=legendsize))
         ob.patch.set(alpha=0.7)
         ax.add_artist(ob)
     # If list is not empty, plot error bars at several values.
@@ -359,7 +371,7 @@ def pl_fl_diag(
     x_fr_accpt, y_fr_accpt = stars_f_acpt[1], stars_f_acpt[0]
 
     ax.set_title(r"$N_{{accpt}}={}$ , $N_{{rjct}}={}$ (fields compl)".format(
-        len(x_fr_accpt), len(x_fr_rject)), fontsize=9)
+        len(x_fr_accpt), len(x_fr_rject)), fontsize=titlesize)
     # CMD for first color
     col_idx = 1
     flCMD(
@@ -384,10 +396,11 @@ def pl_ad_test(gs, b, flag_ad_test, ad_cl, ad_fr, id_kinem):
     if flag_ad_test:
 
         def adPlot(ax, d1, d2, s):
-            ax.set_title('(' + s + ')', fontsize=9)
+            ax.tick_params(axis='both', which='major', labelsize=xytickssize)
+            ax.set_title('(' + s + ')', fontsize=titlesize)
             ax.axes.yaxis.set_ticklabels([])
-            plt.xlabel("A-D test")
-            plt.ylabel("N (norm)")
+            plt.xlabel("A-D test", fontsize=xylabelsize)
+            plt.ylabel("N (norm)", fontsize=xylabelsize)
             ax.grid(
                 b=True, which='major', color='gray', linestyle='--', lw=.5,
                 zorder=1)
@@ -407,7 +420,7 @@ def pl_ad_test(gs, b, flag_ad_test, ad_cl, ad_fr, id_kinem):
                 ax.axvline(
                     x=6.546, ls=':', lw=2.5, c='k', label=r"$p_{v}=0.001$")
             ax.set_xscale('log')
-            ax.legend(fontsize='small')
+            ax.legend(fontsize=legendsize)
 
         ax = plt.subplot(gs[4 + b:5 + b, 0:2])
         adPlot(ax, ad_cl[0], ad_fr[0], 'phot')
@@ -424,11 +437,12 @@ def pl_ad_test(gs, b, flag_ad_test, ad_cl, ad_fr, id_kinem):
 def pl_p_vals(
     ax, Ncl, Nf, prob_cl, kde_cl, kde_fr, x_cl, x_fr, x_over, y_over,
         reg_id):
+    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
     ax.set_title(
-        r'$P_{{cl}}={:.2f}\;({})$'.format(prob_cl, reg_id), fontsize=9)
+        r'$P_{{cl}}={:.2f}\;({})$'.format(prob_cl, reg_id), fontsize=titlesize)
     ax.axes.yaxis.set_ticklabels([])
-    plt.xlabel('p-values', fontsize=10)
-    plt.ylabel('Density (norm)', fontsize=10)
+    plt.xlabel('p-values', fontsize=xylabelsize)
+    plt.ylabel('Density (norm)', fontsize=xylabelsize)
     ax.minorticks_on()
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
             zorder=1)
@@ -450,7 +464,7 @@ def pl_p_vals(
         plt.fill_between(x_over, y_over, 0, color='grey', alpha='0.5')
     # Legend.
     handles, labels = ax.get_legend_handles_labels()
-    leg = ax.legend(handles, labels, numpoints=1, fontsize=9)
+    leg = ax.legend(handles, labels, numpoints=1, fontsize=legendsize)
     leg.get_frame().set_alpha(0.6)
     plt.gca().set_ylim(bottom=0)
 
