@@ -47,14 +47,15 @@ def main(
         flag_print_perc = True
         argsOF = [
             pd, clp, max_mag_syn, obs_clust, ext_coefs, st_dist_mass, N_fc,
-            available_secs, init_pop, N_pop_init, N_gen, flag_print_perc]
+            available_secs, init_pop, N_pop_init, N_gen, err_pars,
+            flag_print_perc]
 
     elif pd['best_fit_algor'] == 'boot+DE':
         popsize, maxiter = pd['N_pop'], pd['N_gen']
 
         argsOF = [
             pd, clp, max_mag_syn, st_dist_mass, ext_coefs, N_fc,
-            obs_clust, popsize, maxiter, available_secs, True]
+            obs_clust, popsize, maxiter, available_secs, err_pars, True]
 
     # First run of the numerical optimizer function with the observed data.
     isoch_fit_params = optimizerFunc(pd['best_fit_algor'], argsOF)
@@ -89,13 +90,13 @@ def main(
                     pd, clp, max_mag_syn, obs_cl, ext_coefs, st_dist_mass,
                     N_fc, np.inf, isoch_fit_params[
                         'OF_final_generation'][:N_btstrp], N_btstrp,
-                    pd['N_step_btstrp'], False]
+                    pd['N_step_btstrp'], err_pars, False]
 
             elif pd['best_fit_algor'] == 'boot+DE':
                 argsOF = [
                     pd, clp, max_mag_syn, st_dist_mass, ext_coefs, N_fc,
                     obs_cl, pd['N_pop_btstrp'], pd['N_step_btstrp'],
-                    np.nan, False]
+                    np.nan, err_pars, False]
 
             params_boot.append(optimizerFunc(pd['best_fit_algor'], argsOF))
 
@@ -143,19 +144,20 @@ def optimizerFunc(best_fit_algor, args):
     """
     if best_fit_algor == 'boot+GA':
         pd, clp, max_mag_syn, obs_clust, ext_coefs, st_dist_mass, N_fc,\
-            available_secs, init_pop, N_pop, N_gen, flag_print_perc = args
+            available_secs, init_pop, N_pop, N_gen, err_pars,\
+            flag_print_perc = args
 
         if flag_print_perc:
             # Print advances.
             isoch_fit_params = genetic_algorithm.main(
                 available_secs, init_pop, flag_print_perc, N_pop, N_gen,
                 max_mag_syn, obs_clust, ext_coefs, st_dist_mass, N_fc,
-                clp['err_pars'], clp['completeness'], **pd)
+                err_pars, clp['completeness'], **pd)
         else:
             isoch_fit_params = genetic_algorithm.main(
                 available_secs, init_pop, flag_print_perc, N_pop, N_gen,
                 max_mag_syn, obs_clust, ext_coefs, st_dist_mass, N_fc,
-                clp['err_pars'], clp['completeness'], **pd)
+                err_pars, clp['completeness'], **pd)
 
     elif best_fit_algor == 'boot+DE':
         pd, clp, max_mag_syn, st_dist_mass, ext_coefs, N_fc, m_ini,\
