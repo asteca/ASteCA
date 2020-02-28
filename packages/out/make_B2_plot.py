@@ -9,12 +9,11 @@ from . prep_plots import figsize_x, figsize_y, grid_x, grid_y
 
 
 def main(
-        npd, cld_c, pd, err_lst, cl_region_c, cl_region_rjct_c,
-        stars_out_c, stars_out_rjct_c, field_regions_c, flag_no_fl_regs_c,
-        field_regions_rjct_c, n_memb, lum_func, phot_analy_compl,
-        phot_data_compl, err_rm_data, completeness, flag_ad_test, ad_cl,
-        ad_fr, ad_cl_fr_p, ad_cl_fr_pk, stars_f_acpt, stars_f_rjct,
-        col_0_comb, col_1_comb, mag_0_comb, **kwargs):
+    npd, cld_c, pd, err_lst, cl_region_c, cl_region_rjct_c, stars_out_c,
+    stars_out_rjct_c, field_regions_c, flag_no_fl_regs_c, field_regions_rjct_c,
+    n_memb, lum_func, phot_analy_compl, phot_data_compl, err_rm_data,
+    completeness, stars_f_acpt, stars_f_rjct, col_0_comb, col_1_comb,
+        mag_0_comb, **kwargs):
     """
     Make B2 block plots.
     """
@@ -50,8 +49,6 @@ def main(
         asp_ratio = prep_plots.aspect_ratio(x_min, x_max, y_min, y_max)
         coord, x_name, y_name = prep_plots.coord_syst(pd['coords'])
 
-        b = 2 if len(pd['colors']) > 1 else 0
-
         # Photometric analysis plots.
         arglist = [
             # pl_cl_fl_regions
@@ -75,13 +72,7 @@ def main(
             [gs, y_ax, flag_no_fl_regs_c, lum_func],
             # pl_data_rm_perc
             [gs, y_ax, phot_analy_compl, phot_data_compl, err_rm_data,
-             completeness],
-            # pl_ad_test
-            [gs, b, flag_ad_test, ad_cl, ad_fr, pd['id_kinem']],
-            # pl_ad_pvals_phot
-            [gs, b, flag_ad_test, ad_cl_fr_p],
-            # pl_ad_pvals_pk
-            [gs, b, flag_ad_test, ad_cl_fr_pk, pd['id_kinem']]
+             completeness]
         ]
         for n, args in enumerate(arglist):
             mp_data_analysis.plot(n, *args)

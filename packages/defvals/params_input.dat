@@ -95,7 +95,7 @@ TF         n    0. 0. 0. 0.
 
 # Create output figures?
 #
-# * blocks: [A1, A2, A3, B1, B2, C1, C2, C3, D1, D2]
+# * blocks: [A1, A2, A3, B1, B2, B3, C1, C2, C3, D1, D2]
 #   Select one or more identifier to decide which plots will be produced. Leave
 #   empty for no output plots. An 's' character after an identifier will make
 #   the code stop and return right after creating that plot. I.e.: the line
@@ -107,7 +107,8 @@ TF         n    0. 0. 0. 0.
 #   - A2: center and field density analysis
 #   - A3: radius analysis
 #   - B1: uncertainties analysis
-#   - B2: photometric and kinematic data analysis
+#   - B2: photometric data analysis
+#   - B3: Anderson-Darling test
 #   - C1: decontamination algorithm photometric diagrams
 #   - C2: parallax analysis
 #   - C3: proper motions analysis
@@ -115,7 +116,7 @@ TF         n    0. 0. 0. 0.
 #   - D2: best fit synthetic cluster found
 #
 #   blocks
-MP   A1 A2 A3 B1 B2 C1 C2 C3 D1 D2
+MP   A1 A2 A3 B1 B2 B3 C1 C2 C3 D1 D2
 
 # * format: png / pdf
 #   Format of the final image file.
