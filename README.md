@@ -12,7 +12,7 @@ intrinsic/extrinsic parameters: metallicity, age, reddening, distance, total
 mass, binarity fraction, etc.
 
 **IMPORTANT**: until the release of v1.0.0 the package will be *under heavy
-development*. Keep this in mind if you want to use it on your research.
+development*. Keep this in mind if you want to use it in your research.
 
 
 ## Releases
@@ -21,6 +21,16 @@ The latest release can always be accessed [here][5].
 
 See the [CHANGELOG][6] file for a list of previous releases, the changes
 made in each one, and possible compatibility breaks with older versions.
+
+
+## Requirements
+
+ASteCA requires the following packages:
+
+* [`astropy`][14], [`numpy`][15], [`scipy`][16], [`matplotlib`][17], [`ptemcee`][18], [`emcee`][19], [`corner.py`][20]
+
+The `emcee` package is not essential but some functions will not work without it. The packages `ptemcee` and `corner.py` are included within the code for simplicity, and don't need to be installed.
+
 
 
 ## Referencing
@@ -67,3 +77,10 @@ ________________________________________________________________________________
 [11]: https://github.com/asteca/asteca/issues
 [12]: http://www.aanda.org/articles/aa/abs/2015/04/aa24946-14/aa24946-14.html
 [13]: http://www.gnu.org/licenses/gpl-3.0.en.html
+[14]: https://www.astropy.org/
+[15]: https://numpy.org/
+[16]: https://www.scipy.org/
+[17]: https://matplotlib.org/
+[18]: https://github.com/willvousden/ptemcee
+[19]: https://emcee.readthedocs.io/
+[20]: https://corner.readthedocs.io/
