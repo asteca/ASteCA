@@ -195,7 +195,7 @@ def fregsDef(clp, stars_group, f_regions, spiral, sp_indx, num_bins_area):
 
 
 def spiral_region(h_manual, sp_coords):
-    '''
+    """
     At this point we have the list 'sp_coords' composed of two lists, the
     first one containing the x coordinates for every bin that corresponds
     to the region and the second list the y coordinates. We need to
@@ -203,11 +203,9 @@ def spiral_region(h_manual, sp_coords):
     we use 'h_manual' which is a list that already contains the stars that
     fall inside each of the bins in the 2D histogram along with their
     relevant data (ID, x, y, mag, etc..)
-    '''
+    """
 
-    # Initialize empty field region.
     f_region = []
-
     # Iterate through all the bins in the spiral list defined.
     for xbin, ybin in zip(*sp_coords):
 
