@@ -130,7 +130,7 @@ def pl_full_frame(
     ax.minorticks_on()
     ax.set_aspect(aspect=asp_ratio)
     ax.set_title(
-        r"$N_{{stars}}$={}(phot incomp)".format(len(x)), fontsize=titlesize)
+        r"$N_{{stars}}$={} (phot incomp)".format(len(x)), fontsize=titlesize)
     # Set plot limits
     plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
@@ -141,6 +141,13 @@ def pl_full_frame(
     plt.xlabel('{} ({})'.format(x_name, coord), fontsize=xylabelsize)
     plt.ylabel('{} ({})'.format(y_name, coord), fontsize=xylabelsize)
     ax.tick_params(axis='both', which='major', labelsize=xytickssize)
+
+    N_max = 50000  # HARDCODED
+    if len(x) > N_max:
+        print("  WARNING: too many stars. Plotting {} random samples.".format(
+            N_max))
+        ids = np.random.choice(np.arange(len(x)), N_max, replace=False)
+        x, y = x[ids], y[ids]
 
     # Plot stars.
     plt.scatter(x, y, marker='o', c='black', s=st_sizes_arr)
