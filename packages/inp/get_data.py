@@ -107,6 +107,9 @@ def readDataFile(nanvals, read_mode, id_col, data_file):
     """
     Read input data file.
     """
+    # TODO to separate IDs (strings) from the rest of the data, I read the file
+    # twice. This is very slow for large files.
+
     # Identify all these strings as invalid entries.
     fill_msk = [('', '0')] + [(_, '0') for _ in nanvals]
     # Store IDs as strings.
@@ -160,20 +163,24 @@ def fill_cols(tbl, fill=np.nan, kind='f'):
 
 def maskBadPhot(data, mag_col, e_mag_col, col_col, e_col_col):
     """
-    Mask photometric values outside the (-50., 50.) range.
+    Mask photometric values outside the (mmin, mmax) range.
     """
+    # HARDCODED valid magnitude range
+    mmin, mmax = 0., 50.
+
     # Convert to masked table in case it is not.
     data = Table(data, masked=True)
 
     # # TODO this is a temporary magnitude filter
     # data = data[np.array([float(_) < 18. for _ in data[mag_col[0]]])]
 
+    # TODO this for block is rather slow for large data files
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         for idx in [mag_col, e_mag_col, col_col, e_col_col]:
             for c_idx in idx:
                 # Reject bad photometric values.
-                msk = np.array([-50. < float(_) < 50. for _ in data[c_idx]])
+                msk = np.array([mmin < float(_) < mmax for _ in data[c_idx]])
                 # Apply masks to each photometric column.
                 data[c_idx].mask = [~msk]
 
