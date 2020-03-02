@@ -92,8 +92,8 @@ def main(
 
     frac_reject = 1. - (float(cld_c['ids'].size) / cld_i['ids'].size)
     if frac_reject > 0.05:
-        print("  WARNING: N={} ({:.0f}%) of stars contain\n"
-              "  incomplete photometric data".format(
+        print("  WARNING: N={} ({:.0f}%) of stars contain incomplete " +
+              "photometric data".format(
                   cld_i['ids'].size - cld_c['ids'].size, 100. * frac_reject))
 
     clp = {
