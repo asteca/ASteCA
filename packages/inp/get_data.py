@@ -166,7 +166,7 @@ def maskBadPhot(data, mag_col, e_mag_col, col_col, e_col_col):
     Mask photometric values outside the (mmin, mmax) range.
     """
     # HARDCODED valid magnitude range
-    mmin, mmax = 0., 50.
+    mmin, mmax = -10., 50.
 
     # Convert to masked table in case it is not.
     data = Table(data, masked=True)
