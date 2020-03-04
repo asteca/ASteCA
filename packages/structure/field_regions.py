@@ -107,7 +107,7 @@ def fieldRegs(hist_2d, bin_width, cl_area):
     total_area = x_bins * y_bins * (bin_width ** 2)
 
     # Several empty areas, in decreasing order of size.
-    sq_areas = np.arange(2., 1.2, -.05) * cl_area
+    sq_areas = np.arange(1.4, 1.2, -.05) * cl_area
     # All the possible total number of field regions.
     f_regs_all = [int(_) for _ in (total_area - sq_areas) / cl_area]
 
