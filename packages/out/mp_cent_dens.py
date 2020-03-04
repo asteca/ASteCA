@@ -9,7 +9,7 @@ from . prep_plots import xylabelsize, xytickssize, titlesize, cbartickssize,\
 
 def pl_densmap(
     gs, fig, asp_ratio, x_name, y_name, coord, bw_list, kde_cent,
-        frame_kde_cent, fr_dens):
+        frame_kde_cent, fr_dens, clust_rad):
     """
     Coordinates 2D KDE.
     """
@@ -27,10 +27,10 @@ def pl_densmap(
     plt.axvline(x=kde_cent[0], linestyle='--', color='green')
     plt.axhline(y=kde_cent[1], linestyle='--', color='green')
 
-    # # Radius
-    # circle = plt.Circle(
-    #     (kde_cent[0], kde_cent[1]), clust_rad, color='green', fill=False)
-    # ax.add_artist(circle)
+    # Radius
+    circle = plt.Circle(
+        (kde_cent[0], kde_cent[1]), clust_rad, color='green', fill=False)
+    ax.add_artist(circle)
 
     ext_range, x_grid, y_grid, k_pos = frame_kde_cent
     kde = np.reshape(k_pos.T, x_grid.shape)
@@ -69,7 +69,7 @@ def pl_densmap(
 
 def pl_knn_dens(
     gs, fig, asp_ratio, x_min, x_max, y_min, y_max, x_name, y_name, coord,
-        NN_dd, xy_filtered, fr_dens, NN_dist, kde_cent):
+        NN_dd, xy_filtered, fr_dens, NN_dist, kde_cent, clust_rad):
     """
     """
     ax = plt.subplot(gs[0:2, 2:4])
@@ -115,6 +115,11 @@ def pl_knn_dens(
     # Assigned center.
     plt.scatter(kde_cent[0], kde_cent[1], color='g', s=40, lw=1.5,
                 marker='x', zorder=5)
+    # Radius
+    circle = plt.Circle(
+        (kde_cent[0], kde_cent[1]), clust_rad, color='red', fill=False)
+    ax.add_artist(circle)
+
     leg = plt.legend(
         fancybox=True, fontsize=legendsize, handlelength=1., loc='best')
     leg.get_frame().set_alpha(0.7)
@@ -122,7 +127,7 @@ def pl_knn_dens(
 
 def pl_full_frame(
     gs, fig, project, x_offset, y_offset, x_name, y_name, coord, x_min, x_max,
-        y_min, y_max, asp_ratio, kde_cent, x, y, st_sizes_arr):
+        y_min, y_max, asp_ratio, kde_cent, x, y, st_sizes_arr, clust_rad):
     """
     x,y finding chart of full frame
     """
@@ -154,6 +159,10 @@ def pl_full_frame(
     # plt.axvline(x=kde_cent[0], linestyle='--', color='green')
     # plt.axhline(y=kde_cent[1], linestyle='--', color='green')
     plt.scatter(*kde_cent, marker='x', c='red', s=50)
+    # Radius
+    circle = plt.Circle(
+        (kde_cent[0], kde_cent[1]), clust_rad, color='red', fill=False)
+    ax.add_artist(circle)
 
     # Add text box
     r_frmt = '{:.0f}' if coord == 'px' else '{:.5f}'

@@ -116,14 +116,14 @@ def main(cl_file, pd):
     # Integrated magnitude. For plotting purposes only.
     clp = integMags.main(clp, **cld_i)
 
+    # Cluster radius
+    clp = radius.main(cld_i, clp, **pd)
+
     # Uses the incomplete data.
     make_A2_plot.main(npd, cld_i, pd, **clp)
     if pd['stop_idx'] == 'A2':
         retFunc(npd['clust_name'], start)
         return
-
-    # Cluster radius
-    clp = radius.main(cld_i, clp, **pd)
 
     # Cluster's area and total number of stars within the cluster region.
     clp = cluster_area.main(clp, **cld_i)

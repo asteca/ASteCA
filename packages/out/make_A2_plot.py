@@ -12,7 +12,7 @@ def main(
     npd, cld_i, pd, x_offset, y_offset, bw_list, kde_cent, frame_kde_cent,
     rdp_radii, integ_dists, integ_mags, xy_filtered, xy_cent_dist, NN_dist,
     fr_dens, fdens_min_d, fdens_lst, fdens_std_lst, field_dens_d, field_dens,
-        field_dens_std, **kwargs):
+        field_dens_std, clust_rad, **kwargs):
     """
     Make A2 block plots.
     """
@@ -33,14 +33,15 @@ def main(
         arglist = [
             # pl_densmap: 2D Gaussian convolved histogram.
             [gs, fig, asp_ratio, x_name, y_name, coord, bw_list, kde_cent,
-             frame_kde_cent, fr_dens],
+             frame_kde_cent, fr_dens, clust_rad],
             # pl_knn_dens
             [gs, fig, asp_ratio, x_min, x_max, y_min, y_max, x_name, y_name,
-             coord, pd['NN_dd'], xy_filtered, fr_dens, NN_dist, kde_cent],
+             coord, pd['NN_dd'], xy_filtered, fr_dens, NN_dist, kde_cent,
+             clust_rad],
             # pl_full_frame: x,y finding chart of full frame.
             [gs, fig, pd['project'], x_offset, y_offset, x_name, y_name, coord,
              x_min, x_max, y_min, y_max, asp_ratio, kde_cent, cld_i['x'],
-             cld_i['y'], st_sizes_arr],
+             cld_i['y'], st_sizes_arr, clust_rad],
             # pl_field_dens
             [gs, coord, pd['fdens_method'], xy_cent_dist, fr_dens, fdens_min_d,
              fdens_lst, fdens_std_lst, field_dens_d, field_dens,
