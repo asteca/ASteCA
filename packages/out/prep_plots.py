@@ -367,8 +367,9 @@ def p2_ranges(p2, min_max_p):
 
 
 def packData(
-    lkl_method, cl_max_mag, bf_bin_edges, synth_clst, shift_isoch,
-        colors, filters, col_0_comb, mag_0_comb, col_1_comb):
+    lkl_method, cl_max_mag, bf_bin_edges, synth_clst_plot, binar_idx_plot,
+    shift_isoch, isoch_1sigma, colors, filters, col_0_comb, mag_0_comb,
+        col_1_comb):
     """
     Properly select and pack data for CMD/CCD of observed and synthetic
     clusters, and their Hess diagram.
@@ -388,49 +389,65 @@ def packData(
     x_phot_all, y_phot_all = col_0_comb, mag_0_comb
     frst_obs_mag, frst_obs_col = list(zip(*list(zip(*cl_max_mag))[3]))[0],\
         list(zip(*list(zip(*cl_max_mag))[5]))[0]
-    frst_synth_col, frst_synth_mag = synth_clst[0][1], synth_clst[0][0]
-    # Indexes of binary systems.
-    binar_idx = synth_clst[2][0]
+    frst_synth_col, frst_synth_mag = synth_clst_plot.T[1], synth_clst_plot.T[0]
     frst_col_edgs, frst_mag_edgs = bin_edges[1], bin_edges[0]
     # Filters and colors are appended continuously in 'shift_isoch'. If
     # there are 3 defined filters, then the first color starts at the
     # index 3. This is why 'N_mags' is used as the 'first color' index.
     frst_col_isoch, frst_mag_isoch = shift_isoch[N_mags], shift_isoch[0]
+
+    # # In place for #460
+    # # 1 sigma region
+    # frst_col_1sigma, frst_mag_1sigma = np.array([]), np.array([])
+    # if isoch_1sigma.any():
+    #     frst_col_1sigma, frst_mag_1sigma = isoch_1sigma[:, N_mags, :],\
+    #         isoch_1sigma[:, 0, :]
+    frst_col_1sigma, frst_mag_1sigma = [], []
+
     # gs plot coords.
     gs_y1, gs_y2 = 0, 2
     # Index of observed filter/color to scatter plot.
     i_obs_x, i_obs_y = 0, 0
     hr_diags = [
         [x_phot_all, y_phot_all, frst_obs_col, frst_obs_mag, frst_synth_col,
-         frst_synth_mag, binar_idx, frst_col_edgs, frst_mag_edgs,
-         frst_col_isoch, frst_mag_isoch, colors[0], filters[0], 'mag',
-         i_obs_x, i_obs_y, gs_y1, gs_y2]]
+         frst_synth_mag, binar_idx_plot, frst_col_edgs, frst_mag_edgs,
+         frst_col_isoch, frst_mag_isoch, frst_col_1sigma, frst_mag_1sigma,
+         colors[0], filters[0], 'mag', i_obs_x, i_obs_y, gs_y1, gs_y2]]
 
     # If more than one color was defined, plot an extra CMD (main magnitude
     # versus first color), and an extra CCD (first color versus second color)
     if N_cols > 1:
         scnd_obs_col = list(zip(*list(zip(*cl_max_mag))[5]))[1]
-        scnd_synth_col = synth_clst[0][2]
+        scnd_synth_col = synth_clst_plot.T[2]
         scnd_col_edgs = bin_edges[2]
         scnd_col_isoch = shift_isoch[N_mags + 1]
+
+        # # In place for #460
+        # scnd_col_1sigma = np.array([])
+        # if isoch_1sigma.any():
+        #     scnd_col_1sigma = isoch_1sigma[:, N_mags + 1, :]
+        scnd_col_1sigma = []
+
         # CMD of main magnitude and second color defined.
         x_phot_all, y_phot_all = col_1_comb, mag_0_comb
         gs_y1, gs_y2 = 2, 4
         i_obs_x, i_obs_y = 1, 0
         hr_diags.append(
             [x_phot_all, y_phot_all, scnd_obs_col, frst_obs_mag,
-             scnd_synth_col, frst_synth_mag, binar_idx, scnd_col_edgs,
-             frst_mag_edgs, shift_isoch[2], frst_mag_isoch, colors[1],
-             filters[0], 'mag', i_obs_x, i_obs_y, gs_y1, gs_y2])
+             scnd_synth_col, frst_synth_mag, binar_idx_plot, scnd_col_edgs,
+             frst_mag_edgs, shift_isoch[2], frst_mag_isoch, scnd_col_1sigma,
+             frst_mag_1sigma, colors[1], filters[0], 'mag', i_obs_x, i_obs_y,
+             gs_y1, gs_y2])
         # CCD of first and second color defined.
         x_phot_all, y_phot_all = col_0_comb, col_1_comb
         gs_y1, gs_y2 = 4, 6
         i_obs_x, i_obs_y = 0, 1
         hr_diags.append(
             [x_phot_all, y_phot_all, frst_obs_col, scnd_obs_col,
-             frst_synth_col, scnd_synth_col, binar_idx, frst_col_edgs,
-             scnd_col_edgs, frst_col_isoch, scnd_col_isoch, colors[0],
-             colors[1], 'col', i_obs_x, i_obs_y, gs_y1, gs_y2])
+             frst_synth_col, scnd_synth_col, binar_idx_plot, frst_col_edgs,
+             scnd_col_edgs, frst_col_isoch, scnd_col_isoch, frst_col_1sigma,
+             scnd_col_1sigma, colors[0], colors[1], 'col', i_obs_x, i_obs_y,
+             gs_y1, gs_y2])
 
     return hr_diags
 

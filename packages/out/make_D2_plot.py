@@ -11,9 +11,9 @@ from . prep_plots import figsize_x, figsize_y, grid_x, grid_y, cbartickssize
 
 
 def main(
-    npd, pd, synth_clst, shift_isoch, cl_max_mag, bf_bin_edges, err_lst,
-    col_0_comb, mag_0_comb, col_1_comb, isoch_fit_params, isoch_fit_errors,
-        pickledump=False, **kwargs):
+    npd, pd, synth_clst_plot, binar_idx_plot, shift_isoch, isoch_1sigma,
+    cl_max_mag, bf_bin_edges, err_lst, col_0_comb, mag_0_comb, col_1_comb,
+        isoch_fit_params, isoch_fit_errors, pickledump=False, **kwargs):
     """
     Make D2 block plots.
     """
@@ -29,9 +29,9 @@ def main(
             with open(pname, 'wb') as handle:
                 new_pd = {i: pd[i] for i in pd if i != 'theor_tracks'}
                 pickle.dump((
-                    npd, new_pd, synth_clst, shift_isoch, cl_max_mag, err_lst,
-                    col_0_comb, mag_0_comb, col_1_comb, isoch_fit_params,
-                    isoch_fit_errors), handle)
+                    npd, new_pd, synth_clst_plot, shift_isoch, cl_max_mag,
+                    err_lst, col_0_comb, mag_0_comb, col_1_comb,
+                    isoch_fit_params, isoch_fit_errors), handle)
 
         fig = plt.figure(figsize=(figsize_x, figsize_y))
         gs = gridspec.GridSpec(grid_y, grid_x)
@@ -44,13 +44,13 @@ def main(
 
         # Plot one ore more rows of CMDs/CCDs.
         hr_diags = prep_plots.packData(
-            pd['lkl_method'], cl_max_mag, bf_bin_edges, synth_clst,
-            shift_isoch, pd['colors'], pd['filters'], col_0_comb, mag_0_comb,
-            col_1_comb)
+            pd['lkl_method'], cl_max_mag, bf_bin_edges, synth_clst_plot,
+            binar_idx_plot, shift_isoch, isoch_1sigma, pd['colors'],
+            pd['filters'], col_0_comb, mag_0_comb, col_1_comb)
         for (x_phot_all, y_phot_all, x_phot_obs, y_phot_obs, x_synth_phot,
              y_synth_phot, binar_idx, hess_xedges, hess_yedges, x_isoch,
-             y_isoch, x_name, y_name, yaxis, i_obs_x, i_obs_y, gs_y1,
-             gs_y2) in hr_diags:
+             y_isoch, x_1sigma, y_1sigma, x_name, y_name, yaxis, i_obs_x,
+             i_obs_y, gs_y1, gs_y2) in hr_diags:
 
             hess_x, hess_y, HD = prep_plots.get_hess(
                 [x_phot_obs, y_phot_obs], [x_synth_phot, y_synth_phot],
@@ -68,8 +68,8 @@ def main(
                 [gs, gs_y1, gs_y2, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
                  x_ax, y_ax, hess_xedges, hess_yedges, x_synth_phot,
                  y_synth_phot, binar_idx, pd['IMF_name'], pd['R_V'],
-                 best_sol, isoch_fit_errors, x_isoch,
-                 y_isoch, pd['lkl_method'], pd['lkl_binning'],
+                 best_sol, isoch_fit_errors, x_isoch, y_isoch,
+                 pd['lkl_method'], pd['lkl_binning'],
                  pd['all_evol_tracks'], pd['evol_track']]
             ]
             for n, args in enumerate(arglist):
@@ -88,7 +88,7 @@ def main(
                 fig, gs, gs_y1, gs_y2, x_ax, y_ax, cl_max_mag, x_min_cmd,
                 x_max_cmd, y_min_cmd, y_max_cmd, err_lst, v_min_mp, v_max_mp,
                 obs_x, obs_y, obs_MPs, hess_xedges, hess_yedges,
-                x_isoch, y_isoch)
+                x_isoch, y_isoch, x_1sigma, y_1sigma)
 
         # Generate output file.
         plt.savefig(
@@ -107,7 +107,7 @@ def main(
 def plot_observed_cluster(
     fig, gs, gs_y1, gs_y2, x_ax, y_ax, cl_max_mag, x_min_cmd, x_max_cmd,
     y_min_cmd, y_max_cmd, err_lst, v_min_mp, v_max_mp, obs_x, obs_y, obs_MPs,
-        hess_xedges, hess_yedges, x_isoch, y_isoch):
+        hess_xedges, hess_yedges, x_isoch, y_isoch, x_1sigma, y_1sigma):
     """
     This function is called separately since we need to retrieve some
     information from it to plot that #$%&! colorbar.
@@ -117,8 +117,8 @@ def plot_observed_cluster(
     # pl_mps_phot_diag
     plot_colorbar, sca, trans = mp_best_fit2.pl_mps_phot_diag(
         gs, gs_y1, gs_y2, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
-        x_ax, y_ax, v_min_mp, v_max_mp, obs_x, obs_y, obs_MPs,
-        err_bar, hess_xedges, hess_yedges, x_isoch, y_isoch)
+        x_ax, y_ax, v_min_mp, v_max_mp, obs_x, obs_y, obs_MPs, err_bar,
+        hess_xedges, hess_yedges, x_isoch, y_isoch, x_1sigma, y_1sigma)
 
     # Ignore warning issued by colorbar plotted in photometric diagram with
     # membership probabilities.

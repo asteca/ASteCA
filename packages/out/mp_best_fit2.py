@@ -9,7 +9,7 @@ from . prep_plots import xylabelsize, xytickssize, titlesize, legendsize
 def pl_mps_phot_diag(
     gs, gs_y1, gs_y2, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
     x_ax, y_ax, v_min_mp, v_max_mp, obs_x, obs_y, obs_MPs, err_bar,
-        hess_xedges, hess_yedges, x_isoch, y_isoch):
+        hess_xedges, hess_yedges, x_isoch, y_isoch, x_1sigma, y_1sigma):
     """
     Star's membership probabilities on cluster's photometric diagram.
     """
@@ -68,6 +68,15 @@ def pl_mps_phot_diag(
             fmt='k.', lw=0.8, ms=0., zorder=4)
     # For plotting the colorbar (see bottom of make_D_plot file).
     trans = ax.transAxes + fig.transFigure.inverted()
+
+    # # In place for #460
+    # from scipy.spatial import ConvexHull
+    # if x_1sigma.any() and y_1sigma.any():
+    #     pts = np.array([x_1sigma.ravel(), y_1sigma.ravel()]).T
+    #     hull = ConvexHull(pts)
+    #     plt.fill(
+    #         pts[hull.vertices, 0], pts[hull.vertices, 1], 'grey', alpha=0.25,
+    #         zorder=-1)
 
     return plot_colorbar, sca, trans
 
