@@ -38,7 +38,7 @@ def pl_mp_histo(
             # Plot histo colored according to colormap.
             for c, p in list(zip(col, patches)):
                 plt.setp(p, 'facecolor', cm(c), zorder=3)
-                plt.setp(p, 'edgecolor', 'k')
+                plt.setp(p, 'edgecolor', 'k', lw=.5)
         else:
             print("  WARNING: all MPs are equal valued. "
                   "Can not plot MPs histogram.")
@@ -46,6 +46,14 @@ def pl_mp_histo(
         min_prob = cl_reg_fit[-1][-1]
         plt.axvline(x=min_prob, linestyle='--', color='green', lw=2.5,
                     zorder=3)
+
+        # Plot reversed cumulative MPs sum
+        ax2 = ax.twinx()
+        probs_x = np.sort(prob_data)[::-1]
+        cum_sum_MPs = np.arange(len(prob_data))
+        ax2.plot(probs_x, cum_sum_MPs, ls='--', c='k', lw=1.5)
+        ax2.tick_params(axis='both', which='major', labelsize=xytickssize)
+        ax2.tick_params(axis='y', rotation=45)
 
         # Add text box.
         str_pm = ['MP', '\geq', 'prob']
