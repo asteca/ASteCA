@@ -4,6 +4,7 @@ import matplotlib.gridspec as gridspec
 from os.path import join
 import warnings
 import pickle
+from .._version import __version__
 from . import add_version_plot
 from . import mp_best_fit2
 from . import prep_plots
@@ -13,25 +14,27 @@ from . prep_plots import figsize_x, figsize_y, grid_x, grid_y, cbartickssize
 def main(
     npd, pd, synth_clst_plot, binar_idx_plot, shift_isoch, isoch_1sigma,
     cl_max_mag, bf_bin_edges, err_lst, col_0_comb, mag_0_comb, col_1_comb,
-        isoch_fit_params, isoch_fit_errors, pickledump=False, **kwargs):
+        isoch_fit_params, isoch_fit_errors, **kwargs):
     """
     Make D2 block plots.
     """
     if 'D2' in pd['flag_make_plot'] and pd['bf_flag']:
 
-        # Internal flag, used for re-generating easily the D2 plot
-        if pickledump:
+        # If working on a dev branch store data used for re-generating easily
+        # the D2 plot
+        if 'dev' in __version__:
             # for k, val in pd.items():
             #     print(k, np.array(val).nbytes / 1024.**2)
-            # Dump for possible reuse
             pname = join(
                 npd['output_subdir'], str(npd['clust_name']) + '_D2.pickle')
             with open(pname, 'wb') as handle:
+                # Remove 'theor_tracks', not needed
                 new_pd = {i: pd[i] for i in pd if i != 'theor_tracks'}
                 pickle.dump((
-                    npd, new_pd, synth_clst_plot, shift_isoch, cl_max_mag,
-                    err_lst, col_0_comb, mag_0_comb, col_1_comb,
-                    isoch_fit_params, isoch_fit_errors), handle)
+                    npd, new_pd, synth_clst_plot, binar_idx_plot, shift_isoch,
+                    isoch_1sigma, cl_max_mag, bf_bin_edges, err_lst,
+                    col_0_comb, mag_0_comb, col_1_comb, isoch_fit_params,
+                    isoch_fit_errors), handle)
 
         fig = plt.figure(figsize=(figsize_x, figsize_y))
         gs = gridspec.GridSpec(grid_y, grid_x)
