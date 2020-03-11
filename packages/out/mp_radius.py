@@ -104,37 +104,41 @@ def pl_rad_dens(
     plt.xlabel(r'radius $[{}]$'.format(coord2), fontsize=xylabelsize)
     plt.ylabel(r"$\rho$ $[st/{}^{{2}}]$".format(coord2), fontsize=xylabelsize)
     ax.tick_params(axis='both', which='major', labelsize=xytickssize)
-    ax.ticklabel_format(axis='y', style='sci', scilimits=(0, 0))
+    # ax.ticklabel_format(axis='y', style='sci', scilimits=(0, 0))
     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5)
 
     # Legend texts
     r_frmt = '{:.0f}' if coord2 == 'px' else '{:.2f}'
-    t_rad = r"$r_{{{}}}=" + r_frmt + r"_{{" + r_frmt + r"}}^{{" +\
-        r_frmt + r"}}\,[{}]$"
+    # t_rad = r"$r_{{{}}}=" + r_frmt + r"_{{" + r_frmt + r"}}^{{" +\
+    #     r_frmt + r"}}\,[{}]$"
+    t_rad = r"$r_{{{}}}=" + r_frmt + r"\,[{}]$"
 
     # Plot density profile
-    ax.plot(rdp_radii, rdp_points, marker='o', ms=5, lw=1., zorder=3,
-            label="RDP")
+    ax.scatter(rdp_radii, rdp_points, marker='o', s=15, zorder=3)
+    # ax.plot(rdp_radii, rdp_points, marker='o', ms=5, lw=1., zorder=3,
+    #         label="RDP")
     # Plot error bars
     plt.errorbar(
         rdp_radii, rdp_points, yerr=rdp_stddev, fmt='none', ecolor='grey',
-        lw=1., zorder=1)
+        lw=.8, zorder=1)
 
     # Plot background level.
     ax.hlines(y=field_dens, xmin=0, xmax=max(rdp_radii), color='k', ls='--',
-              zorder=5)
-    if not np.isnan(e_fdens):
-        ax.hlines(
-            y=field_dens - e_fdens, xmin=0, xmax=max(rdp_radii),
-            color='k', ls=':', zorder=5)
-        ax.hlines(
-            y=field_dens + e_fdens, xmin=0, xmax=max(rdp_radii),
-            color='k', ls=':', zorder=5)
+              zorder=5, label=r"$d_{{field}}={:.1f} \,[st/{}^{{2}}]$".format(
+                field_dens, coord2))
+    # if not np.isnan(e_fdens):
+    #     ax.hlines(
+    #         y=field_dens - e_fdens, xmin=0, xmax=max(rdp_radii),
+    #         color='k', ls=':', zorder=5)
+    #     ax.hlines(
+    #         y=field_dens + e_fdens, xmin=0, xmax=max(rdp_radii),
+    #         color='k', ls=':', zorder=5)
     # Plot radius.
     y_mid_point = (y_max + y_min) * .5
     ax.vlines(x=clust_rad, ymin=field_dens, ymax=y_mid_point, lw=1.5,
               color='r', label=t_rad.format(
-                  "cl", clust_rad, e_rad[0], e_rad[1], coord2), zorder=5)
+                    "cl", clust_rad, coord2), zorder=5)
+                  # "cl", clust_rad, e_rad[0], e_rad[1], coord2), zorder=5)
     # Plot radius error zone.
     if not np.isnan(e_rad[0]):
         plt.axvspan(e_rad[0], e_rad[1], facecolor='grey', alpha=0.25)
@@ -142,7 +146,7 @@ def pl_rad_dens(
     # Plot King profile.
     if kp_flag:
         txts = [
-            'King prof ({:.2f})'.format(KP_conct_par),
+            'King profile', # ({:.2f})'.format(KP_conct_par),
             t_rad.format(
                 "c", KP_Bys_rc[1], KP_Bys_rc[0], KP_Bys_rc[2], coord2),
             t_rad.format("t", KP_Bys_rt[1], KP_Bys_rt[0], KP_Bys_rt[2], coord2)
@@ -152,56 +156,56 @@ def pl_rad_dens(
         kpf_yvals = KP_cent_dens * kpf(
             kpf_xvals, KP_Bys_rc[1], KP_Bys_rt[1]) + field_dens
         ax.plot(kpf_xvals, kpf_yvals, 'g--', label=txts[0], lw=2., zorder=3)
-        # Core radius
-        rc_ymax = KP_cent_dens * kpf(
-            KP_Bys_rc[1], KP_Bys_rc[1], KP_Bys_rt[1]) + field_dens
-        ax.vlines(
-            x=KP_Bys_rc[1], ymin=field_dens, ymax=rc_ymax, label=txts[1],
-            color='g', linestyles=':', lw=2., zorder=5)
-        # Tidal radius
-        ax.vlines(x=KP_Bys_rt[1], ymin=field_dens, ymax=y_mid_point,
-                  label=txts[2], color='g')
+        # # Core radius
+        # rc_ymax = KP_cent_dens * kpf(
+        #     KP_Bys_rc[1], KP_Bys_rc[1], KP_Bys_rt[1]) + field_dens
+        # ax.vlines(
+        #     x=KP_Bys_rc[1], ymin=field_dens, ymax=rc_ymax, label=txts[1],
+        #     color='g', linestyles=':', lw=2., zorder=5)
+        # # Tidal radius
+        # ax.vlines(x=KP_Bys_rt[1], ymin=field_dens, ymax=y_mid_point,
+        #           label=txts[2], color='g')
 
     # get handles
     handles, labels = ax.get_legend_handles_labels()
     # use them in the legend
-    ax.legend(handles, labels, loc='upper center', numpoints=2,
-              fontsize=legendsize)
+    ax.legend(handles, labels, loc='upper right', numpoints=2,
+              fontsize=11) #legendsize)
 
-    #
-    # Log-log plot
-    # ax = plt.subplot(gs[2:4, 4:6])
-    axins = inset_axes(ax, width=2.5, height=2.5)
-    axins.minorticks_on()
-    axins.grid(b=True, which='both', color='gray', linestyle='--', lw=.25)
-    # plt.xlabel(r'log(radius) $[{}]$'.format(coord2), fontsize=8)
-    # plt.ylabel(r"log($\rho$) $[st/{}^{{2}}]$".format(coord2), fontsize=8)
-    axins.tick_params(axis='both', which='both', labelsize=6)
+    # #
+    # # Log-log plot
+    # # ax = plt.subplot(gs[2:4, 4:6])
+    # axins = inset_axes(ax, width=2.5, height=2.5)
+    # axins.minorticks_on()
+    # axins.grid(b=True, which='both', color='gray', linestyle='--', lw=.25)
+    # # plt.xlabel(r'log(radius) $[{}]$'.format(coord2), fontsize=8)
+    # # plt.ylabel(r"log($\rho$) $[st/{}^{{2}}]$".format(coord2), fontsize=8)
+    # axins.tick_params(axis='both', which='both', labelsize=6)
 
-    axins.scatter(rdp_radii, rdp_points, s=5, zorder=5)
-    axins.hlines(y=field_dens, xmin=min(rdp_radii), xmax=max(rdp_radii),
-                 color='k', ls='--', zorder=5)
-    if not np.isnan(e_fdens):
-        axins.hlines(
-            y=field_dens - e_fdens, xmin=min(rdp_radii),
-            xmax=max(rdp_radii), color='k', ls=':', zorder=5)
-        axins.hlines(
-            y=field_dens + e_fdens, xmin=min(rdp_radii),
-            xmax=max(rdp_radii), color='k', ls=':', zorder=5)
-    axins.vlines(
-        x=clust_rad, ymin=field_dens, ymax=y_mid_point, lw=1.5, color='r',
-        zorder=10)
-    # Plot King profile.
-    if kp_flag:
-        axins.plot(kpf_xvals, kpf_yvals, 'g--', lw=1., zorder=3)
-        axins.vlines(
-            x=KP_Bys_rc[1], ymin=field_dens, ymax=rc_ymax, color='g',
-            linestyles=':', lw=1.)
-        axins.vlines(
-            x=KP_Bys_rt[1], ymin=field_dens, ymax=y_mid_point, color='g', lw=1)
+    # axins.scatter(rdp_radii, rdp_points, s=5, zorder=5)
+    # axins.hlines(y=field_dens, xmin=min(rdp_radii), xmax=max(rdp_radii),
+    #              color='k', ls='--', zorder=5)
+    # if not np.isnan(e_fdens):
+    #     axins.hlines(
+    #         y=field_dens - e_fdens, xmin=min(rdp_radii),
+    #         xmax=max(rdp_radii), color='k', ls=':', zorder=5)
+    #     axins.hlines(
+    #         y=field_dens + e_fdens, xmin=min(rdp_radii),
+    #         xmax=max(rdp_radii), color='k', ls=':', zorder=5)
+    # axins.vlines(
+    #     x=clust_rad, ymin=field_dens, ymax=y_mid_point, lw=1.5, color='r',
+    #     zorder=10)
+    # # Plot King profile.
+    # if kp_flag:
+    #     axins.plot(kpf_xvals, kpf_yvals, 'g--', lw=1., zorder=3)
+    #     axins.vlines(
+    #         x=KP_Bys_rc[1], ymin=field_dens, ymax=rc_ymax, color='g',
+    #         linestyles=':', lw=1.)
+    #     axins.vlines(
+    #         x=KP_Bys_rt[1], ymin=field_dens, ymax=y_mid_point, color='g', lw=1)
 
-    axins.set_xscale('log')
-    axins.set_yscale('log')
+    # axins.set_xscale('log')
+    # axins.set_yscale('log')
 
 
 def pl_KP_Bys(

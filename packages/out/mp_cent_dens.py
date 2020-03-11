@@ -14,18 +14,20 @@ def pl_densmap(
     Coordinates 2D KDE.
     """
 
+    x_name, y_name = r'$\alpha_{2000}$', r'$\delta_{2000}$'
+
     ax = plt.subplot(gs[0:2, 0:2])
     frmt = '{:.4f}' if coord == 'deg' else '{:.0f}'
-    ax.set_title((r'$KDE_{{bdw}}$ =' + frmt + ' [{}]').format(
-        bw_list[1], coord), fontsize=titlesize)
+    # ax.set_title((r'$KDE_{{bdw}}$ =' + frmt + ' [{}]').format(
+    #     bw_list[1], coord), fontsize=titlesize)
     plt.xlabel('{} ({})'.format(x_name, coord), fontsize=xylabelsize)
     plt.ylabel('{} ({})'.format(y_name, coord), fontsize=xylabelsize)
 
     ax.minorticks_on()
-    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
+    ax.tick_params(axis='both', which='major', labelsize=8) #xytickssize)
 
-    plt.axvline(x=kde_cent[0], linestyle='--', color='green')
-    plt.axhline(y=kde_cent[1], linestyle='--', color='green')
+    # plt.axvline(x=kde_cent[0], linestyle='--', color='green')
+    # plt.axhline(y=kde_cent[1], linestyle='--', color='green')
 
     # Radius
     circle = plt.Circle(
@@ -45,7 +47,8 @@ def pl_densmap(
     divider = make_axes_locatable(ax)
     cax = divider.append_axes("right", size="2%", pad=0.05)
     cbar = plt.colorbar(im, cax=cax)
-    cbar.set_ticks([np.min(kde), np.ptp(kde) * .5, np.max(kde)])
+    # cbar.set_ticks([np.min(kde), np.ptp(kde) * .5, np.max(kde)])
+    cbar.set_ticks([np.min(kde), np.max(kde)])
     scale = 3600. if coord == 'deg' else 1.
 
     kde_dens_min, kde_dens_max = fr_dens.min(), fr_dens.max()
@@ -53,16 +56,45 @@ def pl_densmap(
     frmt = '{:.2E}' if midpt > 100. or midpt < .1 else '{:.0f}'
     cbar.ax.set_yticklabels([
         frmt.format(kde_dens_min / scale),
-        frmt.format(midpt),
-        frmt.format(kde_dens_max / scale)], rotation=90)
+        # frmt.format(midpt),
+        frmt.format(kde_dens_max / scale)], rotation=0) #90)
     cbar.ax.tick_params(labelsize=cbartickssize)
-    # Align bottom and middle labels. Don't include last label (one at the
-    # top) as we don't want to change its alignment.
-    for i, label in enumerate(cbar.ax.get_yticklabels()[:-1]):
-        if i == 0:
-            label.set_va("bottom")
-        else:
-            label.set_va("center")
+    # # Align bottom and middle labels. Don't include last label (one at the
+    # # top) as we don't want to change its alignment.
+    # for i, label in enumerate(cbar.ax.get_yticklabels()[:-1]):
+    #     if i == 0:
+    #         label.set_va("bottom")
+    #     else:
+    #         label.set_va("center")
+
+    # Add text box
+    kde_cent = (186.085049, -61.8505119)
+    r_frmt = '{:.0f}' if coord == 'px' else '{:.5f}'
+    x_cent = kde_cent[0]
+    x_name, y_name = r'\alpha', r'\delta'
+    t1 = (r'${}_{{c}} =$' + r_frmt).format(x_name, x_cent)
+    t2 = (r'${}_{{c}} =$' + r_frmt).format(y_name, kde_cent[1])
+    text = '   NGC4349\n' + t1 + '\n' + t2
+    ob = offsetbox.AnchoredText(
+        text, pad=0.2, loc=2, prop=dict(size=legendsize))
+    ob.patch.set(alpha=0.85)
+    ax.add_artist(ob)
+
+    import matplotlib.patches as patches
+    x_outer_min, x_outer_max = -0.09, 0.109
+    y_outer_min, y_outer_max = -0.085, 0.115
+    x_inner_min, x_inner_max = -0.07, 0.085
+    y_inner_min, y_inner_max = -0.065, 0.09
+    w_in, h_in = x_inner_max - x_inner_min, y_inner_max - y_inner_min
+    rect = patches.Rectangle(
+        (x_inner_min, y_inner_min), w_in, h_in, linewidth=2., linestyle='--',
+        edgecolor='k', facecolor='none')
+    ax.add_patch(rect)
+    w_ou, h_ou = x_outer_max - x_outer_min, y_outer_max - y_outer_min
+    rect = patches.Rectangle(
+        (x_outer_min, y_outer_min), w_ou, h_ou, linewidth=2., linestyle='--',
+        edgecolor='k', facecolor='none')
+    ax.add_patch(rect)
 
     ax.set_aspect(aspect=asp_ratio)
 
