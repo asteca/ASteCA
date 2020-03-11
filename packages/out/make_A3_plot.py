@@ -21,11 +21,8 @@ def main(
     Make A3 block plots.
     """
     if 'A3' in pd['flag_make_plot']:
-        # fig = plt.figure(figsize=(figsize_x, figsize_y))
-        # gs = gridspec.GridSpec(grid_y, grid_x)
-        fig = plt.figure(figsize=(25, 25))
-        gs = gridspec.GridSpec(10, 12)
-
+        fig = plt.figure(figsize=(figsize_x, figsize_y))
+        gs = gridspec.GridSpec(grid_y, grid_x)
         add_version_plot.main()
 
         # Obtain plotting parameters and data.
