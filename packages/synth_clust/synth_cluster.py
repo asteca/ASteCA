@@ -12,7 +12,8 @@ from . import add_errors
 
 def main(
     fundam_params, varIdxs, model, theor_tracks, completeness, max_mag_syn,
-        st_dist_mass, R_V, ext_coefs, N_fc, err_pars, m_ini_idx, binar_flag):
+    st_dist_mass, R_V, ext_coefs, N_fc, err_pars, m_ini_idx, binar_flag,
+        extra_pars_flag=False):
     """
     Takes an isochrone and returns a synthetic cluster created according to
     a certain mass distribution.
@@ -80,9 +81,15 @@ def main(
 
             if isoch_compl.any():
                 # Get errors according to errors distribution.
-                synth_clust = add_errors.main(isoch_compl, err_pars)
+                synth_clust, sigma, extra_pars = add_errors.main(
+                    isoch_compl, err_pars, m_ini_idx, binar_flag,
+                    extra_pars_flag)
 
-    return synth_clust
+    if extra_pars_flag is False:
+        # Only pass the photometry, used by the likelihood function
+        return synth_clust
+    return synth_clust, sigma, extra_pars,\
+        (isoch_moved, mass_dist, isoch_binar, isoch_compl)
 
 
 def properModel(fundam_params, model, varIdxs):

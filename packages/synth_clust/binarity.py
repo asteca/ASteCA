@@ -40,7 +40,8 @@ def main(isoch_mass, bin_frac, m_ini_idx, N_fc):
 
 def binarGen(
     binar_fracs, N_mass_interp, mags_theor, cols_theor, mags_cols_theor,
-        extra_pars, bin_mass_ratio, synth_rand_seed):
+    extra_pars, all_met_vals, all_age_vals, bin_mass_ratio,
+        synth_rand_seed):
     """
     Called by isoch_params().
 
@@ -69,9 +70,8 @@ def binarGen(
 
         print("Generating binary data (b_mr={:.2f})".format(bin_mass_ratio))
 
-        # All theoretical isochrones are interpolated with the same length,
-        # assign unique binarity probabilities to each star randomly.
-        unq_b_probs = np.arange(N_mass_interp) / float(N_mass_interp)
+        met_probs, age_probs, unq_probs, fracs = randVals(
+            N_mass_interp, bin_mass_ratio)
 
         mags_binar, cols_binar, probs_binar, mass_binar = [], [], [], []
         # For each metallicity defined.
@@ -89,7 +89,9 @@ def binarGen(
                 # Calculate random secondary masses of these binary stars
                 # between bin_mass_ratio*m1 and m1, where m1 is the primary
                 # mass.
-                m2 = np.random.uniform(bin_mass_ratio * mass_ini, mass_ini)
+                # m2 = np.random.uniform(bin_mass_ratio * mass_ini, mass_ini)
+                m2 = fracs * mass_ini
+
                 # If any secondary mass falls outside of the lower isochrone's
                 # mass range, change its value to the min value.
                 m2 = np.maximum(np.min(mass_ini), m2)
@@ -134,9 +136,15 @@ def binarGen(
                 # Add masses to obtain the binary system's mass.
                 mass_bin.append([mass_ini + mass_ini[bin_m_close]])
 
-                # Shuffle binarity probabilities.
-                np.random.shuffle(unq_b_probs)
-                prob_bin.append([unq_b_probs])
+                # Find closest met & age values
+                iz = np.searchsorted(met_probs, all_met_vals[mx])
+                ia = np.searchsorted(age_probs, all_age_vals[ax])
+                # This ensures that the same (z, a) pair points to the same
+                # 'unq_probs' values (for the same random seed), no matter
+                # the ranges used for these parameters.
+                idx = (iz + ia) % len(unq_probs)
+                probs = unq_probs[idx]
+                prob_bin.append([probs])
 
             # Store for each metallicity value.
             mags_binar.append(mag_bin)
@@ -149,6 +157,46 @@ def binarGen(
         return None
 
     return mags_binar, cols_binar, probs_binar, mass_binar
+
+
+def randVals(
+    N_mass_interp, bin_mass_ratio, zmin=0., zmax=0.06, amin=6., amax=10.5,
+        N_mets=50000, N_ages=50000, N_unq_probs=10000):
+    """
+    Process the required random values making sure that they are reproducible
+    to the maximum possible extent. In the N_mets-->inf, N_ages-->inf limit
+    all (z, a) pairs have a unique index assigned and hence always point to
+    the exact same position in 'unq_probs'.
+
+    The 'N_unq_probs' value is not that important. In the limit
+    N_unq_probs-->inf every (z, a) pair has a unique array of probabilities
+    assigned.
+
+    HARDCODED
+    zmin, zmax, amin, amax : full range for each parameter
+    N_mets, N_ages, N_unq_probs : number of elements in each array
+    """
+
+    # All theoretical isochrones are interpolated with the same length,
+    # assign unique binarity probabilities to each star randomly.
+    b_probs = np.arange(N_mass_interp) / float(N_mass_interp)
+
+    # As long as the length of 'b_probs' stays the same (i.e.:
+    # as long as N_mass_interp stays the same), this will produce
+    # the same results for the same random seed.
+
+    met_probs = np.linspace(zmin, zmax, N_mets)
+    age_probs = np.linspace(amin, amax, N_ages)
+    unq_probs = []
+    for _ in range(N_unq_probs):
+        # Shuffle binarity probabilities.
+        np.random.shuffle(b_probs)
+        unq_probs.append(list(b_probs))
+
+    # Fractions for second mass
+    fracs = np.random.uniform(bin_mass_ratio, 1., N_mass_interp)
+
+    return met_probs, age_probs, unq_probs, fracs
 
 
 def mag_combine(m1, m2):
