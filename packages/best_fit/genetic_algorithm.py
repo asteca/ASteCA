@@ -142,7 +142,7 @@ def main(
                 m, s = divmod(max(1., available_secs - elapsed_in), 60)
                 h, m = divmod(m, 60)
                 # m += s / 60.
-                print("{:>3}% LP={:.1f} ({:.5f}, {:.3f}, {:.3f}, "
+                print("{:>3}% LP={:.3f} ({:.5f}, {:.3f}, {:.3f}, "
                       "{:.2f}, {:.0f}, {:.2f})".format(
                           milestones[0], lkl[0], *generation[0]) +
                       " [{:.0f} m/s | {:.0f}h{:.0f}m]".format(
