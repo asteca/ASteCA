@@ -137,7 +137,6 @@ def dolphin(synth_clust, obs_clust):
 
     # M = synth_phot[0].size
     # Cash's C statistic: 2 * sum(m_i - n_i * ln(m_i))
-    # weighted: 2 * sum(w_i * (m_i - n_i * ln(m_i)))
     C_cash = 2. * (synth_clust.shape[0] - np.sum(
         (cl_histo_f_z * np.log(syn_histo_f_z))))
 
