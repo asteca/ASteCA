@@ -57,6 +57,9 @@ def main(met_files, ages_strs, evol_track, CMD_extra_pars, all_syst_filters):
             # Column indexes for all the filters defined in this system.
             # TODO the extra params consume a lot of memory and are not used
             # (for now?), hence the [0] to pass only the 'M_ini' index.
+            # The 'M_ini' parameter is stored for each photometric system
+            # (i.e., duplicated) because later on these values are checked
+            # to make sure they are equal for equal (z, a)
             uniq_fltrs = list(all_syst_filters[j][1:]) + [CMD_extra_pars[0]]
 
             # Column numbers for the filters defined in this system.
