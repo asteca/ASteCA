@@ -37,6 +37,18 @@ def check_get(pd):
         # Check equality of the initial mass across photometric systems.
         miniCheck(extra_pars, met_vals_all, age_vals_all)
 
+        # Once the above check has passed, remove the extra 'M_ini' array
+        # from 'extra_pars'.
+        # TODO this will need the change when/if more extra parameters are
+        # stored beyond 'M_ini'
+        extra_pars2 = [[] for _ in met_vals_all]
+        for i, z in enumerate(extra_pars):
+            ages = [[] for _ in age_vals_all]
+            for j, a in enumerate(z):
+                ages[j].append(a[0])
+            extra_pars2[i] = ages
+        extra_pars = extra_pars2
+
         # Take the synthetic data from the unique filters read, create the
         # necessary colors, and position the magnitudes and colors in the
         # same order as they are read from the cluster's data file.
