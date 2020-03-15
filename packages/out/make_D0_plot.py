@@ -113,7 +113,9 @@ def main(
         ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5)
         # Set plot limits
         plt.xlim(min(synth_clust[0]) - 0.5, max(synth_clust[0]) + 0.5)
-        plt.ylim(-0.001, max(sigma[0]) + .25 * max(sigma[0]))
+        plt.ylim(
+            min(sigma[0]) - .1 * max(sigma[0]),
+            max(sigma[0]) + .25 * max(sigma[0]))
         # Set axis labels
         plt.ylabel(r'$\sigma_{}$'.format(y_ax), fontsize=xylabelsize)
         plt.xlabel(r'${}$'.format(y_ax), fontsize=xylabelsize)
@@ -134,9 +136,11 @@ def main(
         ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5)
         # Set plot limits
         plt.xlim(min(synth_clust[0]) - 0.5, max(synth_clust[0]) + 0.5)
-        plt.ylim(-0.01, max(sigma[1]) + .25 * max(sigma[1]))
+        plt.ylim(
+            min(sigma[1]) - .1 * max(sigma[1]),
+            max(sigma[1]) + .25 * max(sigma[1]))
         # Set axis labels
-        plt.ylabel(r'$\sigma_{}$'.format(x_ax0), fontsize=xylabelsize)
+        plt.ylabel(r'$\sigma_{{{}}}$'.format(x_ax0), fontsize=xylabelsize)
         plt.xlabel(r'${}$'.format(y_ax), fontsize=xylabelsize)
         # Set minor ticks
         ax.minorticks_on()
