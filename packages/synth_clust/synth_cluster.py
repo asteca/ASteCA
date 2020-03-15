@@ -88,8 +88,8 @@ def main(
     if extra_pars_flag is False:
         # Only pass the photometry, used by the likelihood function
         return synth_clust
-    return synth_clust, sigma, extra_pars,\
-        (isoch_moved, mass_dist, isoch_binar, isoch_compl)
+    return synth_clust, sigma, extra_pars, isoch_moved, mass_dist,\
+        isoch_binar, isoch_compl
 
 
 def properModel(fundam_params, model, varIdxs):
