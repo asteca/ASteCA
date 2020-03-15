@@ -103,7 +103,7 @@ def readCMDFile(met_f, ages_strs, line_start, age_format, column_ids):
     isochrones for the ages within the age range.
     """
 
-    # This can not be a numpy array since different ages have different number
+    # This cant not be a numpy array since different ages have different number
     # of stars, and an array can not have an irregular shape.
     metal_isoch = []
     # Open the metallicity file.
