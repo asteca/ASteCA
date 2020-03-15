@@ -9,16 +9,7 @@ from scipy.stats import gaussian_kde
 from ..structure.king_profile import KingProf
 # from ..best_fit.bf_common import varPars
 from .. import update_progress
-from . synth_cluster import properModel
-from . import zaWAverage
-from . import move_isochrone
-from . import cut_max_mag
-from . import mass_distribution
-from . import mass_interp
-from . import binarity
-from . import completeness_rm
-from . import add_errors
-
+from . import synth_cluster
 from ..out import synth_gen_out
 from ..out import make_D0_plot
 
@@ -27,7 +18,7 @@ def main(
     npd, clp, max_mag_syn, obs_clust, ext_coefs, st_dist_mass, N_fc, err_pars,
     fundam_params, theor_tracks, R_V, m_ini_idx, binar_flag, filters, colors,
     plot_frmt, flag_make_plot, coords, plot_dpi, xmax=2000, ymax=2000,
-        synth_CI=False, rt=250., **kwargs):
+        synth_CI_rand=False, rt=250., **kwargs):
     """
     In place for #239
     """
@@ -40,7 +31,7 @@ def main(
     else:
         rc = np.random.uniform(10., rt - 10.)
 
-    if synth_CI is True:
+    if synth_CI_rand is True:
         CI = np.random.uniform(.1, .95)
     else:
         CI = clp['cont_index']
@@ -82,11 +73,14 @@ def main(
         # model = np.array([np.random.uniform(*_) for _ in ranges])
         # model_var = model[varIdxs]
 
-        isoch_moved, mass_dist, isoch_binar, isoch_compl,\
-            (synth_clust, sigma, extra_pars) = synth_cluster(
+        synth_clust, sigma, extra_pars, isoch_moved, mass_dist, isoch_binar,\
+            isoch_compl = synth_cluster.main(
                 fundam_params, varIdxs, model, theor_tracks,
                 clp['completeness'], max_mag_syn, st_dist_mass, R_V, ext_coefs,
-                N_fc, err_pars, m_ini_idx, binar_flag)
+                N_fc, err_pars, m_ini_idx, binar_flag, True)
+
+        # Undo transposing performed in add_errors()
+        synth_clust = synth_clust.T
 
         # Generate positional data
         field_dens, cl_dists, x_cl, y_cl, x_fl, y_fl = xyCoords(
@@ -120,63 +114,63 @@ def main(
     return
 
 
-def synth_cluster(
-    fundam_params, varIdxs, model, theor_tracks, completeness, max_mag_syn,
-        st_dist_mass, R_V, ext_coefs, N_fc, err_pars, m_ini_idx, binar_flag):
-    """
-    Takes an isochrone and returns a synthetic cluster created according to
-    a certain mass distribution.
-    """
+# def synth_cluster(
+#     fundam_params, varIdxs, model, theor_tracks, completeness, max_mag_syn,
+#         st_dist_mass, R_V, ext_coefs, N_fc, err_pars, m_ini_idx, binar_flag):
+#     """
+#     Takes an isochrone and returns a synthetic cluster created according to
+#     a certain mass distribution.
+#     """
 
-    # Return proper values for fixed parameters and parameters required
-    # for the (z, log(age)) isochrone averaging.
-    model_proper, z_model, a_model, ml, mh, al, ah = properModel(
-        fundam_params, model, varIdxs)
+#     # Return proper values for fixed parameters and parameters required
+#     # for the (z, log(age)) isochrone averaging.
+#     model_proper, z_model, a_model, ml, mh, al, ah = properModel(
+#         fundam_params, model, varIdxs)
 
-    # Generate a weighted average isochrone from the (z, log(age)) values in
-    # the 'model'.
-    isochrone = zaWAverage.main(
-        theor_tracks, fundam_params, z_model, a_model, ml, mh, al, ah)
+#     # Generate a weighted average isochrone from the (z, log(age)) values in
+#     # the 'model'.
+#     isochrone = zaWAverage.main(
+#         theor_tracks, fundam_params, z_model, a_model, ml, mh, al, ah)
 
-    # Extract parameters
-    e, d, M_total, bin_frac = model_proper
+#     # Extract parameters
+#     e, d, M_total, bin_frac = model_proper
 
-    # Move theoretical isochrone using the values 'e' and 'd'.
-    isoch_moved = move_isochrone.main(
-        isochrone, e, d, R_V, ext_coefs, N_fc, binar_flag, m_ini_idx)
+#     # Move theoretical isochrone using the values 'e' and 'd'.
+#     isoch_moved = move_isochrone.main(
+#         isochrone, e, d, R_V, ext_coefs, N_fc, binar_flag, m_ini_idx)
 
-    # Get isochrone minus those stars beyond the magnitude cut.
-    isoch_cut = cut_max_mag.main(isoch_moved, max_mag_syn)
+#     # Get isochrone minus those stars beyond the magnitude cut.
+#     isoch_cut = cut_max_mag.main(isoch_moved, max_mag_syn)
 
-    # # Empty list to pass if at some point no stars are left.
-    # synth_clust = np.array([])
-    # Check for an empty array.
-    if isoch_cut.any():
-        # Mass distribution to produce a synthetic cluster based on
-        # a given IMF and total mass.
-        mass_dist = mass_distribution.main(st_dist_mass, M_total)
+#     # # Empty list to pass if at some point no stars are left.
+#     # synth_clust = np.array([])
+#     # Check for an empty array.
+#     if isoch_cut.any():
+#         # Mass distribution to produce a synthetic cluster based on
+#         # a given IMF and total mass.
+#         mass_dist = mass_distribution.main(st_dist_mass, M_total)
 
-        # Interpolate masses in mass_dist into the isochrone rejecting those
-        # masses that fall outside of the isochrone's mass range.
-        # This destroys the order by magnitude.
-        isoch_mass = mass_interp.main(isoch_cut, mass_dist, m_ini_idx)
+#         # Interpolate masses in mass_dist into the isochrone rejecting those
+#         # masses that fall outside of the isochrone's mass range.
+#         # This destroys the order by magnitude.
+#         isoch_mass = mass_interp.main(isoch_cut, mass_dist, m_ini_idx)
 
-        if isoch_mass.any():
-            # Assignment of binarity.
-            isoch_binar = binarity.main(isoch_mass, bin_frac, m_ini_idx, N_fc)
+#         if isoch_mass.any():
+#             # Assignment of binarity.
+#             isoch_binar = binarity.main(isoch_mass, bin_frac, m_ini_idx, N_fc)
 
-            # Completeness limit removal of stars.
-            isoch_compl = completeness_rm.main(isoch_binar, completeness)
+#             # Completeness limit removal of stars.
+#             isoch_compl = completeness_rm.main(isoch_binar, completeness)
 
-            if isoch_compl.any():
-                # Get errors according to errors distribution.
-                synth_clust = add_errors.main(
-                    isoch_compl, err_pars, binar_flag, m_ini_idx)
+#             if isoch_compl.any():
+#                 # Get errors according to errors distribution.
+#                 synth_clust = add_errors.main(
+#                     isoch_compl, err_pars, binar_flag, m_ini_idx)
 
-    # if not synth_clust[0].any():
-    #     raise ValueError("Synthetic cluster is empty: {}".format(model))
+#     # if not synth_clust[0].any():
+#     #     raise ValueError("Synthetic cluster is empty: {}".format(model))
 
-    return isoch_moved, mass_dist, isoch_binar, isoch_compl, synth_clust
+#     return isoch_moved, mass_dist, isoch_binar, isoch_compl, synth_clust
 
 
 def xyCoords(N_clust, CI, rc, rt, xmax, ymax, cx, cy):

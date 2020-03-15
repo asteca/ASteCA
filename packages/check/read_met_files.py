@@ -60,11 +60,13 @@ def check_get(pd):
 
         # Interpolate all the data in the isochrones (including the binarity
         # data)
+        all_met_vals, all_age_vals, binar_fracs = pd['fundam_params'][0],\
+            pd['fundam_params'][1], pd['fundam_params'][5]
         pd['theor_tracks'], pd['m_ini_idx'], pd['binar_flag'] =\
             interp_isochs.main(
                 mags_theor, cols_theor, mags_cols_theor, extra_pars,
-                pd['fundam_params'][0], pd['fundam_params'][1],
-                pd['fundam_params'][5], pd['bin_mr'], pd['synth_rand_seed'])
+                all_met_vals, all_age_vals, binar_fracs, pd['bin_mr'],
+                pd['synth_rand_seed'])
 
         print("\nGrid values")
         print("z        : {:<5} [{}, {}]".format(
@@ -90,7 +92,7 @@ def miniCheck(extra_pars, met_vals_all, age_vals_all):
     """
     extra_pars = np.array(extra_pars)
     # If a single z and log(age) are defined, this array will have a shape
-    # (#met_vals, #log(ages), #phot_systs, #stars). Hence the '[:3'.
+    # (#met_vals, #log(ages), #phot_systs, #stars). Hence the '[:3]'.
     Nz, Na, Ndim = extra_pars.shape[:3]
     if Ndim == 1:
         # Single photometric system defined. Nothing to check.
