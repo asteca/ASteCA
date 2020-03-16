@@ -44,7 +44,8 @@ def main(
     # Generate a weighted average isochrone from the (z, log(age)) values in
     # the 'model'.
     isochrone = zaWAverage.main(
-        theor_tracks, fundam_params, z_model, a_model, ml, mh, al, ah)
+        theor_tracks, m_ini_idx, fundam_params, z_model, a_model, ml, mh, al,
+        ah)
 
     # Extract parameters
     e, d, M_total, bin_frac = model_proper
