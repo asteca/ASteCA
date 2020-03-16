@@ -183,6 +183,12 @@ def modeKDE(fundam_params, varIdxs, mcmc_trace):
     mcmc_kde, mode_sol = [], []
     for i, mcmc_par in enumerate(mcmc_trace):
 
+        # Multiple elements are required
+        if len(mcmc_par) <= 1:
+            mcmc_kde.append([])
+            mode_sol.append(np.nan)
+            continue
+
         # Length of the last 10% of the chain.
         N = int(mcmc_par.shape[0] * .1)
 
