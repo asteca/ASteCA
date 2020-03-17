@@ -181,16 +181,14 @@ def pl_rad_dens(
     axins.scatter(rdp_radii, rdp_points, s=5, zorder=5)
     axins.hlines(y=field_dens, xmin=min(rdp_radii), xmax=max(rdp_radii),
                  color='k', ls='--', zorder=5)
-    if not np.isnan(e_fdens):
-        axins.hlines(
-            y=field_dens - e_fdens, xmin=min(rdp_radii),
-            xmax=max(rdp_radii), color='k', ls=':', zorder=5)
-        axins.hlines(
-            y=field_dens + e_fdens, xmin=min(rdp_radii),
-            xmax=max(rdp_radii), color='k', ls=':', zorder=5)
-    axins.vlines(
-        x=clust_rad, ymin=field_dens, ymax=y_mid_point, lw=1.5, color='r',
-        zorder=10)
+    # if not np.isnan(e_fdens):
+    #     axins.hlines(
+    #         y=field_dens - e_fdens, xmin=min(rdp_radii),
+    #         xmax=max(rdp_radii), color='k', ls=':', zorder=5)
+    #     axins.hlines(
+    #         y=field_dens + e_fdens, xmin=min(rdp_radii),
+    #         xmax=max(rdp_radii), color='k', ls=':', zorder=5)
+
     # Plot King profile.
     if kp_flag:
         axins.plot(kpf_xvals, kpf_yvals, 'g--', lw=1., zorder=3)
@@ -199,6 +197,10 @@ def pl_rad_dens(
             linestyles=':', lw=1.)
         axins.vlines(
             x=KP_Bys_rt[1], ymin=field_dens, ymax=y_mid_point, color='g', lw=1)
+    else:
+        axins.vlines(
+            x=clust_rad, ymin=field_dens, ymax=y_mid_point, lw=1.5, color='r',
+            zorder=10)
 
     axins.set_xscale('log')
     axins.set_yscale('log')
