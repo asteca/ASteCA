@@ -36,6 +36,10 @@ def main(
     extra_pars = [l1, l2, ..., l6]
     """
 
+    # If 'extra_pars_flag' is True and synth_clust = np.array([])
+    sigma, extra_pars, isoch_moved, mass_dist, isoch_binar, isoch_compl =\
+        [[] for _ in range(6)]
+
     # Return proper values for fixed parameters and parameters required
     # for the (z, log(age)) isochrone averaging.
     model_proper, z_model, a_model, ml, mh, al, ah = properModel(
@@ -44,7 +48,8 @@ def main(
     # Generate a weighted average isochrone from the (z, log(age)) values in
     # the 'model'.
     isochrone = zaWAverage.main(
-        theor_tracks, fundam_params, z_model, a_model, ml, mh, al, ah)
+        theor_tracks, m_ini_idx, fundam_params, z_model, a_model, ml, mh, al,
+        ah)
 
     # Extract parameters
     e, d, M_total, bin_frac = model_proper

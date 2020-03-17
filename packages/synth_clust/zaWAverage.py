@@ -2,7 +2,9 @@
 import numpy as np
 
 
-def main(theor_tracks, fundam_params, z_model, a_model, ml, mh, al, ah):
+def main(
+    theor_tracks, m_ini_idx, fundam_params, z_model, a_model, ml, mh, al,
+        ah):
     """
     Average a new (weighted) isochrone from the four closest points in the
     (z, a) grid.
@@ -61,6 +63,10 @@ def main(theor_tracks, fundam_params, z_model, a_model, ml, mh, al, ah):
     weights = inv_d / np.sum(inv_d)
     isochrone = isochs[0] * weights[0] + isochs[1] * weights[1] +\
         isochs[2] * weights[2] + isochs[3] * weights[3]
+
+    # Re-write the binary probabilities with the isochs[0] values. Values
+    # are random so it is indistinct which of the four arrays we choose.
+    isochrone[m_ini_idx - 2] = isochs[0][m_ini_idx - 2]
 
     # The above averaging assumes that the four isochrones are mass-aligned.
     # This is strictly *not true*, but since the four isochrones have

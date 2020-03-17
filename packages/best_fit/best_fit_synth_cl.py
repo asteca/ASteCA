@@ -107,10 +107,6 @@ def dataPrep(pd, clp):
     ext_coefs = extin_coefs.main(
         pd['cmd_systs'], pd['filters'], pd['colors'], ext_shape)
 
-    if pd['synth_rand_seed'] is not None:
-        print("Random seed set for synthetic clusters: {}".format(
-            pd['synth_rand_seed']))
-
     # Obtain mass distribution using the selected IMF. We run it once
     # because the array only depends on the IMF selected.
     st_dist_mass = imf.main(pd['IMF_name'], pd['fundam_params'][4])

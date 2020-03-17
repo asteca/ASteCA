@@ -363,7 +363,7 @@ FR  local      optm          0.5
 #   Number of MCMC chains used in the Bayesian analysis.
 #
 # * nruns: [int]
-#   Number of MCMC steps used in the Bayesian analysis. 
+#   Number of MCMC steps used in the Bayesian analysis.
 #
 # * nburn: [0.<float<1.]
 #   Percentage of chains to throw away as burn-in.
@@ -412,7 +412,7 @@ RS          n
 #   RB: binary fraction
 #
 #        min      max
-RZ    0.0005     0.03
+RZ       min      max
 RA         7       10
 RE         0        1
 RD         8       15
@@ -513,12 +513,12 @@ PS      1000         20     .25
 #     used.
 #
 #     prior      mean      stddev
-PTZ       u    0.0152       0.005
-PTA       u         8         0.5
-PTE       u       0.5        0.02
-PTD       u        14         0.5
-PTM       u      1000         500
-PTB       u       0.5         0.2
+PRZ       u    0.0152       0.005
+PRA       u         8         0.5
+PRE       u       0.5        0.02
+PRD       u        14         0.5
+PRM       u      1000         500
+PRB       u       0.5         0.2
 
 # emcee parameters.
 #
@@ -549,7 +549,7 @@ PT        20     20       y
 #   - N_step: [int], number of steps  used in the bootstrap process.
 #
 #    hperc    N_pop    N_step
-BT      .5       10       100
+BT     .5        50       100
 
 # Genetic Algorithm parameters.
 #
@@ -571,9 +571,9 @@ BT      .5       10       100
 #     exiting the GA.
 #
 #   n_pop  fdif  p_cross  cr_sel  p_mut  n_el  n_ei  n_es
-GA     50    1.     0.85      2P    0.1     1   100    50  
+GA     50    1.     0.85      2P   0.05     1   100    50  
 
-# Likelihood equation.
+# Likelihood.
 #
 # * likelihood: tremmel / dolphin / tolstoy
 #

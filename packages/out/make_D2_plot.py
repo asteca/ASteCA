@@ -12,7 +12,7 @@ from . prep_plots import figsize_x, figsize_y, grid_x, grid_y, cbartickssize
 
 
 def main(
-    npd, pd, synth_clst_plot, binar_idx_plot, shift_isoch, isoch_1sigma,
+    npd, pd, synth_clst_plot, binar_idx_plot, shift_isoch, synthcl_Nsigma,
     cl_max_mag, bf_bin_edges, err_lst, col_0_comb, mag_0_comb, col_1_comb,
         isoch_fit_params, isoch_fit_errors, **kwargs):
     """
@@ -32,7 +32,7 @@ def main(
                 new_pd = {i: pd[i] for i in pd if i != 'theor_tracks'}
                 pickle.dump((
                     npd, new_pd, synth_clst_plot, binar_idx_plot, shift_isoch,
-                    isoch_1sigma, cl_max_mag, bf_bin_edges, err_lst,
+                    synthcl_Nsigma, cl_max_mag, bf_bin_edges, err_lst,
                     col_0_comb, mag_0_comb, col_1_comb, isoch_fit_params,
                     isoch_fit_errors), handle)
 
@@ -48,11 +48,11 @@ def main(
         # Plot one ore more rows of CMDs/CCDs.
         hr_diags = prep_plots.packData(
             pd['lkl_method'], cl_max_mag, bf_bin_edges, synth_clst_plot,
-            binar_idx_plot, shift_isoch, isoch_1sigma, pd['colors'],
+            binar_idx_plot, shift_isoch, synthcl_Nsigma, pd['colors'],
             pd['filters'], col_0_comb, mag_0_comb, col_1_comb)
         for (x_phot_all, y_phot_all, x_phot_obs, y_phot_obs, x_synth_phot,
              y_synth_phot, binar_idx, hess_xedges, hess_yedges, x_isoch,
-             y_isoch, x_1sigma, y_1sigma, x_name, y_name, yaxis, i_obs_x,
+             y_isoch, phot_Nsigma, x_name, y_name, yaxis, i_obs_x,
              i_obs_y, gs_y1, gs_y2) in hr_diags:
 
             hess_x, hess_y, HD = prep_plots.get_hess(
@@ -61,6 +61,7 @@ def main(
             x_ax, y_ax = prep_plots.ax_names(x_name, y_name, yaxis)
             x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd =\
                 prep_plots.diag_limits(yaxis, x_phot_all, y_phot_all)
+            sy_sz_pt = prep_plots.phot_diag_st_size(x_synth_phot)
 
             arglist = [
                 # pl_hess_diag: Hess diagram 'observed - synthetic'
@@ -70,7 +71,7 @@ def main(
                 # pl_bf_synth_cl: Best fit synthetic cluster obtained.
                 [gs, gs_y1, gs_y2, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
                  x_ax, y_ax, hess_xedges, hess_yedges, x_synth_phot,
-                 y_synth_phot, binar_idx, pd['IMF_name'], pd['R_V'],
+                 y_synth_phot, sy_sz_pt, binar_idx, pd['IMF_name'], pd['R_V'],
                  best_sol, isoch_fit_errors, x_isoch, y_isoch,
                  pd['lkl_method'], pd['lkl_binning'],
                  pd['all_evol_tracks'], pd['evol_track']]
@@ -80,6 +81,7 @@ def main(
 
             v_min_mp, v_max_mp = prep_plots.da_colorbar_range(cl_max_mag, [])
             diag_fit_inv, dummy = prep_plots.da_phot_diag(cl_max_mag, [])
+            cl_sz_pt = prep_plots.phot_diag_st_size(diag_fit_inv)
             # Main photometric diagram of observed cluster.
             i_y = 0 if yaxis == 'mag' else 1
             # x axis is always a color so this the index is fixed to '1'.
@@ -90,8 +92,8 @@ def main(
             plot_observed_cluster(
                 fig, gs, gs_y1, gs_y2, x_ax, y_ax, cl_max_mag, x_min_cmd,
                 x_max_cmd, y_min_cmd, y_max_cmd, err_lst, v_min_mp, v_max_mp,
-                obs_x, obs_y, obs_MPs, hess_xedges, hess_yedges,
-                x_isoch, y_isoch, x_1sigma, y_1sigma)
+                obs_x, obs_y, obs_MPs, cl_sz_pt, hess_xedges, hess_yedges,
+                x_isoch, y_isoch, phot_Nsigma)
 
         # Generate output file.
         plt.savefig(
@@ -110,7 +112,7 @@ def main(
 def plot_observed_cluster(
     fig, gs, gs_y1, gs_y2, x_ax, y_ax, cl_max_mag, x_min_cmd, x_max_cmd,
     y_min_cmd, y_max_cmd, err_lst, v_min_mp, v_max_mp, obs_x, obs_y, obs_MPs,
-        hess_xedges, hess_yedges, x_isoch, y_isoch, x_1sigma, y_1sigma):
+        cl_sz_pt, hess_xedges, hess_yedges, x_isoch, y_isoch, phot_Nsigma):
     """
     This function is called separately since we need to retrieve some
     information from it to plot that #$%&! colorbar.
@@ -121,7 +123,7 @@ def plot_observed_cluster(
     plot_colorbar, sca, trans = mp_best_fit2.pl_mps_phot_diag(
         gs, gs_y1, gs_y2, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
         x_ax, y_ax, v_min_mp, v_max_mp, obs_x, obs_y, obs_MPs, err_bar,
-        hess_xedges, hess_yedges, x_isoch, y_isoch, x_1sigma, y_1sigma)
+        cl_sz_pt, hess_xedges, hess_yedges, x_isoch, y_isoch, phot_Nsigma)
 
     # Ignore warning issued by colorbar plotted in photometric diagram with
     # membership probabilities.

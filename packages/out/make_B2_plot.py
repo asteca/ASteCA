@@ -42,8 +42,8 @@ def main(
             err_bar_cl1 = prep_plots.error_bars(
                 cl_region_c, x_min_cmd1, err_lst)
 
-        f_sz_pt = prep_plots.phot_diag_st_size(len(stars_f_acpt[0]))
-        cl_sz_pt = prep_plots.phot_diag_st_size(len(cl_region_c))
+        f_sz_pt = prep_plots.phot_diag_st_size(stars_f_acpt[0])
+        cl_sz_pt = prep_plots.phot_diag_st_size(cl_region_c)
         x_min, x_max, y_min, y_max = prep_plots.frame_max_min(
             cld_c['x'], cld_c['y'])
         asp_ratio = prep_plots.aspect_ratio(x_min, x_max, y_min, y_max)

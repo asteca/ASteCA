@@ -65,13 +65,17 @@ def main(
                 pd['colors'][i], pd['filters'][0], 'mag')
             x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd =\
                 prep_plots.diag_limits('mag', cols_all, mags_all)
+            cl_c_sz_pt = prep_plots.phot_diag_st_size(mags_c)
+            cl_i_sz_pt = prep_plots.phot_diag_st_size(mags_i)
+
             # Color indexes for the 'local_cell_clean' edges
             c1, c2 = i + 1, 0
             plot_colorbar, sca, trans, v_min_mp, v_max_mp =\
                 mp_decont_photom.pl_mps_incomp_diags(
                     gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax,
                     y_ax, col_c, mags_c, colors_c, col_i, mags_i, colors_i,
-                    pd['fld_clean_mode'], local_rm_edges, c1, c2, j_gs)
+                    cl_c_sz_pt, cl_i_sz_pt, pd['fld_clean_mode'],
+                    local_rm_edges, c1, c2, j_gs)
             all_colorbars.append((
                 plot_colorbar, sca, trans, v_min_mp, v_max_mp))
             j_gs += 1
@@ -84,20 +88,25 @@ def main(
                 prep_plots.diag_limits('col', cols0_all, cols1_all)
             x_ax, y_ax = prep_plots.ax_names(
                 pd['colors'][i], pd['colors'][j], 'col')
+            cl_c_sz_pt = prep_plots.phot_diag_st_size(cols_c[i])
+            cl_i_sz_pt = prep_plots.phot_diag_st_size(cols_i[i])
+
             # Color indexes for the 'local_cell_clean' edges
             c1, c2 = i + 1, j + 1
             plot_colorbar, sca, trans, v_min_mp, v_max_mp =\
                 mp_decont_photom.pl_mps_incomp_diags(
                     gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax,
                     y_ax, cols_c[i], cols_c[j], colors_c,
-                    cols_i[i], cols_i[j], colors_i, pd['fld_clean_mode'],
-                    local_rm_edges, c1, c2, j_gs)
+                    cols_i[i], cols_i[j], colors_i, cl_c_sz_pt, cl_i_sz_pt,
+                    pd['fld_clean_mode'], local_rm_edges, c1, c2, j_gs)
             all_colorbars.append((
                 plot_colorbar, sca, trans, v_min_mp, v_max_mp))
             j_gs += 1
 
         diag_fit_inv, diag_no_fit_inv = prep_plots.da_phot_diag(
             cl_reg_fit, cl_reg_no_fit)
+        cl_f_sz_pt = prep_plots.phot_diag_st_size(diag_fit_inv)
+        cl_nf_sz_pt = prep_plots.phot_diag_st_size(diag_no_fit_inv)
         # Uses first magnitude and color defined
         x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd = prep_plots.diag_limits(
             'mag', col_0_comb, mag_0_comb)
@@ -109,7 +118,8 @@ def main(
         plot_colorbar, sca, trans = mp_decont_photom.pl_mps_phot_diag(
             gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax,
             y_ax, v_min_mp_comp, v_max_mp_comp, diag_fit_inv, diag_no_fit_inv,
-            err_bar, pd['fld_clean_mode'], local_rm_edges)
+            cl_f_sz_pt, cl_nf_sz_pt, err_bar, pd['fld_clean_mode'],
+            local_rm_edges)
         all_colorbars.append((
             plot_colorbar, sca, trans, v_min_mp_comp, v_max_mp_comp))
 
