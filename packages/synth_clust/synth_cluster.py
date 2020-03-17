@@ -36,6 +36,10 @@ def main(
     extra_pars = [l1, l2, ..., l6]
     """
 
+    # If 'extra_pars_flag' is True and synth_clust = np.array([])
+    sigma, extra_pars, isoch_moved, mass_dist, isoch_binar, isoch_compl =\
+        [[] for _ in range(6)]
+
     # Return proper values for fixed parameters and parameters required
     # for the (z, log(age)) isochrone averaging.
     model_proper, z_model, a_model, ml, mh, al, ah = properModel(
