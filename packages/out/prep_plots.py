@@ -158,14 +158,18 @@ def star_size(mag, N=None, zmin=None, zmax=None):
 
 def phot_diag_st_size(x):
     """
-    Calculate optimal size for stars in photometric diagram.
+    Size for stars in photometric diagram given a linear relation:
+    x, y = (1., 5000.), (18., 3.)
     """
-    a, b, c, d = 2.99, -2.81, 563.36, 15.02
-    if x != 0:
-        return ((a - d) / (1 + ((x / c) ** b))) + d
-    else:
-        # If no field regions were defined.
+    N = len(x)
+    if N == 0:
         return 0.
+    elif N >= 5000:
+        return 3.
+    else:
+        # coeffs = np.polyfit(x, y, 1)
+        coeffs = [-0.003, 18.]
+        return np.poly1d(coeffs)(N)
 
 
 def zoomed_frame(x, y, mags, x_zmin, x_zmax, y_zmin, y_zmax):

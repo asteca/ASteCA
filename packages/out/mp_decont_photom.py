@@ -135,8 +135,8 @@ def pl_chart_mps(
 
 def pl_mps_phot_diag(
     gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax, v_min_mp,
-    v_max_mp, diag_fit_inv, diag_no_fit_inv, err_bar, mode_fld_clean,
-        local_rm_edges):
+    v_max_mp, diag_fit_inv, diag_no_fit_inv, cl_f_sz_pt, cl_nf_sz_pt, err_bar,
+        mode_fld_clean, local_rm_edges):
     """
     Star's membership probabilities on cluster's photometric diagram.
     """
@@ -181,16 +181,18 @@ def pl_mps_phot_diag(
         col_select_fit, col_select_no_fit = '#4682b4', '#4682b4'
         plot_colorbar = False
     # Plot stars *not* used in the best fit process.
-    plt.scatter(diag_no_fit_inv[1][0], diag_no_fit_inv[0][0], marker='o',
-                c=col_select_no_fit, s=25, cmap=cm, lw=0.5, edgecolor='k',
-                alpha=0.5, vmin=v_min_mp, vmax=v_max_mp, zorder=2)
+    plt.scatter(
+        diag_no_fit_inv[1][0], diag_no_fit_inv[0][0], marker='o',
+        c=col_select_no_fit, s=cl_nf_sz_pt, cmap=cm, lw=0.3, edgecolor='k',
+        alpha=0.5, vmin=v_min_mp, vmax=v_max_mp, zorder=2)
     # Draw horizontal line over stars discarded.
     plt.scatter(diag_no_fit_inv[1][0], diag_no_fit_inv[0][0],
                 marker='_', c='k', lw=0.5, alpha=0.5, zorder=3)
     # Plot stars used in the best fit process.
-    sca = plt.scatter(diag_fit_inv[1][0], diag_fit_inv[0][0], marker='o',
-                      c=col_select_fit, s=30, cmap=cm, lw=0.5, edgecolor='k',
-                      vmin=v_min_mp, vmax=v_max_mp, zorder=4)
+    sca = plt.scatter(
+        diag_fit_inv[1][0], diag_fit_inv[0][0], marker='o', c=col_select_fit,
+        s=cl_f_sz_pt, cmap=cm, lw=0.3, edgecolor='k', vmin=v_min_mp,
+        vmax=v_max_mp, zorder=4)
     # If list is not empty, plot error bars at several values.
     if x_val:
         plt.errorbar(
@@ -204,8 +206,8 @@ def pl_mps_phot_diag(
 
 def pl_mps_incomp_diags(
     gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
-    xdata_c, ydata_c, coldata_c, xdata_i, ydata_i, coldata_i,
-        mode_fld_clean, local_rm_edges, c1, c2, gspos_idx):
+    xdata_c, ydata_c, coldata_c, xdata_i, ydata_i, coldata_i, cl_c_sz_pt,
+        cl_i_sz_pt, mode_fld_clean, local_rm_edges, c1, c2, gspos_idx):
     """
     Star's membership probabilities on cluster's photometric diagram.
     """
@@ -254,12 +256,12 @@ def pl_mps_incomp_diags(
     plot_colorbar = True if v_min_mp != v_max_mp else False
     # Plot stars used in the best fit process.
     sca = plt.scatter(
-        xdata_c, ydata_c, marker='o', c=coldata_c, s=30, cmap=cm, lw=0.5,
-        edgecolor='k', vmin=v_min_mp, vmax=v_max_mp, zorder=4)
+        xdata_c, ydata_c, marker='o', c=coldata_c, s=cl_c_sz_pt, cmap=cm,
+        lw=0.3, edgecolor='k', vmin=v_min_mp, vmax=v_max_mp, zorder=4)
     if sum(~np.isnan(xdata_i) & ~np.isnan(ydata_i)) > 0:
         plt.scatter(
-            xdata_i, ydata_i, marker='^', c=coldata_i, s=30, cmap=cm, lw=0.5,
-            edgecolor='k', zorder=6)
+            xdata_i, ydata_i, marker='^', c=coldata_i, s=cl_i_sz_pt, cmap=cm,
+            lw=0.3, edgecolor='k', zorder=6)
     # For plotting the colorbar
     trans = ax.transAxes + fig.transFigure.inverted()
 
