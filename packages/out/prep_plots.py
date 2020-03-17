@@ -372,7 +372,7 @@ def p2_ranges(p2, min_max_p):
 
 def packData(
     lkl_method, cl_max_mag, bf_bin_edges, synth_clst_plot, binar_idx_plot,
-    shift_isoch, isoch_1sigma, colors, filters, col_0_comb, mag_0_comb,
+    shift_isoch, synthcl_Nsigma, colors, filters, col_0_comb, mag_0_comb,
         col_1_comb):
     """
     Properly select and pack data for CMD/CCD of observed and synthetic
@@ -400,13 +400,10 @@ def packData(
     # index 3. This is why 'N_mags' is used as the 'first color' index.
     frst_col_isoch, frst_mag_isoch = shift_isoch[N_mags], shift_isoch[0]
 
-    # # In place for #460
-    # # 1 sigma region
-    # frst_col_1sigma, frst_mag_1sigma = np.array([]), np.array([])
-    # if isoch_1sigma.any():
-    #     frst_col_1sigma, frst_mag_1sigma = isoch_1sigma[:, N_mags, :],\
-    #         isoch_1sigma[:, 0, :]
-    frst_col_1sigma, frst_mag_1sigma = [], []
+    # 1 sigma region
+    mag_col1_1sigma = []
+    if synthcl_Nsigma.any():
+        mag_col1_1sigma = [synthcl_Nsigma[N_mags], synthcl_Nsigma[0]]
 
     # gs plot coords.
     gs_y1, gs_y2 = 0, 2
@@ -415,7 +412,7 @@ def packData(
     hr_diags = [
         [x_phot_all, y_phot_all, frst_obs_col, frst_obs_mag, frst_synth_col,
          frst_synth_mag, binar_idx_plot, frst_col_edgs, frst_mag_edgs,
-         frst_col_isoch, frst_mag_isoch, frst_col_1sigma, frst_mag_1sigma,
+         frst_col_isoch, frst_mag_isoch, mag_col1_1sigma,
          colors[0], filters[0], 'mag', i_obs_x, i_obs_y, gs_y1, gs_y2]]
 
     # If more than one color was defined, plot an extra CMD (main magnitude
@@ -426,11 +423,11 @@ def packData(
         scnd_col_edgs = bin_edges[2]
         scnd_col_isoch = shift_isoch[N_mags + 1]
 
-        # # In place for #460
-        # scnd_col_1sigma = np.array([])
-        # if isoch_1sigma.any():
-        #     scnd_col_1sigma = isoch_1sigma[:, N_mags + 1, :]
-        scnd_col_1sigma = []
+        mag_col2_1sigma, col1_col2_1sigma = [], []
+        if synthcl_Nsigma.any():
+            mag_col2_1sigma = [synthcl_Nsigma[N_mags + 1], synthcl_Nsigma[0]]
+            col1_col2_1sigma = [
+                synthcl_Nsigma[N_mags], synthcl_Nsigma[N_mags + 1]]
 
         # CMD of main magnitude and second color defined.
         x_phot_all, y_phot_all = col_1_comb, mag_0_comb
@@ -439,9 +436,8 @@ def packData(
         hr_diags.append(
             [x_phot_all, y_phot_all, scnd_obs_col, frst_obs_mag,
              scnd_synth_col, frst_synth_mag, binar_idx_plot, scnd_col_edgs,
-             frst_mag_edgs, shift_isoch[2], frst_mag_isoch, scnd_col_1sigma,
-             frst_mag_1sigma, colors[1], filters[0], 'mag', i_obs_x, i_obs_y,
-             gs_y1, gs_y2])
+             frst_mag_edgs, shift_isoch[2], frst_mag_isoch, mag_col2_1sigma,
+             colors[1], filters[0], 'mag', i_obs_x, i_obs_y, gs_y1, gs_y2])
         # CCD of first and second color defined.
         x_phot_all, y_phot_all = col_0_comb, col_1_comb
         gs_y1, gs_y2 = 4, 6
@@ -449,9 +445,8 @@ def packData(
         hr_diags.append(
             [x_phot_all, y_phot_all, frst_obs_col, scnd_obs_col,
              frst_synth_col, scnd_synth_col, binar_idx_plot, frst_col_edgs,
-             scnd_col_edgs, frst_col_isoch, scnd_col_isoch, frst_col_1sigma,
-             scnd_col_1sigma, colors[0], colors[1], 'col', i_obs_x, i_obs_y,
-             gs_y1, gs_y2])
+             scnd_col_edgs, frst_col_isoch, scnd_col_isoch, col1_col2_1sigma,
+             colors[0], colors[1], 'col', i_obs_x, i_obs_y, gs_y1, gs_y2])
 
     return hr_diags
 
