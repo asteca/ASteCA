@@ -19,7 +19,7 @@ def pl_mp_histo(
         ax = plt.subplot(gs[0:2, 0:2])
         plt.xlim(0., 1.)
         plt.xlabel('MP', fontsize=xylabelsize)
-        plt.ylabel('N (normalized)', fontsize=xylabelsize)
+        plt.ylabel('N', fontsize=xylabelsize)
         ax.minorticks_on()
         ax.tick_params(axis='both', which='major', labelsize=xytickssize)
         ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
@@ -29,7 +29,7 @@ def pl_mp_histo(
         n_bins = int((max(prob_data) - min(prob_data)) / 0.025)
         if n_bins > 0:
             # Normalized histogram.
-            n, bins, patches = plt.hist(prob_data, n_bins, density=True)
+            n, bins, patches = plt.hist(prob_data, n_bins)
             # Get bin centers.
             bin_centers = 0.5 * (bins[:-1] + bins[1:])
             # scale values to interval [0,1]
@@ -53,8 +53,10 @@ def pl_mp_histo(
         probs_x = np.sort(prob_data)[::-1]
         cum_sum_MPs = np.arange(len(prob_data))
         ax2.plot(probs_x, cum_sum_MPs, ls='--', c='k', lw=1.5)
-        ax2.tick_params(axis='both', which='major', labelsize=xytickssize)
+        ax2.set_ylabel("N (<MP)", fontsize=xylabelsize - 2., rotation=0)
+        ax2.tick_params(axis='both', which='major', labelsize=xytickssize - 2.)
         ax2.tick_params(axis='y', rotation=45)
+        ax2.yaxis.set_label_coords(1.03, 1.03)
 
         # Add text box.
         str_pm = ['MP', '\geq', 'prob']
@@ -70,6 +72,7 @@ def pl_mp_histo(
             len(cl_reg_fit), str_pm[0], str_pm[1], str_pm[2])
         text = text0 + '\n' + text1 + '\n' + text2 + '\n' + text3
         plt.plot([], label=text)
+
         plt.legend(fontsize=legendsize, handlelength=0)
         # Avoid showing the value 0.0 in the y axis.
         plt.ylim(0.001, plt.ylim()[1])
@@ -162,10 +165,12 @@ def pl_mps_phot_diag(
         # Use first magnitude and color.
         for x_ed in local_rm_edges[1]:
             # vertical lines
-            ax.axvline(x_ed, linestyle=':', lw=.8, color='k', zorder=1)
+            ax.axvline(x_ed, linestyle=grid_ls, lw=grid_lw, color=grid_col,
+                       zorder=1)
         for y_ed in local_rm_edges[0]:
             # horizontal lines
-            ax.axhline(y_ed, linestyle=':', lw=.8, color='k', zorder=1)
+            ax.axhline(y_ed, linestyle=grid_ls, lw=grid_lw, color=grid_col,
+                       zorder=1)
     else:
         ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
                 lw=grid_lw, zorder=1)
@@ -238,10 +243,12 @@ def pl_mps_incomp_diags(
         # Use first magnitude and color.
         for x_ed in local_rm_edges[c1]:
             # vertical lines
-            ax.axvline(x_ed, linestyle=':', lw=.8, color='k', zorder=1)
+            ax.axvline(x_ed, linestyle=grid_ls, lw=grid_lw, color=grid_col,
+                       zorder=1)
         for y_ed in local_rm_edges[c2]:
             # horizontal lines
-            ax.axhline(y_ed, linestyle=':', lw=.8, color='k', zorder=1)
+            ax.axhline(y_ed, linestyle=grid_ls, lw=grid_lw, color=grid_col,
+                       zorder=1)
     else:
         ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
                 lw=grid_lw, zorder=1)
