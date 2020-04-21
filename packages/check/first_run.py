@@ -33,11 +33,11 @@ def main(mypath):
         else:
             print("ERROR: No 'packages/.first_run' file present.\n")
     except Exception:
-        print("ERROR: Could not check/copy input data files and folders.\n")
         print(traceback.format_exc())
+        print("ERROR: Could not check/copy input data files and folders.\n")
 
     if first_run_flag:
-        raise ValueError("First run processes completed.\n")
+        print("First run processes completed.\n")
 
     return first_run_flag
 
