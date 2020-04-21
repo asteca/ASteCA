@@ -10,8 +10,8 @@ def main(clp, npd, bf_flag, best_fit_algor, fundam_params, filters, colors,
     by the 'Best Fit' function.
     """
 
-    clp['synth_clst_plot'], clp['binar_idx_plot'], clp['shift_isoch'] =\
-        [], [], []
+    clp['synth_clst_plot'], clp['binar_idx_plot'], clp['shift_isoch'],\
+        clp['synthcl_Nsigma'] = [np.array([]) for _ in range(4)]
     if bf_flag:
 
         isoch_moved, synth_clst, sigma, extra_pars, synthcl_Nsigma =\
@@ -66,7 +66,7 @@ def main(clp, npd, bf_flag, best_fit_algor, fundam_params, filters, colors,
 def synth_cl_plot(
     best_fit_algor, fundam_params, isoch_fit_params, isoch_fit_errors,
     theor_tracks, completeness, max_mag_syn, st_dist_mass, R_V, ext_coefs,
-        N_fc, err_pars, m_ini_idx, binar_flag, N_models=500):
+        N_fc, err_pars, m_ini_idx, binar_flag, N_models=1000):
     """
     Generate a synthetic cluster and a N(mu, sigma) region for plotting, from
     'N_models' models.
