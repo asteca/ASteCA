@@ -42,7 +42,7 @@ MR   nam
 PI       id      x       y       px         n
 
 # Columns for the photometric data. The IDs for the supported photometric
-# systems are stored in the 'phot_systs.dat' file
+# systems are stored in the 'CMD_systs.dat' file
 #
 #  * mag, e_mag: Magnitude and uncertainty.
 #
