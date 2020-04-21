@@ -148,3 +148,4 @@ def plot_observed_cluster(
             sca, cax=cbaxes, ticks=[v_min_mp, v_max_mp],
             orientation='horizontal')
         cbar.ax.tick_params(labelsize=cbartickssize)
+        # cbar.ax.set_title('MP', x=1.2, y=-.5)
