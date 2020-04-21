@@ -6,7 +6,8 @@ from . import add_version_plot
 from . import prep_plots
 from ..structure.king_profile import centDens, KingProf
 from . prep_plots import figsize_x, figsize_y, grid_x, grid_y
-from . prep_plots import xylabelsize, xytickssize, titlesize, legendsize
+from . prep_plots import xylabelsize, xytickssize, titlesize, legendsize,\
+    grid_col, grid_ls, grid_lw
 
 
 def main(
@@ -50,7 +51,8 @@ def main(
         ax.minorticks_on()
         ax.tick_params(axis='both', which='major', labelsize=xytickssize)
         # Set grid
-        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5)
+        ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
+                lw=grid_lw)
         t1 = r'$N_{{cluster}} = ${}'.format(len(isoch_moved[1]))
         t2 = r'${}_{{min}} = ${:.1f}'.format(y_ax, max_mag_syn)
         t3 = r'$z = ${:.4f}'.format(model[0])
@@ -77,7 +79,8 @@ def main(
         ax = plt.subplot(gs[0:1, 2:4])
         ax.minorticks_on()
         ax.tick_params(axis='both', which='major', labelsize=xytickssize)
-        ax.grid(b=True, which='major', color='grey', linestyle='-', lw=.5)
+        ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
+                lw=grid_lw)
         plt.hist(mass_dist, 50)
         plt.xlabel(r"$\log \, m\;[M_{\odot}]$", fontsize=xylabelsize)
         plt.ylabel(r'$\log \, N$', fontsize=xylabelsize)
@@ -93,7 +96,8 @@ def main(
         ax.tick_params(axis='both', which='major', labelsize=xytickssize)
         # Backg color.
         ax.set_facecolor('#D8D8D8')
-        ax.grid(b=True, which='major', color='w', linestyle='-', lw=.5)
+        ax.grid(
+            b=True, which='major', color='w', linestyle=grid_ls, lw=grid_lw)
         # Plot stars.
         _, edges, _ = plt.hist(
             isoch_binar[0], bins=50, color='blue', histtype='step', zorder=4,
@@ -110,7 +114,8 @@ def main(
 
         # Magnitude error
         ax = plt.subplot(gs[0, 4:6])
-        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5)
+        ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
+                lw=grid_lw)
         # Set plot limits
         plt.xlim(min(synth_clust[0]) - 0.5, max(synth_clust[0]) + 0.5)
         plt.ylim(
@@ -133,7 +138,8 @@ def main(
 
         # Color color error
         ax = plt.subplot(gs[1, 4:6])
-        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5)
+        ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
+                lw=grid_lw)
         # Set plot limits
         plt.xlim(min(synth_clust[0]) - 0.5, max(synth_clust[0]) + 0.5)
         plt.ylim(
@@ -152,7 +158,8 @@ def main(
 
         # King's profile
         ax = plt.subplot(gs[2:4, 0:2])
-        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5)
+        ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
+                lw=grid_lw)
         ax.minorticks_on()
         ax.tick_params(axis='both', which='major', labelsize=xytickssize)
         plt.title(r"$r_{{c}}=${:.0f}, $r_{{t}}=${:.0f}".format(rc, rt))
@@ -199,8 +206,8 @@ def main(
         ax.minorticks_on()
         ax.tick_params(axis='both', which='major', labelsize=xytickssize)
         # Set grid
-        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
-                zorder=1)
+        ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
+                lw=grid_lw, zorder=1)
         # Plot stars.
         plt.scatter(
             synth_field[1], synth_field[0], marker='o', c='k', s=5, lw=.3,

@@ -6,7 +6,8 @@ from itertools import cycle
 from ..structure.king_profile import KingProf as kpf
 from . import BayesPlots
 from .. import aux_funcs
-from . prep_plots import xylabelsize, xytickssize, legendsize, titlesize
+from . prep_plots import xylabelsize, xytickssize, legendsize, titlesize,\
+    grid_col, grid_ls, grid_lw
 
 
 def pl_rad_find(
@@ -43,7 +44,8 @@ def pl_rad_find(
     plt.ylabel(r"$N_{memb}\;|\;N_{field}\;|\;CI$", fontsize=xylabelsize)
     ax.tick_params(axis='both', which='major', labelsize=xytickssize)
 
-    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5)
+    ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
+            lw=grid_lw)
 
     plt.plot(rad_rads, rad_N_membs, c='g', label=r'$N_{memb}$')
     plt.plot(rad_rads, rad_N_field, c='b', ls='--', label=r'$N_{field}$')
@@ -105,7 +107,8 @@ def pl_rad_dens(
     plt.ylabel(r"$\rho$ $[st/{}^{{2}}]$".format(coord2), fontsize=xylabelsize)
     ax.tick_params(axis='both', which='major', labelsize=xytickssize)
     ax.ticklabel_format(axis='y', style='sci', scilimits=(0, 0))
-    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5)
+    ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
+            lw=grid_lw)
 
     # Legend texts
     r_frmt = '{:.0f}' if coord2 == 'px' else '{:.2f}'
@@ -173,7 +176,8 @@ def pl_rad_dens(
     # ax = plt.subplot(gs[2:4, 4:6])
     axins = inset_axes(ax, width=2.5, height=2.5)
     axins.minorticks_on()
-    axins.grid(b=True, which='both', color='gray', linestyle='--', lw=.25)
+    axins.grid(b=True, which='both', color=grid_col, linestyle=grid_ls,
+               lw=grid_lw)
     # plt.xlabel(r'log(radius) $[{}]$'.format(coord2), fontsize=8)
     # plt.ylabel(r"log($\rho$) $[st/{}^{{2}}]$".format(coord2), fontsize=8)
     axins.tick_params(axis='both', which='both', labelsize=6)
@@ -357,8 +361,8 @@ def pl_mag_membs(gs, y_ax, kp_flag, membvsmag):
     else:
         ax = plt.subplot(gs[2:4, 2:4])
     ax.minorticks_on()
-    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
-            zorder=0)
+    ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
+            lw=grid_lw, zorder=0)
     ax.set_title(
         r"$N_{{memb}}$ vs magnitude cut (phot incomp)", fontsize=titlesize)
     plt.xlabel('$' + y_ax + '$', fontsize=xylabelsize)
@@ -393,7 +397,8 @@ def pl_cl_fl_regions(
 
     # Set minor ticks
     ax.minorticks_on()
-    ax.grid(b=True, which='both', color='gray', linestyle='--', lw=.5)
+    ax.grid(b=True, which='both', color=grid_col, linestyle=grid_ls,
+            lw=grid_lw)
     # Radius
     circle = plt.Circle((kde_cent[0], kde_cent[1]), clust_rad,
                         color='k', fill=False)

@@ -6,7 +6,8 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
 # from matplotlib.colors import LinearSegmentedColormap
 import matplotlib.offsetbox as offsetbox
-from . prep_plots import xylabelsize, xytickssize, titlesize, legendsize
+from . prep_plots import xylabelsize, xytickssize, titlesize, legendsize,\
+    grid_col, grid_ls, grid_lw
 
 
 def pl_cl_fl_regions(
@@ -29,7 +30,8 @@ def pl_cl_fl_regions(
     # Set minor ticks
     ax.minorticks_on()
     ax.tick_params(axis='both', which='major', labelsize=xytickssize)
-    ax.grid(b=True, which='both', color='gray', linestyle='--', lw=.5)
+    ax.grid(b=True, which='both', color=grid_col, linestyle=grid_ls,
+            lw=grid_lw)
 
     # Plot cluster region.
     if len(cl_region_rjct_c) > 0:
@@ -62,8 +64,8 @@ def pl_lum_func(gs, y_ax, flag_no_fl_regs, lum_func):
     # Only draw units on axis (ie: 1, 2, 3)
     ax.xaxis.set_major_locator(MultipleLocator(2.0))
     ax.tick_params(axis='both', which='major', labelsize=xytickssize)
-    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
-            zorder=1)
+    ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
+            lw=grid_lw, zorder=1)
     # Set axis labels
     plt.xlabel('$' + y_ax + '$', fontsize=xylabelsize)
     plt.ylabel('$N^{\star}/A_{cl}$', fontsize=xylabelsize)
@@ -106,8 +108,8 @@ def pl_data_rm_perc(
     ax.set_title("Percentage of stars kept after each process",
                  fontsize=titlesize)
     ax.minorticks_on()
-    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
-            zorder=1)
+    ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
+            lw=grid_lw, zorder=1)
     ax.tick_params(axis='both', which='major', labelsize=xytickssize)
     # Set axis labels
     plt.xlabel('$' + y_ax + '$', fontsize=xylabelsize)
@@ -165,8 +167,8 @@ def clCMD(
     plt.ylabel('$' + y_ax + '$', fontsize=xylabelsize)
     # Set minor ticks
     ax.minorticks_on()
-    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
-            zorder=1)
+    ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
+            lw=grid_lw, zorder=1)
     ax.tick_params(axis='both', which='major', labelsize=xytickssize)
     # Add text box.
     text = r'$N_{{memb}} \approx {}$'.format(n_memb)
@@ -285,8 +287,8 @@ def hessKDE(
     ax.contour(xx, yy, diff, colors='k', linewidths=.5)
     # ax.clabel(CS, inline=1, fontsize=10)
 
-    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
-            zorder=3)
+    ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
+            lw=grid_lw, zorder=3)
     plt.gca().invert_yaxis()
 
 
@@ -332,8 +334,8 @@ def flCMD(
     # Set minor ticks
     ax.minorticks_on()
     ax.tick_params(axis='both', which='major', labelsize=xytickssize)
-    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
-            zorder=1)
+    ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
+            lw=grid_lw, zorder=1)
     # Plot accepted/rejected stars within the field regions defined.
     if x_fr_rject:
         plt.scatter(x_fr_rject, y_fr_rject, marker='x',

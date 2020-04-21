@@ -5,7 +5,7 @@ from matplotlib.patches import Ellipse, Rectangle
 import numpy as np
 from astropy.stats import sigma_clipped_stats
 from . prep_plots import xylabelsize, xytickssize, titlesize, cbarlabelsize,\
-    cbartickssize, legendsize
+    cbartickssize, legendsize, grid_col, grid_ls, grid_lw
 
 
 def pms_VPD_all(gs, xlabel, PM_KDE_std, coord, y_ax, allfr_PMs):
@@ -19,8 +19,8 @@ def pms_VPD_all(gs, xlabel, PM_KDE_std, coord, y_ax, allfr_PMs):
         fontsize=titlesize)
     ax.minorticks_on()
     ax.tick_params(axis='both', which='major', labelsize=xytickssize)
-    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
-            zorder=-1)
+    ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
+            lw=grid_lw, zorder=-1)
     plt.xlabel(xlabel, fontsize=xylabelsize)
     plt.ylabel(r"$\mu_{{\delta}} \, \mathrm{[mas/yr]}$", fontsize=xylabelsize)
 
@@ -91,8 +91,8 @@ def pms_coords_all(
         fontsize=titlesize)
     ax.minorticks_on()
     ax.tick_params(axis='both', which='major', labelsize=xytickssize)
-    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
-            zorder=-1)
+    ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
+            lw=grid_lw, zorder=-1)
     plt.xlabel('{} ({})'.format(x_name, coord), fontsize=xylabelsize)
     plt.ylabel('{} ({})'.format(y_name, coord), fontsize=xylabelsize)
 
@@ -145,8 +145,8 @@ def pms_VPD_zoom(
     ax = plt.subplot(gs[2:4, 0:2])
     ax.minorticks_on()
     ax.tick_params(axis='both', which='major', labelsize=xytickssize)
-    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
-            zorder=1)
+    ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
+            lw=grid_lw, zorder=1)
     plt.xlabel(xlabel, fontsize=xylabelsize)
     plt.ylabel(r"$\mu_{{\delta}} \, \mathrm{[mas/yr]}$", fontsize=xylabelsize)
 
@@ -185,8 +185,8 @@ def pms_VPD_zoom_KDE(
         fontsize=titlesize)
     ax.minorticks_on()
     ax.tick_params(axis='both', which='major', labelsize=xytickssize)
-    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
-            zorder=1)
+    ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
+            lw=grid_lw, zorder=1)
 
     plt.xlabel(xlabel, fontsize=xylabelsize)
     plt.ylabel(r"$\mu_{{\delta}} \, \mathrm{[mas/yr]}$", fontsize=xylabelsize)
@@ -237,8 +237,8 @@ def pms_VPD_zoom_MP(gs, xlabel, coord, clreg_PMs, fregs_PMs, raPMrng, dePMrng):
     ax = plt.subplot(gs[2:4, 4:6])
     ax.minorticks_on()
     ax.tick_params(axis='both', which='major', labelsize=xytickssize)
-    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
-            zorder=1)
+    ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
+            lw=grid_lw, zorder=1)
 
     plt.xlabel(xlabel, fontsize=xylabelsize)
     plt.ylabel(r"$\mu_{{\delta}} \, \mathrm{[mas/yr]}$", fontsize=xylabelsize)
@@ -276,8 +276,8 @@ def pms_vs_mag(
     def axplot(ax, x_range, xlabel, cl_x, cl_y, fr_x, fr_y):
         ax.minorticks_on()
         ax.tick_params(axis='both', which='major', labelsize=xytickssize)
-        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
-                zorder=1)
+        ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
+                lw=grid_lw, zorder=1)
 
         ax.set_xlabel(xlabel, fontsize=xylabelsize)
         ax.set_ylabel(y_ax, fontsize=xylabelsize)
@@ -307,8 +307,8 @@ def pms_dist(gs, y_ax, clreg_PMs, pm_dist_max):
     ax = plt.subplot(gs[4:6, 4:6])
     ax.minorticks_on()
     ax.tick_params(axis='both', which='major', labelsize=xytickssize)
-    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
-            zorder=1)
+    ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
+            lw=grid_lw, zorder=1)
 
     ax.set_title("Distance to KDE's cluster max", fontsize=titlesize)
     plt.xlabel("PM dist [mas/yr]", fontsize=xylabelsize)

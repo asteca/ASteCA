@@ -3,7 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.offsetbox as offsetbox
 from matplotlib.colors import LinearSegmentedColormap, LogNorm, ListedColormap
-from . prep_plots import xylabelsize, xytickssize, titlesize, legendsize
+from . prep_plots import xylabelsize, xytickssize, titlesize, legendsize,\
+    grid_col, grid_ls, grid_lw
 
 
 def pl_mps_phot_diag(
@@ -32,10 +33,12 @@ def pl_mps_phot_diag(
     # Plot grid.
     for x_ed in hess_xedges:
         # vertical lines
-        ax.axvline(x_ed, linestyle=':', lw=.8, color='k', zorder=1)
+        ax.axvline(
+            x_ed, linestyle=grid_ls, lw=grid_lw, color=grid_col, zorder=1)
     for y_ed in hess_yedges:
         # horizontal lines
-            ax.axhline(y_ed, linestyle=':', lw=.8, color='k', zorder=1)
+            ax.axhline(
+                y_ed, linestyle=grid_ls, lw=grid_lw, color=grid_col, zorder=1)
     # This reversed colormap means higher prob stars will look redder.
     rmap = plt.cm.get_cmap('RdYlBu_r')
     # If the 'tolstoy' method was used AND the stars have a range of colors.
@@ -165,13 +168,14 @@ def pl_bf_synth_cl(
             text, pad=.2, loc=1, prop=dict(size=legendsize))
         ob.patch.set(alpha=0.85)
         ax.add_artist(ob)
-    # Plot grid.
     for x_ed in hess_xedges:
         # vertical lines
-        ax.axvline(x_ed, linestyle=':', lw=.8, color='k', zorder=1)
+        ax.axvline(
+            x_ed, linestyle=grid_ls, lw=grid_lw, color=grid_col, zorder=1)
     for y_ed in hess_yedges:
         # horizontal lines
-        ax.axhline(y_ed, linestyle=':', lw=.8, color='k', zorder=1)
+            ax.axhline(
+                y_ed, linestyle=grid_ls, lw=grid_lw, color=grid_col, zorder=1)
     # Plot synthetic cluster.
     single_idx, bin_idx = binar_idx <= 1., binar_idx > 1.
     # Single systems

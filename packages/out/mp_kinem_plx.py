@@ -7,7 +7,7 @@ import numpy as np
 from . import BayesPlots
 from .. import aux_funcs
 from . prep_plots import xylabelsize, xytickssize, titlesize, cbarlabelsize,\
-    cbartickssize, legendsize
+    cbartickssize, legendsize, grid_col, grid_ls, grid_lw
 
 
 def plx_histo(
@@ -22,8 +22,8 @@ def plx_histo(
     plt.ylabel('N', fontsize=xylabelsize)
     ax.minorticks_on()
     ax.tick_params(axis='both', which='major', labelsize=xytickssize)
-    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
-            zorder=1)
+    ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
+            lw=grid_lw, zorder=1)
     # Normalized histogram for cluster region.
     if len(plx_clrg) > 100:
         Nb = 100
@@ -67,8 +67,8 @@ def plx_chart(gs, x_name, y_name, coord, cl_reg_fit, plx_Bys):
     probabilities obtained and sizes according to parallaxes.
     """
     ax = plt.subplot(gs[0:2, 4:6])
-    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
-            zorder=1)
+    ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
+            lw=grid_lw, zorder=1)
     # If RA is used, invert axis.
     if coord == 'deg':
         ax.invert_xaxis()
@@ -125,8 +125,8 @@ def plx_vs_mag(
     Parallaxes versus main magnitude.
     """
     ax = plt.subplot(gs[0:2, 2:4])
-    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
-            zorder=1)
+    ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
+            lw=grid_lw, zorder=1)
 
     # HARDCODED in plx_analysis: 3 sigma outlier rejection
     ax.set_title("Plx clip " + r"$(med\pm3\sigma,\;N={})$".format(
@@ -244,8 +244,8 @@ def pms_vs_plx_mp_mag(
         ax = plt.subplot(gs[gsi[0] + j1:gsi[1] + j1, gsi[2] + j2:gsi[3] + j2])
         ax.minorticks_on()
         ax.tick_params(axis='both', which='major', labelsize=xytickssize)
-        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
-                zorder=1)
+        ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
+                lw=grid_lw, zorder=1)
         ax.set_ylabel(ylabel, fontsize=xylabelsize)
         ax.set_xlabel(xlabel, fontsize=xylabelsize)
 

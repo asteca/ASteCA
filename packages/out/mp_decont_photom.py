@@ -2,7 +2,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.offsetbox as offsetbox
-from . prep_plots import xylabelsize, xytickssize, titlesize, legendsize
+from . prep_plots import xylabelsize, xytickssize, titlesize, legendsize,\
+    grid_col, grid_ls, grid_lw
 
 
 def pl_mp_histo(
@@ -21,8 +22,8 @@ def pl_mp_histo(
         plt.ylabel('N (normalized)', fontsize=xylabelsize)
         ax.minorticks_on()
         ax.tick_params(axis='both', which='major', labelsize=xytickssize)
-        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
-                zorder=1)
+        ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
+                lw=grid_lw, zorder=1)
         prob_data = [star[9] for star in memb_prob_avrg_sort]
         # Histogram of the data.
         n_bins = int((max(prob_data) - min(prob_data)) / 0.025)
@@ -166,8 +167,8 @@ def pl_mps_phot_diag(
             # horizontal lines
             ax.axhline(y_ed, linestyle=':', lw=.8, color='k', zorder=1)
     else:
-        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
-                zorder=1)
+        ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
+                lw=grid_lw, zorder=1)
     # This reversed colormap means higher prob stars will look redder.
     cm = plt.cm.get_cmap('RdYlBu_r')
     # If stars have a range of colors, use list of colors. Else use a single
@@ -242,8 +243,8 @@ def pl_mps_incomp_diags(
             # horizontal lines
             ax.axhline(y_ed, linestyle=':', lw=.8, color='k', zorder=1)
     else:
-        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
-                zorder=1)
+        ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
+                lw=grid_lw, zorder=1)
 
     # This reversed colormap means higher prob stars will look redder.
     cm = plt.cm.get_cmap('RdYlBu_r')

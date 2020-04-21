@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import matplotlib.offsetbox as offsetbox
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from . prep_plots import xylabelsize, xytickssize, titlesize, cbartickssize,\
-    legendsize
+    legendsize, grid_col, grid_ls, grid_lw
 
 
 def pl_densmap(
@@ -87,7 +87,8 @@ def pl_knn_dens(
     plt.xlabel('{} ({})'.format(x_name, coord), fontsize=xylabelsize)
     plt.ylabel('{} ({})'.format(y_name, coord), fontsize=xylabelsize)
     ax.minorticks_on()
-    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5)
+    ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
+            lw=grid_lw)
 
     perc = np.percentile(NN_dist, 25)
     msk = NN_dist < perc
@@ -211,7 +212,8 @@ def pl_field_dens(
     plt.ylabel(r"$\rho$ $[st/{}^{{2}}]$".format(coord2), fontsize=xylabelsize)
     ax.tick_params(axis='both', which='major', labelsize=xytickssize)
     ax.ticklabel_format(axis='y', style='sci', scilimits=(0, 0))
-    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5)
+    ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
+            lw=grid_lw)
 
     plt.scatter(fr_dist, fr_dens, c='k', s=5, alpha=.2, zorder=1)
     plt.errorbar(
@@ -248,7 +250,8 @@ def pl_mag_cent(gs, coord, y_ax, integ_dists, integ_mags):
     ax = plt.subplot(gs[2:4, 2:4])
     ax.minorticks_on()
     ax.tick_params(axis='both', which='major', labelsize=xytickssize)
-    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5)
+    ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
+            lw=grid_lw)
     ax.set_title('Integrated magnitude vs distance', fontsize=titlesize)
 
     # Nstp = max(1, int(round(len(rdp_radii) / 10.)))

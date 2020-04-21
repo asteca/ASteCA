@@ -17,6 +17,7 @@ xytickssize = 9.5
 titlesize = 9
 legendsize = 9.5
 cbarlabelsize, cbartickssize = 8, 8
+grid_col, grid_ls, grid_lw = 'grey', '-', .25
 
 
 def frame_max_min(x_data, y_data):

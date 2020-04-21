@@ -3,7 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.offsetbox as offsetbox
 from . import prep_plots
-from . prep_plots import xylabelsize, xytickssize, legendsize
+from . prep_plots import xylabelsize, xytickssize, legendsize,\
+    grid_col, grid_ls, grid_lw
 
 
 def starsPlot(boundary, x_data, y_data):
@@ -77,8 +78,8 @@ def pl_phot_err(
 
         ax = plt.subplot(
             gs[i // 2: (i // 2) + 1, 3 * (i % 2):3 * (i % 2) + 3])
-        ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
-                zorder=1)
+        ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
+                lw=grid_lw, zorder=1)
         plt.xlim(x_min, x_max)
         # Set axis labels
         plt.xlabel(r'$' + x_ax + r'$', fontsize=xylabelsize)

@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import matplotlib.offsetbox as offsetbox
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from . prep_plots import xylabelsize, xytickssize, cbarlabelsize,\
-    cbartickssize, legendsize
+    cbartickssize, legendsize, grid_col, grid_ls, grid_lw
 
 
 def pl_GA_lkl(
@@ -16,7 +16,8 @@ def pl_GA_lkl(
     # Set minor ticks
     ax.minorticks_on()
     ax.tick_params(axis='y', which='major', labelsize=xytickssize)
-    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5)
+    ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
+            lw=grid_lw)
     plt.xlabel('Generation', fontsize=xylabelsize)
     plt.ylabel('Likelihood', fontsize=xylabelsize)
 
@@ -89,7 +90,8 @@ def pl_lkl_scatt(gs, pos, ld_p, min_max_p, cp_r, cp_e, models_GA, lkls_GA):
     ax.locator_params(nbins=5)
     # Set minor ticks
     ax.minorticks_on()
-    ax.grid(b=True, which='major', color='gray', linestyle=':', lw=.5)
+    ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
+            lw=grid_lw)
     ax.tick_params(axis='y', which='major', labelsize=xytickssize)
     plt.xlabel(ld_p, fontsize=xylabelsize)
     # Add textbox.

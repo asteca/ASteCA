@@ -1,7 +1,8 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-from . prep_plots import xylabelsize, xytickssize, titlesize, legendsize
+from . prep_plots import xylabelsize, xytickssize, titlesize, legendsize,\
+    grid_col, grid_ls, grid_lw
 
 
 def pl_ad_test(gs, flag_ad_test, ad_cl, ad_fr, id_kinem):
@@ -15,9 +16,8 @@ def pl_ad_test(gs, flag_ad_test, ad_cl, ad_fr, id_kinem):
             ax.axes.yaxis.set_ticklabels([])
             plt.xlabel("A-D test (log)", fontsize=xylabelsize)
             plt.ylabel("N (log)", fontsize=xylabelsize)
-            ax.grid(
-                b=True, which='major', color='gray', linestyle='--', lw=.5,
-                zorder=1)
+            ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
+                    lw=grid_lw, zorder=1)
             ax.hist(d1, bins=25, density=True, color='r', histtype='step')
             plt.plot([0, 0], label=r'$Cl$', color='r')
             ax.hist(d2, bins=25, density=True, color='b', histtype='step')
@@ -59,8 +59,8 @@ def pl_p_vals(
     plt.xlabel('p-values', fontsize=xylabelsize)
     plt.ylabel('Density (norm)', fontsize=xylabelsize)
     ax.minorticks_on()
-    ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
-            zorder=1)
+    ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
+            lw=grid_lw, zorder=1)
     # Grid to background.
     ax.set_axisbelow(True)
     # Plot field vs field KDE.
