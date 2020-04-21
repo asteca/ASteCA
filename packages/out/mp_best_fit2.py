@@ -108,10 +108,12 @@ def pl_hess_diag(
         ax.set_title("Hess diagram (observed - synthetic)", fontsize=titlesize)
     for x_ed in hess_xedges:
         # vertical lines
-        ax.axvline(x_ed, linestyle=':', lw=.8, color='k', zorder=1)
+        ax.axvline(x_ed, linestyle=grid_ls, lw=grid_lw, color=grid_col,
+                   zorder=1)
     for y_ed in hess_yedges:
         # horizontal lines
-        ax.axhline(y_ed, linestyle=':', lw=.8, color='k', zorder=1)
+        ax.axhline(y_ed, linestyle=grid_ls, lw=grid_lw, color=grid_col,
+                   zorder=1)
     if HD.any():
         # Add text box.
         if HD.min() < 0:
