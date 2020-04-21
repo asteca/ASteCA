@@ -39,10 +39,19 @@ MR   nam
 #   data.
 #
 #   id_star   x/ra   y/dec   coords   project
-PI       id      x       y       px         n
+PI       id      x       y       px         y
 
-# Columns for the photometric data. The IDs for the supported photometric
-# systems are stored in the 'CMD_systs.dat' file
+# Columns for the photometric data.
+#
+# The format is 'X,ID,Y' where 'X' is the name/column number of the magnitude
+# (depends on the 'mode' selected above), 'ID' is the identification number of
+# the corresponding photometric system (IDs for the supported photometric
+# systems are stored in the 'CMD_systs.dat' file), and 'Y' is the name of the
+# filter in that system (also in the 'CMD_systs.dat' file). In the case of a 
+# color the format is 'X,ID,Y1,Y2' where the same definitions apply and 'Y1',
+# 'Y2' are the names of the magnitudes that make up the color in the order
+# (Y1-Y2). The associated uncertainty (in both cases) is indicated only with
+# the name/column number.
 #
 #  * mag, e_mag: Magnitude and uncertainty.
 #
@@ -55,7 +64,7 @@ PM     V,4,Vmag       eV
 PC   BV,4,Bmag,Vmag      eBV
 
 # Columns for the proper motions [mas/yr], parallax [mas], and radial
-# velocity [km/s]. If a data column is not present, indicate it with a 'n'.
+# velocity [km/s]. If a data column is not present, indicate it with 'n'.
 #
 #    Parallax         |------ Proper motions -------|    Radial velocity
 #    plx    e_plx     pmRA    e_pmRA    pmDE    e_pmDE     rv    e_rv
@@ -73,7 +82,7 @@ PK     n        n        n         n       n         n      n       n
 #   treated as bad/missing values.
 #
 #   nanvals
-NV    INDEF, NAN, NaN, 99.999, 999.99
+NV  INDEF, NAN, NaN, 99.999, 999.99
 
 # Trim frame?
 #
@@ -116,7 +125,7 @@ TF         n    0. 0. 0. 0.
 #   - D2: best fit synthetic cluster found
 #
 #   blocks
-MP   A1 A2 A3 B1 B2 B3 C1 C2 C3 D1 D2
+MP  A1 A2 A3 B1 B2 B3 C1 C2 C3 D1 D2
 
 # * format: png / pdf
 #   Format of the final image file.
@@ -396,8 +405,8 @@ PO        3.            y
 #   Random seed used in the generation of synthetic clusters. Set it to any
 #   integer for reproducibility.
 #
-#    ran_seed
-RS          n
+#   ran_seed
+RS         n
 
 # Ranges for all the fundamental parameters
 #
@@ -456,8 +465,8 @@ MF  kroupa_2002
 #   Minimum mass ratio for the generation of binaries. Ignored if the
 #   'Binary fraction' parameter is fixed to '0.'
 #
-#     min_mass_ratio
-BR                .7
+#   min_mass_ratio
+BR              .7
 
 # Ratio of total to selective absorption (R_V).
 #
@@ -505,8 +514,8 @@ CF    ptemcee      .1
 #   - nwalkers: [int], Number of walkers/chains used.
 #   - nburn: [0<float<1], percentage of the chain discarded as burn-in.
 #
-#     nsteps   nwalkers   nburn
-PS      1000         20     .25
+#   nsteps   nwalkers   nburn
+PS    1000         20     .25
 #
 #   - prior: u / g, uniform (u) or Gaussian (g) prior distributions for the
 #     fitted parameters. 'mean/stddev' are only required if the 'g' prior is
@@ -527,8 +536,8 @@ PRB       u       0.5         0.2
 #     StretchMove(), WalkMove(), KDEMove(), DEMove(), DESnookerMove(),
 #     GaussianMove(), MHMove()
 #
-#     moves
-PE    StretchMove()
+#   moves
+PE  StretchMove()
 
 # ptemcee parameters.
 #
@@ -537,8 +546,8 @@ PE    StretchMove()
 #   - adapt: y / n, turn on-off the adaptive (dynamic) temperature selection
 #     (ptemcee only).
 #
-#     ntemps   Tmax   adapt
-PT        20     20       y
+#   ntemps   Tmax   adapt
+PT      20     20       y
 
 # Bootstrap parameters
 #
@@ -548,8 +557,8 @@ PT        20     20       y
 #   - N_pop: [int], population number used in the bootstrap process.
 #   - N_step: [int], number of steps  used in the bootstrap process.
 #
-#    hperc    N_pop    N_step
-BT     .5        50       100
+#   hperc    N_pop    N_step
+BT    .5        50       100
 
 # Genetic Algorithm parameters.
 #
