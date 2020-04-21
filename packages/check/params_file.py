@@ -30,7 +30,7 @@ def check(mypath, file_end, inst_packgs_lst):
     # Check if params_input_XX.dat file is properly formatted.
     try:
         # Read input parameters from params_input.dat file.
-        pd = input_params.main(mypath, pars_f_path)
+        pd = input_params.main(pars_f_path)
     except Exception:
         # Halt code.
         print(traceback.format_exc())
