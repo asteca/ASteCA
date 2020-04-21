@@ -29,7 +29,7 @@ from . import CMD_phot_systs
 #     return lst
 
 
-def main(mypath, pars_f_path):
+def main(pars_f_path):
     """
     This function reads the input data parameters stored in the
     'params_input_XX.dat' file and returns a dictionary.
