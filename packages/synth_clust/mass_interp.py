@@ -2,19 +2,20 @@
 import numpy as np
 
 
-def main(isoch_cut, mass_dist, m_ini):
-    '''
+def main(isoch_cut, mass_dist, m_ini_idx):
+    """
     For each mass in the IMF mass distribution, find the star in the isochrone
     with the closest mass value and pass it forward.
     Masses that fall outside of the isochrone's mass range are rejected.
-    '''
+    """
+
     # Returns the indices that would sort the isochrone with
-    # the minimum mass. This is why we use the 'm_ini' index.
-    order = isoch_cut[m_ini, :].argsort()
+    # the minimum mass. This is why we use the 'm_ini_idx' index.
+    order = isoch_cut[m_ini_idx, :].argsort()
 
     # Returns an array with the mass values in the theoretical isochrone
     # ordered from min to max.
-    key = isoch_cut[m_ini, order]
+    key = isoch_cut[m_ini_idx, order]
 
     ##########################################################################
     # # Uncomment this block to see how many stars are being discarded
@@ -23,7 +24,7 @@ def main(isoch_cut, mass_dist, m_ini):
     # # entire isochrone (instead of one with a max-mag cut).
     # try:
     #     print 'Min, max mass values in isochrone: {:.3f}, {:.3f}'.format(
-    #         min(isoch_cut[m_ini]), max(isoch_cut[m_ini]))
+    #         min(isoch_cut[m_ini_idx]), max(isoch_cut[m_ini_idx]))
     #     print 'Total mass in mass_dist: {:.2f}'.format(sum(mass_dist))
     #     # Masses out of boundary to the left, ie: smaller masses.
     #     reject_min = mass_dist[(mass_dist < key[0])]
@@ -64,14 +65,14 @@ def main(isoch_cut, mass_dist, m_ini):
 
 
 def find_closest(key, target):
-    '''
+    """
     See: http://stackoverflow.com/a/8929827/1391441
     Helper function for locating the mass values in the IMF distribution onto
     the isochrone.
     General: find closest target element for elements in key.
 
     Returns an array of indexes of the same length as 'target'.
-    '''
+    """
 
     # Find indexes where the masses in 'target' should be located in 'key' such
     # that if the masses in 'target' were inserted *before* these indices, the

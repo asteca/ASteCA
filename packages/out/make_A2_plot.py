@@ -2,40 +2,23 @@
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from os.path import join
-from . import mp_structure
+from . import mp_cent_dens
 from . import add_version_plot
 from . import prep_plots
+from . prep_plots import figsize_x, figsize_y, grid_x, grid_y
 
-
-#############################################################
-# # Timer function: http://stackoverflow.com/a/21860100/1391441
-# from contextlib import contextmanager
-# import time
-# @contextmanager
-# def timeblock(label):
-#     start = time.clock()
-#     try:
-#         yield
-#     finally:
-#         end = time.clock()
-#         print ('{} elapsed: {}'.format(label, end - start))
-#############################################################
 
 def main(
-    npd, cld_i, pd, x_offset, y_offset, bw_list, kde_cent, kde_plot,
-    K_cent_dens, clust_rad, e_rad, poisson_error, bin_cent, bin_width,
-    kde_approx_cent, frame_kde_cent, kde_dens_max, kde_dens_min, core_rad,
-    e_core, tidal_rad, e_tidal, K_conct_par, flag_2pk_conver, flag_3pk_conver,
-    radii, rdp_points, field_dens, cont_index, n_memb_i, cl_region_i,
-    cl_region_rjct_i, field_regions_rjct_i, field_regions_i,
-        flag_no_fl_regs_i, **kwargs):
-    '''
+    npd, cld_i, pd, x_offset, y_offset, bw_list, kde_cent, frame_kde_cent,
+    rdp_radii, integ_dists, integ_mags, xy_filtered, xy_cent_dist, NN_dist,
+    fr_dens, fdens_min_d, fdens_lst, fdens_std_lst, field_dens_d, field_dens,
+        field_dens_std, clust_rad, **kwargs):
+    """
     Make A2 block plots.
-    '''
+    """
     if 'A2' in pd['flag_make_plot']:
-        # figsize(x1, y1), GridSpec(y2, x2)
-        fig = plt.figure(figsize=(30, 25))
-        gs = gridspec.GridSpec(10, 12)
+        fig = plt.figure(figsize=(figsize_x, figsize_y))
+        gs = gridspec.GridSpec(grid_y, grid_x)
         add_version_plot.main()
 
         # Obtain plotting parameters and data.
@@ -43,45 +26,35 @@ def main(
             cld_i['x'], cld_i['y'])
         asp_ratio = prep_plots.aspect_ratio(x_min, x_max, y_min, y_max)
         coord, x_name, y_name = prep_plots.coord_syst(pd['coords'])
-        x_zmin, x_zmax, y_zmin, y_zmax = prep_plots.frame_zoomed(
-            x_min, x_max, y_min, y_max, kde_cent, clust_rad)
-        x_data_z, y_data_z, mag_data_z = prep_plots.zoomed_frame(
-            cld_i['x'], cld_i['y'], cld_i['mags'], x_zmin, x_zmax, y_zmin,
-            y_zmax)
         st_sizes_arr = prep_plots.star_size(cld_i['mags'][0])
-        st_sizes_arr_z = prep_plots.star_size(mag_data_z)
+        _, y_ax = prep_plots.ax_names(pd['colors'][0], pd['filters'][0], 'mag')
 
         # Structure plots.
         arglist = [
-            # pl_center: 2D Gaussian convolved histogram.
+            # pl_densmap: 2D Gaussian convolved histogram.
             [gs, fig, asp_ratio, x_name, y_name, coord, bw_list, kde_cent,
-             frame_kde_cent, kde_dens_max, kde_dens_min, clust_rad],
+             frame_kde_cent, fr_dens, clust_rad],
+            # pl_knn_dens
+            [gs, fig, asp_ratio, x_min, x_max, y_min, y_max, x_name, y_name,
+             coord, pd['NN_dd'], xy_filtered, fr_dens, NN_dist, kde_cent,
+             clust_rad],
             # pl_full_frame: x,y finding chart of full frame.
-            [gs, fig, pd['project'], x_offset, y_offset, x_name, y_name,
-             coord, x_min, x_max, y_min, y_max, asp_ratio, kde_cent, clust_rad,
-             cld_i['x'], cld_i['y'], st_sizes_arr, core_rad, e_core,
-             tidal_rad, e_tidal, K_conct_par, flag_2pk_conver,
-             flag_3pk_conver],
-            # pl_rad_dens: Radial density plot.
-            [gs, radii, rdp_points, field_dens, coord,
-             npd['clust_name'], clust_rad, e_rad, poisson_error, bin_width,
-             core_rad, e_core, tidal_rad, e_tidal, K_cent_dens,
-             flag_2pk_conver, flag_3pk_conver],
-            # pl_zoom_frame: Zoom on x,y finding chart.
-            [gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin, y_zmax,
-                cont_index, n_memb_i, kde_plot, x_data_z, y_data_z,
-                st_sizes_arr_z, kde_cent, clust_rad],
-            # pl_cl_fl_regions: Cluster and field regions defined.
-            [gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max,
-                asp_ratio, kde_cent, clust_rad, field_regions_i,
-                field_regions_rjct_i, cl_region_i, cl_region_rjct_i,
-                flag_no_fl_regs_i]
+            [gs, fig, pd['project'], x_offset, y_offset, x_name, y_name, coord,
+             x_min, x_max, y_min, y_max, asp_ratio, kde_cent, cld_i['x'],
+             cld_i['y'], st_sizes_arr, clust_rad],
+            # pl_field_dens
+            [gs, coord, pd['fdens_method'], xy_cent_dist, fr_dens, fdens_min_d,
+             fdens_lst, fdens_std_lst, field_dens_d, field_dens,
+             field_dens_std],
+            # pl_mag_cent
+            [gs, coord, y_ax, integ_dists, integ_mags],
+            # pl_rdp_rings
+            [gs, fig, asp_ratio, x_min, x_max, y_min, y_max, x_name, y_name,
+             coord, kde_cent, rdp_radii]
         ]
         for n, args in enumerate(arglist):
-            # with timeblock("{}".format(n)):
-            mp_structure.plot(n, *args)
+            mp_cent_dens.plot(n, *args)
 
-        # Generate output file.
         fig.tight_layout()
         plt.savefig(
             join(npd['output_subdir'], str(npd['clust_name']) +

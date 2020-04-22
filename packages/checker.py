@@ -1,11 +1,12 @@
 
 import platform
-from .check import pack
 from .check import first_run
-from .check import update
+from .check import pack
 from .check import clusters
 from .check import params_file
+from .check import update
 from .check import params_data
+from .check import params_kinem
 from .check import params_out
 from .check import params_struct
 from .check import params_decont
@@ -28,6 +29,7 @@ def check_all(mypath, file_end):
     inst_packgs_lst = pack.check()
 
     # Import here after the needed packages were checked to be present.
+    from .check import params_synthcl
     from .check import params_match
     from .check import read_met_files
 
@@ -46,8 +48,10 @@ def check_all(mypath, file_end):
     # If they are, store also the name of the proper isochrones folders.
     pd = params_data.check(mypath, pd)
 
+    params_kinem.check(pd)
+
     # Check output parameters.
-    params_out.check(**pd)
+    pd = params_out.check(pd)
 
     # Check structural parameters.
     params_struct.check(**pd)
@@ -55,8 +59,12 @@ def check_all(mypath, file_end):
     # Check decontamination algorithm parameters.
     params_decont.check(cl_files, **pd)
 
-    # Check the best synthetic cluster match parameters.
-    pd = params_match.check(mypath, pd)
+    # Check synthetic clusters parameters. Generate the
+    # 'fundam_params' variable.
+    pd = params_synthcl.check(mypath, pd)
+
+    # Check the best match parameters.
+    pd = params_match.check(pd)
 
     # Filters and colors names.
     fs = ', '.join(_[1] for _ in pd['filters'])

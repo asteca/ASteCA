@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
 from scipy.ndimage import gaussian_filter
 from matplotlib.colors import LinearSegmentedColormap, colorConverter
-from .prep_plots import CIEllipse
+from .prep_plots import SigmaEllipse
 
 
 def hist2d(
@@ -213,12 +213,12 @@ def pl_2_param_dens(_2_params, gs, min_max_p2, varIdxs, params_trace):
     # To specify the number of ticks on both or any single axes
     ax.locator_params(nbins=5)
     if gs_x1 == 0:
-        plt.ylabel(y_label, fontsize=16)
+        plt.ylabel(y_label, fontsize=11)
         plt.yticks(rotation=45)
     else:
         ax.tick_params(labelleft=False)
     if gs_y2 == 12:
-        plt.xlabel(x_label, fontsize=16)
+        plt.xlabel(x_label, fontsize=11)
         plt.xticks(rotation=45)
     else:
         ax.tick_params(labelbottom=False)
@@ -229,11 +229,11 @@ def pl_2_param_dens(_2_params, gs, min_max_p2, varIdxs, params_trace):
 
         ax.set_title(r"$\rho={:.2f}$".format(np.corrcoef(
             [params_trace[mx_model], params_trace[my_model]])[0][1]),
-            fontsize=10)
+            fontsize=11)
 
         hist2d(ax, params_trace[mx_model], params_trace[my_model])
 
-        mean_pos, width, height, theta = CIEllipse(np.array([
+        mean_pos, width, height, theta = SigmaEllipse(np.array([
             params_trace[mx_model], params_trace[my_model]]).T)
         # Plot 95% confidence ellipse.
         plt.scatter(
@@ -282,7 +282,7 @@ def pl_param_pf(
     ax = plt.subplot(gs[gs_y1:gs_y2, gs_x1:gs_x2])
     plt.title(
         ld_p + r"$\;[R^2\approx$" + "{:.2f}]".format(param_r2[cp]),
-        fontsize=10)
+        fontsize=11)
 
     # Set x axis limit.
     xp_min, xp_max = min_max_p[cp]
@@ -291,7 +291,7 @@ def pl_param_pf(
     # Set minor ticks
     ax.minorticks_on()
     if cp == 5:
-        plt.xlabel(ld_p, fontsize=16)
+        plt.xlabel(ld_p, fontsize=11)
         plt.xticks(rotation=45)
     # else:
     #     ax.tick_params(labelbottom=False)
@@ -335,9 +335,9 @@ def pl_param_pf(
         ph = np.percentile(model_done[c_model], 84)
         pl = np.percentile(model_done[c_model], 16)
         plt.axvline(
-            x=ph, linestyle=':', color='orange', zorder=4,
+            x=ph, linestyle=':', color='orange', lw=1.5, zorder=4,
             label=("16-84th perc\n(" + p + ", " + p + ")").format(pl, ph))
-        plt.axvline(x=pl, linestyle=':', color='orange', zorder=4)
+        plt.axvline(x=pl, linestyle=':', color='orange', lw=1.5, zorder=4)
 
         cur_ylim = ax.get_ylim()
         ax.set_ylim([0, cur_ylim[1]])

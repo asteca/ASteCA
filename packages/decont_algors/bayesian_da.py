@@ -25,6 +25,11 @@ def main(
     # region, stored with the appropriate format.
     cl_reg_prep, w_cl = reg_data(
         len(cl_region), mags, cols, kinem, e_mags, e_cols, e_kinem)
+    if not cl_reg_prep.any():
+        raise ValueError(
+            "Cluster region is empty after removing the turned-off\n" +
+            "dimension. Check the 'w_xxx' flags in the Bayesian DA.")
+
     # Normalize data.
     cl_reg_prep, N_msk_cl = dataNorm(cl_reg_prep)
 
@@ -199,10 +204,10 @@ def reg_data(N_reg, mags, cols, kinem, e_mags, e_cols, e_kinem):
     return data_err, wi
 
 
-def dataNorm(data_arr):
+def dataNorm(data_arr, sigma_max=4.):
     """
-    Mask 4 sigma outliers (particularly important when PMs are used), and
-    normalize arrays.
+    Mask 'sigma_max' sigma outliers (particularly important when PMs are used),
+    and normalize arrays.
     """
 
     # Mask outliers (np.nan).
@@ -217,8 +222,8 @@ def dataNorm(data_arr):
                 med, std = np.nanmedian(data_arr[:, i, j]),\
                     np.nanstd(data_arr[:, i, j])
                 msk = np.logical_or(
-                    data_arr[:, i, j] < med - 4. * std,
-                    data_arr[:, i, j] > med + 4. * std)
+                    data_arr[:, i, j] < med - sigma_max * std,
+                    data_arr[:, i, j] > med + sigma_max * std)
                 data_arr[:, i, j][msk] = np.nan
                 N_msk += sum(msk)
 

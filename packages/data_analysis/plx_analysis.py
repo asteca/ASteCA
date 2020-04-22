@@ -2,14 +2,13 @@
 import numpy as np
 from scipy.optimize import differential_evolution as DE
 from scipy.special import exp1
-from ..best_fit.emcee3rc2 import ensemble
 import warnings
 from .. import update_progress
 
 
 def main(
-    clp, plx_bayes_flag, plx_offset, plx_chains, plx_runs, flag_plx_mp,
-        flag_make_plot, outlr_std=3., **kwargs):
+    clp, plx_bayes_flag, plx_offset, plx_chains, plx_runs, plx_burn,
+        flag_plx_mp, flag_make_plot, outlr_std=3., **kwargs):
     """
     Bayesian parallax distance using the Bailer-Jones (2015) model with the
     'shape parameter' marginalized.
@@ -17,8 +16,8 @@ def main(
     Hardcoded choices:
 
     * outlr_std sigma outliers are rejected
-    * MPs are used
     * Bayesian prior is a Gaussian with a fixed standard deviation
+    * The default 'Stretch' move is used by emcee
     """
 
     plx_clrg, mmag_clp, mp_clp, plx_clp, e_plx_clp, plx_samples,\
@@ -39,23 +38,26 @@ def main(
             print("Processing parallaxes")
 
             # Reject outlr_std*\sigma outliers.
-            max_plx, min_plx = np.nanmedian(plx) + outlr_std * np.nanstd(plx),\
-                np.nanmedian(plx) - outlr_std * np.nanstd(plx)
+            max_plx = np.nanmedian(plx) + outlr_std * np.nanstd(plx)
+            min_plx = np.nanmedian(plx) - outlr_std * np.nanstd(plx)
 
-            # Suppress Runtimewarning issued when 'plx' contains 'nan' values.
+            # Suppress Runtimewarning issued when 'plx' contains 'nan'
+            # values.
             with np.warnings.catch_warnings():
                 np.warnings.filterwarnings('ignore')
                 plx_2s_msk = (plx < max_plx) & (plx > min_plx)
 
             # Prepare masked data.
             mmag_clp = np.array(
-                list(zip(*list(zip(*clp['cl_reg_fit']))[3]))[0])[plx_2s_msk]
+                list(zip(*list(zip(
+                    *clp['cl_reg_fit']))[3]))[0])[plx_2s_msk]
             mp_clp = np.array(list(zip(*clp['cl_reg_fit']))[9])[plx_2s_msk]
             plx_clp = plx[plx_2s_msk]
             e_plx_clp = np.array(
-                list(zip(*list(zip(*clp['cl_reg_fit']))[8]))[0])[plx_2s_msk]
-            # Take care of possible zero values that can produce issues since
-            # errors are in the denominator.
+                list(zip(*list(zip(
+                    *clp['cl_reg_fit']))[8]))[0])[plx_2s_msk]
+            # Take care of possible zero values that can produce issues
+            # since errors are in the denominator.
             e_plx_clp[e_plx_clp == 0.] = 10.
 
             # Weighted average.
@@ -65,10 +67,10 @@ def main(
             plx_wa = np.average(plx_clp, weights=plx_w)
 
             if plx_bayes_flag:
-                plx_samples, plx_Bys, plx_bayes_flag_clp, plx_tau_autocorr,\
-                    mean_afs, plx_ess = plxBayes(
-                        plx_offset, plx_chains, plx_runs, flag_plx_mp, plx_clp,
-                        e_plx_clp, mp_clp)
+                plx_samples, plx_Bys, plx_bayes_flag_clp,\
+                    plx_tau_autocorr, mean_afs, plx_ess = plxBayes(
+                        plx_offset, plx_chains, plx_runs, plx_burn,
+                        flag_plx_mp, plx_clp, e_plx_clp, mp_clp)
 
         else:
             print("  WARNING: no valid Plx data found")
@@ -94,10 +96,23 @@ def checkPlx(plx_clrg):
 
 
 def plxBayes(
-    plx_offset, plx_chains, plx_runs, flag_plx_mp, plx_clp, e_plx_clp,
-        mp_clp):
+    plx_offset, plx_chains, plx_runs, plx_burn, flag_plx_mp, plx_clp,
+        e_plx_clp, mp_clp, N_conv=1000, tau_stable=0.05):
     """
+
+    HARDCODED
+    N_conv
+    tau_stable
     """
+
+    from emcee import ensemble
+    # from emcee import moves
+    # mv = [
+    #     (moves.DESnookerMove(), 0.1), (moves.DEMove(), 0.9 * 0.9),
+    #     (moves.DEMove(gamma0=1.0), 0.9 * 0.1),
+    # ]
+    # # moves.KDEMove()
+
     plx_bayes_flag_clp = True
 
     # Add offset to parallax data.
@@ -133,7 +148,8 @@ def plxBayes(
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
 
-            old_tau, N_conv = np.inf, 1000
+            # HARDCODED
+            old_tau = np.inf
             for i, _ in enumerate(sampler.sample(pos0, iterations=nruns)):
                 # Only check convergence every X steps
                 if i % 10 and i < (nruns - 1):
@@ -146,32 +162,32 @@ def plxBayes(
                 tau_index += 1
 
                 # Check convergence
-                converged = np.all(tau * N_conv < i)
-                converged &= np.all(np.abs(old_tau - tau) / tau < 0.01)
+                converged = tau * (N_conv / nwalkers) < i * plx_burn
+                converged &= np.all(np.abs(old_tau - tau) / tau < tau_stable)
                 if converged:
                     print("")
                     break
                 old_tau = tau
-                # tau_mean = np.nanmean(sampler.get_autocorr_time(tol=0))
                 update_progress.updt(nruns, i + 1)
 
         mean_afs = afs[:tau_index]
         tau_autocorr = autocorr_vals[:tau_index]
-        # Remove burn-in (25% of chain)
-        nburn = int(i * .25)
+
+        nburn = int(i * plx_burn)
         samples = sampler.get_chain(discard=nburn, flat=True)
         # 16th, 84th in Kpc
         p16, p84 = np.percentile(samples, (16, 84))
         plx_Bys = np.array([p16, np.mean(samples), p84])
-        tau_mean = np.mean(sampler.get_autocorr_time(tol=0))
-        plx_ess = samples.size / tau_mean
+
+        tau = sampler.get_autocorr_time(tol=0)[0]
+        plx_ess = samples.size / tau
 
         # For plotting, (nsteps, nchains, ndim)
         plx_samples = sampler.get_chain()[:, :, 0]
 
         print("Bayesian plx estimated: " +
               "{:.3f} (ESS={:.0f}, tau={:.0f})".format(
-                  1. / plx_Bys[1], plx_ess, tau_mean))
+                  1. / plx_Bys[1], plx_ess, tau))
     except Exception as e:
         print(e)
         print("\n  ERROR: could not process Plx data with emcee")

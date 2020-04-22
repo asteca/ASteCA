@@ -1,11 +1,10 @@
 
 import numpy as np
-import random
 from scipy.optimize import differential_evolution as DE
 from scipy import stats
 import warnings
 from ..synth_clust import synth_cluster
-from . import likelihood, zaWAverage
+from . import likelihood
 from .. import update_progress
 
 
@@ -66,7 +65,7 @@ def fillParams(fundam_params, varIdxs, model):
 
 def initPop(
     ranges, varIdxs, lkl_method, obs_clust, fundam_params,
-        synthcl_args, ntemps, nwalkers_ptm, init_mode, popsize, maxiter):
+        synthcl_args, ntemps, nwalkers, init_mode, popsize, maxiter):
     """
     Obtain initial parameter values using either a random distribution, or
     the Differential Evolution algorithm to approximate reasonable solutions.
@@ -76,7 +75,7 @@ def initPop(
     if init_mode == 'random':
         # print("Random initial population")
         for _ in range(ntemps):
-            p0.append(random_population(fundam_params, varIdxs, nwalkers_ptm))
+            p0.append(random_population(fundam_params, varIdxs, nwalkers))
 
     elif init_mode == 'diffevol':
         # DEPRECATED 05/09/19 when #425 was implemented
@@ -87,19 +86,19 @@ def initPop(
 
             # Estimate initial threshold value using DE.
             def DEdist(model):
-                synth_clust = synthClust(
-                    fundam_params, varIdxs, model, synthcl_args)
+                synth_clust = synth_cluster.main(
+                    fundam_params, varIdxs, model, *synthcl_args)
                 if synth_clust:
                     lkl = likelihood.main(lkl_method, synth_clust, obs_clust)
                     return lkl
                 return np.inf
 
             walkers_sols = []
-            for _ in range(nwalkers_ptm):
+            for _ in range(nwalkers):
                 result = DE(
                     DEdist, ranges[varIdxs], popsize=popsize, maxiter=maxiter)
                 walkers_sols.append(result.x)
-                update_progress.updt(nwalkers_ptm, _ + 1)
+                update_progress.updt(nwalkers, _ + 1)
 
         p0 = [walkers_sols for _ in range(ntemps)]
 
@@ -120,18 +119,6 @@ def random_population(fundam_params, varIdxs, n_ran):
 
     return np.array(p_lst).T
 
-
-def synthClust(fundam_params, varIdxs, synthcl_args, model):
-    """
-    Generate a synthetic cluster.
-    """
-    # Average a new isochrone
-    # theor_tracks = synthcl_args[0]
-    isochrone, model_proper = zaWAverage.main(
-        synthcl_args[0], fundam_params, varIdxs, model)
-
-    # Generate synthetic cluster.
-    return synth_cluster.main(isochrone, model_proper, *synthcl_args[1:])
 
 #  DEPRECATED 24-09-2019
 # def discreteParams(fundam_params, varIdxs, chains_nruns, pushidxs):
@@ -195,6 +182,12 @@ def modeKDE(fundam_params, varIdxs, mcmc_trace):
     """
     mcmc_kde, mode_sol = [], []
     for i, mcmc_par in enumerate(mcmc_trace):
+
+        # Multiple elements are required
+        if len(mcmc_par) <= 1:
+            mcmc_kde.append([])
+            mode_sol.append(np.nan)
+            continue
 
         # Length of the last 10% of the chain.
         N = int(mcmc_par.shape[0] * .1)

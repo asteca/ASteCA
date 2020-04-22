@@ -1,6 +1,5 @@
 
 import os
-import sys
 from shutil import copyfile, copytree
 import traceback
 
@@ -34,11 +33,11 @@ def main(mypath):
         else:
             print("ERROR: No 'packages/.first_run' file present.\n")
     except Exception:
-        print("ERROR: Could not check/copy input data files and folders.\n")
         print(traceback.format_exc())
+        print("ERROR: Could not check/copy input data files and folders.\n")
 
     if first_run_flag:
-        sys.exit("First run processes completed.\n")
+        print("First run processes completed.\n")
 
     return first_run_flag
 
@@ -60,9 +59,9 @@ def files_folders_check(mypath):
             # Now check if it exists in the root folder.
             if os.path.isfile(i_f_path):
                 # File exist in root folder. Rename it.
-                sys.exit("File '{}' is already present in root folder.\n"
-                         "Please rename/delete it and try again.\n".format(
-                             i_f))
+                raise ValueError(
+                    "File '{}' is already present in root folder.\nPlease"
+                    " rename/delete it and try again.\n".format(i_f))
             else:
                 success += 1
         else:
@@ -75,9 +74,9 @@ def files_folders_check(mypath):
         if os.path.isdir(n_fo_path):
             # Now, check if the folder exists in the root.
             if os.path.isdir(i_fo_path):
-                sys.exit("Folder '/{}' is already present in root folder.\n"
-                         "Please rename/delete it and try again\n.".format(
-                             i_fo))
+                raise ValueError(
+                    "Folder '/{}' is already present in root folder.\n"
+                    "Please rename/delete it and try again\n.".format(i_fo))
             else:
                 success += 1
         else:

@@ -4,9 +4,10 @@ import copy
 
 
 def main(cl_reg_fit, max_mag):
-    '''
-    Reject stars beyond the given magnitude limit.
-    '''
+    """
+    Reject stars beyond the maximum magnitude given.
+    """
+
     # Maximum observed (main) magnitude.
     max_mag_obs = np.max(list(zip(*list(zip(*cl_reg_fit))[1:][2]))[0])
 

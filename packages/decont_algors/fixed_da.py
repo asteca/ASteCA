@@ -8,7 +8,7 @@ def main(cl_region, fixedda_port):
     print("Applying 'fixed' DA (fport={:.2f})".format(fixedda_port))
 
     # Cluster's sequence using the main magnitude.
-    main_mag = list(zip(*zip(*cl_region)[3])[0])
+    main_mag = list(zip(*list(zip(*cl_region))[3]))[0]
     mi, mf = min(main_mag), max(main_mag)
     # Magnitude range
     deltam = mf - mi

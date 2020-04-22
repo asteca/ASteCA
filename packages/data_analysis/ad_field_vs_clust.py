@@ -6,7 +6,7 @@ from scipy.integrate import quad
 import warnings
 
 
-def main(clp, cld_c, ad_runs, ad_k_comb, flag_make_plot, **kwargs):
+def main(clp, cld_c, ad_runs, flag_make_plot, **kwargs):
     """
 
     AD test for k-samples: "tests the null hypothesis that k-samples are drawn
@@ -36,7 +36,7 @@ def main(clp, cld_c, ad_runs, ad_k_comb, flag_make_plot, **kwargs):
 
     # Check if test is to be applied or skipped. Check if field regions
     # where found.
-    if ad_runs <= 0 or 'B2' not in flag_make_plot:
+    if ad_runs <= 0 or 'B3' not in flag_make_plot:
         print("Skipping field vs cluster A-D test")
 
     elif clp['flag_no_fl_regs_c']:
@@ -52,17 +52,16 @@ def main(clp, cld_c, ad_runs, ad_k_comb, flag_make_plot, **kwargs):
 
         run_total = 2. * int(ad_runs * len(clp['field_regions_c']))
         runs = 0
-        # Run first only for photometric data, and then for all data (if more
-        # data exists)
+        # Run first only for photometric data, and then for Plx+PM data (if it
+        # exists)
         for i in range(2):
             for run_num in range(ad_runs):
 
-                data_cl = dataExtract(clp['cl_region_c'], ad_k_comb, i)
+                data_cl = dataExtract(clp['cl_region_c'], i)
                 # Field regions
                 data_fr = []
                 for fr in clp['field_regions_c']:
-                    data_fr.append(
-                        dataExtract(fr, ad_k_comb, i))
+                    data_fr.append(dataExtract(fr, i))
 
                 # Compare to each defined field region.
                 for f_idx, data_fl in enumerate(data_fr):
@@ -72,8 +71,8 @@ def main(clp, cld_c, ad_runs, ad_k_comb, flag_make_plot, **kwargs):
                     pv_cl[i] += list(ad_pv[1])
 
                     # Compare the field region used above with all the
-                    # remaining field regions. This results in [N*(N+1)/2]
-                    # combinations of field vs field comparisons.
+                    # remaining field regions. This results in [N*(N-1)/2]
+                    # combinations ("handshakes") of field vs field.
                     for data_fl2 in data_fr[(f_idx + 1):]:
                         ad_pv = ADtest(data_fl, data_fl2)
                         ad_fr[i] += list(ad_pv[0])
@@ -82,15 +81,12 @@ def main(clp, cld_c, ad_runs, ad_k_comb, flag_make_plot, **kwargs):
                     runs += 1
                 update_progress.updt(run_total, runs)
 
-        # Cap p-values
-        pvals_cl = [pvalFix(ad_cl[0], pv_cl[0]), pvalFix(ad_cl[1], pv_cl[1])]
-        pvals_fr = [pvalFix(ad_fr[0], pv_fr[0]), pvalFix(ad_fr[1], pv_fr[1])]
-
-        ad_cl_fr_p = kdeplot(pvals_cl[0], pvals_fr[0], 'phot')
+        # len(pv_cl[0]) = AD runs * N phot dims * N field regs
+        # len(pv_fr[0]) = AD runs * N phot dims * [N*(N-1)/2] field regs
+        ad_cl_fr_p = kdeplot(pv_cl[0], pv_fr[0], 'phot')
         ad_cl_fr_p = [len(pv_cl[0]), len(pv_fr[0])] + ad_cl_fr_p
 
-        data_id = 'phot+Plx+PM' if ad_k_comb else 'Plx+PM'
-        ad_cl_fr_pk = kdeplot(pvals_cl[1], pvals_fr[1], data_id)
+        ad_cl_fr_pk = kdeplot(pv_cl[1], pv_fr[1], 'Plx+PM')
         ad_cl_fr_pk = [len(pv_cl[1]), len(pv_fr[1])] + ad_cl_fr_pk
 
     clp.update({
@@ -99,7 +95,7 @@ def main(clp, cld_c, ad_runs, ad_k_comb, flag_make_plot, **kwargs):
     return clp
 
 
-def dataExtract(region, kin_flag, idx):
+def dataExtract(region, idx):
     """
     """
     def photData():
@@ -134,22 +130,11 @@ def dataExtract(region, kin_flag, idx):
 
     elif idx == 1:
         k_err = kinData()
-
-        if kin_flag is True:
-            phot_data = photData()
-            # If any of the parallax+PMs dimensions was processed, add it.
-            if k_err:
-                data_all = np.concatenate([phot_data, np.array(k_err)])
-            else:
-                # No valid Plx and/or PM data found
-                data_all = phot_data
-
-        elif kin_flag is False:
-            if k_err:
-                data_all = np.array(k_err)
-            else:
-                # No valid Plx and/or PM data found
-                data_all = np.array([[np.nan] * 2, [np.nan] * 2])
+        if k_err:
+            data_all = np.array(k_err)
+        else:
+            # No valid Plx and/or PM data found
+            data_all = np.array([[np.nan] * 2, [np.nan] * 2])
 
     return data_all
 
@@ -176,36 +161,6 @@ def ADtest(data_x, data_y):
             # anderson_darling_k([dd, data_y[i]])
 
     return np.array(ad_vals).T
-
-
-def pvalFix(ad_vals, p_vals):
-    """
-    TODO Fix taken from Scipy v1.2.0:
-    https://github.com/scipy/scipy/blob/
-    dfc9a9c73ced00e2588dd8d3ee03f9e106e139bf/scipy/stats/morestats.py#L2032
-    """
-    critical = np.array([0.325, 1.226, 1.961, 2.718, 3.752, 4.592, 6.546])
-    sig = np.array([0.25, 0.1, 0.05, 0.025, 0.01, 0.005, 0.001])
-
-    p_vals_c = []
-    for i, A2 in enumerate(ad_vals):
-
-        if A2 < critical.min():
-            # p-value capped
-            # if p_vals[i] > 1.:
-            #     p = 1.
-            # else:
-            #     p = p_vals[i]
-            p = sig.max()
-        elif A2 > critical.max():
-            # p-value floored
-            p = sig.min()
-        else:
-            p = p_vals[i]
-
-        p_vals_c.append(p)
-
-    return np.array(p_vals_c)
 
 
 def kdeplot(p_vals_cl, p_vals_f, data_id):
@@ -248,11 +203,15 @@ def kdeplot(p_vals_cl, p_vals_f, data_id):
     if cl_fr_range > 0.001:
         x_cl, kde_cl = regKDE(p_vals_cl)
     else:
+        # p_vals_rnd = np.random.normal(p_vals_cl[0], 0.0001, len(p_vals_cl))
+        # x_cl, kde_cl = regKDE(p_vals_rnd)
         x_cl, kde_cl = p_vals_cl[0], np.array([])
 
     if fr_fr_range > 0.001:
         x_fr, kde_fr = regKDE(p_vals_f)
     else:
+        # p_vals_rnd = np.random.normal(p_vals_f[0], 0.0001, len(p_vals_f))
+        # x_fr, kde_fr = regKDE(p_vals_rnd)
         x_fr, kde_fr = [], np.array([])
 
     if kde_cl.any() and kde_fr.any():
@@ -260,15 +219,22 @@ def kdeplot(p_vals_cl, p_vals_f, data_id):
         x_over = np.linspace(pmin, pmax, 1000)
         overlap, y_over = KDEoverlap(x_over, p_vals_cl, p_vals_f)
         # Probability value for the cluster.
-        prob_cl = 1 - overlap
+        prob_cl = 1. - overlap
     else:
-        prob_cl, x_over, y_over = np.nan, [], np.array([])
+        # If the KDEs for either distribution could not be obtained because
+        # the range is too small, assign a probability of 1.
+        prob_cl, x_over, y_over = 1., [], np.array([])
 
     return [prob_cl, kde_cl, kde_fr, x_cl, x_fr, x_over, y_over]
 
 
 def anderson_darling_k(samples):
-    """Apply the Anderson-Darling k-sample test.
+    """
+    Not used, testing for now.
+
+    Source: https://github.com/aarchiba/kuiper/blob/master/anderson_darling.py#L193
+
+    Apply the Anderson-Darling k-sample test.
     This test evaluates whether it is plausible that all the samples are drawn
     from the same distribution, based on Scholz and Stephens 1987. The
     statistic computed is their A_kn (rather than A_akn, which differs in

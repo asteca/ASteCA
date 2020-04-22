@@ -6,26 +6,28 @@ from . import add_version_plot
 from . import mp_kinem_plx
 from . import prep_plots
 from .. import aux_funcs
+from . prep_plots import figsize_x, figsize_y, grid_x, grid_y
 
 
 def main(
     npd, pd, col_0_comb, mag_0_comb, plx_flag_clp, plx_clrg,
     mmag_clp, mp_clp, plx_clp, e_plx_clp, flag_no_fl_regs_i, field_regions_i,
     cl_reg_fit, plx_bayes_flag_clp, plx_samples, plx_Bys, plx_tau_autocorr,
-    mean_afs, plx_ess, plx_wa, plx_pm_flag, pmMP, pmRA_DE, pmDE, mmag_pm,
-        pmRA_fl_DE, pmDE_fl, pm_Plx_cl, pm_Plx_fr, **kwargs):
-    '''
+    mean_afs, plx_ess, plx_wa, plx_pm_flag, clreg_PMs, fregs_PMs, pm_Plx_cl,
+        pm_Plx_fr, **kwargs):
+    """
     Make C2 block plots.
-    '''
+    """
 
     if 'C2' in pd['flag_make_plot']:
 
         if plx_flag_clp is False:
-            print("<<WARNING: nothing to plot in 'C2' block>>")
+            print("  WARNING: nothing to plot in 'C2' block")
+            print("<<Skip C2 block plot>>")
             return
 
-        fig = plt.figure(figsize=(30, 25))
-        gs = gridspec.GridSpec(10, 12)
+        fig = plt.figure(figsize=(figsize_x, figsize_y))
+        gs = gridspec.GridSpec(grid_y, grid_x)
         add_version_plot.main()
 
         coord, x_name, y_name = prep_plots.coord_syst(pd['coords'])
@@ -40,11 +42,6 @@ def main(
                 mmag_clp, mp_clp, plx_clp, e_plx_clp, flag_no_fl_regs_i,
                 field_regions_i)
         plx_cl_kde_x, plx_cl_kde = aux_funcs.kde1D(plx_clrg)
-        if plx_bayes_flag_clp:
-            plx_mu_kde_x, plx_mu_kde = aux_funcs.kde1D(
-                1. / plx_samples.flatten())
-        else:
-            plx_mu_kde_x, plx_mu_kde = [], []
 
         arglist = [
             # plx_histo
@@ -56,24 +53,22 @@ def main(
             [gs, y_min_cmd, y_max_cmd, y_ax, mmag_clp, mp_clp, plx_clp,
              e_plx_clp, plx_flrg, mag_flrg, plx_Bys, plx_wa],
             # plx_bys_params
-            [gs, plx_bayes_flag_clp, plx_samples, plx_Bys, plx_mu_kde_x,
-             plx_mu_kde, plx_tau_autocorr, mean_afs, plx_ess]
+            [gs, plx_bayes_flag_clp, plx_samples, plx_Bys,
+             plx_tau_autocorr, mean_afs, plx_ess]
         ]
         for n, args in enumerate(arglist):
             mp_kinem_plx.plot(n, *args)
 
         if plx_pm_flag:
             # PMs data.
-            pmMP, pmRA_DE, _, pmDE, _, mmag_pm, _ =\
-                prep_plots.PMsPlot(
-                    pmMP, pmRA_DE, None, pmDE, None, mmag_pm, None)
-            raPMrng, dePMrng = prep_plots.PMsrange(pmRA_DE, pmDE)
+            raPMrng, dePMrng = prep_plots.PMsrange(
+                clreg_PMs['pmRA'], clreg_PMs['pmDE'],)
 
             arglist = [
                 # pms_vs_plx_mp_mag
-                gs, coord, y_ax, plx_bayes_flag_clp, plx_clp, plx_Bys,
-                pmMP, pmRA_DE, pmDE, mmag_pm, pmRA_fl_DE, pmDE_fl, pm_Plx_cl,
-                pm_Plx_fr, raPMrng, dePMrng]
+                gs, coord, pd['cosDE_flag'], y_ax, plx_bayes_flag_clp,
+                plx_clp, plx_Bys, clreg_PMs, fregs_PMs, pm_Plx_cl, pm_Plx_fr,
+                raPMrng, dePMrng]
             mp_kinem_plx.plot(4, *arglist)
 
         # Generate output file.

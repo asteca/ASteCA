@@ -1,94 +1,100 @@
 
-import math
+import numpy as np
+from ..aux_funcs import circFrac
 
 
-def main(clp):
+def main(clp, RDP_rings, rings_rm=.1, Nmin=10, **kwargs):
     """
-    Calculate the density profile by counting the number of stars in the center
-    bin first (r aprox width_bin/2 px), then moving to the 8 adjacent bins
-    (r aprox width_bin + (width_bin/2) px), then the following 16 (r aprox
-    2*width_bin + (width_bin/2) px), then the next 24 (r aprox 3*width_bin +
-    (width_bin/2) px) and so forth. These "square rings" have consecutive
-    multiples of 8 bins each (if no bin falls outside the range of the x,y
-    chart) and an area of N*width_bin^2 [px^2], where N is the number of bins.
-    Dividing the number of stars in each "square ring" by this area, we get all
-    the "ring densities" for those approximate values of r.
+    Obtain the RDP using the concentric rings method. For plotting only.
+
+    HARDCODED
+
+    rings_rm: remove the more conflicting last X% of radii values.
+    Nmin: minimum number of stars that a ring should contain. Else, expand it.
     """
 
-    x_c_b, y_c_b = clp['bin_cent']
+    # Frame limits
+    x0, x1 = min(clp['xy_filtered'].T[0]), max(clp['xy_filtered'].T[0])
+    y0, y1 = min(clp['xy_filtered'].T[1]), max(clp['xy_filtered'].T[1])
 
-    square_rings, radii, rdp_points, poisson_error = [], [], [], []
-    # Use max x,y length defined in the 2D histogram.
-    rdp_length = max(len(clp['hist_2d']), len(clp['hist_2d'][0]))
-    # Iterate through all the bins in the largest dimension.
-    for i in range(rdp_length):
-        # Store here the coordinates of the bins.
-        bins_coords = []
+    # Handle the case where int()==0
+    max_i = max(1, int(rings_rm * RDP_rings))
+    # The +1 adds a ring accounting for the initial 0. in the array
+    radii = np.linspace(
+        0., clp['xy_cent_dist'].max(), RDP_rings + 1 + max_i)[:-max_i]
 
-        # Initialize bin_count for this square ring.
-        ring_count, bin_count = 0, 0
+    # Areas and #stars for all rad values.
+    rdp_radii, rdp_points, rdp_stddev = [], [], []
+    l_prev, N_in_prev = np.inf, 0.
+    for l, h in zip(*[radii[:-1], radii[1:]]):
+        # Stars within this ring.
+        N_in = (
+            (clp['xy_cent_dist'] >= l) & (clp['xy_cent_dist'] < h)).sum() +\
+            N_in_prev
 
-        # Iterate through bins in the x dimension for the 2D hist.
-        for xindex, xitem in enumerate(clp['hist_2d']):
-            # Iterate through bins in the y dimension for the 2D hist.
-            for yindex, st_in_bin in enumerate(xitem):
+        l_now = min(l, l_prev)
 
-                # Bin is in the top row
-                if yindex == (y_c_b + i) and abs(xindex - x_c_b) <= i:
-                    # Add stars in bin to corresponding ring.
-                    ring_count += st_in_bin
-                    # Add 1 more bin to the "square ring".
-                    bin_count += 1
-                    bins_coords.append([xindex - x_c_b, i])
-                # Bin is in the bottom row
-                elif yindex == (y_c_b - i) and abs(xindex - x_c_b) <= i:
-                    ring_count += st_in_bin
-                    bin_count += 1
-                    bins_coords.append([xindex - x_c_b, -i])
-                # Bin is in the left column
-                elif xindex == (x_c_b - i) and abs(yindex - y_c_b) <= (i - 1):
-                    ring_count += st_in_bin
-                    bin_count += 1
-                    bins_coords.append([-i, yindex - y_c_b])
-                # Bin is in the right column
-                elif xindex == (x_c_b + i) and abs(yindex - y_c_b) <= (i - 1):
-                    ring_count += st_in_bin
-                    bin_count += 1
-                    bins_coords.append([i, yindex - y_c_b])
+        # Require that at least 'Nmin' stars are within the ring.
+        if N_in > Nmin:
+            # Area of ring.
+            fr_area_l = circFrac(
+                (clp['kde_cent']), l_now, x0, x1, y0, y1, clp['N_MC'],
+                clp['rand_01_MC'], clp['cos_t'], clp['sin_t'])
+            fr_area_h = circFrac(
+                (clp['kde_cent']), h, x0, x1, y0, y1, clp['N_MC'],
+                clp['rand_01_MC'], clp['cos_t'], clp['sin_t'])
+            ring_area = (np.pi * h**2 * fr_area_h) -\
+                (np.pi * l_now**2 * fr_area_l)
 
-        # Break when no more bins are stored in this square ring. This means
-        # we reached the border of the frame.
-        if bin_count == 0:
-            break
+            # Store RDP parameters.
+            rad_med = h if l_now == 0. else .5 * (l_now + h)
+            rdp_radii.append(rad_med)
+            rdp_points.append(N_in / ring_area)
+            rdp_stddev.append(np.sqrt(N_in) / ring_area)
 
-        # Store bin coordinates in each square ring.
-        square_rings.append(bins_coords)
-        # If no stars are inside this square ring, set value to 1 to avoid a
-        # division by zero.
-        bin_count = 1 if bin_count == 0 else bin_count
-        # The number of bins times the area of each bin gives the area of
-        # this square ring.
-        area = bin_count * (clp['bin_width'] ** 2)
+            # Reset
+            l_prev, N_in_prev = np.inf, 0.
 
-        # Calculate density corresponding to "square ring" i
-        rdp_points.append(ring_count / area)
-        # Obtain the Poisson error bar for each value
-        poisson_error.append(math.sqrt(ring_count) / area)
+        else:
+            l_prev = l_now
+            N_in_prev += N_in
 
-        # Store values for radii to go with the densities obtained above
-        # and stored in 'rdp_points'
-        radii.append(clp['bin_width'] / 2. + (clp['bin_width'] * i))
-
-    # Transform from bin units to coordinate units before passing.
-    rdp_length = rdp_length * clp['bin_width']
-
-    if rdp_points:
-        print("Radial density profile (RDP) calculated")
-    else:
+    if not rdp_radii:
         raise ValueError("ERROR: RDP is empty. Check the center coordinates")
 
-    # Add data to dictionary.
-    clp['radii'], clp['rdp_points'], clp['poisson_error'],\
-        clp['square_rings'], clp['rdp_length'] = radii, rdp_points,\
-        poisson_error, square_rings, rdp_length
+    if RDP_rings != len(rdp_radii):
+        print("RDP: N={} rings with <10 stars inside were merged".format(
+            RDP_rings - len(rdp_radii)))
+
+    clp['rdp_radii'], clp['rdp_points'], clp['rdp_stddev'] = rdp_radii,\
+        rdp_points, rdp_stddev
     return clp
+
+
+# DELETE 23/01/20 Tried this approach briefly but it did not work.
+# def kNNRDP(fr_dist, fr_dens):
+#     """
+#     Use the kNN's per-star densities. Average these values for several circular
+#     rings to obtain the RDP.
+#     """
+
+#     # HARDCODED: remove the more conflicting last ~10% of radii values.
+#     radii = np.linspace(0., fr_dist.max(), 55)[:-5]
+
+#     rdp_radii, rdp_NN, rdp_stddev = [], [], []
+
+#     # This method uses the median of the 'fr_dens' values for
+#     # stars within a ring. Not sure why (09/01/20) it is not working
+#     # properly.
+#     for l, h in zip(*[radii[:-1], radii[1:]]):
+#         # Stars within this ring.
+#         msk_in = (fr_dist >= l) & (fr_dist < h)
+#         if sum(msk_in) > 0:
+#             rdp_radii.append(.5 * (l + h))
+#             rdp_NN.append(np.median(fr_dens[msk_in]))
+#             rdp_stddev.append(np.std(fr_dens[msk_in]))
+
+#     if not rdp_radii:
+#         raise ValueError("ERROR: RDP is empty. Check the center coordinates")
+
+#     return rdp_radii, rdp_NN, rdp_stddev

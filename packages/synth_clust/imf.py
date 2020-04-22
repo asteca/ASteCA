@@ -1,5 +1,5 @@
 
-from ..core_imp import np
+import numpy as np
 from scipy.integrate import quad
 from scipy.interpolate import interp1d
 
@@ -25,7 +25,6 @@ def main(IMF_name, masses, m_high=150.):
       IMF, that (approximately) sum to the associated total mass.
 
     """
-
     print("Sampling selected IMF ({})".format(IMF_name))
 
     # Low mass limits for each IMF. Defined slightly larger to avoid sampling
@@ -35,6 +34,21 @@ def main(IMF_name, masses, m_high=150.):
         'kroupa_1993': 0.081, 'kroupa_2002': 0.011, 'salpeter_1955': 0.31}
     # IMF low mass limit.
     m_low = imfs_dict[IMF_name]
+
+    sampled_IMF = invTrnsfSmpl(masses, IMF_name, m_low, m_high)
+
+    st_dist_mass = (sampled_IMF, np.cumsum(sampled_IMF))
+
+    return st_dist_mass
+
+
+def invTrnsfSmpl(masses, IMF_name, m_low, m_high):
+    """
+    IMF inverse transform sampling.
+
+    Asked here: https://stackoverflow.com/q/21100716/1391441
+    """
+    from .set_rand_seed import np
 
     # Obtain normalization constant (k = \int_{m_low}^{m_up} \xi(m) dm). This
     # makes the IMF behave like a PDF.
@@ -68,9 +82,7 @@ def main(IMF_name, masses, m_high=150.):
         mass_samples += sampled_inv_cdf(100).tolist()
     sampled_IMF = np.array(mass_samples)
 
-    st_dist_mass = (sampled_IMF, np.cumsum(sampled_IMF))
-
-    return st_dist_mass
+    return sampled_IMF
 
 
 def IMF_func(m_star, IMF_name):

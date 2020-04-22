@@ -7,15 +7,16 @@ from . import mp_best_fit1_GA
 from . import mp_best_fit1_mcmc
 from . import cornerPlot, tracePlot
 from . import prep_plots
+from . prep_plots import figsize_x, figsize_y, grid_x, grid_y
 
 
 def main(npd, pd, isoch_fit_params, isoch_fit_errors, **kwargs):
-    '''
+    """
     Make D1 block plots.
-    '''
+    """
     if 'D1' in pd['flag_make_plot'] and pd['bf_flag']:
-        fig = plt.figure(figsize=(30, 30))
-        gs = gridspec.GridSpec(12, 12)
+        fig = plt.figure(figsize=(figsize_x, figsize_y))
+        gs = gridspec.GridSpec(grid_y, grid_x)
 
         # Title and version for the plot.
         m_bf, s_bf = divmod(isoch_fit_params['bf_elapsed'], 60)
@@ -35,16 +36,23 @@ def main(npd, pd, isoch_fit_params, isoch_fit_errors, **kwargs):
                 xt = 0.83
                 xf, yf = .67, 1.01
         elif pd['best_fit_algor'] == 'ptemcee':
-            nwalkers, nburn, nsteps, pt_adapt = pd['nwalkers_pt'],\
-                pd['nburn_pt'], isoch_fit_params['N_steps'],\
+            nwalkers, nburn, nsteps, pt_adapt = pd['nwalkers_mcee'],\
+                pd['nburn_mcee'], isoch_fit_params['N_steps'],\
                 pd['pt_adapt']
             p_str = (
                 "chains={:.0f}, burn={:.2f}, steps={:.0f},"
                 " adapt={}").format(nwalkers, nburn, nsteps[-1], pt_adapt)
+        elif pd['best_fit_algor'] == 'emcee':
+            nwalkers, nburn, nsteps = pd['nwalkers_mcee'],\
+                pd['nburn_mcee'], isoch_fit_params['N_steps']
+            p_str = (
+                "[{}] chains={:.0f}, burn={:.2f}, steps={:.0f} ").format(
+                ' '.join(pd['emcee_moves']), nwalkers, nburn, nsteps[-1])
+
         add_version_plot.main(x_fix=xf, y_fix=yf)
         plt.suptitle(
             ("{} | {:.0f}h{:.0f}m").format(p_str, h_bf, m_bf), x=xt, y=yt,
-            fontsize=14)
+            fontsize=11)
 
         # Best fitting process plots.
         if pd['best_fit_algor'] == 'boot+GA':
@@ -67,12 +75,9 @@ def main(npd, pd, isoch_fit_params, isoch_fit_errors, **kwargs):
 
             min_max_p = prep_plots.param_ranges(
                 pd['best_fit_algor'], pd['fundam_params'])
-            l_min_max = prep_plots.likl_y_range(
-                pd['best_fit_algor'], isoch_fit_params['lkl_best'],
-                isoch_fit_params['lkl_mean'])
             args = [
                 # pl_GA_lkl: Likelihood evolution for the GA.
-                gs, pos0, l_min_max, isoch_fit_params['lkl_best'],
+                gs, pos0, isoch_fit_params['lkl_best'],
                 isoch_fit_params['lkl_mean'], isoch_fit_params['OF_models'],
                 isoch_fit_params['new_bs_indx'], pd['fit_diff'],
                 pd['cross_prob'], pd['cross_sel'], pd['mut_prob'],
@@ -104,7 +109,12 @@ def main(npd, pd, isoch_fit_params, isoch_fit_errors, **kwargs):
             for n, args in enumerate(arglist, 1):
                 mp_best_fit1_GA.plot(n, *args)
 
-        if pd['best_fit_algor'] in ('ptemcee'):  # 'abc', 'emcee'
+        elif pd['best_fit_algor'] in ('ptemcee', 'emcee'):  # 'abc'
+
+            if pd['best_fit_algor'] == 'ptemcee':
+                maf_steps = isoch_fit_params['maf_allT']
+            elif pd['best_fit_algor'] == 'emcee':
+                maf_steps = isoch_fit_params['maf_steps']
 
             min_max_p = prep_plots.param_ranges(
                 pd['best_fit_algor'], pd['fundam_params'],
@@ -117,35 +127,36 @@ def main(npd, pd, isoch_fit_params, isoch_fit_errors, **kwargs):
 
             # pl_MAP_lkl: Parameters half of pdfs.
             args = [
-                gs, isoch_fit_params['N_steps'],
-                isoch_fit_params['prob_mean'], isoch_fit_params['map_lkl'],
-                isoch_fit_params['map_lkl_final']]
+                gs, isoch_fit_params['N_steps'], isoch_fit_params['prob_mean'],
+                isoch_fit_params['map_lkl'], isoch_fit_params['map_lkl_final']]
             mp_best_fit1_mcmc.plot(0, *args)
+
+            if pd['best_fit_algor'] == 'ptemcee':
+                # pl_betas: Betas vs steps.
+                args = [
+                    gs, isoch_fit_params['Tmax'],
+                    isoch_fit_params['N_steps'],
+                    isoch_fit_params['betas_pt']]
+                mp_best_fit1_mcmc.plot(2, *args)
+
+                # pl_Tswaps: Tswaps AFs vs steps.
+                args = [
+                    gs, isoch_fit_params['N_steps'],
+                    isoch_fit_params['tswaps_afs']]
+                mp_best_fit1_mcmc.plot(3, *args)
 
             # pl_MAF: Parameters evolution of MAF.
             args = [
-                gs, isoch_fit_params['N_steps'],
-                isoch_fit_params['maf_allT']]
+                gs, pd['best_fit_algor'], isoch_fit_params['N_steps'],
+                maf_steps]
             mp_best_fit1_mcmc.plot(1, *args)
-
-            # pl_betas: Betas vs steps.
-            args = [
-                gs, isoch_fit_params['Tmax'],
-                isoch_fit_params['N_steps'],
-                isoch_fit_params['betas_pt']]
-            mp_best_fit1_mcmc.plot(2, *args)
-
-            # pl_Tswaps: Tswaps AFs vs steps.
-            args = [
-                gs, isoch_fit_params['N_steps'],
-                isoch_fit_params['tswaps_afs']]
-            mp_best_fit1_mcmc.plot(3, *args)
 
             # pl_tau
             args = [
                 gs, isoch_fit_params['N_steps'],
                 isoch_fit_params['tau_autocorr']]
             mp_best_fit1_mcmc.plot(4, *args)
+
             # TODO re-implement when/if code is fixed
             # # pl_mESS
             # args = [
@@ -153,16 +164,19 @@ def main(npd, pd, isoch_fit_params, isoch_fit_errors, **kwargs):
             #     isoch_fit_params['minESS'],
             #     isoch_fit_params['mESS_epsilon']]
             # mp_best_fit1_mcmc.plot(7, *args)
+
             # pl_lags
             args = [
                 gs, isoch_fit_params['varIdxs'],
                 isoch_fit_params['acorr_function']]
             mp_best_fit1_mcmc.plot(5, *args)
+
             # pl_GW
             args = [
                 gs, isoch_fit_params['varIdxs'],
                 isoch_fit_params['geweke_z']]
             mp_best_fit1_mcmc.plot(6, *args)
+
             # pl_tau_histo
             args = [
                 gs, isoch_fit_params['all_taus']]
@@ -200,7 +214,7 @@ def sharedPlots(pd, npd, isoch_fit_params, gs, min_max_p):
         traceplot_args = []
         post_trace, pre_trace = isoch_fit_params['params_boot'], None
 
-    elif pd['best_fit_algor'] == 'ptemcee':
+    elif pd['best_fit_algor'] in ('ptemcee', 'emcee'):
         trace = isoch_fit_params['mcmc_trace']
         msol = 'MAP'
         best_sol = isoch_fit_params['mean_sol']

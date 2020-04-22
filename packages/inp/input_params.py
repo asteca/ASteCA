@@ -29,11 +29,11 @@ from . import CMD_phot_systs
 #     return lst
 
 
-def main(mypath, pars_f_path):
-    '''
+def main(pars_f_path):
+    """
     This function reads the input data parameters stored in the
     'params_input_XX.dat' file and returns a dictionary.
-    '''
+    """
 
     # Accept these variations of the 'true' flag.
     true_lst = ('y', 'Y', 'yes', 'Yes', 'YES', 'true', 'True', 'TRUE')
@@ -81,13 +81,19 @@ def main(mypath, pars_f_path):
                 # Structure functions parameters.
                 elif reader[0] == 'MD':
                     manual_struct.append(reader[1:])
-                elif reader[0] == 'CH':
+                elif reader[0] == 'CD':
                     center_bw = float(reader[1])
-                elif reader[0] == 'CR':
-                    radius_method = str(reader[1])
-                    fdens_method = str(reader[2])
+                    NN_dd = int(reader[2])
+                    fdens_method = str(reader[3])
+                elif reader[0] == 'RU':
+                    nsteps_rad = int(reader[1])
+                    RDP_rings = int(reader[2])
                 elif reader[0] == 'KP':
                     kp_flag = True if reader[1] in true_lst else False
+                    kp_nchains = int(reader[2])
+                    kp_nruns = int(reader[3])
+                    kp_nburn = float(reader[4])
+                    rt_max_f = float(reader[5])
                 elif reader[0] == 'GR':
                     try:
                         fr_number = int(reader[1])
@@ -99,7 +105,6 @@ def main(mypath, pars_f_path):
                     err_max = reader[1:]
                 elif reader[0] == 'AD':
                     ad_runs = int(reader[1])
-                    ad_k_comb = True if reader[2] in true_lst else False
 
                 # Decontamination algorithm parameters
                 elif reader[0] == 'DA':
@@ -117,29 +122,25 @@ def main(mypath, pars_f_path):
                     fld_clean_prob = float(reader[3])
 
                 # Parallax & PMS analysis
-                elif reader[0] == 'PP':
+                elif reader[0] == 'PX':
                     plx_bayes_flag = True if reader[1] in true_lst else False
                     plx_offset = float(reader[2])
                     plx_chains = int(reader[3])
                     plx_runs = int(reader[4])
-                    flag_plx_mp = True if reader[5] in true_lst else False
+                    plx_burn = float(reader[5])
+                    flag_plx_mp = True if reader[6] in true_lst else False
                 elif reader[0] == 'PO':
                     PM_KDE_std = float(reader[1])
-                    PM_nnmax = int(reader[2])
-                    PM_nnperc = float(reader[3])
-                    flag_PM_coord = True if reader[4] in true_lst else False
+                    cosDE_flag = True if reader[2] in true_lst else False
 
-                # Cluster parameters assignation.
-                elif reader[0] == 'CF':
-                    best_fit_algor = str(reader[1])
-                    # TODO extend this param to 'brute force'
-                    hmax = float(reader[2])
-
+                # Synthetic clusters parameters
+                elif reader[0] == 'RS':
+                    synth_rand_seed = str(reader[1])
                 # Ranges for the fundamental parameters
                 elif reader[0] == 'RZ':
-                    z_range = list(map(float, reader[1:]))
+                    z_range = reader[1:]
                 elif reader[0] == 'RA':
-                    a_range = list(map(float, reader[1:]))
+                    a_range = reader[1:]
                 elif reader[0] == 'RE':
                     e_range = list(map(float, reader[1:]))
                 elif reader[0] == 'RD':
@@ -149,26 +150,54 @@ def main(mypath, pars_f_path):
                 elif reader[0] == 'RB':
                     b_range = list(map(float, reader[1:]))
 
+                elif reader[0] == 'ET':
+                    evol_track = str(reader[1])
+                    colibri = str(reader[2])
+                elif reader[0] == 'MF':
+                    IMF_name = str(reader[1])
+                elif reader[0] == 'BR':
+                    bin_mr = float(reader[1])
+                elif reader[0] == 'RV':
+                    R_V = float(reader[1])
+                elif reader[0] == 'MM':
+                    try:
+                        max_mag = float(reader[1])
+                    except ValueError:
+                        max_mag = str(reader[1])
+
+                # Cluster parameters assignation.
+                elif reader[0] == 'CF':
+                    best_fit_algor = str(reader[1])
+                    # TODO extend this param to 'brute force'
+                    hmax = float(reader[2])
+
+                # Shared ptemcee/emcee parameters.
+                elif reader[0] == 'PS':
+                    nsteps_mcee = int(float(reader[1]))
+                    nwalkers_mcee = int(float(reader[2]))
+                    nburn_mcee = float(reader[3])
+                elif reader[0] == 'PRZ':
+                    z_prior = [reader[1]] + list(map(float, reader[2:]))
+                elif reader[0] == 'PRA':
+                    a_prior = [reader[1]] + list(map(float, reader[2:]))
+                elif reader[0] == 'PRE':
+                    e_prior = [reader[1]] + list(map(float, reader[2:]))
+                elif reader[0] == 'PRD':
+                    d_prior = [reader[1]] + list(map(float, reader[2:]))
+                elif reader[0] == 'PRM':
+                    m_prior = [reader[1]] + list(map(float, reader[2:]))
+                elif reader[0] == 'PRB':
+                    b_prior = [reader[1]] + list(map(float, reader[2:]))
+
+                # emcee algorithm parameters.
+                elif reader[0] == 'PE':
+                    emcee_moves = reader[1:]
+
                 # ptemcee algorithm parameters.
                 elif reader[0] == 'PT':
-                    ntemps = reader[1]
-                    nsteps_pt = int(float(reader[2]))
-                    nwalkers_pt = int(float(reader[3]))
-                    nburn_pt = float(reader[4])
-                    tmax_pt = reader[5]
-                    pt_adapt = True if reader[6] in true_lst else False
-                elif reader[0] == 'PTZ':
-                    pt_z_prior = [reader[1]] + list(map(float, reader[2:]))
-                elif reader[0] == 'PTA':
-                    pt_a_prior = [reader[1]] + list(map(float, reader[2:]))
-                elif reader[0] == 'PTE':
-                    pt_e_prior = [reader[1]] + list(map(float, reader[2:]))
-                elif reader[0] == 'PTD':
-                    pt_d_prior = [reader[1]] + list(map(float, reader[2:]))
-                elif reader[0] == 'PTM':
-                    pt_m_prior = [reader[1]] + list(map(float, reader[2:]))
-                elif reader[0] == 'PTB':
-                    pt_b_prior = [reader[1]] + list(map(float, reader[2:]))
+                    pt_ntemps = reader[1]
+                    pt_tmax = reader[2]
+                    pt_adapt = True if reader[3] in true_lst else False
 
                 # TODO not finished yet
                 # # ABC algorithm parameters.
@@ -209,25 +238,7 @@ def main(mypath, pars_f_path):
                 elif reader[0] == 'LK':
                     lkl_method = str(reader[1])
                     lkl_binning = str(reader[2])
-                    lkl_weight = str(reader[3])
-
-                # Synthetic clusters parameters
-                elif reader[0] == 'ET':
-                    evol_track = str(reader[1])
-                    colibri = str(reader[2])
-                elif reader[0] == 'PS':
-                    za_steps = list(map(float, reader[1:3]))
-                elif reader[0] == 'MF':
-                    IMF_name = str(reader[1])
-                elif reader[0] == 'BR':
-                    bin_mr = float(reader[1])
-                elif reader[0] == 'RV':
-                    R_V = float(reader[1])
-                elif reader[0] == 'MM':
-                    try:
-                        max_mag = float(reader[1])
-                    except ValueError:
-                        max_mag = str(reader[1])
+                    lkl_manual_bins = reader[3:]
 
                 else:
                     # Get parameters file name from path.
@@ -245,27 +256,27 @@ def main(mypath, pars_f_path):
     # Accepted field stars removal methods.
     fld_rem_methods = ('local', 'n_memb', 'mp_05', 'top_h', 'man', 'all')
     # Accepted binning methods.
-    bin_methods = ('fixed', 'auto', 'fd', 'doane', 'scott', 'rice', 'sqrt',
-                   'sturges', 'knuth', 'blocks', 'blocks-max')
-    bin_weights = ('mean', 'median', 'max')
+    bin_methods = (
+        'optm', 'fixed', 'auto', 'fd', 'doane', 'scott', 'rice', 'sqrt',
+        'sturges', 'knuth', 'blocks', 'blocks-max', 'manual')
     # Likelihood methods.
+    # 'duong', 'kdeKL', 'dolphin_kde'
     lkl_methods = (
-        'tolstoy', 'duong', 'dolphin', 'mighell', 'kdeKL', 'dolphin_kde')
+        'tremmel', 'dolphin', 'mighell', 'tolstoy', 'isochfit')
     # Accepted IMF functions.
     imf_funcs = ('chabrier_2001_exp', 'chabrier_2001_log', 'kroupa_1993',
                  'kroupa_2002', 'salpeter_1955')
     # Optimizing algorithm
     # TODO 'brute', 'emcee', 'abc'
-    optimz_algors = ('ptemcee', 'boot+GA', 'n')
+    optimz_algors = ('ptemcee', 'boot+GA', 'emcee', 'n', 'synth_gen')
     # Accepted forms of priors.
     bayes_priors = ('u', 'g')
 
-    priors_pt = [
-        pt_z_prior, pt_a_prior, pt_e_prior, pt_d_prior, pt_m_prior, pt_b_prior]
+    priors_mcee = [z_prior, a_prior, e_prior, d_prior, m_prior, b_prior]
 
     # Map evolutionary tracks selection to proper names, and name of the folder
     # where they should be stored.
-    cmd_evol_tracks = {
+    all_evol_tracks = {
         'PAR12+CS_35': ('parsec12', 'PARSEC v1.2S', 'COLIBRI S_35'),
         'PAR11+CS_35': ('parsec11', 'PARSEC v1.1', 'COLIBRI S_35'),
         'PAR10+CS_35': ('parsec10', 'PARSEC v1.0', 'COLIBRI S_35'),
@@ -279,6 +290,13 @@ def main(mypath, pars_f_path):
         'PAR11+No': ('parsec11', 'PARSEC v1.1', 'No'),
         'PAR10+No': ('parsec10', 'PARSEC v1.0', 'No'),
     }
+
+    # HARDCODED AND IMPORTANT
+    # If the CMD isochrones change, this needs to change too.
+    # Names of the "extra" columns in the CMD service isochrones.
+    CMD_extra_pars = (
+        'Mini', 'int_IMF', 'Mass', 'logL', 'logTe', 'logg', 'label',
+        'mbolmag')
 
     # Dictionary with data on the CMD service photometric systems.
     cmd_systs = CMD_phot_systs.main()
@@ -298,35 +316,37 @@ def main(mypath, pars_f_path):
         'plot_dpi': plot_dpi,
         # Structure functions parameters
         'manual_struct': manual_struct, 'center_bw': center_bw,
-        'radius_method': radius_method, 'fdens_method': fdens_method,
-        'kp_flag': kp_flag, 'fr_number': fr_number,
+        'NN_dd': NN_dd, 'fdens_method': fdens_method, 'nsteps_rad': nsteps_rad,
+        'RDP_rings': RDP_rings, 'kp_flag': kp_flag, 'kp_nchains': kp_nchains,
+        'kp_nruns': kp_nruns, 'kp_nburn': kp_nburn, 'rt_max_f': rt_max_f,
+        'fr_number': fr_number,
         #
-        'err_max': err_max, 'ad_runs': ad_runs, 'ad_k_comb': ad_k_comb,
+        'err_max': err_max, 'ad_runs': ad_runs,
         # Decontamination algorithm parameters.
         'da_algor': da_algor, 'bayesda_runs': bayesda_runs,
         'fixedda_port': fixedda_port, 'bayesda_dflag': bayesda_dflag,
         # Plx & PMs parameters.
         'plx_bayes_flag': plx_bayes_flag, 'plx_offset': plx_offset,
-        'plx_chains': plx_chains, 'plx_runs': plx_runs,
+        'plx_chains': plx_chains, 'plx_runs': plx_runs, 'plx_burn': plx_burn,
         'flag_plx_mp': flag_plx_mp,
-        'PM_KDE_std': PM_KDE_std, 'PM_nnmax': PM_nnmax,
-        'PM_nnperc': PM_nnperc, 'flag_PM_coord': flag_PM_coord,
+        'PM_KDE_std': PM_KDE_std, 'cosDE_flag': cosDE_flag,
         # Cluster region field stars removal parameters.
         'fld_clean_mode': fld_clean_mode, 'fld_clean_bin': fld_clean_bin,
         'fld_clean_prob': fld_clean_prob,
         # Best fit parameters.
         'best_fit_algor': best_fit_algor, 'hmax': hmax,
         'lkl_method': lkl_method, 'lkl_binning': lkl_binning,
-        'lkl_weight': lkl_weight,
+        'lkl_manual_bins': lkl_manual_bins,
         # Synthetic cluster parameters
-        'evol_track': evol_track, 'za_steps': za_steps,
+        'synth_rand_seed': synth_rand_seed, 'evol_track': evol_track,
         'max_mag': max_mag, 'IMF_name': IMF_name, 'R_V': R_V, 'bin_mr': bin_mr,
         # parameters ranges
         'par_ranges': par_ranges,
         # ptemcee algorithm parameters.
-        'ntemps': ntemps, 'nsteps_pt': nsteps_pt,
-        'nwalkers_pt': nwalkers_pt, 'nburn_pt': nburn_pt,
-        "pt_adapt": pt_adapt, 'tmax_pt': tmax_pt, 'priors_pt': priors_pt,
+        'nsteps_mcee': nsteps_mcee, 'nwalkers_mcee': nwalkers_mcee,
+        'nburn_mcee': nburn_mcee, 'priors_mcee': priors_mcee,
+        'emcee_moves': emcee_moves,
+        'pt_ntemps': pt_ntemps, "pt_adapt": pt_adapt, 'pt_tmax': pt_tmax,
         # # ABC algorithm parameters.
         # 'nwalkers_abc': nwalkers_abc, 'nburn_abc': nburn_abc,
         # 'nsteps_abc': nsteps_abc, 'priors_abc': priors_abc,
@@ -344,10 +364,11 @@ def main(mypath, pars_f_path):
         # Fixed accepted parameter values and photometric systems.
         'read_mode_accpt': read_mode_accpt, 'coord_accpt': coord_accpt,
         'da_algors_accpt': da_algors_accpt, 'fld_rem_methods': fld_rem_methods,
-        'bin_methods': bin_methods, 'bin_weights': bin_weights,
+        'bin_methods': bin_methods,
         'imf_funcs': imf_funcs, 'lkl_methods': lkl_methods,
         'optimz_algors': optimz_algors, 'bayes_priors': bayes_priors,
-        'cmd_evol_tracks': cmd_evol_tracks, 'cmd_systs': cmd_systs}
+        'all_evol_tracks': all_evol_tracks, 'CMD_extra_pars': CMD_extra_pars,
+        'cmd_systs': cmd_systs}
 
     # Return parameters dictionary.
     return pd

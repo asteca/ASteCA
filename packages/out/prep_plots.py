@@ -4,24 +4,35 @@ from ..best_fit.obs_clust_prepare import dataProcess
 from ..decont_algors.local_cell_clean import bin_edges_f
 import numpy as np
 import warnings
-from scipy import stats
 from astropy.visualization import ZScaleInterval
 from astropy.stats import sigma_clipped_stats
 
 
+# HARDCODED Global plot parameters
+figsize_x, figsize_y = 30, 30
+# figsize(x1, y1), GridSpec(y2, x2)
+grid_x, grid_y = 12, 12
+xylabelsize = 10
+xytickssize = 9.5
+titlesize = 9
+legendsize = 9.5
+cbarlabelsize, cbartickssize = 8, 8
+grid_col, grid_ls, grid_lw = 'grey', '-', .25
+
+
 def frame_max_min(x_data, y_data):
-    '''
+    """
     Get max and min values in x,y coordinates.
-    '''
+    """
     x_min, x_max = min(x_data), max(x_data)
     y_min, y_max = min(y_data), max(y_data)
     return x_min, x_max, y_min, y_max
 
 
 def aspect_ratio(x_min, x_max, y_min, y_max):
-    '''
+    """
     Define an optimal aspect ratio for full frame plots.
-    '''
+    """
     x_range, y_range = abs(x_max - x_min), abs(y_max - y_min)
     asp_ratio = float(min(x_range, y_range) / max(x_range, y_range))
 
@@ -37,21 +48,28 @@ def aspect_ratio(x_min, x_max, y_min, y_max):
 
 
 def coord_syst(coords):
-    '''
+    """
     Define system of coordinates used.
-    '''
+    """
     coord_lst = ['px', 'x', 'y'] if coords == 'px' else ['deg', 'ra', 'dec']
     return coord_lst
 
 
-def frame_zoomed(x_min, x_max, y_min, y_max, kde_cent, clust_rad):
-    '''
+def frame_zoomed(
+    x_min, x_max, y_min, y_max, kde_cent, clust_rad, kpflag=None,
+        tidal_rad=None):
+    """
     If possible, define zoomed frame.
-    '''
-    x_zmin, x_zmax = max(x_min, (kde_cent[0] - 1.5 * clust_rad)), \
-        min(x_max, (kde_cent[0] + 1.5 * clust_rad))
-    y_zmin, y_zmax = max(y_min, (kde_cent[1] - 1.5 * clust_rad)), \
-        min(y_max, (kde_cent[1] + 1.5 * clust_rad))
+    """
+    if kpflag:
+        rad = clust_rad if clust_rad > tidal_rad[1] else tidal_rad[1]
+    else:
+        rad = clust_rad
+
+    x_zmin, x_zmax = max(x_min, (kde_cent[0] - 1.2 * rad)), \
+        min(x_max, (kde_cent[0] + 1.2 * rad))
+    y_zmin, y_zmax = max(y_min, (kde_cent[1] - 1.2 * rad)), \
+        min(y_max, (kde_cent[1] + 1.2 * rad))
     # Prevent axis stretching.
     if (x_zmax - x_zmin) != (y_zmax - y_zmin):
         lst = [(x_zmax - x_zmin), (y_zmax - y_zmin)]
@@ -65,9 +83,9 @@ def frame_zoomed(x_min, x_max, y_min, y_max, kde_cent, clust_rad):
 
 
 def ax_names(x, y, yaxis):
-    '''
+    """
     Define names for photometric diagram axes.
-    '''
+    """
     col_n = []
     c_filts = x[1].split(',')
     for f in c_filts:
@@ -87,13 +105,16 @@ def ax_names(x, y, yaxis):
         ys = y_ax.split('_')
         y_ax = ys[0] + '_{' + ys[1] + '}'
 
+    # Remove 'mag' introduced by the latest isochrones in the CMD service
+    x_ax, y_ax = x_ax.replace('mag', ''), y_ax.replace('mag', '')
+
     return x_ax, y_ax
 
 
 def diag_limits(yaxis, phot_x, phot_y):
-    '''
+    """
     Define plot limits for *all* photometric diagrams.
-    '''
+    """
     x_median, x_std = np.nanmedian(phot_x), np.nanstd(phot_x)
     x_min_cmd, x_max_cmd = x_median - 4.5 * x_std, x_median + 4.5 * x_std
 
@@ -119,10 +140,10 @@ def diag_limits(yaxis, phot_x, phot_y):
 
 
 def star_size(mag, N=None, zmin=None, zmax=None):
-    '''
+    """
     Convert magnitudes into intensities and define sizes of stars in
     finding chart.
-    '''
+    """
     mag = np.array(mag)
     if N is None:
         N = mag.size
@@ -137,21 +158,25 @@ def star_size(mag, N=None, zmin=None, zmax=None):
 
 
 def phot_diag_st_size(x):
-    '''
-    Calculate optimal size for stars in photometric diagram.
-    '''
-    a, b, c, d = 2.99, -2.81, 563.36, 15.02
-    if x != 0:
-        return ((a - d) / (1 + ((x / c) ** b))) + d
-    else:
-        # If no field regions were defined.
+    """
+    Size for stars in photometric diagram given a linear relation:
+    x, y = (1., 5000.), (18., 3.)
+    """
+    N = len(x)
+    if N == 0:
         return 0.
+    elif N >= 5000:
+        return 3.
+    else:
+        # coeffs = np.polyfit(x, y, 1)
+        coeffs = [-0.003, 18.]
+        return np.poly1d(coeffs)(N)
 
 
 def zoomed_frame(x, y, mags, x_zmin, x_zmax, y_zmin, y_zmax):
-    '''
+    """
     Separate stars for zoomed frame. Use main magnitude.
-    '''
+    """
     x_data_z, y_data_z, mag_data_z = [], [], []
     for st_x, st_y, st_mag in list(zip(x, y, mags[0])):
         if x_zmin <= st_x <= x_zmax and y_zmin <= st_y <= y_zmax:
@@ -176,9 +201,9 @@ def da_colorbar_range(cl_reg_fit, cl_reg_no_fit):
 def da_find_chart(
     kde_cent, clust_rad, stars_out, x_zmin, x_zmax, y_zmin, y_zmax,
         cl_reg_fit, cl_reg_no_fit):
-    '''
+    """
     Finding chart with MPs assigned by the DA.
-    '''
+    """
     # Arrange stars used in the best fit process.
     cl_reg_fit = list(zip(*cl_reg_fit))
     # Finding chart data. Invert values so higher prob stars are on top.
@@ -210,11 +235,11 @@ def da_find_chart(
 
 
 def da_phot_diag(cl_reg_fit, cl_reg_no_fit):
-    '''
+    """
     Generate parameters for the photometric diagram plotted with the MPs
     assigned by the DA. The stars are inverted according to their MPs, so that
     those with larger probabilities are plotted last.
-    '''
+    """
     # Arrange stars used in the best fit process.
     cl_reg_fit = list(zip(*cl_reg_fit))
     # Magnitudes.
@@ -270,9 +295,9 @@ def error_bars(stars_phot, x_min_cmd, err_lst, all_flag=None):
 
 
 def param_ranges(best_fit_algor, fundam_params, varIdxs=None, trace=None):
-    '''
+    """
     Parameter ranges used by several plots.
-    '''
+    """
     min_max_p = []
     if best_fit_algor in ['brute', 'boot+GA']:
 
@@ -334,9 +359,9 @@ def param_ranges(best_fit_algor, fundam_params, varIdxs=None, trace=None):
 
 
 def p2_ranges(p2, min_max_p):
-    '''
+    """
     Parameter ranges used by the MCMC 2-param density plots.
-    '''
+    """
     par_idx = {
         'metal': 0, 'age': 1, 'ext': 2, 'dist': 3, 'mass': 4, 'binar': 5}
     par = p2.split('-')
@@ -346,34 +371,21 @@ def p2_ranges(p2, min_max_p):
     return min_max_p2
 
 
-def likl_y_range(opt_method, lkl_best, lkl_mean):
-    '''
-    Obtain y axis range for the likelihood axis.
-    '''
-    # if opt_method == 'emcee':
-    #     l_min_max = [
-    #         max(0., min(lkl_old) - .2 * min(lkl_old)),
-    #         np.median(lkl_old[:int(.1 * len(lkl_old))]) * 1.5]
-    # elif opt_method == 'boot+GA':
-    # Take limits from L_min curve.
-    lkl_range = max(lkl_mean) - min(lkl_best)
-    l_min_max = [max(0., min(lkl_best) - 0.1 * lkl_range),
-                 max(lkl_mean) + 0.1 * lkl_range]
-
-    return l_min_max
-
-
 def packData(
-    lkl_method, lkl_binning, cl_max_mag, synth_clst, shift_isoch,
-        colors, filters, col_0_comb, mag_0_comb, col_1_comb):
+    lkl_method, cl_max_mag, bf_bin_edges, synth_clst_plot, binar_idx_plot,
+    shift_isoch, synthcl_Nsigma, colors, filters, col_0_comb, mag_0_comb,
+        col_1_comb):
     """
     Properly select and pack data for CMD/CCD of observed and synthetic
     clusters, and their Hess diagram.
     """
-    bin_method = 'auto' if lkl_method == 'tolstoy' else lkl_binning
-    mags_cols_cl, dummy = dataProcess(cl_max_mag)
-    # Obtain bin edges for each dimension, defining a grid.
-    bin_edges = bin_edges_f(bin_method, mags_cols_cl)
+    if lkl_method in ('tolstoy', 'isochfit'):
+        bin_method = 'auto'
+        mags_cols_cl, dummy = dataProcess(cl_max_mag)
+        # Obtain bin edges for each dimension, defining a grid.
+        bin_edges = bin_edges_f(bin_method, mags_cols_cl)
+    else:
+        bin_edges = bf_bin_edges
 
     N_mags, N_cols = len(filters), len(colors)
 
@@ -382,50 +394,60 @@ def packData(
     x_phot_all, y_phot_all = col_0_comb, mag_0_comb
     frst_obs_mag, frst_obs_col = list(zip(*list(zip(*cl_max_mag))[3]))[0],\
         list(zip(*list(zip(*cl_max_mag))[5]))[0]
-    frst_synth_col, frst_synth_mag = synth_clst[0][0][1],\
-        synth_clst[0][0][0]
-    # Indexes of binary systems.
-    binar_idx = synth_clst[1][0]
+    frst_synth_col, frst_synth_mag = synth_clst_plot.T[1], synth_clst_plot.T[0]
     frst_col_edgs, frst_mag_edgs = bin_edges[1], bin_edges[0]
     # Filters and colors are appended continuously in 'shift_isoch'. If
     # there are 3 defined filters, then the first color starts at the
     # index 3. This is why 'N_mags' is used as the 'first color' index.
     frst_col_isoch, frst_mag_isoch = shift_isoch[N_mags], shift_isoch[0]
+
+    # 1 sigma region
+    mag_col1_1sigma = []
+    if synthcl_Nsigma.any():
+        mag_col1_1sigma = [synthcl_Nsigma[N_mags], synthcl_Nsigma[0]]
+
     # gs plot coords.
     gs_y1, gs_y2 = 0, 2
     # Index of observed filter/color to scatter plot.
     i_obs_x, i_obs_y = 0, 0
     hr_diags = [
         [x_phot_all, y_phot_all, frst_obs_col, frst_obs_mag, frst_synth_col,
-         frst_synth_mag, binar_idx, frst_col_edgs, frst_mag_edgs,
-         frst_col_isoch, frst_mag_isoch, colors[0], filters[0], 'mag',
-         i_obs_x, i_obs_y, gs_y1, gs_y2]]
+         frst_synth_mag, binar_idx_plot, frst_col_edgs, frst_mag_edgs,
+         frst_col_isoch, frst_mag_isoch, mag_col1_1sigma,
+         colors[0], filters[0], 'mag', i_obs_x, i_obs_y, gs_y1, gs_y2]]
 
     # If more than one color was defined, plot an extra CMD (main magnitude
     # versus first color), and an extra CCD (first color versus second color)
     if N_cols > 1:
         scnd_obs_col = list(zip(*list(zip(*cl_max_mag))[5]))[1]
-        scnd_synth_col = synth_clst[0][0][2]
+        scnd_synth_col = synth_clst_plot.T[2]
         scnd_col_edgs = bin_edges[2]
         scnd_col_isoch = shift_isoch[N_mags + 1]
+
+        mag_col2_1sigma, col1_col2_1sigma = [], []
+        if synthcl_Nsigma.any():
+            mag_col2_1sigma = [synthcl_Nsigma[N_mags + 1], synthcl_Nsigma[0]]
+            col1_col2_1sigma = [
+                synthcl_Nsigma[N_mags], synthcl_Nsigma[N_mags + 1]]
+
         # CMD of main magnitude and second color defined.
         x_phot_all, y_phot_all = col_1_comb, mag_0_comb
         gs_y1, gs_y2 = 2, 4
         i_obs_x, i_obs_y = 1, 0
         hr_diags.append(
             [x_phot_all, y_phot_all, scnd_obs_col, frst_obs_mag,
-             scnd_synth_col, frst_synth_mag, binar_idx, scnd_col_edgs,
-             frst_mag_edgs, shift_isoch[2], frst_mag_isoch, colors[1],
-             filters[0], 'mag', i_obs_x, i_obs_y, gs_y1, gs_y2])
+             scnd_synth_col, frst_synth_mag, binar_idx_plot, scnd_col_edgs,
+             frst_mag_edgs, shift_isoch[2], frst_mag_isoch, mag_col2_1sigma,
+             colors[1], filters[0], 'mag', i_obs_x, i_obs_y, gs_y1, gs_y2])
         # CCD of first and second color defined.
         x_phot_all, y_phot_all = col_0_comb, col_1_comb
         gs_y1, gs_y2 = 4, 6
         i_obs_x, i_obs_y = 0, 1
         hr_diags.append(
             [x_phot_all, y_phot_all, frst_obs_col, scnd_obs_col,
-             frst_synth_col, scnd_synth_col, binar_idx, frst_col_edgs,
-             scnd_col_edgs, frst_col_isoch, scnd_col_isoch, colors[0],
-             colors[1], 'col', i_obs_x, i_obs_y, gs_y1, gs_y2])
+             frst_synth_col, scnd_synth_col, binar_idx_plot, frst_col_edgs,
+             scnd_col_edgs, frst_col_isoch, scnd_col_isoch, col1_col2_1sigma,
+             colors[0], colors[1], 'col', i_obs_x, i_obs_y, gs_y1, gs_y2])
 
     return hr_diags
 
@@ -488,46 +510,22 @@ def plxPlot(
     return plx_flrg, mag_flrg, mmag_clp, mp_clp, plx_clp, e_plx_clp
 
 
-def PMsPlot(pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, mmag_pm, pm_dist_max):
+def SigmaEllipse(points, Nsigma=2.):
     """
-    Parameters for the proper motions plot.
-    """
+    Generate a 'Nsigma' ellipse based on the mean and covariance of a point
+    "cloud".
 
-    # Re-arrange so stars with larger MPs are on top.
-    mp_i = pmMP.argsort()
-    arr_lst = []
-    for arr in (pmMP, pmRA_DE, e_pmRA_DE, pmDE, e_pmDE, mmag_pm, pm_dist_max):
-        if arr is not None:
-            arr_lst.append(arr[mp_i])
-        else:
-            arr_lst.append([])
-
-    return arr_lst
-
-
-def CIEllipse(points, prob=.95):
-    """
-    Generate a 'prob' confidence interval ellipse based on the mean and
-    covariance of a point "cloud".
-
-    Source: https://stackoverflow.com/q/12301071/1391441
-    Definition: https://stats.stackexchange.com/a/217377/10416
-
-    Definition (Wikipedia): "Were this procedure to be repeated on numerous
-    samples, the fraction of calculated confidence intervals (which would
-    differ for each sample) that encompass the true population parameter would
-    tend toward 90%."
-
+    Source: https://stackoverflow.com/a/12321306/1391441
 
     Parameters
     ----------
         points : An Nx2 array of the data points.
-        prob : probability value for the CI region.
+        Nsigma : probability value for the CI region.
     """
     def eigsorted(cov):
-        '''
+        """
         Eigenvalues and eigenvectors of the covariance matrix.
-        '''
+        """
         vals, vecs = np.linalg.eigh(cov)
         order = vals.argsort()[::-1]
         return vals[order], vecs[:, order]
@@ -541,9 +539,8 @@ def CIEllipse(points, prob=.95):
     vals, vecs = eigsorted(cov)
     theta = np.degrees(np.arctan2(*vecs[:, 0][::-1]))
 
-    k = np.sqrt(stats.chi2.ppf(prob, 2))
     # Width and height are "full" widths, not radius
-    width, height = 2 * np.sqrt(vals) * k
+    width, height = 2 * np.sqrt(vals) * Nsigma
 
     return mean_pos, width, height, theta
 
@@ -596,3 +593,17 @@ def PMsrange(pmRA_DE, pmDE):
     dePMrng = de_median - .5 * xyrange, de_median + .5 * xyrange
 
     return raPMrng, dePMrng
+
+
+def pmRectangle(allfr_PMs, frac=.1):
+    """
+    Define a rectangle around the center of the maximum value in the KDE of
+    all the (pmRA, pmDE) in the frame.
+    """
+    pmRA_all, pmDE_all = allfr_PMs['pmRA'], allfr_PMs['pmDE']
+    _, _, ra_std = sigma_clipped_stats(pmRA_all)
+    _, _, de_std = sigma_clipped_stats(pmDE_all)
+    xyrang = max(ra_std, de_std)
+    xydelta = frac * xyrang
+
+    return xydelta, xyrang

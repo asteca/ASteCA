@@ -1,4 +1,6 @@
 
+import numpy as np
+from . import zaWAverage
 from . import move_isochrone
 from . import cut_max_mag
 from . import mass_distribution
@@ -9,8 +11,9 @@ from . import add_errors
 
 
 def main(
-    isochrone, model_proper, err_max, err_lst, completeness, max_mag_syn,
-        st_dist_mass, R_V, ext_coefs, N_fc, m_ini, cmpl_rnd, err_rnd):
+    fundam_params, varIdxs, model, theor_tracks, completeness, max_mag_syn,
+    st_dist_mass, R_V, ext_coefs, N_fc, err_pars, m_ini_idx, binar_flag,
+        extra_pars_flag=False):
     """
     Takes an isochrone and returns a synthetic cluster created according to
     a certain mass distribution.
@@ -29,185 +32,122 @@ def main(
     Correct indexes of binary systems after completeness removal.
     binary_idxs = [i1, i2, ..., iN]
 
-    Six lists containing the theoretical tracks extra parameters.
+    Lists containing the theoretical tracks extra parameters.
     extra_pars = [l1, l2, ..., l6]
     """
 
-    # Unpack synthetic cluster parameters. The first two elements are the
-    # metallicity and the age, which are already incorporated in the selected
-    # isochrone.
+    # If 'extra_pars_flag' is True and synth_clust = np.array([])
+    sigma, extra_pars, isoch_moved, mass_dist, isoch_binar, isoch_compl =\
+        [[] for _ in range(6)]
+
+    # Return proper values for fixed parameters and parameters required
+    # for the (z, log(age)) isochrone averaging.
+    model_proper, z_model, a_model, ml, mh, al, ah = properModel(
+        fundam_params, model, varIdxs)
+
+    # Generate a weighted average isochrone from the (z, log(age)) values in
+    # the 'model'.
+    isochrone = zaWAverage.main(
+        theor_tracks, m_ini_idx, fundam_params, z_model, a_model, ml, mh, al,
+        ah)
+
+    # Extract parameters
     e, d, M_total, bin_frac = model_proper
 
-    # import time
-    # t1, t2, t3, t4, t5, t6, t7 = 0., 0., 0., 0., 0., 0., 0.
-
-    # s = time.clock()
     # Move theoretical isochrone using the values 'e' and 'd'.
-    isoch_moved = move_isochrone.main(isochrone, e, d, R_V, ext_coefs, N_fc)
-    # t1 = time.clock() - s
+    isoch_moved = move_isochrone.main(
+        isochrone, e, d, R_V, ext_coefs, N_fc, binar_flag, m_ini_idx)
 
-    ##############################################################
-    # # To generate a synthetic cluster with the full isochrone length,
-    # # un-comment this line.
-    # # This takes the max magnitude from the isochrone itself instead of using
-    # # the input cluster file.
-    # print "\nCluster's log(age): {:0.2f}".format(synth_cl_params[1])
-    # print 'Fixed total mass: {:0.2f}'.format(M_total)
-    # max_mag = max(isoch_moved[1]) + 0.5
-    ##############################################################
-
-    # s = time.clock()
     # Get isochrone minus those stars beyond the magnitude cut.
     isoch_cut = cut_max_mag.main(isoch_moved, max_mag_syn)
-    # t2 = time.clock() - s
+
+    # # In place for #358
+    # return isoch_cut.T[:, :3]
 
     # Empty list to pass if at some point no stars are left.
-    synth_clust = []
+    synth_clust = np.array([])
     # Check for an empty array.
     if isoch_cut.any():
-
-        # s = time.clock()
         # Mass distribution to produce a synthetic cluster based on
         # a given IMF and total mass.
         mass_dist = mass_distribution.main(st_dist_mass, M_total)
-        # t3 = time.clock() - s
 
-        # s = time.clock()
         # Interpolate masses in mass_dist into the isochrone rejecting those
         # masses that fall outside of the isochrone's mass range.
-        isoch_mass = mass_interp.main(isoch_cut, mass_dist, m_ini)
-        # t4 = time.clock() - s
+        # This destroys the order by magnitude.
+        isoch_mass = mass_interp.main(isoch_cut, mass_dist, m_ini_idx)
 
         if isoch_mass.any():
-
-            ##############################################################
-            # # For plotting purposes: store a copy of this list before
-            # # adding binaries since the list gets overwritten.
-            # from copy import deepcopy
-            # isoch_mass0 = deepcopy(isoch_mass)
-            ##############################################################
-
-            # s = time.clock()
             # Assignment of binarity.
-            isoch_binar = binarity.main(isoch_mass, bin_frac, m_ini, N_fc)
-            # t5 = time.clock() - s
+            isoch_binar = binarity.main(isoch_mass, bin_frac, m_ini_idx, N_fc)
 
-            # s = time.clock()
             # Completeness limit removal of stars.
-            isoch_compl = completeness_rm.main(
-                isoch_binar, completeness, cmpl_rnd)
-            # t6 = time.clock() - s
-
-            ##############################################################
-            # # Use when producing synthetic clusters from isochrones.
-            # # Comment the line above.
-            # isoch_compl = compl_func2(isoch_binar)
-            ##############################################################
+            isoch_compl = completeness_rm.main(isoch_binar, completeness)
 
             if isoch_compl.any():
-
-                # s = time.clock()
                 # Get errors according to errors distribution.
-                synth_clust = add_errors.main(
-                    isoch_compl, err_lst, err_max, m_ini, err_rnd)
-                # t7 = time.clock() - s
+                synth_clust, sigma, extra_pars = add_errors.main(
+                    isoch_compl, err_pars, m_ini_idx, binar_flag,
+                    extra_pars_flag)
 
-    ################################################################
-    # # Plot synthetic cluster.
-    # from synth_plot import synth_clust_plot as s_c_p
-    # m, a = synth_cl_params[:2]
-    # print(m, a, M_total)
-    # out_name = str(m).split('.')[1] + '_' + str(a)
-    # # out_name = 'synth_clust'
-    # out_folder = '/home/gabriel/Descargas/'
-    # path = out_folder + out_name + '.png'
-    # s_c_p(N_fc, mass_dist, isochrone, synth_cl_params, isoch_moved,
-    #       isoch_cut, isoch_mass0, isoch_binar, binar_idx0, isoch_compl,
-    #       binar_idx, synth_clust, path)
-    ################################################################
-
-    # return np.array([t1, t2, t3, t4, t5, t6, t7])
-    return synth_clust
+    if extra_pars_flag is False:
+        # Only pass the photometry, used by the likelihood function
+        return synth_clust
+    return synth_clust, sigma, extra_pars, isoch_moved, mass_dist,\
+        isoch_binar, isoch_compl
 
 
-if __name__ == "__main__":
+def properModel(fundam_params, model, varIdxs):
+    """
+    Define the 'proper' model with values for (z, a) taken from its grid,
+    and filled values for those parameters that are fixed.
 
-    import pickle
-    import numpy as np
-    from synth_clust import imf
-    import sys
-    mpath = sys.path[0].replace('synth_clust', '').replace('packages/', '')
+    Parameters
+    ----------
+    model : array
+      Array of *free* fundamental parameters only (ie: in varIdxs).
 
-    # Data for RUP42 file (2.2 Mb) with BV, UB colors read
-    print("Reading data")
-    bin_mr = .7
-    with open(mpath + 'theor_tracks.pickle', 'rb') as f:
-        theor_tracks = pickle.load(f)
-    err_max = [.3]
-    err_lst = [
-        np.array([4.82905373e-17, 1.60540044e+00, 3.04244535e-02]),
-        np.array([2.91192261e-10, 8.99472478e-01, 4.53498125e-02]),
-        np.array([5.83560740e-06, 4.79509209e-01, 3.82828812e-02])]
-    completeness = [
-        np.array([8.695, 8.96248, 9.22996, 9.49744, 9.76492, 10.0324,
-                  10.29988, 10.56736, 10.83484, 11.10232, 11.3698, 11.63728,
-                  11.90476, 12.17224, 12.43972, 12.7072, 12.97468, 13.24216,
-                  13.50964, 13.77712, 14.0446, 14.31208, 14.57956, 14.84704,
-                  15.11452, 15.382, 15.64948, 15.91696, 16.18444, 16.45192,
-                  16.7194, 16.98688, 17.25436, 17.52184, 17.78932, 18.0568,
-                  18.32428, 18.59176, 18.85924, 19.12672, 19.3942, 19.66168,
-                  19.92916, 20.19664, 20.46412, 20.7316, 20.99908, 21.26656,
-                  21.53404, 21.80152, 22.069]), 37,
-        np.array([1., 0.98684211, 0.90131579, 0.82017544, 0.63048246,
-                  0.36074561, 0.18311404, 0.10087719, 0.04166667, 0.01644737,
-                  0.01754386, 0.00438596, 0.00109649])]
-    max_mag_syn = 20.99
-    ext_coefs = [
-        (0.99974902186052628, -0.0046292182005786527),
-        [(0.9999253931841896, 0.94553192328962365),
-         (0.99974902186052628, -0.0046292182005786527)],
-        [(0.96420188342499813, 1.784213363585738),
-         (0.9999253931841896, 0.94553192328962365)]]
-    N_fc = [1, 2]
-    R_V = 3.1
-    print("Data read")
+    Returns
+    -------
+    model_proper : list
+      Stores (E_BV, dm, Mass, b_fr) including the fixed parameters that are
+      missing from 'model'.
+    z_model, a_model : floats
+      The (z, a) values for this model's isochrone.
+    ml, mh, al, ah : ints
+      Indexes of the (z, a) values in the grid that define the box that enclose
+      the (z_model, a_model) values.
 
-    Nm, Na = np.shape(theor_tracks)[0], np.shape(theor_tracks)[1]
+    """
 
-    M_max_all = [1000., 5000., 10000., 25000., 50000., 100000., 250000.]
-    print("Running")
-    times_all = 0.
-    for M_max in M_max_all:
+    model_proper, j = [], 0
+    for i, par in enumerate(fundam_params):
+        # Check if this parameter is one of the 'free' parameters.
+        if i in varIdxs:
+            # If it is the parameter metallicity.
+            if i == 0:
+                # Select the closest value in the array of allowed values.
+                mh = min(len(par) - 1, np.searchsorted(par, model[i - j]))
+                ml = mh - 1
+                # Define the model's z value
+                z_model = model[i - j]
+            # If it is the parameter log(age).
+            elif i == 1:
+                # Select the closest value in the array of allowed values.
+                ah = min(len(par) - 1, np.searchsorted(par, model[i - j]))
+                al = ah - 1
+                a_model = model[i - j]
+            else:
+                model_proper.append(model[i - j])
+        else:
+            if i == 0:
+                ml = mh = 0
+                z_model = fundam_params[0][0]
+            elif i == 1:
+                al = ah = 0
+                a_model = fundam_params[1][0]
+            else:
+                model_proper.append(par[0])
+            j += 1
 
-        # set step for 100 masses
-        M_step = M_max / 100.
-        M_min = 50.
-        masses = np.arange(M_min, M_max, M_step)
-        st_dist_mass = imf.main('kroupa_2002', 150., masses)
-
-        cmpl_rnd = np.random.uniform(0., 1., 1000000)
-        err_rnd = np.random.normal(0, 1, 1000000)
-
-        N = 10000
-        times = np.array([0., 0., 0., 0., 0., 0., 0.])
-        for _ in range(N):
-            ext = np.random.uniform(0., 2.)
-            dm = np.random.uniform(8., 20.)
-            M_total = np.random.choice(masses)
-            bf = np.random.uniform(0., 1.)
-            synth_cl_params = (np.nan, np.nan, ext, dm, M_total, bf)
-
-            mi, ai = np.random.choice(Nm), np.random.choice(Na)
-            isochrone = theor_tracks[mi][ai]
-
-            times = times + main(
-                err_max, err_lst, completeness, max_mag_syn, st_dist_mass,
-                isochrone, R_V, ext_coefs, N_fc, cmpl_rnd, err_rnd,
-                synth_cl_params)
-
-        times_perc = np.round(100. * times / times.sum(), 1)
-        print("    {:2.0f}-{:6.0f} {:7.2f}    {}".format(
-            M_min, M_max, times.sum(), "    ".join(map(str, times_perc))))
-
-        times_all += times.sum()
-    print("    Total time: ~{:.3f} s --> ~xx% faster".format(times_all))
+    return model_proper, z_model, a_model, ml, mh, al, ah

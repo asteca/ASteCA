@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 def main(clp):  # m_ini_obs
     """
-    TODO
+    TODO in place for #96
     1. use the LF maximum magnitude cut, otherwise the incompleteness of low
     mass stars impacts on the slope estimation.
     2. perhaps fit two distinct lines: m<1 and m>1? This is where most IMFs

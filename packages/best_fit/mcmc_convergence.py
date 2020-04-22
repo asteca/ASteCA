@@ -5,7 +5,6 @@ from scipy.special import gammaln
 # from scipy.signal import fftconvolve
 import logging
 import warnings
-# from .emcee3rc2 import autocorr
 from .ptemcee import util
 
 
@@ -265,6 +264,117 @@ def geweke(x, first=.1, last=.5, intervals=20):
         return np.array(zscores)
 
 
+def convergenceVals(algor, ndim, varIdxs, chains_nruns, bi_steps):
+    """
+    Convergence statistics.
+    """
+    if algor == 'emcee':
+        from emcee import autocorr
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+
+        if algor == 'ptemcee':
+            # Mean Tau across chains, shape: (post-bi steps, ndims)
+            x = np.mean(chains_nruns.T, axis=1).T
+            tau_autocorr = []
+            j = 10  # Here in case the line below is skipped
+            for j in np.arange(50, x.shape[0], 50):
+                # tau.shape: ndim
+                tau = util.autocorr_integrated_time(x[:j])
+                # Autocorrelation time. Mean across dimensions.
+                tau_autocorr.append([bi_steps + j, np.mean(tau)])
+            # Add one last point with the entire chain.
+            if j < x.shape[0]:
+                tau = util.autocorr_integrated_time(x)
+                tau_autocorr.append([bi_steps + x.shape[0], np.mean(tau)])
+            tau_autocorr = np.array(tau_autocorr).T
+        elif algor == 'emcee':
+            tau_autocorr = None
+
+        # Autocorrelation time for each parameter, mean across chains.
+        if algor == 'emcee':
+            acorr_t = autocorr.integrated_time(
+                chains_nruns, tol=0, quiet=True)
+        elif algor == 'ptemcee':
+            x = np.mean(chains_nruns.transpose(1, 0, 2), axis=0)
+            acorr_t = util.autocorr_integrated_time(x)
+
+        # Autocorrelation time for each chain for each parameter.
+        logger = logging.getLogger()
+        logger.disabled = True
+        at = []
+        # For each parameter/dimension
+        for p in chains_nruns.T:
+            at_p = []
+            # For each chain for this parameter/dimension
+            for c in p:
+                if algor == 'emcee':
+                    at_p.append(autocorr.integrated_time(c, quiet=True)[0])
+                elif algor == 'ptemcee':
+                    at_p.append(util.autocorr_integrated_time(c))
+            at.append(at_p)
+        logger.disabled = False
+        # IAT for all chains and all parameters.
+        all_taus = [item for subl in at for item in subl]
+
+        # # Worst chain: chain with the largest acorr time.
+        # max_at_c = [np.argmax(a) for a in at]
+        # # Best chain: chain with the smallest acorr time.
+        # min_at_c = [np.argmin(a) for a in at]
+        # Chain with the closest IAT to the median
+        med_at_c = [np.argmin(np.abs(np.median(a) - a)) for a in at]
+
+        # Mean Geweke z-scores and autocorrelation functions for all chains.
+        geweke_z, acorr_function = [[] for _ in range(ndim)],\
+            [[] for _ in range(ndim)]
+        for i, p in enumerate(chains_nruns.T):
+            for c in p:
+                try:
+                    geweke_z[i].append(geweke(c))
+                except ZeroDivisionError:
+                    geweke_z[i].append([np.nan, np.nan])
+                try:
+                    if algor == 'emcee':
+                        acorr_function[i].append(autocorr.function_1d(c))
+                    elif algor == 'ptemcee':
+                        acorr_function[i].append(util.autocorr_function(c))
+                except FloatingPointError:
+                    acorr_function[i].append([np.nan])
+        # Mean across chains
+        geweke_z = np.nanmean(geweke_z, axis=1)
+        acorr_function = np.nanmean(acorr_function, axis=1)
+
+        # # Cut the autocorrelation function just after *all* the parameters
+        # # have crossed the zero line.
+        # try:
+        #     lag_zero = max([np.where(_ < 0)[0][0] for _ in acorr_function])
+        # except IndexError:
+        #     # Could not obtain zero lag
+        #     lag_zero = acorr_function.shape[-1]
+        # acorr_function = acorr_function[:, :int(lag_zero + .2 * lag_zero)]
+
+        # # Approx IAT
+        # lag_iat = 1. + 2. * np.sum(acorr_function, axis=1)
+        # print("  Approx (zero lag) IAT: ", lag_iat)
+
+        # Effective Sample Size (per param) = (nsteps / tau) * nchains
+        mcmc_ess = (chains_nruns.shape[0] / acorr_t) * chains_nruns.shape[1]
+
+        # TODO fix this function
+        # # Minimum effective sample size (ESS), and multi-variable ESS.
+        # minESS, mESS = fminESS(ndim), multiESS(chains_nruns)
+        # # print("mESS: {}".format(mESS))
+        # mESS_epsilon = [[], [], []]
+        # for alpha in [.01, .05, .1, .2, .3, .4, .5, .6, .7, .8, .9, .95]:
+        #     mESS_epsilon[0].append(alpha)
+        #     mESS_epsilon[1].append(fminESS(ndim, alpha=alpha, ess=minESS))
+        #     mESS_epsilon[2].append(fminESS(ndim, alpha=alpha, ess=mESS))
+
+    return tau_autocorr, acorr_t, med_at_c, all_taus, geweke_z,\
+        acorr_function, mcmc_ess
+
+
 # def return_intersection(hist_1, hist_2):
 #     """
 #     The ranges of both histograms must coincide for this function to work.
@@ -300,105 +410,3 @@ def geweke(x, first=.1, last=.5, intervals=20):
 #             mcmc_halves.append(1.)
 
 #     return mcmc_halves
-
-def convergenceVals(algor, ndim, varIdxs, N_conv, chains_nruns, bi_steps):
-    """
-    Convergence statistics.
-    """
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-
-        # Mean Tau across chains, shape: (post-bi steps, ndims)
-        x = np.mean(chains_nruns.T, axis=1).T
-        tau_autocorr = []
-        for j in np.arange(50, x.shape[0], 50):
-            # tau.shape: ndim
-            tau = util.autocorr_integrated_time(x[:j])
-            # Autocorrelation time. Mean across dimensions.
-            tau_autocorr.append([bi_steps + j, np.mean(tau)])
-        # Add one last point with the entire chain.
-        if j < x.shape[0]:
-            tau = util.autocorr_integrated_time(x)
-            tau_autocorr.append([bi_steps + x.shape[0], np.mean(tau)])
-        tau_autocorr = np.array(tau_autocorr).T
-
-        # Autocorrelation time for each parameter, mean across chains.
-        if algor == 'emcee':
-            acorr_t = autocorr.integrated_time(
-                chains_nruns, tol=N_conv, quiet=True)
-        elif algor == 'ptemcee':
-            x = np.mean(chains_nruns.transpose(1, 0, 2), axis=0)
-            acorr_t = util.autocorr_integrated_time(x)
-        elif algor == 'abc':
-            acorr_t = np.array([np.nan] * ndim)
-
-        # Autocorrelation time for each chain for each parameter.
-        logger = logging.getLogger()
-        logger.disabled = True
-        at = []
-        # For each parameter/dimension
-        for p in chains_nruns.T:
-            at_p = []
-            # For each chain for this parameter/dimension
-            for c in p:
-                # at_p.append(autocorr.integrated_time(c, quiet=True)[0])
-                at_p.append(util.autocorr_integrated_time(c))
-            at.append(at_p)
-        logger.disabled = False
-
-        # IAT for all chains and all parameters.
-        all_taus = [item for subl in at for item in subl]
-
-        # # Worst chain: chain with the largest acorr time.
-        # max_at_c = [np.argmax(a) for a in at]
-        # # Best chain: chain with the smallest acorr time.
-        # min_at_c = [np.argmin(a) for a in at]
-        # Chain with the closest to the median IAT
-        med_at_c = [np.argmin(np.abs(np.median(a) - a)) for a in at]
-
-        # Mean Geweke z-scores and autocorrelation functions for all chains.
-        geweke_z, acorr_function = [[] for _ in range(ndim)],\
-            [[] for _ in range(ndim)]
-        for i, p in enumerate(chains_nruns.T):
-            for c in p:
-                try:
-                    geweke_z[i].append(geweke(c))
-                except ZeroDivisionError:
-                    geweke_z[i].append([np.nan, np.nan])
-                try:
-                    # acorr_function[i].append(autocorr.function_1d(c))
-                    acorr_function[i].append(util.autocorr_function(c))
-                except FloatingPointError:
-                    acorr_function[i].append([np.nan])
-        # Mean across chains
-        geweke_z = np.nanmean(geweke_z, axis=1)
-        acorr_function = np.nanmean(acorr_function, axis=1)
-
-        # # Cut the autocorrelation function just after *all* the parameters
-        # # have crossed the zero line.
-        # try:
-        #     lag_zero = max([np.where(_ < 0)[0][0] for _ in acorr_function])
-        # except IndexError:
-        #     # Could not obtain zero lag
-        #     lag_zero = acorr_function.shape[-1]
-        # acorr_function = acorr_function[:, :int(lag_zero + .2 * lag_zero)]
-
-        # # Approx IAT
-        # lag_iat = 1. + 2. * np.sum(acorr_function, axis=1)
-        # print("  Approx (zero lag) IAT: ", lag_iat)
-
-        # Effective Sample Size (per param) = (nsteps / tau) * nchains
-        mcmc_ess = (chains_nruns.shape[0] / acorr_t) * chains_nruns.shape[1]
-
-        # TODO fix this function
-        # # Minimum effective sample size (ESS), and multi-variable ESS.
-        # minESS, mESS = fminESS(ndim), multiESS(chains_nruns)
-        # # print("mESS: {}".format(mESS))
-        # mESS_epsilon = [[], [], []]
-        # for alpha in [.01, .05, .1, .2, .3, .4, .5, .6, .7, .8, .9, .95]:
-        #     mESS_epsilon[0].append(alpha)
-        #     mESS_epsilon[1].append(fminESS(ndim, alpha=alpha, ess=minESS))
-        #     mESS_epsilon[2].append(fminESS(ndim, alpha=alpha, ess=mESS))
-
-    return tau_autocorr, acorr_t, med_at_c, all_taus, geweke_z,\
-        acorr_function, mcmc_ess

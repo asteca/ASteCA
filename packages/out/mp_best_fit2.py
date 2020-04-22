@@ -2,42 +2,45 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.offsetbox as offsetbox
-from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.colors import LinearSegmentedColormap, LogNorm, ListedColormap
+from . prep_plots import xylabelsize, xytickssize, titlesize, legendsize,\
+    grid_col, grid_ls, grid_lw
 
 
 def pl_mps_phot_diag(
     gs, gs_y1, gs_y2, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
     x_ax, y_ax, v_min_mp, v_max_mp, obs_x, obs_y, obs_MPs, err_bar,
-        hess_xedges, hess_yedges, x_isoch, y_isoch):
-    '''
+        cl_sz_pt, hess_xedges, hess_yedges, x_isoch, y_isoch, phot_Nsigma):
+    """
     Star's membership probabilities on cluster's photometric diagram.
-    '''
+    """
     ax = plt.subplot(gs[gs_y1:gs_y2, 0:2])
-    # Set plot limits
-    plt.xlim(x_min_cmd, x_max_cmd)
-    plt.ylim(y_min_cmd, y_max_cmd)
     # Set axis labels
-    plt.xlabel('$' + x_ax + '$', fontsize=12)
-    plt.ylabel('$' + y_ax + '$', fontsize=12)
+    plt.xlabel('$' + x_ax + '$', fontsize=xylabelsize)
+    plt.ylabel('$' + y_ax + '$', fontsize=xylabelsize)
     # Add text box.
     if gs_y1 == 0:
         text = '$N_{{fit}}={}$'.format(len(obs_MPs))
-        ob = offsetbox.AnchoredText(text, loc=4, prop=dict(size=14))
+        ob = offsetbox.AnchoredText(text, loc=4, prop=dict(size=legendsize))
         ob.patch.set(boxstyle='square,pad=-0.2', alpha=0.85)
         ax.add_artist(ob)
-    # Set minor ticks
+
     ax.minorticks_on()
+    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
     if gs_y1 == 0:
-        ax.set_title("Observed", fontsize=10)
+        txt = r" + $\mathcal{N}(\mu,\sigma^2)$" if phot_Nsigma else ""
+        ax.set_title("Observed" + txt, fontsize=titlesize)
     # Plot grid.
     for x_ed in hess_xedges:
         # vertical lines
-        ax.axvline(x_ed, linestyle=':', lw=.8, color='k', zorder=1)
+        ax.axvline(
+            x_ed, linestyle=grid_ls, lw=grid_lw, color=grid_col, zorder=1)
     for y_ed in hess_yedges:
         # horizontal lines
-            ax.axhline(y_ed, linestyle=':', lw=.8, color='k', zorder=1)
+            ax.axhline(
+                y_ed, linestyle=grid_ls, lw=grid_lw, color=grid_col, zorder=1)
     # This reversed colormap means higher prob stars will look redder.
-    cm = plt.cm.get_cmap('RdYlBu_r')
+    rmap = plt.cm.get_cmap('RdYlBu_r')
     # If the 'tolstoy' method was used AND the stars have a range of colors.
     # Currently the 'dolphin' likelihood does not use MPs in the fit, so it's
     # confusing to color stars is if it did.
@@ -48,11 +51,27 @@ def pl_mps_phot_diag(
         col_select_fit, isoch_col = '#4682b4', 'r'
         plot_colorbar = False
     # Plot stars used in the best fit process.
-    sca = plt.scatter(obs_x, obs_y, marker='o',
-                      c=col_select_fit, s=30, cmap=cm, lw=0.5, edgecolor='k',
-                      vmin=v_min_mp, vmax=v_max_mp, zorder=4)
+    sca = plt.scatter(
+        obs_x, obs_y, marker='o', c=col_select_fit, s=cl_sz_pt + 2., cmap=rmap,
+        lw=0.3, edgecolor='k', vmin=v_min_mp, vmax=v_max_mp, zorder=4)
+
+    # Plot sigma region
+    if phot_Nsigma:
+        cGreys = plt.cm.get_cmap('Greys', 100)
+        cmap = ListedColormap(cGreys(range(65)))
+        # Extend one bin upwards and to the left
+        ybin = abs(hess_yedges[1] - hess_yedges[0])
+        hess_yedges = [hess_yedges[0] - ybin] + list(hess_yedges)
+        xbin = abs(hess_xedges[1] - hess_xedges[0])
+        hess_xedges = [hess_xedges[0] - xbin] + list(hess_xedges)
+        plt.hist2d(*phot_Nsigma, bins=(
+            hess_xedges, hess_yedges), cmap=cmap, norm=LogNorm())
     # Plot isochrone.
     plt.plot(x_isoch, y_isoch, isoch_col, lw=1., zorder=6)
+
+    plt.xlim(x_min_cmd, x_max_cmd)
+    plt.ylim(y_min_cmd, y_max_cmd)
+
     # If list is not empty, plot error bars at several values. The
     # prep_plots.error_bars() is not able to handle the color-color diagram.
     x_val, mag_y, xy_err = err_bar
@@ -81,17 +100,20 @@ def pl_hess_diag(
     plt.xlim(x_min_cmd, x_max_cmd)
     plt.ylim(y_min_cmd, y_max_cmd)
     # Set axis labels
-    plt.xlabel('$' + x_ax + '$', fontsize=12)
+    plt.xlabel('$' + x_ax + '$', fontsize=xylabelsize)
     # Set minor ticks
     ax.minorticks_on()
+    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
     if gs_y1 == 0:
-        ax.set_title("Hess diagram (observed - synthetic)", fontsize=10)
+        ax.set_title("Hess diagram (observed - synthetic)", fontsize=titlesize)
     for x_ed in hess_xedges:
         # vertical lines
-        ax.axvline(x_ed, linestyle=':', lw=.8, color='k', zorder=1)
+        ax.axvline(x_ed, linestyle=grid_ls, lw=grid_lw, color=grid_col,
+                   zorder=1)
     for y_ed in hess_yedges:
         # horizontal lines
-        ax.axhline(y_ed, linestyle=':', lw=.8, color='k', zorder=1)
+        ax.axhline(y_ed, linestyle=grid_ls, lw=grid_lw, color=grid_col,
+                   zorder=1)
     if HD.any():
         # Add text box.
         if HD.min() < 0:
@@ -119,54 +141,60 @@ def pl_hess_diag(
         handles, labels = ax.get_legend_handles_labels()
         leg = ax.legend(
             handles, labels, loc='lower right', scatterpoints=1, ncol=2,
-            columnspacing=.2, handletextpad=-.3, fontsize=10)
+            columnspacing=.2, handletextpad=-.3, fontsize=legendsize)
         leg.get_frame().set_alpha(0.7)
 
 
 def pl_bf_synth_cl(
     gs, gs_y1, gs_y2, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
-    hess_xedges, hess_yedges, x_synth, y_synth, binar_idx, IMF_name, R_V,
-    best_sol, p_err, x_isoch, y_isoch, lkl_method, bin_method,
-        cmd_evol_tracks, evol_track):
-    '''
+    hess_xedges, hess_yedges, x_synth, y_synth, sy_sz_pt, binar_idx, IMF_name,
+    R_V, best_sol, p_err, x_isoch, y_isoch, lkl_method, bin_method,
+        all_evol_tracks, evol_track):
+    """
     Best fit synthetic cluster obtained.
-    '''
+    """
     ax = plt.subplot(gs[gs_y1:gs_y2, 4:6])
     # Set plot limits
     plt.xlim(x_min_cmd, x_max_cmd)
     plt.ylim(y_min_cmd, y_max_cmd)
     # Set axis labels
-    plt.xlabel('$' + x_ax + '$', fontsize=12)
+    plt.xlabel('$' + x_ax + '$', fontsize=xylabelsize)
     # Set minor ticks
     ax.minorticks_on()
+    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
     if gs_y1 == 0:
-        ax.set_title("Synthetic (best match)", fontsize=10)
+        ax.set_title("Synthetic (best match)", fontsize=titlesize)
         # Add text box
         text = '$({};\,{})$'.format(lkl_method, bin_method)
-        ob = offsetbox.AnchoredText(text, pad=.2, loc=1, prop=dict(size=12))
+        ob = offsetbox.AnchoredText(
+            text, pad=.2, loc=1, prop=dict(size=legendsize))
         ob.patch.set(alpha=0.85)
         ax.add_artist(ob)
-    # Plot grid.
     for x_ed in hess_xedges:
         # vertical lines
-        ax.axvline(x_ed, linestyle=':', lw=.8, color='k', zorder=1)
+        ax.axvline(
+            x_ed, linestyle=grid_ls, lw=grid_lw, color=grid_col, zorder=1)
     for y_ed in hess_yedges:
         # horizontal lines
-        ax.axhline(y_ed, linestyle=':', lw=.8, color='k', zorder=1)
+            ax.axhline(
+                y_ed, linestyle=grid_ls, lw=grid_lw, color=grid_col, zorder=1)
     # Plot synthetic cluster.
     single_idx, bin_idx = binar_idx <= 1., binar_idx > 1.
     # Single systems
-    plt.scatter(x_synth[single_idx], y_synth[single_idx], marker='o', s=30,
-                c='#4682b4', lw=0.5, edgecolor='k', zorder=2)
+    plt.scatter(
+        x_synth[single_idx], y_synth[single_idx], marker='o', s=sy_sz_pt + 2.,
+        c='#4682b4', lw=0.3, edgecolor='k', zorder=2)
     # Binary systems
-    plt.scatter(x_synth[bin_idx], y_synth[bin_idx], marker='o', s=30,
-                c='#F34C4C', lw=0.35, edgecolor='k', zorder=3)
+    plt.scatter(
+        x_synth[bin_idx], y_synth[bin_idx], marker='o', s=sy_sz_pt + 2.,
+        c='#F34C4C', lw=0.3, edgecolor='k', zorder=3)
     # Plot isochrone.
     plt.plot(x_isoch, y_isoch, '#21B001', lw=1., zorder=6)
     if gs_y1 == 0:
         # Add text box
         text1 = '$N_{{synth}} = {}$'.format(len(x_synth))
-        ob = offsetbox.AnchoredText(text1, pad=.2, loc=3, prop=dict(size=14))
+        ob = offsetbox.AnchoredText(
+            text1, pad=.2, loc=3, prop=dict(size=legendsize))
         ob.patch.set(alpha=0.85)
         ax.add_artist(ob)
 
@@ -174,8 +202,8 @@ def pl_bf_synth_cl(
         ax_t = plt.subplot(gs[gs_y1:gs_y2, 6:7])
         ax_t.axis('off')  # Remove axis from frame.
         # Map isochrones set selection to proper name.
-        iso_print = cmd_evol_tracks[evol_track][1] + ' + ' +\
-            cmd_evol_tracks[evol_track][2]
+        iso_print = all_evol_tracks[evol_track][1] + ' + ' +\
+            all_evol_tracks[evol_track][2]
         t1 = r'$Synthetic\;cluster\;parameters$' + '\n[{}]'.format(iso_print)
         t2 = r'$IMF \hspace{{3.}}:\;{}$'.format(
             IMF_name.replace('_', '\;').title())
@@ -195,15 +223,15 @@ def pl_bf_synth_cl(
         text = t1 + '\n\n' + t2 + '\n' + t3 + '\n' + t4 + '\n' + t5 + '\n' +\
             t6 + '\n' + t7 + '\n' + t8 + '\n' + t9
         ob = offsetbox.AnchoredText(
-            text, pad=1, loc=6, borderpad=-5, prop=dict(size=11))
+            text, pad=1, loc=6, borderpad=-5, prop=dict(size=legendsize))
         ob.patch.set(alpha=0.85)
         ax_t.add_artist(ob)
 
 
 def plot(N, *args):
-    '''
+    """
     Handle each plot separately.
-    '''
+    """
     plt_map = {
         0: [pl_hess_diag, 'Hess diagram'],
         1: [pl_bf_synth_cl, 'synthetic cluster']

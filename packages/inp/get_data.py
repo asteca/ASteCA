@@ -3,14 +3,11 @@ import numpy as np
 import warnings
 from astropy.io import ascii
 from astropy.table import Table
-from collections import defaultdict, Iterable
 import operator
 import copy
+from functools import reduce
 from ..structure import trim_frame
-# In place for #243
-import sys
-if sys.version_info[0] == 3:
-    from functools import reduce
+from ..aux_funcs import flatten, list_duplicates
 
 
 def main(
@@ -95,9 +92,9 @@ def main(
 
     frac_reject = 1. - (float(cld_c['ids'].size) / cld_i['ids'].size)
     if frac_reject > 0.05:
-        print("  WARNING: N={} ({:.0f}%) of stars contain\n"
-              "  incomplete photometric data".format(
-                  cld_i['ids'].size - cld_c['ids'].size, 100. * frac_reject))
+        print(("  WARNING: {} stars ({:.0f}%) contain incomplete " +
+               "photometric data").format(
+                   cld_i['ids'].size - cld_c['ids'].size, 100. * frac_reject))
 
     clp = {
         'flag_data_eq': flag_data_eq, 'x_offset': x_offset,
@@ -110,6 +107,9 @@ def readDataFile(nanvals, read_mode, id_col, data_file):
     """
     Read input data file.
     """
+    # TODO to separate IDs (strings) from the rest of the data, I read the file
+    # twice. This is very slow for large files.
+
     # Identify all these strings as invalid entries.
     fill_msk = [('', '0')] + [(_, '0') for _ in nanvals]
     # Store IDs as strings.
@@ -163,16 +163,24 @@ def fill_cols(tbl, fill=np.nan, kind='f'):
 
 def maskBadPhot(data, mag_col, e_mag_col, col_col, e_col_col):
     """
-    Mask photometric values outside the (-50., 50.) range.
+    Mask photometric values outside the (mmin, mmax) range.
     """
+    # HARDCODED valid magnitude range
+    mmin, mmax = -10., 50.
+
     # Convert to masked table in case it is not.
     data = Table(data, masked=True)
+
+    # # TODO this is a temporary magnitude filter
+    # data = data[np.array([float(_) < 18. for _ in data[mag_col[0]]])]
+
+    # TODO this for block is rather slow for large data files
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         for idx in [mag_col, e_mag_col, col_col, e_col_col]:
             for c_idx in idx:
                 # Reject bad photometric values.
-                msk = np.array([-50. < float(_) < 50. for _ in data[c_idx]])
+                msk = np.array([mmin < float(_) < mmax for _ in data[c_idx]])
                 # Apply masks to each photometric column.
                 data[c_idx].mask = [~msk]
 
@@ -206,29 +214,6 @@ def dataSplit(mag_col, e_mag_col, col_col, e_col_col, data):
         flag_data_eq = True
 
     return data_compl, flag_data_eq
-
-
-def flatten(l):
-    """
-    Source: https://stackoverflow.com/a/2158532/1391441
-    """
-    for el in l:
-        # In place for #243
-        import sys
-        if sys.version_info[0] == 2:
-            if isinstance(el, Iterable) and not isinstance(el, basestring):
-                for sub in flatten(el):
-                    yield sub
-            else:
-                yield el
-        else:
-            import collections
-            if isinstance(el, collections.Iterable) and not\
-                    isinstance(el, (str, bytes)):
-                for sub in flatten(el):
-                    yield sub
-            else:
-                yield el
 
 
 def dataCols(data_file, data, col_names):
@@ -321,20 +306,6 @@ def dataCols(data_file, data, col_names):
                     " Check the input data format".format(data_names[i], i))
 
     return ids, x, y, mags, cols, kine, em, ec, ek
-
-
-def list_duplicates(seq):
-    """
-    Find and report duplicates in list.
-
-    Source: https://stackoverflow.com/a/5419576/1391441
-    """
-    tally = defaultdict(list)
-    for i, item in enumerate(seq):
-        tally[item].append(i)
-    dups = ((key, map(str, locs)) for key, locs in tally.items()
-            if len(locs) > 1)
-    return dups
 
 
 def coordsProject(x, y, coords, project, ra_cent=None, dec_cent=None):

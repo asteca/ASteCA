@@ -41,66 +41,12 @@ def main(cld_i, clp, coords, project, center_bw, cent_manual, **kwargs):
         # Obtain KDE plot.
         _, kde_plot = kde_center_zoom(cld_i['x'], cld_i['y'], (x0, y0), radius)
 
-        # DEPRECATED 02/09/2019
-        # # Re-write center values if fixed in semi input file.
-        # if cent_flag_semi == 1:
-        #     if coords == 'deg' and project:
-        #         x_cent = (kde_cent[0] / np.cos(
-        #             np.deg2rad(kde_cent[1] + clp['y_offset']))) +\
-        #             clp['x_offset']
-        #     else:
-        #         x_cent = kde_cent[0]
-
-        #     print("Semi center found: ({:g}, {:g}) {}".format(
-        #         x_cent, kde_cent[1] + clp['y_offset'], coord))
-
         kde_cent = (x0, y0)
         print("Manual center fixed: ({:g}, {:g}) {}".format(
             *cent_manual, coord))
 
         # Find bin where the center xy coordinates are located.
         bin_cent = center_bin(clp['xedges'], clp['yedges'], kde_cent)
-
-    # DEPRECATED May 2019
-    # # If Manual mode is set, display center and ask the user to accept it or
-    # # input new one.
-    # elif run_mode == 'manual':
-
-    #     # Restrict the KDE to a smaller area (to improve performance).
-    #     radius = 0.25 * min(np.ptp(cld_i['x']), np.ptp(cld_i['y']))
-    #     kde_cent, kde_plot = kde_center_zoom(
-    #         cld_i['x'], cld_i['y'], clp['kde_approx_cent'], radius)
-    #     bin_cent = center_bin(clp['xedges'], clp['yedges'], kde_cent)
-
-    #     # Show plot with center obtained. Use main magnitude.
-    #     display_cent.main(
-    #         cld_i['x'], cld_i['y'], cld_i['mags'][0], kde_cent, bin_cent,
-    #         clp['hist_2d_g'][1], coords)
-    #     plt.show()
-    #     # No KDE plot is 'manual' mode is used.
-    #     kde_plot = []
-
-    #     # Ask if the user accepts the center coordinates found, or if new ones
-    #     # should be used.
-    #     while True:
-    #         answer_cen = raw_input('Input new center values? (y/n) ')
-    #         if answer_cen == 'n':
-    #             print('Value accepted.')
-    #             break
-    #         elif answer_cen == 'y':
-    #             kde_cent = []
-    #             try:
-    #                 kde_cent.append(float(raw_input('x_center: ')))
-    #                 kde_cent.append(float(raw_input('y_center: ')))
-    #                 # Store center bin coords for the filtered hist.
-    #                 bin_cent = center_bin(
-    #                     clp['xedges'], clp['yedges'], kde_cent)
-    #                 flag_center_manual = True  # <-- ??
-    #                 break
-    #             except Exception:
-    #                 print("Sorry, input is not valid. Try again")
-    #         else:
-    #             print("Sorry, input is not valid. Try again")
 
     # Add data to dictionary.
     center_params = {

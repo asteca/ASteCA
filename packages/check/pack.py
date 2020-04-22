@@ -1,6 +1,4 @@
 
-
-import sys
 import imp
 
 
@@ -23,16 +21,15 @@ def check():
         print("ERROR: the following required packages are missing:\n")
         for p in missing_pckg:
             print(" - {}".format(p))
-        sys.exit("Missing packages")
+        raise ValueError("Missing packages")
 
-    # 'rpy2' is no longer used
-    # # Non-essential packages
-    # for pckg in ['rpy2']:
-    #     try:
-    #         imp.find_module(pckg)
-    #         inst_packgs_lst.append(pckg)
-    #     except ImportError:
-    #         pass
+    # Non-essential packages
+    for pckg in ['emcee']:
+        try:
+            imp.find_module(pckg)
+            inst_packgs_lst.append(pckg)
+        except ImportError:
+            pass
 
     return inst_packgs_lst
 
