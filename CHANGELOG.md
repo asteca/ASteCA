@@ -1,5 +1,31 @@
 # Change Log
 
+## [[v0.3.0]][261] - 2020-04-22
+
+### Changed
+
+Massive changes introduced in this new version. Python 2.7.x is no longer supported.
+
+* Port to Python 3  ([243][260])
+* Upgrade to `emcee` v3.0.2  ([423][259])
+* Add `emcee` to the best fit process  ([193][258])
+* Upgraded to `astropy` v0.0.4
+* Remove (z,a) steps  ([413][257])
+* Bug fix: binary probabilities should not be averaged by `zaWAverage` ([462][256])
+* Add Tremmel's implementation of the PLR ([447][255])
+* Improve performance of synthetic cluster generation ([445][254])
+* Fix Tolstoy likelihood accounting for uncertainties twice ([406][253])
+* Add option to apply 'pmRA*cos(DE)' correction ([452][252])
+* Added `optm` method to local removal of stars ([432][251])
+* Added `manual` binning method to likelihood block ([325][250])
+* New radius estimating method and many improvements to structural functions (RDP, field dens, radius)  ([454][246], [449][247], [346][248], [378][249])
+* Added maximum likelihood method for fitting King profiles ([268][244], [298][245])
+* Allow seeding the synthetic cluster generation process ([196][243])
+* Add stopping condition to the plotting line ([443][242])
+* Add Nsigma region to the best fit synthetic cluster ([460][241])
+* Fix small bug in radii arrows ([182][240])
+
+
 ## [[v0.2.7]][239] - 2019-10-03
 
 ### Changed
@@ -725,3 +751,31 @@ ________________________________________________________________________________
 [237]: https://github.com/asteca/ASteCA/issues/439
 [238]: https://github.com/asteca/ASteCA/issues/434
 [239]: https://github.com/asteca/asteca/releases/tag/v0.2.7
+[240]: https://github.com/asteca/ASteCA/issues/182
+[241]: https://github.com/asteca/ASteCA/issues/460
+[242]: https://github.com/asteca/ASteCA/issues/443
+[243]: https://github.com/asteca/ASteCA/issues/196
+[244]: https://github.com/asteca/ASteCA/issues/268
+[245]: https://github.com/asteca/ASteCA/issues/298
+[246]: https://github.com/asteca/ASteCA/issues/454
+[247]: https://github.com/asteca/ASteCA/issues/449
+[248]: https://github.com/asteca/ASteCA/issues/346
+[249]: https://github.com/asteca/ASteCA/issues/378
+[250]: https://github.com/asteca/ASteCA/issues/325
+[251]: https://github.com/asteca/ASteCA/issues/432
+[252]: https://github.com/asteca/ASteCA/issues/452
+[253]: https://github.com/asteca/ASteCA/issues/406
+[254]: https://github.com/asteca/ASteCA/issues/445
+[255]: https://github.com/asteca/ASteCA/issues/447
+[256]: https://github.com/asteca/ASteCA/issues/462
+[257]: https://github.com/asteca/ASteCA/issues/413
+[258]: https://github.com/asteca/ASteCA/issues/193
+[259]: https://github.com/asteca/ASteCA/issues/423
+[260]: https://github.com/asteca/ASteCA/issues/243
+[261]: https://github.com/asteca/asteca/releases/tag/v0.3.0
+
+
+
+
+
+
