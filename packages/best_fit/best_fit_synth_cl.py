@@ -25,12 +25,7 @@ def main(npd, pd, clp):
 
         # Calculate the best fitting parameters.
         if pd['best_fit_algor'] == 'ptemcee':
-        #     isoch_fit_params = ptemcee_algor.main(
-        #         clp['completeness'], max_mag_syn, obs_clust, ext_coefs,
-        #         st_dist_mass, N_fc, err_pars, **pd)
-
-            from . import zeus
-            isoch_fit_params = zeus.main(
+            isoch_fit_params = ptemcee_algor.main(
                 clp['completeness'], max_mag_syn, obs_clust, ext_coefs,
                 st_dist_mass, N_fc, err_pars, **pd)
 
