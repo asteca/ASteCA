@@ -58,7 +58,7 @@ def check(mypath, pd):
         mag_col += [
             'col' + str(int(column_id) + 1) if pd['read_mode'] == 'num' else
             column_id]
-        if pd['bf_flag']:
+        if pd['best_fit_algor'] not in ('n', 'synth_gen'):
             # Check.
             phot_syst_filt_check(all_systs, mag, phot_syst, filter_name)
         # Name of photometric system and filter, used to extract its
@@ -84,7 +84,7 @@ def check(mypath, pd):
         col_col += [
             'col' + str(int(column_id) + 1) if pd['read_mode'] == 'num'
             else column_id]
-        if pd['bf_flag']:
+        if pd['best_fit_algor'] not in ('n', 'synth_gen'):
             # Check.
             phot_syst_filt_check(all_systs, col, phot_syst, filter_name1)
             phot_syst_filt_check(all_systs, col, phot_syst, filter_name2)

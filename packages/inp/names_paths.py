@@ -3,7 +3,7 @@ from os.path import join, exists
 from os import makedirs, extsep
 
 
-def main(cl_file, best_fit_algor, **kwargs):
+def main(cl_file, **kwargs):
     '''
     Generate names and paths to be used by several functions.
     '''
@@ -31,7 +31,7 @@ def main(cl_file, best_fit_algor, **kwargs):
         makedirs(output_subdir)
 
     memb_file_out = join(output_subdir, clust_name + '_memb.dat')
-    mcmc_file_out = join(output_subdir, clust_name + '_mcmc.dat')
+    mcmc_file_out = join(output_subdir, clust_name + '_mcmc.pickle')
     synth_file_out = join(output_subdir, clust_name + '_synth.dat')
     write_name = join(cl_file[2], clust_name)
     out_file_name = join(output_dir, 'asteca_output.dat')

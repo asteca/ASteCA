@@ -36,7 +36,6 @@ from .data_analysis import pms_analysis
 from .out import inparams_out
 from .out import cluster_members_file
 from .best_fit import best_fit_synth_cl
-from .out import mcmc_samples
 from .out import synth_cl_file
 from .out import massFunction  # TODO
 from .out import create_out_data_file
@@ -263,9 +262,6 @@ def main(cl_file, pd):
     if pd['best_fit_algor'] == 'synth_gen':
         retFunc(npd['clust_name'], start)
         return
-
-    # Save MCMC samples to file (if MCMC sampler was used)
-    mcmc_samples.main(clp, pd, **npd)
 
     # Create output synthetic cluster file if one was found
     clp = synth_cl_file.main(clp, npd, **pd)

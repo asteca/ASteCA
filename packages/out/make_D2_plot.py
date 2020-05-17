@@ -3,8 +3,6 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from os.path import join
 import warnings
-import pickle
-from .._version import __version__
 from . import add_version_plot
 from . import mp_best_fit2
 from . import prep_plots
@@ -18,32 +16,36 @@ def main(
     """
     Make D2 block plots.
     """
-    if 'D2' in pd['flag_make_plot'] and pd['bf_flag']:
+    if 'D2' in pd['flag_make_plot'] and pd['best_fit_algor'] != 'n':
 
-        # If working on a dev branch store data used for re-generating easily
-        # the D2 plot
-        if 'dev' in __version__:
-            # for k, val in pd.items():
-            #     print(k, np.array(val).nbytes / 1024.**2)
-            pname = join(
-                npd['output_subdir'], str(npd['clust_name']) + '_D2.pickle')
-            with open(pname, 'wb') as handle:
-                # Remove 'theor_tracks', not needed
-                new_pd = {i: pd[i] for i in pd if i != 'theor_tracks'}
-                pickle.dump((
-                    npd, new_pd, synth_clst_plot, binar_idx_plot, shift_isoch,
-                    synthcl_Nsigma, cl_max_mag, bf_bin_edges, err_lst,
-                    col_0_comb, mag_0_comb, col_1_comb, isoch_fit_params,
-                    isoch_fit_errors), handle)
+        # DEPRECATED May 2020
+        # import pickle
+        # from .._version import __version__
+        # # If working on a dev branch store data used for re-generating easily
+        # # the D2 plot
+        # if 'dev' in __version__:
+        #     # for k, val in pd.items():
+        #     #     print(k, np.array(val).nbytes / 1024.**2)
+        #     pname = join(
+        #         npd['output_subdir'], str(npd['clust_name']) + '_D2.pickle')
+        #     with open(pname, 'wb') as handle:
+        #         # Remove 'theor_tracks', not needed
+        #         new_pd = {i: pd[i] for i in pd if i != 'theor_tracks'}
+        #         pickle.dump((
+        #             npd, new_pd, synth_clst_plot, binar_idx_plot, shift_isoch,
+        #             synthcl_Nsigma, cl_max_mag, bf_bin_edges, err_lst,
+        #             col_0_comb, mag_0_comb, col_1_comb, isoch_fit_params,
+        #             isoch_fit_errors), handle)
 
         fig = plt.figure(figsize=(figsize_x, figsize_y))
         gs = gridspec.GridSpec(grid_y, grid_x)
         add_version_plot.main(y_fix=1.005)
 
-        if pd['best_fit_algor'] == 'boot+GA':
-            best_sol = isoch_fit_params['map_sol']
-        elif pd['best_fit_algor'] in ('ptemcee', 'emcee'):
-            best_sol = isoch_fit_params['mean_sol']
+        # DEPRECATED May 2020
+        # if pd['best_fit_algor'] == 'boot+GA':
+        #     best_sol = isoch_fit_params['map_sol']
+        # elif pd['best_fit_algor'] in ('ptemcee', 'emcee'):
+        best_sol = isoch_fit_params['mean_sol']
 
         # Plot one ore more rows of CMDs/CCDs.
         hr_diags = prep_plots.packData(

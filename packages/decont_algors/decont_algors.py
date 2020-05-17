@@ -1,13 +1,12 @@
 
 import numpy as np
 from . import bayesian_da
-from . import fixed_da
 from . import read_da
 
 
 def main(
     clp, npd, colors, plx_col, pmx_col, pmy_col, rv_col, da_algor,
-        bayesda_runs, bayesda_dflag, fixedda_port, **kwargs):
+        bayesda_runs, bayesda_dflag, **kwargs):
     """
     Apply selected decontamination algorithm.
     """
@@ -29,12 +28,13 @@ def main(
             colors, plx_col, pmx_col, pmy_col, rv_col, bayesda_runs,
             bayesda_dflag, clp['cl_region_i'], clp['field_regions_i'])
 
-    elif da_algor == 'fixed':
-        memb_probs_cl_region = fixed_da.main(clp['cl_region_i'], fixedda_port)
-
     elif da_algor == 'read':
         memb_probs_cl_region = read_da.main(
             clp['cl_region_i'], npd['memb_file'])
+
+    # DEPRECATED May 2020
+    # elif da_algor == 'fixed':
+    #     memb_probs_cl_region = fixed_da.main(clp['cl_region_i'], fixedda_port)
 
     # Store for plotting in 'C1' block and adding to the members output file.
     clp['memb_probs_cl_region_i'] = memb_probs_cl_region

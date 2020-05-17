@@ -4,17 +4,15 @@ import warnings
 import time as t
 from ..synth_clust import synth_cluster
 from . import likelihood
-from .mcmc_convergence import convergenceVals
-from .bf_common import initPop, varPars, rangeCheck, fillParams,\
-    r2Dist, modeKDE  # , thinChain
-from .ptemcee import sampler  # , util
+from .bf_common import initPop, varPars, rangeCheck, fillParams
+from .ptemcee import sampler
 
 
 def main(
     completeness, max_mag_syn, obs_clust, ext_coefs, st_dist_mass, N_fc,
     err_pars, m_ini_idx, binar_flag, lkl_method, fundam_params, theor_tracks,
     R_V, pt_ntemps, pt_adapt, pt_tmax, priors_mcee, nsteps_mcee,
-        nwalkers_mcee, nburn_mcee, hmax, **kwargs):
+        nwalkers_mcee, mins_max, **kwargs):
     """
     """
 
@@ -36,7 +34,7 @@ def main(
         pt_ntemps = int(float(pt_ntemps))
 
     # Start timing.
-    max_secs = hmax * 60. * 60.
+    max_secs = mins_max * 60.
     available_secs = max(30, max_secs)
 
     # Define Parallel tempered sampler
@@ -133,70 +131,23 @@ def main(
     # Final MAP fit.
     map_sol, map_lkl_final = map_sol_old
 
-    # This number should be between approximately 0.25 and 0.5 if everything
-    # went as planned.
-    m_accpt_fr = np.mean(ptsampler.acceptance_fraction[0])
-    if m_accpt_fr > .5 or m_accpt_fr < .25:
-        print("  WARNING: mean acceptance fraction is outside of the\n"
-              "  recommended range.")
+    # # This number should be between approximately 0.25 and 0.5 if everything
+    # # went as planned.
+    # m_accpt_fr = np.mean(ptsampler.acceptance_fraction[0])
+    # if m_accpt_fr > .5 or m_accpt_fr < .25:
+    #     print("  WARNING: mean acceptance fraction is outside of the\n"
+    #           "  recommended range.")
 
     # ptsampler.chain.shape: (ntemps, nchains, nsteps, ndim)
     # cold_chain.shape: (i, nchains, ndim)
     cold_chain = ptsampler.chain[0, :, :i, :].transpose(1, 0, 2)
 
-    # Store burn-in chain phase.
-    bi_steps = int(nburn_mcee * cold_chain.shape[0])
-    # chains_nruns.shape: (bi_steps, nchains, ndim)
-    chains_nruns = cold_chain[:bi_steps]
-    # pars_chains_bi.shape: (ndim, nchains, bi_steps)
-    pars_chains_bi = chains_nruns.T
-
-    # After burn-in
-    chains_nruns = cold_chain[bi_steps:]
-    pars_chains = chains_nruns.T
-
-    # Convergence parameters.
-    tau_autocorr, acorr_t, med_at_c, all_taus, geweke_z, acorr_function,\
-        mcmc_ess = convergenceVals(
-            'ptemcee', ndim, varIdxs, chains_nruns, bi_steps)
-
-    # Re-shape trace for all parameters (flat chain).
-    # Shape: (ndim, runs * nchains)
-    mcmc_trace = chains_nruns.reshape(-1, ndim).T
-
-    # # Thin chains
-    # mcmc_trace = thinChain(mcmc_trace, acorr_t)
-
-    param_r2 = r2Dist(fundam_params, varIdxs, mcmc_trace)
-    mode_sol, pardist_kde = modeKDE(fundam_params, varIdxs, mcmc_trace)
-
-    # Mean and median.
-    mean_sol = np.mean(mcmc_trace, axis=1)
-    median_sol = np.median(mcmc_trace, axis=1)
-
-    # Fill the spaces of the parameters not fitted with their fixed values.
-    mean_sol = fillParams(fundam_params, varIdxs, mean_sol)
-    mode_sol = fillParams(fundam_params, varIdxs, mode_sol)
-    median_sol = fillParams(fundam_params, varIdxs, median_sol)
-
-    # Total number of values used to estimate the parameter's distributions.
-    N_total = mcmc_trace.shape[-1]
-
     isoch_fit_params = {
-        'varIdxs': varIdxs, 'mean_sol': mean_sol, 'Tmax': str(Tmax),
-        'median_sol': median_sol, 'map_sol': map_sol, 'map_lkl': map_lkl,
-        'mode_sol': mode_sol, 'pardist_kde': pardist_kde, 'param_r2': param_r2,
-        'map_lkl_final': map_lkl_final, 'prob_mean': prob_mean,
-        'bf_elapsed': elapsed, 'mcmc_trace': mcmc_trace,
-        'pars_chains_bi': pars_chains_bi, 'pars_chains': pars_chains,
-        'maf_allT': maf_allT, 'tswaps_afs': tswaps_afs, 'betas_pt': betas_pt,
-        #
-        'tau_autocorr': tau_autocorr, 'acorr_t': acorr_t, 'med_at_c': med_at_c,
-        'all_taus': all_taus, 'acorr_function': acorr_function,
-        # 'max_at_c': max_at_c, 'min_at_c': min_at_c,
-        # 'minESS': minESS, 'mESS': mESS, 'mESS_epsilon': mESS_epsilon,
-        'geweke_z': geweke_z, 'mcmc_ess': mcmc_ess, 'N_total': N_total,
-        'N_steps': N_steps
+        'varIdxs': varIdxs, 'ndim': ndim, 'Tmax': str(Tmax),
+        'map_sol': map_sol, 'map_lkl': map_lkl, 'map_lkl_final': map_lkl_final,
+        'prob_mean': prob_mean, 'bf_elapsed': elapsed, 'maf_allT': maf_allT,
+        'tswaps_afs': tswaps_afs, 'betas_pt': betas_pt, 'N_steps': N_steps,
+        'cold_chain': cold_chain
     }
 
     return isoch_fit_params

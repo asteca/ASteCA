@@ -3,7 +3,7 @@ import numpy as np
 from ..synth_clust import synth_cluster
 
 
-def main(clp, npd, bf_flag, best_fit_algor, fundam_params, filters, colors,
+def main(clp, npd, best_fit_algor, fundam_params, filters, colors,
          theor_tracks, R_V, m_ini_idx, binar_flag, **kwargs):
     """
     Create output data file with stars in the best fit synthetic cluster found
@@ -12,11 +12,11 @@ def main(clp, npd, bf_flag, best_fit_algor, fundam_params, filters, colors,
 
     clp['synth_clst_plot'], clp['binar_idx_plot'], clp['shift_isoch'],\
         clp['synthcl_Nsigma'] = [np.array([]) for _ in range(4)]
-    if bf_flag:
 
+    if best_fit_algor != 'n':
         isoch_moved, synth_clst, sigma, extra_pars, synthcl_Nsigma =\
             synth_cl_plot(
-                best_fit_algor, fundam_params, clp['isoch_fit_params'],
+                fundam_params, clp['isoch_fit_params'],
                 clp['isoch_fit_errors'], theor_tracks, clp['completeness'],
                 clp['max_mag_syn'], clp['st_dist_mass'], R_V, clp['ext_coefs'],
                 clp['N_fc'], clp['err_pars'], m_ini_idx, binar_flag)
@@ -64,20 +64,21 @@ def main(clp, npd, bf_flag, best_fit_algor, fundam_params, filters, colors,
 
 
 def synth_cl_plot(
-    best_fit_algor, fundam_params, isoch_fit_params, isoch_fit_errors,
-    theor_tracks, completeness, max_mag_syn, st_dist_mass, R_V, ext_coefs,
-        N_fc, err_pars, m_ini_idx, binar_flag, N_models=1000):
+    fundam_params, isoch_fit_params, isoch_fit_errors, theor_tracks,
+    completeness, max_mag_syn, st_dist_mass, R_V, ext_coefs, N_fc, err_pars,
+        m_ini_idx, binar_flag, N_models=1000):
     """
     Generate a synthetic cluster and a N(mu, sigma) region for plotting, from
     'N_models' models.
     """
 
-    if best_fit_algor == 'boot+GA':
-        # Use ML fit values for all parameters.
-        model = isoch_fit_params['map_sol']
-    elif best_fit_algor in ('ptemcee', 'emcee'):
-        # Use mean fit values for all parameters.
-        model = isoch_fit_params['mean_sol']
+    # DEPRECATED May 2020
+    # if best_fit_algor == 'boot+GA':
+    #     # Use ML fit values for all parameters.
+    #     model = isoch_fit_params['map_sol']
+    # elif best_fit_algor in ('ptemcee', 'emcee'):
+    # Use mean fit values for all parameters.
+    model = isoch_fit_params['mean_sol']
 
     # Generate a model with the "best" fitted parameters.
     model_var = np.array(model)[isoch_fit_params['varIdxs']]
