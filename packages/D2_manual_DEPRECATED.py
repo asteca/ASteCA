@@ -3,6 +3,8 @@ import pickle
 from .out import make_D2_plot
 
 
+# DEPRECATED May 2020
+
 def main(path):
     """
     This file is used to manually re-generate the D2 plot through a

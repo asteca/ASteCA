@@ -1,32 +1,5 @@
 
-# import re
 from . import CMD_phot_systs
-
-
-# DEPRECATED 19/04/17
-# def char_remove(in_lst):
-#     '''
-#     Correctly convert input data for parameters ranges to lists.
-#     '''
-#     lst = []
-#     # If input list is empty, return empty list.
-#     if in_lst[1:]:
-#         l0 = []
-#         if in_lst[1][0] in {'[', '(', '{'}:
-#             # Remove non-numeric characters and append numbers as floats.
-#             l0.append([
-#                 float(i) for i in re.findall('[0-9.]+', str(in_lst[1:]))])
-#             # Store indicating that this is a list of values.
-#             lst = ['l', list(map(float, l0[0]))]
-#         else:
-#             if len(in_lst[1:4]) < 3:
-#                 # Not enough values to define a range. Store as list of values.
-#                 lst = ['l', list(map(float, in_lst[1:4]))]
-#             else:
-#                 # Store indicating that this is a range of values.
-#                 lst = ['r', list(map(float, in_lst[1:4]))]
-
-#     return lst
 
 
 def main(pars_f_path):
@@ -43,99 +16,97 @@ def main(pars_f_path):
 
         manual_struct = []
         # Iterate through each line in the file.
-        for l, line in enumerate(f_dat):
+        for ln, line in enumerate(f_dat):
 
             if not line.startswith("#") and line.strip() != '':
                 reader = line.split()
 
                 # Input data parameters.
-                if reader[0] == 'MR':
+                if reader[0] == 'I0':
                     read_mode = str(reader[1])
-                elif reader[0] == 'PI':
+                elif reader[0] == 'I1':
                     id_ids = reader[1]
                     id_xdata = reader[2]
                     id_ydata = reader[3]
                     coords = reader[4]
                     project = True if reader[5] in true_lst else False
-                elif reader[0] == 'PM':
+                elif reader[0] == 'I2':
                     id_mags = reader[1:]
-                elif reader[0] == 'PC':
+                elif reader[0] == 'I3':
                     id_cols = reader[1:]
-                elif reader[0] == 'PK':
+                elif reader[0] == 'I4':
                     id_kinem = reader[1:]
 
                 # Input data processing
-                elif reader[0] == 'NV':
+                elif reader[0] == 'I5':
                     nanvals = [_.replace(',', '') for _ in reader[1:]]
-                elif reader[0] == 'TF':
+                elif reader[0] == 'I6':
                     flag_tf = True if reader[1] in true_lst else False
                     tf_range = list(map(float, reader[2:]))
 
-                # Output parameters.
-                elif reader[0] == 'MP':
-                    flag_make_plot = reader[1:]
-                elif reader[0] == 'PF':
-                    plot_frmt = str(reader[1])
-                    plot_dpi = int(reader[2])
-
                 # Structure functions parameters.
-                elif reader[0] == 'MD':
+                elif reader[0] == 'S0':
                     manual_struct.append(reader[1:])
-                elif reader[0] == 'CD':
+                elif reader[0] == 'S1':
                     center_bw = float(reader[1])
                     NN_dd = int(reader[2])
                     fdens_method = str(reader[3])
-                elif reader[0] == 'RU':
+                elif reader[0] == 'S2':
                     nsteps_rad = int(reader[1])
                     RDP_rings = int(reader[2])
-                elif reader[0] == 'KP':
+                elif reader[0] == 'S3':
                     kp_flag = True if reader[1] in true_lst else False
                     kp_nchains = int(reader[2])
                     kp_nruns = int(reader[3])
                     kp_nburn = float(reader[4])
                     rt_max_f = float(reader[5])
-                elif reader[0] == 'GR':
+                elif reader[0] == 'S4':
                     try:
                         fr_number = int(reader[1])
                     except ValueError:
                         fr_number = str(reader[1])
 
                 # Data analysis functions parameters.
-                elif reader[0] == 'ER':
+                elif reader[0] == 'E0':
                     err_max = reader[1:]
-                elif reader[0] == 'AD':
+                elif reader[0] == 'A0':
                     ad_runs = int(reader[1])
 
                 # Decontamination algorithm parameters
-                elif reader[0] == 'DA':
+                elif reader[0] == 'D0':
                     da_algor = reader[1]
                     bayesda_runs = int(reader[2])
-                    fixedda_port = float(reader[3])
-
-                elif reader[0] == 'DW':
-                    bayesda_dflag = reader[1:]
+                    bayesda_dflag = reader[2:]
 
                 # Cluster region field stars removal.
-                elif reader[0] == 'FR':
+                elif reader[0] == 'F0':
                     fld_clean_mode = str(reader[1])
                     fld_clean_bin = str(reader[2])
                     fld_clean_prob = float(reader[3])
 
                 # Parallax & PMS analysis
-                elif reader[0] == 'PX':
+                elif reader[0] == 'P0':
                     plx_bayes_flag = True if reader[1] in true_lst else False
                     plx_offset = float(reader[2])
                     plx_chains = int(reader[3])
                     plx_runs = int(reader[4])
                     plx_burn = float(reader[5])
                     flag_plx_mp = True if reader[6] in true_lst else False
-                elif reader[0] == 'PO':
+                elif reader[0] == 'P1':
                     PM_KDE_std = float(reader[1])
                     cosDE_flag = True if reader[2] in true_lst else False
 
                 # Synthetic clusters parameters
-                elif reader[0] == 'RS':
+                elif reader[0] == 'R0':
                     synth_rand_seed = str(reader[1])
+                    evol_track = str(reader[2])
+                    IMF_name = str(reader[3])
+                    bin_mr = float(reader[4])
+                    try:
+                        max_mag = float(reader[5])
+                    except ValueError:
+                        max_mag = str(reader[5])
+
                 # Ranges for the fundamental parameters
                 elif reader[0] == 'RZ':
                     z_range = reader[1:]
@@ -143,116 +114,80 @@ def main(pars_f_path):
                     a_range = reader[1:]
                 elif reader[0] == 'RE':
                     e_range = list(map(float, reader[1:]))
+                elif reader[0] == 'RR':
+                    dr_range = reader[1:]
+                elif reader[0] == 'RV':
+                    R_V = float(reader[1])
                 elif reader[0] == 'RD':
                     d_range = list(map(float, reader[1:]))
                 elif reader[0] == 'RM':
                     m_range = list(map(float, reader[1:]))
                 elif reader[0] == 'RB':
                     b_range = list(map(float, reader[1:]))
-
-                elif reader[0] == 'ET':
-                    evol_track = str(reader[1])
-                    colibri = str(reader[2])
-                elif reader[0] == 'MF':
-                    IMF_name = str(reader[1])
-                elif reader[0] == 'BR':
-                    bin_mr = float(reader[1])
-                elif reader[0] == 'RV':
-                    R_V = float(reader[1])
-                elif reader[0] == 'MM':
-                    try:
-                        max_mag = float(reader[1])
-                    except ValueError:
-                        max_mag = str(reader[1])
+                elif reader[0] == 'RS':
+                    bs_range = reader[1:]
 
                 # Cluster parameters assignation.
-                elif reader[0] == 'CF':
+                elif reader[0] == 'B0':
                     best_fit_algor = str(reader[1])
-                    # TODO extend this param to 'brute force'
-                    hmax = float(reader[2])
+                    mins_max = float(reader[2])
+                    full_trace_flag = True if reader[3] in true_lst else False
 
-                # Shared ptemcee/emcee parameters.
-                elif reader[0] == 'PS':
+                # Shared ptemcee parameters.
+                elif reader[0] == 'B1':
                     nsteps_mcee = int(float(reader[1]))
                     nwalkers_mcee = int(float(reader[2]))
                     nburn_mcee = float(reader[3])
-                elif reader[0] == 'PRZ':
+                    pt_ntemps = reader[4]
+                    pt_tmax = reader[5]
+                    pt_adapt = True if reader[6] in true_lst else False
+
+                # Priors
+                elif reader[0] == 'BZ':
                     z_prior = [reader[1]] + list(map(float, reader[2:]))
-                elif reader[0] == 'PRA':
+                elif reader[0] == 'BA':
                     a_prior = [reader[1]] + list(map(float, reader[2:]))
-                elif reader[0] == 'PRE':
+                elif reader[0] == 'BE':
                     e_prior = [reader[1]] + list(map(float, reader[2:]))
-                elif reader[0] == 'PRD':
+                elif reader[0] == 'BR':
+                    dr_prior = [reader[1]] + list(map(float, reader[2:]))
+                elif reader[0] == 'BV':
+                    rv_prior = [reader[1]] + list(map(float, reader[2:]))
+                elif reader[0] == 'BD':
                     d_prior = [reader[1]] + list(map(float, reader[2:]))
-                elif reader[0] == 'PRM':
+                elif reader[0] == 'BM':
                     m_prior = [reader[1]] + list(map(float, reader[2:]))
-                elif reader[0] == 'PRB':
+                elif reader[0] == 'BB':
                     b_prior = [reader[1]] + list(map(float, reader[2:]))
-
-                # emcee algorithm parameters.
-                elif reader[0] == 'PE':
-                    emcee_moves = reader[1:]
-
-                # ptemcee algorithm parameters.
-                elif reader[0] == 'PT':
-                    pt_ntemps = reader[1]
-                    pt_tmax = reader[2]
-                    pt_adapt = True if reader[3] in true_lst else False
-
-                # TODO not finished yet
-                # # ABC algorithm parameters.
-                # elif reader[0] == 'AB':
-                #     nwalkers_abc = int(float(reader[1]))
-                #     nburn_abc = float(reader[2])
-                #     nsteps_abc = int(float(reader[3]))
-                #     priors_abc = reader[4]
-
-                # TODO not finished yet
-                # # emcee algorithm parameters.
-                # elif reader[0] == 'EM':
-                #     nwalkers_emc = int(float(reader[1]))
-                #     nburn_emc = int(float(reader[2]))
-                #     N_burn_emc = int(float(reader[3]))
-                #     nsteps_emc = int(float(reader[4]))
-                #     emcee_a = float(reader[5])
-                #     priors_emc = reader[6]
-
-                # Bootstrap parameters.
-                elif reader[0] == 'BT':
-                    hperc_btstrp = float(reader[1])
-                    N_pop_btstrp = int(reader[2])
-                    N_step_btstrp = int(reader[3])
-
-                # Genetic algorithm parameters.
-                elif reader[0] == 'GA':
-                    N_pop = int(reader[1])
-                    fit_diff = float(reader[2])
-                    cross_prob = float(reader[3])
-                    cross_sel = str(reader[4])
-                    mut_prob = float(reader[5])
-                    N_el = int(reader[6])
-                    N_ei = int(reader[7])
-                    N_es = int(reader[8])
+                elif reader[0] == 'BS':
+                    bs_prior = [reader[1]] + list(map(float, reader[2:]))
 
                 # Likelihood function
-                elif reader[0] == 'LK':
+                elif reader[0] == 'B2':
                     lkl_method = str(reader[1])
                     lkl_binning = str(reader[2])
                     lkl_manual_bins = reader[3:]
+
+                # Output parameters.
+                elif reader[0] == 'O0':
+                    flag_make_plot = reader[1:]
+                elif reader[0] == 'O1':
+                    plot_frmt = str(reader[1])
+                    plot_dpi = int(reader[2])
 
                 else:
                     # Get parameters file name from path.
                     pars_f_name = pars_f_path.split('/')[-1]
                     print("  WARNING: Unknown '{}' ID found in line {}\n"
                           "  of '{}' file.\n".format(
-                              reader[0], l + 1, pars_f_name))
+                              reader[0], ln + 1, pars_f_name))
 
     # Accepted coordinate units
     coord_accpt = ('px', 'deg')
     # Accepted read modes
     read_mode_accpt = ('nam', 'num')
     # Accepted decontamination algorithms.
-    da_algors_accpt = ('bayes', 'fixed', 'read', 'skip')
+    da_algors_accpt = ('bayes', 'read', 'skip')
     # Accepted field stars removal methods.
     fld_rem_methods = ('local', 'n_memb', 'mp_05', 'top_h', 'man', 'all')
     # Accepted binning methods.
@@ -267,8 +202,7 @@ def main(pars_f_path):
     imf_funcs = ('chabrier_2001_exp', 'chabrier_2001_log', 'kroupa_1993',
                  'kroupa_2002', 'salpeter_1955')
     # Optimizing algorithm
-    # TODO 'brute', 'emcee', 'abc'
-    optimz_algors = ('ptemcee', 'boot+GA', 'emcee', 'n', 'synth_gen')
+    optimz_algors = ('ptemcee', 'read', 'n', 'synth_gen')
     # Accepted forms of priors.
     bayes_priors = ('u', 'g')
 
@@ -300,7 +234,6 @@ def main(pars_f_path):
 
     # Dictionary with data on the CMD service photometric systems.
     cmd_systs = CMD_phot_systs.main()
-    evol_track = evol_track + '+' + colibri
 
     par_ranges = [z_range, a_range, e_range, d_range, m_range, b_range]
 
@@ -322,45 +255,36 @@ def main(pars_f_path):
         'fr_number': fr_number,
         #
         'err_max': err_max, 'ad_runs': ad_runs,
+
         # Decontamination algorithm parameters.
         'da_algor': da_algor, 'bayesda_runs': bayesda_runs,
-        'fixedda_port': fixedda_port, 'bayesda_dflag': bayesda_dflag,
+        'bayesda_dflag': bayesda_dflag,
+
         # Plx & PMs parameters.
         'plx_bayes_flag': plx_bayes_flag, 'plx_offset': plx_offset,
         'plx_chains': plx_chains, 'plx_runs': plx_runs, 'plx_burn': plx_burn,
         'flag_plx_mp': flag_plx_mp,
         'PM_KDE_std': PM_KDE_std, 'cosDE_flag': cosDE_flag,
+
         # Cluster region field stars removal parameters.
         'fld_clean_mode': fld_clean_mode, 'fld_clean_bin': fld_clean_bin,
         'fld_clean_prob': fld_clean_prob,
-        # Best fit parameters.
-        'best_fit_algor': best_fit_algor, 'hmax': hmax,
-        'lkl_method': lkl_method, 'lkl_binning': lkl_binning,
-        'lkl_manual_bins': lkl_manual_bins,
+
         # Synthetic cluster parameters
-        'synth_rand_seed': synth_rand_seed, 'evol_track': evol_track,
-        'max_mag': max_mag, 'IMF_name': IMF_name, 'R_V': R_V, 'bin_mr': bin_mr,
-        # parameters ranges
-        'par_ranges': par_ranges,
+        'synth_rand_seed': synth_rand_seed, 'par_ranges': par_ranges,
+        'evol_track': evol_track, 'IMF_name': IMF_name, 'bin_mr': bin_mr,
+        'R_V': R_V, 'max_mag': max_mag,
+
+        # Best fit parameters.
+        'best_fit_algor': best_fit_algor, 'mins_max': mins_max,
+        'full_trace_flag': full_trace_flag,
         # ptemcee algorithm parameters.
         'nsteps_mcee': nsteps_mcee, 'nwalkers_mcee': nwalkers_mcee,
         'nburn_mcee': nburn_mcee, 'priors_mcee': priors_mcee,
-        'emcee_moves': emcee_moves,
         'pt_ntemps': pt_ntemps, "pt_adapt": pt_adapt, 'pt_tmax': pt_tmax,
-        # # ABC algorithm parameters.
-        # 'nwalkers_abc': nwalkers_abc, 'nburn_abc': nburn_abc,
-        # 'nsteps_abc': nsteps_abc, 'priors_abc': priors_abc,
-        # # emcee algorithm parameters.
-        # 'nwalkers_emc': nwalkers_emc, 'nburn_emc': nburn_emc,
-        # "N_burn_emc": N_burn_emc, 'nsteps_emc': nsteps_emc,
-        # "emcee_a": emcee_a, 'priors_emc': priors_emc,
-        # Bootstrap parameters
-        'hperc_btstrp': hperc_btstrp, 'N_pop_btstrp': N_pop_btstrp,
-        'N_step_btstrp': N_step_btstrp,
-        # Genetic algorithm parameters.
-        'N_pop': N_pop, 'fit_diff': fit_diff,
-        'cross_prob': cross_prob, 'cross_sel': cross_sel, 'mut_prob': mut_prob,
-        'N_el': N_el, 'N_ei': N_ei, 'N_es': N_es,
+        'lkl_method': lkl_method, 'lkl_binning': lkl_binning,
+        'lkl_manual_bins': lkl_manual_bins,
+
         # Fixed accepted parameter values and photometric systems.
         'read_mode_accpt': read_mode_accpt, 'coord_accpt': coord_accpt,
         'da_algors_accpt': da_algors_accpt, 'fld_rem_methods': fld_rem_methods,
@@ -370,5 +294,4 @@ def main(pars_f_path):
         'all_evol_tracks': all_evol_tracks, 'CMD_extra_pars': CMD_extra_pars,
         'cmd_systs': cmd_systs}
 
-    # Return parameters dictionary.
     return pd

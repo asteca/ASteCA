@@ -67,34 +67,34 @@ def pl_Tswaps(gs, N_steps, tswaps_afs):
     ax.legend(fontsize=legendsize, loc=0)
 
 
-def pl_MAF(gs, algor, N_steps, maf_steps):
+def pl_MAF(gs, N_steps, maf_steps):
     """
     Evolution of MAF values.
     """
     ax = plt.subplot(gs[0:2, 6:8])
     ax.tick_params(axis='both', which='major', labelsize=xytickssize)
-    if algor == 'ptemcee':
-        ax.set_title(
-            r"$MAF_{{[T=1]}}={:.3f}$".format(maf_steps[0][-1]),
-            fontsize=titlesize)
-        # x, y = list(zip(*maf_steps))
-        # x, y_replicas = maf_steps
-        Nt = len(maf_steps) - 1
-        for i, y in enumerate(maf_steps):
-            if i == 0:
-                lbl_ls = ("Cold", '--', 1.5, 4)
-            elif i == Nt:
-                lbl_ls = ("Hot", ':', 1.5, 4)
-            else:
-                lbl_ls = (None, '-', .5, 1)
-            ax.plot(
-                N_steps, y, label=lbl_ls[0], ls=lbl_ls[1], lw=lbl_ls[2],
-                zorder=lbl_ls[3])
-        ax.legend(fontsize=legendsize, loc=0)  # , handlelength=0.)
+    ax.set_title(
+        r"$MAF_{{[T=1]}}={:.3f}$".format(maf_steps[0][-1]),
+        fontsize=titlesize)
+    # x, y = list(zip(*maf_steps))
+    # x, y_replicas = maf_steps
+    Nt = len(maf_steps) - 1
+    for i, y in enumerate(maf_steps):
+        if i == 0:
+            lbl_ls = ("Cold", '--', 1.5, 4)
+        elif i == Nt:
+            lbl_ls = ("Hot", ':', 1.5, 4)
+        else:
+            lbl_ls = (None, '-', .5, 1)
+        ax.plot(
+            N_steps, y, label=lbl_ls[0], ls=lbl_ls[1], lw=lbl_ls[2],
+            zorder=lbl_ls[3])
+    ax.legend(fontsize=legendsize, loc=0)  # , handlelength=0.)
 
-    elif algor == 'emcee':
-        ax.set_title(r"$MAF={:.3f}$".format(maf_steps[-1]), fontsize=titlesize)
-        ax.plot(N_steps, maf_steps, lw=1.5)
+    # DEPRECATED May 2020
+    # elif algor == 'emcee':
+    #     ax.set_title(r"$MAF={:.3f}$".format(maf_steps[-1]), fontsize=titlesize)
+    #     ax.plot(N_steps, maf_steps, lw=1.5)
 
     plt.xlabel("steps", fontsize=xylabelsize)
     plt.ylabel("MAF", fontsize=xylabelsize)

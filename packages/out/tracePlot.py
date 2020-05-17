@@ -6,8 +6,8 @@ from . prep_plots import xylabelsize, xytickssize, titlesize
 
 
 def traceplots(
-    par_name, gs, best_fit_algor, best_sol, min_max_p, method_args,
-        trace, varIdxs, post_trace, pre_trace):
+    par_name, gs, best_sol, min_max_p, method_args, trace, varIdxs,
+        post_trace, pre_trace):
     """
     Parameter sampler chain.
     """
@@ -32,14 +32,11 @@ def traceplots(
         ax.tick_params(labelbottom=False)
     plt.ylabel(labels[cp])
 
-    if best_fit_algor in ('ptemcee', 'emcee'):
-        acorr_t, med_at_c, mcmc_ess = method_args
-        N_pre = pre_trace.shape[-1]
-        N_tot = N_pre + post_trace.shape[-1]
-        # elif best_fit_algor == 'abc':
-        #     N_bi, N_tot = nburn, nsteps
-    elif best_fit_algor == 'boot+GA':
-        N_pre, N_tot = 0, post_trace.shape[-1]
+    # DEPRECATED May 2020
+    # if best_fit_algor in ('ptemcee', 'emcee'):
+    acorr_t, med_at_c, mcmc_ess = method_args
+    N_pre = pre_trace.shape[-1]
+    N_tot = N_pre + post_trace.shape[-1]
 
     ax.set_xlim(0, N_tot)
 
@@ -53,22 +50,23 @@ def traceplots(
                 pre_trace[c_model][med_at_c[c_model]], c='grey',
                 lw=.5, alpha=0.5)
 
-        if best_fit_algor in ('ptemcee'):
-            # Post burn-in in MCMC
-            post_trace_plot = post_trace[c_model][med_at_c[c_model]]
-            # Filtered mean of all chains.
-            N = post_trace.shape[-1]
-            xavr = uniform_filter1d(
-                np.mean(post_trace[c_model], axis=0), int(.02 * N))
-            plt.plot(np.arange(N_pre, N_tot), xavr, c='g')
+        # DEPRECATED May 2020
+        # if best_fit_algor in ('ptemcee'):
+        # Post burn-in in MCMC
+        post_trace_plot = post_trace[c_model][med_at_c[c_model]]
+        # Filtered mean of all chains.
+        N = post_trace.shape[-1]
+        xavr = uniform_filter1d(
+            np.mean(post_trace[c_model], axis=0), int(.02 * N))
+        plt.plot(np.arange(N_pre, N_tot), xavr, c='g')
 
-            ax.set_title(
-                (r"$\hat{{\tau}}_{{c}}={:.0f}\;(\hat{{n}}_{{eff}}="
-                 "{:.0f})$").format(acorr_t[c_model], mcmc_ess[c_model]),
-                fontsize=titlesize)
+        ax.set_title(
+            (r"$\hat{{\tau}}_{{c}}={:.0f}\;(\hat{{n}}_{{eff}}="
+             "{:.0f})$").format(acorr_t[c_model], mcmc_ess[c_model]),
+            fontsize=titlesize)
 
-        elif best_fit_algor == 'boot+GA':
-            post_trace_plot = post_trace[c_model]
+        # elif best_fit_algor == 'boot+GA':
+        #     post_trace_plot = post_trace[c_model]
 
         plt.plot(np.arange(N_pre, N_tot), post_trace_plot, c='k', lw=.8,
                  ls='-', alpha=0.5)

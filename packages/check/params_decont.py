@@ -3,9 +3,10 @@ from os.path import isfile
 from packages.inp import names_paths
 
 
-def check(cl_files, da_algor, da_algors_accpt, bayesda_runs, fixedda_port,
-          bayesda_dflag, fld_rem_methods, bin_methods, fld_clean_mode,
-          fld_clean_bin, colors, **kwargs):
+def check(
+    cl_files, da_algor, da_algors_accpt, bayesda_runs, bayesda_dflag,
+    fld_rem_methods, bin_methods, fld_clean_mode, fld_clean_bin, colors,
+        **kwargs):
     """
     Check parameters related to the decontamination algorithm functions.
     """
@@ -30,11 +31,6 @@ def check(cl_files, da_algor, da_algors_accpt, bayesda_runs, fixedda_port,
             raise ValueError(
                 "there are {} 'bayes' DA weights defined, there should "
                 "be {}.".format(len(bayesda_dflag), 5 + len(colors)))
-
-    if da_algor == 'fixed':
-        # Check Bayesian decontamination algorithm parameters.
-        if fixedda_port > 1 or fixedda_port < 0:
-            raise ValueError("'fport' can not be outside the [0, 1] range.")
 
     # 'Read' mode is set.
     if da_algor == 'read':
