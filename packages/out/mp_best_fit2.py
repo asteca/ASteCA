@@ -37,8 +37,8 @@ def pl_mps_phot_diag(
             x_ed, linestyle=grid_ls, lw=grid_lw, color=grid_col, zorder=1)
     for y_ed in hess_yedges:
         # horizontal lines
-            ax.axhline(
-                y_ed, linestyle=grid_ls, lw=grid_lw, color=grid_col, zorder=1)
+        ax.axhline(
+            y_ed, linestyle=grid_ls, lw=grid_lw, color=grid_col, zorder=1)
     # This reversed colormap means higher prob stars will look redder.
     rmap = plt.cm.get_cmap('RdYlBu_r')
     # If the 'tolstoy' method was used AND the stars have a range of colors.
@@ -163,7 +163,7 @@ def pl_bf_synth_cl(
     ax.minorticks_on()
     ax.tick_params(axis='both', which='major', labelsize=xytickssize)
     if gs_y1 == 0:
-        ax.set_title("Synthetic (best match)", fontsize=titlesize)
+        ax.set_title("Synthetic (mean solution)", fontsize=titlesize)
         # Add text box
         text = '$({};\,{})$'.format(lkl_method, bin_method)
         ob = offsetbox.AnchoredText(
@@ -176,8 +176,8 @@ def pl_bf_synth_cl(
             x_ed, linestyle=grid_ls, lw=grid_lw, color=grid_col, zorder=1)
     for y_ed in hess_yedges:
         # horizontal lines
-            ax.axhline(
-                y_ed, linestyle=grid_ls, lw=grid_lw, color=grid_col, zorder=1)
+        ax.axhline(
+            y_ed, linestyle=grid_ls, lw=grid_lw, color=grid_col, zorder=1)
     # Plot synthetic cluster.
     single_idx, bin_idx = binar_idx <= 1., binar_idx > 1.
     # Single systems
