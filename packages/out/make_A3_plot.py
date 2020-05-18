@@ -11,11 +11,11 @@ from . prep_plots import figsize_x, figsize_y, grid_x, grid_y
 
 def main(
     npd, cld_i, pd, kde_cent, clust_rad, e_rad, rad_rads, rad_N_membs,
-    rad_N_field, rad_CI, KP_cent_dens, membvsmag,
-    KP_steps, KP_mean_afs, KP_tau_autocorr, KP_ESS, KP_samples, KP_Bys_rc,
-    KP_Bys_rt, KP_memb_num, KP_conct_par, rdp_radii, rdp_points, rdp_stddev,
-    field_dens, field_dens_std, cont_index, cl_region_i, frac_cl_area,
-    cl_region_rjct_i, field_regions_rjct_i, field_regions_i,
+    rad_N_field, rad_CI, KP_cent_dens, membvsmag, KP_steps, KP_mean_afs,
+    xy_filtered, xy_cent_dist, N_MC, rand_01_MC, cos_t, sin_t,
+    KP_tau_autocorr, KP_ESS, KP_samples, KP_Bys_rc, KP_Bys_rt, KP_memb_num,
+    KP_conct_par, field_dens, field_dens_std, cont_index, cl_region_i,
+    frac_cl_area, cl_region_rjct_i, field_regions_rjct_i, field_regions_i,
         flag_no_fl_regs_i, **kwargs):
     """
     Make A3 block plots.
@@ -38,6 +38,9 @@ def main(
             y_zmax)
         st_sizes_arr_z = prep_plots.star_size(mag_data_z)
         _, y_ax = prep_plots.ax_names(pd['colors'][0], pd['filters'][0], 'mag')
+        rdp_radii, rdp_points, rdp_stddev = prep_plots.RDPCurve(
+            xy_filtered, xy_cent_dist, kde_cent, N_MC, rand_01_MC, cos_t,
+            sin_t)
 
         # Structure plots.
         arglist = [

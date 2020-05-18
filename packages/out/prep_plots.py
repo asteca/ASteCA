@@ -2,6 +2,7 @@
 from ..math_f import exp_function
 from ..best_fit.obs_clust_prepare import dataProcess
 from ..decont_algors.local_cell_clean import bin_edges_f
+from ..aux_funcs import circFrac
 import numpy as np
 import warnings
 from astropy.visualization import ZScaleInterval
@@ -609,3 +610,60 @@ def pmRectangle(allfr_PMs, frac=.1):
     xydelta = frac * xyrang
 
     return xydelta, xyrang
+
+
+def RDPCurve(
+    xy_filtered, xy_cent_dist, kde_cent, N_MC, rand_01_MC, cos_t, sin_t,
+        RDP_rings=50, rings_rm=.1, Nmin=10, **kwargs):
+    """
+    Obtain the RDP using the concentric rings method.
+
+    HARDCODED:
+    RDP_rings: number of rings to (initially) try to define
+    rings_rm: remove the more conflicting last X% of radii values.
+    Nmin: minimum number of stars that a ring should contain. Else, expand it.
+    """
+
+    # Frame limits
+    x0, x1 = min(xy_filtered.T[0]), max(xy_filtered.T[0])
+    y0, y1 = min(xy_filtered.T[1]), max(xy_filtered.T[1])
+
+    # Handle the case where int()==0
+    max_i = max(1, int(rings_rm * RDP_rings))
+    # The +1 adds a ring accounting for the initial 0. in the array
+    radii = np.linspace(0., xy_cent_dist.max(), RDP_rings + 1 + max_i)[:-max_i]
+
+    # Areas and #stars for all rad values.
+    rdp_radii, rdp_points, rdp_stddev = [], [], []
+    l_prev, N_in_prev = np.inf, 0.
+    for l, h in zip(*[radii[:-1], radii[1:]]):
+        # Stars within this ring.
+        N_in = ((xy_cent_dist >= l) & (xy_cent_dist < h)).sum() + N_in_prev
+
+        l_now = min(l, l_prev)
+
+        # Require that at least 'Nmin' stars are within the ring.
+        if N_in > Nmin:
+            # Area of ring.
+            fr_area_l = circFrac(
+                (kde_cent), l_now, x0, x1, y0, y1, N_MC, rand_01_MC, cos_t,
+                sin_t)
+            fr_area_h = circFrac(
+                (kde_cent), h, x0, x1, y0, y1, N_MC, rand_01_MC, cos_t, sin_t)
+            ring_area = (np.pi * h**2 * fr_area_h) -\
+                (np.pi * l_now**2 * fr_area_l)
+
+            # Store RDP parameters.
+            rad_med = h if l_now == 0. else .5 * (l_now + h)
+            rdp_radii.append(rad_med)
+            rdp_points.append(N_in / ring_area)
+            rdp_stddev.append(np.sqrt(N_in) / ring_area)
+
+            # Reset
+            l_prev, N_in_prev = np.inf, 0.
+
+        else:
+            l_prev = l_now
+            N_in_prev += N_in
+
+    return rdp_radii, rdp_points, rdp_stddev

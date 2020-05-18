@@ -11,7 +11,6 @@ from .structure import xy_density
 from .structure import center
 from .structure import radius
 from .structure import field_density
-from .structure import radial_dens_prof
 from .structure import integMags
 from .structure import cluster_area
 from .structure import contamination_index
@@ -108,9 +107,6 @@ def main(cl_file, pd):
 
     # Field density value in stars/<area unit>.
     clp = field_density.main(clp, cld_i, **pd)
-
-    # RDP. For plotting purposes only.
-    clp = radial_dens_prof.main(clp, **pd)
 
     # Integrated magnitude. For plotting purposes only.
     clp = integMags.main(clp, **cld_i)

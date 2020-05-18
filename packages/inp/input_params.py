@@ -51,16 +51,14 @@ def main(pars_f_path):
                     center_bw = float(reader[1])
                     NN_dd = int(reader[2])
                     fdens_method = str(reader[3])
+                    nsteps_rad = int(reader[4])
                 elif reader[0] == 'S2':
-                    nsteps_rad = int(reader[1])
-                    RDP_rings = int(reader[2])
-                elif reader[0] == 'S3':
                     kp_flag = True if reader[1] in true_lst else False
                     kp_nchains = int(reader[2])
                     kp_nruns = int(reader[3])
                     kp_nburn = float(reader[4])
                     rt_max_f = float(reader[5])
-                elif reader[0] == 'S4':
+                elif reader[0] == 'S3':
                     try:
                         fr_number = int(reader[1])
                     except ValueError:
@@ -242,17 +240,16 @@ def main(pars_f_path):
         'read_mode': read_mode, 'id_ids': id_ids, 'id_xdata': id_xdata,
         'id_ydata': id_ydata, 'coords': coords, 'project': project,
         'id_mags': id_mags, 'id_cols': id_cols, 'id_kinem': id_kinem,
+
         # Input data processing
         'nanvals': nanvals, 'flag_tf': flag_tf, 'tf_range': tf_range,
-        # Output
-        'flag_make_plot': flag_make_plot, 'plot_frmt': plot_frmt,
-        'plot_dpi': plot_dpi,
+
         # Structure functions parameters
         'manual_struct': manual_struct, 'center_bw': center_bw,
         'NN_dd': NN_dd, 'fdens_method': fdens_method, 'nsteps_rad': nsteps_rad,
-        'RDP_rings': RDP_rings, 'kp_flag': kp_flag, 'kp_nchains': kp_nchains,
-        'kp_nruns': kp_nruns, 'kp_nburn': kp_nburn, 'rt_max_f': rt_max_f,
-        'fr_number': fr_number,
+        'kp_flag': kp_flag, 'kp_nchains': kp_nchains, 'kp_nruns': kp_nruns,
+        'kp_nburn': kp_nburn, 'rt_max_f': rt_max_f, 'fr_number': fr_number,
+
         #
         'err_max': err_max, 'ad_runs': ad_runs,
 
@@ -292,6 +289,11 @@ def main(pars_f_path):
         'imf_funcs': imf_funcs, 'lkl_methods': lkl_methods,
         'optimz_algors': optimz_algors, 'bayes_priors': bayes_priors,
         'all_evol_tracks': all_evol_tracks, 'CMD_extra_pars': CMD_extra_pars,
-        'cmd_systs': cmd_systs}
+        'cmd_systs': cmd_systs,
+
+        # Output
+        'flag_make_plot': flag_make_plot, 'plot_frmt': plot_frmt,
+        'plot_dpi': plot_dpi
+    }
 
     return pd
