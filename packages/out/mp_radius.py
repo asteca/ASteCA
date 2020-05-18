@@ -5,7 +5,6 @@ from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 from itertools import cycle
 from ..structure.king_profile import KingProf as kpf
 from . import BayesPlots
-from .. import aux_funcs
 from . prep_plots import xylabelsize, xytickssize, legendsize, titlesize,\
     grid_col, grid_ls, grid_lw
 
@@ -147,22 +146,22 @@ def pl_rad_dens(
         txts = [
             'King prof ({:.2f})'.format(KP_conct_par),
             t_rad.format(
-                "c", KP_Bys_rc[1], KP_Bys_rc[0], KP_Bys_rc[2], coord2),
+                "c", KP_Bys_rc[3], KP_Bys_rc[0], KP_Bys_rc[2], coord2),
             t_rad.format("t", KP_Bys_rt[1], KP_Bys_rt[0], KP_Bys_rt[2], coord2)
         ]
         # Plot curve. Values outside of rt contribute 'fd'.
         kpf_xvals = np.linspace(rdp_radii[0], KP_Bys_rt[1], 100)
         kpf_yvals = KP_cent_dens * kpf(
-            kpf_xvals, KP_Bys_rc[1], KP_Bys_rt[1]) + field_dens
+            kpf_xvals, KP_Bys_rc[3], KP_Bys_rt[3]) + field_dens
         ax.plot(kpf_xvals, kpf_yvals, 'g--', label=txts[0], lw=2., zorder=3)
         # Core radius
         rc_ymax = KP_cent_dens * kpf(
-            KP_Bys_rc[1], KP_Bys_rc[1], KP_Bys_rt[1]) + field_dens
+            KP_Bys_rc[3], KP_Bys_rc[3], KP_Bys_rt[3]) + field_dens
         ax.vlines(
-            x=KP_Bys_rc[1], ymin=field_dens, ymax=rc_ymax, label=txts[1],
+            x=KP_Bys_rc[3], ymin=field_dens, ymax=rc_ymax, label=txts[1],
             color='g', linestyles=':', lw=2., zorder=5)
         # Tidal radius
-        ax.vlines(x=KP_Bys_rt[1], ymin=field_dens, ymax=y_mid_point,
+        ax.vlines(x=KP_Bys_rt[3], ymin=field_dens, ymax=y_mid_point,
                   label=txts[2], color='g')
 
     # get handles
@@ -197,10 +196,10 @@ def pl_rad_dens(
     if kp_flag:
         axins.plot(kpf_xvals, kpf_yvals, 'g--', lw=1., zorder=3)
         axins.vlines(
-            x=KP_Bys_rc[1], ymin=field_dens, ymax=rc_ymax, color='g',
+            x=KP_Bys_rc[3], ymin=field_dens, ymax=rc_ymax, color='g',
             linestyles=':', lw=1.)
         axins.vlines(
-            x=KP_Bys_rt[1], ymin=field_dens, ymax=y_mid_point, color='g', lw=1)
+            x=KP_Bys_rt[3], ymin=field_dens, ymax=y_mid_point, color='g', lw=1)
     else:
         axins.vlines(
             x=clust_rad, ymin=field_dens, ymax=y_mid_point, lw=1.5, color='r',
@@ -212,7 +211,7 @@ def pl_rad_dens(
 
 def pl_KP_Bys(
     gs, coord, kp_flag, kp_nburn, KP_steps, KP_mean_afs, KP_tau_autocorr,
-        KP_ESS, KP_samples, KP_Bys_rc, KP_Bys_rt):
+        KP_ESS, KP_samples, KP_Bys_rc, KP_Bys_rt, KP_Bayes_kde):
     """
     """
     if kp_flag:
@@ -221,6 +220,8 @@ def pl_KP_Bys(
         if coord == 'deg':
             KP_samples = KP_samples * 60.
             KP_Bys_rc, KP_Bys_rt = KP_Bys_rc * 60., KP_Bys_rt * 60.
+            KP_Bayes_kde[0][0], KP_Bayes_kde[1][0] =\
+                KP_Bayes_kde[0][0] * 60., KP_Bayes_kde[1][0] * 60.
             coord2 = 'arcmin'
         else:
             coord2 = 'px'
@@ -247,16 +248,14 @@ def pl_KP_Bys(
 
         gsy, gsx = (4, 6), (0, 2)
         xylabel = r"$r_{{c}}$ [{}]".format(coord2)
-        mu_kde_x, mu_kde = aux_funcs.kde1D(KP_samples[:, :, 0].flatten())
         BayesPlots.histogram(
-            gs, gsx, gsy, KP_samples[:, :, 0], mu_kde_x, mu_kde, KP_Bys_rc,
+            gs, gsx, gsy, KP_samples[:, :, 0], KP_Bys_rc, KP_Bayes_kde[0],
             xylabel)
 
         gsy, gsx = (4, 6), (2, 4)
         xylabel = r"$r_{{t}}$ [{}]".format(coord2)
-        mu_kde_x, mu_kde = aux_funcs.kde1D(KP_samples[:, :, 1].flatten())
         BayesPlots.histogram(
-            gs, gsx, gsy, KP_samples[:, :, 1], mu_kde_x, mu_kde, KP_Bys_rt,
+            gs, gsx, gsy, KP_samples[:, :, 1], KP_Bys_rt, KP_Bayes_kde[1],
             xylabel)
 
         gsy, gsx = (4, 6), (4, 6)
@@ -314,13 +313,13 @@ def pl_zoom_frame(
     if kp_flag:
         # Plot tidal radius.
         circle = plt.Circle(
-            (kde_cent[0], kde_cent[1]), KP_Bys_rt[1], color='g', fill=False,
+            (kde_cent[0], kde_cent[1]), KP_Bys_rt[3], color='g', fill=False,
             lw=1.5)
         fig.gca().add_artist(circle)
         # Plot core radius.
-        if KP_Bys_rc[1] > 0:
+        if KP_Bys_rc[3] > 0:
             circle = plt.Circle(
-                (kde_cent[0], kde_cent[1]), KP_Bys_rc[1], color='g',
+                (kde_cent[0], kde_cent[1]), KP_Bys_rc[3], color='g',
                 fill=False, ls='dashed', lw=1.)
             fig.gca().add_artist(circle)
 

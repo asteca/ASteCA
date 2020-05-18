@@ -7,7 +7,7 @@ from . prep_plots import xylabelsize, xytickssize, legendsize
 
 
 def histogram(
-    gs, gsx, gsy, mcmc_samples, mu_kde_x, mu_kde, _16_50_84,
+    gs, gsx, gsy, mcmc_samples, _16_50_84_mean_mode, mu_x_kde,
         xylabel):
     """
     Parameter's distribution
@@ -24,27 +24,38 @@ def histogram(
         (bin_edges[1:] + bin_edges[:-1]) * .5, hist / float(hist.max()),
         width=(bin_edges[1] - bin_edges[0]), color='grey', alpha=0.3)
     # Plot KDE.
-    plt.plot(mu_kde_x, mu_kde / max(mu_kde), color='k', lw=1.5)
+    plt.plot(mu_x_kde[0], mu_x_kde[1] / max(mu_x_kde[1]), color='k', lw=1.5)
+
+    _16, _50, _84, _mean, _mode = _16_50_84_mean_mode
+
     # Mean
     plt.axvline(
-        x=_16_50_84[1], linestyle='--', color='blue', zorder=4,
-        label=("Mean={:.3f}").format(_16_50_84[1]))
+        x=_mean, linestyle='--', color='blue', zorder=4,
+        label=("Mean ({:.2f})").format(_mean))
+    # Median
+    plt.axvline(
+        x=_50, linestyle='--', color='green', zorder=4,
+        label=("Median ({:.2f})").format(_50))
+    # Mode
+    plt.axvline(
+        x=_mode, linestyle='--', color='cyan', zorder=4,
+        label=("Mode ({:.2f})").format(_mode))
+
     # 16th and 84th percentiles.
     std = np.std(mcmc_samples.flatten())
-    txt = "16-84th perc\n" + r"$\sigma={:.3f}$".format(std)
+    txt = "16-84th perc\n" + r"$({:.2f}, {:.2f})$".format(_16, _84)
     plt.axvline(
-        x=_16_50_84[0], linestyle=':', color='orange', zorder=4,
-        label=txt)
-    plt.axvline(x=_16_50_84[2], linestyle=':', color='orange', zorder=4)
+        x=_16, linestyle=':', color='orange', zorder=4, label=txt)
+    plt.axvline(x=_84, linestyle=':', color='orange', zorder=4)
 
-    plt.xlim(max(-1., (_16_50_84[1]) - 4. * std), (_16_50_84[1]) + 4. * std)
+    plt.xlim(max(-1., (_mean) - 4. * std), (_mean) + 4. * std)
     cur_ylim = ax.get_ylim()
     ax.set_ylim([0, cur_ylim[1]])
     plt.legend(fontsize=legendsize)
 
 
 def traceplot(
-    gs, gsx, gsy, mcmc_samples, _16_50_84, Brn_prcnt, xylabel,
+    gs, gsx, gsy, mcmc_samples, _16_50_84_mean_mode, Brn_prcnt, xylabel,
         xticks=True):
     """
     Chains traceplot.
@@ -56,9 +67,12 @@ def traceplot(
     Nburn = Brn_prcnt * N_tot
     plt.axvline(x=Nburn, linestyle=':', color='r', zorder=4)
     # 16th and 84th percentiles + median.
-    plt.axhline(y=_16_50_84[0], linestyle=':', color='orange', zorder=4)
-    plt.axhline(y=_16_50_84[1], linestyle=':', color='blue', zorder=4)
-    plt.axhline(y=_16_50_84[2], linestyle=':', color='orange', zorder=4)
+    plt.axhline(
+        y=_16_50_84_mean_mode[0], linestyle=':', color='orange', zorder=4)
+    plt.axhline(
+        y=_16_50_84_mean_mode[3], linestyle=':', color='blue', zorder=4)
+    plt.axhline(
+        y=_16_50_84_mean_mode[2], linestyle=':', color='orange', zorder=4)
     if xticks is True:
         plt.xlabel("Steps", fontsize=xylabelsize)
     else:
@@ -104,7 +118,13 @@ def twoParDens(gs, gsx, gsy, KP_samples, KP_Bys_rc, KP_Bys_rt, xylabel):
     ax = plt.subplot(gs[gsy[0]:gsy[1], gsx[0]:gsx[1]])
     ax.tick_params(axis='both', which='major', labelsize=xytickssize)
     hist2d(ax, KP_samples[:, :, 0], KP_samples[:, :, 1])
-    plt.scatter(KP_Bys_rc[1], KP_Bys_rt[1], marker='x', c='r', s=50, zorder=5)
+    plt.scatter(
+        KP_Bys_rc[1], KP_Bys_rt[1], marker='x', c='green', s=50, zorder=5)
+    plt.scatter(
+        KP_Bys_rc[3], KP_Bys_rt[3], marker='x', c='blue', s=50, zorder=5)
+    plt.scatter(
+        KP_Bys_rc[4], KP_Bys_rt[4], marker='x', c='cyan', s=50, zorder=5)
+
     plt.xlabel(xylabel[0], fontsize=xylabelsize)
     plt.ylabel(xylabel[1], fontsize=xylabelsize)
     # xmed, xstd = np.median(KP_samples[:, :, 0]), np.std(KP_samples[:, :, 0])

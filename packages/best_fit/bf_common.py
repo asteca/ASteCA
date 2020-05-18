@@ -4,6 +4,7 @@ from scipy.optimize import differential_evolution as DE
 from scipy import stats
 import warnings
 from ..synth_clust import synth_cluster
+from ..aux_funcs import kde1D
 from . import likelihood
 from .. import update_progress
 
@@ -198,15 +199,11 @@ def modeKDE(fundam_params, varIdxs, mcmc_trace):
         xp_min, xp_max = max(fundam_params[varIdxs[i]][0], pmin - std),\
             min(fundam_params[varIdxs[i]][-1], pmax + std)
 
-        x_rang = .1 * (xp_max - xp_min)
-        x_kde = np.mgrid[xp_min - x_rang:xp_max + x_rang:100j]
-        # Use a slightly larger Scott bandwidth (looks better when plotted)
-        bw = 1.25 * len(mcmc_par) ** (-1. / (len(varIdxs) + 4))
         # KDE for plotting.
         try:
-            kernel_cl = stats.gaussian_kde(mcmc_par, bw_method=bw)
-            # Parameter's KDE evaluated and reshaped.
-            par_kde = np.reshape(kernel_cl(x_kde).T, x_kde.shape)
+            # Use a slightly larger Scott bandwidth (looks better when plotted)
+            bw = 1.25 * len(mcmc_par) ** (-1. / (len(varIdxs) + 4))
+            x_kde, par_kde = kde1D(mcmc_par, xp_min, xp_max, bw)
 
             # Store for plotting
             mcmc_kde.append([x_kde, par_kde])

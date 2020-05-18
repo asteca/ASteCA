@@ -5,6 +5,7 @@ import warnings
 from .. import update_progress
 from ..out import prep_plots
 from ..aux_funcs import circFrac
+from ..best_fit.bf_common import modeKDE
 
 
 def main(
@@ -20,7 +21,7 @@ def main(
     if kp_flag:
         print("Estimating King profile")
         KP_cd, KP_steps, KP_mean_afs, KP_tau_autocorr, KP_ESS, KP_samples,\
-            KP_Bys_rc, KP_Bys_rt = fit_King_prof(
+            KP_Bys_rc, KP_Bys_rt, KP_Bayes_kde = fit_King_prof(
                 kp_nchains, kp_nruns, kp_nburn, cld_i['x'], cld_i['y'],
                 clp['kde_cent'], clp['field_dens'],
                 clp['clust_rad'], clp['n_memb_i'], clp['N_MC'],
@@ -44,14 +45,16 @@ def main(
         print("Skipping King profile fit")
         KP_cd, KP_steps, KP_mean_afs, KP_tau_autocorr, KP_ESS, KP_samples,\
             KP_memb_num, KP_conct_par = [np.nan] * 8
-        KP_Bys_rc, KP_Bys_rt = np.array([np.nan, np.nan, np.nan]),\
-            np.array([np.nan, np.nan, np.nan])
+        KP_Bys_rc, KP_Bys_rt, KP_Bayes_kde =\
+            np.array([np.nan, np.nan, np.nan]),\
+            np.array([np.nan, np.nan, np.nan]), np.array([])
 
     clp['KP_cent_dens'], clp['KP_steps'], clp['KP_mean_afs'],\
         clp['KP_tau_autocorr'], clp['KP_ESS'], clp['KP_samples'],\
-        clp['KP_Bys_rc'], clp['KP_Bys_rt'], clp['KP_memb_num'],\
-        clp['KP_conct_par'] = KP_cd, KP_steps, KP_mean_afs, KP_tau_autocorr,\
-        KP_ESS, KP_samples, KP_Bys_rc, KP_Bys_rt, KP_memb_num, KP_conct_par
+        clp['KP_Bys_rc'], clp['KP_Bys_rt'], clp['KP_Bayes_kde'],\
+        clp['KP_memb_num'], clp['KP_conct_par'] = KP_cd, KP_steps,\
+        KP_mean_afs, KP_tau_autocorr, KP_ESS, KP_samples, KP_Bys_rc,\
+        KP_Bys_rt, KP_Bayes_kde, KP_memb_num, KP_conct_par
     return clp
 
 
@@ -184,10 +187,16 @@ def fit_King_prof(
             e_cx, e_cy, e_rc, e_rt = np.percentile(samples, (16, 84), 0).T
         elif ndim == 2:
             rc, rt = np.mean(samples, 0)
-            e_rc_16, e_rc_84, e_rt_16, e_rt_84 = np.percentile(
-                samples, (16, 84), 0).T.flatten()
-            KP_Bys_rc = np.array([e_rc_16, rc, e_rc_84])
-            KP_Bys_rt = np.array([e_rt_16, rt, e_rt_84])
+            rc_16, rc_50, rc_84, rt_16, rt_50, rt_84 = np.percentile(
+                samples, (16, 50, 84), 0).T.flatten()
+            # Mode and KDE to plot
+            # This simulates the 'fundam_params and 'varIdxs' arrays.
+            fp, vi = [[-np.inf, np.inf], [-np.inf, np.inf]], [0, 1]
+            KP_Bys_mode, KP_Bayes_kde = modeKDE(fp, vi, samples.T)
+
+            # Store: 16, median, 84, mean, mode
+            KP_Bys_rc = np.array([rc_16, rc_50, rc_84, rc, KP_Bys_mode[0]])
+            KP_Bys_rt = np.array([rt_16, rt_50, rt_84, rt, KP_Bys_mode[1]])
 
         # Effective sample size
         KP_ESS = samples.shape[0] / np.mean(sampler.get_autocorr_time(tol=0))
@@ -204,7 +213,7 @@ def fit_King_prof(
     KP_cd = centDens(N_memb, rc, rt, rt_rang)
 
     return KP_cd, KP_steps, KP_mean_afs, KP_tau_autocorr, KP_ESS, KP_samples,\
-        KP_Bys_rc, KP_Bys_rt
+        KP_Bys_rc, KP_Bys_rt, KP_Bayes_kde
 
 
 def lnprob(
