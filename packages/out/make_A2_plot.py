@@ -10,8 +10,8 @@ from . prep_plots import figsize_x, figsize_y, grid_x, grid_y
 
 def main(
     npd, cld_i, pd, x_offset, y_offset, bw_list, kde_cent, frame_kde_cent,
-    rdp_radii, integ_dists, integ_mags, xy_filtered, xy_cent_dist, NN_dist,
-    fr_dens, fdens_min_d, fdens_lst, fdens_std_lst, field_dens_d, field_dens,
+    integ_dists, integ_mags, xy_filtered, xy_cent_dist, NN_dist, fr_dens,
+    fdens_min_d, fdens_lst, fdens_std_lst, field_dens_d, field_dens,
         field_dens_std, clust_rad, **kwargs):
     """
     Make A2 block plots.
@@ -46,11 +46,11 @@ def main(
             [gs, coord, pd['fdens_method'], xy_cent_dist, fr_dens, fdens_min_d,
              fdens_lst, fdens_std_lst, field_dens_d, field_dens,
              field_dens_std],
-            # pl_mag_cent
+            # pl_integ_mag_cent
             [gs, coord, y_ax, integ_dists, integ_mags],
-            # pl_rdp_rings
-            [gs, fig, asp_ratio, x_min, x_max, y_min, y_max, x_name, y_name,
-             coord, kde_cent, rdp_radii]
+            # pl_centdist_vs_mag
+            [gs, fig, y_ax, coord, cld_i['x'], cld_i['y'], cld_i['mags'][0],
+             kde_cent, clust_rad]
         ]
         for n, args in enumerate(arglist):
             mp_cent_dens.plot(n, *args)

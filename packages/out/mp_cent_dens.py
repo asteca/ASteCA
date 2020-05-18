@@ -1,5 +1,6 @@
 
 import numpy as np
+from scipy.spatial.distance import cdist
 import matplotlib.pyplot as plt
 import matplotlib.offsetbox as offsetbox
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -237,7 +238,7 @@ def pl_field_dens(
     leg.get_frame().set_alpha(0.7)
 
 
-def pl_mag_cent(gs, coord, y_ax, integ_dists, integ_mags):
+def pl_integ_mag_cent(gs, coord, y_ax, integ_dists, integ_mags):
     """
     """
     # Convert from deg to arcmin if (ra,dec) were used.
@@ -254,19 +255,6 @@ def pl_mag_cent(gs, coord, y_ax, integ_dists, integ_mags):
             lw=grid_lw)
     ax.set_title('Integrated magnitude vs distance', fontsize=titlesize)
 
-    # Nstp = max(1, int(round(len(rdp_radii) / 10.)))
-    # rdp_radii, rdp_mags = rdp_radii[::Nstp], rdp_mags[::Nstp]
-
-    # w = (rdp_radii[-1] - rdp_radii[0]) / 15.
-    # plt.boxplot(rdp_mags, positions=rdp_radii, widths=w)
-    # plt.xlim(rdp_radii[0] - 1.5 * w, rdp_radii[-1] + 1.5 * w)
-    # ax.set_xticks(rdp_radii)
-    # if coord2 == "arcmin":
-    #     tck = ["{:.1f}".format(_) for _ in rdp_radii]
-    # else:
-    #     tck = ["{:.0f}".format(_) for _ in rdp_radii]
-    # ax.set_xticklabels(tck)
-
     plt.plot(integ_dists, integ_mags)
 
     plt.ylabel('$' + y_ax + '$' + r" $^{*}$", fontsize=xylabelsize)
@@ -274,31 +262,43 @@ def pl_mag_cent(gs, coord, y_ax, integ_dists, integ_mags):
     ax.invert_yaxis()
 
 
-def pl_rdp_rings(
-    gs, fig, asp_ratio, x_min, x_max, y_min, y_max, x_name, y_name, coord,
-        kde_cent, rdp_radii):
+def pl_centdist_vs_mag(
+    gs, fig, y_ax, coord, xi, yi, magi, kde_cent,
+        clust_rad):
     """
     """
+    # Distances of all stars to the center of the cluster.
+    xy_cent_dist = cdist([kde_cent], np.array((xi, yi)).T)[0]
+
+    # Convert from deg to arcmin if (ra,dec) were used.
+    if coord == 'deg':
+        clust_rad, xy_cent_dist = clust_rad * 60., xy_cent_dist * 60.
+        coord2 = 'arcmin'
+    else:
+        coord2 = 'px'
+
     ax = plt.subplot(gs[2:4, 4:6])
     ax.minorticks_on()
-    ax.set_aspect(aspect=asp_ratio)
-    # Set plot limits
-    plt.xlim(x_min, x_max)
-    plt.ylim(y_min, y_max)
-    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=xylabelsize)
-    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=xylabelsize)
     ax.tick_params(axis='both', which='major', labelsize=xytickssize)
-    # If RA is used, invert axis.
-    if coord == 'deg':
-        ax.invert_xaxis()
-    ax.set_title(
-        r'$N_{{rings}}={}$'.format(len(rdp_radii)), fontsize=titlesize)
+    ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
+            lw=grid_lw)
+    # plt.xlim(xy_cent_dist.min(), min(xy_cent_dist.max(), clust_rad * 10.))
 
-    for rad in rdp_radii:
-        circle = plt.Circle(
-            (kde_cent[0], kde_cent[1]), rad, color='g', fill=False, ls=':',
-            zorder=5)
-        ax.add_artist(circle)
+    plt.xlabel(
+        r'Distance to center $[{}]$'.format(coord2), fontsize=xylabelsize)
+    plt.ylabel('$' + y_ax + '$', fontsize=xylabelsize)
+
+    msk = xy_cent_dist <= clust_rad
+    plt.scatter(
+        xy_cent_dist[~msk], magi[~msk], s=10, c='grey', alpha=.75,
+        edgecolor='w', lw=.3, label=r"$r>r_{cl}$")
+    plt.scatter(
+        xy_cent_dist[msk], magi[msk], s=25, c='k',
+        edgecolor='w', lw=.3, label=r"$r\leq r_{cl}$")
+    ax.invert_yaxis()
+
+    leg = plt.legend(fancybox=True, fontsize=legendsize, loc='upper right')
+    leg.get_frame().set_alpha(0.7)
 
 
 def plot(N, *args):
@@ -311,8 +311,8 @@ def plot(N, *args):
         1: [pl_knn_dens, 'kNN per-star densities'],
         2: [pl_full_frame, 'full frame'],
         3: [pl_field_dens, 'Field density'],
-        4: [pl_mag_cent, 'magnitude vs dist to center'],
-        5: [pl_rdp_rings, 'RDP rings']
+        4: [pl_integ_mag_cent, 'Integrated magnitude vs dist to center'],
+        5: [pl_centdist_vs_mag, 'Distance to center vs magnitude']
     }
 
     fxn = plt_map.get(N, None)[0]

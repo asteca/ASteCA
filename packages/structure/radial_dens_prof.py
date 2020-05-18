@@ -5,13 +5,11 @@ from ..aux_funcs import circFrac
 
 def main(clp, RDP_rings, rings_rm=.1, Nmin=10, **kwargs):
     """
-    Obtain the RDP using the concentric rings method. Mostly used for plotting.
+    Obtain the RDP using the concentric rings method. The 'rdp_radii' array
+    is used minimally by 'radius.py' (uses the initial and last values). Other
+    than that, this is just used for plotting the RDP.
 
-    The 'rdp_radii' array is used minimally by 'radius.py' (uses the initial
-    and last values).
-
-    HARDCODED
-
+    HARDCODED:
     rings_rm: remove the more conflicting last X% of radii values.
     Nmin: minimum number of stars that a ring should contain. Else, expand it.
     """
