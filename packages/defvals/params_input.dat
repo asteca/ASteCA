@@ -125,20 +125,12 @@ S0  CLUSTER      n        n        n          n
 #   - XX%: select the density value at that percentile from the estimated center
 #     (the '%' character is necessary, e.g '75%')
 #   - float>0: manual value.
-#
-#   bandwidth    NN    field_dens
-S1         .0    10          iter
-
-# Radius and radial density profile function.
-#
 # * N_steps: [int]
 #   The number of bootstrap steps employed to estimate the uncertainty
 #   associated to the radius.
-# * RDP_rings: [int]
-#   Number of circular rings used for plotting the RDP.
 #
-#   N_steps    RDP_rings
-S2        0           50
+#   bandwidth    NN    field_dens   N_steps
+S1         .0    10          iter         0
 
 # King profile fitting parameters.
 #
@@ -156,7 +148,7 @@ S2        0           50
 #   the radius obtained in the previous step.
 #
 #   flag   nchains   nruns  nburn    rt_max
-S3     n        20    5000    .25         2
+S2     n        20    5000    .25         2
 
 # Field stars regions.
 #
@@ -166,7 +158,7 @@ S3     n        20    5000    .25         2
 #   - max: use the maximum possible number of field regions in the frame.
 #
 #   regions
-S4       10
+S3       10
 ################################################################################
 
 

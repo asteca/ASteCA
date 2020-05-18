@@ -57,9 +57,9 @@ def main(cld_i, clp, coords, project, center_bw, cent_manual, **kwargs):
 
 
 def kde_center_zoom(x_data, y_data, kde_approx_cent, radius):
-    '''
+    """
     Find the KDE maximum value pointing to the center coordinates.
-    '''
+    """
 
     # Unpack approximate center values.
     x_cent_pix, y_cent_pix = kde_approx_cent

@@ -16,10 +16,10 @@ def main(clp, x, y, mags, **kwargs):
     (not a good sign).
     """
 
-    # If the cluster's area is more than 90% of the full frame's area, don't
+    # If the cluster's area is less than 10% of the full frame's area, don't
     # estimate the CI.
     frame_area = np.ptp(x) * np.ptp(y)
-    if (frame_area - clp['cl_area']) / frame_area < .1:
+    if (frame_area - clp['cl_area']) / frame_area > .1:
 
         # Count the total number of stars within the defined cluster region
         # (including stars with rejected photometric errors)
