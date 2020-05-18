@@ -48,7 +48,7 @@ def rdpAreasDists(
     cld_i, kde_cent, rdp_radii, N_MC, rand_01_MC, cos_t, sin_t, Nrads=300,
         **kwargs):
     """
-    The areas for each radius value in 'rdp_radii' are obtained here once.
+    The areas for each radius value in 'rad_radii' are obtained here once.
     We also calculate here the distance of each star to the defined center.
 
     HARDCODED
@@ -71,8 +71,8 @@ def rdpAreasDists(
 
     # We use the 'rdp_radii' here since it is already processed to contain
     # reasonable starting and finishing values.
-    # Defining this array here gives the radius finding function more
-    # resolution,almost independently of the number of RDP rings used.
+    # Defining this array here gives the radius finding function a reasonable
+    # resolution.
     rad_radii = np.linspace(rdp_radii[0], rdp_radii[-1], Nrads)
 
     # Areas associated to the radii defined in 'rad_radii'.

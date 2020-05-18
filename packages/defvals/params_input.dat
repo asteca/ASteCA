@@ -383,7 +383,7 @@ RS         n
 #   Save MCMC trace to file?
 #
 #   algorithm   mins_max  save_trace
-B0    ptemcee         30           n
+B0    ptemcee          5           n
 
 # ptemcee parameters.
 #

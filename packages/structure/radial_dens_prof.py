@@ -5,7 +5,10 @@ from ..aux_funcs import circFrac
 
 def main(clp, RDP_rings, rings_rm=.1, Nmin=10, **kwargs):
     """
-    Obtain the RDP using the concentric rings method. For plotting only.
+    Obtain the RDP using the concentric rings method. Mostly used for plotting.
+
+    The 'rdp_radii' array is used minimally by 'radius.py' (uses the initial
+    and last values).
 
     HARDCODED
 
@@ -62,9 +65,9 @@ def main(clp, RDP_rings, rings_rm=.1, Nmin=10, **kwargs):
     if not rdp_radii:
         raise ValueError("ERROR: RDP is empty. Check the center coordinates")
 
-    if RDP_rings != len(rdp_radii):
-        print("RDP: N={} rings with <10 stars inside were merged".format(
-            RDP_rings - len(rdp_radii)))
+    # if RDP_rings != len(rdp_radii):
+    #     print("RDP: N={} rings with <10 stars inside were merged".format(
+    #         RDP_rings - len(rdp_radii)))
 
     clp['rdp_radii'], clp['rdp_points'], clp['rdp_stddev'] = rdp_radii,\
         rdp_points, rdp_stddev
