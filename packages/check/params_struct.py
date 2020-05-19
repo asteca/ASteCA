@@ -3,11 +3,19 @@ from collections import Counter
 
 
 def check(
-    manual_struct, center_bw, fdens_method, kp_flag, kp_nchains, kp_nburn,
-        inst_packgs_lst, **kwargs):
+    trim_frame_range, manual_struct, center_bw, fdens_method, kp_flag,
+        kp_nchains, kp_nburn, inst_packgs_lst, **kwargs):
     """
     Check that the parameters are properly written.
     """
+
+    dups = [
+        _ for _, c in Counter(list(zip(*trim_frame_range))[0]).items()
+        if c > 1]
+    if dups:
+        raise ValueError((
+            "duplicated entries found in 'Trim frame' block:\n" +
+            "{}".format(dups)))
 
     dups = [
         _ for _, c in Counter(list(zip(*manual_struct))[0]).items() if c > 1]
