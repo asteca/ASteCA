@@ -48,7 +48,7 @@ def main(clp, cld_i, center_bw, flag_make_plot, mirror_flag, **kwargs):
 
     # Run once more for plotting.
     kernel, x_grid, y_grid, positions, k_pos = kde_center(
-        x_data, y_data, bw_list[1], True)
+        x_data, y_data, bw_list[1], mirror_flag, True)
 
     clp['cents_xy'], clp['kde_approx_cent'], clp['bw_list'],\
         clp['frame_kdes'], clp['frame_kde_cent'] = cents_xy, kde_approx_cent,\
