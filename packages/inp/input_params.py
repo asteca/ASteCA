@@ -14,7 +14,7 @@ def main(pars_f_path):
     # Read data from file.
     with open(pars_f_path, "r") as f_dat:
 
-        manual_struct = []
+        manual_struct, trim_frame_range = [], []
         # Iterate through each line in the file.
         for ln, line in enumerate(f_dat):
 
@@ -41,8 +41,8 @@ def main(pars_f_path):
                 elif reader[0] == 'I5':
                     nanvals = [_.replace(',', '') for _ in reader[1:]]
                 elif reader[0] == 'I6':
-                    flag_tf = True if reader[1] in true_lst else False
-                    tf_range = list(map(float, reader[2:]))
+                    trim_frame_range.append([
+                        reader[1], list(map(float, reader[2:]))])
 
                 # Structure functions parameters.
                 elif reader[0] == 'S0':
@@ -242,7 +242,7 @@ def main(pars_f_path):
         'id_mags': id_mags, 'id_cols': id_cols, 'id_kinem': id_kinem,
 
         # Input data processing
-        'nanvals': nanvals, 'flag_tf': flag_tf, 'tf_range': tf_range,
+        'nanvals': nanvals, 'trim_frame_range': trim_frame_range,
 
         # Structure functions parameters
         'manual_struct': manual_struct, 'center_bw': center_bw,

@@ -81,13 +81,13 @@ I5  INDEF, NAN, NaN, 99.999, 999.99
 
 # Trim frame?
 #
-# * tf_flag: [y / n]
-#   Flag if the frame should be trimmed.
+# * name: [str]
+#   Name of the cluster that should be trimmed.
 # * range: [floats] * 4
 #   Input the x,y ranges in the order: xmin, xmax, ymin, ymax
 #
-#    tf_flag    range
-I6         n    0. 0. 0. 0.
+#     name        range
+I6       n   0. 0. 0. 0.
 ################################################################################
 
 
