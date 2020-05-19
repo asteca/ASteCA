@@ -172,6 +172,8 @@ def main(pars_f_path):
                 elif reader[0] == 'O1':
                     plot_frmt = str(reader[1])
                     plot_dpi = int(reader[2])
+                    # TODO this flag is hidden for now
+                    mirror_flag = True
 
                 else:
                     # Get parameters file name from path.
@@ -293,7 +295,7 @@ def main(pars_f_path):
 
         # Output
         'flag_make_plot': flag_make_plot, 'plot_frmt': plot_frmt,
-        'plot_dpi': plot_dpi
+        'plot_dpi': plot_dpi, 'mirror_flag': mirror_flag
     }
 
     return pd

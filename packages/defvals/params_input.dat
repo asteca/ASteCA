@@ -463,7 +463,6 @@ O0  D1 D2
 
 # * format: [png / pdf / supported matplotlib]
 #   Format of the final image file.
-#
 # * DPI: [integer]
 #   Manages the size of the generated image files.
 #
