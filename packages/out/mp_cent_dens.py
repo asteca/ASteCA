@@ -183,6 +183,7 @@ def pl_full_frame(
     ax.add_artist(ob)
 
 
+
 def pl_field_dens(
     gs, coord, fdens_method, fr_dist, fr_dens, fdens_min_d, fdens_lst,
         fdens_std_lst, field_dens_d, field_dens, field_dens_std):
@@ -204,7 +205,7 @@ def pl_field_dens(
     ymin = max(0., min(fr_dens) - delta_y)
     ymax = max(fr_dens) + delta_y
 
-    ax = plt.subplot(gs[2:4, 0:2])
+    ax = plt.subplot(gs[2:4, 0:4])
     ax.set_title(("Method: '{}'").format(fdens_method), fontsize=titlesize)
     plt.ylim(ymin, ymax)
     ax.minorticks_on()
@@ -238,33 +239,9 @@ def pl_field_dens(
     leg.get_frame().set_alpha(0.7)
 
 
-def pl_integ_mag_cent(gs, coord, y_ax, integ_dists, integ_mags):
-    """
-    """
-    # Convert from deg to arcmin if (ra,dec) were used.
-    if coord == 'deg':
-        integ_dists = np.array(integ_dists) * 60.
-        coord2 = 'arcmin'
-    else:
-        coord2 = 'px'
-
-    ax = plt.subplot(gs[2:4, 2:4])
-    ax.minorticks_on()
-    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
-    ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
-            lw=grid_lw)
-    ax.set_title('Integrated magnitude vs distance', fontsize=titlesize)
-
-    plt.plot(integ_dists, integ_mags)
-
-    plt.ylabel('$' + y_ax + '$' + r" $^{*}$", fontsize=xylabelsize)
-    plt.xlabel("Distance to center [{}]".format(coord2), fontsize=xylabelsize)
-    ax.invert_yaxis()
-
-
 def pl_centdist_vs_mag(
-    gs, fig, y_ax, coord, xi, yi, magi, kde_cent,
-        clust_rad):
+    gs, fig, y_ax, coord, xi, yi, magi, kde_cent, clust_rad,
+        integ_dists, integ_mags):
     """
     """
     # Distances of all stars to the center of the cluster.
@@ -273,6 +250,7 @@ def pl_centdist_vs_mag(
     # Convert from deg to arcmin if (ra,dec) were used.
     if coord == 'deg':
         clust_rad, xy_cent_dist = clust_rad * 60., xy_cent_dist * 60.
+        integ_dists = np.array(integ_dists) * 60.
         coord2 = 'arcmin'
     else:
         coord2 = 'px'
@@ -296,8 +274,18 @@ def pl_centdist_vs_mag(
         xy_cent_dist[msk], magi[msk], s=25, c='k',
         edgecolor='w', lw=.3, label=r"$r\leq r_{cl}$")
     ax.invert_yaxis()
+    plt.legend(fancybox=True, fontsize=legendsize, loc='lower right')
 
-    leg = plt.legend(fancybox=True, fontsize=legendsize, loc='upper right')
+    ax2 = ax.twinx()
+    ax2.minorticks_on()
+    ax2.tick_params(axis='both', which='major', labelsize=xytickssize)
+
+    plt.plot(integ_dists, integ_mags, c='r', lw=3., label="Integ mag")
+
+    plt.ylabel('$' + y_ax + '$' + r" $^{*}$", fontsize=xylabelsize)
+    ax2.invert_yaxis()
+
+    leg = plt.legend(fancybox=True, fontsize=legendsize, loc='upper center')
     leg.get_frame().set_alpha(0.7)
 
 
@@ -311,8 +299,7 @@ def plot(N, *args):
         1: [pl_knn_dens, 'kNN per-star densities'],
         2: [pl_full_frame, 'full frame'],
         3: [pl_field_dens, 'Field density'],
-        4: [pl_integ_mag_cent, 'Integrated magnitude vs dist to center'],
-        5: [pl_centdist_vs_mag, 'Distance to center vs magnitude']
+        4: [pl_centdist_vs_mag, 'Distance to center vs magnitude']
     }
 
     fxn = plt_map.get(N, None)[0]
