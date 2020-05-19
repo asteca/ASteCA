@@ -177,6 +177,7 @@ def pl_rad_dens(
     axins.minorticks_on()
     axins.grid(b=True, which='both', color=grid_col, linestyle=grid_ls,
                lw=grid_lw)
+    axins.set_ylim(y_min, y_max)
     # plt.xlabel(r'log(radius) $[{}]$'.format(coord2), fontsize=8)
     # plt.ylabel(r"log($\rho$) $[st/{}^{{2}}]$".format(coord2), fontsize=8)
     axins.tick_params(axis='both', which='both', labelsize=6)
