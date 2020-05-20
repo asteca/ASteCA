@@ -49,9 +49,10 @@ def main(pars_f_path):
                     manual_struct.append(reader[1:])
                 elif reader[0] == 'S1':
                     center_bw = float(reader[1])
-                    NN_dd = int(reader[2])
-                    fdens_method = str(reader[3])
-                    nsteps_rad = int(reader[4])
+                    mirror_flag = True if reader[2] in true_lst else False
+                    NN_dd = int(reader[3])
+                    fdens_method = str(reader[4])
+                    nsteps_rad = int(reader[5])
                 elif reader[0] == 'S2':
                     kp_flag = True if reader[1] in true_lst else False
                     kp_nchains = int(reader[2])
@@ -74,7 +75,7 @@ def main(pars_f_path):
                 elif reader[0] == 'D0':
                     da_algor = reader[1]
                     bayesda_runs = int(reader[2])
-                    bayesda_dflag = reader[2:]
+                    bayesda_dflag = reader[3:]
 
                 # Cluster region field stars removal.
                 elif reader[0] == 'F0':
@@ -248,7 +249,8 @@ def main(pars_f_path):
 
         # Structure functions parameters
         'manual_struct': manual_struct, 'center_bw': center_bw,
-        'NN_dd': NN_dd, 'fdens_method': fdens_method, 'nsteps_rad': nsteps_rad,
+        'mirror_flag': mirror_flag, 'NN_dd': NN_dd,
+        'fdens_method': fdens_method, 'nsteps_rad': nsteps_rad,
         'kp_flag': kp_flag, 'kp_nchains': kp_nchains, 'kp_nruns': kp_nruns,
         'kp_nburn': kp_nburn, 'rt_max_f': rt_max_f, 'fr_number': fr_number,
 
@@ -295,7 +297,7 @@ def main(pars_f_path):
 
         # Output
         'flag_make_plot': flag_make_plot, 'plot_frmt': plot_frmt,
-        'plot_dpi': plot_dpi, 'mirror_flag': mirror_flag
+        'plot_dpi': plot_dpi
     }
 
     return pd
