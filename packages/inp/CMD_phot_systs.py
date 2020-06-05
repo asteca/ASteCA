@@ -1,9 +1,9 @@
 
-import os
+from pathlib import Path
 
 
 def main():
-    '''
+    """
     Dictionary that stores the names and column names for each
     filter defined in each photometric system, as presented in the CMD
     Girardi et al. service: http://stev.oapd.inaf.it/cgi-bin/cmd
@@ -20,10 +20,9 @@ def main():
     Returns
     -------
     cmd_systs : dictionary
-    '''
-    fn = os.path.join(
-        os.path.dirname(__file__), 'CMD_systs.dat').replace(
-        '/inp/', '/defvals/')
+    """
+    fn = Path.cwd() / 'packages' / 'defvals' / 'CMD_systs.dat'
+
     cmd_systs = {}
     with open(fn) as f:
         f_lines = f.readlines()
