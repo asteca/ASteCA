@@ -171,8 +171,9 @@ def main(pars_f_path):
                 elif reader[0] == 'O0':
                     flag_make_plot = reader[1:]
                 elif reader[0] == 'O1':
-                    plot_frmt = str(reader[1])
-                    plot_dpi = int(reader[2])
+                    # plot_frmt = str(reader[1])
+                    # plot_dpi = int(reader[2])
+                    plot_style = str(reader[1])
                     # TODO this flag is hidden for now
                     mirror_flag = True
 
@@ -296,8 +297,8 @@ def main(pars_f_path):
         'cmd_systs': cmd_systs,
 
         # Output
-        'flag_make_plot': flag_make_plot, 'plot_frmt': plot_frmt,
-        'plot_dpi': plot_dpi
+        'flag_make_plot': flag_make_plot, 'plot_style': plot_style
+        # 'plot_frmt': plot_frmt, 'plot_dpi': plot_dpi
     }
 
     return pd

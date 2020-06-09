@@ -15,10 +15,6 @@ def check(pd):
                     "unrecognized block ('{}') selected for plotting.".format(
                         _))
 
-    if pd['plot_frmt'] not in ('png', 'pdf', 'PNG', 'PDF'):
-        raise ValueError("figure output format selected ('{}') is"
-                         " not valid.".format(pd['plot_frmt']))
-
     pd['stop_idx'] = 'no'
     if 's' in pd['flag_make_plot']:
         if pd['flag_make_plot'].index('s') > 0:
