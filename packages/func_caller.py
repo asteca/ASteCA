@@ -1,5 +1,8 @@
 
+import os
 import time
+import matplotlib
+import matplotlib.pyplot as plt
 import gc  # Garbage collector.
 #
 from .inp import names_paths
@@ -68,6 +71,16 @@ def main(cl_file, pd):
     clp : contains all the information about the cluster gathered by the
     functions applied. Modified constantly throughout the code.
     """
+
+    # Define the style to use in all the plots.
+    if os.getcwd() in matplotlib.matplotlib_fname():
+        # Use found 'matplotlibrc' file
+        pass
+    elif pd['plot_style'] == 'asteca':
+        # Use own style
+        plt.style.use(os.getcwd() + '/packages/out/asteca.mplstyle')
+    else:
+        plt.style.use(pd['plot_style'])
 
     # Start timing this loop.
     start = time.time()
