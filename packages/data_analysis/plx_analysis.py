@@ -3,6 +3,7 @@ import numpy as np
 from scipy.optimize import differential_evolution as DE
 from scipy.special import exp1
 import warnings
+from ..best_fit.bf_common import modeKDE
 from .. import update_progress
 
 
@@ -22,8 +23,8 @@ def main(
 
     plx_clrg, mmag_clp, mp_clp, plx_clp, e_plx_clp, plx_samples,\
         plx_tau_autocorr, mean_afs = [[] for _ in range(8)]
-    plx_flag_clp, plx_bayes_flag_clp, plx_wa, plx_Bys, plx_ess = False, False,\
-        np.nan, np.array([]), np.nan
+    plx_flag_clp, plx_bayes_flag_clp, plx_wa, plx_Bayes_kde, plx_Bys,\
+        plx_ess = False, False, np.nan, np.array([]), np.array([]), np.nan
 
     if ('C2' in flag_make_plot) or plx_bayes_flag:
 
@@ -67,7 +68,7 @@ def main(
             plx_wa = np.average(plx_clp, weights=plx_w)
 
             if plx_bayes_flag:
-                plx_samples, plx_Bys, plx_bayes_flag_clp,\
+                plx_samples, plx_Bayes_kde, plx_Bys, plx_bayes_flag_clp,\
                     plx_tau_autocorr, mean_afs, plx_ess = plxBayes(
                         plx_offset, plx_chains, plx_runs, plx_burn,
                         flag_plx_mp, plx_clp, e_plx_clp, mp_clp)
@@ -80,8 +81,8 @@ def main(
         'mmag_clp': mmag_clp, 'mp_clp': mp_clp, 'plx_clp': plx_clp,
         'e_plx_clp': e_plx_clp, 'plx_Bys': plx_Bys, 'plx_wa': plx_wa,
         'plx_bayes_flag_clp': plx_bayes_flag_clp, 'plx_samples': plx_samples,
-        'plx_tau_autocorr': plx_tau_autocorr, 'mean_afs': mean_afs,
-        'plx_ess': plx_ess})
+        'plx_Bayes_kde': plx_Bayes_kde, 'plx_tau_autocorr': plx_tau_autocorr,
+        'mean_afs': mean_afs, 'plx_ess': plx_ess})
     return clp
 
 
@@ -175,9 +176,16 @@ def plxBayes(
 
         nburn = int(i * plx_burn)
         samples = sampler.get_chain(discard=nburn, flat=True)
-        # 16th, 84th in Kpc
-        p16, p84 = np.percentile(samples, (16, 84))
-        plx_Bys = np.array([p16, np.mean(samples), p84])
+
+        # Mode and KDE to plot
+        # This simulates the 'fundam_params and 'varIdxs' arrays.
+        fp, vi = [[-np.inf, np.inf], [-np.inf, np.inf]], [0, 1]
+        plx_Bys_mode, plx_Bayes_kde = modeKDE(fp, vi, 1. / samples.T)
+        plx_Bys_mode, plx_Bayes_kde = 1. / plx_Bys_mode[0], plx_Bayes_kde[0]
+
+        # 16th, median, 84th, mean, mode in Kpc
+        p16, p50, p84 = np.percentile(samples, (16, 50, 84))
+        plx_Bys = np.array([p16, p50, p84, np.mean(samples), plx_Bys_mode])
 
         tau = sampler.get_autocorr_time(tol=0)[0]
         plx_ess = samples.size / tau
@@ -187,15 +195,15 @@ def plxBayes(
 
         print("Bayesian plx estimated: " +
               "{:.3f} (ESS={:.0f}, tau={:.0f})".format(
-                  1. / plx_Bys[1], plx_ess, tau))
+                  1. / plx_Bys[3], plx_ess, tau))
     except Exception as e:
         print(e)
         print("\n  ERROR: could not process Plx data with emcee")
         plx_samples, plx_Bys, plx_bayes_flag_clp, plx_ess, tau_autocorr,\
             mean_afs = [], np.array([]), False, np.nan, np.nan, np.nan
 
-    return plx_samples, plx_Bys, plx_bayes_flag_clp, tau_autocorr,\
-        mean_afs, plx_ess
+    return plx_samples, plx_Bayes_kde, plx_Bys, plx_bayes_flag_clp,\
+        tau_autocorr, mean_afs, plx_ess
 
 
 def DE_mu_sol(plx_clp, e_plx_clp, mp_clp, int_max=20., psize=20, maxi=100):
