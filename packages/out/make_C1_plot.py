@@ -7,7 +7,7 @@ from os.path import join
 from . import add_version_plot
 from . import mp_decont_photom
 from . import prep_plots
-from . prep_plots import figsize_x, figsize_y, grid_x, grid_y, cbartickssize
+from . prep_plots import figsize_x, figsize_y, grid_x, grid_y
 
 
 def main(
@@ -39,8 +39,9 @@ def main(
         # Decontamination algorithm plots.
         arglist = [
             # pl_mp_histo
-            [gs, n_memb_da, memb_prob_avrg_sort, flag_decont_skip,
-             cl_reg_fit, pd['fld_clean_mode'], pd['fld_clean_bin']],
+            [gs, pd['plot_style'], n_memb_da, memb_prob_avrg_sort,
+             flag_decont_skip, cl_reg_fit, pd['fld_clean_mode'],
+             pd['fld_clean_bin']],
             # pl_chart_mps
             [gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin,
              y_zmax, kde_cent, clust_rad, flag_decont_skip,
@@ -72,10 +73,10 @@ def main(
             c1, c2 = i + 1, 0
             plot_colorbar, sca, trans, v_min_mp, v_max_mp =\
                 mp_decont_photom.pl_mps_incomp_diags(
-                    gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax,
-                    y_ax, col_c, mags_c, colors_c, col_i, mags_i, colors_i,
-                    cl_c_sz_pt, cl_i_sz_pt, pd['fld_clean_mode'],
-                    local_rm_edges, c1, c2, j_gs)
+                    gs, fig, pd['plot_style'], x_min_cmd, x_max_cmd, y_min_cmd,
+                    y_max_cmd, x_ax, y_ax, col_c, mags_c, colors_c, col_i,
+                    mags_i, colors_i, cl_c_sz_pt, cl_i_sz_pt,
+                    pd['fld_clean_mode'], local_rm_edges, c1, c2, j_gs)
             all_colorbars.append((
                 plot_colorbar, sca, trans, v_min_mp, v_max_mp))
             j_gs += 1
@@ -95,8 +96,8 @@ def main(
             c1, c2 = i + 1, j + 1
             plot_colorbar, sca, trans, v_min_mp, v_max_mp =\
                 mp_decont_photom.pl_mps_incomp_diags(
-                    gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax,
-                    y_ax, cols_c[i], cols_c[j], colors_c,
+                    gs, fig, pd['plot_style'], x_min_cmd, x_max_cmd, y_min_cmd,
+                    y_max_cmd, x_ax, y_ax, cols_c[i], cols_c[j], colors_c,
                     cols_i[i], cols_i[j], colors_i, cl_c_sz_pt, cl_i_sz_pt,
                     pd['fld_clean_mode'], local_rm_edges, c1, c2, j_gs)
             all_colorbars.append((
@@ -116,10 +117,10 @@ def main(
             cl_reg_fit + cl_reg_no_fit, x_min_cmd, err_lst)
         # pl_mps_phot_diag
         plot_colorbar, sca, trans = mp_decont_photom.pl_mps_phot_diag(
-            gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax,
-            y_ax, v_min_mp_comp, v_max_mp_comp, diag_fit_inv, diag_no_fit_inv,
-            cl_f_sz_pt, cl_nf_sz_pt, err_bar, pd['fld_clean_mode'],
-            local_rm_edges)
+            gs, pd['plot_style'], fig, x_min_cmd, x_max_cmd, y_min_cmd,
+            y_max_cmd, x_ax, y_ax, v_min_mp_comp, v_max_mp_comp, diag_fit_inv,
+            diag_no_fit_inv, cl_f_sz_pt, cl_nf_sz_pt, err_bar,
+            pd['fld_clean_mode'], local_rm_edges)
         all_colorbars.append((
             plot_colorbar, sca, trans, v_min_mp_comp, v_max_mp_comp))
 
@@ -127,8 +128,7 @@ def main(
 
         # Generate output file.
         plt.savefig(
-            join(npd['output_subdir'], str(npd['clust_name']) +
-                 '_C1.' + pd['plot_frmt']), dpi=pd['plot_dpi'],
+            join(npd['output_subdir'], str(npd['clust_name']) + '_C1'),
             bbox_inches='tight')
         # Close to release memory.
         plt.clf()
@@ -163,4 +163,4 @@ def plot_colorbars(fig, all_colorbars):
             cbar = plt.colorbar(
                 sca, cax=cbaxes, ticks=[v_min_mp, v_max_mp],
                 orientation='horizontal')
-            cbar.ax.tick_params(labelsize=cbartickssize)
+            cbar.ax.minorticks_off()

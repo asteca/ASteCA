@@ -2,7 +2,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.ndimage.filters import uniform_filter1d
-from . prep_plots import xylabelsize, xytickssize, titlesize
 
 
 def traceplots(
@@ -12,9 +11,9 @@ def traceplots(
     Parameter sampler chain.
     """
     plot_dict = {
-        'metal': [8, 12, 0, 1, 0], 'age': [8, 12, 1, 2, 1],
-        'ext': [8, 12, 2, 3, 2], 'dist': [8, 12, 3, 4, 3],
-        'mass': [8, 12, 4, 5, 4], 'binar': [8, 12, 5, 6, 5]
+        'metal': [6, 10, 0, 1, 0], 'age': [6, 10, 1, 2, 1],
+        'ext': [6, 10, 2, 3, 2], 'dist': [6, 10, 3, 4, 3],
+        'mass': [6, 10, 4, 5, 4], 'binar': [6, 10, 5, 6, 5]
     }
 
     labels = [r'$z$', r'$\log(age)$', r'$E_{{(B-V)}}$', r'$(m-M)_o$',
@@ -22,12 +21,12 @@ def traceplots(
 
     gs_x1, gs_x2, gs_y1, gs_y2, cp = plot_dict[par_name]
     ax = plt.subplot(gs[gs_y1:gs_y2, gs_x1:gs_x2])
-    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
+
     if cp == 0:
         ax.set_title(
-            r"Chain with the closest $\tau$ to the median", fontsize=titlesize)
+            r"Chain with the closest $\tau$ to the median")
     if cp == 5:
-        plt.xlabel("steps", fontsize=xylabelsize)
+        plt.xlabel("steps")
     else:
         ax.tick_params(labelbottom=False)
     plt.ylabel(labels[cp])
@@ -62,8 +61,7 @@ def traceplots(
 
         ax.set_title(
             (r"$\hat{{\tau}}_{{c}}={:.0f}\;(\hat{{n}}_{{eff}}="
-             "{:.0f})$").format(acorr_t[c_model], mcmc_ess[c_model]),
-            fontsize=titlesize)
+             "{:.0f})$").format(acorr_t[c_model], mcmc_ess[c_model]))
 
         # elif best_fit_algor == 'boot+GA':
         #     post_trace_plot = post_trace[c_model]
@@ -77,8 +75,8 @@ def traceplots(
         #  16th and 84th percentiles (1 sigma) around median.
         ph = np.percentile(trace[c_model], 84)
         pl = np.percentile(trace[c_model], 16)
-        plt.axhline(y=ph, linestyle=':', color='orange', zorder=4)
-        plt.axhline(y=pl, linestyle=':', color='orange', zorder=4)
+        plt.axhline(y=ph, lw=2, linestyle=':', color='orange', zorder=4)
+        plt.axhline(y=pl, lw=2, linestyle=':', color='orange', zorder=4)
         # plt.axhline(
         #     y=float(cp_r[cp]), color='k', ls='--', lw=1.2, zorder=4,
         #     label=r"$\tau={:.0f}\;(\hat{{n}}_{{eff}}={:.0f})$".format(
@@ -92,7 +90,6 @@ def plot(N, *args):
     """
     Handle each plot separately.
     """
-    plt.style.use('seaborn-darkgrid')
     plt_map = {
         0: [traceplots, args[0] + ' sampler chain']
     }
@@ -107,4 +104,3 @@ def plot(N, *args):
         import traceback
         print(traceback.format_exc())
         print("  WARNING: error when plotting {}".format(plt_map.get(N)[1]))
-    plt.style.use('default')

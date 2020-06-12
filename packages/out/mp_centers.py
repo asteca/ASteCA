@@ -2,7 +2,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.offsetbox as offsetbox
-from . prep_plots import xylabelsize, xytickssize, titlesize
 
 
 def pl_full_frame(
@@ -15,10 +14,9 @@ def pl_full_frame(
         0: gs[0:2, 0:2], 1: gs[2:4, 0:2], 2: gs[4:6, 0:2],
         3: gs[6:8, 0:2], 4: gs[8:10, 0:2]}
     ax = plt.subplot(gs_map.get(N))
-    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
 
     ax.set_aspect(aspect=asp_ratio)
-    plt.title("{}: {}".format(main_mag, mag_range), fontsize=titlesize)
+    plt.title("{}: {}".format(main_mag, mag_range))
     # Set plot limits
     plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
@@ -26,8 +24,8 @@ def pl_full_frame(
     if coord == 'deg':
         ax.invert_xaxis()
     # Set axis labels
-    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=xylabelsize)
-    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=xylabelsize)
+    plt.xlabel('{} ({})'.format(x_name, coord))
+    plt.ylabel('{} ({})'.format(y_name, coord))
     # Set minor ticks
     ax.minorticks_on()
     # Plot stars.
@@ -56,7 +54,6 @@ def pl_densxy(
     plt.xlabel('{} ({})'.format(x_name, coord), fontsize=11)
     plt.ylabel('{} ({})'.format(y_name, coord), fontsize=11)
 
-    ax.minorticks_on()
     plt.axvline(x=cent_xy[0], linestyle='--', lw=.85, color='green')
     plt.axhline(y=cent_xy[1], linestyle='--', lw=.85, color='green')
     plt.scatter(*cent_xy, marker='x', color='w', s=20)

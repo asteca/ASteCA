@@ -54,8 +54,8 @@ I1       id      x       y       px         y
 #   The associated uncertainty (in both cases) is indicated only with the
 #   name/column number.
 # * plx, pmRa, pmDE, rv: [str / n]
-#   Parallax [mas], proper motions [mas/yr], and radial velocity [km/s]. If a
-#   data column is not present use 'n'.
+#   Columns for the parallax [mas], proper motions [mas/yr], and radial velocity
+#   [km/s]. If a data column is not present use 'n'.
 #
 #           mag    e_mag
 I2     V,4,Vmag       eV
@@ -109,7 +109,7 @@ I6       n   0. 0. 0. 0.
 #   name       c_x      c_y      rad     f_regs
 S0  CLUSTER      n        n        n          n
 
-# Center assignment and field density.
+# Center assignment, field density, radius value.
 #
 # * bandwidth: [float]
 #   The bandwidth used by the Gaussian KDE applied to the 2-dimensional (x,y)
@@ -442,7 +442,7 @@ B2     tremmel      knuth      5 10
 
 # Create output figures?
 #
-# * blocks: [A1, A2, A3, B1, B2, B3, C1, C2, C3, D1, D2]
+# * blocks: [A1, A2, A3, B1, B2, B3, C1, C2, C3, D1, D2, D3]
 #   Select one or more identifier to decide which plots will be produced. Leave
 #   empty for no output plots. An 's' character after an identifier will make
 #   the code stop and return right after creating that plot. I.e.: the line
@@ -460,16 +460,19 @@ B2     tremmel      knuth      5 10
 #   - C2: parallax analysis
 #   - C3: proper motions analysis
 #   - D1: convergence diagnostics
-#   - D2: best fit synthetic cluster found
+#   - D2: corner plot for the fundamental parameters
+#   - D3: best fit synthetic cluster found
 #
 #   blocks
-O0  D1 D2
+O0  A1 A2 A3 B1 B2 B3 C1 C2 C3 D1 D2 D3
 
-# * format: [png / pdf / supported matplotlib]
-#   Format of the final image file.
-# * DPI: [integer]
-#   Manages the size of the generated image files.
+# * plot_style: [asteca / any style supported by matplotlib]
+#   To display a list of supported styles, use:
+#   > import matplotlib.pyplot as plt;print(plt.style.available)
+#   You can use your own 'matplotlibrc' file storing it in the top folder.
+#   Any parameter in that file will overwrite the parameters in the selected
+#   style below.
 #
-#   format     DPI
-O1     png     150
+#   plot_style
+O1      asteca
 ################################################################################

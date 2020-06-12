@@ -6,8 +6,6 @@ from . import add_version_plot
 from . import prep_plots
 from ..structure.king_profile import centDens, KingProf
 from . prep_plots import figsize_x, figsize_y, grid_x, grid_y
-from . prep_plots import xylabelsize, xytickssize, titlesize, legendsize,\
-    grid_col, grid_ls, grid_lw
 
 
 def main(
@@ -45,14 +43,10 @@ def main(
         # plt.xlim(col_min, col_max)
         # plt.ylim(mag_min, mag_max)
         # # Set axis labels
-        plt.xlabel('$' + x_ax0 + '$', fontsize=xylabelsize)
-        plt.ylabel('$' + y_ax + '$', fontsize=xylabelsize)
-        # Set minor ticks
-        ax.minorticks_on()
-        ax.tick_params(axis='both', which='major', labelsize=xytickssize)
-        # Set grid
-        ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
-                lw=grid_lw)
+        plt.xlabel('$' + x_ax0 + '$')
+        plt.ylabel('$' + y_ax + '$')
+
+        ax.grid()
         t1 = r'$N_{{cluster}} = ${}'.format(len(isoch_moved[1]))
         t2 = r'${}_{{min}} = ${:.1f}'.format(y_ax, max_mag_syn)
         t3 = r'$z = ${:.4f}'.format(model[0])
@@ -68,7 +62,7 @@ def main(
         # Create an empty plot with the required text.
         plt.plot([], label=text)
         # Remove the handle from the legend box.
-        plt.legend(handlelength=0, fontsize=legendsize)
+        plt.legend(handlelength=0)
         # Plot stars.
         plt.scatter(
             isoch_moved[1], isoch_moved[0], marker='o', c='r', s=15., lw=0.3)
@@ -77,27 +71,20 @@ def main(
 
         # Mass distribution
         ax = plt.subplot(gs[0:1, 2:4])
-        ax.minorticks_on()
-        ax.tick_params(axis='both', which='major', labelsize=xytickssize)
-        ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
-                lw=grid_lw)
+        ax.grid()
         plt.hist(mass_dist, 50)
-        plt.xlabel(r"$\log \, m\;[M_{\odot}]$", fontsize=xylabelsize)
-        plt.ylabel(r'$\log \, N$', fontsize=xylabelsize)
+        plt.xlabel(r"$\log \, m\;[M_{\odot}]$")
+        plt.ylabel(r'$\log \, N$')
         ax.set_xscale('log')
         ax.set_yscale('log')
 
         # Completeness
         ax = plt.subplot(gs[1:2, 2:4])
-        plt.xlabel(r'${}$'.format(y_ax), fontsize=xylabelsize)
-        plt.ylabel(r'$N$', fontsize=xylabelsize)
-        # Set minor ticks
-        ax.minorticks_on()
-        ax.tick_params(axis='both', which='major', labelsize=xytickssize)
+        plt.xlabel(r'${}$'.format(y_ax))
+        plt.ylabel(r'$N$')
         # Backg color.
         ax.set_facecolor('#D8D8D8')
-        ax.grid(
-            b=True, which='major', color='w', linestyle=grid_ls, lw=grid_lw)
+        ax.grid()
         # Plot stars.
         _, edges, _ = plt.hist(
             isoch_binar[0], bins=50, color='blue', histtype='step', zorder=4,
@@ -108,25 +95,21 @@ def main(
             ls='dashed', hatch="/", zorder=4)
         # Legends.
         leg = plt.legend(
-            fancybox=True, loc='upper left', numpoints=1, fontsize=legendsize)
+            fancybox=True, loc='upper left', numpoints=1)
         # Set the alpha value of the legend.
         leg.get_frame().set_alpha(0.7)
 
         # Magnitude error
         ax = plt.subplot(gs[0, 4:6])
-        ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
-                lw=grid_lw)
+        ax.grid()
         # Set plot limits
         plt.xlim(min(synth_clust[0]) - 0.5, max(synth_clust[0]) + 0.5)
         plt.ylim(
             min(sigma[0]) - .1 * max(sigma[0]),
             max(sigma[0]) + .25 * max(sigma[0]))
         # Set axis labels
-        plt.ylabel(r'$\sigma_{}$'.format(y_ax), fontsize=xylabelsize)
-        plt.xlabel(r'${}$'.format(y_ax), fontsize=xylabelsize)
-        # Set minor ticks
-        ax.minorticks_on()
-        ax.tick_params(axis='both', which='major', labelsize=xytickssize)
+        plt.ylabel(r'$\sigma_{}$'.format(y_ax))
+        plt.xlabel(r'${}$'.format(y_ax))
         # plt.text(0.25, 0.85, '$N_{cluster} = %d$' % len(synth_clust[0]),
         #          transform=ax.transAxes,
         #          bbox=dict(facecolor='white', alpha=0.75), fontsize=13)
@@ -138,19 +121,15 @@ def main(
 
         # Color color error
         ax = plt.subplot(gs[1, 4:6])
-        ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
-                lw=grid_lw)
+        ax.grid()
         # Set plot limits
         plt.xlim(min(synth_clust[0]) - 0.5, max(synth_clust[0]) + 0.5)
         plt.ylim(
             min(sigma[1]) - .1 * max(sigma[1]),
             max(sigma[1]) + .25 * max(sigma[1]))
         # Set axis labels
-        plt.ylabel(r'$\sigma_{{{}}}$'.format(x_ax0), fontsize=xylabelsize)
-        plt.xlabel(r'${}$'.format(y_ax), fontsize=xylabelsize)
-        # Set minor ticks
-        ax.minorticks_on()
-        ax.tick_params(axis='both', which='major', labelsize=xytickssize)
+        plt.ylabel(r'$\sigma_{{{}}}$'.format(x_ax0))
+        plt.xlabel(r'${}$'.format(y_ax))
         # Plot stars errors.
         plt.scatter(synth_field[0], sigma_field[1], marker='o', c='k', s=5)
         plt.scatter(synth_clust[0], sigma[1], marker='o', c='r', s=5, zorder=3)
@@ -158,36 +137,31 @@ def main(
 
         # King's profile
         ax = plt.subplot(gs[2:4, 0:2])
-        ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
-                lw=grid_lw)
-        ax.minorticks_on()
-        ax.tick_params(axis='both', which='major', labelsize=xytickssize)
+        ax.grid()
         plt.title(r"$r_{{c}}=${:.0f}, $r_{{t}}=${:.0f}".format(rc, rt))
         r = np.linspace(0., rt, 1000)
         plt.plot(
-            r, centDens(synth_clust.shape[1], rc, rt, r) *
-            KingProf(r, rc, rt), c='r',
-            label=r"$K_{{cp}}={:.2f}$".format(np.log10(rt / rc)), zorder=5)
+            r,
+            centDens(synth_clust.shape[1], rc, rt, r) * KingProf(r, rc, rt),
+            c='r', label=r"$K_{{cp}}={:.2f}$".format(np.log10(rt / rc)),
+            zorder=5)
         vals, edges = np.histogram(cl_dists, 20)
         areas = np.pi * edges**2  # TODO handle areas outside of frame?
         rings_a = areas[1:] - areas[:-1]
         dens = vals / rings_a
         plt.bar(edges[:-1], dens, width=5)
-        plt.xlabel("Distance to center", fontsize=xylabelsize)
-        plt.ylabel(r"$\rho$ [st/area] (normalized)", fontsize=xylabelsize)
-        plt.legend(loc='upper right', fontsize=legendsize)
+        plt.xlabel("Distance to center")
+        plt.ylabel(r"$\rho$ [st/area] (normalized)")
+        plt.legend(loc='upper right')
 
         # x,y finding chart of full frame
         ax = plt.subplot(gs[2:4, 2:4])
         plt.xlim(0., xmax)
         plt.ylim(0., ymax)
-        plt.xlabel('x (px)', fontsize=xylabelsize)
-        plt.ylabel('y (px)', fontsize=xylabelsize)
+        plt.xlabel('x (px)')
+        plt.ylabel('y (px)')
         ax.set_title(r"$N_{{cl}}=${}, $N_{{fr}}=${}, CI={:.2f}".format(
-            len(x_cl), len(x_fl), CI), fontsize=titlesize)
-        # Set minor ticks
-        ax.minorticks_on()
-        ax.tick_params(axis='both', which='major', labelsize=xytickssize)
+            len(x_cl), len(x_fl), CI))
         circle = plt.Circle((cx, cy), rt, color='r', fill=False, lw=2.)
         fig.gca().add_artist(circle)
         mags = synth_clust[0].tolist() + synth_field[0].tolist()
@@ -200,14 +174,9 @@ def main(
 
         # Full region CMD.
         ax = plt.subplot(gs[2:4, 4:6])
-        plt.xlabel('$' + x_ax0 + '$', fontsize=xylabelsize)
-        plt.ylabel('$' + y_ax + '$', fontsize=xylabelsize)
-        # Set minor ticks
-        ax.minorticks_on()
-        ax.tick_params(axis='both', which='major', labelsize=xytickssize)
-        # Set grid
-        ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
-                lw=grid_lw, zorder=1)
+        plt.xlabel('$' + x_ax0 + '$')
+        plt.ylabel('$' + y_ax + '$')
+        ax.grid()
         # Plot stars.
         plt.scatter(
             synth_field[1], synth_field[0], marker='o', c='k', s=5, lw=.3,
@@ -221,7 +190,7 @@ def main(
             synth_clust[1][~b_msk], synth_clust[0][~b_msk], marker='o',
             c='r', s=10, lw=.2, edgecolor='k', zorder=2, label="Single")
         ax.invert_yaxis()
-        plt.legend(numpoints=1, fontsize=legendsize)
+        plt.legend(numpoints=1)
 
         fig.tight_layout()
         # Generate output file.

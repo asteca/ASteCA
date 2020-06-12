@@ -5,25 +5,20 @@ from matplotlib.colors import ListedColormap
 import numpy as np
 # from astropy.stats import sigma_clipped_stats
 from . import BayesPlots
-from .. import aux_funcs
-from . prep_plots import xylabelsize, xytickssize, titlesize, cbarlabelsize,\
-    cbartickssize, legendsize, grid_col, grid_ls, grid_lw
 
 
 def plx_histo(
-    gs, plx_offset, plx_clrg, plx_x_kde, kde_pl, plx_flrg,
+    gs, plot_style, plx_offset, plx_clrg, plx_x_kde, kde_pl, plx_flrg,
         flag_no_fl_regs_i):
     """
     Histogram for the distribution of parallaxes within the cluster region.
     """
     ax = plt.subplot(gs[0:2, 0:2])
-    ax.set_title('Offset applied: +{}'.format(plx_offset), fontsize=titlesize)
-    plt.xlabel('Plx [mas]', fontsize=xylabelsize)
-    plt.ylabel('N', fontsize=xylabelsize)
-    ax.minorticks_on()
-    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
-    ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
-            lw=grid_lw, zorder=1)
+    ax.set_title('Offset applied: +{}'.format(plx_offset))
+    plt.xlabel('Plx [mas]')
+    plt.ylabel('N')
+    if plot_style == 'asteca':
+        ax.grid()
     # Normalized histogram for cluster region.
     if len(plx_clrg) > 100:
         Nb = 100
@@ -49,8 +44,7 @@ def plx_histo(
     plx_lt_zero = 100. * plx_clrg[plx_clrg < 0.].size / plx_clrg.size
     ob = offsetbox.AnchoredText(
         r"$Plx_{{max}}$={:.3f} [mas]".format(p_max_mas) + '\n' +
-        r"$Plx<0 \rightarrow$ {:.1f}%".format(plx_lt_zero),
-        pad=0.2, loc=1, prop=dict(size=legendsize))
+        r"$Plx<0 \rightarrow$ {:.1f}%".format(plx_lt_zero), pad=0.2, loc=1)
     ob.patch.set(alpha=0.85)
     ax.add_artist(ob)
     plt.xlim(
@@ -58,26 +52,23 @@ def plx_histo(
         min(3., np.mean(plx_clrg) + 3. * np.std(plx_clrg)))
     # Avoid showing the value 0.0 in the y axis.
     plt.ylim(0.01, plt.ylim()[1])
-    ax.legend(fontsize=legendsize, loc=7)
+    ax.legend(loc=7)
 
 
-def plx_chart(gs, x_name, y_name, coord, cl_reg_fit, plx_Bys):
+def plx_chart(gs, plot_style, x_name, y_name, coord, cl_reg_fit, plx_Bys):
     """
     Finding chart of cluster region with colors assigned according to the
     probabilities obtained and sizes according to parallaxes.
     """
     ax = plt.subplot(gs[0:2, 4:6])
-    ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
-            lw=grid_lw, zorder=1)
+    if plot_style == 'asteca':
+        ax.grid()
     # If RA is used, invert axis.
     if coord == 'deg':
         ax.invert_xaxis()
     # Set axis labels
-    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=xylabelsize)
-    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=xylabelsize)
-    # Set minor ticks
-    ax.minorticks_on()
-    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
+    plt.xlabel('{} ({})'.format(x_name, coord))
+    plt.ylabel('{} ({})'.format(y_name, coord))
 
     # Prepare data.
     x = np.array(list(zip(*cl_reg_fit))[1])
@@ -88,7 +79,7 @@ def plx_chart(gs, x_name, y_name, coord, cl_reg_fit, plx_Bys):
         (~np.isnan(plx))
     x, y, mp, plx = x[msk], y[msk], mp[msk], plx[msk]
     ax.set_title(
-        r'Cluster region ($N_{{fit}}$={})'.format(len(x)), fontsize=titlesize)
+        r'Cluster region ($N_{{fit}}$={})'.format(len(x)))
 
     if plx_Bys.any():
         # Bayesian parallax value.
@@ -119,23 +110,20 @@ def plx_chart(gs, x_name, y_name, coord, cl_reg_fit, plx_Bys):
 
 
 def plx_vs_mag(
-    gs, y_min_cmd, y_max_cmd, y_ax, mmag_plx_clp, mp_plx_clp, plx_clp,
-        e_plx_clp, plx_flrg, mag_flrg, plx_Bys, plx_wa):
+    gs, plot_style, y_min_cmd, y_max_cmd, y_ax, mmag_plx_clp, mp_plx_clp,
+        plx_clp, e_plx_clp, plx_flrg, mag_flrg, plx_Bys, plx_wa):
     """
     Parallaxes versus main magnitude.
     """
     ax = plt.subplot(gs[0:2, 2:4])
-    ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
-            lw=grid_lw, zorder=1)
+    if plot_style == 'asteca':
+        ax.grid()
 
     # HARDCODED in plx_analysis: 3 sigma outlier rejection
     ax.set_title("Plx clip " + r"$(med\pm3\sigma,\;N={})$".format(
-        len(plx_clp)), fontsize=titlesize)
-    plt.xlabel('Plx [mas]', fontsize=xylabelsize)
-    plt.ylabel(y_ax, fontsize=xylabelsize)
-    # Set minor ticks
-    ax.minorticks_on()
-    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
+        len(plx_clp)))
+    plt.xlabel('Plx [mas]')
+    plt.ylabel(y_ax)
 
     cm = plt.cm.get_cmap('RdYlBu_r')
     # Plot stars selected to be used in the best fit process.
@@ -153,7 +141,7 @@ def plx_vs_mag(
 
     if plx_Bys.any():
         # Bayesian parallaxes in mas
-        plx_16, plx_mean, plx_84 = 1. / plx_Bys
+        plx_16, plx_median, plx_84, plx_mean, plx_mode = 1. / plx_Bys
         # Bayesian parallaxes in pc
         pc_h, pc_m, pc_l = 1000. / plx_84, 1000. / plx_mean, 1000. / plx_16
         t0 = r"$Plx_{{Bay}} =$" + '\n'
@@ -183,10 +171,10 @@ def plx_vs_mag(
         label=r"$Plx_{{med}} = {:.3f}$".format(np.median(plx_clp)))
 
     cbar = plt.colorbar(pad=.01, fraction=.02, aspect=50)
-    cbar.ax.tick_params(labelsize=cbartickssize)
-    cbar.set_label('MPs', size=cbarlabelsize, labelpad=-15, y=1.07, rotation=0)
+    cbar.ax.minorticks_off()
+    cbar.set_label('MPs', labelpad=-15, y=1.07, rotation=0)
 
-    ax.legend(fontsize=legendsize, loc=0)
+    ax.legend(loc=0)
     min_plx, max_plx = np.min(plx_clp) - .2, np.max(plx_clp) + .2
     ax.axvspan(min_plx, 0., alpha=0.25, color='grey', zorder=1)
     plt.xlim(max(-1., min_plx), max_plx)
@@ -196,17 +184,17 @@ def plx_vs_mag(
 
 
 def plx_bys_params(
-    gs, plx_bayes_flag_clp, plx_samples, plx_Bys, plx_tau_autocorr, mean_afs,
-        plx_ess):
+    gs, plx_bayes_flag_clp, plx_samples, plx_Bayes_kde, plx_Bys,
+        plx_tau_autocorr, mean_afs, plx_ess):
     """
     """
     if plx_bayes_flag_clp:
-        plt.style.use('seaborn-darkgrid')
+
+        dec_places = "{:.3f}"
 
         # Prepare data
         mcmc_samples = 1. / plx_samples
-        plx_mu_kde_x, plx_mu_kde = aux_funcs.kde1D(mcmc_samples.flatten())
-        _16_50_84 = 1. / plx_Bys
+        _16_50_84_mean_mode = 1. / plx_Bys
         xylabel = "Plx"
 
         # HARDCODED in plx_analysis: store samples every 10 steps
@@ -216,12 +204,13 @@ def plx_bys_params(
 
         gsy, gsx = (2, 4), (0, 2)
         BayesPlots.histogram(
-            gs, gsx, gsy, mcmc_samples, plx_mu_kde_x, plx_mu_kde, _16_50_84,
-            xylabel)
+            gs, gsx, gsy, mcmc_samples, _16_50_84_mean_mode, plx_Bayes_kde,
+            xylabel, dec_places)
 
         gsy, gsx = (2, 3), (2, 6)
         BayesPlots.traceplot(
-            gs, gsx, gsy, mcmc_samples, _16_50_84, Brn_prcnt, xylabel)
+            gs, gsx, gsy, mcmc_samples, _16_50_84_mean_mode, Brn_prcnt,
+            xylabel)
 
         gsy, gsx = (3, 4), (2, 4)
         BayesPlots.autocorr(
@@ -230,31 +219,27 @@ def plx_bys_params(
         gsy, gsx = (3, 4), (4, 6)
         BayesPlots.meanAF(gs, gsx, gsy, Nsteps, mean_afs)
 
-        plt.style.use('default')
-
 
 def pms_vs_plx_mp_mag(
-    gs, coord, cosDE_flag, y_ax, plx_bayes_flag_clp, plx_clp, plx_Bys,
-        clreg_PMs, fregs_PMs, pm_Plx_cl, pm_Plx_fr, raPMrng, dePMrng):
+    gs, plot_style, coord, cosDE_flag, y_ax, plx_bayes_flag_clp, plx_clp,
+        plx_Bys, clreg_PMs, fregs_PMs, pm_Plx_cl, pm_Plx_fr, raPMrng, dePMrng):
     """
     """
     def axplot(
         gsi, j1, j2, yrang, xlabel, ylabel, cl_xdata, cl_ydata, cl_col,
             fr_xdata, fr_ydata, cmap, cbar_label, plx_dist):
         ax = plt.subplot(gs[gsi[0] + j1:gsi[1] + j1, gsi[2] + j2:gsi[3] + j2])
-        ax.minorticks_on()
-        ax.tick_params(axis='both', which='major', labelsize=xytickssize)
-        ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
-                lw=grid_lw, zorder=1)
-        ax.set_ylabel(ylabel, fontsize=xylabelsize)
-        ax.set_xlabel(xlabel, fontsize=xylabelsize)
+        if plot_style == 'asteca':
+            ax.grid()
+        ax.set_ylabel(ylabel)
+        ax.set_xlabel(xlabel)
 
         plt.scatter(
             cl_xdata, cl_ydata, marker='o', c=cl_col, s=25, edgecolor='k',
             lw=.2, cmap=cmap, zorder=4, label="Cluster reg")
         cbar = plt.colorbar(pad=.01, fraction=.02, aspect=50)
-        cbar.ax.tick_params(labelsize=cbartickssize)
-        cbar.set_label(cbar_label, size=cbarlabelsize)
+        cbar.ax.minorticks_off()
+        cbar.set_label(cbar_label)
         if j2 == 0:
             cbar.ax.invert_yaxis()
 

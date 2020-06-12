@@ -6,13 +6,11 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
 # from matplotlib.colors import LinearSegmentedColormap
 import matplotlib.offsetbox as offsetbox
-from . prep_plots import xylabelsize, xytickssize, titlesize, legendsize,\
-    grid_col, grid_ls, grid_lw
 
 
 def pl_cl_fl_regions(
-    gs, x_name, y_name, coord, x_min, x_max, y_min, y_max, asp_ratio,
-        field_regions_rjct_c, cl_region_rjct_c, flag_no_fl_regs_c):
+    gs, plot_style, x_name, y_name, coord, x_min, x_max, y_min, y_max,
+        asp_ratio, field_regions_rjct_c, cl_region_rjct_c, flag_no_fl_regs_c):
     """
     Cluster and field regions defined.
     """
@@ -25,13 +23,10 @@ def pl_cl_fl_regions(
     if coord == 'deg':
         ax.invert_xaxis()
     # Set axis labels
-    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=xylabelsize)
-    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=xylabelsize)
-    # Set minor ticks
-    ax.minorticks_on()
-    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
-    ax.grid(b=True, which='both', color=grid_col, linestyle=grid_ls,
-            lw=grid_lw)
+    plt.xlabel('{} ({})'.format(x_name, coord))
+    plt.ylabel('{} ({})'.format(y_name, coord))
+    if plot_style == 'asteca':
+        ax.grid(which='both')
 
     # Plot cluster region.
     if len(cl_region_rjct_c) > 0:
@@ -50,40 +45,38 @@ def pl_cl_fl_regions(
                             c='teal', s=15, lw=.5, edgecolors='none')
 
     ax.set_title(r"$N_{{rjct}}$={} (phot compl)".format(
-        len(cl_region_rjct_c) + N_flrg), fontsize=titlesize)
+        len(cl_region_rjct_c) + N_flrg))
 
 
-def pl_lum_func(gs, y_ax, flag_no_fl_regs, lum_func):
+def pl_lum_func(gs, plot_style, y_ax, flag_no_fl_regs, lum_func):
     """
     LF of stars in cluster region and outside.
     """
     x_cl, y_cl, x_fl, y_fl, x_all, y_all = lum_func
     ax = plt.subplot(gs[0:2, 2:4])
-    ax.set_title("LF after error removal (compl)", fontsize=titlesize)
-    ax.minorticks_on()
+    ax.set_title("LF after error removal (compl)")
     # Only draw units on axis (ie: 1, 2, 3)
     ax.xaxis.set_major_locator(MultipleLocator(2.0))
-    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
-    ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
-            lw=grid_lw, zorder=1)
+    if plot_style == 'asteca':
+        ax.grid()
     # Set axis labels
-    plt.xlabel('$' + y_ax + '$', fontsize=xylabelsize)
-    plt.ylabel('$N^{\star}/A_{cl}$', fontsize=xylabelsize)
+    plt.xlabel('$' + y_ax + '$')
+    plt.ylabel(r'$N^{\star}/A_{cl}$')
 
     # All frame.
     plt.step(x_all, y_all, where='post', color='k', lw=2.5, linestyle=':',
              label='Frame (compl)', zorder=6)
     # Cluster region LF (contaminated).
     plt.step(x_cl, y_cl, where='post', color='r', lw=1.,
-             label='$LF_{cl+fl} \,(r \leq r_{cl})$', zorder=2)
+             label=r'$LF_{cl+fl} \,(r \leq r_{cl})$', zorder=2)
     # Check if field regions were defined.
     if flag_no_fl_regs is not True:
         # Average field regions LF.
         plt.step(x_fl, y_fl, where='post', color='b', lw=1.,
-                 label='$LF_{fl} \,(\star_{field})$', zorder=3)
+                 label=r'$LF_{fl} \,(\star_{field})$', zorder=3)
         # Cluster region LF - average field regions LF.
         plt.step(x_cl, y_cl - y_fl, where='post', color='g', lw=1.7,
-                 label='$LF_{cl}$', zorder=4)
+                 label=r'$LF_{cl}$', zorder=4)
         max_y = max(max(y_cl), max(y_fl), max(y_all))
     else:
         max_y = max(max(y_cl), max(y_all))
@@ -93,27 +86,23 @@ def pl_lum_func(gs, y_ax, flag_no_fl_regs, lum_func):
     plt.ylim(0., max_y + 0.05 * max_y)
 
     # Legends.
-    leg = plt.legend(fancybox=True, loc='upper right', numpoints=1,
-                     fontsize=legendsize)
+    leg = plt.legend(fancybox=True, loc='upper right', numpoints=1)
     # Set the alpha value of the legend.
     leg.get_frame().set_alpha(0.7)
 
 
 def pl_data_rm_perc(
-    gs, y_ax, phot_analy_compl, phot_data_compl, err_rm_data,
+    gs, plot_style, y_ax, phot_analy_compl, phot_data_compl, err_rm_data,
         combined_compl):
     """
     """
     ax = plt.subplot(gs[0:2, 4:6])
-    ax.set_title("Percentage of stars kept after each process",
-                 fontsize=titlesize)
-    ax.minorticks_on()
-    ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
-            lw=grid_lw, zorder=1)
-    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
+    ax.set_title("Percentage of stars kept after each process")
+    if plot_style == 'asteca':
+        ax.grid()
     # Set axis labels
-    plt.xlabel('$' + y_ax + '$', fontsize=xylabelsize)
-    plt.ylabel('perc', fontsize=xylabelsize)
+    plt.xlabel('$' + y_ax + '$')
+    plt.ylabel('perc')
 
     edges, perc_vals = phot_analy_compl
     perc_vals_min = [min(perc_vals)]
@@ -147,8 +136,7 @@ def pl_data_rm_perc(
         label=txt)
 
     # Legends.
-    leg = plt.legend(
-        fancybox=True, numpoints=1, loc='lower right', fontsize=legendsize)
+    leg = plt.legend(fancybox=True, numpoints=1, loc='lower right')
     # Set the alpha value of the legend.
     leg.get_frame().set_alpha(0.7)
 
@@ -157,23 +145,19 @@ def pl_data_rm_perc(
 
 
 def clCMD(
-    ax, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
+    ax, plot_style, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
         xr, yr, xa, ya, n_memb, cl_sz_pt, err_bar, col_idx):
     # Set plot limits
     plt.xlim(x_min_cmd, x_max_cmd)
     plt.ylim(y_min_cmd, y_max_cmd)
     # Set axis labels
-    plt.xlabel('$' + x_ax + '$', fontsize=xylabelsize)
-    plt.ylabel('$' + y_ax + '$', fontsize=xylabelsize)
-    # Set minor ticks
-    ax.minorticks_on()
-    ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
-            lw=grid_lw, zorder=1)
-    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
+    plt.xlabel('$' + x_ax + '$')
+    plt.ylabel('$' + y_ax + '$')
+    if plot_style == 'asteca':
+        ax.grid()
     # Add text box.
     text = r'$N_{{memb}} \approx {}$'.format(n_memb)
-    ob = offsetbox.AnchoredText(
-        text, pad=0.2, loc=1, prop=dict(size=legendsize))
+    ob = offsetbox.AnchoredText(text, pad=0.2, loc=1)
     ob.patch.set(alpha=0.7)
     ax.add_artist(ob)
     # Plot stars in CMD.
@@ -191,9 +175,10 @@ def clCMD(
 
 
 def pl_cl_diag(
-    gs, x_ax0, y_ax, x_min_cmd0, x_max_cmd0, y_min_cmd0, y_max_cmd0, x_ax1,
-    x_min_cmd1, x_max_cmd1, y_min_cmd1, y_max_cmd1, err_bar_cl0, err_bar_cl1,
-        cl_region_rjct_c, cl_region_c, n_memb, cl_sz_pt):
+    gs, plot_style, x_ax0, y_ax, x_min_cmd0, x_max_cmd0, y_min_cmd0,
+    y_max_cmd0, x_ax1, x_min_cmd1, x_max_cmd1, y_min_cmd1, y_max_cmd1,
+    err_bar_cl0, err_bar_cl1, cl_region_rjct_c, cl_region_c, n_memb,
+        cl_sz_pt):
     """
     Cluster's stars CMD diagram (stars inside cluster's radius)
     """
@@ -201,7 +186,7 @@ def pl_cl_diag(
     ax.set_title(
         r"$N_{{accpt}}={}$ , $N_{{rjct}}={}$"
         r" ($r \leq r_{{cl}}$ compl)".format(
-            len(cl_region_c), len(cl_region_rjct_c)), fontsize=titlesize)
+            len(cl_region_c), len(cl_region_rjct_c)))
     xr, yr = [], []
     if len(cl_region_rjct_c) > 0:
         xr = list(zip(*list(zip(*cl_region_rjct_c))[5]))[0]
@@ -211,8 +196,8 @@ def pl_cl_diag(
     # CMD for first color
     col_idx = 1
     clCMD(
-        ax, x_min_cmd0, x_max_cmd0, y_min_cmd0, y_max_cmd0, x_ax0, y_ax,
-        xr, yr, xa, ya, n_memb, cl_sz_pt, err_bar_cl0, col_idx)
+        ax, plot_style, x_min_cmd0, x_max_cmd0, y_min_cmd0, y_max_cmd0, x_ax0,
+        y_ax, xr, yr, xa, ya, n_memb, cl_sz_pt, err_bar_cl0, col_idx)
 
     if x_ax1 != '':
         ax = plt.subplot(gs[4:6, 0:2])
@@ -223,21 +208,21 @@ def pl_cl_diag(
         # CMD for second color
         col_idx = 2
         clCMD(
-            ax, x_min_cmd1, x_max_cmd1, y_min_cmd1, y_max_cmd1, x_ax1, y_ax,
-            xr, yr, xa, ya, n_memb, cl_sz_pt, err_bar_cl1, col_idx)
+            ax, plot_style, x_min_cmd1, x_max_cmd1, y_min_cmd1, y_max_cmd1,
+            x_ax1, y_ax, xr, yr, xa, ya, n_memb, cl_sz_pt, err_bar_cl1,
+            col_idx)
 
 
 def hessKDE(
-    ax, x_ax, y_ax, x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd,
+    ax, plot_style, x_ax, y_ax, x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd,
         cl_col, cl_mag, fr_col, fr_mag):
 
     # This bandwidth seems to produce nice results.
     bw, Nb = .2, 100
 
-    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
-    ax.set_title("Cluster - Field (normalized)", fontsize=titlesize)
-    plt.xlabel('$' + x_ax + '$', fontsize=xylabelsize)
-    plt.ylabel('$' + y_ax + '$', fontsize=xylabelsize)
+    ax.set_title("Cluster - Field (normalized)")
+    plt.xlabel('$' + x_ax + '$')
+    plt.ylabel('$' + y_ax + '$')
 
     xx, yy = np.mgrid[x_min_cmd:x_max_cmd:complex(Nb),
                       y_max_cmd:y_min_cmd:complex(Nb)]
@@ -278,8 +263,7 @@ def hessKDE(
     integ = np.sum(diff * cell)
     # Add text box.
     text = r'$\int \Delta KDE_{{[cl-fr]}} \approx {:.2f}$'.format(integ)
-    ob = offsetbox.AnchoredText(
-        text, pad=0.2, loc=1, prop=dict(size=legendsize))
+    ob = offsetbox.AnchoredText(text, pad=0.2, loc=1)
     ob.patch.set(alpha=0.7)
     ax.add_artist(ob)
 
@@ -287,14 +271,14 @@ def hessKDE(
     ax.contour(xx, yy, diff, colors='k', linewidths=.5)
     # ax.clabel(CS, inline=1, fontsize=10)
 
-    ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
-            lw=grid_lw, zorder=3)
+    if plot_style == 'asteca':
+        ax.grid()
     plt.gca().invert_yaxis()
 
 
 def pl_hess_cmd(
-    gs, x_ax0, x_ax1, y_ax, x_max_cmd0, x_min_cmd0, y_min_cmd0, y_max_cmd0,
-    x_max_cmd1, x_min_cmd1, y_min_cmd1, y_max_cmd1, stars_f_acpt,
+    gs, plot_style, x_ax0, x_ax1, y_ax, x_max_cmd0, x_min_cmd0, y_min_cmd0,
+    y_max_cmd0, x_max_cmd1, x_min_cmd1, y_min_cmd1, y_max_cmd1, stars_f_acpt,
         cl_region_c):
     """
     Hess diagram for CMD of field vs cluster region.
@@ -306,7 +290,7 @@ def pl_hess_cmd(
         fr_col, fr_mag = stars_f_acpt[1], stars_f_acpt[0]
 
         hessKDE(
-            ax, x_ax0, y_ax, x_max_cmd0, x_min_cmd0, y_min_cmd0,
+            ax, plot_style, x_ax0, y_ax, x_max_cmd0, x_min_cmd0, y_min_cmd0,
             y_max_cmd0, cl_col, cl_mag, fr_col, fr_mag)
 
         if stars_f_acpt[2]:
@@ -314,13 +298,13 @@ def pl_hess_cmd(
             fr_col = stars_f_acpt[2]
             ax = plt.subplot(gs[4:6, 2:4])
             hessKDE(
-                ax, x_ax1, y_ax, x_max_cmd1, x_min_cmd1, y_min_cmd1,
-                y_max_cmd1, cl_col, cl_mag, fr_col, fr_mag)
+                ax, plot_style, x_ax1, y_ax, x_max_cmd1, x_min_cmd1,
+                y_min_cmd1, y_max_cmd1, cl_col, cl_mag, fr_col, fr_mag)
 
 
 def flCMD(
-    ax, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax, N_fr,
-    x_fr_rject, y_fr_rject, x_fr_accpt, y_fr_accpt, f_sz_pt, err_bar,
+    ax, plot_style, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
+    N_fr, x_fr_rject, y_fr_rject, x_fr_accpt, y_fr_accpt, f_sz_pt, err_bar,
         col_idx):
     """
     Field stars CMD diagram.
@@ -329,13 +313,10 @@ def flCMD(
     plt.xlim(x_min_cmd, x_max_cmd)
     plt.ylim(y_min_cmd, y_max_cmd)
     # Set axis labels
-    plt.xlabel('$' + x_ax + '$', fontsize=xylabelsize)
-    plt.ylabel('$' + y_ax + '$', fontsize=xylabelsize)
-    # Set minor ticks
-    ax.minorticks_on()
-    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
-    ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
-            lw=grid_lw, zorder=1)
+    plt.xlabel('$' + x_ax + '$')
+    plt.ylabel('$' + y_ax + '$')
+    if plot_style == 'asteca':
+        ax.grid()
     # Plot accepted/rejected stars within the field regions defined.
     if x_fr_rject:
         plt.scatter(x_fr_rject, y_fr_rject, marker='x',
@@ -346,8 +327,7 @@ def flCMD(
         n_field = int(len(x_fr_accpt) / float(N_fr))
         # Add text box.
         text = r'$N_{{field}} \approx {}$'.format(n_field)
-        ob = offsetbox.AnchoredText(
-            text, pad=0.2, loc=1, prop=dict(size=legendsize))
+        ob = offsetbox.AnchoredText(text, pad=0.2, loc=1)
         ob.patch.set(alpha=0.7)
         ax.add_artist(ob)
     # If list is not empty, plot error bars at several values.
@@ -359,9 +339,10 @@ def flCMD(
 
 
 def pl_fl_diag(
-    gs, x_ax0, y_ax, x_min_cmd0, x_max_cmd0, y_min_cmd0, y_max_cmd0, x_ax1,
-    x_min_cmd1, x_max_cmd1, y_min_cmd1, y_max_cmd1, field_regions_c,
-        stars_f_rjct, stars_f_acpt, f_sz_pt, err_bar_fl0, err_bar_fl1):
+    gs, plot_style, x_ax0, y_ax, x_min_cmd0, x_max_cmd0, y_min_cmd0,
+    y_max_cmd0, x_ax1, x_min_cmd1, x_max_cmd1, y_min_cmd1, y_max_cmd1,
+    field_regions_c, stars_f_rjct, stars_f_acpt, f_sz_pt, err_bar_fl0,
+        err_bar_fl1):
     """
     Field stars CMD diagram.
     """
@@ -372,12 +353,12 @@ def pl_fl_diag(
     x_fr_accpt, y_fr_accpt = stars_f_acpt[1], stars_f_acpt[0]
 
     ax.set_title(r"$N_{{accpt}}={}$ , $N_{{rjct}}={}$ (fields compl)".format(
-        len(x_fr_accpt), len(x_fr_rject)), fontsize=titlesize)
+        len(x_fr_accpt), len(x_fr_rject)))
     # CMD for first color
     col_idx = 1
     flCMD(
-        ax, x_min_cmd0, x_max_cmd0, y_min_cmd0, y_max_cmd0, x_ax0, y_ax,
-        N_fr, x_fr_rject, y_fr_rject, x_fr_accpt, y_fr_accpt, f_sz_pt,
+        ax, plot_style, x_min_cmd0, x_max_cmd0, y_min_cmd0, y_max_cmd0, x_ax0,
+        y_ax, N_fr, x_fr_rject, y_fr_rject, x_fr_accpt, y_fr_accpt, f_sz_pt,
         err_bar_fl0, col_idx)
 
     if x_ax1 != '':
@@ -386,9 +367,9 @@ def pl_fl_diag(
         # CMD for second color
         col_idx = 2
         flCMD(
-            ax, x_min_cmd1, x_max_cmd1, y_min_cmd1, y_max_cmd1, x_ax1, y_ax,
-            N_fr, x_fr_rject, y_fr_rject, x_fr_accpt, y_fr_accpt, f_sz_pt,
-            err_bar_fl1, col_idx)
+            ax, plot_style, x_min_cmd1, x_max_cmd1, y_min_cmd1, y_max_cmd1,
+            x_ax1, y_ax, N_fr, x_fr_rject, y_fr_rject, x_fr_accpt, y_fr_accpt,
+            f_sz_pt, err_bar_fl1, col_idx)
 
 
 def plot(N, *args):

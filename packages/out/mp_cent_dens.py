@@ -4,8 +4,6 @@ from scipy.spatial.distance import cdist
 import matplotlib.pyplot as plt
 import matplotlib.offsetbox as offsetbox
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-from . prep_plots import xylabelsize, xytickssize, titlesize, cbartickssize,\
-    legendsize, grid_col, grid_ls, grid_lw
 
 
 def pl_densmap(
@@ -15,19 +13,18 @@ def pl_densmap(
     Coordinates 2D KDE.
     """
 
+    # import warnings
+    # warnings.filterwarnings("error")
+
     ax = plt.subplot(gs[0:2, 0:2])
     frmt = '{:.4f}' if coord == 'deg' else '{:.0f}'
     ax.set_title((r'$KDE_{{bdw}}$ =' + frmt + ' [{}]').format(
-        bw_list[1], coord), fontsize=titlesize)
-    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=xylabelsize)
-    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=xylabelsize)
+        bw_list[1], coord))
+    plt.xlabel('{} ({})'.format(x_name, coord))
+    plt.ylabel('{} ({})'.format(y_name, coord))
 
-    ax.minorticks_on()
-    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
-
-    plt.axvline(x=kde_cent[0], linestyle='--', color='green')
-    plt.axhline(y=kde_cent[1], linestyle='--', color='green')
-
+    plt.axvline(x=kde_cent[0], linestyle='--', lw=1., color='green')
+    plt.axhline(y=kde_cent[1], linestyle='--', lw=1., color='green')
     # Radius
     circle = plt.Circle(
         (kde_cent[0], kde_cent[1]), clust_rad, color='green', fill=False)
@@ -46,7 +43,9 @@ def pl_densmap(
     divider = make_axes_locatable(ax)
     cax = divider.append_axes("right", size="2%", pad=0.05)
     cbar = plt.colorbar(im, cax=cax)
-    cbar.set_ticks([np.min(kde), np.ptp(kde) * .5, np.max(kde)])
+    cbar.set_ticks([
+        np.min(kde), (np.max(kde) + np.min(kde)) * .5, np.max(kde)])
+    cbar.ax.minorticks_off()
     scale = 3600. if coord == 'deg' else 1.
 
     kde_dens_min, kde_dens_max = fr_dens.min(), fr_dens.max()
@@ -56,7 +55,8 @@ def pl_densmap(
         frmt.format(kde_dens_min / scale),
         frmt.format(midpt),
         frmt.format(kde_dens_max / scale)], rotation=90)
-    cbar.ax.tick_params(labelsize=cbartickssize)
+    cbar.ax.tick_params()
+
     # Align bottom and middle labels. Don't include last label (one at the
     # top) as we don't want to change its alignment.
     for i, label in enumerate(cbar.ax.get_yticklabels()[:-1]):
@@ -69,27 +69,25 @@ def pl_densmap(
 
 
 def pl_knn_dens(
-    gs, fig, asp_ratio, x_min, x_max, y_min, y_max, x_name, y_name, coord,
-        NN_dd, xy_filtered, fr_dens, NN_dist, kde_cent, clust_rad):
+    gs, fig, plot_style, asp_ratio, x_min, x_max, y_min, y_max, x_name,
+    y_name, coord, NN_dd, xy_filtered, fr_dens, NN_dist, kde_cent,
+        clust_rad):
     """
     """
     ax = plt.subplot(gs[0:2, 2:4])
     ax.set_aspect(aspect=asp_ratio)
-    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
     # Set plot limits
     plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
     # If RA is used, invert axis.
     if coord == 'deg':
         ax.invert_xaxis()
-    ax.set_title(
-        r'$kNN={}\;(d\leq d_{{p=25\%}})$'.format(NN_dd), fontsize=titlesize)
+    ax.set_title(r'$kNN={}\;(d\leq d_{{p=25\%}})$'.format(NN_dd))
 
-    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=xylabelsize)
-    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=xylabelsize)
-    ax.minorticks_on()
-    ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
-            lw=grid_lw)
+    plt.xlabel('{} ({})'.format(x_name, coord))
+    plt.ylabel('{} ({})'.format(y_name, coord))
+    if plot_style == 'asteca':
+        ax.grid()
 
     perc = np.percentile(NN_dist, 25)
     msk = NN_dist < perc
@@ -122,8 +120,7 @@ def pl_knn_dens(
         (kde_cent[0], kde_cent[1]), clust_rad, color='red', fill=False)
     ax.add_artist(circle)
 
-    leg = plt.legend(
-        fancybox=True, fontsize=legendsize, handlelength=1., loc='best')
+    leg = plt.legend(fancybox=True, handlelength=1., loc='best')
     leg.get_frame().set_alpha(0.7)
 
 
@@ -134,10 +131,9 @@ def pl_full_frame(
     x,y finding chart of full frame
     """
     ax = plt.subplot(gs[0:2, 4:6])
-    ax.minorticks_on()
     ax.set_aspect(aspect=asp_ratio)
     ax.set_title(
-        r"$N_{{stars}}$={} (phot incomp)".format(len(x)), fontsize=titlesize)
+        r"$N_{{stars}}$={} (phot incomp)".format(len(x)))
     # Set plot limits
     plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
@@ -145,9 +141,8 @@ def pl_full_frame(
     if coord == 'deg':
         ax.invert_xaxis()
     # Set axis labels
-    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=xylabelsize)
-    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=xylabelsize)
-    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
+    plt.xlabel('{} ({})'.format(x_name, coord))
+    plt.ylabel('{} ({})'.format(y_name, coord))
 
     N_max = 50000  # HARDCODED
     if len(x) > N_max:
@@ -177,16 +172,14 @@ def pl_full_frame(
     t2 = (r'${}_{{c}} =$' + r_frmt + r'$\,{}$').format(
         y_name, kde_cent[1] + y_offset, coord)
     text = t1 + '\n' + t2
-    ob = offsetbox.AnchoredText(
-        text, pad=0.2, loc=2, prop=dict(size=legendsize))
+    ob = offsetbox.AnchoredText(text, pad=0.2, loc=2)
     ob.patch.set(alpha=0.85)
     ax.add_artist(ob)
 
 
-
 def pl_field_dens(
-    gs, coord, fdens_method, fr_dist, fr_dens, fdens_min_d, fdens_lst,
-        fdens_std_lst, field_dens_d, field_dens, field_dens_std):
+    gs, plot_style, coord, fdens_method, fr_dist, fr_dens, fdens_min_d,
+        fdens_lst, fdens_std_lst, field_dens_d, field_dens, field_dens_std):
     """
     Field density values for different percentiles.
     """
@@ -206,16 +199,13 @@ def pl_field_dens(
     ymax = max(fr_dens) + delta_y
 
     ax = plt.subplot(gs[2:4, 0:4])
-    ax.set_title(("Method: '{}'").format(fdens_method), fontsize=titlesize)
+    ax.set_title(("Method: '{}'").format(fdens_method))
     plt.ylim(ymin, ymax)
-    ax.minorticks_on()
-    plt.xlabel(
-        r'Distance to center $[{}]$'.format(coord2), fontsize=xylabelsize)
-    plt.ylabel(r"$\rho$ $[st/{}^{{2}}]$".format(coord2), fontsize=xylabelsize)
-    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
+    plt.xlabel(r'Distance to center $[{}]$'.format(coord2))
+    plt.ylabel(r"$\rho$ $[st/{}^{{2}}]$".format(coord2))
     ax.ticklabel_format(axis='y', style='sci', scilimits=(0, 0))
-    ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
-            lw=grid_lw)
+    if plot_style == 'asteca':
+        ax.grid()
 
     plt.scatter(fr_dist, fr_dens, c='k', s=5, alpha=.2, zorder=1)
     plt.errorbar(
@@ -235,12 +225,12 @@ def pl_field_dens(
             field_dens, xmin=fdens_min_d[0], xmax=fdens_min_d[-1], color='g',
             label=t1)
 
-    leg = plt.legend(fancybox=True, fontsize=legendsize, loc='upper right')
+    leg = plt.legend(fancybox=True, loc='upper right')
     leg.get_frame().set_alpha(0.7)
 
 
 def pl_centdist_vs_mag(
-    gs, fig, y_ax, coord, xi, yi, magi, kde_cent, clust_rad,
+    gs, fig, plot_style, y_ax, coord, xi, yi, magi, kde_cent, clust_rad,
         integ_dists, integ_mags):
     """
     """
@@ -256,15 +246,12 @@ def pl_centdist_vs_mag(
         coord2 = 'px'
 
     ax = plt.subplot(gs[2:4, 4:6])
-    ax.minorticks_on()
-    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
-    ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
-            lw=grid_lw)
+    if plot_style == 'asteca':
+        ax.grid()
     # plt.xlim(xy_cent_dist.min(), min(xy_cent_dist.max(), clust_rad * 10.))
 
-    plt.xlabel(
-        r'Distance to center $[{}]$'.format(coord2), fontsize=xylabelsize)
-    plt.ylabel('$' + y_ax + '$', fontsize=xylabelsize)
+    plt.xlabel(r'Distance to center $[{}]$'.format(coord2))
+    plt.ylabel('$' + y_ax + '$')
 
     msk = xy_cent_dist <= clust_rad
     plt.scatter(
@@ -274,18 +261,15 @@ def pl_centdist_vs_mag(
         xy_cent_dist[msk], magi[msk], s=25, c='k',
         edgecolor='w', lw=.3, label=r"$r\leq r_{cl}$")
     ax.invert_yaxis()
-    plt.legend(fancybox=True, fontsize=legendsize, loc='lower right')
+    plt.legend(fancybox=True, loc='lower right')
 
     ax2 = ax.twinx()
-    ax2.minorticks_on()
-    ax2.tick_params(axis='both', which='major', labelsize=xytickssize)
-
     plt.plot(integ_dists, integ_mags, c='r', lw=3., label="Integ mag")
 
-    plt.ylabel('$' + y_ax + '$' + r" $^{*}$", fontsize=xylabelsize)
+    plt.ylabel('$' + y_ax + '$' + r" $^{*}$")
     ax2.invert_yaxis()
 
-    leg = plt.legend(fancybox=True, fontsize=legendsize, loc='upper center')
+    leg = plt.legend(fancybox=True, loc='upper center')
     leg.get_frame().set_alpha(0.7)
 
 

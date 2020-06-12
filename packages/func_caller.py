@@ -52,6 +52,7 @@ from .out import make_C2_plot
 from .out import make_C3_plot
 from .out import make_D1_plot
 from .out import make_D2_plot
+from .out import make_D3_plot
 
 
 def main(cl_file, pd):
@@ -271,14 +272,19 @@ def main(cl_file, pd):
     # Add cluster data output file
     add_data_output.main(npd, pd, **clp)
 
-    # Plot result of best match algorithm.
+    # Convergence plots.
     make_D1_plot.main(npd, pd, **clp)
     if pd['stop_idx'] == 'D1':
         retFunc(npd['clust_name'], start)
         return
+    # Corner plot.
+    make_D2_plot.main(npd, pd, **clp)
+    if pd['stop_idx'] == 'D2':
+        retFunc(npd['clust_name'], start)
+        return
 
     # Plot final best match found.
-    make_D2_plot.main(npd, pd, **clp)
+    make_D3_plot.main(npd, pd, **clp)
     retFunc(npd['clust_name'], start)
 
 
