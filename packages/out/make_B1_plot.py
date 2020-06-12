@@ -6,7 +6,7 @@ from os.path import join
 from . import mp_errors
 from . import add_version_plot
 from . import prep_plots
-from . prep_plots import figsize_x, figsize_y, grid_x, grid_y, titlesize
+from . prep_plots import figsize_x, figsize_y, grid_x, grid_y
 
 
 def main(
@@ -39,13 +39,12 @@ def main(
              "field regions, compl frame)").format(
                 len(cl_region_c) + len(stars_out_c),
                 len(stars_out_rjct_c) + len(cl_region_rjct_c)),
-            fontsize=titlesize, x=.26, y=1.005)
+            x=.26, y=1.005)
 
         # Generate output file.
         fig.tight_layout()
         plt.savefig(
-            join(npd['output_subdir'], str(npd['clust_name']) +
-                 '_B1.' + pd['plot_frmt']), dpi=pd['plot_dpi'],
+            join(npd['output_subdir'], str(npd['clust_name']) + '_B1'),
             bbox_inches='tight')
         # Close to release memory.
         plt.clf()

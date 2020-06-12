@@ -345,10 +345,9 @@ def pl_param_pf(
 
 
 def plot(N, *args):
-    '''
+    """
     Handle each plot separately.
-    '''
-    plt.style.use('seaborn-darkgrid')
+    """
     plt_map = {
         0: [pl_2_param_dens, args[0] + ' density map'],
         1: [pl_param_pf, args[0] + ' probability function'],
@@ -364,4 +363,3 @@ def plot(N, *args):
         import traceback
         print(traceback.format_exc())
         print("  WARNING: error when plotting {}".format(plt_map.get(N)[1]))
-    plt.style.use('default')

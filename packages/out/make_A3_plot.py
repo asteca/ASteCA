@@ -21,6 +21,7 @@ def main(
     Make A3 block plots.
     """
     if 'A3' in pd['flag_make_plot']:
+
         fig = plt.figure(figsize=(figsize_x, figsize_y))
         gs = gridspec.GridSpec(grid_y, grid_x)
         add_version_plot.main()
@@ -45,12 +46,12 @@ def main(
         # Structure plots.
         arglist = [
             # pl_rad_find
-            [gs, coord, clust_rad, e_rad, rad_rads, rad_N_membs, rad_N_field,
-             rad_CI],
+            [gs, pd['plot_style'], coord, clust_rad, e_rad, rad_rads,
+             rad_N_membs, rad_N_field, rad_CI],
             # pl_rad_dens: Radial density plot.
-            [gs, coord, rdp_radii, rdp_points, rdp_stddev, field_dens,
-             field_dens_std, clust_rad, e_rad, pd['kp_flag'], KP_Bys_rc,
-             KP_Bys_rt, KP_cent_dens, KP_conct_par],
+            [gs, pd['plot_style'], coord, rdp_radii, rdp_points, rdp_stddev,
+             field_dens, field_dens_std, clust_rad, e_rad, pd['kp_flag'],
+             KP_Bys_rc, KP_Bys_rt, KP_cent_dens, KP_conct_par],
             # pl_KP_Bys
             [gs, coord, pd['kp_flag'], pd['kp_nburn'], KP_steps, KP_mean_afs,
              KP_tau_autocorr, KP_ESS, KP_samples, KP_Bys_rc, KP_Bys_rt,
@@ -61,10 +62,10 @@ def main(
              kde_cent, clust_rad, KP_Bys_rc, KP_Bys_rt, frac_cl_area,
              pd['kp_flag']],
             # pl_mag_membs
-            [gs, y_ax, pd['kp_flag'], membvsmag],
+            [gs, pd['plot_style'], y_ax, pd['kp_flag'], membvsmag],
             # pl_cl_fl_regions: Cluster and field regions defined.
-            [gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max,
-             asp_ratio, kde_cent, clust_rad, field_regions_i,
+            [gs, fig, pd['plot_style'], x_name, y_name, coord, x_min, x_max,
+             y_min, y_max, asp_ratio, kde_cent, clust_rad, field_regions_i,
              field_regions_rjct_i, cl_region_i, cl_region_rjct_i,
              flag_no_fl_regs_i, pd['kp_flag']]
         ]
@@ -77,8 +78,7 @@ def main(
             warnings.simplefilter("ignore")
             fig.tight_layout()
         plt.savefig(
-            join(npd['output_subdir'], str(npd['clust_name']) +
-                 '_A3.' + pd['plot_frmt']), dpi=pd['plot_dpi'],
+            join(npd['output_subdir'], str(npd['clust_name']) + '_A3'),
             bbox_inches='tight')
         # Close to release memory.
         plt.clf()

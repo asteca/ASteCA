@@ -52,27 +52,28 @@ def main(
         # Photometric analysis plots.
         arglist = [
             # pl_cl_fl_regions
-            [gs, x_name, y_name, coord, x_min, x_max, y_min, y_max, asp_ratio,
-             field_regions_rjct_c, cl_region_rjct_c, flag_no_fl_regs_c],
+            [gs, pd['plot_style'], x_name, y_name, coord, x_min, x_max, y_min,
+             y_max, asp_ratio, field_regions_rjct_c, cl_region_rjct_c,
+             flag_no_fl_regs_c],
             # pl_cl_diag: Cluster's stars diagram (stars inside cluster's rad)
-            [gs, x_ax0, y_ax, x_min_cmd0, x_max_cmd0, y_min_cmd0, y_max_cmd0,
-             x_ax1, x_min_cmd1, x_max_cmd1, y_min_cmd1, y_max_cmd1,
-             err_bar_cl0, err_bar_cl1, cl_region_rjct_c, cl_region_c, n_memb,
-             cl_sz_pt],
+            [gs, pd['plot_style'], x_ax0, y_ax, x_min_cmd0, x_max_cmd0,
+             y_min_cmd0, y_max_cmd0, x_ax1, x_min_cmd1, x_max_cmd1, y_min_cmd1,
+             y_max_cmd1, err_bar_cl0, err_bar_cl1, cl_region_rjct_c,
+             cl_region_c, n_memb, cl_sz_pt],
             # pl_hess_cmd
-            [gs, x_ax0, x_ax1, y_ax, x_max_cmd0, x_min_cmd0, y_min_cmd0,
-             y_max_cmd0, x_max_cmd1, x_min_cmd1, y_min_cmd1, y_max_cmd1,
-             stars_f_acpt, cl_region_c],
+            [gs, pd['plot_style'], x_ax0, x_ax1, y_ax, x_max_cmd0, x_min_cmd0,
+             y_min_cmd0, y_max_cmd0, x_max_cmd1, x_min_cmd1, y_min_cmd1,
+             y_max_cmd1, stars_f_acpt, cl_region_c],
             # pl_fl_diag: Field stars CMD/CCD diagram.
-            [gs, x_ax0, y_ax, x_min_cmd0, x_max_cmd0, y_min_cmd0, y_max_cmd0,
-             x_ax1, x_min_cmd1, x_max_cmd1, y_min_cmd1, y_max_cmd1,
-             field_regions_c, stars_f_rjct, stars_f_acpt, f_sz_pt,
+            [gs, pd['plot_style'], x_ax0, y_ax, x_min_cmd0, x_max_cmd0,
+             y_min_cmd0, y_max_cmd0, x_ax1, x_min_cmd1, x_max_cmd1, y_min_cmd1,
+             y_max_cmd1, field_regions_c, stars_f_rjct, stars_f_acpt, f_sz_pt,
              err_bar_fl0, err_bar_fl1],
             # pl_lum_func: LF of stars in cluster region and outside.
-            [gs, y_ax, flag_no_fl_regs_c, lum_func],
+            [gs, pd['plot_style'], y_ax, flag_no_fl_regs_c, lum_func],
             # pl_data_rm_perc
-            [gs, y_ax, phot_analy_compl, phot_data_compl, err_rm_data,
-             completeness]
+            [gs, pd['plot_style'], y_ax, phot_analy_compl, phot_data_compl,
+             err_rm_data, completeness]
         ]
         for n, args in enumerate(arglist):
             mp_data_analysis.plot(n, *args)
@@ -80,8 +81,7 @@ def main(
         # Generate output file.
         fig.tight_layout()
         plt.savefig(
-            join(npd['output_subdir'], str(npd['clust_name']) +
-                 '_B2.' + pd['plot_frmt']), dpi=pd['plot_dpi'],
+            join(npd['output_subdir'], str(npd['clust_name']) + '_B2'),
             bbox_inches='tight')
         # Close to release memory.
         plt.clf()

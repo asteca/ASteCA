@@ -62,8 +62,7 @@ def main(
         # Generate output file.
         fig.tight_layout()
         plt.savefig(
-            join(npd['output_subdir'], str(npd['clust_name']) +
-                 '_A1.' + pd['plot_frmt']), dpi=pd['plot_dpi'],
+            join(npd['output_subdir'], str(npd['clust_name']) + '_A1'),
             bbox_inches='tight')
         # Close to release memory.
         plt.clf()

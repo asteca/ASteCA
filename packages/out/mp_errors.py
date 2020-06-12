@@ -3,8 +3,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.offsetbox as offsetbox
 from . import prep_plots
-from . prep_plots import xylabelsize, xytickssize, legendsize,\
-    grid_col, grid_ls, grid_lw
 
 
 def starsPlot(boundary, x_data, y_data):
@@ -78,16 +76,11 @@ def pl_phot_err(
 
         ax = plt.subplot(
             gs[i // 2: (i // 2) + 1, 3 * (i % 2):3 * (i % 2) + 3])
-        ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
-                lw=grid_lw, zorder=1)
         plt.xlim(x_min, x_max)
         # Set axis labels
-        plt.xlabel(r'$' + x_ax + r'$', fontsize=xylabelsize)
-        plt.ylabel(r'$\sigma_{{{}}}$'.format(y_ax), fontsize=xylabelsize + 2)
+        plt.xlabel(r'$' + x_ax + r'$')
+        plt.ylabel(r'$\sigma_{{{}}}$'.format(y_ax))
         ax.set_facecolor('#EFF0F1')
-        # Set minor ticks
-        ax.minorticks_on()
-        ax.tick_params(axis='both', which='major', labelsize=xytickssize)
 
         # Rejected stars outside the cluster region
         if any(mmag_out_rjct) and any(stars_out_rjct_c):
@@ -110,8 +103,7 @@ def pl_phot_err(
             # Plot legend in the main magnitude plot.
             leg = plt.legend(
                 fancybox=True, loc='upper left', scatterpoints=1,
-                fontsize=legendsize, markerscale=2.,
-                prop={'size': legendsize})
+                markerscale=2.)
             # Set the alpha value of the legend.
             leg.get_frame().set_alpha(0.7)
             # Max error cut
@@ -120,7 +112,7 @@ def pl_phot_err(
                       linestyles='dashed', zorder=4)
             txt = r"$max={}$ mag".format(em_float[0])
             txt += "\n" + r"$N_{{rjct}}={}$".format(N_st_err_rjct[0])
-            ob = offsetbox.AnchoredText(txt, loc=1, prop=dict(size=legendsize))
+            ob = offsetbox.AnchoredText(txt, loc=1)
             ob.patch.set(alpha=0.7)
             ax.add_artist(ob)
             # Plot error curve
@@ -133,7 +125,7 @@ def pl_phot_err(
                       linestyles='dashed', zorder=4)
             txt = r"$max={}$ mag".format(em_float[1 + k])
             txt += "\n" + r"$N_{{rjct}}={}$".format(N_st_err_rjct[1][k])
-            ob = offsetbox.AnchoredText(txt, loc=2, prop=dict(size=legendsize))
+            ob = offsetbox.AnchoredText(txt, loc=2)
             ob.patch.set(alpha=0.7)
             ax.add_artist(ob)
             plt.plot(err_bar_all[1], err_bar_all[2][k + 1], color='yellow',
@@ -147,7 +139,7 @@ def pl_phot_err(
                       linestyles='dashed', zorder=4)
             txt = r"$max={}$ {}".format(em_float[-(3 - k)], unit)
             txt += "\n" + r"$N_{{rjct}}={}$".format(N_st_err_rjct[2][k])
-            ob = offsetbox.AnchoredText(txt, loc=2, prop=dict(size=legendsize))
+            ob = offsetbox.AnchoredText(txt, loc=2)
             ob.patch.set(alpha=0.7)
             ax.add_artist(ob)
         # Maximum error limit of 1.

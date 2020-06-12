@@ -207,6 +207,8 @@ def main(pars_f_path):
     optimz_algors = ('ptemcee', 'read', 'n', 'synth_gen')
     # Accepted forms of priors.
     bayes_priors = ('u', 'g')
+    plots_names = ('A1', 'A2', 'A3', 'B1', 'B2', 'B3', 'C1', 'C2', 'C3', 'D0',
+                   'D1', 'D2', 'D3', 's')
 
     priors_mcee = [z_prior, a_prior, e_prior, d_prior, m_prior, b_prior]
 
@@ -297,8 +299,8 @@ def main(pars_f_path):
         'cmd_systs': cmd_systs,
 
         # Output
-        'flag_make_plot': flag_make_plot, 'plot_style': plot_style
-        # 'plot_frmt': plot_frmt, 'plot_dpi': plot_dpi
+        'flag_make_plot': flag_make_plot, 'plot_style': plot_style,
+        'plots_names': plots_names
     }
 
     return pd

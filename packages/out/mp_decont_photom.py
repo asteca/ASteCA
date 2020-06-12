@@ -2,13 +2,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.offsetbox as offsetbox
-from . prep_plots import xylabelsize, xytickssize, titlesize, legendsize,\
-    grid_col, grid_ls, grid_lw
 
 
 def pl_mp_histo(
-    gs, n_memb_da, memb_prob_avrg_sort, flag_decont_skip, cl_reg_fit,
-        mode_fld_clean, local_bin):
+    gs, plot_style, n_memb_da, memb_prob_avrg_sort, flag_decont_skip,
+        cl_reg_fit, mode_fld_clean, local_bin):
     """
     Histogram for the distribution of membership probabilities from the
     decontamination algorithm.
@@ -18,12 +16,10 @@ def pl_mp_histo(
         # Reduced membership.
         ax = plt.subplot(gs[0:2, 0:2])
         plt.xlim(0., 1.)
-        plt.xlabel('MP', fontsize=xylabelsize)
-        plt.ylabel('N', fontsize=xylabelsize)
-        ax.minorticks_on()
-        ax.tick_params(axis='both', which='major', labelsize=xytickssize)
-        ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
-                lw=grid_lw, zorder=1)
+        plt.xlabel('MP')
+        plt.ylabel('N')
+        if plot_style == 'asteca':
+            ax.grid()
         prob_data = [star[9] for star in memb_prob_avrg_sort]
         # Histogram of the data.
         n_bins = int((max(prob_data) - min(prob_data)) / 0.025)
@@ -50,20 +46,20 @@ def pl_mp_histo(
 
         # Plot reversed cumulative MPs sum
         ax2 = ax.twinx()
+        ax2.minorticks_off()
         probs_x = np.sort(prob_data)[::-1]
         cum_sum_MPs = np.arange(len(prob_data))
         ax2.plot(probs_x, cum_sum_MPs, ls='--', c='k', lw=1.5)
-        ax2.set_ylabel("N (<MP)", fontsize=xylabelsize - 2., rotation=0)
-        ax2.tick_params(axis='both', which='major', labelsize=xytickssize - 2.)
+        ax2.set_ylabel("N (<MP)", rotation=0)
         ax2.tick_params(axis='y', rotation=45)
-        ax2.yaxis.set_label_coords(1.03, 1.03)
+        ax2.yaxis.set_label_coords(1.03, 1.05)
 
         # Add text box.
-        str_pm = ['MP', '\geq', 'prob']
+        str_pm = ['MP', r'\geq', 'prob']
         if mode_fld_clean == 'local':
-            str_pm.append(mode_fld_clean + ';\,' + local_bin)
+            str_pm.append(mode_fld_clean + r';\,' + local_bin)
         else:
-            str_pm.append(mode_fld_clean.replace('_', '\_'))
+            str_pm.append(mode_fld_clean.replace('_', r'\_'))
         text0 = r'$N_{{total}}={}$'.format(len(prob_data))
         text1 = r'$n_{{memb-DA}}={}\,(MP \geq 0.5)$'.format(n_memb_da)
         text2 = r'${}_{{min}}={:.2f}\,({})$'.format(
@@ -73,7 +69,7 @@ def pl_mp_histo(
         text = text0 + '\n' + text1 + '\n' + text2 + '\n' + text3
         plt.plot([], label=text)
 
-        plt.legend(fontsize=legendsize, handlelength=0)
+        plt.legend(handlelength=0)
         # Avoid showing the value 0.0 in the y axis.
         plt.ylim(0.001, plt.ylim()[1])
 
@@ -90,25 +86,22 @@ def pl_chart_mps(
     # Set plot limits, Use 'zoom' x,y ranges.
     plt.xlim(x_zmin, x_zmax)
     plt.ylim(y_zmin, y_zmax)
-    ax.set_title('Cluster region'.format(), fontsize=titlesize)
+    ax.set_title('Cluster region'.format())
     # If RA is used, invert axis.
     if coord == 'deg':
         ax.invert_xaxis()
     # Set axis labels
-    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=xylabelsize)
-    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=xylabelsize)
+    plt.xlabel('{} ({})'.format(x_name, coord))
+    plt.ylabel('{} ({})'.format(y_name, coord))
     # Set minor ticks
-    ax.minorticks_on()
-    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
     # Radius
     circle = plt.Circle((kde_cent[0], kde_cent[1]), clust_rad, color='red',
                         fill=False)
     fig.gca().add_artist(circle)
     # If DA was skipped, print info on 'local' method here.
     if flag_decont_skip and mode_fld_clean == 'local':
-        text = r'$({})$'.format(mode_fld_clean + ';\,' + local_bin)
-        ob = offsetbox.AnchoredText(
-            text, pad=0.2, loc=2, prop=dict(size=legendsize))
+        text = r'$({})$'.format(mode_fld_clean + r';\,' + local_bin)
+        ob = offsetbox.AnchoredText(text, pad=0.2, loc=2)
         ob.patch.set(alpha=0.85)
         ax.add_artist(ob)
     # Color map, higher prob stars look redder.
@@ -138,9 +131,9 @@ def pl_chart_mps(
 
 
 def pl_mps_phot_diag(
-    gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax, v_min_mp,
-    v_max_mp, diag_fit_inv, diag_no_fit_inv, cl_f_sz_pt, cl_nf_sz_pt, err_bar,
-        mode_fld_clean, local_rm_edges):
+    gs, plot_style, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax,
+    y_ax, v_min_mp, v_max_mp, diag_fit_inv, diag_no_fit_inv, cl_f_sz_pt,
+        cl_nf_sz_pt, err_bar, mode_fld_clean, local_rm_edges):
     """
     Star's membership probabilities on cluster's photometric diagram.
     """
@@ -150,30 +143,27 @@ def pl_mps_phot_diag(
     plt.xlim(x_min_cmd, x_max_cmd)
     plt.ylim(y_min_cmd, y_max_cmd)
     # Set axis labels
-    plt.xlabel('$' + x_ax + '$', fontsize=xylabelsize)
-    plt.ylabel('$' + y_ax + '$', fontsize=xylabelsize)
+    plt.xlabel('$' + x_ax + '$')
+    plt.ylabel('$' + y_ax + '$')
     # Add text box.
     text = '$N_{{fit}}={}$'.format(len(diag_fit_inv[2]))
-    ob = offsetbox.AnchoredText(text, loc=2, prop=dict(size=legendsize))
+    ob = offsetbox.AnchoredText(text, loc=2)
     ob.patch.set(boxstyle='square,pad=-0.2', alpha=0.85)
     ax.add_artist(ob)
-    # Set minor ticks
-    ax.minorticks_on()
-    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
+
     # Plot grid.
+    gls, glw, gc = plt.rcParams['grid.linestyle'],\
+        plt.rcParams['grid.linewidth'], plt.rcParams['grid.color']
     if mode_fld_clean == 'local' and local_rm_edges is not None:
-        # Use first magnitude and color.
         for x_ed in local_rm_edges[1]:
             # vertical lines
-            ax.axvline(x_ed, linestyle=grid_ls, lw=grid_lw, color=grid_col,
-                       zorder=1)
+            ax.axvline(x_ed, linestyle=gls, lw=glw, color=gc, zorder=1)
         for y_ed in local_rm_edges[0]:
             # horizontal lines
-            ax.axhline(y_ed, linestyle=grid_ls, lw=grid_lw, color=grid_col,
-                       zorder=1)
+            ax.axhline(y_ed, linestyle=gls, lw=glw, color=gc, zorder=1)
     else:
-        ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
-                lw=grid_lw, zorder=1)
+        if plot_style == 'asteca':
+            ax.grid()
     # This reversed colormap means higher prob stars will look redder.
     cm = plt.cm.get_cmap('RdYlBu_r')
     # If stars have a range of colors, use list of colors. Else use a single
@@ -211,8 +201,8 @@ def pl_mps_phot_diag(
 
 
 def pl_mps_incomp_diags(
-    gs, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
-    xdata_c, ydata_c, coldata_c, xdata_i, ydata_i, coldata_i, cl_c_sz_pt,
+    gs, fig, plot_style, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax,
+    y_ax, xdata_c, ydata_c, coldata_c, xdata_i, ydata_i, coldata_i, cl_c_sz_pt,
         cl_i_sz_pt, mode_fld_clean, local_rm_edges, c1, c2, gspos_idx):
     """
     Star's membership probabilities on cluster's photometric diagram.
@@ -227,31 +217,28 @@ def pl_mps_incomp_diags(
     plt.xlim(x_min_cmd, x_max_cmd)
     plt.ylim(y_min_cmd, y_max_cmd)
     # Set axis labels
-    plt.xlabel('$' + x_ax + '$', fontsize=xylabelsize)
-    plt.ylabel('$' + y_ax + '$', fontsize=xylabelsize)
+    plt.xlabel('$' + x_ax + '$')
+    plt.ylabel('$' + y_ax + '$')
     # Add text box.
     text = r'$N_{{cmpl}}={},\, N_{{incmpl}}={}$'.format(
         sum(~np.isnan(xdata_c) & ~np.isnan(ydata_c)),
         sum(~np.isnan(xdata_i) & ~np.isnan(ydata_i)))
-    ax.set_title(text, fontsize=titlesize)
-    # Set minor ticks
-    ax.minorticks_on()
-    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
+    ax.set_title(text)
 
     # Plot grid.
+    gls, glw, gc = plt.rcParams['grid.linestyle'],\
+        plt.rcParams['grid.linewidth'], plt.rcParams['grid.color']
     if mode_fld_clean == 'local' and local_rm_edges is not None:
         # Use first magnitude and color.
         for x_ed in local_rm_edges[c1]:
             # vertical lines
-            ax.axvline(x_ed, linestyle=grid_ls, lw=grid_lw, color=grid_col,
-                       zorder=1)
+            ax.axvline(x_ed, linestyle=gls, lw=glw, color=gc, zorder=1)
         for y_ed in local_rm_edges[c2]:
             # horizontal lines
-            ax.axhline(y_ed, linestyle=grid_ls, lw=grid_lw, color=grid_col,
-                       zorder=1)
+            ax.axhline(y_ed, linestyle=gls, lw=glw, color=gc, zorder=1)
     else:
-        ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
-                lw=grid_lw, zorder=1)
+        if plot_style == 'asteca':
+            ax.grid()
 
     # This reversed colormap means higher prob stars will look redder.
     cm = plt.cm.get_cmap('RdYlBu_r')

@@ -9,16 +9,10 @@ from astropy.visualization import ZScaleInterval
 from astropy.stats import sigma_clipped_stats
 
 
-# HARDCODED Global plot parameters
+# HARDCODED figure size and grid distribution
 figsize_x, figsize_y = 30, 30
 # figsize(x1, y1), GridSpec(y2, x2)
 grid_x, grid_y = 12, 12
-xylabelsize = 10
-xytickssize = 9.5
-titlesize = 9
-legendsize = 9.5
-cbarlabelsize, cbartickssize = 8, 8
-grid_col, grid_ls, grid_lw = 'grey', '-', .25
 
 
 def frame_max_min(x_data, y_data):
