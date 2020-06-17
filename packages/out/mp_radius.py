@@ -2,9 +2,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+from matplotlib import patches as mpatches
 from itertools import cycle
 from ..structure.king_profile import KingProf as kpf
-from . import BayesPlots
 
 
 def pl_rad_find(
@@ -201,71 +201,14 @@ def pl_rad_dens(
     axins.set_ylim(y0, y_max)
 
 
-def pl_KP_Bys(
-    gs, coord, kp_flag, kp_nburn, KP_steps, KP_mean_afs, KP_tau_autocorr,
-        KP_ESS, KP_samples, KP_Bys_rc, KP_Bys_rt, KP_Bayes_kde):
-    """
-    """
-    if kp_flag:
-
-        # Convert from deg to arcmin if (ra,dec) were used.
-        if coord == 'deg':
-            KP_samples = KP_samples * 60.
-            KP_Bys_rc, KP_Bys_rt = KP_Bys_rc * 60., KP_Bys_rt * 60.
-            KP_Bayes_kde[0][0], KP_Bayes_kde[1][0] =\
-                KP_Bayes_kde[0][0] * 60., KP_Bayes_kde[1][0] * 60.
-            coord2, dec_places = 'arcmin', "{:.2f}"
-        else:
-            coord2, dec_places = 'px', "{:.0f}"
-
-        gsy, gsx = (2, 3), (0, 2)
-        BayesPlots.autocorr(
-            gs, gsx, gsy, KP_steps, KP_tau_autocorr, KP_ESS)
-
-        gsy, gsx = (3, 4), (0, 2)
-        BayesPlots.meanAF(gs, gsx, gsy, KP_steps, KP_mean_afs)
-
-        gsy, gsx = (2, 3), (2, 6)
-        xylabel = r"$r_{{c}}$ [{}]".format(coord2)
-        BayesPlots.traceplot(
-            gs, gsx, gsy, KP_samples[:, :, 0], KP_Bys_rc, kp_nburn, xylabel,
-            False)
-
-        gsy, gsx = (3, 4), (2, 6)
-        xylabel = r"$r_{{t}}$ [{}]".format(coord2)
-        BayesPlots.traceplot(
-            gs, gsx, gsy, KP_samples[:, :, 1], KP_Bys_rt, kp_nburn, xylabel)
-
-        gsy, gsx = (4, 6), (0, 2)
-        xylabel = r"$r_{{c}}$ [{}]".format(coord2)
-        BayesPlots.histogram(
-            gs, gsx, gsy, KP_samples[:, :, 0], KP_Bys_rc, KP_Bayes_kde[0],
-            xylabel, dec_places)
-
-        gsy, gsx = (4, 6), (2, 4)
-        xylabel = r"$r_{{t}}$ [{}]".format(coord2)
-        BayesPlots.histogram(
-            gs, gsx, gsy, KP_samples[:, :, 1], KP_Bys_rt, KP_Bayes_kde[1],
-            xylabel, dec_places)
-
-        gsy, gsx = (4, 6), (4, 6)
-        xylabel = (
-            r"$r_{{c}}$ [{}]".format(coord2), r"$r_{{t}}$ [{}]".format(coord2))
-        BayesPlots.twoParDens(
-            gs, gsx, gsy, KP_samples, KP_Bys_rc, KP_Bys_rt, xylabel)
-
-
 def pl_zoom_frame(
     gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin, y_zmax, cont_index,
     x_data, y_data, st_sizes_arr, kde_cent, clust_rad, KP_Bys_rc,
-        KP_Bys_rt, frac_cl_area, kp_flag):
+        KP_Bys_rt, KP_Bys_ecc, KP_Bys_theta, frac_cl_area, kp_flag):
     """
     Zoom on x,y finding chart.
     """
-    if kp_flag:
-        ax = plt.subplot(gs[6:8, 0:2])
-    else:
-        ax = plt.subplot(gs[2:4, 0:2])
+    ax = plt.subplot(gs[2:4, 0:2])
 
     # Force square plot.
     ax.set_aspect('equal')
@@ -297,16 +240,28 @@ def pl_zoom_frame(
     # Core and tidal radii
     if kp_flag:
         # Plot tidal radius.
-        circle = plt.Circle(
-            (kde_cent[0], kde_cent[1]), KP_Bys_rt[3], color='g', fill=False,
-            lw=1.5)
-        fig.gca().add_artist(circle)
+        rt_mode, ecc_mode, theta_mode = KP_Bys_rt[4], KP_Bys_ecc[4],\
+            KP_Bys_theta[4]
+        b = rt_mode * np.sqrt(1. - ecc_mode**2)
+        ellipse = mpatches.Ellipse(
+            xy=kde_cent, width=2. * rt_mode, height=2. * b,
+            angle=np.rad2deg(theta_mode), facecolor='None', edgecolor='g',
+            linewidth=1.5, transform=ax.transData)
+        # circle = plt.Circle(
+        #     (kde_cent[0], kde_cent[1]), KP_Bys_rt[3], color='g', fill=False,
+        #     lw=1.5)
+        fig.gca().add_artist(ellipse)
         # Plot core radius.
-        if KP_Bys_rc[3] > 0:
-            circle = plt.Circle(
-                (kde_cent[0], kde_cent[1]), KP_Bys_rc[3], color='g',
-                fill=False, ls='dashed', lw=1.)
-            fig.gca().add_artist(circle)
+        rc_mode = KP_Bys_rc[4]
+        # circle = plt.Circle(
+        #     (kde_cent[0], kde_cent[1]), KP_Bys_rc[3], color='g',
+        #     fill=False, ls='dashed', lw=1.)
+        b = rc_mode * np.sqrt(1. - ecc_mode**2)
+        ellipse = mpatches.Ellipse(
+            xy=kde_cent, width=2. * rc_mode, height=2. * b,
+            angle=np.rad2deg(theta_mode), facecolor='None', edgecolor='g',
+            ls='dashed', linewidth=1.5, transform=ax.transData)
+        fig.gca().add_artist(ellipse)
 
     # # Plot contour levels if it was obtained.
     # if kde_plot:
@@ -337,13 +292,10 @@ def pl_zoom_frame(
                 marker='x', zorder=5)
 
 
-def pl_mag_membs(gs, plot_style, y_ax, kp_flag, membvsmag):
+def pl_mag_membs(gs, plot_style, y_ax, membvsmag):
     """
     """
-    if kp_flag:
-        ax = plt.subplot(gs[6:8, 2:4])
-    else:
-        ax = plt.subplot(gs[2:4, 2:4])
+    ax = plt.subplot(gs[2:4, 2:4])
     if plot_style == 'asteca':
         ax.grid()
     ax.set_title(r"$N_{{memb}}$ vs magnitude cut (phot incomp)")
@@ -355,14 +307,11 @@ def pl_mag_membs(gs, plot_style, y_ax, kp_flag, membvsmag):
 def pl_cl_fl_regions(
     gs, fig, plot_style, x_name, y_name, coord, x_min, x_max, y_min, y_max,
     asp_ratio, kde_cent, clust_rad, field_regions_i, field_regions_rjct_i,
-        cl_region_i, cl_region_rjct_i, flag_no_fl_regs_i, kp_flag):
+        cl_region_i, cl_region_rjct_i, flag_no_fl_regs_i):
     """
     Cluster and field regions defined.
     """
-    if kp_flag:
-        ax = plt.subplot(gs[6:8, 4:6])
-    else:
-        ax = plt.subplot(gs[2:4, 4:6])
+    ax = plt.subplot(gs[2:4, 4:6])
 
     ax.set_aspect(aspect=asp_ratio)
     # Set plot limits
@@ -419,10 +368,9 @@ def plot(N, *args):
     plt_map = {
         0: [pl_rad_find, 'Radius estimation'],
         1: [pl_rad_dens, 'radial density function'],
-        2: [pl_KP_Bys, 'King profile Bayes plots'],
-        3: [pl_zoom_frame, 'zoomed frame'],
-        4: [pl_mag_membs, 'estimated members vs magnitude cut'],
-        5: [pl_cl_fl_regions, 'cluster and field regions defined']
+        2: [pl_zoom_frame, 'zoomed frame'],
+        3: [pl_mag_membs, 'estimated members vs magnitude cut'],
+        4: [pl_cl_fl_regions, 'cluster and field regions defined']
     }
 
     fxn = plt_map.get(N, None)[0]
