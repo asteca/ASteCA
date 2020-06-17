@@ -77,7 +77,9 @@ def NmembVsMag(x, y, mag, clust_rad, cl_area, field_dens, cent_dists):
     area_out = area_tot - cl_area
 
     membvsmag = []
-    mag_ranges = np.linspace(mag.min(), mag.max(), 11)
+    mag_ranges = np.linspace(np.nanmin(mag), np.nanmax(mag), 11)
+    # handle possible nan values
+    mag[np.isnan(mag)] = np.inf
     for i, mmax in enumerate(mag_ranges[1:]):
         msk = mag < mmax
         if msk.sum() > 2:
