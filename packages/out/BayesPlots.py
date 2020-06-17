@@ -110,11 +110,12 @@ def meanAF(gs, gsx, gsy, Nsteps, mean_afs):
     plt.legend()
 
 
-def twoParDens(gs, gsx, gsy, KP_samples, KP_Bys_rc, KP_Bys_rt, xylabel):
+def twoParDens(
+        gs, gsx, gsy, x_samples, y_samples, KP_Bys_rc, KP_Bys_rt, xylabel):
     """
     """
     ax = plt.subplot(gs[gsy[0]:gsy[1], gsx[0]:gsx[1]])
-    hist2d(ax, KP_samples[:, :, 0], KP_samples[:, :, 1])
+    hist2d(ax, x_samples, y_samples)
     plt.scatter(
         KP_Bys_rc[1], KP_Bys_rt[1], marker='x', c='green', s=50, zorder=5)
     plt.scatter(
