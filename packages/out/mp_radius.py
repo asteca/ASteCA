@@ -292,10 +292,60 @@ def pl_zoom_frame(
                 marker='x', zorder=5)
 
 
+def pl_dens_map(
+    gs, fig, asp_ratio, x_name, y_name, coord, x_zmin, x_zmax, y_zmin, y_zmax,
+    kde_cent, frame_kde_cent, clust_rad, kp_flag, KP_Bys_rc, KP_Bys_rt,
+        KP_Bys_ecc, KP_Bys_theta):
+    """
+    Coordinates 2D KDE zoom.
+    """
+    ax = plt.subplot(gs[2:4, 2:4])
+
+    plt.xlim(x_zmin, x_zmax)
+    plt.ylim(y_zmin, y_zmax)
+    plt.xlabel('{} ({})'.format(x_name, coord))
+    plt.ylabel('{} ({})'.format(y_name, coord))
+
+    # Radius
+    circle = plt.Circle(
+        (kde_cent[0], kde_cent[1]), clust_rad, color='r', fill=False)
+    ax.add_artist(circle)
+
+    # Core and tidal radii (using mode values)
+    if kp_flag:
+        # Plot tidal radius.
+        rt_mode, ecc_mode, theta_mode = KP_Bys_rt[4], KP_Bys_ecc[4],\
+            KP_Bys_theta[4]
+        b = rt_mode * np.sqrt(1. - ecc_mode**2)
+        ellipse = mpatches.Ellipse(
+            xy=kde_cent, width=2. * rt_mode, height=2. * b,
+            angle=np.rad2deg(theta_mode), facecolor='None', edgecolor='g',
+            linewidth=1.5, transform=ax.transData)
+        fig.gca().add_artist(ellipse)
+        # Plot core radius.
+        rc_mode = KP_Bys_rc[4]
+        b = rc_mode * np.sqrt(1. - ecc_mode**2)
+        ellipse = mpatches.Ellipse(
+            xy=kde_cent, width=2. * rc_mode, height=2. * b,
+            angle=np.rad2deg(theta_mode), facecolor='None', edgecolor='g',
+            ls='dashed', linewidth=1., transform=ax.transData)
+        fig.gca().add_artist(ellipse)
+
+    ext_range, x_grid, y_grid, k_pos = frame_kde_cent
+    kde = np.reshape(k_pos.T, x_grid.shape)
+    plt.imshow(
+        np.rot90(kde), cmap=plt.get_cmap('RdYlBu_r'), extent=ext_range)
+    plt.contour(x_grid, y_grid, kde, colors='#551a8b', linewidths=0.5)
+    # If RA is used, invert axis.
+    if coord == 'deg':
+        ax.invert_xaxis()
+    ax.set_aspect(aspect=asp_ratio)
+
+
 def pl_mag_membs(gs, plot_style, y_ax, membvsmag):
     """
     """
-    ax = plt.subplot(gs[2:4, 2:4])
+    ax = plt.subplot(gs[2:4, 4:6])
     if plot_style == 'asteca':
         ax.grid()
     ax.set_title(r"$N_{{memb}}$ vs magnitude cut (phot incomp)")
@@ -311,7 +361,7 @@ def pl_cl_fl_regions(
     """
     Cluster and field regions defined.
     """
-    ax = plt.subplot(gs[2:4, 4:6])
+    ax = plt.subplot(gs[4:6, 0:2])
 
     ax.set_aspect(aspect=asp_ratio)
     # Set plot limits
@@ -369,8 +419,9 @@ def plot(N, *args):
         0: [pl_rad_find, 'Radius estimation'],
         1: [pl_rad_dens, 'radial density function'],
         2: [pl_zoom_frame, 'zoomed frame'],
-        3: [pl_mag_membs, 'estimated members vs magnitude cut'],
-        4: [pl_cl_fl_regions, 'cluster and field regions defined']
+        3: [pl_dens_map, 'density map'],
+        4: [pl_mag_membs, 'estimated members vs magnitude cut'],
+        5: [pl_cl_fl_regions, 'cluster and field regions defined']
     }
 
     fxn = plt_map.get(N, None)[0]

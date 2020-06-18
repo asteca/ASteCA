@@ -10,14 +10,13 @@ from . prep_plots import figsize_x, figsize_y, grid_x, grid_y
 
 
 def main(
-    npd, cld_i, pd, kde_cent, clust_rad, e_rad, rad_rads, rad_N_membs,
-    rad_N_field, rad_CI, KP_cent_dens, membvsmag, KP_steps, KP_mean_afs,
-    xy_filtered, xy_cent_dist, N_MC, rand_01_MC, cos_t, sin_t,
+    npd, cld_i, pd, kde_cent, frame_kde_cent, clust_rad, e_rad, rad_rads,
+    rad_N_membs, rad_N_field, rad_CI, KP_cent_dens, membvsmag, KP_steps,
+    KP_mean_afs, xy_filtered, xy_cent_dist, N_MC, rand_01_MC, cos_t, sin_t,
     KP_tau_autocorr, KP_ESS, KP_samples, KP_Bys_rc, KP_Bys_rt, KP_Bys_ecc,
-    KP_Bys_theta, KP_Bayes_kde,
-    KP_memb_num, KP_conct_par, field_dens, field_dens_std, cont_index,
-    cl_region_i, frac_cl_area, cl_region_rjct_i, field_regions_rjct_i,
-        field_regions_i, flag_no_fl_regs_i, **kwargs):
+    KP_Bys_theta, KP_Bayes_kde, KP_memb_num, KP_conct_par, field_dens,
+    field_dens_std, cont_index, cl_region_i, frac_cl_area, cl_region_rjct_i,
+        field_regions_rjct_i, field_regions_i, flag_no_fl_regs_i, **kwargs):
     """
     Make A3 block plots.
     """
@@ -58,6 +57,10 @@ def main(
              cont_index, x_data_z, y_data_z, st_sizes_arr_z,
              kde_cent, clust_rad, KP_Bys_rc, KP_Bys_rt, KP_Bys_ecc,
              KP_Bys_theta, frac_cl_area, pd['kp_flag']],
+            # pl_dens_map
+            [gs, fig, asp_ratio, x_name, y_name, coord, x_zmin, x_zmax,
+             y_zmin, y_zmax, kde_cent, frame_kde_cent, clust_rad,
+             pd['kp_flag'], KP_Bys_rc, KP_Bys_rt, KP_Bys_ecc, KP_Bys_theta],
             # pl_mag_membs
             [gs, pd['plot_style'], y_ax, membvsmag],
             # pl_cl_fl_regions: Cluster and field regions defined.

@@ -3,14 +3,65 @@ import numpy as np
 from scipy.spatial.distance import cdist
 import matplotlib.pyplot as plt
 import matplotlib.offsetbox as offsetbox
-from matplotlib import patches as mpatches
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+
+
+def pl_full_frame(
+    gs, fig, project, x_offset, y_offset, x_name, y_name, coord, x_min, x_max,
+        y_min, y_max, asp_ratio, kde_cent, x, y, st_sizes_arr, clust_rad):
+    """
+    x,y finding chart of full frame
+    """
+    ax = plt.subplot(gs[0:4, 0:4])
+    ax.set_aspect(aspect=asp_ratio)
+    ax.set_title(
+        r"$N_{{stars}}$={} (phot incomp)".format(len(x)))
+    # Set plot limits
+    plt.xlim(x_min, x_max)
+    plt.ylim(y_min, y_max)
+    # If RA is used, invert axis.
+    if coord == 'deg':
+        ax.invert_xaxis()
+    # Set axis labels
+    plt.xlabel('{} ({})'.format(x_name, coord))
+    plt.ylabel('{} ({})'.format(y_name, coord))
+
+    N_max = 50000  # HARDCODED
+    if len(x) > N_max:
+        print("  WARNING: too many stars. Plotting {} random samples.".format(
+            N_max))
+        ids = np.random.choice(np.arange(len(x)), N_max, replace=False)
+        x, y = x[ids], y[ids]
+
+    # Plot stars.
+    plt.scatter(x, y, marker='o', c='black', s=st_sizes_arr)
+    # plt.axvline(x=kde_cent[0], linestyle='--', color='green')
+    # plt.axhline(y=kde_cent[1], linestyle='--', color='green')
+    plt.scatter(*kde_cent, marker='x', c='red', s=50)
+    # Radius
+    circle = plt.Circle(
+        (kde_cent[0], kde_cent[1]), clust_rad, color='red', fill=False)
+    ax.add_artist(circle)
+
+    # Add text box
+    r_frmt = '{:.0f}' if coord == 'px' else '{:.5f}'
+    if coord == 'deg' and project:
+        x_cent = (kde_cent[0] / np.cos(np.deg2rad(kde_cent[1] + y_offset))) +\
+            x_offset
+    else:
+        x_cent = kde_cent[0]
+    t1 = (r'${}_{{c}} =$' + r_frmt + r'$\,{}$').format(x_name, x_cent, coord)
+    t2 = (r'${}_{{c}} =$' + r_frmt + r'$\,{}$').format(
+        y_name, kde_cent[1] + y_offset, coord)
+    text = t1 + '\n' + t2
+    ob = offsetbox.AnchoredText(text, pad=0.2, loc=2)
+    ob.patch.set(alpha=0.85)
+    ax.add_artist(ob)
 
 
 def pl_densmap(
     gs, fig, asp_ratio, x_name, y_name, coord, bw_list, kde_cent,
-    frame_kde_cent, fr_dens, clust_rad, kp_flag, KP_Bys_rc, KP_Bys_rt,
-        KP_Bys_ecc, KP_Bys_theta):
+        frame_kde_cent, fr_dens, clust_rad):
     """
     Coordinates 2D KDE.
     """
@@ -18,7 +69,7 @@ def pl_densmap(
     # import warnings
     # warnings.filterwarnings("error")
 
-    ax = plt.subplot(gs[0:2, 0:2])
+    ax = plt.subplot(gs[0:2, 4:6])
     frmt = '{:.4f}' if coord == 'deg' else '{:.0f}'
     ax.set_title((r'$KDE_{{bdw}}$ =' + frmt + ' [{}]').format(
         bw_list[1], coord))
@@ -31,26 +82,6 @@ def pl_densmap(
     circle = plt.Circle(
         (kde_cent[0], kde_cent[1]), clust_rad, color='r', fill=False)
     ax.add_artist(circle)
-
-    # Core and tidal radii
-    if kp_flag:
-        # Plot tidal radius.
-        rt_mode, ecc_mode, theta_mode = KP_Bys_rt[4], KP_Bys_ecc[4],\
-            KP_Bys_theta[4]
-        b = rt_mode * np.sqrt(1. - ecc_mode**2)
-        ellipse = mpatches.Ellipse(
-            xy=kde_cent, width=2. * rt_mode, height=2. * b,
-            angle=np.rad2deg(theta_mode), facecolor='None', edgecolor='g',
-            linewidth=1.5, transform=ax.transData)
-        fig.gca().add_artist(ellipse)
-        # Plot core radius.
-        rc_mode = KP_Bys_rc[4]
-        b = rc_mode * np.sqrt(1. - ecc_mode**2)
-        ellipse = mpatches.Ellipse(
-            xy=kde_cent, width=2. * rc_mode, height=2. * b,
-            angle=np.rad2deg(theta_mode), facecolor='None', edgecolor='g',
-            ls='dashed', linewidth=1., transform=ax.transData)
-        fig.gca().add_artist(ellipse)
 
     ext_range, x_grid, y_grid, k_pos = frame_kde_cent
     kde = np.reshape(k_pos.T, x_grid.shape)
@@ -96,7 +127,7 @@ def pl_knn_dens(
         y_offset, kde_cent, clust_rad):
     """
     """
-    ax = plt.subplot(gs[0:2, 2:4])
+    ax = plt.subplot(gs[2:4, 4:6])
     ax.set_aspect(aspect=asp_ratio)
     # Set plot limits
     plt.xlim(x_min, x_max)
@@ -154,59 +185,6 @@ def pl_knn_dens(
     leg.get_frame().set_alpha(0.7)
 
 
-def pl_full_frame(
-    gs, fig, project, x_offset, y_offset, x_name, y_name, coord, x_min, x_max,
-        y_min, y_max, asp_ratio, kde_cent, x, y, st_sizes_arr, clust_rad):
-    """
-    x,y finding chart of full frame
-    """
-    ax = plt.subplot(gs[0:2, 4:6])
-    ax.set_aspect(aspect=asp_ratio)
-    ax.set_title(
-        r"$N_{{stars}}$={} (phot incomp)".format(len(x)))
-    # Set plot limits
-    plt.xlim(x_min, x_max)
-    plt.ylim(y_min, y_max)
-    # If RA is used, invert axis.
-    if coord == 'deg':
-        ax.invert_xaxis()
-    # Set axis labels
-    plt.xlabel('{} ({})'.format(x_name, coord))
-    plt.ylabel('{} ({})'.format(y_name, coord))
-
-    N_max = 50000  # HARDCODED
-    if len(x) > N_max:
-        print("  WARNING: too many stars. Plotting {} random samples.".format(
-            N_max))
-        ids = np.random.choice(np.arange(len(x)), N_max, replace=False)
-        x, y = x[ids], y[ids]
-
-    # Plot stars.
-    plt.scatter(x, y, marker='o', c='black', s=st_sizes_arr)
-    # plt.axvline(x=kde_cent[0], linestyle='--', color='green')
-    # plt.axhline(y=kde_cent[1], linestyle='--', color='green')
-    plt.scatter(*kde_cent, marker='x', c='red', s=50)
-    # Radius
-    circle = plt.Circle(
-        (kde_cent[0], kde_cent[1]), clust_rad, color='red', fill=False)
-    ax.add_artist(circle)
-
-    # Add text box
-    r_frmt = '{:.0f}' if coord == 'px' else '{:.5f}'
-    if coord == 'deg' and project:
-        x_cent = (kde_cent[0] / np.cos(np.deg2rad(kde_cent[1] + y_offset))) +\
-            x_offset
-    else:
-        x_cent = kde_cent[0]
-    t1 = (r'${}_{{c}} =$' + r_frmt + r'$\,{}$').format(x_name, x_cent, coord)
-    t2 = (r'${}_{{c}} =$' + r_frmt + r'$\,{}$').format(
-        y_name, kde_cent[1] + y_offset, coord)
-    text = t1 + '\n' + t2
-    ob = offsetbox.AnchoredText(text, pad=0.2, loc=2)
-    ob.patch.set(alpha=0.85)
-    ax.add_artist(ob)
-
-
 def pl_field_dens(
     gs, plot_style, coord, fdens_method, fr_dist, fr_dens, fdens_min_d,
         fdens_lst, fdens_std_lst, field_dens_d, field_dens, field_dens_std):
@@ -228,7 +206,7 @@ def pl_field_dens(
     ymin = max(0., min(fr_dens) - delta_y)
     ymax = max(fr_dens) + delta_y
 
-    ax = plt.subplot(gs[2:4, 0:4])
+    ax = plt.subplot(gs[4:6, 0:4])
     ax.set_title(("Method: '{}'").format(fdens_method))
     plt.ylim(ymin, ymax)
     plt.xlabel(r'Distance to center $[{}]$'.format(coord2))
@@ -275,7 +253,7 @@ def pl_centdist_vs_mag(
     else:
         coord2 = 'px'
 
-    ax = plt.subplot(gs[2:4, 4:6])
+    ax = plt.subplot(gs[4:6, 4:6])
     if plot_style == 'asteca':
         ax.grid()
     # plt.xlim(xy_cent_dist.min(), min(xy_cent_dist.max(), clust_rad * 10.))
@@ -309,9 +287,9 @@ def plot(N, *args):
     """
 
     plt_map = {
-        0: [pl_densmap, 'density positional chart'],
-        1: [pl_knn_dens, 'kNN per-star densities'],
-        2: [pl_full_frame, 'full frame'],
+        0: [pl_full_frame, 'full frame'],
+        1: [pl_densmap, 'density positional chart'],
+        2: [pl_knn_dens, 'kNN per-star densities'],
         3: [pl_field_dens, 'Field density'],
         4: [pl_centdist_vs_mag, 'Distance to center vs magnitude']
     }
