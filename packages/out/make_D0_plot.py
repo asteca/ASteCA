@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from . import add_version_plot
 from . import prep_plots
-from ..structure.king_profile import centDensEllipse, KingProf
+from ..structure.king_profile import centDens, KingProf
 from . prep_plots import figsize_x, figsize_y, grid_x, grid_y
 
 
@@ -143,7 +143,7 @@ def main(
         ecc = 0.
         plt.plot(
             r,
-            centDensEllipse(
+            centDens(
                 synth_clust.shape[1], r, rc, rt, ecc) * KingProf(r, rc, rt),
             c='r', label=r"$K_{{cp}}={:.2f}$".format(np.log10(rt / rc)),
             zorder=5)
