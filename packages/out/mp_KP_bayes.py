@@ -19,12 +19,19 @@ def pl_KP_Bys(
     else:
         coord2, dec_places = 'px', "{:.0f}"
 
-    gsy, gsx = (0, 2), (0, 2)
-    BayesPlots.autocorr(
-        gs, gsx, gsy, KP_steps, KP_tau_autocorr, KP_ESS)
+    # Decide how to accommodate the plots
+    if KP_samples.shape[-1] == 2:
+        gsy_AC, gsy_AF = (0, 1), (1, 2)
+        gsy_Hrc, gsy_Hrt, gsy_Hrcrt = (2, 4), (2, 4), (2, 4)
+    elif KP_samples.shape[-1] == 4:
+        gsy_AC, gsy_AF = (0, 2), (2, 4)
+        gsy_Hrc, gsy_Hrt, gsy_Hrcrt = (4, 6), (4, 6), (4, 6)
 
-    gsy, gsx = (2, 4), (0, 2)
-    BayesPlots.meanAF(gs, gsx, gsy, KP_steps, KP_mean_afs)
+    gsx = (0, 2)
+    BayesPlots.autocorr(
+        gs, gsx, gsy_AC, KP_steps, KP_tau_autocorr, KP_ESS)
+    gsx = (0, 2)
+    BayesPlots.meanAF(gs, gsx, gsy_AF, KP_steps, KP_mean_afs)
 
     #
     gsy, gsx = (0, 1), (2, 6)
@@ -38,26 +45,28 @@ def pl_KP_Bys(
         gs, gsx, gsy, KP_samples[:, :, 1], KP_Bys_rt, kp_nburn, xylabel)
 
     # Core vs tidal radii
-    gsy, gsx = (4, 6), (0, 2)
+    gsx = (0, 2)
     xylabel = r"$r_{{c}}$ [{}]".format(coord2)
     BayesPlots.histogram(
-        gs, gsx, gsy, KP_samples[:, :, 0], KP_Bys_rc, KP_Bayes_kde[0],
+        gs, gsx, gsy_Hrc, KP_samples[:, :, 0], KP_Bys_rc, KP_Bayes_kde[0],
         xylabel, dec_places)
     #
-    gsy, gsx = (4, 6), (2, 4)
+    gsx = (2, 4)
     xylabel = r"$r_{{t}}$ [{}]".format(coord2)
     BayesPlots.histogram(
-        gs, gsx, gsy, KP_samples[:, :, 1], KP_Bys_rt, KP_Bayes_kde[1],
+        gs, gsx, gsy_Hrt, KP_samples[:, :, 1], KP_Bys_rt, KP_Bayes_kde[1],
         xylabel, dec_places)
     #
-    gsy, gsx = (4, 6), (4, 6)
+    gsx = (4, 6)
     xylabel = (
         r"$r_{{c}}$ [{}]".format(coord2), r"$r_{{t}}$ [{}]".format(coord2))
     x_samples, y_samples = KP_samples[:, :, 0], KP_samples[:, :, 1]
     BayesPlots.twoParDens(
-        gs, gsx, gsy, x_samples, y_samples, KP_Bys_rc, KP_Bys_rt, xylabel)
+        gs, gsx, gsy_Hrcrt, x_samples, y_samples, KP_Bys_rc, KP_Bys_rt,
+        xylabel)
 
-    try:
+    # Eccentricity, theta
+    if KP_samples.shape[-1] == 4:
         gsy, gsx = (2, 3), (2, 6)
         xylabel = r"$ecc$"
         BayesPlots.traceplot(
@@ -84,9 +93,8 @@ def pl_KP_Bys(
         xylabel = (r"$ecc$", r"$\theta$ [rad]")
         x_samples, y_samples = KP_samples[:, :, 2], KP_samples[:, :, 3]
         BayesPlots.twoParDens(
-            gs, gsx, gsy, x_samples, y_samples, KP_Bys_ecc, KP_Bys_theta, xylabel)
-    except:
-        pass
+            gs, gsx, gsy, x_samples, y_samples, KP_Bys_ecc, KP_Bys_theta,
+            xylabel)
 
 
 def plot(N, *args):
