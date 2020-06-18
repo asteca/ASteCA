@@ -125,7 +125,11 @@ def twoParDens(
 
     plt.xlabel(xylabel[0])
     plt.ylabel(xylabel[1])
-    # xmed, xstd = np.median(KP_samples[:, :, 0]), np.std(KP_samples[:, :, 0])
-    # ymed, ystd = np.median(KP_samples[:, :, 1]), np.std(KP_samples[:, :, 1])
-    # plt.xlim(max(0.01, xmed - xstd), xmed + 2. * xstd)
-    # plt.ylim(max(0.01, ymed - ystd), ymed + 2. * ystd)
+
+    xl, yl = ax.get_xlim(), ax.get_ylim()
+    xmed, xstd = np.median(x_samples), np.std(x_samples)
+    ymed, ystd = np.median(y_samples), np.std(y_samples)
+    x3s_min, x3s_max = xmed - 3. * xstd, xmed + 3. * xstd
+    y3s_min, y3s_max = ymed - 3. * ystd, ymed + 3. * ystd
+    plt.xlim(max(xl[0], x3s_min), min(xl[1], x3s_max))
+    plt.ylim(max(yl[0], y3s_min), min(yl[1], y3s_max))
