@@ -1,5 +1,7 @@
 
 import numpy as np
+from astropy.stats import circmean
+from astropy import units as u
 from scipy import spatial
 import warnings
 from .. import update_progress
@@ -14,20 +16,20 @@ def main(
     Bayesian inference over an array of stars' coordinates using a King
     profile model.
 
+    The previously obtained 'clust_rad' value is used to determine the
+    range where rt should be fitted.
+
     The field density value is fixed to the previously estimated value.
     The central density is inferred from the (rc, rt) values and the previously
-    estimated number of members ('n_memb_i') which is *also* estimated
-    using the field density.
+    estimated number of members ('n_memb_i', which is *also* estimated
+    using the field density), OR estimated per step (also using 'fd').
 
     This means that the value given to the field density has a *very large*
     influence on the final (rc, rt) values.
 
-    I tried setting the field density as as free parameter but, given the
-    form of the likelihood, the sampler tends to maximize its value as much
-    as possible; this is not physically reasonable.
-
-    The previously obtained 'clust_rad' value is used to determine the
-    range where rt should be fitted.
+    I tried setting the field density as as free parameter but the sampler
+    tends to maximize its value as much as possible. This is not physically
+    reasonable.
 
     """
 
@@ -76,32 +78,42 @@ def main(
 
 def fit_King_prof(
     nchains, nruns, nburn, x, y, cl_cent, field_dens, cl_rad, n_memb_i,
-        rt_max_f, N_integ=1000, ndim=4, N_conv=1000, tau_stable=0.05):
+        rt_max_f, N_integ=1000, N_conv=1000, tau_stable=0.05):
     """
     rt_max_f: factor that caps the maximum tidal radius, given the previously
     estimated cluster radius.
-
-    HARDCODED:
-    N_integ : number of values used in the tidal radius array.
-    N_conv
-    tau_stable
     """
 
     from emcee import ensemble
     from emcee import moves
 
-    # HARDCODED
-    # mv = moves.StretchMove()
-    # mv = moves.KDEMove()
+    # HARDCODED ##########################
+    # Move used by emcee
     mv = [
         (moves.DESnookerMove(), 0.1),
         (moves.DEMove(), 0.9 * 0.9),
         (moves.DEMove(gamma0=1.0), 0.9 * 0.1),
     ]
+    # mv = moves.StretchMove()
+    # mv = moves.KDEMove()
 
-    # HARDCODED
     # Steps to store Bayes params.
     KP_steps = int(nruns * .01)
+
+    # Field density and estimated number of members (previously
+    # obtained)
+    fd = field_dens
+
+    # Fix N_memb
+    N_memb = n_memb_i
+    # Estimate N_memb with each sampler step
+    # N_memb = None
+
+    # Select the number of parameters to fit:
+    # ndim = 2 fits (rc, rt)
+    # ndim = 4 fits (rc, rt, ecc, theta)
+    ndim = 2
+    # HARDCODED ##########################
 
     # The tidal radius can not be larger than 'rt_max' times the estimated
     # "optimal" cluster radius. Used as a prior.
@@ -129,17 +141,11 @@ def fit_King_prof(
     xy_cent_dist = spatial.distance.cdist([cl_cent], xy)[0]
     msk = xy_cent_dist <= rt_max
     xy_in = xy[msk].T
-
-    # Fixed values: field density and estimated number of members (previously
-    # obtained)
-    fd = field_dens
-    N_memb = n_memb_i
-    # Estimate N_memb with each sampler step
-    # N_memb = None
+    r_in = xy_cent_dist[msk]
 
     args = {
-        'ndim': ndim, 'rt_max': rt_max, 'rt_rang': rt_rang, 'fd': fd,
-        'N_memb': N_memb, 'xy_in': xy_in, 'cl_cent': cl_cent}
+        'ndim': ndim, 'rt_max': rt_max, 'cl_cent': cl_cent, 'fd': fd,
+        'N_memb': N_memb, 'rt_rang': rt_rang, 'xy_in': xy_in, 'r_in': r_in}
 
     # emcee sampler
     sampler = ensemble.EnsembleSampler(
@@ -171,7 +177,7 @@ def fit_King_prof(
                 break
             old_tau = tau
 
-            # update_progress.updt(nruns, i + 1)
+            update_progress.updt(nruns, i + 1)
 
         KP_mean_afs = afs[:tau_index]
         KP_tau_autocorr = autocorr_vals[:tau_index]
@@ -197,9 +203,13 @@ def fit_King_prof(
             KP_Bayes_kde += [[], []]
 
         elif ndim == 4:
-            ecc, theta = np.mean(samples[:, 2:], 0)
+            ecc = np.mean(samples[:, 2], 0)
+            theta = circmean(samples[:, 3] * u.rad).value
+            # Beware: the median and percentiles for theta might not be
+            # properly defined.
             ecc_16, ecc_50, ecc_84, theta_16, theta_50, theta_84 =\
                 np.percentile(samples[:, 2:], (16, 50, 84), 0).T.flatten()
+            # Estimate the mode
             fp, vi = [
                 [-np.inf, np.inf], [-np.inf, np.inf], [-np.inf, np.inf],
                 [-np.inf, np.inf]], [0, 1, 2, 3]
@@ -210,13 +220,6 @@ def fit_King_prof(
         KP_Bys_rt = np.array([rt_16, rt_50, rt_84, rt, KP_Bys_mode[1]])
         KP_Bys_ecc = np.array([ecc_16, ecc_50, ecc_84, ecc, KP_Bys_mode[2]])
 
-        from astropy.stats import circmean
-        from astropy import units as u
-        print(circmean(samples[:, 2:] * u.rad))
-        print(theta)
-        import pdb; pdb.set_trace()  # breakpoint 0640b18a //
-        
-
         KP_Bys_theta = np.array([
             theta_16, theta_50, theta_84, theta, KP_Bys_mode[3]])
 
@@ -226,14 +229,16 @@ def fit_King_prof(
         # For plotting, (nsteps, nchains, ndim)
         KP_samples = sampler.get_chain()
 
-    # Central density, for plotting.
-    KP_cd = centDensEllipse(N_memb, rt_rang, rc, rt, ecc)
+    # Central density, for plotting. Use mean values for all the parameters.
+    KP_cd = lnlike(
+        (rc, rt, ecc, theta), ndim, rt_max, cl_cent, fd, N_memb, xy_in, r_in,
+        rt_rang, True)
 
     return KP_cd, KP_steps, KP_mean_afs, KP_tau_autocorr, KP_ESS, KP_samples,\
         KP_Bys_rc, KP_Bys_rt, KP_Bys_ecc, KP_Bys_theta, KP_Bayes_kde
 
 
-def lnprob(pars, ndim, rt_rang, fd, N_memb, xy_in, cl_cent, rt_max):
+def lnprob(pars, ndim, rt_max, cl_cent, fd, N_memb, xy_in, r_in, rt_rang):
     """
     Logarithmic posterior
     """
@@ -248,47 +253,52 @@ def lnprob(pars, ndim, rt_rang, fd, N_memb, xy_in, cl_cent, rt_max):
             theta < 0. or theta > np.pi:
         return -np.inf
 
-    return lnlike((rc, rt, ecc, theta), rt_rang, fd, N_memb, xy_in, cl_cent)
+    return lnlike(
+        (rc, rt, ecc, theta), ndim, rt_max, cl_cent, fd, N_memb, xy_in, r_in,
+        rt_rang)
 
 
-def lnlike(pars, rt_rang, fd, N_memb, xy_in, cl_cent):
+def lnlike(
+    pars, ndim, rt_max, cl_cent, fd, N_memb, xy_in, r_in, rt_rang,
+        return_dens=False):
     """
     As defined in Pieres et al. (2016)
     """
     rc, rt, ecc, theta = pars
-    x, y = xy_in
 
-    # Identify stars inside this ellipse
-    in_ellip_msk = inEllipse(xy_in, cl_cent, rt, ecc, theta)
+    if ndim == 2:
+        # Values outside the tidal radius contribute 'fd' to the likelihood.
+        r_in = np.clip(r_in, a_min=0., a_max=rt)
+        N_in_region = r_in.size
+        # Evaluate each star in King's profile
+        KP = KingProf(r_in, rc, rt)
+
+    elif ndim == 4:
+        x, y = xy_in
+        # Identify stars inside this ellipse
+        in_ellip_msk = inEllipse(xy_in, cl_cent, rt, ecc, theta)
+        N_in_region = in_ellip_msk.sum()
+
+        # General form of the ellipse
+        # https://math.stackexchange.com/a/434482/37846
+        dx, dy = x - cl_cent[0], y - cl_cent[1]
+        x1 = dx * np.cos(theta) + dy * np.sin(theta)
+        y1 = dx * np.sin(theta) - dy * np.cos(theta)
+        # The 'width' ('a') is used instead of the radius 'r' (sqrt(x**2+y**2))
+        # in King's profile, for each star
+        a_xy = np.sqrt(x1**2 + y1**2 / (1. - ecc**2))
+
+        # Values outside the ellipse contribute only 'fd' to the likelihood.
+        a_xy[~in_ellip_msk] = rt
+        KP = KingProf(a_xy, rc, rt)
 
     if N_memb is None:
-        # Clculate the number of true members as the total number of stars
-        # inside the ellipse, minus the expected number of field stars in the
-        # area
-        N_in_ellipse = in_ellip_msk.sum()
-        a = rt
-        b = a * np.sqrt(1. - ecc**2)
-        N_field_stars = (np.pi * a * b) * fd
-        N_memb = N_in_ellipse - N_field_stars
-        # Minimum value is 1
-        N_memb = max(1, N_memb)
+        N_memb = NmembEst(ndim, fd, N_in_region, rt_max, rt, ecc)
 
     # Central density
-    k = centDensEllipse(N_memb, rt_rang, rc, rt, ecc)
-
-    # General form of the ellipse
-    # https://math.stackexchange.com/a/434482/37846
-    dx, dy = x - cl_cent[0], y - cl_cent[1]
-    x1 = dx * np.cos(theta) + dy * np.sin(theta)
-    y1 = dx * np.sin(theta) - dy * np.cos(theta)
-    # The 'width' ('a') is used instead of the radius 'r' (sqrt(x**2+y**2))
-    # in King's profile, for each star
-    a_xy = np.sqrt(x1**2 + y1**2 / (1. - ecc**2))
-
-    # Values outside the ellipse contribute only 'fd' to the likelihood.
-    a_xy[~in_ellip_msk] = rt
-    # Evaluate each star in King's profile
-    KP = KingProf(a_xy, rc, rt)
+    k = centDens(N_memb, rt_rang, rc, rt, ecc)
+    if return_dens is True:
+        return k
 
     # Likelihood
     li = k * KP + fd
@@ -296,11 +306,26 @@ def lnlike(pars, rt_rang, fd, N_memb, xy_in, cl_cent):
     # Sum of log-likelighood
     sum_log_lkl = np.log(li).sum()
 
-    # if np.random.randint(200) == 50:
-    #     print("{:.1f} {:.4f} {:.0f} {} {:.2f}".format(
-    #         sum_log_lkl, rt, N_memb, N_in_ellipse, N_memb * k))
-
     return sum_log_lkl
+
+
+def NmembEst(ndim, fd, N_in_region, rt_max, rt, ecc):
+    """
+    The number of true members is estimated as the total number of stars
+    inside the region, minus the expected number of field stars in
+    the region.
+    """
+    if ndim == 2:
+        N_field_stars = fd * rt_max**2
+    elif ndim == 4:
+        a = rt
+        b = a * np.sqrt(1. - ecc**2)
+        N_field_stars = (np.pi * a * b) * fd
+
+    N_memb = N_in_region - N_field_stars
+    # Minimum value is 1
+    N_memb = max(1, N_memb)
+    return N_memb
 
 
 def inEllipse(xy_in, cl_cent, rt, ecc, theta):
@@ -337,7 +362,7 @@ def inEllipse(xy_in, cl_cent, rt, ecc, theta):
     return in_ellip_msk
 
 
-def centDensEllipse(N_memb, arr, rc, rt, ecc):
+def centDens(N_memb, arr, rc, rt, ecc):
     """
     Central density constant. Integrate up to rt.
 
@@ -345,8 +370,8 @@ def centDensEllipse(N_memb, arr, rc, rt, ecc):
     """
     i = np.searchsorted(arr, rt)
     b = arr[:i] * np.sqrt(1. - ecc**2)
-    ell_integ = np.trapz(2. * np.pi * b * KingProf(arr[:i], rc, rt), arr[:i])
-    return N_memb / ell_integ
+    integ = np.trapz(2. * np.pi * b * KingProf(arr[:i], rc, rt), arr[:i])
+    return N_memb / integ
 
 
 def KingProf(r_in, rc, rt):
@@ -376,7 +401,7 @@ def num_memb_conc_param(cd, rc, rt):
 
 
 #############################################################################
-# All the code below is for testing purposes
+# All the code below is for testing purposes only
 
 # def NmembEst(fd, r_in, rt_max):
 #     """
