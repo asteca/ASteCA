@@ -3,12 +3,14 @@ import numpy as np
 from scipy.spatial.distance import cdist
 import matplotlib.pyplot as plt
 import matplotlib.offsetbox as offsetbox
+from matplotlib import patches as mpatches
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 
 def pl_densmap(
     gs, fig, asp_ratio, x_name, y_name, coord, bw_list, kde_cent,
-        frame_kde_cent, fr_dens, clust_rad):
+    frame_kde_cent, fr_dens, clust_rad, kp_flag, KP_Bys_rc, KP_Bys_rt,
+        KP_Bys_ecc, KP_Bys_theta):
     """
     Coordinates 2D KDE.
     """
@@ -23,12 +25,32 @@ def pl_densmap(
     plt.xlabel('{} ({})'.format(x_name, coord))
     plt.ylabel('{} ({})'.format(y_name, coord))
 
-    plt.axvline(x=kde_cent[0], linestyle='--', lw=1., color='green')
-    plt.axhline(y=kde_cent[1], linestyle='--', lw=1., color='green')
+    plt.axvline(x=kde_cent[0], linestyle='--', lw=1., color='white')
+    plt.axhline(y=kde_cent[1], linestyle='--', lw=1., color='white')
     # Radius
     circle = plt.Circle(
-        (kde_cent[0], kde_cent[1]), clust_rad, color='green', fill=False)
+        (kde_cent[0], kde_cent[1]), clust_rad, color='r', fill=False)
     ax.add_artist(circle)
+
+    # Core and tidal radii
+    if kp_flag:
+        # Plot tidal radius.
+        rt_mode, ecc_mode, theta_mode = KP_Bys_rt[4], KP_Bys_ecc[4],\
+            KP_Bys_theta[4]
+        b = rt_mode * np.sqrt(1. - ecc_mode**2)
+        ellipse = mpatches.Ellipse(
+            xy=kde_cent, width=2. * rt_mode, height=2. * b,
+            angle=np.rad2deg(theta_mode), facecolor='None', edgecolor='g',
+            linewidth=1.5, transform=ax.transData)
+        fig.gca().add_artist(ellipse)
+        # Plot core radius.
+        rc_mode = KP_Bys_rc[4]
+        b = rc_mode * np.sqrt(1. - ecc_mode**2)
+        ellipse = mpatches.Ellipse(
+            xy=kde_cent, width=2. * rc_mode, height=2. * b,
+            angle=np.rad2deg(theta_mode), facecolor='None', edgecolor='g',
+            ls='dashed', linewidth=1., transform=ax.transData)
+        fig.gca().add_artist(ellipse)
 
     ext_range, x_grid, y_grid, k_pos = frame_kde_cent
     kde = np.reshape(k_pos.T, x_grid.shape)
@@ -70,8 +92,8 @@ def pl_densmap(
 
 def pl_knn_dens(
     gs, fig, plot_style, asp_ratio, x_min, x_max, y_min, y_max, x_name,
-    y_name, coord, NN_dd, xy_filtered, fr_dens, NN_dist, kde_cent,
-        clust_rad):
+    y_name, coord, NN_dd, xy_filtered, fr_dens, NN_dist, project, x_offset,
+        y_offset, kde_cent, clust_rad):
     """
     """
     ax = plt.subplot(gs[0:2, 2:4])
@@ -110,7 +132,15 @@ def pl_knn_dens(
         (xy_filtered[idx][0], xy_filtered[idx][1]), NN_dist[idx], color='r',
         lw=1., fill=False, zorder=5)
     fig.gca().add_artist(circle)
-    plt.plot([], [], color='r', lw=2., label=r"$dens_{max}$")
+    # Add coords to legend
+    r_frmt = '{:.0f}' if coord == 'px' else '{:.5f}'
+    x_max_dens = xy_filtered[idx][0]
+    y_max_dens = xy_filtered[idx][1] + y_offset
+    if coord == 'deg' and project:
+        x_max_dens = (
+            x_max_dens / np.cos(np.deg2rad(y_max_dens + y_offset))) + x_offset
+    t1 = ('(' + r_frmt + ',\n' + r_frmt + ')').format(x_max_dens, y_max_dens)
+    plt.plot([], [], color='r', lw=2., label=r"$dens_{max}$" + "\n" + t1)
 
     # Assigned center.
     plt.scatter(kde_cent[0], kde_cent[1], color='g', s=40, lw=1.5,

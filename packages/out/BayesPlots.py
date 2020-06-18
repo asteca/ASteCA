@@ -110,11 +110,12 @@ def meanAF(gs, gsx, gsy, Nsteps, mean_afs):
     plt.legend()
 
 
-def twoParDens(gs, gsx, gsy, KP_samples, KP_Bys_rc, KP_Bys_rt, xylabel):
+def twoParDens(
+        gs, gsx, gsy, x_samples, y_samples, KP_Bys_rc, KP_Bys_rt, xylabel):
     """
     """
     ax = plt.subplot(gs[gsy[0]:gsy[1], gsx[0]:gsx[1]])
-    hist2d(ax, KP_samples[:, :, 0], KP_samples[:, :, 1])
+    hist2d(ax, x_samples, y_samples)
     plt.scatter(
         KP_Bys_rc[1], KP_Bys_rt[1], marker='x', c='green', s=50, zorder=5)
     plt.scatter(
@@ -124,7 +125,11 @@ def twoParDens(gs, gsx, gsy, KP_samples, KP_Bys_rc, KP_Bys_rt, xylabel):
 
     plt.xlabel(xylabel[0])
     plt.ylabel(xylabel[1])
-    # xmed, xstd = np.median(KP_samples[:, :, 0]), np.std(KP_samples[:, :, 0])
-    # ymed, ystd = np.median(KP_samples[:, :, 1]), np.std(KP_samples[:, :, 1])
-    # plt.xlim(max(0.01, xmed - xstd), xmed + 2. * xstd)
-    # plt.ylim(max(0.01, ymed - ystd), ymed + 2. * ystd)
+
+    xl, yl = ax.get_xlim(), ax.get_ylim()
+    xmed, xstd = np.median(x_samples), np.std(x_samples)
+    ymed, ystd = np.median(y_samples), np.std(y_samples)
+    x3s_min, x3s_max = xmed - 3. * xstd, xmed + 3. * xstd
+    y3s_min, y3s_max = ymed - 3. * ystd, ymed + 3. * ystd
+    plt.xlim(max(xl[0], x3s_min), min(xl[1], x3s_max))
+    plt.ylim(max(yl[0], y3s_min), min(yl[1], y3s_max))

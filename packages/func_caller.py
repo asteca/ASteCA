@@ -115,12 +115,6 @@ def main(cl_file, pd):
     # Cluster radius
     clp = radius.main(cld_i, clp, **pd)
 
-    # Uses the incomplete data.
-    make_A2_plot.main(npd, cld_i, pd, **clp)
-    if pd['stop_idx'] == 'A2':
-        retFunc(npd['clust_name'], start)
-        return
-
     # Cluster's area and total number of stars within the cluster region.
     clp = cluster_area.main(clp, **cld_i)
 
@@ -129,6 +123,12 @@ def main(cl_file, pd):
 
     # King profiles based on the density profiles.
     clp = king_profile.main(clp, cld_i, **pd)
+
+    # Uses the incomplete data.
+    make_A2_plot.main(npd, cld_i, pd, **clp)
+    if pd['stop_idx'] == 'A2':
+        retFunc(npd['clust_name'], start)
+        return
 
     # ^ All the functions above use the *photo incomplete* dataset 'cld_i'
 
