@@ -152,7 +152,7 @@ S1         .0         n   10          iter         0
 #   the radius obtained in the previous step.
 #
 #   flag   nchains   nruns  nburn    rt_max
-S2     n        20    5000    .25         2
+S2     y        20    5000    .25         2
 
 # Field stars regions.
 #
