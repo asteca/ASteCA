@@ -1,9 +1,15 @@
 
 
 def main(pd, clust_name, **kwargs):
-    '''
+    """
+    Read the range values for trimming the frame, if given.
     Read manual center, radius and number of field regions for this cluster.
-    '''
+    """
+
+    pd['flag_tf'], pd['tf_range'] = False, [0., 0., 0., 0.]
+    for line in pd['trim_frame_range']:
+        if line[0] == clust_name:
+            pd['flag_tf'], pd['tf_range'] = True, line[1]
 
     # Fill with dummy values since these variables are required later on.
     pd['cent_manual'], pd['rad_manual'], pd['f_regs_manual'] = 'n', 'n', 'n'

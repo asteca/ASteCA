@@ -1,0 +1,46 @@
+# MATPLOTLIBRC FORMAT
+#
+# There are *many* more parameters than the ones used here. See
+# https://matplotlib.org/users/customizing.html for more details.
+
+
+# ***************************************************************************
+# * AXES                                                                    *
+# ***************************************************************************
+# See https://matplotlib.org/api/axes_api.html#module-matplotlib.axes
+axes.grid.axis     : both    ## which axis the grid should apply to
+axes.grid.which    : major   ## gridlines at {major, minor, both} ticks
+axes.titlesize     : 9       ## fontsize of the axes title
+axes.labelsize     : 10      ## fontsize of the x any y labels
+
+
+# ***************************************************************************
+# * TICKS                                                                   *
+# ***************************************************************************
+# See https://matplotlib.org/api/axis_api.html#matplotlib.axis.Tick
+xtick.labelsize     : 9.5    ## fontsize of the tick labels
+xtick.minor.visible : True   ## visibility of minor ticks on x-axis
+ytick.labelsize     : 9.5    ## fontsize of the tick labels
+ytick.minor.visible : True   ## visibility of minor ticks on y-axis
+
+
+# ***************************************************************************
+# * GRIDS                                                                   *
+# ***************************************************************************
+grid.color     : grey    ## grid color
+grid.linestyle : -       ## solid
+grid.linewidth : 0.25    ## in points
+grid.alpha     : 1.0     ## transparency, between 0.0 and 1.0
+
+
+# ***************************************************************************
+# * LEGEND                                                                  *
+# ***************************************************************************
+legend.fontsize      : 9.5
+
+
+# ***************************************************************************
+# * SAVING FIGURES                                                          *
+# ***************************************************************************
+savefig.dpi       : 150         ## figure dots per inch or 'figure'
+savefig.format    : png         ## {png, ps, pdf, svg}

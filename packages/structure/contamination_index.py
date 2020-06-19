@@ -9,31 +9,27 @@ def main(clp, x, y, mags, **kwargs):
     ratio of field stars density over the density of stars in the cluster
     region. Uses the 'incomplete' data.
 
-    A small number (close to zero) means the field contamination in the
-    cluster region is very small.
-    If this number equals 0.5, it means that an equal number of field stars
-    and cluster members are expected inside the cluster region. A value of
-    1 means there are no expected cluster members inside the cluster region
-    (which isn't a good sign).
+    CI ~ 0.0 -> the field contamination in the cluster region is very small.
+    CI ~ 0.5 -> an equal number of field stars and cluster members are
+    expected inside the cluster region.
+    CI ~ 1.0 -> there are no expected cluster members inside the cluster region
+    (not a good sign).
     """
 
-    # If the cluster radius exceeds the length of the area where the field
-    # density value was obtained (ie: the extension of the RDP), then do not
-    # obtain the 'cont_index' parameter since the field density does not
-    # represent the density of the field but rather the density of the
-    # outermost regions of the cluster.
-    if clp['clust_rad'] < clp['rdp_radii'][-1]:
+    # If the cluster's area is less than 10% of the full frame's area, don't
+    # estimate the CI.
+    frame_area = np.ptp(x) * np.ptp(y)
+    if (frame_area - clp['cl_area']) / frame_area > .1:
 
         # Count the total number of stars within the defined cluster region
         # (including stars with rejected photometric errors)
         dist = cdist([clp['kde_cent']], np.array([x, y]).T)[0]
+        n_in_cl_reg = (dist < clp['clust_rad']).sum()
 
+        # Estimated number of members versus maximum magnitude. For plotting.
         membvsmag = NmembVsMag(
             x, y, mags[0], clp['clust_rad'], clp['cl_area'], clp['field_dens'],
             dist)
-
-        # cdist(np.array([x, y]).T, np.atleast_2d(clp['kde_cent']))
-        n_in_cl_reg = (dist < clp['clust_rad']).sum()
 
         # Final contamination index.
         cont_index, n_memb_i, _ = CIfunc(
@@ -81,7 +77,9 @@ def NmembVsMag(x, y, mag, clust_rad, cl_area, field_dens, cent_dists):
     area_out = area_tot - cl_area
 
     membvsmag = []
-    mag_ranges = np.linspace(mag.min(), mag.max(), 11)
+    mag_ranges = np.linspace(np.nanmin(mag), np.nanmax(mag), 11)
+    # handle possible nan values
+    mag[np.isnan(mag)] = np.inf
     for i, mmax in enumerate(mag_ranges[1:]):
         msk = mag < mmax
         if msk.sum() > 2:

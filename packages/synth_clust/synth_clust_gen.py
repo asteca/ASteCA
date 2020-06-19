@@ -177,7 +177,7 @@ def xyCoords(N_clust, CI, rc, rt, xmax, ymax, cx, cy):
     """
     """
 
-    # Estimate number fo field stars, given CI, N_clust, and rt
+    # Estimate number of field stars, given CI, N_clust, and rt
     area_frame = xmax * ymax
     area_cl = np.pi * rt**2
 

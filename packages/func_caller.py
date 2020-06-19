@@ -11,7 +11,6 @@ from .structure import xy_density
 from .structure import center
 from .structure import radius
 from .structure import field_density
-from .structure import radial_dens_prof
 from .structure import integMags
 from .structure import cluster_area
 from .structure import contamination_index
@@ -36,7 +35,6 @@ from .data_analysis import pms_analysis
 from .out import inparams_out
 from .out import cluster_members_file
 from .best_fit import best_fit_synth_cl
-from .out import mcmc_samples
 from .out import synth_cl_file
 from .out import massFunction  # TODO
 from .out import create_out_data_file
@@ -54,6 +52,7 @@ from .out import make_C2_plot
 from .out import make_C3_plot
 from .out import make_D1_plot
 from .out import make_D2_plot
+from .out import make_D3_plot
 
 
 def main(cl_file, pd):
@@ -109,9 +108,6 @@ def main(cl_file, pd):
 
     # Field density value in stars/<area unit>.
     clp = field_density.main(clp, cld_i, **pd)
-
-    # RDP. For plotting purposes only.
-    clp = radial_dens_prof.main(clp, **pd)
 
     # Integrated magnitude. For plotting purposes only.
     clp = integMags.main(clp, **cld_i)
@@ -264,9 +260,6 @@ def main(cl_file, pd):
         retFunc(npd['clust_name'], start)
         return
 
-    # Save MCMC samples to file (if MCMC sampler was used)
-    mcmc_samples.main(clp, pd, **npd)
-
     # Create output synthetic cluster file if one was found
     clp = synth_cl_file.main(clp, npd, **pd)
 
@@ -279,14 +272,19 @@ def main(cl_file, pd):
     # Add cluster data output file
     add_data_output.main(npd, pd, **clp)
 
-    # Plot result of best match algorithm.
+    # Convergence plots.
     make_D1_plot.main(npd, pd, **clp)
     if pd['stop_idx'] == 'D1':
         retFunc(npd['clust_name'], start)
         return
+    # Corner plot.
+    make_D2_plot.main(npd, pd, **clp)
+    if pd['stop_idx'] == 'D2':
+        retFunc(npd['clust_name'], start)
+        return
 
     # Plot final best match found.
-    make_D2_plot.main(npd, pd, **clp)
+    make_D3_plot.main(npd, pd, **clp)
     retFunc(npd['clust_name'], start)
 
 

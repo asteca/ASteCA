@@ -3,8 +3,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.offsetbox as offsetbox
 from matplotlib.colors import LinearSegmentedColormap, LogNorm, ListedColormap
-from . prep_plots import xylabelsize, xytickssize, titlesize, legendsize,\
-    grid_col, grid_ls, grid_lw
 
 
 def pl_mps_phot_diag(
@@ -16,29 +14,28 @@ def pl_mps_phot_diag(
     """
     ax = plt.subplot(gs[gs_y1:gs_y2, 0:2])
     # Set axis labels
-    plt.xlabel('$' + x_ax + '$', fontsize=xylabelsize)
-    plt.ylabel('$' + y_ax + '$', fontsize=xylabelsize)
+    plt.xlabel('$' + x_ax + '$')
+    plt.ylabel('$' + y_ax + '$')
     # Add text box.
     if gs_y1 == 0:
         text = '$N_{{fit}}={}$'.format(len(obs_MPs))
-        ob = offsetbox.AnchoredText(text, loc=4, prop=dict(size=legendsize))
+        ob = offsetbox.AnchoredText(text, loc=4)
         ob.patch.set(boxstyle='square,pad=-0.2', alpha=0.85)
         ax.add_artist(ob)
 
-    ax.minorticks_on()
-    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
     if gs_y1 == 0:
         txt = r" + $\mathcal{N}(\mu,\sigma^2)$" if phot_Nsigma else ""
-        ax.set_title("Observed" + txt, fontsize=titlesize)
+        ax.set_title("Observed" + txt)
+
     # Plot grid.
+    gls, glw, gc = plt.rcParams['grid.linestyle'],\
+        plt.rcParams['grid.linewidth'], plt.rcParams['grid.color']
     for x_ed in hess_xedges:
         # vertical lines
-        ax.axvline(
-            x_ed, linestyle=grid_ls, lw=grid_lw, color=grid_col, zorder=1)
+        ax.axvline(x_ed, linestyle=gls, lw=glw, color=gc, zorder=1)
     for y_ed in hess_yedges:
         # horizontal lines
-            ax.axhline(
-                y_ed, linestyle=grid_ls, lw=grid_lw, color=grid_col, zorder=1)
+        ax.axhline(y_ed, linestyle=gls, lw=glw, color=gc, zorder=1)
     # This reversed colormap means higher prob stars will look redder.
     rmap = plt.cm.get_cmap('RdYlBu_r')
     # If the 'tolstoy' method was used AND the stars have a range of colors.
@@ -100,20 +97,18 @@ def pl_hess_diag(
     plt.xlim(x_min_cmd, x_max_cmd)
     plt.ylim(y_min_cmd, y_max_cmd)
     # Set axis labels
-    plt.xlabel('$' + x_ax + '$', fontsize=xylabelsize)
-    # Set minor ticks
-    ax.minorticks_on()
-    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
+    plt.xlabel('$' + x_ax + '$')
     if gs_y1 == 0:
-        ax.set_title("Hess diagram (observed - synthetic)", fontsize=titlesize)
+        ax.set_title("Hess diagram (observed - synthetic)")
+
+    gls, glw, gc = plt.rcParams['grid.linestyle'],\
+        plt.rcParams['grid.linewidth'], plt.rcParams['grid.color']
     for x_ed in hess_xedges:
         # vertical lines
-        ax.axvline(x_ed, linestyle=grid_ls, lw=grid_lw, color=grid_col,
-                   zorder=1)
+        ax.axvline(x_ed, linestyle=gls, lw=glw, color=gc, zorder=1)
     for y_ed in hess_yedges:
         # horizontal lines
-        ax.axhline(y_ed, linestyle=grid_ls, lw=grid_lw, color=grid_col,
-                   zorder=1)
+        ax.axhline(y_ed, linestyle=gls, lw=glw, color=gc, zorder=1)
     if HD.any():
         # Add text box.
         if HD.min() < 0:
@@ -141,7 +136,7 @@ def pl_hess_diag(
         handles, labels = ax.get_legend_handles_labels()
         leg = ax.legend(
             handles, labels, loc='lower right', scatterpoints=1, ncol=2,
-            columnspacing=.2, handletextpad=-.3, fontsize=legendsize)
+            columnspacing=.2, handletextpad=-.3)
         leg.get_frame().set_alpha(0.7)
 
 
@@ -158,26 +153,24 @@ def pl_bf_synth_cl(
     plt.xlim(x_min_cmd, x_max_cmd)
     plt.ylim(y_min_cmd, y_max_cmd)
     # Set axis labels
-    plt.xlabel('$' + x_ax + '$', fontsize=xylabelsize)
-    # Set minor ticks
-    ax.minorticks_on()
-    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
+    plt.xlabel('$' + x_ax + '$')
+
     if gs_y1 == 0:
-        ax.set_title("Synthetic (best match)", fontsize=titlesize)
+        ax.set_title("Synthetic (mean solution)")
         # Add text box
-        text = '$({};\,{})$'.format(lkl_method, bin_method)
-        ob = offsetbox.AnchoredText(
-            text, pad=.2, loc=1, prop=dict(size=legendsize))
+        text = r'$({};\,{})$'.format(lkl_method, bin_method)
+        ob = offsetbox.AnchoredText(text, pad=.2, loc=1)
         ob.patch.set(alpha=0.85)
         ax.add_artist(ob)
+
+    gls, glw, gc = plt.rcParams['grid.linestyle'],\
+        plt.rcParams['grid.linewidth'], plt.rcParams['grid.color']
     for x_ed in hess_xedges:
         # vertical lines
-        ax.axvline(
-            x_ed, linestyle=grid_ls, lw=grid_lw, color=grid_col, zorder=1)
+        ax.axvline(x_ed, linestyle=gls, lw=glw, color=gc, zorder=1)
     for y_ed in hess_yedges:
         # horizontal lines
-            ax.axhline(
-                y_ed, linestyle=grid_ls, lw=grid_lw, color=grid_col, zorder=1)
+        ax.axhline(y_ed, linestyle=gls, lw=glw, color=gc, zorder=1)
     # Plot synthetic cluster.
     single_idx, bin_idx = binar_idx <= 1., binar_idx > 1.
     # Single systems
@@ -193,8 +186,7 @@ def pl_bf_synth_cl(
     if gs_y1 == 0:
         # Add text box
         text1 = '$N_{{synth}} = {}$'.format(len(x_synth))
-        ob = offsetbox.AnchoredText(
-            text1, pad=.2, loc=3, prop=dict(size=legendsize))
+        ob = offsetbox.AnchoredText(text1, pad=.2, loc=3)
         ob.patch.set(alpha=0.85)
         ax.add_artist(ob)
 
@@ -206,7 +198,7 @@ def pl_bf_synth_cl(
             all_evol_tracks[evol_track][2]
         t1 = r'$Synthetic\;cluster\;parameters$' + '\n[{}]'.format(iso_print)
         t2 = r'$IMF \hspace{{3.}}:\;{}$'.format(
-            IMF_name.replace('_', '\;').title())
+            IMF_name.replace('_', r'\;').title())
         t3 = r'$R_{{V}} \hspace{{3.2}}=\;{}$'.format(R_V)
         t4 = r'$z \hspace{{3.9}}=\;{:.5f}\pm {:.5f}$'.format(
             best_sol[0], p_err[0][2])
@@ -222,8 +214,7 @@ def pl_bf_synth_cl(
             best_sol[5], p_err[5][2])
         text = t1 + '\n\n' + t2 + '\n' + t3 + '\n' + t4 + '\n' + t5 + '\n' +\
             t6 + '\n' + t7 + '\n' + t8 + '\n' + t9
-        ob = offsetbox.AnchoredText(
-            text, pad=1, loc=6, borderpad=-5, prop=dict(size=legendsize))
+        ob = offsetbox.AnchoredText(text, pad=1, loc=6, borderpad=-5)
         ob.patch.set(alpha=0.85)
         ax_t.add_artist(ob)
 

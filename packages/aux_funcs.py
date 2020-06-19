@@ -41,16 +41,16 @@ def reject_outliers(data, m=4.):
     return data[msk]
 
 
-def kde1D(data):
+def kde1D(data, xmin=None, xmax=None, bw=None, xr_fr=.1):
     """
     1D KDE.
     """
-    # Cluster region KDE curve.
-    xmin, xmax = np.min(data), np.max(data)
+    if xmin is None and xmax is None:
+        xmin, xmax = np.min(data), np.max(data)
     # Define KDE limits.
-    x_rang = .1 * (xmax - xmin)
+    x_rang = xr_fr * (xmax - xmin)
     kde_x = np.mgrid[xmin - x_rang:xmax + x_rang:1000j]
-    kernel_cl = stats.gaussian_kde(data)
+    kernel_cl = stats.gaussian_kde(data, bw_method=bw)
     # KDE for plotting.
     kde = np.reshape(kernel_cl(kde_x).T, kde_x.shape)
 

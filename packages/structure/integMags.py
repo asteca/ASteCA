@@ -14,7 +14,7 @@ def main(clp, x, y, mags, N_dists=50, **kwargs):
     rdp_dists_cent = spatial.distance.cdist([clp['kde_cent']], xy)[0]
 
     dists = np.linspace(
-        np.percentile(rdp_dists_cent, 1), np.percentile(rdp_dists_cent, 50),
+        np.percentile(rdp_dists_cent, 1), np.percentile(rdp_dists_cent, 99),
         N_dists)
 
     integ_dists, integ_mags = [], []

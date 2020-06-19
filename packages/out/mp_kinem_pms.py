@@ -4,25 +4,20 @@ from matplotlib.colors import Normalize
 from matplotlib.patches import Ellipse, Rectangle
 import numpy as np
 from astropy.stats import sigma_clipped_stats
-from . prep_plots import xylabelsize, xytickssize, titlesize, cbarlabelsize,\
-    cbartickssize, legendsize, grid_col, grid_ls, grid_lw
 
 
-def pms_VPD_all(gs, xlabel, PM_KDE_std, coord, y_ax, allfr_PMs):
+def pms_VPD_all(gs, plot_style, xlabel, PM_KDE_std, coord, y_ax, allfr_PMs):
     """
     PMs for all the frame.
     """
 
     ax = plt.subplot(gs[0:2, 0:2])
     ax.set_title(
-        r'All stars in frame + KDE ($\mu\pm\sigma={:.2f}$)'.format(PM_KDE_std),
-        fontsize=titlesize)
-    ax.minorticks_on()
-    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
-    ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
-            lw=grid_lw, zorder=-1)
-    plt.xlabel(xlabel, fontsize=xylabelsize)
-    plt.ylabel(r"$\mu_{{\delta}} \, \mathrm{[mas/yr]}$", fontsize=xylabelsize)
+        r'All stars in frame + KDE ($\mu\pm\sigma={:.2f}$)'.format(PM_KDE_std))
+    if plot_style == 'asteca':
+        ax.grid()
+    plt.xlabel(xlabel)
+    plt.ylabel(r"$\mu_{{\delta}} \, \mathrm{[mas/yr]}$")
 
     cmap = plt.cm.get_cmap('viridis')
     mmag = allfr_PMs['mmag']
@@ -33,9 +28,9 @@ def pms_VPD_all(gs, xlabel, PM_KDE_std, coord, y_ax, allfr_PMs):
         pmRA_all, pmDE_all, s=8, c=mag, cmap=cmap,
         edgecolor='k', lw=.2, zorder=3)
     cbar = plt.colorbar(pad=.01, fraction=.02, aspect=50)
-    cbar.ax.tick_params(labelsize=cbartickssize)
+    cbar.ax.minorticks_off()
     cbar.ax.invert_yaxis()
-    cbar.set_label(y_ax, size=cbarlabelsize)
+    cbar.set_label(y_ax)
 
     ra_mean, ra_median, ra_std = sigma_clipped_stats(pmRA_all)
     de_mean, de_median, de_std = sigma_clipped_stats(pmDE_all)
@@ -50,10 +45,9 @@ def pms_VPD_KDE_all(gs, xlabel, coord, y_ax, allr_KDE_PMs, xydelta, xyrang):
     PMx, PMy, PMz = allr_KDE_PMs['x'], allr_KDE_PMs['y'], allr_KDE_PMs['z']
 
     ax = plt.subplot(gs[0:2, 2:4])
-    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
-    ax.set_title("All stars KDE (zoomed)", fontsize=titlesize)
-    plt.xlabel(xlabel, fontsize=xylabelsize)
-    plt.ylabel(r"$\mu_{{\delta}} \, \mathrm{[mas/yr]}$", fontsize=xylabelsize)
+    ax.set_title("All stars KDE (zoomed)")
+    plt.xlabel(xlabel)
+    plt.ylabel(r"$\mu_{{\delta}} \, \mathrm{[mas/yr]}$")
 
     # Zoom +/-1 sigma around the max density value.
     xmax, ymax = allr_KDE_PMs['zmax_x'], allr_KDE_PMs['zmax_y']
@@ -75,26 +69,24 @@ def pms_VPD_KDE_all(gs, xlabel, coord, y_ax, allr_KDE_PMs, xydelta, xyrang):
         facecolor='none', zorder=10)
     ax.add_patch(rect)
 
-    plt.legend(fontsize=legendsize)
+    plt.legend()
     plt.xlim(zmax_x - xyrang, zmax_x + xyrang)
     plt.ylim(zmax_y - xyrang, zmax_y + xyrang)
 
 
 def pms_coords_all(
-    fig, gs, coord, x_min, x_max, y_min, y_max, asp_ratio, x_name, y_name,
-        kde_cent, clust_rad, allfr_PMs, allr_KDE_PMs, xydelta):
+    fig, gs, plot_style, coord, x_min, x_max, y_min, y_max, asp_ratio, x_name,
+        y_name, kde_cent, clust_rad, allfr_PMs, allr_KDE_PMs, xydelta):
     """
     """
     ax = plt.subplot(gs[0:2, 4:6])
     ax.set_title(
-        "In square w,h: {:.3f} [mas/yr]".format(2. * xydelta),
-        fontsize=titlesize)
-    ax.minorticks_on()
-    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
-    ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
-            lw=grid_lw, zorder=-1)
-    plt.xlabel('{} ({})'.format(x_name, coord), fontsize=xylabelsize)
-    plt.ylabel('{} ({})'.format(y_name, coord), fontsize=xylabelsize)
+        "In square w,h: {:.3f} [mas/yr]".format(2. * xydelta))
+    ax.tick_params(axis='both', which='major')
+    if plot_style == 'asteca':
+        ax.grid()
+    plt.xlabel('{} ({})'.format(x_name, coord))
+    plt.ylabel('{} ({})'.format(y_name, coord))
 
     # Mask for stars inside the rectangle in the above plot.
     xmax, ymax = allr_KDE_PMs['zmax_x'], allr_KDE_PMs['zmax_y']
@@ -121,8 +113,8 @@ def pms_coords_all(
         xRA, yDE, c=PM_total, s=PM_total, lw=.2, vmin=vmin, vmax=vmax,
         zorder=5)
     cbar = plt.colorbar(pad=.01, fraction=.02, aspect=40)
-    cbar.ax.tick_params(labelsize=cbartickssize)
-    cbar.set_label('Total PM', size=cbarlabelsize)
+    cbar.ax.minorticks_off()
+    cbar.set_label('Total PM')
 
     circle = plt.Circle(
         (kde_cent[0], kde_cent[1]), clust_rad, color='red', fill=False,
@@ -138,17 +130,15 @@ def pms_coords_all(
 
 
 def pms_VPD_zoom(
-    gs, xlabel, coord, y_ax, clreg_PMs, fregs_PMs, raPMrng, dePMrng,
-        flag_no_fl_regs_i):
+    gs, plot_style, xlabel, coord, y_ax, clreg_PMs, fregs_PMs, raPMrng,
+        dePMrng, flag_no_fl_regs_i):
     """
     """
     ax = plt.subplot(gs[2:4, 0:2])
-    ax.minorticks_on()
-    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
-    ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
-            lw=grid_lw, zorder=1)
-    plt.xlabel(xlabel, fontsize=xylabelsize)
-    plt.ylabel(r"$\mu_{{\delta}} \, \mathrm{[mas/yr]}$", fontsize=xylabelsize)
+    if plot_style == 'asteca':
+        ax.grid()
+    plt.xlabel(xlabel)
+    plt.ylabel(r"$\mu_{{\delta}} \, \mathrm{[mas/yr]}$")
 
     pmRA, pmDE, mmag = clreg_PMs['pmRA'], clreg_PMs['pmDE'], clreg_PMs['mmag']
     msk = np.argsort(mmag)[::-1]
@@ -158,9 +148,9 @@ def pms_VPD_zoom(
         pmRA, pmDE, marker='o', c=mmag, s=25, cmap=cmap, edgecolor='k',
         lw=.5, zorder=4, label="Cluster reg")
     cbar = plt.colorbar(pad=.01, fraction=.02, aspect=50)
-    cbar.ax.tick_params(labelsize=cbartickssize)
+    cbar.ax.minorticks_off()
     cbar.ax.invert_yaxis()
-    cbar.set_label(y_ax, size=cbarlabelsize)
+    cbar.set_label(y_ax)
 
     if not flag_no_fl_regs_i:
         pmRA, pmDE = fregs_PMs['pmRA'], fregs_PMs['pmDE']
@@ -170,26 +160,23 @@ def pms_VPD_zoom(
 
     plt.xlim(raPMrng)
     plt.ylim(dePMrng)
-    plt.legend(fontsize=legendsize)
+    plt.legend()
 
 
 def pms_VPD_zoom_KDE(
-    gs, xlabel, coord, cr_KDE_PMs, fr_KDE_PMs, raPMrng, dePMrng, PMs_cent,
-        PMs_width, PMs_height, PMs_theta, Nsigma):
+    gs, plot_style, xlabel, coord, cr_KDE_PMs, fr_KDE_PMs, raPMrng, dePMrng,
+        PMs_cent, PMs_width, PMs_height, PMs_theta, Nsigma):
     """
     KDE of PMs for cluster and field regions.
     """
     ax = plt.subplot(gs[2:4, 2:4])
     ax.set_title(
-        r'Error-weighted KDE + {:.0f}$\sigma$ ellipse'.format(Nsigma),
-        fontsize=titlesize)
-    ax.minorticks_on()
-    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
-    ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
-            lw=grid_lw, zorder=1)
+        r'Error-weighted KDE + {:.0f}$\sigma$ ellipse'.format(Nsigma))
+    if plot_style == 'asteca':
+        ax.grid()
 
-    plt.xlabel(xlabel, fontsize=xylabelsize)
-    plt.ylabel(r"$\mu_{{\delta}} \, \mathrm{[mas/yr]}$", fontsize=xylabelsize)
+    plt.xlabel(xlabel)
+    plt.ylabel(r"$\mu_{{\delta}} \, \mathrm{[mas/yr]}$")
 
     # Cluster region contour
     CS = plt.contour(
@@ -228,20 +215,20 @@ def pms_VPD_zoom_KDE(
 
     plt.xlim(*raPMrng)
     plt.ylim(*dePMrng)
-    plt.legend(fontsize=legendsize)
+    plt.legend()
 
 
-def pms_VPD_zoom_MP(gs, xlabel, coord, clreg_PMs, fregs_PMs, raPMrng, dePMrng):
+def pms_VPD_zoom_MP(
+    gs, plot_style, xlabel, coord, clreg_PMs, fregs_PMs, raPMrng,
+        dePMrng):
     """
     """
     ax = plt.subplot(gs[2:4, 4:6])
-    ax.minorticks_on()
-    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
-    ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
-            lw=grid_lw, zorder=1)
+    if plot_style == 'asteca':
+        ax.grid()
 
-    plt.xlabel(xlabel, fontsize=xylabelsize)
-    plt.ylabel(r"$\mu_{{\delta}} \, \mathrm{[mas/yr]}$", fontsize=xylabelsize)
+    plt.xlabel(xlabel)
+    plt.ylabel(r"$\mu_{{\delta}} \, \mathrm{[mas/yr]}$")
 
     cmap = plt.cm.get_cmap('RdYlBu_r')
     pmMP = clreg_PMs['MP']
@@ -253,8 +240,8 @@ def pms_VPD_zoom_MP(gs, xlabel, coord, clreg_PMs, fregs_PMs, raPMrng, dePMrng):
         elinewidth=.65, ecolor=cmap(norm(pmMP)), zorder=4)
     plt.scatter(clreg_PMs['pmRA'], clreg_PMs['pmDE'], c=pmMP, cmap=cmap, s=0.)
     cbar = plt.colorbar(pad=.01, fraction=.02, aspect=50)
-    cbar.ax.tick_params(labelsize=cbarlabelsize)
-    cbar.set_label("MPs", size=cbartickssize)
+    cbar.ax.minorticks_off()
+    cbar.set_label("MPs")
 
     ax.errorbar(
         fregs_PMs['pmRA'], fregs_PMs['pmDE'], yerr=fregs_PMs['epmDE'],
@@ -266,7 +253,7 @@ def pms_VPD_zoom_MP(gs, xlabel, coord, clreg_PMs, fregs_PMs, raPMrng, dePMrng):
 
 
 def pms_vs_mag(
-    gs, xlabel, coord, y_ax, clreg_PMs, fregs_PMs, raPMrng,
+    gs, plot_style, xlabel, coord, y_ax, clreg_PMs, fregs_PMs, raPMrng,
         dePMrng):
     """
     """
@@ -274,13 +261,11 @@ def pms_vs_mag(
     ymin, ymax = max(clreg_PMs['mmag']) + .5, min(clreg_PMs['mmag']) + .5
 
     def axplot(ax, x_range, xlabel, cl_x, cl_y, fr_x, fr_y):
-        ax.minorticks_on()
-        ax.tick_params(axis='both', which='major', labelsize=xytickssize)
-        ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
-                lw=grid_lw, zorder=1)
+        if plot_style == 'asteca':
+            ax.grid()
 
-        ax.set_xlabel(xlabel, fontsize=xylabelsize)
-        ax.set_ylabel(y_ax, fontsize=xylabelsize)
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(y_ax)
         cmap = plt.cm.get_cmap('RdYlBu_r')
 
         ax.scatter(
@@ -301,18 +286,16 @@ def pms_vs_mag(
            fregs_PMs['pmDE'], fregs_PMs['mmag'])
 
 
-def pms_dist(gs, y_ax, clreg_PMs, pm_dist_max):
+def pms_dist(gs, plot_style, y_ax, clreg_PMs, pm_dist_max):
     """
     """
     ax = plt.subplot(gs[4:6, 4:6])
-    ax.minorticks_on()
-    ax.tick_params(axis='both', which='major', labelsize=xytickssize)
-    ax.grid(b=True, which='major', color=grid_col, linestyle=grid_ls,
-            lw=grid_lw, zorder=1)
+    if plot_style == 'asteca':
+        ax.grid()
 
-    ax.set_title("Distance to KDE's cluster max", fontsize=titlesize)
-    plt.xlabel("PM dist [mas/yr]", fontsize=xylabelsize)
-    plt.ylabel(y_ax, fontsize=xylabelsize)
+    ax.set_title("Distance to KDE's cluster max")
+    plt.xlabel("PM dist [mas/yr]")
+    plt.ylabel(y_ax)
 
     cmap = plt.cm.get_cmap('RdYlBu_r')
     plt.scatter(
@@ -364,7 +347,6 @@ def plot(N, *args):
 #     ax = plt.subplot(gs[0:2, 2:4])
 #     ax.set_title(
 #         'All stars in frame, d<{:.1f}% prcntl'.format(nnperc), fontsize=9)
-#     ax.minorticks_on()
 #     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
 #             zorder=-1)
 #     if coord == 'deg':
@@ -386,7 +368,6 @@ def plot(N, *args):
 #         pmRA, pmDE, s=25, c=mag, cmap=cmap, edgecolor='k', lw=.5,
 #         label="N-N={}\nN={}".format(nnmax, pmRA.size), zorder=2)
 #     cbar = plt.colorbar(pad=.01, fraction=.02, aspect=50)
-#     cbar.ax.tick_params(labelsize=7)
 #     cbar.ax.invert_yaxis()
 #     cbar.set_label(y_ax, size=8)
 
@@ -401,7 +382,6 @@ def plot(N, *args):
 #     """
 #     ax = plt.subplot(gs[0:2, 4:6])
 #     ax.set_title('All stars in frame, filtered by N-N', fontsize=9)
-#     ax.minorticks_on()
 #     ax.grid(b=True, which='major', color='gray', linestyle='--', lw=.5,
 #             zorder=-1)
 #     plt.xlabel('{} ({})'.format(x_name, coord), fontsize=12)
@@ -432,7 +412,6 @@ def plot(N, *args):
 #         label=r"$N_{{r<r_{{cl}}}}$={}".format(N_in_r), zorder=2)
 #     # mag, cmap=cmap, edgecolor='k', lw=.5)
 #     # cbar = plt.colorbar(pad=.01, fraction=.02, aspect=50)
-#     # cbar.ax.tick_params(labelsize=7)
 #     # cbar.ax.invert_yaxis()
 #     # cbar.set_label(y_ax, size=8)
 #     plt.legend(fontsize='small')

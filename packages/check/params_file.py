@@ -39,15 +39,8 @@ def check(mypath, file_end, inst_packgs_lst):
     # Add to parameters dictionary.
     pd['inst_packgs_lst'], pd['file_end'] = inst_packgs_lst, file_end
 
-    # Create here the 'bf_flag' flag.
     if pd['best_fit_algor'] not in pd['optimz_algors']:
         raise ValueError("the selected best fit method '{}' does not match"
                          " a valid input.".format(pd['best_fit_algor']))
-
-    # In place for #239
-    if pd['best_fit_algor'] != 'n' and pd['best_fit_algor'] != 'synth_gen':
-        pd['bf_flag'] = True
-    else:
-        pd['bf_flag'] = False
 
     return pd

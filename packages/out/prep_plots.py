@@ -2,22 +2,17 @@
 from ..math_f import exp_function
 from ..best_fit.obs_clust_prepare import dataProcess
 from ..decont_algors.local_cell_clean import bin_edges_f
+from ..aux_funcs import circFrac
 import numpy as np
 import warnings
 from astropy.visualization import ZScaleInterval
 from astropy.stats import sigma_clipped_stats
 
 
-# HARDCODED Global plot parameters
+# HARDCODED figure size and grid distribution
 figsize_x, figsize_y = 30, 30
 # figsize(x1, y1), GridSpec(y2, x2)
 grid_x, grid_y = 12, 12
-xylabelsize = 10
-xytickssize = 9.5
-titlesize = 9
-legendsize = 9.5
-cbarlabelsize, cbartickssize = 8, 8
-grid_col, grid_ls, grid_lw = 'grey', '-', .25
 
 
 def frame_max_min(x_data, y_data):
@@ -294,66 +289,68 @@ def error_bars(stars_phot, x_min_cmd, err_lst, all_flag=None):
     return [x_val, mag_y, xy_err]
 
 
-def param_ranges(best_fit_algor, fundam_params, varIdxs=None, trace=None):
+def param_ranges(fundam_params, varIdxs=None, trace=None):
     """
     Parameter ranges used by several plots.
     """
     min_max_p = []
-    if best_fit_algor in ['brute', 'boot+GA']:
-
-        if varIdxs is not None and trace is not None:
-            for cp, param in enumerate(fundam_params):
-                if cp in varIdxs:
-                    c_model = varIdxs.index(cp)
-                    # Use the last 10% of the trace.
-                    N = int(trace[c_model].shape[-1] * .1)
-                    std = np.std(trace[c_model][-N:])
-                    pmin, pmax = np.min(trace[c_model][-N:]),\
-                        np.max(trace[c_model][-N:])
-                    min_max_p.append([
-                        max(param[0], pmin - std),
-                        min(param[-1], pmax + std)])
-                else:
-                    min_max_p.append([min(param) - .001, max(param) + .001])
+    # Select the ranges given by the limits of the space explored by all
+    # the chains, for each parameter.
+    for cp, param in enumerate(fundam_params):
+        if cp in varIdxs:
+            c_model = varIdxs.index(cp)
+            # Use the last 10% of the chains.
+            N = int(trace[c_model].shape[-1] * .1)
+            std = np.std(trace[c_model][:, -N:])
+            pmin, pmax = np.min(trace[c_model][:, -N:]),\
+                np.max(trace[c_model][:, -N:])
+            min_max_p.append([
+                max(param[0], pmin - std),
+                min(param[-1], pmax + std)])
         else:
-            for param in fundam_params:
-                # Set the delta for the parameter range. If only one value was
-                # used, set a very small delta value.
-                delta_p = (max(param) - min(param)) * 0.05 \
-                    if max(param) != min(param) else 0.001
-                # Store parameter range.
-                min_max_p.append([min(param) - delta_p, max(param) + delta_p])
+            min_max_p.append([min(param) - .001, max(param) + .001])
 
-    elif best_fit_algor in ('ptemcee', 'emcee'):
-        # Select the ranges given by the limits of the space explored by all
-        # the chains, for each parameter.
-        for cp, param in enumerate(fundam_params):
-            if cp in varIdxs:
-                c_model = varIdxs.index(cp)
-                # Use the last 10% of the chains.
-                N = int(trace[c_model].shape[-1] * .1)
-                std = np.std(trace[c_model][:, -N:])
-                pmin, pmax = np.min(trace[c_model][:, -N:]),\
-                    np.max(trace[c_model][:, -N:])
-                min_max_p.append([
-                    max(param[0], pmin - std),
-                    min(param[-1], pmax + std)])
-            else:
-                min_max_p.append([min(param) - .001, max(param) + .001])
+    # DEPRECATED May 2020
+    # if best_fit_algor in ['brute', 'boot+GA']:
 
-    elif best_fit_algor == 'abc':
-        # Select the ranges given by the limits of the space explored by all
-        # the chains, for each parameter.
-        for cp, param in enumerate(fundam_params):
-            if cp in varIdxs:
-                c_model = varIdxs.index(cp)
-                mean = np.mean(post_bi[c_model])
-                std3 = 3 * np.std(post_bi[c_model])
-                min_max_p.append([
-                    max(param[0], mean - std3),
-                    min(param[-1], mean + std3)])
-            else:
-                min_max_p.append([min(param) - .001, max(param) + .001])
+    #     if varIdxs is not None and trace is not None:
+    #         for cp, param in enumerate(fundam_params):
+    #             if cp in varIdxs:
+    #                 c_model = varIdxs.index(cp)
+    #                 # Use the last 10% of the trace.
+    #                 N = int(trace[c_model].shape[-1] * .1)
+    #                 std = np.std(trace[c_model][-N:])
+    #                 pmin, pmax = np.min(trace[c_model][-N:]),\
+    #                     np.max(trace[c_model][-N:])
+    #                 min_max_p.append([
+    #                     max(param[0], pmin - std),
+    #                     min(param[-1], pmax + std)])
+    #             else:
+    #                 min_max_p.append([min(param) - .001, max(param) + .001])
+    #     else:
+    #         for param in fundam_params:
+    #             # Set the delta for the parameter range. If only one value was
+    #             # used, set a very small delta value.
+    #             delta_p = (max(param) - min(param)) * 0.05 \
+    #                 if max(param) != min(param) else 0.001
+    #             # Store parameter range.
+    #             min_max_p.append([min(param) - delta_p, max(param) + delta_p])
+
+    # elif best_fit_algor in ('ptemcee', 'emcee'):
+
+    # elif best_fit_algor == 'abc':
+    #     # Select the ranges given by the limits of the space explored by all
+    #     # the chains, for each parameter.
+    #     for cp, param in enumerate(fundam_params):
+    #         if cp in varIdxs:
+    #             c_model = varIdxs.index(cp)
+    #             mean = np.mean(post_bi[c_model])
+    #             std3 = 3 * np.std(post_bi[c_model])
+    #             min_max_p.append([
+    #                 max(param[0], mean - std3),
+    #                 min(param[-1], mean + std3)])
+    #         else:
+    #             min_max_p.append([min(param) - .001, max(param) + .001])
 
     return min_max_p
 
@@ -607,3 +604,60 @@ def pmRectangle(allfr_PMs, frac=.1):
     xydelta = frac * xyrang
 
     return xydelta, xyrang
+
+
+def RDPCurve(
+    xy_filtered, xy_cent_dist, kde_cent, N_MC, rand_01_MC, cos_t, sin_t,
+        RDP_rings=50, rings_rm=.1, Nmin=10, **kwargs):
+    """
+    Obtain the RDP using the concentric rings method.
+
+    HARDCODED:
+    RDP_rings: number of rings to (initially) try to define
+    rings_rm: remove the more conflicting last X% of radii values.
+    Nmin: minimum number of stars that a ring should contain. Else, expand it.
+    """
+
+    # Frame limits
+    x0, x1 = min(xy_filtered.T[0]), max(xy_filtered.T[0])
+    y0, y1 = min(xy_filtered.T[1]), max(xy_filtered.T[1])
+
+    # Handle the case where int()==0
+    max_i = max(1, int(rings_rm * RDP_rings))
+    # The +1 adds a ring accounting for the initial 0. in the array
+    radii = np.linspace(0., xy_cent_dist.max(), RDP_rings + 1 + max_i)[:-max_i]
+
+    # Areas and #stars for all rad values.
+    rdp_radii, rdp_points, rdp_stddev = [], [], []
+    l_prev, N_in_prev = np.inf, 0.
+    for l, h in zip(*[radii[:-1], radii[1:]]):
+        # Stars within this ring.
+        N_in = ((xy_cent_dist >= l) & (xy_cent_dist < h)).sum() + N_in_prev
+
+        l_now = min(l, l_prev)
+
+        # Require that at least 'Nmin' stars are within the ring.
+        if N_in > Nmin:
+            # Area of ring.
+            fr_area_l = circFrac(
+                (kde_cent), l_now, x0, x1, y0, y1, N_MC, rand_01_MC, cos_t,
+                sin_t)
+            fr_area_h = circFrac(
+                (kde_cent), h, x0, x1, y0, y1, N_MC, rand_01_MC, cos_t, sin_t)
+            ring_area = (np.pi * h**2 * fr_area_h) -\
+                (np.pi * l_now**2 * fr_area_l)
+
+            # Store RDP parameters.
+            rad_med = h if l_now == 0. else .5 * (l_now + h)
+            rdp_radii.append(rad_med)
+            rdp_points.append(N_in / ring_area)
+            rdp_stddev.append(np.sqrt(N_in) / ring_area)
+
+            # Reset
+            l_prev, N_in_prev = np.inf, 0.
+
+        else:
+            l_prev = l_now
+            N_in_prev += N_in
+
+    return rdp_radii, rdp_points, rdp_stddev

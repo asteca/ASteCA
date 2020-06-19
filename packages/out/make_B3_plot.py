@@ -20,11 +20,11 @@ def main(
 
         arglist = [
             # pl_ad_test
-            [gs, flag_ad_test, ad_cl, ad_fr, pd['id_kinem']],
+            [gs, pd['plot_style'], flag_ad_test, ad_cl, ad_fr, pd['id_kinem']],
             # pl_ad_pvals_phot
-            [gs, flag_ad_test, ad_cl_fr_p],
+            [gs, pd['plot_style'], flag_ad_test, ad_cl_fr_p],
             # pl_ad_pvals_pk
-            [gs, flag_ad_test, ad_cl_fr_pk, pd['id_kinem']]
+            [gs, pd['plot_style'], flag_ad_test, ad_cl_fr_pk, pd['id_kinem']]
         ]
         for n, args in enumerate(arglist):
             mp_AD_test.plot(n, *args)
@@ -32,8 +32,7 @@ def main(
         # Generate output file.
         fig.tight_layout()
         plt.savefig(
-            join(npd['output_subdir'], str(npd['clust_name']) +
-                 '_B3.' + pd['plot_frmt']), dpi=pd['plot_dpi'],
+            join(npd['output_subdir'], str(npd['clust_name']) + '_B3'),
             bbox_inches='tight')
         # Close to release memory.
         plt.clf()

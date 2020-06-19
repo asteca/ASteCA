@@ -3,11 +3,19 @@ from collections import Counter
 
 
 def check(
-    manual_struct, center_bw, fdens_method, RDP_rings, kp_flag,
+    trim_frame_range, manual_struct, center_bw, fdens_method, kp_flag,
         kp_nchains, kp_nburn, inst_packgs_lst, **kwargs):
     """
     Check that the parameters are properly written.
     """
+
+    dups = [
+        _ for _, c in Counter(list(zip(*trim_frame_range))[0]).items()
+        if c > 1]
+    if dups:
+        raise ValueError((
+            "duplicated entries found in 'Trim frame' block:\n" +
+            "{}".format(dups)))
 
     dups = [
         _ for _, c in Counter(list(zip(*manual_struct))[0]).items() if c > 1]
@@ -36,9 +44,6 @@ def check(
         elif fdens_method not in ('min', 'last', 'iter'):
             raise ValueError("field density mode ('{}') is not"
                              " recognized.".format(fdens_method))
-
-    if RDP_rings < 5 or RDP_rings > 500:
-        raise ValueError("valid range is 5 < RDP_rings < 500")
 
     if kp_flag:
         if 'emcee' not in inst_packgs_lst:

@@ -51,24 +51,29 @@ def main(
 
         arglist = [
             # pms_VPD_all
-            [gs, xlabel, pd['PM_KDE_std'], coord, y_ax, allfr_PMs],
+            [gs, pd['plot_style'], xlabel, pd['PM_KDE_std'], coord, y_ax,
+             allfr_PMs],
             # pms_VPD_KDE_all
             [gs, xlabel, coord, y_ax, allr_KDE_PMs, xydelta, xyrang],
             # pms_coords_all
-            [fig, gs, coord, x_min, x_max, y_min, y_max, asp_ratio, x_name,
-             y_name, kde_cent, clust_rad, allfr_PMs, allr_KDE_PMs, xydelta],
+            [fig, gs, pd['plot_style'], coord, x_min, x_max, y_min, y_max,
+             asp_ratio, x_name, y_name, kde_cent, clust_rad, allfr_PMs,
+             allr_KDE_PMs, xydelta],
             # pms_VPD_zoom
-            [gs, xlabel, coord, y_ax, clreg_PMs, fregs_PMs, raPMrng,
-             dePMrng, flag_no_fl_regs_i],
+            [gs, pd['plot_style'], xlabel, coord, y_ax, clreg_PMs, fregs_PMs,
+             raPMrng, dePMrng, flag_no_fl_regs_i],
             # pms_VPD_zoom_KDE
-            [gs, xlabel, coord, cr_KDE_PMs, fr_KDE_PMs, raPMrng, dePMrng,
-             PMs_cent, PMs_width, PMs_height, PMs_theta, Nsigma],
+            [gs, pd['plot_style'], xlabel, coord, cr_KDE_PMs, fr_KDE_PMs,
+             raPMrng, dePMrng, PMs_cent, PMs_width, PMs_height, PMs_theta,
+             Nsigma],
             # # pms_VPD_zoom_MP
-            [gs, xlabel, coord, clreg_PMs, fregs_PMs, raPMrng, dePMrng],
+            [gs, pd['plot_style'], xlabel, coord, clreg_PMs, fregs_PMs,
+             raPMrng, dePMrng],
             # pms_vs_mag
-            [gs, xlabel, coord, y_ax, clreg_PMs, fregs_PMs, raPMrng, dePMrng],
+            [gs, pd['plot_style'], xlabel, coord, y_ax, clreg_PMs, fregs_PMs,
+             raPMrng, dePMrng],
             # pms_dist
-            [gs, y_ax, clreg_PMs, pm_dist_max]
+            [gs, pd['plot_style'], y_ax, clreg_PMs, pm_dist_max]
         ]
         for n, args in enumerate(arglist):
             mp_kinem_pms.plot(n, *args)
@@ -76,8 +81,7 @@ def main(
         # Generate output file.
         fig.tight_layout()
         plt.savefig(
-            join(npd['output_subdir'], str(npd['clust_name']) +
-                 '_C3.' + pd['plot_frmt']), dpi=pd['plot_dpi'],
+            join(npd['output_subdir'], str(npd['clust_name']) + '_C3'),
             bbox_inches='tight')
         print("<<Plots for C3 block created>>")
         # Close to release memory.

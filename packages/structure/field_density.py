@@ -62,6 +62,7 @@ def fixedParams(x, y, kde_cent, lb=1., rt=99., N_MC=100000, **kwargs):
 
 def distDens(NN_dd, xy_filtered, N_MC, rand_01_MC, cos_t, sin_t, **kwargs):
     """
+    Obtain the NN densities and radius for each star in the frame.
     """
     # Frame limits
     x0, x1 = min(xy_filtered.T[0]), max(xy_filtered.T[0])
@@ -80,6 +81,7 @@ def distDens(NN_dd, xy_filtered, N_MC, rand_01_MC, cos_t, sin_t, **kwargs):
         # If the area of the star lies outside of the frame.
         if (x[i] - rad < x0) or (x[i] + rad > x1) or (y[i] - rad < y0) or\
                 (y[i] + rad > y1):
+            # Use Monte Carlo to estimate its area
             fr_area = circFrac(
                 (x[i], y[i]), rad, x0, x1, y0, y1, N_MC, rand_01_MC, cos_t,
                 sin_t)
@@ -97,8 +99,9 @@ def kNNRDP(xy_cent_dist, dens, fdens_method):
     field density.
     """
 
+    # Obtain field density estimates using all stars beyond increasingly large
+    # radius values (percentages of the distances to the pre-defined center)
     fdens_min_d, fdens_lst, fdens_std_lst = [], [], []
-
     # HARDCODED: distance to center range.
     # dens_in_p, N_in_p = [], 0
     for perc in range(10, 99, 5):

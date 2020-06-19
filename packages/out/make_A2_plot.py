@@ -5,18 +5,19 @@ from os.path import join
 from . import mp_cent_dens
 from . import add_version_plot
 from . import prep_plots
-from . prep_plots import figsize_x, figsize_y, grid_x, grid_y
+from . prep_plots import grid_x, grid_y, figsize_x, figsize_y
 
 
 def main(
     npd, cld_i, pd, x_offset, y_offset, bw_list, kde_cent, frame_kde_cent,
-    rdp_radii, integ_dists, integ_mags, xy_filtered, xy_cent_dist, NN_dist,
-    fr_dens, fdens_min_d, fdens_lst, fdens_std_lst, field_dens_d, field_dens,
+    integ_dists, integ_mags, xy_filtered, xy_cent_dist, NN_dist, fr_dens,
+    fdens_min_d, fdens_lst, fdens_std_lst, field_dens_d, field_dens,
         field_dens_std, clust_rad, **kwargs):
     """
     Make A2 block plots.
     """
     if 'A2' in pd['flag_make_plot']:
+
         fig = plt.figure(figsize=(figsize_x, figsize_y))
         gs = gridspec.GridSpec(grid_y, grid_x)
         add_version_plot.main()
@@ -31,34 +32,31 @@ def main(
 
         # Structure plots.
         arglist = [
-            # pl_densmap: 2D Gaussian convolved histogram.
-            [gs, fig, asp_ratio, x_name, y_name, coord, bw_list, kde_cent,
-             frame_kde_cent, fr_dens, clust_rad],
-            # pl_knn_dens
-            [gs, fig, asp_ratio, x_min, x_max, y_min, y_max, x_name, y_name,
-             coord, pd['NN_dd'], xy_filtered, fr_dens, NN_dist, kde_cent,
-             clust_rad],
             # pl_full_frame: x,y finding chart of full frame.
             [gs, fig, pd['project'], x_offset, y_offset, x_name, y_name, coord,
              x_min, x_max, y_min, y_max, asp_ratio, kde_cent, cld_i['x'],
              cld_i['y'], st_sizes_arr, clust_rad],
+            # pl_densmap: 2D Gaussian convolved histogram.
+            [gs, fig, asp_ratio, x_name, y_name, coord, bw_list, kde_cent,
+             frame_kde_cent, fr_dens, clust_rad],
+            # pl_knn_dens
+            [gs, fig, pd['plot_style'], asp_ratio, x_min, x_max, y_min, y_max,
+             x_name, y_name, coord, pd['NN_dd'], xy_filtered, fr_dens, NN_dist,
+             pd['project'], x_offset, y_offset, kde_cent, clust_rad],
             # pl_field_dens
-            [gs, coord, pd['fdens_method'], xy_cent_dist, fr_dens, fdens_min_d,
-             fdens_lst, fdens_std_lst, field_dens_d, field_dens,
-             field_dens_std],
-            # pl_mag_cent
-            [gs, coord, y_ax, integ_dists, integ_mags],
-            # pl_rdp_rings
-            [gs, fig, asp_ratio, x_min, x_max, y_min, y_max, x_name, y_name,
-             coord, kde_cent, rdp_radii]
+            [gs, pd['plot_style'], coord, pd['fdens_method'], xy_cent_dist,
+             fr_dens, fdens_min_d, fdens_lst, fdens_std_lst, field_dens_d,
+             field_dens, field_dens_std],
+            # # pl_centdist_vs_mag
+            [gs, fig, pd['plot_style'], y_ax, coord, cld_i['x'], cld_i['y'],
+             cld_i['mags'][0], kde_cent, clust_rad, integ_dists, integ_mags]
         ]
         for n, args in enumerate(arglist):
             mp_cent_dens.plot(n, *args)
 
         fig.tight_layout()
         plt.savefig(
-            join(npd['output_subdir'], str(npd['clust_name']) +
-                 '_A2.' + pd['plot_frmt']), dpi=pd['plot_dpi'],
+            join(npd['output_subdir'], str(npd['clust_name']) + '_A2'),
             bbox_inches='tight')
         # Close to release memory.
         plt.clf()

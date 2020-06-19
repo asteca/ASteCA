@@ -1,5 +1,23 @@
 # Change Log
 
+## [[v0.3.1]][282] - 2020-06-19
+
+Only the `ptemcee` method is kept, all others are now deprecated.
+
+### Changed
+
+* Corrected an error in the `CMD_systs.dat` file ([468][281])
+* [Fixed path][280] for `CMD_systs.dat`, now works in Windows (and Mac?)
+* Control (some) plotting parameters through custom style and allow the selection of one of the supported styles ([464][279])
+* Dump the results of the fundamental parameters analysis to file ([467][278])
+* Closed several issues related to the deprecated bootstrap(+GA), brute force, and emcee methods ([265][269], [280][270], [284][271], [324][272], [341][273], [347][274], [418][275], [442][276], [447][277])
+* Split D1 plots (MCMC convergence diagnostics plots & values) ([389][268])
+* Explore Zeus as a possible addition to the best fit process ([457][267])
+* Add mode, median to King's profile plot ([470][266])
+* Make "trim frame" option per cluster ([474][265])
+* Closed due to old or not applicable ([209][262], [293][263], [399][264])
+
+
 ## [[v0.3.0]][261] - 2020-04-22
 
 ### Changed
@@ -773,6 +791,28 @@ ________________________________________________________________________________
 [259]: https://github.com/asteca/ASteCA/issues/423
 [260]: https://github.com/asteca/ASteCA/issues/243
 [261]: https://github.com/asteca/asteca/releases/tag/v0.3.0
+[262]: https://github.com/asteca/ASteCA/issues/209
+[263]: https://github.com/asteca/ASteCA/issues/293
+[264]: https://github.com/asteca/ASteCA/issues/399
+[265]: https://github.com/asteca/ASteCA/issues/474
+[266]: https://github.com/asteca/ASteCA/issues/470
+[267]: https://github.com/asteca/ASteCA/issues/457
+[268]: https://github.com/asteca/ASteCA/issues/389
+[269]: https://github.com/asteca/ASteCA/issues/265
+[270]: https://github.com/asteca/ASteCA/issues/280
+[271]: https://github.com/asteca/ASteCA/issues/284
+[272]: https://github.com/asteca/ASteCA/issues/324
+[273]: https://github.com/asteca/ASteCA/issues/341
+[274]: https://github.com/asteca/ASteCA/issues/347
+[275]: https://github.com/asteca/ASteCA/issues/418
+[276]: https://github.com/asteca/ASteCA/issues/442
+[277]: https://github.com/asteca/ASteCA/issues/447
+[278]: https://github.com/asteca/ASteCA/issues/467
+[279]: https://github.com/asteca/ASteCA/issues/464
+[280]: https://github.com/asteca/ASteCA/commit/3ab2b30d3d107972734112e7f0bd8ce12709ebdc
+[281]: https://github.com/asteca/ASteCA/issues/468
+[282]: https://github.com/asteca/asteca/releases/tag/v0.3.1
+
 
 
 
