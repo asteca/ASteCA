@@ -36,6 +36,9 @@ def main(clp, x, y, mags, **kwargs):
             n_in_cl_reg, clp['field_dens'], clp['cl_area'])
         # Used in the King profile fitting
         n_memb_i = int(round(n_memb_i))
+        if n_memb_i < 2:
+            print("  WARNING: The estimated number of members is < 2")
+            n_memb_i = 1
 
         if cont_index >= 1.:
             print("  WARNING: contamination index value is very large: "
