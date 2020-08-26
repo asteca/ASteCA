@@ -1,5 +1,6 @@
 
 import numpy as np
+from scipy import stats
 import matplotlib.pyplot as plt
 from ..aux_funcs import reject_outliers
 from . cornerPlot import hist2d
@@ -7,7 +8,7 @@ from . cornerPlot import hist2d
 
 def histogram(
     gs, gsx, gsy, mcmc_samples, _16_50_84_mean_mode, mu_x_kde,
-        xylabel, dec_places):
+        xylabel, dec_places, xlims=None):
     """
     Parameter's distribution
     """
@@ -40,14 +41,18 @@ def histogram(
         label=("Mode (" + dec_places + ")").format(_mode))
 
     # 16th and 84th percentiles.
-    std = np.std(mcmc_samples.flatten())
     txt = "16-84th perc\n" +\
         (r"$(" + dec_places + ", " + dec_places + ")$").format(_16, _84)
     plt.axvline(
         x=_16, linestyle=':', color='orange', zorder=4, label=txt)
     plt.axvline(x=_84, linestyle=':', color='orange', zorder=4)
 
-    plt.xlim(max(-1., (_mean) - 4. * std), (_mean) + 4. * std)
+    if xlims is None:
+        # MAD is robust to outliers
+        mad = 1.4826 * stats.median_absolute_deviation(mcmc_samples.flatten())
+        plt.xlim(_50 - 4. * mad, _50 + 4. * mad)
+    else:
+        plt.xlim(xlims[0], xlims[1])
     cur_ylim = ax.get_ylim()
     ax.set_ylim([0, cur_ylim[1]])
     plt.legend()
@@ -55,9 +60,12 @@ def histogram(
 
 def traceplot(
     gs, gsx, gsy, mcmc_samples, _16_50_84_mean_mode, Brn_prcnt, xylabel,
-        xticks=True):
+        xticks=True, tp_p=.5):
     """
     Chains traceplot.
+
+    tp_p : percentage of the final portion of the trace that will be used to
+    set the limits in the y axis.
     """
     ax = plt.subplot(gs[gsy[0]:gsy[1], gsx[0]:gsx[1]])
     N_tot = mcmc_samples.shape[0]
@@ -76,8 +84,8 @@ def traceplot(
     else:
         plt.xticks([])
     plt.ylabel(xylabel)
-    # Use the last 10% of the chains.
-    N = int(mcmc_samples.shape[0] * .1)
+    # Use the last X% of the chains.
+    N = int(mcmc_samples.shape[0] * tp_p)
     std = np.std(mcmc_samples[-N:])
     pmin, pmax = np.min(mcmc_samples[-N:]), np.max(mcmc_samples[-N:])
     ymin, ymax = pmin - std, pmax + std
