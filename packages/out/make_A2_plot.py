@@ -12,7 +12,9 @@ def main(
     npd, cld_i, pd, x_offset, y_offset, bw_list, kde_cent, frame_kde_cent,
     integ_dists, integ_mags, xy_filtered, xy_cent_dist, NN_dist, fr_dens,
     fdens_min_d, fdens_lst, fdens_std_lst, field_dens_d, field_dens,
-        field_dens_std, clust_rad, **kwargs):
+        field_dens_std, clust_rad,
+        KP_plot, KP_Bys_rc, KP_Bys_rt,
+        **kwargs):
     """
     Make A2 block plots.
     """
@@ -46,7 +48,8 @@ def main(
             # pl_field_dens
             [gs, pd['plot_style'], coord, pd['fdens_method'], xy_cent_dist,
              fr_dens, fdens_min_d, fdens_lst, fdens_std_lst, field_dens_d,
-             field_dens, field_dens_std],
+             field_dens, field_dens_std,
+             KP_plot['KP_cent_dens'], KP_Bys_rc, KP_Bys_rt],
             # # pl_centdist_vs_mag
             [gs, fig, pd['plot_style'], y_ax, coord, cld_i['x'], cld_i['y'],
              cld_i['mags'][0], kde_cent, clust_rad, integ_dists, integ_mags]
