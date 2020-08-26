@@ -630,11 +630,11 @@ def RDPCurve(
     # Areas and #stars for all rad values.
     rdp_radii, rdp_points, rdp_stddev = [], [], []
     l_prev, N_in_prev = np.inf, 0.
-    for l, h in zip(*[radii[:-1], radii[1:]]):
+    for lw, h in zip(*[radii[:-1], radii[1:]]):
         # Stars within this ring.
-        N_in = ((xy_cent_dist >= l) & (xy_cent_dist < h)).sum() + N_in_prev
+        N_in = ((xy_cent_dist >= lw) & (xy_cent_dist < h)).sum() + N_in_prev
 
-        l_now = min(l, l_prev)
+        l_now = min(lw, l_prev)
 
         # Require that at least 'Nmin' stars are within the ring.
         if N_in > Nmin:
