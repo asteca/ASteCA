@@ -6,7 +6,9 @@ import bisect
 from ..update_progress import updt
 
 
-def main(clp, cld_i, center_bw, flag_make_plot, mirror_flag, **kwargs):
+def main(
+    clp, cld_i, center_bw, flag_make_plot, mirror_flag, Nmax=50000,
+        **kwargs):
     """
     Obtain Gaussian filtered 2D x,y histograms and the maximum values in them
     as centers.
@@ -17,6 +19,10 @@ def main(clp, cld_i, center_bw, flag_make_plot, mirror_flag, **kwargs):
     mskx, msky = np.isnan(cld_i['x']), np.isnan(cld_i['y'])
     msk = ~mskx & ~msky
     x_data, y_data = cld_i['x'][msk], cld_i['y'][msk]
+    if x_data.size > Nmax:
+        print("  WARNING: too many stars. Capping at {}".format(Nmax))
+        step = int(x_data.size / Nmax)
+        x_data, y_data = x_data[::step], y_data[::step]
 
     if center_bw == 0.:
         # Use half of Scotts factor (scipy's default).
