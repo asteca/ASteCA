@@ -11,10 +11,9 @@ from . prep_plots import figsize_x, figsize_y, grid_x, grid_y
 
 def main(
     npd, cld_i, pd, kde_cent, frame_kde_cent, clust_rad, e_rad, rad_rads,
-    rad_N_membs, rad_N_field, rad_CI, KP_cent_dens, membvsmag, KP_steps,
-    KP_mean_afs, xy_filtered, xy_cent_dist, N_MC, rand_01_MC, cos_t, sin_t,
-    KP_tau_autocorr, KP_ESS, KP_samples, KP_Bys_rc, KP_Bys_rt, KP_Bys_ecc,
-    KP_Bys_theta, KP_Bayes_kde, KP_memb_num, KP_conct_par, field_dens,
+    rad_N_membs, rad_N_field, rad_CI, membvsmag, xy_filtered, xy_cent_dist,
+    N_MC, rand_01_MC, cos_t, sin_t, KP_Bys_rc, KP_Bys_rt, KP_Bys_ecc,
+    KP_Bys_theta, KP_plot, KP_conct_par, KP_memb_num, field_dens,
     field_dens_std, cont_index, cl_region_i, frac_cl_area, cl_region_rjct_i,
         field_regions_rjct_i, field_regions_i, flag_no_fl_regs_i, **kwargs):
     """
@@ -51,7 +50,7 @@ def main(
             # pl_rad_dens: Radial density plot.
             [gs, pd['plot_style'], coord, rdp_radii, rdp_points, rdp_stddev,
              field_dens, field_dens_std, clust_rad, e_rad, pd['kp_flag'],
-             KP_Bys_rc, KP_Bys_rt, KP_cent_dens, KP_conct_par],
+             KP_Bys_rc, KP_Bys_rt, KP_plot, KP_conct_par],
             # pl_zoom_frame: Zoom on x,y finding chart.
             [gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin, y_zmax,
              cont_index, x_data_z, y_data_z, st_sizes_arr_z,
@@ -89,13 +88,12 @@ def main(
 
             fig = plt.figure(figsize=(figsize_x, figsize_y))
             gs = gridspec.GridSpec(grid_y, grid_x)
-            add_version_plot.main()
+            add_version_plot.main(y_fix=.998)
 
             arglist = [
                 # pl_KP_Bys
-                [gs, coord, pd['kp_nburn'], KP_steps, KP_mean_afs,
-                 KP_tau_autocorr, KP_ESS, KP_samples, KP_Bys_rc, KP_Bys_rt,
-                 KP_Bys_ecc, KP_Bys_theta, KP_Bayes_kde]
+                [gs, coord, pd['kp_nburn'], KP_plot, KP_Bys_rc, KP_Bys_rt,
+                 KP_Bys_ecc, KP_Bys_theta]
             ]
             for n, args in enumerate(arglist):
                 mp_KP_bayes.plot(n, *args)
