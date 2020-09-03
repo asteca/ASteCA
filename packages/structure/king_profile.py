@@ -5,9 +5,9 @@ from astropy import units as u
 from scipy import spatial
 from scipy import stats
 import warnings
-from .. import update_progress
-from ..out import prep_plots
-from ..best_fit.bf_common import modeKDE
+# from .. import update_progress
+# from ..out import prep_plots
+# from ..best_fit.bf_common import modeKDE
 
 
 def main(
@@ -469,19 +469,20 @@ def plotParams(
 #############################################################################
 # All the code below is for testing purposes only
 
-def test():
+def test(ndim=4):
     """
+    ndim = 2 : Fits rc, rt
+    ndim = 4 : Fits rc, rt, ecc, theta
     """
     seed = np.random.randint(10000)
     print(seed, "\n")
     np.random.seed(seed)
 
-    Nf, Ncl = 2000, 200
+    Ncl = 500
     cl_cent = (1000., 1000.)
     frame_rang = 2000.
-    xy_field = np.random.uniform(0., frame_rang, (2, Nf))
-    fd = Nf / frame_rang**2
     N_integ = 1000
+    rtmax = 300.
 
     def neglnprob(pars, ndim, rt_max, cl_cent, fd, Ncl, xy_in, r_in, rt_rang):
         return -1. * lnprob(
@@ -489,61 +490,47 @@ def test():
 
     orig, res = [], []
     for _ in range(10):
-        # rt
-        width = np.random.uniform(50., 300.)
-        ecc = .8 # np.random.uniform(.5, .9)
-        theta = 0. # np.random.uniform(-np.pi / 2., np.pi / 2.)
-        # rc
-        height = width * (1. - ecc**2)
+
+        # Full frame contamination index
+        CI = np.random.uniform(5, 20)
+        print("\nCI (full frame): {:.2f}".format(CI))
+        Nf = int(CI * Ncl)
+        xy_field = np.random.uniform(0., frame_rang, (2, Nf))
+        fd = Nf / frame_rang**2
+
+        # rc, rt
+        rt = np.random.uniform(rtmax * .5, rtmax)
+        rc = np.random.uniform(rt * .1, rt * .9)
+        ecc, theta = 0., 0.
+        if ndim == 4:
+            ecc = np.random.uniform(.5, .9)
+            theta = np.random.uniform(-np.pi / 2., np.pi / 2.)
         print(
-            ("\nOrig r_c, r_t, ecc, theta: {:.2f}, {:.2f}, {:.2f}," +
-             " {:.1f}").format(height, width, ecc, np.rad2deg(theta)))
-        orig.append([height, width, ecc, theta])
+            ("O-> rc, rt, ecc, theta: {:.2f}, {:.2f}, {:.2f}," +
+             " {:.1f}").format(rc, rt, ecc, np.rad2deg(theta)))
+        orig.append([rc, rt, ecc, theta])
 
-        N_in_ellip = 0.
-        xy_clust = []
-        while N_in_ellip < Ncl:
-            # Generate stars positions sampling from a King profile
-            # rc, rt = height, width
-            cl_dists = invTrnsfSmpl(height, width, ecc, theta, 1000)
-            phi = np.random.uniform(0., 1., 1000) * 2 * np.pi
-            x = cl_cent[0] + cl_dists * np.cos(phi)
-            y = cl_cent[1] + cl_dists * np.sin(phi)
-            xy = np.array([x, y])
-
-            # Filter stars outside the ellipse
-            msk = inEllipse(xy, cl_cent, width, ecc, theta)
-
-            ax = plt.subplot(111)
-            plt.scatter(*xy, c='k')
-            ellipse = mpatches.Ellipse(
-                xy=cl_cent, width=2. * width, height=2. * width,
-                angle=0.,
-                facecolor='None', edgecolor='black', linewidth=2,
-                transform=ax.transData, zorder=6)
-            ax.add_patch(ellipse)
-
-            plt.scatter(*xy[:, msk], c='g')
-            a2 = width**2
-            b2 = a2 * (1. - ecc**2)
-            ellipse = mpatches.Ellipse(
-                xy=cl_cent, width=2. * np.sqrt(a2), height=2. * np.sqrt(b2),
-                angle=np.rad2deg(theta),
-                facecolor='None', edgecolor='green', linewidth=2,
-                transform=ax.transData, zorder=6)
-            ax.add_patch(ellipse)
-
-            plt.show()
-            import pdb; pdb.set_trace()  # breakpoint f7c56dc5 //
-
-
-            xy_clust += list(xy.T[msk])
-            N_in_ellip = len(xy_clust)
-        xy_clust = np.array(xy_clust)[:Ncl].T
+        if ndim == 2:
+            cl_dists = invTrnsfSmpl(rc, rt, Ncl)
+            # Generate positions for cluster members, given heir KP distances
+            # to the center.
+            phi = np.random.uniform(0., 1., Ncl) * 2 * np.pi
+            x_cl = cl_cent[0] + cl_dists * np.cos(phi)
+            y_cl = cl_cent[1] + cl_dists * np.sin(phi)
+            xy_clust = np.array([x_cl, y_cl])
+        elif ndim == 4:
+            xy_clust = invTrnsfSmpl_ellip(rc, rt, ecc, theta, Ncl)
+            # Rotate sample via rotation matrix
+            R = np.array(
+                ((np.cos(theta), -np.sin(theta)),
+                    (np.sin(theta), np.cos(theta))))
+            xy_clust = R.dot(xy_clust.T)
+            # Move sample to the center of the frame
+            xy_clust = (xy_clust.T + cl_cent).T
 
         # Full frame
         xy = np.concatenate([xy_field.T, xy_clust.T])
-        rt_max = width * 3
+        rt_max = rt * 3
         rt_rang = np.linspace(0., rt_max, N_integ)
 
         # Stars inside the cut-out given by the 'rt_max' value.
@@ -552,18 +539,30 @@ def test():
         r_in = xy_cent_dist[msk]
         xy_in = xy[msk].T
 
-        ndim = 4
-        # rc, rt, ecc, theta
-        bounds = ((.05 * rt_max, rt_max), (.05 * rt_max, rt_max),
-                  (.5, .9), (-np.pi / 2., np.pi / 2.))
+        if ndim == 2:
+            # rc, rt
+            bounds = ((.05 * rt_max, rt_max), (.05 * rt_max, rt_max))
+        elif ndim == 4:
+            # rc, rt, ecc, theta
+            bounds = ((.05 * rt_max, rt_max), (.05 * rt_max, rt_max),
+                      (.5, .9), (-np.pi / 2., np.pi / 2.))
+        # Minimize -lnprob
         result = differential_evolution(
             neglnprob, bounds,
             args=(ndim, rt_max, cl_cent, fd, Ncl, xy_in, r_in, rt_rang),
-            maxiter=2000, popsize=50, tol=0.00001)
-        r_rc, r_rt, r_ecc, r_theta = result.x
+            maxiter=1000, popsize=25, tol=0.00001)
+        if ndim == 2:
+            r_rc, r_rt = result.x
+            r_ecc, r_theta = 0., 0.
+        elif ndim == 4:
+            r_rc, r_rt, r_ecc, r_theta = result.x
         print(
-            ("Recov r_c, r_t, ecc, theta: {:.2f}, {:.2f}, {:.2f}, " +
+            ("R-> rc, rt, ecc, theta: {:.2f}, {:.2f}, {:.2f}, " +
              "{:.1f}").format(r_rc, r_rt, r_ecc, np.rad2deg(r_theta)))
+        # print(result)
+        # resPlot(cl_cent, xy_field, xy_clust, rt, ecc, theta, r_rt, r_ecc,
+        #         r_theta)
+
         res.append([r_rc, r_rt, r_ecc, r_theta])
 
         theta_p = np.pi + theta if theta < 0. else theta
@@ -571,10 +570,6 @@ def test():
         diff1 = np.rad2deg(abs(theta_p - r_theta_p))
         diff2 = np.rad2deg(abs(theta - r_theta))
         print(min(diff1, diff2))
-
-        print(result)
-        resPlot(cl_cent, xy_field, xy_clust, height, width, ecc, theta,
-                *result.x)
 
     orig, res = np.array(orig), np.array(res)
     perc_diff = (100. * (orig[:, :2] - res[:, :2]) / orig[:, :2]).T
@@ -594,12 +589,9 @@ def test():
     plt.show()
 
 
-def resPlot(
-    cl_cent, xy_field, xy_clust, rc, rt, ecc, theta, r_rc, r_rt, r_ecc,
-        r_theta):
+def resPlot(cl_cent, xy_field, xy_clust, rt, ecc, theta, r_rt, r_ecc, r_theta):
     """
     """
-
     ax = plt.subplot(111)
     a2 = rt**2
     b2 = a2 * (1. - ecc**2)
@@ -630,21 +622,62 @@ def resPlot(
     plt.show()
 
 
-def invTrnsfSmpl(rc, rt, ecc, theta, N_samp, N_interp=1000):
+def func(x, y, rc, rt, ecc):
+    c1 = 1 / rc**2
+    c2 = 1 - ecc**2
+    c3 = -np.sqrt(1 + (rt / rc)**2)
+    return (np.sqrt(1 + c1 * (x**2 + (y**2 / c2))) + c3)**2
+
+
+def invTrnsfSmpl_ellip(rc, rt, ecc, theta, Nsample):
+    """
+    Sample King's profile using the inverse CDF method.
+    """
+    import sys
+    # insert at 1, 0 is the script path (or '' in REPL)
+    sys.path.insert(1, '/home/gabriel/Descargas/pinky-master')
+    from pinky import Pinky
+
+    width = rt
+    height = width * np.sqrt(1 - ecc**2)
+    x = np.linspace(-width, width, 50)
+    y = np.linspace(-height, height, 50)
+    XX, YY = np.meshgrid(x, y)
+    P = func(XX, YY, rc, rt, ecc)
+    p = Pinky(P=P, extent=[-width, width, -height, height])
+
+    cl_cent, in_theta = (0., 0.), 0.
+    xy_in_ellipse = []
+    while True:
+        sampled_points = p.sample(Nsample)
+        msk = inEllipse(sampled_points.T, cl_cent, rt, ecc, in_theta)
+        xy_in_ellipse += list(sampled_points[msk])
+        if len(xy_in_ellipse) >= Nsample:
+            break
+
+    samples = np.array(xy_in_ellipse)[:Nsample]
+
+    # ax = plt.subplot(111)
+    # plt.scatter(*samples)
+    # height = rt * np.sqrt(1. - ecc**2)
+    # ellipse = mpatches.Ellipse(
+    #     xy=(0., 0.), width=2. * rt, height=2. * height,
+    #     facecolor='None', edgecolor='black', linewidth=2,
+    #     angle=np.rad2deg(theta), transform=ax.transData, zorder=6)
+    # ax.add_patch(ellipse)
+    # plt.show()
+
+    return samples
+
+
+def invTrnsfSmpl(rc, rt, N_samp, N_interp=1000):
     """
     Sample King's profile using the inverse CDF method.
     """
     from scipy.integrate import quad
     from scipy.interpolate import interp1d
 
-    def rKP(r, rc, rt, ecc, theta):
-        x, y = r * np.cos(theta), r * np.sin(theta)
-        x1 = x * np.cos(theta) + y * np.sin(theta)
-        y1 = x * np.sin(theta) - y * np.cos(theta)
-        # The 'width' ('a') is used instead of the radius 'r' (sqrt(x**2+y**2))
-        # in King's profile, for each star
-        r = np.sqrt(x1**2 + y1**2 / (1. - ecc**2))
-
+    def rKP(r, rc, rt):
         return r * KingProf(r, rc, rt)
 
     r_0rt = np.linspace(0., rt, N_interp)
@@ -652,7 +685,7 @@ def invTrnsfSmpl(rc, rt, ecc, theta, N_samp, N_interp=1000):
     # Sample the CDF
     CDF_samples = []
     for r in r_0rt:
-        CDF_samples.append(quad(rKP, 0., r, args=(rc, rt, ecc, theta))[0])
+        CDF_samples.append(quad(rKP, 0., r, args=(rc, rt))[0])
 
     # Normalize CDF
     CDF_samples = np.array(CDF_samples) / CDF_samples[-1]
