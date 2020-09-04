@@ -12,9 +12,7 @@ def main(
     npd, cld_i, pd, x_offset, y_offset, bw_list, kde_cent, frame_kde_cent,
     integ_dists, integ_mags, xy_filtered, xy_cent_dist, NN_dist, fr_dens,
     fdens_min_d, fdens_lst, fdens_std_lst, field_dens_d, field_dens,
-        field_dens_std, clust_rad,
-        KP_plot, KP_Bys_rc, KP_Bys_rt,
-        **kwargs):
+        field_dens_std, clust_rad, **kwargs):
     """
     Make A2 block plots.
     """
