@@ -67,15 +67,20 @@ def pl_rad_dens(
     Radial density plot.
     """
 
+    KP_cent_dens, _16_84_rang, _84_kp, _16_kp = 0., 0., 0., 0.
+    if kp_flag:
+        KP_cent_dens, _16_84_rang, _84_kp, _16_kp = KP_plot['KP_cent_dens'],\
+            KP_plot['_16_84_rang'], KP_plot['_84_kp'], KP_plot['_16_kp']
+
     # Convert from deg to arcmin if (ra,dec) were used.
     if coord == 'deg':
         rdp_radii = np.array(rdp_radii) * 60.
         clust_rad, e_rad = clust_rad * 60., e_rad * 60.
         KP_Bys_rc, KP_Bys_rt = KP_Bys_rc * 60., KP_Bys_rt * 60.
         field_dens, e_fdens, KP_cent_dens = field_dens / 3600.,\
-            e_fdens / 3600., KP_plot['KP_cent_dens'] / 3600.
-        _16_84_rang, _84_kp, _16_kp = KP_plot['_16_84_rang'] * 60.,\
-            KP_plot['_84_kp'] / 3600., KP_plot['_16_kp'] / 3600.
+            e_fdens / 3600., KP_cent_dens / 3600.
+        _16_84_rang, _84_kp, _16_kp = _16_84_rang * 60.,\
+            _84_kp / 3600., _16_kp / 3600.
         rdp_points = np.array(rdp_points) / 3600.
         rdp_stddev = np.array(rdp_stddev) / 3600.
         coord2 = 'arcmin'
