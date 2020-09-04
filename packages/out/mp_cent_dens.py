@@ -187,8 +187,7 @@ def pl_knn_dens(
 
 def pl_field_dens(
     gs, plot_style, coord, fdens_method, fr_dist, fr_dens, fdens_min_d,
-        fdens_lst, fdens_std_lst, field_dens_d, field_dens, field_dens_std,
-        KP_cent_dens, KP_Bys_rc, KP_Bys_rt,):
+        fdens_lst, fdens_std_lst, field_dens_d, field_dens, field_dens_std):
     """
     Field density values for different percentiles.
     """
@@ -234,11 +233,11 @@ def pl_field_dens(
             field_dens, xmin=fdens_min_d[0], xmax=fdens_min_d[-1], color='g',
             label=t1)
 
-    from ..structure.king_profile import KingProf as kpf
-    kpf_xvals = np.linspace(0, KP_Bys_rt[1] * 60., 100)
-    kpf_yvals = (KP_cent_dens/3600.) * kpf(
-        kpf_xvals, KP_Bys_rc[3] * 60., KP_Bys_rt[3] * 60.) + field_dens
-    ax.plot(kpf_xvals, kpf_yvals, 'g--', lw=2., zorder=3)
+    # from ..structure.king_profile import KingProf as kpf
+    # kpf_xvals = np.linspace(0, KP_Bys_rt[1] * 60., 100)
+    # kpf_yvals = (KP_cent_dens/3600.) * kpf(
+    #     kpf_xvals, KP_Bys_rc[3] * 60., KP_Bys_rt[3] * 60.) + field_dens
+    # ax.plot(kpf_xvals, kpf_yvals, 'g--', lw=2., zorder=3)
 
     leg = plt.legend(fancybox=True, loc='upper right')
     leg.get_frame().set_alpha(0.7)
