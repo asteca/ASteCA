@@ -41,12 +41,12 @@ def pl_KP_Bys(
     gsy, gsx = (0, 1), (2, 6)
     xylabel = r"$r_{{c}}$ [{}]".format(coord2)
     BayesPlots.traceplot(
-        gs, gsx, gsy, KP_samples[:, :, 0], KP_Bys_rc, nburn, xylabel,
+        gs, gsx, gsy, KP_samples[:, :, 0], KP_Bys_rc, kp_nburn, xylabel,
         False)
     gsy, gsx = (1, 2), (2, 6)
     xylabel = r"$r_{{t}}$ [{}]".format(coord2)
     BayesPlots.traceplot(
-        gs, gsx, gsy, KP_samples[:, :, 1], KP_Bys_rt, nburn, xylabel)
+        gs, gsx, gsy, KP_samples[:, :, 1], KP_Bys_rt, kp_nburn, xylabel)
 
     # Core vs tidal radii
     gsx = (0, 2)
@@ -85,13 +85,13 @@ def pl_KP_Bys(
         xylabel = r"$ecc$"
         BayesPlots.histogram(
             gs, gsx, gsy, KP_samples[nburn:, :, 2], KP_Bys_ecc,
-            KP_kde[2], xylabel, dec_places, (-0.1, 1.1))
+            KP_kde[2], xylabel, "{:.2f}")
         #
         gsy, gsx = (6, 8), (2, 4)
         xylabel = r"$\theta$ [rad]"
         BayesPlots.histogram(
             gs, gsx, gsy, KP_samples[nburn:, :, 3], KP_Bys_theta,
-            KP_kde[3], xylabel, dec_places)
+            KP_kde[3], xylabel, "{:.2f}")
         #
         gsy, gsx = (6, 8), (4, 6)
         xylabel = (r"$ecc$", r"$\theta$ [rad]")
