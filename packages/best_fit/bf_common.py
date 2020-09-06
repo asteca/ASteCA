@@ -4,7 +4,7 @@ from scipy.optimize import differential_evolution as DE
 from scipy import stats
 import warnings
 from ..synth_clust import synth_cluster
-from ..aux_funcs import kde1D
+from ..aux_funcs import kde1D, reject_outliers
 from . import likelihood
 from .. import update_progress
 
@@ -183,6 +183,7 @@ def modeKDE(fundam_params, varIdxs, mcmc_trace):
     """
     mcmc_kde, mode_sol = [], []
     for i, mcmc_par in enumerate(mcmc_trace):
+        mcmc_par = reject_outliers(mcmc_par)
 
         # Multiple elements are required
         if len(mcmc_par) <= 1:

@@ -47,7 +47,7 @@ def main(
             [gs, pd['plot_style'], coord, pd['fdens_method'], xy_cent_dist,
              fr_dens, fdens_min_d, fdens_lst, fdens_std_lst, field_dens_d,
              field_dens, field_dens_std],
-            # # pl_centdist_vs_mag
+            # pl_centdist_vs_mag
             [gs, fig, pd['plot_style'], y_ax, coord, cld_i['x'], cld_i['y'],
              cld_i['mags'][0], kde_cent, clust_rad, integ_dists, integ_mags]
         ]

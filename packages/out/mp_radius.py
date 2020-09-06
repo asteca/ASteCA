@@ -61,11 +61,16 @@ def pl_rad_find(
 
 def pl_rad_dens(
     gs, plot_style, coord, rdp_radii, rdp_points, rdp_stddev, field_dens,
-    e_fdens, clust_rad, e_rad, kp_flag, KP_Bys_rc, KP_Bys_rt, KP_cent_dens,
+    e_fdens, clust_rad, e_rad, kp_flag, KP_Bys_rc, KP_Bys_rt, KP_plot,
         KP_conct_par):
     """
     Radial density plot.
     """
+
+    KP_cent_dens, _16_84_rang, _84_kp, _16_kp = 0., 0., 0., 0.
+    if kp_flag:
+        KP_cent_dens, _16_84_rang, _84_kp, _16_kp = KP_plot['KP_cent_dens'],\
+            KP_plot['_16_84_rang'], KP_plot['_84_kp'], KP_plot['_16_kp']
 
     # Convert from deg to arcmin if (ra,dec) were used.
     if coord == 'deg':
@@ -74,6 +79,8 @@ def pl_rad_dens(
         KP_Bys_rc, KP_Bys_rt = KP_Bys_rc * 60., KP_Bys_rt * 60.
         field_dens, e_fdens, KP_cent_dens = field_dens / 3600.,\
             e_fdens / 3600., KP_cent_dens / 3600.
+        _16_84_rang, _84_kp, _16_kp = _16_84_rang * 60.,\
+            _84_kp / 3600., _16_kp / 3600.
         rdp_points = np.array(rdp_points) / 3600.
         rdp_stddev = np.array(rdp_stddev) / 3600.
         coord2 = 'arcmin'
@@ -91,7 +98,7 @@ def pl_rad_dens(
     y_min = max((field_dens - delta_backg) -
                 (max(rdp_points[:N_h]) - min(rdp_points[:N_h])) / 10., 0)
     y_max = max(rdp_points[:N_h]) + (
-        max(rdp_points[:N_h]) - min(rdp_points[:N_h])) / 10.
+        max(rdp_points[:N_h]) - min(rdp_points[:N_h])) / 5.
     # Set plot limits
     plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
@@ -147,6 +154,13 @@ def pl_rad_dens(
         kpf_yvals = KP_cent_dens * kpf(
             kpf_xvals, KP_Bys_rc[3], KP_Bys_rt[3]) + field_dens
         ax.plot(kpf_xvals, kpf_yvals, 'g--', label=txts[0], lw=2., zorder=3)
+        # 16-84th range
+        idx = (np.abs(_16_84_rang - kpf_xvals[-1])).argmin()
+        # 16-84 region
+        ax.fill_between(
+            _16_84_rang[:idx], _84_kp[:idx], _16_kp[:idx], facecolor='green',
+            alpha=0.1)
+
         # Core radius
         rc_ymax = KP_cent_dens * kpf(
             KP_Bys_rc[3], KP_Bys_rc[3], KP_Bys_rt[3]) + field_dens
@@ -197,6 +211,7 @@ def pl_rad_dens(
 
     axins.set_xscale('log')
     axins.set_yscale('log')
+    axins.minorticks_off()
     y0, y1 = axins.set_ylim()
     axins.set_ylim(y0, y_max)
 

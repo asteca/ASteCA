@@ -34,7 +34,7 @@ def pl_full_frame(
         x, y = x[ids], y[ids]
 
     # Plot stars.
-    plt.scatter(x, y, marker='o', c='black', s=st_sizes_arr)
+    plt.scatter(x, y, marker='o', c='black', s=st_sizes_arr * 1.5)
     # plt.axvline(x=kde_cent[0], linestyle='--', color='green')
     # plt.axhline(y=kde_cent[1], linestyle='--', color='green')
     plt.scatter(*kde_cent, marker='x', c='red', s=50)
@@ -232,6 +232,12 @@ def pl_field_dens(
         ax.hlines(
             field_dens, xmin=fdens_min_d[0], xmax=fdens_min_d[-1], color='g',
             label=t1)
+
+    # from ..structure.king_profile import KingProf as kpf
+    # kpf_xvals = np.linspace(0, KP_Bys_rt[1] * 60., 100)
+    # kpf_yvals = (KP_cent_dens/3600.) * kpf(
+    #     kpf_xvals, KP_Bys_rc[3] * 60., KP_Bys_rt[3] * 60.) + field_dens
+    # ax.plot(kpf_xvals, kpf_yvals, 'g--', lw=2., zorder=3)
 
     leg = plt.legend(fancybox=True, loc='upper right')
     leg.get_frame().set_alpha(0.7)
