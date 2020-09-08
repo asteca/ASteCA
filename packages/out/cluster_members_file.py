@@ -1,5 +1,5 @@
 
-from astropy.io import ascii
+from ..inp import data_IO
 from astropy.table import Table
 
 
@@ -27,9 +27,5 @@ def main(clp, npd, **kwargs):
                 st[0], round(clp['memb_probs_cl_region_i'][i], 2), '-1'])
 
     t = Table(list(zip(*data)), names=['ID', 'MP', 'sel'])
-    ascii.write(
-        t, npd['memb_file_out'], overwrite=True, format='csv',
-        fast_writer=False  # <-- TODO remove when the bug is fixed
-    )
-
+    data_IO.dataSave(t, npd['memb_file_out'])
     print("Cluster region and MPs saved to file")

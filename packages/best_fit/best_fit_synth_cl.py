@@ -1,6 +1,6 @@
 
 import numpy as np
-import pickle
+from ..inp import data_IO
 from . import max_mag_cut, obs_clust_prepare, ptemcee_algor
 from ..synth_clust import add_errors, imf, extin_coefs, synth_clust_gen
 from .mcmc_convergence import convergenceVals
@@ -54,8 +54,9 @@ def main(npd, pd, clp):
         #     isoch_fit_params = abcpmc_algor.main()
 
         # Save MCMC trace (and some other variables) to file
-        mcmcSamplesSave(
-            isoch_fit_params, pd['full_trace_flag'], npd['mcmc_file_out'])
+        if pd['save_trace_flag']:
+            data_IO.dataSave(isoch_fit_params, npd['mcmc_file_out'])
+            print("OUtput of MCMC sampler saved to file")
 
         # Obtain convergence parameters
         isoch_fit_params = convergenceParams(isoch_fit_params, **pd)
@@ -65,7 +66,7 @@ def main(npd, pd, clp):
         print("Best fit parameters obtained")
 
     elif pd['best_fit_algor'] == 'read':
-        isoch_fit_params = mcmcSamplesRead(
+        isoch_fit_params = data_IO.dataRead(
             npd['clust_name'], npd['mcmc_file_out'])
         isoch_fit_params = convergenceParams(isoch_fit_params, **pd)
         isoch_fit_errors = params_errors(pd, isoch_fit_params)
@@ -260,27 +261,3 @@ def params_errors(pd, isoch_fit_params):
     # elif pd['best_fit_algor'] in ('ptemcee', 'emcee'):  # , , 'abc'
 
     return isoch_fit_errors
-
-
-def mcmcSamplesSave(isoch_fit_params, full_trace_flag, mcmc_file_out):
-    """
-    Create output data file with the MCMC sampler values for each parameter,
-    for all chains/walkers.
-    """
-    if full_trace_flag:
-        with open(mcmc_file_out, 'wb') as f:
-            pickle.dump(isoch_fit_params, f)
-
-        print("OUtput of MCMC sampler saved to file")
-
-
-def mcmcSamplesRead(clust_name, mcmc_file_out):
-    """
-    Create output data file with the MCMC sampler values for each parameter,
-    for all chains/walkers.
-    """
-    mcmc_file_out = mcmc_file_out.replace('output' + '/' + clust_name, 'input')
-    with open(mcmc_file_out, 'rb') as f:
-        isoch_fit_params = pickle.load(f)
-
-    return isoch_fit_params
