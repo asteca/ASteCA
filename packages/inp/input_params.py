@@ -130,7 +130,7 @@ def main(pars_f_path):
                 elif reader[0] == 'B0':
                     best_fit_algor = str(reader[1])
                     mins_max = float(reader[2])
-                    full_trace_flag = True if reader[3] in true_lst else False
+                    save_trace_flag = True if reader[3] in true_lst else False
 
                 # Shared ptemcee parameters.
                 elif reader[0] == 'B1':
@@ -281,7 +281,7 @@ def main(pars_f_path):
 
         # Best fit parameters.
         'best_fit_algor': best_fit_algor, 'mins_max': mins_max,
-        'full_trace_flag': full_trace_flag,
+        'save_trace_flag': save_trace_flag,
         # ptemcee algorithm parameters.
         'nsteps_mcee': nsteps_mcee, 'nwalkers_mcee': nwalkers_mcee,
         'nburn_mcee': nburn_mcee, 'priors_mcee': priors_mcee,
