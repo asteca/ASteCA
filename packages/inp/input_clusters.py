@@ -31,7 +31,7 @@ def main(mypath, file_end):
             else:
                 subdir = subdir0
             # Don't attempt to read membership or .md files.
-            if not f.endswith(('_memb.dat', '.md', '.pickle')):
+            if not f.endswith(('_memb.dat', '_mass.dat', '.md', '.pickle')):
                 cl_files.append([mypath, input_dir, subdir, f])
 
     # Return sorted list by cluster file name.
