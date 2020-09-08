@@ -363,7 +363,7 @@ RS         n
 
 #################### Best fit algorithm parameters #############################
 
-# Algorithm used to maximize/explore the parameter space given a likelihood.
+# Algorithm used to explore the parameter space given a likelihood.
 #
 # * algorithm: ptemcee / n
 #
