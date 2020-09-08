@@ -6,10 +6,10 @@ from .._version import __version__
 
 
 def main(npd):
-    '''
+    """
     Create output data file with headers. This will not overwrite any old
     output data file already in the folder.
-    '''
+    """
     out_file_name = npd['out_file_name']
     # Current time and date.
     now_time = strftime("%Y-%m-%d %H:%M:%S")
