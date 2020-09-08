@@ -27,5 +27,5 @@ def main(clp, npd, **kwargs):
                 st[0], round(clp['memb_probs_cl_region_i'][i], 2), '-1'])
 
     t = Table(list(zip(*data)), names=['ID', 'MP', 'sel'])
-    data_IO.dataSave(t, npd['memb_file_out'])
+    data_IO.dataSave(t, npd['memb_file_out'], 'w')
     print("Cluster region and MPs saved to file")
