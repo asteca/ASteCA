@@ -204,8 +204,9 @@ def writeFileOut(
     # Write masses file
     st_ID = np.array(list(zip(*cl_max_mag))[0])
     main_mag = np.array(list(zip(*cl_max_mag))[3]).flatten()
+    first_col = np.array(list(zip(*cl_max_mag))[5]).flatten()
     mass_table = Table(
-        [st_ID, main_mag, st_mean, st_std],
-        names=['ID', 'Mag', 'Mass_mu', 'Mass_std'])
+        [st_ID, main_mag, first_col, st_mean, st_std],
+        names=['ID', 'Mag', 'Col', 'Mass_mu', 'Mass_std'])
     mass_table.meta['comments'] = ['Subset of stars selected as members']
     data_IO.dataSave(mass_table, npd['mass_file_out'], 'w')
