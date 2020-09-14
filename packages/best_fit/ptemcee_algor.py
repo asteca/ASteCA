@@ -2,6 +2,7 @@
 import numpy as np
 import warnings
 import time as t
+from .. import update_progress
 from ..synth_clust import synth_cluster
 from . import likelihood
 from .bf_common import initPop, varPars, rangeCheck, fillParams
@@ -61,9 +62,16 @@ def main(
         N_steps_store, runs = 50, 0
 
         elapsed, start = 0., t.time()
-        milestones = list(range(10, 101, 10))
         for i, (pos, lnprob, lnlike) in enumerate(ptsampler.sample(
                 pos0, iterations=nsteps_mcee, adapt=pt_adapt)):
+
+            elapsed += t.time() - start
+            start = t.time()
+            m, s = divmod(nsteps_mcee / ((i + 1) / elapsed) - elapsed, 60)
+            h, m = divmod(m, 60)
+            txt = " [{:.0f} models/sec | {:.0f}h{:.0f}m]".format(
+                (ntemps * nwalkers_mcee * (i + 1)) / elapsed, h, m)
+            update_progress.updt(nsteps_mcee, i + 1, txt)
 
             # Only check convergence every 'N_steps_store' steps
             if (i + 1) % N_steps_store:
@@ -75,18 +83,6 @@ def main(
             # Mean acceptance fractions for all temperatures.
             afs.append(np.mean(ptsampler.acceptance_fraction, axis=1))
 
-            # # Autocorrelation time for the non-tempered chain. Mean across
-            # # chains.
-            # # ptsampler.chain.shape: (ntemps, nwalkers, nsteps, ndim)
-            # # x.shape: (nsteps, ndim)
-            # x = np.mean(ptsampler.chain[0, :, :i, :], axis=0)
-            # # x = np.mean(ptsampler.chain[0], axis=0)
-            # # tau.shape: ndim
-            # tau = util.autocorr_integrated_time(x)
-            # # Autocorrelation time. Mean across dimensions.
-            # tau_autocorr.append(np.mean(tau))
-
-            maf = np.mean(ptsampler.acceptance_fraction[0])
             # Store MAP solution in this iteration.
             prob_mean.append(np.mean(lnprob[0]))
             idx_best = np.argmax(lnprob[0])
@@ -96,22 +92,6 @@ def main(
                     fillParams(fundam_params, varIdxs, pos[0][idx_best]),
                     lnprob[0][idx_best]]
             map_lkl.append(map_sol_old[1])
-
-            # Time used to check how fast the sampler is advancing.
-            elapsed += t.time() - start
-            start = t.time()
-            # Print progress.
-            percentage_complete = (100. * (i + 1) / nsteps_mcee)
-            if len(milestones) > 0 and percentage_complete >= milestones[0]:
-                map_sol, logprob = map_sol_old
-                m, s = divmod(nsteps_mcee / (i / elapsed) - elapsed, 60)
-                h, m = divmod(m, 60)
-                print("{:>3}% ({:.3f}) LP={:.1f} ({:.5f}, {:.3f}, {:.3f}, "
-                      "{:.2f}, {:.0f}, {:.2f})".format(
-                          milestones[0], maf, logprob, *map_sol) +
-                      " [{:.0f} m/s | {:.0f}h{:.0f}m]".format(
-                          (ntemps * nwalkers_mcee * i) / elapsed, h, m))
-                milestones = milestones[1:]
 
             # Stop when available time is consumed.
             if elapsed >= available_secs:
