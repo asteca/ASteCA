@@ -36,7 +36,6 @@ from .out import inparams_out
 from .out import cluster_members_file
 from .best_fit import best_fit_synth_cl
 from .out import synth_cl_file
-from .out import massFunction  # TODO
 from .out import create_out_data_file
 #
 from .out import add_data_output
@@ -262,9 +261,6 @@ def main(cl_file, pd):
 
     # Create output synthetic cluster file if one was found
     clp = synth_cl_file.main(clp, npd, **pd)
-
-    # TODO #96
-    # clp = massFunction.main(clp)
 
     # Create template output data file in /output dir.
     create_out_data_file.main(npd)
