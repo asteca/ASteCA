@@ -27,8 +27,10 @@ def main(clp, x, y, mags, **kwargs):
         n_in_cl_reg = (dist < clp['clust_rad']).sum()
 
         # Estimated number of members versus maximum magnitude. For plotting.
+        # Use a copy to avoid overwriting the original array
+        mags_cp = np.array(list(mags[0]))
         membvsmag = NmembVsMag(
-            x, y, mags[0], clp['clust_rad'], clp['cl_area'], clp['field_dens'],
+            x, y, mags_cp, clp['clust_rad'], clp['cl_area'], clp['field_dens'],
             dist)
 
         # Final contamination index.

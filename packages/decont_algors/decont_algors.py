@@ -30,7 +30,7 @@ def main(
 
     elif da_algor == 'read':
         memb_probs_cl_region = read_da.main(
-            clp['cl_region_i'], npd['memb_file'])
+            clp['cl_region_i'], npd['clust_name'], npd['memb_file'])
 
     # DEPRECATED May 2020
     # elif da_algor == 'fixed':

@@ -33,6 +33,7 @@ def main(cl_file, **kwargs):
     memb_file_out = join(output_subdir, clust_name + '_memb.dat')
     mcmc_file_out = join(output_subdir, clust_name + '_mcmc.pickle')
     synth_file_out = join(output_subdir, clust_name + '_synth.dat')
+    mass_file_out = join(output_subdir, clust_name + '_mass.dat')
     write_name = join(cl_file[2], clust_name)
     out_file_name = join(output_dir, 'asteca_output.dat')
     params_out = join(output_subdir, clust_name + '_params_input.dat')
@@ -44,8 +45,8 @@ def main(cl_file, **kwargs):
         'memb_file': memb_file, 'output_dir': output_dir,
         'out_file_name': out_file_name, 'output_subdir': output_subdir,
         'memb_file_out': memb_file_out, 'synth_file_out': synth_file_out,
-        'write_name': write_name, 'mcmc_file_out': mcmc_file_out,
-        'params_out': params_out}
+        'mass_file_out': mass_file_out, 'write_name': write_name,
+        'mcmc_file_out': mcmc_file_out, 'params_out': params_out}
     return npd
 
 

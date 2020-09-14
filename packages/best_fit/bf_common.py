@@ -1,12 +1,12 @@
 
 import numpy as np
-from scipy.optimize import differential_evolution as DE
 from scipy import stats
-import warnings
-from ..synth_clust import synth_cluster
 from ..aux_funcs import kde1D, reject_outliers
-from . import likelihood
-from .. import update_progress
+# import warnings
+# from scipy.optimize import differential_evolution as DE
+# from ..synth_clust import synth_cluster
+# from . import likelihood
+# from .. import update_progress
 
 
 def varPars(fundam_params):
@@ -78,30 +78,30 @@ def initPop(
         for _ in range(ntemps):
             p0.append(random_population(fundam_params, varIdxs, nwalkers))
 
-    elif init_mode == 'diffevol':
-        # DEPRECATED 05/09/19 when #425 was implemented
-        print("     DE init pop")
+    # elif init_mode == 'diffevol':
+    #     # DEPRECATED 05/09/19 when #425 was implemented
+    #     print("     DE init pop")
 
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+    #     with warnings.catch_warnings():
+    #         warnings.simplefilter("ignore")
 
-            # Estimate initial threshold value using DE.
-            def DEdist(model):
-                synth_clust = synth_cluster.main(
-                    fundam_params, varIdxs, model, *synthcl_args)
-                if synth_clust:
-                    lkl = likelihood.main(lkl_method, synth_clust, obs_clust)
-                    return lkl
-                return np.inf
+    #         # Estimate initial threshold value using DE.
+    #         def DEdist(model):
+    #             synth_clust = synth_cluster.main(
+    #                 fundam_params, varIdxs, model, *synthcl_args)
+    #             if synth_clust:
+    #                 lkl = likelihood.main(lkl_method, synth_clust, obs_clust)
+    #                 return lkl
+    #             return np.inf
 
-            walkers_sols = []
-            for _ in range(nwalkers):
-                result = DE(
-                    DEdist, ranges[varIdxs], popsize=popsize, maxiter=maxiter)
-                walkers_sols.append(result.x)
-                update_progress.updt(nwalkers, _ + 1)
+    #         walkers_sols = []
+    #         for _ in range(nwalkers):
+    #             result = DE(
+    #                 DEdist, ranges[varIdxs], popsize=popsize, maxiter=maxiter)
+    #             walkers_sols.append(result.x)
+    #             update_progress.updt(nwalkers, _ + 1)
 
-        p0 = [walkers_sols for _ in range(ntemps)]
+    #     p0 = [walkers_sols for _ in range(ntemps)]
 
     return p0
 
@@ -114,9 +114,9 @@ def random_population(fundam_params, varIdxs, n_ran):
     """
     p_lst = []
     for i in varIdxs:
-            p_lst.append(
-                np.random.uniform(
-                    fundam_params[i][0], fundam_params[i][-1], n_ran))
+        p_lst.append(
+            np.random.uniform(
+                fundam_params[i][0], fundam_params[i][-1], n_ran))
 
     return np.array(p_lst).T
 
