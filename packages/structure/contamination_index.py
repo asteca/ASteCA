@@ -50,7 +50,7 @@ def main(clp, x, y, mags, **kwargs):
     else:
         print("  WARNING: cluster radius is too large to obtain\n"
               "  a reliable contamination index value")
-        cont_index, n_memb_i, membvsmag = np.nan, np.nan, []
+        cont_index, n_memb_i, membvsmag = np.nan, np.nan, np.array([])
 
     clp['cont_index'], clp['n_memb_i'], clp['membvsmag'] =\
         cont_index, n_memb_i, membvsmag

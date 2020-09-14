@@ -366,7 +366,8 @@ def pl_mag_membs(gs, plot_style, y_ax, membvsmag):
     ax.set_title(r"$N_{{memb}}$ vs magnitude cut (phot incomp)")
     plt.xlabel('$' + y_ax + '$')
     plt.ylabel(r'$N_{memb}$')
-    plt.bar(*membvsmag, zorder=5)
+    if membvsmag.any():
+        plt.bar(*membvsmag, zorder=5)
 
 
 def pl_cl_fl_regions(

@@ -299,7 +299,7 @@ def pms_vs_plx_mp_mag(
     # Colored according to MPs
     msk = np.argsort(clreg_PMs['MP'])
     # Check field regions
-    fr_pmRA_m, pm_Plx_fr_m, fr_pmDE_m = np.array([]), [], []
+    fr_pmRA_m, pm_Plx_fr_m, fr_pmDE_m = np.array([]), np.array([]), []
     if fregs_PMs['pmRA'].any():
         pm_Plx_fr_m, fr_pmRA_m, fr_pmDE_m = pm_Plx_fr, fregs_PMs['pmRA'],\
             fregs_PMs['pmDE']
