@@ -19,12 +19,14 @@ def main(clp, npd, best_fit_algor, fundam_params, filters, colors,
     """
 
     clp['synth_clst_plot'], clp['binar_idx_plot'], clp['shift_isoch'],\
-        clp['synthcl_Nsigma'], clp['st_mass_mean'], clp['st_mass_std'] =\
-        [np.array([]) for _ in range(6)]
+        clp['synthcl_Nsigma'], clp['st_mass_mean'], clp['st_mass_std'],\
+        clp['st_mass_mean_binar'], clp['st_mass_std_binar'],\
+        clp['prob_binar'] = [np.array([]) for _ in range(9)]
 
     if best_fit_algor != 'n':
         isoch_moved, synth_clust, sigma, extra_pars, synthcl_Nsigma,\
-            st_mass_mean, st_mass_std = synth_cl_plot(
+            st_mass_mean, st_mass_std, st_mass_mean_binar, st_mass_std_binar,\
+            prob_binar = synth_cl_plot(
                 fundam_params, clp['isoch_fit_params'],
                 clp['isoch_fit_errors'], theor_tracks, clp['completeness'],
                 clp['max_mag_syn'], clp['st_dist_mass'], R_V, clp['ext_coefs'],
@@ -34,14 +36,13 @@ def main(clp, npd, best_fit_algor, fundam_params, filters, colors,
         # If cluster is not empty.
         if synth_clust.any():
             writeFileOut(npd, filters, colors, synth_clust, sigma, extra_pars,
-                         clp['cl_max_mag'], st_mass_mean, st_mass_std)
+                         clp['cl_max_mag'], st_mass_mean, st_mass_std,
+                         st_mass_mean_binar, st_mass_std_binar, prob_binar)
             # Save for plotting.
             binar_idx = extra_pars[0]
             clp['synth_clst_plot'], clp['binar_idx_plot'],\
-                clp['shift_isoch'], clp['synthcl_Nsigma'],\
-                clp['st_mass_mean'], clp['st_mass_std'] = synth_clust,\
-                binar_idx, isoch_moved, synthcl_Nsigma, st_mass_mean,\
-                st_mass_std
+                clp['shift_isoch'], clp['synthcl_Nsigma'] = synth_clust,\
+                binar_idx, isoch_moved, synthcl_Nsigma
         else:
             print("  ERROR: empty synthetic cluster could not be saved\n"
                   "  to file")
@@ -85,23 +86,27 @@ def synth_cl_plot(
             nancount += 1
 
     # Check if any parameter has an uncertainty attached. Else, skip process
-    synthcl_Nsigma, st_mass_mean, st_mass_std = [
-        np.array([]) for _ in range(3)]
+    synthcl_Nsigma, st_mass_mean, st_mass_std, st_mass_mean_binar,\
+        st_mass_std_binar, prob_binar = [np.array([]) for _ in range(6)]
     if nancount != 6:
-        synthcl_Nsigma, st_mass_mean, st_mass_std = ranModels(
-            N_fc, cl_max_mag, syntClustArgs, p_vals)
+        synthcl_Nsigma, st_mass_mean, st_mass_std, st_mass_mean_binar,\
+            st_mass_std_binar, prob_binar = ranModels(
+                binar_flag, N_fc, cl_max_mag, syntClustArgs, p_vals)
 
     return isoch_moved, synth_clust, sigma, extra_pars, synthcl_Nsigma,\
-        st_mass_mean, st_mass_std
+        st_mass_mean, st_mass_std, st_mass_mean_binar, st_mass_std_binar,\
+        prob_binar
 
 
-def ranModels(N_fc, cl_max_mag, syntClustArgs, p_vals, N_models=1000):
+def ranModels(
+        binar_flag, N_fc, cl_max_mag, syntClustArgs, p_vals, N_models=1000):
     """
     Generate a synthetic cluster and a N(mu, sigma) region for plotting, from
     'N_models' models.
 
     Also assigns individual masses to stars in the true member subset.
     """
+    print("Estimating individual masses")
 
     # Generate 'N_models' random models.
     models = []
@@ -113,8 +118,12 @@ def ranModels(N_fc, cl_max_mag, syntClustArgs, p_vals, N_models=1000):
     # Arrange properly
     mags, cols = [np.array(_) for _ in mags_cols_cl]
     obs_phot = np.concatenate([mags, cols]).T
+
     # Initiate empty arrays for mean and variance
     st_mass_mean, M2 = np.zeros(obs_phot.shape[0]), np.zeros(obs_phot.shape[0])
+    st_mass_mean_binar, M2_binar = np.zeros(obs_phot.shape[0]),\
+        np.zeros(obs_phot.shape[0])
+    prob_binar = np.zeros(obs_phot.shape[0])
 
     # Generate the synthetic clusters from the sampled parameters.
     synthcl_Nsigma = [[] for _ in range(sum(N_fc))]
@@ -122,15 +131,26 @@ def ranModels(N_fc, cl_max_mag, syntClustArgs, p_vals, N_models=1000):
 
         # Estimate the mean and variance for each star via recurrence.
         isoch_mv, synth_cl = setSynthClust(model, True, *syntClustArgs)[:2]
-        # For each observed star, find the closest synthetic star in the
-        # photometric space
-        tree = cKDTree(isoch_mv[:sum(N_fc)].T)
-        dd, ii = tree.query(obs_phot, k=1)
-        # Assign masses to each observed star
+
         # TODO assuming that m_ini masses are positioned last in this array
-        obs_mass = isoch_mv[-1][ii]
+        mass_ini = isoch_mv[-1]
+
+        # For non-binary systems
+        photom = isoch_mv[:sum(N_fc)].T
+        obs_mass, lkl_p = photomMatch(obs_phot, mass_ini, photom)
         # Estimate mean and variance
         st_mass_mean, M2 = recurrentStats(Nm, st_mass_mean, M2, obs_mass)
+
+        # For binary systems
+        if binar_flag:
+            photom_binar = isoch_mv[sum(N_fc):2 * sum(N_fc)].T
+            obs_mass, lkl_b = photomMatch(obs_phot, mass_ini, photom_binar)
+            st_mass_mean_binar, M2_binar = recurrentStats(
+                Nm, st_mass_mean_binar, M2_binar, obs_mass)
+
+            # Bayesian probability
+            new_prob_binar = 1. / (1. + (lkl_p / lkl_b))
+            prob_binar = recurrentStats(Nm, prob_binar, None, new_prob_binar)
 
         # Synthetic cluster
         sc = synth_cl.T
@@ -141,8 +161,26 @@ def ranModels(N_fc, cl_max_mag, syntClustArgs, p_vals, N_models=1000):
 
     # Store standard deviations
     st_mass_std = np.sqrt(M2 / Nm)
+    st_mass_std_binar = np.sqrt(M2_binar / Nm)
 
-    return synthcl_Nsigma, st_mass_mean, st_mass_std
+    return synthcl_Nsigma, st_mass_mean, st_mass_std, st_mass_mean_binar,\
+        st_mass_std_binar, prob_binar
+
+
+def photomMatch(obs_phot, mass_ini, photom):
+    """
+    For each observed star, find the closest synthetic star in the
+    photometric space 'photom'
+    """
+    tree = cKDTree(photom)
+    dd, ii = tree.query(obs_phot, k=1)
+    # Assign masses to each observed star
+    obs_mass = mass_ini[ii]
+
+    # Likelihood is defined as the inverse of the distance
+    lkl = 1. / dd
+
+    return obs_mass, lkl
 
 
 def recurrentStats(Nm, mean, var, newValue):
@@ -153,6 +191,8 @@ def recurrentStats(Nm, mean, var, newValue):
     count = Nm + 1
     delta = newValue - mean
     mean += delta / count
+    if var is None:
+        return mean
     var += delta * (newValue - mean)
     return mean, var
 
@@ -175,7 +215,7 @@ def setSynthClust(
 
 def writeFileOut(
     npd, filters, colors, synth_clst, sigma, extra_pars, cl_max_mag, st_mean,
-        st_std):
+        st_std, st_mean_binar, st_std_binar, prob_binar):
     """
     Save best fit synthetic cluster found, and per star masses to file.
     """
@@ -201,12 +241,18 @@ def writeFileOut(
     synth_table.meta['comments'] = ["Binary systems ID's begin with a '2'"]
     data_IO.dataSave(synth_table, npd['synth_file_out'], 'w')
 
-    # Write masses file
+    # Write masses to file
     st_ID = np.array(list(zip(*cl_max_mag))[0])
-    main_mag = np.array(list(zip(*cl_max_mag))[3]).flatten()
-    first_col = np.array(list(zip(*cl_max_mag))[5]).flatten()
+    main_mag = np.array(list(zip(*cl_max_mag))[3]).T[0]
+    first_col = np.array(list(zip(*cl_max_mag))[5]).T[0]
     mass_table = Table(
-        [st_ID, main_mag, first_col, st_mean, st_std],
-        names=['ID', 'Mag', 'Col', 'Mass_mu', 'Mass_std'])
+        [st_ID, main_mag, first_col, st_mean, st_std, st_mean_binar,
+         st_std_binar, prob_binar],
+        names=['ID', 'Mag', 'Col', 'Mass_mu', 'Mass_std', 'Mass_binar_mu',
+               'Mass_binar_std', 'P_binar'])
     mass_table.meta['comments'] = ['Subset of stars selected as members']
-    data_IO.dataSave(mass_table, npd['mass_file_out'], 'w')
+    data_IO.dataSave(
+        mass_table, npd['mass_file_out'], 'w',
+        {'Mag': '%12.5f', 'Col': '%12.5f', 'Mass_mu': '%12.5f',
+         'Mass_std': '%12.5f', 'Mass_binar_mu': '%12.5f',
+         'Mass_binar_std': '%12.5f', 'P_binar': '%12.2f'})
