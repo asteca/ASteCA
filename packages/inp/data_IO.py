@@ -3,7 +3,7 @@ import pickle
 from astropy.io import ascii
 
 
-def dataSave(data, file_out, wm='wb'):
+def dataSave(data, file_out, wm='wb', fdict={}):
     """
     Create output data file with: MP values / MCMC samples / mass values.
     """
@@ -11,7 +11,7 @@ def dataSave(data, file_out, wm='wb'):
         with open(file_out, wm) as f:
             pickle.dump(data, f)
     elif wm == 'w':
-        ascii.write(data, file_out, overwrite=True)
+        ascii.write(data, file_out, overwrite=True, formats=fdict)
 
 
 def dataRead(clust_name, file_in, rm='rb'):
