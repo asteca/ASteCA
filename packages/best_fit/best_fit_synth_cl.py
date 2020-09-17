@@ -77,6 +77,7 @@ def main(npd, pd, clp):
         synth_clust_gen.main(
             npd, clp, max_mag_syn, obs_clust, ext_coefs, st_dist_mass, N_fc,
             err_pars, **pd)
+        isoch_fit_params, isoch_fit_errors = [], []
 
     else:
         print("Skip parameters fitting process")
