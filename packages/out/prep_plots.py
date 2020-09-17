@@ -7,6 +7,7 @@ import numpy as np
 import warnings
 from astropy.visualization import ZScaleInterval
 from astropy.stats import sigma_clipped_stats
+from ..structure import king_profile
 
 
 # HARDCODED figure size and grid distribution
@@ -661,3 +662,43 @@ def RDPCurve(
             N_in_prev += N_in
 
     return rdp_radii, rdp_points, rdp_stddev
+
+
+def RDPellipse(xy_filtered, xy_cent_dist, kde_cent, ecc, theta, RDP_ell=50, Nmin=10):
+    'xy_filtered: Filter out stars that are too close to the frames borders.'
+
+    radii = np.linspace(0., xy_cent_dist.max(), RDP_ell + 1)
+    rdp_ellradii, rdp_ellpoints, rdp_ellstddev = [], [], []
+    l_prev, N_in_prev = np.inf, 0. 
+    for lw, h in zip(*[radii[:-1], radii[1:]]):
+        in_ellip_msk_lw = king_profile.inEllipse(xy_filtered.T, kde_cent, lw, ecc, theta)
+        in_ellip_msk_h = king_profile.inEllipse(xy_filtered.T, kde_cent, h, ecc, theta)
+
+        N_in = (len(xy_filtered[in_ellip_msk_h]) - len(xy_filtered[in_ellip_msk_lw])) + N_in_prev
+        
+        l_now = min(lw, l_prev)  # if N_in < Nmin take the next ellipse (discard this lw)
+        if N_in > Nmin:
+            # Area of an ellipse = pi*a*b
+            area_lw = np.pi * l_now**2 * np.sqrt(1 - ecc**2)
+            area_h = np.pi * h**2 * np.sqrt(1-ecc**2)
+            ellring_area = area_h - area_lw
+
+            rad_med =  h if l_now == 0. else .5 * (l_now + h)
+            rdp_ellradii.append(rad_med)
+            rdp_ellpoints.append(N_in / ellring_area)
+            rdp_ellstddev.append(np.sqrt(N_in) / ellring_area)
+            
+            # Reset
+            l_prev, N_in_prev = np.inf, 0.
+
+        else:
+            l_prev = l_now
+            N_in_prev += N_in
+
+    return rdp_ellradii, rdp_ellpoints, rdp_ellstddev
+        
+
+    
+    
+    
+    
