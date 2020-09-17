@@ -12,7 +12,7 @@ def main(
     model, isoch_moved, mass_dist, isoch_binar, isoch_compl, synth_clust,
     extra_pars, sigma, synth_field, sigma_field, cx, cy, rc, rt, cl_dists,
     xmax, ymax, x_cl, y_cl, x_fl, y_fl, CI, max_mag_syn, flag_make_plot,
-        coords, colors, filters, plot_dpi, plot_file):
+        coords, colors, filters, plot_file):
     """
     In place for #239
     Plot synthetic clusters.
@@ -196,7 +196,7 @@ def main(
 
         fig.tight_layout()
         # Generate output file.
-        plt.savefig(plot_file, dpi=plot_dpi, bbox_inches='tight')
+        plt.savefig(plot_file, bbox_inches='tight')
         # Close to release memory.
         plt.clf()
         plt.close("all")

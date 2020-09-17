@@ -17,7 +17,7 @@ from ..out import make_D0_plot
 def main(
     npd, clp, max_mag_syn, obs_clust, ext_coefs, st_dist_mass, N_fc, err_pars,
     fundam_params, theor_tracks, R_V, m_ini_idx, binar_flag, filters, colors,
-    plot_frmt, flag_make_plot, coords, plot_dpi, xmax=2000, ymax=2000,
+    flag_make_plot, coords, xmax=2000, ymax=2000,
         synth_CI_rand=False, rt=250., **kwargs):
     """
     In place for #239
@@ -35,27 +35,31 @@ def main(
         CI = np.random.uniform(.1, .95)
     else:
         CI = clp['cont_index']
+    CI = 0. if np.isnan(CI) else CI
 
     # Position cluster in the center of the frame
     cx, cy = xmax * .5, ymax * .5
 
-    # TODO handle cases where no field region is defined
-    mags_fl = []
-    for fl in clp['field_regions_c']:
-        mags_fl += np.ravel(list(zip(*fl))[3]).tolist()
-    mags_fl = np.array(mags_fl)
-    # Generate mags KDE
-    x_grid_fr = np.linspace(min(mags_fl), max(mags_fl), 1000)
-    kde = gaussian_kde(mags_fl)
-    kdepdf_fr = kde.evaluate(x_grid_fr)
+    # Handle cases where no field region is defined
+    if len(clp['field_regions_c']) > 0:
+        mags_fl = []
+        for fl in clp['field_regions_c']:
+            mags_fl += np.ravel(list(zip(*fl))[3]).tolist()
+        mags_fl = np.array(mags_fl)
+        # Generate mags KDE
+        x_grid_fr = np.linspace(min(mags_fl), max(mags_fl), 1000)
+        kde = gaussian_kde(mags_fl)
+        kdepdf_fr = kde.evaluate(x_grid_fr)
+    else:
+        kdepdf_fr = None
 
     # TODO this should come from params_input.dat
-    z_vals = (0.005, 0.0152, 0.03)
-    a_vals = (7., 8., 9.)
-    e_vals = (1.,)
-    d_vals = (14.,)
-    m_vals = (500., 2000.)
-    b_vals = (0.3,)
+    z_vals = (0.00017,)
+    a_vals = (10.16,)
+    e_vals = (0.04,)
+    d_vals = (25.05,)
+    m_vals = (500000., 1000000., 5000000)
+    b_vals = (0.,)
     # Take model values from the above list.
     varIdxs = (0, 1, 2, 3, 4, 5)
 
@@ -86,16 +90,21 @@ def main(
         field_dens, cl_dists, x_cl, y_cl, x_fl, y_fl = xyCoords(
             synth_clust.shape[1], CI, rc, rt, xmax, ymax, cx, cy)
 
-        # Generate field stars' photometry
-        synth_field, sigma_field = fldStarsPhot(
-            kdepdf_fr, x_grid_fr, max_mag_syn, synth_clust, sigma, len(x_fl))
+        if kdepdf_fr is not None:
+            # Generate field stars' photometry
+            synth_field, sigma_field = fldStarsPhot(
+                kdepdf_fr, x_grid_fr, max_mag_syn, synth_clust, sigma,
+                len(x_fl))
 
-        # Clip at 'max_mag_syn'
-        msk = synth_field[0] < max_mag_syn
-        synth_field, sigma_field = synth_field[:, msk], sigma_field[:, msk]
-        x_fl, y_fl = x_fl[msk], y_fl[msk]
+            # Clip at 'max_mag_syn'
+            msk = synth_field[0] < max_mag_syn
+            synth_field, sigma_field = synth_field[:, msk], sigma_field[:, msk]
+            x_fl, y_fl = x_fl[msk], y_fl[msk]
+        else:
+            x_fl, y_fl, synth_field, sigma_field = [
+                np.array([]) for _ in range(4)]
 
-        data_file, plot_file = fileName(npd, model, plot_frmt)
+        data_file, plot_file = fileName(npd, model)
 
         # Output data to file.
         synth_gen_out.createFile(
@@ -106,7 +115,7 @@ def main(
             model, isoch_moved, mass_dist, isoch_binar, isoch_compl,
             synth_clust, extra_pars, sigma, synth_field, sigma_field, cx, cy,
             rc, rt, cl_dists, xmax, ymax, x_cl, y_cl, x_fl, y_fl, CI,
-            max_mag_syn, flag_make_plot, coords, colors, filters, plot_dpi,
+            max_mag_syn, flag_make_plot, coords, colors, filters,
             plot_file)
 
         update_progress.updt(len(models), i + 1)
@@ -231,7 +240,10 @@ def estimateNfield(N_membs, CI, tot_area, cl_area):
     """
 
     # Number of field stars in the cluster area
-    N_field_in_clreg = N_membs / (1. / CI - 1.)
+    if CI == 0.:
+        N_field_in_clreg = 0.
+    else:
+        N_field_in_clreg = N_membs / (1. / CI - 1.)
 
     # Field stars density
     field_dens = N_field_in_clreg / cl_area
@@ -316,12 +328,12 @@ def fldStarsPhot(
     return synth_field, sigma_field
 
 
-def fileName(npd, model, plot_frmt):
+def fileName(npd, model):
     """
     """
 
     # (z, a) subfolder name
-    subfolder = str("{:.4f}".format(model[0])).replace("0.", "") +\
+    subfolder = str("{:.7f}".format(model[0])).replace("0.", "") +\
         "_" + str("{:.3f}".format(model[1])).replace(".", "")
 
     synth_gen_fold = join(npd['output_subdir'], 'synth', subfolder)
@@ -334,6 +346,6 @@ def fileName(npd, model, plot_frmt):
         "_" + str("{:.2f}".format(model[5])).replace(".", "")
 
     data_file = join(synth_gen_fold, clust_name + '.dat')
-    plot_file = join(synth_gen_fold, clust_name + '.' + plot_frmt)
+    plot_file = join(synth_gen_fold, clust_name)
 
     return data_file, plot_file

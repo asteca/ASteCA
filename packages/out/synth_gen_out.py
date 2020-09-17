@@ -15,8 +15,11 @@ def createFile(
     IDs = np.array([cl_ids + fl_ids]).astype(float)
     coords = np.array([
         x_cl.tolist() + x_fl.tolist(), y_cl.tolist() + y_fl.tolist()])
-    photom = np.concatenate((synth_clust, synth_field), 1)
-    e_photom = np.concatenate((sigma, sigma_field), 1)
+    if synth_field.any():
+        photom = np.concatenate((synth_clust, synth_field), 1)
+        e_photom = np.concatenate((sigma, sigma_field), 1)
+    else:
+        photom, e_photom = synth_clust, sigma
 
     extra_pars_fl = np.zeros((extra_pars.shape[0], x_fl.size))
     extra_pars_all = np.concatenate((extra_pars, extra_pars_fl), 1)
