@@ -2,6 +2,7 @@
 import numpy as np
 from scipy.integrate import quad
 from scipy.interpolate import interp1d
+from .. import update_progress
 
 
 def main(IMF_name, masses, m_high=150.):
@@ -76,10 +77,19 @@ def invTrnsfSmpl(masses, IMF_name, m_low, m_high):
         mr = mr[(mr >= CDF_min) & (mr <= CDF_max)]
         return inv_cdf(mr)
 
+    # Empirically I've found that if: mass_sum = sampled_inv_cdf(N_chunk).sum()
+    # then: N_chunk / mass_sum ~ 2.5
+    # This means that to achieve a total mass of 'mass[-1]' in a reasonable
+    # number of steps (~100), i.e. mass_sum * 100 ~ masses[-1],
+    # then the chunk should be of size:
+    # N_chunk ~ 2.5 * mass_sum = 2.5 * masses[-1]/100
+    N_chunk = max(100, int(2.5 * masses[-1] / 100.))
+
     # Sample in chunks of 100 stars until the maximum defined mass is reached.
     mass_samples = []
     while np.sum(mass_samples) < masses[-1]:
-        mass_samples += sampled_inv_cdf(100).tolist()
+        mass_samples += sampled_inv_cdf(N_chunk).tolist()
+        update_progress.updt(masses[-1], sum(mass_samples))
     sampled_IMF = np.array(mass_samples)
 
     return sampled_IMF
