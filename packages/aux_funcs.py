@@ -77,3 +77,33 @@ def circFrac(cent, rad, x0, x1, y0, y1, N_tot, rand_01_MC, cos_t, sin_t):
     # The area is the points within circle and frame over the points within
     # circle.
     return msk_xy.sum() / N_tot
+
+def ellipFrac(cent, a, x0, x1, y0, y1, N_tot, rand_01_MC, cos_t, sin_t, theta, ecc):
+    """
+    Use Monte Carlo to estimate the fraction of the area of a ellipsed centered
+    in (cx, cy) and rotated an angle thetha, with a semi-major axis 'a' and 
+    eccentricity 'ecc', that is located within the frame given by the limits 
+    'x0, x1, y0, y1'.
+    """
+
+    cx, cy = cent
+    
+    b = a*np.sqrt(1-ecc**2)
+    cos_th = np.cos(theta)
+    sin_th = np.sin(theta)
+    
+    # r = rad * np.sqrt(np.random.uniform(0., 1., N_tot))
+    # theta = np.random.uniform(0., 1., N_tot) * 2 * np.pi
+    rand_01_MC_a = rand_01_MC * a
+    rand_01_MC_b = rand_01_MC * b
+    
+    # cos(x-y)=cos(x)cos(y)+sen(x)sen(y);  sen(x-y)=sen(x)cos(y)-sen(y)cos(x)
+    xr = cx + rand_01_MC_a * (cos_t * cos_th + sin_t * sin_th)
+    yr = cy + rand_01_MC_b * (sin_t * cos_th - sin_th * cos_t)
+
+    # Points within the ellipse that are within the frame.
+    msk_xy = (xr > x0) & (xr < x1) & (yr > y0) & (yr < y1)
+
+    return msk_xy.sum() / N_tot
+
+

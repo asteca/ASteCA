@@ -42,7 +42,8 @@ def main(
         #    xy_filtered, xy_cent_dist, kde_cent, N_MC, rand_01_MC, cos_t,
         #    sin_t)
         rdp_radii, rdp_points, rdp_stddev = prep_plots.RDPellipse(
-            xy_filtered, xy_cent_dist, kde_cent, KP_Bys_ecc[3], KP_Bys_theta[3])
+            xy_filtered, xy_cent_dist, kde_cent, KP_Bys_ecc[3], KP_Bys_theta[3], 
+            N_MC, rand_01_MC, cos_t, sin_t)
 
 
 
