@@ -100,7 +100,7 @@ def ellipFrac(cent, a, x0, x1, y0, y1, N_tot, rand_01_MC, cos_t, sin_t, theta, e
     # https://math.stackexchange.com/questions/2645689/what-is-the-parametric-equation-of-a-rotated-ellipse-given-the-angle-of-rotatio
 
     xr = cx + rand_01_MC_a * cos_t * cos_th - rand_01_MC_b * sin_t * sin_th
-    yr = cy + rand_01_MC_a * cos_t * sin_th + rand_01_MC_b * sin_t * sin_th
+    yr = cy + rand_01_MC_a * cos_t * sin_th + rand_01_MC_b * sin_t * cos_th
     
     # Points within the ellipse that are within the frame.
     msk_xy = (xr > x0) & (xr < x1) & (yr > y0) & (yr < y1)
