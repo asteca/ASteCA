@@ -693,13 +693,14 @@ def RDPellipse(
         if N_in > Nmin:
 
             # Area of ellipse-ring.
+
             fr_area_l = ellipFrac(
                 (kde_cent), l_now, x0, x1, y0, y1, N_MC, rand_01_MC, cos_t, sin_t, theta, ecc)
             fr_area_h = ellipFrac(
                 (kde_cent), h, x0, x1, y0, y1, N_MC, rand_01_MC, cos_t, sin_t, theta, ecc)
             ellring_area = (np.pi * h**2 * np.sqrt(1-ecc**2) * fr_area_h) -\
                 (np.pi * l_now**2 * np.sqrt(1 - ecc**2) * fr_area_l)
-           
+
             # Store RDP parameters.
             rad_med =  h if l_now == 0. else .5 * (l_now + h)
             rdp_ellradii.append(rad_med)
