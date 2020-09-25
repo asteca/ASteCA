@@ -250,7 +250,7 @@ def pms_vs_plx_mp_mag(
 
         plt.axvline(
             x=plx_dist[0], linestyle='--', color=plx_dist[1], lw=1.5,
-            label=r"$Plx_{{{}}} = {:.3f}$ [mas]".format(
+            label=r"$Plx_{{{}}} = {:.3f}$ [mas] (median)".format(
                 plx_dist[2], plx_dist[0]))
 
         plx_median, plx_std = np.median(cl_xdata), np.std(cl_xdata)
