@@ -95,7 +95,7 @@ def main(
                 fig, gs, gs_y1, gs_y2, x_ax, y_ax, cl_max_mag, x_min_cmd,
                 x_max_cmd, y_min_cmd, y_max_cmd, err_lst, v_min_mp, v_max_mp,
                 obs_x, obs_y, obs_MPs, cl_sz_pt, hess_xedges, hess_yedges,
-                x_isoch, y_isoch, phot_Nsigma)
+                x_isoch, y_isoch, phot_Nsigma, pd['lkl_method'])
 
         # Generate output file.
         plt.savefig(
@@ -113,7 +113,8 @@ def main(
 def plot_observed_cluster(
     fig, gs, gs_y1, gs_y2, x_ax, y_ax, cl_max_mag, x_min_cmd, x_max_cmd,
     y_min_cmd, y_max_cmd, err_lst, v_min_mp, v_max_mp, obs_x, obs_y, obs_MPs,
-        cl_sz_pt, hess_xedges, hess_yedges, x_isoch, y_isoch, phot_Nsigma):
+    cl_sz_pt, hess_xedges, hess_yedges, x_isoch, y_isoch, phot_Nsigma,
+        lkl_method):
     """
     This function is called separately since we need to retrieve some
     information from it to plot that #$%&! colorbar.
@@ -124,7 +125,8 @@ def plot_observed_cluster(
     plot_colorbar, sca, trans = mp_bestfit_CMD.pl_mps_phot_diag(
         gs, gs_y1, gs_y2, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
         x_ax, y_ax, v_min_mp, v_max_mp, obs_x, obs_y, obs_MPs, err_bar,
-        cl_sz_pt, hess_xedges, hess_yedges, x_isoch, y_isoch, phot_Nsigma)
+        cl_sz_pt, hess_xedges, hess_yedges, x_isoch, y_isoch, phot_Nsigma,
+        lkl_method)
 
     # Ignore warning issued by colorbar plotted in photometric diagram with
     # membership probabilities.

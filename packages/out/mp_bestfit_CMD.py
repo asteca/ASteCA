@@ -8,7 +8,8 @@ from matplotlib.colors import LinearSegmentedColormap, LogNorm, ListedColormap
 def pl_mps_phot_diag(
     gs, gs_y1, gs_y2, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
     x_ax, y_ax, v_min_mp, v_max_mp, obs_x, obs_y, obs_MPs, err_bar,
-        cl_sz_pt, hess_xedges, hess_yedges, x_isoch, y_isoch, phot_Nsigma):
+    cl_sz_pt, hess_xedges, hess_yedges, x_isoch, y_isoch, phot_Nsigma,
+        lkl_method):
     """
     Star's membership probabilities on cluster's photometric diagram.
     """
@@ -36,12 +37,13 @@ def pl_mps_phot_diag(
     for y_ed in hess_yedges:
         # horizontal lines
         ax.axhline(y_ed, linestyle=gls, lw=glw, color=gc, zorder=1)
+
     # This reversed colormap means higher prob stars will look redder.
     rmap = plt.cm.get_cmap('RdYlBu_r')
     # If the 'tolstoy' method was used AND the stars have a range of colors.
-    # Currently the 'dolphin' likelihood does not use MPs in the fit, so it's
-    # confusing to color stars is if it did.
-    if v_min_mp != v_max_mp:
+    # The 'dolphin / tremmel' likelihoods do not use MPs in the fit, so it's
+    # confusing to color stars as if they did.
+    if (v_min_mp != v_max_mp) and lkl_method == 'tolstoy':
         col_select_fit, isoch_col = obs_MPs, 'g'
         plot_colorbar = True
     else:
