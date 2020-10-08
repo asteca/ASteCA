@@ -261,10 +261,12 @@ def tolstoy(synth_clust, obs_clust):
     # Observed cluster's photometry and membership probabilities.
     obs_photom, sigma, sigma_prod, N, log_mem_probs = obs_clust
 
+    # This line takes up ~30% of the processing time
     # Sum for all photometric dimensions.
     Dsum = (np.square(
         obs_photom - synth_clust[None, :, :]) / sigma).sum(axis=-1)
 
+    # This line takes up ~70% of the processing time
     sum_N = (
         logsumexp(-.5 * Dsum, b=1. / sigma_prod, axis=1) +
         log_mem_probs).sum()
