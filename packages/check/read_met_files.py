@@ -18,8 +18,7 @@ def check_get(pd):
         # Print info about tracks.
         nt = '' if len(pd['all_syst_filters']) == 1 else 's'
         print("Processing {} theoretical isochrones\n"
-              "in the photometric system{}:".format(
-                  pd['all_evol_tracks'][pd['evol_track']][1], nt))
+              "in the photometric system{}:".format(pd['evol_track'], nt))
         for syst in pd['all_syst_filters']:
             print(" * {}".format(pd['cmd_systs'][syst[0]][0]))
 

@@ -75,8 +75,7 @@ def main(
                  x_ax, y_ax, hess_xedges, hess_yedges, x_synth_phot,
                  y_synth_phot, sy_sz_pt, binar_idx, pd['IMF_name'], pd['R_V'],
                  best_sol, isoch_fit_errors, x_isoch, y_isoch,
-                 pd['lkl_method'], pd['lkl_binning'],
-                 pd['all_evol_tracks'], pd['evol_track']]
+                 pd['lkl_method'], pd['lkl_binning'], pd['evol_track']]
             ]
             for n, args in enumerate(arglist):
                 mp_bestfit_CMD.plot(n, *args)

@@ -79,15 +79,15 @@ def checkEvolTracks(mypath, pd):
     # Dictionary of photometric systems defined in the CMD service.
     all_systs = pd['cmd_systs']
 
-    # Fix isochrones location according to the CMD and set selected.
-    text1 = pd['all_evol_tracks'][pd['evol_track']][0]
-    # Generate correct name for the isochrones path.
+    # Generate name for the isochrones' folders.
+    mpi = mypath + 'isochrones/'
     iso_paths = []
     for p_syst in all_syst_filters:
-        text2 = all_systs[p_syst[0]][0]
+        phot_syst = all_systs[p_syst[0]][0]
         # Set iso_path according to the above values.
         iso_paths.append(
-            join(mypath + 'isochrones/' + text1 + '_' + text2))
+            join(mpi + pd['all_evol_tracks'][pd['evol_track']] + '_' +
+                 phot_syst))
 
     # Check if /isochrones folder exists.
     for iso_path in iso_paths:
