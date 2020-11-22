@@ -95,8 +95,8 @@ def pl_rad_dens(
     N_h = int(.5 * len(rdp_points))
     delta_total = (max(rdp_points) - field_dens)
     delta_backg = 0.1 * delta_total
-    y_min = max((field_dens - delta_backg) -
-                (max(rdp_points[:N_h]) - min(rdp_points[:N_h])) / 10., 0)
+    y_min = max((field_dens - delta_backg)
+                - (max(rdp_points[:N_h]) - min(rdp_points[:N_h])) / 10., 0)
     y_max = max(rdp_points[:N_h]) + (
         max(rdp_points[:N_h]) - min(rdp_points[:N_h])) / 5.
     # Set plot limits
@@ -147,10 +147,10 @@ def pl_rad_dens(
             'King prof ({:.2f})'.format(KP_conct_par),
             t_rad.format(
                 "c", KP_Bys_rc[3], KP_Bys_rc[0], KP_Bys_rc[2], coord2),
-            t_rad.format("t", KP_Bys_rt[1], KP_Bys_rt[0], KP_Bys_rt[2], coord2)
+            t_rad.format("t", KP_Bys_rt[3], KP_Bys_rt[0], KP_Bys_rt[2], coord2)
         ]
         # Plot curve. Values outside of rt contribute 'fd'.
-        kpf_xvals = np.linspace(rdp_radii[0], KP_Bys_rt[1], 100)
+        kpf_xvals = np.linspace(rdp_radii[0], KP_Bys_rt[3], 100)
         kpf_yvals = KP_cent_dens * kpf(
             kpf_xvals, KP_Bys_rc[3], KP_Bys_rt[3]) + field_dens
         ax.plot(kpf_xvals, kpf_yvals, 'g--', label=txts[0], lw=2., zorder=3)
