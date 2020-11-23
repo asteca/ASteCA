@@ -59,9 +59,9 @@ def main(pars_f_path):
                     kp_nruns = int(reader[3])
                     kp_nburn = float(reader[4])
                     rt_max_f = float(reader[5])
-                elif reader[0] == 'S22':
-                    kp_emcee_moves = [_.strip() for _ in line[3:].split(';')]
                 elif reader[0] == 'S3':
+                    kp_emcee_moves = [_.strip() for _ in line[3:].split(';')]
+                elif reader[0] == 'S4':
                     try:
                         fr_number = int(reader[1])
                     except ValueError:

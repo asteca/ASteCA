@@ -157,8 +157,8 @@ S1         .0         n   10          iter         0
 #
 #   ndim   nchains   nruns  nburn    rt_max
 S2     2        20    5000    .25         2
-#    emcee_moves
-S22  StretchMove()
+#   emcee_moves
+S3  StretchMove()
 
 # Field stars regions.
 #
@@ -168,7 +168,7 @@ S22  StretchMove()
 #   - max: use the maximum possible number of field regions in the frame.
 #
 #   regions
-S3       10
+S4       10
 ################################################################################
 
 
