@@ -4,6 +4,12 @@ from astropy.stats import circmean
 from astropy import units as u
 from scipy import spatial
 from scipy import stats
+try:
+    # If this import is not done outside main(), then eval() fails in the
+    # definition of the moves
+    from emcee import moves
+except ImportError:
+    pass
 import warnings
 from .. import update_progress
 from ..out import prep_plots
@@ -11,8 +17,8 @@ from ..best_fit.bf_common import modeKDE
 
 
 def main(
-    clp, cld_i, kp_flag, kp_nchains, kp_nruns, kp_nburn, rt_max_f, coords,
-        **kwargs):
+    clp, cld_i, kp_ndim, kp_nchains, kp_nruns, kp_nburn, kp_emcee_moves,
+        rt_max_f, coords, **kwargs):
     """
     Bayesian inference over an array of stars' coordinates using a King
     profile model.
@@ -33,12 +39,12 @@ def main(
     reasonable.
 
     """
-    if kp_flag:
+    if kp_ndim in (2, 4):
         print("Estimating King profile")
         KP_plot, KP_Bys_rc, KP_Bys_rt, KP_Bys_ecc, KP_Bys_theta =\
             fit_King_prof(
-                kp_nchains, kp_nruns, kp_nburn, cld_i['x'],
-                cld_i['y'], clp['kde_cent'], clp['field_dens'],
+                kp_ndim, kp_nchains, kp_nruns, kp_nburn, kp_emcee_moves,
+                cld_i['x'], cld_i['y'], clp['kde_cent'], clp['field_dens'],
                 clp['clust_rad'], clp['n_memb_i'], rt_max_f)
 
         # Obtain number of members and concentration parameter.
@@ -65,14 +71,31 @@ def main(
 
 
 def fit_King_prof(
-    nchains, nruns, nburn, x, y, cl_cent, field_dens, cl_rad, n_memb_i,
-        rt_max_f, N_integ=1000, N_conv=500, tau_stable=0.01):
+    ndim, nchains, nruns, nburn, kp_emcee_moves, x, y, cl_cent, field_dens,
+        cl_rad, n_memb_i, rt_max_f, N_integ=1000, N_conv=500, tau_stable=0.01):
     """
     N_integ : number of points used in the integration performed in the
     central density function
 
-    If the chain is longer than N_conv times the estimated autocorrelation
-    time and if this estimate changed by less than (tau_stable * 100)%
+    N_conv, tau_stable: if the chain is longer than N_conv times the
+    estimated autocorrelation time and if this estimate changed by less than
+    (tau_stable * 100)%
+
+    ndim = 2 fits (rc, rt)
+    ndim = 3 fits (rc, rt, fd)         <-- Not implemented
+    ndim = 4 fits (rc, rt, ecc, theta)
+
+    ## About the 'N_memb' and 'field_dens' parameters
+
+    * 'N_memb' fixed + 'fd' fixed: best results
+    * 'N_memb' free  + 'fd' fixed: N_memb grows and very large tidal radii
+       are favored
+    * 'N_memb' free  + 'fd' free : the field density tends to the maximum
+      allowed, which pulls the tidal radius to lower values, The number of
+      members also drops to small values.
+    * 'N_memb' fixed  + 'fd' free: the field density tends to the maximum
+      allowed, which pulls the tidal radius to lower values
+
 
     ** TODO **
 
@@ -87,38 +110,21 @@ def fit_King_prof(
     * Align the theta with the y axis (North) instead of the x axis (as done
     in Martin et al. 2008; 'A Comprehensive Maximum Likelihood Analysis of
     the Structural Properties of Faint Milky Way Satellites')?
-
-    * Fit the field density?
-    ndim = 3 (rc, rt, fd)
-    I don't think it can be done...
-
     """
-    from emcee import ensemble
-    from emcee import moves
 
-    # HARDCODED ##########################
+    from emcee import ensemble
     # Move used by emcee
-    mv = [
-        (moves.DESnookerMove(), 0.1),
-        (moves.DEMove(), 0.9 * 0.9),
-        (moves.DEMove(gamma0=1.0), 0.9 * 0.1),
-    ]
-    # mv = moves.StretchMove()
-    # mv = moves.KDEMove()
+    mv = [(eval("(moves." + _ + ")")) for _ in kp_emcee_moves]
 
     # Steps to store Bayes params.
     KP_steps = int(nruns * .01)
 
-    # Estimated number of members (previously obtained)
+    # Fixed number of members (previously estimated)
     N_memb = n_memb_i
     # Estimate N_memb with each sampler step
     # N_memb = None
-
-    # Select the number of parameters to fit:
-    # ndim = 2 fits (rc, rt)
-    # ndim = 4 fits (rc, rt, ecc, theta)
-    ndim = 4
-    # HARDCODED ##########################
+    #
+    # fd_max = 5. * field_dens
 
     # The tidal radius can not be larger than 'rt_max' times the estimated
     # "optimal" cluster radius. Used as a prior.
@@ -138,17 +144,21 @@ def fit_King_prof(
     # Dimensions: rc, rt
     rc_pos0 = np.random.uniform(.05 * rt_max, rt_max, nchains)
     rt_pos0 = np.random.uniform(rc_pos0, rt_max, nchains)
-    if ndim == 2:
-        pos0 = np.array([rc_pos0, rt_pos0]).T
-    elif ndim == 4:
+    pos0 = [rc_pos0, rt_pos0]
+    # if ndim == 3:
+    #     fd_pos0 = np.random.uniform(0., fd_max, nchains)
+    #     pos0 += [fd_pos0]
+    if ndim == 4:
         # Dimensions: ecc, theta
         ecc = np.random.uniform(.0, 1., nchains)
         theta = np.random.uniform(-np.pi / 2., np.pi / 2., nchains)
-        pos0 = np.array([rc_pos0, rt_pos0, ecc, theta]).T
+        pos0 += [ecc, theta]
+    pos0 = np.array(pos0).T
 
     # Define emcee sampler
     args = {
         'ndim': ndim, 'rt_max': rt_max, 'cl_cent': cl_cent, 'fd': field_dens,
+        # 'fd_max': fd_max,
         'N_memb': N_memb, 'rt_rang': rt_rang, 'xy_in': xy_in, 'r_in': r_in}
     sampler = ensemble.EnsembleSampler(
         nchains, ndim, lnprob, kwargs=args, moves=mv)
@@ -217,17 +227,22 @@ def fit_King_prof(
     return KP_plot, KP_Bys_rc, KP_Bys_rt, KP_Bys_ecc, KP_Bys_theta
 
 
-def lnprob(pars, ndim, rt_max, cl_cent, fd, N_memb, xy_in, r_in, rt_rang):
+def lnprob(
+        pars, ndim, rt_max, cl_cent, fd, N_memb, xy_in, r_in, rt_rang):
     """
     Logarithmic posterior
     """
     if ndim == 2:
         rc, rt = pars
         ecc, theta = 0., 0.
+    # if ndim == 3:
+    #     rc, rt, fd = pars
+    #     ecc, theta = 0., 0.
     elif ndim == 4:
         rc, rt, ecc, theta = pars
 
     # Prior.
+    # fd < 0. or fd > fd_max
     if rt <= rc or rc <= 0. or rt > rt_max or ecc < .0 or ecc > 1. or\
             theta < -np.pi / 2. or theta > np.pi / 2.:
         return -np.inf
@@ -245,12 +260,13 @@ def lnlike(
     """
     rc, rt, ecc, theta = pars
 
-    if ndim == 2:
+    if ndim in (2, 3):
         # Values outside the tidal radius contribute 'fd' to the likelihood.
         r_in_clip = np.clip(r_in, a_min=0., a_max=rt)
-        # N_in_region = r_in.size
+
         # Evaluate each star in King's profile
         KP = KingProf(r_in_clip, rc, rt)
+        # N_in_region = (r_in <= rt).sum()
 
     elif ndim == 4:
         x, y = xy_in
@@ -267,43 +283,56 @@ def lnlike(
         # in King's profile, for each star
         a_xy = np.sqrt(x1**2 + y1**2 / (1. - ecc**2))
 
-        # Values outside the ellipse contribute only 'fd' to the likelihood.
+        # Values outside the ellipse contribute 'fd' to the likelihood.
         a_xy[~in_ellip_msk] = rt
         KP = KingProf(a_xy, rc, rt)
 
+    # fd = fieldDens(ndim, rt_max, r_in, rt, N_in_region)
+
     # if N_memb is None:
-    #     N_memb = NmembEst(ndim, fd, N_in_region, rt_max, rt, ecc)
+    #     # Estimate the number of members
+    #     N_memb = NmembEst(ndim, fd, N_in_region, rt, ecc)
 
     # Central density
-    k = centDens(N_memb, rt_rang, rc, rt, ecc)
+    rho_0 = centDens(N_memb, rt_rang, rc, rt, ecc)
     if return_dens is True:
-        return k
+        return rho_0
 
     # Likelihood
-    li = k * KP + fd
-
-    # Sum of log-likelighood
+    li = rho_0 * KP + fd
+    # Sum of log-likelihood
     sum_log_lkl = np.log(li).sum()
 
+    sum_log_lkl = -np.inf if np.isnan(sum_log_lkl) else sum_log_lkl
     return sum_log_lkl
 
 
-# def NmembEst(ndim, fd, N_in_region, rt_max, rt, ecc):
+# def fieldDens(ndim, rt_max, r_in, rt, N_in_region):
+#     """
+#     Estimate the field density.
+#     """
+#     if ndim in (2, 3):
+#         fd = (r_in.size - N_in_region) / (np.pi * (rt_max**2 - rt**2))
+
+#     return fd
+
+
+# def NmembEst(ndim, fd, N_in_region, rt, ecc):
 #     """
 #     The number of true members is estimated as the total number of stars
 #     inside the region, minus the expected number of field stars in
 #     the region.
 #     """
-#     if ndim == 2:
-#         N_field_stars = np.pi * rt_max**2 * fd
+#     if ndim in (2, 3):
+#         N_field_stars = np.pi * rt**2 * fd
 #     elif ndim == 4:
 #         a = rt
 #         b = a * np.sqrt(1. - ecc**2)
 #         N_field_stars = (np.pi * a * b) * fd
 
 #     N_memb = N_in_region - N_field_stars
-#     # Minimum value is 1
-#     N_memb = max(1, N_memb)
+#     # # Minimum value is 1
+#     # N_memb = max(1, N_memb)
 #     return N_memb
 
 
@@ -332,8 +361,8 @@ def inEllipse(xy_in, cl_cent, rt, ecc, theta):
     # np.ravel is needed to change the array of arrays (of 1 element) into a
     # single array. Points are exactly on the ellipse when the sum of distances
     # is equal to the width
-    z = np.ravel(np.linalg.norm(xy - el_foc1, axis=-1) +
-                 np.linalg.norm(xy - el_foc2, axis=-1))
+    z = np.ravel(np.linalg.norm(xy - el_foc1, axis=-1)
+                 + np.linalg.norm(xy - el_foc2, axis=-1))
 
     # Mask that identifies the points inside the ellipse
     in_ellip_msk = z <= 2. * rt  # np.sqrt(max(a2, b2)) * 2.
@@ -395,9 +424,14 @@ def plotParams(
     KP_samples = sampler.get_chain()
 
     # Mode and KDE
-    if ndim == 2:
+    if ndim in (2, 3):
         # This simulates the 'fundam_params and 'varIdxs' arrays.
-        fp, vi = [[-np.inf, np.inf], [-np.inf, np.inf]], [0, 1]
+        if ndim == 2:
+            fp, vi = [[-np.inf, np.inf], [-np.inf, np.inf]], [0, 1]
+        else:
+            fp, vi = [
+                [-np.inf, np.inf], [-np.inf, np.inf], [-np.inf, np.inf]],\
+                [0, 1, 2]
         KP_mode, KP_kde = modeKDE(fp, vi, samples.T)
         # Add ecc, theta
         KP_mode += [0., 0.]
