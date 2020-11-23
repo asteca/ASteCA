@@ -138,9 +138,9 @@ S1         .0         n   10          iter         0
 
 # King profile fitting parameters.
 #
-# * flag: [y / n]
-#   Attempt to fit a King profile to the radial density profile of the defined
-#   cluster region.
+# * ndim: [0 / 2 / 4]
+#   Number of dimensions to fit: '0' means skip the process (no fit), '2' means
+#   fit (rc, rt), '4' means fit (rc, rt, ecc, theta)
 # * nchains: [int]
 #   Number of MCMC chains used in the Bayesian analysis.
 # * nruns: [int]
@@ -151,8 +151,14 @@ S1         .0         n   10          iter         0
 #   Factor that determines the maximum value of the tidal radius, compared to
 #   the radius obtained in the previous step.
 #
-#   flag   nchains   nruns  nburn    rt_max
-S2     y        20    5000    .25         2
+# * emcee_moves: [str]
+#   Single or multiple strings (if multiple, separated by ;) determining the
+#   moves used by the `emcee` package.
+#
+#   ndim   nchains   nruns  nburn    rt_max
+S2     2        20    5000    .25         2
+#    emcee_moves
+S22  StretchMove()
 
 # Field stars regions.
 #

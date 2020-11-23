@@ -54,11 +54,13 @@ def main(pars_f_path):
                     fdens_method = str(reader[4])
                     nsteps_rad = int(reader[5])
                 elif reader[0] == 'S2':
-                    kp_flag = True if reader[1] in true_lst else False
+                    kp_ndim = int(reader[1])
                     kp_nchains = int(reader[2])
                     kp_nruns = int(reader[3])
                     kp_nburn = float(reader[4])
                     rt_max_f = float(reader[5])
+                elif reader[0] == 'S22':
+                    kp_emcee_moves = [_.strip() for _ in line[3:].split(';')]
                 elif reader[0] == 'S3':
                     try:
                         fr_number = int(reader[1])
@@ -245,8 +247,9 @@ def main(pars_f_path):
         'manual_struct': manual_struct, 'center_bw': center_bw,
         'mirror_flag': mirror_flag, 'NN_dd': NN_dd,
         'fdens_method': fdens_method, 'nsteps_rad': nsteps_rad,
-        'kp_flag': kp_flag, 'kp_nchains': kp_nchains, 'kp_nruns': kp_nruns,
+        'kp_ndim': kp_ndim, 'kp_nchains': kp_nchains, 'kp_nruns': kp_nruns,
         'kp_nburn': kp_nburn, 'rt_max_f': rt_max_f, 'fr_number': fr_number,
+        'kp_emcee_moves': kp_emcee_moves,
 
         #
         'err_max': err_max, 'ad_runs': ad_runs,
