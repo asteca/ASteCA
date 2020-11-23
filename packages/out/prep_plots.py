@@ -3,10 +3,12 @@ from ..math_f import exp_function
 from ..best_fit.obs_clust_prepare import dataProcess
 from ..decont_algors.local_cell_clean import bin_edges_f
 from ..aux_funcs import circFrac
+from ..aux_funcs import ellipFrac
 import numpy as np
 import warnings
 from astropy.visualization import ZScaleInterval
 from astropy.stats import sigma_clipped_stats
+from ..structure import king_profile
 
 
 # HARDCODED figure size and grid distribution
@@ -661,3 +663,61 @@ def RDPCurve(
             N_in_prev += N_in
 
     return rdp_radii, rdp_points, rdp_stddev
+
+
+def RDPellipse(
+    xy_filtered, xy_cent_dist, kde_cent, ecc, theta, N_MC,\
+        rand_01_MC, cos_t, sin_t, RDP_ell=50, Nmin=10):
+    
+    'xy_filtered: Filter out stars that are too close to the frames borders.'
+    # Frame limits
+    x0, x1 = min(xy_filtered.T[0]), max(xy_filtered.T[0])
+    y0, y1 = min(xy_filtered.T[1]), max(xy_filtered.T[1])
+
+    radii = np.linspace(0., xy_cent_dist.max(), RDP_ell + 1)
+
+    # Areas and #stars for all rad values.
+    rdp_ellradii, rdp_ellpoints, rdp_ellstddev = [], [], []
+    l_prev, N_in_prev = np.inf, 0. 
+    for lw, h in zip(*[radii[:-1], radii[1:]]):
+
+        # Stars within this ellipse-ring.
+        in_ellip_msk_lw = king_profile.inEllipse(xy_filtered.T, kde_cent, lw, ecc, theta)
+        in_ellip_msk_h = king_profile.inEllipse(xy_filtered.T, kde_cent, h, ecc, theta)
+
+        N_in = (len(xy_filtered[in_ellip_msk_h]) - len(xy_filtered[in_ellip_msk_lw])) + N_in_prev
+        
+        l_now = min(lw, l_prev)  # if N_in < Nmin take the next ellipse (discard this lw).
+        
+        # Require that at least 'Nmin' stars are within the ellipse-ring.
+        if N_in > Nmin:
+
+            # Area of ellipse-ring.
+
+            fr_area_l = ellipFrac(
+                (kde_cent), l_now, x0, x1, y0, y1, N_MC, rand_01_MC, cos_t, sin_t, theta, ecc)
+            fr_area_h = ellipFrac(
+                (kde_cent), h, x0, x1, y0, y1, N_MC, rand_01_MC, cos_t, sin_t, theta, ecc)
+            ellring_area = (np.pi * h**2 * np.sqrt(1-ecc**2) * fr_area_h) -\
+                (np.pi * l_now**2 * np.sqrt(1 - ecc**2) * fr_area_l)
+
+            # Store RDP parameters.
+            rad_med =  h if l_now == 0. else .5 * (l_now + h)
+            rdp_ellradii.append(rad_med)
+            rdp_ellpoints.append(N_in / ellring_area)
+            rdp_ellstddev.append(np.sqrt(N_in) / ellring_area)
+            
+            # Reset
+            l_prev, N_in_prev = np.inf, 0.
+
+        else:
+            l_prev = l_now
+            N_in_prev += N_in
+
+    return rdp_ellradii, rdp_ellpoints, rdp_ellstddev
+        
+
+    
+    
+    
+    

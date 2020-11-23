@@ -38,9 +38,14 @@ def main(
             y_zmax)
         st_sizes_arr_z = prep_plots.star_size(mag_data_z)
         _, y_ax = prep_plots.ax_names(pd['colors'][0], pd['filters'][0], 'mag')
-        rdp_radii, rdp_points, rdp_stddev = prep_plots.RDPCurve(
-            xy_filtered, xy_cent_dist, kde_cent, N_MC, rand_01_MC, cos_t,
-            sin_t)
+        #rdp_radii, rdp_points, rdp_stddev = prep_plots.RDPCurve(
+        #    xy_filtered, xy_cent_dist, kde_cent, N_MC, rand_01_MC, cos_t,
+        #    sin_t)
+        rdp_radii, rdp_points, rdp_stddev = prep_plots.RDPellipse(
+            xy_filtered, xy_cent_dist, kde_cent, KP_Bys_ecc[3], KP_Bys_theta[3], 
+            N_MC, rand_01_MC, cos_t, sin_t)
+
+
 
         # Structure plots.
         arglist = [
