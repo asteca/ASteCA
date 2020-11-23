@@ -31,7 +31,7 @@ def main(
         asp_ratio = prep_plots.aspect_ratio(x_min, x_max, y_min, y_max)
         coord, x_name, y_name = prep_plots.coord_syst(pd['coords'])
         x_zmin, x_zmax, y_zmin, y_zmax = prep_plots.frame_zoomed(
-            x_min, x_max, y_min, y_max, kde_cent, clust_rad, pd['kp_flag'],
+            x_min, x_max, y_min, y_max, kde_cent, clust_rad, pd['kp_ndim'],
             KP_Bys_rt)
         x_data_z, y_data_z, mag_data_z = prep_plots.zoomed_frame(
             cld_i['x'], cld_i['y'], cld_i['mags'], x_zmin, x_zmax, y_zmin,
@@ -49,17 +49,17 @@ def main(
              rad_N_membs, rad_N_field, rad_CI],
             # pl_rad_dens: Radial density plot.
             [gs, pd['plot_style'], coord, rdp_radii, rdp_points, rdp_stddev,
-             field_dens, field_dens_std, clust_rad, e_rad, pd['kp_flag'],
+             field_dens, field_dens_std, clust_rad, e_rad, pd['kp_ndim'],
              KP_Bys_rc, KP_Bys_rt, KP_plot, KP_conct_par],
             # pl_zoom_frame: Zoom on x,y finding chart.
             [gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin, y_zmax,
              cont_index, x_data_z, y_data_z, st_sizes_arr_z,
              kde_cent, clust_rad, KP_Bys_rc, KP_Bys_rt, KP_Bys_ecc,
-             KP_Bys_theta, frac_cl_area, pd['kp_flag']],
+             KP_Bys_theta, frac_cl_area, pd['kp_ndim']],
             # pl_dens_map
             [gs, fig, asp_ratio, x_name, y_name, coord, x_zmin, x_zmax,
              y_zmin, y_zmax, kde_cent, frame_kde_cent, clust_rad,
-             pd['kp_flag'], KP_Bys_rc, KP_Bys_rt, KP_Bys_ecc, KP_Bys_theta],
+             pd['kp_ndim'], KP_Bys_rc, KP_Bys_rt, KP_Bys_ecc, KP_Bys_theta],
             # pl_mag_membs
             [gs, pd['plot_style'], y_ax, membvsmag],
             # pl_cl_fl_regions: Cluster and field regions defined.
@@ -84,7 +84,7 @@ def main(
         plt.close("all")
 
         # Bayesian convergence plots
-        if pd['kp_flag']:
+        if pd['kp_ndim'] in (2, 4):
 
             fig = plt.figure(figsize=(figsize_x, figsize_y))
             gs = gridspec.GridSpec(grid_y, grid_x)

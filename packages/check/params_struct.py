@@ -3,7 +3,7 @@ from collections import Counter
 
 
 def check(
-    trim_frame_range, manual_struct, center_bw, fdens_method, kp_flag,
+    trim_frame_range, manual_struct, center_bw, fdens_method, kp_ndim,
         kp_nchains, kp_nburn, inst_packgs_lst, **kwargs):
     """
     Check that the parameters are properly written.
@@ -45,7 +45,10 @@ def check(
             raise ValueError("field density mode ('{}') is not"
                              " recognized.".format(fdens_method))
 
-    if kp_flag:
+    if kp_ndim not in (0, 2, 4):
+        raise ValueError(
+            "Unrecognized value for King profile 'ndim' parameter")
+    elif kp_ndim in (2, 4):
         if 'emcee' not in inst_packgs_lst:
             raise ValueError("King profile is selected to run, but 'emcee' is"
                              " not installed")

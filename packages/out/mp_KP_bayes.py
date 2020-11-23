@@ -19,7 +19,7 @@ def pl_KP_Bys(
         coord2, dec_places = 'px', "{:.0f}"
 
     # Decide how to accommodate the plots
-    if KP_samples.shape[-1] == 2:
+    if KP_samples.shape[-1] in (2, 3):
         gsy_AC, gsy_AF = (0, 1), (1, 2)
         gsy_Hrc, gsy_Hrt, gsy_Hrcrt = (2, 4), (2, 4), (2, 4)
     elif KP_samples.shape[-1] == 4:
