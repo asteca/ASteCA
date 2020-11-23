@@ -48,11 +48,12 @@ def main(pars_f_path):
                 elif reader[0] == 'S0':
                     manual_struct.append(reader[1:])
                 elif reader[0] == 'S1':
-                    center_bw = float(reader[1])
-                    mirror_flag = True if reader[2] in true_lst else False
-                    NN_dd = int(reader[3])
-                    fdens_method = str(reader[4])
-                    nsteps_rad = int(reader[5])
+                    fdens_method = str(reader[1])
+                    try:
+                        fr_number = int(reader[2])
+                    except ValueError:
+                        fr_number = str(reader[2])
+
                 elif reader[0] == 'S2':
                     kp_ndim = int(reader[1])
                     kp_nchains = int(reader[2])
@@ -61,11 +62,6 @@ def main(pars_f_path):
                     rt_max_f = float(reader[5])
                 elif reader[0] == 'S3':
                     kp_emcee_moves = [_.strip() for _ in line[3:].split(';')]
-                elif reader[0] == 'S4':
-                    try:
-                        fr_number = int(reader[1])
-                    except ValueError:
-                        fr_number = str(reader[1])
 
                 # Data analysis functions parameters.
                 elif reader[0] == 'E0':
@@ -176,8 +172,6 @@ def main(pars_f_path):
                     # plot_frmt = str(reader[1])
                     # plot_dpi = int(reader[2])
                     plot_style = str(reader[1])
-                    # TODO this flag is hidden for now
-                    mirror_flag = True
 
                 else:
                     # Get parameters file name from path.
@@ -244,11 +238,10 @@ def main(pars_f_path):
         'nanvals': nanvals, 'trim_frame_range': trim_frame_range,
 
         # Structure functions parameters
-        'manual_struct': manual_struct, 'center_bw': center_bw,
-        'mirror_flag': mirror_flag, 'NN_dd': NN_dd,
-        'fdens_method': fdens_method, 'nsteps_rad': nsteps_rad,
+        'manual_struct': manual_struct, 'fdens_method': fdens_method,
+        'fr_number': fr_number,
         'kp_ndim': kp_ndim, 'kp_nchains': kp_nchains, 'kp_nruns': kp_nruns,
-        'kp_nburn': kp_nburn, 'rt_max_f': rt_max_f, 'fr_number': fr_number,
+        'kp_nburn': kp_nburn, 'rt_max_f': rt_max_f,
         'kp_emcee_moves': kp_emcee_moves,
 
         #

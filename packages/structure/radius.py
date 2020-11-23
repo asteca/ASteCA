@@ -7,7 +7,7 @@ from ..out import prep_plots
 from .. import update_progress
 
 
-def main(cld_i, clp, coords, rad_manual, nsteps_rad, NN_dd, **kwargs):
+def main(cld_i, clp, coords, rad_manual, **kwargs):
     """
     Estimate the radius through the optimization of the #cluster-members vs
     #field-stars values. Assign the uncertainty through a bootstrap process
@@ -24,21 +24,20 @@ def main(cld_i, clp, coords, rad_manual, nsteps_rad, NN_dd, **kwargs):
 
     coord = prep_plots.coord_syst(coords)[0]
     if rad_manual == 'n':
-        print("Estimating radius")
-
-        if nsteps_rad > 2:
-            # Use bootstrap to estimate the uncertainty.
-            clp['e_rad'] = radError(
-                rad_radii, rad_areas, st_dists_cent, nsteps_rad, **clp)
-            print("Radius found: {:g} {}".format(clp['clust_rad'], coord))
-        else:
-            clp['e_rad'] = np.array([np.nan, np.nan])
-            print("Radius found (no bootstrap): {:g} {}".format(
-                clp['clust_rad'], coord))
+        # DEPRECATED Nov 2020
+        # print("Estimating radius")
+        # if nsteps_rad > 2:
+        #     # Use bootstrap to estimate the uncertainty.
+        #     clp['e_rad'] = radError(
+        #         rad_radii, rad_areas, st_dists_cent, nsteps_rad, **clp)
+        #     print("Radius found: {:g} {}".format(clp['clust_rad'], coord))
+        # else:
+        #     clp['e_rad'] = np.array([np.nan, np.nan])
+        print("Radius found: {:g} {}".format(clp['clust_rad'], coord))
 
     elif rad_manual != 'n':
         # Update radius, assign zero error.
-        clp['clust_rad'], clp['e_rad'] = rad_manual, np.array([np.nan, np.nan])
+        clp['clust_rad'] = rad_manual
         print("Manual radius set: {:g} {}".format(clp['clust_rad'], coord))
 
     return clp

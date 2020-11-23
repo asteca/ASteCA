@@ -8,7 +8,7 @@ from ..structure.king_profile import KingProf as kpf
 
 
 def pl_rad_find(
-    gs, plot_style, coord, clust_rad, e_rad, rad_rads, rad_N_membs,
+    gs, plot_style, coord, clust_rad, rad_rads, rad_N_membs,
         rad_N_field, rad_CI):
     """
     Radius estimation plot.
@@ -16,7 +16,7 @@ def pl_rad_find(
     # Convert from deg to arcmin if (ra,dec) were used.
     if coord == 'deg':
         rad_rads = np.array(rad_rads) * 60.
-        clust_rad, e_rad = clust_rad * 60., e_rad * 60.
+        clust_rad = clust_rad * 60.
         coord2 = 'arcmin'
     else:
         coord2 = 'px'
@@ -47,8 +47,10 @@ def pl_rad_find(
 
     plt.plot(rad_rads, rad_CI, ls=':', c='k', label='CI')
     plt.axvline(x=clust_rad, lw=1.5, color='r', label=r"$r_{cl}$")
-    if not np.isnan(e_rad[0]):
-        plt.axvspan((e_rad[0]), (e_rad[1]), facecolor='grey', alpha=0.25)
+    # DEPRECATED Nov 2020
+    # if not np.isnan(e_rad[0]):
+    #     plt.axvspan((e_rad[0]), (e_rad[1]), facecolor='grey', alpha=0.25)
+
     # Legends.
     leg = plt.legend(fancybox=True)
     leg.get_frame().set_alpha(0.7)
@@ -61,21 +63,21 @@ def pl_rad_find(
 
 def pl_rad_dens(
     gs, plot_style, coord, rdp_radii, rdp_points, rdp_stddev, field_dens,
-    e_fdens, clust_rad, e_rad, kp_flag, KP_Bys_rc, KP_Bys_rt, KP_plot,
+    e_fdens, clust_rad, kp_ndim, KP_Bys_rc, KP_Bys_rt, KP_plot,
         KP_conct_par):
     """
     Radial density plot.
     """
 
     KP_cent_dens, _16_84_rang, _84_kp, _16_kp = 0., 0., 0., 0.
-    if kp_flag:
+    if kp_ndim in (2, 4):
         KP_cent_dens, _16_84_rang, _84_kp, _16_kp = KP_plot['KP_cent_dens'],\
             KP_plot['_16_84_rang'], KP_plot['_84_kp'], KP_plot['_16_kp']
 
     # Convert from deg to arcmin if (ra,dec) were used.
     if coord == 'deg':
         rdp_radii = np.array(rdp_radii) * 60.
-        clust_rad, e_rad = clust_rad * 60., e_rad * 60.
+        clust_rad = clust_rad * 60.
         KP_Bys_rc, KP_Bys_rt = KP_Bys_rc * 60., KP_Bys_rt * 60.
         field_dens, e_fdens, KP_cent_dens = field_dens / 3600.,\
             e_fdens / 3600., KP_cent_dens / 3600.
@@ -111,7 +113,8 @@ def pl_rad_dens(
 
     # Legend texts
     r_frmt = '{:.0f}' if coord2 == 'px' else '{:.2f}'
-    t_rad = r"$r_{{{}}}=" + r_frmt + r"_{{" + r_frmt + r"}}^{{" +\
+    t_rad = r"$r_{{{}}}=" + r_frmt + r"\,[{}]$"
+    kp_rad = r"$r_{{{}}}=" + r_frmt + r"_{{" + r_frmt + r"}}^{{" +\
         r_frmt + r"}}\,[{}]$"
 
     # Plot density profile
@@ -135,19 +138,19 @@ def pl_rad_dens(
     # Plot radius.
     y_mid_point = (y_max + y_min) * .5
     ax.vlines(x=clust_rad, ymin=field_dens, ymax=y_mid_point, lw=1.5,
-              color='r', label=t_rad.format(
-                  "cl", clust_rad, e_rad[0], e_rad[1], coord2), zorder=5)
-    # Plot radius error zone.
-    if not np.isnan(e_rad[0]):
-        plt.axvspan(e_rad[0], e_rad[1], facecolor='grey', alpha=0.25)
+              color='r', label=t_rad.format("cl", clust_rad, coord2), zorder=5)
+    # # Plot radius error zone.
+    # if not np.isnan(e_rad[0]):
+    #     plt.axvspan(e_rad[0], e_rad[1], facecolor='grey', alpha=0.25)
 
     # Plot King profile.
-    if kp_flag:
+    if kp_ndim in (2, 4):
         txts = [
             'King prof ({:.2f})'.format(KP_conct_par),
-            t_rad.format(
+            kp_rad.format(
                 "c", KP_Bys_rc[3], KP_Bys_rc[0], KP_Bys_rc[2], coord2),
-            t_rad.format("t", KP_Bys_rt[3], KP_Bys_rt[0], KP_Bys_rt[2], coord2)
+            kp_rad.format(
+                "t", KP_Bys_rt[3], KP_Bys_rt[0], KP_Bys_rt[2], coord2)
         ]
         # Plot curve. Values outside of rt contribute 'fd'.
         kpf_xvals = np.linspace(rdp_radii[0], KP_Bys_rt[3], 100)
@@ -197,7 +200,7 @@ def pl_rad_dens(
     #         xmax=max(rdp_radii), color='k', ls=':', zorder=5)
 
     # Plot King profile.
-    if kp_flag:
+    if kp_ndim in (2, 4):
         axins.plot(kpf_xvals, kpf_yvals, 'g--', lw=1., zorder=3)
         axins.vlines(
             x=KP_Bys_rc[3], ymin=field_dens, ymax=rc_ymax, color='g',
@@ -219,7 +222,7 @@ def pl_rad_dens(
 def pl_zoom_frame(
     gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin, y_zmax, cont_index,
     x_data, y_data, st_sizes_arr, kde_cent, clust_rad, KP_Bys_rc,
-        KP_Bys_rt, KP_Bys_ecc, KP_Bys_theta, frac_cl_area, kp_flag):
+        KP_Bys_rt, KP_Bys_ecc, KP_Bys_theta, frac_cl_area, kp_ndim):
     """
     Zoom on x,y finding chart.
     """
@@ -253,7 +256,7 @@ def pl_zoom_frame(
     fig.gca().add_artist(circle)
 
     # Core and tidal radii
-    if kp_flag:
+    if kp_ndim in (2, 4):
         # Plot tidal radius.
         rt_mode, ecc_mode, theta_mode = KP_Bys_rt[4], KP_Bys_ecc[4],\
             KP_Bys_theta[4]
@@ -309,7 +312,7 @@ def pl_zoom_frame(
 
 def pl_dens_map(
     gs, fig, asp_ratio, x_name, y_name, coord, x_zmin, x_zmax, y_zmin, y_zmax,
-    kde_cent, frame_kde_cent, clust_rad, kp_flag, KP_Bys_rc, KP_Bys_rt,
+    kde_cent, frame_kde_cent, clust_rad, kp_ndim, KP_Bys_rc, KP_Bys_rt,
         KP_Bys_ecc, KP_Bys_theta):
     """
     Coordinates 2D KDE zoom.
@@ -327,7 +330,7 @@ def pl_dens_map(
     ax.add_artist(circle)
 
     # Core and tidal radii (using mode values)
-    if kp_flag:
+    if kp_ndim in (2, 4):
         # Plot tidal radius.
         rt_mode, ecc_mode, theta_mode = KP_Bys_rt[4], KP_Bys_ecc[4],\
             KP_Bys_theta[4]

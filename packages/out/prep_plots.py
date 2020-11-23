@@ -609,8 +609,8 @@ def pmRectangle(allfr_PMs, frac=.1):
 
 
 def RDPCurve(
-    xy_filtered, xy_cent_dist, kde_cent, N_MC, rand_01_MC, cos_t, sin_t,
-        RDP_rings=50, rings_rm=.1, Nmin=10, **kwargs):
+    ndim, xy_filtered, xy_cent_dist, kde_cent, ecc, theta, N_MC, rand_01_MC,
+        cos_t, sin_t, RDP_rings=50, rings_rm=.1, Nmin=10, **kwargs):
     """
     Obtain the RDP using the concentric rings method.
 
@@ -633,21 +633,45 @@ def RDPCurve(
     rdp_radii, rdp_points, rdp_stddev = [], [], []
     l_prev, N_in_prev = np.inf, 0.
     for lw, h in zip(*[radii[:-1], radii[1:]]):
-        # Stars within this ring.
-        N_in = ((xy_cent_dist >= lw) & (xy_cent_dist < h)).sum() + N_in_prev
 
+        # Stars within this ellipse-ring.
+        if ndim in (0, 2):
+            N_in = ((xy_cent_dist >= lw) & (xy_cent_dist < h)).sum()\
+                + N_in_prev
+        elif ndim == 4:
+            N_in_ellip_lw = king_profile.inEllipse(
+                xy_filtered.T, kde_cent, lw, ecc, theta).sum()
+            N_in_ellip_h = king_profile.inEllipse(
+                xy_filtered.T, kde_cent, h, ecc, theta).sum()
+            N_in = (N_in_ellip_h - N_in_ellip_lw) + N_in_prev
+
+        # If N_in < Nmin take the next ellipse-ring (discard this lw).
         l_now = min(lw, l_prev)
 
-        # Require that at least 'Nmin' stars are within the ring.
+        # Require that at least 'Nmin' stars are within the ellipse-ring.
         if N_in > Nmin:
-            # Area of ring.
-            fr_area_l = circFrac(
-                (kde_cent), l_now, x0, x1, y0, y1, N_MC, rand_01_MC, cos_t,
-                sin_t)
-            fr_area_h = circFrac(
-                (kde_cent), h, x0, x1, y0, y1, N_MC, rand_01_MC, cos_t, sin_t)
-            ring_area = (np.pi * h**2 * fr_area_h) -\
-                (np.pi * l_now**2 * fr_area_l)
+
+            if ndim in (0, 2):
+                # Area of ring.
+                fr_area_l = circFrac(
+                    (kde_cent), l_now, x0, x1, y0, y1, N_MC, rand_01_MC, cos_t,
+                    sin_t)
+                fr_area_h = circFrac(
+                    (kde_cent), h, x0, x1, y0, y1, N_MC, rand_01_MC, cos_t,
+                    sin_t)
+                ring_area = (np.pi * h**2 * fr_area_h)\
+                    - (np.pi * l_now**2 * fr_area_l)
+            elif ndim == 4:
+                # Area of ellipse-ring.
+                fr_area_l = ellipFrac(
+                    (kde_cent), l_now, x0, x1, y0, y1, N_MC, rand_01_MC, cos_t,
+                    sin_t, theta, ecc)
+                fr_area_h = ellipFrac(
+                    (kde_cent), h, x0, x1, y0, y1, N_MC, rand_01_MC, cos_t,
+                    sin_t, theta, ecc)
+                ring_area = (
+                    np.pi * h**2 * np.sqrt(1 - ecc**2) * fr_area_h)\
+                    - (np.pi * l_now**2 * np.sqrt(1 - ecc**2) * fr_area_l)
 
             # Store RDP parameters.
             rad_med = h if l_now == 0. else .5 * (l_now + h)
@@ -663,61 +687,3 @@ def RDPCurve(
             N_in_prev += N_in
 
     return rdp_radii, rdp_points, rdp_stddev
-
-
-def RDPellipse(
-    xy_filtered, xy_cent_dist, kde_cent, ecc, theta, N_MC,\
-        rand_01_MC, cos_t, sin_t, RDP_ell=50, Nmin=10):
-    
-    'xy_filtered: Filter out stars that are too close to the frames borders.'
-    # Frame limits
-    x0, x1 = min(xy_filtered.T[0]), max(xy_filtered.T[0])
-    y0, y1 = min(xy_filtered.T[1]), max(xy_filtered.T[1])
-
-    radii = np.linspace(0., xy_cent_dist.max(), RDP_ell + 1)
-
-    # Areas and #stars for all rad values.
-    rdp_ellradii, rdp_ellpoints, rdp_ellstddev = [], [], []
-    l_prev, N_in_prev = np.inf, 0. 
-    for lw, h in zip(*[radii[:-1], radii[1:]]):
-
-        # Stars within this ellipse-ring.
-        in_ellip_msk_lw = king_profile.inEllipse(xy_filtered.T, kde_cent, lw, ecc, theta)
-        in_ellip_msk_h = king_profile.inEllipse(xy_filtered.T, kde_cent, h, ecc, theta)
-
-        N_in = (len(xy_filtered[in_ellip_msk_h]) - len(xy_filtered[in_ellip_msk_lw])) + N_in_prev
-        
-        l_now = min(lw, l_prev)  # if N_in < Nmin take the next ellipse (discard this lw).
-        
-        # Require that at least 'Nmin' stars are within the ellipse-ring.
-        if N_in > Nmin:
-
-            # Area of ellipse-ring.
-
-            fr_area_l = ellipFrac(
-                (kde_cent), l_now, x0, x1, y0, y1, N_MC, rand_01_MC, cos_t, sin_t, theta, ecc)
-            fr_area_h = ellipFrac(
-                (kde_cent), h, x0, x1, y0, y1, N_MC, rand_01_MC, cos_t, sin_t, theta, ecc)
-            ellring_area = (np.pi * h**2 * np.sqrt(1-ecc**2) * fr_area_h) -\
-                (np.pi * l_now**2 * np.sqrt(1 - ecc**2) * fr_area_l)
-
-            # Store RDP parameters.
-            rad_med =  h if l_now == 0. else .5 * (l_now + h)
-            rdp_ellradii.append(rad_med)
-            rdp_ellpoints.append(N_in / ellring_area)
-            rdp_ellstddev.append(np.sqrt(N_in) / ellring_area)
-            
-            # Reset
-            l_prev, N_in_prev = np.inf, 0.
-
-        else:
-            l_prev = l_now
-            N_in_prev += N_in
-
-    return rdp_ellradii, rdp_ellpoints, rdp_ellstddev
-        
-
-    
-    
-    
-    

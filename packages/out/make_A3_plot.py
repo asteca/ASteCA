@@ -10,7 +10,7 @@ from . prep_plots import figsize_x, figsize_y, grid_x, grid_y
 
 
 def main(
-    npd, cld_i, pd, kde_cent, frame_kde_cent, clust_rad, e_rad, rad_rads,
+    npd, cld_i, pd, kde_cent, frame_kde_cent, clust_rad, rad_rads,
     rad_N_membs, rad_N_field, rad_CI, membvsmag, xy_filtered, xy_cent_dist,
     N_MC, rand_01_MC, cos_t, sin_t, KP_Bys_rc, KP_Bys_rt, KP_Bys_ecc,
     KP_Bys_theta, KP_plot, KP_conct_par, KP_memb_num, field_dens,
@@ -38,23 +38,18 @@ def main(
             y_zmax)
         st_sizes_arr_z = prep_plots.star_size(mag_data_z)
         _, y_ax = prep_plots.ax_names(pd['colors'][0], pd['filters'][0], 'mag')
-        #rdp_radii, rdp_points, rdp_stddev = prep_plots.RDPCurve(
-        #    xy_filtered, xy_cent_dist, kde_cent, N_MC, rand_01_MC, cos_t,
-        #    sin_t)
-        rdp_radii, rdp_points, rdp_stddev = prep_plots.RDPellipse(
-            xy_filtered, xy_cent_dist, kde_cent, KP_Bys_ecc[3], KP_Bys_theta[3], 
-            N_MC, rand_01_MC, cos_t, sin_t)
-
-
+        rdp_radii, rdp_points, rdp_stddev = prep_plots.RDPCurve(
+            pd['kp_ndim'], xy_filtered, xy_cent_dist, kde_cent, KP_Bys_ecc[3],
+            KP_Bys_theta[3], N_MC, rand_01_MC, cos_t, sin_t)
 
         # Structure plots.
         arglist = [
             # pl_rad_find
-            [gs, pd['plot_style'], coord, clust_rad, e_rad, rad_rads,
+            [gs, pd['plot_style'], coord, clust_rad, rad_rads,
              rad_N_membs, rad_N_field, rad_CI],
             # pl_rad_dens: Radial density plot.
             [gs, pd['plot_style'], coord, rdp_radii, rdp_points, rdp_stddev,
-             field_dens, field_dens_std, clust_rad, e_rad, pd['kp_ndim'],
+             field_dens, field_dens_std, clust_rad, pd['kp_ndim'],
              KP_Bys_rc, KP_Bys_rt, KP_plot, KP_conct_par],
             # pl_zoom_frame: Zoom on x,y finding chart.
             [gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin, y_zmax,

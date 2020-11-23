@@ -5,7 +5,7 @@ from ..inp.get_data import flatten
 
 def main(
     npd, pd, cont_index, n_memb, memb_par, n_memb_da, frac_cl_area,
-    x_offset, y_offset, kde_cent, clust_rad, e_rad, KP_Bys_rc, KP_Bys_rt,
+    x_offset, y_offset, kde_cent, clust_rad, KP_Bys_rc, KP_Bys_rt,
         KP_memb_num, isoch_fit_params, isoch_fit_errors, **kwargs):
     """
     Add data obtained to the 'asteca_output.dat' file.
@@ -24,7 +24,7 @@ def main(
     # Center + radii and uncertainties
     cre_r = [
         frmt.format(_) for _ in [
-            x_cent, kde_cent[1] + y_offset, clust_rad, e_rad[0], e_rad[1],
+            x_cent, kde_cent[1] + y_offset, clust_rad,
             KP_Bys_rc[1], KP_Bys_rc[0], KP_Bys_rc[2],
             KP_Bys_rt[1], KP_Bys_rt[0], KP_Bys_rt[2]]]
 
@@ -54,7 +54,7 @@ def main(
     #     t2.write(f, format='ascii.no_header', formats={'col0': '%-16s'})
 
     frmts = (
-        '{:<30} {:>10} {:>10} {:>10} {:>10} {:>10} ' +
+        '{:<30} {:>10} {:>10} {:>10} ' +
         '{:>10} {:>10} {:>10} {:>10} {:>10} {:>10} {:>7.2f} {:>10.0f} ' +
         '{:>10.0f} {:>10.0f} {:>9.2f} {:>7.2f} ' +
         '{:>10.6} {:>10.6} {:>10.6} {:>10.6} {:>10.6} {:>10.6} {:>10.6} {:>6.2} ' +

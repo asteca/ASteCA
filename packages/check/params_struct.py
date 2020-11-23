@@ -3,8 +3,8 @@ from collections import Counter
 
 
 def check(
-    trim_frame_range, manual_struct, center_bw, fdens_method, kp_ndim,
-        kp_nchains, kp_nburn, inst_packgs_lst, **kwargs):
+    trim_frame_range, manual_struct, fdens_method, kp_ndim, kp_nchains,
+        kp_nburn, inst_packgs_lst, **kwargs):
     """
     Check that the parameters are properly written.
     """
@@ -14,19 +14,19 @@ def check(
         if c > 1]
     if dups:
         raise ValueError((
-            "duplicated entries found in 'Trim frame' block:\n" +
-            "{}".format(dups)))
+            "duplicated entries found in 'Trim frame' block:\n"
+            + "{}".format(dups)))
 
     dups = [
         _ for _, c in Counter(list(zip(*manual_struct))[0]).items() if c > 1]
     if dups:
         raise ValueError((
-            "duplicated entries found in 'Structure' block:\n" +
-            "{}".format(dups)))
+            "duplicated entries found in 'Structure' block:\n"
+            + "{}".format(dups)))
 
-    if center_bw < 0.:
-        raise ValueError("KDE bandwidth ('{}') must be greater\n"
-                         "than (or equal to) zero.".format(center_bw))
+    # if center_bw < 0.:
+    #     raise ValueError("KDE bandwidth ('{}') must be greater\n"
+    #                      "than (or equal to) zero.".format(center_bw))
 
     # Radius finding function.
     try:

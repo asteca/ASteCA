@@ -7,7 +7,7 @@ from ..update_progress import updt
 
 
 def main(
-    clp, cld_i, center_bw, flag_make_plot, mirror_flag, Nmax=50000,
+    clp, cld_i, flag_make_plot, mirror_flag=True, Nmax=50000, center_bw=0.,
         **kwargs):
     """
     Obtain Gaussian filtered 2D x,y histograms and the maximum values in them

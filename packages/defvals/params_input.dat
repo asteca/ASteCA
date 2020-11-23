@@ -109,18 +109,8 @@ I6       n   0. 0. 0. 0.
 #   name       c_x      c_y      rad     f_regs
 S0  CLUSTER      n        n        n          n
 
-# Center assignment, field density, radius value.
+# Field density, and number of field regions.
 #
-# * bandwidth: [float]
-#   The bandwidth used by the Gaussian KDE applied to the 2-dimensional (x,y)
-#   stars coordinates to estimate the center coordinates. If 'bandwidth=0'
-#   then half of Scott's rule is employed (this generally gives good results).
-# * mirror: [y / n]
-#   Flag to indicate whether to "mirror" the coordinates at the edges of the
-#   frame to avoid the low-density KDE artifact. This could hide non-physical
-#   lower densities at the edges. Only affects the generated density map plot.
-# * NN: [int]
-#   Number of closest neighbors used to estimate the per-star densities.
 # * field_dens: [min / last / iter / XX% / float>0.]
 #   - min: will use the minimum value  in the field density array.
 #   - last: will use the last value in the field density array.
@@ -129,12 +119,13 @@ S0  CLUSTER      n        n        n          n
 #   - XX%: select the density value at that percentile from the estimated center
 #     (the '%' character is necessary, e.g '75%')
 #   - float>0: manual value.
-# * N_steps: [int]
-#   The number of bootstrap steps employed to estimate the uncertainty
-#   associated to the radius.
+# * regions: [int / max]
+#   Number of field regions around the cluster that the code will try to define.
+#   - int: manually set a number of field regions.
+#   - max: use the maximum possible number of field regions in the frame.
 #
-#   bandwidth    mirror   NN    field_dens   N_steps
-S1         .0         n   10          iter         0
+#   field_dens   regions
+S1        iter        10
 
 # King profile fitting parameters.
 #
@@ -150,25 +141,15 @@ S1         .0         n   10          iter         0
 # * rt_max: [0.<float]
 #   Factor that determines the maximum value of the tidal radius, compared to
 #   the radius obtained in the previous step.
-#
-# * emcee_moves: [str]
+# * moves: [str]
 #   Single or multiple strings (if multiple, separated by ;) determining the
 #   moves used by the `emcee` package.
 #
 #   ndim   nchains   nruns  nburn    rt_max
 S2     2        20    5000    .25         2
-#   emcee_moves
+#
+#   moves
 S3  StretchMove()
-
-# Field stars regions.
-#
-# * regions: [int / max]
-#   Number of field regions around the cluster that the code will try to define.
-#   - int: manually set a number of field regions.
-#   - max: use the maximum possible number of field regions in the frame.
-#
-#   regions
-S4       10
 ################################################################################
 
 

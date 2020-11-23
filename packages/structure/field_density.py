@@ -5,7 +5,7 @@ from ..aux_funcs import circFrac
 from ..out import prep_plots
 
 
-def main(clp, cld_i, coords, NN_dd, fdens_method, **kwargs):
+def main(clp, cld_i, coords, fdens_method, **kwargs):
     """
     Get field density level of frame.
     """
@@ -15,7 +15,7 @@ def main(clp, cld_i, coords, NN_dd, fdens_method, **kwargs):
     clp['xy_filtered'], clp['xy_cent_dist'], clp['N_MC'], clp['rand_01_MC'],\
         clp['cos_t'], clp['sin_t'] = fixedParams(cld_i['x'], cld_i['y'], **clp)
 
-    clp['NN_dist'], clp['fr_dens'] = distDens(NN_dd, **clp)
+    clp['NN_dd'], clp['NN_dist'], clp['fr_dens'] = distDens(**clp)
 
     clp['fdens_min_d'], clp['fdens_lst'], clp['fdens_std_lst'],\
         clp['field_dens_d'], clp['field_dens'], clp['field_dens_std'] = kNNRDP(
@@ -60,7 +60,7 @@ def fixedParams(x, y, kde_cent, lb=1., rt=99., N_MC=100000, **kwargs):
     return xy_filtered, xy_cent_dist, N_MC, rand_01_MC, cos_t, sin_t
 
 
-def distDens(NN_dd, xy_filtered, N_MC, rand_01_MC, cos_t, sin_t, **kwargs):
+def distDens(xy_filtered, N_MC, rand_01_MC, cos_t, sin_t, **kwargs):
     """
     Obtain the NN densities and radius for each star in the frame.
     """
@@ -69,6 +69,7 @@ def distDens(NN_dd, xy_filtered, N_MC, rand_01_MC, cos_t, sin_t, **kwargs):
     y0, y1 = min(xy_filtered.T[1]), max(xy_filtered.T[1])
 
     # Find NN_dd nearest neighbors.
+    NN_dd = int(max(10, np.sqrt(len(xy_filtered))))
     tree = spatial.cKDTree(xy_filtered)
     inx = tree.query(xy_filtered, k=NN_dd + 1)
     # Keep the distance to the most distant neighbor, ie: the radius.
@@ -90,7 +91,7 @@ def distDens(NN_dd, xy_filtered, N_MC, rand_01_MC, cos_t, sin_t, **kwargs):
     # Per star densities.
     fr_dens = NN_dd / areas
 
-    return NN_dist, fr_dens
+    return NN_dd, NN_dist, fr_dens
 
 
 def kNNRDP(xy_cent_dist, dens, fdens_method):

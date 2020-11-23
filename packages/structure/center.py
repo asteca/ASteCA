@@ -6,7 +6,7 @@ from .xy_density import cent_bin as center_bin
 from ..inp.get_data import coordsProject
 
 
-def main(cld_i, clp, coords, project, center_bw, cent_manual, **kwargs):
+def main(cld_i, clp, coords, project, cent_manual, **kwargs):
     """
     Obtains the center of the putative cluster.
     """

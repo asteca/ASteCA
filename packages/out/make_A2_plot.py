@@ -10,8 +10,8 @@ from . prep_plots import grid_x, grid_y, figsize_x, figsize_y
 
 def main(
     npd, cld_i, pd, x_offset, y_offset, bw_list, kde_cent, frame_kde_cent,
-    integ_dists, integ_mags, xy_filtered, xy_cent_dist, NN_dist, fr_dens,
-    fdens_min_d, fdens_lst, fdens_std_lst, field_dens_d, field_dens,
+    integ_dists, integ_mags, xy_filtered, xy_cent_dist, NN_dd, NN_dist,
+    fr_dens, fdens_min_d, fdens_lst, fdens_std_lst, field_dens_d, field_dens,
         field_dens_std, clust_rad, **kwargs):
     """
     Make A2 block plots.
@@ -41,7 +41,7 @@ def main(
              frame_kde_cent, fr_dens, clust_rad],
             # pl_knn_dens
             [gs, fig, pd['plot_style'], asp_ratio, x_min, x_max, y_min, y_max,
-             x_name, y_name, coord, pd['NN_dd'], xy_filtered, fr_dens, NN_dist,
+             x_name, y_name, coord, NN_dd, xy_filtered, fr_dens, NN_dist,
              pd['project'], x_offset, y_offset, kde_cent, clust_rad],
             # pl_field_dens
             [gs, pd['plot_style'], coord, pd['fdens_method'], xy_cent_dist,

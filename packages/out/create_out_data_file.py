@@ -80,7 +80,7 @@ def main(npd):
 # Nt: Number of samples used to estimate the parameters values.\n\
 #\n\
 NAME                                  c_x        c_y       \
-r_cl        r16        r84        r_c       rc16       rc84        \
+r_cl        r_c       rc16       rc84        \
 r_t       rt16       rt84      CI   n_memb_k     n_memb  n_memb_da  \
 memb_par     a_f     \
 z_mean      z_MAP   z_median     z_mode     z_16th     z_84th      z_std  z_R^2     \
