@@ -54,6 +54,7 @@ def pl_full_frame(
     t2 = (r'${}_{{c}} =$' + r_frmt + r'$\,{}$').format(
         y_name, kde_cent[1] + y_offset, coord)
     text = t1 + '\n' + t2
+    # prop={'fontsize': 15})
     ob = offsetbox.AnchoredText(text, pad=0.2, loc=2)
     ob.patch.set(alpha=0.85)
     ax.add_artist(ob)
