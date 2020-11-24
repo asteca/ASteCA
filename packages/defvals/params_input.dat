@@ -266,9 +266,15 @@ F0  local      optm          0.5
 #   Percentage of chains to throw away as burn-in.
 # * mp_flag: [y / n]
 #   Use MPs in the parallax analysis?
+# * moves: [str]
+#   Single or multiple strings (if multiple, separated by ;) determining the
+#   'moves' used by the 'emcee' package.
 #
 #   plx_flag   offset   nchains   nruns   nburn   mp_flag
 P0         n    0.029        10    5000     .25         y
+#
+#   moves
+P1  DESnookerMove(), 0.1; DEMove(), 0.9 * 0.9; DEMove(gamma0=1.0), 0.9 * 0.1
 
 # Proper motions analysis
 #
@@ -278,7 +284,7 @@ P0         n    0.029        10    5000     .25         y
 #   Is the pmRA data already multiplied by the 'cos(DE)' factor?
 #
 #   KDE_stds   cosDE_flag
-P1        3.            y
+P2        3.            y
 ################################################################################
 
 

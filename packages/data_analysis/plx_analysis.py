@@ -2,6 +2,12 @@
 import numpy as np
 from scipy.optimize import differential_evolution as DE
 from scipy.special import exp1
+try:
+    # If this import is not done outside main(), then eval() fails in the
+    # definition of the moves
+    from emcee import moves
+except ImportError:
+    pass
 import warnings
 from ..best_fit.bf_common import modeKDE
 from .. import update_progress
@@ -9,7 +15,7 @@ from .. import update_progress
 
 def main(
     clp, plx_bayes_flag, plx_offset, plx_chains, plx_runs, plx_burn,
-        flag_plx_mp, flag_make_plot, outlr_std=3., **kwargs):
+        flag_plx_mp, plx_emcee_moves, flag_make_plot, outlr_std=3., **kwargs):
     """
     Bayesian parallax distance using the Bailer-Jones (2015) model with the
     'shape parameter' marginalized.
@@ -18,7 +24,6 @@ def main(
 
     * outlr_std sigma outliers are rejected
     * Bayesian prior is a Gaussian with a fixed standard deviation
-    * The default 'Stretch' move is used by emcee
     """
 
     plx_clrg, mmag_clp, mp_clp, plx_clp, e_plx_clp, plx_samples,\
@@ -71,7 +76,8 @@ def main(
                 plx_samples, plx_Bayes_kde, plx_Bys, plx_bayes_flag_clp,\
                     plx_tau_autocorr, mean_afs, plx_ess = plxBayes(
                         plx_offset, plx_chains, plx_runs, plx_burn,
-                        flag_plx_mp, plx_clp, e_plx_clp, mp_clp)
+                        flag_plx_mp, plx_emcee_moves, plx_clp, e_plx_clp,
+                        mp_clp)
 
         else:
             print("  WARNING: no valid Plx data found")
@@ -97,8 +103,8 @@ def checkPlx(plx_clrg):
 
 
 def plxBayes(
-    plx_offset, plx_chains, plx_runs, plx_burn, flag_plx_mp, plx_clp,
-        e_plx_clp, mp_clp, N_conv=1000, tau_stable=0.05):
+    plx_offset, plx_chains, plx_runs, plx_burn, flag_plx_mp, plx_emcee_moves,
+        plx_clp, e_plx_clp, mp_clp, N_conv=1000, tau_stable=0.05):
     """
 
     HARDCODED
@@ -107,12 +113,8 @@ def plxBayes(
     """
 
     from emcee import ensemble
-    # from emcee import moves
-    # mv = [
-    #     (moves.DESnookerMove(), 0.1), (moves.DEMove(), 0.9 * 0.9),
-    #     (moves.DEMove(gamma0=1.0), 0.9 * 0.1),
-    # ]
-    # # moves.KDEMove()
+    # Move used by emcee
+    mv = [(eval("(moves." + _ + ")")) for _ in plx_emcee_moves]
 
     plx_bayes_flag_clp = True
 
@@ -128,7 +130,8 @@ def plxBayes(
     print("  Bayesian Plx model ({} runs)".format(nruns))
 
     # DE initial mu position
-    mu_p = DE_mu_sol(plx_clp, e_plx_clp, mp_clp)
+    # mu_p = DE_mu_sol(plx_clp, e_plx_clp, mp_clp)
+    mu_p = np.mean(plx_clp)
 
     # Define the 'r_i' values used to evaluate the integral.
     int_max = mu_p + 5.
@@ -136,13 +139,14 @@ def plxBayes(
 
     # emcee sampler
     sampler = ensemble.EnsembleSampler(
-        nwalkers, ndim, lnprob, args=(x, B2, mp_clp, mu_p))
+        nwalkers, ndim, lnprob, args=(x, B2, mp_clp, mu_p), moves=mv)
 
-    # Random initial guesses.
     # Ball of initial guesses around 'mu_p'
-    pos0 = np.clip(
-        np.array([[mu_p + .05 * np.random.normal()] for i in range(nwalkers)]),
-        a_min=0., a_max=None)
+    # pos0 = np.clip(
+    #     np.array([[mu_p + .05 * np.random.normal()] for i in range(nwalkers)]),
+    #     a_min=0., a_max=None)
+    # Random initial guesses
+    pos0 = np.random.uniform(0., 2. * np.mean(plx_clp), (nwalkers, 1))
 
     tau_index, autocorr_vals, afs = 0, np.empty(nruns), np.empty(nruns)
     try:
@@ -199,8 +203,9 @@ def plxBayes(
     except Exception as e:
         print(e)
         print("\n  ERROR: could not process Plx data with emcee")
-        plx_samples, plx_Bys, plx_bayes_flag_clp, plx_ess, tau_autocorr,\
-            mean_afs = [], np.array([]), False, np.nan, np.nan, np.nan
+        plx_samples, plx_Bayes_kde, plx_Bys, plx_bayes_flag_clp, plx_ess,\
+            tau_autocorr, mean_afs = [], np.array([]), np.array([]), False,\
+            np.nan, np.nan, np.nan
 
     return plx_samples, plx_Bayes_kde, plx_Bys, plx_bayes_flag_clp,\
         tau_autocorr, mean_afs, plx_ess
