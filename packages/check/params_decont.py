@@ -27,6 +27,9 @@ def check(
 
         # This assumes that there is no maximum number of colors that can be
         # defined
+        if 'y' not in bayesda_dflag:
+            raise ValueError(
+                "at least one 'bayes' DA weight must be set to 'y'.")
         if len(bayesda_dflag) - 5 != len(colors):
             raise ValueError(
                 "there are {} 'bayes' DA weights defined, there should "
