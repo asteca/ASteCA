@@ -164,6 +164,7 @@ def fit_King_prof(
         nchains, ndim, lnprob, kwargs=args, moves=mv)
 
     # Run the sampler hiding some annoying warnings
+    conver_flag = False
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
 
@@ -185,9 +186,13 @@ def fit_King_prof(
             converged &= np.all(np.abs(old_tau - tau) / tau < 0.01)
             if converged:
                 print("")
+                conver_flag = True
                 break
             old_tau = tau
             update_progress.updt(nruns, i + 1)
+
+    if conver_flag:
+        print("Process converged")
 
     # Remove burn-in
     nburn = int(i * nburn)
@@ -228,7 +233,7 @@ def fit_King_prof(
 
 
 def lnprob(
-        pars, ndim, rt_max, cl_cent, fd, N_memb, xy_in, r_in, rt_rang):
+        pars, ndim, rt_max, cl_cent, fd, N_memb, rt_rang, xy_in, r_in):
     """
     Logarithmic posterior
     """
