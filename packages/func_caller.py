@@ -207,7 +207,7 @@ def main(cl_file, pd):
     # Approximate number of cluster's members.
     clp = members_number.main(clp)
 
-    make_B2_plot.main(npd, cld_c, pd, **clp)
+    make_B2_plot.main(npd, cld_i, pd, **clp)
     if pd['stop_idx'] == 'B2':
         retFunc(npd['clust_name'], start)
         return

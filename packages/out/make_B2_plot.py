@@ -9,7 +9,7 @@ from . prep_plots import figsize_x, figsize_y, grid_x, grid_y
 
 
 def main(
-    npd, cld_c, pd, err_lst, cl_region_c, cl_region_rjct_c, stars_out_c,
+    npd, cld_i, pd, err_lst, cl_region_c, cl_region_rjct_c, stars_out_c,
     stars_out_rjct_c, field_regions_c, flag_no_fl_regs_c, field_regions_rjct_c,
     n_memb, lum_func, phot_analy_compl, phot_data_compl, err_rm_data,
     completeness, stars_f_acpt, stars_f_rjct, col_0_comb, col_1_comb,
@@ -45,7 +45,7 @@ def main(
         f_sz_pt = prep_plots.phot_diag_st_size(stars_f_acpt[0])
         cl_sz_pt = prep_plots.phot_diag_st_size(cl_region_c)
         x_min, x_max, y_min, y_max = prep_plots.frame_max_min(
-            cld_c['x'], cld_c['y'])
+            cld_i['x'], cld_i['y'])
         asp_ratio = prep_plots.aspect_ratio(x_min, x_max, y_min, y_max)
         coord, x_name, y_name = prep_plots.coord_syst(pd['coords'])
 
