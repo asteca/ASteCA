@@ -35,8 +35,8 @@ I0   nam
 # * project: [y / n]
 #   If 'coords=deg' indicate whether to use a sinusoidal projection on the data.
 #
-#   id_star   x/ra   y/dec   coords   project
-I1       id      x       y       px         y
+#    id_star     x/ra     y/dec   coords   project
+I1  EDR3Name  RA_ICRS   DE_ICRS      deg         y
 
 # Columns for the photometry, parallax, proper motions, and radial velocity.
 #
@@ -57,15 +57,15 @@ I1       id      x       y       px         y
 #   Columns for the parallax [mas], proper motions [mas/yr], and radial velocity
 #   [km/s]. If a data column is not present use 'n'.
 #
-#           mag    e_mag
-I2     V,4,Vmag       eV
+#            mag      e_mag
+I2  Gmag,28,Gmag     e_Gmag
 #
-#               col    e_col
-I3   BV,4,Bmag,Vmag      eBV
+#                         col      e_col
+I3   BP-RP,28,G_BPmag,G_RPmag    e_BP-RP
 #
 #    Parallax         |------ Proper motions -------|    Radial velocity
 #    plx    e_plx     pmRA    e_pmRA    pmDE    e_pmDE     rv    e_rv
-I4     n        n        n         n       n         n      n       n
+I4   Plx    e_Plx     pmRA    e_pmRA    pmDE    e_pmDE      n       n
 ################################################################################
 
 
@@ -146,7 +146,7 @@ S1        iter        10
 #   moves used by the `emcee` package.
 #
 #   ndim   nchains   nruns  nburn    rt_max
-S2     2        20    5000    .25         2
+S2     2        20    2000    .25         2
 #
 #   moves
 S3  StretchMove()
@@ -169,7 +169,7 @@ S3  StretchMove()
 #   columns are not present (or no maximum limit is desired) use 'n'.
 #
 #   e_mag_max   e_col_max    e_plx_max     e_pm_max     e_rv_max
-E0        0.1           n            n            n            n
+E0        0.1         0.3            n            n            n
 
 # Anderson-Darling test (cluster vs field regions).
 #
@@ -201,7 +201,7 @@ A0   100
 #   DA. If more than one color is defined, add more values after 'w_col'.
 #
 #   algor   runs   w_mag   w_col   w_Plx   w_PMx   w_PMy   w_RV
-D0  bayes   1000       y       y       y       y       y      n
+D0  bayes   1000       n       n       y       y       y      n
 ################################################################################
 
 
@@ -271,7 +271,7 @@ F0  local      optm          0.5
 #   'moves' used by the 'emcee' package.
 #
 #   plx_flag   offset   nchains   nruns   nburn   mp_flag
-P0         n    0.029        10    5000     .25         y
+P0         y    0.029        10    2000     .25         y
 #
 #   moves
 P1  DESnookerMove(), 0.1; DEMove(), 0.9 * 0.9; DEMove(gamma0=1.0), 0.9 * 0.1
@@ -296,7 +296,7 @@ P2        3.            y
 #   will be randomly selected.
 #
 # * evol_track: PAR12 + [CS_37 / CS_35 / CS_07 / CPR16 / No]
-#   Evolutionary tracks. Combine the latest 'PARSEC' tracks 'PAR12'
+#   Evolutionary tracks. Combine the latest 'PARSEC' tracks PAR12
 #   (PARSEC v1.2S) with one of the 'Colibri' tracks: CS_37 (COLIBRI S_37),
 #   CS_35 (COLIBRI S_35), CS_07 (COLIBRI S_07), CPR16 (COLIBRI PR16),
 #   No (No limitation in Z), using a '+' sign. For example: 'PAR12+No'.
@@ -318,8 +318,8 @@ P2        3.            y
 #   - max: use the maximum observed magnitude (i.e.: no cut is applied).
 #   - [float]: manually select the maximum magnitude value to use.
 #
-#   ran_seed   evol_track           IMF   min_mass_ratio   max_mag
-R0         n     PAR12+No   kroupa_2002              0.7       max
+#   ran_seed    evol_track           IMF   min_mass_ratio   max_mag
+R0         n   PAR12+CS_37   kroupa_2002              0.7       max
 
 # Ranges for all the fundamental parameters
 #
@@ -341,13 +341,13 @@ R0         n     PAR12+No   kroupa_2002              0.7       max
 #
 #        min      max
 RZ       min      max
-RA         7       10
+RA         7       9
 RE         0        1
 RR         n
 RV       3.1
 RD         8       15
 RM       100     5000
-RB         0        1
+RB         0.5
 RS         n
 ################################################################################
 
