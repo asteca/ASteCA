@@ -90,7 +90,8 @@ def max_err_cut(cld, err_max):
         # set.
         N_st_err_rjct = N_stars - np.array([
             m_msk.sum(), np.sum(c_msk, 1), np.array([
-                plx_msk.sum(), pmx_msk.sum(), pmy_msk.sum(), rv_msk.sum()])])
+                plx_msk.sum(), pmx_msk.sum(), pmy_msk.sum(), rv_msk.sum()])],
+            dtype=object)
 
     acpt_indx = np.flatnonzero(
         (m_msk.all(0) & np.array(c_msk).all(0) & plx_msk & pmx_msk & pmy_msk &

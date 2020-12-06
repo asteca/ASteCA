@@ -89,7 +89,7 @@ def miniCheck(extra_pars, met_vals_all, age_vals_all):
 
     extra_pars.shape = (#met_vals, #log(ages), #phot_systs)
     """
-    extra_pars = np.array(extra_pars)
+    extra_pars = np.array(extra_pars, dtype=object)
     # If a single z and log(age) are defined, this array will have a shape
     # (#met_vals, #log(ages), #phot_systs, #stars). Hence the '[:3]'.
     Nz, Na, Ndim = extra_pars.shape[:3]
