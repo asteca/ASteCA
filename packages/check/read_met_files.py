@@ -20,7 +20,7 @@ def check_get(pd):
         print("Processing {} theoretical isochrones\n"
               "in the photometric system{}:".format(pd['evol_track'], nt))
         for syst in pd['all_syst_filters']:
-            print(" * {}".format(pd['cmd_systs'][syst[0]][0]))
+            print(" * {}".format(syst[0]))
 
         # Get all metallicity files and their values, and the log(age) values.
         met_files, met_vals_all, age_vals_all, ages_strs = readZA.main(**pd)

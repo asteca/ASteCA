@@ -56,17 +56,10 @@ def checkEvolTracks(mypath, pd):
     Check photometric systems for all the evolutionary tracks that will be
     used. Store and return their IDs, filter names, and paths.
     """
-
-    # Check selected isochrones set.
-    if pd['evol_track'] not in pd['all_evol_tracks'].keys():
-        raise ValueError("the selected isochrones set ('{}') does\n"
-                         "not match a valid input.".format(pd['evol_track']))
-
-    all_syst_filters, iso_paths = [], []
     # Remove duplicate filters (if they exist), and combine them into one
     # tuple per photometric system.
     # The resulting list looks like this:
-    # [('2', 'T1', 'C'), ('4', 'B', 'V'), ('65', 'J')]
+    # [('phot_syst1', 'T1', 'C'), ('phot_syst2', 'B', 'V'), ...]
     # where the first element of each tuple points to the photometric
     # system, and the remaining elements are the unique filters in that
     # system.
@@ -76,20 +69,18 @@ def checkEvolTracks(mypath, pd):
         d.setdefault(k, [k]).append(v)
     all_syst_filters = sorted(map(tuple, d.values()))
 
-    # Dictionary of photometric systems defined in the CMD service.
-    all_systs = pd['cmd_systs']
+    # # Dictionary of photometric systems defined in the CMD service.
+    # all_systs = pd['cmd_systs']
 
     # Generate name for the isochrones' folders.
     mpi = mypath + 'isochrones/'
     iso_paths = []
     for p_syst in all_syst_filters:
-        phot_syst = all_systs[p_syst[0]][0]
-        # Set iso_path according to the above values.
-        iso_paths.append(
-            join(mpi + pd['all_evol_tracks'][pd['evol_track']] + '_' +
-                 phot_syst))
+        # Set iso_path according to the above values. The lower-case is
+        # important!
+        iso_paths.append(join(mpi + p_syst[0].lower()))
 
-    # Check if /isochrones folder exists.
+    # Check if '/isochrones' folder exists.
     for iso_path in iso_paths:
         if not isdir(iso_path):
             raise ValueError(
@@ -97,7 +88,49 @@ def checkEvolTracks(mypath, pd):
                 " run but the folder:\n\n {}\n\ndoes not exists."
                 .format(iso_path))
 
-    pd['all_syst_filters'], pd['iso_paths'] = all_syst_filters, iso_paths
+    # Extract lambdas from 'filterslambdas' files
+    cmd_systs = {}
+    for iso_path in iso_paths:
+        with open(iso_path + "/filterslambdas.dat") as f:
+            ls = f.read().split()[1:]
+            phot_syst = iso_path.split('/')[-1]
+            # Number of filters/lambdas/omegas
+            Nf = int(len(ls) / 3.)
+            # Filters
+            filters = tuple(ls[:Nf])
+            # Lambdas
+            lambdas = tuple(map(float, ls[Nf:2 * Nf]))
+            cmd_systs[phot_syst] = (filters, lambdas)
+
+    # Check that all filters exist
+    for syst in all_syst_filters:
+        psyst, filters = syst[0], syst[1:]
+        for filt in filters:
+            if filt not in cmd_systs[psyst][0]:
+                raise ValueError(("Filter '{}' not present in photometric "
+                                  "system '{}'".format(filt, psyst)))
+
+    # Read evolutionary tracks used and check that its is the same track used
+    # for all systems.
+    if len(iso_paths) > 1:
+        all_evol_tracks = []
+        for iso_path in iso_paths:
+            with open(iso_path + "/filterslambdas.dat") as f:
+                all_evol_tracks.append(f.read().split()[0])
+
+        if len(set(all_evol_tracks)) > 1:
+            raise ValueError(
+                "The same evolutionary track must be used\n"
+                + "for all the photometric systems. Tracks found:\n"
+                + "{}".format(', '.join(all_evol_tracks)))
+        evol_track = all_evol_tracks[0]
+    else:
+        # This is for printing to screen only.
+        with open(iso_paths[0] + "/filterslambdas.dat") as f:
+            evol_track = f.read().split()[0]
+
+    pd['all_syst_filters'], pd['iso_paths'], pd['cmd_systs'],\
+        pd['evol_track'] = all_syst_filters, iso_paths, cmd_systs, evol_track
 
     return pd
 

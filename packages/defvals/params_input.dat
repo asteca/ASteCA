@@ -16,20 +16,10 @@
 
 ############################## Input data ######################################
 
-# Read mode
-#
-# * mode: [nam / num]
-#   - nam: names of the data columns. A proper header must be in place.
-#   - num: indexes of the data columns (starting with zero). The header must be
-#          commented out entirely.
-#
-#   mode
-I0   nam
-
 # Columns for the IDs and (x, y) coordinates.
 #
-# * id_star, x/ra, y/dec: [str / int]
-#   IDs and coordinates.
+# * id_star, x/ra, y/dec: [str]
+#   Columns for the IDs and coordinates.
 # * coords: [px / deg]
 #   Indicates if the coordinates of the observed frame are in pixels or degrees.
 # * project: [y / n]
@@ -40,28 +30,29 @@ I1  EDR3Name  RA_ICRS   DE_ICRS      deg         y
 
 # Columns for the photometry, parallax, proper motions, and radial velocity.
 #
-# * mag, e_mag: [str]
-#   Magnitude and uncertainty.
-#   The format is 'X,ID,Y' where 'X' is the name/column number of the magnitude
-#   (depends on the 'mode' selected above), 'ID' is the identification number
-#   of the corresponding photometric system (IDs for the supported photometric
-#   systems are stored in the 'CMD_systs.dat' file), and 'Y' is the name of the
-#   filter in that system (also in the 'CMD_systs.dat' file).
-# * col, e_col: [str]
-#   Color and uncertainty. One color is mandatory.
-#   The format is 'X,ID,Y1,Y2' where the same definitions apply and 'Y1', 'Y2'
-#   are the names of the magnitudes that make up the color in the order (Y1-Y2).
-#   The associated uncertainty (in both cases) is indicated only with the
-#   name/column number.
+# * system: [str]
+#   Photometric system's id. Must match the isochrones' folder name.
+# * filterX: [str]
+#   Name of the filter as it appears in the isochrone files. For the color line
+#   the filters 'filter1, filter2' must be ordered such that the color is
+#   generated as: (filter1 - filter2).
+# * mag_col, e_mag_col: [str]
+#   Column names for the magnitude and its uncertainty.
+# * color_col, e_color_col: [str]
+#   Column names for the color and its uncertainty. One color is mandatory, and
+#   up to two colors are supported for the fundamental parameters block (the
+#   other blocks have no limit on the colors). If more than one color is to be
+#   used, add a new line starting with the identificator 'I3'.
+#
+#           system    filter     mag_col      e_mag_col
+I2        gaiaedr3      Gmag        Gmag         e_Gmag
+#
+#           system    filter1    filter2   color_col  e_color_col
+I3        gaiaedr3    G_BPmag    G_RPmag       BP-RP      e_BP-RP
+#
 # * plx, pmRa, pmDE, rv: [str / n]
 #   Columns for the parallax [mas], proper motions [mas/yr], and radial velocity
 #   [km/s]. If a data column is not present use 'n'.
-#
-#            mag      e_mag
-I2  Gmag,28,Gmag     e_Gmag
-#
-#                         col      e_col
-I3   BP-RP,28,G_BPmag,G_RPmag    e_BP-RP
 #
 #    Parallax         |------ Proper motions -------|    Radial velocity
 #    plx    e_plx     pmRA    e_pmRA    pmDE    e_pmDE     rv    e_rv
@@ -232,9 +223,9 @@ D0  bayes   1000       n       n       y       y       y      n
 #             rice / sqrt / sturges / knuth]
 #   Binning method to be used if the 'local' method is selected. Otherwise
 #   this parameter is ignored.
-#   - optm: select the number of bins so that the number of stars left are
-#     the closest to the estimated number of members as possible. The number of
-#     bins in the magnitude is twice the number in the colors.
+#   - optm: select the number of bins so that the number of stars left is
+#     as close to the estimated number of members as possible. The number of
+#     bins in the magnitude is twice the number used in the colors.
 #   - fixed: Based on Bonatto & Bica (2007; 377, 3, 1301-1323) but using larger
 #     values: 0.5 mag for colors and 1. mag for the magnitude.
 #   - blocks / knuth: astropy's implementation.
@@ -295,12 +286,6 @@ P2        3.            y
 #   Random seed used in the generation of synthetic clusters. If 'n', an integer
 #   will be randomly selected.
 #
-# * evol_track: PAR12 + [CS_37 / CS_35 / CS_07 / CPR16 / No]
-#   Evolutionary tracks. Combine the latest 'PARSEC' tracks PAR12
-#   (PARSEC v1.2S) with one of the 'Colibri' tracks: CS_37 (COLIBRI S_37),
-#   CS_35 (COLIBRI S_35), CS_07 (COLIBRI S_07), CPR16 (COLIBRI PR16),
-#   No (No limitation in Z), using a '+' sign. For example: 'PAR12+No'.
-#
 # * IMF: [str]
 #   IMF used to populate the synthetic clusters.
 #   - kroupa_2002      : Kroupa (2002) 295.82K, Eq. (2) & (3)
@@ -318,8 +303,8 @@ P2        3.            y
 #   - max: use the maximum observed magnitude (i.e.: no cut is applied).
 #   - [float]: manually select the maximum magnitude value to use.
 #
-#   ran_seed    evol_track           IMF   min_mass_ratio   max_mag
-R0         n   PAR12+CS_37   kroupa_2002              0.7       max
+#   ran_seed          IMF   min_mass_ratio   max_mag
+R0         n  kroupa_2002              0.7       max
 
 # Ranges for all the fundamental parameters
 #
@@ -371,7 +356,7 @@ RS         n
 #   Save MCMC trace to file?
 #
 #   algorithm   mins_max  save_trace
-B0    ptemcee          5           n
+B0    ptemcee          5           y
 
 # ptemcee parameters.
 #

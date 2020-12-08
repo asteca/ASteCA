@@ -11,7 +11,7 @@ from ..aux_funcs import flatten, list_duplicates
 
 
 def main(
-    npd, read_mode, nanvals, id_col, x_col, y_col, mag_col, e_mag_col, col_col,
+    npd, nanvals, id_col, x_col, y_col, mag_col, e_mag_col, col_col,
     e_col_col, plx_col, e_plx_col, pmx_col, e_pmx_col, pmy_col, e_pmy_col,
         rv_col, e_rv_col, coords, project, flag_tf, tf_range, **kwargs):
     """
@@ -24,7 +24,7 @@ def main(
 
     data_file = npd['data_file']
     try:
-        data = readDataFile(nanvals, read_mode, id_col, data_file)
+        data = readDataFile(nanvals, id_col, data_file)
         N_all = len(data)
 
         # Arrange column names in the proper order and shape.
@@ -103,7 +103,7 @@ def main(
     return cld_i, cld_c, clp
 
 
-def readDataFile(nanvals, read_mode, id_col, data_file):
+def readDataFile(nanvals, id_col, data_file):
     """
     Read input data file.
     """
@@ -112,35 +112,21 @@ def readDataFile(nanvals, read_mode, id_col, data_file):
 
     # Identify all these strings as invalid entries.
     fill_msk = [('', '0')] + [(_, '0') for _ in nanvals]
-    # Store IDs as strings.
-    if read_mode == 'num':
-        # Read IDs as strings, not applying the 'fill_msk'
-        data = ascii.read(
-            data_file, converters={id_col: [ascii.convert_numpy(np.str)]},
-            format='no_header')
-        # Store IDs
+    # Read IDs as strings, not applying the 'fill_msk'
+    data = ascii.read(
+        data_file, converters={id_col: [ascii.convert_numpy(np.str)]})
+    # Store IDs
+    try:
         id_data = data[id_col]
-        # Read rest of the data applying the mask
-        data = ascii.read(
-            data_file, fill_values=fill_msk, format='no_header')
-        # Replace IDs column
-        data[id_col] = id_data
-    elif read_mode == 'nam':
-        # Read IDs as strings, not applying the 'fill_msk'
-        data = ascii.read(
-            data_file, converters={id_col: [ascii.convert_numpy(np.str)]})
-        # Store IDs
-        try:
-            id_data = data[id_col]
-        except KeyError:
-            raise ValueError(
-                "ERROR: the '{}' key could not be found. Check that \n"
-                "the 'id' name is properly written, and that all columns \n"
-                "have *unique* names\n".format(id_col))
-        # Read rest of the data applying the mask
-        data = ascii.read(data_file, fill_values=fill_msk)
-        # Replace IDs column
-        data[id_col] = id_data
+    except KeyError:
+        raise ValueError(
+            "ERROR: the '{}' key could not be found. Check that \n"
+            "the 'id' name is properly written, and that all columns \n"
+            "have *unique* names\n".format(id_col))
+    # Read rest of the data applying the mask
+    data = ascii.read(data_file, fill_values=fill_msk)
+    # Replace IDs column
+    data[id_col] = id_data
 
     return data
 

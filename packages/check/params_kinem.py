@@ -14,8 +14,7 @@ def check(pd):
     for i, ci in enumerate(pd['id_kinem']):
         if ci not in ('n', 'N'):
             try:
-                pd[k_cols[i] + '_col'] = 'col' + str(int(ci) + 1) if\
-                    pd['read_mode'] == 'num' else ci
+                pd[k_cols[i] + '_col'] = ci
             except ValueError:
                 raise ValueError(
                     "bad index ('{}') for '{}' column in "

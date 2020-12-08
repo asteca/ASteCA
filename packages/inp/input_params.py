@@ -1,6 +1,4 @@
 
-from . import CMD_phot_systs
-
 
 def main(pars_f_path):
     """
@@ -14,7 +12,7 @@ def main(pars_f_path):
     # Read data from file.
     with open(pars_f_path, "r") as f_dat:
 
-        manual_struct, trim_frame_range = [], []
+        id_cols, manual_struct, trim_frame_range = [], [], []
         # Iterate through each line in the file.
         for ln, line in enumerate(f_dat):
 
@@ -22,9 +20,7 @@ def main(pars_f_path):
                 reader = line.split()
 
                 # Input data parameters.
-                if reader[0] == 'I0':
-                    read_mode = str(reader[1])
-                elif reader[0] == 'I1':
+                if reader[0] == 'I1':
                     id_ids = reader[1]
                     id_xdata = reader[2]
                     id_ydata = reader[3]
@@ -33,7 +29,7 @@ def main(pars_f_path):
                 elif reader[0] == 'I2':
                     id_mags = reader[1:]
                 elif reader[0] == 'I3':
-                    id_cols = reader[1:]
+                    id_cols.append(reader[1:])
                 elif reader[0] == 'I4':
                     id_kinem = reader[1:]
 
@@ -98,13 +94,12 @@ def main(pars_f_path):
                 # Synthetic clusters parameters
                 elif reader[0] == 'R0':
                     synth_rand_seed = str(reader[1])
-                    evol_track = str(reader[2])
-                    IMF_name = str(reader[3])
-                    bin_mr = float(reader[4])
+                    IMF_name = str(reader[2])
+                    bin_mr = float(reader[3])
                     try:
-                        max_mag = float(reader[5])
+                        max_mag = float(reader[4])
                     except ValueError:
-                        max_mag = str(reader[5])
+                        max_mag = str(reader[4])
 
                 # Ranges for the fundamental parameters
                 elif reader[0] == 'RZ':
@@ -184,8 +179,6 @@ def main(pars_f_path):
 
     # Accepted coordinate units
     coord_accpt = ('px', 'deg')
-    # Accepted read modes
-    read_mode_accpt = ('nam', 'num')
     # Accepted decontamination algorithms.
     da_algors_accpt = ('bayes', 'read', 'skip')
     # Accepted field stars removal methods.
@@ -210,14 +203,6 @@ def main(pars_f_path):
 
     priors_mcee = [z_prior, a_prior, e_prior, d_prior, m_prior, b_prior]
 
-    # Map the selected evolutionary tracks to their proper folder names,
-    # as given by the ezPADOVA-2 package.
-    all_evol_tracks = {
-        'PAR12+CS_37': 'parsec12_37', 'PAR12+CS_35': 'parsec12_35',
-        'PAR12+CS_07': 'parsec12_07', 'PAR12+CPR16': 'parsec12_16',
-        'PAR12+No': 'parsec12_No',
-    }
-
     # HARDCODED AND IMPORTANT
     # If the CMD isochrones change, this needs to change too.
     # Names of the "extra" columns in the CMD service isochrones.
@@ -225,14 +210,11 @@ def main(pars_f_path):
         'Mini', 'int_IMF', 'Mass', 'logL', 'logTe', 'logg', 'label',
         'mbolmag')
 
-    # Dictionary with data on the CMD service photometric systems.
-    cmd_systs = CMD_phot_systs.main()
-
     par_ranges = [z_range, a_range, e_range, d_range, m_range, b_range]
 
     pd = {
         # Input data parameters
-        'read_mode': read_mode, 'id_ids': id_ids, 'id_xdata': id_xdata,
+        'id_ids': id_ids, 'id_xdata': id_xdata,
         'id_ydata': id_ydata, 'coords': coords, 'project': project,
         'id_mags': id_mags, 'id_cols': id_cols, 'id_kinem': id_kinem,
 
@@ -265,7 +247,7 @@ def main(pars_f_path):
 
         # Synthetic cluster parameters
         'synth_rand_seed': synth_rand_seed, 'par_ranges': par_ranges,
-        'evol_track': evol_track, 'IMF_name': IMF_name, 'bin_mr': bin_mr,
+        'IMF_name': IMF_name, 'bin_mr': bin_mr,
         'R_V': R_V, 'max_mag': max_mag,
 
         # Best fit parameters.
@@ -279,13 +261,11 @@ def main(pars_f_path):
         'lkl_manual_bins': lkl_manual_bins,
 
         # Fixed accepted parameter values and photometric systems.
-        'read_mode_accpt': read_mode_accpt, 'coord_accpt': coord_accpt,
-        'da_algors_accpt': da_algors_accpt, 'fld_rem_methods': fld_rem_methods,
-        'bin_methods': bin_methods,
+        'coord_accpt': coord_accpt, 'da_algors_accpt': da_algors_accpt,
+        'fld_rem_methods': fld_rem_methods, 'bin_methods': bin_methods,
         'imf_funcs': imf_funcs, 'lkl_methods': lkl_methods,
         'optimz_algors': optimz_algors, 'bayes_priors': bayes_priors,
-        'all_evol_tracks': all_evol_tracks, 'CMD_extra_pars': CMD_extra_pars,
-        'cmd_systs': cmd_systs,
+        'CMD_extra_pars': CMD_extra_pars,
 
         # Output
         'flag_make_plot': flag_make_plot, 'plot_style': plot_style,
