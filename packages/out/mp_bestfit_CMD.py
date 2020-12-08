@@ -47,7 +47,7 @@ def pl_mps_phot_diag(
         col_select_fit, isoch_col = obs_MPs, 'g'
         plot_colorbar = True
     else:
-        col_select_fit, isoch_col = '#4682b4', 'r'
+        col_select_fit, isoch_col = '#519ddb', 'r'
         plot_colorbar = False
     # Plot stars used in the best fit process.
     sca = plt.scatter(
@@ -178,7 +178,7 @@ def pl_bf_synth_cl(
     # Single systems
     plt.scatter(
         x_synth[single_idx], y_synth[single_idx], marker='o', s=sy_sz_pt + 2.,
-        c='#4682b4', lw=0.3, edgecolor='k', zorder=2)
+        c='#519ddb', lw=0.3, edgecolor='k', zorder=2)
     # Binary systems
     plt.scatter(
         x_synth[bin_idx], y_synth[bin_idx], marker='o', s=sy_sz_pt + 2.,
