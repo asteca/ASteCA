@@ -8,7 +8,7 @@ from ..best_fit.obs_clust_prepare import dataProcess
 
 
 def main(clp, npd, best_fit_algor, fundam_params, filters, colors,
-         theor_tracks, R_V, m_ini_idx, binar_flag, **kwargs):
+         theor_tracks, R_V, m_ini_idx, binar_flag, D3_sol, **kwargs):
     """
     This function serves three purposes:
 
@@ -31,7 +31,7 @@ def main(clp, npd, best_fit_algor, fundam_params, filters, colors,
                 clp['isoch_fit_errors'], theor_tracks, clp['completeness'],
                 clp['max_mag_syn'], clp['st_dist_mass'], R_V, clp['ext_coefs'],
                 clp['N_fc'], clp['err_pars'], m_ini_idx, binar_flag,
-                clp['cl_max_mag'])
+                clp['cl_max_mag'], D3_sol)
 
         # If cluster is not empty.
         if synth_clust.any():
@@ -53,7 +53,7 @@ def main(clp, npd, best_fit_algor, fundam_params, filters, colors,
 def synth_cl_plot(
     fundam_params, isoch_fit_params, isoch_fit_errors, theor_tracks,
     completeness, max_mag_syn, st_dist_mass, R_V, ext_coefs, N_fc, err_pars,
-        m_ini_idx, binar_flag, cl_max_mag):
+        m_ini_idx, binar_flag, cl_max_mag, D3_sol):
     """
     Prepare data and generate the uncertainty region and individual masses,
     if uncertainties for at least one parameter exists.
@@ -65,8 +65,8 @@ def synth_cl_plot(
         completeness, max_mag_syn, st_dist_mass, R_V, ext_coefs,
         N_fc, err_pars, m_ini_idx, binar_flag)
 
-    # Use the mean solution values for all parameters.
-    model = isoch_fit_params['mean_sol']
+    # Use the selected solution values for all the parameters.
+    model = isoch_fit_params[D3_sol + '_sol']
 
     # Generate isochrone, synthetic cluster (with uncertainties), and extra
     # parameters for the "best" fitted parameters.

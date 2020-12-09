@@ -45,7 +45,7 @@ def main(
         # if pd['best_fit_algor'] == 'boot+GA':
         #     best_sol = isoch_fit_params['map_sol']
         # elif pd['best_fit_algor'] in ('ptemcee', 'emcee'):
-        best_sol = isoch_fit_params['mean_sol']
+        best_sol = isoch_fit_params[pd['D3_sol'] + '_sol']
 
         # Plot one ore more rows of CMDs/CCDs.
         hr_diags = prep_plots.packData(
@@ -75,7 +75,8 @@ def main(
                  x_ax, y_ax, hess_xedges, hess_yedges, x_synth_phot,
                  y_synth_phot, sy_sz_pt, binar_idx, pd['IMF_name'], pd['R_V'],
                  best_sol, isoch_fit_errors, x_isoch, y_isoch,
-                 pd['lkl_method'], pd['lkl_binning'], pd['evol_track']]
+                 pd['lkl_method'], pd['lkl_binning'], pd['evol_track'],
+                 pd['D3_sol']]
             ]
             for n, args in enumerate(arglist):
                 mp_bestfit_CMD.plot(n, *args)
