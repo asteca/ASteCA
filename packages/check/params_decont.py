@@ -13,10 +13,10 @@ def check(
 
     # Check selected algorithm.
     if da_algor not in da_algors_accpt:
-        raise ValueError("the selected decontamination algorithm ({})\n"
+        raise ValueError("the selected decontamination algorithm flag ({})\n"
                          "is not recognized.".format(da_algor))
 
-    if da_algor == 'bayes':
+    if da_algor == 'y':
         # Check Bayesian decontamination algorithm parameters.
         if bayesda_runs < 2:
             raise ValueError("must input 'runs'>=2 for the Bayesian DA.")

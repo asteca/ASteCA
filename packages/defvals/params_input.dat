@@ -179,20 +179,19 @@ A0   100
 
 # Assign membership probabilities (MPs) to stars within the cluster region.
 #
-# * algor: [bayes / read / skip]
-#   - bayes: Bayesian decontamination algorithm. Number of iterations set via
-#     the 'runs' parameter.
+# * flag: [y / n / read]
+#   - y: apply the Bayesian decontamination algorithm (DA).
+#   - n: no DA applied, all stars are assigned MP=1.
 #   - read: read MPs from an existing file.
-#   - skip: all stars are assigned MP=1 (i.e.: no DA applied).
 # * runs: [integer>=2]
 #   The Bayesian DA will iterate a maximum of 'runs' times or until the MPs
 #   converge to within 0.1% values. Minimum value is 2.
 #  * w_xxx: [y / n]
-#   Turn data dimensions (photometric and kinematic) on/off (y/n) to use in the
-#   DA. If more than one color is defined, add more values after 'w_col'.
+#   Turn data dimensions used by the DA on/off (y/n). If more than one color
+#   is defined, add more values below 'w_col'.
 #
-#   algor   runs   w_mag   w_col   w_Plx   w_PMx   w_PMy   w_RV
-D0  bayes   1000       n       n       y       y       y      n
+#   flag   runs   w_mag   w_col   w_Plx   w_PMx   w_PMy   w_RV
+D0     y   1000       n       n       y       y       y      n
 ################################################################################
 
 

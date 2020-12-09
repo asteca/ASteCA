@@ -179,8 +179,8 @@ def main(pars_f_path):
 
     # Accepted coordinate units
     coord_accpt = ('px', 'deg')
-    # Accepted decontamination algorithms.
-    da_algors_accpt = ('bayes', 'read', 'skip')
+    # Decontamination algorithm flag.
+    da_algors_accpt = ('y', 'n', 'read')
     # Accepted field stars removal methods.
     fld_rem_methods = ('local', 'n_memb', 'mp_05', 'top_h', 'man', 'all')
     # Accepted binning methods.
