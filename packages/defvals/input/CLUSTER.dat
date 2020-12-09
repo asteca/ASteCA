@@ -1,9 +1,13 @@
 #
-# Photometric systems: Gaia DR2 + ubvrijhk
 #
-# CI, rc, rt, Nmemb : 0.50, 142, 250, 498
+# Structural parameters:
+#   CI   rc   rt  Nmemb
+# 0.50  142  250    498
 #
-# model (z, log(age), E_BV, dm, M, b_fr) : 0.01520 8.0000 0.500 12.000 2000 0.30
+# True fundamental parameters:
+#       z  log(t)   E_BV     m-M     M  b_fr
+# 0.01520  8.0000  0.500  12.000  2000  0.30
+#
 #
 ID,x,y,Gmag,BP-RP,BV,e_Gmag,e_BP-RP,e_BV,bfr_prob,bfr_mass,m_ini
 11,996.1609,970.7578,15.7305,0.8446,0.6964,0.0004,0.0017,0.0328,0.7467,2.9197,1.6560
