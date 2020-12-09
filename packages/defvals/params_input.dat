@@ -145,7 +145,7 @@ S3  StretchMove()
 
 
 
-##################### Uncertainties & A-D analysis #############################
+################## Photometric + kinematic uncertainties #######################
 
 # Error rejection.
 #
@@ -161,16 +161,6 @@ S3  StretchMove()
 #
 #   e_mag_max   e_col_max    e_plx_max     e_pm_max     e_rv_max
 E0        0.1         0.3            n            n            n
-
-# Anderson-Darling test (cluster vs field regions).
-#
-# * runs: [int]
-#   Number of times the A-D test will run, perturbing through a normal
-#   distribution where the associated uncertainties are the standard
-#   deviations. Input a value of '0' to skip this test.
-#
-#   runs
-A0   100
 ################################################################################
 
 
@@ -418,7 +408,7 @@ B2     tremmel      knuth      5 10
 
 # Create output figures?
 #
-# * blocks: [A1, A2, A3, B1, B2, B3, C1, C2, C3, D1, D2, D3]
+# * blocks: [A1, A2, A3, B1, B2, C1, C2, C3, D1, D2, D3]
 #   Select one or more identifier to decide which plots will be produced. Leave
 #   empty for no output plots. An 's' character after an identifier will make
 #   the code stop and return right after creating that plot. I.e.: the line
@@ -431,7 +421,6 @@ B2     tremmel      knuth      5 10
 #   - A3: radius analysis
 #   - B1: uncertainties analysis
 #   - B2: photometric data analysis
-#   - B3: Anderson-Darling test
 #   - C1: decontamination algorithm photometric diagrams
 #   - C2: parallax analysis
 #   - C3: proper motions analysis
@@ -440,7 +429,7 @@ B2     tremmel      knuth      5 10
 #   - D3: best fit synthetic cluster found
 #
 #   blocks
-O0  A1 A2 A3 B1 B2 B3 C1 C2 C3 D1 D2 D3
+O0  A1 A2 A3 B1 B2 C1 C2 C3 D1 D2 D3
 
 # * plot_style: [asteca / any style supported by matplotlib]
 #   To display a list of supported styles, use:

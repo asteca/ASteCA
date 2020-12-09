@@ -62,8 +62,6 @@ def main(pars_f_path):
                 # Data analysis functions parameters.
                 elif reader[0] == 'E0':
                     err_max = reader[1:]
-                elif reader[0] == 'A0':
-                    ad_runs = int(reader[1])
 
                 # Decontamination algorithm parameters
                 elif reader[0] == 'D0':
@@ -197,7 +195,7 @@ def main(pars_f_path):
     optimz_algors = ('ptemcee', 'read', 'n', 'synth_gen')
     # Accepted forms of priors.
     bayes_priors = ('u', 'g')
-    plots_names = ('A1', 'A2', 'A3', 'B1', 'B2', 'B3', 'C1', 'C2', 'C3', 'D0',
+    plots_names = ('A1', 'A2', 'A3', 'B1', 'B2', 'C1', 'C2', 'C3', 'D0',
                    'D1', 'D2', 'D3', 's')
     D3_methods = ('mean', 'median', 'mode', 'map')
 
@@ -229,7 +227,7 @@ def main(pars_f_path):
         'kp_emcee_moves': kp_emcee_moves,
 
         #
-        'err_max': err_max, 'ad_runs': ad_runs,
+        'err_max': err_max,
 
         # Decontamination algorithm parameters.
         'da_algor': da_algor, 'bayesda_runs': bayesda_runs,
