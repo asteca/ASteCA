@@ -80,7 +80,8 @@ def readMetvals(iso_paths):
         for f in os.listdir(iso_path):
             # Remove hidden files and folders possibly present in folder.
             if os.path.isfile(os.path.join(iso_path, f))\
-                    and not f.startswith('.'):
+                    and not f.startswith('.') and not\
+                    f.startswith('filterslambdas'):
                 metal_files.append(f)
 
         # Iterate in order through all the metallicity files stored for the

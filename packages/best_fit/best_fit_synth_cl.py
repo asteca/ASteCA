@@ -117,11 +117,7 @@ def dataPrep(pd, clp):
         pd['lkl_manual_bins'])
 
     # Obtain extinction coefficients.
-    # This parameter determines the total number of sub-arrays for each
-    # isochrone stored.
-    ext_shape = len(pd['theor_tracks'][0][0])
-    ext_coefs = extin_coefs.main(
-        pd['cmd_systs'], pd['filters'], pd['colors'], ext_shape)
+    ext_coefs = extin_coefs.main(pd['cmd_systs'], pd['filters'], pd['colors'])
 
     # Obtain mass distribution using the selected IMF. We run it once
     # because the array only depends on the IMF selected.

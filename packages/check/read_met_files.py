@@ -20,7 +20,7 @@ def check_get(pd):
         print("Processing {} theoretical isochrones\n"
               "in the photometric system{}:".format(pd['evol_track'], nt))
         for syst in pd['all_syst_filters']:
-            print(" * {}".format(pd['cmd_systs'][syst[0]][0]))
+            print(" * {}".format(syst[0]))
 
         # Get all metallicity files and their values, and the log(age) values.
         met_files, met_vals_all, age_vals_all, ages_strs = readZA.main(**pd)
@@ -89,7 +89,7 @@ def miniCheck(extra_pars, met_vals_all, age_vals_all):
 
     extra_pars.shape = (#met_vals, #log(ages), #phot_systs)
     """
-    extra_pars = np.array(extra_pars)
+    extra_pars = np.array(extra_pars, dtype=object)
     # If a single z and log(age) are defined, this array will have a shape
     # (#met_vals, #log(ages), #phot_systs, #stars). Hence the '[:3]'.
     Nz, Na, Ndim = extra_pars.shape[:3]
