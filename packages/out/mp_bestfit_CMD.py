@@ -146,7 +146,7 @@ def pl_bf_synth_cl(
     gs, gs_y1, gs_y2, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
     hess_xedges, hess_yedges, x_synth, y_synth, sy_sz_pt, binar_idx, IMF_name,
     R_V, best_sol, p_err, x_isoch, y_isoch, lkl_method, bin_method,
-        evol_track):
+        evol_track, D3_sol):
     """
     Best fit synthetic cluster obtained.
     """
@@ -158,7 +158,7 @@ def pl_bf_synth_cl(
     plt.xlabel('$' + x_ax + '$')
 
     if gs_y1 == 0:
-        ax.set_title("Synthetic (mean solution)")
+        ax.set_title("Synthetic ({} solution)".format(D3_sol))
         # Add text box
         text = r'$({};\,{})$'.format(lkl_method, bin_method)
         ob = offsetbox.AnchoredText(text, pad=.2, loc=1)

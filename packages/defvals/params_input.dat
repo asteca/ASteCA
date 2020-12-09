@@ -448,7 +448,9 @@ O0  A1 A2 A3 B1 B2 B3 C1 C2 C3 D1 D2 D3
 #   You can use your own 'matplotlibrc' file storing it in the top folder.
 #   Any parameter in that file will overwrite the parameters in the selected
 #   style below.
+# * D3_sol: [mean / median / mode / map]
+#   The solution (isochrone + synthetic cluster) to plot in the D3 image.
 #
-#   plot_style
-O1      asteca
+#   plot_style   D3_sol
+O1      asteca     mean
 ################################################################################

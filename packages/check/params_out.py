@@ -16,6 +16,10 @@ def check(pd):
                 raise ValueError(
                     "unrecognized block ('{}') selected for plotting.".format(
                         _))
+        if pd['D3_sol'] not in pd['D3_methods']:
+            raise ValueError(
+                "unrecognized method '{}' selected for the D3 block.".format(
+                    pd['D3_sol']))
 
     pd['stop_idx'] = 'no'
     if 's' in pd['flag_make_plot']:

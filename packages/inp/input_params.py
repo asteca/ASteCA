@@ -166,9 +166,8 @@ def main(pars_f_path):
                 elif reader[0] == 'O0':
                     flag_make_plot = reader[1:]
                 elif reader[0] == 'O1':
-                    # plot_frmt = str(reader[1])
-                    # plot_dpi = int(reader[2])
                     plot_style = str(reader[1])
+                    D3_sol = str(reader[2])
 
                 else:
                     # Get parameters file name from path.
@@ -200,6 +199,7 @@ def main(pars_f_path):
     bayes_priors = ('u', 'g')
     plots_names = ('A1', 'A2', 'A3', 'B1', 'B2', 'B3', 'C1', 'C2', 'C3', 'D0',
                    'D1', 'D2', 'D3', 's')
+    D3_methods = ('mean', 'median', 'mode', 'map')
 
     priors_mcee = [z_prior, a_prior, e_prior, d_prior, m_prior, b_prior]
 
@@ -269,6 +269,7 @@ def main(pars_f_path):
 
         # Output
         'flag_make_plot': flag_make_plot, 'plot_style': plot_style,
+        'D3_sol': D3_sol, 'D3_methods': D3_methods,
         'plots_names': plots_names
     }
 
