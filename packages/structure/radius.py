@@ -58,6 +58,9 @@ def rdpAreasDists(
 
     # Array of coordinates.
     xy = np.array([cld_i['x'], cld_i['y']]).T
+    if xy.shape[1] > 50000:
+        idx = np.random.choice(xy.shape[1], 50000, replace=False)
+        xy = xy[idx]
 
     # Distances of all stars to the center of the cluster.
     st_dists_cent = cdist([kde_cent], xy)[0]
