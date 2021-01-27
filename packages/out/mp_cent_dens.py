@@ -136,7 +136,7 @@ def pl_knn_dens(
     # If RA is used, invert axis.
     if coord == 'deg':
         ax.invert_xaxis()
-    ax.set_title(r'$kNN={}\;(d\leq d_{{p=25\%}})$'.format(NN_dd))
+    ax.set_title(r'$kNN={}\;|\;max(100; (d\leq d_{{p=25\%}}))$'.format(NN_dd))
 
     plt.xlabel('{} ({})'.format(x_name, coord))
     plt.ylabel('{} ({})'.format(y_name, coord))
@@ -146,6 +146,8 @@ def pl_knn_dens(
     perc = np.percentile(NN_dist, 25)
     msk = NN_dist < perc
     xy, NN_d = xy_filtered[msk], NN_dist[msk]
+    # 100 maximum
+    xy, NN_d = xy[:100], NN_d[:100]
     for i, (x, y) in enumerate(xy):
         circle = plt.Circle(
             (x, y), NN_d[i], color='k', lw=.5, alpha=.5, fill=False)

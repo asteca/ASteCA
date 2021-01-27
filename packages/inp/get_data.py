@@ -107,26 +107,21 @@ def readDataFile(nanvals, id_col, data_file):
     """
     Read input data file.
     """
-    # TODO to separate IDs (strings) from the rest of the data, I read the file
-    # twice. This is very slow for large files.
-
     # Identify all these strings as invalid entries.
     fill_msk = [('', '0')] + [(_, '0') for _ in nanvals]
-    # Read IDs as strings, not applying the 'fill_msk'
+    # Read IDs as strings, not applying the 'fill_msk'. Read rest of the
+    # data applying the fill mask
     data = ascii.read(
-        data_file, converters={id_col: [ascii.convert_numpy(np.str)]})
-    # Store IDs
+        data_file, fill_values=fill_msk, fill_exclude_names=(id_col,),
+        converters={id_col: [ascii.convert_numpy(np.str)]})
+
     try:
-        id_data = data[id_col]
+        data[id_col]
     except KeyError:
         raise ValueError(
             "ERROR: the '{}' key could not be found. Check that \n"
             "the 'id' name is properly written, and that all columns \n"
             "have *unique* names\n".format(id_col))
-    # Read rest of the data applying the mask
-    data = ascii.read(data_file, fill_values=fill_msk)
-    # Replace IDs column
-    data[id_col] = id_data
 
     return data
 

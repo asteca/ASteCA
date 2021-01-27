@@ -11,6 +11,10 @@ def main(clp, x, y, mags, N_dists=50, **kwargs):
     N_dists : number of distance steps.
     """
     xy = np.array([x, y]).T
+    if xy.shape[1] > 50000:
+        idx = np.random.choice(xy.shape[1], 50000, replace=False)
+        xy = xy[idx]
+
     rdp_dists_cent = spatial.distance.cdist([clp['kde_cent']], xy)[0]
 
     dists = np.linspace(

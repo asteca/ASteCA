@@ -45,6 +45,10 @@ def fixedParams(x, y, kde_cent, lb=1., rt=99., N_MC=100000, **kwargs):
     x, y = x[msk_in_frame], y[msk_in_frame]
     xy_filtered = np.array((x, y)).T
 
+    if xy_filtered.shape[0] > 50000:
+        idx = np.random.choice(xy_filtered.shape[0], 50000, replace=False)
+        xy_filtered = xy_filtered[idx]
+
     # Distances of (almost) all stars to the center of the cluster.
     xy_cent_dist = spatial.distance.cdist([kde_cent], xy_filtered)[0]
 

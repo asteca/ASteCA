@@ -22,7 +22,8 @@ from .errors import err_range_avrg
 #
 from .data_analysis import compl_err_funcs
 from .data_analysis import luminosity
-from .data_analysis import ad_field_vs_clust
+# DEPRECATED 12/20
+# from .data_analysis import ad_field_vs_clust
 from .data_analysis import members_number
 #
 from .decont_algors import decont_algors
@@ -45,7 +46,8 @@ from .out import make_A3_plot
 from .out import photComb
 from .out import make_B1_plot
 from .out import make_B2_plot
-from .out import make_B3_plot
+# DEPRECATED 12/20
+# from .out import make_B3_plot
 from .out import make_C1_plot
 from .out import make_C2_plot
 from .out import make_C3_plot
@@ -212,12 +214,12 @@ def main(cl_file, pd):
         retFunc(npd['clust_name'], start)
         return
 
-    clp = ad_field_vs_clust.main(clp, cld_c, **pd)
-
-    make_B3_plot.main(npd, pd, **clp)
-    if pd['stop_idx'] == 'B3':
-        retFunc(npd['clust_name'], start)
-        return
+    # DEPRECATED 12/20
+    # clp = ad_field_vs_clust.main(clp, cld_c, **pd)
+    # make_B3_plot.main(npd, pd, **clp)
+    # if pd['stop_idx'] == 'B3':
+    #     retFunc(npd['clust_name'], start)
+    #     return
 
     # Apply decontamination algorithm.
     clp = decont_algors.main(clp, npd, **pd)
