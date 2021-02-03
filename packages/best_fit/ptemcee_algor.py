@@ -67,7 +67,9 @@ def main(
 
             elapsed += t.time() - start
             start = t.time()
-            m, s = divmod(nsteps_mcee / ((i + 1) / elapsed) - elapsed, 60)
+            remaining_time = max(0, min(
+                available_secs, (nsteps_mcee * elapsed) / (i + 1)) - elapsed)
+            m, s = divmod(remaining_time, 60)
             h, m = divmod(m, 60)
             txt = " [{:.0f} models/sec | {:.0f}h{:.0f}m]".format(
                 (ntemps * nwalkers_mcee * (i + 1)) / elapsed, h, m)
