@@ -31,7 +31,7 @@ def pl_full_frame(
         print("  WARNING: too many stars. Plotting {} random samples.".format(
             N_max))
         ids = np.random.choice(np.arange(len(x)), N_max, replace=False)
-        x, y = x[ids], y[ids]
+        x, y, st_sizes_arr = x[ids], y[ids], st_sizes_arr[ids]
 
     # Plot stars.
     plt.scatter(x, y, marker='o', c='black', s=st_sizes_arr * 1.5)
