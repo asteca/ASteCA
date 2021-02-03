@@ -63,11 +63,12 @@ def main(met_files, ages_strs, evol_track, CMD_extra_pars, all_syst_filters):
             uniq_fltrs = list(all_syst_filters[j][1:]) + [CMD_extra_pars[0]]
 
             # Column numbers for the filters defined in this system.
-            ids = isochs_format.common_ids(evol_track, uniq_fltrs, l_s)
+            column_ids = isochs_format.common_ids(evol_track, uniq_fltrs, l_s)
 
             # Store list holding the filter columns with the same metallicity.
             filters_mini = readMetFile(
-                evol_track, met_f, ages_strs, line_start, age_format, ids)
+                evol_track, met_f, ages_strs, line_start, age_format,
+                column_ids)
 
             # Separate filter data from the initial mass, assuming the latter
             # is always positioned last.
