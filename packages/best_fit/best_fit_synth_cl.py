@@ -230,31 +230,4 @@ def params_errors(pd, isoch_fit_params):
     isoch_fit_errors = assignUncertns(
         isoch_fit_params['varIdxs'], isoch_fit_params['mcmc_trace'])
 
-    # DEPRECATED May 2019
-    # if best_fit_algor == 'brute':
-    #     fundam_params = args
-    #     isoch_fit_errors = []
-    #     # Assign errors as the largest step in each parameter.
-    #     for pv in fundam_params:
-    #         # If any parameter has a single valued range, assign 'nan'.
-    #         if len(pv) > 1:
-    #             # Find largest delta in this parameter used values.
-    #             largest_delta = np.diff(pv).max()
-    #             # Store the maximum value.
-    #             isoch_fit_errors.append(largest_delta)
-    #         else:
-    #             isoch_fit_errors.append(np.nan)
-
-    # DEPRECATED May 2020
-    # if pd['best_fit_algor'] in ('boot+GA'):
-
-    #     pb = isoch_fit_params['params_boot']
-    #     if pb.any():
-    #         isoch_fit_errors = assignUncertns(isoch_fit_params['varIdxs'], pb)
-    #     else:
-    #         # No error assignment.
-    #         isoch_fit_errors = [[np.nan] * 3] * 6
-
-    # elif pd['best_fit_algor'] in ('ptemcee', 'emcee'):  # , , 'abc'
-
     return isoch_fit_errors
