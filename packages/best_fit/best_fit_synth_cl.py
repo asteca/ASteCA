@@ -2,7 +2,7 @@
 import numpy as np
 from ..inp import data_IO
 from . import max_mag_cut, obs_clust_prepare, ptemcee_algor
-from ..synth_clust import add_errors, imf, extin_coefs, synth_clust_gen
+from ..synth_clust import tracksPrep, synth_clust_gen
 from .mcmc_convergence import convergenceVals
 from .bf_common import r2Dist, modeKDE, fillParams  # thinChain
 
@@ -15,13 +15,33 @@ def main(npd, pd, clp):
 
     # General parameters
     if pd['best_fit_algor'] != 'n':
-        cl_max_mag, max_mag_syn, obs_clust, ext_coefs, st_dist_mass, N_fc,\
-            err_pars = dataPrep(pd, clp)
+        cl_max_mag, max_mag_syn, obs_clust = dataPrep(pd, clp)
+        # 'theor_tracks' array is generated here and stored in 'pd'
+        pd, ext_coefs, st_dist_mass, N_fc, mv_err_pars = tracksPrep.main(
+            pd, clp)
+        # Average minimum mass fraction for binary systems
+        mean_bin_mr = 0.
+        if pd['binar_flag']:
+            mean_bin_mr = (pd['bin_mr'] + 1.) / 2.
     else:
         # Pass dummy data used by data output and some plot functions.
-        cl_max_mag, max_mag_syn, ext_coefs, st_dist_mass, N_fc, err_pars =\
-            [[]] * 6
-        obs_clust = [[]]
+        cl_max_mag, max_mag_syn, ext_coefs, st_dist_mass, N_fc, mv_err_pars,\
+            obs_clust = [[]] * 7
+        mean_bin_mr = 0.
+
+    # # TEMPORARY
+    # # Use for saving the necessary input for the 'perf_test.py' file.
+    # import pickle
+    # with open('perf_test.pickle', 'wb') as f:
+    #     pickle.dump([
+    #         obs_clust, cl_max_mag, pd['fundam_params'], pd['theor_tracks'],
+    #         pd['lkl_method'], pd['R_V'], clp['completeness'],
+    #         max_mag_syn, st_dist_mass, ext_coefs, N_fc, pd['m_ini_idx'],
+    #         pd['binar_flag'], mv_err_pars, mean_bin_mr], f)
+    # print("Data saved to pickle")
+    # import sys
+    # sys.exit()
+    # # TEMPORARY
 
     if pd['best_fit_algor'] == 'ptemcee':
         print("Searching for optimal parameters")
@@ -32,26 +52,7 @@ def main(npd, pd, clp):
         # Calculate the best fitting parameters.
         isoch_fit_params = ptemcee_algor.main(
             clp['completeness'], max_mag_syn, obs_clust, ext_coefs,
-            st_dist_mass, N_fc, err_pars, **pd)
-
-        # TODO DEPRECATED May 2020
-        # elif pd['best_fit_algor'] == 'emcee':
-        #     isoch_fit_params = emcee_algor.main(
-        #         clp['completeness'], max_mag_syn, obs_clust, ext_coefs,
-        #         st_dist_mass, N_fc, err_pars, **pd)
-
-        # elif pd['best_fit_algor'] == 'boot+GA':
-        #     isoch_fit_params = bootstrap.main(
-        #         pd, clp, cl_max_mag, max_mag_syn, obs_clust, ext_coefs,
-        #         st_dist_mass, N_fc, err_pars)
-
-        # TODO DEPRECATED May 2019
-        # if best_fit_algor == 'brute':
-        #     # Brute force algorithm.
-        #     isoch_fit_params = brute_force_algor.main()
-        # TODO not working yet
-        # elif best_fit_algor == 'abc':
-        #     isoch_fit_params = abcpmc_algor.main()
+            st_dist_mass, N_fc, mv_err_pars, mean_bin_mr, **pd)
 
         # Save MCMC trace (and some other variables) to file
         if pd['save_trace_flag']:
@@ -76,7 +77,7 @@ def main(npd, pd, clp):
     elif pd['best_fit_algor'] == 'synth_gen':
         synth_clust_gen.main(
             npd, clp, max_mag_syn, obs_clust, ext_coefs, st_dist_mass, N_fc,
-            err_pars, **pd)
+            mv_err_pars, **pd)
         isoch_fit_params, isoch_fit_errors = [], []
 
     else:
@@ -92,11 +93,11 @@ def main(npd, pd, clp):
         isoch_fit_errors = [[np.nan, np.nan, np.nan]] * 6
 
     clp['cl_max_mag'], clp['max_mag_syn'], clp['ext_coefs'],\
-        clp['st_dist_mass'], clp['N_fc'], clp['err_pars'],\
+        clp['st_dist_mass'], clp['N_fc'], clp['mv_err_pars'],\
         clp['bf_bin_edges'], clp['isoch_fit_params'],\
-        clp['isoch_fit_errors'] = cl_max_mag, max_mag_syn, ext_coefs,\
-        st_dist_mass, N_fc, err_pars, obs_clust[0], isoch_fit_params,\
-        isoch_fit_errors
+        clp['isoch_fit_errors'], clp['mean_bin_mr'] = cl_max_mag, max_mag_syn,\
+        ext_coefs, st_dist_mass, N_fc, mv_err_pars, obs_clust[0],\
+        isoch_fit_params, isoch_fit_errors, mean_bin_mr
 
     return clp
 
@@ -113,38 +114,9 @@ def dataPrep(pd, clp):
 
     # Processed observed cluster.
     obs_clust = obs_clust_prepare.main(
-        cl_max_mag, pd['lkl_method'], pd['lkl_binning'],
-        pd['lkl_manual_bins'])
+        cl_max_mag, pd['lkl_method'], pd['lkl_binning'], pd['lkl_manual_bins'])
 
-    # Obtain extinction coefficients.
-    ext_coefs = extin_coefs.main(pd['cmd_systs'], pd['filters'], pd['colors'])
-
-    # Obtain mass distribution using the selected IMF. We run it once
-    # because the array only depends on the IMF selected.
-    st_dist_mass = imf.main(pd['IMF_name'], pd['fundam_params'][4])
-
-    # Store the number of defined filters and colors.
-    N_fc = [len(pd['filters']), len(pd['colors'])]
-
-    err_rand = add_errors.randIdxs(pd['lkl_method'])
-    err_pars = clp['err_lst'], clp['em_float'], err_rand
-
-    # # TEMPORARY
-    # # Use for saving the necessary input for the 'perf_test.py' file.
-    # import pickle
-    # with open('perf_test.pickle', 'wb') as f:
-    #     pickle.dump([
-    #         obs_clust, cl_max_mag, pd['fundam_params'], pd['theor_tracks'],
-    #         pd['lkl_method'], pd['R_V'], clp['completeness'],
-    #         max_mag_syn, st_dist_mass, ext_coefs, N_fc, pd['m_ini_idx'],
-    #         pd['binar_flag'], err_pars], f)
-    # print("finished")
-    # import sys
-    # sys.exit()
-    # # TEMPORARY
-
-    return cl_max_mag, max_mag_syn, obs_clust, ext_coefs, st_dist_mass, N_fc,\
-        err_pars
+    return cl_max_mag, max_mag_syn, obs_clust
 
 
 def convergenceParams(isoch_fit_params, fundam_params, nburn_mcee, **kwargs):
