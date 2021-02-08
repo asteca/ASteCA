@@ -2,7 +2,6 @@
 import numpy as np
 from packages.inp import readZA
 from packages.inp import read_isochs
-from packages.inp import interp_isochs
 
 
 def check_get(pd):
@@ -12,7 +11,7 @@ def check_get(pd):
     """
 
     # Only read files if best fit method is set to run. Else pass empty list.
-    pd['theor_tracks'], pd['m_ini_idx'], pd['binar_flag'] = [], np.nan, False
+    pd['m_ini_idx'] = -1
 
     if pd['best_fit_algor'] != 'n':
         # Print info about tracks.
@@ -40,32 +39,34 @@ def check_get(pd):
         # from 'extra_pars'.
         # TODO this will need the change when/if more extra parameters are
         # stored beyond 'M_ini'
-        extra_pars2 = [[] for _ in met_vals_all]
+        N_extra_pars = 1
+        Nz, Na = len(met_vals_all), len(age_vals_all)
+        extra_pars2 = [[[[] for _ in range(Na)] for _ in range(Nz)]
+                       for _ in range(N_extra_pars)]
         for i, z in enumerate(extra_pars):
-            ages = [[] for _ in age_vals_all]
             for j, a in enumerate(z):
-                ages[j].append(a[0])
-            extra_pars2[i] = ages
+                extra_pars2[0][i][j] = np.array(a[0])
         extra_pars = extra_pars2
+
+        # extra_pars2 = [[] for _ in met_vals_all]
+        # for i, z in enumerate(extra_pars):
+        #     masses = [[] for _ in age_vals_all]
+        #     for j, a in enumerate(z):
+        #         masses[j].append(a[0])
+        #     extra_pars2[i] = masses
+        # extra_pars = extra_pars2
 
         # Take the synthetic data from the unique filters read, create the
         # necessary colors, and position the magnitudes and colors in the
         # same order as they are read from the cluster's data file.
         # The mags_cols_theor list contains the magnitudes used to create the
-        # defined colors. This is necessary to properly add binarity to the
-        # synthetic clusters below.
+        # defined colors. This is used to properly add binarity to the
+        # synthetic clusters.
         mags_theor, cols_theor, mags_cols_theor = arrange_filters(
             isoch_list, pd['all_syst_filters'], pd['filters'], pd['colors'])
 
-        # Interpolate all the data in the isochrones (including the binarity
-        # data)
-        all_met_vals, all_age_vals, binar_fracs = pd['fundam_params'][0],\
-            pd['fundam_params'][1], pd['fundam_params'][5]
-        pd['theor_tracks'], pd['m_ini_idx'], pd['binar_flag'] =\
-            interp_isochs.main(
-                mags_theor, cols_theor, mags_cols_theor, extra_pars,
-                all_met_vals, all_age_vals, binar_fracs, pd['bin_mr'],
-                pd['synth_rand_seed'])
+        pd['data_tracks'] = [
+            mags_theor, cols_theor, extra_pars, mags_cols_theor]
 
         print("\nGrid values")
         print("z        : {:<5} [{}, {}]".format(
@@ -74,9 +75,6 @@ def check_get(pd):
         print("log(age) : {:<5} [{}, {}]".format(
             len(age_vals_all), pd['fundam_params'][1][0],
             pd['fundam_params'][1][-1]))
-        # Size of array in memory
-        print("(Size of array: {:.0f} Mbs)\n".format(
-            pd['theor_tracks'].nbytes / 1024.**2))
 
     return pd
 
@@ -116,7 +114,6 @@ def arrange_filters(isoch_list, all_syst_filters, filters, colors):
     all magnitudes and colors according to the order given to the photometric
     data read from file.
     """
-
     # Extract names of all read filters in the order in which they are stored
     # in 'isoch_list'.
     all_filts = []
@@ -130,12 +127,22 @@ def arrange_filters(isoch_list, all_syst_filters, filters, colors):
         fi.append(all_filts.index(f[1]))
     # Create list of theoretical magnitudes, in the same orders as they are
     # read from the cluster's data file.
+    # mags_theor = []
+    # for met in isoch_list:
+    #     m = []
+    #     for age in met:
+    #         a = []
+    #         for i in fi:
+    #             age_arr = np.array(age[i])
+    #             a.append(age_arr)
+    #         m.append(a)
+    #     mags_theor.append(m)
     mags_theor = []
-    for met in isoch_list:
+    for i in fi:
         m = []
-        for age in met:
+        for met in isoch_list:
             a = []
-            for i in fi:
+            for age in met:
                 a.append(np.array(age[i]))
             m.append(a)
         mags_theor.append(m)
@@ -150,12 +157,24 @@ def arrange_filters(isoch_list, all_syst_filters, filters, colors):
         fci.append(ci)
     # Create list of theoretical colors, in the same orders as they are
     # read from the cluster's data file.
+    # cols_theor = []
+    # for met in isoch_list:
+    #     m = []
+    #     for age in met:
+    #         a = []
+    #         for ic in fci:
+    #             # Generate color in the sense it was given in
+    #             # 'params_input.dat'.
+    #             col_arr = np.array(age[ic[0]]) - np.array(age[ic[1]])
+    #             a.append(col_arr)
+    #         m.append(a)
+    #     cols_theor.append(m)
     cols_theor = []
-    for met in isoch_list:
+    for ic in fci:
         m = []
-        for age in met:
+        for met in isoch_list:
             a = []
-            for ic in fci:
+            for age in met:
                 # Generate color in the sense it was given in
                 # 'params_input.dat'.
                 a.append(np.array(age[ic[0]]) - np.array(age[ic[1]]))
@@ -167,18 +186,29 @@ def arrange_filters(isoch_list, all_syst_filters, filters, colors):
     # mags_cols_theor = [met1, met2, ..., metN]
     # metX = [age1, age2, ..., age_M]
     # ageX = [filter1, filter2, filter3, filter4, ..., filterQ]
-    # such that: color1 = filter1 - filter2, color1 = filter3 - filter4, ...
+    # such that: color1 = filter1 - filter2, color2 = filter3 - filter4, ...
+    # mags_cols_theor0 = []
+    # for met in isoch_list:
+    #     m = []
+    #     for age in met:
+    #         a = []
+    #         # For each color defined.
+    #         for ic in fci:
+    #             # For each filter of this color.
+    #             a.append(age[ic[0]])
+    #             a.append(age[ic[1]])
+    #         m.append(a)
+    #     mags_cols_theor0.append(m)
+
     mags_cols_theor = []
-    for met in isoch_list:
-        m = []
-        for age in met:
-            a = []
-            # For each color defined.
-            for ic in fci:
-                # For each filter of this color.
-                a.append(age[ic[0]])
-                a.append(age[ic[1]])
-            m.append(a)
-        mags_cols_theor.append(m)
+    for ic in fci:
+        for c in ic:
+            m = []
+            for met in isoch_list:
+                a = []
+                for age in met:
+                    a.append(np.array(age[c]))
+                m.append(a)
+            mags_cols_theor.append(m)
 
     return mags_theor, cols_theor, mags_cols_theor
