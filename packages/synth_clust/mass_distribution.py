@@ -2,28 +2,25 @@
 import numpy as np
 
 
-def main(st_dist_mass, M_total):
+def main(st_dist_mass, mean_bin_mr, bin_frac, M_total):
     """
-    http://www.astro.ru.nl/~slarsen/teaching/Galaxies/cmd.pdf
-    http://python4mpia.github.io/fitting_data/MC-sampling-from-Salpeter.html
-
-    Returns a mass distribution according to a given IMF and a total cluster
-    mass.
-
-    Generate N_stars for each interval (m, m+dm) with masses randomly
-    distributed within this interval.
-
+    Returns the sampled IMF up to a total mass.
     """
 
-    # This is not in use since May 2019 (see 'imf.py'), because all the
-    # mass distributions need to be equal. It could be useful when #239 is
-    # implemented.
-    #
-    # if st_dist_mass[M_total][-1] is True:
-    #     base, scale, N_stars = st_dist_mass[M_total][:-1]
-    #     mass_dist = np.random.random(N_stars) * scale + base
-    # else:
+    # # Select a fraction of stars to be binaries
+    # bin_indxs = binar_probs[:isoch_cut.shape[-1]] <= bin_frac
+    # # Secondary masses of the binary systems
+    # binar_masses = isochrone[-1][bin_indxs]
+    # # Excess of mass that will be introduced by the secondary masses
+    # M_excess = binar_masses.sum()
+    # # Mass of primary systems
+    # single_masses = isochrone[m_ini_idx][bin_indxs].sum()
+    # # Excess mass as a fraction of the single masses
+    # M_excess_frac = M_excess / single_masses
+    # # Remove that excess from the total mass to compensate
+    # M_total = max(10, M_total - M_excess_frac * bin_frac * M_total)
+    # #
+    # This line is a faster approximation to the (exact) block above
+    M_total = max(10, M_total - mean_bin_mr * bin_frac * M_total)
 
-    mass_dist = st_dist_mass[0][:np.searchsorted(st_dist_mass[1], M_total)]
-
-    return mass_dist
+    return st_dist_mass[0][:np.searchsorted(st_dist_mass[1], M_total)]

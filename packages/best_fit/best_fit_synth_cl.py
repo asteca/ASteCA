@@ -2,7 +2,7 @@
 import numpy as np
 from ..inp import data_IO
 from . import max_mag_cut, obs_clust_prepare, ptemcee_algor
-from ..synth_clust import tracksPrep, synth_clust_gen
+from ..synth_clust import synth_clust_gen
 from .mcmc_convergence import convergenceVals
 from .bf_common import r2Dist, modeKDE, fillParams  # thinChain
 
@@ -15,29 +15,18 @@ def main(npd, pd, clp):
 
     # General parameters
     if pd['best_fit_algor'] != 'n':
-        cl_max_mag, max_mag_syn, obs_clust = dataPrep(pd, clp)
-        # 'theor_tracks' array is generated here and stored in 'pd'
-        pd, ext_coefs, st_dist_mass, N_fc, mv_err_pars = tracksPrep.main(
-            pd, clp)
-        # Average minimum mass fraction for binary systems
-        mean_bin_mr = 0.
-        if pd['binar_flag']:
-            mean_bin_mr = (pd['bin_mr'] + 1.) / 2.
-    else:
-        # Pass dummy data used by data output and some plot functions.
-        cl_max_mag, max_mag_syn, ext_coefs, st_dist_mass, N_fc, mv_err_pars,\
-            obs_clust = [[]] * 7
-        mean_bin_mr = 0.
+        clp = dataPrep(pd, clp)
 
     # # TEMPORARY
     # # Use for saving the necessary input for the 'perf_test.py' file.
     # import pickle
     # with open('perf_test.pickle', 'wb') as f:
     #     pickle.dump([
-    #         obs_clust, cl_max_mag, pd['fundam_params'], pd['theor_tracks'],
-    #         pd['lkl_method'], pd['R_V'], clp['completeness'],
-    #         max_mag_syn, st_dist_mass, ext_coefs, N_fc, pd['m_ini_idx'],
-    #         pd['binar_flag'], mv_err_pars, mean_bin_mr], f)
+    #         pd['fundam_params'], pd['lkl_method'], clp['completeness'],
+    #         clp['err_lst'], clp['em_float'], obs_clust, max_mag_syn,
+    #         ext_coefs, binar_flag, mean_bin_mr, N_fc, m_ini_idx,
+    #         pd['st_dist_mass'], theor_tracks, err_norm_rand, binar_probs,
+    #         ext_unif_rand, pd['R_V']], f)
     # print("Data saved to pickle")
     # import sys
     # sys.exit()
@@ -51,13 +40,13 @@ def main(npd, pd, clp):
 
         # Calculate the best fitting parameters.
         isoch_fit_params = ptemcee_algor.main(
-            clp['completeness'], max_mag_syn, obs_clust, ext_coefs,
-            st_dist_mass, N_fc, mv_err_pars, mean_bin_mr, **pd)
+            clp['completeness'], clp['err_lst'], clp['em_float'],
+            clp['max_mag_syn'], clp['obs_clust'], **pd)
 
         # Save MCMC trace (and some other variables) to file
         if pd['save_trace_flag']:
             data_IO.dataSave(isoch_fit_params, npd['mcmc_file_out'])
-            print("OUtput of MCMC sampler saved to file")
+            print("Output of MCMC sampler saved to file")
 
         # Obtain convergence parameters
         isoch_fit_params = convergenceParams(isoch_fit_params, **pd)
@@ -73,12 +62,12 @@ def main(npd, pd, clp):
         isoch_fit_errors = params_errors(pd, isoch_fit_params)
         print("Best fit parameters read from file")
 
-    # In place for #239
+    # In place for #239. NOT WORKING AS OF FEB 2021, after #488 #503 #506
     elif pd['best_fit_algor'] == 'synth_gen':
         synth_clust_gen.main(
             npd, clp, max_mag_syn, obs_clust, ext_coefs, st_dist_mass, N_fc,
             mv_err_pars, **pd)
-        isoch_fit_params, isoch_fit_errors = [], []
+        # isoch_fit_params, isoch_fit_errors = [], []
 
     else:
         print("Skip parameters fitting process")
@@ -92,12 +81,8 @@ def main(npd, pd, clp):
             'N_total': np.nan}
         isoch_fit_errors = [[np.nan, np.nan, np.nan]] * 6
 
-    clp['cl_max_mag'], clp['max_mag_syn'], clp['ext_coefs'],\
-        clp['st_dist_mass'], clp['N_fc'], clp['mv_err_pars'],\
-        clp['bf_bin_edges'], clp['isoch_fit_params'],\
-        clp['isoch_fit_errors'], clp['mean_bin_mr'] = cl_max_mag, max_mag_syn,\
-        ext_coefs, st_dist_mass, N_fc, mv_err_pars, obs_clust[0],\
-        isoch_fit_params, isoch_fit_errors, mean_bin_mr
+    clp['isoch_fit_params'], clp['isoch_fit_errors'] = isoch_fit_params,\
+        isoch_fit_errors
 
     return clp
 
@@ -109,14 +94,15 @@ def dataPrep(pd, clp):
     """
 
     # Remove stars beyond the maximum magnitude limit, if it was set.
-    cl_max_mag, max_mag_syn = max_mag_cut.main(
+    clp['cl_max_mag'], clp['max_mag_syn'] = max_mag_cut.main(
         clp['cl_reg_fit'], pd['max_mag'])
 
     # Processed observed cluster.
-    obs_clust = obs_clust_prepare.main(
-        cl_max_mag, pd['lkl_method'], pd['lkl_binning'], pd['lkl_manual_bins'])
+    clp['obs_clust'] = obs_clust_prepare.main(
+        clp['cl_max_mag'], pd['lkl_method'], pd['lkl_binning'],
+        pd['lkl_manual_bins'])
 
-    return cl_max_mag, max_mag_syn, obs_clust
+    return clp
 
 
 def convergenceParams(isoch_fit_params, fundam_params, nburn_mcee, **kwargs):

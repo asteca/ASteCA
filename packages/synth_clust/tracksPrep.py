@@ -3,25 +3,22 @@ import numpy as np
 from . import extin_coefs
 from . import imf
 from . import binarity
-from . import add_errors
-from .. import update_progress
 
 
-def main(pd, clp):
+def main(pd):
     """
     Return list structured as:
 
     theor_tracks = [m1, m2, .., mN]
     mX = [age1, age2, ..., ageM]
-    ageX = [f1,.., c1, c2,.., f1b,.., c1b, c2b,.., bp, mb, m_ini,.., m_bol]
+    ageX = [f1,.., c1, c2,.., Mini, f1b,.., c1b, c2b,.., bp, Mb]
     where:
-    fX:  individual filters (mags). Currently a single main mag is allowed.
-    cX:  colors
-    Mini,...: extra parameters.
-    fXb: filters with binary data  ------
-    cXb: colors with the binary data    | Only stored if binarity is set as a
-    mb:  binary masses                  | free param, or fixed to a value > 0.
-    pb:  binary probabilities------------
+    fX  : individual filters (mags). Currently a single main mag is allowed.
+    cX  : colors
+    Mini: initial mass
+    fXb : filters with binary data  ------
+    cXb : colors with the binary data    | Only stored if binarity is set as a
+    Mb  : binary masses -----------------| free param, or fixed to a value > 0.
 
     theor_tracks.shape = (Nz, Na, Nd, Ni)
     Nz: number of metallicities
@@ -33,118 +30,182 @@ def main(pd, clp):
     from . import set_rand_seed
     set_rand_seed.main(pd['synth_rand_seed'])
 
-    # Obtain extinction coefficients.
-    ext_coefs = extin_coefs.main(pd['cmd_systs'], pd['filters'], pd['colors'])
+    # Extract some data
+    all_met_vals, all_age_vals = pd['fundam_params'][:2]
+    all_masses, binar_fracs = pd['fundam_params'][4], pd['fundam_params'][5]
+    Nmets, Max_mass = len(all_met_vals), all_masses[-1]
 
-    # Obtain mass distribution using the selected IMF.
-    st_dist_mass = imf.main(pd['IMF_name'], pd['fundam_params'][4])
+    # Obtain extinction coefficients.
+    pd['ext_coefs'] = extin_coefs.main(
+        pd['cmd_systs'], pd['filters'], pd['colors'])
 
     # Set the binary flag
-    binar_fracs = pd['fundam_params'][5]
-    pd['binar_flag'] = False
+    binar_flag, mean_bin_mr = False, 0.
     if len(binar_fracs) > 1 or binar_fracs[0] > 0.:
-        pd['binar_flag'] = True
+        binar_flag = True
+        # Average minimum mass fraction for binary systems
+        mean_bin_mr = (pd['bin_mr'] + 1.) / 2.
+    pd['binar_flag'], pd['mean_bin_mr'] = binar_flag, mean_bin_mr
 
     # Store the number of defined filters and colors.
-    N_fc = [len(pd['filters']), len(pd['colors'])]
-    # Index of 'M_ini' (theoretical initial mass), stored in the interpolated
-    # isochrones: right after the magnitude and color(s)
-    pd['m_ini_idx'] = N_fc[0] + N_fc[1]
+    pd['N_fc'] = [len(pd['filters']), len(pd['colors'])]
+    # Index of 'M_ini' (theoretical initial mass), stored in the
+    # interpolated isochrones: right after the magnitude and color(s)
+    pd['m_ini_idx'] = pd['N_fc'][0] + pd['N_fc'][1]
 
-    # Interpolate the sampled masses in the isochrones
-    print("Populating isochrones")
-    interp_tracks, mags_cols_intp = interpIsochs(
-        pd['data_tracks'], st_dist_mass, pd['binar_flag'], N_fc)
+    # Obtain mass distribution using the selected IMF.
+    pd['st_dist_mass'] = imf.main(pd['IMF_name'], Nmets, Max_mass)
+    # tot_mem = 0.
+    # for stm in st_dist_mass:
+    #     tot_mem += stm[0].nbytes / 1024.**2 + stm[1].nbytes / 1024.**2
 
     # Combine all data into a single array of shape:
-    # (N_z, N_age, N_data, N_IMF_interp), where 'N_data' depends on the number
+    # (N_z, N_age, N_data, N_interp), where 'N_data' depends on the number
     # of colors defines, and whether the binarity is on/off
-    if pd['binar_flag']:
-        all_met_vals, all_age_vals = pd['fundam_params'][:2]
-        interp_tracks = binarity.binarGen(
-            pd['data_tracks'], pd['m_ini_idx'], interp_tracks, mags_cols_intp,
-            all_met_vals, all_age_vals, pd['bin_mr'], N_fc)
+
+    # Create the necessary colors, and position the magnitudes and colors
+    # in the same order as they are read from the cluster's data file.
+    interp_tracks, mags_cols_intp = interpIsochs(
+        pd['isoch_list'], pd['extra_pars'], pd['all_syst_filters'],
+        pd['filters'], pd['colors'])
+
+    if binar_flag:
+        pd['theor_tracks'] = binarity.binarGen(
+            pd['bin_mr'], pd['m_ini_idx'], pd['N_fc'], interp_tracks,
+            mags_cols_intp, all_met_vals, all_age_vals)
     else:
-        interp_tracks = interp_tracks[:, :, :pd['m_ini_idx'] + 1, :]
+        pd['theor_tracks'] = interp_tracks
+    # Size of array
+    # print("{:.0f} Mbs".format(theor_tracks.nbytes / 1024.**2))
 
-    pd['theor_tracks'] = interp_tracks
+    pd['err_norm_rand'], pd['binar_probs'], pd['ext_unif_rand'] = randVals(
+        pd['lkl_method'], pd['st_dist_mass'], pd['theor_tracks'])
 
-    print("(Size of array: {:.0f} Mbs)".format(
-        pd['theor_tracks'].nbytes / 1024.**2))
-
-    # Error parameters
-    err_rand = add_errors.randIdxs(
-        pd['lkl_method'], pd['theor_tracks'].shape[-1])
-
-    # For the move_isoch() function. In place for #174
-    rand_unif = np.random.uniform(0., 1., pd['theor_tracks'].shape[-1])
-
-    # Pack
-    mv_err_pars = clp['err_lst'], clp['em_float'], err_rand, rand_unif
-
-    return pd, ext_coefs, st_dist_mass, N_fc, mv_err_pars
+    return pd
 
 
-def interpIsochs(data_tracks, st_dist_mass, binar_flag, N_fc):
+def interpIsochs(isoch_list, extra_pars, all_syst_filters, filters, colors):
     """
-    Interpolate sampled masses into all the filters, colors, filters of colors,
-    and extra parameters (masses, etc).
+    Take the list of filters stored, create the necessary colors, arrange and
+    interpolate all magnitudes and colors according to the order given to the
+    photometric data read from file.
+
+    The mags_cols_theor list contains the magnitudes used to create the
+    defined colors. This is used to properly add binarity to the
+    synthetic clusters.
+
+    If more than one photometric system was used, then the 'extra_pars' array
+    has extra 'M_ini' arrays (used to check) that need to be removed.
+    TODO this will need the change when/if more extra parameters are
+    stored beyond 'M_ini'
     """
 
-    # Sampled masses
-    t = st_dist_mass[0]
+    # Extract names of all read filters in the order in which they are stored
+    # in 'isoch_list'.
+    all_filts = []
+    for ps in all_syst_filters:
+        all_filts = all_filts + list(ps[1:])
 
-    # Define empty array to hold the final data
-    # Magnitude and colors defined. The '1' is there for the initial mass
-    Nd = N_fc[0] + N_fc[1] + 1
-    if binar_flag:
-        # The '2' is there for the binarity probability and mass
-        Nd += N_fc[0] + N_fc[1] + 2
-    Nz, Na, Np = len(data_tracks[0][0]), len(data_tracks[0][0][0]), len(t)
-    interp_tracks = np.empty([Nz, Na, Nd, Np])
+    # Store the index of each filter read from data, as they are stored in
+    # 'isoch_list'.
+    fi = []
+    for f in filters:
+        fi.append(all_filts.index(f[1]))
 
-    # 'data_tracks' is defined in read_met_files() as:
-    # pd['data_tracks'] = [mags_theor, cols_theor, extra_pars, mags_cols_theor]
-    # mags_theor, cols_theor, extra_pars, mags_cols_theor = data_tracks
-    extra_pars = data_tracks[-2]
+    # Store the index of each filter for each color read from data, as they
+    # are stored in 'isoch_list'.
+    fci = []
+    for c in colors:
+        ci = []
+        for f in c[1].split(','):
+            ci.append(all_filts.index(f))
+        fci.append(ci)
 
-    # Do not add the 'mags_cols_theor' array (at the end of 'data_tracks') to
-    # 'interp_tracks'
-    kk = -1
-    for nn, data in enumerate(data_tracks[:-1]):
-        kk += 1
-        # For each filter/color/extra parameter in list.
-        for idx, fce in enumerate(data):
-            kk += idx
-            # For each metallicity value list.
-            for i, met in enumerate(fce):
-                # For each age value list.
-                for j, age in enumerate(met):
-                    # Assume 'M_ini' is in the '0th' position
-                    xp = extra_pars[0][i][j]
-                    yp = fce[i][j]
-                    interp_tracks[i][j][kk] = np.interp(t, xp, yp)
+    # Calculate the maximum number of stars in all isochrones, and add '10'
+    # before interpolating. This is so that all tracks have the same number
+    # of points.
+    N_pts_max = 0
+    for z in isoch_list:
+        for a in z:
+            N_pts_max = max(N_pts_max, len(a[0]))
+    N_pts_max = N_pts_max + 10
+    xx = np.linspace(0., 1., N_pts_max)
 
-        update_progress.updt(len(data_tracks[:-1]), nn + 1)
+    interp_tracks = []
+    for i, met in enumerate(isoch_list):
+        m = []
+        for j, age in enumerate(met):
+            a = []
+            for im in fi:
+                xp = np.linspace(0, 1, len(age[im]))
+                a.append(np.interp(xx, xp, age[im]))
+            for ic in fci:
+                col = np.array(age[ic[0]]) - np.array(age[ic[1]])
+                xp = np.linspace(0, 1, len(col))
+                a.append(np.interp(xx, xp, col))
 
-    # The magnitudes for each color ('mags_cols_intp') are defined here
-    # and discarded after the colors (and magnitudes) with binarity assignment
-    # are obtained.
-    Nz, Na, _, Np = interp_tracks.shape
-    mags_cols_intp = np.empty([Nz, Na, len(data_tracks[-1]), Np])
-    if binar_flag:
-        for k, fce in enumerate(data_tracks[-1]):
-            for i, met in enumerate(fce):
-                for j, age in enumerate(met):
-                    xp = extra_pars[0][i][j]
-                    yp = fce[i][j]
-                    mags_cols_intp[i][j][k] = np.interp(t, xp, yp)
+            # Use the first 'M_ini' array, hence the '[0]'
+            p = extra_pars[i][j][0]
+            xp = np.linspace(0, 1, len(p))
+            a.append(np.interp(xx, xp, p))
+            m.append(a)
+        interp_tracks.append(m)
 
-    # # In place for #415
-    # filename = 'temp.memmap'
-    # sp = np.array(theor_tracks).shape
-    # theor_tracks_mp = np.memmap(
-    #     filename, dtype='float64', mode='w+', shape=sp)
-    # theor_tracks_mp[:] = theor_tracks[:]
+    interp_tracks = np.array(interp_tracks)
+
+    # Create list of theoretical colors, in the same orders as they are
+    # read from the cluster's data file.
+    # mags_cols_intp = [met1, met2, ..., metN]
+    # metX = [age1, age2, ..., age_M]
+    # ageX = [filter1, filter2, filter3, filter4, ..., filterQ]
+    # such that: color1 = filter1 - filter2, color2 = filter3 - filter4, ...
+    mags_cols_intp = []
+    for met in isoch_list:
+        m = []
+        for age in met:
+            a = []
+            # For each color defined.
+            for ic in fci:
+                # For each filter of this color.
+                xp = np.linspace(0, 1, len(age[ic[0]]))
+                a.append(np.interp(xx, xp, age[ic[0]]))
+                xp = np.linspace(0, 1, len(age[ic[1]]))
+                a.append(np.interp(xx, xp, age[ic[1]]))
+            m.append(a)
+        mags_cols_intp.append(m)
+    mags_cols_intp = np.array(mags_cols_intp)
 
     return interp_tracks, mags_cols_intp
+
+
+def randVals(lkl_method, st_dist_mass, theor_tracks):
+    """
+    Generate lists of random values used by the synthetic cluster generating
+    function.
+    """
+    # This is the maximum number of stars that will ever be interpolated into
+    # an isochrone
+    N_mass = 0
+    for sdm in st_dist_mass:
+        N_mass = max(len(sdm[0]), N_mass)
+
+    # Number of metallicity values defined
+    N_mets = theor_tracks.shape[0]
+
+    err_norm_rand, binar_probs, ext_unif_rand = [], [], []
+    for _ in range(N_mets):
+
+        if lkl_method == 'tolstoy':
+            # Tolstoy likelihood considers uncertainties, there's no need to
+            # add it to the synthetic clusters.
+            err_norm_rand.append(np.zeros(N_mass))
+        else:
+            err_norm_rand.append(np.random.normal(0., 1., N_mass))
+
+        # Binary probabilities, one per metallicity
+        binar_probs.append(np.random.uniform(0., 1., N_mass))
+
+        # For the move_isoch() function. In place for #174
+        ext_unif_rand.append(np.random.uniform(0., 1., N_mass))
+
+    return err_norm_rand, binar_probs, ext_unif_rand

@@ -2,19 +2,21 @@
 import numpy as np
 
 
-def main(isochrone, e, d, R_V, ext_coefs, N_fc, binar_flag, m_ini_idx):
+def main(
+    isochrone, e, d, R_V, ext_coefs, N_fc, rand_unif, m_ini_idx,
+        binar_flag):
     """
     Receives an isochrone of a given age and metallicity and modifies
     its color and magnitude values according to given values for the extinction
     E(B-V) (e) and distance modulus (d).
     N_fc is the number of filters (N_fc[0]), and colors defined (N_fc[1]).
+
+                 |------Nf-----|         |------Nc-----|
+    isochrone = [f1, f2, .., fNf, M_ini, c1, c2, .., cNc, M_b]
+
                  |------Nf-----|  |------Nc-----|
-    isochrone = [f1, f2, .., fNf, c1, c2, .., cNc,
-                 |-----Nf----|  |--------Nc------|
-                 f1b, .., fNfb, c1b, c2b, .., cNcb, bp, mb, m_ini,.., m_bol
-    ]
-                 |----Nf----|  |-----Nc-----|
-    ext_coefs = [cf1, .., cfNf, cc1, .., ccNc]
+    ext_coefs = [cf1, ...., cfNf, cc1, ...., ccNc]
+
     where:
     cfX = [a, b]  ; ccX = [[a1, b1], [a2, b2]]
     and:
@@ -34,43 +36,50 @@ def main(isochrone, e, d, R_V, ext_coefs, N_fc, binar_flag, m_ini_idx):
     (m1 - m2)_obs = (m1 - m2)_int + E(m1 - m2)
     (m1 - m2)_obs = (m1 - m2)_int + (a12 + b12/Rv) * R_V * E(B-V)
     """
+    # Copy to avoid overwriting
+    isochrone = np.array(isochrone)
 
-    Av = R_V * e
+    # TODO. In place for #174
+    ext_diff = .0
+
+    Av = R_V * (e + rand_unif[:isochrone.shape[-1]] * ext_diff)
     Nf, Nc = N_fc
 
-    def magmove(fi, mag):
+    def magmove(fi):
         Ax = (ext_coefs[fi][0] + ext_coefs[fi][1] / R_V) * Av
-        return np.array(mag) + d + Ax
+        return d + Ax
 
-    def colmove(ci, col):
-        Ex = ((ext_coefs[Nf + ci][0][0] + ext_coefs[Nf + ci][0][1] / R_V) -
-              (ext_coefs[Nf + ci][1][0] + ext_coefs[Nf + ci][1][1] / R_V)) * Av
-        return np.array(col) + Ex
-
-    iso_moved = []
+    def colmove(ci):
+        Ex = ((ext_coefs[ci][0][0] + ext_coefs[ci][0][1] / R_V)
+              - (ext_coefs[ci][1][0] + ext_coefs[ci][1][1] / R_V)) * Av
+        return Ex
 
     # Move filters.
-    for fi, mag in enumerate(isochrone[:Nf]):
-        iso_moved.append(magmove(fi, mag))
+    for fi in range(Nf):
+        Ax_d = magmove(fi)
+        isochrone[fi] += Ax_d
+        if binar_flag:
+            # Move filters with binary data.
+            isochrone[Nf + Nc + 1 + fi] += Ax_d
 
     # Move colors.
-    for ci, col in enumerate(isochrone[Nf:(Nf + Nc)]):
-        iso_moved.append(colmove(ci, col))
+    for ci in range(Nf, Nf + Nc):
+        Ex = colmove(ci)
+        isochrone[ci] += Ex
+        if binar_flag:
+            # Move colors with binary data.
+            isochrone[m_ini_idx + Nf + ci] += Ex
 
-    binar_idx = 0
-    if binar_flag:
-        # Move filters with binary data.
-        for fi, mag in enumerate(isochrone[(Nf + Nc):(Nf + Nc + Nf)]):
-            iso_moved.append(magmove(fi, mag))
+    # # import matplotlib.pyplot as plt
+    # # # plt.subplot(121)
+    # # plt.scatter(isochrone[1], isochrone[0], c='g')
+    # # plt.scatter(isochrone[m_ini_idx + 2], isochrone[m_ini_idx + 1], c='r', alpha=.5)
+    # # plt.gca().invert_yaxis()
+    # # # Second color
+    # # # plt.subplot(122)
+    # # # plt.scatter(isochrone[2], isochrone[0], c='g')
+    # # # plt.scatter(isochrone[6], isochrone[4], c='r', alpha=.5)
+    # # # plt.gca().invert_yaxis()
+    # # plt.show()
 
-        # Move colors with binary data.
-        for ci, col in enumerate(
-                isochrone[(Nf + Nc + Nf):(Nf + Nc + Nf + Nc)]):
-            iso_moved.append(colmove(ci, col))
-
-        binar_idx = 2
-
-    # Append the extra parameters, not affected by distance/reddening.
-    iso_moved = np.array(iso_moved + list(isochrone[m_ini_idx - binar_idx:]))
-
-    return iso_moved
+    return isochrone
