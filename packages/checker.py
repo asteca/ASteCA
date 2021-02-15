@@ -1,14 +1,6 @@
 
 from .check import first_run
 from .check import pack
-from .check import clusters
-from .check import params_file
-from .check import update
-from .check import params_data
-from .check import params_kinem
-from .check import params_out
-from .check import params_struct
-from .check import params_decont
 
 
 def check_all(mypath, file_end):
@@ -28,6 +20,14 @@ def check_all(mypath, file_end):
     inst_packgs_lst = pack.check()
 
     # Import here after the needed packages were checked to be present.
+    from .check import clusters
+    from .check import params_file
+    from .check import update
+    from .check import params_data
+    from .check import params_kinem
+    from .check import params_out
+    from .check import params_struct
+    from .check import params_decont
     from .check import params_synthcl
     from .check import params_match
     from .check import read_met_files
@@ -71,10 +71,11 @@ def check_all(mypath, file_end):
     print("Filter: {}".format(fs))
     print("Color:  {}\n".format(cs))
 
-    # Check and store metallicity files.
-    pd = read_met_files.check_get(pd)
+    if pd['best_fit_algor'] != 'n':
+        # Check and store metallicity files.
+        pd = read_met_files.check_get(pd)
 
-    print("Full check done.\n\nNumber of clusters to analyze: {}\n".format(
+    print("Full check done.\n\nNumber of clusters to analyze: {}".format(
         len(cl_files)))
 
     return cl_files, pd

@@ -4,10 +4,9 @@ from scipy.spatial.distance import cdist
 from .contamination_index import CIfunc
 from ..aux_funcs import circFrac
 from ..out import prep_plots
-from .. import update_progress
 
 
-def main(cld_i, clp, coords, rad_manual, **kwargs):
+def main(cld_i, clp, coords, rad_manual, clust_rad_mode, **kwargs):
     """
     Estimate the radius through the optimization of the #cluster-members vs
     #field-stars values. Assign the uncertainty through a bootstrap process
@@ -20,7 +19,7 @@ def main(cld_i, clp, coords, rad_manual, **kwargs):
     # Obtain the optimal radius and arrays for plotting.
     clp['clust_rad'], clp['rad_rads'], clp['rad_N_membs'], clp['rad_N_field'],\
         clp['rad_CI'] = optimalRadius(
-            rad_radii, rad_areas, st_dists_cent, **clp)
+            clust_rad_mode, rad_radii, rad_areas, st_dists_cent, **clp)
 
     coord = prep_plots.coord_syst(coords)[0]
     if rad_manual == 'n':
@@ -33,7 +32,14 @@ def main(cld_i, clp, coords, rad_manual, **kwargs):
         #     print("Radius found: {:g} {}".format(clp['clust_rad'], coord))
         # else:
         #     clp['e_rad'] = np.array([np.nan, np.nan])
-        print("Radius found: {:g} {}".format(clp['clust_rad'], coord))
+        if clust_rad_mode == 'auto':
+            print("Radius found: {:g} {}".format(clp['clust_rad'], coord))
+
+        elif clust_rad_mode == 'max':
+            clp['clust_rad'] = maxRadius(
+                cld_i['x'], cld_i['y'], clp['kde_cent'])
+            print("Large radius selected: {:g} {}".format(
+                clp['clust_rad'], coord))
 
     elif rad_manual != 'n':
         # Update radius, assign zero error.
@@ -95,7 +101,7 @@ def rdpAreasDists(
 
 
 def optimalRadius(
-    rad_radii, rad_areas, st_dists_cent, field_dens, bttstrp_flag=False,
+    clust_rad_mode, rad_radii, rad_areas, st_dists_cent, field_dens,
         **kwargs):
     """
     Estimate the optimal radius as the value that maximizes the (normalized)
@@ -145,33 +151,46 @@ def optimalRadius(
     idx = np.argmax(N_membs - N_field)
     clust_rad = data[0][idx]
 
-    if bttstrp_flag:
-        return clust_rad
-
     return clust_rad, data[0], N_membs, N_field, data[3]
 
 
-def radError(
-        rad_radii, rad_areas, st_dists_cent, N_btstrp, field_dens, **kwargs):
+def maxRadius(x, y, kde_cent):
     """
-    Bootstrap the distances to estimate the radius uncertainty.
+    Estimate a large radius that encloses the entire frame
     """
+    xmin, xmax, ymin, ymax = min(x), max(x), min(y), max(y)
+    pts = np.array([(xmin, ymin), (xmin, ymax), (xmax, ymin), (xmax, ymax)])
+    # Fast euclidean distance: https://stackoverflow.com/a/47775357/1391441
+    a_min_b = kde_cent - pts
+    dist = np.sqrt(np.einsum('ij,ij->i', a_min_b, a_min_b))
+    # Use the maximum distance as the radius
+    clust_rad = max(dist)
 
-    steps = int(.1 * N_btstrp)
-    all_rads = np.empty(N_btstrp)
-    for i in range(N_btstrp):
+    return clust_rad
 
-        # Sample distances with replacement.
-        st_dists_btstrp = np.random.choice(st_dists_cent, st_dists_cent.size)
 
-        # Obtain the optimal radius and arrays for plotting.
-        all_rads[i] = optimalRadius(
-            rad_radii, rad_areas, st_dists_btstrp, field_dens, True)
+# DEPRECATED Nov 2020
+# def radError(
+#         rad_radii, rad_areas, st_dists_cent, N_btstrp, field_dens, **kwargs):
+#     """
+#     Bootstrap the distances to estimate the radius uncertainty.
+#     """
 
-        if i + 1 == N_btstrp:
-            pass
-        elif (i + 1) % steps:
-            continue
-        update_progress.updt(N_btstrp, i + 1)
+#     steps = int(.1 * N_btstrp)
+#     all_rads = np.empty(N_btstrp)
+#     for i in range(N_btstrp):
 
-    return np.percentile(all_rads, (16, 84))
+#         # Sample distances with replacement.
+#         st_dists_btstrp = np.random.choice(st_dists_cent, st_dists_cent.size)
+
+#         # Obtain the optimal radius and arrays for plotting.
+#         all_rads[i] = optimalRadius(
+#             rad_radii, rad_areas, st_dists_btstrp, field_dens, True)
+
+#         if i + 1 == N_btstrp:
+#             pass
+#         elif (i + 1) % steps:
+#             continue
+#         update_progress.updt(N_btstrp, i + 1)
+
+#     return np.percentile(all_rads, (16, 84))
