@@ -51,7 +51,7 @@ def pl_mps_phot_diag(
         plot_colorbar = False
     # Plot stars used in the best fit process.
     sca = plt.scatter(
-        obs_x, obs_y, marker='o', c=col_select_fit, s=cl_sz_pt + 2., cmap=rmap,
+        obs_x, obs_y, marker='o', c=col_select_fit, s=cl_sz_pt, cmap=rmap,
         lw=0.3, edgecolor='k', vmin=v_min_mp, vmax=v_max_mp, zorder=4)
 
     # Plot sigma region
@@ -173,15 +173,14 @@ def pl_bf_synth_cl(
     for y_ed in hess_yedges:
         # horizontal lines
         ax.axhline(y_ed, linestyle=gls, lw=glw, color=gc, zorder=1)
-    # Plot synthetic cluster.
-    single_idx, bin_idx = binar_idx <= 1., binar_idx > 1.
+
     # Single systems
     plt.scatter(
-        x_synth[single_idx], y_synth[single_idx], marker='o', s=sy_sz_pt + 2.,
+        x_synth[~binar_idx], y_synth[~binar_idx], marker='o', s=sy_sz_pt,
         c='#519ddb', lw=0.3, edgecolor='k', zorder=2)
     # Binary systems
     plt.scatter(
-        x_synth[bin_idx], y_synth[bin_idx], marker='o', s=sy_sz_pt + 2.,
+        x_synth[binar_idx], y_synth[binar_idx], marker='o', s=sy_sz_pt,
         c='#F34C4C', lw=0.3, edgecolor='k', zorder=3)
     # Plot isochrone.
     plt.plot(x_isoch, y_isoch, '#21B001', lw=1., zorder=6)

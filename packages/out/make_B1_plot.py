@@ -16,40 +16,35 @@ def main(
     """
     Make B1 block plots.
     """
-    if 'B1' in pd['flag_make_plot']:
-        fig = plt.figure(figsize=(figsize_x, figsize_y))
-        gs = gridspec.GridSpec(grid_y, grid_x)
-        add_version_plot.main(y_fix=1.)
+    fig = plt.figure(figsize=(figsize_x, figsize_y))
+    gs = gridspec.GridSpec(grid_y, grid_x)
+    add_version_plot.main(y_fix=1.)
 
-        # Obtain plotting parameters and data.
-        err_bar_all = prep_plots.error_bars(
-            cld_c['mags'][0], np.nan, err_lst, 'all')
+    # Obtain plotting parameters and data.
+    err_bar_all = prep_plots.error_bars(
+        cld_c['mags'][0], np.nan, err_lst, 'all')
 
-        # Magnitude vs uncertainties diagrams.
-        arglist = [
-            [gs, pd['colors'], pd['filters'], pd['id_kinem'], cld_c['mags'],
-             em_float, cl_region_c, cl_region_rjct_c, stars_out_c,
-             stars_out_rjct_c, N_st_err_rjct, err_bar_all]
-        ]
-        for n, args in enumerate(arglist):
-            mp_errors.plot(n, *args)
+    # Magnitude vs uncertainties diagrams.
+    arglist = [
+        [gs, pd['colors'], pd['filters'], pd['id_kinem'], cld_c['mags'],
+         em_float, cl_region_c, cl_region_rjct_c, stars_out_c,
+         stars_out_rjct_c, N_st_err_rjct, err_bar_all]
+    ]
+    for n, args in enumerate(arglist):
+        mp_errors.plot(n, *args)
 
-        plt.suptitle(
-            (r"$N_{{accpt}}={}$ , $N_{{rjct}}={}$ (cluster + "
-             "field regions, compl frame)").format(
-                len(cl_region_c) + len(stars_out_c),
-                len(stars_out_rjct_c) + len(cl_region_rjct_c)),
-            x=.26, y=1.005)
+    plt.suptitle(
+        (r"$N_{{accpt}}={}$ , $N_{{rjct}}={}$ (cluster + "
+         "field regions, compl frame)").format(
+            len(cl_region_c) + len(stars_out_c),
+            len(stars_out_rjct_c) + len(cl_region_rjct_c)),
+        x=.26, y=1.005)
 
-        # Generate output file.
-        fig.tight_layout()
-        plt.savefig(
-            join(npd['output_subdir'], str(npd['clust_name']) + '_B1'),
-            bbox_inches='tight')
-        # Close to release memory.
-        plt.clf()
-        plt.close("all")
-
-        print("<<Plots for B1 block created>>")
-    else:
-        print("<<Skip B1 block plot>>")
+    # Generate output file.
+    fig.tight_layout()
+    plt.savefig(
+        join(npd['output_subdir'], str(npd['clust_name']) + '_B1'),
+        bbox_inches='tight')
+    # Close to release memory.
+    plt.clf()
+    plt.close("all")

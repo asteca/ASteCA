@@ -260,7 +260,7 @@ def pl_2_param_dens(_2_params, gs, min_max_p2, varIdxs, params_trace):
 
 def pl_param_pf(
     par_name, gs, min_max_p, varIdxs, mean_sol, map_sol, median_sol, mode_sol,
-        param_r2, pardist_kde, model_done, msol):
+        param_r2, pardist_kde, model_done):
     '''
     Parameter posterior plot.
     '''
@@ -321,7 +321,7 @@ def pl_param_pf(
         # MAP
         plt.axvline(
             x=map_sol[cp], linestyle='--', color='red', zorder=4,
-            label=("{} (" + p + ")").format(msol, map_sol[cp]))
+            label=("MAP (" + p + ")").format(map_sol[cp]))
         # Median
         plt.axvline(
             x=median_sol[cp], linestyle=':', color='green', zorder=4,
