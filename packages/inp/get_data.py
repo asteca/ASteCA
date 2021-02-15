@@ -36,11 +36,15 @@ def main(
         col_names_keep = list(filter(bool, list(flatten(col_names))))
         data.keep_columns(col_names_keep)
 
-        # Remove stars with no valid coordinates data
+        # Remove stars with no valid coordinates data in either x or y
         try:
-            data = data[(~data[x_col].mask) & (~data[y_col].mask)]
+            data = data[(~data[x_col].mask)]
         except AttributeError:
-            # Not masked columns
+            # Not a masked columns
+            pass
+        try:
+            data = data[(~data[y_col].mask)]
+        except AttributeError:
             pass
         N_coords = len(data)
 

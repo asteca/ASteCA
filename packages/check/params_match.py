@@ -71,7 +71,7 @@ def chechLkl(pd):
             except ValueError:
                 raise ValueError("bin numbers must be integers")
 
-        N_colors = int(len(pd['id_cols']) / 2.)
+        N_colors = int(len(pd['id_cols']))
         if len(pd['lkl_manual_bins']) != N_colors + 1:
             raise ValueError(
                 "there are {} bin values defined, there should be {}.".format(

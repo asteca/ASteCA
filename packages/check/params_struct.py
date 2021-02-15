@@ -3,8 +3,8 @@ from collections import Counter
 
 
 def check(
-    trim_frame_range, manual_struct, fdens_method, kp_ndim, kp_nchains,
-        kp_nburn, inst_packgs_lst, **kwargs):
+    trim_frame_range, manual_struct, fdens_method, clust_rad_mode, kp_ndim,
+        kp_nchains, kp_nburn, inst_packgs_lst, **kwargs):
     """
     Check that the parameters are properly written.
     """
@@ -44,6 +44,10 @@ def check(
         elif fdens_method not in ('min', 'last', 'iter'):
             raise ValueError("field density mode ('{}') is not"
                              " recognized.".format(fdens_method))
+
+    if clust_rad_mode not in ('auto', 'max'):
+        raise ValueError("radius mode ('{}') is not"
+                         " recognized.".format(clust_rad_mode))
 
     if kp_ndim not in (0, 2, 4):
         raise ValueError(

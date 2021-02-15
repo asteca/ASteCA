@@ -38,7 +38,7 @@ def main(cl_file, **kwargs):
     out_file_name = join(output_dir, 'asteca_output.dat')
     params_out = join(output_subdir, clust_name + '_params_input.dat')
 
-    print("Analyzing cluster {}".format(clust_name))
+    print("\nAnalyzing cluster {}".format(clust_name))
 
     npd = {
         'clust_name': clust_name, 'data_file': data_file,
@@ -54,11 +54,14 @@ def get_clust_name(cl_file):
     """
     Extract cluster's name from file.
     """
-    # Split cluster's file into sections separated by dots.
-    cl_split = cl_file[-1].split(extsep)
-    # Join all the sections except the last one (the extension) and store the
-    # cluster's clean name.
-    clust_name = '.'.join(cl_split[:-1])
+    if '.' in cl_file[-1]:
+        # Split cluster's file name into sections separated by dots.
+        cl_split = cl_file[-1].split(extsep)
+        # Join all the sections except the last one (the extension) and store
+        # the cluster's clean name.
+        clust_name = '.'.join(cl_split[:-1])
+    else:
+        clust_name = cl_file[-1]
 
     return clust_name
 

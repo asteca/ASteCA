@@ -45,10 +45,11 @@ def main(pars_f_path):
                     manual_struct.append(reader[1:])
                 elif reader[0] == 'S1':
                     fdens_method = str(reader[1])
+                    clust_rad_mode = str(reader[2])
                     try:
-                        fr_number = int(reader[2])
+                        fr_number = int(reader[3])
                     except ValueError:
-                        fr_number = str(reader[2])
+                        fr_number = str(reader[3])
 
                 elif reader[0] == 'S2':
                     kp_ndim = int(reader[1])
@@ -221,7 +222,7 @@ def main(pars_f_path):
 
         # Structure functions parameters
         'manual_struct': manual_struct, 'fdens_method': fdens_method,
-        'fr_number': fr_number,
+        'clust_rad_mode': clust_rad_mode, 'fr_number': fr_number,
         'kp_ndim': kp_ndim, 'kp_nchains': kp_nchains, 'kp_nruns': kp_nruns,
         'kp_nburn': kp_nburn, 'rt_max_f': rt_max_f,
         'kp_emcee_moves': kp_emcee_moves,
