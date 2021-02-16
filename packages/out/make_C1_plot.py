@@ -127,8 +127,8 @@ def main(
 
     # Generate output file.
     plt.savefig(
-        join(npd['output_subdir'], str(npd['clust_name']) + '_C1'),
-        bbox_inches='tight')
+        join(npd['output_subdir'], str(npd['clust_name']) + '_C1'
+             + npd['ext']))
     # Close to release memory.
     plt.clf()
     plt.close("all")

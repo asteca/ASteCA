@@ -53,9 +53,8 @@ def main(
         mp_cent_dens.plot(n, *args)
 
     fig.tight_layout()
-    plt.savefig(
-        join(npd['output_subdir'], str(npd['clust_name']) + '_A2'),
-        bbox_inches='tight')
+    fname = join(npd['output_subdir'], npd['clust_name'] + '_A2' + npd['ext'])
+    plt.savefig(fname)
     # Close to release memory.
     plt.clf()
     plt.close("all")

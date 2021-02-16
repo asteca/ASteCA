@@ -56,7 +56,7 @@ def main(npd, pd, clp):
     fig.tight_layout()
     plt.savefig(join(
         npd['output_subdir'], str(npd['clust_name']) + '_D2_'
-        + pd['best_fit_algor']), bbox_inches='tight')
+        + pd['best_fit_algor'] + npd['ext']))
 
     plt.clf()
     plt.close("all")

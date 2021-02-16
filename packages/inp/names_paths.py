@@ -1,4 +1,5 @@
 
+import matplotlib as mpl
 from os.path import join, exists
 from os import makedirs, extsep
 
@@ -30,6 +31,9 @@ def main(cl_file, **kwargs):
     if not exists(output_subdir):
         makedirs(output_subdir)
 
+    # Extension for plots. Catch '.' in file name.
+    ext = '.' + mpl.rcParams['savefig.format'] if '.' in clust_name else ''
+
     memb_file_out = join(output_subdir, clust_name + '_memb.dat')
     mcmc_file_out = join(output_subdir, clust_name + '_mcmc.pickle')
     synth_file_out = join(output_subdir, clust_name + '_synth.dat')
@@ -46,7 +50,8 @@ def main(cl_file, **kwargs):
         'out_file_name': out_file_name, 'output_subdir': output_subdir,
         'memb_file_out': memb_file_out, 'synth_file_out': synth_file_out,
         'mass_file_out': mass_file_out, 'write_name': write_name,
-        'mcmc_file_out': mcmc_file_out, 'params_out': params_out}
+        'mcmc_file_out': mcmc_file_out, 'params_out': params_out,
+        'ext': ext}
     return npd
 
 

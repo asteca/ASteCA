@@ -193,7 +193,7 @@ def main(
 
     fig.tight_layout()
     # Generate output file.
-    plt.savefig(plot_file, bbox_inches='tight')
+    plt.savefig(plot_file)
     # Close to release memory.
     plt.clf()
     plt.close("all")

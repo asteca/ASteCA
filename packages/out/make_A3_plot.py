@@ -75,8 +75,8 @@ def main(
         warnings.simplefilter("ignore")
         fig.tight_layout()
     plt.savefig(
-        join(npd['output_subdir'], str(npd['clust_name']) + '_A3'),
-        bbox_inches='tight')
+        join(npd['output_subdir'], str(npd['clust_name']) + '_A3'
+             + npd['ext']))
     # Close to release memory.
     plt.clf()
     plt.close("all")
@@ -98,8 +98,8 @@ def main(
 
         fig.tight_layout()
         plt.savefig(
-            join(npd['output_subdir'], str(npd['clust_name']) + '_A3_KP'),
-            bbox_inches='tight')
+            join(npd['output_subdir'], str(npd['clust_name']) + '_A3_KP'
+                 + npd['ext']))
         # Close to release memory.
         plt.clf()
         plt.close("all")

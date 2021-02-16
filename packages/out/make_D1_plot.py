@@ -186,7 +186,7 @@ def main(npd, pd, clp):
         fig.tight_layout()
         plt.savefig(join(
             npd['output_subdir'], str(npd['clust_name']) + '_D1_'
-            + pd['best_fit_algor']), bbox_inches='tight')
+            + pd['best_fit_algor'] + npd['ext']))
         print("<<Plots for D1 block created>>")
     except Exception as exc:
         print(exc)
