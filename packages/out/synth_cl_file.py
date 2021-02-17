@@ -62,13 +62,16 @@ def writeFileOut(
         mass_table = Table(
             [st_ID, main_mag, first_col, st_mean, st_std, st_mean_binar,
              st_std_binar, prob_binar],
-            names=['ID', 'Mag', 'Col', 'Mass_mu', 'Mass_std', 'Mass_binar_mu',
-                   'Mass_binar_std', 'P_binar'])
-        mass_table.meta['comments'] = ['Subset of stars selected as members']
+            names=['ID', 'Mag', 'Col', 'M1', 'M1_std', 'M2', 'M2_std',
+                   'P_binar'])
+        mass_table.meta['comments'] = [
+            '', 'Subset of stars selected as members', 'M1: primary mass',
+            'M2: secondary mass (if binary system)',
+            'P_binar: binary probability', '']
         data_IO.dataSave(
             mass_table, npd['mass_file_out'], 'w',
-            {'Mag': '%12.5f', 'Col': '%12.5f', 'Mass_mu': '%12.5f',
-             'Mass_std': '%12.5f', 'Mass_binar_mu': '%12.5f',
-             'Mass_binar_std': '%12.5f', 'P_binar': '%12.2f'})
+            {'Mag': '%12.5f', 'Col': '%12.5f', 'M1': '%12.5f',
+             'M1_std': '%12.5f', 'M2': '%12.5f', 'M2_std': '%12.5f',
+             'P_binar': '%12.2f'})
     else:
         print("  WARNING: could not save masses/binary probabilities to file")

@@ -56,7 +56,6 @@ def main(clp, pd):
         mass_primary = isoch[pd['m_ini_idx']]
         binar_idxs = ~(isoch[-1] == -99.)
         mass_secondary = isoch[-1]
-        mass_binar = mass_primary + mass_secondary
         # shape: (N_stars, Ndim)
         photom = isoch[:sum(pd['N_fc'])].T
 
@@ -75,7 +74,7 @@ def main(clp, pd):
             if photom_binar.any():
                 Nm_binar += 1
                 obs_mass, lkl_b = photomMatch(
-                    obs_phot, photom_binar, mass_binar[binar_idxs])
+                    obs_phot, photom_binar, mass_secondary[binar_idxs])
                 st_mass_mean_binar, M2_binar = recurrentStats(
                     Nm, st_mass_mean_binar, M2_binar, obs_mass)
 
