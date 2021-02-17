@@ -143,10 +143,10 @@ def checkSynthClustParams(pd):
         raise ValueError("Name of IMF ({}) is incorrect.".format(
             pd['IMF_name']))
 
-    if not 0. <= pd['bin_mr'] <= 1.:
+    if not 0. <= pd['min_bmass_ratio'] <= 1.:
         raise ValueError(
             "Binary mass ratio set ('{}') is out of\nboundaries. Please select"
-            " a value in the range [0., 1.]".format(pd['bin_mr']))
+            " a value in the range [0., 1.]".format(pd['min_bmass_ratio']))
 
     # Check R_V defined.
     if pd['R_V'] <= 0.:

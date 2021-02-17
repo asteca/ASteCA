@@ -44,7 +44,7 @@ def main(pd):
     if len(binar_fracs) > 1 or binar_fracs[0] > 0.:
         binar_flag = True
         # Average minimum mass fraction for binary systems
-        mean_bin_mr = (pd['bin_mr'] + 1.) / 2.
+        mean_bin_mr = (pd['min_bmass_ratio'] + 1.) / 2.
     pd['binar_flag'], pd['mean_bin_mr'] = binar_flag, mean_bin_mr
 
     # Store the number of defined filters and colors.
@@ -71,7 +71,7 @@ def main(pd):
 
     if binar_flag:
         pd['theor_tracks'] = binarity.binarGen(
-            pd['bin_mr'], pd['m_ini_idx'], pd['N_fc'], interp_tracks,
+            pd['min_bmass_ratio'], pd['m_ini_idx'], pd['N_fc'], interp_tracks,
             mags_cols_intp, all_met_vals, all_age_vals)
     else:
         pd['theor_tracks'] = interp_tracks

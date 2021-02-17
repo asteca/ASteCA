@@ -29,7 +29,7 @@ def main(isoch_mass, bin_frac, m_ini_idx, N_fc, binar_probs):
 
 
 def binarGen(
-    bin_mass_ratio, m_ini_idx, N_fc, interp_tracks, mags_cols_intp,
+    min_bmass_ratio, m_ini_idx, N_fc, interp_tracks, mags_cols_intp,
         all_met_vals, all_age_vals):
     """
     For each theoretical isochrone defined.
@@ -41,7 +41,7 @@ def binarGen(
     from .set_rand_seed import np
 
     print("Generating binary data (b_mr=[{:.2f}, 1.])".format(
-        bin_mass_ratio))
+        min_bmass_ratio))
 
     # interp_tracks.shape = (Nz, Na, Nd, Np)
     N_mets, Na, Nd, N_mass = interp_tracks.shape
@@ -52,7 +52,7 @@ def binarGen(
 
     # Fractions for second mass, one per metallicity
     binar_fracs = [
-        np.random.uniform(bin_mass_ratio, 1., N_mass) for _ in range(N_mets)]
+        np.random.uniform(min_bmass_ratio, 1., N_mass) for _ in range(N_mets)]
 
     # For each metallicity defined.
     for mx, _ in enumerate(interp_tracks):

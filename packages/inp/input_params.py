@@ -94,7 +94,7 @@ def main(pars_f_path):
                 elif reader[0] == 'R0':
                     synth_rand_seed = str(reader[1])
                     IMF_name = str(reader[2])
-                    bin_mr = float(reader[3])
+                    min_bmass_ratio = float(reader[3])
                     try:
                         max_mag = float(reader[4])
                     except ValueError:
@@ -246,7 +246,7 @@ def main(pars_f_path):
 
         # Synthetic cluster parameters
         'synth_rand_seed': synth_rand_seed, 'par_ranges': par_ranges,
-        'IMF_name': IMF_name, 'bin_mr': bin_mr,
+        'IMF_name': IMF_name, 'min_bmass_ratio': min_bmass_ratio,
         'R_V': R_V, 'max_mag': max_mag,
 
         # Best fit parameters.
