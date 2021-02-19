@@ -64,6 +64,8 @@ def main():
     # packages are installed.
     from packages import func_caller
 
+    print("Full check done.\n\nNumber of clusters to analyze: {}".format(
+        len(cl_files)))
     # Iterate through all cluster files.
     for cl_file in cl_files:
         try:

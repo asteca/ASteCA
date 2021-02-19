@@ -75,7 +75,4 @@ def check_all(mypath, file_end):
         # Check and store metallicity files.
         pd = read_met_files.check_get(pd)
 
-    print("Full check done.\n\nNumber of clusters to analyze: {}".format(
-        len(cl_files)))
-
     return cl_files, pd
