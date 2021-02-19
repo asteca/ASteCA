@@ -2,7 +2,9 @@
 import numpy as np
 
 
-def main(theor_tracks, fundam_params, z_model, a_model, ml, mh, al, ah):
+def main(
+    theor_tracks, fundam_params, binar_flag, m_ini_idx, z_model, a_model,
+        ml, mh, al, ah):
     """
     Generate a new "weighted" isochrone from the four closest points in the
     (z, a) grid.
@@ -60,6 +62,14 @@ def main(theor_tracks, fundam_params, z_model, a_model, ml, mh, al, ah):
     weights = inv_d / np.sum(inv_d)
     isochrone = isochs[0] * weights[0] + isochs[1] * weights[1] +\
         isochs[2] * weights[2] + isochs[3] * weights[3]
+
+    # DO NOT average the masses or their distribution will be lost. We use the
+    # closest isochrone values.
+    idx = np.argmin(dist)
+    isochrone[m_ini_idx] = isochs[idx][m_ini_idx]
+    if binar_flag:
+        isochrone[-1] = isochs[idx][-1]
+
     # isochrone = theor_tracks[ml][al] * weights[0] +\
     #     theor_tracks[ml][ah] * weights[1] +\
     #     theor_tracks[mh][al] * weights[2] +\
