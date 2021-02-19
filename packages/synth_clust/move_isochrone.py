@@ -4,7 +4,7 @@ import numpy as np
 
 def main(
     isochrone, e, d, R_V, ext_coefs, N_fc, rand_unif, m_ini_idx,
-        binar_flag):
+        binar_flag, ext_diff=.0):
     """
     Receives an isochrone of a given age and metallicity and modifies
     its color and magnitude values according to given values for the extinction
@@ -39,8 +39,7 @@ def main(
     # Copy to avoid overwriting
     isochrone = np.array(isochrone)
 
-    # TODO. In place for #174
-    ext_diff = .0
+    # TODO: 'ext_diff' is i n place for #174
 
     Av = R_V * (e + rand_unif[:isochrone.shape[-1]] * ext_diff)
     Nf, Nc = N_fc

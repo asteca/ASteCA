@@ -708,9 +708,11 @@ def isoch_sigmaNreg(
     ag = np.argmin(abs(np.array(fundam_params[1]) - am))
     # Move isochrone
     isochrone = theor_tracks[zg][ag][:sum(N_fc)]
+    # TODO 'ext_diff' in place for #174
+    binar_flag, ext_diff = False, 0.
     shift_isoch = move_isochrone.main(
         isochrone, e, d, R_V, ext_coefs, N_fc, ext_unif_rand[zg],
-        m_ini_idx, False)
+        m_ini_idx, binar_flag, ext_diff)
     shift_isoch = shift_isoch[:sum(N_fc)]
 
     # Generate random models from the selected solution (mean, median, mode,
