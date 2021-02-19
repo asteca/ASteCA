@@ -67,21 +67,21 @@ def main(clp, pd):
             # Estimate mean and variance
             st_mass_mean, M2 = recurrentStats(Nm, st_mass_mean, M2, obs_mass)
 
-        # For binary systems
-        if pd['binar_flag']:
-            photom_binar = photom[binar_idxs]
-            # If there are no binary systems, skip
-            if photom_binar.any():
-                Nm_binar += 1
-                obs_mass, lkl_b = photomMatch(
-                    obs_phot, photom_binar, mass_secondary[binar_idxs])
-                st_mass_mean_binar, M2_binar = recurrentStats(
-                    Nm, st_mass_mean_binar, M2_binar, obs_mass)
+            # For binary systems
+            if pd['binar_flag']:
+                photom_binar = photom[binar_idxs]
+                # If there are no binary systems, skip
+                if photom_binar.any():
+                    Nm_binar += 1
+                    obs_mass, lkl_b = photomMatch(
+                        obs_phot, photom_binar, mass_secondary[binar_idxs])
+                    st_mass_mean_binar, M2_binar = recurrentStats(
+                        Nm, st_mass_mean_binar, M2_binar, obs_mass)
 
-                # Bayesian probability
-                new_prob_binar = 1. / (1. + (lkl_p / lkl_b))
-                prob_binar = recurrentStats(
-                    Nm, prob_binar, None, new_prob_binar)
+                    # Bayesian probability
+                    new_prob_binar = 1. / (1. + (lkl_p / lkl_b))
+                    prob_binar = recurrentStats(
+                        Nm, prob_binar, None, new_prob_binar)
 
         update_progress.updt(models.shape[0], Nm + 1)
 
