@@ -182,15 +182,10 @@ def main(npd, pd, clp):
     mp_mcmc_cnvrg.plot(7, *args)
 
     # Generate output file.
-    try:
-        fig.tight_layout()
-        plt.savefig(join(
-            npd['output_subdir'], str(npd['clust_name']) + '_D1_'
-            + pd['best_fit_algor'] + npd['ext']))
-        print("<<Plots for D1 block created>>")
-    except Exception as exc:
-        print(exc)
-        print("\n\n  ERROR: could not plot 'D1' block.\n")
+    fig.tight_layout()
+    plt.savefig(join(
+        npd['output_subdir'], str(npd['clust_name']) + '_D1_'
+        + pd['best_fit_algor'] + npd['ext']))
     # Close to release memory.
     plt.clf()
     plt.close("all")
