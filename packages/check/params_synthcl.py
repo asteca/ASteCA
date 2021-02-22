@@ -199,8 +199,8 @@ def getParamVals(pd):
                 pmin = p_rng[0]
                 if pmin != 'min':
                     raise ValueError(
-                        ("'{}': unrecognized string '{}'.\nOnly 'min' " +
-                         "string is accepted as the lower range.").format(
+                        ("'{}': unrecognized string '{}'.\nOnly 'min' "
+                         + "string is accepted as the lower range.").format(
                             t, pmin))
             try:
                 pmax = float(p_rng[1])
@@ -208,8 +208,8 @@ def getParamVals(pd):
                 pmax = p_rng[1]
                 if pmax != 'max':
                     raise ValueError(
-                        ("'{}': unrecognized string '{}'.\nOnly 'max' " +
-                         "string is accepted as the upper range.").format(
+                        ("'{}': unrecognized string '{}'.\nOnly 'max' "
+                         + "string is accepted as the upper range.").format(
                             t, pmax))
             fundam_params[idx] = [pmin, pmax]
 
