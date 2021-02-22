@@ -103,10 +103,10 @@ def main(cl_file, pd):
 
     if 'A1' in pd['flag_make_plot']:
         make_A1_plot.main(npd, cld_i, pd, **clp)
+        print("<<Plots for A1 block created>>")
         if pd['stop_idx'] == 'A1':
             retFunc(npd['clust_name'], start)
             return
-        print("<<Plots for A1 block created>>")
     else:
         print("<<Skip A1 plot>>")
 
@@ -125,10 +125,10 @@ def main(cl_file, pd):
     # Uses the incomplete data.
     if 'A2' in pd['flag_make_plot']:
         make_A2_plot.main(npd, cld_i, pd, **clp)
+        print("<<Plots for A2 block created>>")
         if pd['stop_idx'] == 'A2':
             retFunc(npd['clust_name'], start)
             return
-        print("<<Plots for A2 block created>>")
     else:
         print("<<Skip A2 plot>>")
 
@@ -190,10 +190,10 @@ def main(cl_file, pd):
     # Uses the incomplete 'cl_region' and 'field_regions' data.
     if 'A3' in pd['flag_make_plot']:
         make_A3_plot.main(npd, cld_i, pd, **clp)
+        print("<<Plots for A3 block created>>")
         if pd['stop_idx'] == 'A3':
             retFunc(npd['clust_name'], start)
             return
-        print("<<Plots for A3 block created>>")
     else:
         print("<<Skip A3 plot>>")
 
@@ -214,10 +214,10 @@ def main(cl_file, pd):
 
     if 'B1' in pd['flag_make_plot']:
         make_B1_plot.main(npd, cld_c, pd, **clp)
+        print("<<Plots for B1 block created>>")
         if pd['stop_idx'] == 'B1':
             retFunc(npd['clust_name'], start)
             return
-        print("<<Plots for B1 block created>>")
     else:
         print("<<Skip B1 plot>>")
 
@@ -229,10 +229,10 @@ def main(cl_file, pd):
 
     if 'B2' in pd['flag_make_plot']:
         make_B2_plot.main(npd, cld_i, pd, **clp)
+        print("<<Plots for B2 block created>>")
         if pd['stop_idx'] == 'B2':
             retFunc(npd['clust_name'], start)
             return
-        print("<<Plots for B2 block created>>")
     else:
         print("<<Skip B2 plot>>")
 
@@ -257,10 +257,10 @@ def main(cl_file, pd):
 
     if 'C1' in pd['flag_make_plot']:
         make_C1_plot.main(npd, cld_c, pd, **clp)
+        print("<<Plots for C1 block created>>")
         if pd['stop_idx'] == 'C1':
             retFunc(npd['clust_name'], start)
             return
-        print("<<Plots for C1 block created>>")
     else:
         print("<<Skip C1 plot>>")
 
@@ -272,19 +272,19 @@ def main(cl_file, pd):
 
     if 'C2' in pd['flag_make_plot']:
         make_C2_plot.main(npd, pd, **clp)
+        print("<<Plots for C2 block created>>")
         if pd['stop_idx'] == 'C2':
             retFunc(npd['clust_name'], start)
             return
-        print("<<Plots for C2 block created>>")
     else:
         print("<<Skip C2 plot>>")
 
     if 'C3' in pd['flag_make_plot']:
         make_C3_plot.main(npd, pd, cld_i, **clp)
+        print("<<Plots for C3 block created>>")
         if pd['stop_idx'] == 'C3':
             retFunc(npd['clust_name'], start)
             return
-        print("<<Plots for C3 block created>>")
     else:
         print("<<Skip C3 plot>>")
 
@@ -316,6 +316,7 @@ def main(cl_file, pd):
         # Convergence plots.
         if 'D1' in pd['flag_make_plot']:
             make_D1_plot.main(npd, pd, clp)
+            print("<<Plots for D1 block created>>")
             if pd['stop_idx'] == 'D1':
                 retFunc(npd['clust_name'], start)
                 return
@@ -325,10 +326,10 @@ def main(cl_file, pd):
         # Corner plot.
         if 'D2' in pd['flag_make_plot']:
             make_D2_plot.main(npd, pd, clp)
+            print("<<Plots for D2 block created>>")
             if pd['stop_idx'] == 'D2':
                 retFunc(npd['clust_name'], start)
                 return
-            print("<<Plots for D2 block created>>")
         else:
             print("<<Skip D2 plot>>")
 
