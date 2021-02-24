@@ -105,8 +105,6 @@ def fit_King_prof(
     https://ned.ipac.caltech.edu/level5/Sept11/Graham/Graham2.html,
     Eq (1)
 
-    * Make the emcee 'move' a general parameter
-
     * Align the theta with the y axis (North) instead of the x axis (as done
     in Martin et al. 2008; 'A Comprehensive Maximum Likelihood Analysis of
     the Structural Properties of Faint Milky Way Satellites')?
@@ -224,10 +222,10 @@ def fit_King_prof(
     # Store: 16th, median, 84th, mean, mode
     KP_Bys_rc = np.array([rc_16, rc_50, rc_84, rc_m, KP_plot['KP_mode'][0]])
     KP_Bys_rt = np.array([rt_16, rt_50, rt_84, rt_m, KP_plot['KP_mode'][1]])
-    KP_Bys_ecc = np.array([
-        ecc_16, ecc_50, ecc_84, ecc_m, KP_plot['KP_mode'][2]])
-    KP_Bys_theta = np.array([
-        theta_16, theta_50, theta_84, theta_m, KP_plot['KP_mode'][3]])
+    KP_Bys_ecc = [
+        ecc_16, ecc_50, ecc_84, ecc_m, KP_plot['KP_mode'][2]]
+    KP_Bys_theta = [
+        theta_16, theta_50, theta_84, theta_m, KP_plot['KP_mode'][3]]
 
     return KP_plot, KP_Bys_rc, KP_Bys_rt, KP_Bys_ecc, KP_Bys_theta
 
@@ -391,8 +389,8 @@ def KingProf(r_in, rc, rt):
     """
     King (1962) profile.
     """
-    return ((1. / np.sqrt(1. + (r_in / rc) ** 2)) -
-            (1. / np.sqrt(1. + (rt / rc) ** 2))) ** 2
+    return ((1. / np.sqrt(1. + (r_in / rc) ** 2))
+            - (1. / np.sqrt(1. + (rt / rc) ** 2))) ** 2
 
 
 def num_memb_conc_param(cd, rc, rt):
@@ -461,7 +459,7 @@ def plotParams(
     # 16th-84th percentile region for the profile fit
     ecc, theta = 0., 0.
     kpf_yvals = []
-    cent_dens_all = []
+    # cent_dens_all = []
     for _ in range(1000):
         # Sample rc, rt, ecc, theta. Use the median and MAD.
         rc = np.random.normal(rc_50, 1.4826 * rc_MAD)
@@ -476,11 +474,13 @@ def plotParams(
             KP_cd_ = lnlike(
                 (rc, rt, ecc, theta), ndim, rt_max, cl_cent, field_dens,
                 N_memb, xy_in, r_in, rt_rang, True)
-            cent_dens_all.append(KP_cd_)
+            # cent_dens_all.append(KP_cd_)
         # Values in y
         kpf_yvals.append(KP_cd_ * KingProf(rt_rang, rc, rt) + field_dens)
 
-    cent_dens_all = np.array(cent_dens_all) / 3600.
+    # cent_dens_all = np.array(cent_dens_all)
+    # print(KP_cent_dens, cent_dens_all.mean())
+
     kpf_yvals = np.array(kpf_yvals).T
     _16_kp = np.nanpercentile(kpf_yvals, 16, 1)
     _84_kp = np.nanpercentile(kpf_yvals, 84, 1)
