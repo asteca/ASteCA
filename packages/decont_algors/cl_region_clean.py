@@ -18,6 +18,8 @@ def main(clp, fld_clean_mode, fld_clean_bin, fld_clean_prob, **kwargs):
     if fld_clean_mode == 'all':
         # Skip reduction process.
         print("No field star removal applied on cluster region")
+        # Remove stars with a color far away from the x median.
+        cl_reg_fit, cl_reg_no_fit = rmColorOutliers(cl_reg_fit, cl_reg_no_fit)
 
     # If the DA was skipped and any method but 'local' or 'mag' is selected,
     # don't run.
@@ -73,9 +75,9 @@ def main(clp, fld_clean_mode, fld_clean_bin, fld_clean_prob, **kwargs):
 
 
 def nmemb_sel(n_memb, memb_prob_avrg_sort):
-    '''
+    """
     Algorithm to select which stars to use by the best fit function.
-    '''
+    """
     cl_reg_fit, cl_reg_no_fit = memb_prob_avrg_sort, []
 
     # Check approximate number of true members obtained by the structural
@@ -110,9 +112,9 @@ def nmemb_sel(n_memb, memb_prob_avrg_sort):
 
 
 def top_h(memb_prob_avrg_sort):
-    '''
+    """
     Reject stars in the lower half of the membership probabilities list.
-    '''
+    """
 
     cl_reg_fit, cl_reg_no_fit = memb_prob_avrg_sort, []
 
@@ -129,9 +131,9 @@ def top_h(memb_prob_avrg_sort):
 
 
 def manual(memb_prob_avrg_sort, fld_clean_prob, min_prob_i=None):
-    '''
+    """
     Find index of star with membership probability < min_prob_i.
-    '''
+    """
     cl_reg_fit, cl_reg_no_fit = memb_prob_avrg_sort, [],
 
     if min_prob_i is None:
@@ -163,36 +165,31 @@ def manual(memb_prob_avrg_sort, fld_clean_prob, min_prob_i=None):
     return cl_reg_fit, cl_reg_no_fit
 
 
-def rmColorOutliers(cl_reg_fit, cl_reg_no_fit):
+def rmColorOutliers(cl_reg_fit, cl_reg_no_fit, Nstd=5.):
     """
-    Reject stars that are below (dimmer) than the median magnitude, and with
-    either color outside the (.5, 99.5) percentile.
+    Reject stars that are far away from the sequence.
     """
+    mag = np.array(list(zip(*cl_reg_fit))[3]).flatten()
+    colors = np.array(list(zip(*cl_reg_fit))[5])
 
-    # Limits for the colors.
-    col_lims = np.percentile(list(zip(*cl_reg_fit))[5], (.5, 99.5), axis=0)
     # Median, std for colors
-    col_med = np.median(list(zip(*cl_reg_fit))[5])
-    col_std = np.std(list(zip(*cl_reg_fit))[5])
+    col_med, col_std = np.median(colors), np.std(colors)
     # Median, std for magnitude.
-    mag_med = np.median(list(zip(*cl_reg_fit))[3])
-    mag_std = np.std(list(zip(*cl_reg_fit))[3])
+    mag_med, mag_std = np.median(mag), np.std(mag)
 
     cl_reg_fit2, cl_reg_no_fit2 = [], []
     for i, st in enumerate(cl_reg_fit):
-        if st[3] > mag_med:
-            # Color of star is outside of range.
-            if np.any(st[5] < col_lims[0]) or np.any(st[5] > col_lims[1]):
+        # For the brightest stars
+        if st[3] <= mag_med - .5 * mag_std:
+            if np.any(st[5] < col_med - Nstd * col_std) or np.any(
+                    st[5] > col_med + Nstd * col_std):
                 cl_reg_no_fit2.append(st)
             else:
                 cl_reg_fit2.append(st)
         else:
-            # For bright stars, relax the condition a bit.
-            if np.any(st[5] < col_med - 4 * col_std) and\
-                    st[3] < mag_med - 4 * mag_std:
-                cl_reg_no_fit2.append(st)
-            elif np.any(st[5] > col_med - 4 * col_std) and\
-                    st[3] < mag_med - 4 * mag_std:
+            # Make the left side a bit tighter than the right
+            if np.any(st[5] < col_med - (Nstd - 2) * col_std) or np.any(
+                    st[5] > col_med + (Nstd - 1) * col_std):
                 cl_reg_no_fit2.append(st)
             else:
                 cl_reg_fit2.append(st)
