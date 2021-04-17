@@ -1,5 +1,6 @@
 
 import numpy as np
+from scipy import stats
 from .. import update_progress
 
 
@@ -51,8 +52,7 @@ def binarGen(
         interp_tracks, np.zeros([N_mets, Na, Nd, N_mass])), axis=2)
 
     # Fractions for second mass, one per metallicity
-    binar_fracs = [
-        np.random.uniform(min_bmass_ratio, 1., N_mass) for _ in range(N_mets)]
+    binar_fracs, mean_bin_mr = randBinarFracs(min_bmass_ratio, N_mass, N_mets)
 
     # For each metallicity defined.
     for mx, _ in enumerate(interp_tracks):
@@ -117,7 +117,64 @@ def binarGen(
 
         update_progress.updt(N_mets, mx + 1)
 
-    return interp_tracks
+    return interp_tracks, mean_bin_mr
+
+
+def randBinarFracs(mbr, N_mass, N_mets):
+    """
+    """
+    # mbr = 'raghavan' #'fisher'
+
+    def fQ(xk, pk):
+        """
+        Discrete function
+        """
+        pk /= pk.sum()
+        fq = stats.rv_discrete(a=0., b=1., name='custm', values=(xk, pk))
+        # Average minimum mass fraction for binary systems
+        mean_bin_mr = fq.mean()
+
+        return fq, mean_bin_mr
+
+    # Fisher's distribution
+    if mbr == 'fisher':
+        # Fisher, Schröder & Smith (2005), 10.1111/j.1365-2966.2005.09193.x;
+        # Fig 6 (solid line)
+        xk = np.arange(0.05, 1.01, 0.1)
+        pk = np.array([
+            0.07320166320166316, 0.0811413721413721, 0.0924109494109494,
+            0.08995495495495492, 0.07918849618849616, 0.07049757449757446,
+            0.07344906444906443, 0.08970755370755368, 0.11137075537075536,
+            0.24156202356202355])
+        fq, mean_bin_mr = fQ(xk, pk)
+    elif mbr == 'raghavan':
+        # Raghavan et al. (2010), 10.1088/0067-0049/190/1/1; Fig 16 (left)
+        xk = np.arange(0.025, 1.01, 0.05)
+        pk = np.array([
+            0.5263157894736867, 2.6105263157894765, 0.5263157894736867,
+            4.673684210526318, 7.810526315789476, 3.6421052631578963,
+            9.894736842105264, 5.7052631578947395, 4.694736842105266,
+            5.726315789473686, 4.673684210526318, 6.757894736842108,
+            5.747368421052634, 5.726315789473686, 2.6105263157894765,
+            5.7052631578947395, 4.715789473684213, 5.7052631578947395,
+            3.6421052631578963, 12.989473684210529])
+        fq, mean_bin_mr = fQ(xk, pk)
+    else:
+        mean_bin_mr = (mbr + 1.) / 2.
+
+    binar_fracs = []
+    for _ in range(N_mets):
+        if mbr in ('fisher', 'raghavan'):
+            # 'ppf' is the inverse CDF
+            dist = fq.ppf(np.random.uniform(0., 1., N_mass))
+        else:
+            dist = np.random.uniform(mbr, 1., N_mass)
+        binar_fracs.append(dist)
+
+    # import matplotlib.pyplot as plt
+    # plt.hist(dist, 20);plt.show()
+
+    return binar_fracs, mean_bin_mr
 
 
 def mag_combine(m1, m2):

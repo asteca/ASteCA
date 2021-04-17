@@ -40,12 +40,10 @@ def main(pd):
         pd['cmd_systs'], pd['filters'], pd['colors'])
 
     # Set the binary flag
-    binar_flag, mean_bin_mr = False, 0.
+    binar_flag = False
     if len(binar_fracs) > 1 or binar_fracs[0] > 0.:
         binar_flag = True
-        # Average minimum mass fraction for binary systems
-        mean_bin_mr = (pd['min_bmass_ratio'] + 1.) / 2.
-    pd['binar_flag'], pd['mean_bin_mr'] = binar_flag, mean_bin_mr
+    pd['binar_flag'] = binar_flag
 
     # Store the number of defined filters and colors.
     pd['N_fc'] = [len(pd['filters']), len(pd['colors'])]
@@ -70,11 +68,11 @@ def main(pd):
         pd['filters'], pd['colors'])
 
     if binar_flag:
-        pd['theor_tracks'] = binarity.binarGen(
+        pd['theor_tracks'], pd['mean_bin_mr'] = binarity.binarGen(
             pd['min_bmass_ratio'], pd['m_ini_idx'], pd['N_fc'], interp_tracks,
             mags_cols_intp, all_met_vals, all_age_vals)
     else:
-        pd['theor_tracks'] = interp_tracks
+        pd['theor_tracks'], pd['mean_bin_mr'] = interp_tracks, 0.
     # Size of array
     # print("{:.0f} Mbs".format(theor_tracks.nbytes / 1024.**2))
 
