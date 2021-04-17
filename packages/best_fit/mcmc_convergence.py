@@ -276,10 +276,17 @@ def convergenceVals(algor, ndim, varIdxs, chains_nruns, bi_steps):
 
         if algor == 'ptemcee':
             # Mean Tau across chains, shape: (post-bi steps, ndims)
-            x = np.mean(chains_nruns.T, axis=1).T
+            # The ACT is obtained here because when done inside the
+            # ptsampler iteration, the values (mostly initial) are affected
+            # by the fact that the chains are fully populated with zeros.
+
+            # chains_nruns.shape: (nsteps, nchains, ndims)
+            # x.shape: (nsteps, ndims)
+            x = np.mean(chains_nruns, axis=1)
+
             tau_autocorr = []
-            j = 10  # Here in case the line below is skipped
-            for j in np.arange(50, x.shape[0], 50):
+            j, step = 10, 50  # Here in case the line below is skipped
+            for j in np.arange(step, x.shape[0], step):
                 # tau.shape: ndim
                 tau = util.autocorr_integrated_time(x[:j])
                 # Autocorrelation time. Mean across dimensions.
