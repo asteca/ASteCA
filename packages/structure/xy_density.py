@@ -7,7 +7,7 @@ from ..update_progress import updt
 
 
 def main(
-    clp, cld_i, flag_make_plot, mirror_flag=True, Nmax=25000, center_bw=0.,
+    clp, cld_i, flag_make_plot, mirror_flag=True, Nmax=125000, center_bw=0.,
         **kwargs):
     """
     Obtain Gaussian filtered 2D x,y histograms and the maximum values in them
@@ -20,7 +20,8 @@ def main(
     msk = ~mskx & ~msky
     x_data, y_data = cld_i['x'][msk], cld_i['y'][msk]
     if x_data.size > Nmax:
-        print("  WARNING: too many stars. Randomly selecting {}".format(Nmax))
+        print(("  WARNING: too many stars. Selecting {} random\n"
+               "  stars for center estimation").format(Nmax))
         step = int(x_data.size / Nmax)
         x_data, y_data = x_data[::step], y_data[::step]
 
@@ -52,10 +53,6 @@ def main(
         kde_approx_cent, frame_kde_cent = kde_center(
             x_data, y_data, bw_list[1], mirror_flag)
 
-    # Run once more for plotting.
-    kernel, x_grid, y_grid, positions, k_pos = kde_center(
-        x_data, y_data, bw_list[1], mirror_flag, True)
-
     clp['cents_xy'], clp['kde_approx_cent'], clp['bw_list'],\
         clp['frame_kdes'], clp['frame_kde_cent'] = cents_xy, kde_approx_cent,\
         bw_list, frame_kdes, frame_kde_cent
@@ -63,7 +60,7 @@ def main(
     return clp
 
 
-def kde_center(x_data, y_data, bdw, mirror_flag, plotFlag=False):
+def kde_center(x_data, y_data, bdw, mirror_flag):
     """
     Find the KDE maximum value pointing to the center coordinates.
     """
@@ -97,9 +94,6 @@ def kde_center(x_data, y_data, bdw, mirror_flag, plotFlag=False):
     except np.linalg.LinAlgError:
         print("  WARNING: could not generate coordinates KDE")
         return [np.nan, np.nan], []
-
-    if plotFlag:
-        return kernel, x_grid, y_grid, positions, k_pos
 
     # Coordinates of max value in x,y grid (ie: center position).
     kde_cent = positions.T[np.argmax(k_pos)]
