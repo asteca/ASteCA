@@ -37,8 +37,8 @@ def mag_ranges(x, y, mags):
     """
     main_mag = mags[0]
     m0, m4 = np.nanmin(main_mag), np.nanmax(main_mag)
-    mag_step = (m4 - m0) / 4.
-    m1, m2, m3 = m0 + mag_step, m0 + 2. * mag_step, m0 + 3. * mag_step
+    # Use percentiles
+    m1, m2, m3 = np.percentile(main_mag, (25, 50, 75))
 
     # Populate ranges
     r0, r1, r2, r3, r4 = [], [], [], [], []
