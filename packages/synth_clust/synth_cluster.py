@@ -75,10 +75,25 @@ def main(
         # This destroys the order by magnitude.
         isoch_mass = mass_interp.main(isoch_cut, m_ini_idx, mass_dist)
 
+        # # In place for testing #508
+        # import matplotlib.pyplot as plt
+        # plt.subplot(121)
+        # plt.scatter(isoch_mass[4],isoch_mass[3],c='r')
+        # plt.scatter(isoch_mass[1],isoch_mass[0],c='g')
+        # plt.scatter(isoch_cut[4],isoch_cut[3],c='b', marker='x')
+        # plt.scatter(isoch_cut[1],isoch_cut[0],c='cyan', marker='x')
+        # plt.gca().invert_yaxis()
+
         if isoch_mass.any():
             # Assignment of binarity.
             isoch_binar = binarity.main(
                 isoch_mass, bin_frac, m_ini_idx, N_fc, binar_probs[ml])
+
+            # # In place for testing #508
+            # plt.subplot(122)
+            # plt.scatter(isoch_binar[1],isoch_binar[0],c='g')
+            # plt.gca().invert_yaxis()
+            # plt.show()
 
             # Completeness limit removal of stars.
             isoch_compl = completeness_rm.main(isoch_binar, completeness)
