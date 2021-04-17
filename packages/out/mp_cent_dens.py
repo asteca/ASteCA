@@ -104,7 +104,7 @@ def pl_densmap(
 
     kde_dens_min, kde_dens_max = fr_dens.min(), fr_dens.max()
     midpt = ((kde_dens_max + kde_dens_min) * .5) / scale
-    frmt = '{:.2E}' if midpt > 100. or midpt < .1 else '{:.0f}'
+    frmt = '{:.2E}' if midpt > 100. else '{:.1f}'
     cbar.ax.set_yticklabels([
         frmt.format(kde_dens_min / scale),
         frmt.format(midpt),
