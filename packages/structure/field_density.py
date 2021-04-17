@@ -21,7 +21,7 @@ def main(clp, cld_i, coords, fdens_method, **kwargs):
         clp['field_dens_d'], clp['field_dens'], clp['field_dens_std'] = kNNRDP(
         clp['xy_cent_dist'], clp['fr_dens'], fdens_method)
 
-    print("Field density ({:.1E} stars/{c}^2)".format(
+    print("Field density ({:.3E} stars/{c}^2)".format(
         clp['field_dens'], c=prep_plots.coord_syst(coords)[0]))
 
     return clp
@@ -45,9 +45,9 @@ def fixedParams(x, y, kde_cent, lb=1., rt=99., N_MC=100000, **kwargs):
     x, y = x[msk_in_frame], y[msk_in_frame]
     xy_filtered = np.array((x, y)).T
 
+    # Issue message because this will take a long time for large fields
     if xy_filtered.shape[0] > 50000:
-        idx = np.random.choice(xy_filtered.shape[0], 50000, replace=False)
-        xy_filtered = xy_filtered[idx]
+        print("Obtaining field density parameter")
 
     # Distances of (almost) all stars to the center of the cluster.
     xy_cent_dist = spatial.distance.cdist([kde_cent], xy_filtered)[0]
