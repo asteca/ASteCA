@@ -1,6 +1,7 @@
 
 import numpy as np
 from scipy.spatial.distance import cdist
+from scipy.signal import savgol_filter
 from .contamination_index import CIfunc
 from ..aux_funcs import circFrac
 from ..out import prep_plots
@@ -147,6 +148,13 @@ def optimalRadius(
     # Normalizing separately is important. Otherwise it selects low radii
     # values.
     N_membs = data[1] / data[1].max()
+    # Smooth the curve
+    # ws: window size, pol: polynomial order
+    ws, pol = int(len(N_membs) / 5.), 3
+    # must be odd
+    ws = ws + 1 if ws % 2 == 0 else ws
+    N_membs = savgol_filter(N_membs, ws, pol)
+
     N_field = data[2] / data[2].max()
     idx = np.argmax(N_membs - N_field)
     clust_rad = data[0][idx]
