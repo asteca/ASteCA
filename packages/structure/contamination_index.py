@@ -88,14 +88,17 @@ def NmembVsMag(x, y, mag, clust_rad, cl_area, field_dens, cent_dists):
     for i, mmax in enumerate(mag_ranges[1:]):
         msk = mag < mmax
         if msk.sum() > 2:
+            # N stars in the mag range, inside the cluster region
             n_in_cl_reg = (cent_dists[msk] < clust_rad).sum()
             # Use the global field density value when the maximum magnitude
-            # is used.
-            if i == 9:
-                fdens = field_dens
-            else:
-                Ntot = msk.sum()
-                fdens = (Ntot - n_in_cl_reg) / area_out
+            # is used. <-- WHY? DEPRECATED MARCH 21
+            # if i == 9:
+            #     fdens = field_dens
+            # else:
+
+            # N stars in the mag range
+            Ntot = msk.sum()
+            fdens = (Ntot - n_in_cl_reg) / area_out
             n_fl = fdens * cl_area
             n_memb_i = max(0, int(round(n_in_cl_reg - n_fl)))
             membvsmag.append([mmax, n_memb_i])
