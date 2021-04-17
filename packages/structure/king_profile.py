@@ -48,8 +48,11 @@ def main(
                 clp['clust_rad'], clp['n_memb_i'], rt_max_f)
 
         # Obtain number of members and concentration parameter.
-        KP_memb_num, KP_conct_par = num_memb_conc_param(
-            KP_plot['KP_cent_dens'], KP_Bys_rc[1], KP_Bys_rt[1])
+        if KP_Bys_rt[1] > 0.:
+            KP_memb_num, KP_conct_par = num_memb_conc_param(
+                KP_plot['KP_cent_dens'], KP_Bys_rc[1], KP_Bys_rt[1])
+        else:
+            KP_memb_num, KP_conct_par = np.nan, np.nan
 
         coord = prep_plots.coord_syst(coords)[0]
         # Set precision of printed values.
@@ -81,6 +84,7 @@ def fit_King_prof(
     estimated autocorrelation time and if this estimate changed by less than
     (tau_stable * 100)%
 
+    ndim = 1 fits (rc)                 <-- Not implemented
     ndim = 2 fits (rc, rt)
     ndim = 3 fits (rc, rt, fd)         <-- Not implemented
     ndim = 4 fits (rc, rt, ecc, theta)
@@ -115,7 +119,7 @@ def fit_King_prof(
     mv = [(eval("(moves." + _ + ")")) for _ in kp_emcee_moves]
 
     # Steps to store Bayes params.
-    KP_steps = int(nruns * .01)
+    KP_steps = max(1, int(nruns * .01))
 
     # Fixed number of members (previously estimated)
     N_memb = n_memb_i
@@ -143,6 +147,10 @@ def fit_King_prof(
     rc_pos0 = np.random.uniform(.05 * rt_max, rt_max, nchains)
     rt_pos0 = np.random.uniform(rc_pos0, rt_max, nchains)
     pos0 = [rc_pos0, rt_pos0]
+
+    # ndim = 1
+    # pos0 = [rc_pos0]
+
     # if ndim == 3:
     #     fd_pos0 = np.random.uniform(0., fd_max, nchains)
     #     pos0 += [fd_pos0]
@@ -197,10 +205,15 @@ def fit_King_prof(
     samples = sampler.get_chain(discard=nburn, flat=True)
 
     # Estimate mean, median, 16th, 84th percentiles for each parameter
-    rc_m, rt_m = np.mean(samples[:, :2], 0)
+    if ndim == 1:
+        rc_m, rt_m = np.mean(samples), 0.
+        rc_16, rc_50, rc_84 = np.percentile(samples, (16, 50, 84))
+        rt_16, rt_50, rt_84 = 0., 0., 0.
+    elif ndim in (2, 4):
+        rc_m, rt_m = np.mean(samples[:, :2], 0)
+        rc_16, rc_50, rc_84, rt_16, rt_50, rt_84 = np.percentile(
+            samples[:, :2], (16, 50, 84), 0).T.flatten()
     ecc_m, theta_m = 0., 0.
-    rc_16, rc_50, rc_84, rt_16, rt_50, rt_84 = np.percentile(
-        samples[:, :2], (16, 50, 84), 0).T.flatten()
     ecc_16, ecc_50, ecc_84, theta_16, theta_50, theta_84 =\
         [np.array([np.nan] * 3) for _ in range(6)]
     # Re-write if eccentricity and theta where obtained
@@ -235,7 +248,10 @@ def lnprob(
     """
     Logarithmic posterior
     """
-    if ndim == 2:
+    if ndim == 1:
+        rc = pars
+        rt, ecc, theta = np.inf, 0., 0.
+    elif ndim == 2:
         rc, rt = pars
         ecc, theta = 0., 0.
     # if ndim == 3:
@@ -263,7 +279,7 @@ def lnlike(
     """
     rc, rt, ecc, theta = pars
 
-    if ndim in (2, 3):
+    if ndim in (1, 2, 3):
         # Values outside the tidal radius contribute 'fd' to the likelihood.
         r_in_clip = np.clip(r_in, a_min=0., a_max=rt)
 
@@ -288,7 +304,9 @@ def lnlike(
 
         # Values outside the ellipse contribute 'fd' to the likelihood.
         a_xy[~in_ellip_msk] = rt
-        KP = KingProf(a_xy, rc, rt)
+        r_in_clip = a_xy
+
+        KP = KingProf(r_in_clip, rc, rt)
 
     # fd = fieldDens(ndim, rt_max, r_in, rt, N_in_region)
 
@@ -396,8 +414,8 @@ def KingProf(r_in, rc, rt):
 def num_memb_conc_param(cd, rc, rt):
     """
     Calculate approximate number of cluster members with Eq (3) from
-    Froebrich et al. (2007); 374, 399-408 and the concentration
-    parameter.
+    Froebrich et al. (2007); 374, 399-408.
+    Also estimate the concentration parameter.
     """
 
     # Approximate number of members.
@@ -409,6 +427,27 @@ def num_memb_conc_param(cd, rc, rt):
     kcp = np.log10(rt / rc)
 
     return n_c_k, kcp
+
+
+def KP_memb_x(cd, rc, rt, x):
+    """
+    Calculate approximate number of cluster members for a given King Profile,
+    from 0 up to x. General form of Eq (3) in Froebrich et al. (2007);
+    374, 399-408.
+    """
+
+    c = rc**2
+    A = -1. / np.sqrt(c + rt**2)
+    B = np.pi * cd * c
+
+    # Evaluate the integral in x
+    integ_x = A * (A * x**2 + 4 * np.sqrt(c + x**2)) + np.log(c + x**2)
+    # Evaluate the integral in 0
+    integ_0 = A * 4 * np.sqrt(c) + np.log(c)
+    # Members up to x
+    N_x = B * (integ_x - integ_0)
+
+    return N_x
 
 
 def plotParams(
@@ -427,15 +466,21 @@ def plotParams(
     KP_samples = sampler.get_chain()
 
     # Mode and KDE
-    if ndim in (2, 3):
+    if ndim in (1, 2, 3):
         # This simulates the 'fundam_params and 'varIdxs' arrays.
-        if ndim == 2:
+        if ndim == 1:
+            fp, vi = [[-np.inf, np.inf]], [0]
+        elif ndim == 2:
             fp, vi = [[-np.inf, np.inf], [-np.inf, np.inf]], [0, 1]
         else:
             fp, vi = [
                 [-np.inf, np.inf], [-np.inf, np.inf], [-np.inf, np.inf]],\
                 [0, 1, 2]
         KP_mode, KP_kde = modeKDE(fp, vi, samples.T)
+        if ndim == 1:
+            # Add rt
+            KP_mode += [np.inf]
+            KP_kde += [[]]
         # Add ecc, theta
         KP_mode += [0., 0.]
         KP_kde += [[], []]
@@ -446,7 +491,9 @@ def plotParams(
         KP_mode, KP_kde = modeKDE(fp, vi, samples.T)
 
     rc_MAD = stats.median_absolute_deviation(samples[:, 0])
-    rt_MAD = stats.median_absolute_deviation(samples[:, 1])
+    rt_MAD = np.inf
+    if ndim != 1:
+        rt_MAD = stats.median_absolute_deviation(samples[:, 1])
     if ndim == 4:
         ecc_MAD = stats.median_absolute_deviation(samples[:, 2])
         theta_MAD = stats.median_absolute_deviation(samples[:, 3])
@@ -458,7 +505,7 @@ def plotParams(
 
     # 16th-84th percentile region for the profile fit
     ecc, theta = 0., 0.
-    kpf_yvals = []
+    kpf_yvals, cd_rc_rt_sampled = [], []
     # cent_dens_all = []
     for _ in range(1000):
         # Sample rc, rt, ecc, theta. Use the median and MAD.
@@ -475,11 +522,14 @@ def plotParams(
                 (rc, rt, ecc, theta), ndim, rt_max, cl_cent, field_dens,
                 N_memb, xy_in, r_in, rt_rang, True)
             # cent_dens_all.append(KP_cd_)
+        cd_rc_rt_sampled.append([KP_cd_, rc, rt])
+
         # Values in y
         kpf_yvals.append(KP_cd_ * KingProf(rt_rang, rc, rt) + field_dens)
 
     # cent_dens_all = np.array(cent_dens_all)
     # print(KP_cent_dens, cent_dens_all.mean())
+    cd_rc_rt_sampled = np.array(cd_rc_rt_sampled).T
 
     kpf_yvals = np.array(kpf_yvals).T
     _16_kp = np.nanpercentile(kpf_yvals, 16, 1)
@@ -490,6 +540,7 @@ def plotParams(
         'KP_mean_afs': KP_mean_afs, 'KP_tau_autocorr': KP_tau_autocorr,
         'KP_ESS': KP_ESS, 'KP_samples': KP_samples, 'KP_mode': KP_mode,
         'KP_kde': KP_kde, 'KP_cent_dens': KP_cent_dens,
-        '_16_84_rang': rt_rang, '_16_kp': _16_kp, '_84_kp': _84_kp}
+        '_16_84_rang': rt_rang, '_16_kp': _16_kp, '_84_kp': _84_kp,
+        'cd_rc_rt_sampled': cd_rc_rt_sampled}
 
     return KP_plot

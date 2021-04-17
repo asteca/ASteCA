@@ -45,6 +45,13 @@ def main(
         # pl_rad_find
         [gs, pd['plot_style'], coord, clust_rad, rad_rads,
          rad_N_membs, rad_N_field, rad_CI],
+        # pl_mag_membs
+        [gs, pd['plot_style'], y_ax, membvsmag],
+        # pl_cl_fl_regions: Cluster and field regions defined.
+        [gs, fig, pd['plot_style'], x_name, y_name, coord, x_min, x_max,
+         y_min, y_max, asp_ratio, kde_cent, clust_rad, field_regions_i,
+         field_regions_rjct_i, cl_region_i, cl_region_rjct_i,
+         flag_no_fl_regs_i],
         # pl_rad_dens: Radial density plot.
         [gs, pd['plot_style'], coord, rdp_radii, rdp_points, rdp_stddev,
          field_dens, field_dens_std, clust_rad, pd['kp_ndim'],
@@ -54,17 +61,13 @@ def main(
          cont_index, x_data_z, y_data_z, st_sizes_arr_z,
          kde_cent, clust_rad, KP_Bys_rc, KP_Bys_rt, KP_Bys_ecc,
          KP_Bys_theta, frac_cl_area, pd['kp_ndim']],
+        # pl_memb_vs_rad
+        [gs, pd['plot_style'], coord, cld_i['x'], cld_i['y'], kde_cent,
+         clust_rad, field_dens, KP_Bys_rt[1], pd['kp_ndim'], KP_plot],
         # pl_dens_map
         [gs, fig, asp_ratio, x_name, y_name, coord, x_zmin, x_zmax,
          y_zmin, y_zmax, kde_cent, frame_kde_cent, clust_rad,
-         pd['kp_ndim'], KP_Bys_rc, KP_Bys_rt, KP_Bys_ecc, KP_Bys_theta],
-        # pl_mag_membs
-        [gs, pd['plot_style'], y_ax, membvsmag],
-        # pl_cl_fl_regions: Cluster and field regions defined.
-        [gs, fig, pd['plot_style'], x_name, y_name, coord, x_min, x_max,
-         y_min, y_max, asp_ratio, kde_cent, clust_rad, field_regions_i,
-         field_regions_rjct_i, cl_region_i, cl_region_rjct_i,
-         flag_no_fl_regs_i]
+         pd['kp_ndim'], KP_Bys_rc, KP_Bys_rt, KP_Bys_ecc, KP_Bys_theta]
     ]
     for n, args in enumerate(arglist):
         mp_radius.plot(n, *args)
