@@ -10,7 +10,7 @@ from ..structure.king_profile import KP_memb_x
 
 
 def pl_rad_find(
-    gs, plot_style, coord, clust_rad, rad_rads, rad_N_membs,
+    gs, plot_style, coord, clust_rad, e_rad, rad_rads, rad_N_membs,
         rad_N_field, rad_CI):
     """
     Radius estimation plot.
@@ -18,7 +18,7 @@ def pl_rad_find(
     # Convert from deg to arcmin if (ra,dec) were used.
     if coord == 'deg':
         rad_rads = np.array(rad_rads) * 60.
-        clust_rad = clust_rad * 60.
+        clust_rad, e_rad = clust_rad * 60., e_rad * 60.
         coord2 = 'arcmin'
     else:
         coord2 = 'px'
@@ -50,8 +50,8 @@ def pl_rad_find(
     plt.plot(rad_rads, rad_CI, ls=':', c='k', label='CI')
     plt.axvline(x=clust_rad, lw=1.5, color='r', label=r"$r_{cl}$")
     # DEPRECATED Nov 2020
-    # if not np.isnan(e_rad[0]):
-    #     plt.axvspan((e_rad[0]), (e_rad[1]), facecolor='grey', alpha=0.25)
+    if not np.isnan(e_rad[0]):
+        plt.axvspan((e_rad[0]), (e_rad[1]), facecolor='grey', alpha=0.2)
 
     # Legends.
     leg = plt.legend(fancybox=True)
@@ -134,7 +134,7 @@ def pl_cl_fl_regions(
 
 def pl_rad_dens(
     gs, plot_style, coord, rdp_radii, rdp_points, rdp_stddev, field_dens,
-    e_fdens, clust_rad, kp_ndim, KP_Bys_rc, KP_Bys_rt, KP_plot,
+    e_fdens, clust_rad, e_rad, kp_ndim, KP_Bys_rc, KP_Bys_rt, KP_plot,
         KP_conct_par):
     """
     Radial density plot.
@@ -148,7 +148,7 @@ def pl_rad_dens(
     # Convert from deg to arcmin if (ra,dec) were used.
     if coord == 'deg':
         rdp_radii = np.array(rdp_radii) * 60.
-        clust_rad = clust_rad * 60.
+        clust_rad, e_rad = clust_rad * 60., e_rad * 60.
         KP_Bys_rc, KP_Bys_rt = KP_Bys_rc * 60., KP_Bys_rt * 60.
         field_dens, e_fdens, KP_cent_dens = field_dens / 3600.,\
             e_fdens / 3600., KP_cent_dens / 3600.
@@ -210,9 +210,9 @@ def pl_rad_dens(
     y_mid_point = (y_max + y_min) * .5
     ax.vlines(x=clust_rad, ymin=field_dens, ymax=y_mid_point, lw=1.5,
               color='r', label=t_rad.format("cl", clust_rad, coord2), zorder=5)
-    # # Plot radius error zone.
-    # if not np.isnan(e_rad[0]):
-    #     plt.axvspan(e_rad[0], e_rad[1], facecolor='grey', alpha=0.25)
+    # Plot radius error zone.
+    if not np.isnan(e_rad[0]):
+        plt.axvspan(e_rad[0], e_rad[1], facecolor='grey', alpha=0.2)
 
     # Plot King profile.
     if kp_ndim in (2, 4):
@@ -382,8 +382,8 @@ def pl_zoom_frame(
 
 
 def pl_memb_vs_rad(
-    gs, plot_style, coord, x_i, y_i, kde_cent, clust_rad, field_dens, rt,
-        kp_ndim, KP_plot):
+    gs, plot_style, coord, x_i, y_i, kde_cent, clust_rad, e_rad, field_dens,
+        rt, kp_ndim, KP_plot):
     """
     """
     _16_84_rang, cd_rc_rt_sampled = 0., (0., 0., 0.)
@@ -395,9 +395,9 @@ def pl_memb_vs_rad(
     if coord == 'deg':
         field_dens, cd_sampled = field_dens / 3600.,\
             cd_rc_rt_sampled[0] / 3600.
-        clust_rad, rt0, _16_84_rang, rc_sampled, rt_sampled = clust_rad * 60.,\
-            rt * 60., _16_84_rang * 60., cd_rc_rt_sampled[1] * 60.,\
-            cd_rc_rt_sampled[2] * 60.
+        clust_rad, e_rad, rt0, _16_84_rang, rc_sampled, rt_sampled =\
+            clust_rad * 60., e_rad * 60., rt * 60., _16_84_rang * 60.,\
+            cd_rc_rt_sampled[1] * 60., cd_rc_rt_sampled[2] * 60.
         coord2 = 'arcmin'
     else:
         cd_sampled, rc_sampled, rt_sampled = cd_rc_rt_sampled
@@ -436,6 +436,10 @@ def pl_memb_vs_rad(
         plt.axvline(rt0, color='g', ls='--')
 
     plt.axvline(clust_rad, color='r', ls='--')
+    # Plot radius error zone.
+    if not np.isnan(e_rad[0]):
+        plt.axvspan(e_rad[0], e_rad[1], facecolor='grey', alpha=0.2)
+
     N_memb = []
     for r in rads:
         msk = xy_cent_dist < r

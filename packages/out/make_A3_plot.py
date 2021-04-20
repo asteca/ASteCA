@@ -10,7 +10,7 @@ from . prep_plots import figsize_x, figsize_y, grid_x, grid_y
 
 
 def main(
-    npd, cld_i, pd, kde_cent, frame_kde_cent, clust_rad, rad_rads,
+    npd, cld_i, pd, kde_cent, frame_kde_cent, clust_rad, e_rad, rad_rads,
     rad_N_membs, rad_N_field, rad_CI, membvsmag, xy_filtered, xy_cent_dist,
     N_MC, rand_01_MC, cos_t, sin_t, KP_Bys_rc, KP_Bys_rt, KP_Bys_ecc,
     KP_Bys_theta, KP_plot, KP_conct_par, KP_memb_num, field_dens,
@@ -43,7 +43,7 @@ def main(
     # Structure plots.
     arglist = [
         # pl_rad_find
-        [gs, pd['plot_style'], coord, clust_rad, rad_rads,
+        [gs, pd['plot_style'], coord, clust_rad, e_rad, rad_rads,
          rad_N_membs, rad_N_field, rad_CI],
         # pl_mag_membs
         [gs, pd['plot_style'], y_ax, membvsmag],
@@ -54,7 +54,7 @@ def main(
          flag_no_fl_regs_i],
         # pl_rad_dens: Radial density plot.
         [gs, pd['plot_style'], coord, rdp_radii, rdp_points, rdp_stddev,
-         field_dens, field_dens_std, clust_rad, pd['kp_ndim'],
+         field_dens, field_dens_std, clust_rad, e_rad, pd['kp_ndim'],
          KP_Bys_rc, KP_Bys_rt, KP_plot, KP_conct_par],
         # pl_zoom_frame: Zoom on x,y finding chart.
         [gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin, y_zmax,
@@ -63,7 +63,7 @@ def main(
          KP_Bys_theta, frac_cl_area, pd['kp_ndim']],
         # pl_memb_vs_rad
         [gs, pd['plot_style'], coord, cld_i['x'], cld_i['y'], kde_cent,
-         clust_rad, field_dens, KP_Bys_rt[1], pd['kp_ndim'], KP_plot],
+         clust_rad, e_rad, field_dens, KP_Bys_rt[1], pd['kp_ndim'], KP_plot],
         # pl_dens_map
         [gs, fig, asp_ratio, x_name, y_name, coord, x_zmin, x_zmax,
          y_zmin, y_zmax, kde_cent, frame_kde_cent, clust_rad,
