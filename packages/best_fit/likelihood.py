@@ -21,10 +21,9 @@ from scipy.stats import gaussian_kde, entropy
 
 
 def main(lkl_method, synth_clust, obs_clust):
-    '''
-    Generate synthetic cluster with an isochrone of given values for
-    metallicity and age. Match the synthetic cluster to the observed cluster.
-    '''
+    """
+    Match the synthetic cluster to the observed cluster.
+    """
 
     # If synthetic cluster is empty, assign a large likelihood value. This
     # assumes *all* likelihoods here need minimizing.

@@ -16,8 +16,8 @@ from ..out import make_D0_plot
 
 def main(
     npd, clp, max_mag_syn, obs_clust, ext_coefs, st_dist_mass, N_fc, err_pars,
-    fundam_params, theor_tracks, R_V, m_ini_idx, binar_flag, filters, colors,
-    flag_make_plot, coords, xmax=2000, ymax=2000,
+    fundam_params, theor_tracks, R_V, m_ini_idx, binar_flag, mean_bin_mr,
+    filters, colors, flag_make_plot, coords, xmax=2000, ymax=2000,
         synth_CI_rand=False, rt=250., **kwargs):
     """
     In place for #239
@@ -81,7 +81,7 @@ def main(
             isoch_compl = synth_cluster.main(
                 fundam_params, varIdxs, model, theor_tracks,
                 clp['completeness'], max_mag_syn, st_dist_mass, R_V, ext_coefs,
-                N_fc, err_pars, m_ini_idx, binar_flag, True)
+                N_fc, err_pars, m_ini_idx, binar_flag, mean_bin_mr, True)
 
         # Undo transposing performed in add_errors()
         synth_clust = synth_clust.T
@@ -111,12 +111,16 @@ def main(
             filters, colors, extra_pars, model, synth_clust, sigma, x_cl,
             y_cl, x_fl, y_fl, synth_field, sigma_field, CI, rc, rt, data_file)
 
-        make_D0_plot.main(
-            model, isoch_moved, mass_dist, isoch_binar, isoch_compl,
-            synth_clust, extra_pars, sigma, synth_field, sigma_field, cx, cy,
-            rc, rt, cl_dists, xmax, ymax, x_cl, y_cl, x_fl, y_fl, CI,
-            max_mag_syn, flag_make_plot, coords, colors, filters,
-            plot_file)
+        if 'D0' in flag_make_plot:
+            make_D0_plot.main(
+                model, isoch_moved, mass_dist, isoch_binar, isoch_compl,
+                synth_clust, extra_pars, sigma, synth_field, sigma_field, cx, cy,
+                rc, rt, cl_dists, xmax, ymax, x_cl, y_cl, x_fl, y_fl, CI,
+                max_mag_syn, flag_make_plot, coords, colors, filters,
+                plot_file)
+            print("<<Plots for D0 block created>>")
+        else:
+            print("<<Skip D0 plot>>")
 
         update_progress.updt(len(models), i + 1)
 

@@ -197,8 +197,8 @@ def plxBayes(
         # For plotting, (nsteps, nchains, ndim)
         plx_samples = sampler.get_chain()[:, :, 0]
 
-        print("Bayesian plx estimated: " +
-              "{:.3f} (ESS={:.0f}, tau={:.0f})".format(
+        print("Bayesian plx estimated: "
+              + "{:.3f} (ESS={:.0f}, tau={:.0f})".format(
                   1. / plx_Bys[3], plx_ess, tau))
     except Exception as e:
         print(e)

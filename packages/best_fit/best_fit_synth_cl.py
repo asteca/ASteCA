@@ -2,7 +2,7 @@
 import numpy as np
 from ..inp import data_IO
 from . import max_mag_cut, obs_clust_prepare, ptemcee_algor
-from ..synth_clust import add_errors, imf, extin_coefs, synth_clust_gen
+from ..synth_clust import synth_clust_gen
 from .mcmc_convergence import convergenceVals
 from .bf_common import r2Dist, modeKDE, fillParams  # thinChain
 
@@ -15,13 +15,22 @@ def main(npd, pd, clp):
 
     # General parameters
     if pd['best_fit_algor'] != 'n':
-        cl_max_mag, max_mag_syn, obs_clust, ext_coefs, st_dist_mass, N_fc,\
-            err_pars = dataPrep(pd, clp)
-    else:
-        # Pass dummy data used by data output and some plot functions.
-        cl_max_mag, max_mag_syn, ext_coefs, st_dist_mass, N_fc, err_pars =\
-            [[]] * 6
-        obs_clust = [[]]
+        clp = dataPrep(pd, clp)
+
+    # # TEMPORARY
+    # # Use for saving the necessary input for the 'perf_test.py' file.
+    # import pickle
+    # with open('perf_test.pickle', 'wb') as f:
+    #     pickle.dump([
+    #         pd['fundam_params'], pd['lkl_method'], clp['completeness'],
+    #         clp['err_lst'], clp['em_float'], obs_clust, max_mag_syn,
+    #         ext_coefs, binar_flag, mean_bin_mr, N_fc, m_ini_idx,
+    #         pd['st_dist_mass'], theor_tracks, err_norm_rand, binar_probs,
+    #         ext_unif_rand, pd['R_V']], f)
+    # print("Data saved to pickle")
+    # import sys
+    # sys.exit()
+    # # TEMPORARY
 
     if pd['best_fit_algor'] == 'ptemcee':
         print("Searching for optimal parameters")
@@ -31,32 +40,13 @@ def main(npd, pd, clp):
 
         # Calculate the best fitting parameters.
         isoch_fit_params = ptemcee_algor.main(
-            clp['completeness'], max_mag_syn, obs_clust, ext_coefs,
-            st_dist_mass, N_fc, err_pars, **pd)
-
-        # TODO DEPRECATED May 2020
-        # elif pd['best_fit_algor'] == 'emcee':
-        #     isoch_fit_params = emcee_algor.main(
-        #         clp['completeness'], max_mag_syn, obs_clust, ext_coefs,
-        #         st_dist_mass, N_fc, err_pars, **pd)
-
-        # elif pd['best_fit_algor'] == 'boot+GA':
-        #     isoch_fit_params = bootstrap.main(
-        #         pd, clp, cl_max_mag, max_mag_syn, obs_clust, ext_coefs,
-        #         st_dist_mass, N_fc, err_pars)
-
-        # TODO DEPRECATED May 2019
-        # if best_fit_algor == 'brute':
-        #     # Brute force algorithm.
-        #     isoch_fit_params = brute_force_algor.main()
-        # TODO not working yet
-        # elif best_fit_algor == 'abc':
-        #     isoch_fit_params = abcpmc_algor.main()
+            clp['completeness'], clp['err_lst'], clp['em_float'],
+            clp['max_mag_syn'], clp['obs_clust'], **pd)
 
         # Save MCMC trace (and some other variables) to file
         if pd['save_trace_flag']:
             data_IO.dataSave(isoch_fit_params, npd['mcmc_file_out'])
-            print("OUtput of MCMC sampler saved to file")
+            print("Output of MCMC sampler saved to file")
 
         # Obtain convergence parameters
         isoch_fit_params = convergenceParams(isoch_fit_params, **pd)
@@ -72,12 +62,12 @@ def main(npd, pd, clp):
         isoch_fit_errors = params_errors(pd, isoch_fit_params)
         print("Best fit parameters read from file")
 
-    # In place for #239
+    # In place for #239. NOT WORKING AS OF FEB 2021, after #488 #503 #506
     elif pd['best_fit_algor'] == 'synth_gen':
         synth_clust_gen.main(
             npd, clp, max_mag_syn, obs_clust, ext_coefs, st_dist_mass, N_fc,
-            err_pars, **pd)
-        isoch_fit_params, isoch_fit_errors = [], []
+            mv_err_pars, **pd)
+        # isoch_fit_params, isoch_fit_errors = [], []
 
     else:
         print("Skip parameters fitting process")
@@ -91,11 +81,7 @@ def main(npd, pd, clp):
             'N_total': np.nan}
         isoch_fit_errors = [[np.nan, np.nan, np.nan]] * 6
 
-    clp['cl_max_mag'], clp['max_mag_syn'], clp['ext_coefs'],\
-        clp['st_dist_mass'], clp['N_fc'], clp['err_pars'],\
-        clp['bf_bin_edges'], clp['isoch_fit_params'],\
-        clp['isoch_fit_errors'] = cl_max_mag, max_mag_syn, ext_coefs,\
-        st_dist_mass, N_fc, err_pars, obs_clust[0], isoch_fit_params,\
+    clp['isoch_fit_params'], clp['isoch_fit_errors'] = isoch_fit_params,\
         isoch_fit_errors
 
     return clp
@@ -108,43 +94,15 @@ def dataPrep(pd, clp):
     """
 
     # Remove stars beyond the maximum magnitude limit, if it was set.
-    cl_max_mag, max_mag_syn = max_mag_cut.main(
+    clp['cl_max_mag'], clp['max_mag_syn'] = max_mag_cut.main(
         clp['cl_reg_fit'], pd['max_mag'])
 
     # Processed observed cluster.
-    obs_clust = obs_clust_prepare.main(
-        cl_max_mag, pd['lkl_method'], pd['lkl_binning'],
+    clp['obs_clust'] = obs_clust_prepare.main(
+        clp['cl_max_mag'], pd['lkl_method'], pd['lkl_binning'],
         pd['lkl_manual_bins'])
 
-    # Obtain extinction coefficients.
-    ext_coefs = extin_coefs.main(pd['cmd_systs'], pd['filters'], pd['colors'])
-
-    # Obtain mass distribution using the selected IMF. We run it once
-    # because the array only depends on the IMF selected.
-    st_dist_mass = imf.main(pd['IMF_name'], pd['fundam_params'][4])
-
-    # Store the number of defined filters and colors.
-    N_fc = [len(pd['filters']), len(pd['colors'])]
-
-    err_rand = add_errors.randIdxs(pd['lkl_method'])
-    err_pars = clp['err_lst'], clp['em_float'], err_rand
-
-    # # TEMPORARY
-    # # Use for saving the necessary input for the 'perf_test.py' file.
-    # import pickle
-    # with open('perf_test.pickle', 'wb') as f:
-    #     pickle.dump([
-    #         obs_clust, cl_max_mag, pd['fundam_params'], pd['theor_tracks'],
-    #         pd['lkl_method'], pd['R_V'], clp['completeness'],
-    #         max_mag_syn, st_dist_mass, ext_coefs, N_fc, pd['m_ini_idx'],
-    #         pd['binar_flag'], err_pars], f)
-    # print("finished")
-    # import sys
-    # sys.exit()
-    # # TEMPORARY
-
-    return cl_max_mag, max_mag_syn, obs_clust, ext_coefs, st_dist_mass, N_fc,\
-        err_pars
+    return clp
 
 
 def convergenceParams(isoch_fit_params, fundam_params, nburn_mcee, **kwargs):
@@ -229,32 +187,5 @@ def params_errors(pd, isoch_fit_params):
 
     isoch_fit_errors = assignUncertns(
         isoch_fit_params['varIdxs'], isoch_fit_params['mcmc_trace'])
-
-    # DEPRECATED May 2019
-    # if best_fit_algor == 'brute':
-    #     fundam_params = args
-    #     isoch_fit_errors = []
-    #     # Assign errors as the largest step in each parameter.
-    #     for pv in fundam_params:
-    #         # If any parameter has a single valued range, assign 'nan'.
-    #         if len(pv) > 1:
-    #             # Find largest delta in this parameter used values.
-    #             largest_delta = np.diff(pv).max()
-    #             # Store the maximum value.
-    #             isoch_fit_errors.append(largest_delta)
-    #         else:
-    #             isoch_fit_errors.append(np.nan)
-
-    # DEPRECATED May 2020
-    # if pd['best_fit_algor'] in ('boot+GA'):
-
-    #     pb = isoch_fit_params['params_boot']
-    #     if pb.any():
-    #         isoch_fit_errors = assignUncertns(isoch_fit_params['varIdxs'], pb)
-    #     else:
-    #         # No error assignment.
-    #         isoch_fit_errors = [[np.nan] * 3] * 6
-
-    # elif pd['best_fit_algor'] in ('ptemcee', 'emcee'):  # , , 'abc'
 
     return isoch_fit_errors

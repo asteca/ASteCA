@@ -11,9 +11,10 @@ from . import add_errors
 
 
 def main(
-    fundam_params, varIdxs, model, theor_tracks, completeness, max_mag_syn,
-    st_dist_mass, R_V, ext_coefs, N_fc, err_pars, m_ini_idx, binar_flag,
-        extra_pars_flag=False):
+    fundam_params, varIdxs, model, completeness, err_lst, em_float,
+    max_mag_syn, ext_coefs, binar_flag, mean_bin_mr, N_fc, m_ini_idx,
+    st_dist_mass, theor_tracks, err_norm_rand, binar_probs, ext_unif_rand,
+        R_V, transpose_flag=True):
     """
     Takes an isochrone and returns a synthetic cluster created according to
     a certain mass distribution.
@@ -36,10 +37,6 @@ def main(
     extra_pars = [l1, l2, ..., l6]
     """
 
-    # If 'extra_pars_flag' is True and synth_clust = np.array([])
-    sigma, extra_pars, isoch_moved, mass_dist, isoch_binar, isoch_compl =\
-        [[] for _ in range(6)]
-
     # Return proper values for fixed parameters and parameters required
     # for the (z, log(age)) isochrone averaging.
     model_proper, z_model, a_model, ml, mh, al, ah = properModel(
@@ -48,15 +45,16 @@ def main(
     # Generate a weighted average isochrone from the (z, log(age)) values in
     # the 'model'.
     isochrone = zaWAverage.main(
-        theor_tracks, m_ini_idx, fundam_params, z_model, a_model, ml, mh, al,
-        ah)
+        theor_tracks, fundam_params, binar_flag, m_ini_idx, z_model, a_model,
+        ml, mh, al, ah)
 
     # Extract parameters
     e, d, M_total, bin_frac = model_proper
 
     # Move theoretical isochrone using the values 'e' and 'd'.
     isoch_moved = move_isochrone.main(
-        isochrone, e, d, R_V, ext_coefs, N_fc, binar_flag, m_ini_idx)
+        isochrone, e, d, R_V, ext_coefs, N_fc, ext_unif_rand[ml],
+        m_ini_idx, binar_flag)
 
     # Get isochrone minus those stars beyond the magnitude cut.
     isoch_cut = cut_max_mag.main(isoch_moved, max_mag_syn)
@@ -66,35 +64,51 @@ def main(
 
     # Empty list to pass if at some point no stars are left.
     synth_clust = np.array([])
-    # Check for an empty array.
     if isoch_cut.any():
-        # Mass distribution to produce a synthetic cluster based on
-        # a given IMF and total mass.
-        mass_dist = mass_distribution.main(st_dist_mass, M_total)
+
+        # Return the isochrone with the proper total mass.
+        mass_dist = mass_distribution.main(
+            st_dist_mass[ml], mean_bin_mr, bin_frac, M_total)
 
         # Interpolate masses in mass_dist into the isochrone rejecting those
         # masses that fall outside of the isochrone's mass range.
         # This destroys the order by magnitude.
-        isoch_mass = mass_interp.main(isoch_cut, mass_dist, m_ini_idx)
+        isoch_mass = mass_interp.main(isoch_cut, m_ini_idx, mass_dist)
+
+        # # In place for testing #508
+        # import matplotlib.pyplot as plt
+        # plt.subplot(121)
+        # plt.scatter(isoch_mass[4],isoch_mass[3],c='r')
+        # plt.scatter(isoch_mass[1],isoch_mass[0],c='g')
+        # plt.scatter(isoch_cut[4],isoch_cut[3],c='b', marker='x')
+        # plt.scatter(isoch_cut[1],isoch_cut[0],c='cyan', marker='x')
+        # plt.gca().invert_yaxis()
 
         if isoch_mass.any():
             # Assignment of binarity.
-            isoch_binar = binarity.main(isoch_mass, bin_frac, m_ini_idx, N_fc)
+            isoch_binar = binarity.main(
+                isoch_mass, bin_frac, m_ini_idx, N_fc, binar_probs[ml])
+
+            # # In place for testing #508
+            # plt.subplot(122)
+            # plt.scatter(isoch_binar[1],isoch_binar[0],c='g')
+            # plt.gca().invert_yaxis()
+            # plt.show()
 
             # Completeness limit removal of stars.
             isoch_compl = completeness_rm.main(isoch_binar, completeness)
 
             if isoch_compl.any():
                 # Get errors according to errors distribution.
-                synth_clust, sigma, extra_pars = add_errors.main(
-                    isoch_compl, err_pars, m_ini_idx, binar_flag,
-                    extra_pars_flag)
+                synth_clust = add_errors.main(
+                    isoch_compl, err_lst, em_float, err_norm_rand[ml])
 
-    if extra_pars_flag is False:
-        # Only pass the photometry, used by the likelihood function
-        return synth_clust
-    return synth_clust, sigma, extra_pars, isoch_moved, mass_dist,\
-        isoch_binar, isoch_compl
+                # Transposing is necessary for np.histogramdd() in the
+                # likelihood
+                if transpose_flag:
+                    synth_clust = synth_clust[:sum(N_fc)].T
+
+    return synth_clust
 
 
 def properModel(fundam_params, model, varIdxs):

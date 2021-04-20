@@ -1,17 +1,23 @@
 
 import numpy as np
+import warnings
 from scipy.spatial.distance import cdist
+from scipy.signal import savgol_filter
 from .contamination_index import CIfunc
 from ..aux_funcs import circFrac
 from ..out import prep_plots
 from .. import update_progress
 
 
-def main(cld_i, clp, coords, rad_manual, **kwargs):
+def main(
+    cld_i, clp, coords, rad_manual, clust_rad_mode, Nboot=1000,
+        **kwargs):
     """
     Estimate the radius through the optimization of the #cluster-members vs
     #field-stars values. Assign the uncertainty through a bootstrap process
     based on the field density's uncertainty.
+
+    Nboot: number of boostrap runs
     """
 
     # Parameters used internally only.
@@ -24,20 +30,24 @@ def main(cld_i, clp, coords, rad_manual, **kwargs):
 
     coord = prep_plots.coord_syst(coords)[0]
     if rad_manual == 'n':
-        # DEPRECATED Nov 2020
-        # print("Estimating radius")
-        # if nsteps_rad > 2:
-        #     # Use bootstrap to estimate the uncertainty.
-        #     clp['e_rad'] = radError(
-        #         rad_radii, rad_areas, st_dists_cent, nsteps_rad, **clp)
-        #     print("Radius found: {:g} {}".format(clp['clust_rad'], coord))
-        # else:
-        #     clp['e_rad'] = np.array([np.nan, np.nan])
-        print("Radius found: {:g} {}".format(clp['clust_rad'], coord))
+        # DEPRECATED Nov 2020; RE-IMPLEMENTED April 2021
+        print("Estimating radius")
+        # Use bootstrap to estimate the uncertainty.
+        clp['e_rad'] = radError(
+            rad_radii, rad_areas, st_dists_cent, clp['field_dens'],
+            clp['field_dens_std'], Nboot)
+        if clust_rad_mode == 'auto':
+            print("Radius found: {:g} {}".format(clp['clust_rad'], coord))
+
+        elif clust_rad_mode == 'max':
+            clp['clust_rad'] = maxRadius(
+                cld_i['x'], cld_i['y'], clp['kde_cent'])
+            print("Large radius selected: {:g} {}".format(
+                clp['clust_rad'], coord))
 
     elif rad_manual != 'n':
         # Update radius, assign zero error.
-        clp['clust_rad'] = rad_manual
+        clp['clust_rad'], clp['e_rad'] = rad_manual, np.array([np.nan, np.nan])
         print("Manual radius set: {:g} {}".format(clp['clust_rad'], coord))
 
     return clp
@@ -45,7 +55,7 @@ def main(cld_i, clp, coords, rad_manual, **kwargs):
 
 def rdpAreasDists(
     cld_i, kde_cent, N_MC, rand_01_MC, cos_t, sin_t, Nstars=20, Nrads=300,
-        **kwargs):
+        Nmax=50000, **kwargs):
     """
     The areas for each radius value in 'rad_radii' are obtained here once.
     We also calculate here the distance of each star to the defined center.
@@ -54,12 +64,13 @@ def rdpAreasDists(
     Nstars: number of stars used to define the minimum and maximum radii values
     used to define the 'rad_radii' array.
     Nrads: number of values used to generate the 'rad_radii' array.
+    Nmax: maximum number of stars used in the process
     """
 
     # Array of coordinates.
     xy = np.array([cld_i['x'], cld_i['y']]).T
-    if xy.shape[1] > 50000:
-        idx = np.random.choice(xy.shape[1], 50000, replace=False)
+    if xy.shape[1] > Nmax:
+        idx = np.random.choice(xy.shape[1], Nmax, replace=False)
         xy = xy[idx]
 
     # Distances of all stars to the center of the cluster.
@@ -95,7 +106,7 @@ def rdpAreasDists(
 
 
 def optimalRadius(
-    rad_radii, rad_areas, st_dists_cent, field_dens, bttstrp_flag=False,
+    rad_radii, rad_areas, st_dists_cent, field_dens, bottstrpFlag=False,
         **kwargs):
     """
     Estimate the optimal radius as the value that maximizes the (normalized)
@@ -140,38 +151,76 @@ def optimalRadius(
 
     # Normalizing separately is important. Otherwise it selects low radii
     # values.
-    N_membs = data[1] / data[1].max()
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        N_membs = data[1] / data[1].max()
+
+    if bottstrpFlag:
+        N_field = data[2] / data[2].max()
+        idx = np.argmax(N_membs - N_field)
+        return data[0][idx]
+
+    # Smooth the curve
+    # ws: window size, pol: polynomial order
+    ws, pol = int(len(N_membs) / 5.), 3
+    # must be odd
+    ws = ws + 1 if ws % 2 == 0 else ws
+    N_membs = savgol_filter(N_membs, ws, pol)
+
     N_field = data[2] / data[2].max()
     idx = np.argmax(N_membs - N_field)
     clust_rad = data[0][idx]
 
-    if bttstrp_flag:
-        return clust_rad
-
     return clust_rad, data[0], N_membs, N_field, data[3]
 
 
+def maxRadius(x, y, kde_cent):
+    """
+    Estimate a large radius that encloses the entire frame
+    """
+    xmin, xmax, ymin, ymax = min(x), max(x), min(y), max(y)
+    pts = np.array([(xmin, ymin), (xmin, ymax), (xmax, ymin), (xmax, ymax)])
+    # Fast euclidean distance: https://stackoverflow.com/a/47775357/1391441
+    a_min_b = kde_cent - pts
+    dist = np.sqrt(np.einsum('ij,ij->i', a_min_b, a_min_b))
+    # Use the maximum distance as the radius
+    clust_rad = max(dist)
+
+    return clust_rad
+
+
+# DEPRECATED Nov 2020; RE-IMPLEMENTED April 2021
 def radError(
-        rad_radii, rad_areas, st_dists_cent, N_btstrp, field_dens, **kwargs):
+    rad_radii, rad_areas, st_dists_cent, field_dens, field_dens_std,
+        Nboot):
     """
     Bootstrap the distances to estimate the radius uncertainty.
     """
 
-    steps = int(.1 * N_btstrp)
-    all_rads = np.empty(N_btstrp)
-    for i in range(N_btstrp):
+    steps = int(.1 * Nboot)
+    all_rads = []
+    for i in range(Nboot):
 
-        # Sample distances with replacement.
+        # Sample distances with replacement. This has a small effect on the
+        # final values, the largest effect is due to the field density sampling
         st_dists_btstrp = np.random.choice(st_dists_cent, st_dists_cent.size)
 
-        # Obtain the optimal radius and arrays for plotting.
-        all_rads[i] = optimalRadius(
-            rad_radii, rad_areas, st_dists_btstrp, field_dens, True)
+        field_dens_s = field_dens
+        # If the field density was set manually, there is no uncertainty
+        if not np.isnan(field_dens_std):
+            field_dens_s = np.random.normal(field_dens, field_dens_std)
+            field_dens_s = field_dens if field_dens_s <= 0. else field_dens_s
 
-        if i + 1 == N_btstrp:
+        # Obtain the optimal radius and arrays for plotting.
+        rad = optimalRadius(
+            rad_radii, rad_areas, st_dists_btstrp, field_dens_s, True)
+        if not np.isnan(rad):
+            all_rads.append(rad)
+
+        if i + 1 == Nboot:
             pass
         elif (i + 1) % steps:
             continue
-        update_progress.updt(N_btstrp, i + 1)
+        update_progress.updt(Nboot, i + 1)
 
     return np.percentile(all_rads, (16, 84))

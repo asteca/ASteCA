@@ -45,10 +45,11 @@ def main(pars_f_path):
                     manual_struct.append(reader[1:])
                 elif reader[0] == 'S1':
                     fdens_method = str(reader[1])
+                    clust_rad_mode = str(reader[2])
                     try:
-                        fr_number = int(reader[2])
+                        fr_number = int(reader[3])
                     except ValueError:
-                        fr_number = str(reader[2])
+                        fr_number = str(reader[3])
 
                 elif reader[0] == 'S2':
                     kp_ndim = int(reader[1])
@@ -93,7 +94,7 @@ def main(pars_f_path):
                 elif reader[0] == 'R0':
                     synth_rand_seed = str(reader[1])
                     IMF_name = str(reader[2])
-                    bin_mr = float(reader[3])
+                    min_bmass_ratio = float(reader[3])
                     try:
                         max_mag = float(reader[4])
                     except ValueError:
@@ -221,7 +222,7 @@ def main(pars_f_path):
 
         # Structure functions parameters
         'manual_struct': manual_struct, 'fdens_method': fdens_method,
-        'fr_number': fr_number,
+        'clust_rad_mode': clust_rad_mode, 'fr_number': fr_number,
         'kp_ndim': kp_ndim, 'kp_nchains': kp_nchains, 'kp_nruns': kp_nruns,
         'kp_nburn': kp_nburn, 'rt_max_f': rt_max_f,
         'kp_emcee_moves': kp_emcee_moves,
@@ -245,7 +246,7 @@ def main(pars_f_path):
 
         # Synthetic cluster parameters
         'synth_rand_seed': synth_rand_seed, 'par_ranges': par_ranges,
-        'IMF_name': IMF_name, 'bin_mr': bin_mr,
+        'IMF_name': IMF_name, 'min_bmass_ratio': min_bmass_ratio,
         'R_V': R_V, 'max_mag': max_mag,
 
         # Best fit parameters.

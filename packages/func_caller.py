@@ -36,6 +36,8 @@ from .data_analysis import pms_analysis
 from .out import inparams_out
 from .out import cluster_members_file
 from .best_fit import best_fit_synth_cl
+from .synth_clust import synthClustPrep
+from .synth_clust import masses_binar_probs
 from .out import synth_cl_file
 from .out import create_out_data_file
 #
@@ -99,10 +101,14 @@ def main(cl_file, pd):
     # Gaussian filtered 2D x,y histograms.
     clp = xy_density.main(clp, cld_i, **pd)
 
-    make_A1_plot.main(npd, cld_i, pd, **clp)
-    if pd['stop_idx'] == 'A1':
-        retFunc(npd['clust_name'], start)
-        return
+    if 'A1' in pd['flag_make_plot']:
+        make_A1_plot.main(npd, cld_i, pd, **clp)
+        print("<<Plots for A1 block created>>")
+        if pd['stop_idx'] == 'A1':
+            retFunc(npd['clust_name'], start)
+            return
+    else:
+        print("<<Skip A1 plot>>")
 
     # Cluster's center coordinates and errors.
     clp = center.main(cld_i, clp, **pd)
@@ -117,10 +123,14 @@ def main(cl_file, pd):
     clp = radius.main(cld_i, clp, **pd)
 
     # Uses the incomplete data.
-    make_A2_plot.main(npd, cld_i, pd, **clp)
-    if pd['stop_idx'] == 'A2':
-        retFunc(npd['clust_name'], start)
-        return
+    if 'A2' in pd['flag_make_plot']:
+        make_A2_plot.main(npd, cld_i, pd, **clp)
+        print("<<Plots for A2 block created>>")
+        if pd['stop_idx'] == 'A2':
+            retFunc(npd['clust_name'], start)
+            return
+    else:
+        print("<<Skip A2 plot>>")
 
     # Cluster's area and total number of stars within the cluster region.
     clp = cluster_area.main(clp, **cld_i)
@@ -178,10 +188,14 @@ def main(cl_file, pd):
     #              '--> stars_out_rjct_x -----> field_regions_rjct_x
 
     # Uses the incomplete 'cl_region' and 'field_regions' data.
-    make_A3_plot.main(npd, cld_i, pd, **clp)
-    if pd['stop_idx'] == 'A3':
-        retFunc(npd['clust_name'], start)
-        return
+    if 'A3' in pd['flag_make_plot']:
+        make_A3_plot.main(npd, cld_i, pd, **clp)
+        print("<<Plots for A3 block created>>")
+        if pd['stop_idx'] == 'A3':
+            retFunc(npd['clust_name'], start)
+            return
+    else:
+        print("<<Skip A3 plot>>")
 
     # v The functions below use the *photom complete* dataset with the
     # exception of the 'compl_err_funcs()' function and the Bayesian DA. The
@@ -198,10 +212,14 @@ def main(cl_file, pd):
     # Helper function for plotting.
     clp = photComb.main(pd, clp)
 
-    make_B1_plot.main(npd, cld_c, pd, **clp)
-    if pd['stop_idx'] == 'B1':
-        retFunc(npd['clust_name'], start)
-        return
+    if 'B1' in pd['flag_make_plot']:
+        make_B1_plot.main(npd, cld_c, pd, **clp)
+        print("<<Plots for B1 block created>>")
+        if pd['stop_idx'] == 'B1':
+            retFunc(npd['clust_name'], start)
+            return
+    else:
+        print("<<Skip B1 plot>>")
 
     # Luminosity function and completeness level for each magnitude bin.
     clp = luminosity.main(clp, **cld_c)
@@ -209,10 +227,14 @@ def main(cl_file, pd):
     # Approximate number of cluster's members.
     clp = members_number.main(clp)
 
-    make_B2_plot.main(npd, cld_i, pd, **clp)
-    if pd['stop_idx'] == 'B2':
-        retFunc(npd['clust_name'], start)
-        return
+    if 'B2' in pd['flag_make_plot']:
+        make_B2_plot.main(npd, cld_i, pd, **clp)
+        print("<<Plots for B2 block created>>")
+        if pd['stop_idx'] == 'B2':
+            retFunc(npd['clust_name'], start)
+            return
+    else:
+        print("<<Skip B2 plot>>")
 
     # DEPRECATED 12/20
     # clp = ad_field_vs_clust.main(clp, cld_c, **pd)
@@ -233,10 +255,14 @@ def main(cl_file, pd):
     # Create data file with membership probabilities.
     cluster_members_file.main(clp, npd, **pd)
 
-    make_C1_plot.main(npd, cld_c, pd, **clp)
-    if pd['stop_idx'] == 'C1':
-        retFunc(npd['clust_name'], start)
-        return
+    if 'C1' in pd['flag_make_plot']:
+        make_C1_plot.main(npd, cld_c, pd, **clp)
+        print("<<Plots for C1 block created>>")
+        if pd['stop_idx'] == 'C1':
+            retFunc(npd['clust_name'], start)
+            return
+    else:
+        print("<<Skip C1 plot>>")
 
     # Analyze parallax data if available.
     clp = plx_analysis.main(clp, **pd)
@@ -244,14 +270,23 @@ def main(cl_file, pd):
     # Analyze PMs data if available.
     clp = pms_analysis.main(clp, cld_i, **pd)
 
-    make_C2_plot.main(npd, pd, **clp)
-    if pd['stop_idx'] == 'C2':
-        retFunc(npd['clust_name'], start)
-        return
-    make_C3_plot.main(npd, pd, cld_i, **clp)
-    if pd['stop_idx'] == 'C3':
-        retFunc(npd['clust_name'], start)
-        return
+    if 'C2' in pd['flag_make_plot']:
+        make_C2_plot.main(npd, pd, **clp)
+        print("<<Plots for C2 block created>>")
+        if pd['stop_idx'] == 'C2':
+            retFunc(npd['clust_name'], start)
+            return
+    else:
+        print("<<Skip C2 plot>>")
+
+    if 'C3' in pd['flag_make_plot']:
+        make_C3_plot.main(npd, pd, cld_i, **clp)
+        print("<<Plots for C3 block created>>")
+        if pd['stop_idx'] == 'C3':
+            retFunc(npd['clust_name'], start)
+            return
+    else:
+        print("<<Skip C3 plot>>")
 
     # Obtain best fitting parameters for cluster.
     clp = best_fit_synth_cl.main(npd, pd, clp)
@@ -261,8 +296,14 @@ def main(cl_file, pd):
         retFunc(npd['clust_name'], start)
         return
 
+    # Prepare "best" synthetic cluster found
+    clp = synthClustPrep.main(clp, pd)
+
+    # Estimate binary probabilities
+    clp = masses_binar_probs.main(clp, pd)
+
     # Create output synthetic cluster file if one was found
-    clp = synth_cl_file.main(clp, npd, **pd)
+    synth_cl_file.main(clp, npd, pd)
 
     # Create template output data file in /output dir.
     create_out_data_file.main(npd)
@@ -270,20 +311,35 @@ def main(cl_file, pd):
     # Add cluster data output file
     add_data_output.main(npd, pd, **clp)
 
-    # Convergence plots.
-    make_D1_plot.main(npd, pd, **clp)
-    if pd['stop_idx'] == 'D1':
-        retFunc(npd['clust_name'], start)
-        return
-    # Corner plot.
-    make_D2_plot.main(npd, pd, **clp)
-    if pd['stop_idx'] == 'D2':
-        retFunc(npd['clust_name'], start)
-        return
+    if pd['best_fit_algor'] != 'n':
 
-    # Plot final best match found.
-    make_D3_plot.main(npd, pd, **clp)
-    retFunc(npd['clust_name'], start)
+        # Convergence plots.
+        if 'D1' in pd['flag_make_plot']:
+            make_D1_plot.main(npd, pd, clp)
+            print("<<Plots for D1 block created>>")
+            if pd['stop_idx'] == 'D1':
+                retFunc(npd['clust_name'], start)
+                return
+        else:
+            print("<<Skip D1 plot>>")
+
+        # Corner plot.
+        if 'D2' in pd['flag_make_plot']:
+            make_D2_plot.main(npd, pd, clp)
+            print("<<Plots for D2 block created>>")
+            if pd['stop_idx'] == 'D2':
+                retFunc(npd['clust_name'], start)
+                return
+        else:
+            print("<<Skip D2 plot>>")
+
+        # Plot final best match found.
+        if 'D3' in pd['flag_make_plot']:
+            make_D3_plot.main(npd, pd, clp)
+            print("<<Plots for D3 block created>>")
+            retFunc(npd['clust_name'], start)
+        else:
+            print("<<Skip D3 plot>>")
 
 
 def retFunc(clname, start):

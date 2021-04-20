@@ -10,18 +10,20 @@ from .ptemcee import sampler
 
 
 def main(
-    completeness, max_mag_syn, obs_clust, ext_coefs, st_dist_mass, N_fc,
-    err_pars, m_ini_idx, binar_flag, lkl_method, fundam_params, theor_tracks,
-    R_V, pt_ntemps, pt_adapt, pt_tmax, priors_mcee, nsteps_mcee,
-        nwalkers_mcee, mins_max, **kwargs):
+    completeness, err_lst, em_float, max_mag_syn, obs_clust, ext_coefs,
+    binar_flag, mean_bin_mr, N_fc, m_ini_idx, theor_tracks,
+    err_norm_rand, binar_probs, ext_unif_rand, fundam_params, lkl_method, R_V,
+    pt_ntemps, pt_adapt, pt_tmax, priors_mcee, nsteps_mcee, nwalkers_mcee,
+        mins_max, st_dist_mass, **kwargs):
     """
     """
 
     varIdxs, ndim, ranges = varPars(fundam_params)
     # Pack synthetic cluster arguments.
     synthcl_args = [
-        theor_tracks, completeness, max_mag_syn, st_dist_mass, R_V, ext_coefs,
-        N_fc, err_pars, m_ini_idx, binar_flag]
+        completeness, err_lst, em_float, max_mag_syn, ext_coefs, binar_flag,
+        mean_bin_mr, N_fc, m_ini_idx, st_dist_mass, theor_tracks,
+        err_norm_rand, binar_probs, ext_unif_rand, R_V]
 
     if pt_tmax in ('n', 'none', 'None'):
         Tmax = None
@@ -41,8 +43,8 @@ def main(
     # Define Parallel tempered sampler
     ptsampler = sampler.Sampler(
         nwalkers_mcee, ndim, loglkl, logp,
-        loglargs=[fundam_params, synthcl_args, lkl_method, obs_clust, ranges,
-                  varIdxs, priors_mcee], Tmax=Tmax, ntemps=pt_ntemps)
+        loglargs=[fundam_params, lkl_method, obs_clust, ranges, varIdxs,
+                  priors_mcee, synthcl_args], Tmax=Tmax, ntemps=pt_ntemps)
 
     ntemps = ptsampler.ntemps
     # Initial population.
@@ -67,10 +69,17 @@ def main(
 
             elapsed += t.time() - start
             start = t.time()
-            m, s = divmod(nsteps_mcee / ((i + 1) / elapsed) - elapsed, 60)
+            remaining_time = max(0, min(
+                available_secs, (nsteps_mcee * elapsed) / (i + 1)) - elapsed)
+            m, s = divmod(remaining_time, 60)
             h, m = divmod(m, 60)
-            txt = " [{:.0f} models/sec | {:.0f}h{:.0f}m]".format(
-                (ntemps * nwalkers_mcee * (i + 1)) / elapsed, h, m)
+            if m > 0:
+                tt, hm, ms = "hm", h, m
+            else:
+                tt, hm, ms = "ms", m, s
+            txt = " [{:.0f} models/sec | {:.0f}{}{:.0f}{}]".format(
+                (ntemps * nwalkers_mcee * (i + 1)) / elapsed, hm, tt[0], ms,
+                tt[1])
             update_progress.updt(nsteps_mcee, i + 1, txt)
 
             # Only check convergence every 'N_steps_store' steps
@@ -134,8 +143,8 @@ def main(
 
 
 def loglkl(
-    model, fundam_params, synthcl_args, lkl_method, obs_clust, ranges,
-        varIdxs, priors):
+    model, fundam_params, lkl_method, obs_clust, ranges, varIdxs, priors,
+        synthcl_args):
     """
     """
     rangeFlag = rangeCheck(model, ranges, varIdxs)
@@ -145,6 +154,7 @@ def loglkl(
         # Generate synthetic cluster.
         synth_clust = synth_cluster.main(
             fundam_params, varIdxs, model, *synthcl_args)
+
         # Call likelihood function for this model.
         lkl = likelihood.main(lkl_method, synth_clust, obs_clust)
         log_p = 0.
