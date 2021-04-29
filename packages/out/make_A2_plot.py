@@ -8,11 +8,7 @@ from . import prep_plots
 from . prep_plots import grid_x, grid_y, figsize_x, figsize_y
 
 
-def main(
-    npd, cld_i, pd, x_offset, y_offset, bw_list, kde_cent, frame_kde_cent,
-    integ_dists, integ_mags, xy_filtered, xy_cent_dist, NN_dd, NN_dist,
-    fr_dens, fdens_min_d, fdens_lst, fdens_std_lst, field_dens_d, field_dens,
-        field_dens_std, clust_rad, **kwargs):
+def main(npd, cld_i, pd, clp):
     """
     Make A2 block plots.
     """
@@ -31,23 +27,27 @@ def main(
     # Structure plots.
     arglist = [
         # pl_full_frame: x,y finding chart of full frame.
-        [gs, fig, pd['project'], x_offset, y_offset, x_name, y_name, coord,
-         x_min, x_max, y_min, y_max, asp_ratio, kde_cent, cld_i['x'],
-         cld_i['y'], st_sizes_arr, clust_rad],
+        [gs, fig, pd['project'], clp['x_offset'], clp['y_offset'], x_name,
+         y_name, coord, x_min, x_max, y_min, y_max, asp_ratio, clp['kde_cent'],
+         cld_i['x'], cld_i['y'], st_sizes_arr, clp['clust_rad']],
         # pl_densmap: 2D Gaussian convolved histogram.
-        [gs, fig, asp_ratio, x_name, y_name, coord, bw_list, kde_cent,
-         frame_kde_cent, fr_dens, clust_rad],
+        [gs, fig, asp_ratio, x_name, y_name, coord, clp['bw_list'],
+         clp['kde_cent'], clp['frame_kde_cent'], clp['fr_dens'],
+         clp['clust_rad']],
         # pl_knn_dens
         [gs, fig, pd['plot_style'], asp_ratio, x_min, x_max, y_min, y_max,
-         x_name, y_name, coord, NN_dd, xy_filtered, fr_dens, NN_dist,
-         pd['project'], x_offset, y_offset, kde_cent, clust_rad],
+         x_name, y_name, coord, clp['NN_dd'], clp['xy_filtered'],
+         clp['fr_dens'], clp['NN_dist'], pd['project'], clp['x_offset'],
+         clp['y_offset'], clp['kde_cent'], clp['clust_rad']],
         # pl_field_dens
-        [gs, pd['plot_style'], coord, pd['fdens_method'], xy_cent_dist,
-         fr_dens, fdens_min_d, fdens_lst, fdens_std_lst, field_dens_d,
-         field_dens, field_dens_std],
+        [gs, pd['plot_style'], coord, pd['fdens_method'], clp['xy_cent_dist'],
+         clp['fr_dens'], clp['fdens_min_d'], clp['fdens_lst'],
+         clp['fdens_std_lst'], clp['field_dens_d'], clp['field_dens'],
+         clp['field_dens_std']],
         # pl_centdist_vs_mag
         [gs, fig, pd['plot_style'], y_ax, coord, cld_i['x'], cld_i['y'],
-         cld_i['mags'][0], kde_cent, clust_rad, integ_dists, integ_mags]
+         cld_i['mags'][0], clp['kde_cent'], clp['clust_rad'],
+         clp['integ_dists'], clp['integ_mags']]
     ]
     for n, args in enumerate(arglist):
         mp_cent_dens.plot(n, *args)

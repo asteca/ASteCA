@@ -2,6 +2,8 @@
 import numpy as np
 
 
+# DEPRECATED April 2021
+
 def main(clp):
     """
     Compare the estimated number of true members obtained via the stars density

@@ -1,6 +1,6 @@
 
 import numpy as np
-from scipy import spatial
+from scipy.stats import median_abs_deviation as MAD
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 from matplotlib import patches as mpatches
@@ -10,57 +10,56 @@ from ..structure.king_profile import KP_memb_x
 
 
 def pl_rad_find(
-    gs, plot_style, coord, clust_rad, e_rad, rad_rads, rad_N_membs,
-        rad_N_field, rad_CI):
+    gs, plot_style, coord, clust_rad, membs_ratio, CI_vals,
+        rad_radii):
     """
     Radius estimation plot.
     """
     # Convert from deg to arcmin if (ra,dec) were used.
     if coord == 'deg':
-        rad_rads = np.array(rad_rads) * 60.
-        clust_rad, e_rad = clust_rad * 60., e_rad * 60.
+        rad_radii, clust_rad = rad_radii * 60., clust_rad * 60.
         coord2 = 'arcmin'
     else:
         coord2 = 'px'
 
-    # Cut when (if) N_nembs = 0
-    try:
-        icut = np.where(rad_N_membs == 0.)[0][0]
-        if icut == 0:
-            icut = len(rad_N_membs)
-        else:
-            # Use 30 points since the number of radii values in
-            # radius.rdpAreasDists() is hardcoded to 300.
-            icut = icut + 30
-    except IndexError:
-        icut = len(rad_N_membs)
-    rad_rads, rad_N_membs, rad_N_field, rad_CI = rad_rads[:icut],\
-        rad_N_membs[:icut], rad_N_field[:icut], rad_CI[:icut]
+    # # Cut when (if) N_nembs = 0
+    # try:
+    #     icut = np.where(rad_N_membs == 0.)[0][0]
+    #     if icut == 0:
+    #         icut = len(rad_N_membs)
+    #     else:
+    #         # Use 30 points since the number of radii values in
+    #         # radius.rdpAreasDists() is hardcoded to 300.
+    #         icut = icut + 30
+    # except IndexError:
+    #     icut = len(rad_N_membs)
+    # rad_rads, rad_N_membs, rad_N_field, rad_CI = rad_rads[:icut],\
+    #     rad_N_membs[:icut], rad_N_field[:icut], rad_CI[:icut]
 
     ax = plt.subplot(gs[0:2, 0:2])
     plt.xlabel(r'radius $[{}]$'.format(coord2))
-    plt.ylabel(r"$N_{memb}\;|\;N_{field}\;|\;CI$")
+    # plt.ylabel(r"$N_{memb}\;|\;N_{field}\;|\;CI$"))
     if plot_style == 'asteca':
         ax.grid()
 
-    plt.plot(rad_rads, rad_N_membs, c='g', label=r'$N_{memb}$')
-    plt.plot(rad_rads, rad_N_field, c='b', ls='--', label=r'$N_{field}$')
-    # ymin, ymax = ax.get_ylim()
+    plt.scatter(rad_radii, membs_ratio, c='g', label=r'$N_{memb}/N_{ring}$',
+                alpha=.3)
+    # plt.plot(rad_radii, rad_N_field, c='b', ls='--', label=r'$N_{field}$')
+    # # ymin, ymax = ax.get_ylim()
 
-    plt.plot(rad_rads, rad_CI, ls=':', c='k', label='CI')
+    plt.plot(rad_radii, CI_vals, ls=':', c='k', label='CI')
+    ymin, _ = ax.get_ylim()
+    ymin = max(ymin, 0)
     plt.axvline(x=clust_rad, lw=1.5, color='r', label=r"$r_{cl}$")
-    # DEPRECATED Nov 2020
-    if not np.isnan(e_rad[0]):
-        plt.axvspan((e_rad[0]), (e_rad[1]), facecolor='grey', alpha=0.2)
 
     # Legends.
     leg = plt.legend(fancybox=True)
     leg.get_frame().set_alpha(0.7)
 
-    xmin, xmax = ax.get_xlim()
-    plt.xlim(max(xmin, 0.), xmax)
-    plt.ylim(0., 1.02)
-    # plt.ylim(ymin, ymax)
+    # xmin, xmax = ax.get_xlim()
+    xmax = min(clust_rad + clust_rad * 3, rad_radii[-1])
+    plt.ylim(ymin, 1.02)
+    plt.xlim(rad_radii[0], xmax)
 
 
 def pl_mag_membs(gs, plot_style, y_ax, membvsmag):
@@ -69,7 +68,7 @@ def pl_mag_membs(gs, plot_style, y_ax, membvsmag):
     ax = plt.subplot(gs[0:2, 2:4])
     if plot_style == 'asteca':
         ax.grid()
-    ax.set_title(r"$N_{{memb}}$ vs magnitude cut (phot incomp); $r<r_{{cl}}$")
+    ax.set_title(r"$N_{{memb}}$ vs magnitude cut (phot incomp); $r_{{cl}}$")
     plt.xlabel('$' + y_ax + '$')
     plt.ylabel(r'$N_{memb}$')
     if membvsmag.any():
@@ -133,9 +132,9 @@ def pl_cl_fl_regions(
 
 
 def pl_rad_dens(
-    gs, plot_style, coord, rdp_radii, rdp_points, rdp_stddev, field_dens,
-    e_fdens, clust_rad, e_rad, kp_ndim, KP_Bys_rc, KP_Bys_rt, KP_plot,
-        KP_conct_par):
+    gs, plot_style, coord, rdp_radii, rdp_points, rdp_stddev, rad_max,
+    field_dens, e_fdens, clust_rad, kp_ndim, KP_Bys_rc, KP_Bys_rt,
+        KP_plot, KP_conct_par):
     """
     Radial density plot.
     """
@@ -148,7 +147,7 @@ def pl_rad_dens(
     # Convert from deg to arcmin if (ra,dec) were used.
     if coord == 'deg':
         rdp_radii = np.array(rdp_radii) * 60.
-        clust_rad, e_rad = clust_rad * 60., e_rad * 60.
+        clust_rad, rad_max = clust_rad * 60., rad_max * 60.
         KP_Bys_rc, KP_Bys_rt = KP_Bys_rc * 60., KP_Bys_rt * 60.
         field_dens, e_fdens, KP_cent_dens = field_dens / 3600.,\
             e_fdens / 3600., KP_cent_dens / 3600.
@@ -161,20 +160,6 @@ def pl_rad_dens(
         coord2 = 'px'
 
     ax = plt.subplot(gs[2:4, 0:4])
-    # Get max and min values in x,y
-    x_min = max(min(rdp_radii) - (max(rdp_radii) / 20.), 0)
-    x_max = min(max(rdp_radii) + (max(rdp_radii) / 20.), 3. * clust_rad)
-
-    N_h = int(.5 * len(rdp_points))
-    delta_total = (max(rdp_points) - field_dens)
-    delta_backg = 0.1 * delta_total
-    y_min = max((field_dens - delta_backg)
-                - (max(rdp_points[:N_h]) - min(rdp_points[:N_h])) / 10., 0)
-    y_max = max(rdp_points[:N_h]) + (
-        max(rdp_points[:N_h]) - min(rdp_points[:N_h])) / 5.
-    # Set plot limits
-    plt.xlim(x_min, x_max)
-    plt.ylim(y_min, y_max)
 
     plt.xlabel(r'radius $[{}]$'.format(coord2))
     plt.ylabel(r"$\rho$ $[st/{}^{{2}}]$".format(coord2))
@@ -206,13 +191,20 @@ def pl_rad_dens(
         ax.hlines(
             y=field_dens + e_fdens, xmin=0, xmax=max(rdp_radii),
             color='k', ls=':', zorder=5)
+
+    # Set plot limits
+    delta_backg = 0.15 * (max(rdp_points) - field_dens)
+    y_min = field_dens - delta_backg
+    y_min = 0. if y_min <= 0. else y_min
+    N_half = int(len(rdp_points) * .5)
+    y_max = min(ax.get_ylim()[1], max(rdp_points[:N_half]) + delta_backg)
+    plt.xlim(0, rad_max)
+    plt.ylim(y_min, y_max)
+    y_mid_point = np.mean(ax.get_ylim())
+
     # Plot radius.
-    y_mid_point = (y_max + y_min) * .5
     ax.vlines(x=clust_rad, ymin=field_dens, ymax=y_mid_point, lw=1.5,
               color='r', label=t_rad.format("cl", clust_rad, coord2), zorder=5)
-    # Plot radius error zone.
-    if not np.isnan(e_rad[0]):
-        plt.axvspan(e_rad[0], e_rad[1], facecolor='grey', alpha=0.2)
 
     # Plot King profile.
     if kp_ndim in (2, 4):
@@ -262,13 +254,6 @@ def pl_rad_dens(
     axins.scatter(rdp_radii, rdp_points, s=5, zorder=5)
     axins.hlines(y=field_dens, xmin=min(rdp_radii), xmax=max(rdp_radii),
                  color='k', ls='--', zorder=5)
-    # if not np.isnan(e_fdens):
-    #     axins.hlines(
-    #         y=field_dens - e_fdens, xmin=min(rdp_radii),
-    #         xmax=max(rdp_radii), color='k', ls=':', zorder=5)
-    #     axins.hlines(
-    #         y=field_dens + e_fdens, xmin=min(rdp_radii),
-    #         xmax=max(rdp_radii), color='k', ls=':', zorder=5)
 
     # Plot King profile.
     if kp_ndim in (2, 4):
@@ -286,8 +271,10 @@ def pl_rad_dens(
     axins.set_xscale('log')
     axins.set_yscale('log')
     axins.minorticks_off()
-    y0, y1 = axins.set_ylim()
-    axins.set_ylim(y0, y_max)
+    # y0, y1 = axins.set_ylim()
+    # axins.set_ylim(y0, y_max)
+    if y_min > 0:
+        axins.set_ylim(y_min, y_max)
 
 
 def pl_zoom_frame(
@@ -382,22 +369,22 @@ def pl_zoom_frame(
 
 
 def pl_memb_vs_rad(
-    gs, plot_style, coord, x_i, y_i, kde_cent, clust_rad, e_rad, field_dens,
-        rt, kp_ndim, KP_plot):
+    gs, plot_style, coord, clust_rad, rad_radii, N_membs, N_membs_16,
+        N_membs_84, rc, rt, kp_ndim, KP_plot):
     """
     """
-    _16_84_rang, cd_rc_rt_sampled = 0., (0., 0., 0.)
+    cent_dens, _16_84_rang, cd_rc_rt_sampled = 0., 0., (0., 0., 0.)
     if kp_ndim in (2, 4):
-        _16_84_rang, cd_rc_rt_sampled = KP_plot['_16_84_rang'],\
-            KP_plot['cd_rc_rt_sampled']
+        cent_dens, _16_84_rang, cd_rc_rt_sampled = KP_plot['KP_cent_dens'],\
+            KP_plot['_16_84_rang'], KP_plot['cd_rc_rt_sampled']
 
     # Convert from deg to arcmin if (ra,dec) were used.
     if coord == 'deg':
-        field_dens, cd_sampled = field_dens / 3600.,\
-            cd_rc_rt_sampled[0] / 3600.
-        clust_rad, e_rad, rt0, _16_84_rang, rc_sampled, rt_sampled =\
-            clust_rad * 60., e_rad * 60., rt * 60., _16_84_rang * 60.,\
-            cd_rc_rt_sampled[1] * 60., cd_rc_rt_sampled[2] * 60.
+        cent_dens, cd_sampled = cent_dens / 3600., cd_rc_rt_sampled[0] / 3600.
+        clust_rad, rc, rt, _16_84_rang, rc_sampled, rt_sampled,\
+            rad_radii = clust_rad * 60., rc * 60.,\
+            rt * 60., _16_84_rang * 60., cd_rc_rt_sampled[1] * 60.,\
+            cd_rc_rt_sampled[2] * 60., rad_radii * 60.
         coord2 = 'arcmin'
     else:
         cd_sampled, rc_sampled, rt_sampled = cd_rc_rt_sampled
@@ -409,100 +396,92 @@ def pl_memb_vs_rad(
     if plot_style == 'asteca':
         ax.grid()
 
-    xy = np.array((x_i, y_i)).T
-    xy_cent_dist = spatial.distance.cdist([kde_cent], xy)[0]
-    if coord == 'deg':
-        xy_cent_dist = xy_cent_dist * 60.
-
     # Minimum in arcmin or pixel
-    r_min = 2
-    r_max = max(clust_rad, rt0)
-
-    rads = np.linspace(r_min, r_max, 50)
+    r_min = 1
+    rads = np.linspace(r_min, rt, 50)
     # Plot King profile.
     if kp_ndim in (2, 4):
-        N_KP_16_84 = []
+        N_KP_best, N_KP_16_84 = [], []
         for r in rads:
+            N_KP_best.append(KP_memb_x(cent_dens, rc, rt, r))
+
             N_KP = []
             # Only use 100 samples to reduce the impact on performance
             for i, cd in enumerate(cd_sampled[:100]):
-                rc, rt = rc_sampled[i], rt_sampled[i]
-                N_KP.append(KP_memb_x(cd, rc, rt, r))
+                rc_s, rt_s = rc_sampled[i], rt_sampled[i]
+                N_KP.append(KP_memb_x(cd, rc_s, rt_s, r))
             N_KP_16_84.append(np.nanpercentile(N_KP, (16, 84)))
         N_KP_16_84 = np.array(N_KP_16_84).T
         # 16-84 region
         ax.fill_between(rads, N_KP_16_84[0], N_KP_16_84[1], facecolor='green',
-                        alpha=0.3, label="KP region")
-        plt.axvline(rt0, color='g', ls='--')
+                        alpha=0.4, label=r"$16th-84th$ (KP)")
+        # plt.plot(rads, N_KP_16_84[1], c='g')
+        plt.axvline(rt, color='g', ls='-', label=r"$r_{t}$")
 
-    plt.axvline(clust_rad, color='r', ls='--')
-    # Plot radius error zone.
-    if not np.isnan(e_rad[0]):
-        plt.axvspan(e_rad[0], e_rad[1], facecolor='grey', alpha=0.2)
+        N_KP_best = np.array(N_KP_best)
+        idx = np.argmin(abs(N_KP_best - .90 * N_KP_best.max()))
+        plt.axvline(
+            rads[idx], ls=':', label="90% " + r"$r_{t}$", c='orange', lw=2)
+        idx = np.argmin(abs(N_KP_best - .95 * N_KP_best.max()))
+        plt.axvline(
+            rads[idx], ls=':', label="95% " + r"$r_{t}$", c='cyan', lw=2)
 
-    N_memb = []
-    for r in rads:
-        msk = xy_cent_dist < r
-        N_memb.append(msk.sum() - field_dens * np.pi * r**2)
-    plt.plot(rads, N_memb, c='r', label=r"$N - d_{{field}} \pi r^{{2}}$")
+    plt.axvline(clust_rad, color='r', ls='-', label=r"$r_{cl}$")
+    plt.plot(rad_radii, N_membs, c='r', ls="--", label=r"$N_{{memb}}$")
+
+    # 16-84 region
+    if N_membs_16.any():
+        ax.fill_between(
+            rad_radii, N_membs_16, N_membs_84, facecolor='orange', alpha=0.2,
+            label=r"$16th-84th$")
+        N_membs_max = N_membs_84
+    else:
+        N_membs_max = N_membs
+
+    if kp_ndim in (2, 4):
+        rad_max = max(rt, clust_rad)
+    else:
+        rad_max = clust_rad
+    rad_max = rad_max + rad_max * .15
+
+    idx = np.argmin(abs(rad_radii - rad_max))
+    N_memb_ymax = min(N_membs_max[:idx].max(), N_membs.max() * 4)
+    if kp_ndim in (2, 4):
+        ymax = max(N_memb_ymax, N_KP_16_84[1][-1])
+    else:
+        ymax = N_memb_ymax
 
     plt.legend()
-    if kp_ndim in (2, 4):
-        ymax = max(max(N_memb), N_KP_16_84[1][-1])
-    else:
-        ymax = N_memb[-1]
     plt.ylim(0, ymax + .1 * ymax)
-    plt.xlim(1, r_max + .1 * r_max)
+    plt.xlim(rad_radii[0], rad_max)
 
 
-def pl_dens_map(
-    gs, fig, asp_ratio, x_name, y_name, coord, x_zmin, x_zmax, y_zmin, y_zmax,
-    kde_cent, frame_kde_cent, clust_rad, kp_ndim, KP_Bys_rc, KP_Bys_rt,
-        KP_Bys_ecc, KP_Bys_theta):
+def pl_membs_dist(gs, fig, members_dist, n_memb_i):
     """
     Coordinates 2D KDE zoom.
     """
-    ax = plt.subplot(gs[4:6, 4:6])
+    if members_dist.any():
 
-    plt.xlim(x_zmin, x_zmax)
-    plt.ylim(y_zmin, y_zmax)
-    plt.xlabel('{} ({})'.format(x_name, coord))
-    plt.ylabel('{} ({})'.format(y_name, coord))
+        ax = plt.subplot(gs[4:6, 4:6])
 
-    # Radius
-    circle = plt.Circle(
-        (kde_cent[0], kde_cent[1]), clust_rad, color='r', fill=False)
-    ax.add_artist(circle)
+        median, mad_v = np.median(members_dist), MAD(members_dist)
+        msk = (members_dist > 0.) & (members_dist < median + 5. * mad_v)
+        if msk.sum() > 10:
+            members_dist = members_dist[msk]
 
-    # Core and tidal radii (using mode values)
-    if kp_ndim in (2, 4):
-        # Plot tidal radius.
-        rt_mode, ecc_mode, theta_mode = KP_Bys_rt[4], KP_Bys_ecc[4],\
-            KP_Bys_theta[4]
-        b = rt_mode * np.sqrt(1. - ecc_mode**2)
-        ellipse = mpatches.Ellipse(
-            xy=kde_cent, width=2. * rt_mode, height=2. * b,
-            angle=np.rad2deg(theta_mode), facecolor='None', edgecolor='g',
-            linewidth=1.5, transform=ax.transData)
-        fig.gca().add_artist(ellipse)
-        # Plot core radius.
-        rc_mode = KP_Bys_rc[4]
-        b = rc_mode * np.sqrt(1. - ecc_mode**2)
-        ellipse = mpatches.Ellipse(
-            xy=kde_cent, width=2. * rc_mode, height=2. * b,
-            angle=np.rad2deg(theta_mode), facecolor='None', edgecolor='g',
-            ls='dashed', linewidth=1., transform=ax.transData)
-        fig.gca().add_artist(ellipse)
+        plt.hist(members_dist, 25, density=True, alpha=.5)
+        xmin, xmax = ax.get_xlim()
 
-    ext_range, x_grid, y_grid, k_pos = frame_kde_cent
-    kde = np.reshape(k_pos.T, x_grid.shape)
-    plt.imshow(
-        np.rot90(kde), cmap=plt.get_cmap('RdYlBu_r'), extent=ext_range)
-    plt.contour(x_grid, y_grid, kde, colors='#551a8b', linewidths=0.5)
-    # If RA is used, invert axis.
-    if coord == 'deg':
-        ax.invert_xaxis()
-    ax.set_aspect(aspect=asp_ratio)
+        _16, _84 = np.percentile(members_dist, (16, 84))
+        plt.axvline(n_memb_i, c='r', ls='-', lw=2,
+                    label=r"$N_{{memb}}$={}".format(n_memb_i))
+        plt.axvline(_16, c='orange', ls=':', lw=3)
+        plt.axvline(_84, c='orange', ls=':', lw=3, label=r"$16th-84th$")
+        plt.legend()
+
+        ax.set_yticks([])
+        plt.xlim(max(0., median - 5. * mad_v), xmax)
+        plt.xlabel(r"Number of members (for $r_{{cl}}$)")
 
 
 def plot(N, *args):
@@ -517,7 +496,7 @@ def plot(N, *args):
         3: [pl_rad_dens, 'radial density function'],
         4: [pl_zoom_frame, 'zoomed frame'],
         5: [pl_memb_vs_rad, 'estimated members vs radius'],
-        6: [pl_dens_map, 'density map']
+        6: [pl_membs_dist, 'distribution of the number of members']
     }
 
     fxn = plt_map.get(N, None)[0]

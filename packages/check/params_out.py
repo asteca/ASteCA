@@ -26,6 +26,11 @@ def check(pd):
         if pd['flag_make_plot'].index('s') > 0:
             stop_idx = pd['flag_make_plot'].index('s')
             pd['stop_idx'] = pd['flag_make_plot'][stop_idx - 1]
+    try:
+        idx = pd['flag_make_plot'].index(pd['stop_idx'])
+        pd['flag_make_plot'] = pd['flag_make_plot'][:idx + 1]
+    except ValueError:
+        pass
 
     import matplotlib
     import matplotlib.pyplot as plt

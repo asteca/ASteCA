@@ -102,13 +102,9 @@ S0  CLUSTER      n        n        n          n
 
 # Field density, and number of field regions.
 #
-# * field_dens: [min / last / iter / XX% / float>0.]
-#   - min: will use the minimum value  in the field density array.
-#   - last: will use the last value in the field density array.
-#   - iter: the density will be estimated rejecting values in the RDP through an
+# * field_dens: [auto / float>0.]
+#   - auto: the density will be estimated rejecting values in the RDP through an
 #     iterative process.
-#   - XX%: select the density value at that percentile from the estimated center
-#     (the '%' character is necessary, e.g '75%')
 #   - float>0: manual value.
 # * clust_radius: [auto / max]
 #   Mode used to estimate the cluster region's radius.
@@ -121,7 +117,7 @@ S0  CLUSTER      n        n        n          n
 #   - max: use the maximum possible number of field regions in the frame.
 #
 #   field_dens   clust_radius   regions
-S1        iter           auto        10
+S1        auto           auto        10
 
 # King profile fitting parameters.
 #

@@ -4,9 +4,9 @@ from ..inp.get_data import flatten
 
 
 def main(
-    npd, pd, cont_index, n_memb, memb_par, n_memb_da, frac_cl_area,
-    x_offset, y_offset, kde_cent, clust_rad, KP_Bys_rc, KP_Bys_rt,
-        KP_memb_num, isoch_fit_params, isoch_fit_errors, **kwargs):
+    npd, pd, cont_index, n_memb, frac_cl_area, x_offset, y_offset, kde_cent,
+    clust_rad, KP_Bys_rc, KP_Bys_rt, KP_memb_num, isoch_fit_params,
+        isoch_fit_errors, **kwargs):
     """
     Add data obtained to the 'asteca_output.dat' file.
     """
@@ -40,8 +40,8 @@ def main(
     # Store all parameter values in list.
     # Using main magnitude only
     line = [
-        write_name, cre_r, cont_index, KP_memb_num, n_memb, n_memb_da,
-        memb_par, frac_cl_area, cpe_r, isoch_fit_params['N_total']]
+        write_name, cre_r, cont_index, KP_memb_num, n_memb,
+        frac_cl_area, cpe_r, isoch_fit_params['N_total']]
     # Flatten list.
     line_f = list(flatten(line))
 
@@ -56,7 +56,7 @@ def main(
     frmts = (
         '{:<30} {:>10} {:>10} {:>10} ' +
         '{:>10} {:>10} {:>10} {:>10} {:>10} {:>10} {:>7.2f} {:>10.0f} ' +
-        '{:>10.0f} {:>10.0f} {:>9.2f} {:>7.2f} ' +
+        '{:>10.0f} {:>7.2f} ' +
         '{:>10.6} {:>10.6} {:>10.6} {:>10.6} {:>10.6} {:>10.6} {:>10.6} {:>6.2} ' +
         '{:>10.6} {:>10.6} {:>10.6} {:>10.6} {:>10.6} {:>10.6} {:>10.6} {:>6.2} ' +
         '{:>10.6} {:>10.6} {:>10.6} {:>10.6} {:>10.6} {:>10.6} {:>10.6} {:>6.2} ' +

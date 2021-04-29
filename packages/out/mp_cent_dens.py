@@ -197,7 +197,7 @@ def pl_field_dens(
     # Convert from deg to arcmin if (ra,dec) were used.
     if coord == 'deg':
         fr_dist, fdens_min_d, field_dens_d = np.array(fr_dist) * 60.,\
-            np.array(fdens_min_d) * 60., field_dens_d * 60.
+            np.array(fdens_min_d) * 60., np.array(field_dens_d) * 60.
         fr_dens, fdens_lst, fdens_std_lst = [
             np.array(_) / 3600. for _ in (fr_dens, fdens_lst, fdens_std_lst)]
         field_dens = field_dens / 3600.
@@ -210,7 +210,7 @@ def pl_field_dens(
     ymax = max(fr_dens) + delta_y
 
     ax = plt.subplot(gs[4:6, 0:4])
-    ax.set_title(("Method: '{}'").format(fdens_method))
+    # ax.set_title(("Method: '{}'").format(fdens_method))
     plt.ylim(ymin, ymax)
     plt.xlabel(r'Distance to center $[{}]$'.format(coord2))
     plt.ylabel(r"$\rho$ $[st/{}^{{2}}]$".format(coord2))
@@ -223,18 +223,18 @@ def pl_field_dens(
         fdens_min_d, fdens_lst, yerr=fdens_std_lst, fmt='b', ms=25,
         ecolor='r', lw=1.2)
 
-    t1 = r"$d_{{field}}=$ {:.1E} $[st/{}^{{2}}]$".format(
+    t1 = r"$d_{{field}}=$ {:.3E} $[st/{}^{{2}}]$".format(
         field_dens, coord2)
 
     # Check if a manual value was used
-    if not np.isnan(field_dens_d):
+    if fdens_method != 'auto':
+        ax.hlines(
+            field_dens, xmin=fdens_min_d[0], xmax=fdens_min_d[-1], color='g',
+            label=t1, zorder=5)
+    else:
         plt.scatter(
             field_dens_d, field_dens, marker='o', s=25, c='g', label=t1,
             zorder=5)
-    else:
-        ax.hlines(
-            field_dens, xmin=fdens_min_d[0], xmax=fdens_min_d[-1], color='g',
-            label=t1)
 
     # from ..structure.king_profile import KingProf as kpf
     # kpf_xvals = np.linspace(0, KP_Bys_rt[1] * 60., 100)
