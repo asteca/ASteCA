@@ -1,14 +1,6 @@
 
 import numpy as np
-import warnings
 from ..out import prep_plots
-
-from scipy.spatial.distance import cdist
-from scipy.signal import savgol_filter
-
-import scipy.stats as stats
-from scipy.stats import median_abs_deviation as MAD
-from .contamination_index import CIfunc
 from ..aux_funcs import monteCarloPars, circFrac
 
 
@@ -21,16 +13,16 @@ def main(cld_i, clp, coords, rad_manual, clust_rad_mode, **kwargs):
     Nboot: number of bootstrap runs
     """
     print("Estimating the radius")
-
-    clp['all_rads'], clp['e_rad'] = np.array([]), np.array([np.nan, np.nan])
+    clp['rad_radii'], clp['rad_areas'], clp['N_in_cl_rad'], clp['N_in_ring'] =\
+        rdpAreasDists(cld_i['x'], cld_i['y'], clp['kde_cent'],
+                      clp['xy_cent_dist'], clp['field_dens'])
 
     coord = prep_plots.coord_syst(coords)[0]
     if rad_manual == 'n':
-        # Use bootstrap to estimate the uncertainty.
-        rad_radii, rad_areas, N_in_cl_rad, N_in_ring = rdpAreasDists(
-            cld_i['x'], cld_i['y'], clp['kde_cent'], clp['xy_cent_dist'])
+
         clp['clust_rad'] = optimalRadius(
-            rad_radii, rad_areas, N_in_cl_rad, N_in_ring, clp['field_dens'])
+            clp['rad_radii'], clp['rad_areas'], clp['N_in_cl_rad'],
+            clp['N_in_ring'], clp['field_dens'])
 
         # if not np.isnan(clp['field_dens_std']):
         #     clp['all_rads'], clp['e_rad'] = radError(
@@ -59,88 +51,19 @@ def main(cld_i, clp, coords, rad_manual, clust_rad_mode, **kwargs):
 
 def optimalRadius(rad_radii, rad_areas, N_in_cl_rad, N_in_ring, field_dens):
     """
-    Estimate the optimal radius as the value that...
+    Estimate the optimal radius as the rad value where the 'N_membs/N_in_ring'
+    ratio is maximized.
     """
-    # data, break_counter, N_membs = [], 0, []
-    # for i, rad in enumerate(rad_radii):
-
-    #     # # Stars within radius.
-    #     # n_in_cl_reg = (xy_cent_dist <= rad).sum()
-    #     # if n_in_cl_reg == 0:
-    #     #     continue
-
-    #     # Ring's area
-    #     # area_ring = rad_areas[i] - area_old
-    #     # area_old = rad_areas[i]
-
-    #     # # Stars within ring
-    #     # N_in_ring = n_in_cl_reg - N_in_old
-    #     # N_in_old = n_in_cl_reg
-
-    #     # # Estimated number of field stars in ring
-    #     # n_fl_r = field_dens * area_ring
-
-    #     # # Estimated number of members in ring
-    #     # n_memb_r = N_in_r - n_fl_r
-    #     # # Cumulative number of members
-    #     # n_memb = n_memb_r + n_memb_old
-    #     # n_memb_old = n_memb
-
-    #     n_memb = N_in_cl_rad[i] - field_dens * rad_areas[i]
-
-    #     # Break check
-    #     if n_memb <= 0. and i > .5 * len(rad_radii):
-    #         break_counter += 1
-    #         if break_counter > 3:
-    #             break
-    #     N_membs.append(n_memb)
-
     N_membs = N_in_cl_rad - field_dens * rad_areas
 
-    # rads, N_membs, N_field, CI
-    # data = np.clip(data, a_min=0., a_max=None).T
-
-    # # Normalizing separately is important. Otherwise it selects low radii
-    # # values.
-    # membs_max = data[1].max()
-    # with warnings.catch_warnings():
-    #     warnings.simplefilter("ignore")
-    #     N_membs = data[1] / membs_max
-    # N_field = data[2] / data[2].max()
-
-    # # Smooth the curve. Tried smoothing before the normalization but it
-    # # increases the uncertainty region enormously.
-    # # Catch error in savgol_filter() when there is a 'nan' or 'inf'
-    # if np.isnan(N_membs).any() or np.isinf(N_membs).any():
-    #     N_membs_smooth = N_membs
-    # else:
-    #     # ws: window size, pol: polynomial order
-    #     ws, pol = int(len(N_membs) / 5.), 3
-    #     # must be odd
-    #     ws = ws + 1 if ws % 2 == 0 else ws
-    #     N_membs_smooth = savgol_filter(N_membs, ws, pol)
-
-    # Optimal radius selection
-    # idx = np.argmax(N_membs_smooth - N_field)
     idx = np.argmax(N_membs / N_in_ring)
     clust_rad = rad_radii[idx]
 
-    # # if plotflag:
-    # print(field_dens, idx, clust_rad)
-    # import matplotlib.pyplot as plt
-    # plt.subplot(121)
-    # plt.scatter(rad_radii, N_membs / N_in_ring)
-    # plt.subplot(122)
-    # plt.scatter(rad_radii, N_membs, c='g')
-    # plt.scatter(rad_radii, N_in_ring, c='r')
-    # plt.show()
-
-    # return data[0], data[3], membs_max, N_membs_smooth, N_field, clust_rad
     return clust_rad
 
 
 def rdpAreasDists(
-    x, y, kde_cent, xy_cent_dist, pmin=3, pmax=90, Nrads=300, Nmax=50000,
+    x, y, kde_cent, xy_cent_dist, field_dens, pmin=2, pmax=90, Nrads=300,
         N_MC=1000000):
     """
     The areas for each radius value in 'rad_radii' are obtained here once.
@@ -149,20 +72,18 @@ def rdpAreasDists(
     HARDCODED
     pmin, pmax: minimum and maximum percentiles used to define the radii range
     Nrads: number of values used to generate the 'rad_radii' array.
-    Nmax: maximum number of stars used in the process
     N_MC: points in the Monte Carlo area estimation. Use 1e6 for stability.
     """
 
     rand_01_MC, cos_t, sin_t = monteCarloPars(N_MC)
 
-    # Define the radii values
+    # # Define the radii values
     dmin, dmax = np.percentile(xy_cent_dist, (pmin, pmax))
     all_rads = np.linspace(dmin, dmax, Nrads)
 
     # Frame limits
     x0, x1 = min(x), max(x)
     y0, y1 = min(y), max(y)
-
     # Estimate the minimum distance from the center of the cluster to any
     # border of the frame
     dx0, dx1 = abs(kde_cent[0] - x0), abs(kde_cent[0] - x1)
@@ -190,10 +111,11 @@ def rdpAreasDists(
                 (kde_cent), rad, x0, x1, y0, y1, rand_01_MC, cos_t, sin_t)
         rad_areas[i] *= fr_area
 
-        # Stars within ring
+        # Total stars within ring
         N_in_ring.append(n_in_cl_reg - N_in_old)
         N_in_old = n_in_cl_reg
 
+    # INterpolate extra points
     xx = np.linspace(0., 1., 1000)
     xp = np.linspace(0, 1, len(rad_radii))
     interp_lst = []
@@ -219,7 +141,8 @@ def maxRadius(x, y, kde_cent):
     return clust_rad
 
 
-# # DEPRECATED Nov 2020; RE-IMPLEMENTED April 2021
+# # DEPRECATED Nov 2020; RE-IMPLEMENTED April 2021 (it had almost no effect
+# # on the radius uncertainty)
 # def radError(
 #     rad_radii, rad_areas, N_in_cl_rad, N_in_ring, field_dens, field_dens_std,
 #         Nboot=1000):
