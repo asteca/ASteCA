@@ -35,13 +35,7 @@ def check(
             raise ValueError("field density ('{}') must be"
                              " greater than zero.".format(fd))
     except ValueError:
-        if fdens_method[-1] == '%':
-            fdens = float(fdens_method[:-1])
-            if fdens > 100. or fdens <= 0.:
-                raise ValueError(
-                    "percentage value in field density must be\n"
-                    "in the (0., 100] range")
-        elif fdens_method not in ('min', 'last', 'iter'):
+        if fdens_method != 'auto':
             raise ValueError("field density mode ('{}') is not"
                              " recognized.".format(fdens_method))
 
