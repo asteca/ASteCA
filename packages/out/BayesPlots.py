@@ -109,7 +109,7 @@ def histogram(
 
     if xlims is None:
         # MAD is robust to outliers
-        mad = 1.4826 * stats.median_absolute_deviation(no_outlr)
+        mad = stats.median_abs_deviation(no_outlr)
         plt.xlim(_50 - 4. * mad, _50 + 4. * mad)
     else:
         plt.xlim(xlims[0], xlims[1])
@@ -141,8 +141,8 @@ def twoParDens(
 
     xl, yl = ax.get_xlim(), ax.get_ylim()
     # MAD is robust to outliers
-    xmad = 1.4826 * stats.median_absolute_deviation(x_no_outlr)
-    ymad = 1.4826 * stats.median_absolute_deviation(y_no_outlr)
+    xmad = stats.median_abs_deviation(x_no_outlr)
+    ymad = stats.median_abs_deviation(y_no_outlr)
     xsm, ysm = min(xmad, np.std(x_no_outlr)), min(ymad, np.std(y_no_outlr))
     xmed, ymed = np.median(x_no_outlr), np.median(y_no_outlr)
     x3s_min, x3s_max = xmed - 3. * xsm, xmed + 3. * xsm
