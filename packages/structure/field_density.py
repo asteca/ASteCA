@@ -1,7 +1,7 @@
 
 import numpy as np
 from scipy import spatial
-from ..aux_funcs import circFrac
+from ..aux_funcs import monteCarloPars, circFrac
 from ..out import prep_plots
 
 
@@ -9,11 +9,12 @@ def main(clp, cld_i, coords, fdens_method, **kwargs):
     """
     Get field density level of frame.
     """
+    print("Estimating the field density")
 
     # Parameters that are obtained here and used in the functions below
     # and other structural analysis functions later on.
-    clp['xy_filtered'], clp['xy_cent_dist'], clp['N_MC'], clp['rand_01_MC'],\
-        clp['cos_t'], clp['sin_t'] = fixedParams(cld_i['x'], cld_i['y'], **clp)
+    clp['xy_filtered'], clp['xy_cent_dist'] = fixedParams(
+        cld_i['x'], cld_i['y'], **clp)
 
     clp['NN_dd'], clp['NN_dist'], clp['fr_dens'] = distDens(**clp)
 
@@ -27,7 +28,7 @@ def main(clp, cld_i, coords, fdens_method, **kwargs):
     return clp
 
 
-def fixedParams(x, y, kde_cent, lb=1., rt=99., N_MC=100000, **kwargs):
+def fixedParams(x, y, kde_cent, lb=1., rt=99., **kwargs):
     """
     Estimate here parameters that need to be obtained only once.
 
@@ -35,7 +36,6 @@ def fixedParams(x, y, kde_cent, lb=1., rt=99., N_MC=100000, **kwargs):
 
     lb, rt: lower bottom / right top
        Frame limits in percentile values.
-    N_MC: number of Monte Carlo points to use when estimating circular areas.
     """
 
     # Filter out stars that are too close to the frame's borders.
@@ -45,26 +45,13 @@ def fixedParams(x, y, kde_cent, lb=1., rt=99., N_MC=100000, **kwargs):
     x, y = x[msk_in_frame], y[msk_in_frame]
     xy_filtered = np.array((x, y)).T
 
-    # Issue message because this will take a long time for large fields
-    if xy_filtered.shape[0] > 50000:
-        print("Obtaining field density parameter")
-
     # Distances of (almost) all stars to the center of the cluster.
     xy_cent_dist = spatial.distance.cdist([kde_cent], xy_filtered)[0]
 
-    # For stars close to the border frames, the areas will be overestimated.
-    # That's why we filter some of them out above and use Monte Carlo here for
-    # the rest of them.
-    # Obtain these values here so they are not estimated every time the MC
-    # in circFrac() is called.
-    rand_01_MC = np.sqrt(np.random.uniform(0., 1., N_MC))
-    theta = np.random.uniform(0., 1., N_MC) * 2 * np.pi
-    cos_t, sin_t = np.cos(theta), np.sin(theta)
-
-    return xy_filtered, xy_cent_dist, N_MC, rand_01_MC, cos_t, sin_t
+    return xy_filtered, xy_cent_dist
 
 
-def distDens(bw_list, xy_filtered, N_MC, rand_01_MC, cos_t, sin_t, **kwargs):
+def distDens(bw_list, xy_filtered, **kwargs):
     """
     Obtain the NN densities and radius for each star in the frame.
 
@@ -79,9 +66,6 @@ def distDens(bw_list, xy_filtered, N_MC, rand_01_MC, cos_t, sin_t, **kwargs):
 
     # Find NN_dd nearest neighbors.
     tree = spatial.cKDTree(xy_filtered)
-
-    # OLD
-    # NN_dd = int(max(10, np.sqrt(len(xy_filtered))))
     # Estimate NN_dd
     N_in_vol = tree.query_ball_point(xy_filtered, r=bw_list[1])
     NN_dd = int(np.median([len(_) for _ in N_in_vol]))
@@ -89,6 +73,9 @@ def distDens(bw_list, xy_filtered, N_MC, rand_01_MC, cos_t, sin_t, **kwargs):
     inx = tree.query(xy_filtered, k=NN_dd + 1)
     # Keep the distance to the most distant neighbor, ie: the radius.
     NN_dist = inx[0][:, NN_dd]
+
+    # Parameters for the Monte Carlo function
+    rand_01_MC, cos_t, sin_t = monteCarloPars()
 
     x, y = xy_filtered.T
     areas = np.pi * NN_dist**2
@@ -99,7 +86,7 @@ def distDens(bw_list, xy_filtered, N_MC, rand_01_MC, cos_t, sin_t, **kwargs):
                 (y[i] + rad > y1):
             # Use Monte Carlo to estimate its area
             fr_area = circFrac(
-                (x[i], y[i]), rad, x0, x1, y0, y1, N_MC, rand_01_MC, cos_t,
+                (x[i], y[i]), rad, x0, x1, y0, y1, rand_01_MC, cos_t,
                 sin_t)
         areas[i] *= fr_area
 
@@ -109,55 +96,38 @@ def distDens(bw_list, xy_filtered, N_MC, rand_01_MC, cos_t, sin_t, **kwargs):
     return NN_dd, NN_dist, fr_dens
 
 
-def kNNRDP(xy_cent_dist, dens, fdens_method):
+def kNNRDP(xy_cent_dist, fr_dens, fdens_method, pmin=2, pmax=99, Nrings=100):
     """
     Use the previously obtained densities and distances to estimate the
     field density.
     """
+    dmin, dmax = np.percentile(xy_cent_dist, (pmin, pmax))
+    rad_range = np.linspace(dmin, dmax, Nrings)
 
-    # Obtain field density estimates using all stars beyond increasingly large
-    # radius values (percentages of the distances to the pre-defined center)
+    # Obtain field density estimates using circular rings of
+    # increasingly large radius (percentages of the distances to the
+    # pre-defined center)
     fdens_min_d, fdens_lst, fdens_std_lst = [], [], []
-    # HARDCODED: distance to center range.
-    # dens_in_p, N_in_p = [], 0
-    for perc in range(10, 99, 5):
-        dist_min = np.percentile(xy_cent_dist, perc)
-        msk_dens = xy_cent_dist > dist_min
+    rad_old = 0.
+    for rad in rad_range:
 
-        # N_in_p += msk_dens.sum()
-        # dens_in_p += list(dens[msk_dens])
+        # Define ring with a minimum of 10 stars
+        msk_dens = (xy_cent_dist > rad_old) & (xy_cent_dist <= rad)
+        if msk_dens.sum() < 10:
+            continue
 
-        # HARDCODED minimum number of stars in percentile.
-        # # Only use values estimated with a reasonable number of stars.
-        # if N_in_p > 100:
-        fdens_min_d.append(dist_min)
-        fdens_lst.append(np.median(dens[msk_dens]))
-        fdens_std_lst.append(np.std(dens[msk_dens]))
-        # # Reset
-        # dens_in_p, N_in_p = [], 0
+        fdens_min_d.append((rad + rad_old) * .5)
+        fdens_lst.append(np.median(fr_dens[msk_dens]))
+        fdens_std_lst.append(np.std(fr_dens[msk_dens]))
 
-    if fdens_method == 'min':
-        # Use the minimum value.
-        i = np.argmin(fdens_lst)
-        field_dens_d, field_dens, field_dens_std = fdens_min_d[i],\
-            fdens_lst[i], fdens_std_lst[i]
-    elif fdens_method == 'last':
-        # Use the last value in the series.
-        field_dens_d, field_dens, field_dens_std = fdens_min_d[-1],\
-            fdens_lst[-1], fdens_std_lst[-1]
-    elif fdens_method == 'iter':
-        field_dens = iterativeRDP(fdens_lst)
-        idx = np.argmin(abs(field_dens - np.array(fdens_lst)))
-        field_dens_d, field_dens_std = fdens_min_d[idx], fdens_std_lst[idx]
-    elif fdens_method[-1] == '%':
-        # Use the x% percentile.
-        idx = int(len(fdens_min_d) * float(fdens_method[:-1]) / 100.)
-        field_dens_d, field_dens, field_dens_std = fdens_min_d[idx],\
-            fdens_lst[idx], fdens_std_lst[idx]
+        rad_old = rad
+
+    if fdens_method != 'auto':
+        field_dens = float(fdens_method)
     else:
-        # The 'nan' value identifies this as a manual value.
-        field_dens_d, field_dens, field_dens_std = np.nan,\
-            float(fdens_method), 0.
+        field_dens = iterativeRDP(fdens_lst)
+    idx = np.argmin(abs(field_dens - np.array(fdens_lst)))
+    field_dens_d, field_dens_std = fdens_min_d[idx], fdens_std_lst[idx]
 
     return fdens_min_d, fdens_lst, fdens_std_lst, field_dens_d, field_dens,\
         field_dens_std
@@ -167,7 +137,7 @@ def iterativeRDP(fdens_lst):
     """
     Iterative process:
 
-    1. Start with the complete set of radial density points
+    1. Start with the complete set of field density values
     2. Obtain its median and standard deviation.
     3. Reject the point located the farthest away from the 1 sigma range around
        the median
@@ -175,6 +145,14 @@ def iterativeRDP(fdens_lst):
     5. Repeat the process until no points are left beyond the 1 sigma level.
     6. Return the field density as the median value.
     """
+
+    # field_dens_old = np.inf
+    # for i in range(len(fdens_lst)):
+    #     field_dens = np.median(fdens_lst[i + 1:])
+    #     if field_dens > field_dens_old:
+    #         break
+    #     field_dens_old = field_dens
+
     fdens_copy = fdens_lst.copy()
 
     stable_cond = False
@@ -187,8 +165,8 @@ def iterativeRDP(fdens_lst):
         # level.
         rm_elem = False
         dist_r = -1.
-        for indx, elem in enumerate(fdens_copy):
-            dist = abs(elem - median)
+        for indx, fd in enumerate(fdens_copy):
+            dist = abs(fd - median)
 
             if dist > sigma and dist > dist_r:
                 # Update distance removal value.
