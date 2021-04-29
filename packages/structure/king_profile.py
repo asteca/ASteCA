@@ -38,6 +38,9 @@ def main(
     tends to maximize its value as much as possible. This is not physically
     reasonable.
 
+    IMPORTANT: the function will not work properly if the cluster's area
+    is cropped; i.e.: near a frame's border.
+
     """
     if kp_ndim in (2, 4):
         print("Estimating King profile")
@@ -490,13 +493,13 @@ def plotParams(
             [-np.inf, np.inf]], [0, 1, 2, 3]
         KP_mode, KP_kde = modeKDE(fp, vi, samples.T)
 
-    rc_MAD = stats.median_absolute_deviation(samples[:, 0])
+    rc_MAD = stats.median_abs_deviation(samples[:, 0])
     rt_MAD = np.inf
     if ndim != 1:
-        rt_MAD = stats.median_absolute_deviation(samples[:, 1])
+        rt_MAD = stats.median_abs_deviation(samples[:, 1])
     if ndim == 4:
-        ecc_MAD = stats.median_absolute_deviation(samples[:, 2])
-        theta_MAD = stats.median_absolute_deviation(samples[:, 3])
+        ecc_MAD = stats.median_abs_deviation(samples[:, 2])
+        theta_MAD = stats.median_abs_deviation(samples[:, 3])
 
     # Central density. Use mean values for all the parameters.
     KP_cent_dens = lnlike(
