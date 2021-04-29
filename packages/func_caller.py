@@ -9,11 +9,12 @@ from .inp import get_data
 from .structure import histo_2d
 from .structure import xy_density
 from .structure import center
-from .structure import radius
 from .structure import field_density
 from .structure import integMags
+from .structure import radius
 from .structure import cluster_area
 from .structure import contamination_index
+from .structure import members_incomp
 from .structure import king_profile
 from .errors import err_accpt_rejct
 from .structure import stars_in_out_cl_reg
@@ -24,10 +25,11 @@ from .data_analysis import compl_err_funcs
 from .data_analysis import luminosity
 # DEPRECATED 12/20
 # from .data_analysis import ad_field_vs_clust
-from .data_analysis import members_number
+from .data_analysis import members_compl
 #
 from .decont_algors import decont_algors
-from .decont_algors import members_N_compare
+# DEPRECATED April 2021
+# from .decont_algors import members_N_compare
 from .decont_algors import cl_region_clean
 #
 from .data_analysis import plx_analysis
@@ -79,6 +81,9 @@ def main(cl_file, pd):
     # File names (n) and paths (p) dictionary (d).
     npd = names_paths.main(cl_file, **pd)
 
+    # Create template output data file in /output dir.
+    create_out_data_file.main(npd)
+
     # Save params_input.dat file used.
     inparams_out.main(npd, **pd)
 
@@ -124,7 +129,7 @@ def main(cl_file, pd):
 
     # Uses the incomplete data.
     if 'A2' in pd['flag_make_plot']:
-        make_A2_plot.main(npd, cld_i, pd, **clp)
+        make_A2_plot.main(npd, cld_i, pd, clp)
         print("<<Plots for A2 block created>>")
         if pd['stop_idx'] == 'A2':
             retFunc(npd['clust_name'], start)
@@ -137,6 +142,9 @@ def main(cl_file, pd):
 
     # Contamination index.
     clp = contamination_index.main(clp, **cld_i)
+
+    # Estimate the number of members in the incomplete dataset
+    clp = members_incomp.main(clp)
 
     # King profiles based on the density profiles.
     clp = king_profile.main(clp, cld_i, **pd)
@@ -189,7 +197,7 @@ def main(cl_file, pd):
 
     # Uses the incomplete 'cl_region' and 'field_regions' data.
     if 'A3' in pd['flag_make_plot']:
-        make_A3_plot.main(npd, cld_i, pd, **clp)
+        make_A3_plot.main(npd, cld_i, pd, clp)
         print("<<Plots for A3 block created>>")
         if pd['stop_idx'] == 'A3':
             retFunc(npd['clust_name'], start)
@@ -225,7 +233,7 @@ def main(cl_file, pd):
     clp = luminosity.main(clp, **cld_c)
 
     # Approximate number of cluster's members.
-    clp = members_number.main(clp)
+    clp = members_compl.main(clp)
 
     if 'B2' in pd['flag_make_plot']:
         make_B2_plot.main(npd, cld_i, pd, **clp)
@@ -246,8 +254,9 @@ def main(cl_file, pd):
     # Apply decontamination algorithm.
     clp = decont_algors.main(clp, npd, **pd)
 
+    # DEPRECATED April 2021
     # Obtain members parameter.
-    clp = members_N_compare.main(clp)
+    # clp = members_N_compare.main(clp)
 
     # Remove stars from the observed cluster according to a selected method.
     clp = cl_region_clean.main(clp, **pd)
@@ -304,9 +313,6 @@ def main(cl_file, pd):
 
     # Create output synthetic cluster file if one was found
     synth_cl_file.main(clp, npd, pd)
-
-    # Create template output data file in /output dir.
-    create_out_data_file.main(npd)
 
     # Add cluster data output file
     add_data_output.main(npd, pd, **clp)

@@ -1,13 +1,15 @@
 
+import numpy as np
+import warnings
+from scipy.spatial.distance import cdist
+from astropy.visualization import ZScaleInterval
+from astropy.stats import sigma_clipped_stats
+
+from ..structure.contamination_index import CIfunc
 from ..math_f import exp_function
 from ..best_fit.obs_clust_prepare import dataProcess
 from ..decont_algors.local_cell_clean import bin_edges_f
-from ..aux_funcs import circFrac
-from ..aux_funcs import ellipFrac
-import numpy as np
-import warnings
-from astropy.visualization import ZScaleInterval
-from astropy.stats import sigma_clipped_stats
+from ..aux_funcs import monteCarloPars, circFrac, ellipFrac
 from ..structure import king_profile
 from ..synth_clust import move_isochrone
 from ..synth_clust.masses_binar_probs import ranModels
@@ -224,8 +226,8 @@ def da_find_chart(
     out_clust_rad = [[], []]
     for star in stars_out:
         if x_zmin <= star[1] <= x_zmax and y_zmin <= star[2] <= y_zmax:
-            dist = np.sqrt((kde_cent[0] - star[1]) ** 2 +
-                           (kde_cent[1] - star[2]) ** 2)
+            dist = np.sqrt((kde_cent[0] - star[1]) ** 2
+                           + (kde_cent[1] - star[2]) ** 2)
             # Only plot stars outside the cluster's radius.
             if dist >= clust_rad:
                 out_clust_rad[0].append(star[1])
@@ -612,8 +614,8 @@ def pmRectangle(allfr_PMs, frac=.1):
 
 
 def RDPCurve(
-    ndim, xy_filtered, xy_cent_dist, kde_cent, ecc, theta, N_MC, rand_01_MC,
-        cos_t, sin_t, RDP_rings=50, rings_rm=.1, Nmin=10, **kwargs):
+    ndim, xy_filtered, xy_cent_dist, kde_cent, clust_rad, ecc, theta,
+        RDP_rings=50, rings_rm=.1, Nmin=10, **kwargs):
     """
     Obtain the RDP using the concentric rings method.
 
@@ -631,6 +633,8 @@ def RDPCurve(
     max_i = max(1, int(rings_rm * RDP_rings))
     # The +1 adds a ring accounting for the initial 0. in the array
     radii = np.linspace(0., xy_cent_dist.max(), RDP_rings + 1 + max_i)[:-max_i]
+
+    rand_01_MC, cos_t, sin_t = monteCarloPars()
 
     # Areas and #stars for all rad values.
     rdp_radii, rdp_points, rdp_stddev = [], [], []
@@ -657,21 +661,21 @@ def RDPCurve(
             if ndim in (0, 2):
                 # Area of ring.
                 fr_area_l = circFrac(
-                    (kde_cent), l_now, x0, x1, y0, y1, N_MC, rand_01_MC, cos_t,
+                    (kde_cent), l_now, x0, x1, y0, y1, rand_01_MC, cos_t,
                     sin_t)
                 fr_area_h = circFrac(
-                    (kde_cent), h, x0, x1, y0, y1, N_MC, rand_01_MC, cos_t,
+                    (kde_cent), h, x0, x1, y0, y1, rand_01_MC, cos_t,
                     sin_t)
                 ring_area = (np.pi * h**2 * fr_area_h)\
                     - (np.pi * l_now**2 * fr_area_l)
             elif ndim == 4:
                 # Area of ellipse-ring.
                 fr_area_l = ellipFrac(
-                    (kde_cent), l_now, x0, x1, y0, y1, N_MC, rand_01_MC, cos_t,
-                    sin_t, theta, ecc)
+                    (kde_cent), l_now, theta, ecc, x0, x1, y0, y1, rand_01_MC,
+                    cos_t, sin_t)
                 fr_area_h = ellipFrac(
-                    (kde_cent), h, x0, x1, y0, y1, N_MC, rand_01_MC, cos_t,
-                    sin_t, theta, ecc)
+                    (kde_cent), h, theta, ecc, x0, x1, y0, y1, rand_01_MC,
+                    cos_t, sin_t)
                 ring_area = (
                     np.pi * h**2 * np.sqrt(1 - ecc**2) * fr_area_h)\
                     - (np.pi * l_now**2 * np.sqrt(1 - ecc**2) * fr_area_l)
@@ -689,7 +693,79 @@ def RDPCurve(
             l_prev = l_now
             N_in_prev += N_in
 
-    return rdp_radii, rdp_points, rdp_stddev
+    # Get max value in x
+    rad_max = min(max(rdp_radii) + (max(rdp_radii) / 20.), 4. * clust_rad)
+
+    return rdp_radii, rdp_points, rdp_stddev, rad_max
+
+
+def NmembVsMag(x, y, mags, kde_cent, clust_rad, cl_area):
+    """
+    Number of members versus magnitude cut.
+    """
+    cent_dists = cdist([kde_cent], np.array([x, y]).T)[0]
+
+    # Use a copy to avoid overwriting the original array
+    mag = np.array(list(mags[0]))
+
+    area_tot = (np.nanmax(x) - np.nanmin(x)) * (np.nanmax(y) - np.nanmin(y))
+    area_out = area_tot - cl_area
+
+    membvsmag = []
+    mag_ranges = np.linspace(np.nanmin(mag), np.nanmax(mag), 11)
+    # handle possible nan values
+    mag[np.isnan(mag)] = np.inf
+    for i, mmax in enumerate(mag_ranges[1:]):
+        msk = mag < mmax
+        if msk.sum() > 2:
+            # N stars in the mag range, inside the cluster region
+            n_in_cl_reg = (cent_dists[msk] < clust_rad).sum()
+
+            # N stars in the mag range
+            Ntot = msk.sum()
+            fdens = (Ntot - n_in_cl_reg) / area_out
+            n_fl = fdens * cl_area
+            n_memb_estim = max(0, int(round(n_in_cl_reg - n_fl)))
+            membvsmag.append([mmax, n_memb_estim])
+
+    return np.array(membvsmag).T
+
+
+def membVSrad(
+    field_dens, field_dens_std, rad_radii, rad_areas, N_in_cl_rad,
+        N_in_ring):
+    """
+    """
+    N_membs = N_in_cl_rad - field_dens * rad_areas
+    membs_ratio = N_membs / N_in_ring
+    membs_ratio /= membs_ratio.max()
+
+    CI_vals = CIfunc(N_in_cl_rad, field_dens, rad_areas)
+
+    # # Smooth the curve. Tried smoothing before the normalization but it
+    # # increases the uncertainty region enormously.
+    # # Catch error in savgol_filter() when there is a 'nan' or 'inf'
+    # if np.isnan(membs_ratio).any() or np.isinf(membs_ratio).any():
+    #     N_membs_smooth = membs_ratio
+    # else:
+    #     # ws: window size, pol: polynomial order
+    #     ws, pol = int(len(membs_ratio) / 5.), 3
+    #     # must be odd
+    #     ws = ws + 1 if ws % 2 == 0 else ws
+    #     N_membs_smooth = savgol_filter(membs_ratio, ws, pol)
+    # N_membs_smooth /= N_membs_smooth.max()
+
+    N_membs_16, N_membs_84 = np.array([]), np.array([])
+    if not np.isnan(field_dens_std):
+        field_dens_s = np.random.normal(field_dens, field_dens_std, 1000)
+        N_membs_all = []
+        for fdens in field_dens_s:
+            N_membs_all.append(N_in_cl_rad - fdens * rad_areas)
+        N_membs_all = np.array(N_membs_all)
+        N_membs_16 = np.nanpercentile(N_membs_all, 16, 0)
+        N_membs_84 = np.nanpercentile(N_membs_all, 84, 0)
+
+    return N_membs, N_membs_16, N_membs_84, membs_ratio, CI_vals
 
 
 def isoch_sigmaNreg(
