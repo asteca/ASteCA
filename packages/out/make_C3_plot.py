@@ -9,14 +9,11 @@ from . import prep_plots
 from . prep_plots import figsize_x, figsize_y, grid_x, grid_y
 
 
-def main(
-    npd, pd, cld_i, PM_flag, clreg_PMs, fregs_PMs, allfr_PMs, cr_KDE_PMs,
-    fr_KDE_PMs, allr_KDE_PMs, pm_dist_max, kde_cent, clust_rad,
-        flag_no_fl_regs_i, **kwargs):
+def main(npd, pd, cld_i, clp):
     """
     Make C3 block plots.
     """
-    if PM_flag is False:
+    if clp['PM_flag'] is False:
         print("  WARNING: nothing to plot in 'C3' block")
         print("<<Skip C3 plot>>")
         return
@@ -35,42 +32,39 @@ def main(
 
     # PMs data.
     raPMrng, dePMrng = prep_plots.PMsrange(
-        clreg_PMs['pmRA'], clreg_PMs['pmDE'])
+        clp['clreg_PMs']['pmRA'], clp['clreg_PMs']['pmDE'])
     Nsigma = 2.
     PMs_cent, PMs_width, PMs_height, PMs_theta = prep_plots.SigmaEllipse(
-        np.array([clreg_PMs['pmRA'], clreg_PMs['pmDE']]).T, Nsigma)
-    xydelta, xyrang = prep_plots.pmRectangle(allfr_PMs)
-
-    if pd['cosDE_flag'] is False and coord == 'px':
-        xlabel = r"$\mu_{{\alpha}} \, \mathrm{[mas/yr]}$"
-    else:
-        xlabel = r"$\mu_{{\alpha}} \, cos \delta \, \mathrm{[mas/yr]}$"
+        np.array([clp['clreg_PMs']['pmRA'], clp['clreg_PMs']['pmDE']]).T,
+        Nsigma)
+    xydelta, xyrang = prep_plots.pmRectangle(clp['allfr_PMs'])
+    xlabel = r"$\mu_{{\alpha}} \, cos \delta \, \mathrm{[mas/yr]}$"
 
     arglist = [
         # pms_VPD_all
-        [gs, pd['plot_style'], xlabel, pd['PM_KDE_std'], coord, y_ax,
-         allfr_PMs],
+        [gs, pd['plot_style'], xlabel, coord, y_ax, clp['allfr_PMs']],
         # pms_VPD_KDE_all
-        [gs, xlabel, coord, y_ax, allr_KDE_PMs, xydelta, xyrang],
+        [gs, xlabel, coord, y_ax, clp['allr_KDE_PMs'], xydelta, xyrang],
         # pms_coords_all
         [fig, gs, pd['plot_style'], coord, x_min, x_max, y_min, y_max,
-         asp_ratio, x_name, y_name, kde_cent, clust_rad, allfr_PMs,
-         allr_KDE_PMs, xydelta],
+         asp_ratio, x_name, y_name, clp['kde_cent'], clp['clust_rad'],
+         clp['allfr_PMs'], clp['allr_KDE_PMs'], xydelta],
         # pms_VPD_zoom
-        [gs, pd['plot_style'], xlabel, coord, y_ax, clreg_PMs, fregs_PMs,
-         raPMrng, dePMrng, flag_no_fl_regs_i],
+        [gs, pd['plot_style'], xlabel, coord, y_ax, clp['clreg_PMs'],
+         clp['fregs_PMs'], raPMrng, dePMrng, clp['flag_no_fl_regs_i']],
         # pms_VPD_zoom_KDE
-        [gs, pd['plot_style'], xlabel, coord, cr_KDE_PMs, fr_KDE_PMs,
-         raPMrng, dePMrng, PMs_cent, PMs_width, PMs_height, PMs_theta,
-         Nsigma],
-        # # pms_VPD_zoom_MP
-        [gs, pd['plot_style'], xlabel, coord, clreg_PMs, fregs_PMs,
-         raPMrng, dePMrng],
-        # pms_vs_mag
-        [gs, pd['plot_style'], xlabel, coord, y_ax, clreg_PMs, fregs_PMs,
-         raPMrng, dePMrng],
-        # pms_dist
-        [gs, pd['plot_style'], y_ax, clreg_PMs, pm_dist_max]
+        [gs, pd['plot_style'], xlabel, coord, clp['cr_KDE_PMs'],
+         clp['fr_KDE_PMs'], raPMrng, dePMrng, PMs_cent, PMs_width,
+         PMs_height, PMs_theta, Nsigma],
+        # pms_VPD_zoom_MP
+        [gs, pd['plot_style'], xlabel, coord, clp['clreg_PMs'],
+         clp['fregs_PMs'], raPMrng, dePMrng]
+        # DEPRECATED 04/2021
+        # # pms_vs_mag
+        # [gs, pd['plot_style'], xlabel, coord, y_ax, clreg_PMs, fregs_PMs,
+        #  raPMrng, dePMrng],
+        # # pms_dist
+        # [gs, pd['plot_style'], y_ax, clreg_PMs, pm_dist_max]
     ]
     for n, args in enumerate(arglist):
         mp_kinem_pms.plot(n, *args)

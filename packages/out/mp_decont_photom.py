@@ -5,7 +5,7 @@ import matplotlib.offsetbox as offsetbox
 
 
 def pl_mp_histo(
-    gs, plot_style, n_memb_da, memb_prob_avrg_sort, flag_decont_skip,
+    gs, plot_style, memb_prob_avrg_sort, flag_decont_skip,
         cl_reg_fit, mode_fld_clean, local_bin):
     """
     Histogram for the distribution of membership probabilities from the
@@ -61,12 +61,11 @@ def pl_mp_histo(
         else:
             str_pm.append(mode_fld_clean.replace('_', r'\_'))
         text0 = r'$N_{{total}}={}$'.format(len(prob_data))
-        text1 = r'$n_{{memb-DA}}={}\,(MP \geq 0.5)$'.format(n_memb_da)
-        text2 = r'${}_{{min}}={:.2f}\,({})$'.format(
+        text1 = r'${}_{{min}}={:.2f}\,({})$'.format(
             str_pm[2], min_prob, str_pm[3])
-        text3 = r'$N_{{fit}}={} \, ({} {} {}_{{min}})$'.format(
+        text2 = r'$N_{{fit}}={} \, ({} {} {}_{{min}})$'.format(
             len(cl_reg_fit), str_pm[0], str_pm[1], str_pm[2])
-        text = text0 + '\n' + text1 + '\n' + text2 + '\n' + text3
+        text = text0 + '\n' + text1 + '\n' + text2
         plt.plot([], label=text)
 
         plt.legend(handlelength=0)

@@ -6,10 +6,12 @@ import numpy as np
 from astropy.stats import sigma_clipped_stats
 
 
-def pms_VPD_all(gs, plot_style, xlabel, PM_KDE_std, coord, y_ax, allfr_PMs):
+def pms_VPD_all(gs, plot_style, xlabel, coord, y_ax, allfr_PMs):
     """
     PMs for all the frame.
     """
+    # This is set to '3' in pms_analysis.kde_2d()
+    PM_KDE_std = 3
 
     ax = plt.subplot(gs[0:2, 0:2])
     ax.set_title(
@@ -110,8 +112,7 @@ def pms_coords_all(
     vmin, vmax = max(vmin, min(PM_total)), min(vmax, max(PM_total))
 
     cbar = plt.scatter(
-        xRA, yDE, c=PM_total, s=PM_total, lw=.2, vmin=vmin, vmax=vmax,
-        zorder=5)
+        xRA, yDE, s=15, c=PM_total, vmin=vmin, vmax=vmax, alpha=.75, zorder=5)
     cbar = plt.colorbar(pad=.01, fraction=.02, aspect=40)
     cbar.ax.minorticks_off()
     cbar.set_label('Total PM')
@@ -252,59 +253,59 @@ def pms_VPD_zoom_MP(
     plt.ylim(dePMrng)
 
 
-def pms_vs_mag(
-    gs, plot_style, xlabel, coord, y_ax, clreg_PMs, fregs_PMs, raPMrng,
-        dePMrng):
-    """
-    """
-    pmMP = clreg_PMs['MP']
-    ymin, ymax = max(clreg_PMs['mmag']) + .5, min(clreg_PMs['mmag']) + .5
+# DEPRECATED 04/2021
+# def pms_vs_mag(
+#     gs, plot_style, xlabel, coord, y_ax, clreg_PMs, fregs_PMs, raPMrng,
+#         dePMrng):
+#     """
+#     """
+#     pmMP = clreg_PMs['MP']
+#     ymin, ymax = max(clreg_PMs['mmag']) + .5, min(clreg_PMs['mmag']) + .5
 
-    def axplot(ax, x_range, xlabel, cl_x, cl_y, fr_x, fr_y):
-        if plot_style == 'asteca':
-            ax.grid()
+#     def axplot(ax, x_range, xlabel, cl_x, cl_y, fr_x, fr_y):
+#         if plot_style == 'asteca':
+#             ax.grid()
 
-        ax.set_xlabel(xlabel)
-        ax.set_ylabel(y_ax)
-        cmap = plt.cm.get_cmap('RdYlBu_r')
+#         ax.set_xlabel(xlabel)
+#         ax.set_ylabel(y_ax)
+#         cmap = plt.cm.get_cmap('RdYlBu_r')
 
-        ax.scatter(
-            cl_x, cl_y, marker='o', c=pmMP, s=30, edgecolors='black',
-            cmap=cmap, lw=0.35, zorder=5)
-        ax.scatter(fr_x, fr_y, c='grey', s=15, marker='^', zorder=2)
-        ax.set_xlim(x_range)
-        ax.set_ylim(ymin, ymax)
+#         ax.scatter(
+#             cl_x, cl_y, marker='o', c=pmMP, s=30, edgecolors='black',
+#             cmap=cmap, lw=0.35, zorder=5)
+#         ax.scatter(fr_x, fr_y, c='grey', s=15, marker='^', zorder=2)
+#         ax.set_xlim(x_range)
+#         ax.set_ylim(ymin, ymax)
 
-    ax1 = plt.subplot(gs[4:6, 0:2])
-    ax2 = plt.subplot(gs[4:6, 2:4])
+#     ax1 = plt.subplot(gs[4:6, 0:2])
+#     ax2 = plt.subplot(gs[4:6, 2:4])
 
-    axplot(
-        ax1, raPMrng, xlabel, clreg_PMs['pmRA'], clreg_PMs['mmag'],
-        fregs_PMs['pmRA'], fregs_PMs['mmag'])
-    xlabel = r"$\mu_{{\delta}} \, \mathrm{[mas/yr]}$"
-    axplot(ax2, dePMrng, xlabel, clreg_PMs['pmDE'], clreg_PMs['mmag'],
-           fregs_PMs['pmDE'], fregs_PMs['mmag'])
+#     axplot(
+#         ax1, raPMrng, xlabel, clreg_PMs['pmRA'], clreg_PMs['mmag'],
+#         fregs_PMs['pmRA'], fregs_PMs['mmag'])
+#     xlabel = r"$\mu_{{\delta}} \, \mathrm{[mas/yr]}$"
+#     axplot(ax2, dePMrng, xlabel, clreg_PMs['pmDE'], clreg_PMs['mmag'],
+#            fregs_PMs['pmDE'], fregs_PMs['mmag'])
+#
+# def pms_dist(gs, plot_style, y_ax, clreg_PMs, pm_dist_max):
+#     """
+#     """
+#     ax = plt.subplot(gs[4:6, 4:6])
+#     if plot_style == 'asteca':
+#         ax.grid()
 
+#     ax.set_title("Distance to KDE's cluster max")
+#     plt.xlabel("PM dist [mas/yr]")
+#     plt.ylabel(y_ax)
 
-def pms_dist(gs, plot_style, y_ax, clreg_PMs, pm_dist_max):
-    """
-    """
-    ax = plt.subplot(gs[4:6, 4:6])
-    if plot_style == 'asteca':
-        ax.grid()
+#     cmap = plt.cm.get_cmap('RdYlBu_r')
+#     plt.scatter(
+#         pm_dist_max, clreg_PMs['mmag'], marker='o', c=clreg_PMs['MP'],
+#         s=30, edgecolors='black', cmap=cmap, lw=0.35, zorder=4)
 
-    ax.set_title("Distance to KDE's cluster max")
-    plt.xlabel("PM dist [mas/yr]")
-    plt.ylabel(y_ax)
-
-    cmap = plt.cm.get_cmap('RdYlBu_r')
-    plt.scatter(
-        pm_dist_max, clreg_PMs['mmag'], marker='o', c=clreg_PMs['MP'],
-        s=30, edgecolors='black', cmap=cmap, lw=0.35, zorder=4)
-
-    plx_mean, plx_median, plx_std = sigma_clipped_stats(pm_dist_max)
-    plt.xlim(-.05, min(max(pm_dist_max), plx_median + 4. * plx_std))
-    plt.gca().invert_yaxis()
+#     plx_mean, plx_median, plx_std = sigma_clipped_stats(pm_dist_max)
+#     plt.xlim(-.05, min(max(pm_dist_max), plx_median + 4. * plx_std))
+#     plt.gca().invert_yaxis()
 
 
 def plot(N, *args):
@@ -319,10 +320,9 @@ def plot(N, *args):
         #
         3: [pms_VPD_zoom, 'VPD cluster region'],
         4: [pms_VPD_zoom_KDE, 'PMs KDE diagram'],
-        5: [pms_VPD_zoom_MP, 'PMs VPD MP colored'],
-        #
-        6: [pms_vs_mag, 'PMs mag MP colored'],
-        7: [pms_dist, 'PMs distance to center']
+        5: [pms_VPD_zoom_MP, 'PMs VPD MP colored']
+        # 6: [pms_vs_mag, 'PMs mag MP colored'],
+        # 7: [pms_dist, 'PMs distance to center']
     }
 
     fxn = plt_map.get(N, None)[0]

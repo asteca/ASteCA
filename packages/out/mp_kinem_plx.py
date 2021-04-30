@@ -43,8 +43,8 @@ def plx_histo(
     plt.axvline(x=p_max_mas, linestyle='--', color='b', lw=.7, zorder=5)
     plx_lt_zero = 100. * plx_clrg[plx_clrg < 0.].size / plx_clrg.size
     ob = offsetbox.AnchoredText(
-        r"$Plx_{{max}}$={:.3f} [mas]".format(p_max_mas) + '\n' +
-        r"$Plx<0 \rightarrow$ {:.1f}%".format(plx_lt_zero), pad=0.2, loc=1)
+        r"$Plx_{{max}}$={:.3f} [mas]".format(p_max_mas) + '\n'
+        + r"$Plx<0 \rightarrow$ {:.1f}%".format(plx_lt_zero), pad=0.2, loc=1)
     ob.patch.set(alpha=0.85)
     ax.add_artist(ob)
     plt.xlim(
@@ -110,7 +110,7 @@ def plx_chart(gs, plot_style, x_name, y_name, coord, cl_reg_fit, plx_Bys):
 
 
 def plx_vs_mag(
-    gs, plot_style, y_min_cmd, y_max_cmd, y_ax, mmag_plx_clp, mp_plx_clp,
+    gs, plot_style, y_min_cmd, y_max_cmd, y_ax, mmag_plx_clp,
         plx_clp, e_plx_clp, plx_flrg, mag_flrg, plx_Bys, plx_wa):
     """
     Parallaxes versus main magnitude.
@@ -125,11 +125,11 @@ def plx_vs_mag(
     plt.xlabel('Plx [mas]')
     plt.ylabel(y_ax)
 
-    cm = plt.cm.get_cmap('RdYlBu_r')
+    # cm = plt.cm.get_cmap('RdYlBu_r')
     # Plot stars selected to be used in the best fit process.
     plt.scatter(
-        plx_clp, mmag_plx_clp, marker='o', c=mp_plx_clp, s=30,
-        edgecolors='black', cmap=cm, lw=0.35, zorder=4)
+        plx_clp, mmag_plx_clp, alpha=.5, edgecolors='black', lw=0.3, zorder=4)
+    # marker='o', s=30,
     ax.errorbar(
         plx_clp, mmag_plx_clp, xerr=e_plx_clp, fmt='none', elinewidth=.35,
         ecolor='grey')
@@ -170,9 +170,9 @@ def plx_vs_mag(
         x=np.median(plx_clp), linestyle='--', color='k', lw=.85, zorder=5,
         label=r"$Plx_{{med}} = {:.3f}$".format(np.median(plx_clp)))
 
-    cbar = plt.colorbar(pad=.01, fraction=.02, aspect=50)
-    cbar.ax.minorticks_off()
-    cbar.set_label('MPs', labelpad=-15, y=1.07, rotation=0)
+    # cbar = plt.colorbar(pad=.01, fraction=.02, aspect=50)
+    # cbar.ax.minorticks_off()
+    # cbar.set_label('MPs', labelpad=-15, y=1.07, rotation=0)
 
     ax.legend(loc=0)
     min_plx, max_plx = np.min(plx_clp) - .2, np.max(plx_clp) + .2
@@ -220,100 +220,101 @@ def plx_bys_params(
         BayesPlots.meanAF(gs, gsx, gsy, Nsteps, mean_afs)
 
 
-def pms_vs_plx_mp_mag(
-    gs, plot_style, coord, cosDE_flag, y_ax, plx_bayes_flag_clp, plx_clp,
-        plx_Bys, clreg_PMs, fregs_PMs, pm_Plx_cl, pm_Plx_fr, raPMrng, dePMrng):
-    """
-    """
-    def axplot(
-        gsi, j1, j2, yrang, xlabel, ylabel, cl_xdata, cl_ydata, cl_col,
-            fr_xdata, fr_ydata, cmap, cbar_label, plx_dist):
-        ax = plt.subplot(gs[gsi[0] + j1:gsi[1] + j1, gsi[2] + j2:gsi[3] + j2])
-        if plot_style == 'asteca':
-            ax.grid()
-        ax.set_ylabel(ylabel)
-        ax.set_xlabel(xlabel)
+# DEPRECATED 04/2021
+# def pms_vs_plx_mp_mag(
+#     gs, plot_style, coord, cosDE_flag, y_ax, plx_bayes_flag_clp, plx_clp,
+#         plx_Bys, clreg_PMs, fregs_PMs, pm_Plx_cl, pm_Plx_fr, raPMrng, dePMrng):
+#     """
+#     """
+#     def axplot(
+#         gsi, j1, j2, yrang, xlabel, ylabel, cl_xdata, cl_ydata, cl_col,
+#             fr_xdata, fr_ydata, cmap, cbar_label, plx_dist):
+#         ax = plt.subplot(gs[gsi[0] + j1:gsi[1] + j1, gsi[2] + j2:gsi[3] + j2])
+#         if plot_style == 'asteca':
+#             ax.grid()
+#         ax.set_ylabel(ylabel)
+#         ax.set_xlabel(xlabel)
 
-        plt.scatter(
-            cl_xdata, cl_ydata, marker='o', c=cl_col, s=25, edgecolor='k',
-            lw=.2, cmap=cmap, zorder=4, label="Cluster reg")
-        cbar = plt.colorbar(pad=.01, fraction=.02, aspect=50)
-        cbar.ax.minorticks_off()
-        cbar.set_label(cbar_label)
-        if j2 == 0:
-            cbar.ax.invert_yaxis()
+#         plt.scatter(
+#             cl_xdata, cl_ydata, marker='o', c=cl_col, s=25, edgecolor='k',
+#             lw=.2, cmap=cmap, zorder=4, label="Cluster reg")
+#         cbar = plt.colorbar(pad=.01, fraction=.02, aspect=50)
+#         cbar.ax.minorticks_off()
+#         cbar.set_label(cbar_label)
+#         if j2 == 0:
+#             cbar.ax.invert_yaxis()
 
-        if fr_xdata.any():
-            ax.scatter(
-                fr_xdata, fr_ydata, marker='^', s=20, c='grey', linewidth=0.,
-                alpha=.65, zorder=1, label="Field reg")
+#         if fr_xdata.any():
+#             ax.scatter(
+#                 fr_xdata, fr_ydata, marker='^', s=20, c='grey', linewidth=0.,
+#                 alpha=.65, zorder=1, label="Field reg")
 
-        plt.axvline(
-            x=plx_dist[0], linestyle='--', color=plx_dist[1], lw=1.5,
-            label=r"$Plx_{{{}}} = {:.3f}$ [mas] (median)".format(
-                plx_dist[2], plx_dist[0]))
+#         plt.axvline(
+#             x=plx_dist[0], linestyle='--', color=plx_dist[1], lw=1.5,
+#             label=r"$Plx_{{{}}} = {:.3f}$ [mas] (median)".format(
+#                 plx_dist[2], plx_dist[0]))
 
-        plx_median, plx_std = np.median(cl_xdata), np.std(cl_xdata)
-        min_plx = max(min(cl_xdata) - .1, plx_median - 2. * plx_std)
-        ax.set_xlim(
-            min_plx, min(max(cl_xdata) + .1, plx_median + 2. * plx_std))
-        ax.axvspan(min_plx, 0., alpha=0.25, color='grey', zorder=1)
-        ax.set_ylim(yrang)
+#         plx_median, plx_std = np.median(cl_xdata), np.std(cl_xdata)
+#         min_plx = max(min(cl_xdata) - .1, plx_median - 2. * plx_std)
+#         ax.set_xlim(
+#             min_plx, min(max(cl_xdata) + .1, plx_median + 2. * plx_std))
+#         ax.axvspan(min_plx, 0., alpha=0.25, color='grey', zorder=1)
+#         ax.set_ylim(yrang)
 
-        if j1 == 0:
-            plt.legend(fontsize='small')
+#         if j1 == 0:
+#             plt.legend(fontsize='small')
 
-    if plx_bayes_flag_clp:
-        gsi = (4, 6, 0, 3)
-        plx_dist = (1. / plx_Bys[1], 'g', 'Bay')
-    else:
-        gsi = (2, 4, 0, 3)
-        plx_dist = (np.median(plx_clp), 'k', 'med')
+#     if plx_bayes_flag_clp:
+#         gsi = (4, 6, 0, 3)
+#         plx_dist = (1. / plx_Bys[1], 'g', 'Bay')
+#     else:
+#         gsi = (2, 4, 0, 3)
+#         plx_dist = (np.median(plx_clp), 'k', 'med')
 
-    if cosDE_flag is False and coord == 'px':
-        ylabel = r"$\mu_{{\alpha}} \, \mathrm{[mas/yr]}$"
-    else:
-        ylabel = r"$\mu_{{\alpha}} \, cos \delta \, \mathrm{[mas/yr]}$"
+#     if cosDE_flag is False and coord == 'px':
+#         ylabel = r"$\mu_{{\alpha}} \, \mathrm{[mas/yr]}$"
+#     else:
+#         ylabel = r"$\mu_{{\alpha}} \, cos \delta \, \mathrm{[mas/yr]}$"
 
-    # Colored according to main mag
-    xlabel = ""
-    cmap = plt.cm.get_cmap('viridis')
-    msk = np.argsort(clreg_PMs['mmag'])[::-1]
+#     # Colored according to main mag
+#     xlabel = ""
+#     cmap = plt.cm.get_cmap('viridis')
+#     msk = np.argsort(clreg_PMs['mmag'])[::-1]
 
-    # Check field regions
-    fr_pmRA_m, pm_Plx_fr_m, fr_pmDE_m = np.array([]), np.array([]), []
-    if fregs_PMs['pmRA'].any():
-        pm_Plx_fr_m, fr_pmRA_m, fr_pmDE_m = pm_Plx_fr, fregs_PMs['pmRA'],\
-            fregs_PMs['pmDE']
-    axplot(
-        gsi, 0, 0, raPMrng, xlabel, ylabel, pm_Plx_cl[msk],
-        clreg_PMs['pmRA'][msk], clreg_PMs['mmag'][msk], pm_Plx_fr_m,
-        fr_pmRA_m, cmap, y_ax, plx_dist)
-    xlabel = r"$Plx \, \mathrm{[mas]}$"
-    ylabel = r"$\mu_{{\delta}} \, \mathrm{[mas/yr]}$"
-    axplot(
-        gsi, 2, 0, dePMrng, xlabel, ylabel, pm_Plx_cl[msk],
-        clreg_PMs['pmDE'][msk], clreg_PMs['mmag'][msk],
-        pm_Plx_fr_m, fr_pmDE_m, cmap, y_ax, plx_dist)
+#     # Check field regions
+#     fr_pmRA_m, pm_Plx_fr_m, fr_pmDE_m = np.array([]), np.array([]), []
+#     if fregs_PMs['pmRA'].any():
+#         pm_Plx_fr_m, fr_pmRA_m, fr_pmDE_m = pm_Plx_fr, fregs_PMs['pmRA'],\
+#             fregs_PMs['pmDE']
+#     axplot(
+#         gsi, 0, 0, raPMrng, xlabel, ylabel, pm_Plx_cl[msk],
+#         clreg_PMs['pmRA'][msk], clreg_PMs['mmag'][msk], pm_Plx_fr_m,
+#         fr_pmRA_m, cmap, y_ax, plx_dist)
+#     xlabel = r"$Plx \, \mathrm{[mas]}$"
+#     ylabel = r"$\mu_{{\delta}} \, \mathrm{[mas/yr]}$"
+#     axplot(
+#         gsi, 2, 0, dePMrng, xlabel, ylabel, pm_Plx_cl[msk],
+#         clreg_PMs['pmDE'][msk], clreg_PMs['mmag'][msk],
+#         pm_Plx_fr_m, fr_pmDE_m, cmap, y_ax, plx_dist)
 
-    # Colored according to MPs
-    msk = np.argsort(clreg_PMs['MP'])
-    # Check field regions
-    fr_pmRA_m, pm_Plx_fr_m, fr_pmDE_m = np.array([]), np.array([]), []
-    if fregs_PMs['pmRA'].any():
-        pm_Plx_fr_m, fr_pmRA_m, fr_pmDE_m = pm_Plx_fr, fregs_PMs['pmRA'],\
-            fregs_PMs['pmDE']
-    ylabel, xlabel = "", ""
-    cmap = plt.cm.get_cmap('RdYlBu_r')
-    axplot(
-        gsi, 0, 3, raPMrng, xlabel, ylabel, pm_Plx_cl[msk],
-        clreg_PMs['pmRA'][msk], clreg_PMs['MP'][msk], pm_Plx_fr_m,
-        fr_pmRA_m, cmap, 'MP', plx_dist)
-    xlabel = r"$Plx \, \mathrm{[mas]}$"
-    axplot(
-        gsi, 2, 3, dePMrng, xlabel, ylabel, pm_Plx_cl[msk],
-        clreg_PMs['pmDE'][msk], clreg_PMs['MP'][msk], pm_Plx_fr_m,
-        fr_pmDE_m, cmap, 'MP', plx_dist)
+#     # Colored according to MPs
+#     msk = np.argsort(clreg_PMs['MP'])
+#     # Check field regions
+#     fr_pmRA_m, pm_Plx_fr_m, fr_pmDE_m = np.array([]), np.array([]), []
+#     if fregs_PMs['pmRA'].any():
+#         pm_Plx_fr_m, fr_pmRA_m, fr_pmDE_m = pm_Plx_fr, fregs_PMs['pmRA'],\
+#             fregs_PMs['pmDE']
+#     ylabel, xlabel = "", ""
+#     cmap = plt.cm.get_cmap('RdYlBu_r')
+#     axplot(
+#         gsi, 0, 3, raPMrng, xlabel, ylabel, pm_Plx_cl[msk],
+#         clreg_PMs['pmRA'][msk], clreg_PMs['MP'][msk], pm_Plx_fr_m,
+#         fr_pmRA_m, cmap, 'MP', plx_dist)
+#     xlabel = r"$Plx \, \mathrm{[mas]}$"
+#     axplot(
+#         gsi, 2, 3, dePMrng, xlabel, ylabel, pm_Plx_cl[msk],
+#         clreg_PMs['pmDE'][msk], clreg_PMs['MP'][msk], pm_Plx_fr_m,
+#         fr_pmDE_m, cmap, 'MP', plx_dist)
 
 
 def plot(N, *args):
@@ -325,8 +326,8 @@ def plot(N, *args):
         0: [plx_histo, 'Plx histogram'],
         1: [plx_chart, 'Plx chart'],
         2: [plx_vs_mag, 'Plx vs mag'],
-        3: [plx_bys_params, 'Plx Bayes parameter'],
-        4: [pms_vs_plx_mp_mag, 'PMs vs Plx, mag & MP colored']
+        3: [plx_bys_params, 'Plx Bayes parameter']
+        # 4: [pms_vs_plx_mp_mag, 'PMs vs Plx, mag & MP colored']
     }
 
     fxn = plt_map.get(N, None)[0]

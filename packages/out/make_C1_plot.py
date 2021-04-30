@@ -12,7 +12,7 @@ from . prep_plots import figsize_x, figsize_y, grid_x, grid_y
 
 def main(
     npd, cld_c, pd, kde_cent, clust_rad, stars_out_c, cl_region_i,
-    memb_probs_cl_region_i, memb_prob_avrg_sort, flag_decont_skip, n_memb_da,
+    memb_probs_cl_region_i, memb_prob_avrg_sort, flag_decont_skip,
     cl_reg_fit, cl_reg_no_fit, local_rm_edges, col_0_comb, mag_0_comb,
         err_lst, **kwargs):
     """
@@ -38,7 +38,7 @@ def main(
     # Decontamination algorithm plots.
     arglist = [
         # pl_mp_histo
-        [gs, pd['plot_style'], n_memb_da, memb_prob_avrg_sort,
+        [gs, pd['plot_style'], memb_prob_avrg_sort,
          flag_decont_skip, cl_reg_fit, pd['fld_clean_mode'],
          pd['fld_clean_bin']],
         # pl_chart_mps
