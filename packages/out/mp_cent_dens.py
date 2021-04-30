@@ -227,7 +227,7 @@ def pl_field_dens(
         field_dens, coord2)
 
     # Check if a manual value was used
-    if fdens_method != 'auto':
+    if fdens_method != 'a':
         ax.hlines(
             field_dens, xmin=fdens_min_d[0], xmax=fdens_min_d[-1], color='g',
             label=t1, zorder=5)

@@ -4,7 +4,7 @@ from . import spiral as sp
 from . import field_manual_histo
 
 
-def main(i_c, clp, fr_number, f_regs_manual, **kwargs):
+def main(i_c, clp, fregs_method, **kwargs):
     """
     Define empty region around the cluster via a spiral centered on it
     and of area a bit larger than that defined by the cluster's radius.
@@ -14,10 +14,6 @@ def main(i_c, clp, fr_number, f_regs_manual, **kwargs):
 
     Uses stars *already cleaned by the error rejection function*.
     """
-
-    # Check if manual value is set.
-    if f_regs_manual != 'n':
-        fr_number = f_regs_manual
 
     num_bins_sqarea, f_regs_max = fieldRegs(
         clp['hist_2d'], clp['bin_width'], clp['cl_area'])
@@ -32,25 +28,24 @@ def main(i_c, clp, fr_number, f_regs_manual, **kwargs):
     else:
         # If the number of field regions defined is larger than the maximum
         # allowed, use the maximum.
-        if fr_number == 'max':
+        if fregs_method == 'a':
             f_regions = f_regs_max
             print("  Using maximum number of field regions ({})".format(
                 f_regions))
-        elif fr_number > f_regs_max:
+        elif fregs_method > f_regs_max:
             f_regions = f_regs_max
             print(("    WARNING: Number of FR defined ({}) is larger than\n"
                    "    the maximum allowed ({}). Using max number").format(
-                fr_number, f_regs_max))
-        elif fr_number <= 0:
+                fregs_method, f_regs_max))
+        elif fregs_method == 0:
             f_regions = f_regs_max
-            print(("    WARNING: Number of FR ({}) is less than or equal\n"
-                   "    to zero. No field region will be defined").format(
-                fr_number))
+            print(("    WARNING: Number of FR ({}) is zero.\n"
+                   "    No field region will be defined").format(fregs_method))
             flag_no_fl_regs = True
         else:
             print("  Using defined number of field regions ({})".format(
-                fr_number))
-            f_regions = fr_number
+                fregs_method))
+            f_regions = fregs_method
 
     # Obtain field regions only if it is possible.
     field_regions, field_regions_rjct = [], []
@@ -79,8 +74,8 @@ def main(i_c, clp, fr_number, f_regs_manual, **kwargs):
         # flag.
         if not field_regions:
             flag_no_fl_regs = True
-            print('    WARNING: no field regions left after the removal of\n' +
-                  '    those containing less than 4 stars.')
+            print('    WARNING: no field regions left after the removal of\n'
+                  + '    those containing less than 4 stars.')
 
         # Process *rejected* stars by the errors function.
         field_regions_rjct = fregsDef(

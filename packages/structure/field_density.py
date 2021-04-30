@@ -122,10 +122,10 @@ def kNNRDP(xy_cent_dist, fr_dens, fdens_method, pmin=2, pmax=99, Nrings=100):
 
         rad_old = rad
 
-    if fdens_method != 'auto':
-        field_dens = float(fdens_method)
-    else:
+    if fdens_method == 'a':
         field_dens = iterativeRDP(fdens_lst)
+    else:
+        field_dens = float(fdens_method)
     idx = np.argmin(abs(field_dens - np.array(fdens_lst)))
     field_dens_d, field_dens_std = fdens_min_d[idx], fdens_std_lst[idx]
 

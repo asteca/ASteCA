@@ -6,7 +6,7 @@ from .xy_density import cent_bin as center_bin
 from ..inp.get_data import coordsProject
 
 
-def main(cld_i, clp, coords, project, cent_manual, **kwargs):
+def main(cld_i, clp, coords, project, cent_method, **kwargs):
     """
     Obtains the center of the putative cluster.
     """
@@ -17,8 +17,7 @@ def main(cld_i, clp, coords, project, cent_manual, **kwargs):
         np.nanmax(cld_i['x']) - np.nanmin(cld_i['x']),
         np.nanmax(cld_i['y']) - np.nanmin(cld_i['y']))
 
-    if cent_manual == 'n':
-
+    if cent_method[0] == 'a':
         # Obtain center coordinates as the maximum KDE value. Use the
         # approximate center obtained with the full frame and the given
         # bandwidth.
@@ -32,10 +31,10 @@ def main(cld_i, clp, coords, project, cent_manual, **kwargs):
         print("Auto center found (bw={:g}): ({:g}, {:g}) {}".format(
             clp['bw_list'][1], kde_cent[0], kde_cent[1], coord))
 
-    elif cent_manual != 'n':
+    else:
         # De-project center coordinates if needed.
         x0, y0, _, _ = coordsProject(
-            cent_manual[0], cent_manual[1], coords, project,
+            cent_method[0], cent_method[1], coords, project,
             clp['x_offset'], clp['y_offset'])
 
         # Obtain KDE plot.
@@ -43,7 +42,7 @@ def main(cld_i, clp, coords, project, cent_manual, **kwargs):
 
         kde_cent = (x0, y0)
         print("Manual center fixed: ({:g}, {:g}) {}".format(
-            *cent_manual, coord))
+            *cent_method, coord))
 
         # Find bin where the center xy coordinates are located.
         bin_cent = center_bin(clp['xedges'], clp['yedges'], kde_cent)

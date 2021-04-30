@@ -2,6 +2,7 @@
 import numpy as np
 import warnings
 from scipy.spatial.distance import cdist
+from scipy.signal import savgol_filter
 from astropy.visualization import ZScaleInterval
 from astropy.stats import sigma_clipped_stats
 
@@ -742,18 +743,18 @@ def membVSrad(
 
     CI_vals = CIfunc(N_in_cl_rad, field_dens, rad_areas)
 
-    # # Smooth the curve. Tried smoothing before the normalization but it
-    # # increases the uncertainty region enormously.
-    # # Catch error in savgol_filter() when there is a 'nan' or 'inf'
-    # if np.isnan(membs_ratio).any() or np.isinf(membs_ratio).any():
-    #     N_membs_smooth = membs_ratio
-    # else:
-    #     # ws: window size, pol: polynomial order
-    #     ws, pol = int(len(membs_ratio) / 5.), 3
-    #     # must be odd
-    #     ws = ws + 1 if ws % 2 == 0 else ws
-    #     N_membs_smooth = savgol_filter(membs_ratio, ws, pol)
-    # N_membs_smooth /= N_membs_smooth.max()
+    # Smooth the curve. Tried smoothing before the normalization but it
+    # increases the uncertainty region enormously.
+    # Catch error in savgol_filter() when there is a 'nan' or 'inf'
+    if np.isnan(membs_ratio).any() or np.isinf(membs_ratio).any():
+        membs_ratio_smooth = np.array([])
+    else:
+        # window size (must be odd). There are ~1000 values by default
+        ws = max(3, int(len(membs_ratio) / 10.))
+        ws = ws + 1 if ws % 2 == 0 else ws
+        # polynomial order
+        pol = 3
+        membs_ratio_smooth = savgol_filter(membs_ratio, ws, pol)
 
     N_membs_16, N_membs_84 = np.array([]), np.array([])
     if not np.isnan(field_dens_std):
@@ -765,7 +766,8 @@ def membVSrad(
         N_membs_16 = np.nanpercentile(N_membs_all, 16, 0)
         N_membs_84 = np.nanpercentile(N_membs_all, 84, 0)
 
-    return N_membs, N_membs_16, N_membs_84, membs_ratio, CI_vals
+    return CI_vals, N_membs, N_membs_16, N_membs_84, membs_ratio,\
+        membs_ratio_smooth
 
 
 def isoch_sigmaNreg(

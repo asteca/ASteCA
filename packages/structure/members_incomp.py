@@ -20,12 +20,14 @@ def main(clp):
     field_dens_s = np.random.normal(
         clp['field_dens'], clp['field_dens_std'], 1000)
     N_memb_all = N_in_rad - clp['cl_area'] * field_dens_s
+    N_memb_all = N_memb_all[N_memb_all > 0]
 
     # Used in the King profile fitting
-    n_memb_i = int(np.median(N_memb_all))
-    if n_memb_i < 2:
-        print("  WARNING: The estimated number of members is < 2")
-        n_memb_i = 1
+    if len(N_memb_all) > 10:
+        n_memb_i = int(np.median(N_memb_all))
+    else:
+        print("  WARNING: The estimated number of members is < 10")
+        n_memb_i = 10
     clp['n_memb_i'], clp['members_dist'] = n_memb_i, N_memb_all
 
     return clp
