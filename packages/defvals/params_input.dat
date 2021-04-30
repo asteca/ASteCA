@@ -354,27 +354,20 @@ BS       n
 
 # Likelihood.
 #
-# * likelihood: tremmel / dolphin / tolstoy
-#
-#   - tremmel: uses the 'Poisson likelihood ratio' defined in Tremmel et al.
-#     (2013); Eq. 10 (with v_{i,j}=1).
-#   - dolphin: uses the 'Poisson likelihood ratio' defined in Dolphin (2002);
-#     Eq. 10.
-#   - tolstoy: weighted bin-free statistic as that defined in Tolstoy & Saha
-#     (1996), Monteiro et al (2010) and Hernández & Valls-Gabaud (2008).
+# The likelihood function is the 'Poisson likelihood ratio' defined in
+# Tremmel et al. (2013); Eq. 10 (with v_{i,j}=1).
 #
 # * binning: fixed / manual / blocks / blocks-max / auto / fd / doane / scott /
 #            rice / sqrt / sturges / knuth
-#   Binning method used for the 'tremmel' and 'dolphin' likelihoods.
-#   Otherwise this parameter is ignored.
+#   Binning method applied on the photometric space.
 #
 # * N_bins: [int]
 #   Number of bins for each photometric dimension if the 'manual' binning mode
 #   is selected. The order is: 'N_bin_mag N_bin_color' (add another
 #   'N_bin_color' if two colors are employed).
 #
-#   likelihood    binning    N_bins
-B2     tremmel      knuth      5 10
+#   binning    N_bins
+B2    knuth      5 10
 ################################################################################
 
 
