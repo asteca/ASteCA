@@ -1,10 +1,11 @@
 
 import numpy as np
+from scipy.signal import savgol_filter
 from ..out import prep_plots
 from ..aux_funcs import monteCarloPars, circFrac
 
 
-def main(cld_i, clp, coords, rad_manual, clust_rad_mode, **kwargs):
+def main(cld_i, clp, coords, rad_method, **kwargs):
     """
     Estimate the radius through the optimization of the #cluster-members vs
     #field-stars values. Assign the uncertainty through a bootstrap process
@@ -18,11 +19,12 @@ def main(cld_i, clp, coords, rad_manual, clust_rad_mode, **kwargs):
                       clp['xy_cent_dist'], clp['field_dens'])
 
     coord = prep_plots.coord_syst(coords)[0]
-    if rad_manual == 'n':
+    if rad_method == 'a':
 
         clp['clust_rad'] = optimalRadius(
             clp['rad_radii'], clp['rad_areas'], clp['N_in_cl_rad'],
             clp['N_in_ring'], clp['field_dens'])
+        print("Radius found: {:g} {}".format(clp['clust_rad'], coord))
 
         # if not np.isnan(clp['field_dens_std']):
         #     clp['all_rads'], clp['e_rad'] = radError(
@@ -33,17 +35,14 @@ def main(cld_i, clp, coords, rad_manual, clust_rad_mode, **kwargs):
         #     clp['xy_cent_dist'], clp['fr_dens'], clp['field_dens'],
         #     clp['field_dens_std'], Nboot)
 
-        if clust_rad_mode == 'auto':
-            print("Radius found: {:g} {}".format(clp['clust_rad'], coord))
+    elif rad_method == 'max':
+        clp['clust_rad'] = maxRadius(
+            cld_i['x'], cld_i['y'], clp['kde_cent'])
+        print("Large radius selected: {:g} {}".format(
+            clp['clust_rad'], coord))
 
-        elif clust_rad_mode == 'max':
-            clp['clust_rad'] = maxRadius(
-                cld_i['x'], cld_i['y'], clp['kde_cent'])
-            print("Large radius selected: {:g} {}".format(
-                clp['clust_rad'], coord))
-
-    elif rad_manual != 'n':
-        clp['clust_rad'] = rad_manual
+    else:
+        clp['clust_rad'] = rad_method
         print("Manual radius set: {:g} {}".format(clp['clust_rad'], coord))
 
     return clp

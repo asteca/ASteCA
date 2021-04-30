@@ -53,7 +53,7 @@ def check_all(mypath, file_end):
     pd = params_out.check(pd)
 
     # Check structural parameters.
-    params_struct.check(**pd)
+    pd = params_struct.check(pd)
 
     # Check decontamination algorithm parameters.
     params_decont.check(cl_files, **pd)

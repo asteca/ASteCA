@@ -85,39 +85,26 @@ I6       n   0. 0. 0. 0.
 
 ####################### Structural functions ###################################
 
-# Fixed values for the center, radius, and/or the number of field regions. If
-# the parameter is not to be fixed, use 'n'.
+# Values for the structural parameters. Use 'a' for automatic estimation. If no
+# values are set for any given cluster, automatic values will be used.
 #
-# * name: [str / n]
+# * name         : [str]
 #   Cluster's name (must match the name of the input data file)
-# * c_x / c_y: [float / n]
-#   Cluster's (x, y) center in pixels or degrees.
-# * rad: [float / n]
-#   Cluster's radius in pixels or degrees.
-# * f_regs: [int / n]
-#   Number of field regions to obtain around the cluster.
-#
-#   name       c_x      c_y      rad     f_regs
-S0  CLUSTER      n        n        n          n
-
-# Field density, and number of field regions.
-#
-# * field_dens: [auto / float>0.]
-#   - auto: the density will be estimated rejecting values in the RDP through an
-#     iterative process.
-#   - float>0: manual value.
-# * clust_radius: [auto / max]
-#   Mode used to estimate the cluster region's radius.
-#   - auto: selects the 'optimal' value (maximizes the difference between
-#     cluster members and field stars within the region)
+# * c_x / c_y    : [float / a]
+#   Cluster's center in pixels or degrees.
+# * field_dens   : [float>0. / a]
+#   Field (background+foreground) density.
+# * clust_radius : [float>0. / a / max]
+#   Cluster's radius.
+#   - a: selects the 'optimal' value (maximizes the ratio between
+#     cluster members and stars within rings of increasing radii)
 #   - max: uses a radius large enough to include all stars in the frame.
-# * regions: [int / max]
-#   Number of field regions around the cluster that the code will try to define.
-#   - int: manually set a number of field regions.
-#   - max: use the maximum possible number of field regions in the frame.
+# * f_regs       : [int>0 / a]
+#   Number of field regions to define around the cluster (used by the
+#   decontamination algorithm).
 #
-#   field_dens   clust_radius   regions
-S1        auto           auto        10
+#   name       c_x      c_y      field_dens   clust_radius     f_regs
+S0  CLUSTER      a        a               a              a          a
 
 # King profile fitting parameters.
 #
@@ -138,10 +125,10 @@ S1        auto           auto        10
 #   moves used by the `emcee` package.
 #
 #   ndim   nchains   nruns  nburn    rt_max
-S2     2        20    2000    .25         2
+S1     2        20    2000    .25         2
 #
 #   moves
-S3  StretchMove()
+S2  StretchMove()
 ################################################################################
 
 

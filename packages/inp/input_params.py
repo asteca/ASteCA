@@ -43,21 +43,14 @@ def main(pars_f_path):
                 # Structure functions parameters.
                 elif reader[0] == 'S0':
                     manual_struct.append(reader[1:])
-                elif reader[0] == 'S1':
-                    fdens_method = str(reader[1])
-                    clust_rad_mode = str(reader[2])
-                    try:
-                        fr_number = int(reader[3])
-                    except ValueError:
-                        fr_number = str(reader[3])
 
-                elif reader[0] == 'S2':
+                elif reader[0] == 'S1':
                     kp_ndim = int(reader[1])
                     kp_nchains = int(reader[2])
                     kp_nruns = int(reader[3])
                     kp_nburn = float(reader[4])
                     rt_max_f = float(reader[5])
-                elif reader[0] == 'S3':
+                elif reader[0] == 'S2':
                     kp_emcee_moves = [_.strip() for _ in line[3:].split(';')]
 
                 # Data analysis functions parameters.
@@ -177,6 +170,8 @@ def main(pars_f_path):
 
     # Accepted coordinate units
     coord_accpt = ('px', 'deg')
+    # Radius estimating methods
+    rad_modes_accpt = ('a', 'max')
     # Decontamination algorithm flag.
     da_algors_accpt = ('y', 'n', 'read')
     # Accepted field stars removal methods.
@@ -221,11 +216,9 @@ def main(pars_f_path):
         'nanvals': nanvals, 'trim_frame_range': trim_frame_range,
 
         # Structure functions parameters
-        'manual_struct': manual_struct, 'fdens_method': fdens_method,
-        'clust_rad_mode': clust_rad_mode, 'fr_number': fr_number,
-        'kp_ndim': kp_ndim, 'kp_nchains': kp_nchains, 'kp_nruns': kp_nruns,
-        'kp_nburn': kp_nburn, 'rt_max_f': rt_max_f,
-        'kp_emcee_moves': kp_emcee_moves,
+        'manual_struct': manual_struct, 'kp_ndim': kp_ndim,
+        'kp_nchains': kp_nchains, 'kp_nruns': kp_nruns, 'kp_nburn': kp_nburn,
+        'rt_max_f': rt_max_f, 'kp_emcee_moves': kp_emcee_moves,
 
         #
         'err_max': err_max,
@@ -260,7 +253,8 @@ def main(pars_f_path):
         'lkl_manual_bins': lkl_manual_bins,
 
         # Fixed accepted parameter values and photometric systems.
-        'coord_accpt': coord_accpt, 'da_algors_accpt': da_algors_accpt,
+        'coord_accpt': coord_accpt, 'rad_modes_accpt': rad_modes_accpt,
+        'da_algors_accpt': da_algors_accpt,
         'fld_rem_methods': fld_rem_methods, 'bin_methods': bin_methods,
         'imf_funcs': imf_funcs, 'lkl_methods': lkl_methods,
         'optimz_algors': optimz_algors, 'bayes_priors': bayes_priors,

@@ -10,7 +10,7 @@ from ..structure.king_profile import KP_memb_x
 
 
 def pl_rad_find(
-    gs, plot_style, coord, clust_rad, membs_ratio, CI_vals,
+    gs, plot_style, coord, clust_rad, membs_ratio, membs_ratio_smooth, CI_vals,
         rad_radii):
     """
     Radius estimation plot.
@@ -42,12 +42,13 @@ def pl_rad_find(
     if plot_style == 'asteca':
         ax.grid()
 
-    plt.scatter(rad_radii, membs_ratio, c='g', label=r'$N_{memb}/N_{ring}$',
-                alpha=.3)
-    # plt.plot(rad_radii, rad_N_field, c='b', ls='--', label=r'$N_{field}$')
-    # # ymin, ymax = ax.get_ylim()
+    msk = membs_ratio > 0
+    plt.scatter(rad_radii[msk], membs_ratio[msk], c='g',
+                label=r'$N_{memb}/N_{ring}$', alpha=.3)
+    if membs_ratio_smooth[msk].any():
+        plt.plot(rad_radii[msk], membs_ratio_smooth[msk], c='b')
 
-    plt.plot(rad_radii, CI_vals, ls=':', c='k', label='CI')
+    plt.plot(rad_radii[msk], CI_vals[msk], ls=':', c='k', label='CI')
     ymin, _ = ax.get_ylim()
     ymin = max(ymin, 0)
     plt.axvline(x=clust_rad, lw=1.5, color='r', label=r"$r_{cl}$")
@@ -57,9 +58,9 @@ def pl_rad_find(
     leg.get_frame().set_alpha(0.7)
 
     # xmin, xmax = ax.get_xlim()
-    xmax = min(clust_rad + clust_rad * 3, rad_radii[-1])
+    xmax = min(clust_rad + clust_rad * 3, rad_radii[msk][-1])
     plt.ylim(ymin, 1.02)
-    plt.xlim(rad_radii[0], xmax)
+    plt.xlim(0., xmax)
 
 
 def pl_mag_membs(gs, plot_style, y_ax, membvsmag):
@@ -442,7 +443,7 @@ def pl_memb_vs_rad(
         rad_max = max(rt, clust_rad)
     else:
         rad_max = clust_rad
-    rad_max = rad_max + rad_max * .15
+    rad_max = min(2 * rad_max, rad_radii[-1])
 
     idx = np.argmin(abs(rad_radii - rad_max))
     N_memb_ymax = min(N_membs_max[:idx].max(), N_membs.max() * 4)

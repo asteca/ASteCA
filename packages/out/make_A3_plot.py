@@ -37,8 +37,8 @@ def main(npd, cld_i, pd, clp):
     membvsmag = prep_plots.NmembVsMag(
         cld_i['x'], cld_i['y'], cld_i['mags'], clp['kde_cent'],
         clp['clust_rad'], clp['cl_area'])
-    N_membs, N_membs_16, N_membs_84, membs_ratio, CI_vals =\
-        prep_plots.membVSrad(
+    CI_vals, N_membs, N_membs_16, N_membs_84, membs_ratio,\
+        membs_ratio_smooth = prep_plots.membVSrad(
             clp['field_dens'], clp['field_dens_std'], clp['rad_radii'],
             clp['rad_areas'], clp['N_in_cl_rad'], clp['N_in_ring'])
 
@@ -46,7 +46,7 @@ def main(npd, cld_i, pd, clp):
     arglist = [
         # pl_rad_find
         [gs, pd['plot_style'], coord, clp['clust_rad'], membs_ratio,
-         CI_vals, clp['rad_radii']],
+         membs_ratio_smooth, CI_vals, clp['rad_radii']],
         # pl_mag_membs
         [gs, pd['plot_style'], y_ax, membvsmag],
         # pl_cl_fl_regions: Cluster and field regions defined.
