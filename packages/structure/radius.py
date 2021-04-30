@@ -55,8 +55,19 @@ def optimalRadius(rad_radii, rad_areas, N_in_cl_rad, N_in_ring, field_dens):
     ratio is maximized.
     """
     N_membs = N_in_cl_rad - field_dens * rad_areas
+    membs_ratio = N_membs / N_in_ring
 
-    idx = np.argmax(N_membs / N_in_ring)
+    if np.isnan(membs_ratio).any() or np.isinf(membs_ratio).any():
+        pass
+    else:
+        # window size (must be odd). There are ~1000 values by default
+        ws = max(3, int(len(membs_ratio) / 10.))
+        ws = ws + 1 if ws % 2 == 0 else ws
+        # polynomial order
+        pol = 3
+        membs_ratio = savgol_filter(membs_ratio, ws, pol)
+
+    idx = np.argmax(membs_ratio)
     clust_rad = rad_radii[idx]
 
     return clust_rad
@@ -64,7 +75,7 @@ def optimalRadius(rad_radii, rad_areas, N_in_cl_rad, N_in_ring, field_dens):
 
 def rdpAreasDists(
     x, y, kde_cent, xy_cent_dist, field_dens, pmin=2, pmax=90, Nrads=300,
-        N_MC=1000000):
+        N_MC=1000000, Ninterp=1000):
     """
     The areas for each radius value in 'rad_radii' are obtained here once.
     We also calculate here the distance of each star to the defined center.
@@ -73,6 +84,7 @@ def rdpAreasDists(
     pmin, pmax: minimum and maximum percentiles used to define the radii range
     Nrads: number of values used to generate the 'rad_radii' array.
     N_MC: points in the Monte Carlo area estimation. Use 1e6 for stability.
+    Ninterp: number of interpolated points in the final arrays
     """
 
     rand_01_MC, cos_t, sin_t = monteCarloPars(N_MC)
@@ -116,7 +128,7 @@ def rdpAreasDists(
         N_in_old = n_in_cl_reg
 
     # INterpolate extra points
-    xx = np.linspace(0., 1., 1000)
+    xx = np.linspace(0., 1., Ninterp)
     xp = np.linspace(0, 1, len(rad_radii))
     interp_lst = []
     for lst in (rad_radii, rad_areas, N_in_cl_rad, N_in_ring):
