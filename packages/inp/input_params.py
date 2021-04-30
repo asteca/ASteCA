@@ -146,9 +146,8 @@ def main(pars_f_path):
 
                 # Likelihood function
                 elif reader[0] == 'B2':
-                    lkl_method = str(reader[1])
-                    lkl_binning = str(reader[2])
-                    lkl_manual_bins = reader[3:]
+                    lkl_binning = str(reader[1])
+                    lkl_manual_bins = reader[2:]
 
                 # Output parameters.
                 elif reader[0] == 'O0':
@@ -176,10 +175,15 @@ def main(pars_f_path):
     bin_methods = (
         'optm', 'fixed', 'auto', 'fd', 'doane', 'scott', 'rice', 'sqrt',
         'sturges', 'knuth', 'blocks', 'blocks-max', 'manual')
+
     # Likelihood methods.
-    # 'duong', 'kdeKL', 'dolphin_kde'
-    lkl_methods = (
-        'tremmel', 'dolphin', 'mighell', 'tolstoy', 'isochfit')
+    lkl_methods = ('tremmel',)
+    # FIXED 04/2021
+    lkl_method = 'tremmel'
+    # DEPRECATED 04/2021
+    # 'duong', 'kdeKL', 'dolphin_kde', 'dolphin', 'mighell', 'tolstoy',
+    # 'isochfit'
+
     # Accepted IMF functions.
     imf_funcs = ('chabrier_2001_exp', 'chabrier_2001_log', 'kroupa_1993',
                  'kroupa_2002', 'salpeter_1955')
