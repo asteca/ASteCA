@@ -280,7 +280,7 @@ def main(cl_file, pd):
     clp = pms_analysis.main(clp, cld_i, **pd)
 
     if 'C2' in pd['flag_make_plot']:
-        make_C2_plot.main(npd, pd, **clp)
+        make_C2_plot.main(npd, pd, clp)
         print("<<Plots for C2 block created>>")
         if pd['stop_idx'] == 'C2':
             retFunc(npd['clust_name'], start)
@@ -289,7 +289,7 @@ def main(cl_file, pd):
         print("<<Skip C2 plot>>")
 
     if 'C3' in pd['flag_make_plot']:
-        make_C3_plot.main(npd, pd, cld_i, **clp)
+        make_C3_plot.main(npd, pd, cld_i, clp)
         print("<<Plots for C3 block created>>")
         if pd['stop_idx'] == 'C3':
             retFunc(npd['clust_name'], start)

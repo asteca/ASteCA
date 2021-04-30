@@ -43,5 +43,5 @@ def check(pd):
         raise ValueError("set a minimum of 4 chains for Plx Bayesian analysis")
     if pd['plx_burn'] <= 0. or pd['plx_burn'] >= 1.:
         raise ValueError("Plx 'nburn' should be in the range (0., 1.)")
-    if pd['PM_KDE_std'] <= 0.:
-        raise ValueError("'KDE_std' parameter must be greater than 0.")
+    # if pd['PM_KDE_std'] <= 0.:
+    #     raise ValueError("'KDE_std' parameter must be greater than 0.")

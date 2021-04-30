@@ -15,7 +15,7 @@ from .. import update_progress
 
 def main(
     clp, plx_bayes_flag, plx_offset, plx_chains, plx_runs, plx_burn,
-        flag_plx_mp, plx_emcee_moves, flag_make_plot, outlr_std=3., **kwargs):
+        plx_emcee_moves, flag_make_plot, outlr_std=3., **kwargs):
     """
     Bayesian parallax distance using the Bailer-Jones (2015) model with the
     'shape parameter' marginalized.
@@ -26,8 +26,8 @@ def main(
     * Bayesian prior is a Gaussian with a fixed standard deviation
     """
 
-    plx_clrg, mmag_clp, mp_clp, plx_clp, e_plx_clp, plx_samples,\
-        plx_tau_autocorr, mean_afs = [[] for _ in range(8)]
+    plx_clrg, mmag_clp, plx_clp, e_plx_clp, plx_samples,\
+        plx_tau_autocorr, mean_afs = [[] for _ in range(7)]
     plx_flag_clp, plx_bayes_flag_clp, plx_wa, plx_Bayes_kde, plx_Bys,\
         plx_ess = False, False, np.nan, np.array([]), np.array([]), np.nan
 
@@ -57,7 +57,6 @@ def main(
             mmag_clp = np.array(
                 list(zip(*list(zip(
                     *clp['cl_reg_fit']))[3]))[0])[plx_2s_msk]
-            mp_clp = np.array(list(zip(*clp['cl_reg_fit']))[9])[plx_2s_msk]
             plx_clp = plx[plx_2s_msk]
             e_plx_clp = np.array(
                 list(zip(*list(zip(
@@ -68,7 +67,7 @@ def main(
 
             # Weighted average.
             # Source: https://physics.stackexchange.com/a/329412/8514
-            plx_w = mp_clp / np.square(e_plx_clp)
+            plx_w = 1. / np.square(e_plx_clp)
             plx_w = plx_w if plx_w.sum() > 0. else None
             plx_wa = np.average(plx_clp, weights=plx_w)
 
@@ -76,15 +75,14 @@ def main(
                 plx_samples, plx_Bayes_kde, plx_Bys, plx_bayes_flag_clp,\
                     plx_tau_autocorr, mean_afs, plx_ess = plxBayes(
                         plx_offset, plx_chains, plx_runs, plx_burn,
-                        flag_plx_mp, plx_emcee_moves, plx_clp, e_plx_clp,
-                        mp_clp)
+                        plx_emcee_moves, plx_clp, e_plx_clp)
 
         else:
             print("  WARNING: no valid Plx data found")
 
     clp.update({
         'plx_flag_clp': plx_flag_clp, 'plx_clrg': plx_clrg,
-        'mmag_clp': mmag_clp, 'mp_clp': mp_clp, 'plx_clp': plx_clp,
+        'mmag_clp': mmag_clp, 'plx_clp': plx_clp,
         'e_plx_clp': e_plx_clp, 'plx_Bys': plx_Bys, 'plx_wa': plx_wa,
         'plx_bayes_flag_clp': plx_bayes_flag_clp, 'plx_samples': plx_samples,
         'plx_Bayes_kde': plx_Bayes_kde, 'plx_tau_autocorr': plx_tau_autocorr,
@@ -103,8 +101,8 @@ def checkPlx(plx_clrg):
 
 
 def plxBayes(
-    plx_offset, plx_chains, plx_runs, plx_burn, flag_plx_mp, plx_emcee_moves,
-        plx_clp, e_plx_clp, mp_clp, N_conv=1000, tau_stable=0.05):
+    plx_offset, plx_chains, plx_runs, plx_burn, plx_emcee_moves,
+        plx_clp, e_plx_clp, N_conv=1000, tau_stable=0.05):
     """
 
     HARDCODED
@@ -121,16 +119,12 @@ def plxBayes(
     # Add offset to parallax data.
     plx_clp += plx_offset
 
-    # If MPs are not to be used, use all 1.
-    if flag_plx_mp is False:
-        mp_clp = np.ones(mp_clp.shape)
-
     # Sampler parameters.
     ndim, nwalkers, nruns = 1, plx_chains, plx_runs
     print("  Bayesian Plx model ({} runs)".format(nruns))
 
     # DE initial mu position
-    # mu_p = DE_mu_sol(plx_clp, e_plx_clp, mp_clp)
+    # mu_p = DE_mu_sol(plx_clp, e_plx_clp)
     mu_p = np.mean(plx_clp)
 
     # Define the 'r_i' values used to evaluate the integral.
@@ -139,7 +133,7 @@ def plxBayes(
 
     # emcee sampler
     sampler = ensemble.EnsembleSampler(
-        nwalkers, ndim, lnprob, args=(x, B2, mp_clp, mu_p), moves=mv)
+        nwalkers, ndim, lnprob, args=(x, B2, mu_p), moves=mv)
 
     # Ball of initial guesses around 'mu_p'
     # pos0 = np.clip(
@@ -211,7 +205,7 @@ def plxBayes(
         tau_autocorr, mean_afs, plx_ess
 
 
-def DE_mu_sol(plx_clp, e_plx_clp, mp_clp, int_max=20., psize=20, maxi=100):
+def DE_mu_sol(plx_clp, e_plx_clp, int_max=20., psize=20, maxi=100):
     """
     Use the Differential Evolution algorithm to approximate the best solution
     used as the mean of the prior.
@@ -224,7 +218,7 @@ def DE_mu_sol(plx_clp, e_plx_clp, mp_clp, int_max=20., psize=20, maxi=100):
 
         # Use DE to estimate the ML
         def DEdist(model):
-            return -lnlike(model, x, B2, mp_clp)
+            return -lnlike(model, x, B2)
         bounds = [[0., 20.]]
         result = DE(DEdist, bounds, popsize=psize, maxiter=maxi)
 
@@ -242,11 +236,11 @@ def r_iVals(int_max, plx, e_plx):
     return x, B2
 
 
-def lnprob(mu, x, B2, MPs, mu_p):
+def lnprob(mu, x, B2, mu_p):
     lp = lnprior(mu, mu_p)
     if np.isinf(lp):
         return -np.inf
-    return lp + lnlike(mu, x, B2, MPs)
+    return lp + lnlike(mu, x, B2)
 
 
 def lnprior(mu, mu_p, std_p=1.):
@@ -266,7 +260,7 @@ def lnprior(mu, mu_p, std_p=1.):
     # return 0.
 
 
-def lnlike(mu, x, B2, MPs):
+def lnlike(mu, x, B2):
     """
     Model defined in Bailer-Jones (2015), Eq (20), The shape parameter s_c
     is marginalized.
@@ -298,11 +292,9 @@ def lnlike(mu, x, B2, MPs):
     # Double integral
     int_exp = np.trapz(distFunc(x), x, axis=0)
 
-    # Apply MPs
-    MP_intexp = MPs * int_exp
     # Mask 'bad' values
     msk = np.logical_or(
-        MP_intexp <= 0., MP_intexp >= np.inf, MP_intexp <= -np.inf)
-    MP_intexp[msk] = np.nan
+        int_exp <= 0., int_exp >= np.inf, int_exp <= -np.inf)
+    int_exp[msk] = np.nan
 
-    return np.nansum(np.log(MP_intexp))
+    return np.nansum(np.log(int_exp))

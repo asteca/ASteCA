@@ -486,17 +486,10 @@ def get_hess(obs_mags_cols, synth_phot, hess_xedges, hess_yedges):
     return hess_x, hess_y, HD
 
 
-def plxPlot(
-    mmag_clp, mp_clp, plx_clp, e_plx_clp, flag_no_fl_regs_i,
-        field_regions_i):
+def plxPlot(flag_no_fl_regs_i, field_regions_i):
     """
     Parameters for the parallax plot.
     """
-    # Put large MP stars in cluster region on top.
-    mp_i = mp_clp.argsort()
-    mmag_clp, mp_clp, plx_clp, e_plx_clp = mmag_clp[mp_i],\
-        mp_clp[mp_i], plx_clp[mp_i], e_plx_clp[mp_i]
-
     if not flag_no_fl_regs_i:
         plx_flrg, mag_flrg = [], []
         # Extract parallax data.
@@ -512,7 +505,7 @@ def plxPlot(
     else:
         plx_flrg, mag_flrg = np.array([]), []
 
-    return plx_flrg, mag_flrg, mmag_clp, mp_clp, plx_clp, e_plx_clp
+    return plx_flrg, mag_flrg
 
 
 def SigmaEllipse(points, Nsigma=2.):

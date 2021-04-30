@@ -76,12 +76,8 @@ def main(pars_f_path):
                     plx_chains = int(reader[3])
                     plx_runs = int(reader[4])
                     plx_burn = float(reader[5])
-                    flag_plx_mp = True if reader[6] in true_lst else False
                 elif reader[0] == 'P1':
                     plx_emcee_moves = [_.strip() for _ in line[3:].split(';')]
-                elif reader[0] == 'P2':
-                    PM_KDE_std = float(reader[1])
-                    cosDE_flag = True if reader[2] in true_lst else False
 
                 # Synthetic clusters parameters
                 elif reader[0] == 'R0':
@@ -230,8 +226,7 @@ def main(pars_f_path):
         # Plx & PMs parameters.
         'plx_bayes_flag': plx_bayes_flag, 'plx_offset': plx_offset,
         'plx_chains': plx_chains, 'plx_runs': plx_runs, 'plx_burn': plx_burn,
-        'flag_plx_mp': flag_plx_mp, 'plx_emcee_moves': plx_emcee_moves,
-        'PM_KDE_std': PM_KDE_std, 'cosDE_flag': cosDE_flag,
+        'plx_emcee_moves': plx_emcee_moves,
 
         # Cluster region field stars removal parameters.
         'fld_clean_mode': fld_clean_mode, 'fld_clean_bin': fld_clean_bin,
