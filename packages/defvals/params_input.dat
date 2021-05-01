@@ -249,7 +249,6 @@ P1  DESnookerMove(), 0.1; DEMove(), 0.9 * 0.9; DEMove(gamma0=1.0), 0.9 * 0.1
 # * ran_seed: [int / n]
 #   Random seed used in the generation of synthetic clusters. If 'n', an integer
 #   will be randomly selected.
-#
 # * IMF: [str]
 #   IMF used to populate the synthetic clusters.
 #   - kroupa_2002      : Kroupa (2002) 295.82K, Eq. (2) & (3)
@@ -257,18 +256,19 @@ P1  DESnookerMove(), 0.1; DEMove(), 0.9 * 0.9; DEMove(gamma0=1.0), 0.9 * 0.1
 #   - chabrier_2001_log: Chabrier (2001) 554.1274C, Eq (7)
 #   - kroupa_1993      : Kroupa et al. (1993) 262.545K, Eq. (13)
 #   - salpeter_1955    : Salpeter (1955)
-#
 # * min_mass_ratio: [0<float<=1]
-#   Minimum mass ratio for the generation of binaries.
-#
-# * Maximum mag: [max / float]
-#   Select a maximum magnitude cut to be used in the best fit process. This
+#   Minimum mass ratio for the uniform distribution probabilities of the
+#   binary mass ratio (q=m2/m1).
+# * max_mag: ['max' / float]
+#   Maximum magnitude cut to be used in the best fit process. This
 #   limit affects both the observed and synthetic cluster.
 #   - max: use the maximum observed magnitude (i.e.: no cut is applied).
 #   - [float]: manually select the maximum magnitude value to use.
+# * N_interp: [int]
+#   Number of interpolation points used in the isochrones.
 #
-#   ran_seed          IMF   min_mass_ratio   max_mag
-R0         n  kroupa_2002              0.7       max
+#   ran_seed             IMF    min_mass_ratio   max_mag   N_interp
+R0         n     kroupa_2002               0.7       max        500
 
 # Ranges for all the fundamental parameters
 #
@@ -307,13 +307,11 @@ RS         n
 # Algorithm used to explore the parameter space given a likelihood.
 #
 # * algorithm: ptemcee / n
-#
 #   - ptemcee: Parallel tempering Bayesian MCMC algorithm.
 #   - read   : Read pickle file generated with the 'save_trace' option. The
 #              file must exist in the 'input' folder.
 #   - n      : No fundamental parameters estimation will be attempted on the
 #              observed cluster. All the parameters below are ignored.
-#
 # * mins_max: [float]
 #   Maximum number of minutes the process is allowed to run.
 # * save_trace: [y / n]

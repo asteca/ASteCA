@@ -1,6 +1,7 @@
 
 import numpy as np
 from scipy.signal import savgol_filter
+from scipy.spatial.distance import cdist
 from ..out import prep_plots
 from ..aux_funcs import monteCarloPars, circFrac
 
@@ -37,7 +38,7 @@ def main(cld_i, clp, coords, rad_method, **kwargs):
 
     elif rad_method == 'max':
         clp['clust_rad'] = maxRadius(
-            cld_i['x'], cld_i['y'], clp['kde_cent'])
+            cld_i['x'], cld_i['y'], clp['kde_cent'], clp['xy_cent_dist'])
         print("Large radius selected: {:g} {}".format(
             clp['clust_rad'], coord))
 
@@ -137,17 +138,11 @@ def rdpAreasDists(
     return rad_radii, rad_areas, N_in_cl_rad, N_in_ring
 
 
-def maxRadius(x, y, kde_cent):
+def maxRadius(x, y, kde_cent, xy_cent_dist):
     """
-    Estimate a large radius that encloses the entire frame
+    Estimate a radius large enough for every last star
     """
-    xmin, xmax, ymin, ymax = min(x), max(x), min(y), max(y)
-    pts = np.array([(xmin, ymin), (xmin, ymax), (xmax, ymin), (xmax, ymax)])
-    # Fast euclidean distance: https://stackoverflow.com/a/47775357/1391441
-    a_min_b = kde_cent - pts
-    dist = np.sqrt(np.einsum('ij,ij->i', a_min_b, a_min_b))
-    # Use the maximum distance as the radius
-    clust_rad = max(dist)
+    clust_rad = cdist([kde_cent], np.array((x, y)).T)[0].max()
 
     return clust_rad
 
@@ -223,8 +218,8 @@ def maxRadius(x, y, kde_cent):
 #     xy_cent_dist, fr_dens, field_dens, field_dens_std, Nrings, count_max,
 #         pmin, pmax, stars_min=10):
 #     """
-#     Estimate the radius as the value where the density (from the center of the
-#     cluster) reaches the region of the field density:
+#     Estimate the radius as the value where the density (from the center of
+#     the cluster) reaches the region of the field density:
 #     (field_dens - field_dens_std)
 #     """
 #     dmin, dmax = np.percentile(xy_cent_dist, (pmin, pmax))

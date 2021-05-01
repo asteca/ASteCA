@@ -65,7 +65,7 @@ def main(pd):
     # in the same order as they are read from the cluster's data file.
     interp_tracks, mags_cols_intp = interpIsochs(
         pd['isoch_list'], pd['extra_pars'], pd['all_syst_filters'],
-        pd['filters'], pd['colors'])
+        pd['filters'], pd['colors'], pd['N_interp'])
 
     if binar_flag:
         pd['theor_tracks'], pd['mean_bin_mr'] = binarity.binarGen(
@@ -82,7 +82,8 @@ def main(pd):
     return pd
 
 
-def interpIsochs(isoch_list, extra_pars, all_syst_filters, filters, colors):
+def interpIsochs(
+        isoch_list, extra_pars, all_syst_filters, filters, colors, N_interp):
     """
     Take the list of filters stored, create the necessary colors, arrange and
     interpolate all magnitudes and colors according to the order given to the
@@ -126,7 +127,7 @@ def interpIsochs(isoch_list, extra_pars, all_syst_filters, filters, colors):
     for z in isoch_list:
         for a in z:
             N_pts_max = max(N_pts_max, len(a[0]))
-    N_pts_max = N_pts_max + 10
+    N_pts_max = N_pts_max + N_interp
     xx = np.linspace(0., 1., N_pts_max)
 
     interp_tracks = []
