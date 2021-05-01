@@ -17,19 +17,27 @@ from packages.synth_clust import completeness_rm
 from packages.synth_clust import add_errors
 from packages.best_fit import likelihood
 
+"""
 
-def main(model, lkl_method, obs_clust, fundam_params, synthcl_args):
+1. **This file needs to be in the top folder of the repo**
+
+2. The 'perf_test.pickle' is created by 'best_fit_synth_cl'
+
+3. The input 'perf_test.pickle' should also be present in the top folder
+
+"""
+
+
+def main(model, lkl_method, obs_clust, synthcl_args):
     """
-    1. **This file needs to be in the top folder of the repo**
-    2. The 'perf_test.pickle' is created by 'best_fit_synth_cl'
-    3. The input 'perf_test.pickle' should also be present in the top folder
     """
+    fundam_params, completeness, err_lst, em_float,\
+        max_mag_syn, ext_coefs, binar_flag, mean_bin_mr, N_fc, m_ini_idx,\
+        st_dist_mass, theor_tracks, err_norm_rand, binar_probs, ext_unif_rand,\
+        R_V = synthcl_args
+
     varIdxs, ndim, ranges = varPars(fundam_params)
     model = np.array(model)[varIdxs]
-
-    completeness, err_lst, em_float, max_mag_syn, ext_coefs, binar_flag,\
-        mean_bin_mr, N_fc, m_ini_idx, st_dist_mass, theor_tracks,\
-        err_norm_rand, binar_probs, ext_unif_rand, R_V = synthcl_args
 
     t0, t1, t2, t3, t4, t5, t6, t7, t8, t9 = [0.] * 10
 
@@ -40,7 +48,8 @@ def main(model, lkl_method, obs_clust, fundam_params, synthcl_args):
 
     s = t.time()
     isochrone = zaWAverage.main(
-        theor_tracks, fundam_params, z_model, a_model, ml, mh, al, ah)
+        theor_tracks, fundam_params, binar_flag, m_ini_idx, z_model, a_model,
+        ml, mh, al, ah)
     t1 = t.time() - s
 
     # Generate synthetic cluster.
@@ -85,6 +94,7 @@ def main(model, lkl_method, obs_clust, fundam_params, synthcl_args):
                 t8 = t.time() - s
 
     s = t.time()
+    # Transposing is necessary for np.histogramdd() in the likelihood
     synth_clust = synth_clust[:sum(N_fc)].T
     _ = likelihood.main(lkl_method, synth_clust, obs_clust)
     t9 = t.time() - s
@@ -99,15 +109,15 @@ if __name__ == '__main__':
 
     print("Reading data")
     with open(mpath + '/perf_test.pickle', 'rb') as f:
-        fundam_params, lkl_method, completeness, err_lst, em_float, obs_clust,\
-            max_mag_syn, ext_coefs, binar_flag, mean_bin_mr, N_fc, m_ini_idx,\
+        fundam_params, completeness, err_lst, em_float, max_mag_syn,\
+            ext_coefs, binar_flag, mean_bin_mr, N_fc, m_ini_idx,\
             st_dist_mass, theor_tracks, err_norm_rand, binar_probs,\
-            ext_unif_rand, R_V = pickle.load(f)
+            ext_unif_rand, R_V, lkl_method, obs_clust = pickle.load(f)
 
     # Pack synthetic cluster arguments.
     synthcl_args = [
-        completeness, err_lst, em_float, max_mag_syn, ext_coefs, binar_flag,
-        mean_bin_mr, N_fc, m_ini_idx, st_dist_mass, theor_tracks,
+        fundam_params, completeness, err_lst, em_float, max_mag_syn, ext_coefs,
+        binar_flag, mean_bin_mr, N_fc, m_ini_idx, st_dist_mass, theor_tracks,
         err_norm_rand, binar_probs, ext_unif_rand, R_V]
 
     print("Running")
@@ -121,8 +131,7 @@ if __name__ == '__main__':
         for p in fundam_params:
             model.append(np.random.uniform(min(p), max(p)))
 
-        data = main(
-            model, lkl_method, obs_clust, fundam_params, synthcl_args)
+        data = main(model, lkl_method, obs_clust, synthcl_args)
         times_all.append(data)
 
         N_tot += 1

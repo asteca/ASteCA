@@ -22,11 +22,12 @@ def main(npd, pd, clp):
     # import pickle
     # with open('perf_test.pickle', 'wb') as f:
     #     pickle.dump([
-    #         pd['fundam_params'], pd['lkl_method'], clp['completeness'],
-    #         clp['err_lst'], clp['em_float'], obs_clust, max_mag_syn,
-    #         ext_coefs, binar_flag, mean_bin_mr, N_fc, m_ini_idx,
-    #         pd['st_dist_mass'], theor_tracks, err_norm_rand, binar_probs,
-    #         ext_unif_rand, pd['R_V']], f)
+    #         pd['fundam_params'], clp['completeness'], clp['err_lst'],
+    #         clp['em_float'], clp['max_mag_syn'], pd['ext_coefs'],
+    #         pd['binar_flag'], pd['mean_bin_mr'], pd['N_fc'],
+    #         pd['m_ini_idx'], pd['st_dist_mass'], pd['theor_tracks'],
+    #         pd['err_norm_rand'], pd['binar_probs'], pd['ext_unif_rand'],
+    #         pd['R_V'], pd['lkl_method'], clp['obs_clust']], f)
     # print("Data saved to pickle")
     # import sys
     # sys.exit()

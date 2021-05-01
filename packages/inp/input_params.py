@@ -88,6 +88,7 @@ def main(pars_f_path):
                         max_mag = float(reader[4])
                     except ValueError:
                         max_mag = str(reader[4])
+                    N_interp = int(reader[5])
 
                 # Ranges for the fundamental parameters
                 elif reader[0] == 'RZ':
@@ -239,7 +240,7 @@ def main(pars_f_path):
         # Synthetic cluster parameters
         'synth_rand_seed': synth_rand_seed, 'par_ranges': par_ranges,
         'IMF_name': IMF_name, 'min_bmass_ratio': min_bmass_ratio,
-        'R_V': R_V, 'max_mag': max_mag,
+        'max_mag': max_mag, 'N_interp': N_interp, 'R_V': R_V,
 
         # Best fit parameters.
         'best_fit_algor': best_fit_algor, 'mins_max': mins_max,

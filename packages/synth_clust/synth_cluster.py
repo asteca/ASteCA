@@ -78,10 +78,10 @@ def main(
         # # In place for testing #508
         # import matplotlib.pyplot as plt
         # plt.subplot(121)
-        # plt.scatter(isoch_mass[4],isoch_mass[3],c='r')
-        # plt.scatter(isoch_mass[1],isoch_mass[0],c='g')
-        # plt.scatter(isoch_cut[4],isoch_cut[3],c='b', marker='x')
-        # plt.scatter(isoch_cut[1],isoch_cut[0],c='cyan', marker='x')
+        # plt.scatter(isoch_mass[4], isoch_mass[3], c='r')
+        # plt.scatter(isoch_mass[1], isoch_mass[0], c='g')
+        # plt.scatter(isoch_cut[4], isoch_cut[3], c='b', marker='x')
+        # plt.scatter(isoch_cut[1], isoch_cut[0], c='cyan', marker='x')
         # plt.gca().invert_yaxis()
 
         if isoch_mass.any():
@@ -91,7 +91,7 @@ def main(
 
             # # In place for testing #508
             # plt.subplot(122)
-            # plt.scatter(isoch_binar[1],isoch_binar[0],c='g')
+            # plt.scatter(isoch_binar[1], isoch_binar[0], c='g')
             # plt.gca().invert_yaxis()
             # plt.show()
 
