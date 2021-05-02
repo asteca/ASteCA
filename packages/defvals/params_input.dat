@@ -56,7 +56,7 @@ I3        gaiaedr3    G_BPmag    G_RPmag       BP-RP      e_BP-RP
 #
 #    Parallax         |------ Proper motions -------|    Radial velocity
 #    plx    e_plx     pmRA    e_pmRA    pmDE    e_pmDE     rv    e_rv
-I4     n        n        n         n       n         n      n       n
+I4   Plx    e_Plx     pmRA    e_pmRA    pmDE    e_pmDE      n       n
 ################################################################################
 
 
