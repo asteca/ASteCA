@@ -26,7 +26,7 @@
 #   If 'coords=deg' indicate whether to use a sinusoidal projection on the data.
 #
 #    id_star     x/ra     y/dec   coords   project
-I1        ID        x         y       px         n
+I1   EDR3Name      _x        _y      deg         n
 
 # Columns for the photometry, parallax, proper motions, and radial velocity.
 #
