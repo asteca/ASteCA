@@ -131,11 +131,3 @@ def chechLkl(pd):
 #         raise ValueError(
 #             "GA 'n_el' must be smaller than 'n_pop';\n'{}' and '{}' are set"
 #             " respectively.".format(pd['N_el'], pd['N_pop']))
-
-# DEPRECATED May 2020
-# def checkemcee(pd):
-#     """
-#     """
-#     if 'emcee' not in pd['inst_packgs_lst']:
-#         raise ValueError("'emcee' method is selected, but the package is\n" +
-#                          "not installed")

@@ -81,9 +81,10 @@ def check(pd):
         raise ValueError(
             "Unrecognized value for King profile 'ndim' parameter")
     elif pd['kp_ndim'] in (2, 4):
-        if 'emcee' not in pd['inst_packgs_lst']:
-            raise ValueError("King profile is selected to run, but 'emcee' is"
-                             " not installed")
+        # # DEPRECATED 05/2021
+        # if 'emcee' not in pd['inst_packgs_lst']:
+        #     raise ValueError("King profile is selected to run, but 'emcee'"
+        #                      " is not installed")
         if pd['kp_nchains'] < 10:
             raise ValueError(
                 "set a minimum of 10 chains for KP Bayesian analysis")

@@ -34,10 +34,11 @@ def check(pd):
             raise ValueError("missing error column for '{}' in"
                              "'params_input.dat'".format('e_' + col[:-4]))
 
-    if pd['plx_bayes_flag']:
-        if 'emcee' not in pd['inst_packgs_lst']:
-            raise ValueError("Plx data is set to be procesed, but 'emcee' is"
-                             " not installed")
+    # # DEPRECATED 05/2021
+    # if pd['plx_bayes_flag']:
+    #     if 'emcee' not in pd['inst_packgs_lst']:
+    #         raise ValueError("Plx data is set to be procesed, but 'emcee' is"
+    #                          " not installed")
 
     if pd['plx_chains'] < 4:
         raise ValueError("set a minimum of 4 chains for Plx Bayesian analysis")

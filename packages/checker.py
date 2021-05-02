@@ -1,6 +1,5 @@
 
 from .check import first_run
-from .check import pack
 
 
 def check_all(mypath, file_end):
@@ -16,8 +15,9 @@ def check_all(mypath, file_end):
 
     print('Checking input parameters...\n')
 
-    # Check that all the essential packages are installed.
-    inst_packgs_lst = pack.check()
+    # # DEPRECATED 05/2021
+    # # Check that all the essential packages are installed.
+    # inst_packgs_lst = pack.check()
 
     # Import here after the needed packages were checked to be present.
     from .check import clusters
@@ -37,7 +37,7 @@ def check_all(mypath, file_end):
 
     # Read parameters from 'params_input.dat' file. Return a dictionary
     # containing all the parameter values.
-    pd = params_file.check(mypath, file_end, inst_packgs_lst)
+    pd = params_file.check(mypath, file_end)
 
     # Check if a new version is available.
     update.check()
