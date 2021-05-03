@@ -21,20 +21,19 @@ def main(
 
     The synthetic cluster returned has the shape:
 
-    synth_clust = [photometry, binary_idxs + extra_pars]
+    * transpose_flag = True
 
-    photometry = [photom, errors]
-    photom = [f1, f2, ..., fF, c1, c2, ..., cC]
-    (where F and C are the total number of filters and colors defined)
+    synth_clust = [mag, c1, (c2)]
 
-    errors = [ef1, ef2, ..., efF, ec1, ec2, ..., ecC]
-    (photometric errrors for each photometric dimension defined)
+    where c1 and c2 colors defined.
 
-    Correct indexes of binary systems after completeness removal.
-    binary_idxs = [i1, i2, ..., iN]
+    * transpose_flag = False
 
-    Lists containing the theoretical tracks extra parameters.
-    extra_pars = [l1, l2, ..., l6]
+    synth_clust = [mag, c1, (c2), mag_b, c1_b, (c2_b), m_ini_1, m_ini_1]
+
+    where 'm_ini_1, m_ini_2' are the masses of the single/binary systems. The
+    single systems only have 'm_ini_1' defined, and a '-99' stored in 'm_ini_2'
+
     """
 
     # Return proper values for fixed parameters and parameters required
