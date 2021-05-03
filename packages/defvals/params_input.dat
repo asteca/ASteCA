@@ -55,7 +55,7 @@ I3        gaiaedr3    G_BPmag    G_RPmag       BP-RP      e_BP-RP
 #   [km/s]. If a data column is not present use 'n'.
 #
 #    Parallax         |------ Proper motions -------|    Radial velocity
-#    plx    e_plx     pmRA    e_pmRA    pmDE    e_pmDE     rv    e_rv
+#    Plx    e_Plx     pmRA    e_pmRA    pmDE    e_pmDE     rv    e_rv
 I4   Plx    e_Plx     pmRA    e_pmRA    pmDE    e_pmDE      n       n
 ################################################################################
 
@@ -290,13 +290,13 @@ R0         n     kroupa_2002               0.7       max        500
 #
 #        min      max
 RZ       min      max
-RA         7       9
-RE         0        1
+RA       7.5      9.5
+RE         0       1
 RR         n
 RV       3.1
 RD         8       15
 RM       100     5000
-RB         0.5
+RB        0.      0.5
 RS         n
 ################################################################################
 
