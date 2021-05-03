@@ -22,11 +22,11 @@ def main(npd, clp, pd, rt=0.05, synth_CI_rand=False):
 
     print("Generating synthetic clusters")
 
-    kcp = clp['KP_conct_par']
-    if not np.isnan(kcp):
-        rc = rt / (10 ** kcp)
-    else:
-        rc = np.random.uniform(.5 * rt, rt)
+    # kcp = clp['KP_conct_par']
+    # if not np.isnan(kcp):
+    #     rc = rt / (10 ** kcp)
+    # else:
+    rc = np.random.uniform(.25 * rt, 0.5 * rt)
 
     # if synth_CI_rand is True:
     #     CI = np.random.uniform(.1, .95)
