@@ -65,10 +65,9 @@ def main(npd, pd, clp):
 
     # In place for #239. NOT WORKING AS OF FEB 2021, after #488 #503 #506
     elif pd['best_fit_algor'] == 'synth_gen':
-        synth_clust_gen.main(
-            npd, clp, max_mag_syn, obs_clust, ext_coefs, st_dist_mass, N_fc,
-            mv_err_pars, **pd)
-        # isoch_fit_params, isoch_fit_errors = [], []
+        synth_clust_gen.main(npd, clp, pd)
+        import sys
+        sys.exit()
 
     else:
         print("Skip parameters fitting process")
