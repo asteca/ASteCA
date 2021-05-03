@@ -2,55 +2,93 @@
 from collections import Counter
 
 
-def check(
-    trim_frame_range, manual_struct, center_bw, fdens_method, kp_flag,
-        kp_nchains, kp_nburn, inst_packgs_lst, **kwargs):
+def check(pd):
     """
     Check that the parameters are properly written.
     """
 
     dups = [
-        _ for _, c in Counter(list(zip(*trim_frame_range))[0]).items()
+        _ for _, c in Counter(list(zip(*pd['trim_frame_range']))[0]).items()
         if c > 1]
     if dups:
         raise ValueError((
-            "duplicated entries found in 'Trim frame' block:\n" +
-            "{}".format(dups)))
+            "duplicated entries found in 'Trim frame' block:\n"
+            + "{}".format(dups)))
 
-    dups = [
-        _ for _, c in Counter(list(zip(*manual_struct))[0]).items() if c > 1]
-    if dups:
-        raise ValueError((
-            "duplicated entries found in 'Structure' block:\n" +
-            "{}".format(dups)))
+    manual_struct = {}
+    for line in pd['manual_struct']:
+        if line[0] in manual_struct.keys():
+            raise ValueError((
+                "duplicated entries found in 'Structure' block: '{}'".format(
+                    line[0])))
 
-    if center_bw < 0.:
-        raise ValueError("KDE bandwidth ('{}') must be greater\n"
-                         "than (or equal to) zero.".format(center_bw))
-
-    # Radius finding function.
-    try:
-        fd = float(fdens_method)
-        if fd < 0.:
-            raise ValueError("field density ('{}') must be"
-                             " greater than zero.".format(fd))
-    except ValueError:
-        if fdens_method[-1] == '%':
-            fdens = float(fdens_method[:-1])
-            if fdens > 100. or fdens <= 0.:
+        if line[1] == 'a' or line[2] == 'a':
+            if not (line[1] == 'a' and line[2] == 'a'):
                 raise ValueError(
-                    "percentage value in field density must be\n"
-                    "in the (0., 100] range")
-        elif fdens_method not in ('min', 'last', 'iter'):
-            raise ValueError("field density mode ('{}') is not"
-                             " recognized.".format(fdens_method))
+                    "Center coordinates must both be either floats or 'a'")
+            cx, cy = 'a', 'a'
+        else:
+            cx, cy = float(line[1]), float(line[2])
 
-    if kp_flag:
-        if 'emcee' not in inst_packgs_lst:
-            raise ValueError("King profile is selected to run, but 'emcee' is"
-                             " not installed")
-        if kp_nchains < 10:
+        float_flag = False
+        try:
+            fdens = float(line[3])
+            float_flag = True
+        except ValueError:
+            fdens = line[3]
+        if float_flag:
+            if fdens < 0:
+                raise ValueError("The field density value must be >= 0")
+        else:
+            if fdens != 'a':
+                raise ValueError("Unrecognized field density mode '{}'".format(
+                    line[3]))
+
+        float_flag = False
+        try:
+            rad = float(line[4])
+            float_flag = True
+        except ValueError:
+            rad = line[4]
+        if float_flag:
+            if rad <= 0:
+                raise ValueError("The radius value must be > 0")
+        else:
+            if rad not in pd['rad_modes_accpt']:
+                raise ValueError("Radius mode '{}' not recognized".format(
+                    rad))
+
+        float_flag = False
+        try:
+            fregs = int(line[5])
+            float_flag = True
+        except ValueError:
+            fregs = line[5]
+        if float_flag:
+            if fregs < 0:
+                raise ValueError("The number of field regions must be >= 0")
+        else:
+            if fregs != 'a':
+                raise ValueError("Unrecognized field regions mode '{}'".format(
+                    fregs))
+
+        manual_struct[line[0]] = (cx, cy, fdens, rad, fregs)
+
+    # Re-write entry in 'pd'
+    pd['manual_struct'] = manual_struct
+
+    if pd['kp_ndim'] not in (0, 2, 4):
+        raise ValueError(
+            "Unrecognized value for King profile 'ndim' parameter")
+    elif pd['kp_ndim'] in (2, 4):
+        # # DEPRECATED 05/2021
+        # if 'emcee' not in pd['inst_packgs_lst']:
+        #     raise ValueError("King profile is selected to run, but 'emcee'"
+        #                      " is not installed")
+        if pd['kp_nchains'] < 10:
             raise ValueError(
                 "set a minimum of 10 chains for KP Bayesian analysis")
-        if kp_nburn <= 0. or kp_nburn >= 1.:
+        if pd['kp_nburn'] <= 0. or pd['kp_nburn'] >= 1.:
             raise ValueError("KP 'nburn' should be in the range (0., 1.)")
+
+    return pd

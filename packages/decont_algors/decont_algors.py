@@ -13,24 +13,24 @@ def main(
 
     # Check if at least one equal-sized field region was obtained for the
     # *incomplete* dataset (used by the Bayesian DA).
-    if da_algor == 'bayes' and clp['flag_no_fl_regs_i']:
+    if da_algor == 'y' and clp['flag_no_fl_regs_i']:
         print("  WARNING: no field regions found. Can not apply Bayesian DA")
-        da_algor = 'skip'
+        da_algor = 'n'
 
     flag_decont_skip = False
-    if da_algor == 'skip':
+    if da_algor == 'n':
         print("Assign equal probabilities to all stars in cluster region")
         memb_probs_cl_region = [1.] * len(clp['cl_region_i'])
         flag_decont_skip = True
 
-    elif da_algor == 'bayes':
+    elif da_algor == 'y':
         memb_probs_cl_region = bayesian_da.main(
             colors, plx_col, pmx_col, pmy_col, rv_col, bayesda_runs,
             bayesda_dflag, clp['cl_region_i'], clp['field_regions_i'])
 
     elif da_algor == 'read':
         memb_probs_cl_region = read_da.main(
-            clp['cl_region_i'], npd['memb_file'])
+            clp['cl_region_i'], npd['clust_name'], npd['memb_file'])
 
     # DEPRECATED May 2020
     # elif da_algor == 'fixed':

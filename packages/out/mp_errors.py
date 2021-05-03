@@ -74,13 +74,17 @@ def pl_phot_err(
     for i, pl in enumerate(err_plot):
         x_ax, y_ax, j, k = pl
 
+        # j=4 means 'main magnitude'
+        # j=6 means 'color'
+        # j=8 means 'parallax, proper motion dimension, or radial velocity'
+
         ax = plt.subplot(
             gs[i // 2: (i // 2) + 1, 3 * (i % 2):3 * (i % 2) + 3])
         plt.xlim(x_min, x_max)
         # Set axis labels
         plt.xlabel(r'$' + x_ax + r'$')
         plt.ylabel(r'$\sigma_{{{}}}$'.format(y_ax))
-        ax.set_facecolor('#EFF0F1')
+        # ax.set_facecolor('#EFF0F1')
 
         # Rejected stars outside the cluster region
         if any(mmag_out_rjct) and any(stars_out_rjct_c):
@@ -108,8 +112,9 @@ def pl_phot_err(
             leg.get_frame().set_alpha(0.7)
             # Max error cut
             max_cut_y = em_float[0]
-            ax.hlines(y=max_cut_y, xmin=x_min, xmax=x_max, color='k',
-                      linestyles='dashed', zorder=4)
+            if not np.isinf(max_cut_y):
+                ax.hlines(y=max_cut_y, xmin=x_min, xmax=x_max, color='k',
+                          linestyles='dashed', zorder=4)
             txt = r"$max={}$ mag".format(em_float[0])
             txt += "\n" + r"$N_{{rjct}}={}$".format(N_st_err_rjct[0])
             ob = offsetbox.AnchoredText(txt, loc=1)
@@ -118,11 +123,11 @@ def pl_phot_err(
             # Plot error curve
             plt.plot(err_bar_all[1], err_bar_all[2][0], color='yellow',
                      ls='--', lw=2, zorder=5)
-
         elif j == 6:
             max_cut_y = em_float[1 + k]
-            ax.hlines(y=max_cut_y, xmin=x_min, xmax=x_max, color='k',
-                      linestyles='dashed', zorder=4)
+            if not np.isinf(max_cut_y):
+                ax.hlines(y=max_cut_y, xmin=x_min, xmax=x_max, color='k',
+                          linestyles='dashed', zorder=4)
             txt = r"$max={}$ mag".format(em_float[1 + k])
             txt += "\n" + r"$N_{{rjct}}={}$".format(N_st_err_rjct[1][k])
             ob = offsetbox.AnchoredText(txt, loc=2)
@@ -135,8 +140,9 @@ def pl_phot_err(
             # Use single PM max error value defined, for PMde
             k = 1 if k == 2 else 1
             max_cut_y = em_float[-(3 - k)]
-            ax.hlines(y=max_cut_y, xmin=x_min, xmax=x_max, color='k',
-                      linestyles='dashed', zorder=4)
+            if not np.isinf(max_cut_y):
+                ax.hlines(y=max_cut_y, xmin=x_min, xmax=x_max, color='k',
+                          linestyles='dashed', zorder=4)
             txt = r"$max={}$ {}".format(em_float[-(3 - k)], unit)
             txt += "\n" + r"$N_{{rjct}}={}$".format(N_st_err_rjct[2][k])
             ob = offsetbox.AnchoredText(txt, loc=2)

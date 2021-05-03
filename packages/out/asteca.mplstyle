@@ -44,3 +44,4 @@ legend.fontsize      : 9.5
 # ***************************************************************************
 savefig.dpi       : 150         ## figure dots per inch or 'figure'
 savefig.format    : png         ## {png, ps, pdf, svg}
+savefig.bbox      : tight       ## {tight, standard}

@@ -2,8 +2,42 @@
 import numpy as np
 
 
+def main(cmd_systs, filters, colors):
+    """
+    Obtain extinction coefficients for all the observed filters and colors,
+    in the order in which they are stored in theor_tracks.
+    """
+    ext_coefs = []
+
+    # For filters.
+    for f in filters:
+        # f[0]: photometric system; f[1]: name of filter
+        # Index of filter
+        fi = cmd_systs[f[0]][0].index(f[1])
+        # Effective wavelength in Armstrong.
+        eff_wave = cmd_systs[f[0]][1][fi]
+        # CCM coefficient for this filter. Use the effective wavelength in
+        # inverse microns.
+        ext_coefs.append(ccm_model(10000. / eff_wave))
+
+    # For colors.
+    for c in colors:
+        # c[0]: photometric system; c[1]: color index
+        # Index of filters.
+        ci1 = cmd_systs[c[0]][0].index(c[1].split(',')[0])
+        ci2 = cmd_systs[c[0]][0].index(c[1].split(',')[1])
+        # Effective wavelength in Armstrong.
+        eff_wave1 = cmd_systs[c[0]][1][ci1]
+        eff_wave2 = cmd_systs[c[0]][1][ci2]
+        # CCM coefficient for this filter. Use the effective wavelength in
+        # inverse microns.
+        ext_coefs.append([ccm_model(10000. / eff_wave1),
+                          ccm_model(10000. / eff_wave2)])
+    return ext_coefs
+
+
 def ccm_model(mw):
-    '''
+    """
     Cardelli, Clayton, and Mathis (1989 ApJ. 345, 245) model for extinction
     coefficients with updated coefficients for near-UV from O'Donnell
     (1994, ApJ, 422, 158).
@@ -17,7 +51,7 @@ def ccm_model(mw):
     There appears to be an error in the Far-UV range in the original IDL
     routine where the maximum inverse wavelength is 11 and it should be 10
     according to Cardelli et al. 1989 (pag 251, Eq (5,a,b)).
-    '''
+    """
 
     if 0.3 <= mw < 1.1:
         # Infrared.
@@ -61,38 +95,3 @@ def ccm_model(mw):
             "the CCM model limit (10 [1/micron]).".format(mw))
 
     return a, b
-
-
-def main(cmd_systs, filters, colors, ext_shape):
-    """
-    Obtain extinction coefficients for all the observed filters and colors,
-    in the order in which they are stored in theor_tracks.
-    """
-    ext_coefs = []
-
-    # For filters.
-    for f in filters:
-        # f[0]: photometric system; f[1]: name of filter
-        # Index of filter
-        fi = cmd_systs[f[0]][1].index(f[1])
-        # Effective wavelength in Armstrong.
-        eff_wave = cmd_systs[f[0]][2][fi]
-        # CCM coefficient for this filter. Use the effective wavelength in
-        # inverse microns.
-        ext_coefs.append(ccm_model(10000. / eff_wave))
-
-    # For colors.
-    for c in colors:
-        # c[0]: photometric system; c[1]: color index
-        # Index of filters.
-        ci1 = cmd_systs[c[0]][1].index(c[1].split(',')[0])
-        ci2 = cmd_systs[c[0]][1].index(c[1].split(',')[1])
-        # Effective wavelength in Armstrong.
-        eff_wave1 = cmd_systs[c[0]][2][ci1]
-        eff_wave2 = cmd_systs[c[0]][2][ci2]
-        # CCM coefficient for this filter. Use the effective wavelength in
-        # inverse microns.
-        ext_coefs.append([ccm_model(10000. / eff_wave1),
-                          ccm_model(10000. / eff_wave2)])
-
-    return ext_coefs

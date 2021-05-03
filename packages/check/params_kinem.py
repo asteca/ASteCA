@@ -14,8 +14,7 @@ def check(pd):
     for i, ci in enumerate(pd['id_kinem']):
         if ci not in ('n', 'N'):
             try:
-                pd[k_cols[i] + '_col'] = 'col' + str(int(ci) + 1) if\
-                    pd['read_mode'] == 'num' else ci
+                pd[k_cols[i] + '_col'] = ci
             except ValueError:
                 raise ValueError(
                     "bad index ('{}') for '{}' column in "
@@ -35,14 +34,15 @@ def check(pd):
             raise ValueError("missing error column for '{}' in"
                              "'params_input.dat'".format('e_' + col[:-4]))
 
-    if pd['plx_bayes_flag']:
-        if 'emcee' not in pd['inst_packgs_lst']:
-            raise ValueError("Plx data is set to be procesed, but 'emcee' is"
-                             " not installed")
+    # # DEPRECATED 05/2021
+    # if pd['plx_bayes_flag']:
+    #     if 'emcee' not in pd['inst_packgs_lst']:
+    #         raise ValueError("Plx data is set to be procesed, but 'emcee' is"
+    #                          " not installed")
 
     if pd['plx_chains'] < 4:
         raise ValueError("set a minimum of 4 chains for Plx Bayesian analysis")
     if pd['plx_burn'] <= 0. or pd['plx_burn'] >= 1.:
         raise ValueError("Plx 'nburn' should be in the range (0., 1.)")
-    if pd['PM_KDE_std'] <= 0.:
-        raise ValueError("'KDE_std' parameter must be greater than 0.")
+    # if pd['PM_KDE_std'] <= 0.:
+    #     raise ValueError("'KDE_std' parameter must be greater than 0.")

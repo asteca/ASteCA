@@ -6,10 +6,10 @@ from .._version import __version__
 
 
 def main(npd):
-    '''
+    """
     Create output data file with headers. This will not overwrite any old
     output data file already in the folder.
-    '''
+    """
     out_file_name = npd['out_file_name']
     # Current time and date.
     now_time = strftime("%Y-%m-%d %H:%M:%S")
@@ -62,11 +62,6 @@ def main(npd):
 #           fitted King profile (if it converged).\n\
 # n_memb: Approximate number of cluster's members assuming a uniform\n\
 #         background.\n\
-# n_memb_da: Approximate number of cluster's members obtained via the DA\n\
-#            algorithm.\n\
-# memb_par: Members parameter comparing the approximate structural number of\n\
-#           members ('n_memb') with the approximate photometric number of\n\
-#           members ('n_memb_da').\n\
 # a_f: Fraction of cluster's area that is present in frame.\n\
 #\n\
 # Parameters values are in the sense: mean, MAP/ML, median, mode.\n\
@@ -80,9 +75,8 @@ def main(npd):
 # Nt: Number of samples used to estimate the parameters values.\n\
 #\n\
 NAME                                  c_x        c_y       \
-r_cl        r16        r84        r_c       rc16       rc84        \
-r_t       rt16       rt84      CI   n_memb_k     n_memb  n_memb_da  \
-memb_par     a_f     \
+r_cl        r_c       rc16       rc84        \
+r_t       rt16       rt84      CI   n_memb_k     n_memb     a_f     \
 z_mean      z_MAP   z_median     z_mode     z_16th     z_84th      z_std  z_R^2     \
 a_mean      a_MAP   a_median     a_mode     a_16th     a_84th      a_std  a_R^2     \
 E_mean      E_MAP   E_median     E_mode     E_16th     E_84th      E_std  E_R^2     \
@@ -90,4 +84,3 @@ d_mean      d_MAP   d_median     d_mode     d_16th     d_84th      d_std  d_R^2 
 M_mean      M_MAP   M_median     M_mode     M_16th     M_84th      M_std  M_R^2     \
 b_mean      b_MAP   b_median     b_mode     b_16th     b_84th      b_std  b_R^2     \
     Nt\n".format(__version__, now_time, now_time))
-            print("Output data file created")

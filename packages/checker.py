@@ -1,14 +1,5 @@
 
 from .check import first_run
-from .check import pack
-from .check import clusters
-from .check import params_file
-from .check import update
-from .check import params_data
-from .check import params_kinem
-from .check import params_out
-from .check import params_struct
-from .check import params_decont
 
 
 def check_all(mypath, file_end):
@@ -24,10 +15,19 @@ def check_all(mypath, file_end):
 
     print('Checking input parameters...\n')
 
-    # Check that all the essential packages are installed.
-    inst_packgs_lst = pack.check()
+    # # DEPRECATED 05/2021
+    # # Check that all the essential packages are installed.
+    # inst_packgs_lst = pack.check()
 
     # Import here after the needed packages were checked to be present.
+    from .check import clusters
+    from .check import params_file
+    from .check import update
+    from .check import params_data
+    from .check import params_kinem
+    from .check import params_out
+    from .check import params_struct
+    from .check import params_decont
     from .check import params_synthcl
     from .check import params_match
     from .check import read_met_files
@@ -37,7 +37,7 @@ def check_all(mypath, file_end):
 
     # Read parameters from 'params_input.dat' file. Return a dictionary
     # containing all the parameter values.
-    pd = params_file.check(mypath, file_end, inst_packgs_lst)
+    pd = params_file.check(mypath, file_end)
 
     # Check if a new version is available.
     update.check()
@@ -53,7 +53,7 @@ def check_all(mypath, file_end):
     pd = params_out.check(pd)
 
     # Check structural parameters.
-    params_struct.check(**pd)
+    pd = params_struct.check(pd)
 
     # Check decontamination algorithm parameters.
     params_decont.check(cl_files, **pd)
@@ -71,10 +71,8 @@ def check_all(mypath, file_end):
     print("Filter: {}".format(fs))
     print("Color:  {}\n".format(cs))
 
-    # Check and store metallicity files.
-    pd = read_met_files.check_get(pd)
-
-    print("Full check done.\n\nNumber of clusters to analyze: {}\n".format(
-        len(cl_files)))
+    if pd['best_fit_algor'] != 'n':
+        # Check and store metallicity files.
+        pd = read_met_files.check_get(pd)
 
     return cl_files, pd

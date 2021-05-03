@@ -4,7 +4,7 @@ import traceback
 from packages.inp import input_params
 
 
-def check(mypath, file_end, inst_packgs_lst):
+def check(mypath, file_end):
     """
     Check the existence of the 'params_input.dat' file, and check that
     the parameters are properly written.
@@ -37,7 +37,7 @@ def check(mypath, file_end, inst_packgs_lst):
         raise ValueError("'{}' is badly formatted.".format(pars_f_name))
 
     # Add to parameters dictionary.
-    pd['inst_packgs_lst'], pd['file_end'] = inst_packgs_lst, file_end
+    pd['file_end'] = file_end
 
     if pd['best_fit_algor'] not in pd['optimz_algors']:
         raise ValueError("the selected best fit method '{}' does not match"

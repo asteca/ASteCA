@@ -1,141 +1,77 @@
 
 import numpy as np
-from ..synth_clust import synth_cluster
+from astropy.table import Table
+from ..inp import data_IO
 
 
-def main(clp, npd, best_fit_algor, fundam_params, filters, colors,
-         theor_tracks, R_V, m_ini_idx, binar_flag, **kwargs):
+def main(clp, npd, pd):
     """
-    Create output data file with stars in the best fit synthetic cluster found
-    by the 'Best Fit' function.
+    1. Create output data file with stars in the best fit synthetic cluster
+       found by the 'Best Fit' function.
+    2. Create output data file for the observed cluster with individual
+       estimated masses
     """
 
-    clp['synth_clst_plot'], clp['binar_idx_plot'], clp['shift_isoch'],\
-        clp['synthcl_Nsigma'] = [np.array([]) for _ in range(4)]
-
-    if best_fit_algor != 'n':
-        isoch_moved, synth_clst, sigma, extra_pars, synthcl_Nsigma =\
-            synth_cl_plot(
-                fundam_params, clp['isoch_fit_params'],
-                clp['isoch_fit_errors'], theor_tracks, clp['completeness'],
-                clp['max_mag_syn'], clp['st_dist_mass'], R_V, clp['ext_coefs'],
-                clp['N_fc'], clp['err_pars'], m_ini_idx, binar_flag)
-
+    if pd['best_fit_algor'] != 'n':
         # If cluster is not empty.
-        if synth_clst.any():
-            # Prepare data.
-            e_mags_cols = sigma.T
-            binar_idx, ini_mass = extra_pars[0], extra_pars[2]
-            # Prepare header.
-            hdr = ['ID  '] + [f[1] + '   ' for f in filters]
-            hdr += ['(' + c[1].replace(',', '-') + ')   ' for c in colors]
-            hdr += ['e_' + f[1] + '   ' for f in filters]
-            hdr += ['e_(' + c[1].replace(',', '-') + ')   ' for c in colors]
-            # TODO storing only 'M_ini' for now
-            hdr = ''.join(hdr) + 'Mini\n'
+        if not clp['synth_cl_phot'].any():
+            print("  ERROR: empty synthetic cluster is empty and could not\n"
+                  "  be saved to file")
+            return
 
-            # Save best fit synthetic cluster found to file.
-            with open(npd['synth_file_out'], "w") as f_out:
-                f_out.write(hdr)
-                for i, st in enumerate(synth_clst):
-                    if binar_idx[i] > 1.:
-                        ID = '2' + str(i)
-                    else:
-                        ID = '1' + str(i)
-                    f_out.write("{:<8}".format(ID))
-                    for _ in st:
-                        f_out.write("{:<8.4f}".format(_))
-                    for _ in e_mags_cols[i]:
-                        f_out.write("{:<8.4f}".format(_))
-                    # TODO storing only 'M_ini' for now
-                    # f_out.write("{:<8.4f}\n".format(*extra_pars[i]))
-                    f_out.write("{:<8.4f}\n".format(ini_mass[i]))
+        writeFileOut(
+            npd, pd['filters'], pd['colors'], pd['m_ini_idx'],
+            clp['synth_cl_phot'], clp['synth_cl_sigma'], clp['cl_max_mag'],
+            clp['st_mass_mean'], clp['st_mass_std'], clp['st_mass_mean_binar'],
+            clp['st_mass_std_binar'], clp['prob_binar'])
+        print("Synthetic and observed clusters saved to file")
 
-            # Save for plotting.
-            clp['synth_clst_plot'], clp['binar_idx_plot'],\
-                clp['shift_isoch'], clp['synthcl_Nsigma'] = synth_clst,\
-                binar_idx, isoch_moved, synthcl_Nsigma
 
+def writeFileOut(
+    npd, filters, colors, m_ini_idx, synth_clust, sigma, cl_max_mag,
+        st_mean, st_std, st_mean_binar, st_std_binar, prob_binar):
+    """
+    Save best fit synthetic cluster found, and per star masses to file.
+    """
+
+    # Write synthetic cluster file
+    e_mags_cols = np.array(sigma).T
+    # Create IDs identifying binary systems
+    binar_ID = []
+    for i, bi in enumerate(synth_clust[-1]):
+        if bi == -99.:
+            binar_ID.append('1' + str(i))
         else:
-            print("  ERROR: empty synthetic cluster could not be saved\n"
-                  "  to file")
+            binar_ID.append('2' + str(i))
+    phot_col = [f[1] for f in filters] +\
+        ['(' + c[1].replace(',', '-') + ')' for c in colors]
+    ephot_col = ['e_' + f[1] for f in filters] +\
+        ['e_(' + c[1].replace(',', '-') + ')' for c in colors]
+    col_names = ['ID'] + phot_col + ephot_col + ['M_ini1', 'M_ini2']
+    data = [binar_ID] + [_ for _ in synth_clust[:m_ini_idx]] +\
+        [_ for _ in e_mags_cols.T] + [synth_clust[m_ini_idx], synth_clust[-1]]
+    synth_table = Table(data, names=col_names)
+    synth_table.meta['comments'] = ["Binary systems ID's begin with a '2'"]
+    data_IO.dataSave(synth_table, npd['synth_file_out'], 'w')
 
-    return clp
-
-
-def synth_cl_plot(
-    fundam_params, isoch_fit_params, isoch_fit_errors, theor_tracks,
-    completeness, max_mag_syn, st_dist_mass, R_V, ext_coefs, N_fc, err_pars,
-        m_ini_idx, binar_flag, N_models=1000):
-    """
-    Generate a synthetic cluster and a N(mu, sigma) region for plotting, from
-    'N_models' models.
-    """
-
-    # DEPRECATED May 2020
-    # if best_fit_algor == 'boot+GA':
-    #     # Use ML fit values for all parameters.
-    #     model = isoch_fit_params['map_sol']
-    # elif best_fit_algor in ('ptemcee', 'emcee'):
-    # Use mean fit values for all parameters.
-    model = isoch_fit_params['mean_sol']
-
-    # Generate a model with the "best" fitted parameters.
-    model_var = np.array(model)[isoch_fit_params['varIdxs']]
-
-    # Pack common args.
-    syntClustArgs = (
-        fundam_params, isoch_fit_params['varIdxs'], theor_tracks,
-        completeness, max_mag_syn, st_dist_mass, R_V, ext_coefs,
-        N_fc, err_pars, m_ini_idx, binar_flag)
-
-    isoch_moved, synth_clust, sigma, extra_pars = setSynthClust(
-        model_var, True, *syntClustArgs)
-
-    # Generate the synthetic clusters required to plot the 1-sigma zone.
-    p_vals, nancount = [], 0
-    for i, p in enumerate(model):
-        std = isoch_fit_errors[i][-1]
-        if not np.isnan(std):
-            vals = [p, std]
-            p_vals.append(vals)
-        else:
-            nancount += 1
-
-    # Check if any parameter has an uncertainty attached.
-    if nancount == 6:
-        synthcl_Nsigma = np.array([])
-        return isoch_moved, synth_clust, sigma, extra_pars, synthcl_Nsigma
-
-    # Generate 'N_models' random models.
-    models = []
-    for par in p_vals:
-        models.append(np.random.normal(par[0], par[1], N_models))
-
-    # Generate the synthetic clusters from the sampled parameters.
-    synthcl_Nsigma = [[] for _ in range(sum(N_fc))]
-    for model in np.array(models).T:
-        # Synthetic cluster
-        sc = setSynthClust(model, True, *syntClustArgs)[1].T
-        if sc.any():
-            for i, photom_dim in enumerate(sc):
-                synthcl_Nsigma[i] += list(photom_dim)
-    synthcl_Nsigma = np.array(synthcl_Nsigma)
-
-    return isoch_moved, synth_clust, sigma, extra_pars, synthcl_Nsigma
-
-
-def setSynthClust(
-    model, extra_pars_flag, fundam_params, varIdxs, theor_tracks,
-    completeness, max_mag_syn, st_dist_mass, R_V, ext_coefs, N_fc, err_pars,
-        m_ini_idx, binar_flag):
-    """
-    Generate synthetic cluster given by 'model'.
-    """
-    synth_clust, sigma, extra_pars, isoch_moved, mass_dist, isoch_binar,\
-        isoch_compl = synth_cluster.main(
-            fundam_params, varIdxs, model, theor_tracks, completeness,
-            max_mag_syn, st_dist_mass, R_V, ext_coefs, N_fc, err_pars,
-            m_ini_idx, binar_flag, extra_pars_flag)
-
-    return isoch_moved, synth_clust, sigma, extra_pars
+    # Write observed cluster with masses to file
+    if st_mean.any():
+        st_ID = np.array(list(zip(*cl_max_mag))[0])
+        main_mag = np.array(list(zip(*cl_max_mag))[3]).T[0]
+        first_col = np.array(list(zip(*cl_max_mag))[5]).T[0]
+        mass_table = Table(
+            [st_ID, main_mag, first_col, st_mean, st_std, st_mean_binar,
+             st_std_binar, prob_binar],
+            names=['ID', 'Mag', 'Col', 'M1', 'M1_std', 'M2', 'M2_std',
+                   'P_binar'])
+        mass_table.meta['comments'] = [
+            '', 'Subset of stars selected as members', 'M1: primary mass',
+            'M2: secondary mass (if binary system)',
+            'P_binar: binary probability', '']
+        data_IO.dataSave(
+            mass_table, npd['mass_file_out'], 'w',
+            {'Mag': '%12.5f', 'Col': '%12.5f', 'M1': '%12.5f',
+             'M1_std': '%12.5f', 'M2': '%12.5f', 'M2_std': '%12.5f',
+             'P_binar': '%12.2f'})
+    else:
+        print("  WARNING: could not save masses/binary probabilities to file")

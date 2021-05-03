@@ -1,9 +1,9 @@
 
 import numpy as np
-from astropy.io import ascii
+from ..inp import data_IO
 
 
-def main(cl_region, memb_file, readda_idcol=0, readda_mpcol=-2):
+def main(cl_region, clust_name, memb_file, readda_idcol=0, readda_mpcol=-2):
     """
     Read MP values from file. Any star in the defined cluster whose ID is not
     found in the membership file will be assigned MP=0.5.
@@ -12,7 +12,7 @@ def main(cl_region, memb_file, readda_idcol=0, readda_mpcol=-2):
     """
     print("Reading membership probabilities from file")
     # Read IDs and MPs from file.
-    data = ascii.read(memb_file)
+    data = data_IO.dataRead(clust_name, memb_file, 'r')
     # Read IDs as strings since that is how they are stored in 'cl_region'
     id_list = [str(_) for _ in data.columns[readda_idcol]]
     try:

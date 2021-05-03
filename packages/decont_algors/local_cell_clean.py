@@ -297,7 +297,7 @@ def get_fit_stars(cl_hist_p, f_hist, flag_decont_skip):
     #     cl_hist_p_flat = cl_hist_p[0]
 
     # Flatten arrays to access all of its elements.
-    cl_hist_p_flat = np.asarray(cl_hist_p).flatten()
+    cl_hist_p_flat = np.asarray(cl_hist_p, dtype=object).flatten()
     f_hist_flat = f_hist.flatten()
 
     cl_reg_fit, cl_reg_no_fit = [], []

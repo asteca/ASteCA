@@ -1,5 +1,38 @@
 # Change Log
 
+
+## [[v0.4.0]][309] - 2021-05-03
+
+### Changed
+
+* Compensate cluster's mass for binaries masses? ([488][308])
+* Estimate individual per-star masses ([484][307])
+* Improve performance of synth cluster generation (3) ([506][306])
+* Simplify isochrones download/handling ([497][305])
+* Add CS 37 COLIBRI track + deprecate old versions 10 & 11 of PARSEC ([495][304])
+* Optimal radius too large for some clusters ([510][303])
+* Project equatorial coordinates before processing ([237][302])
+* Add eccentricity parameter to KP fit? ([480][301])
+* Finish working on enhanced King profile fitting ([456][300])
+* Remove KDE_stds and mp_flag parameters ([500][299])
+* Simplify input of structure parameters ([512][298])
+* Deprecate all likelihoods except Tremmel ([507][297])
+* Interpolate IMF masses into the isochrones, not the other way around ([503][296])
+* Add minimum binary mass ratio to fundamental parameters? ([504][295])
+* Deprecate Anderson-Darling test ([499][294])
+* Deprecate "Read mode" ([498][293])
+* Add IMF and PMF curves obtention ([96][292])
+* Convert pixel coordinates to RA & DEC ([203][291])
+* Add ZAMS to CMD final plot ([160][290])
+* Add semi_input.dat checking to checker ([214][289])
+* Add weighted spatial density map ([167][288])
+* Generate output CMD-CCD plots for the mean+median+mode ([479][287])
+* Exact circle area using geometry instead of Monte Carlo ([446][286])
+* Use the maximum number of members in the optimal radius? ([494][285])
+* Add 1-sigma region to King profile ([478][284])
+* Turn off MP coloring in D2 plots for binned likelihoods ([473][283])
+
+
 ## [[v0.3.1]][282] - 2020-06-19
 
 Only the `ptemcee` method is kept, all others are now deprecated.
@@ -812,10 +845,30 @@ ________________________________________________________________________________
 [280]: https://github.com/asteca/ASteCA/commit/3ab2b30d3d107972734112e7f0bd8ce12709ebdc
 [281]: https://github.com/asteca/ASteCA/issues/468
 [282]: https://github.com/asteca/asteca/releases/tag/v0.3.1
-
-
-
-
-
-
-
+[283]: https://github.com/asteca/ASteCA/issues/473
+[284]: https://github.com/asteca/ASteCA/issues/478
+[285]: https://github.com/asteca/ASteCA/issues/494
+[286]: https://github.com/asteca/ASteCA/issues/446
+[287]: https://github.com/asteca/ASteCA/issues/479
+[288]: https://github.com/asteca/ASteCA/issues/167
+[289]: https://github.com/asteca/ASteCA/issues/214
+[290]: https://github.com/asteca/ASteCA/issues/160
+[291]: https://github.com/asteca/ASteCA/issues/203
+[292]: https://github.com/asteca/ASteCA/issues/96
+[293]: https://github.com/asteca/ASteCA/issues/498
+[294]: https://github.com/asteca/ASteCA/issues/499
+[295]: https://github.com/asteca/ASteCA/issues/504
+[296]: https://github.com/asteca/ASteCA/issues/503
+[297]: https://github.com/asteca/ASteCA/issues/507
+[298]: https://github.com/asteca/ASteCA/issues/512
+[299]: https://github.com/asteca/ASteCA/issues/500
+[300]: https://github.com/asteca/ASteCA/issues/456
+[301]: https://github.com/asteca/ASteCA/issues/480
+[302]: https://github.com/asteca/ASteCA/issues/237
+[303]: https://github.com/asteca/ASteCA/issues/510
+[304]: https://github.com/asteca/ASteCA/issues/495
+[305]: https://github.com/asteca/ASteCA/issues/497
+[306]: https://github.com/asteca/ASteCA/issues/506
+[307]: https://github.com/asteca/ASteCA/issues/484
+[308]: https://github.com/asteca/ASteCA/issues/488
+[309]: https://github.com/asteca/asteca/releases/tag/v0.4.0

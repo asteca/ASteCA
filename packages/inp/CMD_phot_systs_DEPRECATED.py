@@ -2,6 +2,9 @@
 from pathlib import Path
 
 
+# DEPRECATED 06/12/20
+
+
 def main():
     """
     Dictionary that stores the names and column names for each

@@ -13,10 +13,10 @@ def check(
 
     # Check selected algorithm.
     if da_algor not in da_algors_accpt:
-        raise ValueError("the selected decontamination algorithm ({})\n"
+        raise ValueError("the selected decontamination algorithm flag ({})\n"
                          "is not recognized.".format(da_algor))
 
-    if da_algor == 'bayes':
+    if da_algor == 'y':
         # Check Bayesian decontamination algorithm parameters.
         if bayesda_runs < 2:
             raise ValueError("must input 'runs'>=2 for the Bayesian DA.")
@@ -27,6 +27,9 @@ def check(
 
         # This assumes that there is no maximum number of colors that can be
         # defined
+        if 'y' not in bayesda_dflag:
+            raise ValueError(
+                "at least one 'bayes' DA weight must be set to 'y'.")
         if len(bayesda_dflag) - 5 != len(colors):
             raise ValueError(
                 "there are {} 'bayes' DA weights defined, there should "

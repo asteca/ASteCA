@@ -21,10 +21,9 @@ from scipy.stats import gaussian_kde, entropy
 
 
 def main(lkl_method, synth_clust, obs_clust):
-    '''
-    Generate synthetic cluster with an isochrone of given values for
-    metallicity and age. Match the synthetic cluster to the observed cluster.
-    '''
+    """
+    Match the synthetic cluster to the observed cluster.
+    """
 
     # If synthetic cluster is empty, assign a large likelihood value. This
     # assumes *all* likelihoods here need minimizing.
@@ -261,10 +260,12 @@ def tolstoy(synth_clust, obs_clust):
     # Observed cluster's photometry and membership probabilities.
     obs_photom, sigma, sigma_prod, N, log_mem_probs = obs_clust
 
+    # This line takes up ~30% of the processing time
     # Sum for all photometric dimensions.
     Dsum = (np.square(
         obs_photom - synth_clust[None, :, :]) / sigma).sum(axis=-1)
 
+    # This line takes up ~70% of the processing time
     sum_N = (
         logsumexp(-.5 * Dsum, b=1. / sigma_prod, axis=1) +
         log_mem_probs).sum()

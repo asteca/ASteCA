@@ -8,7 +8,8 @@ from matplotlib.colors import LinearSegmentedColormap, LogNorm, ListedColormap
 def pl_mps_phot_diag(
     gs, gs_y1, gs_y2, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
     x_ax, y_ax, v_min_mp, v_max_mp, obs_x, obs_y, obs_MPs, err_bar,
-        cl_sz_pt, hess_xedges, hess_yedges, x_isoch, y_isoch, phot_Nsigma):
+    cl_sz_pt, hess_xedges, hess_yedges, x_isoch, y_isoch, phot_Nsigma,
+        lkl_method):
     """
     Star's membership probabilities on cluster's photometric diagram.
     """
@@ -36,20 +37,21 @@ def pl_mps_phot_diag(
     for y_ed in hess_yedges:
         # horizontal lines
         ax.axhline(y_ed, linestyle=gls, lw=glw, color=gc, zorder=1)
+
     # This reversed colormap means higher prob stars will look redder.
     rmap = plt.cm.get_cmap('RdYlBu_r')
     # If the 'tolstoy' method was used AND the stars have a range of colors.
-    # Currently the 'dolphin' likelihood does not use MPs in the fit, so it's
-    # confusing to color stars is if it did.
-    if v_min_mp != v_max_mp:
+    # The 'dolphin / tremmel' likelihoods do not use MPs in the fit, so it's
+    # confusing to color stars as if they did.
+    if (v_min_mp != v_max_mp) and lkl_method == 'tolstoy':
         col_select_fit, isoch_col = obs_MPs, 'g'
         plot_colorbar = True
     else:
-        col_select_fit, isoch_col = '#4682b4', 'r'
+        col_select_fit, isoch_col = '#519ddb', 'r'
         plot_colorbar = False
     # Plot stars used in the best fit process.
     sca = plt.scatter(
-        obs_x, obs_y, marker='o', c=col_select_fit, s=cl_sz_pt + 2., cmap=rmap,
+        obs_x, obs_y, marker='o', c=col_select_fit, s=cl_sz_pt, cmap=rmap,
         lw=0.3, edgecolor='k', vmin=v_min_mp, vmax=v_max_mp, zorder=4)
 
     # Plot sigma region
@@ -144,7 +146,7 @@ def pl_bf_synth_cl(
     gs, gs_y1, gs_y2, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
     hess_xedges, hess_yedges, x_synth, y_synth, sy_sz_pt, binar_idx, IMF_name,
     R_V, best_sol, p_err, x_isoch, y_isoch, lkl_method, bin_method,
-        all_evol_tracks, evol_track):
+        evol_track, D3_sol):
     """
     Best fit synthetic cluster obtained.
     """
@@ -156,7 +158,7 @@ def pl_bf_synth_cl(
     plt.xlabel('$' + x_ax + '$')
 
     if gs_y1 == 0:
-        ax.set_title("Synthetic (mean solution)")
+        ax.set_title("Synthetic ({} solution)".format(D3_sol))
         # Add text box
         text = r'$({};\,{})$'.format(lkl_method, bin_method)
         ob = offsetbox.AnchoredText(text, pad=.2, loc=1)
@@ -171,15 +173,14 @@ def pl_bf_synth_cl(
     for y_ed in hess_yedges:
         # horizontal lines
         ax.axhline(y_ed, linestyle=gls, lw=glw, color=gc, zorder=1)
-    # Plot synthetic cluster.
-    single_idx, bin_idx = binar_idx <= 1., binar_idx > 1.
+
     # Single systems
     plt.scatter(
-        x_synth[single_idx], y_synth[single_idx], marker='o', s=sy_sz_pt + 2.,
-        c='#4682b4', lw=0.3, edgecolor='k', zorder=2)
+        x_synth[~binar_idx], y_synth[~binar_idx], marker='o', s=sy_sz_pt,
+        c='#519ddb', lw=0.3, edgecolor='k', zorder=2)
     # Binary systems
     plt.scatter(
-        x_synth[bin_idx], y_synth[bin_idx], marker='o', s=sy_sz_pt + 2.,
+        x_synth[binar_idx], y_synth[binar_idx], marker='o', s=sy_sz_pt,
         c='#F34C4C', lw=0.3, edgecolor='k', zorder=3)
     # Plot isochrone.
     plt.plot(x_isoch, y_isoch, '#21B001', lw=1., zorder=6)
@@ -193,10 +194,8 @@ def pl_bf_synth_cl(
         # Add text box to the right of the synthetic cluster.
         ax_t = plt.subplot(gs[gs_y1:gs_y2, 6:7])
         ax_t.axis('off')  # Remove axis from frame.
-        # Map isochrones set selection to proper name.
-        iso_print = all_evol_tracks[evol_track][1] + ' + ' +\
-            all_evol_tracks[evol_track][2]
-        t1 = r'$Synthetic\;cluster\;parameters$' + '\n[{}]'.format(iso_print)
+        t1 = r'$Synthetic\;cluster\;parameters$' + '\n[Tracks: {}]'.format(
+            evol_track)
         t2 = r'$IMF \hspace{{3.}}:\;{}$'.format(
             IMF_name.replace('_', r'\;').title())
         t3 = r'$R_{{V}} \hspace{{3.2}}=\;{}$'.format(R_V)

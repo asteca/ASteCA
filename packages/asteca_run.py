@@ -55,18 +55,25 @@ def main():
     # files are read and stored here.
     cl_files, pd = check_all(mypath, file_end)
 
+    # Prepare tracks and other required data
+    if pd['best_fit_algor'] != 'n':
+        from packages.synth_clust import tracksPrep
+        pd = tracksPrep.main(pd)
+
     # Import here to ensure the check has passed and all the necessary
     # packages are installed.
     from packages import func_caller
 
+    print("Full check done.\n\nNumber of clusters to analyze: {}".format(
+        len(cl_files)))
     # Iterate through all cluster files.
     for cl_file in cl_files:
         try:
             # Call module that calls all sub-modules sequentially.
             func_caller.main(cl_file, pd)
         except Exception:
-            print('\n!!! --> {}/{} '.format(cl_file[-2], cl_file[-1]) +
-                  'could not be successfully processed <-- !!!\n')
+            print('\n!!! --> {}/{} '.format(cl_file[-2], cl_file[-1])
+                  + 'could not be successfully processed <-- !!!\n')
             print(traceback.format_exc())
 
     # End of run.

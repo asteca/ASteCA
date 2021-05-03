@@ -2,9 +2,10 @@
 import numpy as np
 from scipy.integrate import quad
 from scipy.interpolate import interp1d
+from .. import update_progress
 
 
-def main(IMF_name, masses, m_high=150.):
+def main(IMF_name, Nmets, Max_mass, m_high=150.):
     """
     Returns the number of stars per interval of mass for the selected IMF.
 
@@ -12,17 +13,23 @@ def main(IMF_name, masses, m_high=150.):
     ----------
     IMF_name : str
       Name of the IMF to be used.
-    masses: array
-      Array of floats containing the range of masses defined.
+    Nmets : int
+      number of metallicity values defined
+    Max_mass: float
+      Maximum mass defined.
     m_high : float
       Maximum mass value to be sampled.
 
     Returns
     -------
-    st_dist_mass : dict
-      Dictionary that contains the N defined masses, one array per mass value.
-      Each array contains a given number of stars sampled from the selected
-      IMF, that (approximately) sum to the associated total mass.
+    st_dist_mass : list
+      Tuple that contains: a given number of stars sampled from the selected
+      IMF, that (approximately) sum to the associated total mass; the
+      cumulative sum of those masses.
+      One list per metallicity value defined is returned. This is to add some
+      variety to the sampled IMF. Ideally this should be done every time a
+      new isochrone is populated, but this is not possible due to performance
+      costs and reproducibility.
 
     """
     print("Sampling selected IMF ({})".format(IMF_name))
@@ -35,21 +42,22 @@ def main(IMF_name, masses, m_high=150.):
     # IMF low mass limit.
     m_low = imfs_dict[IMF_name]
 
-    sampled_IMF = invTrnsfSmpl(masses, IMF_name, m_low, m_high)
+    inv_cdf, CDF_min, CDF_max = invTrnsfSmpl(IMF_name, m_low, m_high)
 
-    st_dist_mass = (sampled_IMF, np.cumsum(sampled_IMF))
+    st_dist_mass = []
+    for _ in range(Nmets):
+        st_dist_mass += [sampleInv(Max_mass, inv_cdf, CDF_min, CDF_max)]
+        update_progress.updt(Nmets, _ + 1)
 
     return st_dist_mass
 
 
-def invTrnsfSmpl(masses, IMF_name, m_low, m_high):
+def invTrnsfSmpl(IMF_name, m_low, m_high):
     """
     IMF inverse transform sampling.
 
     Asked here: https://stackoverflow.com/q/21100716/1391441
     """
-    from .set_rand_seed import np
-
     # Obtain normalization constant (k = \int_{m_low}^{m_up} \xi(m) dm). This
     # makes the IMF behave like a PDF.
     norm_const = quad(IMF_func, m_low, m_high, args=(IMF_name))[0]
@@ -71,18 +79,35 @@ def invTrnsfSmpl(masses, IMF_name, m_low, m_high):
     # Inverse CDF
     inv_cdf = interp1d(CDF_samples, mass_values)
 
+    return inv_cdf, CDF_min, CDF_max
+
+
+def sampleInv(Max_mass, inv_cdf, CDF_min, CDF_max):
+    """
+    Sample the inverse CDF
+    """
+    from .set_rand_seed import np
+
     def sampled_inv_cdf(N):
         mr = np.random.rand(N)
         mr = mr[(mr >= CDF_min) & (mr <= CDF_max)]
         return inv_cdf(mr)
 
+    # Empirically I've found that if: mass_sum = sampled_inv_cdf(N_chunk).sum()
+    # then: N_chunk / mass_sum ~ 2.5
+    # This means that to achieve a total mass of 'Max_mass' in a reasonable
+    # number of steps (~100), i.e. mass_sum * 100 ~ Max_mass,
+    # then the chunk should be of size:
+    # N_chunk ~ 2.5 * mass_sum = 2.5 * Max_mass/100
+    N_chunk = max(100, int(2.5 * Max_mass / 100.))
+
     # Sample in chunks of 100 stars until the maximum defined mass is reached.
     mass_samples = []
-    while np.sum(mass_samples) < masses[-1]:
-        mass_samples += sampled_inv_cdf(100).tolist()
+    while np.sum(mass_samples) < Max_mass:
+        mass_samples += sampled_inv_cdf(N_chunk).tolist()
     sampled_IMF = np.array(mass_samples)
 
-    return sampled_IMF
+    return [sampled_IMF, np.cumsum(sampled_IMF)]
 
 
 def IMF_func(m_star, IMF_name):
@@ -132,8 +157,8 @@ def imfs(IMF_name, m_star):
         # http://adsabs.harvard.edu/abs/2001ApJ...554.1274C
         # Eq (7)
         imf_val = (1. / (np.log(10) * m_star)) * 0.141 * \
-            np.exp(-((np.log10(m_star) - np.log10(0.1)) ** 2) /
-                   (2 * 0.627 ** 2))
+            np.exp(-((np.log10(m_star) - np.log10(0.1)) ** 2)
+                   / (2 * 0.627 ** 2))
 
     elif IMF_name == 'chabrier_2001_exp':
         # Chabrier (2001) exponential form of the IMF.

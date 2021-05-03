@@ -1,6 +1,6 @@
 
 import numpy as np
-from ..aux_funcs import circFrac
+from ..aux_funcs import monteCarloPars, circFrac
 
 
 def main(clp, x, y, **kwargs):
@@ -31,9 +31,10 @@ def main(clp, x, y, **kwargs):
         pass
 
     else:
+        rand_01_MC, cos_t, sin_t = monteCarloPars()
         frac_cl_area = circFrac(
             clp['kde_cent'], clp['clust_rad'], x_min, x_max, y_min, y_max,
-            clp['N_MC'], clp['rand_01_MC'], clp['cos_t'], clp['sin_t'])
+            rand_01_MC, cos_t, sin_t)
         cl_area = cl_area * frac_cl_area
 
         print("  WARNING: only a portion of the cluster\n  is present "

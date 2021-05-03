@@ -9,111 +9,90 @@ from . import prep_plots
 from . prep_plots import figsize_x, figsize_y, grid_x, grid_y
 
 
-def main(
-    npd, pd, synth_clst_plot, binar_idx_plot, shift_isoch, synthcl_Nsigma,
-    cl_max_mag, bf_bin_edges, err_lst, col_0_comb, mag_0_comb, col_1_comb,
-        isoch_fit_params, isoch_fit_errors, **kwargs):
+def main(npd, pd, clp):
     """
     Make D3 block plots.
     """
-    if 'D3' in pd['flag_make_plot'] and pd['best_fit_algor'] != 'n':
+    fig = plt.figure(figsize=(figsize_x, figsize_y))
+    gs = gridspec.GridSpec(grid_y, grid_x)
+    add_version_plot.main(y_fix=1.005)
 
-        # DEPRECATED May 2020
-        # import pickle
-        # from .._version import __version__
-        # # If working on a dev branch store data used for re-generating easily
-        # # the D2 plot
-        # if 'dev' in __version__:
-        #     # for k, val in pd.items():
-        #     #     print(k, np.array(val).nbytes / 1024.**2)
-        #     pname = join(
-        #         npd['output_subdir'], str(npd['clust_name']) + '_D2.pickle')
-        #     with open(pname, 'wb') as handle:
-        #         # Remove 'theor_tracks', not needed
-        #         new_pd = {i: pd[i] for i in pd if i != 'theor_tracks'}
-        #         pickle.dump((
-        #             npd, new_pd, synth_clst_plot, binar_idx_plot, shift_isoch,
-        #             synthcl_Nsigma, cl_max_mag, bf_bin_edges, err_lst,
-        #             col_0_comb, mag_0_comb, col_1_comb, isoch_fit_params,
-        #             isoch_fit_errors), handle)
+    fit_pars = clp['isoch_fit_params']
 
-        fig = plt.figure(figsize=(figsize_x, figsize_y))
-        gs = gridspec.GridSpec(grid_y, grid_x)
-        add_version_plot.main(y_fix=1.005)
+    best_sol = fit_pars[pd['D3_sol'] + '_sol']
 
-        # DEPRECATED May 2020
-        # if pd['best_fit_algor'] == 'boot+GA':
-        #     best_sol = isoch_fit_params['map_sol']
-        # elif pd['best_fit_algor'] in ('ptemcee', 'emcee'):
-        best_sol = isoch_fit_params['mean_sol']
+    shift_isoch, synthcl_Nsigma = prep_plots.isoch_sigmaNreg(
+        pd['fundam_params'], pd['R_V'], pd['D3_sol'], pd['theor_tracks'],
+        pd['m_ini_idx'], pd['ext_coefs'], pd['N_fc'], pd['ext_unif_rand'],
+        fit_pars, clp['isoch_fit_errors'], clp['syntClustArgs'])
 
-        # Plot one ore more rows of CMDs/CCDs.
-        hr_diags = prep_plots.packData(
-            pd['lkl_method'], cl_max_mag, bf_bin_edges, synth_clst_plot,
-            binar_idx_plot, shift_isoch, synthcl_Nsigma, pd['colors'],
-            pd['filters'], col_0_comb, mag_0_comb, col_1_comb)
-        for (x_phot_all, y_phot_all, x_phot_obs, y_phot_obs, x_synth_phot,
-             y_synth_phot, binar_idx, hess_xedges, hess_yedges, x_isoch,
-             y_isoch, phot_Nsigma, x_name, y_name, yaxis, i_obs_x,
-             i_obs_y, gs_y1, gs_y2) in hr_diags:
+    # Plot one ore more rows of CMDs/CCDs.
+    bf_bin_edges = clp['obs_clust'][0]
+    hr_diags = prep_plots.packData(
+        pd['lkl_method'], pd['colors'], pd['filters'], clp['cl_max_mag'],
+        clp['synth_cl_phot'], clp['binar_idx'], clp['col_0_comb'],
+        clp['mag_0_comb'], clp['col_1_comb'], bf_bin_edges,
+        shift_isoch, synthcl_Nsigma)
+    for (x_phot_all, y_phot_all, x_phot_obs, y_phot_obs, x_synth_phot,
+         y_synth_phot, binar_idx, hess_xedges, hess_yedges, x_isoch,
+         y_isoch, phot_Nsigma, x_name, y_name, yaxis, i_obs_x,
+         i_obs_y, gs_y1, gs_y2) in hr_diags:
 
-            hess_x, hess_y, HD = prep_plots.get_hess(
-                [x_phot_obs, y_phot_obs], [x_synth_phot, y_synth_phot],
-                hess_xedges, hess_yedges)
-            x_ax, y_ax = prep_plots.ax_names(x_name, y_name, yaxis)
-            x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd =\
-                prep_plots.diag_limits(yaxis, x_phot_all, y_phot_all)
-            sy_sz_pt = prep_plots.phot_diag_st_size(x_synth_phot)
+        hess_x, hess_y, HD = prep_plots.get_hess(
+            [x_phot_obs, y_phot_obs], [x_synth_phot, y_synth_phot],
+            hess_xedges, hess_yedges)
+        x_ax, y_ax = prep_plots.ax_names(x_name, y_name, yaxis)
+        x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd =\
+            prep_plots.diag_limits(yaxis, x_phot_all, y_phot_all)
+        sy_sz_pt = prep_plots.phot_diag_st_size(x_synth_phot)
 
-            arglist = [
-                # pl_hess_diag: Hess diagram 'observed - synthetic'
-                [gs, gs_y1, gs_y2, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
-                 x_ax, y_ax, pd['lkl_method'], hess_xedges, hess_yedges,
-                 hess_x, hess_y, HD],
-                # pl_bf_synth_cl: Best fit synthetic cluster obtained.
-                [gs, gs_y1, gs_y2, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
-                 x_ax, y_ax, hess_xedges, hess_yedges, x_synth_phot,
-                 y_synth_phot, sy_sz_pt, binar_idx, pd['IMF_name'], pd['R_V'],
-                 best_sol, isoch_fit_errors, x_isoch, y_isoch,
-                 pd['lkl_method'], pd['lkl_binning'],
-                 pd['all_evol_tracks'], pd['evol_track']]
-            ]
-            for n, args in enumerate(arglist):
-                mp_bestfit_CMD.plot(n, *args)
+        arglist = [
+            # pl_hess_diag: Hess diagram 'observed - synthetic'
+            [gs, gs_y1, gs_y2, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
+             x_ax, y_ax, pd['lkl_method'], hess_xedges, hess_yedges,
+             hess_x, hess_y, HD],
+            # pl_bf_synth_cl: Best fit synthetic cluster obtained.
+            [gs, gs_y1, gs_y2, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
+             x_ax, y_ax, hess_xedges, hess_yedges, x_synth_phot,
+             y_synth_phot, sy_sz_pt, binar_idx, pd['IMF_name'], pd['R_V'],
+             best_sol, clp['isoch_fit_errors'], x_isoch, y_isoch,
+             pd['lkl_method'], pd['lkl_binning'], pd['evol_track'],
+             pd['D3_sol']]
+        ]
+        for n, args in enumerate(arglist):
+            mp_bestfit_CMD.plot(n, *args)
 
-            v_min_mp, v_max_mp = prep_plots.da_colorbar_range(cl_max_mag, [])
-            diag_fit_inv, dummy = prep_plots.da_phot_diag(cl_max_mag, [])
-            cl_sz_pt = prep_plots.phot_diag_st_size(diag_fit_inv)
-            # Main photometric diagram of observed cluster.
-            i_y = 0 if yaxis == 'mag' else 1
-            # x axis is always a color so this the index is fixed to '1'.
-            # y axis is not, so the 'i_y' index determines what goes there.
-            obs_x, obs_y, obs_MPs = diag_fit_inv[1][i_obs_x],\
-                diag_fit_inv[i_y][i_obs_y], diag_fit_inv[2]
-            # tight_layout is called here
-            plot_observed_cluster(
-                fig, gs, gs_y1, gs_y2, x_ax, y_ax, cl_max_mag, x_min_cmd,
-                x_max_cmd, y_min_cmd, y_max_cmd, err_lst, v_min_mp, v_max_mp,
-                obs_x, obs_y, obs_MPs, cl_sz_pt, hess_xedges, hess_yedges,
-                x_isoch, y_isoch, phot_Nsigma)
+        v_min_mp, v_max_mp = prep_plots.da_colorbar_range(
+            clp['cl_max_mag'], [])
+        diag_fit_inv, dummy = prep_plots.da_phot_diag(clp['cl_max_mag'], [])
+        cl_sz_pt = prep_plots.phot_diag_st_size(diag_fit_inv)
+        # Main photometric diagram of observed cluster.
+        i_y = 0 if yaxis == 'mag' else 1
+        # x axis is always a color so this the index is fixed to '1'.
+        # y axis is not, so the 'i_y' index determines what goes there.
+        obs_x, obs_y, obs_MPs = diag_fit_inv[1][i_obs_x],\
+            diag_fit_inv[i_y][i_obs_y], diag_fit_inv[2]
+        # tight_layout is called here
+        plot_observed_cluster(
+            fig, gs, gs_y1, gs_y2, x_ax, y_ax, clp['cl_max_mag'], x_min_cmd,
+            x_max_cmd, y_min_cmd, y_max_cmd, clp['err_lst'], v_min_mp,
+            v_max_mp, obs_x, obs_y, obs_MPs, cl_sz_pt, hess_xedges,
+            hess_yedges, x_isoch, y_isoch, phot_Nsigma, pd['lkl_method'])
 
-        # Generate output file.
-        plt.savefig(
-            join(npd['output_subdir'], str(npd['clust_name']) + '_D3'),
-            bbox_inches='tight')
-        # Close to release memory.
-        plt.clf()
-        plt.close("all")
-
-        print("<<Plots for D3 block created>>")
-    else:
-        print("<<Skip D3 block plot>>")
+    # Generate output file.
+    plt.savefig(
+        join(npd['output_subdir'], str(npd['clust_name']) + '_D3'
+             + npd['ext']))
+    # Close to release memory.
+    plt.clf()
+    plt.close("all")
 
 
 def plot_observed_cluster(
     fig, gs, gs_y1, gs_y2, x_ax, y_ax, cl_max_mag, x_min_cmd, x_max_cmd,
     y_min_cmd, y_max_cmd, err_lst, v_min_mp, v_max_mp, obs_x, obs_y, obs_MPs,
-        cl_sz_pt, hess_xedges, hess_yedges, x_isoch, y_isoch, phot_Nsigma):
+    cl_sz_pt, hess_xedges, hess_yedges, x_isoch, y_isoch, phot_Nsigma,
+        lkl_method):
     """
     This function is called separately since we need to retrieve some
     information from it to plot that #$%&! colorbar.
@@ -124,7 +103,8 @@ def plot_observed_cluster(
     plot_colorbar, sca, trans = mp_bestfit_CMD.pl_mps_phot_diag(
         gs, gs_y1, gs_y2, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
         x_ax, y_ax, v_min_mp, v_max_mp, obs_x, obs_y, obs_MPs, err_bar,
-        cl_sz_pt, hess_xedges, hess_yedges, x_isoch, y_isoch, phot_Nsigma)
+        cl_sz_pt, hess_xedges, hess_yedges, x_isoch, y_isoch, phot_Nsigma,
+        lkl_method)
 
     # Ignore warning issued by colorbar plotted in photometric diagram with
     # membership probabilities.

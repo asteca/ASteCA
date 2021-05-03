@@ -3,6 +3,7 @@ import numpy as np
 import warnings
 from astropy.io import ascii
 from astropy.table import Table
+from astropy import wcs
 import operator
 import copy
 from functools import reduce
@@ -11,7 +12,7 @@ from ..aux_funcs import flatten, list_duplicates
 
 
 def main(
-    npd, read_mode, nanvals, id_col, x_col, y_col, mag_col, e_mag_col, col_col,
+    npd, nanvals, id_col, x_col, y_col, mag_col, e_mag_col, col_col,
     e_col_col, plx_col, e_plx_col, pmx_col, e_pmx_col, pmy_col, e_pmy_col,
         rv_col, e_rv_col, coords, project, flag_tf, tf_range, **kwargs):
     """
@@ -24,7 +25,7 @@ def main(
 
     data_file = npd['data_file']
     try:
-        data = readDataFile(nanvals, read_mode, id_col, data_file)
+        data = readDataFile(nanvals, id_col, data_file)
         N_all = len(data)
 
         # Arrange column names in the proper order and shape.
@@ -36,11 +37,15 @@ def main(
         col_names_keep = list(filter(bool, list(flatten(col_names))))
         data.keep_columns(col_names_keep)
 
-        # Remove stars with no valid coordinates data
+        # Remove stars with no valid coordinates data in either x or y
         try:
-            data = data[(~data[x_col].mask) & (~data[y_col].mask)]
+            data = data[(~data[x_col].mask)]
         except AttributeError:
-            # Not masked columns
+            # Not a masked columns
+            pass
+        try:
+            data = data[(~data[y_col].mask)]
+        except AttributeError:
             pass
         N_coords = len(data)
 
@@ -103,44 +108,25 @@ def main(
     return cld_i, cld_c, clp
 
 
-def readDataFile(nanvals, read_mode, id_col, data_file):
+def readDataFile(nanvals, id_col, data_file):
     """
     Read input data file.
     """
-    # TODO to separate IDs (strings) from the rest of the data, I read the file
-    # twice. This is very slow for large files.
-
     # Identify all these strings as invalid entries.
     fill_msk = [('', '0')] + [(_, '0') for _ in nanvals]
-    # Store IDs as strings.
-    if read_mode == 'num':
-        # Read IDs as strings, not applying the 'fill_msk'
-        data = ascii.read(
-            data_file, converters={id_col: [ascii.convert_numpy(np.str)]},
-            format='no_header')
-        # Store IDs
-        id_data = data[id_col]
-        # Read rest of the data applying the mask
-        data = ascii.read(
-            data_file, fill_values=fill_msk, format='no_header')
-        # Replace IDs column
-        data[id_col] = id_data
-    elif read_mode == 'nam':
-        # Read IDs as strings, not applying the 'fill_msk'
-        data = ascii.read(
-            data_file, converters={id_col: [ascii.convert_numpy(np.str)]})
-        # Store IDs
-        try:
-            id_data = data[id_col]
-        except KeyError:
-            raise ValueError(
-                "ERROR: the '{}' key could not be found. Check that \n"
-                "the 'id' name is properly written, and that all columns \n"
-                "have *unique* names\n".format(id_col))
-        # Read rest of the data applying the mask
-        data = ascii.read(data_file, fill_values=fill_msk)
-        # Replace IDs column
-        data[id_col] = id_data
+    # Read IDs as strings, not applying the 'fill_msk'. Read rest of the
+    # data applying the fill mask
+    data = ascii.read(
+        data_file, fill_values=fill_msk, fill_exclude_names=(id_col,),
+        converters={id_col: [ascii.convert_numpy(np.str)]})
+
+    try:
+        data[id_col]
+    except KeyError:
+        raise ValueError(
+            "ERROR: the '{}' key could not be found. Check that \n"
+            "the 'id' name is properly written, and that all columns \n"
+            "have *unique* names\n".format(id_col))
 
     return data
 
@@ -313,12 +299,28 @@ def coordsProject(x, y, coords, project, ra_cent=None, dec_cent=None):
     Sinusoidal projection.
     """
     if coords == 'deg' and project:
+
         if ra_cent is None:
-            ra_cent = (max(x) + min(x)) / 2.
-            dec_cent = (max(y) + min(y)) / 2.
-        x = (x - ra_cent) * np.cos(np.deg2rad(y))
-        y = (y - dec_cent)
-        x_offset, y_offset = ra_cent, dec_cent
+            # Use this method to transform the coordinates before applying
+            # the sinusoidal projection. This handles the cases where the frame
+            # is splitted between quadrants
+            ww = wcs.WCS(naxis=2)
+            # Sanson-Flamsteed (“global sinusoid”)
+            ww.wcs.ctype = ["RA---SFL", "DEC--SFL"]
+            x_px, y_px = ww.wcs_world2pix(x, y, 1)
+            # Remove the cosine
+            x_px /= np.cos(np.deg2rad(y_px))
+            # DFind the origin for the observed frame
+            ra_cent = (max(x_px) + min(x_px)) / 2.
+            dec_cent = (max(y_px) + min(y_px)) / 2.
+            # Apply the sinusoidal projection
+            x = (x_px - ra_cent) * np.cos(np.deg2rad(y_px))
+            y = (y_px - dec_cent)
+        else:
+            x = (x - ra_cent) * np.cos(np.deg2rad(y))
+            y = (y - dec_cent)
+        x_offset = ra_cent if ra_cent > 0. else (ra_cent + 360.)
+        y_offset = dec_cent
     else:
         x_offset, y_offset = 0., 0.
 

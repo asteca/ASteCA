@@ -1,12 +1,20 @@
 
+import numpy as np
+import warnings
+from scipy.spatial.distance import cdist
+from scipy.signal import savgol_filter
+from astropy.visualization import ZScaleInterval
+from astropy.stats import sigma_clipped_stats
+
+from ..structure.contamination_index import CIfunc
 from ..math_f import exp_function
 from ..best_fit.obs_clust_prepare import dataProcess
 from ..decont_algors.local_cell_clean import bin_edges_f
-from ..aux_funcs import circFrac
-import numpy as np
-import warnings
-from astropy.visualization import ZScaleInterval
-from astropy.stats import sigma_clipped_stats
+from ..aux_funcs import monteCarloPars, circFrac, ellipFrac
+from ..structure import king_profile
+from ..synth_clust import move_isochrone
+from ..synth_clust.masses_binar_probs import ranModels
+from ..synth_clust.synthClustPrep import setSynthClust
 
 
 # HARDCODED figure size and grid distribution
@@ -219,8 +227,8 @@ def da_find_chart(
     out_clust_rad = [[], []]
     for star in stars_out:
         if x_zmin <= star[1] <= x_zmax and y_zmin <= star[2] <= y_zmax:
-            dist = np.sqrt((kde_cent[0] - star[1]) ** 2 +
-                           (kde_cent[1] - star[2]) ** 2)
+            dist = np.sqrt((kde_cent[0] - star[1]) ** 2
+                           + (kde_cent[1] - star[2]) ** 2)
             # Only plot stars outside the cluster's radius.
             if dist >= clust_rad:
                 out_clust_rad[0].append(star[1])
@@ -369,9 +377,9 @@ def p2_ranges(p2, min_max_p):
 
 
 def packData(
-    lkl_method, cl_max_mag, bf_bin_edges, synth_clst_plot, binar_idx_plot,
-    shift_isoch, synthcl_Nsigma, colors, filters, col_0_comb, mag_0_comb,
-        col_1_comb):
+    lkl_method, colors, filters, cl_max_mag, synth_cl_phot, binar_idx,
+    col_0_comb, mag_0_comb, col_1_comb, bf_bin_edges, shift_isoch,
+        synthcl_Nsigma):
     """
     Properly select and pack data for CMD/CCD of observed and synthetic
     clusters, and their Hess diagram.
@@ -391,7 +399,7 @@ def packData(
     x_phot_all, y_phot_all = col_0_comb, mag_0_comb
     frst_obs_mag, frst_obs_col = list(zip(*list(zip(*cl_max_mag))[3]))[0],\
         list(zip(*list(zip(*cl_max_mag))[5]))[0]
-    frst_synth_col, frst_synth_mag = synth_clst_plot.T[1], synth_clst_plot.T[0]
+    frst_synth_col, frst_synth_mag = synth_cl_phot[1], synth_cl_phot[0]
     frst_col_edgs, frst_mag_edgs = bin_edges[1], bin_edges[0]
     # Filters and colors are appended continuously in 'shift_isoch'. If
     # there are 3 defined filters, then the first color starts at the
@@ -409,7 +417,7 @@ def packData(
     i_obs_x, i_obs_y = 0, 0
     hr_diags = [
         [x_phot_all, y_phot_all, frst_obs_col, frst_obs_mag, frst_synth_col,
-         frst_synth_mag, binar_idx_plot, frst_col_edgs, frst_mag_edgs,
+         frst_synth_mag, binar_idx, frst_col_edgs, frst_mag_edgs,
          frst_col_isoch, frst_mag_isoch, mag_col1_1sigma,
          colors[0], filters[0], 'mag', i_obs_x, i_obs_y, gs_y1, gs_y2]]
 
@@ -417,7 +425,7 @@ def packData(
     # versus first color), and an extra CCD (first color versus second color)
     if N_cols > 1:
         scnd_obs_col = list(zip(*list(zip(*cl_max_mag))[5]))[1]
-        scnd_synth_col = synth_clst_plot.T[2]
+        scnd_synth_col = synth_cl_phot[2]
         scnd_col_edgs = bin_edges[2]
         scnd_col_isoch = shift_isoch[N_mags + 1]
 
@@ -433,7 +441,7 @@ def packData(
         i_obs_x, i_obs_y = 1, 0
         hr_diags.append(
             [x_phot_all, y_phot_all, scnd_obs_col, frst_obs_mag,
-             scnd_synth_col, frst_synth_mag, binar_idx_plot, scnd_col_edgs,
+             scnd_synth_col, frst_synth_mag, binar_idx, scnd_col_edgs,
              frst_mag_edgs, shift_isoch[2], frst_mag_isoch, mag_col2_1sigma,
              colors[1], filters[0], 'mag', i_obs_x, i_obs_y, gs_y1, gs_y2])
         # CCD of first and second color defined.
@@ -442,7 +450,7 @@ def packData(
         i_obs_x, i_obs_y = 0, 1
         hr_diags.append(
             [x_phot_all, y_phot_all, frst_obs_col, scnd_obs_col,
-             frst_synth_col, scnd_synth_col, binar_idx_plot, frst_col_edgs,
+             frst_synth_col, scnd_synth_col, binar_idx, frst_col_edgs,
              scnd_col_edgs, frst_col_isoch, scnd_col_isoch, col1_col2_1sigma,
              colors[0], colors[1], 'col', i_obs_x, i_obs_y, gs_y1, gs_y2])
 
@@ -478,17 +486,10 @@ def get_hess(obs_mags_cols, synth_phot, hess_xedges, hess_yedges):
     return hess_x, hess_y, HD
 
 
-def plxPlot(
-    mmag_clp, mp_clp, plx_clp, e_plx_clp, flag_no_fl_regs_i,
-        field_regions_i):
+def plxPlot(flag_no_fl_regs_i, field_regions_i):
     """
     Parameters for the parallax plot.
     """
-    # Put large MP stars in cluster region on top.
-    mp_i = mp_clp.argsort()
-    mmag_clp, mp_clp, plx_clp, e_plx_clp = mmag_clp[mp_i],\
-        mp_clp[mp_i], plx_clp[mp_i], e_plx_clp[mp_i]
-
     if not flag_no_fl_regs_i:
         plx_flrg, mag_flrg = [], []
         # Extract parallax data.
@@ -504,7 +505,7 @@ def plxPlot(
     else:
         plx_flrg, mag_flrg = np.array([]), []
 
-    return plx_flrg, mag_flrg, mmag_clp, mp_clp, plx_clp, e_plx_clp
+    return plx_flrg, mag_flrg
 
 
 def SigmaEllipse(points, Nsigma=2.):
@@ -607,7 +608,7 @@ def pmRectangle(allfr_PMs, frac=.1):
 
 
 def RDPCurve(
-    xy_filtered, xy_cent_dist, kde_cent, N_MC, rand_01_MC, cos_t, sin_t,
+    ndim, xy_filtered, xy_cent_dist, kde_cent, clust_rad, ecc, theta,
         RDP_rings=50, rings_rm=.1, Nmin=10, **kwargs):
     """
     Obtain the RDP using the concentric rings method.
@@ -627,25 +628,51 @@ def RDPCurve(
     # The +1 adds a ring accounting for the initial 0. in the array
     radii = np.linspace(0., xy_cent_dist.max(), RDP_rings + 1 + max_i)[:-max_i]
 
+    rand_01_MC, cos_t, sin_t = monteCarloPars()
+
     # Areas and #stars for all rad values.
     rdp_radii, rdp_points, rdp_stddev = [], [], []
     l_prev, N_in_prev = np.inf, 0.
-    for l, h in zip(*[radii[:-1], radii[1:]]):
-        # Stars within this ring.
-        N_in = ((xy_cent_dist >= l) & (xy_cent_dist < h)).sum() + N_in_prev
+    for lw, h in zip(*[radii[:-1], radii[1:]]):
 
-        l_now = min(l, l_prev)
+        # Stars within this ellipse-ring.
+        if ndim in (0, 2):
+            N_in = ((xy_cent_dist >= lw) & (xy_cent_dist < h)).sum()\
+                + N_in_prev
+        elif ndim == 4:
+            N_in_ellip_lw = king_profile.inEllipse(
+                xy_filtered.T, kde_cent, lw, ecc, theta).sum()
+            N_in_ellip_h = king_profile.inEllipse(
+                xy_filtered.T, kde_cent, h, ecc, theta).sum()
+            N_in = (N_in_ellip_h - N_in_ellip_lw) + N_in_prev
 
-        # Require that at least 'Nmin' stars are within the ring.
+        # If N_in < Nmin take the next ellipse-ring (discard this lw).
+        l_now = min(lw, l_prev)
+
+        # Require that at least 'Nmin' stars are within the ellipse-ring.
         if N_in > Nmin:
-            # Area of ring.
-            fr_area_l = circFrac(
-                (kde_cent), l_now, x0, x1, y0, y1, N_MC, rand_01_MC, cos_t,
-                sin_t)
-            fr_area_h = circFrac(
-                (kde_cent), h, x0, x1, y0, y1, N_MC, rand_01_MC, cos_t, sin_t)
-            ring_area = (np.pi * h**2 * fr_area_h) -\
-                (np.pi * l_now**2 * fr_area_l)
+
+            if ndim in (0, 2):
+                # Area of ring.
+                fr_area_l = circFrac(
+                    (kde_cent), l_now, x0, x1, y0, y1, rand_01_MC, cos_t,
+                    sin_t)
+                fr_area_h = circFrac(
+                    (kde_cent), h, x0, x1, y0, y1, rand_01_MC, cos_t,
+                    sin_t)
+                ring_area = (np.pi * h**2 * fr_area_h)\
+                    - (np.pi * l_now**2 * fr_area_l)
+            elif ndim == 4:
+                # Area of ellipse-ring.
+                fr_area_l = ellipFrac(
+                    (kde_cent), l_now, theta, ecc, x0, x1, y0, y1, rand_01_MC,
+                    cos_t, sin_t)
+                fr_area_h = ellipFrac(
+                    (kde_cent), h, theta, ecc, x0, x1, y0, y1, rand_01_MC,
+                    cos_t, sin_t)
+                ring_area = (
+                    np.pi * h**2 * np.sqrt(1 - ecc**2) * fr_area_h)\
+                    - (np.pi * l_now**2 * np.sqrt(1 - ecc**2) * fr_area_l)
 
             # Store RDP parameters.
             rad_med = h if l_now == 0. else .5 * (l_now + h)
@@ -660,4 +687,122 @@ def RDPCurve(
             l_prev = l_now
             N_in_prev += N_in
 
-    return rdp_radii, rdp_points, rdp_stddev
+    # Get max value in x
+    rad_max = min(max(rdp_radii) + (max(rdp_radii) / 20.), 4. * clust_rad)
+
+    return rdp_radii, rdp_points, rdp_stddev, rad_max
+
+
+def NmembVsMag(x, y, mags, kde_cent, clust_rad, cl_area):
+    """
+    Number of members versus magnitude cut.
+    """
+    cent_dists = cdist([kde_cent], np.array([x, y]).T)[0]
+
+    # Use a copy to avoid overwriting the original array
+    mag = np.array(list(mags[0]))
+
+    area_tot = (np.nanmax(x) - np.nanmin(x)) * (np.nanmax(y) - np.nanmin(y))
+    area_out = area_tot - cl_area
+
+    membvsmag = []
+    mag_ranges = np.linspace(np.nanmin(mag), np.nanmax(mag), 11)
+    # handle possible nan values
+    mag[np.isnan(mag)] = np.inf
+    for i, mmax in enumerate(mag_ranges[1:]):
+        msk = mag < mmax
+        if msk.sum() > 2:
+            # N stars in the mag range, inside the cluster region
+            n_in_cl_reg = (cent_dists[msk] < clust_rad).sum()
+
+            # N stars in the mag range
+            Ntot = msk.sum()
+            fdens = (Ntot - n_in_cl_reg) / area_out
+            n_fl = fdens * cl_area
+            n_memb_estim = max(0, int(round(n_in_cl_reg - n_fl)))
+            membvsmag.append([mmax, n_memb_estim])
+
+    return np.array(membvsmag).T
+
+
+def membVSrad(
+    field_dens, field_dens_std, rad_radii, rad_areas, N_in_cl_rad,
+        N_in_ring):
+    """
+    """
+    N_membs = N_in_cl_rad - field_dens * rad_areas
+    membs_ratio = N_membs / N_in_ring
+    membs_ratio /= membs_ratio.max()
+
+    CI_vals = CIfunc(N_in_cl_rad, field_dens, rad_areas)
+
+    # Smooth the curve. Tried smoothing before the normalization but it
+    # increases the uncertainty region enormously.
+    # Catch error in savgol_filter() when there is a 'nan' or 'inf'
+    if np.isnan(membs_ratio).any() or np.isinf(membs_ratio).any():
+        membs_ratio_smooth = np.array([])
+    else:
+        # window size (must be odd). There are ~1000 values by default
+        ws = max(3, int(len(membs_ratio) / 10.))
+        ws = ws + 1 if ws % 2 == 0 else ws
+        # polynomial order
+        pol = 3
+        membs_ratio_smooth = savgol_filter(membs_ratio, ws, pol)
+
+    N_membs_16, N_membs_84 = np.array([]), np.array([])
+    if not np.isnan(field_dens_std):
+        field_dens_s = np.random.normal(field_dens, field_dens_std, 1000)
+        N_membs_all = []
+        for fdens in field_dens_s:
+            N_membs_all.append(N_in_cl_rad - fdens * rad_areas)
+        N_membs_all = np.array(N_membs_all)
+        N_membs_16 = np.nanpercentile(N_membs_all, 16, 0)
+        N_membs_84 = np.nanpercentile(N_membs_all, 84, 0)
+
+    return CI_vals, N_membs, N_membs_16, N_membs_84, membs_ratio,\
+        membs_ratio_smooth
+
+
+def isoch_sigmaNreg(
+    fundam_params, R_V, D3_sol, theor_tracks, m_ini_idx, ext_coefs, N_fc,
+        ext_unif_rand, isoch_fit_params, isoch_fit_errors, syntClustArgs):
+    """
+    Generate the uncertainty region, if uncertainties for at least one
+    parameter exists.
+    """
+
+    # Selected solution values for all the parameters.
+    model = isoch_fit_params[D3_sol + '_sol']
+    zm, am, e, d = model[:4]
+    # Values in grid
+    zg = np.argmin(abs(np.array(fundam_params[0]) - zm))
+    ag = np.argmin(abs(np.array(fundam_params[1]) - am))
+    # Move isochrone
+    isochrone = theor_tracks[zg][ag][:sum(N_fc)]
+    # TODO 'ext_diff' in place for #174
+    binar_flag, ext_diff = False, 0.
+    shift_isoch = move_isochrone.main(
+        isochrone, e, d, R_V, ext_coefs, N_fc, ext_unif_rand[zg],
+        m_ini_idx, binar_flag, ext_diff)
+    shift_isoch = shift_isoch[:sum(N_fc)]
+
+    # Generate random models from the selected solution (mean, median, mode,
+    # MAP), given by 'D3_sol'.
+    models = ranModels(
+        fundam_params, D3_sol, isoch_fit_params, isoch_fit_errors)
+
+    # Generate the synthetic clusters from the sampled parameters.
+    synthcl_Nsigma = np.array([])
+    if models.any():
+        synthcl_Nsigma = [[] for _ in range(sum(N_fc))]
+        for Nm, model in enumerate(models):
+
+            # Estimate the mean and variance for each star via recurrence.
+            synth_cl = setSynthClust(model, *syntClustArgs)
+            # Synthetic cluster
+            if synth_cl.any():
+                for i, photom_dim in enumerate(synth_cl[:sum(N_fc)]):
+                    synthcl_Nsigma[i] += list(photom_dim)
+        synthcl_Nsigma = np.array(synthcl_Nsigma)
+
+    return shift_isoch, synthcl_Nsigma

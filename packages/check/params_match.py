@@ -71,7 +71,7 @@ def chechLkl(pd):
             except ValueError:
                 raise ValueError("bin numbers must be integers")
 
-        N_colors = int(len(pd['id_cols']) / 2.)
+        N_colors = int(len(pd['id_cols']))
         if len(pd['lkl_manual_bins']) != N_colors + 1:
             raise ValueError(
                 "there are {} bin values defined, there should be {}.".format(
@@ -131,11 +131,3 @@ def chechLkl(pd):
 #         raise ValueError(
 #             "GA 'n_el' must be smaller than 'n_pop';\n'{}' and '{}' are set"
 #             " respectively.".format(pd['N_el'], pd['N_pop']))
-
-# DEPRECATED May 2020
-# def checkemcee(pd):
-#     """
-#     """
-#     if 'emcee' not in pd['inst_packgs_lst']:
-#         raise ValueError("'emcee' method is selected, but the package is\n" +
-#                          "not installed")
