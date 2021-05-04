@@ -74,24 +74,22 @@ def optimalRadius(rad_radii, rad_areas, N_in_cl_rad, N_in_ring, field_dens):
 
 
 def rdpAreasDists(
-    x, y, kde_cent, xy_cent_dist, field_dens, pmin=2, pmax=90, Nrads=300,
+    x, y, kde_cent, xy_cent_dist, field_dens, pmin=2, pmax=0.9, Nrads=300,
         N_MC=1000000, Ninterp=1000):
     """
     The areas for each radius value in 'rad_radii' are obtained here once.
     We also calculate here the distance of each star to the defined center.
 
     HARDCODED
-    pmin, pmax: minimum and maximum percentiles used to define the radii range
+    pmin: minimum percentile used to define the radii range
+    pmax: percentage of the maximum distance from the center to a frame's
+          border, used to define the radii range
     Nrads: number of values used to generate the 'rad_radii' array.
     N_MC: points in the Monte Carlo area estimation. Use 1e6 for stability.
     Ninterp: number of interpolated points in the final arrays
     """
 
     rand_01_MC, cos_t, sin_t = monteCarloPars(N_MC)
-
-    # # Define the radii values
-    dmin, dmax = np.percentile(xy_cent_dist, (pmin, pmax))
-    all_rads = np.linspace(dmin, dmax, Nrads)
 
     # Frame limits
     x0, x1 = min(x), max(x)
@@ -101,6 +99,10 @@ def rdpAreasDists(
     dx0, dx1 = abs(kde_cent[0] - x0), abs(kde_cent[0] - x1)
     dy0, dy1 = abs(kde_cent[1] - y0), abs(kde_cent[1] - y1)
     dxy = min(dx0, dx1, dy0, dy1)
+
+    # Define the radii values
+    dmin = np.percentile(xy_cent_dist, pmin)
+    all_rads = np.linspace(dmin, max(dx0, dx1, dy0, dy1) * pmax, Nrads)
 
     # Areas associated to the radii defined in 'all_rads'.
     rad_areas, rad_radii, N_in_ring, N_in_cl_rad =\
