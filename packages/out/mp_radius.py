@@ -274,7 +274,7 @@ def pl_rad_dens(
     axins.minorticks_off()
     # y0, y1 = axins.set_ylim()
     # axins.set_ylim(y0, y_max)
-    if y_min > 0:
+    if y_min > 1:
         axins.set_ylim(y_min, y_max)
 
 
