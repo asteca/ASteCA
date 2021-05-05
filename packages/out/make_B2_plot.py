@@ -46,7 +46,7 @@ def main(
     x_min, x_max, y_min, y_max = prep_plots.frame_max_min(
         cld_i['x'], cld_i['y'])
     asp_ratio = prep_plots.aspect_ratio(x_min, x_max, y_min, y_max)
-    coord, x_name, y_name = prep_plots.coord_syst(pd['coords'])
+    coord, x_name, y_name = "deg", "ra", "dec"
 
     # Photometric analysis plots.
     arglist = [

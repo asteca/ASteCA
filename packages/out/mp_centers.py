@@ -20,9 +20,7 @@ def pl_full_frame(
     # Set plot limits
     plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
-    # If RA is used, invert axis.
-    if coord == 'deg':
-        ax.invert_xaxis()
+    ax.invert_xaxis()
     # Set axis labels
     plt.xlabel('{} ({})'.format(x_name, coord))
     plt.ylabel('{} ({})'.format(y_name, coord))
@@ -76,9 +74,7 @@ def pl_densxy(
         ob.patch.set(alpha=0.85)
         ax.add_artist(ob)
 
-    # If RA is used, invert axis.
-    if coord == 'deg':
-        ax.invert_xaxis()
+    ax.invert_xaxis()
     ax.set_aspect(aspect=asp_ratio)
 
 

@@ -86,9 +86,7 @@ def pl_chart_mps(
     plt.xlim(x_zmin, x_zmax)
     plt.ylim(y_zmin, y_zmax)
     ax.set_title('Cluster region'.format())
-    # If RA is used, invert axis.
-    if coord == 'deg':
-        ax.invert_xaxis()
+    ax.invert_xaxis()
     # Set axis labels
     plt.xlabel('{} ({})'.format(x_name, coord))
     plt.ylabel('{} ({})'.format(y_name, coord))

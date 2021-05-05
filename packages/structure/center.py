@@ -1,17 +1,15 @@
 
 import numpy as np
 from scipy import stats
-from ..out import prep_plots
 from .xy_density import cent_bin as center_bin
 from ..inp.get_data import coordsProject
 
 
-def main(cld_i, clp, coords, project, cent_method, **kwargs):
+def main(cld_i, clp, project, cent_method, **kwargs):
     """
     Obtains the center of the putative cluster.
     """
 
-    coord = prep_plots.coord_syst(coords)[0]
     # Restrict the KDE to a smaller area (to improve performance).
     radius = 0.25 * min(
         np.nanmax(cld_i['x']) - np.nanmin(cld_i['x']),
@@ -28,21 +26,20 @@ def main(cld_i, clp, coords, project, cent_method, **kwargs):
         # Find bin where the center xy coordinates are located.
         bin_cent = center_bin(clp['xedges'], clp['yedges'], kde_cent)
 
-        print("Auto center found (bw={:g}): ({:g}, {:g}) {}".format(
-            clp['bw_list'][1], kde_cent[0], kde_cent[1], coord))
+        print("Auto center found (bw={:g}): ({:g}, {:g}) deg".format(
+            clp['bw_list'][1], kde_cent[0], kde_cent[1]))
 
     else:
         # De-project center coordinates if needed.
         x0, y0, _, _ = coordsProject(
-            cent_method[0], cent_method[1], coords, project,
+            cent_method[0], cent_method[1], project,
             clp['x_offset'], clp['y_offset'])
 
         # Obtain KDE plot.
         _, kde_plot = kde_center_zoom(cld_i['x'], cld_i['y'], (x0, y0), radius)
 
         kde_cent = (x0, y0)
-        print("Manual center fixed: ({:g}, {:g}) {}".format(
-            *cent_method, coord))
+        print("Manual center fixed: ({:g}, {:g}) deg".format(*cent_method))
 
         # Find bin where the center xy coordinates are located.
         bin_cent = center_bin(clp['xedges'], clp['yedges'], kde_cent)

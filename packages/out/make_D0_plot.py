@@ -12,7 +12,7 @@ def main(
     model, isoch_moved, mass_dist, isoch_binar, isoch_compl, synth_clust,
     extra_pars, sigma, synth_field, sigma_field, cx, cy, rc, rt, cl_dists,
     xmax, ymax, x_cl, y_cl, x_fl, y_fl, CI, max_mag_syn, flag_make_plot,
-        coords, colors, filters, plot_file):
+        colors, filters, plot_file):
     """
     In place for #239
     Plot synthetic clusters.
@@ -21,7 +21,6 @@ def main(
     gs = gridspec.GridSpec(grid_y, grid_x)
     add_version_plot.main(y_fix=1.005)
 
-    coord, x_name, y_name = prep_plots.coord_syst(coords)
     x_ax0, y_ax = prep_plots.ax_names(colors[0], filters[0], 'mag')
 
     # # Plot field + cluster.

@@ -15,8 +15,8 @@ def main(
     out_file_name, write_name = npd['out_file_name'], npd['write_name']
 
     # Round structure parameters.
-    frmt = "{:.6f}" if pd['coords'] == 'deg' else "{:.0f}"
-    if pd['coords'] == 'deg' and pd['project']:
+    frmt = "{:.6f}"
+    if pd['project']:
         x_cent = (kde_cent[0] / np.cos(np.deg2rad(kde_cent[1] + y_offset))) +\
             x_offset
     else:

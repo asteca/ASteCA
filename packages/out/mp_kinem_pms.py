@@ -122,10 +122,8 @@ def pms_coords_all(
         zorder=10)
     fig.gca().add_artist(circle)
 
-    plt.xlim(x_min, x_max)
+    plt.xlim(x_max, x_min)
     plt.ylim(y_min, y_max)
-    if coord == 'deg':
-        ax.invert_xaxis()
 
     ax.set_aspect(aspect=asp_ratio)
 

@@ -10,13 +10,10 @@ def pl_KP_Bys(
 
     # Convert from deg to arcmin if (ra,dec) were used.
     KP_samples, KP_kde = KP_plot['KP_samples'], KP_plot['KP_kde']
-    if coord == 'deg':
-        KP_samples[:, :, :2] = KP_samples[:, :, :2] * 60.
-        KP_Bys_rc, KP_Bys_rt = KP_Bys_rc * 60., KP_Bys_rt * 60.
-        KP_kde[0][0], KP_kde[1][0] = KP_kde[0][0] * 60., KP_kde[1][0] * 60.
-        coord2, dec_places = 'arcmin', "{:.2f}"
-    else:
-        coord2, dec_places = 'px', "{:.0f}"
+    KP_samples[:, :, :2] = KP_samples[:, :, :2] * 60.
+    KP_Bys_rc, KP_Bys_rt = KP_Bys_rc * 60., KP_Bys_rt * 60.
+    KP_kde[0][0], KP_kde[1][0] = KP_kde[0][0] * 60., KP_kde[1][0] * 60.
+    coord2, dec_places = 'arcmin', "{:.2f}"
 
     # Decide how to accommodate the plots
     if KP_samples.shape[-1] in (2, 3):
