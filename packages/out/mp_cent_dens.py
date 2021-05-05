@@ -65,12 +65,8 @@ def pl_densmap(
     Coordinates 2D KDE.
     """
 
-    # import warnings
-    # warnings.filterwarnings("error")
-
     ax = plt.subplot(gs[0:2, 4:6])
-    frmt = '{:.0f}'
-    ax.set_title((r'$KDE_{{bdw}}$ =' + frmt + ' [{}]').format(
+    ax.set_title((r'$KDE_{{bdw}}$ ={:.4f} [{}]').format(
         bw_list[1], coord))
     plt.xlabel('{} ({})'.format(x_name, coord))
     plt.ylabel('{} ({})'.format(y_name, coord))
