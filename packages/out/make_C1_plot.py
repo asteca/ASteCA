@@ -27,7 +27,7 @@ def main(
         cld_c['x'], cld_c['y'])
     x_zmin, x_zmax, y_zmin, y_zmax = prep_plots.frame_zoomed(
         x_min, x_max, y_min, y_max, kde_cent, clust_rad)
-    coord, x_name, y_name = prep_plots.coord_syst(pd['coords'])
+    coord, x_name, y_name = "deg", "ra", "dec"
     v_min_mp_comp, v_max_mp_comp = prep_plots.da_colorbar_range(
         cl_reg_fit, cl_reg_no_fit)
     chart_fit_inv, chart_no_fit_inv, out_clust_rad =\

@@ -50,14 +50,6 @@ def aspect_ratio(x_min, x_max, y_min, y_max):
     return asp_ratio
 
 
-def coord_syst(coords):
-    """
-    Define system of coordinates used.
-    """
-    coord_lst = ['px', 'x', 'y'] if coords == 'px' else ['deg', 'ra', 'dec']
-    return coord_lst
-
-
 def frame_zoomed(
     x_min, x_max, y_min, y_max, kde_cent, clust_rad, kpflag=None,
         tidal_rad=None):

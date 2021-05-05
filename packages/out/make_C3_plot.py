@@ -22,7 +22,7 @@ def main(npd, pd, cld_i, clp):
     gs = gridspec.GridSpec(grid_y, grid_x)
     add_version_plot.main(y_fix=.999)
 
-    coord, x_name, y_name = prep_plots.coord_syst(pd['coords'])
+    coord, x_name, y_name = "deg", "ra", "dec"
     # Uses first magnitude and color defined
     x_ax, y_ax = prep_plots.ax_names(
         pd['colors'][0], pd['filters'][0], 'mag')

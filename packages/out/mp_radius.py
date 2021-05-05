@@ -15,12 +15,9 @@ def pl_rad_find(
     """
     Radius estimation plot.
     """
-    # Convert from deg to arcmin if (ra,dec) were used.
-    if coord == 'deg':
-        rad_radii, clust_rad = rad_radii * 60., clust_rad * 60.
-        coord2 = 'arcmin'
-    else:
-        coord2 = 'px'
+    # Convert from deg to arcmin
+    rad_radii, clust_rad = rad_radii * 60., clust_rad * 60.
+    coord2 = 'arcmin'
 
     # # Cut when (if) N_nembs = 0
     # try:
@@ -86,12 +83,7 @@ def pl_cl_fl_regions(
     ax = plt.subplot(gs[0:2, 4:6])
 
     ax.set_aspect(aspect=asp_ratio)
-    # Set plot limits
-    # plt.xlim(x_min, x_max)
-    # plt.ylim(y_min, y_max)
-    # If RA is used, invert axis.
-    if coord == 'deg':
-        ax.invert_xaxis()
+    ax.invert_xaxis()
     plt.xlabel('{} ({})'.format(x_name, coord))
     plt.ylabel('{} ({})'.format(y_name, coord))
     if plot_style == 'asteca':
@@ -145,20 +137,17 @@ def pl_rad_dens(
         KP_cent_dens, _16_84_rang, _84_kp, _16_kp = KP_plot['KP_cent_dens'],\
             KP_plot['_16_84_rang'], KP_plot['_84_kp'], KP_plot['_16_kp']
 
-    # Convert from deg to arcmin if (ra,dec) were used.
-    if coord == 'deg':
-        rdp_radii = np.array(rdp_radii) * 60.
-        clust_rad, rad_max = clust_rad * 60., rad_max * 60.
-        KP_Bys_rc, KP_Bys_rt = KP_Bys_rc * 60., KP_Bys_rt * 60.
-        field_dens, e_fdens, KP_cent_dens = field_dens / 3600.,\
-            e_fdens / 3600., KP_cent_dens / 3600.
-        _16_84_rang, _84_kp, _16_kp = _16_84_rang * 60.,\
-            _84_kp / 3600., _16_kp / 3600.
-        rdp_points = np.array(rdp_points) / 3600.
-        rdp_stddev = np.array(rdp_stddev) / 3600.
-        coord2 = 'arcmin'
-    else:
-        coord2 = 'px'
+    # Convert from deg to arcmin
+    rdp_radii = np.array(rdp_radii) * 60.
+    clust_rad, rad_max = clust_rad * 60., rad_max * 60.
+    KP_Bys_rc, KP_Bys_rt = KP_Bys_rc * 60., KP_Bys_rt * 60.
+    field_dens, e_fdens, KP_cent_dens = field_dens / 3600.,\
+        e_fdens / 3600., KP_cent_dens / 3600.
+    _16_84_rang, _84_kp, _16_kp = _16_84_rang * 60.,\
+        _84_kp / 3600., _16_kp / 3600.
+    rdp_points = np.array(rdp_points) / 3600.
+    rdp_stddev = np.array(rdp_stddev) / 3600.
+    coord2 = 'arcmin'
 
     ax = plt.subplot(gs[2:4, 0:4])
 
@@ -274,7 +263,7 @@ def pl_rad_dens(
     axins.minorticks_off()
     # y0, y1 = axins.set_ylim()
     # axins.set_ylim(y0, y_max)
-    if y_min > 0:
+    if y_min > 1:
         axins.set_ylim(y_min, y_max)
 
 
@@ -292,9 +281,7 @@ def pl_zoom_frame(
     # Set plot limits.
     plt.xlim(x_zmin, x_zmax)
     plt.ylim(y_zmin, y_zmax)
-    if coord == 'deg':
-        # If RA is used, invert axis.
-        ax.invert_xaxis()
+    ax.invert_xaxis()
     # Set axis labels
     plt.xlabel('{} ({})'.format(x_name, coord))
     plt.ylabel('{} ({})'.format(y_name, coord))
@@ -379,17 +366,13 @@ def pl_memb_vs_rad(
         cent_dens, _16_84_rang, cd_rc_rt_sampled = KP_plot['KP_cent_dens'],\
             KP_plot['_16_84_rang'], KP_plot['cd_rc_rt_sampled']
 
-    # Convert from deg to arcmin if (ra,dec) were used.
-    if coord == 'deg':
-        cent_dens, cd_sampled = cent_dens / 3600., cd_rc_rt_sampled[0] / 3600.
-        clust_rad, rc, rt, _16_84_rang, rc_sampled, rt_sampled,\
-            rad_radii = clust_rad * 60., rc * 60.,\
-            rt * 60., _16_84_rang * 60., cd_rc_rt_sampled[1] * 60.,\
-            cd_rc_rt_sampled[2] * 60., rad_radii * 60.
-        coord2 = 'arcmin'
-    else:
-        cd_sampled, rc_sampled, rt_sampled = cd_rc_rt_sampled
-        coord2 = 'px'
+    # Convert from deg to arcmin
+    cent_dens, cd_sampled = cent_dens / 3600., cd_rc_rt_sampled[0] / 3600.
+    clust_rad, rc, rt, _16_84_rang, rc_sampled, rt_sampled,\
+        rad_radii = clust_rad * 60., rc * 60.,\
+        rt * 60., _16_84_rang * 60., cd_rc_rt_sampled[1] * 60.,\
+        cd_rc_rt_sampled[2] * 60., rad_radii * 60.
+    coord2 = 'arcmin'
 
     ax = plt.subplot(gs[4:6, 0:4])
     plt.xlabel(r'radius $[{}]$'.format(coord2))
@@ -397,7 +380,7 @@ def pl_memb_vs_rad(
     if plot_style == 'asteca':
         ax.grid()
 
-    # Minimum in arcmin or pixel
+    # Minimum arcmin
     r_min = 1
     rads = np.linspace(r_min, rt, 50)
     # Plot King profile.

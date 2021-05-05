@@ -19,9 +19,7 @@ def pl_cl_fl_regions(
     # Set plot limits
     plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
-    # If RA is used, invert axis.
-    if coord == 'deg':
-        ax.invert_xaxis()
+    ax.invert_xaxis()
     # Set axis labels
     plt.xlabel('{} ({})'.format(x_name, coord))
     plt.ylabel('{} ({})'.format(y_name, coord))

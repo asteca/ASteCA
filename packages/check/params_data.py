@@ -7,12 +7,6 @@ def check(mypath, pd):
     isochrones, and to properly generate the synthetic clusters (if the best
     match function is set to run).
     """
-    # Check px/deg.
-    if pd['coords'] not in pd['coord_accpt']:
-        raise ValueError(
-            "coordinate units '{}' given in the input parameters\n"
-            "file are incorrect.".format(pd['coords']))
-
     # Read column indexes for the IDs and the coordinates.
     id_col, x_col, y_col = pd['id_ids'], pd['id_xdata'], pd['id_ydata']
 
@@ -52,7 +46,7 @@ def check(mypath, pd):
         try:
             ferr = float(err)
         except ValueError:
-            if err not in ('n', 'N'):
+            if err != 'max':
                 raise ValueError("bad value ('{}') for max error"
                                  " in 'params_input.dat'".format(err))
             ferr = 1.

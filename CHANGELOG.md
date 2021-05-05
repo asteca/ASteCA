@@ -1,6 +1,17 @@
 # Change Log
 
 
+## [[v0.4.1]][314] - 2021-05-05
+
+### Changed
+
+* Fixed estimated optimal radius that was too large ([513][313])
+* Deprecate pixel coordinate support ([509][312])
+* Coordinates density map shows artifact in corners ([511][311])
+* Split A-D test into one test per feature ([477][310])
+
+
+
 ## [[v0.4.0]][309] - 2021-05-03
 
 ### Changed
@@ -872,3 +883,8 @@ ________________________________________________________________________________
 [307]: https://github.com/asteca/ASteCA/issues/484
 [308]: https://github.com/asteca/ASteCA/issues/488
 [309]: https://github.com/asteca/asteca/releases/tag/v0.4.0
+[310]: https://github.com/asteca/ASteCA/issues/477
+[311]: https://github.com/asteca/ASteCA/issues/511
+[312]: https://github.com/asteca/ASteCA/issues/509
+[313]: https://github.com/asteca/ASteCA/issues/513
+[314]: https://github.com/asteca/asteca/releases/tag/v0.4.1

@@ -19,9 +19,7 @@ def pl_full_frame(
     # Set plot limits
     plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
-    # If RA is used, invert axis.
-    if coord == 'deg':
-        ax.invert_xaxis()
+    ax.invert_xaxis()
     # Set axis labels
     plt.xlabel('{} ({})'.format(x_name, coord))
     plt.ylabel('{} ({})'.format(y_name, coord))
@@ -44,8 +42,8 @@ def pl_full_frame(
     ax.add_artist(circle)
 
     # Add text box
-    r_frmt = '{:.0f}' if coord == 'px' else '{:.5f}'
-    if coord == 'deg' and project:
+    r_frmt = '{:.5f}'
+    if project:
         x_cent = (kde_cent[0] / np.cos(np.deg2rad(kde_cent[1] + y_offset))) +\
             x_offset
     else:
@@ -67,12 +65,8 @@ def pl_densmap(
     Coordinates 2D KDE.
     """
 
-    # import warnings
-    # warnings.filterwarnings("error")
-
     ax = plt.subplot(gs[0:2, 4:6])
-    frmt = '{:.4f}' if coord == 'deg' else '{:.0f}'
-    ax.set_title((r'$KDE_{{bdw}}$ =' + frmt + ' [{}]').format(
+    ax.set_title((r'$KDE_{{bdw}}$ ={:.4f} [{}]').format(
         bw_list[1], coord))
     plt.xlabel('{} ({})'.format(x_name, coord))
     plt.ylabel('{} ({})'.format(y_name, coord))
@@ -89,9 +83,7 @@ def pl_densmap(
     im = plt.imshow(
         np.rot90(kde), cmap=plt.get_cmap('RdYlBu_r'), extent=ext_range)
     plt.contour(x_grid, y_grid, kde, colors='#551a8b', linewidths=0.5)
-    # If RA is used, invert axis.
-    if coord == 'deg':
-        ax.invert_xaxis()
+    ax.invert_xaxis()
 
     # Colorbar on the right side of ax.
     divider = make_axes_locatable(ax)
@@ -100,7 +92,7 @@ def pl_densmap(
     cbar.set_ticks([
         np.min(kde), (np.max(kde) + np.min(kde)) * .5, np.max(kde)])
     cbar.ax.minorticks_off()
-    scale = 3600. if coord == 'deg' else 1.
+    scale = 3600.
 
     kde_dens_min, kde_dens_max = fr_dens.min(), fr_dens.max()
     midpt = ((kde_dens_max + kde_dens_min) * .5) / scale
@@ -133,9 +125,7 @@ def pl_knn_dens(
     # Set plot limits
     plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
-    # If RA is used, invert axis.
-    if coord == 'deg':
-        ax.invert_xaxis()
+    ax.invert_xaxis()
     ax.set_title(r'$kNN={}\;|\;max(100; (d\leq d_{{p=25\%}}))$'.format(NN_dd))
 
     plt.xlabel('{} ({})'.format(x_name, coord))
@@ -170,7 +160,7 @@ def pl_knn_dens(
     r_frmt = '{:.0f}' if coord == 'px' else '{:.5f}'
     x_max_dens = xy_filtered[idx][0]
     y_max_dens = xy_filtered[idx][1] + y_offset
-    if coord == 'deg' and project:
+    if project:
         x_max_dens = (
             x_max_dens / np.cos(np.deg2rad(y_max_dens + y_offset))) + x_offset
     t1 = ('(' + r_frmt + ',\n' + r_frmt + ')').format(x_max_dens, y_max_dens)
@@ -194,16 +184,13 @@ def pl_field_dens(
     """
     Field density values for different percentiles.
     """
-    # Convert from deg to arcmin if (ra,dec) were used.
-    if coord == 'deg':
-        fr_dist, fdens_min_d, field_dens_d = np.array(fr_dist) * 60.,\
-            np.array(fdens_min_d) * 60., np.array(field_dens_d) * 60.
-        fr_dens, fdens_lst, fdens_std_lst = [
-            np.array(_) / 3600. for _ in (fr_dens, fdens_lst, fdens_std_lst)]
-        field_dens = field_dens / 3600.
-        coord2 = 'arcmin'
-    else:
-        coord2 = 'px'
+    # Convert from deg to arcmin
+    fr_dist, fdens_min_d, field_dens_d = np.array(fr_dist) * 60.,\
+        np.array(fdens_min_d) * 60., np.array(field_dens_d) * 60.
+    fr_dens, fdens_lst, fdens_std_lst = [
+        np.array(_) / 3600. for _ in (fr_dens, fdens_lst, fdens_std_lst)]
+    field_dens = field_dens / 3600.
+    coord2 = 'arcmin'
 
     delta_y = np.ptp(fr_dens) * .1
     ymin = max(0., min(fr_dens) - delta_y)
@@ -254,13 +241,10 @@ def pl_centdist_vs_mag(
     # Distances of all stars to the center of the cluster.
     xy_cent_dist = cdist([kde_cent], np.array((xi, yi)).T)[0]
 
-    # Convert from deg to arcmin if (ra,dec) were used.
-    if coord == 'deg':
-        clust_rad, xy_cent_dist = clust_rad * 60., xy_cent_dist * 60.
-        integ_dists = np.array(integ_dists) * 60.
-        coord2 = 'arcmin'
-    else:
-        coord2 = 'px'
+    # Convert from deg to arcmin
+    clust_rad, xy_cent_dist = clust_rad * 60., xy_cent_dist * 60.
+    integ_dists = np.array(integ_dists) * 60.
+    coord2 = 'arcmin'
 
     ax = plt.subplot(gs[4:6, 4:6])
     if plot_style == 'asteca':

@@ -2,11 +2,10 @@
 import numpy as np
 from scipy.signal import savgol_filter
 from scipy.spatial.distance import cdist
-from ..out import prep_plots
 from ..aux_funcs import monteCarloPars, circFrac
 
 
-def main(cld_i, clp, coords, rad_method, **kwargs):
+def main(cld_i, clp, rad_method, **kwargs):
     """
     Estimate the radius through the optimization of the #cluster-members vs
     #field-stars values. Assign the uncertainty through a bootstrap process
@@ -19,13 +18,12 @@ def main(cld_i, clp, coords, rad_method, **kwargs):
         rdpAreasDists(cld_i['x'], cld_i['y'], clp['kde_cent'],
                       clp['xy_cent_dist'], clp['field_dens'])
 
-    coord = prep_plots.coord_syst(coords)[0]
     if rad_method == 'a':
 
         clp['clust_rad'] = optimalRadius(
             clp['rad_radii'], clp['rad_areas'], clp['N_in_cl_rad'],
             clp['N_in_ring'], clp['field_dens'])
-        print("Radius found: {:g} {}".format(clp['clust_rad'], coord))
+        print("Radius found: {:g} deg".format(clp['clust_rad']))
 
         # if not np.isnan(clp['field_dens_std']):
         #     clp['all_rads'], clp['e_rad'] = radError(
@@ -39,12 +37,12 @@ def main(cld_i, clp, coords, rad_method, **kwargs):
     elif rad_method == 'max':
         clp['clust_rad'] = maxRadius(
             cld_i['x'], cld_i['y'], clp['kde_cent'], clp['xy_cent_dist'])
-        print("Large radius selected: {:g} {}".format(
-            clp['clust_rad'], coord))
+        print("Large radius selected: {:g} deg".format(
+            clp['clust_rad']))
 
     else:
         clp['clust_rad'] = rad_method
-        print("Manual radius set: {:g} {}".format(clp['clust_rad'], coord))
+        print("Manual radius set: {:g} deg".format(clp['clust_rad']))
 
     return clp
 
@@ -74,24 +72,22 @@ def optimalRadius(rad_radii, rad_areas, N_in_cl_rad, N_in_ring, field_dens):
 
 
 def rdpAreasDists(
-    x, y, kde_cent, xy_cent_dist, field_dens, pmin=2, pmax=90, Nrads=300,
+    x, y, kde_cent, xy_cent_dist, field_dens, pmin=2, pmax=0.9, Nrads=300,
         N_MC=1000000, Ninterp=1000):
     """
     The areas for each radius value in 'rad_radii' are obtained here once.
     We also calculate here the distance of each star to the defined center.
 
     HARDCODED
-    pmin, pmax: minimum and maximum percentiles used to define the radii range
+    pmin: minimum percentile used to define the radii range
+    pmax: percentage of the maximum distance from the center to a frame's
+          border, used to define the radii range
     Nrads: number of values used to generate the 'rad_radii' array.
     N_MC: points in the Monte Carlo area estimation. Use 1e6 for stability.
     Ninterp: number of interpolated points in the final arrays
     """
 
     rand_01_MC, cos_t, sin_t = monteCarloPars(N_MC)
-
-    # # Define the radii values
-    dmin, dmax = np.percentile(xy_cent_dist, (pmin, pmax))
-    all_rads = np.linspace(dmin, dmax, Nrads)
 
     # Frame limits
     x0, x1 = min(x), max(x)
@@ -101,6 +97,10 @@ def rdpAreasDists(
     dx0, dx1 = abs(kde_cent[0] - x0), abs(kde_cent[0] - x1)
     dy0, dy1 = abs(kde_cent[1] - y0), abs(kde_cent[1] - y1)
     dxy = min(dx0, dx1, dy0, dy1)
+
+    # Define the radii values
+    dmin = np.percentile(xy_cent_dist, pmin)
+    all_rads = np.linspace(dmin, max(dx0, dx1, dy0, dy1) * pmax, Nrads)
 
     # Areas associated to the radii defined in 'all_rads'.
     rad_areas, rad_radii, N_in_ring, N_in_cl_rad =\

@@ -24,8 +24,7 @@ def main(pars_f_path):
                     id_ids = reader[1]
                     id_xdata = reader[2]
                     id_ydata = reader[3]
-                    coords = reader[4]
-                    project = True if reader[5] in true_lst else False
+                    project = True if reader[4] in true_lst else False
                 elif reader[0] == 'I2':
                     id_mags = reader[1:]
                 elif reader[0] == 'I3':
@@ -210,7 +209,7 @@ def main(pars_f_path):
     pd = {
         # Input data parameters
         'id_ids': id_ids, 'id_xdata': id_xdata,
-        'id_ydata': id_ydata, 'coords': coords, 'project': project,
+        'id_ydata': id_ydata, 'project': project,
         'id_mags': id_mags, 'id_cols': id_cols, 'id_kinem': id_kinem,
 
         # Input data processing
