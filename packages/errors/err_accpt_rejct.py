@@ -60,7 +60,7 @@ def max_err_cut(cld, err_max):
     N_colors, N_stars = cld['cols'].shape
     em_float = []
     for err in err_max:
-        if err == 'n':
+        if err == 'max':
             em_float.append(np.inf)
         else:
             em_float.append(float(err))

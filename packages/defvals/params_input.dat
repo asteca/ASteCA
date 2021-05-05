@@ -137,18 +137,17 @@ S2  StretchMove()
 
 # Error rejection.
 #
-# * e_mag_max: [float / str]
+# * e_mag_max: [float / max]
 #   Maximum error value a star can have in its magnitude without being
-#   rejected. Use 'n' for no maximum limit.
-# * e_col_max: [float / str]
+#   rejected. Use 'max' for no maximum limit.
+# * e_col_max: [float / max]
 #   Maximum error value a star can have in its color(s) without being rejected.
-#   Use 'n' for no maximum limit.
-# * e_plx_max / e_pm_max / e_rv_max: [float / str]
-#   Idem for parallax / proper motions / radial velocity values. If these data
-#   columns are not present (or no maximum limit is desired) use 'n'.
+# * e_plx_max / e_pm_max / e_rv_max: [float / max]
+#   Idem for parallax / proper motions / radial velocity values. Use 'max' if
+#   any of these data columns are not present (or no maximum limit is desired)
 #
 #   e_mag_max   e_col_max    e_plx_max     e_pm_max     e_rv_max
-E0        0.1         0.3            n            n            n
+E0        0.1         0.3          max          max          max
 ################################################################################
 
 
