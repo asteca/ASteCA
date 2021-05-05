@@ -26,8 +26,8 @@ def main(mmag, e_mc, be_m, interv_mag, n_interv):
             # Iterate through all intervals in magnitude.
             for q in range(n_interv):
                 # Store star's errors in corresponding interval.
-                if (be_m + interv_mag * q) <= st_mag < (be_m + interv_mag *
-                                                        (q + 1)):
+                if (be_m + interv_mag * q) <= st_mag < (be_m + interv_mag
+                                                        * (q + 1)):
                     # Star falls in this interval, store its error value.
                     mc_interv[q].append(e_mc[st_ind])
                     break
