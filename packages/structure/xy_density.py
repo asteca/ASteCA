@@ -71,7 +71,7 @@ def kde_center(x_data, y_data, bdw, mirror_flag):
 
     # Fix KDE artifact around the borders
     if mirror_flag:
-        values = dataMirror(values.T, (xmin, xmax, ymin, ymax))
+        values = dataMirror(values.T)
 
     # Obtain Gaussian KDE.
     try:
@@ -105,35 +105,63 @@ def kde_center(x_data, y_data, bdw, mirror_flag):
     return kde_cent, kde_plot
 
 
-def dataMirror(data, bbox, perc=.1):
+def dataMirror(data, perc=.05):
     """
     Mirror a small percentage of data in all borders to remove the KDE artifact
     that lowers the density close to the edges.
 
     Source: https://stackoverflow.com/a/33602171/1391441
     """
-    # Mirror points
-    points_left = np.copy(data)
-    points_left[:, 0] = bbox[0] - (points_left[:, 0] - bbox[0])
-    points_right = np.copy(data)
-    points_right[:, 0] = bbox[1] + (bbox[1] - points_right[:, 0])
+
+    # Box
+    xmin, ymin = np.min(data, 0)
+    xmax, ymax = np.max(data, 0)
+    midy = (ymax - ymin) * .5
+
+    points_left_up = np.copy(data)
+    points_left_up[:, 0] = xmin - (points_left_up[:, 0] - xmin)
+    points_left_up[:, 1] += midy
+
+    points_left_down = np.copy(data)
+    points_left_down[:, 0] = xmin - (points_left_down[:, 0] - xmin)
+    points_left_down[:, 1] -= midy
+
+    points_right_up = np.copy(data)
+    points_right_up[:, 0] = xmax + (xmax - points_right_up[:, 0])
+    points_right_up[:, 1] += midy
+
+    points_right_down = np.copy(data)
+    points_right_down[:, 0] = xmax + (xmax - points_right_down[:, 0])
+    points_right_down[:, 1] -= midy
+
     points_down = np.copy(data)
-    points_down[:, 1] = bbox[2] - (points_down[:, 1] - bbox[2])
+    points_down[:, 1] = ymin - (points_down[:, 1] - ymin)
     points_up = np.copy(data)
-    points_up[:, 1] = bbox[3] + (bbox[3] - points_up[:, 1])
+    points_up[:, 1] = ymax + (ymax - points_up[:, 1])
+
+    # plt.scatter(*data.T, c='g', alpha=.3)
+    # plt.scatter(*points_left_up.T, c='b', alpha=.2)
+    # plt.scatter(*points_left_down.T, c='r', alpha=.2)
+    # plt.scatter(*points_right_up.T, c='b', alpha=.2)
+    # plt.scatter(*points_right_down.T, c='r', alpha=.2)
+    # plt.scatter(*points_up.T, c='cyan', alpha=.2)
+    # plt.scatter(*points_down.T, c='orange', alpha=.2)
+    # plt.show()
 
     # Mirrored data
     mirror_data = np.append(
-        np.append(points_left, points_right, axis=0),
-        np.append(points_down, points_up, axis=0), axis=0)
+        np.append(points_left_down, points_left_up, axis=0),
+        np.append(points_right_down, points_right_up, axis=0), axis=0)
+    mirror_data = np.append(
+        mirror_data, np.append(points_down, points_up, axis=0), axis=0)
 
     # Combine all data
     points = np.append(data, mirror_data, axis=0)
 
-    # Trim mirrored frame to withtin a 'perc' pad of the full (x, y) range
+    # Trim mirrored frame to within a 'perc' pad of the full (x, y) range
     xr, yr = np.ptp(data.T[0]) * perc, np.ptp(data.T[1]) * perc
-    xmin, xmax = bbox[0] - xr, bbox[1] + xr
-    ymin, ymax = bbox[2] - yr, bbox[3] + yr
+    xmin, xmax = xmin - xr, xmax + xr
+    ymin, ymax = ymin - yr, ymax + yr
     msk = (points[:, 0] > xmin) & (points[:, 0] < xmax) &\
         (points[:, 1] > ymin) & (points[:, 1] < ymax)
 

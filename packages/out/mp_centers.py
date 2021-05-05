@@ -46,8 +46,7 @@ def pl_densxy(
     ax = plt.subplot(gs_map.get(N))
 
     if N in [5, 6, 7]:
-        r_frmt = '{:.0f}' if coord == 'px' else '{:.4f}'
-        plt.title(("Bandwidth: " + r_frmt + ' [{}]').format(
+        plt.title(("Bandwidth: {:.4f} [{}]").format(
             bw_list[N - 5], coord), fontsize=11)
     plt.xlabel('{} ({})'.format(x_name, coord), fontsize=11)
     plt.ylabel('{} ({})'.format(y_name, coord), fontsize=11)
@@ -64,10 +63,9 @@ def pl_densxy(
         plt.contour(x, y, kde, colors='#551a8b', linewidths=0.5)
 
         # Add text box
-        r_frmt = '{:.0f}' if coord == 'px' else '{:.3f}'
-        t1 = ('${}_{{c}} =$' + r_frmt + '$\,{}$').format(
+        t1 = (r'${}_{{c}} =${:.3f} $\,{}$').format(
             x_name, cent_xy[0], coord)
-        t2 = ('${}_{{c}} =$' + r_frmt + '$\,{}$').format(
+        t2 = (r'${}_{{c}} =${:.3f} $\,{}$').format(
             y_name, cent_xy[1], coord)
         text = t1 + '\n' + t2
         ob = offsetbox.AnchoredText(text, pad=0.2, loc=2, prop=dict(size=10))
