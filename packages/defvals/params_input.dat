@@ -16,17 +16,15 @@
 
 ############################## Input data ######################################
 
-# Columns for the IDs and (x, y) coordinates.
+# Columns for the IDs and (ra, dec) coordinates.
 #
-# * id_star, x/ra, y/dec: [str]
-#   Columns for the IDs and coordinates.
-# * coords: [px / deg]
-#   Indicates if the coordinates of the observed frame are in pixels or degrees.
+# * id_star, ra, dec: [str]
+#   Column namess for the IDs and coordinates (in degrees).
 # * project: [y / n]
-#   If 'coords=deg' indicate whether to use a sinusoidal projection on the data.
+#   Indicate whether to apply a sinusoidal projection on the coordinates.
 #
-#    id_star     x/ra     y/dec   coords   project
-I1   EDR3Name      _x        _y      deg         n
+#    id_star       ra       dec     project
+I1   EDR3Name      _x        _y           n
 
 # Columns for the photometry, parallax, proper motions, and radial velocity.
 #
@@ -90,18 +88,24 @@ I6       n   0. 0. 0. 0.
 #
 # * name         : [str]
 #   Cluster's name (must match the name of the input data file)
-# * c_x / c_y    : [float / a]
-#   Cluster's center in pixels or degrees.
-# * field_dens   : [float>0. / a]
+# * c_x / c_y    : [a / float]
+#   Cluster's center coordinates
+# * field_dens   : [a / float>0.]
 #   Field (background+foreground) density.
-# * clust_radius : [float>0. / a / max]
+#   - a: selects the field density automatically using the per-star local
+#        densities
+#   - float: manual value in stars/degree^2
+# * clust_radius : [a / max / float>0.]
 #   Cluster's radius.
 #   - a: selects the 'optimal' value (maximizes the ratio between
 #     cluster members and stars within rings of increasing radii)
 #   - max: uses a radius large enough to include all stars in the frame.
-# * f_regs       : [int>0 / a]
+#   - float: manual value in degrees.
+# * f_regs       : [a / int>0]
 #   Number of field regions to define around the cluster (used by the
 #   decontamination algorithm).
+#   - a: selects the maximum available
+#   - int: manual number of field regions
 #
 #   name       c_x      c_y      field_dens   clust_radius     f_regs
 S0  CLUSTER      a        a               a              a          a
@@ -137,18 +141,17 @@ S2  StretchMove()
 
 # Error rejection.
 #
-# * e_mag_max: [float / str]
+# * e_mag_max: [float / max]
 #   Maximum error value a star can have in its magnitude without being
-#   rejected. Use 'n' for no maximum limit.
-# * e_col_max: [float / str]
+#   rejected. Use 'max' for no maximum limit.
+# * e_col_max: [float / max]
 #   Maximum error value a star can have in its color(s) without being rejected.
-#   Use 'n' for no maximum limit.
-# * e_plx_max / e_pm_max / e_rv_max: [float / str]
-#   Idem for parallax / proper motions / radial velocity values. If these data
-#   columns are not present (or no maximum limit is desired) use 'n'.
+# * e_plx_max / e_pm_max / e_rv_max: [float / max]
+#   Idem for parallax / proper motions / radial velocity values. Use 'max' if
+#   any of these data columns are not present (or no maximum limit is desired)
 #
 #   e_mag_max   e_col_max    e_plx_max     e_pm_max     e_rv_max
-E0        0.1         0.3            n            n            n
+E0        0.1         0.3          max          max          max
 ################################################################################
 
 

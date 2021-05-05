@@ -12,13 +12,12 @@ except ImportError:
     pass
 import warnings
 from .. import update_progress
-from ..out import prep_plots
 from ..best_fit.bf_common import modeKDE
 
 
 def main(
     clp, cld_i, kp_ndim, kp_nchains, kp_nruns, kp_nburn, kp_emcee_moves,
-        rt_max_f, coords, **kwargs):
+        rt_max_f, **kwargs):
     """
     Bayesian inference over an array of stars' coordinates using a King
     profile model.
@@ -57,11 +56,9 @@ def main(
         else:
             KP_memb_num, KP_conct_par = np.nan, np.nan
 
-        coord = prep_plots.coord_syst(coords)[0]
         # Set precision of printed values.
-        text2 = '{:.1f}, {:.1f}' if coord == 'px' else '{:g}, {:g}'
-        text = 'Core & tidal radii obtained: ' + text2 + ' {}'
-        print(text.format(KP_Bys_rc[1], KP_Bys_rt[1], coord))
+        print('Core & tidal radii obtained: {:g}, {:g} deg'.format(
+            KP_Bys_rc[1], KP_Bys_rt[1]))
 
     else:
         print("Skipping King profile fit")

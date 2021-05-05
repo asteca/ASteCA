@@ -20,7 +20,7 @@ def main(npd, cld_i, pd, clp):
     x_min, x_max, y_min, y_max = prep_plots.frame_max_min(
         cld_i['x'], cld_i['y'])
     asp_ratio = prep_plots.aspect_ratio(x_min, x_max, y_min, y_max)
-    coord, x_name, y_name = prep_plots.coord_syst(pd['coords'])
+    coord, x_name, y_name = "deg", "ra", "dec"
     st_sizes_arr = prep_plots.star_size(cld_i['mags'][0])
     _, y_ax = prep_plots.ax_names(pd['colors'][0], pd['filters'][0], 'mag')
 

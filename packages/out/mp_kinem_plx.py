@@ -63,9 +63,7 @@ def plx_chart(gs, plot_style, x_name, y_name, coord, cl_reg_fit, plx_Bys):
     ax = plt.subplot(gs[0:2, 4:6])
     if plot_style == 'asteca':
         ax.grid()
-    # If RA is used, invert axis.
-    if coord == 'deg':
-        ax.invert_xaxis()
+    ax.invert_xaxis()
     # Set axis labels
     plt.xlabel('{} ({})'.format(x_name, coord))
     plt.ylabel('{} ({})'.format(y_name, coord))

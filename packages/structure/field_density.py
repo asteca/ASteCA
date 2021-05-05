@@ -2,10 +2,9 @@
 import numpy as np
 from scipy import spatial
 from ..aux_funcs import monteCarloPars, circFrac
-from ..out import prep_plots
 
 
-def main(clp, cld_i, coords, fdens_method, **kwargs):
+def main(clp, cld_i, fdens_method, **kwargs):
     """
     Get field density level of frame.
     """
@@ -22,8 +21,7 @@ def main(clp, cld_i, coords, fdens_method, **kwargs):
         clp['field_dens_d'], clp['field_dens'], clp['field_dens_std'] = kNNRDP(
         clp['xy_cent_dist'], clp['fr_dens'], fdens_method)
 
-    print("Field density ({:.3E} stars/{c}^2)".format(
-        clp['field_dens'], c=prep_plots.coord_syst(coords)[0]))
+    print("Field density ({:.3E} stars/deg^2)".format(clp['field_dens']))
 
     return clp
 
