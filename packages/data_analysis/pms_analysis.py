@@ -4,8 +4,7 @@ from scipy import stats
 from astropy.stats import sigma_clipped_stats
 
 
-def main(
-        clp, cld_i, coords, project, flag_make_plot, **kwargs):
+def main(clp, cld_i, project, flag_make_plot, **kwargs):
     """
     Assume that the pmRA is already corrected by the cosine of DE.
     """
