@@ -1,6 +1,14 @@
 # Change Log
 
 
+## [[v0.4.2]][315] - 2021-05-10
+
+### Changed
+
+Fixed two issues: don't read hidden files from the `input/` folder, remove forgotten parameter that was removed in the previous release.
+
+
+
 ## [[v0.4.1]][314] - 2021-05-05
 
 ### Changed
@@ -888,3 +896,4 @@ ________________________________________________________________________________
 [312]: https://github.com/asteca/ASteCA/issues/509
 [313]: https://github.com/asteca/ASteCA/issues/513
 [314]: https://github.com/asteca/asteca/releases/tag/v0.4.1
+[315]: https://github.com/asteca/asteca/releases/tag/v0.4.2
