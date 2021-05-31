@@ -77,7 +77,7 @@ def kde_center_zoom(x_data, y_data, kde_approx_cent, radius):
         raise ValueError(
             "ERROR: cluster region is empty and no center value\n"
             "could be estimated. Check that x,y columns are correct\n"
-            "in 'params_input.dat' file.")
+            "in 'asteca.ini' file.")
 
     # Obtain Gaussian KDE.
     kernel = stats.gaussian_kde(values)

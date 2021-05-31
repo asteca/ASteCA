@@ -6,7 +6,7 @@ from ..best_fit.obs_clust_prepare import dataProcess
 from .. import update_progress
 
 
-def main(clp, pd):
+def main(clp, pd, td):
     """
     Assign masses to the (decontaminated) observed cluster, and binary
     probabilities (if binarity was estimated).
@@ -23,7 +23,7 @@ def main(clp, pd):
     # Generate random models from the selected solution (mean, median, mode,
     # MAP), given by 'D3_sol.
     models = ranModels(
-        pd['fundam_params'], pd['D3_sol'], clp['isoch_fit_params'],
+        td['fundam_params'], pd['D3_sol'], clp['isoch_fit_params'],
         clp['isoch_fit_errors'])
 
     if not models.any():
@@ -53,11 +53,11 @@ def main(clp, pd):
             continue
 
         # Masses, binary mask
-        mass_primary = isoch[pd['m_ini_idx']]
+        mass_primary = isoch[td['m_ini_idx']]
         binar_idxs = ~(isoch[-1] == -99.)
         mass_secondary = isoch[-1]
         # shape: (N_stars, Ndim)
-        photom = isoch[:sum(pd['N_fc'])].T
+        photom = isoch[:sum(td['N_fc'])].T
 
         # For non-binary systems
         photom_single = photom[~binar_idxs]
@@ -68,7 +68,7 @@ def main(clp, pd):
             st_mass_mean, M2 = recurrentStats(Nm, st_mass_mean, M2, obs_mass)
 
             # For binary systems
-            if pd['binar_flag']:
+            if td['binar_flag']:
                 photom_binar = photom[binar_idxs]
                 # If there are no binary systems, skip
                 if photom_binar.any():

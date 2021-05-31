@@ -9,7 +9,7 @@ from . import prep_plots
 from . prep_plots import figsize_x, figsize_y, grid_x, grid_y
 
 
-def main(npd, pd, clp):
+def main(npd, pd, clp, td):
     """
     Make D1 block plots.
     """
@@ -26,8 +26,7 @@ def main(npd, pd, clp):
     add_version_plot.main(x_fix=xf, y_fix=yf)
 
     nwalkers, nburn, nsteps, pt_adapt = pd['nwalkers_mcee'],\
-        pd['nburn_mcee'], fit_pars['N_steps'],\
-        pd['pt_adapt']
+        pd['nburn_mcee'], fit_pars['N_steps'], pd['pt_adapt']
     p_str = (
         "chains={:.0f}, burn={:.2f}, steps={:.0f},"
         " adapt={}").format(nwalkers, nburn, nsteps[-1], pt_adapt)
@@ -115,8 +114,7 @@ def main(npd, pd, clp):
 
     # Trace plots
     min_max_p = prep_plots.param_ranges(
-        pd['fundam_params'], fit_pars['varIdxs'],
-        fit_pars['pars_chains'])
+        td['fundam_params'], fit_pars['varIdxs'], fit_pars['pars_chains'])
     trace = fit_pars['mcmc_trace']
     best_sol = fit_pars['mean_sol']
     traceplot_args = (

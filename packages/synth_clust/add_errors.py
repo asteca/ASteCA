@@ -2,7 +2,7 @@
 from ..math_f import exp_function
 
 
-def main(isoch_compl, err_lst, err_max, err_norm_rand):
+def main(isoch_compl, err_lst, err_norm_rand):
     """
     Add random synthetic uncertainties to the magnitude and color(s)
     """

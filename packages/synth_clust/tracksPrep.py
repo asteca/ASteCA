@@ -5,7 +5,9 @@ from . import imf
 from . import binarity
 
 
-def main(pd):
+def main(
+    td, synth_rand_seed, cmd_systs, filters, colors, IMF_name,
+        all_syst_filters, N_interp, min_bmass_ratio, lkl_method, **kwargs):
     """
     Return list structured as:
 
@@ -28,31 +30,30 @@ def main(pd):
     """
     # Set the random seed in numpy
     from . import set_rand_seed
-    set_rand_seed.main(pd['synth_rand_seed'])
+    set_rand_seed.main(synth_rand_seed)
 
     # Extract some data
-    all_met_vals, all_age_vals = pd['fundam_params'][:2]
-    all_masses, binar_fracs = pd['fundam_params'][4], pd['fundam_params'][5]
+    all_met_vals, all_age_vals = td['fundam_params'][:2]
+    all_masses, binar_fracs = td['fundam_params'][4], td['fundam_params'][5]
     Nmets, Max_mass = len(all_met_vals), all_masses[-1]
 
     # Obtain extinction coefficients.
-    pd['ext_coefs'] = extin_coefs.main(
-        pd['cmd_systs'], pd['filters'], pd['colors'])
+    td['ext_coefs'] = extin_coefs.main(cmd_systs, filters, colors)
 
     # Set the binary flag
     binar_flag = False
     if len(binar_fracs) > 1 or binar_fracs[0] > 0.:
         binar_flag = True
-    pd['binar_flag'] = binar_flag
+    td['binar_flag'] = binar_flag
 
     # Store the number of defined filters and colors.
-    pd['N_fc'] = [len(pd['filters']), len(pd['colors'])]
+    td['N_fc'] = [len(filters), len(colors)]
     # Index of 'M_ini' (theoretical initial mass), stored in the
     # interpolated isochrones: right after the magnitude and color(s)
-    pd['m_ini_idx'] = pd['N_fc'][0] + pd['N_fc'][1]
+    td['m_ini_idx'] = td['N_fc'][0] + td['N_fc'][1]
 
     # Obtain mass distribution using the selected IMF.
-    pd['st_dist_mass'] = imf.main(pd['IMF_name'], Nmets, Max_mass)
+    td['st_dist_mass'] = imf.main(IMF_name, Nmets, Max_mass)
     # tot_mem = 0.
     # for stm in st_dist_mass:
     #     tot_mem += stm[0].nbytes / 1024.**2 + stm[1].nbytes / 1024.**2
@@ -64,22 +65,22 @@ def main(pd):
     # Create the necessary colors, and position the magnitudes and colors
     # in the same order as they are read from the cluster's data file.
     interp_tracks, mags_cols_intp = interpIsochs(
-        pd['isoch_list'], pd['extra_pars'], pd['all_syst_filters'],
-        pd['filters'], pd['colors'], pd['N_interp'])
+        td['isoch_list'], td['extra_pars'], all_syst_filters,
+        filters, colors, N_interp)
 
     if binar_flag:
-        pd['theor_tracks'], pd['mean_bin_mr'] = binarity.binarGen(
-            pd['min_bmass_ratio'], pd['m_ini_idx'], pd['N_fc'], interp_tracks,
+        td['theor_tracks'], td['mean_bin_mr'] = binarity.binarGen(
+            min_bmass_ratio, td['m_ini_idx'], td['N_fc'], interp_tracks,
             mags_cols_intp, all_met_vals, all_age_vals)
     else:
-        pd['theor_tracks'], pd['mean_bin_mr'] = interp_tracks, 0.
+        td['theor_tracks'], td['mean_bin_mr'] = interp_tracks, 0.
     # Size of array
     # print("{:.0f} Mbs".format(theor_tracks.nbytes / 1024.**2))
 
-    pd['err_norm_rand'], pd['binar_probs'], pd['ext_unif_rand'] = randVals(
-        pd['lkl_method'], pd['st_dist_mass'], pd['theor_tracks'])
+    td['err_norm_rand'], td['binar_probs'], td['ext_unif_rand'] = randVals(
+        lkl_method, td['st_dist_mass'], td['theor_tracks'])
 
-    return pd
+    return td
 
 
 def interpIsochs(

@@ -7,9 +7,9 @@ from .. import update_progress
 def main(
     colors, plx_col, pmx_col, pmy_col, rv_col, bayesda_runs, bayesda_dflag,
         cl_region, field_regions):
-    '''
+    """
     Bayesian field decontamination algorithm.
-    '''
+    """
     print('Applying Bayesian DA ({} runs)'.format(bayesda_runs))
 
     # cl_region = [[id, x, y, mags, e_mags, cols, e_cols, kine, ek], [], ...]
@@ -27,8 +27,8 @@ def main(
         len(cl_region), mags, cols, kinem, e_mags, e_cols, e_kinem)
     if not cl_reg_prep.any():
         raise ValueError(
-            "Cluster region is empty after removing the turned-off\n" +
-            "dimension. Check the 'w_xxx' flags in the Bayesian DA.")
+            "Cluster region is empty after removing the turned-off\n"
+            + "dimension. Check the 'w_xxx' flags in the Bayesian DA.")
 
     # Normalize data.
     cl_reg_prep, N_msk_cl = dataNorm(cl_reg_prep)

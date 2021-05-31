@@ -3,7 +3,7 @@
 def main(pars_f_path):
     """
     This function reads the input data parameters stored in the
-    'params_input_XX.dat' file and returns a dictionary.
+    'asteca_XX.ini' file and returns a dictionary.
     """
 
     # Accept these variations of the 'true' flag.
@@ -12,7 +12,8 @@ def main(pars_f_path):
     # Read data from file.
     with open(pars_f_path, "r") as f_dat:
 
-        id_cols, manual_struct, trim_frame_range = [], [], []
+        id_cols, manual_struct, trim_frame_range, par_ranges, priors_mcee_in =\
+            [], [], [], [], []
         # Iterate through each line in the file.
         for ln, line in enumerate(f_dat):
 
@@ -90,24 +91,27 @@ def main(pars_f_path):
                     N_interp = int(reader[5])
 
                 # Ranges for the fundamental parameters
-                elif reader[0] == 'RZ':
-                    z_range = reader[1:]
-                elif reader[0] == 'RA':
-                    a_range = reader[1:]
-                elif reader[0] == 'RE':
-                    e_range = list(map(float, reader[1:]))
-                elif reader[0] == 'RR':
-                    dr_range = reader[1:]
-                elif reader[0] == 'RV':
-                    R_V = float(reader[1])
-                elif reader[0] == 'RD':
-                    d_range = list(map(float, reader[1:]))
-                elif reader[0] == 'RM':
-                    m_range = list(map(float, reader[1:]))
-                elif reader[0] == 'RB':
-                    b_range = list(map(float, reader[1:]))
-                elif reader[0] == 'RS':
-                    bs_range = reader[1:]
+                elif reader[0] == 'R1':
+                    par_ranges.append(reader[1:])
+
+                # elif reader[0] == 'RZ':
+                #     z_range = reader[1:]
+                # elif reader[0] == 'RA':
+                #     a_range = reader[1:]
+                # elif reader[0] == 'RE':
+                #     e_range = list(map(float, reader[1:]))
+                # elif reader[0] == 'RR':
+                #     dr_range = reader[1:]
+                # elif reader[0] == 'RV':
+                #     R_V = float(reader[1])
+                # elif reader[0] == 'RD':
+                #     d_range = list(map(float, reader[1:]))
+                # elif reader[0] == 'RM':
+                #     m_range = list(map(float, reader[1:]))
+                # elif reader[0] == 'RB':
+                #     b_range = list(map(float, reader[1:]))
+                # elif reader[0] == 'RS':
+                #     bs_range = reader[1:]
 
                 # Cluster parameters assignation.
                 elif reader[0] == 'B0':
@@ -125,27 +129,30 @@ def main(pars_f_path):
                     pt_adapt = True if reader[6] in true_lst else False
 
                 # Priors
-                elif reader[0] == 'BZ':
-                    z_prior = [reader[1]] + list(map(float, reader[2:]))
-                elif reader[0] == 'BA':
-                    a_prior = [reader[1]] + list(map(float, reader[2:]))
-                elif reader[0] == 'BE':
-                    e_prior = [reader[1]] + list(map(float, reader[2:]))
-                elif reader[0] == 'BR':
-                    dr_prior = [reader[1]] + list(map(float, reader[2:]))
-                elif reader[0] == 'BV':
-                    rv_prior = [reader[1]] + list(map(float, reader[2:]))
-                elif reader[0] == 'BD':
-                    d_prior = [reader[1]] + list(map(float, reader[2:]))
-                elif reader[0] == 'BM':
-                    m_prior = [reader[1]] + list(map(float, reader[2:]))
-                elif reader[0] == 'BB':
-                    b_prior = [reader[1]] + list(map(float, reader[2:]))
-                elif reader[0] == 'BS':
-                    bs_prior = [reader[1]] + list(map(float, reader[2:]))
+                elif reader[0] == 'B2':
+                    priors_mcee_in.append(reader[1:])
+
+                # elif reader[0] == 'BZ':
+                #     z_prior = [reader[1]] + list(map(float, reader[2:]))
+                # elif reader[0] == 'BA':
+                #     a_prior = [reader[1]] + list(map(float, reader[2:]))
+                # elif reader[0] == 'BE':
+                #     e_prior = [reader[1]] + list(map(float, reader[2:]))
+                # elif reader[0] == 'BR':
+                #     dr_prior = [reader[1]] + list(map(float, reader[2:]))
+                # elif reader[0] == 'BV':
+                #     rv_prior = [reader[1]] + list(map(float, reader[2:]))
+                # elif reader[0] == 'BD':
+                #     d_prior = [reader[1]] + list(map(float, reader[2:]))
+                # elif reader[0] == 'BM':
+                #     m_prior = [reader[1]] + list(map(float, reader[2:]))
+                # elif reader[0] == 'BB':
+                #     b_prior = [reader[1]] + list(map(float, reader[2:]))
+                # elif reader[0] == 'BS':
+                #     bs_prior = [reader[1]] + list(map(float, reader[2:]))
 
                 # Likelihood function
-                elif reader[0] == 'B2':
+                elif reader[0] == 'B3':
                     lkl_binning = str(reader[1])
                     lkl_manual_bins = reader[2:]
 
@@ -195,16 +202,12 @@ def main(pars_f_path):
                    'D1', 'D2', 'D3', 's')
     D3_methods = ('mean', 'median', 'mode', 'map')
 
-    priors_mcee = [z_prior, a_prior, e_prior, d_prior, m_prior, b_prior]
-
     # HARDCODED AND IMPORTANT
     # If the CMD isochrones change, this needs to change too.
     # Names of the "extra" columns in the CMD service isochrones.
     CMD_extra_pars = (
         'Mini', 'int_IMF', 'Mass', 'logL', 'logTe', 'logg', 'label',
         'mbolmag')
-
-    par_ranges = [z_range, a_range, e_range, d_range, m_range, b_range]
 
     pd = {
         # Input data parameters
@@ -239,14 +242,14 @@ def main(pars_f_path):
         # Synthetic cluster parameters
         'synth_rand_seed': synth_rand_seed, 'par_ranges': par_ranges,
         'IMF_name': IMF_name, 'min_bmass_ratio': min_bmass_ratio,
-        'max_mag': max_mag, 'N_interp': N_interp, 'R_V': R_V,
+        'max_mag': max_mag, 'N_interp': N_interp,
 
         # Best fit parameters.
         'best_fit_algor': best_fit_algor, 'mins_max': mins_max,
         'save_trace_flag': save_trace_flag,
         # ptemcee algorithm parameters.
         'nsteps_mcee': nsteps_mcee, 'nwalkers_mcee': nwalkers_mcee,
-        'nburn_mcee': nburn_mcee, 'priors_mcee': priors_mcee,
+        'nburn_mcee': nburn_mcee, 'priors_mcee_in': priors_mcee_in,
         'pt_ntemps': pt_ntemps, "pt_adapt": pt_adapt, 'pt_tmax': pt_tmax,
         'lkl_method': lkl_method, 'lkl_binning': lkl_binning,
         'lkl_manual_bins': lkl_manual_bins,

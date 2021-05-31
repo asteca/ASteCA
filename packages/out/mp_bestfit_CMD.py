@@ -145,7 +145,7 @@ def pl_hess_diag(
 def pl_bf_synth_cl(
     gs, gs_y1, gs_y2, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
     hess_xedges, hess_yedges, x_synth, y_synth, sy_sz_pt, binar_idx, IMF_name,
-    R_V, best_sol, p_err, x_isoch, y_isoch, lkl_method, bin_method,
+    best_sol, p_err, x_isoch, y_isoch, lkl_method, bin_method,
         evol_track, D3_sol):
     """
     Best fit synthetic cluster obtained.
@@ -198,7 +198,7 @@ def pl_bf_synth_cl(
             evol_track)
         t2 = r'$IMF \hspace{{3.}}:\;{}$'.format(
             IMF_name.replace('_', r'\;').title())
-        t3 = r'$R_{{V}} \hspace{{3.2}}=\;{}$'.format(R_V)
+        t3 = r'$R_{{V}} \hspace{{3.2}}=\;{}$'.format(best_sol[6])
         t4 = r'$z \hspace{{3.9}}=\;{:.5f}\pm {:.5f}$'.format(
             best_sol[0], p_err[0][2])
         t5 = r'$\log(age) \hspace{{0.17}}=\;{:.3f}\pm {:.3f}$'.format(

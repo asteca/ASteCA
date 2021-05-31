@@ -18,7 +18,7 @@ def check(pd):
             except ValueError:
                 raise ValueError(
                     "bad index ('{}') for '{}' column in "
-                    "'params_input.dat'".format(ci, k_cols[i]))
+                    "'asteca.ini'".format(ci, k_cols[i]))
         else:
             pd[k_cols[i] + '_col'] = False
 
@@ -26,13 +26,13 @@ def check(pd):
     if (pd['pmx_col'] is False and pd['pmy_col'] is not False) or\
             (pd['pmy_col'] is False and pd['pmx_col'] is not False):
         raise ValueError("both (or none) PM dimensions must be defined"
-                         " in 'params_input.dat'")
+                         " in 'asteca.ini'")
 
     # Check that error columns are present
     for col in ('plx_col', 'pmx_col', 'pmy_col', 'rv_col'):
         if pd[col] is not False and pd['e_' + col] is False:
             raise ValueError("missing error column for '{}' in"
-                             "'params_input.dat'".format('e_' + col[:-4]))
+                             "'asteca.ini'".format('e_' + col[:-4]))
 
     # # DEPRECATED 05/2021
     # if pd['plx_bayes_flag']:

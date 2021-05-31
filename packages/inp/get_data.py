@@ -273,7 +273,7 @@ def dataCols(data_file, data, col_names):
     except IndexError:
         raise IndexError("ERROR: data input file:\n  {}\n  contains "
                          "fewer columns than those given "
-                         "in 'params_input.dat'".format(data_file))
+                         "in 'asteca.ini'".format(data_file))
 
     # Check if the range of any coordinate column is zero.
     data_names = ['x_coords', 'y_coords']

@@ -46,7 +46,7 @@ def files_folders_check(mypath):
     """
     Check if input files and input folders already exist in root folder.
     """
-    files_lst = ['params_input.dat']
+    files_lst = ['asteca.ini']
     folds_lst = ['isochrones', 'input']
 
     success = 0

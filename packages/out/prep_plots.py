@@ -756,7 +756,7 @@ def membVSrad(
 
 
 def isoch_sigmaNreg(
-    fundam_params, R_V, D3_sol, theor_tracks, m_ini_idx, ext_coefs, N_fc,
+    fundam_params, D3_sol, theor_tracks, m_ini_idx, ext_coefs, N_fc,
         ext_unif_rand, isoch_fit_params, isoch_fit_errors, syntClustArgs):
     """
     Generate the uncertainty region, if uncertainties for at least one
@@ -764,8 +764,7 @@ def isoch_sigmaNreg(
     """
 
     # Selected solution values for all the parameters.
-    model = isoch_fit_params[D3_sol + '_sol']
-    zm, am, e, d = model[:4]
+    zm, am, e, d, _, _, R_V = isoch_fit_params[D3_sol + '_sol']
     # Values in grid
     zg = np.argmin(abs(np.array(fundam_params[0]) - zm))
     ag = np.argmin(abs(np.array(fundam_params[1]) - am))

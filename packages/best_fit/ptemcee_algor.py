@@ -10,20 +10,20 @@ from .ptemcee import sampler
 
 
 def main(
-    completeness, err_lst, em_float, max_mag_syn, obs_clust, ext_coefs,
-    binar_flag, mean_bin_mr, N_fc, m_ini_idx, theor_tracks,
-    err_norm_rand, binar_probs, ext_unif_rand, fundam_params, lkl_method, R_V,
-    pt_ntemps, pt_adapt, pt_tmax, priors_mcee, nsteps_mcee, nwalkers_mcee,
-        mins_max, st_dist_mass, **kwargs):
+    completeness, err_lst, max_mag_syn, obs_clust, lkl_method,
+    pt_ntemps, pt_adapt, pt_tmax, nsteps_mcee, nwalkers_mcee, mins_max,
+    priors_mcee, ext_coefs, binar_flag, mean_bin_mr, N_fc, m_ini_idx,
+    theor_tracks, err_norm_rand, binar_probs, ext_unif_rand, fundam_params,
+        st_dist_mass, **kwargs):
     """
     """
 
     varIdxs, ndim, ranges = varPars(fundam_params)
     # Pack synthetic cluster arguments.
     synthcl_args = [
-        completeness, err_lst, em_float, max_mag_syn, ext_coefs, binar_flag,
+        completeness, err_lst, max_mag_syn, ext_coefs, binar_flag,
         mean_bin_mr, N_fc, m_ini_idx, st_dist_mass, theor_tracks,
-        err_norm_rand, binar_probs, ext_unif_rand, R_V]
+        err_norm_rand, binar_probs, ext_unif_rand]
 
     if pt_tmax in ('n', 'none', 'None'):
         Tmax = None

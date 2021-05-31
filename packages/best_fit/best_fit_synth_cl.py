@@ -7,7 +7,7 @@ from .mcmc_convergence import convergenceVals
 from .bf_common import r2Dist, modeKDE, fillParams  # thinChain
 
 
-def main(npd, pd, clp):
+def main(npd, pd, td, clp):
     """
     Perform a best fitting process to find the cluster's fundamental
     parameters.
@@ -17,22 +17,6 @@ def main(npd, pd, clp):
     if pd['best_fit_algor'] != 'n':
         clp = dataPrep(pd, clp)
 
-    # # TEMPORARY
-    # # Use for saving the necessary input for the 'perf_test.py' file.
-    # import pickle
-    # with open('perf_test.pickle', 'wb') as f:
-    #     pickle.dump([
-    #         pd['fundam_params'], clp['completeness'], clp['err_lst'],
-    #         clp['em_float'], clp['max_mag_syn'], pd['ext_coefs'],
-    #         pd['binar_flag'], pd['mean_bin_mr'], pd['N_fc'],
-    #         pd['m_ini_idx'], pd['st_dist_mass'], pd['theor_tracks'],
-    #         pd['err_norm_rand'], pd['binar_probs'], pd['ext_unif_rand'],
-    #         pd['R_V'], pd['lkl_method'], clp['obs_clust']], f)
-    # print("Data saved to pickle")
-    # import sys
-    # sys.exit()
-    # # TEMPORARY
-
     if pd['best_fit_algor'] == 'ptemcee':
         print("Searching for optimal parameters")
         lkl_bin = pd['lkl_method'] + '; ' + pd['lkl_binning'] if\
@@ -41,8 +25,10 @@ def main(npd, pd, clp):
 
         # Calculate the best fitting parameters.
         isoch_fit_params = ptemcee_algor.main(
-            clp['completeness'], clp['err_lst'], clp['em_float'],
-            clp['max_mag_syn'], clp['obs_clust'], **pd)
+            clp['completeness'], clp['err_lst'],
+            clp['max_mag_syn'], clp['obs_clust'], pd['lkl_method'],
+            pd['pt_ntemps'], pd['pt_adapt'], pd['pt_tmax'],
+            pd['nsteps_mcee'], pd['nwalkers_mcee'], pd['mins_max'], **td)
 
         # Save MCMC trace (and some other variables) to file
         if pd['save_trace_flag']:
@@ -50,17 +36,19 @@ def main(npd, pd, clp):
             print("Output of MCMC sampler saved to file")
 
         # Obtain convergence parameters
-        isoch_fit_params = convergenceParams(isoch_fit_params, **pd)
+        isoch_fit_params = convergenceParams(
+            isoch_fit_params, pd['nburn_mcee'], td['fundam_params'])
 
         # Assign uncertainties.
-        isoch_fit_errors = params_errors(pd, isoch_fit_params)
+        isoch_fit_errors = params_errors(isoch_fit_params)
         print("Best fit parameters obtained")
 
     elif pd['best_fit_algor'] == 'read':
         isoch_fit_params = data_IO.dataRead(
             npd['clust_name'], npd['mcmc_file_out'])
-        isoch_fit_params = convergenceParams(isoch_fit_params, **pd)
-        isoch_fit_errors = params_errors(pd, isoch_fit_params)
+        isoch_fit_params = convergenceParams(
+            isoch_fit_params, pd['nburn_mcee'], td['fundam_params'])
+        isoch_fit_errors = params_errors(isoch_fit_params)
         print("Best fit parameters read from file")
 
     # In place for #239. NOT WORKING AS OF FEB 2021, after #488 #503 #506
@@ -105,7 +93,7 @@ def dataPrep(pd, clp):
     return clp
 
 
-def convergenceParams(isoch_fit_params, fundam_params, nburn_mcee, **kwargs):
+def convergenceParams(isoch_fit_params, nburn_mcee, fundam_params):
     """
     """
 
@@ -165,14 +153,14 @@ def convergenceParams(isoch_fit_params, fundam_params, nburn_mcee, **kwargs):
     return isoch_fit_params
 
 
-def params_errors(pd, isoch_fit_params):
+def params_errors(isoch_fit_params):
     """
     Obtain uncertainties for the fitted parameters.
     """
 
     def assignUncertns(varIdxs, trace):
         isoch_fit_errors, j = [], 0
-        for i in range(6):
+        for i in range(len(isoch_fit_params)):
             if i in varIdxs:
                 # 16th and 84th percentiles (1 sigma), and STDDEV
                 ph = np.percentile(trace[i - j], 84)
