@@ -6,18 +6,18 @@ import re
 from . import isochs_format
 
 
-def main(fundam_params, iso_paths, evol_track, **kwargs):
+def main(fundam_params, iso_paths, evol_track):
     """
     Given the paths defined in 'iso_paths' for all the photometric systems:
 
     1. Read paths to all the available metallicity files, and their 'z' values.
     2. Find a subset of common 'z' values across photometric systems.
-    3. Check that its range contains the values in the 'params_input' file.
+    3. Check that its range contains the values in the 'asteca.ini' file.
     4. Filter the 'z' vales to keep only those in the defined range.
     5. Read all the age values in each accepted metallicity file.
     6. Find a subset of common ages across metallicity files and phot systems.
     7. Convert to log10(age) and sort.
-    7. Check that its range contains the values in the 'params_input' file.
+    7. Check that its range contains the values in the 'asteca.ini' file.
     8. Filter the 'log(age)' vales to keep only those in the defined range.
 
     **IMPORTANT**
@@ -146,7 +146,7 @@ def checkMetAge(par, p_rng, vals_all, round_f=5):
     """
     (Semi) Agnostic (z, log(age)) parameter check.
 
-    Given the (z, log(age)) range in the 'params_input' file, check that this
+    Given the (z, log(age)) range in the 'asteca.ini' file, check that this
     range, or fixed value, is contained by the available values in all the
     photometric systems being used.
 
@@ -200,14 +200,14 @@ def checkMetAge(par, p_rng, vals_all, round_f=5):
             if idx_r == len(vals_all) or idx_r == 0:
                 idx_r = idx_r - 1 if idx_r == len(vals_all) else idx_r
                 sys.exit(
-                    ("\nERROR: could not find matching {} for the fixed\n" +
-                     "value '{}'. The closest value found is: [{}]").format(
+                    ("\nERROR: could not find matching {} for the fixed\n"
+                     + "value '{}'. The closest value found is: [{}]").format(
                         par, p0, vals_all[idx_r]))
             else:
                 sys.exit(
-                    ("\nERROR: could not find matching {} for the fixed\n" +
-                     "value '{}'. The closest values found are: " +
-                     "[{}, {}]").format(
+                    ("\nERROR: could not find matching {} for the fixed\n"
+                     + "value '{}'. The closest values found are: "
+                     + "[{}, {}]").format(
                         par, p0, vals_all[idx_r - 1], vals_all[idx_r]))
 
     return p_rng
@@ -285,8 +285,8 @@ def findAgeSubset(age_vals_all, iso_paths):
         common_a = list(set.intersection(*[set(z) for z in ages_phot_syst]))
         if not common_a:
             sys.exit(
-                "\nERROR: no common age values were found across\n" +
-                "metallicity files in the '{}' photometric system.".format(
+                "\nERROR: no common age values were found across\n"
+                + "metallicity files in the '{}' photometric system.".format(
                     iso_paths[i].split('/')[-1]))
         ages_common.append(common_a)
 
@@ -294,8 +294,8 @@ def findAgeSubset(age_vals_all, iso_paths):
     ages_common = list(set.intersection(*[set(z) for z in ages_common]))
     if not ages_common:
         sys.exit(
-            "\nERROR: no common age values were found across\n" +
-            "the photometric systems.")
+            "\nERROR: no common age values were found across\n"
+            + "the photometric systems.")
 
     return ages_common
 

@@ -40,7 +40,7 @@ def main(cl_file, **kwargs):
     mass_file_out = join(output_subdir, clust_name + '_mass.dat')
     write_name = join(cl_file[2], clust_name)
     out_file_name = join(output_dir, 'asteca_output.dat')
-    params_out = join(output_subdir, clust_name + '_params_input.dat')
+    params_out = join(output_subdir, clust_name + '_asteca.ini')
 
     print("\nAnalyzing cluster {}".format(clust_name))
 
@@ -76,7 +76,7 @@ def memb_file_name(cl_file):
     Name of file with membership data.
     """
     # Call function again to avoid passing 'clust_name'. This allows the
-    # module 'params_input_decont' to use this function.
+    # module 'params_decont' to use this function.
     clust_name = get_clust_name(cl_file)
     memb_file = join(cl_file[0], cl_file[1], cl_file[2],
                      clust_name + '_memb.dat')

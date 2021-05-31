@@ -48,7 +48,7 @@ def check(mypath, pd):
         except ValueError:
             if err != 'max':
                 raise ValueError("bad value ('{}') for max error"
-                                 " in 'params_input.dat'".format(err))
+                                 " in 'asteca.ini'".format(err))
             ferr = 1.
         if ferr < 0.:
             raise ValueError("max error value must be positive")

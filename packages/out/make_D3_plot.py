@@ -9,7 +9,7 @@ from . import prep_plots
 from . prep_plots import figsize_x, figsize_y, grid_x, grid_y
 
 
-def main(npd, pd, clp):
+def main(npd, pd, clp, td):
     """
     Make D3 block plots.
     """
@@ -22,8 +22,8 @@ def main(npd, pd, clp):
     best_sol = fit_pars[pd['D3_sol'] + '_sol']
 
     shift_isoch, synthcl_Nsigma = prep_plots.isoch_sigmaNreg(
-        pd['fundam_params'], pd['R_V'], pd['D3_sol'], pd['theor_tracks'],
-        pd['m_ini_idx'], pd['ext_coefs'], pd['N_fc'], pd['ext_unif_rand'],
+        td['fundam_params'], pd['D3_sol'], td['theor_tracks'],
+        td['m_ini_idx'], td['ext_coefs'], td['N_fc'], td['ext_unif_rand'],
         fit_pars, clp['isoch_fit_errors'], clp['syntClustArgs'])
 
     # Plot one ore more rows of CMDs/CCDs.
@@ -54,7 +54,7 @@ def main(npd, pd, clp):
             # pl_bf_synth_cl: Best fit synthetic cluster obtained.
             [gs, gs_y1, gs_y2, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
              x_ax, y_ax, hess_xedges, hess_yedges, x_synth_phot,
-             y_synth_phot, sy_sz_pt, binar_idx, pd['IMF_name'], pd['R_V'],
+             y_synth_phot, sy_sz_pt, binar_idx, pd['IMF_name'],
              best_sol, clp['isoch_fit_errors'], x_isoch, y_isoch,
              pd['lkl_method'], pd['lkl_binning'], pd['evol_track'],
              pd['D3_sol']]

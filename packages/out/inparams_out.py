@@ -5,12 +5,12 @@ from time import strftime
 
 def main(npd, file_end, **kwargs):
     """
-    Save input 'params_input.dat' file as output file.
+    Save input 'asteca.ini' file as output file.
     """
 
-    fname = './params_input.dat'
-    if isfile('./params_input' + file_end + '.dat'):
-        fname = './params_input' + file_end + '.dat'
+    fname = './asteca.ini'
+    if isfile('./asteca' + file_end + '.ini'):
+        fname = './asteca' + file_end + '.ini'
 
     with open(fname, 'r') as f:
         # Read file into data var.

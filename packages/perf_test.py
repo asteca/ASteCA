@@ -34,7 +34,7 @@ def main(model, lkl_method, obs_clust, synthcl_args):
     fundam_params, completeness, err_lst, em_float,\
         max_mag_syn, ext_coefs, binar_flag, mean_bin_mr, N_fc, m_ini_idx,\
         st_dist_mass, theor_tracks, err_norm_rand, binar_probs, ext_unif_rand,\
-        R_V = synthcl_args
+        = synthcl_args
 
     varIdxs, ndim, ranges = varPars(fundam_params)
     model = np.array(model)[varIdxs]
@@ -53,11 +53,11 @@ def main(model, lkl_method, obs_clust, synthcl_args):
     t1 = t.time() - s
 
     # Generate synthetic cluster.
-    e, d, M_total, bin_frac = model_proper
+    e, d, M_total, bin_frac, R_V = model_proper
 
     s = t.time()
     isoch_moved = move_isochrone.main(
-        isochrone, e, d, R_V, ext_coefs, N_fc, ext_unif_rand[ml], m_ini_idx,
+        isochrone, e, d, ext_coefs, N_fc, ext_unif_rand[ml], m_ini_idx,
         binar_flag)
     t2 = t.time() - s
 
@@ -112,13 +112,13 @@ if __name__ == '__main__':
         fundam_params, completeness, err_lst, em_float, max_mag_syn,\
             ext_coefs, binar_flag, mean_bin_mr, N_fc, m_ini_idx,\
             st_dist_mass, theor_tracks, err_norm_rand, binar_probs,\
-            ext_unif_rand, R_V, lkl_method, obs_clust = pickle.load(f)
+            ext_unif_rand, lkl_method, obs_clust = pickle.load(f)
 
     # Pack synthetic cluster arguments.
     synthcl_args = [
         fundam_params, completeness, err_lst, em_float, max_mag_syn, ext_coefs,
         binar_flag, mean_bin_mr, N_fc, m_ini_idx, st_dist_mass, theor_tracks,
-        err_norm_rand, binar_probs, ext_unif_rand, R_V]
+        err_norm_rand, binar_probs, ext_unif_rand]
 
     print("Running")
     np.random.seed(12345)
@@ -136,7 +136,7 @@ if __name__ == '__main__':
 
         N_tot += 1
         elapsed += t.time() - start
-        models_sec.append(N_tot / elapsed)
+        models_sec.append(1 / (t.time() - start))
         if np.random.randint(1000) == 500:
             print(("{}, {:.1f} | {:.0f}").format(
                 N_tot, elapsed, models_sec[-1]))

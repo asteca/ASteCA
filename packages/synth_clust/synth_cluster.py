@@ -11,10 +11,10 @@ from . import add_errors
 
 
 def main(
-    fundam_params, varIdxs, model, completeness, err_lst, em_float,
+    fundam_params, varIdxs, model, completeness, err_lst,
     max_mag_syn, ext_coefs, binar_flag, mean_bin_mr, N_fc, m_ini_idx,
     st_dist_mass, theor_tracks, err_norm_rand, binar_probs, ext_unif_rand,
-        R_V, transpose_flag=True):
+        transpose_flag=True):
     """
     Takes an isochrone and returns a synthetic cluster created according to
     a certain mass distribution.
@@ -48,7 +48,7 @@ def main(
         ml, mh, al, ah)
 
     # Extract parameters
-    e, d, M_total, bin_frac = model_proper
+    e, d, M_total, bin_frac, R_V = model_proper
 
     # Move theoretical isochrone using the values 'e' and 'd'.
     isoch_moved = move_isochrone.main(
@@ -100,7 +100,7 @@ def main(
             if isoch_compl.any():
                 # Get errors according to errors distribution.
                 synth_clust = add_errors.main(
-                    isoch_compl, err_lst, em_float, err_norm_rand[ml])
+                    isoch_compl, err_lst, err_norm_rand[ml])
 
                 # Transposing is necessary for np.histogramdd() in the
                 # likelihood
@@ -123,8 +123,8 @@ def properModel(fundam_params, model, varIdxs):
     Returns
     -------
     model_proper : list
-      Stores (E_BV, dm, Mass, b_fr) including the fixed parameters that are
-      missing from 'model'.
+      Stores (E_BV, dm, Mass, b_fr, R_V) including the fixed parameters that
+      are missing from 'model'.
     z_model, a_model : floats
       The (z, a) values for this model's isochrone.
     ml, mh, al, ah : ints

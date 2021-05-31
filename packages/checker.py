@@ -1,5 +1,15 @@
 
 from .check import first_run
+from .check import clusters
+from .check import params_file
+from .check import update
+from .check import params_data
+from .check import params_kinem
+from .check import params_out
+from .check import params_struct
+from .check import params_decont
+from .check import params_synthcl
+from .check import params_match
 
 
 def check_all(mypath, file_end):
@@ -19,23 +29,10 @@ def check_all(mypath, file_end):
     # # Check that all the essential packages are installed.
     # inst_packgs_lst = pack.check()
 
-    # Import here after the needed packages were checked to be present.
-    from .check import clusters
-    from .check import params_file
-    from .check import update
-    from .check import params_data
-    from .check import params_kinem
-    from .check import params_out
-    from .check import params_struct
-    from .check import params_decont
-    from .check import params_synthcl
-    from .check import params_match
-    from .check import read_met_files
-
     # Check if input cluster files exist.
     cl_files = clusters.check(mypath, file_end)
 
-    # Read parameters from 'params_input.dat' file. Return a dictionary
+    # Read parameters from 'asteca.ini' file. Return a dictionary
     # containing all the parameter values.
     pd = params_file.check(mypath, file_end)
 
@@ -59,7 +56,7 @@ def check_all(mypath, file_end):
     params_decont.check(cl_files, **pd)
 
     # Check synthetic clusters parameters. Generate the
-    # 'fundam_params' variable.
+    # 'fundam_params_all' variable.
     pd = params_synthcl.check(mypath, pd)
 
     # Check the best match parameters.
@@ -70,9 +67,5 @@ def check_all(mypath, file_end):
     cs = ', '.join('(' + _[1].replace(',', '-') + ')' for _ in pd['colors'])
     print("Filter: {}".format(fs))
     print("Color:  {}\n".format(cs))
-
-    if pd['best_fit_algor'] != 'n':
-        # Check and store metallicity files.
-        pd = read_met_files.check_get(pd)
 
     return cl_files, pd

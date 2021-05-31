@@ -4,7 +4,7 @@ from astropy.table import Table
 from ..inp import data_IO
 
 
-def main(clp, npd, pd):
+def main(clp, npd, pd, td):
     """
     1. Create output data file with stars in the best fit synthetic cluster
        found by the 'Best Fit' function.
@@ -20,7 +20,7 @@ def main(clp, npd, pd):
             return
 
         writeFileOut(
-            npd, pd['filters'], pd['colors'], pd['m_ini_idx'],
+            npd, pd['filters'], pd['colors'], td['m_ini_idx'],
             clp['synth_cl_phot'], clp['synth_cl_sigma'], clp['cl_max_mag'],
             clp['st_mass_mean'], clp['st_mass_std'], clp['st_mass_mean_binar'],
             clp['st_mass_std_binar'], clp['prob_binar'])

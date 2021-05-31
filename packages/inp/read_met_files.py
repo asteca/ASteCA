@@ -4,7 +4,7 @@ from packages.inp import readZA
 from packages.inp import read_isochs
 
 
-def check_get(pd):
+def check_get(pd, td):
     """
     Process all the metallicity files and the ages stored in them. To save
     time, we process and store all the theoretical isochrones data here.
@@ -13,34 +13,35 @@ def check_get(pd):
     # Print info about tracks.
     nt = '' if len(pd['all_syst_filters']) == 1 else 's'
     print(
-        "Processing {} isochrones in the photometric system{}:".format(
+        "\nProcessing {} isochrones in the photometric system{}:".format(
             pd['evol_track'], nt))
     for syst in pd['all_syst_filters']:
         print(" * {}".format(syst[0]))
 
     # Get all metallicity files and their values, and the log(age) values.
-    met_files, met_vals_all, age_vals_all, ages_strs = readZA.main(**pd)
+    met_files, met_vals_all, age_vals_all, ages_strs = readZA.main(
+        td['fundam_params'], pd['iso_paths'], pd['evol_track'])
 
     # Store the common grid values for the metallicity and age.
-    pd['fundam_params'][:2] = met_vals_all, age_vals_all
+    td['fundam_params'][:2] = met_vals_all, age_vals_all
 
     # Get isochrones and their extra parameters (mass, etc.).
-    pd['isoch_list'], pd['extra_pars'] = read_isochs.main(
+    td['isoch_list'], td['extra_pars'] = read_isochs.main(
         met_files, ages_strs, pd['evol_track'], pd['CMD_extra_pars'],
         pd['all_syst_filters'])
 
     # Check equality of the initial mass across photometric systems.
-    miniCheck(pd['extra_pars'], met_vals_all, age_vals_all)
+    miniCheck(td['extra_pars'], met_vals_all, age_vals_all)
 
     print("\nGrid values")
     print("z        : {:<5} [{}, {}]".format(
-        len(met_vals_all), pd['fundam_params'][0][0],
-        pd['fundam_params'][0][-1]))
+        len(met_vals_all), td['fundam_params'][0][0],
+        td['fundam_params'][0][-1]))
     print("log(age) : {:<5} [{}, {}]".format(
-        len(age_vals_all), pd['fundam_params'][1][0],
-        pd['fundam_params'][1][-1]))
+        len(age_vals_all), td['fundam_params'][1][0],
+        td['fundam_params'][1][-1]))
 
-    return pd
+    return td
 
 
 def miniCheck(extra_pars, met_vals_all, age_vals_all):

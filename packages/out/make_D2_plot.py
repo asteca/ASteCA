@@ -8,7 +8,7 @@ from . import prep_plots
 from . prep_plots import figsize_x, figsize_y, grid_x, grid_y
 
 
-def main(npd, pd, clp):
+def main(npd, pd, clp, td):
     """
     Make D2 block plots (corner plot).
     """
@@ -33,8 +33,7 @@ def main(npd, pd, clp):
 
         # Limits for the 2-dens plots.
         min_max_p = prep_plots.param_ranges(
-            pd['fundam_params'], fit_pars['varIdxs'],
-            fit_pars['pars_chains'])
+            td['fundam_params'], fit_pars['varIdxs'], fit_pars['pars_chains'])
         min_max_p2 = prep_plots.p2_ranges(p2, min_max_p)
 
         trace = fit_pars['mcmc_trace']

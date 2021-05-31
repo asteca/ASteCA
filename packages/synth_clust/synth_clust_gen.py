@@ -48,7 +48,7 @@ def main(npd, clp, pd, rt=0.05, synth_CI_rand=False):
     else:
         kdepdf_fr = None
 
-    # TODO this should come from params_input.dat
+    # TODO this should come from asteca.ini
     z_vals = (0.0151,)
     a_vals = (8.5,)
     e_vals = (0.5,)
@@ -78,7 +78,7 @@ def main(npd, clp, pd, rt=0.05, synth_CI_rand=False):
         #     isoch_compl = synth_cluster.main(
         synth_clust = synth_cluster.main(
             pd['fundam_params'], varIdxs, model, clp['completeness'],
-            clp['err_lst'], clp['em_float'], clp['max_mag_syn'],
+            clp['err_lst'], clp['max_mag_syn'],
             pd['ext_coefs'], pd['binar_flag'], pd['mean_bin_mr'],
             pd['N_fc'], pd['m_ini_idx'], pd['st_dist_mass'],
             pd['theor_tracks'], pd['err_norm_rand'],

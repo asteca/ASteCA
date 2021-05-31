@@ -6,12 +6,12 @@ from packages.inp import input_params
 
 def check(mypath, file_end):
     """
-    Check the existence of the 'params_input.dat' file, and check that
+    Check the existence of the 'asteca.ini' file, and check that
     the parameters are properly written.
     """
 
-    # Check if params_input_XX.dat file exists.
-    pars_f_name = 'params_input' + file_end + '.dat'
+    # Check if 'asteca_XX.ini' file exists.
+    pars_f_name = 'asteca' + file_end + '.ini'
     pars_f_path = join(mypath, pars_f_name)
     if file_end == '':
         if not isfile(pars_f_path):
@@ -19,17 +19,17 @@ def check(mypath, file_end):
     else:
         if not isfile(pars_f_path):
             print("  WARNING: {} file does not exist.\n  Falling back to"
-                  " 'params_input.dat' file.\n".format(pars_f_name))
+                  " 'asteca.ini' file.\n".format(pars_f_name))
 
             # Fall back to default file.
-            pars_f_name = 'params_input.dat'
+            pars_f_name = 'asteca.ini'
             pars_f_path = join(mypath, pars_f_name)
             if not isfile(pars_f_path):
                 raise ValueError("'{}' file does not exist.".format(
                     pars_f_name))
-    # Check if params_input_XX.dat file is properly formatted.
+    # Check if asteca_XX.ini file is properly formatted.
     try:
-        # Read input parameters from params_input.dat file.
+        # Read input parameters from asteca.ini file.
         pd = input_params.main(pars_f_path)
     except Exception:
         # Halt code.
