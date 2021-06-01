@@ -723,7 +723,7 @@ def membVSrad(
     """
     """
     N_membs = N_in_cl_rad - field_dens * rad_areas
-    membs_ratio = N_membs / N_in_ring
+    membs_ratio = N_membs / np.clip(N_in_ring, a_min=1, a_max=np.inf)
     membs_ratio /= membs_ratio.max()
 
     CI_vals = CIfunc(N_in_cl_rad, field_dens, rad_areas)

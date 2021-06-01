@@ -42,8 +42,9 @@ def pl_rad_find(
     msk = membs_ratio > 0
     plt.scatter(rad_radii[msk], membs_ratio[msk], c='g',
                 label=r'$N_{memb}/N_{ring}$', alpha=.3)
-    if membs_ratio_smooth[msk].any():
-        plt.plot(rad_radii[msk], membs_ratio_smooth[msk], c='b')
+    if membs_ratio_smooth.any():
+        if membs_ratio_smooth[msk].any():
+            plt.plot(rad_radii[msk], membs_ratio_smooth[msk], c='b')
 
     plt.plot(rad_radii[msk], CI_vals[msk], ls=':', c='k', label='CI')
     ymin, _ = ax.get_ylim()
