@@ -37,7 +37,7 @@ def main(cld_i, clp, rad_method, **kwargs):
     elif rad_method == 'max':
         clp['clust_rad'] = maxRadius(
             cld_i['x'], cld_i['y'], clp['kde_cent'], clp['xy_cent_dist'])
-        print("Large radius selected: {:g} deg".format(
+        print("Max radius selected: {:g} deg".format(
             clp['clust_rad']))
 
     else:
