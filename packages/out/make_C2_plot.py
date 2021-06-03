@@ -45,7 +45,7 @@ def main(npd, pd, clp):
          clp['plx_clp'], clp['e_plx_clp'], plx_flrg, mag_flrg,
          clp['plx_Bys'], clp['plx_wa']],
         # plx_bys_params
-        [gs, clp['plx_bayes_flag_clp'], clp['plx_samples'],
+        [gs, clp['plx_bayes_flag_clp'], pd['plx_burn'], clp['plx_samples'],
          clp['plx_Bayes_kde'], clp['plx_Bys'], clp['plx_tau_autocorr'],
          clp['mean_afs'], clp['plx_ess']]
     ]

@@ -182,7 +182,7 @@ def plx_vs_mag(
 
 
 def plx_bys_params(
-    gs, plx_bayes_flag_clp, plx_samples, plx_Bayes_kde, plx_Bys,
+    gs, plx_bayes_flag_clp, plx_burn, plx_samples, plx_Bayes_kde, plx_Bys,
         plx_tau_autocorr, mean_afs, plx_ess):
     """
     """
@@ -197,8 +197,6 @@ def plx_bys_params(
 
         # HARDCODED in plx_analysis: store samples every 10 steps
         Nsteps = 10
-        # HARDCODED in plx_analysis: 25% of trace is burned
-        Brn_prcnt = .25
 
         gsy, gsx = (2, 4), (0, 2)
         BayesPlots.histogram(
@@ -207,7 +205,7 @@ def plx_bys_params(
 
         gsy, gsx = (2, 3), (2, 6)
         BayesPlots.traceplot(
-            gs, gsx, gsy, mcmc_samples, _16_50_84_mean_mode, Brn_prcnt,
+            gs, gsx, gsy, mcmc_samples, _16_50_84_mean_mode, plx_burn,
             xylabel)
 
         gsy, gsx = (3, 4), (2, 4)
