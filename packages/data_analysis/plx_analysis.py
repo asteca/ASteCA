@@ -1,13 +1,5 @@
 
 import numpy as np
-from scipy.optimize import differential_evolution as DE
-from scipy.special import exp1
-try:
-    # If this import is not done outside main(), then eval() fails in the
-    # definition of the moves
-    from emcee import moves
-except ImportError:
-    pass
 import warnings
 from ..best_fit.bf_common import modeKDE
 from .. import update_progress
@@ -15,10 +7,11 @@ from .. import update_progress
 
 def main(
     clp, plx_bayes_flag, plx_offset, plx_chains, plx_runs, plx_burn,
-        plx_emcee_moves, flag_make_plot, outlr_std=3., **kwargs):
+        flag_make_plot, outlr_std=3., **kwargs):
     """
-    Bayesian parallax distance using the Bailer-Jones (2015) model with the
-    'shape parameter' marginalized.
+    Bayesian parallax distance using the simple likelihood shown in
+    Cantat-Gaudin et al. (2018), 'A Gaia DR2 view of the Open Cluster
+    population in the Milky Way'
 
     Hardcoded choices:
 
@@ -75,7 +68,7 @@ def main(
                 plx_samples, plx_Bayes_kde, plx_Bys, plx_bayes_flag_clp,\
                     plx_tau_autocorr, mean_afs, plx_ess = plxBayes(
                         plx_offset, plx_chains, plx_runs, plx_burn,
-                        plx_emcee_moves, plx_clp, e_plx_clp)
+                        plx_clp, e_plx_clp)
 
         else:
             print("  WARNING: no valid Plx data found")
@@ -101,7 +94,7 @@ def checkPlx(plx_clrg):
 
 
 def plxBayes(
-    plx_offset, plx_chains, plx_runs, plx_burn, plx_emcee_moves,
+    plx_offset, plx_chains, plx_runs, plx_burn,
         plx_clp, e_plx_clp, N_conv=1000, tau_stable=0.05):
     """
 
@@ -111,8 +104,6 @@ def plxBayes(
     """
 
     from emcee import ensemble
-    # Move used by emcee
-    mv = [(eval("(moves." + _ + ")")) for _ in plx_emcee_moves]
 
     plx_bayes_flag_clp = True
 
@@ -123,21 +114,14 @@ def plxBayes(
     ndim, nwalkers, nruns = 1, plx_chains, plx_runs
     print("  Bayesian Plx model ({} runs)".format(nruns))
 
-    # DE initial mu position
-    # mu_p = DE_mu_sol(plx_clp, e_plx_clp)
-    mu_p = np.mean(plx_clp)
-
-    # Define the 'r_i' values used to evaluate the integral.
-    int_max = mu_p + 5.
-    x, B2 = r_iVals(int_max, plx_clp, e_plx_clp)
-
+    e_plx2 = e_plx_clp**2
     # emcee sampler
     sampler = ensemble.EnsembleSampler(
-        nwalkers, ndim, lnprob, args=(x, B2, mu_p), moves=mv)
+        nwalkers, ndim, lnprob, args=(plx_clp, e_plx2))
 
     # Ball of initial guesses around 'mu_p'
     # pos0 = np.clip(
-    #     np.array([[mu_p + .05 * np.random.normal()] for i in range(nwalkers)]),
+    #   np.array([[mu_p + .05 * np.random.normal()] for i in range(nwalkers)]),
     #     a_min=0., a_max=None)
     # Random initial guesses
     pos0 = np.random.uniform(0., 2. * np.mean(plx_clp), (nwalkers, 1))
@@ -205,96 +189,18 @@ def plxBayes(
         tau_autocorr, mean_afs, plx_ess
 
 
-def DE_mu_sol(plx_clp, e_plx_clp, int_max=20., psize=20, maxi=100):
-    """
-    Use the Differential Evolution algorithm to approximate the best solution
-    used as the mean of the prior.
-    """
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-
-        # Define the 'r_i' values used to evaluate the integral.
-        x, B2 = r_iVals(int_max, plx_clp, e_plx_clp)
-
-        # Use DE to estimate the ML
-        def DEdist(model):
-            return -lnlike(model, x, B2)
-        bounds = [[0., 20.]]
-        result = DE(DEdist, bounds, popsize=psize, maxiter=maxi)
-
-    return result.x[0]
-
-
-def r_iVals(int_max, plx, e_plx):
-    """
-    The 'r_i' values used to evaluate the integral.
-    """
-    N = int(int_max / 0.01)
-    x = np.linspace(.1, int_max, N).reshape(-1, 1)
-    B1 = ((plx - (1. / x)) / e_plx)**2
-    B2 = (np.exp(-.5 * B1) / e_plx)
-    return x, B2
-
-
-def lnprob(mu, x, B2, mu_p):
-    lp = lnprior(mu, mu_p)
-    if np.isinf(lp):
+def lnprob(d, plx, e_plx2):
+    if d <= 0:
         return -np.inf
-    return lp + lnlike(mu, x, B2)
+    return lnlike(d, plx, e_plx2)
 
 
-def lnprior(mu, mu_p, std_p=1.):
+def lnlike(d, plx, e_plx2):
     """
-    Log prior.
+    Simple likelihood used in Cantat-Gaudin et al. (2018), 'A Gaia DR2 view of
+    the Open Cluster population in the Milky Way'
+
+    The final estimated value is almost always equivalent to the weighted
+    average.
     """
-    if mu < 0.:
-        return -np.inf
-
-    # Gaussian > 0
-    return -0.5 * ((mu - mu_p) / std_p)**2
-
-    # Exponential prior proposed by Bailer-Jones.
-    # return (.5 / (.5 * mu_p)**3) * mu**2 * np.exp(-mu / (.5 * mu_p))
-
-    # # Uniform prior
-    # return 0.
-
-
-def lnlike(mu, x, B2):
-    """
-    Model defined in Bailer-Jones (2015), Eq (20), The shape parameter s_c
-    is marginalized.
-    """
-
-    # Marginalization of the scale parameter 's_c'. We integrate over it
-    # using the incomplete gamma function as per Wolfram:
-    #
-    # https://www.wolframalpha.com/input/
-    # ?i=integral+exp(-.5*(a%5E2%2Fx%5E2))+%2F+x,+x%3D0+to+x%3Db
-    #
-    # This function is equivalent to scipy's 'exp1()', as stated in:
-    #
-    # https://stackoverflow.com/a/53148269/1391441
-    #
-    # so we use this function to marginalize the 's_c' parameter up to a
-    # 5 kpc limit.
-    lim_u = 5.
-
-    def distFunc(r_i):
-        """
-        Eq (20) of Bailer-Jones (2015) with everything that can be calculated
-        outside, moved outside.
-        """
-        sc_int = .5 * exp1(.5 * ((r_i - mu) / lim_u)**2)
-        sc_int.T[np.isinf(sc_int.T)] = 0.
-        return B2 * sc_int
-
-    # Double integral
-    int_exp = np.trapz(distFunc(x), x, axis=0)
-
-    # Mask 'bad' values
-    msk = np.logical_or(
-        int_exp <= 0., int_exp >= np.inf, int_exp <= -np.inf)
-    int_exp[msk] = np.nan
-
-    return np.nansum(np.log(int_exp))
+    return -np.sum((plx - 1 / d)**2 / e_plx2)
