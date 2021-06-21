@@ -25,11 +25,11 @@ def main(npd, pd, clp, td):
     xf, yf = .02, .999
     add_version_plot.main(x_fix=xf, y_fix=yf)
 
-    nwalkers, nburn, nsteps, pt_adapt = pd['nwalkers_mcee'],\
-        pd['nburn_mcee'], fit_pars['N_steps'], pd['pt_adapt']
     p_str = (
         "chains={:.0f}, burn={:.2f}, steps={:.0f},"
-        " adapt={}").format(nwalkers, nburn, nsteps[-1], pt_adapt)
+        " adapt={}").format(
+            pd['nwalkers_mcee'], pd['nburn_mcee'], fit_pars['N_steps'][-1],
+            pd['pt_adapt'])
 
     xt, yt = .5, 1.005
     plt.suptitle(
