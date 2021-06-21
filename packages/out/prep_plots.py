@@ -124,7 +124,7 @@ def diag_limits(yaxis, phot_x, phot_y):
 
     # y limits.
     if yaxis == 'mag':
-        y_min_cmd = y_median + 1.25 * y_std + .75
+        y_min_cmd = np.nanmax(phot_y_msk) + .5  # y_median + 1.25 * y_std + .75
         # If photometric axis y is a magnitude, make sure the brightest star
         # is always plotted.
         y_max_cmd = np.nanmin(phot_y_msk) - 1.
