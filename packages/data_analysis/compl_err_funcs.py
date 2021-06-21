@@ -57,7 +57,6 @@ def photoAnalysis(mags_i):
 
     if complt_flag:
         # comp_b_edges, comp_perc
-        pass
         print("Photometric analysis incompleteness function read")
 
     else:
@@ -170,9 +169,12 @@ def combineCompl(mags_i, phot_analy_compl, mmag_acpt_c):
 
     # Correct the initial LF using the completeness loss function.
     h_mag_i, _ = mmagHist(mags_i, comp_b_edges)
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        h_mag_i_full = h_mag_i / comp_perc
+    # with warnings.catch_warnings():
+    #     warnings.simplefilter("ignore")
+    # Avoid nan values later on
+    comp_perc[comp_perc == 0.] = 1e-6
+    h_mag_i_full = h_mag_i / comp_perc
+
     # Rebin corrected full LF according to 'eqN_edges' array.
     h_mag_i_full = rebin(comp_b_edges, h_mag_i_full, eqN_edges)
 
@@ -182,9 +184,9 @@ def combineCompl(mags_i, phot_analy_compl, mmag_acpt_c):
     # Percentage of stars that should be *removed* from the synthetic cluster.
     # This is reversed with respect to the other percentages so that
     # the 'completeness_rm()' function is simpler.
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        err_rm_perc = 1. - (h_mag_acpt_c / h_mag_i_full)
+    # with warnings.catch_warnings():
+    #     warnings.simplefilter("ignore")
+    err_rm_perc = 1. - (h_mag_acpt_c / h_mag_i_full)
     err_rm_perc = np.clip(err_rm_perc, a_min=0., a_max=1.)
 
     # Add a '1.' at the beginning to indicate that all stars with smaller
@@ -273,8 +275,8 @@ def rebin(x1, y1, x2):
         end_pos = end_pos_test[0]
 
     # the first bin totally covers x1 range
-    if (start_pos == end_pos - 1 and i_place[start_pos] == 0 and
-            i_place[start_pos + 1] == x1.size):
+    if (start_pos == end_pos - 1 and i_place[start_pos] == 0
+            and i_place[start_pos + 1] == x1.size):
         sub_edges = x1
         sub_dx = np.ediff1d(sub_edges)
         sub_y_ave = y1_ave
@@ -315,8 +317,8 @@ def rebin(x1, y1, x2):
         # deal with whole parts of bin that are spanned
         cum_sum = np.cumsum(y1)
         running_sum = (
-            cum_sum[i_place[start_pos + 1:end_pos + 1] - 2] -
-            cum_sum[i_place[start_pos:end_pos] - 1])
+            cum_sum[i_place[start_pos + 1:end_pos + 1] - 2]
+            - cum_sum[i_place[start_pos:end_pos] - 1])
 
         y2[start_pos:end_pos] += running_sum
 
