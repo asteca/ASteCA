@@ -114,6 +114,20 @@ def bin_edges_f(
     diagram. The 'bin_edges' list will contain all magnitudes first, and then
     all colors (in the same order in which they are read).
     """
+
+    # # Test of edges created to use more resolution for brighter stars. Not
+    # # fully tested yet 06/2021
+    # bin_edges = []
+    # for mag in mags_cols_cl[0]:
+    #     pp = np.percentile(mag, (0, 25, 50, 75, 100))
+    #     e1 = list(np.linspace(pp[0], pp[1], 8))
+    #     e2 = list(np.linspace(pp[1], pp[2], 4)[1:-1])
+    #     e3 = list(np.linspace(pp[2], pp[3], 2))
+    #     bin_edges += [np.array(e1 + e2 + e3 + [pp[4]])]
+    # for col in mags_cols_cl[1]:
+    #     bin_edges += [np.arange(min(col), max(col), .1)]
+    # return bin_edges
+
     bin_edges = []
     if bin_method in (
             'auto', 'fd', 'doane', 'scott', 'rice', 'sturges', 'sqrt'):

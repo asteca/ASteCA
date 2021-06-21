@@ -1,6 +1,6 @@
 
 import numpy as np
-from scipy.stats import binned_statistic_dd, gaussian_kde
+from scipy.stats import gaussian_kde
 from ..decont_algors.local_cell_clean import bin_edges_f
 
 
