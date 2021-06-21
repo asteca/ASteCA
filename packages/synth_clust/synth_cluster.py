@@ -9,6 +9,8 @@ from . import binarity
 from . import completeness_rm
 from . import add_errors
 
+# import matplotlib.pyplot as plt
+
 
 def main(
     fundam_params, varIdxs, model, completeness, err_lst,
@@ -75,13 +77,13 @@ def main(
         isoch_mass = mass_interp.main(isoch_cut, m_ini_idx, mass_dist)
 
         # # In place for testing #508
-        # import matplotlib.pyplot as plt
         # plt.subplot(121)
-        # plt.scatter(isoch_mass[4], isoch_mass[3], c='r')
+        # # plt.scatter(isoch_mass[4], isoch_mass[3], c='r')
         # plt.scatter(isoch_mass[1], isoch_mass[0], c='g')
-        # plt.scatter(isoch_cut[4], isoch_cut[3], c='b', marker='x')
-        # plt.scatter(isoch_cut[1], isoch_cut[0], c='cyan', marker='x')
+        # # plt.scatter(isoch_cut[4], isoch_cut[3], c='b', marker='x')
+        # # plt.scatter(isoch_cut[1], isoch_cut[0], c='cyan', marker='x')
         # plt.gca().invert_yaxis()
+        # # plt.hist(isoch_mass[0], 25)
 
         if isoch_mass.any():
             # Assignment of binarity.
@@ -96,6 +98,13 @@ def main(
 
             # Completeness limit removal of stars.
             isoch_compl = completeness_rm.main(isoch_binar, completeness)
+
+            # # In place for testing #508
+            # plt.subplot(122)
+            # plt.scatter(isoch_compl[1], isoch_compl[0], c='g')
+            # plt.gca().invert_yaxis()
+            # # plt.hist(isoch_compl[0], 25)
+            # plt.show()
 
             if isoch_compl.any():
                 # Get errors according to errors distribution.
