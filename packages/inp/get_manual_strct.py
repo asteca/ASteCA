@@ -1,4 +1,6 @@
 
+import copy
+
 
 def main(pd, clust_name, **kwargs):
     """
@@ -16,14 +18,16 @@ def main(pd, clust_name, **kwargs):
 
     clFlag = False
     try:
-        cx, cy, fdens, rad, fregs = pd['manual_struct'][clust_name]
+        cx, cy, fdens, rad, fregs = copy.deepcopy(
+            pd['manual_struct'][clust_name])
         clFlag = True
     except KeyError:
         pass
     # Default values
     if clFlag is False:
         if 'CLUSTER' in pd['manual_struct'].keys():
-            cx, cy, fdens, rad, fregs = pd['manual_struct']['CLUSTER']
+            cx, cy, fdens, rad, fregs = copy.deepcopy(
+                pd['manual_struct']['CLUSTER'])
         else:
             raise ValueError("Line 'S0' in 'asteca.ini' missing 'CLUSTER'")
 

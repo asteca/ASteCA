@@ -1,4 +1,5 @@
 
+import copy
 from . import read_met_files
 from ..synth_clust import tracksPrep
 
@@ -12,23 +13,26 @@ def main(pd, clust_name, **kwargs):
 
         clPresent = True
         try:
-            td['fundam_params'] = pd['fundam_params_all'][clust_name]
+            td['fundam_params'] = copy.deepcopy(
+                pd['fundam_params_all'][clust_name])
         except KeyError:
             clPresent = False
             print(("Cluster not found in line 'R1'. Default to "
                    "'CLUSTER' values"))
-        if not clPresent:
-            td['fundam_params'] = pd['fundam_params_all']['CLUSTER']
+        if clPresent is False:
+            td['fundam_params'] = copy.deepcopy(
+                pd['fundam_params_all']['CLUSTER'])
 
         clPresent = True
         try:
-            td['priors_mcee'] = pd['priors_mcee_all'][clust_name]
+            td['priors_mcee'] = copy.deepcopy(
+                pd['priors_mcee_all'][clust_name])
         except KeyError:
             clPresent = False
             print(("Cluster not found in line 'B2'. Default to "
                    "'CLUSTER' values"))
-        if not clPresent:
-            td['priors_mcee'] = pd['priors_mcee_all']['CLUSTER']
+        if clPresent is False:
+            td['priors_mcee'] = copy.deepcopy(pd['priors_mcee_all']['CLUSTER'])
 
         # Check and store metallicity files.
         # Keys added: 'isoch_list', 'extra_pars'
