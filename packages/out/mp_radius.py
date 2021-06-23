@@ -400,8 +400,8 @@ def pl_memb_vs_rad(
         # 16-84 region
         ax.fill_between(rads, N_KP_16_84[0], N_KP_16_84[1], facecolor='green',
                         alpha=0.4, label=r"$16th-84th$ (KP)")
-        # plt.plot(rads, N_KP_16_84[1], c='g')
-        plt.axvline(rt, color='g', ls='-', label=r"$r_{t}$")
+        plt.axvline(rt, color='g', ls='-', label=r"$r_{t}$" + " (N={})".format(
+            int(np.mean([N_KP_16_84[0][-1], N_KP_16_84[1][-1]]))))
 
         N_KP_best = np.array(N_KP_best)
         idx = np.argmin(abs(N_KP_best - .90 * N_KP_best.max()))
