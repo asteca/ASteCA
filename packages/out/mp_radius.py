@@ -427,9 +427,9 @@ def pl_memb_vs_rad(
         N_membs_max = N_membs
 
     if kp_ndim in (2, 4):
-        rad_max = max(rt, clust_rad)
+        rad_max = rt + rt * .2
     else:
-        rad_max = clust_rad
+        rad_max = clust_rad + clust_rad * .5
     rad_max = min(2 * rad_max, rad_radii[-1])
 
     idx = np.argmin(abs(rad_radii - rad_max))
