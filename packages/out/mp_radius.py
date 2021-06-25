@@ -410,6 +410,9 @@ def pl_memb_vs_rad(
         idx = np.argmin(abs(N_KP_best - .95 * N_KP_best.max()))
         plt.axvline(
             rads[idx], ls=':', label="95% " + r"$r_{t}$", c='cyan', lw=2)
+        idx = np.argmin(abs(N_KP_best - .99 * N_KP_best.max()))
+        plt.axvline(
+            rads[idx], ls=':', label="99% " + r"$r_{t}$", c='blue', lw=2)
 
     plt.axvline(clust_rad, color='r', ls='-', label=r"$r_{cl}$")
     plt.plot(rad_radii, N_membs, c='r', ls="--", label=r"$N_{{memb}}$")
