@@ -197,19 +197,19 @@ def pl_rad_dens(
     ax.vlines(x=clust_rad, ymin=field_dens, ymax=y_mid_point, lw=1.5,
               color='r', label=t_rad.format("cl", clust_rad, coord2), zorder=5)
 
-    # Plot King profile.
+    # Plot King profile. Use median values
     if kp_ndim in (2, 4):
         txts = [
             'King prof ({:.2f})'.format(KP_conct_par),
             kp_rad.format(
-                "c", KP_Bys_rc[3], KP_Bys_rc[0], KP_Bys_rc[2], coord2),
+                "c", KP_Bys_rc[1], KP_Bys_rc[0], KP_Bys_rc[2], coord2),
             kp_rad.format(
-                "t", KP_Bys_rt[3], KP_Bys_rt[0], KP_Bys_rt[2], coord2)
+                "t", KP_Bys_rt[1], KP_Bys_rt[0], KP_Bys_rt[2], coord2)
         ]
         # Plot curve. Values outside of rt contribute 'fd'.
-        kpf_xvals = np.linspace(rdp_radii[0], KP_Bys_rt[3], 100)
+        kpf_xvals = np.linspace(rdp_radii[0], KP_Bys_rt[1], 100)
         kpf_yvals = KP_cent_dens * kpf(
-            kpf_xvals, KP_Bys_rc[3], KP_Bys_rt[3]) + field_dens
+            kpf_xvals, KP_Bys_rc[1], KP_Bys_rt[1]) + field_dens
         ax.plot(kpf_xvals, kpf_yvals, 'g--', label=txts[0], lw=2., zorder=3)
         # 16-84th range
         idx = (np.abs(_16_84_rang - kpf_xvals[-1])).argmin()
@@ -220,12 +220,12 @@ def pl_rad_dens(
 
         # Core radius
         rc_ymax = KP_cent_dens * kpf(
-            KP_Bys_rc[3], KP_Bys_rc[3], KP_Bys_rt[3]) + field_dens
+            KP_Bys_rc[1], KP_Bys_rc[1], KP_Bys_rt[1]) + field_dens
         ax.vlines(
-            x=KP_Bys_rc[3], ymin=field_dens, ymax=rc_ymax, label=txts[1],
+            x=KP_Bys_rc[1], ymin=field_dens, ymax=rc_ymax, label=txts[1],
             color='g', linestyles=':', lw=2., zorder=5)
         # Tidal radius
-        ax.vlines(x=KP_Bys_rt[3], ymin=field_dens, ymax=y_mid_point,
+        ax.vlines(x=KP_Bys_rt[1], ymin=field_dens, ymax=y_mid_point,
                   label=txts[2], color='g')
 
     # get handles
