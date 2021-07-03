@@ -94,13 +94,22 @@ def distDens(bw_list, xy_filtered, **kwargs):
     return NN_dd, NN_dist, fr_dens
 
 
-def kNNRDP(xy_cent_dist, fr_dens, fdens_method, pmin=2, pmax=99, Nrings=100):
+def kNNRDP(xy_cent_dist, fr_dens, fdens_method, pmin=1, pmax=99, Nrings=100):
     """
     Use the previously obtained densities and distances to estimate the
     field density.
     """
     dmin, dmax = np.percentile(xy_cent_dist, (pmin, pmax))
     rad_range = np.linspace(dmin, dmax, Nrings)
+
+    # # Used for testing the King profile fit
+    # dmin, dmax = np.percentile(xy_cent_dist, (.1, 25))
+    # rad_range0 = np.linspace(dmin, dmax, 50)
+    # dmin, dmax = np.percentile(xy_cent_dist, (25, 50))
+    # rad_range1 = np.linspace(dmin, dmax, 25)
+    # dmin, dmax = np.percentile(xy_cent_dist, (50, 99))
+    # rad_range2 = np.linspace(dmin, dmax, 25)
+    # rad_range = np.array(list(rad_range0) + list(rad_range1[1:])  + list(rad_range2[1:]))
 
     # Obtain field density estimates using circular rings of
     # increasingly large radius (percentages of the distances to the
@@ -109,9 +118,9 @@ def kNNRDP(xy_cent_dist, fr_dens, fdens_method, pmin=2, pmax=99, Nrings=100):
     rad_old = 0.
     for rad in rad_range:
 
-        # Define ring with a minimum of 10 stars
+        # Define ring with a minimum of 5 stars
         msk_dens = (xy_cent_dist > rad_old) & (xy_cent_dist <= rad)
-        if msk_dens.sum() < 10:
+        if msk_dens.sum() < 5:
             continue
 
         fdens_min_d.append((rad + rad_old) * .5)
@@ -126,6 +135,10 @@ def kNNRDP(xy_cent_dist, fr_dens, fdens_method, pmin=2, pmax=99, Nrings=100):
         field_dens = float(fdens_method)
     idx = np.argmin(abs(field_dens - np.array(fdens_lst)))
     field_dens_d, field_dens_std = fdens_min_d[idx], fdens_std_lst[idx]
+
+    # # Used for testing the King profile fit
+    # from astropy.io import ascii
+    # ascii.write(np.array([fdens_min_d, fdens_lst, fdens_std_lst]).T, "KP_test.dat")
 
     return fdens_min_d, fdens_lst, fdens_std_lst, field_dens_d, field_dens,\
         field_dens_std
