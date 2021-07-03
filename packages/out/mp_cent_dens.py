@@ -180,7 +180,7 @@ def pl_knn_dens(
 
 def pl_field_dens(
     gs, plot_style, coord, fdens_method, fr_dist, fr_dens, fdens_min_d,
-        fdens_lst, fdens_std_lst, field_dens_d, field_dens, field_dens_std):
+        fdens_lst, fdens_std_lst, field_dens_d, field_dens):
     """
     Field density values for different percentiles.
     """

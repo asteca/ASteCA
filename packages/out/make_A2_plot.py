@@ -42,8 +42,7 @@ def main(npd, cld_i, pd, clp):
         # pl_field_dens
         [gs, pd['plot_style'], coord, pd['fdens_method'], clp['xy_cent_dist'],
          clp['fr_dens'], clp['fdens_min_d'], clp['fdens_lst'],
-         clp['fdens_std_lst'], clp['field_dens_d'], clp['field_dens'],
-         clp['field_dens_std']],
+         clp['fdens_std_lst'], clp['field_dens_d'], clp['field_dens']],
         # pl_centdist_vs_mag
         [gs, fig, pd['plot_style'], y_ax, coord, cld_i['x'], cld_i['y'],
          cld_i['mags'][0], clp['kde_cent'], clp['clust_rad'],
