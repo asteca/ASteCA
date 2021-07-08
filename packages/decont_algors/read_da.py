@@ -14,12 +14,8 @@ def main(cl_region, clust_name, memb_file, readda_idcol=0, readda_mpcol=-2):
     # Read IDs and MPs from file.
     data = data_IO.dataRead(clust_name, memb_file, 'r')
     # Read IDs as strings since that is how they are stored in 'cl_region'
-    id_list = [str(_) for _ in data.columns[readda_idcol]]
-    try:
-        memb_probs = data.columns[readda_mpcol]
-    except IndexError:
-        print("  WARNING: MPs column not found. Assigned MP=1. to all stars")
-        memb_probs = np.ones(len(data))
+    id_list = list(data.columns[readda_idcol])
+    memb_probs = np.array(data.columns[readda_mpcol])
 
     N_not, memb_probs_cl_region = 0, []
     # Assign probabilities read from file according to the star's IDs.
@@ -35,7 +31,7 @@ def main(cl_region, clust_name, memb_file, readda_idcol=0, readda_mpcol=-2):
             N_not += 1
 
     if N_not > 0:
-        print(("  WARNING: {} stars where not present in the membership\n" +
-               "  file and were assigned MP=0.5").format(N_not))
+        print(("  WARNING: {} stars where not present in the membership\n"
+               + "  file and were assigned MP=0.5").format(N_not))
 
     return memb_probs_cl_region
