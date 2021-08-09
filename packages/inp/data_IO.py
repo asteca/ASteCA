@@ -18,8 +18,9 @@ def dataRead(clust_name, file_in, rm='rb'):
     """
     Read data file with: MP values / MCMC samples / mass values.
     """
-    file_in = file_in.replace('output' + '/' + clust_name, 'input')
     if rm == 'rb':
+        file_in = file_in.replace('output', 'input')
+        file_in = file_in.replace(clust_name + '/', '')
         with open(file_in, rm) as f:
             data = pickle.load(f)
     elif rm == 'r':
