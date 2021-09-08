@@ -110,8 +110,13 @@ def diag_limits(yaxis, phot_x, phot_y):
     """
     Define plot limits for *all* photometric diagrams.
     """
-    x_median, x_std = np.nanmedian(phot_x), np.nanstd(phot_x)
-    x_min_cmd, x_max_cmd = x_median - 4.5 * x_std, x_median + 4.5 * x_std
+    # OLD
+    # x_median, x_std = np.nanmedian(phot_x), np.nanstd(phot_x)
+    # x_min_cmd, x_max_cmd = x_median - 4.5 * x_std, x_median + 4.5 * x_std
+    # NEW
+    x_delta = np.ptp(phot_x)
+    x_min_cmd = min(phot_x) - .2 * x_delta
+    x_max_cmd = max(phot_x) + .1 * x_delta
 
     # Use stars within the x limits defined. This prevents stars far away
     # from the x median from affecting the limit in y.
