@@ -11,7 +11,7 @@
 axes.grid.axis     : both    ## which axis the grid should apply to
 axes.grid.which    : major   ## gridlines at {major, minor, both} ticks
 axes.titlesize     : 9       ## fontsize of the axes title
-axes.labelsize     : 10      ## fontsize of the x any y labels
+axes.labelsize     : 10      ## fontsize of the x and y labels
 
 
 # ***************************************************************************
