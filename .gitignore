@@ -2,8 +2,6 @@
 /*
 # except for this file
 !asteca.py
-# and this file
-!environment.yml
 # and this folder
 !/packages
 # But do ignore these files
