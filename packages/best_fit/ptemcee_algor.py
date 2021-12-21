@@ -164,9 +164,7 @@ def loglkl(
                 log_p += np.log(1 / pr[2]) - .5 * np.square(
                     (model[i] - pr[1]) / pr[2])
 
-        # The negative likelihood is returned since Dolphin requires a
-        # minimization of the PLR. Here we are maximizing, hence the minus.
-        logpost = log_p + (-lkl)
+        logpost = log_p + lkl
 
     return logpost
 
