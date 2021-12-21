@@ -2,7 +2,7 @@
 import numpy as np
 import warnings
 from ..best_fit.bf_common import modeKDE
-from .. import update_progress
+# from .. import update_progress
 
 
 def main(
@@ -151,7 +151,7 @@ def plxBayes(
                     print("")
                     break
                 old_tau = tau
-                update_progress.updt(nruns, i + 1)
+                # update_progress.updt(nruns, i + 1)
 
         mean_afs = afs[:tau_index]
         tau_autocorr = autocorr_vals[:tau_index]
@@ -190,9 +190,18 @@ def plxBayes(
 
 
 def lnprob(d, plx, e_plx2):
+    """
+    """
+    # Restrict solutions to this range
     if d <= 0:
         return -np.inf
-    return lnlike(d, plx, e_plx2)
+    return log_prior(d) + lnlike(d, plx, e_plx2)
+
+
+def log_prior(d):
+    """
+    """
+    return 0.
 
 
 def lnlike(d, plx, e_plx2):
@@ -203,4 +212,4 @@ def lnlike(d, plx, e_plx2):
     The final estimated value is almost always equivalent to the weighted
     average.
     """
-    return -np.sum((plx - 1 / d)**2 / e_plx2)
+    return -np.sum((plx - 1 / d)**2 / (2 * e_plx2))
