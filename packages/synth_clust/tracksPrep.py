@@ -203,6 +203,10 @@ def randVals(lkl_method, st_dist_mass, theor_tracks):
             err_norm_rand.append(np.random.normal(0., 1., N_mass))
 
         # Binary probabilities, one per metallicity
+        # In place for #198
+        # This assumes a flat multiplicity frequency, which is not
+        # necessarily true. A probability proportional to the primary mass
+        # probably should be used.
         binar_probs.append(np.random.uniform(0., 1., N_mass))
 
         # For the move_isoch() function. In place for #174

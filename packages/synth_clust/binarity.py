@@ -52,7 +52,7 @@ def binarGen(
         interp_tracks, np.zeros([N_mets, Na, Nd, N_mass])), axis=2)
 
     # Fractions for second mass, one per metallicity
-    binar_fracs, mean_bin_mr = randBinarFracs(min_bmass_ratio, N_mass, N_mets)
+    mass_ratios, mean_bin_mr = randBinarFracs(min_bmass_ratio, N_mass, N_mets)
 
     # For each metallicity defined.
     for mx, _ in enumerate(interp_tracks):
@@ -65,7 +65,7 @@ def binarGen(
             # Calculate random secondary masses of these binary stars
             # between bin_mass_ratio*m1 and m1, where m1 is the primary
             # mass.
-            m2 = binar_fracs[mx] * mass_ini
+            m2 = mass_ratios[mx] * mass_ini
 
             # Calculate unresolved binary magnitude for each
             # filter/magnitude defined.
@@ -122,7 +122,11 @@ def binarGen(
 
 def randBinarFracs(mbr, N_mass, N_mets):
     """
+    IN PLACE FOR #496
+
+    Define the mass ratio for the secondary masses
     """
+
     # mbr = 'raghavan' #'fisher'
 
     def fQ(xk, pk):
@@ -162,19 +166,19 @@ def randBinarFracs(mbr, N_mass, N_mets):
     else:
         mean_bin_mr = (mbr + 1.) / 2.
 
-    binar_fracs = []
+    mass_ratios = []
     for _ in range(N_mets):
         if mbr in ('fisher', 'raghavan'):
             # 'ppf' is the inverse CDF
             dist = fq.ppf(np.random.uniform(0., 1., N_mass))
         else:
             dist = np.random.uniform(mbr, 1., N_mass)
-        binar_fracs.append(dist)
+        mass_ratios.append(dist)
 
     # import matplotlib.pyplot as plt
     # plt.hist(dist, 20);plt.show()
 
-    return binar_fracs, mean_bin_mr
+    return mass_ratios, mean_bin_mr
 
 
 def mag_combine(m1, m2):
