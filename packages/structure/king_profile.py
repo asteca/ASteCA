@@ -103,6 +103,9 @@ def fit_King_prof(
 
     ** TODO **
 
+    * Fit using the RDP and a chi-square (Kuepper et al. 2010, Tarricq et
+    al. 2021)
+
     * Generalize to exponential profile? See:
     https://www.aanda.org/articles/aa/abs/2016/02/aa27070-15/aa27070-15.html
     Eq (2),
@@ -315,6 +318,7 @@ def lnlike(
     #     N_memb = NmembEst(ndim, fd, N_in_region, rt, ecc)
 
     # Central density
+    # N_memb, integ = centDens0(fd, rc, rt, rt_rang, ecc)
     rho_0 = centDens(N_memb, rt_rang, rc, rt, ecc)
     if return_dens is True:
         return rho_0
@@ -396,11 +400,31 @@ def centDens(N_memb, arr, rc, rt, ecc):
     Central density constant. Integrate up to rt.
 
     https://math.stackexchange.com/a/1891110/37846
+
+    The number of members is estimated with:
+
+    N_memb = cd * integ
+
+    where 'integ' is:
+
+    x = 1 + (rt / rc) ** 2
+    integ = (np.pi * rc ** 2) * (
+            np.log(x) - 4 + (4 * np.sqrt(x) + (x - 1)) / x)
+
+    i.e., the integral of 2*pi*r*KP divided by 'cd'. Below, 'integ' is
+    equivalent to the one given above, but generalized to an ellipse.
     """
     i = np.searchsorted(arr, rt)
     b = arr[:i] * np.sqrt(1. - ecc**2)
     integ = np.trapz(2. * np.pi * b * KingProf(arr[:i], rc, rt), arr[:i])
     return N_memb / integ
+
+
+# def centDens0(fd, rc, rt, max_dens=432000):
+#     """
+#     Central density constant.
+#     """
+#     return (max_dens - fd) / KingProf(0, rc, rt)
 
 
 def KingProf(r_in, rc, rt):
