@@ -36,6 +36,11 @@ def interp1d(x_new, x, y):
     `x` and `y` are arrays of values used to approximate some function f:
     ``y = f(x)`` using some new values
     y_new = f(x_new)
+
+    x_new.shape --> M
+    x.shape     --> N
+    y.shape     --> (D, N)
+    y_new.T.shape --> (D, M)
     """
 
     _y = y.T
