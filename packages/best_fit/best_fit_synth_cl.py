@@ -23,6 +23,21 @@ def main(npd, pd, td, clp):
             pd['lkl_method'] in ('dolphin', 'tremmel') else pd['lkl_method']
         print("Using {} algorithm ({})".format(pd['best_fit_algor'], lkl_bin))
 
+        # Calculate the best fitting parameters.
+        from . import kombine_algor
+        isoch_fit_params = kombine_algor.main(
+            clp['completeness'], clp['err_lst'],
+            clp['max_mag_syn'], clp['obs_clust'], pd['lkl_method'],
+            pd['pt_ntemps'], pd['pt_adapt'], pd['pt_tmax'],
+            pd['nsteps_mcee'], pd['nwalkers_mcee'], pd['mins_max'], **td)
+
+        from . import dynesty_algor
+        isoch_fit_params = dynesty_algor.main(
+            clp['completeness'], clp['err_lst'],
+            clp['max_mag_syn'], clp['obs_clust'], pd['lkl_method'],
+            pd['pt_ntemps'], pd['pt_adapt'], pd['pt_tmax'],
+            pd['nsteps_mcee'], pd['nwalkers_mcee'], pd['mins_max'], **td)
+
         # # Calculate the best fitting parameters.
         # from . import pypesto_algor
         # isoch_fit_params = pypesto_algor.main(
