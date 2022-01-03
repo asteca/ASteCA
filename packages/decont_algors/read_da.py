@@ -14,7 +14,7 @@ def main(cl_region, clust_name, memb_file, readda_idcol=0, readda_mpcol=-2):
     # Read IDs and MPs from file.
     data = data_IO.dataRead(clust_name, memb_file, 'r')
     # Read IDs as strings since that is how they are stored in 'cl_region'
-    id_list = list(data.columns[readda_idcol])
+    id_list = list(np.array(data.columns[readda_idcol], dtype=str))
     memb_probs = np.array(data.columns[readda_mpcol])
 
     N_not, memb_probs_cl_region = 0, []
