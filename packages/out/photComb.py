@@ -27,7 +27,7 @@ def main(pd, clp):
             cl_rj_col_1 = list(list(zip(*list(zip(
                 *clp['cl_region_rjct_c']))[5]))[1])
 
-    # Only use 25$ of the rejected stars. This way they have a lesser impact
+    # Only use 25% of the rejected stars. This way they have a smaller impact
     # on the CMD limits.
     Nh = int(len(cl_rj_mag_0) / 4.)
     shuffle(cl_rj_mag_0)
