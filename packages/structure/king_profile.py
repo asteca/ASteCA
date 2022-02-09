@@ -28,14 +28,10 @@ def main(
     The field density value is fixed to the previously estimated value.
     The central density is inferred from the (rc, rt) values and the previously
     estimated number of members ('n_memb_i', which is *also* estimated
-    using the field density), OR estimated per step (also using 'fd').
+    using the field density).
 
     This means that the value given to the field density has a *very large*
     influence on the final (rc, rt) values.
-
-    I tried setting the field density as as free parameter but the sampler
-    tends to maximize its value as much as possible. This is not physically
-    reasonable.
 
     IMPORTANT: the function will not work properly if the cluster's area
     is cropped; i.e.: near a frame's border.
@@ -126,10 +122,6 @@ def fit_King_prof(
 
     # Fixed number of members (previously estimated)
     N_memb = n_memb_i
-    # Estimate N_memb with each sampler step
-    # N_memb = None
-    #
-    # fd_max = 5. * field_dens
 
     # The tidal radius can not be larger than 'rt_max' times the estimated
     # "optimal" cluster radius. Used as a prior.
@@ -150,13 +142,6 @@ def fit_King_prof(
     rc_pos0 = np.random.uniform(.05 * rt_max, rt_max, nchains)
     rt_pos0 = np.random.uniform(rc_pos0, rt_max, nchains)
     pos0 = [rc_pos0, rt_pos0]
-
-    # ndim = 1
-    # pos0 = [rc_pos0]
-
-    # if ndim == 3:
-    #     fd_pos0 = np.random.uniform(0., fd_max, nchains)
-    #     pos0 += [fd_pos0]
     if ndim == 4:
         # Dimensions: ecc, theta
         ecc = np.random.uniform(.0, 1., nchains)
@@ -208,11 +193,7 @@ def fit_King_prof(
     samples = sampler.get_chain(discard=nburn, flat=True)
 
     # Estimate mean, median, 16th, 84th percentiles for each parameter
-    if ndim == 1:
-        rc_m, rt_m = np.mean(samples), 0.
-        rc_16, rc_50, rc_84 = np.percentile(samples, (16, 50, 84))
-        rt_16, rt_50, rt_84 = 0., 0., 0.
-    elif ndim in (2, 4):
+    if ndim in (2, 4):
         rc_m, rt_m = np.mean(samples[:, :2], 0)
         rc_16, rc_50, rc_84, rt_16, rt_50, rt_84 = np.percentile(
             samples[:, :2], (16, 50, 84), 0).T.flatten()
@@ -251,20 +232,13 @@ def lnprob(
     """
     Logarithmic posterior
     """
-    if ndim == 1:
-        rc = pars
-        rt, ecc, theta = np.inf, 0., 0.
-    elif ndim == 2:
+    if ndim == 2:
         rc, rt = pars
         ecc, theta = 0., 0.
-    # if ndim == 3:
-    #     rc, rt, fd = pars
-    #     ecc, theta = 0., 0.
     elif ndim == 4:
         rc, rt, ecc, theta = pars
 
     # Prior.
-    # fd < 0. or fd > fd_max
     if rt <= rc or rc <= 0. or rt > rt_max or ecc < .0 or ecc > 1. or\
             theta < -np.pi / 2. or theta > np.pi / 2.:
         return -np.inf
@@ -311,14 +285,7 @@ def lnlike(
 
         KP = KingProf(r_in_clip, rc, rt)
 
-    # fd = fieldDens(ndim, rt_max, r_in, rt, N_in_region)
-
-    # if N_memb is None:
-    #     # Estimate the number of members
-    #     N_memb = NmembEst(ndim, fd, N_in_region, rt, ecc)
-
     # Central density
-    # N_memb, integ = centDens0(fd, rc, rt, rt_rang, ecc)
     rho_0 = centDens(N_memb, rt_rang, rc, rt, ecc)
     if return_dens is True:
         return rho_0
@@ -330,35 +297,6 @@ def lnlike(
 
     sum_log_lkl = -np.inf if np.isnan(sum_log_lkl) else sum_log_lkl
     return sum_log_lkl
-
-
-# def fieldDens(ndim, rt_max, r_in, rt, N_in_region):
-#     """
-#     Estimate the field density.
-#     """
-#     if ndim in (2, 3):
-#         fd = (r_in.size - N_in_region) / (np.pi * (rt_max**2 - rt**2))
-
-#     return fd
-
-
-# def NmembEst(ndim, fd, N_in_region, rt, ecc):
-#     """
-#     The number of true members is estimated as the total number of stars
-#     inside the region, minus the expected number of field stars in
-#     the region.
-#     """
-#     if ndim in (2, 3):
-#         N_field_stars = np.pi * rt**2 * fd
-#     elif ndim == 4:
-#         a = rt
-#         b = a * np.sqrt(1. - ecc**2)
-#         N_field_stars = (np.pi * a * b) * fd
-
-#     N_memb = N_in_region - N_field_stars
-#     # # Minimum value is 1
-#     # N_memb = max(1, N_memb)
-#     return N_memb
 
 
 def inEllipse(xy_in, cl_cent, rt, ecc, theta):
@@ -418,13 +356,6 @@ def centDens(N_memb, arr, rc, rt, ecc):
     b = arr[:i] * np.sqrt(1. - ecc**2)
     integ = np.trapz(2. * np.pi * b * KingProf(arr[:i], rc, rt), arr[:i])
     return N_memb / integ
-
-
-# def centDens0(fd, rc, rt, max_dens=432000):
-#     """
-#     Central density constant.
-#     """
-#     return (max_dens - fd) / KingProf(0, rc, rt)
 
 
 def KingProf(r_in, rc, rt):
@@ -490,21 +421,10 @@ def plotParams(
     KP_samples = sampler.get_chain()
 
     # Mode and KDE
-    if ndim in (1, 2, 3):
+    if ndim == 2:
         # This simulates the 'fundam_params and 'varIdxs' arrays.
-        if ndim == 1:
-            fp, vi = [[-np.inf, np.inf]], [0]
-        elif ndim == 2:
-            fp, vi = [[-np.inf, np.inf], [-np.inf, np.inf]], [0, 1]
-        else:
-            fp, vi = [
-                [-np.inf, np.inf], [-np.inf, np.inf], [-np.inf, np.inf]],\
-                [0, 1, 2]
+        fp, vi = [[-np.inf, np.inf], [-np.inf, np.inf]], [0, 1]
         KP_mode, KP_kde = modeKDE(fp, vi, samples.T)
-        if ndim == 1:
-            # Add rt
-            KP_mode += [np.inf]
-            KP_kde += [[]]
         # Add ecc, theta
         KP_mode += [0., 0.]
         KP_kde += [[], []]
