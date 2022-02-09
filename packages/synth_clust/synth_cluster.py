@@ -31,7 +31,7 @@ def main(
 
     * transpose_flag = False
 
-    synth_clust = [mag, c1, (c2), mag_b, c1_b, (c2_b), m_ini_1, m_ini_1]
+    synth_clust = [mag, c1, (c2), mag_b, c1_b, (c2_b), m_ini_1, m_ini_2]
 
     where 'm_ini_1, m_ini_2' are the masses of the single/binary systems. The
     single systems only have 'm_ini_1' defined, and a '-99' stored in 'm_ini_2'
@@ -59,6 +59,9 @@ def main(
 
     # Get isochrone minus those stars beyond the magnitude cut.
     isoch_cut = cut_max_mag.main(isoch_moved, max_mag_syn)
+
+    # In place for MiMO testing
+    # return isoch_cut
 
     # # In place for #358
     # return isoch_cut.T[:, :3]

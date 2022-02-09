@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 
 
 """
-See also: https://stats.stackexchange.com/q/404775/10416
+Trying to replicate the method described in the MiMO article
 """
 
 
@@ -34,15 +34,14 @@ def main(
         err_norm_rand, binar_probs, ext_unif_rand]
 
     #
-    # For the other distances
-    bin_edges, cl_histo_f_z, cl_z_idx = obs_clust
-    dist_pars = (lkl_method, bin_edges, cl_z_idx)
-
     def loglike(model):
         # Generate synthetic cluster.
         synth_clust = synth_cluster.main(
-            fundam_params, varIdxs, model, *synthcl_args)
-        return statDist(synth_clust, cl_histo_f_z, dist_pars)
+            fundam_params, varIdxs, model, *synthcl_args, transpose_flag=False)
+        res = integLkl(synth_clust, obs_clust)
+        # print(model, res)
+        # breakpoint()
+        return res
 
     deltas = ranges[:, 1][:-1] - ranges[:, 0][:-1]
 
@@ -54,7 +53,7 @@ def main(
 
     #
     dsampler = DynamicNestedSampler(loglike, ptform, ndim)
-    dsampler.run_nested(maxcall=200000)
+    dsampler.run_nested(maxcall=20000)
     print("\nTime", tm.time() - start)
     print("ESS", dsampler.n_effective)
     res = dsampler.results
@@ -65,7 +64,6 @@ def main(
 
     fig, axes = dyplot.traceplot(
         res, show_titles=True, trace_cmap='viridis', connect=True)
-                                 # connect_highlight=range(5))
     plt.show()
 
     samples, weights = res.samples, np.exp(res.logwt - res.logz[-1])
@@ -77,22 +75,50 @@ def main(
     return
 
 
-def statDist(synth, obs, dist_pars):
+def integLkl(synth, obs, alpha=-2.):
     """
+    obs:   (mag, e_mag, color, e_color)
+    synth: (mag, color, mass)
     """
-    lkl_method, bin_edges, cl_z_idx = dist_pars
+    from scipy.integrate import dblquad
 
-    return likelihood.main(lkl_method, synth, [bin_edges, obs, cl_z_idx])
+    if synth.shape[1] < 10:
+        return -np.inf
 
-    # # Histogram of the synthetic cluster, using the bin edges calculated
-    # # with the observed cluster.
-    # syn_histo = histogramdd(synth, bins=bin_edges)
+    # synth_clust = [mag, c1, mag_b, c1_b, m_ini_1, m_ini_1]
+    smag, scol = synth[:2]
+    mass = synth[-2]
+    mag, col, e_mag, e_col = obs
 
-    # # Flatten N-dimensional histogram.
-    # syn_histo_f = syn_histo.ravel()
-    # # Remove all bins where n_i = 0 (no observed stars).
-    # syn_histo_f_z = syn_histo_f[cl_z_idx]
+    dx = (smag[1:] - smag[:-1]) * (scol[1:] - scol[:-1])
+    IMF_m = mass[:-1]**alpha
 
-    # # return wasserstein_distance(syn_histo_f_z, obs)
-    # # return energy_distance(syn_histo_f_z, obs)
-    # return anderson_ksamp([syn_histo_f_z, obs])[0]
+    def deltaIMF(m, c, eps=0.05):
+        d = (smag - m)**2 + (scol - c)**2
+        if min(d) > eps:
+            return 0.
+
+        i = np.argmin(d)
+        return mass[i]**alpha
+
+    mmin, mmax, cmin, cmax = smag.min(), smag.max(), scol.min(), scol.max()
+
+    def func(c, m, mi, ci, emi, eci):
+        return deltaIMF(m, c) * np.exp(-.5 * ((mi - m) / emi)**2)\
+            * np.exp(-.5 * ((ci - c) / eci)**2)
+
+    Phi = np.ones(len(mag))
+    for i, magi in enumerate(mag):
+        Phi0 = dblquad(func, mmin, mmax, cmin, cmax, args=(
+            magi, col[i], e_mag[i], e_col[i]))[0]
+
+        y = IMF_m * np.exp(-.5 * ((magi - smag[:-1]) / e_mag[i])**2)\
+            * np.exp(-.5 * ((col[i] - scol[:-1]) / e_col[i])**2)
+        Phi[i] = (dx * y).sum()
+
+        print(Phi0, Phi[i])
+    breakpoint()
+
+    logLkl = np.log(Phi + 1).sum()
+
+    return logLkl

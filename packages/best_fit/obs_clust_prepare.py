@@ -207,4 +207,13 @@ def main(cl_max_mag, lkl_method, lkl_binning, lkl_manual_bins):
 
         obs_clust = [obs_kde, kde_pts]
 
+
+    # # In place for MiMO testing
+    # e_mags_cols = []
+    # for e_m in list(zip(*list(zip(*cl_max_mag))[1:][3])):
+    #     e_mags_cols.append(e_m)
+    # for e_c in list(zip(*list(zip(*cl_max_mag))[1:][5])):
+    #     e_mags_cols.append(e_c)
+    # obs_clust = list(np.array(mags_cols_cl[0])) + list(np.array(mags_cols_cl[1])) + list(np.array(e_mags_cols))
+
     return obs_clust
