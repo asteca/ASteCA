@@ -722,29 +722,16 @@ def NmembVsMag(x, y, mags, kde_cent, clust_rad, cl_area):
     return np.array(membvsmag).T
 
 
-def membVSrad(
-    field_dens, field_dens_std, rad_radii, rad_areas, N_in_cl_rad,
-        N_in_ring):
+def membVSrad(x, y, kde_cent, xy_cent_dist, field_dens, field_dens_std):
     """
     """
+
+    rad_radii, rad_areas, N_in_cl_rad = rdpAreasDists(
+        x, y, kde_cent, xy_cent_dist, field_dens)
+
     N_membs = N_in_cl_rad - field_dens * rad_areas
-    membs_ratio = N_membs / np.clip(N_in_ring, a_min=1, a_max=np.inf)
-    membs_ratio /= membs_ratio.max()
 
     CI_vals = CIfunc(N_in_cl_rad, field_dens, rad_areas)
-
-    # Smooth the curve. Tried smoothing before the normalization but it
-    # increases the uncertainty region enormously.
-    # Catch error in savgol_filter() when there is a 'nan' or 'inf'
-    if np.isnan(membs_ratio).any() or np.isinf(membs_ratio).any():
-        membs_ratio_smooth = np.array([])
-    else:
-        # window size (must be odd). There are ~1000 values by default
-        ws = max(3, int(len(membs_ratio) / 10.))
-        ws = ws + 1 if ws % 2 == 0 else ws
-        # polynomial order
-        pol = 3
-        membs_ratio_smooth = savgol_filter(membs_ratio, ws, pol)
 
     N_membs_16, N_membs_84 = np.array([]), np.array([])
     if not np.isnan(field_dens_std):
@@ -756,8 +743,65 @@ def membVSrad(
         N_membs_16 = np.nanpercentile(N_membs_all, 16, 0)
         N_membs_84 = np.nanpercentile(N_membs_all, 84, 0)
 
-    return CI_vals, N_membs, N_membs_16, N_membs_84, membs_ratio,\
-        membs_ratio_smooth
+    return CI_vals, rad_radii, N_membs, N_membs_16, N_membs_84
+
+
+def rdpAreasDists(
+    x, y, kde_cent, xy_cent_dist, field_dens, pmin=2, pmax=0.9, Nrads=300,
+        N_MC=1000000, Ninterp=1000):
+    """
+    pmin: minimum percentile used to define the radii range
+    pmax: percentage of the maximum distance from the center to a frame's
+          border, used to define the radii range
+    Nrads: number of values used to generate the 'rad_radii' array.
+    N_MC: points in the Monte Carlo area estimation. Use 1e6 for stability.
+    Ninterp: number of interpolated points in the final arrays
+    """
+
+    rand_01_MC, cos_t, sin_t = monteCarloPars(N_MC)
+
+    # Frame limits
+    x0, x1 = min(x), max(x)
+    y0, y1 = min(y), max(y)
+    # Estimate the minimum distance from the center of the cluster to any
+    # border of the frame
+    dx0, dx1 = abs(kde_cent[0] - x0), abs(kde_cent[0] - x1)
+    dy0, dy1 = abs(kde_cent[1] - y0), abs(kde_cent[1] - y1)
+    dxy = min(dx0, dx1, dy0, dy1)
+
+    # Define the radii values
+    dmin = np.percentile(xy_cent_dist, pmin)
+    all_rads = np.linspace(dmin, max(dx0, dx1, dy0, dy1) * pmax, Nrads)
+
+    # Areas associated to the radii defined in 'all_rads'.
+    rad_areas, rad_radii, N_in_cl_rad =\
+        np.pi * np.array(all_rads)**2, [], []
+    for i, rad in enumerate(all_rads):
+
+        # Stars within radius.
+        n_in_cl_reg = (xy_cent_dist <= rad).sum()
+        if n_in_cl_reg == 0:
+            continue
+
+        rad_radii.append(rad)
+        # Stars within radius
+        N_in_cl_rad.append(n_in_cl_reg)
+
+        fr_area = 1.
+        if rad > dxy:
+            fr_area = circFrac(
+                (kde_cent), rad, x0, x1, y0, y1, rand_01_MC, cos_t, sin_t)
+        rad_areas[i] *= fr_area
+
+    # Interpolate extra points
+    xx = np.linspace(0., 1., Ninterp)
+    xp = np.linspace(0, 1, len(rad_radii))
+    interp_lst = []
+    for lst in (rad_radii, rad_areas, N_in_cl_rad):
+        interp_lst.append(np.interp(xx, xp, lst))
+    rad_radii, rad_areas, N_in_cl_rad = interp_lst
+
+    return rad_radii, rad_areas, N_in_cl_rad
 
 
 def isoch_sigmaNreg(
