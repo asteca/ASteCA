@@ -3,7 +3,6 @@ import numpy as np
 import scipy.integrate as integrate
 from scipy.stats import median_abs_deviation as MAD
 from scipy.spatial.distance import cdist
-# from ..aux_funcs import monteCarloPars, circFrac
 
 
 def main(cld_i, clp, rad_method, **kwargs):
