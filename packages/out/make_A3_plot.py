@@ -37,16 +37,15 @@ def main(npd, cld_i, pd, clp):
     membvsmag = prep_plots.NmembVsMag(
         cld_i['x'], cld_i['y'], cld_i['mags'], clp['kde_cent'],
         clp['clust_rad'], clp['cl_area'])
-    CI_vals, N_membs, N_membs_16, N_membs_84, membs_ratio,\
-        membs_ratio_smooth = prep_plots.membVSrad(
-            clp['field_dens'], clp['field_dens_std'], clp['rad_radii'],
-            clp['rad_areas'], clp['N_in_cl_rad'], clp['N_in_ring'])
+    CI_vals, rad_radii, N_membs, N_membs_16, N_membs_84 = prep_plots.membVSrad(
+        cld_i['x'], cld_i['y'], clp['kde_cent'], clp['xy_cent_dist'],
+        clp['field_dens'], clp['field_dens_std'])
 
     # Structure plots.
     arglist = [
         # pl_rad_find
-        [gs, pd['plot_style'], coord, clp['clust_rad'], membs_ratio,
-         membs_ratio_smooth, CI_vals, clp['rad_radii']],
+        [gs, pd['plot_style'], coord, clp['clust_rad'],
+         clp['rads_interp'], clp['integ_interp'], CI_vals, rad_radii],
         # pl_mag_membs
         [gs, pd['plot_style'], y_ax, membvsmag],
         # pl_cl_fl_regions: Cluster and field regions defined.
@@ -58,7 +57,7 @@ def main(npd, cld_i, pd, clp):
         # pl_rad_dens: Radial density plot.
         [gs, pd['plot_style'], coord, rdp_radii, rdp_points, rdp_stddev,
          rad_max, clp['field_dens'], clp['field_dens_std'], clp['clust_rad'],
-         pd['kp_ndim'], clp['KP_Bys_rc'], clp['KP_Bys_rt'],
+         clp['rad_uncert'], pd['kp_ndim'], clp['KP_Bys_rc'], clp['KP_Bys_rt'],
          clp['KP_plot'], clp['KP_conct_par']],
         # pl_zoom_frame: Zoom on x,y finding chart.
         [gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin, y_zmax,
@@ -67,7 +66,7 @@ def main(npd, cld_i, pd, clp):
          clp['KP_Bys_ecc'], clp['KP_Bys_theta'], clp['frac_cl_area'],
          pd['kp_ndim']],
         # pl_memb_vs_rad
-        [gs, pd['plot_style'], coord, clp['clust_rad'], clp['rad_radii'],
+        [gs, pd['plot_style'], coord, clp['clust_rad'], rad_radii,
          N_membs, N_membs_16, N_membs_84, clp['KP_Bys_rc'][1],
          clp['KP_Bys_rt'][1], pd['kp_ndim'], clp['KP_plot']],
         # pl_membs_dist

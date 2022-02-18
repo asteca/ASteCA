@@ -180,17 +180,19 @@ def pl_knn_dens(
 
 def pl_field_dens(
     gs, plot_style, coord, fdens_method, fr_dist, fr_dens, fdens_min_d,
-        fdens_lst, fdens_std_lst, field_dens_d, field_dens):
+        fdens_lst, fdens_std_lst, field_dens):
     """
     Field density values for different percentiles.
     """
     # Convert from deg to arcmin
-    fr_dist, fdens_min_d, field_dens_d = np.array(fr_dist) * 60.,\
-        np.array(fdens_min_d) * 60., np.array(field_dens_d) * 60.
+    fr_dist, fdens_min_d = np.array(fr_dist) * 60., np.array(fdens_min_d) * 60.
     fr_dens, fdens_lst, fdens_std_lst = [
         np.array(_) / 3600. for _ in (fr_dens, fdens_lst, fdens_std_lst)]
     field_dens = field_dens / 3600.
     coord2 = 'arcmin'
+
+    idx = np.argmin(abs(field_dens - np.array(fdens_lst)))
+    field_dens_d = fdens_min_d[idx]
 
     delta_y = np.ptp(fr_dens) * .1
     ymin = max(0., min(fr_dens) - delta_y)

@@ -10,54 +10,36 @@ from ..structure.king_profile import KP_memb_x
 
 
 def pl_rad_find(
-    gs, plot_style, coord, clust_rad, membs_ratio, membs_ratio_smooth, CI_vals,
-        rad_radii):
+    gs, plot_style, coord, clust_rad, rads_interp, integ_interp,
+        CI_vals, rad_radii):
     """
     Radius estimation plot.
     """
     # Convert from deg to arcmin
-    rad_radii, clust_rad = rad_radii * 60., clust_rad * 60.
+    rads_interp, rad_radii, clust_rad = np.array(rads_interp) * 60.,\
+        rad_radii * 60, clust_rad * 60.
     coord2 = 'arcmin'
-
-    # # Cut when (if) N_nembs = 0
-    # try:
-    #     icut = np.where(rad_N_membs == 0.)[0][0]
-    #     if icut == 0:
-    #         icut = len(rad_N_membs)
-    #     else:
-    #         # Use 30 points since the number of radii values in
-    #         # radius.rdpAreasDists() is hardcoded to 300.
-    #         icut = icut + 30
-    # except IndexError:
-    #     icut = len(rad_N_membs)
-    # rad_rads, rad_N_membs, rad_N_field, rad_CI = rad_rads[:icut],\
-    #     rad_N_membs[:icut], rad_N_field[:icut], rad_CI[:icut]
 
     ax = plt.subplot(gs[0:2, 0:2])
     plt.xlabel(r'radius $[{}]$'.format(coord2))
-    # plt.ylabel(r"$N_{memb}\;|\;N_{field}\;|\;CI$"))
     if plot_style == 'asteca':
         ax.grid()
 
-    msk = membs_ratio > 0
-    plt.scatter(rad_radii[msk], membs_ratio[msk], c='g',
-                label=r'$N_{memb}/N_{ring}$', alpha=.3)
-    if membs_ratio_smooth.any():
-        if membs_ratio_smooth[msk].any():
-            plt.plot(rad_radii[msk], membs_ratio_smooth[msk], c='b')
+    plt.scatter(rads_interp, integ_interp, c='g',
+                label=r'$\int A$', alpha=.3)
 
-    plt.plot(rad_radii[msk], CI_vals[msk], ls=':', c='k', label='CI')
+    plt.plot(rad_radii, CI_vals, ls=':', c='k', label='CI')
     ymin, _ = ax.get_ylim()
     ymin = max(ymin, 0)
     plt.axvline(x=clust_rad, lw=1.5, color='r', label=r"$r_{cl}$")
 
     # Legends.
-    leg = plt.legend(fancybox=True)
+    leg = plt.legend(fancybox=True, loc='lower right')
     leg.get_frame().set_alpha(0.7)
 
     # xmin, xmax = ax.get_xlim()
-    xmax = min(clust_rad + clust_rad * 3, rad_radii[msk][-1])
-    plt.ylim(ymin, 1.02)
+    xmax = min(clust_rad + clust_rad * 3, rad_radii[-1])
+    plt.ylim(ymin, 1.12)
     plt.xlim(0., xmax)
 
 
@@ -127,7 +109,7 @@ def pl_cl_fl_regions(
 
 def pl_rad_dens(
     gs, plot_style, coord, rdp_radii, rdp_points, rdp_stddev, rad_max,
-    field_dens, e_fdens, clust_rad, kp_ndim, KP_Bys_rc, KP_Bys_rt,
+    field_dens, e_fdens, clust_rad, rad_uncert, kp_ndim, KP_Bys_rc, KP_Bys_rt,
         KP_plot, KP_conct_par):
     """
     Radial density plot.
@@ -140,7 +122,8 @@ def pl_rad_dens(
 
     # Convert from deg to arcmin
     rdp_radii = np.array(rdp_radii) * 60.
-    clust_rad, rad_max = clust_rad * 60., rad_max * 60.
+    clust_rad, rad_uncert, rad_max = clust_rad * 60., rad_uncert * 60.,\
+        rad_max * 60.
     KP_Bys_rc, KP_Bys_rt = KP_Bys_rc * 60., KP_Bys_rt * 60.
     field_dens, e_fdens, KP_cent_dens = field_dens / 3600.,\
         e_fdens / 3600., KP_cent_dens / 3600.
@@ -159,8 +142,9 @@ def pl_rad_dens(
         ax.grid()
 
     # Legend texts
-    r_frmt = '{:.0f}' if coord2 == 'px' else '{:.2f}'
-    t_rad = r"$r_{{{}}}=" + r_frmt + r"\,[{}]$"
+    r_frmt = '{:.2f}'
+    t_rad = r"$r_{{{}}}=" + r_frmt + r"_{{" + r_frmt + r"}}^{{" +\
+        r_frmt + r"}}\,[{}]$"
     kp_rad = r"$r_{{{}}}=" + r_frmt + r"_{{" + r_frmt + r"}}^{{" +\
         r_frmt + r"}}\,[{}]$"
 
@@ -195,7 +179,13 @@ def pl_rad_dens(
 
     # Plot radius.
     ax.vlines(x=clust_rad, ymin=field_dens, ymax=y_mid_point, lw=1.5,
-              color='r', label=t_rad.format("cl", clust_rad, coord2), zorder=5)
+              color='r', label=t_rad.format(
+                  "cl", clust_rad, rad_uncert[0], rad_uncert[1], coord2),
+              zorder=5)
+    if not np.isnan(rad_uncert[0]):
+        ax.fill_betweenx(
+            (field_dens, y_mid_point), rad_uncert[0], rad_uncert[1],
+            color='grey', alpha=.25)
 
     # Plot King profile. Use median values
     if kp_ndim in (2, 4):
