@@ -1,6 +1,7 @@
 
 import numpy as np
 from scipy import spatial
+import scipy.integrate as integrate
 from ..aux_funcs import monteCarloPars, circFrac
 
 
@@ -15,11 +16,18 @@ def main(clp, cld_i, fdens_method, **kwargs):
     clp['xy_filtered'], clp['xy_cent_dist'] = fixedParams(
         cld_i['x'], cld_i['y'], **clp)
 
-    clp['NN_dd'], clp['NN_dist'], clp['fr_dens'] = distDens(**clp)
+    clp['NN_dd'], clp['NN_dist'], clp['fr_dens'] = distDens(
+        clp['bw_list'], clp['xy_filtered'])
 
-    clp['fdens_min_d'], clp['fdens_lst'], clp['fdens_std_lst'],\
-        clp['field_dens_d'], clp['field_dens'], clp['field_dens_std'] = kNNRDP(
-        clp['xy_cent_dist'], clp['fr_dens'], fdens_method)
+    clp['fdens_min_d'], clp['fdens_lst'], clp['fdens_std_lst'] = kNNRDP(
+        clp['xy_cent_dist'], clp['fr_dens'])
+
+    if fdens_method == 'a':
+        field_dens, field_dens_std = integFieldDens(
+            clp['fdens_min_d'], clp['fdens_lst'])
+    else:
+        field_dens, field_dens_std = float(fdens_method), np.nan
+    clp['field_dens'], clp['field_dens_std'] = field_dens, field_dens_std
 
     print("Field density ({:.3E} stars/deg^2)".format(clp['field_dens']))
 
@@ -49,7 +57,7 @@ def fixedParams(x, y, kde_cent, lb=1., rt=99., **kwargs):
     return xy_filtered, xy_cent_dist
 
 
-def distDens(bw_list, xy_filtered, **kwargs):
+def distDens(bw_list, xy_filtered):
     """
     Obtain the NN densities and radius for each star in the frame.
 
@@ -94,22 +102,13 @@ def distDens(bw_list, xy_filtered, **kwargs):
     return NN_dd, NN_dist, fr_dens
 
 
-def kNNRDP(xy_cent_dist, fr_dens, fdens_method, pmin=1, pmax=99, Nrings=100):
+def kNNRDP(xy_cent_dist, fr_dens, pmin=1, pmax=99, Nrings=100):
     """
     Use the previously obtained densities and distances to estimate the
     field density.
     """
     dmin, dmax = np.percentile(xy_cent_dist, (pmin, pmax))
     rad_range = np.linspace(dmin, dmax, Nrings)
-
-    # # Used for testing the King profile fit
-    # dmin, dmax = np.percentile(xy_cent_dist, (.1, 25))
-    # rad_range0 = np.linspace(dmin, dmax, 50)
-    # dmin, dmax = np.percentile(xy_cent_dist, (25, 50))
-    # rad_range1 = np.linspace(dmin, dmax, 25)
-    # dmin, dmax = np.percentile(xy_cent_dist, (50, 99))
-    # rad_range2 = np.linspace(dmin, dmax, 25)
-    # rad_range = np.array(list(rad_range0) + list(rad_range1[1:])  + list(rad_range2[1:]))
 
     # Obtain field density estimates using circular rings of
     # increasingly large radius (percentages of the distances to the
@@ -125,74 +124,115 @@ def kNNRDP(xy_cent_dist, fr_dens, fdens_method, pmin=1, pmax=99, Nrings=100):
 
         fdens_min_d.append((rad + rad_old) * .5)
         fdens_lst.append(np.median(fr_dens[msk_dens]))
+        # Only for plotting
         fdens_std_lst.append(np.std(fr_dens[msk_dens]))
 
         rad_old = rad
 
-    if fdens_method == 'a':
-        field_dens = iterativeRDP(fdens_lst)
-    else:
-        field_dens = float(fdens_method)
-    idx = np.argmin(abs(field_dens - np.array(fdens_lst)))
-    field_dens_d, field_dens_std = fdens_min_d[idx], fdens_std_lst[idx]
-
-    # # Used for testing the King profile fit
-    # from astropy.io import ascii
-    # ascii.write(np.array([fdens_min_d, fdens_lst, fdens_std_lst]).T, "KP_test.dat")
-
-    return fdens_min_d, fdens_lst, fdens_std_lst, field_dens_d, field_dens,\
-        field_dens_std
+    return fdens_min_d, fdens_lst, fdens_std_lst
 
 
-def iterativeRDP(fdens_lst):
+def integFieldDens(fdens_min_d, fdens_lst, step=5, perc=.95):
     """
-    Iterative process:
+    Obtain the field density integrating the (fdens_min_d, fdens_lst) arrays
+    with in steps. When the ratio of integrals to the first integral reaches
+    a fixed percentage (perc), select that as the cut radius. Beyond this
+    value all densities are assumed to represent the field density.
 
-    1. Start with the complete set of field density values
-    2. Obtain its median and standard deviation.
-    3. Reject the point located the farthest away from the 1 sigma range around
-       the median
-    4. Obtain new median and standard deviation.
-    5. Repeat the process until no points are left beyond the 1 sigma level.
-    6. Return the field density as the median value.
+    The final value and STDDEV are the median and STDDEV of the post cut radius
+    density values.
     """
 
-    # field_dens_old = np.inf
-    # for i in range(len(fdens_lst)):
-    #     field_dens = np.median(fdens_lst[i + 1:])
-    #     if field_dens > field_dens_old:
-    #         break
-    #     field_dens_old = field_dens
+    xx = np.linspace(0., 1., 1000)
+    xp = np.linspace(0, 1, len(fdens_min_d))
+    interp_lst = []
+    for lst in (fdens_min_d, fdens_lst):
+        interp_lst.append(np.interp(xx, xp, lst))
+    rads, dens = interp_lst
 
-    fdens_copy = fdens_lst.copy()
+    def curveInt(N1, N2, x, y):
+        xx, yy = x[N1:N2], y[N1:N2]
+        area_T = integrate.simpson(yy, xx)
+        area = area_T
+        return area
 
-    stable_cond = False
-    while stable_cond is False:
+    i_old = 0
+    rads_v, vals = [], []
+    for i in range(step, len(rads), step):
+        integ = curveInt(i_old, i, rads, dens)
+        vals.append(integ)
+        rads_v.append(np.mean(rads[i_old:i]))
+        i_old = i - int(step * .5)
+    rads_v = np.array(rads_v)
+    areas = 1 - np.array(vals) / vals[0]
 
-        # Obtain median and standard deviation.
-        median, sigma = np.median(fdens_copy), np.std(fdens_copy)
+    membs_ratio = areas / areas.max()
+    xp = np.linspace(0, 1, len(areas))
+    rads_v_interp = np.interp(xx, xp, rads_v)
+    membs_ratio_interp = np.interp(xx, xp, membs_ratio)
 
-        # Check if at least one element in the list is beyond the 1 sigma
-        # level.
-        rm_elem = False
-        dist_r = -1.
-        for indx, fd in enumerate(fdens_copy):
-            dist = abs(fd - median)
+    idx = int(len(membs_ratio_interp) * .5)
+    for i, v in enumerate(membs_ratio_interp):
+        if v > perc:
+            idx = i
+            break
+    f_rad = rads_v_interp[idx]
+    j = np.argmin(abs(f_rad - rads))
+    field_dens, field_dens_std = np.median(dens[j:]), np.std(dens[j:])
 
-            if dist > sigma and dist > dist_r:
-                # Update distance removal value.
-                dist_r = dist
-                # Store index of element.
-                rm_index = indx
-                # Raise flag.
-                rm_elem = True
+    return field_dens, field_dens_std
 
-        if rm_elem is True:
-            # Remove element from list and iterate again.
-            del fdens_copy[rm_index]
-        else:
-            stable_cond = True
 
-        field_dens = median
+# DEPRECATED Feb 2022
+# def iterativeRDP(fdens_lst):
+#     """
+#     Iterative process:
 
-    return field_dens
+#     1. Start with the complete set of field density values
+#     2. Obtain its median and standard deviation.
+#     3. Reject the point located the farthest away from the 1 sigma range around
+#        the median
+#     4. Obtain new median and standard deviation.
+#     5. Repeat the process until no points are left beyond the 1 sigma level.
+#     6. Return the field density as the median value.
+#     """
+
+#     # field_dens_old = np.inf
+#     # for i in range(len(fdens_lst)):
+#     #     field_dens = np.median(fdens_lst[i + 1:])
+#     #     if field_dens > field_dens_old:
+#     #         break
+#     #     field_dens_old = field_dens
+
+#     fdens_copy = fdens_lst.copy()
+
+#     stable_cond = False
+#     while stable_cond is False:
+
+#         # Obtain median and standard deviation.
+#         median, sigma = np.median(fdens_copy), np.std(fdens_copy)
+
+#         # Check if at least one element in the list is beyond the 1 sigma
+#         # level.
+#         rm_elem = False
+#         dist_r = -1.
+#         for indx, fd in enumerate(fdens_copy):
+#             dist = abs(fd - median)
+
+#             if dist > sigma and dist > dist_r:
+#                 # Update distance removal value.
+#                 dist_r = dist
+#                 # Store index of element.
+#                 rm_index = indx
+#                 # Raise flag.
+#                 rm_elem = True
+
+#         if rm_elem is True:
+#             # Remove element from list and iterate again.
+#             del fdens_copy[rm_index]
+#         else:
+#             stable_cond = True
+
+#         field_dens = median
+
+#     return field_dens
