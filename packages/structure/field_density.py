@@ -57,13 +57,15 @@ def fixedParams(x, y, kde_cent, lb=1., rt=99., **kwargs):
     return xy_filtered, xy_cent_dist
 
 
-def distDens(bw_list, xy_filtered):
+def distDens(bw_list, xy_filtered, NN_dd_max=200):
     """
     Obtain the NN densities and radius for each star in the frame.
 
     The 'NN_dd' parameter is estimated using the bandwidth employed in the
     KDE analysis. We calculate the number of neighbors within a radius equal to
     the bandwidth, and take the median of the number of neighbors as NN_dd.
+
+    NN_dd_max: Set maximum value otherwise the query eats up all the memory
     """
 
     # Frame limits
@@ -75,6 +77,7 @@ def distDens(bw_list, xy_filtered):
     # Estimate NN_dd
     N_in_vol = tree.query_ball_point(xy_filtered, r=bw_list[1])
     NN_dd = int(np.median([len(_) for _ in N_in_vol]))
+    NN_dd = max(NN_dd, NN_dd_max)
 
     inx = tree.query(xy_filtered, k=NN_dd + 1)
     # Keep the distance to the most distant neighbor, ie: the radius.
