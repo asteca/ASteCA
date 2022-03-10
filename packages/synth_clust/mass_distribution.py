@@ -17,8 +17,8 @@ def main(st_dist_mass, mean_bin_mr, bin_frac, M_total):
        bin_frac * N_T * m_b'; where m_b' is the mean secondary mass of the
        binary systems.
     5. The mean secondary mass can be obtained as: m_b' = m_s' * r; where
-       m_s' is the mean single systems' mass, and r is the mean binary
-       fraction used.
+       m_s' is the mean single systems' mass, and r is the mean mass ratio
+       of the 'q' distribution.
     6. Hence: M_T = N_T * m_s' <--> m_s' = M_T/N_T
     7. Finally: M_B = M_T * bin_frac * r
 
