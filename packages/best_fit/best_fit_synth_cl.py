@@ -17,6 +17,10 @@ def main(npd, pd, td, clp):
     if pd['best_fit_algor'] != 'n':
         clp = dataPrep(pd, clp)
 
+    # # Un-comment to fit [Fe/H] instead of Z
+    # td['fundam_params'][0] = list(np.log10(np.array(
+    #     td['fundam_params'][0]) / 0.0152))
+
     if pd['best_fit_algor'] == 'ptemcee':
         print("Searching for optimal parameters")
         lkl_bin = pd['lkl_method'] + '; ' + pd['lkl_binning'] if\
