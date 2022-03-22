@@ -389,6 +389,8 @@ def KP_memb_x(cd, rc, rt, x):
     Calculate approximate number of cluster members for a given King Profile,
     from 0 up to x. General form of Eq (3) in Froebrich et al. (2007);
     374, 399-408.
+
+    Used by packages/out/mp_radius.py
     """
 
     c = rc**2
