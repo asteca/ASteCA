@@ -287,10 +287,16 @@ def lnlike(
 
     # Central density
     rho_0 = centDens(N_memb, rt_rang, rc, rt, ecc)
+
+    # Testing to avoid using 'N_memb'. A small number must be added to 'fd'
+    # and still it does not work as well as the above method
+    # rho_0 = (N_in_region - np.pi * rt**2 * fd * (1 + 0.025)) / KP_memb_x(1, rc, rt, rt)
+
     if return_dens is True:
         return rho_0
 
     # Likelihood
+    # 'fd' IS necessary and I'm not sure why
     li = rho_0 * KP + fd
     # Sum of log-likelihood
     sum_log_lkl = np.log(li).sum()
@@ -355,6 +361,11 @@ def centDens(N_memb, arr, rc, rt, ecc):
     i = np.searchsorted(arr, rt)
     b = arr[:i] * np.sqrt(1. - ecc**2)
     integ = np.trapz(2. * np.pi * b * KingProf(arr[:i], rc, rt), arr[:i])
+
+    # # The above is equivalent to (for a circle):
+    # integ2 = KP_memb_x(1, rc, rt, rt)  # * np.sqrt(1. - ecc**2) <-- ??
+    # print(ecc, integ - integ2)
+
     return N_memb / integ
 
 
