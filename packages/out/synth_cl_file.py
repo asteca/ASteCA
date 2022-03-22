@@ -15,7 +15,7 @@ def main(clp, npd, pd, td):
     if pd['best_fit_algor'] != 'n':
         # If cluster is not empty.
         if not clp['synth_cl_phot'].any():
-            print("  ERROR: empty synthetic cluster is empty and could not\n"
+            print("  ERROR: empty synthetic cluster could not\n"
                   "  be saved to file")
             return
 
