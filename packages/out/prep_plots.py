@@ -110,29 +110,17 @@ def diag_limits(yaxis, phot_x, phot_y):
     """
     Define plot limits for *all* photometric diagrams.
     """
-    # OLD
-    # x_median, x_std = np.nanmedian(phot_x), np.nanstd(phot_x)
-    # x_min_cmd, x_max_cmd = x_median - 4.5 * x_std, x_median + 4.5 * x_std
-    # NEW
-    x_delta = np.ptp(phot_x)
+    x_delta = np.nanmax(phot_x) - np.nanmin(phot_x)
     x_min_cmd = min(phot_x) - .2 * x_delta
     x_max_cmd = max(phot_x) + .1 * x_delta
 
-    # Use stars within the x limits defined. This prevents stars far away
-    # from the x median from affecting the limit in y.
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        xmsk = (phot_x > x_min_cmd) & (phot_x < x_max_cmd)
-
-    phot_y_msk = np.array(phot_y)[xmsk]
-    y_median, y_std = np.nanmedian(phot_y_msk), np.nanstd(phot_y_msk)
-
+    y_median, y_std = np.nanmedian(phot_y), np.nanstd(phot_y)
     # y limits.
     if yaxis == 'mag':
-        y_min_cmd = np.nanmax(phot_y_msk) + .5  # y_median + 1.25 * y_std + .75
+        y_min_cmd = np.nanmax(phot_y) + .5
         # If photometric axis y is a magnitude, make sure the brightest star
         # is always plotted.
-        y_max_cmd = np.nanmin(phot_y_msk) - 1.
+        y_max_cmd = np.nanmin(phot_y) - 1.
     else:
         y_max_cmd, y_min_cmd = y_median - 4.5 * y_std, y_median + 4.5 * y_std
 
