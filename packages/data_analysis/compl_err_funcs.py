@@ -27,13 +27,13 @@ def main(clp, cld_i, cld_c):
 
     phot_data_compl = photDataCompl(mags_i, cld_c)
 
-    err_rm_data = errRemv(clp, mmag_acpt_c)
+    # DEPRECATED 23/03/22
+    # err_rm_data = errRemv(clp, mmag_acpt_c)
 
     final_compl = combineCompl(mags_i, phot_analy_compl, mmag_acpt_c)
 
-    clp['phot_analy_compl'], clp['phot_data_compl'], clp['err_rm_data'],\
-        clp['completeness'] = phot_analy_compl, phot_data_compl, err_rm_data,\
-        final_compl
+    clp['phot_analy_compl'], clp['phot_data_compl'], clp['completeness'] =\
+        phot_analy_compl, phot_data_compl, final_compl
     return clp
 
 
@@ -127,36 +127,37 @@ def photDataCompl(mags_i, cld_c):
     return [eqN_edges, err_rm_perc, perc_rmvd]
 
 
-def errRemv(clp, mmag_acpt_c):
-    """
-    """
-    eqN_edges, err_rm_perc, perc_rmvd =\
-        [mmag_acpt_c.min(), mmag_acpt_c.max()], np.ones(1), 0.
-    if len(clp['rjct_stars_c']) > 0:
-        # (Main) Magnitudes of error rejected stars.
-        mmag_rjct_c = np.array(
-            list(zip(*(list(zip(*clp['rjct_stars_c']))[3])))[0])
-        all_mags = np.concatenate((mmag_acpt_c, mmag_rjct_c))
+# DEPRECATED 23/03/22
+# def errRemv(clp, mmag_acpt_c):
+#     """
+#     """
+#     eqN_edges, err_rm_perc, perc_rmvd =\
+#         [mmag_acpt_c.min(), mmag_acpt_c.max()], np.ones(1), 0.
+#     if len(clp['rjct_stars_c']) > 0:
+#         # (Main) Magnitudes of error rejected stars.
+#         mmag_rjct_c = np.array(
+#             list(zip(*(list(zip(*clp['rjct_stars_c']))[3])))[0])
+#         all_mags = np.concatenate((mmag_acpt_c, mmag_rjct_c))
 
-        # Number of stars per bin: 10% of the total number of accepted stars,
-        # between the limits [10, 50].
-        Nbins = max(10, min(int(mmag_acpt_c.size * .1), 50))
-        eqN_edges = histedges_equalN(all_mags, Nbins)
+#         # Number of stars per bin: 10% of the total number of accepted stars,
+#         # between the limits [10, 50].
+#         Nbins = max(10, min(int(mmag_acpt_c.size * .1), 50))
+#         eqN_edges = histedges_equalN(all_mags, Nbins)
 
-        # Histograms for accepted and all stars.
-        h_mag_all_c, _ = mmagHist(all_mags, eqN_edges)
+#         # Histograms for accepted and all stars.
+#         h_mag_all_c, _ = mmagHist(all_mags, eqN_edges)
 
-        # Accepted main magnitudes histogram (complete dataset).
-        h_mag_acpt_c, _ = mmagHist(mmag_acpt_c, eqN_edges)
+#         # Accepted main magnitudes histogram (complete dataset).
+#         h_mag_acpt_c, _ = mmagHist(mmag_acpt_c, eqN_edges)
 
-        # Estimate error removal function: percentage of stars that remain
-        # after error rejection.
-        err_rm_perc = h_mag_acpt_c / h_mag_all_c.astype(float)
+#         # Estimate error removal function: percentage of stars that remain
+#         # after error rejection.
+#         err_rm_perc = h_mag_acpt_c / h_mag_all_c.astype(float)
 
-        perc_rmvd = 100. * (mmag_rjct_c.size / all_mags.size)
+#         perc_rmvd = 100. * (mmag_rjct_c.size / all_mags.size)
 
-    print("Error removal function estimated")
-    return [eqN_edges, err_rm_perc, perc_rmvd]
+#     print("Error removal function estimated")
+#     return [eqN_edges, err_rm_perc, perc_rmvd]
 
 
 def combineCompl(mags_i, phot_analy_compl, mmag_acpt_c):

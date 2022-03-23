@@ -1,10 +1,9 @@
 
-import numpy as np
 from ..inp.get_data import flatten
 
 
 def main(
-    npd, pd, cont_index, n_memb, frac_cl_area, x_offset, y_offset, kde_cent,
+    npd, pd, cont_index, n_memb, frac_cl_area, kde_cent,
     clust_rad, KP_Bys_rc, KP_Bys_rt, KP_memb_num, isoch_fit_params,
         isoch_fit_errors, **kwargs):
     """
@@ -16,15 +15,10 @@ def main(
 
     # Round structure parameters.
     frmt = "{:.6f}"
-    if pd['project']:
-        x_cent = (kde_cent[0] / np.cos(np.deg2rad(kde_cent[1] + y_offset))) +\
-            x_offset
-    else:
-        x_cent = kde_cent[0]
     # Center + radii and uncertainties
     cre_r = [
         frmt.format(_) for _ in [
-            x_cent, kde_cent[1] + y_offset, clust_rad,
+            kde_cent[0], kde_cent[1], clust_rad,
             KP_Bys_rc[1], KP_Bys_rc[0], KP_Bys_rc[2],
             KP_Bys_rt[1], KP_Bys_rt[0], KP_Bys_rt[2]]]
 

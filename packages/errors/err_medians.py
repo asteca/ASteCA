@@ -17,8 +17,7 @@ def main(mmag, e_mc, be_m, interv_mag, n_interv):
     # Iterate through all stars.
     for st_ind, st_mag in enumerate(mmag):
 
-        # Use only stars above the bright end. All stars are already below
-        # the err_max limit.
+        # Use only stars above the bright end.
         if be_m <= st_mag:
             # Store each star in its corresponding interval in the segmented
             # mag list. Will be used to calculate the curve fit.
@@ -32,7 +31,7 @@ def main(mmag, e_mc, be_m, interv_mag, n_interv):
                     mc_interv[q].append(e_mc[st_ind])
                     break
 
-    # We have the photometric errors of stars within the (be_m, err_max) range,
+    # We have the photometric errors of stars within the (be_m<) range,
     # stored in magnitude intervals (from the main magnitude) in the
     # 'mc_interv' list.
 

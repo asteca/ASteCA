@@ -3,18 +3,17 @@ import numpy as np
 import warnings
 from astropy.io import ascii
 from astropy.table import Table
-from astropy import wcs
+# from astropy import wcs
 import operator
 import copy
 from functools import reduce
-from ..structure import trim_frame
 from ..aux_funcs import flatten, list_duplicates
 
 
 def main(
     npd, nanvals, id_col, x_col, y_col, mag_col, e_mag_col, col_col,
     e_col_col, plx_col, e_plx_col, pmx_col, e_pmx_col, pmy_col, e_pmy_col,
-        rv_col, e_rv_col, project, flag_tf, tf_range, **kwargs):
+        **kwargs):
     """
     Read data from the cluster's input file.
 
@@ -31,8 +30,8 @@ def main(
         # Arrange column names in the proper order and shape.
         col_names = [
             id_col, x_col, y_col, mag_col, e_mag_col, col_col, e_col_col,
-            [plx_col, pmx_col, pmy_col, rv_col],
-            [e_plx_col, e_pmx_col, e_pmy_col, e_rv_col]]
+            [plx_col, pmx_col, pmy_col],
+            [e_plx_col, e_pmx_col, e_pmy_col]]
         # Remove not wanted columns.
         col_names_keep = list(filter(bool, list(flatten(col_names))))
         data.keep_columns(col_names_keep)
@@ -52,10 +51,6 @@ def main(
         # Mask bad photometry.
         data = maskBadPhot(data, mag_col, e_mag_col, col_col, e_col_col)
 
-        # Trim frame according to coordinates limits.
-        data = trim_frame.main(flag_tf, tf_range, data, x_col, y_col)
-        N_trim = len(data)
-
         # Split into incomplete and complete data.
         data_compl, flag_data_eq = dataSplit(
             mag_col, e_mag_col, col_col, e_col_col, data)
@@ -72,14 +67,12 @@ def main(
     # Create cluster's dictionary with the *photometrically incomplete* data.
     ids, x, y, mags, cols, kine, em, ec, ek = dataCols(
         data_file, data, col_names)
-    x, y, x_offset, y_offset = coordsProject(x, y, project)
     cld_i = {'ids': ids, 'x': x, 'y': y, 'mags': mags, 'em': em,
              'cols': cols, 'ec': ec, 'kine': kine, 'ek': ek}
 
     # Create cluster's dictionary with the *photometrically complete* data.
     ids, x, y, mags, cols, kine, em, ec, ek = dataCols(
         data_file, data_compl, col_names)
-    x, y, _, _ = coordsProject(x, y, project, x_offset, y_offset)
     cld_c = {'ids': ids, 'x': x, 'y': y, 'mags': mags, 'em': em,
              'cols': cols, 'ec': ec, 'kine': kine, 'ek': ek}
 
@@ -91,19 +84,13 @@ def main(
             "  coordinates data were removed".format(
                 N_all - N_coords, 100. * frac_reject))
 
-    if N_trim != N_coords:
-        print("Stars removed by trimming the frame: N={}".format(
-            N_coords - N_trim))
-
     frac_reject = 1. - (float(cld_c['ids'].size) / cld_i['ids'].size)
     if frac_reject > 0.05:
         print(("  WARNING: {} stars ({:.0f}%) contain incomplete "
                + "photometric data").format(
                    cld_i['ids'].size - cld_c['ids'].size, 100. * frac_reject))
 
-    clp = {
-        'flag_data_eq': flag_data_eq, 'x_offset': x_offset,
-        'y_offset': y_offset, 'col_names_keep': col_names_keep}
+    clp = {'flag_data_eq': flag_data_eq, 'col_names_keep': col_names_keep}
 
     return cld_i, cld_c, clp
 
@@ -294,37 +281,39 @@ def dataCols(data_file, data, col_names):
     return ids, x, y, mags, cols, kine, em, ec, ek
 
 
-def coordsProject(x, y, project, ra_cent=None, dec_cent=None):
-    """
-    Sinusoidal projection.
-    """
-    if project:
+# DEPRECATED 23/03/22
+# def coordsProject(x, y, ra_cent=None, dec_cent=None):
+#     """
+#     Sinusoidal projection.
+#     """
+#     if project:
 
-        if ra_cent is None:
-            # Use this method to transform the coordinates before applying
-            # the sinusoidal projection. This handles the cases where the frame
-            # is splitted between quadrants
-            ww = wcs.WCS(naxis=2)
-            # Sanson-Flamsteed (“global sinusoid”)
-            ww.wcs.ctype = ["RA---SFL", "DEC--SFL"]
-            x_px, y_px = ww.wcs_world2pix(x, y, 1)
-            # Remove the cosine
-            x_px /= np.cos(np.deg2rad(y_px))
-            # DFind the origin for the observed frame
-            ra_cent = (max(x_px) + min(x_px)) / 2.
-            dec_cent = (max(y_px) + min(y_px)) / 2.
-            # Apply the sinusoidal projection
-            x = (x_px - ra_cent) * np.cos(np.deg2rad(y_px))
-            y = (y_px - dec_cent)
-        else:
-            x = (x - ra_cent) * np.cos(np.deg2rad(y))
-            y = (y - dec_cent)
-        x_offset = ra_cent if ra_cent > 0. else (ra_cent + 360.)
-        y_offset = dec_cent
-    else:
-        x_offset, y_offset = 0., 0.
+#         if ra_cent is None:
+#             # Use this method to transform the coordinates before applying
+#             # the sinusoidal projection. This handles the cases where the frame
+#             # is splitted between quadrants
+#             ww = wcs.WCS(naxis=2)
+#             # Sanson-Flamsteed (“global sinusoid”)
+#             ww.wcs.ctype = ["RA---SFL", "DEC--SFL"]
+#             x_px, y_px = ww.wcs_world2pix(x, y, 1)
+#             # Remove the cosine
+#             x_px /= np.cos(np.deg2rad(y_px))
 
-    return x, y, x_offset, y_offset
+#             # Find the origin for the observed frame
+#             ra_cent = (max(x_px) + min(x_px)) / 2.
+#             dec_cent = (max(y_px) + min(y_px)) / 2.
+#             # Apply the sinusoidal projection
+#             x = (x_px - ra_cent) * np.cos(np.deg2rad(y_px))
+#             y = (y_px - dec_cent)
+#         else:
+#             x = (x - ra_cent) * np.cos(np.deg2rad(y))
+#             y = (y - dec_cent)
+#         x_offset = ra_cent if ra_cent > 0. else (ra_cent + 360.)
+#         y_offset = dec_cent
+#     else:
+#         x_offset, y_offset = 0., 0.
+
+#     return x, y, x_offset, y_offset
 
 
 if __name__ == '__main__':

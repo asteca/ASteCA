@@ -3,7 +3,9 @@ import numpy as np
 import warnings
 
 
-def main(i_c, cld, clp, err_max, **kwargs):
+# DEPRECATED 23/03/22
+
+def main(i_c, cld, clp, **kwargs):
     """
     Accept and reject stars in and out of the cluster's boundaries according to
     a given `err_max` error value.
@@ -83,19 +85,17 @@ def max_err_cut(cld, err_max):
             cld['ek'][1] < em_float[2 + N_colors], np.isnan(cld['ek'][1]))
         pmy_msk = np.logical_or(
             cld['ek'][2] < em_float[2 + N_colors], np.isnan(cld['ek'][2]))
-        rv_msk = np.logical_or(
-            cld['ek'][3] < em_float[3 + N_colors], np.isnan(cld['ek'][3]))
 
         # Used only when plotting the mag vs error diagrams for the complete
         # set.
         N_st_err_rjct = N_stars - np.array([
             m_msk.sum(), np.sum(c_msk, 1), np.array([
-                plx_msk.sum(), pmx_msk.sum(), pmy_msk.sum(), rv_msk.sum()])],
+                plx_msk.sum(), pmx_msk.sum(), pmy_msk.sum()])],
             dtype=object)
 
     acpt_indx = np.flatnonzero(
-        (m_msk.all(0) & np.array(c_msk).all(0) & plx_msk & pmx_msk & pmy_msk &
-         rv_msk)).tolist()
+        (m_msk.all(0) & np.array(c_msk).all(0) & plx_msk & pmx_msk
+            & pmy_msk)).tolist()
     rjct_indx = np.setdiff1d(
         np.arange(len(cld['em'][0])), acpt_indx).tolist()
 

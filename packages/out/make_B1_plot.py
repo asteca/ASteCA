@@ -10,9 +10,8 @@ from . prep_plots import figsize_x, figsize_y, grid_x, grid_y
 
 
 def main(
-    npd, cld_c, pd, em_float, err_lst, cl_region_c, cl_region_rjct_c,
-    stars_out_c, stars_out_rjct_c, N_st_err_rjct, col_0_comb, mag_0_comb,
-        **kwargs):
+    npd, cld_c, pd, err_lst, cl_region_c, stars_out_c, col_0_comb,
+        mag_0_comb, **kwargs):
     """
     Make B1 block plots.
     """
@@ -27,17 +26,14 @@ def main(
     # Magnitude vs uncertainties diagrams.
     arglist = [
         [gs, pd['colors'], pd['filters'], pd['id_kinem'], cld_c['mags'],
-         em_float, cl_region_c, cl_region_rjct_c, stars_out_c,
-         stars_out_rjct_c, N_st_err_rjct, err_bar_all]
+         cl_region_c, stars_out_c, err_bar_all]
     ]
     for n, args in enumerate(arglist):
         mp_errors.plot(n, *args)
 
     plt.suptitle(
-        (r"$N_{{accpt}}={}$ , $N_{{rjct}}={}$ (cluster + "
-         "field regions, compl frame)").format(
-            len(cl_region_c) + len(stars_out_c),
-            len(stars_out_rjct_c) + len(cl_region_rjct_c)),
+        (r"$N={}$ (cluster + field regions, compl frame)").format(
+            len(cl_region_c) + len(stars_out_c)),
         x=.26, y=1.005)
 
     # Generate output file.

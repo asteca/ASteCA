@@ -51,9 +51,7 @@ def main(npd, cld_i, pd, clp):
         # pl_cl_fl_regions: Cluster and field regions defined.
         [gs, fig, pd['plot_style'], x_name, y_name, coord, x_min, x_max,
          y_min, y_max, asp_ratio, clp['kde_cent'], clp['clust_rad'],
-         clp['field_regions_i'], clp['field_regions_rjct_i'],
-         clp['cl_region_i'], clp['cl_region_rjct_i'],
-         clp['flag_no_fl_regs_i']],
+         clp['field_regions_i'], clp['cl_region_i'], clp['flag_no_fl_regs_i']],
         # pl_rad_dens: Radial density plot.
         [gs, pd['plot_style'], coord, rdp_radii, rdp_points, rdp_stddev,
          rad_max, clp['field_dens'], clp['field_dens_std'], clp['clust_rad'],
