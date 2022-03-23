@@ -5,7 +5,7 @@ from .. import update_progress
 
 
 def main(
-    colors, plx_col, pmx_col, pmy_col, rv_col, bayesda_runs, bayesda_dflag,
+    colors, plx_col, pmx_col, pmy_col, bayesda_runs, bayesda_dflag,
         cl_region, field_regions):
     """
     Bayesian field decontamination algorithm.
@@ -20,7 +20,7 @@ def main(
 
     # Remove data dimensions.
     mags, cols, kinem, e_mags, e_cols, e_kinem = rmDimensions(
-        cl_region, colors, plx_col, pmx_col, pmy_col, rv_col, bayesda_dflag)
+        cl_region, colors, plx_col, pmx_col, pmy_col, bayesda_dflag)
     # Magnitudes and colors (and their errors) for all stars in the cluster
     # region, stored with the appropriate format.
     cl_reg_prep, w_cl = reg_data(
@@ -41,8 +41,7 @@ def main(
         # Obtain likelihood, for each star in the cluster region, of
         # being a field star.
         mags, cols, kinem, e_mags, e_cols, e_kinem = rmDimensions(
-            fl_region, colors, plx_col, pmx_col, pmy_col, rv_col,
-            bayesda_dflag)
+            fl_region, colors, plx_col, pmx_col, pmy_col, bayesda_dflag)
         fl_reg_prep, w_fl = reg_data(
             n_fl, mags, cols, kinem, e_mags, e_cols, e_kinem)
         fl_reg_prep, N_msk = dataNorm(fl_reg_prep)
@@ -134,9 +133,7 @@ def main(
     return memb_probs_cl_region
 
 
-def rmDimensions(
-    region, colors, plx_col, pmx_col, pmy_col, rv_col,
-        bayesda_dflag):
+def rmDimensions(region, colors, plx_col, pmx_col, pmy_col, bayesda_dflag):
     """
     Remove data dimensions turned off by the user.
     """
@@ -150,7 +147,7 @@ def rmDimensions(
     for i, flag in enumerate(bayesda_dflag[1:len(colors) + 1]):
         if flag == 'y':
             cols.append(list(zip(*region_z[5]))[i])
-    for i, k_d in enumerate((plx_col, pmx_col, pmy_col, rv_col)):
+    for i, k_d in enumerate((plx_col, pmx_col, pmy_col)):
         if k_d is not False and bayesda_dflag[1 + len(colors) + i] == 'y':
             kinem.append(list(zip(*region_z[7]))[i])
 
@@ -161,7 +158,7 @@ def rmDimensions(
     for i, flag in enumerate(bayesda_dflag[1:len(colors) + 1]):
         if flag == 'y':
             e_cols.append(list(zip(*region_z[6]))[i])
-    for i, k_d in enumerate((plx_col, pmx_col, pmy_col, rv_col)):
+    for i, k_d in enumerate((plx_col, pmx_col, pmy_col)):
         if k_d is not False and bayesda_dflag[1 + len(colors) + i] == 'y':
             e_kinem.append(list(zip(*region_z[8]))[i])
 
