@@ -1,19 +1,9 @@
 
-from collections import Counter
-
 
 def check(pd):
     """
     Check that the parameters are properly written.
     """
-
-    dups = [
-        _ for _, c in Counter(list(zip(*pd['trim_frame_range']))[0]).items()
-        if c > 1]
-    if dups:
-        raise ValueError((
-            "duplicated entries found in 'Trim frame' block:\n"
-            + "{}".format(dups)))
 
     manual_struct = {}
     for line in pd['manual_struct']:

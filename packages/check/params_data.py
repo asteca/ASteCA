@@ -41,25 +41,26 @@ def check(mypath, pd):
         pd['e_col_col'], pd['colors'], pd['c_filters'] = id_col, x_col, y_col,\
         mag_col, e_mag_col, filters, col_col, e_col_col, colors, c_filters
 
-    # Check error values
-    for err in pd['err_max']:
-        try:
-            ferr = float(err)
-        except ValueError:
-            if err != 'max':
-                raise ValueError("bad value ('{}') for max error"
-                                 " in 'asteca.ini'".format(err))
-            ferr = 1.
-        if ferr < 0.:
-            raise ValueError("max error value must be positive")
+    # DEPRECATED 23/03/22
+    # # Check error values
+    # for err in pd['err_max']:
+    #     try:
+    #         ferr = float(err)
+    #     except ValueError:
+    #         if err != 'max':
+    #             raise ValueError("bad value ('{}') for max error"
+    #                              " in 'asteca.ini'".format(err))
+    #         ferr = 1.
+    #     if ferr < 0.:
+    #         raise ValueError("max error value must be positive")
 
-    # This assumes that there is no maximum number of colors that can
-    # be defined
-    N_colors = len(pd['id_cols'])
-    if len(pd['err_max']) - 4 != N_colors:
-        raise ValueError(
-            "there are {} 'e_*_max' values defined, there should\n"
-            "be {}, because {} color(s) is/are defined.".format(
-                len(pd['err_max']), 4 + N_colors, N_colors))
+    # # This assumes that there is no maximum number of colors that can
+    # # be defined
+    # N_colors = len(pd['id_cols'])
+    # if len(pd['err_max']) - 4 != N_colors:
+    #     raise ValueError(
+    #         "there are {} 'e_*_max' values defined, there should\n"
+    #         "be {}, because {} color(s) is/are defined.".format(
+    #             len(pd['err_max']), 4 + N_colors, N_colors))
 
     return pd

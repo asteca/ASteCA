@@ -4,7 +4,7 @@ from scipy import stats
 from astropy.stats import sigma_clipped_stats
 
 
-def main(clp, cld_i, project, flag_make_plot, **kwargs):
+def main(clp, cld_i, flag_make_plot, **kwargs):
     """
     Assume that the pmRA is already corrected by the cosine of DE.
     """
@@ -20,26 +20,6 @@ def main(clp, cld_i, project, flag_make_plot, **kwargs):
         clreg_PMs, fregs_PMs, allfr_PMs = PMsData(cld_i, clp)
         cr_KDE_PMs, fr_KDE_PMs, allr_KDE_PMs = PMsKDE(
             clreg_PMs, fregs_PMs, allfr_PMs)
-
-        # DEPRECATED 04/2021
-        # # Cosine(DE) correction on the RA (if possible and needed)
-        # clreg_PMs, fregs_PMs, allfr_PMs = pmRAcosDE(
-        #    coords, project, clp['y_offset'], clreg_PMs, fregs_PMs, allfr_PMs)
-
-        # DEPRECATED 04/2021
-        # if 'C2' in flag_make_plot:
-        #     # Plx data filtered by PMs nan values
-        #     plx_pm_flag, pm_Plx_cl, pm_Plx_fr = plx_PMs_data(
-        #         clp, clreg_PMs['msk'], fregs_PMs['msk'])
-
-        # DEPRECATED 04/2021
-        # # PM distances to the KDE's center.
-        # xmax, ymax = cr_KDE_PMs['zmax_x'], cr_KDE_PMs['zmax_y']
-        # pm_dist_max = cdist(
-        #     np.array([[
-        #         cr_KDE_PMs['x'][xmax][ymax],
-        #         cr_KDE_PMs['y'][xmax][ymax]]]),
-        #     np.array([clreg_PMs['pmRA'], clreg_PMs['pmDE']]).T)[0]
 
     clp.update({
         'PM_flag': PM_flag, 'clreg_PMs': clreg_PMs, 'fregs_PMs': fregs_PMs,
@@ -133,66 +113,6 @@ def PMsData(cld_i, clp):
     return clreg_PMs, fregs_PMs, allfr_PMs
 
 
-# DEPRECATED 04/2021
-# def pmRAcosDE(
-#     cosDE_flag, coords, project, y_offset, clreg_PMs, fregs_PMs,
-#         allfr_PMs):
-#     """
-#     Correct pmRA by the cosine of DE.
-#     """
-#     def cosCorr(_dict):
-#         # Shift declination data if necessary.
-#         if project:
-#             DE = _dict['DE'] + y_offset
-#         else:
-#             DE = _dict['DE']
-#         # Propagate error in RA*cos(delta) first.
-#         _dict['epmRA'] = np.sqrt(
-#             (_dict['epmRA'] * _dict['pmRA'] * np.sin(np.deg2rad(DE)))**2
-#             + (_dict['epmRA'] * np.cos(np.deg2rad(DE)))**2)
-#         # Now apply cosine factor.
-#         _dict['pmRA'] = _dict['pmRA'] * np.cos(np.deg2rad(DE))
-
-#         return _dict
-
-#     if cosDE_flag:
-#         # Correction is already applied, nothing to do here.
-#         pass
-#     else:
-#         if coords == 'deg':
-#             arrs = []
-#             for _ in (clreg_PMs, fregs_PMs, allfr_PMs):
-#                 arrs.append(cosCorr(_))
-#             clreg_PMs, fregs_PMs, allfr_PMs = arrs
-#         else:
-#             # pmRA data is not corrected by the cosine of DE and pixel
-#             # coordinates are being used. The cos factor can not be applied.
-#             print("  WARNING: can not apply cos(DE) factor to pmRA")
-
-#     return clreg_PMs, fregs_PMs, allfr_PMs
-
-
-# DEPRECATED 04/2021
-# def plx_PMs_data(clp, msk_cr, msk_fr):
-#     """
-#     Extract Plx data associated to the values filtered by PMs.
-#     """
-#     # Cluster region
-#     pm_Plx_cl = np.array(
-#         list(zip(*list(zip(*clp['cl_reg_fit']))[7]))[0])[msk_cr]
-#     if pm_Plx_cl.any():
-#         plx_pm_flag = True
-
-#     # Field regions
-#     pm_Plx_fr = []
-#     if not clp['flag_no_fl_regs_i']:
-#         for fl_rg in clp['field_regions_i']:
-#             pm_Plx_fr += list(zip(*list(zip(*fl_rg))[7]))[0]
-#         pm_Plx_fr = np.array(pm_Plx_fr)[msk_fr]
-
-#     return plx_pm_flag, pm_Plx_cl, pm_Plx_fr
-
-
 def PMsKDE(clreg_PMs, fregs_PMs, allfr_PMs):
     """
     Error weighted 2D KDE for cluster, field regions, and all frame.
@@ -270,40 +190,3 @@ def kde_2d(xarr, xsigma, yarr, ysigma, grid_dens=50, Nstd=3, N_max=10000):
     zmax_x, zmax_y = np.unravel_index(z.argmax(), z.shape)
 
     return {'x': x, 'y': y, 'z': z, 'zmax_x': zmax_x, 'zmax_y': zmax_y}
-
-
-# DEPRECATED 18/01/20
-# def PMsNNAll(
-#     PM_flag_all, flag_PM_coord, xRA_all, yDE_all, pmRA_all, pmDE_all,
-#         nnmax):
-#     """
-#     Nearest-neighbor analysis that combines coordinates and PMs data.
-#     """
-#     if PM_flag_all:
-
-#         # Normalize data
-#         def norm(data):
-#             data_norm = []
-#             for arr in data:
-#                 dmin = np.min(arr)
-#                 arr_n = arr - dmin
-#                 dmax = np.max(arr_n)
-#                 arr_n /= dmax
-#                 data_norm.append(arr_n)
-#             return np.array(data_norm)
-
-#         if flag_PM_coord is True:
-#             data = norm([xRA_all, yDE_all, pmRA_all, pmDE_all]).T
-#         else:
-#             data = norm([pmRA_all, pmDE_all]).T
-
-#         # Create the tree
-#         tree = spatial.cKDTree(data)
-#         # Find the closest nnmax-1 neighbors (1st entry is the point itself)
-#         dists = tree.query(data, nnmax)
-#         # Extract distances
-#         nn_dist = dists[0][:, 1:]
-#         # Median values
-#         PMs_d_median = np.median(nn_dist, 1)
-
-#         return PMs_d_median

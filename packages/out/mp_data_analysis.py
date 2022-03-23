@@ -8,42 +8,43 @@ from matplotlib.ticker import MultipleLocator
 import matplotlib.offsetbox as offsetbox
 
 
-def pl_cl_fl_regions(
-    gs, plot_style, x_name, y_name, coord, x_min, x_max, y_min, y_max,
-        asp_ratio, field_regions_rjct_c, cl_region_rjct_c, flag_no_fl_regs_c):
-    """
-    Cluster and field regions defined.
-    """
-    ax = plt.subplot(gs[0:2, 0:2])
-    ax.set_aspect(aspect=asp_ratio)
-    # Set plot limits
-    plt.xlim(x_min, x_max)
-    plt.ylim(y_min, y_max)
-    ax.invert_xaxis()
-    # Set axis labels
-    plt.xlabel('{} ({})'.format(x_name, coord))
-    plt.ylabel('{} ({})'.format(y_name, coord))
-    if plot_style == 'asteca':
-        ax.grid(which='both')
+# DEPRECATED 23/03/22
+# def pl_cl_fl_regions(
+#     gs, plot_style, x_name, y_name, coord, x_min, x_max, y_min, y_max,
+#         asp_ratio, field_regions_rjct_c, cl_region_rjct_c, flag_no_fl_regs_c):
+#     """
+#     Cluster and field regions defined.
+#     """
+#     ax = plt.subplot(gs[0:2, 0:2])
+#     ax.set_aspect(aspect=asp_ratio)
+#     # Set plot limits
+#     plt.xlim(x_min, x_max)
+#     plt.ylim(y_min, y_max)
+#     ax.invert_xaxis()
+#     # Set axis labels
+#     plt.xlabel('{} ({})'.format(x_name, coord))
+#     plt.ylabel('{} ({})'.format(y_name, coord))
+#     if plot_style == 'asteca':
+#         ax.grid(which='both')
 
-    # Plot cluster region.
-    if len(cl_region_rjct_c) > 0:
-        plt.scatter(
-            list(zip(*cl_region_rjct_c))[1], list(zip(*cl_region_rjct_c))[2],
-            marker='x', c='teal', s=15, lw=.5, edgecolors='none')
+#     # Plot cluster region.
+#     if len(cl_region_rjct_c) > 0:
+#         plt.scatter(
+#             list(zip(*cl_region_rjct_c))[1], list(zip(*cl_region_rjct_c))[2],
+#             marker='x', c='teal', s=15, lw=.5, edgecolors='none')
 
-    N_flrg = 0
-    if not flag_no_fl_regs_c:
-        # Stars inside the field regions with rejected errors.
-        for i, reg in enumerate(field_regions_rjct_c):
-            if reg:
-                fl_reg = list(zip(*reg))
-                N_flrg += len(fl_reg[0])
-                plt.scatter(fl_reg[1], fl_reg[2], marker='x',
-                            c='teal', s=15, lw=.5, edgecolors='none')
+#     N_flrg = 0
+#     if not flag_no_fl_regs_c:
+#         # Stars inside the field regions with rejected errors.
+#         for i, reg in enumerate(field_regions_rjct_c):
+#             if reg:
+#                 fl_reg = list(zip(*reg))
+#                 N_flrg += len(fl_reg[0])
+#                 plt.scatter(fl_reg[1], fl_reg[2], marker='x',
+#                             c='teal', s=15, lw=.5, edgecolors='none')
 
-    ax.set_title(r"$N_{{rjct}}$={} (phot compl)".format(
-        len(cl_region_rjct_c) + N_flrg))
+#     ax.set_title(r"$N_{{rjct}}$={} (phot compl)".format(
+#         len(cl_region_rjct_c) + N_flrg))
 
 
 def pl_lum_func(gs, plot_style, y_ax, flag_no_fl_regs, lum_func):
@@ -90,7 +91,7 @@ def pl_lum_func(gs, plot_style, y_ax, flag_no_fl_regs, lum_func):
 
 
 def pl_data_rm_perc(
-    gs, plot_style, y_ax, phot_analy_compl, phot_data_compl, err_rm_data,
+    gs, plot_style, y_ax, phot_analy_compl, phot_data_compl,
         combined_compl):
     """
     """
@@ -114,12 +115,13 @@ def pl_data_rm_perc(
     plt.step(
         edges[:-1], perc_vals, where='post', lw=2., linestyle='--', label=txt)
 
-    edges, perc_vals, perc_rmvd = err_rm_data
-    perc_vals_min.append(min(perc_vals))
-    txt = "Error removal ({:.1f}% rm)".format(perc_rmvd)
-    plt.step(
-        edges[:-1], perc_vals, where='post', lw=2., color='teal',
-        linestyle='--', label=txt)
+    # DEPRECATED 23/03/22
+    # edges, perc_vals, perc_rmvd = err_rm_data
+    # perc_vals_min.append(min(perc_vals))
+    # txt = "Error removal ({:.1f}% rm)".format(perc_rmvd)
+    # plt.step(
+    #     edges[:-1], perc_vals, where='post', lw=2., color='teal',
+    #     linestyle='--', label=txt)
 
     edges, perc_vals, perc_rmvd = combined_compl
     # Remove the extra '1.' value at the beginning (used by the completeness
@@ -144,7 +146,7 @@ def pl_data_rm_perc(
 
 def clCMD(
     ax, plot_style, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
-        xr, yr, xa, ya, n_memb, cl_sz_pt, err_bar, col_idx):
+        xa, ya, n_memb, cl_sz_pt, err_bar, col_idx):
     # Set plot limits
     plt.xlim(x_min_cmd, x_max_cmd)
     plt.ylim(y_min_cmd, y_max_cmd)
@@ -159,9 +161,6 @@ def clCMD(
     ob.patch.set(alpha=0.7)
     ax.add_artist(ob)
     # Plot stars in CMD.
-    if yr:
-        # Only attempt to plot if any star is stored in the list.
-        plt.scatter(xr, yr, marker='x', c='teal', s=12, lw=.5, zorder=2)
     plt.scatter(
         xa, ya, marker='o', c='r', s=cl_sz_pt, lw=0.3, edgecolor='k', zorder=3)
     # If list is not empty, plot error bars at several values.
@@ -175,40 +174,29 @@ def clCMD(
 def pl_cl_diag(
     gs, plot_style, x_ax0, y_ax, x_min_cmd0, x_max_cmd0, y_min_cmd0,
     y_max_cmd0, x_ax1, x_min_cmd1, x_max_cmd1, y_min_cmd1, y_max_cmd1,
-    err_bar_cl0, err_bar_cl1, cl_region_rjct_c, cl_region_c, n_memb,
-        cl_sz_pt):
+        err_bar_cl0, err_bar_cl1, cl_region_c, n_memb, cl_sz_pt):
     """
     Cluster's stars CMD diagram (stars inside cluster's radius)
     """
     ax = plt.subplot(gs[2:4, 0:2])
     ax.set_title(
-        r"$N_{{accpt}}={}$ , $N_{{rjct}}={}$"
-        r" ($r \leq r_{{cl}}$ compl)".format(
-            len(cl_region_c), len(cl_region_rjct_c)))
-    xr, yr = [], []
-    if len(cl_region_rjct_c) > 0:
-        xr = list(zip(*list(zip(*cl_region_rjct_c))[5]))[0]
-        yr = list(zip(*list(zip(*cl_region_rjct_c))[3]))[0]
+        r"$N={}$" r" ($r \leq r_{{cl}}$ compl)".format(len(cl_region_c)))
     xa = list(zip(*list(zip(*cl_region_c))[5]))[0]
     ya = list(zip(*list(zip(*cl_region_c))[3]))[0]
     # CMD for first color
     col_idx = 1
     clCMD(
         ax, plot_style, x_min_cmd0, x_max_cmd0, y_min_cmd0, y_max_cmd0, x_ax0,
-        y_ax, xr, yr, xa, ya, n_memb, cl_sz_pt, err_bar_cl0, col_idx)
+        y_ax, xa, ya, n_memb, cl_sz_pt, err_bar_cl0, col_idx)
 
     if x_ax1 != '':
         ax = plt.subplot(gs[4:6, 0:2])
-        xr = []
-        if len(cl_region_rjct_c) > 0:
-            xr = list(zip(*list(zip(*cl_region_rjct_c))[5]))[1]
         xa = list(zip(*list(zip(*cl_region_c))[5]))[1]
         # CMD for second color
         col_idx = 2
         clCMD(
             ax, plot_style, x_min_cmd1, x_max_cmd1, y_min_cmd1, y_max_cmd1,
-            x_ax1, y_ax, xr, yr, xa, ya, n_memb, cl_sz_pt, err_bar_cl1,
-            col_idx)
+            x_ax1, y_ax, xa, ya, n_memb, cl_sz_pt, err_bar_cl1, col_idx)
 
 
 def hessKDE(
@@ -302,8 +290,7 @@ def pl_hess_cmd(
 
 def flCMD(
     ax, plot_style, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
-    N_fr, x_fr_rject, y_fr_rject, x_fr_accpt, y_fr_accpt, f_sz_pt, err_bar,
-        col_idx):
+        N_fr, x_fr_accpt, y_fr_accpt, f_sz_pt, err_bar, col_idx):
     """
     Field stars CMD diagram.
     """
@@ -315,10 +302,6 @@ def flCMD(
     plt.ylabel('$' + y_ax + '$')
     if plot_style == 'asteca':
         ax.grid()
-    # Plot accepted/rejected stars within the field regions defined.
-    if x_fr_rject:
-        plt.scatter(x_fr_rject, y_fr_rject, marker='x',
-                    c='teal', s=15, lw=.5, zorder=2)
     if x_fr_accpt:
         plt.scatter(x_fr_accpt, y_fr_accpt, marker='o', c='b',
                     s=f_sz_pt, lw=0.3, edgecolor='k', zorder=3)
@@ -339,35 +322,31 @@ def flCMD(
 def pl_fl_diag(
     gs, plot_style, x_ax0, y_ax, x_min_cmd0, x_max_cmd0, y_min_cmd0,
     y_max_cmd0, x_ax1, x_min_cmd1, x_max_cmd1, y_min_cmd1, y_max_cmd1,
-    field_regions_c, stars_f_rjct, stars_f_acpt, f_sz_pt, err_bar_fl0,
-        err_bar_fl1):
+        field_regions_c, stars_f_acpt, f_sz_pt, err_bar_fl0, err_bar_fl1):
     """
     Field stars CMD diagram.
     """
     ax = plt.subplot(gs[2:4, 4:6])
 
     N_fr = len(field_regions_c)
-    x_fr_rject, y_fr_rject = stars_f_rjct[1], stars_f_rjct[0]
     x_fr_accpt, y_fr_accpt = stars_f_acpt[1], stars_f_acpt[0]
 
-    ax.set_title(r"$N_{{accpt}}={}$ , $N_{{rjct}}={}$ (fields compl)".format(
-        len(x_fr_accpt), len(x_fr_rject)))
+    ax.set_title(r"$N={}$ (fields compl)".format(len(x_fr_accpt)))
     # CMD for first color
     col_idx = 1
     flCMD(
         ax, plot_style, x_min_cmd0, x_max_cmd0, y_min_cmd0, y_max_cmd0, x_ax0,
-        y_ax, N_fr, x_fr_rject, y_fr_rject, x_fr_accpt, y_fr_accpt, f_sz_pt,
-        err_bar_fl0, col_idx)
+        y_ax, N_fr, x_fr_accpt, y_fr_accpt, f_sz_pt, err_bar_fl0, col_idx)
 
     if x_ax1 != '':
         ax = plt.subplot(gs[4:6, 4:6])
-        x_fr_rject, x_fr_accpt = stars_f_rjct[2], stars_f_acpt[2]
+        x_fr_accpt = stars_f_acpt[2]
         # CMD for second color
         col_idx = 2
         flCMD(
             ax, plot_style, x_min_cmd1, x_max_cmd1, y_min_cmd1, y_max_cmd1,
-            x_ax1, y_ax, N_fr, x_fr_rject, y_fr_rject, x_fr_accpt, y_fr_accpt,
-            f_sz_pt, err_bar_fl1, col_idx)
+            x_ax1, y_ax, N_fr, x_fr_accpt, y_fr_accpt, f_sz_pt, err_bar_fl1,
+            col_idx)
 
 
 def plot(N, *args):
@@ -376,12 +355,11 @@ def plot(N, *args):
     """
 
     plt_map = {
-        0: [pl_cl_fl_regions, 'cluster + field regions rejected stars'],
-        1: [pl_cl_diag, 'cluster region photometric diagram'],
-        2: [pl_hess_cmd, 'Hess CMD'],
-        3: [pl_fl_diag, 'field regions photometric diagram'],
-        4: [pl_lum_func, 'luminosity function'],
-        5: [pl_data_rm_perc, 'error removal percentage']
+        0: [pl_cl_diag, 'cluster region photometric diagram'],
+        1: [pl_hess_cmd, 'Hess CMD'],
+        2: [pl_fl_diag, 'field regions photometric diagram'],
+        3: [pl_lum_func, 'luminosity function'],
+        4: [pl_data_rm_perc, 'error removal percentage']
     }
 
     fxn = plt_map.get(N, None)[0]

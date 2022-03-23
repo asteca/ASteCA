@@ -17,7 +17,6 @@ from .structure import cluster_area
 from .structure import contamination_index
 from .structure import members_incomp
 from .structure import king_profile
-from .errors import err_accpt_rejct
 from .structure import stars_in_out_cl_reg
 from .structure import field_regions
 from .errors import err_range_avrg
@@ -161,8 +160,20 @@ def main(cl_file, pd):
     # to be used by the DA, and the parameters obtained with the
     # *photo complete* dataset for the rest of the functions.
     print("Processing complete dataset:")
-    # Accept and reject stars based on their errors.
-    clp = err_accpt_rejct.main('comp', cld_c, clp, **pd)
+
+    # Store each star separately. This part is important since it is here
+    # where we define the shape of the data list.
+    clp['acpt_stars_c'] = [
+        list(_) for _ in zip(*[
+            cld_c['ids'], cld_c['x'], cld_c['y'], cld_c['mags'].T,
+            cld_c['em'].T, cld_c['cols'].T, cld_c['ec'].T, cld_c['kine'].T,
+            cld_c['ek'].T])]
+    #
+    clp['acpt_stars_i'] = [
+        list(_) for _ in zip(*[
+            cld_i['ids'], cld_i['x'], cld_i['y'], cld_i['mags'].T,
+            cld_i['em'].T, cld_i['cols'].T, cld_i['ec'].T, cld_i['kine'].T,
+            cld_i['ek'].T])]
 
     # Stars in and out of cluster's radius.
     clp = stars_in_out_cl_reg.main('comp', clp)
@@ -173,32 +184,13 @@ def main(cl_file, pd):
     # Only process incomplete data if the the input data is not equal. Else
     # just use the complete dataset.
     if clp['flag_data_eq']:
-        clp['cl_region_i'], clp['flag_no_fl_regs_i'], clp['field_regions_i'], \
-            clp['cl_region_rjct_i'], clp['field_regions_rjct_i'] =\
+        clp['cl_region_i'], clp['flag_no_fl_regs_i'], clp['field_regions_i'] =\
             clp['cl_region_c'], clp['flag_no_fl_regs_c'],\
-            clp['field_regions_c'], clp['cl_region_rjct_c'],\
-            clp['field_regions_rjct_c']
+            clp['field_regions_c']
     else:
         print("Processing incomplete dataset:")
-        clp = err_accpt_rejct.main('incomp', cld_i, clp, **pd)
         clp = stars_in_out_cl_reg.main('incomp', clp)
         clp = field_regions.main('incomp', clp, **pd)
-
-    # This is what these three functions generate. The 'x' separates incomplete
-    # (i) and complete (c) data.
-    #
-    # err_accpt_rejct -------> acpt_stars_x
-    #       |        '-------> rjct_stars_x
-    #       |
-    #       v
-    # stars_in_out_cl_reg ---> acpt_stars_x --> cl_region_x
-    #       |            |                 '--> stars_out_x
-    #       |            |
-    #       |            '---> rjct_stars_x --> cl_region_rjct_x
-    #       |                              '--> stars_out_rjct_x
-    #       v
-    # field_regions --> stars_out_x ----------> field_regions_x
-    #              '--> stars_out_rjct_x -----> field_regions_rjct_x
 
     # Uses the incomplete 'cl_region' and 'field_regions' data.
     if 'A3' in pd['flag_make_plot']:

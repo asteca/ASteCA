@@ -27,9 +27,9 @@ def main(npd, cld_i, pd, clp):
     # Structure plots.
     arglist = [
         # pl_full_frame: x,y finding chart of full frame.
-        [gs, fig, pd['project'], clp['x_offset'], clp['y_offset'], x_name,
-         y_name, coord, x_min, x_max, y_min, y_max, asp_ratio, clp['kde_cent'],
-         cld_i['x'], cld_i['y'], st_sizes_arr, clp['clust_rad']],
+        [gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max, asp_ratio,
+         clp['kde_cent'], cld_i['x'], cld_i['y'], st_sizes_arr,
+         clp['clust_rad']],
         # pl_densmap: 2D Gaussian convolved histogram.
         [gs, fig, asp_ratio, x_name, y_name, coord, clp['bw_list'],
          clp['kde_cent'], clp['frame_kde_cent'], clp['fr_dens'],
@@ -37,8 +37,7 @@ def main(npd, cld_i, pd, clp):
         # pl_knn_dens
         [gs, fig, pd['plot_style'], asp_ratio, x_min, x_max, y_min, y_max,
          x_name, y_name, coord, clp['NN_dd'], clp['xy_filtered'],
-         clp['fr_dens'], clp['NN_dist'], pd['project'], clp['x_offset'],
-         clp['y_offset'], clp['kde_cent'], clp['clust_rad']],
+         clp['fr_dens'], clp['NN_dist'], clp['kde_cent'], clp['clust_rad']],
         # pl_field_dens
         [gs, pd['plot_style'], coord, pd['fdens_method'], clp['xy_cent_dist'],
          clp['fr_dens'], clp['fdens_min_d'], clp['fdens_lst'],

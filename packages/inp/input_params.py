@@ -12,8 +12,7 @@ def main(pars_f_path):
     # Read data from file.
     with open(pars_f_path, "r") as f_dat:
 
-        id_cols, manual_struct, trim_frame_range, par_ranges, priors_mcee_in =\
-            [], [], [], [], []
+        id_cols, manual_struct, par_ranges, priors_mcee_in = [], [], [], []
         # Iterate through each line in the file.
         for ln, line in enumerate(f_dat):
 
@@ -25,7 +24,6 @@ def main(pars_f_path):
                     id_ids = reader[1]
                     id_xdata = reader[2]
                     id_ydata = reader[3]
-                    project = True if reader[4] in true_lst else False
                 elif reader[0] == 'I2':
                     id_mags = reader[1:]
                 elif reader[0] == 'I3':
@@ -36,9 +34,6 @@ def main(pars_f_path):
                 # Input data processing
                 elif reader[0] == 'I5':
                     nanvals = [_.replace(',', '') for _ in reader[1:]]
-                elif reader[0] == 'I6':
-                    trim_frame_range.append([
-                        reader[1], list(map(float, reader[2:]))])
 
                 # Structure functions parameters.
                 elif reader[0] == 'S0':
@@ -52,10 +47,6 @@ def main(pars_f_path):
                     rt_max_f = float(reader[5])
                 elif reader[0] == 'S2':
                     kp_emcee_moves = [_.strip() for _ in line[3:].split(';')]
-
-                # Data analysis functions parameters.
-                elif reader[0] == 'E0':
-                    err_max = reader[1:]
 
                 # Decontamination algorithm parameters
                 elif reader[0] == 'D0':
@@ -210,19 +201,16 @@ def main(pars_f_path):
     pd = {
         # Input data parameters
         'id_ids': id_ids, 'id_xdata': id_xdata,
-        'id_ydata': id_ydata, 'project': project,
-        'id_mags': id_mags, 'id_cols': id_cols, 'id_kinem': id_kinem,
+        'id_ydata': id_ydata, 'id_mags': id_mags, 'id_cols': id_cols,
+        'id_kinem': id_kinem,
 
         # Input data processing
-        'nanvals': nanvals, 'trim_frame_range': trim_frame_range,
+        'nanvals': nanvals,
 
         # Structure functions parameters
         'manual_struct': manual_struct, 'kp_ndim': kp_ndim,
         'kp_nchains': kp_nchains, 'kp_nruns': kp_nruns, 'kp_nburn': kp_nburn,
         'rt_max_f': rt_max_f, 'kp_emcee_moves': kp_emcee_moves,
-
-        #
-        'err_max': err_max,
 
         # Decontamination algorithm parameters.
         'da_algor': da_algor, 'bayesda_runs': bayesda_runs,

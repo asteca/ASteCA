@@ -5,12 +5,12 @@ def check(pd):
     Check that kinematic data is properly defined.
     """
 
-    if len(pd['id_kinem']) != 8:
-        raise ValueError("there should be 8 entries in 'PK' line ({})".format(
+    if len(pd['id_kinem']) != 6:
+        raise ValueError("there should be 6 entries in 'I4' line ({})".format(
             len(pd['id_kinem'])))
 
     # Read PMs, parallax, and RV data.
-    k_cols = ('plx', 'e_plx', 'pmx', 'e_pmx', 'pmy', 'e_pmy', 'rv', 'e_rv')
+    k_cols = ('plx', 'e_plx', 'pmx', 'e_pmx', 'pmy', 'e_pmy')
     for i, ci in enumerate(pd['id_kinem']):
         if ci not in ('n', 'N'):
             try:
@@ -29,20 +29,12 @@ def check(pd):
                          " in 'asteca.ini'")
 
     # Check that error columns are present
-    for col in ('plx_col', 'pmx_col', 'pmy_col', 'rv_col'):
+    for col in ('plx_col', 'pmx_col', 'pmy_col'):
         if pd[col] is not False and pd['e_' + col] is False:
             raise ValueError("missing error column for '{}' in"
                              "'asteca.ini'".format('e_' + col[:-4]))
-
-    # # DEPRECATED 05/2021
-    # if pd['plx_bayes_flag']:
-    #     if 'emcee' not in pd['inst_packgs_lst']:
-    #         raise ValueError("Plx data is set to be procesed, but 'emcee' is"
-    #                          " not installed")
 
     if pd['plx_chains'] < 4:
         raise ValueError("set a minimum of 4 chains for Plx Bayesian analysis")
     if pd['plx_burn'] <= 0. or pd['plx_burn'] >= 1.:
         raise ValueError("Plx 'nburn' should be in the range (0., 1.)")
-    # if pd['PM_KDE_std'] <= 0.:
-    #     raise ValueError("'KDE_std' parameter must be greater than 0.")

@@ -2,10 +2,9 @@
 import numpy as np
 from scipy import stats
 from .xy_density import cent_bin as center_bin
-from ..inp.get_data import coordsProject
 
 
-def main(cld_i, clp, project, cent_method, **kwargs):
+def main(cld_i, clp, cent_method, **kwargs):
     """
     Obtains the center of the putative cluster.
     """
@@ -30,10 +29,7 @@ def main(cld_i, clp, project, cent_method, **kwargs):
             clp['bw_list'][1], kde_cent[0], kde_cent[1]))
 
     else:
-        # De-project center coordinates if needed.
-        x0, y0, _, _ = coordsProject(
-            cent_method[0], cent_method[1], project,
-            clp['x_offset'], clp['y_offset'])
+        x0, y0 = cent_method[0], cent_method[1]
 
         # Obtain KDE plot.
         _, kde_plot = kde_center_zoom(cld_i['x'], cld_i['y'], (x0, y0), radius)

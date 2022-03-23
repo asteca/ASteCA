@@ -7,8 +7,8 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 
 def pl_full_frame(
-    gs, fig, project, x_offset, y_offset, x_name, y_name, coord, x_min, x_max,
-        y_min, y_max, asp_ratio, kde_cent, x, y, st_sizes_arr, clust_rad):
+    gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max, asp_ratio,
+        kde_cent, x, y, st_sizes_arr, clust_rad):
     """
     x,y finding chart of full frame
     """
@@ -43,14 +43,10 @@ def pl_full_frame(
 
     # Add text box
     r_frmt = '{:.5f}'
-    if project:
-        x_cent = (kde_cent[0] / np.cos(np.deg2rad(kde_cent[1] + y_offset))) +\
-            x_offset
-    else:
-        x_cent = kde_cent[0]
-    t1 = (r'${}_{{c}} =$' + r_frmt + r'$\,{}$').format(x_name, x_cent, coord)
+    t1 = (r'${}_{{c}} =$' + r_frmt + r'$\,{}$').format(
+        x_name, kde_cent[0], coord)
     t2 = (r'${}_{{c}} =$' + r_frmt + r'$\,{}$').format(
-        y_name, kde_cent[1] + y_offset, coord)
+        y_name, kde_cent[1], coord)
     text = t1 + '\n' + t2
     # prop={'fontsize': 15})
     ob = offsetbox.AnchoredText(text, pad=0.2, loc=2)
@@ -116,8 +112,8 @@ def pl_densmap(
 
 def pl_knn_dens(
     gs, fig, plot_style, asp_ratio, x_min, x_max, y_min, y_max, x_name,
-    y_name, coord, NN_dd, xy_filtered, fr_dens, NN_dist, project, x_offset,
-        y_offset, kde_cent, clust_rad):
+    y_name, coord, NN_dd, xy_filtered, fr_dens, NN_dist, kde_cent,
+        clust_rad):
     """
     """
     ax = plt.subplot(gs[2:4, 4:6])
@@ -159,10 +155,8 @@ def pl_knn_dens(
     # Add coords to legend
     r_frmt = '{:.0f}' if coord == 'px' else '{:.5f}'
     x_max_dens = xy_filtered[idx][0]
-    y_max_dens = xy_filtered[idx][1] + y_offset
-    if project:
-        x_max_dens = (
-            x_max_dens / np.cos(np.deg2rad(y_max_dens + y_offset))) + x_offset
+    y_max_dens = xy_filtered[idx][1]
+    x_max_dens = (x_max_dens / np.cos(np.deg2rad(y_max_dens)))
     t1 = ('(' + r_frmt + ',\n' + r_frmt + ')').format(x_max_dens, y_max_dens)
     plt.plot([], [], color='r', lw=2., label=r"$dens_{max}$" + "\n" + t1)
 

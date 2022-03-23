@@ -58,8 +58,8 @@ def pl_mag_membs(gs, plot_style, y_ax, membvsmag):
 
 def pl_cl_fl_regions(
     gs, fig, plot_style, x_name, y_name, coord, x_min, x_max, y_min, y_max,
-    asp_ratio, kde_cent, clust_rad, field_regions_i, field_regions_rjct_i,
-        cl_region_i, cl_region_rjct_i, flag_no_fl_regs_i):
+    asp_ratio, kde_cent, clust_rad, field_regions_i, cl_region_i,
+        flag_no_fl_regs_i):
     """
     Cluster and field regions defined.
     """
@@ -77,34 +77,21 @@ def pl_cl_fl_regions(
     fig.gca().add_artist(circle)
 
     # Plot cluster region.
-    if len(cl_region_rjct_i) > 0:
-        plt.scatter(
-            list(zip(*cl_region_rjct_i))[1], list(zip(*cl_region_rjct_i))[2],
-            marker='o', c='red', s=8, edgecolors='w', lw=.2)
     plt.scatter(list(zip(*cl_region_i))[1], list(zip(*cl_region_i))[2],
                 marker='o', c='red', s=8, edgecolors='w', lw=.2)
 
     N_flrg = 0
     if not flag_no_fl_regs_i:
         col0 = cycle(['DimGray', 'ForestGreen', 'maroon', 'RoyalBlue'])
-        col1 = cycle(['DimGray', 'ForestGreen', 'maroon', 'RoyalBlue'])
         # Stars inside the field regions with accepted errors.
         for i, reg in enumerate(field_regions_i):
             fl_reg = list(zip(*reg))
             N_flrg += len(fl_reg[0])
             plt.scatter(fl_reg[1], fl_reg[2], marker='o',
                         c=next(col0), s=8, edgecolors='w', lw=.2)
-        # Stars inside the field regions with rejected errors.
-        for i, reg in enumerate(field_regions_rjct_i):
-            if reg:
-                fl_reg = list(zip(*reg))
-                N_flrg += len(fl_reg[0])
-                plt.scatter(fl_reg[1], fl_reg[2], marker='o',
-                            c=next(col1), s=8, edgecolors='w', lw=.2)
 
     ax.set_title(r"$N_{{stars}}$={} (phot incomp); $N_{{fregs}}$={}".format(
-        len(cl_region_i) + len(cl_region_rjct_i) + N_flrg,
-        len(field_regions_i)))
+        len(cl_region_i) + N_flrg, len(field_regions_i)))
 
 
 def pl_rad_dens(
