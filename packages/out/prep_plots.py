@@ -362,16 +362,15 @@ def p2_ranges(p2, min_max_p):
 
 
 def packData(
-    lkl_method, colors, filters, cl_max_mag, synth_cl_phot, binar_idx,
-    col_0_comb, mag_0_comb, col_1_comb, bf_bin_edges, shift_isoch,
-        synthcl_Nsigma):
+    lkl_method, colors, filters, cl_syn_fit, synth_cl_phot, binar_idx,
+        bf_bin_edges, shift_isoch, synthcl_Nsigma):
     """
     Properly select and pack data for CMD/CCD of observed and synthetic
     clusters, and their Hess diagram.
     """
     if lkl_method in ('tolstoy', 'isochfit'):
         bin_method = 'auto'
-        mags_cols_cl, dummy = dataProcess(cl_max_mag)
+        mags_cols_cl, dummy = dataProcess(cl_syn_fit)
         # Obtain bin edges for each dimension, defining a grid.
         bin_edges = bin_edges_f(bin_method, mags_cols_cl)
     else:
@@ -381,9 +380,8 @@ def packData(
 
     # CMD of main magnitude and first color defined.
     # Used to defined limits.
-    x_phot_all, y_phot_all = col_0_comb, mag_0_comb
-    frst_obs_mag, frst_obs_col = list(zip(*list(zip(*cl_max_mag))[3]))[0],\
-        list(zip(*list(zip(*cl_max_mag))[5]))[0]
+    frst_obs_mag, frst_obs_col = list(zip(*list(zip(*cl_syn_fit))[3]))[0],\
+        list(zip(*list(zip(*cl_syn_fit))[5]))[0]
     frst_synth_col, frst_synth_mag = synth_cl_phot[1], synth_cl_phot[0]
     frst_col_edgs, frst_mag_edgs = bin_edges[1], bin_edges[0]
     # Filters and colors are appended continuously in 'shift_isoch'. If
@@ -401,7 +399,7 @@ def packData(
     # Index of observed filter/color to scatter plot.
     i_obs_x, i_obs_y = 0, 0
     hr_diags = [
-        [x_phot_all, y_phot_all, frst_obs_col, frst_obs_mag, frst_synth_col,
+        [frst_obs_col, frst_obs_mag, frst_synth_col,
          frst_synth_mag, binar_idx, frst_col_edgs, frst_mag_edgs,
          frst_col_isoch, frst_mag_isoch, mag_col1_1sigma,
          colors[0], filters[0], 'mag', i_obs_x, i_obs_y, gs_y1, gs_y2]]
@@ -409,7 +407,7 @@ def packData(
     # If more than one color was defined, plot an extra CMD (main magnitude
     # versus first color), and an extra CCD (first color versus second color)
     if N_cols > 1:
-        scnd_obs_col = list(zip(*list(zip(*cl_max_mag))[5]))[1]
+        scnd_obs_col = list(zip(*list(zip(*cl_syn_fit))[5]))[1]
         scnd_synth_col = synth_cl_phot[2]
         scnd_col_edgs = bin_edges[2]
         scnd_col_isoch = shift_isoch[N_mags + 1]
@@ -421,20 +419,18 @@ def packData(
                 synthcl_Nsigma[N_mags], synthcl_Nsigma[N_mags + 1]]
 
         # CMD of main magnitude and second color defined.
-        x_phot_all, y_phot_all = col_1_comb, mag_0_comb
         gs_y1, gs_y2 = 2, 4
         i_obs_x, i_obs_y = 1, 0
         hr_diags.append(
-            [x_phot_all, y_phot_all, scnd_obs_col, frst_obs_mag,
+            [scnd_obs_col, frst_obs_mag,
              scnd_synth_col, frst_synth_mag, binar_idx, scnd_col_edgs,
              frst_mag_edgs, shift_isoch[2], frst_mag_isoch, mag_col2_1sigma,
              colors[1], filters[0], 'mag', i_obs_x, i_obs_y, gs_y1, gs_y2])
         # CCD of first and second color defined.
-        x_phot_all, y_phot_all = col_0_comb, col_1_comb
         gs_y1, gs_y2 = 4, 6
         i_obs_x, i_obs_y = 0, 1
         hr_diags.append(
-            [x_phot_all, y_phot_all, frst_obs_col, scnd_obs_col,
+            [frst_obs_col, scnd_obs_col,
              frst_synth_col, scnd_synth_col, binar_idx, frst_col_edgs,
              scnd_col_edgs, frst_col_isoch, scnd_col_isoch, col1_col2_1sigma,
              colors[0], colors[1], 'col', i_obs_x, i_obs_y, gs_y1, gs_y2])

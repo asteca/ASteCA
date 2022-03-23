@@ -1,7 +1,8 @@
 
+import copy
 import numpy as np
 from ..inp import data_IO
-from . import max_mag_cut, obs_clust_prepare, ptemcee_algor
+from . import obs_clust_prepare, ptemcee_algor
 from ..synth_clust import synth_clust_gen
 from .mcmc_convergence import convergenceVals
 from .bf_common import r2Dist, modeKDE, fillParams  # thinChain
@@ -120,13 +121,13 @@ def dataPrep(pd, clp):
     clusters generation.
     """
 
-    # Remove stars beyond the maximum magnitude limit, if it was set.
-    clp['cl_max_mag'], clp['max_mag_syn'] = max_mag_cut.main(
-        clp['cl_reg_fit'], pd['max_mag'])
+    clp['max_mag_syn'] = np.max(list(zip(*list(zip(
+        *clp['cl_reg_fit']))[1:][2]))[0])
+    clp['cl_syn_fit'] = copy.deepcopy(clp['cl_reg_fit'])
 
     # Processed observed cluster.
     clp['obs_clust'] = obs_clust_prepare.main(
-        clp['cl_max_mag'], pd['lkl_method'], pd['lkl_binning'],
+        clp['cl_syn_fit'], pd['lkl_method'], pd['lkl_binning'],
         pd['lkl_manual_bins'])
 
     return clp

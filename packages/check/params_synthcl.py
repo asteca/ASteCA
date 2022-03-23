@@ -193,12 +193,6 @@ def checkSynthClustParams(pd):
             "Binary mass ratio set ('{}') is out of\nboundaries. Please select"
             " a value in the range [0., 1.]".format(pd['min_bmass_ratio']))
 
-    # Check maximum magnitude limit defined.
-    if isinstance(pd['max_mag'], str):
-        if pd['max_mag'] != 'max':
-            raise ValueError("Maximum magnitude value selected ({}) is"
-                             " not valid.".format(pd['max_mag']))
-
     for key, vals in pd['fundam_params_all'].items():
         # Check E_BV
         if vals[2][0] < 0.:

@@ -3,6 +3,7 @@ import numpy as np
 import copy
 
 
+# DEPRECATED 23/03/22
 def main(cl_reg_fit, max_mag):
     """
     Reject stars beyond the maximum magnitude given.

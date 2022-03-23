@@ -4,30 +4,30 @@ from scipy.stats import gaussian_kde
 from ..decont_algors.local_cell_clean import bin_edges_f
 
 
-def dataProcess(cl_max_mag):
+def dataProcess(cl_syn_fit):
     """
     Extract photometric data, and membership probabilities. Remove ID's to
     make entire array of floats.
     """
     mags_cols_cl = [[], []]
-    for mag in list(zip(*list(zip(*cl_max_mag))[1:][2])):
+    for mag in list(zip(*list(zip(*cl_syn_fit))[1:][2])):
         mags_cols_cl[0].append(mag)
-    for col in list(zip(*list(zip(*cl_max_mag))[1:][4])):
+    for col in list(zip(*list(zip(*cl_syn_fit))[1:][4])):
         mags_cols_cl[1].append(col)
 
     # Store membership probabilities here.
-    memb_probs = np.array(list(zip(*cl_max_mag))[1:][8])
+    memb_probs = np.array(list(zip(*cl_syn_fit))[1:][8])
 
     return mags_cols_cl, memb_probs
 
 
-def main(cl_max_mag, lkl_method, lkl_binning, lkl_manual_bins):
+def main(cl_syn_fit, lkl_method, lkl_binning, lkl_manual_bins):
     '''
     Prepare observed cluster array here to save time before the algorithm to
     find the best synthetic cluster fit is used.
     '''
 
-    mags_cols_cl, memb_probs = dataProcess(cl_max_mag)
+    mags_cols_cl, memb_probs = dataProcess(cl_syn_fit)
 
     if lkl_method in ['dolphin', 'mighell', 'tremmel']:
         # Obtain bin edges for each dimension, defining a grid.
@@ -97,9 +97,9 @@ def main(cl_max_mag, lkl_method, lkl_binning, lkl_manual_bins):
         # Square errors here to not repeat the same calculations each time a
         # new synthetic cluster is matched.
         e_mags_cols = []
-        for e_m in list(zip(*list(zip(*cl_max_mag))[1:][3])):
+        for e_m in list(zip(*list(zip(*cl_syn_fit))[1:][3])):
             e_mags_cols.append(np.square(e_m))
-        for e_c in list(zip(*list(zip(*cl_max_mag))[1:][5])):
+        for e_c in list(zip(*list(zip(*cl_syn_fit))[1:][5])):
             e_mags_cols.append(np.square(e_c))
 
         # DEPRECATED 18/01/20. The new method does not use errors in the
@@ -210,9 +210,9 @@ def main(cl_max_mag, lkl_method, lkl_binning, lkl_manual_bins):
 
     # # In place for MiMO testing
     # e_mags_cols = []
-    # for e_m in list(zip(*list(zip(*cl_max_mag))[1:][3])):
+    # for e_m in list(zip(*list(zip(*cl_syn_fit))[1:][3])):
     #     e_mags_cols.append(e_m)
-    # for e_c in list(zip(*list(zip(*cl_max_mag))[1:][5])):
+    # for e_c in list(zip(*list(zip(*cl_syn_fit))[1:][5])):
     #     e_mags_cols.append(e_c)
     # obs_clust = list(np.array(mags_cols_cl[0])) + list(np.array(mags_cols_cl[1])) + list(np.array(e_mags_cols))
 

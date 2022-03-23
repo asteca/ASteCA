@@ -29,11 +29,10 @@ def main(npd, pd, clp, td):
     # Plot one ore more rows of CMDs/CCDs.
     bf_bin_edges = clp['obs_clust'][0]
     hr_diags = prep_plots.packData(
-        pd['lkl_method'], pd['colors'], pd['filters'], clp['cl_max_mag'],
-        clp['synth_cl_phot'], clp['binar_idx'], clp['col_0_comb'],
-        clp['mag_0_comb'], clp['col_1_comb'], bf_bin_edges,
+        pd['lkl_method'], pd['colors'], pd['filters'], clp['cl_syn_fit'],
+        clp['synth_cl_phot'], clp['binar_idx'], bf_bin_edges,
         shift_isoch, synthcl_Nsigma)
-    for (x_phot_all, y_phot_all, x_phot_obs, y_phot_obs, x_synth_phot,
+    for (x_phot_obs, y_phot_obs, x_synth_phot,
          y_synth_phot, binar_idx, hess_xedges, hess_yedges, x_isoch,
          y_isoch, phot_Nsigma, x_name, y_name, yaxis, i_obs_x,
          i_obs_y, gs_y1, gs_y2) in hr_diags:
@@ -43,7 +42,7 @@ def main(npd, pd, clp, td):
             hess_xedges, hess_yedges)
         x_ax, y_ax = prep_plots.ax_names(x_name, y_name, yaxis)
         x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd =\
-            prep_plots.diag_limits(yaxis, x_phot_all, y_phot_all)
+            prep_plots.diag_limits(yaxis, x_phot_obs, y_phot_obs)
         sy_sz_pt = prep_plots.phot_diag_st_size(x_synth_phot)
 
         arglist = [
@@ -63,8 +62,8 @@ def main(npd, pd, clp, td):
             mp_bestfit_CMD.plot(n, *args)
 
         v_min_mp, v_max_mp = prep_plots.da_colorbar_range(
-            clp['cl_max_mag'], [])
-        diag_fit_inv, dummy = prep_plots.da_phot_diag(clp['cl_max_mag'], [])
+            clp['cl_syn_fit'], [])
+        diag_fit_inv, dummy = prep_plots.da_phot_diag(clp['cl_syn_fit'], [])
         cl_sz_pt = prep_plots.phot_diag_st_size(diag_fit_inv)
         # Main photometric diagram of observed cluster.
         i_y = 0 if yaxis == 'mag' else 1
@@ -74,7 +73,7 @@ def main(npd, pd, clp, td):
             diag_fit_inv[i_y][i_obs_y], diag_fit_inv[2]
         # tight_layout is called here
         plot_observed_cluster(
-            fig, gs, gs_y1, gs_y2, x_ax, y_ax, clp['cl_max_mag'], x_min_cmd,
+            fig, gs, gs_y1, gs_y2, x_ax, y_ax, clp['cl_syn_fit'], x_min_cmd,
             x_max_cmd, y_min_cmd, y_max_cmd, clp['err_lst'], v_min_mp,
             v_max_mp, obs_x, obs_y, obs_MPs, cl_sz_pt, hess_xedges,
             hess_yedges, x_isoch, y_isoch, phot_Nsigma, pd['lkl_method'])
@@ -89,7 +88,7 @@ def main(npd, pd, clp, td):
 
 
 def plot_observed_cluster(
-    fig, gs, gs_y1, gs_y2, x_ax, y_ax, cl_max_mag, x_min_cmd, x_max_cmd,
+    fig, gs, gs_y1, gs_y2, x_ax, y_ax, cl_syn_fit, x_min_cmd, x_max_cmd,
     y_min_cmd, y_max_cmd, err_lst, v_min_mp, v_max_mp, obs_x, obs_y, obs_MPs,
     cl_sz_pt, hess_xedges, hess_yedges, x_isoch, y_isoch, phot_Nsigma,
         lkl_method):
@@ -97,7 +96,7 @@ def plot_observed_cluster(
     This function is called separately since we need to retrieve some
     information from it to plot that #$%&! colorbar.
     """
-    err_bar = prep_plots.error_bars(cl_max_mag, x_min_cmd, err_lst)
+    err_bar = prep_plots.error_bars(cl_syn_fit, x_min_cmd, err_lst)
 
     # pl_mps_phot_diag
     plot_colorbar, sca, trans = mp_bestfit_CMD.pl_mps_phot_diag(

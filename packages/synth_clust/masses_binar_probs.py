@@ -32,7 +32,7 @@ def main(clp, pd, td):
 
     print("Estimating binary probabilities and masses")
     # Extract photometry used in the best fit process
-    mags_cols_cl, _ = dataProcess(clp['cl_max_mag'])
+    mags_cols_cl, _ = dataProcess(clp['cl_syn_fit'])
     # Arrange properly
     mags, cols = [np.array(_) for _ in mags_cols_cl]
     obs_phot = np.concatenate([mags, cols]).T
