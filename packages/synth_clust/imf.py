@@ -5,7 +5,7 @@ from scipy.interpolate import interp1d
 from .. import update_progress
 
 
-def main(IMF_name, Nmets, Max_mass, m_high=150.):
+def main(IMF_name, Nmets, Max_mass, m_low=0.08, m_high=150.):
     """
     Returns the number of stars per interval of mass for the selected IMF.
 
@@ -33,15 +33,6 @@ def main(IMF_name, Nmets, Max_mass, m_high=150.):
 
     """
     print("Sampling selected IMF ({})".format(IMF_name))
-
-    # Low mass limits for each IMF. Defined slightly larger to avoid sampling
-    # issues.
-    imfs_dict = {
-        'chabrier_2001_exp': 0.011, 'chabrier_2001_log': 0.011,
-        'kroupa_1993': 0.081, 'kroupa_2002': 0.011, 'salpeter_1955': 0.31}
-    # IMF low mass limit.
-    m_low = imfs_dict[IMF_name]
-
     inv_cdf, CDF_min, CDF_max = invTrnsfSmpl(IMF_name, m_low, m_high)
 
     st_dist_mass = []
