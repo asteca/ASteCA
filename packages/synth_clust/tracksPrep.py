@@ -7,7 +7,7 @@ from . import binarity
 
 def main(
     td, synth_rand_seed, cmd_systs, filters, colors, IMF_name,
-        all_syst_filters, N_interp, min_bmass_ratio, lkl_method, **kwargs):
+        all_syst_filters, min_bmass_ratio, lkl_method, **kwargs):
     """
     Return list structured as:
 
@@ -66,7 +66,7 @@ def main(
     # in the same order as they are read from the cluster's data file.
     interp_tracks, mags_cols_intp = interpIsochs(
         td['isoch_list'], td['extra_pars'], all_syst_filters,
-        filters, colors, N_interp)
+        filters, colors)
 
     if binar_flag:
         td['theor_tracks'], td['mean_bin_mr'] = binarity.binarGen(
@@ -84,7 +84,8 @@ def main(
 
 
 def interpIsochs(
-        isoch_list, extra_pars, all_syst_filters, filters, colors, N_interp):
+    isoch_list, extra_pars, all_syst_filters, filters, colors,
+        N_interp=1500):
     """
     Take the list of filters stored, create the necessary colors, arrange and
     interpolate all magnitudes and colors according to the order given to the

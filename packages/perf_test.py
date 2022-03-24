@@ -127,7 +127,7 @@ def inParams(Mmin, Mmax):
               ('Gmag', 'G_BPmag', 'G_RPmag'),
               (6422.01, 5335.42, 7739.17))}, 'filters': [('gaiaedr3', 'Gmag')],
           'colors': [('gaiaedr3', 'G_BPmag,G_RPmag')],
-          'IMF_name': 'kroupa_2002', 'N_interp': 500, 'min_bmass_ratio': .7,
+          'IMF_name': 'kroupa_2002', 'min_bmass_ratio': .7,
           'lkl_method': lkl_method}
     td = get_tracks.main(pd, 'CLUSTER')
 
