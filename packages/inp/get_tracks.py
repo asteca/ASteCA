@@ -17,7 +17,7 @@ def main(pd, clust_name, **kwargs):
                 pd['fundam_params_all'][clust_name])
         except KeyError:
             clPresent = False
-            print(("Cluster not found in line 'R1'. Default to "
+            print(("Cluster not found in line 'R2'. Default to "
                    "'CLUSTER' values"))
         if clPresent is False:
             td['fundam_params'] = copy.deepcopy(

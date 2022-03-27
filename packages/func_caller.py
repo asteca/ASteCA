@@ -15,13 +15,13 @@ from .structure import integMags
 from .structure import radius
 from .structure import cluster_area
 from .structure import contamination_index
-from .structure import members_incomp
+from .structure import N_members
 from .structure import king_profile
 from .structure import stars_in_out_cl_reg
 from .structure import field_regions
 from .errors import err_range_avrg
 #
-from .data_analysis import compl_err_funcs
+from .data_analysis import compl_func
 from .data_analysis import luminosity
 # DEPRECATED 12/20
 # from .data_analysis import ad_field_vs_clust
@@ -98,20 +98,20 @@ def main(cl_file, pd):
     # stars in data file) and complete (only those with full photometric data)
     # dictionaries.
     # Initiates cluster's parameters dictionary 'clp'.
-    cld_i, cld_c, clp = get_data.main(npd, **pd)
+    cld, clp = get_data.main(npd, **pd)
 
     # DEPRECATED (at least for now, 08/05/18)
     # If Manual mode is set, display frame and ask if it should be trimmed.
     # cld = trim_frame.main(cld, **pd)
 
     # Obtain 2D coordinates histogram for the observed frame.
-    clp = histo_2d.main(clp, **cld_i)
+    clp = histo_2d.main(clp, **cld)
 
     # Gaussian filtered 2D x,y histograms.
-    clp = xy_density.main(clp, cld_i, **pd)
+    clp = xy_density.main(clp, cld, **pd)
 
     if 'A1' in pd['flag_make_plot']:
-        make_A1_plot.main(npd, cld_i, pd, **clp)
+        make_A1_plot.main(npd, cld, pd, **clp)
         print("<<Plots for A1 block created>>")
         if pd['stop_idx'] == 'A1':
             retFunc(npd['clust_name'], start)
@@ -120,20 +120,20 @@ def main(cl_file, pd):
         print("<<Skip A1 plot>>")
 
     # Cluster's center coordinates and errors.
-    clp = center.main(cld_i, clp, **pd)
+    clp = center.main(cld, clp, **pd)
 
     # Field density value in stars/<area unit>.
-    clp = field_density.main(clp, cld_i, **pd)
+    clp = field_density.main(clp, cld, **pd)
 
     # Integrated magnitude. For plotting purposes only.
-    clp = integMags.main(clp, **cld_i)
+    clp = integMags.main(clp, **cld)
 
     # Cluster radius
-    clp = radius.main(cld_i, clp, **pd)
+    clp = radius.main(cld, clp, **pd)
 
     # Uses the incomplete data.
     if 'A2' in pd['flag_make_plot']:
-        make_A2_plot.main(npd, cld_i, pd, clp)
+        make_A2_plot.main(npd, cld, pd, clp)
         print("<<Plots for A2 block created>>")
         if pd['stop_idx'] == 'A2':
             retFunc(npd['clust_name'], start)
@@ -142,59 +142,34 @@ def main(cl_file, pd):
         print("<<Skip A2 plot>>")
 
     # Cluster's area and total number of stars within the cluster region.
-    clp = cluster_area.main(clp, **cld_i)
+    clp = cluster_area.main(clp, **cld)
 
     # Contamination index.
-    clp = contamination_index.main(clp, **cld_i)
+    clp = contamination_index.main(clp, **cld)
 
-    # Estimate the number of members in the incomplete dataset
-    clp = members_incomp.main(clp)
+    # Estimate the number of members
+    clp = N_members.main(clp)
 
     # King profiles based on the density profiles.
-    clp = king_profile.main(clp, cld_i, **pd)
-
-    # ^ All the functions above use the *photo incomplete* dataset 'cld_i'
-
-    # These three functions are applied for both datasets since we need the
-    # 'cl_region' and 'field_regions' parameters with *photo incomplete* data
-    # to be used by the DA, and the parameters obtained with the
-    # *photo complete* dataset for the rest of the functions.
-    print("Processing complete dataset:")
+    clp = king_profile.main(clp, cld, **pd)
 
     # Store each star separately. This part is important since it is here
     # where we define the shape of the data list.
-    clp['acpt_stars_c'] = [
+    clp['acpt_stars'] = [
         list(_) for _ in zip(*[
-            cld_c['ids'], cld_c['x'], cld_c['y'], cld_c['mags'].T,
-            cld_c['em'].T, cld_c['cols'].T, cld_c['ec'].T, cld_c['kine'].T,
-            cld_c['ek'].T])]
-    #
-    clp['acpt_stars_i'] = [
-        list(_) for _ in zip(*[
-            cld_i['ids'], cld_i['x'], cld_i['y'], cld_i['mags'].T,
-            cld_i['em'].T, cld_i['cols'].T, cld_i['ec'].T, cld_i['kine'].T,
-            cld_i['ek'].T])]
+            cld['ids'], cld['x'], cld['y'], cld['mags'].T,
+            cld['em'].T, cld['cols'].T, cld['ec'].T, cld['kine'].T,
+            cld['ek'].T])]
 
     # Stars in and out of cluster's radius.
-    clp = stars_in_out_cl_reg.main('comp', clp)
+    clp = stars_in_out_cl_reg.main(clp)
 
     # Field regions around the cluster's center.
-    clp = field_regions.main('comp', clp, **pd)
-
-    # Only process incomplete data if the the input data is not equal. Else
-    # just use the complete dataset.
-    if clp['flag_data_eq']:
-        clp['cl_region_i'], clp['flag_no_fl_regs_i'], clp['field_regions_i'] =\
-            clp['cl_region_c'], clp['flag_no_fl_regs_c'],\
-            clp['field_regions_c']
-    else:
-        print("Processing incomplete dataset:")
-        clp = stars_in_out_cl_reg.main('incomp', clp)
-        clp = field_regions.main('incomp', clp, **pd)
+    clp = field_regions.main(clp, **pd)
 
     # Uses the incomplete 'cl_region' and 'field_regions' data.
     if 'A3' in pd['flag_make_plot']:
-        make_A3_plot.main(npd, cld_i, pd, clp)
+        make_A3_plot.main(npd, cld, pd, clp)
         print("<<Plots for A3 block created>>")
         if pd['stop_idx'] == 'A3':
             retFunc(npd['clust_name'], start)
@@ -202,23 +177,17 @@ def main(cl_file, pd):
     else:
         print("<<Skip A3 plot>>")
 
-    # v The functions below use the *photom complete* dataset with the
-    # exception of the 'compl_err_funcs()' function and the Bayesian DA. The
-    # DA uses the *photo incomplete* dataset to assign MPs. After this, only
-    # those stars in the *photo complete* dataset are kept and passed forward
-    # to the fundamental parameters estimation process.
-
     # Obtain exponential fit for the errors.
     clp = err_range_avrg.main(clp)
 
-    # Combined error rejection & completeness function.
-    clp = compl_err_funcs.main(clp, cld_i, cld_c)
+    # Completeness function estimation.
+    clp = compl_func.main(pd, clp, cld)
 
     # Helper function for plotting.
     clp = photComb.main(pd, clp)
 
     if 'B1' in pd['flag_make_plot']:
-        make_B1_plot.main(npd, cld_c, pd, **clp)
+        make_B1_plot.main(npd, cld, pd, **clp)
         print("<<Plots for B1 block created>>")
         if pd['stop_idx'] == 'B1':
             retFunc(npd['clust_name'], start)
@@ -227,13 +196,13 @@ def main(cl_file, pd):
         print("<<Skip B1 plot>>")
 
     # Luminosity function and completeness level for each magnitude bin.
-    clp = luminosity.main(clp, **cld_c)
+    clp = luminosity.main(clp, **cld)
 
     # Approximate number of cluster's members.
     clp = members_compl.main(clp)
 
     if 'B2' in pd['flag_make_plot']:
-        make_B2_plot.main(npd, cld_i, pd, **clp)
+        make_B2_plot.main(npd, cld, pd, **clp)
         print("<<Plots for B2 block created>>")
         if pd['stop_idx'] == 'B2':
             retFunc(npd['clust_name'], start)
@@ -241,19 +210,8 @@ def main(cl_file, pd):
     else:
         print("<<Skip B2 plot>>")
 
-    # DEPRECATED 12/20
-    # clp = ad_field_vs_clust.main(clp, cld_c, **pd)
-    # make_B3_plot.main(npd, pd, **clp)
-    # if pd['stop_idx'] == 'B3':
-    #     retFunc(npd['clust_name'], start)
-    #     return
-
     # Apply decontamination algorithm.
     clp = decont_algors.main(clp, npd, **pd)
-
-    # DEPRECATED April 2021
-    # Obtain members parameter.
-    # clp = members_N_compare.main(clp)
 
     # Remove stars from the observed cluster according to a selected method.
     clp = cl_region_clean.main(clp, **pd)
@@ -262,7 +220,7 @@ def main(cl_file, pd):
     cluster_members_file.main(clp, npd, **pd)
 
     if 'C1' in pd['flag_make_plot']:
-        make_C1_plot.main(npd, cld_c, pd, **clp)
+        make_C1_plot.main(npd, cld, pd, **clp)
         print("<<Plots for C1 block created>>")
         if pd['stop_idx'] == 'C1':
             retFunc(npd['clust_name'], start)
@@ -274,7 +232,7 @@ def main(cl_file, pd):
     clp = plx_analysis.main(clp, **pd)
 
     # Analyze PMs data if available.
-    clp = pms_analysis.main(clp, cld_i, **pd)
+    clp = pms_analysis.main(clp, cld, **pd)
 
     if 'C2' in pd['flag_make_plot']:
         make_C2_plot.main(npd, pd, clp)
@@ -286,7 +244,7 @@ def main(cl_file, pd):
         print("<<Skip C2 plot>>")
 
     if 'C3' in pd['flag_make_plot']:
-        make_C3_plot.main(npd, pd, cld_i, clp)
+        make_C3_plot.main(npd, pd, cld, clp)
         print("<<Plots for C3 block created>>")
         if pd['stop_idx'] == 'C3':
             retFunc(npd['clust_name'], start)

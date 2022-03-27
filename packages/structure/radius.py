@@ -5,7 +5,7 @@ from scipy.stats import median_abs_deviation as MAD
 from scipy.spatial.distance import cdist
 
 
-def main(cld_i, clp, rad_method, **kwargs):
+def main(cld, clp, rad_method, **kwargs):
     """
     Estimate the radius through the integrals of the field density array.
     Assign the uncertainty through a bootstrap process based on the field
@@ -25,7 +25,7 @@ def main(cld_i, clp, rad_method, **kwargs):
 
     elif rad_method == 'max':
         clp['clust_rad'] = maxRadius(
-            cld_i['x'], cld_i['y'], clp['kde_cent'], clp['xy_cent_dist'])
+            cld['x'], cld['y'], clp['kde_cent'], clp['xy_cent_dist'])
         print("Max radius selected: {:g} deg".format(
             clp['clust_rad']))
 

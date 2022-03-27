@@ -4,16 +4,16 @@ import numpy as np
 
 def main(clp):
     """
-    Distribution for the number of members estimated in the incomplete
-    dataset. Uses the uncertainties in the field density.
+    Distribution for the number of members estimated. Uses the uncertainties
+    in the field density.
 
-    The estimated number of members 'n_memb_i' is used by the King's profile
+    The estimated number of members 'n_memb' is used by the King's profile
     function.
     """
 
     # Field density and radius were st manually
     if np.isnan(clp['field_dens_std']):
-        clp['n_memb_i'], clp['members_dist'] = 1, np.array([])
+        clp['n_memb'], clp['members_dist'] = 1, np.array([])
         return clp
 
     N_in_rad = (clp['xy_cent_dist'] < clp['clust_rad']).sum()
@@ -28,6 +28,6 @@ def main(clp):
     else:
         print("  WARNING: The estimated number of members is < 10")
         n_memb_i = 10
-    clp['n_memb_i'], clp['members_dist'] = n_memb_i, N_memb_all
+    clp['n_memb'], clp['members_dist'] = n_memb_i, N_memb_all
 
     return clp

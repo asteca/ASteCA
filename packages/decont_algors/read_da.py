@@ -3,19 +3,18 @@ import numpy as np
 from ..inp import data_IO
 
 
-def main(cl_region, clust_name, memb_file, readda_idcol=0, readda_mpcol=-2):
+def main(cl_region, data_file, id_ids, da_algor):
     """
     Read MP values from file. Any star in the defined cluster whose ID is not
     found in the membership file will be assigned MP=0.5.
-
-    The indexes for the ID and MPs columns are hardcoded.
     """
     print("Reading membership probabilities from file")
-    # Read IDs and MPs from file.
-    data = data_IO.dataRead(clust_name, memb_file, 'r')
+    # Read input file.
+    data = data_IO.dataRead(None, data_file, 'r')
+
     # Read IDs as strings since that is how they are stored in 'cl_region'
-    id_list = list(np.array(data.columns[readda_idcol], dtype=str))
-    memb_probs = np.array(data.columns[readda_mpcol])
+    id_list = list(np.array(data[id_ids], dtype=str))
+    memb_probs = data[da_algor]
 
     N_not, memb_probs_cl_region = 0, []
     # Assign probabilities read from file according to the star's IDs.

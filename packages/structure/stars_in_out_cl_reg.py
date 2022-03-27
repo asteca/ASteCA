@@ -2,7 +2,7 @@
 import numpy as np
 
 
-def main(i_c, clp):
+def main(clp):
     """
     Separate stars between those inside the cluster's radius and those outside.
     """
@@ -12,7 +12,7 @@ def main(i_c, clp):
     cl_region, stars_out = [], []
 
     # Iterate through all stars with accepted photometric errors.
-    for star in clp['acpt_stars_' + i_c[0]]:
+    for star in clp['acpt_stars']:
 
         # Separate in and out of cluster's boundaries.
         dist = np.sqrt((clp['kde_cent'][0] - star[1]) ** 2
@@ -32,7 +32,7 @@ def main(i_c, clp):
     elif 1 < len(cl_region) < 10:
         print("    WARNING: less than 10 stars present in cluster region")
     else:
-        print("  Stars separated in/out of cluster's boundaries")
+        print("Stars separated in/out of cluster's boundaries")
 
     # DEPRECATED 23/03/22
     # # Iterate through all stars with rejected photometric errors.
@@ -50,6 +50,5 @@ def main(i_c, clp):
     #         cl_region_rjct.append(star)
 
     # Add parameters to dictionary.
-    clp['cl_region_' + i_c[0]], clp['stars_out_' + i_c[0]] = cl_region,\
-        stars_out
+    clp['cl_region'], clp['stars_out'] = cl_region, stars_out
     return clp

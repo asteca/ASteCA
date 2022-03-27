@@ -1,67 +1,67 @@
 
-import numpy as np
+# import numpy as np
 from . import bayesian_da
 from . import read_da
 
 
 def main(
-    clp, npd, colors, plx_col, pmx_col, pmy_col, da_algor,
+    clp, npd, colors, id_ids, plx_col, pmx_col, pmy_col, da_algor,
         bayesda_runs, bayesda_dflag, **kwargs):
     """
     Apply selected decontamination algorithm.
     """
 
-    # Check if at least one equal-sized field region was obtained for the
-    # *incomplete* dataset (used by the Bayesian DA).
-    if da_algor == 'y' and clp['flag_no_fl_regs_i']:
+    # Check if at least one equal-sized field region was obtained
+    # (used by the Bayesian DA).
+    if da_algor == 'y' and clp['flag_no_fl_regs']:
         print("  WARNING: no field regions found. Can not apply Bayesian DA")
         da_algor = 'n'
 
     flag_decont_skip = False
     if da_algor == 'n':
         print("Assign equal probabilities to all stars in cluster region")
-        memb_probs_cl_region = [1.] * len(clp['cl_region_i'])
+        memb_probs_cl_region = [1.] * len(clp['cl_region'])
         flag_decont_skip = True
 
     elif da_algor == 'y':
         memb_probs_cl_region = bayesian_da.main(
             colors, plx_col, pmx_col, pmy_col, bayesda_runs,
-            bayesda_dflag, clp['cl_region_i'], clp['field_regions_i'])
+            bayesda_dflag, clp['cl_region'], clp['field_regions'])
 
-    elif da_algor == 'read':
+    else:
         memb_probs_cl_region = read_da.main(
-            clp['cl_region_i'], npd['clust_name'], npd['memb_file'])
+            clp['cl_region'], npd['data_file'], id_ids, da_algor)
 
     # Store for plotting in 'C1' block and adding to the members output file.
-    clp['memb_probs_cl_region_i'] = memb_probs_cl_region
+    clp['memb_probs_cl_region'] = memb_probs_cl_region
 
-    # Pass only values for the stars in the *complete* dataset.
-    memb_probs_cl_region = filterMPs(
-        memb_probs_cl_region, clp['cl_region_i'], clp['cl_region_c'])
+    # DEPRECATED 26/03/22
+    # memb_probs_cl_region = filterMPs(memb_probs_cl_region, clp['cl_region'])
 
     # Append MPs and sort by probabilities.
-    memb_prob_avrg_sort = mpas(clp['cl_region_c'], memb_probs_cl_region)
+    memb_prob_avrg_sort = mpas(clp['cl_region'], memb_probs_cl_region)
 
     clp['memb_prob_avrg_sort'], clp['flag_decont_skip'] =\
         memb_prob_avrg_sort, flag_decont_skip
     return clp
 
 
-def filterMPs(memb_probs_cl_region, cl_region_i, cl_region_c):
-    """
-    Pass along MPs only for stars in the *complete* dataset.
-    """
+# DEPRECATED 26/03/22
+# def filterMPs(memb_probs_cl_region, cl_region):
+#     """
+#     Pass along MPs only for stars in the *complete* dataset.
+#     """
 
-    ids_c, ids_i = list(zip(*cl_region_c))[0], list(zip(*cl_region_i))[0]
-    memb_probs_cl_region_c = np.zeros(len(ids_c))
-    dict_ids_c = {_: i for i, _ in enumerate(ids_c)}
-    for i, id_i in enumerate(ids_i):
-        try:
-            memb_probs_cl_region_c[dict_ids_c[id_i]] = memb_probs_cl_region[i]
-        except KeyError:
-            pass
+#     ids_c, ids_i = list(zip(*cl_region_c))[0], list(zip(*cl_region_i))[0]
+#     memb_probs_cl_region_c = np.zeros(len(ids_c))
+#     dict_ids_c = {_: i for i, _ in enumerate(ids_c)}
+#     for i, id_i in enumerate(ids_i):
+#         try:
+#             memb_probs_cl_region_c[dict_ids_c[id_i]] = memb_probs_cl_region[i]
+#         except KeyError:
+#             pass
 
-    return memb_probs_cl_region_c
+#     return memb_probs_cl_region_c
 
 
 def mpas(cl_region, memb_probs_cl_region):

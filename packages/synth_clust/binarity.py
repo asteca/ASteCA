@@ -12,9 +12,14 @@ def main(isoch_mass, bin_frac, m_ini_idx, N_fc, binar_probs):
     # If the binary fraction is zero, skip the whole process.
     if bin_frac > 0.:
 
+        #
+        Nm = isoch_mass[m_ini_idx].size
+        b_p = binar_mass(isoch_mass[m_ini_idx])
+        bin_indxs = np.random.choice(range(Nm), int(Nm * bin_frac), False, b_p)
+
         # Select a fraction of stars to be binaries, according to the random
         # probabilities assigned before.
-        bin_indxs = binar_probs[:isoch_mass.shape[-1]] <= bin_frac
+        # bin_indxs = binar_probs[:isoch_mass.shape[-1]] <= bin_frac
 
         # Index of the first binary magnitude.
         # mag_binar = m_ini_idx + 1
@@ -24,9 +29,29 @@ def main(isoch_mass, bin_frac, m_ini_idx, N_fc, binar_probs):
 
         # Update the binary systems' masses so that the secondary masses for
         # SINGLE systems are identified with a '-99.' value.
-        isoch_mass[-1][~bin_indxs] = -99.
+        # isoch_mass[-1][~bin_indxs] = -99.
+
+        sing_indxs = list(set(range(Nm)) - set(bin_indxs))
+        isoch_mass[-1][sing_indxs] = -99.
 
     return isoch_mass
+
+
+def binar_mass(x):
+    """
+    https://stackoverflow.com/a/29359275/1391441
+    """
+    from scipy.interpolate import interp1d
+
+    # xx = (0.08, .29, .96, 2.4, 7.65, 28.5, 70)
+    # yy = (.22, .26, .46, .52, .64, .82, 1)
+    # logx = np.log10(xx)
+    # logy = np.log10(yy)
+    logx = (-1.097, -0.538, -0.018, 0.380, 0.884, 1.455, 1.845)
+    logy = (-0.658, -0.585, -0.337, -0.284, -0.194, -0.086, 0.)
+    lin_interp = interp1d(logx, logy)
+    b_p = np.power(10.0, lin_interp(np.log10(x)))
+    return b_p / b_p.sum() # <-- IS THIS NORMALIZATION REASONABLE
 
 
 def binarGen(
@@ -127,7 +152,8 @@ def randBinarFracs(mbr, N_mass, N_mets):
     Define the mass ratio for the secondary masses
     """
 
-    # mbr = 'raghavan' #'fisher'
+    mbr = 'raghavan'
+    # mbr = 'fisher'
 
     def fQ(xk, pk):
         """

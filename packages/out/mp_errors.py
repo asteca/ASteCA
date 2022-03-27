@@ -9,11 +9,11 @@ def starsPlot(boundary, x_data, y_data):
     """
     Plot accepted/rejected stars outside/inside the cluster region.
     """
-    if boundary == 'rjct':
-        if len(y_data) > 0:
-            # Only attempt to plot if any star is stored in the list.
-            plt.scatter(
-                x_data, y_data, marker='x', c='teal', s=35, lw=.5, zorder=1)
+    # if boundary == 'rjct':
+    #     if len(y_data) > 0:
+    #         # Only attempt to plot if any star is stored in the list.
+    #         plt.scatter(
+    #             x_data, y_data, marker='x', c='teal', s=35, lw=.5, zorder=1)
     if boundary == 'accpt_in':
         if len(y_data) > 0:
             plt.scatter(
@@ -27,7 +27,7 @@ def starsPlot(boundary, x_data, y_data):
 
 
 def pl_phot_err(
-    gs, colors, filters, id_kinem, mags, cl_region_c, stars_out_c,
+    gs, colors, filters, id_kinem, mags, cl_region, stars_out,
         err_bar_all):
     """
     Photometric + kinematic error rejection.
@@ -35,10 +35,10 @@ def pl_phot_err(
 
     # Main magnitude (x) data for accepted/rejected stars.
     mmag_out_acpt, mmag_in_acpt = np.array([]), np.array([])
-    if stars_out_c:
-        mmag_out_acpt = np.array(list(zip(*list(zip(*stars_out_c))[3]))[0])
-    if cl_region_c:
-        mmag_in_acpt = np.array(list(zip(*list(zip(*cl_region_c))[3]))[0])
+    if stars_out:
+        mmag_out_acpt = np.array(list(zip(*list(zip(*stars_out))[3]))[0])
+    if cl_region:
+        mmag_in_acpt = np.array(list(zip(*list(zip(*cl_region))[3]))[0])
 
     # Define parameters for main magnitude error plot.
     y_ax, x_ax = prep_plots.ax_names(filters[0], filters[0], 'mag')
@@ -76,14 +76,14 @@ def pl_phot_err(
         plt.ylabel(r'$\sigma_{{{}}}$'.format(y_ax))
         # ax.set_facecolor('#EFF0F1')
 
-        if any(mmag_in_acpt) and any(cl_region_c):
+        if any(mmag_in_acpt) and any(cl_region):
             # Accepted stars inside the cluster region.
             starsPlot('accpt_in', mmag_in_acpt,
-                      list(zip(*list(zip(*cl_region_c))[j]))[k])
-        if any(mmag_out_acpt) and any(stars_out_c):
+                      list(zip(*list(zip(*cl_region))[j]))[k])
+        if any(mmag_out_acpt) and any(stars_out):
             # Accepted stars outside the cluster region.
             starsPlot('accpt_out', mmag_out_acpt,
-                      list(zip(*list(zip(*stars_out_c))[j]))[k])
+                      list(zip(*list(zip(*stars_out))[j]))[k])
 
         if j == 4:
             # Plot legend in the main magnitude plot.

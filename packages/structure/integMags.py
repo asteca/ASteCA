@@ -26,8 +26,6 @@ def main(clp, x, y, mags, N_dists=50, **kwargs):
     for d1 in dists:
         msk = (rdp_dists_cent < d1)  # (rdp_dists_cent >= d0) &
         m = mags[0][msk]
-        # Remove nans
-        m = m[~np.isnan(m)]
         if len(m) > 0:
             integ_dists.append(d1)
             integ_mags.append(-2.5 * np.log10(np.sum(10 ** (m / -2.5))))

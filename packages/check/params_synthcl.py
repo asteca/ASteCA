@@ -65,7 +65,7 @@ def getParamVals(pd):
                     p = p_rng[0]
                     if p not in ('min', 'max'):
                         raise ValueError(
-                            "R1: unrecognized string '{}'".format(p))
+                            "R2: unrecognized string '{}'".format(p))
                 tlst[idx] = [p]
             else:
                 try:
@@ -74,7 +74,7 @@ def getParamVals(pd):
                     pmin = p_rng[0]
                     if pmin != 'min':
                         raise ValueError(
-                            ("R1: unrecognized string '{}'.\nOnly 'min' "
+                            ("R2: unrecognized string '{}'.\nOnly 'min' "
                              + "string is accepted as the lower "
                              + "range.").format(pmin))
                 try:
@@ -83,13 +83,13 @@ def getParamVals(pd):
                     pmax = p_rng[1]
                     if pmax != 'max':
                         raise ValueError(
-                            ("R1: unrecognized string '{}'.\nOnly 'max' "
+                            ("R2: unrecognized string '{}'.\nOnly 'max' "
                              + "string is accepted as the upper "
                              + "range.").format(pmax))
                 tlst[idx] = [pmin, pmax]
 
         if len(tlst) != 7:
-            raise ValueError("Missing parameters in line 'R1'")
+            raise ValueError("Missing parameters in line 'R2'")
         fundam_params_all[cl_pars[0]] = tlst
 
     pd['fundam_params_all'] = fundam_params_all

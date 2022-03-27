@@ -5,7 +5,7 @@ import scipy.integrate as integrate
 from ..aux_funcs import monteCarloPars, circFrac
 
 
-def main(clp, cld_i, fdens_method, **kwargs):
+def main(clp, cld, fdens_method, **kwargs):
     """
     Get field density level of frame.
     """
@@ -14,7 +14,7 @@ def main(clp, cld_i, fdens_method, **kwargs):
     # Parameters that are obtained here and used in the functions below
     # and other structural analysis functions later on.
     clp['xy_filtered'], clp['xy_cent_dist'] = fixedParams(
-        cld_i['x'], cld_i['y'], **clp)
+        cld['x'], cld['y'], **clp)
 
     clp['NN_dd'], clp['NN_dist'], clp['fr_dens'] = distDens(
         clp['bw_list'], clp['xy_filtered'])

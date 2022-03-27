@@ -524,39 +524,40 @@ def SigmaEllipse(points, Nsigma=2.):
     return mean_pos, width, height, theta
 
 
-def complSeparate(cl_region_i, membs_i, memb_prob_avrg_sort):
-    """
-    Separate stars into complete and incomplete arrays.
-    """
-    mags_c, mags_i, cols_c, cols_i, colors_c, colors_i = [[] for _ in range(6)]
-    ids_c = list(zip(*memb_prob_avrg_sort))[0]
-    dict_ids_c = {_: i for i, _ in enumerate(ids_c)}
-    for i, star in enumerate(cl_region_i):
-        try:
-            mags_c.append(memb_prob_avrg_sort[dict_ids_c[star[0]]][3][0])
-            cols_c.append(memb_prob_avrg_sort[dict_ids_c[star[0]]][5])
-            colors_c.append(memb_prob_avrg_sort[dict_ids_c[star[0]]][9])
-        except KeyError:
-            mags_i.append(star[3][0])
-            cols_i.append(star[5])
-            colors_i.append(membs_i[i])
+# DEPRECATED 26/03/22
+# def complSeparate(cl_region, membs_i, memb_prob_avrg_sort):
+#     """
+#     Separate stars into complete and incomplete arrays.
+#     """
+#     mags_c, mags_i, cols_c, cols_i, colors_c, colors_i = [[] for _ in range(6)]
+#     ids_c = list(zip(*memb_prob_avrg_sort))[0]
+#     dict_ids_c = {_: i for i, _ in enumerate(ids_c)}
+#     for i, star in enumerate(cl_region):
+#         try:
+#             mags_c.append(memb_prob_avrg_sort[dict_ids_c[star[0]]][3][0])
+#             cols_c.append(memb_prob_avrg_sort[dict_ids_c[star[0]]][5])
+#             colors_c.append(memb_prob_avrg_sort[dict_ids_c[star[0]]][9])
+#         except KeyError:
+#             mags_i.append(star[3][0])
+#             cols_i.append(star[5])
+#             colors_i.append(membs_i[i])
 
-    cols_c = np.array(cols_c).T
-    if cols_i:
-        cols_i = np.array(cols_i).T
-        idx_i = np.argsort(colors_i)
-        mags_i = np.array(mags_i)[idx_i].tolist()
-        cols_i = np.array([_[idx_i] for _ in cols_i]).tolist()
-        colors_i = np.array(colors_i)[idx_i].tolist()
-    else:
-        cols_i = [[] for _ in range(cols_c.shape[0])]
+#     cols_c = np.array(cols_c).T
+#     if cols_i:
+#         cols_i = np.array(cols_i).T
+#         idx_i = np.argsort(colors_i)
+#         mags_i = np.array(mags_i)[idx_i].tolist()
+#         cols_i = np.array([_[idx_i] for _ in cols_i]).tolist()
+#         colors_i = np.array(colors_i)[idx_i].tolist()
+#     else:
+#         cols_i = [[] for _ in range(cols_c.shape[0])]
 
-    idx_c = np.argsort(colors_c)
-    mags_c = np.array(mags_c)[idx_c].tolist()
-    cols_c = np.array([_[idx_c] for _ in cols_c]).tolist()
-    colors_c = np.array(colors_c)[idx_c].tolist()
+#     idx_c = np.argsort(colors_c)
+#     mags_c = np.array(mags_c)[idx_c].tolist()
+#     cols_c = np.array([_[idx_c] for _ in cols_c]).tolist()
+#     colors_c = np.array(colors_c)[idx_c].tolist()
 
-    return mags_c, mags_i, cols_c, cols_i, colors_c, colors_i
+#     return mags_c, mags_i, cols_c, cols_i, colors_c, colors_i
 
 
 def PMsrange(pmRA_DE, pmDE):

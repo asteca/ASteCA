@@ -31,10 +31,6 @@ def main(pars_f_path):
                 elif reader[0] == 'I4':
                     id_kinem = reader[1:]
 
-                # Input data processing
-                elif reader[0] == 'I5':
-                    nanvals = [_.replace(',', '') for _ in reader[1:]]
-
                 # Structure functions parameters.
                 elif reader[0] == 'S0':
                     manual_struct.append(reader[1:])
@@ -76,6 +72,10 @@ def main(pars_f_path):
 
                 # Ranges for the fundamental parameters
                 elif reader[0] == 'R1':
+                    completeness = [_.replace(',', '') for _ in reader[1:]]
+
+                # Ranges for the fundamental parameters
+                elif reader[0] == 'R2':
                     par_ranges.append(reader[1:])
 
                 # elif reader[0] == 'RZ':
@@ -158,8 +158,6 @@ def main(pars_f_path):
     coord_accpt = ('px', 'deg')
     # Radius estimating methods
     rad_modes_accpt = ('a', 'max')
-    # Decontamination algorithm flag.
-    da_algors_accpt = ('y', 'n', 'read')
     # Accepted field stars removal methods.
     fld_rem_methods = ('local', 'n_memb', 'mp_05', 'top_h', 'man', 'all')
     # Accepted binning methods.
@@ -199,9 +197,6 @@ def main(pars_f_path):
         'id_ydata': id_ydata, 'id_mags': id_mags, 'id_cols': id_cols,
         'id_kinem': id_kinem,
 
-        # Input data processing
-        'nanvals': nanvals,
-
         # Structure functions parameters
         'manual_struct': manual_struct, 'kp_ndim': kp_ndim,
         'kp_nchains': kp_nchains, 'kp_nruns': kp_nruns, 'kp_nburn': kp_nburn,
@@ -222,6 +217,7 @@ def main(pars_f_path):
         # Synthetic cluster parameters
         'synth_rand_seed': synth_rand_seed, 'par_ranges': par_ranges,
         'IMF_name': IMF_name, 'min_bmass_ratio': min_bmass_ratio,
+        'completeness': completeness,
 
         # Best fit parameters.
         'best_fit_algor': best_fit_algor, 'mins_max': mins_max,
@@ -235,7 +231,6 @@ def main(pars_f_path):
 
         # Fixed accepted parameter values and photometric systems.
         'coord_accpt': coord_accpt, 'rad_modes_accpt': rad_modes_accpt,
-        'da_algors_accpt': da_algors_accpt,
         'fld_rem_methods': fld_rem_methods, 'bin_methods': bin_methods,
         'imf_funcs': imf_funcs, 'lkl_methods': lkl_methods,
         'optimz_algors': optimz_algors, 'bayes_priors': bayes_priors,

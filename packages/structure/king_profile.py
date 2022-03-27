@@ -16,7 +16,7 @@ from ..best_fit.bf_common import modeKDE
 
 
 def main(
-    clp, cld_i, kp_ndim, kp_nchains, kp_nruns, kp_nburn, kp_emcee_moves,
+    clp, cld, kp_ndim, kp_nchains, kp_nruns, kp_nburn, kp_emcee_moves,
         rt_max_f, **kwargs):
     """
     Bayesian inference over an array of stars' coordinates using a King
@@ -42,8 +42,8 @@ def main(
         KP_plot, KP_Bys_rc, KP_Bys_rt, KP_Bys_ecc, KP_Bys_theta =\
             fit_King_prof(
                 kp_ndim, kp_nchains, kp_nruns, kp_nburn, kp_emcee_moves,
-                cld_i['x'], cld_i['y'], clp['kde_cent'], clp['field_dens'],
-                clp['clust_rad'], clp['n_memb_i'], rt_max_f)
+                cld['x'], cld['y'], clp['kde_cent'], clp['field_dens'],
+                clp['clust_rad'], clp['n_memb'], rt_max_f)
 
         # Obtain number of members and concentration parameter.
         if KP_Bys_rt[1] > 0.:

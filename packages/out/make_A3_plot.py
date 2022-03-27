@@ -9,7 +9,7 @@ from . import prep_plots
 from . prep_plots import figsize_x, figsize_y, grid_x, grid_y
 
 
-def main(npd, cld_i, pd, clp):
+def main(npd, cld, pd, clp):
     """
     Make A3 block plots.
     """
@@ -18,15 +18,14 @@ def main(npd, cld_i, pd, clp):
     add_version_plot.main(y_fix=.998)
 
     # Obtain plotting parameters and data.
-    x_min, x_max, y_min, y_max = prep_plots.frame_max_min(
-        cld_i['x'], cld_i['y'])
+    x_min, x_max, y_min, y_max = prep_plots.frame_max_min(cld['x'], cld['y'])
     asp_ratio = prep_plots.aspect_ratio(x_min, x_max, y_min, y_max)
     coord, x_name, y_name = "deg", "ra", "dec"
     x_zmin, x_zmax, y_zmin, y_zmax = prep_plots.frame_zoomed(
         x_min, x_max, y_min, y_max, clp['kde_cent'], clp['clust_rad'],
         pd['kp_ndim'], clp['KP_Bys_rt'])
     x_data_z, y_data_z, mag_data_z = prep_plots.zoomed_frame(
-        cld_i['x'], cld_i['y'], cld_i['mags'], x_zmin, x_zmax, y_zmin,
+        cld['x'], cld['y'], cld['mags'], x_zmin, x_zmax, y_zmin,
         y_zmax)
     st_sizes_arr_z = prep_plots.star_size(mag_data_z)
     _, y_ax = prep_plots.ax_names(pd['colors'][0], pd['filters'][0], 'mag')
@@ -35,10 +34,10 @@ def main(npd, cld_i, pd, clp):
         clp['kde_cent'], clp['clust_rad'], clp['KP_Bys_ecc'][3],
         clp['KP_Bys_theta'][3])
     membvsmag = prep_plots.NmembVsMag(
-        cld_i['x'], cld_i['y'], cld_i['mags'], clp['kde_cent'],
+        cld['x'], cld['y'], cld['mags'], clp['kde_cent'],
         clp['clust_rad'], clp['cl_area'])
     CI_vals, rad_radii, N_membs, N_membs_16, N_membs_84 = prep_plots.membVSrad(
-        cld_i['x'], cld_i['y'], clp['kde_cent'], clp['xy_cent_dist'],
+        cld['x'], cld['y'], clp['kde_cent'], clp['xy_cent_dist'],
         clp['field_dens'], clp['field_dens_std'])
 
     # Structure plots.
@@ -51,7 +50,7 @@ def main(npd, cld_i, pd, clp):
         # pl_cl_fl_regions: Cluster and field regions defined.
         [gs, fig, pd['plot_style'], x_name, y_name, coord, x_min, x_max,
          y_min, y_max, asp_ratio, clp['kde_cent'], clp['clust_rad'],
-         clp['field_regions_i'], clp['cl_region_i'], clp['flag_no_fl_regs_i']],
+         clp['field_regions'], clp['cl_region'], clp['flag_no_fl_regs']],
         # pl_rad_dens: Radial density plot.
         [gs, pd['plot_style'], coord, rdp_radii, rdp_points, rdp_stddev,
          rad_max, clp['field_dens'], clp['field_dens_std'], clp['clust_rad'],
@@ -68,7 +67,7 @@ def main(npd, cld_i, pd, clp):
          N_membs, N_membs_16, N_membs_84, clp['KP_Bys_rc'][1],
          clp['KP_Bys_rt'][1], pd['kp_ndim'], clp['KP_plot']],
         # pl_membs_dist
-        [gs, fig, clp['members_dist'], clp['n_memb_i']]
+        [gs, fig, clp['members_dist'], clp['n_memb']]
     ]
     for n, args in enumerate(arglist):
         mp_radius.plot(n, *args)
