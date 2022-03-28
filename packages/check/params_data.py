@@ -35,6 +35,9 @@ def check(mypath, pd):
         c_filters.append((phot_syst, filter2))
         colors.append((phot_syst, filter1 + ',' + filter2))
 
+    if not colors:
+        raise ValueError("At least one color must be defined")
+
     # Add data to parameters dictionary.
     pd['id_col'], pd['x_col'], pd['y_col'],\
         pd['mag_col'], pd['e_mag_col'], pd['filters'], pd['col_col'],\
