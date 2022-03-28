@@ -22,8 +22,8 @@ def main(clp, fregs_method, **kwargs):
     # means that the cluster is either too large or the frame too small.
     flag_no_fl_regs = False
     if f_regs_max < 1:
-        print("    WARNING: cluster region is too large\n"
-              "    No field regions available")
+        print("  WARNING: cluster region is too large. No field"
+              " regions available")
         flag_no_fl_regs = True
     else:
         # If the number of field regions defined is larger than the maximum
@@ -34,13 +34,13 @@ def main(clp, fregs_method, **kwargs):
                 f_regions))
         elif fregs_method > f_regs_max:
             f_regions = f_regs_max
-            print(("    WARNING: Number of FR defined ({}) is larger than\n"
-                   "    the maximum allowed ({}). Using max number").format(
+            print(("  WARNING: Number of FR defined ({}) is larger than\n"
+                   "  the maximum allowed ({}). Using max number").format(
                 fregs_method, f_regs_max))
         elif fregs_method == 0:
             f_regions = f_regs_max
-            print(("    WARNING: Number of FR ({}) is zero.\n"
-                   "    No field region will be defined").format(fregs_method))
+            print(("  WARNING: Number of FR ({}) is zero.\n"
+                   "  No field region will be defined").format(fregs_method))
             flag_no_fl_regs = True
         else:
             print("Using defined number of field regions ({})".format(
@@ -73,8 +73,8 @@ def main(clp, fregs_method, **kwargs):
         # flag.
         if not field_regions:
             flag_no_fl_regs = True
-            print('    WARNING: no field regions left after the removal of\n'
-                  + '    those containing less than 4 stars.')
+            print('  WARNING: no field regions left after the removal of\n'
+                  + '  those containing less than 4 stars.')
 
         # DEPRECATED 23/03/22
         # # Process *rejected* stars by the errors function.
