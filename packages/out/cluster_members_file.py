@@ -18,8 +18,8 @@ def main(clp, npd, id_ids, **kwargs):
         all_data.remove_column('sel')
     if 'memb_probs' in all_data.keys():
         all_data.remove_column('memb_probs')
-    all_data.add_column('--', name='sel')
-    all_data.add_column(np.nan, name='memb_probs')
+    all_data.add_column(-1, name='sel')
+    all_data.add_column(0., name='memb_probs')
     IDs = list(all_data[id_ids])
 
     # Add ID associated to the use of the each star in the fundamental
