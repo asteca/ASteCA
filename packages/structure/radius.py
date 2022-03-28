@@ -1,16 +1,13 @@
 
 import numpy as np
 import scipy.integrate as integrate
-from scipy.stats import median_abs_deviation as MAD
 from scipy.spatial.distance import cdist
 
 
 def main(cld, clp, rad_method, **kwargs):
     """
     Estimate the radius through the integrals of the field density array.
-    Assign the uncertainty through a bootstrap process based on the field
-    density's uncertainty.
-
+    Assign the uncertainty based on the field density's uncertainty.
     """
     print("Estimating the radius")
 
@@ -39,52 +36,9 @@ def main(cld, clp, rad_method, **kwargs):
     return clp
 
 
-def optimalRadius(
-        field_dens, field_dens_std, fdens_min_d, fdens_lst, Nboot=500):
+def optimalRadius(field_dens, field_dens_std, fdens_min_d, fdens_lst):
     """
-    Bootstrap the field density to estimate the radius uncertainty.
-
-    Nboot: number of bootstrap runs
     """
-    if np.isnan(field_dens_std):
-        clust_rad = integRad(field_dens, fdens_min_d, fdens_lst)
-        rad_uncert = np.array([np.nan, np.nan])
-    else:
-        field_dens_s = np.random.normal(field_dens, field_dens_std, Nboot)
-        field_dens_s[field_dens_s <= 0.] = 1e-5
-
-        all_rads = []
-        for field_dens_s_i in field_dens_s:
-            rad = integRad(field_dens_s_i, fdens_min_d, fdens_lst)
-            if not np.isnan(rad):
-                all_rads.append(rad)
-        all_rads = np.array(all_rads)
-
-        msk = all_rads < np.median(all_rads) + MAD(all_rads) * 3
-        if msk.sum() > 10:
-            all_rads = all_rads[msk]
-
-        clust_rad = np.median(all_rads)
-        rad_uncert = np.percentile(all_rads, (16, 84))
-
-    rads_interp, integ_interp = integRad(
-        field_dens, fdens_min_d, fdens_lst, True)
-
-    return clust_rad, rad_uncert, rads_interp, integ_interp
-
-
-def integRad(
-    field_dens, fdens_min_d, fdens_lst, memb_flag=False, step=5,
-        perc=.975):
-    """
-    The (fdens_min_d, fdens_lst) arrays are integrated in steps and the areas
-    normalized (removing the area for the field density). When these ratios
-    reach the 'perc' value, select that as the cluster radius.
-
-    The hard-coded values for 'step' and 'perc' are selected after much
-    testing.
-    """
-
     # Interpolate extra points into de radii and field density arrays.
     xx = np.linspace(0., 1., 1000)
     xp = np.linspace(0, 1, len(fdens_min_d))
@@ -92,6 +46,31 @@ def integRad(
     for lst in (fdens_min_d, fdens_lst):
         interp_lst.append(np.interp(xx, xp, lst))
     rads, dens = interp_lst
+
+    clust_rad = integRad(field_dens, xx, xp, rads, dens)
+    if np.isnan(field_dens_std):
+        r_16, r_84 = np.nan, np.nan
+    else:
+        r_16 = integRad(field_dens + field_dens_std, xx, xp, rads, dens)
+        r_84 = integRad(field_dens - field_dens_std, xx, xp, rads, dens)
+    rad_uncert = np.array([r_16, r_84])
+
+    rads_interp, integ_interp = integRad(field_dens, xx, xp, rads, dens, True)
+
+    return clust_rad, rad_uncert, rads_interp, integ_interp
+
+
+def integRad(
+        field_dens, xx, xp, rads, dens, memb_flag=False, step=5, perc=.975):
+    """
+    The (fdens_min_d, fdens_lst) arrays are integrated in steps and the areas
+    normalized (removing the area for the field density). When these ratios
+    reach the 'perc' value, select that as the cluster radius.
+
+    The hard-coded values for 'step' and 'perc' were selected after much
+    testing.
+    """
+
     dens = np.clip(dens, a_min=field_dens, a_max=np.inf)
 
     def curveInt(N1, N2, x, y):
@@ -99,34 +78,34 @@ def integRad(
         area_T = integrate.simpson(yy, xx)
         area_F = field_dens * (xx.max() - xx.min())
         area = area_T - area_F
-        return area
+        return max(1.e-6, area)
 
     i_old = 0
     rads_v, vals = [], []
     for i in range(step, len(rads), step):
-        integ = curveInt(i_old, i, rads, dens)
-        vals.append(integ)
+        vals.append(curveInt(i_old, i, rads, dens))
         rads_v.append(np.mean(rads[i_old:i]))
         i_old = i - int(step * .5)
     rads_v = np.array(rads_v)
-    # This will break if memb_flag is True
-    if vals[0] == 0.:
-        return np.nan
-    areas = 1 - np.array(vals) / vals[0]
 
+    # Avoid an error adding a small value here
+    vals[0] += 1.e-6
+
+    areas = 1 - np.array(vals) / vals[0]
     areas_ratio = areas / areas.max()
     xp = np.linspace(0, 1, len(areas_ratio))
     rads_v_interp = np.interp(xx, xp, rads_v)
     areas_ratio_interp = np.interp(xx, xp, areas_ratio)
+
     if memb_flag is True:
         return rads_v_interp, areas_ratio_interp
 
-    clust_rad = rads_v_interp[int(len(rads_v_interp) * .5)]
+    # Default cluster value in case the method fails
+    clust_rad = rads_v_interp[int(len(rads_v_interp) * .9)]
     for i, v in enumerate(areas_ratio_interp):
         if v > perc:
             clust_rad = rads_v_interp[i]
             break
-
     return clust_rad
 
 
