@@ -34,6 +34,6 @@ def gauss_error(rnd, mc, e_mc):
     rnd : random array of floats normally distributed around 0. with stddev 1.
     e_mc: fitted observational uncertainty value
     """
-    mc_gauss = mc + rnd[:len(mc)] * e_mc
+    mc_gauss = mc + rnd * e_mc
 
     return mc_gauss
