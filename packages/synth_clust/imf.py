@@ -5,7 +5,7 @@ from scipy.interpolate import interp1d
 from .. import update_progress
 
 
-def main(IMF_name, Nmets, Max_mass, m_low=0.08, m_high=150.):
+def main(IMF_name, Nmets, Max_mass):
     """
     Returns the number of stars per interval of mass for the selected IMF.
 
@@ -33,17 +33,17 @@ def main(IMF_name, Nmets, Max_mass, m_low=0.08, m_high=150.):
 
     """
     print("Sampling selected IMF ({})".format(IMF_name))
-    inv_cdf, CDF_min, CDF_max = invTrnsfSmpl(IMF_name, m_low, m_high)
+    inv_cdf = invTrnsfSmpl(IMF_name)
 
     st_dist_mass = []
     for _ in range(Nmets):
-        st_dist_mass += [sampleInv(Max_mass, inv_cdf, CDF_min, CDF_max)]
+        st_dist_mass += [sampleInv(Max_mass, inv_cdf)]
         update_progress.updt(Nmets, _ + 1)
 
     return st_dist_mass
 
 
-def invTrnsfSmpl(IMF_name, m_low, m_high):
+def invTrnsfSmpl(IMF_name='kroupa_2002', m_low=0.08, m_high=150):
     """
     IMF inverse transform sampling.
 
@@ -65,15 +65,16 @@ def invTrnsfSmpl(IMF_name, m_low, m_high):
 
     # Normalize values
     CDF_samples = np.array(CDF_samples) / norm_const
-    CDF_min, CDF_max = CDF_samples.min(), CDF_samples.max()
+    # These are (0, 1)
+    # CDF_min, CDF_max = CDF_samples.min(), CDF_samples.max()
 
     # Inverse CDF
     inv_cdf = interp1d(CDF_samples, mass_values)
 
-    return inv_cdf, CDF_min, CDF_max
+    return inv_cdf
 
 
-def sampleInv(Max_mass, inv_cdf, CDF_min, CDF_max):
+def sampleInv(Max_mass, inv_cdf):
     """
     Sample the inverse CDF
     """
@@ -81,18 +82,11 @@ def sampleInv(Max_mass, inv_cdf, CDF_min, CDF_max):
 
     def sampled_inv_cdf(N):
         mr = np.random.rand(N)
-        mr = mr[(mr >= CDF_min) & (mr <= CDF_max)]
+        # mr = mr[(mr >= CDF_min) & (mr <= CDF_max)]
         return inv_cdf(mr)
 
-    # Empirically I've found that if: mass_sum = sampled_inv_cdf(N_chunk).sum()
-    # then: N_chunk / mass_sum ~ 2.5
-    # This means that to achieve a total mass of 'Max_mass' in a reasonable
-    # number of steps (~100), i.e. mass_sum * 100 ~ Max_mass,
-    # then the chunk should be of size:
-    # N_chunk ~ 2.5 * mass_sum = 2.5 * Max_mass/100
+    # Sample in chunks until the maximum defined mass is reached.
     N_chunk = max(100, int(2.5 * Max_mass / 100.))
-
-    # Sample in chunks of 100 stars until the maximum defined mass is reached.
     mass_samples = []
     while np.sum(mass_samples) < Max_mass:
         mass_samples += sampled_inv_cdf(N_chunk).tolist()
