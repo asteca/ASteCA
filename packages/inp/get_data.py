@@ -14,27 +14,28 @@ def main(
     Read data from the cluster's input file.
     """
 
+    # Arrange column names in the proper order and shape.
+    col_names = [
+        id_col, x_col, y_col, mag_col, e_mag_col, col_col, e_col_col,
+        [plx_col, pmx_col, pmy_col],
+        [e_plx_col, e_pmx_col, e_pmy_col]]
+    # Remove not wanted columns.
+    col_names_keep = list(filter(bool, list(flatten(col_names))))
+
+    # Read cluster's data file
     data_file = npd['data_file']
     try:
-        data = readDataFile(id_col, data_file)
+        data = readDataFile(col_names_keep, data_file)
     except ascii.InconsistentTableError:
         raise ValueError("ERROR: could not read data input file:\n  {}\n"
                          "  Check that all rows are filled (i.e., no blank"
                          " spaces)\n  for all columns\n".format(data_file))
     N_all = len(data)
 
-    # Arrange column names in the proper order and shape.
-    col_names = [
-        id_col, x_col, y_col, mag_col, e_mag_col, col_col, e_col_col,
-        [plx_col, pmx_col, pmy_col],
-        [e_plx_col, e_pmx_col, e_pmy_col]]
-
-    # Remove not wanted columns.
-    col_names_keep = list(filter(bool, list(flatten(col_names))))
-    data.keep_columns(col_names_keep)
-
-    # Remove rows that contain missing data
+    # Remove rows that contain missing data (excluding IDs column)
     data = dataClean(data, col_names_keep[1:])
+    # In place for #537
+    # data = data.dropna()
 
     N_final = len(data)
     print("Stars read from input file: N={}".format(N_all))
@@ -56,18 +57,30 @@ def main(
 
 
 def readDataFile(
-        id_col, data_file, nanvals=('INDEF', 'NAN', 'NaN', '--', 'nan')):
+    col_names_keep, data_file,
+        nanvals=('INDEF', 'NAN', 'NaN', '--', 'nan')):
     """
     Read input data file.
     """
+
+    id_col = col_names_keep[0]
 
     # Identify all these strings as invalid entries.
     fill_msk = [('', '0')] + [(_, '0') for _ in nanvals]
     # Read IDs as strings, not applying the 'fill_msk'. Read rest of the
     # data applying the fill mask
     data = ascii.read(
-        data_file, fill_values=fill_msk, fill_exclude_names=(id_col,),
+        data_file, include_names=col_names_keep, fill_values=fill_msk,
+        fill_exclude_names=(id_col,),
         converters={id_col: [ascii.convert_numpy(np.str)]})
+
+    # In place for #537
+    # import pandas as pd
+    # dtypes = {id_col: 'str'}
+    # for col in col_names_keep[1:]:
+    #     dtypes[col] = np.float64
+    # data = pd.read_csv(data_file, usecols=col_names_keep, index_col=False,
+    #                    dtype=dtypes, delimiter=' ')
 
     try:
         data[id_col]
@@ -113,11 +126,11 @@ def dataCols(data_file, data, col_names):
         ids = np.array(data[col_names[0]])
         dups = list(list_duplicates(ids))
         if dups:
-            print("ERROR: duplicated IDs found in data file:")
-            for dup in dups:
-                print("  ID '{}' found in lines: {}".format(
-                    dup[0], ", ".join(dup[1])))
-            raise ValueError("Duplicated IDs found")
+            # print("ERROR: duplicated IDs found in data file:")
+            # for dup in dups:
+            #     print("  ID '{}' found in lines: {}".format(
+            #         dup[0], ", ".join(dup[1])))
+            raise ValueError("ERROR: duplicated IDs found in data file")
 
         # Read coordinates data.
         x, y = np.array(data[col_names[1]]), np.array(data[col_names[2]])
