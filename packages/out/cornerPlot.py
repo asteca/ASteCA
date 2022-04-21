@@ -180,7 +180,7 @@ def hist2d(
     # ax.set_ylim(range[1])
 
 
-def pl_2_param_dens(_2_params, gs, min_max_p2, varIdxs, params_trace):
+def pl_2_param_dens(_2_params, gs, labels, min_max_p2, varIdxs, params_trace):
     '''
     Parameter vs parameters density map.
     '''
@@ -201,9 +201,6 @@ def pl_2_param_dens(_2_params, gs, min_max_p2, varIdxs, params_trace):
         'dist-binar': [6, 8, 10, 12, 3, 5],
         'mass-binar': [8, 10, 10, 12, 4, 5]
     }
-
-    labels = ['$z$', '$log(age)$', '$E_{(B-V)}$', '$(m-M)_o$',
-              '$M\,(M_{{\odot}})$', '$b_{frac}$']
 
     gs_x1, gs_x2, gs_y1, gs_y2, mx, my = plot_dict[_2_params]
     x_label, y_label = labels[mx], labels[my]
@@ -259,8 +256,8 @@ def pl_2_param_dens(_2_params, gs, min_max_p2, varIdxs, params_trace):
 
 
 def pl_param_pf(
-    par_name, gs, min_max_p, varIdxs, mean_sol, map_sol, median_sol, mode_sol,
-        param_r2, pardist_kde, model_done):
+    par_name, gs, labels, min_max_p, varIdxs, mean_sol, map_sol, median_sol,
+        mode_sol, pardist_kde, model_done):
     '''
     Parameter posterior plot.
     '''
@@ -272,17 +269,13 @@ def pl_param_pf(
 
     gs_x1, gs_x2, gs_y1, gs_y2, cp = plot_dict[par_name]
 
-    labels = [r'$z$', r'$\log(age)$', r'$E_{{(B-V)}}$', r'$(m-M)_o$',
-              r'$M\,(M_{{\odot}})$', r'$b_{{frac}}$']
     frm = ["{:.4f}", "{:.3f}", "{:.3f}", "{:.3f}", "{:.0f}", "{:.2f}"]
 
     ld_p = labels[cp]
     p = frm[cp]
 
     ax = plt.subplot(gs[gs_y1:gs_y2, gs_x1:gs_x2])
-    plt.title(
-        ld_p + r"$\;[R^2\approx$" + "{:.2f}]".format(param_r2[cp]),
-        fontsize=11)
+    plt.title(ld_p, fontsize=11)
 
     # Set x axis limit.
     xp_min, xp_max = min_max_p[cp]

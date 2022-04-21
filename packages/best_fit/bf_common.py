@@ -1,6 +1,5 @@
 
 import numpy as np
-from scipy import stats
 from ..aux_funcs import kde1D, reject_outliers
 # import warnings
 # from scipy.optimize import differential_evolution as DE
@@ -160,20 +159,21 @@ def rangeCheck(model, ranges, varIdxs):
     return False
 
 
-def r2Dist(fundam_params, varIdxs, params_trace):
-    """
-    R^2 for normal distribution.
-    """
-    param_r2 = []
-    for i, _ in enumerate(fundam_params):
-        if i in varIdxs:
-            c_model = varIdxs.index(i)
-            par = params_trace[c_model]
-            param_r2.append(stats.probplot(par)[1][-1] ** 2)
-        else:
-            param_r2.append(np.nan)
+# DEPRECATED 02/04/22
+# def r2Dist(fundam_params, varIdxs, params_trace):
+#     """
+#     R^2 for normal distribution.
+#     """
+#     param_r2 = []
+#     for i, _ in enumerate(fundam_params):
+#         if i in varIdxs:
+#             c_model = varIdxs.index(i)
+#             par = params_trace[c_model]
+#             param_r2.append(stats.probplot(par)[1][-1] ** 2)
+#         else:
+#             param_r2.append(np.nan)
 
-    return param_r2
+#     return param_r2
 
 
 def modeKDE(fundam_params, varIdxs, mcmc_trace):

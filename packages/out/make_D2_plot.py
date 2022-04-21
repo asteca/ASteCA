@@ -37,7 +37,8 @@ def main(npd, pd, clp, td):
         min_max_p2 = prep_plots.p2_ranges(p2, min_max_p)
 
         trace = fit_pars['mcmc_trace']
-        args = [p2, gs, min_max_p2, fit_pars['varIdxs'], trace]
+        args = [p2, gs, labels, min_max_p2, fit_pars['varIdxs'],
+                trace]
         cornerPlot.plot(0, *args)
 
     par_list = ['metal', 'age', 'ext', 'dist', 'mass', 'binar']
@@ -45,10 +46,10 @@ def main(npd, pd, clp, td):
     # pl_param_pf: Parameters probability functions.
     for p in par_list:
         args = [
-            p, gs, min_max_p, fit_pars['varIdxs'],
+            p, gs, labels, min_max_p, fit_pars['varIdxs'],
             fit_pars['mean_sol'], fit_pars['map_sol'],
             fit_pars['median_sol'], fit_pars['mode_sol'],
-            fit_pars['param_r2'], fit_pars['pardist_kde'], trace]
+            fit_pars['pardist_kde'], trace]
         cornerPlot.plot(1, *args)
 
     # Generate output file.
