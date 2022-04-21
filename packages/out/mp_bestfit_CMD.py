@@ -20,7 +20,7 @@ def pl_mps_phot_diag(
     # Add text box.
     if gs_y1 == 0:
         text = '$N_{{fit}}={}$'.format(len(obs_MPs))
-        ob = offsetbox.AnchoredText(text, loc=4)
+        ob = offsetbox.AnchoredText(text, loc=3)
         ob.patch.set(boxstyle='square,pad=-0.2', alpha=0.85)
         ax.add_artist(ob)
 
@@ -64,7 +64,7 @@ def pl_mps_phot_diag(
         xbin = abs(hess_xedges[1] - hess_xedges[0])
         hess_xedges = [hess_xedges[0] - xbin] + list(hess_xedges)
         plt.hist2d(*phot_Nsigma, bins=(
-            hess_xedges, hess_yedges), cmap=cmap, norm=LogNorm())
+            hess_xedges, hess_yedges), cmap=cmap, norm=LogNorm(), zorder=-1)
     # Plot isochrone.
     plt.plot(x_isoch, y_isoch, isoch_col, lw=1., zorder=6)
 
@@ -107,10 +107,10 @@ def pl_hess_diag(
         plt.rcParams['grid.linewidth'], plt.rcParams['grid.color']
     for x_ed in hess_xedges:
         # vertical lines
-        ax.axvline(x_ed, linestyle=gls, lw=glw, color=gc, zorder=1)
+        ax.axvline(x_ed, linestyle=gls, lw=glw, color=gc, zorder=3)
     for y_ed in hess_yedges:
         # horizontal lines
-        ax.axhline(y_ed, linestyle=gls, lw=glw, color=gc, zorder=1)
+        ax.axhline(y_ed, linestyle=gls, lw=glw, color=gc, zorder=3)
     if HD.any():
         # Add text box.
         if HD.min() < 0:
