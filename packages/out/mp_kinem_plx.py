@@ -9,7 +9,7 @@ from . import BayesPlots
 
 def plx_histo(
     gs, plot_style, plx_offset, plx_clrg, plx_x_kde, kde_pl, plx_flrg,
-        flag_no_fl_regs_i):
+        flag_no_fl_regs):
     """
     Histogram for the distribution of parallaxes within the cluster region.
     """
@@ -30,7 +30,7 @@ def plx_histo(
         plx_clrg, Nb, density=True, zorder=4, color='#9aafd1',
         alpha=0.75, label=r"Cluster region ($N_{fit}$)")
     # Plot histogram for the parallaxes of the field regions.
-    if not flag_no_fl_regs_i:
+    if not flag_no_fl_regs:
         plt.hist(
             plx_flrg, 100, density=True, zorder=1, color='#ef703e',
             alpha=0.5, label="Field regions")

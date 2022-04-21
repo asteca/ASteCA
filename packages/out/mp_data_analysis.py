@@ -14,7 +14,7 @@ def pl_lum_func(gs, plot_style, y_ax, flag_no_fl_regs, lum_func):
     """
     x_cl, y_cl, x_fl, y_fl, x_all, y_all = lum_func
     ax = plt.subplot(gs[0:2, 2:4])
-    ax.set_title("LF after error removal (compl)")
+    ax.set_title("LF after error removal")
     # Only draw units on axis (ie: 1, 2, 3)
     ax.xaxis.set_major_locator(MultipleLocator(2.0))
     if plot_style == 'asteca':
@@ -25,7 +25,7 @@ def pl_lum_func(gs, plot_style, y_ax, flag_no_fl_regs, lum_func):
 
     # All frame.
     plt.step(x_all, y_all, where='post', color='k', lw=2.5, linestyle=':',
-             label='Frame (compl)', zorder=6)
+             label='Frame', zorder=6)
     # Cluster region LF (contaminated).
     plt.step(x_cl, y_cl, where='post', color='r', lw=1.,
              label=r'$LF_{cl+fl} \,(r \leq r_{cl})$', zorder=2)
@@ -107,7 +107,7 @@ def pl_cl_diag(
     """
     ax = plt.subplot(gs[2:4, 0:2])
     ax.set_title(
-        r"$N={}$" r" ($r \leq r_{{cl}}$ compl)".format(len(cl_region_c)))
+        r"$N={}$" r" ($r \leq r_{{cl}}$)".format(len(cl_region_c)))
     xa = list(zip(*list(zip(*cl_region_c))[5]))[0]
     ya = list(zip(*list(zip(*cl_region_c))[3]))[0]
     # CMD for first color
@@ -260,7 +260,7 @@ def pl_fl_diag(
     N_fr = len(field_regions_c)
     x_fr_accpt, y_fr_accpt = stars_f_acpt[1], stars_f_acpt[0]
 
-    ax.set_title(r"$N={}$ (fields compl)".format(len(x_fr_accpt)))
+    ax.set_title(r"$N={}$ (fields)".format(len(x_fr_accpt)))
     # CMD for first color
     col_idx = 1
     flCMD(

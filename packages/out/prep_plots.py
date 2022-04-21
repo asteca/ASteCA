@@ -467,14 +467,14 @@ def get_hess(obs_mags_cols, synth_phot, hess_xedges, hess_yedges):
     return hess_x, hess_y, HD
 
 
-def plxPlot(flag_no_fl_regs_i, field_regions_i):
+def plxPlot(flag_no_fl_regs, field_regions):
     """
     Parameters for the parallax plot.
     """
-    if not flag_no_fl_regs_i:
+    if not flag_no_fl_regs:
         plx_flrg, mag_flrg = [], []
         # Extract parallax data.
-        for fl_rg in field_regions_i:
+        for fl_rg in field_regions:
             plx_flrg += list(zip(*list(zip(*fl_rg))[7]))[0]
             mag_flrg += list(zip(*list(zip(*fl_rg))[3]))[0]
         plx_flrg, mag_flrg = np.asarray(plx_flrg), np.asarray(mag_flrg)

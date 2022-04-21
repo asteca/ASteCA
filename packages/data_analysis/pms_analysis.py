@@ -74,10 +74,10 @@ def PMsData(cld_i, clp):
         'pmRA': np.array([]), 'epmRA': np.array([]),
         'pmDE': np.array([]), 'epmDE': np.array([]),
         'DE': np.array([]), 'mmag': np.array([]), 'msk': np.array([])}
-    if not clp['flag_no_fl_regs_i']:
+    if not clp['flag_no_fl_regs']:
         msk_fr, mmag_fr, pmRA_fr, e_pmRA_fr, pmDE_fr, e_pmDE_fr, DE_fr =\
             [[] for _ in range(7)]
-        for fl_rg in clp['field_regions_i']:
+        for fl_rg in clp['field_regions']:
             mmag_fr += list(zip(*list(zip(*fl_rg))[3]))[0]
             pmRA_fr += list(zip(*list(zip(*fl_rg))[7]))[1]
             e_pmRA_fr += list(zip(*list(zip(*fl_rg))[8]))[1]

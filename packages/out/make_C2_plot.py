@@ -30,13 +30,13 @@ def main(npd, pd, clp):
 
     # Parallax data.
     plx_flrg, mag_flrg = prep_plots.plxPlot(
-        clp['flag_no_fl_regs_i'], clp['field_regions_i'])
+        clp['flag_no_fl_regs'], clp['field_regions'])
     plx_cl_kde_x, plx_cl_kde = aux_funcs.kde1D(clp['plx_clrg'])
 
     arglist = [
         # plx_histo
         [gs, pd['plot_style'], pd['plx_offset'], clp['plx_clrg'], plx_cl_kde_x,
-         plx_cl_kde, plx_flrg, clp['flag_no_fl_regs_i']],
+         plx_cl_kde, plx_flrg, clp['flag_no_fl_regs']],
         # plx_chart
         [gs, pd['plot_style'], x_name, y_name, coord, clp['cl_reg_fit'],
          clp['plx_Bys']],

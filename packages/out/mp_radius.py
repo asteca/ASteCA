@@ -58,8 +58,8 @@ def pl_mag_membs(gs, plot_style, y_ax, membvsmag):
 
 def pl_cl_fl_regions(
     gs, fig, plot_style, x_name, y_name, coord, x_min, x_max, y_min, y_max,
-    asp_ratio, kde_cent, clust_rad, field_regions_i, cl_region_i,
-        flag_no_fl_regs_i):
+    asp_ratio, kde_cent, clust_rad, field_regions, cl_region_i,
+        flag_no_fl_regs):
     """
     Cluster and field regions defined.
     """
@@ -81,17 +81,17 @@ def pl_cl_fl_regions(
                 marker='o', c='red', s=8, edgecolors='w', lw=.2)
 
     N_flrg = 0
-    if not flag_no_fl_regs_i:
+    if not flag_no_fl_regs:
         col0 = cycle(['DimGray', 'ForestGreen', 'maroon', 'RoyalBlue'])
         # Stars inside the field regions with accepted errors.
-        for i, reg in enumerate(field_regions_i):
+        for i, reg in enumerate(field_regions):
             fl_reg = list(zip(*reg))
             N_flrg += len(fl_reg[0])
             plt.scatter(fl_reg[1], fl_reg[2], marker='o',
                         c=next(col0), s=8, edgecolors='w', lw=.2)
 
     ax.set_title(r"$N_{{stars}}$={} (phot incomp); $N_{{fregs}}$={}".format(
-        len(cl_region_i) + N_flrg, len(field_regions_i)))
+        len(cl_region_i) + N_flrg, len(field_regions)))
 
 
 def pl_rad_dens(
