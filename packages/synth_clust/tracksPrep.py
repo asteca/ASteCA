@@ -34,29 +34,6 @@ def main(
 
     # Extract some data
     all_met_vals, all_age_vals = td['fundam_params'][:2]
-    all_masses, binar_fracs = td['fundam_params'][4], td['fundam_params'][5]
-    Nmets, Max_mass = len(all_met_vals), all_masses[-1]
-
-    # Obtain extinction coefficients.
-    td['ext_coefs'] = extin_coefs.main(cmd_systs, filters, colors)
-
-    # Set the binary flag
-    binar_flag = False
-    if len(binar_fracs) > 1 or binar_fracs[0] > 0.:
-        binar_flag = True
-    td['binar_flag'] = binar_flag
-
-    # Store the number of defined filters and colors.
-    td['N_fc'] = [len(filters), len(colors)]
-    # Index of 'M_ini' (theoretical initial mass), stored in the
-    # interpolated isochrones: right after the magnitude and color(s)
-    td['m_ini_idx'] = td['N_fc'][0] + td['N_fc'][1]
-
-    # Obtain mass distribution using the selected IMF.
-    td['st_dist_mass'] = imf.main(IMF_name, Nmets, Max_mass)
-    # tot_mem = 0.
-    # for stm in st_dist_mass:
-    #     tot_mem += stm[0].nbytes / 1024.**2 + stm[1].nbytes / 1024.**2
 
     # Combine all data into a single array of shape:
     # (N_z, N_age, N_data, N_interp), where 'N_data' depends on the number
