@@ -27,7 +27,8 @@ def main(
 
     # If (z, a) are both fixed, just return the single processed isochrone
     if ml == al == mh == ah == 0:
-        return theor_tracks[ml][al]
+        # The np.array() is important to avoid overwriting 'theor_tracks'
+        return np.array(theor_tracks[ml][al])
 
     # The four points in the (z, age) grid that define the box that contains
     # the model value (z_model, a_model)
