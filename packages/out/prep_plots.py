@@ -1,20 +1,20 @@
 
 import numpy as np
-import warnings
+# import warnings
 from scipy.spatial.distance import cdist
-from scipy.signal import savgol_filter
+# from scipy.signal import savgol_filter
 from astropy.visualization import ZScaleInterval
 from astropy.stats import sigma_clipped_stats
 
 from ..structure.contamination_index import CIfunc
 from ..math_f import exp_function
-from ..best_fit.obs_clust_prepare import dataProcess
+from ..best_fit.prep_obs_params import dataProcess
 from ..decont_algors.local_cell_clean import bin_edges_f
 from ..aux_funcs import monteCarloPars, circFrac, ellipFrac
 from ..structure import king_profile
 from ..synth_clust import move_isochrone
 from ..synth_clust.masses_binar_probs import ranModels
-from ..synth_clust.synthClustPrep import setSynthClust
+from ..best_fit.bf_common import getSynthClust
 
 
 # HARDCODED figure size and grid distribution
@@ -803,12 +803,12 @@ def isoch_sigmaNreg(
     zg = np.argmin(abs(np.array(fundam_params[0]) - zm))
     ag = np.argmin(abs(np.array(fundam_params[1]) - am))
     # Move isochrone
-    isochrone = theor_tracks[zg][ag][:sum(N_fc)]
+    isochrone = theor_tracks[zg][ag]
     # TODO 'ext_diff' in place for #174
-    binar_flag, ext_diff = False, 0.
+    ext_diff = 0.
     shift_isoch = move_isochrone.main(
         isochrone, e, d, R_V, ext_coefs, N_fc, ext_unif_rand[zg],
-        m_ini_idx, binar_flag, ext_diff)
+        m_ini_idx, ext_diff)
     shift_isoch = shift_isoch[:sum(N_fc)]
 
     # Generate random models from the selected solution (mean, median, mode,
@@ -823,7 +823,7 @@ def isoch_sigmaNreg(
         for Nm, model in enumerate(models):
 
             # Estimate the mean and variance for each star via recurrence.
-            synth_cl = setSynthClust(model, *syntClustArgs)
+            synth_cl = getSynthClust(model, *syntClustArgs, False)[0]
             # Synthetic cluster
             if synth_cl.any():
                 for i, photom_dim in enumerate(synth_cl[:sum(N_fc)]):

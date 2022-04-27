@@ -7,8 +7,8 @@ def main(pd, clp, cld):
     """
     Estimate the (in)completeness function.
     """
-    # Magnitudes in the incomplete set, without nans
-    mags = cld['mags'][0][~np.isnan(cld['mags'][0])]
+    # Magnitudes
+    mags = cld['mags'][0]
 
     complt_flag = True
     if pd['completeness'][0] == 'n':
@@ -28,57 +28,71 @@ def main(pd, clp, cld):
     return clp
 
 
-def photoAnalysis(mags, bins=10):
+def photoAnalysis(mags, bins=50):
     """
-    Stars lost throughout the photometry process.
+    If no photometric analysis (in)completeness function is given, the code
+    will approximate one using the LF.
+    """
+    # Magnitude histogram
+    mag_histo, mag_edges = np.histogram(mags, bins)
 
-    If no photometric analysis completeness function is given, the code will
-    approximate one. It does this using the main magnitude, fitting an
-    exponential (IMF equivalent) to the observed luminosity function (ie: the
-    histogram of the main magnitude). After this, the (estimated) number of
+    # Index of the bin with the maximum number of stars.
+    max_indx = mag_histo.argmax(axis=0)
+
+    # Percentage of stars in each bin beyond the maximum interval
+    # (included), assuming the bin with the maximum value represents 100%.
+    comp_perc = np.concatenate((
+        np.ones(mag_histo[:max_indx + 1].size),
+        mag_histo[max_indx + 1:] / float(mag_histo[max_indx])))
+
+    # Exponential correction
+    comp_perc = expCorrection(mag_histo, mag_edges, max_indx, comp_perc)
+
+    # Add a '0.' at the beginning to indicate that all stars with smaller
+    # magnitudes than the brightest star observed should be removed by the
+    # 'completeness_rm()' process.
+    comp_perc = np.array([0.] + list(comp_perc))
+
+    # Percentage of stars that should be *removed* from the synthetic cluster.
+    # This is reversed so that the 'completeness_rm()' function is simpler.
+    rm_perc = np.clip(1. - comp_perc, a_min=0., a_max=1.)
+
+    return [mag_edges, rm_perc]
+
+
+def expCorrection(mag_histo, mag_edges, max_indx, comp_perc):
+    """
+    Exponential correction to the (in)completeness function.
+
+    Fits an exponential (IMF equivalent) to the observed luminosity function
+    (ie: the histogram of the main magnitude). The (estimated) number of
     stars lost in the photometry process is obtained for magnitude values
     beyond the bin with the maximum number of stars in the original LF. All
     bins before that one (ie: brighter stars) are considered to be 100%
     complete.
     """
-    # Main magnitudes histogram
-    h_mag, edges = np.histogram(
-        mags, bins, range=(np.nanmin(mags), np.nanmax(mags)))
+    try:
+        # Estimate pre-completeness LF, ie: the LF with no photometric loss
+        # of stars.
+        def func(x, A, B, C):
+            m = np.exp(-x)
+            return A * m ** (-B) + C
+        x, y = mag_edges[:(max_indx + 1)], mag_histo[:(max_indx + 1)]
+        popt, _ = curve_fit(func, x, y)
 
-    # Index of the bin with the maximum number of stars.
-    max_indx = h_mag.argmax(axis=0)
+        # Estimate number of stars beyond the maximum value, using the
+        # above fitted LF.
+        Nstars = func(mag_edges[(max_indx + 2):], *popt)
+        # Correct the completeness loss fraction using this "correct"
+        # number of stars.
+        comp_perc[(max_indx + 1):] = mag_histo[(max_indx + 1):] / Nstars
 
-    # Percentage of stars in each bin beyond the maximum interval
-    # (included), assuming the previous values are all 100%.
-    rm_perc = np.concatenate((
-        np.ones(h_mag[:max_indx + 1].size),
-        h_mag[max_indx + 1:] / float(h_mag[max_indx])))
+    except RuntimeError:
+        # LF could not be fit.
+        print("  WARNING: no exponential correction applied on "
+              "incompleteness function")
 
-    # Estimate pre-completeness LF, ie: the LF with no photometric loss
-    # of stars.
-    def func(x, A, B, C):
-        m = np.exp(-x)
-        return A * m ** (-B) + C
-    x, y = edges[:(max_indx + 1)], h_mag[:(max_indx + 1)]
-    popt, pcov = curve_fit(func, x, y)
-
-    # Estimate number of stars beyond the maximum value, using the
-    # above fitted LF.
-    Nstars = func(edges[(max_indx + 2):], *popt)
-    # Correct the completeness loss fraction using this "correct"
-    # number of stars.
-    rm_perc[(max_indx + 1):] = h_mag[(max_indx + 1):] / Nstars
-
-    # Percentage of stars that should be *removed* from the synthetic cluster.
-    # This is reversed the 'completeness_rm()' function is simpler.
-    rm_perc = 1. - np.clip(rm_perc, a_min=0., a_max=1.)
-
-    # Add a '1.' at the beginning to indicate that all stars with smaller
-    # magnitudes than the brightest star observed should be removed by the
-    # 'completeness_rm()' process.
-    rm_perc = np.array([1.] + list(rm_perc))
-
-    return [edges, rm_perc]
+    return comp_perc
 
 
 def manualFunc(completeness, mags):

@@ -3,7 +3,7 @@ import time
 import gc  # Garbage collector.
 #
 from .inp import names_paths
-from .inp import get_tracks
+from .inp import read_met_files
 from .inp import get_manual_strct
 from .inp import get_data
 # from .structure import trim_frame  # DEPRECATED
@@ -37,6 +37,8 @@ from .data_analysis import pms_analysis
 #
 from .out import inparams_out
 from .out import cluster_members_file
+from .best_fit import prep_obs_params
+from .best_fit import prep_synth_params
 from .best_fit import best_fit_synth_cl
 from .synth_clust import synthClustPrep
 from .synth_clust import masses_binar_probs
@@ -87,9 +89,6 @@ def main(cl_file, pd):
 
     # Save asteca.ini file used.
     inparams_out.main(npd, **pd)
-
-    # Read tracks data (if necessary)
-    td = get_tracks.main(pd, **npd)
 
     # Get manual structural data and add to dictionary.
     pd = get_manual_strct.main(pd, **npd)
@@ -251,6 +250,15 @@ def main(cl_file, pd):
             return
     else:
         print("<<Skip C3 plot>>")
+
+    # Read tracks and prepare the 'td' dictionary
+    td = read_met_files.main(pd, **npd)
+
+    # Prepare necessary data for the fitting process
+    clp = prep_obs_params.main(clp, **pd)
+
+    # Prepare necessary data for the fitting process
+    td = prep_synth_params.main(pd, clp, td)
 
     # Obtain best fitting parameters for cluster.
     clp = best_fit_synth_cl.main(npd, pd, td, clp)

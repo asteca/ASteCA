@@ -114,7 +114,7 @@ def main(npd, pd, clp, td):
 
     # Trace plots
     min_max_p = prep_plots.param_ranges(
-        td['fundam_params'], fit_pars['varIdxs'], fit_pars['pars_chains'])
+        td['fundam_params'], clp['varIdxs'], fit_pars['pars_chains'])
     trace = fit_pars['mcmc_trace']
     best_sol = fit_pars['mean_sol']
     traceplot_args = (
@@ -125,8 +125,8 @@ def main(npd, pd, clp, td):
     par_list = ['metal', 'age', 'ext', 'dist', 'mass', 'binar']
     for p in par_list:
         args = [
-            p, gs, best_sol, min_max_p, traceplot_args, trace,
-            fit_pars['varIdxs'], post_trace, pre_trace]
+            p, gs, best_sol, min_max_p, traceplot_args,
+            trace, clp['varIdxs'], post_trace, pre_trace]
         tracePlot.plot(0, *args)
 
     # Parallel Coordinates plot
@@ -168,11 +168,11 @@ def main(npd, pd, clp, td):
     # mp_mcmc_cnvrg.plot(7, *args)
 
     # pl_lags
-    args = [gs, fit_pars['varIdxs'], fit_pars['acorr_function']]
+    args = [gs, clp['varIdxs'], fit_pars['acorr_function']]
     mp_mcmc_cnvrg.plot(5, *args)
 
     # pl_GW
-    args = [gs, fit_pars['varIdxs'], fit_pars['geweke_z']]
+    args = [gs, clp['varIdxs'], fit_pars['geweke_z']]
     mp_mcmc_cnvrg.plot(6, *args)
 
     # pl_tau_histo

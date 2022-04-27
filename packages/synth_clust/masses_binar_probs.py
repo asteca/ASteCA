@@ -1,8 +1,8 @@
 
 import numpy as np
 from scipy.spatial import cKDTree
-from .synthClustPrep import setSynthClust
-from ..best_fit.obs_clust_prepare import dataProcess
+from ..best_fit.bf_common import getSynthClust
+from ..best_fit.prep_obs_params import dataProcess
 from .. import update_progress
 
 
@@ -12,10 +12,10 @@ def main(clp, pd, td):
     probabilities (if binarity was estimated).
     """
 
-    # Dummy arrays
-    clp['st_mass_mean'], clp['st_mass_std'],\
-        clp['st_mass_mean_binar'], clp['st_mass_std_binar'],\
-        clp['prob_binar'] = [np.array([]) for _ in range(5)]
+    # # Dummy arrays
+    # clp['st_mass_mean'], clp['st_mass_std'],\
+    #     clp['st_mass_mean_binar'], clp['st_mass_std_binar'],\
+    #     clp['prob_binar'] = [np.array([]) for _ in range(5)]
     # No best fit process was employed
     if pd['best_fit_algor'] == 'n':
         return clp
@@ -26,9 +26,10 @@ def main(clp, pd, td):
         td['fundam_params'], pd['D3_sol'], clp['isoch_fit_params'],
         clp['isoch_fit_errors'])
 
-    if not models.any():
-        print(" WARNING: could not assign masses and binary probabilities")
-        return clp
+    # This should never happen
+    # if not models.any():
+    #     print(" WARNING: could not assign masses and binary probabilities")
+    #     return clp
 
     print("Estimating binary probabilities and masses")
     # Extract photometry used in the best fit process
@@ -44,20 +45,24 @@ def main(clp, pd, td):
     prob_binar = np.zeros(obs_phot.shape[0])
 
     # Estimate the mean and variance for each star via recurrence.
-    Nm_binar = 0
+    Nm_binar, binar_vals, MassT_vals = 0, [], []
     for Nm, model in enumerate(models):
 
         # Generate synthetic cluster from the 'model'.
-        isoch = setSynthClust(model, *clp['syntClustArgs'])
+        isoch, M_total = getSynthClust(model, *clp['syntClustArgs'], False)
         if not isoch.any():
             continue
 
         # Masses, binary mask
         mass_primary = isoch[td['m_ini_idx']]
-        binar_idxs = ~(isoch[-1] == -99.)
+        # Binaries have M2>0
+        binar_idxs = isoch[-1] > 0.
         mass_secondary = isoch[-1]
         # shape: (N_stars, Ndim)
         photom = isoch[:sum(td['N_fc'])].T
+
+        MassT_vals.append(M_total)
+        binar_vals.append(binar_idxs.sum() / isoch.shape[-1])
 
         # For non-binary systems
         photom_single = photom[~binar_idxs]
@@ -68,7 +73,7 @@ def main(clp, pd, td):
             st_mass_mean, M2 = recurrentStats(Nm, st_mass_mean, M2, obs_mass)
 
             # For binary systems
-            if td['binar_flag']:
+            if binar_idxs.sum() > 0:
                 photom_binar = photom[binar_idxs]
                 # If there are no binary systems, skip
                 if photom_binar.any():
@@ -89,9 +94,17 @@ def main(clp, pd, td):
     st_mass_std = np.sqrt(M2 / Nm)
     st_mass_std_binar = np.sqrt(M2_binar / max(1, Nm_binar))
 
+    # If the distribution of binaries with mass was fitted instead of the
+    # binary fraction parameter, then this must be obtained indirectly.
+    MassT_dist_vals = (np.mean(MassT_vals), np.std(MassT_vals))
+    binar_dist_vals = (np.mean(binar_vals), np.std(binar_vals))
+    print(MassT_dist_vals)
+    print(binar_dist_vals)
+
     clp['st_mass_mean'], clp['st_mass_std'], clp['st_mass_mean_binar'],\
-        clp['st_mass_std_binar'], clp['prob_binar'] = st_mass_mean,\
-        st_mass_std, st_mass_mean_binar, st_mass_std_binar, prob_binar
+        clp['st_mass_std_binar'], clp['prob_binar'], clp['binar_dist_vals'] =\
+        st_mass_mean, st_mass_std, st_mass_mean_binar, st_mass_std_binar,\
+        prob_binar, binar_dist_vals
 
     return clp
 

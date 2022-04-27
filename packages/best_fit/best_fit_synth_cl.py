@@ -1,11 +1,10 @@
 
-import copy
 import numpy as np
 from ..inp import data_IO
-from . import obs_clust_prepare, ptemcee_algor
+from . import ptemcee_algor
 from ..synth_clust import synth_clust_gen
 from .mcmc_convergence import convergenceVals
-from .bf_common import r2Dist, modeKDE, fillParams  # thinChain
+from .bf_common import varPars, modeKDE, fillParams
 
 
 def main(npd, pd, td, clp):
@@ -13,11 +12,6 @@ def main(npd, pd, td, clp):
     Perform a best fitting process to find the cluster's fundamental
     parameters.
     """
-
-    # General parameters
-    if pd['best_fit_algor'] != 'n':
-        clp = dataPrep(pd, clp)
-
     # # Un-comment to fit [Fe/H] instead of Z
     # td['fundam_params'][0] = list(np.log10(np.array(
     #     td['fundam_params'][0]) / 0.0152))
@@ -27,6 +21,19 @@ def main(npd, pd, td, clp):
         lkl_bin = pd['lkl_method'] + '; ' + pd['lkl_binning'] if\
             pd['lkl_method'] in ('dolphin', 'tremmel') else pd['lkl_method']
         print("Using {} algorithm ({})".format(pd['best_fit_algor'], lkl_bin))
+
+        clp['varIdxs'], clp['ndim'], clp['ranges'] = varPars(
+            td['fundam_params'])
+
+        # Pack common args for the 'synth_cluster.py' function.
+        clp['syntClustArgs'] = (
+            pd['bp_vs_mass'], pd['alpha'],
+            clp['varIdxs'], clp['completeness'], clp['err_lst'],
+            clp['max_mag_syn'], clp['N_obs_stars'],
+            td['fundam_params'], td['ed_compl_vals'], td['ext_coefs'],
+            td['mean_bin_mr'], td['N_fc'], td['m_ini_idx'],
+            td['st_dist_mass'], td['theor_tracks'], td['err_norm_rand'],
+            td['binar_probs'], td['ext_unif_rand'])
 
         # from . import kombine_algor
         # isoch_fit_params = kombine_algor.main(
@@ -65,10 +72,10 @@ def main(npd, pd, td, clp):
 
         # Calculate the best fitting parameters.
         isoch_fit_params = ptemcee_algor.main(
-            clp['completeness'], clp['err_lst'],
-            clp['max_mag_syn'], clp['obs_clust'], pd['lkl_method'],
-            pd['pt_ntemps'], pd['pt_adapt'], pd['pt_tmax'],
-            pd['nsteps_mcee'], pd['nwalkers_mcee'], pd['mins_max'], **td)
+            pd['lkl_method'], pd['pt_ntemps'], pd['pt_adapt'], pd['pt_tmax'],
+            pd['nsteps_mcee'], pd['nwalkers_mcee'], pd['mins_max'],
+            td['priors_mcee'], td['fundam_params'], clp['obs_clust'],
+            clp['varIdxs'], clp['ndim'], clp['ranges'], clp['syntClustArgs'])
 
         # Save MCMC trace (and some other variables) to file
         if pd['save_trace_flag']:
@@ -77,18 +84,20 @@ def main(npd, pd, td, clp):
 
         # Obtain convergence parameters
         isoch_fit_params = convergenceParams(
-            isoch_fit_params, pd['nburn_mcee'], td['fundam_params'])
+            pd['nburn_mcee'], td['fundam_params'], clp['ndim'],
+            clp['varIdxs'], isoch_fit_params)
 
         # Assign uncertainties.
-        isoch_fit_errors = params_errors(isoch_fit_params)
+        isoch_fit_errors = params_errors(clp['varIdxs'], isoch_fit_params)
         print("Best fit parameters obtained")
 
     elif pd['best_fit_algor'] == 'read':
         isoch_fit_params = data_IO.dataRead(
             npd['clust_name'], npd['mcmc_file_out'])
         isoch_fit_params = convergenceParams(
-            isoch_fit_params, pd['nburn_mcee'], td['fundam_params'])
-        isoch_fit_errors = params_errors(isoch_fit_params)
+            pd['nburn_mcee'], td['fundam_params'], clp['ndim'],
+            clp['varIdxs'], isoch_fit_params)
+        isoch_fit_errors = params_errors(clp['varIdxs'], isoch_fit_params)
         print("Best fit parameters read from file")
 
     # In place for #239. NOT WORKING AS OF FEB 2021, after #488 #503 #506
@@ -115,25 +124,8 @@ def main(npd, pd, td, clp):
     return clp
 
 
-def dataPrep(pd, clp):
-    """
-    Obtain several parameters needed for the best fit process / synthetic
-    clusters generation.
-    """
-
-    clp['max_mag_syn'] = np.max(list(zip(*list(zip(
-        *clp['cl_reg_fit']))[1:][2]))[0])
-    clp['cl_syn_fit'] = copy.deepcopy(clp['cl_reg_fit'])
-
-    # Processed observed cluster.
-    clp['obs_clust'] = obs_clust_prepare.main(
-        clp['cl_syn_fit'], pd['lkl_method'], pd['lkl_binning'],
-        pd['lkl_manual_bins'])
-
-    return clp
-
-
-def convergenceParams(isoch_fit_params, nburn_mcee, fundam_params):
+def convergenceParams(
+        nburn_mcee, fundam_params, ndim, varIdxs, isoch_fit_params):
     """
     """
 
@@ -151,36 +143,34 @@ def convergenceParams(isoch_fit_params, nburn_mcee, fundam_params):
     # Convergence parameters.
     tau_autocorr, acorr_t, med_at_c, all_taus, geweke_z, acorr_function,\
         mcmc_ess = convergenceVals(
-            'ptemcee', isoch_fit_params['ndim'], isoch_fit_params['varIdxs'],
-            chains_nruns, bi_steps)
+            'ptemcee', ndim, varIdxs, chains_nruns, bi_steps)
 
     # Re-shape trace for all parameters (flat chain).
     # Shape: (ndim, runs * nchains)
-    mcmc_trace = chains_nruns.reshape(-1, isoch_fit_params['ndim']).T
+    mcmc_trace = chains_nruns.reshape(-1, ndim).T
 
     # # Thin chains
     # mcmc_trace = thinChain(mcmc_trace, acorr_t)
 
-    param_r2 = r2Dist(fundam_params, isoch_fit_params['varIdxs'], mcmc_trace)
-    mode_sol, pardist_kde = modeKDE(
-        fundam_params, isoch_fit_params['varIdxs'], mcmc_trace)
+    # DEPRECATED 02/04/22
+    # param_r2 = r2Dist(fundam_params, isoch_fit_params['varIdxs'], mcmc_trace)
+    mode_sol, pardist_kde = modeKDE(fundam_params, varIdxs, mcmc_trace)
 
     # Mean and median.
     mean_sol = np.mean(mcmc_trace, axis=1)
     median_sol = np.median(mcmc_trace, axis=1)
 
     # Fill the spaces of the parameters not fitted with their fixed values.
-    mean_sol = fillParams(fundam_params, isoch_fit_params['varIdxs'], mean_sol)
-    mode_sol = fillParams(fundam_params, isoch_fit_params['varIdxs'], mode_sol)
-    median_sol = fillParams(
-        fundam_params, isoch_fit_params['varIdxs'], median_sol)
+    mean_sol = fillParams(fundam_params, varIdxs, mean_sol)
+    mode_sol = fillParams(fundam_params, varIdxs, mode_sol)
+    median_sol = fillParams(fundam_params, varIdxs, median_sol)
 
     # Total number of values used to estimate the parameter's distributions.
     N_total = mcmc_trace.shape[-1]
 
     isoch_fit_params.update({
         'mean_sol': mean_sol, 'median_sol': median_sol, 'mode_sol': mode_sol,
-        'pardist_kde': pardist_kde, 'param_r2': param_r2,
+        'pardist_kde': pardist_kde,
         'mcmc_trace': mcmc_trace, 'pars_chains_bi': pars_chains_bi,
         'pars_chains': pars_chains,
         'tau_autocorr': tau_autocorr, 'acorr_t': acorr_t, 'med_at_c': med_at_c,
@@ -193,7 +183,7 @@ def convergenceParams(isoch_fit_params, nburn_mcee, fundam_params):
     return isoch_fit_params
 
 
-def params_errors(isoch_fit_params):
+def params_errors(varIdxs, isoch_fit_params):
     """
     Obtain uncertainties for the fitted parameters.
     """
@@ -213,7 +203,6 @@ def params_errors(isoch_fit_params):
 
         return isoch_fit_errors
 
-    isoch_fit_errors = assignUncertns(
-        isoch_fit_params['varIdxs'], isoch_fit_params['mcmc_trace'])
+    isoch_fit_errors = assignUncertns(varIdxs, isoch_fit_params['mcmc_trace'])
 
     return isoch_fit_errors

@@ -1,33 +1,26 @@
 
+import copy
 import numpy as np
 from scipy.stats import gaussian_kde
 from ..decont_algors.local_cell_clean import bin_edges_f
 
 
-def dataProcess(cl_syn_fit):
+def main(
+    clp, best_fit_algor, lkl_method, lkl_binning, lkl_manual_bins,
+        **kwargs):
     """
-    Extract photometric data, and membership probabilities. Remove ID's to
-    make entire array of floats.
-    """
-    mags_cols_cl = [[], []]
-    for mag in list(zip(*list(zip(*cl_syn_fit))[1:][2])):
-        mags_cols_cl[0].append(mag)
-    for col in list(zip(*list(zip(*cl_syn_fit))[1:][4])):
-        mags_cols_cl[1].append(col)
-
-    # Store membership probabilities here.
-    memb_probs = np.array(list(zip(*cl_syn_fit))[1:][8])
-
-    return mags_cols_cl, memb_probs
-
-
-def main(cl_syn_fit, lkl_method, lkl_binning, lkl_manual_bins):
-    '''
     Prepare observed cluster array here to save time before the algorithm to
     find the best synthetic cluster fit is used.
-    '''
+    """
+    if best_fit_algor == 'n':
+        return clp
 
-    mags_cols_cl, memb_probs = dataProcess(cl_syn_fit)
+    clp['N_obs_stars'] = len(clp['cl_reg_fit'])
+    clp['max_mag_syn'] = np.max(list(zip(*list(zip(
+        *clp['cl_reg_fit']))[1:][2]))[0])
+    clp['cl_syn_fit'] = copy.deepcopy(clp['cl_reg_fit'])
+
+    mags_cols_cl, memb_probs = dataProcess(clp['cl_syn_fit'])
 
     if lkl_method in ['dolphin', 'mighell', 'tremmel']:
         # Obtain bin edges for each dimension, defining a grid.
@@ -37,23 +30,7 @@ def main(cl_syn_fit, lkl_method, lkl_binning, lkl_manual_bins):
         # Put all magnitudes and colors into a single list.
         obs_mags_cols = mags_cols_cl[0] + mags_cols_cl[1]
         # Obtain histogram for observed cluster.
-
-        # Tried this (15/01/20) for RUP85 to see if I could get the fit
-        # to not give that much weight to the low mass section.
-        # idx = np.argsort(obs_mags_cols[0])
-        # ww = np.zeros(len(obs_mags_cols[0]))
-        # for i, w in enumerate(np.linspace(1., 0., len(obs_mags_cols[0]))):
-        #     ww[idx[i]] = w
-        # memb_probs = np.array(ww)
-
         cl_histo = np.histogramdd(obs_mags_cols, bins=bin_edges)[0]
-
-        # DEPRECATED 10/01/20
-        # Weight each bin by the 'lkl_weight' statistic (mean by default) of
-        # the MPs of each star within that bin.
-        # bin_w = np.nan_to_num(binned_statistic_dd(
-        #     np.array(obs_mags_cols).T, memb_probs, statistic='mean',
-        #     bins=bin_edges)[0])
 
         # Flatten N-dimensional histograms.
         cl_histo_f = np.array(cl_histo).ravel()
@@ -69,8 +46,6 @@ def main(cl_syn_fit, lkl_method, lkl_binning, lkl_manual_bins):
         # Remove all bins where n_i=0 (no observed stars). Used by the
         # 'Dolphin' likelihood.
         cl_histo_f_z = cl_histo_f[cl_z_idx]
-        # DEPRECATED 10/01/20
-        # bin_weight_f_z = bin_weight_f[cl_z_idx]
 
         # Dolphin n_i dependent constant.
         # N = cl_histo.sum()
@@ -97,9 +72,9 @@ def main(cl_syn_fit, lkl_method, lkl_binning, lkl_manual_bins):
         # Square errors here to not repeat the same calculations each time a
         # new synthetic cluster is matched.
         e_mags_cols = []
-        for e_m in list(zip(*list(zip(*cl_syn_fit))[1:][3])):
+        for e_m in list(zip(*list(zip(*clp['cl_syn_fit']))[1:][3])):
             e_mags_cols.append(np.square(e_m))
-        for e_c in list(zip(*list(zip(*cl_syn_fit))[1:][5])):
+        for e_c in list(zip(*list(zip(*clp['cl_syn_fit']))[1:][5])):
             e_mags_cols.append(np.square(e_c))
 
         # DEPRECATED 18/01/20. The new method does not use errors in the
@@ -162,33 +137,6 @@ def main(cl_syn_fit, lkl_method, lkl_binning, lkl_manual_bins):
 
         obs_clust = [cl_histo, bin_edges]
 
-    # DEPRECATED 17/01/20
-    # elif lkl_method == 'duong':
-    #     # Define variables to communicate with package 'R'.
-    #     import rpy2.robjects as robjects
-    #     from rpy2.robjects.packages import importr
-    #     ks = importr('ks')
-    #     kde_test = ks.kde_test
-    #     hpi_kfe = ks.Hpi_kfe
-
-    #     # CMD for cluster region.
-    #     mags_cols = mags_cols_cl[0] + mags_cols_cl[1]
-    #     matrix_cl = np.ravel(np.column_stack((mags_cols)))
-    #     # matrix_cl = []
-    #     # for st in obs_st:
-    #     #     matrix_cl.append(st[0][0])
-    #     #     matrix_cl.append(st[1][0])
-    #     rows_cl = int(len(matrix_cl) / 2)
-
-    #     # Create matrices for these CMDs.
-    #     m_cl = robjects.r.matrix(robjects.FloatVector(matrix_cl),
-    #                              nrow=rows_cl, byrow=True)
-
-    #     # Bandwidth matrices.
-    #     hpic = hpi_kfe(x=m_cl, binned=True)
-
-    #     obs_clust = [kde_test, hpi_kfe, m_cl, hpic]
-
     elif lkl_method in ['dolphin_kde', 'kdeKL']:
 
         vals = np.array(mags_cols_cl[0] + mags_cols_cl[1])
@@ -216,4 +164,23 @@ def main(cl_syn_fit, lkl_method, lkl_binning, lkl_manual_bins):
     #     e_mags_cols.append(e_c)
     # obs_clust = list(np.array(mags_cols_cl[0])) + list(np.array(mags_cols_cl[1])) + list(np.array(e_mags_cols))
 
-    return obs_clust
+    clp['obs_clust'] = obs_clust
+
+    return clp
+
+
+def dataProcess(cl_syn_fit):
+    """
+    Extract photometric data, and membership probabilities. Remove ID's to
+    make entire array of floats.
+    """
+    mags_cols_cl = [[], []]
+    for mag in list(zip(*list(zip(*cl_syn_fit))[1:][2])):
+        mags_cols_cl[0].append(mag)
+    for col in list(zip(*list(zip(*cl_syn_fit))[1:][4])):
+        mags_cols_cl[1].append(col)
+
+    # Store membership probabilities here.
+    memb_probs = np.array(list(zip(*cl_syn_fit))[1:][8])
+
+    return mags_cols_cl, memb_probs

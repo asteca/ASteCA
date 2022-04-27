@@ -137,7 +137,7 @@ def pl_hess_diag(
         # Legend.
         handles, labels = ax.get_legend_handles_labels()
         leg = ax.legend(
-            handles, labels, loc='lower right', scatterpoints=1, ncol=2,
+            handles, labels, loc='lower left', scatterpoints=1, ncol=2,
             columnspacing=.2, handletextpad=-.3)
         leg.get_frame().set_alpha(0.7)
 
@@ -145,8 +145,8 @@ def pl_hess_diag(
 def pl_bf_synth_cl(
     gs, gs_y1, gs_y2, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
     hess_xedges, hess_yedges, x_synth, y_synth, sy_sz_pt, binar_idx, IMF_name,
-    best_sol, p_err, x_isoch, y_isoch, lkl_method, bin_method,
-        evol_track, D3_sol):
+    binar_dist_vals, best_sol, p_err, x_isoch, y_isoch, lkl_method,
+        bin_method, evol_track, D3_sol):
     """
     Best fit synthetic cluster obtained.
     """
@@ -209,8 +209,12 @@ def pl_bf_synth_cl(
             best_sol[3], p_err[3][2])
         t8 = r'$M\,(M_{{\odot}}) \hspace{{1.07}} =\;{:.0f}\pm {:.0f}$'.format(
             best_sol[4], p_err[4][2])
-        t9 = r'$b_{{frac}} \hspace{{2.37}}=\;{:.2f}\pm {:.2f}$'.format(
+        t9 = r'$\beta \hspace{{3.85}}=\;{:.2f}\pm {:.2f}$'.format(
             best_sol[5], p_err[5][2])
+        t9 += '\n'
+        t9 += r'$(b_{{frac}} \hspace{{2.}}=\;{:.2f}\pm {:.2f})$'.format(
+            binar_dist_vals[0], binar_dist_vals[1])
+
         text = t1 + '\n\n' + t2 + '\n' + t3 + '\n' + t4 + '\n' + t5 + '\n' +\
             t6 + '\n' + t7 + '\n' + t8 + '\n' + t9
         ob = offsetbox.AnchoredText(text, pad=1, loc=6, borderpad=-5)

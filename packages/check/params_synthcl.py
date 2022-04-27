@@ -65,7 +65,7 @@ def getParamVals(pd):
                     p = p_rng[0]
                     if p not in ('min', 'max'):
                         raise ValueError(
-                            "R2: unrecognized string '{}'".format(p))
+                            "R3: unrecognized string '{}'".format(p))
                 tlst[idx] = [p]
             else:
                 try:
@@ -74,7 +74,7 @@ def getParamVals(pd):
                     pmin = p_rng[0]
                     if pmin != 'min':
                         raise ValueError(
-                            ("R2: unrecognized string '{}'.\nOnly 'min' "
+                            ("R3: unrecognized string '{}'.\nOnly 'min' "
                              + "string is accepted as the lower "
                              + "range.").format(pmin))
                 try:
@@ -83,13 +83,14 @@ def getParamVals(pd):
                     pmax = p_rng[1]
                     if pmax != 'max':
                         raise ValueError(
-                            ("R2: unrecognized string '{}'.\nOnly 'max' "
+                            ("R3: unrecognized string '{}'.\nOnly 'max' "
                              + "string is accepted as the upper "
                              + "range.").format(pmax))
                 tlst[idx] = [pmin, pmax]
 
+        # GARDCODED NUMBER OF PARAMETERS EXPECTED
         if len(tlst) != 7:
-            raise ValueError("Missing parameters in line 'R2'")
+            raise ValueError("Missing parameters in line 'R3'")
         fundam_params_all[cl_pars[0]] = tlst
 
     pd['fundam_params_all'] = fundam_params_all
@@ -187,11 +188,17 @@ def checkSynthClustParams(pd):
     if pd['IMF_name'] not in pd['imf_funcs']:
         raise ValueError("Name of IMF ({}) is incorrect.".format(
             pd['IMF_name']))
+    if pd['Max_mass'] < 100.:
+        raise ValueError("Minimum 'Max_mass' must be >= 100")
 
-    if not 0. <= pd['min_bmass_ratio'] <= 1.:
+    if pd['alpha'] < 0.:
         raise ValueError(
-            "Binary mass ratio set ('{}') is out of\nboundaries. Please select"
-            " a value in the range [0., 1.]".format(pd['min_bmass_ratio']))
+            "'alpha' parameter ('{}') is out of\nboundaries. Select"
+            " a value <=0".format(pd['alpha']))
+    if pd['gamma'] <= 0.:
+        raise ValueError(
+            "'gamma' parameter ('{}') is out of\nboundaries. Select"
+            " a value larger than 0".format(pd['gamma']))
 
     for key, vals in pd['fundam_params_all'].items():
         # Check E_BV

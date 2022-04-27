@@ -54,6 +54,7 @@ def main(npd, pd, clp, td):
             [gs, gs_y1, gs_y2, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
              x_ax, y_ax, hess_xedges, hess_yedges, x_synth_phot,
              y_synth_phot, sy_sz_pt, binar_idx, pd['IMF_name'],
+             clp['binar_dist_vals'],
              best_sol, clp['isoch_fit_errors'], x_isoch, y_isoch,
              pd['lkl_method'], pd['lkl_binning'], pd['evol_track'],
              pd['D3_sol']]

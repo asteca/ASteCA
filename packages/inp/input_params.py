@@ -68,14 +68,21 @@ def main(pars_f_path):
                 elif reader[0] == 'R0':
                     synth_rand_seed = str(reader[1])
                     IMF_name = str(reader[2])
-                    min_bmass_ratio = float(reader[3])
+                    Max_mass = int(float(reader[3]))
 
                 # Ranges for the fundamental parameters
                 elif reader[0] == 'R1':
-                    completeness = [_.replace(',', '') for _ in reader[1:]]
+                    bp_vs_mass = str(reader[1])
+                    alpha = float(reader[2])
+                    q_vs_mass = str(reader[3])
+                    gamma = float(reader[4])
 
                 # Ranges for the fundamental parameters
                 elif reader[0] == 'R2':
+                    completeness = [_.replace(',', '') for _ in reader[1:]]
+
+                # Ranges for the fundamental parameters
+                elif reader[0] == 'R3':
                     par_ranges.append(reader[1:])
 
                 # elif reader[0] == 'RZ':
@@ -164,7 +171,8 @@ def main(pars_f_path):
     bin_methods = (
         'optm', 'fixed', 'auto', 'fd', 'doane', 'scott', 'rice', 'sqrt',
         'sturges', 'knuth', 'blocks', 'blocks-max', 'manual')
-
+    # Binary system methods
+    # binar_methods = ('logfit', 'D&K', 'uniform')
     # Likelihood methods.
     lkl_methods = ('tremmel',)
     # FIXED 04/2021
@@ -216,7 +224,9 @@ def main(pars_f_path):
 
         # Synthetic cluster parameters
         'synth_rand_seed': synth_rand_seed, 'par_ranges': par_ranges,
-        'IMF_name': IMF_name, 'min_bmass_ratio': min_bmass_ratio,
+        'IMF_name': IMF_name, 'Max_mass': Max_mass,
+        'bp_vs_mass': bp_vs_mass, 'q_vs_mass': q_vs_mass,
+        'alpha': alpha, 'gamma': gamma,
         'completeness': completeness,
 
         # Best fit parameters.

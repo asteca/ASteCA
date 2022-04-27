@@ -1,5 +1,6 @@
 
 import numpy as np
+from ..synth_clust import synth_cluster
 from ..aux_funcs import kde1D, reject_outliers
 # import warnings
 # from scipy.optimize import differential_evolution as DE
@@ -24,6 +25,24 @@ def varPars(fundam_params):
     ndim = len(varIdxs)
 
     return varIdxs, ndim, np.array(ranges)
+
+
+def getSynthClust(
+    model, bp_vs_mass, alpha, varIdxs, completeness, err_lst, max_mag_syn,
+    N_obs_stars, fundam_params, ed_compl_vals, ext_coefs, mean_bin_mr, N_fc,
+    m_ini_idx, st_dist_mass, theor_tracks, err_norm_rand, binar_probs,
+        ext_unif_rand, transpose_flag):
+    """
+    Generate synthetic cluster given by 'model'.
+
+    transpose_flag=False : returns the non-reduced, non-transposed array
+    """
+
+    return synth_cluster.main(
+        model, fundam_params, varIdxs, completeness, err_lst,
+        max_mag_syn, N_obs_stars, ed_compl_vals, ext_coefs, mean_bin_mr,
+        N_fc, m_ini_idx, st_dist_mass, theor_tracks, err_norm_rand, bp_vs_mass,
+        alpha, binar_probs, ext_unif_rand, transpose_flag)
 
 
 def fillParams(fundam_params, varIdxs, model):

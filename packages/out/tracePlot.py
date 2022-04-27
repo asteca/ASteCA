@@ -17,7 +17,7 @@ def traceplots(
     }
 
     labels = [r'$z$', r'$\log(age)$', r'$E_{{(B-V)}}$', r'$(m-M)_o$',
-              r'$M\,(M_{{\odot}})$', r'$b_{{frac}}$']
+              r'$M\,(M_{{\odot}})$', r'$\beta$']
 
     gs_x1, gs_x2, gs_y1, gs_y2, cp = plot_dict[par_name]
     ax = plt.subplot(gs[gs_y1:gs_y2, gs_x1:gs_x2])

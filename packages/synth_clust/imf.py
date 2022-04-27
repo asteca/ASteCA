@@ -37,7 +37,8 @@ def main(IMF_name, Nmets, Max_mass):
 
     st_dist_mass = []
     for _ in range(Nmets):
-        st_dist_mass += [sampleInv(Max_mass, inv_cdf)]
+        sampled_IMF = sampleInv(Max_mass, inv_cdf)
+        st_dist_mass += [[sampled_IMF, np.cumsum(sampled_IMF)]]
         update_progress.updt(Nmets, _ + 1)
 
     return st_dist_mass
@@ -49,9 +50,8 @@ def invTrnsfSmpl(IMF_name='kroupa_2002', m_low=0.08, m_high=150):
 
     Asked here: https://stackoverflow.com/q/21100716/1391441
     """
-    # Obtain normalization constant (k = \int_{m_low}^{m_up} \xi(m) dm). This
-    # makes the IMF behave like a PDF.
-    norm_const = quad(IMF_func, m_low, m_high, args=(IMF_name))[0]
+    # Obtain normalization constant (k = \int_{m_low}^{m_up} \xi(m) dm).
+    # norm_const = quad(IMF_func, m_low, m_high, args=(IMF_name))[0]
 
     # IMF mass interpolation step and grid values.
     mass_step = 0.05
@@ -64,7 +64,7 @@ def invTrnsfSmpl(IMF_name='kroupa_2002', m_low=0.08, m_high=150):
         CDF_samples.append(quad(IMF_func, m_low, m, args=(IMF_name))[0])
 
     # Normalize values
-    CDF_samples = np.array(CDF_samples) / norm_const
+    CDF_samples = np.array(CDF_samples) / max(CDF_samples)
     # These are (0, 1)
     # CDF_min, CDF_max = CDF_samples.min(), CDF_samples.max()
 
@@ -92,7 +92,7 @@ def sampleInv(Max_mass, inv_cdf):
         mass_samples += sampled_inv_cdf(N_chunk).tolist()
     sampled_IMF = np.array(mass_samples)
 
-    return [sampled_IMF, np.cumsum(sampled_IMF)]
+    return sampled_IMF
 
 
 def IMF_func(m_star, IMF_name):

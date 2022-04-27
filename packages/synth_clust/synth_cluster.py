@@ -3,20 +3,17 @@ import numpy as np
 from . import zaWAverage
 from . import move_isochrone
 from . import cut_max_mag
-from . import mass_distribution
 from . import mass_interp
 from . import binarity
 from . import completeness_rm
 from . import add_errors
 
-# import matplotlib.pyplot as plt
-
 
 def main(
-    fundam_params, varIdxs, model, completeness, err_lst,
-    max_mag_syn, ext_coefs, binar_flag, mean_bin_mr, N_fc, m_ini_idx,
-    st_dist_mass, theor_tracks, err_norm_rand, binar_probs, ext_unif_rand,
-        transpose_flag=True):
+    model, fundam_params, varIdxs, completeness, err_lst, max_mag_syn,
+    N_obs_stars, ed_compl_vals, ext_coefs, mean_bin_mr, N_fc, m_ini_idx,
+    st_dist_mass, theor_tracks, err_norm_rand, bp_vs_mass, alpha, binar_probs,
+        ext_unif_rand, transpose_flag):
     """
     Takes an isochrone and returns a synthetic cluster created according to
     a certain mass distribution.
@@ -33,9 +30,8 @@ def main(
 
     synth_clust = [mag, c1, (c2), mag_b, c1_b, (c2_b), m_ini_1, m_ini_2]
 
-    where 'm_ini_1, m_ini_2' are the masses of the single/binary systems. The
-    single systems only have 'm_ini_1' defined, and a '-99' stored in 'm_ini_2'
-
+    where 'm_ini_1, m_ini_2' are the primary and secondary masses of the
+    binary systems. The single systems only have a '0' stored in 'm_ini_2'.
     """
 
     # Return proper values for fixed parameters and parameters required
@@ -46,16 +42,15 @@ def main(
     # Generate a weighted average isochrone from the (z, log(age)) values in
     # the 'model'.
     isochrone = zaWAverage.main(
-        theor_tracks, fundam_params, binar_flag, m_ini_idx, z_model, a_model,
+        theor_tracks, fundam_params, m_ini_idx, z_model, a_model,
         ml, mh, al, ah)
 
     # Extract parameters
-    e, d, M_total, bin_frac, R_V = model_proper
+    e, d, M_total, beta, R_V = model_proper
 
     # Move theoretical isochrone using the values 'e' and 'd'.
     isoch_moved = move_isochrone.main(
-        isochrone, e, d, R_V, ext_coefs, N_fc, ext_unif_rand[ml],
-        m_ini_idx, binar_flag)
+        isochrone, e, d, R_V, ext_coefs, N_fc, ext_unif_rand[ml], m_ini_idx)
 
     # Get isochrone minus those stars beyond the magnitude cut.
     isoch_cut = cut_max_mag.main(isoch_moved, max_mag_syn)
@@ -67,47 +62,58 @@ def main(
     # return isoch_cut.T[:, :3]
 
     # Empty list to pass if at some point no stars are left.
-    synth_clust = np.array([])
+    synth_clust, M_total = np.array([]), 0.
     if isoch_cut.any():
 
-        # Return the isochrone with the proper total mass.
-        mass_dist = mass_distribution.main(
-            st_dist_mass[ml], mean_bin_mr, bin_frac, M_total)
+        # DEPRECATED 04/22
+        # # Return the isochrone with the proper total mass.
+        # mass_dist = mass_distribution.main(
+        #     bp_vs_mass, isoch_cut, m_ini_idx, st_dist_mass[ml], mean_bin_mr,
+        #     bin_frac, M_total)
+
+        mass_ini = isoch_cut[m_ini_idx]
+        mmin, mmax = mass_ini.min(), mass_ini.max()
+        mass = st_dist_mass[ml][0]
+        msk_m = (mass >= mmin) & (mass <= mmax)
+
+        if msk_m.sum() == 0:
+            return synth_clust, M_total
+
+        N_compl_rm_stars = 0
+        if completeness[-1] is True:
+            # Indexes of elements in ed_compl_vals closest the (e, d) values
+            idx_e = np.argmin(abs(e - ed_compl_vals[0]))
+            idx_d = np.argmin(abs(d - ed_compl_vals[1]))
+            compl_rm_perc = ed_compl_vals[2][idx_e][idx_d]
+            # Estimation of stars removed by the completeness function
+            N_compl_rm_stars = int(N_obs_stars * compl_rm_perc)
+
+        # Total number of stars sampled from 'st_dist_mass'
+        N_stars = N_obs_stars + N_compl_rm_stars
+        mass_dist = st_dist_mass[ml][0][msk_m][:N_stars]
+        # Total mass estimation for this 'N_stars' value
+        M_total = st_dist_mass[ml][1][msk_m][:N_stars][-1]
 
         # Interpolate masses in mass_dist into the isochrone rejecting those
         # masses that fall outside of the isochrone's mass range.
         # This destroys the order by magnitude.
-        isoch_mass = mass_interp.main(isoch_cut, m_ini_idx, mass_dist)
-
-        # # In place for testing #508
-        # plt.subplot(121)
-        # # plt.scatter(isoch_mass[4], isoch_mass[3], c='r')
-        # plt.scatter(isoch_mass[1], isoch_mass[0], c='g')
-        # # plt.scatter(isoch_cut[4], isoch_cut[3], c='b', marker='x')
-        # # plt.scatter(isoch_cut[1], isoch_cut[0], c='cyan', marker='x')
-        # plt.gca().invert_yaxis()
-        # # plt.hist(isoch_mass[0], 25)
+        isoch_mass = mass_interp.main(isoch_cut, mass_ini, mass_dist)
 
         if isoch_mass.any():
             # Assignment of binarity.
             isoch_binar = binarity.main(
-                isoch_mass, bin_frac, m_ini_idx, N_fc, binar_probs[ml])
+                isoch_mass, alpha, beta, m_ini_idx, N_fc, bp_vs_mass,
+                binar_probs[ml])
 
-            # # In place for testing #508
-            # plt.subplot(122)
-            # plt.scatter(isoch_binar[1], isoch_binar[0], c='g')
-            # plt.gca().invert_yaxis()
-            # plt.show()
+            # Percentage of mass added by the binaries:
+            # binar_mass_perc = binary_sists_mass / single_sists_mass
+            binar_mass_perc = isoch_binar[-1].sum() /\
+                isoch_binar[m_ini_idx].sum()
+            # Total mass corrected by the added mass as binary systems
+            M_total = M_total * (1 + binar_mass_perc)
 
-            # Completeness limit removal of stars.
+            # Completeness removal of stars.
             isoch_compl = completeness_rm.main(isoch_binar, completeness)
-
-            # # In place for testing #508
-            # plt.subplot(122)
-            # plt.scatter(isoch_compl[1], isoch_compl[0], c='g')
-            # plt.gca().invert_yaxis()
-            # # plt.hist(isoch_compl[0], 25)
-            # plt.show()
 
             if isoch_compl.any():
                 # Get errors according to errors distribution.
@@ -119,7 +125,7 @@ def main(
                 if transpose_flag:
                     synth_clust = synth_clust[:sum(N_fc)].T
 
-    return synth_clust
+    return synth_clust, M_total
 
 
 def properModel(fundam_params, model, varIdxs):

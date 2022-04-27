@@ -2,28 +2,18 @@
 import numpy as np
 import warnings
 import time as t
-from .. import update_progress
-from ..synth_clust import synth_cluster
-from . import likelihood
-from .bf_common import initPop, varPars, rangeCheck, fillParams
+from .bf_common import getSynthClust, initPop, rangeCheck, fillParams
 from .ptemcee import sampler
+from . import likelihood
+from .. import update_progress
 
 
 def main(
-    completeness, err_lst, max_mag_syn, obs_clust, lkl_method,
-    pt_ntemps, pt_adapt, pt_tmax, nsteps_mcee, nwalkers_mcee, mins_max,
-    priors_mcee, ext_coefs, binar_flag, mean_bin_mr, N_fc, m_ini_idx,
-    theor_tracks, err_norm_rand, binar_probs, ext_unif_rand, fundam_params,
-        st_dist_mass, **kwargs):
+    lkl_method, pt_ntemps, pt_adapt, pt_tmax, nsteps_mcee, nwalkers_mcee,
+    mins_max, priors_mcee, fundam_params, obs_clust, varIdxs, ndim, ranges,
+        synthcl_args):
     """
     """
-
-    varIdxs, ndim, ranges = varPars(fundam_params)
-    # Pack synthetic cluster arguments.
-    synthcl_args = [
-        completeness, err_lst, max_mag_syn, ext_coefs, binar_flag,
-        mean_bin_mr, N_fc, m_ini_idx, st_dist_mass, theor_tracks,
-        err_norm_rand, binar_probs, ext_unif_rand]
 
     if pt_tmax in ('n', 'none', 'None'):
         Tmax = None
@@ -43,7 +33,7 @@ def main(
     # Define Parallel tempered sampler
     ptsampler = sampler.Sampler(
         nwalkers_mcee, ndim, loglkl, logp,
-        loglargs=[fundam_params, lkl_method, obs_clust, ranges, varIdxs,
+        loglargs=[lkl_method, obs_clust, ranges, varIdxs,
                   priors_mcee, synthcl_args], Tmax=Tmax, ntemps=pt_ntemps)
 
     ntemps = ptsampler.ntemps
@@ -132,8 +122,8 @@ def main(
     cold_chain = ptsampler.chain[0, :, :i, :].transpose(1, 0, 2)
 
     isoch_fit_params = {
-        'varIdxs': varIdxs, 'ndim': ndim, 'Tmax': str(Tmax),
-        'map_sol': map_sol, 'map_lkl': map_lkl, 'map_lkl_final': map_lkl_final,
+        'Tmax': str(Tmax), 'map_sol': map_sol, 'map_lkl': map_lkl,
+        'map_lkl_final': map_lkl_final,
         'prob_mean': prob_mean, 'bf_elapsed': elapsed, 'maf_allT': maf_allT,
         'tswaps_afs': tswaps_afs, 'betas_pt': betas_pt, 'N_steps': N_steps,
         'cold_chain': cold_chain
@@ -143,8 +133,7 @@ def main(
 
 
 def loglkl(
-    model, fundam_params, lkl_method, obs_clust, ranges, varIdxs, priors,
-        synthcl_args):
+        model, lkl_method, obs_clust, ranges, varIdxs, priors, synthcl_args):
     """
     """
     rangeFlag = rangeCheck(model, ranges, varIdxs)
@@ -152,8 +141,7 @@ def loglkl(
     logpost = -1e9
     if rangeFlag:
         # Generate synthetic cluster.
-        synth_clust = synth_cluster.main(
-            fundam_params, varIdxs, model, *synthcl_args)
+        synth_clust = getSynthClust(model, *synthcl_args, True)[0]
 
         # Call likelihood function for this model.
         lkl = likelihood.main(lkl_method, synth_clust, obs_clust)

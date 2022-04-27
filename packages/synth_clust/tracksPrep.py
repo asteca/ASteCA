@@ -1,13 +1,11 @@
 
 import numpy as np
-from . import extin_coefs
-from . import imf
 from . import binarity
 
 
 def main(
-    td, synth_rand_seed, cmd_systs, filters, colors, IMF_name,
-        all_syst_filters, min_bmass_ratio, lkl_method, **kwargs):
+    td, synth_rand_seed, filters, colors, IMF_name, all_syst_filters,
+        q_vs_mass, gamma, **kwargs):
     """
     Return list structured as:
 
@@ -32,37 +30,30 @@ def main(
     from . import set_rand_seed
     set_rand_seed.main(synth_rand_seed)
 
-    # Extract some data
-    all_met_vals, all_age_vals = td['fundam_params'][:2]
-
     # Combine all data into a single array of shape:
     # (N_z, N_age, N_data, N_interp), where 'N_data' depends on the number
     # of colors defines, and whether the binarity is on/off
 
     # Create the necessary colors, and position the magnitudes and colors
     # in the same order as they are read from the cluster's data file.
+    print("Interpolate isochrones")
     interp_tracks, mags_cols_intp = interpIsochs(
         td['isoch_list'], td['extra_pars'], all_syst_filters,
         filters, colors)
 
-    if binar_flag:
-        td['theor_tracks'], td['mean_bin_mr'] = binarity.binarGen(
-            min_bmass_ratio, td['m_ini_idx'], td['N_fc'], interp_tracks,
-            mags_cols_intp, all_met_vals, all_age_vals)
-    else:
-        td['theor_tracks'], td['mean_bin_mr'] = interp_tracks, 0.
-    # Size of array
-    # print("{:.0f} Mbs".format(theor_tracks.nbytes / 1024.**2))
-
-    td['err_norm_rand'], td['binar_probs'], td['ext_unif_rand'] = randVals(
-        lkl_method, td['st_dist_mass'], td['theor_tracks'])
+    # Tracks prepared for binarity
+    print("Generate binary system's parameters")
+    all_met_vals, all_age_vals = td['fundam_params'][:2]
+    td['theor_tracks'], td['mean_bin_mr'] = binarity.binarGen(
+        q_vs_mass, gamma, td['m_ini_idx'], td['N_fc'],
+        interp_tracks, mags_cols_intp, all_met_vals, all_age_vals)
 
     return td
 
 
 def interpIsochs(
     isoch_list, extra_pars, all_syst_filters, filters, colors,
-        N_interp=1500):
+        N_extra=2000):
     """
     Take the list of filters stored, create the necessary colors, arrange and
     interpolate all magnitudes and colors according to the order given to the
@@ -99,15 +90,23 @@ def interpIsochs(
             ci.append(all_filts.index(f))
         fci.append(ci)
 
-    # Calculate the maximum number of stars in all isochrones, and add '10'
-    # before interpolating. This is so that all tracks have the same number
-    # of points.
+    # Calculate the maximum number of stars in all isochrones, and add
+    # 'N_extra' before interpolating. This is so that all tracks have the
+    # same number of points.
     N_pts_max = 0
     for z in isoch_list:
         for a in z:
             N_pts_max = max(N_pts_max, len(a[0]))
-    N_pts_max = N_pts_max + N_interp
+    N_pts_max = N_pts_max + N_extra
     xx = np.linspace(0., 1., N_pts_max)
+
+    # # Interpolate according to IMF distribution
+    # from . import imf
+    # inv_cdf = imf.invTrnsfSmpl()
+    # xx = inv_cdf(np.random.rand(N_pts_max))
+    # xx -= xx.min()
+    # xx /= xx.max()
+    # xx.sort()
 
     interp_tracks = []
     for i, met in enumerate(isoch_list):
@@ -130,6 +129,12 @@ def interpIsochs(
         interp_tracks.append(m)
 
     interp_tracks = np.array(interp_tracks)
+
+    # import matplotlib.pyplot as plt
+    # plt.scatter(interp_tracks[0, 0, 1, :], interp_tracks[0, 0, 0, :])
+    # plt.gca().invert_yaxis()
+    # plt.show()
+    # breakpoint()
 
     # Create list of theoretical colors, in the same orders as they are
     # read from the cluster's data file.
@@ -154,40 +159,3 @@ def interpIsochs(
     mags_cols_intp = np.array(mags_cols_intp)
 
     return interp_tracks, mags_cols_intp
-
-
-def randVals(lkl_method, st_dist_mass, theor_tracks):
-    """
-    Generate lists of random values used by the synthetic cluster generating
-    function.
-    """
-    # This is the maximum number of stars that will ever be interpolated into
-    # an isochrone
-    N_mass = 0
-    for sdm in st_dist_mass:
-        N_mass = max(len(sdm[0]), N_mass)
-
-    # Number of metallicity values defined
-    N_mets = theor_tracks.shape[0]
-
-    err_norm_rand, binar_probs, ext_unif_rand = [], [], []
-    for _ in range(N_mets):
-
-        if lkl_method == 'tolstoy':
-            # Tolstoy likelihood considers uncertainties, there's no need to
-            # add it to the synthetic clusters.
-            err_norm_rand.append(np.zeros(N_mass))
-        else:
-            err_norm_rand.append(np.random.normal(0., 1., N_mass))
-
-        # Binary probabilities, one per metallicity
-        # In place for #198
-        # This assumes a flat multiplicity frequency, which is not
-        # necessarily true. A probability proportional to the primary mass
-        # probably should be used.
-        binar_probs.append(np.random.uniform(0., 1., N_mass))
-
-        # For the move_isoch() function. In place for #174
-        ext_unif_rand.append(np.random.uniform(0., 1., N_mass))
-
-    return err_norm_rand, binar_probs, ext_unif_rand

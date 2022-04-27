@@ -39,7 +39,7 @@ def writeFileOut(
     # Create IDs identifying binary systems
     binar_ID = []
     for i, bi in enumerate(synth_clust[-1]):
-        if bi == -99.:
+        if bi == -0.:
             binar_ID.append('1' + str(i))
         else:
             binar_ID.append('2' + str(i))

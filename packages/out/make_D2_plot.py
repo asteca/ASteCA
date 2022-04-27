@@ -24,6 +24,9 @@ def main(npd, pd, clp, td):
     xf, yf = .02, .999
     add_version_plot.main(x_fix=xf, y_fix=yf)
 
+    labels = [r'$z$', r'$log(age)$', r'$E_{(B-V)}$', r'$(m-M)_o$',
+              r'$M\,(M_{{\odot}})$', r'$\beta$']
+
     # pl_2_param_dens: Param vs param density map.
     for p2 in [
             'metal-age', 'metal-ext', 'metal-dist', 'metal-mass',
@@ -33,11 +36,11 @@ def main(npd, pd, clp, td):
 
         # Limits for the 2-dens plots.
         min_max_p = prep_plots.param_ranges(
-            td['fundam_params'], fit_pars['varIdxs'], fit_pars['pars_chains'])
+            td['fundam_params'], clp['varIdxs'], fit_pars['pars_chains'])
         min_max_p2 = prep_plots.p2_ranges(p2, min_max_p)
 
         trace = fit_pars['mcmc_trace']
-        args = [p2, gs, labels, min_max_p2, fit_pars['varIdxs'],
+        args = [p2, gs, labels, min_max_p2, clp['varIdxs'],
                 trace]
         cornerPlot.plot(0, *args)
 
@@ -46,7 +49,7 @@ def main(npd, pd, clp, td):
     # pl_param_pf: Parameters probability functions.
     for p in par_list:
         args = [
-            p, gs, labels, min_max_p, fit_pars['varIdxs'],
+            p, gs, labels, min_max_p, clp['varIdxs'],
             fit_pars['mean_sol'], fit_pars['map_sol'],
             fit_pars['median_sol'], fit_pars['mode_sol'],
             fit_pars['pardist_kde'], trace]

@@ -13,10 +13,10 @@ def main(synth_rand_seed):
     """
     if synth_rand_seed is None:
         synth_rand_seed = np.random.randint(100000)
-        print("\nRandom seed for synthetic clusters (random): {}".format(
+        print("Random seed for synthetic clusters (random): {}".format(
             synth_rand_seed))
     else:
-        print("\nRandom seed for synthetic clusters (manual): {}".format(
+        print("Random seed for synthetic clusters (manual): {}".format(
             synth_rand_seed))
 
     # In place for #505
