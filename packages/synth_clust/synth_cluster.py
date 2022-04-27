@@ -46,7 +46,7 @@ def main(
         ml, mh, al, ah)
 
     # Extract parameters
-    e, d, M_total, beta, R_V = model_proper
+    e, d, M_total, beta, R_V = model_proper #TODO REMOVE M_total
 
     # Move theoretical isochrone using the values 'e' and 'd'.
     isoch_moved = move_isochrone.main(
@@ -79,18 +79,18 @@ def main(
         if msk_m.sum() == 0:
             return synth_clust, M_total
 
-        N_compl_rm_stars = 0
+        compl_rm_perc = 0
         if completeness[-1] is True:
             # Indexes of elements in ed_compl_vals closest the (e, d) values
-            idx_e = np.argmin(abs(e - ed_compl_vals[0]))
-            idx_d = np.argmin(abs(d - ed_compl_vals[1]))
-            compl_rm_perc = ed_compl_vals[2][idx_e][idx_d]
-            # Estimation of stars removed by the completeness function
-            N_compl_rm_stars = int(N_obs_stars * compl_rm_perc)
+            idx_a = np.argmin(abs(a_model - ed_compl_vals[0]))
+            idx_e = np.argmin(abs(e - ed_compl_vals[1]))
+            idx_d = np.argmin(abs(d - ed_compl_vals[2]))
+            compl_rm_perc = ed_compl_vals[3][idx_a, idx_e, idx_d]
 
-        # Total number of stars sampled from 'st_dist_mass'
-        N_stars = N_obs_stars + N_compl_rm_stars
-        mass_dist = st_dist_mass[ml][0][msk_m][:N_stars]
+        # Total number of stars, corrected by the removal process by the
+        # completeness function below
+        N_stars = int(N_obs_stars / (1 - compl_rm_perc))
+        mass_dist = mass[msk_m][:N_stars]
         # Total mass estimation for this 'N_stars' value
         M_total = st_dist_mass[ml][1][msk_m][:N_stars][-1]
 

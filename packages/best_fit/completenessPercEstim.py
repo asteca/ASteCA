@@ -8,17 +8,21 @@ def main(clp, td):
     """
     Simulate synthetic cluster to obtain an estimate of the percentage of stars
     that are removed by the 'completeness' function. This value is made to
-    depend in the extinction and distance modulus parameter, found to be the
-    two that most affect it.
+    depend on the age, extinction, and distance modulus parameter, found to be
+    the three that most affect it.
 
     Used to correct the synthetic clusters in 'synth_cluster.py'.
     """
     fundam_params = td['fundam_params']
     # Indexes of "free" parameters (ext, dm)
-    varIdxs = [2, 3]
+    varIdxs = [1, 2, 3]
 
-    # Only extinction and distance modulus vary, the remaining parameters are
-    # kept fixed.
+    # Only age, extinction, and distance modulus vary, the remaining parameters
+    # are kept fixed.
+    if len(fundam_params[1]) == 1:
+        ages = [fundam_params[1][0]]
+    else:
+        ages = np.linspace(fundam_params[1][0], fundam_params[1][-1], 10)
     if len(fundam_params[2]) == 1:
         exts = [fundam_params[2][0]]
     else:
@@ -27,18 +31,22 @@ def main(clp, td):
         dms = [fundam_params[3][0]]
     else:
         dms = np.linspace(fundam_params[3][0], fundam_params[3][-1], 10)
-    ed_compl_vals = [exts, dms]
+    ed_compl_vals = [ages, exts, dms]
 
-    exts_dms = []
-    for ext in exts:
-        dms_lst = []
-        for dm in dms:
-            # Only *free* parameters go into the model
-            model = [ext, dm]
-            dms_lst.append(testSynthClust(
-                model, clp['max_mag_syn'], clp['completeness'], varIdxs, **td))
-        exts_dms.append(dms_lst)
-    ed_compl_vals.append(np.array(exts_dms))
+    age_exts_dms = []
+    for age in ages:
+        exts_dms = []
+        for ext in exts:
+            dms_lst = []
+            for dm in dms:
+                # Only *free* parameters go into the model
+                model = [age, ext, dm]
+                dms_lst.append(testSynthClust(
+                    model, clp['max_mag_syn'], clp['completeness'], varIdxs,
+                    **td))
+            exts_dms.append(dms_lst)
+        age_exts_dms.append(exts_dms)
+    ed_compl_vals.append(np.array(age_exts_dms))
 
     return ed_compl_vals
 
@@ -75,5 +83,5 @@ def testSynthClust(
         return 1
     isoch_compl = completeness_rm.main(isoch_mass, completeness)
 
-    crp = 1 - len(isoch_compl[0]) / len(mass_dist)
-    return crp
+    compl_rm_perc = 1 - len(isoch_compl[0]) / msk_m.sum()
+    return compl_rm_perc

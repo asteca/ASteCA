@@ -22,8 +22,8 @@ def main(isoch_binar, completeness):
     if completeness[-1] is False:
         return isoch_binar
 
-    # Remember that 'comp_perc' here means the percentage of stars that should
-    # be *REMOVED* from each mag range|bin.
+    # 'comp_perc' means the percentage of stars that should
+    # be *REMOVED* from each mag bin.
     bin_edges, comp_perc = completeness[:2]
 
     # If stars exist in the isochrone beyond the completeness magnitude
