@@ -2,7 +2,6 @@
 import numpy as np
 from ..synth_clust import synth_cluster, zaWAverage, move_isochrone,\
     cut_max_mag, mass_interp, completeness_rm
-from .bf_common import varPars
 
 
 def main(clp, td):
@@ -15,11 +14,11 @@ def main(clp, td):
     Used to correct the synthetic clusters in 'synth_cluster.py'.
     """
     fundam_params = td['fundam_params']
-    varIdxs, _, _ = varPars(fundam_params)
+    # Indexes of "free" parameters (ext, dm)
+    varIdxs = [2, 3]
 
     # Only extinction and distance modulus vary, the remaining parameters are
     # kept fixed.
-    z0, a0, m0, b0 = fundam_params[0][0], fundam_params[1][0], 0, 0
     if len(fundam_params[2]) == 1:
         exts = [fundam_params[2][0]]
     else:
@@ -34,10 +33,10 @@ def main(clp, td):
     for ext in exts:
         dms_lst = []
         for dm in dms:
-            crp = testSynthClust(
-                [z0, a0, ext, dm, m0, b0], clp['max_mag_syn'],
-                clp['completeness'], varIdxs, **td)
-            dms_lst.append(crp)
+            # Only *free* parameters go into the model
+            model = [ext, dm]
+            dms_lst.append(testSynthClust(
+                model, clp['max_mag_syn'], clp['completeness'], varIdxs, **td))
         exts_dms.append(dms_lst)
     ed_compl_vals.append(np.array(exts_dms))
 
