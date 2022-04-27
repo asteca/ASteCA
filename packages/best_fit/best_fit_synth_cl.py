@@ -27,11 +27,11 @@ def main(npd, pd, td, clp):
 
         # Pack common args for the 'synth_cluster.py' function.
         clp['syntClustArgs'] = (
-            pd['bp_vs_mass'], pd['alpha'],
+            pd['alpha'],
             clp['varIdxs'], clp['completeness'], clp['err_lst'],
             clp['max_mag_syn'], clp['N_obs_stars'],
             td['fundam_params'], td['ed_compl_vals'], td['ext_coefs'],
-            td['mean_bin_mr'], td['N_fc'], td['m_ini_idx'],
+            td['N_fc'], td['m_ini_idx'],
             td['st_dist_mass'], td['theor_tracks'], td['err_norm_rand'],
             td['binar_probs'], td['ext_unif_rand'])
 

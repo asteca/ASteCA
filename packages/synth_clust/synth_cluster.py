@@ -11,8 +11,8 @@ from . import add_errors
 
 def main(
     model, fundam_params, varIdxs, completeness, err_lst, max_mag_syn,
-    N_obs_stars, ed_compl_vals, ext_coefs, mean_bin_mr, N_fc, m_ini_idx,
-    st_dist_mass, theor_tracks, err_norm_rand, bp_vs_mass, alpha, binar_probs,
+    N_obs_stars, ed_compl_vals, ext_coefs, N_fc, m_ini_idx,
+    st_dist_mass, theor_tracks, err_norm_rand, alpha, binar_probs,
         ext_unif_rand, transpose_flag):
     """
     Takes an isochrone and returns a synthetic cluster created according to
@@ -102,8 +102,7 @@ def main(
         if isoch_mass.any():
             # Assignment of binarity.
             isoch_binar = binarity.main(
-                isoch_mass, alpha, beta, m_ini_idx, N_fc, bp_vs_mass,
-                binar_probs[ml])
+                isoch_mass, alpha, beta, m_ini_idx, N_fc, binar_probs[ml])
 
             # Percentage of mass added by the binaries:
             # binar_mass_perc = binary_sists_mass / single_sists_mass

@@ -72,10 +72,9 @@ def main(pars_f_path):
 
                 # Ranges for the fundamental parameters
                 elif reader[0] == 'R1':
-                    bp_vs_mass = str(reader[1])
-                    alpha = float(reader[2])
-                    q_vs_mass = str(reader[3])
-                    gamma = float(reader[4])
+                    alpha = float(reader[1])
+                    q_vs_mass = str(reader[2])
+                    gamma = float(reader[3])
 
                 # Ranges for the fundamental parameters
                 elif reader[0] == 'R2':
@@ -225,8 +224,7 @@ def main(pars_f_path):
         # Synthetic cluster parameters
         'synth_rand_seed': synth_rand_seed, 'par_ranges': par_ranges,
         'IMF_name': IMF_name, 'Max_mass': Max_mass,
-        'bp_vs_mass': bp_vs_mass, 'q_vs_mass': q_vs_mass,
-        'alpha': alpha, 'gamma': gamma,
+        'alpha': alpha, 'q_vs_mass': q_vs_mass, 'gamma': gamma,
         'completeness': completeness,
 
         # Best fit parameters.

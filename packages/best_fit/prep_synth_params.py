@@ -12,7 +12,7 @@ def main(pd, clp, td):
         return td
 
     # Keys added: 'ext_coefs', 'N_fc', 'm_ini_idx',
-    # 'st_dist_mass', 'theor_tracks', 'mean_bin_mr', 'err_norm_rand',
+    # 'st_dist_mass', 'theor_tracks', 'err_norm_rand',
     # 'binar_probs', 'ext_unif_rand'
     td = tracksPrep.main(td, **pd)
 
@@ -25,7 +25,7 @@ def main(pd, clp, td):
     td['st_dist_mass'] = imf.main(pd['IMF_name'], Nmets, pd['Max_mass'])
 
     td['err_norm_rand'], td['binar_probs'], td['ext_unif_rand'] = randVals(
-        td['st_dist_mass'], td['theor_tracks'])
+        td['st_dist_mass'], Nmets)
 
     td['ed_compl_vals'] = []
     if clp['completeness'][-1] is True:
@@ -34,7 +34,7 @@ def main(pd, clp, td):
     return td
 
 
-def randVals(st_dist_mass, theor_tracks):
+def randVals(st_dist_mass, Nmets):
     """
     Generate lists of random values used by the synthetic cluster generating
     function.
@@ -44,21 +44,17 @@ def randVals(st_dist_mass, theor_tracks):
     N_mass = 0
     for sdm in st_dist_mass:
         N_mass = max(len(sdm[0]), N_mass)
-
-    # Number of metallicity values defined
-    N_mets = theor_tracks.shape[0]
-
     binar_probs = []
-    for _ in range(N_mets):
+    for _ in range(Nmets):
         # Uniform probabilities, used for the binary assignment (one per
         # metallicity)
         binar_probs.append(np.random.uniform(0., 1., len(st_dist_mass[_][0])))
 
-    err_norm_rand = np.random.normal(0., 1., (N_mets, N_mass))
+    err_norm_rand = np.random.normal(0., 1., (Nmets, N_mass))
 
     # For the move_isoch() function. In place for #174
     # ext_unif_rand.append(np.random.uniform(0., 1., N_mass))
 
-    ext_unif_rand = np.random.uniform(0., 1., (N_mets, N_mass))
+    ext_unif_rand = np.random.uniform(0., 1., (Nmets, N_mass))
 
     return err_norm_rand, binar_probs, ext_unif_rand

@@ -1,10 +1,9 @@
 
 import numpy as np
-from scipy.interpolate import interp1d
 from scipy.stats import powerlaw
 
 
-def main(isoch_mass, alpha, beta, m_ini_idx, N_fc, bp_vs_mass, binar_probs):
+def main(isoch_mass, alpha, beta, m_ini_idx, N_fc, binar_probs):
     """
     Select a fraction of stars to be binaries, given a chosen method.
     """
@@ -12,7 +11,7 @@ def main(isoch_mass, alpha, beta, m_ini_idx, N_fc, bp_vs_mass, binar_probs):
     Ns = isoch_mass.shape[-1]
     mass = isoch_mass[m_ini_idx]
 
-    b_p = binarProbsF(bp_vs_mass, mass, alpha, beta)
+    b_p = binarProbsF(mass, alpha, beta)
     bin_indxs = DK_fit(binar_probs, Ns, mass, b_p)
 
     # Index of the first binary magnitude.
@@ -103,7 +102,6 @@ def binarGen(
     interp_tracks = np.concatenate((
         interp_tracks, np.zeros([N_mets, Na, Nd, N_mass])), axis=2)
 
-    all_mass_ratios = []
     # For each metallicity defined.
     for mx, _ in enumerate(interp_tracks):
         # For each age defined.
@@ -114,8 +112,6 @@ def binarGen(
 
             # Mass-ratio distribution
             mass_ratios = qDistribution(q_vs_mass, mass_ini, gamma)
-
-            all_mass_ratios += list(mass_ratios)
 
             # Calculate random secondary masses of these binary stars
             # between bin_mass_ratio*m1 and m1, where m1 is the primary
@@ -152,10 +148,7 @@ def binarGen(
             # Secondary masses
             interp_tracks[mx][ax][-1] = m2
 
-    # Mean binary mass-ratio
-    mean_bin_mr = np.mean(all_mass_ratios)
-
-    return interp_tracks, mean_bin_mr
+    return interp_tracks
 
 
 def qDistribution(q_vs_mass, M1, gamma):
@@ -189,28 +182,27 @@ def qDistribution(q_vs_mass, M1, gamma):
     return mass_ratios
 
 
-def binarProbsF(bp_vs_mass, x, alpha=None, beta=None):
+def binarProbsF(x, alpha=None, beta=None):
     """
     Distribution of probability of binarity (multiplicity fraction) versus
     primary masses.
 
     D&K: from Duchene and Kraus 2013.
-
     Source: https://stackoverflow.com/a/29359275/1391441
     """
-    if bp_vs_mass == "D&K":
-        # xx = (0.08, .29, .96, 2.4, 7.65, 28.5, 151)
-        # yy = (.22, .26, .46, .52, .64, .82, 1)
-        # logx = np.log10(xx)
-        # logy = np.log10(yy)
-        logx = (-1.097, -0.538, -0.018, 0.380, 0.884, 1.455, 2.18)
-        logy = (-0.658, -0.585, -0.337, -0.284, -0.194, -0.086, 0.)
-        lin_interp = interp1d(logx, logy)
-        b_p = np.power(10.0, lin_interp(np.log10(x)))
+    # if bp_vs_mass == "D&K":
+    #     # xx = (0.08, .29, .96, 2.4, 7.65, 28.5, 151)
+    #     # yy = (.22, .26, .46, .52, .64, .82, 1)
+    #     # logx = np.log10(xx)
+    #     # logy = np.log10(yy)
+    #     logx = (-1.097, -0.538, -0.018, 0.380, 0.884, 1.455, 2.18)
+    #     logy = (-0.658, -0.585, -0.337, -0.284, -0.194, -0.086, 0.)
+    #     lin_interp = interp1d(logx, logy)
+    #     b_p = np.power(10.0, lin_interp(np.log10(x)))
 
-    elif bp_vs_mass == "logfit":
-        b_p = alpha + beta * np.log(x + 1)
-        b_p = np.clip(b_p, a_min=0, a_max=1)
+    # elif bp_vs_mass == "logfit":
+    b_p = alpha + beta * np.log(x + 1)
+    b_p = np.clip(b_p, a_min=0, a_max=1)
 
     return b_p
 

@@ -44,7 +44,7 @@ def main(
     # Tracks prepared for binarity
     print("Generate binary system's parameters")
     all_met_vals, all_age_vals = td['fundam_params'][:2]
-    td['theor_tracks'], td['mean_bin_mr'] = binarity.binarGen(
+    td['theor_tracks'] = binarity.binarGen(
         q_vs_mass, gamma, td['m_ini_idx'], td['N_fc'],
         interp_tracks, mags_cols_intp, all_met_vals, all_age_vals)
 
