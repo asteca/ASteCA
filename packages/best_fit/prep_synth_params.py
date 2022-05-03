@@ -26,10 +26,6 @@ def main(pd, clp, td):
 
     td['rand_norm_vals'], td['rand_unif_vals'] = randVals(td['st_dist_mass'])
 
-    td['ed_compl_vals'] = []
-    # if clp['completeness'][-1] is True:
-    #     td['ed_compl_vals'] = completenessPercEstim.main(clp, td)
-
     return td
 
 

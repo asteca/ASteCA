@@ -31,9 +31,8 @@ def main(npd, pd, td, clp):
         clp['syntClustArgs'] = (
             pd['DR_dist'], pd['alpha'], model_proper,
             clp['varIdxs'], clp['completeness'], clp['err_lst'],
-            clp['max_mag_syn'], clp['N_obs_stars'],
-            td['fundam_params'], td['ed_compl_vals'], td['ext_coefs'],
-            td['N_fc'], td['m_ini_idx'], td['st_dist_mass'],
+            clp['max_mag_syn'], clp['N_obs_stars'], td['fundam_params'],
+            td['ext_coefs'], td['N_fc'], td['m_ini_idx'], td['st_dist_mass'],
             td['theor_tracks'], td['rand_norm_vals'], td['rand_unif_vals'])
 
         # import matplotlib.pyplot as plt

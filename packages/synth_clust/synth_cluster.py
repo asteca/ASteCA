@@ -12,9 +12,8 @@ from . import add_errors
 
 def main(
     model, transpose_flag, DR_dist, alpha, model_proper, varIdxs, completeness,
-    err_lst, max_mag_syn, N_obs_stars, fundam_params, ed_compl_vals, ext_coefs,
-    N_fc, m_ini_idx, st_dist_mass, theor_tracks, rand_norm_vals,
-        rand_unif_vals):
+    err_lst, max_mag_syn, N_obs_stars, fundam_params, ext_coefs, N_fc,
+        m_ini_idx, st_dist_mass, theor_tracks, rand_norm_vals, rand_unif_vals):
     """
     Takes an isochrone and returns a synthetic cluster created according to
     a certain mass distribution.
@@ -75,25 +74,6 @@ def main(
     if msk_m.sum() == 0:
         return synth_clust, M_total
 
-    # # The estimation of the total fraction of stars removed by the
-    # # completeness function is replaced by an exact removal *after*
-    # this function is applied. This does not affect the performance
-    # significantly. REMOVE
-    #
-    # compl_rm_perc = 0
-    # if completeness[-1] is True:
-    #     # Indexes of elements in ed_compl_vals closest the (e, d) values
-    #     idx_a = np.argmin(abs(a_model - ed_compl_vals[0]))
-    #     idx_e = np.argmin(abs(e - ed_compl_vals[1]))
-    #     idx_d = np.argmin(abs(d - ed_compl_vals[2]))
-    #     compl_rm_perc = ed_compl_vals[3][idx_a, idx_e, idx_d]
-    # # Total number of stars, corrected by the removal process by the
-    # # completeness function below
-    # N_stars = int(N_obs_stars / (1 - compl_rm_perc))
-    # mass_dist = mass[msk_m][:N_stars]
-    # # Total mass estimation for this 'N_stars' value
-    # M_total = st_dist_mass[ml][1][msk_m][:N_stars][-1]
-
     # Interpolate masses in mass_dist into the isochrone rejecting those
     # masses that fall outside of the isochrone's mass range.
     # This destroys the order by magnitude.
@@ -126,14 +106,12 @@ def main(
 
     # Percentage of mass added by the binaries:
     # binar_mass_perc = binary_sists_mass / single_sists_mass
-    binar_mass_perc = isoch_binar[-1].sum() /\
-        isoch_binar[m_ini_idx].sum()
+    binar_mass_perc = isoch_binar[-1].sum() / isoch_binar[m_ini_idx].sum()
     # Total mass corrected by the added mass as binary systems
     M_total = M_total * (1 + binar_mass_perc)
 
     # Assign errors according to errors distribution.
-    synth_clust = add_errors.main(
-        isoch_compl, err_lst, rand_norm_vals[1])
+    synth_clust = add_errors.main(isoch_compl, err_lst, rand_norm_vals[1])
 
     # Transposing is necessary for np.histogramdd() in the
     # likelihood

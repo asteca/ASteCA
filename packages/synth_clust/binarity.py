@@ -12,7 +12,6 @@ def main(isoch_mass, alpha, beta, m_ini_idx, N_fc, rand_unif_vals):
     mass = isoch_mass[m_ini_idx]
 
     b_p = binarProbsF(mass, alpha, beta)
-    # bin_indxs = DK_fit(rand_unif_vals, Ns, mass, b_p)
     # Stars (masses) with the largest binary probabilities are selected
     # proportional to their probability
     bin_indxs = b_p > rand_unif_vals[:Ns]
@@ -26,57 +25,9 @@ def main(isoch_mass, alpha, beta, m_ini_idx, N_fc, rand_unif_vals):
 
     # Update the binary systems' masses so that the secondary masses for
     # SINGLE systems are identified with a '0.' value.
-    # sing_indxs = list(set(range(Ns)) - set(bin_indxs))
-    # sing_indxs = findIxs(Ns, bin_indxs)
-    # isoch_mass[-1][sing_indxs] = 0.
     isoch_mass[-1][~bin_indxs] = 0.
 
     return isoch_mass
-
-
-# def DK_fit(rand_unif_vals, Ns, mass, b_p, Nbins=5):
-#     """
-#     Select binary systems according to their primary mass values.
-
-#     The stars (masses) with the largest binary probabilities should be
-#     selected more often (proportional to their probability). The delta
-#     'b_p - rand_unif_vals' results in larger values for masses with larger
-#     'b_p' values. But since np.argsort() puts the indexes of the smaller
-#     values first, we use 'rand_unif_vals - b_p' instead.
-#     """
-
-#     bp_delta = rand_unif_vals[:Ns] - b_p
-
-#     Ns_idx = np.arange(Ns)
-#     xx = np.linspace(mass.min(), mass.max(), Nbins)
-
-#     m_low, bin_indxs = xx[0], []
-#     for m_high in xx[1:]:
-#         # Masses in this range
-#         msk = (mass > m_low) & (mass < m_high)
-
-#         Ns_m = msk.sum()
-#         if Ns_m > 0:
-#             b_p_m = b_p[msk]
-#             # Estimate the binary fraction within this range
-#             bin_frac = np.mean(b_p_m)
-
-#             # bfc += Ns_m * bin_frac
-#             # Ns_mt += Ns_m
-
-#             Nb = int(Ns_m * bin_frac)
-#             if Nb > 0:
-#                 # Indexes of stars within this mass range
-#                 Ns_m_idx = Ns_idx[msk]
-
-#                 # Select stars with largest probabilities that are (randomly)
-#                 # larger than the uniform values in 'rand_unif_vals'
-#                 idx = np.argsort(bp_delta[msk])[:Nb]
-#                 bin_indxs += list(Ns_m_idx[idx])
-
-#         m_low = m_high
-
-#     return np.array(bin_indxs)
 
 
 def binarGen(
