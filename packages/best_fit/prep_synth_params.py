@@ -10,9 +10,7 @@ def main(pd, clp, td):
     if pd['best_fit_algor'] == 'n':
         return td
 
-    # Keys added: 'ext_coefs', 'N_fc', 'm_ini_idx',
-    # 'st_dist_mass', 'theor_tracks', 'err_norm_rand',
-    # 'binar_probs', 'ext_unif_rand'
+    # Interpolate the isochrones and generate binary systems
     td = tracksPrep.main(td, **pd)
 
     # Obtain extinction coefficients.
@@ -23,21 +21,22 @@ def main(pd, clp, td):
     Nmets = len(td['fundam_params'][0])
     td['st_dist_mass'] = imf.main(pd['IMF_name'], Nmets, pd['Max_mass'])
 
-    td['rand_norm_vals'], td['rand_unif_vals'] = randVals(td['st_dist_mass'])
+    td['rand_norm_vals'], td['rand_unif_vals'] = randVals(
+        td['theor_tracks'], td['st_dist_mass'])
 
     return td
 
 
-def randVals(st_dist_mass):
+def randVals(theor_tracks, st_dist_mass):
     """
     Generate lists of random values used by the synthetic cluster generating
     function.
     """
     # This is the maximum number of stars that will ever be interpolated into
     # an isochrone
-    N_mass = 0
+    N_isoch, N_mass = theor_tracks.shape[-1], 0
     for sdm in st_dist_mass:
-        N_mass = max(len(sdm[0]), N_mass)
+        N_mass = max(len(sdm[0]), N_mass, N_isoch)
 
     # Used by `move_isochrone()` and `add_errors`
     rand_norm_vals = np.random.normal(0., 1., (2, N_mass))

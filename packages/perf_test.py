@@ -26,7 +26,7 @@ zmin, zmax, amin, amax = 0.01, 0.02, 7.5, 8.5
 emin, emax, drmin, drmax = 0, 2, 0, .5
 dmmin, dmmax, bmin, bmax = 5, 20, 0., .5
 # Mass range
-Max_mass = 100000
+Max_mass = 1000
 # Maximum running time (in seconds)
 max_time = 20
 
@@ -73,15 +73,14 @@ def memrayCall():
 def main(pd, clp, td):
     """
     """
+    model_proper = np.array([_[0] for _ in td['fundam_params']])
     # Pack common args for the 'synth_cluster.py' function.
     syntClustArgs = (
-        pd['DR_dist'], pd['alpha'],
+        pd['DR_dist'], pd['alpha'], model_proper,
         clp['varIdxs'], clp['completeness'], clp['err_lst'],
-        clp['max_mag_syn'], clp['N_obs_stars'],
-        td['fundam_params'], td['ext_coefs'],
-        td['N_fc'], td['m_ini_idx'],
-        td['st_dist_mass'], td['theor_tracks'], td['rand_norm_vals'],
-        td['rand_unif_vals'])
+        clp['max_mag_syn'], clp['N_obs_stars'], td['fundam_params'],
+        td['ext_coefs'], td['N_fc'], td['m_ini_idx'], td['st_dist_mass'],
+        td['theor_tracks'], td['rand_norm_vals'], td['rand_unif_vals'])
 
     elapsed, start, Nmodels, tstep = 0., t.time(), 0, 10
     while elapsed < max_time:
@@ -89,10 +88,9 @@ def main(pd, clp, td):
         model = []
         for p in td['fundam_params']:
             model.append(np.random.uniform(min(p), max(p)))
+        model = np.array(model)[clp['varIdxs']]
 
         # Call synthetic cluster generation
-        # varIdxs = varPars(fundam_params)[0]
-        # model = np.array(model)[varIdxs]
         synth_clust = getSynthClust(model, True, syntClustArgs)[0]
         # Call likelihood
         _ = likelihood.main(pd['lkl_method'], synth_clust, clp['obs_clust'])
