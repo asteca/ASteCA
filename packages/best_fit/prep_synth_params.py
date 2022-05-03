@@ -1,7 +1,6 @@
 
 import numpy as np
 from ..synth_clust import tracksPrep, extin_coefs, imf
-from ..best_fit import completenessPercEstim
 
 
 def main(pd, clp, td):
