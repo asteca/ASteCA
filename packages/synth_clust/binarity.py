@@ -3,7 +3,7 @@ import numpy as np
 from scipy.stats import powerlaw
 
 
-def main(isoch_mass, alpha, beta, m_ini_idx, N_fc, binar_probs):
+def main(isoch_mass, alpha, beta, m_ini_idx, N_fc, rand_unif_vals):
     """
     Select a fraction of stars to be binaries, given a chosen method.
     """
@@ -12,7 +12,10 @@ def main(isoch_mass, alpha, beta, m_ini_idx, N_fc, binar_probs):
     mass = isoch_mass[m_ini_idx]
 
     b_p = binarProbsF(mass, alpha, beta)
-    bin_indxs = DK_fit(binar_probs, Ns, mass, b_p)
+    # bin_indxs = DK_fit(rand_unif_vals, Ns, mass, b_p)
+    # Stars (masses) with the largest binary probabilities are selected
+    # proportional to their probability
+    bin_indxs = b_p > rand_unif_vals[:Ns]
 
     # Index of the first binary magnitude.
     # mag_binar = m_ini_idx + 1
@@ -23,68 +26,61 @@ def main(isoch_mass, alpha, beta, m_ini_idx, N_fc, binar_probs):
 
     # Update the binary systems' masses so that the secondary masses for
     # SINGLE systems are identified with a '0.' value.
-    sing_indxs = list(set(range(Ns)) - set(bin_indxs))
-    isoch_mass[-1][sing_indxs] = 0.
+    # sing_indxs = list(set(range(Ns)) - set(bin_indxs))
+    # sing_indxs = findIxs(Ns, bin_indxs)
+    # isoch_mass[-1][sing_indxs] = 0.
+    isoch_mass[-1][~bin_indxs] = 0.
 
     return isoch_mass
 
 
-def DK_fit(binar_probs, Ns, mass, b_p, Nbins=5):
-    """
-    Select binary systems according to the primary mass values.
+# def DK_fit(rand_unif_vals, Ns, mass, b_p, Nbins=5):
+#     """
+#     Select binary systems according to their primary mass values.
 
-    The stars (masses) with the largest binary probabilities should be
-    selected more often (proportional to their probability). The delta
-    'b_p - binar_probs' results in larger values for masses with larger
-    'b_p' values. But since np.argsort() puts the indexes of the smaller
-    values first, we use 'binar_probs - b_p' instead.
-    """
-    bp_delta = binar_probs[:Ns] - b_p
+#     The stars (masses) with the largest binary probabilities should be
+#     selected more often (proportional to their probability). The delta
+#     'b_p - rand_unif_vals' results in larger values for masses with larger
+#     'b_p' values. But since np.argsort() puts the indexes of the smaller
+#     values first, we use 'rand_unif_vals - b_p' instead.
+#     """
 
-    Ns_idx = np.arange(Ns)
-    # xx = (0.08, .29, .96, 2.4, 7.65, 28.5, 151)
-    xx = np.linspace(mass.min(), mass.max(), Nbins)
-    m_low, bin_indxs = xx[0], []
+#     bp_delta = rand_unif_vals[:Ns] - b_p
 
-    bfc, Ns_mt = 0, 0
+#     Ns_idx = np.arange(Ns)
+#     xx = np.linspace(mass.min(), mass.max(), Nbins)
 
-    for m_high in xx[1:]:
-        # Masses in this range
-        msk = (mass > m_low) & (mass < m_high)
-        Ns_m = msk.sum()
-        if Ns_m > 0:
-            b_p_m = b_p[msk]
-            # Estimate the binary fraction within this range
-            bin_frac = np.mean(b_p_m)
+#     m_low, bin_indxs = xx[0], []
+#     for m_high in xx[1:]:
+#         # Masses in this range
+#         msk = (mass > m_low) & (mass < m_high)
 
-            bfc += Ns_m * bin_frac
-            Ns_mt += Ns_m
+#         Ns_m = msk.sum()
+#         if Ns_m > 0:
+#             b_p_m = b_p[msk]
+#             # Estimate the binary fraction within this range
+#             bin_frac = np.mean(b_p_m)
 
-            Nb = int(Ns_m * bin_frac)
-            if Nb > 0:
-                # Indexes of stars within this mass range
-                Ns_m_idx = Ns_idx[msk]
+#             # bfc += Ns_m * bin_frac
+#             # Ns_mt += Ns_m
 
-                # WORKS BUT IS RANDOM
-                # b_p_norm = b_p_m / b_p_m.sum()
-                # bin_indxs += list(np.random.choice(
-                #     Ns_m_idx, Nb, p=b_p_norm, replace=False))
+#             Nb = int(Ns_m * bin_frac)
+#             if Nb > 0:
+#                 # Indexes of stars within this mass range
+#                 Ns_m_idx = Ns_idx[msk]
 
-                # THIS DOES NOT WORK
-                # idx = np.argsort(b_p_m)[::-1][:Nb]
+#                 # Select stars with largest probabilities that are (randomly)
+#                 # larger than the uniform values in 'rand_unif_vals'
+#                 idx = np.argsort(bp_delta[msk])[:Nb]
+#                 bin_indxs += list(Ns_m_idx[idx])
 
-                # Select stars with largest probabilities that are (randomly)
-                # larger than the uniform values in 'binar_probs'
-                idx = np.argsort(bp_delta[msk])[:Nb]
-                bin_indxs += list(Ns_m_idx[idx])
+#         m_low = m_high
 
-        m_low = m_high
-
-    return np.array(bin_indxs)
+#     return np.array(bin_indxs)
 
 
 def binarGen(
-    q_vs_mass, gamma, m_ini_idx, N_fc, interp_tracks, mags_cols_intp,
+    gamma, m_ini_idx, N_fc, interp_tracks, mags_cols_intp,
         all_met_vals, all_age_vals):
     """
     For each theoretical isochrone defined.
@@ -111,7 +107,7 @@ def binarGen(
             mass_ini = isoch[m_ini_idx]
 
             # Mass-ratio distribution
-            mass_ratios = qDistribution(q_vs_mass, mass_ini, gamma)
+            mass_ratios = qDistribution(mass_ini, gamma)
 
             # Calculate random secondary masses of these binary stars
             # between bin_mass_ratio*m1 and m1, where m1 is the primary
@@ -151,14 +147,17 @@ def binarGen(
     return interp_tracks
 
 
-def qDistribution(q_vs_mass, M1, gamma):
+def qDistribution(M1, gamma):
     """
     D&K      : Distribution of mass-ratios versus primary masses
     (Duchene & Kraus 2013). Mass dependent.
     powerlaw : Power-law distribution with shape parameter 'gamma'. Not mass
     dependent.
     """
-    if q_vs_mass == "D&K":
+    try:
+        gamma = float(gamma)
+        mass_ratios = powerlaw.rvs(gamma, size=len(M1))
+    except ValueError:
         msk1, gamma1 = M1 <= 0.1, 4.2
         msk2, gamma2 = (M1 > 0.1) & (M1 <= 0.6), 0.4
         msk3, gamma3 = (M1 > 0.6) & (M1 <= 1.4), 0.3
@@ -173,11 +172,7 @@ def qDistribution(q_vs_mass, M1, gamma):
             q = np.random.power(gamma + 1, msk.sum())
             mass_ratios[msk] = q
 
-    elif q_vs_mass == "powerlaw":
-        mass_ratios = powerlaw.rvs(gamma, size=len(M1))
-
-    # import matplotlib.pyplot as plt
-    # plt.hist(mass_ratios);plt.show()
+    mass_ratios = np.clip(mass_ratios, a_min=0, a_max=1)
 
     return mass_ratios
 

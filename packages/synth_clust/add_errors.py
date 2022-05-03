@@ -2,12 +2,12 @@
 from ..math_f import exp_function
 
 
-def main(isoch_compl, err_lst, err_norm_rand):
+def main(isoch_compl, err_lst, rand_norm_vals):
     """
     Add random synthetic uncertainties to the magnitude and color(s)
     """
 
-    rnd = err_norm_rand[:isoch_compl.shape[-1]]
+    rnd = rand_norm_vals[:isoch_compl.shape[-1]]
 
     for i, popt_mc in enumerate(err_lst):
         # isoch_compl[0] is the main magnitude.

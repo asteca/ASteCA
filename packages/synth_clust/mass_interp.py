@@ -7,7 +7,10 @@ def main(isoch_cut, mass_ini, mass_dist):
     For each mass in the sampled IMF mass distribution, interpolate its value
     (and those of all the sub-arrays in 'isoch_cut') into the isochrone.
 
-    Masses that fall outside of the isochrone's mass range are rejected.
+    Masses that fall outside of the isochrone's mass range have been previously
+    rejected.
+
+    Assumes `mass_ini` is ordered
     """
 
     # Interpolate sampled masses

@@ -5,7 +5,7 @@ from . import binarity
 
 def main(
     td, synth_rand_seed, filters, colors, IMF_name, all_syst_filters,
-        q_vs_mass, gamma, **kwargs):
+        gamma, **kwargs):
     """
     Return list structured as:
 
@@ -45,8 +45,8 @@ def main(
     print("Generate binary system's parameters")
     all_met_vals, all_age_vals = td['fundam_params'][:2]
     td['theor_tracks'] = binarity.binarGen(
-        q_vs_mass, gamma, td['m_ini_idx'], td['N_fc'],
-        interp_tracks, mags_cols_intp, all_met_vals, all_age_vals)
+        gamma, td['m_ini_idx'], td['N_fc'], interp_tracks, mags_cols_intp,
+        all_met_vals, all_age_vals)
 
     return td
 

@@ -13,8 +13,7 @@ from ..decont_algors.local_cell_clean import bin_edges_f
 from ..aux_funcs import monteCarloPars, circFrac, ellipFrac
 from ..structure import king_profile
 from ..synth_clust import move_isochrone
-from ..synth_clust.masses_binar_probs import ranModels
-from ..best_fit.bf_common import getSynthClust
+from ..best_fit.bf_common import ranModels, getSynthClust
 
 
 # HARDCODED figure size and grid distribution
@@ -353,7 +352,7 @@ def p2_ranges(p2, min_max_p):
     Parameter ranges used by the MCMC 2-param density plots.
     """
     par_idx = {
-        'metal': 0, 'age': 1, 'ext': 2, 'dist': 3, 'mass': 4, 'binar': 5}
+        'metal': 0, 'age': 1, 'ext': 2, 'dr': 3, 'dist': 4, 'beta': 5}
     par = p2.split('-')
 
     min_max_p2 = min_max_p[par_idx[par[0]]] + min_max_p[par_idx[par[1]]]
@@ -790,25 +789,26 @@ def rdpAreasDists(
 
 
 def isoch_sigmaNreg(
-    fundam_params, D3_sol, theor_tracks, m_ini_idx, ext_coefs, N_fc,
-        ext_unif_rand, isoch_fit_params, isoch_fit_errors, syntClustArgs):
+    fundam_params, D3_sol, theor_tracks, m_ini_idx, ext_coefs, N_fc, DR_dist,
+    rand_norm_vals, rand_unif_vals, isoch_fit_params, isoch_fit_errors,
+        syntClustArgs):
     """
     Generate the uncertainty region, if uncertainties for at least one
     parameter exists.
     """
 
     # Selected solution values for all the parameters.
-    zm, am, e, d, _, _, R_V = isoch_fit_params[D3_sol + '_sol']
+    zm, am, e, dr, d, _, R_V = isoch_fit_params[D3_sol + '_sol']
     # Values in grid
     zg = np.argmin(abs(np.array(fundam_params[0]) - zm))
     ag = np.argmin(abs(np.array(fundam_params[1]) - am))
     # Move isochrone
-    isochrone = theor_tracks[zg][ag]
-    # TODO 'ext_diff' in place for #174
-    ext_diff = 0.
+    isochrone = np.array(theor_tracks[zg][ag])
+    # Use this array to position the shifted isochrone properly
+    rand_v = np.ones(isochrone.shape[-1]) * .5
     shift_isoch = move_isochrone.main(
-        isochrone, e, d, R_V, ext_coefs, N_fc, ext_unif_rand[zg],
-        m_ini_idx, ext_diff)
+        isochrone, e, dr, d, R_V, ext_coefs, N_fc, DR_dist, rand_v,
+        rand_v, m_ini_idx)
     shift_isoch = shift_isoch[:sum(N_fc)]
 
     # Generate random models from the selected solution (mean, median, mode,
@@ -820,10 +820,10 @@ def isoch_sigmaNreg(
     synthcl_Nsigma = np.array([])
     if models.any():
         synthcl_Nsigma = [[] for _ in range(sum(N_fc))]
-        for Nm, model in enumerate(models):
+        for model in models:
 
             # Estimate the mean and variance for each star via recurrence.
-            synth_cl = getSynthClust(model, *syntClustArgs, False)[0]
+            synth_cl = getSynthClust(model, False, syntClustArgs)[0]
             # Synthetic cluster
             if synth_cl.any():
                 for i, photom_dim in enumerate(synth_cl[:sum(N_fc)]):

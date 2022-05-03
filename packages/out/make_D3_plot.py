@@ -23,7 +23,8 @@ def main(npd, pd, clp, td):
 
     shift_isoch, synthcl_Nsigma = prep_plots.isoch_sigmaNreg(
         td['fundam_params'], pd['D3_sol'], td['theor_tracks'],
-        td['m_ini_idx'], td['ext_coefs'], td['N_fc'], td['ext_unif_rand'],
+        td['m_ini_idx'], td['ext_coefs'], td['N_fc'], pd['DR_dist'],
+        td['rand_norm_vals'], td['rand_unif_vals'],
         fit_pars, clp['isoch_fit_errors'], clp['syntClustArgs'])
 
     # Plot one ore more rows of CMDs/CCDs.
@@ -53,11 +54,11 @@ def main(npd, pd, clp, td):
             # pl_bf_synth_cl: Best fit synthetic cluster obtained.
             [gs, gs_y1, gs_y2, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
              x_ax, y_ax, hess_xedges, hess_yedges, x_synth_phot,
-             y_synth_phot, sy_sz_pt, binar_idx, pd['IMF_name'],
-             clp['binar_dist_vals'],
-             best_sol, clp['isoch_fit_errors'], x_isoch, y_isoch,
-             pd['lkl_method'], pd['lkl_binning'], pd['evol_track'],
-             pd['D3_sol']]
+             y_synth_phot, sy_sz_pt, binar_idx, best_sol, x_isoch, y_isoch,
+             pd['IMF_name'], pd['alpha'], pd['gamma'], pd['lkl_method'],
+             pd['lkl_binning'], pd['evol_track'], pd['D3_sol'],
+             clp['MassT_dist_vals'], clp['binar_dist_vals'],
+             clp['isoch_fit_errors']]
         ]
         for n, args in enumerate(arglist):
             mp_bestfit_CMD.plot(n, *args)
@@ -65,7 +66,7 @@ def main(npd, pd, clp, td):
         v_min_mp, v_max_mp = prep_plots.da_colorbar_range(
             clp['cl_syn_fit'], [])
         diag_fit_inv, dummy = prep_plots.da_phot_diag(clp['cl_syn_fit'], [])
-        cl_sz_pt = prep_plots.phot_diag_st_size(diag_fit_inv)
+        # cl_sz_pt = prep_plots.phot_diag_st_size(diag_fit_inv)
         # Main photometric diagram of observed cluster.
         i_y = 0 if yaxis == 'mag' else 1
         # x axis is always a color so this the index is fixed to '1'.
@@ -76,7 +77,7 @@ def main(npd, pd, clp, td):
         plot_observed_cluster(
             fig, gs, gs_y1, gs_y2, x_ax, y_ax, clp['cl_syn_fit'], x_min_cmd,
             x_max_cmd, y_min_cmd, y_max_cmd, clp['err_lst'], v_min_mp,
-            v_max_mp, obs_x, obs_y, obs_MPs, cl_sz_pt, hess_xedges,
+            v_max_mp, obs_x, obs_y, obs_MPs, sy_sz_pt, hess_xedges,
             hess_yedges, x_isoch, y_isoch, phot_Nsigma, pd['lkl_method'])
 
     # Generate output file.

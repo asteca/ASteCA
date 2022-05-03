@@ -25,15 +25,56 @@ def main(npd, pd, td, clp):
         clp['varIdxs'], clp['ndim'], clp['ranges'] = varPars(
             td['fundam_params'])
 
+        model_proper = np.array([_[0] for _ in td['fundam_params']])
+
         # Pack common args for the 'synth_cluster.py' function.
         clp['syntClustArgs'] = (
-            pd['alpha'],
+            pd['DR_dist'], pd['alpha'], model_proper,
             clp['varIdxs'], clp['completeness'], clp['err_lst'],
             clp['max_mag_syn'], clp['N_obs_stars'],
             td['fundam_params'], td['ed_compl_vals'], td['ext_coefs'],
-            td['N_fc'], td['m_ini_idx'],
-            td['st_dist_mass'], td['theor_tracks'], td['err_norm_rand'],
-            td['binar_probs'], td['ext_unif_rand'])
+            td['N_fc'], td['m_ini_idx'], td['st_dist_mass'],
+            td['theor_tracks'], td['rand_norm_vals'], td['rand_unif_vals'])
+
+        # import matplotlib.pyplot as plt
+        # mags_cols_cl = [[], []]
+        # for mag in list(zip(*list(zip(*clp['cl_syn_fit']))[1:][2])):
+        #     mags_cols_cl[0].append(mag)
+        # for col in list(zip(*list(zip(*clp['cl_syn_fit']))[1:][4])):
+        #     mags_cols_cl[1].append(col)
+        # from .bf_common import getSynthClust
+        # from ..synth_clust import move_isochrone
+
+        # def plot(model):
+        #     synth_clust = getSynthClust(
+        #         model, True, clp['syntClustArgs'])[0].T
+
+        #     # Selected solution values for all the parameters.
+        #     am = 9.6
+        #     zm, e, dr, d, R_V = model
+        #     # Values in grid
+        #     zg = np.argmin(abs(np.array(td['fundam_params'][0]) - zm))
+        #     ag = np.argmin(abs(np.array(td['fundam_params'][1]) - am))
+        #     # Move isochrone
+        #     isochrone = np.array(td['theor_tracks'][zg][ag])
+        #     # dr = 0
+        #     rand_v = np.ones(isochrone.shape[-1]) * .5
+        #     shift_isoch = move_isochrone.main(
+        #         isochrone, e, dr, d, R_V, td['ext_coefs'], td['N_fc'],
+        #         pd['DR_dist'], rand_v, rand_v, td['m_ini_idx'])
+        #     shift_isoch = shift_isoch[:sum(td['N_fc'])]
+
+        #     plt.scatter(mags_cols_cl[1][0], mags_cols_cl[0][0], alpha=.5)
+        #     plt.scatter(synth_clust[1], synth_clust[0], marker='x', alpha=.5)
+        #     plt.plot(shift_isoch[1], shift_isoch[0], c='k')
+        #     # plt.gca().invert_yaxis()
+        #     plt.grid(which='both')
+        #     plt.xlim(.5, 3)
+        #     plt.ylim(20.5, 10.5)
+        #     plt.show()
+
+        # plot(np.array([0.01534, 0.7, 0.25, 12.1, 3.1]))
+        # breakpoint()
 
         # from . import kombine_algor
         # isoch_fit_params = kombine_algor.main(

@@ -122,7 +122,7 @@ def main(npd, pd, clp, td):
     post_trace, pre_trace = fit_pars['pars_chains'], fit_pars['pars_chains_bi']
 
     # pl_param_chain: Parameters sampler chains.
-    par_list = ['metal', 'age', 'ext', 'dist', 'mass', 'binar']
+    par_list = ['metal', 'age', 'ext', 'dr', 'dist', 'beta']
     for p in par_list:
         args = [
             p, gs, best_sol, min_max_p, traceplot_args,

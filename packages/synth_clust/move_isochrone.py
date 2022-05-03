@@ -3,8 +3,8 @@ import numpy as np
 
 
 def main(
-    isochrone, ebv, dm, R_V, ext_coefs, N_fc, rand_unif, m_ini_idx,
-        ext_diff=.2):
+    isochrone, ebv, dr, dm, R_V, ext_coefs, N_fc, DR_dist, rand_norm,
+        rand_unif, m_ini_idx):
     """
     Receives an isochrone of a given age and metallicity and modifies
     its color and magnitude values according to given values for the extinction
@@ -36,15 +36,19 @@ def main(
     (m1 - m2)_obs = (m1 - m2)_int + E(m1 - m2)
     (m1 - m2)_obs = (m1 - m2)_int + (a12 + b12/Rv) * R_V * E(B-V)
     """
-    # Copy to avoid overwriting
-    # isochrone = np.array(isochrone)
 
-    # TODO: 'ext_diff' is in place for #174
+    # E_BV differential reddening
+    if DR_dist == 'uniform':
+        # ebv_dr = (2 * rand_unif[:isochrone.shape[-1]] - 1) * dr
+        ebv_dr = rand_unif[:isochrone.shape[-1]] * dr
+    elif DR_dist == 'normal':
+        # ebv_dr = rand_norm[:isochrone.shape[-1]] * dr
+        ebv_dr = abs(rand_norm[:isochrone.shape[-1]]) * dr
 
-    # E_BV affected by the differential reddening
-    ebv_dr = ebv + (2 * rand_unif[:isochrone.shape[-1]] - 1) * ext_diff
+    # ebv = np.clip(ebv + ebv_dr, a_min=0., a_max=np.inf)
 
-    Av = R_V * ebv_dr
+    # Av = R_V * ebv
+    Av = R_V * (ebv + ebv_dr)
     Nf, Nc = N_fc
 
     def magmove(fi):
@@ -55,8 +59,6 @@ def main(
         Ex = ((ext_coefs[ci][0][0] + ext_coefs[ci][0][1] / R_V)
               - (ext_coefs[ci][1][0] + ext_coefs[ci][1][1] / R_V)) * Av
         return Ex
-
-    # col0, mag0 = np.array(isochrone[1]), np.array(isochrone[0])
 
     # Move filters.
     for fi in range(Nf):
@@ -71,22 +73,5 @@ def main(
         isochrone[ci] += Ex
         # Move colors with binary data.
         isochrone[m_ini_idx + Nf + ci] += Ex
-
-    # import matplotlib.pyplot as plt
-    # plt.subplot(121)
-    # plt.scatter(col0, mag0, c='g')
-    # plt.gca().invert_yaxis()
-    # # import matplotlib.pyplot as plt
-    # plt.subplot(122)
-    # plt.scatter(isochrone[1], isochrone[0], c='g')
-    # # plt.scatter(isochrone[m_ini_idx + 2], isochrone[m_ini_idx + 1], c='r', alpha=.5)
-    # plt.gca().invert_yaxis()
-    # # Second color
-    # # plt.subplot(122)
-    # # plt.scatter(isochrone[2], isochrone[0], c='g')
-    # # plt.scatter(isochrone[6], isochrone[4], c='r', alpha=.5)
-    # # plt.gca().invert_yaxis()
-    # plt.show()
-    # breakpoint()
 
     return isochrone

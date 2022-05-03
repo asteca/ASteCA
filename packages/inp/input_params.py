@@ -67,21 +67,27 @@ def main(pars_f_path):
                 # Synthetic clusters parameters
                 elif reader[0] == 'R0':
                     synth_rand_seed = str(reader[1])
-                    IMF_name = str(reader[2])
-                    Max_mass = int(float(reader[3]))
 
-                # Ranges for the fundamental parameters
+                # Synthetic clusters parameters
                 elif reader[0] == 'R1':
-                    alpha = float(reader[1])
-                    q_vs_mass = str(reader[2])
-                    gamma = float(reader[3])
+                    IMF_name = str(reader[1])
+                    Max_mass = int(float(reader[2]))
 
-                # Ranges for the fundamental parameters
+                # Synthetic clusters parameters
                 elif reader[0] == 'R2':
-                    completeness = [_.replace(',', '') for _ in reader[1:]]
+                    DR_dist = str(reader[1])
 
                 # Ranges for the fundamental parameters
                 elif reader[0] == 'R3':
+                    alpha = float(reader[1])
+                    gamma = reader[2]
+
+                # Ranges for the fundamental parameters
+                elif reader[0] == 'R4':
+                    completeness = [_.replace(',', '') for _ in reader[1:]]
+
+                # Ranges for the fundamental parameters
+                elif reader[0] == 'R5':
                     par_ranges.append(reader[1:])
 
                 # elif reader[0] == 'RZ':
@@ -223,9 +229,8 @@ def main(pars_f_path):
 
         # Synthetic cluster parameters
         'synth_rand_seed': synth_rand_seed, 'par_ranges': par_ranges,
-        'IMF_name': IMF_name, 'Max_mass': Max_mass,
-        'alpha': alpha, 'q_vs_mass': q_vs_mass, 'gamma': gamma,
-        'completeness': completeness,
+        'IMF_name': IMF_name, 'Max_mass': Max_mass, 'DR_dist': DR_dist,
+        'alpha': alpha, 'gamma': gamma, 'completeness': completeness,
 
         # Best fit parameters.
         'best_fit_algor': best_fit_algor, 'mins_max': mins_max,

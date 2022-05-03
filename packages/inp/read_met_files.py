@@ -15,15 +15,21 @@ def main(pd, clust_name, **kwargs):
 
     clPresent = True
     try:
-        td['fundam_params'] = copy.deepcopy(
-            pd['fundam_params_all'][clust_name])
+        td['fundam_params'] = [
+            pd['fundam_params_all'][clust_name][0],
+            pd['fundam_params_all'][clust_name][1]]
+        td['fundam_params'] += [
+            np.array(_) for _ in pd['fundam_params_all'][clust_name][2:]]
     except KeyError:
         clPresent = False
-        print(("Cluster not found in line 'R3'. Default to "
+        print(("Cluster not found in line 'R5'. Default to "
                "'CLUSTER' values"))
     if clPresent is False:
-        td['fundam_params'] = copy.deepcopy(
-            pd['fundam_params_all']['CLUSTER'])
+        td['fundam_params'] = [
+            pd['fundam_params_all']['CLUSTER'][0],
+            pd['fundam_params_all']['CLUSTER'][1]]
+        td['fundam_params'] += [
+            np.array(_) for _ in pd['fundam_params_all']['CLUSTER'][2:]]
 
     clPresent = True
     try:

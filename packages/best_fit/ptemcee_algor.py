@@ -141,7 +141,7 @@ def loglkl(
     logpost = -1e9
     if rangeFlag:
         # Generate synthetic cluster.
-        synth_clust = getSynthClust(model, *synthcl_args, True)[0]
+        synth_clust = getSynthClust(model, True, synthcl_args)[0]
 
         # Call likelihood function for this model.
         lkl = likelihood.main(lkl_method, synth_clust, obs_clust)

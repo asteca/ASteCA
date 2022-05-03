@@ -24,17 +24,16 @@ def main(pd, clp, td):
     Nmets = len(td['fundam_params'][0])
     td['st_dist_mass'] = imf.main(pd['IMF_name'], Nmets, pd['Max_mass'])
 
-    td['err_norm_rand'], td['binar_probs'], td['ext_unif_rand'] = randVals(
-        td['st_dist_mass'], Nmets)
+    td['rand_norm_vals'], td['rand_unif_vals'] = randVals(td['st_dist_mass'])
 
     td['ed_compl_vals'] = []
-    if clp['completeness'][-1] is True:
-        td['ed_compl_vals'] = completenessPercEstim.main(clp, td)
+    # if clp['completeness'][-1] is True:
+    #     td['ed_compl_vals'] = completenessPercEstim.main(clp, td)
 
     return td
 
 
-def randVals(st_dist_mass, Nmets):
+def randVals(st_dist_mass):
     """
     Generate lists of random values used by the synthetic cluster generating
     function.
@@ -44,17 +43,11 @@ def randVals(st_dist_mass, Nmets):
     N_mass = 0
     for sdm in st_dist_mass:
         N_mass = max(len(sdm[0]), N_mass)
-    binar_probs = []
-    for _ in range(Nmets):
-        # Uniform probabilities, used for the binary assignment (one per
-        # metallicity)
-        binar_probs.append(np.random.uniform(0., 1., len(st_dist_mass[_][0])))
 
-    err_norm_rand = np.random.normal(0., 1., (Nmets, N_mass))
+    # Used by `move_isochrone()` and `add_errors`
+    rand_norm_vals = np.random.normal(0., 1., (2, N_mass))
 
-    # For the move_isoch() function. In place for #174
-    # ext_unif_rand.append(np.random.uniform(0., 1., N_mass))
+    # Used by `move_isochrone()`, `binarity()`, `completeness_rm()`
+    rand_unif_vals = np.random.uniform(0., 1., (3, N_mass))
 
-    ext_unif_rand = np.random.uniform(0., 1., (Nmets, N_mass))
-
-    return err_norm_rand, binar_probs, ext_unif_rand
+    return rand_norm_vals, rand_unif_vals

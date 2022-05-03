@@ -144,9 +144,9 @@ def pl_hess_diag(
 
 def pl_bf_synth_cl(
     gs, gs_y1, gs_y2, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
-    hess_xedges, hess_yedges, x_synth, y_synth, sy_sz_pt, binar_idx, IMF_name,
-    binar_dist_vals, best_sol, p_err, x_isoch, y_isoch, lkl_method,
-        bin_method, evol_track, D3_sol):
+    hess_xedges, hess_yedges, x_synth, y_synth, sy_sz_pt, binar_idx, best_sol,
+    x_isoch, y_isoch, IMF_name, alpha, gamma, lkl_method, bin_method,
+        evol_track, D3_sol, MassT_dist_vals, binar_dist_vals, p_err):
     """
     Best fit synthetic cluster obtained.
     """
@@ -196,6 +196,29 @@ def pl_bf_synth_cl(
         ax_t.axis('off')  # Remove axis from frame.
         t1 = r'$Synthetic\;cluster\;parameters$' + '\n[Tracks: {}]'.format(
             evol_track)
+
+        # t2 = r"{:>17}$:\;{}$".format(
+        #     r'$IMF$', IMF_name.replace('_', r'\;').title())
+        # t3 = r"{:>17}$=\;{}$".format(r'$R_{{V}}$', best_sol[6])
+        # t4 = r"{:>17}$=\;{:.5f}\pm {:.5f}$".format(
+        #     r"$z$", best_sol[0], p_err[0][2])
+        # t5 = r"{:>17}$=\;{:.3f}\pm {:.3f}$".format(
+        #     r'$\log(age)$', best_sol[1], p_err[1][2])
+        # t6 = r"{:>17}$=\;{:.3f}\pm {:.3f}$".format(
+        #     r'$E_{{(B-V)}}$', best_sol[2], p_err[2][2])
+        # t7 = r"{:>17}$=\;{:.3f}\pm {:.3f}$".format(
+        #     r'$DR$', best_sol[3], p_err[3][2])
+        # t8 = r"{:>17}$=\;{:.2f}\pm {:.2f}$".format(
+        #     r'$(m-M)_{{0}}$', best_sol[4], p_err[4][2])
+        # t9 = r"{:>17}$=\;{:.3f}$".format(r'$\alpha$', alpha)
+        # t10 = r"{:>17}$=\;{:.3f}\pm {:.3f}$".format(
+        #     r'$\beta$', best_sol[5], p_err[5][2])
+        # t11 = r"{:>17}$=\;{}$".format(r'$\gamma$', gamma)
+        # t12 = r"{:>17}$=\;{:.0f}\pm {:.0f}$".format(
+        #     r'$M\,(M_{{\odot}})$', MassT_dist_vals[0], MassT_dist_vals[1])
+        # t13 = r"{:>17}$=\;{:.2f}\pm {:.2f}$".format(
+        #     r'$b_{{frac}}$', binar_dist_vals[0], binar_dist_vals[1])
+
         t2 = r'$IMF \hspace{{3.}}:\;{}$'.format(
             IMF_name.replace('_', r'\;').title())
         t3 = r'$R_{{V}} \hspace{{3.2}}=\;{}$'.format(best_sol[6])
@@ -205,18 +228,23 @@ def pl_bf_synth_cl(
             best_sol[1], p_err[1][2])
         t6 = r'$E_{{(B-V)}} \hspace{{1.35}}=\;{:.3f}\pm {:.3f}$'.format(
             best_sol[2], p_err[2][2])
-        t7 = r'$(m-M)_{{0}}=\;{:.3f} \pm {:.3f}$'.format(
+        t7 = r'$DR \hspace{{2.9}} =\;{:.3f}\pm {:.3f}$'.format(
             best_sol[3], p_err[3][2])
-        t8 = r'$M\,(M_{{\odot}}) \hspace{{1.07}} =\;{:.0f}\pm {:.0f}$'.format(
+        t8 = r'$(m-M)_{{0}} =\;{:.2f} \pm {:.2f}$'.format(
             best_sol[4], p_err[4][2])
-        t9 = r'$\beta \hspace{{3.85}}=\;{:.2f}\pm {:.2f}$'.format(
+        t9 = r"$\alpha \hspace{{3.85}}=\;{:.3f}$".format(alpha)
+        t10 = r'$\beta \hspace{{3.85}}=\;{:.3f}\pm {:.3f}$'.format(
             best_sol[5], p_err[5][2])
-        t9 += '\n'
-        t9 += r'$(b_{{frac}} \hspace{{2.}}=\;{:.2f}\pm {:.2f})$'.format(
+        t11 = r"$\gamma \hspace{{3.85}}=\;{}$".format(gamma)
+
+        t12 = r'$M\,(M_{{\odot}}) \hspace{{.83}}=\;{:.0f}\pm {:.0f}$'.format(
+            MassT_dist_vals[0], MassT_dist_vals[1])
+        t13 = r'$b_{{frac}} \hspace{{2.1}}=\;{:.2f}\pm {:.2f}$'.format(
             binar_dist_vals[0], binar_dist_vals[1])
 
         text = t1 + '\n\n' + t2 + '\n' + t3 + '\n' + t4 + '\n' + t5 + '\n' +\
-            t6 + '\n' + t7 + '\n' + t8 + '\n' + t9
+            t6 + '\n' + t7 + '\n' + t8 + '\n' + t9 + '\n' + t10 + '\n' +\
+            t11 + '\n\n' + t12 + '\n' + t13
         ob = offsetbox.AnchoredText(text, pad=1, loc=6, borderpad=-5)
         ob.patch.set(alpha=0.85)
         ax_t.add_artist(ob)

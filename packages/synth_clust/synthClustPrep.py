@@ -26,7 +26,7 @@ def main(clp, pd, td):
     # Model with the "best" fitted parameters.
     model_var = np.array(model)[clp['varIdxs']]
     # shape: (N_dim, N_stars)
-    synth_clust = getSynthClust(model_var, *clp['syntClustArgs'], False)[0]
+    synth_clust = getSynthClust(model_var, False, clp['syntClustArgs'])[0]
     # Get uncertainties
     sigma = []
     for i, popt_mc in enumerate(clp['err_lst']):

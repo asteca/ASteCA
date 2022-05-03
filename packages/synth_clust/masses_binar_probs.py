@@ -1,7 +1,8 @@
 
+import logging
 import numpy as np
 from scipy.spatial import cKDTree
-from ..best_fit.bf_common import getSynthClust
+from ..best_fit.bf_common import ranModels, getSynthClust
 from ..best_fit.prep_obs_params import dataProcess
 from .. import update_progress
 
@@ -11,11 +12,6 @@ def main(clp, pd, td):
     Assign masses to the (decontaminated) observed cluster, and binary
     probabilities (if binarity was estimated).
     """
-
-    # # Dummy arrays
-    # clp['st_mass_mean'], clp['st_mass_std'],\
-    #     clp['st_mass_mean_binar'], clp['st_mass_std_binar'],\
-    #     clp['prob_binar'] = [np.array([]) for _ in range(5)]
     # No best fit process was employed
     if pd['best_fit_algor'] == 'n':
         return clp
@@ -49,7 +45,7 @@ def main(clp, pd, td):
     for Nm, model in enumerate(models):
 
         # Generate synthetic cluster from the 'model'.
-        isoch, M_total = getSynthClust(model, *clp['syntClustArgs'], False)
+        isoch, M_total = getSynthClust(model, False, clp['syntClustArgs'])
         if not isoch.any():
             continue
 
@@ -97,56 +93,22 @@ def main(clp, pd, td):
     # If the distribution of binaries with mass was fitted instead of the
     # binary fraction parameter, then this must be obtained indirectly.
     MassT_dist_vals = (np.mean(MassT_vals), np.std(MassT_vals))
+    # The binary fraction will have a small dispersion even for fixed 'beta'
+    # because the probabilities depend on the masses which vary for different
+    # values of (z, a)
     binar_dist_vals = (np.mean(binar_vals), np.std(binar_vals))
-    print(MassT_dist_vals)
-    print(binar_dist_vals)
+    if pd['Max_mass'] < np.mean(MassT_vals) + np.std(MassT_vals):
+        logging.warning(
+            "The total mass is too close to the 'Max_mass'"
+            + "parameter. Consider increasing this value.")
 
     clp['st_mass_mean'], clp['st_mass_std'], clp['st_mass_mean_binar'],\
-        clp['st_mass_std_binar'], clp['prob_binar'], clp['binar_dist_vals'] =\
-        st_mass_mean, st_mass_std, st_mass_mean_binar, st_mass_std_binar,\
-        prob_binar, binar_dist_vals
+        clp['st_mass_std_binar'], clp['prob_binar'], clp['MassT_dist_vals'],\
+        clp['binar_dist_vals'] = st_mass_mean, st_mass_std,\
+        st_mass_mean_binar, st_mass_std_binar, prob_binar,\
+        MassT_dist_vals, binar_dist_vals
 
     return clp
-
-
-def ranModels(fundam_params, D3_sol, isoch_fit_params, isoch_fit_errors,
-              N_models=1000):
-    """
-    Generate the requested models via sampling a Gaussian centered on the
-    selected solution, with standard deviation given by the attached
-    uncertainty.
-
-    HARDCODED:
-
-    N_models: number of models to generate.
-    """
-    # Use the selected solution values for all the parameters.
-    model = isoch_fit_params[D3_sol + '_sol']
-
-    # Extract standard deviations.
-    p_vals, nancount = [], 0
-    for i, p in enumerate(model):
-        std = isoch_fit_errors[i][-1]
-        if not np.isnan(std):
-            p_vals.append([
-                p, std, min(fundam_params[i]), max(fundam_params[i])])
-        else:
-            # The parameter has no uncertainty attached
-            nancount += 1
-
-    # Check if at least one parameter has an uncertainty attached.
-    if nancount < 6:
-        # Generate 'N_models' random models.
-        models = []
-        for par in p_vals:
-            model = np.random.normal(par[0], par[1], N_models)
-            model = np.clip(model, a_min=par[2], a_max=par[3])
-            models.append(model)
-        models = np.array(models).T
-    else:
-        models = np.array([])
-
-    return models
 
 
 def photomMatch(obs_phot, photom, mass_ini):

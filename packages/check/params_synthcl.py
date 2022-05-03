@@ -65,7 +65,7 @@ def getParamVals(pd):
                     p = p_rng[0]
                     if p not in ('min', 'max'):
                         raise ValueError(
-                            "R3: unrecognized string '{}'".format(p))
+                            "R5: unrecognized string '{}'".format(p))
                 tlst[idx] = [p]
             else:
                 try:
@@ -74,7 +74,7 @@ def getParamVals(pd):
                     pmin = p_rng[0]
                     if pmin != 'min':
                         raise ValueError(
-                            ("R3: unrecognized string '{}'.\nOnly 'min' "
+                            ("R5: unrecognized string '{}'.\nOnly 'min' "
                              + "string is accepted as the lower "
                              + "range.").format(pmin))
                 try:
@@ -83,14 +83,14 @@ def getParamVals(pd):
                     pmax = p_rng[1]
                     if pmax != 'max':
                         raise ValueError(
-                            ("R3: unrecognized string '{}'.\nOnly 'max' "
+                            ("R5: unrecognized string '{}'.\nOnly 'max' "
                              + "string is accepted as the upper "
                              + "range.").format(pmax))
                 tlst[idx] = [pmin, pmax]
 
-        # GARDCODED NUMBER OF PARAMETERS EXPECTED
+        # HARDCODED NUMBER OF PARAMETERS EXPECTED
         if len(tlst) != 7:
-            raise ValueError("Missing parameters in line 'R3'")
+            raise ValueError("Missing parameters in line 'R5'")
         fundam_params_all[cl_pars[0]] = tlst
 
     pd['fundam_params_all'] = fundam_params_all
@@ -191,29 +191,46 @@ def checkSynthClustParams(pd):
     if pd['Max_mass'] < 100.:
         raise ValueError("Minimum 'Max_mass' must be >= 100")
 
+    if pd['DR_dist'] not in ('uniform', 'normal'):
+        raise ValueError("'DR_dist' parameter ('{}') is not recognized".format(
+            pd['DR_dist']))
+
     if pd['alpha'] < 0.:
         raise ValueError(
             "'alpha' parameter ('{}') is out of\nboundaries. Select"
             " a value <=0".format(pd['alpha']))
-    if pd['gamma'] <= 0.:
-        raise ValueError(
-            "'gamma' parameter ('{}') is out of\nboundaries. Select"
-            " a value larger than 0".format(pd['gamma']))
 
-    for key, vals in pd['fundam_params_all'].items():
+    try:
+        float(pd['gamma'])
+        if pd['gamma'] <= 0.:
+            raise ValueError(
+                "'gamma' parameter ('{}') is out of\nboundaries. Select"
+                " a value larger than 0".format(pd['gamma']))
+    except ValueError:
+        if pd['gamma'] != 'D&K':
+            raise ValueError(
+                "Unrecognized 'gamma' value ('{}')".format(pd['gamma']))
+
+    pars = ('E_BV', 'DR', 'd_m', 'Beta')
+    for i, (key, vals) in enumerate(pd['fundam_params_all'].items()):
+        if i > 1:
+            if vals[i][-1] < vals[i][0]:
+                raise ValueError((
+                    "{}: Maximum value must be greater than minimum").format(
+                    pars[i - 2]))
+
         # Check E_BV
         if vals[2][0] < 0.:
-            raise ValueError("Minimum extinction must be a positive value")
-        # Check d_m
+            raise ValueError("Minimum extinction is 0")
+        # Check DR
         if vals[3][0] < 0.:
-            raise ValueError(
-                "Minimum distance modulus must be a positive value")
-        # Check mass
-        if vals[4][0] < 100.:
-            raise ValueError("Minimum mass must be >= 100")
-        # Check b_fr
-        if vals[5][0] < 0. or vals[5][0] > 1.:
-            raise ValueError("Binary fraction must be in the range [0, 1]")
+            raise ValueError("Minimum differential reddening is 0")
+        # Check d_m
+        if vals[4][0] < 0.:
+            raise ValueError("Minimum distance modulus is 0")
+        # Check Beta
+        if vals[5][0] < 0.:
+            raise ValueError("Minimum Beta parameter is 0")
         # Check R_V
         if vals[6][0] <= 0.:
-            raise ValueError("Minimum R_V must be > 0")
+            raise ValueError("Minimum R_V is 0")

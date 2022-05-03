@@ -24,15 +24,16 @@ def main(npd, pd, clp, td):
     xf, yf = .02, .999
     add_version_plot.main(x_fix=xf, y_fix=yf)
 
-    labels = [r'$z$', r'$log(age)$', r'$E_{(B-V)}$', r'$(m-M)_o$',
-              r'$M\,(M_{{\odot}})$', r'$\beta$']
+    # r'$M\,(M_{{\odot}})$'
+    labels = [r'$z$', r'$log(age)$', r'$E_{(B-V)}$', r'$DR$', r'$(m-M)_o$',
+              r'$\beta$']
 
     # pl_2_param_dens: Param vs param density map.
     for p2 in [
-            'metal-age', 'metal-ext', 'metal-dist', 'metal-mass',
-            'metal-binar', 'age-ext', 'age-dist', 'age-mass',
-            'age-binar', 'ext-dist', 'ext-mass', 'ext-binar',
-            'dist-mass', 'dist-binar', 'mass-binar']:
+            'metal-age', 'metal-ext', 'metal-dr', 'metal-dist', 'metal-beta',
+            'age-ext', 'age-dist', 'age-dr', 'age-beta',
+            'ext-dr', 'ext-dist', 'ext-beta',
+            'dr-dist', 'dr-beta', 'dist-beta']:
 
         # Limits for the 2-dens plots.
         min_max_p = prep_plots.param_ranges(
@@ -40,11 +41,10 @@ def main(npd, pd, clp, td):
         min_max_p2 = prep_plots.p2_ranges(p2, min_max_p)
 
         trace = fit_pars['mcmc_trace']
-        args = [p2, gs, labels, min_max_p2, clp['varIdxs'],
-                trace]
+        args = [p2, gs, labels, min_max_p2, clp['varIdxs'], trace]
         cornerPlot.plot(0, *args)
 
-    par_list = ['metal', 'age', 'ext', 'dist', 'mass', 'binar']
+    par_list = ['metal', 'age', 'ext', 'dr', 'dist', 'beta']
 
     # pl_param_pf: Parameters probability functions.
     for p in par_list:

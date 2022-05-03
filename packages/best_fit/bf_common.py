@@ -27,22 +27,14 @@ def varPars(fundam_params):
     return varIdxs, ndim, np.array(ranges)
 
 
-def getSynthClust(
-    model, alpha, varIdxs, completeness, err_lst, max_mag_syn,
-    N_obs_stars, fundam_params, ed_compl_vals, ext_coefs, N_fc,
-    m_ini_idx, st_dist_mass, theor_tracks, err_norm_rand, binar_probs,
-        ext_unif_rand, transpose_flag):
+def getSynthClust(model, transpose_flag, syntClustArgs):
     """
     Generate synthetic cluster given by 'model'.
 
     transpose_flag=False : returns the non-reduced, non-transposed array
     """
 
-    return synth_cluster.main(
-        model, fundam_params, varIdxs, completeness, err_lst,
-        max_mag_syn, N_obs_stars, ed_compl_vals, ext_coefs,
-        N_fc, m_ini_idx, st_dist_mass, theor_tracks, err_norm_rand,
-        alpha, binar_probs, ext_unif_rand, transpose_flag)
+    return synth_cluster.main(model, transpose_flag, *syntClustArgs)
 
 
 def fillParams(fundam_params, varIdxs, model):
@@ -240,3 +232,43 @@ def thinChain(mcmc_trace, acorr_t):
     """
     """
     return mcmc_trace[:, ::int(np.mean(acorr_t))]
+
+
+def ranModels(fundam_params, D3_sol, isoch_fit_params, isoch_fit_errors,
+              N_models=1000):
+    """
+    Generate the requested models via sampling a Gaussian centered on the
+    selected solution, with standard deviation given by the attached
+    uncertainty.
+
+    HARDCODED:
+
+    N_models: number of models to generate.
+    """
+    # Use the selected solution values for all the parameters.
+    model = isoch_fit_params[D3_sol + '_sol']
+
+    # Extract standard deviations.
+    p_vals, nancount = [], 0
+    for i, p in enumerate(model):
+        std = isoch_fit_errors[i][-1]
+        if not np.isnan(std):
+            p_vals.append([
+                p, std, min(fundam_params[i]), max(fundam_params[i])])
+        else:
+            # The parameter has no uncertainty attached
+            nancount += 1
+
+    # Check if at least one parameter has an uncertainty attached.
+    if nancount < 7:  # HARDCODED VALUE
+        # Generate 'N_models' random models.
+        models = []
+        for par in p_vals:
+            model = np.random.normal(par[0], par[1], N_models)
+            model = np.clip(model, a_min=par[2], a_max=par[3])
+            models.append(model)
+        models = np.array(models).T
+    else:
+        models = np.array([])
+
+    return models

@@ -187,19 +187,19 @@ def pl_2_param_dens(_2_params, gs, labels, min_max_p2, varIdxs, params_trace):
     plot_dict = {
         'metal-age': [0, 2, 2, 4, 0, 1],
         'metal-ext': [0, 2, 4, 6, 0, 2],
-        'metal-dist': [0, 2, 6, 8, 0, 3],
-        'metal-mass': [0, 2, 8, 10, 0, 4],
-        'metal-binar': [0, 2, 10, 12, 0, 5],
+        'metal-dr': [0, 2, 6, 8, 0, 3],
+        'metal-dist': [0, 2, 8, 10, 0, 4],
+        'metal-beta': [0, 2, 10, 12, 0, 5],
         'age-ext': [2, 4, 4, 6, 1, 2],
-        'age-dist': [2, 4, 6, 8, 1, 3],
-        'age-mass': [2, 4, 8, 10, 1, 4],
-        'age-binar': [2, 4, 10, 12, 1, 5],
-        'ext-dist': [4, 6, 6, 8, 2, 3],
-        'ext-mass': [4, 6, 8, 10, 2, 4],
-        'ext-binar': [4, 6, 10, 12, 2, 5],
-        'dist-mass': [6, 8, 8, 10, 3, 4],
-        'dist-binar': [6, 8, 10, 12, 3, 5],
-        'mass-binar': [8, 10, 10, 12, 4, 5]
+        'age-dr': [2, 4, 6, 8, 1, 3],
+        'age-dist': [2, 4, 8, 10, 1, 4],
+        'age-beta': [2, 4, 10, 12, 1, 5],
+        'ext-dr': [4, 6, 6, 8, 2, 3],
+        'ext-dist': [4, 6, 8, 10, 2, 4],
+        'ext-beta': [4, 6, 10, 12, 2, 5],
+        'dr-dist': [6, 8, 8, 10, 3, 4],
+        'dr-beta': [6, 8, 10, 12, 3, 5],
+        'dist-beta': [8, 10, 10, 12, 4, 5]
     }
 
     gs_x1, gs_x2, gs_y1, gs_y2, mx, my = plot_dict[_2_params]
@@ -263,8 +263,8 @@ def pl_param_pf(
     '''
     plot_dict = {
         'metal': [0, 2, 0, 2, 0], 'age': [2, 4, 2, 4, 1],
-        'ext': [4, 6, 4, 6, 2], 'dist': [6, 8, 6, 8, 3],
-        'mass': [8, 10, 8, 10, 4], 'binar': [10, 12, 10, 12, 5]
+        'ext': [4, 6, 4, 6, 2], 'dr': [6, 8, 6, 8, 3],
+        'dist': [8, 10, 8, 10, 4], 'beta': [10, 12, 10, 12, 5]
     }
 
     gs_x1, gs_x2, gs_y1, gs_y2, cp = plot_dict[par_name]
