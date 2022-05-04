@@ -26,9 +26,9 @@ zmin, zmax, amin, amax = 0.01, 0.02, 7.5, 8.5
 emin, emax, drmin, drmax = 0, 2, 0, .5
 dmmin, dmmax, bmin, bmax = 5, 20, 0., .5
 # Mass range
-Max_mass = 1000
+Max_mass = 100000
 # Maximum running time (in seconds)
-max_time = 20
+max_time = 120
 
 np.random.seed(12345)
 
@@ -53,8 +53,8 @@ def profilerCall():
     print("Plotting")
     plot(Max_mass, Nmodels, times_all)
 
-    print("Preparing profiler report...")
-    profiler.open_in_browser()
+    # print("Preparing profiler report...")
+    # profiler.open_in_browser()
 
 
 def memrayCall():
@@ -191,8 +191,10 @@ def extractTimes(profiler):
             i = l_s.index('|-')
         return float(l_s[i + 1])
 
+    data = profiler.output_text().split('\n')
+
     t0, t1, t2, t3, t4, t5, t6, t7, t8, t9 = [0] * 10
-    for line in profiler.output_text().split('\n'):
+    for line in data:
         if 'properModel' in line:
             t0 = getTime(line)
         elif 'main' in line and 'zaWAverage' in line:
