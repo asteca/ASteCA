@@ -121,7 +121,7 @@ def main(
     return synth_clust, M_total
 
 
-def properModel(fundam_params, model_proper, model, varIdxs):
+def properModel(fundam_params, model_proper0, model, varIdxs):
     """
     Define the 'proper' model with values for (z, a) taken from its grid,
     and filled values for those parameters that are fixed.
@@ -141,6 +141,7 @@ def properModel(fundam_params, model_proper, model, varIdxs):
       the proper (z, a) values.
 
     """
+    model_proper = np.array(model_proper0)
     model_proper[varIdxs] = model
 
     ml = mh = 0
@@ -152,11 +153,12 @@ def properModel(fundam_params, model_proper, model, varIdxs):
     al = ah = 0
     if 1 in varIdxs:
         par = fundam_params[1]
-        mh = min(len(par) - 1, np.searchsorted(par, model_proper[1]))
+        ah = min(len(par) - 1, np.searchsorted(par, model_proper[1]))
         al = ah - 1
 
     return model_proper, ml, mh, al, ah
 
+    # DEPRECATED 04/22
     # model_proper, j = [], 0
     # for i, par in enumerate(fundam_params):
     #     # Check if this parameter is one of the 'free' parameters.
@@ -187,4 +189,11 @@ def properModel(fundam_params, model_proper, model, varIdxs):
     #             model_proper.append(par[0])
     #         j += 1
 
-    # return model_proper, z_model, a_model, ml, mh, al, ah
+    # model_proper = [z_model, a_model] + model_proper
+
+    # if (np.array(model_proper)==model_proper1).all() is False:
+    #     breakpoint()
+    # if ml1 != ml or mh1 != mh or al1 != al or ah1 != ah:
+    #     breakpoint()
+
+    return model_proper, ml, mh, al, ah
