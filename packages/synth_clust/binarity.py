@@ -16,9 +16,9 @@ def main(isoch_mass, alpha, beta, m_ini_idx, N_fc, rand_unif_vals):
     # proportional to their probability
     bin_indxs = b_p > rand_unif_vals[:Ns]
 
-    # Index of the first binary magnitude.
-    # mag_binar = m_ini_idx + 1
-    # Update array with new values of magnitudes and colors.
+    # Index of the first binary magnitude.: mag_binar = m_ini_idx + 1
+    # Update array with new values of magnitudes and colors for the binary
+    # systems.
     if bin_indxs.any():
         for i in range(N_fc[0] + N_fc[1]):
             isoch_mass[i][bin_indxs] = isoch_mass[m_ini_idx + 1 + i][bin_indxs]
