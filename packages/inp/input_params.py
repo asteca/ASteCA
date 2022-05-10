@@ -76,6 +76,7 @@ def main(pars_f_path):
                 # Synthetic clusters parameters
                 elif reader[0] == 'R2':
                     DR_dist = str(reader[1])
+                    DR_percentage = float(reader[2])
 
                 # Ranges for the fundamental parameters
                 elif reader[0] == 'R3':
@@ -84,7 +85,8 @@ def main(pars_f_path):
 
                 # Ranges for the fundamental parameters
                 elif reader[0] == 'R4':
-                    completeness = [_.replace(',', '') for _ in reader[1:]]
+                    Max_mag = float(reader[1])
+                    completeness = [_.replace(',', '') for _ in reader[2:]]
 
                 # Ranges for the fundamental parameters
                 elif reader[0] == 'R5':
@@ -229,8 +231,9 @@ def main(pars_f_path):
 
         # Synthetic cluster parameters
         'synth_rand_seed': synth_rand_seed, 'par_ranges': par_ranges,
-        'IMF_name': IMF_name, 'Max_mass': Max_mass, 'DR_dist': DR_dist,
-        'alpha': alpha, 'gamma': gamma, 'completeness': completeness,
+        'IMF_name': IMF_name, 'Max_mass': Max_mass, 'Max_mag': Max_mag,
+        'DR_dist': DR_dist, 'DR_percentage': DR_percentage, 'alpha': alpha,
+        'gamma': gamma, 'completeness': completeness,
 
         # Best fit parameters.
         'best_fit_algor': best_fit_algor, 'mins_max': mins_max,

@@ -11,9 +11,10 @@ from . import add_errors
 
 
 def main(
-    model, transpose_flag, DR_dist, alpha, model_proper, varIdxs, completeness,
-    err_lst, max_mag_syn, N_obs_stars, fundam_params, ext_coefs, N_fc,
-        m_ini_idx, st_dist_mass, theor_tracks, rand_norm_vals, rand_unif_vals):
+    model, transpose_flag, DR_dist, DR_percentage, alpha, model_proper,
+    varIdxs, completeness, err_lst, max_mag_syn, N_obs_stars, fundam_params,
+    ext_coefs, N_fc, m_ini_idx, st_dist_mass, theor_tracks, rand_norm_vals,
+        rand_unif_vals):
     """
     Takes an isochrone and returns a synthetic cluster created according to
     a certain mass distribution.
@@ -36,11 +37,11 @@ def main(
 
     # Return proper values for fixed parameters and parameters required
     # for the (z, log(age)) isochrone averaging.
-    model_proper, ml, mh, al, ah = properModel(
+    model_proper0, ml, mh, al, ah = properModel(
         fundam_params, model_proper, model, varIdxs)
 
     # Extract parameters
-    met, age, e, dr, d, beta, R_V = model_proper
+    met, age, beta, e, dr, R_V, d = model_proper0
 
     # Generate a weighted average isochrone from the (z, log(age)) values in
     # the 'model'.
@@ -49,7 +50,7 @@ def main(
 
     # Move theoretical isochrone using the values 'e' and 'd'.
     isoch_moved = move_isochrone.main(
-        isochrone, e, dr, d, R_V, ext_coefs, N_fc, DR_dist,
+        isochrone, e, dr, d, R_V, ext_coefs, N_fc, DR_dist, DR_percentage,
         rand_norm_vals[0], rand_unif_vals[0], m_ini_idx)
 
     # Get isochrone minus those stars beyond the magnitude cut.
@@ -105,7 +106,7 @@ def main(
         M_total = M_total_arr[:N_obs_stars][-1]
 
     # Percentage of mass added by the binaries:
-    # binar_mass_perc = binary_sists_mass / single_sists_mass
+    # binar_mass_perc = secondary_masses / primary_masses
     binar_mass_perc = isoch_binar[-1].sum() / isoch_binar[m_ini_idx].sum()
     # Total mass corrected by the added mass as binary systems
     M_total = M_total * (1 + binar_mass_perc)
