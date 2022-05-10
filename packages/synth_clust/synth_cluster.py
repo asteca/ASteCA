@@ -5,6 +5,7 @@ from . import move_isochrone
 from . import cut_max_mag
 from . import mass_distribution
 from . import mass_interp
+from . import extinction
 from . import binarity
 from . import completeness_rm
 from . import add_errors
@@ -41,20 +42,19 @@ def main(
         fundam_params, model_proper, model, varIdxs)
 
     # Extract parameters
-    met, age, beta, e, dr, R_V, d = model_proper0
+    met, age, beta, e, dr, R_V, dm = model_proper0
 
     # Generate a weighted average isochrone from the (z, log(age)) values in
     # the 'model'.
     isochrone = zaWAverage.main(
         theor_tracks, fundam_params, m_ini_idx, met, age, ml, mh, al, ah)
 
-    # Move theoretical isochrone using the values 'e' and 'd'.
-    isoch_moved = move_isochrone.main(
-        isochrone, e, dr, d, R_V, ext_coefs, N_fc, DR_dist, DR_percentage,
-        rand_norm_vals[0], rand_unif_vals[0], m_ini_idx)
+    # Move theoretical isochrone using the distance modulus
+    isoch_moved = move_isochrone.main(isochrone, N_fc, dm)
 
-    # Get isochrone minus those stars beyond the magnitude cut.
-    isoch_cut = cut_max_mag.main(isoch_moved, max_mag_syn)
+    # Remove stars beyond the maximum magnitude
+    isoch_cut, _ = cut_max_mag.main(isoch_moved, max_mag_syn)
+
     # In place for MiMO testing
     # return isoch_cut
     # # In place for #358
@@ -69,10 +69,9 @@ def main(
     mass_ini = isoch_cut[m_ini_idx]
 
     # Return the mass distribution within the 'isoch_cut' range
-    mass_dist, msk_m, M_total_arr = mass_distribution.main(
-        mass_ini, st_dist_mass[ml])
+    mass_dist, M_total_arr = mass_distribution.main(mass_ini, st_dist_mass[ml])
 
-    if msk_m.sum() == 0:
+    if not mass_dist.any():
         return synth_clust, M_total
 
     # Interpolate masses in mass_dist into the isochrone rejecting those
@@ -80,35 +79,36 @@ def main(
     # This destroys the order by magnitude.
     isoch_mass = mass_interp.main(isoch_cut, mass_ini, mass_dist)
 
-    if not isoch_mass.any():
-        return synth_clust, M_total
-
     # Assignment of binarity.
     isoch_binar = binarity.main(
         isoch_mass, alpha, beta, m_ini_idx, N_fc, rand_unif_vals[1])
 
-    # Use a different array of random uniform values to de-couple the
-    # process from the one applied in binarity.main()
+    isoch_extin = extinction.main(
+        isoch_binar, e, dr, R_V, ext_coefs, N_fc, DR_dist, DR_percentage,
+        rand_norm_vals[0], rand_unif_vals[0], m_ini_idx)
+    # Remove stars moved beyond the maximum magnitude
+    isoch_extin, msk_ct = cut_max_mag.main(isoch_extin, max_mag_syn)
+
+    if not isoch_extin.any():
+        return synth_clust, M_total
+
     # Completeness removal of stars.
     isoch_compl, msk_cr = completeness_rm.main(
-        isoch_binar, completeness, rand_unif_vals[2])
-
-    # Keep the same number of synthetic stars as observed stars
-    isoch_compl = isoch_compl[:, :N_obs_stars]
+        isoch_extin, completeness, rand_unif_vals[2])
 
     if not isoch_compl.any():
         return synth_clust, M_total
 
-    # Apply 'msk_cr' to correct the mass for the completeness (if applied)
-    if msk_cr.sum() > 0:
-        M_total = M_total_arr[msk_cr][:N_obs_stars][-1]
-    else:
-        M_total = M_total_arr[:N_obs_stars][-1]
+    # Keep the same number of synthetic stars as observed stars
+    isoch_compl = isoch_compl[:, :N_obs_stars]
 
-    # Percentage of mass added by the binaries:
+    # Apply 'msk_ct' and 'msk_cr' to correct the mass for the stars removed
+    # by extinction() and completeness_rm() (if applied)
+    M_total = M_total_arr[msk_ct][msk_cr][:N_obs_stars][-1]
+
+    # Correct M_total applying the percentage of mass added by the binaries:
     # binar_mass_perc = secondary_masses / primary_masses
     binar_mass_perc = isoch_binar[-1].sum() / isoch_binar[m_ini_idx].sum()
-    # Total mass corrected by the added mass as binary systems
     M_total = M_total * (1 + binar_mass_perc)
 
     # Assign errors according to errors distribution.

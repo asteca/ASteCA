@@ -61,4 +61,4 @@ def main(mass_ini, st_dist_mass):
     # Filter the total mass associated with each sampled mass
     M_total_arr = st_dist_mass[1][msk_m]
 
-    return mass_dist, msk_m, M_total_arr
+    return mass_dist, M_total_arr
