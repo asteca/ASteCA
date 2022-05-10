@@ -85,7 +85,7 @@ def main(pars_f_path):
 
                 # Ranges for the fundamental parameters
                 elif reader[0] == 'R4':
-                    Max_mag = float(reader[1])
+                    Max_mag = reader[1]
                     completeness = [_.replace(',', '') for _ in reader[2:]]
 
                 # Ranges for the fundamental parameters

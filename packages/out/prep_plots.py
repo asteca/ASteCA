@@ -12,7 +12,7 @@ from ..best_fit.prep_obs_params import dataProcess
 from ..decont_algors.local_cell_clean import bin_edges_f
 from ..aux_funcs import monteCarloPars, circFrac, ellipFrac
 from ..structure import king_profile
-from ..synth_clust import move_isochrone
+from ..synth_clust import move_isochrone, extinction
 from ..best_fit.bf_common import ranModels, getSynthClust
 
 
@@ -800,18 +800,18 @@ def isoch_sigmaNreg(
     """
 
     # Selected solution values for all the parameters.
-    zm, am, _, e, dr, R_V, d = isoch_fit_params[D3_sol + '_sol']
+    zm, am, _, e, dr, R_V, dm = isoch_fit_params[D3_sol + '_sol']
     # Values in grid
     zg = np.argmin(abs(np.array(fundam_params[0]) - zm))
     ag = np.argmin(abs(np.array(fundam_params[1]) - am))
-    # Move isochrone
-    isochrone = np.array(theor_tracks[zg][ag])
-    # Use this array to position the shifted isochrone properly
-    rand_v = np.ones(isochrone.shape[-1]) * .5
+    # Non-interpolated isochrone
+    isochrone = move_isochrone.main(
+        theor_tracks[zg][ag], N_fc, dm)
+    # Use these values to position the shifted isochrone properly
     dr, DR_percentage = 0, 0
-    shift_isoch = move_isochrone.main(
-        isochrone, e, dr, d, R_V, ext_coefs, N_fc, DR_dist, DR_percentage,
-        rand_v, rand_v, m_ini_idx)
+    shift_isoch = extinction.main(
+        isochrone, e, dr, R_V, ext_coefs, N_fc, DR_dist, DR_percentage,
+        rand_norm_vals[0], rand_unif_vals[0], m_ini_idx)
     shift_isoch = shift_isoch[:sum(N_fc)]
 
     # Generate random models from the selected solution (mean, median, mode,

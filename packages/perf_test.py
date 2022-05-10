@@ -23,12 +23,12 @@ from packages.best_fit import likelihood
 # Define the range used for metallicity and age (isochrones must contain these
 # ranges)
 zmin, zmax, amin, amax = 0.01, 0.02, 7.5, 8.5
-emin, emax, drmin, drmax = 0, 2, 0, .5
-dmmin, dmmax, bmin, bmax = 5, 20, 0., .5
+betamin, betamax, emin, emax, drmin, drmax = 0, .5, 0, 2, 0, .5
+rvmin, rvmax, dmmin, dmmax = 2, 5, 5, 20
 # Mass range
-Max_mass = 100000
+Max_mass = 10000
 # Maximum running time (in seconds)
-max_time = 120
+max_time = 20
 
 np.random.seed(12345)
 
@@ -75,12 +75,12 @@ def main(pd, clp, td):
     """
     model_proper = np.array([_[0] for _ in td['fundam_params']])
     # Pack common args for the 'synth_cluster.py' function.
-    syntClustArgs = (
-        pd['DR_dist'], pd['alpha'], model_proper,
+    syntClustArgs = [
+        pd['DR_dist'], pd['DR_percentage'], pd['alpha'], model_proper,
         clp['varIdxs'], clp['completeness'], clp['err_lst'],
         clp['max_mag_syn'], clp['N_obs_stars'], td['fundam_params'],
         td['ext_coefs'], td['N_fc'], td['m_ini_idx'], td['st_dist_mass'],
-        td['theor_tracks'], td['rand_norm_vals'], td['rand_unif_vals'])
+        td['theor_tracks'], td['rand_norm_vals'], td['rand_unif_vals']]
 
     elapsed, start, Nmodels, tstep = 0., t.time(), 0, 10
     while elapsed < max_time:
@@ -115,9 +115,10 @@ def inParams(Max_mass):
     """
 
     fundam_params_all = {'CLUSTER': [
-        [zmin, zmax], [amin, amax], [emin, emax], [drmin, drmax],
-        [dmmin, dmmax], [bmin, bmax], [3.1]]}
-    priors_mcee_all = {'CLUSTER': [['u'], ['u'], ['u'], ['u'], ['u'], ['u']]}
+        [zmin, zmax], [amin, amax], [betamin, betamax], [emin, emax],
+        [drmin, drmax], [rvmin, rvmax], [dmmin, dmmax]]}
+    priors_mcee_all = {'CLUSTER': [
+        ['u'], ['u'], ['u'], ['u'], ['u'], ['u'], ['u']]}
 
     pd = {'best_fit_algor': 'y',
           'fundam_params_all': fundam_params_all,
@@ -132,9 +133,9 @@ def inParams(Max_mass):
               (6422.01, 5335.42, 7739.17))}, 'filters': [('gaiaedr3', 'Gmag')],
           'colors': [('gaiaedr3', 'G_BPmag,G_RPmag')],
           'IMF_name': 'kroupa_2002', 'Max_mass': Max_mass, 'DR_dist': 'normal',
-          'alpha': 0.275, 'gamma': 'D&K', 'lkl_method': 'tremmel',
-          'lkl_binning': 'knuth',
-          'lkl_manual_bins': None}
+          'DR_percentage': 1, 'alpha': 0.275, 'gamma': 'D&K',
+          'lkl_method': 'tremmel', 'Max_mag': 'max',
+          'lkl_binning': 'knuth', 'lkl_manual_bins': None}
 
     # Read "observed" cluster
     cldata = ascii.read('packages/defvals/input/CLUSTER.dat')
