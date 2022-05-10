@@ -1,12 +1,12 @@
 
-import copy
 import numpy as np
 from scipy.stats import gaussian_kde
+from . import max_mag_cut
 from ..decont_algors.local_cell_clean import bin_edges_f
 
 
 def main(
-    clp, best_fit_algor, lkl_method, lkl_binning, lkl_manual_bins,
+    clp, best_fit_algor, Max_mag, lkl_method, lkl_binning, lkl_manual_bins,
         **kwargs):
     """
     Prepare observed cluster array here to save time before the algorithm to
@@ -15,10 +15,14 @@ def main(
     if best_fit_algor == 'n':
         return clp
 
-    clp['N_obs_stars'] = len(clp['cl_reg_fit'])
-    clp['max_mag_syn'] = np.max(list(zip(*list(zip(
-        *clp['cl_reg_fit']))[1:][2]))[0])
-    clp['cl_syn_fit'] = copy.deepcopy(clp['cl_reg_fit'])
+    # Remove stars beyond the maximum magnitude limit, if it was set.
+    clp['cl_syn_fit'], clp['max_mag_syn'] = max_mag_cut.main(
+        clp['cl_reg_fit'], Max_mag)
+
+    clp['N_obs_stars'] = len(clp['cl_syn_fit'])
+    # clp['max_mag_syn'] = np.max(list(zip(*list(zip(
+    #     *clp['cl_reg_fit']))[1:][2]))[0])
+    # clp['cl_syn_fit'] = copy.deepcopy(clp['cl_reg_fit'])
 
     mags_cols_cl, memb_probs = dataProcess(clp['cl_syn_fit'])
 
