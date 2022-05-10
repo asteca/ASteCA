@@ -53,7 +53,7 @@ def main(clp, **kwargs):
              np.array([0.])))
     else:
         print("  WARNING: no field regions defined. Luminosity function\n"
-              "  is not cleaned from field star contamination")
+              "  is not clean from field star contamination")
         # Pass dummy lists.
         x_fl, y_fl = [], []
 

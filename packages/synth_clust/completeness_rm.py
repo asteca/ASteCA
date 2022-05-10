@@ -2,7 +2,7 @@
 import numpy as np
 
 
-def main(isoch_binar, completeness, rand_unif_vals):
+def main(isoch, completeness, rand_unif_vals):
     """
     Remove a number of stars according to the percentages of star loss found in
     the 'mag_completeness' function of the luminosity module, for the real
@@ -24,20 +24,20 @@ def main(isoch_binar, completeness, rand_unif_vals):
 
     # If no completeness function was defined or no star in the isochrone
     # exists beyond the completeness magnitude level, skip the process.
-    if compl_flag is False or np.max(isoch_binar[0]) < bin_edges[0]:
-        return np.array(isoch_binar), np.array([])
+    if compl_flag is False or np.max(isoch[0]) < bin_edges[0]:
+        return np.array(isoch), np.array([])
 
-    # Indexes of stars in 'isoch_binar[0]' whose main magnitude
+    # Indexes of stars in 'isoch[0]' whose main magnitude
     # value falls between the ranges given by 'bin_edges'.
     #
     # Magnitude values *below* the minimum magnitude edge will be
     # assigned the integer '0'. For each star these are the indexes that
     # point to their corresponding position inside 'bin_edges'
-    c_indx = np.searchsorted(bin_edges, isoch_binar[0], side='left')
+    c_indx = np.searchsorted(bin_edges, isoch[0], side='left')
 
     # This mask points to the stars that should be KEPT
     msk = comp_perc[c_indx] < rand_unif_vals[:c_indx.size]
-    isoch_compl = np.array(isoch_binar[:, msk])
+    isoch_compl = np.array(isoch[:, msk])
 
     return isoch_compl, msk
 

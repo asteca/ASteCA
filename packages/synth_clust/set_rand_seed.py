@@ -4,12 +4,7 @@ import numpy as np
 
 def main(synth_rand_seed):
     """
-    Random seed used in the generation of synthetic clusters. Used by:
-
-    * imf
-    * binary
-    * move_isochrone (In place for #174) & add_errors use the random arrays
-      generated in tracksPrep
+    Random seed used in the generation of synthetic clusters.
     """
     if synth_rand_seed is None:
         synth_rand_seed = np.random.randint(100000)
