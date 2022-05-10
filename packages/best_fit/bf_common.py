@@ -56,24 +56,6 @@ def fillParams(fundam_params, varIdxs, model):
     return model_filled
 
 
-#  DEPRECATED 02-10-2019
-# def closeSol(fundam_params, model, pushidxs):
-#     """
-#     Find the closest value in the parameters list for the discrete parameters
-#     metallicity, age, and mass.
-#     """
-#     model_proper = []
-#     for i, par in enumerate(fundam_params):
-#         # If it is the parameter metallicity, age or mass.
-#         if i in pushidxs:
-#             # Select the closest value in the array of allowed values.
-#             model_proper.append(min(par, key=lambda x: abs(x - model[i])))
-#         else:
-#             model_proper.append(model[i])
-
-#     return model_proper
-
-
 def initPop(
     ranges, varIdxs, lkl_method, obs_clust, fundam_params,
         synthcl_args, ntemps, nwalkers, init_mode, popsize, maxiter):
@@ -129,34 +111,6 @@ def random_population(fundam_params, varIdxs, n_ran):
                 fundam_params[i][0], fundam_params[i][-1], n_ran))
 
     return np.array(p_lst).T
-
-
-#  DEPRECATED 24-09-2019
-# def discreteParams(fundam_params, varIdxs, chains_nruns, pushidxs):
-#     """
-#     Push values in each chain for each discrete parameter in the 'pushidxs'
-#     list to the closest grid value.
-
-#     chains_nruns.shape: (runs, nwalkers, ndim)
-#     """
-#     params, j = [], 0
-#     for i, par in enumerate(fundam_params):
-#         p = np.array(par)
-#         # If this parameter is one of the 'free' parameters.
-#         if i in varIdxs:
-#             # If it is the parameter metallicity, age or mass.
-#             if i in pushidxs:
-#                 pc = chains_nruns.T[j]
-#                 chains = []
-#                 for c in pc:
-#                     chains.append(
-#                         p[abs(c[None, :] - p[:, None]).argmin(axis=0)])
-#                 params.append(chains)
-#             else:
-#                 params.append(chains_nruns.T[j])
-#             j += 1
-
-#     return np.array(params).T
 
 
 def rangeCheck(model, ranges, varIdxs):

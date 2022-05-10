@@ -93,9 +93,7 @@ def main(cl_file, pd):
     # Get manual structural data and add to dictionary.
     pd = get_manual_strct.main(pd, **npd)
 
-    # Cluster's data from file, as dictionary. Obtain both incomplete (ie: all
-    # stars in data file) and complete (only those with full photometric data)
-    # dictionaries.
+    # Cluster's data from file, as dictionary.
     # Initiates cluster's parameters dictionary 'clp'.
     cld, clp = get_data.main(npd, **pd)
 
@@ -130,7 +128,6 @@ def main(cl_file, pd):
     # Cluster radius
     clp = radius.main(cld, clp, **pd)
 
-    # Uses the incomplete data.
     if 'A2' in pd['flag_make_plot']:
         make_A2_plot.main(npd, cld, pd, clp)
         print("<<Plots for A2 block created>>")
@@ -166,7 +163,6 @@ def main(cl_file, pd):
     # Field regions around the cluster's center.
     clp = field_regions.main(clp, **pd)
 
-    # Uses the incomplete 'cl_region' and 'field_regions' data.
     if 'A3' in pd['flag_make_plot']:
         make_A3_plot.main(npd, cld, pd, clp)
         print("<<Plots for A3 block created>>")

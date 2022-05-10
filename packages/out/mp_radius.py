@@ -49,7 +49,7 @@ def pl_mag_membs(gs, plot_style, y_ax, membvsmag):
     ax = plt.subplot(gs[0:2, 2:4])
     if plot_style == 'asteca':
         ax.grid()
-    ax.set_title(r"$N_{{memb}}$ vs magnitude cut (phot incomp); $r_{{cl}}$")
+    ax.set_title(r"$N_{{memb}}$ vs magnitude cut; $r_{{cl}}$")
     plt.xlabel('$' + y_ax + '$')
     plt.ylabel(r'$N_{memb}$')
     if membvsmag.any():
@@ -90,7 +90,7 @@ def pl_cl_fl_regions(
             plt.scatter(fl_reg[1], fl_reg[2], marker='o',
                         c=next(col0), s=8, edgecolors='w', lw=.2)
 
-    ax.set_title(r"$N_{{stars}}$={} (phot incomp); $N_{{fregs}}$={}".format(
+    ax.set_title(r"$N_{{stars}}$={}; $N_{{fregs}}$={}".format(
         len(cl_region_i) + N_flrg, len(field_regions)))
 
 
@@ -274,8 +274,7 @@ def pl_zoom_frame(
             N_in += 1
 
     ax.set_title(
-        (r"$A_{{fr}}$={:.0f}%, $N_{{r<r_{{cl}}}}$={}, "
-            "[$CI = {:.2f}$] (phot incomp)").format(
+        (r"$A_{{fr}}$={:.0f}%, $N_{{r<r_{{cl}}}}$={}, [$CI = {:.2f}$]").format(
             100. * frac_cl_area, N_in, cont_index))
     fig.gca().add_artist(circle)
 

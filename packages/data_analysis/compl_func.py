@@ -90,7 +90,7 @@ def expCorrection(mag_histo, mag_edges, max_indx, comp_perc):
     except RuntimeError:
         # LF could not be fit.
         print("  WARNING: no exponential correction applied on "
-              "incompleteness function")
+              "completeness function")
 
     return comp_perc
 

@@ -14,8 +14,7 @@ def pl_full_frame(
     """
     ax = plt.subplot(gs[0:4, 0:4])
     ax.set_aspect(aspect=asp_ratio)
-    ax.set_title(
-        r"$N_{{stars}}$={} (phot incomp)".format(len(x)))
+    ax.set_title(r"$N_{{stars}}$={}".format(len(x)))
     # Set plot limits
     plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
