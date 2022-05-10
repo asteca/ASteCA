@@ -1,6 +1,5 @@
 
 import numpy as np
-from scipy.stats import powerlaw
 
 
 def main(isoch_mass, alpha, beta, m_ini_idx, N_fc, rand_unif_vals):
@@ -104,10 +103,16 @@ def qDistribution(M1, gamma):
     (Duchene & Kraus 2013). Mass dependent.
     powerlaw : Power-law distribution with shape parameter 'gamma'. Not mass
     dependent.
+
+
+    Use 'gamma + 1' in the power-law distribution below because in D&K this
+    distribution is defined as f(q)~q^gamma, while numpy's distribution is
+    defined as ~a*x^(a-1).
     """
     try:
         gamma = float(gamma)
-        mass_ratios = powerlaw.rvs(gamma, size=len(M1))
+        # mass_ratios = powerlaw.rvs(gamma, size=M1.size)
+        mass_ratios = np.random.power(gamma + 1, M1.size)
     except ValueError:
         msk1, gamma1 = M1 <= 0.1, 4.2
         msk2, gamma2 = (M1 > 0.1) & (M1 <= 0.6), 0.4
@@ -116,7 +121,7 @@ def qDistribution(M1, gamma):
         msk5, gamma5 = (M1 > 6.5) & (M1 <= 16), 0.0  # <- Not sure. Use uniform
         msk6, gamma6 = M1 > 16, 0.0  # <- Not sure. Use uniform
 
-        mass_ratios = np.zeros(M1.size) - 1
+        mass_ratios = np.zeros(M1.size)
         for msk, gamma in (
                 (msk1, gamma1), (msk2, gamma2), (msk3, gamma3), (msk4, gamma4),
                 (msk5, gamma5), (msk6, gamma6)):
