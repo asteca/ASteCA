@@ -194,6 +194,10 @@ def checkSynthClustParams(pd):
     if pd['DR_dist'] not in ('uniform', 'normal'):
         raise ValueError("'DR_dist' parameter ('{}') is not recognized".format(
             pd['DR_dist']))
+    if pd['DR_percentage'] <= 0. or pd['DR_percentage'] > 1.:
+        raise ValueError(
+            "'DR_percentage' parameter ('{}') is out of\nboundaries".format(
+                pd['DR_percentage']))
 
     if pd['alpha'] < 0.:
         raise ValueError(
@@ -201,17 +205,17 @@ def checkSynthClustParams(pd):
             " a value <=0".format(pd['alpha']))
 
     try:
-        float(pd['gamma'])
-        if pd['gamma'] <= 0.:
+        gamma = float(pd['gamma'])
+        if gamma <= -1.:
             raise ValueError(
                 "'gamma' parameter ('{}') is out of\nboundaries. Select"
-                " a value larger than 0".format(pd['gamma']))
+                " a value > -1".format(pd['gamma']))
     except ValueError:
         if pd['gamma'] != 'D&K':
             raise ValueError(
                 "Unrecognized 'gamma' value ('{}')".format(pd['gamma']))
 
-    pars = ('E_BV', 'DR', 'd_m', 'Beta')
+    pars = ('Beta', 'E_BV', 'DR', 'R_v', 'd_m')
     for i, (key, vals) in enumerate(pd['fundam_params_all'].items()):
         if i > 1:
             if vals[i][-1] < vals[i][0]:
@@ -219,18 +223,18 @@ def checkSynthClustParams(pd):
                     "{}: Maximum value must be greater than minimum").format(
                     pars[i - 2]))
 
-        # Check E_BV
+        # Check Beta
         if vals[2][0] < 0.:
+            raise ValueError("Minimum Beta parameter is 0")
+        # Check E_BV
+        if vals[3][0] < 0.:
             raise ValueError("Minimum extinction is 0")
         # Check DR
-        if vals[3][0] < 0.:
-            raise ValueError("Minimum differential reddening is 0")
-        # Check d_m
         if vals[4][0] < 0.:
-            raise ValueError("Minimum distance modulus is 0")
-        # Check Beta
-        if vals[5][0] < 0.:
-            raise ValueError("Minimum Beta parameter is 0")
+            raise ValueError("Minimum differential reddening is 0")
         # Check R_V
-        if vals[6][0] <= 0.:
+        if vals[5][0] <= 0.:
             raise ValueError("Minimum R_V is 0")
+        # Check d_m
+        if vals[6][0] < 0.:
+            raise ValueError("Minimum distance modulus is 0")
