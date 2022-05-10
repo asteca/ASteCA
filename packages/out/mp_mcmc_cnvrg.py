@@ -134,7 +134,7 @@ def pl_tau(gs, N_steps, tau_autocorr):
     ax.legend(loc=0)
 
 
-def pl_lags(gs, varIdxs, acorr_function):
+def pl_lags(gs, varIdxs, acorr_function, par_list):
     """
     lags plot.
     """
@@ -143,8 +143,7 @@ def pl_lags(gs, varIdxs, acorr_function):
     plt.xlabel("Lag")
     plt.ylabel("ACF")
 
-    plot_dict = ['metal', 'age', 'ext', 'dist', 'mass', 'binar']
-    for i, par_name in enumerate(plot_dict):
+    for i, par_name in enumerate(par_list):
         if i in varIdxs:
             c_model = varIdxs.index(i)
             p = acorr_function[c_model]
@@ -158,7 +157,7 @@ def pl_lags(gs, varIdxs, acorr_function):
     # ax.text(lag_zero, .52, "{}".format(lag_zero))
 
 
-def pl_GW(gs, varIdxs, geweke_z):
+def pl_GW(gs, varIdxs, geweke_z, par_list):
     """
     Geweke plot.
     """
@@ -169,9 +168,8 @@ def pl_GW(gs, varIdxs, geweke_z):
     plt.axhline(y=2., color='grey', ls=':', lw=1.2, zorder=4)
     plt.axhline(y=-2., color='grey', ls=':', lw=1.2, zorder=4)
 
-    plot_dict = ['metal', 'age', 'ext', 'dist', 'mass', 'binar']
     ymin, ymax = [], []
-    for i, par_name in enumerate(plot_dict):
+    for i, par_name in enumerate(par_list):
         if i in varIdxs:
             c_model = varIdxs.index(i)
             p = geweke_z[c_model]

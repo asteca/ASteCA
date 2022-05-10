@@ -3,7 +3,7 @@ import numpy as np
 from scipy import stats
 import matplotlib.pyplot as plt
 from ..aux_funcs import reject_outliers
-from . cornerPlot import hist2d
+# from . cornerPlot import hist2d
 
 
 def autocorr(gs, gsx, gsy, Nsteps, tau_autocorr, ESS):

@@ -347,17 +347,19 @@ def param_ranges(fundam_params, varIdxs=None, trace=None):
     return min_max_p
 
 
-def p2_ranges(p2, min_max_p):
-    """
-    Parameter ranges used by the MCMC 2-param density plots.
-    """
-    par_idx = {
-        'metal': 0, 'age': 1, 'ext': 2, 'dr': 3, 'dist': 4, 'beta': 5}
-    par = p2.split('-')
+# DEPRECATED 05/22
+# def p2_ranges(p2, min_max_p):
+#     """
+#     Parameter ranges used by the MCMC 2-param density plots.
+#     """
+#     par_idx = {
+#         'metal': 0, 'age': 1, 'beta': 2, 'ext': 3, 'dr': 4, 'rv': 5,
+#         'dist': 6}
+#     par = p2.split('-')
 
-    min_max_p2 = min_max_p[par_idx[par[0]]] + min_max_p[par_idx[par[1]]]
+#     min_max_p2 = min_max_p[par_idx[par[0]]] + min_max_p[par_idx[par[1]]]
 
-    return min_max_p2
+#     return min_max_p2
 
 
 def packData(
@@ -798,7 +800,7 @@ def isoch_sigmaNreg(
     """
 
     # Selected solution values for all the parameters.
-    zm, am, e, dr, d, _, R_V = isoch_fit_params[D3_sol + '_sol']
+    zm, am, _, e, dr, R_V, d = isoch_fit_params[D3_sol + '_sol']
     # Values in grid
     zg = np.argmin(abs(np.array(fundam_params[0]) - zm))
     ag = np.argmin(abs(np.array(fundam_params[1]) - am))
@@ -806,9 +808,10 @@ def isoch_sigmaNreg(
     isochrone = np.array(theor_tracks[zg][ag])
     # Use this array to position the shifted isochrone properly
     rand_v = np.ones(isochrone.shape[-1]) * .5
+    dr, DR_percentage = 0, 0
     shift_isoch = move_isochrone.main(
-        isochrone, e, dr, d, R_V, ext_coefs, N_fc, DR_dist, rand_v,
-        rand_v, m_ini_idx)
+        isochrone, e, dr, d, R_V, ext_coefs, N_fc, DR_dist, DR_percentage,
+        rand_v, rand_v, m_ini_idx)
     shift_isoch = shift_isoch[:sum(N_fc)]
 
     # Generate random models from the selected solution (mean, median, mode,

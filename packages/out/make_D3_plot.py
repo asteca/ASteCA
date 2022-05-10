@@ -50,14 +50,14 @@ def main(npd, pd, clp, td):
             # pl_hess_diag: Hess diagram 'observed - synthetic'
             [gs, gs_y1, gs_y2, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
              x_ax, y_ax, pd['lkl_method'], hess_xedges, hess_yedges,
-             hess_x, hess_y, HD],
+             hess_x, hess_y, HD, x_isoch, y_isoch],
             # pl_bf_synth_cl: Best fit synthetic cluster obtained.
             [gs, gs_y1, gs_y2, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
              x_ax, y_ax, hess_xedges, hess_yedges, x_synth_phot,
              y_synth_phot, sy_sz_pt, binar_idx, best_sol, x_isoch, y_isoch,
-             pd['IMF_name'], pd['alpha'], pd['gamma'], pd['lkl_method'],
-             pd['lkl_binning'], pd['evol_track'], pd['D3_sol'],
-             clp['MassT_dist_vals'], clp['binar_dist_vals'],
+             pd['IMF_name'], pd['DR_percentage'], pd['alpha'], pd['gamma'],
+             pd['lkl_method'], pd['lkl_binning'], pd['evol_track'],
+             pd['D3_sol'], clp['MassT_dist_vals'], clp['binar_dist_vals'],
              clp['isoch_fit_errors']]
         ]
         for n, args in enumerate(arglist):

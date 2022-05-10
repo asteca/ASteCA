@@ -90,7 +90,8 @@ def pl_mps_phot_diag(
 
 def pl_hess_diag(
     gs, gs_y1, gs_y2, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
-        lkl_method, hess_xedges, hess_yedges, hess_x, hess_y, HD):
+    lkl_method, hess_xedges, hess_yedges, hess_x, hess_y, HD, x_isoch,
+        y_isoch):
     """
     Hess diagram of observed minus best match synthetic cluster.
     """
@@ -141,12 +142,15 @@ def pl_hess_diag(
             columnspacing=.2, handletextpad=-.3)
         leg.get_frame().set_alpha(0.7)
 
+    plt.plot(x_isoch, y_isoch, c='k', lw=1., zorder=6)
+
 
 def pl_bf_synth_cl(
     gs, gs_y1, gs_y2, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
     hess_xedges, hess_yedges, x_synth, y_synth, sy_sz_pt, binar_idx, best_sol,
-    x_isoch, y_isoch, IMF_name, alpha, gamma, lkl_method, bin_method,
-        evol_track, D3_sol, MassT_dist_vals, binar_dist_vals, p_err):
+    x_isoch, y_isoch, IMF_name, DR_percentage, alpha, gamma, lkl_method,
+    bin_method, evol_track, D3_sol, MassT_dist_vals, binar_dist_vals,
+        p_err):
     """
     Best fit synthetic cluster obtained.
     """
@@ -221,30 +225,33 @@ def pl_bf_synth_cl(
 
         t2 = r'$IMF \hspace{{3.}}:\;{}$'.format(
             IMF_name.replace('_', r'\;').title())
-        t3 = r'$R_{{V}} \hspace{{3.2}}=\;{}$'.format(best_sol[6])
+        t3 = r'$M\,(M_{{\odot}}) \hspace{{1.}}=\;{:.0f}\pm {:.0f}$'.format(
+            MassT_dist_vals[0], MassT_dist_vals[1])
+
         t4 = r'$z \hspace{{3.9}}=\;{:.5f}\pm {:.5f}$'.format(
             best_sol[0], p_err[0][2])
         t5 = r'$\log(age) \hspace{{0.17}}=\;{:.3f}\pm {:.3f}$'.format(
             best_sol[1], p_err[1][2])
-        t6 = r'$E_{{(B-V)}} \hspace{{1.35}}=\;{:.3f}\pm {:.3f}$'.format(
-            best_sol[2], p_err[2][2])
-        t7 = r'$DR \hspace{{2.9}} =\;{:.3f}\pm {:.3f}$'.format(
-            best_sol[3], p_err[3][2])
-        t8 = r'$(m-M)_{{0}} =\;{:.2f} \pm {:.2f}$'.format(
-            best_sol[4], p_err[4][2])
-        t9 = r"$\alpha \hspace{{3.85}}=\;{:.3f}$".format(alpha)
-        t10 = r'$\beta \hspace{{3.85}}=\;{:.3f}\pm {:.3f}$'.format(
-            best_sol[5], p_err[5][2])
-        t11 = r"$\gamma \hspace{{3.85}}=\;{}$".format(gamma)
 
-        t12 = r'$M\,(M_{{\odot}}) \hspace{{.83}}=\;{:.0f}\pm {:.0f}$'.format(
-            MassT_dist_vals[0], MassT_dist_vals[1])
-        t13 = r'$b_{{frac}} \hspace{{2.1}}=\;{:.2f}\pm {:.2f}$'.format(
+        t6 = r"$\alpha \hspace{{3.85}}=\;{:.3f}$".format(alpha)
+        t7 = r'$\beta \hspace{{3.85}}=\;{:.3f}\pm {:.3f}$'.format(
+            best_sol[2], p_err[2][2])
+        t8 = r"$\gamma \hspace{{3.85}}=\;{}$".format(gamma)
+        t9 = r'$b_{{frac}} \hspace{{2.4}}=\;{:.2f}\pm {:.2f}$'.format(
             binar_dist_vals[0], binar_dist_vals[1])
 
+        t10 = r'$E_{{(B-V)}} \hspace{{1.35}}=\;{:.3f}\pm {:.3f}$'.format(
+            best_sol[3], p_err[3][2])
+        t11 = r'$DR \hspace{{2.9}} =\;{:.3f}\pm {:.3f}\,({})$'.format(
+            best_sol[4], p_err[4][2], DR_percentage)
+        t12 = r'$R_{{V}} \hspace{{3.2}}=\;{:.3f}\pm {:.3f}$'.format(
+            best_sol[5], p_err[5][2])
+        t13 = r'$(m-M)_{{0}} =\;{:.2f} \pm {:.2f}$'.format(
+            best_sol[6], p_err[6][2])
+
         text = t1 + '\n\n' + t2 + '\n' + t3 + '\n' + t4 + '\n' + t5 + '\n' +\
-            t6 + '\n' + t7 + '\n' + t8 + '\n' + t9 + '\n' + t10 + '\n' +\
-            t11 + '\n\n' + t12 + '\n' + t13
+            t6 + '\n' + t7 + '\n' + t8 + '\n' + t9 + '\n\n' + t10 + '\n' +\
+            t11 + '\n' + t12 + '\n' + t13
         ob = offsetbox.AnchoredText(text, pad=1, loc=6, borderpad=-5)
         ob.patch.set(alpha=0.85)
         ax_t.add_artist(ob)
