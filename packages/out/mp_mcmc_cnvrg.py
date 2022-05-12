@@ -79,18 +79,18 @@ def pl_MAF(gs, N_steps, maf_steps):
     plt.axhline(y=.5, color='grey', ls=':', lw=1.2, zorder=4)
 
 
-def pl_MAP_lkl(gs, N_steps, prob_mean, map_lkl, map_lkl_final):
+def pl_MAP_lkl(gs, N_steps, lkl_mean_steps, lkl_steps):
     """
     Evolution of MAP likelihood values.
     """
     ax = plt.subplot(gs[2:4, 0:2])
-    ax.plot(N_steps, map_lkl, label=r"$L_{{min}}={:.1f}$".format(
-        map_lkl_final))
+    plt.title("Cold chains")
+    ax.plot(N_steps, lkl_steps, label="Best")
     ymin, ymax = ax.get_ylim()
 
-    ax.plot(N_steps, prob_mean, label="Mean LP")
+    ax.plot(N_steps, lkl_mean_steps, label="Mean")
     plt.xlabel("steps")
-    plt.ylabel("Lkl (MAP)")
+    plt.ylabel("Likelihood")
     ax.legend(loc=0)  # , handlelength=0.)
     plt.ylim(ymin, ymax)
 

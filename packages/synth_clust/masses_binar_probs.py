@@ -4,6 +4,7 @@ import numpy as np
 from scipy.spatial import cKDTree
 from ..best_fit.bf_common import ranModels, getSynthClust
 from ..best_fit.prep_obs_params import dataProcess
+from ..aux_funcs import kde1D
 from .. import update_progress
 
 
@@ -90,17 +91,8 @@ def main(clp, pd, td):
     st_mass_std = np.sqrt(M2 / Nm)
     st_mass_std_binar = np.sqrt(M2_binar / max(1, Nm_binar))
 
-    # If the distribution of binaries with mass was fitted instead of the
-    # binary fraction parameter, then this must be obtained indirectly.
-    MassT_dist_vals = (np.mean(MassT_vals), np.std(MassT_vals))
-    # The binary fraction will have a small dispersion even for fixed 'beta'
-    # because the probabilities depend on the masses which vary for different
-    # values of (z, a)
-    binar_dist_vals = (np.mean(binar_vals), np.std(binar_vals))
-    if pd['Max_mass'] < np.mean(MassT_vals) + np.std(MassT_vals):
-        logging.warning(
-            "The total mass is too close to the 'Max_mass'"
-            + "parameter. Consider increasing this value.")
+    MassT_dist_vals, binar_dist_vals = estimMassBinar(
+        pd, MassT_vals, binar_vals)
 
     clp['st_mass_mean'], clp['st_mass_std'], clp['st_mass_mean_binar'],\
         clp['st_mass_std_binar'], clp['prob_binar'], clp['MassT_dist_vals'],\
@@ -140,3 +132,37 @@ def recurrentStats(Nm, mean, var, newValue):
         return mean
     var += delta * (newValue - mean)
     return mean, var
+
+
+def estimMassBinar(pd, MassT_vals, binar_vals):
+    """
+    Estimate the mean, etc values for the mass and binary fraction
+    distributions, as these are not fitted parameters.
+    """
+    x_kde, M_kde = kde1D(MassT_vals)
+    mode_M = x_kde[np.argmax(M_kde)]
+    MassT_dist_vals = {
+        'mean_sol': np.mean(MassT_vals), 'median_sol': np.median(MassT_vals),
+        'mode_sol': mode_M, 'errors': (
+            np.percentile(MassT_vals, 16), np.percentile(MassT_vals, 84),
+            np.std(MassT_vals))
+    }
+
+    if pd['Max_mass'] < np.mean(MassT_vals) + np.std(MassT_vals):
+        logging.warning(
+            "The total mass is too close to the 'Max_mass' "
+            + "parameter. Consider increasing this value.")
+
+    # The binary fraction will have a small dispersion even for fixed 'beta'
+    # because the probabilities depend on the masses which vary for different
+    # values of (z, a)
+    x_kde, bf_kde = kde1D(binar_vals)
+    mode_bf = x_kde[np.argmax(bf_kde)]
+    binar_dist_vals = {
+        'mean_sol': np.mean(binar_vals), 'median_sol': np.median(binar_vals),
+        'mode_sol': mode_bf, 'errors': (
+            np.percentile(binar_vals, 16), np.percentile(binar_vals, 84),
+            np.std(binar_vals))
+    }
+
+    return MassT_dist_vals, binar_dist_vals

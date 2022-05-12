@@ -201,32 +201,10 @@ def pl_bf_synth_cl(
         t1 = r'$Synthetic\;cluster\;parameters$' + '\n[Tracks: {}]'.format(
             evol_track)
 
-        # t2 = r"{:>17}$:\;{}$".format(
-        #     r'$IMF$', IMF_name.replace('_', r'\;').title())
-        # t3 = r"{:>17}$=\;{}$".format(r'$R_{{V}}$', best_sol[6])
-        # t4 = r"{:>17}$=\;{:.5f}\pm {:.5f}$".format(
-        #     r"$z$", best_sol[0], p_err[0][2])
-        # t5 = r"{:>17}$=\;{:.3f}\pm {:.3f}$".format(
-        #     r'$\log(age)$', best_sol[1], p_err[1][2])
-        # t6 = r"{:>17}$=\;{:.3f}\pm {:.3f}$".format(
-        #     r'$E_{{(B-V)}}$', best_sol[2], p_err[2][2])
-        # t7 = r"{:>17}$=\;{:.3f}\pm {:.3f}$".format(
-        #     r'$DR$', best_sol[3], p_err[3][2])
-        # t8 = r"{:>17}$=\;{:.2f}\pm {:.2f}$".format(
-        #     r'$(m-M)_{{0}}$', best_sol[4], p_err[4][2])
-        # t9 = r"{:>17}$=\;{:.3f}$".format(r'$\alpha$', alpha)
-        # t10 = r"{:>17}$=\;{:.3f}\pm {:.3f}$".format(
-        #     r'$\beta$', best_sol[5], p_err[5][2])
-        # t11 = r"{:>17}$=\;{}$".format(r'$\gamma$', gamma)
-        # t12 = r"{:>17}$=\;{:.0f}\pm {:.0f}$".format(
-        #     r'$M\,(M_{{\odot}})$', MassT_dist_vals[0], MassT_dist_vals[1])
-        # t13 = r"{:>17}$=\;{:.2f}\pm {:.2f}$".format(
-        #     r'$b_{{frac}}$', binar_dist_vals[0], binar_dist_vals[1])
-
         t2 = r'$IMF \hspace{{3.}}:\;{}$'.format(
             IMF_name.replace('_', r'\;').title())
         t3 = r'$M\,(M_{{\odot}}) \hspace{{1.}}=\;{:.0f}\pm {:.0f}$'.format(
-            MassT_dist_vals[0], MassT_dist_vals[1])
+            MassT_dist_vals[D3_sol + '_sol'], MassT_dist_vals['errors'][2])
 
         t4 = r'$z \hspace{{3.9}}=\;{:.5f}\pm {:.5f}$'.format(
             best_sol[0], p_err[0][2])
@@ -238,7 +216,7 @@ def pl_bf_synth_cl(
             best_sol[2], p_err[2][2])
         t8 = r"$\gamma \hspace{{3.85}}=\;{}$".format(gamma)
         t9 = r'$b_{{frac}} \hspace{{2.4}}=\;{:.2f}\pm {:.2f}$'.format(
-            binar_dist_vals[0], binar_dist_vals[1])
+            binar_dist_vals[D3_sol + '_sol'], binar_dist_vals['errors'][2])
 
         t10 = r'$E_{{(B-V)}} \hspace{{1.35}}=\;{:.3f}\pm {:.3f}$'.format(
             best_sol[3], p_err[3][2])

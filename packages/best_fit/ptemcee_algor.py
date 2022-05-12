@@ -2,7 +2,7 @@
 import numpy as np
 import warnings
 import time as t
-from .bf_common import getSynthClust, initPop, rangeCheck, fillParams
+from .bf_common import getSynthClust, initPop, rangeCheck
 from .ptemcee import sampler
 from . import likelihood
 from .. import update_progress
@@ -46,7 +46,7 @@ def main(
     # fractions.
     afs, tswaps = [], []
     # Store for Lkl values for plotting.
-    prob_mean, map_lkl, map_sol_old = [], [], [[], -np.inf]
+    lkl_mean_steps, lkl_steps = [], []
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
@@ -83,14 +83,9 @@ def main(
             afs.append(np.mean(ptsampler.acceptance_fraction, axis=1))
 
             # Store MAP solution in this iteration.
-            prob_mean.append(np.mean(lnprob[0]))
+            lkl_mean_steps.append(np.mean(lnprob[0]))
             idx_best = np.argmax(lnprob[0])
-            # Update if a new optimal solution was found.
-            if lnprob[0][idx_best] > map_sol_old[1]:
-                map_sol_old = [
-                    fillParams(fundam_params, varIdxs, pos[0][idx_best]),
-                    lnprob[0][idx_best]]
-            map_lkl.append(map_sol_old[1])
+            lkl_steps.append(lnprob[0][idx_best])
 
             # Stop when available time is consumed.
             if elapsed >= available_secs:
@@ -107,9 +102,6 @@ def main(
     # Betas history
     betas_pt = ptsampler.beta_history[:, (N_steps_store - 1)::N_steps_store]
 
-    # Final MAP fit.
-    map_sol, map_lkl_final = map_sol_old
-
     # # This number should be between approximately 0.25 and 0.5 if everything
     # # went as planned.
     # m_accpt_fr = np.mean(ptsampler.acceptance_fraction[0])
@@ -122,9 +114,9 @@ def main(
     cold_chain = ptsampler.chain[0, :, :i, :].transpose(1, 0, 2)
 
     isoch_fit_params = {
-        'Tmax': str(Tmax), 'map_sol': map_sol, 'map_lkl': map_lkl,
-        'map_lkl_final': map_lkl_final,
-        'prob_mean': prob_mean, 'bf_elapsed': elapsed, 'maf_allT': maf_allT,
+        'Tmax': str(Tmax), 'lkl_steps': lkl_steps,
+        'lkl_mean_steps': lkl_mean_steps,
+        'bf_elapsed': elapsed, 'maf_allT': maf_allT,
         'tswaps_afs': tswaps_afs, 'betas_pt': betas_pt, 'N_steps': N_steps,
         'cold_chain': cold_chain
     }

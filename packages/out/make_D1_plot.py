@@ -58,8 +58,8 @@ def main(npd, pd, clp, td):
 
     # pl_MAP_lkl: Parameters half of pdfs.
     args = [
-        gs, fit_pars['N_steps'], fit_pars['prob_mean'],
-        fit_pars['map_lkl'], fit_pars['map_lkl_final']]
+        gs, fit_pars['N_steps'], fit_pars['lkl_mean_steps'],
+        fit_pars['lkl_steps']]
     mp_mcmc_cnvrg.plot(0, *args)
 
     # if pd['best_fit_algor'] == 'ptemcee':
