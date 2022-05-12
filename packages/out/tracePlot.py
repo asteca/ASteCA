@@ -17,7 +17,7 @@ def traceplots(
         'dist': [6, 10, 6, 7, 6]
     }
 
-    labels = [r'$z$', r'$\log(age)$', r'$\beta$', r'$E_{{(B-V)}}$', r'$DR$',
+    labels = [r'$z$', r'$\log(age)$', r'$\beta$', r'$A_{{V}}$', r'$DR$',
               r'$R_v$', r'$(m-M)_o$']
 
     gs_x1, gs_x2, gs_y1, gs_y2, cp = plot_dict[par_name]

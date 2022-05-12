@@ -111,8 +111,8 @@ def plotCorner(fit_pars, ndim, varIdxs):
     import corner
 
     labels = np.array([
-        r'$z$', r'$log(age)$', r'$\beta$', r'$E_{(B-V)}$', r'$DR$',
-        r'$R_v$', r'$(m-M)_o$'])
+        r'$z$', r'$log(age)$', r'$\beta$', r'$A_{V}$', r'$DR$',
+        r'$R_V$', r'$(m-M)_o$'])
 
     # samples.shape = N_dim, N_pts
     samples = fit_pars['mcmc_trace']

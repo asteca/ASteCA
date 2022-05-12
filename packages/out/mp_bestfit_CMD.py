@@ -218,7 +218,7 @@ def pl_bf_synth_cl(
         t9 = r'$b_{{frac}} \hspace{{2.4}}=\;{:.2f}\pm {:.2f}$'.format(
             binar_dist_vals[D3_sol + '_sol'], binar_dist_vals['errors'][2])
 
-        t10 = r'$E_{{(B-V)}} \hspace{{1.35}}=\;{:.3f}\pm {:.3f}$'.format(
+        t10 = r'$A_{{V}} \hspace{{3.2}}=\;{:.3f}\pm {:.3f}$'.format(
             best_sol[3], p_err[3][2])
         t11 = r'$DR \hspace{{2.9}} =\;{:.3f}\pm {:.3f}\,({})$'.format(
             best_sol[4], p_err[4][2], DR_percentage)

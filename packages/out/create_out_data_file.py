@@ -30,14 +30,14 @@ txt = """#
 # a  : log(age)
 # B  : beta
 # bf : binary fraction
-# E  : E(B-V) extinction
+# Av : Visual absorption
 # DR : differential reddening
 # Rv : ratio of total to selective absorption
 # dm : distance modulus
 #
 """
 txt += "NAME,c_x,c_y,r_cl,r_c,rc16,rc84,r_t,rt16,rt84,CI,n_memb_k,n_memb,a_f,"
-for par in ('M', 'z', 'a', 'B', 'bf', 'E', 'DR', 'Rv', 'dm'):
+for par in ('M', 'z', 'a', 'B', 'bf', 'Av', 'DR', 'Rv', 'dm'):
     txt += "{}_mean,{}_median,{}_mode,{}_16th,{}_84th,{}_std,".format(
         *[par] * 6)
 # Remove last comma, add new line

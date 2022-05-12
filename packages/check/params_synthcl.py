@@ -215,7 +215,7 @@ def checkSynthClustParams(pd):
             raise ValueError(
                 "Unrecognized 'gamma' value ('{}')".format(pd['gamma']))
 
-    pars = ('Beta', 'E_BV', 'DR', 'R_v', 'd_m')
+    pars = ('Beta', 'Av', 'DR', 'Rv', 'd_m')
     for i, (key, vals) in enumerate(pd['fundam_params_all'].items()):
         if i > 1:
             if vals[i][-1] < vals[i][0]:
@@ -228,13 +228,13 @@ def checkSynthClustParams(pd):
             raise ValueError("Minimum Beta parameter is 0")
         # Check E_BV
         if vals[3][0] < 0.:
-            raise ValueError("Minimum extinction is 0")
+            raise ValueError("Minimum visual absorption is 0")
         # Check DR
         if vals[4][0] < 0.:
             raise ValueError("Minimum differential reddening is 0")
         # Check R_V
         if vals[5][0] <= 0.:
-            raise ValueError("Minimum R_V is 0")
+            raise ValueError("Minimum Rv is 0")
         # Check d_m
         if vals[6][0] < 0.:
             raise ValueError("Minimum distance modulus is 0")
