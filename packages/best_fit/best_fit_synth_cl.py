@@ -2,7 +2,7 @@
 import numpy as np
 from ..inp import data_IO
 from . import ptemcee_algor
-from ..synth_clust import synth_clust_gen
+# from ..synth_clust import synth_clust_gen
 from .mcmc_convergence import convergenceVals
 from .bf_common import varPars, modeKDE, fillParams
 
