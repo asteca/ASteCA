@@ -230,7 +230,7 @@ def params_errors(varIdxs, isoch_fit_params):
 
     def assignUncertns(varIdxs, trace):
         isoch_fit_errors, j = [], 0
-        for i in range(len(isoch_fit_params)):
+        for i in range(7):  # HARDCODED
             if i in varIdxs:
                 # 16th and 84th percentiles (1 sigma), and STDDEV
                 ph = np.percentile(trace[i - j], 84)
