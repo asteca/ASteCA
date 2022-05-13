@@ -12,6 +12,10 @@ def main(clp, pd, td):
     """
     Assign masses to the (decontaminated) observed cluster, and binary
     probabilities (if binarity was estimated).
+
+    Estimate the statistics for the mass and binary fractions (not fitted)
+
+    Also generate the uncertainty region (for plotting).
     """
     # No best fit process was employed
     if pd['best_fit_algor'] == 'n':
@@ -22,11 +26,6 @@ def main(clp, pd, td):
     models = ranModels(
         td['fundam_params'], pd['D3_sol'], clp['isoch_fit_params'],
         clp['isoch_fit_errors'])
-
-    # This should never happen
-    # if not models.any():
-    #     print(" WARNING: could not assign masses and binary probabilities")
-    #     return clp
 
     print("Estimating binary probabilities and masses")
     # Extract photometry used in the best fit process
@@ -43,12 +42,17 @@ def main(clp, pd, td):
 
     # Estimate the mean and variance for each star via recurrence.
     Nm_binar, binar_vals, MassT_vals = 0, [], []
+    # Used for plotting
+    synthcl_Nsigma = [[] for _ in range(sum(td['N_fc']))]
     for Nm, model in enumerate(models):
 
         # Generate synthetic cluster from the 'model'.
         isoch, M_total = getSynthClust(model, False, clp['syntClustArgs'])
         if not isoch.any():
             continue
+
+        for i, photom_dim in enumerate(isoch[:sum(td['N_fc'])]):
+            synthcl_Nsigma[i] += list(photom_dim)
 
         # Masses, binary mask
         mass_primary = isoch[td['m_ini_idx']]
@@ -87,6 +91,9 @@ def main(clp, pd, td):
 
         update_progress.updt(models.shape[0], Nm + 1)
 
+    # Used for plotting
+    synthcl_Nsigma = np.array(synthcl_Nsigma)
+
     # Store standard deviations
     st_mass_std = np.sqrt(M2 / Nm)
     st_mass_std_binar = np.sqrt(M2_binar / max(1, Nm_binar))
@@ -96,9 +103,9 @@ def main(clp, pd, td):
 
     clp['st_mass_mean'], clp['st_mass_std'], clp['st_mass_mean_binar'],\
         clp['st_mass_std_binar'], clp['prob_binar'], clp['MassT_dist_vals'],\
-        clp['binar_dist_vals'] = st_mass_mean, st_mass_std,\
-        st_mass_mean_binar, st_mass_std_binar, prob_binar,\
-        MassT_dist_vals, binar_dist_vals
+        clp['binar_dist_vals'], clp['synthcl_Nsigma'] = st_mass_mean,\
+        st_mass_std, st_mass_mean_binar, st_mass_std_binar, prob_binar,\
+        MassT_dist_vals, binar_dist_vals, synthcl_Nsigma
 
     return clp
 

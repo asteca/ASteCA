@@ -13,7 +13,6 @@ from ..decont_algors.local_cell_clean import bin_edges_f
 from ..aux_funcs import monteCarloPars, circFrac, ellipFrac
 from ..structure import king_profile
 from ..synth_clust import move_isochrone, extinction
-from ..best_fit.bf_common import ranModels, getSynthClust
 
 
 # HARDCODED figure size and grid distribution
@@ -790,47 +789,23 @@ def rdpAreasDists(
     return rad_radii, rad_areas, N_in_cl_rad
 
 
-def isoch_sigmaNreg(
-    fundam_params, D3_sol, theor_tracks, m_ini_idx, ext_coefs, N_fc, DR_dist,
-    rand_norm_vals, rand_unif_vals, isoch_fit_params, isoch_fit_errors,
-        syntClustArgs):
+def shiftedIsoch(
+    fundam_params, theor_tracks, m_ini_idx, ext_coefs, N_fc, DR_dist,
+        rand_norm_vals, rand_unif_vals, best_sol):
     """
-    Generate the uncertainty region, if uncertainties for at least one
-    parameter exists.
+    Generate the shifted isochrone.
     """
-
-    # Selected solution values for all the parameters.
-    zm, am, _, e, dr, R_V, dm = isoch_fit_params[D3_sol + '_sol']
+    zm, am, _, av, _, rv, dm = best_sol
     # Values in grid
     zg = np.argmin(abs(np.array(fundam_params[0]) - zm))
     ag = np.argmin(abs(np.array(fundam_params[1]) - am))
     # Non-interpolated isochrone
-    isochrone = move_isochrone.main(
-        theor_tracks[zg][ag], N_fc, dm)
+    isochrone = move_isochrone.main(np.array(theor_tracks[zg][ag]), N_fc, dm)
     # Use these values to position the shifted isochrone properly
     dr, DR_percentage = 0, 0
     shift_isoch = extinction.main(
-        isochrone, e, dr, R_V, ext_coefs, N_fc, DR_dist, DR_percentage,
+        isochrone, av, dr, rv, ext_coefs, N_fc, DR_dist, DR_percentage,
         rand_norm_vals[0], rand_unif_vals[0], m_ini_idx)
     shift_isoch = shift_isoch[:sum(N_fc)]
 
-    # Generate random models from the selected solution (mean, median, mode,
-    # MAP), given by 'D3_sol'.
-    models = ranModels(
-        fundam_params, D3_sol, isoch_fit_params, isoch_fit_errors)
-
-    # Generate the synthetic clusters from the sampled parameters.
-    synthcl_Nsigma = np.array([])
-    if models.any():
-        synthcl_Nsigma = [[] for _ in range(sum(N_fc))]
-        for model in models:
-
-            # Estimate the mean and variance for each star via recurrence.
-            synth_cl = getSynthClust(model, False, syntClustArgs)[0]
-            # Synthetic cluster
-            if synth_cl.any():
-                for i, photom_dim in enumerate(synth_cl[:sum(N_fc)]):
-                    synthcl_Nsigma[i] += list(photom_dim)
-        synthcl_Nsigma = np.array(synthcl_Nsigma)
-
-    return shift_isoch, synthcl_Nsigma
+    return shift_isoch
