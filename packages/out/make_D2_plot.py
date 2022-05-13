@@ -26,7 +26,11 @@ def main(npd, pd, clp, td):
 
     fit_pars = clp['isoch_fit_params']
 
-    fig = plotCorner(fit_pars, clp['ndim'], clp['varIdxs'])
+    if clp['ndim'] >= 2:
+        fig = plotCorner(fit_pars, clp['ndim'], clp['varIdxs'])
+    else:
+        logging.warning("Single dimension fitted. Can not produce corner plot")
+        return
 
     xf, yf = .02, .999
     add_version_plot.main(x_fix=xf, y_fix=yf)
