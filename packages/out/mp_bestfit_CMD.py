@@ -44,10 +44,10 @@ def pl_mps_phot_diag(
     # The 'dolphin / tremmel' likelihoods do not use MPs in the fit, so it's
     # confusing to color stars as if they did.
     if (v_min_mp != v_max_mp) and lkl_method == 'tolstoy':
-        col_select_fit, isoch_col = obs_MPs, 'g'
+        col_select_fit = obs_MPs
         plot_colorbar = True
     else:
-        col_select_fit, isoch_col = '#519ddb', 'r'
+        col_select_fit = '#519ddb'
         plot_colorbar = False
     # Plot stars used in the best fit process.
     sca = plt.scatter(
@@ -66,7 +66,7 @@ def pl_mps_phot_diag(
         plt.hist2d(*phot_Nsigma, bins=(
             hess_xedges, hess_yedges), cmap=cmap, norm=LogNorm(), zorder=-1)
     # Plot isochrone.
-    plt.plot(x_isoch, y_isoch, isoch_col, lw=1., zorder=6)
+    plt.plot(x_isoch, y_isoch, c='k', lw=1., zorder=6)
 
     plt.xlim(x_min_cmd, x_max_cmd)
     plt.ylim(y_min_cmd, y_max_cmd)
@@ -187,7 +187,7 @@ def pl_bf_synth_cl(
         x_synth[binar_idx], y_synth[binar_idx], marker='o', s=sy_sz_pt,
         c='#F34C4C', lw=0.3, edgecolor='k', zorder=3)
     # Plot isochrone.
-    plt.plot(x_isoch, y_isoch, '#21B001', lw=1., zorder=6)
+    plt.plot(x_isoch, y_isoch, c='k', lw=1., zorder=6)
     if gs_y1 == 0:
         # Add text box
         text1 = '$N_{{synth}} = {}$'.format(len(x_synth))
@@ -198,11 +198,9 @@ def pl_bf_synth_cl(
         # Add text box to the right of the synthetic cluster.
         ax_t = plt.subplot(gs[gs_y1:gs_y2, 6:7])
         ax_t.axis('off')  # Remove axis from frame.
-        t1 = r'$Synthetic\;cluster\;parameters$' + '\n[Tracks: {}]'.format(
-            evol_track)
+        t1 = r'Tracks: {}'.format(evol_track)
+        t2 = r'IMF: {}'.format(IMF_name.replace('_', r'\;').title())
 
-        t2 = r'$IMF \hspace{{3.}}:\;{}$'.format(
-            IMF_name.replace('_', r'\;').title())
         t3 = r'$M\,(M_{{\odot}}) \hspace{{1.}}=\;{:.0f}\pm {:.0f}$'.format(
             MassT_dist_vals[D3_sol + '_sol'], MassT_dist_vals['errors'][2])
 
@@ -227,7 +225,7 @@ def pl_bf_synth_cl(
         t13 = r'$(m-M)_{{0}} =\;{:.2f} \pm {:.2f}$'.format(
             best_sol[6], p_err[6][2])
 
-        text = t1 + '\n\n' + t2 + '\n' + t3 + '\n' + t4 + '\n' + t5 + '\n' +\
+        text = t1 + '\n' + t2 + '\n\n' + t3 + '\n' + t4 + '\n' + t5 + '\n' +\
             t6 + '\n' + t7 + '\n' + t8 + '\n' + t9 + '\n\n' + t10 + '\n' +\
             t11 + '\n' + t12 + '\n' + t13
         ob = offsetbox.AnchoredText(text, pad=1, loc=6, borderpad=-5)

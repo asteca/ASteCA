@@ -17,22 +17,20 @@ def main(npd, pd, clp, td):
     gs = gridspec.GridSpec(grid_y, grid_x)
     add_version_plot.main(y_fix=1.005)
 
-    fit_pars = clp['isoch_fit_params']
+    # Selected solution values for all the parameters.
+    best_sol = clp['isoch_fit_params'][pd['D3_sol'] + '_sol']
 
-    best_sol = fit_pars[pd['D3_sol'] + '_sol']
-
-    shift_isoch, synthcl_Nsigma = prep_plots.isoch_sigmaNreg(
-        td['fundam_params'], pd['D3_sol'], td['theor_tracks'],
+    shift_isoch = prep_plots.shiftedIsoch(
+        td['fundam_params'], td['theor_tracks'],
         td['m_ini_idx'], td['ext_coefs'], td['N_fc'], pd['DR_dist'],
-        td['rand_norm_vals'], td['rand_unif_vals'],
-        fit_pars, clp['isoch_fit_errors'], clp['syntClustArgs'])
+        td['rand_norm_vals'], td['rand_unif_vals'], best_sol)
 
     # Plot one ore more rows of CMDs/CCDs.
     bf_bin_edges = clp['obs_clust'][0]
     hr_diags = prep_plots.packData(
         pd['lkl_method'], pd['colors'], pd['filters'], clp['cl_syn_fit'],
         clp['synth_cl_phot'], clp['binar_idx'], bf_bin_edges,
-        shift_isoch, synthcl_Nsigma)
+        shift_isoch, clp['synthcl_Nsigma'])
     for (x_phot_obs, y_phot_obs, x_synth_phot,
          y_synth_phot, binar_idx, hess_xedges, hess_yedges, x_isoch,
          y_isoch, phot_Nsigma, x_name, y_name, yaxis, i_obs_x,

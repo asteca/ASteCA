@@ -195,9 +195,7 @@ def ranModels(fundam_params, D3_sol, isoch_fit_params, isoch_fit_errors,
     selected solution, with standard deviation given by the attached
     uncertainty.
 
-    HARDCODED:
-
-    N_models: number of models to generate.
+    N_models: number of models to generate (HARDCODED)
     """
     # Use the selected solution values for all the parameters.
     model = isoch_fit_params[D3_sol + '_sol']
@@ -214,7 +212,7 @@ def ranModels(fundam_params, D3_sol, isoch_fit_params, isoch_fit_errors,
             nancount += 1
 
     # Check if at least one parameter has an uncertainty attached.
-    if nancount < 7:  # HARDCODED VALUE
+    if nancount < 7:  # HARDCODED
         # Generate 'N_models' random models.
         models = []
         for par in p_vals:
