@@ -38,11 +38,8 @@ def main(
 
     # Return proper values for fixed parameters and parameters required
     # for the (z, log(age)) isochrone averaging.
-    model_proper0, ml, mh, al, ah = properModel(
+    met, age, beta, av, dr, rv, dm, ml, mh, al, ah = properModel(
         fundam_params, model_proper, model, varIdxs)
-
-    # Extract parameters
-    met, age, beta, e, dr, R_V, dm = model_proper0
 
     # Generate a weighted average isochrone from the (z, log(age)) values in
     # the 'model'.
@@ -84,7 +81,7 @@ def main(
         isoch_mass, alpha, beta, m_ini_idx, N_fc, rand_unif_vals[1])
 
     isoch_extin = extinction.main(
-        isoch_binar, e, dr, R_V, ext_coefs, N_fc, DR_dist, DR_percentage,
+        isoch_binar, av, dr, rv, ext_coefs, N_fc, DR_dist, DR_percentage,
         rand_norm_vals[0], rand_unif_vals[0], m_ini_idx)
     # Remove stars moved beyond the maximum magnitude
     isoch_extin, msk_ct = cut_max_mag.main(isoch_extin, max_mag_syn)
@@ -104,7 +101,10 @@ def main(
 
     # Apply 'msk_ct' and 'msk_cr' to correct the mass for the stars removed
     # by extinction() and completeness_rm() (if applied)
-    M_total = M_total_arr[msk_ct][msk_cr][:N_obs_stars][-1]
+    if msk_cr.any():
+        M_total = M_total_arr[msk_ct][msk_cr][:N_obs_stars][-1]
+    else:
+        M_total = M_total_arr[msk_ct][:N_obs_stars][-1]
 
     # Correct M_total applying the percentage of mass added by the binaries:
     # binar_mass_perc = secondary_masses / primary_masses
@@ -122,7 +122,7 @@ def main(
     return synth_clust, M_total
 
 
-def properModel(fundam_params, model_proper0, model, varIdxs):
+def properModel(fundam_params, model_proper, model, varIdxs):
     """
     Define the 'proper' model with values for (z, a) taken from its grid,
     and filled values for those parameters that are fixed.
@@ -134,7 +134,7 @@ def properModel(fundam_params, model_proper0, model, varIdxs):
 
     Returns
     -------
-    model_proper : list
+    model_proper0  : list
       All fundamental parameters, including the fixed parameters that are
       missing from 'model'.
     ml, mh, al, ah : ints
@@ -142,22 +142,22 @@ def properModel(fundam_params, model_proper0, model, varIdxs):
       the proper (z, a) values.
 
     """
-    model_proper = np.array(model_proper0)
-    model_proper[varIdxs] = model
+    model_proper0 = np.array(model_proper)
+    model_proper0[varIdxs] = model
 
     ml = mh = 0
     if 0 in varIdxs:
         par = fundam_params[0]
-        mh = min(len(par) - 1, np.searchsorted(par, model_proper[0]))
+        mh = min(len(par) - 1, np.searchsorted(par, model_proper0[0]))
         ml = mh - 1
 
     al = ah = 0
     if 1 in varIdxs:
         par = fundam_params[1]
-        ah = min(len(par) - 1, np.searchsorted(par, model_proper[1]))
+        ah = min(len(par) - 1, np.searchsorted(par, model_proper0[1]))
         al = ah - 1
 
-    return model_proper, ml, mh, al, ah
+    return *model_proper0, ml, mh, al, ah
 
     # DEPRECATED 04/22
     # model_proper, j = [], 0
