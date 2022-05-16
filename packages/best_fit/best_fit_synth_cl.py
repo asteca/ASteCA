@@ -18,9 +18,6 @@ def main(npd, pd, td, clp):
 
     if pd['best_fit_algor'] == 'ptemcee':
         print("Searching for optimal parameters")
-        # lkl_bin = pd['lkl_method'] + '; ' + pd['lkl_binning'] if\
-        #     pd['lkl_method'] in ('dolphin', 'tremmel') else pd['lkl_method']
-        # print("Using {} algorithm ({})".format(pd['best_fit_algor'], lkl_bin))
 
         clp['varIdxs'], clp['ndim'], clp['ranges'] = varPars(
             td['fundam_params'])
