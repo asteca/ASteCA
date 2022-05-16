@@ -157,6 +157,10 @@ def plotCorner(fit_pars, ndim, varIdxs):
     for yi in range(ndim):
         for xi in range(yi):
             ax = axes[yi, xi]
+
+            ax.set_title(r"$\rho={:.2f}$".format(np.corrcoef(
+                [samples[xi], samples[yi]])[0][1]))
+
             mean_pos, width, height, theta = SigmaEllipse(np.array([
                 samples[xi], samples[yi]]).T)
             # Plot 95% confidence ellipse.

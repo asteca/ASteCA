@@ -199,7 +199,7 @@ def pl_bf_synth_cl(
         ax_t = plt.subplot(gs[gs_y1:gs_y2, 6:7])
         ax_t.axis('off')  # Remove axis from frame.
         t1 = r'Tracks: {}'.format(evol_track)
-        t2 = r'IMF: {}'.format(IMF_name.replace('_', r'\;').title())
+        t2 = r'IMF: {}'.format(IMF_name.replace('_', ' ').title())
 
         t3 = r'$M\,(M_{{\odot}}) \hspace{{1.}}=\;{:.0f}\pm {:.0f}$'.format(
             MassT_dist_vals[D3_sol + '_sol'], MassT_dist_vals['errors'][2])
@@ -213,13 +213,19 @@ def pl_bf_synth_cl(
         t7 = r'$\beta \hspace{{3.85}}=\;{:.3f}\pm {:.3f}$'.format(
             best_sol[2], p_err[2][2])
         t8 = r"$\gamma \hspace{{3.85}}=\;{}$".format(gamma)
+
+        # If 'beta' was not fitted, inherit the 'nan' uncertainty
+        if np.isnan(p_err[2][2]):
+            e_bfr = np.nan
+        else:
+            e_bfr = binar_dist_vals['errors'][2]
         t9 = r'$b_{{frac}} \hspace{{2.4}}=\;{:.2f}\pm {:.2f}$'.format(
-            binar_dist_vals[D3_sol + '_sol'], binar_dist_vals['errors'][2])
+            binar_dist_vals[D3_sol + '_sol'], e_bfr)
 
         t10 = r'$A_{{V}} \hspace{{3.2}}=\;{:.3f}\pm {:.3f}$'.format(
             best_sol[3], p_err[3][2])
-        t11 = r'$DR \hspace{{2.9}} =\;{:.3f}\pm {:.3f}\,({})$'.format(
-            best_sol[4], p_err[4][2], DR_percentage)
+        t11 = r'$DR \hspace{{2.9}} =\;{:.3f}\pm {:.3f}$'.format(  # \,({})
+            best_sol[4], p_err[4][2])  # DR_percentage
         t12 = r'$R_{{V}} \hspace{{3.2}}=\;{:.3f}\pm {:.3f}$'.format(
             best_sol[5], p_err[5][2])
         t13 = r'$(m-M)_{{0}} =\;{:.2f} \pm {:.2f}$'.format(
