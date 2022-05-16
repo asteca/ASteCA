@@ -7,6 +7,9 @@ def check(mypath, pd):
     isochrones, and to properly generate the synthetic clusters (if the best
     match function is set to run).
     """
+    if pd['sep'] not in pd['separators'].keys():
+        raise ValueError("Unrecognized separator: '{}'".format(pd['sep']))
+
     # Read column indexes for the IDs and the coordinates.
     id_col, x_col, y_col = pd['id_ids'], pd['id_xdata'], pd['id_ydata']
 

@@ -1,13 +1,13 @@
 
 import numpy as np
-from astropy.io import ascii
-import operator
-from functools import reduce
+import pandas as pd
+# import operator
+# from functools import reduce
 from ..aux_funcs import flatten, list_duplicates
 
 
 def main(
-    npd, id_col, x_col, y_col, mag_col, e_mag_col, col_col,
+    npd, separators, sep, id_col, x_col, y_col, mag_col, e_mag_col, col_col,
     e_col_col, plx_col, e_plx_col, pmx_col, e_pmx_col, pmy_col, e_pmy_col,
         **kwargs):
     """
@@ -24,18 +24,12 @@ def main(
 
     # Read cluster's data file
     data_file = npd['data_file']
-    try:
-        data = readDataFile(col_names_keep, data_file)
-    except ascii.InconsistentTableError:
-        raise ValueError("ERROR: could not read data input file:\n  {}\n"
-                         "  Check that all rows are filled (i.e., no blank"
-                         " spaces)\n  for all columns\n".format(data_file))
+    data = readDataFile(col_names_keep, data_file, separators[sep])
     N_all = len(data)
 
     # Remove rows that contain missing data (excluding IDs column)
-    data = dataClean(data, col_names_keep[1:])
-    # In place for #537
-    # data = data.dropna()
+    # data = dataClean(data, col_names_keep[1:])
+    data = data.dropna()
 
     N_final = len(data)
     print("Stars read from input file: N={}".format(N_all))
@@ -57,65 +51,46 @@ def main(
 
 
 def readDataFile(
-    col_names_keep, data_file,
+    col_names_keep, data_file, sep,
         nanvals=('INDEF', 'NAN', 'NaN', '--', 'nan')):
     """
     Read input data file.
     """
-
     id_col = col_names_keep[0]
 
-    # Identify all these strings as invalid entries.
-    fill_msk = [('', '0')] + [(_, '0') for _ in nanvals]
-    # Read IDs as strings, not applying the 'fill_msk'. Read rest of the
-    # data applying the fill mask
-    data = ascii.read(
-        data_file, include_names=col_names_keep, fill_values=fill_msk,
-        fill_exclude_names=(id_col,),
-        converters={id_col: [ascii.convert_numpy(np.str)]})
-
-    # In place for #537
-    # import pandas as pd
-    # dtypes = {id_col: 'str'}
-    # for col in col_names_keep[1:]:
-    #     dtypes[col] = np.float64
-    # data = pd.read_csv(data_file, usecols=col_names_keep, index_col=False,
-    #                    dtype=dtypes, delimiter=' ')
-
-    try:
-        data[id_col]
-    except KeyError:
-        raise ValueError(
-            "ERROR: the '{}' key could not be found. Check that \n"
-            "the 'id' name is properly written, and that all columns \n"
-            "have *unique* names\n".format(id_col))
+    dtypes = {id_col: 'str'}
+    for col in col_names_keep[1:]:
+        dtypes[col] = np.float64
+    data = pd.read_csv(
+        data_file, usecols=col_names_keep, index_col=False,
+        dtype=dtypes, na_values=nanvals, sep=sep)
 
     return data
 
 
-def dataClean(data, col_lst):
-    """
-    Remove rows with invalid/missing data
-    """
-    # Define data columns.
-    data_cols = list(flatten(col_lst))
-    # Check if there are any masked elements in the data.
-    masked_elems = 0
-    cmsk = []
-    for col in data_cols:
-        # Catch "AttributeError: 'Column' object has no attribute 'mask'"
-        # if column is not masked.
-        try:
-            masked_elems += data[col].mask.sum()
-            cmsk.append(~data[col].mask)
-        except AttributeError:
-            pass
+# def dataClean(data, col_lst):
+#     """
+#     Remove rows with invalid/missing data
+#     """
+#     # Define data columns.
+#     data_cols = list(flatten(col_lst))
+#     # Check if there are any masked elements in the data.
+#     masked_elems = 0
+#     cmsk = []
+#     for col in data_cols:
+#         # Catch "AttributeError: 'Column' object has no attribute 'mask'"
+#         # if column is not masked.
+#         try:
+#             masked_elems += data[col].mask.sum()
+#             cmsk.append(~data[col].mask)
+#         except AttributeError:
+#             pass
 
-    # Remove rows with at least one masked element.
-    if masked_elems > 0:
-        data = data[reduce(operator.and_, cmsk)]
+#     # Remove rows with at least one masked element.
+#     if masked_elems > 0:
+#         data = data[reduce(operator.and_, cmsk)]
 
-    return data
+#     return data
 
 
 def dataCols(data_file, data, col_names):
