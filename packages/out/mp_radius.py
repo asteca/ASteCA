@@ -77,8 +77,17 @@ def pl_cl_fl_regions(
     fig.gca().add_artist(circle)
 
     # Plot cluster region.
-    plt.scatter(list(zip(*cl_region_i))[1], list(zip(*cl_region_i))[2],
-                marker='o', c='red', s=8, edgecolors='w', lw=.2)
+    x = np.array(list(zip(*cl_region_i))[1])
+    y = np.array(list(zip(*cl_region_i))[2])
+    N_max = 50000  # HARDCODED
+    if len(x) > N_max:
+        print("  WARNING: too many stars. Plotting {} random samples.".format(
+            N_max))
+        ids = np.random.choice(np.arange(len(x)), N_max, replace=False)
+        plt.scatter(
+            x[ids], y[ids], marker='o', c='red', s=8, edgecolors='w', lw=.2)
+    else:
+        plt.scatter(x, y, marker='o', c='red', s=8, edgecolors='w', lw=.2)
 
     N_flrg = 0
     if not flag_no_fl_regs:
@@ -326,8 +335,14 @@ def pl_zoom_frame(
     #     plt.contour(x, y, kde, c_lines, colors='b', linewidths=0.6)
 
     # Plot stars.
-    plt.scatter(x_data, y_data, marker='o', c='black', s=st_sizes_arr,
-                zorder=1)
+    N_max = 50000  # HARDCODED
+    if len(x_data) > N_max:
+        ids = np.random.choice(np.arange(len(x_data)), N_max, replace=False)
+        plt.scatter(np.array(x_data)[ids], np.array(y_data)[ids], marker='o',
+                    c='black', s=np.array(st_sizes_arr)[ids], zorder=1)
+    else:
+        plt.scatter(x_data, y_data, marker='o', c='black', s=st_sizes_arr,
+                    zorder=1)
     # Plot center.
     plt.scatter(kde_cent[0], kde_cent[1], color='r', s=40, lw=1.5,
                 marker='x', zorder=5)

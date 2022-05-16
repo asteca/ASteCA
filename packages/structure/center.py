@@ -75,6 +75,11 @@ def kde_center_zoom(x_data, y_data, kde_approx_cent, radius):
             "could be estimated. Check that x,y columns are correct\n"
             "in 'asteca.ini' file.")
 
+    # Use a maximum of 100000 stars HARDCODED
+    if values.shape[-1] > 100000:
+        idx = np.random.choice(values.shape[-1], 100000, replace=False)
+        values = values[:, idx]
+
     # Obtain Gaussian KDE.
     kernel = stats.gaussian_kde(values)
     # Grid density (number of points).
