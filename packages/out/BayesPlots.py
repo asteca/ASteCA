@@ -124,11 +124,17 @@ def twoParDens(
     """
     ax = plt.subplot(gs[gsy[0]:gsy[1], gsx[0]:gsx[1]])
 
-    x_no_outlr = reject_outliers(x_samples.flatten())
-    y_no_outlr = reject_outliers(y_samples.flatten())
-    bin_edges = (np.linspace(x_no_outlr.min(), x_no_outlr.max(), 20),
-                 np.linspace(y_no_outlr.min(), y_no_outlr.max(), 20))
-    hist2d(ax, x_samples, y_samples, bin_edges)
+    x_flat, y_flat = x_samples.flatten(), y_samples.flatten()
+    x_no_outlr = reject_outliers(x_flat)
+    y_no_outlr = reject_outliers(y_flat)
+    bin_edges = (np.linspace(x_no_outlr.min(), x_no_outlr.max(), 25),
+                 np.linspace(y_no_outlr.min(), y_no_outlr.max(), 25))
+    # hist2d(ax, x_samples, y_samples, bin_edges)
+    H, xe, ye, _ = plt.hist2d(x_flat, y_flat, bin_edges, cmap='Greys')
+    xbins = xe[:-1] + (xe[1] - xe[0]) / 2
+    ybins = ye[:-1] + (ye[1] - ye[0]) / 2
+    plt.contour(xbins, ybins, H.T, 6, colors='orange')
+
     plt.scatter(
         KP_Bys_rc[1], KP_Bys_rt[1], marker='x', c='green', s=50, zorder=5)
     plt.scatter(
