@@ -27,6 +27,7 @@ def main(pars_f_path):
                     id_ids = reader[1]
                     id_xdata = reader[2]
                     id_ydata = reader[3]
+                    xy_frame = reader[4]
                 elif reader[0] == 'I2':
                     id_mags = reader[1:]
                 elif reader[0] == 'I3':
@@ -175,6 +176,8 @@ def main(pars_f_path):
     separators = {
         'comma': ',', 'space': r'\s+', 'semicolon': ';', 'vertical-bar': '|',
         'tab': '\t'}
+    # Reference frames
+    xy_frames_accpt = ('equatorial', 'galactic')
     # Radius estimating methods
     rad_modes_accpt = ('a', 'max')
     # Accepted field stars removal methods.
@@ -214,8 +217,8 @@ def main(pars_f_path):
     pd = {
         # Input data parameters
         'separators': separators, 'sep': sep, 'id_ids': id_ids,
-        'id_xdata': id_xdata, 'id_ydata': id_ydata, 'id_mags': id_mags,
-        'id_cols': id_cols, 'id_kinem': id_kinem,
+        'id_xdata': id_xdata, 'id_ydata': id_ydata, 'xy_frame': xy_frame,
+        'id_mags': id_mags, 'id_cols': id_cols, 'id_kinem': id_kinem,
 
         # Structure functions parameters
         'manual_struct': manual_struct, 'kp_ndim': kp_ndim,
@@ -251,7 +254,7 @@ def main(pars_f_path):
         'lkl_manual_bins': lkl_manual_bins,
 
         # Fixed accepted parameter values and photometric systems.
-        'rad_modes_accpt': rad_modes_accpt,
+        'xy_frames_accpt': xy_frames_accpt, 'rad_modes_accpt': rad_modes_accpt,
         'fld_rem_methods': fld_rem_methods, 'bin_methods': bin_methods,
         'imf_funcs': imf_funcs, 'lkl_methods': lkl_methods,
         'optimz_algors': optimz_algors, 'bayes_priors': bayes_priors,

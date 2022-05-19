@@ -13,6 +13,9 @@ def check(mypath, pd):
     # Read column indexes for the IDs and the coordinates.
     id_col, x_col, y_col = pd['id_ids'], pd['id_xdata'], pd['id_ydata']
 
+    if pd['xy_frame'] not in pd['xy_frames_accpt']:
+        raise ValueError("Unrecognized frame: '{}'".format(pd['xy_frame']))
+
     # Extract magnitudes (filters) data.
     try:
         # column_id, phot_syst, filter_name = mag.split(',')

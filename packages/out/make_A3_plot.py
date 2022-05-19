@@ -19,8 +19,14 @@ def main(npd, cld, pd, clp):
 
     # Obtain plotting parameters and data.
     x_min, x_max, y_min, y_max = prep_plots.frame_max_min(cld['x'], cld['y'])
+    coord = "deg"
+    if pd['xy_frame'] == 'equatorial':
+        x_name, y_name = "ra", "dec"
+        x_min, x_max = x_max, x_min
+    else:
+        x_name, y_name = "lon", "lat"
     asp_ratio = prep_plots.aspect_ratio(x_min, x_max, y_min, y_max)
-    coord, x_name, y_name = "deg", "ra", "dec"
+
     x_zmin, x_zmax, y_zmin, y_zmax = prep_plots.frame_zoomed(
         x_min, x_max, y_min, y_max, clp['kde_cent'], clp['clust_rad'],
         pd['kp_ndim'], clp['KP_Bys_rt'])

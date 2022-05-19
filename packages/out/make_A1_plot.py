@@ -20,13 +20,18 @@ def main(
     add_version_plot.main()
 
     # Obtain plotting parameters and data.
-    coord, x_name, y_name = "deg", "ra", "dec"
     x_min, x_max, y_min, y_max = prep_plots.frame_max_min(
         cld_i['x'], cld_i['y'])
+    coord = "deg"
+    if pd['xy_frame'] == 'equatorial':
+        x_name, y_name = "ra", "dec"
+        x_min, x_max = x_max, x_min
+    else:
+        x_name, y_name = "lon", "lat"
     asp_ratio = prep_plots.aspect_ratio(x_min, x_max, y_min, y_max)
+
     # Use first magnitude and color
-    x_ax, y_ax = prep_plots.ax_names(
-        pd['colors'][0], pd['filters'][0], 'mag')
+    x_ax, y_ax = prep_plots.ax_names(pd['colors'][0], pd['filters'][0], 'mag')
 
     # Structure plots.
     interval = ZScaleInterval()
