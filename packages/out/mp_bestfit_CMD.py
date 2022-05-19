@@ -3,13 +3,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.offsetbox as offsetbox
 from matplotlib.colors import LinearSegmentedColormap, LogNorm, ListedColormap
+import matplotlib.patches as mpatches
 
 
 def pl_mps_phot_diag(
     gs, gs_y1, gs_y2, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
     x_ax, y_ax, v_min_mp, v_max_mp, obs_x, obs_y, obs_MPs, err_bar,
     cl_sz_pt, hess_xedges, hess_yedges, x_isoch, y_isoch, phot_Nsigma,
-        lkl_method):
+        lkl_method, redVect):
     """
     Star's membership probabilities on cluster's photometric diagram.
     """
@@ -70,6 +71,12 @@ def pl_mps_phot_diag(
 
     plt.xlim(x_min_cmd, x_max_cmd)
     plt.ylim(y_min_cmd, y_max_cmd)
+
+    # Reddening vector
+    x0, y0, dx, dy = redVect
+    prop = dict(arrowstyle="-|>,head_width=0.4,head_length=0.8",
+                color='indianred', shrinkA=0, shrinkB=0, lw=2)
+    plt.annotate("", xy=(x0 + dx, y0 + dy), xytext=(x0, y0), arrowprops=prop)
 
     # If list is not empty, plot error bars at several values. The
     # prep_plots.error_bars() is not able to handle the color-color diagram.
@@ -204,7 +211,7 @@ def pl_bf_synth_cl(
         t3 = r'$M\,(M_{{\odot}}) \hspace{{1.}}=\;{:.0f}\pm {:.0f}$'.format(
             MassT_dist_vals[D3_sol + '_sol'], MassT_dist_vals['errors'][2])
 
-        t4 = r'$z \hspace{{3.9}}=\;{:.5f}\pm {:.5f}$'.format(
+        t4 = r'$z \hspace{{3.9}}=\;{:.4f}\pm {:.4f}$'.format(
             best_sol[0], p_err[0][2])
         t5 = r'$\log(age) \hspace{{0.17}}=\;{:.3f}\pm {:.3f}$'.format(
             best_sol[1], p_err[1][2])
@@ -219,7 +226,7 @@ def pl_bf_synth_cl(
             e_bfr = np.nan
         else:
             e_bfr = binar_dist_vals['errors'][2]
-        t9 = r'$b_{{frac}} \hspace{{2.4}}=\;{:.2f}\pm {:.2f}$'.format(
+        t9 = r'$b_{{frac}} \hspace{{2.4}}=\;{:.3f}\pm {:.3f}$'.format(
             binar_dist_vals[D3_sol + '_sol'], e_bfr)
 
         t10 = r'$A_{{V}} \hspace{{3.2}}=\;{:.3f}\pm {:.3f}$'.format(

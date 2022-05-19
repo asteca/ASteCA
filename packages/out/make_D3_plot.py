@@ -22,8 +22,10 @@ def main(npd, pd, clp, td):
 
     shift_isoch = prep_plots.shiftedIsoch(
         td['fundam_params'], td['theor_tracks'],
-        td['m_ini_idx'], td['ext_coefs'], td['N_fc'], pd['DR_dist'],
-        td['rand_norm_vals'], td['rand_unif_vals'], best_sol)
+        td['m_ini_idx'], td['ext_coefs'], td['N_fc'], best_sol)
+    redVect = prep_plots.reddeningVector(
+        clp['cl_syn_fit'], td['m_ini_idx'], td['ext_coefs'], td['N_fc'],
+        best_sol)
 
     # Plot one ore more rows of CMDs/CCDs.
     bf_bin_edges = clp['obs_clust'][0]
@@ -76,7 +78,8 @@ def main(npd, pd, clp, td):
             fig, gs, gs_y1, gs_y2, x_ax, y_ax, clp['cl_syn_fit'], x_min_cmd,
             x_max_cmd, y_min_cmd, y_max_cmd, clp['err_lst'], v_min_mp,
             v_max_mp, obs_x, obs_y, obs_MPs, sy_sz_pt, hess_xedges,
-            hess_yedges, x_isoch, y_isoch, phot_Nsigma, pd['lkl_method'])
+            hess_yedges, x_isoch, y_isoch, phot_Nsigma, pd['lkl_method'],
+            redVect)
 
     # Generate output file.
     plt.savefig(
@@ -91,7 +94,7 @@ def plot_observed_cluster(
     fig, gs, gs_y1, gs_y2, x_ax, y_ax, cl_syn_fit, x_min_cmd, x_max_cmd,
     y_min_cmd, y_max_cmd, err_lst, v_min_mp, v_max_mp, obs_x, obs_y, obs_MPs,
     cl_sz_pt, hess_xedges, hess_yedges, x_isoch, y_isoch, phot_Nsigma,
-        lkl_method):
+        lkl_method, redVect):
     """
     This function is called separately since we need to retrieve some
     information from it to plot that #$%&! colorbar.
@@ -103,7 +106,7 @@ def plot_observed_cluster(
         gs, gs_y1, gs_y2, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
         x_ax, y_ax, v_min_mp, v_max_mp, obs_x, obs_y, obs_MPs, err_bar,
         cl_sz_pt, hess_xedges, hess_yedges, x_isoch, y_isoch, phot_Nsigma,
-        lkl_method)
+        lkl_method, redVect)
 
     # Ignore warning issued by colorbar plotted in photometric diagram with
     # membership probabilities.

@@ -790,8 +790,7 @@ def rdpAreasDists(
 
 
 def shiftedIsoch(
-    fundam_params, theor_tracks, m_ini_idx, ext_coefs, N_fc, DR_dist,
-        rand_norm_vals, rand_unif_vals, best_sol):
+        fundam_params, theor_tracks, m_ini_idx, ext_coefs, N_fc, best_sol):
     """
     Generate the shifted isochrone.
     """
@@ -802,10 +801,38 @@ def shiftedIsoch(
     # Non-interpolated isochrone
     isochrone = move_isochrone.main(np.array(theor_tracks[zg][ag]), N_fc, dm)
     # Use these values to position the shifted isochrone properly
-    dr, DR_percentage = 0, 0
+    dr, DR_dist, DR_percentage = 0, '', 0
     shift_isoch = extinction.main(
         isochrone, av, dr, rv, ext_coefs, N_fc, DR_dist, DR_percentage,
-        rand_norm_vals[0], rand_unif_vals[0], m_ini_idx)
+        [], [], m_ini_idx)
     shift_isoch = shift_isoch[:sum(N_fc)]
 
     return shift_isoch
+
+
+def reddeningVector(cl_syn_fit, m_ini_idx, ext_coefs, N_fc, best_sol):
+    """
+    Generate the reddening vector
+    """
+    frst_obs_mag, frst_obs_col = list(zip(*list(zip(*cl_syn_fit))[3]))[0],\
+        list(zip(*list(zip(*cl_syn_fit))[5]))[0]
+    x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd =\
+        diag_limits('mag', frst_obs_col, frst_obs_mag)
+    # Location of the base of the arrow
+    x0 = (x_max_cmd - x_min_cmd) * .2 + x_min_cmd
+    y0 = (y_min_cmd - y_max_cmd) * .8 + y_max_cmd
+    # Length of the arrow
+    arrow_length = (y_min_cmd - y_max_cmd) * .1
+
+    _, _, _, _, _, rv, _ = best_sol
+    av = arrow_length
+    isochrone = np.array([[y0], [x0], [0], [0], [0], [0]])
+    dr, DR_dist, DR_percentage = 0, '', 0
+    shift_isoch = extinction.main(
+        isochrone, av, dr, rv, ext_coefs, N_fc, DR_dist, DR_percentage,
+        [], [], m_ini_idx)
+    x1, y1 = shift_isoch[1][0], shift_isoch[0][0]
+    dx = x1 - x0
+    dy = y1 - y0
+
+    return (x0, y0, dx, dy)
