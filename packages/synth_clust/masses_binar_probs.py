@@ -19,6 +19,12 @@ def main(clp, pd, td):
     """
     # No best fit process was employed
     if pd['best_fit_algor'] == 'n':
+        clp['MassT_dist_vals'] = {
+            'mean_sol': np.nan, 'median_sol': np.nan, 'mode_sol': np.nan,
+            'errors': (np.nan, np.nan, np.nan)}
+        clp['binar_dist_vals'] = {
+            'mean_sol': np.nan, 'median_sol': np.nan, 'mode_sol': np.nan,
+            'errors': (np.nan, np.nan, np.nan)}
         return clp
 
     # Generate random models from the selected solution (mean, median, mode,
