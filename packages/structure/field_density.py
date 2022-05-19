@@ -56,7 +56,7 @@ def fixedParams(x, y, kde_cent, lb=1., rt=99., **kwargs):
     return xy_filtered, xy_cent_dist
 
 
-def distDens(bw_list, xy_filtered, NN_dd_max=200):
+def distDens(bw_list, xy_filtered, Npts_max=250000, NN_dd_max=200):
     """
     Obtain the NN densities and radius for each star in the frame.
 
@@ -64,10 +64,13 @@ def distDens(bw_list, xy_filtered, NN_dd_max=200):
     KDE analysis. We calculate the number of neighbors within a radius equal to
     the bandwidth, and take the median of the number of neighbors as NN_dd.
 
-    NN_dd_max: Set maximum value otherwise the query eats up all the memory
+    HARDCODED to avoid eating up all the memory
+    Npts_max: maximum number of stars before using the coarse method to
+    estimate per-star densities
+    NN_dd_max: maximum for 'NN_dd'
     """
     # Use this approach for large fields
-    if xy_filtered.shape[0] > 100000:
+    if xy_filtered.shape[0] > Npts_max:
 
         points = xy_filtered.T
 

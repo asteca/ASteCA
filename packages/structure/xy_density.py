@@ -7,11 +7,14 @@ from ..update_progress import updt
 
 
 def main(
-    clp, cld, flag_make_plot, mirror_flag=True, Nmax=125000, center_bw=0.,
+    clp, cld, flag_make_plot, mirror_flag=True, Nmax=25000, center_bw=0.,
         **kwargs):
     """
     Obtain Gaussian filtered 2D x,y histograms and the maximum values in them
     as centers.
+
+    HARDCODED
+    Nmax: maximum number of stars used in the center estimation process
     """
     print("Obtaining KDEs for the frame's coordinates")
 
