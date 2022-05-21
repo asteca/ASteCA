@@ -22,7 +22,7 @@ def main(
     plx_clrg, mmag_clp, plx_clp, e_plx_clp, plx_samples,\
         plx_tau_autocorr, mean_afs = [[] for _ in range(7)]
     plx_flag_clp, plx_bayes_flag_clp, plx_wa, plx_Bayes_kde, plx_Bys,\
-        plx_ess = False, False, np.nan, np.array([]), np.array([]), np.nan
+        plx_ess = False, False, np.nan, np.array([]), {}, np.nan
 
     if ('C2' in flag_make_plot) or plx_bayes_flag:
 
@@ -127,63 +127,65 @@ def plxBayes(
     pos0 = np.random.uniform(0., 2. * np.mean(plx_clp), (nwalkers, 1))
 
     tau_index, autocorr_vals, afs = 0, np.empty(nruns), np.empty(nruns)
-    try:
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+    # try:
+    # HARDCODED
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
 
-            # HARDCODED
-            old_tau = np.inf
-            for i, _ in enumerate(sampler.sample(pos0, iterations=nruns)):
-                # Only check convergence every X steps
-                if i % 10 and i < (nruns - 1):
-                    continue
+        old_tau = np.inf
+        for i, _ in enumerate(sampler.sample(pos0, iterations=nruns)):
+            # Only check convergence every X steps
+            if i % 10 and i < (nruns - 1):
+                continue
 
-                afs[tau_index] = np.mean(sampler.acceptance_fraction)
+            afs[tau_index] = np.mean(sampler.acceptance_fraction)
 
-                tau = sampler.get_autocorr_time(tol=0)
-                autocorr_vals[tau_index] = np.mean(tau)
-                tau_index += 1
+            tau = sampler.get_autocorr_time(tol=0)
+            autocorr_vals[tau_index] = np.mean(tau)
+            tau_index += 1
 
-                # Check convergence
-                converged = tau * (N_conv / nwalkers) < i * plx_burn
-                converged &= np.all(np.abs(old_tau - tau) / tau < tau_stable)
-                if converged:
-                    print("")
-                    break
-                old_tau = tau
-                # update_progress.updt(nruns, i + 1)
+            # Check convergence
+            converged = tau * (N_conv / nwalkers) < i * plx_burn
+            converged &= np.all(np.abs(old_tau - tau) / tau < tau_stable)
+            if converged:
+                print("")
+                break
+            old_tau = tau
+            # update_progress.updt(nruns, i + 1)
 
-        mean_afs = afs[:tau_index]
-        tau_autocorr = autocorr_vals[:tau_index]
+    mean_afs = afs[:tau_index]
+    tau_autocorr = autocorr_vals[:tau_index]
 
-        nburn = int(i * plx_burn)
-        samples = sampler.get_chain(discard=nburn, flat=True)
+    nburn = int(i * plx_burn)
+    samples = sampler.get_chain(discard=nburn, flat=True)
 
-        # Mode and KDE to plot
-        # This simulates the 'fundam_params and 'varIdxs' arrays.
-        fp, vi = [[-np.inf, np.inf], [-np.inf, np.inf]], [0, 1]
-        plx_Bys_mode, plx_Bayes_kde = modeKDE(fp, vi, 1. / samples.T)
-        plx_Bys_mode, plx_Bayes_kde = 1. / plx_Bys_mode[0], plx_Bayes_kde[0]
+    # Mode and KDE to plot
+    # This simulates the 'fundam_params and 'varIdxs' arrays.
+    fp, vi = [[-np.inf, np.inf], [-np.inf, np.inf]], [0, 1]
+    plx_Bys_mode, plx_Bayes_kde = modeKDE(fp, vi, 1. / samples.T)
+    plx_Bys_mode, plx_Bayes_kde = 1. / plx_Bys_mode[0], plx_Bayes_kde[0]
 
-        # 16th, median, 84th, mean, mode in Kpc
-        p16, p50, p84 = np.percentile(samples, (16, 50, 84))
-        plx_Bys = np.array([p16, p50, p84, np.mean(samples), plx_Bys_mode])
+    # 16th, median, 84th, mean, mode in Kpc
+    p16, p50, p84 = np.percentile(samples, (16, 50, 84))
+    plx_Bys = {
+        '16th': p16, 'median': p50, '84th': p84, 'mean': np.mean(samples),
+        'std': np.std(samples), 'mode': plx_Bys_mode}
 
-        tau = sampler.get_autocorr_time(tol=0)[0]
-        plx_ess = samples.size / tau
+    tau = sampler.get_autocorr_time(tol=0)[0]
+    plx_ess = samples.size / tau
 
-        # For plotting, (nsteps, nchains, ndim)
-        plx_samples = sampler.get_chain()[:, :, 0]
+    # For plotting, (nsteps, nchains, ndim)
+    plx_samples = sampler.get_chain()[:, :, 0]
 
-        print("Bayesian plx estimated: "
-              + "{:.3f} (ESS={:.0f}, tau={:.0f})".format(
-                  1. / plx_Bys[3], plx_ess, tau))
-    except Exception as e:
-        print(e)
-        print("\n  ERROR: could not process Plx data with emcee")
-        plx_samples, plx_Bayes_kde, plx_Bys, plx_bayes_flag_clp, plx_ess,\
-            tau_autocorr, mean_afs = [], np.array([]), np.array([]), False,\
-            np.nan, np.nan, np.nan
+    print("Bayesian plx estimated: "
+          + "{:.3f} (ESS={:.0f}, tau={:.0f})".format(
+              1. / plx_Bys['mean'], plx_ess, tau))
+    # except Exception as e:
+    #     print(e)
+    #     print("\n  ERROR: could not process Plx data with emcee")
+    #     plx_samples, plx_Bayes_kde, plx_Bys, plx_bayes_flag_clp, plx_ess,\
+    #         tau_autocorr, mean_afs = [], np.array([]), np.array([]), False,\
+    #         np.nan, np.nan, np.nan
 
     return plx_samples, plx_Bayes_kde, plx_Bys, plx_bayes_flag_clp,\
         tau_autocorr, mean_afs, plx_ess

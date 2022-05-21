@@ -57,8 +57,8 @@ def pl_mag_membs(gs, plot_style, y_ax, membvsmag):
 
 
 def pl_cl_fl_regions(
-    gs, fig, plot_style, x_name, y_name, coord, x_min, x_max, y_min, y_max,
-    asp_ratio, kde_cent, clust_rad, field_regions, cl_region_i,
+    gs, fig, plot_style, xy_frame, x_name, y_name, coord, x_min, x_max, y_min,
+    y_max, asp_ratio, kde_cent, clust_rad, field_regions, cl_region_i,
         flag_no_fl_regs):
     """
     Cluster and field regions defined.
@@ -66,7 +66,8 @@ def pl_cl_fl_regions(
     ax = plt.subplot(gs[0:2, 4:6])
 
     ax.set_aspect(aspect=asp_ratio)
-    ax.invert_xaxis()
+    if xy_frame == 'equatorial':
+        ax.invert_xaxis()
     plt.xlabel('{} ({})'.format(x_name, coord))
     plt.ylabel('{} ({})'.format(y_name, coord))
     if plot_style == 'asteca':
@@ -120,7 +121,8 @@ def pl_rad_dens(
     rdp_radii = np.array(rdp_radii) * 60.
     clust_rad, rad_uncert, rad_max = clust_rad * 60., rad_uncert * 60.,\
         rad_max * 60.
-    KP_Bys_rc, KP_Bys_rt = KP_Bys_rc * 60., KP_Bys_rt * 60.
+    KP_Bys_rc = {k: v * 60. for k, v in KP_Bys_rc.items()}
+    KP_Bys_rt = {k: v * 60. for k, v in KP_Bys_rt.items()}
     field_dens, e_fdens, KP_cent_dens = field_dens / 3600.,\
         e_fdens / 3600., KP_cent_dens / 3600.
     _16_84_rang, _84_kp, _16_kp = _16_84_rang * 60.,\
@@ -188,14 +190,16 @@ def pl_rad_dens(
         txts = [
             'King prof ({:.2f})'.format(KP_conct_par),
             kp_rad.format(
-                "c", KP_Bys_rc[1], KP_Bys_rc[0], KP_Bys_rc[2], coord2),
+                "c", KP_Bys_rc['median'], KP_Bys_rc['16th'], KP_Bys_rc['84th'],
+                coord2),
             kp_rad.format(
-                "t", KP_Bys_rt[1], KP_Bys_rt[0], KP_Bys_rt[2], coord2)
+                "t", KP_Bys_rt['median'], KP_Bys_rt['16th'], KP_Bys_rt['84th'],
+                coord2)
         ]
         # Plot curve. Values outside of rt contribute 'fd'.
-        kpf_xvals = np.linspace(rdp_radii[0], KP_Bys_rt[1], 100)
+        kpf_xvals = np.linspace(rdp_radii[0], KP_Bys_rt['median'], 100)
         kpf_yvals = KP_cent_dens * kpf(
-            kpf_xvals, KP_Bys_rc[1], KP_Bys_rt[1]) + field_dens
+            kpf_xvals, KP_Bys_rc['median'], KP_Bys_rt['median']) + field_dens
         ax.plot(kpf_xvals, kpf_yvals, 'g--', label=txts[0], lw=2., zorder=3)
         # 16-84th range
         idx = (np.abs(_16_84_rang - kpf_xvals[-1])).argmin()
@@ -206,12 +210,13 @@ def pl_rad_dens(
 
         # Core radius
         rc_ymax = KP_cent_dens * kpf(
-            KP_Bys_rc[1], KP_Bys_rc[1], KP_Bys_rt[1]) + field_dens
+            KP_Bys_rc['median'], KP_Bys_rc['median'], KP_Bys_rt['median'])\
+            + field_dens
         ax.vlines(
-            x=KP_Bys_rc[1], ymin=field_dens, ymax=rc_ymax, label=txts[1],
-            color='g', linestyles=':', lw=2., zorder=5)
+            x=KP_Bys_rc['median'], ymin=field_dens, ymax=rc_ymax,
+            label=txts[1], color='g', linestyles=':', lw=2., zorder=5)
         # Tidal radius
-        ax.vlines(x=KP_Bys_rt[1], ymin=field_dens, ymax=y_mid_point,
+        ax.vlines(x=KP_Bys_rt['median'], ymin=field_dens, ymax=y_mid_point,
                   label=txts[2], color='g')
 
     # get handles
@@ -236,10 +241,11 @@ def pl_rad_dens(
     if kp_ndim in (2, 4):
         axins.plot(kpf_xvals, kpf_yvals, 'g--', lw=1., zorder=3)
         axins.vlines(
-            x=KP_Bys_rc[3], ymin=field_dens, ymax=rc_ymax, color='g',
+            x=KP_Bys_rc['median'], ymin=field_dens, ymax=rc_ymax, color='g',
             linestyles=':', lw=1.)
         axins.vlines(
-            x=KP_Bys_rt[3], ymin=field_dens, ymax=y_mid_point, color='g', lw=1)
+            x=KP_Bys_rt['median'], ymin=field_dens, ymax=y_mid_point,
+            color='g', lw=1)
     else:
         axins.vlines(
             x=clust_rad, ymin=field_dens, ymax=y_mid_point, lw=1.5, color='r',
@@ -255,8 +261,8 @@ def pl_rad_dens(
 
 
 def pl_zoom_frame(
-    gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin, y_zmax, cont_index,
-    x_data, y_data, st_sizes_arr, kde_cent, clust_rad, KP_Bys_rc,
+    gs, fig, xy_frame, x_name, y_name, coord, x_zmin, x_zmax, y_zmin, y_zmax,
+    cont_index, x_data, y_data, st_sizes_arr, kde_cent, clust_rad, KP_Bys_rc,
         KP_Bys_rt, KP_Bys_ecc, KP_Bys_theta, frac_cl_area, kp_ndim):
     """
     Zoom on x,y finding chart.
@@ -268,7 +274,8 @@ def pl_zoom_frame(
     # Set plot limits.
     plt.xlim(x_zmin, x_zmax)
     plt.ylim(y_zmin, y_zmax)
-    ax.invert_xaxis()
+    if xy_frame == 'equatorial':
+        ax.invert_xaxis()
     # Set axis labels
     plt.xlabel('{} ({})'.format(x_name, coord))
     plt.ylabel('{} ({})'.format(y_name, coord))
@@ -290,26 +297,26 @@ def pl_zoom_frame(
     # Core and tidal radii
     if kp_ndim in (2, 4):
         # Plot tidal radius.
-        rt_mode, ecc_mode, theta_mode = KP_Bys_rt[4], KP_Bys_ecc[4],\
-            KP_Bys_theta[4]
-        b = rt_mode * np.sqrt(1. - ecc_mode**2)
+        rt_median, ecc_median, theta_mean = KP_Bys_rt['median'],\
+            KP_Bys_ecc['median'], KP_Bys_theta['mean']
+        b = rt_median * np.sqrt(1. - ecc_median**2)
         ellipse = mpatches.Ellipse(
-            xy=kde_cent, width=2. * rt_mode, height=2. * b,
-            angle=np.rad2deg(theta_mode), facecolor='None', edgecolor='g',
+            xy=kde_cent, width=2. * rt_median, height=2. * b,
+            angle=np.rad2deg(theta_mean), facecolor='None', edgecolor='g',
             linewidth=1.5, transform=ax.transData)
         # circle = plt.Circle(
         #     (kde_cent[0], kde_cent[1]), KP_Bys_rt[3], color='g', fill=False,
         #     lw=1.5)
         fig.gca().add_artist(ellipse)
         # Plot core radius.
-        rc_mode = KP_Bys_rc[4]
+        rc_median = KP_Bys_rc['median']
         # circle = plt.Circle(
         #     (kde_cent[0], kde_cent[1]), KP_Bys_rc[3], color='g',
         #     fill=False, ls='dashed', lw=1.)
-        b = rc_mode * np.sqrt(1. - ecc_mode**2)
+        b = rc_median * np.sqrt(1. - ecc_median**2)
         ellipse = mpatches.Ellipse(
-            xy=kde_cent, width=2. * rc_mode, height=2. * b,
-            angle=np.rad2deg(theta_mode), facecolor='None', edgecolor='g',
+            xy=kde_cent, width=2. * rc_median, height=2. * b,
+            angle=np.rad2deg(theta_mean), facecolor='None', edgecolor='g',
             ls='dashed', linewidth=1.5, transform=ax.transData)
         fig.gca().add_artist(ellipse)
 

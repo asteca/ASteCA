@@ -49,13 +49,13 @@ def aspect_ratio(x_min, x_max, y_min, y_max):
 
 
 def frame_zoomed(
-    x_min, x_max, y_min, y_max, kde_cent, clust_rad, kpflag=None,
+    x_min, x_max, y_min, y_max, kde_cent, clust_rad,
         tidal_rad=None):
     """
     If possible, define zoomed frame.
     """
-    if kpflag:
-        rad = clust_rad if clust_rad > tidal_rad[1] else tidal_rad[1]
+    if tidal_rad is not None:
+        rad = clust_rad if clust_rad > tidal_rad else tidal_rad
     else:
         rad = clust_rad
 
