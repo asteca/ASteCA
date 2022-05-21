@@ -25,7 +25,7 @@ from .data_analysis import compl_func
 from .data_analysis import luminosity
 # DEPRECATED 12/20
 # from .data_analysis import ad_field_vs_clust
-from .data_analysis import members_compl
+# from .data_analysis import members_compl
 #
 from .decont_algors import decont_algors
 # DEPRECATED April 2021
@@ -193,8 +193,9 @@ def main(cl_file, pd):
     # Luminosity function and completeness level for each magnitude bin.
     clp = luminosity.main(clp, **cld)
 
+    # DEPRECATED 05/22
     # Approximate number of cluster's members.
-    clp = members_compl.main(clp)
+    # clp = members_compl.main(clp)
 
     if 'B2' in pd['flag_make_plot']:
         make_B2_plot.main(npd, cld, pd, **clp)
