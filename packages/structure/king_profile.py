@@ -60,7 +60,8 @@ def main(
         print("Skipping King profile fit")
         KP_plot, KP_memb_num, KP_conct_par = {}, np.nan, np.nan
         KP_Bys_rc, KP_Bys_rt, KP_Bys_ecc, KP_Bys_theta =\
-            [np.array([np.nan] * 5) for _ in range(4)]
+            [{'16th': np.nan, 'median': np.nan, '84th': np.nan, 'mean': np.nan,
+              'std': np.nan, 'mode': np.nan} for _ in range(4)]
 
     clp['KP_plot'], clp['KP_Bys_rc'], clp['KP_Bys_rt'],\
         clp['KP_Bys_ecc'], clp['KP_Bys_theta'], clp['KP_memb_num'],\
