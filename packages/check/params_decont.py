@@ -1,6 +1,6 @@
 
-from os.path import isfile
-from packages.inp import names_paths
+# from os.path import isfile
+# from packages.inp import names_paths
 
 
 def check(
@@ -25,10 +25,10 @@ def check(
         if 'y' not in bayesda_dflag:
             raise ValueError(
                 "at least one 'bayes' DA weight must be set to 'y'.")
-        if len(bayesda_dflag) - 5 != len(colors):
+        if len(bayesda_dflag) - 4 != len(colors):  # HARDCODED '4'
             raise ValueError(
                 "there are {} 'bayes' DA weights defined, there should "
-                "be {}.".format(len(bayesda_dflag), 5 + len(colors)))
+                "be {}.".format(len(bayesda_dflag), 4 + len(colors)))
 
     # Check 'field stars removal' method selected.
     if fld_clean_mode not in fld_rem_methods:
