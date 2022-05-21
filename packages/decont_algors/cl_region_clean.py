@@ -19,7 +19,7 @@ def main(clp, fld_clean_mode, fld_clean_bin, fld_clean_prob, **kwargs):
         # Skip reduction process.
         print("No field star removal applied on cluster region")
         # Remove stars with a color far away from the x median.
-        cl_reg_fit, cl_reg_no_fit = rmColorOutliers(cl_reg_fit, cl_reg_no_fit)
+        # cl_reg_fit, cl_reg_no_fit = rmColorOutliers(cl_reg_fit, cl_reg_no_fit)
 
     # If the DA was skipped and any method but 'local' or 'mag' is selected,
     # don't run.
