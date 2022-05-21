@@ -3,7 +3,7 @@ import numpy as np
 
 
 def main(
-    isochrone, ebv, dr, R_V, ext_coefs, N_fc, DR_dist, DR_percentage,
+    isochrone, Av, dr, Rv, ext_coefs, N_fc, DR_dist, DR_percentage,
         rand_norm, rand_unif, m_ini_idx):
     """
     Modifies color and magnitude values according to given values for the
@@ -35,32 +35,29 @@ def main(
     (m1 - m2)_obs = (m1 - m2)_int + E(m1 - m2)
     (m1 - m2)_obs = (m1 - m2)_int + (a12 + b12/Rv) * R_V * E(B-V)
     """
-    Ns = isochrone.shape[-1]
 
-    # E_BV differential reddening
-    if DR_dist == 'uniform':
-        ebv_dr = (2 * rand_unif[:isochrone.shape[-1]] - 1) * dr
-        # ebv_dr = rand_unif[:Ns] * dr
-    elif DR_dist == 'normal':
-        # ebv_dr = abs(rand_norm[:Ns]) * dr
-        ebv_dr = rand_norm[:Ns] * dr
-        # ebv_dr = np.clip(
-        #     3 * dr - abs(rand_norm[:Ns]) * dr, a_min=0, a_max=np.inf)
+    if dr > 0.:
+        Ns = isochrone.shape[-1]
 
-    ebv_dr[rand_unif[:Ns] > DR_percentage] = 0.
+        if DR_dist == 'uniform':
+            Av_dr = (2 * rand_unif[:isochrone.shape[-1]] - 1) * dr
+            # Av_dr = rand_unif[:Ns] * dr
+        elif DR_dist == 'normal':
+            # Av_dr = abs(rand_norm[:Ns]) * dr
+            Av_dr = rand_norm[:Ns] * dr
 
-    ebv = np.clip(ebv + ebv_dr, a_min=0., a_max=np.inf)
-    # ebv = ebv + ebv_dr
-    Av = R_V * ebv
+        Av_dr[rand_unif[:Ns] > DR_percentage] = 0.
+        Av = np.clip(Av + Av_dr, a_min=0., a_max=np.inf)
+
     Nf, Nc = N_fc
 
     def magmove(fi):
-        Ax = (ext_coefs[fi][0] + ext_coefs[fi][1] / R_V) * Av
+        Ax = (ext_coefs[fi][0] + ext_coefs[fi][1] / Rv) * Av
         return Ax
 
     def colmove(ci):
-        Ex = ((ext_coefs[ci][0][0] + ext_coefs[ci][0][1] / R_V)
-              - (ext_coefs[ci][1][0] + ext_coefs[ci][1][1] / R_V)) * Av
+        Ex = ((ext_coefs[ci][0][0] + ext_coefs[ci][0][1] / Rv)
+              - (ext_coefs[ci][1][0] + ext_coefs[ci][1][1] / Rv)) * Av
         return Ex
 
     # Move filters.
