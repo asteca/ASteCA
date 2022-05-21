@@ -5,8 +5,8 @@ import matplotlib.offsetbox as offsetbox
 
 
 def pl_full_frame(
-    N, gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max, asp_ratio,
-        x, y, st_sizes_arr, mag_range, main_mag):
+    N, gs, fig, xy_frame, x_name, y_name, coord, x_min, x_max, y_min, y_max,
+        asp_ratio, x, y, st_sizes_arr, mag_range, main_mag):
     """
     x,y finding chart of stars in frame within 'mag_range'
     """
@@ -20,7 +20,8 @@ def pl_full_frame(
     # Set plot limits
     plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
-    ax.invert_xaxis()
+    if xy_frame == 'equatorial':
+        ax.invert_xaxis()
     # Set axis labels
     plt.xlabel('{} ({})'.format(x_name, coord))
     plt.ylabel('{} ({})'.format(y_name, coord))
@@ -31,7 +32,7 @@ def pl_full_frame(
 
 
 def pl_densxy(
-    N, gs, fig, asp_ratio, x_name, y_name, coord, bw_list, kde_pl,
+    N, gs, fig, xy_frame, asp_ratio, x_name, y_name, coord, bw_list, kde_pl,
         cent_xy):
     """
     2D Gaussian convolved histogram.
@@ -72,7 +73,8 @@ def pl_densxy(
         ob.patch.set(alpha=0.85)
         ax.add_artist(ob)
 
-    ax.invert_xaxis()
+    if xy_frame == 'equatorial':
+        ax.invert_xaxis()
     ax.set_aspect(aspect=asp_ratio)
 
 

@@ -22,14 +22,13 @@ def main(npd, cld, pd, clp):
     coord = "deg"
     if pd['xy_frame'] == 'equatorial':
         x_name, y_name = "ra", "dec"
-        x_min, x_max = x_max, x_min
     else:
         x_name, y_name = "lon", "lat"
     asp_ratio = prep_plots.aspect_ratio(x_min, x_max, y_min, y_max)
 
     x_zmin, x_zmax, y_zmin, y_zmax = prep_plots.frame_zoomed(
         x_min, x_max, y_min, y_max, clp['kde_cent'], clp['clust_rad'],
-        pd['kp_ndim'], clp['KP_Bys_rt'])
+        clp['KP_Bys_rt']['median'])
     x_data_z, y_data_z, mag_data_z = prep_plots.zoomed_frame(
         cld['x'], cld['y'], cld['mags'], x_zmin, x_zmax, y_zmin,
         y_zmax)
@@ -37,8 +36,8 @@ def main(npd, cld, pd, clp):
     _, y_ax = prep_plots.ax_names(pd['colors'][0], pd['filters'][0], 'mag')
     rdp_radii, rdp_points, rdp_stddev, rad_max = prep_plots.RDPCurve(
         pd['kp_ndim'], clp['xy_filtered'], clp['xy_cent_dist'],
-        clp['kde_cent'], clp['clust_rad'], clp['KP_Bys_ecc'][3],
-        clp['KP_Bys_theta'][3])
+        clp['kde_cent'], clp['clust_rad'], clp['KP_Bys_ecc']['median'],
+        clp['KP_Bys_theta']['mean'])
     membvsmag = prep_plots.NmembVsMag(
         cld['x'], cld['y'], cld['mags'], clp['kde_cent'],
         clp['clust_rad'], clp['cl_area'])
@@ -54,24 +53,25 @@ def main(npd, cld, pd, clp):
         # pl_mag_membs
         [gs, pd['plot_style'], y_ax, membvsmag],
         # pl_cl_fl_regions: Cluster and field regions defined.
-        [gs, fig, pd['plot_style'], x_name, y_name, coord, x_min, x_max,
-         y_min, y_max, asp_ratio, clp['kde_cent'], clp['clust_rad'],
-         clp['field_regions'], clp['cl_region'], clp['flag_no_fl_regs']],
+        [gs, fig, pd['plot_style'], pd['xy_frame'], x_name, y_name, coord,
+         x_min, x_max, y_min, y_max, asp_ratio, clp['kde_cent'],
+         clp['clust_rad'], clp['field_regions'], clp['cl_region'],
+         clp['flag_no_fl_regs']],
         # pl_rad_dens: Radial density plot.
         [gs, pd['plot_style'], coord, rdp_radii, rdp_points, rdp_stddev,
          rad_max, clp['field_dens'], clp['field_dens_std'], clp['clust_rad'],
          clp['rad_uncert'], pd['kp_ndim'], clp['KP_Bys_rc'], clp['KP_Bys_rt'],
          clp['KP_plot'], clp['KP_conct_par']],
         # pl_zoom_frame: Zoom on x,y finding chart.
-        [gs, fig, x_name, y_name, coord, x_zmin, x_zmax, y_zmin, y_zmax,
-         clp['cont_index'], x_data_z, y_data_z, st_sizes_arr_z,
+        [gs, fig, pd['xy_frame'], x_name, y_name, coord, x_zmin, x_zmax,
+         y_zmin, y_zmax, clp['cont_index'], x_data_z, y_data_z, st_sizes_arr_z,
          clp['kde_cent'], clp['clust_rad'], clp['KP_Bys_rc'], clp['KP_Bys_rt'],
          clp['KP_Bys_ecc'], clp['KP_Bys_theta'], clp['frac_cl_area'],
          pd['kp_ndim']],
         # pl_memb_vs_rad
         [gs, pd['plot_style'], coord, clp['clust_rad'], rad_radii,
-         N_membs, N_membs_16, N_membs_84, clp['KP_Bys_rc'][1],
-         clp['KP_Bys_rt'][1], pd['kp_ndim'], clp['KP_plot']],
+         N_membs, N_membs_16, N_membs_84, clp['KP_Bys_rc']['median'],
+         clp['KP_Bys_rt']['median'], pd['kp_ndim'], clp['KP_plot']],
         # pl_membs_dist
         [gs, fig, clp['members_dist'], clp['n_memb']]
     ]

@@ -22,7 +22,6 @@ def main(npd, cld_i, pd, clp):
     coord = "deg"
     if pd['xy_frame'] == 'equatorial':
         x_name, y_name = "ra", "dec"
-        x_min, x_max = x_max, x_min
     else:
         x_name, y_name = "lon", "lat"
     asp_ratio = prep_plots.aspect_ratio(x_min, x_max, y_min, y_max)
@@ -33,13 +32,13 @@ def main(npd, cld_i, pd, clp):
     # Structure plots.
     arglist = [
         # pl_full_frame: x,y finding chart of full frame.
-        [gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max, asp_ratio,
-         clp['kde_cent'], cld_i['x'], cld_i['y'], st_sizes_arr,
-         clp['clust_rad']],
+        [gs, fig, pd['xy_frame'], x_name, y_name, coord, x_min, x_max, y_min,
+         y_max, asp_ratio, clp['kde_cent'], cld_i['x'], cld_i['y'],
+         st_sizes_arr, clp['clust_rad']],
         # pl_densmap: 2D Gaussian convolved histogram.
-        [gs, fig, asp_ratio, x_name, y_name, coord, clp['bw_list'],
-         clp['kde_cent'], clp['frame_kde_cent'], clp['pts_dens'],
-         clp['clust_rad']],
+        [gs, fig, pd['xy_frame'], asp_ratio, x_name, y_name, coord,
+         clp['bw_list'], clp['kde_cent'], clp['frame_kde_cent'],
+         clp['pts_dens'], clp['clust_rad']],
         # # pl_knn_dens
         # [gs, fig, pd['plot_style'], asp_ratio, x_min, x_max, y_min, y_max,
         #  x_name, y_name, coord, clp['xy_filtered'],

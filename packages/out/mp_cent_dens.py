@@ -7,8 +7,8 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 
 def pl_full_frame(
-    gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max, asp_ratio,
-        kde_cent, x, y, st_sizes_arr, clust_rad):
+    gs, fig, xy_frame, x_name, y_name, coord, x_min, x_max, y_min, y_max,
+        asp_ratio, kde_cent, x, y, st_sizes_arr, clust_rad):
     """
     x,y finding chart of full frame
     """
@@ -18,7 +18,8 @@ def pl_full_frame(
     # Set plot limits
     plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
-    ax.invert_xaxis()
+    if xy_frame == 'equatorial':
+        ax.invert_xaxis()
     # Set axis labels
     plt.xlabel('{} ({})'.format(x_name, coord))
     plt.ylabel('{} ({})'.format(y_name, coord))
@@ -54,7 +55,7 @@ def pl_full_frame(
 
 
 def pl_densmap(
-    gs, fig, asp_ratio, x_name, y_name, coord, bw_list, kde_cent,
+    gs, fig, xy_frame, asp_ratio, x_name, y_name, coord, bw_list, kde_cent,
         frame_kde_cent, pts_dens, clust_rad):
     """
     Coordinates 2D KDE.
@@ -78,7 +79,8 @@ def pl_densmap(
     im = plt.imshow(
         np.rot90(kde), cmap=plt.get_cmap('RdYlBu_r'), extent=ext_range)
     plt.contour(x_grid, y_grid, kde, colors='#551a8b', linewidths=0.5)
-    ax.invert_xaxis()
+    if xy_frame == 'equatorial':
+        ax.invert_xaxis()
 
     # Colorbar on the right side of ax.
     divider = make_axes_locatable(ax)
@@ -204,7 +206,8 @@ def pl_field_dens(
     N_max = 50000  # HARDCODED
     if len(fr_dist) > N_max:
         ids = np.random.choice(np.arange(len(fr_dist)), N_max, replace=False)
-        plt.scatter(fr_dist[ids], pts_dens[ids], c='k', s=5, alpha=.2, zorder=1)
+        plt.scatter(fr_dist[ids], pts_dens[ids], c='k', s=5, alpha=.2,
+                    zorder=1)
     else:
         plt.scatter(fr_dist, pts_dens, c='k', s=5, alpha=.2, zorder=1)
 
