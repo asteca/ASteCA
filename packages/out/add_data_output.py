@@ -21,8 +21,8 @@ def main(
     cre_r = [
         frmt.format(_) for _ in [
             kde_cent[0], kde_cent[1], clust_rad,
-            KP_Bys_rc[1], KP_Bys_rc[0], KP_Bys_rc[2],
-            KP_Bys_rt[1], KP_Bys_rt[0], KP_Bys_rt[2]]]
+            KP_Bys_rc['median'], KP_Bys_rc['16th'], KP_Bys_rc['84th'],
+            KP_Bys_rt['median'], KP_Bys_rt['16th'], KP_Bys_rt['84th']]]
 
     # Cluster parameters and errors.
     cpe_r = [
