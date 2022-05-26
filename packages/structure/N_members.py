@@ -22,7 +22,8 @@ def main(clp):
             clp['field_dens'], clp['field_dens_std'], 1000)
         N_memb_all = N_in_rad - clp['cl_area'] * field_dens_s
         N_memb_all = N_memb_all[N_memb_all > 0]
-        n_memb = int(np.median(N_memb_all))
+        if N_memb_all.size > 0:
+            n_memb = int(np.median(N_memb_all))
 
     if n_memb < 10:
         print("  WARNING: The estimated number of members is < 10")
