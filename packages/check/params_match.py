@@ -57,7 +57,7 @@ def checkPtemcee(pd):
             elif pr[0] == 'g':
                 tlst.append([pr[0], float(pr[1]), float(pr[2])])
 
-        if len(tlst) != 6:
+        if len(tlst) != 7:  # HARDCODED '7'
             raise ValueError("Missing parameters in line 'B2'")
         priors_mcee_all[cl_pars[0]] = tlst
 
