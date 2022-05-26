@@ -56,7 +56,7 @@ def fixedParams(x, y, kde_cent, lb=1., rt=99., **kwargs):
     return xy_filtered, xy_cent_dist
 
 
-def distDens(bw_list, xy_filtered, Npts_max=250000, NN_dd_max=200):
+def distDens(bw_list, xy_filtered, Npts_max=150000, Nbins=100, NN_dd_max=200):
     """
     Obtain the NN densities and radius for each star in the frame.
 
@@ -67,6 +67,7 @@ def distDens(bw_list, xy_filtered, Npts_max=250000, NN_dd_max=200):
     HARDCODED to avoid eating up all the memory
     Npts_max: maximum number of stars before using the coarse method to
     estimate per-star densities
+    Nbins: number of bins used for the 2D histogram in case of too many stars
     NN_dd_max: maximum for 'NN_dd'
     """
     # Use this approach for large fields
@@ -92,7 +93,7 @@ def distDens(bw_list, xy_filtered, Npts_max=250000, NN_dd_max=200):
 
             return pts_dens / bin_area
 
-        pts_dens = histoDens(100)
+        pts_dens = histoDens(Nbins)
         msk = pts_dens == 0.
         pts_dens[msk] = np.median(pts_dens)
 
@@ -108,7 +109,7 @@ def distDens(bw_list, xy_filtered, Npts_max=250000, NN_dd_max=200):
         # Estimate NN_dd
         N_in_vol = tree.query_ball_point(xy_filtered, r=bw_list[1])
         NN_dd = int(np.median([len(_) for _ in N_in_vol]))
-        NN_dd = max(NN_dd, NN_dd_max)
+        NN_dd = min(NN_dd, NN_dd_max)
 
         inx = tree.query(xy_filtered, k=NN_dd + 1)
         # Keep the distance to the most distant neighbor, ie: the radius.
