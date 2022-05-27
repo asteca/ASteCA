@@ -5,7 +5,7 @@ from scipy.interpolate import interp1d
 from .. import update_progress
 
 
-def main(IMF_name, Nmets, Max_mass, m_high=150.):
+def main(IMF_name, Nmets, Max_mass):
     """
     Returns the number of stars per interval of mass for the selected IMF.
 
@@ -33,34 +33,25 @@ def main(IMF_name, Nmets, Max_mass, m_high=150.):
 
     """
     print("Sampling selected IMF ({})".format(IMF_name))
-
-    # Low mass limits for each IMF. Defined slightly larger to avoid sampling
-    # issues.
-    imfs_dict = {
-        'chabrier_2001_exp': 0.011, 'chabrier_2001_log': 0.011,
-        'kroupa_1993': 0.081, 'kroupa_2002': 0.011, 'salpeter_1955': 0.31}
-    # IMF low mass limit.
-    m_low = imfs_dict[IMF_name]
-
-    inv_cdf, CDF_min, CDF_max = invTrnsfSmpl(IMF_name, m_low, m_high)
+    inv_cdf = invTrnsfSmpl(IMF_name)
 
     st_dist_mass = []
     for _ in range(Nmets):
-        st_dist_mass += [sampleInv(Max_mass, inv_cdf, CDF_min, CDF_max)]
+        sampled_IMF = sampleInv(Max_mass, inv_cdf)
+        st_dist_mass += [[sampled_IMF, np.cumsum(sampled_IMF)]]
         update_progress.updt(Nmets, _ + 1)
 
     return st_dist_mass
 
 
-def invTrnsfSmpl(IMF_name, m_low, m_high):
+def invTrnsfSmpl(IMF_name='kroupa_2002', m_low=0.08, m_high=150):
     """
     IMF inverse transform sampling.
 
     Asked here: https://stackoverflow.com/q/21100716/1391441
     """
-    # Obtain normalization constant (k = \int_{m_low}^{m_up} \xi(m) dm). This
-    # makes the IMF behave like a PDF.
-    norm_const = quad(IMF_func, m_low, m_high, args=(IMF_name))[0]
+    # Obtain normalization constant (k = \int_{m_low}^{m_up} \xi(m) dm).
+    # norm_const = quad(IMF_func, m_low, m_high, args=(IMF_name))[0]
 
     # IMF mass interpolation step and grid values.
     mass_step = 0.05
@@ -73,16 +64,17 @@ def invTrnsfSmpl(IMF_name, m_low, m_high):
         CDF_samples.append(quad(IMF_func, m_low, m, args=(IMF_name))[0])
 
     # Normalize values
-    CDF_samples = np.array(CDF_samples) / norm_const
-    CDF_min, CDF_max = CDF_samples.min(), CDF_samples.max()
+    CDF_samples = np.array(CDF_samples) / max(CDF_samples)
+    # These are (0, 1)
+    # CDF_min, CDF_max = CDF_samples.min(), CDF_samples.max()
 
     # Inverse CDF
     inv_cdf = interp1d(CDF_samples, mass_values)
 
-    return inv_cdf, CDF_min, CDF_max
+    return inv_cdf
 
 
-def sampleInv(Max_mass, inv_cdf, CDF_min, CDF_max):
+def sampleInv(Max_mass, inv_cdf):
     """
     Sample the inverse CDF
     """
@@ -90,24 +82,17 @@ def sampleInv(Max_mass, inv_cdf, CDF_min, CDF_max):
 
     def sampled_inv_cdf(N):
         mr = np.random.rand(N)
-        mr = mr[(mr >= CDF_min) & (mr <= CDF_max)]
+        # mr = mr[(mr >= CDF_min) & (mr <= CDF_max)]
         return inv_cdf(mr)
 
-    # Empirically I've found that if: mass_sum = sampled_inv_cdf(N_chunk).sum()
-    # then: N_chunk / mass_sum ~ 2.5
-    # This means that to achieve a total mass of 'Max_mass' in a reasonable
-    # number of steps (~100), i.e. mass_sum * 100 ~ Max_mass,
-    # then the chunk should be of size:
-    # N_chunk ~ 2.5 * mass_sum = 2.5 * Max_mass/100
+    # Sample in chunks until the maximum defined mass is reached.
     N_chunk = max(100, int(2.5 * Max_mass / 100.))
-
-    # Sample in chunks of 100 stars until the maximum defined mass is reached.
     mass_samples = []
     while np.sum(mass_samples) < Max_mass:
         mass_samples += sampled_inv_cdf(N_chunk).tolist()
     sampled_IMF = np.array(mass_samples)
 
-    return [sampled_IMF, np.cumsum(sampled_IMF)]
+    return sampled_IMF
 
 
 def IMF_func(m_star, IMF_name):

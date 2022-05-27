@@ -1,3 +1,4 @@
+
 import numpy as np
 
 
@@ -11,7 +12,7 @@ def main(clp, **kwargs):
     """
 
     # (Main) Magnitudes of all stars AFTER error rejection.
-    mmag = np.array(list(zip(*(list(zip(*clp['acpt_stars_c']))[3])))[0])
+    mmag = np.array(list(zip(*(list(zip(*clp['acpt_stars']))[3])))[0])
 
     # This is the curve for the entire observed frame, normalized to the area
     # of the cluster.
@@ -22,7 +23,7 @@ def main(clp, **kwargs):
         (np.array([0.]), lf_all / clp['frame_norm'], np.array([0.])))
 
     # Obtain histogram for cluster region.
-    mag_cl = list(zip(*list(zip(*clp['cl_region_c']))[3]))[0]
+    mag_cl = list(zip(*list(zip(*clp['cl_region']))[3]))[0]
     lf_clust, lf_edg_c = np.histogram(
         mag_cl, bins=50, range=(np.nanmin(mag_cl), np.nanmax(mag_cl)))
 
@@ -33,10 +34,10 @@ def main(clp, **kwargs):
 
     # Now for field regions.
     mag_fl = []
-    if clp['flag_no_fl_regs_c'] is False:
+    if clp['flag_no_fl_regs'] is False:
 
         # Extract main magnitudes for all stars in all field regions defined.
-        for freg in clp['field_regions_c']:
+        for freg in clp['field_regions']:
             for star in freg:
                 mag_fl.append(star[3][0])
 
@@ -48,11 +49,11 @@ def main(clp, **kwargs):
         # last vertical bars.
         x_fl = np.concatenate((np.array([0.]), lf_edg_f))
         y_fl = np.concatenate(
-            (np.array([0.]), (lf_field / float(len(clp['field_regions_c']))),
+            (np.array([0.]), (lf_field / float(len(clp['field_regions']))),
              np.array([0.])))
     else:
         print("  WARNING: no field regions defined. Luminosity function\n"
-              "  is not cleaned from field star contamination")
+              "  is not clean from field star contamination")
         # Pass dummy lists.
         x_fl, y_fl = [], []
 

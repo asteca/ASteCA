@@ -9,7 +9,7 @@ from . import BayesPlots
 
 def plx_histo(
     gs, plot_style, plx_offset, plx_clrg, plx_x_kde, kde_pl, plx_flrg,
-        flag_no_fl_regs_i):
+        flag_no_fl_regs):
     """
     Histogram for the distribution of parallaxes within the cluster region.
     """
@@ -30,7 +30,7 @@ def plx_histo(
         plx_clrg, Nb, density=True, zorder=4, color='#9aafd1',
         alpha=0.75, label=r"Cluster region ($N_{fit}$)")
     # Plot histogram for the parallaxes of the field regions.
-    if not flag_no_fl_regs_i:
+    if not flag_no_fl_regs:
         plt.hist(
             plx_flrg, 100, density=True, zorder=1, color='#ef703e',
             alpha=0.5, label="Field regions")
@@ -79,9 +79,9 @@ def plx_chart(gs, plot_style, x_name, y_name, coord, cl_reg_fit, plx_Bys):
     ax.set_title(
         r'Cluster region ($N_{{fit}}$={})'.format(len(x)))
 
-    if plx_Bys.any():
+    if plx_Bys:
         # Bayesian parallax value.
-        p_max_mas = 1. / plx_Bys[1]
+        p_max_mas = 1. / plx_Bys['median']
         # Distance to max value. Stars closer to the max value are larger.
         plx_d = 2. + 1. / (abs(plx - p_max_mas) + .1) ** 2.3
 
@@ -137,9 +137,10 @@ def plx_vs_mag(
             plx_flrg, mag_flrg, marker='^', s=20, c='grey', linewidth=0.,
             alpha=.5, zorder=1)
 
-    if plx_Bys.any():
+    if plx_Bys:
         # Bayesian parallaxes in mas
-        plx_16, plx_median, plx_84, plx_mean, plx_mode = 1. / plx_Bys
+        plx_16, plx_84, plx_mean = 1. / plx_Bys['16th'],\
+            1. / plx_Bys['84th'], 1. / plx_Bys['mean']
         # Bayesian parallaxes in pc
         pc_h, pc_m, pc_l = 1000. / plx_84, 1000. / plx_mean, 1000. / plx_16
         t0 = r"$Plx_{{Bay}} =$" + '\n'
@@ -192,7 +193,7 @@ def plx_bys_params(
 
         # Prepare data
         mcmc_samples = 1. / plx_samples
-        _16_50_84_mean_mode = 1. / plx_Bys
+        KP_stats = {k: 1. / v for k, v in plx_Bys.items()}
         xylabel = "Plx"
 
         # HARDCODED in plx_analysis: store samples every 10 steps
@@ -200,13 +201,12 @@ def plx_bys_params(
 
         gsy, gsx = (2, 4), (0, 2)
         BayesPlots.histogram(
-            gs, gsx, gsy, mcmc_samples, _16_50_84_mean_mode, plx_Bayes_kde,
+            gs, gsx, gsy, mcmc_samples, KP_stats, plx_Bayes_kde,
             xylabel, dec_places)
 
         gsy, gsx = (2, 3), (2, 6)
         BayesPlots.traceplot(
-            gs, gsx, gsy, mcmc_samples, _16_50_84_mean_mode, plx_burn,
-            xylabel)
+            gs, gsx, gsy, mcmc_samples, KP_stats, plx_burn, xylabel)
 
         gsy, gsx = (3, 4), (2, 4)
         BayesPlots.autocorr(

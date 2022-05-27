@@ -21,14 +21,14 @@ def main(clp, npd, pd, td):
 
         writeFileOut(
             npd, pd['filters'], pd['colors'], td['m_ini_idx'],
-            clp['synth_cl_phot'], clp['synth_cl_sigma'], clp['cl_max_mag'],
+            clp['synth_cl_phot'], clp['synth_cl_sigma'], clp['cl_syn_fit'],
             clp['st_mass_mean'], clp['st_mass_std'], clp['st_mass_mean_binar'],
             clp['st_mass_std_binar'], clp['prob_binar'])
         print("Synthetic and observed clusters saved to file")
 
 
 def writeFileOut(
-    npd, filters, colors, m_ini_idx, synth_clust, sigma, cl_max_mag,
+    npd, filters, colors, m_ini_idx, synth_clust, sigma, cl_syn_fit,
         st_mean, st_std, st_mean_binar, st_std_binar, prob_binar):
     """
     Save best fit synthetic cluster found, and per star masses to file.
@@ -39,7 +39,7 @@ def writeFileOut(
     # Create IDs identifying binary systems
     binar_ID = []
     for i, bi in enumerate(synth_clust[-1]):
-        if bi == -99.:
+        if bi == -0.:
             binar_ID.append('1' + str(i))
         else:
             binar_ID.append('2' + str(i))
@@ -56,9 +56,9 @@ def writeFileOut(
 
     # Write observed cluster with masses to file
     if st_mean.any():
-        st_ID = np.array(list(zip(*cl_max_mag))[0])
-        main_mag = np.array(list(zip(*cl_max_mag))[3]).T[0]
-        first_col = np.array(list(zip(*cl_max_mag))[5]).T[0]
+        st_ID = np.array(list(zip(*cl_syn_fit))[0])
+        main_mag = np.array(list(zip(*cl_syn_fit))[3]).T[0]
+        first_col = np.array(list(zip(*cl_syn_fit))[5]).T[0]
         mass_table = Table(
             [st_ID, main_mag, first_col, st_mean, st_std, st_mean_binar,
              st_std_binar, prob_binar],

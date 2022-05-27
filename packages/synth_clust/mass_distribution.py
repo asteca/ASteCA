@@ -1,10 +1,10 @@
 
-import numpy as np
 
-
-def main(st_dist_mass, mean_bin_mr, bin_frac, M_total):
+def main(mass_ini, st_dist_mass):
     """
     Returns the sampled IMF up to a total mass.
+
+    DEPRECATED 04/22 (below)
 
     The binary fraction correction is derived as follows:
 
@@ -21,9 +21,44 @@ def main(st_dist_mass, mean_bin_mr, bin_frac, M_total):
        of the 'q' distribution.
     6. Hence: M_T = N_T * m_s' <--> m_s' = M_T/N_T
     7. Finally: M_B = M_T * bin_frac * r
-
     """
-    # Correct the total mass
-    M_total = max(10, M_total - mean_bin_mr * bin_frac * M_total)
 
-    return st_dist_mass[0][:np.searchsorted(st_dist_mass[1], M_total)]
+    # def meanBinarProbs(alpha):
+    #     mass_ini = isoch_cut[m_ini_idx]
+    #     mmin, mmax = mass_ini.min(), mass_ini.max()
+    #     # M_total = max(10, M_total - mean_bin_mr * M_total)
+    #     # M_idx = np.searchsorted(st_dist_mass[1], M_total)
+    #     mass = st_dist_mass[0]  # [:M_idx]
+    #     msk_m = (mass >= mmin) & (mass <= mmax)
+    #     mass = mass[msk_m]
+    #     b_p = binarProbsF(bp_vs_mass, mass)
+    #     bin_frac = np.mean(b_p)
+    #     mean_bin_mr = np.mean(qDistribution(q_vs_mass, mass, alpha))
+
+    #     return bin_frac, mean_bin_mr
+
+    # if bp_vs_mass == "D&K":
+    #     bin_frac, mean_bin_mr = meanBinarProbs(0.)
+    # elif bp_vs_mass == "logfit":
+    #     bin_frac, mean_bin_mr = meanBinarProbs(bin_frac)
+    # elif bp_vs_mass == "uniform":
+    #     mean_bin_mr = np.mean(qDistribution(q_vs_mass, mass, alpha))
+
+    # # Correct the total mass
+    # M_total = max(10, M_total - mean_bin_mr * bin_frac * M_total)
+
+    # # Index for the given mass value
+    # M_idx = np.searchsorted(st_dist_mass[1], M_total)
+
+    # return st_dist_mass[0][:M_idx]
+
+    # Filter masses in the IMF mass sampling that are outside of the mass
+    # range given by 'isoch_cut'
+    mmin, mmax = mass_ini.min(), mass_ini.max()
+    mass = st_dist_mass[0]
+    msk_m = (mass >= mmin) & (mass <= mmax)
+    mass_dist = mass[msk_m]
+    # Filter the total mass associated with each sampled mass
+    M_total_arr = st_dist_mass[1][msk_m]
+
+    return mass_dist, M_total_arr

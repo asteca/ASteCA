@@ -7,18 +7,18 @@ from ..update_progress import updt
 
 
 def main(
-    clp, cld_i, flag_make_plot, mirror_flag=True, Nmax=125000, center_bw=0.,
+    clp, cld, flag_make_plot, mirror_flag=True, Nmax=25000, center_bw=0.,
         **kwargs):
     """
     Obtain Gaussian filtered 2D x,y histograms and the maximum values in them
     as centers.
+
+    HARDCODED
+    Nmax: maximum number of stars used in the center estimation process
     """
     print("Obtaining KDEs for the frame's coordinates")
 
-    # Filter possible nan values in (x, y)
-    mskx, msky = np.isnan(cld_i['x']), np.isnan(cld_i['y'])
-    msk = ~mskx & ~msky
-    x_data, y_data = cld_i['x'][msk], cld_i['y'][msk]
+    x_data, y_data = cld['x'], cld['y']
     if x_data.size > Nmax:
         print(("  WARNING: too many stars. Selecting {} random\n"
                "  stars for center estimation").format(Nmax))

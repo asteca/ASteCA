@@ -5,7 +5,7 @@ import scipy.integrate as integrate
 from ..aux_funcs import monteCarloPars, circFrac
 
 
-def main(clp, cld_i, fdens_method, **kwargs):
+def main(clp, cld, fdens_method, **kwargs):
     """
     Get field density level of frame.
     """
@@ -14,13 +14,12 @@ def main(clp, cld_i, fdens_method, **kwargs):
     # Parameters that are obtained here and used in the functions below
     # and other structural analysis functions later on.
     clp['xy_filtered'], clp['xy_cent_dist'] = fixedParams(
-        cld_i['x'], cld_i['y'], **clp)
+        cld['x'], cld['y'], **clp)
 
-    clp['NN_dd'], clp['NN_dist'], clp['fr_dens'] = distDens(
-        clp['bw_list'], clp['xy_filtered'])
+    clp['pts_dens'] = distDens(clp['bw_list'], clp['xy_filtered'])
 
     clp['fdens_min_d'], clp['fdens_lst'], clp['fdens_std_lst'] = kNNRDP(
-        clp['xy_cent_dist'], clp['fr_dens'])
+        clp['xy_cent_dist'], clp['pts_dens'])
 
     if fdens_method == 'a':
         field_dens, field_dens_std = integFieldDens(
@@ -57,7 +56,7 @@ def fixedParams(x, y, kde_cent, lb=1., rt=99., **kwargs):
     return xy_filtered, xy_cent_dist
 
 
-def distDens(bw_list, xy_filtered, NN_dd_max=200):
+def distDens(bw_list, xy_filtered, Npts_max=150000, Nbins=100, NN_dd_max=200):
     """
     Obtain the NN densities and radius for each star in the frame.
 
@@ -65,47 +64,80 @@ def distDens(bw_list, xy_filtered, NN_dd_max=200):
     KDE analysis. We calculate the number of neighbors within a radius equal to
     the bandwidth, and take the median of the number of neighbors as NN_dd.
 
-    NN_dd_max: Set maximum value otherwise the query eats up all the memory
+    HARDCODED to avoid eating up all the memory
+    Npts_max: maximum number of stars before using the coarse method to
+    estimate per-star densities
+    Nbins: number of bins used for the 2D histogram in case of too many stars
+    NN_dd_max: maximum for 'NN_dd'
     """
+    # Use this approach for large fields
+    if xy_filtered.shape[0] > Npts_max:
 
-    # Frame limits
-    x0, x1 = min(xy_filtered.T[0]), max(xy_filtered.T[0])
-    y0, y1 = min(xy_filtered.T[1]), max(xy_filtered.T[1])
+        points = xy_filtered.T
 
-    # Find NN_dd nearest neighbors.
-    tree = spatial.cKDTree(xy_filtered)
-    # Estimate NN_dd
-    N_in_vol = tree.query_ball_point(xy_filtered, r=bw_list[1])
-    NN_dd = int(np.median([len(_) for _ in N_in_vol]))
-    NN_dd = max(NN_dd, NN_dd_max)
+        def histoDens(Nbins):
+            H, xedges, yedges = np.histogram2d(*points, Nbins)
+            bin_area = (xedges[1] - xedges[0]) * (yedges[1] - yedges[0])
 
-    inx = tree.query(xy_filtered, k=NN_dd + 1)
-    # Keep the distance to the most distant neighbor, ie: the radius.
-    NN_dist = inx[0][:, NN_dd]
+            # Find indexes of points within edges
+            xi = np.digitize(points[0], xedges, right=True)
+            yi = np.digitize(points[1], yedges, right=True)
 
-    # Parameters for the Monte Carlo function
-    rand_01_MC, cos_t, sin_t = monteCarloPars()
+            # Handle border cases
+            xi_e = np.clip(xi - 1, a_min=0, a_max=np.inf).astype(int)
+            yi_e = np.clip(yi - 1, a_min=0, a_max=np.inf).astype(int)
 
-    x, y = xy_filtered.T
-    areas = np.pi * NN_dist**2
-    for i, rad in enumerate(NN_dist):
-        fr_area = 1.
-        # If the area of the star lies outside of the frame.
-        if (x[i] - rad < x0) or (x[i] + rad > x1) or (y[i] - rad < y0) or\
-                (y[i] + rad > y1):
-            # Use Monte Carlo to estimate its area
-            fr_area = circFrac(
-                (x[i], y[i]), rad, x0, x1, y0, y1, rand_01_MC, cos_t,
-                sin_t)
-        areas[i] *= fr_area
+            pts_dens = np.zeros(points.shape[-1])
+            for i in range(points.shape[-1]):
+                pts_dens[i] = H[xi_e[i], yi_e[i]]
 
-    # Per star densities.
-    fr_dens = NN_dd / areas
+            return pts_dens / bin_area
 
-    return NN_dd, NN_dist, fr_dens
+        pts_dens = histoDens(Nbins)
+        msk = pts_dens == 0.
+        pts_dens[msk] = np.median(pts_dens)
+
+        return pts_dens
+
+    else:
+        # Frame limits
+        x0, x1 = min(xy_filtered.T[0]), max(xy_filtered.T[0])
+        y0, y1 = min(xy_filtered.T[1]), max(xy_filtered.T[1])
+
+        # Find NN_dd nearest neighbors.
+        tree = spatial.cKDTree(xy_filtered)
+        # Estimate NN_dd
+        N_in_vol = tree.query_ball_point(xy_filtered, r=bw_list[1])
+        NN_dd = int(np.median([len(_) for _ in N_in_vol]))
+        NN_dd = min(NN_dd, NN_dd_max)
+
+        inx = tree.query(xy_filtered, k=NN_dd + 1)
+        # Keep the distance to the most distant neighbor, ie: the radius.
+        NN_dist = inx[0][:, NN_dd]
+
+        # Parameters for the Monte Carlo function
+        rand_01_MC, cos_t, sin_t = monteCarloPars()
+
+        x, y = xy_filtered.T
+        areas = np.pi * NN_dist**2
+        for i, rad in enumerate(NN_dist):
+            fr_area = 1.
+            # If the area of the star lies outside of the frame.
+            if (x[i] - rad < x0) or (x[i] + rad > x1) or (y[i] - rad < y0) or\
+                    (y[i] + rad > y1):
+                # Use Monte Carlo to estimate its area
+                fr_area = circFrac(
+                    (x[i], y[i]), rad, x0, x1, y0, y1, rand_01_MC, cos_t,
+                    sin_t)
+            areas[i] *= fr_area
+
+        # Per star densities.
+        pts_dens = NN_dd / areas
+
+        return pts_dens
 
 
-def kNNRDP(xy_cent_dist, fr_dens, pmin=1, pmax=99, Nrings=100):
+def kNNRDP(xy_cent_dist, pts_dens, pmin=1, pmax=99, Nrings=100):
     """
     Use the previously obtained densities and distances to estimate the
     field density.
@@ -126,9 +158,9 @@ def kNNRDP(xy_cent_dist, fr_dens, pmin=1, pmax=99, Nrings=100):
             continue
 
         fdens_min_d.append((rad + rad_old) * .5)
-        fdens_lst.append(np.median(fr_dens[msk_dens]))
+        fdens_lst.append(np.median(pts_dens[msk_dens]))
         # Only for plotting
-        fdens_std_lst.append(np.std(fr_dens[msk_dens]))
+        fdens_std_lst.append(np.std(pts_dens[msk_dens]))
 
         rad_old = rad
 

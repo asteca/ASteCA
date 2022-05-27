@@ -1,20 +1,18 @@
 
 import numpy as np
-import warnings
+# import warnings
 from scipy.spatial.distance import cdist
-from scipy.signal import savgol_filter
+# from scipy.signal import savgol_filter
 from astropy.visualization import ZScaleInterval
 from astropy.stats import sigma_clipped_stats
 
 from ..structure.contamination_index import CIfunc
 from ..math_f import exp_function
-from ..best_fit.obs_clust_prepare import dataProcess
+from ..best_fit.prep_obs_params import dataProcess
 from ..decont_algors.local_cell_clean import bin_edges_f
 from ..aux_funcs import monteCarloPars, circFrac, ellipFrac
 from ..structure import king_profile
-from ..synth_clust import move_isochrone
-from ..synth_clust.masses_binar_probs import ranModels
-from ..synth_clust.synthClustPrep import setSynthClust
+from ..synth_clust import move_isochrone, extinction
 
 
 # HARDCODED figure size and grid distribution
@@ -51,13 +49,13 @@ def aspect_ratio(x_min, x_max, y_min, y_max):
 
 
 def frame_zoomed(
-    x_min, x_max, y_min, y_max, kde_cent, clust_rad, kpflag=None,
+    x_min, x_max, y_min, y_max, kde_cent, clust_rad,
         tidal_rad=None):
     """
     If possible, define zoomed frame.
     """
-    if kpflag:
-        rad = clust_rad if clust_rad > tidal_rad[1] else tidal_rad[1]
+    if tidal_rad is not None:
+        rad = clust_rad if clust_rad > tidal_rad else tidal_rad
     else:
         rad = clust_rad
 
@@ -348,30 +346,31 @@ def param_ranges(fundam_params, varIdxs=None, trace=None):
     return min_max_p
 
 
-def p2_ranges(p2, min_max_p):
-    """
-    Parameter ranges used by the MCMC 2-param density plots.
-    """
-    par_idx = {
-        'metal': 0, 'age': 1, 'ext': 2, 'dist': 3, 'mass': 4, 'binar': 5}
-    par = p2.split('-')
+# DEPRECATED 05/22
+# def p2_ranges(p2, min_max_p):
+#     """
+#     Parameter ranges used by the MCMC 2-param density plots.
+#     """
+#     par_idx = {
+#         'metal': 0, 'age': 1, 'beta': 2, 'ext': 3, 'dr': 4, 'rv': 5,
+#         'dist': 6}
+#     par = p2.split('-')
 
-    min_max_p2 = min_max_p[par_idx[par[0]]] + min_max_p[par_idx[par[1]]]
+#     min_max_p2 = min_max_p[par_idx[par[0]]] + min_max_p[par_idx[par[1]]]
 
-    return min_max_p2
+#     return min_max_p2
 
 
 def packData(
-    lkl_method, colors, filters, cl_max_mag, synth_cl_phot, binar_idx,
-    col_0_comb, mag_0_comb, col_1_comb, bf_bin_edges, shift_isoch,
-        synthcl_Nsigma):
+    lkl_method, colors, filters, cl_syn_fit, synth_cl_phot, binar_idx,
+        bf_bin_edges, shift_isoch, synthcl_Nsigma):
     """
     Properly select and pack data for CMD/CCD of observed and synthetic
     clusters, and their Hess diagram.
     """
     if lkl_method in ('tolstoy', 'isochfit'):
         bin_method = 'auto'
-        mags_cols_cl, dummy = dataProcess(cl_max_mag)
+        mags_cols_cl, dummy = dataProcess(cl_syn_fit)
         # Obtain bin edges for each dimension, defining a grid.
         bin_edges = bin_edges_f(bin_method, mags_cols_cl)
     else:
@@ -381,9 +380,8 @@ def packData(
 
     # CMD of main magnitude and first color defined.
     # Used to defined limits.
-    x_phot_all, y_phot_all = col_0_comb, mag_0_comb
-    frst_obs_mag, frst_obs_col = list(zip(*list(zip(*cl_max_mag))[3]))[0],\
-        list(zip(*list(zip(*cl_max_mag))[5]))[0]
+    frst_obs_mag, frst_obs_col = list(zip(*list(zip(*cl_syn_fit))[3]))[0],\
+        list(zip(*list(zip(*cl_syn_fit))[5]))[0]
     frst_synth_col, frst_synth_mag = synth_cl_phot[1], synth_cl_phot[0]
     frst_col_edgs, frst_mag_edgs = bin_edges[1], bin_edges[0]
     # Filters and colors are appended continuously in 'shift_isoch'. If
@@ -401,7 +399,7 @@ def packData(
     # Index of observed filter/color to scatter plot.
     i_obs_x, i_obs_y = 0, 0
     hr_diags = [
-        [x_phot_all, y_phot_all, frst_obs_col, frst_obs_mag, frst_synth_col,
+        [frst_obs_col, frst_obs_mag, frst_synth_col,
          frst_synth_mag, binar_idx, frst_col_edgs, frst_mag_edgs,
          frst_col_isoch, frst_mag_isoch, mag_col1_1sigma,
          colors[0], filters[0], 'mag', i_obs_x, i_obs_y, gs_y1, gs_y2]]
@@ -409,7 +407,7 @@ def packData(
     # If more than one color was defined, plot an extra CMD (main magnitude
     # versus first color), and an extra CCD (first color versus second color)
     if N_cols > 1:
-        scnd_obs_col = list(zip(*list(zip(*cl_max_mag))[5]))[1]
+        scnd_obs_col = list(zip(*list(zip(*cl_syn_fit))[5]))[1]
         scnd_synth_col = synth_cl_phot[2]
         scnd_col_edgs = bin_edges[2]
         scnd_col_isoch = shift_isoch[N_mags + 1]
@@ -421,20 +419,18 @@ def packData(
                 synthcl_Nsigma[N_mags], synthcl_Nsigma[N_mags + 1]]
 
         # CMD of main magnitude and second color defined.
-        x_phot_all, y_phot_all = col_1_comb, mag_0_comb
         gs_y1, gs_y2 = 2, 4
         i_obs_x, i_obs_y = 1, 0
         hr_diags.append(
-            [x_phot_all, y_phot_all, scnd_obs_col, frst_obs_mag,
+            [scnd_obs_col, frst_obs_mag,
              scnd_synth_col, frst_synth_mag, binar_idx, scnd_col_edgs,
              frst_mag_edgs, shift_isoch[2], frst_mag_isoch, mag_col2_1sigma,
              colors[1], filters[0], 'mag', i_obs_x, i_obs_y, gs_y1, gs_y2])
         # CCD of first and second color defined.
-        x_phot_all, y_phot_all = col_0_comb, col_1_comb
         gs_y1, gs_y2 = 4, 6
         i_obs_x, i_obs_y = 0, 1
         hr_diags.append(
-            [x_phot_all, y_phot_all, frst_obs_col, scnd_obs_col,
+            [frst_obs_col, scnd_obs_col,
              frst_synth_col, scnd_synth_col, binar_idx, frst_col_edgs,
              scnd_col_edgs, frst_col_isoch, scnd_col_isoch, col1_col2_1sigma,
              colors[0], colors[1], 'col', i_obs_x, i_obs_y, gs_y1, gs_y2])
@@ -471,14 +467,14 @@ def get_hess(obs_mags_cols, synth_phot, hess_xedges, hess_yedges):
     return hess_x, hess_y, HD
 
 
-def plxPlot(flag_no_fl_regs_i, field_regions_i):
+def plxPlot(flag_no_fl_regs, field_regions):
     """
     Parameters for the parallax plot.
     """
-    if not flag_no_fl_regs_i:
+    if not flag_no_fl_regs:
         plx_flrg, mag_flrg = [], []
         # Extract parallax data.
-        for fl_rg in field_regions_i:
+        for fl_rg in field_regions:
             plx_flrg += list(zip(*list(zip(*fl_rg))[7]))[0]
             mag_flrg += list(zip(*list(zip(*fl_rg))[3]))[0]
         plx_flrg, mag_flrg = np.asarray(plx_flrg), np.asarray(mag_flrg)
@@ -528,39 +524,40 @@ def SigmaEllipse(points, Nsigma=2.):
     return mean_pos, width, height, theta
 
 
-def complSeparate(cl_region_i, membs_i, memb_prob_avrg_sort):
-    """
-    Separate stars into complete and incomplete arrays.
-    """
-    mags_c, mags_i, cols_c, cols_i, colors_c, colors_i = [[] for _ in range(6)]
-    ids_c = list(zip(*memb_prob_avrg_sort))[0]
-    dict_ids_c = {_: i for i, _ in enumerate(ids_c)}
-    for i, star in enumerate(cl_region_i):
-        try:
-            mags_c.append(memb_prob_avrg_sort[dict_ids_c[star[0]]][3][0])
-            cols_c.append(memb_prob_avrg_sort[dict_ids_c[star[0]]][5])
-            colors_c.append(memb_prob_avrg_sort[dict_ids_c[star[0]]][9])
-        except KeyError:
-            mags_i.append(star[3][0])
-            cols_i.append(star[5])
-            colors_i.append(membs_i[i])
+# DEPRECATED 26/03/22
+# def complSeparate(cl_region, membs_i, memb_prob_avrg_sort):
+#     """
+#     Separate stars into complete and incomplete arrays.
+#     """
+#     mags_c, mags_i, cols_c, cols_i, colors_c, colors_i = [[] for _ in range(6)]
+#     ids_c = list(zip(*memb_prob_avrg_sort))[0]
+#     dict_ids_c = {_: i for i, _ in enumerate(ids_c)}
+#     for i, star in enumerate(cl_region):
+#         try:
+#             mags_c.append(memb_prob_avrg_sort[dict_ids_c[star[0]]][3][0])
+#             cols_c.append(memb_prob_avrg_sort[dict_ids_c[star[0]]][5])
+#             colors_c.append(memb_prob_avrg_sort[dict_ids_c[star[0]]][9])
+#         except KeyError:
+#             mags_i.append(star[3][0])
+#             cols_i.append(star[5])
+#             colors_i.append(membs_i[i])
 
-    cols_c = np.array(cols_c).T
-    if cols_i:
-        cols_i = np.array(cols_i).T
-        idx_i = np.argsort(colors_i)
-        mags_i = np.array(mags_i)[idx_i].tolist()
-        cols_i = np.array([_[idx_i] for _ in cols_i]).tolist()
-        colors_i = np.array(colors_i)[idx_i].tolist()
-    else:
-        cols_i = [[] for _ in range(cols_c.shape[0])]
+#     cols_c = np.array(cols_c).T
+#     if cols_i:
+#         cols_i = np.array(cols_i).T
+#         idx_i = np.argsort(colors_i)
+#         mags_i = np.array(mags_i)[idx_i].tolist()
+#         cols_i = np.array([_[idx_i] for _ in cols_i]).tolist()
+#         colors_i = np.array(colors_i)[idx_i].tolist()
+#     else:
+#         cols_i = [[] for _ in range(cols_c.shape[0])]
 
-    idx_c = np.argsort(colors_c)
-    mags_c = np.array(mags_c)[idx_c].tolist()
-    cols_c = np.array([_[idx_c] for _ in cols_c]).tolist()
-    colors_c = np.array(colors_c)[idx_c].tolist()
+#     idx_c = np.argsort(colors_c)
+#     mags_c = np.array(mags_c)[idx_c].tolist()
+#     cols_c = np.array([_[idx_c] for _ in cols_c]).tolist()
+#     colors_c = np.array(colors_c)[idx_c].tolist()
 
-    return mags_c, mags_i, cols_c, cols_i, colors_c, colors_i
+#     return mags_c, mags_i, cols_c, cols_i, colors_c, colors_i
 
 
 def PMsrange(pmRA_DE, pmDE):
@@ -792,45 +789,50 @@ def rdpAreasDists(
     return rad_radii, rad_areas, N_in_cl_rad
 
 
-def isoch_sigmaNreg(
-    fundam_params, D3_sol, theor_tracks, m_ini_idx, ext_coefs, N_fc,
-        ext_unif_rand, isoch_fit_params, isoch_fit_errors, syntClustArgs):
+def shiftedIsoch(
+        fundam_params, theor_tracks, m_ini_idx, ext_coefs, N_fc, best_sol):
     """
-    Generate the uncertainty region, if uncertainties for at least one
-    parameter exists.
+    Generate the shifted isochrone.
     """
-
-    # Selected solution values for all the parameters.
-    zm, am, e, d, _, _, R_V = isoch_fit_params[D3_sol + '_sol']
+    zm, am, _, av, _, rv, dm = best_sol
     # Values in grid
     zg = np.argmin(abs(np.array(fundam_params[0]) - zm))
     ag = np.argmin(abs(np.array(fundam_params[1]) - am))
-    # Move isochrone
-    isochrone = theor_tracks[zg][ag][:sum(N_fc)]
-    # TODO 'ext_diff' in place for #174
-    binar_flag, ext_diff = False, 0.
-    shift_isoch = move_isochrone.main(
-        isochrone, e, d, R_V, ext_coefs, N_fc, ext_unif_rand[zg],
-        m_ini_idx, binar_flag, ext_diff)
+    # Non-interpolated isochrone
+    isochrone = move_isochrone.main(np.array(theor_tracks[zg][ag]), N_fc, dm)
+    # Use these values to position the shifted isochrone properly
+    dr, DR_dist, DR_percentage = 0, '', 0
+    shift_isoch = extinction.main(
+        isochrone, av, dr, rv, ext_coefs, N_fc, DR_dist, DR_percentage,
+        [], [], m_ini_idx)
     shift_isoch = shift_isoch[:sum(N_fc)]
 
-    # Generate random models from the selected solution (mean, median, mode,
-    # MAP), given by 'D3_sol'.
-    models = ranModels(
-        fundam_params, D3_sol, isoch_fit_params, isoch_fit_errors)
+    return shift_isoch
 
-    # Generate the synthetic clusters from the sampled parameters.
-    synthcl_Nsigma = np.array([])
-    if models.any():
-        synthcl_Nsigma = [[] for _ in range(sum(N_fc))]
-        for Nm, model in enumerate(models):
 
-            # Estimate the mean and variance for each star via recurrence.
-            synth_cl = setSynthClust(model, *syntClustArgs)
-            # Synthetic cluster
-            if synth_cl.any():
-                for i, photom_dim in enumerate(synth_cl[:sum(N_fc)]):
-                    synthcl_Nsigma[i] += list(photom_dim)
-        synthcl_Nsigma = np.array(synthcl_Nsigma)
+def reddeningVector(cl_syn_fit, m_ini_idx, ext_coefs, N_fc, best_sol):
+    """
+    Generate the reddening vector
+    """
+    frst_obs_mag, frst_obs_col = list(zip(*list(zip(*cl_syn_fit))[3]))[0],\
+        list(zip(*list(zip(*cl_syn_fit))[5]))[0]
+    x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd =\
+        diag_limits('mag', frst_obs_col, frst_obs_mag)
+    # Location of the base of the arrow
+    x0 = (x_max_cmd - x_min_cmd) * .2 + x_min_cmd
+    y0 = (y_min_cmd - y_max_cmd) * .8 + y_max_cmd
+    # Length of the arrow
+    arrow_length = (y_min_cmd - y_max_cmd) * .1
 
-    return shift_isoch, synthcl_Nsigma
+    _, _, _, _, _, rv, _ = best_sol
+    av = arrow_length
+    isochrone = np.array([[y0], [x0], [0], [0], [0], [0]])
+    dr, DR_dist, DR_percentage = 0, '', 0
+    shift_isoch = extinction.main(
+        isochrone, av, dr, rv, ext_coefs, N_fc, DR_dist, DR_percentage,
+        [], [], m_ini_idx)
+    x1, y1 = shift_isoch[1][0], shift_isoch[0][0]
+    dx = x1 - x0
+    dy = y1 - y0
+
+    return (x0, y0, dx, dy)

@@ -63,7 +63,7 @@ def main(fundam_params, iso_paths, evol_track):
 
     age_vals_all, ages_strs = filterAgevals(a_rng, age_vals_all, ages_strs)
 
-    return met_files, met_vals_all, age_vals_all, ages_strs
+    return met_files, np.array(met_vals_all), np.array(age_vals_all), ages_strs
 
 
 def readMetvals(iso_paths):

@@ -79,9 +79,9 @@ def main(npd, clp, pd, rt=0.05, synth_CI_rand=False):
         synth_clust = synth_cluster.main(
             pd['fundam_params'], varIdxs, model, clp['completeness'],
             clp['err_lst'], clp['max_mag_syn'],
-            pd['ext_coefs'], pd['binar_flag'], pd['mean_bin_mr'],
+            pd['ext_coefs'], pd['mean_bin_mr'],
             pd['N_fc'], pd['m_ini_idx'], pd['st_dist_mass'],
-            pd['theor_tracks'], pd['err_norm_rand'],
+            pd['theor_tracks'], pd['rand_norm_vals'],
             pd['binar_probs'], pd['ext_unif_rand'], pd['R_V'])
 
         # Undo transposing performed in add_errors()

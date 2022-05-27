@@ -7,8 +7,14 @@ def check(mypath, pd):
     isochrones, and to properly generate the synthetic clusters (if the best
     match function is set to run).
     """
+    if pd['sep'] not in pd['separators'].keys():
+        raise ValueError("Unrecognized separator: '{}'".format(pd['sep']))
+
     # Read column indexes for the IDs and the coordinates.
     id_col, x_col, y_col = pd['id_ids'], pd['id_xdata'], pd['id_ydata']
+
+    if pd['xy_frame'] not in pd['xy_frames_accpt']:
+        raise ValueError("Unrecognized frame: '{}'".format(pd['xy_frame']))
 
     # Extract magnitudes (filters) data.
     try:
@@ -34,6 +40,9 @@ def check(mypath, pd):
         c_filters.append((phot_syst, filter1))
         c_filters.append((phot_syst, filter2))
         colors.append((phot_syst, filter1 + ',' + filter2))
+
+    if not colors:
+        raise ValueError("At least one color must be defined")
 
     # Add data to parameters dictionary.
     pd['id_col'], pd['x_col'], pd['y_col'],\

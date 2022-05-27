@@ -7,19 +7,19 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 
 def pl_full_frame(
-    gs, fig, x_name, y_name, coord, x_min, x_max, y_min, y_max, asp_ratio,
-        kde_cent, x, y, st_sizes_arr, clust_rad):
+    gs, fig, xy_frame, x_name, y_name, coord, x_min, x_max, y_min, y_max,
+        asp_ratio, kde_cent, x, y, st_sizes_arr, clust_rad):
     """
     x,y finding chart of full frame
     """
     ax = plt.subplot(gs[0:4, 0:4])
     ax.set_aspect(aspect=asp_ratio)
-    ax.set_title(
-        r"$N_{{stars}}$={} (phot incomp)".format(len(x)))
+    ax.set_title(r"$N_{{stars}}$={}".format(len(x)))
     # Set plot limits
     plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
-    ax.invert_xaxis()
+    if xy_frame == 'equatorial':
+        ax.invert_xaxis()
     # Set axis labels
     plt.xlabel('{} ({})'.format(x_name, coord))
     plt.ylabel('{} ({})'.format(y_name, coord))
@@ -55,8 +55,8 @@ def pl_full_frame(
 
 
 def pl_densmap(
-    gs, fig, asp_ratio, x_name, y_name, coord, bw_list, kde_cent,
-        frame_kde_cent, fr_dens, clust_rad):
+    gs, fig, xy_frame, asp_ratio, x_name, y_name, coord, bw_list, kde_cent,
+        frame_kde_cent, pts_dens, clust_rad):
     """
     Coordinates 2D KDE.
     """
@@ -79,7 +79,8 @@ def pl_densmap(
     im = plt.imshow(
         np.rot90(kde), cmap=plt.get_cmap('RdYlBu_r'), extent=ext_range)
     plt.contour(x_grid, y_grid, kde, colors='#551a8b', linewidths=0.5)
-    ax.invert_xaxis()
+    if xy_frame == 'equatorial':
+        ax.invert_xaxis()
 
     # Colorbar on the right side of ax.
     divider = make_axes_locatable(ax)
@@ -90,7 +91,7 @@ def pl_densmap(
     cbar.ax.minorticks_off()
     scale = 3600.
 
-    kde_dens_min, kde_dens_max = fr_dens.min(), fr_dens.max()
+    kde_dens_min, kde_dens_max = pts_dens.min(), pts_dens.max()
     midpt = ((kde_dens_max + kde_dens_min) * .5) / scale
     frmt = '{:.2E}' if midpt > 100. else '{:.1f}'
     cbar.ax.set_yticklabels([
@@ -110,87 +111,88 @@ def pl_densmap(
     ax.set_aspect(aspect=asp_ratio)
 
 
-def pl_knn_dens(
-    gs, fig, plot_style, asp_ratio, x_min, x_max, y_min, y_max, x_name,
-    y_name, coord, NN_dd, xy_filtered, fr_dens, NN_dist, kde_cent,
-        clust_rad):
-    """
-    """
-    ax = plt.subplot(gs[2:4, 4:6])
-    ax.set_aspect(aspect=asp_ratio)
-    # Set plot limits
-    plt.xlim(x_min, x_max)
-    plt.ylim(y_min, y_max)
-    ax.invert_xaxis()
-    ax.set_title(r'$kNN={}\;|\;max(100; (d\leq d_{{p=25\%}}))$'.format(NN_dd))
+# DEPRECATED 05/22
+# def pl_knn_dens(
+#     gs, fig, plot_style, asp_ratio, x_min, x_max, y_min, y_max, x_name,
+#     y_name, coord, xy_filtered, fr_dens, NN_dist, kde_cent,
+#         clust_rad):
+#     """
+#     """
+#     ax = plt.subplot(gs[2:4, 4:6])
+#     ax.set_aspect(aspect=asp_ratio)
+#     # Set plot limits
+#     plt.xlim(x_min, x_max)
+#     plt.ylim(y_min, y_max)
+#     ax.invert_xaxis()
+#     # ax.set_title(r'$kNN={}\;|\;max(100; (d\leq d_{{p=25\%}}))$'.format(NN_dd))
 
-    plt.xlabel('{} ({})'.format(x_name, coord))
-    plt.ylabel('{} ({})'.format(y_name, coord))
-    if plot_style == 'asteca':
-        ax.grid()
+#     plt.xlabel('{} ({})'.format(x_name, coord))
+#     plt.ylabel('{} ({})'.format(y_name, coord))
+#     if plot_style == 'asteca':
+#         ax.grid()
 
-    perc = np.percentile(NN_dist, 25)
-    msk = NN_dist < perc
-    xy, NN_d = xy_filtered[msk], NN_dist[msk]
-    # 100 maximum
-    xy, NN_d = xy[:100], NN_d[:100]
-    for i, (x, y) in enumerate(xy):
-        circle = plt.Circle(
-            (x, y), NN_d[i], color='k', lw=.5, alpha=.5, fill=False)
-        ax.add_artist(circle)
+#     perc = np.percentile(NN_dist, 25)
+#     msk = NN_dist < perc
+#     xy, NN_d = xy_filtered[msk], NN_dist[msk]
+#     # 100 maximum
+#     xy, NN_d = xy[:100], NN_d[:100]
+#     for i, (x, y) in enumerate(xy):
+#         circle = plt.Circle(
+#             (x, y), NN_d[i], color='k', lw=.5, alpha=.5, fill=False)
+#         ax.add_artist(circle)
 
-    # Star with the smallest associated density.
-    idx = np.argmin(fr_dens)
-    circle = plt.Circle(
-        (xy_filtered[idx][0], xy_filtered[idx][1]), NN_dist[idx], color='b',
-        lw=1.5, fill=False, zorder=4)
-    fig.gca().add_artist(circle)
-    plt.plot([], [], color='b', lw=2., label=r"$dens_{min}$")
-    # Star with the largest associated density.
-    idx = np.argmax(fr_dens)
-    circle = plt.Circle(
-        (xy_filtered[idx][0], xy_filtered[idx][1]), NN_dist[idx], color='r',
-        lw=1., fill=False, zorder=5)
-    fig.gca().add_artist(circle)
-    # Add coords to legend
-    r_frmt = '{:.0f}' if coord == 'px' else '{:.5f}'
-    x_max_dens = xy_filtered[idx][0]
-    y_max_dens = xy_filtered[idx][1]
-    x_max_dens = (x_max_dens / np.cos(np.deg2rad(y_max_dens)))
-    t1 = ('(' + r_frmt + ',\n' + r_frmt + ')').format(x_max_dens, y_max_dens)
-    plt.plot([], [], color='r', lw=2., label=r"$dens_{max}$" + "\n" + t1)
+#     # Star with the smallest associated density.
+#     idx = np.argmin(fr_dens)
+#     circle = plt.Circle(
+#         (xy_filtered[idx][0], xy_filtered[idx][1]), NN_dist[idx], color='b',
+#         lw=1.5, fill=False, zorder=4)
+#     fig.gca().add_artist(circle)
+#     plt.plot([], [], color='b', lw=2., label=r"$dens_{min}$")
+#     # Star with the largest associated density.
+#     idx = np.argmax(fr_dens)
+#     circle = plt.Circle(
+#         (xy_filtered[idx][0], xy_filtered[idx][1]), NN_dist[idx], color='r',
+#         lw=1., fill=False, zorder=5)
+#     fig.gca().add_artist(circle)
+#     # Add coords to legend
+#     r_frmt = '{:.0f}' if coord == 'px' else '{:.5f}'
+#     x_max_dens = xy_filtered[idx][0]
+#     y_max_dens = xy_filtered[idx][1]
+#     x_max_dens = (x_max_dens / np.cos(np.deg2rad(y_max_dens)))
+#     t1 = ('(' + r_frmt + ',\n' + r_frmt + ')').format(x_max_dens, y_max_dens)
+#     plt.plot([], [], color='r', lw=2., label=r"$dens_{max}$" + "\n" + t1)
 
-    # Assigned center.
-    plt.scatter(kde_cent[0], kde_cent[1], color='g', s=40, lw=1.5,
-                marker='x', zorder=5)
-    # Radius
-    circle = plt.Circle(
-        (kde_cent[0], kde_cent[1]), clust_rad, color='red', fill=False)
-    ax.add_artist(circle)
+#     # Assigned center.
+#     plt.scatter(kde_cent[0], kde_cent[1], color='g', s=40, lw=1.5,
+#                 marker='x', zorder=5)
+#     # Radius
+#     circle = plt.Circle(
+#         (kde_cent[0], kde_cent[1]), clust_rad, color='red', fill=False)
+#     ax.add_artist(circle)
 
-    leg = plt.legend(fancybox=True, handlelength=1., loc='best')
-    leg.get_frame().set_alpha(0.7)
+#     leg = plt.legend(fancybox=True, handlelength=1., loc='best')
+#     leg.get_frame().set_alpha(0.7)
 
 
 def pl_field_dens(
-    gs, plot_style, coord, fdens_method, fr_dist, fr_dens, fdens_min_d,
+    gs, plot_style, coord, fdens_method, fr_dist, pts_dens, fdens_min_d,
         fdens_lst, fdens_std_lst, field_dens):
     """
     Field density values for different percentiles.
     """
     # Convert from deg to arcmin
     fr_dist, fdens_min_d = np.array(fr_dist) * 60., np.array(fdens_min_d) * 60.
-    fr_dens, fdens_lst, fdens_std_lst = [
-        np.array(_) / 3600. for _ in (fr_dens, fdens_lst, fdens_std_lst)]
+    pts_dens, fdens_lst, fdens_std_lst = [
+        np.array(_) / 3600. for _ in (pts_dens, fdens_lst, fdens_std_lst)]
     field_dens = field_dens / 3600.
     coord2 = 'arcmin'
 
     idx = np.argmin(abs(field_dens - np.array(fdens_lst)))
     field_dens_d = fdens_min_d[idx]
 
-    delta_y = np.ptp(fr_dens) * .1
-    ymin = max(0., min(fr_dens) - delta_y)
-    ymax = max(fr_dens) + delta_y
+    delta_y = np.ptp(pts_dens) * .1
+    ymin = max(0., min(pts_dens) - delta_y)
+    ymax = max(pts_dens) + delta_y
 
     ax = plt.subplot(gs[4:6, 0:4])
     # ax.set_title(("Method: '{}'").format(fdens_method))
@@ -201,7 +203,14 @@ def pl_field_dens(
     if plot_style == 'asteca':
         ax.grid()
 
-    plt.scatter(fr_dist, fr_dens, c='k', s=5, alpha=.2, zorder=1)
+    N_max = 50000  # HARDCODED
+    if len(fr_dist) > N_max:
+        ids = np.random.choice(np.arange(len(fr_dist)), N_max, replace=False)
+        plt.scatter(fr_dist[ids], pts_dens[ids], c='k', s=5, alpha=.2,
+                    zorder=1)
+    else:
+        plt.scatter(fr_dist, pts_dens, c='k', s=5, alpha=.2, zorder=1)
+
     plt.errorbar(
         fdens_min_d, fdens_lst, yerr=fdens_std_lst, fmt='b', ms=25,
         ecolor='r', lw=1.2)
@@ -254,9 +263,18 @@ def pl_centdist_vs_mag(
     plt.scatter(
         xy_cent_dist[~msk], magi[~msk], s=10, c='grey', alpha=.75,
         edgecolor='w', lw=.3, label=r"$r>r_{cl}$")
-    plt.scatter(
-        xy_cent_dist[msk], magi[msk], s=25, c='k',
-        edgecolor='w', lw=.3, label=r"$r\leq r_{cl}$")
+
+    N_max = 50000  # HARDCODED
+    if msk.sum() > N_max:
+        ids = np.random.choice(np.arange(msk.sum()), N_max, replace=False)
+        plt.scatter(
+            xy_cent_dist[msk][ids], magi[msk][ids], s=25, c='k',
+            edgecolor='w', lw=.3, label=r"$r\leq r_{cl}$")
+    else:
+        plt.scatter(
+            xy_cent_dist[msk], magi[msk], s=25, c='k',
+            edgecolor='w', lw=.3, label=r"$r\leq r_{cl}$")
+
     ax.invert_yaxis()
     plt.legend(fancybox=True, loc='lower right')
 
@@ -278,9 +296,9 @@ def plot(N, *args):
     plt_map = {
         0: [pl_full_frame, 'full frame'],
         1: [pl_densmap, 'density positional chart'],
-        2: [pl_knn_dens, 'kNN per-star densities'],
-        3: [pl_field_dens, 'Field density'],
-        4: [pl_centdist_vs_mag, 'Distance to center vs magnitude']
+        # 2: [pl_knn_dens, 'kNN per-star densities'],
+        2: [pl_field_dens, 'Field density'],
+        3: [pl_centdist_vs_mag, 'Distance to center vs magnitude']
     }
 
     fxn = plt_map.get(N, None)[0]

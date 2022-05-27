@@ -36,7 +36,7 @@ def mag_ranges(x, y, mags):
     Separate coordinates of observed stars into four magnitude ranges.
     """
     main_mag = mags[0]
-    m0, m4 = np.nanmin(main_mag), np.nanmax(main_mag)
+    m0, m4 = np.min(main_mag), np.max(main_mag)
     # Use percentiles
     m1, m2, m3 = np.percentile(main_mag, (25, 50, 75))
 

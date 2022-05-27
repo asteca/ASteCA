@@ -130,7 +130,7 @@ def pms_coords_all(
 
 def pms_VPD_zoom(
     gs, plot_style, xlabel, coord, y_ax, clreg_PMs, fregs_PMs, raPMrng,
-        dePMrng, flag_no_fl_regs_i):
+        dePMrng, flag_no_fl_regs):
     """
     """
     ax = plt.subplot(gs[2:4, 0:2])
@@ -151,7 +151,7 @@ def pms_VPD_zoom(
     cbar.ax.invert_yaxis()
     cbar.set_label(y_ax)
 
-    if not flag_no_fl_regs_i:
+    if not flag_no_fl_regs:
         pmRA, pmDE = fregs_PMs['pmRA'], fregs_PMs['pmDE']
         plt.scatter(
             pmRA, pmDE, marker='^', s=20, c='grey', linewidth=0.,
@@ -182,11 +182,11 @@ def pms_VPD_zoom_KDE(
         cr_KDE_PMs['x'], cr_KDE_PMs['y'], cr_KDE_PMs['z'], 5, colors='g',
         linewidths=1., extent=(raPMrng[0], raPMrng[1], dePMrng[0], dePMrng[1]),
         zorder=3)
-    xmax, ymax = cr_KDE_PMs['zmax_x'], cr_KDE_PMs['zmax_y']
-    zmax_x, zmax_y = cr_KDE_PMs['x'][xmax][ymax],\
-        cr_KDE_PMs['y'][xmax][ymax]
-    CS.collections[0].set_label(
-        r"$KDE_{{max}},\, clust: ({:.3f}, {:.3f})$".format(zmax_x, zmax_y))
+    # xmax, ymax = cr_KDE_PMs['zmax_x'], cr_KDE_PMs['zmax_y']
+    # zmax_x, zmax_y = cr_KDE_PMs['x'][xmax][ymax],\
+    #     cr_KDE_PMs['y'][xmax][ymax]
+    # CS.collections[0].set_label(
+    #     r"$KDE_{{max}},\, clust: ({:.3f}, {:.3f})$".format(zmax_x, zmax_y))
 
     # Filed regions contours
     if bool(fr_KDE_PMs):
@@ -194,23 +194,24 @@ def pms_VPD_zoom_KDE(
             fr_KDE_PMs['x'], fr_KDE_PMs['y'], fr_KDE_PMs['z'], 10, colors='k',
             linewidths=.5,
             extent=(raPMrng[0], raPMrng[1], dePMrng[0], dePMrng[1]), zorder=2)
-        xmax, ymax = fr_KDE_PMs['zmax_x'], fr_KDE_PMs['zmax_y']
-        zmax_x, zmax_y = fr_KDE_PMs['x'][xmax][ymax],\
-            fr_KDE_PMs['y'][xmax][ymax]
-        CS.collections[0].set_label(
-            r"$KDE_{{max}},\, field: ({:.3f}, {:.3f})$".format(
-                zmax_x, zmax_y))
+        # xmax, ymax = fr_KDE_PMs['zmax_x'], fr_KDE_PMs['zmax_y']
+        # zmax_x, zmax_y = fr_KDE_PMs['x'][xmax][ymax],\
+        #     fr_KDE_PMs['y'][xmax][ymax]
+        # CS.collections[0].set_label(
+        #     r"$KDE_{{max}},\, field: ({:.3f}, {:.3f})$".format(
+        #         zmax_x, zmax_y))
 
     ellipse = Ellipse(
         xy=(PMs_cent[0], PMs_cent[1]), width=PMs_width,
         height=PMs_height, edgecolor='r', fc='None', lw=1.5,
         ls='--', zorder=4, angle=PMs_theta)
     ax.add_patch(ellipse)
+    t1 = r"$cent=[{:.3f},{:.3f}]$".format(PMs_cent[0], PMs_cent[1])
+    t2 = r"$(w,h)=[{:.3f},{:.3f}]$".format(PMs_width, PMs_height)
+    lab = t1 + '\n' + t2
     plt.scatter(
         PMs_cent[0], PMs_cent[1], c='r', marker='x', s=25, zorder=4,
-        label=(r"$cent=[{:.3f},{:.3f}]$" + '\n' +
-               r"$(w,h)=[{:.3f},{:.3f}]$").format(
-                   PMs_cent[0], PMs_cent[1], PMs_width, PMs_height))
+        label=lab)
 
     plt.xlim(*raPMrng)
     plt.ylim(*dePMrng)

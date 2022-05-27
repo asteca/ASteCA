@@ -5,9 +5,9 @@ from os import makedirs, extsep
 
 
 def main(cl_file, **kwargs):
-    '''
+    """
     Generate names and paths to be used by several functions.
-    '''
+    """
     # Hard-coded output folder name.
     out_fold = 'output'
 
@@ -16,8 +16,6 @@ def main(cl_file, **kwargs):
 
     # Generate hardcoded file names and paths.
     data_file = join(*cl_file)
-    # Path to membership probabilities file if it exists.
-    memb_file = memb_file_name(cl_file)
     # Root output dir.
     output_dir = join(cl_file[0], out_fold)
     # Output subdir and 'done' dir.
@@ -34,7 +32,7 @@ def main(cl_file, **kwargs):
     # Extension for plots. Catch '.' in file name.
     ext = '.' + mpl.rcParams['savefig.format'] if '.' in clust_name else ''
 
-    memb_file_out = join(output_subdir, clust_name + '_memb.dat')
+    memb_file_out = join(output_subdir, cl_file[-1])
     mcmc_file_out = join(output_subdir, clust_name + '_mcmc.pickle')
     synth_file_out = join(output_subdir, clust_name + '_synth.dat')
     mass_file_out = join(output_subdir, clust_name + '_mass.dat')
@@ -46,7 +44,7 @@ def main(cl_file, **kwargs):
 
     npd = {
         'clust_name': clust_name, 'data_file': data_file,
-        'memb_file': memb_file, 'output_dir': output_dir,
+        'output_dir': output_dir,
         'out_file_name': out_file_name, 'output_subdir': output_subdir,
         'memb_file_out': memb_file_out, 'synth_file_out': synth_file_out,
         'mass_file_out': mass_file_out, 'write_name': write_name,
@@ -69,15 +67,3 @@ def get_clust_name(cl_file):
         clust_name = cl_file[-1]
 
     return clust_name
-
-
-def memb_file_name(cl_file):
-    """
-    Name of file with membership data.
-    """
-    # Call function again to avoid passing 'clust_name'. This allows the
-    # module 'params_decont' to use this function.
-    clust_name = get_clust_name(cl_file)
-    memb_file = join(cl_file[0], cl_file[1], cl_file[2],
-                     clust_name + '_memb.dat')
-    return memb_file

@@ -3,13 +3,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.offsetbox as offsetbox
 from matplotlib.colors import LinearSegmentedColormap, LogNorm, ListedColormap
+import matplotlib.patches as mpatches
 
 
 def pl_mps_phot_diag(
     gs, gs_y1, gs_y2, fig, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd,
     x_ax, y_ax, v_min_mp, v_max_mp, obs_x, obs_y, obs_MPs, err_bar,
     cl_sz_pt, hess_xedges, hess_yedges, x_isoch, y_isoch, phot_Nsigma,
-        lkl_method):
+        lkl_method, redVect):
     """
     Star's membership probabilities on cluster's photometric diagram.
     """
@@ -20,7 +21,7 @@ def pl_mps_phot_diag(
     # Add text box.
     if gs_y1 == 0:
         text = '$N_{{fit}}={}$'.format(len(obs_MPs))
-        ob = offsetbox.AnchoredText(text, loc=4)
+        ob = offsetbox.AnchoredText(text, loc=3)
         ob.patch.set(boxstyle='square,pad=-0.2', alpha=0.85)
         ax.add_artist(ob)
 
@@ -44,10 +45,10 @@ def pl_mps_phot_diag(
     # The 'dolphin / tremmel' likelihoods do not use MPs in the fit, so it's
     # confusing to color stars as if they did.
     if (v_min_mp != v_max_mp) and lkl_method == 'tolstoy':
-        col_select_fit, isoch_col = obs_MPs, 'g'
+        col_select_fit = obs_MPs
         plot_colorbar = True
     else:
-        col_select_fit, isoch_col = '#519ddb', 'r'
+        col_select_fit = '#519ddb'
         plot_colorbar = False
     # Plot stars used in the best fit process.
     sca = plt.scatter(
@@ -64,12 +65,18 @@ def pl_mps_phot_diag(
         xbin = abs(hess_xedges[1] - hess_xedges[0])
         hess_xedges = [hess_xedges[0] - xbin] + list(hess_xedges)
         plt.hist2d(*phot_Nsigma, bins=(
-            hess_xedges, hess_yedges), cmap=cmap, norm=LogNorm())
+            hess_xedges, hess_yedges), cmap=cmap, norm=LogNorm(), zorder=-1)
     # Plot isochrone.
-    plt.plot(x_isoch, y_isoch, isoch_col, lw=1., zorder=6)
+    plt.plot(x_isoch, y_isoch, c='k', lw=1., zorder=6)
 
     plt.xlim(x_min_cmd, x_max_cmd)
     plt.ylim(y_min_cmd, y_max_cmd)
+
+    # Reddening vector
+    x0, y0, dx, dy = redVect
+    prop = dict(arrowstyle="-|>,head_width=0.4,head_length=0.8",
+                color='indianred', shrinkA=0, shrinkB=0, lw=2)
+    plt.annotate("", xy=(x0 + dx, y0 + dy), xytext=(x0, y0), arrowprops=prop)
 
     # If list is not empty, plot error bars at several values. The
     # prep_plots.error_bars() is not able to handle the color-color diagram.
@@ -90,7 +97,8 @@ def pl_mps_phot_diag(
 
 def pl_hess_diag(
     gs, gs_y1, gs_y2, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
-        lkl_method, hess_xedges, hess_yedges, hess_x, hess_y, HD):
+    lkl_method, hess_xedges, hess_yedges, hess_x, hess_y, HD, x_isoch,
+        y_isoch):
     """
     Hess diagram of observed minus best match synthetic cluster.
     """
@@ -107,10 +115,10 @@ def pl_hess_diag(
         plt.rcParams['grid.linewidth'], plt.rcParams['grid.color']
     for x_ed in hess_xedges:
         # vertical lines
-        ax.axvline(x_ed, linestyle=gls, lw=glw, color=gc, zorder=1)
+        ax.axvline(x_ed, linestyle=gls, lw=glw, color=gc, zorder=3)
     for y_ed in hess_yedges:
         # horizontal lines
-        ax.axhline(y_ed, linestyle=gls, lw=glw, color=gc, zorder=1)
+        ax.axhline(y_ed, linestyle=gls, lw=glw, color=gc, zorder=3)
     if HD.any():
         # Add text box.
         if HD.min() < 0:
@@ -137,16 +145,19 @@ def pl_hess_diag(
         # Legend.
         handles, labels = ax.get_legend_handles_labels()
         leg = ax.legend(
-            handles, labels, loc='lower right', scatterpoints=1, ncol=2,
+            handles, labels, loc='lower left', scatterpoints=1, ncol=2,
             columnspacing=.2, handletextpad=-.3)
         leg.get_frame().set_alpha(0.7)
+
+    plt.plot(x_isoch, y_isoch, c='k', lw=1., zorder=6)
 
 
 def pl_bf_synth_cl(
     gs, gs_y1, gs_y2, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax, y_ax,
-    hess_xedges, hess_yedges, x_synth, y_synth, sy_sz_pt, binar_idx, IMF_name,
-    best_sol, p_err, x_isoch, y_isoch, lkl_method, bin_method,
-        evol_track, D3_sol):
+    hess_xedges, hess_yedges, x_synth, y_synth, sy_sz_pt, binar_idx, best_sol,
+    x_isoch, y_isoch, IMF_name, DR_percentage, alpha, gamma, lkl_method,
+    bin_method, evol_track, D3_sol, MassT_dist_vals, binar_dist_vals,
+        p_err):
     """
     Best fit synthetic cluster obtained.
     """
@@ -183,7 +194,7 @@ def pl_bf_synth_cl(
         x_synth[binar_idx], y_synth[binar_idx], marker='o', s=sy_sz_pt,
         c='#F34C4C', lw=0.3, edgecolor='k', zorder=3)
     # Plot isochrone.
-    plt.plot(x_isoch, y_isoch, '#21B001', lw=1., zorder=6)
+    plt.plot(x_isoch, y_isoch, c='k', lw=1., zorder=6)
     if gs_y1 == 0:
         # Add text box
         text1 = '$N_{{synth}} = {}$'.format(len(x_synth))
@@ -194,25 +205,42 @@ def pl_bf_synth_cl(
         # Add text box to the right of the synthetic cluster.
         ax_t = plt.subplot(gs[gs_y1:gs_y2, 6:7])
         ax_t.axis('off')  # Remove axis from frame.
-        t1 = r'$Synthetic\;cluster\;parameters$' + '\n[Tracks: {}]'.format(
-            evol_track)
-        t2 = r'$IMF \hspace{{3.}}:\;{}$'.format(
-            IMF_name.replace('_', r'\;').title())
-        t3 = r'$R_{{V}} \hspace{{3.2}}=\;{}$'.format(best_sol[6])
-        t4 = r'$z \hspace{{3.9}}=\;{:.5f}\pm {:.5f}$'.format(
+        t1 = r'Tracks: {}'.format(evol_track)
+        t2 = r'IMF: {}'.format(IMF_name.replace('_', ' ').title())
+
+        t3 = r'$M\,(M_{{\odot}}) \hspace{{1.}}=\;{:.0f}\pm {:.0f}$'.format(
+            MassT_dist_vals[D3_sol + '_sol'], MassT_dist_vals['errors'][2])
+
+        t4 = r'$z \hspace{{3.9}}=\;{:.4f}\pm {:.4f}$'.format(
             best_sol[0], p_err[0][2])
         t5 = r'$\log(age) \hspace{{0.17}}=\;{:.3f}\pm {:.3f}$'.format(
             best_sol[1], p_err[1][2])
-        t6 = r'$E_{{(B-V)}} \hspace{{1.35}}=\;{:.3f}\pm {:.3f}$'.format(
+
+        t6 = r"$\alpha \hspace{{3.85}}=\;{:.3f}$".format(alpha)
+        t7 = r'$\beta \hspace{{3.85}}=\;{:.3f}\pm {:.3f}$'.format(
             best_sol[2], p_err[2][2])
-        t7 = r'$(m-M)_{{0}}=\;{:.3f} \pm {:.3f}$'.format(
+        t8 = r"$\gamma \hspace{{3.85}}=\;{}$".format(gamma)
+
+        # If 'beta' was not fitted, inherit the 'nan' uncertainty
+        if np.isnan(p_err[2][2]):
+            e_bfr = np.nan
+        else:
+            e_bfr = binar_dist_vals['errors'][2]
+        t9 = r'$b_{{frac}} \hspace{{2.4}}=\;{:.3f}\pm {:.3f}$'.format(
+            binar_dist_vals[D3_sol + '_sol'], e_bfr)
+
+        t10 = r'$A_{{V}} \hspace{{3.2}}=\;{:.3f}\pm {:.3f}$'.format(
             best_sol[3], p_err[3][2])
-        t8 = r'$M\,(M_{{\odot}}) \hspace{{1.07}} =\;{:.0f}\pm {:.0f}$'.format(
-            best_sol[4], p_err[4][2])
-        t9 = r'$b_{{frac}} \hspace{{2.37}}=\;{:.2f}\pm {:.2f}$'.format(
+        t11 = r'$DR \hspace{{2.9}} =\;{:.3f}\pm {:.3f}$'.format(  # \,({})
+            best_sol[4], p_err[4][2])  # DR_percentage
+        t12 = r'$R_{{V}} \hspace{{3.2}}=\;{:.3f}\pm {:.3f}$'.format(
             best_sol[5], p_err[5][2])
-        text = t1 + '\n\n' + t2 + '\n' + t3 + '\n' + t4 + '\n' + t5 + '\n' +\
-            t6 + '\n' + t7 + '\n' + t8 + '\n' + t9
+        t13 = r'$(m-M)_{{0}} =\;{:.2f} \pm {:.2f}$'.format(
+            best_sol[6], p_err[6][2])
+
+        text = t1 + '\n' + t2 + '\n\n' + t3 + '\n' + t4 + '\n' + t5 + '\n' +\
+            t6 + '\n' + t7 + '\n' + t8 + '\n' + t9 + '\n\n' + t10 + '\n' +\
+            t11 + '\n' + t12 + '\n' + t13
         ob = offsetbox.AnchoredText(text, pad=1, loc=6, borderpad=-5)
         ob.patch.set(alpha=0.85)
         ax_t.add_artist(ob)

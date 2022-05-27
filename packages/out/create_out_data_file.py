@@ -5,6 +5,45 @@ from os.path import isfile
 from .._version import __version__
 
 
+txt = """#
+# [ASteCA {}]
+#
+# Created:  [{}]
+# Modified: [{}]
+#
+# NAME     : Cluster's name
+# c_x      : x center coordinate
+# c_y      : y center coordinate
+# r_cl     : radius
+# r_c      : Core radius (King profile)
+# r_t      : Tidal radius (King profile)
+# CI       : Contamination index
+# n_memb_k : Number of members obtained integrating the fitted King profile
+# n_memb   : Number of members assuming a uniform background
+# a_f      : Fraction of cluster's area that is present in frame
+#
+# Parameter values are in the sense: mean, median, mode, 16th percentile,
+# 84th percentile, and STDDEV.
+#
+# M  : total initial mass
+# z  : metallicity
+# a  : log(age)
+# bf : binary fraction
+# B  : beta
+# Av : Visual absorption
+# DR : differential reddening
+# Rv : ratio of total to selective absorption
+# dm : distance modulus
+#
+"""
+txt += "NAME,c_x,c_y,r_cl,r_c,rc16,rc84,r_t,rt16,rt84,CI,n_memb_k,n_memb,a_f,"
+for par in ('M', 'z', 'a', 'bf', 'B', 'Av', 'DR', 'Rv', 'dm'):
+    txt += "{}_mean,{}_median,{}_mode,{}_16th,{}_84th,{}_std,".format(
+        *[par] * 6)
+# Remove last comma, add new line
+txt = txt[:-1] + "\n"
+
+
 def main(npd):
     """
     Create output data file with headers. This will not overwrite any old
@@ -42,45 +81,4 @@ def main(npd):
     # File doesn't exist -> create new one.
     else:
         with open(out_file_name, 'w') as out_data_file:
-            out_data_file.write("#\n\
-# [ASteCA {}]\n\
-#\n\
-# Created:  [{}]\n\
-# Modified: [{}]\n\
-#\n\
-# NAME: Cluster's name.\n\
-# c_x: Cluster's x center coordinate.\n\
-# c_y: Cluster's y center coordinate.\n\
-# r_cl: Cluster's radius.\n\
-# r_c: Core radius (3-P King profile).\n\
-# r_t: Tidal radius (3-P King profile).\n\
-#\n\
-# CI: 'Contamination index' is a  measure of the contamination of field\n\
-#      stars in the cluster region. The closer to 1, the more contaminated \n\
-#      the cluster region is.\n\
-# n_memb_k: Approximate number of cluster's members obtained integrating the\n\
-#           fitted King profile (if it converged).\n\
-# n_memb: Approximate number of cluster's members assuming a uniform\n\
-#         background.\n\
-# a_f: Fraction of cluster's area that is present in frame.\n\
-#\n\
-# Parameters values are in the sense: mean, MAP/ML, median, mode.\n\
-# Parameters uncertainties are 16th, 84th percentiles, and STDDEV.\n\
-# z: Metallicity value.\n\
-# a: log(age).\n\
-# E: extinction E(B-V).\n\
-# d: Distance modulus.\n\
-# M: Total initial mass.\n\
-# b: Binary fraction.\n\
-# Nt: Number of samples used to estimate the parameters values.\n\
-#\n\
-NAME                                  c_x        c_y       \
-r_cl        r_c       rc16       rc84        \
-r_t       rt16       rt84      CI   n_memb_k     n_memb     a_f     \
-z_mean      z_MAP   z_median     z_mode     z_16th     z_84th      z_std  z_R^2     \
-a_mean      a_MAP   a_median     a_mode     a_16th     a_84th      a_std  a_R^2     \
-E_mean      E_MAP   E_median     E_mode     E_16th     E_84th      E_std  E_R^2     \
-d_mean      d_MAP   d_median     d_mode     d_16th     d_84th      d_std  d_R^2     \
-M_mean      M_MAP   M_median     M_mode     M_16th     M_84th      M_std  M_R^2     \
-b_mean      b_MAP   b_median     b_mode     b_16th     b_84th      b_std  b_R^2     \
-    Nt\n".format(__version__, now_time, now_time))
+            out_data_file.write(txt.format(__version__, now_time, now_time))

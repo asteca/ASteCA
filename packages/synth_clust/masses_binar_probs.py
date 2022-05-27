@@ -1,8 +1,10 @@
 
+import logging
 import numpy as np
 from scipy.spatial import cKDTree
-from .synthClustPrep import setSynthClust
-from ..best_fit.obs_clust_prepare import dataProcess
+from ..best_fit.bf_common import ranModels, getSynthClust
+from ..best_fit.prep_obs_params import dataProcess
+from ..aux_funcs import kde1D
 from .. import update_progress
 
 
@@ -10,14 +12,19 @@ def main(clp, pd, td):
     """
     Assign masses to the (decontaminated) observed cluster, and binary
     probabilities (if binarity was estimated).
-    """
 
-    # Dummy arrays
-    clp['st_mass_mean'], clp['st_mass_std'],\
-        clp['st_mass_mean_binar'], clp['st_mass_std_binar'],\
-        clp['prob_binar'] = [np.array([]) for _ in range(5)]
+    Estimate the statistics for the mass and binary fractions (not fitted)
+
+    Also generate the uncertainty region (for plotting).
+    """
     # No best fit process was employed
     if pd['best_fit_algor'] == 'n':
+        clp['MassT_dist_vals'] = {
+            'mean_sol': np.nan, 'median_sol': np.nan, 'mode_sol': np.nan,
+            'errors': (np.nan, np.nan, np.nan)}
+        clp['binar_dist_vals'] = {
+            'mean_sol': np.nan, 'median_sol': np.nan, 'mode_sol': np.nan,
+            'errors': (np.nan, np.nan, np.nan)}
         return clp
 
     # Generate random models from the selected solution (mean, median, mode,
@@ -26,13 +33,9 @@ def main(clp, pd, td):
         td['fundam_params'], pd['D3_sol'], clp['isoch_fit_params'],
         clp['isoch_fit_errors'])
 
-    if not models.any():
-        print(" WARNING: could not assign masses and binary probabilities")
-        return clp
-
     print("Estimating binary probabilities and masses")
     # Extract photometry used in the best fit process
-    mags_cols_cl, _ = dataProcess(clp['cl_max_mag'])
+    mags_cols_cl, _ = dataProcess(clp['cl_syn_fit'])
     # Arrange properly
     mags, cols = [np.array(_) for _ in mags_cols_cl]
     obs_phot = np.concatenate([mags, cols]).T
@@ -44,20 +47,29 @@ def main(clp, pd, td):
     prob_binar = np.zeros(obs_phot.shape[0])
 
     # Estimate the mean and variance for each star via recurrence.
-    Nm_binar = 0
+    Nm_binar, binar_vals, MassT_vals = 0, [], []
+    # Used for plotting
+    synthcl_Nsigma = [[] for _ in range(sum(td['N_fc']))]
     for Nm, model in enumerate(models):
 
         # Generate synthetic cluster from the 'model'.
-        isoch = setSynthClust(model, *clp['syntClustArgs'])
+        isoch, M_total = getSynthClust(model, False, clp['syntClustArgs'])
         if not isoch.any():
             continue
 
+        for i, photom_dim in enumerate(isoch[:sum(td['N_fc'])]):
+            synthcl_Nsigma[i] += list(photom_dim)
+
         # Masses, binary mask
         mass_primary = isoch[td['m_ini_idx']]
-        binar_idxs = ~(isoch[-1] == -99.)
+        # Binaries have M2>0
+        binar_idxs = isoch[-1] > 0.
         mass_secondary = isoch[-1]
         # shape: (N_stars, Ndim)
         photom = isoch[:sum(td['N_fc'])].T
+
+        MassT_vals.append(M_total)
+        binar_vals.append(binar_idxs.sum() / isoch.shape[-1])
 
         # For non-binary systems
         photom_single = photom[~binar_idxs]
@@ -68,7 +80,7 @@ def main(clp, pd, td):
             st_mass_mean, M2 = recurrentStats(Nm, st_mass_mean, M2, obs_mass)
 
             # For binary systems
-            if td['binar_flag']:
+            if binar_idxs.sum() > 0:
                 photom_binar = photom[binar_idxs]
                 # If there are no binary systems, skip
                 if photom_binar.any():
@@ -85,55 +97,23 @@ def main(clp, pd, td):
 
         update_progress.updt(models.shape[0], Nm + 1)
 
+    # Used for plotting
+    synthcl_Nsigma = np.array(synthcl_Nsigma)
+
     # Store standard deviations
     st_mass_std = np.sqrt(M2 / Nm)
     st_mass_std_binar = np.sqrt(M2_binar / max(1, Nm_binar))
 
+    MassT_dist_vals, binar_dist_vals = estimMassBinar(
+        pd, MassT_vals, binar_vals)
+
     clp['st_mass_mean'], clp['st_mass_std'], clp['st_mass_mean_binar'],\
-        clp['st_mass_std_binar'], clp['prob_binar'] = st_mass_mean,\
-        st_mass_std, st_mass_mean_binar, st_mass_std_binar, prob_binar
+        clp['st_mass_std_binar'], clp['prob_binar'], clp['MassT_dist_vals'],\
+        clp['binar_dist_vals'], clp['synthcl_Nsigma'] = st_mass_mean,\
+        st_mass_std, st_mass_mean_binar, st_mass_std_binar, prob_binar,\
+        MassT_dist_vals, binar_dist_vals, synthcl_Nsigma
 
     return clp
-
-
-def ranModels(fundam_params, D3_sol, isoch_fit_params, isoch_fit_errors,
-              N_models=1000):
-    """
-    Generate the requested models via sampling a Gaussian centered on the
-    selected solution, with standard deviation given by the attached
-    uncertainty.
-
-    HARDCODED:
-
-    N_models: number of models to generate.
-    """
-    # Use the selected solution values for all the parameters.
-    model = isoch_fit_params[D3_sol + '_sol']
-
-    # Extract standard deviations.
-    p_vals, nancount = [], 0
-    for i, p in enumerate(model):
-        std = isoch_fit_errors[i][-1]
-        if not np.isnan(std):
-            p_vals.append([
-                p, std, min(fundam_params[i]), max(fundam_params[i])])
-        else:
-            # The parameter has no uncertainty attached
-            nancount += 1
-
-    # Check if at least one parameter has an uncertainty attached.
-    if nancount < 6:
-        # Generate 'N_models' random models.
-        models = []
-        for par in p_vals:
-            model = np.random.normal(par[0], par[1], N_models)
-            model = np.clip(model, a_min=par[2], a_max=par[3])
-            models.append(model)
-        models = np.array(models).T
-    else:
-        models = np.array([])
-
-    return models
 
 
 def photomMatch(obs_phot, photom, mass_ini):
@@ -165,3 +145,37 @@ def recurrentStats(Nm, mean, var, newValue):
         return mean
     var += delta * (newValue - mean)
     return mean, var
+
+
+def estimMassBinar(pd, MassT_vals, binar_vals):
+    """
+    Estimate the mean, etc values for the mass and binary fraction
+    distributions, as these are not fitted parameters.
+    """
+    x_kde, M_kde = kde1D(MassT_vals)
+    mode_M = x_kde[np.argmax(M_kde)]
+    MassT_dist_vals = {
+        'mean_sol': np.mean(MassT_vals), 'median_sol': np.median(MassT_vals),
+        'mode_sol': mode_M, 'errors': (
+            np.percentile(MassT_vals, 16), np.percentile(MassT_vals, 84),
+            np.std(MassT_vals))
+    }
+
+    if pd['Max_mass'] < np.mean(MassT_vals) + np.std(MassT_vals):
+        logging.warning(
+            "The total mass is too close to the 'Max_mass' "
+            + "parameter. Consider increasing this value.")
+
+    # The binary fraction will have a small dispersion even for fixed 'beta'
+    # because the probabilities depend on the masses which vary for different
+    # values of (z, a)
+    x_kde, bf_kde = kde1D(binar_vals)
+    mode_bf = x_kde[np.argmax(bf_kde)]
+    binar_dist_vals = {
+        'mean_sol': np.mean(binar_vals), 'median_sol': np.median(binar_vals),
+        'mode_sol': mode_bf, 'errors': (
+            np.percentile(binar_vals, 16), np.percentile(binar_vals, 84),
+            np.std(binar_vals))
+    }
+
+    return MassT_dist_vals, binar_dist_vals

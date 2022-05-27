@@ -20,20 +20,20 @@ def main(pars_f_path):
                 reader = line.split()
 
                 # Input data parameters.
-                if reader[0] == 'I1':
+                if reader[0] == 'I0':
+                    sep = reader[1]
+
+                elif reader[0] == 'I1':
                     id_ids = reader[1]
                     id_xdata = reader[2]
                     id_ydata = reader[3]
+                    xy_frame = reader[4]
                 elif reader[0] == 'I2':
                     id_mags = reader[1:]
                 elif reader[0] == 'I3':
                     id_cols.append(reader[1:])
                 elif reader[0] == 'I4':
                     id_kinem = reader[1:]
-
-                # Input data processing
-                elif reader[0] == 'I5':
-                    nanvals = [_.replace(',', '') for _ in reader[1:]]
 
                 # Structure functions parameters.
                 elif reader[0] == 'S0':
@@ -71,16 +71,29 @@ def main(pars_f_path):
                 # Synthetic clusters parameters
                 elif reader[0] == 'R0':
                     synth_rand_seed = str(reader[1])
-                    IMF_name = str(reader[2])
-                    min_bmass_ratio = float(reader[3])
-                    try:
-                        max_mag = float(reader[4])
-                    except ValueError:
-                        max_mag = str(reader[4])
-                    N_interp = int(reader[5])
+
+                # Synthetic clusters parameters
+                elif reader[0] == 'R1':
+                    IMF_name = str(reader[1])
+                    Max_mass = int(float(reader[2]))
+
+                # Synthetic clusters parameters
+                elif reader[0] == 'R2':
+                    DR_dist = str(reader[1])
+                    DR_percentage = float(reader[2])
 
                 # Ranges for the fundamental parameters
-                elif reader[0] == 'R1':
+                elif reader[0] == 'R3':
+                    alpha = float(reader[1])
+                    gamma = reader[2]
+
+                # Ranges for the fundamental parameters
+                elif reader[0] == 'R4':
+                    Max_mag = reader[1]
+                    completeness = [_.replace(',', '') for _ in reader[2:]]
+
+                # Ranges for the fundamental parameters
+                elif reader[0] == 'R5':
                     par_ranges.append(reader[1:])
 
                 # elif reader[0] == 'RZ':
@@ -160,18 +173,21 @@ def main(pars_f_path):
                               reader[0], ln + 1, pars_f_name))
 
     # Accepted coordinate units
-    coord_accpt = ('px', 'deg')
+    separators = {
+        'comma': ',', 'space': r'\s+', 'semicolon': ';', 'vertical-bar': '|',
+        'tab': '\t'}
+    # Reference frames
+    xy_frames_accpt = ('equatorial', 'galactic')
     # Radius estimating methods
     rad_modes_accpt = ('a', 'max')
-    # Decontamination algorithm flag.
-    da_algors_accpt = ('y', 'n', 'read')
     # Accepted field stars removal methods.
     fld_rem_methods = ('local', 'n_memb', 'mp_05', 'top_h', 'man', 'all')
     # Accepted binning methods.
     bin_methods = (
         'optm', 'fixed', 'auto', 'fd', 'doane', 'scott', 'rice', 'sqrt',
         'sturges', 'knuth', 'blocks', 'blocks-max', 'manual')
-
+    # Binary system methods
+    # binar_methods = ('logfit', 'D&K', 'uniform')
     # Likelihood methods.
     lkl_methods = ('tremmel',)
     # FIXED 04/2021
@@ -200,12 +216,9 @@ def main(pars_f_path):
 
     pd = {
         # Input data parameters
-        'id_ids': id_ids, 'id_xdata': id_xdata,
-        'id_ydata': id_ydata, 'id_mags': id_mags, 'id_cols': id_cols,
-        'id_kinem': id_kinem,
-
-        # Input data processing
-        'nanvals': nanvals,
+        'separators': separators, 'sep': sep, 'id_ids': id_ids,
+        'id_xdata': id_xdata, 'id_ydata': id_ydata, 'xy_frame': xy_frame,
+        'id_mags': id_mags, 'id_cols': id_cols, 'id_kinem': id_kinem,
 
         # Structure functions parameters
         'manual_struct': manual_struct, 'kp_ndim': kp_ndim,
@@ -226,8 +239,9 @@ def main(pars_f_path):
 
         # Synthetic cluster parameters
         'synth_rand_seed': synth_rand_seed, 'par_ranges': par_ranges,
-        'IMF_name': IMF_name, 'min_bmass_ratio': min_bmass_ratio,
-        'max_mag': max_mag, 'N_interp': N_interp,
+        'IMF_name': IMF_name, 'Max_mass': Max_mass, 'Max_mag': Max_mag,
+        'DR_dist': DR_dist, 'DR_percentage': DR_percentage, 'alpha': alpha,
+        'gamma': gamma, 'completeness': completeness,
 
         # Best fit parameters.
         'best_fit_algor': best_fit_algor, 'mins_max': mins_max,
@@ -240,8 +254,7 @@ def main(pars_f_path):
         'lkl_manual_bins': lkl_manual_bins,
 
         # Fixed accepted parameter values and photometric systems.
-        'coord_accpt': coord_accpt, 'rad_modes_accpt': rad_modes_accpt,
-        'da_algors_accpt': da_algors_accpt,
+        'xy_frames_accpt': xy_frames_accpt, 'rad_modes_accpt': rad_modes_accpt,
         'fld_rem_methods': fld_rem_methods, 'bin_methods': bin_methods,
         'imf_funcs': imf_funcs, 'lkl_methods': lkl_methods,
         'optimz_algors': optimz_algors, 'bayes_priors': bayes_priors,

@@ -6,12 +6,12 @@ def main(pd, clp):
     defined. Used to define the limits for the plotted CMDs.
     """
 
-    # Stars in complete photometry, cluster region.
-    cl_ac_col_0 = list(list(zip(*list(zip(*clp['cl_region_c']))[5]))[0])
-    cl_ac_mag_0 = list(list(zip(*list(zip(*clp['cl_region_c']))[3]))[0])
+    # Stars in cluster region.
+    cl_ac_col_0 = list(list(zip(*list(zip(*clp['cl_region']))[5]))[0])
+    cl_ac_mag_0 = list(list(zip(*list(zip(*clp['cl_region']))[3]))[0])
     cl_ac_col_1 = []
     if len(pd['colors']) > 1:
-        cl_ac_col_1 = list(list(zip(*list(zip(*clp['cl_region_c']))[5]))[1])
+        cl_ac_col_1 = list(list(zip(*list(zip(*clp['cl_region']))[5]))[1])
 
     # DEPRECATED 23/03/22
     # # Stars in complete photometry, error rejected, cluster region.
@@ -37,7 +37,7 @@ def main(pd, clp):
     col_0_comb = cl_ac_col_0  # + cl_rj_col_0[:Nh]
     col_1_comb = cl_ac_col_1  # + cl_rj_col_1[:Nh]
 
-    stars_f_acpt = field_region_stars(clp['field_regions_c'], pd['colors'])
+    stars_f_acpt = field_region_stars(clp['field_regions'], pd['colors'])
 
     clp.update({
         'stars_f_acpt': stars_f_acpt, 'mag_0_comb': mag_0_comb,

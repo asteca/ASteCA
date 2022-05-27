@@ -1,19 +1,57 @@
 
+import copy
 import numpy as np
 from packages.inp import readZA
 from packages.inp import read_isochs
 
 
-def check_get(pd, td):
+def main(pd, clust_name, **kwargs):
     """
-    Process all the metallicity files and the ages stored in them. To save
-    time, we process and store all the theoretical isochrones data here.
+    Process all the metallicity files and the ages stored in them.
     """
+    td = {}
+    if pd['best_fit_algor'] == 'n':
+        return td
+
+    clPresent = True
+    try:
+        td['fundam_params'] = [
+            pd['fundam_params_all'][clust_name][0],
+            pd['fundam_params_all'][clust_name][1]]
+        td['fundam_params'] += [
+            np.array(_) for _ in pd['fundam_params_all'][clust_name][2:]]
+    except KeyError:
+        clPresent = False
+        print(("Cluster not found in line 'R5'. Default to "
+               "'CLUSTER' values"))
+    if clPresent is False:
+        td['fundam_params'] = [
+            pd['fundam_params_all']['CLUSTER'][0],
+            pd['fundam_params_all']['CLUSTER'][1]]
+        td['fundam_params'] += [
+            np.array(_) for _ in pd['fundam_params_all']['CLUSTER'][2:]]
+
+    clPresent = True
+    try:
+        td['priors_mcee'] = copy.deepcopy(
+            pd['priors_mcee_all'][clust_name])
+    except KeyError:
+        clPresent = False
+        print(("Cluster not found in line 'B2'. Default to "
+               "'CLUSTER' values"))
+    if clPresent is False:
+        td['priors_mcee'] = copy.deepcopy(pd['priors_mcee_all']['CLUSTER'])
+
+    # Store the number of defined filters and colors.
+    td['N_fc'] = [len(pd['filters']), len(pd['colors'])]
+    # Index of 'M_ini' (theoretical initial mass), stored in the
+    # interpolated isochrones: right after the magnitude and color(s)
+    td['m_ini_idx'] = td['N_fc'][0] + td['N_fc'][1]
 
     # Print info about tracks.
     nt = '' if len(pd['all_syst_filters']) == 1 else 's'
     print(
-        "\nProcessing {} isochrones in the photometric system{}:".format(
+        "Processing {} isochrones in the photometric system{}:".format(
             pd['evol_track'], nt))
     for syst in pd['all_syst_filters']:
         print(" * {}".format(syst[0]))
@@ -33,13 +71,13 @@ def check_get(pd, td):
     # Check equality of the initial mass across photometric systems.
     miniCheck(td['extra_pars'], met_vals_all, age_vals_all)
 
-    print("\nGrid values")
-    print("z        : {:<5} [{}, {}]".format(
-        len(met_vals_all), td['fundam_params'][0][0],
-        td['fundam_params'][0][-1]))
-    print("log(age) : {:<5} [{}, {}]".format(
-        len(age_vals_all), td['fundam_params'][1][0],
-        td['fundam_params'][1][-1]))
+    # print("Grid values")
+    # print("z        : {:<5} [{}, {}]".format(
+    #     len(met_vals_all), td['fundam_params'][0][0],
+    #     td['fundam_params'][0][-1]))
+    # print("log(age) : {:<5} [{}, {}]".format(
+    #     len(age_vals_all), td['fundam_params'][1][0],
+    #     td['fundam_params'][1][-1]))
 
     return td
 
