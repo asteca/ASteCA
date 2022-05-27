@@ -84,8 +84,7 @@ def main(npd, cld, pd, clp):
         warnings.simplefilter("ignore")
         fig.tight_layout()
     plt.savefig(
-        join(npd['output_subdir'], str(npd['clust_name']) + '_A3'
-             + npd['ext']))
+        join(npd['output_subdir'], npd['clust_name'] + '_A3' + npd['ext']))
     # Close to release memory.
     plt.clf()
     plt.close("all")
