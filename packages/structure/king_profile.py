@@ -72,7 +72,7 @@ def main(
 
 def fit_King_prof(
     ndim, nchains, nruns, nburn, kp_emcee_moves, cl_cent, xy_filtered,
-    xy_cent_dist, field_dens, cl_rad, n_memb_i, rt_max_f, N_integ=1000,
+    xy_cent_dist, field_dens, cl_rad, n_memb, rt_max_f, N_integ=1000,
         N_conv=500, tau_stable=0.01):
     """
     N_integ : number of points used in the integration performed in the
@@ -123,7 +123,7 @@ def fit_King_prof(
     KP_steps = max(1, int(nruns * .01))
 
     # Fixed number of members (previously estimated)
-    N_memb = n_memb_i
+    N_memb = 1 * n_memb
 
     # The tidal radius can not be larger than 'rt_max' times the estimated
     # "optimal" cluster radius. Used as a prior.
@@ -297,7 +297,7 @@ def lnlike(
         return rho_0
 
     # Likelihood
-    # 'fd' IS necessary and I'm not sure why
+    # 'fd' IS necessary
     li = rho_0 * KP + fd
     # Sum of log-likelihood
     sum_log_lkl = np.log(li).sum()
