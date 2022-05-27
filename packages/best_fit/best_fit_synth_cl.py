@@ -16,9 +16,7 @@ def main(npd, pd, td, clp):
     # td['fundam_params'][0] = list(np.log10(np.array(
     #     td['fundam_params'][0]) / 0.0152))
 
-    if pd['best_fit_algor'] == 'ptemcee':
-        print("Searching for optimal parameters")
-
+    if pd['best_fit_algor'] != 'n':
         clp['varIdxs'], clp['ndim'], clp['ranges'] = varPars(
             td['fundam_params'])
 
@@ -31,6 +29,9 @@ def main(npd, pd, td, clp):
             clp['max_mag_syn'], clp['N_obs_stars'], td['fundam_params'],
             td['ext_coefs'], td['N_fc'], td['m_ini_idx'], td['st_dist_mass'],
             td['theor_tracks'], td['rand_norm_vals'], td['rand_unif_vals']]
+
+    if pd['best_fit_algor'] == 'ptemcee':
+        print("Searching for optimal parameters")
 
         # import matplotlib.pyplot as plt
         # mags_cols_cl = [[], []]
