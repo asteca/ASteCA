@@ -362,7 +362,7 @@ def centDens(N_memb, arr, rc, rt, ecc):
     i = np.searchsorted(arr, rt)
     b = arr[:i] * np.sqrt(1. - ecc**2)
     integ = np.trapz(2. * np.pi * b * KingProf(arr[:i], rc, rt), arr[:i])
-    integ = max(0.01, integ)
+    integ = max(0.0000001, integ)
 
     # # The above is equivalent to (for a circle):
     # integ2 = KP_memb_x(1, rc, rt, rt)  # * np.sqrt(1. - ecc**2) <-- ??
