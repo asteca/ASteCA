@@ -297,49 +297,23 @@ def pl_zoom_frame(
     # Core and tidal radii
     if kp_ndim in (2, 4):
         # Plot tidal radius.
-        rt_median, ecc_median, theta_mean = KP_Bys_rt['median'],\
-            KP_Bys_ecc['median'], KP_Bys_theta['mean']
-        b = rt_median * np.sqrt(1. - ecc_median**2)
+        rt_median, ecc_mean, theta_mean = KP_Bys_rt['median'],\
+            KP_Bys_ecc['mean'], KP_Bys_theta['mean']
+        b = rt_median * np.sqrt(1. - ecc_mean**2)
         ellipse = mpatches.Ellipse(
             xy=kde_cent, width=2. * rt_median, height=2. * b,
             angle=np.rad2deg(theta_mean), facecolor='None', edgecolor='g',
             linewidth=1.5, transform=ax.transData)
-        # circle = plt.Circle(
-        #     (kde_cent[0], kde_cent[1]), KP_Bys_rt[3], color='g', fill=False,
-        #     lw=1.5)
         fig.gca().add_artist(ellipse)
+
         # Plot core radius.
         rc_median = KP_Bys_rc['median']
-        # circle = plt.Circle(
-        #     (kde_cent[0], kde_cent[1]), KP_Bys_rc[3], color='g',
-        #     fill=False, ls='dashed', lw=1.)
-        b = rc_median * np.sqrt(1. - ecc_median**2)
+        b = rc_median * np.sqrt(1. - ecc_mean**2)
         ellipse = mpatches.Ellipse(
             xy=kde_cent, width=2. * rc_median, height=2. * b,
             angle=np.rad2deg(theta_mean), facecolor='None', edgecolor='g',
             ls='dashed', linewidth=1.5, transform=ax.transData)
         fig.gca().add_artist(ellipse)
-
-    # # Plot contour levels if it was obtained.
-    # if kde_plot:
-    #     ext_range, x, y, k_pos = kde_plot
-    #     # Number of contour lines depends on how large the cluster area is
-    #     # compared with the area where the positional KDE was obtained.
-    #     frac_xy = (ext_range[1] - ext_range[0]) / (2. * clust_rad)
-    #     if frac_xy <= 1.5:
-    #         c_lines = 5
-    #     elif 1.5 < frac_xy <= 2.:
-    #         c_lines = 10
-    #     elif 2. < frac_xy <= 2.5:
-    #         c_lines = 15
-    #     elif 2.5 < frac_xy <= 3.:
-    #         c_lines = 20
-    #     elif 3 < frac_xy <= 3.5:
-    #         c_lines = 25
-    #     elif 3.5 < frac_xy:
-    #         c_lines = 30
-    #     kde = np.reshape(k_pos.T, x.shape)
-    #     plt.contour(x, y, kde, c_lines, colors='b', linewidths=0.6)
 
     # Plot stars.
     N_max = 50000  # HARDCODED
