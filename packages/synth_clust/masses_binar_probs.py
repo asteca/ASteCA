@@ -170,7 +170,9 @@ def estimMassBinar(pd, MassT_vals, binar_vals):
     # because the probabilities depend on the masses which vary for different
     # values of (z, a)
     x_kde, bf_kde = kde1D(binar_vals)
-    mode_bf = x_kde[np.argmax(bf_kde)]
+    mode_bf = np.nan
+    if bf_kde.any():
+        mode_bf = x_kde[np.argmax(bf_kde)]
     binar_dist_vals = {
         'mean_sol': np.mean(binar_vals), 'median_sol': np.median(binar_vals),
         'mode_sol': mode_bf, 'errors': (

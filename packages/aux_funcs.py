@@ -50,9 +50,12 @@ def kde1D(data, xmin=None, xmax=None, bw=None, xr_fr=.1):
     # Define KDE limits.
     x_rang = xr_fr * (xmax - xmin)
     kde_x = np.mgrid[xmin - x_rang:xmax + x_rang:1000j]
-    kernel_cl = stats.gaussian_kde(data, bw_method=bw)
-    # KDE for plotting.
-    kde = np.reshape(kernel_cl(kde_x).T, kde_x.shape)
+    try:
+        kernel_cl = stats.gaussian_kde(data, bw_method=bw)
+        # KDE for plotting.
+        kde = np.reshape(kernel_cl(kde_x).T, kde_x.shape)
+    except np.linalg.LinAlgError:
+        kde = np.array([])
 
     return kde_x, kde
 
