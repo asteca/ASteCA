@@ -161,12 +161,12 @@ def plotCorner(fit_pars, ndim, varIdxs):
             ax.set_title(r"$\rho={:.2f}$".format(np.corrcoef(
                 [samples[xi], samples[yi]])[0][1]))
 
+            # Plot 95% confidence ellipse.
             mean_pos, width, height, theta = SigmaEllipse(np.array([
                 samples[xi], samples[yi]]).T)
-            # Plot 95% confidence ellipse.
-            plt.scatter(
-                mean_pos[0], mean_pos[1], marker='x', c='b', s=30, linewidth=2,
-                zorder=4)
+            # ax.scatter(
+            #     mean_pos[0], mean_pos[1], marker='x', c='b', s=30, linewidth=2,
+            #     zorder=4)
             ellipse = Ellipse(
                 xy=mean_pos, width=width, height=height, angle=theta,
                 edgecolor='k', fc='None', lw=.7, zorder=4)
