@@ -1,4 +1,4 @@
-![](https://github.com/asteca/ASteCA-Docs/tree/master/docs/_static/front_page.png)
+![](https://github.com/asteca/ASteCA-Docs/tree/master/docs/_static/asteca_icon.png)
 
 
 # ASteCA [Automated Stellar Cluster Analysis]
