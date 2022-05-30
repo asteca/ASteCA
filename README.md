@@ -6,7 +6,7 @@
 The ASteCA package is designed to fully automatize the usual tests
 applied on star clusters in order to estimate their characteristics and
 fundamental parameters. The package is still be *under heavy development*.
-For an up to date description of **ASteCA** please refer to the
+For an up to date description please refer to the
 [documentation][3]. The latest release can be accessed [here][4].
 
 If you use this package please cite its accompanying [article][1] using the
