@@ -1,20 +1,16 @@
-![](https://github.com/asteca/ASteCA-Docs/tree/master/docs/_static/asteca_icon.png)
-
 
 # ASteCA [Automated Stellar Cluster Analysis]
-[![AA](https://img.shields.io/badge/A%26A-576--A6,%202015-yellowgreen.svg)][7]
-[![License](https://img.shields.io/badge/license-GPLv3-red.svg)][13]
+[![AA](https://img.shields.io/badge/A%26A-576--A6,%202015-yellowgreen.svg)][1]
+[![License](https://img.shields.io/badge/license-GPLv3-red.svg)][2]
 
-The [ASteCA][1] package is designed to fully automatize the usual tests
-applied on [star clusters][2] in order to determine their characteristics and
+The ASteCA package is designed to fully automatize the usual tests
+applied on star clusters in order to estimate their characteristics and
 fundamental parameters. The package is still be *under heavy development*.
 For an up to date description of **ASteCA** please refer to the
-[documentation][1].
+[documentation][3]. The latest release can be accessed [here][4].
 
-The latest release can always be accessed [here][5].
-
-The accompanying article describing the code in detail can be accessed
-[via A&A][7], and referenced using the following BibTeX entry:
+If you use this package please cite its accompanying [article][1] using the
+Bibtex:
 
 ````
 @article{Perren_2015,
@@ -30,10 +26,9 @@ The accompanying article describing the code in detail can be accessed
 }
 ````
 
+[1]: http://www.aanda.org/articles/aa/abs/2015/04/aa24946-14/aa24946-14.html
+[2]: http://www.gnu.org/licenses/gpl-3.0.en.html
+[3]: http://asteca.github.io
+[4]: https://github.com/asteca/asteca/releases/latest
 
-[1]: http://asteca.github.io
-[2]: https://en.wikipedia.org/wiki/Star_cluster
-[5]: https://github.com/asteca/asteca/releases/latest
-[7]: http://www.aanda.org/articles/aa/abs/2015/04/aa24946-14/aa24946-14.html
-[13]: http://www.gnu.org/licenses/gpl-3.0.en.html
 
