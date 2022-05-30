@@ -1,18 +1,16 @@
-[![AA](https://img.shields.io/badge/A%26A-576--A6,%202015-yellowgreen.svg)][7]
-[![License](https://img.shields.io/badge/license-GPLv3-red.svg)][13]
+![](https://github.com/asteca/ASteCA-Docs/blob/master/docs/_static/front_page.png)
 ________________________________________________________________________________
 
 
 # ASteCA [Automated Stellar Cluster Analysis]
+[![AA](https://img.shields.io/badge/A%26A-576--A6,%202015-yellowgreen.svg)][7]
+[![License](https://img.shields.io/badge/license-GPLv3-red.svg)][13]
 
 The [ASteCA][1] package is designed to fully automatize the usual tests
-applied on [star clusters][2] in order to determine their characteristics:
-center, radius, stars membership probabilities and associated
-intrinsic/extrinsic parameters: metallicity, age, reddening, distance, total
-mass, binarity fraction, etc.
-
-**IMPORTANT**: until the release of v1.0.0 the package will be *under heavy
-development*. Keep this in mind if you want to use it in your research.
+applied on [star clusters][2] in order to determine their characteristics and
+fundamental parameters. The package is still be *under heavy development*.
+For an up to date description of **ASteCA** please refer to the
+[documentation][1].
 
 The latest release can always be accessed [here][5].
 
@@ -33,9 +31,6 @@ The accompanying article describing the code in detail can be accessed
 }
 ````
 
-This article will rapidly become outdated as new versions are released. For an
-up to date description of **ASteCA** please refer to the online
-[documentation][1].
 
 [1]: http://asteca.github.io
 [2]: https://en.wikipedia.org/wiki/Star_cluster
