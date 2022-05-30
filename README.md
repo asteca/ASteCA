@@ -35,13 +35,10 @@ The accompanying article describing the code in detail can be accessed
 
 This article will rapidly become outdated as new versions are released. For an
 up to date description of **ASteCA** please refer to the online
-[documentation][4].
+[documentation][1].
 
-
-________________________________________________________________________________
 [1]: http://asteca.github.io
 [2]: https://en.wikipedia.org/wiki/Star_cluster
-[4]: http://asteca.rtfd.org/
 [5]: https://github.com/asteca/asteca/releases/latest
 [7]: http://www.aanda.org/articles/aa/abs/2015/04/aa24946-14/aa24946-14.html
 [13]: http://www.gnu.org/licenses/gpl-3.0.en.html
