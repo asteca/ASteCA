@@ -819,8 +819,8 @@ def reddeningVector(cl_syn_fit, m_ini_idx, ext_coefs, N_fc, best_sol):
     x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd =\
         diag_limits('mag', frst_obs_col, frst_obs_mag)
     # Location of the base of the arrow
-    x0 = (x_max_cmd - x_min_cmd) * .2 + x_min_cmd
-    y0 = (y_min_cmd - y_max_cmd) * .8 + y_max_cmd
+    x0 = (x_max_cmd - x_min_cmd) * .55 + x_min_cmd
+    y0 = (y_min_cmd - y_max_cmd) * .1 + y_max_cmd
     # Length of the arrow
     arrow_length = (y_min_cmd - y_max_cmd) * .1
 
