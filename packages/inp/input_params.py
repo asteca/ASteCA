@@ -45,8 +45,6 @@ def main(pars_f_path):
                     kp_nruns = int(reader[3])
                     kp_nburn = float(reader[4])
                     rt_max_f = float(reader[5])
-                elif reader[0] == 'S2':
-                    kp_emcee_moves = [_.strip() for _ in line[3:].split(';')]
 
                 # Decontamination algorithm parameters
                 elif reader[0] == 'D0':
@@ -223,7 +221,7 @@ def main(pars_f_path):
         # Structure functions parameters
         'manual_struct': manual_struct, 'kp_ndim': kp_ndim,
         'kp_nchains': kp_nchains, 'kp_nruns': kp_nruns, 'kp_nburn': kp_nburn,
-        'rt_max_f': rt_max_f, 'kp_emcee_moves': kp_emcee_moves,
+        'rt_max_f': rt_max_f,
 
         # Decontamination algorithm parameters.
         'da_algor': da_algor, 'bayesda_runs': bayesda_runs,

@@ -3,19 +3,13 @@ import numpy as np
 from astropy.stats import circmean, circstd
 from astropy import units as u
 from scipy import stats
-try:
-    # If this import is not done outside main(), then eval() fails in the
-    # definition of the moves
-    from emcee import moves
-except ImportError:
-    pass
 import warnings
 from .. import update_progress
 from ..best_fit.bf_common import modeKDE
 
 
 def main(
-    clp, cld, kp_ndim, kp_nchains, kp_nruns, kp_nburn, kp_emcee_moves,
+    clp, cld, kp_ndim, kp_nchains, kp_nruns, kp_nburn,
         rt_max_f, **kwargs):
     """
     Bayesian inference over an array of stars' coordinates using a King
@@ -40,7 +34,7 @@ def main(
         print("Estimating King profile")
         KP_plot, KP_Bys_rc, KP_Bys_rt, KP_Bys_ecc, KP_Bys_theta =\
             fit_King_prof(
-                kp_ndim, kp_nchains, kp_nruns, kp_nburn, kp_emcee_moves,
+                kp_ndim, kp_nchains, kp_nruns, kp_nburn,
                 clp['kde_cent'], clp['xy_filtered'], clp['xy_cent_dist'],
                 clp['field_dens'], clp['clust_rad'], clp['n_memb'], rt_max_f)
 
@@ -71,7 +65,7 @@ def main(
 
 
 def fit_King_prof(
-    ndim, nchains, nruns, nburn, kp_emcee_moves, cl_cent, xy_filtered,
+    ndim, nchains, nruns, nburn, cl_cent, xy_filtered,
     xy_cent_dist, field_dens, cl_rad, n_memb, rt_max_f, N_integ=1000,
         N_conv=500, tau_stable=0.01):
     """
@@ -117,7 +111,8 @@ def fit_King_prof(
 
     from emcee import ensemble
     # Move used by emcee
-    mv = [(eval("(moves." + _ + ")")) for _ in kp_emcee_moves]
+    # DESnookerMove(), 0.1; DEMove(), 0.9 * 0.9; DEMove(gamma0=1.0), 0.9 * 0.1
+    # mv = [(eval("(moves." + _ + ")")) for _ in kp_emcee_moves]
 
     # Steps to store Bayes params.
     KP_steps = max(1, int(nruns * .01))
@@ -154,8 +149,7 @@ def fit_King_prof(
         'ndim': ndim, 'rt_max': rt_max, 'cl_cent': cl_cent, 'fd': field_dens,
         # 'fd_max': fd_max,
         'N_memb': N_memb, 'rt_rang': rt_rang, 'xy_in': xy_in, 'r_in': r_in}
-    sampler = ensemble.EnsembleSampler(
-        nchains, ndim, lnprob, kwargs=args, moves=mv)
+    sampler = ensemble.EnsembleSampler(nchains, ndim, lnprob, kwargs=args)
 
     # Run the sampler hiding some annoying warnings
     conver_flag = False
