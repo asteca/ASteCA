@@ -7,8 +7,14 @@ def check(mypath, pd):
     isochrones, and to properly generate the synthetic clusters (if the best
     match function is set to run).
     """
+    if pd['sep'] not in pd['separators'].keys():
+        raise ValueError("Unrecognized separator: '{}'".format(pd['sep']))
+
     # Read column indexes for the IDs and the coordinates.
     id_col, x_col, y_col = pd['id_ids'], pd['id_xdata'], pd['id_ydata']
+
+    if pd['xy_frame'] not in pd['xy_frames_accpt']:
+        raise ValueError("Unrecognized frame: '{}'".format(pd['xy_frame']))
 
     # Extract magnitudes (filters) data.
     try:
@@ -35,31 +41,35 @@ def check(mypath, pd):
         c_filters.append((phot_syst, filter2))
         colors.append((phot_syst, filter1 + ',' + filter2))
 
+    if not colors:
+        raise ValueError("At least one color must be defined")
+
     # Add data to parameters dictionary.
     pd['id_col'], pd['x_col'], pd['y_col'],\
         pd['mag_col'], pd['e_mag_col'], pd['filters'], pd['col_col'],\
         pd['e_col_col'], pd['colors'], pd['c_filters'] = id_col, x_col, y_col,\
         mag_col, e_mag_col, filters, col_col, e_col_col, colors, c_filters
 
-    # Check error values
-    for err in pd['err_max']:
-        try:
-            ferr = float(err)
-        except ValueError:
-            if err != 'max':
-                raise ValueError("bad value ('{}') for max error"
-                                 " in 'params_input.dat'".format(err))
-            ferr = 1.
-        if ferr < 0.:
-            raise ValueError("max error value must be positive")
+    # DEPRECATED 23/03/22
+    # # Check error values
+    # for err in pd['err_max']:
+    #     try:
+    #         ferr = float(err)
+    #     except ValueError:
+    #         if err != 'max':
+    #             raise ValueError("bad value ('{}') for max error"
+    #                              " in 'asteca.ini'".format(err))
+    #         ferr = 1.
+    #     if ferr < 0.:
+    #         raise ValueError("max error value must be positive")
 
-    # This assumes that there is no maximum number of colors that can
-    # be defined
-    N_colors = len(pd['id_cols'])
-    if len(pd['err_max']) - 4 != N_colors:
-        raise ValueError(
-            "there are {} 'e_*_max' values defined, there should\n"
-            "be {}, because {} color(s) is/are defined.".format(
-                len(pd['err_max']), 4 + N_colors, N_colors))
+    # # This assumes that there is no maximum number of colors that can
+    # # be defined
+    # N_colors = len(pd['id_cols'])
+    # if len(pd['err_max']) - 4 != N_colors:
+    #     raise ValueError(
+    #         "there are {} 'e_*_max' values defined, there should\n"
+    #         "be {}, because {} color(s) is/are defined.".format(
+    #             len(pd['err_max']), 4 + N_colors, N_colors))
 
     return pd

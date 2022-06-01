@@ -3,7 +3,7 @@ import numpy as np
 
 
 def main(
-    theor_tracks, fundam_params, binar_flag, m_ini_idx, z_model, a_model,
+    theor_tracks, fundam_params, m_ini_idx, z_model, a_model,
         ml, mh, al, ah):
     """
     Generate a new "weighted" isochrone from the four closest points in the
@@ -27,7 +27,8 @@ def main(
 
     # If (z, a) are both fixed, just return the single processed isochrone
     if ml == al == mh == ah == 0:
-        return theor_tracks[ml][al]
+        # The np.array() is important to avoid overwriting 'theor_tracks'
+        return np.array(theor_tracks[ml][al])
 
     # The four points in the (z, age) grid that define the box that contains
     # the model value (z_model, a_model)
@@ -67,8 +68,8 @@ def main(
     # closest isochrone values.
     idx = np.argmin(dist)
     isochrone[m_ini_idx] = isochs[idx][m_ini_idx]
-    if binar_flag:
-        isochrone[-1] = isochs[idx][-1]
+    # Now for the secondary masses
+    isochrone[-1] = isochs[idx][-1]
 
     # isochrone = theor_tracks[ml][al] * weights[0] +\
     #     theor_tracks[ml][ah] * weights[1] +\
@@ -97,10 +98,14 @@ def main(
     # plt.scatter(z_model, a_model, marker='x', c='g')
     # # First color
     # plt.subplot(122)
-    # plt.scatter(theor_tracks[ml][al][1], theor_tracks[ml][al][0], c='b', alpha=.5)
-    # plt.scatter(theor_tracks[ml][ah][1], theor_tracks[ml][ah][0], c='r', alpha=.5)
-    # plt.scatter(theor_tracks[mh][al][1], theor_tracks[mh][al][0], c='cyan', alpha=.5)
-    # plt.scatter(theor_tracks[mh][ah][1], theor_tracks[mh][ah][0], c='orange', alpha=.5)
+    # plt.scatter(
+    #     theor_tracks[ml][al][1], theor_tracks[ml][al][0], c='b', alpha=.5)
+    # plt.scatter(
+    #     theor_tracks[ml][ah][1], theor_tracks[ml][ah][0], c='r', alpha=.5)
+    # plt.scatter(
+    #     theor_tracks[mh][al][1], theor_tracks[mh][al][0], c='cyan', alpha=.5)
+    # plt.scatter(
+    #     theor_tracks[mh][ah][1], theor_tracks[mh][ah][0], c='orange', alpha=.5)
     # plt.scatter(isochrone[1], isochrone[0], c='g')
     # plt.gca().invert_yaxis()
     # # Second color
@@ -112,5 +117,7 @@ def main(
     # # plt.scatter(isochrone[2], isochrone[0], c='g', ls='--')
     # # plt.gca().invert_yaxis()
     # plt.show()
+    # print("zaWavrg")
+    # breakpoint()
 
     return isochrone

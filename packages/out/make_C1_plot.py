@@ -11,8 +11,8 @@ from . prep_plots import figsize_x, figsize_y, grid_x, grid_y
 
 
 def main(
-    npd, cld_c, pd, kde_cent, clust_rad, stars_out_c, cl_region_i,
-    memb_probs_cl_region_i, memb_prob_avrg_sort, flag_decont_skip,
+    npd, cld, pd, kde_cent, clust_rad, stars_out, cl_region,
+    memb_probs_cl_region, memb_prob_avrg_sort, flag_decont_skip,
     cl_reg_fit, cl_reg_no_fit, local_rm_edges, col_0_comb, mag_0_comb,
         err_lst, **kwargs):
     """
@@ -23,8 +23,7 @@ def main(
     add_version_plot.main(y_fix=.999)
 
     # Obtain plotting parameters and data.
-    x_min, x_max, y_min, y_max = prep_plots.frame_max_min(
-        cld_c['x'], cld_c['y'])
+    x_min, x_max, y_min, y_max = prep_plots.frame_max_min(cld['x'], cld['y'])
     x_zmin, x_zmax, y_zmin, y_zmax = prep_plots.frame_zoomed(
         x_min, x_max, y_min, y_max, kde_cent, clust_rad)
     coord, x_name, y_name = "deg", "ra", "dec"
@@ -32,7 +31,7 @@ def main(
         cl_reg_fit, cl_reg_no_fit)
     chart_fit_inv, chart_no_fit_inv, out_clust_rad =\
         prep_plots.da_find_chart(
-            kde_cent, clust_rad, stars_out_c, x_zmin, x_zmax, y_zmin,
+            kde_cent, clust_rad, stars_out, x_zmin, x_zmax, y_zmin,
             y_zmax, cl_reg_fit, cl_reg_no_fit)
 
     # Decontamination algorithm plots.
@@ -50,54 +49,49 @@ def main(
     for n, args in enumerate(arglist):
         mp_decont_photom.plot(n, *args)
 
-    # Plot all 2D combinations of magnitudes and colors.
-    mags_c, mags_i, cols_c, cols_i, colors_c, colors_i =\
-        prep_plots.complSeparate(
-            cl_region_i, memb_probs_cl_region_i, memb_prob_avrg_sort)
-    mags_all = mags_c + mags_i
+    # # Plot all 2D combinations of magnitudes and colors.
+    membs_sort = sorted(memb_prob_avrg_sort, key=lambda item: (item[-1]))
+    mags = list(zip(*list(zip(*membs_sort))[3]))
+    cols = list(zip(*list(zip(*membs_sort))[5]))
+    probs = list(zip(*membs_sort))[-1]
     j_gs = 0
     all_colorbars = []
-    for i, col_c in enumerate(cols_c):
-        col_i = cols_i[i]
-        cols_all = list(col_c) + list(col_i)
-
+    # Mag vs colors (except the 1st)
+    for i, col in enumerate(cols[1:], 1):
         x_ax, y_ax = prep_plots.ax_names(
             pd['colors'][i], pd['filters'][0], 'mag')
         x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd =\
-            prep_plots.diag_limits('mag', cols_all, mags_all)
-        cl_c_sz_pt = prep_plots.phot_diag_st_size(mags_c)
-        cl_i_sz_pt = prep_plots.phot_diag_st_size(mags_i)
+            prep_plots.diag_limits('mag', col, mags)
+        cl_c_sz_pt = prep_plots.phot_diag_st_size(mags)
 
         # Color indexes for the 'local_cell_clean' edges
         c1, c2 = i + 1, 0
         plot_colorbar, sca, trans, v_min_mp, v_max_mp =\
             mp_decont_photom.pl_mps_incomp_diags(
                 gs, fig, pd['plot_style'], x_min_cmd, x_max_cmd, y_min_cmd,
-                y_max_cmd, x_ax, y_ax, col_c, mags_c, colors_c, col_i,
-                mags_i, colors_i, cl_c_sz_pt, cl_i_sz_pt,
+                y_max_cmd, x_ax, y_ax, col, mags, probs, cl_c_sz_pt,
                 pd['fld_clean_mode'], local_rm_edges, c1, c2, j_gs)
         all_colorbars.append((
             plot_colorbar, sca, trans, v_min_mp, v_max_mp))
         j_gs += 1
 
-    c_combs = list(itertools.combinations(range(len(cols_c)), 2))
+    # Color combinations
+    c_combs = list(itertools.combinations(range(len(cols)), 2))
     for i, j in c_combs:
-        cols0_all = list(cols_c[i]) + list(cols_i[i])
-        cols1_all = list(cols_c[j]) + list(cols_i[j])
+        cols0_all = list(cols[i])
+        cols1_all = list(cols[j])
         x_max_cmd, x_min_cmd, y_min_cmd, y_max_cmd =\
             prep_plots.diag_limits('col', cols0_all, cols1_all)
         x_ax, y_ax = prep_plots.ax_names(
             pd['colors'][i], pd['colors'][j], 'col')
-        cl_c_sz_pt = prep_plots.phot_diag_st_size(cols_c[i])
-        cl_i_sz_pt = prep_plots.phot_diag_st_size(cols_i[i])
+        cl_sz_pt = prep_plots.phot_diag_st_size(cols[i])
 
         # Color indexes for the 'local_cell_clean' edges
         c1, c2 = i + 1, j + 1
         plot_colorbar, sca, trans, v_min_mp, v_max_mp =\
             mp_decont_photom.pl_mps_incomp_diags(
                 gs, fig, pd['plot_style'], x_min_cmd, x_max_cmd, y_min_cmd,
-                y_max_cmd, x_ax, y_ax, cols_c[i], cols_c[j], colors_c,
-                cols_i[i], cols_i[j], colors_i, cl_c_sz_pt, cl_i_sz_pt,
+                y_max_cmd, x_ax, y_ax, cols[i], cols[j], probs, cl_sz_pt,
                 pd['fld_clean_mode'], local_rm_edges, c1, c2, j_gs)
         all_colorbars.append((
             plot_colorbar, sca, trans, v_min_mp, v_max_mp))

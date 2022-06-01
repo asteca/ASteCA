@@ -2,28 +2,18 @@
 import numpy as np
 import warnings
 import time as t
-from .. import update_progress
-from ..synth_clust import synth_cluster
-from . import likelihood
-from .bf_common import initPop, varPars, rangeCheck, fillParams
+from .bf_common import getSynthClust, initPop, rangeCheck
 from .ptemcee import sampler
+from . import likelihood
+from .. import update_progress
 
 
 def main(
-    completeness, err_lst, em_float, max_mag_syn, obs_clust, ext_coefs,
-    binar_flag, mean_bin_mr, N_fc, m_ini_idx, theor_tracks,
-    err_norm_rand, binar_probs, ext_unif_rand, fundam_params, lkl_method, R_V,
-    pt_ntemps, pt_adapt, pt_tmax, priors_mcee, nsteps_mcee, nwalkers_mcee,
-        mins_max, st_dist_mass, **kwargs):
+    lkl_method, pt_ntemps, pt_adapt, pt_tmax, nsteps_mcee, nwalkers_mcee,
+    mins_max, priors_mcee, fundam_params, obs_clust, varIdxs, ndim, ranges,
+        synthcl_args):
     """
     """
-
-    varIdxs, ndim, ranges = varPars(fundam_params)
-    # Pack synthetic cluster arguments.
-    synthcl_args = [
-        completeness, err_lst, em_float, max_mag_syn, ext_coefs, binar_flag,
-        mean_bin_mr, N_fc, m_ini_idx, st_dist_mass, theor_tracks,
-        err_norm_rand, binar_probs, ext_unif_rand, R_V]
 
     if pt_tmax in ('n', 'none', 'None'):
         Tmax = None
@@ -43,7 +33,7 @@ def main(
     # Define Parallel tempered sampler
     ptsampler = sampler.Sampler(
         nwalkers_mcee, ndim, loglkl, logp,
-        loglargs=[fundam_params, lkl_method, obs_clust, ranges, varIdxs,
+        loglargs=[lkl_method, obs_clust, ranges, varIdxs,
                   priors_mcee, synthcl_args], Tmax=Tmax, ntemps=pt_ntemps)
 
     ntemps = ptsampler.ntemps
@@ -56,7 +46,7 @@ def main(
     # fractions.
     afs, tswaps = [], []
     # Store for Lkl values for plotting.
-    prob_mean, map_lkl, map_sol_old = [], [], [[], -np.inf]
+    lkl_mean_steps, lkl_steps = [], []
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
@@ -93,14 +83,9 @@ def main(
             afs.append(np.mean(ptsampler.acceptance_fraction, axis=1))
 
             # Store MAP solution in this iteration.
-            prob_mean.append(np.mean(lnprob[0]))
+            lkl_mean_steps.append(np.mean(lnprob[0]))
             idx_best = np.argmax(lnprob[0])
-            # Update if a new optimal solution was found.
-            if lnprob[0][idx_best] > map_sol_old[1]:
-                map_sol_old = [
-                    fillParams(fundam_params, varIdxs, pos[0][idx_best]),
-                    lnprob[0][idx_best]]
-            map_lkl.append(map_sol_old[1])
+            lkl_steps.append(lnprob[0][idx_best])
 
             # Stop when available time is consumed.
             if elapsed >= available_secs:
@@ -117,9 +102,6 @@ def main(
     # Betas history
     betas_pt = ptsampler.beta_history[:, (N_steps_store - 1)::N_steps_store]
 
-    # Final MAP fit.
-    map_sol, map_lkl_final = map_sol_old
-
     # # This number should be between approximately 0.25 and 0.5 if everything
     # # went as planned.
     # m_accpt_fr = np.mean(ptsampler.acceptance_fraction[0])
@@ -132,9 +114,9 @@ def main(
     cold_chain = ptsampler.chain[0, :, :i, :].transpose(1, 0, 2)
 
     isoch_fit_params = {
-        'varIdxs': varIdxs, 'ndim': ndim, 'Tmax': str(Tmax),
-        'map_sol': map_sol, 'map_lkl': map_lkl, 'map_lkl_final': map_lkl_final,
-        'prob_mean': prob_mean, 'bf_elapsed': elapsed, 'maf_allT': maf_allT,
+        'Tmax': str(Tmax), 'lkl_steps': lkl_steps,
+        'lkl_mean_steps': lkl_mean_steps,
+        'bf_elapsed': elapsed, 'maf_allT': maf_allT,
         'tswaps_afs': tswaps_afs, 'betas_pt': betas_pt, 'N_steps': N_steps,
         'cold_chain': cold_chain
     }
@@ -143,8 +125,7 @@ def main(
 
 
 def loglkl(
-    model, fundam_params, lkl_method, obs_clust, ranges, varIdxs, priors,
-        synthcl_args):
+        model, lkl_method, obs_clust, ranges, varIdxs, priors, synthcl_args):
     """
     """
     rangeFlag = rangeCheck(model, ranges, varIdxs)
@@ -152,8 +133,7 @@ def loglkl(
     logpost = -1e9
     if rangeFlag:
         # Generate synthetic cluster.
-        synth_clust = synth_cluster.main(
-            fundam_params, varIdxs, model, *synthcl_args)
+        synth_clust = getSynthClust(model, True, synthcl_args)[0]
 
         # Call likelihood function for this model.
         lkl = likelihood.main(lkl_method, synth_clust, obs_clust)
@@ -164,9 +144,7 @@ def loglkl(
                 log_p += np.log(1 / pr[2]) - .5 * np.square(
                     (model[i] - pr[1]) / pr[2])
 
-        # The negative likelihood is returned since Dolphin requires a
-        # minimization of the PLR. Here we are maximizing, hence the minus.
-        logpost = log_p + (-lkl)
+        logpost = log_p + lkl
 
     return logpost
 

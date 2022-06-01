@@ -4,7 +4,7 @@ from . import spiral as sp
 from . import field_manual_histo
 
 
-def main(i_c, clp, fregs_method, **kwargs):
+def main(clp, fregs_method, **kwargs):
     """
     Define empty region around the cluster via a spiral centered on it
     and of area a bit larger than that defined by the cluster's radius.
@@ -22,33 +22,33 @@ def main(i_c, clp, fregs_method, **kwargs):
     # means that the cluster is either too large or the frame too small.
     flag_no_fl_regs = False
     if f_regs_max < 1:
-        print("    WARNING: cluster region is too large\n"
-              "    No field regions available")
+        print("  WARNING: cluster region is too large. No field"
+              " regions available")
         flag_no_fl_regs = True
     else:
         # If the number of field regions defined is larger than the maximum
         # allowed, use the maximum.
         if fregs_method == 'a':
             f_regions = f_regs_max
-            print("  Using maximum number of field regions ({})".format(
+            print("Using maximum number of field regions ({})".format(
                 f_regions))
         elif fregs_method > f_regs_max:
             f_regions = f_regs_max
-            print(("    WARNING: Number of FR defined ({}) is larger than\n"
-                   "    the maximum allowed ({}). Using max number").format(
+            print(("  WARNING: Number of FR defined ({}) is larger than\n"
+                   "  the maximum allowed ({}). Using max number").format(
                 fregs_method, f_regs_max))
         elif fregs_method == 0:
             f_regions = f_regs_max
-            print(("    WARNING: Number of FR ({}) is zero.\n"
-                   "    No field region will be defined").format(fregs_method))
+            print(("  WARNING: Number of FR ({}) is zero.\n"
+                   "  No field region will be defined").format(fregs_method))
             flag_no_fl_regs = True
         else:
-            print("  Using defined number of field regions ({})".format(
+            print("Using defined number of field regions ({})".format(
                 fregs_method))
             f_regions = fregs_method
 
     # Obtain field regions only if it is possible.
-    field_regions, field_regions_rjct = [], []
+    field_regions = []
     if flag_no_fl_regs is False:
 
         # List that contains the spiral as a list of x,y coordinates (also
@@ -66,26 +66,25 @@ def main(i_c, clp, fregs_method, **kwargs):
 
         # Process *accepted* stars by the errors function.
         field_regions = fregsDef(
-            clp, clp['stars_out_' + i_c[0]], f_regions, spiral, sp_indx,
-            num_bins_area)
+            clp, clp['stars_out'], f_regions, spiral, sp_indx, num_bins_area)
         field_regions = fregsDel(field_regions)
 
         # If after removing the empty regions no regions are left, raise the
         # flag.
         if not field_regions:
             flag_no_fl_regs = True
-            print('    WARNING: no field regions left after the removal of\n'
-                  + '    those containing less than 4 stars.')
+            print('  WARNING: no field regions left after the removal of\n'
+                  + '  those containing less than 4 stars.')
 
-        # Process *rejected* stars by the errors function.
-        field_regions_rjct = fregsDef(
-            clp, clp['stars_out_rjct_' + i_c[0]], f_regions, spiral, sp_indx,
-            num_bins_area)
-        # field_regions_rjct = fregsDel(field_regions_rjct, prt=False)
+        # DEPRECATED 23/03/22
+        # # Process *rejected* stars by the errors function.
+        # field_regions_rjct = fregsDef(
+        #     clp, clp['stars_out_rjct_' + i_c[0]], f_regions, spiral, sp_indx,
+        #     num_bins_area)
+        # # field_regions_rjct = fregsDel(field_regions_rjct, prt=False)
 
-    clp['flag_no_fl_regs_' + i_c[0]], clp['field_regions_' + i_c[0]],\
-        clp['field_regions_rjct_' + i_c[0]] = flag_no_fl_regs, field_regions,\
-        field_regions_rjct
+    clp['flag_no_fl_regs'], clp['field_regions'] =\
+        flag_no_fl_regs, field_regions,
 
     return clp
 

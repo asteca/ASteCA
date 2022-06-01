@@ -1,6 +1,6 @@
 
 import numpy as np
-from scipy import stats
+from ..synth_clust import synth_cluster
 from ..aux_funcs import kde1D, reject_outliers
 # import warnings
 # from scipy.optimize import differential_evolution as DE
@@ -27,6 +27,16 @@ def varPars(fundam_params):
     return varIdxs, ndim, np.array(ranges)
 
 
+def getSynthClust(model, transpose_flag, syntClustArgs):
+    """
+    Generate synthetic cluster given by 'model'.
+
+    transpose_flag=False : returns the non-reduced, non-transposed array
+    """
+
+    return synth_cluster.main(model, transpose_flag, *syntClustArgs)
+
+
 def fillParams(fundam_params, varIdxs, model):
     """
     Fills the places in 'model' of the parameters that were not fitted, with
@@ -44,24 +54,6 @@ def fillParams(fundam_params, varIdxs, model):
             j += 1
 
     return model_filled
-
-
-#  DEPRECATED 02-10-2019
-# def closeSol(fundam_params, model, pushidxs):
-#     """
-#     Find the closest value in the parameters list for the discrete parameters
-#     metallicity, age, and mass.
-#     """
-#     model_proper = []
-#     for i, par in enumerate(fundam_params):
-#         # If it is the parameter metallicity, age or mass.
-#         if i in pushidxs:
-#             # Select the closest value in the array of allowed values.
-#             model_proper.append(min(par, key=lambda x: abs(x - model[i])))
-#         else:
-#             model_proper.append(model[i])
-
-#     return model_proper
 
 
 def initPop(
@@ -121,34 +113,6 @@ def random_population(fundam_params, varIdxs, n_ran):
     return np.array(p_lst).T
 
 
-#  DEPRECATED 24-09-2019
-# def discreteParams(fundam_params, varIdxs, chains_nruns, pushidxs):
-#     """
-#     Push values in each chain for each discrete parameter in the 'pushidxs'
-#     list to the closest grid value.
-
-#     chains_nruns.shape: (runs, nwalkers, ndim)
-#     """
-#     params, j = [], 0
-#     for i, par in enumerate(fundam_params):
-#         p = np.array(par)
-#         # If this parameter is one of the 'free' parameters.
-#         if i in varIdxs:
-#             # If it is the parameter metallicity, age or mass.
-#             if i in pushidxs:
-#                 pc = chains_nruns.T[j]
-#                 chains = []
-#                 for c in pc:
-#                     chains.append(
-#                         p[abs(c[None, :] - p[:, None]).argmin(axis=0)])
-#                 params.append(chains)
-#             else:
-#                 params.append(chains_nruns.T[j])
-#             j += 1
-
-#     return np.array(params).T
-
-
 def rangeCheck(model, ranges, varIdxs):
     """
     Check that all the model values are within the given ranges.
@@ -160,20 +124,21 @@ def rangeCheck(model, ranges, varIdxs):
     return False
 
 
-def r2Dist(fundam_params, varIdxs, params_trace):
-    """
-    R^2 for normal distribution.
-    """
-    param_r2 = []
-    for i, _ in enumerate(fundam_params):
-        if i in varIdxs:
-            c_model = varIdxs.index(i)
-            par = params_trace[c_model]
-            param_r2.append(stats.probplot(par)[1][-1] ** 2)
-        else:
-            param_r2.append(np.nan)
+# DEPRECATED 02/04/22
+# def r2Dist(fundam_params, varIdxs, params_trace):
+#     """
+#     R^2 for normal distribution.
+#     """
+#     param_r2 = []
+#     for i, _ in enumerate(fundam_params):
+#         if i in varIdxs:
+#             c_model = varIdxs.index(i)
+#             par = params_trace[c_model]
+#             param_r2.append(stats.probplot(par)[1][-1] ** 2)
+#         else:
+#             param_r2.append(np.nan)
 
-    return param_r2
+#     return param_r2
 
 
 def modeKDE(fundam_params, varIdxs, mcmc_trace):
@@ -221,3 +186,41 @@ def thinChain(mcmc_trace, acorr_t):
     """
     """
     return mcmc_trace[:, ::int(np.mean(acorr_t))]
+
+
+def ranModels(fundam_params, D3_sol, isoch_fit_params, isoch_fit_errors,
+              N_models=1000):
+    """
+    Generate the requested models via sampling a Gaussian centered on the
+    selected solution, with standard deviation given by the attached
+    uncertainty.
+
+    N_models: number of models to generate (HARDCODED)
+    """
+    # Use the selected solution values for all the parameters.
+    model = isoch_fit_params[D3_sol + '_sol']
+
+    # Extract standard deviations.
+    p_vals, nancount = [], 0
+    for i, p in enumerate(model):
+        std = isoch_fit_errors[i][-1]
+        if not np.isnan(std):
+            p_vals.append([
+                p, std, min(fundam_params[i]), max(fundam_params[i])])
+        else:
+            # The parameter has no uncertainty attached
+            nancount += 1
+
+    # Check if at least one parameter has an uncertainty attached.
+    if nancount < 7:  # HARDCODED
+        # Generate 'N_models' random models.
+        models = []
+        for par in p_vals:
+            model = np.random.normal(par[0], par[1], N_models)
+            model = np.clip(model, a_min=par[2], a_max=par[3])
+            models.append(model)
+        models = np.array(models).T
+    else:
+        models = np.array([])
+
+    return models

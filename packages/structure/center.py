@@ -2,18 +2,17 @@
 import numpy as np
 from scipy import stats
 from .xy_density import cent_bin as center_bin
-from ..inp.get_data import coordsProject
 
 
-def main(cld_i, clp, project, cent_method, **kwargs):
+def main(cld, clp, cent_method, **kwargs):
     """
     Obtains the center of the putative cluster.
     """
 
     # Restrict the KDE to a smaller area (to improve performance).
     radius = 0.25 * min(
-        np.nanmax(cld_i['x']) - np.nanmin(cld_i['x']),
-        np.nanmax(cld_i['y']) - np.nanmin(cld_i['y']))
+        np.nanmax(cld['x']) - np.nanmin(cld['x']),
+        np.nanmax(cld['y']) - np.nanmin(cld['y']))
 
     if cent_method[0] == 'a':
         # Obtain center coordinates as the maximum KDE value. Use the
@@ -21,7 +20,7 @@ def main(cld_i, clp, project, cent_method, **kwargs):
         # bandwidth.
         cent = clp['kde_approx_cent']
         kde_cent, kde_plot = kde_center_zoom(
-            cld_i['x'], cld_i['y'], cent, radius)
+            cld['x'], cld['y'], cent, radius)
 
         # Find bin where the center xy coordinates are located.
         bin_cent = center_bin(clp['xedges'], clp['yedges'], kde_cent)
@@ -30,13 +29,10 @@ def main(cld_i, clp, project, cent_method, **kwargs):
             clp['bw_list'][1], kde_cent[0], kde_cent[1]))
 
     else:
-        # De-project center coordinates if needed.
-        x0, y0, _, _ = coordsProject(
-            cent_method[0], cent_method[1], project,
-            clp['x_offset'], clp['y_offset'])
+        x0, y0 = cent_method[0], cent_method[1]
 
         # Obtain KDE plot.
-        _, kde_plot = kde_center_zoom(cld_i['x'], cld_i['y'], (x0, y0), radius)
+        _, kde_plot = kde_center_zoom(cld['x'], cld['y'], (x0, y0), radius)
 
         kde_cent = (x0, y0)
         print("Manual center fixed: ({:g}, {:g}) deg".format(*cent_method))
@@ -77,7 +73,12 @@ def kde_center_zoom(x_data, y_data, kde_approx_cent, radius):
         raise ValueError(
             "ERROR: cluster region is empty and no center value\n"
             "could be estimated. Check that x,y columns are correct\n"
-            "in 'params_input.dat' file.")
+            "in 'asteca.ini' file.")
+
+    # Use a maximum of 100000 stars HARDCODED
+    if values.shape[-1] > 100000:
+        idx = np.random.choice(values.shape[-1], 100000, replace=False)
+        values = values[:, idx]
 
     # Obtain Gaussian KDE.
     kernel = stats.gaussian_kde(values)

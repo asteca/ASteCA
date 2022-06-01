@@ -30,13 +30,13 @@ def main(npd, pd, clp):
 
     # Parallax data.
     plx_flrg, mag_flrg = prep_plots.plxPlot(
-        clp['flag_no_fl_regs_i'], clp['field_regions_i'])
+        clp['flag_no_fl_regs'], clp['field_regions'])
     plx_cl_kde_x, plx_cl_kde = aux_funcs.kde1D(clp['plx_clrg'])
 
     arglist = [
         # plx_histo
         [gs, pd['plot_style'], pd['plx_offset'], clp['plx_clrg'], plx_cl_kde_x,
-         plx_cl_kde, plx_flrg, clp['flag_no_fl_regs_i']],
+         plx_cl_kde, plx_flrg, clp['flag_no_fl_regs']],
         # plx_chart
         [gs, pd['plot_style'], x_name, y_name, coord, clp['cl_reg_fit'],
          clp['plx_Bys']],
@@ -45,7 +45,7 @@ def main(npd, pd, clp):
          clp['plx_clp'], clp['e_plx_clp'], plx_flrg, mag_flrg,
          clp['plx_Bys'], clp['plx_wa']],
         # plx_bys_params
-        [gs, clp['plx_bayes_flag_clp'], clp['plx_samples'],
+        [gs, clp['plx_bayes_flag_clp'], pd['plx_burn'], clp['plx_samples'],
          clp['plx_Bayes_kde'], clp['plx_Bys'], clp['plx_tau_autocorr'],
          clp['mean_afs'], clp['plx_ess']]
     ]

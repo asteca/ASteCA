@@ -1,62 +1,43 @@
 
 import numpy as np
-from . import synth_cluster
+from ..best_fit.bf_common import getSynthClust
 from . add_errors import getSigmas
 
 
-def main(clp, pd):
+def main(clp, pd, td):
     """
+    Generate the arrays 'synth_cl_phot', 'synth_cl_sigma', 'binar_idx'.
+
+    synth_cl_phot  : a sample of the "best" synthetic cluster fit. Used for
+    plotting and storing to file.
+    synth_cl_sigma : uncertainties attached to the above sample. Used for
+    the output file
+    binar_idx      : indexes of binary systems. Used for plotting.
     """
-    if pd['best_fit_algor'] != 'n':
-        # Use the selected solution values for all the parameters.
-        model = clp['isoch_fit_params'][pd['D3_sol'] + '_sol']
 
-        # Pack common args.
-        clp['syntClustArgs'] = (
-            pd['fundam_params'], clp['isoch_fit_params']['varIdxs'],
-            clp['completeness'], clp['err_lst'], clp['em_float'],
-            clp['max_mag_syn'], pd['ext_coefs'], pd['binar_flag'],
-            pd['mean_bin_mr'], pd['N_fc'], pd['m_ini_idx'],
-            pd['st_dist_mass'], pd['theor_tracks'], pd['err_norm_rand'],
-            pd['binar_probs'], pd['ext_unif_rand'], pd['R_V'])
+    if pd['best_fit_algor'] == 'n':
+        return clp
 
-        # Generate isochrone, synthetic cluster (with uncertainties), and sigma
-        # values for the "best" fitted parameters.
-        # Model with the "best" fitted parameters.
-        model_var = np.array(model)[clp['isoch_fit_params']['varIdxs']]
-        # shape: (N_dim, N_stars)
-        synth_clust = setSynthClust(model_var, *clp['syntClustArgs'])
-        # Get uncertainties
-        sigma = []
-        for i, popt_mc in enumerate(clp['err_lst']):
-            sigma.append(getSigmas(synth_clust[0], popt_mc))
+    # Use the selected solution values for all the parameters.
+    model = clp['isoch_fit_params'][pd['D3_sol'] + '_sol']
 
-        # Save for plotting and storing.
-        clp['synth_cl_phot'], clp['synth_cl_sigma'] = synth_clust, sigma
+    # Generate isochrone, synthetic cluster (with uncertainties), and sigma
+    # values for the "best" fitted parameters.
+    # Model with the "best" fitted parameters.
+    model_var = np.array(model)[clp['varIdxs']]
+    # shape: (N_dim, N_stars)
+    synth_clust = getSynthClust(model_var, False, clp['syntClustArgs'])[0]
+    # Get uncertainties
+    sigma = []
+    for i, popt_mc in enumerate(clp['err_lst']):
+        sigma.append(getSigmas(synth_clust[0], popt_mc))
 
-        # Mask that points to *binary* systems
-        if pd['binar_flag']:
-            clp['binar_idx'] = ~(synth_clust[-1] == -99.)
-        else:
-            clp['binar_idx'] = np.array([
-                False for _ in range(synth_clust.shape[-1])])
+    # Save for plotting and storing.
+    clp['synth_cl_phot'], clp['synth_cl_sigma'] = synth_clust, sigma
+
+    # Mask that points to *binary* systems. 'synth_clust[-1]' is the
+    # mass of binary systems, where a value of 0 indicates a single
+    # system.
+    clp['binar_idx'] = synth_clust[-1] > 0.
 
     return clp
-
-
-def setSynthClust(
-    model, fundam_params, varIdxs, completeness, err_lst,
-    em_float, max_mag_syn, ext_coefs, binar_flag, mean_bin_mr, N_fc, m_ini_idx,
-    st_dist_mass, theor_tracks, err_norm_rand, binar_probs,
-        ext_unif_rand, R_V):
-    """
-    Generate synthetic cluster given by 'model'.
-    """
-    # This returns the non-reduced, non-transposed array
-    transpose_flag = False
-
-    return synth_cluster.main(
-        fundam_params, varIdxs, model, completeness, err_lst, em_float,
-        max_mag_syn, ext_coefs, binar_flag, mean_bin_mr, N_fc, m_ini_idx,
-        st_dist_mass, theor_tracks, err_norm_rand, binar_probs,
-        ext_unif_rand, R_V, transpose_flag)

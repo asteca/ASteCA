@@ -11,7 +11,7 @@ def check(mypath, pd):
     """
 
     # If best fit method is set to run.
-    pd['fundam_params'] = []
+    pd['fundam_params_all'] = []
     if pd['best_fit_algor'] != 'n':
 
         # Check the random seed
@@ -23,32 +23,78 @@ def check(mypath, pd):
             except ValueError:
                 raise ValueError("random seed is not a valid integer")
 
-        checkParamRanges(pd)
+        pd = getParamVals(pd)
 
         pd = checkEvolTracks(mypath, pd)
 
         checkSynthClustParams(pd)
 
-        pd = getParamVals(pd)
-
     return pd
 
 
-def checkParamRanges(pd):
+def getParamVals(pd):
     """
+    Generate the proper lists with the parameter ranges and their priors
     """
-    # Check that no parameter range is empty.
-    p_names = [
-        'metallicity', 'age', 'extinction', 'distance', 'mass', 'binarity']
-    for i, p in enumerate(pd['par_ranges']):
-        if not p:
-            raise ValueError("Range defined for '{}' parameter is"
-                             " empty.".format(p_names[i]))
-    m_range = pd['par_ranges'][4]
-    if m_range[0] == 0.:
-        print("  WARNING: minimum total mass is zero in params_input"
-              " file.\n  Changed minimum mass to 10.\n")
-        m_range[0] = 10.
+    fundam_params_all = {}
+    for cl_pars in pd['par_ranges']:
+        par_ranges = cl_pars[1:]
+
+        tlst = []
+        for idx, param in enumerate(par_ranges):
+            # If only one value is defined.
+            if len(param) == 1:
+                if idx not in (0, 1):
+                    tlst.append([float(param[0])])
+                else:
+                    tlst.append([param[0]])
+            else:
+                # Store range of values.
+                if idx not in (0, 1):
+                    tlst.append(list(map(float, param.split('/'))))
+                else:
+                    tlst.append(param.split('/'))
+
+        # Check for min/max presence in z,log(age) parameters
+        for idx in (0, 1):
+            p_rng = tlst[idx]
+            if len(p_rng) == 1:
+                try:
+                    p = float(p_rng[0])
+                except ValueError:
+                    p = p_rng[0]
+                    if p not in ('min', 'max'):
+                        raise ValueError(
+                            "R5: unrecognized string '{}'".format(p))
+                tlst[idx] = [p]
+            else:
+                try:
+                    pmin = float(p_rng[0])
+                except ValueError:
+                    pmin = p_rng[0]
+                    if pmin != 'min':
+                        raise ValueError(
+                            ("R5: unrecognized string '{}'.\nOnly 'min' "
+                             + "string is accepted as the lower "
+                             + "range.").format(pmin))
+                try:
+                    pmax = float(p_rng[1])
+                except ValueError:
+                    pmax = p_rng[1]
+                    if pmax != 'max':
+                        raise ValueError(
+                            ("R5: unrecognized string '{}'.\nOnly 'max' "
+                             + "string is accepted as the upper "
+                             + "range.").format(pmax))
+                tlst[idx] = [pmin, pmax]
+
+        # HARDCODED NUMBER OF PARAMETERS EXPECTED
+        if len(tlst) != 7:
+            raise ValueError("Missing parameters in line 'R5'")
+        fundam_params_all[cl_pars[0]] = tlst
+
+    pd['fundam_params_all'] = fundam_params_all
+    return pd
 
 
 def checkEvolTracks(mypath, pd):
@@ -142,76 +188,53 @@ def checkSynthClustParams(pd):
     if pd['IMF_name'] not in pd['imf_funcs']:
         raise ValueError("Name of IMF ({}) is incorrect.".format(
             pd['IMF_name']))
+    if pd['Max_mass'] < 100.:
+        raise ValueError("Minimum 'Max_mass' must be >= 100")
 
-    if not 0. <= pd['min_bmass_ratio'] <= 1.:
+    if pd['DR_dist'] not in ('uniform', 'normal'):
+        raise ValueError("'DR_dist' parameter ('{}') is not recognized".format(
+            pd['DR_dist']))
+    if pd['DR_percentage'] <= 0. or pd['DR_percentage'] > 1.:
         raise ValueError(
-            "Binary mass ratio set ('{}') is out of\nboundaries. Please select"
-            " a value in the range [0., 1.]".format(pd['min_bmass_ratio']))
+            "'DR_percentage' parameter ('{}') is out of\nboundaries".format(
+                pd['DR_percentage']))
 
-    # Check R_V defined.
-    if pd['R_V'] <= 0.:
+    if pd['alpha'] < 0.:
         raise ValueError(
-            "Ratio of total to selective absorption\nR_V ({}) must be positive"
-            " defined.".format(pd['R_V']))
+            "'alpha' parameter ('{}') is out of\nboundaries. Select"
+            " a value <=0".format(pd['alpha']))
 
-    # Check maximum magnitude limit defined.
-    if isinstance(pd['max_mag'], str):
-        if pd['max_mag'] != 'max':
-            raise ValueError("Maximum magnitude value selected ({}) is"
-                             " not valid.".format(pd['max_mag']))
+    try:
+        gamma = float(pd['gamma'])
+        if gamma <= -1.:
+            raise ValueError(
+                "'gamma' parameter ('{}') is out of\nboundaries. Select"
+                " a value > -1".format(pd['gamma']))
+    except ValueError:
+        if pd['gamma'] != 'D&K':
+            raise ValueError(
+                "Unrecognized 'gamma' value ('{}')".format(pd['gamma']))
 
+    pars = ('Beta', 'Av', 'DR', 'Rv', 'd_m')
+    for i, (key, vals) in enumerate(pd['fundam_params_all'].items()):
+        if i > 1:
+            if vals[i][-1] < vals[i][0]:
+                raise ValueError((
+                    "{}: Maximum value must be greater than minimum").format(
+                    pars[i - 2]))
 
-def getParamVals(pd):
-    """
-    Properly format parameter ranges to be used by the selected best fit
-    method.
-    """
-
-    fundam_params = []
-    for i, param in enumerate(pd['par_ranges']):
-        # If only one value is defined.
-        if len(param) == 1:
-            fundam_params.append([param[0]])
-        # If min == max store single value in array.
-        elif param[0] == param[1]:
-            fundam_params.append([param[0]])
-        else:
-            # Store range of values.
-            fundam_params.append(param)
-
-    # Check for min/max presence in z,log(age) parameters
-    for idx in (0, 1):
-        p_rng = fundam_params[idx]
-        t = 'RZ' if idx == 0 else 'RA'
-        if len(p_rng) == 1:
-            try:
-                p = float(p_rng[0])
-            except ValueError:
-                p = p_rng[0]
-                if p not in ('min', 'max'):
-                    raise ValueError("'{}': unrecognized string '{}'".format(
-                        t, p))
-            fundam_params[idx] = [p]
-        else:
-            try:
-                pmin = float(p_rng[0])
-            except ValueError:
-                pmin = p_rng[0]
-                if pmin != 'min':
-                    raise ValueError(
-                        ("'{}': unrecognized string '{}'.\nOnly 'min' "
-                         + "string is accepted as the lower range.").format(
-                            t, pmin))
-            try:
-                pmax = float(p_rng[1])
-            except ValueError:
-                pmax = p_rng[1]
-                if pmax != 'max':
-                    raise ValueError(
-                        ("'{}': unrecognized string '{}'.\nOnly 'max' "
-                         + "string is accepted as the upper range.").format(
-                            t, pmax))
-            fundam_params[idx] = [pmin, pmax]
-
-    pd['fundam_params'] = fundam_params
-    return pd
+        # Check Beta
+        if vals[2][0] < 0.:
+            raise ValueError("Minimum Beta parameter is 0")
+        # Check E_BV
+        if vals[3][0] < 0.:
+            raise ValueError("Minimum visual absorption is 0")
+        # Check DR
+        if vals[4][0] < 0.:
+            raise ValueError("Minimum differential reddening is 0")
+        # Check R_V
+        if vals[5][0] <= 0.:
+            raise ValueError("Minimum Rv is 0")
+        # Check d_m
+        if vals[6][0] < 0.:
+            raise ValueError("Minimum distance modulus is 0")

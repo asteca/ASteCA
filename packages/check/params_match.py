@@ -15,7 +15,7 @@ def check(pd):
         if len(pd['colors']) > 2:
             raise ValueError("more than two colors defined.")
 
-        checkPtemcee(pd)
+        pd = checkPtemcee(pd)
         chechLkl(pd)
 
     return pd
@@ -32,11 +32,6 @@ def checkPtemcee(pd):
     if pd['nburn_mcee'] <= 0. or pd['nburn_mcee'] >= 1:
         raise ValueError("burn-in percentage must be in the range (0., 1.)")
 
-    for pr in pd['priors_mcee']:
-        if pr[0] not in pd['bayes_priors']:
-            raise ValueError("one of the selected priors ({}) is not"
-                             " allowed.".format(pr))
-
     if pd['pt_ntemps'] not in ('n', 'none', 'None'):
         if int(float(pd['pt_ntemps'])) < 1:
             raise ValueError("the minimum number of temperatures is 1.")
@@ -46,6 +41,28 @@ def checkPtemcee(pd):
     except ValueError:
         if pd['pt_tmax'] not in ('n', 'none', 'None', 'inf'):
             raise ValueError("'Tmax' parameter is not a valid string.")
+
+    priors_mcee_all = {}
+    for cl_pars in pd['priors_mcee_in']:
+        par_ranges = cl_pars[1:]
+
+        tlst = []
+        for idx, param in enumerate(par_ranges):
+            pr = param.split('/')
+            if pr[0] not in pd['bayes_priors']:
+                raise ValueError("one of the selected priors ({}) is not"
+                                 " allowed.".format(pr))
+            if pr[0] == 'u':
+                tlst.append(pr)
+            elif pr[0] == 'g':
+                tlst.append([pr[0], float(pr[1]), float(pr[2])])
+
+        if len(tlst) != 7:  # HARDCODED '7'
+            raise ValueError("Missing parameters in line 'B2'")
+        priors_mcee_all[cl_pars[0]] = tlst
+
+    pd['priors_mcee_all'] = priors_mcee_all
+    return pd
 
 
 def chechLkl(pd):
@@ -84,13 +101,11 @@ def chechLkl(pd):
     #     raise ValueError("the selected weight method '{}' for the 'Best"
     #              "\nfit' function does not match a valid input."
     #              .format(pd['lkl_weight']))
-
-    # Check mass range selected.
-    m_range = pd['par_ranges'][4]
-    if pd['lkl_method'] == 'tolstoy':
-        if len(m_range) > 1:
-            raise ValueError("'tolstoy' method was selected but more than"
-                             "\none initial mass value is set.")
+    # m_range = pd['par_ranges'][4]
+    # if pd['lkl_method'] == 'tolstoy':
+    #     if len(m_range) > 1:
+    #         raise ValueError("'tolstoy' method was selected but more than"
+    #                          "\none initial mass value is set.")
 
 
 # DEPRECATED May 2020

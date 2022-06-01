@@ -180,32 +180,11 @@ def hist2d(
     # ax.set_ylim(range[1])
 
 
-def pl_2_param_dens(_2_params, gs, min_max_p2, varIdxs, params_trace):
+def pl_2_param_dens(_, gs, labels, gspars, min_max_p2, varIdxs, params_trace):
     '''
     Parameter vs parameters density map.
     '''
-    plot_dict = {
-        'metal-age': [0, 2, 2, 4, 0, 1],
-        'metal-ext': [0, 2, 4, 6, 0, 2],
-        'metal-dist': [0, 2, 6, 8, 0, 3],
-        'metal-mass': [0, 2, 8, 10, 0, 4],
-        'metal-binar': [0, 2, 10, 12, 0, 5],
-        'age-ext': [2, 4, 4, 6, 1, 2],
-        'age-dist': [2, 4, 6, 8, 1, 3],
-        'age-mass': [2, 4, 8, 10, 1, 4],
-        'age-binar': [2, 4, 10, 12, 1, 5],
-        'ext-dist': [4, 6, 6, 8, 2, 3],
-        'ext-mass': [4, 6, 8, 10, 2, 4],
-        'ext-binar': [4, 6, 10, 12, 2, 5],
-        'dist-mass': [6, 8, 8, 10, 3, 4],
-        'dist-binar': [6, 8, 10, 12, 3, 5],
-        'mass-binar': [8, 10, 10, 12, 4, 5]
-    }
-
-    labels = ['$z$', '$log(age)$', '$E_{(B-V)}$', '$(m-M)_o$',
-              '$M\,(M_{{\odot}})$', '$b_{frac}$']
-
-    gs_x1, gs_x2, gs_y1, gs_y2, mx, my = plot_dict[_2_params]
+    gs_x1, gs_x2, gs_y1, gs_y2, mx, my = gspars
     x_label, y_label = labels[mx], labels[my]
 
     ax = plt.subplot(gs[gs_y1:gs_y2, gs_x1:gs_x2])
@@ -217,7 +196,7 @@ def pl_2_param_dens(_2_params, gs, min_max_p2, varIdxs, params_trace):
         plt.yticks(rotation=45)
     else:
         ax.tick_params(labelleft=False)
-    if gs_y2 == 12:
+    if gs_y2 == 7:
         plt.xlabel(x_label, fontsize=11)
         plt.xticks(rotation=45)
     else:
@@ -259,30 +238,33 @@ def pl_2_param_dens(_2_params, gs, min_max_p2, varIdxs, params_trace):
 
 
 def pl_param_pf(
-    par_name, gs, min_max_p, varIdxs, mean_sol, map_sol, median_sol, mode_sol,
-        param_r2, pardist_kde, model_done):
+    par_name, gs, labels, min_max_p, varIdxs, mean_sol, map_sol, median_sol,
+        mode_sol, pardist_kde, model_done):
     '''
     Parameter posterior plot.
     '''
+    # plot_dict = {
+    #     'metal': [0, 2, 0, 2, 0], 'age': [2, 4, 2, 4, 1],
+    #     'beta': [4, 6, 4, 6, 2], 'ext': [6, 8, 6, 8, 3],
+    #     'dr': [8, 10, 8, 10, 4], 'rv': [10, 12, 10, 12, 5],
+    #     'dist': [12, 14, 12, 14, 6]
+    # }
     plot_dict = {
-        'metal': [0, 2, 0, 2, 0], 'age': [2, 4, 2, 4, 1],
-        'ext': [4, 6, 4, 6, 2], 'dist': [6, 8, 6, 8, 3],
-        'mass': [8, 10, 8, 10, 4], 'binar': [10, 12, 10, 12, 5]
+        'metal': [0, 1, 0, 1, 0], 'age': [1, 2, 1, 2, 1],
+        'beta': [2, 3, 2, 3, 2], 'ext': [3, 4, 3, 4, 3],
+        'dr': [4, 5, 4, 5, 4], 'rv': [5, 6, 5, 6, 5],
+        'dist': [6, 7, 6, 7, 6]
     }
-
     gs_x1, gs_x2, gs_y1, gs_y2, cp = plot_dict[par_name]
 
-    labels = [r'$z$', r'$\log(age)$', r'$E_{{(B-V)}}$', r'$(m-M)_o$',
-              r'$M\,(M_{{\odot}})$', r'$b_{{frac}}$']
-    frm = ["{:.4f}", "{:.3f}", "{:.3f}", "{:.3f}", "{:.0f}", "{:.2f}"]
+    frm = [
+        "{:.4f}", "{:.3f}", "{:.3f}", "{:.3f}", "{:.3f}", "{:.3f}", "{:.2f}"]
 
     ld_p = labels[cp]
     p = frm[cp]
 
     ax = plt.subplot(gs[gs_y1:gs_y2, gs_x1:gs_x2])
-    plt.title(
-        ld_p + r"$\;[R^2\approx$" + "{:.2f}]".format(param_r2[cp]),
-        fontsize=11)
+    plt.title(ld_p, fontsize=11)
 
     # Set x axis limit.
     xp_min, xp_max = min_max_p[cp]
@@ -341,7 +323,7 @@ def pl_param_pf(
 
         cur_ylim = ax.get_ylim()
         ax.set_ylim([0, cur_ylim[1]])
-        plt.legend(fontsize='small')
+        plt.legend(fontsize='small', bbox_to_anchor=(1.05, .5))
 
 
 def plot(N, *args):

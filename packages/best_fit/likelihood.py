@@ -2,22 +2,7 @@
 import numpy as np
 from scipy.special import logsumexp, loggamma
 from scipy.stats import gaussian_kde, entropy
-
-# ############################################################
-# # Timer function: http://stackoverflow.com/a/21860100/1391441
-# from contextlib import contextmanager
-# import time
-
-
-# @contextmanager
-# def timeblock(label):
-#     start = time.clock()
-#     try:
-#         yield
-#     finally:
-#         end = time.clock()
-#         print ('{} elapsed: {}'.format(label, end - start))
-# ############################################################
+from .histodd import histogramdd
 
 
 def main(lkl_method, synth_clust, obs_clust):
@@ -25,10 +10,9 @@ def main(lkl_method, synth_clust, obs_clust):
     Match the synthetic cluster to the observed cluster.
     """
 
-    # If synthetic cluster is empty, assign a large likelihood value. This
-    # assumes *all* likelihoods here need minimizing.
+    # If synthetic cluster is empty, assign a small likelihood value.
     if not synth_clust.any():
-        return 1.e09
+        return -1.e09
 
     # Obtain the likelihood matching the synthetic and observed clusters.
     if lkl_method == 'tremmel':
@@ -51,8 +35,8 @@ def main(lkl_method, synth_clust, obs_clust):
 
 def tremmel(synth_clust, obs_clust):
     """
-    Poisson likelihood ratio as defined in Tremmel et al (2013), E1 10 with
-    v_{i,j}=1. This returns the negative log likelihood.
+    Poisson likelihood ratio as defined in Tremmel et al (2013), Eq 10 with
+    v_{i,j}=1. This returns the log likelihood.
 
     p(d|\theta) = \prod_i^N \frac{\Gamma(n_i+m_i+\frac{1}{2})}
         {2^{n_i+m_i+\frac{1}{2}} d_i!\Gamma(m_i+\frac{1}{2}))}
@@ -63,16 +47,16 @@ def tremmel(synth_clust, obs_clust):
 
     Minus logarithm:
 
-    -\log(p) = 0.693  (M+N+\frac{1}{2}) + \sum_i^N \log n_i! -
-        \sum_i^N \left[\log\Gamma(n_i+m_i+\frac{1}{2})-
+    \log(p) = \sum_i^N \left[\log\Gamma(n_i+m_i+\frac{1}{2})-
         \log \Gamma(m_i+\frac{1}{2}) \right]
+        - 0.693  (M+N+\frac{1}{2}) - \sum_i^N \log n_i!
 
-    -\log(p) = 0.693 (N+\frac{1}{2}) + \sum_i^N \log n_i! +
-        0.693\,M - SumLogGamma(n_i, m_i)
+    \log(p) = SumLogGamma(n_i, m_i) -0.693 (N+\frac{1}{2}) -
+        \sum_i^N \log n_i! - 0.693\,M
 
-    -\log(p) = f(n_i) + 0.693\,M - SumLogGamma(n_i, m_i)
+    \log(p) = f(n_i) + SumLogGamma(n_i, m_i) - 0.693\,M
 
-    -\log(p)\approx 0.693\,M - SumLogGamma(n_i, m_i)
+    \log(p)\approx SumLogGamma(n_i, m_i) - 0.693\,M
 
     """
 
@@ -81,19 +65,24 @@ def tremmel(synth_clust, obs_clust):
 
     # Histogram of the synthetic cluster, using the bin edges calculated
     # with the observed cluster.
-    syn_histo = np.histogramdd(synth_clust, bins=bin_edges)[0]
+
+    # TODO: testing this implementation of histodd. Related:
+    # #258, #515
+    # syn_histo = np.histogramdd(synth_clust, bins=bin_edges)[0]
+    syn_histo = histogramdd(synth_clust, bins=bin_edges)
+
     # Flatten N-dimensional histogram.
     syn_histo_f = syn_histo.ravel()
     # Remove all bins where n_i = 0 (no observed stars).
     syn_histo_f_z = syn_histo_f[cl_z_idx]
 
     SumLogGamma = np.sum(
-        loggamma(cl_histo_f_z + syn_histo_f_z + .5) -
-        loggamma(syn_histo_f_z + .5))
+        loggamma(cl_histo_f_z + syn_histo_f_z + .5)
+        - loggamma(syn_histo_f_z + .5))
 
     # M = synth_clust.shape[0]
     # ln(2) ~ 0.693
-    tremmel_lkl = 0.693 * synth_clust.shape[0] - SumLogGamma
+    tremmel_lkl = SumLogGamma - 0.693 * synth_clust.shape[0]
 
     return tremmel_lkl
 

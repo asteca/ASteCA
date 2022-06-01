@@ -1,31 +1,38 @@
 
+import numpy as np
 from ..inp import data_IO
-from astropy.table import Table
 
 
-def main(clp, npd, **kwargs):
+def main(clp, npd, id_ids, **kwargs):
     """
-    Create output data file with stars inside the cluster radius along with
-    their membership probabilities and 'clean region' selection identifier.
+    Create output data file with membership probabilities and selection
+    identifiers:
+
+    -1 means outside of the cluster region
+    0 means inside but not selected as member
+    1 means selected as member
     """
+
+    all_data = data_IO.dataRead(None, npd['data_file'], 'r')
+    if 'sel' in all_data.keys():
+        all_data.remove_column('sel')
+    if 'memb_probs' in all_data.keys():
+        all_data.remove_column('memb_probs')
+    all_data.add_column(-1, name='sel')
+    all_data.add_column(0., name='memb_probs')
+    IDs = list(all_data[id_ids])
 
     # Add ID associated to the use of the each star in the fundamental
-    # parameters estimation process (ie: after cleaning the cluster region).
-    data, idx = [], ['1', '0']
-    for i, reg in enumerate([clp['cl_reg_fit'], clp['cl_reg_no_fit']]):
+    # parameters estimation process and MPs.
+    for i, reg in enumerate([clp['cl_reg_no_fit'], clp['cl_reg_fit']]):
         for st in reg:
-            # Identify stars selected by the removal function.
-            data.append([st[0], st[9], idx[i]])
+            # st[9] == membership probability
+            try:
+                j = IDs.index(st[0])
+                all_data['sel'][j] = i
+                all_data['memb_probs'][j] = st[9]
+            except ValueError:
+                pass
 
-    # TODO: this block gets really slow for large clusters
-    # Add "incomplete" data in cluster region to file.
-    ids_data = list(zip(*data))[0]
-    for i, st in enumerate(clp['cl_region_i']):
-        if st[0] not in ids_data:
-            # Identify stars selected by the removal function.
-            data.append([
-                st[0], round(clp['memb_probs_cl_region_i'][i], 2), '-1'])
-
-    t = Table(list(zip(*data)), names=['ID', 'MP', 'sel'])
-    data_IO.dataSave(t, npd['memb_file_out'], 'w')
+    data_IO.dataSave(all_data, npd['memb_file_out'], 'w')
     print("Cluster region and MPs saved to file")

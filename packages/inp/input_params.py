@@ -3,7 +3,7 @@
 def main(pars_f_path):
     """
     This function reads the input data parameters stored in the
-    'params_input_XX.dat' file and returns a dictionary.
+    'asteca_XX.ini' file and returns a dictionary.
     """
 
     # Accept these variations of the 'true' flag.
@@ -12,7 +12,7 @@ def main(pars_f_path):
     # Read data from file.
     with open(pars_f_path, "r") as f_dat:
 
-        id_cols, manual_struct, trim_frame_range = [], [], []
+        id_cols, manual_struct, par_ranges, priors_mcee_in = [], [], [], []
         # Iterate through each line in the file.
         for ln, line in enumerate(f_dat):
 
@@ -20,24 +20,20 @@ def main(pars_f_path):
                 reader = line.split()
 
                 # Input data parameters.
-                if reader[0] == 'I1':
+                if reader[0] == 'I0':
+                    sep = reader[1]
+
+                elif reader[0] == 'I1':
                     id_ids = reader[1]
                     id_xdata = reader[2]
                     id_ydata = reader[3]
-                    project = True if reader[4] in true_lst else False
+                    xy_frame = reader[4]
                 elif reader[0] == 'I2':
                     id_mags = reader[1:]
                 elif reader[0] == 'I3':
                     id_cols.append(reader[1:])
                 elif reader[0] == 'I4':
                     id_kinem = reader[1:]
-
-                # Input data processing
-                elif reader[0] == 'I5':
-                    nanvals = [_.replace(',', '') for _ in reader[1:]]
-                elif reader[0] == 'I6':
-                    trim_frame_range.append([
-                        reader[1], list(map(float, reader[2:]))])
 
                 # Structure functions parameters.
                 elif reader[0] == 'S0':
@@ -49,12 +45,6 @@ def main(pars_f_path):
                     kp_nruns = int(reader[3])
                     kp_nburn = float(reader[4])
                     rt_max_f = float(reader[5])
-                elif reader[0] == 'S2':
-                    kp_emcee_moves = [_.strip() for _ in line[3:].split(';')]
-
-                # Data analysis functions parameters.
-                elif reader[0] == 'E0':
-                    err_max = reader[1:]
 
                 # Decontamination algorithm parameters
                 elif reader[0] == 'D0':
@@ -75,39 +65,53 @@ def main(pars_f_path):
                     plx_chains = int(reader[3])
                     plx_runs = int(reader[4])
                     plx_burn = float(reader[5])
-                elif reader[0] == 'P1':
-                    plx_emcee_moves = [_.strip() for _ in line[3:].split(';')]
 
                 # Synthetic clusters parameters
                 elif reader[0] == 'R0':
                     synth_rand_seed = str(reader[1])
-                    IMF_name = str(reader[2])
-                    min_bmass_ratio = float(reader[3])
-                    try:
-                        max_mag = float(reader[4])
-                    except ValueError:
-                        max_mag = str(reader[4])
-                    N_interp = int(reader[5])
+
+                # Synthetic clusters parameters
+                elif reader[0] == 'R1':
+                    IMF_name = str(reader[1])
+                    Max_mass = int(float(reader[2]))
+
+                # Synthetic clusters parameters
+                elif reader[0] == 'R2':
+                    DR_dist = str(reader[1])
+                    DR_percentage = float(reader[2])
 
                 # Ranges for the fundamental parameters
-                elif reader[0] == 'RZ':
-                    z_range = reader[1:]
-                elif reader[0] == 'RA':
-                    a_range = reader[1:]
-                elif reader[0] == 'RE':
-                    e_range = list(map(float, reader[1:]))
-                elif reader[0] == 'RR':
-                    dr_range = reader[1:]
-                elif reader[0] == 'RV':
-                    R_V = float(reader[1])
-                elif reader[0] == 'RD':
-                    d_range = list(map(float, reader[1:]))
-                elif reader[0] == 'RM':
-                    m_range = list(map(float, reader[1:]))
-                elif reader[0] == 'RB':
-                    b_range = list(map(float, reader[1:]))
-                elif reader[0] == 'RS':
-                    bs_range = reader[1:]
+                elif reader[0] == 'R3':
+                    alpha = float(reader[1])
+                    gamma = reader[2]
+
+                # Ranges for the fundamental parameters
+                elif reader[0] == 'R4':
+                    Max_mag = reader[1]
+                    completeness = [_.replace(',', '') for _ in reader[2:]]
+
+                # Ranges for the fundamental parameters
+                elif reader[0] == 'R5':
+                    par_ranges.append(reader[1:])
+
+                # elif reader[0] == 'RZ':
+                #     z_range = reader[1:]
+                # elif reader[0] == 'RA':
+                #     a_range = reader[1:]
+                # elif reader[0] == 'RE':
+                #     e_range = list(map(float, reader[1:]))
+                # elif reader[0] == 'RR':
+                #     dr_range = reader[1:]
+                # elif reader[0] == 'RV':
+                #     R_V = float(reader[1])
+                # elif reader[0] == 'RD':
+                #     d_range = list(map(float, reader[1:]))
+                # elif reader[0] == 'RM':
+                #     m_range = list(map(float, reader[1:]))
+                # elif reader[0] == 'RB':
+                #     b_range = list(map(float, reader[1:]))
+                # elif reader[0] == 'RS':
+                #     bs_range = reader[1:]
 
                 # Cluster parameters assignation.
                 elif reader[0] == 'B0':
@@ -125,27 +129,30 @@ def main(pars_f_path):
                     pt_adapt = True if reader[6] in true_lst else False
 
                 # Priors
-                elif reader[0] == 'BZ':
-                    z_prior = [reader[1]] + list(map(float, reader[2:]))
-                elif reader[0] == 'BA':
-                    a_prior = [reader[1]] + list(map(float, reader[2:]))
-                elif reader[0] == 'BE':
-                    e_prior = [reader[1]] + list(map(float, reader[2:]))
-                elif reader[0] == 'BR':
-                    dr_prior = [reader[1]] + list(map(float, reader[2:]))
-                elif reader[0] == 'BV':
-                    rv_prior = [reader[1]] + list(map(float, reader[2:]))
-                elif reader[0] == 'BD':
-                    d_prior = [reader[1]] + list(map(float, reader[2:]))
-                elif reader[0] == 'BM':
-                    m_prior = [reader[1]] + list(map(float, reader[2:]))
-                elif reader[0] == 'BB':
-                    b_prior = [reader[1]] + list(map(float, reader[2:]))
-                elif reader[0] == 'BS':
-                    bs_prior = [reader[1]] + list(map(float, reader[2:]))
+                elif reader[0] == 'B2':
+                    priors_mcee_in.append(reader[1:])
+
+                # elif reader[0] == 'BZ':
+                #     z_prior = [reader[1]] + list(map(float, reader[2:]))
+                # elif reader[0] == 'BA':
+                #     a_prior = [reader[1]] + list(map(float, reader[2:]))
+                # elif reader[0] == 'BE':
+                #     e_prior = [reader[1]] + list(map(float, reader[2:]))
+                # elif reader[0] == 'BR':
+                #     dr_prior = [reader[1]] + list(map(float, reader[2:]))
+                # elif reader[0] == 'BV':
+                #     rv_prior = [reader[1]] + list(map(float, reader[2:]))
+                # elif reader[0] == 'BD':
+                #     d_prior = [reader[1]] + list(map(float, reader[2:]))
+                # elif reader[0] == 'BM':
+                #     m_prior = [reader[1]] + list(map(float, reader[2:]))
+                # elif reader[0] == 'BB':
+                #     b_prior = [reader[1]] + list(map(float, reader[2:]))
+                # elif reader[0] == 'BS':
+                #     bs_prior = [reader[1]] + list(map(float, reader[2:]))
 
                 # Likelihood function
-                elif reader[0] == 'B2':
+                elif reader[0] == 'B3':
                     lkl_binning = str(reader[1])
                     lkl_manual_bins = reader[2:]
 
@@ -164,18 +171,21 @@ def main(pars_f_path):
                               reader[0], ln + 1, pars_f_name))
 
     # Accepted coordinate units
-    coord_accpt = ('px', 'deg')
+    separators = {
+        'comma': ',', 'space': r'\s+', 'semicolon': ';', 'vertical-bar': '|',
+        'tab': '\t'}
+    # Reference frames
+    xy_frames_accpt = ('equatorial', 'galactic')
     # Radius estimating methods
     rad_modes_accpt = ('a', 'max')
-    # Decontamination algorithm flag.
-    da_algors_accpt = ('y', 'n', 'read')
     # Accepted field stars removal methods.
     fld_rem_methods = ('local', 'n_memb', 'mp_05', 'top_h', 'man', 'all')
     # Accepted binning methods.
     bin_methods = (
         'optm', 'fixed', 'auto', 'fd', 'doane', 'scott', 'rice', 'sqrt',
         'sturges', 'knuth', 'blocks', 'blocks-max', 'manual')
-
+    # Binary system methods
+    # binar_methods = ('logfit', 'D&K', 'uniform')
     # Likelihood methods.
     lkl_methods = ('tremmel',)
     # FIXED 04/2021
@@ -195,8 +205,6 @@ def main(pars_f_path):
                    'D1', 'D2', 'D3', 's')
     D3_methods = ('mean', 'median', 'mode', 'map')
 
-    priors_mcee = [z_prior, a_prior, e_prior, d_prior, m_prior, b_prior]
-
     # HARDCODED AND IMPORTANT
     # If the CMD isochrones change, this needs to change too.
     # Names of the "extra" columns in the CMD service isochrones.
@@ -204,24 +212,16 @@ def main(pars_f_path):
         'Mini', 'int_IMF', 'Mass', 'logL', 'logTe', 'logg', 'label',
         'mbolmag')
 
-    par_ranges = [z_range, a_range, e_range, d_range, m_range, b_range]
-
     pd = {
         # Input data parameters
-        'id_ids': id_ids, 'id_xdata': id_xdata,
-        'id_ydata': id_ydata, 'project': project,
+        'separators': separators, 'sep': sep, 'id_ids': id_ids,
+        'id_xdata': id_xdata, 'id_ydata': id_ydata, 'xy_frame': xy_frame,
         'id_mags': id_mags, 'id_cols': id_cols, 'id_kinem': id_kinem,
-
-        # Input data processing
-        'nanvals': nanvals, 'trim_frame_range': trim_frame_range,
 
         # Structure functions parameters
         'manual_struct': manual_struct, 'kp_ndim': kp_ndim,
         'kp_nchains': kp_nchains, 'kp_nruns': kp_nruns, 'kp_nburn': kp_nburn,
-        'rt_max_f': rt_max_f, 'kp_emcee_moves': kp_emcee_moves,
-
-        #
-        'err_max': err_max,
+        'rt_max_f': rt_max_f,
 
         # Decontamination algorithm parameters.
         'da_algor': da_algor, 'bayesda_runs': bayesda_runs,
@@ -230,7 +230,6 @@ def main(pars_f_path):
         # Plx & PMs parameters.
         'plx_bayes_flag': plx_bayes_flag, 'plx_offset': plx_offset,
         'plx_chains': plx_chains, 'plx_runs': plx_runs, 'plx_burn': plx_burn,
-        'plx_emcee_moves': plx_emcee_moves,
 
         # Cluster region field stars removal parameters.
         'fld_clean_mode': fld_clean_mode, 'fld_clean_bin': fld_clean_bin,
@@ -238,22 +237,22 @@ def main(pars_f_path):
 
         # Synthetic cluster parameters
         'synth_rand_seed': synth_rand_seed, 'par_ranges': par_ranges,
-        'IMF_name': IMF_name, 'min_bmass_ratio': min_bmass_ratio,
-        'max_mag': max_mag, 'N_interp': N_interp, 'R_V': R_V,
+        'IMF_name': IMF_name, 'Max_mass': Max_mass, 'Max_mag': Max_mag,
+        'DR_dist': DR_dist, 'DR_percentage': DR_percentage, 'alpha': alpha,
+        'gamma': gamma, 'completeness': completeness,
 
         # Best fit parameters.
         'best_fit_algor': best_fit_algor, 'mins_max': mins_max,
         'save_trace_flag': save_trace_flag,
         # ptemcee algorithm parameters.
         'nsteps_mcee': nsteps_mcee, 'nwalkers_mcee': nwalkers_mcee,
-        'nburn_mcee': nburn_mcee, 'priors_mcee': priors_mcee,
+        'nburn_mcee': nburn_mcee, 'priors_mcee_in': priors_mcee_in,
         'pt_ntemps': pt_ntemps, "pt_adapt": pt_adapt, 'pt_tmax': pt_tmax,
         'lkl_method': lkl_method, 'lkl_binning': lkl_binning,
         'lkl_manual_bins': lkl_manual_bins,
 
         # Fixed accepted parameter values and photometric systems.
-        'coord_accpt': coord_accpt, 'rad_modes_accpt': rad_modes_accpt,
-        'da_algors_accpt': da_algors_accpt,
+        'xy_frames_accpt': xy_frames_accpt, 'rad_modes_accpt': rad_modes_accpt,
         'fld_rem_methods': fld_rem_methods, 'bin_methods': bin_methods,
         'imf_funcs': imf_funcs, 'lkl_methods': lkl_methods,
         'optimz_algors': optimz_algors, 'bayes_priors': bayes_priors,

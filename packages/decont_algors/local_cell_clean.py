@@ -8,7 +8,7 @@ from functools import reduce
 
 
 def main(
-    n_memb, field_regions_c, memb_prob_avrg_sort, flag_decont_skip,
+    n_memb, field_regions, memb_prob_avrg_sort, flag_decont_skip,
         fld_clean_bin):
     """
     Takes the photometric diagram of the cluster region with assigned MPs,
@@ -18,7 +18,7 @@ def main(
 
     Parameters
     ----------
-    field_regions_c : list
+    field_regions : list
         List of arrays, one for each field region defined. Each array
         contains a unique number of stars, and all their attributes with
         shape: (N_stars, Features)
@@ -34,7 +34,7 @@ def main(
 
     # Prepare photometric data for cluster and field regions.
     mags_cols_cl, mags_cols_all_fl = dataComb(
-        memb_prob_avrg_sort, field_regions_c)
+        memb_prob_avrg_sort, field_regions)
 
     def regSelect(nbins):
         # Obtain bin edges.
@@ -48,7 +48,7 @@ def main(
 
         # Obtain field regions histogram (only number of stars in each cell).
         f_hist = get_fl_reg_hist(
-            field_regions_c, mags_cols_all_fl, bin_edges, cl_hist)
+            field_regions, mags_cols_all_fl, bin_edges, cl_hist)
 
         # Obtain stars separated in list to be used by the best fit function,
         # and the list of the rejected stars not to be used.
@@ -80,7 +80,7 @@ def main(
     return cl_reg_fit, cl_reg_no_fit, bin_edges
 
 
-def dataComb(memb_prob_avrg_sort, field_regions_c):
+def dataComb(memb_prob_avrg_sort, field_regions):
     """
     Combine photometric data into a single array.
     """
@@ -93,7 +93,7 @@ def dataComb(memb_prob_avrg_sort, field_regions_c):
 
     # Field regions data
     mags_cols_all_fl = []
-    for freg in field_regions_c:
+    for freg in field_regions:
         # Create list with all magnitudes and colors defined.
         mags_cols_fl = []
         for mag in list(zip(*list(zip(*freg))[1:][2])):
@@ -114,6 +114,20 @@ def bin_edges_f(
     diagram. The 'bin_edges' list will contain all magnitudes first, and then
     all colors (in the same order in which they are read).
     """
+
+    # # Test of edges created to use more resolution for brighter stars. Not
+    # # fully tested yet 06/2021
+    # bin_edges = []
+    # for mag in mags_cols_cl[0]:
+    #     pp = np.percentile(mag, (0, 25, 50, 75, 100))
+    #     e1 = list(np.linspace(pp[0], pp[1], 8))
+    #     e2 = list(np.linspace(pp[1], pp[2], 4)[1:-1])
+    #     e3 = list(np.linspace(pp[2], pp[3], 2))
+    #     bin_edges += [np.array(e1 + e2 + e3 + [pp[4]])]
+    # for col in mags_cols_cl[1]:
+    #     bin_edges += [np.arange(min(col), max(col), .1)]
+    # return bin_edges
+
     bin_edges = []
     if bin_method in (
             'auto', 'fd', 'doane', 'scott', 'rice', 'sturges', 'sqrt'):
@@ -261,7 +275,7 @@ def get_clust_histo(memb_prob_avrg_sort, mags_cols_cl, bin_edges):
     return cl_hist_p, cl_hist
 
 
-def get_fl_reg_hist(field_regions_c, mags_cols_all_fl, bin_edges, cl_hist):
+def get_fl_reg_hist(field_regions, mags_cols_all_fl, bin_edges, cl_hist):
     """
     Obtain the average number of field region stars in each cell defined for
     the N-dimensional cluster region photometric diagram.
@@ -276,7 +290,7 @@ def get_fl_reg_hist(field_regions_c, mags_cols_all_fl, bin_edges, cl_hist):
             np.array(list(zip(*mags_cols_fl))), bins=bin_edges)[0]
 
     # Average number of stars in each cell/bin and round to integer.
-    f_hist = np.around(f_hist / len(field_regions_c), 0)
+    f_hist = np.around(f_hist / len(field_regions), 0)
 
     return f_hist
 

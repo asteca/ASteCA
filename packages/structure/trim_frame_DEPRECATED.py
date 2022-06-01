@@ -1,5 +1,7 @@
 
 
+# DEPRECATED 23/03/22
+
 def main(flag_tf, tf_range, data, x_col, y_col):
     """
     Remove stars outside of the (xmin, xmax, ymin, ymax) range.

@@ -5,11 +5,11 @@ from .. import update_progress
 
 
 def main(
-    colors, plx_col, pmx_col, pmy_col, rv_col, bayesda_runs, bayesda_dflag,
+    colors, plx_col, pmx_col, pmy_col, bayesda_runs, bayesda_dflag,
         cl_region, field_regions):
-    '''
+    """
     Bayesian field decontamination algorithm.
-    '''
+    """
     print('Applying Bayesian DA ({} runs)'.format(bayesda_runs))
 
     # cl_region = [[id, x, y, mags, e_mags, cols, e_cols, kine, ek], [], ...]
@@ -20,15 +20,15 @@ def main(
 
     # Remove data dimensions.
     mags, cols, kinem, e_mags, e_cols, e_kinem = rmDimensions(
-        cl_region, colors, plx_col, pmx_col, pmy_col, rv_col, bayesda_dflag)
+        cl_region, colors, plx_col, pmx_col, pmy_col, bayesda_dflag)
     # Magnitudes and colors (and their errors) for all stars in the cluster
     # region, stored with the appropriate format.
     cl_reg_prep, w_cl = reg_data(
         len(cl_region), mags, cols, kinem, e_mags, e_cols, e_kinem)
     if not cl_reg_prep.any():
         raise ValueError(
-            "Cluster region is empty after removing the turned-off\n" +
-            "dimension. Check the 'w_xxx' flags in the Bayesian DA.")
+            "Cluster region is empty after removing the turned-off\n"
+            + "dimension. Check the 'w_xxx' flags in the Bayesian DA.")
 
     # Normalize data.
     cl_reg_prep, N_msk_cl = dataNorm(cl_reg_prep)
@@ -41,8 +41,7 @@ def main(
         # Obtain likelihood, for each star in the cluster region, of
         # being a field star.
         mags, cols, kinem, e_mags, e_cols, e_kinem = rmDimensions(
-            fl_region, colors, plx_col, pmx_col, pmy_col, rv_col,
-            bayesda_dflag)
+            fl_region, colors, plx_col, pmx_col, pmy_col, bayesda_dflag)
         fl_reg_prep, w_fl = reg_data(
             n_fl, mags, cols, kinem, e_mags, e_cols, e_kinem)
         fl_reg_prep, N_msk = dataNorm(fl_reg_prep)
@@ -56,12 +55,13 @@ def main(
             N_msk_cl, N_msk_fr))
 
     # Create copy of the cluster region to be shuffled below.
-    clust_reg_shuffle, w_cl_shuffle = cl_reg_prep[:], w_cl[:]
+    # clust_reg_shuffle, w_cl_shuffle = cl_reg_prep[:], w_cl[:]
+    N_cl_reg, N_cl_reg_prep = len(cl_region), len(cl_reg_prep)
 
     # Initial null probabilities for all stars in the cluster region.
-    prob_avrg_old = np.zeros(len(cl_region))
+    prob_avrg_old = np.zeros(N_cl_reg)
     # Probabilities for all stars in the cluster region.
-    runs_fields_probs = np.zeros(len(cl_region))
+    runs_fields_probs = np.zeros(N_cl_reg)
 
     # Run 'bayesda_runs*fl_likelihoods' times.
     N_total = 0
@@ -69,46 +69,33 @@ def main(
         # Iterate through all the 'field stars' regions that were populated.
         for n_fl, fl_lkl in fl_likelihoods:
 
-            if n_fl < len(cl_region):
-                # TODO DEPRECATED June 2019
-                # # Randomly shuffle the stars within the cluster region.
-                # p = np.random.permutation(len(clust_reg_shuffle))
-                # clust_reg_shuffle, w_cl_shuffle = clust_reg_shuffle[p],\
-                #     w_cl_shuffle[p]
-                # # Remove n_fl random stars from the cluster region and
-                # # obtain the likelihoods for each star in this "cleaned"
-                # # cluster region.
-                # cl_lkl = likelihood(
-                #     bayesda_weights, clust_reg_shuffle[n_fl:],
-                #     w_cl_shuffle[n_fl:], cl_reg_prep, w_cl)
-
+            if n_fl < N_cl_reg:
                 # Select stars from the cluster region according to their
                 # associated probabilities.
-                n_memb = len(clust_reg_shuffle) - n_fl
+                n_memb = N_cl_reg_prep - n_fl
                 if n_memb > 0:
                     # Identify first run.
                     if N_total > 0:
                         # Select stars according to their probabilities so far.
                         p = np.random.choice(
-                            len(clust_reg_shuffle), n_memb, replace=False,
+                            N_cl_reg_prep, n_memb, replace=False,
                             p=runs_fields_probs / runs_fields_probs.sum())
                     else:
                         p = np.random.choice(
-                            len(clust_reg_shuffle), n_memb, replace=False)
+                            N_cl_reg_prep, n_memb, replace=False)
                 else:
-                    p = np.arange(len(clust_reg_shuffle))
-                clust_reg_shuffle_nmemb, w_cl_shuffle_nmemb =\
-                    clust_reg_shuffle[p], w_cl_shuffle[p]
+                    p = np.arange(N_cl_reg_prep)
+
+                # clust_reg_shuffle_nmemb, w_cl_shuffle_nmemb =\
+                #     clust_reg_shuffle[p], w_cl_shuffle[p]
                 # cluster region.
-                cl_lkl = likelihood(
-                    clust_reg_shuffle_nmemb, w_cl_shuffle_nmemb, cl_reg_prep,
-                    w_cl)
+                cl_lkl = likelihood(cl_reg_prep[p], w_cl[p], cl_reg_prep, w_cl)
             else:
-                # If there are *more* field region stars than the total of
+                # If there are *more* field stars than the total of
                 # stars within the cluster region (highly contaminated
                 # cluster), assign zero likelihood of being a true member to
                 # all stars within the cluster region.
-                cl_lkl = np.ones(len(cl_region)) * 1e-7
+                cl_lkl = np.ones(N_cl_reg) * 1e-7
 
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
@@ -134,9 +121,7 @@ def main(
     return memb_probs_cl_region
 
 
-def rmDimensions(
-    region, colors, plx_col, pmx_col, pmy_col, rv_col,
-        bayesda_dflag):
+def rmDimensions(region, colors, plx_col, pmx_col, pmy_col, bayesda_dflag):
     """
     Remove data dimensions turned off by the user.
     """
@@ -150,7 +135,7 @@ def rmDimensions(
     for i, flag in enumerate(bayesda_dflag[1:len(colors) + 1]):
         if flag == 'y':
             cols.append(list(zip(*region_z[5]))[i])
-    for i, k_d in enumerate((plx_col, pmx_col, pmy_col, rv_col)):
+    for i, k_d in enumerate((plx_col, pmx_col, pmy_col)):
         if k_d is not False and bayesda_dflag[1 + len(colors) + i] == 'y':
             kinem.append(list(zip(*region_z[7]))[i])
 
@@ -161,7 +146,7 @@ def rmDimensions(
     for i, flag in enumerate(bayesda_dflag[1:len(colors) + 1]):
         if flag == 'y':
             e_cols.append(list(zip(*region_z[6]))[i])
-    for i, k_d in enumerate((plx_col, pmx_col, pmy_col, rv_col)):
+    for i, k_d in enumerate((plx_col, pmx_col, pmy_col)):
         if k_d is not False and bayesda_dflag[1 + len(colors) + i] == 'y':
             e_kinem.append(list(zip(*region_z[8]))[i])
 

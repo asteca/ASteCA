@@ -51,7 +51,7 @@ def main(npd, pd, cld_i, clp):
          clp['allfr_PMs'], clp['allr_KDE_PMs'], xydelta],
         # pms_VPD_zoom
         [gs, pd['plot_style'], xlabel, coord, y_ax, clp['clreg_PMs'],
-         clp['fregs_PMs'], raPMrng, dePMrng, clp['flag_no_fl_regs_i']],
+         clp['fregs_PMs'], raPMrng, dePMrng, clp['flag_no_fl_regs']],
         # pms_VPD_zoom_KDE
         [gs, pd['plot_style'], xlabel, coord, clp['cr_KDE_PMs'],
          clp['fr_KDE_PMs'], raPMrng, dePMrng, PMs_cent, PMs_width,

@@ -7,7 +7,7 @@ def main(clp, x, y, mags, **kwargs):
     """
     Calculate the contamination index value. This parameter is defined as the
     ratio of field stars density over the density of stars in the cluster
-    region. Uses the 'incomplete' data.
+    region.
 
     CI ~ 0.0 -> the field contamination in the cluster region is very small.
     CI ~ 0.5 -> an equal number of field stars and cluster members are

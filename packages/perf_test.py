@@ -1,171 +1,242 @@
 
 import time as t
-import pickle
-import sys
+from astropy.io import ascii
 import numpy as np
 import matplotlib.pyplot as plt
 
+from pyinstrument import Profiler
+import memray
+
+from packages.inp import read_met_files
+from packages.best_fit import prep_obs_params
+from packages.best_fit import prep_synth_params
+from packages.best_fit.bf_common import getSynthClust
 from packages.best_fit.bf_common import varPars
-from packages.synth_clust import zaWAverage
-from packages.synth_clust.synth_cluster import properModel
-from packages.synth_clust import move_isochrone
-from packages.synth_clust import cut_max_mag
-from packages.synth_clust import mass_distribution
-from packages.synth_clust import mass_interp
-from packages.synth_clust import binarity
-from packages.synth_clust import completeness_rm
-from packages.synth_clust import add_errors
 from packages.best_fit import likelihood
 
 """
-
 1. **This file needs to be in the top folder of the repo**
-
-2. The 'perf_test.pickle' is created by 'best_fit_synth_cl'
-
-3. The input 'perf_test.pickle' should also be present in the top folder
-
+2. It uses the default 'CLUSTER.dat' file in the 'defvals' folder
+3. It reads Gaia EDR3 isochrones from the 'isochrones' folder
 """
 
+# Define the range used for metallicity and age (isochrones must contain these
+# ranges)
+zmin, zmax, amin, amax = 0.01, 0.02, 7.5, 8.5
+betamin, betamax, emin, emax, drmin, drmax = 0, .5, 0, 2, 0, .5
+rvmin, rvmax, dmmin, dmmax = 2, 5, 5, 20
+# Mass range
+Max_mass = 10000
+# Maximum running time (in seconds)
+max_time = 20
 
-def main(model, lkl_method, obs_clust, synthcl_args):
+np.random.seed(12345)
+
+
+def profilerCall():
     """
     """
-    fundam_params, completeness, err_lst, em_float,\
-        max_mag_syn, ext_coefs, binar_flag, mean_bin_mr, N_fc, m_ini_idx,\
-        st_dist_mass, theor_tracks, err_norm_rand, binar_probs, ext_unif_rand,\
-        R_V = synthcl_args
+    # This makes 'mass_distribution' appear at the expense of taking a little
+    # longer to process the results.
+    profiler = Profiler(interval=0.0001)
+    # profiler = Profiler()
 
-    varIdxs, ndim, ranges = varPars(fundam_params)
-    model = np.array(model)[varIdxs]
-
-    t0, t1, t2, t3, t4, t5, t6, t7, t8, t9 = [0.] * 10
-
-    s = t.time()
-    model_proper, z_model, a_model, ml, mh, al, ah = properModel(
-        fundam_params, model, varIdxs)
-    t0 = t.time() - s
-
-    s = t.time()
-    isochrone = zaWAverage.main(
-        theor_tracks, fundam_params, binar_flag, m_ini_idx, z_model, a_model,
-        ml, mh, al, ah)
-    t1 = t.time() - s
-
-    # Generate synthetic cluster.
-    e, d, M_total, bin_frac = model_proper
-
-    s = t.time()
-    isoch_moved = move_isochrone.main(
-        isochrone, e, d, R_V, ext_coefs, N_fc, ext_unif_rand[ml], m_ini_idx,
-        binar_flag)
-    t2 = t.time() - s
-
-    s = t.time()
-    isoch_cut = cut_max_mag.main(isoch_moved, max_mag_syn)
-    t3 = t.time() - s
-
-    synth_clust = np.array([])
-    if isoch_cut.any():
-
-        s = t.time()
-        mass_dist = mass_distribution.main(
-            st_dist_mass[ml], mean_bin_mr, bin_frac, M_total)
-        t4 = t.time() - s
-
-        s = t.time()
-        isoch_mass = mass_interp.main(isoch_cut, m_ini_idx, mass_dist)
-        t5 = t.time() - s
-
-        if isoch_mass.any():
-            s = t.time()
-            isoch_binar = binarity.main(
-                isoch_mass, bin_frac, m_ini_idx, N_fc, binar_probs[ml])
-            t6 = t.time() - s
-
-            s = t.time()
-            isoch_compl = completeness_rm.main(isoch_binar, completeness)
-            t7 = t.time() - s
-
-            if isoch_compl.any():
-                s = t.time()
-                synth_clust = add_errors.main(
-                    isoch_compl, err_lst, em_float, err_norm_rand[ml])
-                t8 = t.time() - s
-
-    s = t.time()
-    # Transposing is necessary for np.histogramdd() in the likelihood
-    synth_clust = synth_clust[:sum(N_fc)].T
-    _ = likelihood.main(lkl_method, synth_clust, obs_clust)
-    t9 = t.time() - s
-
-    return t0, t1, t2, t3, t4, t5, t6, t7, t8, t9
-
-
-if __name__ == '__main__':
-
-    # from synth_clust import imf
-    mpath = sys.path[0].replace('synth_clust', '').replace('packages/', '')
-
-    print("Reading data")
-    with open(mpath + '/perf_test.pickle', 'rb') as f:
-        fundam_params, completeness, err_lst, em_float, max_mag_syn,\
-            ext_coefs, binar_flag, mean_bin_mr, N_fc, m_ini_idx,\
-            st_dist_mass, theor_tracks, err_norm_rand, binar_probs,\
-            ext_unif_rand, R_V, lkl_method, obs_clust = pickle.load(f)
-
-    # Pack synthetic cluster arguments.
-    synthcl_args = [
-        fundam_params, completeness, err_lst, em_float, max_mag_syn, ext_coefs,
-        binar_flag, mean_bin_mr, N_fc, m_ini_idx, st_dist_mass, theor_tracks,
-        err_norm_rand, binar_probs, ext_unif_rand, R_V]
+    pd, clp, td = inParams(Max_mass)
 
     print("Running")
-    np.random.seed(12345)
+    profiler.start()
+    Nmodels = main(pd, clp, td)
+    profiler.stop()
 
-    times_all = []
-    max_time, elapsed, start, N_tot, models_sec = 600., 0., t.time(), 0, []
+    print("Extracting times")
+    times_all = extractTimes(profiler)
+    print("Plotting")
+    plot(Max_mass, Nmodels, times_all)
+
+    # print("Preparing profiler report...")
+    # profiler.open_in_browser()
+
+
+def memrayCall():
+    """
+    Usage:
+
+    memray summary output_file.bin
+    memray flamegraph output_file.bin
+    """
+    pd, clp, td = inParams(Max_mass)
+    with memray.Tracker("output_file.bin"):
+        main(pd, clp, td)
+    print("Finished")
+
+
+def main(pd, clp, td):
+    """
+    """
+    model_proper = np.array([_[0] for _ in td['fundam_params']])
+    # Pack common args for the 'synth_cluster.py' function.
+    syntClustArgs = [
+        pd['DR_dist'], pd['DR_percentage'], pd['alpha'], model_proper,
+        clp['varIdxs'], clp['completeness'], clp['err_lst'],
+        clp['max_mag_syn'], clp['N_obs_stars'], td['fundam_params'],
+        td['ext_coefs'], td['N_fc'], td['m_ini_idx'], td['st_dist_mass'],
+        td['theor_tracks'], td['rand_norm_vals'], td['rand_unif_vals']]
+
+    elapsed, start, Nmodels, tstep = 0., t.time(), 0, 10
     while elapsed < max_time:
 
         model = []
-        for p in fundam_params:
+        for p in td['fundam_params']:
             model.append(np.random.uniform(min(p), max(p)))
+        model = np.array(model)[clp['varIdxs']]
 
-        data = main(model, lkl_method, obs_clust, synthcl_args)
-        times_all.append(data)
+        # Call synthetic cluster generation
+        synth_clust = getSynthClust(model, True, syntClustArgs)[0]
+        # Call likelihood
+        _ = likelihood.main(pd['lkl_method'], synth_clust, clp['obs_clust'])
 
-        N_tot += 1
+        Nmodels += 1
         elapsed += t.time() - start
-        models_sec.append(N_tot / elapsed)
-        if np.random.randint(1000) == 500:
-            print(("{}, {:.1f} | {:.0f}").format(
-                N_tot, elapsed, models_sec[-1]))
+        if elapsed >= tstep:
+            print(("{:.1f} | {:.0f}").format(elapsed, Nmodels / elapsed))
+            tstep += 10
 
         start = t.time()
         if elapsed >= max_time:
             break
 
-    times_norm = 100. * np.sum(times_all, 0) / elapsed
+    return Nmodels
+
+
+def inParams(Max_mass):
+    """
+    This module is built to work with the default 'CLUSTER.dat' file and
+    Gaia EDR3 Parsec+No isochrones
+    """
+
+    fundam_params_all = {'CLUSTER': [
+        [zmin, zmax], [amin, amax], [betamin, betamax], [emin, emax],
+        [drmin, drmax], [rvmin, rvmax], [dmmin, dmmax]]}
+    priors_mcee_all = {'CLUSTER': [
+        ['u'], ['u'], ['u'], ['u'], ['u'], ['u'], ['u']]}
+
+    pd = {'best_fit_algor': 'y',
+          'fundam_params_all': fundam_params_all,
+          'priors_mcee_all': priors_mcee_all,
+          'all_syst_filters': [('gaiaedr3', 'G_RPmag', 'Gmag', 'G_BPmag')],
+          'evol_track': 'PAR12+No', 'iso_paths': ['./isochrones/gaiaedr3'],
+          'CMD_extra_pars': (
+              'Mini', 'int_IMF', 'Mass', 'logL', 'logTe', 'logg', 'label',
+              'mbolmag'), 'synth_rand_seed': None,
+          'cmd_systs': {'gaiaedr3': (
+              ('Gmag', 'G_BPmag', 'G_RPmag'),
+              (6422.01, 5335.42, 7739.17))}, 'filters': [('gaiaedr3', 'Gmag')],
+          'colors': [('gaiaedr3', 'G_BPmag,G_RPmag')],
+          'IMF_name': 'kroupa_2002', 'Max_mass': Max_mass, 'DR_dist': 'normal',
+          'DR_percentage': 1, 'alpha': 0.275, 'gamma': 'D&K',
+          'lkl_method': 'tremmel', 'Max_mag': 'max',
+          'lkl_binning': 'knuth', 'lkl_manual_bins': None}
+
+    # Read "observed" cluster
+    cldata = ascii.read('packages/defvals/input/CLUSTER.dat')
+    cl_reg_fit0 = list(zip(*[
+        cldata['EDR3Name'], cldata['_x'], cldata['_x'], cldata['Gmag'],
+        cldata['e_Gmag'], cldata['BP-RP'], cldata['e_BP-RP']]))
+    cl_reg_fit = []
+    for st in cl_reg_fit0:
+        cl_reg_fit.append(
+            list(st[:3]) + [[st[3]]] + [[st[4]]] + [[st[5]]] + [[st[6]]]
+            + list(np.array([np.ones(4) * np.nan]))
+            + list(np.array([np.ones(4) * np.nan])) + [1])
+    # max_mag_syn = max(cldata['Gmag'])
+    clp = {'cl_reg_fit': cl_reg_fit}
+
+    completeness = [
+        np.array([
+            11.0578, 15.569595, 16.2036, 16.61846, 16.8903, 17.08015,
+            17.24488, 17.407075, 17.56784, 17.7021, 17.81175, 17.924355,
+            18.02364, 18.115365, 18.21082, 18.313775, 18.41914, 18.545955,
+            18.67507, 18.80564, 18.9959]),
+        np.array([
+            1., 0.00716116, 0., 0., 0.07651589,
+            0., 0., 0., 0.00714035, 0.02800014,
+            0., 0.0454411, 0.00454196, 0., 0.05118521,
+            0.33643902, 0.39760438, 0.53978769, 0.59136226, 0.6437164,
+            0.78133205]), 0.0]
+    clp['completeness'] = [completeness[0], completeness[1], False]
+
+    err_lst = [
+        np.array([9.97217805e-09, 6.68941895e-01, 2.74837659e-02]),
+        np.array([4.56490040e-09, 6.75067801e-01, 1.37429298e-02])]
+    clp['err_lst'] = err_lst
+
+    clp['varIdxs'], clp['ndim'], clp['ranges'] = varPars(
+        fundam_params_all)
+
+    td = read_met_files.main(pd, 'CLUSTER')
+    clp = prep_obs_params.main(clp, **pd)
+    td = prep_synth_params.main(pd, clp, td)
+
+    return pd, clp, td
+
+
+def extractTimes(profiler):
+    """
+    """
+
+    def getTime(line):
+        l_s = line.split()
+        try:
+            i = l_s.index('`-')
+        except ValueError:
+            i = l_s.index('|-')
+        return float(l_s[i + 1])
+
+    data = profiler.output_text().split('\n')
+
+    t0, t1, t2, t3, t4, t5, t6, t7, t8, t9 = [0] * 10
+    for line in data:
+        if 'properModel' in line:
+            t0 = getTime(line)
+        elif 'main' in line and 'zaWAverage' in line:
+            t1 = getTime(line)
+        elif 'main' in line and 'move_isochrone' in line:
+            t2 = getTime(line)
+        elif 'main' in line and 'cut_max_mag' in line:
+            t3 = getTime(line)
+        elif 'main' in line and 'mass_distribution' in line:
+            t4 = getTime(line)
+        elif 'main' in line and 'mass_interp' in line:
+            t5 = getTime(line)
+        elif 'main' in line and 'binarity' in line:
+            t6 = getTime(line)
+        elif 'main' in line and 'completeness_rm' in line:
+            t7 = getTime(line)
+        elif 'main' in line and 'add_errors' in line:
+            t8 = getTime(line)
+        elif 'main' in line and 'likelihood' in line:
+            t9 = getTime(line)
+
+    return np.array([t0, t1, t2, t3, t4, t5, t6, t7, t8, t9])
+
+
+def plot(Max_mass, Nmodels, times_all):
+    """
+    """
+    times_norm = 100. * times_all / times_all.sum()
     cols = [
         'propModel', 'zaWAvrg', 'move', 'cut', 'M_dst', 'M_interp', 'binar',
-        'complete', 'errors', lkl_method]
+        'complete', 'errors', 'likelihood']
+    models_sec = Nmodels / max_time
 
     for i, c in enumerate(cols):
-        print("{}: {}".format(c, times_norm[i]))
+        print("{}: {:.2f}".format(c, times_norm[i]))
 
-    fig, axs = plt.subplots(2, 1, figsize=(20, 20))
+    fig, axs = plt.subplots(1, 1, figsize=(20, 10))
 
-    M_min, M_max = fundam_params[-2]
-    axs[0].set_title(
-        "Exclude initial 5% of runs | M=[{:.0f}, {:.0f}]".format(M_min, M_max),
-        fontsize=18)
-    axs[0].plot(models_sec[-int(.95 * len(models_sec)):])
-    axs[0].grid(True, zorder=0)
-    axs[0].xaxis.set_tick_params(labelsize=18)
-    axs[0].yaxis.set_tick_params(labelsize=18)
-
-    axs[1].set_title("N={}, t={:.2f} -> [{:.0f} m/s]".format(
-        N_tot, elapsed, N_tot / elapsed), fontsize=18)
+    axs.set_title(
+        ("M_max={:.0f} | N={}, t={:.0f} --> [{:.0f} m/s]").format(
+            Max_mass, Nmodels, max_time, models_sec), fontsize=18)
     plt.grid(zorder=0)
     plt.bar(cols, times_norm, zorder=4)
     # Text annotations
@@ -181,3 +252,10 @@ if __name__ == '__main__':
 
     fig.tight_layout()
     plt.savefig("perf_test.png", dpi=150)
+
+
+if __name__ == '__main__':
+
+    profilerCall()
+
+    # memrayCall()

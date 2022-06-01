@@ -199,8 +199,8 @@ def pl_mps_phot_diag(
 
 def pl_mps_incomp_diags(
     gs, fig, plot_style, x_min_cmd, x_max_cmd, y_min_cmd, y_max_cmd, x_ax,
-    y_ax, xdata_c, ydata_c, coldata_c, xdata_i, ydata_i, coldata_i, cl_c_sz_pt,
-        cl_i_sz_pt, mode_fld_clean, local_rm_edges, c1, c2, gspos_idx):
+    y_ax, xdata, ydata, probs, cl_c_sz_pt, mode_fld_clean, local_rm_edges,
+        c1, c2, gspos_idx):
     """
     Star's membership probabilities on cluster's photometric diagram.
     """
@@ -216,11 +216,11 @@ def pl_mps_incomp_diags(
     # Set axis labels
     plt.xlabel('$' + x_ax + '$')
     plt.ylabel('$' + y_ax + '$')
-    # Add text box.
-    text = r'$N_{{cmpl}}={},\, N_{{incmpl}}={}$'.format(
-        sum(~np.isnan(xdata_c) & ~np.isnan(ydata_c)),
-        sum(~np.isnan(xdata_i) & ~np.isnan(ydata_i)))
-    ax.set_title(text)
+    # # Add text box.
+    # text = r'$N_{{cmpl}}={},\, N_{{incmpl}}={}$'.format(
+    #     sum(~np.isnan(xdata_c) & ~np.isnan(ydata_c)),
+    #     sum(~np.isnan(xdata_i) & ~np.isnan(ydata_i)))
+    # ax.set_title(text)
 
     # Plot grid.
     gls, glw, gc = plt.rcParams['grid.linestyle'],\
@@ -239,21 +239,21 @@ def pl_mps_incomp_diags(
 
     # This reversed colormap means higher prob stars will look redder.
     cm = plt.cm.get_cmap('RdYlBu_r')
-    if sum(~np.isnan(xdata_i) & ~np.isnan(ydata_i)) > 0:
-        v_min_mp = round(min(np.nanmin(coldata_i), np.nanmin(coldata_c)), 2)
-        v_max_mp = round(max(np.nanmax(coldata_i), np.nanmax(coldata_c)), 2)
-    else:
-        v_min_mp = round(np.nanmin(coldata_c), 2)
-        v_max_mp = round(np.nanmax(coldata_c), 2)
+    # if sum(~np.isnan(xdata_i) & ~np.isnan(ydata_i)) > 0:
+    #     v_min_mp = round(min(np.nanmin(coldata_i), np.nanmin(coldata_c)), 2)
+    #     v_max_mp = round(max(np.nanmax(coldata_i), np.nanmax(coldata_c)), 2)
+    # else:
+    v_min_mp = round(np.nanmin(probs), 2)
+    v_max_mp = round(np.nanmax(probs), 2)
     plot_colorbar = True if v_min_mp != v_max_mp else False
     # Plot stars used in the best fit process.
     sca = plt.scatter(
-        xdata_c, ydata_c, marker='o', c=coldata_c, s=cl_c_sz_pt, cmap=cm,
+        xdata, ydata, marker='o', c=probs, s=cl_c_sz_pt, cmap=cm,
         lw=0.3, edgecolor='k', vmin=v_min_mp, vmax=v_max_mp, zorder=4)
-    if sum(~np.isnan(xdata_i) & ~np.isnan(ydata_i)) > 0:
-        plt.scatter(
-            xdata_i, ydata_i, marker='^', c=coldata_i, s=cl_i_sz_pt, cmap=cm,
-            lw=0.3, edgecolor='k', zorder=6)
+    # if sum(~np.isnan(xdata_i) & ~np.isnan(ydata_i)) > 0:
+    #     plt.scatter(
+    #         xdata_i, ydata_i, marker='^', c=coldata_i, s=cl_i_sz_pt, cmap=cm,
+    #         lw=0.3, edgecolor='k', zorder=6)
     # For plotting the colorbar
     trans = ax.transAxes + fig.transFigure.inverted()
 

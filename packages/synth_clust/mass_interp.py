@@ -2,19 +2,16 @@
 import numpy as np
 
 
-def main(isoch_cut, m_ini_idx, mass_dist):
+def main(isoch_cut, mass_ini, mass_dist):
     """
-    For each mass in the sampled IMF mass distribution, find the star in the
-    isochrone  with the closest initial mass value and pass it forward.
-    Masses that fall outside of the isochrone's mass range are rejected.
+    For each mass in the sampled IMF mass distribution, interpolate its value
+    (and those of all the sub-arrays in 'isoch_cut') into the isochrone.
+
+    Masses that fall outside of the isochrone's mass range have been previously
+    rejected.
+
+    Assumes `mass_ini` is ordered
     """
-
-    mass_ini = isoch_cut[m_ini_idx]
-
-    # Reject masses in the IMF mass distribution that are located outside of
-    # the theoretical isochrone's mass range.
-    mass_dist = mass_dist[
-        (mass_dist >= mass_ini.min()) & (mass_dist <= mass_ini.max())]
 
     # Interpolate sampled masses
     isoch_interp = interp1d(mass_dist, mass_ini, isoch_cut)
@@ -36,6 +33,11 @@ def interp1d(x_new, x, y):
     `x` and `y` are arrays of values used to approximate some function f:
     ``y = f(x)`` using some new values
     y_new = f(x_new)
+
+    x_new.shape --> M
+    x.shape     --> N
+    y.shape     --> (D, N)
+    y_new.T.shape --> (D, M)
     """
 
     _y = y.T

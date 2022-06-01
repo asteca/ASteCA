@@ -12,12 +12,13 @@ def traceplots(
     """
     plot_dict = {
         'metal': [6, 10, 0, 1, 0], 'age': [6, 10, 1, 2, 1],
-        'ext': [6, 10, 2, 3, 2], 'dist': [6, 10, 3, 4, 3],
-        'mass': [6, 10, 4, 5, 4], 'binar': [6, 10, 5, 6, 5]
+        'beta': [6, 10, 2, 3, 2], 'ext': [6, 10, 3, 4, 3],
+        'dr': [6, 10, 4, 5, 4], 'rv': [6, 10, 5, 6, 5],
+        'dist': [6, 10, 6, 7, 6]
     }
 
-    labels = [r'$z$', r'$\log(age)$', r'$E_{{(B-V)}}$', r'$(m-M)_o$',
-              r'$M\,(M_{{\odot}})$', r'$b_{{frac}}$']
+    labels = [r'$z$', r'$\log(age)$', r'$\beta$', r'$A_{{V}}$', r'$DR$',
+              r'$R_v$', r'$(m-M)_o$']
 
     gs_x1, gs_x2, gs_y1, gs_y2, cp = plot_dict[par_name]
     ax = plt.subplot(gs[gs_y1:gs_y2, gs_x1:gs_x2])
@@ -25,7 +26,7 @@ def traceplots(
     if cp == 0:
         ax.set_title(
             r"Chain with the closest $\tau$ to the median")
-    if cp == 5:
+    if cp == 6:
         plt.xlabel("steps")
     else:
         ax.tick_params(labelbottom=False)
