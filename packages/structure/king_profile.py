@@ -32,7 +32,7 @@ def main(
     """
     if kp_ndim in (2, 4):
         print("Estimating King profile")
-        KP_plot, KP_Bys_rc, KP_Bys_rt, KP_Bys_ecc, KP_Bys_theta =\
+        KP_plot, KP_Bys_rc, KP_Bys_rt, KP_Bys_ell, KP_Bys_theta =\
             fit_King_prof(
                 kp_ndim, kp_nchains, kp_nruns, kp_nburn,
                 clp['kde_cent'], clp['xy_filtered'], clp['xy_cent_dist'],
@@ -40,9 +40,12 @@ def main(
 
         # Obtain number of members and concentration parameter.
         if KP_Bys_rt['median'] > 0.:
-            KP_memb_num, KP_conct_par = num_memb_conc_param(
+            arr = np.linspace(0, KP_Bys_rt['median'], 1000)
+            KP_memb_num = KP_memb_x(
                 KP_plot['KP_cent_dens'], KP_Bys_rc['median'],
+                KP_Bys_rt['median'], KP_Bys_ell['median'], arr,
                 KP_Bys_rt['median'])
+            KP_conct_par = np.log10(KP_Bys_rt['median'] / KP_Bys_rc['median'])
         else:
             KP_memb_num, KP_conct_par = np.nan, np.nan
 
@@ -53,13 +56,13 @@ def main(
     else:
         print("Skipping King profile fit")
         KP_plot, KP_memb_num, KP_conct_par = {}, np.nan, np.nan
-        KP_Bys_rc, KP_Bys_rt, KP_Bys_ecc, KP_Bys_theta =\
+        KP_Bys_rc, KP_Bys_rt, KP_Bys_ell, KP_Bys_theta =\
             [{'16th': np.nan, 'median': np.nan, '84th': np.nan, 'mean': np.nan,
               'std': np.nan, 'mode': np.nan} for _ in range(4)]
 
     clp['KP_plot'], clp['KP_Bys_rc'], clp['KP_Bys_rt'],\
-        clp['KP_Bys_ecc'], clp['KP_Bys_theta'], clp['KP_memb_num'],\
-        clp['KP_conct_par'] = KP_plot, KP_Bys_rc, KP_Bys_rt, KP_Bys_ecc,\
+        clp['KP_Bys_ell'], clp['KP_Bys_theta'], clp['KP_memb_num'],\
+        clp['KP_conct_par'] = KP_plot, KP_Bys_rc, KP_Bys_rt, KP_Bys_ell,\
         KP_Bys_theta, KP_memb_num, KP_conct_par
     return clp
 
@@ -79,7 +82,7 @@ def fit_King_prof(
     ndim = 1 fits (rc)                 <-- Not implemented
     ndim = 2 fits (rc, rt)
     ndim = 3 fits (rc, rt, fd)         <-- Not implemented
-    ndim = 4 fits (rc, rt, ecc, theta)
+    ndim = 4 fits (rc, rt, ell, theta)
 
     ## About the 'N_memb' and 'field_dens' parameters
 
@@ -138,10 +141,10 @@ def fit_King_prof(
     rt_pos0 = np.random.uniform(rc_pos0, rt_max, nchains)
     pos0 = [rc_pos0, rt_pos0]
     if ndim == 4:
-        # Dimensions: ecc, theta
-        ecc = np.random.uniform(.0, 1., nchains)
+        # Dimensions: ell, theta
+        ell = np.random.uniform(.0, 1., nchains)
         theta = np.random.uniform(-np.pi / 2., np.pi / 2., nchains)
-        pos0 += [ecc, theta]
+        pos0 += [ell, theta]
     pos0 = np.array(pos0).T
 
     # Define emcee sampler
@@ -192,13 +195,13 @@ def fit_King_prof(
         rc_std, rt_std = np.std(samples[:, :2], 0)
         rc_16, rc_50, rc_84, rt_16, rt_50, rt_84 = np.percentile(
             samples[:, :2], (16, 50, 84), 0).T.flatten()
-    ecc_m, ecc_std, theta_m, theta_std = 0., 0., 0., 0
-    ecc_16, ecc_50, ecc_84, theta_std = [np.nan] * 4
-    # Re-write if eccentricity and theta where obtained
+    ell_m, ell_std, theta_m, theta_std = 0., 0., 0., 0
+    ell_16, ell_50, ell_84, theta_std = [np.nan] * 4
+    # Re-write if ellipticity and theta where obtained
     if ndim == 4:
-        ecc_m = np.mean(samples[:, 2], 0)
-        ecc_std = np.std(samples[:, 2], 0)
-        ecc_16, ecc_50, ecc_84 = np.percentile(
+        ell_m = np.mean(samples[:, 2], 0)
+        ell_std = np.std(samples[:, 2], 0)
+        ell_16, ell_50, ell_84 = np.percentile(
             samples[:, 2], (16, 50, 84), 0).T.flatten()
         theta_m = circmean(samples[:, 3] * u.rad).value
         theta_std = circstd(samples[:, 3] * u.rad).value
@@ -206,7 +209,7 @@ def fit_King_prof(
     # Parameters for plotting
     KP_plot = plotParams(
         KP_steps, ndim, sampler, samples, afs, autocorr_vals, tau_index, rc_m,
-        rt_m, ecc_m, theta_m, theta_std, rc_50, rt_50, ecc_50, rt_max, cl_cent,
+        rt_m, ell_m, theta_m, theta_std, rc_50, rt_50, ell_50, rt_max, cl_cent,
         field_dens, N_memb, xy_in, r_in, rt_rang)
 
     # Store: 16th, median, 84th, mean, STDDEV, mode
@@ -214,12 +217,13 @@ def fit_King_prof(
                  'std': rc_std, 'mode': KP_plot['KP_mode'][0]}
     KP_Bys_rt = {'16th': rt_16, 'median': rt_50, '84th': rt_84, 'mean': rt_m,
                  'std': rt_std, 'mode': KP_plot['KP_mode'][1]}
-    KP_Bys_ecc = {'16th': ecc_16, 'median': ecc_50, '84th': ecc_84,
-                  'mean': ecc_m, 'std': ecc_std, 'mode': KP_plot['KP_mode'][2]}
+    KP_Bys_ell = {'16th': ell_16, 'median': ell_50, '84th': ell_84,
+                  'mean': ell_m, 'std': ell_std, 'mode': KP_plot['KP_mode'][2]}
     KP_Bys_theta = {'16th': np.nan, 'median': np.nan, '84th': np.nan,
-                    'mean': theta_m, 'std': theta_std, 'mode': np.nan}
+                    'mean': theta_m, 'std': theta_std,
+                    'mode': KP_plot['KP_mode'][3]}
 
-    return KP_plot, KP_Bys_rc, KP_Bys_rt, KP_Bys_ecc, KP_Bys_theta
+    return KP_plot, KP_Bys_rc, KP_Bys_rt, KP_Bys_ell, KP_Bys_theta
 
 
 def lnprob(
@@ -229,17 +233,17 @@ def lnprob(
     """
     if ndim == 2:
         rc, rt = pars
-        ecc, theta = 0., 0.
+        ell, theta = 0., 0.
     elif ndim == 4:
-        rc, rt, ecc, theta = pars
+        rc, rt, ell, theta = pars
 
     # Prior.
-    if rt <= rc or rc <= 0. or rt > rt_max or ecc < .0 or ecc >= 1. or\
+    if rt <= rc or rc <= 0. or rt > rt_max or ell < .0 or ell >= 1. or\
             theta < -np.pi / 2. or theta > np.pi / 2.:
         return -np.inf
 
     return lnlike(
-        (rc, rt, ecc, theta), ndim, rt_max, cl_cent, fd, N_memb, xy_in, r_in,
+        (rc, rt, ell, theta), ndim, rt_max, cl_cent, fd, N_memb, xy_in, r_in,
         rt_rang)
 
 
@@ -249,7 +253,7 @@ def lnlike(
     """
     As defined in Pieres et al. (2016)
     """
-    rc, rt, ecc, theta = pars
+    rc, rt, ell, theta = pars
 
     if ndim in (1, 2, 3):
         # Values outside the tidal radius contribute 'fd' to the likelihood.
@@ -262,7 +266,7 @@ def lnlike(
     elif ndim == 4:
         x, y = xy_in
         # Identify stars inside this ellipse
-        in_ellip_msk = inEllipse(xy_in, cl_cent, rt, ecc, theta)
+        in_ellip_msk = inEllipse(xy_in, cl_cent, rt, ell, theta)
         # N_in_region = in_ellip_msk.sum()
 
         # General form of the ellipse
@@ -272,7 +276,7 @@ def lnlike(
         y1 = dx * np.sin(theta) - dy * np.cos(theta)
         # The 'width' ('a') is used instead of the radius 'r' (sqrt(x**2+y**2))
         # in King's profile, for each star
-        a_xy = np.sqrt(x1**2 + y1**2 / (1. - ecc**2))
+        a_xy = np.sqrt(x1**2 + y1**2 / (1. - ell)**2)
 
         # Values outside the ellipse contribute 'fd' to the likelihood.
         a_xy[~in_ellip_msk] = rt
@@ -281,7 +285,7 @@ def lnlike(
         KP = KingProf(r_in_clip, rc, rt)
 
     # Central density
-    rho_0 = centDens(N_memb, rt_rang, rc, rt, ecc)
+    rho_0 = centDens(N_memb, rt_rang, rc, rt, ell)
 
     # Testing to avoid using 'N_memb'. A small number must be added to 'fd'
     # and still it does not work as well as the above method
@@ -300,7 +304,7 @@ def lnlike(
     return sum_log_lkl
 
 
-def inEllipse(xy_in, cl_cent, rt, ecc, theta):
+def inEllipse(xy_in, cl_cent, rt, ell, theta):
     """
     Source: https://stackoverflow.com/a/59718947/1391441
     """
@@ -311,7 +315,7 @@ def inEllipse(xy_in, cl_cent, rt, ecc, theta):
     # Width (squared)
     a2 = rt**2
     # Height (squared)
-    b2 = a2 * (1. - ecc**2)
+    b2 = a2 * (1. - ell)**2
 
     # distance between the center and the foci
     foc_dist = np.sqrt(np.abs(b2 - a2))
@@ -334,13 +338,32 @@ def inEllipse(xy_in, cl_cent, rt, ecc, theta):
     return in_ellip_msk
 
 
-def centDens(N_memb, arr, rc, rt, ecc):
+def centDens(N_memb, arr, rc, rt, ell):
     """
     Central density constant. Integrate up to rt.
 
     https://math.stackexchange.com/a/1891110/37846
 
     The number of members is estimated with:
+
+    N_memb = cd * integ
+    """
+    # Avoid dividing by zero
+    integ = max(0.0000001, KP_integ_x(rc, rt, ell, arr, rt))
+    return N_memb / integ
+
+
+def KingProf(r_in, rc, rt):
+    """
+    King (1962) profile.
+    """
+    return ((1. / np.sqrt(1. + (r_in / rc) ** 2))
+            - (1. / np.sqrt(1. + (rt / rc) ** 2))) ** 2
+
+
+def KP_integ_x(rc, rt, ell, arr, rad):
+    """
+    Integral of King's profile up to rad. It must be understood as:
 
     N_memb = cd * integ
 
@@ -353,70 +376,28 @@ def centDens(N_memb, arr, rc, rt, ecc):
     i.e., the integral of 2*pi*r*KP divided by 'cd'. Below, 'integ' is
     equivalent to the one given above, but generalized to an ellipse.
     """
-    i = np.searchsorted(arr, rt)
-    b = arr[:i] * np.sqrt(1. - ecc**2)
+    i = np.searchsorted(arr, rad)
+    b = arr[:i] * (1. - max(0, ell))  # The max() catches 'nan'
     integ = np.trapz(2. * np.pi * b * KingProf(arr[:i], rc, rt), arr[:i])
-    integ = max(0.0000001, integ)
-
-    # # The above is equivalent to (for a circle):
-    # integ2 = KP_memb_x(1, rc, rt, rt)  # * np.sqrt(1. - ecc**2) <-- ??
-    # print(ecc, integ - integ2)
-
-    return N_memb / integ
+    return integ
 
 
-def KingProf(r_in, rc, rt):
-    """
-    King (1962) profile.
-    """
-    return ((1. / np.sqrt(1. + (r_in / rc) ** 2))
-            - (1. / np.sqrt(1. + (rt / rc) ** 2))) ** 2
-
-
-def num_memb_conc_param(cd, rc, rt):
-    """
-    Calculate approximate number of cluster members with Eq (3) from
-    Froebrich et al. (2007); 374, 399-408.
-    Also estimate the concentration parameter.
-    """
-
-    # Approximate number of members.
-    x = 1 + (rt / rc) ** 2
-    n_c_k = int(round(
-        (np.pi * cd * rc ** 2) * (
-            np.log(x) - 4 + (4 * np.sqrt(x) + (x - 1)) / x)))
-    # Concentration parameter.
-    kcp = np.log10(rt / rc)
-
-    return n_c_k, kcp
-
-
-def KP_memb_x(cd, rc, rt, x):
+def KP_memb_x(cd, rc, rt, ell, arr, rad):
     """
     Calculate approximate number of cluster members for a given King Profile,
-    from 0 up to x. General form of Eq (3) in Froebrich et al. (2007);
-    374, 399-408.
+    from 0 up to x.
 
     Used by packages/out/mp_radius.py
     """
+    integ = KP_integ_x(rc, rt, ell, arr, rad)
+    N_memb_x = int(cd * integ)
 
-    c = rc**2
-    A = -1. / np.sqrt(c + rt**2)
-    B = np.pi * cd * c
-
-    # Evaluate the integral in x
-    integ_x = A * (A * x**2 + 4 * np.sqrt(c + x**2)) + np.log(c + x**2)
-    # Evaluate the integral in 0
-    integ_0 = A * 4 * np.sqrt(c) + np.log(c)
-    # Members up to x
-    N_x = B * (integ_x - integ_0)
-
-    return N_x
+    return N_memb_x
 
 
 def plotParams(
     KP_steps, ndim, sampler, samples, afs, autocorr_vals, tau_index, rc_m,
-    rt_m, ecc_m, theta_m, theta_std, rc_50, rt_50, ecc_50, rt_max, cl_cent,
+    rt_m, ell_m, theta_m, theta_std, rc_50, rt_50, ell_50, rt_max, cl_cent,
         field_dens, N_memb, xy_in, r_in, rt_rang):
     """
     """
@@ -434,7 +415,7 @@ def plotParams(
         # This simulates the 'fundam_params and 'varIdxs' arrays.
         fp, vi = [[-np.inf, np.inf], [-np.inf, np.inf]], [0, 1]
         KP_mode, KP_kde = modeKDE(fp, vi, samples.T)
-        # Add ecc, theta
+        # Add ell, theta
         KP_mode += [0., 0.]
         KP_kde += [[], []]
     elif ndim == 4:
@@ -448,43 +429,43 @@ def plotParams(
     if ndim != 1:
         rt_MAD = stats.median_abs_deviation(samples[:, 1])
     if ndim == 4:
-        ecc_MAD = stats.median_abs_deviation(samples[:, 2])
+        ell_MAD = stats.median_abs_deviation(samples[:, 2])
 
     # Central density. Use mean values for all the parameters.
     KP_cent_dens = lnlike(
-        (rc_m, rt_m, ecc_m, theta_m), ndim, rt_max, cl_cent, field_dens,
+        (rc_m, rt_m, ell_m, theta_m), ndim, rt_max, cl_cent, field_dens,
         N_memb, xy_in, r_in, rt_rang, True)
 
     # 16th-84th percentile region for the profile fit
-    ecc, theta = 0., 0.
-    kpf_yvals, cd_rc_rt_sampled = [], []
+    ell, theta = 0., 0.
+    kpf_yvals, cd_rc_rt_ell_sampled = [], []
 
-    # Sample rc, rt, ecc, theta. Use the median and MAD.
+    # Sample rc, rt, ell, theta. Use the median and MAD.
     N = 1000
     rc_s = np.random.normal(rc_50, 1.4826 * rc_MAD, N)
     rt_s = np.random.normal(rt_50, 1.4826 * rt_MAD, N)
     if ndim == 4:
-        ecc_s = np.random.normal(ecc_50, 1.4826 * ecc_MAD, N)
-        ecc_s = np.clip(ecc_s, a_min=0, a_max=.99)
+        ell_s = np.random.normal(ell_50, 1.4826 * ell_MAD, N)
+        ell_s = np.clip(ell_s, a_min=0, a_max=.99)
         theta_s = np.random.normal(theta_m, theta_std, N)
 
     for _ in range(N):
-        rc, rt = rc_s[_], rt_s[_]
+        rc, rt, ell = rc_s[_], rt_s[_], np.nan
         if ndim == 4:
-            ecc, theta = ecc_s[_], theta_s[_]
+            ell, theta = ell_s[_], theta_s[_]
 
         # with warnings.catch_warnings():
         #     warnings.simplefilter("ignore")
         # Obtain central density
         KP_cd_ = lnlike(
-            (rc, rt, ecc, theta), ndim, rt_max, cl_cent, field_dens,
+            (rc, rt, ell, theta), ndim, rt_max, cl_cent, field_dens,
             N_memb, xy_in, r_in, rt_rang, True)
-        cd_rc_rt_sampled.append([KP_cd_, rc, rt])
+        cd_rc_rt_ell_sampled.append([KP_cd_, rc, rt, ell])
 
         # Values in y
         kpf_yvals.append(KP_cd_ * KingProf(rt_rang, rc, rt) + field_dens)
 
-    cd_rc_rt_sampled = np.array(cd_rc_rt_sampled).T
+    cd_rc_rt_ell_sampled = np.array(cd_rc_rt_ell_sampled).T
 
     kpf_yvals = np.array(kpf_yvals).T
     _16_kp = np.nanpercentile(kpf_yvals, 16, 1)
@@ -496,6 +477,6 @@ def plotParams(
         'KP_ESS': KP_ESS, 'KP_samples': KP_samples, 'KP_mode': KP_mode,
         'KP_kde': KP_kde, 'KP_cent_dens': KP_cent_dens,
         '_16_84_rang': rt_rang, '_16_kp': _16_kp, '_84_kp': _84_kp,
-        'cd_rc_rt_sampled': cd_rc_rt_sampled}
+        'cd_rc_rt_ell_sampled': cd_rc_rt_ell_sampled}
 
     return KP_plot

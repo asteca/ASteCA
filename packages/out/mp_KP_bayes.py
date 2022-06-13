@@ -3,7 +3,7 @@ from . import BayesPlots
 
 
 def pl_KP_Bys(
-    gs, coord, kp_nburn, KP_plot, KP_Bys_rc, KP_Bys_rt, KP_Bys_ecc,
+    gs, coord, kp_nburn, KP_plot, KP_Bys_rc, KP_Bys_rt, KP_Bys_ell,
         KP_Bys_theta):
     """
     """
@@ -67,22 +67,22 @@ def pl_KP_Bys(
         gs, gsx, gsy_Hrcrt, x_samples, y_samples, KP_Bys_rc, KP_Bys_rt,
         xylabel)
 
-    # Eccentricity, theta
+    # Ellipticity, theta
     if KP_samples.shape[-1] == 4:
         gsy, gsx = (2, 3), (2, 6)
-        xylabel = r"$ecc$"
+        xylabel = r"$ell$"
         BayesPlots.traceplot(
-            gs, gsx, gsy, KP_samples[:, :, 2], KP_Bys_ecc, kp_nburn, xylabel)
+            gs, gsx, gsy, KP_samples[:, :, 2], KP_Bys_ell, kp_nburn, xylabel)
         gsy, gsx = (3, 4), (2, 6)
         xylabel = r"$\theta$ [rad]"
         BayesPlots.traceplot(
             gs, gsx, gsy, KP_samples[:, :, 3], KP_Bys_theta, kp_nburn, xylabel)
 
-        # Eccentricity vs theta
+        # Ellipticity vs theta
         gsy, gsx = (6, 8), (0, 2)
-        xylabel = r"$ecc$"
+        xylabel = r"$ell$"
         BayesPlots.histogram(
-            gs, gsx, gsy, KP_samples[nburn:, :, 2], KP_Bys_ecc,
+            gs, gsx, gsy, KP_samples[nburn:, :, 2], KP_Bys_ell,
             KP_kde[2], xylabel, "{:.2f}")
         #
         gsy, gsx = (6, 8), (2, 4)
@@ -92,11 +92,11 @@ def pl_KP_Bys(
             KP_kde[3], xylabel, "{:.2f}")
         #
         gsy, gsx = (6, 8), (4, 6)
-        xylabel = (r"$ecc$", r"$\theta$ [rad]")
+        xylabel = (r"$ell$", r"$\theta$ [rad]")
         x_samples, y_samples = KP_samples[nburn:, :, 2],\
             KP_samples[nburn:, :, 3]
         BayesPlots.twoParDens(
-            gs, gsx, gsy, x_samples, y_samples, KP_Bys_ecc, KP_Bys_theta,
+            gs, gsx, gsy, x_samples, y_samples, KP_Bys_ell, KP_Bys_theta,
             xylabel)
 
 

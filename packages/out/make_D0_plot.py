@@ -136,11 +136,11 @@ def main(
     ax.grid()
     plt.title(r"$r_{{c}}=${:.0f}, $r_{{t}}=${:.0f}".format(rc, rt))
     r = np.linspace(0., rt, 1000)
-    ecc = 0.
+    ell = 0.
     plt.plot(
         r,
         centDens(
-            synth_clust.shape[1], r, rc, rt, ecc) * KingProf(r, rc, rt),
+            synth_clust.shape[1], r, rc, rt, ell) * KingProf(r, rc, rt),
         c='r', label=r"$K_{{cp}}={:.2f}$".format(np.log10(rt / rc)),
         zorder=5)
     vals, edges = np.histogram(cl_dists, 20)

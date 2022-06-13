@@ -85,17 +85,17 @@ def circFrac(cent, rad, x0, x1, y0, y1, rand_01_MC, cos_t, sin_t):
 
 
 def ellipFrac(
-        cent, a, theta, ecc, x0, x1, y0, y1, rand_01_MC, cos_t, sin_t):
+        cent, a, theta, ell, x0, x1, y0, y1, rand_01_MC, cos_t, sin_t):
     """
     Use Monte Carlo to estimate the fraction of the area of an ellipse centered
     in (cx, cy) and rotated an angle theta, with a semi-major axis 'a' and
-    eccentricity 'ecc', that is located within the frame given by the limits
+    ellipticity 'ell', that is located within the frame given by the limits
     'x0, x1, y0, y1'.
     """
     N_tot = len(rand_01_MC)
 
     cx, cy = cent
-    b = a * np.sqrt(1 - ecc**2)
+    b = a * (1 - ell)
     cos_th = np.cos(theta)
     sin_th = np.sin(theta)
 

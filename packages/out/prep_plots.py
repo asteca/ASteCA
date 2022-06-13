@@ -590,7 +590,7 @@ def pmRectangle(allfr_PMs, frac=.1):
 
 
 def RDPCurve(
-    ndim, xy_filtered, xy_cent_dist, kde_cent, clust_rad, ecc, theta,
+    ndim, xy_filtered, xy_cent_dist, kde_cent, clust_rad, ell, theta,
         RDP_rings=50, rings_rm=.1, Nmin=10, **kwargs):
     """
     Obtain the RDP using the concentric rings method.
@@ -623,9 +623,9 @@ def RDPCurve(
                 + N_in_prev
         elif ndim == 4:
             N_in_ellip_lw = king_profile.inEllipse(
-                xy_filtered.T, kde_cent, lw, ecc, theta).sum()
+                xy_filtered.T, kde_cent, lw, ell, theta).sum()
             N_in_ellip_h = king_profile.inEllipse(
-                xy_filtered.T, kde_cent, h, ecc, theta).sum()
+                xy_filtered.T, kde_cent, h, ell, theta).sum()
             N_in = (N_in_ellip_h - N_in_ellip_lw) + N_in_prev
 
         # If N_in < Nmin take the next ellipse-ring (discard this lw).
@@ -647,14 +647,14 @@ def RDPCurve(
             elif ndim == 4:
                 # Area of ellipse-ring.
                 fr_area_l = ellipFrac(
-                    (kde_cent), l_now, theta, ecc, x0, x1, y0, y1, rand_01_MC,
+                    (kde_cent), l_now, theta, ell, x0, x1, y0, y1, rand_01_MC,
                     cos_t, sin_t)
                 fr_area_h = ellipFrac(
-                    (kde_cent), h, theta, ecc, x0, x1, y0, y1, rand_01_MC,
+                    (kde_cent), h, theta, ell, x0, x1, y0, y1, rand_01_MC,
                     cos_t, sin_t)
                 ring_area = (
-                    np.pi * h**2 * np.sqrt(1 - ecc**2) * fr_area_h)\
-                    - (np.pi * l_now**2 * np.sqrt(1 - ecc**2) * fr_area_l)
+                    np.pi * h**2 * (1 - ell) * fr_area_h)\
+                    - (np.pi * l_now**2 * (1 - ell) * fr_area_l)
 
             # Store RDP parameters.
             rad_med = h if l_now == 0. else .5 * (l_now + h)

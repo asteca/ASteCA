@@ -36,7 +36,7 @@ def main(npd, cld, pd, clp):
     _, y_ax = prep_plots.ax_names(pd['colors'][0], pd['filters'][0], 'mag')
     rdp_radii, rdp_points, rdp_stddev, rad_max = prep_plots.RDPCurve(
         pd['kp_ndim'], clp['xy_filtered'], clp['xy_cent_dist'],
-        clp['kde_cent'], clp['clust_rad'], clp['KP_Bys_ecc']['median'],
+        clp['kde_cent'], clp['clust_rad'], clp['KP_Bys_ell']['median'],
         clp['KP_Bys_theta']['mean'])
     membvsmag = prep_plots.NmembVsMag(
         cld['x'], cld['y'], cld['mags'], clp['kde_cent'],
@@ -66,12 +66,13 @@ def main(npd, cld, pd, clp):
         [gs, fig, pd['xy_frame'], x_name, y_name, coord, x_zmin, x_zmax,
          y_zmin, y_zmax, clp['cont_index'], x_data_z, y_data_z, st_sizes_arr_z,
          clp['kde_cent'], clp['clust_rad'], clp['KP_Bys_rc'], clp['KP_Bys_rt'],
-         clp['KP_Bys_ecc'], clp['KP_Bys_theta'], clp['frac_cl_area'],
+         clp['KP_Bys_ell'], clp['KP_Bys_theta'], clp['frac_cl_area'],
          pd['kp_ndim']],
         # pl_memb_vs_rad
         [gs, pd['plot_style'], coord, clp['clust_rad'], rad_radii,
          N_membs, N_membs_16, N_membs_84, clp['KP_Bys_rc']['median'],
-         clp['KP_Bys_rt']['median'], pd['kp_ndim'], clp['KP_plot']],
+         clp['KP_Bys_rt']['median'], clp['KP_Bys_ell']['median'],
+         pd['kp_ndim'], clp['KP_plot']],
         # pl_membs_dist
         [gs, fig, clp['members_dist'], clp['n_memb']]
     ]
@@ -99,7 +100,7 @@ def main(npd, cld, pd, clp):
         arglist = [
             # pl_KP_Bys
             [gs, coord, pd['kp_nburn'], clp['KP_plot'], clp['KP_Bys_rc'],
-             clp['KP_Bys_rt'], clp['KP_Bys_ecc'], clp['KP_Bys_theta']]
+             clp['KP_Bys_rt'], clp['KP_Bys_ell'], clp['KP_Bys_theta']]
         ]
         for n, args in enumerate(arglist):
             mp_KP_bayes.plot(n, *args)

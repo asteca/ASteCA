@@ -263,7 +263,7 @@ def pl_rad_dens(
 def pl_zoom_frame(
     gs, fig, xy_frame, x_name, y_name, coord, x_zmin, x_zmax, y_zmin, y_zmax,
     cont_index, x_data, y_data, st_sizes_arr, kde_cent, clust_rad, KP_Bys_rc,
-        KP_Bys_rt, KP_Bys_ecc, KP_Bys_theta, frac_cl_area, kp_ndim):
+        KP_Bys_rt, KP_Bys_ell, KP_Bys_theta, frac_cl_area, kp_ndim):
     """
     Zoom on x,y finding chart.
     """
@@ -297,9 +297,9 @@ def pl_zoom_frame(
     # Core and tidal radii
     if kp_ndim in (2, 4):
         # Plot tidal radius.
-        rt_median, ecc_mean, theta_mean = KP_Bys_rt['median'],\
-            KP_Bys_ecc['mean'], KP_Bys_theta['mean']
-        b = rt_median * np.sqrt(1. - ecc_mean**2)
+        rt_median, ell_mean, theta_mean = KP_Bys_rt['median'],\
+            KP_Bys_ell['mean'], KP_Bys_theta['mean']
+        b = rt_median * (1. - ell_mean)
         ellipse = mpatches.Ellipse(
             xy=kde_cent, width=2. * rt_median, height=2. * b,
             angle=np.rad2deg(theta_mean), facecolor='None', edgecolor='g',
@@ -308,7 +308,7 @@ def pl_zoom_frame(
 
         # Plot core radius.
         rc_median = KP_Bys_rc['median']
-        b = rc_median * np.sqrt(1. - ecc_mean**2)
+        b = rc_median * (1. - ell_mean)
         ellipse = mpatches.Ellipse(
             xy=kde_cent, width=2. * rc_median, height=2. * b,
             angle=np.rad2deg(theta_mean), facecolor='None', edgecolor='g',
@@ -331,20 +331,21 @@ def pl_zoom_frame(
 
 def pl_memb_vs_rad(
     gs, plot_style, coord, clust_rad, rad_radii, N_membs, N_membs_16,
-        N_membs_84, rc, rt, kp_ndim, KP_plot):
+        N_membs_84, rc, rt, ell, kp_ndim, KP_plot):
     """
     """
-    cent_dens, _16_84_rang, cd_rc_rt_sampled = 0., 0., (0., 0., 0.)
+    cent_dens, _16_84_rang, cd_rc_rt_ell_sampled = 0., 0., (0., 0., 0.)
     if kp_ndim in (2, 4):
-        cent_dens, _16_84_rang, cd_rc_rt_sampled = KP_plot['KP_cent_dens'],\
-            KP_plot['_16_84_rang'], KP_plot['cd_rc_rt_sampled']
+        cent_dens, _16_84_rang, cd_rc_rt_ell_sampled =\
+            KP_plot['KP_cent_dens'], KP_plot['_16_84_rang'],\
+            KP_plot['cd_rc_rt_ell_sampled']
 
     # Convert from deg to arcmin
-    cent_dens, cd_sampled = cent_dens / 3600., cd_rc_rt_sampled[0] / 3600.
+    cent_dens, cd_sampled = cent_dens / 3600., cd_rc_rt_ell_sampled[0] / 3600.
     clust_rad, rc, rt, _16_84_rang, rc_sampled, rt_sampled,\
         rad_radii = clust_rad * 60., rc * 60.,\
-        rt * 60., _16_84_rang * 60., cd_rc_rt_sampled[1] * 60.,\
-        cd_rc_rt_sampled[2] * 60., rad_radii * 60.
+        rt * 60., _16_84_rang * 60., cd_rc_rt_ell_sampled[1] * 60.,\
+        cd_rc_rt_ell_sampled[2] * 60., rad_radii * 60.
     coord2 = 'arcmin'
 
     ax = plt.subplot(gs[4:6, 0:4])
@@ -359,14 +360,16 @@ def pl_memb_vs_rad(
     # Plot King profile.
     if kp_ndim in (2, 4):
         N_KP_best, N_KP_16_84 = [], []
+        arr = np.linspace(0, rt, 1000)
         for r in rads:
-            N_KP_best.append(KP_memb_x(cent_dens, rc, rt, r))
+            N_KP_best.append(KP_memb_x(cent_dens, rc, rt, ell, arr, r))
 
             N_KP = []
             # Only use 100 samples to reduce the impact on performance
             for i, cd in enumerate(cd_sampled[:100]):
                 rc_s, rt_s = rc_sampled[i], rt_sampled[i]
-                N_KP.append(KP_memb_x(cd, rc_s, rt_s, r))
+                ell_s = cd_rc_rt_ell_sampled[3][i]
+                N_KP.append(KP_memb_x(cd, rc_s, rt_s, ell_s, arr, r))
             N_KP_16_84.append(np.nanpercentile(N_KP, (16, 84)))
         N_KP_16_84 = np.array(N_KP_16_84).T
         # 16-84 region

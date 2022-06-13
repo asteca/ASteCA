@@ -5,8 +5,8 @@ from ..inp.get_data import flatten
 
 
 def main(
-    npd, pd, cont_index, n_memb, frac_cl_area, kde_cent,
-    clust_rad, KP_Bys_rc, KP_Bys_rt, KP_memb_num, isoch_fit_params,
+    npd, pd, cont_index, n_memb, frac_cl_area, kde_cent, clust_rad, KP_Bys_rc,
+    KP_Bys_rt, KP_Bys_ell, KP_Bys_theta, KP_memb_num, isoch_fit_params,
         isoch_fit_errors, MassT_dist_vals, binar_dist_vals, **kwargs):
     """
     Add data obtained to the 'asteca_output.dat' file.
@@ -21,8 +21,16 @@ def main(
     cre_r = [
         frmt.format(_) for _ in [
             kde_cent[0], kde_cent[1], clust_rad,
-            KP_Bys_rc['median'], KP_Bys_rc['16th'], KP_Bys_rc['84th'],
-            KP_Bys_rt['median'], KP_Bys_rt['16th'], KP_Bys_rt['84th']]]
+            KP_Bys_rc['mean'], KP_Bys_rc['median'], KP_Bys_rc['mode'],
+            KP_Bys_rc['16th'], KP_Bys_rc['84th'], KP_Bys_rc['std'],
+            KP_Bys_rt['mean'], KP_Bys_rt['median'], KP_Bys_rt['mode'],
+            KP_Bys_rt['16th'], KP_Bys_rt['84th'], KP_Bys_rt['std'],
+            KP_Bys_ell['mean'], KP_Bys_ell['median'], KP_Bys_ell['mode'],
+            KP_Bys_ell['16th'], KP_Bys_ell['84th'], KP_Bys_ell['std'],
+            KP_Bys_theta['mean'], KP_Bys_theta['median'], KP_Bys_theta['mode'],
+            KP_Bys_theta['16th'], KP_Bys_theta['84th'], KP_Bys_theta['std'],
+        ]
+    ]
 
     # Cluster parameters and errors.
     cpe_r = [

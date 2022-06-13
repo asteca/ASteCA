@@ -17,6 +17,8 @@ txt = """#
 # r_cl     : radius
 # r_c      : Core radius (King profile)
 # r_t      : Tidal radius (King profile)
+# ell      : Ellipticity
+# theta    : Rotation angle
 # CI       : Contamination index
 # n_memb_k : Number of members obtained integrating the fitted King profile
 # n_memb   : Number of members assuming a uniform background
@@ -36,7 +38,11 @@ txt = """#
 # dm : distance modulus
 #
 """
-txt += "NAME,c_x,c_y,r_cl,r_c,rc16,rc84,r_t,rt16,rt84,CI,n_memb_k,n_memb,a_f,"
+txt += "NAME,c_x,c_y,r_cl,"
+for par in ('r_c', 'r_t', 'ell', 'theta'):
+    txt += "{}_mean,{}_median,{}_mode,{}_16th,{}_84th,{}_std,".format(
+        *[par] * 6)
+txt += "CI,n_memb_k,n_memb,a_f,"
 for par in ('M', 'z', 'a', 'bf', 'B', 'Av', 'DR', 'Rv', 'dm'):
     txt += "{}_mean,{}_median,{}_mode,{}_16th,{}_84th,{}_std,".format(
         *[par] * 6)
