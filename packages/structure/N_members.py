@@ -13,6 +13,7 @@ def main(clp):
 
     N_in_rad = (clp['xy_cent_dist'] < clp['clust_rad']).sum()
 
+    n_memb = 0
     # The field density was manually fixed
     if np.isnan(clp['field_dens_std']):
         n_memb = int(N_in_rad - clp['cl_area'] * clp['field_dens'])
