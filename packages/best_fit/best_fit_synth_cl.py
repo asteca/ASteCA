@@ -110,6 +110,11 @@ def main(npd, pd, td, clp):
         #     pd['pt_ntemps'], pd['pt_adapt'], pd['pt_tmax'],
         #     pd['nsteps_mcee'], pd['nwalkers_mcee'], pd['mins_max'], **td)
 
+        # from . import ultranest_algor
+        # isoch_fit_params = ultranest_algor.main(
+        #     pd['lkl_method'], clp['obs_clust'], clp['varIdxs'],
+        #     clp['ranges'], clp['syntClustArgs'])
+
         # Calculate the best fitting parameters.
         isoch_fit_params = ptemcee_algor.main(
             pd['lkl_method'], pd['pt_ntemps'], pd['pt_adapt'], pd['pt_tmax'],
