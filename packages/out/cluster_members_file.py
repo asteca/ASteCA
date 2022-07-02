@@ -1,5 +1,4 @@
 
-import numpy as np
 from ..inp import data_IO
 
 
@@ -20,7 +19,7 @@ def main(clp, npd, id_ids, **kwargs):
         all_data.remove_column('memb_probs')
     all_data.add_column(-1, name='sel')
     all_data.add_column(0., name='memb_probs')
-    IDs = list(all_data[id_ids])
+    IDs = list(all_data[id_ids].astype(str))
 
     # Add ID associated to the use of the each star in the fundamental
     # parameters estimation process and MPs.
