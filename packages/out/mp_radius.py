@@ -185,21 +185,21 @@ def pl_rad_dens(
             (field_dens, y_mid_point), rad_uncert[0], rad_uncert[1],
             color='grey', alpha=.25)
 
-    # Plot King profile. Use median values
+    # Plot King profile. Use mode values
     if kp_ndim in (2, 4):
         txts = [
             'King prof ({:.2f})'.format(KP_conct_par),
             kp_rad.format(
-                "c", KP_Bys_rc['median'], KP_Bys_rc['16th'], KP_Bys_rc['84th'],
+                "c", KP_Bys_rc['mode'], KP_Bys_rc['16th'], KP_Bys_rc['84th'],
                 coord2),
             kp_rad.format(
-                "t", KP_Bys_rt['median'], KP_Bys_rt['16th'], KP_Bys_rt['84th'],
+                "t", KP_Bys_rt['mode'], KP_Bys_rt['16th'], KP_Bys_rt['84th'],
                 coord2)
         ]
         # Plot curve. Values outside of rt contribute 'fd'.
-        kpf_xvals = np.linspace(rdp_radii[0], KP_Bys_rt['median'], 100)
+        kpf_xvals = np.linspace(rdp_radii[0], KP_Bys_rt['mode'], 100)
         kpf_yvals = KP_cent_dens * kpf(
-            kpf_xvals, KP_Bys_rc['median'], KP_Bys_rt['median']) + field_dens
+            kpf_xvals, KP_Bys_rc['mode'], KP_Bys_rt['mode']) + field_dens
         ax.plot(kpf_xvals, kpf_yvals, 'g--', label=txts[0], lw=2., zorder=3)
         # 16-84th range
         idx = (np.abs(_16_84_rang - kpf_xvals[-1])).argmin()
@@ -210,13 +210,13 @@ def pl_rad_dens(
 
         # Core radius
         rc_ymax = KP_cent_dens * kpf(
-            KP_Bys_rc['median'], KP_Bys_rc['median'], KP_Bys_rt['median'])\
+            KP_Bys_rc['mode'], KP_Bys_rc['mode'], KP_Bys_rt['mode'])\
             + field_dens
         ax.vlines(
-            x=KP_Bys_rc['median'], ymin=field_dens, ymax=rc_ymax,
+            x=KP_Bys_rc['mode'], ymin=field_dens, ymax=rc_ymax,
             label=txts[1], color='g', linestyles=':', lw=2., zorder=5)
         # Tidal radius
-        ax.vlines(x=KP_Bys_rt['median'], ymin=field_dens, ymax=y_mid_point,
+        ax.vlines(x=KP_Bys_rt['mode'], ymin=field_dens, ymax=y_mid_point,
                   label=txts[2], color='g')
 
     # get handles
@@ -241,10 +241,10 @@ def pl_rad_dens(
     if kp_ndim in (2, 4):
         axins.plot(kpf_xvals, kpf_yvals, 'g--', lw=1., zorder=3)
         axins.vlines(
-            x=KP_Bys_rc['median'], ymin=field_dens, ymax=rc_ymax, color='g',
+            x=KP_Bys_rc['mode'], ymin=field_dens, ymax=rc_ymax, color='g',
             linestyles=':', lw=1.)
         axins.vlines(
-            x=KP_Bys_rt['median'], ymin=field_dens, ymax=y_mid_point,
+            x=KP_Bys_rt['mode'], ymin=field_dens, ymax=y_mid_point,
             color='g', lw=1)
     else:
         axins.vlines(
@@ -297,21 +297,21 @@ def pl_zoom_frame(
     # Core and tidal radii
     if kp_ndim in (2, 4):
         # Plot tidal radius.
-        rt_median, ell_mean, theta_mean = KP_Bys_rt['median'],\
-            KP_Bys_ell['mean'], KP_Bys_theta['mean']
-        b = rt_median * (1. - ell_mean)
+        rt_sol, ell_sol, theta_sol = KP_Bys_rt['mode'],\
+            KP_Bys_ell['mode'], KP_Bys_theta['mode']
+        b = rt_sol * (1. - ell_sol)
         ellipse = mpatches.Ellipse(
-            xy=kde_cent, width=2. * rt_median, height=2. * b,
-            angle=np.rad2deg(theta_mean), facecolor='None', edgecolor='g',
+            xy=kde_cent, width=2. * rt_sol, height=2. * b,
+            angle=np.rad2deg(theta_sol), facecolor='None', edgecolor='g',
             linewidth=1.5, transform=ax.transData)
         fig.gca().add_artist(ellipse)
 
         # Plot core radius.
-        rc_median = KP_Bys_rc['median']
-        b = rc_median * (1. - ell_mean)
+        rc_sol = KP_Bys_rc['mode']
+        b = rc_sol * (1. - ell_sol)
         ellipse = mpatches.Ellipse(
-            xy=kde_cent, width=2. * rc_median, height=2. * b,
-            angle=np.rad2deg(theta_mean), facecolor='None', edgecolor='g',
+            xy=kde_cent, width=2. * rc_sol, height=2. * b,
+            angle=np.rad2deg(theta_sol), facecolor='None', edgecolor='g',
             ls='dashed', linewidth=1.5, transform=ax.transData)
         fig.gca().add_artist(ellipse)
 

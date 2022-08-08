@@ -28,7 +28,7 @@ def main(npd, cld, pd, clp):
 
     x_zmin, x_zmax, y_zmin, y_zmax = prep_plots.frame_zoomed(
         x_min, x_max, y_min, y_max, clp['kde_cent'], clp['clust_rad'],
-        clp['KP_Bys_rt']['median'])
+        clp['KP_Bys_rt']['mode'])
     x_data_z, y_data_z, mag_data_z = prep_plots.zoomed_frame(
         cld['x'], cld['y'], cld['mags'], x_zmin, x_zmax, y_zmin,
         y_zmax)
@@ -36,8 +36,8 @@ def main(npd, cld, pd, clp):
     _, y_ax = prep_plots.ax_names(pd['colors'][0], pd['filters'][0], 'mag')
     rdp_radii, rdp_points, rdp_stddev, rad_max = prep_plots.RDPCurve(
         pd['kp_ndim'], clp['xy_filtered'], clp['xy_cent_dist'],
-        clp['kde_cent'], clp['clust_rad'], clp['KP_Bys_ell']['median'],
-        clp['KP_Bys_theta']['mean'])
+        clp['kde_cent'], clp['clust_rad'], clp['KP_Bys_ell']['mode'],
+        clp['KP_Bys_theta']['mode'])
     membvsmag = prep_plots.NmembVsMag(
         cld['x'], cld['y'], cld['mags'], clp['kde_cent'],
         clp['clust_rad'], clp['cl_area'])
@@ -70,8 +70,8 @@ def main(npd, cld, pd, clp):
          pd['kp_ndim']],
         # pl_memb_vs_rad
         [gs, pd['plot_style'], coord, clp['clust_rad'], rad_radii,
-         N_membs, N_membs_16, N_membs_84, clp['KP_Bys_rc']['median'],
-         clp['KP_Bys_rt']['median'], clp['KP_Bys_ell']['median'],
+         N_membs, N_membs_16, N_membs_84, clp['KP_Bys_rc']['mode'],
+         clp['KP_Bys_rt']['mode'], clp['KP_Bys_ell']['mode'],
          pd['kp_ndim'], clp['KP_plot']],
         # pl_membs_dist
         [gs, fig, clp['members_dist'], clp['n_memb']]
