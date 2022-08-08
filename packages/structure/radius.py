@@ -30,6 +30,11 @@ def main(cld, clp, rad_method, **kwargs):
         clp['clust_rad'] = rad_method
         print("Manual radius set: {:g} deg".format(clp['clust_rad']))
 
+        clust_rad_man, _, _, _ = optimalRadius(
+            clp['field_dens'], clp['field_dens_std'],
+            np.array(clp['fdens_min_d']), np.array(clp['fdens_lst']))
+        clp['clust_rad'] = max(clp['clust_rad'], 2 * clust_rad_man)
+
     clp['rad_uncert'], clp['rads_interp'], clp['integ_interp'] =\
         rad_uncert, rads_interp, integ_interp
 

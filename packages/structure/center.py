@@ -19,26 +19,23 @@ def main(cld, clp, cent_method, **kwargs):
         # approximate center obtained with the full frame and the given
         # bandwidth.
         cent = clp['kde_approx_cent']
-        kde_cent, kde_plot = kde_center_zoom(
-            cld['x'], cld['y'], cent, radius)
-
-        # Find bin where the center xy coordinates are located.
-        bin_cent = center_bin(clp['xedges'], clp['yedges'], kde_cent)
-
+        kde_cent, kde_plot = kde_center_zoom(cld['x'], cld['y'], cent, radius)
         print("Auto center found (bw={:g}): ({:g}, {:g}) deg".format(
             clp['bw_list'][1], kde_cent[0], kde_cent[1]))
-
     else:
-        x0, y0 = cent_method[0], cent_method[1]
+        kde_cent = (cent_method[0], cent_method[1])
 
-        # Obtain KDE plot.
-        _, kde_plot = kde_center_zoom(cld['x'], cld['y'], (x0, y0), radius)
+        # # Obtain KDE plot.
+        # _, kde_plot = kde_center_zoom(cld['x'], cld['y'], kde_cent, radius)
+        # print("Manual center fixed: ({:g}, {:g}) deg".format(*cent_method))
 
-        kde_cent = (x0, y0)
-        print("Manual center fixed: ({:g}, {:g}) deg".format(*cent_method))
+        radius = 0.15 * (radius / 0.25)
+        kde_cent, kde_plot = kde_center_zoom(
+            cld['x'], cld['y'], kde_cent, radius)
+        print("Center estimated: ({:g}, {:g}) deg".format(*kde_cent))
 
-        # Find bin where the center xy coordinates are located.
-        bin_cent = center_bin(clp['xedges'], clp['yedges'], kde_cent)
+    # Find bin where the center xy coordinates are located.
+    bin_cent = center_bin(clp['xedges'], clp['yedges'], kde_cent)
 
     # Add data to dictionary.
     center_params = {
