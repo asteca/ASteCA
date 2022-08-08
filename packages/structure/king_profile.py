@@ -352,6 +352,12 @@ def centDens(N_memb, arr, rc, rt, ell):
     integ = max(0.0000001, KP_integ_x(rc, rt, ell, arr, rt))
     return N_memb / integ
 
+    # This does not work, r_t grows to the maximum allowed value
+    # cent_dens = some value
+    # A = 1 / np.sqrt(1 + (rt / rc)**2)
+    # rho_0 = cent_dens / (1 - A)**2
+    # return rho_0
+
 
 def KingProf(r_in, rc, rt):
     """
