@@ -105,15 +105,18 @@ def main(npd, pd, td, clp):
 
         # from . import pyabc_algor
         # isoch_fit_params = pyabc_algor.main(
-        #     clp['completeness'], clp['err_lst'],
-        #     clp['max_mag_syn'], clp['obs_clust'], pd['lkl_method'],
-        #     pd['pt_ntemps'], pd['pt_adapt'], pd['pt_tmax'],
-        #     pd['nsteps_mcee'], pd['nwalkers_mcee'], pd['mins_max'], **td)
+        #     pd['lkl_method'], clp['obs_clust'], clp['varIdxs'], clp['ndim'],
+        #     clp['ranges'], clp['syntClustArgs'])
 
         # from . import ultranest_algor
         # isoch_fit_params = ultranest_algor.main(
         #     pd['lkl_method'], clp['obs_clust'], clp['varIdxs'],
         #     clp['ranges'], clp['syntClustArgs'])
+
+        # from . import pocoMC_algor
+        # isoch_fit_params = pocoMC_algor.main(
+        #     pd['lkl_method'], clp['obs_clust'], clp['varIdxs'], clp['ndim'],
+        #     clp['ranges'], clp['syntClustArgs'], td['priors_mcee'])
 
         # Calculate the best fitting parameters.
         isoch_fit_params = ptemcee_algor.main(
