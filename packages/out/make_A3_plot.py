@@ -34,9 +34,9 @@ def main(npd, cld, pd, clp):
         y_zmax)
     st_sizes_arr_z = prep_plots.star_size(mag_data_z)
     _, y_ax = prep_plots.ax_names(pd['colors'][0], pd['filters'][0], 'mag')
-    rdp_radii, rdp_points, rdp_stddev, rad_max = prep_plots.RDPCurve(
+    rdp_radii, rdp_points, rdp_stddev = prep_plots.RDPCurve(
         pd['kp_ndim'], clp['xy_filtered'], clp['xy_cent_dist'],
-        clp['kde_cent'], clp['clust_rad'], clp['KP_Bys_ell']['mode'],
+        clp['kde_cent'], clp['KP_Bys_ell']['mode'],
         clp['KP_Bys_theta']['mode'])
     membvsmag = prep_plots.NmembVsMag(
         cld['x'], cld['y'], cld['mags'], clp['kde_cent'],
@@ -48,8 +48,8 @@ def main(npd, cld, pd, clp):
     # Structure plots.
     arglist = [
         # pl_rad_find
-        [gs, pd['plot_style'], coord, clp['clust_rad'],
-         clp['rads_interp'], clp['integ_interp'], CI_vals, rad_radii],
+        [gs, pd['plot_style'], coord, clp['field_dens'], clp['clust_rad'],
+         clp['rads_fit_line'], rdp_radii, rdp_points],
         # pl_mag_membs
         [gs, pd['plot_style'], y_ax, membvsmag],
         # pl_cl_fl_regions: Cluster and field regions defined.
@@ -59,7 +59,7 @@ def main(npd, cld, pd, clp):
          clp['flag_no_fl_regs']],
         # pl_rad_dens: Radial density plot.
         [gs, pd['plot_style'], coord, rdp_radii, rdp_points, rdp_stddev,
-         rad_max, clp['field_dens'], clp['field_dens_std'], clp['clust_rad'],
+         clp['field_dens'], clp['field_dens_std'], clp['clust_rad'],
          clp['rad_uncert'], pd['kp_ndim'], clp['KP_Bys_rc'], clp['KP_Bys_rt'],
          clp['KP_plot'], clp['KP_conct_par']],
         # pl_zoom_frame: Zoom on x,y finding chart.

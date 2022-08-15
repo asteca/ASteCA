@@ -590,7 +590,7 @@ def pmRectangle(allfr_PMs, frac=.1):
 
 
 def RDPCurve(
-    ndim, xy_filtered, xy_cent_dist, kde_cent, clust_rad, ell, theta,
+    ndim, xy_filtered, xy_cent_dist, kde_cent, ell, theta,
         RDP_rings=50, rings_rm=.1, Nmin=10, **kwargs):
     """
     Obtain the RDP using the concentric rings method.
@@ -669,10 +669,7 @@ def RDPCurve(
             l_prev = l_now
             N_in_prev += N_in
 
-    # Get max value in x
-    rad_max = min(max(rdp_radii) + (max(rdp_radii) / 20.), 4. * clust_rad)
-
-    return rdp_radii, rdp_points, rdp_stddev, rad_max
+    return rdp_radii, rdp_points, rdp_stddev
 
 
 def NmembVsMag(x, y, mags, kde_cent, clust_rad, cl_area):

@@ -10,14 +10,15 @@ from ..structure.king_profile import KP_memb_x
 
 
 def pl_rad_find(
-    gs, plot_style, coord, clust_rad, rads_interp, integ_interp,
-        CI_vals, rad_radii):
+    gs, plot_style, coord, field_dens, clust_rad, rads_fit_line, rdp_radii,
+        rdp_points):
     """
     Radius estimation plot.
     """
     # Convert from deg to arcmin
-    rads_interp, rad_radii, clust_rad = np.array(rads_interp) * 60.,\
-        rad_radii * 60, clust_rad * 60.
+    rdp_radii, clust_rad = np.array(rdp_radii) * 60, clust_rad * 60.
+    rdp_points = np.array(rdp_points) / 3600.
+    field_dens = field_dens / 3600.
     coord2 = 'arcmin'
 
     ax = plt.subplot(gs[0:2, 0:2])
@@ -25,22 +26,29 @@ def pl_rad_find(
     if plot_style == 'asteca':
         ax.grid()
 
-    plt.scatter(rads_interp, integ_interp, c='g',
-                label=r'$\int A$', alpha=.3)
+    if rads_fit_line.any():
+        intercept, slope, intercept_stderr, stderr = rads_fit_line
+        s_vals = np.random.normal(slope, stderr, 100)
+        i_vals = np.random.normal(intercept, intercept_stderr, 100)
+        for _ in range(100):
+            y = (np.exp(i_vals[_]) / 3600) * (rdp_radii / 60)**s_vals[_]
+            plt.plot(rdp_radii, y, c='grey', alpha=.1, zorder=0)
 
-    plt.plot(rad_radii, CI_vals, ls=':', c='k', label='CI')
-    ymin, _ = ax.get_ylim()
-    ymin = max(ymin, 0)
-    plt.axvline(x=clust_rad, lw=1.5, color='r', label=r"$r_{cl}$")
+        y = (np.exp(intercept) / 3600) * (rdp_radii / 60)**slope
+        plt.plot(rdp_radii, y, c='b', ls='--', label="Line fit", zorder=1)
+
+    plt.scatter(rdp_radii[:3], rdp_points[:3], c='r', marker='x', zorder=2)
+    plt.scatter(rdp_radii[3:], rdp_points[3:], c='k', zorder=2)
+    plt.axvline(x=clust_rad, lw=1.5, color='r', label=r"$r_{cl}$", zorder=3)
+    ax.hlines(y=field_dens, xmin=0, xmax=max(rdp_radii), color='k', ls='--',
+              label="Field density", zorder=5)
 
     # Legends.
-    leg = plt.legend(fancybox=True, loc='lower right')
+    leg = plt.legend(fancybox=True, loc='upper center')
     leg.get_frame().set_alpha(0.7)
 
-    # xmin, xmax = ax.get_xlim()
-    xmax = min(clust_rad + clust_rad * 3, rad_radii[-1])
-    plt.ylim(ymin, 1.12)
-    plt.xlim(0., xmax)
+    ax.set_xscale('log')
+    ax.set_yscale('log')
 
 
 def pl_mag_membs(gs, plot_style, y_ax, membvsmag):
@@ -105,12 +113,14 @@ def pl_cl_fl_regions(
 
 
 def pl_rad_dens(
-    gs, plot_style, coord, rdp_radii, rdp_points, rdp_stddev, rad_max,
+    gs, plot_style, coord, rdp_radii, rdp_points, rdp_stddev,
     field_dens, e_fdens, clust_rad, rad_uncert, kp_ndim, KP_Bys_rc, KP_Bys_rt,
         KP_plot, KP_conct_par):
     """
     Radial density plot.
     """
+    # Get max value in x
+    rad_max = min(max(rdp_radii) + (max(rdp_radii) / 20.), 4. * clust_rad)
 
     KP_cent_dens, _16_84_rang, _84_kp, _16_kp = 0., 0., 0., 0.
     if kp_ndim in (2, 4):
@@ -185,21 +195,21 @@ def pl_rad_dens(
             (field_dens, y_mid_point), rad_uncert[0], rad_uncert[1],
             color='grey', alpha=.25)
 
-    # Plot King profile. Use mode values
+    # Plot King profile.
     if kp_ndim in (2, 4):
         txts = [
             'King prof ({:.2f})'.format(KP_conct_par),
             kp_rad.format(
-                "c", KP_Bys_rc['mode'], KP_Bys_rc['16th'], KP_Bys_rc['84th'],
+                "c", KP_Bys_rc['median'], KP_Bys_rc['16th'], KP_Bys_rc['84th'],
                 coord2),
             kp_rad.format(
-                "t", KP_Bys_rt['mode'], KP_Bys_rt['16th'], KP_Bys_rt['84th'],
+                "t", KP_Bys_rt['median'], KP_Bys_rt['16th'], KP_Bys_rt['84th'],
                 coord2)
         ]
         # Plot curve. Values outside of rt contribute 'fd'.
-        kpf_xvals = np.linspace(rdp_radii[0], KP_Bys_rt['mode'], 100)
+        kpf_xvals = np.linspace(rdp_radii[0], KP_Bys_rt['median'], 100)
         kpf_yvals = KP_cent_dens * kpf(
-            kpf_xvals, KP_Bys_rc['mode'], KP_Bys_rt['mode']) + field_dens
+            kpf_xvals, KP_Bys_rc['median'], KP_Bys_rt['median']) + field_dens
         ax.plot(kpf_xvals, kpf_yvals, 'g--', label=txts[0], lw=2., zorder=3)
         # 16-84th range
         idx = (np.abs(_16_84_rang - kpf_xvals[-1])).argmin()
@@ -210,13 +220,13 @@ def pl_rad_dens(
 
         # Core radius
         rc_ymax = KP_cent_dens * kpf(
-            KP_Bys_rc['mode'], KP_Bys_rc['mode'], KP_Bys_rt['mode'])\
+            KP_Bys_rc['median'], KP_Bys_rc['median'], KP_Bys_rt['median'])\
             + field_dens
         ax.vlines(
-            x=KP_Bys_rc['mode'], ymin=field_dens, ymax=rc_ymax,
+            x=KP_Bys_rc['median'], ymin=field_dens, ymax=rc_ymax,
             label=txts[1], color='g', linestyles=':', lw=2., zorder=5)
         # Tidal radius
-        ax.vlines(x=KP_Bys_rt['mode'], ymin=field_dens, ymax=y_mid_point,
+        ax.vlines(x=KP_Bys_rt['median'], ymin=field_dens, ymax=y_mid_point,
                   label=txts[2], color='g')
 
     # get handles
@@ -241,10 +251,10 @@ def pl_rad_dens(
     if kp_ndim in (2, 4):
         axins.plot(kpf_xvals, kpf_yvals, 'g--', lw=1., zorder=3)
         axins.vlines(
-            x=KP_Bys_rc['mode'], ymin=field_dens, ymax=rc_ymax, color='g',
+            x=KP_Bys_rc['median'], ymin=field_dens, ymax=rc_ymax, color='g',
             linestyles=':', lw=1.)
         axins.vlines(
-            x=KP_Bys_rt['mode'], ymin=field_dens, ymax=y_mid_point,
+            x=KP_Bys_rt['median'], ymin=field_dens, ymax=y_mid_point,
             color='g', lw=1)
     else:
         axins.vlines(

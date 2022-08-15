@@ -208,9 +208,9 @@ def fit_King_prof(
 
     # Parameters for plotting
     KP_plot = plotParams(
-        KP_steps, ndim, sampler, samples, afs, autocorr_vals, tau_index, rc_m,
-        rt_m, ell_m, theta_m, theta_std, rc_50, rt_50, ell_50, rt_max, cl_cent,
-        field_dens, N_memb, xy_in, r_in, rt_rang)
+        KP_steps, ndim, sampler, samples, afs, autocorr_vals, tau_index,
+        theta_std, rc_50, rt_50, rt_max, cl_cent, field_dens, N_memb, xy_in,
+        r_in, rt_rang)
 
     # Store: 16th, median, 84th, mean, STDDEV, mode
     KP_Bys_rc = {'16th': rc_16, 'median': rc_50, '84th': rc_84, 'mean': rc_m,
@@ -287,9 +287,13 @@ def lnlike(
     # Central density
     rho_0 = centDens(N_memb, rt_rang, rc, rt, ell)
 
-    # Testing to avoid using 'N_memb'. A small number must be added to 'fd'
-    # and still it does not work as well as the above method
-    # rho_0 = (N_in_region - np.pi * rt**2 * fd * (1 + 0.025)) / KP_memb_x(1, rc, rt, rt)
+    # # Does not use 'N_memb'. The results are very non rob
+    # integ = max(0.0000001, KP_integ_x(rc, rt, ell, rt_rang, rt))
+    # a = rt
+    # b = a * (1. - ell) if ndim == 4 else rt
+    # area = np.pi * a * b
+    # N_memb = max(1, N_in_region - area * fd)
+    # rho_0 = N_memb / integ
 
     if return_dens is True:
         return rho_0
@@ -402,9 +406,9 @@ def KP_memb_x(cd, rc, rt, ell, arr, rad):
 
 
 def plotParams(
-    KP_steps, ndim, sampler, samples, afs, autocorr_vals, tau_index, rc_m,
-    rt_m, ell_m, theta_m, theta_std, rc_50, rt_50, ell_50, rt_max, cl_cent,
-        field_dens, N_memb, xy_in, r_in, rt_rang):
+    KP_steps, ndim, sampler, samples, afs, autocorr_vals, tau_index,
+    theta_std, rc_50, rt_50, rt_max, cl_cent, field_dens, N_memb, xy_in, r_in,
+        rt_rang):
     """
     """
     # Mean acceptance fraction
@@ -429,6 +433,7 @@ def plotParams(
             [-np.inf, np.inf], [-np.inf, np.inf], [-np.inf, np.inf],
             [-np.inf, np.inf]], [0, 1, 2, 3]
         KP_mode, KP_kde = modeKDE(fp, vi, samples.T)
+    ell_mode, theta_mode = KP_mode[2], KP_mode[3]
 
     rc_MAD = stats.median_abs_deviation(samples[:, 0])
     rt_MAD = np.inf
@@ -437,10 +442,10 @@ def plotParams(
     if ndim == 4:
         ell_MAD = stats.median_abs_deviation(samples[:, 2])
 
-    # Central density. Use mean values for all the parameters.
+    # Central density
     KP_cent_dens = lnlike(
-        (rc_m, rt_m, ell_m, theta_m), ndim, rt_max, cl_cent, field_dens,
-        N_memb, xy_in, r_in, rt_rang, True)
+        (rc_50, rt_50, ell_mode, theta_mode), ndim, rt_max, cl_cent,
+        field_dens, N_memb, xy_in, r_in, rt_rang, True)
 
     # 16th-84th percentile region for the profile fit
     ell, theta = 0., 0.
@@ -451,9 +456,9 @@ def plotParams(
     rc_s = np.random.normal(rc_50, 1.4826 * rc_MAD, N)
     rt_s = np.random.normal(rt_50, 1.4826 * rt_MAD, N)
     if ndim == 4:
-        ell_s = np.random.normal(ell_50, 1.4826 * ell_MAD, N)
+        ell_s = np.random.normal(ell_mode, 1.4826 * ell_MAD, N)
         ell_s = np.clip(ell_s, a_min=0, a_max=.99)
-        theta_s = np.random.normal(theta_m, theta_std, N)
+        theta_s = np.random.normal(theta_mode, theta_std, N)
 
     for _ in range(N):
         rc, rt, ell = rc_s[_], rt_s[_], np.nan
