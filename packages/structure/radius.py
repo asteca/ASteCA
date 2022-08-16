@@ -12,6 +12,8 @@ def main(cld, clp, rad_method, **kwargs):
     Assign the uncertainty based on the field density's uncertainty.
     """
     print("Estimating the radius")
+    clp['rad_uncert'], clp['rads_fit_line'] = np.array([np.nan, np.nan]),\
+        np.array([])
 
     if rad_method == 'a':
         clp['clust_rad'], clp['rad_uncert'], clp['rads_fit_line'] =\
@@ -26,14 +28,9 @@ def main(cld, clp, rad_method, **kwargs):
             cld['x'], cld['y'], clp['kde_cent'], clp['xy_cent_dist'])
         print("Max radius selected: {:g} deg".format(
             clp['clust_rad']))
-        clp['rad_uncert'], clp['rads_fit_line'] = np.array([np.nan, np.nan]),\
-            np.array([])
-
     else:
         clp['clust_rad'] = rad_method
         print("Manual radius set: {:g} deg".format(clp['clust_rad']))
-
-    # rads_interp, integ_interp
 
     return clp
 
