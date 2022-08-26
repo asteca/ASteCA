@@ -25,14 +25,14 @@ def main(cld, clp, cent_method, **kwargs):
     else:
         kde_cent = (cent_method[0], cent_method[1])
 
-        # # Obtain KDE plot.
-        # _, kde_plot = kde_center_zoom(cld['x'], cld['y'], kde_cent, radius)
-        # print("Manual center fixed: ({:g}, {:g}) deg".format(*cent_method))
+        # Obtain KDE plot.
+        _, kde_plot = kde_center_zoom(cld['x'], cld['y'], kde_cent, radius)
+        print("Manual center fixed: ({:g}, {:g}) deg".format(*cent_method))
 
-        radius = 0.15 * (radius / 0.25)
-        kde_cent, kde_plot = kde_center_zoom(
-            cld['x'], cld['y'], kde_cent, radius)
-        print("Center estimated: ({:g}, {:g}) deg".format(*kde_cent))
+        # radius = 0.15 * (radius / 0.25)
+        # kde_cent, kde_plot = kde_center_zoom(
+        #     cld['x'], cld['y'], kde_cent, radius)
+        # print("Center estimated: ({:g}, {:g}) deg".format(*kde_cent))
 
     # Find bin where the center xy coordinates are located.
     bin_cent = center_bin(clp['xedges'], clp['yedges'], kde_cent)
