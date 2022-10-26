@@ -823,7 +823,10 @@ def reddeningVector(cl_syn_fit, m_ini_idx, ext_coefs, N_fc, best_sol):
 
     _, _, _, _, _, rv, _ = best_sol
     av = arrow_length
-    isochrone = np.array([[y0], [x0], [0], [0], [0], [0]])
+    if N_fc[1] == 1:
+        isochrone = np.array([[y0], [x0], [0], [0], [0], [0]])
+    elif N_fc[1] == 2:
+        isochrone = np.array([[y0], [x0], [0], [0], [0], [0], [0]])
     dr, DR_dist, DR_percentage = 0, '', 0
     shift_isoch = extinction.main(
         isochrone, av, dr, rv, ext_coefs, N_fc, DR_dist, DR_percentage,
