@@ -215,13 +215,13 @@ def checkSynthClustParams(pd):
             raise ValueError(
                 "Unrecognized 'gamma' value ('{}')".format(pd['gamma']))
 
-    pars = ('Beta', 'Av', 'DR', 'Rv', 'd_m')
     for i, (key, vals) in enumerate(pd['fundam_params_all'].items()):
-        if i > 1:
-            if vals[i][-1] < vals[i][0]:
-                raise ValueError((
-                    "{}: Maximum value must be greater than minimum").format(
-                    pars[i - 2]))
+        for val_i in vals:
+            if val_i[0] != 'min':
+                if val_i[-1] < val_i[0]:
+                    raise ValueError((
+                        "{}: parameter range maximum value must be greater "
+                        + "than minimum (line R5)").format(key))
 
         # Check Beta
         if vals[2][0] < 0.:
