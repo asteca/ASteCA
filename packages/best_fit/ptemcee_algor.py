@@ -137,12 +137,15 @@ def loglkl(
 
         # Call likelihood function for this model.
         lkl = likelihood.main(lkl_method, synth_clust, obs_clust)
-        log_p = 0.
-        for i, pr in enumerate(priors):
+        # Priors
+        log_p, j = 0., 0
+        for i in varIdxs:
+            pr = priors[i]
             # Gaussian prior. If the prior is uniform, simply pass.
             if pr[0] == 'g':
                 log_p += np.log(1 / pr[2]) - .5 * np.square(
-                    (model[i] - pr[1]) / pr[2])
+                    (model[j] - pr[1]) / pr[2])
+            j += 1
 
         logpost = log_p + lkl
 
