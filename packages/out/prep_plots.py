@@ -13,6 +13,7 @@ from ..decont_algors.local_cell_clean import bin_edges_f
 from ..aux_funcs import monteCarloPars, circFrac, ellipFrac
 from ..structure import king_profile
 from ..synth_clust import move_isochrone, extinction
+from ..synth_clust.synth_cluster import properModel, zaWAverage
 
 
 # HARDCODED figure size and grid distribution
@@ -787,16 +788,21 @@ def rdpAreasDists(
 
 
 def shiftedIsoch(
-        fundam_params, theor_tracks, m_ini_idx, ext_coefs, N_fc, best_sol):
+    fundam_params, theor_tracks, m_ini_idx, ext_coefs, N_fc, best_sol,
+        varIdxs):
     """
     Generate the shifted isochrone.
     """
-    zm, am, _, av, _, rv, dm = best_sol
-    # Values in grid
-    zg = np.argmin(abs(np.array(fundam_params[0]) - zm))
-    ag = np.argmin(abs(np.array(fundam_params[1]) - am))
-    # Non-interpolated isochrone
-    isochrone = move_isochrone.main(np.array(theor_tracks[zg][ag]), N_fc, dm)
+    model_proper = np.array([_[0] for _ in fundam_params])
+    model = np.array(best_sol)[varIdxs]
+    met, age, beta, av, dr, rv, dm, ml, mh, al, ah = properModel(
+        fundam_params, model_proper, model, varIdxs)
+
+    # Ịnterpolated isochrone
+    isochrone = zaWAverage.main(
+        theor_tracks, fundam_params, m_ini_idx, met, age, ml, mh, al, ah)
+    isochrone = move_isochrone.main(isochrone, N_fc, dm)
+
     # Use these values to position the shifted isochrone properly
     dr, DR_dist, DR_percentage = 0, '', 0
     shift_isoch = extinction.main(

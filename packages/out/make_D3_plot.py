@@ -21,8 +21,8 @@ def main(npd, pd, clp, td):
     best_sol = clp['isoch_fit_params'][pd['D3_sol'] + '_sol']
 
     shift_isoch = prep_plots.shiftedIsoch(
-        td['fundam_params'], td['theor_tracks'],
-        td['m_ini_idx'], td['ext_coefs'], td['N_fc'], best_sol)
+        td['fundam_params'], td['theor_tracks'], td['m_ini_idx'],
+        td['ext_coefs'], td['N_fc'], best_sol, clp['varIdxs'])
     redVect = prep_plots.reddeningVector(
         clp['cl_syn_fit'], td['m_ini_idx'], td['ext_coefs'], td['N_fc'],
         best_sol)
