@@ -217,7 +217,7 @@ def checkSynthClustParams(pd):
 
     for i, (key, vals) in enumerate(pd['fundam_params_all'].items()):
         for val_i in vals:
-            if val_i[0] != 'min':
+            if val_i[0] != 'min' and val_i[-1] != 'max':
                 if val_i[-1] < val_i[0]:
                     raise ValueError((
                         "{}: parameter range maximum value must be greater "
