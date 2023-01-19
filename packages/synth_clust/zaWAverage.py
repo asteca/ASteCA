@@ -60,7 +60,7 @@ def main(
     # points. This way is faster than using 'np.average()'.
     # Inverse of the distance.
     inv_d = 1. / dist
-    weights = inv_d / np.sum(inv_d)
+    weights = inv_d / sum(inv_d)
     isochrone = isochs[0] * weights[0] + isochs[1] * weights[1] +\
         isochs[2] * weights[2] + isochs[3] * weights[3]
 

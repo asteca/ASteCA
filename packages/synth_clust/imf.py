@@ -88,7 +88,7 @@ def sampleInv(Max_mass, inv_cdf):
     # Sample in chunks until the maximum defined mass is reached.
     N_chunk = max(100, int(2.5 * Max_mass / 100.))
     mass_samples = []
-    while np.sum(mass_samples) < Max_mass:
+    while sum(mass_samples) < Max_mass:
         mass_samples += sampled_inv_cdf(N_chunk).tolist()
     sampled_IMF = np.array(mass_samples)
 
