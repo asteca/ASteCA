@@ -137,7 +137,7 @@ def main(cl_file, pd):
     else:
         print("<<Skip A2 plot>>")
 
-    # Cluster's area and total number of stars within the cluster region.
+    # Cluster's area
     clp = cluster_area.main(clp, **cld)
 
     # Contamination index.
