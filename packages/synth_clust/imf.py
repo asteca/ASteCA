@@ -39,9 +39,23 @@ def main(IMF_name, Nmets, Max_mass):
     for _ in range(Nmets):
         sampled_IMF = sampleInv(Max_mass, inv_cdf)
         st_dist_mass += [[sampled_IMF, np.cumsum(sampled_IMF)]]
+        # # In place for #545
+        # print("\n\n----> BE CAREFUL HERE IN THE IMF FUNCTION <----\n\n")
+        # sampled_IMF, mass_removed = remove_low_mass(sampled_IMF, m_lowest=0.5)
+        # st_dist_mass += [[sampled_IMF, mass_removed + np.cumsum(sampled_IMF)]]
+
         update_progress.updt(Nmets, _ + 1)
 
     return st_dist_mass
+
+
+def remove_low_mass(sampled_IMF, m_lowest):
+    """
+    Remove the lowest mass stars from the array, to save memory
+    """
+    msk = sampled_IMF > m_lowest
+    mass_removed = sampled_IMF[~msk].sum()
+    return sampled_IMF[msk], mass_removed
 
 
 def invTrnsfSmpl(IMF_name='kroupa_2002', m_low=0.08, m_high=150):
