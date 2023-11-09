@@ -91,7 +91,6 @@ def main(
     # tt = np.sum([t1, t2, t3, t4, t5, t6, t7])
     # print(t1/tt, t2/tt, t3/tt, t4/tt, t5/tt, t6/tt, t7/tt)
 
-    # # if np.random.randint(0, 100) == 10:
     # import matplotlib.pyplot as plt
     # plt.subplot(121)
     # plt.scatter(*pts.T, c='r')
@@ -99,14 +98,14 @@ def main(
     # # First color
     # plt.subplot(122)
     # plt.scatter(
-    #     theor_tracks[ml][al][1], theor_tracks[ml][al][0], c='b', alpha=.5)
+    #     theor_tracks[ml][al][1], theor_tracks[ml][al][0], c='b', alpha=.25)
     # plt.scatter(
-    #     theor_tracks[ml][ah][1], theor_tracks[ml][ah][0], c='r', alpha=.5)
+    #     theor_tracks[ml][ah][1], theor_tracks[ml][ah][0], c='r', alpha=.25)
     # plt.scatter(
-    #     theor_tracks[mh][al][1], theor_tracks[mh][al][0], c='cyan', alpha=.5)
+    #     theor_tracks[mh][al][1], theor_tracks[mh][al][0], c='cyan', alpha=.25)
     # plt.scatter(
-    #     theor_tracks[mh][ah][1], theor_tracks[mh][ah][0], c='orange', alpha=.5)
-    # plt.scatter(isochrone[1], isochrone[0], c='g')
+    #     theor_tracks[mh][ah][1], theor_tracks[mh][ah][0], c='orange', alpha=.25)
+    # plt.scatter(isochrone[1], isochrone[0], c='k', marker='x')
     # plt.gca().invert_yaxis()
     # # Second color
     # # plt.subplot(133)
@@ -117,7 +116,6 @@ def main(
     # # plt.scatter(isochrone[2], isochrone[0], c='g', ls='--')
     # # plt.gca().invert_yaxis()
     # plt.show()
-    # print("zaWavrg")
     # breakpoint()
 
     return isochrone

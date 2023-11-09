@@ -1,5 +1,6 @@
 
-from collections import defaultdict, Iterable
+from collections import defaultdict
+from collections.abc import Iterable
 import numpy as np
 from scipy import stats
 from astropy.stats import sigma_clipped_stats

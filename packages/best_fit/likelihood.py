@@ -39,7 +39,7 @@ def tremmel(synth_clust, obs_clust):
     v_{i,j}=1. This returns the log likelihood.
 
     p(d|\theta) = \prod_i^N \frac{\Gamma(n_i+m_i+\frac{1}{2})}
-        {2^{n_i+m_i+\frac{1}{2}} d_i!\Gamma(m_i+\frac{1}{2}))}
+        {2^{n_i+m_i+\frac{1}{2}} n_i!\Gamma(m_i+\frac{1}{2}))}
 
     \log(p) = \sum_i^N \left[\log\Gamma(n_i+m_i+\frac{1}{2})
         - (m_i+n_i+\frac{1}{2})\log2 -\log n_i!
