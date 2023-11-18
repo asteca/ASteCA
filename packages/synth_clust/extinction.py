@@ -1,13 +1,14 @@
 
-import numpy as np
-
 
 def main(
-    isochrone, Av, dr, Rv, ext_coefs, N_fc, DR_dist, DR_percentage,
+    isochrone, E_bv, E_BV_dr, Rv, ext_coefs, N_fc, DR_dist, DR_percentage,
         rand_norm, rand_unif, m_ini_idx):
     """
     Modifies color and magnitude values according to given values for the
-    E(B-V) extinction (e). The distance modulus was applied before this.
+    total absorption Av. Using this parameter instead of the E(B-V) extinction
+    reduces the correlation with Rv.
+
+    The distance modulus was applied before this function.
     N_fc is the number of filters (N_fc[0]), and colors defined (N_fc[1]).
 
                  |------Nf-----|         |------Nc-----|
@@ -36,6 +37,11 @@ def main(
     (m1 - m2)_obs = (m1 - m2)_int + (a12 + b12/Rv) * R_V * E(B-V)
     """
 
+    # Av = E_bv * Rv
+    # dr = E_BV_dr * Rv
+    Av = E_bv
+    dr = E_BV_dr
+
     if dr > 0.:
         Ns = isochrone.shape[-1]
 
@@ -47,7 +53,10 @@ def main(
             Av_dr = rand_norm[:Ns] * dr
 
         Av_dr[rand_unif[:Ns] > DR_percentage] = 0.
-        Av = np.clip(Av + Av_dr, a_min=0., a_max=np.inf)
+
+        # WHY WAS I USING THIS LINE??
+        # Av = np.clip(Av + Av_dr, a_min=0., a_max=np.inf)
+        Av = Av + Av_dr
 
     Nf, Nc = N_fc
 
