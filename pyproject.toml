@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "asteca"
+version = "0.5.0"
+description = ""
+authors = ["Gabriel I Perren <gabrielperren@gmail.com>"]
+readme = "README.md"
+license = "MIT"
+keywords = ["cluster", "astrophysics"]
+homepage = "https://asteca.github.io/"
+repository = "https://github.com/asteca/ASteCA"
+documentation = "https://asteca.readthedocs.io/"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+astropy = "^6.0.0"
+numpy = "^1.26.3"
+scipy = "^1.11.4"
+pandas = "^2.1.4"
+fast-histogram = "^0.12"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

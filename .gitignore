@@ -4,6 +4,7 @@
 !README.md
 !LICENSE.txt
 !poetry.lock
+!pyproject.toml
 # and this folder
 !/asteca
 !/packages
