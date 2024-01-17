@@ -2,8 +2,8 @@
 /*
 # except for this file
 !README.md
-!CHANGELOG.rst
 !LICENSE.txt
+!poetry.lock
 # and this folder
 !/asteca
 !/packages
