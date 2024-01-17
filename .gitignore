@@ -6,5 +6,6 @@
 !LICENSE.txt
 # and this folder
 !/asteca
+!/packages
 # But do ignore these files
 *.pyc
