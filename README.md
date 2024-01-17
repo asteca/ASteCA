@@ -1,7 +1,7 @@
 
 # ASteCA [Automated Stellar Cluster Analysis]
 [![AA](https://img.shields.io/badge/A%26A-576--A6,%202015-yellowgreen.svg)][1]
-[![License](https://img.shields.io/badge/license-GPLv3-red.svg)][2]
+[![License](https://img.shields.io/badge/license-MIT-blue)][2]
 
 The ASteCA package is designed to fully automatize the usual tests
 applied on star clusters in order to estimate their characteristics and
@@ -27,7 +27,7 @@ Bibtex:
 ````
 
 [1]: http://www.aanda.org/articles/aa/abs/2015/04/aa24946-14/aa24946-14.html
-[2]: http://www.gnu.org/licenses/gpl-3.0.en.html
+[2]: https://opensource.org/license/mit/
 [3]: http://asteca.github.io
 [4]: https://github.com/asteca/asteca/releases/latest
 
