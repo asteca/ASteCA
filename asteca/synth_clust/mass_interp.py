@@ -18,13 +18,11 @@ def main(isoch_cut, m_ini_idx, st_dist_mass):
     # msk_max = (st_dist_mass[0] <= mass_ini.max())
     # (~msk_min).sum(): stars lost below the minimum mass (photometric)
     # (~msk_max).sum(): stars lost above the maximum mass (evolutionary)
-    msk_m = (st_dist_mass[0] >= mass_ini.min()) & (st_dist_mass[0] <= mass_ini.max())
+    msk_m = (st_dist_mass >= mass_ini.min()) & (st_dist_mass <= mass_ini.max())
     if msk_m.sum() == 0:
         return np.array([])
 
-    mass_dist = st_dist_mass[0][msk_m]
-    # # Filter the total mass associated with each sampled mass
-    # M_total_arr = st_dist_mass[1][msk_m]
+    mass_dist = st_dist_mass[msk_m]
 
     # Interpolate sampled masses
     isoch_mass = interp1d(mass_ini, mass_dist, isoch_cut)
