@@ -1,5 +1,24 @@
 import numpy as np
 import pandas as pd
+from typing import Tuple, List
+
+
+def get(model, N_interp, f_paths, met_col, age_col, cols_keep) -> Tuple[List, List]:
+    """ """
+    if model == "PARSEC":
+        isochrones, met_age_arr = read_PARSEC_files(
+            f_paths, met_col, age_col, cols_keep, N_interp
+        )
+    elif model == "MIST":
+        isochrones, met_age_arr = read_MIST_files(
+            f_paths, met_col, age_col, cols_keep, N_interp
+        )
+    elif model == "BASTI":
+        isochrones, met_age_arr = read_BASTI_files(
+            f_paths, met_col, age_col, cols_keep, N_interp
+        )
+
+    return isochrones, met_age_arr
 
 
 def read_PARSEC_files(f_paths, met_col, age_col, cols_keep, N_interp):

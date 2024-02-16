@@ -1,10 +1,9 @@
-import logging
+# import logging
 import numpy as np
 import pandas as pd
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 import astropy.coordinates as coord
-import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 from scipy.spatial import KDTree
 from astropy.stats import knuth_bin_width, bayesian_blocks
@@ -15,11 +14,17 @@ def cluster_load(self):
     """ """
     print("Reading and processing cluster data")
 
-    cl_ids = np.array(self.cluster_df[self.id_column])
-    mag = np.array(self.cluster_df[self.mag_column])
-    colors = [np.array(self.cluster_df[_]) for _ in self.col_column]
-    e_mag = np.array(self.cluster_df[self.e_mag_column])
-    e_colors = [np.array(self.cluster_df[_]) for _ in self.e_col_column]
+    cl_ids = np.array(self.cluster_df[self.source_id])
+    
+    mag = np.array(self.cluster_df[self.magnitude])
+    e_mag = np.array(self.cluster_df[self.e_mag])
+    
+    colors = [np.array(self.cluster_df[self.color])]
+    if self.color2 is not None:
+        colors.append(np.array(self.cluster_df[self.color2]))
+    e_colors = [np.array(self.cluster_df[self.e_color])]
+    if self.e_color2 is not None:
+        e_colors.append(np.array(self.cluster_df[self.e_color2]))
 
     # Obtain bin edges for each dimension, defining a grid.
     bin_edges, ranges, Nbins = bin_edges_f(
@@ -32,7 +37,6 @@ def cluster_load(self):
         # hess_diag.append(
         #     np.histogram2d(
         #         mag, col, bins=[bin_edges[0]] + [bin_edges[i + 1]])[0])
-
         hess_diag = histogram2d(
             mag,
             col,
@@ -42,16 +46,9 @@ def cluster_load(self):
 
     # Flatten array
     cl_histo_f = []
-    # probs_f = []
     for i, diag in enumerate(hess_diag):
         cl_histo_f += list(np.array(diag).ravel())
     cl_histo_f = np.array(cl_histo_f)
-
-    # Down sample histogram
-    hist_down_samp = np.array(cl_histo_f)
-    msk = hist_down_samp > 5
-    hist_down_samp[msk] = 5
-    # hist_down_samp[~msk] = 0.
 
     # Index of bins where stars were observed
     cl_z_idx = cl_histo_f != 0
@@ -62,12 +59,8 @@ def cluster_load(self):
     # Used by the synthetic cluster module
     max_mag_syn = max(mag)
     N_obs_stars = len(mag)
-    N_colors = len(colors)
+    m_ini_idx = len(colors) + 1
     err_lst = error_distribution(mag, e_mag, e_colors)
-
-    msk = np.isnan(mag) | np.isnan(colors[0])
-    mag0 = mag[~msk]
-    colors0 = colors[0][~msk]
 
     cluster_dict = {
         "cl_ids": cl_ids,
@@ -78,14 +71,11 @@ def cluster_load(self):
         "Nbins": Nbins,
         "cl_z_idx": cl_z_idx,
         "cl_histo_f_z": cl_histo_f_z,
+        #
         "max_mag_syn": max_mag_syn,
         "N_obs_stars": N_obs_stars,
-        "N_colors": N_colors,
+        "m_ini_idx": m_ini_idx,
         "err_lst": err_lst,
-        #
-        "hist_down_samp": hist_down_samp,
-        "mag0": mag0,
-        "colors0": colors0,
     }
 
     return cluster_dict
@@ -258,17 +248,19 @@ def get_masses_binar(my_cluster, synthcl, model_fit, model_std):
 
     Estimate the statistics for the mass and binary fractions (not fitted)
     """
-    print("Estimating total mass, binary probabilities, and per star masses")
+    print("Estimating total mass, binary probabilities, and individual star masses")
     cl_dict = my_cluster.cluster_dict
-    ra, dec = my_cluster.ra, my_cluster.dec
+    ra = np.median(my_cluster.cluster_df[my_cluster.ra])
+    dec = np.median(my_cluster.cluster_df[my_cluster.dec])
+
     model_fixed = my_cluster.model_fixed
-    m_ini_idx = cl_dict["N_colors"] + 1
+    m_ini_idx = cl_dict["m_ini_idx"]
     # Extract photometry used in the best fit process
     mags_cols_cl = [cl_dict["mag"]] + [_ for _ in cl_dict["colors"]]
     obs_phot = np.array(mags_cols_cl)
 
     # Generate random models from the selected solution
-    models = ranModels(model_fit, model_std)
+    models = ranModels(model_fit, model_std, my_cluster.N_models)
 
     # Identify nans in mag and colors and re-write them as -10
     nan_msk = np.full(obs_phot.shape[1], False)
@@ -285,26 +277,32 @@ def get_masses_binar(my_cluster, synthcl, model_fit, model_std):
     binar_vals = []
     Nm, Nm_binar = 0, 0
 
-    from .synth_cluster import invTrnsfSmpl
-    inv_cdf = invTrnsfSmpl(synthcl.IMF_name)
+    # from .synth_cluster import invTrnsfSmpl
+    # inv_cdf = invTrnsfSmpl(synthcl.IMF_name)
+    try:
+        st_dist_mass = synthcl.st_dist_mass_full
+    except KeyError:
+        st_dist_mass = synthcl.st_dist_mass
 
-    masses_dict = {'M_actual': [], 'M_init': [], 'M_init_LGB05': []}
+    masses_dict = {'M_actual': [], 'M_init': []}
     for _, model in enumerate(models):
         # Generate synthetic cluster from the 'model'.
         isoch = synthcl.generate(model, my_cluster, True)
         if not isoch.any():
             continue
 
-        Nm, Nm_binar, st_mass_mean, st_mass_var, st_mass_mean_binar, st_mass_var_binar, binar_vals, prob_binar = xxx(
+        # TODO
+        Nm, Nm_binar, st_mass_mean, st_mass_var, st_mass_mean_binar, \
+            st_mass_var_binar, binar_vals, prob_binar = xxx(
             Nm, st_mass_mean, st_mass_var, Nm_binar, obs_phot, m_ini_idx, st_mass_mean_binar,
-            st_mass_var_binar, prob_binar, binar_vals, isoch)
+            st_mass_var_binar, prob_binar, binar_vals, synthcl.alpha, isoch)
 
         # Extract dm and loga
         model_comb = model_fixed | model
         loga, dm = model_comb['loga'], model_comb['dm']
         #
         masses_dict = get_masses(
-            masses_dict, cl_dict, ra, dec, m_ini_idx, inv_cdf, isoch, loga, dm)
+            masses_dict, ra, dec, m_ini_idx, st_dist_mass, isoch, loga, dm)
 
     # Store standard deviations instead of variances
     st_mass_std = np.sqrt(st_mass_var / Nm)
@@ -340,7 +338,7 @@ def get_masses_binar(my_cluster, synthcl, model_fit, model_std):
     return masses_dict, np.array(binar_vals), cl_masses_bfr
 
 
-def ranModels(model_fit, model_std, N_models=1000):
+def ranModels(model_fit, model_std, N_models):
     """
     Generate the requested models via sampling a Gaussian centered on the
     selected solution, with standard deviation given by the attached
@@ -358,7 +356,8 @@ def ranModels(model_fit, model_std, N_models=1000):
     return ran_models
 
 
-def xxx(Nm, st_mass_mean, st_mass_var, Nm_binar, obs_phot, m_ini_idx, st_mass_mean_binar, st_mass_var_binar, prob_binar, binar_vals, isoch):
+def xxx(Nm, st_mass_mean, st_mass_var, Nm_binar, obs_phot, m_ini_idx,
+    st_mass_mean_binar, st_mass_var_binar, prob_binar, binar_vals, alpha, isoch):
     """
     Estimate the mean and variance for each star via recurrence.
     """
@@ -368,9 +367,14 @@ def xxx(Nm, st_mass_mean, st_mass_var, Nm_binar, obs_phot, m_ini_idx, st_mass_me
     # shape: (N_stars, Ndim)
     photom = isoch[:m_ini_idx].T
 
-    # Binaries have M2>0
-    binar_idxs = isoch[-1] > 0.0
-    binar_frac = binar_idxs.sum() / isoch.shape[-1]
+    if alpha > 0.:
+        # Binaries have M2>0
+        binar_idxs = isoch[-1] > 0.0
+        binar_frac = binar_idxs.sum() / isoch.shape[-1]
+    else:
+        # No binaries were defined
+        binar_idxs = np.full(isoch.shape[1], False)
+        binar_frac = 0.
     binar_vals.append(binar_frac)
 
     # For non-binary systems
@@ -401,7 +405,8 @@ def xxx(Nm, st_mass_mean, st_mass_var, Nm_binar, obs_phot, m_ini_idx, st_mass_me
                 new_prob_binar = 1.0 / (1.0 + (lkl_p / lkl_b))
                 prob_binar = recurrentStats(Nm, prob_binar, None, new_prob_binar)
 
-    return Nm, Nm_binar, st_mass_mean, st_mass_var, st_mass_mean_binar, st_mass_var_binar, binar_vals, prob_binar
+    return Nm, Nm_binar, st_mass_mean, st_mass_var, st_mass_mean_binar, \
+           st_mass_var_binar, binar_vals, prob_binar
 
 
 def photomMatch(obs_phot, photom, mass_ini):
@@ -436,97 +441,114 @@ def recurrentStats(Nm, mean, var, newValue):
     return mean, var
 
 
-def get_masses(masses_dict, cl_dict, ra, dec, m_ini_idx, inv_cdf, isoch, loga, dm):
+def get_masses(masses_dict, ra, dec, m_ini_idx, st_dist_mass, isoch, loga, dm):
     """ """
-    N_obs = cl_dict["N_obs_stars"]
+    # N_obs = cl_dict["N_obs_stars"]
     mass_ini = isoch[m_ini_idx]
     M_obs = mass_ini.sum()
-
     mass_min, mass_max = mass_ini.min(), mass_ini.max()
 
-    def sampled_inv_cdf(N):
-        mr = np.random.rand(N)
-        return inv_cdf(mr)
+    # Select a random IMF sampling array
+    Nmets, Nages = len(st_dist_mass), len(st_dist_mass[0])
+    i = np.random.randint(Nmets)
+    j = np.random.randint(Nages)
+    mass_samples = st_dist_mass[i][j]
 
-    # Sample in chunks until the maximum defined mass is reached. This strategy is
-    # a good balance between speed and accuracy
-    N_chunk = max(10, int(N_obs * .25))
+    # def sampled_inv_cdf(N):
+    #     mr = np.random.rand(N)
+    #     return inv_cdf(mr)
+    # mass_samples = sampled_inv_cdf(500000)
 
+    mass_tot = np.cumsum(mass_samples)
+
+    gamma = 0.62
+    t = 10**loga
     qev_t = stellar_evol_mass_loss(loga)
-    mass_all = []
-    mass_inrange = []
+    term1 = (1-qev_t)**gamma
+    t0 = minit_LGB05(ra, dec, dm)
 
-    M_actual, M_phot, M_ev = 0, 0, 0
-    N_obs_synth = 0
-    while N_obs_synth < N_obs:
-        # Sample the IMF
-        mass_samples = sampled_inv_cdf(N_chunk)
-
-        mass_all += list(mass_samples)
+    def func_optm(N_max, flag_mass=False):
+        M_init_sample = mass_samples[:int(N_max)]
+        M_init = mass_tot[int(N_max)]
 
         # Masks for the min-max mass range
-        msk_min = mass_samples > mass_min
-        msk_max = mass_samples < mass_max
+        msk_max = M_init_sample > mass_max
+        M_ev = M_init_sample[msk_max].sum()
+        M_actual_dyn = M_init - M_ev
+        msk_min = M_init_sample < mass_min
+        # This is the percentage of mass below the photometric minimum mass limit
+        M_ratio = M_init_sample[msk_min].sum() / M_actual_dyn
 
-        # Mass below the minimum mass
-        M_phot += mass_samples[~msk_min].sum()
-        # Mass below the max mass range
-        M_actual += mass_samples[msk_max].sum()
-        # Mass above the maximum mass
-        M_ev += mass_samples[~msk_max].sum()
+        term2 = (gamma/(M_init**gamma))*(t/t0)
+        M_actual, M_actual_range = 0, 0
+        if term1 > term2:
+            M_actual = M_init * (term1 - term2)**(1/gamma)
+            M_actual_range = M_actual - M_actual*M_ratio
 
-        # Number of stars within the min-max mass range
-        N_obs_synth += (msk_min & msk_max).sum()
+        if flag_mass:
+            return M_actual, M_init, abs(M_actual_range - M_obs)
+        return abs(M_actual_range - M_obs)
 
-        mass_inrange += list(mass_samples[(msk_min & msk_max)])
+    # Perform grid search
+    optimal_param = grid_search_optimal_parameter(func_optm, 100, len(mass_samples))
+    M_actual, M_init, mass_diff = func_optm(optimal_param, True)
 
-    # M_actual ~ M_obs + M_phot
-
-    M_init_ev = M_ev / qev_t
-    # M_dyn = M_init - M_actual - M_ev
-    print(N_obs_synth - N_obs, int(M_actual), round(qev_t, 3), int(M_ev), int(M_init_ev), int(sum(mass_all)))
-
-    # if M_actual>9000:
-    #     breakpoint()
-
-    # import matplotlib.pyplot as plt
-    # idx = np.argsort(mass_all)
-    # plt.plot(np.array(mass_all)[idx], np.cumsum(np.array(mass_all)[idx]))
-    # plt.xscale('log')
-    # plt.show()
-
-    # t = 10**loga
-    # gamma = 0.62
-    # C_env0 = 810e6
-    # epsilon = 0.08
-    # M_init = sum(mass_all)
-    # t0 = gamma*t/((M_init*(1-qev_t))**gamma - M_actual**gamma)
-    # rho_amb = ((C_env0*(1-epsilon)*10**(-4*gamma))/t0)**2
-    # print("{:.3f}, {:.3f}".format(t0/1e6, rho_amb))
-
-    M_init_LGB05 = minit_LGB05(ra, dec, loga, dm, M_actual, qev_t, M_init_ev)
-
-    # import matplotlib.pyplot as plt
-    # plt.hist(mass_all, 50)
-    # plt.xscale('log')
-    # plt.yscale('log')
-    # breakpoint()
+    # print(round(loga, 2), int(M_actual), int(M_init), int(mass_diff))
 
     masses_dict['M_actual'].append(M_actual)
-    masses_dict['M_init'].append(M_init_ev)
-    masses_dict['M_init_LGB05'].append(M_init_LGB05)
+    masses_dict['M_init'].append(M_init)
 
     return masses_dict
 
 
-def stellar_evol_mass_loss(loga):
+def grid_search_optimal_parameter(
+    func, lower_bound, upper_bound, tolerance=500, max_iterations=5
+) -> float:
+    """
+    Perform a grid search to find the optimal parameter within a given range.
+
+    Parameters:
+    - func: The objective function to optimize.
+    - lower_bound: The lower bound of the parameter range.
+    - upper_bound: The upper bound of the parameter range.
+    - tolerance: The tolerance level to determine convergence.
+    - max_iterations: Maximum number of iterations.
+
+    Returns:
+    - optimal_parameter: The optimal parameter within the specified range.
+    """
+
+    iteration = 0
+    while iteration < max_iterations and (upper_bound - lower_bound) > tolerance:
+        mid_point = (lower_bound + upper_bound) / 2
+        par_range = upper_bound - lower_bound
+        left_point = mid_point - par_range / 4
+        right_point = mid_point + par_range / 4
+
+        func_mid = func(mid_point)
+        if func(left_point) < func_mid:
+            upper_bound = mid_point
+        elif func(right_point) < func_mid:
+            lower_bound = mid_point
+        else:
+            lower_bound = left_point
+            upper_bound = right_point
+
+        iteration += 1
+
+    optimal_parameter = (lower_bound + upper_bound) / 2
+
+    return optimal_parameter
+
+
+def stellar_evol_mass_loss(loga) -> float:
     """ Fraction of the initial cluster mass (Mini) lost by stellar evolution"""
     a, b, c = 7, 0.26, -1.8
     q_ev = 10**((max(7.1, loga) - a)**b + c)
     return q_ev
 
 
-def minit_LGB05(ra, dec, loga, dm, M_actual, q_ev, M_init_ev, epsilon=0.08):
+def minit_LGB05(ra, dec, dm, epsilon=0.08):
     """
     Laplacian in spherical coordinates:
 
@@ -539,7 +561,6 @@ def minit_LGB05(ra, dec, loga, dm, M_actual, q_ev, M_init_ev, epsilon=0.08):
     # Constants for all clusters
     gamma = 0.62
     C_env0 = 810e6
-    t = 10**loga
 
     # Constants for MW potentials
     M_B = 2.5e10
@@ -589,19 +610,16 @@ def minit_LGB05(ra, dec, loga, dm, M_actual, q_ev, M_init_ev, epsilon=0.08):
     rho_amb = (1/(4*np.pi)) * (Phi_B_Laplacian + Phi_D_laplacian + Phi_H_Laplacian)
     t0 = C_env0*(1-epsilon)*10**(-4*gamma)*rho_amb**(-.5)
 
-    Minit = (M_actual**gamma + gamma*(t/t0))**(1/gamma)/(1-q_ev)
-
-    # print("{:.3f}, {:.3f}".format(t0/1e6, rho_amb))
-
-    return Minit
+    return t0
+    # Minit = (M_actual**gamma + gamma*(t/t0))**(1/gamma)/(1-q_ev)
 
 
 def mplot(my_cluster, synthcl, model_fit):
     """ """
-    # m_ini_idx = cluster_dict['N_colors'] + 1
+    import matplotlib.pyplot as plt
 
-    mag_col = my_cluster.mag_column
-    col_col = my_cluster.col_column
+    mag_col = my_cluster.magnitude
+    col_col = my_cluster.color
     cl_dict = my_cluster.cluster_dict
 
     # Generate synthetic cluster.
@@ -623,7 +641,11 @@ def mplot(my_cluster, synthcl, model_fit):
         label=f"Observed, N={cl_dict['N_obs_stars']}",
     )
 
-    binar_idx = synth_clust[-1] != 0.0
+    if synthcl.alpha > 0:
+        binar_idx = synth_clust[-1] != 0.0
+    else:
+        binar_idx = np.full(synth_clust.shape[1], False)
+
     x_synth, y_synth = synth_clust[1], synth_clust[0]
     # Single synthetic systems
     plt.scatter(

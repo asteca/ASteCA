@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def main(isoch_cut, m_ini_idx, st_dist_mass):
+def main(isoch_cut, m_ini_idx, st_dist_mass, N_obs_stars):
     """
     For each mass in the sampled IMF mass distribution, interpolate its value
     (and those of all the sub-arrays in 'isoch_cut') into the isochrone.
@@ -19,20 +19,33 @@ def main(isoch_cut, m_ini_idx, st_dist_mass):
     # (~msk_min).sum(): stars lost below the minimum mass (photometric)
     # (~msk_max).sum(): stars lost above the maximum mass (evolutionary)
     msk_m = (st_dist_mass >= mass_ini.min()) & (st_dist_mass <= mass_ini.max())
-    if msk_m.sum() == 0:
+
+    # Interpolate the same number of observed stars into the isochrone
+    mass_dist = st_dist_mass[msk_m][:N_obs_stars]
+    if not mass_dist.any():
         return np.array([])
 
-    mass_dist = st_dist_mass[msk_m]
+    # # This is about 2x faster than interp1d() but it comes at the cost of a more
+    # # coarse distribution of stars throughout the isochrone. To fix this, we have to
+    # # apply a random noise to the magnitude(s) proportional to the percentage that
+    # # the masses sampled differ from those in the isochrone. This lowers the
+    # # performance to an increase of ~22%
+    # idx = np.searchsorted(mass_ini, mass_dist)
+    # isoch_mass = isoch_cut[:, idx]
+    # m_perc = (isoch_mass[m_ini_idx]-mass_dist)/mass_dist
+    # isoch_mass[0] += isoch_mass[0]*m_perc
+    # if isoch_mass.shape[0] > m_ini_idx:
+    #     isoch_mass[m_ini_idx+1] += isoch_mass[m_ini_idx+1]*m_perc
+    # return isoch_mass
 
-    # Interpolate sampled masses
-    isoch_mass = interp1d(mass_ini, mass_dist, isoch_cut)
-
-    # # This is equivalent to the block above, but slower for more than 5
+    # # This is equivalent to the interp1d(), but slower for more than 5
     # # dimensions, and *very* slightly faster for lower dimensions
     # isoch_mass = np.empty([isoch_cut.shape[0], mass_dist.size])
     # for i, arr in enumerate(isoch_cut):
     #     isoch_mass[i] = np.interp(mass_dist, mass_ini, arr)
 
+    # Interpolate sampled masses
+    isoch_mass = interp1d(mass_ini, mass_dist, isoch_cut)
     return isoch_mass
 
 

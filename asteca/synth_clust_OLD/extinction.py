@@ -1,14 +1,14 @@
 def main(
-    isochrone,
+    ext_coefs,
+    rand_norm,
+    rand_unif,
+    DR_dist,
+    DR_percentage,
+    m_ini_idx,
     Av,
     dr,
     Rv,
-    ext_coefs,
-    DR_dist,
-    DR_percentage,
-    rand_norm,
-    rand_unif,
-    m_ini_idx,
+    isochrone,
 ):
     """
     Modifies magnitude and color(s) according to given values for the

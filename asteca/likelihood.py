@@ -11,6 +11,8 @@ def get_lkl(lkl_name, cluster_dict, synth_clust):
         return visual(cluster_dict, synth_clust)
     if lkl_name == "mean_dist":
         return mean_dist(cluster_dict, synth_clust)
+    if lkl_name == "bins_distance":
+        return bins_distance(cluster_dict, synth_clust)
 
 
 def tremmel(cluster_dict, synth_clust):
@@ -198,3 +200,46 @@ def mean_dist(cluster_dict, synth_clust):
     # plt.show()
 
     return P_val
+
+
+def bins_distance(cluster_dict, synth_clust):
+    """ Sum of distances to corresponding bins in he Hess diagram."""
+    if not synth_clust.any():
+        return 1.0e09
+
+    mag0, colors0 = cluster_dict['mag'], cluster_dict['colors'][0]
+    msk = np.isnan(mag0) | np.isnan(colors0)
+    mag0, colors0 = mag0[~msk], colors0[~msk]
+    mag_s, colors_s = synth_clust[0], synth_clust[1]
+
+    mpercs = (.1, .5, 1, 2, 5, 10, 30, 60, 90)
+    cpercs = (.5, 1, 5, 15, 30, 60, 90)
+
+    perc_mag0 = np.percentile(mag0, mpercs)
+    perc_colors0 = np.percentile(colors0, cpercs)
+    pts_0 = []
+    for pm in perc_mag0:
+        for pc in perc_colors0:
+            pts_0.append([pm, pc])
+    pts_0 = np.array(pts_0).T
+
+    # import matplotlib.pyplot as plt
+    # plt.scatter(colors0, mag0)
+    # plt.scatter(pts_0[1], pts_0[0], c='k')
+    # plt.gca().invert_yaxis()
+    # plt.show()
+    # breakpoint()
+
+    perc_mag_s = np.percentile(mag_s, mpercs)
+    perc_colors_s = np.percentile(colors_s, cpercs)
+    pts_s = []
+    for pm in perc_mag_s:
+        for pc in perc_colors_s:
+            pts_s.append([pm, pc])
+    pts_s = np.array(pts_s).T
+
+    dist = np.sqrt((pts_s[0] - pts_0[0])**2 + (pts_s[1] - pts_0[1])**2)
+    weights = np.linspace(1, .05, len(mpercs)*len(cpercs))
+    lkl = sum(dist*weights)
+
+    return lkl

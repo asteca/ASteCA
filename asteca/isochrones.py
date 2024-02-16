@@ -1,94 +1,74 @@
 import os
 import numpy as np
 import pandas as pd
-from . import isochs_read
+from .modules import isochs_read
+
+# These are the column names for the initial mass, metallicity, and age for the
+# supported photometric system's isochrones files.
+phot_syst_col_names = {
+    "PARSEC": {"mass_col": "Mini", "met_col": "Zini", "age_col": "logAge"},
+    "MIST": {"mass_col": "initial_mass", "met_col": "Zinit",
+             "age_col": "log10_isochrone_age_yr"},
+    "BASTI": {"mass_col": "M/Mo(ini)", "met_col": "Z =", "age_col": "Age (Myr) ="}
+}
 
 
-def isochs_load(self):
+def isochs_load(self) -> tuple[np.ndarray, list, dict]:
+    r"""Load the theoretical isochrones and return a dictionary with the data.
+
+    Returns
+    -------
+    theor_tracks: np.ndarray
+        Array of isochrones. Updated by `synth_clusters.synthcl_load()`
+    color_filters : list
+        Individual filters for each color defined. Used by
+        `synth_clusters.synthcl_load.add_binarity()`
+    met_age_dict : dict
+        Used by `synth_clusters.synthcl_generate()`
+
     """
-
-    isochrones.shape = (N_photsyst, N_z, N_a, N_interp, N_cols)
-    met_age_arr.shape = (N_photsyst, N_z*N_a, 2)
-
-    theor_tracks.shape = (N_z, N_a, N_cols, N_interp)
-    """
-
-    # Read and interpolate all metallicities an ages
-    print(f"Reading {self.model} isochrones...")
-
-    cols_keep, met_col, age_col, mass_col = get_columns(self, self.model)
+    cols_keep, mass_col, met_col, age_col = get_columns(self, self.model)
 
     f_paths = extract_paths(self.isochs_path, self.model)
 
-    if self.model == "PARSEC":
-        isochrones, met_age_arr = isochs_read.read_PARSEC_files(
-            f_paths, met_col, age_col, cols_keep, self.N_interp
-        )
-    elif self.model == "MIST":
-        isochrones, met_age_arr = isochs_read.read_MIST_files(
-            f_paths, met_col, age_col, cols_keep, self.N_interp
-        )
-    elif self.model == "BASTI":
-        isochrones, met_age_arr = isochs_read.read_BASTI_files(
-            f_paths, met_col, age_col, cols_keep, self.N_interp
-        )
-
+    # isochrones.shape = (N_photsyst, N_z, N_a, N_interp, N_cols)
+    # met_age_arr.shape = (N_photsyst, N_z*N_a, 2)
+    isochrones, met_age_arr = isochs_read.get(
+        self.model, self.N_interp, f_paths, met_col, age_col, cols_keep
+    )
     N_ps, Nz, Na = len(isochrones), len(isochrones[0]), len(isochrones[0][0])
-    print(f"Processing isochrones for {N_ps} photometric systems, N_z={Nz}, N_a={Na}")
+    print(f"Processing {self.model} isochrones for {N_ps} photometric systems, "
+          + f"N_z={Nz}, N_a={Na}")
+
     isochrones = m_ini_check(mass_col, isochrones)
     met_age_dict = met_ages_check(met_age_arr)
 
-    theor_tracks, mags_cols_intp = order_isochrones(
+    # theor_tracks.shape = (N_z, N_a, N_cols, N_interp)
+    theor_tracks, color_filters = order_isochrones(
         self.mag_filter_name, self.color_filter_name, mass_col, isochrones
     )
 
-    isochs_dict = {
-        "theor_tracks": theor_tracks,
-        "met_age_dict": met_age_dict,
-        "mags_cols_intp": mags_cols_intp,
-        "filter_lambdas": self.mag_color_lambdas,
-        "mag_filter_name": self.mag_filter_name,
-        "color_filter_name": self.color_filter_name,
-    }
-
-    return isochs_dict
+    return theor_tracks, color_filters, met_age_dict
 
 
-def get_columns(self, model):
+def get_columns(self, model: str) -> tuple[list, str, str, str]:
     """ """
-    mass_col = self.initial_mass_col
-    met_col = self.metallicity_col
-    age_col = self.age_col
-
-    if model == "PARSEC":
-        if mass_col is None:
-            mass_col = "Mini"
-        if met_col is None:
-            met_col = "Zini"
-        if age_col is None:
-            age_col = "logAge"
-    elif model == "MIST":
-        if mass_col is None:
-            mass_col = "initial_mass"
-        if met_col is None:
-            met_col = "Zinit"
-        if age_col is None:
-            age_col = "log10_isochrone_age_yr"
-    elif model == "BASTI":
-        if mass_col is None:
-            mass_col = "M/Mo(ini)"
-        if met_col is None:
-            met_col = "Z ="
-        if age_col is None:
-            age_col = "Age (Myr) ="
+    if self.column_names is None:
+        mass_col = phot_syst_col_names[model]["mass_col"]
+        met_col = phot_syst_col_names[model]["met_col"]
+        age_col = phot_syst_col_names[model]["age_col"]
+    else:
+        mass_col = self.column_names["mass_col"]
+        met_col = self.column_names["met_col"]
+        age_col = self.column_names["age_col"]
 
     # Select columns to keep
     cols_keep = list(self.mag_color_lambdas.keys()) + [mass_col]
 
-    return cols_keep, met_col, age_col, mass_col
+    return cols_keep, mass_col, met_col, age_col
 
 
-def extract_paths(isochs_path, model):
+def extract_paths(isochs_path: str, model: str) -> list:
     """
     Extract files from 'isochs_path'.
 
@@ -101,30 +81,34 @@ def extract_paths(isochs_path, model):
     > : folder
     >>: file
 
-    > PARSEC
-         |---> phot_syst_1
+    > PARSEC/
+         |---> phot_syst_1/
                    |-------->> mets_ages
-         |---> phot_syst_2
+         |---> phot_syst_2/
                    |-------->> ...
 
-    > MIST
-         |---> phot_syst_1
-                   |-------->> met_1_ages
-                   |-------->> met_2_ages
+    > MIST/
+         |---> phot_syst_1/
+                   |-------->> met_ages_1
+                   |-------->> met_ages_2
                    |-------->> ...
-         |---> phot_syst_2
+         |---> phot_syst_2/
+                   |-------->> met_ages_1
                    |-------->> ...
 
-    > BASTI
-         |---> phot_syst_1
-                   |--------> met_1
+    > BASTI/
+         |---> phot_syst_1/
+                   |--------> met_1/
                               |---->> age_1
                               |---->> age_2
                               |---->> ...
-                   |--------> met_2
+                   |--------> met_2/
                               |---->> age_1
                               |---->> ...
-         |---> phot_syst_2
+         |---> phot_syst_2/
+                   |--------> met_1/
+                              |---->> age_1
+                              |---->> ...
                    |--------> ...
 
     """
@@ -196,7 +180,7 @@ def extract_paths(isochs_path, model):
     return f_paths
 
 
-def m_ini_check(initial_mass, isochrones):
+def m_ini_check(initial_mass: str, isochrones: list) -> list:
     """
     The isochrone parameter 'initial_mass' is assumed to be equal across
     photometric systems, for a given metallicity and age. We check here that
@@ -234,10 +218,10 @@ def m_ini_check(initial_mass, isochrones):
     return isochrones_merged
 
 
-def met_ages_check(met_age_dict):
+def met_ages_check(met_age_arr: list) -> dict:
     """ """
-    phot_syst_0 = met_age_dict[0]
-    for phot_syst in met_age_dict[1:]:
+    phot_syst_0 = met_age_arr[0]
+    for phot_syst in met_age_arr[1:]:
         for i, met_age in enumerate(phot_syst_0):
             met_age_x = phot_syst[i]
 
@@ -248,21 +232,22 @@ def met_ages_check(met_age_dict):
 
         phot_syst_0 = phot_syst
 
-    # Select a single array
-    met_age_dict = phot_syst_0
+    # # Select a single array
+    # met_age_dict = phot_syst_0
 
     # Discard duplicate values
-    all_z, all_a = np.array(met_age_dict).T
+    all_z, all_a = np.array(phot_syst_0).T
     all_z = np.array(list(dict.fromkeys(all_z))).astype(float)
     all_a = np.array(list(dict.fromkeys(all_a))).astype(float)
 
-    # Store in dictionary to use later
     met_age_dict = {"z": all_z, "a": all_a}
 
     return met_age_dict
 
 
-def order_isochrones(mag_filter_name, color_filter_name, initial_mass, isochrones):
+def order_isochrones(
+    mag_filter_name: str, color_filter_name: list, initial_mass: str, isochrones: list
+) -> tuple[np.ndarray, list]:
     """
     Return list structured as:
 
@@ -286,7 +271,6 @@ def order_isochrones(mag_filter_name, color_filter_name, initial_mass, isochrone
     Nd: number of data columns
     Ni: number of interpolated values
     """
-
     # isochrones.shape = Nz, Na, Ni, Nd
     # Nz: number of metallicities
     # Na: number of log(age)s
@@ -301,9 +285,10 @@ def order_isochrones(mag_filter_name, color_filter_name, initial_mass, isochrone
 
     # Array that will store all the interpolated tracks
     theor_tracks = np.zeros([Nz, Na, (1 + 1 + N_colors), Ni])
+
     # Store the magnitudes to generate the colors separately. Used only by the
     # binarity process
-    mags_cols_intp = []
+    color_filters = []
 
     for i, met in enumerate(isochrones):
         met_lst = []
@@ -325,15 +310,6 @@ def order_isochrones(mag_filter_name, color_filter_name, initial_mass, isochrone
             met_lst.append(cols_dict)
 
             theor_tracks[i][j][k + 2] = df_age[initial_mass]
-        mags_cols_intp.append(met_lst)
+        color_filters.append(met_lst)
 
-    return theor_tracks, mags_cols_intp
-
-
-def isochs_minmax(isochs_dict):
-    """ """
-    zmin = isochs_dict['met_age_dict']['z'].min()
-    zmax = isochs_dict['met_age_dict']['z'].max()
-    amin = isochs_dict['met_age_dict']['a'].min()
-    amax = isochs_dict['met_age_dict']['a'].max()
-    return zmin, zmax, amin, amax
+    return theor_tracks, color_filters
