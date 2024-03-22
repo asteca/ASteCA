@@ -1,12 +1,17 @@
 # ignore everything in root
 /*
-# except for this file
+# except for these files
 !README.md
 !LICENSE.txt
 !poetry.lock
 !pyproject.toml
-# and this folder
+
+# and these folderers
 !/asteca
-!/packages
-# But do ignore these files
+!/docs
+
+# But ignore these files
 *.pyc
+
+# and ignore these folders
+/docs/build/*

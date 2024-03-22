@@ -1,315 +1,106 @@
 import os
-import numpy as np
-import pandas as pd
-from .modules import isochs_read
-
-# These are the column names for the initial mass, metallicity, and age for the
-# supported photometric system's isochrones files.
-phot_syst_col_names = {
-    "PARSEC": {"mass_col": "Mini", "met_col": "Zini", "age_col": "logAge"},
-    "MIST": {"mass_col": "initial_mass", "met_col": "Zinit",
-             "age_col": "log10_isochrone_age_yr"},
-    "BASTI": {"mass_col": "M/Mo(ini)", "met_col": "Z =", "age_col": "Age (Myr) ="}
-}
+from dataclasses import dataclass
+from typing import Optional
+from .modules import isochrones_priv
 
 
-def isochs_load(self) -> tuple[np.ndarray, list, dict]:
-    r"""Load the theoretical isochrones and return a dictionary with the data.
+@dataclass
+class isochrones:
+    r"""Define an `isochrones` object.
 
-    Returns
-    -------
-    theor_tracks: np.ndarray
-        Array of isochrones. Updated by `synth_clusters.synthcl_load()`
-    color_filters : list
-        Individual filters for each color defined. Used by
-        `synth_clusters.synthcl_load.add_binarity()`
-    met_age_dict : dict
-        Used by `synth_clusters.synthcl_generate()`
+    The object contains the loaded theoretical isochrones used by the
+    :class:`synthetic` class to generate synthetic clusters.
 
-    """
-    cols_keep, mass_col, met_col, age_col = get_columns(self, self.model)
-
-    f_paths = extract_paths(self.isochs_path, self.model)
-
-    # isochrones.shape = (N_photsyst, N_z, N_a, N_interp, N_cols)
-    # met_age_arr.shape = (N_photsyst, N_z*N_a, 2)
-    isochrones, met_age_arr = isochs_read.get(
-        self.model, self.N_interp, f_paths, met_col, age_col, cols_keep
-    )
-    N_ps, Nz, Na = len(isochrones), len(isochrones[0]), len(isochrones[0][0])
-    print(f"Processing {self.model} isochrones for {N_ps} photometric systems, "
-          + f"N_z={Nz}, N_a={Na}")
-
-    isochrones = m_ini_check(mass_col, isochrones)
-    met_age_dict = met_ages_check(met_age_arr)
-
-    # theor_tracks.shape = (N_z, N_a, N_cols, N_interp)
-    theor_tracks, color_filters = order_isochrones(
-        self.mag_filter_name, self.color_filter_name, mass_col, isochrones
-    )
-
-    return theor_tracks, color_filters, met_age_dict
-
-
-def get_columns(self, model: str) -> tuple[list, str, str, str]:
-    """ """
-    if self.column_names is None:
-        mass_col = phot_syst_col_names[model]["mass_col"]
-        met_col = phot_syst_col_names[model]["met_col"]
-        age_col = phot_syst_col_names[model]["age_col"]
-    else:
-        mass_col = self.column_names["mass_col"]
-        met_col = self.column_names["met_col"]
-        age_col = self.column_names["age_col"]
-
-    # Select columns to keep
-    cols_keep = list(self.mag_color_lambdas.keys()) + [mass_col]
-
-    return cols_keep, mass_col, met_col, age_col
-
-
-def extract_paths(isochs_path: str, model: str) -> list:
-    """
-    Extract files from 'isochs_path'.
-
-    What is in a file for each model (for a given photometric system):
-
-    PARSEC: multiple metallicities and multiple ages
-    MIST  : single metallicity and multiple ages
-    BASTI : single metallicity and single age
-
-    > : folder
-    >>: file
-
-    > PARSEC/
-         |---> phot_syst_1/
-                   |-------->> mets_ages
-         |---> phot_syst_2/
-                   |-------->> ...
-
-    > MIST/
-         |---> phot_syst_1/
-                   |-------->> met_ages_1
-                   |-------->> met_ages_2
-                   |-------->> ...
-         |---> phot_syst_2/
-                   |-------->> met_ages_1
-                   |-------->> ...
-
-    > BASTI/
-         |---> phot_syst_1/
-                   |--------> met_1/
-                              |---->> age_1
-                              |---->> age_2
-                              |---->> ...
-                   |--------> met_2/
-                              |---->> age_1
-                              |---->> ...
-         |---> phot_syst_2/
-                   |--------> met_1/
-                              |---->> age_1
-                              |---->> ...
-                   |--------> ...
+    Parameters
+    ----------
+    isochs_path : str
+        Path to the folder that contains the files for the theoretical isochrones.
+        The name of the folder must be one of the supported isochrone services:
+        `PARSEC <http://stev.oapd.inaf.it/cgi-bin/cmd_3.7>`_,
+        `MIST <https://waps.cfa.harvard.edu/MIST/>`_, or
+        `BASTI <http://basti-iac.oa-abruzzo.inaf.it/isocs.html>`_.
+        Examples of valid paths: ``isochrones/PARSEC/``, ``Mist/``, ``basti``.
+        See :ref:`isochronesload` for more detailed information on how to properly
+        store the isochrone files.
+    magnitude : dict
+        Dictionary containing the magnitude's filter name (as defined in the files
+        of the theoretical isochrones) as the key, and its effective lambda
+        (in Angstrom) as the value. Example for Gaia's ``G`` magnitude:
+        ``{"Gmag": 6390.21}``.
+    color : dict
+        Dictionary containing the color used in the cluster's analysis. The correct
+        format is: ``{"filter1": 1111.11, "filter2": 2222.22}``, where ``filter1``
+        and `filter2` are the names of the filters that are combined to generate
+        the color. The order is important because the color will be generated as:
+        ``filter1-filter2``. The values ``1111.11`` and ``2222.22`` are the effective
+        lambdas (in Angstrom) for each filter. The color does not need to be defined
+        in the same photometric system as the magnitude.
+        Example for Gaia's 'BP-RP' color:
+        ``{"G_BPmag": 5182.58, "G_RPmag": 7825.08}``
+    color2 : dict, optional
+        Optional second color to use in the analysis. Same format as that used by the
+        ``color`` parameter.
+    column_names : dict
+        Column names for the initial mass, metallicity, and age for the photometric
+        system's isochrones files. Example:
+        ``{"mass_col": "Mini", "met_col": "Zini", "age_col": "logAge"}``.
+        This dictionary is defined internally in `ASteCA` and should only be given
+        by the user if the isochrone service changes its format and the `isochrones`
+        class fails to load the files.
+    N_interp : int
+        Number of interpolation points used to ensure that all isochrones are the
+        same shape.
 
     """
-    f_paths = []
-    # For each photometric system
-    for ps in os.listdir(isochs_path):
-        ps_path = os.path.join(isochs_path, ps)
+    isochs_path: str
+    magnitude: dict
+    color: dict
+    color2: Optional[dict] = None
+    column_names: Optional[dict] = None
+    N_interp: int = 2500
 
-        if model == "PARSEC":
-            # A single file per photometric system is expected here
-            if len(os.listdir(ps_path)) > 1:
-                raise ValueError("One file per photometric system is expected")
-            for met in os.listdir(ps_path):
-                f_paths.append(os.path.join(ps_path, met))
+    def __post_init__(self):
+        # Extract model from isochrones' path
+        if self.isochs_path.endswith("/"):
+            self.model = self.isochs_path[:-1].split("/")[-1].upper()
+        else:
+            self.model = self.isochs_path.split("/")[-1].upper()
 
-        elif model == "MIST":
-            met_files = []
-            for met in os.listdir(ps_path):
-                met_files.append(os.path.join(ps_path, met))
-            f_paths.append(met_files)
-
-        elif model == "BASTI":
-            met_files = []
-            for met_folder in os.listdir(ps_path):
-                met_folder_path = os.path.join(ps_path, met_folder)
-                met_lst = []
-                for met in os.listdir(met_folder_path):
-                    met_lst.append(os.path.join(met_folder_path, met))
-                met_files.append(met_lst)
-            f_paths.append(met_files)
-
-    # Check that the number of files matches across photometric systems and
-    # metallicities for BASTI
-    if model == "MIST":
-        nmets = []
-        for ps in f_paths:
-            nmets.append(len(ps))
-        if len(list(set(nmets))) > 1:
+        # Check model input
+        models = ("PARSEC", "MIST", "BASTI")
+        if self.model not in models:
             raise ValueError(
-                "The number of files for each photometric system must match"
+                f"Model '{self.model}' not recognized. Should be one of {models}"
             )
-    elif model == "BASTI":
-        nmets = []
-        for ps in f_paths:
-            nmets.append(len(ps))
-        if len(list(set(nmets))) > 1:
+
+        # Check path to isochrones
+        if os.path.isdir(self.isochs_path) is False:
             raise ValueError(
-                "The number of files for each photometric system must match"
+                f"Path '{self.isochs_path}' must point to the folder that "
+                + f"contains the '{self.model}' isochrones"
             )
-        # Now check the number of age files for each metallicity
-        for ps in f_paths:
-            nages = []
-            for met in ps:
-                nages.append(len(met))
-            if len(list(set(nages))) > 1:
-                raise ValueError(
-                    "The number of files for each metallicity system must match"
-                )
 
-        # Flatten the list once checked
-        f_paths_flat = []
-        for ps in f_paths:
-            met_f_ps = []
-            for met_f in ps:
-                met_f_ps += met_f
-            f_paths_flat.append(met_f_ps)
-        f_paths = f_paths_flat
+        # Extract magnitude, color(s), and lambdas
+        self.mag_color_lambdas = self.magnitude | self.color
+        self.mag_filter_name = list(self.magnitude.keys())[0]
+        self.color_filter_name = [list(self.color.keys())]
+        # Add second color if any
+        if self.color2 is not None:
+            self.color_filter_name.append(list(self.color2.keys()))
+            self.mag_color_lambdas = self.mag_color_lambdas | self.color2
 
-    return f_paths
+        # Load isochrone files
+        self.theor_tracks, self.color_filters, self.met_age_dict =\
+            isochrones_priv.load(self)
+        print("Finished loading isochrone file(s)")
 
+    def min_max(self) -> tuple[float]:
+        r"""Return the minimum and maximum values for the metallicity and age defined
+        in the theoretical isochrones.
 
-def m_ini_check(initial_mass: str, isochrones: list) -> list:
-    """
-    The isochrone parameter 'initial_mass' is assumed to be equal across
-    photometric systems, for a given metallicity and age. We check here that
-    this is the case.
-
-    Combine photometric systems if more than one was used.
-    """
-    if len(isochrones) == 1:
-        isochrones_merged = isochrones[0]
-        return isochrones_merged
-
-    isochrones_merged = []
-    phot_syst_0 = isochrones[0]
-    for phot_syst in isochrones[1:]:
-        for i, met in enumerate(phot_syst_0):
-            met_vals = []
-            for j, df_age in enumerate(met):
-                df_x = phot_syst[i][j]
-
-                if (
-                    abs(df_age[initial_mass].values - df_x[initial_mass].values).sum()
-                    > 0.001
-                ):
-                    raise ValueError(
-                        "Initial mass values are not equal across photometric systems"
-                    )
-
-                # Merge and drop a mass_ini column
-                df_x = df_x.drop(["Mini"], axis=1)
-                met_vals.append(pd.concat([df_age, df_x], axis=1))
-            isochrones_merged.append(met_vals)
-
-        phot_syst_0 = phot_syst
-
-    return isochrones_merged
-
-
-def met_ages_check(met_age_arr: list) -> dict:
-    """ """
-    phot_syst_0 = met_age_arr[0]
-    for phot_syst in met_age_arr[1:]:
-        for i, met_age in enumerate(phot_syst_0):
-            met_age_x = phot_syst[i]
-
-            if abs(np.array(met_age) - np.array(met_age_x)).sum() > 0.001:
-                raise ValueError(
-                    "Metallicities and ages are not equal across photometric systems"
-                )
-
-        phot_syst_0 = phot_syst
-
-    # # Select a single array
-    # met_age_dict = phot_syst_0
-
-    # Discard duplicate values
-    all_z, all_a = np.array(phot_syst_0).T
-    all_z = np.array(list(dict.fromkeys(all_z))).astype(float)
-    all_a = np.array(list(dict.fromkeys(all_a))).astype(float)
-
-    met_age_dict = {"z": all_z, "a": all_a}
-
-    return met_age_dict
-
-
-def order_isochrones(
-    mag_filter_name: str, color_filter_name: list, initial_mass: str, isochrones: list
-) -> tuple[np.ndarray, list]:
-    """
-    Return list structured as:
-
-    theor_tracks = [m1, m2, .., mN]
-    mX = [age1, age2, ..., ageM]
-    ageX = [f,.., c1, c2,.., Mini, fb,.., c1b, c2b,.., Minib]
-
-    where:
-    N     : number of metallicities in grid
-    M     : number of ages in grid
-    f     : magnitude
-    cX    : colors
-    Mini  : initial mass
-    fb    : binary magnitude --
-    cXb   : binary colors     |
-    Minib : binary masses -----
-
-    theor_tracks.shape = (Nz, Na, Nd, Ni)
-    Nz: number of metallicities
-    Na: number of log(age)s
-    Nd: number of data columns
-    Ni: number of interpolated values
-    """
-    # isochrones.shape = Nz, Na, Ni, Nd
-    # Nz: number of metallicities
-    # Na: number of log(age)s
-    # Ni: number of interpolated values
-    # Nd: number of data columns --> mini + mag + 2 * colors (one mag per color)
-    Nz, Na, Ni, Nd = np.shape(isochrones)
-
-    # m_ini_col = isoch_data['initial_mass']
-    # mag_filter = cluster_data['mag_filter_name']
-    # col_filter = cluster_data['color_filter_name']
-    N_colors = len(color_filter_name)
-
-    # Array that will store all the interpolated tracks
-    theor_tracks = np.zeros([Nz, Na, (1 + 1 + N_colors), Ni])
-
-    # Store the magnitudes to generate the colors separately. Used only by the
-    # binarity process
-    color_filters = []
-
-    for i, met in enumerate(isochrones):
-        met_lst = []
-        for j, df_age in enumerate(met):
-            # Store magnitude
-            theor_tracks[i][j][0] = df_age[mag_filter_name]
-            # Store colors
-            cols_dict = {}
-            for k, color_filts in enumerate(color_filter_name):
-                f1 = df_age[color_filts[0]]
-                f2 = df_age[color_filts[1]]
-                # Store color
-                theor_tracks[i][j][1 + k] = f1 - f2
-
-                # Individual filters for colors, used for binarity
-                cols_dict[color_filts[0]] = f1
-                cols_dict[color_filts[1]] = f2
-
-            met_lst.append(cols_dict)
-
-            theor_tracks[i][j][k + 2] = df_age[initial_mass]
-        color_filters.append(met_lst)
-
-    return theor_tracks, color_filters
+        """
+        zmin = self.met_age_dict['z'].min()
+        zmax = self.met_age_dict['z'].max()
+        amin = self.met_age_dict['a'].min()
+        amax = self.met_age_dict['a'].max()
+        return zmin, zmax, amin, amax

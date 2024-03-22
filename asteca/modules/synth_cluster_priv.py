@@ -1,5 +1,157 @@
 import numpy as np
 from scipy import stats
+from .imfs import invTrnsfSmpl, sampleInv
+
+
+def add_binarity(self) -> np.ndarray:
+    """
+    For each theoretical isochrone defined.
+        1. Draw random secondary masses for *all* stars.
+        2. Interpolate magnitude values for these masses
+        3. Calculate the magnitudes for the binary system.
+        4. Calculate the colors for the binary system.
+
+    theor_tracks.shape = (Nz, Na, N_cols, N_interp)
+
+    If binarity is processed:
+        N_cols: magnitude + color(s) + initial masses + unresolved mag +
+            unresolved color(s) + secondary masses
+    else:
+        N_cols: magnitude + colors + initial mass
+
+    """
+    if self.alpha is None:
+        print("Parameter 'alpha' is set to None: binary systems are not generated")
+        return self.isochs.theor_tracks
+    print("Generating binary data")
+
+    mag_idx = 0
+    N_colors = len(self.isochs.color_filter_name)
+    m_ini_idx = mag_idx + N_colors + 1
+
+    # Extend to accommodate binary data
+    Nz, Na, Nd, Ni = self.isochs.theor_tracks.shape
+    theor_tracks = np.concatenate(
+        (self.isochs.theor_tracks, np.zeros([Nz, Na, Nd, Ni])), axis=2
+    )
+
+    # For each metallicity defined.
+    for mx, met in enumerate(theor_tracks):
+        # For each age defined.
+        for ax, isoch in enumerate(met):
+            # Extract initial masses for this isochrone.
+            mass_ini = isoch[m_ini_idx]
+
+            # Mass-ratio distribution
+            mass_ratios = qDistribution(mass_ini, self.gamma)
+
+            # Calculate random secondary masses of these binary stars
+            # between bin_mass_ratio*m1 and m1, where m1 is the primary
+            # mass.
+            m2 = mass_ratios * mass_ini
+
+            # Calculate unresolved binary magnitude
+            mag = isoch[mag_idx]
+            mag_m2 = np.interp(m2, mass_ini, mag)
+            theor_tracks[mx][ax][m_ini_idx + 1] = mag_combine(mag, mag_m2)
+
+            # Calculate unresolved color for each color defined.
+            for ic, color in enumerate(self.isochs.color_filter_name):
+                mc1 = self.isochs.color_filters[mx][ax][color[0]]
+                mc2 = self.isochs.color_filters[mx][ax][color[1]]
+                f_m1 = np.interp(m2, mass_ini, mc1)
+                f1 = mag_combine(mc1, f_m1)
+                f_m2 = np.interp(m2, mass_ini, mc2)
+                f2 = mag_combine(mc2, f_m2)
+                theor_tracks[mx][ax][m_ini_idx + 1 + 1 + ic] = f1 - f2
+
+            # Secondary masses
+            theor_tracks[mx][ax][-1] = m2
+
+    return theor_tracks
+
+
+def extinction_coeffs(self) -> list:
+    """
+    Obtain extinction coefficients for all the observed filters and colors,
+    in the order in which they are stored in theor_tracks.
+
+    ext_coefs = [ec_mag, ec_col1, ...]
+    """
+    print("Obtaining extinction coefficients")
+
+    # For the magnitude.
+    # Effective wavelength in Armstrong.
+    eff_wave = self.isochs.mag_color_lambdas[self.isochs.mag_filter_name]
+    # CCM coefficient. Effective wavelength in inverse microns.
+    ext_coefs = [ccm_model(10000.0 / eff_wave)]
+
+    # For colors.
+    for color in self.isochs.color_filter_name:
+        c_filt1, c_filt2 = color
+        # Effective wavelength in Armstrong.
+        eff_wave1 = self.isochs.mag_color_lambdas[c_filt1]
+        eff_wave2 = self.isochs.mag_color_lambdas[c_filt2]
+        ext_coefs.append(
+            [ccm_model(10000.0 / eff_wave1), ccm_model(10000.0 / eff_wave2)]
+        )
+
+    return ext_coefs
+
+
+def sample_imf(self, Nmets: int, Nages: int) -> list:
+    """
+    Returns the number of stars per interval of mass for the selected IMF.
+
+    Parameters
+    ----------
+    IMF_name : str
+      Name of the IMF to be used.
+    max_mass: float
+      Maximum mass defined.
+
+    Returns
+    -------
+    st_dist_mass : list
+      Tuple that contains: a given number of stars sampled from the selected
+      IMF, that (approximately) sum to the associated total mass; the
+      cumulative sum of those masses.
+      One list per metallicity and age values defined is returned. This is to add some
+      variety to the sampled IMF.
+    """
+    print(f"Sampling selected IMF ({self.IMF_name})")
+    inv_cdf = invTrnsfSmpl(self.IMF_name)
+
+    st_dist_mass = []
+    for _ in range(Nmets):
+        met_lst = []
+        for _ in range(Nages):
+            sampled_IMF = sampleInv(self.max_mass, inv_cdf)
+            met_lst.append(sampled_IMF)
+        st_dist_mass.append(met_lst)
+
+    return st_dist_mass
+
+
+def randVals(self) -> dict:
+    """
+    Generate lists of random values used by the synthetic cluster generating
+    function.
+    """
+    # This is the maximum number of stars that will ever be interpolated into
+    # an isochrone
+    N_isoch, N_mass = self.theor_tracks.shape[-1], 0
+    for sdm in self.st_dist_mass:
+        N_mass = max(len(sdm[0]), N_mass, N_isoch)
+
+    # Used by `move_isochrone()` and `add_errors`
+    rand_norm_vals = np.random.normal(0.0, 1.0, (2, N_mass))
+
+    # Used by `move_isochrone()`, `binarity()`
+    rand_unif_vals = np.random.uniform(0.0, 1.0, (2, N_mass))
+
+    rand_floats = {'norm': rand_norm_vals, 'unif': rand_unif_vals}
+    return rand_floats
 
 
 def qDistribution(M1: np.ndarray, gamma: [float, str]) -> np.ndarray:
@@ -174,7 +326,10 @@ def properModel(
       the proper (z, a) values.
 
     """
-    model_comb = model_fixed | model_fit
+    # If any parameter is repeated in both dictionaries, this order gives priority
+    # to the 'model_fixed' dict, in the sense that its values will be the ones
+    # written to 'model_comb'
+    model_comb = model_fit | model_fixed
     model_full = np.array(
         [model_comb[k] for k in ["z", "loga", "beta", "Av", "DR", "Rv", "dm"]]
     )
@@ -422,7 +577,7 @@ def cut_max_mag(isoch_moved, max_mag_syn):
     """
     # Discard stars in isochrone beyond max_mag_syn limit.
     msk = isoch_moved[0] < max_mag_syn
-    return isoch_moved[:, msk], (~msk).sum()
+    return isoch_moved[:, msk]
 
 
 def mass_interp(isoch_cut, m_ini_idx, st_dist_mass, N_obs_stars):
@@ -468,10 +623,21 @@ def mass_interp(isoch_cut, m_ini_idx, st_dist_mass, N_obs_stars):
     # for i, arr in enumerate(isoch_cut):
     #     isoch_mass[i] = np.interp(mass_dist, mass_ini, arr)
 
-    # Find where in the original data, the values to interpolate
-    # would be inserted.
+    isoch_mass = interp_mass_isoch(isoch_cut, mass_ini, mass_dist)
+
+    return isoch_mass
+
+
+def interp_mass_isoch(isoch_cut, mass_ini, mass_dist):
+    """
+    Find where in the original data, the values to interpolate would be inserted.
+
+    NOTE: I already tried to speed this block up using numba (@jit(nopython=True))
+    but it does not help. The code runs even slower.
+    """
     # Note: If x_new[n] == x[m], then m is returned by searchsorted.
     x_new_indices = np.searchsorted(mass_ini, mass_dist)
+
     # Calculate the slope of regions that each x_new value falls in.
     lo = x_new_indices - 1
     x_lo = mass_ini[lo]
@@ -493,7 +659,7 @@ def binarity(alpha, beta, m_ini_idx, rand_unif_vals, isoch_mass):
     Select a fraction of stars to be binaries, given a chosen method.
     """
     # No binarity process defined
-    if alpha == 0.:
+    if alpha is None:
         return isoch_mass
 
     Ns = isoch_mass.shape[-1]
@@ -501,7 +667,12 @@ def binarity(alpha, beta, m_ini_idx, rand_unif_vals, isoch_mass):
 
     # Distribution of probability of binarity (multiplicity fraction) versus
     # primary masses.
-    b_p = np.clip(alpha + beta * np.log(mass), a_min=0, a_max=1)
+
+    # # Duchene & Kraus (2013) Fig 1
+    # b_p = np.clip(alpha + beta * np.log(mass), a_min=0, a_max=1)
+
+    # Offner et al. (2022); Fig 1 (left), Table 1
+    b_p = np.clip(alpha + beta * np.arctan(mass), a_min=0, a_max=1)
 
     # Stars (masses) with the largest binary probabilities are selected
     # proportional to their probability
@@ -544,3 +715,82 @@ def add_errors(isoch_compl, err_lst, rand_norm_vals):
         isoch_compl[i] += rnd * sigma_mc
 
     return isoch_compl
+
+
+def generate(self, my_cluster, model_fit):
+    r"""Returns the full synthetic cluster array.
+
+    This is an almost exact copy of the ``synth_cluster.generate()`` function with
+    the only difference that it returns the full array. This is generated:
+
+    synth_clust = [mag, c1, (c2), m_ini_1, mag_b, c1_b, (c2_b), m_ini_2]
+
+    where c1 and c2 colors defined, and 'm_ini_1, m_ini_2' are the primary and
+    secondary masses of the binary systems. The single systems only have a '0'
+    stored in 'm_ini_2'.
+
+    """
+    # Return proper values for fixed parameters and parameters required
+    # for the (z, log(age)) isochrone averaging.
+    met, loga, beta, av, dr, rv, dm, ml, mh, al, ah = properModel(
+        self.isochs.met_age_dict, my_cluster.model_fixed, model_fit
+    )
+
+    # Generate a weighted average isochrone from the (z, log(age)) values in
+    # the 'model'.
+    isochrone = zaWAverage(
+        self.theor_tracks,
+        self.isochs.met_age_dict,
+        my_cluster.cluster_dict['m_ini_idx'],
+        met,
+        loga,
+        ml,
+        mh,
+        al,
+        ah,
+    )
+
+    # Move theoretical isochrone using the distance modulus
+    isoch_moved = move_isochrone(
+        isochrone, my_cluster.cluster_dict['m_ini_idx'], dm)
+
+    # Apply extinction correction
+    isoch_extin = extinction(
+        self.ext_coefs,
+        self.rand_floats['norm'][0],
+        self.rand_floats['unif'][0],
+        self.DR_dist,
+        self.DR_percentage,
+        my_cluster.cluster_dict['m_ini_idx'],
+        av,
+        dr,
+        rv,
+        isoch_moved,
+    )
+
+    # Remove isochrone stars beyond the maximum magnitude
+    isoch_cut = cut_max_mag(
+        isoch_extin, my_cluster.cluster_dict["max_mag_syn"])
+    if not isoch_cut.any():
+        return np.array([])
+
+    # Interpolate IMF's sampled masses into the isochrone.
+    isoch_mass = mass_interp(
+        isoch_cut, my_cluster.cluster_dict['m_ini_idx'], self.st_dist_mass[ml][al],
+        my_cluster.cluster_dict["N_obs_stars"])
+    if not isoch_mass.any():
+        return np.array([])
+
+    # Assignment of binarity.
+    isoch_binar = binarity(
+        self.alpha, beta, my_cluster.cluster_dict['m_ini_idx'],
+        self.rand_floats['unif'][1], isoch_mass
+    )
+
+    # Assign errors according to errors distribution.
+    synth_clust = add_errors(
+        isoch_binar, my_cluster.cluster_dict["err_lst"],
+        self.rand_floats['norm'][1]
+    )
+
+    return synth_clust
