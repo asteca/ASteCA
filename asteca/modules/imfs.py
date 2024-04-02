@@ -2,59 +2,22 @@ import numpy as np
 from scipy.interpolate import make_interp_spline
 
 
-def invTrnsfSmpl(IMF_name, m_low=0.08, m_high=150, mass_step=0.05):
+def invTrnsfSmpl(IMF_name, m_low=0.08, m_high=150):
     """
     IMF inverse transform sampling.
-
-    Asked here: https://stackoverflow.com/q/21100716/1391441
     """
-    # IMF mass interpolation step and grid values.
-    mass_values = np.arange(m_low, m_high, mass_step)
-
-    def IMF_func(m_star, IMF_name):
-        return get_imf(IMF_name, m_star)
-
-    # CDF_samples = []
-    # for m in mass_values:
-    #     x = quad(IMF_func, m_low, m, args=(IMF_name))[0]
-    #     CDF_samples.append(x)
-    # # Normalize values
-    # CDF_samples = np.array(CDF_samples) / max(CDF_samples)
-    # # These are (0, 1)
-    # # CDF_min, CDF_max = CDF_samples.min(), CDF_samples.max()
-    # # Inverse CDF
-    # from scipy.interpolate import interp1d
-    # inv_cdf = interp1d(CDF_samples, mass_values)  # Almost deprecated
-
-    # x_old, CDF_samples = -np.inf, []
-    # for m in mass_values:
-    #     x = quad(IMF_func, m_low, m, args=(IMF_name))[0]
-    #     # This ensures that CDF_samples is monotonically increasing, bypassing
-    #     # rounding errors
-    #     if x <= x_old:
-    #         x = x_old + 1e-15
-    #     CDF_samples.append(x)
-    #     x_old = x
-
-    # # Normalize values
-    # CDF_samples = np.array(CDF_samples) / max(CDF_samples)
-    # # These are (0, 1)
-    # # CDF_min, CDF_max = CDF_samples.min(), CDF_samples.max()
-
-    # # k=1 is important otherwise the interpolator can become unstable for values
-    # # close to 1 and return huge masses and even negative ones
-    # inv_cdf = make_interp_spline(CDF_samples, mass_values, k=1)
 
     # The lower mass region needs to be sampled more accurately
-    mass_values = list(np.linspace(m_low, .5, 50))
-    mass_values += list(np.linspace(.501, 10, 250))
-    mass_values += list(np.linspace(10.01, m_high, 250))
+    mass_values = list(np.linspace(m_low, .5, 100))
+    mass_values += list(np.linspace(.501, 2, 75))
+    mass_values += list(np.linspace(2.01, 10, 50))
+    mass_values += list(np.linspace(10.01, m_high, 25))
 
     CDF_samples = []
-    IMF_old, m_old, area_CDF = IMF_func(m_low, IMF_name), m_low, 0.
+    IMF_old, m_old, area_CDF = get_imf(IMF_name, m_low), m_low, 0.
     for m in mass_values[1:]:
         # Approximate integral with rectangular area, and add to previous total area
-        IMF_new = IMF_func(m, IMF_name)
+        IMF_new = get_imf(IMF_name, m)
         area_CDF += .5*(IMF_new + IMF_old) * (m - m_old)
         CDF_samples.append(area_CDF)
         IMF_old, m_old = IMF_new, m
@@ -91,73 +54,48 @@ def get_imf(IMF_name, m_star):
     """
     Define any number of IMFs.
 
-    The package https://github.com/keflavich/imf has some more (I think,
-    24-09-2019).
+    The package https://github.com/keflavich/imf has some more (I think).
     """
     if IMF_name == "salpeter_1955":
         # Salpeter (1955)  IMF.
         # https://ui.adsabs.harvard.edu/abs/1955ApJ...121..161S/
         imf_val = m_star**-2.35
 
-    elif IMF_name == "kroupa_1993":
-        # Kroupa, Tout & Gilmore. (1993) piecewise IMF.
-        # http://adsabs.harvard.edu/abs/1993MNRAS.262..545K
-        # Eq. (13), p. 572 (28)
-        alpha = [-1.3, -2.2, -2.7]
-        m0, m1, m2 = [0.08, 0.5, 1.0]
-        factor = [0.035, 0.019, 0.019]
-        if m0 < m_star <= m1:
-            i = 0
-        elif m1 < m_star <= m2:
-            i = 1
-        elif m2 < m_star:
-            i = 2
-        imf_val = factor[i] * (m_star ** alpha[i])
-
     elif IMF_name == "kroupa_2001":
         # Kroupa (2001), Mon. Not. R. Astron. Soc. 322, 231-246 (2001); Eq. 2
+        # https://ui.adsabs.harvard.edu/abs/2001MNRAS.322..231K/abstract
         alpha = [-0.3, -1.3, -2.3]
         m0, m1, m2 = [0.01, 0.08, 0.5]
-        if m0 < m_star <= m1:
-            i = 0
-        elif m1 < m_star <= m2:
-            i = 1
-        elif m2 < m_star:
-            i = 2
-        imf_val = m_star ** alpha[i]
-
-    elif IMF_name == "chabrier_2001_log":
-        # Chabrier (2001) lognormal form of the IMF.
-        # http://adsabs.harvard.edu/abs/2001ApJ...554.1274C
-        # Eq (7)
-        imf_val = (
-            (1.0 / (np.log(10) * m_star))
-            * 0.141
-            * np.exp(-((np.log10(m_star) - np.log10(0.1)) ** 2) / (2 * 0.627**2))
-        )
-
-    elif IMF_name == "chabrier_2001_exp":
-        # Chabrier (2001) exponential form of the IMF.
-        # http://adsabs.harvard.edu/abs/2001ApJ...554.1274C
-        # Eq (8)
-        imf_val = 3.0 * m_star ** (-3.3) * np.exp(-((716.4 / m_star) ** 0.25))
-
-    elif IMF_name == "popescu_2009":
-        # Kroupa (2002) Salpeter (1995) piecewise IMF taken from Popescu & Hanson
-        # (2009; MASSCLEAN), Eq. (2) & (3), p. 1725
-        alpha = [-0.3, -1.3, -2.3]
-        m0, m1, m2 = [0.01, 0.08, 0.5]
+        # Continuity factor taken from Popescu & Hanson (2009; MASSCLEAN),
+        # Eq. (2) & (3), p. 1725
         factor = [
             (1.0 / m1) ** alpha[0],
             (1.0 / m1) ** alpha[1],
             ((m2 / m1) ** alpha[1]) * ((1.0 / m2) ** alpha[2]),
         ]
-        if m0 < m_star <= m1:
+        if m0 <= m_star <= m1:
             i = 0
         elif m1 < m_star <= m2:
             i = 1
         elif m2 < m_star:
             i = 2
         imf_val = factor[i] * (m_star ** alpha[i])
+
+    elif IMF_name == "chabrier_2014":
+        # Chabrier et al. (2014)
+        # https://ui.adsabs.harvard.edu/abs/2014ApJ...796...75C/abstract ; Eq (34)
+        nc, mc = 11, 0.18
+        m0 = nc*mc
+        Ah, x = 0.649, 1.35
+        Al = Ah*nc**(x/2)
+        c = 0.434294/m_star  # np.log10(e)/m ; This is the transformation from
+        # dN/log(m) --> dN/dm
+        sigma_2 = np.log10(nc)/(x*np.log(10))
+        if m_star <= m0:
+            imf_val = c * Al * m0**(-x) * np.exp(
+                -(np.log10(m_star)-np.log10(mc))**2/(2*sigma_2)
+            )
+        elif m_star > m0:
+            imf_val = c * Ah * m_star**(-x)
 
     return imf_val

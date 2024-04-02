@@ -1,9 +1,88 @@
 import numpy as np
 from scipy.special import loggamma
+from astropy.stats import knuth_bin_width, bayesian_blocks
 from fast_histogram import histogram2d
 
 
-def tremmel(cluster_dict, synth_clust):
+def lkl_data(self):
+    """ """
+    # Obtain bin edges for each dimension, defining a grid.
+    bin_edges, ranges, Nbins = bin_edges_f(
+        self.bin_method, self.my_cluster.mag_p, self.my_cluster.colors_p)
+
+    # Obtain histogram for observed cluster.
+    hess_diag = []
+    for i, col in enumerate(self.my_cluster.colors_p):
+        # Fast 2D histogram
+        hess_diag = histogram2d(
+            self.my_cluster.mag_p,
+            col,
+            range=[[ranges[0][0], ranges[0][1]], [ranges[i + 1][0], ranges[i + 1][1]]],
+            bins=[Nbins[0], Nbins[i + 1]],
+        )
+
+    # Flatten array
+    cl_histo_f = []
+    for i, diag in enumerate(hess_diag):
+        cl_histo_f += list(np.array(diag).ravel())
+    cl_histo_f = np.array(cl_histo_f)
+
+    # Index of bins where stars were observed
+    cl_z_idx = cl_histo_f != 0
+
+    # Remove all bins where n_i=0 (no observed stars)
+    cl_histo_f_z = cl_histo_f[cl_z_idx]
+
+    # Arguments below used by the functions called by the get() method
+    # self.bin_edges = bin_edges
+    self.ranges = ranges
+    self.Nbins = Nbins
+    self.cl_z_idx = cl_z_idx
+    self.cl_histo_f_z = cl_histo_f_z
+
+
+def bin_edges_f(bin_method, mag, colors):
+    """ """
+
+    bin_edges = []
+
+    if bin_method == "knuth":
+        bin_edges.append(
+            knuth_bin_width(mag[~np.isnan(mag)], return_bins=True, quiet=True)[1]
+        )
+        for col in colors:
+            bin_edges.append(
+                knuth_bin_width(col[~np.isnan(col)], return_bins=True, quiet=True)[1]
+            )
+
+    elif bin_method == "fixed":
+        N_mag, N_col = 15, 10
+        # Magnitude
+        mag_min, mag_max = np.nanmin(mag), np.nanmax(mag)
+        bin_edges.append(np.linspace(mag_min, mag_max, N_mag))
+        # Colors
+        for col in colors:
+            col_min, col_max = np.nanmin(col), np.nanmax(col)
+            bin_edges.append(np.linspace(col_min, col_max, N_col))
+
+    elif bin_method == "bayes_blocks":
+        bin_edges.append(bayesian_blocks(mag[~np.isnan(mag)]))
+        for col in colors:
+            bin_edges.append(bayesian_blocks(col[~np.isnan(col)]))
+
+    elif bin_method == "manual":
+        bin_edges = bin_edges
+
+    # Extract ranges and number of bins, used by histogram2d
+    ranges, Nbins = [], []
+    for be in bin_edges:
+        ranges.append([be[0], be[-1]])
+        Nbins.append(len(be))
+
+    return bin_edges, ranges, Nbins
+
+
+def tremmel(self, synth_clust):
     r"""
     Poisson likelihood ratio as defined in Tremmel et al (2013), Eq 10 with
     v_{i,j}=1. This returns the log likelihood.
@@ -34,24 +113,21 @@ def tremmel(cluster_dict, synth_clust):
     if not synth_clust.any():
         return -1.0e09
 
-    #
+    # Obtain histogram for the synthetic cluster.
     mag, colors = synth_clust[0], synth_clust[1:]
-
-    # Obtain histogram for observed cluster.
     syn_histo_f = []
     for i, col in enumerate(colors):
         # hess_diag = np.histogram2d(
         #     mag, col, bins=[
-        #         cluster_dict['bin_edges'][0]] + [cluster_dict['bin_edges'][i + 1]])[0]
-
+        #         self.bin_edges[0]] + [self.bin_edges[i + 1]])[0]
         hess_diag = histogram2d(
             mag,
             col,
             range=[
-                [cluster_dict["ranges"][0][0], cluster_dict["ranges"][0][1]],
-                [cluster_dict["ranges"][i + 1][0], cluster_dict["ranges"][i + 1][1]],
+                [self.ranges[0][0], self.ranges[0][1]],
+                [self.ranges[i + 1][0], self.ranges[i + 1][1]],
             ],
-            bins=[cluster_dict["Nbins"][0], cluster_dict["Nbins"][i + 1]],
+            bins=[self.Nbins[0], self.Nbins[i + 1]],
         )
 
         # Flatten array
@@ -59,10 +135,10 @@ def tremmel(cluster_dict, synth_clust):
     syn_histo_f = np.array(syn_histo_f)
 
     # Remove all bins where n_i = 0 (no observed stars).
-    syn_histo_f_z = syn_histo_f[cluster_dict["cl_z_idx"]]
+    syn_histo_f_z = syn_histo_f[self.cl_z_idx]
 
     SumLogGamma = np.sum(
-        loggamma(cluster_dict["cl_histo_f_z"] + syn_histo_f_z + 0.5)
+        loggamma(self.cl_histo_f_z + syn_histo_f_z + 0.5)
         - loggamma(syn_histo_f_z + 0.5)
     )
 

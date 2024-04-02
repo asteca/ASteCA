@@ -1,5 +1,7 @@
 from dataclasses import dataclass
+from typing import Optional
 import numpy as np
+import matplotlib.pyplot as plt
 from .isochrones import isochrones
 from .modules import synth_cluster_priv as scp
 
@@ -8,36 +10,33 @@ from .modules import synth_cluster_priv as scp
 class synthetic:
     r"""Define a ``synthetic`` object.
 
-    Use the data loaded in the :class:`isochrones` object to generate a
+    Use the isochrones loaded in the :class:`isochrones` object to generate a
     :class:`synthetic` object. This object is used to generate synthetic clusters
-    given a set of input fundamental parameters (metallicity, age, distance,
-    extinction, etc.).
+    given a :class:`cluster` object  and a set of input fundamental parameters
+    (metallicity, age, distance, extinction, etc.).
+
+    See the :ref:`synth_clusters` section for more details.
 
     Parameters
     ----------
     isochs : :class:`isochrones`
          :doc:`isochrones` object with the loaded files for the theoretical isochrones.
-    alpha : None, float
-        First parameter of the 
-    gamma : str, float
-        xxxxx
-    DR_dist : str
-        xxxxx
-    DR_percentage : float
-        xxxxx
-    IMF_name : str
-        xxxxx
-    max_mass : int
-        xxxxx
+    IMF_name : str, {"salpeter_1955", "kroupa_2001", "chabrier_2014"}, default="chabrier_2014"
+        Name of the initial mass function used to populate the isochrones.
+    max_mass : int, default=100_000
+        Maximum total initial mass. Should be large enough to allow generating as many
+        synthetic stars as observed stars.
+    gamma : str, float, {"D&K", "fisher_stepped", "fisher_peaked", "raghavan"}, default="D&K"
+        Distribution function for the mass ratio of the binary systems.
+    DR_distribution : str, {"uniform", "normal"}, default="uniform"
+        Distribution function for the differential reddening.
 
     """
     isochs: isochrones
-    alpha: None | float = .0
-    gamma: float | str = "D&K"
-    DR_dist: str = "uniform"
-    DR_percentage: float = 1.0
-    IMF_name: str = "kroupa_2001"
+    IMF_name: str = "chabrier_2014"
     max_mass: int = 100_000
+    gamma: float | str = "D&K"
+    DR_distribution: str = "uniform"
 
     def __post_init__(self):
         # Check gamma distribution
@@ -58,25 +57,27 @@ class synthetic:
             "uniform",
             "normal",
         )
-        if self.DR_dist not in DR_funcs:
+        if self.DR_distribution not in DR_funcs:
             raise ValueError(
-                f"Differential reddening function '{self.DR_dist}' not recognized. "
+                f"Differential reddening function '{self.DR_distribution}' not recognized. "
                 + f"Should be one of {DR_funcs}"
             )
 
         # Check IMF function
         imfs = (
             "salpeter_1955",
-            "kroupa_1993",
             "kroupa_2001",
-            "chabrier_2001_log",
-            "chabrier_2001_exp",
-            "popescu_2009",
+            "chabrier_2014",
         )
         if self.IMF_name not in imfs:
             raise ValueError(
                 f"IMF '{self.IMF_name}' not recognized. Should be one of {imfs}"
             )
+
+        # Sample the selected IMF
+        # Nmets, Nages = self.theor_tracks.shape[:2]
+        Nmets, Nages = self.isochs.theor_tracks.shape[:2]
+        self.st_dist_mass = scp.sample_imf(self, Nmets, Nages)
 
         # Add binary systems
         self.theor_tracks = scp.add_binarity(self)
@@ -84,22 +85,78 @@ class synthetic:
         # Get extinction coefficients for these filters
         self.ext_coefs = scp.extinction_coeffs(self)
 
-        # Sample the selected IMF
-        Nmets, Nages = self.theor_tracks.shape[:2]
-        self.st_dist_mass = scp.sample_imf(self, Nmets, Nages)
-
         # Generate random floats used by `synth_clusters.synthcl_generate()`
         self.rand_floats = scp.randVals(self)
-        print("Finished generating parameters for synthetic clusters")
+        print("Synthetic clusters object generated\n")
 
-    def adjust_mass_sampling(self, my_cluster, dm_min: float) -> tuple[list, list]:
-        """ """
+    def calibrate(self, cluster, fix_params: dict = {}, z_to_FeH: float | None = None, dm_min: float | None = None):
+        r"""Calibrate a :class:`synthetic` object based on a :class:`cluster` object
+        and a dictionary of fixed fundamental parameters (``fix_params``).
+
+        Use the data obtained from your observed cluster stored in the
+        :class:`cluster` object, to calibrate a :class:`synthetic` object. Additionally,
+        a dictionary of fixed fundamental parameters (metallicity, age, distance,
+        extinction, etc.) can be passed.
+
+        See the :ref:`synth_clusters` section for more details.
+
+        Parameters
+        ----------
+        cluster : :class:`cluster`
+             :doc:`cluster` object with the processed data from your observed cluster.
+        fix_params : dict, optional, default={}
+            Dictionary with the values for the fixed parameters (if any).
+        z_to_FeH : float, optional, default=None
+            If ``None``, the default ``z`` values (defined when loading the isochrones
+            via the :class:`isochrones` object) will be used to generate the synthetic
+            clusters. If ``float``, it must represent the solar metallicity for these
+            isochrones. The metallicity values will then be converted to ``[FeH]``
+            values, to be used by the :meth:`synthetic.generate()` method.
+        dm_min : float, optional, default=None
+            Value for the minimum distance modulus. Used to constrain the lower masses
+            in the theoretical isochrones to make the generating process more
+            efficient.
+
+        """
+
+        self.met_age_dict = self.isochs.met_age_dict
+        # Convert z to FeH if requested 
+        if z_to_FeH is not None:
+            feh = np.log10(self.met_age_dict['met'] / z_to_FeH)
+            N_old = len(feh)
+            round_n = 4
+            while True:
+                feh_r = np.round(feh, round_n)
+                N_new = len(set(feh_r))
+                # If no duplicated values exist after rounding
+                if N_old == N_new:
+                    break
+                round_n += 1
+            # Replace old values
+            self.met_age_dict['met'] = feh_r
+
+        self.max_mag_syn = max(cluster.mag_p)
+        self.N_obs_stars = len(cluster.mag_p)
+        self.m_ini_idx = len(cluster.colors_p) + 1
+
+        self.err_dist = scp.error_distribution(
+            self, cluster.mag_p, cluster.e_mag_p, cluster.e_colors_p)
+
+        self.fix_params = fix_params
+
+        self.binar_flag = True
+        if "alpha" in list(fix_params.keys()) and "beta" in list(fix_params.keys()):
+            if fix_params["alpha"] == 0. and fix_params["beta"] == 0.:
+                self.binar_flag = False
+
+        if dm_min is None:
+            return
         min_masses = []
         for met_arr in self.theor_tracks:
             met_lst = []
             for age_arr in met_arr:
-                mag, mass = age_arr[0], age_arr[my_cluster.cluster_dict['m_ini_idx']]
-                i = np.argmin(abs(my_cluster.cluster_dict['max_mag_syn'] - (mag + dm_min)))
+                mag, mass = age_arr[0], age_arr[cluster.m_ini_idx]
+                i = np.argmin(abs(cluster.max_mag_syn - (mag + dm_min)))
                 met_lst.append(mass[i])
             min_masses.append(met_lst)
 
@@ -118,32 +175,58 @@ class synthetic:
         # Update this parameter with the new array
         self.st_dist_mass = st_dist_mass_lmass
 
-    def generate(self, my_cluster, model_fit: dict) -> np.ndarray:
-        r"""Return a synthetic cluster.
+    def min_max(self) -> tuple[float]:
+        r"""Return the minimum and maximum values for the metallicity and age defined
+        in the theoretical isochrones.
+
+        Returns
+        -------
+        tuple[float]
+            Tuple of (minimum_metallicity, maximum_metallicity, minimum_age, maximum_age)
+    
+        """
+        zmin = self.met_age_dict['met'].min()
+        zmax = self.met_age_dict['met'].max()
+        amin = self.met_age_dict['a'].min()
+        amax = self.met_age_dict['a'].max()
+        return zmin, zmax, amin, amax
+
+    def generate(self, fit_params: dict) -> np.ndarray:
+        r"""Generate a synthetic cluster.
 
         The synthetic cluster is generated according to the parameters given in
-        the ``model_fixed`` and ``model_fit`` dictionaries.
+        the ``fit_params`` dictionary and the already calibrated :class:`synthetic`
+        object.
 
-        The synthetic cluster returned has the shape:
+        Parameters
+        ----------
+        fit_params : dict
+            Dictionary with the values for the fundamental parameters that were **not**
+            included in the ``fix_params`` dictionary when the :class:`synthetic`
+            object was calibrated (``synthetic.calibrate()`` method).
 
-        synth_clust = [mag, c1, (c2)]
-
-        where c1 and c2 colors defined.
+        Returns
+        -------
+        array[mag, c1, (c2)]
+            Return a ``np.array`` containing a synthetic cluster with the shape
+            ``[mag, c1, (c2)]``, where ``mag`` is the magnitude dimension, and
+            ``c1`` and ``c2`` (last one is optional) are the color dimension(s).
+    
 
         """
 
         # Return proper values for fixed parameters and parameters required
         # for the (z, log(age)) isochrone averaging.
-        met, loga, beta, av, dr, rv, dm, ml, mh, al, ah = scp.properModel(
-            self.isochs.met_age_dict, my_cluster.model_fixed, model_fit
+        met, loga, alpha, beta, av, dr, rv, dm, ml, mh, al, ah = scp.properModel(
+            self.met_age_dict, self.fix_params, fit_params
         )
 
         # Generate a weighted average isochrone from the (z, log(age)) values in
         # the 'model'.
         isochrone = scp.zaWAverage(
             self.theor_tracks,
-            self.isochs.met_age_dict,
-            my_cluster.cluster_dict['m_ini_idx'],
+            self.met_age_dict,
+            self.m_ini_idx,
             met,
             loga,
             ml,
@@ -153,17 +236,15 @@ class synthetic:
         )
 
         # Move theoretical isochrone using the distance modulus
-        isoch_moved = scp.move_isochrone(
-            isochrone, my_cluster.cluster_dict['m_ini_idx'], dm)
+        isoch_moved = scp.move_isochrone(isochrone, self.m_ini_idx, dm)
 
         # Apply extinction correction
         isoch_extin = scp.extinction(
             self.ext_coefs,
             self.rand_floats['norm'][0],
             self.rand_floats['unif'][0],
-            self.DR_dist,
-            self.DR_percentage,
-            my_cluster.cluster_dict['m_ini_idx'],
+            self.DR_distribution,
+            self.m_ini_idx,
             av,
             dr,
             rv,
@@ -171,28 +252,101 @@ class synthetic:
         )
 
         # Remove isochrone stars beyond the maximum magnitude
-        isoch_cut = scp.cut_max_mag(
-            isoch_extin, my_cluster.cluster_dict["max_mag_syn"])
+        isoch_cut = scp.cut_max_mag(isoch_extin, self.max_mag_syn)
         if not isoch_cut.any():
             return np.array([])
 
         # Interpolate IMF's sampled masses into the isochrone.
         isoch_mass = scp.mass_interp(
-            isoch_cut, my_cluster.cluster_dict['m_ini_idx'], self.st_dist_mass[ml][al],
-            my_cluster.cluster_dict["N_obs_stars"])
+            isoch_cut, self.m_ini_idx, self.st_dist_mass[ml][al], self.N_obs_stars)
         if not isoch_mass.any():
             return np.array([])
 
         # Assignment of binarity.
         isoch_binar = scp.binarity(
-            self.alpha, beta, my_cluster.cluster_dict['m_ini_idx'],
-            self.rand_floats['unif'][1], isoch_mass
+            alpha, beta, self.gamma, self.m_ini_idx, self.rand_floats['unif'][1], isoch_mass
         )
 
         # Assign errors according to errors distribution.
         synth_clust = scp.add_errors(
-            isoch_binar, my_cluster.cluster_dict["err_lst"],
-            self.rand_floats['norm'][1]
+            isoch_binar, self.err_dist, self.rand_floats['norm'][1]
         )
 
-        return synth_clust[:my_cluster.cluster_dict['m_ini_idx']]
+        return synth_clust[:self.m_ini_idx]
+
+    def synthplot(self, fit_params, ax=None, isochplot=False):
+        r"""Generate a color-magnitude plot for a synthetic cluster.
+
+        The synthetic cluster is generated using the fundamental parameter values
+        given in the ``fit_params`` dictionary.
+
+        Parameters
+        ----------
+        fit_params : dict
+            Dictionary with the values for the fundamental parameters that were **not**
+            included in the ``fix_params`` dictionary when the :class:`synthetic`
+            object was calibrated (``synthetic.calibrate()`` method).
+        ax : matplotlib.axis, optional, default=None
+            Matplotlib axis where to draw the plot.
+        isochplot : bool, default=False
+            If ``True``, the accompanying isochrone will be plotted.
+
+        Returns
+        -------
+        matplotlib.axis
+            Matplotlib axis object
+
+        """
+
+        invert_yaxis_flag = False
+        if ax is None:
+            f, ax = plt.subplots()
+            invert_yaxis_flag = True
+
+        # Generate synthetic cluster.
+        synth_clust = scp.generate(self, fit_params)
+        if self.gamma is not None:
+            binar_idx = synth_clust[-1] != 0.0
+        else:
+            binar_idx = np.full(synth_clust.shape[1], False)
+
+        x_synth, y_synth = synth_clust[1], synth_clust[0]
+        # Single synthetic systems
+        plt.scatter(
+            x_synth[~binar_idx],
+            y_synth[~binar_idx],
+            marker="^",
+            c="#519ddb",
+            alpha=0.5,
+            label=f"Single, N={len(x_synth[~binar_idx])}",
+        )
+        # Binary synthetic systems
+        plt.scatter(
+            x_synth[binar_idx],
+            y_synth[binar_idx],
+            marker="v",
+            c="#F34C4C",
+            alpha=0.5,
+            label=f"Binary, N={len(x_synth[binar_idx])}",
+        )
+
+        # plt.xlabel(list(self.isochs.magnitude.keys())[0])
+        # c1, c2 = list(self.isochs.color.keys())
+        # plt.ylabel(f"{c1}-{c2}")
+        plt.legend()
+        if invert_yaxis_flag:
+            plt.gca().invert_yaxis()
+
+        if isochplot is False:
+            return ax
+
+        # Generate displaced isochrone        
+        fit_params['DR'] = 0
+        isochrone = scp.generate(self, fit_params, True)
+        # Remove stars beyond the color limits
+        xmin, xmax = x_synth[~binar_idx].min(), x_synth[~binar_idx].max()
+        msk = (isochrone[1] >= xmin) & (isochrone[1] <= xmax)
+        isochrone = isochrone[:, msk]
+        plt.plot(isochrone[1], isochrone[0], c='k')
+
+        return ax

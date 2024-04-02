@@ -10,15 +10,11 @@
 ASteCA
 ======
 
-This is the manual of operation for the Automated Stellar Cluster Analysis (``ASteCA``)
-package. ``ASteCA`` is an open source code developed entirely in Python, designed to
-handle the analysis applied to stellar clusters in order to determine their
-intrinsic/extrinsic fundamental parameters: metallicity, age, mass, binarity,
-extinction, distance, etc..
+**ASteCA** is pure Python open source tool designed to perform the analysis applied to stellar clusters in order to determine their intrinsic/extrinsic fundamental parameters: extinction, distance, metallicity, age, binarity, mass, etc..
 
 
 .. warning::
-   Version 0.5.0 is a complete re-write of ``ASteCA``. In previous versions it was
+   Version 0.5.0 is a complete re-write of **ASteCA**. In previous versions it was
    a large Python script and from this version onward it is a proper Python package.
    This version also removed many of the features that were previously
    available, to concentrate on the fundamental parameters estimation.
@@ -34,10 +30,15 @@ extinction, distance, etc..
    :caption: User guide
 
    contents/installation
-   contents/isochrones_load
-   contents/synthetic_clusters
-   contents/cluster_load
+   contents/faq
 
+.. toctree::
+   :maxdepth: 3
+   :caption: Basic configuration
+
+   basic/cluster_load
+   basic/isochrones_load
+   basic/synthetic_clusters
 
 .. toctree::
    :maxdepth: 1
@@ -45,15 +46,15 @@ extinction, distance, etc..
 
    tutorials/quickstart
 
-
 .. toctree::
    :maxdepth: 1
-   :caption: API
+   :caption: API Reference
 
-   user/isochrones
-   user/synthcluster
-   user/likelihood
-   user/cluster
+   api/cluster
+   api/isochrones
+   api/synthcluster
+   api/likelihood
+
 
 
 License & Attribution

@@ -1,15 +1,18 @@
 .. _isochronesload:
 
-Isochrones
-==========
+Loading the isochrones
+######################
 
 
-``ASteCA`` requires a set of theoretical isochrones to be able to estimate the
-fundamental parameters for the clusters. The supported services are:
+**ASteCA** requires a set of theoretical isochrones to estimate the fundamental
+parameters for the clusters. The supported services are:
 `PARSEC <http://stev.oapd.inaf.it/cgi-bin/cmd_3.7>`_,
 `MIST <https://waps.cfa.harvard.edu/MIST/>`_, and
 `BASTI <http://basti-iac.oa-abruzzo.inaf.it/isocs.html>`_.
 
+
+Storing the files
+*****************
 
 Each service produces the isochrone files in a different way. A single file
 produced with these services will contain:
@@ -55,6 +58,43 @@ produced by the ``MIST`` system, and ``age_X.isc_xxxx`` is the names of a file p
 by the ``BASTI`` system, stored in a sub-folder named after its metallicity
 ``met_x``.
 
+
+Loading the files
+*****************
+
+Once the files are properly stored in a folder, you need to load them by generating an
+``isochrones`` object. You can generate an ``isochrones`` object as follows:
+
+.. code-block:: python
+
+    import asteca
+
+    # Load PARSEC isochrones
+    isochs = asteca.isochrones(
+        isochs_path="parsec/",
+        magnitude={"Gmag": 6390.21},
+        color={"G_BPmag": 5182.58, "G_RPmag": 7825.08}
+    )
+
+
+Where:
+
+.. code-block:: console
+
+  isochs (str)     : Path to the folder where the isochrone file(s) is(are) stored
+
+  magnitude (dict) : Name of the magnitude column in the isochrone file(s), followed by
+  its effective lambda value in angstrom units (see below)
+
+  color (dict)     : Name of the two magnitudes that make up the color, along with their
+  lambda values. Magnitudes must be **in the proper order**.
+
+The effective lambda values represent the effective central/midpoint wavelength of a
+filter. These values are available for example in the
+`CMD service <http://stev.oapd.inaf.it/cgi-bin/cmd>`_.
+
+See :ref:`isochrones_api` for more information on the arguments of the
+:class:`isochrones` class.
 
 Please `contact me <gabrielperren@gmail.com>`_ if you have any issues with the loading
 process of the theoretical isochrones.

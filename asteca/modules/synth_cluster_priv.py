@@ -1,6 +1,85 @@
 import numpy as np
 from scipy import stats
+from scipy.optimize import curve_fit
 from .imfs import invTrnsfSmpl, sampleInv
+
+
+def error_distribution(self, mag, e_mag, e_colors):
+    """
+    Fit an exponential function to the errors in each photometric dimension,
+    using the main magnitude as the x coordinate.
+    """
+    def exp_3p(x, a, b, c):
+        """
+        Three-parameters exponential function.
+
+        This function is tied to the 'synth_cluster.add_errors' function.
+        """
+        return a * np.exp(b * x) + c
+
+    # Mask of not nan values across arrays
+    nan_msk = np.isnan(mag) | np.isnan(e_mag)
+    for e_col in e_colors:
+        nan_msk = nan_msk | np.isnan(e_col)
+    not_nan_msk = ~nan_msk
+    # Remove nan values
+    mag, e_mag = mag[not_nan_msk], e_mag[not_nan_msk]
+    e_col_non_nan = []
+    for e_col in e_colors:
+        e_col_non_nan.append(e_col[not_nan_msk])
+    e_colors = e_col_non_nan
+
+    # Left end of magnitude range
+    be_m = max(min(mag) + 1.0, np.percentile(mag, 0.5))
+    # Width of the intervals in magnitude.
+    interv_mag = 0.5
+    # Number of intervals.
+    delta_mag = mag.max() - be_m
+    n_interv = int(round(delta_mag / interv_mag))
+    #
+    steps_x = np.linspace(be_m - 0.5 * interv_mag, mag.max(), n_interv - 1)
+
+    # Median values for each error array in each magnitude range
+    mag_y = []
+    for i, e_mc in enumerate([e_mag] + [list(_) for _ in e_colors]):
+        x1 = steps_x[0]
+        e_mc_medians = []
+        for x2 in steps_x[1:]:
+            msk = (mag >= x1) & (mag < x2)
+            strs_in_range = np.array(e_mc)[msk]
+            if len(strs_in_range) > 1:
+                e_mc_medians.append(np.median(strs_in_range))
+            else:
+                # If no stars in interval, use fixed value
+                e_mc_medians.append(0.0001)
+            x1 = x2
+        mag_y.append(e_mc_medians)
+
+    # Make sure that median error values increase with increasing magnitude. This
+    # ensures that the 3P exponential fit does not fail
+    mag_y_new = []
+    for e_arr in mag_y:
+        e_arr_new, v_old = [], np.inf
+        for i in range(-1, -len(e_arr) - 1, -1):
+            if e_arr[i] > v_old:
+                e_arr_new.append(v_old)
+            else:
+                e_arr_new.append(e_arr[i])
+            v_old = e_arr[i]
+        e_arr_new.reverse()
+        mag_y_new.append(e_arr_new)
+    mag_y = mag_y_new
+
+    # Mid points in magnitude range
+    mag_x = 0.5 * (steps_x[:-1] + steps_x[1:])
+
+    # Fit 3-parameter exponential
+    err_dist = []
+    for y in mag_y:
+        popt_mc, _ = curve_fit(exp_3p, mag_x, y)
+        err_dist.append(popt_mc)
+
+    return err_dist
 
 
 def add_binarity(self) -> np.ndarray:
@@ -20,9 +99,6 @@ def add_binarity(self) -> np.ndarray:
         N_cols: magnitude + colors + initial mass
 
     """
-    if self.alpha is None:
-        print("Parameter 'alpha' is set to None: binary systems are not generated")
-        return self.isochs.theor_tracks
     print("Generating binary data")
 
     mag_idx = 0
@@ -305,7 +381,7 @@ def ccm_model(mw: float) -> list:
 
 
 def properModel(
-    met_age_dict: dict, model_fixed: dict, model_fit: dict
+    met_age_dict: dict, fix_params: dict, fit_params: dict
 ) -> tuple[float, float, float, float, float, float, float, int, int, int, int]:
     """
     Define the 'proper' model with values for (z, a) taken from its grid,
@@ -318,7 +394,7 @@ def properModel(
 
     Returns
     -------
-    model_fixed  : array
+    fix_params  : array
       All fundamental parameters, including the fixed parameters that are
       missing from 'model'.
     ml, mh, al, ah : ints
@@ -327,17 +403,17 @@ def properModel(
 
     """
     # If any parameter is repeated in both dictionaries, this order gives priority
-    # to the 'model_fixed' dict, in the sense that its values will be the ones
+    # to the 'fix_params' dict, in the sense that its values will be the ones
     # written to 'model_comb'
-    model_comb = model_fit | model_fixed
+    model_comb = fit_params | fix_params
     model_full = np.array(
-        [model_comb[k] for k in ["z", "loga", "beta", "Av", "DR", "Rv", "dm"]]
+        [model_comb[k] for k in ["met", "loga", "alpha", "beta", "Av", "DR", "Rv", "dm"]]
     )
 
-    if len(met_age_dict["z"]) == 1:
+    if len(met_age_dict["met"]) == 1:
         ml = mh = 0
     else:
-        par = met_age_dict["z"]
+        par = met_age_dict["met"]
         mh = min(len(par) - 1, np.searchsorted(par, model_full[0]))
         ml = mh - 1
 
@@ -379,7 +455,7 @@ def zaWAverage(theor_tracks, met_age_dict, m_ini_idx, z_model, a_model, ml, mh, 
 
     # The four points in the (z, age) grid that define the box that contains
     # the model value (z_model, a_model)
-    z1, z2 = met_age_dict["z"][ml], met_age_dict["z"][mh]
+    z1, z2 = met_age_dict["met"][ml], met_age_dict["met"][mh]
     a1, a2 = met_age_dict["a"][al], met_age_dict["a"][ah]
     pts = np.array([(z1, a1), (z1, a2), (z2, a1), (z2, a2)])
 
@@ -493,13 +569,12 @@ def extinction(
     ext_coefs,
     rand_norm,
     rand_unif,
-    DR_dist,
-    DR_percentage,
+    DR_distribution,
     m_ini_idx,
     Av,
     dr,
     Rv,
-    isochrone,
+    isochrone
 ):
     """
     Modifies magnitude and color(s) according to given values for the
@@ -535,14 +610,15 @@ def extinction(
     if dr > 0.0:
         Ns = isochrone.shape[-1]
 
-        if DR_dist == "uniform":
-            Av_dr = (2 * rand_unif[: isochrone.shape[-1]] - 1) * dr
-            # Av_dr = rand_unif[:Ns] * dr
-        elif DR_dist == "normal":
-            # Av_dr = abs(rand_norm[:Ns]) * dr
-            Av_dr = rand_norm[:Ns] * dr
+        if DR_distribution == "uniform":
+            # Av_dr = rand_unif[: isochrone.shape[-1]] * dr
+            Av_dr = rand_unif[:Ns] * dr
+        elif DR_distribution == "normal":
+            Av_dr = abs(rand_norm[:Ns]) * dr
 
-        Av_dr[rand_unif[:Ns] > DR_percentage] = 0.0
+        # In place in case I ever want to implement the percentage of stars affected.
+        # Without this, all stars are affected by the DR.
+        # Av_dr[rand_unif[:Ns] > DR_percentage] = 0.0
         Av = Av + Av_dr
 
     def colmove(ci):
@@ -654,12 +730,12 @@ def interp_mass_isoch(isoch_cut, mass_ini, mass_dist):
     return isoch_mass
 
 
-def binarity(alpha, beta, m_ini_idx, rand_unif_vals, isoch_mass):
+def binarity(alpha, beta, binar_flag, m_ini_idx, rand_unif_vals, isoch_mass):
     """
     Select a fraction of stars to be binaries, given a chosen method.
     """
     # No binarity process defined
-    if alpha is None:
+    if binar_flag is False:
         return isoch_mass
 
     Ns = isoch_mass.shape[-1]
@@ -668,11 +744,10 @@ def binarity(alpha, beta, m_ini_idx, rand_unif_vals, isoch_mass):
     # Distribution of probability of binarity (multiplicity fraction) versus
     # primary masses.
 
-    # # Duchene & Kraus (2013) Fig 1
-    # b_p = np.clip(alpha + beta * np.log(mass), a_min=0, a_max=1)
-
     # Offner et al. (2022); Fig 1 (left), Table 1
-    b_p = np.clip(alpha + beta * np.arctan(mass), a_min=0, a_max=1)
+    # b_p = np.clip(alpha + beta * np.log(mass), a_min=0, a_max=1)
+    # b_p = np.clip(alpha + beta * np.arctan(mass), a_min=0, a_max=1)
+    b_p = np.clip(alpha + beta * (1 / (1 + 1/mass)), a_min=0, a_max=1)
 
     # Stars (masses) with the largest binary probabilities are selected
     # proportional to their probability
@@ -693,7 +768,7 @@ def binarity(alpha, beta, m_ini_idx, rand_unif_vals, isoch_mass):
     return isoch_mass
 
 
-def add_errors(isoch_compl, err_lst, rand_norm_vals):
+def add_errors(isoch_compl, err_dist, rand_norm_vals):
     """
     Add random synthetic uncertainties to the magnitude and color(s)
     """
@@ -701,7 +776,7 @@ def add_errors(isoch_compl, err_lst, rand_norm_vals):
     rnd = rand_norm_vals[: isoch_compl.shape[-1]]
     main_mag = isoch_compl[0]
 
-    for i, (a, b, c) in enumerate(err_lst):
+    for i, (a, b, c) in enumerate(err_dist):
         # isoch_compl[0] is the main magnitude.
         # sigma_mc = getSigmas(isoch_compl[0], popt_mc)
 
@@ -717,7 +792,7 @@ def add_errors(isoch_compl, err_lst, rand_norm_vals):
     return isoch_compl
 
 
-def generate(self, my_cluster, model_fit):
+def generate(self, fit_params, plotflag=False):
     r"""Returns the full synthetic cluster array.
 
     This is an almost exact copy of the ``synth_cluster.generate()`` function with
@@ -732,16 +807,16 @@ def generate(self, my_cluster, model_fit):
     """
     # Return proper values for fixed parameters and parameters required
     # for the (z, log(age)) isochrone averaging.
-    met, loga, beta, av, dr, rv, dm, ml, mh, al, ah = properModel(
-        self.isochs.met_age_dict, my_cluster.model_fixed, model_fit
+    met, loga, alpha, beta, av, dr, rv, dm, ml, mh, al, ah = properModel(
+        self.met_age_dict, self.fix_params, fit_params
     )
 
     # Generate a weighted average isochrone from the (z, log(age)) values in
     # the 'model'.
     isochrone = zaWAverage(
         self.theor_tracks,
-        self.isochs.met_age_dict,
-        my_cluster.cluster_dict['m_ini_idx'],
+        self.met_age_dict,
+        self.m_ini_idx,
         met,
         loga,
         ml,
@@ -751,17 +826,15 @@ def generate(self, my_cluster, model_fit):
     )
 
     # Move theoretical isochrone using the distance modulus
-    isoch_moved = move_isochrone(
-        isochrone, my_cluster.cluster_dict['m_ini_idx'], dm)
+    isoch_moved = move_isochrone(isochrone, self.m_ini_idx, dm)
 
     # Apply extinction correction
     isoch_extin = extinction(
         self.ext_coefs,
         self.rand_floats['norm'][0],
         self.rand_floats['unif'][0],
-        self.DR_dist,
-        self.DR_percentage,
-        my_cluster.cluster_dict['m_ini_idx'],
+        self.DR_distribution,
+        self.m_ini_idx,
         av,
         dr,
         rv,
@@ -769,28 +842,25 @@ def generate(self, my_cluster, model_fit):
     )
 
     # Remove isochrone stars beyond the maximum magnitude
-    isoch_cut = cut_max_mag(
-        isoch_extin, my_cluster.cluster_dict["max_mag_syn"])
+    isoch_cut = cut_max_mag(isoch_extin, self.max_mag_syn)
     if not isoch_cut.any():
         return np.array([])
+    if plotflag:
+        return isoch_cut
 
     # Interpolate IMF's sampled masses into the isochrone.
     isoch_mass = mass_interp(
-        isoch_cut, my_cluster.cluster_dict['m_ini_idx'], self.st_dist_mass[ml][al],
-        my_cluster.cluster_dict["N_obs_stars"])
+        isoch_cut, self.m_ini_idx, self.st_dist_mass[ml][al], self.N_obs_stars)
     if not isoch_mass.any():
         return np.array([])
 
     # Assignment of binarity.
     isoch_binar = binarity(
-        self.alpha, beta, my_cluster.cluster_dict['m_ini_idx'],
-        self.rand_floats['unif'][1], isoch_mass
+        alpha, beta, self.binar_flag, self.m_ini_idx, self.rand_floats['unif'][1],
+        isoch_mass
     )
 
     # Assign errors according to errors distribution.
-    synth_clust = add_errors(
-        isoch_binar, my_cluster.cluster_dict["err_lst"],
-        self.rand_floats['norm'][1]
-    )
+    synth_clust = add_errors(isoch_binar, self.err_dist, self.rand_floats['norm'][1])
 
     return synth_clust

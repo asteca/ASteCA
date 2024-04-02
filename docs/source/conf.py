@@ -31,7 +31,7 @@ __version__ = '0.5.1'
 
 project = 'ASteCA'
 copyright = '2024, Gabriel I Perren'
-author = 'Gabriel I Perren'
+# author = 'Gabriel I Perren'
 
 # The full version, including alpha/beta/rc tags
 version = __version__
@@ -52,7 +52,24 @@ extensions = [
 ]
 
 # https://myst-nb.readthedocs.io/en/v0.12.2/use/execute.html
-nb_execution_mode = "cache"
+nb_execution_mode = "auto"
+
+myst_enable_extensions = [
+    "amsmath",
+    # "attrs_inline",
+    # "colon_fence",
+    # "deflist",
+    "dollarmath",
+    # "fieldlist",
+    # "html_admonition",
+    # "html_image",
+    # "linkify",
+    # "replacements",
+    # "smartquotes",
+    # "strikethrough",
+    # "substitution",
+    # "tasklist",
+]
 
 # Add any paths that contain templates here, relative to this directory.
 # templates_path = ['_templates']

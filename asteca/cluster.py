@@ -2,39 +2,140 @@ from dataclasses import dataclass
 from typing import Optional
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+#
 from .modules import cluster_priv
 from .modules import synth_cluster_priv as scp
 
 
 @dataclass
 class cluster:
-    source_id: str
+    r"""Define a ``cluster`` object.
+
+    Parameters
+    ----------
+    cluster_df : pd.DataFrame
+        pandas DataFrame with the cluster's loaded data
+    magnitude : str
+        Name of the DataFrame column that contains the magnitude
+    e_mag : str
+        Name of the DataFrame column that contains the magnitude's uncertainty
+    color : str
+        Name of the DataFrame column that contains the color
+    e_color : str
+        Name of the DataFrame column that contains the color's uncertainty
+    source_id: str, optional, default=None
+        Name of the DataFrame column that contains the IDs for the stars
+    ra: str, optional, default=None
+        Name of the DataFrame column that contains the right ascension (RA)
+    dec: str, optional, default=None
+        Name of the DataFrame column that contains the declination (DEC)
+    plx: str, optional, default=None
+        Name of the DataFrame column that contains the parallax
+    pmra: str, optional, default=None
+        Name of the DataFrame column that contains the RA proper motion
+    pmde: str, optional, default=None
+        Name of the DataFrame column that contains the DEC proper motion
+    color2: str, optional, default=None
+        Name of the DataFrame column that contains the second color
+    e_color2: str, optional, default=None
+        Name of the DataFrame column that contains the second color's uncertainty
+
+    """
+    cluster_df: pd.DataFrame
     magnitude: str
     e_mag: str
     color: str
     e_color: str
-    model_fixed: dict
-    cluster_df: Optional[None] = None
+    # N_models: int = 1000
+    source_id: Optional[str] = None
     ra: Optional[str] = None
     dec: Optional[str] = None
-    bin_method: str = "knuth"
-    N_mag: int = 15
-    N_col: int = 10
-    N_models: int = 100
-    color2: str | None = None
-    e_color2: str | None = None
+    plx: Optional[str] = None
+    pmra: Optional[str] = None
+    pmde: Optional[str] = None
+    color2: Optional[str] = None
+    e_color2: Optional[str] = None
 
     def __post_init__(self):
-        bin_methods = ("knuth", "fixed", "bayes_blocks")
-        if self.bin_method not in bin_methods:
-            raise ValueError(
-                f"Binning '{self.bin_method}' not recognized. "
-                + f"Should be one of {bin_methods}"
-            )
 
-        self.cluster_dict = cluster_priv.load(self)
+        # Load photometry
+        cluster_priv.load(self)
 
-    def masses_binar(self, synthcl, model_fit, model_std):
+    def radecplot(self):
+        r"""Generate a (RA, DEC) plot.
+
+        Returns
+        -------
+        matplotlib.axis
+            Matplotlib axis object
+
+        """
+        ra = self.cluster_df[self.ra].values
+        dec = self.cluster_df[self.dec].values
+        mag = self.cluster_df[self.magnitude].values
+
+        msk = ~np.isnan(mag)
+        ra = ra[msk]
+        dec = dec[msk]
+        mag = mag[msk]
+
+        # Mag to flux
+        sizes = 10**(mag/-2.5)
+        # Normalize to 1
+        sizes /= sizes.max()
+        # Set min, max
+        sizes = 1 + 75*sizes
+
+        f, ax = plt.subplots()
+        plt.scatter(ra, dec, s=sizes, c="k", alpha=.7)
+        plt.xlabel("RA")
+        plt.ylabel("DEC")
+        plt.gca().invert_xaxis()
+
+        return ax
+
+    def clustplot(self, ax=None):
+        r"""Generate a color-magnitude plot.
+
+        Parameters
+        ----------
+        ax : matplotlib.axis, optional, default=None
+            Matplotlib axis where to draw the plot
+
+        Returns
+        -------
+        matplotlib.axis
+            Matplotlib axis object
+
+
+        """
+        invert_yaxis_flag = False
+        if ax is None:
+            f, ax = plt.subplots()
+            invert_yaxis_flag = True
+
+        mag_col = self.magnitude
+        col_col = self.color
+
+        plt.scatter(
+            self.colors_p[0],
+            self.mag_p,
+            c="green",
+            alpha=0.5,
+            label=f"Observed, N={len(self.mag_p)}",
+        )
+
+        plt.xlabel(col_col)
+        plt.ylabel(mag_col)
+        plt.legend()
+
+        if invert_yaxis_flag:
+            plt.gca().invert_yaxis()
+
+        return ax
+
+    def _masses_binar(self, synthcl, fit_params, model_std):
         """
         Assign individual masses to the observed cluster's stars, along with binary
         probabilities (if binarity was estimated).
@@ -42,18 +143,17 @@ class cluster:
         Estimate the statistics for the mass and binary fractions (not fitted)
         """
         print("Estimating total mass, binary probabilities, and individual star masses")
-        cl_dict = self.cluster_dict
+        cl_ids = np.array(self.cluster_df[self.source_id])
         ra = np.median(self.cluster_df[self.ra])
         dec = np.median(self.cluster_df[self.dec])
 
-        model_fixed = self.model_fixed
-        m_ini_idx = cl_dict["m_ini_idx"]
+        m_ini_idx = self.m_ini_idx
         # Extract photometry used in the best fit process
-        mags_cols_cl = [cl_dict["mag"]] + [_ for _ in cl_dict["colors"]]
+        mags_cols_cl = [self.mag] + [_ for _ in self.colors]
         obs_phot = np.array(mags_cols_cl)
 
         # Generate random models from the selected solution
-        models = cluster_priv.ranModels(self.N_models, model_fit, model_std)
+        models = cluster_priv.ranModels(self.N_models, fit_params, model_std)
 
         # Identify nans in mag and colors and re-write them as -10
         nan_msk = np.full(obs_phot.shape[1], False)
@@ -74,14 +174,14 @@ class cluster:
         # inv_cdf = invTrnsfSmpl(synthcl.IMF_name)
         try:
             st_dist_mass = synthcl.st_dist_mass_full
-        except KeyError:
+        except (KeyError, AttributeError):
             st_dist_mass = synthcl.st_dist_mass
 
         masses_dict = {'M_actual': [], 'M_init': []}
         for _, model in enumerate(models):
             # Generate synthetic cluster from the 'model'.
             # isoch = synthcl.generate(model, self, True)
-            isoch = scp.generate(synthcl, self, model)
+            isoch = scp.generate(synthcl, model)
             if not isoch.any():
                 continue
 
@@ -92,7 +192,7 @@ class cluster:
                 st_mass_var_binar, prob_binar, binar_vals, synthcl.alpha, isoch)
 
             # Extract dm and loga
-            model_comb = model_fixed | model
+            model_comb = synthcl.fix_params | model
             loga, dm = model_comb['loga'], model_comb['dm']
             #
             masses_dict = cluster_priv.get_masses(
@@ -120,7 +220,7 @@ class cluster:
 
         cl_masses_bfr = pd.DataFrame(
             {
-                "ID": cl_dict["cl_ids"],
+                "ID": cl_ids,
                 "M1": st_mass_mean,
                 "M1_std": st_mass_std,
                 "M2": st_mass_mean_binar,
@@ -130,63 +230,3 @@ class cluster:
         )
 
         return masses_dict, np.array(binar_vals), cl_masses_bfr
-
-    def clust_plot(self, synthcl, model_fit):
-        """ """
-        import matplotlib.pyplot as plt
-
-        mag_col = self.magnitude
-        col_col = self.color
-        cl_dict = self.cluster_dict
-
-        # Generate synthetic cluster.
-        synth_clust = scp.generate(synthcl, self, model_fit)
-        # plt.title(f"Lkl dist ={round(final_dist, 3)}")
-        # y_edges, x_edges = cluster_dict["bin_edges"]
-        # for xe in x_edges:
-        #     plt.axvline(xe, c="grey", ls=":")
-        # for ye in y_edges:
-        #     plt.axhline(ye, c="grey", ls=":")
-
-        # plt.figure(figsize=(8, 8), dpi=300)
-
-        plt.scatter(
-            cl_dict["colors"][0],
-            cl_dict["mag"],
-            c="green",
-            alpha=0.5,
-            label=f"Observed, N={cl_dict['N_obs_stars']}",
-        )
-
-        if synthcl.alpha is not None:
-            binar_idx = synth_clust[-1] != 0.0
-        else:
-            binar_idx = np.full(synth_clust.shape[1], False)
-
-        x_synth, y_synth = synth_clust[1], synth_clust[0]
-        # Single synthetic systems
-        plt.scatter(
-            x_synth[~binar_idx],
-            y_synth[~binar_idx],
-            marker="^",
-            c="#519ddb",
-            alpha=0.5,
-            label=f"Single, N={len(x_synth[~binar_idx])}",
-        )
-        # Binary synthetic systems
-        plt.scatter(
-            x_synth[binar_idx],
-            y_synth[binar_idx],
-            marker="v",
-            c="#F34C4C",
-            alpha=0.5,
-            label=f"Binary, N={len(x_synth[binar_idx])}",
-        )
-
-        plt.xlabel(col_col)
-        plt.ylabel(mag_col)
-
-        plt.gca().invert_yaxis()
-        plt.legend()
-        plt.show()
-        # plt.savefig(f"{fname}.png")

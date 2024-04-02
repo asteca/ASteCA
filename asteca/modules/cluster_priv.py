@@ -2,197 +2,28 @@ import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 import astropy.coordinates as coord
-from scipy.optimize import curve_fit
 from scipy.spatial import KDTree
-from astropy.stats import knuth_bin_width, bayesian_blocks
-from fast_histogram import histogram2d
 
 
 def load(self):
-    """ """
+    """
+    The photometry is store with a '_p' to differentiate from the self.magnitude,
+    self.color, etc that are defined with the class is called.
+    """
     print("Reading and processing cluster data")
 
-    cl_ids = np.array(self.cluster_df[self.source_id])
+    self.mag_p = np.array(self.cluster_df[self.magnitude])
+    self.e_mag_p = np.array(self.cluster_df[self.e_mag])
     
-    mag = np.array(self.cluster_df[self.magnitude])
-    e_mag = np.array(self.cluster_df[self.e_mag])
-    
-    colors = [np.array(self.cluster_df[self.color])]
+    self.colors_p = [np.array(self.cluster_df[self.color])]
     if self.color2 is not None:
-        colors.append(np.array(self.cluster_df[self.color2]))
-    e_colors = [np.array(self.cluster_df[self.e_color])]
+        self.colors_p.append(np.array(self.cluster_df[self.color2]))
+    self.e_colors_p = [np.array(self.cluster_df[self.e_color])]
     if self.e_color2 is not None:
-        e_colors.append(np.array(self.cluster_df[self.e_color2]))
-
-    # Obtain bin edges for each dimension, defining a grid.
-    bin_edges, ranges, Nbins = bin_edges_f(self.bin_method, mag, colors)
-
-    # Obtain histogram for observed cluster.
-    hess_diag = []
-    for i, col in enumerate(colors):
-        # Fast 2D histogram
-        hess_diag = histogram2d(
-            mag,
-            col,
-            range=[[ranges[0][0], ranges[0][1]], [ranges[i + 1][0], ranges[i + 1][1]]],
-            bins=[Nbins[0], Nbins[i + 1]],
-        )
-
-    # Flatten array
-    cl_histo_f = []
-    for i, diag in enumerate(hess_diag):
-        cl_histo_f += list(np.array(diag).ravel())
-    cl_histo_f = np.array(cl_histo_f)
-
-    # Index of bins where stars were observed
-    cl_z_idx = cl_histo_f != 0
-
-    # Remove all bins where n_i=0 (no observed stars)
-    cl_histo_f_z = cl_histo_f[cl_z_idx]
-
-    # Used by the synthetic cluster module
-    max_mag_syn = max(mag)
-    N_obs_stars = len(mag)
-    m_ini_idx = len(colors) + 1
-    err_lst = error_distribution(self, mag, e_mag, e_colors)
-
-    cluster_dict = {
-        "cl_ids": cl_ids,
-        "mag": mag,
-        "colors": colors,
-        "bin_edges": bin_edges,
-        "ranges": ranges,
-        "Nbins": Nbins,
-        "cl_z_idx": cl_z_idx,
-        "cl_histo_f_z": cl_histo_f_z,
-        #
-        "max_mag_syn": max_mag_syn,
-        "N_obs_stars": N_obs_stars,
-        "m_ini_idx": m_ini_idx,
-        "err_lst": err_lst,
-    }
-
-    return cluster_dict
+        self.e_colors_p.append(np.array(self.cluster_df[self.e_color2]))
 
 
-def bin_edges_f(bin_method, mag, colors):
-    """ """
-
-    bin_edges = []
-
-    if bin_method == "knuth":
-        bin_edges.append(
-            knuth_bin_width(mag[~np.isnan(mag)], return_bins=True, quiet=True)[1]
-        )
-        for col in colors:
-            bin_edges.append(
-                knuth_bin_width(col[~np.isnan(col)], return_bins=True, quiet=True)[1]
-            )
-
-    elif bin_method == "fixed":
-        # Magnitude
-        mag_min, mag_max = np.nanmin(mag), np.nanmax(mag)
-        bin_edges.append(np.linspace(mag_min, mag_max, self.N_mag))
-        # Colors
-        for col in colors:
-            col_min, col_max = np.nanmin(col), np.nanmax(col)
-            bin_edges.append(np.linspace(col_min, col_max, self.N_col))
-
-    elif bin_method == "bayes_blocks":
-        bin_edges.append(bayesian_blocks(mag[~np.isnan(mag)]))
-        for col in colors:
-            bin_edges.append(bayesian_blocks(col[~np.isnan(col)]))
-
-    # Extract ranges and number of bins, used by histogram2d
-    ranges, Nbins = [], []
-    for be in bin_edges:
-        ranges.append([be[0], be[-1]])
-        Nbins.append(len(be))
-
-    return bin_edges, ranges, Nbins
-
-
-def error_distribution(self, mag, e_mag, e_colors):
-    """
-    Fit an exponential function to the errors in each photometric dimension,
-    using the main magnitude as the x coordinate.
-    This data is used to display the error bars, and more importantly, to
-    generate the synthetic clusters in the best match module.
-    """
-    def exp_3p(x, a, b, c):
-        """
-        Three-parameters exponential function.
-
-        This function is tied to the 'synth_cluster.add_errors' function.
-        """
-        return a * np.exp(b * x) + c
-
-    # Mask of not nan values across arrays
-    nan_msk = np.isnan(mag) | np.isnan(e_mag)
-    for e_col in e_colors:
-        nan_msk = nan_msk | np.isnan(e_col)
-    not_nan_msk = ~nan_msk
-    # Remove nan values
-    mag, e_mag = mag[not_nan_msk], e_mag[not_nan_msk]
-    e_col_non_nan = []
-    for e_col in e_colors:
-        e_col_non_nan.append(e_col[not_nan_msk])
-    e_colors = e_col_non_nan
-
-    # Left end of magnitude range
-    be_m = max(min(mag) + 1.0, np.percentile(mag, 0.5))
-    # Width of the intervals in magnitude.
-    interv_mag = 0.5
-    # Number of intervals.
-    delta_mag = mag.max() - be_m
-    n_interv = int(round(delta_mag / interv_mag))
-    #
-    steps_x = np.linspace(be_m - 0.5 * interv_mag, mag.max(), n_interv - 1)
-
-    # Median values for each error array in each magnitude range
-    mag_y = []
-    for i, e_mc in enumerate([e_mag] + [list(_) for _ in e_colors]):
-        x1 = steps_x[0]
-        e_mc_medians = []
-        for x2 in steps_x[1:]:
-            msk = (mag >= x1) & (mag < x2)
-            strs_in_range = np.array(e_mc)[msk]
-            if len(strs_in_range) > 1:
-                e_mc_medians.append(np.median(strs_in_range))
-            else:
-                # If no stars in interval, use fixed value
-                e_mc_medians.append(0.0001)
-            x1 = x2
-        mag_y.append(e_mc_medians)
-
-    # Make sure that median error values increase with increasing magnitude. This
-    # ensures that the 3P exponential fit does not fail
-    mag_y_new = []
-    for e_arr in mag_y:
-        e_arr_new, v_old = [], np.inf
-        for i in range(-1, -len(e_arr) - 1, -1):
-            if e_arr[i] > v_old:
-                e_arr_new.append(v_old)
-            else:
-                e_arr_new.append(e_arr[i])
-            v_old = e_arr[i]
-        e_arr_new.reverse()
-        mag_y_new.append(e_arr_new)
-    mag_y = mag_y_new
-
-    # Mid points in magnitude range
-    mag_x = 0.5 * (steps_x[:-1] + steps_x[1:])
-
-    # Fit 3-parameter exponential
-    err_lst = []
-    for y in mag_y:
-        popt_mc, _ = curve_fit(exp_3p, mag_x, y)
-        err_lst.append(popt_mc)
-
-    return err_lst
-
-
-def ranModels(N_models, model_fit, model_std):
+def ranModels(N_models, fit_params, model_std):
     """
     Generate the requested models via sampling a Gaussian centered on the
     selected solution, with standard deviation given by the attached
@@ -201,7 +32,7 @@ def ranModels(N_models, model_fit, model_std):
     N_models: number of models to generate (HARDCODED)
     """
     models_ran = {}
-    for k, f_val in model_fit.items():
+    for k, f_val in fit_params.items():
         std = model_std[k]
         models_ran[k] = np.random.normal(f_val, std, N_models)
     # Transpose dict of arrays into list of dicts
@@ -210,8 +41,10 @@ def ranModels(N_models, model_fit, model_std):
     return ran_models
 
 
-def xxx(Nm, st_mass_mean, st_mass_var, Nm_binar, obs_phot, m_ini_idx,
-    st_mass_mean_binar, st_mass_var_binar, prob_binar, binar_vals, alpha, isoch):
+def xxx(
+    Nm, st_mass_mean, st_mass_var, Nm_binar, obs_phot, m_ini_idx,
+    st_mass_mean_binar, st_mass_var_binar, prob_binar, binar_vals, alpha, isoch
+):
     """
     Estimate the mean and variance for each star via recurrence.
     """

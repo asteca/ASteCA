@@ -6,9 +6,9 @@ from .modules import isochrones_priv
 
 @dataclass
 class isochrones:
-    r"""Define an `isochrones` object.
+    r"""Define an ``isochrones`` object.
 
-    The object contains the loaded theoretical isochrones used by the
+    This object contains the loaded theoretical isochrones used by the
     :class:`synthetic` class to generate synthetic clusters.
 
     Parameters
@@ -37,27 +37,27 @@ class isochrones:
         in the same photometric system as the magnitude.
         Example for Gaia's 'BP-RP' color:
         ``{"G_BPmag": 5182.58, "G_RPmag": 7825.08}``
-    color2 : dict, optional
+    N_interp : int, default=2500
+        Number of interpolation points used to ensure that all isochrones are the
+        same shape.
+    color2 : dict, optional, default=None
         Optional second color to use in the analysis. Same format as that used by the
         ``color`` parameter.
-    column_names : dict
+    column_names : dict, optional, default=None
         Column names for the initial mass, metallicity, and age for the photometric
         system's isochrones files. Example:
         ``{"mass_col": "Mini", "met_col": "Zini", "age_col": "logAge"}``.
         This dictionary is defined internally in `ASteCA` and should only be given
         by the user if the isochrone service changes its format and the `isochrones`
         class fails to load the files.
-    N_interp : int
-        Number of interpolation points used to ensure that all isochrones are the
-        same shape.
 
     """
     isochs_path: str
     magnitude: dict
     color: dict
+    N_interp: int = 2500
     color2: Optional[dict] = None
     column_names: Optional[dict] = None
-    N_interp: int = 2500
 
     def __post_init__(self):
         # Extract model from isochrones' path
@@ -92,15 +92,4 @@ class isochrones:
         # Load isochrone files
         self.theor_tracks, self.color_filters, self.met_age_dict =\
             isochrones_priv.load(self)
-        print("Finished loading isochrone file(s)")
-
-    def min_max(self) -> tuple[float]:
-        r"""Return the minimum and maximum values for the metallicity and age defined
-        in the theoretical isochrones.
-
-        """
-        zmin = self.met_age_dict['z'].min()
-        zmax = self.met_age_dict['z'].max()
-        amin = self.met_age_dict['a'].min()
-        amax = self.met_age_dict['a'].max()
-        return zmin, zmax, amin, amax
+        print("Isochrone object generated\n")

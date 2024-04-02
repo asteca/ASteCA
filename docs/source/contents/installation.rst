@@ -1,9 +1,9 @@
-.. installation:
+.. _installation:
 
 Installation
-============
+############
 
-I recommend using the `conda`_ package and environment manager to install ``ASteCA``
+I recommend using the `conda`_ package and environment manager to install **ASteCA**
 in an isolated Python environment. To install ``conda``, follow these steps:
 
 1. Go to https://conda.io/miniconda.html and download the appropriate version
@@ -18,8 +18,8 @@ in an isolated Python environment. To install ``conda``, follow these steps:
 
    Select yes when asked: *Do you whish the installer to prepend the Miniconda3
    install location to PATH in your ~/path?*
-3. Close and re-open your terminal for the changes to take effect.
-4. Create a virtual environment for ``ASteCA`` with the command:
+3. Restart your terminal for the changes to take effect.
+4. Create a virtual environment for **ASteCA** with the command:
 
    .. code-block:: bash
 
@@ -41,16 +41,17 @@ in an isolated Python environment. To install ``conda``, follow these steps:
       (asteca) $
 
      You need to activate this environment each time *before* attempting to
-     run ``ASteCA``.
+     run **ASteCA**.
 
-6. Finally, install ``ASteCA`` with:
+6. Finally, install **ASteCA** with:
 
    .. code-block:: bash
 
      (asteca) $ pip install asteca
 
 
-If everything went well, you can now access a ``Python`` shell and import ``ASteCA``:
+If everything went well, you can now access a ``Python`` shell within your ``conda``
+environment and import **ASteCA**:
 
 .. code-block:: bash
 
