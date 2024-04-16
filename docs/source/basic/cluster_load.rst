@@ -53,7 +53,7 @@ That's it! You can now for example generate a quick coordinates plot with the
 
 showing something like:
 
-.. image:: ../_static/ra_dec.png
+.. figure:: ../_static/ra_dec.png
    :align: center
 
 or a color-magnitude plot with the ``cmd_plot()`` method:
@@ -67,5 +67,5 @@ or a color-magnitude plot with the ``cmd_plot()`` method:
 
 which should results in something like this:
 
-.. image:: ../_static/cmd_plot.png
+.. figure:: ../_static/cmd_plot.png
    :align: center

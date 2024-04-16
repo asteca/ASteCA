@@ -21,7 +21,8 @@ class likelihood:
         `Tremmel et al. (2013) <https://ui.adsabs.harvard.edu/abs/2013ApJ...766...19T/abstract)>`_
         is accepted.
     bin_method: str, {"knuth", "fixed", "bayes_blocks", "manual"}, default="knuth"
-        Bin method used to split the color-magnitude diagram into cells. If ``manual``
+        Bin method used to split the color-magnitude diagram into cells
+        (`Hess diagram <https://en.wikipedia.org/wiki/Hess_diagram>`_). If ``manual``
         is selected, a list containing an array of edge values for the magnitude,
         followed by one or two arrays (depending on the number of colors defined) for
         the color(s), also with edge values.
@@ -49,8 +50,11 @@ class likelihood:
         lpriv.lkl_data(self)
 
         # Evaluate cluster against itself
-        self.max_lkl = self.get(np.array([
-            self.my_cluster.mag_p, *self.my_cluster.colors_p]))
+        self.max_lkl = self.get(
+            np.array([self.my_cluster.mag_p, *self.my_cluster.colors_p])
+        )
+
+        print("Likelihood object generated\n")
 
     def get(self, synth_clust):
         r"""Evaluate the selected likelihood function.
@@ -58,8 +62,10 @@ class likelihood:
         Parameters
         ----------
         synth_clust : array
-            ``np.array`` containing the synthetic cluster. If ``None`` then the
-            observed cluster will be compared against itself.
+            ``np.array`` containing the synthetic cluster. The shape of this array must
+            be: ``[magnitude, color1, (color2)]``, where ``magnitude`` and ``color``
+            are arrays with the magnitude and color photometric data (``color2`` is the
+            optional second color defined).
 
         Returns
         -------

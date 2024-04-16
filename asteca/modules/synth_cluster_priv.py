@@ -1,6 +1,7 @@
 import numpy as np
 from scipy import stats
 from scipy.optimize import curve_fit
+import warnings
 from .imfs import invTrnsfSmpl, sampleInv
 
 
@@ -9,14 +10,6 @@ def error_distribution(self, mag, e_mag, e_colors):
     Fit an exponential function to the errors in each photometric dimension,
     using the main magnitude as the x coordinate.
     """
-    def exp_3p(x, a, b, c):
-        """
-        Three-parameters exponential function.
-
-        This function is tied to the 'synth_cluster.add_errors' function.
-        """
-        return a * np.exp(b * x) + c
-
     # Mask of not nan values across arrays
     nan_msk = np.isnan(mag) | np.isnan(e_mag)
     for e_col in e_colors:
@@ -76,10 +69,64 @@ def error_distribution(self, mag, e_mag, e_colors):
     # Fit 3-parameter exponential
     err_dist = []
     for y in mag_y:
-        popt_mc, _ = curve_fit(exp_3p, mag_x, y)
+        popt_mc = get_3p_pars(mag_x, y, mag)
         err_dist.append(popt_mc)
 
     return err_dist
+
+
+def exp_3p(x, a, b, c):
+    """
+    Three-parameters exponential function.
+
+    This function is tied to the 'synth_cluster.add_errors' function.
+    """
+    return a * np.exp(b * x) + c
+
+
+def exp_2p(x, a, b):
+    """Two-parameters exponential function. Required for scipy.optimize.curve_fit."""
+    return a * np.exp(b * x)
+
+
+def get_3p_pars(mag_x, y, mags):
+    """Fit 3P or 2P exponential curve."""
+    try:
+        if len(mag_x) >= 3:
+            # Fit 3-param exponential curve.
+            popt_mc, _ = curve_fit(exp_3p, mag_x, y)
+        else:
+            # If the length of this list is 2, it means that the main
+            # magnitude length is too small. If this is the case, do not
+            # attempt to fit a 3 parameter exp function since it will fail.
+            raise RuntimeError
+
+    # If the 3-param exponential fitting process fails.
+    except RuntimeError:
+        warnings.warn("3-param exponential error function fit failed. Attempt 2P fit")
+        try:
+            # Fit simple 2-params exponential curve.
+            popt_mc, _ = curve_fit(exp_2p, mag_x, y)
+            # Insert empty 'c' value to be fed later on to the 3P exponential
+            # function used to obtain the plotted error bars. This makes the
+            # 2P exp function equivalent with the 3P exp function, with the
+            # 'c' parameter equal to 0.
+            popt_mc = np.insert(popt_mc, 2, 0.0)
+
+        # If the 2-param exponential fitting process also fails, try with a
+        # 2P exp but using only min and max error values.
+        except RuntimeError:
+            warnings.warn(
+                "2-param exponential error function fit failed. Perform min-max magnitude fit."
+            )
+            # Fit simple 2-params exponential curve.
+            mags_minmax = [min(mags), max(mags) - (max(mags) - min(mags)) / 20.0]
+            y_minmax = [min(y), max(y)]
+            popt_mc, _ = curve_fit(exp_2p, mags_minmax, y_minmax)
+            # Insert 'c' value into exponential function param list.
+            popt_mc = np.insert(popt_mc, 2, 0.0)
+
+    return popt_mc
 
 
 def add_binarity(self) -> np.ndarray:
@@ -119,11 +166,8 @@ def add_binarity(self) -> np.ndarray:
             mass_ini = isoch[m_ini_idx]
 
             # Mass-ratio distribution
-            mass_ratios = qDistribution(mass_ini, self.gamma)
-
-            # Calculate random secondary masses of these binary stars
-            # between bin_mass_ratio*m1 and m1, where m1 is the primary
-            # mass.
+            mass_ratios = qDistribution(mass_ini, self.gamma, self.seed + mx + ax)
+            # Secondary masses
             m2 = mass_ratios * mass_ini
 
             # Calculate unresolved binary magnitude
@@ -199,10 +243,10 @@ def sample_imf(self, Nmets: int, Nages: int) -> list:
     inv_cdf = invTrnsfSmpl(self.IMF_name)
 
     st_dist_mass = []
-    for _ in range(Nmets):
+    for i in range(Nmets):
         met_lst = []
-        for _ in range(Nages):
-            sampled_IMF = sampleInv(self.max_mass, inv_cdf)
+        for j in range(Nages):
+            sampled_IMF = sampleInv(i+j + self.seed, self.max_mass, inv_cdf)
             met_lst.append(sampled_IMF)
         st_dist_mass.append(met_lst)
 
@@ -221,22 +265,23 @@ def randVals(self) -> dict:
         N_mass = max(len(sdm[0]), N_mass, N_isoch)
 
     # Used by `move_isochrone()` and `add_errors`
-    rand_norm_vals = np.random.normal(0.0, 1.0, (2, N_mass))
+    # rand_norm_vals = np.random.normal(0.0, 1.0, (2, N_mass))
+    rand_norm_vals = np.random.default_rng(self.seed).normal(0.0, 1.0, (2, N_mass))
 
     # Used by `move_isochrone()`, `binarity()`
-    rand_unif_vals = np.random.uniform(0.0, 1.0, (2, N_mass))
+    # rand_unif_vals = np.random.uniform(0.0, 1.0, (2, N_mass))
+    rand_unif_vals = np.random.default_rng(self.seed).uniform(0.0, 1.0, (2, N_mass))
 
-    rand_floats = {'norm': rand_norm_vals, 'unif': rand_unif_vals}
+    rand_floats = {"norm": rand_norm_vals, "unif": rand_unif_vals}
     return rand_floats
 
 
-def qDistribution(M1: np.ndarray, gamma: [float, str]) -> np.ndarray:
+def qDistribution(M1: np.ndarray, gamma: [float, str], seed: int) -> np.ndarray:
     """
-    D&K      : Distribution of mass-ratios versus primary masses
-    (Duchene & Kraus 2013). Mass dependent.
-    powerlaw : Power-law distribution with shape parameter 'gamma'. Not mass
+    float : Power-law distribution with shape parameter 'gamma'. Not mass
     dependent.
-
+    D&K : Distribution of mass-ratios versus primary masses
+    (Duchene & Kraus 2013). Mass dependent.
 
     Use 'gamma + 1' in the power-law distribution below because in D&K this
     distribution is defined as f(q)~q^gamma, while numpy's distribution is
@@ -246,10 +291,10 @@ def qDistribution(M1: np.ndarray, gamma: [float, str]) -> np.ndarray:
 
     try:
         gamma = float(gamma)
-        mass_ratios = np.random.power(gamma + 1, N)
+        # mass_ratios = np.random.power(gamma + 1, N)
+        mass_ratios = np.random.default_rng(seed).power(gamma + 1, N)
     except ValueError:
-
-        if gamma == 'D&K':
+        if gamma == "D&K":
             msk1, gamma1 = M1 <= 0.1, 4.2
             msk2, gamma2 = (M1 > 0.1) & (M1 <= 0.6), 0.4
             msk3, gamma3 = (M1 > 0.6) & (M1 <= 1.4), 0.3
@@ -266,41 +311,68 @@ def qDistribution(M1: np.ndarray, gamma: [float, str]) -> np.ndarray:
                 (msk5, gamma5),
                 (msk6, gamma6),
             ):
-                q = np.random.power(gammaX + 1, msk.sum())
+                # q = np.random.power(gammaX + 1, msk.sum())
+                q = np.random.default_rng(seed).power(gammaX + 1, msk.sum())
                 mass_ratios[msk] = q
 
         # Fisher's distribution
-        elif gamma == 'fisher_stepped':
-            # Fisher, Schröder & Smith (2005), 10.1111/j.1365-2966.2005.09193.x;
-            # Table 3, stepped
-            xk = np.linspace(0., 1., 10)
-            pk = np.array([29., 29., 30., 32., 31., 32., 36., 45., 27., 76.])
+        elif gamma == "fisher_stepped":
+            # Fisher, Schröder & Smith (2005); Table 3, stepped
+            # https://doi.org/10.1111/j.1365-2966.2005.09193.x
+            xk = np.linspace(0.0, 1.0, 10)
+            pk = np.array([29.0, 29.0, 30.0, 32.0, 31.0, 32.0, 36.0, 45.0, 27.0, 76.0])
 
-        elif gamma == 'fisher_peaked':
-            # Fisher, Schröder & Smith (2005), 10.1111/j.1365-2966.2005.09193.x;
-            # Table 3, peaked
-            xk = np.linspace(0., 1., 10)
-            pk = np.array([27., 30., 34., 33., 29., 26., 27., 33., 41., 89.])
+        elif gamma == "fisher_peaked":
+            # Fisher, Schröder & Smith (2005); Table 3, peaked
+            # https://doi.org/10.1111/j.1365-2966.2005.09193.x
+            xk = np.linspace(0.0, 1.0, 10)
+            pk = np.array([27.0, 30.0, 34.0, 33.0, 29.0, 26.0, 27.0, 33.0, 41.0, 89.0])
 
-        elif gamma == 'raghavan':
-            # Raghavan et al. (2010), 10.1088/0067-0049/190/1/1; Fig 16 (left)
-            xk = np.linspace(0., 1., 20)
-            pk = np.array([
-                0.53,  2.61,  0.53,  4.67,  7.81,  3.64,  9.89,  5.71,  4.69,
-                5.73,  4.67,  6.76,  5.75,  5.73,  2.61,  5.71,  4.72,  5.71,
-                3.64, 12.99])
+        elif gamma == "raghavan":
+            # Raghavan et al. (2010); Fig 16 (left)
+            # https://iopscience.iop.org/article/10.1088/0067-0049/190/1/1
+            xk = np.linspace(0.0, 1.0, 20)
+            pk = np.array(
+                [
+                    0.53,
+                    2.61,
+                    0.53,
+                    4.67,
+                    7.81,
+                    3.64,
+                    9.89,
+                    5.71,
+                    4.69,
+                    5.73,
+                    4.67,
+                    6.76,
+                    5.75,
+                    5.73,
+                    2.61,
+                    5.71,
+                    4.72,
+                    5.71,
+                    3.64,
+                    12.99,
+                ]
+            )
 
-        if gamma != 'D&K':
+        if gamma != "D&K":
+
             def fQ(xk, pk):
                 """
                 Discrete function
                 """
                 pk /= pk.sum()
-                fq = stats.rv_discrete(a=0., b=1., values=(xk, pk))
+                fq = stats.rv_discrete(a=0.0, b=1.0, values=(xk, pk))
                 return fq
+
             fq = fQ(xk, pk)
             # 'ppf' is the inverse CDF
-            mass_ratios = fq.ppf(np.random.uniform(0., 1., N))
+            mass_ratios = fq.ppf(
+                # np.random.uniform(0.0, 1.0, N)
+                np.random.default_rng(seed).uniform(0.0, 1.0, N)
+            )
 
     return mass_ratios
 
@@ -407,7 +479,10 @@ def properModel(
     # written to 'model_comb'
     model_comb = fit_params | fix_params
     model_full = np.array(
-        [model_comb[k] for k in ["met", "loga", "alpha", "beta", "Av", "DR", "Rv", "dm"]]
+        [
+            model_comb[k]
+            for k in ["met", "loga", "alpha", "beta", "Av", "DR", "Rv", "dm"]
+        ]
     )
 
     if len(met_age_dict["met"]) == 1:
@@ -566,15 +641,7 @@ def move_isochrone(isochrone, m_ini_idx, dm):
 
 
 def extinction(
-    ext_coefs,
-    rand_norm,
-    rand_unif,
-    DR_distribution,
-    m_ini_idx,
-    Av,
-    dr,
-    Rv,
-    isochrone
+    ext_coefs, rand_norm, rand_unif, DR_distribution, m_ini_idx, Av, dr, Rv, isochrone
 ):
     """
     Modifies magnitude and color(s) according to given values for the
@@ -590,7 +657,7 @@ def extinction(
     mag_ec = [a, b]  ; cX_ec = [[a1, b1], [a2, b2]]
 
     and:
-    ccm_coef = a + b / Rv = ext_coefs[0] + ext_coefs[1] / Rv
+    ccm_coef = a + b / Rv = ext_coefs[i][0] + ext_coefs[i][1] / Rv
 
     Ax = ef * Av
     m_obs = M_int + Ax + dist_mod
@@ -611,15 +678,18 @@ def extinction(
         Ns = isochrone.shape[-1]
 
         if DR_distribution == "uniform":
-            # Av_dr = rand_unif[: isochrone.shape[-1]] * dr
-            Av_dr = rand_unif[:Ns] * dr
+            # Av_dr = rand_unif[:Ns] * dr
+            Av_dr = (2 * rand_unif[:Ns] - 1) * dr
         elif DR_distribution == "normal":
-            Av_dr = abs(rand_norm[:Ns]) * dr
+            # Av_dr = abs(rand_norm[:Ns]) * dr
+            Av_dr = rand_norm[:Ns] * dr
 
         # In place in case I ever want to implement the percentage of stars affected.
         # Without this, all stars are affected by the DR.
         # Av_dr[rand_unif[:Ns] > DR_percentage] = 0.0
-        Av = Av + Av_dr
+
+        # Clip at 0
+        Av = np.clip(Av + Av_dr, a_min=0, a_max=np.inf)
 
     def colmove(ci):
         Ex = (
@@ -736,6 +806,9 @@ def binarity(alpha, beta, binar_flag, m_ini_idx, rand_unif_vals, isoch_mass):
     """
     # No binarity process defined
     if binar_flag is False:
+        # Update the binary systems' masses so that the secondary masses for
+        # SINGLE systems are identified with a 'nan' value.
+        isoch_mass[-1] = np.nan
         return isoch_mass
 
     Ns = isoch_mass.shape[-1]
@@ -747,7 +820,7 @@ def binarity(alpha, beta, binar_flag, m_ini_idx, rand_unif_vals, isoch_mass):
     # Offner et al. (2022); Fig 1 (left), Table 1
     # b_p = np.clip(alpha + beta * np.log(mass), a_min=0, a_max=1)
     # b_p = np.clip(alpha + beta * np.arctan(mass), a_min=0, a_max=1)
-    b_p = np.clip(alpha + beta * (1 / (1 + 1/mass)), a_min=0, a_max=1)
+    b_p = np.clip(alpha + beta * (1 / (1 + 1.4 / mass)), a_min=0, a_max=1)
 
     # Stars (masses) with the largest binary probabilities are selected
     # proportional to their probability
@@ -755,15 +828,15 @@ def binarity(alpha, beta, binar_flag, m_ini_idx, rand_unif_vals, isoch_mass):
 
     # Index of the binary magnitude: mag_binar = m_ini_idx + 1
     # Update array with new values of magnitudes and colors for the binary
-    # systems.
+    # systems. This does not change the primary mass values, just the magnitude and
+    # color(s).
     if bin_indxs.any():
-        # for i in range(N_fc[0] + N_fc[1]):
         for i in range(m_ini_idx):
             isoch_mass[i][bin_indxs] = isoch_mass[m_ini_idx + 1 + i][bin_indxs]
 
     # Update the binary systems' masses so that the secondary masses for
-    # SINGLE systems are identified with a '0.' value.
-    isoch_mass[-1][~bin_indxs] = 0.0
+    # SINGLE systems are identified with a 'nan' value.
+    isoch_mass[-1][~bin_indxs] = np.nan
 
     return isoch_mass
 
@@ -781,7 +854,8 @@ def add_errors(isoch_compl, err_dist, rand_norm_vals):
         # sigma_mc = getSigmas(isoch_compl[0], popt_mc)
 
         # Three-parameters exponential function for the uncertainty
-        sigma_mc = a * np.exp(b * main_mag) + c
+        # sigma_mc = a * np.exp(b * main_mag) + c
+        sigma_mc = exp_3p(main_mag, a, b, c)
 
         # Randomly move stars around these errors.
         # isoch_compl[i] = gauss_error(rnd, isoch_compl[i], sigma_mc)
@@ -831,8 +905,8 @@ def generate(self, fit_params, plotflag=False):
     # Apply extinction correction
     isoch_extin = extinction(
         self.ext_coefs,
-        self.rand_floats['norm'][0],
-        self.rand_floats['unif'][0],
+        self.rand_floats["norm"][0],
+        self.rand_floats["unif"][0],
         self.DR_distribution,
         self.m_ini_idx,
         av,
@@ -850,17 +924,22 @@ def generate(self, fit_params, plotflag=False):
 
     # Interpolate IMF's sampled masses into the isochrone.
     isoch_mass = mass_interp(
-        isoch_cut, self.m_ini_idx, self.st_dist_mass[ml][al], self.N_obs_stars)
+        isoch_cut, self.m_ini_idx, self.st_dist_mass[ml][al], self.N_obs_stars
+    )
     if not isoch_mass.any():
         return np.array([])
 
     # Assignment of binarity.
     isoch_binar = binarity(
-        alpha, beta, self.binar_flag, self.m_ini_idx, self.rand_floats['unif'][1],
-        isoch_mass
+        alpha,
+        beta,
+        self.binar_flag,
+        self.m_ini_idx,
+        self.rand_floats["unif"][1],
+        isoch_mass,
     )
 
     # Assign errors according to errors distribution.
-    synth_clust = add_errors(isoch_binar, self.err_dist, self.rand_floats['norm'][1])
+    synth_clust = add_errors(isoch_binar, self.err_dist, self.rand_floats["norm"][1])
 
     return synth_clust

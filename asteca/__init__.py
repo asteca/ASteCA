@@ -3,16 +3,13 @@ from .synthetic import synthetic
 from .cluster import cluster
 from .likelihood import likelihood
 
-# # Pull version from pyproject.toml
-# __version__ = importlib.metadata.version(__package__ or __name__)
-
 from contextlib import suppress
 import importlib.metadata
 from pathlib import Path
 
 
 def extract_version() -> str:
-    """Returns either the version of installed package or the one
+    """Returns either the version of the installed package or the one
     found in nearby pyproject.toml
 
     https://stackoverflow.com/a/76206192/1391441

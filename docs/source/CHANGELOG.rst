@@ -549,8 +549,7 @@ version of the ``params_input.dat`` file)
 -  Improved ``top_tiers`` plotting and saved file
    (`#184 <https://github.com/asteca/asteca/issues/184>`__).
 
-Caveats
-~~~~~~~
+**Caveats**
 
 -  Same as version
    `0.1.2 <https://github.com/asteca/asteca/releases/tag/v0.1.2>`__.
@@ -616,8 +615,7 @@ version of the ``params_input.dat`` file)
    `#178 <https://github.com/asteca/asteca/issues/178>`__).
 
 
-Caveats
-~~~~~~~
+**Caveats**
 
 -  Same as version
    `0.1.2 <https://github.com/asteca/asteca/releases/tag/v0.1.2>`__.
@@ -641,8 +639,7 @@ Caveats
    (`#169 <https://github.com/asteca/asteca/issues/169>`__).
 
 
-Caveats
-~~~~~~~
+**Caveats**
 
 -  Same as version
    `0.1.2 <https://github.com/asteca/asteca/releases/tag/v0.1.2>`__.
@@ -685,8 +682,7 @@ version of the ``params_input.dat`` file)
    `#143 <https://github.com/asteca/asteca/issues/143>`__).
 
 
-Caveats
-~~~~~~~
+**Caveats**
 
 -  Same as version
    `0.1.2 <https://github.com/asteca/asteca/releases/tag/v0.1.2>`__.
@@ -707,8 +703,7 @@ Caveats
 -  Minor re-arrangement with semi-input data.
 
 
-Caveats
-~~~~~~~
+**Caveats**
 
 -  Same as version
    `0.1.2 <https://github.com/asteca/asteca/releases/tag/v0.1.2>`__.
@@ -729,8 +724,7 @@ Caveats
    (`#132 <https://github.com/asteca/asteca/issues/132>`__).
 
 
-Caveats
-~~~~~~~
+**Caveats**
 
 -  Same as version
    `0.1.2 <https://github.com/asteca/asteca/releases/tag/v0.1.2>`__.
@@ -761,8 +755,7 @@ Caveats
    used to flatten list.
 
 
-Caveats
-~~~~~~~
+**Caveats**
 
 -  Still not sure why *tolstoy* likelihood is biased towards high masses
    :confused:
@@ -781,8 +774,7 @@ Caveats
 -  Closed *Known issues* from previous version.
 
 
-Caveats
-~~~~~~~
+**Caveats**
 
 -  Same as previous version.
 
@@ -801,8 +793,7 @@ Caveats
 -  Some speed improvements (moved things around mainly).
 -  Binary fraction is now a free parameter.
 
-Known issues
-~~~~~~~~~~~~
+**Known issues**
 
 -  **Serious bug**: if the DA is set to run but the *Best fit method*
    isn’t, the final plot can’t be produced since the ``syn_cl_err``
@@ -819,8 +810,7 @@ Known issues
    in next release.
 
 
-Caveats
-~~~~~~~
+**Caveats**
 
 -  The total initial mass can be set as a free parameter but the
    likelihood function will select always synthetic clusters of high

@@ -3,13 +3,17 @@
 [![AA](https://img.shields.io/badge/A%26A-576--A6,%202015-yellowgreen.svg)][1]
 [![License](https://img.shields.io/badge/license-MIT-blue)][2]
 
-The ASteCA package is designed to fully automatize the usual tests
-applied on star clusters in order to estimate their characteristics and
-fundamental parameters. The package is still be *under heavy development*.
-For an up to date description please refer to the
-[documentation][3]. The latest release can be accessed [here][4].
+**ASteCA** is a package designed to automatize the usual analysis applied on star
+clusters, in order to estimate their characteristics and fundamental parameters.
 
-If you use this package please cite its accompanying [article][1] using the
+Install with:
+
+```
+pip install asteca
+```
+
+See the [documentation](https://asteca.github.io) for more details. If you use this
+package in your research, please cite its accompanying [article][1] using the following
 Bibtex:
 
 ````

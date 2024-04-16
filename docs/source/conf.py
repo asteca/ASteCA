@@ -12,25 +12,15 @@
 #
 import os
 import sys
-# print(sys.path)
-sys.path.insert(0, os.path.abspath('../../'))
-
-# from pkg_resources import DistributionNotFound, get_distribution
-# # try:
-# import asteca
-# __version__ = asteca.__version__
-# # __version__ = get_distribution("asteca").version
-# # except DistributionNotFound:
-# #     __version__ = "unknown version"
-# print(__version__)
-
-__version__ = '0.5.1'
+sys.path.insert(0, os.path.abspath("../../"))
+import asteca
+__version__ = asteca.__version__
 
 
 # -- Project information -----------------------------------------------------
 
-project = 'ASteCA'
-copyright = '2024, Gabriel I Perren'
+project = "ASteCA"
+copyright = "2024, Gabriel I Perren"
 # author = 'Gabriel I Perren'
 
 # The full version, including alpha/beta/rc tags
@@ -46,30 +36,34 @@ release = __version__
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
-    'sphinx.ext.githubpages',
+    "sphinx.ext.githubpages",
     "myst_nb",
     "IPython.sphinxext.ipython_console_highlighting",
+    "sphinx_math_dollar",
+    "sphinx.ext.mathjax",
 ]
+
+# pip install sphinx-math-dollar
+# https://www.sympy.org/sphinx-math-dollar/
+mathjax3_config = {
+    "tex": {
+        "inlineMath": [["\\(", "\\)"]],
+        "displayMath": [["\\[", "\\]"]],
+    }
+}
 
 # https://myst-nb.readthedocs.io/en/v0.12.2/use/execute.html
 nb_execution_mode = "auto"
+# nb_execution_mode = "off"
+# nb_execution_timeout = -1
 
 myst_enable_extensions = [
     "amsmath",
-    # "attrs_inline",
-    # "colon_fence",
-    # "deflist",
     "dollarmath",
-    # "fieldlist",
-    # "html_admonition",
-    # "html_image",
-    # "linkify",
-    # "replacements",
-    # "smartquotes",
-    # "strikethrough",
-    # "substitution",
-    # "tasklist",
 ]
+
+# Don't re-order methods alphabetically
+autodoc_member_order = "bysource"
 
 # Add any paths that contain templates here, relative to this directory.
 # templates_path = ['_templates']
@@ -85,17 +79,30 @@ exclude_patterns = []
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'sphinx_book_theme'
+html_theme = "sphinx_book_theme"
 html_favicon = "_static/favicon.ico"
 html_title = "[ ASteCA ]"
 html_theme_options = {
     "repository_url": "https://github.com/asteca/ASteCA",
     "use_repository_button": True,
+    "use_issues_button": True,
+    "path_to_docs": "docs",
+    "use_edit_page_button": True,
     "use_fullscreen_button": False,
-    "show_toc_level": 1,
+    "show_toc_level": 2,
+    "navigation_with_keys": False,
+    "repository_branch": "main",
+    "launch_buttons": {
+        "binderhub_url": "https://mybinder.org",
+        "notebook_interface": "classic",
+    },
 }
+
+
+# Hide parent class name in right sidebar TOC for methods
+toc_object_entries_show_parents = 'hide'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = ["_static"]

@@ -7,9 +7,12 @@ import pandas as pd
 # supported photometric system's isochrones files.
 phot_syst_col_names = {
     "PARSEC": {"mass_col": "Mini", "met_col": "Zini", "age_col": "logAge"},
-    "MIST": {"mass_col": "initial_mass", "met_col": "Zinit",
-             "age_col": "log10_isochrone_age_yr"},
-    "BASTI": {"mass_col": "M/Mo(ini)", "met_col": "Z =", "age_col": "Age (Myr) ="}
+    "MIST": {
+        "mass_col": "initial_mass",
+        "met_col": "Zinit",
+        "age_col": "log10_isochrone_age_yr",
+    },
+    "BASTI": {"mass_col": "M/Mo(ini)", "met_col": "Z =", "age_col": "Age (Myr) ="},
 }
 
 
@@ -34,18 +37,25 @@ def load(self) -> tuple[np.ndarray, list, dict]:
     # isochrones.shape = (N_photsyst, N_z, N_a, N_interp, N_cols)
     # met_age_arr.shape = (N_photsyst, N_z*N_a, 2)
     isochrones, met_age_arr = read(
-        self.model, self.N_interp, f_paths, met_col, age_col, cols_keep
+        self.model,
+        self.N_interp,
+        self.parsec_rm_stage_9,
+        f_paths,
+        met_col,
+        age_col,
+        cols_keep,
     )
     N_ps, Nz, Na = len(isochrones), len(isochrones[0]), len(isochrones[0][0])
-    print(f"Processing {self.model} isochrones for {N_ps} photometric systems, "
-          + f"Nz={Nz}, Na={Na}...")
+    print(
+        f"Processing {self.model} isochrones for {N_ps} photometric systems, "
+        + f"N_met={Nz}, N_age={Na}..."
+    )
 
     isochrones = m_ini_check(self, mass_col, isochrones)
     met_age_dict = met_ages_check(self, met_age_arr)
 
     # theor_tracks.shape = (N_z, N_a, N_cols, N_interp)
-    theor_tracks, color_filters = order_isochrones(
-        self, mass_col, isochrones)
+    theor_tracks, color_filters = order_isochrones(self, mass_col, isochrones)
 
     return theor_tracks, color_filters, met_age_dict
 
@@ -201,7 +211,9 @@ def met_ages_check(self, met_age_arr: list) -> dict:
     return met_age_dict
 
 
-def order_isochrones(self, initial_mass: str, isochrones: list) -> tuple[np.ndarray, list]:
+def order_isochrones(
+    self, initial_mass: str, isochrones: list
+) -> tuple[np.ndarray, list]:
     """
     Return list structured as:
 
@@ -269,13 +281,14 @@ def order_isochrones(self, initial_mass: str, isochrones: list) -> tuple[np.ndar
     return theor_tracks, color_filters
 
 
-def read(model, N_interp, f_paths, met_col, age_col, cols_keep) -> tuple[list, list]:
+def read(
+    model, N_interp, parsec_rm_stage_9, f_paths, met_col, age_col, cols_keep
+) -> tuple[list, list]:
     """ """
-    # generate a docstring
-    
+
     if model == "PARSEC":
         isochrones, met_age_arr = read_PARSEC_files(
-            f_paths, met_col, age_col, cols_keep, N_interp
+            f_paths, parsec_rm_stage_9, met_col, age_col, cols_keep, N_interp
         )
     elif model == "MIST":
         isochrones, met_age_arr = read_MIST_files(
@@ -289,7 +302,9 @@ def read(model, N_interp, f_paths, met_col, age_col, cols_keep) -> tuple[list, l
     return isochrones, met_age_arr
 
 
-def read_PARSEC_files(f_paths, met_col, age_col, cols_keep, N_interp):
+def read_PARSEC_files(
+    f_paths, parsec_rm_stage_9, met_col, age_col, cols_keep, N_interp, label_col="label"
+):
     """
     Each PARSEC file represents a single photometric system.
     """
@@ -310,6 +325,11 @@ def read_PARSEC_files(f_paths, met_col, age_col, cols_keep, N_interp):
                 a_grouped = met_df.groupby(age_col, sort=False)
                 age_arr = []
                 for _, df in a_grouped:
+                    # Remove post-AGB stage
+                    if parsec_rm_stage_9 is True:
+                        msk = df["label"] != "9"
+                        df = df[msk]
+
                     # Save (z, a) values
                     met_age.append(
                         [float(df[met_col].values[0]), float(df[age_col].values[0])]

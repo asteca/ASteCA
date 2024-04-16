@@ -50,6 +50,10 @@ class isochrones:
         This dictionary is defined internally in `ASteCA` and should only be given
         by the user if the isochrone service changes its format and the `isochrones`
         class fails to load the files.
+    parsec_rm_stage_9 : boll, optional, default=True
+        If the isochrones are PARSEC, this argument set to ``True`` will remove the
+        *post_AGB* stage (label=9) which are still
+        "`in preparation <http://stev.oapd.inaf.it/cmd_3.7/faq.html>`_".
 
     """
     isochs_path: str
@@ -58,6 +62,7 @@ class isochrones:
     N_interp: int = 2500
     color2: Optional[dict] = None
     column_names: Optional[dict] = None
+    parsec_rm_stage_9: Optional[bool] = True
 
     def __post_init__(self):
         # Extract model from isochrones' path
@@ -90,6 +95,7 @@ class isochrones:
             self.mag_color_lambdas = self.mag_color_lambdas | self.color2
 
         # Load isochrone files
-        self.theor_tracks, self.color_filters, self.met_age_dict =\
-            isochrones_priv.load(self)
+        self.theor_tracks, self.color_filters, self.met_age_dict = isochrones_priv.load(
+            self
+        )
         print("Isochrone object generated\n")

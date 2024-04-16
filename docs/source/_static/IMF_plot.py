@@ -3,26 +3,30 @@ import numpy as np
 
 
 def main():
+    fig = plt.figure(figsize=(8, 4))
 
-    fig = plt.figure(figsize=(5, 5))
-
-    x_vals = np.array(list(np.arange(0.08, 1, .01)) + [1] + [1, 2, 3, 5, 10, 15, 20, 50, 100])
+    x_vals = np.array(
+        list(np.arange(0.02, 1, 0.01)) + [1] + [1, 2, 3, 5, 10, 15, 20, 50, 100]
+    )
     for imf_f in ("Salpeter (1955)", "Kroupa (2001)", "Chabrier et al. (2014)"):
         print(imf_f)
         y = []
         for x in x_vals:
             y.append(get_imf(imf_f, x))
         # breakpoint()
-        idx = np.argmin(abs(x_vals-1))
+        idx = np.argmin(abs(x_vals - 1))
         y = np.array(y) / y[idx]
         # plt.plot(np.log10(x_vals), y, label=imf_f)
         plt.plot(x_vals, y, label=imf_f)
         plt.legend()
-    plt.xscale('log')
+
+    plt.xlim(0.018, 20)
+    plt.ylim(0.0009, 700)
+    plt.xscale("log")
     plt.xlabel(r"$m\,[M_{\odot}]$")
     plt.ylabel(r"$\xi\,(m)$")
-    plt.yscale('log')
-    plt.savefig("IMFs.png", dpi=300, bbox_inches='tight')
+    plt.yscale("log")
+    plt.savefig("IMFs.png", dpi=300, bbox_inches="tight")
 
 
 def get_imf(IMF_name, m_star):
@@ -61,20 +65,23 @@ def get_imf(IMF_name, m_star):
         # Chabrier et al. (2014)
         # https://ui.adsabs.harvard.edu/abs/2014ApJ...796...75C/abstract ; Eq (34)
         nc, mc = 11, 0.18
-        m0 = nc*mc
+        m0 = nc * mc
         Ah, x = 0.649, 1.35
-        Al = Ah*nc**(x/2)
-        c = 0.434294/m_star  # np.log10(e)/m
-        sigma_2 = np.log10(nc)/(x*np.log(10))
+        Al = Ah * nc ** (x / 2)
+        c = 0.434294 / m_star  # np.log10(e)/m
+        sigma_2 = np.log10(nc) / (x * np.log(10))
         if m_star <= m0:
-            imf_val = c * Al * m0**(-x) * np.exp(
-                -(np.log10(m_star)-np.log10(mc))**2/(2*sigma_2)
+            imf_val = (
+                c
+                * Al
+                * m0 ** (-x)
+                * np.exp(-((np.log10(m_star) - np.log10(mc)) ** 2) / (2 * sigma_2))
             )
         elif m_star > m0:
-            imf_val = c * Ah * m_star**(-x)
+            imf_val = c * Ah * m_star ** (-x)
 
     return imf_val
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
