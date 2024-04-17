@@ -10,21 +10,19 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-import numpy as np
-
-import os
-import sys
-sys.path.insert(0, os.path.abspath("../../"))
-import asteca
-__version__ = asteca.__version__
+# import os
+# import sys
+# sys.path.insert(0, os.path.abspath("../../"))
+# import asteca
+# __version__ = asteca.__version__
 
 
-# with open("../../pyproject.toml", encoding="utf-8") as pyproject_toml:
-#     __version__ = (
-#         next(line for line in pyproject_toml if line.startswith("version"))
-#         .split("=")[1]
-#         .strip("'\"\n ")
-#     )
+with open("../pyproject.toml", encoding="utf-8") as pyproject_toml:
+    __version__ = (
+        next(line for line in pyproject_toml if line.startswith("version"))
+        .split("=")[1]
+        .strip("'\"\n ")
+    )
 
 
 # -- Project information -----------------------------------------------------
@@ -44,8 +42,8 @@ release = __version__
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    "sphinx.ext.autodoc",
-    # 'autoapi.extension',
+    # "sphinx.ext.autodoc",
+    "autoapi.extension",
     "sphinx.ext.napoleon",
     "sphinx.ext.githubpages",
     "myst_nb",
@@ -54,7 +52,8 @@ extensions = [
     "sphinx.ext.mathjax",
 ]
 
-# autoapi_dirs = ['../asteca']
+autoapi_dirs = ['../asteca']
+# autoapi_generate_api_docs = False
 
 # pip install sphinx-math-dollar
 # https://www.sympy.org/sphinx-math-dollar/
@@ -75,8 +74,8 @@ myst_enable_extensions = [
     "dollarmath",
 ]
 
-# Don't re-order methods alphabetically
-autodoc_member_order = "bysource"
+# # Don't re-order methods alphabetically
+# autodoc_member_order = "bysource"
 
 # Add any paths that contain templates here, relative to this directory.
 # templates_path = ['_templates']

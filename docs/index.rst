@@ -91,11 +91,4 @@ TOC
 
    tutorials/quickstart
 
-.. toctree::
-   :maxdepth: 1
-   :caption: API Reference
 
-   api/cluster
-   api/isochrones
-   api/synthcluster
-   api/likelihood
