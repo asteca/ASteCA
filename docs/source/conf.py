@@ -13,8 +13,16 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath("../../"))
-import asteca
-__version__ = asteca.__version__
+# import asteca
+# __version__ = asteca.__version__
+
+
+with open("../../pyproject.toml", encoding="utf-8") as pyproject_toml:
+    __version__ = (
+        next(line for line in pyproject_toml if line.startswith("version"))
+        .split("=")[1]
+        .strip("'\"\n ")
+    )
 
 
 # -- Project information -----------------------------------------------------
