@@ -1,0 +1,3 @@
+sphinx_book_theme
+myst-nb
+sphinx-math-dollar

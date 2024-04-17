@@ -5,6 +5,7 @@
 !LICENSE.txt
 !poetry.lock
 !pyproject.toml
+!.readthedocs.yaml
 
 # and these folderers
 !/asteca
