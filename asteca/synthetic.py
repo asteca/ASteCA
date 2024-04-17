@@ -297,11 +297,8 @@ class synthetic:
             Matplotlib axis object
 
         """
-
-        invert_yaxis_flag = False
         if ax is None:
             f, ax = plt.subplots()
-            invert_yaxis_flag = True
 
         # Generate synthetic cluster.
         synth_clust = scp.generate(self, fit_params)
@@ -312,30 +309,29 @@ class synthetic:
 
         x_synth, y_synth = synth_clust[1], synth_clust[0]
         # Single synthetic systems
-        plt.scatter(
+        ax.scatter(
             x_synth[~binar_idx],
             y_synth[~binar_idx],
             marker="^",
             c="#519ddb",
             alpha=0.5,
-            label=f"Synthetic (single systems), N={len(x_synth[~binar_idx])}",
+            label=f"Synthetic (single), N={len(x_synth[~binar_idx])}",
         )
         # Binary synthetic systems
-        plt.scatter(
+        ax.scatter(
             x_synth[binar_idx],
             y_synth[binar_idx],
             marker="v",
             c="#F34C4C",
             alpha=0.5,
-            label=f"Synthetic (binary systems), N={len(x_synth[binar_idx])}",
+            label=f"Synthetic (binary), N={len(x_synth[binar_idx])}",
         )
 
-        # plt.xlabel(list(self.isochs.magnitude.keys())[0])
-        # c1, c2 = list(self.isochs.color.keys())
-        # plt.ylabel(f"{c1}-{c2}")
-        plt.legend()
-        if invert_yaxis_flag:
-            plt.gca().invert_yaxis()
+        plt.ylabel(list(self.isochs.magnitude.keys())[0])
+        c1, c2 = list(self.isochs.color.keys())
+        plt.xlabel(f"{c1}-{c2}")
+        ax.set_ylim(max(self.mag_p) + .5, min(self.mag_p) - .5)
+        ax.legend()
 
         if isochplot is False:
             return ax
@@ -348,7 +344,7 @@ class synthetic:
         xmin, xmax = x_synth[~binar_idx].min(), x_synth[~binar_idx].max()
         msk = (isochrone[1] >= xmin) & (isochrone[1] <= xmax)
         isochrone = isochrone[:, msk]
-        plt.plot(isochrone[1], isochrone[0], c="k")
+        ax.plot(isochrone[1], isochrone[0], c="k")
 
         return ax
 

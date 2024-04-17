@@ -23,7 +23,7 @@ in an isolated Python environment. To install ``conda``, follow these steps:
 
    .. code-block:: bash
 
-     $ conda create --name asteca
+     $ conda create --name asteca python=3.11
 
 5. Activate the environment:
 

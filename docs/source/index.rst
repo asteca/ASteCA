@@ -20,7 +20,8 @@ extinction, distance, metallicity, age, binarity, mass, etc..
    This version also removed many of the features that were previously
    available, to concentrate on the fundamental parameters estimation.
    Feel free to `contact me`_ if you have questions about using this code in your
-   research, or `open a new issue`_ in the code's repository.
+   research, and please `open a new issue`_ in the code's repository if you find
+   something either wrong or missing.
 
 Install with:
 

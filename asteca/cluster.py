@@ -127,10 +127,8 @@ class cluster:
 
 
         """
-        invert_yaxis_flag = False
         if ax is None:
             f, ax = plt.subplots()
-            invert_yaxis_flag = True
 
         if binar_prob is not None:
             msk_binar = binar_prob > 0.5
@@ -139,7 +137,7 @@ class cluster:
         col_col = self.color
 
         if binar_prob is None:
-            plt.scatter(
+            ax.scatter(
                 self.colors_p[0],
                 self.mag_p,
                 c="green",
@@ -147,26 +145,24 @@ class cluster:
                 label=f"Observed, N={len(self.mag_p)}",
             )
         else:
-            plt.scatter(
+            ax.scatter(
                 self.colors_p[0][~msk_binar],
                 self.mag_p[~msk_binar],
                 c="green",
                 alpha=0.5,
-                label=f"Observed (single systems), N={len(self.mag_p[~msk_binar])}",
+                label=f"Observed (single), N={len(self.mag_p[~msk_binar])}",
             )
-            plt.scatter(
+            ax.scatter(
                 self.colors_p[0][msk_binar],
                 self.mag_p[msk_binar],
                 c="red",
                 alpha=0.5,
-                label=f"Observed (binary systems), N={len(self.mag_p[msk_binar])}",
+                label=f"Observed (binary), N={len(self.mag_p[msk_binar])}",
             )
 
-        plt.xlabel(col_col)
-        plt.ylabel(mag_col)
-        plt.legend()
-
-        if invert_yaxis_flag:
-            plt.gca().invert_yaxis()
+        ax.set_ylim(max(self.mag_p) + .5, min(self.mag_p) - .5)
+        ax.set_xlabel(col_col)
+        ax.set_ylabel(mag_col)
+        ax.legend()
 
         return ax

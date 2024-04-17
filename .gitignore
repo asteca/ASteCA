@@ -16,4 +16,4 @@
 # and ignore these folders
 /docs/build/*
 # Jupyter Notebook
-.ipynb_checkpoints/*
+.ipynb_checkpoints

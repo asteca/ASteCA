@@ -341,14 +341,14 @@ which will produce something like this:
     :scale: 35%
     :align: center
 
-You can combine this with the :meth:`cmdplot()` method mentioned in :ref:`cluster_load`
+You can combine this with the :meth:`clustplot()` method mentioned in :ref:`cluster_load`
 to generate a combined CMD plot:
 
 .. code-block:: python
 
     import matplotlib.pyplot as plt
-    ax = my_cluster.cmdplot()
-    # Use the axis returned by `cmdplot()`
+    ax = my_cluster.clustplot()
+    # Use the axis returned by `clustplot()`
     synthcl.synthplot(fit_params, ax)
     plt.show()
 

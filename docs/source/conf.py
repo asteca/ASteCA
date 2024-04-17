@@ -35,6 +35,7 @@ release = __version__
 # ones.
 extensions = [
     "sphinx.ext.autodoc",
+    # 'autoapi.extension',
     "sphinx.ext.napoleon",
     "sphinx.ext.githubpages",
     "myst_nb",
@@ -42,6 +43,8 @@ extensions = [
     "sphinx_math_dollar",
     "sphinx.ext.mathjax",
 ]
+
+# autoapi_dirs = ['../asteca']
 
 # pip install sphinx-math-dollar
 # https://www.sympy.org/sphinx-math-dollar/
@@ -53,7 +56,7 @@ mathjax3_config = {
 }
 
 # https://myst-nb.readthedocs.io/en/v0.12.2/use/execute.html
-nb_execution_mode = "auto"
+# nb_execution_mode = "auto"
 # nb_execution_mode = "off"
 # nb_execution_timeout = -1
 
