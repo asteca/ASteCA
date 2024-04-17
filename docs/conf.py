@@ -66,7 +66,7 @@ mathjax3_config = {
 
 # https://myst-nb.readthedocs.io/en/v0.12.2/use/execute.html
 # nb_execution_mode = "auto"
-# nb_execution_mode = "off"
+nb_execution_mode = "off"
 # nb_execution_timeout = -1
 
 myst_enable_extensions = [
