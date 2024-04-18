@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "asteca"
+version = "0.5.0"
+description = "Stellar cluster analysis package"
+authors = ["Gabriel I Perren <gabrielperren@gmail.com>"]
+readme = "README.md"
+license = "MIT"
+keywords = ["cluster", "astrophysics"]
+homepage = "https://asteca.github.io/"
+repository = "https://github.com/asteca/ASteCA"
+documentation = "https://asteca.readthedocs.io/"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+numpy = "^1.26.4"
+matplotlib = "^3.8.4"
+scipy = "^1.13.0"
+astropy = "^6.0.1"
+pandas = "^2.2.2"
+fast-histogram = "^0.14"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

@@ -1,12 +1,21 @@
 # ignore everything in root
 /*
-# except for this file
-!asteca.py
+# except for these files
 !README.md
-!CHANGELOG.rst
 !LICENSE.txt
-# and this folder
-!/packages
-# But do ignore these files
+!poetry.lock
+!pyproject.toml
+!.readthedocs.yaml
+
+# and these folderers
+!/asteca
+!/docs
+
+# But ignore these files
 *.pyc
-*.pickle
+
+# and ignore these folders
+/docs/build/*
+/docs/autoapi/*
+# Jupyter Notebook
+.ipynb_checkpoints
