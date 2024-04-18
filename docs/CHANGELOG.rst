@@ -1,6 +1,14 @@
 .. :changelog:
 
 
+`[v0.5.0] <https://github.com/asteca/asteca/releases/tag/v0.5.0>`__ - 2024-04-19
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Major update, **ASteCA** is now a proper Python package that can be installed with
+`pip install asteca`.
+
+
+
 
 `[v0.4.3] <https://github.com/asteca/asteca/releases/tag/v0.4.3>`__ - 2022-06-01
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
